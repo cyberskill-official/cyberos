@@ -73,7 +73,7 @@ cyberos-cuo run cuo/chief-strategy-officer/per-mna-thesis \
 | 2 | QA-INTEGRATION-001 | No integration plan | Operator drafts |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.1 — CSO-Strategy role profile
+- `../../../../modules/cuo/README.md` §5.1 — CSO-Strategy role profile
 - `../../chief-executive-officer/workflows/capital-allocation-memo.md` — deal-financing peer
 - `../../chief-financial-officer/workflows/annual-strategic-plan.md` — capital-structure peer
 - `../../../skill/mna-thesis-{author,audit}/SKILL.md`

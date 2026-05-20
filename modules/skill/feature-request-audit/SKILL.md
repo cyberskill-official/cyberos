@@ -790,7 +790,7 @@ These apply to **every** Feature Request. Auditors MUST check that no FR violate
 ### §10.2 — How the Backlog Grows
 
 - **New FRs:** authored per the playbook rules above. Each FR is a markdown file at `docs/feature-requests/{module}/FR-{MOD}-{NNN}-{slug}.md` with a sibling `.audit.md` at 10/10 score. The backlog is regenerated from these files.
-- **FR status flow:** `draft → ready_to_implement → implementing → ready_to_review → reviewing → ready_to_test → testing → done` (with `on_hold` or `closed` off-ramps per [`STATUS-REFERENCE.md`](../../../docs/feature-requests/STATUS-REFERENCE.md)).
+- **FR status flow:** `draft → ready_to_implement → implementing → ready_to_review → reviewing → ready_to_test → testing → done` (with `on_hold` or `closed` off-ramps per [`STATUS-REFERENCE.md`](../contracts/feature-request/STATUS-REFERENCE.md)).
 - **Re-prioritising:** edit `priority` in the FR's frontmatter, then re-generate the backlog. Don't edit the backlog index directly — it's a derived view.
 - **Re-phasing:** if a P1 FR becomes urgent for P0, edit `phase: P0` in the FR's frontmatter. The phase exit gate criteria don't change — just move the FR.
 - **Deferring a phase:** if a slice can't ship in its planned phase, mark its FRs `deferred` and add a follow-up FR in the next phase with the same scope.

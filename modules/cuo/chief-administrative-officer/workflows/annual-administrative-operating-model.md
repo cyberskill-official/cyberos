@@ -28,6 +28,6 @@ audit_hooks:
 CAO-Admin's annual operating model for back-office functions per McKinsey 7S + Bain back-office-excellence framework.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.1 — CAO-Admin role profile
+- `../../../../modules/cuo/README.md` §5.1 — CAO-Admin role profile
 - `../../chief-operating-officer/workflows/annual-operating-model.md` — broader peer
 - `../../../skill/operating-model-{author,audit}/SKILL.md`

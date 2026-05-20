@@ -28,6 +28,6 @@ audit_hooks:
 CIO-Information's IT-lens input to security strategy per NIST CSF 2.0 + CIS Controls v8 IG2 (IT operations focus).
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.3
+- `../../../../modules/cuo/README.md` §5.3
 - `../../chief-information-security-officer/workflows/annual-security-strategy.md` — upstream peer
 - `../../../skill/security-strategy-{author,audit}/SKILL.md`

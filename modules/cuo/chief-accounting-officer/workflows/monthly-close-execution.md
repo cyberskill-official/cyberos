@@ -31,6 +31,6 @@ audit_hooks:
 CAO-Accounting's monthly close execution per US GAAP / IFRS technical-accounting requirements + SOC 1 controls. Sister workflow to CFO's `monthly-close` — CFO orchestrates; CAO-Accounting executes technical-accounting decisions.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.2 — CAO-Accounting role profile
+- `../../../../modules/cuo/README.md` §5.2 — CAO-Accounting role profile
 - `../../chief-financial-officer/workflows/monthly-close.md` — upstream orchestrator
 - `../../../skill/monthly-close-{author,audit}/SKILL.md`

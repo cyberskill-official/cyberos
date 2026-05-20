@@ -32,6 +32,6 @@ audit_hooks:
 CSO-Sustainability's annual env-specific report per GHG Protocol + SBTi + CDP + TCFD scenario analysis + GRI environmental standards.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7
+- `../../../../modules/cuo/README.md` §5.7
 - `./annual-emissions-inventory.md` — upstream feeder
 - `../../../skill/sustainability-report-{author,audit}/SKILL.md`

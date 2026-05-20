@@ -2,7 +2,7 @@
 contract_id: threat-model
 contract_version: v1
 template_literal: threat-model@1
-description: Canonical threat-model@1 — STRIDE threat model with OWASP Top 10:2025 + ASVS mapping. Authored by threat-model-author; validated by threat-model-audit via threat_model_rubric@1.0. Implements Software Development Process.md §2(d) security review.
+description: Canonical threat-model@1 — STRIDE threat model with OWASP Top 10:2025 + ASVS mapping. Authored by threat-model-author; validated by threat-model-audit via threat_model_rubric@1.0. Implements modules/cuo/README.md#software-development-process §2(d) security review.
 contract_kind: artefact_schema
 locked_at: 2026-05-17
 

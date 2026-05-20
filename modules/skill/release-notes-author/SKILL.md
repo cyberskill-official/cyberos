@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: release-notes-author
 description: >-
-  Author customer-facing release notes (release-notes@1) for a release candidate, drawn from CHANGELOG entries + merged PRs since the last release tag. Splits by Keep-a-Changelog categories (Added, Changed, Deprecated, Removed, Fixed, Security) and surfaces breaking changes, security advisories, and upgrade guides up-front. Covers Software Development Process.md §2(i) release. Chains naturally into release-notes-audit. Use when user asks to "draft a release notes" or "create the release notes". Do NOT use for "audit existing release notes" (use release-notes-audit instead).
+  Author customer-facing release notes (release-notes@1) for a release candidate, drawn from CHANGELOG entries + merged PRs since the last release tag. Splits by Keep-a-Changelog categories (Added, Changed, Deprecated, Removed, Fixed, Security) and surfaces breaking changes, security advisories, and upgrade guides up-front. Covers modules/cuo/README.md#software-development-process §2(i) release. Chains naturally into release-notes-audit. Use when user asks to "draft a release notes" or "create the release notes". Do NOT use for "audit existing release notes" (use release-notes-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0

@@ -33,5 +33,5 @@ audit_hooks:
 Chief ESG Officer's per-engagement charter per AccountAbility AA1000SES stakeholder engagement standard.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7
+- `../../../../modules/cuo/README.md` §5.7
 - `../../../skill/program-charter-{author,audit}/SKILL.md`

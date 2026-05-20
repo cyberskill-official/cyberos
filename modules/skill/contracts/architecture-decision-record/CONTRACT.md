@@ -2,7 +2,7 @@
 contract_id: adr
 contract_version: v1
 template_literal: architecture-decision-record@1
-description: Canonical architecture-decision-record@1 — Architecture Decision Record in Michael Nygard format. Authored by architecture-decision-record-author; validated by architecture-decision-record-audit via adr_rubric@1.0. Implements Software Development Process.md §2(d).
+description: Canonical architecture-decision-record@1 — Architecture Decision Record in Michael Nygard format. Authored by architecture-decision-record-author; validated by architecture-decision-record-audit via adr_rubric@1.0. Implements modules/cuo/README.md#software-development-process §2(d).
 contract_kind: artefact_schema
 locked_at: 2026-05-17
 

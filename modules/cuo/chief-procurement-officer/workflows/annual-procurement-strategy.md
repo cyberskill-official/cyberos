@@ -36,6 +36,6 @@ audit_hooks:
 CPO-Procurement's annual strategy per CIPS Global Standard + Kraljic strategic-sourcing matrix + ISM (Institute for Supply Management) + Hackett spend-analytics framework.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7
+- `../../../../modules/cuo/README.md` §5.7
 - `../../chief-financial-officer/workflows/annual-budget.md` — budget envelope upstream
 - `../../../skill/procurement-strategy-{author,audit}/SKILL.md`

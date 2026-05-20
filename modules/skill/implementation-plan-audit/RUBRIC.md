@@ -1,6 +1,6 @@
 # `impl_plan_rubric@1.0` — machine-checkable Implementation Plan rubric
 
-> Sourced from `cyberos/skill/contracts/implementation-plan/CONTRACT.md` and `cyberos/docs/Software Development Process.md` §2(f) Implementation; DORA findings on small-batch discipline + AI-assisted code review. Rubric version `1.0` is locked.
+> Sourced from `cyberos/skill/contracts/implementation-plan/CONTRACT.md` and `../../../modules/cuo/README.md` §2(f) Implementation; DORA findings on small-batch discipline + AI-assisted code review. Rubric version `1.0` is locked.
 
 ---
 
@@ -103,6 +103,6 @@
 
 - `cyberos/skill/docs/AUDIT_LOOP.md`, `cyberos/skill/docs/RUBRIC_FORMAT.md`
 - `cyberos/skill/contracts/implementation-plan/CONTRACT.md`
-- `cyberos/docs/Software Development Process.md` §2(f) — Implementation stage source
-- `cyberos/docs/Software Development Process.md` §5 — AI integration source (drives §8 and COND-005)
+- `../../../modules/cuo/README.md` §2(f) — Implementation stage source
+- `../../../modules/cuo/README.md` §5 — AI integration source (drives §8 and COND-005)
 - DORA 2024 — small-batch discipline rationale for QA-BATCH-001

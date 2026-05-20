@@ -160,8 +160,8 @@ The CTO (or delegate) is pulled into this workflow at these pause points:
 ## Cross-references
 
 - `../README.md` — the CTO 9-block spec.
-- `../../../docs/The C-Suite Reference.md` §5.3 — CTO role profile.
-- `../../../docs/Software Development Process.md` §2(b)–§2(f) — the SDLC stages this workflow drives.
+- `../../../../modules/cuo/README.md` §5.3 — CTO role profile.
+- `../../../../modules/cuo/README.md` §2(b)–§2(f) — the SDLC stages this workflow drives.
 - `../../docs/AGENTS.md` — protocol normativity.
 - `../../docs/ROUTING.md` — how the CUO reaches this workflow.
 - `../../../skill/{srs,adr,threat-model,sdd,impl-plan}-{author,audit}/SKILL.md` — the per-skill specs.

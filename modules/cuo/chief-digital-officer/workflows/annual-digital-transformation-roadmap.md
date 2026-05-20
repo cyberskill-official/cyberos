@@ -46,6 +46,6 @@ CDO-Digital's annual digital transformation per Gartner Digital Business Transfo
 - **Step 2 `transformation-roadmap-audit`** — validates per rubric.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7 — Chief Digital Officer role profile
+- `../../../../modules/cuo/README.md` §5.7 — Chief Digital Officer role profile
 - `../../chief-transformation-officer/workflows/annual-transformation-roadmap.md` — peer (broader transformation)
 - `../../../skill/transformation-roadmap-{author,audit}/SKILL.md`

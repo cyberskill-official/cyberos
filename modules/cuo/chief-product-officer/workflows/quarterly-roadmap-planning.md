@@ -72,6 +72,6 @@ cyberos-cuo run cuo/chief-product-officer/quarterly-roadmap-planning \
 | 2 | QA-OPPORTUNITY-001 | Commitment without opportunity tree | Operator discovers or drops |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.3 — CPO-Product role profile
+- `../../../../modules/cuo/README.md` §5.3 — CPO-Product role profile
 - `../../chief-technology-officer/workflows/architect-new-system.md` — downstream feeder (PRD → SRS → ADR chain)
 - `../../../skill/product-roadmap-{author,audit}/SKILL.md`

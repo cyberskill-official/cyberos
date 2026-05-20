@@ -69,7 +69,7 @@ cyberos-cuo run cuo/chief-revenue-officer/weekly-revenue-cadence \
 | 2 | QA-COVERAGE-001 | Pipeline coverage < 3x | Escalate to CEO |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.2 — CRO-Revenue role profile
+- `../../../../modules/cuo/README.md` §5.2 — CRO-Revenue role profile
 - `../../chief-sales-officer/workflows/weekly-pipeline-review.md` — upstream chain
 - `../../cco-customer/README.md` — customer-success peer
 - `../../../skill/rhythm-of-business-{author,audit}/SKILL.md`

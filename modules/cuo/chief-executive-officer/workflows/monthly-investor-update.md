@@ -71,5 +71,5 @@ cyberos-cuo run cuo/chief-executive-officer/monthly-investor-update \
 
 ## Cross-references
 - `../README.md` §5.3 — output type "investor updates (quarterly)"
-- `../../../docs/The C-Suite Reference.md` §5.1
+- `../../../../modules/cuo/README.md` §5.1
 - `../../../skill/investor-update-{author,audit}/SKILL.md`

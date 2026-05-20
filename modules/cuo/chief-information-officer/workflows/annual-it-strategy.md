@@ -28,5 +28,5 @@ audit_hooks:
 CIO-Information's annual IT strategy per ITIL 4 + COBIT 2019 + Gartner Bimodal IT framework.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.3 — CIO-Information role profile
+- `../../../../modules/cuo/README.md` §5.3 — CIO-Information role profile
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

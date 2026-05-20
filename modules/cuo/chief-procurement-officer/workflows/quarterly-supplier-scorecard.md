@@ -33,6 +33,6 @@ audit_hooks:
 CPO-Procurement's quarterly supplier scoring per CIPS supplier-performance-management + Kraljic-matrix + Sustainable Procurement Pledge.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7
+- `../../../../modules/cuo/README.md` §5.7
 - `../../chief-operating-officer/workflows/quarterly-vendor-scorecard.md` — vendor-broader peer
 - `../../../skill/vendor-scorecard-{author,audit}/SKILL.md`

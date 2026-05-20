@@ -72,6 +72,6 @@ cyberos-cuo run cuo/chief-information-security-officer/annual-pen-test-cycle \
 | 2 | QA-REMEDIATION-001 | Remediation lacks specificity | Operator extends |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.3 — CISO role profile
+- `../../../../modules/cuo/README.md` §5.3 — CISO role profile
 - `../../chief-technology-officer/workflows/threat-model-refresh.md` — quarterly upstream peer
 - `../../../skill/pen-test-report-{author,audit}/SKILL.md`

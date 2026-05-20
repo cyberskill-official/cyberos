@@ -82,7 +82,7 @@ next_action:      ship
 
 This fixture proves end-to-end:
 
-1. `statement-of-work-author` correctly emits all 12 SOW skeleton sections per Software Development Process.md §4.9.
+1. `statement-of-work-author` correctly emits all 12 SOW skeleton sections per modules/cuo/README.md#software-development-process §4.9.
 2. The 12-section ordering is preserved (SEC-001..012 pass).
 3. Conditional sections wire correctly: `fixed_price` → `### Fixed-Price Terms` (COND-001 pass); personal data → `Sub-processor list` + DPA reference (COND-006 pass).
 4. The audit-fix loop converges: one auto-fix in iteration 1, one operator-judgement wontfix in iteration 2, PASS in iteration 2.

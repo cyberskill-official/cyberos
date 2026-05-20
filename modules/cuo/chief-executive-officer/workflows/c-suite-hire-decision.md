@@ -73,5 +73,5 @@ cyberos-cuo run cuo/chief-executive-officer/c-suite-hire-decision \
 
 ## Cross-references
 - `../README.md` §5.4 — output type "C-suite hires + fires"
-- `../../../docs/The C-Suite Reference.md` §5.1
+- `../../../../modules/cuo/README.md` §5.1
 - `../../../skill/hire-decision-{author,audit}/SKILL.md`

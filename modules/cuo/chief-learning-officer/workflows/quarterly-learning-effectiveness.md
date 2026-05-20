@@ -28,5 +28,5 @@ audit_hooks:
 CLO-Learning's quarterly effectiveness review per Kirkpatrick model + Phillips ROI methodology + ATD impact measurement.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.5
+- `../../../../modules/cuo/README.md` §5.5
 - `../../../skill/enps-program-{author,audit}/SKILL.md`

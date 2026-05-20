@@ -73,6 +73,6 @@ cyberos-cuo run cuo/chief-communications-officer/per-press-release \
 | 2 | QA-CORRECTION-001 | Typo in distribution | Issue correction notice |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.4 — CCO-Communications role profile
+- `../../../../modules/cuo/README.md` §5.4 — CCO-Communications role profile
 - `../../chief-marketing-officer/workflows/per-press-release.md` — content-side partner
 - `../../../skill/press-release-{author,audit}/SKILL.md`

@@ -78,15 +78,15 @@ Design rationale lives in the FRs themselves (each carries §1 normative clauses
 
 | FR | Title | Effort | Protocol amendment |
 |---|---|---:|---|
-| [FR-MEMORY-112](docs/feature-requests/memory/FR-MEMORY-112-episodic-memory.md) | Episodic memory — `kind: episode` + `cyberos recall-similar`; reflection-loop foundation | 12h | No (additive enum) |
-| [FR-MEMORY-113](docs/feature-requests/memory/FR-MEMORY-113-recency-decay-recall.md) | Park-et-al combined-score recall (relevance·0.4 + importance·0.3 + recency·0.3) with Exponential/Ebbinghaus decay | 8h | No |
-| [FR-MEMORY-114](docs/feature-requests/memory/FR-MEMORY-114-write-time-importance.md) | Write-time importance scoring — Haiku-rated; mock-llm/anthropic Invoker (CUO Phase-3 pattern) | 8h | No |
-| [FR-MEMORY-115](docs/feature-requests/memory/FR-MEMORY-115-cyberos-dream.md) | **`cyberos dream` — out-of-band batch reflection** (4 detectors: duplicates / stale / new / verify); operator-gated apply | 32h | **§7.7 (P19)** |
-| [FR-MEMORY-116](docs/feature-requests/memory/FR-MEMORY-116-semantic-dedup-consolidate.md) | Consolidation SemanticDedup phase (Walk → Compact → Sign → Publish → SemanticDedup); shares FR-115 detector | 6h | No |
-| [FR-MEMORY-117](docs/feature-requests/memory/FR-MEMORY-117-per-store-acl.md) | Per-store ACL via `STORE.yaml`; writer enforces on writes; auto-migrate top-level dirs | 24h | **§14.4 (P20)** |
-| [FR-MEMORY-118](docs/feature-requests/memory/FR-MEMORY-118-put-if-precondition.md) | `put_if` optimistic-concurrency primitive; content-hash preconditions | 8h | **§3.1 (P21)** |
-| [FR-MEMORY-119](docs/feature-requests/memory/FR-MEMORY-119-session-transcript-ledger.md) | Session transcript ledger — opt-in `cyberos session {start,append,end}`; default classification=confidential | 24h | **§18 (P22)** |
-| [FR-MEMORY-120](docs/feature-requests/memory/FR-MEMORY-120-cyberos-history.md) | `cyberos history <path>` — per-file version + attribution from audit chain; dream/session annotations inline | 8h | No |
+| [FR-MEMORY-112](../../docs/feature-requests/memory/FR-MEMORY-112-episodic-memory.md) | Episodic memory — `kind: episode` + `cyberos recall-similar`; reflection-loop foundation | 12h | No (additive enum) |
+| [FR-MEMORY-113](../../docs/feature-requests/memory/FR-MEMORY-113-recency-decay-recall.md) | Park-et-al combined-score recall (relevance·0.4 + importance·0.3 + recency·0.3) with Exponential/Ebbinghaus decay | 8h | No |
+| [FR-MEMORY-114](../../docs/feature-requests/memory/FR-MEMORY-114-write-time-importance.md) | Write-time importance scoring — Haiku-rated; mock-llm/anthropic Invoker (CUO Phase-3 pattern) | 8h | No |
+| [FR-MEMORY-115](../../docs/feature-requests/memory/FR-MEMORY-115-cyberos-dream.md) | **`cyberos dream` — out-of-band batch reflection** (4 detectors: duplicates / stale / new / verify); operator-gated apply | 32h | **§7.7 (P19)** |
+| [FR-MEMORY-116](../../docs/feature-requests/memory/FR-MEMORY-116-semantic-dedup-consolidate.md) | Consolidation SemanticDedup phase (Walk → Compact → Sign → Publish → SemanticDedup); shares FR-115 detector | 6h | No |
+| [FR-MEMORY-117](../../docs/feature-requests/memory/FR-MEMORY-117-per-store-acl.md) | Per-store ACL via `STORE.yaml`; writer enforces on writes; auto-migrate top-level dirs | 24h | **§14.4 (P20)** |
+| [FR-MEMORY-118](../../docs/feature-requests/memory/FR-MEMORY-118-put-if-precondition.md) | `put_if` optimistic-concurrency primitive; content-hash preconditions | 8h | **§3.1 (P21)** |
+| [FR-MEMORY-119](../../docs/feature-requests/memory/FR-MEMORY-119-session-transcript-ledger.md) | Session transcript ledger — opt-in `cyberos session {start,append,end}`; default classification=confidential | 24h | **§18 (P22)** |
+| [FR-MEMORY-120](../../docs/feature-requests/memory/FR-MEMORY-120-cyberos-history.md) | `cyberos history <path>` — per-file version + attribution from audit chain; dream/session annotations inline | 8h | No |
 
 ### Ship sequence (per `docs/proposals/MEMORY-IMPROVEMENT-WAVE-2026Q3.md` §5)
 

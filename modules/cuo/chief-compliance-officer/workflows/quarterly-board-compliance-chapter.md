@@ -69,6 +69,6 @@ cyberos-cuo run cuo/chief-compliance-officer/quarterly-board-compliance-chapter 
 | 2 | QA-DISCLOSURE-001 | Material weakness no disclosure plan | Escalate to CEO + CLO-Legal |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.6 — CCO-Compliance role profile
+- `../../../../modules/cuo/README.md` §5.6 — CCO-Compliance role profile
 - `../../chief-executive-officer/workflows/quarterly-board-update.md` — board-deck consumer
 - `../../../skill/compliance-program-{author,audit}/SKILL.md`

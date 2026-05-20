@@ -1,6 +1,6 @@
 # `cco-commercial` — Chief Commercial Officer (Commercial)
 
-> Per `../../docs/The C-Suite Reference.md` §5.4 + §4 (9-block schema).
+> Per `../../../modules/cuo/README.md` §5.4 + §4 (9-block schema).
 
 ## §1  Identity & scope
 - **Full disambiguated title:** Chief Commercial Officer (Commercial).
@@ -49,5 +49,5 @@ All workflows chain through shipped Tier-2 skills (`partner-program`, `program-c
 ---
 
 ## Cross-references
-- `../../docs/The C-Suite Reference.md` §5.4 — source role profile.
+- `../../../modules/cuo/README.md` §5.4 — source role profile.
 - `../MODULE.md` §4.

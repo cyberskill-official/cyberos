@@ -1,6 +1,6 @@
 # `project_plan_rubric@1.0` — machine-checkable project plan rubric
 
-> Sourced from `cyberos/docs/Software Development Process.md` §2(c) Feasibility and project planning; PMBOK 8th Edition (performance domains, May 2026 release); PRINCE2 7th Edition (five integrated elements: principles, people, practices, processes, project context). Rubric version `1.0` is locked.
+> Sourced from `../../../modules/cuo/README.md` §2(c) Feasibility and project planning; PMBOK 8th Edition (performance domains, May 2026 release); PRINCE2 7th Edition (five integrated elements: principles, people, practices, processes, project context). Rubric version `1.0` is locked.
 
 ---
 
@@ -103,6 +103,6 @@
 
 - `cyberos/skill/docs/AUDIT_LOOP.md`, `cyberos/skill/docs/RUBRIC_FORMAT.md`
 - `REPORT_FORMAT.md`, `INVARIANTS.md`
-- `cyberos/docs/Software Development Process.md` §2(c) — Feasibility & project planning source
+- `../../../modules/cuo/README.md` §2(c) — Feasibility & project planning source
 - PMBOK 8th Edition — May 2026 release
 - PRINCE2 7th Edition

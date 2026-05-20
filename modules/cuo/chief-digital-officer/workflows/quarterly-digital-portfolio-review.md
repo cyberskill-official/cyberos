@@ -31,6 +31,6 @@ audit_hooks:
 CDO-Digital's quarterly portfolio review per Bain digital-program-management framework. Aggregates program health + channel performance + CX metrics.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7
+- `../../../../modules/cuo/README.md` §5.7
 - `./annual-digital-transformation-roadmap.md` — upstream parent
 - `../../../skill/transformation-roadmap-{author,audit}/SKILL.md`

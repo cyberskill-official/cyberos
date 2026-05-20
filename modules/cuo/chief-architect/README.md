@@ -1,6 +1,6 @@
 # `chief-architect` — Chief Architect / Chief Software Architect
 
-> Per `../../docs/The C-Suite Reference.md` §5.3 + §4 (9-block schema).
+> Per `../../../modules/cuo/README.md` §5.3 + §4 (9-block schema).
 
 ## §1  Identity & scope
 - **Full disambiguated title:** Chief Architect / Chief Software Architect.
@@ -48,5 +48,5 @@ All workflows chain through shipped SDP-original + Tier-2 skills (`adr`, `threat
 ---
 
 ## Cross-references
-- `../../docs/The C-Suite Reference.md` §5.3 — source role profile.
+- `../../../modules/cuo/README.md` §5.3 — source role profile.
 - `../MODULE.md` §4.

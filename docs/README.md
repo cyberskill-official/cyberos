@@ -1,11 +1,9 @@
 # `docs/` — Project-level documentation
 
-This folder holds CyberOS's canonical specifications (SDP + C-Suite Reference) and the FR backlog. Module-specific docs live in each module's `README.md` (see [`../modules/`](../modules/)). Operational tours live at [`../tours/`](../tours/).
+This folder holds CyberOS's FR backlog and documentation tooling. Module-specific docs live in each module's `README.md` (see [`../modules/`](../modules/)). Operational tours live at [`../tours/`](../tours/). Canonical specifications (SDP + C-Suite Reference) have been moved to [`../modules/cuo/README.md`](../modules/cuo/README.md).
 
 | Folder / File | Purpose | Entry point |
 |---|---|---|
-| [`Software Development Process.md`](Software%20Development%20Process.md) | **Normative.** The 13-stage SDP (SOW → SRS → FRs → ADR → SDD → impl → review → test → deploy → release → runbook → retro → decomm). Every skill chains a sub-set of these stages | — |
-| [`The C-Suite Reference.md`](The%20C-Suite%20Reference.md) | **Normative.** 48-persona atlas (47 active + 1 EXTINCT cautionary tale). Source for every `modules/cuo/<persona-slug>/README.md`. Sections §2 (acronym matrix), §4 (9-block schema), §5 (per-persona profiles), §7 (CyberSkill priority order), §8 (commercial baselines) | — |
 | [`feature-requests/`](feature-requests/) | **Living.** ~556 FRs organised across 26 domains (ai, auth, memory, chat, crm, cuo, doc, docs, email, esop, hr, inv, kb, learn, mcp, obs, okr, portal, proj, res, rew, skill, ten, time). Each FR authored via the `feature-request-author` skill | [`feature-requests/BACKLOG.md`](feature-requests/BACKLOG.md) (index) + `../feature-request-audit skill` (see feature-request skills) (discipline — moved 2026-05-18 to live with the `feature-request-audit` skill) |
 | [`Makefile`](Makefile) | pandoc round-trip utility for any md ↔ docx work | — |
 
@@ -41,8 +39,8 @@ SDP ── normative ──▶ FRs ── authority ──▶ Skill catalog ─�
                                                                    (ai-gateway, auth, mcp, …)
 ```
 
-- **SDP** (`Software Development Process.md`) defines the 13 stages every deliverable flows through.
-- **C-Suite Reference** (`The C-Suite Reference.md`) defines the 48 personas + the 9-block schema each persona spec must render.
+- **SDP** (`../modules/cuo/README.md`) defines the 14 stages every deliverable flows through.
+- **C-Suite Reference** (`../modules/cuo/README.md`) defines the 48 personas + the 9-block schema each persona spec must render.
 - **FRs** (`feature-requests/`) capture every concrete change request, tagged by phase + module.
 - **Skill catalog** (`modules/skill/`) ships 104 author+audit pairs that materialise SDP stages into agentic Skills.
 - **CUO workflows** (`modules/cuo/`) chain Skills into persona-owned deliverables (194 workflows live).

@@ -76,7 +76,7 @@ auth/
     └── rls_isolation_test.rs  # property test: cross-tenant SELECT returns 0 rows
 ```
 
-## Open invariants (per AUTHORING_DISCIPLINE)
+## Open invariants (per feature-request-audit skill)
 
 - §3.1 rule 1 — root tenant is `Uuid::nil()`. ✓ enforced (`tenants` seed row + `cyberos_types::TenantId::ROOT`).
 - §3.4 rule 13 — RLS MUST have BOTH USING and WITH CHECK. ✓ enforced (migration 0005).

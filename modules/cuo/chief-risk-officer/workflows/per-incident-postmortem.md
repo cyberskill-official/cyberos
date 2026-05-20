@@ -75,6 +75,6 @@ cyberos-cuo run cuo/chief-risk-officer/per-incident-postmortem \
 | 2 | QA-CONTROL-001 | Control failure unidentified | Operator traces |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.6 — CRO-Risk role profile
+- `../../../../modules/cuo/README.md` §5.6 — CRO-Risk role profile
 - `../../chief-technology-officer/workflows/post-incident-review.md` — upstream engineering peer
 - `../../../skill/postmortem-{author,audit}/SKILL.md`

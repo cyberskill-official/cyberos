@@ -71,6 +71,6 @@ cyberos-cuo run cuo/chief-customer-officer/per-account-cs-engagement \
 | 2 | QA-CADENCE-001 | No cadence | Operator defines |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.4 — CCO-Customer role profile
+- `../../../../modules/cuo/README.md` §5.4 — CCO-Customer role profile
 - `../../chief-sales-officer/workflows/quarterly-account-plan.md` — sales peer (expansion thesis overlap)
 - `../../../skill/cs-engagement-{author,audit}/SKILL.md`

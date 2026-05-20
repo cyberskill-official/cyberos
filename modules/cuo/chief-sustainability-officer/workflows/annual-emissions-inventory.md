@@ -37,6 +37,6 @@ audit_hooks:
 Chief Sustainability Officer's annual GHG inventory per GHG Protocol Corporate Standard + ISO 14064-1 + IPCC AR6 factors. Feeds CSRD/ESRS, CDP disclosure, and SBTi target tracking.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7
+- `../../../../modules/cuo/README.md` §5.7
 - `../../chief-esg-officer/workflows/annual-esg-report.md` — downstream consumer
 - `../../../skill/emissions-inventory-{author,audit}/SKILL.md`

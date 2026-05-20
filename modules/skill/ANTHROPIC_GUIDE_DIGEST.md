@@ -27,7 +27,7 @@ This document digests Anthropic's 33-page guide, lines each principle up against
 
 The Anthropic guide is a fundamentals doc aimed at first-time skill authors, not a competing architecture. It defines the lowest-common-denominator Anthropic Agent Skills format — a folder containing `SKILL.md` (YAML frontmatter + Markdown body), optional `scripts/`, `references/`, `assets/` — and walks through planning, testing, distribution, and a five-pattern troubleshooting catalogue.
 
-CyberOS SKILL module v2.0.0 already implements every structural principle in the guide. Most of them are implemented *more strictly*: the guide's `description` is freeform; CyberOS's frontmatter has 33 fields organised into 11 governance blocks. The guide recommends a "before-upload checklist"; CyberOS has Part 24.1 self-test plus the 40-rule AUTHORING_DISCIPLINE plus the 8-step audit loop plus `INVARIANTS.md` runtime checks. The guide's iteration advice is "watch under/over-triggering and refine the description"; CyberOS has auto-refinement (Part 6), manual fine-tune (Part 7), drift signals, and acceptance auto-pause at <40% (DEC-055).
+CyberOS SKILL module v2.0.0 already implements every structural principle in the guide. Most of them are implemented *more strictly*: the guide's `description` is freeform; CyberOS's frontmatter has 33 fields organised into 11 governance blocks. The guide recommends a "before-upload checklist"; CyberOS has Part 24.1 self-test plus the 40-rule feature-request-audit skill plus the 8-step audit loop plus `INVARIANTS.md` runtime checks. The guide's iteration advice is "watch under/over-triggering and refine the description"; CyberOS has auto-refinement (Part 6), manual fine-tune (Part 7), drift signals, and acceptance auto-pause at <40% (DEC-055).
 
 The guide does, however, surface **three concrete things CyberOS is missing** when (not if) skills ship to non-CyberOS hosts (Claude.ai, Claude Code, Codex, Cursor, vanilla MCP). All three are about the *port surface* — the frontmatter contract that a flat-host loader actually sees:
 
@@ -322,7 +322,7 @@ Sorted by value × ease.
 - **Touches:** feature-request-audit skill §3.10 adds a rule; Recipe 8 expands one paragraph
 - **Effort:** 1 hour
 - **Risk:** zero
-- **Authored:** no — fold into the next AUTHORING_DISCIPLINE revision
+- **Authored:** no — fold into the next feature-request-audit skill revision
 
 ### §6.6 — MEDIUM value: "After-upload" / post-deploy operator checklist
 

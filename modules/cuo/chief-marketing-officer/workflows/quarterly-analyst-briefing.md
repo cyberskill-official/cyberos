@@ -70,6 +70,6 @@ cyberos-cuo run cuo/chief-marketing-officer/quarterly-analyst-briefing \
 | 2 | QA-EVIDENCE-001 | Claim no evidence | Operator supplies |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.4 — CMO role profile
+- `../../../../modules/cuo/README.md` §5.4 — CMO role profile
 - `../../cco-communications/README.md` — PR partner
 - `../../../skill/analyst-briefing-{author,audit}/SKILL.md`

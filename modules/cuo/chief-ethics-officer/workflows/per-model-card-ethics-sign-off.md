@@ -70,6 +70,6 @@ cyberos-cuo run cuo/chief-ethics-officer/per-model-card-ethics-sign-off \
 | 2 | QA-LIMITS-001 | Limits ambiguous | Operator tightens |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.6 — Chief Ethics Officer role profile
+- `../../../../modules/cuo/README.md` §5.6 — Chief Ethics Officer role profile
 - `../../chief-ai-officer/workflows/per-model-card-release.md` — upstream peer
 - `../../../skill/model-card-{author,audit}/SKILL.md`

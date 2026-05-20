@@ -224,7 +224,7 @@ audit_hooks:
 
 ## §9  Cross-references
 
-- `docs/The C-Suite Reference.md` (project root) — the source document this catalog implements. §2 acronym matrix, §3 stage matrix, §4 persona template, §5 role profiles, §6 audit framework, §7 CyberSkill-specific, §8 commercial heuristics.
+- `../../modules/cuo/README.md` (project root) — the source document this catalog implements. §2 acronym matrix, §3 stage matrix, §4 persona template, §5 role profiles, §6 audit framework, §7 CyberSkill-specific, §8 commercial heuristics.
 - `skill/` — the source-of-truth for the skills that workflows chain. `skill/MODULE.md` §3 lists all 46 currently-shipped bundles.
 - `memory/` — the memory. Every CUO routing decision + workflow invocation lands in the audit chain per `memory/docs/AGENTS.md` §6.
 - `cuo/docs/AGENTS.md` — protocol normativity (replaces the legacy CUO AGENTS.md after v2.0.0 rebuild).

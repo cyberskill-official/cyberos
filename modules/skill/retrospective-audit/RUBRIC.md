@@ -1,6 +1,6 @@
 # `retro_rubric@1.0` — machine-checkable Retrospective rubric
 
-> Sourced from `cyberos/docs/Software Development Process.md` Template §4.8 (Start/Stop/Continue + DORA Review). Rubric version `1.0` is locked.
+> Sourced from `../../../modules/cuo/README.md` Template §4.8 (Start/Stop/Continue + DORA Review). Rubric version `1.0` is locked.
 
 ---
 
@@ -92,4 +92,4 @@
 ## Cross-references
 
 - `cyberos/skill/docs/AUDIT_LOOP.md`, `cyberos/skill/docs/RUBRIC_FORMAT.md`
-- `cyberos/docs/Software Development Process.md` Template §4.8 + §5.6 — Retrospective + DORA review sources
+- `../../../modules/cuo/README.md` Template §4.8 + §5.6 — Retrospective + DORA review sources

@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: software-design-document-author
 description: >-
-  Author a Software Design Description (sdd@1) per IEEE 1016-2009 from approved SRS plus accepted ADRs. Captures component design, interface specifications (OpenAPI), data schema, UI/UX prototype references, and design rationale per IEEE 1016 design viewpoints. Covers Software Development Process.md §2(e) Detailed design. Chains naturally into software-design-document-audit and implementation-plan-author. Use when user asks to "draft a software design document" or "create the software design document". Do NOT use for "audit existing software design document" (use software-design-document-audit instead).
+  Author a Software Design Description (sdd@1) per IEEE 1016-2009 from approved SRS plus accepted ADRs. Captures component design, interface specifications (OpenAPI), data schema, UI/UX prototype references, and design rationale per IEEE 1016 design viewpoints. Covers modules/cuo/README.md#software-development-process §2(e) Detailed design. Chains naturally into software-design-document-audit and implementation-plan-author. Use when user asks to "draft a software design document" or "create the software design document". Do NOT use for "audit existing software design document" (use software-design-document-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0

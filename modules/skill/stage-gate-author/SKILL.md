@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: stage-gate-author
 description: >-
-  Author a one-page stage-gate sign-off (stage-gate@1) per Software Development Process.md Template §4.3. Captures: stage name, entry criteria met (Y/N + evidence link), exit criteria met (Y/N + evidence link), risks/issues, decision (Go / Go-with-conditions / No-Go), signatures (EM, TL, Client Sponsor). Run at every stage boundary in fixed-price engagements; optional in T&M. Chains naturally into stage-gate-audit. Use when user asks to "draft a stage gate" or "create the stage gate". Do NOT use for "audit existing stage gate" (use stage-gate-audit instead).
+  Author a one-page stage-gate sign-off (stage-gate@1) per modules/cuo/README.md#software-development-process Template §4.3. Captures: stage name, entry criteria met (Y/N + evidence link), exit criteria met (Y/N + evidence link), risks/issues, decision (Go / Go-with-conditions / No-Go), signatures (EM, TL, Client Sponsor). Run at every stage boundary in fixed-price engagements; optional in T&M. Chains naturally into stage-gate-audit. Use when user asks to "draft a stage gate" or "create the stage gate". Do NOT use for "audit existing stage gate" (use stage-gate-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0

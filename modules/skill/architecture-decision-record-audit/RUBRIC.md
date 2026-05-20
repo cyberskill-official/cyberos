@@ -1,6 +1,6 @@
 # `adr_rubric@1.0` — machine-checkable Architecture Decision Record rubric
 
-> Sourced from `cyberos/docs/Software Development Process.md` §2(d) System architecture and high-level design; Michael Nygard's ADR format; arc42 documentation; ISO/IEC 25010:2023 portability/maintainability sub-characteristics. Rubric version `1.0` is locked.
+> Sourced from `../../../modules/cuo/README.md` §2(d) System architecture and high-level design; Michael Nygard's ADR format; arc42 documentation; ISO/IEC 25010:2023 portability/maintainability sub-characteristics. Rubric version `1.0` is locked.
 
 ---
 
@@ -98,7 +98,7 @@
 
 - `cyberos/skill/docs/AUDIT_LOOP.md`, `cyberos/skill/docs/RUBRIC_FORMAT.md`
 - `REPORT_FORMAT.md`, `INVARIANTS.md`
-- `cyberos/docs/Software Development Process.md` §2(d) — Architecture stage source
+- `../../../modules/cuo/README.md` §2(d) — Architecture stage source
 - Michael Nygard, "Documenting Architecture Decisions" — ADR template origin
 - arc42 — documentation conventions
 - ISO/IEC 25010:2023 — quality-characteristic mapping for §5

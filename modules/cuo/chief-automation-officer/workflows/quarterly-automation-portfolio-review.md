@@ -31,6 +31,6 @@ audit_hooks:
 Chief Automation Officer's quarterly review per UiPath Center of Excellence playbook + Gartner Hyper-automation tracking.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7
+- `../../../../modules/cuo/README.md` §5.7
 - `./annual-automation-roadmap.md` — upstream parent
 - `../../../skill/automation-roadmap-{author,audit}/SKILL.md`

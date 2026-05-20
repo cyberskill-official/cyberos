@@ -28,5 +28,5 @@ audit_hooks:
 Chief-Architect's annual architecture vision per ThoughtWorks Tech Radar + Gartner reference architectures + Mark Richards software-architecture-styles.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.3
+- `../../../../modules/cuo/README.md` §5.3
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

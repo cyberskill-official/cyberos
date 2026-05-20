@@ -69,6 +69,6 @@ cyberos-cuo run cuo/chief-privacy-officer/data-subject-request-cycle \
 | 2 | QA-IDENTITY-001 | Identity verification weak | Operator requests stronger evidence |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.6 — CPO-Privacy role profile
+- `../../../../modules/cuo/README.md` §5.6 — CPO-Privacy role profile
 - `../../chief-legal-officer/workflows/quarterly-regulatory-cycle.md` — peer for aggregate reporting
 - `../../../skill/dsr-runbook-{author,audit}/SKILL.md`

@@ -71,7 +71,7 @@ cyberos-cuo run cuo/chief-ai-officer/per-model-bias-audit \
 | 2 | QA-COVERAGE-001 | Attributes incomplete | Operator extends |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.3 — CAIO role profile
+- `../../../../modules/cuo/README.md` §5.3 — CAIO role profile
 - `./per-model-card-release.md` — peer (feeds model-card bias section)
 - `../../chief-ethics-officer/README.md` — ethics peer
 - `../../../skill/bias-audit-{author,audit}/SKILL.md`

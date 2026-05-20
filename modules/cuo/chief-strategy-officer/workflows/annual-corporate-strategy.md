@@ -72,6 +72,6 @@ cyberos-cuo run cuo/chief-strategy-officer/annual-corporate-strategy \
 | 2 | QA-WTP-001 | Where-to-play vague | Operator tightens |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.1 — CSO-Strategy role profile
+- `../../../../modules/cuo/README.md` §5.1 — CSO-Strategy role profile
 - `../../chief-executive-officer/workflows/quarterly-board-update.md` — board-deck strategy chapter
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: statement-of-work-author
 description: >-
-  Author a Statement of Work (SOW) / Project Charter from a discovery brief, lead form, or kick-off interview. Covers all 12 SOW skeleton fields (objectives, scope in/out, deliverables, assumptions and constraints, engagement model, team and roles, schedule and milestones, pricing and invoicing, acceptance criteria, IP and confidentiality, change control, warranty and support, governance cadence) per Software Development Process.md §4.9. Halts at PLAN approval and HITL gates. Chains naturally into statement-of-work-audit by default. Use when user asks to "draft a statement of work" or "create the statement of work". Do NOT use for "audit existing statement of work" (use statement-of-work-audit instead).
+  Author a Statement of Work (SOW) / Project Charter from a discovery brief, lead form, or kick-off interview. Covers all 12 SOW skeleton fields (objectives, scope in/out, deliverables, assumptions and constraints, engagement model, team and roles, schedule and milestones, pricing and invoicing, acceptance criteria, IP and confidentiality, change control, warranty and support, governance cadence) per modules/cuo/README.md#software-development-process §4.9. Halts at PLAN approval and HITL gates. Chains naturally into statement-of-work-audit by default. Use when user asks to "draft a statement of work" or "create the statement of work". Do NOT use for "audit existing statement of work" (use statement-of-work-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -136,7 +136,7 @@ untrusted_content_wrapping: required
 
 # statement-of-work-author — Statement of Work generator
 
-> Authors a Statement of Work (SOW) / Project Charter from a discovery brief, lead form, or kick-off interview. Implements the 12-section skeleton from Software Development Process.md §4.9. Chains naturally into [`statement-of-work-audit`](../statement-of-work-audit/SKILL.md).
+> Authors a Statement of Work (SOW) / Project Charter from a discovery brief, lead form, or kick-off interview. Implements the 12-section skeleton from modules/cuo/README.md#software-development-process §4.9. Chains naturally into [`statement-of-work-audit`](../statement-of-work-audit/SKILL.md).
 
 `prompt_revision: sow_author@1.0.0`
 

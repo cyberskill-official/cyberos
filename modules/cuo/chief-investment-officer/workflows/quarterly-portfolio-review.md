@@ -31,6 +31,6 @@ audit_hooks:
 CIO-Investment's quarterly portfolio review per Brinson-Hood-Beebower attribution + factor-based risk decomposition (Fama-French / Barra).
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7
+- `../../../../modules/cuo/README.md` §5.7
 - `./per-investment-thesis.md` — upstream thesis feeders
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

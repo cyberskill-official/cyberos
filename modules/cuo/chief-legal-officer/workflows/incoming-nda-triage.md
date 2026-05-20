@@ -68,5 +68,5 @@ cyberos-cuo run cuo/chief-legal-officer/incoming-nda-triage \
 
 ## Cross-references
 - `../README.md` §5 (Operational) — "contract review + signing"
-- `../../../docs/The C-Suite Reference.md` §5.2
+- `../../../../modules/cuo/README.md` §5.2
 - `../../../skill/nda-triage-{author,audit}/SKILL.md`

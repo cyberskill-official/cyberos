@@ -1,6 +1,6 @@
 # `test_strategy_rubric@1.0` — machine-checkable Test Strategy rubric
 
-> Sourced from `cyberos/docs/Software Development Process.md` §2(h) Testing + Template §4.6 Test Strategy outline; OWASP Top 10:2025 (threat-led pen-test); WCAG 2.2 (accessibility); ISO/IEC 25010:2023 (NFR coverage). Rubric version `1.0` is locked.
+> Sourced from `../../../modules/cuo/README.md` §2(h) Testing + Template §4.6 Test Strategy outline; OWASP Top 10:2025 (threat-led pen-test); WCAG 2.2 (accessibility); ISO/IEC 25010:2023 (NFR coverage). Rubric version `1.0` is locked.
 
 ---
 
@@ -99,7 +99,7 @@
 ## Cross-references
 
 - `cyberos/skill/docs/AUDIT_LOOP.md`, `cyberos/skill/docs/RUBRIC_FORMAT.md`
-- `cyberos/docs/Software Development Process.md` §2(h) + Template §4.6 — Test Strategy source
+- `../../../modules/cuo/README.md` §2(h) + Template §4.6 — Test Strategy source
 - OWASP Top 10:2025 — security-testing coverage
 - WCAG 2.2 — accessibility-testing coverage
 - ISO/IEC 25010:2023 — NFR-mapping coverage

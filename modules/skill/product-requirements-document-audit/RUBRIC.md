@@ -1,6 +1,6 @@
 # `prd_rubric@1.0` — machine-checkable Product Requirements rubric
 
-> Sourced from `cyberos/skill/contracts/product-requirements-document/CONTRACT.md` and `cyberos/docs/Software Development Process.md` §2(b) Requirements + §4.5 PRD section. Rubric version `1.0` is locked; bumping requires a coordinated update of the contract body and this skill's CONTRACT_ECHO. Each rule has a stable `rule_id`.
+> Sourced from `cyberos/skill/contracts/product-requirements-document/CONTRACT.md` and `../../../modules/cuo/README.md` §2(b) Requirements + §4.5 PRD section. Rubric version `1.0` is locked; bumping requires a coordinated update of the contract body and this skill's CONTRACT_ECHO. Each rule has a stable `rule_id`.
 
 ---
 
@@ -115,4 +115,4 @@
 - `REPORT_FORMAT.md` (sibling file) — `.audit.md` shape.
 - `INVARIANTS.md` (sibling file) — invariant catalog including `deterministic_drift`.
 - `cyberos/skill/contracts/product-requirements-document/CONTRACT.md` — the PRD template this rubric audits.
-- `cyberos/docs/Software Development Process.md` §2(b) — Requirements stage source.
+- `../../../modules/cuo/README.md` §2(b) — Requirements stage source.

@@ -70,6 +70,6 @@ cyberos-cuo run cuo/chief-transformation-officer/quarterly-portfolio-review \
 | 2 | QA-VALUE-REAL-001 | Value tracking missing | Operator instruments |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7 — Chief Transformation Officer role profile
+- `../../../../modules/cuo/README.md` §5.7 — Chief Transformation Officer role profile
 - `./annual-transformation-roadmap.md` — upstream parent
 - `../../../skill/transformation-roadmap-{author,audit}/SKILL.md`

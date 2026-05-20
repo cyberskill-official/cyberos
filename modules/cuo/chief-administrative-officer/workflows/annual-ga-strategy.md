@@ -28,5 +28,5 @@ audit_hooks:
 CAO-Admin's annual G&A strategy per Bain G&A-optimization + Hackett shared-services + KPMG G&A-benchmarking.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.1
+- `../../../../modules/cuo/README.md` §5.1
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

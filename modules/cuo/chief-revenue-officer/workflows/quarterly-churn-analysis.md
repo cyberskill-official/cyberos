@@ -78,6 +78,6 @@ cyberos-cuo run cuo/chief-revenue-officer/quarterly-churn-analysis \
 | 2 | QA-WINBACK-001 | Win-back program no offer | Operator designs |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.2 — CRO-Revenue role profile
+- `../../../../modules/cuo/README.md` §5.2 — CRO-Revenue role profile
 - `../../cco-customer/README.md` — CS peer for execution-driven churn
 - `../../../skill/churn-analysis-{author,audit}/SKILL.md`

@@ -28,6 +28,6 @@ audit_hooks:
 CAO-Accounting's controllership support for annual budget per Adaptive / Anaplan / Pigment + US GAAP capex-vs-opex guidance.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.2
+- `../../../../modules/cuo/README.md` §5.2
 - `../../chief-financial-officer/workflows/annual-budget.md` — upstream parent
 - `../../../skill/budget-{author,audit}/SKILL.md`

@@ -72,7 +72,7 @@ cyberos-cuo run cuo/chief-compliance-officer/annual-compliance-program \
 | 2 | QA-CONTROL-001 | No mapped control | Operator drafts |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.6 — CCO-Compliance role profile
+- `../../../../modules/cuo/README.md` §5.6 — CCO-Compliance role profile
 - `../../chief-legal-officer/workflows/quarterly-regulatory-cycle.md` — peer (filings vs program)
 - `../../chief-information-security-officer/workflows/soc2-audit-readiness.md` — security-compliance peer
 - `../../../skill/compliance-program-{author,audit}/SKILL.md`

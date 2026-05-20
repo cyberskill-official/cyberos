@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: project-plan-author
 description: >-
-  Author a feasibility memo + project plan + RAID log + communication plan (project-plan@1) from an approved SRS plus constraints (budget, timeline, regulatory). Covers Software Development Process.md §2(c) Feasibility study and project planning. Outputs technical feasibility, schedule (PMBOK 8th ed. performance domains; PRINCE2 7th ed. business case theme), RAID log, communication plan, kickoff agenda. Chains naturally into project-plan-audit and stage-gate-author. Use when user asks to "draft a project plan" or "create the project plan". Do NOT use for "audit existing project plan" (use project-plan-audit instead).
+  Author a feasibility memo + project plan + RAID log + communication plan (project-plan@1) from an approved SRS plus constraints (budget, timeline, regulatory). Covers modules/cuo/README.md#software-development-process §2(c) Feasibility study and project planning. Outputs technical feasibility, schedule (PMBOK 8th ed. performance domains; PRINCE2 7th ed. business case theme), RAID log, communication plan, kickoff agenda. Chains naturally into project-plan-audit and stage-gate-author. Use when user asks to "draft a project plan" or "create the project plan". Do NOT use for "audit existing project plan" (use project-plan-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0

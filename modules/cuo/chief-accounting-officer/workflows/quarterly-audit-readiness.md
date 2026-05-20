@@ -31,6 +31,6 @@ audit_hooks:
 CAO-Accounting's quarterly audit-readiness per PCAOB AS 5 + AICPA SOC 1 + ICFR (SOX 404) walkthrough standards.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.2
+- `../../../../modules/cuo/README.md` §5.2
 - `../../chief-compliance-officer/workflows/quarterly-control-testing.md` — upstream feeder
 - `../../../skill/compliance-program-{author,audit}/SKILL.md`

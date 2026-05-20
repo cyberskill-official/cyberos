@@ -31,5 +31,5 @@ audit_hooks:
 CSO-Sustainability's quarterly target-progress tracking per SBTi monitoring + CDP scoring.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7
+- `../../../../modules/cuo/README.md` §5.7
 - `../../../skill/emissions-inventory-{author,audit}/SKILL.md`

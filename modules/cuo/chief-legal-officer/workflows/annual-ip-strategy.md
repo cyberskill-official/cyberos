@@ -74,6 +74,6 @@ cyberos-cuo run cuo/chief-legal-officer/annual-ip-strategy \
 
 ## Cross-references
 - `../README.md` §5 (Strategic) — "IP portfolio strategy"
-- `../../../docs/The C-Suite Reference.md` §5.2
+- `../../../../modules/cuo/README.md` §5.2
 - `../../../skill/ip-strategy-{author,audit}/SKILL.md`
 - `../../../skill/product-roadmap-{author,audit}/SKILL.md` — upstream input

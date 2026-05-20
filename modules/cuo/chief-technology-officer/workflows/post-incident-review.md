@@ -109,7 +109,7 @@ The CTO is pulled in at:
 ## Cross-references
 
 - `../README.md` — CTO 9-block spec.
-- `../../../docs/Software Development Process.md` §2(j) — Operations: incidents.
-- `../../../docs/The C-Suite Reference.md` §5.3 — CTO output: post-mortems are an operational output.
+- `../../../../modules/cuo/README.md` §2(j) — Operations: incidents.
+- `../../../../modules/cuo/README.md` §5.3 — CTO output: post-mortems are an operational output.
 - `../../../skill/postmortem-author/SKILL.md`, `../../../skill/postmortem-audit/RUBRIC.md` — per-skill specs.
 - Google SRE Book — blameless post-mortem culture (the discipline this workflow encodes).

@@ -35,6 +35,6 @@ audit_hooks:
 CDO-Digital's per-channel modernization charter per PMI charter + Bain digital-program framework. Triggered per major channel program (web replatform / app rewrite / IoT rollout / kiosk modernization).
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7 — Chief Digital Officer role profile
+- `../../../../modules/cuo/README.md` §5.7 — Chief Digital Officer role profile
 - `./annual-digital-transformation-roadmap.md` — upstream parent
 - `../../../skill/program-charter-{author,audit}/SKILL.md`

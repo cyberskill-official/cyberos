@@ -1,6 +1,6 @@
 # CyberOS — Feature Request Backlog
 
-**Owner:** Stephen Cheng (CEO) · **Status:** v0.7.0 — **STATUS-WAVE-2026-05 lifecycle simplification** (2026-05-19). The previous "tag soup" status enum (`shipped + strict-audited`, `shipped + mocked-dependency`, `[BLOCKED: …]`, `[FAILED: …]`, `accepted`, `building`, `audited`, `planned`, etc.) is **retired**. The new canonical 10-state enum lives at [`STATUS-REFERENCE.md`](STATUS-REFERENCE.md): `draft | ready_to_implement | implementing | ready_to_review | reviewing | ready_to_test | testing | done | on_hold | closed`. Migration applied: `planned/accepted/audited/in_review → ready_to_implement`, `building/in_progress → implementing`, `shipped + … → done`, `deferred → on_hold`, `rejected/superseded → closed`, `[BLOCKED: …]/[FAILED: …] → ready_to_implement` (failures route back to rework — see STATUS-REFERENCE §1.3). The CTO workflow that drives ship was also renamed `implement-backlog-frs → ship-feature-requests`. Plus a global rename `brain → memory` across all memory-module references (FR IDs, file names, code identifiers, audit row_kinds, CHANGELOG tags, prose). The CHAT/PROJ/EMAIL Layer-0/2 wave still applies: FR-CHAT-001 + FR-EMAIL-001 + FR-PROJ-001 all moved to `done` (slice 1) on 2026-05-19. Three new `services/<name>/` directories: chat, email, proj. v0.6.0 — PLUGIN module wave + v0.5.0 MEMORY Improvement Wave still apply.
+**Owner:** Stephen Cheng (CEO) · **Status:** v0.7.0 — **STATUS-WAVE-2026-05 lifecycle simplification** (2026-05-19). The previous "tag soup" status enum (`shipped + strict-audited`, `shipped + mocked-dependency`, `[BLOCKED: …]`, `[FAILED: …]`, `accepted`, `building`, `audited`, `planned`, etc.) is **retired**. The new canonical 10-state enum lives at [`STATUS-REFERENCE.md`](../../modules/skill/contracts/feature-request/STATUS-REFERENCE.md): `draft | ready_to_implement | implementing | ready_to_review | reviewing | ready_to_test | testing | done | on_hold | closed`. Migration applied: `planned/accepted/audited/in_review → ready_to_implement`, `building/in_progress → implementing`, `shipped + … → done`, `deferred → on_hold`, `rejected/superseded → closed`, `[BLOCKED: …]/[FAILED: …] → ready_to_implement` (failures route back to rework — see STATUS-REFERENCE §1.3). The CTO workflow that drives ship was also renamed `implement-backlog-frs → ship-feature-requests`. Plus a global rename `brain → memory` across all memory-module references (FR IDs, file names, code identifiers, audit row_kinds, CHANGELOG tags, prose). The CHAT/PROJ/EMAIL Layer-0/2 wave still applies: FR-CHAT-001 + FR-EMAIL-001 + FR-PROJ-001 all moved to `done` (slice 1) on 2026-05-19. Three new `services/<name>/` directories: chat, email, proj. v0.6.0 — PLUGIN module wave + v0.5.0 MEMORY Improvement Wave still apply.
 **Source of truth:** the markdown files in this folder. This index is regenerated when FRs land or change status.
 **Authoring playbook:** `feature-request-audit` skill (see feature-request skills) (moved 2026-05-18 — was `feature-request-audit` skill at the root of this folder; now co-located with the `feature-request-audit` skill that enforces it)
 **Roadmap:** [`../../website/docs/architecture/milestones.html`](../../website/docs/architecture/milestones.html)
@@ -68,7 +68,7 @@ The website (this docs site at `website/docs/`) deploys to **cyberos.cyberskill.
 - `vercel.json` + `.vercelignore` in place at repo root.
 - Vercel project `cyberos-docs` under team `team_9SRH0b2jquntBO1gu2jDA5zP` (Stephen Cheng's projects).
 - DNS: `CNAME cyberos → cname.vercel-dns.com`.
-- Runbook: [`../../DEPLOY-VERCEL.md`](../../DEPLOY-VERCEL.md).
+- Runbook: [`../../DEPLOY-VERCEL.md`](../../website/docs/DEPLOYMENT.md).
 - Recurring publish: `git push` (when Git integration enabled) OR `vercel deploy --prod` from repo root.
 
 **Gate criteria for advancing waves:**
@@ -106,7 +106,7 @@ This document is the **single source of truth** for what CyberOS is going to bui
 - **Phase** maps to the milestone arc — `P0 Foundation` ships the cross-cutting infrastructure; `P1 Productivity` adds the internal-workflow modules; `P2 Operations` adds revenue + ops surfaces; `P3 SaaS-ready` adds the multi-tenant + employment-decision modules; `P4 Client-facing` adds external-customer surfaces.
 - **Slice** is a coherent ship-unit within a module. Slice 1 is always the minimum viable surface for that module. Subsequent slices add depth, scale, compliance hardening, or persona surfaces.
 - **Priority** uses BCP-14 keywords — `MUST` (release blocker) · `SHOULD` (release should-have) · `COULD` (release nice-to-have) · `MAY` (post-release).
-- **Status**: The current state of the FR (see [`STATUS-REFERENCE.md`](STATUS-REFERENCE.md) for details).
+- **Status**: The current state of the FR (see [`STATUS-REFERENCE.md`](../../modules/skill/contracts/feature-request/STATUS-REFERENCE.md) for details).
 - **Depends on**: The cross-FR dependency list.
 - **Effort** is a rough sizing in hours (1h = 30 min focused work + 30 min coordination/review). Treat as ±50%. Sized for one experienced engineer.
 

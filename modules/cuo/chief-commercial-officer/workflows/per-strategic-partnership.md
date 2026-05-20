@@ -32,6 +32,6 @@ audit_hooks:
 CCO-Commercial's per-partnership charter per Crossbeam partner-economics + TSIA value-engineering framework.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.4
+- `../../../../modules/cuo/README.md` §5.4
 - `./annual-partner-program.md` — upstream parent
 - `../../../skill/program-charter-{author,audit}/SKILL.md`

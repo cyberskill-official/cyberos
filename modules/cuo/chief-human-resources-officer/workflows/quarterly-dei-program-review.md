@@ -72,6 +72,6 @@ cyberos-cuo run cuo/chief-human-resources-officer/quarterly-dei-program-review \
 | 2 | QA-PIPELINE-001 | Funnel leakage unflagged | Operator surfaces |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.5 — CHRO role profile
+- `../../../../modules/cuo/README.md` §5.5 — CHRO role profile
 - `../../cdo-diversity/README.md` — peer/dedicated DEI persona where exists
 - `../../../skill/dei-program-{author,audit}/SKILL.md`

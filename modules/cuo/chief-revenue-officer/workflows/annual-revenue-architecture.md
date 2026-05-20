@@ -71,6 +71,6 @@ cyberos-cuo run cuo/chief-revenue-officer/annual-revenue-architecture \
 | 2 | QA-KERNEL-001 | Rumelt diagnosis/policy/action incomplete | Operator extends |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.2 — CRO-Revenue role profile
+- `../../../../modules/cuo/README.md` §5.2 — CRO-Revenue role profile
 - `../../chief-sales-officer/workflows/annual-gtm-plan.md` — upstream feeder
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

@@ -27,5 +27,5 @@ audit_hooks:
 Chief Remote Officer's per-initiative charter for distributed-team programs.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7
+- `../../../../modules/cuo/README.md` §5.7
 - `../../../skill/program-charter-{author,audit}/SKILL.md`

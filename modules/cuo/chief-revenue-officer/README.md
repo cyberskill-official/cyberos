@@ -1,6 +1,6 @@
 # `cro-revenue` — Chief Revenue Officer
 
-> Per `../../docs/The C-Suite Reference.md` §5.2 + §4 (9-block schema).
+> Per `../../../modules/cuo/README.md` §5.2 + §4 (9-block schema).
 
 ## §1  Identity & scope
 - **Full disambiguated title:** Chief Revenue Officer.
@@ -58,6 +58,6 @@ All workflows chain through shipped skills — Tier-1 (`rhythm-of-business`, `bo
 ---
 
 ## Cross-references
-- `../../docs/The C-Suite Reference.md` §5.2 — source role profile.
+- `../../../modules/cuo/README.md` §5.2 — source role profile.
 - `../MODULE.md` §4 — canonical persona catalog.
 - `../docs/AGENTS.md` — protocol normativity.

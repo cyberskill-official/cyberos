@@ -28,5 +28,5 @@ audit_hooks:
 CIO-Investment's annual investment strategy per Yale Endowment Model + Norway sovereign-wealth model + Swensen Pioneering Portfolio Management.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7
+- `../../../../modules/cuo/README.md` §5.7
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

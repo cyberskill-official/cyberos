@@ -21,7 +21,7 @@ emitted_source_freshness_tier: 12
 
 # `statement-of-work@1` — canonical Statement of Work contract
 
-> A **contract**, not a skill. Holds the single source of truth for the Statement of Work / Project Charter artefact across CyberOS. Loaded by `statement-of-work-author` (generation skeleton) and `statement-of-work-audit` (validation target via `sow_rubric@1.0`). Implements Software Development Process.md §4.9 (Project Charter / SOW skeleton).
+> A **contract**, not a skill. Holds the single source of truth for the Statement of Work / Project Charter artefact across CyberOS. Loaded by `statement-of-work-author` (generation skeleton) and `statement-of-work-audit` (validation target via `sow_rubric@1.0`). Implements modules/cuo/README.md#software-development-process §4.9 (Project Charter / SOW skeleton).
 
 ## Why a separate contract for SOWs
 
@@ -58,6 +58,6 @@ Every claim in §1 Objectives / §3 Deliverables / §9 Acceptance Criteria carri
 
 ## Citations
 
-- `cyberos/docs/Software Development Process.md` §4.9 — SOW skeleton source.
-- `cyberos/docs/Software Development Process.md` §6 — Engagement models + IP + AI-tool usage policy.
+- `../../../../modules/cuo/README.md` §4.9 — SOW skeleton source.
+- `../../../../modules/cuo/README.md` §6 — Engagement models + IP + AI-tool usage policy.
 - Consumers: `statement-of-work-author` (generation), `statement-of-work-audit` (validation), `product-requirements-document-author` / `project-plan-author` / `closure-author` (upstream context).

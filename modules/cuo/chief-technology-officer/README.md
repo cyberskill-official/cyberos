@@ -1,6 +1,6 @@
 # `cto` — Chief Technology Officer
 
-> Per `../../docs/The C-Suite Reference.md` §5.3 (Technology, Data & AI) + §4 (the 9-block schema). Canonical reference persona for CUO v2.0.0.
+> Per `../../../modules/cuo/README.md` §5.3 (Technology, Data & AI) + §4 (the 9-block schema). Canonical reference persona for CUO v2.0.0.
 
 ## §1  Identity & scope
 
@@ -132,10 +132,10 @@ This persona ships the following workflows under `./workflows/`. Each chains shi
 
 ## Cross-references
 
-- `../../docs/The C-Suite Reference.md` §5.3 — source role profile (CTO).
-- `../../docs/The C-Suite Reference.md` §3 — stage matrix.
-- `../../docs/The C-Suite Reference.md` §6 — audit framework.
-- `../../docs/Software Development Process.md` — the operational manual the CTO's workflows execute against.
+- `../../../modules/cuo/README.md` §5.3 — source role profile (CTO).
+- `../../../modules/cuo/README.md` §3 — stage matrix.
+- `../../../modules/cuo/README.md` §6 — audit framework.
+- `../../../modules/cuo/README.md` — the operational manual the CTO's workflows execute against.
 - `../MODULE.md` — canonical persona catalog.
 - `../docs/AGENTS.md` — protocol normativity.
 - `../docs/ROUTING.md` — CUO routing into this persona.

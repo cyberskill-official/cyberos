@@ -28,6 +28,6 @@ audit_hooks:
 CRO-Restructuring's monthly status update per AlixPartners / FTI standard reporting cadence for distressed engagements.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7
+- `../../../../modules/cuo/README.md` §5.7
 - `./per-turnaround-plan.md` — upstream parent
 - `../../../skill/turnaround-plan-{author,audit}/SKILL.md`

@@ -68,6 +68,6 @@ cyberos-cuo run cuo/chief-strategy-officer/quarterly-strategy-review \
 | 2 | QA-PIVOT-001 | Pivot no environment evidence | Operator strengthens or de-escalates |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.1 — CSO-Strategy role profile
+- `../../../../modules/cuo/README.md` §5.1 — CSO-Strategy role profile
 - `./annual-corporate-strategy.md` — upstream parent
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

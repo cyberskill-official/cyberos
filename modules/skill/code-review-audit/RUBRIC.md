@@ -1,6 +1,6 @@
 # `code_review_rubric@1.0` — machine-checkable Code Review rubric
 
-> Sourced from `cyberos/docs/Software Development Process.md` §2(g) Code review and integration + Template §4.5 Code Review Checklist; IEEE 1028-2008 (Standard for Software Reviews and Audits); OWASP Top 10:2025 mapping. Rubric version `1.0` is locked.
+> Sourced from `../../../modules/cuo/README.md` §2(g) Code review and integration + Template §4.5 Code Review Checklist; IEEE 1028-2008 (Standard for Software Reviews and Audits); OWASP Top 10:2025 mapping. Rubric version `1.0` is locked.
 
 ---
 
@@ -113,9 +113,9 @@
 ## Cross-references
 
 - `cyberos/skill/docs/AUDIT_LOOP.md`, `cyberos/skill/docs/RUBRIC_FORMAT.md`
-- `cyberos/docs/Software Development Process.md` §2(g) — Code review & integration source
-- `cyberos/docs/Software Development Process.md` Template §4.5 — Code Review Checklist
-- `cyberos/docs/Software Development Process.md` §5 — AI integration source (drives §4 and QA-AI-*)
+- `../../../modules/cuo/README.md` §2(g) — Code review & integration source
+- `../../../modules/cuo/README.md` Template §4.5 — Code Review Checklist
+- `../../../modules/cuo/README.md` §5 — AI integration source (drives §4 and QA-AI-*)
 - IEEE 1028-2008 — Standard for Software Reviews and Audits
 - OWASP Top 10:2025 — A01-A10 mapping for §5/§6/§7 + COND-002
 - DORA 2024 — small-batch + AI-rubber-stamp risk for QA-SIZE-001 + QA-RUBBER-001

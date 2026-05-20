@@ -34,6 +34,6 @@ audit_hooks:
 CGO's annual strategy per Reforge growth-strategy + OpenView PLG + Brian Balfour 4-Fits framework (product-market / product-channel / channel-model / model-market).
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.1
+- `../../../../modules/cuo/README.md` §5.1
 - `../../chief-sales-officer/workflows/annual-gtm-plan.md` — sales-led peer
 - `../../../skill/gtm-plan-{author,audit}/SKILL.md`

@@ -31,6 +31,6 @@ audit_hooks:
 CCO-Commercial's quarterly partner scoring per Crossbeam ecosystem-led growth + Impartner partner-performance-management.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.4
+- `../../../../modules/cuo/README.md` §5.4
 - `./annual-partner-program.md` — upstream parent
 - `../../../skill/partner-program-{author,audit}/SKILL.md`

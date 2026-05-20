@@ -71,6 +71,6 @@ cyberos-cuo run cuo/chief-information-security-officer/monthly-vuln-management \
 | 2 | QA-EXCEPTION-001 | Exception lacks expiry / re-review date | Operator adds |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.3 — CISO role profile
+- `../../../../modules/cuo/README.md` §5.3 — CISO role profile
 - `../../chief-technology-officer/workflows/deploy-readiness-review.md` — patch-window peer
 - `../../../skill/vulnerability-mgmt-report-{author,audit}/SKILL.md`

@@ -69,6 +69,6 @@ cyberos-cuo run cuo/chief-risk-officer/quarterly-kri-dashboard \
 | 2 | QA-BREACH-001 | Breach no narrative | Operator drafts |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.6 — CRO-Risk role profile
+- `../../../../modules/cuo/README.md` §5.6 — CRO-Risk role profile
 - `./annual-erm-framework.md` — upstream parent
 - `../../../skill/kri-dashboard-{author,audit}/SKILL.md`

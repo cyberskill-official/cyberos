@@ -30,5 +30,5 @@ audit_hooks:
 Chief Medical Officer's per-program charter for MSL / evidence / KOL / education initiatives per MAPS Medical Affairs Professional Society standards + Sunshine Act compliance.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7
+- `../../../../modules/cuo/README.md` §5.7
 - `../../../skill/program-charter-{author,audit}/SKILL.md`

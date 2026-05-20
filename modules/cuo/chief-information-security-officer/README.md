@@ -1,6 +1,6 @@
 # `ciso` — Chief Information Security Officer
 
-> Per `../../docs/The C-Suite Reference.md` §5.3 + §4 (9-block schema).
+> Per `../../../modules/cuo/README.md` §5.3 + §4 (9-block schema).
 
 ## §1  Identity & scope
 - **Full disambiguated title:** Chief Information Security Officer.
@@ -50,5 +50,5 @@ All workflows chain through shipped Tier-5 skills (`security-strategy`, `vulnera
 ---
 
 ## Cross-references
-- `../../docs/The C-Suite Reference.md` §5.3 — source role profile.
+- `../../../modules/cuo/README.md` §5.3 — source role profile.
 - `../MODULE.md` §4.

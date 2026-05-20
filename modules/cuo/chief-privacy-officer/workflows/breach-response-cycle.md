@@ -72,6 +72,6 @@ cyberos-cuo run cuo/chief-privacy-officer/breach-response-cycle \
 | 2 | QA-SCOPE-001 | Affected inventory incomplete | CISO re-investigates |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.6 — CPO-Privacy role profile
+- `../../../../modules/cuo/README.md` §5.6 — CPO-Privacy role profile
 - `../../chief-information-security-officer/workflows/monthly-vuln-management.md` — upstream signal source
 - `../../../skill/breach-notification-{author,audit}/SKILL.md`

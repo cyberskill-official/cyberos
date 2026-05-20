@@ -72,7 +72,7 @@ cyberos-cuo run cuo/chief-trust-officer/per-trust-incident-update \
 | 2 | QA-SCOPE-001 | Vague scope | Operator clarifies |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.6 — Chief Trust Officer role profile
+- `../../../../modules/cuo/README.md` §5.6 — Chief Trust Officer role profile
 - `../../chief-privacy-officer/workflows/breach-response-cycle.md` — peer (72h clock)
 - `../../chief-communications-officer/workflows/per-crisis-response.md` — peer (PR coordination)
 - `../../../skill/trust-portal-update-{author,audit}/SKILL.md`

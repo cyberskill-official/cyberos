@@ -6,7 +6,7 @@ All notable changes to the SOW artefact contract SHALL be documented here. Keep-
 
 ### Added
 - Initial contract authored for catalog rebuild v2.0.0.
-- 12 mandatory sections per Software Development Process.md §4.9.
+- 12 mandatory sections per modules/cuo/README.md#software-development-process §4.9.
 - Frontmatter contract aligned with `statement-of-work-audit/RUBRIC.md` §2.
 - Conditional-section coverage for all five engagement models + EU/Vietnam/HIPAA data-class addenda.
 

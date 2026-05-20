@@ -32,5 +32,5 @@ audit_hooks:
 CRO-Restructuring's per-engagement turnaround plan per AlixPartners / FTI / Alvarez & Marsal / Berkeley Research Group playbooks.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7 — CRO-Restructuring role profile
+- `../../../../modules/cuo/README.md` §5.7 — CRO-Restructuring role profile
 - `../../../skill/turnaround-plan-{author,audit}/SKILL.md`

@@ -27,6 +27,6 @@ audit_hooks:
 CPO-People's consolidated quarterly people review across workforce + engagement + DEI.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.5
+- `../../../../modules/cuo/README.md` §5.5
 - `../../chief-human-resources-officer/workflows/` — upstream feeders
 - `../../../skill/rhythm-of-business-{author,audit}/SKILL.md`

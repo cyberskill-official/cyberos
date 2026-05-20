@@ -78,5 +78,5 @@ Per the `contracts/investment-thesis/template.md` H2 list.
 
 - `cyberos/skill/docs/AUDIT_LOOP.md`, `cyberos/skill/docs/RUBRIC_FORMAT.md`
 - `cyberos/skill/contracts/investment-thesis/CONTRACT.md` + `template.md`
-- `cyberos/docs/The C-Suite Reference.md` §5.7 — niche persona role profile.
+- `../../../modules/cuo/README.md` §5.7 — niche persona role profile.
 - Skill-specific FM-105+ + QA-NNN rules added in v1.1 per fine-tune discipline.

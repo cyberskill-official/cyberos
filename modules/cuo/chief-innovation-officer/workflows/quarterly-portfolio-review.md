@@ -67,6 +67,6 @@ cyberos-cuo run cuo/chief-innovation-officer/quarterly-portfolio-review \
 | 2 | QA-GATE-001 | Stage-gate decision no rationale | Operator drafts |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7 — Chief Innovation Officer role profile
+- `../../../../modules/cuo/README.md` §5.7 — Chief Innovation Officer role profile
 - `./annual-innovation-portfolio.md` — upstream parent
 - `../../../skill/innovation-portfolio-{author,audit}/SKILL.md`

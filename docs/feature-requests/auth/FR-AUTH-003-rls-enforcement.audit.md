@@ -102,7 +102,7 @@ Two spec-text drifts surfaced during the audit:
 
 Both amendments should land as FR-AUTH-003 v2 — operator decision required.
 
-### §10.7 — Slice plan (executed end-to-end per AUTHORING_DISCIPLINE §9.1)
+### §10.7 — Slice plan (executed end-to-end per feature-request-audit skill §9.1)
 
 **Slice 1 — foundation (G-001 + G-002 + G-003 + G-004 + G-005 + G-008):** ~280 LOC across new rls.rs module + 2 migrations + CI workflow + handler error mapping. 1 commit.
 
@@ -110,7 +110,7 @@ Both amendments should land as FR-AUTH-003 v2 — operator decision required.
 
 **Slice 3 — DEFERRED (G-009):** OTel metrics reassigned to FR-OBS-001 per the no-half-built-metrics-surface rationale established with FR-AUTH-002 G-011.
 
-Per AUTHORING_DISCIPLINE §9.1, slice-1 + slice-2 land in one continuous session — each as its own commit for git-history hygiene, but no overnight pauses between them. Slice-3 deferred to a different FR (FR-OBS-001), so the FR-AUTH-003 audit closes with the §9.3 defer-with-rationale rule satisfied.
+Per feature-request-audit skill §9.1, slice-1 + slice-2 land in one continuous session — each as its own commit for git-history hygiene, but no overnight pauses between them. Slice-3 deferred to a different FR (FR-OBS-001), so the FR-AUTH-003 audit closes with the §9.3 defer-with-rationale rule satisfied.
 
 ---
 

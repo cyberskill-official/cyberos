@@ -31,5 +31,5 @@ audit_hooks:
 CRO-Restructuring's per-event stakeholder communication during distress. Decisions logged for fiduciary-duty record per Delaware Chancery zone-of-insolvency case law.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7
+- `../../../../modules/cuo/README.md` §5.7
 - `../../../skill/decision-log-{author,audit}/SKILL.md`

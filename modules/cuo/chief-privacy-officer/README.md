@@ -1,6 +1,6 @@
 # `cpo-privacy` — Chief Privacy Officer (Privacy)
 
-> Per `../../docs/The C-Suite Reference.md` §5.6 + §4 (9-block schema).
+> Per `../../../modules/cuo/README.md` §5.6 + §4 (9-block schema).
 
 ## §1  Identity & scope
 - **Full disambiguated title:** Chief Privacy Officer (Privacy).
@@ -50,5 +50,5 @@ All workflows chain through shipped Tier-1 skills (`dsr-runbook`, `pia`, `breach
 ---
 
 ## Cross-references
-- `../../docs/The C-Suite Reference.md` §5.6.
+- `../../../modules/cuo/README.md` §5.6.
 - `../MODULE.md` §4.

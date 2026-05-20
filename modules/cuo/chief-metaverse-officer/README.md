@@ -1,6 +1,6 @@
 # `chief-metaverse-officer` — Chief Metaverse Officer (EXTINCT — cautionary tale)
 
-> Per `../../docs/The C-Suite Reference.md` §5.7 + §4 (9-block schema).
+> Per `../../../modules/cuo/README.md` §5.7 + §4 (9-block schema).
 
 ## §1  Identity & scope
 - **Full disambiguated title:** Chief Metaverse Officer (EXTINCT — cautionary tale).
@@ -43,5 +43,5 @@ Workflows planned. See `../docs/NEEDED_SKILLS.md`.
 ---
 
 ## Cross-references
-- `../../docs/The C-Suite Reference.md` §5.7.
+- `../../../modules/cuo/README.md` §5.7.
 - `../MODULE.md` §4.

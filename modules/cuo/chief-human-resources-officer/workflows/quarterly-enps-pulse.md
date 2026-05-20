@@ -69,6 +69,6 @@ cyberos-cuo run cuo/chief-human-resources-officer/quarterly-enps-pulse \
 | 2 | QA-COMP-PCT-001 | Response rate < 60% | Operator extends window |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.5 — CHRO role profile
+- `../../../../modules/cuo/README.md` §5.5 — CHRO role profile
 - `../../chief-happiness-officer/README.md` — escalation peer
 - `../../../skill/enps-program-{author,audit}/SKILL.md`

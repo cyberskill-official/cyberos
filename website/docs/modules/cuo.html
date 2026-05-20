@@ -153,7 +153,7 @@
 
  <div class="bbg-card p-5 mb-4" style="border-left: 4px solid #f59e0b; background:#fef3c7">
   <p class="text-sm text-amber-900 leading-relaxed mb-2">
-   <strong>Where we are.</strong> The markdown-driven persona/workflow rebuild is complete and now sits under a Python supervisor with all four phases shipped (Phase 4 — the 6 Handler subclasses — landed on 2026-05-18). Every C-suite role from <code>docs/The C-Suite Reference.md</code> §5 ships as <code>modules/cuo/&lt;persona-slug&gt;/</code> with a 9-block-schema README. Each persona's <code>workflows/&lt;workflow&gt;.md</code> declares a chain of SKILL module skills, and the supervisor auto-dispatches one of 6 Handler subclasses (Linear / TimeCritical / PerInstance / MultiOutput / SequentialApproval / PersonaPair) per the workflow's <code>pattern:</code> frontmatter.
+   <strong>Where we are.</strong> The markdown-driven persona/workflow rebuild is complete and now sits under a Python supervisor with all four phases shipped (Phase 4 — the 6 Handler subclasses — landed on 2026-05-18). Every C-suite role from <code>../../../modules/cuo/README.md</code> §5 ships as <code>modules/cuo/&lt;persona-slug&gt;/</code> with a 9-block-schema README. Each persona's <code>workflows/&lt;workflow&gt;.md</code> declares a chain of SKILL module skills, and the supervisor auto-dispatches one of 6 Handler subclasses (Linear / TimeCritical / PerInstance / MultiOutput / SequentialApproval / PersonaPair) per the workflow's <code>pattern:</code> frontmatter.
   </p>
   <p class="text-sm text-amber-900 leading-relaxed">
    <strong>48 persona folders, 47 with shipped workflows (chief-metaverse-officer EXTINCT) = 221 workflows live as of 2026-05-18</strong> (post Tier-C1 depth additions across 14 priority personas). Persona first-coverage was closed Sessions D–N; Tier-C1 added 27 depth workflows across ceo/cfo/cto/chro/cso-sales/coo/cmo/ciso/cdo-data/cpo-product/chief-of-staff/cro-revenue/caio/cpo-privacy. Acronym collisions resolved by full <code>chief-{role}-officer</code> slug normalisation (2026-05-18).
@@ -1028,7 +1028,7 @@ stateDiagram-v2
   </table>
  </div>
 
- <p class="text-sm text-slate-600 mb-6">Total: 47 active personas (chief-metaverse-officer is EXTINCT — see §8.3) · 221 workflows live · all chain through the SKILL module's <strong>104 author+audit pairs / 108 contracts</strong>. <a href="../../docs/The%20C-Suite%20Reference.md" class="text-blue-700 underline">The C-Suite Reference §5</a> is the canonical role atlas; the staged-introduction order is documented in <a href="https://github.com/cyberskill/cyberos/blob/main/docs/feature-requests/REPORTS.md" target="_blank" rel="noopener" class="text-blue-700 underline">REPORTS.md §2</a>.</p>
+ <p class="text-sm text-slate-600 mb-6">Total: 47 active personas (chief-metaverse-officer is EXTINCT — see §8.3) · 221 workflows live · all chain through the SKILL module's <strong>104 author+audit pairs / 108 contracts</strong>. <a href="../../../modules/cuo/README.md" class="text-blue-700 underline">The C-Suite Reference §5</a> is the canonical role atlas; the staged-introduction order is documented in <a href="https://github.com/cyberskill/cyberos/blob/main/docs/feature-requests/REPORTS.md" target="_blank" rel="noopener" class="text-blue-700 underline">REPORTS.md §2</a>.</p>
 
  <!-- §8.1b — Quick family-grid (kept as compact second view) -->
  <details class="bbg-card p-4 mb-6">
@@ -1169,7 +1169,7 @@ stateDiagram-v2
  <section id="extinct" class="mt-8">
  <h3 class="text-xl font-bold mb-3">8.3 — Why one persona is extinct</h3>
  <p class="text-slate-600 mb-4">
- <code>chief-metaverse-officer</code> sits in the catalog as an empty husk — its folder exists but has no shipped workflows and never will. Per <a href="../../docs/The%20C-Suite%20Reference.md" class="text-blue-700 underline">The C-Suite Reference §8 rule 4</a>, when a C-role concept fails the market test (the metaverse-as-business-platform thesis collapsed 2022-2024), we KEEP its folder as a cautionary tale rather than delete it. New persona proposals MUST reference the extinct list during ADR review and explain why the proposed role isn't another metaverse moment.
+ <code>chief-metaverse-officer</code> sits in the catalog as an empty husk — its folder exists but has no shipped workflows and never will. Per <a href="../../../modules/cuo/README.md" class="text-blue-700 underline">The C-Suite Reference §8 rule 4</a>, when a C-role concept fails the market test (the metaverse-as-business-platform thesis collapsed 2022-2024), we KEEP its folder as a cautionary tale rather than delete it. New persona proposals MUST reference the extinct list during ADR review and explain why the proposed role isn't another metaverse moment.
  </p>
  </section>
 </section>

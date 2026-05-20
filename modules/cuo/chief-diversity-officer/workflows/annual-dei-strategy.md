@@ -28,5 +28,5 @@ audit_hooks:
 CDO-Diversity's annual DEI strategy per Rumelt + Catalyst + McKinsey Diversity Wins + Project Include.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.5
+- `../../../../modules/cuo/README.md` §5.5
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

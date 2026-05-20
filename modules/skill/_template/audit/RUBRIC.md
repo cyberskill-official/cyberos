@@ -1,6 +1,6 @@
 # `<artifact>_rubric@1.0` — machine-checkable audit rubric
 
-> Sourced from `cyberos/skill/contracts/<artifact>/CONTRACT.md` (the artefact contract) and `cyberos/docs/Software Development Process.md` (the SDP stage definition). Rubric version `1.0` is locked; bumping requires a coordinated update of the contract body and this skill's CONTRACT_ECHO. Each rule has a stable `rule_id`. Rule IDs MUST appear verbatim in the audit report so reports are diffable across iterations and operators.
+> Sourced from `cyberos/skill/contracts/<artifact>/CONTRACT.md` (the artefact contract) and `../../../../modules/cuo/README.md` (the SDP stage definition). Rubric version `1.0` is locked; bumping requires a coordinated update of the contract body and this skill's CONTRACT_ECHO. Each rule has a stable `rule_id`. Rule IDs MUST appear verbatim in the audit report so reports are diffable across iterations and operators.
 
 This file is a template. When copying to a real `<artifact>-audit/RUBRIC.md`:
 

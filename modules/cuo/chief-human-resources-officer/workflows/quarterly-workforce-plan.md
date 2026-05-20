@@ -72,6 +72,6 @@ cyberos-cuo run cuo/chief-human-resources-officer/quarterly-workforce-plan \
 | 2 | QA-BUDGET-001 | Headcount > envelope | Escalate to CFO |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.5 — CHRO role profile
+- `../../../../modules/cuo/README.md` §5.5 — CHRO role profile
 - `../../chief-operating-officer/workflows/quarterly-capacity-plan.md` — peer feeding capacity signal
 - `../../../skill/workforce-plan-{author,audit}/SKILL.md`

@@ -28,5 +28,5 @@ audit_hooks:
 CXO's annual experience strategy per Forrester CX framework + Bain Net Promoter System + Don Norman User-Experience principles.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.4
+- `../../../../modules/cuo/README.md` §5.4
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

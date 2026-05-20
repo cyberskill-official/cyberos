@@ -1,6 +1,6 @@
 # `cso-strategy` — Chief Strategy Officer (Strategy)
 
-> Per `../../docs/The C-Suite Reference.md` §5.1 + §4 (9-block schema).
+> Per `../../../modules/cuo/README.md` §5.1 + §4 (9-block schema).
 
 ## §1  Identity & scope
 - **Full disambiguated title:** Chief Strategy Officer (Strategy).
@@ -54,6 +54,6 @@ All workflows chain through shipped Tier-2 skills (`strategy-doc`, `mna-thesis`)
 ---
 
 ## Cross-references
-- `../../docs/The C-Suite Reference.md` §5.1 — source role profile.
+- `../../../modules/cuo/README.md` §5.1 — source role profile.
 - `../MODULE.md` §4 — canonical persona catalog.
 - `../docs/AGENTS.md` — protocol normativity.

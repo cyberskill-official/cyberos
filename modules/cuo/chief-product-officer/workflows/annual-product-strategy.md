@@ -72,6 +72,6 @@ cyberos-cuo run cuo/chief-product-officer/annual-product-strategy \
 | 2 | QA-KILL-001 | No kill criteria | Operator drafts per bet |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.3 — CPO-Product role profile
+- `../../../../modules/cuo/README.md` §5.3 — CPO-Product role profile
 - `./quarterly-roadmap-planning.md` — downstream consumer
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

@@ -36,6 +36,6 @@ audit_hooks:
 CCO-Commercial's annual partner program per Crossbeam + Impartner partner-program standards + TSIA partner-economics framework.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.4 — CCO-Commercial role profile
+- `../../../../modules/cuo/README.md` §5.4 — CCO-Commercial role profile
 - `../../chief-sales-officer/workflows/annual-gtm-plan.md` — upstream peer
 - `../../../skill/partner-program-{author,audit}/SKILL.md`

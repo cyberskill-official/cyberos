@@ -29,7 +29,7 @@ Closes Wave 1 of the Anthropic Skills portability pass. Per FR-SKILL-115:
 
 ### Next FR-SKILL-111..115 100%-completion work
 
-Per [`modules/skill/FR_111_115_COMPLETION_PLAN.md`](modules/skill/FR_111_115_COMPLETION_PLAN.md):
+Per [`modules/skill/FR_111_115_COMPLETION_PLAN.md`](FR_111_115_COMPLETION_PLAN.md):
 - **G** (in-progress this session) — 10-skill priority backfill cohort for FR-111 + FR-112 (P0 personas: cpo + cto)
 - **H** (in-progress this session) — Rust skill-broker scaffold for FR-103 + FR-111 + FR-113 validators
 
@@ -46,7 +46,7 @@ Per [`modules/skill/FR_111_115_COMPLETION_PLAN.md`](modules/skill/FR_111_115_COM
 
 ### Added
 
-- `skill/MODULE.md` — canonical catalog mapping every skill to a SDP §2 stage from `cyberos/docs/Software Development Process.md` (13 stages, 22 author+audit pairs planned).
+- `skill/MODULE.md` — canonical catalog mapping every skill to a SDP §2 stage from `../../modules/cuo/README.md` (13 stages, 22 author+audit pairs planned).
 - `skill/_template/` — canonical scaffold for new author/audit skills (30 files across `_template/author/` and `_template/audit/`). Copy + sed pattern for new pairs.
 - `skill/docs/AUDIT_LOOP.md` — the 8-step audit algorithm spec.
 - `skill/docs/RUBRIC_FORMAT.md` — the rubric format spec (FM/SEC/COND/QA/SAFE/STALE rule families with stable rule_ids).

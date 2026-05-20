@@ -33,6 +33,6 @@ Per memory note: `chro` is default; `cpo-people` only when firm prefers CPO nome
 
 ## Cross-references
 
-- `../../../docs/The C-Suite Reference.md` §5.5 — both CHRO and CPO-People per the §2 acronym disambiguation
+- `../../../../modules/cuo/README.md` §5.5 — both CHRO and CPO-People per the §2 acronym disambiguation
 - `../../chro/README.md` — canonical implementation
 - `../../chief-human-resources-officer/workflows/` — all 5 shipped workflows (annual-comp-cycle, quarterly-workforce-plan, new-hire-onboarding, quarterly-enps-pulse, quarterly-dei-program-review)

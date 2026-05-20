@@ -71,6 +71,6 @@ cyberos-cuo run cuo/chief-trust-officer/annual-transparency-report \
 | 2 | QA-METHODOLOGY-001 | Methodology missing | Operator documents |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.6 — Chief Trust Officer role profile
+- `../../../../modules/cuo/README.md` §5.6 — Chief Trust Officer role profile
 - `./quarterly-trust-portal-update.md` — peer
 - `../../../skill/transparency-report-{author,audit}/SKILL.md`

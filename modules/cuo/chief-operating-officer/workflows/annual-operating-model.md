@@ -71,6 +71,6 @@ cyberos-cuo run cuo/chief-operating-officer/annual-operating-model \
 | 2 | QA-CHANGE-001 | Change no rationale | Operator adds |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.1 — COO role profile
+- `../../../../modules/cuo/README.md` §5.1 — COO role profile
 - `../../chief-of-staff/workflows/weekly-rhythm-of-business.md` — operational peer (RoB references operating-model)
 - `../../../skill/operating-model-{author,audit}/SKILL.md`

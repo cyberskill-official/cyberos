@@ -31,6 +31,6 @@ audit_hooks:
 Chief-Architect's per-decision ADR workflow per Michael Nygard ADR format + ISO/IEC 25010 quality attributes.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.3 — Chief Architect role profile
+- `../../../../modules/cuo/README.md` §5.3 — Chief Architect role profile
 - `../../chief-technology-officer/workflows/adr-quick-capture.md` — CTO peer (CTO captures most ADRs; Chief-Architect authors major architecture-class ADRs)
 - `../../../skill/adr-{author,audit}/SKILL.md`

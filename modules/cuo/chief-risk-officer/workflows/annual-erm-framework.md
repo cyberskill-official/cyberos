@@ -73,6 +73,6 @@ cyberos-cuo run cuo/chief-risk-officer/annual-erm-framework \
 | 2 | QA-COVERAGE-001 | Incident class missing | Operator adds class |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.6 — CRO-Risk role profile
+- `../../../../modules/cuo/README.md` §5.6 — CRO-Risk role profile
 - `../../cco-compliance/README.md` — compliance peer
 - `../../../skill/enterprise-risk-framework-{author,audit}/SKILL.md`

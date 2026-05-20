@@ -91,7 +91,7 @@ Operators are pulled into this workflow at the following pause points:
 ## Cross-references
 
 - `../README.md` — the persona's 9-block spec (this workflow renders block 5's strategic / operational / communication outputs).
-- `../../../docs/The C-Suite Reference.md` §5.X — the source role profile.
+- `../../../../modules/cuo/README.md` §5.X — the source role profile.
 - `../../docs/AGENTS.md` — protocol normativity.
 - `../../docs/ROUTING.md` — how the CUO supervisor reaches this workflow.
 - `../../docs/NEEDED_SKILLS.md` — if any step references a `planned:` skill, the gap is enumerated there.

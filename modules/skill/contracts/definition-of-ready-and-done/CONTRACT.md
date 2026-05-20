@@ -2,7 +2,7 @@
 contract_id: dor-dod
 contract_version: v1
 template_literal: definition-of-ready-and-done@1
-description: Canonical definition-of-ready-and-done@1 schema — project-level Definition of Ready + Definition of Done declaration. Authored by definition-of-ready-and-done-author; validated by definition-of-ready-and-done-audit via dor_dod_rubric@1.0. Implements Software Development Process.md Templates §4.1 and §4.2.
+description: Canonical definition-of-ready-and-done@1 schema — project-level Definition of Ready + Definition of Done declaration. Authored by definition-of-ready-and-done-author; validated by definition-of-ready-and-done-audit via dor_dod_rubric@1.0. Implements modules/cuo/README.md#software-development-process Templates §4.1 and §4.2.
 contract_kind: artefact_schema
 locked_at: 2026-05-17
 
@@ -45,5 +45,5 @@ Five sections per `definition-of-ready-and-done-audit/RUBRIC.md` §3 (`SEC-001..
 
 ## Citations
 
-- `cyberos/docs/Software Development Process.md` §4.1, §4.2 — DoR/DoD source.
+- `../../../../modules/cuo/README.md` §4.1, §4.2 — DoR/DoD source.
 - Consumers: `definition-of-ready-and-done-author` (generation), `definition-of-ready-and-done-audit` (validation), every downstream skill's `### Compliance` checks.

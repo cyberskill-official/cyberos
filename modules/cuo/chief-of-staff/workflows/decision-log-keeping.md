@@ -68,5 +68,5 @@ cyberos-cuo run cuo/chief-of-staff/decision-log-keeping \
 
 ## Cross-references
 - `../README.md` §5 (Operational) — "decision log"
-- `../../../docs/The C-Suite Reference.md` §5.7
+- `../../../../modules/cuo/README.md` §5.7
 - `../../../skill/decision-log-{author,audit}/SKILL.md`

@@ -30,8 +30,10 @@ This README is the **single source of truth** for the CUO module. It consolidate
 10. [Data shapes](#10-data-shapes)
 11. [Catalog status](#11-catalog-status)
 12. [Roadmap — Phase 4 and depth additions](#12-roadmap)
-13. [Appendix A — Protocol normativity](#appendix-a--protocol-normativity)
-14. [Appendix B — Cross-references](#appendix-b--cross-references)
+13. [Software Development Process (Default)](#13-software-development-process-default)
+14. [The C-Suite Reference](#14-the-c-suite-reference)
+15. [Appendix A — Protocol normativity](#appendix-a--protocol-normativity)
+16. [Appendix B — Cross-references](#appendix-b--cross-references)
 
 ---
 
@@ -51,7 +53,7 @@ The CUO does three things:
 2. **Routes** natural-language requests through a two-stage match: persona → workflow. When the query has no persona name, falls back to scoring workflows across all personas (domain-language fallback).
 3. **Executes** the matched workflow's skill chain via a pluggable `Invoker` (`MockInvoker` for dry-run, `SubprocessInvoker` for the Rust SKILL host, `LLMInvoker` for prompt-only skills via the Anthropic API). Optionally seals every step + the chain summary into the memory audit chain.
 
-CyberSkill anchors the catalog to [`../../docs/The C-Suite Reference.md`](../../docs/The%20C-Suite%20Reference.md) — one persona per C-role in §5, one folder per persona, one workflow per produced artefact.
+CyberSkill anchors the catalog to [`../../modules/cuo/README.md`](../../modules/cuo/README.md#the-c-suite-reference) — one persona per C-role in §5, one folder per persona, one workflow per produced artefact.
 
 ---
 
@@ -117,7 +119,7 @@ modules/cuo/
 │       └── <slug>.md      ← workflow file declaring skill_chain[]
 ```
 
-**Persona folders are flat under `modules/cuo/` and use the FULL `chief-*-officer` form** (post-2026-05-18 rename — the prior short-acronym slugs `cto/`, `cfo/`, etc. were renamed to `chief-technology-officer/`, `chief-financial-officer/`, etc. for consistency). Acronym collisions (the 7 colliding C-roles: CRO / CCO / CDO / CSO / CPO / CAO / CIO / CLO) are disambiguated by the role-noun directly in the slug — e.g. `chief-revenue-officer/` vs `chief-risk-officer/` vs `chief-restructuring-officer/`. See [The C-Suite Reference](../../docs/The%20C-Suite%20Reference.md) §2 for the acronym matrix.
+**Persona folders are flat under `modules/cuo/` and use the FULL `chief-*-officer` form** (post-2026-05-18 rename — the prior short-acronym slugs `cto/`, `cfo/`, etc. were renamed to `chief-technology-officer/`, `chief-financial-officer/`, etc. for consistency). Acronym collisions (the 7 colliding C-roles: CRO / CCO / CDO / CSO / CPO / CAO / CIO / CLO) are disambiguated by the role-noun directly in the slug — e.g. `chief-revenue-officer/` vs `chief-risk-officer/` vs `chief-restructuring-officer/`. See [The C-Suite Reference](../../modules/cuo/README.md#the-c-suite-reference) §2 for the acronym matrix.
 
 ---
 
@@ -516,7 +518,7 @@ Five workflow patterns surfaced during Sessions D-N still need supervisor suppor
 
 ### Depth additions (deferred)
 
-Most personas have 4 workflows. Full coverage may want 8–12 each — ~250–450 workflows of headroom remain. Sessions O+ would expand depth per priority order from [C-Suite Reference §7](../../docs/The%20C-Suite%20Reference.md).
+Most personas have 4 workflows. Full coverage may want 8–12 each — ~250–450 workflows of headroom remain. Sessions O+ would expand depth per priority order from [C-Suite Reference §7](../../modules/cuo/README.md#the-c-suite-reference).
 
 ### Phase 5 — production runtime (designed, not built)
 
@@ -524,6 +526,35 @@ Most personas have 4 workflows. Full coverage may want 8–12 each — ~250–45
 - memory emission always-on
 - Multi-tenant `.cyberos-memory/` per organisation
 - HTTP-callable via FastAPI wrapper
+
+---
+
+## 13. Software Development Process (Default)
+
+The Software Development Process (SDP) is the canonical, 14-stage lifecycle that governs how features flow from ideation to decommissioning.
+
+1. **SOW (Statement of Work):** Initial scoping and funding approval.
+2. **PRD (Product Requirements Document):** Outcome-focused specification authored by the CPO.
+3. **SRS (Software Requirements Specification):** Deep technical translation of the PRD authored by the CTO.
+4. **NFRs (Non-Functional Requirements):** Systemic specs (performance, scale, security) authored and audited against the NFR catalog, then certified by the `certify-nfrs` CTO workflow.
+5. **FRs (Feature Requests):** Granular, INVEST-compliant backlogs generated from the SRS.
+6. **ADR (Architecture Decision Record):** Immutable technical decisions guiding the implementation.
+7. **SDD (Software Design Document):** Technical blueprints mapping out components.
+8. **Implementation:** Writing the code.
+9. **Code Review:** Automated and human verification.
+10. **Test:** CI pipelines and Q/A workflows.
+11. **Deploy:** `deploy-readiness-review` gate ensuring it's safe to push.
+12. **Release:** Opening the feature to the end user.
+13. **Runbook:** Documenting operational incident response.
+14. **Retrospective/Decommission:** Learning from the release or sunsetting the feature gracefully.
+
+## 14. The C-Suite Reference
+
+This module defines 48 specific personas to run the business. Each persona is fully fleshed out in their respective `README.md` block using a rigid 9-block schema, dictating their precise inputs, outputs, goals, and workflows.
+
+- **Purpose:** Decouple generic AI tasks into highly specific, outcome-driven business functions.
+- **Acronyms:** Full titles must be used in paths (e.g., `chief-technology-officer`) to avoid the 7 common C-suite collisions (like CRO = Revenue/Risk/Restructuring).
+- **Extinct Personas:** We maintain `chief-metaverse-officer` deliberately as a cautionary tale against hype-driven development.
 
 ---
 
@@ -707,7 +738,3 @@ At the end of any session that invoked workflows, the CUO SHALL report: workflow
 - [`CHANGELOG.md`](CHANGELOG.md) — release history
 - [`../skill/README.md`](../skill/README.md) — source of skills referenced in `skill_chain[]`
 - [`../memory/README.md`](../memory/README.md) and [`../memory/AGENTS.md`](../memory/AGENTS.md) — memory protocol
-- [`../../docs/The C-Suite Reference.md`](../../docs/The%20C-Suite%20Reference.md) — source atlas
-- [`../../docs/Software Development Process.md`](../../docs/Software%20Development%20Process.md) — SDP 13 stages
-- [`../../tours/`](../../tours/) — operational CodeTour walkthroughs
-- [`../../website/docs/modules/cuo.html`](../../website/docs/modules/cuo.html) — interactive module page

@@ -2,7 +2,7 @@
 contract_id: stage-gate
 contract_version: v1
 template_literal: stage-gate@1
-description: Canonical stage-gate@1 — one-page Go / Go-with-conditions / No-Go sign-off for a SDLC stage boundary. Authored by stage-gate-author; validated by stage-gate-audit via stage_gate_rubric@1.0. Implements Software Development Process.md Template §4.3.
+description: Canonical stage-gate@1 — one-page Go / Go-with-conditions / No-Go sign-off for a SDLC stage boundary. Authored by stage-gate-author; validated by stage-gate-audit via stage_gate_rubric@1.0. Implements modules/cuo/README.md#software-development-process Template §4.3.
 contract_kind: artefact_schema
 locked_at: 2026-05-17
 

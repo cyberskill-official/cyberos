@@ -1,6 +1,6 @@
 # `cso-security` — Chief Security Officer (Security)
 
-> Per `../../docs/The C-Suite Reference.md` §5.7 + §4 (9-block schema).
+> Per `../../../modules/cuo/README.md` §5.7 + §4 (9-block schema).
 
 ## §1  Identity & scope
 - **Full disambiguated title:** Chief Security Officer (Security).
@@ -48,5 +48,5 @@ All workflows chain through shipped Tier-2/Tier-5 + SDP-original skills (`securi
 ---
 
 ## Cross-references
-- `../../docs/The C-Suite Reference.md` §5.7.
+- `../../../modules/cuo/README.md` §5.7.
 - `../MODULE.md` §4.

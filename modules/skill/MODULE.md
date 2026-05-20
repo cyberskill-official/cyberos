@@ -45,7 +45,7 @@ The lifecycle is the same for every skill in the catalog. The `_template/` skele
 
 ## §2  Stage map — Software Development Process to skill bundle
 
-The Software Development Process.md document at the project root defines 13 SDLC stages (a through m). This module ships an author + audit pair for every artifact those stages produce. Stages (k) Documentation is cross-cutting and is covered by per-artifact skills below. Templates §4.1–§4.10 from the document each map to a skill or a section of one.
+The modules/cuo/README.md#software-development-process document at the project root defines 13 SDLC stages (a through m). This module ships an author + audit pair for every artifact those stages produce. Stages (k) Documentation is cross-cutting and is covered by per-artifact skills below. Templates §4.1–§4.10 from the document each map to a skill or a section of one.
 
 | SDP §2 stage | Primary artifact(s) | Author skill | Audit skill | Template ref |
 |---|---|---|---|---|
@@ -390,7 +390,7 @@ Each skill's `produces.next_skill_recommendation` field encodes its default down
 
 ## §5  Cross-references
 
-- `docs/Software Development Process.md` (project root) — the source document this catalog implements. §2 stages (a–m), §4 templates (4.1–4.10), §3 audit framework all map directly into the catalog.
+- `../../modules/cuo/README.md` (project root) — the source document this catalog implements. §2 stages (a–m), §4 templates (4.1–4.10), §3 audit framework all map directly into the catalog.
 - `cuo/` — the router module that picks which skill to invoke for a natural-language request. CUO consumes this module's catalog via `cyberos-cuo catalog`.
 - `memory/` — the memory. Skills declare `allowed_memory_scopes` in their SKILL.md frontmatter; the host's capability broker enforces them. AGENTS.md §0–§17 govern the memory protocol that constrains memory writes.
 - `skill/contracts/` — artifact schemas (PRD, SRS, FR, task, impl-plan, project-brief, chain-manifest, nats-subjects). Skills import these via `depends_on_contracts:` rather than redefining schemas locally.
@@ -412,7 +412,7 @@ Each skill's `produces.next_skill_recommendation` field encodes its default down
 
 §6.5  **AGENTS.md §14 emission.** After every session that touches non-memory files, emit the §14.1 / §14.2 block as the memory heartbeat signal (memory: `feedback_section_14_emission.md`). The block summarises file ops, scopes touched, rejections, and token budget.
 
-§6.6  **Project self-containment.** This module references the SDP document at `docs/Software Development Process.md` in the same project root. It does NOT reference other CyberSkill projects (sale-noti, landing-page, design-system, tamagochi, design-system-audit-framework). Per memory `feedback_project_self_containment.md`, deliverables stay inside their project.
+§6.6  **Project self-containment.** This module references the SDP document at `../../modules/cuo/README.md` in the same project root. It does NOT reference other CyberSkill projects (sale-noti, landing-page, design-system, tamagochi, design-system-audit-framework). Per memory `feedback_project_self_containment.md`, deliverables stay inside their project.
 
 ---
 

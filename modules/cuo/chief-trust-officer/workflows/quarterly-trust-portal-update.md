@@ -72,7 +72,7 @@ cyberos-cuo run cuo/chief-trust-officer/quarterly-trust-portal-update \
 | 2 | QA-SUBPROCESSOR-001 | Change without notice | Escalate to CLO-Legal |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.6 — Chief Trust Officer role profile
+- `../../../../modules/cuo/README.md` §5.6 — Chief Trust Officer role profile
 - `../../chief-information-security-officer/workflows/soc2-audit-readiness.md` — cert peer
 - `../../chief-privacy-officer/workflows/annual-privacy-program.md` — privacy peer
 - `../../../skill/trust-portal-update-{author,audit}/SKILL.md`

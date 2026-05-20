@@ -31,6 +31,6 @@ audit_hooks:
 CCO-Commercial's annual channel strategy per Rumelt + TSIA channel-economics + Crossbeam ecosystem-led growth framework.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.4
+- `../../../../modules/cuo/README.md` §5.4
 - `../../chief-sales-officer/workflows/annual-gtm-plan.md` — peer
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

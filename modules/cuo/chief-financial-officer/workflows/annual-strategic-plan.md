@@ -71,6 +71,6 @@ cyberos-cuo run cuo/chief-financial-officer/annual-strategic-plan \
 | 2 | QA-HURDLE-001 | Hurdle rate not benchmarked | Operator benchmarks against industry WACC |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.2 — CFO role profile
+- `../../../../modules/cuo/README.md` §5.2 — CFO role profile
 - `../../chief-executive-officer/workflows/capital-allocation-memo.md` — per-event peer (single decision; this annual sets framework)
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

@@ -69,6 +69,6 @@ cyberos-cuo run cuo/chief-human-resources-officer/new-hire-onboarding \
 | 2 | QA-GOALS-001 | No 30-60-90 goals | Hiring manager drafts |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.5 — CHRO role profile
+- `../../../../modules/cuo/README.md` §5.5 — CHRO role profile
 - `../../chief-executive-officer/workflows/c-suite-hire-decision.md` — upstream hire-decision feeder
 - `../../../skill/onboarding-pack-{author,audit}/SKILL.md`

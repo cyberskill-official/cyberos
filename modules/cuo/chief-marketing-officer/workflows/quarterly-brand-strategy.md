@@ -71,6 +71,6 @@ cyberos-cuo run cuo/chief-marketing-officer/quarterly-brand-strategy \
 | 2 | QA-AUDIENCE-001 | Audience tier overlaps | Operator clarifies |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.4 — CMO role profile
+- `../../../../modules/cuo/README.md` §5.4 — CMO role profile
 - `../../chief-brand-officer/README.md` — partner persona where exists
 - `../../../skill/brand-strategy-{author,audit}/SKILL.md`

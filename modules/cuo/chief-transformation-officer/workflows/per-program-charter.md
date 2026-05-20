@@ -69,6 +69,6 @@ cyberos-cuo run cuo/chief-transformation-officer/per-program-charter \
 | 2 | QA-VALUE-001 | No value hypothesis | Operator drafts |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7 — Chief Transformation Officer role profile
+- `../../../../modules/cuo/README.md` §5.7 — Chief Transformation Officer role profile
 - `./annual-transformation-roadmap.md` — upstream parent
 - `../../../skill/program-charter-{author,audit}/SKILL.md`

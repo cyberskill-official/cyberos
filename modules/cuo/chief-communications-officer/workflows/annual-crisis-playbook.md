@@ -72,6 +72,6 @@ cyberos-cuo run cuo/chief-communications-officer/annual-crisis-playbook \
 | 2 | QA-ESCALATION-001 | Escalation ambiguous | Operator clarifies |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.4 — CCO-Communications role profile
+- `../../../../modules/cuo/README.md` §5.4 — CCO-Communications role profile
 - `../../chief-privacy-officer/workflows/breach-response-cycle.md` — privacy-breach scenario peer
 - `../../../skill/crisis-comms-playbook-{author,audit}/SKILL.md`

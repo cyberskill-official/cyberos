@@ -27,6 +27,6 @@ audit_hooks:
 CXO's CX-lens augmentation of CDO-Data's customer-360 architecture. Sister workflow pattern (same as risk-lens-vs-engineering-lens, content-vs-distribution).
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.4
+- `../../../../modules/cuo/README.md` §5.4
 - `../../chief-data-officer/workflows/annual-customer-360-architecture.md` — upstream peer
 - `../../../skill/customer-360-{author,audit}/SKILL.md`

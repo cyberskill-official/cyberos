@@ -72,6 +72,6 @@ cyberos-cuo run cuo/chief-human-resources-officer/annual-comp-cycle \
 | 2 | QA-BUDGET-001 | Recommendation > envelope | Escalate to CFO |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.5 — CHRO role profile
+- `../../../../modules/cuo/README.md` §5.5 — CHRO role profile
 - `../../chief-financial-officer/workflows/annual-budget.md` — peer feeding budget envelope
 - `../../../skill/comp-plan-{author,audit}/SKILL.md`

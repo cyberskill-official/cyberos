@@ -71,6 +71,6 @@ cyberos-cuo run cuo/chief-knowledge-officer/annual-knowledge-taxonomy \
 | 2 | QA-DRIFT-001 | Vocab drift from market | Operator extends synonyms |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7 — Chief Knowledge Officer role profile
+- `../../../../modules/cuo/README.md` §5.7 — Chief Knowledge Officer role profile
 - `./quarterly-knowledge-pipeline.md` — peer (taxonomy guides pipeline tagging)
 - `../../../skill/knowledge-taxonomy-{author,audit}/SKILL.md`

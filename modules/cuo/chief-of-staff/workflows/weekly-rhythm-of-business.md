@@ -71,5 +71,5 @@ cyberos-cuo run cuo/chief-of-staff/weekly-rhythm-of-business \
 
 ## Cross-references
 - `../README.md` §5 (Strategic) — "rhythm-of-business calendar"
-- `../../../docs/The C-Suite Reference.md` §5.7
+- `../../../../modules/cuo/README.md` §5.7
 - `../../../skill/rhythm-of-business-{author,audit}/SKILL.md`

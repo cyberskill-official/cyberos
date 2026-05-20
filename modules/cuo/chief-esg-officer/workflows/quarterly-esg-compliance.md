@@ -34,6 +34,6 @@ audit_hooks:
 Chief ESG Officer's quarterly compliance posture per CSRD + SEC climate rule + ISSB + voluntary frameworks (GRI / SASB / TCFD).
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7
+- `../../../../modules/cuo/README.md` §5.7
 - `../../chief-compliance-officer/workflows/annual-compliance-program.md` — upstream feeder
 - `../../../skill/compliance-program-{author,audit}/SKILL.md`

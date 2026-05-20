@@ -1,6 +1,6 @@
 # `coo` — Chief Operating Officer
 
-> Per `../../docs/The C-Suite Reference.md` §5.1 + §4. **Tenure shortest at 3.2 yrs** — role ambiguity is the dominant failure mode; the COO charter MUST be sharp.
+> Per `../../../modules/cuo/README.md` §5.1 + §4. **Tenure shortest at 3.2 yrs** — role ambiguity is the dominant failure mode; the COO charter MUST be sharp.
 
 ## §1  Identity & scope
 
@@ -76,5 +76,5 @@ All workflows chain through shipped skills — Tier-1 (`capacity-plan`, `vendor-
 ---
 
 ## Cross-references
-- `../../docs/The C-Suite Reference.md` §5.1, §3, §6, §7 (consulting-firm-specific).
+- `../../../modules/cuo/README.md` §5.1, §3, §6, §7 (consulting-firm-specific).
 - `../ceo/`, `../cto/`, `../cfo/`, `../chro/` — primary peer collaborations.

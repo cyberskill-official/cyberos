@@ -67,6 +67,6 @@ cyberos-cuo run cuo/chief-brand-officer/per-analyst-brand-briefing \
 | 2 | QA-METRIC-001 | Claim no tracking source | Operator supplies |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.4 — Chief Brand Officer role profile
+- `../../../../modules/cuo/README.md` §5.4 — Chief Brand Officer role profile
 - `../../chief-marketing-officer/workflows/quarterly-analyst-briefing.md` — product/AR peer
 - `../../../skill/analyst-briefing-{author,audit}/SKILL.md`

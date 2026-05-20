@@ -69,7 +69,7 @@ cyberos-cuo run cuo/chief-innovation-officer/per-innovation-charter \
 | 2 | QA-STAGE-001 | No stage-gates | Operator defines |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7 — Chief Innovation Officer role profile
+- `../../../../modules/cuo/README.md` §5.7 — Chief Innovation Officer role profile
 - `./annual-innovation-portfolio.md` — upstream parent
 - `../../chief-transformation-officer/workflows/per-program-charter.md` — distinct peer
 - `../../../skill/program-charter-{author,audit}/SKILL.md`

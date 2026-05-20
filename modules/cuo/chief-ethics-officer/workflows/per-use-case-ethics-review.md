@@ -72,6 +72,6 @@ cyberos-cuo run cuo/chief-ethics-officer/per-use-case-ethics-review \
 | 2 | QA-HARM-001 | Harm vector unexamined | Operator extends |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.6 — Chief Ethics Officer role profile
+- `../../../../modules/cuo/README.md` §5.6 — Chief Ethics Officer role profile
 - `../../chief-ai-officer/workflows/quarterly-use-case-portfolio-review.md` — upstream feeder
 - `../../../skill/ethics-review-{author,audit}/SKILL.md`

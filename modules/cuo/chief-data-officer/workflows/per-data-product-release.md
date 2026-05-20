@@ -71,6 +71,6 @@ cyberos-cuo run cuo/chief-data-officer/per-data-product-release \
 | 2 | QA-LINEAGE-001 | Lineage incomplete | Operator extends |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.3 — CDO-Data role profile
+- `../../../../modules/cuo/README.md` §5.3 — CDO-Data role profile
 - `../../chief-privacy-officer/workflows/privacy-impact-assessment.md` — peer (PIA for personal-data products)
 - `../../../skill/data-product-{author,audit}/SKILL.md`

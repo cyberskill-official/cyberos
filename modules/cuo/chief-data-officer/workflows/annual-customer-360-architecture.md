@@ -76,6 +76,6 @@ cyberos-cuo run cuo/chief-data-officer/annual-customer-360-architecture \
 | 2 | QA-CONSENT-001 | Consent gap | Escalate to CPO-Privacy |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.3 — CDO-Data role profile
+- `../../../../modules/cuo/README.md` §5.3 — CDO-Data role profile
 - `../../cpo-privacy/README.md` — consent peer
 - `../../../skill/customer-360-{author,audit}/SKILL.md`

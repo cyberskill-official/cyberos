@@ -1,6 +1,6 @@
 # `runbook_rubric@1.0` — machine-checkable Runbook rubric
 
-> Sourced from `cyberos/docs/Software Development Process.md` §2(j) Operations; Google SRE Book (SLOs, error budgets); OpenTelemetry observability conventions. Rubric version `1.0` is locked.
+> Sourced from `../../../modules/cuo/README.md` §2(j) Operations; Google SRE Book (SLOs, error budgets); OpenTelemetry observability conventions. Rubric version `1.0` is locked.
 
 ---
 
@@ -99,6 +99,6 @@
 ## Cross-references
 
 - `cyberos/skill/docs/AUDIT_LOOP.md`, `cyberos/skill/docs/RUBRIC_FORMAT.md`
-- `cyberos/docs/Software Development Process.md` §2(j) — Operations stage source
+- `../../../modules/cuo/README.md` §2(j) — Operations stage source
 - Google SRE Book — SLOs, error budgets
 - OpenTelemetry — observability conventions

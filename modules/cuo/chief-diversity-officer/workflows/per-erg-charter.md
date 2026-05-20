@@ -27,5 +27,5 @@ audit_hooks:
 CDO-Diversity's per-ERG charter per Catalyst ERG-best-practices + McKinsey/LeanIn Women-in-the-Workplace.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.5
+- `../../../../modules/cuo/README.md` §5.5
 - `../../../skill/program-charter-{author,audit}/SKILL.md`

@@ -1,6 +1,6 @@
 # `cdo-diversity` — Chief Diversity Officer (Diversity)
 
-> Per `../../docs/The C-Suite Reference.md` §5.5 + §4 (9-block schema).
+> Per `../../../modules/cuo/README.md` §5.5 + §4 (9-block schema).
 
 ## §1  Identity & scope
 - **Full disambiguated title:** Chief Diversity Officer (Diversity).
@@ -48,5 +48,5 @@ All workflows chain through shipped Tier-1/Tier-2 skills (`dei-program`, `progra
 ---
 
 ## Cross-references
-- `../../docs/The C-Suite Reference.md` §5.5 — source role profile.
+- `../../../modules/cuo/README.md` §5.5 — source role profile.
 - `../MODULE.md` §4.

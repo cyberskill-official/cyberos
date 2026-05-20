@@ -120,6 +120,6 @@ The CTO (or deploy owner delegate) is pulled in at:
 ## Cross-references
 
 - `../README.md` — CTO 9-block spec.
-- `../../../docs/Software Development Process.md` §2(i) + Template §4.7 — Deployment + Deployment Readiness Checklist source.
+- `../../../../modules/cuo/README.md` §2(i) + Template §4.7 — Deployment + Deployment Readiness Checklist source.
 - DORA Accelerate State of DevOps — four key metrics that DEP-011 captures.
 - `../../../skill/release-notes-{author,audit}/SKILL.md`, `../../../skill/deploy-checklist-{author,audit}/SKILL.md`.

@@ -110,13 +110,13 @@ Three spec-text drifts surfaced during the audit:
 
 3. **Key rotation 'retiring' state (§1 #1):** spec says `status IN ('active', 'retiring', 'retired')`. Deployed migration has only `('active', 'retired')` with the JWKS query simulating the overlap via `retired_at > NOW() - INTERVAL '7 days'`. The deployed simulation is operationally equivalent (covers the 24h overlap window) but the spec amendment isn't strictly recommended — instead, FR-AUTH-006 (which owns the rotation cron) will add the 'retiring' state when it ships the rotation lifecycle. **No spec amendment; track as FR-AUTH-006 dependency.**
 
-### §10.7 — Slice plan (executed end-to-end per AUTHORING_DISCIPLINE §9.1)
+### §10.7 — Slice plan (executed end-to-end per feature-request-audit skill §9.1)
 
 **Slice 1 — foundation (G-001 + G-002 + G-003 + G-007 + G-008 + G-010 + G-013):** ~400 LOC across new `rate_limit.rs` + new `scope_map.rs` + memory_bridge.rs extensions + handler restructuring + Claims.email + agent_persona default. 1 commit.
 
 **Slice 2 — DEFERRED (G-004 + G-005 + G-006 + G-011):** G-004 deferred to consuming services (spec-explicit); G-005 + G-006 deferred to FR-OBS-001; G-011 deferred to FR-AUTH-006 (spec-explicit).
 
-Per AUTHORING_DISCIPLINE §9.1, slice-1 lands in one continuous session, single commit. Deferrals satisfy §9.3 defer-with-rationale rule — each cites the receiving FR + spec evidence.
+Per feature-request-audit skill §9.1, slice-1 lands in one continuous session, single commit. Deferrals satisfy §9.3 defer-with-rationale rule — each cites the receiving FR + spec evidence.
 
 ---
 

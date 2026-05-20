@@ -615,6 +615,6 @@ P19–P22 are the four protocol amendments introduced by the MEMORY Improvement 
 - [`tests/`](tests/) — 255 green tests
 - [`../skill/README.md`](../skill/README.md) — sibling SKILL module
 - [`../cuo/README.md`](../cuo/README.md) — sibling CUO module
-- [`../../docs/Software Development Process.md`](../../docs/Software%20Development%20Process.md)
+- [`../../modules/cuo/README.md`](../../modules/cuo/README.md#software-development-process)
 - [`../../tours/`](../../tours/) — operational CodeTour walkthroughs for memory audit-chain repair, frontmatter fixes, conflict resolution
 - [`../../website/docs/index.html`](../../website/docs/index.html) — interactive multi-layer architecture diagram

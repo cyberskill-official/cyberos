@@ -72,7 +72,7 @@ cyberos-cuo run cuo/chief-communications-officer/per-crisis-response \
 | 2 | QA-STAKEHOLDER-001 | Key stakeholder missed | Operator extends notify list |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.4 — CCO-Communications role profile
+- `../../../../modules/cuo/README.md` §5.4 — CCO-Communications role profile
 - `./annual-crisis-playbook.md` — upstream parent
 - `../../chief-privacy-officer/workflows/breach-response-cycle.md` — privacy-specific peer (72h discipline)
 - `../../../skill/crisis-comms-playbook-{author,audit}/SKILL.md`

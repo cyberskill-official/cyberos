@@ -72,6 +72,6 @@ cyberos-cuo run cuo/chief-data-officer/annual-data-strategy \
 | 2 | QA-MESH-001 | Mesh principles inconsistent | Operator reconciles |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.3 — CDO-Data role profile
+- `../../../../modules/cuo/README.md` §5.3 — CDO-Data role profile
 - `../../chief-ai-officer/workflows/annual-ai-strategy.md` — peer (data foundations feed AI)
 - `../../../skill/data-strategy-{author,audit}/SKILL.md`

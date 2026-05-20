@@ -1,6 +1,6 @@
 # `audit_rubric@2.0` — machine-checkable Feature Request rubric
 
-> Sourced from `cyberos/skill/contracts/feature-request/CONTRACT.md` (the FR contract body) and `cyberos/docs/Software Development Process.md` §2(b) Requirements. Rubric version `2.0` is locked; bumping requires a coordinated update of the contract body and this skill's CONTRACT_ECHO. Each rule has a stable `rule_id`. Rule IDs MUST appear verbatim in audit reports so reports are diffable across iterations and operators.
+> Sourced from `cyberos/skill/contracts/feature-request/CONTRACT.md` (the FR contract body) and `../../../modules/cuo/README.md` §2(b) Requirements. Rubric version `2.0` is locked; bumping requires a coordinated update of the contract body and this skill's CONTRACT_ECHO. Each rule has a stable `rule_id`. Rule IDs MUST appear verbatim in audit reports so reports are diffable across iterations and operators.
 
 This rubric is a port of the proven rule set from the legacy `cuo/cpo/feature-request-audit` skill (audit_rubric@2.0, locked since 2026-02). It is preserved here verbatim because it has been battle-tested against 50+ FRs in the cyberos `docs/feature-requests/` catalog. Bumping to 3.0 requires governance sign-off.
 

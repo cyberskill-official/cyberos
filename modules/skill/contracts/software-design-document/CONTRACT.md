@@ -2,7 +2,7 @@
 contract_id: sdd
 contract_version: v1
 template_literal: software-design-document@1
-description: Canonical software-design-document@1 — Software Design Description per IEEE 1016-2009. Authored by software-design-document-author; validated by software-design-document-audit via sdd_rubric@1.0. Implements Software Development Process.md §2(e).
+description: Canonical software-design-document@1 — Software Design Description per IEEE 1016-2009. Authored by software-design-document-author; validated by software-design-document-audit via sdd_rubric@1.0. Implements modules/cuo/README.md#software-development-process §2(e).
 contract_kind: artefact_schema
 locked_at: 2026-05-17
 

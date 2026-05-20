@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: closure-author
 description: >-
-  Author a project closure package (closure@1) at the end of an engagement. Captures: sign-off certificate (client + EM + TL), lessons-learned compilation (from per-iteration retros), knowledge- transfer pack (source-code handover, runbooks ready, credentials rotated, runbook ownership transferred), asset handover record, client NPS, on-time/on-budget closure metrics. Covers Software Development Process.md §2(l). Chains naturally into closure-audit. Use when user asks to "draft a closure" or "create the closure". Do NOT use for "audit existing closure" (use closure-audit instead).
+  Author a project closure package (closure@1) at the end of an engagement. Captures: sign-off certificate (client + EM + TL), lessons-learned compilation (from per-iteration retros), knowledge- transfer pack (source-code handover, runbooks ready, credentials rotated, runbook ownership transferred), asset handover record, client NPS, on-time/on-budget closure metrics. Covers modules/cuo/README.md#software-development-process §2(l). Chains naturally into closure-audit. Use when user asks to "draft a closure" or "create the closure". Do NOT use for "audit existing closure" (use closure-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0

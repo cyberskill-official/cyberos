@@ -1,6 +1,6 @@
 # `chief-medical-officer` — Chief Medical Officer
 
-> Per `../../docs/The C-Suite Reference.md` §5.7 + §4 (9-block schema).
+> Per `../../../modules/cuo/README.md` §5.7 + §4 (9-block schema).
 
 ## §1  Identity & scope
 - **Full disambiguated title:** Chief Medical Officer.
@@ -48,5 +48,5 @@ All workflows chain through shipped Tier-2/Tier-3 skills (`clinical-protocol`, `
 ---
 
 ## Cross-references
-- `../../docs/The C-Suite Reference.md` §5.7.
+- `../../../modules/cuo/README.md` §5.7.
 - `../MODULE.md` §4.

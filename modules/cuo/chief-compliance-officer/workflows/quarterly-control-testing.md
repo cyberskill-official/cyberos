@@ -68,6 +68,6 @@ cyberos-cuo run cuo/chief-compliance-officer/quarterly-control-testing \
 | 2 | QA-FAILURE-001 | Failure no remediation | Escalate to control owner |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.6 — CCO-Compliance role profile
+- `../../../../modules/cuo/README.md` §5.6 — CCO-Compliance role profile
 - `./annual-compliance-program.md` — upstream parent
 - `../../../skill/compliance-program-{author,audit}/SKILL.md`

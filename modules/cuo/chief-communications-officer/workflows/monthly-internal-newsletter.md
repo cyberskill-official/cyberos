@@ -70,6 +70,6 @@ cyberos-cuo run cuo/chief-communications-officer/monthly-internal-newsletter \
 | 2 | QA-REGFD-001 | Material info pre-public | Escalate to CLO-Legal |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.4 — CCO-Communications role profile
+- `../../../../modules/cuo/README.md` §5.4 — CCO-Communications role profile
 - `../../chief-of-staff/workflows/weekly-rhythm-of-business.md` — upstream feeder
 - `../../../skill/internal-newsletter-{author,audit}/SKILL.md`

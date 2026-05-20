@@ -31,6 +31,6 @@ audit_hooks:
 Chief-Architect's per-system threat-model review per STRIDE + OWASP Top 10:2025 + ASVS v5.0 + MITRE ATT&CK.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.3
+- `../../../../modules/cuo/README.md` §5.3
 - `../../chief-technology-officer/workflows/threat-model-refresh.md` — CTO quarterly peer
 - `../../../skill/threat-model-{author,audit}/SKILL.md`

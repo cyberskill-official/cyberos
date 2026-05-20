@@ -1,6 +1,6 @@
 # `cio-information` — Chief Information Officer (Information)
 
-> Per `../../docs/The C-Suite Reference.md` §5.3 + §4 (9-block schema).
+> Per `../../../modules/cuo/README.md` §5.3 + §4 (9-block schema).
 
 ## §1  Identity & scope
 - **Full disambiguated title:** Chief Information Officer (Information).
@@ -49,5 +49,5 @@ All workflows chain through shipped Tier-1/Tier-2/Tier-5 skills (`strategy-doc`,
 ---
 
 ## Cross-references
-- `../../docs/The C-Suite Reference.md` §5.3 — source role profile.
+- `../../../modules/cuo/README.md` §5.3 — source role profile.
 - `../MODULE.md` §4.

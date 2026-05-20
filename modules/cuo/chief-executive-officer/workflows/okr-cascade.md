@@ -71,6 +71,6 @@ cyberos-cuo run cuo/chief-executive-officer/okr-cascade \
 
 ## Cross-references
 - `../README.md` §5.1 — output type "OKRs cascade"
-- `../../../docs/The C-Suite Reference.md` §5.1
+- `../../../../modules/cuo/README.md` §5.1
 - `../../chief-of-staff/workflows/quarterly-okr-cascade.md` — peer workflow CoS owns the governance for
 - `../../../skill/okr-set-{author,audit}/SKILL.md`

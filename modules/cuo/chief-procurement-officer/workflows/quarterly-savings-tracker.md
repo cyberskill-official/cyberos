@@ -31,6 +31,6 @@ audit_hooks:
 CPO-Procurement's quarterly savings tracker per Hackett spend-analytics + APQC procurement-benchmarking + ProcureCon savings-classification.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7
+- `../../../../modules/cuo/README.md` §5.7
 - `./annual-procurement-strategy.md` — upstream parent
 - `../../../skill/procurement-strategy-{author,audit}/SKILL.md`

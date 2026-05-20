@@ -73,6 +73,6 @@ cyberos-cuo run cuo/chief-customer-officer/quarterly-churn-collaboration \
 | 2 | QA-ATTRIBUTION-001 | Attribution muddy | Operator clarifies |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.4 — CCO-Customer role profile
+- `../../../../modules/cuo/README.md` §5.4 — CCO-Customer role profile
 - `../../chief-revenue-officer/workflows/quarterly-churn-analysis.md` — upstream parent
 - `../../../skill/churn-analysis-{author,audit}/SKILL.md`

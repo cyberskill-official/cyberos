@@ -73,5 +73,5 @@ cyberos-cuo run cuo/chief-executive-officer/quarterly-board-update \
 
 ## Cross-references
 - `../README.md` §5.3 — output type "board deck (quarterly)"
-- `../../../docs/The C-Suite Reference.md` §5.1
+- `../../../../modules/cuo/README.md` §5.1
 - `../../../skill/board-deck-{author,audit}/SKILL.md`

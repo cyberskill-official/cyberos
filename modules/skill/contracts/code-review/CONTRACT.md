@@ -2,7 +2,7 @@
 contract_id: code-review
 contract_version: v1
 template_literal: code-review@1
-description: Canonical code-review@1 — structured PR review write-up per IEEE 1028. Authored by code-review-author; validated by code-review-audit via code_review_rubric@1.0. Implements Software Development Process.md §2(g) + Template §4.5.
+description: Canonical code-review@1 — structured PR review write-up per IEEE 1028. Authored by code-review-author; validated by code-review-audit via code_review_rubric@1.0. Implements modules/cuo/README.md#software-development-process §2(g) + Template §4.5.
 contract_kind: artefact_schema
 locked_at: 2026-05-17
 

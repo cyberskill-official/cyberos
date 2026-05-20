@@ -56,7 +56,7 @@ All 6 mechanical revisions applied. **Score = 10/10.**
 - **FR-AUTH-111** — closed revoke-reason taxonomy enum (compromised/terminated/policy-violation/operator-error/other). Free-form string ships now.
 - **`auth_admin_revoke_propagation_latency_ms` histogram** — folded into FR-AUTH-110 (it requires Redis to be meaningful; in-memory is sub-ms).
 
-Per the AUTHORING_DISCIPLINE rule (FR-AUTH-001 §10 reference template), each gap is rooted in a §1 clause + closing reference. The 17 closures span 8 gap-fill commits across slices 1-5; cumulative LOC ≈ 1,300 (~850 src + ~450 tests).
+Per the feature-request-audit skill rule (FR-AUTH-001 §10 reference template), each gap is rooted in a §1 clause + closing reference. The 17 closures span 8 gap-fill commits across slices 1-5; cumulative LOC ≈ 1,300 (~850 src + ~450 tests).
 
 ### §10.2 — Spec-vs-code gap table
 

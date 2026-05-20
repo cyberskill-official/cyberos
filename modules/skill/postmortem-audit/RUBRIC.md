@@ -1,6 +1,6 @@
 # `postmortem_rubric@1.0` — machine-checkable Post-mortem rubric
 
-> Sourced from `cyberos/docs/Software Development Process.md` §2(j) Operations incidents; Google SRE Book (blameless post-mortem culture). Rubric version `1.0` is locked.
+> Sourced from `../../../modules/cuo/README.md` §2(j) Operations incidents; Google SRE Book (blameless post-mortem culture). Rubric version `1.0` is locked.
 
 ---
 
@@ -107,7 +107,7 @@
 ## Cross-references
 
 - `cyberos/skill/docs/AUDIT_LOOP.md`, `cyberos/skill/docs/RUBRIC_FORMAT.md`
-- `cyberos/docs/Software Development Process.md` §2(j) — Operations source
+- `../../../modules/cuo/README.md` §2(j) — Operations source
 - Google SRE Book — Blameless Post-mortem culture
 - GDPR Art. 33 — 72-hour data-breach notification
 - Vietnam Decree 13/2023 PDPD — data-protection regime

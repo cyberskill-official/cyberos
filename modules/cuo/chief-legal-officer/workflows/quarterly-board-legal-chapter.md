@@ -77,6 +77,6 @@ cyberos-cuo run cuo/chief-legal-officer/quarterly-board-legal-chapter \
 
 ## Cross-references
 - `../README.md` §5 (Communication) — "board legal chapter"
-- `../../../docs/The C-Suite Reference.md` §5.2
+- `../../../../modules/cuo/README.md` §5.2
 - `../../chief-executive-officer/workflows/quarterly-board-update.md` — peer workflow that consumes this output
 - `../../../skill/{litigation-mgmt-update,board-deck}-{author,audit}/SKILL.md`

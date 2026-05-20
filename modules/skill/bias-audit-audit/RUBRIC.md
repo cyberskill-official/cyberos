@@ -82,7 +82,7 @@ Per the template's `<!-- comment-blocks -->` for conditional sections. Each comm
 
 - `cyberos/skill/docs/AUDIT_LOOP.md`, `cyberos/skill/docs/RUBRIC_FORMAT.md`
 - `cyberos/skill/contracts/bias-audit/CONTRACT.md` + `template.md`
-- `cyberos/docs/The C-Suite Reference.md` §5 — the source role profile.
+- `../../../modules/cuo/README.md` §5 — the source role profile.
 
 ## Skill-specific rules (extend in v1.1)
 

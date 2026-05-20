@@ -29,6 +29,6 @@ audit_hooks:
 CSO-Security's converged-security strategy per ASIS ESRM (Enterprise Security Risk Management) + ANSI/ASIS PAP.1-2012 + NIST SP 800-160. Superset of CISO scope (info-sec only).
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7 — CSO-Security role profile (physical + info-sec)
+- `../../../../modules/cuo/README.md` §5.7 — CSO-Security role profile (physical + info-sec)
 - `../../chief-information-security-officer/workflows/annual-security-strategy.md` — info-sec subset peer
 - `../../../skill/security-strategy-{author,audit}/SKILL.md`

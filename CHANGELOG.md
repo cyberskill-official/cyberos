@@ -508,7 +508,7 @@ Key changes:
 - NEW §0 — 3-card layout + integration-model Mermaid (HR/PROJ/TIME/LEARN/CRM → RES → CUO → hiring memo/rebalance proposal) + 10-row auto-vs-human matrix
 - Risks +5 (R-RES-010..014): RES forecast becomes CEO-decision dependency · Member-preference flags ignored under high-priority · VN OT-cap version drift · cross-Engagement reallocation rate-card mismatch · Lumi RES synthesis leaks Engagement intel
 - KPIs +6: hiring memo CEO acceptance rate · Member-preference override rate (= 1.0) · cross-Engagement rate-card alignment · cap version stamp coverage (= 1.0) · Lumi cross-tenant sign-off (= 1.0)
-- References expanded: §0 + MEMORY_AUTOSYNC_DESIGN.md + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+- References expanded: §0 + MEMORY_AUTOSYNC_DESIGN.md + AUDIT_AND_PLAN + feature-request-audit skill
 
 ---
 
@@ -520,7 +520,7 @@ Key changes:
 - NEW §0 — 3-card layout + multi-tenant-within-multi-tenant Mermaid + 10-row auto-vs-human matrix
 - Risks +5 (R-PORTAL-011..015): sync_class misconfig leak (Critical) · JIT role-mapping wrong · SVG XSS · Client AI cross-Engagement cite (Critical) · SCIM deprovision delay
 - KPIs +6: sync_class filter pass (= 1.0) · JIT role accuracy (≥ 0.99) · SVG XSS blocks · cross-Engagement rejection rate · SCIM session-invalidation p95
-- References expanded: §0 + MEMORY_AUTOSYNC_DESIGN.md + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+- References expanded: §0 + MEMORY_AUTOSYNC_DESIGN.md + AUDIT_AND_PLAN + feature-request-audit skill
 
 ---
 
@@ -532,7 +532,7 @@ Key changes:
 - NEW §0 — 3-card layout + partner-routed signing Mermaid + 10-row auto-vs-human matrix
 - Risks +5 (R-DOC-011..015): cross-module trigger source mismatch · CUO renewal stale terms · expiry cascade miss · multi-jurisdiction cert chain · migrated DocuSign LTV failure
 - KPIs +5: cross-module trigger validation (= 1.0) · renewal terms-stamp coverage (= 1.0) · expiry cascade completeness (= 1.0) · multi-jurisdiction cert-chain declaration (= 1.0) · LTV re-validation (≥ 0.95)
-- References expanded: §0 + MEMORY_AUTOSYNC_DESIGN.md + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+- References expanded: §0 + MEMORY_AUTOSYNC_DESIGN.md + AUDIT_AND_PLAN + feature-request-audit skill
 
 ---
 
@@ -544,7 +544,7 @@ Key changes:
 - NEW §0 — 3-card layout + auto-progress data-flow Mermaid + 8-row auto-vs-human matrix
 - Risks +5 (R-OKR-010..014): progress source schema drift · face-saving framing weaponised · CUO digest hallucination · OKR-weight skews REW · retro cross-tenant leak
 - KPIs +5: progress source schema drift · face-saving pattern detection · digest hallucination rate (≤ 0.01) · OKR-share-of-VP correctness (= 1.0) · retro sync_class default compliance (= 1.0)
-- References expanded: §0 + MEMORY_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+- References expanded: §0 + MEMORY_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + feature-request-audit skill
 
 ---
 
@@ -556,7 +556,7 @@ Key changes:
 - NEW §0 — 3-card layout + cap-table spine Mermaid showing memory exclusion + 10-row auto-vs-human matrix
 - Risks +5 (R-ESOP-011..015): Leaver branch AI auto-route (Critical) · put-option ARR-trigger drift · vesting accrual on statutory leave · M&A acceleration without Member notice · HoldCo partial-flip rollback
 - KPIs +5: Good/Bad Leaver co-sign integrity (= 1.0) · vesting accrual statutory-leave correctness · M&A notification SLA (≤ 5 days) · HoldCo flip cohort success (= 1.0 rollback on partial) · put-option exec query latency
-- References expanded: §0 + 5 cross-module links + MEMORY_AUTOSYNC_DESIGN.md + DEC-036 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+- References expanded: §0 + 5 cross-module links + MEMORY_AUTOSYNC_DESIGN.md + DEC-036 + AUDIT_AND_PLAN + feature-request-audit skill
 
 ---
 
@@ -568,7 +568,7 @@ Key changes:
 - NEW §0 — 3-card layout + signal-flow Mermaid showing per-judge boundary explicitly + 10-row auto-vs-human matrix
 - Risks +5 (R-LEARN-011..015): per-judge score export misconfig (Critical) · VP signal skews toward PROJ-dominant Members · Lumi skill catalogue pushes conflict · Council deliberation memory ingestion (psychological safety) · skill self-claim spam
 - KPIs +5: per-judge export attempts blocked · VP fairness variance (≤ 0.40) · skill claim evidence rate (≥ 0.95) · deliberation transcript purge (≤ 30 d) · HR-to-LEARN-to-REW signal latency
-- References expanded: §0 + 6 cross-module links + MEMORY_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+- References expanded: §0 + 6 cross-module links + MEMORY_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + feature-request-audit skill
 
 ---
 
@@ -581,7 +581,7 @@ Key changes:
 - NEW §0 — 3-card layout + REW-isolated-by-design Mermaid (HR/TIME/PROJ → REW → CFO+CHRO co-sign → payslips → banks/BHXH; memory explicitly disconnected with structural-exclusion line) + 10-row auto-vs-human matrix
 - Risks +5 (R-REW-011..015): HR signals weaponised for P3 cut · BHXH mid-month rate change · Lumi attempts read REW (Catastrophic) · cross-Member cache leak · CFO+CHRO collusion (P1 protection at DB CHECK, not app layer alone)
 - KPIs +5: P3 distribution sign-off completeness (= 1.0) · parameter mid-month transition correctness · Lumi-attempted reads (= 0) · cross-Member cache leak attempts (= 0) · P1 DB-CHECK constraint violations (any > 0 = sev-0)
-- References expanded: §0 + 6 cross-module links + MEMORY_AUTOSYNC_DESIGN.md §5 + DEC-036 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+- References expanded: §0 + 6 cross-module links + MEMORY_AUTOSYNC_DESIGN.md §5 + DEC-036 + AUDIT_AND_PLAN + feature-request-audit skill
 
 ---
 
@@ -594,7 +594,7 @@ Key changes:
 - NEW §0 — 3-card layout + Member-id spine Mermaid + 10-row auto-vs-human matrix
 - Risks +5 (R-HR-011..015): HR signals used as sole comp basis · cross-tenant Member-id collision (Critical) · onboarding fires before AUTH ready · VN labour-law mid-year amendment · sabbatical tick misclassification
 - KPIs +5: signal-only comp decision rate (= 1.0) · onboarding playbook saga p95 · labour-law version stamp coverage (= 1.0) · HR-to-REW handoff p95 · statutory-leave classification accuracy
-- References expanded: §0 + 7 cross-module links + MEMORY_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+- References expanded: §0 + 7 cross-module links + MEMORY_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + feature-request-audit skill
 
 ---
 
@@ -607,7 +607,7 @@ Key changes:
 - NEW §0 "The bigger picture" — 3-card layout + EMAIL-in-orchestration-spine Mermaid + 10-row auto-vs-human matrix
 - Risks +5 (R-EMAIL-011..015): thread-to-issue wrong Engagement · Genie draft confidential leak (High) · bulk-send approval bypass · tracked-domain misconfig (auto-log personal) · CaMeL cost spike
 - KPIs +5: thread-to-issue conversion accuracy · Genie draft confidential-leak rate (= 0) · bulk-send token compliance (= 1.0) · tracked-domain audit pass · CaMeL cost per inbound
-- References expanded: §0 + 7 cross-module links + CaMeL paper + EchoLeak CVE + MEMORY_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+- References expanded: §0 + 7 cross-module links + CaMeL paper + EchoLeak CVE + MEMORY_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + feature-request-audit skill
 
 ---
 
@@ -620,7 +620,7 @@ Key changes:
 - NEW §0 "The bigger picture" — 3-card layout + KB-in-platform Mermaid + 10-row auto-vs-human matrix
 - Risks +5 (R-KB-011..015): runbook catalogue drift · OBS-KB tight coupling (KB outage breaks triage, High impact) · span-citation drift · vendor-pack malicious markdown · doc-gap-detector underperforms
 - KPIs +5: runbook applicability accuracy · span-citation integrity (= 1.0) · doc-gap-detector signal rate · cross-tenant retrieval reject rate · vendor-pack CSO-review rate (= 1.0)
-- References expanded: §0 + 6 cross-module links + OBS §2.6 auto-runbook contract link + MEMORY_AUTOSYNC_DESIGN.md §6 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+- References expanded: §0 + 6 cross-module links + OBS §2.6 auto-runbook contract link + MEMORY_AUTOSYNC_DESIGN.md §6 + AUDIT_AND_PLAN + feature-request-audit skill
 
 ---
 
@@ -633,7 +633,7 @@ Key changes:
 - NEW §0 "The bigger picture" — 3-card layout + INV-in-orchestration-spine Mermaid + 10-row auto-vs-human matrix
 - Risks +5 (R-INV-011..015): incomplete TIME rollup → missing hours · rate-card snapshot divergence · hóa đơn cancellation without dual approval (Critical) · dunning auto-send bug · Decree 123 amendment drift
 - KPIs +5: TIME→INV bridge p95 · missing-Member draft rate · rate-card snapshot integrity (= 1.0) · dunning auto-send false-positive (= 0) · hóa đơn dual-approval rate (= 1.0)
-- References expanded: §0 + 6 cross-module links + PROJ §2.6 billing modes + TIME §0 rollup contract + MEMORY_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+- References expanded: §0 + 6 cross-module links + PROJ §2.6 billing modes + TIME §0 rollup contract + MEMORY_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + feature-request-audit skill
 
 ---
 
@@ -646,7 +646,7 @@ Key changes:
 - NEW §0 "The bigger picture" — 3-card layout + spine Mermaid (PROJ → Member → TIME → Billable cascade → AM → CFO + INV/REW/memory) + 9-row auto-vs-human matrix
 - Risks +5 (R-TIME-011..015): billable cascade snapshot divergence (High) · auto-detect wrong Issue · VN Labour Code 2026 amendment · cycle-rollup runs before all submissions · multi-currency drift
 - KPIs +6: cascade snapshot integrity (= 1.0 hard floor) · auto-detect acceptance · PROJ-TIME issue match rate · cycle-rollup completeness · VN Labour Code version coverage (= 1.0)
-- References expanded: §0 + 6 cross-module links + PROJ §2.6 billable cascade link + MEMORY_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+- References expanded: §0 + 6 cross-module links + PROJ §2.6 billable cascade link + MEMORY_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + feature-request-audit skill
 
 ---
 
@@ -660,7 +660,7 @@ Key changes:
 - NEW §0 "The bigger picture" — 3-card layout + CRM-in-orchestration-spine Mermaid + 9-row auto-vs-human matrix
 - Risks +5 (R-CRM-011..015): bridge fails partially · wrong billing mode · CUO next-action inappropriate · vertical-pack drift · merge data loss
 - KPIs +6: deal-to-Engagement conversion rate · conversion bridge p95 · win/loss memory citation rate · next-action acceptance · stage-stuck deal alert · forecast accuracy
-- References expanded: §0 + 7 cross-module links + PROJ §2.5 join contract link + SKILL §3.6 vertical-pack pattern + MEMORY_AUTOSYNC_DESIGN.md + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW + expanded PDPL articles
+- References expanded: §0 + 7 cross-module links + PROJ §2.5 join contract link + SKILL §3.6 vertical-pack pattern + MEMORY_AUTOSYNC_DESIGN.md + AUDIT_AND_PLAN + feature-request-audit skill + expanded PDPL articles
 
 ---
 
@@ -678,7 +678,7 @@ Key changes:
 - NEW §2.7 "90-day offboarding contract" — 4-phase timeline (Active → Terminating-A 30d → Terminating-B 60d → Terminated day 91+) + signed bundle 6-component export + permanent-delete attestation JSON with Ed25519 signature
 - Risks +8 (R-TEN-013..020): P2 slice slip → margin moat delayed (High) · residency change mid-engagement · hostile termination override · Stripe DPA EU residency · plan-downgrade overage surprise · cross-leak CI gap (Critical) · vertical-pack revenue attribution leak · Lumi-pushed pack pricing change
 - KPIs +9: P2 slice ship date adherence (= P2 · exit) · vertical-pack revenue share (≥ 30% of ARR by P4 · mid — the moat) · cross-leak rate (= 0 hard floor) · residency drill MTTR (≤ 72h) · plan-downgrade overage handling (= 1.0) · hostile-termination cycle time · VN-PSP coverage (≥ 0.95 at P4) · PCI-SAQ-A scope (= 0; Stripe handles all) · tenant attestation completeness (= 1.0)
-- References expanded: 4 in-page sections + 6 cross-module links + AUDIT_AND_PLAN §3.3 + RESEARCH_REVIEW §7.3 (explicit cite of the P2 · exit mandate) + MEMORY_AUTOSYNC_DESIGN.md §6 + FR_AUTHORING_WORKFLOW + EU AI Act Art. 26 + expanded PDPL article citations
+- References expanded: 4 in-page sections + 6 cross-module links + AUDIT_AND_PLAN §3.3 + RESEARCH_REVIEW §7.3 (explicit cite of the P2 · exit mandate) + MEMORY_AUTOSYNC_DESIGN.md §6 + feature-request-audit skill + EU AI Act Art. 26 + expanded PDPL article citations
 
 ---
 
@@ -695,7 +695,7 @@ Key changes:
 - NEW §2.7 "Compliance evidence surface" — regulator × audit scope matrix (EU AI Act, PDPL, SOC 2, ISO 27001, GDPR, Vietnam Decree 13/2023) + per-view scoping YAML + chain-of-custody manifest with chain anchors
 - Risks +10 (R-OBS-011..020): auto-runbook miscategorising P0 (Critical) · compliance export tampering (Critical) · triage skill down → page storm · LangSmith EU residency · trace sampling drops wrong tail · persona-drift false positive · OTel context propagation breaks · query proxy DOS · runbook catalogue drift · maintenance-window noise
 - KPIs +10: auto-runbook coverage (≥ 60% by P1) · P0/P1 false-suppression (= 0 hard floor) · compliance export verification rate (= 1.0) · cross-pillar correlation completeness (≥ 0.95) · tail-sampling error coverage (= 1.0) · persona-drift detector precision · query proxy violations · self-service ticket MTTR · dogfooding alert ACK (we live by this) · compliance surfaces × regulator
-- References expanded to universal-protocol scope: 4 in-page sections + 8 cross-module links + AUDIT_AND_PLAN §3.3 (P0 · slice 1 placement) + RESEARCH_REVIEW §6 (9/10) + MEMORY_AUTOSYNC_DESIGN.md §8 + FR_AUTHORING_WORKFLOW + EU AI Act + ISO 27001 + ISO 42001 + SOC 2 + PDPL + Decree 13 + GDPR Art. 30
+- References expanded to universal-protocol scope: 4 in-page sections + 8 cross-module links + AUDIT_AND_PLAN §3.3 (P0 · slice 1 placement) + RESEARCH_REVIEW §6 (9/10) + MEMORY_AUTOSYNC_DESIGN.md §8 + feature-request-audit skill + EU AI Act + ISO 27001 + ISO 42001 + SOC 2 + PDPL + Decree 13 + GDPR Art. 30
 
 ---
 
@@ -714,7 +714,7 @@ Changes by section:
 - **NEW §2.7 "Tool-discovery surface"** — 6 discovery endpoints (well-known/mcp, capabilities, tools/list, prompts/list, resources/list, resources/templates/list); 8-field Tasks primitive schema with memory_chain anchor; 5 pre-canned prompt templates (weekly_brief, decision_to_issues, draft_cycle_review, deal_to_engagement, find_memory_citations).
 - **§12 Risks** — added 10 new (R-MCP-011..020): external agent token theft (Critical) · prompt injection in tool description · elicitation fatigue (High likelihood) · federation lag · task storm · resource leak via list_changed · heartbeat false-positive · DCR abuse · older-protocol-version security gap · SEP-986 naming collision.
 - **§13 KPIs** — added 10 new: persona-stamp coverage (hard floor = 1.0) · elicitation acceptance rate · tasks completion rate · cross-tenant token-replay attempts · older-protocol session rate (→ 0 by P3 · exit) · list_changed push latency · destructive-op confirm fatigue · external-client tools coverage · SEP-986 compliance.
-- **§17 References** — replaced stale PRD/SRS refs with 4 in-page sections + 8 cross-module links + AUDIT_AND_PLAN §3.3 (P0 · slice 3 placement) + RESEARCH_REVIEW §5 (9/10) + MEMORY_AUTOSYNC_DESIGN.md §5+§6 + FR_AUTHORING_WORKFLOW + DPoP RFC 9449 + EU AI Act + PDPL citations.
+- **§17 References** — replaced stale PRD/SRS refs with 4 in-page sections + 8 cross-module links + AUDIT_AND_PLAN §3.3 (P0 · slice 3 placement) + RESEARCH_REVIEW §5 (9/10) + MEMORY_AUTOSYNC_DESIGN.md §5+§6 + feature-request-audit skill + DPoP RFC 9449 + EU AI Act + PDPL citations.
 
 The MCP Gateway page now reads as the complete answer to: (1) why 22 modules need one external door (federation Mermaid + N²→N+1 math), (2) how the broker prevents a compromised external agent from escaping scope (audience-bound JWT + tool-annotation gating + destructive-op Elicitation), (3) how external agents discover what CyberOS can do (6 discovery endpoints + 5 pre-canned prompts + Tasks primitive for long-running work), (4) what fails if MCP Gateway is missing (every external agent re-implements its own auth + tool catalogue + audit).
 
@@ -845,7 +845,7 @@ Changes by section:
 - **NEW §2.8 "RFC open questions resolved"** — table addressing all 5 open Qs from RFC §6 with proposed defaults + rationale: Q1 workspace = new repo-root Cargo workspace · Q2 memory bridge = subprocess slice 4 → PyO3 slice 5 · Q3 tenant-0 bootstrap = `cyberos-auth bootstrap` CLI subcommand · Q4 HIBP = default-on with per-tenant opt-out · Q5 OBS = slice 1 stdout → slice 5 OTLP. Each becomes an ADR once Stephen signs off.
 - **§12 Risks** — added 7 new (R-AUTH-011..017): stub stays past P3 · reorder regret · Lumi tenant-id spoofing · cross-shard JWT replay · sub-process audit-bridge bottleneck · tenant-0 bootstrap leak · PDPL Art. 38 SME grace lapse.
 - **§13 KPIs** — added 7 new: stub-to-full migration coverage (≥95% T2+ subjects passkey-enrolled by P1 · exit) · mock-AUTH retirement · Lumi tenant-id verification rate · cross-shard rejection · audit-bridge p99 · SME-grace lapsed tenants · 22-role catalogue stability.
-- **§17 References** — replaced PRD/SRS section refs (stripped) with services/auth/RFC.md, sign-in mockup, MEMORY_AUTOSYNC_DESIGN.md §6, RESEARCH_REVIEW §2.4 (cited verbatim), AUDIT_AND_PLAN, FR_AUTHORING_WORKFLOW, AGENTS.md §3.6+§11.
+- **§17 References** — replaced PRD/SRS section refs (stripped) with services/auth/RFC.md, sign-in mockup, MEMORY_AUTOSYNC_DESIGN.md §6, RESEARCH_REVIEW §2.4 (cited verbatim), AUDIT_AND_PLAN, feature-request-audit skill, AGENTS.md §3.6+§11.
 
 Verified:
 - 1442 lines parses cleanly
@@ -874,7 +874,7 @@ Changes by section:
 - **§13 KPIs** — added 8 new universal-protocol KPIs: broker-mediated rate (must be 100%), first-use approval latency, capability scope reject rate, synthesis emit rate, vertical-pack tenant attach rate, vertical-pack revenue share (≥30% of ARR at P4 · mid = the compounding moat), marketplace publish-to-install, pack legal-drift detection.
 - **§14 RACI** — added 9 new rows for Phase 8 + synthesis sub-skill + memory-capture/sync bundles + 4 pack-authoring rows + 2 distribution/marketplace rows + 1 quarterly regulatory-drift review.
 - **§16 Phase status** — added 12 new rows: Phase 8 + 3 universal-protocol skill bundles + 6 vertical packs + 2 marketplace rungs.
-- **§17 References** — added MEMORY_AUTOSYNC_DESIGN.md (4 cross-links), FR_AUTHORING_WORKFLOW, AUDIT_AND_PLAN, RESEARCH_REVIEW, strategy doc §4.4 (vertical packs as Level-4 moat), and cross-module links to memory + CUO module pages.
+- **§17 References** — added MEMORY_AUTOSYNC_DESIGN.md (4 cross-links), feature-request-audit skill, AUDIT_AND_PLAN, RESEARCH_REVIEW, strategy doc §4.4 (vertical packs as Level-4 moat), and cross-module links to memory + CUO module pages.
 
 Verified:
 - 1431 lines parses cleanly

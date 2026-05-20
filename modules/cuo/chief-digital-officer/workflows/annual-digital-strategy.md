@@ -36,5 +36,5 @@ audit_hooks:
 CDO-Digital's annual digital strategy per Rumelt + McKinsey DQ + MIT CISR digital-mastery + Gartner DBT.
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.7
+- `../../../../modules/cuo/README.md` §5.7
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

@@ -72,6 +72,6 @@ cyberos-cuo run cuo/chief-ai-officer/quarterly-use-case-portfolio-review \
 | 2 | QA-RISK-001 | Risk score no rationale | Operator drafts |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.3 — CAIO role profile
+- `../../../../modules/cuo/README.md` §5.3 — CAIO role profile
 - `./annual-ai-strategy.md` — upstream parent
 - `../../../skill/ai-use-case-portfolio-{author,audit}/SKILL.md`

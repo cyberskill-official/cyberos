@@ -69,6 +69,6 @@ cyberos-cuo run cuo/chief-ethics-officer/quarterly-bias-portfolio-audit \
 | 2 | QA-PATTERN-001 | Portfolio pattern unflagged | Operator surfaces |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.6 — Chief Ethics Officer role profile
+- `../../../../modules/cuo/README.md` §5.6 — Chief Ethics Officer role profile
 - `../../chief-ai-officer/workflows/per-model-bias-audit.md` — upstream per-model feeders
 - `../../../skill/bias-audit-{author,audit}/SKILL.md`

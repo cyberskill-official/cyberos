@@ -77,6 +77,6 @@ cyberos-cuo run cuo/chief-customer-officer/quarterly-customer-health-review \
 | 2 | QA-COHORT-001 | Cohort transition unexplained | Operator adds narrative |
 
 ## Cross-references
-- `../../../docs/The C-Suite Reference.md` §5.4 — CCO-Customer role profile
+- `../../../../modules/cuo/README.md` §5.4 — CCO-Customer role profile
 - `../../chief-revenue-officer/workflows/quarterly-churn-analysis.md` — peer (churn = backward, health = forward)
 - `../../../skill/customer-health-review-{author,audit}/SKILL.md`
