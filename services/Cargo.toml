@@ -37,7 +37,7 @@ tower-http  = { version = "0.6", features = ["trace", "cors"] }
 hyper       = "1.5"
 
 # Postgres + migrations
-sqlx        = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono", "json", "migrate", "ipnetwork"] }
+sqlx        = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono", "json", "migrate", "ipnetwork", "rust_decimal"] }
 
 # Serialization
 serde       = { version = "1", features = ["derive"] }
@@ -60,6 +60,13 @@ clap        = { version = "4.5", features = ["derive"] }
 sha2        = { version = "0.10", features = ["oid"] }
 bcrypt      = "0.16"
 jsonwebtoken = "9.3"
+
+# Observability (FR-AI-022)
+opentelemetry         = { version = "0.27", default-features = false }
+opentelemetry-otlp    = { version = "0.27", features = ["grpc-tonic"] }
+opentelemetry_sdk     = { version = "0.27", features = ["rt-tokio"] }
+tracing-opentelemetry = "0.28"
+http                  = "1"
 
 # Test helpers
 tokio-test          = "0.4"

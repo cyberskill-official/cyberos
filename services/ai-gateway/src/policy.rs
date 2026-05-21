@@ -23,4 +23,4 @@ pub use loader::{
     init_loader, load_for_tenant, shutdown_loader, validate_yaml, FileFailure, Loader,
     LoaderInitError, PolicyError,
 };
-pub use schema::{AiPolicy, EmergencyOverride, Provider, Residency, TenantPolicy};
+pub use schema::{AiPolicy, EmergencyOverride, OverrideTarget, Provider, ProviderKind, Residency, TenantPolicy};

@@ -21,6 +21,10 @@ path = "src/bin/cyberos_ai.rs"
 name = "gen-schema"
 path = "src/bin/gen_schema.rs"
 
+[[bin]]
+name = "cost-hold-expiry"
+path = "src/bin/cost_hold_expiry.rs"
+
 # --- Dependencies ---
 [dependencies]
 # Workspace-pinned shared deps
@@ -49,16 +53,66 @@ notify = "6.1"
 arc-swap = "1.7"
 once_cell = "1.20"
 
+# FR-AI-007 specific (cost-table metrics)
+prometheus = "0.13"
+
+# FR-AI-014 specific (persona version stamping)
+semver = "1"
+
 # FR-AI-003 specific (subprocess writer bridge)
 hex = "0.4"
 unicode-normalization = "0.1"
 futures = "0.3"
 
+# FR-AI-015 specific (ZDR source_url validation)
+url = "2"
+
+# FR-AI-016 specific (AZ-suffix regex)
+regex = "1"
+
+# FR-AI-008 specific (multi-provider router)
+async-trait = "0.1"
+rand = "0.8"
+reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
+
+# FR-AI-009 specific (circuit breaker)
+dashmap = "6"
+
+# FR-AI-017 specific (per-tenant cache)
+redis = { version = "0.24", features = ["tokio-comp", "connection-manager"] }
+
+# FR-AI-010 specific (streaming SSE)
+tokio-stream = "0.1"
+
+# FR-AI-011 specific (PII redaction)
+zeroize = { version = "1.8", features = ["derive"] }
+
+# FR-AI-022 specific (OTel tracing)
+opentelemetry.workspace = true
+opentelemetry-otlp.workspace = true
+opentelemetry_sdk.workspace = true
+tracing-opentelemetry.workspace = true
+http.workspace = true
+
+# FR-AI-021 specific (operator CLI)
+jsonwebtoken.workspace = true
+clap_complete = "4"
+comfy-table = "7"
+jsonschema = "0.18"
+
 # Internal
 cyberos-types.workspace = true
+cyberos-cli-exit.workspace = true
 
 [dev-dependencies]
 tokio.workspace = true
 tempfile = "3.13"
 proptest = "1.5"
 rust_decimal_macros = "1.36"
+criterion = { version = "0.5", features = ["html_reports"] }
+assert_cmd = "2"
+predicates = "3"
+
+[[bench]]
+name = "circuit_breaker_bench"
+harness = false

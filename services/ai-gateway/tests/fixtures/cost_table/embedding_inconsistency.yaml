@@ -1,0 +1,10 @@
+version: 1
+last_updated: 2026-05-15
+source: test fixture — is_embedding with non-zero output
+
+rates:
+  bedrock:
+    broken-embedding:
+      input_per_1k_usd:  0.001
+      output_per_1k_usd: 0.5
+      is_embedding: true

@@ -4,7 +4,9 @@
 //!
 //! - [`policy`] — FR-AI-005: per-tenant YAML policy loader (cap · warn · override · residency).
 //! - [`memory_writer`] — FR-AI-003: subprocess bridge to the canonical memory Writer.
+//! - [`cost_table`] — FR-AI-007: YAML-backed, hot-reloadable provider cost rates.
 //! - [`cost_ledger`] — FR-AI-001/002/004: pre-call check · post-call reconcile · expiry cleanup.
+//! - [`cli`] — FR-AI-021: `cyberos-ai` operator CLI (usage · models · policy · failover · invoice · breaker · expiry · memory).
 //!
 //! ## P0 slice 1 (shipped here)
 //!
@@ -37,8 +39,24 @@
 #![allow(clippy::double_ended_iterator_last)]
 #![allow(dead_code)]
 
+pub mod alias;
+pub mod cache;
+pub mod cli;
+pub mod circuit_breaker;
+pub mod cost_hold_expiry;
+pub mod cost_ledger;
+pub mod cost_reconcile;
+pub mod cost_table;
 pub mod memory_writer;
+pub mod otel;
+pub mod persona;
 pub mod policy;
+pub mod redact;
+pub mod rerank;
+pub mod residency;
+pub mod router;
+pub mod streaming;
+pub mod zdr;
 
 /// Service banner used by binaries on startup.
 pub const SERVICE_BANNER: &str = concat!(

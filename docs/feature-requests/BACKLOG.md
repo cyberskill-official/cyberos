@@ -149,48 +149,48 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| **FR-AI-001** | AI Gateway cost-ledger pre-call check | MUST | ready_to_implement | FR-AI-003, FR-AI-005 | 8h |
-| **FR-AI-002** | AI Gateway cost-ledger post-call reconcile | MUST | ready_to_implement | FR-AI-001, FR-AI-003 | 6h |
+| **FR-AI-001** | AI Gateway cost-ledger pre-call check | MUST | done | FR-AI-003, FR-AI-005 | 8h |
+| **FR-AI-002** | AI Gateway cost-ledger post-call reconcile | MUST | done | FR-AI-001, FR-AI-003 | 6h |
 | **FR-AI-003** | memory audit-row bridge (`ai.invocation` chained row per call) | MUST | done | — | 5h |
-| **FR-AI-004** | Cost-hold expiry cleanup job (Postgres scheduled) | MUST | ready_to_implement | FR-AI-001, FR-AI-003 | 3h |
+| **FR-AI-004** | Cost-hold expiry cleanup job (Postgres scheduled) | MUST | done | FR-AI-001, FR-AI-003 | 3h |
 | **FR-AI-005** | Tenant-policy YAML loader (per-tenant cap + warn threshold + override) | MUST | done | — | 5h |
 
 #### Slice 2 — multi-provider router (Bedrock + Anthropic + OpenAI)
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| **FR-AI-006** | Model-alias resolution (`chat.smart` → `bedrock:claude-3.5-sonnet`) with per-tenant override | MUST | ready_to_implement | FR-AI-005 | 6h |
-| **FR-AI-007** | Provider cost-table loader (YAML, hot-reload) | MUST | ready_to_implement | — | 4h |
-| **FR-AI-008** | LiteLLM-derived router with retry + 30 s failover SLA | MUST | ready_to_implement | FR-AI-006, FR-AI-007 | 10h |
-| **FR-AI-009** | Circuit-breaker per (provider, model) with half-open recovery probing | MUST | ready_to_implement | FR-AI-008 | 6h |
-| **FR-AI-010** | Streaming SSE end-to-end (token-by-token to client) | SHOULD | ready_to_implement | FR-AI-008 | 8h |
+| **FR-AI-006** | Model-alias resolution (`chat.smart` → `bedrock:claude-3.5-sonnet`) with per-tenant override | MUST | done | FR-AI-005 | 6h |
+| **FR-AI-007** | Provider cost-table loader (YAML, hot-reload) | MUST | done | — | 4h |
+| **FR-AI-008** | LiteLLM-derived router with retry + 30 s failover SLA | MUST | done | FR-AI-006, FR-AI-007 | 10h |
+| **FR-AI-009** | Circuit-breaker per (provider, model) with half-open recovery probing | MUST | done | FR-AI-008 | 6h |
+| **FR-AI-010** | Streaming SSE end-to-end (token-by-token to client) | SHOULD | done | FR-AI-008 | 8h |
 
 #### Slice 3 — PII redaction + persona stamping
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| **FR-AI-011** | Presidio EN-base PII redaction in-flight (every prompt) | MUST | ready_to_implement | FR-AI-008 | 6h |
-| **FR-AI-012** | VN-PII Presidio plugin (CCCD · MST · VN phone · NĐD · VN address · bank account) | MUST | ready_to_implement | FR-AI-011 | 10h |
-| **FR-AI-013** | VN-PII recall ≥ 99% CI gate on 200-sample test set | MUST | ready_to_implement | FR-AI-012 | 4h |
-| **FR-AI-014** | Persona-version system-prompt injection from memory `memories/personas/<version>.md` | MUST | ready_to_implement | FR-AI-003 | 5h |
-| **FR-AI-015** | ZDR check — refuse non-ZDR provider when tenant policy requires it | MUST | ready_to_implement | FR-AI-006 | 3h |
+| **FR-AI-011** | Presidio EN-base PII redaction in-flight (every prompt) | MUST | done | FR-AI-008 | 6h |
+| **FR-AI-012** | VN-PII Presidio plugin (CCCD · MST · VN phone · NĐD · VN address · bank account) | MUST | done | FR-AI-011 | 10h |
+| **FR-AI-013** | VN-PII recall ≥ 99% CI gate on 200-sample test set | MUST | done | FR-AI-012 | 4h |
+| **FR-AI-014** | Persona-version system-prompt injection from memory `memories/personas/<version>.md` | MUST | done | FR-AI-003 | 5h |
+| **FR-AI-015** | ZDR check — refuse non-ZDR provider when tenant policy requires it | MUST | done | FR-AI-006 | 3h |
 
 #### Slice 4 — geographic residency + per-tenant cache
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| **FR-AI-016** | Tenant residency pinning (`sg-1` / `eu-1` / `us-1` / `vn-1`) propagating to provider selection | MUST | ready_to_implement | FR-AI-006 | 5h |
-| **FR-AI-017** | Cache (Redis) keyed by (tenant_id × prompt_hash × model); ≥ 30% hit rate P0 target | SHOULD | ready_to_implement | FR-AI-008 | 6h |
-| **FR-AI-018** | Cross-tenant cache leak property-test (hard zero) | MUST | ready_to_implement | FR-AI-017 | 3h |
+| **FR-AI-016** | Tenant residency pinning (`sg-1` / `eu-1` / `us-1` / `vn-1`) propagating to provider selection | MUST | done | FR-AI-006 | 5h |
+| **FR-AI-017** | Cache (Redis) keyed by (tenant_id × prompt_hash × model); ≥ 30% hit rate P0 target | SHOULD | done | FR-AI-008 | 6h |
+| **FR-AI-018** | Cross-tenant cache leak property-test (hard zero) | MUST | done | FR-AI-017 | 3h |
 | **FR-AI-019** | Self-hosted BGE-M3 embeddings (single L4 GPU pod) + CPU fallback | SHOULD | done | — | 8h |
-| **FR-AI-020** | BGE-rerank-v2-m3 cross-encoder for KB reranking | COULD | ready_to_implement | FR-AI-019 | 5h |
+| **FR-AI-020** | BGE-rerank-v2-m3 cross-encoder for KB reranking | COULD | done | FR-AI-019 | 5h |
 
 #### Slice 5 — operator surface + observability
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| **FR-AI-021** | `cyberos-ai` operator CLI (usage · models list · policy set · failover drill · invoice export) | MUST | ready_to_implement | FR-AI-008, FR-AI-005 | 8h |
-| **FR-AI-022** | OTel trace + span emission for every call (caller → router → provider → response) | MUST | ready_to_implement | FR-AI-008 | 4h |
+| **FR-AI-021** | `cyberos-ai` operator CLI (usage · models list · policy set · failover drill · invoice export) | MUST | done | FR-AI-008, FR-AI-005 | 8h |
+| **FR-AI-022** | OTel trace + span emission for every call (caller → router → provider → response) | MUST | done | FR-AI-008 | 4h |
 
 ---
 

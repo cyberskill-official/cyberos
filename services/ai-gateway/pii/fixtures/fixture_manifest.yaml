@@ -1,0 +1,50 @@
+# FR-AI-013 — Fixture manifest.
+# Pins recognizer versions and sample counts for the recall gate.
+
+fixture_version: "2026Q2.0"
+generated_at: "2026-05-21T00:00:00Z"
+regenerated_due: "2026-07-01"
+
+sample_counts:
+  VN_CCCD: 30
+  VN_MST: 30
+  VN_PHONE: 30
+  VN_NDD: 20
+  VN_ADDRESS: 30
+  VN_BANK_ACCOUNT: 30
+  negative: 30
+total_samples: 200
+
+# Pinned recognizer versions — test_recall_gate reads /recognizers/version
+# and asserts these match before computing recall.
+recognizer_versions:
+  VN_CCCD: "1.0.0"
+  VN_MST: "1.0.0"
+  VN_PHONE: "1.0.0"
+  VN_NDD: "1.0.0"
+  VN_ADDRESS: "1.0.0"
+  VN_BANK_ACCOUNT: "1.0.0"
+
+# Per-recognizer recall floors.
+recall_floors:
+  VN_CCCD: 0.99
+  VN_MST: 0.99
+  VN_PHONE: 0.99
+  VN_NDD: 0.99
+  VN_ADDRESS: 0.99
+  VN_BANK_ACCOUNT: 0.99
+
+# Aggregate floor.
+aggregate_recall_floor: 0.99
+
+# Precision baselines — used to detect regressions.
+precision_baselines_prior_quarter:
+  VN_CCCD: 1.0
+  VN_MST: 0.96
+  VN_PHONE: 0.98
+  VN_NDD: 1.0
+  VN_ADDRESS: 0.95
+  VN_BANK_ACCOUNT: 0.97
+
+# Runtime budget — wall-clock seconds for the recall gate to complete.
+runtime_budget_seconds: 300

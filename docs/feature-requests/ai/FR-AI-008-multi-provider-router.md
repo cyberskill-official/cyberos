@@ -4,14 +4,14 @@ id: FR-AI-008
 title: "LiteLLM-derived multi-provider router with retry + 30s failover SLA"
 module: AI
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 2
 slice: 2
 owner: Stephen Cheng
 created: 2026-05-15
-shipped: null
+shipped: 2026-05-21
 memory_chain_hash: null
 related_frs: [FR-AI-001, FR-AI-002, FR-AI-006, FR-AI-007, FR-AI-009, FR-AI-010, FR-AI-015, FR-AI-021]
 depends_on: [FR-AI-006, FR-AI-007, FR-AI-002]

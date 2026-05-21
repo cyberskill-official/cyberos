@@ -4,14 +4,14 @@ id: FR-AI-011
 title: "Presidio EN-base PII redaction in-flight (every prompt)"
 module: AI
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 3
 slice: 3
 owner: Stephen Cheng
 created: 2026-05-15
-shipped: null
+shipped: 2026-05-21
 memory_chain_hash: null
 related_frs: [FR-AI-002, FR-AI-005, FR-AI-008, FR-AI-012, FR-AI-013, FR-AI-021]
 depends_on: [FR-AI-008]

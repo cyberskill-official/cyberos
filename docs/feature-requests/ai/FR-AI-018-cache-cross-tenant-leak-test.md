@@ -4,14 +4,14 @@ id: FR-AI-018
 title: "Cross-tenant cache leak property-test (hard zero) — 200K random ops + 7 regression scenarios + adversarial inputs"
 module: AI
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 4
 slice: 4
 owner: Stephen Cheng
 created: 2026-05-15
-shipped: null
+shipped: 2026-05-21
 memory_chain_hash: null
 related_frs: [FR-AI-005, FR-AI-014, FR-AI-016, FR-AI-017]
 depends_on: [FR-AI-017]

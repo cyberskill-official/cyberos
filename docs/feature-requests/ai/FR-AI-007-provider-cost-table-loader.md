@@ -4,7 +4,7 @@ id: FR-AI-007
 title: "Provider cost-table loader — YAML-backed, hot-reloadable rate table"
 module: AI
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 2

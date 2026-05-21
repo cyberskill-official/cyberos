@@ -4,7 +4,7 @@ id: FR-AI-020
 title: "BGE-reranker-v2-m3 cross-encoder for KB reranking (per-region sidecar; CPU fallback)"
 module: AI
 priority: COULD
-status: ready_to_implement
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 4

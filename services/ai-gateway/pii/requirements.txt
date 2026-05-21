@@ -1,0 +1,6 @@
+presidio-analyzer>=2.2,<3
+presidio-anonymizer>=2.2,<3
+fastapi>=0.110,<1
+uvicorn>=0.27,<1
+pyyaml>=6.0,<7
+pytest>=7.0,<10

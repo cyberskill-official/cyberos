@@ -1,0 +1,57 @@
+# FR-AI-007 — Provider cost rates (USD per 1,000 tokens).
+#
+# This file is the canonical source for AI provider pricing.
+# Hot-reloaded by the cost_table module on file change (100ms debounce).
+#
+# Schema: FR-AI-007 §3
+# Validation: `cyberos-ai policy validate` (FR-AI-021)
+
+version: 1
+last_updated: 2026-05-15
+source: |
+  anthropic.com/pricing (Anthropic native)
+  aws.amazon.com/bedrock/pricing (AWS Bedrock)
+  openai.com/pricing (OpenAI)
+
+rates:
+  bedrock:
+    anthropic.claude-3-5-sonnet-20241022-v2:0:
+      input_per_1k_usd:  0.003
+      output_per_1k_usd: 0.015
+    anthropic.claude-3-haiku-20240307-v1:0:
+      input_per_1k_usd:  0.00025
+      output_per_1k_usd: 0.00125
+    amazon.titan-embed-text-v2:0:
+      input_per_1k_usd:  0.00002
+      output_per_1k_usd: 0.0
+      is_embedding: true
+
+  anthropic:
+    claude-3-5-sonnet-20241022:
+      input_per_1k_usd:  0.003
+      output_per_1k_usd: 0.015
+    claude-3-haiku-20240307:
+      input_per_1k_usd:  0.00025
+      output_per_1k_usd: 0.00125
+
+  openai:
+    gpt-4o:
+      input_per_1k_usd:  0.0025
+      output_per_1k_usd: 0.01
+    gpt-4o-mini:
+      input_per_1k_usd:  0.00015
+      output_per_1k_usd: 0.0006
+    text-embedding-3-small:
+      input_per_1k_usd:  0.00002
+      output_per_1k_usd: 0.0
+      is_embedding: true
+
+  bge:                                          # self-hosted (FR-AI-019) — cost = 0
+    bge-m3:
+      input_per_1k_usd:  0.0
+      output_per_1k_usd: 0.0
+      is_embedding: true
+    bge-reranker-v2-m3:
+      input_per_1k_usd:  0.0
+      output_per_1k_usd: 0.0
+      is_embedding: true                        # rerank is "embedding-class" for accounting

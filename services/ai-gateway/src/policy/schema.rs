@@ -67,6 +67,29 @@ pub struct AiPolicy {
     /// `None` = any registered persona allowed.
     #[serde(default)]
     pub allowed_personas: Option<Vec<String>>,
+
+    /// Per-alias overrides — beats primary + fallback chain.
+    /// FR-AI-006 §1 #2.
+    #[serde(default)]
+    pub alias_overrides: Option<HashMap<String, OverrideTarget>>,
+
+    /// If true, providers without regional pinning (e.g. Anthropic native)
+    /// fail residency checks. Default false. FR-AI-006 §1 #7.
+    #[serde(default)]
+    pub residency_requires_regional_provider: Option<bool>,
+
+    /// Extra PII entity types to redact beyond the EN baseline (FR-AI-011 §1 #10).
+    /// Values are Presidio entity-type names (e.g. "VN_CCCD", "VN_MST").
+    #[serde(default)]
+    pub pii_redaction_extra: Option<Vec<String>>,
+}
+
+/// Override target for a specific alias. FR-AI-006 §3.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct OverrideTarget {
+    /// The provider + model_alias_map to use for this alias.
+    pub provider: Provider,
 }
 
 /// Provider tag union. FR-AI-005 §3.
@@ -103,13 +126,82 @@ pub enum Provider {
     },
 }
 
+impl Provider {
+    /// Get the provider kind (simplified identity).
+    pub fn kind(&self) -> ProviderKind {
+        match self {
+            Self::Bedrock { .. } => ProviderKind::Bedrock,
+            Self::Anthropic { .. } => ProviderKind::Anthropic,
+            Self::Openai { .. } => ProviderKind::Openai,
+            Self::Vertex { .. } => ProviderKind::Vertex,
+        }
+    }
+
+    /// Get the provider region (if regional).
+    pub fn region(&self) -> Option<String> {
+        match self {
+            Self::Bedrock { region, .. } => Some(region.clone()),
+            Self::Anthropic { .. } => None,
+            Self::Openai { .. } => None,
+            Self::Vertex { region, .. } => Some(region.clone()),
+        }
+    }
+
+    /// Look up a model alias in this provider's model_alias_map.
+    pub fn model_for_alias(&self, alias: &str) -> Option<&str> {
+        let map = match self {
+            Self::Bedrock { model_alias_map, .. } => model_alias_map,
+            Self::Anthropic { model_alias_map, .. } => model_alias_map,
+            Self::Openai { model_alias_map, .. } => model_alias_map,
+            Self::Vertex { model_alias_map, .. } => model_alias_map,
+        };
+        map.get(alias).map(|s| s.as_str())
+    }
+}
+
+/// Provider kind — simplified enum for cost-table lookups and metric labels.
+///
+/// This is a subset of [`Provider`] that carries no configuration (region, aliases).
+/// Used by FR-AI-007 (cost table) and FR-AI-006 (alias resolution) where only the
+/// provider identity matters, not its full config.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum ProviderKind {
+    /// AWS Bedrock.
+    Bedrock,
+    /// Anthropic API.
+    Anthropic,
+    /// OpenAI API.
+    Openai,
+    /// Google Vertex AI.
+    Vertex,
+    /// Self-hosted BGE (FR-AI-019).
+    Bge,
+}
+
+impl ProviderKind {
+    /// Stable string conversion for OTel metric labels.
+    ///
+    /// Uses the serde rename (lowercase) to avoid coupling OBS dashboards to
+    /// Rust enum variant names.
+    pub fn as_metric_label(&self) -> &'static str {
+        match self {
+            Self::Bedrock => "bedrock",
+            Self::Anthropic => "anthropic",
+            Self::Openai => "openai",
+            Self::Vertex => "vertex",
+            Self::Bge => "bge",
+        }
+    }
+}
+
 /// Residency pin. Slice 1 records the value; FR-AI-016 enforces it at routing time.
 ///
 /// Wire form is hyphenated (`sg-1`, `eu-1`, `us-1`, `vn-1`) per FR-AI-005 §3 + the
 /// EXAMPLE.tenant.yaml reference. `rename_all = "kebab-case"` would emit `sg1` (no
 /// hyphen — serde treats `Sg1` as one word + digit) so each variant carries an
 /// explicit `rename`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 pub enum Residency {
     /// Singapore.
     #[serde(rename = "sg-1")]

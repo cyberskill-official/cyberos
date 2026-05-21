@@ -1,0 +1,58 @@
+# FR-AI-015 — Zero Data Retention attestation table.
+#
+# Each (provider, model) pair MUST be explicitly enumerated.
+# Entries missing is_zdr / verified_at / source_url / attested_by FAIL init.
+# ZDR claims without source = audit failure.
+#
+# See FR-AI-015 for normative schema and acceptance criteria.
+
+version: 1
+last_updated: 2026-05-21
+
+attestations:
+  bedrock:
+    "anthropic.claude-3-5-sonnet-20241022-v2:0":
+      is_zdr: true
+      verified_at: 2026-05-21
+      source_url: "https://aws.amazon.com/bedrock/data-privacy/"
+      attested_by: "stephen@cyberos.world"
+      notes: "Bedrock guarantees no-data-retention per their data privacy whitepaper"
+
+    "anthropic.claude-3-haiku-20240307-v1:0":
+      is_zdr: true
+      verified_at: 2026-05-21
+      source_url: "https://aws.amazon.com/bedrock/data-privacy/"
+      attested_by: "stephen@cyberos.world"
+
+    "amazon.titan-embed-text-v2:0":
+      is_zdr: true
+      verified_at: 2026-05-21
+      source_url: "https://aws.amazon.com/bedrock/data-privacy/"
+      attested_by: "stephen@cyberos.world"
+
+  anthropic:
+    "claude-3-5-sonnet-20241022":
+      is_zdr: true
+      verified_at: 2026-05-21
+      source_url: "https://www.anthropic.com/legal/zero-data-retention"
+      attested_by: "stephen@cyberos.world"
+      notes: "ZDR available on Enterprise plan only; runtime tenant-tier check is FR-AI-022 follow-up"
+
+  openai:
+    "gpt-4o":
+      is_zdr: false
+      verified_at: 2026-05-21
+      source_url: "https://platform.openai.com/docs/models#data-policy"
+      attested_by: "stephen@cyberos.world"
+      notes: |
+        Standard OpenAI retains data 30 days by default. ZDR requires the
+        zero-data-retention org policy enabled per OpenAI's documentation;
+        CyberOS has not validated this. Treat as non-ZDR until policy enabled.
+
+  vertex:
+    "gemini-2.0-pro":
+      is_zdr: false
+      verified_at: 2026-05-21
+      source_url: "https://cloud.google.com/vertex-ai/docs/general/data-governance"
+      attested_by: "stephen@cyberos.world"
+      notes: "Vertex retention is region-dependent; ZDR not validated for VN tenants"

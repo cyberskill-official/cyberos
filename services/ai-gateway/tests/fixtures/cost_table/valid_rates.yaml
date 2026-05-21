@@ -1,0 +1,29 @@
+version: 1
+last_updated: 2026-05-15
+source: test fixture
+
+rates:
+  bedrock:
+    anthropic.claude-3-5-sonnet-20241022-v2:0:
+      input_per_1k_usd:  0.003
+      output_per_1k_usd: 0.015
+    amazon.titan-embed-text-v2:0:
+      input_per_1k_usd:  0.00002
+      output_per_1k_usd: 0.0
+      is_embedding: true
+
+  anthropic:
+    claude-3-5-sonnet-20241022:
+      input_per_1k_usd:  0.003
+      output_per_1k_usd: 0.015
+
+  openai:
+    gpt-4o:
+      input_per_1k_usd:  0.0025
+      output_per_1k_usd: 0.01
+
+  bge:
+    bge-m3:
+      input_per_1k_usd:  0.0
+      output_per_1k_usd: 0.0
+      is_embedding: true

@@ -1,0 +1,19 @@
+version: 1
+last_updated: 2026-05-15
+source: test fixture — three validation failures
+
+rates:
+  bedrock:
+    negative-input:
+      input_per_1k_usd:  -0.01
+      output_per_1k_usd: 0.015
+
+  typo_provider:
+    some-model:
+      input_per_1k_usd:  0.001
+      output_per_1k_usd: 0.002
+
+  openai:
+    "":
+      input_per_1k_usd:  0.001
+      output_per_1k_usd: 0.002

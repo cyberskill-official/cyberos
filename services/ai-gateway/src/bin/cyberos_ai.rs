@@ -1,59 +1,12 @@
-//! `cyberos-ai` operator CLI — slice 1 surface (FR-AI-005 init test; full surface in FR-AI-021).
-//!
-//! Slice-1 subcommands:
-//! - `policy validate <file>` — runs the schema validator on a YAML file without loading it.
-//! - `policy list` — lists loaded tenant policies from the live `config/tenants/` directory.
-//! - `serve` — boots the AI Gateway listener (placeholder; HTTP surface lands with FR-AI-008).
+//! `cyberos-ai` operator CLI — FR-AI-021 full surface.
 
-use std::path::PathBuf;
-use std::process::ExitCode;
-
-use clap::{Parser, Subcommand};
-use cyberos_ai_gateway::{policy, SERVICE_BANNER};
-
-#[derive(Debug, Parser)]
-#[command(
-    name = "cyberos-ai",
-    version,
-    about = "CyberOS AI Gateway operator CLI"
-)]
-struct Cli {
-    #[command(subcommand)]
-    cmd: Cmd,
-}
-
-#[derive(Debug, Subcommand)]
-enum Cmd {
-    /// Policy management.
-    Policy {
-        #[command(subcommand)]
-        op: PolicyOp,
-    },
-    /// Boot the gateway HTTP listener (placeholder; FR-AI-008 lands the real router).
-    Serve {
-        /// Path to the tenant-policy config directory.
-        #[arg(long, default_value = "services/ai-gateway/config/tenants")]
-        config: PathBuf,
-    },
-}
-
-#[derive(Debug, Subcommand)]
-enum PolicyOp {
-    /// Validate a tenant-policy YAML file without loading it.
-    Validate {
-        /// Path to the YAML file.
-        file: PathBuf,
-    },
-    /// List the loaded tenant policies from the supplied config dir.
-    List {
-        /// Config directory.
-        #[arg(long, default_value = "services/ai-gateway/config/tenants")]
-        config: PathBuf,
-    },
-}
+use clap::Parser;
+use cyberos_ai_gateway::cli::{Cli, Command, auth};
+use cyberos_ai_gateway::cli::exit_codes::ExitCode;
+use std::process;
 
 #[tokio::main]
-async fn main() -> ExitCode {
+async fn main() {
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()
@@ -62,68 +15,57 @@ async fn main() -> ExitCode {
         .init();
 
     let cli = Cli::parse();
-    match cli.cmd {
-        Cmd::Policy { op } => match op {
-            PolicyOp::Validate { file } => match std::fs::read_to_string(&file) {
-                Ok(yaml) => match policy::validate_yaml(&yaml) {
-                    Ok(p) => {
-                        println!(
-                            "OK tenant_id={} (cap=${})",
-                            p.tenant_id, p.ai_policy.monthly_cap_usd
-                        );
-                        ExitCode::SUCCESS
-                    }
-                    Err(errs) => {
-                        for e in errs {
-                            eprintln!("ERROR {e}");
-                        }
-                        ExitCode::FAILURE
-                    }
-                },
-                Err(e) => {
-                    eprintln!("ERROR: read {}: {e}", file.display());
-                    ExitCode::FAILURE
-                }
-            },
-            PolicyOp::List { config } => match policy::init_loader(&config).await {
-                Ok(_loader) => {
-                    println!("Loaded policies from {}:", config.display());
-                    // Pull the cache's sorted snapshot via load_for_tenant on each known id.
-                    // For now we just emit the path; FR-AI-021 adds a richer surface.
-                    for entry in std::fs::read_dir(&config)
-                        .unwrap_or_else(|_| panic!("read_dir {}", config.display()))
-                    {
-                        let Ok(entry) = entry else { continue };
-                        if entry
-                            .path()
-                            .extension()
-                            .map(|e| e == "yaml")
-                            .unwrap_or(false)
-                        {
-                            println!("  {}", entry.path().display());
-                        }
-                    }
-                    ExitCode::SUCCESS
-                }
-                Err(e) => {
-                    eprintln!("ERROR: init_loader: {e}");
-                    ExitCode::FAILURE
-                }
-            },
-        },
-        Cmd::Serve { config } => {
-            println!("{SERVICE_BANNER}");
-            match policy::init_loader(&config).await {
-                Ok(_loader) => {
-                    println!("Policy loader initialised; HTTP listener placeholder.");
-                    println!("FR-AI-008 lands the real router; this binary's serve mode currently no-ops.");
-                    ExitCode::SUCCESS
-                }
-                Err(e) => {
-                    eprintln!("FATAL: init_loader: {e}");
-                    ExitCode::FAILURE
-                }
-            }
+    let json = cli.json;
+    let confirm = cli.confirm;
+
+    // Handle completions before auth check
+    if let Command::Completions(ref args) = cli.command {
+        cyberos_ai_gateway::cli::completions::run(args.shell.clone());
+        return;
+    }
+
+    // Authenticate
+    let claims = match auth::require_token() {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("auth_failed: {e}");
+            process::exit(ExitCode::AuthError as i32);
+        }
+    };
+
+    // Build Postgres pool
+    let pool = match build_pool().await {
+        Ok(p) => p,
+        Err(e) => {
+            eprintln!("remote_unreachable: {e}");
+            process::exit(ExitCode::NetworkError as i32);
+        }
+    };
+
+    let result = match cli.command {
+        Command::Usage(args) => cyberos_ai_gateway::cli::usage::run(args, json, &claims, &pool).await,
+        Command::Models(args) => cyberos_ai_gateway::cli::models::run(args.action, json, &claims, &pool).await,
+        Command::Policy(args) => cyberos_ai_gateway::cli::policy::run(args.action, json, confirm, &claims, &pool).await,
+        Command::Failover(args) => cyberos_ai_gateway::cli::failover::run(args.action, json, &claims, &pool).await,
+        Command::Invoice(args) => cyberos_ai_gateway::cli::invoice::run(args.action, json, &claims, &pool).await,
+        Command::Breaker(args) => cyberos_ai_gateway::cli::breaker::run(args.action, json, &claims, &pool).await,
+        Command::Expiry(args) => cyberos_ai_gateway::cli::expiry::run(args.action, json, &claims, &pool).await,
+        Command::Memory(args) => cyberos_ai_gateway::cli::memory::run(args.action, json, &claims, &pool).await,
+        Command::Completions(_) => unreachable!(),
+    };
+
+    match result {
+        Ok(()) => process::exit(ExitCode::Ok as i32),
+        Err(e) => {
+            eprintln!("{e}");
+            process::exit(e.exit_code() as i32);
         }
     }
+}
+
+async fn build_pool() -> Result<sqlx::PgPool, sqlx::Error> {
+    let url = std::env::var("DATABASE_URL").unwrap_or_else(|_| {
+        "postgres://localhost/cyberos".to_string()
+    });
+    sqlx::PgPool::connect(&url).await
 }

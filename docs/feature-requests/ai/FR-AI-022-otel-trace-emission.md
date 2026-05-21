@@ -4,14 +4,14 @@ id: FR-AI-022
 title: "OpenTelemetry trace + span emission for every call (caller → router → provider → response) with W3C TraceContext + PII-safe attributes"
 module: AI
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 5
 slice: 5
 owner: Stephen Cheng
 created: 2026-05-15
-shipped: null
+shipped: 2026-05-21
 memory_chain_hash: null
 related_frs: [FR-AI-001, FR-AI-002, FR-AI-008, FR-AI-009, FR-AI-010, FR-AI-014, FR-AI-017, FR-AI-019, FR-AI-021, FR-OBS-001, FR-OBS-004, FR-OBS-005, FR-OBS-006]
 depends_on: [FR-AI-008, FR-AI-003, FR-OBS-001]

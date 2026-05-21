@@ -92,6 +92,9 @@ mod tests {
                 zdr_required: true,
                 emergency_override: Default::default(),
                 allowed_personas: None,
+                alias_overrides: None,
+                residency_requires_regional_provider: None,
+                pii_redaction_extra: None,
             },
         })
     }

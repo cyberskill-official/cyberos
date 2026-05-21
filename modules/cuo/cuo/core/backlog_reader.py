@@ -25,8 +25,9 @@ from typing import Optional
 
 
 # FR IDs look like FR-<MODULE>-<NNN> — module slug is alphanumeric (no hyphens)
+# Note: FR-IDs may be wrapped in ** markdown bold markers.
 _FR_ROW_RE = re.compile(
-    r"^\|\s*(?P<fr_id>FR-[A-Z]+-\d+)\s*\|"
+    r"^\|\s*\*{0,2}(?P<fr_id>FR-[A-Z]+-\d+)\*{0,2}\s*\|"
     r"\s*(?P<title>[^|]+?)\s*\|"
     r"\s*(?P<priority>[^|]*?)\s*\|"
     r"\s*(?P<status>[^|]+?)\s*\|"

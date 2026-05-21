@@ -4,7 +4,7 @@ id: FR-AI-014
 title: "Persona-version system-prompt injection from memory memories/personas/<handle>.md"
 module: AI
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 3
