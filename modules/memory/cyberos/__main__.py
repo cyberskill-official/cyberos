@@ -1865,7 +1865,7 @@ def _auto_index(store: Path) -> None:
         conn.close()
 
 
-def _auto_digest(store: Path, actor: str, limit: int = 50) -> None:
+def _auto_digest(store: Path, actor: str, limit: int = 0) -> None:
     """Digest project knowledge files into memory files."""
     import hashlib
     import time
@@ -1911,8 +1911,9 @@ def _auto_digest(store: Path, actor: str, limit: int = 50) -> None:
 
     print(f"  Found {len(filtered)} knowledge files to digest")
 
-    # Create digest memories
-    for target in filtered[:limit]:
+    # Create digest memories (limit=0 means no limit)
+    targets_to_digest = filtered if limit == 0 else filtered[:limit]
+    for target in targets_to_digest:
         rel_path = target.relative_to(project_root)
         try:
             content = target.read_text(encoding="utf-8", errors="replace")
@@ -2130,8 +2131,8 @@ def build_parser() -> argparse.ArgumentParser:
         help="ingest project knowledge (README.md, docs/) into memory",
     )
     sp.add_argument(
-        "--digest-limit", type=int, default=50,
-        help="max files to digest with --auto-digest (default 50)",
+        "--digest-limit", type=int, default=0,
+        help="max files to digest with --auto-digest (0 = no limit, default)",
     )
     sp.add_argument(
         "--force", action="store_true",
