@@ -33,6 +33,9 @@ WITH_AUTOMATION=0
 WITH_PRE_COMMIT=0
 NO_AGENT_SYMLINK=0
 FORCE=0
+AUTO_INDEX=0
+AUTO_DIGEST=0
+DIGEST_LIMIT=50
 SOURCE_REPO="$(cd "$(dirname "$0")/.." && pwd)"
 REPO_ROOT="$(cd "$SOURCE_REPO/../.." && pwd)"
 
@@ -42,6 +45,9 @@ while [[ $# -gt 0 ]]; do
         --with-pre-commit)   WITH_PRE_COMMIT=1; shift ;;
         --no-agent-symlink)  NO_AGENT_SYMLINK=1; shift ;;
         --force)             FORCE=1; shift ;;
+        --auto-index)        AUTO_INDEX=1; shift ;;
+        --auto-digest)       AUTO_DIGEST=1; shift ;;
+        --digest-limit)      DIGEST_LIMIT="$2"; shift 2 ;;
         -h|--help)
             grep '^#' "$0" | sed 's/^# \{0,1\}//'
             exit 0 ;;
@@ -82,11 +88,30 @@ echo
 
 echo "→ step 2/5: initialise .cyberos-memory/"
 memory="$TARGET/.cyberos-memory"
+
+# Build cyberos init command
+init_cmd="python -m cyberos --store .cyberos-memory init"
+if [[ "$FORCE" == "1" ]]; then
+    init_cmd="$init_cmd --force"
+fi
+if [[ "$AUTO_INDEX" == "1" ]]; then
+    init_cmd="$init_cmd --auto-index"
+fi
+if [[ "$AUTO_DIGEST" == "1" ]]; then
+    init_cmd="$init_cmd --auto-digest --digest-limit $DIGEST_LIMIT"
+fi
+
+cd "$TARGET"
 if [[ -d "$memory" && "$FORCE" != "1" ]]; then
     echo "  – $memory already exists; skipping store init (use --force to re-init)"
 else
-    mkdir -p "$memory"/{audit,memories/decisions,memories/facts,memories/people,memories/projects,memories/preferences,memories/drift,memories/refinements,meta,company,module,member,client,project,persona,conflicts,exports,index}
-    cat > "$memory/manifest.json" <<EOF
+    echo "  Running: $init_cmd"
+    if eval "$init_cmd"; then
+        echo "  ✓ $memory/ initialized via cyberos init"
+    else
+        echo "  ⚠ cyberos init failed, falling back to manual initialization"
+        mkdir -p "$memory"/{audit,memories/decisions,memories/facts,memories/people,memories/projects,memories/preferences,memories/drift,memories/refinements,meta,company,module,member,client,project,persona,conflicts,exports,index}
+        cat > "$memory/manifest.json" <<EOF
 {
   "schema_version": 2,
   "project": {
@@ -95,9 +120,10 @@ else
   "created_at_ns": $(date +%s)000000000
 }
 EOF
-    # Create HEAD (8-byte LE u64 zeroed)
-    python3 -c "import sys; sys.stdout.buffer.write(b'\x00'*8)" > "$memory/HEAD"
-    echo "  ✓ $memory/ (manifest.json + HEAD + directory skeleton)"
+        # Create HEAD (8-byte LE u64 zeroed)
+        python3 -c "import sys; sys.stdout.buffer.write(b'\x00'*8)" > "$memory/HEAD"
+        echo "  ✓ $memory/ (manifest.json + HEAD + directory skeleton)"
+    fi
 fi
 
 # Copy protocol files into the store (self-contained)
