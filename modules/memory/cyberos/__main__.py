@@ -1767,7 +1767,7 @@ def _cmd_init(args: argparse.Namespace) -> int:
     # --- Phase 3: Auto-digest project knowledge ---
     if args.auto_digest:
         print("\nAuto-digesting project knowledge...")
-        _auto_digest(store, args.actor or "cyberos-cli")
+        _auto_digest(store, args.actor or "cyberos-cli", limit=args.digest_limit)
 
     print(f"\nBRAIN initialized at {store}")
     print("The store is now ready. Run `cyberos doctor` to verify invariants.")
@@ -1865,7 +1865,7 @@ def _auto_index(store: Path) -> None:
         conn.close()
 
 
-def _auto_digest(store: Path, actor: str) -> None:
+def _auto_digest(store: Path, actor: str, limit: int = 50) -> None:
     """Digest project knowledge files into memory files."""
     import hashlib
     import time
@@ -1876,19 +1876,43 @@ def _auto_digest(store: Path, actor: str) -> None:
         print("  Cannot find project root, skipping digest")
         return
 
-    # Files to digest
+    # Files to digest — include READMEs, docs, and key project files
     digest_targets = []
-    for pattern in ["README.md", "README.rst", "docs/*.md", "docs/**/*.md"]:
+    for pattern in [
+        "README.md", "README.rst",
+        "docs/*.md", "docs/**/*.md",
+        "CONTRIBUTING.md", "CHANGELOG.md", "ARCHITECTURE.md",
+        "AGENTS.md", "CLAUDE.md",
+    ]:
         digest_targets.extend(project_root.glob(pattern))
 
-    if not digest_targets:
+    # Deduplicate and exclude audit/generated files
+    seen = set()
+    filtered = []
+    exclude_patterns = [
+        ".audit.md",  # audit companion files
+        "node_modules/",  # dependencies
+        ".git/",  # git internals
+        "__pycache__/",  # python cache
+        ".cyberos-memory/",  # memory store
+    ]
+    for target in digest_targets:
+        rel = str(target.relative_to(project_root))
+        if rel in seen:
+            continue
+        if any(excl in rel for excl in exclude_patterns):
+            continue
+        seen.add(rel)
+        filtered.append(target)
+
+    if not filtered:
         print("  No project knowledge files found to digest")
         return
 
-    print(f"  Found {len(digest_targets)} knowledge files to digest")
+    print(f"  Found {len(filtered)} knowledge files to digest")
 
     # Create digest memories
-    for target in digest_targets[:10]:  # Limit to first 10 for initial digest
+    for target in filtered[:limit]:
         rel_path = target.relative_to(project_root)
         try:
             content = target.read_text(encoding="utf-8", errors="replace")
@@ -2104,6 +2128,10 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument(
         "--auto-digest", action="store_true",
         help="ingest project knowledge (README.md, docs/) into memory",
+    )
+    sp.add_argument(
+        "--digest-limit", type=int, default=50,
+        help="max files to digest with --auto-digest (default 50)",
     )
     sp.add_argument(
         "--force", action="store_true",
