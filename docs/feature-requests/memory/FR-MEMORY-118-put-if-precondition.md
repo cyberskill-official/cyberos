@@ -18,7 +18,6 @@ blocks: []
 protocol_amendment_required: "AGENTS.md §3.1 (extend canonical-op list) — `put_if(path, body, meta, precondition_body_hash)` added; approval phrase: APPROVE protocol change P21 §3.1"
 
 source_pages:
-  - docs/proposals/MEMORY-IMPROVEMENT-WAVE-2026Q3.md#section-22-the-anthropic-talk
   - playground/extracts/memory-and-dreaming.transcript.txt  # see "optimistic concurrency" segment [468..493]
 source_decisions:
   - DEC-240 (put_if is an ADDITIVE primitive; existing `put` keeps unchanged semantics — back-compat preserved by construction)
@@ -35,12 +34,10 @@ modified_files:
   - modules/memory/cyberos/__main__.py           # add `cyberos put-if <path> --precondition <hash>` CLI
   - modules/memory/memory.schema.json            # add `put_if` to canonical-op enum + payload shape
   - modules/memory/memory.invariants.yaml        # `put-if-precondition-form` (error)
-  - modules/memory/AGENTS.md                     # §3.1 amendment (extend canonical-op list)
-  - modules/memory/INTEROP.md                    # one-line note: "Consumers MAY implement put_if; preconditions are the SHA-256 body_hash of the current file or null for create-only"
-  - modules/memory/CHANGELOG.md
+  - AGENTS.md                                     # §3.1 amendment (extend canonical-op list)
 allowed_tools:
   - file_read: modules/memory/**
-  - file_write: modules/memory/cyberos/core/writer.py, modules/memory/cyberos/__main__.py, modules/memory/tests/**, modules/memory/memory.schema.json, modules/memory/memory.invariants.yaml, modules/memory/AGENTS.md, modules/memory/INTEROP.md, modules/memory/CHANGELOG.md
+  - file_write: modules/memory/cyberos/core/writer.py, modules/memory/cyberos/__main__.py, modules/memory/tests/**, modules/memory/memory.schema.json, modules/memory/memory.invariants.yaml, AGENTS.md
   - bash: cd modules/memory && python -m pytest tests/test_put_if_optimistic_concurrency.py -v
   - bash: cd modules/memory && python -m cyberos put-if memories/facts/x.md - --precondition <hex> < body.md
 disallowed_tools:

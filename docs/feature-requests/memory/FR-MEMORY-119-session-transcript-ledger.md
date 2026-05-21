@@ -18,7 +18,6 @@ blocks: [FR-MEMORY-115]
 protocol_amendment_required: "AGENTS.md §18 (new) — session-transcript ledger; approval phrase: APPROVE protocol change P22 §18"
 
 source_pages:
-  - docs/proposals/MEMORY-IMPROVEMENT-WAVE-2026Q3.md#section-22-the-anthropic-talk
   - playground/extracts/memory-and-dreaming.transcript.txt  # see "input sessions" segment that dream consumes
 source_decisions:
   - DEC-250 (Session transcript is OPT-IN — not every cyberos invocation creates a session; opt in via `cyberos session start --id <slug>`)
@@ -38,11 +37,10 @@ modified_files:
   - modules/memory/cyberos/core/writer.py         # add session-aware emit path; sessions/<date>/<id>.binlog.zst storage
   - modules/memory/memory.schema.json             # `SessionFrontmatter` + `SessionTurnPayload` + `SessionAuditKind` definitions
   - modules/memory/memory.invariants.yaml         # `session-lifecycle-well-formed` + `session-classification-valid` rules
-  - modules/memory/AGENTS.md                      # add §18 — sessions (REQUIRES amendment via APPROVE chat-turn P22 §18)
-  - modules/memory/CHANGELOG.md
+  - AGENTS.md                                      # add §18 — sessions (REQUIRES amendment via APPROVE chat-turn P22 §18)
 allowed_tools:
   - file_read: modules/memory/**
-  - file_write: modules/memory/cyberos/**, modules/memory/tests/**, modules/memory/memory.schema.json, modules/memory/memory.invariants.yaml, modules/memory/AGENTS.md, modules/memory/CHANGELOG.md
+  - file_write: modules/memory/cyberos/**, modules/memory/tests/**, modules/memory/memory.schema.json, modules/memory/memory.invariants.yaml, AGENTS.md
   - bash: cd modules/memory && python -m pytest tests/test_session_*.py -v
   - bash: cd modules/memory && python -m cyberos session start --id smoke-test && python -m cyberos session append --id smoke-test --role user --content "hello" && python -m cyberos session end --id smoke-test
 disallowed_tools:

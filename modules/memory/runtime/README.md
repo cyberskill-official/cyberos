@@ -8,7 +8,7 @@ This folder has two roles:
 
 When you're working on operational tooling today, the entry point is `runtime/tools/README.md`. When you're planning the future memory service, the entry point is **Part 1** below.
 
-For the broader CyberOS protocol context (what `.cyberos-memory/` is, how it's governed, what the cookbooks cover, the historical decision trail), see the master navigation hub at `memory/docs/README.md`.
+For the broader CyberOS protocol context, see the module [`README.md`](../README.md) and [`AGENTS.md`](../AGENTS.md).
 
 ---
 

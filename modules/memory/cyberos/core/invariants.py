@@ -441,24 +441,26 @@ def _find_memory_schema(store: Path) -> Path | None:
       1. ``<store>/memory.schema.json`` (in-store override)
       2. ``<store>/../memory/docs/memory.schema.json`` (new layout)
       3. ``<store>/../docs/memory/memory.schema.json`` (legacy layout — transition)
-      4. ``<cyberos>/../docs/memory.schema.json`` (sibling of package, new layout)
-      5. ``<cyberos>/../../docs/memory/memory.schema.json`` (legacy repo layout)
+      4. ``<cyberos>/data/memory.schema.json`` (bundled package data — works with any install)
+      5. ``<cyberos>/../memory.schema.json`` (sibling of package, editable install)
+      6. ``<cyberos>/../../docs/memory/memory.schema.json`` (legacy repo layout)
     """
     candidates = [
         store / "memory.schema.json",
         store.parent / "memory" / "docs" / "memory.schema.json",
         store.parent / "docs" / "memory" / "memory.schema.json",
     ]
-    # Repo-relative candidates derived from the cyberos package location.
     try:
         import cyberos
-        pkg_parent = Path(cyberos.__file__).resolve().parent.parent
-        # Current layout (post-modules/-refactor 2026-05-18): schema sits next
-        # to the package at modules/memory/memory.schema.json.
+        pkg_dir = Path(cyberos.__file__).resolve().parent
+        pkg_parent = pkg_dir.parent
+        # Bundled package data — works with editable and non-editable installs.
+        candidates.append(pkg_dir / "data" / "memory.schema.json")
+        # Editable install: schema sits next to the package at modules/memory/.
         candidates.append(pkg_parent / "memory.schema.json")
-        # Intermediate layout: cyberos package lives at memory/cyberos/, schema at memory/docs/.
+        # Intermediate layout.
         candidates.append(pkg_parent / "docs" / "memory.schema.json")
-        # Legacy layout: cyberos at repo-root, schema at docs/memory/.
+        # Legacy layout.
         candidates.append(pkg_parent.parent / "docs" / "memory" / "memory.schema.json")
     except Exception:  # noqa: BLE001
         pass
@@ -482,17 +484,21 @@ def load_invariants_yaml(path: Path | None = None) -> list[dict]:
 def _find_invariants_yaml() -> Path | None:
     try:
         import cyberos
-        pkg_parent = Path(cyberos.__file__).resolve().parent.parent
-        # Current layout (post-modules/-refactor 2026-05-18): file lives at
-        # the module root next to the package — modules/memory/memory.invariants.yaml.
+        pkg_dir = Path(cyberos.__file__).resolve().parent
+        pkg_parent = pkg_dir.parent
+        # Bundled package data — works with editable and non-editable installs.
+        candidate = pkg_dir / "data" / "memory.invariants.yaml"
+        if candidate.is_file():
+            return candidate
+        # Editable install: file sits next to the package at modules/memory/.
         candidate = pkg_parent / "memory.invariants.yaml"
         if candidate.is_file():
             return candidate
-        # Intermediate layout: memory/cyberos/ + memory/docs/memory.invariants.yaml.
+        # Intermediate layout.
         candidate = pkg_parent / "docs" / "memory.invariants.yaml"
         if candidate.is_file():
             return candidate
-        # Legacy layout: cyberos at repo-root, docs/memory/memory.invariants.yaml.
+        # Legacy layout.
         candidate = pkg_parent.parent / "docs" / "memory" / "memory.invariants.yaml"
         if candidate.is_file():
             return candidate

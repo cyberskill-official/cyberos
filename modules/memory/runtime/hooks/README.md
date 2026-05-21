@@ -43,5 +43,5 @@ Multiple hooks per point run in declared order; first `HookReject` short-circuit
 
 ## Related
 
-- Aspect 5.1 in the operator manual: [`../../memory/docs/README.md`](../../memory/docs/README.md) Part 26.5.1
+- Aspect 5.1 in the operator manual: [`README.md`](../../README.md)
 - Writer that invokes hooks: [`../lib/memory_writer.py`](../lib/memory_writer.py)

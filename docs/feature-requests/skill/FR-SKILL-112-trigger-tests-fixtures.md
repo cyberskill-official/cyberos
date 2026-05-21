@@ -41,12 +41,12 @@ modified_files:
   - modules/skill/_template/audit/acceptance/README.md                 # cross-link to TRIGGER_TESTS.md
   - modules/skill/feature-request-audit/RUBRIC.md                      # add FM-113 (trigger-tests-present)
   - feature-request-audit skill        # §3.10 mentions trigger-tests rule
-  - modules/skill/README.md                                            # Part 13.2 validation pyramid grows a new tier (Layer 1.5: triggering tests); Part 24.1 self-test checklist adds row
-  - modules/skill/ANTHROPIC_GUIDE_DIGEST.md                            # §6.2 status badge updates when FR ships
-  - modules/cuo/README.md                                              # documents the trigger-tests smoke test path
+  - website docs (SKILL appendices)                                    # Part 13.2 validation pyramid grows a new tier (Layer 1.5: triggering tests); Part 24.1 self-test checklist adds row
+  - website docs (SKILL Appendix J)                                    # §6.2 status badge updates when FR ships
+  - website docs (CUO appendices)                                      # documents the trigger-tests smoke test path
 allowed_tools:
   - file_read: modules/**, docs/feature-requests/skill/**
-  - file_write: modules/skill/{_template,feature-request-audit,README.md,ANTHROPIC_GUIDE_DIGEST.md,feature-request-author/acceptance,feature-request-audit/acceptance,product-requirements-document-author/acceptance}, modules/cuo/{cuo,tests,README.md}, docs/feature-requests/skill/**
+  - file_write: modules/skill/{_template,feature-request-audit,feature-request-author/acceptance,feature-request-audit/acceptance,product-requirements-document-author/acceptance}, modules/cuo/{cuo,tests}, docs/feature-requests/skill/**
   - bash: cd modules/cuo && python -m pytest tests/test_trigger_tests.py
 disallowed_tools:
   - require backfill of TRIGGER_TESTS.md across all 104 pairs in one commit batch (lazy backfill per §1 #11)

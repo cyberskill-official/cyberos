@@ -17,9 +17,9 @@ depends_on: [FR-SKILL-113]
 blocks: []
 
 source_pages:
-  - modules/skill/SKILL_BUNDLE_RUBRIC.md
+  - [SKILL Appendix L](https://cyberos-wiki.cyberskill.world/modules/skill/appendices.html) (SKILL_BUNDLE_RUBRIC.md)
   - feature-request-audit skill
-  - modules/skill/ANTHROPIC_GUIDE_DIGEST.md
+  - [SKILL Appendix J](https://cyberos-wiki.cyberskill.world/modules/skill/appendices.html) (ANTHROPIC_GUIDE_DIGEST.md)
 source_decisions:
   - DEC-091 (host-portability — CCSM is source of truth)
   - DEC-182 (frontmatter schema versioned v1 frozen)
@@ -33,7 +33,7 @@ new_files:
   - modules/cuo/cuo/placeholder_check.py
   - modules/cuo/tests/test_placeholder_check.py
 modified_files:
-  - modules/skill/SKILL_BUNDLE_RUBRIC.md                  # add SKB-030 placeholder-free-frontmatter rule
+  - website docs (SKILL Appendix L)                        # add SKB-030 placeholder-free-frontmatter rule
   - feature-request-audit skill  # §3.13 38f mentions placeholder rule
   - modules/skill/<each of 134 production SKILL.md files>        # operator-attested per-skill substitution
 allowed_tools:

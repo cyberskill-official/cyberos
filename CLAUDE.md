@@ -1,1 +1,1 @@
-@AGENTS.md
+modules/memory/cyberos/data/AGENTS.md

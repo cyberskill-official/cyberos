@@ -203,7 +203,7 @@ def load_audit_rows(audit_dir: Path) -> list[dict]:
     """Read every *.binlog under `audit_dir` and return the parsed records as
     a list of dicts. Best-effort: skips malformed frames.
 
-    Frame format (per modules/memory/AGENTS.md §6.2):
+    Frame format (per AGENTS.md §6.2):
       [u32 length BE][u32 crc32c BE][u64 seq BE][u64 ts_ns BE][payload]
     Payload is msgspec canonical JSON.
     """

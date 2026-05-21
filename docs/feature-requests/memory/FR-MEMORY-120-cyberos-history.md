@@ -17,7 +17,6 @@ depends_on: []
 blocks: []
 
 source_pages:
-  - docs/proposals/MEMORY-IMPROVEMENT-WAVE-2026Q3.md#section-22-the-anthropic-talk
   - playground/extracts/memory-and-dreaming.transcript.txt  # see "version history" segment [499..540]
 source_decisions:
   - DEC-260 (history is read-only — pure projection over existing audit-chain rows; no new audit rows emitted by history operations)
@@ -35,10 +34,9 @@ new_files:
 modified_files:
   - modules/memory/cyberos/__main__.py            # wire `cyberos history <path>` subcommand
   - modules/memory/cyberos/core/serve.py          # add GET /api/v2/memories/<path>/history endpoint
-  - modules/memory/CHANGELOG.md
 allowed_tools:
   - file_read: modules/memory/**
-  - file_write: modules/memory/cyberos/**, modules/memory/tests/**, modules/memory/CHANGELOG.md
+  - file_write: modules/memory/cyberos/**, modules/memory/tests/**
   - bash: cd modules/memory && python -m pytest tests/test_history_*.py -v
   - bash: cd modules/memory && python -m cyberos history memories/facts/x.md
 disallowed_tools:

@@ -17,9 +17,9 @@ depends_on: [FR-PLUGIN-001, FR-MCP-001, FR-MCP-003]
 blocks: [FR-PLUGIN-003, FR-PLUGIN-007]
 
 source_pages:
-  - modules/plugin/README.md §1
-  - modules/plugin/INTEROP.md (universal constraints)
-  - modules/cuo/README.md (supervisor v3.0.0-a4 surface)
+  - [Plugin docs](https://cyberos-wiki.cyberskill.world/modules/plugin/) §1
+  - [Plugin docs](https://cyberos-wiki.cyberskill.world/modules/plugin/) INTEROP section (universal constraints)
+  - [CUO docs](https://cyberos-wiki.cyberskill.world/modules/cuo/) (supervisor v3.0.0-a4 surface)
 
 source_decisions:
   - DEC-2410 2026-05-19 — Bridge ships as ONE Rust binary `cyberos-mcp-bridge` at services/plugin-host/ — supports both stdio and HTTP transports

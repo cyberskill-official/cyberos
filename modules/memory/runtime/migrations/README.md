@@ -51,4 +51,4 @@ When a migration is NOT needed: any change that's backward-compatible — adding
 ## Related
 
 - Migration tooling: [`../tools/cyberos_migrate.py`](../tools/cyberos_migrate.py)
-- Protocol upgrade flow (§0.5 + §0.6): [`../../memory/docs/AGENTS.md`](../../../../AGENTS.md) §0.5
+- Protocol upgrade flow (§0.5 + §0.6): [`AGENTS.md`](../../AGENTS.md) §0.5

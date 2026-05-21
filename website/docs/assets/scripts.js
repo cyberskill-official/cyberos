@@ -331,8 +331,6 @@ async function loadSharedNav() {
 }
 
 function wireNavInteractions() {
-  // Pagefind site-wide search (replaces the legacy in-page filter).
-  setupPagefindSearch();
   // Print button
   const printBtn = document.getElementById('nav-print');
   if (printBtn) printBtn.addEventListener('click', () => window.print());
@@ -345,78 +343,6 @@ function wireNavInteractions() {
   if (menuBtn && mobile) {
     menuBtn.addEventListener('click', () => mobile.classList.toggle('hidden'));
   }
-}
-
-/* ---------- Pagefind — site-wide static search ----------
-   Pagefind ships a Rust-built index under `<docs>/pagefind/`. We load
-   pagefind-ui.js + pagefind-ui.css once and mount the widget into the
-   nav's #pagefind-search slot. Path is resolved via rootBase() so this
-   works from /index.html, /modules/*.html, /architecture/*.html, etc. */
-let _pagefindUILoaded = null;
-async function setupPagefindSearch() {
-  const slot = document.getElementById('pagefind-search');
-  if (!slot) return;
-  if (slot.dataset.bound === '1') return;          // already mounted
-  slot.dataset.bound = '1';
-
-  const root = rootBase();                          // '' from root, '../' from subdirs
-  const base = root + 'pagefind/';
-
-  // Lazy-load pagefind-ui.{js,css} exactly once per page.
-  if (!_pagefindUILoaded) {
-    _pagefindUILoaded = (async () => {
-      const css = document.createElement('link');
-      css.rel = 'stylesheet';
-      css.href = base + 'pagefind-ui.css';
-      document.head.appendChild(css);
-
-      await new Promise((resolve, reject) => {
-        const s = document.createElement('script');
-        s.src = base + 'pagefind-ui.js';
-        s.onload = resolve;
-        s.onerror = reject;
-        document.head.appendChild(s);
-      });
-    })();
-  }
-
-  try {
-    await _pagefindUILoaded;
-  } catch (e) {
-    console.warn('Pagefind UI failed to load:', e);
-    slot.innerHTML = '<input class="nav-search" type="search" placeholder="Search unavailable" disabled aria-label="Search unavailable">';
-    return;
-  }
-
-  // PagefindUI is registered as a global by pagefind-ui.js.
-  if (typeof window.PagefindUI !== 'function') {
-    console.warn('Pagefind UI script loaded but PagefindUI not defined.');
-    return;
-  }
-
-  new window.PagefindUI({
-    element: '#pagefind-search',
-    bundlePath: base,
-    showSubResults: true,
-    showImages: false,
-    excerptLength: 30,
-    resetStyles: false,           // let our CSS variables theme it
-    autofocus: false,
-    placeholder: 'Search docs…',
-    translations: {
-      placeholder: 'Search docs…',
-      clear_search: 'Clear',
-      load_more: 'Load more results',
-      search_label: 'Search this site',
-      filters_label: 'Filters',
-      zero_results: 'No matches for [SEARCH_TERM]',
-      many_results: '[COUNT] matches for [SEARCH_TERM]',
-      one_result: '[COUNT] match for [SEARCH_TERM]',
-      alt_search: 'No matches for [SEARCH_TERM] — showing results for [DIFFERENT_TERM]',
-      search_suggestion: 'No matches for [SEARCH_TERM] — try a different term',
-      searching: 'Searching for [SEARCH_TERM]…',
-    },
-  });
 }
 
 function highlightCurrentPage() {
@@ -618,4 +544,4 @@ if (document.readyState === 'loading') {
 window.rerenderMermaid = renderMermaid;
 window.openMermaidModal = openMermaidModal;
 window.closeMermaidModal = closeMermaidModal;
-window.cyberosDocs = { renderMermaid, runSearch, toggleDarkMode, setupPagefindSearch, openMermaidModal, closeMermaidModal };
+window.cyberosDocs = { renderMermaid, runSearch, toggleDarkMode, openMermaidModal, closeMermaidModal };

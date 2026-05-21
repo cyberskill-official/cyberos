@@ -1,24 +1,27 @@
 #!/usr/bin/env bash
 #
-# scripts/install.sh — drop the cyberos protocol into a fresh project.
+# scripts/install.sh — bootstrap a target project for CyberOS memory.
 #
-# One command bootstraps a new project from zero to "AGENTS.md loaded
-# by the agent, .cyberos-memory/ ready to write, doctor reports READY".
+# Creates `.cyberos-memory/` in the target project with the protocol file
+# copied inside (self-contained store). Symlinks AGENTS.md from project
+# root into the store. Adds .cyberos-memory to .gitignore.
+#
+# The cyberos engine is installed once via `pip install -e .` in the
+# source repo; all projects share it.
 #
 # Usage:
-#     # From inside the target project root:
-#     curl -fsSL https://raw.githubusercontent.com/.../scripts/install.sh | bash
+#     /path/to/cyberos/modules/memory/scripts/install.sh [TARGET]
 #
-#     # Or, after cloning the cyberos repo, point install at any project:
-#     /path/to/cyberos/scripts/install.sh ~/Projects/my-other-project
+#     # Force overwrite existing .cyberos-memory/:
+#     install.sh --force
 #
 #     # Skip the agent symlink (if you wire AGENTS.md manually):
 #     install.sh --no-agent-symlink
 #
-#     # Set up host-side automation at the same time (macOS only):
+#     # Set up host-side automation (macOS only):
 #     install.sh --with-automation
 #
-#     # Install the git pre-commit hook too:
+#     # Install the git pre-commit hook:
 #     install.sh --with-pre-commit
 
 set -euo pipefail
@@ -30,7 +33,8 @@ WITH_AUTOMATION=0
 WITH_PRE_COMMIT=0
 NO_AGENT_SYMLINK=0
 FORCE=0
-SOURCE_REPO="$(cd "$(dirname "$0")/../.." && pwd)"
+SOURCE_REPO="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_ROOT="$(cd "$SOURCE_REPO/../.." && pwd)"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -53,63 +57,33 @@ if [[ -z "$TARGET" ]]; then
 fi
 TARGET="$(cd "$TARGET" && pwd)"
 
-echo "=== cyberos install ==="
+echo "=== cyberos memory install ==="
 echo "  source : $SOURCE_REPO"
 echo "  target : $TARGET"
 echo "  options: $([[ $WITH_AUTOMATION == 1 ]] && echo -n '+automation ')$([[ $WITH_PRE_COMMIT == 1 ]] && echo -n '+pre-commit ')$([[ $NO_AGENT_SYMLINK == 1 ]] && echo -n '+no-agent-symlink ')"
 echo
 
-# ---------------------------------------------------------------------- 1. python deps
+# ---------------------------------------------------------------------- 1. check engine
 
-echo "→ step 1/6: python dependencies"
-PIP_FLAGS=""
-if python -c "import sys; sys.exit(0 if sys.version_info >= (3,11) else 1)" 2>/dev/null; then
-    PIP_FLAGS="--break-system-packages"
-fi
-python -m pip install $PIP_FLAGS --quiet \
-    msgspec cryptography crc32c rfc8785 'pyyaml>=6' jsonschema zstandard \
-    || { echo "pip install failed; see above"; exit 1; }
-echo "  ✓ msgspec, cryptography, crc32c, rfc8785, pyyaml, jsonschema, zstandard"
-echo
-
-# ---------------------------------------------------------------------- 2. pandoc (optional)
-
-echo "→ step 2/6: pandoc (optional, for PRD/SRS docx ↔ md round-trip)"
-if command -v pandoc >/dev/null 2>&1; then
-    echo "  ✓ pandoc $(pandoc --version | head -1 | awk '{print $2}')"
+echo "→ step 1/5: check cyberos engine"
+if command -v cyberos >/dev/null 2>&1; then
+    echo "  ✓ cyberos CLI found: $(command -v cyberos)"
+elif python -c "import cyberos" 2>/dev/null; then
+    echo "  ✓ cyberos Python package importable"
 else
-    echo "  – pandoc not found; run \`brew install pandoc\` if you need docx conversion"
+    echo "  ✗ cyberos engine not found."
+    echo "    Install it first:"
+    echo "      cd $SOURCE_REPO && pip install -e ."
+    exit 1
 fi
 echo
 
-# ---------------------------------------------------------------------- 3. protocol files
+# ---------------------------------------------------------------------- 2. .cyberos-memory skeleton + protocol file
 
-echo "→ step 3/6: install protocol files"
-mkdir -p "$TARGET/memory/docs"
-for f in AGENTS.md INTEROP.md memory.schema.json memory.invariants.yaml; do
-    src="$SOURCE_REPO/memory/docs/$f"
-    dst="$TARGET/memory/docs/$f"
-    if [[ -f "$dst" && "$FORCE" != "1" ]]; then
-        echo "  – $f already exists (use --force to overwrite)"
-    else
-        cp "$src" "$dst"
-        echo "  ✓ $dst"
-    fi
-done
-# Copy the cyberos Python package alongside so `python -m cyberos` works
-if [[ ! -d "$TARGET/memory/cyberos" || "$FORCE" == "1" ]]; then
-    mkdir -p "$TARGET/memory"
-    cp -r "$SOURCE_REPO/memory/cyberos" "$TARGET/memory/cyberos"
-    echo "  ✓ $TARGET/memory/cyberos/"
-fi
-echo
-
-# ---------------------------------------------------------------------- 4. .cyberos-memory skeleton
-
-echo "→ step 4/6: initialise .cyberos-memory/"
+echo "→ step 2/5: initialise .cyberos-memory/"
 memory="$TARGET/.cyberos-memory"
 if [[ -d "$memory" && "$FORCE" != "1" ]]; then
-    echo "  – $memory already exists; skipping (use --force to re-init)"
+    echo "  – $memory already exists; skipping store init (use --force to re-init)"
 else
     mkdir -p "$memory"/{audit,memories/decisions,memories/facts,memories/people,memories/projects,memories/preferences,memories/drift,memories/refinements,meta,company,module,member,client,project,persona,conflicts,exports,index}
     cat > "$memory/manifest.json" <<EOF
@@ -121,44 +95,67 @@ else
   "created_at_ns": $(date +%s)000000000
 }
 EOF
-    echo "  ✓ $memory/manifest.json (schema_version=2)"
+    # Create HEAD (8-byte LE u64 zeroed)
+    python3 -c "import sys; sys.stdout.buffer.write(b'\x00'*8)" > "$memory/HEAD"
+    echo "  ✓ $memory/ (manifest.json + HEAD + directory skeleton)"
 fi
+
+# Copy protocol files into the store (self-contained)
+cp "$REPO_ROOT/AGENTS.md" "$memory/AGENTS.md"
+for f in memory.schema.json memory.invariants.yaml; do
+    cp "$SOURCE_REPO/$f" "$memory/$f"
+done
+echo "  ✓ $memory/AGENTS.md + memory.schema.json + memory.invariants.yaml (protocol files)"
 echo
 
-# ---------------------------------------------------------------------- 5. agent symlink
+# ---------------------------------------------------------------------- 3. agent symlink
 
 if [[ "$NO_AGENT_SYMLINK" == "0" ]]; then
-    echo "→ step 5/6: wire AGENTS.md for your agent"
+    echo "→ step 3/5: wire AGENTS.md for your agent"
     cd "$TARGET"
-    # Symlinks work on macOS/Linux; on Git Bash / MSYS / Cygwin under
-    # Windows the symlink may degrade to a copy unless dev mode is on.
-    # Detect Windows and copy instead so the end-state is the same.
     case "$(uname -s 2>/dev/null || echo unknown)" in
         MINGW*|MSYS*|CYGWIN*) USE_COPY=1 ;;
         *)                    USE_COPY=0 ;;
     esac
     for link_name in AGENTS.md CLAUDE.md; do
-        if [[ -e "$link_name" && "$FORCE" != "1" ]]; then
-            echo "  – $link_name already exists; skipping"
+        if [[ -e "$link_name" && ! -L "$link_name" && "$FORCE" != "1" ]]; then
+            echo "  – $link_name already exists (not a symlink); skipping"
         elif [[ "$USE_COPY" == "1" ]]; then
             rm -f "$link_name"
-            cp memory/docs/AGENTS.md "$link_name"
+            cp "$memory/AGENTS.md" "$link_name"
             echo "  ✓ $link_name (copy; on Windows symlinks require dev mode)"
         else
             rm -f "$link_name"
-            ln -s memory/docs/AGENTS.md "$link_name"
-            echo "  ✓ $link_name → memory/docs/AGENTS.md"
+            ln -s .cyberos-memory/AGENTS.md "$link_name"
+            echo "  ✓ $link_name → .cyberos-memory/AGENTS.md"
         fi
     done
     echo
 else
-    echo "→ step 5/6: agent symlink skipped (--no-agent-symlink)"
+    echo "→ step 3/5: agent symlink skipped (--no-agent-symlink)"
     echo
 fi
 
-# ---------------------------------------------------------------------- 6. verify
+# ---------------------------------------------------------------------- 4. .gitignore
 
-echo "→ step 6/6: verify"
+echo "→ step 4/5: .gitignore"
+gitignore="$TARGET/.gitignore"
+marker=".cyberos-memory/"
+if [[ -f "$gitignore" ]] && grep -qF "$marker" "$gitignore"; then
+    echo "  – $marker already in .gitignore; skipping"
+else
+    {
+        echo ""
+        echo "# CyberOS memory store (runtime data, not version-controlled)"
+        echo "$marker"
+    } >> "$gitignore"
+    echo "  ✓ added $marker to .gitignore"
+fi
+echo
+
+# ---------------------------------------------------------------------- 5. verify
+
+echo "→ step 5/5: verify"
 cd "$TARGET"
 if python -m cyberos --store .cyberos-memory doctor > /tmp/cyberos-install-doctor.log 2>&1; then
     tail -3 /tmp/cyberos-install-doctor.log | sed 's/^/  /'
@@ -172,13 +169,13 @@ echo
 
 if [[ "$WITH_AUTOMATION" == "1" ]]; then
     echo "→ extra: macOS automation (launchd)"
-    "$SOURCE_REPO/memory/scripts/automation-install.sh" --target "$TARGET"
+    "$SOURCE_REPO/scripts/automation-install.sh" --target "$TARGET"
     echo
 fi
 
 if [[ "$WITH_PRE_COMMIT" == "1" ]]; then
     echo "→ extra: git pre-commit hook"
-    "$SOURCE_REPO/memory/scripts/install-pre-commit.sh" "$TARGET"
+    "$SOURCE_REPO/scripts/install-pre-commit.sh" "$TARGET"
     echo
 fi
 

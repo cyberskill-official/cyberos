@@ -42,7 +42,7 @@ build_envelope:
 
   modified_files:
     - modules/plugin/manifests/cyberos@1.0.0.plugin.json (commands array)
-    - modules/plugin/README.md §3
+    - website docs (Plugin page §3)
 
   allowed_tools:
     - file_read: modules/plugin/commands/**

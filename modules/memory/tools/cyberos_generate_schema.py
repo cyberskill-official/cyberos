@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-memory/tools/cyberos_generate_schema.py — emit ``memory/docs/memory.schema.json``.
+memory/tools/cyberos_generate_schema.py — emit ``memory.schema.json``.
 
 Derived from the msgspec types in :mod:`cyberos.core`. Single source of truth:
 edit the Struct, regenerate the schema. Never hand-edit ``memory.schema.json``.
@@ -146,7 +146,7 @@ def build_schema() -> dict:
             "Machine-validatable schema for the CyberOS memory. Generated "
             "from cyberos.core msgspec Structs by "
             "memory/tools/cyberos_generate_schema.py. Do not hand-edit. "
-            "The protocol document (memory/docs/AGENTS.md) is the prose "
+            "The protocol document (AGENTS.md) is the prose "
             "companion; this file is the contract. The protocol is "
             "unversioned: there is no schema_version field."
         ),

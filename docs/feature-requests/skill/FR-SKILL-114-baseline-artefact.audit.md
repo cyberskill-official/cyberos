@@ -49,7 +49,7 @@ Cross-FR sanity check:
 - **`_template/author/BASELINE.md` scaffold shipped** — full body with all 6 required sections + worked-example skeleton.
 - **YAML date-parsing handling.** Discovered during testing: when YAML 1.1 (PyYAML's default) parses a bare ISO date like `2026-05-19`, it returns a `datetime.date` object (no tzinfo). The validator handles both `date` and `datetime` forms by padding `date` → `datetime` with UTC tz. Plus accepts both ISO 8601 with `+07:00` zone-offset and `Z` UTC form.
 - **No backfill yet.** Spec §1 #14 said to backfill `cuo/_shared/hello-world` (the only v1.0 skill). Inspection of the current catalog shows `hello-world` is not in `modules/skill/` (only in legacy paths) — backfill deferred to when a real production skill reaches v1.0 promotion.
-- **RUBRIC location.** Same as FR-SKILL-111/112/113: FM-114 landed as SKB-060..066 in `modules/skill/SKILL_BUNDLE_RUBRIC.md`.
+- **RUBRIC location.** Same as FR-SKILL-111/112/113: FM-114 landed as SKB-060..066 in [SKILL_BUNDLE_RUBRIC.md](https://cyberos-wiki.cyberskill.world/modules/skill/appendices.html) (Appendix L).
 - **Broker integration deferred** along with FR-SKILL-103. The §1 #11 partner_connector gate ("broker rejects partner_connector: true on v1.0+ without BASELINE.md") will fire when the broker scaffold ships.
 
 **Post-impl score remains 10/10.** Spec landed cleanly; implementation matched §3 contract.

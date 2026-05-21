@@ -13,7 +13,7 @@ Usage:
     python3 memory/tools/voice_check.py --fix [path]      # interactive
     python3 memory/tools/voice_check.py --strict          # exit 1 on any finding (CI mode)
 
-Default: lints memory/docs/AGENTS.md and memory/docs/README.md
+Default: lints AGENTS.md and README.md at the module root.
 (CHANGELOG is descriptive — exempt).
 
 Exit codes:
@@ -113,7 +113,7 @@ BOLD = lambda s: _c(s, "1")
 
 def main():
     p = argparse.ArgumentParser(description="Voice linter for CyberOS protocol docs")
-    p.add_argument("paths", nargs="*", help="paths or globs (default: memory/docs/AGENTS.md, memory/docs/README.md)")
+    p.add_argument("paths", nargs="*", help="paths or globs (default: AGENTS.md, README.md at module root)")
     p.add_argument("--strict", action="store_true", help="exit 1 on any finding (CI mode)")
     p.add_argument("--summary", action="store_true", help="summary only, no per-line output")
     args = p.parse_args()
@@ -122,23 +122,22 @@ def main():
     if args.paths:
         targets = [Path(x) for x in args.paths]
     else:
-        # Default targets — search upward from CWD for the memory/ or
-        # docs/memory/ root containing AGENTS.md.
+        # Default targets — search upward from CWD for a directory
+        # containing AGENTS.md (module root layout).
         root = Path.cwd()
         targets = []
         for cand in (root, *root.parents):
-            # New layout: <repo>/memory/docs/AGENTS.md
-            new_docs = cand / "memory" / "docs"
-            legacy_docs = cand / "docs" / "memory"
-            if new_docs.is_dir():
-                targets = [new_docs / "AGENTS.md", new_docs / "README.md"]
+            if (cand / "AGENTS.md").is_file() and (cand / "memory.schema.json").is_file():
+                targets = [cand / "AGENTS.md", cand / "README.md"]
                 break
-            if legacy_docs.is_dir():
-                targets = [legacy_docs / "AGENTS.md", legacy_docs / "README.md"]
+            # Also check modules/memory/ layout from repo root
+            mem = cand / "modules" / "memory"
+            if (mem / "AGENTS.md").is_file():
+                targets = [mem / "AGENTS.md", mem / "README.md"]
                 break
         targets = [t for t in targets if t.exists()]
         if not targets:
-            print(ERR("ERROR:") + " no memory/docs/ or docs/memory/ dir found; pass paths explicitly", file=sys.stderr)
+            print(ERR("ERROR:") + " no module root with AGENTS.md found; pass paths explicitly", file=sys.stderr)
             return 2
 
     total = 0

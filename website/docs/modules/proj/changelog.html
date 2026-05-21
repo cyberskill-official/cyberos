@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Project Tracking — Changelog — CyberOS</title>
+ <meta name="description" content="Project Tracking module changelog — all significant changes.">
+ <link rel="canonical" href="https://cyberos-wiki.cyberskill.world/modules/proj/changelog.html">
+ <link rel="stylesheet" href="../../assets/tokens.css">
+ <link rel="stylesheet" href="../../assets/styles.css">
+ <link rel="stylesheet" href="../../assets/tailwind.min.css">
+ <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <script type="module" src="../../assets/scripts.js"></script>
+</head>
+<body data-pagefind-filter="category:Module">
+<span hidden data-pagefind-filter="phase:P1"></span>
+
+<div id="shared-nav"></div>
+
+<header class="hero-gradient border-b border-slate-200">
+ <div class="container py-10 lg:py-14">
+ <nav class="breadcrumbs">
+ <a href="../../index.html">Home</a>
+ <span class="sep">›</span>
+ <a href="../../index.html#catalog">Modules</a>
+ <span class="sep">›</span>
+ <a href="index.html">Project Tracking</a>
+ <span class="sep">›</span>
+ <span class="current">Changelog</span>
+ </nav>
+ <div class="flex items-center gap-3 mb-4 flex-wrap">
+ <span class="text-5xl">📋</span>
+ <h1 class="h-display">Project Tracking — Changelog</h1>
+ </div>
+ <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
+ All significant changes to the Project Tracking module.
+ </p>
+ <div class="flex flex-wrap gap-3 mt-6">
+ <a href="index.html" class="btn btn-primary">← Back to Project Tracking overview</a>
+ </div>
+ </div>
+</header>
+
+<div class="container py-10 lg:py-14 grid lg:grid-cols-12 gap-10">
+
+<aside class="lg:col-span-3 order-2 lg:order-1">
+ <div class="lg:sticky lg:top-20">
+ <div class="bbg-card p-5">
+ <div class="h-eyebrow mb-3">On this page</div>
+ <ul class="space-y-0.5 text-sm">
+      <a class="block py-1 px-2 text-sm rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900" href="#2026-05-15-project-module-page-rewritten-to-gold-orchestration-spine-engagement-economics-memory-anchored-decisions-liquid-glass-ui-exemplar">2026-05-15 — PROJECT module page rewritten to Gold (orchestration spine + Engagement economics + memory-anchored decisions + Liquid-Glass UI exemplar)</a>
+ </ul>
+ </div>
+ </div>
+</aside>
+
+<main class="lg:col-span-9 prose prose-slate max-w-none">
+ <div class="bg-white rounded-xl p-6 lg:p-8 shadow-sm border border-slate-200">
+<h3 id="2026-05-15-project-module-page-rewritten-to-gold-orchestration-spine-engagement-economics-memory-anchored-decisions-liquid-glass-ui-exemplar" class="text-xl font-bold mt-8 mb-3 text-slate-900">2026-05-15 — PROJECT module page rewritten to Gold (orchestration spine + Engagement economics + memory-anchored decisions + Liquid-Glass UI exemplar)</h3>
+
+<p class="mb-3 leading-relaxed">Rewrote <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">website/docs/modules/proj.html</code> from 1126 → 1514 lines (+388 lines, +34%). Encodes three strategic roles the PROJ module plays simultaneously — orchestration spine for cross-module joins, memory-anchored decision substrate, consultancy-native Engagement billing surface — with no role under-served. Targeted Edit operations preserved the existing strong content (4 primitives, sync-engine architecture, 5 key-flow sequences, status enum + workflow overlay, 7 surface CLI commands) while adding 4 strategic deep-dive sections + risk/KPI extensions + universal-protocol references.</p>
+
+<p class="mb-3 leading-relaxed">Changes by section:</p>
+<li class="mb-1 "><strong><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155"><title></code> + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155"><meta></code></strong> — reframed: "PROJ — Orchestration spine · memory-anchored decisions · Engagement billing · CyberOS". Description names the orchestration spine (CRM → PROJECT → TIME → INV → REW → KB → memory), the consultancy-native Engagement primitive, the memory-citation graph, and the Liquid-Glass UI exemplar.</li>
+<li class="mb-1 "><strong>Hero tagline + lede</strong> — explicit "orchestration spine" framing; lists all 3 strategic roles in one paragraph; replaces stale PRD-referenced prose with role descriptions.</li>
+<li class="mb-1 "><strong>Hero fact-grid</strong> — extended from 8 to 13 cards: added Strategic role + Cross-module joins (7) + memory integration (bidirectional) + Engagement model (3 modes) + UI surfaces (4). Strategic role card uses "Orchestration spine" pill prominent.</li>
+<li class="mb-1 "><strong>NEW §0 "The bigger picture — three strategic roles"</strong> — 3-card layout (Role 1 orchestration spine / Role 2 memory-anchored / Role 3 Engagement billing). Cross-module join Mermaid flowchart with PROJ as hub touching 9 other modules. Auto-vs-manual operations matrix (9 rows) — explicitly classifies which PROJ behaviours are automatic vs deliberate.</li>
+<li class="mb-1 "><strong>TOC</strong> — added bigger-picture · orchestration-spine · engagement-economics · memory-anchored · ui-surfaces entries (5 new).</li>
+<li class="mb-1 "><strong>NEW §2.5 "Orchestration spine — cross-module join contracts"</strong> — 9-row canonical contract table covering each counterparty (CRM/EMAIL/TIME/INV/KB/REW/OKR/PORTAL/memory): direction · join key · trigger · payload shape · failure mode. Contract stability policy: breaking changes require ADR + counterparty co-sign + 1-minor-release deprecation window + migration test + memory decision memory.</li>
+<li class="mb-1 "><strong>NEW §2.6 "Engagement economics — consultancy-native primitive"</strong> — 3-mode billing table (T&M / fixed-fee / retainer) with what INV pulls + risk + typical use. Full rate-card YAML example (architect/senior/mid/junior with VND + USD rates + per-role billable_default). Billable / non-billable cascade (4-step priority): Member override → task class → role default → fallback. Margin watchdog spec for P2 (fixed-fee scope-creep early warning).</li>
+<li class="mb-1 "><strong>NEW §2.7 "memory-anchored decisions — issues cite memories"</strong> — three citation relations (cites / implements / supersedes) with examples. Decision-to-issues skill sequence (8-actor Mermaid: User → CUO/CPO skill → memory read → PROJ create N+1 issues → memory write audit). Dual-write audit chain example: PROJ history_event row + memory audit row with matching chain hash.</li>
+<li class="mb-1 "><strong>NEW §2.8 "Liquid-Glass UI surfaces — Board · Timeline · Gantt · Brief"</strong> — 4-surface canonical table (primary use · default view · density · keyboard-first). PROJ-specific design-token overlay (tokens.proj.css) with status palette + priority colours + Liquid-Glass blur/saturate values. 6-point accessibility commitment list (WCAG AA + keyboard nav + screen-reader labels + focus trap + reduce-motion + VN diacritic-correct fonts).</li>
+<li class="mb-1 "><strong>§12 Risks</strong> — added 10 new (R-PROJ-011..020): orchestration-spine SPOF · contract breaking change without ADR · fixed-fee scope creep eats margin (High likelihood × High impact, COO-owned) · memory citation drift · cycle-review draft cites out-of-window work · billing-mode mid-cycle change · decision-to-issues skill drift · Liquid-Glass accessibility fail · SPA cold-load > 5s on VN mobile (Members give up and use Excel) · NATS JetStream backlog staleness.</li>
+<li class="mb-1 "><strong>§13 KPIs</strong> — added 10 new universal-protocol-aware: Join-contract stability (≤ 1 breaking change/quarter) · Engagement margin T&M (≥ 35%) · Engagement margin fixed-fee (≥ 30% on close) · Issues with memory citation (≥ 40% of high-priority) · Decision-to-issues skill acceptance (≥ 70%) · SPA cold-load p95 on VN mobile (≤ 5s) · Citation-drift rate (≤ 5%) · Cross-tenant ACL rejection rate · Dogfooding cycle-review draft acceptance (≥ 70% — founders use this before selling it).</li>
+<li class="mb-1 "><strong>§17 References</strong> — replaced stale PRD/SRS section refs with the 4 new in-page sections + MEMORY_AUTOSYNC_DESIGN.md §5 (capture surfaces) + feature-request-audit skill + AUDIT_AND_PLAN_2026_05_14.md §3.3 (P1 · mid placement) + RESEARCH_REVIEW_2026_05_14.md §4 (Engagement primitive flagged as highest-leverage differentiator) + 11 cross-module page links + PDPL Art. 7/14/20.</li>
+
+<p class="mb-3 leading-relaxed">Verified:</p>
+<li class="mb-1 ">1514 lines parses cleanly</li>
+<li class="mb-1 ">23 top-level sections (was 18) including 5 strategic new ones (§0, §2.5–§2.8)</li>
+<li class="mb-1 ">5 new Mermaid diagrams (cross-module join flowchart + decision-to-issues sequence + 3 inline in §2.6/§2.7/§2.8)</li>
+<li class="mb-1 ">20 risk rows (was 10), with 10 new framed around orchestration spine SPOF + Engagement scope creep + memory-citation drift + VN mobile cold-load</li>
+<li class="mb-1 ">19 KPI rows (was 9), with margin watchdog + citation-coverage + dogfooding-acceptance as the new strategic gates</li>
+
+<p class="mb-3 leading-relaxed">The PROJ page now reads as the complete answer to: (1) why PROJ is the spine and not just a tracker (the join contract table makes it concrete), (2) why consultancies cannot use Linear or Jira off the shelf (the Engagement economics section walks through 3 billing modes + rate-card YAML + billable cascade), (3) how the memory integration makes issue history survive leadership changes (citation graph + dual-write audit chain), (4) why PROJ is the design-system exemplar (4 canonical UI surfaces + token overlay + accessibility commitments). A new engineer reading this page cold can pick up the sync-engine, join contracts, and the four UI surfaces and start P1 slice 1.</p>
+
+
+ </div>
+</main>
+
+</div>
+
+</body>
+</html>

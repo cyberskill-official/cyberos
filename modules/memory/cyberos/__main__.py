@@ -1669,6 +1669,156 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
     return 0 if report.ok else 1
 
 
+# --- self-update -----------------------------------------------------------
+
+
+def _find_source_repo() -> Path | None:
+    """Find the modules/memory/ source repo from the installed package.
+
+    With ``pip install -e .``, ``__file__`` points into the source tree.
+    Walk up from ``cyberos/__main__.py`` to ``modules/memory/``.
+    """
+    pkg_dir = Path(__file__).resolve().parent          # cyberos/
+    memory_dir = pkg_dir.parent                        # modules/memory/
+    if (memory_dir / "AGENTS.md").is_file():
+        return memory_dir
+    return None
+
+
+def _read_source_version(source: Path) -> str | None:
+    """Read the canonical version from the repo-root VERSION file.
+
+    Falls back to parsing ``cyberos/__init__.py`` if VERSION is missing.
+    """
+    # Primary: repo-root VERSION file
+    repo_root = source.parent.parent  # modules/memory/ → modules/ → repo root
+    version_file = repo_root / "VERSION"
+    if version_file.is_file():
+        v = version_file.read_text().strip()
+        if v:
+            return v
+    # Fallback: __init__.py
+    init_file = source / "cyberos" / "__init__.py"
+    for line in init_file.read_text().splitlines():
+        if line.startswith("__version__"):
+            return line.split("=")[1].strip().strip('"').strip("'")
+    return None
+
+
+def _read_manifest(store: Path) -> dict:
+    """Read manifest.json, returning empty dict on missing/corrupt."""
+    import json
+    mf = store / "manifest.json"
+    if not mf.is_file():
+        return {}
+    try:
+        return json.loads(mf.read_text())
+    except Exception:
+        return {}
+
+
+def _write_manifest(store: Path, data: dict) -> None:
+    """Write manifest.json atomically."""
+    import json
+    import os
+    mf = store / "manifest.json"
+    tmp = mf.with_suffix(".tmp")
+    tmp.write_text(json.dumps(data, indent=2) + "\n")
+    os.replace(str(tmp), str(mf))
+
+
+def _cmd_self_update(args: argparse.Namespace) -> int:
+    """Check for a newer version in the source repo, update, and re-init.
+
+    1. Locate the source repo (modules/memory/) from the installed package.
+    2. Compare installed version with source ``__init__.py`` version.
+    3. If newer, ``pip install -e .`` to update.
+    4. Re-copy ``AGENTS.md`` into the current ``.cyberos-memory/`` store.
+    5. Record the current version in ``manifest.json``.
+    """
+    import importlib
+    import subprocess
+
+    source = _find_source_repo()
+    if source is None:
+        print("error: cannot locate source repo (modules/memory/) from installed package")
+        return 1
+
+    # Read source version (from VERSION file or __init__.py)
+    source_version = _read_source_version(source)
+    if source_version is None:
+        print("error: cannot read version from source repo")
+        return 1
+
+    # Installed version
+    from cyberos import __version__ as installed_version
+
+    store = _store(args)
+    manifest = _read_manifest(store)
+    store_version = manifest.get("cyberos_version", "0.0.0")
+
+    print(f"  installed : {installed_version}")
+    print(f"  source    : {source_version}")
+    print(f"  store     : {store_version}")
+
+    needs_update = installed_version != source_version
+    needs_reinit = store_version != installed_version
+
+    if not needs_update and not needs_reinit and not args.force:
+        print("\n  already up to date.")
+        return 0
+
+    # Step 1: re-install package if source is newer
+    if needs_update:
+        print(f"\n  updating package {installed_version} → {source_version} ...")
+        result = subprocess.run(
+            [sys.executable, "-m", "pip", "install", "-e", str(source)],
+            capture_output=True, text=True,
+        )
+        if result.returncode != 0:
+            print(f"  pip install failed:\n{result.stderr}")
+            return 1
+        print("  ✓ package updated")
+        # Reload the version
+        importlib.reload(importlib.import_module("cyberos"))
+
+    # Step 2: re-copy protocol files into the store
+    import shutil
+    for name in ("AGENTS.md", "memory.schema.json", "memory.invariants.yaml"):
+        src = source / name
+        dst = store / name
+        if src.is_file():
+            shutil.copy2(str(src), str(dst))
+    print(f"  ✓ protocol files synced into {store}")
+
+    # Step 3: record version in manifest
+    from cyberos import __version__ as new_version
+    manifest["cyberos_version"] = new_version
+    _write_manifest(store, manifest)
+    print(f"  ✓ manifest.json cyberos_version → {new_version}")
+
+    print("\n  done. run `cyberos doctor` to verify.")
+    return 0
+
+
+def _maybe_check_version(store: Path) -> None:
+    """On first run, print a hint if the store version is stale.
+
+    Non-blocking — prints a warning to stderr and returns immediately.
+    """
+    try:
+        from cyberos import __version__ as installed
+        manifest = _read_manifest(store)
+        store_ver = manifest.get("cyberos_version")
+        if store_ver and store_ver != installed:
+            sys.stderr.write(
+                f"hint: cyberos store version ({store_ver}) differs from "
+                f"installed ({installed}). run `cyberos self-update` to sync.\n"
+            )
+    except Exception:
+        pass
+
+
 # --- argparse wiring ------------------------------------------------------
 
 
@@ -2150,12 +2300,27 @@ def build_parser() -> argparse.ArgumentParser:
                     help="emit JSON output instead of human table")
     sp.set_defaults(fn=_cmd_recall_similar)
 
+    # --- self-update ---
+    sp = sub.add_parser(
+        "self-update",
+        help="check for newer version in source repo, update package + store",
+    )
+    sp.add_argument("--force", action="store_true",
+                    help="re-copy AGENTS.md even if version matches")
+    sp.set_defaults(fn=_cmd_self_update)
+
     return p
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    # Version freshness hint on every non-self-update command
+    if hasattr(args, "fn") and args.fn is not _cmd_self_update:
+        try:
+            _maybe_check_version(_store(args))
+        except Exception:
+            pass
     return int(args.fn(args) or 0)
 
 

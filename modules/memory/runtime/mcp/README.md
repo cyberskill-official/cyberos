@@ -42,6 +42,6 @@ The protocol's audit-ledger invariants (AGENTS §0.6, §5.3, §8.7) require ever
 
 ## Related
 
-- memory spec: [`../../memory/docs/AGENTS.md`](../../../../AGENTS.md)
+- memory spec: [`AGENTS.md`](../../AGENTS.md)
 - Canonical writer: [`../lib/memory_writer.py`](../lib/memory_writer.py)
-- Aspect 12.7 in the operator manual: [`../../memory/docs/README.md`](../../memory/docs/README.md) Part 26.12.7
+- Aspect 12.7 in the operator manual: [`README.md`](../../README.md)

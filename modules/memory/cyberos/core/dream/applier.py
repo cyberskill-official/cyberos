@@ -49,18 +49,17 @@ def _has_section_7_7(store: Path) -> bool:
 
     Looks in two places:
     1. ``<store>/AGENTS.md`` if the store has its own copy.
-    2. ``<store>/../modules/memory/AGENTS.md`` (the canonical location
-       relative to the cyberos repo layout).
+    2. ``<store>/../AGENTS.md`` (repo root, the canonical location).
     """
     candidates: list[Path] = [
         store / "AGENTS.md",
         store.parent / "AGENTS.md",
     ]
-    # Walk up to find a `modules/memory/AGENTS.md` in case the store is
+    # Walk up to find AGENTS.md in case the store is
     # nested inside a project that imported the protocol files.
     for parent in [store, *store.parents][:6]:
-        cand = parent / "modules" / "memory" / "AGENTS.md"
-        if cand.exists():
+        cand = parent / "AGENTS.md"
+        if cand.exists() and cand not in candidates:
             candidates.append(cand)
     for c in candidates:
         if c.exists():
@@ -109,7 +108,7 @@ def apply(
         raise ProtocolAmendmentMissing(
             "AGENTS.md §7.7 not anchored. Approve via:\n"
             "  APPROVE protocol change P19 §7.7\n"
-            "and ensure modules/memory/AGENTS.md contains the §7.7 Dreaming section."
+            "and ensure AGENTS.md contains the §7.7 Dreaming section."
         )
 
     targets = [

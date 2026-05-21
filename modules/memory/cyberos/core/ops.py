@@ -338,7 +338,7 @@ def put_if(
         raise ProtocolAmendmentMissing(
             "AGENTS.md §3.1 extension (put_if) not anchored. Approve via:\n"
             "  APPROVE protocol change P21 §3.1\n"
-            "and ensure modules/memory/AGENTS.md §3.1 includes `put_if` in the "
+            "and ensure AGENTS.md §3.1 includes `put_if` in the "
             "canonical-op table."
         )
 

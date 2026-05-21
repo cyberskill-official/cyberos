@@ -47,8 +47,8 @@ modified_files:
   - modules/skill/_template/audit/references/UNTRUSTED_CONTENT.md      # same
   - modules/skill/feature-request-audit/RUBRIC.md                      # add FM-115 (no-xml-in-frontmatter) + FM-116 (wrap_in_marker-form)
   - feature-request-audit skill        # §3.13 mentions new rules
-  - modules/skill/README.md                                            # Part 2.1 frontmatter row updates; Part 18 anti-pattern entry
-  - modules/skill/ANTHROPIC_GUIDE_DIGEST.md                            # §6.3 status update + decision recorded (option A)
+  - website docs (SKILL appendices)                                    # Part 2.1 frontmatter row updates; Part 18 anti-pattern entry
+  - website docs (SKILL Appendix J)                                    # §6.3 status update + decision recorded (option A)
   - <ALL 104 production SKILL.md files in modules/skill/>               # mechanical sweep
 allowed_tools:
   - file_read: modules/skill/**, services/skill-broker/**, docs/feature-requests/skill/**

@@ -17,7 +17,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$Repo = (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
+$Repo = (Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)))
+$MemModule = Join-Path $Repo "modules\memory"
 $Target = (Resolve-Path $Target).Path
 
 Write-Host "=== cyberos install ==="
@@ -52,8 +53,11 @@ Write-Host ""
 Write-Host "→ step 3/6: install protocol files"
 $dst = Join-Path $Target "memory\docs"
 New-Item -ItemType Directory -Force -Path $dst | Out-Null
-foreach ($f in @("AGENTS.md", "INTEROP.md", "memory.schema.json", "memory.invariants.yaml")) {
-    $src = Join-Path $Repo "memory\docs\$f"
+# AGENTS.md lives at repo root; schema/invariants live in the memory module
+Copy-Item -Path (Join-Path $Repo "AGENTS.md") -Destination (Join-Path $dst "AGENTS.md") -Force
+Write-Host "  ✓ AGENTS.md"
+foreach ($f in @("memory.schema.json", "memory.invariants.yaml")) {
+    $src = Join-Path $MemModule $f
     $dst_file = Join-Path $dst $f
     if ((Test-Path $dst_file) -and -not $Force) {
         Write-Host "  – $f exists; use -Force to overwrite"
@@ -65,7 +69,7 @@ foreach ($f in @("AGENTS.md", "INTEROP.md", "memory.schema.json", "memory.invari
 $cyberos_dst = Join-Path $Target "memory\cyberos"
 if ((-not (Test-Path $cyberos_dst)) -or $Force) {
     New-Item -ItemType Directory -Force -Path (Join-Path $Target "memory") | Out-Null
-    Copy-Item -Path (Join-Path $Repo "memory\cyberos") -Destination $cyberos_dst -Recurse -Force
+    Copy-Item -Path (Join-Path $MemModule "cyberos") -Destination $cyberos_dst -Recurse -Force
     Write-Host "  ✓ $cyberos_dst"
 }
 Write-Host ""

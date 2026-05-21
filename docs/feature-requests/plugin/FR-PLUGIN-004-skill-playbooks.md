@@ -17,9 +17,9 @@ depends_on: [FR-PLUGIN-002, FR-SKILL-111]
 blocks: [FR-PLUGIN-007]
 
 source_pages:
-  - modules/plugin/README.md §1 (Skill playbooks layer)
-  - modules/skill/SKILL_BUNDLE_RUBRIC.md (SKB-020..066 conformance)
-  - modules/skill/ANTHROPIC_GUIDE_DIGEST.md (Anthropic Skills portability)
+  - [Plugin docs](https://cyberos-wiki.cyberskill.world/modules/plugin/) §1 (Skill playbooks layer)
+  - [SKILL Appendix L](https://cyberos-wiki.cyberskill.world/modules/skill/appendices.html) (SKB-020..066 conformance)
+  - [SKILL Appendix J](https://cyberos-wiki.cyberskill.world/modules/skill/appendices.html) (Anthropic Skills portability)
 
 source_decisions:
   - DEC-2430 2026-05-19 — Plugin ships 12 skill playbooks at modules/plugin/skills/<name>/SKILL.md following Anthropic Agent Skills spec
@@ -63,7 +63,7 @@ build_envelope:
 
   modified_files:
     - modules/plugin/manifests/cyberos@1.0.0.plugin.json (skills array)
-    - modules/plugin/README.md
+    - website docs (Plugin page)
 
   allowed_tools:
     - file_read: modules/plugin/skills/**

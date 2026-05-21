@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Documents &amp; Signatures — Changelog — CyberOS</title>
+ <meta name="description" content="Documents &amp; Signatures module changelog — all significant changes.">
+ <link rel="canonical" href="https://cyberos-wiki.cyberskill.world/modules/doc/changelog.html">
+ <link rel="stylesheet" href="../../assets/tokens.css">
+ <link rel="stylesheet" href="../../assets/styles.css">
+ <link rel="stylesheet" href="../../assets/tailwind.min.css">
+ <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <script type="module" src="../../assets/scripts.js"></script>
+</head>
+<body data-pagefind-filter="category:Module">
+<span hidden data-pagefind-filter="phase:P4"></span>
+
+<div id="shared-nav"></div>
+
+<header class="hero-gradient border-b border-slate-200">
+ <div class="container py-10 lg:py-14">
+ <nav class="breadcrumbs">
+ <a href="../../index.html">Home</a>
+ <span class="sep">›</span>
+ <a href="../../index.html#catalog">Modules</a>
+ <span class="sep">›</span>
+ <a href="index.html">Documents &amp; Signatures</a>
+ <span class="sep">›</span>
+ <span class="current">Changelog</span>
+ </nav>
+ <div class="flex items-center gap-3 mb-4 flex-wrap">
+ <span class="text-5xl">📄</span>
+ <h1 class="h-display">Documents &amp; Signatures — Changelog</h1>
+ </div>
+ <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
+ All significant changes to the Documents &amp; Signatures module.
+ </p>
+ <div class="flex flex-wrap gap-3 mt-6">
+ <a href="index.html" class="btn btn-primary">← Back to Documents &amp; Signatures overview</a>
+ </div>
+ </div>
+</header>
+
+<div class="container py-10 lg:py-14 grid lg:grid-cols-12 gap-10">
+
+<aside class="lg:col-span-3 order-2 lg:order-1">
+ <div class="lg:sticky lg:top-20">
+ <div class="bbg-card p-5">
+ <div class="h-eyebrow mb-3">On this page</div>
+ <ul class="space-y-0.5 text-sm">
+      <a class="block py-1 px-2 text-sm rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900" href="#2026-05-15-doc-module-page-rewritten-to-gold-document-repository-e-sign-workflow-contract-lifecycle">2026-05-15 — DOC module page rewritten to Gold (document repository + e-sign workflow + contract lifecycle)</a>
+ </ul>
+ </div>
+ </div>
+</aside>
+
+<main class="lg:col-span-9 prose prose-slate max-w-none">
+ <div class="bg-white rounded-xl p-6 lg:p-8 shadow-sm border border-slate-200">
+<h3 id="2026-05-15-doc-module-page-rewritten-to-gold-document-repository-e-sign-workflow-contract-lifecycle" class="text-xl font-bold mt-8 mb-3 text-slate-900">2026-05-15 — DOC module page rewritten to Gold (document repository + e-sign workflow + contract lifecycle)</h3>
+
+<p class="mb-3 leading-relaxed">Rewrote <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">website/docs/modules/doc.html</code> to Gold. Three strategic roles: (1) document repository (versioned + ACL'd + 10-year retention), (2) e-sign workflow (partner-routed cryptography to eIDAS QTSP / AATL CA / VN CA; CyberOS-owned workflow + identity verification), (3) contract lifecycle (HR/CRM/ESOP integration + expiry alerts + renewal automation).</p>
+
+<p class="mb-3 leading-relaxed">Key changes:</p>
+<li class="mb-1 ">NEW §0 — 3-card layout + partner-routed signing Mermaid + 10-row auto-vs-human matrix</li>
+<li class="mb-1 ">Risks +5 (R-DOC-011..015): cross-module trigger source mismatch · CUO renewal stale terms · expiry cascade miss · multi-jurisdiction cert chain · migrated DocuSign LTV failure</li>
+<li class="mb-1 ">KPIs +5: cross-module trigger validation (= 1.0) · renewal terms-stamp coverage (= 1.0) · expiry cascade completeness (= 1.0) · multi-jurisdiction cert-chain declaration (= 1.0) · LTV re-validation (≥ 0.95)</li>
+<li class="mb-1 ">References expanded: §0 + MEMORY_AUTOSYNC_DESIGN.md + AUDIT_AND_PLAN + feature-request-audit skill</li>
+
+
+ </div>
+</main>
+
+</div>
+
+</body>
+</html>

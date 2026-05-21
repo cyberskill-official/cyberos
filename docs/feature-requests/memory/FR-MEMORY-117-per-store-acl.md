@@ -18,7 +18,6 @@ blocks: [FR-MEMORY-118]
 protocol_amendment_required: "AGENTS.md §14.4 (new) — store-level ACL via STORE.yaml; consumer writers MUST honour acl; approval phrase: APPROVE protocol change P20 §14.4"
 
 source_pages:
-  - docs/proposals/MEMORY-IMPROVEMENT-WAVE-2026Q3.md#section-22-the-anthropic-talk
   - playground/extracts/memory-and-dreaming.transcript.txt  # see "permission scopes" segment [435..464]
 source_decisions:
   - DEC-230 (One STORE.yaml per existing top-level dir auto-generated on first run after upgrade; operator can edit thereafter; missing STORE.yaml ≡ permissive default — back-compat preserved)
@@ -38,12 +37,10 @@ modified_files:
   - modules/memory/cyberos/core/walker.py        # invariant `store-yaml-acl-valid` rule
   - modules/memory/memory.schema.json            # `StoreAcl` + `StoreAclEntry` definitions
   - modules/memory/memory.invariants.yaml        # `store-yaml-acl-valid` (error)
-  - modules/memory/AGENTS.md                     # add §14.4 — store-level ACL (REQUIRES amendment via APPROVE chat-turn P20 §14.4)
-  - modules/memory/INTEROP.md                    # one-line note: "Consumers MUST honour STORE.yaml acl for writes; reads MAY ignore"
-  - modules/memory/CHANGELOG.md
+  - AGENTS.md                                     # add §14.4 — store-level ACL (REQUIRES amendment via APPROVE chat-turn P20 §14.4)
 allowed_tools:
   - file_read: modules/memory/**
-  - file_write: modules/memory/cyberos/**, modules/memory/tests/**, modules/memory/scripts/**, modules/memory/memory.schema.json, modules/memory/memory.invariants.yaml, modules/memory/AGENTS.md, modules/memory/INTEROP.md, modules/memory/CHANGELOG.md
+  - file_write: modules/memory/cyberos/**, modules/memory/tests/**, modules/memory/scripts/**, modules/memory/memory.schema.json, modules/memory/memory.invariants.yaml, AGENTS.md
   - bash: cd modules/memory && python -m pytest tests/test_store_acl_*.py -v
   - bash: cd modules/memory && python scripts/migrate-store-acl.py --store /tmp/memory --dry-run
 disallowed_tools:

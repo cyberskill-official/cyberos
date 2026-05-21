@@ -17,7 +17,6 @@ depends_on: [FR-MEMORY-113]
 blocks: [FR-MEMORY-115]
 
 source_pages:
-  - docs/proposals/MEMORY-IMPROVEMENT-WAVE-2026Q3.md#section-21-the-x-article
   - playground/extracts/agentic-memory.article.txt  # see "Memory management" / "Importance scoring at write time"
 source_decisions:
   - DEC-200 (Write-time importance is OPTIONAL — `--score-importance` flag opts in; default writes never call an LLM)
@@ -42,10 +41,9 @@ modified_files:
   - modules/memory/cyberos/core/writer.py    # if --score-importance, route through importance.score() before put; merge into frontmatter
   - modules/memory/memory.schema.json        # `manifest.importance` schema fragment
   - modules/memory/memory.invariants.yaml    # `importance-cache-valid-sha256` rule
-  - modules/memory/CHANGELOG.md
 allowed_tools:
   - file_read: modules/memory/**, modules/cuo/cuo/invokers.py
-  - file_write: modules/memory/cyberos/**, modules/memory/tests/**, modules/memory/memory.schema.json, modules/memory/memory.invariants.yaml, modules/memory/CHANGELOG.md
+  - file_write: modules/memory/cyberos/**, modules/memory/tests/**, modules/memory/memory.schema.json, modules/memory/memory.invariants.yaml
   - bash: cd modules/memory && python -m pytest tests/test_importance_*.py -v
   - bash: cd modules/memory && python -m cyberos put memories/facts/test.md - --score-importance --dry-run < /tmp/sample.md
 disallowed_tools:
@@ -131,7 +129,7 @@ The write-time importance scoring layer is an **optional preprocessor** sitting 
 
 ## §2 — Why this design (rationale for humans)
 
-**Why opt-in, not default-on (§1 #1, DEC-200).** The memory is offline-first. A user dropping in `modules/memory/AGENTS.md` on a corporate laptop without API access must continue to work. Default-on importance scoring would silently fail or block writes for anyone without an API key. Opt-in keeps the simple case simple; sophisticated users who want quality scoring enable it explicitly.
+**Why opt-in, not default-on (§1 #1, DEC-200).** The memory is offline-first. A user dropping in `AGENTS.md` on a corporate laptop without API access must continue to work. Default-on importance scoring would silently fail or block writes for anyone without an API key. Opt-in keeps the simple case simple; sophisticated users who want quality scoring enable it explicitly.
 
 **Why CUO Phase-3 invoker pattern (§1 #3, DEC-201).** The CUO supervisor already implements this exact pattern — `MockInvoker` for tests, `AnthropicInvoker` for prod, env-or-manifest selection, `CYBEROS_DISABLE_LLM` escape hatch. Reusing it: (a) one mental model across the codebase; (b) the test infrastructure already exists; (c) operators who know CUO know this; (d) future LLM providers (OpenAI, local Ollama, etc.) plug in as new Invoker classes without changing call sites.
 

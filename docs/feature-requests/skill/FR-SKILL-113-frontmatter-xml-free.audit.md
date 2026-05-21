@@ -57,7 +57,7 @@ Cross-FR sanity check:
 - **209 files swept, 211 carry the new form** (the extra 2 are `_template/author/SKILL.md` + `_template/audit/SKILL.md`, updated by hand earlier).
 - **Body XML preserved.** Spot-checked `feature-request-author/SKILL.md` body: `<untrusted_content` appears 2 times in markdown prose (CONTRACT_ECHO example + §3 PLAN phase reference) — both untouched. SK-040 catch-all enforces frontmatter only.
 - **134 pre-existing placeholder leaks discovered** (separate from this FR's scope). Stale `<SDP §2 stage letter>` etc. in `metadata.stage` field across ~134 production SKILL.md files. Not regressions from this FR; the migrate.sh regex was specifically anchored to `wrap_in: <untrusted_content/>` and did NOT touch other XML-bracket fields. Operator note: future FR-SKILL-115 sweep should target `metadata.stage` + other placeholder fields.
-- **RUBRIC location.** Same as FR-SKILL-111/112: FM-115/FM-116 landed as SKB-040..042 in `modules/skill/SKILL_BUNDLE_RUBRIC.md`.
+- **RUBRIC location.** Same as FR-SKILL-111/112: FM-115/FM-116 landed as SKB-040..042 in [SKILL_BUNDLE_RUBRIC.md](https://cyberos-wiki.cyberskill.world/modules/skill/appendices.html) (Appendix L).
 
 **Post-impl score remains 10/10.** Spec was correct; implementation hit a perl-regex landmine that's now documented + the script patched so the landmine won't recur.
 

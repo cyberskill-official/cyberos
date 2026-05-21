@@ -1,6 +1,6 @@
 """CyberOS CUO supervisor — persona-aware orchestration above the SKILL module.
 
-Version: 3.0.0a4 (Phase 4 — 5 special-case workflow handlers).
+Version: see root VERSION file.
 
 The CUO ("Chief Universal Officer") routes natural-language requests through:
     1. persona match    — which C-role best fits this request
@@ -22,7 +22,7 @@ See `README.md` (this module) for the comprehensive guide and Appendix A
 for the normative protocol.
 """
 
-__version__ = "3.0.0a4"
+__version__ = "0.1.0"
 
 from cuo.core.memory_bridge import MemoryEmitResult, memory_is_available, emit_chain_result
 from cuo.core.catalog import PersonaEntry, WorkflowEntry, discover_personas, discover_workflows

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>AI Gateway — Changelog — CyberOS</title>
+ <meta name="description" content="AI Gateway module changelog — all significant changes.">
+ <link rel="canonical" href="https://cyberos-wiki.cyberskill.world/modules/ai/changelog.html">
+ <link rel="stylesheet" href="../../assets/tokens.css">
+ <link rel="stylesheet" href="../../assets/styles.css">
+ <link rel="stylesheet" href="../../assets/tailwind.min.css">
+ <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <script type="module" src="../../assets/scripts.js"></script>
+</head>
+<body data-pagefind-filter="category:Module">
+<span hidden data-pagefind-filter="phase:P0"></span>
+
+<div id="shared-nav"></div>
+
+<header class="hero-gradient border-b border-slate-200">
+ <div class="container py-10 lg:py-14">
+ <nav class="breadcrumbs">
+ <a href="../../index.html">Home</a>
+ <span class="sep">›</span>
+ <a href="../../index.html#catalog">Modules</a>
+ <span class="sep">›</span>
+ <a href="index.html">AI Gateway</a>
+ <span class="sep">›</span>
+ <span class="current">Changelog</span>
+ </nav>
+ <div class="flex items-center gap-3 mb-4 flex-wrap">
+ <span class="text-5xl">🤖</span>
+ <h1 class="h-display">AI Gateway — Changelog</h1>
+ </div>
+ <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
+ All significant changes to the AI Gateway module.
+ </p>
+ <div class="flex flex-wrap gap-3 mt-6">
+ <a href="index.html" class="btn btn-primary">← Back to AI Gateway overview</a>
+ </div>
+ </div>
+</header>
+
+<div class="container py-10 lg:py-14 grid lg:grid-cols-12 gap-10">
+
+<aside class="lg:col-span-3 order-2 lg:order-1">
+ <div class="lg:sticky lg:top-20">
+ <div class="bbg-card p-5">
+ <div class="h-eyebrow mb-3">On this page</div>
+ <ul class="space-y-0.5 text-sm">
+      <a class="block py-1 px-2 text-sm rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900" href="#2026-05-19-p0-implementation-wave-ai-gateway-slice-1-shipped-fr-ai-003-fr-ai-005">2026-05-19 — P0 implementation wave — AI Gateway slice-1 shipped (FR-AI-003 + FR-AI-005)</a>
+      <a class="block py-1 px-2 text-sm rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900" href="#2026-05-15-ai-gateway-module-page-rewritten-to-gold-p0-slice-1-cost-of-everything-gate-provider-abstraction-compliance-plane">2026-05-15 — AI Gateway module page rewritten to Gold (P0 · slice 1 cost-of-everything gate + provider abstraction + compliance plane)</a>
+ </ul>
+ </div>
+ </div>
+</aside>
+
+<main class="lg:col-span-9 prose prose-slate max-w-none">
+ <div class="bg-white rounded-xl p-6 lg:p-8 shadow-sm border border-slate-200">
+<h3 id="2026-05-19-p0-implementation-wave-ai-gateway-slice-1-shipped-fr-ai-003-fr-ai-005" class="text-xl font-bold mt-8 mb-3 text-slate-900">2026-05-19 — P0 implementation wave — AI Gateway slice-1 shipped (FR-AI-003 + FR-AI-005)</h3>
+
+<p class="mb-3 leading-relaxed">CyberOS's P0 build order is locked at AI Gateway → OBS → AUTH (stub) → MCP Gateway → CHAT. This entry covers the AI Gateway portion; see <a href="../obs/changelog.html" class="text-blue-600 hover:underline">OBS changelog</a> and <a href="../mcp/changelog.html" class="text-blue-600 hover:underline">MCP changelog</a> for their respective slices.</p>
+
+<h4 id="what-landed" class="text-lg font-semibold mt-6 mb-2 text-slate-800">What landed</h4>
+
+<p class="mb-3 leading-relaxed"><strong><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">services/ai-gateway/</code></strong> — Rust workspace member, slice-1 of P0.1 AI Gateway:</p>
+
+<li class="mb-1 "><strong>FR-AI-003 — memory audit-row bridge (canonical Writer subprocess) shipped end-to-end (10/10).</strong> Subprocess spawn of <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">python3 -m cyberos.writer put</code> with stdin/stdout/stderr piping; NFC normalisation; sorted-key JSON serialisation matching AGENTS.md §6.2; SHA-256 chain-hash recomputation + verification; path-traversal guard; 5s timeout with <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">kill_on_drop</code> + SIGTERM-then-SIGKILL; typed builders for slice-1 closed set; <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">check_writer_available</code> startup health check.</li>
+<li class="mb-1 "><strong>FR-AI-005 — Tenant-policy YAML loader shipped end-to-end (10/10).</strong> Closed <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">TenantPolicy</code> + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">AiPolicy</code> + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">Provider</code> + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">Residency</code> + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">EmergencyOverride</code> schema; <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">ArcSwap</code>-backed lock-free cache; <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">notify</code> file-watcher with eager startup load; invalid hot-reload preserves cache; path-traversal + charset validation; <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">validate_yaml</code> pure-function entry point.</li>
+<li class="mb-1 "><strong><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos-ai</code> operator CLI</strong> — slice-1 subcommands: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">policy validate <file></code> + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">policy list</code> + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">serve</code>.</li>
+
+<h4 id="catalog-totals-after-this-wave" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Catalog totals after this wave</h4>
+
+<li class="mb-1 "><strong>FRs at <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">shipped + 10/10</code>:</strong> prior 17 → <strong>19</strong> (+FR-AI-003, +FR-AI-005)</li>
+<li class="mb-1 "><strong>FRs flipped <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">planned → building</code>:</strong> <strong>+2</strong> (FR-OBS-001, FR-MCP-001)</li>
+
+<hr class="my-6 border-slate-200">
+
+<h3 id="2026-05-15-ai-gateway-module-page-rewritten-to-gold-p0-slice-1-cost-of-everything-gate-provider-abstraction-compliance-plane" class="text-xl font-bold mt-8 mb-3 text-slate-900">2026-05-15 — AI Gateway module page rewritten to Gold (P0 · slice 1 cost-of-everything gate + provider abstraction + compliance plane)</h3>
+
+<p class="mb-3 leading-relaxed">Rewrote <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">website/docs/modules/ai.html</code> to Gold by encoding three strategic roles: (1) cost-of-everything gate (per-tenant policy YAML + 7-step pre/post accounting + 7-dimension attribution), (2) provider-agnostic router (6-row model-alias table + 7-row failover semantics + residency × provider matrix), (3) compliance plane (4-link chain PII → persona → ZDR → audit + 14-field invocation row schema + VN-PII recogniser).</p>
+
+<p class="mb-3 leading-relaxed">Changes by section:</p>
+<li class="mb-1 "><strong><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155"><title></code> + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155"><meta></code></strong> — reframed: "AI Gateway — Cost-of-everything gate · Provider-agnostic router · Compliance plane".</li>
+<li class="mb-1 "><strong>Hero tagline + lede</strong> — explicit research review §2.4 citation: "ships at P0 · slice 1 BEFORE AUTH because if you can't account for and cap LLM spend, every other module bleeds money invisibly". Lists all 3 strategic roles.</li>
+<li class="mb-1 "><strong>Hero fact-grid</strong> — extended from 8 to 12 cards: added Strategic role + Build placement (P0 · slice 1 P0 #1) + Cost-cap enforcement (hard-stop) + ZDR (required). Renamed dependency card to reflect P0 · slice 1 reality (memory + OBS at start; AUTH at P0 · slice 2).</li>
+<li class="mb-1 "><strong>NEW §0 "The bigger picture — three strategic roles"</strong> — 3-card layout with cross-module dependency Mermaid (6 callers × AI Gateway × 5 providers × 4 platform deps); 9-row auto-vs-human matrix covering failover, cost-cap override, ZDR refusal, cache hit, model alias resolution, image-gen.</li>
+<li class="mb-1 "><strong>TOC</strong> — added bigger-picture · cost-gate · provider-abstraction · compliance-plane entries (4 new).</li>
+<li class="mb-1 "><strong>NEW §2.5 "Cost-of-everything gate"</strong> — per-tenant policy YAML (caps, hard-stop, emergency override, per-model caps, per-persona attribution); 8-actor pre/post-call accounting sequence (Caller → Gateway → ledger → Provider → memory → INV); 7-dimension attribution table (tenant_id, agent_persona, module, cost_centre, route_class, cache_state, failover_path).</li>
+<li class="mb-1 "><strong>NEW §2.6 "Provider abstraction + failover"</strong> — 6-row model-alias resolution (chat.smart / chat.fast / chat.reason / embed.standard / rerank.standard / image.standard); 7-row failover semantics (5xx retry / consecutive 5xx → mark degraded / 429 backoff / circuit breaker / recovery / both-down degraded mode / per-tenant SLA breach); residency × provider matrix (sg-1 / eu-1 / us-1 / vn-1).</li>
+<li class="mb-1 "><strong>NEW §2.7 "Compliance plane"</strong> — 4-link chain table (PII → persona → ZDR → audit) with recall target + failure behaviour per link; full <code>ai.invocation</code> audit row schema (14 extra fields); VN-PII recogniser table (CCCD / MST / VN phone / NĐD / VN address / VN bank account) with patterns + redaction examples.</li>
+<li class="mb-1 "><strong>§12 Risks</strong> — added 10 new (R-AI-011..020): P0 · slice 1 sequence slip → cost-overrun invisible (Critical) · persona prompt cache poisoning · provider DPA cancellation mid-quarter · cost-ledger hold leak · streaming SSE buffer leak · embedding model upgrade breaks memory search · image-gen budget flood at P2+ · geographic residency violation during failover (Critical) · VN-PII recogniser regression · BGE GPU pod OOM under load.</li>
+<li class="mb-1 "><strong>§13 KPIs</strong> — added 9 new: per-persona cost share (alert on > 50% concentration) · cache savings rate (≥ 15% by P1) · hold-to-actual drift (≤ 5%) · residency-violation refusal rate · persona stamp coverage (hard floor = 1.0) · ZDR-compliant routing rate (hard floor = 1.0) · VN-PII recall on production sample (≥ 0.99) · provider-failover MTTR p95 (≤ 30s) · dogfooding LLM cost / Member (≤ $10/$5 trajectory).</li>
+<li class="mb-1 "><strong>§17 References</strong> — replaced stale PRD/SRS refs with the 4 new in-page sections + MEMORY_AUTOSYNC_DESIGN.md §7 + feature-request-audit skill + AUDIT_AND_PLAN §3.3 (P0 · slice 1 placement) + RESEARCH_REVIEW §2.4 (reorder citation) + 8 cross-module links + expanded EU AI Act citations (Art. 12/13/14/15/26/50) + OWASP Gen AI Top-10 + ISO/IEC 42001 + PDPL Art. 14/20/38.</li>
+
+<p class="mb-3 leading-relaxed">The AI Gateway page now reads as the complete answer to: (1) why this module ships first in P0 (cost-control before everything), (2) how the cost ledger gates calls in real-time (pre-check + post-reconcile + 60s hold expiry), (3) how the same Python service abstracts across Bedrock/Anthropic/OpenAI/Vertex (model alias + residency × provider matrix), (4) how the 4-link compliance chain ensures no bytes leak unscrubbed/unstamped/un-ZDR'd/un-audited. A new engineer reading this page cold can pick up the P0 · slice 1 build sequence and ship the cost-gate slice.</p>
+
+
+ </div>
+</main>
+
+</div>
+
+</body>
+</html>

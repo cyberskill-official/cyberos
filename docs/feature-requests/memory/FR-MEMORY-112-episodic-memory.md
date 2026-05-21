@@ -17,7 +17,6 @@ depends_on: [FR-MEMORY-108]
 blocks: [FR-MEMORY-113, FR-MEMORY-114, FR-MEMORY-115]
 
 source_pages:
-  - docs/proposals/MEMORY-IMPROVEMENT-WAVE-2026Q3.md#section-21-the-x-article
   - playground/extracts/agentic-memory.article.txt
 source_decisions:
   - DEC-180 (Add a new top-level memory kind `episode` instead of overloading `facts` or `decisions`; the four existing kinds describe knowledge, episode describes events)
@@ -40,11 +39,10 @@ modified_files:
   - modules/memory/cyberos/core/walker.py       # invariant: every episode has `outcome` ∈ closed enum
   - modules/memory/cyberos/core/frontmatter.py  # validate per-kind frontmatter contract
   - modules/memory/memory.invariants.yaml       # add `episode-outcome-closed-enum` + `episode-quality-score-range`
-  - modules/memory/AGENTS.md                    # §2 layout — add `memories/episodes/` to the kind list (additive, see §0.2 not amended; no normative behaviour change)
-  - modules/memory/CHANGELOG.md                 # release note for `kind: episode`
+  - AGENTS.md                                    # §2 layout — add `memories/episodes/` to the kind list (additive, see §0.2 not amended; no normative behaviour change)
 allowed_tools:
   - file_read: modules/memory/**
-  - file_write: modules/memory/cyberos/**, modules/memory/tests/**, modules/memory/memory.schema.json, modules/memory/memory.invariants.yaml, modules/memory/AGENTS.md, modules/memory/CHANGELOG.md
+  - file_write: modules/memory/cyberos/**, modules/memory/tests/**, modules/memory/memory.schema.json, modules/memory/memory.invariants.yaml, AGENTS.md
   - bash: cd modules/memory && python -m pytest tests/test_episode_log_and_recall.py tests/test_episode_schema.py -v
   - bash: cd modules/memory && python -m cyberos --store /tmp/memory doctor
 disallowed_tools:

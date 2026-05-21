@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Chat — Changelog — CyberOS</title>
+ <meta name="description" content="Chat module changelog — all significant changes.">
+ <link rel="canonical" href="https://cyberos-wiki.cyberskill.world/modules/chat/changelog.html">
+ <link rel="stylesheet" href="../../assets/tokens.css">
+ <link rel="stylesheet" href="../../assets/styles.css">
+ <link rel="stylesheet" href="../../assets/tailwind.min.css">
+ <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <script type="module" src="../../assets/scripts.js"></script>
+</head>
+<body data-pagefind-filter="category:Module">
+<span hidden data-pagefind-filter="phase:P0"></span>
+
+<div id="shared-nav"></div>
+
+<header class="hero-gradient border-b border-slate-200">
+ <div class="container py-10 lg:py-14">
+ <nav class="breadcrumbs">
+ <a href="../../index.html">Home</a>
+ <span class="sep">›</span>
+ <a href="../../index.html#catalog">Modules</a>
+ <span class="sep">›</span>
+ <a href="index.html">Chat</a>
+ <span class="sep">›</span>
+ <span class="current">Changelog</span>
+ </nav>
+ <div class="flex items-center gap-3 mb-4 flex-wrap">
+ <span class="text-5xl">💬</span>
+ <h1 class="h-display">Chat — Changelog</h1>
+ </div>
+ <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
+ All significant changes to the Chat module.
+ </p>
+ <div class="flex flex-wrap gap-3 mt-6">
+ <a href="index.html" class="btn btn-primary">← Back to Chat overview</a>
+ </div>
+ </div>
+</header>
+
+<div class="container py-10 lg:py-14 grid lg:grid-cols-12 gap-10">
+
+<aside class="lg:col-span-3 order-2 lg:order-1">
+ <div class="lg:sticky lg:top-20">
+ <div class="bbg-card p-5">
+ <div class="h-eyebrow mb-3">On this page</div>
+ <ul class="space-y-0.5 text-sm">
+      <a class="block py-1 px-2 text-sm rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900" href="#2026-05-15-chat-module-page-rewritten-to-gold-p0-dogfood-gate-mattermost-fork-rationale-lumi-memory-capture-decommission-kpi">2026-05-15 — CHAT module page rewritten to Gold (P0 dogfood gate + Mattermost fork rationale + @lumi memory capture + decommission KPI)</a>
+ </ul>
+ </div>
+ </div>
+</aside>
+
+<main class="lg:col-span-9 prose prose-slate max-w-none">
+ <div class="bg-white rounded-xl p-6 lg:p-8 shadow-sm border border-slate-200">
+<h3 id="2026-05-15-chat-module-page-rewritten-to-gold-p0-dogfood-gate-mattermost-fork-rationale-lumi-memory-capture-decommission-kpi" class="text-xl font-bold mt-8 mb-3 text-slate-900">2026-05-15 — CHAT module page rewritten to Gold (P0 dogfood gate + Mattermost fork rationale + @lumi memory capture + decommission KPI)</h3>
+
+<p class="mb-3 leading-relaxed">Rewrote <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">website/docs/modules/chat.html</code> to push the module past the threshold from "Solid (8/10)" to Gold by encoding three strategic roles simultaneously: P0 dogfood gate (Slack + Zalo killed by P0 · exit or the platform thesis fails), memory capture surface (one of four canonical capture inputs), and Vietnamese-first chat (PGroonga + TinySegmenter recall ≥ 80%). Targeted Edit operations — preserved every gold-quality detail of the prior content (channels, threads, attachments, search, memory bridge, @genie, Slack importer, mobile, voice) while adding 6 strategic new sections + risk/KPI extensions + universal-protocol references.</p>
+
+<p class="mb-3 leading-relaxed">Changes by section:</p>
+<li class="mb-1 "><strong><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155"><title></code> + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155"><meta></code></strong> — reframed: "P0 dogfood gate · Mattermost fork · @lumi memory capture · CyberOS".</li>
+<li class="mb-1 "><strong>Hero tagline + lede</strong> — explicit P0-dogfood-gate framing: Slack + Zalo decommissioned at P0 exit (P0 · exit), or the whole platform thesis fails. Lists the three strategic roles.</li>
+<li class="mb-1 "><strong>Hero fact-grid</strong> — added "Decom gate Slack+Zalo killed by P0 · exit" + "E2EE decision Per-tenant Postgres encryption".</li>
+<li class="mb-1 "><strong>NEW §0 "The bigger picture — three strategic roles"</strong> — 3-card layout (P0 dogfood gate / memory capture surface / Vietnamese-first chat). P0-exit dependency Mermaid showing reordered sequence (AI Gateway → AUTH stub → MCP → CHAT → Slack/Zalo decom → P0 exit).</li>
+<li class="mb-1 "><strong>TOC</strong> — added 6 new section links (bigger-picture · rt-stack · lumi-memory-capture · e2ee-decision · slack-zalo-migration · decommission-kpi).</li>
+<li class="mb-1 "><strong>NEW §2.5 "Real-time stack — Mattermost fork rationale"</strong> — 4-option decision table (Mattermost fork chosen vs Matrix / Phoenix / build-from-scratch) + own-vs-Mattermost ownership table + fork governance text + license-drift escalation path.</li>
+<li class="mb-1 "><strong>NEW §2.6 "@lumi → memory capture"</strong> — capture rules table (@lumi=capture, no @lumi=privacy floor, DM rules) + 8-actor sequence diagram (User → CHAT → @lumi parser → CUO → AI Gateway → memory Writer → Lumi's memory). Per-message retro-capture opt-in for "Lumi remember the last N messages".</li>
+<li class="mb-1 "><strong>NEW §2.7 "E2EE decision — server-visible by design"</strong> — 10-row threat-model trade table comparing E2EE vs per-tenant Postgres encryption-at-rest; 5-point rationale for choosing the latter; concrete encryption-at-rest description; tenant-level optional E2EE plugin reserved for P3 (search disabled on those channels).</li>
+<li class="mb-1 "><strong>NEW §2.8 "Slack/Zalo migration"</strong> — 8-step <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos-chat import slack</code> flow with parse/map/backfill/ingest/verify checkpoints; 2-path Zalo migration (manual export + future desktop bridge); pre-import dry-run + idempotent + checkpointed importer.</li>
+<li class="mb-1 "><strong>NEW §2.9 "Decommission KPI"</strong> — formal definition: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">decommission_signal := (msgs_in_chat / (msgs_in_chat + msgs_in_slack + msgs_in_zalo)) ≥ 0.95 over 14-day rolling window</code>. Why 95% not 100%; tracking instrumentation table; 3-tier miss-the-gate remediation (T1 = 2-week sprint freeze on net-new modules, T2 = P1 · start platform-thesis review, T3 = potential P0 rescope per research review §1).</li>
+<li class="mb-1 "><strong>§12 Risks</strong> — added 10 new (R-CHAT-011..020): dogfooding-never-happens (Critical, CEO-owned) · enterprise E2EE pressure · voice ASR PII leak · Mattermost license drift · @lumi rate-limit abuse · cross-tenant search leak · Slack import partial failure · retro-capture privacy boundary · mobile push PII leak · VN/EN code-switch tokeniser miss.</li>
+<li class="mb-1 "><strong>§13 KPIs</strong> — added 9 new universal-protocol-aware: decommission_signal (P0-exit gate) · @lumi capture-rate (≥ 0.999) · @lumi response p95 (≤ 4 s) · VN tokeniser recall continuous (≥ 0.80, alert < 0.78) · memory-ingest backlog max · retro-capture opt-in rate · mobile push delivery rate · cross-tenant query reject rate · dogfooding intensity (P0-gate: 100% of full-time team by P0 · slice 2).</li>
+<li class="mb-1 "><strong>§17 References</strong> — replaced/expanded with MEMORY_AUTOSYNC_DESIGN.md §5 (CHAT as 1 of 4 capture surfaces) · feature-request-audit skill (CHAT FRs deliberately pending) · AUDIT_AND_PLAN_2026_05_14.md §3.3 (P0 · slice 2 build placement) · RESEARCH_REVIEW_2026_05_14.md §3 (Solid 8/10 with decommission caveat) · Mattermost governance docs · PGroonga + TinySegmenter refs · PDPL Art. 7/14/20/38 · EU AI Act Art. 12/13/50.</li>
+
+<p class="mb-3 leading-relaxed">Verified:</p>
+<li class="mb-1 ">24 top-level sections (was 18) including 5 strategic new ones (§0, §2.5–§2.9)</li>
+<li class="mb-1 ">4 new Mermaid diagrams (P0-exit dependency + 1 sequence + 0 in §2.7/§2.8 prose + 1 in §0)</li>
+<li class="mb-1 ">20 risk rows (was 10), with 10 newly framed around dogfooding + privacy + tokeniser code-switch</li>
+<li class="mb-1 ">18 KPI rows (was 9), with decommission_signal as the explicit P0-exit gate</li>
+<li class="mb-1 ">decommission_signal definition appears verbatim 3× (hero fact-grid, §2.9, §13 KPI table)</li>
+
+<p class="mb-3 leading-relaxed">The CHAT page now reads as the complete answer to: (1) why CHAT is the P0 dogfood gate not just another module, (2) why Mattermost fork beats Matrix/Phoenix/build-from-scratch under our constraint set, (3) how @lumi mention is the conversational memory-capture mechanism, (4) why we chose per-tenant Postgres encryption-at-rest over E2EE, (5) how Slack/Zalo migration works without losing threads/reactions, and (6) what happens if decommission_signal misses 0.95 by P0 · exit (the platform-thesis review escalation). A new engineer reading this page cold can now pick up the Mattermost fork repo + memory bridge spec + Slack importer spec and start slice 1.</p>
+
+
+ </div>
+</main>
+
+</div>
+
+</body>
+</html>

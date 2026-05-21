@@ -15,5 +15,8 @@ cyberos = "cyberos.__main__:main"
 [tool.setuptools.packages.find]
 include = ["cyberos*"]
 
+[tool.setuptools.package-data]
+cyberos = ["data/*.json", "data/*.yaml", "data/*.md"]
+
 [tool.setuptools.dynamic]
 dependencies = {file = ["cyberos/requirements.txt"]}

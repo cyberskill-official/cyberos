@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cyberos-cuo"
-version = "3.0.0a4"
+version = "0.1.0"
 description = "CyberOS CUO supervisor — persona-aware orchestration above SKILL module"
 readme = "README.md"
 requires-python = ">=3.10"

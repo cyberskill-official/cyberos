@@ -26,5 +26,5 @@ The shell scripts are invoked as commands by `cyberos rollout` and `cyberos clea
 
 ## Related
 
-- memory protocol that `memory_writer.py` enforces: [`../../memory/docs/AGENTS.md`](../../../../AGENTS.md)
-- Rollout flow that invokes `apply-bundle-Q.sh`: [`../../memory/docs/README.md` Part 26.0.5](../../memory/docs/README.md)
+- memory protocol that `memory_writer.py` enforces: [`AGENTS.md`](../../AGENTS.md)
+- Rollout flow that invokes `apply-bundle-Q.sh`: [`README.md`](../../README.md)

@@ -17,7 +17,6 @@ depends_on: [FR-MEMORY-115]
 blocks: []
 
 source_pages:
-  - docs/proposals/MEMORY-IMPROVEMENT-WAVE-2026Q3.md#section-21-the-x-article
   - playground/extracts/agentic-memory.article.txt  # "Periodic consolidation" / `consolidate_memories()` reference
 source_decisions:
   - DEC-220 (Reuse `cyberos.core.dream.detectors.duplicates` verbatim; semantic-dedup is the duplicates-only subset of dreaming gated to run inside the existing consolidation pipeline)
@@ -31,10 +30,9 @@ new_files:
 modified_files:
   - modules/memory/cyberos/core/consolidate.py    # add SemanticDedup phase after Publish; gated on --semantic-dedup flag
   - modules/memory/cyberos/__main__.py            # wire `--semantic-dedup` + `--apply` flags on `cyberos consolidate`
-  - modules/memory/CHANGELOG.md
 allowed_tools:
   - file_read: modules/memory/**
-  - file_write: modules/memory/cyberos/core/consolidate.py, modules/memory/cyberos/__main__.py, modules/memory/tests/**, modules/memory/CHANGELOG.md
+  - file_write: modules/memory/cyberos/core/consolidate.py, modules/memory/cyberos/__main__.py, modules/memory/tests/**
   - bash: cd modules/memory && python -m pytest tests/test_consolidate_semantic_dedup.py -v
   - bash: cd modules/memory && python -m cyberos consolidate --semantic-dedup --dry-run
 disallowed_tools:

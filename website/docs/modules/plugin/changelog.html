@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Plugin — Changelog — CyberOS</title>
+ <meta name="description" content="Cross-runtime distribution">
+ <link rel="stylesheet" href="../../assets/tokens.css">
+ <link rel="stylesheet" href="../../assets/styles.css">
+ <link rel="stylesheet" href="../../assets/tailwind.min.css">
+ <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <script type="module" src="../../assets/scripts.js"></script>
+ <style>
+ .fact-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
+ .fact-card { background: var(--infra-bg); border:1px solid var(--infra-tint); padding: 0.875rem 1rem; border-radius: 0.625rem; }
+ .fact-card .label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--infra-dark); }
+ .fact-card .value { font-size: 1.125rem; font-weight: 800; color: var(--text); margin-top:0.25rem; }
+ .fact-card .note { font-size: 0.75rem; color: var(--text-soft); margin-top: 0.125rem; }
+ .toc-link { display:block; padding:0.375rem 0.625rem; font-size:0.8125rem; color:var(--text-soft); text-decoration:none; border-radius:0.375rem; transition: all 0.12s; }
+ .toc-link:hover { background: var(--infra-bg); color: var(--infra-dark); }
+ .toc-link.active { background: var(--infra-tint); color: var(--infra-dark); font-weight: 600; }
+ .module-section { scroll-margin-top: 80px; margin-bottom: 2.5rem; }
+ .module-section header.section-head { display:flex; align-items:center; gap:0.75rem; margin-bottom: 0.75rem; }
+ .module-section header.section-head h2 { font-size: 1.5rem; font-weight: 800; margin:0; color: var(--text); }
+ .section-num { display:inline-flex; align-items:center; justify-content:center; width:1.75rem; height:1.75rem; border-radius:0.5rem; background:var(--infra); color:white; font-weight:800; font-size:0.875rem; }
+ table.kt { width:100%; border-collapse: collapse; font-size: 0.8125rem; }
+ table.kt thead th { text-align:left; font-weight:700; color:var(--text); padding: 0.5rem 0.625rem; border-bottom: 2px solid var(--border); background: var(--bg-card); }
+ table.kt tbody td { padding: 0.5rem 0.625rem; border-bottom: 1px solid var(--border); color: var(--text-soft); vertical-align: top; }
+ table.kt tbody tr:nth-child(even) td { background: var(--future-bg); }
+ .md-content h1 { font-size: 1.75rem; font-weight: 800; margin: 2rem 0 1rem; color: var(--text); }
+ .md-content h2 { font-size: 1.375rem; font-weight: 700; margin: 1.75rem 0 0.75rem; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+ .md-content h3 { font-size: 1.125rem; font-weight: 700; margin: 1.25rem 0 0.5rem; color: var(--text); }
+ .md-content h4 { font-size: 1rem; font-weight: 700; margin: 1rem 0 0.5rem; color: var(--text-soft); }
+ .md-content p { margin: 0.5rem 0; color: var(--text-soft); line-height: 1.7; }
+ .md-content ul, .md-content ol { margin: 0.5rem 0; padding-left: 1.5rem; color: var(--text-soft); }
+ .md-content li { margin: 0.25rem 0; line-height: 1.6; }
+ .md-content code { background: var(--bg-card); border: 1px solid var(--border); padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.875em; font-family: 'JetBrains Mono', monospace; }
+ .md-content pre { background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 1rem 0; }
+ .md-content pre code { background: none; border: none; padding: 0; color: inherit; }
+ .md-content blockquote { border-left: 4px solid var(--infra); padding: 0.75rem 1rem; margin: 1rem 0; background: var(--infra-bg); border-radius: 0 0.5rem 0.5rem 0; }
+ .md-content blockquote p { margin: 0.25rem 0; }
+ .md-content table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.875rem; }
+ .md-content th { text-align: left; font-weight: 700; padding: 0.5rem 0.75rem; border-bottom: 2px solid var(--border); background: var(--bg-card); }
+ .md-content td { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); }
+ .md-content tr:nth-child(even) td { background: var(--future-bg); }
+ .md-content hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+ .md-content strong { color: var(--text); font-weight: 700; }
+ .md-content a { color: var(--infra-dark); text-decoration: underline; }
+ .md-content a:hover { color: var(--infra); }
+ </style>
+</head>
+<body data-pagefind-filter="category:Module">
+<span hidden data-pagefind-filter="phase:P0"></span>
+
+<div id="shared-nav"></div>
+
+<header class="hero-gradient border-b border-slate-200">
+ <div class="container py-10 lg:py-14">
+ <nav class="breadcrumbs">
+ <a href="../../index.html">Home</a>
+ <span class="sep">›</span>
+ <a href="../../index.html#catalog">Modules</a>
+ <span class="sep">›</span>
+ <a href="index.html">Plugin</a>
+ <span class="sep">›</span>
+ <span class="current">Changelog</span>
+ </nav>
+ <div class="flex items-center gap-3 mb-4 flex-wrap">
+ <span class="text-5xl">📦</span>
+ <h1 class="h-display">Plugin — Changelog</h1>
+ </div>
+ <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
+ Cross-runtime distribution
+ </p>
+ <div class="flex flex-wrap gap-3 mt-6">
+ <a href="index.html" class="btn btn-primary">← Back to Plugin overview</a>
+ </div>
+ </div>
+</header>
+
+<div class="container py-10 lg:py-14 grid lg:grid-cols-12 gap-10">
+
+<aside class="lg:col-span-3 order-2 lg:order-1">
+ <div class="lg:sticky lg:top-20">
+ <div class="bbg-card p-5">
+ <div class="h-eyebrow mb-3">On this page</div>
+ <ul class="space-y-0.5 text-sm">
+ <li><a class="toc-link " href="#2026-05-19-plugin-new-module-cross-runtime-distribution-scaffold-8-frs-at-10-10">2026-05-19 — [PLUGIN] New module — cross-runtime distribution scaffold + 8 FRs at 10/10</a></li>
+ <li><a class="toc-link indent" href="#what-landed">What landed</a></li>
+ <li><a class="toc-link indent" href="#catalog-totals-after-this-wave">Catalog totals after this wave</a></li>
+ <li><a class="toc-link indent" href="#runtime-build-out-next-session">Runtime build-out (next session)</a></li>
+ <li><a class="toc-link indent" href="#files-touched">Files touched</a></li>
+ </ul>
+ <hr class="my-4 border-slate-200">
+ <div class="h-eyebrow mb-2">Source</div>
+ <div class="text-xs text-slate-500">modules/plugin/CHANGELOG.md</div>
+ </div>
+ </div>
+</aside>
+
+<main class="lg:col-span-9 order-1 lg:order-2">
+ <div class="md-content">
+ <h1>Changelog — PLUGIN Module</h1>
+<p>All notable changes to the <code>plugin</code> module will be documented in this file.</p>
+<hr />
+<h2 id="2026-05-19-plugin-new-module-cross-runtime-distribution-scaffold-8-frs-at-10-10">2026-05-19 — [PLUGIN] New module — cross-runtime distribution scaffold + 8 FRs at 10/10</h2>
+<p>CyberOS's distribution + packaging layer. PLUGIN sits on top of the MCP gateway (<code>docs/feature-requests/mcp/</code>) and bundles CUO workflows + memory memory tools + SKILL playbooks as installable <code>.plugin</code> artefacts for <strong>Claude Code</strong>, <strong>Cursor</strong>, <strong>Anthropic Cowork</strong>, and <strong>OpenAI Codex CLI</strong>. Strategy alignment: §4 Level 1 (OSS distribution) + Level 3 (marketplace) + Level 4 (vertical packs ship as per-region plugins) + Level 5 (private marketplace for enterprise white-label).</p>
+<h3 id="what-landed">What landed</h3>
+<p><strong>Module scaffold</strong> at <code>modules/plugin/</code>:</p>
+<ul>
+<li><code>README.md</code> — module charter, scope, layout doctrine, status, cross-module deps</li>
+<li><code>INTEROP.md</code> — 4 P1 runtime target matrix + 8 universal bundle invariants</li>
+<li><code>manifest.schema.json</code> — JSONSchema 2020-12 for canonical <code>plugin.json</code> (load-bearing contract)</li>
+<li><code>AGENTS.md</code> — symlink to <code>modules/memory/AGENTS.md</code> (Layer-1 memory protocol)</li>
+<li><code>CHANGELOG.md</code> — pointer to this root file per 2026-05-18 centralisation</li>
+<li>Empty scaffold folders: <code>adapters/</code> (per-runtime emitters), <code>commands/</code> (slash-commands), <code>manifests/</code> (sample shipped bundles), <code>examples/</code> (developer demos)</li>
+</ul>
+<p><strong>FR catalog</strong> at <code>docs/feature-requests/plugin/</code> — 8 FRs at <strong>10/10</strong>, 58 engineering-hours total:</p>
+<ul>
+<li><code>FR-PLUGIN-001</code> — Plugin manifest schema v1.0.0 + Python reference packer (<code>cyberos-plugin pack</code>). 8h. Keystone — every other FR consumes this manifest contract. Reproducible bundles + Sigstore Rekor anchor mandatory.</li>
+<li><code>FR-PLUGIN-002</code> — CyberOS MCP bridge Rust binary at <code>services/plugin-host/</code>. Supports both stdio + HTTP transports. Exposes 8 tools (CUO 4 + memory 2 + SKILL 2) over MCP 2025-11-25. Tasks primitive for long-running execute_workflow. 4-class error taxonomy. 10h.</li>
+<li><code>FR-PLUGIN-003</code> — 4 canonical slash-commands (<code>/cyberos-run</code>, <code>/cyberos-memory</code>, <code>/cyberos-skill-list</code>, <code>/cyberos-route</code>). 4h.</li>
+<li><code>FR-PLUGIN-004</code> — 12 skill playbooks teaching hosts WHEN to chain plugin tools. SKB-020..023 conformance + TRIGGER_TESTS.md fixtures. 6h.</li>
+<li><code>FR-PLUGIN-005</code> — OAuth-PKCE auth. Audience-bound RS256 JWTs (1h), rotating opaque refresh (24h), OS-keychain storage, locked scope catalogue. 8h.</li>
+<li><code>FR-PLUGIN-006</code> — memory audit emission. 6 plugin.* audit kinds. Audit-then-respond ordering. Durable Postgres outbox with 24h exponential-backoff retry. 6h.</li>
+<li><code>FR-PLUGIN-007</code> — Multi-runtime adapters for 4 P1 targets (claude-code / cursor / cowork / codex-cli). Single canonical manifest → 4 target-native bundles. Per-target reproducibility + Sigstore. P2 targets (goose, amp, continue-dev) deferred. 10h.</li>
+<li><code>FR-PLUGIN-008</code> — Marketplace publish CLI. OCI push to plugins.cyberskill.world + mirror to agentskills.io for public plugins. 70/30 revenue share. Vetted-by-CyberSkill JWT badge. Yank-not-delete semantics. Full marketplace server deferred to FR-PLUGIN-008a. 6h.</li>
+</ul>
+<h3 id="catalog-totals-after-this-wave">Catalog totals after this wave</h3>
+<ul>
+<li><strong>Total FRs:</strong> 253 → <strong>261</strong></li>
+<li><strong>Modules with full spec coverage:</strong> 24 → <strong>25</strong></li>
+<li><strong>Engineering-hours:</strong> ~1,998h → <strong>~2,056h</strong></li>
+</ul>
+<h3 id="runtime-build-out-next-session">Runtime build-out (next session)</h3>
+<p>Implementation phase starts at <code>services/plugin-host/</code> — Rust workspace member (new). Build order matches slice order in <code>docs/feature-requests/plugin/README.md</code>:</p>
+<ul>
+<li>Slice 1 — Plugin core (FR-001 + 002 + 003) — 22h</li>
+<li>Slice 2 — Auth + audit + skill playbooks (FR-004 + 005 + 006) — 20h</li>
+<li>Slice 3 — Multi-runtime + marketplace (FR-007 + 008) — 16h</li>
+</ul>
+<h3 id="files-touched">Files touched</h3>
+<ul>
+<li>New: <code>modules/plugin/{README.md,INTEROP.md,manifest.schema.json,CHANGELOG.md}</code> (4 files)</li>
+<li>New: <code>modules/plugin/AGENTS.md</code> (symlink → <code>../memory/AGENTS.md</code>)</li>
+<li>New: <code>docs/feature-requests/plugin/{README.md,FR-PLUGIN-001..008.{md,audit.md}}</code> (17 files)</li>
+<li>Modified: <code>README.md</code> (repo-layout + Modules table + Roadmap)</li>
+<li>Modified: <code>docs/feature-requests/BACKLOG.md</code> (header v0.5.0 → v0.6.0; headline metrics; new wave note; new production-status row)</li>
+</ul>
+<hr />
+
+ </div>
+</main>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>CyberOS — Changelog</title>
+ <meta name="description" content="CyberOS changelog — all significant changes across modules, services, and infrastructure.">
+ <link rel="canonical" href="https://cyberos-wiki.cyberskill.world/reference/changelog.html">
+ <link rel="stylesheet" href="../assets/tokens.css">
+ <link rel="stylesheet" href="../assets/styles.css">
+ <link rel="stylesheet" href="../assets/tailwind.min.css">
+ <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <script type="module" src="../assets/scripts.js"></script>
+</head>
+<body data-pagefind-filter="category:Reference">
+
+<div id="shared-nav"></div>
+
+<div class="container py-8 max-w-5xl">
+
+ <nav class="breadcrumbs mb-6">
+   <a href="../index.html">Home</a><span class="sep">›</span>
+   <a href="../index.html#navigate">Reference</a><span class="sep">›</span>
+   <span class="current">Changelog</span>
+ </nav>
+
+ <header class="mb-8">
+   <div class="flex items-center gap-3 mb-3">
+     <span class="section-badge" style="background:var(--memory-tint);color:var(--memory-dark)">Reference</span>
+   </div>
+   <h1 class="h-1 mb-3">Changelog</h1>
+   <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-4">
+     All significant changes across CyberOS modules, services, and infrastructure.
+     For module-specific changelogs, see the per-module pages in the nav.
+   </p>
+ </header>
+
+ <div class="grid lg:grid-cols-4 gap-8">
+
+   <!-- TOC sidebar -->
+   <aside class="lg:col-span-1 no-print">
+     <div class="sticky top-20 max-h-[calc(100vh-100px)] overflow-y-auto p-3 rounded-lg" style="background:var(--bg-card,#f8fafc);border:1px solid var(--border,#e2e8f0)">
+       <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 px-2">Entries</h3>
+      <a class="block py-1 px-2 text-sm rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900" href="#per-module-changelogs">Per-module changelogs</a>
+      <a class="block py-1 px-2 text-sm rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900" href="#repository-level-changes">Repository-level changes</a>
+     </div>
+   </aside>
+
+   <!-- Main content -->
+   <main class="lg:col-span-3 prose prose-slate max-w-none">
+     <div class="bg-white rounded-xl p-6 lg:p-8 shadow-sm border border-slate-200">
+<p class="mb-3 leading-relaxed">This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.</p>
+
+<h3 id="per-module-changelogs" class="text-xl font-bold mt-8 mb-3 text-slate-900">Per-module changelogs</h3>
+
+<div class="overflow-x-auto mb-4"><table class="text-sm">
+<thead><tr>
+<th>Module</th>
+<th>Changelog</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><a href="https://cyberos-wiki.cyberskill.world/modules/memory/changelog.html" class="text-blue-600 hover:underline">Memory</a></td>
+<td>Universal memory protocol</td>
+</tr>
+<tr>
+<td><a href="https://cyberos-wiki.cyberskill.world/modules/cuo/changelog.html" class="text-blue-600 hover:underline">CUO / Genie</a></td>
+<td>Persona orchestration</td>
+</tr>
+<tr>
+<td><a href="https://cyberos-wiki.cyberskill.world/modules/skill/changelog.html" class="text-blue-600 hover:underline">Skill</a></td>
+<td>Skill catalog</td>
+</tr>
+<tr>
+<td><a href="https://cyberos-wiki.cyberskill.world/modules/auth/changelog.html" class="text-blue-600 hover:underline">Auth</a></td>
+<td>Authentication</td>
+</tr>
+<tr>
+<td><a href="https://cyberos-wiki.cyberskill.world/modules/ai/changelog.html" class="text-blue-600 hover:underline">AI Gateway</a></td>
+<td>AI Gateway</td>
+</tr>
+<tr>
+<td><a href="https://cyberos-wiki.cyberskill.world/modules/mcp/changelog.html" class="text-blue-600 hover:underline">MCP Gateway</a></td>
+<td>MCP Gateway</td>
+</tr>
+<tr>
+<td><a href="https://cyberos-wiki.cyberskill.world/modules/obs/changelog.html" class="text-blue-600 hover:underline">OBS</a></td>
+<td>Observability</td>
+</tr>
+<tr>
+<td><a href="https://cyberos-wiki.cyberskill.world/modules/chat/changelog.html" class="text-blue-600 hover:underline">Chat</a></td>
+<td>Chat</td>
+</tr>
+<tr>
+<td><a href="https://cyberos-wiki.cyberskill.world/modules/email/changelog.html" class="text-blue-600 hover:underline">Email</a></td>
+<td>Email</td>
+</tr>
+<tr>
+<td><a href="https://cyberos-wiki.cyberskill.world/modules/proj/changelog.html" class="text-blue-600 hover:underline">PROJ</a></td>
+<td>Project tracking</td>
+</tr>
+<tr>
+<td><a href="https://cyberos-wiki.cyberskill.world/modules/time/changelog.html" class="text-blue-600 hover:underline">TIME</a></td>
+<td>Time tracking</td>
+</tr>
+<tr>
+<td><a href="https://cyberos-wiki.cyberskill.world/modules/crm/changelog.html" class="text-blue-600 hover:underline">CRM</a></td>
+<td>Customer relationships</td>
+</tr>
+<tr>
+<td><a href="https://cyberos-wiki.cyberskill.world/modules/kb/changelog.html" class="text-blue-600 hover:underline">KB</a></td>
+<td>Knowledge base</td>
+</tr>
+<tr>
+<td><a href="https://cyberos-wiki.cyberskill.world/modules/hr/changelog.html" class="text-blue-600 hover:underline">HR</a></td>
+<td>People & HR</td>
+</tr>
+<tr>
+<td><a href="https://cyberos-wiki.cyberskill.world/modules/rew/changelog.html" class="text-blue-600 hover:underline">REW</a></td>
+<td>Compensation</td>
+</tr>
+<tr>
+<td><a href="https://cyberos-wiki.cyberskill.world/modules/learn/changelog.html" class="text-blue-600 hover:underline">LEARN</a></td>
+<td>Learning</td>
+</tr>
+<tr>
+<td><a href="https://cyberos-wiki.cyberskill.world/modules/inv/changelog.html" class="text-blue-600 hover:underline">INV</a></td>
+<td>Invoicing</td>
+</tr>
+<tr>
+<td><a href="https://cyberos-wiki.cyberskill.world/modules/esop/changelog.html" class="text-blue-600 hover:underline">ESOP</a></td>
+<td>Stock options</td>
+</tr>
+<tr>
+<td><a href="https://cyberos-wiki.cyberskill.world/modules/res/changelog.html" class="text-blue-600 hover:underline">RES</a></td>
+<td>Resourcing</td>
+</tr>
+<tr>
+<td><a href="https://cyberos-wiki.cyberskill.world/modules/okr/changelog.html" class="text-blue-600 hover:underline">OKR</a></td>
+<td>Objectives & KRs</td>
+</tr>
+<tr>
+<td><a href="https://cyberos-wiki.cyberskill.world/modules/doc/changelog.html" class="text-blue-600 hover:underline">DOC</a></td>
+<td>Documents & signatures</td>
+</tr>
+<tr>
+<td><a href="https://cyberos-wiki.cyberskill.world/modules/portal/changelog.html" class="text-blue-600 hover:underline">PORTAL</a></td>
+<td>Client portal</td>
+</tr>
+<tr>
+<td><a href="https://cyberos-wiki.cyberskill.world/modules/ten/changelog.html" class="text-blue-600 hover:underline">TEN</a></td>
+<td>Tenants</td>
+</tr>
+<tr>
+<td><a href="https://cyberos-wiki.cyberskill.world/modules/website/changelog.html" class="text-blue-600 hover:underline">Website</a></td>
+<td>Website & Infrastructure</td>
+</tr>
+</tbody>
+</table></div>
+
+<h3 id="repository-level-changes" class="text-xl font-bold mt-8 mb-3 text-slate-900">Repository-level changes</h3>
+
+<h4 id="2026-05-18-consolidation-pass" class="text-lg font-semibold mt-6 mb-2 text-slate-800">2026-05-18 — Consolidation pass</h4>
+
+<p class="mb-3 leading-relaxed">Moved all CyberOS-related artifacts into a single umbrella at <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos/</code>:</p>
+
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">workbench/CyberOS-docs/</code> → <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos/website/docs/</code></li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">workbench/CYBEROS_STRATEGY.md</code> → <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos/strategy/CYBEROS_STRATEGY.md</code></li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">workbench/cyberskill-vn-skills/</code> → <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos/public-skills/</code></li>
+
+     </div>
+   </main>
+
+ </div>
+
+ <div class="mt-12 pt-6 border-t border-slate-200 text-center text-sm text-slate-500">
+   <p>Generated by <code>website/build/render-changelog.mjs</code> from <code>CHANGELOG.md</code>.</p>
+ </div>
+</div>
+
+</body>
+</html>

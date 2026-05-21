@@ -43,11 +43,11 @@ modified_files:
   - modules/skill/_template/audit/SKILL.md                             # description block carries trigger phrases per FM-112
   - modules/skill/feature-request-audit/RUBRIC.md                      # add FM-112 (description-format)
   - feature-request-audit skill        # §3.13 mentions description-format rule
-  - modules/skill/README.md                                            # Part 2.1 description field row updates; Part 18 anti-pattern entry added
-  - modules/skill/ANTHROPIC_GUIDE_DIGEST.md                            # §6.1 status badge updates when FR ships
+  - website docs (SKILL appendices)                                    # Part 2.1 description field row updates; Part 18 anti-pattern entry added
+  - website docs (SKILL Appendix J)                                    # §6.1 status badge updates when FR ships
 allowed_tools:
   - file_read: modules/skill/**, services/skill-broker/**, docs/feature-requests/skill/**
-  - file_write: services/skill-broker/{src,tests,fixtures}/**, modules/skill/{_template,feature-request-audit,README.md,ANTHROPIC_GUIDE_DIGEST.md}, docs/feature-requests/skill/**
+  - file_write: services/skill-broker/{src,tests,fixtures}/**, modules/skill/{_template,feature-request-audit}, docs/feature-requests/skill/**
   - bash: cd services/skill-broker && cargo test description_validator
   - bash: cd modules/skill && grep -l 'description:' */SKILL.md  | wc -l   # sweep precondition
 disallowed_tools:

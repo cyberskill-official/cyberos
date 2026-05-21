@@ -17,7 +17,6 @@ depends_on: [FR-MEMORY-108, FR-MEMORY-112]
 blocks: [FR-MEMORY-115, FR-MEMORY-120]
 
 source_pages:
-  - docs/proposals/MEMORY-IMPROVEMENT-WAVE-2026Q3.md#section-21-the-x-article
   - playground/extracts/agentic-memory.article.txt  # see "Memory management" / "Time-based decay" sections
 source_decisions:
   - DEC-190 (Recall combined score is `relevance · w_r + importance · w_i + recency · w_t` with default weights 0.4 / 0.3 / 0.3 per Park et al. 2023 "Generative Agents"; configurable per-store via `manifest.recall_weights`)
@@ -41,10 +40,9 @@ modified_files:
   - modules/memory/memory.schema.json                  # add `Importance` definition + `importance` field on `MemoryFrontmatter`
   - modules/memory/memory.invariants.yaml              # add `manifest-recall-weights-valid` + `importance-range`
   - modules/memory/cyberos/core/writer.py              # validate `manifest.recall_weights` at writer construction (fail-fast, see §1 #11)
-  - modules/memory/CHANGELOG.md
 allowed_tools:
   - file_read: modules/memory/**
-  - file_write: modules/memory/cyberos/**, modules/memory/tests/**, modules/memory/bench/**, modules/memory/memory.schema.json, modules/memory/memory.invariants.yaml, modules/memory/CHANGELOG.md
+  - file_write: modules/memory/cyberos/**, modules/memory/tests/**, modules/memory/bench/**, modules/memory/memory.schema.json, modules/memory/memory.invariants.yaml
   - bash: cd modules/memory && python -m pytest tests/test_ranking_combined_score.py tests/test_decay_profiles.py -v
   - bash: cd modules/memory && python bench/bench_recall_latency.py --episodes 10000 --trials 100
 disallowed_tools:

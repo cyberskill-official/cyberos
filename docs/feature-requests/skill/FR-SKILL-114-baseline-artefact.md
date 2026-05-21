@@ -37,12 +37,12 @@ new_files:
 modified_files:
   - modules/skill/feature-request-audit/RUBRIC.md                      # add FM-114 (baseline-present-at-v1)
   - feature-request-audit skill        # §3.11 adds promotion-readiness rule
-  - modules/skill/README.md                                            # Recipe 11 expanded; Part 13 validation pyramid mentions baseline
-  - modules/skill/ANTHROPIC_GUIDE_DIGEST.md                            # §6.4 status update + path
+  - website docs (SKILL appendices)                                    # Recipe 11 expanded; Part 13 validation pyramid mentions baseline
+  - website docs (SKILL Appendix J)                                    # §6.4 status update + path
 
 allowed_tools:
   - file_read: modules/**, docs/feature-requests/skill/**
-  - file_write: modules/skill/{_template,feature-request-audit,README.md,ANTHROPIC_GUIDE_DIGEST.md}, modules/cuo/{cuo,tests}, docs/feature-requests/skill/**
+  - file_write: modules/skill/{_template,feature-request-audit}, modules/cuo/{cuo,tests}, docs/feature-requests/skill/**
   - bash: cd modules/cuo && python -m pytest tests/test_baseline.py
 
 disallowed_tools:

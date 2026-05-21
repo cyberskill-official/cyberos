@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Authentication — Changelog — CyberOS</title>
+ <meta name="description" content="Authentication module changelog — all significant changes.">
+ <link rel="canonical" href="https://cyberos-wiki.cyberskill.world/modules/auth/changelog.html">
+ <link rel="stylesheet" href="../../assets/tokens.css">
+ <link rel="stylesheet" href="../../assets/styles.css">
+ <link rel="stylesheet" href="../../assets/tailwind.min.css">
+ <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <script type="module" src="../../assets/scripts.js"></script>
+</head>
+<body data-pagefind-filter="category:Module">
+<span hidden data-pagefind-filter="phase:P0"></span>
+
+<div id="shared-nav"></div>
+
+<header class="hero-gradient border-b border-slate-200">
+ <div class="container py-10 lg:py-14">
+ <nav class="breadcrumbs">
+ <a href="../../index.html">Home</a>
+ <span class="sep">›</span>
+ <a href="../../index.html#catalog">Modules</a>
+ <span class="sep">›</span>
+ <a href="index.html">Authentication</a>
+ <span class="sep">›</span>
+ <span class="current">Changelog</span>
+ </nav>
+ <div class="flex items-center gap-3 mb-4 flex-wrap">
+ <span class="text-5xl">🔐</span>
+ <h1 class="h-display">Authentication — Changelog</h1>
+ </div>
+ <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
+ All significant changes to the Authentication module.
+ </p>
+ <div class="flex flex-wrap gap-3 mt-6">
+ <a href="index.html" class="btn btn-primary">← Back to Authentication overview</a>
+ </div>
+ </div>
+</header>
+
+<div class="container py-10 lg:py-14 grid lg:grid-cols-12 gap-10">
+
+<aside class="lg:col-span-3 order-2 lg:order-1">
+ <div class="lg:sticky lg:top-20">
+ <div class="bbg-card p-5">
+ <div class="h-eyebrow mb-3">On this page</div>
+ <ul class="space-y-0.5 text-sm">
+      <a class="block py-1 px-2 text-sm rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900" href="#2026-05-18-wave-1-2-impl-fr-auth-103-saml-xml-dsig-fr-auth-106-geoip-policy">2026-05-18 — Wave-1+2 impl: FR-AUTH-103 SAML XML-DSig + FR-AUTH-106 GeoIP + policy</a>
+      <a class="block py-1 px-2 text-sm rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900" href="#2026-05-19-auth-fr-auth-005-drained-17-17-rustc-floor-bumped-1-83-1-88">2026-05-19 — [AUTH] FR-AUTH-005 drained 17/17 + rustc floor bumped 1.83→1.88</a>
+      <a class="block py-1 px-2 text-sm rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900" href="#2026-05-14-auth-module-page-rewritten-to-gold-p0-slice-2-stub-vs-p3-full-lumi-tenant-identity-rfc-open-qs-resolved">2026-05-14 — AUTH module page rewritten to Gold (P0 · slice 2 stub vs P3 full + Lumi tenant identity + RFC open Qs resolved)</a>
+      <a class="block py-1 px-2 text-sm rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900" href="#2026-05-14-auth-module-rfc-sign-in-mockup">2026-05-14 — AUTH module RFC + sign-in mockup</a>
+ </ul>
+ </div>
+ </div>
+</aside>
+
+<main class="lg:col-span-9 prose prose-slate max-w-none">
+ <div class="bg-white rounded-xl p-6 lg:p-8 shadow-sm border border-slate-200">
+<h3 id="2026-05-18-wave-1-2-impl-fr-auth-103-saml-xml-dsig-fr-auth-106-geoip-policy" class="text-xl font-bold mt-8 mb-3 text-slate-900">2026-05-18 — Wave-1+2 impl: FR-AUTH-103 SAML XML-DSig + FR-AUTH-106 GeoIP + policy</h3>
+
+<p class="mb-3 leading-relaxed"><strong>FR-AUTH-103 SAML XML-DSig (slice-2) + xml-c14n hardening.</strong> <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">services/auth/src/saml_sig.rs</code> (~520 lines): ds:Signature discovery, strict algorithm allowlist (RSA-SHA256 + SHA-256 + exc-c14n), enveloped-signature stripping, reference-by-ID resolution, RSA-PKCS1-v1.5 verify, hand-rolled X.509 → SPKI TLV walk. Migration 0017 adds per-IdP <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">allow_unsigned BOOLEAN DEFAULT FALSE</code>. <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">exc_c14n</code> rewritten as a proper tokeniser. 14 canonicaliser tests + 7 X.509/PEM tests.</p>
+
+<p class="mb-3 leading-relaxed"><strong>FR-AUTH-106 GeoIP + policy + CIDR + sticky-suppression (slices 2 + 3).</strong> New <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">services/auth/src/geoip.rs</code> with <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">GeoIpResolver</code> trait, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">MaxMindResolver</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">NullResolver</code> fallback. Activates <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cross_continent_velocity</code> and <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">geo_velocity_exceeded</code> detectors. Migration 0018 ships <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">travel_policy</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">travel_cidr_allowlist</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">travel_policy_audit</code>. New <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">travel_policy.rs</code> — 60s <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">PolicyCache</code>, bounded-50k <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">StickySuppress</code> LRU. New <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">assess_login</code> wraps the detector chain. New <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">travel_admin.rs</code> exposes 5 routes. <strong>All four login flows</strong> now go through <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">assess_login</code>.</p>
+
+<hr class="my-6 border-slate-200">
+
+<h3 id="2026-05-19-auth-fr-auth-005-drained-17-17-rustc-floor-bumped-1-83-1-88" class="text-xl font-bold mt-8 mb-3 text-slate-900">2026-05-19 — [AUTH] FR-AUTH-005 drained 17/17 + rustc floor bumped 1.83→1.88</h3>
+
+<p class="mb-3 leading-relaxed"><strong>FR-AUTH-005</strong> (admin REST list_tenants + list_subjects + revoke + unrevoke + cursor + jti deny-list) drained end-to-end in one Cowork session. 17 spec-vs-code gaps closed across 5 slices; ≈1,300 LOC src + tests. BACKLOG line 224 mutated <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">planned</code> → <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">[BLOCKED: 17 gaps]</code> → <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">shipped + strict-audited</code>. <strong>All 6 Wave-1 MUST AUTH FRs (001/002/003/004/005/006) are now shipped + strict-audited</strong> — wave-1-2 deploy table-stakes are drain-complete.</p>
+
+<p class="mb-3 leading-relaxed">New modules: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">services/auth/src/{cursor,deny_list,sessions}.rs</code>. New migration: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">migrations/0021_sessions.sql</code> (relocated per DEC-MIGRATION-SLOT-001; slot 0007 was taken). New memory_bridge emitters: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">emit_subject_revoked</code> + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">emit_subject_unrevoked</code>. New test files: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">admin_list_test.rs</code> + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">admin_revoke_test.rs</code> + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">admin_cursor_pagination_test.rs</code> + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">admin_deny_list_test.rs</code>. OTel <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">#[tracing::instrument]</code> on all 4 admin handlers.</p>
+
+<p class="mb-3 leading-relaxed">Architecture decisions logged in FR-AUTH-005-admin-rest.audit.md §10.5: <strong>DEC-DENY-LIST-001</strong> (in-memory slice-1; Redis lift = FR-AUTH-110), <strong>DEC-CURSOR-SIGN-001</strong> (HMAC-SHA256 via HKDF from <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">AUTH_CURSOR_SIGNING_SECRET</code> env), <strong>DEC-MIGRATION-SLOT-001</strong> (0007→0021 relocation). Structural G-012 enforcement: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">DenyList</code> exposes no <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">remove()</code> API — unrevoke literally cannot clear the deny-list at the compile-time level.</p>
+
+<p class="mb-3 leading-relaxed">Deferred follow-ups: <strong>FR-AUTH-110</strong> (Redis-backed deny-list lift for wave-2 horizontal scale) + <strong>FR-AUTH-111</strong> (closed revoke reason taxonomy enum: compromised / terminated / policy-violation / operator-error / other).</p>
+
+<p class="mb-3 leading-relaxed"><strong><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">services/Cargo.toml</code> <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">rust-version</code> bumped 1.83 → 1.88</strong> — <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">webauthn-rs 0.5.5</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">time 0.3.47</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">icu_* 2.2.0</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">base64urlsafedata 0.5.5</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">home 0.5.12</code> all now require ≥1.86/1.88. One-time operator step: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">rustup toolchain install 1.88.0</code>. README §1 prerequisites table updated.</p>
+
+<p class="mb-3 leading-relaxed"><strong>Cascading build fixes after the bump</strong> — <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cargo +1.88.0 build -p cyberos-auth</code> surfaced 2 errors that were either pre-existing (borrow-checker stricter on this NLL path) or shaken loose by the sqlx 0.8 + ipnetwork 0.20 trait shuffle:</p>
+
+<li class="mb-1 "><strong>handlers.rs:1871</strong> — <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">traceparent: Option<String></code> was moved into <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">svc.issue(..., traceparent, ...)</code> then borrowed via <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">.as_deref()</code> for the memory audit emit at :1896. Fixed with <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">traceparent.clone()</code> at the move site per the compiler's own suggestion.</li>
+<li class="mb-1 "><strong>travel.rs:213 + travel_admin.rs:170 + travel_admin.rs:212/244 + travel_policy.rs:134</strong> — <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">ipnetwork::IpNetwork</code> no longer satisfies <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">sqlx::Encode<'_, Postgres></code> / <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">Decode<'_, Postgres></code> (likely a version-coherence pitfall: sqlx-postgres pulls its own ipnetwork copy distinct from the auth crate's). Fixed by binding/reading at the DB boundary as <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">String</code> (Postgres INET accepts the textual CIDR; <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">::text</code> cast on read). The struct field <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">TravelPolicy::allowlist: Vec<IpNetwork></code> is preserved — parsed from <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">String</code> at the read boundary via <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">filter_map(|(c,)| c.parse().ok())</code>.</li>
+<li class="mb-1 ">4 unused-import warnings cleaned (<code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">body::Body</code> in middleware.rs, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">Redirect</code> in oidc.rs, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">Redirect</code>+<code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">Serialize</code> in saml.rs).</li>
+
+<p class="mb-3 leading-relaxed">Compile-verify on macOS: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cd services && cargo +1.88.0 build -p cyberos-auth && cargo +1.88.0 test -p cyberos-auth</code> (was <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">+1.85.0</code>).</p>
+
+<hr class="my-6 border-slate-200">
+
+<h3 id="2026-05-14-auth-module-page-rewritten-to-gold-p0-slice-2-stub-vs-p3-full-lumi-tenant-identity-rfc-open-qs-resolved" class="text-xl font-bold mt-8 mb-3 text-slate-900">2026-05-14 — AUTH module page rewritten to Gold (P0 · slice 2 stub vs P3 full + Lumi tenant identity + RFC open Qs resolved)</h3>
+
+<p class="mb-3 leading-relaxed">Rewrote <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">website/docs/modules/auth.html</code> from 1169 → 1442 lines (+273 lines, +23%). Encodes the research review §2.4 reorder (AI Gateway BEFORE AUTH) and AUTH's distinct roles as P0 · slice 2 stub vs P3 full. Targeted Edit operations preserved every gold-quality detail of the prior content while adding 4 new strategic sections + risk/KPI extensions.</p>
+
+<p class="mb-3 leading-relaxed">Changes by section:</p>
+<li class="mb-1 "><strong><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155"><title></code> + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155"><meta></code></strong> — reframed: "P0 · slice 2 stub → P3 full · Lumi tenant identity · Agent-equal".</li>
+<li class="mb-1 "><strong>Hero tagline + lede</strong> — explicit P0 · slice 2 stub vs P3 full distinction · cites reordered P0 sequence (AI Gateway @ P0 · slice 1 → AUTH @ P0 · slice 2 → MCP Gateway @ P0 · slice 3 → CHAT/CUO @ P0 · exit) · references RFC.md + sign-in mockup + MEMORY_AUTOSYNC_DESIGN.md.</li>
+<li class="mb-1 "><strong>Hero fact-grid</strong> — split status into "P0 · slice 2 stub designed" + "P3 full designed", LoC into 1,500 stub + 7,000 full, RBAC into 5 stub + 22 full, dependencies + Lumi enablement.</li>
+<li class="mb-1 "><strong>NEW §0 "The bigger picture — three strategic moves"</strong> — 3-card layout (Move 1 P0 · slice 2 stub / Move 2 P3 full / Move 3 Lumi tenant identity). Gantt chart Mermaid showing the reordered P0 build sequence end-to-end. Rationale for reorder cited from reviewer.</li>
+<li class="mb-1 "><strong>TOC</strong> — added bigger-picture · stub-vs-full · rbac-catalogue · lumi-integration · open-questions entries.</li>
+<li class="mb-1 "><strong>NEW §2.5 "P0 · slice 2 stub vs P3 full"</strong> — 12-row capability-contrast table covering login mechanism · MFA · RBAC catalogue · JWT signing · tenant isolation · audit-chain emission · admin surfaces · cost · LoC · tests · Lumi integration · SOC 2 evidence. Plus "Migration discipline" + "What stub doesn't compromise on" prose.</li>
+<li class="mb-1 "><strong>NEW §2.6 "22-role RBAC catalogue"</strong> — full 22-row table with scope summary, stub-eligibility, and slice when each role lands. The 5 stub roles (root-admin · tenant-admin · tenant-member · service-account · agent-persona) are explicitly the first 5; the remaining 17 land across slices 3–5. Role-addition policy: ADR-gated, no code-only changes.</li>
+<li class="mb-1 "><strong>NEW §2.7 "AUTH ↔ Lumi's memory"</strong> — full JWT claim shape (15 fields incl. tenant_id, tenant_residency, agent_persona, scope_grants) · sequence diagram of Lumi's memory verifying a sync push · 5-bullet contract requirements list (tenant_id non-removable, JWKS reachability, refresh-token reuse detection, agent-persona claims preserve agent-equal, residency pinning flows through).</li>
+<li class="mb-1 "><strong>NEW §2.8 "RFC open questions resolved"</strong> — table addressing all 5 open Qs from RFC §6 with proposed defaults + rationale: Q1 workspace = new repo-root Cargo workspace · Q2 memory bridge = subprocess slice 4 → PyO3 slice 5 · Q3 tenant-0 bootstrap = <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos-auth bootstrap</code> CLI subcommand · Q4 HIBP = default-on with per-tenant opt-out · Q5 OBS = slice 1 stdout → slice 5 OTLP. Each becomes an ADR once Stephen signs off.</li>
+<li class="mb-1 "><strong>§12 Risks</strong> — added 7 new (R-AUTH-011..017): stub stays past P3 · reorder regret · Lumi tenant-id spoofing · cross-shard JWT replay · sub-process audit-bridge bottleneck · tenant-0 bootstrap leak · PDPL Art. 38 SME grace lapse.</li>
+<li class="mb-1 "><strong>§13 KPIs</strong> — added 7 new: stub-to-full migration coverage (≥95% T2+ subjects passkey-enrolled by P1 · exit) · mock-AUTH retirement · Lumi tenant-id verification rate · cross-shard rejection · audit-bridge p99 · SME-grace lapsed tenants · 22-role catalogue stability.</li>
+<li class="mb-1 "><strong>§17 References</strong> — replaced PRD/SRS section refs (stripped) with services/auth/RFC.md, sign-in mockup, MEMORY_AUTOSYNC_DESIGN.md §6, RESEARCH_REVIEW §2.4 (cited verbatim), AUDIT_AND_PLAN, feature-request-audit skill, AGENTS.md §3.6+§11.</li>
+
+<p class="mb-3 leading-relaxed">Verified:</p>
+<li class="mb-1 ">1442 lines parses cleanly</li>
+<li class="mb-1 ">23 top-level sections (was 18) including 4 strategic new ones</li>
+<li class="mb-1 ">Mermaid gantt chart documents the reordered P0 sequence</li>
+<li class="mb-1 ">All 5 RFC §6 open questions now have proposed defaults visible on the page</li>
+
+<p class="mb-3 leading-relaxed">The AUTH page now reads as the complete answer to: (1) why AUTH is not P0 #1 (research review §2.4), (2) what the P0 · slice 2 stub actually contains vs the P3 full target, (3) how AUTH enables Lumi's memory tenant isolation, (4) what the 5 open RFC questions resolve to. A new engineer reading this page cold can pick up RFC.md and start slice 1.</p>
+
+<hr class="my-6 border-slate-200">
+
+<h3 id="2026-05-14-auth-module-rfc-sign-in-mockup" class="text-xl font-bold mt-8 mb-3 text-slate-900">2026-05-14 — AUTH module RFC + sign-in mockup</h3>
+
+<li class="mb-1 ">Added <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">services/auth/RFC.md</code> — implementation RFC with 5-slice ship plan, audit-chain integration design, and 5 open questions blocking slice 1.</li>
+<li class="mb-1 ">Added <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">services/auth/mockups/sign-in.html</code> — first AUTH UI mockup applying design-system Part 21 Liquid Glass defaults, Umber + Ochre anchors, Be Vietnam Pro first, passkey-first flow with password fallback, MFA chips, memory audit-chain trust footnote.</li>
+<li class="mb-1 ">Verification pass against shipped modules:</li>
+<li class="mb-1 ml-6">memory: 222 tests pass + 1 skip (numpy + jsonschema needed for full green). Real bug found AND fixed: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">check_manifest_validates</code> was skipping parseability when jsonschema absent → <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos state</code> returned READY on a broken manifest. Patched to always parse <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">manifest.json</code> first (regardless of jsonschema availability) and report <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">False</code> on <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">JSONDecodeError</code>; the optional schema-validation layer still skips cleanly when jsonschema is absent. Verified: all 4 <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">tests/test_state.py</code> tests pass, full suite 238 pass / 1 skip / 0 fail. Also verified by simulating absent jsonschema via import hook — good manifest still returns True with "parseability OK, schema skip"; bad manifest returns False with "manifest.json unparseable: ...".</li>
+<li class="mb-1 ml-6">skill: 20 SKILL.md bundles structurally verified, 4 crates, 8 inline Rust tests. <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cargo build</code> not run (sandbox-only limitation).</li>
+<li class="mb-1 ml-6">cuo: 15/15 pytest + 15/15 routing fixtures pass. Catalog discovers all 20 skills correctly.</li>
+<li class="mb-1 ">Stale-claim drift surfaced (none are blockers, all are doc-only):</li>
+<li class="mb-1 ml-6">Memory tests: bootstrap says 245, README says 255, actual is 238 collected.</li>
+<li class="mb-1 ml-6">Doctor invariants: bootstrap says 16, README says 15, actual is 13 on a fresh store.</li>
+<li class="mb-1 ml-6">Docs pages: bootstrap says 32, strategy says 31, actual is 33 HTML files (32 user-facing + nav include).</li>
+<li class="mb-1 ml-6">Strategy §3 Tier-1 #2 and §5 Session-1 #1 list "wire Pagefind" as a to-do; Pagefind is already built and serving (v1.5.2, 32 pages indexed).</li>
+<li class="mb-1 ml-6">DEPLOYMENT.md is at <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">website/docs/DEPLOYMENT.md</code> (bootstrap implies it lives at <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">website/</code>).</li>
+<li class="mb-1 ">Docs site deploy-prep findings:</li>
+<li class="mb-1 ml-6">6 real broken internal links to 2 missing architecture pages: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">architecture/services.html</code> (5 refs from LEARN/HR/INV/ESOP/REW) and <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">architecture/runtime.html</code> (1 ref from CHAT). These are demand-gen blockers — fix before public deploy or convert the link targets.</li>
+
+
+ </div>
+</main>
+
+</div>
+
+</body>
+</html>

@@ -8,7 +8,6 @@
  <link rel="stylesheet" href="assets/tokens.css">
  <link rel="stylesheet" href="assets/styles.css">
  <link rel="stylesheet" href="assets/tailwind.min.css">
- <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
  <link rel="preconnect" href="https://fonts.googleapis.com">
  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
  <script type="module" src="assets/scripts.js"></script>
@@ -74,7 +73,7 @@
  </g>
  <path d="M145 80 L 200 130" stroke="#7a5538" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
  <path d="M355 80 L 300 130" stroke="#7a5538" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
- <a href="modules/cuo.html">
+ <a href="modules/cuo/index.html">
  <g filter="url(#shadow)">
  <rect x="170" y="135" width="160" height="70" rx="14" fill="#f9c64f" stroke="#45210e" stroke-width="2.5"/>
  <text x="250" y="160" text-anchor="middle" font-size="20" font-weight="800" fill="#45210e">CUO</text>
@@ -86,7 +85,7 @@
  <text x="148" y="240" font-size="10" font-style="italic" fill="#4d4641">routes</text>
  <path d="M295 205 L 370 260" stroke="#7a5538" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
  <text x="345" y="240" font-size="10" font-style="italic" fill="#4d4641">records</text>
- <a href="modules/skill.html">
+ <a href="modules/skill/index.html">
  <g filter="url(#shadow)">
  <rect x="40" y="265" width="180" height="80" rx="14" fill="#f5ede6" stroke="#45210e" stroke-width="2.5"/>
  <text x="130" y="293" text-anchor="middle" font-size="20" font-weight="800" fill="#45210e">SKILL</text>
@@ -94,7 +93,7 @@
  <text x="130" y="328" text-anchor="middle" font-size="10" fill="#45210e">Rust host · Bun toolchain</text>
  </g>
  </a>
- <a href="modules/memory.html">
+ <a href="modules/memory/index.html">
  <g filter="url(#shadow)">
  <rect x="280" y="265" width="180" height="80" rx="14" fill="#e8d4c2" stroke="#45210e" stroke-width="2.5"/>
  <text x="370" y="293" text-anchor="middle" font-size="20" font-weight="800" fill="#45210e">MEMORY</text>
@@ -208,7 +207,7 @@
 
  <div class="grid md:grid-cols-3 gap-5">
  <!-- memory -->
- <a href="modules/memory.html" class="bbg-card lift-strong p-6 block no-underline" style="text-decoration:none;color:inherit;border-top:3px solid var(--umber-500)">
+ <a href="modules/memory/index.html" class="bbg-card lift-strong p-6 block no-underline" style="text-decoration:none;color:inherit;border-top:3px solid var(--umber-500)">
  <div class="flex items-center justify-between mb-3">
  <div class="text-4xl">🧠</div>
  <span class="phase-chip phase-p0">P0 · Shipped</span>
@@ -220,7 +219,7 @@
  </a>
 
  <!-- Skill -->
- <a href="modules/skill.html" class="bbg-card lift-strong p-6 block no-underline" style="text-decoration:none;color:inherit;border-top:3px solid var(--umber-500)">
+ <a href="modules/skill/index.html" class="bbg-card lift-strong p-6 block no-underline" style="text-decoration:none;color:inherit;border-top:3px solid var(--umber-500)">
  <div class="flex items-center justify-between mb-3">
  <div class="text-4xl">🛠</div>
  <span class="phase-chip phase-p0">P0 · Shipped</span>
@@ -232,7 +231,7 @@
  </a>
 
  <!-- CUO — Ochre accent border to distinguish (router/conductor role) -->
- <a href="modules/cuo.html" class="bbg-card lift-strong p-6 block no-underline" style="text-decoration:none;color:inherit;border-top:3px solid var(--ochre-500)">
+ <a href="modules/cuo/index.html" class="bbg-card lift-strong p-6 block no-underline" style="text-decoration:none;color:inherit;border-top:3px solid var(--ochre-500)">
  <div class="flex items-center justify-between mb-3">
  <div class="text-4xl">🎯</div>
  <span class="phase-chip phase-p0">P0 · Phases 1–4 shipped</span>
@@ -265,14 +264,14 @@
  <span class="text-sm text-slate-500">P0 phase · 7 modules · gateway + 3 shipped</span>
  </div>
  <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
- <a href="modules/memory.html" class="module-cell" style="border-top:3px solid var(--memory)"><div class="icon">🧠</div><div class="code">memory</div><div class="title">Universal Memory</div></a>
- <a href="modules/cuo.html" class="module-cell" style="border-top:3px solid var(--cuo)"><div class="icon">🎯</div><div class="code">CUO</div><div class="title">Genie / Router</div></a>
- <a href="modules/skill.html" class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">🛠</div><div class="code">SKILL</div><div class="title">Agent skills</div></a>
- <a href="modules/auth.html" class="module-cell" style="border-top:3px solid var(--infra)"><div class="icon">🔐</div><div class="code">AUTH</div><div class="title">Authn/Authz</div></a>
- <a href="modules/ai.html" class="module-cell" style="border-top:3px solid var(--infra)"><div class="icon">⚡</div><div class="code">AI</div><div class="title">AI Gateway</div></a>
- <a href="modules/mcp.html" class="module-cell" style="border-top:3px solid var(--infra)"><div class="icon">🔌</div><div class="code">MCP</div><div class="title">MCP Gateway</div></a>
- <a href="modules/obs.html" class="module-cell" style="border-top:3px solid var(--infra)"><div class="icon">👁</div><div class="code">OBS</div><div class="title">Observability</div></a>
- <a href="modules/chat.html" class="module-cell" style="border-top:3px solid var(--memory)"><div class="icon">💬</div><div class="code">CHAT</div><div class="title">Internal Chat</div></a>
+ <a href="modules/memory/index.html" class="module-cell" style="border-top:3px solid var(--memory)"><div class="icon">🧠</div><div class="code">memory</div><div class="title">Universal Memory</div></a>
+ <a href="modules/cuo/index.html" class="module-cell" style="border-top:3px solid var(--cuo)"><div class="icon">🎯</div><div class="code">CUO</div><div class="title">Genie / Router</div></a>
+ <a href="modules/skill/index.html" class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">🛠</div><div class="code">SKILL</div><div class="title">Agent skills</div></a>
+ <a href="modules/auth/index.html" class="module-cell" style="border-top:3px solid var(--infra)"><div class="icon">🔐</div><div class="code">AUTH</div><div class="title">Authn/Authz</div></a>
+ <a href="modules/ai/index.html" class="module-cell" style="border-top:3px solid var(--infra)"><div class="icon">⚡</div><div class="code">AI</div><div class="title">AI Gateway</div></a>
+ <a href="modules/mcp/index.html" class="module-cell" style="border-top:3px solid var(--infra)"><div class="icon">🔌</div><div class="code">MCP</div><div class="title">MCP Gateway</div></a>
+ <a href="modules/obs/index.html" class="module-cell" style="border-top:3px solid var(--infra)"><div class="icon">👁</div><div class="code">OBS</div><div class="title">Observability</div></a>
+ <a href="modules/chat/index.html" class="module-cell" style="border-top:3px solid var(--memory)"><div class="icon">💬</div><div class="code">CHAT</div><div class="title">Internal Chat</div></a>
  </div>
  </div>
 
@@ -283,15 +282,15 @@
  <span class="text-sm text-slate-500">P1 phase · 9 modules · the moat (+ PLUGIN: cross-runtime distribution)</span>
  </div>
  <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
- <a href="modules/email.html" class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">✉️</div><div class="code">EMAIL</div><div class="title">Mail + Inbox</div></a>
- <a href="modules/proj.html" class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">📋</div><div class="code">PROJ</div><div class="title">Projects</div></a>
- <a href="modules/time.html" class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">⏱</div><div class="code">TIME</div><div class="title">Time / Expense</div></a>
- <a href="modules/crm.html" class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">🤝</div><div class="code">CRM</div><div class="title">Clients</div></a>
- <a href="modules/kb.html" class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">📚</div><div class="code">KB</div><div class="title">Knowledge</div></a>
- <a href="modules/hr.html" class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">👥</div><div class="code">HR</div><div class="title">Human Resources</div></a>
- <a href="modules/rew.html" class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">💎</div><div class="code">REW</div><div class="title">Total Rewards</div></a>
- <a href="modules/learn.html" class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">📈</div><div class="code">LEARN</div><div class="title">Learning · Promotion</div></a>
- <a href="modules/plugin.html" class="module-cell" style="border-top:3px solid var(--infra)"><div class="icon">📦</div><div class="code">PLUGIN</div><div class="title">Cross-runtime distribution</div></a>
+ <a href="modules/email/index.html" class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">✉️</div><div class="code">EMAIL</div><div class="title">Mail + Inbox</div></a>
+ <a href="modules/proj/index.html" class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">📋</div><div class="code">PROJ</div><div class="title">Projects</div></a>
+ <a href="modules/time/index.html" class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">⏱</div><div class="code">TIME</div><div class="title">Time / Expense</div></a>
+ <a href="modules/crm/index.html" class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">🤝</div><div class="code">CRM</div><div class="title">Clients</div></a>
+ <a href="modules/kb/index.html" class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">📚</div><div class="code">KB</div><div class="title">Knowledge</div></a>
+ <a href="modules/hr/index.html" class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">👥</div><div class="code">HR</div><div class="title">Human Resources</div></a>
+ <a href="modules/rew/index.html" class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">💎</div><div class="code">REW</div><div class="title">Total Rewards</div></a>
+ <a href="modules/learn/index.html" class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">📈</div><div class="code">LEARN</div><div class="title">Learning · Promotion</div></a>
+ <a href="modules/plugin/index.html" class="module-cell" style="border-top:3px solid var(--infra)"><div class="icon">📦</div><div class="code">PLUGIN</div><div class="title">Cross-runtime distribution</div></a>
  </div>
  </div>
 
@@ -302,8 +301,8 @@
  <span class="text-sm text-slate-500">P2 phase · 2 modules · bill-to-cash + ESOP</span>
  </div>
  <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
- <a href="modules/inv.html" class="module-cell" style="border-top:3px solid var(--infra)"><div class="icon">🧾</div><div class="code">INV</div><div class="title">Invoicing</div></a>
- <a href="modules/esop.html" class="module-cell" style="border-top:3px solid var(--infra)"><div class="icon">📊</div><div class="code">ESOP</div><div class="title">Phantom Stock</div></a>
+ <a href="modules/inv/index.html" class="module-cell" style="border-top:3px solid var(--infra)"><div class="icon">🧾</div><div class="code">INV</div><div class="title">Invoicing</div></a>
+ <a href="modules/esop/index.html" class="module-cell" style="border-top:3px solid var(--infra)"><div class="icon">📊</div><div class="code">ESOP</div><div class="title">Phantom Stock</div></a>
  </div>
  </div>
 
@@ -314,8 +313,8 @@
  <span class="text-sm text-slate-500">P3 phase · 2 modules · Singapore HoldCo flip</span>
  </div>
  <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
- <a href="modules/res.html" class="module-cell" style="border-top:3px solid var(--cuo)"><div class="icon">📅</div><div class="code">RES</div><div class="title">Resource Plan</div></a>
- <a href="modules/okr.html" class="module-cell" style="border-top:3px solid var(--cuo)"><div class="icon">🎯</div><div class="code">OKR</div><div class="title">OKR · Strategy</div></a>
+ <a href="modules/res/index.html" class="module-cell" style="border-top:3px solid var(--cuo)"><div class="icon">📅</div><div class="code">RES</div><div class="title">Resource Plan</div></a>
+ <a href="modules/okr/index.html" class="module-cell" style="border-top:3px solid var(--cuo)"><div class="icon">🎯</div><div class="code">OKR</div><div class="title">OKR · Strategy</div></a>
  </div>
  </div>
 
@@ -326,9 +325,9 @@
  <span class="text-sm text-slate-500">P4 phase · 3 modules · first paying tenant</span>
  </div>
  <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
- <a href="modules/doc.html" class="module-cell" style="border-top:3px solid var(--future)"><div class="icon">✍️</div><div class="code">DOC</div><div class="title">Document Signing</div></a>
- <a href="modules/portal.html" class="module-cell" style="border-top:3px solid var(--future)"><div class="icon">🌐</div><div class="code">PORTAL</div><div class="title">Client Portal</div></a>
- <a href="modules/ten.html" class="module-cell" style="border-top:3px solid var(--future)"><div class="icon">🏢</div><div class="code">TEN</div><div class="title">Tenancy · Billing</div></a>
+ <a href="modules/doc/index.html" class="module-cell" style="border-top:3px solid var(--future)"><div class="icon">✍️</div><div class="code">DOC</div><div class="title">Document Signing</div></a>
+ <a href="modules/portal/index.html" class="module-cell" style="border-top:3px solid var(--future)"><div class="icon">🌐</div><div class="code">PORTAL</div><div class="title">Client Portal</div></a>
+ <a href="modules/ten/index.html" class="module-cell" style="border-top:3px solid var(--future)"><div class="icon">🏢</div><div class="code">TEN</div><div class="title">Tenancy · Billing</div></a>
  </div>
  </div>
 
@@ -453,59 +452,59 @@
  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-10">CUO presents as one Genie. Internally, 47 C-suite persona workflows load on demand via the open <strong>Anthropic Agent Skills</strong> format. The user sees Genie; Genie routes to whichever skill best fits the request. Same memory, same persona-version stamp, same audit chain. Click any role to jump to its detail on the CUO page.</p>
 
  <div class="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
- <a href="modules/cuo.html#persona-ceo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
+ <a href="modules/cuo/index.html#persona-ceo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
  <div class="text-2xl mb-1">🎯</div><div class="font-bold text-slate-900">CEO</div>
  <p class="text-[11px] font-bold uppercase tracking-wider mb-1" style="color:var(--umber-700)">Vision · Strategy</p>
  <p class="text-xs text-slate-600">Strategy memos · OKR cascade reviews · weekly state-of-business.</p>
  </a>
- <a href="modules/cuo.html#persona-coo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
+ <a href="modules/cuo/index.html#persona-coo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
  <div class="text-2xl mb-1">⚙️</div><div class="font-bold text-slate-900">COO</div>
  <p class="text-[11px] font-bold uppercase tracking-wider mb-1" style="color:var(--umber-700)">Operations</p>
  <p class="text-xs text-slate-600">Status digests · blocker triage · cycle-end summaries.</p>
  </a>
- <a href="modules/cuo.html#persona-cfo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
+ <a href="modules/cuo/index.html#persona-cfo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
  <div class="text-2xl mb-1">💰</div><div class="font-bold text-slate-900">CFO</div>
  <p class="text-[11px] font-bold uppercase tracking-wider mb-1" style="color:var(--umber-700)">Finance · Runway</p>
  <p class="text-xs text-slate-600">Cashflow · AR/AP digests · burn alerts.</p>
  </a>
- <a href="modules/cuo.html#persona-cmo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
+ <a href="modules/cuo/index.html#persona-cmo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
  <div class="text-2xl mb-1">📣</div><div class="font-bold text-slate-900">CMO</div>
  <p class="text-[11px] font-bold uppercase tracking-wider mb-1" style="color:var(--umber-700)">Marketing · Demand</p>
  <p class="text-xs text-slate-600">Campaign briefs · content calendars · channel reports.</p>
  </a>
- <a href="modules/cuo.html#persona-cto" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
+ <a href="modules/cuo/index.html#persona-cto" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
  <div class="text-2xl mb-1">💻</div><div class="font-bold text-slate-900">CTO / CIO</div>
  <p class="text-[11px] font-bold uppercase tracking-wider mb-1" style="color:var(--umber-700)">Technology · Info Systems</p>
  <p class="text-xs text-slate-600">Tech debt · security advisories · OBS digests.</p>
  </a>
- <a href="modules/cuo.html#persona-chro" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
+ <a href="modules/cuo/index.html#persona-chro" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
  <div class="text-2xl mb-1">👥</div><div class="font-bold text-slate-900">CHRO</div>
  <p class="text-[11px] font-bold uppercase tracking-wider mb-1" style="color:var(--umber-700)">People · Talent</p>
  <p class="text-xs text-slate-600">1:1 prep · performance summaries · onboarding.</p>
  </a>
- <a href="modules/cuo.html#persona-cso" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
+ <a href="modules/cuo/index.html#persona-cso" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
  <div class="text-2xl mb-1">🧭</div><div class="font-bold text-slate-900">CSO</div>
  <p class="text-[11px] font-bold uppercase tracking-wider mb-1" style="color:var(--umber-700)">Strategy</p>
  <p class="text-xs text-slate-600">Competitive intel · scenario modelling · partnerships.</p>
  </a>
- <a href="modules/cuo.html#persona-clo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
+ <a href="modules/cuo/index.html#persona-clo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
  <div class="text-2xl mb-1">⚖️</div><div class="font-bold text-slate-900">CLO / CCO</div>
  <p class="text-[11px] font-bold uppercase tracking-wider mb-1" style="color:var(--umber-700)">Legal · Compliance</p>
  <p class="text-xs text-slate-600">Contract redline · GDPR/PDPL audits · DSAR triage.</p>
  </a>
- <a href="modules/cuo.html#persona-cdo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
+ <a href="modules/cuo/index.html#persona-cdo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
  <div class="text-2xl mb-1">📊</div><div class="font-bold text-slate-900">CDO</div>
  <p class="text-[11px] font-bold uppercase tracking-wider mb-1" style="color:var(--umber-700)">Data</p>
  <p class="text-xs text-slate-600">Data quality · lineage · residency reviews.</p>
  </a>
- <a href="modules/cuo.html#persona-cpo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
+ <a href="modules/cuo/index.html#persona-cpo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
  <div class="text-2xl mb-1">🚀</div><div class="font-bold text-slate-900">CPO</div>
  <p class="text-[11px] font-bold uppercase tracking-wider mb-1" style="color:var(--umber-700)">Product</p>
  <p class="text-xs text-slate-600">Product brief drafts · roadmap analysis · user-research synthesis.</p>
  </a>
  </div>
 
- <p class="text-sm mt-6" style="color:var(--text-mute)">+ 4 emerging 2026 sub-personas: CAIO, CXO, CRO, CSO-Sustainability. See <a href="modules/cuo.html#emerging" class="font-semibold" style="color:var(--umber-700)">CUO page →</a></p>
+ <p class="text-sm mt-6" style="color:var(--text-mute)">+ 4 emerging 2026 sub-personas: CAIO, CXO, CRO, CSO-Sustainability. See <a href="modules/cuo/index.html#emerging" class="font-semibold" style="color:var(--umber-700)">CUO page →</a></p>
  </div>
 </section>
 
@@ -644,29 +643,29 @@ flowchart TB
  <h3 class="text-xl font-bold mb-1.5" style="color:var(--text)">Module pages</h3>
  <p class="text-sm leading-relaxed mb-4" style="color:var(--text-mute)">One dedicated page per module with full 5W1H, dependencies, tech stack, status, FR/NFR mapping, sequence diagrams. Three shipped (memory, Skill, CUO) have the deepest treatment.</p>
  <div class="grid grid-cols-3 gap-1.5 mt-4 text-[11px]">
- <a href="modules/memory.html" class="ds-modpill">memory</a>
- <a href="modules/cuo.html" class="ds-modpill">CUO</a>
- <a href="modules/skill.html" class="ds-modpill">SKILL</a>
- <a href="modules/auth.html" class="ds-modpill">AUTH</a>
- <a href="modules/ai.html" class="ds-modpill">AI</a>
- <a href="modules/mcp.html" class="ds-modpill">MCP</a>
- <a href="modules/obs.html" class="ds-modpill">OBS</a>
- <a href="modules/chat.html" class="ds-modpill">CHAT</a>
- <a href="modules/email.html" class="ds-modpill">EMAIL</a>
- <a href="modules/proj.html" class="ds-modpill">PROJ</a>
- <a href="modules/time.html" class="ds-modpill">TIME</a>
- <a href="modules/crm.html" class="ds-modpill">CRM</a>
- <a href="modules/kb.html" class="ds-modpill">KB</a>
- <a href="modules/hr.html" class="ds-modpill">HR</a>
- <a href="modules/rew.html" class="ds-modpill">REW</a>
- <a href="modules/learn.html" class="ds-modpill">LEARN</a>
- <a href="modules/inv.html" class="ds-modpill">INV</a>
- <a href="modules/esop.html" class="ds-modpill">ESOP</a>
- <a href="modules/res.html" class="ds-modpill">RES</a>
- <a href="modules/okr.html" class="ds-modpill">OKR</a>
- <a href="modules/doc.html" class="ds-modpill ds-modpill--future">DOC</a>
- <a href="modules/portal.html" class="ds-modpill ds-modpill--future">PORTAL</a>
- <a href="modules/ten.html" class="ds-modpill ds-modpill--future">TEN</a>
+ <a href="modules/memory/index.html" class="ds-modpill">memory</a>
+ <a href="modules/cuo/index.html" class="ds-modpill">CUO</a>
+ <a href="modules/skill/index.html" class="ds-modpill">SKILL</a>
+ <a href="modules/auth/index.html" class="ds-modpill">AUTH</a>
+ <a href="modules/ai/index.html" class="ds-modpill">AI</a>
+ <a href="modules/mcp/index.html" class="ds-modpill">MCP</a>
+ <a href="modules/obs/index.html" class="ds-modpill">OBS</a>
+ <a href="modules/chat/index.html" class="ds-modpill">CHAT</a>
+ <a href="modules/email/index.html" class="ds-modpill">EMAIL</a>
+ <a href="modules/proj/index.html" class="ds-modpill">PROJ</a>
+ <a href="modules/time/index.html" class="ds-modpill">TIME</a>
+ <a href="modules/crm/index.html" class="ds-modpill">CRM</a>
+ <a href="modules/kb/index.html" class="ds-modpill">KB</a>
+ <a href="modules/hr/index.html" class="ds-modpill">HR</a>
+ <a href="modules/rew/index.html" class="ds-modpill">REW</a>
+ <a href="modules/learn/index.html" class="ds-modpill">LEARN</a>
+ <a href="modules/inv/index.html" class="ds-modpill">INV</a>
+ <a href="modules/esop/index.html" class="ds-modpill">ESOP</a>
+ <a href="modules/res/index.html" class="ds-modpill">RES</a>
+ <a href="modules/okr/index.html" class="ds-modpill">OKR</a>
+ <a href="modules/doc/index.html" class="ds-modpill ds-modpill--future">DOC</a>
+ <a href="modules/portal/index.html" class="ds-modpill ds-modpill--future">PORTAL</a>
+ <a href="modules/ten/index.html" class="ds-modpill ds-modpill--future">TEN</a>
  </div>
  </div>
 
@@ -711,9 +710,9 @@ flowchart TB
  <h3 class="text-xl font-bold mb-1.5" style="color:var(--text)">Source &amp; tooling</h3>
  <p class="text-sm leading-relaxed mb-4" style="color:var(--text-mute)">CyberOS is built in the open. Memory module (Python · BCP-14 normative spec), Skill module (Rust host · Bun toolchain · MCP-compliant), CUO module (LangGraph + LiteLLM). Schema-validated; CHANGELOG newest-first.</p>
  <ul class="text-sm space-y-1.5">
- <li><a href="https://github.com/cyberskill/cyberos" target="_blank" rel="noopener" class="font-semibold hover:underline" style="color:var(--umber-700)" rel="noopener" target="_blank">github.com/cyberskill/cyberos</a> <span style="color:var(--text-mute)">(placeholder)</span></li>
- <li><a href="https://cyberskill.io" target="_blank" rel="noopener" class="font-semibold hover:underline" style="color:var(--umber-700)" rel="noopener" target="_blank">cyberskill.io</a> <span style="color:var(--text-mute)">(public landing)</span></li>
- <li><a href="modules/memory.html#interop" class="font-semibold hover:underline" style="color:var(--umber-700)">memory interop subset (INTEROP.md)</a></li>
+ <li><a href="https://github.com/cyberskill/cyberos" target="_blank" rel="noopener" class="font-semibold hover:underline" style="color:var(--umber-700)">github.com/cyberskill/cyberos</a> <span style="color:var(--text-mute)">(placeholder)</span></li>
+ <li><a href="https://cyberskill.io" target="_blank" rel="noopener" class="font-semibold hover:underline" style="color:var(--umber-700)">cyberskill.io</a> <span style="color:var(--text-mute)">(public landing)</span></li>
+ <li><a href="modules/memory/index.html#interop" class="font-semibold hover:underline" style="color:var(--umber-700)">memory interop subset (INTEROP.md)</a></li>
  </ul>
  </div>
  </div>

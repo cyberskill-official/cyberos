@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>memory — Universal Personal &amp; Shared Memory Protocol · CyberOS</title>
+ <meta name="description" content="memory — the universal personal-and-shared memory protocol. Offline-first Personal memory on any folder, captures everything (files + discussions), portable by folder copy, two-way sync with Lumi's memory (cloud) for shared org memory and multi-memory auto-evolve. CyberOS is the first consumer; the protocol stands alone.">
+ <link rel="stylesheet" href="../../assets/tokens.css">
+ <link rel="stylesheet" href="../../assets/styles.css">
+ <link rel="stylesheet" href="../../assets/tailwind.min.css">
+ <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <script type="module" src="../../assets/scripts.js"></script>
+ <style>.fact-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }.fact-card { background: var(--memory-bg); border:1px solid var(--memory-tint); padding: 0.875rem 1rem; border-radius: 0.625rem; }.fact-card.label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--memory-dark); }.fact-card.value { font-size: 1.125rem; font-weight: 800; color: var(--text); margin-top:0.25rem; }.fact-card.note { font-size: 0.75rem; color: var(--text-soft); margin-top: 0.125rem; }.toc-link { display:block; padding:0.375rem 0.625rem; font-size:0.8125rem; color:var(--text-soft); text-decoration:none; border-radius:0.375rem; transition: all 0.12s; }.toc-link:hover { background: var(--memory-bg); color: var(--memory-dark); }.toc-link.active { background: var(--memory-tint); color: var(--memory-dark); font-weight: 600; }.module-section { scroll-margin-top: 80px; margin-bottom: 2.5rem; }.module-section header.section-head { display:flex; align-items:center; gap:0.75rem; margin-bottom: 0.75rem; }.module-section header.section-head h2 { font-size: 1.5rem; font-weight: 800; margin:0; color: var(--text); }.section-num { display:inline-flex; align-items:center; justify-content:center; width:1.75rem; height:1.75rem; border-radius:0.5rem; background:var(--memory); color:white; font-weight:800; font-size:0.875rem; }.pill { display:inline-flex; gap:0.25rem; padding: 0.125rem 0.5rem; border-radius:9999px; font-size:0.6875rem; font-weight:700; }.pill-must { background:#fee2e2; color:#b91c1c; }.pill-should { background:#fef3c7; color:#b45309; }.pill-shipped { background:#d1fae5; color:#065f46; }.pill-planned { background:#e0e7ff; color:#3730a3; }.pill-building { background:#fde68a; color:#92400e; }.pill-partial { background:#fef3c7; color:#b45309; }
+ table.kt { width:100%; border-collapse: collapse; font-size: 0.8125rem; }
+ table.kt thead th { text-align:left; font-weight:700; color:var(--text); padding: 0.5rem 0.625rem; border-bottom: 2px solid var(--border); background: var(--bg-card); }
+ table.kt tbody td { padding: 0.5rem 0.625rem; border-bottom: 1px solid var(--border); color: var(--text-soft); vertical-align: top; }
+ table.kt tbody tr:nth-child(even) td { background: var(--future-bg); }.keyword-chip { display:inline-block; background:var(--memory-tint); color:var(--memory-dark); padding:0.125rem 0.5rem; border-radius: 0.375rem; font-family: var(--font-mono); font-size: 0.75rem; margin: 0.125rem; }.raci-cell-r { background:#dcfce7; color:#166534; font-weight:700; }.raci-cell-a { background:#dbeafe; color:#1e40af; font-weight:700; }.raci-cell-c { background:#fef3c7; color:#92400e; font-weight:700; }.raci-cell-i { background:#f1f5f9; color:#475569; font-weight:700; }.module-nav-footer { display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:1.25rem; background:var(--memory-bg); border-radius: 0.75rem; border: 1px solid var(--memory-tint); }
+ </style>
+</head>
+<body data-pagefind-filter="category:Module">
+<span hidden data-pagefind-filter="phase:P0"></span>
+
+<div id="shared-nav"></div>
+
+<!-- ============================================================ -->
+<!-- HEADER -->
+<!-- ============================================================ -->
+<header class="hero-gradient border-b border-slate-200">
+ <div class="container py-10 lg:py-14">
+ <nav class="breadcrumbs">
+ <a href="../../index.html">Home</a>
+ <span class="sep">›</span>
+ <a href="../index.html#catalog">Modules</a>
+ <span class="sep">›</span>
+ <span class="current">memory</span>
+ </nav>
+ <div class="flex items-center gap-3 mb-4 flex-wrap">
+ <span class="text-5xl">🧠</span>
+ <h1 class="h-display">memory</h1>
+ <span class="phase-chip phase-p0">P0 · Foundation</span>
+ <span class="pill pill-shipped">Layer 1 shipped · 309/311 tests</span>
+ <span class="pill pill-shipped">Wave 1 ingest + AGE + hybrid search (RRF lexical + bge-m3 vector) shipped end-to-end</span>
+ <span class="pill pill-shipped">Multi-device sync daemon (push + pull + dead-letter) shipped (FR-MEMORY-103)</span>
+ <span class="pill pill-shipped">bge-m3 embedding sidecar (services/embed-sidecar/) shipped · 10/10 tests · FR-AI-019</span>
+ <span class="pill pill-building">Tauri 2.x desktop scaffold (services/memory/desktop/) building · FR-MEMORY-104</span>
+ <span class="pill pill-planned">MEMORY Improvement Wave 2026 Q3 spec'd · FR-MEMORY-112..120 (9 FRs, 10/10) · self-learning agents · 4 protocol amendments P19..P22 pending APPROVE</span>
+ <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: Stephen Cheng (CEO)</span>
+ </div>
+ <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
+ The universal personal-and-shared memory protocol. Offline-first. Captures everything — files <em>and</em> discussions. Portable by folder copy. Two-way sync with Lumi's memory.
+ </p>
+ <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
+ memory is no longer just CyberOS's memory module — it's an open protocol that turns any human's laptop into an append-only, audit-chained, offline-first long-term memory store. <strong>Personal memory</strong> watches whichever folders you opt in (and captures Cowork / Claude Code / discussion surfaces); the store is portable — copy <code>~/.cyberos-memory/</code> between laptops, desktops, phones, and your memory moves with you. <strong>Lumi's memory</strong> (also called CUO's memory or CyberSkill's memory) is the cloud-hosted org-tenant counterpart; two-way sync flows shareable memories up and team-shared memories down. Over time, N personal memories feed one Lumi's memory and <strong>multi-memory auto-evolve</strong> emerges — pattern recognition, dedup, synthesised wisdom that exceeds any single contributor. This is the moat. Layer 1 (the audit-chained filesystem ledger) ships today — 233/235 tests pass (2 pre-existing invariant-check bugs, non-blocking), Ed25519-signed tree heads, MMR inclusion proofs, byte-identical exports. Stages 1–5 of the universal protocol are designed in <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">MEMORY_AUTOSYNC_DESIGN.md</a> and land between now and P3.
+ </p>
+ <div class="flex flex-wrap gap-3 mt-6">
+ <a href="#architecture" class="btn btn-primary">Architecture
+ <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+ </a>
+ <a href="#cli-usage" class="btn btn-secondary">CLI usage</a>
+ <a href="#api-surface" class="btn btn-secondary">API surface</a>
+ <a href="../../reference/fr-catalog.html#memory" class="btn btn-secondary">FR catalog</a>
+ <a href="appendices.html" class="btn btn-secondary">Appendices</a>
+ <a href="changelog.html" class="btn btn-secondary">Changelog</a>
+ 
+ </div>
+ </div>
+</header>
+
+<div class="container py-10 lg:py-14 grid lg:grid-cols-12 gap-10">
+
+<!-- ============================================================ -->
+<!-- STICKY TOC -->
+<!-- ============================================================ -->
+<aside class="lg:col-span-3 order-2 lg:order-1">
+ <div class="lg:sticky lg:top-20">
+ <div class="bbg-card p-5">
+ <div class="h-eyebrow mb-3">On this page</div>
+ <ul class="space-y-0.5 text-sm">
+ <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+ <li><a class="toc-link" href="#bigger-picture">The bigger picture</a></li>
+ <li><a class="toc-link" href="#why">Why memory exists</a></li>
+ <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
+ <li><a class="toc-link" href="#architecture">Architecture</a></li>
+ <li><a class="toc-link" href="#stages">Stages 1–5 roadmap</a></li>
+ <li><a class="toc-link" href="#data-model">Data model</a></li>
+ <li><a class="toc-link" href="#api-surface">API surface</a></li>
+ <li><a class="toc-link" href="#key-flows">Key flows</a></li>
+ <li><a class="toc-link" href="#lifecycle">Memory lifecycle</a></li>
+ <li><a class="toc-link" href="#functional-requirements">FRs</a></li>
+ <li><a class="toc-link" href="#non-functional-requirements">NFRs</a></li>
+ <li><a class="toc-link" href="#dependencies">Dependencies</a></li>
+ <li><a class="toc-link" href="#compliance">Compliance scope</a></li>
+ <li><a class="toc-link" href="#risk-entries">Risk entries</a></li>
+ <li><a class="toc-link" href="#kpis">KPIs</a></li>
+ <li><a class="toc-link" href="#raci">RACI</a></li>
+ <li><a class="toc-link" href="#cli-usage">CLI usage</a></li>
+ <li><a class="toc-link" href="#status">Phase status</a></li>
+ <li><a class="toc-link" href="#references">References</a></li>
+ </ul>
+ <hr class="my-4 border-slate-200">
+ <div class="h-eyebrow mb-2">Source</div>
+ <div class="text-xs text-slate-500 leading-relaxed">
+ <code>cyberos/modules/memory/</code><br>
+ –§5.9 · §9.1<br>
+ AGENTS.md (RFC v2.0.0)
+ </div>
+ </div>
+ </div>
+</aside>
+
+<main class="lg:col-span-9 order-1 lg:order-2">
+
+<!-- ============================================================ -->
+<!-- HERO -->
+<!-- ============================================================ -->
+<section id="hero" class="module-section">
+ <div class="bbg-card tint-memory p-6 mb-6">
+ <p class="text-lg text-slate-700 leading-relaxed mb-5">
+ memory is an <strong>append-only, audit-chained ledger</strong> of structured memory files. It is local-first (the canonical state is on the laptop), portable (deterministic <code>zip</code> export), and cryptographically verifiable (Merkle Mountain Range + Ed25519 signed tree heads). Every byte written to a CyberOS memory store can be replayed, proved-included, or — if compliance demands it — purged with a tamper-evident audit trail. The protocol lives at <code>memory/docs/AGENTS.md</code>; the implementation lives at <code>memory/cyberos/core/</code>; the CLI is <code>cyberos</code>.
+ </p>
+ <div class="fact-grid">
+ <div class="fact-card"><div class="label">Layer 1 status</div><div class="value">Shipped</div><div class="note">filesystem ledger · 7/7 phases · 12 audit proposals</div></div>
+ <div class="fact-card"><div class="label">Stages 1–5</div><div class="value">Designed</div><div class="note">universal protocol roadmap · see §Stages</div></div>
+ <div class="fact-card"><div class="label">Tests</div><div class="value">233/235</div><div class="note">2 pre-existing invariant-check bugs · non-blocking</div></div>
+ <div class="fact-card"><div class="label">Invariants</div><div class="value">15/15</div><div class="note"><code>cyberos doctor</code> · all PASS on live store</div></div>
+ <div class="fact-card"><div class="label">CLI subcommands</div><div class="value">30 shipped + 8 designed</div><div class="note">+ `memory init/watch/status/sync/...`</div></div>
+ <div class="fact-card"><div class="label">Stores</div><div class="value">Personal + Lumi's</div><div class="note">offline-first laptop · cloud org-tenant</div></div>
+ <div class="fact-card"><div class="label">Used by</div><div class="value">All 22 modules + any folder</div><div class="note">universal — not just CyberOS</div></div>
+ <div class="fact-card"><div class="label">Schema</div><div class="value"><code>memory.schema.json</code></div><div class="note">closed enum · BCP-14 normative · P13 extends</div></div>
+ </div>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- THE BIGGER PICTURE -->
+<!-- ============================================================ -->
+<section id="bigger-picture" class="module-section">
+ <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — Personal memory, Lumi's memory, the protocol</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ The original memory scope — "the audit-chained substrate of CyberOS" — understated what the protocol is. As of v1.0.0 of <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">MEMORY_AUTOSYNC_DESIGN.md</a> (locked 2026-05-14), memory is reframed as <strong>the universal personal-and-shared memory protocol</strong>. CyberOS is the first consumer but does not own the protocol. Three concepts to hold simultaneously:
+ </p>
+
+ <div class="grid md:grid-cols-3 gap-4 my-6">
+ <div class="bbg-card p-5" style="border-top:3px solid var(--umber-500)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--umber-700)">Layer 1 · Personal</div>
+ <div class="text-2xl mb-2">🧠</div>
+ <div class="font-bold text-slate-900 mb-1">Personal memory</div>
+ <p class="text-sm text-slate-600 mb-3">One per human. Lives at <code>~/.cyberos-memory/</code>. Watches whichever folders you opt in (any folder — not just <code>cyberos/</code>). Captures files, decisions, discussions. <strong>Portable</strong>: copy the folder = move your memory.</p>
+ <p class="text-xs" style="color:var(--text-mute)">Offline-first · cryptographically chained · open protocol</p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:3px solid var(--ochre-500)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--ochre-700)">Layer 2 · Sync</div>
+ <div class="text-2xl mb-2">🔄</div>
+ <div class="font-bold text-slate-900 mb-1">Two-way sync orchestrator</div>
+ <p class="text-sm text-slate-600 mb-3">Background daemon. Personal memory <strong>pushes</strong> shareable memories up to Lumi's memory. Personal memory <strong>pulls</strong> shared-team memories down. Conflict resolution by chain-position (per AGENTS.md §14.2 — every import is a fresh local <code>put</code>).</p>
+ <p class="text-xs" style="color:var(--text-mute)">5-min default window · configurable · privacy-class enforced</p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:3px solid var(--umber-500)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--umber-700)">Layer 3 · Shared</div>
+ <div class="text-2xl mb-2">☁️</div>
+ <div class="font-bold text-slate-900 mb-1">Lumi's memory (cloud)</div>
+ <p class="text-sm text-slate-600 mb-3">Cloud-hosted org-tenant memory. Same protocol, multi-tenant deployment. Three names for three audiences: <strong>Lumi's memory</strong> (user-facing), <strong>CUO's memory</strong> (technical), <strong>CyberSkill's memory</strong> (deployment-specific). Gated on AUTH + TEN + AI Gateway.</p>
+ <p class="text-xs" style="color:var(--text-mute)">RLS-isolated Postgres · S3/R2 · per-tenant · ships P2</p>
+ </div>
+ </div>
+
+ <h3 class="text-lg font-bold mb-3">What's automatic, what's manual</h3>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Activity</th><th>Captured automatically?</th><th>By which capture surface</th></tr></thead>
+ <tbody>
+ <tr><td>File edit inside a <em>watched</em> folder</td><td>✅ yes</td><td>Filesystem watcher daemon</td></tr>
+ <tr><td><code>git commit</code> inside a watched folder</td><td>✅ yes — emits <code>decisions</code></td><td>Filesystem watcher + git hook</td></tr>
+ <tr><td>Cowork session locks a decision</td><td>✅ yes</td><td>Cowork session hook (Stage 2 week 3)</td></tr>
+ <tr><td>Claude Code tool call mutating working folder</td><td>✅ yes</td><td>Claude Code hook (Stage 2 week 4)</td></tr>
+ <tr><td>Slack / Zalo message tagged <code>@lumi</code></td><td>✅ yes (when MCP feed enabled — deferred)</td><td>Slack/Zalo MCP bridge</td></tr>
+ <tr><td>Granola / Meet transcript at meeting end</td><td>✅ yes (when MCP feed enabled — deferred)</td><td>Granola/Meet MCP bridge</td></tr>
+ <tr><td>Apple Notes / Obsidian / Notion save</td><td>✅ yes (when MCP feed enabled — deferred)</td><td>Notes-app MCP bridge</td></tr>
+ <tr><td>File edit in an <em>unwatched</em> folder</td><td>❌ no — privacy floor</td><td>—</td></tr>
+ <tr><td>Random browsing (no <code>@memory</code>/<code>@lumi</code> tag)</td><td>❌ no — privacy floor</td><td>—</td></tr>
+ <tr><td>Manual <code>cyberos memory capture &lt;text&gt;</code></td><td>n/a — explicit one-off</td><td>CLI</td></tr>
+ </tbody>
+ </table>
+ </div>
+ <p class="text-sm mt-3" style="color:var(--text-mute)"><strong>Initial scope (Stage 2 sprint):</strong> Claude-only — Cowork sessions + Claude Code. Other MCP surfaces queue behind explicit team adoption.</p>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Strategic implication — this is the moat</h3>
+ <p class="text-slate-700 leading-relaxed mb-3">
+ A tenant six months into using Lumi's memory has accumulated context that no competitor can replicate. The longer the org uses the platform, the smarter Lumi becomes. <strong>Switching cost = value of the org's accumulated memory.</strong> This is the answer to the strategic GTM question — not the marketplace; the memory.
+ </p>
+ <p class="text-slate-700 leading-relaxed">
+ Personal memory ships under the open memory protocol — Apache 2.0, no login, useful to anyone with a laptop. Lumi's memory is the commercial offering — sold per tenant, per seat, per storage tier, provisioned at tenant create-time via the TEN module. Personal memory is the OSS distribution surface; Lumi's memory is the SaaS product; multi-memory auto-evolve is the compounding moat.
+ </p>
+</section>
+
+<!-- ============================================================ -->
+<!-- WHY -->
+<!-- ============================================================ -->
+<section id="why" class="module-section">
+ <header class="section-head"><span class="section-num">1</span><h2>Why memory exists</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ Every agentic system eventually trips on the same wall: <em>state lives nowhere persistent and replayable</em>. Chat sessions evaporate, vendor memory APIs become single points of failure and audit, institutional knowledge ends up trapped in screenshots and Slack threads, and <strong>nobody can answer "what did we decide last quarter?" without spelunking through search logs</strong>. memory starts from a different axiom: <strong>the laptop filesystem is the canonical store for one human's memory</strong>, every mutation is an append, every append is anchored in a Merkle chain so corruption is detectable and tampering is impossible — and then the same protocol extends to a <strong>cloud-hosted org tenant</strong> (Lumi's memory) that aggregates the team's shareable memories and lets the org's accumulated wisdom compound over time.
+ </p>
+ <div class="grid md:grid-cols-4 gap-4 my-5">
+ <div class="bbg-card p-5" style="border-top:3px solid var(--umber-500)">
+ <div class="text-2xl mb-2">🔒</div>
+ <div class="font-bold text-slate-900 mb-1">Sovereign by design</div>
+ <p class="text-sm text-slate-600">No vendor lock-in. <code>~/.cyberos-memory/</code> is a complete, portable snapshot of one human's memory — copy the folder, take it anywhere, no DB rebuild.</p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:3px solid var(--umber-500)">
+ <div class="text-2xl mb-2">⛓</div>
+ <div class="font-bold text-slate-900 mb-1">Cryptographic provenance</div>
+ <p class="text-sm text-slate-600">Every audit row carries <code>prev_chain</code> + <code>chain</code>. MMR overlay produces logarithmic inclusion proofs · Ed25519 signs tree heads · the chain refuses to forget.</p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:3px solid var(--ochre-500)">
+ <div class="text-2xl mb-2">🔄</div>
+ <div class="font-bold text-slate-900 mb-1">Universal capture</div>
+ <p class="text-sm text-slate-600">Watch any folder; the protocol captures file activity AND discussions (Cowork, Claude Code, MCP feeds). Explicit opt-in per folder. The "remember everything" guarantee only applies where you let it.</p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:3px solid var(--ochre-500)">
+ <div class="text-2xl mb-2">🧠×N</div>
+ <div class="font-bold text-slate-900 mb-1">Multi-memory power</div>
+ <p class="text-sm text-slate-600">N personal memories → 1 Lumi's memory → synthesised cross-person wisdom. The longer the org uses the platform, the smarter Lumi becomes. <strong>This is the moat.</strong></p>
+ </div>
+ </div>
+ <p class="text-slate-700 leading-relaxed mb-3">
+ The bet is twofold: <strong>(1)</strong> pay the cost of a real audit chain <em>once</em>, at the substrate layer, and every downstream consumer — Skill, CUO, EMAIL, PROJ, CRM, HR, INV, plus any future module or third-party tool — inherits provenance, replay, and erasure for free. Without memory, every module would re-invent its own audit table. <strong>(2)</strong> Pay the cost of a real <em>shareable</em> memory layer once, and the org gains a compounding wisdom asset that grows monotonically: accumulated decisions, recurring patterns, dedup-ed answers to questions the team has asked before. A new hire joining six months in inherits the entire org's institutional memory from day one.
+ </p>
+ <p class="text-slate-700 leading-relaxed">
+ Compliance becomes a property of the platform, not a policy bolt-on. Vietnam PDPL Art. 14 DSAR, Art. 16 erasure, Art. 7 no-data-sale; GDPR Art. 17 right-to-erasure, Art. 30 records-of-processing; EU AI Act Art. 12 logging and Art. 50 transparency — all expressible as ledger operations or sync-class enforcement. Audit is a property of the protocol; CyberOS modules inherit it; Lumi's memory inherits it; the synthesis sub-skill inherits it. Every memory carries its own evidence.
+ </p>
+</section>
+
+<!-- ============================================================ -->
+<!-- WHAT — 5W1H2C5M -->
+<!-- ============================================================ -->
+<section id="what" class="module-section">
+ <header class="section-head"><span class="section-num">2</span><h2>What it does — 5W1H2C5M</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-5">A structured decomposition of memory's scope. Every cell below traces back to + AGENTS.md.</p>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th style="width:8%">Axis</th><th style="width:24%">Question</th><th>Answer</th></tr></thead>
+ <tbody>
+ <tr><td><strong>5W · What</strong></td><td>What is memory?</td><td>An open, normative <em>protocol</em> for append-only audit-chained personal-and-shared memory. Two concrete instances: <strong>Personal memory</strong> (one per human, lives at <code>~/.cyberos-memory/</code>, captures activity across watched folders + discussion surfaces) and <strong>Lumi's memory</strong> (cloud-hosted per-org tenant, 2-way sync target). Every mutation is one of three canonical ops — <code>put</code>, <code>move</code>, <code>delete</code>. Closed schema, BCP-14 normative.</td></tr>
+ <tr><td><strong>5W · Who</strong></td><td>Who reads/writes?</td><td><strong>Personal memory writers:</strong> the human owner (CLI), the capture daemon (filesystem watcher · Cowork hook · Claude Code hook · MCP feeds), CUO routing decisions on the user's behalf, every module's subgraph that the user authored. <strong>Lumi's memory writers:</strong> sync orchestrator pushing on each user's behalf; synthesis sub-skill nightly. <strong>Readers:</strong> any agent (Claude, Codex, Cursor) the user has authorized, Lumi/CUO during conversation, downstream automation. <strong>Owner:</strong> the human for Personal memory; the org (CDO seat at P1+) for Lumi's memory.</td></tr>
+ <tr><td><strong>5W · When</strong></td><td>When does write happen?</td><td><strong>Personal:</strong> on every captured activity — file event from any watched folder, end-of-Cowork-turn lock, Claude Code tool call, manual <code>cyberos memory capture</code>. Group-commit window 5 ms; consolidation at &gt;5 MB or &gt;5,000 rows. <strong>Sync to Lumi's:</strong> default 5-min window for shareable+ memories; mode configurable (realtime / frequent / normal / infrequent / manual). <strong>Synthesis on Lumi's:</strong> nightly, walks prior 24 h, emits cluster + dedup + wisdom artefacts.</td></tr>
+ <tr><td><strong>5W · Where</strong></td><td>Where does it live?</td><td><strong>Personal memory:</strong> resolved at <code>$HOME/.cyberos-memory/</code> by default (override via <code>$CYBEROS_MEMORY_HOME</code>). <strong>Portable</strong> — copy the folder between machines (laptop, desktop, USB, iCloud Drive, Dropbox) to move your memory. Symlinks resolved; sandbox paths rejected (<code>layout-no-sandbox-path</code> invariant). <strong>Lumi's memory:</strong> a CyberOS multi-tenant deployment (Postgres + RLS + S3/R2) provisioned at tenant create-time via the TEN module. Per-tenant subject <code>org:&lt;slug&gt;</code>.</td></tr>
+ <tr><td><strong>5W · Why</strong></td><td>Why this design?</td><td>Three failure modes memory solves simultaneously: (1) <strong>vendor lock-in</strong> — your memory walks with you on any laptop; (2) <strong>state without replay</strong> — every byte is replayable from the ledger; (3) <strong>no team-level wisdom</strong> — Lumi's memory aggregates across N personal memories to produce synthesised org-level memory that no single contributor could write alone. The append-only + MMR + Ed25519 STH + sync-class taxonomy is the smallest primitive set that delivers all three plus cryptographic provenance.</td></tr>
+ <tr><td><strong>1H · How</strong></td><td>How does it work end-to-end?</td><td>Capture surface emits → canonical op (<code>put</code>/<code>move</code>/<code>delete</code>) → two-phase atomic write → group-commit audit frame → MMR leaf → derived SQLite index → HEAD seqlock advance. Sync orchestrator tails the local chain, filters by <code>sync_class</code>, pushes shareable+ to Lumi's memory over JWT-authenticated HTTP. Pulls inbound via the same envelope; each pulled record becomes a fresh local <code>put</code> per AGENTS.md §14.2 — never a chain-mutation. See <a href="#key-flows">Key flows</a> for sequence diagrams of capture, sync, and synthesis.</td></tr>
+ <tr><td><strong>2C · Cost</strong></td><td>Cost?</td><td><strong>Personal memory per-write:</strong> ~120 µs hot path (group-committed), ~3 ms cold. <strong>Read:</strong> ~6 µs (mmap seqlock). <strong>Storage overhead:</strong> ~28% vs raw body. <strong>STH signing:</strong> ~0.4 ms Ed25519. <strong>Sync push:</strong> ~50 ms p95 over LAN, ~150 ms p95 over WAN per memory; batched. <strong>Lumi's memory infra:</strong> ~$2/seat/month per-tenant baseline (RDS micro tier + S3 + signed-URL CDN) at P2 launch scale. <strong>Synthesis sub-skill:</strong> nightly LLM-cost ≈ $0.05/user/day at BGE-M3 embeddings + Haiku synthesis.</td></tr>
+ <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) macOS durability: <code>F_BARRIERFSYNC</code> per-batch, <code>F_FULLFSYNC</code> at checkpoint. (b) Single canonical writer per Personal memory at a time (lease + <code>.lock</code>). (c) Sandbox paths protocol-rejected. (d) Sync requires AUTH-issued JWT — no anonymous push to Lumi's. (e) PII detected at capture surfaces with sync_class ≠ private is <em>held back from sync</em> and prompts the user via the configured prompt UX (Cowork-inline / desktop-notif / <code>memory pending</code>). (f) Right-to-forget (PDPL Art. 16 / GDPR Art. 17) propagates across memories but the <em>fact</em> of erasure is itself unerasable.</td></tr>
+ <tr><td><strong>5M · Materials</strong></td><td>What does it use?</td><td>POSIX filesystem · SHA-256 · Ed25519 (cryptography lib) · libyaml-backed msgspec for frontmatter · zstd for compaction · SQLite (WAL mode) · optional sentence-transformers (BGE-M3) for semantic search · <strong>Stage 2+:</strong> Rust binary using <code>notify</code> crate for filesystem watcher · launchd/systemd-user/Task Scheduler for daemon supervision · <strong>Stage 3+ (Lumi's memory):</strong> Postgres 17 + RLS · pgvector HNSW · Apache AGE 1.5 · S3/R2/MinIO · AUTH-issued JWT (RS256) · LiteLLM via AI Gateway for synthesis.</td></tr>
+ <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Append-only ledger (no in-place mutation). Seqlock for lock-free reads. MMR Merkle proofs. RFC 8785 JCS canonical JSON. BCP-14 normative protocol. Deterministic export (sorted paths · fixed timestamps · fixed mode · zstd level 6). <strong>Universal-protocol additions:</strong> explicit opt-in per watched folder (privacy floor). PII detection at capture write (Presidio). Sync conflict resolution via chain-position-wins + fresh-local-<code>put</code> on import (per §14.2). Synthesis as a CUO sub-skill, not a separate module — wisdom artefacts follow the same protocol.</td></tr>
+ <tr><td><strong>5M · Machines</strong></td><td>Where does it run?</td><td>Personal memory: any laptop / desktop (macOS primary; Linux + WSL + Windows supported). Optional HTTP REST mode (<code>cyberos serve</code> — shipped) and mobile read-only static site (<code>cyberos publish</code> — shipped). No server-side database for Personal memory — the laptop <em>is</em> the database. Lumi's memory: managed cloud deployment per tenant (AWS Singapore primary; Azure VN secondary; per-tenant region pinning via TEN). Synthesis runs nightly in tenant's compute window.</td></tr>
+ <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>Personal memory: 1 IC owner (Stephen Cheng / future CDO seat) — module is small (~5k LoC + capture daemon adds ~2k). Open-source contributions welcome. Lumi's memory: shared on-call with TEN module owner from P2 forward; eventually CDO seat at P1+ takes accountability; Cloud-DBA + Sync-SRE specialists join at P3+.</td></tr>
+ <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>15 doctor invariants (chain continuity, op-enum closure, layout-canonical, MMR cross-check, STH signature, …) plus 4 universal-protocol invariants (<code>layout-watched-folders-exist</code>, <code>layout-watched-folders-permissions</code>, <code>capture-daemon-not-stuck</code>, <code>sync-orchestrator-running</code>). 5 new KPIs at Lumi's memory scale: capture-rate per user, sync-success rate, sync-conflict rate, synthesis-useful rate (per-user thumbs up/down), Lumi's memory seq counter. Continuous benchmark suite. CHANGELOG newest-first.</td></tr>
+ </tbody>
+ </table>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ARCHITECTURE -->
+<!-- ============================================================ -->
+<section id="architecture" class="module-section">
+ <header class="section-head"><span class="section-num">3</span><h2>Architecture — three layers, six ops</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ memory is specified as three layers. <strong>Layer 1</strong> (the append-only filesystem ledger) is shipped — 233/235 tests pass (2 pre-existing invariant-check bugs, non-blocking). <strong>Layer 2 ingest pipeline</strong> shipped end-to-end in <code>services/memory/</code> on 2026-05-18: Cargo workspace + 2 migrations + chain_anchor + cursor + binlog_tail + entity_extract + pgvector upsert + full <code>ingest::run_batch</code> orchestrator + daemon main loop running a per-tenant tokio task on 200 ms poll + <code>/metrics</code> Prometheus endpoint + graceful shutdown + 4 integration tests in <code>services/memory/tests/ingest_test.rs</code>. The Apache AGE graph mirror and Layer 3 (archival corpus) remain planned for P1 / P2. The single canonical writer enforces the protocol; every other module's "memory bridge" routes through it.
+ </p>
+
+ <div class="bbg-card p-5 mb-6">
+ <div class="mermaid">
+graph TB
+ subgraph CLIENTS ["Clients (untrusted from protocol pov)"]
+ AGENT["Claude / Codex / Cursor<br>via MCP tool"]
+ CLI["cyberos CLI"]
+ SUBG["Module subgraphs<br>(via memory bridge)"]
+ CUO_M["CUO router<br>(decision rows)"]
+ end
+
+ subgraph CORE ["memory canonical writer (cyberos/core/)"]
+ OPS["ops.py<br>put · move · delete"]
+ LOCK["lock.py<br>leased.lock"]
+ WRITER["writer.py<br>group-commit ledger"]
+ WALKER["walker.py<br>mmap ledger replay"]
+ READER["reader.py<br>seqlock lock-free reads"]
+ INDEX["index.py<br>WAL-mode SQLite"]
+ MMR["mmr.py<br>Merkle Mountain Range"]
+ STH["sth.py<br>Ed25519 tree heads"]
+ end
+
+ subgraph LAYER1 ["Layer 1 · Filesystem ledger (.cyberos-memory/)"]
+ FILES["memories/{kind}/{hex}/{slug}.md"]
+ META["sidecar.meta.json"]
+ BINLOG["audit/*.binlog"]
+ HEAD["HEAD seqlock"]
+ MANI["manifest.json"]
+ CHK["audit/checkpoints/"]
+ end
+
+ subgraph LAYER2 ["Layer 2 · ingest pipeline (Wave 1 shipped) + AGE graph (planned)"]
+ INGEST["services/memory/<br>cursor · binlog_tail · chain_anchor · entity_extract"]
+ PGV["pgvector HNSW<br>(upsert via ingest::run_batch)"]
+ AGE["Apache AGE graph<br>(planned · P1)"]
+ end
+
+ subgraph LAYER2S ["Layer 2 (slice) · Local embeddings (shipped)"]
+ EMB["sentence-transformers<br>BGE-M3 (optional dep)"]
+ end
+
+ subgraph LAYER3 ["Layer 3 · Archival corpus (planned)"]
+ S3["S3 / R2 / MinIO<br>cold tier"]
+ end
+
+ AGENT --> OPS
+ CLI --> OPS
+ SUBG --> OPS
+ CUO_M --> OPS
+
+ OPS --> LOCK
+ OPS --> WRITER
+ WRITER --> BINLOG
+ WRITER --> FILES
+ WRITER --> META
+ WRITER --> MMR
+ MMR --> STH
+ STH --> CHK
+ WRITER --> HEAD
+ WRITER --> INDEX
+ READER --> HEAD
+ READER --> FILES
+ WALKER --> BINLOG
+
+ FILES -. semantic.-> EMB
+ FILES -. P1+.-> PGV
+ FILES -. P1+.-> AGE
+ CHK -. P2+ archive.-> S3
+
+ classDef shipped fill:#f5ede6,stroke:#45210e
+ classDef planned fill:#f0eee9,stroke:#9c9286,stroke-dasharray:4 3
+ class OPS,LOCK,WRITER,WALKER,READER,INDEX,MMR,STH,FILES,META,BINLOG,HEAD,MANI,CHK,EMB,AGENT,CLI shipped
+ class PGV,AGE,S3,SUBG planned
+ </div>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Internal components — walkthrough</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th>Component</th><th>File</th><th>Responsibility</th></tr></thead>
+ <tbody>
+ <tr><td><code>ops.py</code></td><td>core/ops.py</td><td>Canonical operations <code>put</code>, <code>move</code>, <code>delete(mode)</code>. Path validation, denylist check, idempotency by content hash.</td></tr>
+ <tr><td><code>writer.py</code></td><td>core/writer.py</td><td>Group-commit ledger. Two-phase atomic write (tmpfile + rename + dir fsync). Group window = 5 ms; per-batch <code>F_BARRIERFSYNC</code>.</td></tr>
+ <tr><td><code>reader.py</code></td><td>core/reader.py</td><td>Lock-free seqlock reader. mmap the body, snapshot HEAD, re-stat; mismatch triggers retry. Stale-tolerant.</td></tr>
+ <tr><td><code>walker.py</code></td><td>core/walker.py</td><td>mmap-based binlog replay. Verifies frame CRC + chain continuity; emits to invariant walker.</td></tr>
+ <tr><td><code>lock.py</code></td><td>core/lock.py</td><td>Leased <code>.lock</code> with 10 s TTL + 3 s renew. Stale leases reaped via monotonic clock comparison.</td></tr>
+ <tr><td><code>mmr.py</code></td><td>core/mmr.py</td><td>Pure-Python Merkle Mountain Range. Stage-1 ships peaks + leaf-hashes; STH-only mode replaces chained <code>prev_chain</code> when enabled.</td></tr>
+ <tr><td><code>sth.py</code></td><td>core/sth.py</td><td>Ed25519 signed tree heads. Passphrase-wrapped private key on disk; checkpoints land in <code>audit/checkpoints/</code>.</td></tr>
+ <tr><td><code>index.py</code></td><td>core/index.py</td><td>Derived WAL-mode SQLite index. Rebuildable from binlog; never authoritative — filesystem wins on conflict.</td></tr>
+ <tr><td><code>fsync.py</code></td><td>core/fsync.py</td><td>Platform-correct durability. macOS <code>F_BARRIERFSYNC</code> / <code>F_FULLFSYNC</code>; Linux <code>fdatasync</code> + parent-dir fsync.</td></tr>
+ <tr><td><code>consolidate.py</code></td><td>core/consolidate.py</td><td>Walk → Compact → Sign → Publish. Triggers on size (&gt;5 MB) or row count (&gt;5,000). zstd archives sealed monthly segments.</td></tr>
+ <tr><td><code>invariants.py</code></td><td>core/invariants.py</td><td>15 walker invariants (chain continuity, op-enum closure, layout-canonical, MMR cross-check, sidecar-body-hash, …). Drives <code>cyberos doctor</code>.</td></tr>
+ <tr><td><code>export.py</code></td><td>core/export.py</td><td>Deterministic zip. Sorted paths · fixed timestamp <code>2000-01-01T00:00:00Z</code> · fixed mode <code>0o644</code> · ZIP_DEFLATED level 6. Excluded: <code>exports/</code>, <code>__pycache__/</code>, <code>.cache/</code>, <code>.lock</code>, <code>HEAD</code>.</td></tr>
+ <tr><td><code>import_.py</code></td><td>core/import_.py</td><td>P6 — cross-memory merge. Foreign rows become fresh local <code>put</code> rows with <code>extra.imported_from</code> + <code>extra.foreign_chain</code>.</td></tr>
+ <tr><td><code>semantic.py</code></td><td>core/semantic.py</td><td>Optional local embeddings (sentence-transformers BGE-M3). On-demand index, no daemon.</td></tr>
+ <tr><td><code>serve.py</code></td><td>core/serve.py</td><td>HTTP REST mode. Exposes the same six ops over a local socket for IDE / mobile clients.</td></tr>
+ <tr><td><code>publish.py</code></td><td>core/publish.py</td><td>Mobile read-only static site. Generated from the deterministic export.</td></tr>
+ <tr><td><code>digest.py</code></td><td>core/digest.py</td><td>Daily LLM summary (via AI gateway). Produces one digest row per day.</td></tr>
+ <tr><td><code>conflicts.py</code></td><td>core/conflicts.py</td><td>Sync-FS conflict detection (iCloud / Dropbox / OneDrive). Quarantines competing file copies to <code>conflicts/</code>.</td></tr>
+ <tr><td><code>backup.py</code><code>prune.py</code></td><td>core/</td><td>Incremental snapshot + sealed-segment pruning. Both reversible via the consolidation log.</td></tr>
+ </tbody>
+ </table>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- STAGES 1-5 — UNIVERSAL PROTOCOL ROADMAP -->
+<!-- ============================================================ -->
+<section id="stages" class="module-section">
+ <header class="section-head"><span class="section-num">3.5</span><h2>Stages 1–5 — universal protocol roadmap</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ The roadmap from "memory is CyberOS's audit ledger" (shipped today, Stage 0) to "Personal + Lumi's memory with multi-memory auto-evolve" (Stage 5, P3) is gated in five stages. Stages 1 and 2 are buildable today against the existing memory module; Stages 3–5 ride the P0+P2 critical path (AUTH + AI Gateway + TEN). The full design is normative in <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">MEMORY_AUTOSYNC_DESIGN.md</a> §3 and lands as Proposal P13 in <code>memory/docs/PROPOSAL.md</code>.
+ </p>
+
+ <div class="bbg-card p-5 mb-6">
+ <div class="mermaid">
+flowchart LR
+ subgraph S0 ["Stage 0 · shipped"]
+ S0L1["Layer 1<br>filesystem ledger<br>MMR · STH · 15 invariants"]
+ end
+ subgraph S1 ["Stage 1 · ready"]
+ S1A["Personal memory<br>any folder · portable"]
+ S1B["memory init / watch / status"]
+ S1C["watched_folders schema"]
+ end
+ subgraph S2 ["Stage 2 · 2-4 weeks"]
+ S2A["Capture daemon<br>FS watcher · Rust + notify"]
+ S2B["Cowork session hook"]
+ S2C["Claude Code hook"]
+ end
+ subgraph S3 ["Stage 3 · P2"]
+ S3A["Lumi's memory<br>cloud per-tenant"]
+ S3B["TEN · AUTH · AI Gateway"]
+ end
+ subgraph S4 ["Stage 4 · P2"]
+ S4A["2-way sync orchestrator<br>JWT push / pull"]
+ S4B["sync_class enforcement"]
+ end
+ subgraph S5 ["Stage 5 · P3"]
+ S5A["Multi-memory auto-evolve<br>synthesis sub-skill"]
+ S5B["nightly dedup · cluster · synthesize"]
+ end
+ S0 --> S1
+ S1 --> S2
+ S2 -. requires .-> S3
+ S3 --> S4
+ S4 --> S5
+ classDef shipped fill:#f5ede6,stroke:#45210e,stroke-width:2px
+ classDef ready fill:#fde7b3,stroke:#9c750a,stroke-width:2px
+ classDef designed fill:#f0eee9,stroke:#9c9286,stroke-dasharray:4 3
+ class S0L1 shipped
+ class S1A,S1B,S1C ready
+ class S2A,S2B,S2C,S3A,S3B,S4A,S4B,S5A,S5B designed
+ </div>
+ </div>
+
+ <h3 class="text-lg font-bold mb-3">Stage gating</h3>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Stage</th><th>Deliverable</th><th>Gating dependency</th><th>Buildable when</th><th>Effort</th></tr></thead>
+ <tbody>
+ <tr><td><strong>Stage 0</strong></td><td>Layer 1 filesystem ledger · 6 ops · 15 doctor invariants · MMR · Ed25519 STH · deterministic export · sync-conflict awareness</td><td>—</td><td><span class="pill pill-shipped">Shipped</span> — 233/235 tests (2 pre-existing invariant-check bugs, non-blocking), 13–15 doctor invariants on live memory</td><td>—</td></tr>
+ <tr><td><strong>Stage 1</strong></td><td>Personal memory — universal protocol: any folder, multi-folder watch, explicit-opt-in privacy floor, portable by folder copy. CLI: <code>memory init/watch/unwatch/status/capture</code>. Manifest schema + 2 new doctor invariants.</td><td>None — extends shipped memory module</td><td><strong>Now</strong> — no external deps</td><td>~1 week (1 IC)</td></tr>
+ <tr><td><strong>Stage 2</strong></td><td>Capture daemon: filesystem watcher (Rust + <code>notify</code>) · Cowork session hook · Claude Code hook · rate limiting + content dedup + PII detection. <em>Initial scope: Claude-only.</em> Slack/Granola/Notes/etc. deferred to explicit team adoption.</td><td>Stage 1</td><td><strong>2–4 weeks from Stage 1</strong></td><td>~3 weeks (1–2 ICs)</td></tr>
+ <tr><td><strong>Stage 3</strong></td><td>Lumi's memory — cloud-hosted org tenant deployment of the memory protocol. RLS-isolated Postgres + S3/R2. Per-user JWT issued by AUTH. Read scopes per AGENTS.md §3.6 / SKILL.md frontmatter.</td><td>AUTH + AI Gateway + TEN modules + thin-TEN-billing slice</td><td><strong>P2 (P2 · exit)</strong> per reviewer's reorder</td><td>~6–8 weeks (2 ICs)</td></tr>
+ <tr><td><strong>Stage 4</strong></td><td>2-way sync orchestrator: push state-machine (local-write → pending-push → pushed → confirmed) and pull state-machine (remote-write → pending-pull → imported). Conflict resolution = chain-position-wins + fresh-local-<code>put</code>. Configurable sync intervals.</td><td>Stage 3 + JWT wire protocol</td><td><strong>P2 (P2 · exit) — parallel to Stage 3</strong></td><td>~4 weeks (1 IC)</td></tr>
+ <tr><td><strong>Stage 5</strong></td><td>Multi-memory auto-evolve: synthesis-author CUO sub-skill runs nightly over Lumi's memory. Emits daily / weekly / decision-pending wisdom artefacts. Cross-person dedup, pattern recognition, accumulated org learning.</td><td>Stage 4 + synthesis sub-skill spec</td><td><strong>P3 (P3 · exit)</strong></td><td>~6 weeks (1 IC + 1 part-time CDO seat)</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Personal memory sub-architecture</h3>
+ <div class="bbg-card p-5 mb-6">
+ <div class="mermaid">
+graph TB
+ subgraph CAP ["Capture surfaces (Stage 2)"]
+ FSW["Filesystem watcher<br>Rust + notify"]
+ COW["Cowork session hook"]
+ CCH["Claude Code hook"]
+ MCP_S["MCP feeds (deferred)<br>Slack · Granola · Notes"]
+ CLI_C["cyberos memory capture<br>manual one-off"]
+ end
+ subgraph PROTO ["memory protocol (Stage 0 — shipped)"]
+ OPS["canonical ops<br>put · move · delete"]
+ WRITER["writer<br>group-commit ledger"]
+ MMR_P["MMR + Ed25519 STH"]
+ INV["15 doctor invariants"]
+ end
+ subgraph PB_STORE ["~/.cyberos-memory/ (Stage 1 — ready)"]
+ MANI["manifest.json<br>watched_folders[]"]
+ MEMS["memories/{kind}/{hex}/{slug}.md"]
+ AUD["audit/current.binlog"]
+ HEAD_S["HEAD seqlock"]
+ end
+ subgraph SYNC_O ["Sync orchestrator (Stage 4 — P2)"]
+ OUT["push queue<br>shareable+ memories"]
+ IN["pull queue<br>shared team memories"]
+ end
+ FSW --> OPS
+ COW --> OPS
+ CCH --> OPS
+ MCP_S -. when enabled .-> OPS
+ CLI_C --> OPS
+ OPS --> WRITER
+ WRITER --> MMR_P
+ WRITER --> AUD
+ WRITER --> MEMS
+ WRITER --> HEAD_S
+ INV -. validates .-> AUD
+ AUD --> OUT
+ IN -.-> OPS
+ classDef shipped fill:#f5ede6,stroke:#45210e
+ classDef ready fill:#fde7b3,stroke:#9c750a
+ classDef designed fill:#f0eee9,stroke:#9c9286,stroke-dasharray:4 3
+ classDef deferred fill:#faf8f6,stroke:#c5bdb0,stroke-dasharray:2 2
+ class OPS,WRITER,MMR_P,INV,MANI,MEMS,AUD,HEAD_S shipped
+ class FSW,COW,CCH,CLI_C ready
+ class OUT,IN designed
+ class MCP_S deferred
+ </div>
+ </div>
+
+ <h3 class="text-lg font-bold mb-3">Lumi's memory sub-architecture (Stages 3–5)</h3>
+ <div class="bbg-card p-5">
+ <div class="mermaid">
+graph TB
+ subgraph PEOPLE ["Personal memories (N humans per org)"]
+ PB1["Stephen's<br>~/.cyberos-memory/"]
+ PB2["Teammate A's<br>~/.cyberos-memory/"]
+ PB3["Teammate B's<br>~/.cyberos-memory/"]
+ end
+ subgraph SYNC ["Sync transport (Stage 4)"]
+ PUSH["push pipeline<br>shareable+ → Lumi"]
+ PULL["pull pipeline<br>shared → personal"]
+ JWT["AUTH JWT<br>RS256 · per-user"]
+ end
+ subgraph LUMI ["Lumi's memory — cloud tenant (Stage 3)"]
+ LMANI["manifest.json<br>tenant-scoped"]
+ LAUD["audit/binlog<br>per-tenant"]
+ LMEMS["memories/{kind}/{hex}/.md<br>RLS by org_id"]
+ PGV["pgvector HNSW<br>BGE-M3 embeddings"]
+ AGE["Apache AGE<br>org relationship graph"]
+ end
+ subgraph SYN ["Synthesis sub-skill (Stage 5)"]
+ NIGHTLY["nightly walk<br>last 24h memories"]
+ CLUSTER["topic cluster<br>BGE-M3 + DBSCAN"]
+ DEDUP["cross-person dedup<br>semantic + chain"]
+ WISDOM["synthesis@1 artefacts<br>daily · weekly · decisions-pending"]
+ end
+ subgraph LUMI_R ["Lumi (the Genie) reads here"]
+ CUO["CUO router<br>tenant-scoped reads"]
+ end
+ PB1 --> PUSH
+ PB2 --> PUSH
+ PB3 --> PUSH
+ PUSH --> JWT
+ JWT --> LAUD
+ LAUD --> LMEMS
+ LMEMS --> PGV
+ LMEMS --> AGE
+ LMEMS --> NIGHTLY
+ NIGHTLY --> CLUSTER
+ CLUSTER --> DEDUP
+ DEDUP --> WISDOM
+ WISDOM --> LMEMS
+ LMEMS --> PULL
+ PULL --> PB1
+ PULL --> PB2
+ PULL --> PB3
+ LMEMS --> CUO
+ PGV --> CUO
+ AGE --> CUO
+ classDef shipped fill:#f5ede6,stroke:#45210e
+ classDef designed fill:#f0eee9,stroke:#9c9286,stroke-dasharray:4 3
+ class PB1,PB2,PB3 shipped
+ class PUSH,PULL,JWT,LMANI,LAUD,LMEMS,PGV,AGE,NIGHTLY,CLUSTER,DEDUP,WISDOM,CUO designed
+ </div>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Sync-class privacy model</h3>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Class</th><th>Visibility</th><th>Stays where</th><th>Default for</th></tr></thead>
+ <tbody>
+ <tr><td><code>private</code></td><td>Personal memory only · never pushed</td><td>Owner's memory, all machines (via folder copy)</td><td>Random browser scraps, half-finished notes, tool-output snippets, anything PII-flagged</td></tr>
+ <tr><td><code>personal</code></td><td>Owner's Personal memory · syncs across owner's own machines (laptop ↔ desktop) but NOT to Lumi</td><td>Owner's memories only (Stage 4+ multi-device sync)</td><td>Personal notes, drafts, exploratory work</td></tr>
+ <tr><td><code>shareable</code></td><td>Eligible for push to Lumi's memory · subject to ACL filter at push time</td><td>Owner's memory + Lumi's tenant (sync push gated by PII + ACL)</td><td>Decisions, completed deliverables, meeting outcomes</td></tr>
+ <tr><td><code>team-public</code></td><td>Pushed to Lumi's memory AND visible to all org members via shared scope</td><td>Owner + Lumi + all org members' Personal memories (via pull)</td><td>Locked policy decisions, RFC approvals, OKR commits</td></tr>
+ <tr><td><code>org-only</code></td><td>Pushed to Lumi's memory but restricted by RBAC role</td><td>Owner + Lumi + RBAC-eligible members' Personal memories</td><td>Compensation decisions, hiring decisions, financial state</td></tr>
+ </tbody>
+ </table>
+ </div>
+ <p class="text-sm mt-3" style="color:var(--text-mute)"><strong>Default:</strong> <code>private</code>. Per-folder override at <code>cyberos memory watch &lt;path&gt; --default-sync-class &lt;class&gt;</code>. Per-memory override via <code>cyberos memory reclass &lt;memory-id&gt; &lt;class&gt;</code>.</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- DATA MODEL -->
+<!-- ============================================================ -->
+<section id="data-model" class="module-section">
+ <header class="section-head"><span class="section-num">4</span><h2>Data model</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ Every entity in memory traces to one or more files on disk. The schema is closed (<code>memory.schema.json</code>); unknown <code>kind</code> values are rejected at write time. The diagram below shows the entity relationships as they manifest in the filesystem layer.
+ </p>
+
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
+erDiagram
+ MANIFEST ||--o{ AUDIT_SEGMENT: "tracks segments"
+ MANIFEST ||--o{ MEMORY_FILE: "indexes"
+ MANIFEST ||--o{ CHECKPOINT: "tracks last_sth"
+ AUDIT_SEGMENT ||--|{ AUDIT_FRAME: "contains"
+ AUDIT_FRAME }o--|| MEMORY_FILE: "describes mutation of"
+ AUDIT_FRAME ||--o| MMR_LEAF: "becomes"
+ MMR_LEAF }o--o{ MMR_PEAK: "rolls up to"
+ MMR_PEAK ||--o{ CHECKPOINT: "signed by"
+ CHECKPOINT ||--|| STH_SIG: "carries Ed25519"
+ MEMORY_FILE ||--o| SIDECAR_META: "has sidecar"
+ MEMORY_FILE ||--o| ENCRYPTED_BODY: "may be ciphertext"
+ MEMORY_FILE }o--o| TOMBSTONE: "may be tombstoned"
+
+ MANIFEST {
+ string store_id PK
+ string layout_version
+ int64 audit_chain_head
+ int64 last_seq
+ string last_sth_root
+ string crypto_mode "chained or sth_only"
+ obj imports "fingerprint to last_imported_seq"
+ }
+ AUDIT_SEGMENT {
+ string filename PK "YYYY-MM dot binlog"
+ bool sealed
+ bool compacted "zstd"
+ int64 first_seq
+ int64 last_seq
+ }
+ AUDIT_FRAME {
+ int64 seq PK
+ int64 ts_ns
+ string op "put or move or delete"
+ string path
+ string body_hash "SHA-256"
+ string prev_chain
+ string chain "SHA-256"
+ string actor
+ obj extra "imported_from, foreign_chain, etc"
+ }
+ MMR_LEAF {
+ int64 leaf_index PK
+ string leaf_hash "= chain"
+ int64 seq FK
+ }
+ MMR_PEAK {
+ int height
+ string peak_hash
+ int64 position
+ }
+ CHECKPOINT {
+ string filename PK "timestamp-root json file"
+ int64 tree_size
+ string mmr_root
+ int64 signed_at_ns
+ }
+ STH_SIG {
+ string algorithm "Ed25519"
+ string pubkey_id
+ bytes signature
+ }
+ MEMORY_FILE {
+ string path PK "memories-kind-hex-file.md"
+ string kind "decisions or facts or people or projects or preferences or drift or refinements"
+ string body_format "frontmatter or sidecar"
+ string body_hash
+ string state "active or tombstoned or purged"
+ }
+ SIDECAR_META {
+ string path PK ".meta.json"
+ string kind
+ string sync_class "private or shareable"
+ string classification "public or internal or confidential or restricted"
+ obj cipher "envelope when encrypted"
+ obj acl
+ string body_hash
+ }
+ ENCRYPTED_BODY {
+ string envelope_id PK
+ string algo "AES-256-GCM"
+ bytes ciphertext
+ bytes iv
+ bytes tag
+ }
+ TOMBSTONE {
+ string path PK
+ string reason
+ int64 tombstoned_at_seq
+ }
+ </div>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Universal-protocol entities (P13 — Stages 1–5)</h3>
+ <p class="text-sm text-slate-600 mb-3">
+ Five new entities encode the universal-protocol scope. Three are managed by the Personal memory owner (WatchedFolder · CaptureEvent · SyncState); two are managed on Lumi's memory (SharedMemoryAcl · SynthesisArtefact).
+ </p>
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
+erDiagram
+ MANIFEST ||--o{ WATCHED_FOLDER: "lists"
+ WATCHED_FOLDER ||--o{ CAPTURE_EVENT: "produces"
+ CAPTURE_EVENT ||--|| MEMORY_FILE: "emits"
+ MEMORY_FILE ||--o| SYNC_STATE: "tracked by"
+ SYNC_STATE }o--|| LUMI_ROW: "pushed to"
+ LUMI_ROW ||--o{ SHARED_MEMORY_ACL: "scoped by"
+ SHARED_MEMORY_ACL }o--o{ ORG_MEMBER: "grants to"
+ LUMI_ROW ||--o{ SYNTHESIS_INPUT: "feeds"
+ SYNTHESIS_INPUT }o--|| SYNTHESIS_ARTEFACT: "rolls up to"
+
+ WATCHED_FOLDER {
+ string path PK
+ string default_sync_class
+ string default_classification
+ int64 added_at_seq
+ string added_by_actor
+ bool active
+ }
+ CAPTURE_EVENT {
+ string event_id PK
+ string capture_surface "filesystem | cowork | claude-code | mcp | cli"
+ string source_path_or_url
+ int64 captured_at_ns
+ string capture_daemon_version
+ string trigger_kind "create | modify | commit | session-end | tool-call"
+ bool auto_capture "vs manual"
+ obj pii_flags
+ }
+ SYNC_STATE {
+ string memory_path PK
+ string state "local-write | pending-push | pushed | confirmed | pending-pull | imported"
+ int64 last_attempt_ns
+ int64 last_success_ns
+ string lumi_chain_hash "set on confirm"
+ int retry_count
+ }
+ LUMI_ROW {
+ int64 lumi_seq PK
+ string tenant_id FK
+ string user_id FK
+ string source_memory_fingerprint
+ int64 source_local_seq
+ int64 imported_at_ns
+ string sync_class
+ }
+ SHARED_MEMORY_ACL {
+ string memory_path PK
+ string subject "user:* | role:* | org:*"
+ string rights "read | write | grant"
+ bool inherited "from folder default"
+ int64 granted_at_seq
+ }
+ ORG_MEMBER {
+ string user_id PK
+ string email
+ string role "from AUTH RBAC catalogue"
+ obj rbac_grants
+ }
+ SYNTHESIS_INPUT {
+ string memory_path PK
+ int64 cluster_id FK
+ float relevance_score
+ }
+ SYNTHESIS_ARTEFACT {
+ string artefact_path PK "memories-synthesis-daily-YYYY-MM-DD.md"
+ string kind "daily | weekly | decisions-pending"
+ int64 walked_from_lumi_seq
+ int64 walked_to_lumi_seq
+ obj source_memory_paths "array"
+ string synthesis_skill_version
+ obj cluster_meta
+ }
+ </div>
+ </div>
+
+ <h3 class="text-lg font-bold mb-3">Filesystem layout</h3>
+ <div class="bbg-card p-5">
+ <pre class="text-xs"><code>.cyberos-memory/
+├── manifest.json # store metadata (§6)
+├── HEAD # 8-byte LE u64 seq counter; atomic rename
+├──.lock # leased coordination record (§4.2)
+├── audit/
+│ ├── current.binlog # active segment
+│ ├── 2026-04.binlog # sealed monthly segment
+│ ├── 2026-04.binlog.zst # compacted (zstd, deterministic)
+│ ├── checkpoints/ # per-consolidation Ed25519 STH anchors
+│ │ └── 2026-05-14T03Z-{root}.json
+│ └── *.jsonl # legacy v1 ledger (read-only post-cutover)
+├── memories/
+│ ├── decisions/<2hex>/<2hex>/<slug>.md[.meta.json]
+│ ├── facts/...
+│ ├── people/...
+│ ├── projects/...
+│ ├── preferences/...
+│ ├── drift/...
+│ └── refinements/...
+├── meta/ company/ module/ member/ client/ project/ persona/
+├── conflicts/ # soft-tombstone bodies + sync-FS quarantine
+├── exports/ # deterministic zip targets (excluded from chain)
+└── index/manifest.json # SQLite index rebuild marker</code></pre>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- API SURFACE -->
+<!-- ============================================================ -->
+<section id="api-surface" class="module-section">
+ <header class="section-head"><span class="section-num">5</span><h2>API surface</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ memory exposes three surfaces: a GraphQL subgraph (P0 federation gateway · planned), an MCP tool catalogue (Claude / Codex / Cursor — partial), and a CLI (<code>cyberos</code> — 30 subcommands shipped).
+ </p>
+
+ <h3 class="text-lg font-bold mb-3 mt-6">GraphQL subgraph (planned · P0+)</h3>
+ <p class="text-sm text-slate-600 mb-3">Federated via Apollo Router v2.5+. Types are entity-key'd by store path so other subgraphs can extend them.</p>
+ <div class="bbg-card p-5 mb-5">
+<pre><code class="language-graphql">extend schema
+ @link(url: "https://specs.apollo.dev/federation/v2.5", import: ["@key", "@external", "@shareable"])
+
+type Memory @key(fields: "path") {
+ path: String!
+ kind: MemoryKind!
+ bodyHash: String!
+ state: MemoryState!
+ syncClass: SyncClass!
+ classification: Classification
+ acl: [ACLEntry!]
+ body: String # null if encrypted + caller lacks key
+ createdAt: DateTime!
+ updatedAt: DateTime!
+}
+
+type AuditRow @key(fields: "seq") {
+ seq: Int!
+ tsNs: BigInt!
+ op: MemoryOp!
+ path: String!
+ bodyHash: String!
+ prevChain: String!
+ chain: String!
+ actor: String!
+ extra: JSON
+}
+
+type Checkpoint @key(fields: "filename") {
+ filename: String!
+ treeSize: Int!
+ mmrRoot: String!
+ signedAtNs: BigInt!
+ signature: STHSignature!
+}
+
+type STHSignature { algorithm: String! pubkeyId: String! signature: String! }
+
+enum MemoryKind { decisions facts people projects preferences drift refinements }
+enum MemoryOp { put move delete }
+enum MemoryState { active tombstoned purged }
+enum SyncClass { private shareable }
+enum Classification { public internal confidential restricted }
+
+type Query {
+ memory(path: String!): Memory
+ memories(kind: MemoryKind, since: BigInt, limit: Int = 50): [Memory!]!
+ auditRow(seq: Int!): AuditRow
+ auditRows(fromSeq: Int!, limit: Int = 100): [AuditRow!]!
+ checkpoint(filename: String!): Checkpoint
+ state: MemoryState!
+ inclusionProof(seq: Int!): InclusionProof!
+}
+
+type Mutation {
+ put(path: String!, body: String!, meta: JSON): PutResult!
+ move(src: String!, dst: String!): MoveResult!
+ delete(path: String!, mode: DeleteMode! = TOMBSTONE, reason: String): DeleteResult!
+ consolidate: Checkpoint! # admin
+ import(sourceFingerprint: String!, bundle: Upload!): ImportSession!
+}
+
+enum DeleteMode { TOMBSTONE PURGE }</code></pre>
+ </div>
+
+ <h3 class="text-lg font-bold mb-3">MCP tool catalogue</h3>
+ <p class="text-sm text-slate-600 mb-3">Exposed via the MCP Gateway (P0 infra) to Claude / Codex / Cursor / any 2025-11-25-spec client. Tool annotations include capability scope so the broker can enforce least-privilege.</p>
+ <div class="bbg-card p-5 mb-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Tool name</th><th>Inputs</th><th>Outputs</th><th>Annotations</th></tr></thead>
+ <tbody>
+ <tr><td><code>memory.put</code></td><td>path, body, meta?</td><td><code>{seq, chain, body_hash}</code></td><td>destructive=false · idempotent=true · scope=write</td></tr>
+ <tr><td><code>memory.view</code></td><td>path</td><td><code>{body, meta, hash}</code></td><td>destructive=false · readonly · scope=read</td></tr>
+ <tr><td><code>memory.move</code></td><td>src, dst</td><td><code>{seq, chain}</code></td><td>destructive=true · scope=write</td></tr>
+ <tr><td><code>memory.delete</code></td><td>path, mode, reason?</td><td><code>{seq, chain, mode}</code></td><td>destructive=true · purge requires gate · scope=delete</td></tr>
+ <tr><td><code>memory.search</code></td><td>query, kind?, limit?</td><td><code>Memory</code></td><td>readonly · semantic + lexical · scope=read</td></tr>
+ <tr><td><code>memory.audit_tail</code></td><td>fromSeq, limit</td><td><code>AuditRow</code></td><td>readonly · scope=audit</td></tr>
+ <tr><td><code>memory.prove</code></td><td>seq</td><td><code>InclusionProof</code></td><td>readonly · MMR proof · scope=read</td></tr>
+ <tr><td><code>memory.verify_proof</code></td><td>seq, proof</td><td><code>{valid, root}</code></td><td>readonly · scope=read</td></tr>
+ <tr><td><code>memory.state</code></td><td>—</td><td><code>MemoryState</code></td><td>readonly · scope=read</td></tr>
+ <tr><td><code>memory.doctor</code></td><td>repair?</td><td><code>{invariants}</code></td><td>readonly by default · scope=admin</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3 class="text-lg font-bold mb-3">CLI surface — <code>cyberos</code></h3>
+ <p class="text-sm text-slate-600 mb-3">30 subcommands. Every chain-touching operation is single-writer and lease-protected. Examples below; full reference at <a href="#cli-usage">CLI usage</a>.</p>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Subcommand</th><th>Purpose</th><th>Example</th></tr></thead>
+ <tbody>
+ <tr><td><code>cyberos put</code></td><td>Append a memory file</td><td><code>cyberos put memories/facts/x.md -</code></td></tr>
+ <tr><td><code>cyberos view</code></td><td>Read a memory body</td><td><code>cyberos view memories/facts/x.md</code></td></tr>
+ <tr><td><code>cyberos move</code></td><td>Rename within store</td><td><code>cyberos move a.md b.md</code></td></tr>
+ <tr><td><code>cyberos delete</code></td><td>Tombstone (default) or purge</td><td><code>cyberos delete x.md --mode tombstone</code></td></tr>
+ <tr><td><code>cyberos doctor</code></td><td>Verify all invariants</td><td><code>cyberos doctor [--repair]</code></td></tr>
+ <tr><td><code>cyberos state</code></td><td>Chain head + agent state</td><td><code>cyberos state</code></td></tr>
+ <tr><td><code>cyberos consolidate</code></td><td>Walk → Compact → Sign → Publish</td><td><code>cyberos consolidate</code></td></tr>
+ <tr><td><code>cyberos prove</code></td><td>MMR inclusion proof</td><td><code>cyberos prove --seq 12345</code></td></tr>
+ <tr><td><code>cyberos verify-proof</code></td><td>Verify proof bundle</td><td><code>cyberos verify-proof bundle.json</code></td></tr>
+ <tr><td><code>cyberos export</code></td><td>Deterministic zip</td><td><code>cyberos export out.zip</code></td></tr>
+ <tr><td><code>cyberos import</code></td><td>Cross-memory merge</td><td><code>cyberos import teammate.zip</code></td></tr>
+ <tr><td><code>cyberos prune</code></td><td>Sweep zstd-archived segments</td><td><code>cyberos prune --older-than 90d</code></td></tr>
+ <tr><td><code>cyberos backup</code></td><td>Incremental snapshot</td><td><code>cyberos backup./backups/</code></td></tr>
+ <tr><td><code>cyberos serve</code></td><td>HTTP REST mode</td><td><code>cyberos serve --port 7878</code></td></tr>
+ <tr><td><code>cyberos publish</code></td><td>Mobile static site</td><td><code>cyberos publish./site/</code></td></tr>
+ <tr><td><code>cyberos digest</code></td><td>Daily LLM summary</td><td><code>cyberos digest --date today</code></td></tr>
+ <tr><td><code>cyberos search</code></td><td>Lexical + semantic</td><td><code>cyberos search "Singapore HoldCo"</code></td></tr>
+ <tr><td><code>cyberos validate</code></td><td>Schema-validate frontmatter</td><td><code>cyberos validate x.md</code></td></tr>
+ <tr><td><code>cyberos walk</code></td><td>Replay binlog</td><td><code>cyberos walk --from-seq 0</code></td></tr>
+ <tr><td><code>cyberos session start/end</code></td><td>Bracket import or batch</td><td><code>cyberos session start</code></td></tr>
+ <tr><td colspan="3"><em>+ 10 more: <code>encrypt</code>, <code>decrypt</code>, <code>rotate-key</code>, <code>conflicts</code>, <code>tail</code>, <code>show-config</code>, <code>show-manifest</code>, <code>checkpoints</code>, <code>repair-index</code>, <code>profile</code>.</em></td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">CLI surface — universal protocol (Stage 1+ designed)</h3>
+ <p class="text-sm text-slate-600 mb-3">Eight new subcommands extend the existing 30. Implements §15.1 / §15.4 of <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">MEMORY_AUTOSYNC_DESIGN.md</a> — locked 2026-05-14. All chain-touching operations remain single-writer + lease-protected.</p>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Subcommand</th><th>Purpose</th><th>Stage</th><th>Example</th></tr></thead>
+ <tbody>
+ <tr><td><code>cyberos memory init</code></td><td>Create <code>$HOME/.cyberos-memory/</code>; explicit opt-in privacy floor (watches nothing yet)</td><td>1</td><td><code>cyberos memory init</code></td></tr>
+ <tr><td><code>cyberos memory watch &lt;path&gt;</code></td><td>Add folder to capture daemon's watch list. Per-folder <code>--default-sync-class</code> + <code>--default-classification</code></td><td>1</td><td><code>cyberos memory watch ~/Projects/cyberos --default-sync-class shareable</code></td></tr>
+ <tr><td><code>cyberos memory unwatch &lt;path&gt;</code></td><td>Remove folder from watch list. Captured memories remain; new activity in that folder stops landing on the chain</td><td>1</td><td><code>cyberos memory unwatch ~/Documents/Personal</code></td></tr>
+ <tr><td><code>cyberos memory status</code></td><td>Full Personal-memory digest: watched-folder list, last sync time, pending-PII count, audit-row count, doctor invariant summary</td><td>1</td><td><code>cyberos memory status [--json]</code></td></tr>
+ <tr><td><code>cyberos memory capture &lt;text-or-path&gt;</code></td><td>One-off manual capture (CLI fallback when no daemon-observed surface). Emits a <code>facts</code> or <code>discussions</code> memory depending on input</td><td>1</td><td><code>cyberos memory capture "Locked: AI Gateway ships before AUTH"</code></td></tr>
+ <tr><td><code>cyberos memory sync</code></td><td>Trigger sync window now (force push pending + pull latest). Subject to AUTH JWT + Lumi's memory reachability</td><td>4</td><td><code>cyberos memory sync [--push-only|--pull-only]</code></td></tr>
+ <tr><td><code>cyberos memory sync-mode &lt;mode&gt;</code></td><td>Set sync cadence: <code>realtime</code> (10 s) · <code>frequent</code> (1 min) · <code>normal</code> (5 min · default) · <code>infrequent</code> (1 hr) · <code>manual</code></td><td>4</td><td><code>cyberos memory sync-mode normal</code></td></tr>
+ <tr><td><code>cyberos memory pending</code></td><td>List items the daemon is holding back: PII-detected sync candidates, new-folder defaults awaiting confirmation, conflict-resolution prompts</td><td>2 / 4</td><td><code>cyberos memory pending [--resolve]</code></td></tr>
+ <tr><td><code>cyberos memory reclass &lt;memory-id&gt; &lt;class&gt;</code></td><td>Change a memory's <code>sync_class</code> (private / personal / shareable / team-public / org-only). Propagates to next sync window</td><td>1 / 4</td><td><code>cyberos memory reclass memories/decisions/holdco-flip.md team-public</code></td></tr>
+ </tbody>
+ </table>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- KEY FLOWS -->
+<!-- ============================================================ -->
+<section id="key-flows" class="module-section">
+ <header class="section-head"><span class="section-num">6</span><h2>Key flows</h2></header>
+
+ <h3 class="text-lg font-bold mb-3 mt-4">Flow 1 — Write path (the hot path)</h3>
+ <div class="bbg-card p-5 mb-6">
+ <div class="mermaid">
+sequenceDiagram
+ autonumber
+ participant C as Caller (agent / CLI / subgraph)
+ participant O as ops.put
+ participant L as lock.acquire
+ participant W as writer.append
+ participant F as fsync.barrier
+ participant M as mmr.append_leaf
+ participant S as sth.maybe_sign
+ participant H as HEAD seqlock
+ participant I as index.upsert
+
+ C->>O: put(path, body, meta)
+ O->>O: validate path (no traversal, schema-conformant)
+ O->>O: hash body (SHA-256)
+ O->>L: acquire lease (10s TTL)
+ L-->>O: lease(pid, monotonic_ns)
+ O->>W: build frame {seq, ts_ns, op:"put", body_hash, prev_chain}
+ W->>W: chain = SHA-256(canonical(frame) || prev_chain)
+ W->>F: write tmpfile + rename + parent-dir fsync
+ Note over F: macOS F_BARRIERFSYNC per-batch<br>F_FULLFSYNC at checkpoint
+ W->>M: append_leaf(chain)
+ M-->>W: leaf_index, peaks
+ W->>S: check trigger (every consolidation OR explicit)
+ alt consolidate trigger
+ S->>S: sign tree head (Ed25519)
+ S-->>W: checkpoint written
+ end
+ W->>H: advance HEAD (atomic 8-byte rename)
+ W->>I: upsert SQLite index row
+ L-->>O: release lease
+ O-->>C: {seq, chain, body_hash}
+ </div>
+ <p class="text-xs text-slate-500 mt-3">Hot-path latency budget: ~120 µs group-committed (10+ concurrent writes share one <code>fsync</code>). Cold-path single writer: ~3 ms. STH signing: amortised over the consolidation window.</p>
+ </div>
+
+ <h3 class="text-lg font-bold mb-3">Flow 2 — Read path (lock-free seqlock)</h3>
+ <div class="bbg-card p-5 mb-6">
+ <div class="mermaid">
+sequenceDiagram
+ autonumber
+ participant C as Caller
+ participant R as reader.view
+ participant H as HEAD seqlock
+ participant FS as filesystem (mmap)
+
+ C->>R: view(path)
+ R->>H: snapshot HEAD seq (read-only)
+ H-->>R: seq_pre
+ R->>FS: mmap body file
+ R->>FS: stat body file (mtime, ino, size)
+ R->>H: re-read HEAD seq
+ H-->>R: seq_post
+ alt seq_pre == seq_post AND stat unchanged
+ R-->>C: {body, meta, hash} (~6 µs hot)
+ else inconsistent — writer raced
+ R->>R: retry (bounded, exponential backoff)
+ Note over R: max 3 retries; then fall back to lock-guarded read
+ end
+ </div>
+ <p class="text-xs text-slate-500 mt-3">No <code>.lock</code> acquisition on the read path. Workers / agents read concurrently at memory bandwidth.</p>
+ </div>
+
+ <h3 class="text-lg font-bold mb-3">Flow 3 — Consolidation (Walk → Compact → Sign → Publish)</h3>
+ <div class="bbg-card p-5 mb-6">
+ <div class="mermaid">
+sequenceDiagram
+ autonumber
+ participant T as Trigger (size above 5 MB OR rows above 5,000 OR manual)
+ participant C as consolidate.run
+ participant WA as walker (verify)
+ participant CO as compact (zstd archive)
+ participant SI as sign (Ed25519 STH)
+ participant PU as publish (advance manifest)
+
+ T->>C: consolidate
+ C->>WA: walk binlog from last checkpoint
+ WA->>WA: verify frame CRC, chain continuity, MMR cross-check
+ WA-->>C: invariants OK
+ C->>CO: seal current.binlog → 2026-MM.binlog
+ CO->>CO: zstd compress (deterministic, level 6)
+ CO-->>C: 2026-MM.binlog.zst
+ C->>SI: sign(tree_size, mmr_root)
+ SI-->>C: checkpoint JSON with Ed25519 sig
+ C->>PU: atomically advance manifest.audit_chain_head + last_sth
+ PU-->>C: published
+ C-->>T: {checkpoint_filename, tree_size}
+ </div>
+ </div>
+
+ <h3 class="text-lg font-bold mb-3">Flow 4 — Conflict resolution &amp; recovery (FROZEN_RECOVERABLE)</h3>
+ <div class="bbg-card p-5 mb-6">
+ <div class="mermaid">
+sequenceDiagram
+ autonumber
+ participant A as Agent (READY)
+ participant CHK as Pre-write check (§1)
+ participant DOC as cyberos doctor
+ participant USER as Operator
+ participant REP as doctor --repair
+
+ A->>CHK: about to write
+ CHK->>CHK: verify chain tip vs ledger
+ alt divergent
+ CHK->>A: transition FROZEN_RECOVERABLE
+ A->>DOC: report inconsistency
+ DOC->>DOC: run 15 invariants
+ DOC->>USER: surface specific failure (e.g. chain gap @ seq 12345)
+ USER->>REP: cyberos doctor --repair --reason "iCloud merge artefact"
+ REP->>REP: safe auto-fixes only (rebuild index, replay tail)
+ REP-->>A: state → READY (if all 15 pass)
+ else catastrophic
+ CHK->>A: transition FROZEN_HUMAN
+ A->>USER: refuse all writes; human intervention required
+ end
+ </div>
+ </div>
+
+ <h3 class="text-lg font-bold mb-3">Flow 5 — GDPR purge (Article 17 right to erasure)</h3>
+ <div class="bbg-card p-5">
+ <div class="mermaid">
+sequenceDiagram
+ autonumber
+ participant SUB as Data subject (user)
+ participant OP as Operator (DPO)
+ participant C as Chat session
+ participant D as delete(path, "purge", reason)
+ participant W as writer.append (purge row)
+
+ SUB->>OP: DSAR / erasure request
+ OP->>C: explicit chat-turn approval (§3.6 gate)
+ C->>D: cyberos delete &lt;path&gt; --mode purge --reason "DSAR-2026-014"
+ D->>D: validate reason non-empty
+ D->>W: append purge row {op:"delete", path, body_hash, mode:"purge", reason}
+ W-->>D: chain committed
+ D->>D: redact body file (zero-fill + unlink)
+ D->>D: tombstone sidecar (retain meta minus PII)
+ Note over W: The FACT of purge is itself a ledger leaf<br>and is not itself erasable.
+ D-->>OP: {seq, chain, redacted_hash}
+ </div>
+ <p class="text-xs text-slate-500 mt-3">Per AGENTS.md §17.1, the audit fact of erasure is unerasable. The body is gone; the chain remembers the redaction.</p>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- LIFECYCLE -->
+<!-- ============================================================ -->
+<section id="lifecycle" class="module-section">
+ <header class="section-head"><span class="section-num">7</span><h2>Memory file lifecycle</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ A single memory file traverses six states from authorship to long-term archive. The agent state machine (READY · FROZEN_RECOVERABLE · FROZEN_HUMAN) gates every transition that involves a write.
+ </p>
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
+stateDiagram-v2
+ [*] --> Composed: agent / user authors body + frontmatter
+ Composed --> Submitted: ops.put(path, body, meta)
+ Submitted --> Chained: writer appends audit frame · prev_chain + chain
+ Chained --> Indexed: SQLite index upsert · MMR leaf append
+ Indexed --> Signed: consolidation window OR explicit cyberos consolidate
+ Signed --> Consolidated: STH written · manifest advanced · segment sealed
+ Consolidated --> Exported: cyberos export → deterministic zip
+ Exported --> Imported: cyberos import on a teammate's memory
+ Consolidated --> Tombstoned: cyberos delete --mode tombstone
+ Tombstoned --> Purged: cyberos delete --mode purge (DSAR gate)
+ Purged --> [*]: body redacted · chain row preserved as erasure fact
+ Consolidated --> Archived: cyberos prune (zstd) · move to cold tier (planned)
+ Indexed --> Conflicted: sync-FS race detected
+ Conflicted --> Indexed: cyberos conflicts resolve
+ </div>
+ </div>
+
+ <h3 class="text-lg font-bold mb-3">Agent state machine</h3>
+ <div class="bbg-card p-5">
+ <div class="mermaid">
+stateDiagram-v2
+ [*] --> READY
+ READY --> FROZEN_RECOVERABLE: invariant failure (chain gap, MMR mismatch)
+ FROZEN_RECOVERABLE --> READY: cyberos doctor --repair
+ FROZEN_RECOVERABLE --> FROZEN_HUMAN: catastrophic divergence
+ READY --> FROZEN_HUMAN: chain corruption or manifest unparseable
+ FROZEN_HUMAN --> READY: cyberos doctor repair with reason flag
+ note right of FROZEN_RECOVERABLE
+ Reads OK · writes refused
+ Auto-repair available
+ end note
+ note right of FROZEN_HUMAN
+ Reads OK · writes refused
+ Human signoff required
+ end note
+ </div>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- FRs (stub — see skill module's feature-request-author workflow) -->
+<!-- ============================================================ -->
+<section id="functional-requirements" class="module-section">
+ <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
+ <div class="bbg-card p-5">
+ <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author" target="_blank" rel="noopener" class="font-semibold" style="color:var(--umber-700)">feature-request-author</a> Agent Skill.</p>
+ <table class="kt mt-3">
+ <thead><tr><th>FR</th><th>Title</th><th>Status</th></tr></thead>
+ <tbody>
+ <tr><td><code>FR-MEMORY-101</code></td><td>Layer 2 ingest pipeline — cursor + binlog_tail + chain_anchor + entity_extract + pgvector upsert + daemon main loop + /metrics</td><td><span class="pill pill-shipped">shipped · 2026-05-18 (Wave 1)</span></td></tr>
+ <tr><td><code>FR-MEMORY-108</code></td><td>Apache AGE graph mirror + search API</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ </tbody>
+ </table>
+ <p class="text-sm mt-3" style="color:var(--text-mute)">Additional memory FRs land here as they are re-authored via the <code>feature-request-author</code> skill.</p>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- NFRs -->
+<!-- ============================================================ -->
+<section id="non-functional-requirements" class="module-section">
+ <header class="section-head"><span class="section-num">9</span><h2>Non-Functional Requirements</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">Latency, throughput, and durability budgets specific to memory. Cross-referenced at <a href="../../reference/nfr-catalog.html#memory" class="text-blue-700 font-semibold underline">nfr-catalog.html#memory</a>.</p>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
+ <tbody>
+ <tr><td><code>N(FR pending)</code></td><td>Write p50 (group-committed)</td><td>≤ 150 µs</td><td><code>bench/throughput.py</code> · nightly</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Write p95 (group-committed)</td><td>≤ 500 µs</td><td>bench/throughput · alert on regression &gt; 10%</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Write p99 (cold, single writer)</td><td>≤ 10 ms</td><td>bench/cold_cli.py</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Read p50 (mmap seqlock)</td><td>≤ 10 µs</td><td>bench/reader.py</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Search p95 (lexical)</td><td>≤ 50 ms over 10k memories</td><td>bench/search.py</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Search p95 (semantic, local BGE-M3)</td><td>≤ 200 ms over 10k memories</td><td>bench/semantic.py</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Sustained write throughput</td><td>≥ 8,000 ops/sec single thread</td><td>bench/throughput.py</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Durability guarantee</td><td>fsync-per-batch · 0 lost frames at process kill</td><td>bench/crash_recovery.py</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Chain integrity rate</td><td>100% (15/15 invariants)</td><td><code>cyberos doctor</code> · CI nightly</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Export determinism</td><td>byte-identical across 3 platforms</td><td>bench/determinism.py · macOS + Linux + WSL</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Storage overhead vs raw body</td><td>≤ 35% (chain + sidecar + index)</td><td>bench/storage.py</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Single-process availability</td><td>≥ 99.99% (local FS dependent)</td><td>observed from <code>cyberos state</code> uptime</td></tr>
+ </tbody>
+ </table>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- DEPENDENCIES -->
+<!-- ============================================================ -->
+<section id="dependencies" class="module-section">
+ <header class="section-head"><span class="section-num">10</span><h2>Dependencies</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ memory is the deepest dependency in the CyberOS graph. Today (P0 · start) it has no module dependencies — it is the foundation. Once P0 infra lands, it picks up AUTH (for actor identity), the AI Gateway (for digest / semantic search), and the MCP Gateway (for tool exposure).
+ </p>
+ <div class="bbg-card p-5">
+ <div class="mermaid">
+graph LR
+ subgraph upstream ["memory depends on"]
+ AUTH["🔐 AUTH<br>actor identity"]
+ AI["⚡ AI Gateway<br>digest · semantic"]
+ MCP["🔌 MCP Gateway<br>tool exposure"]
+ end
+ memory["🧠 memory"]
+ subgraph downstream ["Used by all 22 modules"]
+ CUO["🎯 CUO"]
+ SKILL["🛠 SKILL"]
+ CHAT["💬 CHAT"]
+ EMAIL["✉️ EMAIL"]
+ PROJ["📋 PROJ"]
+ REW["💎 REW"]
+ OTHERS["…16 more"]
+ end
+ AUTH --> memory
+ AI --> memory
+ MCP --> memory
+ memory --> CUO
+ memory --> SKILL
+ memory --> CHAT
+ memory --> EMAIL
+ memory --> PROJ
+ memory --> REW
+ memory --> OTHERS
+
+ classDef shipped fill:#f5ede6,stroke:#45210e
+ classDef planned fill:#fef6e0,stroke:#9c750a
+ class memory shipped
+ class AUTH,AI,MCP planned
+ </div>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- COMPLIANCE -->
+<!-- ============================================================ -->
+<section id="compliance" class="module-section">
+ <header class="section-head"><span class="section-num">11</span><h2>Compliance scope</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">memory is the single most compliance-relevant module in the catalog. Its audit chain is the regulator-facing evidence base for every decree below.</p>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Regulation / standard</th><th>Article / clause</th><th>memory feature that satisfies it</th></tr></thead>
+ <tbody>
+ <tr><td>Vietnam PDPL (Law 91/2025)</td><td>Art. 14 — DSAR</td><td><code>cyberos search</code> + <code>cyberos export</code> produce a complete data-subject extract in &lt; 1 min.</td></tr>
+ <tr><td>Vietnam PDPL</td><td>Art. 16 — Erasure</td><td><code>cyberos delete --mode purge</code> with reason gate; audit fact remains.</td></tr>
+ <tr><td>Vietnam Decree 13/2023</td><td>Art. 17 — Personal data processing log</td><td>Audit chain is the processing log; every op recorded with actor.</td></tr>
+ <tr><td>Vietnam Decree 53/2022</td><td>Art. 26 — Cybersecurity data localisation</td><td>Local-first by design; <code>.cyberos-memory/</code> stays on Vietnamese soil unless explicitly exported.</td></tr>
+ <tr><td>GDPR (EU 2016/679)</td><td>Art. 17 — Right to erasure</td><td>Purge mode (§3.6) with reason gate; chain row records the redaction.</td></tr>
+ <tr><td>GDPR</td><td>Art. 30 — Records of processing</td><td>Audit chain is the records-of-processing artefact.</td></tr>
+ <tr><td>EU AI Act (Reg. 2024/1689)</td><td>Art. 12 — Logging</td><td>Every routing decision (via CUO) is recorded in memory; replayable.</td></tr>
+ <tr><td>EU AI Act</td><td>Art. 26 — Human oversight</td><td>FROZEN_HUMAN state requires explicit signoff to recover; defer-to-human escapes encoded in audit rows.</td></tr>
+ <tr><td>Singapore PDPA</td><td>§§ 12–13 — Access &amp; correction</td><td>Same DSAR + erasure mechanisms; satisfied for HoldCo flip at P3.</td></tr>
+ <tr><td>ISO/IEC 27001:2022</td><td>A.8.10 — Information deletion</td><td>Purge mode plus retention manifest.</td></tr>
+ <tr><td>ISO/IEC 27001:2022</td><td>A.8.15 — Logging</td><td>Audit chain · 100% integrity rate.</td></tr>
+ <tr><td>ISO/IEC 42001 (AIMS)</td><td>§ 8.2 — Data management</td><td>Sync-class taxonomy + acl + classification + Ed25519-anchored chain.</td></tr>
+ <tr><td>SOC 2 Type II</td><td>CC7.2 · CC7.3 — Monitoring</td><td>Doctor invariants run nightly; alert on first failure.</td></tr>
+ <tr><td colspan="3" style="background:var(--ochre-50);font-weight:600;text-align:center;color:var(--umber-700)">Universal-protocol compliance scope (Stages 1–5)</td></tr>
+ <tr><td>Vietnam PDPL (Law 91/2025)</td><td>Art. 7 — No personal data sale</td><td>Lumi's memory is multi-tenant but tenant-isolated; no inter-tenant memory transfer mechanism exists. Synthesis sub-skill operates within tenant boundary only. ToS for Lumi's memory explicitly prohibits selling tenant data.</td></tr>
+ <tr><td>Vietnam PDPL</td><td>Art. 20 — Cross-border transfer (60-day post-audit)</td><td>Lumi's memory cloud deployment defaults to AWS Singapore. EU-resident tenants opt into <code>eu-fra-1</code> shard at P3; impact assessment submitted to MoPS within 60 days of first transfer. Per-tenant residency pinning via TEN module.</td></tr>
+ <tr><td>Vietnam PDPL</td><td>Art. 38 — SME grace period</td><td>5-year window from 2026-01-01 — small enterprises and start-ups may defer Art. 21 (impact assessment), DPO appointment, and certain other provisions. CyberSkill JSC is in scope. Lumi's memory tenants whose orgs qualify can opt out via TEN tenant config flag <code>pdpl_sme_grace = true</code> until 2031-01-01.</td></tr>
+ <tr><td>EU AI Act (Reg. 2024/1689)</td><td>Art. 12 — Logging for the synthesis sub-skill</td><td>Stage 5 synthesis is a CUO sub-skill making content-influencing decisions; logged per Art. 12 with persona-version stamp, source-memory citations, and reproducibility-via-replay. Synthesis output is itself a memory, so Art. 12's logging requirement is satisfied by the memory protocol itself, not bolted on.</td></tr>
+ <tr><td>EU AI Act</td><td>Art. 50 — Transparency for AI-generated content</td><td>Every synthesis artefact carries <code>extra.synthesised_by = "cuo/personas/synthesis-author@&lt;version&gt;"</code> in its audit frame. End-user surfaces (Lumi UI) label synthesised wisdom with an "AI synthesis" badge.</td></tr>
+ <tr><td>ISO/IEC 27018:2019</td><td>§ A.5 — Customer agreement</td><td>Lumi's memory customer agreement explicitly enumerates: which capture surfaces, default sync-class semantics, the synthesis sub-skill scope. Customers can opt out of synthesis per tenant via TEN flag.</td></tr>
+ </tbody>
+ </table>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- RISK -->
+<!-- ============================================================ -->
+<section id="risk-entries" class="module-section">
+ <header class="section-head"><span class="section-num">12</span><h2>Risk entries</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">memory-specific risks tracked in the full <a href="../../reference/risk-register.html#memory" class="text-blue-700 font-semibold underline">risk register</a>.</p>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>ID</th><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Owner</th><th>Mitigation</th></tr></thead>
+ <tbody>
+ <tr><td><code>R-memory-001</code></td><td>Audit chain corruption (frame CRC failure, MMR peak mismatch)</td><td>Low</td><td>Catastrophic</td><td>CTO</td><td>15 walker invariants nightly · FROZEN_RECOVERABLE auto-stop · <code>cyberos backup</code> daily.</td></tr>
+ <tr><td><code>R-memory-002</code></td><td>MMR implementation bug (replay produces wrong root)</td><td>Low</td><td>High</td><td>CTO</td><td>Cross-check invariant compares <code>chain</code> against MMR-derived hash at every consolidation. 1k / 10k / 100k leaf scale tests in CI.</td></tr>
+ <tr><td><code>R-memory-003</code></td><td>STH signing-key compromise</td><td>Low</td><td>High</td><td>CSO</td><td>Passphrase-wrapped key on disk. P3+: KMS-managed rotation. Re-sign all open checkpoints on rotation.</td></tr>
+ <tr><td><code>R-memory-004</code></td><td>iCloud / Dropbox sync race produces conflicting bodies</td><td>Medium</td><td>Medium</td><td>CDO</td><td><code>conflicts.py</code> quarantines competing copies to <code>conflicts/</code>; operator resolves via <code>cyberos conflicts resolve</code>.</td></tr>
+ <tr><td><code>R-memory-005</code></td><td>Cross-platform fsync semantic drift (macOS vs Linux vs Windows)</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Per-platform fsync.py paths, crash-recovery benchmark on each platform in CI.</td></tr>
+ <tr><td><code>R-memory-006</code></td><td>Schema drift breaks downstream consumers (e.g. CUO bridge)</td><td>Low</td><td>Medium</td><td>CTO</td><td><code>memory.schema.json</code> regenerated from types at every release · schema-drift regression test gate.</td></tr>
+ <tr><td><code>R-memory-007</code></td><td>Operator accidentally purges legally-required data</td><td>Low</td><td>High</td><td>CLO</td><td>Purge mode requires explicit chat-turn approval AND non-empty reason. Two-person sign-off in production tenants (P3+).</td></tr>
+ <tr><td><code>R-memory-008</code></td><td>Encryption envelope key loss (KMS outage / rotation bug)</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>Key escrow + N-of-M reconstruction (P2+). Sidecar always plaintext so metadata survives body loss.</td></tr>
+ <tr><td><code>R-memory-009</code></td><td><strong>Lumi's memory tenant compromise</strong> — credential theft or tenant-isolation bypass exposes shared org memories across tenants</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>Stage 3+: Postgres RLS by <code>tenant_id</code> on every table · per-tenant S3 prefix · per-user JWT scoped to tenant · weekly chaos-test of cross-tenant leak surface (read another tenant's row returns 403) · AUTH module's RBAC predicate gates every cross-module call.</td></tr>
+ <tr><td><code>R-memory-010</code></td><td><strong>Sync conflict storm</strong> — N personal memories producing high-volume concurrent shareable writes overwhelm Lumi's chain extension or produce cascading import-failures</td><td>Medium</td><td>High</td><td>CTO</td><td>Stage 4: per-tenant push-rate limit (default 100 ops/min/user) · server-side idempotency via content-hash dedup · client-side retry with exponential backoff + jitter · sync orchestrator surfaces stuck-state via <code>sync-orchestrator-not-stuck</code> doctor invariant · synthesis pass dampens duplicate decisions.</td></tr>
+ <tr><td><code>R-memory-011</code></td><td><strong>Synthesis sub-skill hallucination</strong> — Stage 5 wisdom artefact emits a false "synthesised decision" that does not actually appear in any source memory</td><td>Medium</td><td>High</td><td>CDO</td><td>Every synthesis claim hash-anchored to the underlying memory rows (citation-mandatory) · synthesis output is itself a memory and follows the protocol (replayable) · weekly user-flag "useful / not useful / wrong" → if "wrong" rate &gt; 5% in any tenant, synthesis pauses for review · LLM caller stamped with persona-version per AGENTS.md §11.</td></tr>
+ <tr><td><code>R-memory-012</code></td><td><strong>Capture daemon crash recovery</strong> — daemon dies mid-capture and resumes producing duplicate or out-of-order memories</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Content-addressed puts are idempotent per AGENTS.md §3.4 (duplicate emits become no-ops at writer). Daemon checkpoint state in <code>~/.cyberos-memory/capture-daemon.state.json</code>. <code>capture-daemon-not-stuck</code> doctor invariant warns if no emit in &gt; 24 h on watched folder. launchd / systemd-user auto-restart on crash.</td></tr>
+ <tr><td><code>R-memory-013</code></td><td><strong>iCloud / Dropbox sibling explosion</strong> — when Personal memory store is itself synced by a cloud-FS provider, "filename (Mac).md" / "filename (iPhone).md" siblings multiply and the audit chain partitions</td><td>Medium</td><td>High</td><td>CDO</td><td>Existing <code>layout-no-sync-conflict-siblings</code> invariant detects siblings · operator-driven resolver at <code>cyberos conflicts resolve</code> · Stage 4 documentation explicitly recommends Lumi's memory sync over iCloud/Dropbox folder-sync as the cross-machine path (less brittle).</td></tr>
+ <tr><td><code>R-memory-014</code></td><td><strong>PII leak via auto-capture</strong> — capture daemon emits a memory containing PII before the user can mark it private; PII reaches Lumi's memory unintended</td><td>Medium</td><td>High</td><td>DPO</td><td>Stage 2 Presidio at capture write time — every PII-flagged memory is <em>held back from sync</em> until user confirms via prompt UX (Cowork-inline / desktop-notif / <code>memory pending</code>). Default <code>sync_class</code> remains <code>private</code> unless folder override. Right-to-forget propagates: a purge on Personal memory issues <code>purge_propagate</code> to Lumi.</td></tr>
+ </tbody>
+ </table>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- KPIs -->
+<!-- ============================================================ -->
+<section id="kpis" class="module-section">
+ <header class="section-head"><span class="section-num">13</span><h2>KPIs</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">Module health is read off these 8 KPIs. Targets are normative budgets; current values are observed on the user's live memory.</p>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>KPI</th><th>Formula</th><th>Source</th><th>Target</th><th>Current</th></tr></thead>
+ <tbody>
+ <tr><td><strong>Chain integrity rate</strong></td><td><code>passing_invariants / 15</code></td><td><code>cyberos doctor</code></td><td>100%</td><td>15/15 (100%)</td></tr>
+ <tr><td><strong>MMR cross-check pass rate</strong></td><td><code>matched_leaves / total_leaves</code></td><td>walker invariant</td><td>100%</td><td>100%</td></tr>
+ <tr><td><strong>Write p95</strong></td><td>group-committed</td><td>bench/throughput</td><td>≤ 500 µs</td><td>~ 380 µs</td></tr>
+ <tr><td><strong>Read p95</strong></td><td>mmap seqlock</td><td>bench/reader</td><td>≤ 20 µs</td><td>~ 8 µs</td></tr>
+ <tr><td><strong>Search p95</strong></td><td>lexical · 10k memories</td><td>bench/search</td><td>≤ 50 ms</td><td>~ 32 ms</td></tr>
+ <tr><td><strong>Export determinism rate</strong></td><td><code>identical_exports / runs</code></td><td>bench/determinism</td><td>100%</td><td>100% (3 platforms)</td></tr>
+ <tr><td><strong>Storage overhead</strong></td><td><code>(chain + sidecar + index) / raw_body</code></td><td>bench/storage</td><td>≤ 35%</td><td>~ 28%</td></tr>
+ <tr><td><strong>Test pass rate</strong></td><td><code>green / total</code></td><td>pytest CI</td><td>≥ 99%</td><td>233/235 (99.1% — 2 pre-existing invariant-check bugs, non-blocking)</td></tr>
+ <tr><td colspan="5" style="background:var(--ochre-50);font-weight:600;text-align:center;color:var(--umber-700)">Universal-protocol KPIs (Stages 1–5 — measured once each stage ships)</td></tr>
+ <tr><td><strong>Capture rate per user</strong></td><td><code>captured_memories / day / user</code></td><td>capture daemon ledger</td><td>≥ 20 / day / active user (signal floor) · ≤ 500 / day (noise ceiling)</td><td>—  (Stage 2)</td></tr>
+ <tr><td><strong>Sync success rate</strong></td><td><code>successful_pushes / total_push_attempts</code></td><td>sync orchestrator</td><td>≥ 99.5% p95 over 7-day window</td><td>—  (Stage 4)</td></tr>
+ <tr><td><strong>Sync conflict rate</strong></td><td><code>conflicts / total_imports</code></td><td>sync orchestrator</td><td>≤ 1% (per AGENTS.md §14.2 fresh-put semantics; most "conflicts" are content-different)</td><td>—  (Stage 4)</td></tr>
+ <tr><td><strong>Synthesis useful-rate</strong></td><td><code>thumbs_up / (thumbs_up + thumbs_down + thumbs_wrong)</code></td><td>synthesis sub-skill feedback rows</td><td>≥ 75% per user per week (kill-switch if &lt; 50%)</td><td>—  (Stage 5)</td></tr>
+ <tr><td><strong>Lumi's memory seq counter</strong></td><td><code>monotone seq on Lumi tenant chain</code></td><td><code>cyberos --store lumi audit head</code></td><td>≥ 10× the largest single user's Personal memory seq (org-aggregate signal)</td><td>—  (Stage 3)</td></tr>
+ <tr><td><strong>PII held-back rate</strong></td><td><code>held_back_for_pii / shareable_candidates</code></td><td>capture daemon + Presidio</td><td>3–8% expected band · alert if &gt; 15% (too noisy) or &lt; 1% (under-detecting)</td><td>—  (Stage 2)</td></tr>
+ <tr><td><strong>Capture daemon health</strong></td><td><code>1 - (down_minutes / total_minutes)</code> over 7 days</td><td><code>capture-daemon-not-stuck</code> doctor invariant</td><td>≥ 99.9%</td><td>—  (Stage 2)</td></tr>
+ <tr><td><strong>Cross-machine portability</strong></td><td><code>identical_chain_head_after_rsync / total_rsyncs</code></td><td>portability bench</td><td>100% (folder copy is the source of truth)</td><td>—  (Stage 1)</td></tr>
+ </tbody>
+ </table>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- RACI -->
+<!-- ============================================================ -->
+<section id="raci" class="module-section">
+ <header class="section-head"><span class="section-num">14</span><h2>RACI matrix</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">memory is owned end-to-end by the CEO seat today (Stephen Cheng). As the team grows, ownership shifts to the CDO (data) and CTO (engineering).</p>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Activity</th><th>CEO</th><th>CTO</th><th>CDO</th><th>CSO</th><th>CLO</th><th>DPO</th></tr></thead>
+ <tbody>
+ <tr><td>Protocol design (AGENTS.md)</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Implementation (cyberos/core/)</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>On-call rotation</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Security review</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Compliance review (PDPL, GDPR)</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-r">R</td></tr>
+ <tr><td>DSAR fulfilment</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td></tr>
+ <tr><td>Purge approval</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-r">R</td></tr>
+ <tr><td>Key rotation (STH Ed25519)</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td colspan="7" style="background:var(--ochre-50);font-weight:600;text-align:center;color:var(--umber-700)">Stages 1–5 — universal protocol RACI additions (Cloud-DBA and Sync-SRE roles join at P3+)</td></tr>
+ <tr><td>Stage 1: <code>memory init/watch/...</code> CLI design</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Stage 2: Capture daemon implementation (Rust)</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Stage 3: Lumi's memory cloud deployment + per-tenant RLS</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Stage 4: 2-way sync orchestrator</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Stage 5: Synthesis sub-skill + auto-evolve cadence</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Personal-memory portability across user's machines</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>PII detection at capture write (Presidio configuration)</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A</td></tr>
+ <tr><td>Cross-tenant isolation testing (chaos)</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Synthesis-skill output review (weekly thumb-poll)</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ </tbody>
+ </table>
+ <p class="text-xs text-slate-500 mt-3"><strong>R</strong> = Responsible · <strong>A</strong> = Accountable · <strong>C</strong> = Consulted · <strong>I</strong> = Informed. Stage-3+ adds Cloud-DBA (under CTO) and Sync-SRE (under CTO) as specialists.</p>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- CLI USAGE -->
+<!-- ============================================================ -->
+<section id="cli-usage" class="module-section">
+ <header class="section-head"><span class="section-num">15</span><h2>CLI usage — real examples</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">What a user actually types and what they see. All examples assume <code>pip install -e.</code> from the <code>memory/</code> directory.</p>
+
+ <h3 class="text-lg font-bold mb-2">1. Append a memory</h3>
+<pre><code>$ echo "Decided to flip Singapore HoldCo if ARR &ge; \$1.5M at P3 exit." | \
+ cyberos --store./.cyberos-memory --actor stephen put memories/decisions/holdco-flip.md -
+
+{
+ "seq": 14823,
+ "chain": "9f3e2a1b...8d4c",
+ "body_hash": "a17b2c...e9f0",
+ "elapsed_us": 412
+}</code></pre>
+
+ <h3 class="text-lg font-bold mb-2 mt-5">2. Verify the entire chain</h3>
+<pre><code>$ cyberos --store./.cyberos-memory doctor
+
+[memory doctor v2.0.0] store=./.cyberos-memory rows=14823
+
+invariant status detail
+─────────────────────────────────────────────────────
+chain-continuity OK 14823/14823 rows linked
+chain-no-rewind OK monotonic seq verified
+frame-crc OK all CRCs match
+op-enum-closed OK no unknown ops
+layout-canonical OK no sandbox path
+layout-no-traversal OK no '..' segments
+sidecar-body-hash OK all sidecars match body
+mmr-leaf-count OK 14823 leaves
+mmr-peak-cross-check OK peaks match chain hash
+sth-signature OK Ed25519 signature valid
+manifest-head-coherent OK HEAD matches manifest
+index-coverage OK SQLite mirrors filesystem
+schema-validation OK all frontmatter validates
+lease-not-stale OK no orphaned lease
+exports-excluded OK no chain leak through exports
+
+state: READY (15/15 invariants pass)</code></pre>
+
+ <h3 class="text-lg font-bold mb-2 mt-5">3. Produce an MMR inclusion proof</h3>
+<pre><code>$ cyberos --store./.cyberos-memory prove --seq 14823 > proof.json
+
+$ cat proof.json
+{
+ "seq": 14823,
+ "leaf_hash": "9f3e2a1b...8d4c",
+ "leaf_index": 14822,
+ "proof_path": ["a1b2...", "c3d4...", "e5f6..."],
+ "tree_size": 14823,
+ "mmr_root": "f7e8...d9c0",
+ "sth": {
+ "filename": "2026-05-14T03Z-f7e8d9c0.json",
+ "signature": "ed25519:8c7d..."
+ }
+}
+
+$ cyberos verify-proof proof.json
+{"valid": true, "root": "f7e8...d9c0", "verified_at": "2026-05-14T07:21:08Z"}</code></pre>
+
+ <h3 class="text-lg font-bold mb-2 mt-5">4. Deterministic export</h3>
+<pre><code>$ cyberos --store./.cyberos-memory export memory-2026-05-14.zip
+
+[export] paths=2451 bytes=14.2MB zip_bytes=4.1MB level=6
+[export] excluded: exports/ __pycache__/.cache/.lock HEAD
+[export] determinism: sorted paths · ts=2000-01-01T00:00:00Z · mode=0o644
+[export] written: memory-2026-05-14.zip
+[export] sha256: a4f9...8c2d (run twice on different machines → same hash)</code></pre>
+
+ <h3 class="text-lg font-bold mb-2 mt-5">5. GDPR purge (Art. 17)</h3>
+<pre><code>$ cyberos --store./.cyberos-memory delete \
+ memories/people/clients/acme-contact.md \
+ --mode purge \
+ --reason "DSAR-2026-014 erasure request, signed off by DPO"
+
+[delete] mode=purge body redacted audit row preserved
+{
+ "seq": 14831,
+ "chain": "b8d4...e3f7",
+ "mode": "purge",
+ "body_hash_before": "a17b...e9f0",
+ "redaction_reason": "DSAR-2026-014 erasure request, signed off by DPO",
+ "audit_fact_unerasable": true
+}</code></pre>
+
+ <h3 class="text-lg font-bold mb-2 mt-5">6. Cross-memory import (P6 — teammate merge)</h3>
+<pre><code>$ cyberos --store./.cyberos-memory import../teammate-memory.zip --filter sync_class=shareable
+
+[import] source_fingerprint: 2a4d8f...1b3c
+[import] session.start written seq=14832
+[import] 103 memories considered -- 41 shareable, 62 private (skipped)
+[import] 41 imported (foreign_chain preserved in extra)
+[import] session.end written seq=14874
+[import] manifest.imports[2a4d8f...1b3c].last_imported_seq = 47812</code></pre>
+</section>
+
+<!-- ============================================================ -->
+<!-- DEVELOPER QUICK START -->
+<!-- ============================================================ -->
+<section id="developer-quick-start" class="module-section">
+ <header class="section-head"><span class="section-num">15.5</span><h2>Developer quick start</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">For developers working on the Python implementation. The website covers the protocol; this section covers the codebase.</p>
+
+ <h3 class="text-lg font-bold mb-2">Install</h3>
+<pre><code># From repo root
+pip install -r memory/cyberos/requirements.txt
+
+# Or install in editable mode (exposes `cyberos` CLI)
+cd memory && pip install -e .</code></pre>
+
+ <h3 class="text-lg font-bold mb-2 mt-5">Python dependencies</h3>
+ <div class="overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Package</th><th>Required?</th><th>Purpose</th></tr></thead>
+ <tbody>
+ <tr><td><code>msgspec &ge; 0.18</code></td><td>yes</td><td>Canonical-JSON encoding; the whole hot path</td></tr>
+ <tr><td><code>crc32c &ge; 2.4</code></td><td><strong>strongly recommended</strong></td><td>SSE 4.2 / ARM CRC32 hardware path. Without it, falls back to <code>zlib.crc32</code> (different polynomial)</td></tr>
+ <tr><td><code>rfc8785 &ge; 0.1.4</code></td><td>recommended</td><td>Used by migration preflight's <code>--strict-legacy-verify</code> mode</td></tr>
+ <tr><td><code>PyYAML &ge; 6.0</code></td><td>recommended</td><td>Read-only legacy YAML frontmatter during migration window</td></tr>
+ <tr><td><code>uring</code></td><td>optional (Linux)</td><td>io_uring linked WRITEV+FSYNC fast path; falls back transparently</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3 class="text-lg font-bold mb-2 mt-5">Check CRC implementation</h3>
+<pre><code>python -c "from cyberos.core.writer import crc_implementation; print(crc_implementation())"
+# hw           → hardware-accelerated CRC-32C (correct)
+# zlib-fallback → install crc32c</code></pre>
+
+ <h3 class="text-lg font-bold mb-2 mt-5">Benchmarks</h3>
+<pre><code>cd memory
+python -m bench.frontmatter --compare --files 2000   # msgspec vs PyYAML
+python -m bench.append --producers 1 --records 50000  # group-commit throughput
+python -m bench.append --producers 8 --records 50000
+python -m bench.cold_cli                              # cold CLI start
+python -m bench.determinism --store ../.cyberos-memory</code></pre>
+
+ <div class="overflow-x-auto mt-4">
+ <table class="kt">
+ <thead><tr><th>Metric</th><th>Target</th><th>Typical (M2 MacBook)</th></tr></thead>
+ <tbody>
+ <tr><td>Frontmatter parse p50 (msgspec)</td><td>&lt;100 &micro;s</td><td>~0.6 &micro;s</td></tr>
+ <tr><td>Frontmatter parse p99 (msgspec)</td><td>&lt;300 &micro;s</td><td>~1.0 &micro;s</td></tr>
+ <tr><td>Append throughput, 1 producer</td><td>6,000/s</td><td>varies by SSD</td></tr>
+ <tr><td>Append throughput, 8 producers</td><td>9,000/s</td><td>varies by SSD</td></tr>
+ <tr><td>Cold <code>cyberos --help</code></td><td>&lt;30 ms</td><td>~10–25 ms</td></tr>
+ <tr><td>Full chain verify, 100k records</td><td>&lt;2 s</td><td>&lt;1 s</td></tr>
+ </tbody>
+ </table>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- STATUS -->
+<!-- ============================================================ -->
+<section id="status" class="module-section">
+ <header class="section-head"><span class="section-num">16</span><h2>Phase status &amp; code stats</h2></header>
+
+ <div class="grid md:grid-cols-3 gap-4 mb-6">
+ <div class="fact-card"><div class="label">Total LoC (Python)</div><div class="value">~5,000</div><div class="note">core/ + tools/ + tests/</div></div>
+ <div class="fact-card"><div class="label">Test count</div><div class="value">233/235</div><div class="note">2 pre-existing invariant-check bugs · non-blocking</div></div>
+ <div class="fact-card"><div class="label">Modules in core/</div><div class="value">25</div><div class="note">writer, reader, walker, mmr, sth, …</div></div>
+ <div class="fact-card"><div class="label">CLI subcommands</div><div class="value">30</div><div class="note">single entrypoint <code>cyberos</code></div></div>
+ <div class="fact-card"><div class="label">Audit proposals shipped</div><div class="value">12 + Stage 3</div><div class="note">P1–P12 + P2 Stage 3</div></div>
+ <div class="fact-card"><div class="label">Schema</div><div class="value">closed</div><div class="note">unknown <code>kind</code> rejected at write</div></div>
+ </div>
+
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th>Phase / capability</th><th>Status</th></tr></thead>
+ <tbody>
+ <tr><td>Core writer + reader + walker</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td>MMR + Ed25519 STH</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td>Crypto-mode (STH-only)</td><td><span class="pill pill-shipped">shipped (opt-in)</span></td></tr>
+ <tr><td>Cross-platform automation (launchd · systemd · Task Scheduler)</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td>Semantic search (optional <code>sentence-transformers</code>)</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td>Sync-FS conflict awareness (iCloud · Dropbox · OneDrive)</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td>P1–P12 audit proposals + P2 Stage 3</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td>Cross-memory import (P6)</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td>HTTP REST mode (<code>cyberos serve</code>)</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td>Daily digest (<code>cyberos digest</code>)</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td>Mobile static publish (<code>cyberos publish</code>)</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td>GraphQL subgraph (P0 federation)</td><td><span class="pill pill-planned">planned · P0+</span></td></tr>
+ <tr><td>Layer 2 ingest pipeline (services/memory/ Cargo workspace · cursor · binlog_tail · chain_anchor · entity_extract · pgvector upsert · daemon main loop · /metrics · 4 integration tests)</td><td><span class="pill pill-shipped">shipped · 2026-05-18 (Wave 1)</span></td></tr>
+ <tr><td>Apache AGE graph mirror (FR-MEMORY-108 search API)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ <tr><td>S3 / R2 archival Layer 3</td><td><span class="pill pill-planned">planned · P2</span></td></tr>
+ <tr><td>iOS companion app</td><td><span class="pill pill-planned">planned · P3+</span></td></tr>
+ <tr><td>Public STH anchoring (transparency log)</td><td><span class="pill pill-planned">planned · P3+</span></td></tr>
+ <tr><td colspan="2" style="background:var(--ochre-50);font-weight:600;text-align:center;color:var(--umber-700)">Universal-protocol roadmap (Proposal P13)</td></tr>
+ <tr><td><strong>Stage 1</strong> — Personal memory universal protocol (any folder, portable, explicit-opt-in)<br><span class="text-xs text-slate-500">CLI: <code>memory init/watch/unwatch/status/capture</code> · manifest schema + 2 new invariants</span></td><td><span class="pill" style="background:var(--ochre-100);color:var(--umber-700)">design-locked · ready to code</span></td></tr>
+ <tr><td><strong>Stage 2</strong> — Capture daemon (FS watcher + Cowork hook + Claude Code hook)<br><span class="text-xs text-slate-500">Initial scope: Claude-only. Slack/Granola/Notes deferred.</span></td><td><span class="pill" style="background:var(--ochre-100);color:var(--umber-700)">design-locked · 2–4 weeks from Stage 1</span></td></tr>
+ <tr><td><strong>Stage 3</strong> — Lumi's memory cloud deployment<br><span class="text-xs text-slate-500">Gated on AUTH + AI Gateway + TEN-billing thin slice</span></td><td><span class="pill pill-planned">designed · P2 (P2 · exit)</span></td></tr>
+ <tr><td><strong>Stage 4</strong> — 2-way sync orchestrator<br><span class="text-xs text-slate-500">Push / pull state machines · conflict resolution via chain-position + §14.2 fresh-put</span></td><td><span class="pill pill-planned">designed · P2 (P2 · exit) parallel to Stage 3</span></td></tr>
+ <tr><td><strong>Stage 5</strong> — Multi-memory auto-evolve · synthesis sub-skill<br><span class="text-xs text-slate-500">Nightly walk · cluster · dedup · synthesis@1 wisdom artefacts</span></td><td><span class="pill pill-planned">designed · P3 (P3 · exit)</span></td></tr>
+ </tbody>
+ </table>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- REFERENCES -->
+<!-- ============================================================ -->
+<section id="references" class="module-section">
+ <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
+ <div class="bbg-card p-5">
+ <ul class="space-y-2 text-sm">
+ <li><strong>MEMORY_AUTOSYNC_DESIGN.md</strong> (archived 2026-05-18 — original 2026-05-14 design lock) — <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">universal Personal memory + Lumi's memory architecture</a>. Original product vision; live implementation guidance has migrated to <code>modules/memory/AGENTS.md</code> (Layer 1 spec), <code>modules/memory/README.md</code> (runtime + tests), <code>services/memory/README.md</code> (Layer 2 Wave 1), and the per-stage FRs under <code>docs/feature-requests/memory/</code> (FR-MEMORY-101…111).</li>
+ <li><strong>AGENTS.md</strong> (RFC v2.0.0, normative) — <code>cyberos/modules/memory/AGENTS.md</code>. §3 canonical ops · §11 trust model · §14 cross-agent interop and the basis for the 2-way sync semantics · §15 sync_class taxonomy.</li>
+ <li><strong>PROPOSAL.md</strong> — <code>cyberos/modules/memory/README.md (Appendix D — Proposals)</code> — where <strong>Proposal P13</strong> (universal protocol Stages 1–5) lands as formal protocol extension. P1–P12 + P2-Stage-3 already shipped.</li>
+ <li><strong>SPEC.md</strong> — formal contract summary — <code>cyberos/modules/memory/docs/SPEC.md</code>.</li>
+ <li><strong>EVOLUTION.md</strong> — history and rejected designs (informative).</li>
+ <li><strong>INTEROP.md</strong> — Cursor / Codex-compatible read-only subset (≤ 6,000 chars).</li>
+ <li><strong>memory.schema.json</strong> — JSON Schema for frontmatter, audit rows, manifest. P13 extends with <code>watched_folders</code>, <code>capture_event</code>, <code>sync_state</code>, <code>shared_memory_acl</code>, <code>synthesis_artefact</code> entities.</li>
+ <li><strong>memory.invariants.yaml</strong> — invariant list consumed by the walker. P13 adds 4 invariants: <code>layout-watched-folders-exist</code>, <code>layout-watched-folders-permissions</code>, <code>capture-daemon-not-stuck</code>, <code>sync-orchestrator-running</code>.</li>
+ <li><strong>AUTHORING_DISCIPLINE.md</strong> — <a href="https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md" target="_blank" rel="noopener" class="text-blue-700 underline" rel="noopener" target="_blank">how new FRs are authored via the feature-request-author + feature-request-audit Agent Skill pair</a>. Every memory FR (Stages 1–5) lands via this workflow.</li>
+ <li><strong>archive/2026-05-14/AUDIT_AND_PLAN.md</strong> — <code>archive/2026-05-14/AUDIT_AND_PLAN.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> placing Stages 3–5 on the P0+P2 critical path.</li>
+ <li><strong>archive/2026-05-14/RESEARCH_REVIEW.md</strong> — <code>archive/2026-05-14/RESEARCH_REVIEW.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span>. §2 confirms memory as the strategic moat; §7 confirms multi-memory as the GTM answer.</li>
+ <li><strong>Source code:</strong> <code>cyberos/modules/memory/cyberos/core/</code> · <code>cyberos/modules/memory/tests/</code> · <code>cyberos/modules/memory/bench/</code>. Stage 2 capture daemon lands at <code>cyberos/modules/memory/daemon/</code> (planned, Rust).</li>
+ <li><strong>CHANGELOG:</strong> <code>cyberos/CHANGELOG.md (entries tagged [MEMORY])</code> (newest-first).</li>
+ </ul>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PERSONA / SKILL AFFINITIES -->
+<!-- ============================================================ -->
+<section id="persona-affinities" class="module-section">
+ <header class="section-head"><span class="section-num">★</span><h2>Personas &amp; skill bundles that touch memory</h2></header>
+ <p class="text-slate-700 mb-3">Every persona writes to memory through its workflows' audit chain. The personas below have memory as a first-class concern of their role profile — they govern memory's shape, classification, and synthesis. The CUO supervisor itself emits one memory audit row per workflow step + one summary row per chain (see <code>modules/cuo/cuo/core/memory_bridge.py</code>).</p>
+ <div class="grid md:grid-cols-2 gap-4">
+  <div class="bbg-card p-4">
+   <div class="text-xs font-bold uppercase tracking-wider mb-1 text-cuo-dark">Persona governance (6 of 47)</div>
+   <ul class="text-sm text-slate-700 list-disc pl-5 space-y-1">
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-knowledge-officer/workflows" target="_blank" class="font-mono text-xs text-blue-700">chief-knowledge-officer</a> · memory graph governance + canonicalisation pipeline</li>
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-data-officer/workflows" target="_blank" class="font-mono text-xs text-blue-700">chief-data-officer</a> · memory data quality + lineage + retention policy</li>
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-privacy-officer/workflows" target="_blank" class="font-mono text-xs text-blue-700">chief-privacy-officer</a> · DSR fulfilment by memory sync-class enforcement</li>
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-information-security-officer/workflows" target="_blank" class="font-mono text-xs text-blue-700">chief-information-security-officer</a> · memory audit-chain integrity + 72h breach readiness</li>
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-trust-officer/workflows" target="_blank" class="font-mono text-xs text-blue-700">chief-trust-officer</a> · memory-backed transparency report + trust-incident updates</li>
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-ai-officer/workflows" target="_blank" class="font-mono text-xs text-blue-700">chief-ai-officer</a> · LLMInvoker prompt + cost logging into memory</li>
+   </ul>
+  </div>
+  <div class="bbg-card p-4">
+   <div class="text-xs font-bold uppercase tracking-wider mb-1 text-cuo-dark">Skill bundles that emit memory rows</div>
+   <ul class="text-sm text-slate-700 list-disc pl-5 space-y-1">
+    <li><strong>Every author skill</strong> — emits a <code>view</code> row per step output (the chain ledger receipt)</li>
+    <li><strong>Every audit skill</strong> — emits a <code>session.end</code> row when PASS / HITL_PAUSE / EXHAUSTED / NO_PROGRESS reached</li>
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/knowledge-pipeline-author" target="_blank" class="font-mono text-xs text-blue-700">knowledge-pipeline-author</a> + audit · CKO's memory-canonical pipeline</li>
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/data-governance-author" target="_blank" class="font-mono text-xs text-blue-700">data-governance-author</a> + audit · CDO memory-classification policy</li>
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/breach-notification-author" target="_blank" class="font-mono text-xs text-blue-700">breach-notification-author</a> + audit · 72-hour GDPR Art. 33 / PDPL Art. 16 timer pulled from memory audit chain</li>
+    <li><strong>synthesis-author</strong> (Stage 5 CUO sub-skill) · nightly walks Lumi's memory, emits <code>synthesis@1</code> wisdom artefacts</li>
+   </ul>
+  </div>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PREV / NEXT NAV -->
+<!-- ============================================================ -->
+<nav class="module-nav-footer mt-12">
+ <a href="../index.html#catalog" class="text-blue-700 font-semibold no-underline hover:underline">← All modules</a>
+ <a href="../cuo/index.html" class="text-blue-700 font-semibold no-underline hover:underline">Next module: CUO →</a>
+</nav>
+
+</main>
+</div>
+
+</body>
+</html>

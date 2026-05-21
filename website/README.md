@@ -1,19 +1,64 @@
-# CyberOS website surfaces
+# CyberOS website
 
-One surface lives here:
+Multi-page documentation site — 45+ pages, 22 module pages, Liquid Glass design system.
 
-- `docs/` — comprehensive multi-page documentation site (32 pages, 22 module pages, 226 Mermaid diagrams, Pagefind site-wide search, Liquid Glass via the sibling design-system). Open `docs/index.html` in a browser, or serve via `python3 -m http.server` from inside `docs/`.
+## Structure
+
+```
+website/
+├── docs/                     ← the deployed site (open index.html in browser)
+│   ├── index.html            ← overview / landing
+│   ├── modules/              ← per-module pages (22 modules, sub-pages for cuo/memory/skill/plugin)
+│   ├── architecture/         ← infrastructure, compliance, tech stack, milestones, strategy
+│   ├── reference/            ← FR catalog, NFR catalog, changelog, glossary, risk register, getting-started
+│   └── assets/               ← shared nav, JS, CSS, Tailwind, tokens
+├── build/                    ← build pipeline (generates pages from source)
+│   ├── build.sh              ← one-command rebuild: ./build/build.sh
+│   ├── data-extract.mjs      ← walks docs/feature-requests/**/FR-*.md → frs.json
+│   ├── render-fr-catalog.mjs ← frs.json → reference/fr-catalog.html
+│   ├── nfr-extract.mjs       ← walks docs/non-functional-requirements/**/NFR-*.md → nfrs.json
+│   ├── render-nfr-catalog.mjs← nfrs.json → reference/nfr-catalog.html
+│   ├── render-changelog.mjs  ← CHANGELOG.md → reference/changelog.html
+│   ├── render-module-changelog.mjs ← modules/<slug>/CHANGELOG.md → modules/<slug>/changelog.html
+│   └── data/                 ← generated intermediates (frs.json, nfrs.json; deterministic, checked in)
+└── README.md                 ← this file
+```
+
+## How the build pipeline works
+
+The website's **FR Catalog**, **NFR Catalog**, **Changelog**, and **Per-module Changelogs** are generated from source markdown:
+
+```
+docs/feature-requests/**/FR-*.md        →  data-extract.mjs   →  data/frs.json   →  render-fr-catalog.mjs   →  reference/fr-catalog.html
+docs/non-functional-requirements/**/NFR-*.md  →  nfr-extract.mjs  →  data/nfrs.json  →  render-nfr-catalog.mjs  →  reference/nfr-catalog.html
+CHANGELOG.md                                            →  render-changelog.mjs  →  reference/changelog.html
+modules/<slug>/CHANGELOG.md                            →  render-module-changelog.mjs  →  modules/<slug>/changelog.html
+```
+
+**When you create or modify source files**, regenerate the catalog:
+
+```bash
+./website/build/build.sh              # full build (FR + NFR + changelog + per-module)
+./website/build/build.sh --fr         # FR catalog only
+./website/build/build.sh --nfr        # NFR catalog only
+./website/build/build.sh --changelog  # changelog only (consolidated + per-module)
+```
+
+The build is **deterministic** (FR-DOCS-001 §1 #3) — same input produces byte-identical output.
 
 ## Deployment
 
-`docs/` is deployed to **https://cyberos-wiki.cyberskill.world** via **Vercel** (manual deploy, 2026-05-18). The `cyberos-docs` project lives on the *Stephen Cheng's projects* team. Subsequent updates: redeploy via the Vercel CLI from the operator's machine (the operator owns the deploy credentials; this repo intentionally does not carry a `vercel.json` so deploys stay an operator-controlled action).
+Deployed to **https://cyberos-wiki.cyberskill.world** via **Vercel** (manual deploy). The `cyberos-docs` project lives on the Stephen Cheng's projects team.
 
-## Sibling: landing page
+```bash
+vercel deploy --prod
+```
 
-The `cyberskill.world` landing page is a **separate project** with its own git repo at `/Users/stephencheng/Projects/CyberSkill/landing-page/`. Marketing surface, separate release cadence, separate audit cycle. Deployed independently.
+Deploys are operator-controlled — no `vercel.json` in the repo intentionally.
 
-## Sibling: design system
+## Sibling projects
 
-Liquid Glass + Umber/Ochre tokens come from the sibling design-system project at `/Users/stephencheng/Projects/CyberSkill/design-system/`. The docs site under `docs/` consumes design-system tokens via `docs/assets/tokens.css`, which is hand-maintained against the design-system's `DESIGN.md` Part 2 + Part 21. When the design system releases a new version, sync the tokens manually (or via a build script — pending).
-
-See `../strategy/CYBEROS_STRATEGY.md` for the broader distribution plan.
+| Project | Location | Role |
+|---|---|---|
+| landing-page | `../landing-page/` | `cyberskill.world` marketing site |
+| design-system | `../design-system/` | Liquid Glass + Umber/Ochre tokens (consumed via `docs/assets/tokens.css`) |

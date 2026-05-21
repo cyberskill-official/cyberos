@@ -18,7 +18,6 @@ blocks: [FR-MEMORY-116]
 protocol_amendment_required: "AGENTS.md §7.7 (new) — dreaming-applied audit rows MUST carry extra.dream_id + extra.proposal_id provenance; approval phrase: APPROVE protocol change P19 §7.7"
 
 source_pages:
-  - docs/proposals/MEMORY-IMPROVEMENT-WAVE-2026Q3.md#section-22-the-anthropic-talk
   - playground/extracts/memory-and-dreaming.transcript.txt  # see talk segments at [681:39 - 1419:04]
 source_decisions:
   - DEC-210 (Dreaming is OUT-OF-BAND — runs separately from any agent session; never adds latency to the hot path; per Anthropic talk "design perspective" segment)
@@ -50,11 +49,10 @@ modified_files:
   - modules/memory/cyberos/core/walker.py               # invariant: every dream-applied row has well-formed extras
   - modules/memory/memory.schema.json                   # `DreamDiff`, `DreamProposal`, `DreamProposalKind` definitions
   - modules/memory/memory.invariants.yaml               # `dream-applied-row-has-provenance` + `dream-diff-schema-valid`
-  - modules/memory/AGENTS.md                            # add §7.7 Dreaming (REQUIRES amendment via APPROVE chat-turn P19 §7.7)
-  - modules/memory/CHANGELOG.md
+  - AGENTS.md                                            # add §7.7 Dreaming (REQUIRES amendment via APPROVE chat-turn P19 §7.7)
 allowed_tools:
   - file_read: modules/memory/**, playground/extracts/**
-  - file_write: modules/memory/cyberos/**, modules/memory/tests/**, modules/memory/memory.schema.json, modules/memory/memory.invariants.yaml, modules/memory/AGENTS.md, modules/memory/CHANGELOG.md
+  - file_write: modules/memory/cyberos/**, modules/memory/tests/**, modules/memory/memory.schema.json, modules/memory/memory.invariants.yaml, AGENTS.md
   - bash: cd modules/memory && python -m pytest tests/test_dream_*.py -v
   - bash: cd modules/memory && python -m cyberos dream --since 24h --scope memories/facts --dry-run
 disallowed_tools:

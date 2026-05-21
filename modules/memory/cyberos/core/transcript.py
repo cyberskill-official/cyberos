@@ -288,7 +288,7 @@ def start(
         raise ProtocolAmendmentMissing(
             "AGENTS.md §18 not anchored. Approve via:\n"
             "  APPROVE protocol change P22 §18\n"
-            "and ensure modules/memory/AGENTS.md contains §18 Session transcript ledger."
+            "and ensure AGENTS.md contains §18 Session transcript ledger."
         )
     if classification not in _ALLOWED_CLASSIFICATIONS:
         raise ValueError(

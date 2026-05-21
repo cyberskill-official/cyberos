@@ -1,0 +1,2909 @@
+{
+  "schema_version": "v1",
+  "generated_at_marker": "deterministic",
+  "count": 157,
+  "nfrs": [
+    {
+      "id": "NFR-AI-001",
+      "category": "rel",
+      "phase": "P0",
+      "title": "AI Gateway provider failover latency budget — p95 < 5s from primary error to secondary first chunk",
+      "description": "The AI Gateway MUST route to a secondary provider when the primary provider returns a connection error, HTTP 5xx, or fails to emit a first byte within the primary timeout budget (default 8s; configurable per route).",
+      "target": "p95 < 5s from primary upstream error to first byte from secondary provider",
+      "measurement": "Histogram metric `ai_gateway_failover_latency_seconds{primary_provider, secondary_provider, route}` emitted by `services/ai-gateway/src/router.rs` on every provider switch.",
+      "modules": "AI",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-AI-008",
+        "FR-AI-009",
+        "FR-AI-010"
+      ],
+      "path": "docs/non-functional-requirements/ai/NFR-AI-001-provider-failover-budget.md"
+    },
+    {
+      "id": "NFR-AI-002",
+      "category": "perf",
+      "phase": "P0",
+      "title": "AI Gateway cost-ledger pre-call check overhead — p99 < 10ms",
+      "description": "Before every upstream provider call, the AI Gateway MUST consult the per-tenant cost-ledger to verify the projected token-cost does not exceed the tenant's monthly budget remainder.",
+      "target": "p99 < 10ms; p95 < 5ms for cost-ledger pre-call admission check",
+      "measurement": "Histogram metric `ai_gateway_cost_ledger_admit_seconds` emitted by `services/ai-gateway/src/cost/ledger.rs::admit()`.",
+      "modules": "AI",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-AI-007",
+        "FR-AI-008"
+      ],
+      "path": "docs/non-functional-requirements/ai/NFR-AI-002-cost-ledger-check-overhead.md"
+    },
+    {
+      "id": "NFR-AI-003",
+      "category": "rel",
+      "phase": "P0",
+      "title": "AI Gateway circuit-breaker trip policy — 3 errors in 30s opens; recovery probe at 60s",
+      "description": "The AI Gateway circuit-breaker per (provider, route) tuple MUST transition from CLOSED → OPEN when 3 consecutive upstream errors occur within a 30-second sliding window. Errors counted: connection-failure, HTTP 5xx, HTTP 429 with no `Retry-After`, and provider-emitted timeouts.",
+      "target": "Open within 30s of 3rd error; first recovery probe at exactly 60s post-open",
+      "measurement": "Gauge `ai_gateway_circuit_state{provider, route}` ∈ {0=closed, 1=half_open, 2=open}.",
+      "modules": "AI",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-AI-009",
+        "FR-AI-008"
+      ],
+      "path": "docs/non-functional-requirements/ai/NFR-AI-003-circuit-breaker-trip-policy.md"
+    },
+    {
+      "id": "NFR-AI-004",
+      "category": "priv",
+      "phase": "P0",
+      "title": "VN-PII detector recall floor — recall ≥ 99% on quarterly refresh corpus",
+      "description": "The Vietnamese PII detector plugin MUST achieve recall ≥ 99% on the curated VN-PII test corpus (`services/ai-gateway/tests/fixtures/vn_pii_corpus_v*.jsonl`) covering: CMND/CCCD national IDs, MST tax IDs, Vietnamese bank account numbers, Vietnamese phone numbers (mobile + landline), full names with diacritics, and Hanoi/HCMC street addresses.",
+      "target": "Recall ≥ 99% on the VN-PII test corpus; refreshed quarterly",
+      "measurement": "Test harness `services/ai-gateway/tests/vn_pii_recall_test.rs` loads the JSONL corpus, runs each example through the detector, and computes recall per category and overall.",
+      "modules": "AI",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CSO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-AI-012",
+        "FR-AI-013",
+        "FR-AI-011"
+      ],
+      "path": "docs/non-functional-requirements/ai/NFR-AI-004-vn-pii-recall-floor.md"
+    },
+    {
+      "id": "NFR-AI-005",
+      "category": "priv",
+      "phase": "P0",
+      "title": "ZDR attestation freshness — re-verified weekly per provider",
+      "description": "For every upstream AI provider used by the gateway, an active Zero Data Retention (ZDR) attestation MUST be on file under `docs/compliance/zdr-attestations/<provider>/YYYY-MM-DD.{pdf,sha256}`.",
+      "target": "ZDR attestation last-verified-at age ≤ 7 days per active provider",
+      "measurement": "Cron job `deploy/compliance/zdr-attestation-check.sh` runs nightly; for each provider it fetches the current ZDR URL, computes SHA-256, compares to the on-file attestation hash, and updates `zdr_attestation_last_verified_at` if the hash matches.",
+      "modules": "AI",
+      "verify": "I",
+      "priority": "MUST",
+      "owner": "CSO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-AI-015",
+        "FR-AI-016"
+      ],
+      "path": "docs/non-functional-requirements/ai/NFR-AI-005-zdr-attestation-freshness.md"
+    },
+    {
+      "id": "NFR-AI-006",
+      "category": "sec",
+      "phase": "P0",
+      "title": "AI Gateway per-tenant cache cross-leak — zero cross-tenant reads under 10k random JWTs",
+      "description": "The AI Gateway prompt/completion cache MUST key every entry by `(tenant_id, persona_version, prompt_hash, model_alias)` — never just `prompt_hash`. The `tenant_id` is taken from the verified JWT, not from any caller-supplied parameter.",
+      "target": "Property test: 0 cross-tenant cache hits over 10,000 random JWT pairings",
+      "measurement": "Property test `services/ai-gateway/tests/cache_cross_tenant_leak_test.rs` (T) runs the 10k-pair generator on every PR; assertion: zero cross-tenant hits.",
+      "modules": "AI",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-AI-017",
+        "FR-AI-018"
+      ],
+      "path": "docs/non-functional-requirements/ai/NFR-AI-006-per-tenant-cache-isolation.md"
+    },
+    {
+      "id": "NFR-AI-007",
+      "category": "perf",
+      "phase": "P0",
+      "title": "AI Gateway streaming first-byte latency — p95 < 2s for non-cached completions",
+      "description": "For streaming chat-completion requests on the cache-miss path, the AI Gateway MUST emit the first SSE event to the caller at p95 < 2s and p99 < 4s measured from inbound HTTP request received to first SSE data line written to the response stream.",
+      "target": "p95 time-to-first-byte (TTFB) < 2s for streaming /v1/chat/completions, cache-miss path",
+      "measurement": "Histogram `ai_gateway_streaming_ttfb_seconds{route, cache_hit, model_alias}` emitted by `services/ai-gateway/src/streaming/sse.rs`. Buckets: 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 8.",
+      "modules": "AI",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-AI-010",
+        "FR-AI-008"
+      ],
+      "path": "docs/non-functional-requirements/ai/NFR-AI-007-streaming-first-byte-latency.md"
+    },
+    {
+      "id": "NFR-AI-008",
+      "category": "rel",
+      "phase": "P0",
+      "title": "AI Gateway token-count post-call reconcile accuracy — within 0.5%",
+      "description": "After every upstream provider call, the AI Gateway MUST reconcile the locally-projected token count (used for cost-ledger admit per NFR-AI-002) against the provider-reported usage in the response `usage` field.",
+      "target": "Reconciled token count within 0.5% of provider-reported usage, averaged over 1000 calls",
+      "measurement": "Gauge `ai_gateway_token_count_drift_pct{provider, model_alias}` — rolling 1000-call average delta. Alarm at > 0.5%.",
+      "modules": "AI",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CFO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-AI-007",
+        "FR-AI-008"
+      ],
+      "path": "docs/non-functional-requirements/ai/NFR-AI-008-token-count-reconcile-accuracy.md"
+    },
+    {
+      "id": "NFR-AI-009",
+      "category": "comp",
+      "phase": "P0",
+      "title": "AI Gateway residency pinning enforcement — provider region matches tenant policy 100%",
+      "description": "Every tenant MUST carry a residency policy field `residency_region` ∈ {`apac`, `eu`, `us`, `global`} on the tenants table. The AI Gateway reads this from the JWT or from a cached lookup.",
+      "target": "100% of upstream calls route to a provider region matching the tenant residency policy",
+      "measurement": "Counter `ai_gateway_region_match_total{tenant_region, provider_region, match}` per call.",
+      "modules": "AI",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CSO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-AI-016"
+      ],
+      "path": "docs/non-functional-requirements/ai/NFR-AI-009-residency-pinning-enforcement.md"
+    },
+    {
+      "id": "NFR-AI-010",
+      "category": "obs",
+      "phase": "P1",
+      "title": "AI persona-version drift detection — LangSmith cosine deviation > 0.30 triggers alert",
+      "description": "Every active CUO persona MUST carry a versioned eval set (≥ 50 representative prompts per persona) committed under `modules/cuo/personas/<role>/evals/v<N>.jsonl`.",
+      "target": "Drift alert fires within 24h of cosine deviation > 0.30 on a persona's eval set",
+      "measurement": "LangSmith dataset `cyberos-persona-drift-<role>` updated continuously from the 1% sample.",
+      "modules": "AI",
+      "verify": "T",
+      "priority": "SHOULD",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-AI-014",
+        "FR-OBS-004"
+      ],
+      "path": "docs/non-functional-requirements/ai/NFR-AI-010-persona-version-drift-detection.md"
+    },
+    {
+      "id": "NFR-AUTH-001",
+      "category": "perf",
+      "phase": "P0",
+      "title": "AUTH admin endpoint admission latency — verify_jwt + RBAC check < 50ms p95",
+      "description": "The AUTH service MUST complete the admission pipeline `verify_jwt → RBAC.check → admit` at p95 < 50ms and p99 < 100ms measured at the service ingress, over a 14-day rolling window, for every `/v1/admin/*` route.",
+      "target": "p95 < 50ms for verify_jwt + RBAC admit on /v1/admin/* routes",
+      "measurement": "Histogram `auth_admit_latency_seconds{route, result}` emitted by `services/auth/src/middleware/admit.rs` over the verify→check→admit span.",
+      "modules": "AUTH",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-AUTH-004",
+        "FR-AUTH-005",
+        "FR-AUTH-101"
+      ],
+      "path": "docs/non-functional-requirements/auth/NFR-AUTH-001-admin-endpoint-admission-latency.md"
+    },
+    {
+      "id": "NFR-AUTH-002",
+      "category": "sec",
+      "phase": "P0",
+      "title": "AUTH RLS cross-tenant leak — zero rows leaked under property test sweep of 1k random tenants",
+      "description": "Every tenant-scoped Postgres table MUST carry a Row-Level Security (RLS) policy `tenant_id = current_setting('app.tenant_id')::uuid` applied to SELECT, UPDATE, DELETE.",
+      "target": "Property test: 0 cross-tenant rows returned across 1000 random tenant_id pairings on every RLS-protected table",
+      "measurement": "Counter `auth_rls_unscoped_query_total` — should always be zero. Sev-0 alarm on any non-zero.",
+      "modules": "AUTH",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CSO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-AUTH-003",
+        "FR-AUTH-001"
+      ],
+      "path": "docs/non-functional-requirements/auth/NFR-AUTH-002-rls-cross-tenant-leak.md"
+    },
+    {
+      "id": "NFR-AUTH-003",
+      "category": "perf",
+      "phase": "P0",
+      "title": "AUTH JWT signature verification time — < 1ms p99 single key; < 5ms p99 with 7-day rotation window",
+      "description": "AUTH JWT signature verification using the active EdDSA (Ed25519) signing key MUST complete at p99 < 1ms on the production hardware profile (2-vCPU, 4GB RAM container).",
+      "target": "Single-key verify p99 < 1ms; multi-key (during 7-day rotation) p99 < 5ms",
+      "measurement": "Histogram `auth_jwt_verify_seconds{key_id, result}` per verify; buckets 0.0001, 0.0005, 0.001, 0.002, 0.005, 0.01, 0.025.",
+      "modules": "AUTH",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-AUTH-004",
+        "FR-AUTH-007"
+      ],
+      "path": "docs/non-functional-requirements/auth/NFR-AUTH-003-jwt-verification-time.md"
+    },
+    {
+      "id": "NFR-AUTH-004",
+      "category": "sec",
+      "phase": "P0",
+      "title": "AUTH HIBP API timeout policy — 2s hard timeout; fail-open with audit row on timeout",
+      "description": "The HaveIBeenPwned (HIBP) k-anonymity API call MUST be wrapped in a 2s hard timeout. If HIBP doesn't respond in 2s, the call is aborted.",
+      "target": "HIBP API call wrapped in 2s hard timeout; timeout never blocks signup; audit row emitted on every timeout",
+      "measurement": "Counter `auth_hibp_timeout_total` — incremented on every 2s abort. Sev-3 alarm at > 10/hour.",
+      "modules": "AUTH",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CSO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-AUTH-107"
+      ],
+      "path": "docs/non-functional-requirements/auth/NFR-AUTH-004-hibp-timeout-policy.md"
+    },
+    {
+      "id": "NFR-AUTH-005",
+      "category": "rel",
+      "phase": "P0",
+      "title": "AUTH RoleMatrix refresh cadence — ≤ 60s revocation latency; alert on 3 consecutive failures",
+      "description": "The `services/auth/src/rbac/refresher.rs` background task MUST call `RoleMatrix::load_from_db()` every `AUTH_RBAC_REFRESH_SECS` seconds (default 60s, floor 5s).",
+      "target": "RoleMatrix refresher runs every AUTH_RBAC_REFRESH_SECS (default 60s); 3 consecutive failures triggers alert",
+      "measurement": "Counter `auth_rbac_refresh_total{result}` where result ∈ {`success`, `error`}.",
+      "modules": "AUTH",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-AUTH-101"
+      ],
+      "path": "docs/non-functional-requirements/auth/NFR-AUTH-005-rolematrix-refresh-cadence.md"
+    },
+    {
+      "id": "NFR-AUTH-006",
+      "category": "sec",
+      "phase": "P0",
+      "title": "AUTH TOTP drift tolerance — accept ±1 step; reject ±2; rate-limit retries",
+      "description": "The TOTP verify endpoint MUST accept codes within ±1 30-second step (effectively a 90-second window: current ± 30s).",
+      "target": "Accept TOTP codes within ±1 30s step (90s window); reject ±2; rate-limit 5 attempts per minute",
+      "measurement": "Counter `auth_totp_verify_total{result}` where result ∈ {`success`, `fail_outside_window`, `fail_invalid_code`, `rate_limited`}.",
+      "modules": "AUTH",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CSO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-AUTH-102"
+      ],
+      "path": "docs/non-functional-requirements/auth/NFR-AUTH-006-totp-drift-tolerance.md"
+    },
+    {
+      "id": "NFR-AUTH-007",
+      "category": "sec",
+      "phase": "P0",
+      "title": "AUTH signing-key rotation — active key always present; old key honored 7 days post-rotation",
+      "description": "The AUTH signing-key rotation procedure MUST ensure at least one key with `status=active` is present in JWKS at every moment during rotation — there is never a window where JWKS is empty or has no active key.",
+      "target": "Rotation operation completes with at least one active key on JWKS at all times; old key marked retired but honored for verify for 7 days",
+      "measurement": "Gauge `auth_signing_keys_active_count` — should always be ≥ 1. Sev-0 alarm on 0.",
+      "modules": "AUTH",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CSO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-AUTH-004"
+      ],
+      "path": "docs/non-functional-requirements/auth/NFR-AUTH-007-signing-key-rotation.md"
+    },
+    {
+      "id": "NFR-AUTH-008",
+      "category": "rel",
+      "phase": "P0",
+      "title": "AUTH Idempotency-Key TTL — 24-hour replay window; hourly cleanup sweeper",
+      "description": "Idempotency-Key handling on admin POST endpoints (per FR-AUTH-001 §1 #6) MUST retain seen keys for exactly 24 hours from first-seen-at timestamp.",
+      "target": "Idempotency keys retained 24h; cleanup sweeper runs hourly removing expired keys",
+      "measurement": "Gauge `auth_idempotency_keys_total` — current row count. Sev-3 alarm at > 1M.",
+      "modules": "AUTH",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-AUTH-001"
+      ],
+      "path": "docs/non-functional-requirements/auth/NFR-AUTH-008-idempotency-key-ttl.md"
+    },
+    {
+      "id": "NFR-AUTH-009",
+      "category": "sec",
+      "phase": "P0",
+      "title": "AUTH bcrypt cost — ≥ 12 rounds; tunable via AUTH_BCRYPT_COST env",
+      "description": "Password hashing in AUTH MUST use bcrypt with cost factor ≥ 12 (default 12; configurable via `AUTH_BCRYPT_COST` env var).",
+      "target": "Password hashing uses bcrypt cost ≥ 12; production override via AUTH_BCRYPT_COST env",
+      "measurement": "Histogram `auth_password_hash_seconds` — at cost 12 expect ~250ms; at cost 13 expect ~500ms. Alerts at < 100ms (cost too low) and > 1000ms (cost too high or CPU contention).",
+      "modules": "AUTH",
+      "verify": "I",
+      "priority": "MUST",
+      "owner": "CSO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-AUTH-002"
+      ],
+      "path": "docs/non-functional-requirements/auth/NFR-AUTH-009-bcrypt-cost.md"
+    },
+    {
+      "id": "NFR-AUTH-010",
+      "category": "sec",
+      "phase": "P0",
+      "title": "AUTH OIDC state-token TTL — 10-minute hard expiry; CSRF-resistant; one-shot",
+      "description": "OIDC `state` parameters issued during the Authorization Code flow MUST expire exactly 10 minutes after issuance. The callback handler rejects expired states with HTTP 400 `state_expired`.",
+      "target": "OIDC state tokens expire 10 minutes after issuance; single-use; CSRF-bound to session",
+      "measurement": "Counter `auth_oidc_state_consumed_total{result}` where result ∈ {`success`, `expired`, `replayed`, `csrf_mismatch`, `invalid_mac`}.",
+      "modules": "AUTH",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CSO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-AUTH-104"
+      ],
+      "path": "docs/non-functional-requirements/auth/NFR-AUTH-010-oidc-state-token-ttl.md"
+    },
+    {
+      "id": "NFR-CHAT-001",
+      "category": "perf",
+      "phase": "P0",
+      "title": "CHAT message persist latency — p95 < 100ms from send to DB ack",
+      "description": "From the moment a CHAT POST request lands on the Mattermost fork, the message MUST be committed to durable Postgres storage and the DB ack returned at p95 < 100ms and p99 < 250ms, measured at the application span.",
+      "target": "p95 < 100ms, p99 < 250ms from CHAT POST /api/v4/posts to DB commit ack",
+      "measurement": "Histogram `chat_message_persist_seconds{channel_type, has_attachments}` per POST.",
+      "modules": "CHAT",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-CHAT-001",
+        "FR-CHAT-003"
+      ],
+      "path": "docs/non-functional-requirements/chat/NFR-CHAT-001-message-persist-latency.md"
+    },
+    {
+      "id": "NFR-CHAT-002",
+      "category": "perf",
+      "phase": "P0",
+      "title": "CHAT WebSocket fanout latency — p95 < 200ms from persist to all subscribed clients",
+      "description": "After a message is committed to Postgres (NFR-CHAT-001), the WebSocket fanout MUST deliver it to every currently-connected subscriber on the channel at p95 < 200ms and p99 < 500ms.",
+      "target": "p95 < 200ms from DB persist ack to message delivered to every connected WebSocket subscriber on the channel",
+      "measurement": "Histogram `chat_ws_fanout_latency_seconds{cross_pod}` per (message, subscriber) pair; rolled up to worst-case-per-message.",
+      "modules": "CHAT",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-CHAT-001"
+      ],
+      "path": "docs/non-functional-requirements/chat/NFR-CHAT-002-websocket-fanout-latency.md"
+    },
+    {
+      "id": "NFR-CHAT-003",
+      "category": "perf",
+      "phase": "P0",
+      "title": "CHAT memory bridge replication lag — p95 < 2s from chat message to memory put",
+      "description": "After a chat message is committed to CHAT Postgres (NFR-CHAT-001), the memory bridge plugin MUST replicate the message to memory at p95 < 2s and p99 < 5s, measured from chat commit to memory bridge put ack.",
+      "target": "p95 < 2s, p99 < 5s from chat message persist to memory bridge put committed",
+      "measurement": "Histogram `chat_memory_bridge_lag_seconds` per bridged message.",
+      "modules": "CHAT",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-CHAT-005",
+        "FR-MEMORY-101"
+      ],
+      "path": "docs/non-functional-requirements/chat/NFR-CHAT-003-memory-bridge-replication-lag.md"
+    },
+    {
+      "id": "NFR-CHAT-004",
+      "category": "maint",
+      "phase": "P0",
+      "title": "CHAT Mattermost fork upstream-merge cadence — monthly minor rebase; quarterly major",
+      "description": "The CyberOS Mattermost fork MUST be rebased onto upstream minor releases at least monthly (the first business day after the upstream minor ships).",
+      "target": "Fork rebased onto upstream minor monthly; major version quarterly; security CVEs within 14 days",
+      "measurement": "File inspection — `MATTERMOST_UPSTREAM_VERSION.md` must be current; quarterly audit.",
+      "modules": "CHAT",
+      "verify": "I",
+      "priority": "SHOULD",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-CHAT-001"
+      ],
+      "path": "docs/non-functional-requirements/chat/NFR-CHAT-004-mattermost-upstream-merge-cadence.md"
+    },
+    {
+      "id": "NFR-CHAT-005",
+      "category": "func",
+      "phase": "P0",
+      "title": "CHAT VN-search recall floor — hybrid lexical + diacritic-folded recall@10 ≥ 0.90",
+      "description": "The CHAT search endpoint MUST support Vietnamese diacritic-folding: a query \"Nguyen\" MUST match messages containing \"Nguyễn\". Conversely, a query with full diacritics MUST match diacritic-less messages.",
+      "target": "Hybrid Vietnamese search (lexical + diacritic-folded + vector) recall@10 ≥ 0.90 on VN test corpus",
+      "measurement": "Recall@10 reported quarterly to `docs/audits/chat-vn-search-recall/YYYY-Q*.json`.",
+      "modules": "CHAT",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-CHAT-004"
+      ],
+      "path": "docs/non-functional-requirements/chat/NFR-CHAT-005-vn-search-recall-floor.md"
+    },
+    {
+      "id": "NFR-CHAT-006",
+      "category": "comp",
+      "phase": "P0",
+      "title": "CHAT DSAR message export completeness — every message subject authored OR received + chain proof",
+      "description": "A CHAT DSAR (Data Subject Access Request) export for subject `S` MUST include every message in the platform where `S` is either the author OR a member of the channel (recipient) at the time the message was posted.",
+      "target": "100% of messages where subject is author OR recipient are included; memory chain proof attached",
+      "measurement": "Counter `chat_dsar_exports_total{result}` per request.",
+      "modules": "CHAT",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CSO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-CHAT-012"
+      ],
+      "path": "docs/non-functional-requirements/chat/NFR-CHAT-006-dsar-message-export-completeness.md"
+    },
+    {
+      "id": "NFR-CRM-001",
+      "category": "maint",
+      "phase": "P0",
+      "title": "CRM account-contact-deal schema invariants — required fields + closed enum + relational integrity",
+      "description": "The three core CRM tables (`account`, `contact`, `deal`) MUST enforce required fields + closed enum values declared in `modules/crm/schema/`.",
+      "target": "100% of account/contact/deal rows satisfy schema + relational invariants",
+      "measurement": "CI metric `crm_schema_violation_count` — must be 0.",
+      "modules": "CRM",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CSO-Sales",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-CRM-001"
+      ],
+      "path": "docs/non-functional-requirements/crm/NFR-CRM-001-account-contact-deal-schema.md"
+    },
+    {
+      "id": "NFR-CRM-002",
+      "category": "rel",
+      "phase": "P0",
+      "title": "CRM activity-feed ordering — feed MUST be strictly chronologically consistent",
+      "description": "Activity events (call, email, meeting, note, stage-change) for an account/contact/deal MUST be displayed in the feed in strict `committed_at` order (newest first).",
+      "target": "100% of activity-feed reads return events in strict committed-at order; no out-of-order",
+      "measurement": "Counter `crm_feed_out_of_order_total` — must be 0.",
+      "modules": "CRM",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CSO-Sales",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-CRM-002"
+      ],
+      "path": "docs/non-functional-requirements/crm/NFR-CRM-002-activity-feed-ordering.md"
+    },
+    {
+      "id": "NFR-CRM-003",
+      "category": "rel",
+      "phase": "P1",
+      "title": "CRM lead-scoring drift — score model MUST be re-evaluated quarterly against actual outcomes",
+      "description": "The lead-scoring model (`FR-CRM-006`) MUST be re-evaluated quarterly against actual won/lost outcomes; AUC ≥ 0.70 to remain in production.",
+      "target": "Quarterly: score AUC vs actual won/lost outcomes ≥ 0.70; score drift trigger ≤ 5pp",
+      "measurement": "Quarterly AUC against held-out outcomes.",
+      "modules": "CRM",
+      "verify": "T",
+      "priority": "SHOULD",
+      "owner": "CSO-Sales",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-CRM-006"
+      ],
+      "path": "docs/non-functional-requirements/crm/NFR-CRM-003-lead-scoring-drift.md"
+    },
+    {
+      "id": "NFR-CRM-004",
+      "category": "comp",
+      "phase": "P0",
+      "title": "CRM win-loss approval — deals > threshold MUST be approved by CFO before close",
+      "description": "Deals with `amount_vnd > tenant.large_deal_threshold` MUST require CFO signature before transitioning to `won` or `lost`.",
+      "target": "100% of large deals (> threshold) carry CFO signature before close",
+      "measurement": "Counter `crm_large_deal_no_approval_attempt_total` — must be 0.",
+      "modules": "CRM",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CFO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-CRM-007"
+      ],
+      "path": "docs/non-functional-requirements/crm/NFR-CRM-004-win-loss-approval-window.md"
+    },
+    {
+      "id": "NFR-CRM-005",
+      "category": "comp",
+      "phase": "P0",
+      "title": "CRM MST validation freshness — VN business accounts MUST have MST validated within 90 days",
+      "description": "Accounts marked `account_type: vn_business` MUST have their MST (tax ID) validated against the GDT lookup within the last 90 days.",
+      "target": "100% of VN business accounts carry a GDT MST validation within last 90 days",
+      "measurement": "Gauge `crm_account_mst_age_days{tenant}` — max should be < 90.",
+      "modules": "CRM",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CFO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-CRM-008",
+        "FR-CRM-003"
+      ],
+      "path": "docs/non-functional-requirements/crm/NFR-CRM-005-mst-validation-freshness.md"
+    },
+    {
+      "id": "NFR-CRM-006",
+      "category": "sec",
+      "phase": "P0",
+      "title": "CRM bank-config audit — account banking changes MUST emit signed audit row",
+      "description": "Changes to an account's banking info (bank, branch, account number, beneficiary name) MUST emit a signed audit row with `{actor_id, account_id, old_banking_hash, new_banking_hash, changed_at}`.",
+      "target": "100% of account-bank changes emit a signed audit row + trigger CFO notification",
+      "measurement": "Counter `crm_bank_change_total{actor_role}`.",
+      "modules": "CRM",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CFO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-CRM-009"
+      ],
+      "path": "docs/non-functional-requirements/crm/NFR-CRM-006-bank-config-audit.md"
+    },
+    {
+      "id": "NFR-CRM-007",
+      "category": "maint",
+      "phase": "P0",
+      "title": "CRM deal-stage history — every stage change MUST be append-only audited",
+      "description": "Every deal stage transition MUST create an append-only audit row with `{deal_id, from_stage, to_stage, actor_id, changed_at, reason?}`.",
+      "target": "100% of deal-stage transitions create audit rows; history immutable",
+      "measurement": "Counter `crm_deal_stage_transition_total{from, to}`.",
+      "modules": "CRM",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CSO-Sales",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-CRM-001"
+      ],
+      "path": "docs/non-functional-requirements/crm/NFR-CRM-007-deal-stage-history.md"
+    },
+    {
+      "id": "NFR-CRM-008",
+      "category": "rel",
+      "phase": "P0",
+      "title": "CRM conversion-to-engagement integrity — closed deal MUST link to a PROJ engagement",
+      "description": "When a deal transitions to `won`, a PROJ engagement MUST be created or linked within 24h.",
+      "target": "100% of won deals create or link to a PROJ engagement within 24h",
+      "measurement": "Counter `crm_won_deal_engagement_linked_total`.",
+      "modules": "CRM",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "COO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-CRM-004"
+      ],
+      "path": "docs/non-functional-requirements/crm/NFR-CRM-008-conversion-to-engagement.md"
+    },
+    {
+      "id": "NFR-CUO-200",
+      "category": "perf",
+      "phase": "P0",
+      "title": "harness report generation MUST complete in p95 < 5s over a 10⁶-row audit chain",
+      "description": "The `cyberos-cuo harness report` command MUST produce a complete markdown report from a memory audit chain of up to 10⁶ rows in p95 < 5s and p99 < 15s wall-clock time on a single-core x86_64 machine with 8 GB RAM.",
+      "target": "p95 < 5s; p99 < 15s end-to-end `cyberos-cuo harness report --since 30d` on a chain of up to 10⁶ rows + 250 skills",
+      "measurement": "wall-clock duration of `compute_report()` (excluding markdown formatting + disk write)",
+      "modules": "cuo",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-19",
+      "related_frs": [
+        "FR-CUO-200"
+      ],
+      "path": "docs/non-functional-requirements/cuo/NFR-CUO-200-harness-report-generation-latency.md"
+    },
+    {
+      "id": "NFR-CUO-201",
+      "category": "rel",
+      "phase": "P0",
+      "title": "stripe-dedup MUST be deterministic + collision-bounded + check < 10ms p95",
+      "description": "`cuo.core.stripe.compute_stripe(skill_name, signal_id, evidence_rows)` MUST be deterministic — same inputs across processes, sessions, and OS versions produce the same stripe id (verified by repeating the call with identical args and asserting string equality).",
+      "target": "stripe collision rate ≤ 2⁻³² (8-hex SHA-256 truncation birthday bound); open/ glob check p95 < 10ms over ≤ 1000 open proposals",
+      "measurement": "Determinism: `test_stripe_determinism` in `modules/cuo/tests/test_refinement_proposal.py` already verifies — same evidence → same stripe across two calls in the same process.",
+      "modules": "cuo",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-19",
+      "related_frs": [
+        "FR-CUO-201"
+      ],
+      "path": "docs/non-functional-requirements/cuo/NFR-CUO-201-stripe-dedup-correctness-and-latency.md"
+    },
+    {
+      "id": "NFR-CUO-202",
+      "category": "rel",
+      "phase": "P0",
+      "title": "proposal classifier MUST be deterministic + read-only + test-gate-blocking",
+      "description": "`cuo.core.proposal_applier.classify_proposal(proposal_path, skill_root)` MUST be deterministic — same proposal body + same target SKILL.md → same `Classification` dataclass across runs / processes / sessions.",
+      "target": "classify_proposal: 100% deterministic across runs; 0% mutation of any file; test-gate failure → 100% queue (never auto-apply)",
+      "measurement": "Determinism (already covered by FR-CUO-202 tests): not a separate benchmark — `test_classify_is_read_only` + `test_bump_levels` together prove classification stability.",
+      "modules": "cuo",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-19",
+      "related_frs": [
+        "FR-CUO-202"
+      ],
+      "path": "docs/non-functional-requirements/cuo/NFR-CUO-202-applier-classifier-determinism.md"
+    },
+    {
+      "id": "NFR-CUO-203",
+      "category": "scal",
+      "phase": "P0",
+      "title": "workflow signal eval MUST be O(N) — p95 < 2s at 10⁶ audit rows",
+      "description": "`cuo.core.workflow_evolution.compute_workflow_metrics(rows)` MUST be O(N) in the total audit-row count — single pass, dict insertion, no nested re-iteration of `rows`.",
+      "target": "compute_workflow_metrics + evaluate_workflow_signals: O(N) in row count; p95 < 2s wall-clock at N=10⁶ rows × W=50 workflows",
+      "measurement": "Linearity: NEW benchmark `modules/cuo/tests/bench_workflow_evolution.py` runs `compute_workflow_metrics` against synthetic chains of N ∈ {10³, 10⁴, 10⁵, 10⁶} rows.",
+      "modules": "cuo",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-19",
+      "related_frs": [
+        "FR-CUO-203"
+      ],
+      "path": "docs/non-functional-requirements/cuo/NFR-CUO-203-workflow-signal-eval-linearity.md"
+    },
+    {
+      "id": "NFR-CUO-001",
+      "category": "perf",
+      "phase": "P0",
+      "title": "CUO catalog scan latency — full persona+workflow scan completes < 3s",
+      "description": "The CUO supervisor's filesystem catalog scan (`modules/cuo/cuo/catalog.py::scan_catalog()`) MUST complete a full pass over `cuo/<persona>/<workflow>.md` + `skill/public/<skill>/SKILL.md` at p95 < 3s for a catalog of up to 500 personas and 5000 workflows.",
+      "target": "p95 < 3s for full cuo/ + skill/ filesystem catalog scan + validation",
+      "measurement": "Histogram `cuo_catalog_scan_latency_seconds{stage=walk|parse|validate}` — surfaces which sub-step dominates.",
+      "modules": "CUO",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-CUO-101",
+        "FR-CUO-104"
+      ],
+      "path": "docs/non-functional-requirements/cuo/NFR-CUO-001-catalog-scan-latency.md"
+    },
+    {
+      "id": "NFR-CUO-002",
+      "category": "comp",
+      "phase": "P0",
+      "title": "CUO memory audit-chain emission — every chain execution MUST emit ≥ 2 rows",
+      "description": "Every CUO chain execution with `--memory-emit` flag set MUST emit one `kind=cuo.step` row per executed step plus one `kind=cuo.chain.end` summary row carrying `{persona, workflow, step_count, started_at, ended_at, outcome}`.",
+      "target": "100% of executed chains produce 1 row per step + 1 summary row; reconciliation drift < 0.001%",
+      "measurement": "Counter `cuo_memory_emit_attempt_total{stage=step|summary, result=success|fail}`.",
+      "modules": "CUO",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-CUO-101",
+        "FR-CUO-103"
+      ],
+      "path": "docs/non-functional-requirements/cuo/NFR-CUO-002-memory-audit-chain-emission.md"
+    },
+    {
+      "id": "NFR-CUO-003",
+      "category": "rel",
+      "phase": "P0",
+      "title": "CUO handler dispatch correctness — workflow pattern maps to single handler",
+      "description": "Every workflow declaring a `pattern:` in its frontmatter MUST dispatch to exactly one Handler subclass (`LinearHandler | TimeCriticalHandler | PerInstanceHandler | MultiOutputHandler | SequentialApprovalHandler | PersonaPairHandler`) — there is no \"default\" fallback.",
+      "target": "100% of workflows dispatch to exactly one handler; 0 fallback-to-default in production",
+      "measurement": "CI metric `cuo_workflows_missing_pattern_count` — must be 0.",
+      "modules": "CUO",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-CUO-106",
+        "FR-CUO-104"
+      ],
+      "path": "docs/non-functional-requirements/cuo/NFR-CUO-003-handler-dispatch-correctness.md"
+    },
+    {
+      "id": "NFR-CUO-004",
+      "category": "rel",
+      "phase": "P0",
+      "title": "CUO LLM invoker fallback ladder — MockInvoker → SubprocessInvoker → LLMInvoker",
+      "description": "The CUO supervisor's `select_invoker(\"auto\")` function MUST prefer in priority order: (a) `SubprocessInvoker` if `cyberos-skill` binary is on `$PATH`, else (b) `MockInvoker`.",
+      "target": "100% of invoker selection follows the documented ladder; explicit selection always honoured",
+      "measurement": "Counter `cuo_invoker_selected_total{invoker, mode=auto|explicit}`.",
+      "modules": "CUO",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-CUO-101",
+        "FR-CUO-103"
+      ],
+      "path": "docs/non-functional-requirements/cuo/NFR-CUO-004-llm-fallback-ladder.md"
+    },
+    {
+      "id": "NFR-CUO-005",
+      "category": "comp",
+      "phase": "P0",
+      "title": "CUO persona-version stamping — every chain MUST record persona+workflow version",
+      "description": "Every CUO chain audit row MUST carry `{persona_slug, persona_version, workflow_slug, workflow_version}` — both slug and version, both for persona and workflow.",
+      "target": "100% of audit rows carry persona_slug, persona_version, workflow_slug, workflow_version",
+      "measurement": "Counter `cuo_audit_missing_version_total` — must always be 0.",
+      "modules": "CUO",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-CUO-101",
+        "FR-CUO-103"
+      ],
+      "path": "docs/non-functional-requirements/cuo/NFR-CUO-005-persona-version-stamping.md"
+    },
+    {
+      "id": "NFR-CUO-006",
+      "category": "maint",
+      "phase": "P0",
+      "title": "CUO workflow-pattern parsing — YAML safe-load + closed enum + clean error reporting",
+      "description": "Workflow YAML frontmatter MUST parse with `yaml.safe_load()` (no full YAML loader, no arbitrary tag execution).",
+      "target": "100% of workflow frontmatter parses; failed parses produce {file,line,reason} error",
+      "measurement": "Counter `cuo_workflow_parse_error_total{file, reason}`.",
+      "modules": "CUO",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-CUO-101",
+        "FR-CUO-106"
+      ],
+      "path": "docs/non-functional-requirements/cuo/NFR-CUO-006-workflow-pattern-parsing.md"
+    },
+    {
+      "id": "NFR-CUO-007",
+      "category": "rel",
+      "phase": "P1",
+      "title": "CUO replay safety — replayed chain MUST produce same audit row count + order",
+      "description": "Replaying a previously-executed chain (via `cyberos-cuo execute --replay <chain_id>`) MUST produce the same `step_count`, same `skill_chain`, same `outcome` as the original.",
+      "target": "100% of replayed chains match original step count + skill chain + outcome",
+      "measurement": "Counter `cuo_replay_attempt_total{result=success|version_gone|mismatch}`.",
+      "modules": "CUO",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-CUO-103",
+        "FR-CUO-105"
+      ],
+      "path": "docs/non-functional-requirements/cuo/NFR-CUO-007-replay-safety.md"
+    },
+    {
+      "id": "NFR-CUO-008",
+      "category": "perf",
+      "phase": "P1",
+      "title": "CUO route decision latency — natural-language → persona+workflow < 1.5s",
+      "description": "The CUO router (`cyberos-cuo route \"<query>\"`) MUST return a persona+workflow decision at p95 < 1.5s and p99 < 3s for the default Phase-1 two-stage routing algorithm (persona match → workflow match within persona).",
+      "target": "p95 < 1.5s for cyberos-cuo route <natural-language>",
+      "measurement": "Histogram `cuo_route_latency_seconds{stage=persona_match|workflow_match|llm, invoker}`.",
+      "modules": "CUO",
+      "verify": "T",
+      "priority": "SHOULD",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-CUO-101"
+      ],
+      "path": "docs/non-functional-requirements/cuo/NFR-CUO-008-route-decision-latency.md"
+    },
+    {
+      "id": "NFR-CUO-009",
+      "category": "rel",
+      "phase": "P0",
+      "title": "CUO per-step rollback — failed step MUST trigger declared compensations in reverse order",
+      "description": "When a chain step fails AND the chain declares `rollback: <skill_id>` per step, all completed steps' rollback skills MUST execute in strict reverse order before the chain exits.",
+      "target": "100% of step failures with declared compensations execute the rollback in reverse order",
+      "measurement": "Counter `cuo_rollback_attempt_total{step_index, result=success|failed|timeout}`.",
+      "modules": "CUO",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-CUO-105"
+      ],
+      "path": "docs/non-functional-requirements/cuo/NFR-CUO-009-per-step-rollback.md"
+    },
+    {
+      "id": "NFR-CUO-010",
+      "category": "rel",
+      "phase": "P0",
+      "title": "CUO LangGraph Postgres checkpointer durability — checkpoint writes MUST be fsync'd",
+      "description": "LangGraph state checkpoints MUST be written to Postgres with `synchronous_commit = on`; checkpoint writes that return success are durable.",
+      "target": "0 lost checkpoints after process crash; recovery resumes from last fsync'd checkpoint",
+      "measurement": "Histogram `cuo_checkpoint_write_latency_seconds`.",
+      "modules": "CUO",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-CUO-102"
+      ],
+      "path": "docs/non-functional-requirements/cuo/NFR-CUO-010-checkpointer-durability.md"
+    },
+    {
+      "id": "NFR-DOC-001",
+      "category": "comp",
+      "phase": "P0",
+      "title": "DOC eIDAS QTSP attestation — signatures MUST be QES-grade for EU jurisdiction docs",
+      "description": "Signatures applied to documents tagged `jurisdiction: EU` MUST be Qualified Electronic Signatures (QES) per eIDAS Regulation EU 910/2014, backed by a QTSP from the EU trusted list.",
+      "target": "100% of EU-jurisdiction signatures carry a valid QES attestation from a recognised QTSP",
+      "measurement": "Counter `doc_signature_total{jurisdiction, signature_class}` — assert EU + non-QES = 0.",
+      "modules": "DOC",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CLO-Legal",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-DOC-002"
+      ],
+      "path": "docs/non-functional-requirements/doc/NFR-DOC-001-eidas-qtsp-attestation.md"
+    },
+    {
+      "id": "NFR-DOC-002",
+      "category": "comp",
+      "phase": "P0",
+      "title": "DOC PAdES-LT timestamp freshness — restamp before any timestamp expiry",
+      "description": "Documents signed with PAdES-LT (Long-Term) MUST be restamped (PAdES-LTA extension) at least 30 days before any contained timestamp or CRL nears its validity end.",
+      "target": "100% of PAdES-LT documents restamped at least 30 days before any contained timestamp expires",
+      "measurement": "Gauge `doc_pades_lt_days_until_restamp_needed{doc_id}` — min across all timestamps.",
+      "modules": "DOC",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CLO-Legal",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-DOC-011"
+      ],
+      "path": "docs/non-functional-requirements/doc/NFR-DOC-002-pades-lt-freshness.md"
+    },
+    {
+      "id": "NFR-DOC-003",
+      "category": "comp",
+      "phase": "P0",
+      "title": "DOC VN-CA signature compliance — Vietnamese signatures MUST chain to NEAC root",
+      "description": "Documents tagged `jurisdiction: VN` MUST be signed with certificates that chain to a National Electronic Authentication Centre (NEAC) recognised root CA.",
+      "target": "100% of VN-jurisdiction signatures chain to a NEAC-recognised CA",
+      "measurement": "Counter `doc_signature_total{jurisdiction=VN, ca_recognised}` — assert non-recognised = 0.",
+      "modules": "DOC",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CLO-Legal",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-DOC-004"
+      ],
+      "path": "docs/non-functional-requirements/doc/NFR-DOC-003-vn-ca-signature.md"
+    },
+    {
+      "id": "NFR-DOC-004",
+      "category": "comp",
+      "phase": "P1",
+      "title": "DOC VNeID linkage — identity-verified signers MUST be bound to VNeID identifier",
+      "description": "When a signer's identity is verified via VNeID (Vietnamese national digital ID), the resulting signature MUST carry the VNeID identifier in the attestation block.",
+      "target": "100% of VNeID-verified signers carry the VNeID identifier in the signature attestation",
+      "measurement": "Counter `doc_vneid_signature_total`.",
+      "modules": "DOC",
+      "verify": "T",
+      "priority": "SHOULD",
+      "owner": "CLO-Legal",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-DOC-006"
+      ],
+      "path": "docs/non-functional-requirements/doc/NFR-DOC-004-vneid-linkage.md"
+    },
+    {
+      "id": "NFR-DOC-005",
+      "category": "rel",
+      "phase": "P0",
+      "title": "DOC IDV method coverage — all 4 declared methods MUST be reachable per tenant",
+      "description": "The four declared IDV methods (`vneid`, `eidas`, `aatl`, `email_link`) MUST all be reachable + functional for every tenant in supported regions; outages are tracked per method per region.",
+      "target": "100% of IDV methods (VNeID, eIDAS, AATL, email-link) reachable from each tenant region",
+      "measurement": "Per-method availability gauges (hourly probe + monthly aggregate).",
+      "modules": "DOC",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CLO-Legal",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-DOC-006"
+      ],
+      "path": "docs/non-functional-requirements/doc/NFR-DOC-005-idv-method-coverage.md"
+    },
+    {
+      "id": "NFR-DOC-006",
+      "category": "rel",
+      "phase": "P0",
+      "title": "DOC expiry alert latency — alerts MUST fire at 90/30/7/1 day(s) before document expiry",
+      "description": "Documents with `expiry_at:` metadata MUST trigger alerts at 90, 30, 7, and 1 day(s) before expiry, each within ±1 day of the scheduled point.",
+      "target": "100% of tracked-expiry documents fire alerts at the four scheduled cadences within ±1 day",
+      "measurement": "Counter `doc_expiry_alert_fired_total{cadence}`.",
+      "modules": "DOC",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CLO-Legal",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-DOC-008"
+      ],
+      "path": "docs/non-functional-requirements/doc/NFR-DOC-006-expiry-alert-latency.md"
+    },
+    {
+      "id": "NFR-DOC-007",
+      "category": "rel",
+      "phase": "P1",
+      "title": "DOC renewal-draft accuracy — generated renewal MUST preserve original terms unless flagged",
+      "description": "The renewal-proposal CUO workflow (`FR-DOC-009`) MUST generate a renewal draft that preserves the original document's core terms unless the workflow explicitly flags a delta.",
+      "target": "100% of renewal drafts preserve original terms (parties, scope, term length) modulo explicit deltas",
+      "measurement": "Sample audit: CLO-Legal reviews 10% of generated drafts for unexpected mutations; counter `doc_renewal_unexpected_mutation_total`.",
+      "modules": "DOC",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CLO-Legal",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-DOC-009"
+      ],
+      "path": "docs/non-functional-requirements/doc/NFR-DOC-007-renewal-draft-accuracy.md"
+    },
+    {
+      "id": "NFR-DOC-008",
+      "category": "rel",
+      "phase": "P0",
+      "title": "DOC signing workflow integrity — multi-party sign MUST complete in declared order",
+      "description": "Multi-party signing flows declared as `sequence: ordered` MUST require signers to sign in declared order; signer N cannot sign before signers 1..N-1 have completed.",
+      "target": "100% of sequential-signing workflows complete in declared signer order; 0 out-of-order signatures",
+      "measurement": "Counter `doc_sign_order_violation_total` — must be 0.",
+      "modules": "DOC",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-DOC-005"
+      ],
+      "path": "docs/non-functional-requirements/doc/NFR-DOC-008-signing-workflow-integrity.md"
+    },
+    {
+      "id": "NFR-DOC-009",
+      "category": "sec",
+      "phase": "P0",
+      "title": "DOC third-party import validation — imported signed docs MUST be signature-verified",
+      "description": "Documents imported from third-party providers (DocuSign, Adobe Sign, etc.) MUST have their signatures verified at import time against the issuing CA chains.",
+      "target": "100% of imported signed docs verified at import; invalid signatures flagged + quarantined",
+      "measurement": "Counter `doc_import_signature_status_total{status=valid|invalid|unsigned}`.",
+      "modules": "DOC",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-DOC-010"
+      ],
+      "path": "docs/non-functional-requirements/doc/NFR-DOC-009-third-party-import-validation.md"
+    },
+    {
+      "id": "NFR-EMAIL-001",
+      "category": "perf",
+      "phase": "P0",
+      "title": "EMAIL inbound delivery latency — SMTP receipt to inbox visible < 30s p95",
+      "description": "Inbound emails reaching the Stalwart MTA MUST be parsed, classified, indexed, and visible in the recipient's inbox UI within 30s p95 and 90s p99.",
+      "target": "p95 < 30s from SMTP MAIL FROM to inbox-row visible in user UI",
+      "measurement": "Histogram `email_inbound_delivery_latency_seconds{stage=receive|auth_check|camel|index|notify}`.",
+      "modules": "EMAIL",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-EMAIL-001",
+        "FR-EMAIL-003"
+      ],
+      "path": "docs/non-functional-requirements/email/NFR-EMAIL-001-inbound-delivery-latency.md"
+    },
+    {
+      "id": "NFR-EMAIL-002",
+      "category": "sec",
+      "phase": "P0",
+      "title": "EMAIL CaMeL prompt-injection blocking — recall ≥ 95% on the held-out adversarial set",
+      "description": "The CaMeL dual-LLM defence (`FR-EMAIL-005`) MUST detect prompt-injection content in inbound mail at recall ≥ 95% on the platform's held-out adversarial corpus (200+ samples curated by CISO).",
+      "target": "Recall ≥ 95% on the platform's adversarial prompt-injection email corpus",
+      "measurement": "Per-quarter benchmark: recall + FP rate against held-out + legitimate corpus.",
+      "modules": "EMAIL",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CISO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-EMAIL-005"
+      ],
+      "path": "docs/non-functional-requirements/email/NFR-EMAIL-002-camel-injection-blocking.md"
+    },
+    {
+      "id": "NFR-EMAIL-003",
+      "category": "maint",
+      "phase": "P1",
+      "title": "EMAIL BIMI freshness — VMC + BIMI record MUST stay valid; auto-alert on expiry",
+      "description": "The tenant's BIMI Verified Mark Certificate (VMC) + DNS BIMI record MUST be validated weekly via the platform's BIMI prober.",
+      "target": "BIMI VMC + DNS record validated weekly; alert ≥ 30 days before expiry",
+      "measurement": "Gauge `email_bimi_vmc_days_until_expiry{tenant}`.",
+      "modules": "EMAIL",
+      "verify": "A",
+      "priority": "SHOULD",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-EMAIL-004"
+      ],
+      "path": "docs/non-functional-requirements/email/NFR-EMAIL-003-bimi-freshness.md"
+    },
+    {
+      "id": "NFR-EMAIL-004",
+      "category": "sec",
+      "phase": "P0",
+      "title": "EMAIL DKIM/SPF/DMARC pass-through — outbound mail MUST be DMARC-aligned",
+      "description": "Every outbound email MUST carry a valid DKIM signature aligned to the tenant's sending domain; the platform refuses to send unsigned mail.",
+      "target": "100% of outbound emails pass DKIM + SPF + DMARC alignment for the tenant's sending domain",
+      "measurement": "Hourly synthetic mail-to-self DMARC pass rate per tenant.",
+      "modules": "EMAIL",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-EMAIL-004",
+        "FR-EMAIL-009"
+      ],
+      "path": "docs/non-functional-requirements/email/NFR-EMAIL-004-dkim-spf-dmarc-pass.md"
+    },
+    {
+      "id": "NFR-EMAIL-005",
+      "category": "rel",
+      "phase": "P0",
+      "title": "EMAIL thread merge correctness — In-Reply-To + References MUST group messages correctly",
+      "description": "Inbound messages carrying `In-Reply-To` or `References` headers MUST be merged into the parent thread when the parent exists in the tenant's inbox.",
+      "target": "≥ 99% of incoming messages with In-Reply-To are correctly merged into the parent thread",
+      "measurement": "Counter `email_thread_merge_total{method=header|subject|new}`.",
+      "modules": "EMAIL",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-EMAIL-003"
+      ],
+      "path": "docs/non-functional-requirements/email/NFR-EMAIL-005-thread-merge-correctness.md"
+    },
+    {
+      "id": "NFR-EMAIL-006",
+      "category": "sec",
+      "phase": "P0",
+      "title": "EMAIL dual-LLM separation — quarantined LLM MUST NOT see untrusted content + tool surface",
+      "description": "The CaMeL dual-LLM architecture MUST maintain strict separation: the \"privileged\" LLM has tool access but never sees raw email body; the \"quarantined\" LLM sees raw body but has zero tool access.",
+      "target": "100% of CaMeL pipeline runs maintain LLM separation; 0 untrusted-content-with-tools events",
+      "measurement": "Counter `email_camel_quarantined_tool_attempt_total` — must be 0.",
+      "modules": "EMAIL",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CISO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-EMAIL-005"
+      ],
+      "path": "docs/non-functional-requirements/email/NFR-EMAIL-006-dual-llm-separation.md"
+    },
+    {
+      "id": "NFR-EMAIL-007",
+      "category": "priv",
+      "phase": "P0",
+      "title": "EMAIL DSAR export completeness — export MUST contain all subject's messages + metadata",
+      "description": "A DSAR export for a data subject MUST include all email messages where the subject appears in `From`, `To`, `Cc`, `Bcc`, or as referenced in body text via PII matching.",
+      "target": "100% of DSAR exports include all related messages; reconciliation = 0 missing rows",
+      "measurement": "Counter `email_dsar_export_request_total{result=success|partial|failed}`.",
+      "modules": "EMAIL",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CPO-Privacy",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-EMAIL-011"
+      ],
+      "path": "docs/non-functional-requirements/email/NFR-EMAIL-007-dsar-export-completeness.md"
+    },
+    {
+      "id": "NFR-EMAIL-008",
+      "category": "sec",
+      "phase": "P0",
+      "title": "EMAIL bulk-send approval — sends > 100 recipients MUST require explicit approval",
+      "description": "Outbound sends with > 100 unique recipients MUST be paused for explicit approval by a tenant role granted `email:bulk:approve`.",
+      "target": "100% of bulk sends (>100 recipients) carry a recorded approval; 0 auto-sent bulks",
+      "measurement": "Counter `email_bulk_send_attempt_total{result=approved|paused|rejected}`.",
+      "modules": "EMAIL",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-EMAIL-010"
+      ],
+      "path": "docs/non-functional-requirements/email/NFR-EMAIL-008-bulk-send-approval.md"
+    },
+    {
+      "id": "NFR-HR-001",
+      "category": "maint",
+      "phase": "P0",
+      "title": "HR member schema invariants — required fields + closed enum types + unique member_id",
+      "description": "The HR `member` table MUST enforce: required fields (`member_id, full_name, email, employment_status, hire_date, contract_type`); closed enum for `employment_status` and `contract_type`.",
+      "target": "100% of member rows satisfy required-field + uniqueness invariants",
+      "measurement": "CI metric `hr_member_schema_violation_count` — must be 0.",
+      "modules": "HR",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CHRO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-HR-001"
+      ],
+      "path": "docs/non-functional-requirements/hr/NFR-HR-001-member-schema-invariants.md"
+    },
+    {
+      "id": "NFR-HR-002",
+      "category": "comp",
+      "phase": "P0",
+      "title": "HR contract-history immutability — contract changes MUST create new versions, never edit old",
+      "description": "Contract changes (promotion, comp change, role change) MUST create a new contract row with `effective_from` timestamp; the prior row is closed with `effective_to`.",
+      "target": "100% of contract changes create new versioned row; 0 in-place edits",
+      "measurement": "Counter `hr_contract_in_place_edit_attempt_total` — must be 0.",
+      "modules": "HR",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CHRO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-HR-002"
+      ],
+      "path": "docs/non-functional-requirements/hr/NFR-HR-002-contract-history-immutability.md"
+    },
+    {
+      "id": "NFR-HR-003",
+      "category": "priv",
+      "phase": "P0",
+      "title": "HR CCCD-photo access logging — every read MUST be logged with reason; sev-1 on bypass",
+      "description": "Every read of a CCCD (Vietnamese national ID) photo MUST be logged with `{accessor_id, accessed_at, member_id, reason_code, justification}`.",
+      "target": "100% of CCCD-photo reads carry a logged access reason; 0 bypassed reads",
+      "measurement": "Counter `hr_cccd_access_total{reason_code}`.",
+      "modules": "HR",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CPO-Privacy",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-HR-003"
+      ],
+      "path": "docs/non-functional-requirements/hr/NFR-HR-003-cccd-photo-access-logging.md"
+    },
+    {
+      "id": "NFR-HR-004",
+      "category": "rel",
+      "phase": "P0",
+      "title": "HR leave-balance accuracy — accrued - used = balance within ±0.01 days",
+      "description": "Per-member per-leave-type balance MUST satisfy: `accrued - used - corrections = current_balance`, within ±0.01 days.",
+      "target": "100% of member leave balances match accrual - usage within ±0.01 days",
+      "measurement": "Daily reconciliation: `hr_leave_balance_drift_days{member, leave_type}` — must be < 0.01.",
+      "modules": "HR",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CHRO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-HR-004",
+        "FR-HR-006"
+      ],
+      "path": "docs/non-functional-requirements/hr/NFR-HR-004-leave-balance-accuracy.md"
+    },
+    {
+      "id": "NFR-HR-005",
+      "category": "comp",
+      "phase": "P1",
+      "title": "HR policy-version compatibility — policy changes MUST be backward-compatible for in-flight cases",
+      "description": "HR policies (leave, working hours, OT rates) MUST be versioned; in-flight cases (a leave request submitted under v1) MUST be evaluated against v1 even after v2 ships.",
+      "target": "100% of in-flight HR cases preserve their original policy version",
+      "measurement": "Counter `hr_policy_version_mismatch_total` — case evaluated under wrong version; must be 0.",
+      "modules": "HR",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CHRO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-HR-005"
+      ],
+      "path": "docs/non-functional-requirements/hr/NFR-HR-005-policy-version-compatibility.md"
+    },
+    {
+      "id": "NFR-HR-006",
+      "category": "comp",
+      "phase": "P0",
+      "title": "HR accrual-correction audit — every manual leave adjustment MUST require reason + approver",
+      "description": "Manual leave-accrual corrections (overrides of the automatic accrual) MUST be approved by a member with `hr:leave:adjust` permission.",
+      "target": "100% of accrual corrections carry approver signature + structured reason",
+      "measurement": "Counter `hr_accrual_correction_total{reason_code, approver_role}`.",
+      "modules": "HR",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CHRO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-HR-006"
+      ],
+      "path": "docs/non-functional-requirements/hr/NFR-HR-006-accrual-correction-audit.md"
+    },
+    {
+      "id": "NFR-HR-007",
+      "category": "rel",
+      "phase": "P0",
+      "title": "HR onboarding saga durability — every step MUST be replayable; crashes recoverable",
+      "description": "The HR onboarding saga (`FR-HR-007`) MUST persist step state in a durable journal — process crashes resume at last completed step.",
+      "target": "100% of onboarding sagas reach terminal state; crashes recover from last step",
+      "measurement": "Counter `hr_onboarding_saga_total{outcome}`.",
+      "modules": "HR",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CHRO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-HR-007"
+      ],
+      "path": "docs/non-functional-requirements/hr/NFR-HR-007-onboarding-saga-durability.md"
+    },
+    {
+      "id": "NFR-HR-008",
+      "category": "comp",
+      "phase": "P0",
+      "title": "HR termination signoff window — termination MUST be signed by CHRO + line manager within 72h",
+      "description": "Termination workflow MUST require both CHRO + line-manager signatures within a 72h rolling window.",
+      "target": "100% of terminations carry both signatures within 72h; expired approvals require resubmission",
+      "measurement": "Counter `hr_termination_total{kind, signers_count}`.",
+      "modules": "HR",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CHRO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-HR-009"
+      ],
+      "path": "docs/non-functional-requirements/hr/NFR-HR-008-termination-signoff.md"
+    },
+    {
+      "id": "NFR-HR-009",
+      "category": "comp",
+      "phase": "P0",
+      "title": "HR performance history retention — performance signals MUST be retained ≥ 7 years",
+      "description": "Performance signals (reviews, ratings, 360s, PIPs) MUST be retained ≥ 7 years post-member-termination.",
+      "target": "100% of perf-signal rows retained ≥ 7 years; 0 unauthorized deletions",
+      "measurement": "Gauge `hr_perf_record_oldest_age_years` — must be ≥ 7 for terminated members.",
+      "modules": "HR",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CHRO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-HR-008"
+      ],
+      "path": "docs/non-functional-requirements/hr/NFR-HR-009-perf-history-retention.md"
+    },
+    {
+      "id": "NFR-KB-001",
+      "category": "maint",
+      "phase": "P0",
+      "title": "KB document versioning history — every save MUST create an immutable version row",
+      "description": "Every document save MUST create an immutable version row in `kb_document_version` carrying `{doc_id, version_no, author_id, saved_at, body_hash, body_blob_ref}`.",
+      "target": "100% of document saves produce a version row; history immutable; retention ≥ 1 year",
+      "measurement": "Counter `kb_document_save_total{result}`.",
+      "modules": "KB",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-KB-001",
+        "FR-KB-002"
+      ],
+      "path": "docs/non-functional-requirements/kb/NFR-KB-001-doc-versioning-history.md"
+    },
+    {
+      "id": "NFR-KB-002",
+      "category": "sec",
+      "phase": "P0",
+      "title": "KB share-link revocation — revoked link MUST stop working within 60s globally",
+      "description": "Revoking a KB share link MUST propagate to all read paths (origin + CDN + cached link tables) within 60s p95.",
+      "target": "p95 < 60s from revoke action to refused-access at any edge",
+      "measurement": "Histogram `kb_share_link_revocation_propagation_seconds`.",
+      "modules": "KB",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-KB-003"
+      ],
+      "path": "docs/non-functional-requirements/kb/NFR-KB-002-share-link-revocation.md"
+    },
+    {
+      "id": "NFR-KB-003",
+      "category": "usab",
+      "phase": "P1",
+      "title": "KB semantic search recall — bge-m3 + rerank MUST hit recall@10 ≥ 90%",
+      "description": "KB semantic search (`FR-KB-005` bge-m3 + `FR-KB-006` rerank) MUST achieve recall@10 ≥ 90% on the platform's labeled evaluation corpus (1000+ query/doc pairs).",
+      "target": "Recall@10 ≥ 90% on the platform's labeled query/document corpus",
+      "measurement": "Per-quarter benchmark: recall@10, MRR, latency p95.",
+      "modules": "KB",
+      "verify": "T",
+      "priority": "SHOULD",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-KB-005",
+        "FR-KB-006"
+      ],
+      "path": "docs/non-functional-requirements/kb/NFR-KB-003-semantic-search-recall.md"
+    },
+    {
+      "id": "NFR-KB-004",
+      "category": "usab",
+      "phase": "P0",
+      "title": "KB lexical search recall — FTS5 + pgroonga MUST cover known-keyword queries at ≥ 99%",
+      "description": "Lexical search (FTS5 for SQLite tier; pgroonga for Postgres tier) MUST find documents containing exact keyword matches at recall ≥ 99% — known-keyword queries should not silently miss documents.",
+      "target": "Recall ≥ 99% for known-keyword queries; p95 latency < 200ms",
+      "measurement": "Per-quarter benchmark: recall on known-keyword test set.",
+      "modules": "KB",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-KB-004"
+      ],
+      "path": "docs/non-functional-requirements/kb/NFR-KB-004-lexical-search-recall.md"
+    },
+    {
+      "id": "NFR-KB-005",
+      "category": "usab",
+      "phase": "P1",
+      "title": "KB runbook-tag accuracy — runbook docs MUST be findable by incident-keyword + tag combo",
+      "description": "Documents tagged `kind:runbook` MUST be retrievable via the API `?tag=runbook&query=<incident-keyword>` and rank in the top-3 results for the keyword.",
+      "target": "100% of tagged runbooks surface in top-3 for canonical incident-keyword queries",
+      "measurement": "Per-quarter benchmark: top-3 accuracy on canonical incident queries.",
+      "modules": "KB",
+      "verify": "T",
+      "priority": "SHOULD",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-KB-008"
+      ],
+      "path": "docs/non-functional-requirements/kb/NFR-KB-005-runbook-tag-accuracy.md"
+    },
+    {
+      "id": "NFR-KB-006",
+      "category": "maint",
+      "phase": "P1",
+      "title": "KB translation parity — translated doc MUST reference + lag source by ≤ 24h",
+      "description": "Documents with `translation_of: <doc_id>` frontmatter MUST point to a real source document in the same tenant.",
+      "target": "100% of `translation_of:` docs reference an existing source; sync lag ≤ 24h after source change",
+      "measurement": "Counter `kb_translation_dangling_total` — must be 0.",
+      "modules": "KB",
+      "verify": "T",
+      "priority": "SHOULD",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-KB-009"
+      ],
+      "path": "docs/non-functional-requirements/kb/NFR-KB-006-translation-parity.md"
+    },
+    {
+      "id": "NFR-KB-007",
+      "category": "perf",
+      "phase": "P1",
+      "title": "KB render cache TTL — rendered HTML MUST refresh within 60s of doc save",
+      "description": "The KB server-side renderer (`FR-KB-002`) MUST cache rendered HTML keyed by `(doc_id, doc_version, theme)` for fast serving.",
+      "target": "p95 < 60s from doc save to fresh rendered HTML served to all readers",
+      "measurement": "Histogram `kb_render_cache_stale_after_save_seconds`.",
+      "modules": "KB",
+      "verify": "T",
+      "priority": "SHOULD",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-KB-002"
+      ],
+      "path": "docs/non-functional-requirements/kb/NFR-KB-007-render-cache-ttl.md"
+    },
+    {
+      "id": "NFR-MCP-001",
+      "category": "comp",
+      "phase": "P0",
+      "title": "MCP protocol compliance — runtime MUST conform to spec 2025-11-25",
+      "description": "The CyberOS MCP runtime MUST implement the JSON-RPC 2.0 message envelope, capability negotiation, and tool/resource/prompt primitives per the MCP spec version 2025-11-25.",
+      "target": "100% pass on official MCP conformance suite for spec version 2025-11-25",
+      "measurement": "CI: full conformance suite pass/fail per spec version.",
+      "modules": "MCP",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-MCP-001",
+        "FR-MCP-002"
+      ],
+      "path": "docs/non-functional-requirements/mcp/NFR-MCP-001-spec-compliance.md"
+    },
+    {
+      "id": "NFR-MCP-002",
+      "category": "sec",
+      "phase": "P0",
+      "title": "MCP tool annotation gating — destructive ops require explicit human approval annotation",
+      "description": "Every MCP tool exposed by CyberOS MUST declare annotations: `{destructive: bool, readOnly: bool, openWorld: bool}`.",
+      "target": "100% of tools annotated destructive=true gate behind human approval; 0 silent destructions",
+      "measurement": "Counter `mcp_destructive_call_attempt_total{tool, approved}` — surfaces approval rates.",
+      "modules": "MCP",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-MCP-006"
+      ],
+      "path": "docs/non-functional-requirements/mcp/NFR-MCP-002-tool-annotation-gating.md"
+    },
+    {
+      "id": "NFR-MCP-003",
+      "category": "sec",
+      "phase": "P0",
+      "title": "MCP audience-bound tokens — OAuth tokens MUST be aud-scoped to the MCP server",
+      "description": "Tokens issued for use against an MCP server MUST carry the JWT `aud` claim equal to `mcp:<server-id>` (e.g., `mcp:cyberos-projects`).",
+      "target": "100% of MCP-bound tokens carry aud=mcp:<server-id>; cross-audience use rejected",
+      "measurement": "Counter `mcp_token_aud_mismatch_total{server_id, token_aud}`.",
+      "modules": "MCP",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-MCP-004",
+        "FR-MCP-005"
+      ],
+      "path": "docs/non-functional-requirements/mcp/NFR-MCP-003-audience-bound-tokens.md"
+    },
+    {
+      "id": "NFR-MCP-004",
+      "category": "rel",
+      "phase": "P1",
+      "title": "MCP task primitive lifecycle — task state transitions MUST be linear + auditable",
+      "description": "Tasks (per the spec `tasks` primitive) MUST transition through states `pending → running → (succeeded | failed | cancelled)` — no backward transitions; no state outside the closed set.",
+      "target": "100% of task state transitions follow the spec FSM; 0 backward transitions",
+      "measurement": "Histogram `mcp_task_lifetime_seconds{outcome}`.",
+      "modules": "MCP",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-MCP-007"
+      ],
+      "path": "docs/non-functional-requirements/mcp/NFR-MCP-004-task-primitive-lifecycle.md"
+    },
+    {
+      "id": "NFR-MCP-005",
+      "category": "sec",
+      "phase": "P1",
+      "title": "MCP elicitation prompt safety — server-issued prompts MUST be scoped + escapable",
+      "description": "MCP elicitation prompts (server → client requests for additional info) MUST NOT contain instructions that override the host shell's own system prompt or behaviour rules.",
+      "target": "100% of elicitation prompts pass injection-safety lint; clients can always decline",
+      "measurement": "Counter `mcp_elicitation_lint_block_total{server, reason}`.",
+      "modules": "MCP",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-MCP-008"
+      ],
+      "path": "docs/non-functional-requirements/mcp/NFR-MCP-005-elicitation-prompt-safety.md"
+    },
+    {
+      "id": "NFR-MCP-006",
+      "category": "comp",
+      "phase": "P0",
+      "title": "MCP SEP-986 naming compliance — all server/tool identifiers MUST match SEP-986 regex",
+      "description": "Every MCP server, tool, resource, and prompt name MUST conform to the SEP-986 naming pattern: `^[a-z][a-z0-9_-]{0,63}$` (lowercase ASCII, digits, underscore, hyphen, leading letter, max 64 chars).",
+      "target": "100% of names pass SEP-986 validator; non-conforming names blocked at registration",
+      "measurement": "Counter `mcp_name_reject_total{reason=pattern|collision|length}`.",
+      "modules": "MCP",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-MCP-003"
+      ],
+      "path": "docs/non-functional-requirements/mcp/NFR-MCP-006-sep986-naming.md"
+    },
+    {
+      "id": "NFR-MCP-007",
+      "category": "sec",
+      "phase": "P0",
+      "title": "MCP OAuth PKCE — authorization code flow MUST require PKCE; no implicit grant",
+      "description": "The MCP-AUTH endpoint MUST require PKCE (RFC 7636) for every authorization code request — `code_challenge` + `code_challenge_method=S256` are mandatory.",
+      "target": "100% of authorization-code requests carry valid PKCE challenge; implicit grant disabled",
+      "measurement": "Counter `mcp_oauth_pkce_missing_total` — must be 0.",
+      "modules": "MCP",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-MCP-004"
+      ],
+      "path": "docs/non-functional-requirements/mcp/NFR-MCP-007-oauth-pkce.md"
+    },
+    {
+      "id": "NFR-MCP-008",
+      "category": "rel",
+      "phase": "P0",
+      "title": "MCP server heartbeat availability — registered servers MUST respond within 2s",
+      "description": "Every registered MCP server MUST respond to the gateway's heartbeat probe (`ping` or equivalent) within 2s p95.",
+      "target": "p95 < 2s for server heartbeat; 99.5% monthly availability per server",
+      "measurement": "Histogram `mcp_server_heartbeat_latency_seconds{server_id}`.",
+      "modules": "MCP",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-MCP-002"
+      ],
+      "path": "docs/non-functional-requirements/mcp/NFR-MCP-008-server-heartbeat-availability.md"
+    },
+    {
+      "id": "NFR-MEMORY-001",
+      "category": "perf",
+      "phase": "P0",
+      "title": "memory Layer-2 ingest lag — p95 < 1s from Layer-1 commit to l2_memory row visible",
+      "description": "From the moment a row is committed to a Layer-1 memory store (per-actor SQLite append-log), the row MUST be visible in the global `l2_memory` Postgres table at p95 < 1s and p99 < 3s.",
+      "target": "p95 < 1s; p99 < 3s end-to-end Layer-1 commit to Layer-2 visibility",
+      "measurement": "Histogram `memory_layer2_ingest_lag_seconds{tenant_id, actor_id}` measured per ingested row as `(l2_committed_at - l1_committed_at)`.",
+      "modules": "memory",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-MEMORY-101",
+        "FR-MEMORY-108"
+      ],
+      "path": "docs/non-functional-requirements/memory/NFR-MEMORY-001-layer2-ingest-lag.md"
+    },
+    {
+      "id": "NFR-MEMORY-002",
+      "category": "sec",
+      "phase": "P0",
+      "title": "memory chain-anchor verification — every l2_memory read re-checks anchor; mismatch → quarantine",
+      "description": "Every read from `l2_memory` MUST re-verify the row's chain anchor (hash of `(prev_chain_hash, payload_canonical_json)`) against the on-row `chain_hash` column.",
+      "target": "100% of l2_memory reads re-verify the chain anchor; any mismatch quarantines the row and sev-1 alerts",
+      "measurement": "Counter `memory_l2_anchor_verify_total{result}` where result ∈ {`ok`, `mismatch`}.",
+      "modules": "memory",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CSO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-MEMORY-101",
+        "FR-MEMORY-102"
+      ],
+      "path": "docs/non-functional-requirements/memory/NFR-MEMORY-002-chain-anchor-verification.md"
+    },
+    {
+      "id": "NFR-MEMORY-003",
+      "category": "sec",
+      "phase": "P0",
+      "title": "memory per-tenant cursor isolation — cursor advance for tenant A never affects tenant B",
+      "description": "The Layer-2 ingest cursor (`services/memory/src/layer2/cursor.rs`) MUST be scoped per (tenant_id, actor_id) — there is no global cursor that crosses tenants.",
+      "target": "Property test: 0 cross-tenant cursor influence under 1000 random advance sequences",
+      "measurement": "Per-tenant gauge `memory_layer2_cursor_pos{tenant_id, actor_id}`.",
+      "modules": "memory",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CSO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-MEMORY-101",
+        "FR-MEMORY-103"
+      ],
+      "path": "docs/non-functional-requirements/memory/NFR-MEMORY-003-per-tenant-cursor-isolation.md"
+    },
+    {
+      "id": "NFR-MEMORY-004",
+      "category": "perf",
+      "phase": "P0",
+      "title": "memory doctor invariant runtime — full invariant pass < 30s on 100k-row store",
+      "description": "The `cyberos-memory doctor` command MUST complete a full invariant scan in < 30s on a Layer-2 store of 100,000 rows. The scan includes: chain-anchor verification (NFR-MEMORY-002), cursor consistency (NFR-MEMORY-003), per-tenant RLS sanity, and PII pre-ingest detection (NFR-MEMORY-007).",
+      "target": "cyberos-memory doctor full invariant pass completes < 30s on a 100k-row test store",
+      "measurement": "Histogram `memory_doctor_scan_seconds{result, rows_n}` per run.",
+      "modules": "memory",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-MEMORY-105",
+        "FR-MEMORY-102"
+      ],
+      "path": "docs/non-functional-requirements/memory/NFR-MEMORY-004-doctor-invariant-runtime.md"
+    },
+    {
+      "id": "NFR-MEMORY-005",
+      "category": "rel",
+      "phase": "P1",
+      "title": "memory deterministic export bit-identity — two runs on same store produce byte-identical zip",
+      "description": "The `cyberos-memory export <tenant_id>` command MUST produce a deterministic ZIP bundle: two runs against the same Layer-2 state MUST produce byte-identical output (verified by SHA-256 of the zip file).",
+      "target": "Two consecutive `cyberos-memory export` runs on an unchanged store produce identical SHA-256 hashes on the output bundle",
+      "measurement": "Test artifact archive — `tests/memory/export_determinism/expected_hashes.txt` lists expected SHA-256s for a battery of test stores.",
+      "modules": "memory",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-MEMORY-103"
+      ],
+      "path": "docs/non-functional-requirements/memory/NFR-MEMORY-005-deterministic-export.md"
+    },
+    {
+      "id": "NFR-MEMORY-006",
+      "category": "comp",
+      "phase": "P1",
+      "title": "memory STH publication frequency — consolidate every 24h or 100MB whichever first",
+      "description": "The memory consolidation process MUST publish a Signed Tree Head (STH) — a Merkle root over the consolidated window's rows, signed by the platform key — every 24 hours of wall-clock time OR every 100MB of new rows ingested since the last STH, whichever threshold is hit first.",
+      "target": "Signed Tree Head (STH) published every 24h OR 100MB of new rows, whichever occurs first",
+      "measurement": "Counter `memory_sth_published_total{result}` per STH attempt.",
+      "modules": "memory",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CSO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-MEMORY-102",
+        "FR-MEMORY-101"
+      ],
+      "path": "docs/non-functional-requirements/memory/NFR-MEMORY-006-sth-publication-frequency.md"
+    },
+    {
+      "id": "NFR-MEMORY-007",
+      "category": "priv",
+      "phase": "P0",
+      "title": "memory PII pre-ingest gate — Presidio + VN-PII recall ≥ 99% before row hits Layer 2",
+      "description": "Every row entering `l2_memory` MUST first pass through the PII detection pipeline: Presidio (English) followed by the VN-PII plugin (Vietnamese, NFR-AI-004 recall floor).",
+      "target": "100% of l2_memory rows have been through PII detection at recall ≥ 99% before commit",
+      "measurement": "Counter `memory_pii_pre_ingest_total{pii_class, redacted}` per detection.",
+      "modules": "memory",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CSO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-MEMORY-111",
+        "FR-AI-012",
+        "FR-AI-013"
+      ],
+      "path": "docs/non-functional-requirements/memory/NFR-MEMORY-007-pii-pre-ingest-gate.md"
+    },
+    {
+      "id": "NFR-MEMORY-008",
+      "category": "func",
+      "phase": "P0",
+      "title": "memory search API recall floor — lexical hybrid recall@10 ≥ 0.85 on test corpus",
+      "description": "The `services/memory/src/search.rs` search API MUST achieve recall@10 ≥ 0.85 on the curated memory search test corpus (`services/memory/tests/fixtures/search_corpus_v*.jsonl`).",
+      "target": "Hybrid lexical + vector search recall@10 ≥ 0.85 on the memory search test corpus",
+      "measurement": "Recall@10 reported quarterly to `docs/audits/memory-search-recall/YYYY-Q*.json`.",
+      "modules": "memory",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-MEMORY-108",
+        "FR-AI-019",
+        "FR-AI-020"
+      ],
+      "path": "docs/non-functional-requirements/memory/NFR-MEMORY-008-search-api-recall-floor.md"
+    },
+    {
+      "id": "NFR-OBS-001",
+      "category": "obs",
+      "phase": "P0",
+      "title": "RED metric coverage — every service emits rate/error/duration via cyberos-obs-sdk",
+      "description": "Every CyberOS backend service MUST emit the three RED metric families on every public route: `request_rate_total{route, method, status}`, `request_errors_total{route, method, error_class}`, `request_duration_seconds{route, method, status}` (histogram).",
+      "target": "100% of services emit RED metrics; CI fails if a service lacks the cyberos-obs-sdk middleware",
+      "measurement": "Prometheus query `count by (service) (request_rate_total)` lists services emitting RED. Expected: equal to count of deployed services from the manifest.",
+      "modules": "OBS",
+      "verify": "I",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-OBS-003",
+        "FR-OBS-001"
+      ],
+      "path": "docs/non-functional-requirements/obs/NFR-OBS-001-red-metric-coverage.md"
+    },
+    {
+      "id": "NFR-OBS-002",
+      "category": "obs",
+      "phase": "P0",
+      "title": "Trace continuity — W3C traceparent propagates across ≥ 2 service hops; CI test enforces",
+      "description": "Every CyberOS backend service MUST propagate the W3C `traceparent` and `tracestate` HTTP headers on outbound calls (server → service → service) and on NATS subjects (via the `traceparent` message header).",
+      "target": "100% of cross-service requests carry an unbroken traceparent chain ≥ 2 hops",
+      "measurement": "Counter `obs_trace_propagation_gap_total{from_service, to_service}` emitted when an inbound request lacks `traceparent` but came from a known-internal source.",
+      "modules": "OBS",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-OBS-005",
+        "FR-OBS-001"
+      ],
+      "path": "docs/non-functional-requirements/obs/NFR-OBS-002-trace-continuity.md"
+    },
+    {
+      "id": "NFR-OBS-003",
+      "category": "perf",
+      "phase": "P0",
+      "title": "Tail-sampling efficiency — 100% errors + 10% normal; sampler CPU overhead < 2%",
+      "description": "The OTel collector tail-sampler MUST apply the FR-OBS-006 policies (100% errors, 100% 5xx, 100% slow, 100% flagged-tenants, 10% normal) and the measured sampling rates MUST match the policy targets within ±1% over a 1-hour window.",
+      "target": "Tail sampler CPU overhead < 2% of collector CPU; sampling rates exact per FR-OBS-006 policy",
+      "measurement": "Collector self-metric `otelcol_processor_tail_sampling_count_traces_sampled{policy}` divided by `otelcol_processor_tail_sampling_count_traces_seen` per minute. Should match policy targets ±1%.",
+      "modules": "OBS",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-OBS-006",
+        "FR-OBS-001"
+      ],
+      "path": "docs/non-functional-requirements/obs/NFR-OBS-003-tail-sampling-efficiency.md"
+    },
+    {
+      "id": "NFR-OBS-004",
+      "category": "rel",
+      "phase": "P0",
+      "title": "Alert-to-CUO-runbook routing latency — p95 < 30s from rule fire to runbook surface",
+      "description": "From the moment a Prometheus alert rule transitions to `firing`, the CyberOS routing pipeline MUST surface the matched CUO runbook to the on-call surface (Slack channel + CUO supervisor) at p95 < 30s and p99 < 60s.",
+      "target": "p95 < 30s from Alertmanager rule fire to CUO runbook surfaced to on-call",
+      "measurement": "Histogram `obs_alert_to_runbook_seconds` measured from Alertmanager's `startsAt` to the Slack-webhook delivery timestamp on the routed message.",
+      "modules": "OBS",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-OBS-007",
+        "FR-OBS-001"
+      ],
+      "path": "docs/non-functional-requirements/obs/NFR-OBS-004-alert-runbook-routing-latency.md"
+    },
+    {
+      "id": "NFR-OBS-005",
+      "category": "obs",
+      "phase": "P1",
+      "title": "LangSmith AI-trace retention — 90-day window, queryable by persona_version",
+      "description": "Every AI Gateway call (1% sample per NFR-AI-010 + 100% of error/slow calls per NFR-OBS-003) MUST be exported to LangSmith with tags `{tenant_id, persona_version, route, model_alias, status}`.",
+      "target": "AI traces queryable for 90 days; filter by persona_version returns results in < 5s",
+      "measurement": "LangSmith project-config audit (`docs/compliance/langsmith-config.md`) lists current retention; reviewed quarterly.",
+      "modules": "OBS",
+      "verify": "I",
+      "priority": "SHOULD",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-OBS-004",
+        "FR-AI-014"
+      ],
+      "path": "docs/non-functional-requirements/obs/NFR-OBS-005-langsmith-trace-retention.md"
+    },
+    {
+      "id": "NFR-OBS-006",
+      "category": "sec",
+      "phase": "P0",
+      "title": "OBS compliance view scoping — per-tenant RLS-equivalent on Grafana proxy",
+      "description": "The tenant-aware Grafana proxy MUST rewrite every PromQL, LogQL, and TraceQL query to inject a `tenant_id=<tenant_from_jwt>` filter before forwarding to Prometheus, Loki, or Tempo respectively (NFR-OBS-008 covers the AST coverage).",
+      "target": "Tenant A user views ONLY tenant A data in Grafana; zero cross-tenant leakage under property test",
+      "measurement": "Counter `obs_proxy_unscoped_query_total{role}` — should be zero for any role lacking `tenant_scope=global`.",
+      "modules": "OBS",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CSO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-OBS-002",
+        "FR-OBS-008"
+      ],
+      "path": "docs/non-functional-requirements/obs/NFR-OBS-006-compliance-view-scoping.md"
+    },
+    {
+      "id": "NFR-OBS-007",
+      "category": "comp",
+      "phase": "P0",
+      "title": "Chain-of-custody manifest completeness — every alert carries trace_id + alertmanager_id + runbook_id",
+      "description": "Every Alertmanager-routed alert MUST carry the four-field chain-of-custody manifest:",
+      "target": "100% of fired alerts carry the four-field custody manifest; CI verifies on every release",
+      "measurement": "Counter `obs_alert_custody_manifest_complete_total{result}` where result ∈ {`complete`, `incomplete`}. Incomplete should be zero.",
+      "modules": "OBS",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CSO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-OBS-009",
+        "FR-OBS-007"
+      ],
+      "path": "docs/non-functional-requirements/obs/NFR-OBS-007-chain-of-custody-manifest.md"
+    },
+    {
+      "id": "NFR-OBS-008",
+      "category": "sec",
+      "phase": "P0",
+      "title": "Grafana proxy AST-injection coverage — PromQL + LogQL + TraceQL all rewritten with tenant_id",
+      "description": "The tenant-aware Grafana proxy MUST parse incoming queries into the language-specific AST (PromQL, LogQL, TraceQL) — MUST NOT use regex-based rewriting which is bypassable via comment-injection.",
+      "target": "100% of PromQL, LogQL, TraceQL queries through the proxy carry an injected tenant_id filter (verified per-query-language test suite)",
+      "measurement": "Counter `obs_proxy_ast_parse_failed_total{language}` — should be near-zero; high values indicate AST parser drift.",
+      "modules": "OBS",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CSO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-OBS-008",
+        "FR-OBS-002"
+      ],
+      "path": "docs/non-functional-requirements/obs/NFR-OBS-008-grafana-proxy-ast-injection.md"
+    },
+    {
+      "id": "NFR-OKR-001",
+      "category": "maint",
+      "phase": "P0",
+      "title": "OKR objective-KR schema invariants — KR types closed enum; numeric KRs measurable",
+      "description": "KR types MUST be a closed enum: `numeric`, `binary`, `milestone-progress`, `custom-sql`. Ad-hoc types are rejected at create time.",
+      "target": "100% of KRs use the closed enum types; 100% of numeric KRs are computable from declared source",
+      "measurement": "CI metric `okr_kr_invalid_type_count` — must be 0.",
+      "modules": "OKR",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CEO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-OKR-001",
+        "FR-OKR-002"
+      ],
+      "path": "docs/non-functional-requirements/okr/NFR-OKR-001-objective-kr-schema.md"
+    },
+    {
+      "id": "NFR-OKR-002",
+      "category": "sec",
+      "phase": "P0",
+      "title": "OKR custom-SQL co-sign — custom-SQL KRs MUST require CTO + objective-owner co-sign",
+      "description": "KRs using `custom-sql` progress source MUST be co-signed by CTO + the objective owner before activation; the SQL is reviewed for safety + correctness.",
+      "target": "100% of custom-SQL KRs carry both signatures + readonly DB role",
+      "measurement": "Counter `okr_custom_sql_activation_total{has_both_signatures}`.",
+      "modules": "OKR",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-OKR-003"
+      ],
+      "path": "docs/non-functional-requirements/okr/NFR-OKR-002-custom-sql-cosign.md"
+    },
+    {
+      "id": "NFR-OKR-003",
+      "category": "rel",
+      "phase": "P0",
+      "title": "OKR auto-progress accuracy — batch-computed progress MUST match per-KR sample within ±2%",
+      "description": "The nightly auto-progress batch (`FR-OKR-004`) MUST produce per-KR progress values within ±2% of an independent re-computation.",
+      "target": "100% of auto-progress computations within ±2% of independent per-KR computation",
+      "measurement": "Daily reconciliation: batch values vs sample-recomputed; counter `okr_progress_delta_pct{kr}` histogrammed.",
+      "modules": "OKR",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CEO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-OKR-004"
+      ],
+      "path": "docs/non-functional-requirements/okr/NFR-OKR-003-auto-progress-accuracy.md"
+    },
+    {
+      "id": "NFR-OKR-004",
+      "category": "perf",
+      "phase": "P1",
+      "title": "OKR KR check-in latency — manual check-in MUST persist within 2s",
+      "description": "Manual KR check-ins (`FR-OKR-005`) MUST persist + appear in the OKR dashboard within 2s p95.",
+      "target": "p95 < 2s from check-in submit to visible in the OKR dashboard",
+      "measurement": "Histogram `okr_checkin_persist_latency_ms`.",
+      "modules": "OKR",
+      "verify": "T",
+      "priority": "SHOULD",
+      "owner": "CEO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-OKR-005"
+      ],
+      "path": "docs/non-functional-requirements/okr/NFR-OKR-004-kr-checkin-latency.md"
+    },
+    {
+      "id": "NFR-OKR-005",
+      "category": "maint",
+      "phase": "P1",
+      "title": "OKR digest-recipient freshness — Monday digest list MUST match current tenant roster",
+      "description": "The Monday OKR digest (`FR-OKR-006`) MUST be delivered only to currently-active members; terminated members MUST be removed within 24h of HR transition.",
+      "target": "100% of digest recipient lists reflect terminations + role changes within 24h",
+      "measurement": "Counter `okr_digest_sent_to_terminated_total` — must be 0.",
+      "modules": "OKR",
+      "verify": "T",
+      "priority": "SHOULD",
+      "owner": "CHRO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-OKR-006"
+      ],
+      "path": "docs/non-functional-requirements/okr/NFR-OKR-005-digest-recipient-freshness.md"
+    },
+    {
+      "id": "NFR-OKR-006",
+      "category": "rel",
+      "phase": "P0",
+      "title": "OKR cycle-phase advance correctness — cycle phases MUST advance per declared schedule",
+      "description": "OKR cycles MUST advance through declared phases: `draft → active → mid-cycle-check → final-check → retro-draft → closed` on the declared schedule.",
+      "target": "100% of cycles advance phase per schedule; 0 stuck or auto-jumped phases",
+      "measurement": "Counter `okr_cycle_phase_transition_total{from, to}`.",
+      "modules": "OKR",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CEO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-OKR-007"
+      ],
+      "path": "docs/non-functional-requirements/okr/NFR-OKR-006-cycle-phase-advance.md"
+    },
+    {
+      "id": "NFR-OKR-007",
+      "category": "comp",
+      "phase": "P0",
+      "title": "OKR retro-approval gate — quarterly retro MUST be CEO-signed before closing",
+      "description": "A cycle MUST NOT advance to `closed` without a CEO-signed retro.",
+      "target": "100% of closed cycles carry a CEO-signed retro before close",
+      "measurement": "Counter `okr_cycle_close_no_retro_attempt_total` — must be 0.",
+      "modules": "OKR",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CEO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-OKR-007"
+      ],
+      "path": "docs/non-functional-requirements/okr/NFR-OKR-007-retro-approval-gate.md"
+    },
+    {
+      "id": "NFR-OKR-008",
+      "category": "rel",
+      "phase": "P0",
+      "title": "OKR objective cascade integrity — child objectives MUST chain to parent at all times",
+      "description": "Objectives declaring `parent: <objective_id>` MUST reference a real, active objective in the same tenant.",
+      "target": "100% of child objectives have a resolvable parent; 0 orphan trees",
+      "measurement": "Counter `okr_orphan_child_total` — must be 0.",
+      "modules": "OKR",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CEO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-OKR-001"
+      ],
+      "path": "docs/non-functional-requirements/okr/NFR-OKR-008-objective-cascade.md"
+    },
+    {
+      "id": "NFR-PROJ-001",
+      "category": "rel",
+      "phase": "P0",
+      "title": "PROJ Yjs CRDT convergence — concurrent edits MUST converge to identical state across all clients",
+      "description": "Concurrent edits to the same project artifact (issue, brief, cycle plan) via Yjs CRDT MUST converge to byte-identical state across all connected clients within 2s after the last network exchange.",
+      "target": "100% of concurrent edit sets converge within 2s of last network exchange",
+      "measurement": "Histogram `proj_yjs_convergence_latency_seconds` — measured by synthetic multi-client probes.",
+      "modules": "PROJ",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-PROJ-003"
+      ],
+      "path": "docs/non-functional-requirements/proj/NFR-PROJ-001-yjs-crdt-convergence.md"
+    },
+    {
+      "id": "NFR-PROJ-002",
+      "category": "rel",
+      "phase": "P0",
+      "title": "PROJ billable cascade correctness — rate-card change MUST propagate to all unbilled time",
+      "description": "When a rate-card row is created/updated/deactivated, all unbilled time entries falling under that rate-card's scope MUST recompute their `billable_amount` within 60s.",
+      "target": "100% of unbilled time entries reflect the current rate-card within 60s of rate change",
+      "measurement": "Histogram `proj_billable_cascade_latency_seconds` — time from rate change to last entry recomputed.",
+      "modules": "PROJ",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CFO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-PROJ-005",
+        "FR-PROJ-006"
+      ],
+      "path": "docs/non-functional-requirements/proj/NFR-PROJ-002-billable-cascade-correctness.md"
+    },
+    {
+      "id": "NFR-PROJ-003",
+      "category": "rel",
+      "phase": "P0",
+      "title": "PROJ memory_link integrity — every memory_link MUST resolve to a real memory row",
+      "description": "Every `memory_link` field on a PROJ entity (issue, decision-anchor, cycle review) MUST reference a real, accessible memory row by its `(tenant_id, actor_id, seq)` triple.",
+      "target": "100% of memory_link references resolve; 0 dangling links in production",
+      "measurement": "Counter `proj_memory_link_create_failed_total{reason=row_missing|tenant_mismatch}` — write-time gate.",
+      "modules": "PROJ",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-PROJ-009",
+        "FR-PROJ-010"
+      ],
+      "path": "docs/non-functional-requirements/proj/NFR-PROJ-003-memory-link-integrity.md"
+    },
+    {
+      "id": "NFR-PROJ-004",
+      "category": "maint",
+      "phase": "P1",
+      "title": "PROJ cycle-window enforcement — work added mid-cycle MUST be flagged + tracked",
+      "description": "Cycle windows (default 2-week sprint, configurable) MUST be persisted with `{start_at, end_at, frozen_at}` where `frozen_at` is the moment scope is closed.",
+      "target": "100% of mid-cycle additions/removals tracked + visible in the cycle review draft",
+      "measurement": "Per-cycle counters: `proj_cycle_added_post_freeze_total`, `proj_cycle_removed_post_freeze_total`.",
+      "modules": "PROJ",
+      "verify": "T",
+      "priority": "SHOULD",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-PROJ-012",
+        "FR-PROJ-004"
+      ],
+      "path": "docs/non-functional-requirements/proj/NFR-PROJ-004-cycle-window-enforcement.md"
+    },
+    {
+      "id": "NFR-PROJ-005",
+      "category": "obs",
+      "phase": "P1",
+      "title": "PROJ estimate-calibration freshness — calibration data MUST refresh weekly",
+      "description": "Per-team estimate calibration (`FR-PROJ-013`) MUST refresh weekly using closed issues from the prior cycle window.",
+      "target": "Calibration freshness ≤ 7 days; 100% of teams refreshed within their cadence",
+      "measurement": "Gauge `proj_team_calibration_age_days{team}` — must be ≤ 7.",
+      "modules": "PROJ",
+      "verify": "T",
+      "priority": "SHOULD",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-PROJ-013"
+      ],
+      "path": "docs/non-functional-requirements/proj/NFR-PROJ-005-estimate-calibration-freshness.md"
+    },
+    {
+      "id": "NFR-PROJ-006",
+      "category": "rel",
+      "phase": "P1",
+      "title": "PROJ Gantt critical path correctness — CPM algorithm MUST match reference output",
+      "description": "The Gantt view's critical-path-method (CPM) computation MUST match a reference implementation for any dependency graph the UI accepts (acyclic, single-source, single-sink, or general DAG).",
+      "target": "100% of Gantt critical-path computations match a reference CPM implementation",
+      "measurement": "Counter `proj_gantt_cpm_mismatch_total` — must be 0.",
+      "modules": "PROJ",
+      "verify": "T",
+      "priority": "SHOULD",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-PROJ-016"
+      ],
+      "path": "docs/non-functional-requirements/proj/NFR-PROJ-006-gantt-critical-path.md"
+    },
+    {
+      "id": "NFR-PROJ-007",
+      "category": "usab",
+      "phase": "P0",
+      "title": "PROJ a11y-ci gate — every page MUST pass axe-core with 0 critical/serious issues",
+      "description": "Every PROJ page MUST pass `axe-core` with 0 critical and 0 serious violations in the CI a11y-ci gate.",
+      "target": "0 critical/serious axe-core violations per page; 100% page coverage in CI",
+      "measurement": "Per-page counter `proj_axe_violation_count{page, severity}` — critical/serious must be 0.",
+      "modules": "PROJ",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-PROJ-018"
+      ],
+      "path": "docs/non-functional-requirements/proj/NFR-PROJ-007-a11y-ci-gate.md"
+    },
+    {
+      "id": "NFR-PROJ-008",
+      "category": "maint",
+      "phase": "P0",
+      "title": "PROJ design-tokens drift — UI MUST consume tokens; raw hex/px values are CI-banned",
+      "description": "PROJ UI component source (`apps/proj/src/`) MUST NOT contain raw hex color values (`#...`), raw RGB/HSL strings, or raw pixel values for spacing/typography.",
+      "target": "0 raw hex or raw px values in PROJ component CSS/JSX; tokens consumed exclusively",
+      "measurement": "CI metric `proj_raw_color_value_count` — must be 0.",
+      "modules": "PROJ",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-PROJ-018"
+      ],
+      "path": "docs/non-functional-requirements/proj/NFR-PROJ-008-design-tokens-drift.md"
+    },
+    {
+      "id": "NFR-PROJ-009",
+      "category": "rel",
+      "phase": "P0",
+      "title": "PROJ issue state machine — transitions MUST conform to the declared FSM",
+      "description": "Issue state transitions MUST conform to the FSM declared in `modules/proj/state-machine.yaml`: states + allowed transitions + required roles.",
+      "target": "100% of issue state transitions match the FSM; 0 illegal transitions in production",
+      "measurement": "Counter `proj_issue_illegal_transition_total{from, to}` — must be 0.",
+      "modules": "PROJ",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-PROJ-004",
+        "FR-PROJ-001"
+      ],
+      "path": "docs/non-functional-requirements/proj/NFR-PROJ-009-issue-state-machine.md"
+    },
+    {
+      "id": "NFR-PROJ-010",
+      "category": "obs",
+      "phase": "P1",
+      "title": "PROJ blocker detector latency — blocker MUST surface within 4h of cause",
+      "description": "The blocker detector (`FR-PROJ-011`) MUST surface blockers (issues stalled > 3d, missing assignee, missing estimate, etc.) within 4h of the triggering condition becoming true.",
+      "target": "p95 < 4h from blocker condition to dashboard surfacing",
+      "measurement": "Histogram `proj_blocker_detection_latency_seconds` — condition true → surfaced.",
+      "modules": "PROJ",
+      "verify": "T",
+      "priority": "SHOULD",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-PROJ-011"
+      ],
+      "path": "docs/non-functional-requirements/proj/NFR-PROJ-010-blocker-detector-latency.md"
+    },
+    {
+      "id": "NFR-RES-001",
+      "category": "obs",
+      "phase": "P1",
+      "title": "RES matrix-trigger latency — over/under flags MUST surface within 1h of capacity change",
+      "description": "The capacity-demand matrix (`FR-RES-001`) MUST refresh on allocation, hiring, or scope mutations within 1h.",
+      "target": "p95 < 1h from allocation change to over/under flag visibility",
+      "measurement": "Histogram `res_matrix_refresh_latency_seconds`.",
+      "modules": "RES",
+      "verify": "T",
+      "priority": "SHOULD",
+      "owner": "COO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-RES-001",
+        "FR-RES-003"
+      ],
+      "path": "docs/non-functional-requirements/res/NFR-RES-001-matrix-trigger-latency.md"
+    },
+    {
+      "id": "NFR-RES-002",
+      "category": "comp",
+      "phase": "P0",
+      "title": "RES allocation-change history — every allocation mutation MUST emit an audit row",
+      "description": "Every change to a member's allocation (create, update, deactivate) MUST emit a memory audit row carrying `{member_id, project_id, before_pct, after_pct, actor_id, reason?, changed_at}`.",
+      "target": "100% of allocation mutations produce an audit row with before/after delta",
+      "measurement": "Counter `res_allocation_audit_row_total{operation=create|update|deactivate}`.",
+      "modules": "RES",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "COO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-RES-002"
+      ],
+      "path": "docs/non-functional-requirements/res/NFR-RES-002-allocation-history.md"
+    },
+    {
+      "id": "NFR-RES-003",
+      "category": "comp",
+      "phase": "P0",
+      "title": "RES OT consent capture — VN overtime MUST require + persist worker consent",
+      "description": "VN-resident workers' overtime MUST NOT be allocated without explicit, recorded consent of the worker, per the VN labour code OT cap (`FR-RES-005`).",
+      "target": "100% of VN overtime hours carry recorded worker consent + supervisor signoff",
+      "measurement": "Counter `res_ot_consent_missing_total` — must be 0.",
+      "modules": "RES",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CHRO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-RES-005"
+      ],
+      "path": "docs/non-functional-requirements/res/NFR-RES-003-ot-consent-capture.md"
+    },
+    {
+      "id": "NFR-RES-004",
+      "category": "comp",
+      "phase": "P1",
+      "title": "RES hiring-memo signoff — CUO-generated memo MUST have hiring-manager + CHRO co-sign",
+      "description": "The hiring-memo CUO workflow (`FR-RES-004`) MUST produce a memo signed by both the hiring manager + CHRO before the role is published to recruiting channels.",
+      "target": "100% of hiring memos carry both signatures before role goes to recruiting",
+      "measurement": "Counter `res_hiring_memo_published_total{has_both_signatures}`.",
+      "modules": "RES",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CHRO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-RES-004"
+      ],
+      "path": "docs/non-functional-requirements/res/NFR-RES-004-hiring-memo-signoff.md"
+    },
+    {
+      "id": "NFR-RES-005",
+      "category": "obs",
+      "phase": "P1",
+      "title": "RES weekly digest freshness — Monday digest MUST include data through Sunday EOD",
+      "description": "The Monday capacity digest MUST include allocation data current through the prior Sunday 23:59 (tenant local time).",
+      "target": "100% of Monday digests include data current through prior Sunday 23:59 local tenant time",
+      "measurement": "Counter `res_digest_send_total{tenant, on_time}`.",
+      "modules": "RES",
+      "verify": "T",
+      "priority": "SHOULD",
+      "owner": "COO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-RES-001",
+        "FR-RES-003"
+      ],
+      "path": "docs/non-functional-requirements/res/NFR-RES-005-weekly-digest-freshness.md"
+    },
+    {
+      "id": "NFR-RES-006",
+      "category": "rel",
+      "phase": "P1",
+      "title": "RES capacity-flag accuracy — flag MUST match human-confirmed over/under state ≥ 95% of time",
+      "description": "The capacity flags (over-alloc, under-alloc) MUST match COO's human assessment of the same member ≥ 95% of the time over a 4-week rolling sample.",
+      "target": "Flag agreement with COO confirmation ≥ 95% over a 4-week sample",
+      "measurement": "Weekly: COO samples 10 flags + 10 unflagged; computes agreement rate.",
+      "modules": "RES",
+      "verify": "T",
+      "priority": "SHOULD",
+      "owner": "COO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-RES-003"
+      ],
+      "path": "docs/non-functional-requirements/res/NFR-RES-006-capacity-flag-accuracy.md"
+    },
+    {
+      "id": "NFR-RES-007",
+      "category": "maint",
+      "phase": "P0",
+      "title": "RES member-departure handling — terminated members MUST be removed from active allocations within 24h",
+      "description": "When a member's HR record transitions to `terminated` with effective date D, all active allocations MUST be ended by D + 24h.",
+      "target": "100% of terminated members removed from active allocations within 24h of termination effective date",
+      "measurement": "Counter `res_terminated_member_active_alloc_total` — must trend to 0 within 24h.",
+      "modules": "RES",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "COO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-RES-002"
+      ],
+      "path": "docs/non-functional-requirements/res/NFR-RES-007-member-departure-handling.md"
+    },
+    {
+      "id": "NFR-REW-001",
+      "category": "rel",
+      "phase": "P0",
+      "title": "REW comp-formula determinism — same inputs MUST produce same payroll output across reruns",
+      "description": "The monthly payroll compute (`FR-REW-005`) MUST produce byte-identical outputs when rerun with the same `{member_set, parameter_version, period, 3p_income_set}` tuple.",
+      "target": "100% of payroll runs are bit-identical on rerun with same inputs + parameter version",
+      "measurement": "Hash comparison on every recompute; counter `rew_payroll_recompute_hash_mismatch_total` — must be 0 if inputs unchanged.",
+      "modules": "REW",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CFO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-REW-005",
+        "FR-REW-002"
+      ],
+      "path": "docs/non-functional-requirements/rew/NFR-REW-001-comp-formula-determinism.md"
+    },
+    {
+      "id": "NFR-REW-002",
+      "category": "comp",
+      "phase": "P0",
+      "title": "REW payroll-cycle accuracy — monthly run MUST close within +/- 1 VND vs hand-verified sample",
+      "description": "Each monthly payroll run MUST be sample-verified: 5 random members' gross/SI/PIT/net amounts hand-computed by the CFO + an external accountant and compared against the system output.",
+      "target": "100% of monthly runs within ±1 VND of a manual sample of 5 members per period",
+      "measurement": "Per-cycle attestation memo (mandatory artifact).",
+      "modules": "REW",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CFO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-REW-005",
+        "FR-REW-009"
+      ],
+      "path": "docs/non-functional-requirements/rew/NFR-REW-002-payroll-cycle-accuracy.md"
+    },
+    {
+      "id": "NFR-REW-003",
+      "category": "rel",
+      "phase": "P0",
+      "title": "REW bonus-pool conservation — pool inflow MUST equal sum of distributions + carry-over",
+      "description": "The bonus-pool ledger (`FR-REW-007`) MUST satisfy: every inflow row sums to the same total as the corresponding outflow rows (distribution) plus the carry-over balance, per quarter.",
+      "target": "100% conservation: |pool_in - (pool_distributed + carry_over)| < 1 VND per quarter",
+      "measurement": "Per-quarter `rew_bp_conservation_delta_vnd` — must be ≤ 1.",
+      "modules": "REW",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CFO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-REW-007",
+        "FR-REW-008"
+      ],
+      "path": "docs/non-functional-requirements/rew/NFR-REW-003-bonus-pool-conservation.md"
+    },
+    {
+      "id": "NFR-REW-004",
+      "category": "comp",
+      "phase": "P0",
+      "title": "REW P3 distribution audit — quarterly distribution MUST have CFO+CHRO co-sign before execution",
+      "description": "Every P3 quarterly distribution MUST be approved by both CFO and CHRO via signed approval rows before execution; single signature is insufficient.",
+      "target": "100% of P3 distributions carry CFO + CHRO signatures; no auto-execute without both",
+      "measurement": "Counter `rew_p3_single_signer_attempt_total` — must be 0.",
+      "modules": "REW",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CFO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-REW-008"
+      ],
+      "path": "docs/non-functional-requirements/rew/NFR-REW-004-p3-distribution-audit.md"
+    },
+    {
+      "id": "NFR-REW-005",
+      "category": "priv",
+      "phase": "P0",
+      "title": "REW memory exclusion — comp data MUST NOT land in memory Layer-1 or Layer-2",
+      "description": "Per DEC-036, comp/payroll data (salary, bonus, 3P income, distributions) MUST NOT be written to memory Layer-1 or Layer-2 — REW maintains its own segregated audit log.",
+      "target": "0 memory rows referencing REW comp tables; CI gate enforces per DEC-036",
+      "measurement": "CI metric `rew_memory_exclusion_gate_violations` — must be 0.",
+      "modules": "REW",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CFO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-REW-010"
+      ],
+      "path": "docs/non-functional-requirements/rew/NFR-REW-005-memory-exclusion.md"
+    },
+    {
+      "id": "NFR-REW-006",
+      "category": "rel",
+      "phase": "P0",
+      "title": "REW gross/net reconciliation — gross - deductions MUST equal net for every payslip",
+      "description": "Every payslip row MUST satisfy the identity: `gross_vnd - (pit_vnd + si_employee_vnd + advance_recovery_vnd + other_deductions_vnd) = net_vnd`, within ±1 VND tolerance for rounding.",
+      "target": "100% of payslips satisfy gross - (PIT + SI + other deductions) = net within ±1 VND",
+      "measurement": "Per-cycle counter `rew_payslip_reconciliation_fail_total{period}` — must be 0.",
+      "modules": "REW",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CFO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-REW-005",
+        "FR-REW-006"
+      ],
+      "path": "docs/non-functional-requirements/rew/NFR-REW-006-gross-net-reconciliation.md"
+    },
+    {
+      "id": "NFR-REW-007",
+      "category": "rel",
+      "phase": "P0",
+      "title": "REW VietQR payroll batch integrity — batch hash MUST match sum of payslip nets",
+      "description": "Each VietQR payroll batch MUST be cryptographically tied to the payslip set it disburses: the batch row carries a SHA-256 hash of the canonical-sorted payslip-net list.",
+      "target": "100% of VietQR batches verifiable: |sum(batch.amounts) - sum(payslip.nets)| = 0",
+      "measurement": "Counter `rew_vietqr_hash_mismatch_total` — must be 0.",
+      "modules": "REW",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CFO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-REW-009"
+      ],
+      "path": "docs/non-functional-requirements/rew/NFR-REW-007-vietqr-batch-integrity.md"
+    },
+    {
+      "id": "NFR-REW-008",
+      "category": "comp",
+      "phase": "P1",
+      "title": "REW locale handling — payslip currency + tax tables MUST match member residency",
+      "description": "The REW compute path MUST apply VN PIT + SI tables only to members with `residency = VN`; non-VN residents are flagged out-of-scope and excluded from the standard compute.",
+      "target": "100% of payslips use the correct VN tax tables; non-VN residents flagged as out-of-scope",
+      "measurement": "Counter `rew_locale_mismatch_total{member_residency, expected}` — must be 0.",
+      "modules": "REW",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CFO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-REW-004",
+        "FR-REW-006"
+      ],
+      "path": "docs/non-functional-requirements/rew/NFR-REW-008-locale-handling.md"
+    },
+    {
+      "id": "NFR-SKILL-001",
+      "category": "maint",
+      "phase": "P0",
+      "title": "SKILL manifest schema invariants — required-field gate + semver discipline",
+      "description": "Every SKILL bundle published to the OCI registry MUST carry a top-level `SKILL.md` whose YAML frontmatter parses cleanly and contains the closed set of required keys: `name`, `version`, `description`, `inputs`, `outputs`, `capabilities`, `audit`.",
+      "target": "100% of published manifests pass schema validation; 0 unknown-field tolerance",
+      "measurement": "Counter `skill_publish_validation_failure_total{stage=client|server, error_code}` per failed publish.",
+      "modules": "SKILL",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-SKILL-103",
+        "FR-SKILL-101"
+      ],
+      "path": "docs/non-functional-requirements/skill/NFR-SKILL-001-manifest-schema-invariants.md"
+    },
+    {
+      "id": "NFR-SKILL-002",
+      "category": "perf",
+      "phase": "P0",
+      "title": "SKILL capability broker admit latency — grant decision p95 < 25ms",
+      "description": "The SKILL capability broker MUST answer admit requests (skill requests cap X for tenant Y) at p95 < 25ms, p99 < 75ms, measured at the broker's `/admit` ingress over a 14-day rolling window.",
+      "target": "p95 < 25ms for capability admit (token check + policy lookup + decision)",
+      "measurement": "Histogram `skill_broker_admit_latency_seconds{decision, capability}` p50/p95/p99.",
+      "modules": "SKILL",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-SKILL-104",
+        "FR-SKILL-101"
+      ],
+      "path": "docs/non-functional-requirements/skill/NFR-SKILL-002-capability-broker-admit-latency.md"
+    },
+    {
+      "id": "NFR-SKILL-003",
+      "category": "rel",
+      "phase": "P0",
+      "title": "SKILL OCI registry availability — 99.95% read SLO for bundle pulls",
+      "description": "The SKILL OCI registry MUST serve manifest reads (`GET /v2/<name>/manifests/<ref>`) and blob reads (`GET /v2/<name>/blobs/<digest>`) at ≥ 99.95% monthly availability measured at the public ingress.",
+      "target": "99.95% monthly availability for GET /v2/<bundle>/manifests/<ref> + blobs/<digest>",
+      "measurement": "Synthetic prober every 60s from 3 regions hitting `GET /v2/cyberos-skill-fr-author/manifests/latest`.",
+      "modules": "SKILL",
+      "verify": "A",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-SKILL-102",
+        "FR-SKILL-201"
+      ],
+      "path": "docs/non-functional-requirements/skill/NFR-SKILL-003-oci-registry-pull-availability.md"
+    },
+    {
+      "id": "NFR-SKILL-004",
+      "category": "comp",
+      "phase": "P0",
+      "title": "SKILL audit-chain coverage — every skill invocation MUST emit ≥ 1 memory row",
+      "description": "Every skill invocation (success, denial, error) MUST result in at least one Layer-1 memory row carrying `{tenant_id, actor_id, skill_name, skill_version, capability_used, started_at, ended_at, outcome, output_digest?}`.",
+      "target": "100% of skill invocations produce a Layer-1 row within 1s; reconciliation drift < 0.001%",
+      "measurement": "Counter `skill_audit_emit_attempt_total{outcome}` and `skill_audit_emit_success_total`.",
+      "modules": "SKILL",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-SKILL-101",
+        "FR-SKILL-105",
+        "FR-SKILL-106"
+      ],
+      "path": "docs/non-functional-requirements/skill/NFR-SKILL-004-audit-chain-coverage.md"
+    },
+    {
+      "id": "NFR-SKILL-005",
+      "category": "comp",
+      "phase": "P0",
+      "title": "SKILL VN-bundle compliance — MST/VietQR/HoaDon skills MUST pass external validator",
+      "description": "The three Vietnamese-locale skills (`vn-mst-validate`, `vn-bank-transfer`, `vn-vat-invoice`) MUST pass a weekly end-to-end validation run against their respective external authorities: GDT MST lookup endpoint, NAPAS VietQR specification validator, and GDT hoadondientu sandbox.",
+      "target": "100% pass rate against GDT MST + NAPAS VietQR + GDT hoadondientu sandboxes weekly",
+      "measurement": "CI metric per skill: `skill_vn_validator_pass_count` and `skill_vn_validator_fail_count` per weekly run.",
+      "modules": "SKILL",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CFO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-SKILL-108",
+        "FR-SKILL-109",
+        "FR-SKILL-110"
+      ],
+      "path": "docs/non-functional-requirements/skill/NFR-SKILL-005-vn-bundle-compliance.md"
+    },
+    {
+      "id": "NFR-SKILL-006",
+      "category": "maint",
+      "phase": "P0",
+      "title": "SKILL fine-tune loop integrity — author+audit pair MUST stay in lockstep",
+      "description": "Every author skill at `skill/public/<name>/` MUST have a sibling audit skill at `skill/public/<name>-audit/` carrying matching version + same set of declared outputs.",
+      "target": "0 author skills exist without a sibling audit skill; CI gates publish",
+      "measurement": "CI metric `skill_pair_drift_count` — counts authors without audits; must be 0 to merge.",
+      "modules": "SKILL",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-SKILL-107"
+      ],
+      "path": "docs/non-functional-requirements/skill/NFR-SKILL-006-fine-tune-loop-integrity.md"
+    },
+    {
+      "id": "NFR-SKILL-007",
+      "category": "rel",
+      "phase": "P1",
+      "title": "SKILL deterministic-output mode — fixed seed produces byte-identical output",
+      "description": "Skills declaring `deterministic: true` in their manifest frontmatter MUST produce byte-identical outputs when invoked twice with the same `{inputs, seed, capabilities}` tuple.",
+      "target": "deterministic-flag skills produce byte-identical outputs over 100 reruns with fixed seed",
+      "measurement": "CI gate per `deterministic: true` skill: rerun 5 times with same seed; assert all outputs hash-match.",
+      "modules": "SKILL",
+      "verify": "T",
+      "priority": "SHOULD",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-SKILL-103",
+        "FR-SKILL-105"
+      ],
+      "path": "docs/non-functional-requirements/skill/NFR-SKILL-007-deterministic-output.md"
+    },
+    {
+      "id": "NFR-SKILL-008",
+      "category": "sec",
+      "phase": "P0",
+      "title": "SKILL sandbox isolation — skill execution MUST NOT escape declared capabilities",
+      "description": "A skill MUST NOT access any platform resource (DB, network, filesystem, secrets) outside the capabilities declared in its manifest and granted by the broker.",
+      "target": "0 cap-bypass incidents in 90 days; 100% of attempted escapes blocked + audited",
+      "measurement": "Counter `skill_cap_bypass_attempt_total{skill, denied_call, syscall_or_host}`.",
+      "modules": "SKILL",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-SKILL-104",
+        "FR-SKILL-101"
+      ],
+      "path": "docs/non-functional-requirements/skill/NFR-SKILL-008-sandbox-isolation.md"
+    },
+    {
+      "id": "NFR-SKILL-009",
+      "category": "perf",
+      "phase": "P1",
+      "title": "SKILL cold-start latency — bundle pull + manifest parse + capability admit < 2s",
+      "description": "First invocation of a skill not already in local cache MUST complete the cold-start steps (`registry pull → manifest parse → schema validate → capability admit → runtime ready`) at p95 < 2s and p99 < 5s.",
+      "target": "p95 < 2s, p99 < 5s for first-invocation of a skill not in cache",
+      "measurement": "Histogram `skill_cold_start_latency_seconds{step=pull|parse|admit|ready}` — surfaces which step is the bottleneck.",
+      "modules": "SKILL",
+      "verify": "T",
+      "priority": "SHOULD",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-SKILL-102",
+        "FR-SKILL-104"
+      ],
+      "path": "docs/non-functional-requirements/skill/NFR-SKILL-009-cold-start-latency.md"
+    },
+    {
+      "id": "NFR-SKILL-010",
+      "category": "maint",
+      "phase": "P0",
+      "title": "SKILL output contract conformance — produced output MUST match declared schema",
+      "description": "Every skill output MUST match the JSON Schema declared in `outputs:` of its `SKILL.md` frontmatter, validated by the runtime before the output is handed back to the caller.",
+      "target": "100% of skill outputs validate against their declared output contract",
+      "measurement": "Counter `skill_output_schema_check_total{skill, result=pass|fail}`.",
+      "modules": "SKILL",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-SKILL-103",
+        "FR-SKILL-101"
+      ],
+      "path": "docs/non-functional-requirements/skill/NFR-SKILL-010-output-contract-conformance.md"
+    },
+    {
+      "id": "NFR-TEN-001",
+      "category": "rel",
+      "phase": "P0",
+      "title": "TEN provisioning saga reliability — every tenant create MUST be transactional",
+      "description": "Tenant provisioning MUST run as a saga with all-or-nothing semantics: every step succeeds and the tenant is committed, OR any step fails and all prior steps roll back.",
+      "target": "100% of tenant-create sagas reach terminal state (committed | rolled-back); 0 stuck-in-progress",
+      "measurement": "Counter `ten_provisioning_saga_total{outcome=committed|rolled_back|timeout}`.",
+      "modules": "TEN",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-TEN-001",
+        "FR-TEN-101"
+      ],
+      "path": "docs/non-functional-requirements/ten/NFR-TEN-001-provisioning-saga-reliability.md"
+    },
+    {
+      "id": "NFR-TEN-002",
+      "category": "comp",
+      "phase": "P0",
+      "title": "TEN four-residency pinning — tenant data MUST stay in pinned region; 0 cross-region writes",
+      "description": "Each tenant MUST be pinned to exactly one of the four declared residencies (VN, SG, EU, US) at provision time; the pin is immutable post-provision.",
+      "target": "100% of tenant writes land in pinned region; cross-region writes audited + blocked",
+      "measurement": "Counter `ten_cross_region_write_total{tenant, source_region, target_region}` — must be 0.",
+      "modules": "TEN",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-TEN-103"
+      ],
+      "path": "docs/non-functional-requirements/ten/NFR-TEN-002-four-residency-pinning.md"
+    },
+    {
+      "id": "NFR-TEN-003",
+      "category": "comp",
+      "phase": "P0",
+      "title": "TEN plan-tier enforcement — over-quota operations MUST be blocked or queued",
+      "description": "Plan tiers (Free, Pro, Business, Enterprise) declare numeric quotas (users, projects, storage GB, API calls/month).",
+      "target": "100% of plan-quota violations either blocked OR queued with operator-visible state",
+      "measurement": "Counter `ten_quota_block_total{tenant, plan, quota_kind}`.",
+      "modules": "TEN",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CFO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-TEN-002",
+        "FR-TEN-004"
+      ],
+      "path": "docs/non-functional-requirements/ten/NFR-TEN-003-plan-tier-enforcement.md"
+    },
+    {
+      "id": "NFR-TEN-004",
+      "category": "comp",
+      "phase": "P0",
+      "title": "TEN 90-day offboarding FSM — termination MUST advance through declared states",
+      "description": "Tenant offboarding MUST advance through the FSM: `requested → grace_30d → final_export → cold_storage_60d → permanent_delete`.",
+      "target": "100% of offboarded tenants follow the 90-day FSM with declared milestones",
+      "measurement": "Per-state counter `ten_offboarding_state_total{state}`.",
+      "modules": "TEN",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CLO-Legal",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-TEN-104"
+      ],
+      "path": "docs/non-functional-requirements/ten/NFR-TEN-004-offboarding-fsm.md"
+    },
+    {
+      "id": "NFR-TEN-005",
+      "category": "rel",
+      "phase": "P0",
+      "title": "TEN signed bundle determinism — same tenant export MUST produce same hash",
+      "description": "The signed-bundle export (`FR-TEN-105`) MUST be deterministic — re-running with the same `{tenant_id, export_at}` produces byte-identical output (same SHA-256).",
+      "target": "Re-running export with same parameters produces byte-identical bundle hash",
+      "measurement": "Counter `ten_bundle_export_hash_mismatch_total` — must be 0 on re-runs.",
+      "modules": "TEN",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-TEN-105"
+      ],
+      "path": "docs/non-functional-requirements/ten/NFR-TEN-005-signed-bundle-determinism.md"
+    },
+    {
+      "id": "NFR-TEN-006",
+      "category": "sec",
+      "phase": "P0",
+      "title": "TEN hostile-override approval window — emergency termination requires CEO + CLO co-sign",
+      "description": "Hostile termination (FR-TEN-202) — used when a tenant is committing abuse and the normal 90-day FSM is too slow — MUST require both CEO and CLO-Legal signatures within a 24-hour window.",
+      "target": "100% of hostile-override terminations carry CEO + CLO signatures within 24h window",
+      "measurement": "Counter `ten_hostile_override_total{tenant, signers_count}` — single-signer = 0.",
+      "modules": "TEN",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-TEN-202"
+      ],
+      "path": "docs/non-functional-requirements/ten/NFR-TEN-006-hostile-override-window.md"
+    },
+    {
+      "id": "NFR-TEN-007",
+      "category": "rel",
+      "phase": "P0",
+      "title": "TEN four-axis metering precision — users/storage/AI/seats measured within ±0.1%",
+      "description": "The four metering axes (active users, storage GB-month, AI tokens, seats) MUST report values accurate to within ±0.1% of ground-truth (independent recount from DB).",
+      "target": "Metered amounts accurate within ±0.1% vs ground-truth reconciliation",
+      "measurement": "Daily reconciliation: `ten_metering_drift_pct{axis}` — must be < 0.1%.",
+      "modules": "TEN",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CFO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-TEN-004"
+      ],
+      "path": "docs/non-functional-requirements/ten/NFR-TEN-007-four-axis-metering-precision.md"
+    },
+    {
+      "id": "NFR-TEN-008",
+      "category": "comp",
+      "phase": "P0",
+      "title": "TEN audit-event durability — tenant lifecycle events MUST never be lost",
+      "description": "Tenant lifecycle events MUST land in the durable audit store with at-least-once + idempotent semantics.",
+      "target": "100% of tenant lifecycle events (create/upgrade/offboard/delete) reach the durable audit store",
+      "measurement": "Counter `ten_lifecycle_event_emit_total{event}`.",
+      "modules": "TEN",
+      "verify": "T",
+      "priority": "MUST",
+      "owner": "CTO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-TEN-001",
+        "FR-TEN-104",
+        "FR-TEN-106"
+      ],
+      "path": "docs/non-functional-requirements/ten/NFR-TEN-008-audit-event-durability.md"
+    },
+    {
+      "id": "NFR-TEN-009",
+      "category": "rel",
+      "phase": "P0",
+      "title": "TEN VND domestic rail uptime — VND-billing path MUST maintain 99.5% monthly availability",
+      "description": "The VND domestic billing rail (NAPAS + bank integration) MUST maintain 99.5% monthly availability for initiation + settlement.",
+      "target": "99.5% monthly availability for VND-billing initiation + settlement",
+      "measurement": "Synthetic prober (60s cadence) against payment initiation endpoint.",
+      "modules": "TEN",
+      "verify": "A",
+      "priority": "MUST",
+      "owner": "CFO",
+      "created": "2026-05-18",
+      "related_frs": [
+        "FR-TEN-102"
+      ],
+      "path": "docs/non-functional-requirements/ten/NFR-TEN-009-vnd-domestic-rail-uptime.md"
+    }
+  ]
+}

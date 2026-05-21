@@ -28,4 +28,4 @@ Invariants protected:
   7. `.cyberos-memory/` remains a self-contained, zippable artefact.
 """
 
-__version__ = "2.0.0"
+__version__ = "0.1.0"

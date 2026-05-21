@@ -87,7 +87,7 @@ Every required H2 must have ≥1 non-blank line of body (SEC-008).
 
 The complete skeleton lives in [`template.md`](./template.md) — sourced verbatim from `feature-request/FR_CREATE_AND_AUDIT.md` v2.0.0 §18. The skeleton is reproducible byte-for-byte; bumping it is a MAJOR `contract_version` bump for this contract (→ v2 / `feature_request@2`) AND a parallel MAJOR `skill_version` bump for every consumer skill declared via `depends_on_contracts:`.
 
-## Untrusted-content discipline (inherited from CyberOS-AGENTS.md §4.2)
+## Untrusted-content discipline (inherited from AGENTS.md §11)
 
 - Every customer quote MUST be inside `<untrusted_content source="...">…</untrusted_content>`.
 - Quotes outside the block are a SAFE-004 audit warning.
@@ -108,7 +108,7 @@ When this contract bumps to v2, the registry CI matrix verifies every declared c
 ## Citations
 
 - Source artefact → `feature-request/FR_CREATE_AND_AUDIT.md` v2.0.0 §18 + §15.1–§15.7 (rubric).
-- Untrusted-content rules → CyberOS-AGENTS.md §4.2.
+- Untrusted-content rules → AGENTS.md §11.
 - EU AI Act framing → CyberOS-PRD.docx §12.2.2; SRS DEC-064.
 - Contracts vs. skills distinction → registry README v0.2.0 Part 8 + DEC-090.
 

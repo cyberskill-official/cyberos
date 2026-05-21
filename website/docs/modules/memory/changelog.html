@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Memory — Changelog — CyberOS</title>
+ <meta name="description" content="Memory module changelog — all significant changes.">
+ <link rel="canonical" href="https://cyberos-wiki.cyberskill.world/modules/memory/changelog.html">
+ <link rel="stylesheet" href="../../assets/tokens.css">
+ <link rel="stylesheet" href="../../assets/styles.css">
+ <link rel="stylesheet" href="../../assets/tailwind.min.css">
+ <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <script type="module" src="../../assets/scripts.js"></script>
+</head>
+<body data-pagefind-filter="category:Module">
+<span hidden data-pagefind-filter="phase:P0"></span>
+
+<div id="shared-nav"></div>
+
+<header class="hero-gradient border-b border-slate-200">
+ <div class="container py-10 lg:py-14">
+ <nav class="breadcrumbs">
+ <a href="../../index.html">Home</a>
+ <span class="sep">›</span>
+ <a href="../../index.html#catalog">Modules</a>
+ <span class="sep">›</span>
+ <a href="index.html">Memory</a>
+ <span class="sep">›</span>
+ <span class="current">Changelog</span>
+ </nav>
+ <div class="flex items-center gap-3 mb-4 flex-wrap">
+ <span class="text-5xl">🧠</span>
+ <h1 class="h-display">Memory — Changelog</h1>
+ </div>
+ <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
+ All significant changes to the Memory module.
+ </p>
+ <div class="flex flex-wrap gap-3 mt-6">
+ <a href="index.html" class="btn btn-primary">← Back to Memory overview</a>
+ </div>
+ </div>
+</header>
+
+<div class="container py-10 lg:py-14 grid lg:grid-cols-12 gap-10">
+
+<aside class="lg:col-span-3 order-2 lg:order-1">
+ <div class="lg:sticky lg:top-20">
+ <div class="bbg-card p-5">
+ <div class="h-eyebrow mb-3">On this page</div>
+ <ul class="space-y-0.5 text-sm">
+      <a class="block py-1 px-2 text-sm rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900" href="#2026-05-18-fr-memory-104-tauri-2-x-desktop-scaffold">2026-05-18 — FR-MEMORY-104 Tauri 2.x desktop scaffold</a>
+      <a class="block py-1 px-2 text-sm rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900" href="#2026-05-19-memory-wave-2026-q3-closed-fr-memory-120-cyberos-history-shipped-final-fr">2026-05-19 — MEMORY Wave 2026-Q3 CLOSED — FR-MEMORY-120 `cyberos history` shipped (final FR)</a>
+      <a class="block py-1 px-2 text-sm rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900" href="#2026-05-19-wave-3-cont-agents-md-18-p22-approved-fr-memory-119-transcript-ledger">2026-05-19 — Wave 3 cont. — AGENTS.md §18 (P22 APPROVED) + FR-MEMORY-119 transcript ledger</a>
+      <a class="block py-1 px-2 text-sm rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900" href="#2026-05-19-wave-3-cont-agents-md-3-1-extension-p21-approved-fr-memory-118-put-if">2026-05-19 — Wave 3 cont. — AGENTS.md §3.1 extension (P21 APPROVED) + FR-MEMORY-118 put_if</a>
+      <a class="block py-1 px-2 text-sm rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900" href="#2026-05-19-wave-3-start-agents-md-14-4-p20-approved-fr-memory-117-per-store-acl">2026-05-19 — Wave 3 start — AGENTS.md §14.4 (P20 APPROVED) + FR-MEMORY-117 per-store ACL</a>
+      <a class="block py-1 px-2 text-sm rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900" href="#2026-05-19-dependency-version-bumps-agents-md-7-7-p19-approved-wave-2-implementation-fr-memory-115-116">2026-05-19 — Dependency-version bumps + AGENTS.md §7.7 (P19 APPROVED) + Wave 2 implementation (FR-MEMORY-115 + 116)</a>
+      <a class="block py-1 px-2 text-sm rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900" href="#2026-05-14-memory-module-page-rewritten-to-gold-expanded-universal-protocol-scope">2026-05-14 — memory module page rewritten to Gold (expanded universal-protocol scope)</a>
+      <a class="block py-1 px-2 text-sm rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900" href="#2026-05-14-research-review-ingested-memory-auto-sync-design-v1-0-locked">2026-05-14 — Research review ingested + memory auto-sync design v1.0 locked</a>
+ </ul>
+ </div>
+ </div>
+</aside>
+
+<main class="lg:col-span-9 prose prose-slate max-w-none">
+ <div class="bg-white rounded-xl p-6 lg:p-8 shadow-sm border border-slate-200">
+<h3 id="2026-05-18-fr-memory-104-tauri-2-x-desktop-scaffold" class="text-xl font-bold mt-8 mb-3 text-slate-900">2026-05-18 — FR-MEMORY-104 Tauri 2.x desktop scaffold</h3>
+
+<p class="mb-3 leading-relaxed">New <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">services/memory/desktop/</code> (19 files). Backend: Tauri 2 + plugin-shell + plugin-fs; <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">commands.rs</code> for search/quick-capture/sync-state; <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">sync_supervisor.rs</code> supervises the Python memory-sync daemon with 5-restarts-per-60s circuit breaker. Frontend: Svelte 5 runes + Vite + Tailwind 3 — <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">App.svelte</code> with Dashboard / Search / Sync tabs. <strong>NOT in <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">services/Cargo.toml</code> workspace</strong> — own Cargo.lock. Signing scripts for macOS and Windows. FR-MEMORY-104 status bumped <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">accepted → building</code>.</p>
+
+<hr class="my-6 border-slate-200">
+
+<h3 id="2026-05-19-memory-wave-2026-q3-closed-fr-memory-120-cyberos-history-shipped-final-fr" class="text-xl font-bold mt-8 mb-3 text-slate-900">2026-05-19 — MEMORY Wave 2026-Q3 CLOSED — FR-MEMORY-120 <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos history</code> shipped (final FR)</h3>
+
+<p class="mb-3 leading-relaxed">Final FR of the MEMORY Improvement Wave 2026 Q3. No protocol amendment needed (pure read-only projection).</p>
+
+<h4 id="fr-memory-120-implementation" class="text-lg font-semibold mt-6 mb-2 text-slate-800">FR-MEMORY-120 implementation</h4>
+
+<p class="mb-3 leading-relaxed">New <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/cyberos/core/history.py</code> (~265 LOC):</p>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">HistoryEntry</code> dataclass; <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">walk(store, target_path, *, follow_moves, since, limit, show_body)</code> two-pass projection (path-set expansion via move-row sweep, then filter + project). Most-recent-first by default.</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">_row_touches_paths(row, paths)</code> matches <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">row.path</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">extra.path</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">extra.affected_paths[]</code>, and move <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">src</code>/<code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">dst</code>. Catches put / move / delete + every aux kind (<code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">episode.logged</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">memory.importance_scored</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">dream.proposal_applied</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">memory.acl_denied</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">memory.precondition_failed</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">session.*</code>).</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">render_annotations(extra)</code> — inline provenance suffix recognising <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">dream_id</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">proposal_id</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">session_id</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">invocation</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">imported_from</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">merged_into</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">warn_only</code>.</li>
+
+<p class="mb-3 leading-relaxed">CLI: new <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos history <path></code> with <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--limit</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--chronological</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--no-follow-moves</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--show-body</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--since {Nh|Nd|ISO}</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--json</code>.</p>
+
+<h4 id="smoke-verified-end-to-end-against-fresh-tmp-memory-120-fixture" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Smoke verified end-to-end (against fresh /tmp/memory-120 fixture)</h4>
+
+<li class="mb-1 ">✅ Single put → 1 entry, multi-put → N entries descending seq order</li>
+<li class="mb-1 ">✅ <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--chronological</code> flips to ascending</li>
+<li class="mb-1 ">✅ <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--limit 2</code> caps; <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--since 0h</code> filters all; <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--since 24h</code> keeps all 3</li>
+<li class="mb-1 ">✅ Dream annotations rendered inline: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">via dream 01KRYP4D… (proposal PMERGE001) merged into memories/facts/canonical.md</code></li>
+<li class="mb-1 ">✅ Tombstone delete row appears with <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">extra.mode: "tombstone"</code></li>
+<li class="mb-1 ">✅ JSON output with all 9 HistoryEntry fields</li>
+<li class="mb-1 ">✅ Never-existed path → <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">No history for 'memories/facts/never.md'.</code></li>
+<li class="mb-1 ">✅ <strong>Read-only invariant: HEAD before=3, after=3 exact match</strong> (per FR-MEMORY-120 §1 #1)</li>
+<li class="mb-1 ">✅ <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos verify</code> chain intact (3 records)</li>
+
+<h4 id="test-coverage" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Test coverage</h4>
+
+<p class="mb-3 leading-relaxed">New: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/tests/core/test_history.py</code> (302 lines, 18 test functions). Covers AC #1, #2, #3, #4, #5, #7, #10, #13, #16, #20, #21, plus annotation rendering across all 5 recognised tags.</p>
+
+<h4 id="full-memory-wave-2026-q3-final-status" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Full MEMORY Wave 2026-Q3 — FINAL STATUS</h4>
+
+<div class="overflow-x-auto mb-4"><table class="text-sm">
+<thead><tr>
+<th>FR</th>
+<th>Spec</th>
+<th>Impl</th>
+<th>Tests</th>
+<th>Amendment</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>FR-MEMORY-112</td>
+<td>episodic memory</td>
+<td>✅</td>
+<td>351L</td>
+<td>—</td>
+</tr>
+<tr>
+<td>FR-MEMORY-113</td>
+<td>recency-decay recall</td>
+<td>✅</td>
+<td>266L</td>
+<td>—</td>
+</tr>
+<tr>
+<td>FR-MEMORY-114</td>
+<td>write-time importance</td>
+<td>✅</td>
+<td>263L</td>
+<td>—</td>
+</tr>
+<tr>
+<td>FR-MEMORY-115</td>
+<td><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos dream</code></td>
+<td>✅</td>
+<td>329L</td>
+<td>P19 §7.7 ✅</td>
+</tr>
+<tr>
+<td>FR-MEMORY-116</td>
+<td>semantic-dedup consolidate</td>
+<td>✅</td>
+<td>257L</td>
+<td>—</td>
+</tr>
+<tr>
+<td>FR-MEMORY-117</td>
+<td>per-store ACL</td>
+<td>✅</td>
+<td>359L</td>
+<td>P20 §14.4 ✅</td>
+</tr>
+<tr>
+<td>FR-MEMORY-118</td>
+<td><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">put_if</code> precondition-hash</td>
+<td>✅</td>
+<td>349L</td>
+<td>P21 §3.1 ✅</td>
+</tr>
+<tr>
+<td>FR-MEMORY-119</td>
+<td>session transcript ledger</td>
+<td>✅</td>
+<td>308L</td>
+<td>P22 §18 ✅</td>
+</tr>
+<tr>
+<td>FR-MEMORY-120</td>
+<td><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos history</code></td>
+<td>✅</td>
+<td>302L</td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+
+<p class="mb-3 leading-relaxed"><strong>All 9 FRs shipped end-to-end. All 4 protocol amendments APPROVED + merged into AGENTS.md. 2,784 lines of tests covering 110+ acceptance criteria. <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos verify</code> reports chain integrity across every test fixture.</strong></p>
+
+<p class="mb-3 leading-relaxed">The MEMORY module now matches Anthropic's Memory+Dreaming primitive (per the source talk + Ramakrushna article that started this whole wave 2026-05-19 morning).</p>
+
+<hr class="my-6 border-slate-200">
+
+<h3 id="2026-05-19-wave-3-cont-agents-md-18-p22-approved-fr-memory-119-transcript-ledger" class="text-xl font-bold mt-8 mb-3 text-slate-900">2026-05-19 — Wave 3 cont. — AGENTS.md §18 (P22 APPROVED) + FR-MEMORY-119 transcript ledger</h3>
+
+<h4 id="protocol-amendment-18-p22-approved" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Protocol amendment §18 (P22 APPROVED)</h4>
+
+<p class="mb-3 leading-relaxed">Operator's fourth terse <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">APPROVE</code> of the session. New section §18 Session transcript ledger added to <a href="modules/memory/AGENTS.md" class="text-blue-600 hover:underline"><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/AGENTS.md</code></a>. Nine sub-clauses cover opt-in lifecycle, date-partitioned storage at start-date, closed classification enum (<code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">confidential</code> default per Stephen 2026-05-19 / <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">restricted</code>), encryption envelope for restricted payloads, summary rows on the main chain, retention (default 30 days), in-session <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">extra.session_id</code> propagation, lifecycle invariants, and ACL applicability to the <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">sessions/</code> subtree.</p>
+
+<p class="mb-3 leading-relaxed"><strong>Namespace conflict resolved</strong>: the FR spec'd <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos session start|append|end</code>, but the existing P11 <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos session</code> subcommand handles multi-agent coordination — different product with the same verb. The implementation namespaces the transcript ledger under <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos transcript</code> (start / append / end / read / list / purge-expired). §18.1 documents the rename.</p>
+
+<p class="mb-3 leading-relaxed">Tracker entry in <a href="modules/memory/README.md" class="text-blue-600 hover:underline"><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/README.md</code></a> Appendix D flipped P22 from "awaiting APPROVE" to <strong>APPROVED 2026-05-19</strong>.</p>
+
+<h4 id="fr-memory-119-implementation" class="text-lg font-semibold mt-6 mb-2 text-slate-800">FR-MEMORY-119 implementation</h4>
+
+<p class="mb-3 leading-relaxed">New module: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/cyberos/core/transcript.py</code> (~630 LOC):</p>
+
+<li class="mb-1 "><strong><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">Session</code> dataclass</strong> (id, started_at, classification, retention_days, actor, ended_at, ended_reason, binlog_path).</li>
+<li class="mb-1 "><strong><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">start(writer, session_id, classification, retention_days, actor)</code></strong> — anchors §18 check, classification enum check, single-active-pointer check, creates date-partitioned <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">sessions/<YYYY-MM-DD>/<id>.binlog</code>, writes <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">.active</code> pointer, emits <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">session.start</code> aux row.</li>
+<li class="mb-1 "><strong><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">append(writer, session_id, role, content, redactions_applied)</code></strong> — closed role enum, active-session check, length-prefixed frame append (<code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">[u32 length BE][u64 turn_seq BE][u64 ts_ns BE][JSON payload]</code>). Restricted sessions go through <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">_encrypt_content()</code> which wraps content in an <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">aes-256-gcm</code> envelope (uses <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cryptography</code> package if available; falls back to a structured placeholder otherwise).</li>
+<li class="mb-1 "><strong><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">end(writer, session_id, reason, seal_binlog=True)</code></strong> — compresses <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">.binlog</code> → <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">.binlog.zst</code> via zstd level-10, removes raw, emits <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">session.end</code> row.</li>
+<li class="mb-1 "><strong><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">read(store, session_id, decrypt)</code></strong> — iterates frames (handles both <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">.binlog</code> and <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">.binlog.zst</code>); decrypts content_cipher payloads only when <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">decrypt=True</code>.</li>
+<li class="mb-1 "><strong><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">list_sessions(store, since)</code></strong> — enumerates sessions; detects <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">active|ended|purged</code> state from binlog suffix + tombstone marker.</li>
+<li class="mb-1 "><strong><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">purge_expired(writer, retention_days, dry_run)</code></strong> — scans date dirs older than retention, overwrites bodies with tombstone manifest, emits <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">session.purged</code> rows.</li>
+<li class="mb-1 "><strong><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">active_session_id(store)</code></strong> — read the <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">.active</code> pointer.</li>
+<li class="mb-1 "><strong><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">_has_section_18(store)</code></strong> — anchor check (looks for <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">§18</code> + "Session transcript ledger" in nearby <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">AGENTS.md</code>).</li>
+
+<p class="mb-3 leading-relaxed">CLI: new <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos transcript {start|append|end|read|list|purge-expired}</code> subcommand with full operator surface — <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--id</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--classification</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--retention-days</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--role</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--content</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--redactions-applied</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--reason</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--no-seal</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--decrypt</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--since</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--dry-run</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--json</code>.</p>
+
+<h4 id="smoke-verified-end-to-end" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Smoke verified end-to-end</h4>
+
+<li class="mb-1 "><strong>AC #1 lifecycle</strong>: start (confidential default) → append × 2 (turn_seq 0, 1) → end (sealed <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">.binlog.zst</code>) → read back full transcript with timestamps + roles.</li>
+<li class="mb-1 "><strong>AC #3 restricted encrypts</strong>: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--classification restricted</code> + append → without <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--decrypt</code> shows <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">[encrypted content; --decrypt to read]</code>; with <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--decrypt</code> shows <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">secret hello</code>.</li>
+<li class="mb-1 "><strong>AC #4 invalid classification</strong>: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--classification public</code> rejected at argparse (exit 2).</li>
+<li class="mb-1 "><strong>AC #5 append-without-start</strong>: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">error: no active session; start one first</code> (exit 2).</li>
+<li class="mb-1 "><strong>AC #8 two-active rejection</strong>: starting a second session while <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">concurrent-1</code> is active → <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">error: a session is already active ('concurrent-1')</code> (exit 2).</li>
+<li class="mb-1 "><strong>AC #19 amendment gate</strong>: AGENTS.md moved aside → exit 3 + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">APPROVE protocol change P22 §18</code> message.</li>
+<li class="mb-1 "><strong>AC #17 list</strong>: enumerated 3 ended sessions with their <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">state: ended</code> + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">binlog_path</code>.</li>
+<li class="mb-1 "><strong>AC #18 + #20 retention purge</strong>: backdated dir at 2026-04-01 → <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">purge-expired --dry-run --retention-days 30</code> reports 1 purge candidate without mutating; actual <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">purge-expired</code> emits <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">session.purged</code> row at seq=7, replaces body with tombstone JSON.</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos verify</code> reported chain intact (7 records final).</li>
+
+<h4 id="test-coverage" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Test coverage</h4>
+
+<p class="mb-3 leading-relaxed">New: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/tests/core/test_transcript.py</code> (308 lines, 19 test functions) covering: amendment-gate enforcement, lifecycle round-trip, date-partitioned storage, restricted encrypt/decrypt round-trip, closed classification enum (4 reject paths), append-without-start, append-after-end, double-end, two-active-rejection, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">active_session_id()</code> helper, input validation (empty id, bad role, retention_days ≤ 0), <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">list_sessions</code>, purge dry-run + actual, session.purged payload shape, read-unknown-session-returns-empty.</p>
+
+<h4 id="combined-test-surface-waves-1-2-fr-117-fr-118-fr-119" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Combined test surface (Waves 1+2+FR-117+FR-118+FR-119)</h4>
+
+<p class="mb-3 leading-relaxed">8 test files at <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/tests/core/</code> = <strong>2,482 lines, ~122 test functions across 95+ acceptance criteria</strong>.</p>
+
+<h4 id="files-touched-this-entry-only" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Files touched (this entry only)</h4>
+
+<p class="mb-3 leading-relaxed">New:</p>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/cyberos/core/transcript.py</code> (632 lines)</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/tests/core/test_transcript.py</code> (308 lines)</li>
+
+<p class="mb-3 leading-relaxed">Modified:</p>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/AGENTS.md</code> — added §18 (9 sub-clauses)</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/cyberos/__main__.py</code> — <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">_cmd_transcript</code> handler + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos transcript</code> subparser</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/README.md</code> Appendix D — P22 flipped APPROVED + documented the <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">transcript</code> namespace decision</li>
+
+<h4 id="wave-3-status" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Wave 3 status</h4>
+
+<li class="mb-1 ">✅ <strong>P20 §14.4</strong> APPROVED + FR-MEMORY-117 shipped</li>
+<li class="mb-1 ">✅ <strong>P21 §3.1</strong> APPROVED + FR-MEMORY-118 shipped</li>
+<li class="mb-1 ">✅ <strong>P22 §18</strong> APPROVED + FR-MEMORY-119 shipped</li>
+<li class="mb-1 ">⏳ <strong>FR-MEMORY-120</strong> (<code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos history</code>) — no amendment gate; ships when operator says go</li>
+
+<hr class="my-6 border-slate-200">
+
+<h3 id="2026-05-19-wave-3-cont-agents-md-3-1-extension-p21-approved-fr-memory-118-put-if" class="text-xl font-bold mt-8 mb-3 text-slate-900">2026-05-19 — Wave 3 cont. — AGENTS.md §3.1 extension (P21 APPROVED) + FR-MEMORY-118 put_if</h3>
+
+<h4 id="protocol-amendment-3-1-p21-approved" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Protocol amendment §3.1 (P21 APPROVED)</h4>
+
+<p class="mb-3 leading-relaxed">Operator's third terse <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">APPROVE</code> of the session. §3.1's canonical-op table extended from THREE ops (<code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">put</code> / <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">move</code> / <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">delete</code>) to FOUR — <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">put_if</code> joins as the optimistic-concurrency primitive. Three new sub-clauses:</p>
+
+<li class="mb-1 "><strong>§3.1.5</strong> — <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">memory.precondition_failed</code> aux row schema (<code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">{actor, path, expected, actual, attempt_at}</code>). HEAD doesn't advance for the rejected put; advances by +1 for the aux row only.</li>
+<li class="mb-1 "><strong>§3.1.6</strong> — success row is INDISTINGUISHABLE from a regular <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">put</code> (<code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">op="put"</code>, not <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">"put_if"</code>). Downstream consumers (walker / doctor / dream / history) require no special-case logic.</li>
+<li class="mb-1 "><strong>§3.1.7</strong> — ACL check (FR-MEMORY-117) runs BEFORE the precondition check. Policy refusal returns <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">acl_denied</code>, not <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">precondition_failed</code> — different operator action needed.</li>
+
+<p class="mb-3 leading-relaxed">Tracker entry in <a href="modules/memory/README.md" class="text-blue-600 hover:underline"><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/README.md</code></a> Appendix D flipped P21 from "awaiting APPROVE" to <strong>APPROVED 2026-05-19</strong>.</p>
+
+<h4 id="fr-memory-118-implementation" class="text-lg font-semibold mt-6 mb-2 text-slate-800">FR-MEMORY-118 implementation</h4>
+
+<p class="mb-3 leading-relaxed">New op in <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/cyberos/core/ops.py</code>:</p>
+
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">PutIfResult</code> frozen dataclass (5 fields: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">outcome</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">reason</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">expected</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">actual</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">committed_seq</code>).</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">put_if(writer, rel_path, body, *, actor, precondition_body_hash, kind, extra)</code> — content-conditional write. Order of checks: path traversal + size cap → shape validation (64-char lowercase hex OR <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">None</code> only) → <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">_has_section_3_1_put_if()</code> anchor check → ACL gate (FR-MEMORY-117, runs BEFORE precondition per §3.1.7) → precondition check (3 rejection paths) → write. Success emits a plain <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">put</code> row (per §3.1.6) so downstream consumers need no special-case.</li>
+
+<p class="mb-3 leading-relaxed">CLI: new <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos put-if <path> <body_file> --precondition <hex|none></code> subcommand with <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--precondition-from-file</code> + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--json</code> variants.</p>
+
+<h4 id="smoke-verified-end-to-end" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Smoke verified end-to-end</h4>
+
+<li class="mb-1 "><strong>AC #1 match → written</strong>: pre-computed body hash; <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">put-if</code> returns <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">outcome: written, seq: 2</code>.</li>
+<li class="mb-1 "><strong>AC #2 mismatch → rejected</strong>: stale hash → <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">outcome: rejected, reason: precondition_failed, expected: 8fc80ed1…, actual: 79598c2e…</code>. Chain advances by exactly 1 (aux row only).</li>
+<li class="mb-1 "><strong>AC #3 null + absent → written</strong>, <strong>AC #4 null + existing → rejected</strong>.</li>
+<li class="mb-1 "><strong>AC #16 shape validation</strong>: uppercase hex → <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">error: precondition_body_hash must be 64-char lowercase hex or None</code>.</li>
+<li class="mb-1 "><strong>AC #19 amendment gate</strong>: with AGENTS.md moved aside, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">put-if</code> exits with code 3 naming <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">APPROVE protocol change P21 §3.1</code>.</li>
+<li class="mb-1 "><strong>Retry-loop pattern</strong> worked in 1 attempt against the seeded fixture.</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos verify</code> chain intact (6 records).</li>
+
+<h4 id="test-coverage" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Test coverage</h4>
+
+<p class="mb-3 leading-relaxed">New: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/tests/core/test_put_if.py</code> (349 lines, 19 test functions) covering: amendment-gate enforcement, shape validation (5 parametrized bad inputs), 4×2 precondition cross-product, HEAD-doesn't-advance-on-reject invariant, success-row-is-<code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">op=put</code> invariant, aux-row payload shape, ACL-before-precondition ordering, PutIfResult shape, retry-loop pattern, sequential two-writer race smoke.</p>
+
+<h4 id="combined-test-surface-waves-1-2-fr-117-fr-118" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Combined test surface (Waves 1+2+FR-117+FR-118)</h4>
+
+<p class="mb-3 leading-relaxed">7 test files at <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/tests/core/</code> = <strong>2,174 lines, ~103 test functions across 80+ acceptance criteria</strong>.</p>
+
+<h4 id="files-touched-this-entry-only" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Files touched (this entry only)</h4>
+
+<p class="mb-3 leading-relaxed">New: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">tests/core/test_put_if.py</code> (349 lines).</p>
+<p class="mb-3 leading-relaxed">Modified: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/AGENTS.md</code> §3.1; <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/cyberos/core/ops.py</code> (~160 LOC); <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/cyberos/__main__.py</code>; <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/README.md</code> Appendix D.</p>
+
+<h4 id="wave-3-status" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Wave 3 status</h4>
+
+<li class="mb-1 ">✅ <strong>P20 §14.4</strong> APPROVED + FR-MEMORY-117 shipped</li>
+<li class="mb-1 ">✅ <strong>P21 §3.1</strong> APPROVED + FR-MEMORY-118 shipped</li>
+<li class="mb-1 ">⏳ <strong>P22 §18</strong> (session transcript ledger) — awaiting <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">APPROVE protocol change P22 §18</code></li>
+<li class="mb-1 ">⏳ <strong>FR-MEMORY-120</strong> (<code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos history</code>) — no amendment gate</li>
+
+<hr class="my-6 border-slate-200">
+
+<h3 id="2026-05-19-wave-3-start-agents-md-14-4-p20-approved-fr-memory-117-per-store-acl" class="text-xl font-bold mt-8 mb-3 text-slate-900">2026-05-19 — Wave 3 start — AGENTS.md §14.4 (P20 APPROVED) + FR-MEMORY-117 per-store ACL</h3>
+
+<h4 id="protocol-amendment-14-4-p20-approved" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Protocol amendment §14.4 (P20 APPROVED)</h4>
+
+<p class="mb-3 leading-relaxed">Operator approved with a terse <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">APPROVE</code> (interpreted as the next-in-queue per the one-at-a-time rule). New section added to <a href="modules/memory/AGENTS.md" class="text-blue-600 hover:underline"><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/AGENTS.md</code></a> at §14.4 — Store-level ACL. Seven sub-clauses cover STORE.yaml shape + parsing, write-side enforcement via the canonical writer with first-match-wins glob resolution, read non-enforcement (writes-only at protocol level), <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">memory.acl_denied</code> aux row payload, two-sided ACL check on <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">move</code>, INTEROP-consumer obligation, and the <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">store-yaml-acl-valid</code> walker invariant.</p>
+
+<p class="mb-3 leading-relaxed">Tracker entry in <a href="modules/memory/README.md" class="text-blue-600 hover:underline"><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/README.md</code></a> Appendix D flipped P20 from "awaiting APPROVE" to <strong>APPROVED 2026-05-19</strong>.</p>
+
+<h4 id="fr-memory-117-implementation" class="text-lg font-semibold mt-6 mb-2 text-slate-800">FR-MEMORY-117 implementation</h4>
+
+<p class="mb-3 leading-relaxed">New: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/cyberos/core/store_acl.py</code> (~280 LOC):</p>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">StoreAcl</code> dataclass + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">from_yaml(path)</code> parser with full validation (closed-enum modes, required <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">store_id</code>, list-shape <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">acl</code>, glob-actor strings).</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">find_governing_store_yaml(root, rel_path)</code> — walks UP from the target's parent dir; innermost STORE.yaml wins.</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">check_write(root, rel_path, actor)</code> — returns <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">AclResult</code> with <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">allowed</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">mode</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">store_id</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">yaml_path</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">matched_entry</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">reason</code>.</li>
+<li class="mb-1 ">Two-mode operation:</li>
+<li class="mb-1 ml-6"><strong>Enforced</strong> (AGENTS.md §14.4 anchor present): denied writes raise <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">AclDenied</code> after emitting the <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">memory.acl_denied</code> aux row.</li>
+<li class="mb-1 ml-6"><strong>WARN-ONLY</strong> (anchor absent, pre-amendment transition): aux row still emitted with <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">warn_only=True</code> payload field, but writes proceed. Anti-footgun for operators who pull code before APPROVE'ing.</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">explain(root, path, actor)</code> — operator-readable diagnostic for <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos acl explain</code>.</li>
+
+<p class="mb-3 leading-relaxed">Hooks into <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/cyberos/core/ops.py</code>:</p>
+<li class="mb-1 ">New <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">AclDenied(PermissionError)</code> exception class.</li>
+<li class="mb-1 ">New <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">_acl_check(writer, rel_path, actor, attempt_kind)</code> helper — emits the aux row on any non-allow result.</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">put()</code> gates the write before the atomic file write.</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">move()</code> calls <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">_acl_check</code> for BOTH <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">src_rel</code> and <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">dst_rel</code> per §14.4.5; either-side failure → <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">AclDenied</code>.</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">delete()</code> gates before the audit-row submit.</li>
+
+<p class="mb-3 leading-relaxed">Hooks into <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/memory.schema.json</code>:</p>
+<li class="mb-1 ">New <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">StoreAclMode</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">StoreAclEntry</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">StoreAcl</code> definitions matching FR-MEMORY-117 §3 schema fragment.</li>
+
+<p class="mb-3 leading-relaxed">CLI: new <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos acl {show|validate|explain}</code> subcommand:</p>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">acl show</code> — pretty-prints every STORE.yaml in the store.</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">acl validate</code> — re-validates every STORE.yaml against the schema; non-zero exit on any failure.</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">acl explain <path></code> — resolves the effective mode for the active actor on a given path, with the matched ACL entry highlighted.</li>
+
+<h4 id="smoke-verified-end-to-end" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Smoke verified end-to-end</h4>
+
+<li class="mb-1 "><strong>WARN-ONLY</strong> (no AGENTS.md): scheduled-importer write to a deny subtree → seq advanced, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">memory.acl_denied</code> aux row emitted with <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">warn_only: true</code>.</li>
+<li class="mb-1 "><strong>Enforced</strong> (AGENTS.md §14.4 present): same write → <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">AclDenied</code> raised, aux row emitted with <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">warn_only: false</code>, NO put row written.</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos verify</code> chain intact across both modes.</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos acl show</code> formatted three-entry STORE.yaml correctly.</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos acl explain</code> correctly resolved scheduled-importer → <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">deny</code>, stephen@cyberskill.world → <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">read-write</code>.</li>
+<li class="mb-1 ">Happy-path put for stephen@cyberskill.world succeeded at seq=4.</li>
+
+<h4 id="test-coverage" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Test coverage</h4>
+
+<p class="mb-3 leading-relaxed">New: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/tests/core/test_store_acl.py</code> (359 lines, 19 test functions) covering: StoreAcl parse + validation, find_governing_store_yaml walk, check_write across enforcement/warn-only/permissive paths, glob-actor matching, first-match-wins, explicit-deny override, default_mode fallback, built-in actor literals, put/move/delete ACL enforcement via canonical ops, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">move</code> two-sided check, memory.acl_denied aux-row payload shape, explain() output.</p>
+
+<h4 id="combined-test-surface-waves-1-2-fr-memory-117" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Combined test surface (Waves 1 + 2 + FR-MEMORY-117)</h4>
+
+<p class="mb-3 leading-relaxed">6 test files at <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/tests/core/</code>: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">test_episode.py</code> (351) + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">test_ranking_and_decay.py</code> (266) + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">test_importance.py</code> (263) + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">test_dream.py</code> (329) + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">test_consolidate_semantic_dedup.py</code> (257) + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">test_store_acl.py</code> (359) = <strong>1,825 lines, ~84 test functions across 65+ acceptance criteria</strong>.</p>
+
+<h4 id="files-touched-this-entry-only" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Files touched (this entry only)</h4>
+
+<p class="mb-3 leading-relaxed">New:</p>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/cyberos/core/store_acl.py</code> (~280 lines)</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/tests/core/test_store_acl.py</code> (359 lines)</li>
+
+<p class="mb-3 leading-relaxed">Modified:</p>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/AGENTS.md</code> — added §14.4 Store-level ACL (7 sub-clauses)</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/memory.schema.json</code> — added StoreAclMode, StoreAclEntry, StoreAcl definitions</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/cyberos/core/ops.py</code> — <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">AclDenied</code> + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">_acl_check</code> + integration into put/move/delete</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/cyberos/__main__.py</code> — <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">_cmd_acl</code> handler + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos acl {show|validate|explain}</code> subparser</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/README.md</code> Appendix D — P20 flipped APPROVED</li>
+
+<h4 id="wave-3-status" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Wave 3 status</h4>
+
+<li class="mb-1 ">✅ <strong>P20 §14.4</strong> APPROVED + FR-MEMORY-117 implemented</li>
+<li class="mb-1 ">⏳ <strong>P21 §3.1</strong> (put_if precondition-hash) awaiting <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">APPROVE protocol change P21 §3.1</code></li>
+<li class="mb-1 ">⏳ <strong>P22 §18</strong> (session transcript ledger) awaiting <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">APPROVE protocol change P22 §18</code></li>
+<li class="mb-1 ">⏳ <strong>FR-MEMORY-120</strong> (<code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos history</code>) — no amendment gate; ships next session</li>
+
+<hr class="my-6 border-slate-200">
+
+<h3 id="2026-05-19-dependency-version-bumps-agents-md-7-7-p19-approved-wave-2-implementation-fr-memory-115-116" class="text-xl font-bold mt-8 mb-3 text-slate-900">2026-05-19 — Dependency-version bumps + AGENTS.md §7.7 (P19 APPROVED) + Wave 2 implementation (FR-MEMORY-115 + 116)</h3>
+
+<h4 id="dependency-version-audit-bumps-repo-wide" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Dependency version audit + bumps (repo-wide)</h4>
+
+<p class="mb-3 leading-relaxed">Operator: "use latest stable; check throughout cyberos and update all possible." Conservative floor bumps to known-stable versions; patch releases pick up via <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">pip install -U</code> / <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cargo update</code> / <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">pnpm up</code>. Playground folder (cloned upstream repos) untouched.</p>
+
+<div class="overflow-x-auto mb-4"><table class="text-sm">
+<thead><tr>
+<th>Project</th>
+<th>Files touched</th>
+<th>What bumped</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/</code></td>
+<td><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">pyproject.toml</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos/requirements.txt</code></td>
+<td>setuptools 61→75; msgspec 0.18→0.18.6; crc32c 2.4→2.7; PyYAML 6.0→6.0.2</td>
+</tr>
+<tr>
+<td><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/skill/</code></td>
+<td><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">pyproject.toml</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">toolchain/package.json</code></td>
+<td>setuptools 61→75; anthropic 0.40→0.42; msgspec→0.18.6; pyyaml→6.0.2; @bytecodealliance/jco 1.7→1.10</td>
+</tr>
+<tr>
+<td><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/cuo/</code></td>
+<td><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">pyproject.toml</code></td>
+<td>hatchling 1.18→1.25; click 8.1→8.1.7; pyyaml→6.0.2; pytest 8.0→8.3</td>
+</tr>
+<tr>
+<td><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">services/embed-sidecar/</code></td>
+<td><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">pyproject.toml</code></td>
+<td>setuptools 68→75; fastapi 0.110→0.115; uvicorn 0.27→0.32; pydantic 2.6→2.9; sentence-transformers 2.7→3.0; torch 2.2→2.4</td>
+</tr>
+<tr>
+<td><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">services/</code> (workspace)</td>
+<td><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">Cargo.toml</code></td>
+<td>rust-version 1.81→1.83; tokio 1.41→1.42; clap 4→4.5; jsonwebtoken 9→9.3</td>
+</tr>
+<tr>
+<td><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">services/auth/</code></td>
+<td><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">Cargo.toml</code></td>
+<td>reqwest→0.12.9; ipnetwork 0.20→0.21; zeroize 1→1.8</td>
+</tr>
+<tr>
+<td><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">services/memory/</code></td>
+<td><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">Cargo.toml</code></td>
+<td>async-trait→0.1.83; regex 1→1.11; reqwest→0.12.9</td>
+</tr>
+<tr>
+<td><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">services/skill-broker/</code></td>
+<td><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">Cargo.toml</code></td>
+<td>flagged serde_yaml deprecation (slice-4 migration tracked); no version change</td>
+</tr>
+<tr>
+<td><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">services/memory/desktop/</code></td>
+<td><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">package.json</code></td>
+<td>@tauri-apps/api/cli 2.0→2.1; svelte 5.0→5.2; tslib 2.7→2.8; tailwind 3.4.0→3.4.14</td>
+</tr>
+</tbody>
+</table></div>
+
+<h4 id="protocol-amendment-7-7-p19-approved" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Protocol amendment §7.7 (P19 APPROVED)</h4>
+
+<p class="mb-3 leading-relaxed">Operator approved Wave 2 protocol amendment. New section added to <a href="modules/memory/AGENTS.md" class="text-blue-600 hover:underline"><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/AGENTS.md</code></a> at §7.7 — Dreaming. Seven sub-clauses cover out-of-band identity, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">extra.dream_id</code> + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">extra.proposal_id</code> provenance invariant, body-hash precondition gate, operator-gated apply, four new audit kinds, snapshot isolation, and the closed detector enum.</p>
+
+<p class="mb-3 leading-relaxed">Tracker entry in <a href="modules/memory/README.md" class="text-blue-600 hover:underline"><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/README.md</code></a> Appendix D flipped P19 from "awaiting APPROVE" to <strong>APPROVED 2026-05-19</strong>.</p>
+
+<h4 id="fr-memory-115-cyberos-dream-out-of-band-reflection" class="text-lg font-semibold mt-6 mb-2 text-slate-800">FR-MEMORY-115 — <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos dream</code> out-of-band reflection</h4>
+
+<p class="mb-3 leading-relaxed">New: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/cyberos/core/dream/{__init__,proposals,_audit_iter,detectors,runner,applier}.py</code>. Four async detectors (<code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">duplicates</code> / <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">stale</code> / <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">patterns</code> / <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">verify</code>) matching AGENTS.md §7.7.7 closed enum. Runner uses Crockford-base32 ULID <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">dream_id</code>, snapshot-isolated against <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">head_seq</code> at start, persists <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">DreamDiff</code> to <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">dreams/<YYYYMMDDTHHMMSSZ>/diff.json</code>. Applier: 3-pass (strict-idempotency via chain-walk → body-hash precondition → write with <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">extra.dream_id</code>/<code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">extra.proposal_id</code> per §7.7.2). AGENTS.md §7.7 anchor checked before any writes (<code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">ProtocolAmendmentMissing</code> on missing).</p>
+
+<p class="mb-3 leading-relaxed">CLI: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos dream</code> + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos dream-apply <id></code> subcommands.</p>
+
+<p class="mb-3 leading-relaxed"><strong>Smoke verified end-to-end:</strong> seeded 3 facts (2 near-duplicate); dream found 1 merge proposal; apply rejected without §7.7 anchor, succeeded with anchor, idempotent on re-apply (<code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">skipped_idempotent: 1</code>); <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos verify</code> reported chain intact (13 rows).</p>
+
+<p class="mb-3 leading-relaxed"><strong>Side effect</strong>: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos.core.ops.delete()</code> gained optional <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">extra: dict | None</code> kwarg (additive, back-compat).</p>
+
+<h4 id="fr-memory-116-semantic-dedup-consolidate-phase" class="text-lg font-semibold mt-6 mb-2 text-slate-800">FR-MEMORY-116 — Semantic-dedup consolidate phase</h4>
+
+<p class="mb-3 leading-relaxed">Thin wrapper: 5th phase appended to <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos.core.consolidate.run()</code> → <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">Walk → Compact → Sign → Publish → SemanticDedup</code>. Delegates to FR-MEMORY-115's <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">duplicates</code> detector + applier verbatim (asserted by <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">test_consolidate_imports_dream_detector</code> via <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">inspect.getsource</code>). On apply, emits a marker <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">dream.complete</code> row with <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">extra.invocation = "consolidate"</code> so FR-MEMORY-120 history can distinguish dedup-from-consolidate from dedup-from-explicit-<code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">dream</code>.</p>
+
+<p class="mb-3 leading-relaxed">CLI: extends <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos consolidate</code> with <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--semantic-dedup</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--semantic-dedup-apply</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--semantic-dedup-threshold</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">--semantic-dedup-scope</code>. Default behavior unchanged. <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">ConsolidationReport</code> gains 5 new fields.</p>
+
+<p class="mb-3 leading-relaxed"><strong>Smoke verified end-to-end:</strong> same 2-duplicate fixture; all 5 phases ran; 1 proposal found + 1 applied; final <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">dream.complete</code> aux row carries <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">extra.invocation: "consolidate"</code>.</p>
+
+<h4 id="combined-test-coverage-wave-1-wave-2" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Combined test coverage (Wave 1 + Wave 2)</h4>
+
+<p class="mb-3 leading-relaxed">5 test files at <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/tests/core/</code>: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">test_episode.py</code> (351) + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">test_ranking_and_decay.py</code> (266) + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">test_importance.py</code> (263) + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">test_dream.py</code> (329) + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">test_consolidate_semantic_dedup.py</code> (257) = <strong>1,466 lines, ~65 test functions across 50+ acceptance criteria</strong>.</p>
+
+<h4 id="deferred-to-subsequent-sessions" class="text-lg font-semibold mt-6 mb-2 text-slate-800">Deferred to subsequent sessions</h4>
+
+<li class="mb-1 ">pytest run against full suite — sandbox is Python 3.10 (module requires 3.11+); test files are ready for <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">pytest tests/core/ -v</code> in operator env.</li>
+<li class="mb-1 ">Wave 3 (FR-MEMORY-117 ACL · 118 put_if · 119 sessions · 120 history) — gated on independent <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">APPROVE protocol change P20 / P21 / P22</code> chat-turns when operator ready.</li>
+
+<hr class="my-6 border-slate-200">
+
+<h3 id="2026-05-14-memory-module-page-rewritten-to-gold-expanded-universal-protocol-scope" class="text-xl font-bold mt-8 mb-3 text-slate-900">2026-05-14 — memory module page rewritten to Gold (expanded universal-protocol scope)</h3>
+
+<p class="mb-3 leading-relaxed">Rewrote <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">website/docs/modules/memory.html</code> from 1116 → 1518 lines (+402 lines, +36%). Encodes the MEMORY_AUTOSYNC_DESIGN.md vision: universal Personal memory + Lumi's memory + capture daemon + 2-way sync + multi-memory auto-evolve. Targeted Edit operations (not full rewrite) — preserved all existing gold-quality content on Stage 0 (shipped Layer 1) while encoding Stages 1–5.</p>
+
+<p class="mb-3 leading-relaxed">Changes by section:</p>
+<li class="mb-1 "><strong><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155"><title></code> + <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155"><meta description></code></strong> — reframed from "the substrate every CyberOS module depends on" to "the universal personal-and-shared memory protocol — CyberOS is the first consumer, the protocol stands alone".</li>
+<li class="mb-1 "><strong>Hero tagline + lede paragraph</strong> — Personal memory + Lumi's memory duality; portability by folder copy; multi-memory auto-evolve as the moat; Stage 1–5 reference to MEMORY_AUTOSYNC_DESIGN.md.</li>
+<li class="mb-1 "><strong>Hero fact-grid</strong> — replaced single-store metrics with dual-store reality (Layer 1 status + Stages 1–5 designed + Personal+Lumi stores + universal scope).</li>
+<li class="mb-1 "><strong>NEW §0 — "The bigger picture"</strong> — 3-card layout (Personal · Sync orchestrator · Lumi's memory); auto-vs-manual capture matrix; "this is the moat" strategic frame.</li>
+<li class="mb-1 "><strong>TOC</strong> — added "The bigger picture" + "Stages 1–5 roadmap" entries.</li>
+<li class="mb-1 "><strong>§1 Why memory exists</strong> — 4-card layout (was 3) adding "Universal capture" + "Multi-memory power"; expanded the two-paragraph rationale with the compounding-moat argument.</li>
+<li class="mb-1 "><strong>§2 5W1H2C5M</strong> — all 12 cells rewritten to encode the universal protocol scope. Personal vs Lumi distinction in Who/When/Where; Stage 2+ materials (Rust+notify, Presidio); cost model includes sync push p95 and synthesis LLM-cost.</li>
+<li class="mb-1 "><strong>NEW §3.5 — "Stages 1–5 universal protocol roadmap"</strong> — Mermaid stage-dependency flowchart; gating table with effort estimates; Personal memory sub-architecture Mermaid diagram (capture surfaces → ops → store + sync queue); Lumi's memory sub-architecture diagram (N personal memories → sync → tenant chain → synthesis → wisdom); sync_class privacy taxonomy table.</li>
+<li class="mb-1 "><strong>§4 Data model</strong> — added second ERD with 5 new entities: WatchedFolder · CaptureEvent · SyncState · LumiRow · SharedMemoryAcl · OrgMember · SynthesisInput · SynthesisArtefact (~80 lines of Mermaid erDiagram).</li>
+<li class="mb-1 "><strong>§5 API surface</strong> — added a second CLI table with the 8 new <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">memory *</code> subcommands locked per MEMORY_AUTOSYNC_DESIGN.md §15: init/watch/unwatch/status/capture (Stage 1) + sync/sync-mode/pending/reclass (Stage 4).</li>
+<li class="mb-1 "><strong>§11 Compliance</strong> — added PDPL Art. 7 (no data sale), Art. 20 (60-day post-audit cross-border), Art. 38 (SME 5-year grace), EU AI Act Art. 12 (synthesis logging) + Art. 50 (AI-generated content transparency), ISO/IEC 27018 §A.5 (customer agreement).</li>
+<li class="mb-1 "><strong>§12 Risk entries</strong> — added 6 new memory-specific risks (R-memory-009..014): Lumi's memory tenant compromise, sync conflict storm, synthesis hallucination, capture daemon crash recovery, iCloud sibling explosion, PII leak via auto-capture. Each with likelihood / impact / owner / mitigation.</li>
+<li class="mb-1 "><strong>§13 KPIs</strong> — added 8 new universal-protocol KPIs: capture rate per user, sync success rate, sync conflict rate, synthesis useful-rate, Lumi's memory seq counter, PII held-back rate, capture daemon health, cross-machine portability.</li>
+<li class="mb-1 "><strong>§14 RACI</strong> — added 9 new rows covering Stages 1–5 + Personal-memory portability + PII detection + cross-tenant isolation testing + synthesis output review. Stage-3+ adds Cloud-DBA + Sync-SRE roles under CTO.</li>
+<li class="mb-1 "><strong>§16 Phase status</strong> — added 5 new rows for Stages 1–5 with appropriate "design-locked / designed" pills.</li>
+<li class="mb-1 "><strong>§17 References</strong> — replaced PRD/SRS section refs (stripped) with MEMORY_AUTOSYNC_DESIGN.md, PROPOSAL.md (Proposal P13), feature-request-audit skill, AUDIT_AND_PLAN_2026_05_14.md, RESEARCH_REVIEW_2026_05_14.md cross-links. Annotates the 4 new doctor invariants and 5 new schema entities.</li>
+
+<p class="mb-3 leading-relaxed">Result: memory page now reflects the expanded universal-protocol vision while preserving every gold-quality detail of the shipped Stage-0 Layer 1. 5 references to MEMORY_AUTOSYNC_DESIGN.md cross-link the design source-of-truth. 20 mentions of the 8 new <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">memory *</code> subcommands give a cold reader the full CLI map.</p>
+
+<hr class="my-6 border-slate-200">
+
+<h3 id="2026-05-14-research-review-ingested-memory-auto-sync-design-v1-0-locked" class="text-xl font-bold mt-8 mb-3 text-slate-900">2026-05-14 — Research review ingested + memory auto-sync design v1.0 locked</h3>
+
+<li class="mb-1 ">Saved <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">docs/RESEARCH_REVIEW_2026_05_14.md</code> (315 lines, ~53 KB) — the pre-launch audit from Claude Chat's Research Mode. Aggregate 6.5/10; lowest substantive scores on Spec Quality (5) and GTM (5). 10 follow-up tasks created (#31–#40) covering: P0→P1 descope gate, AI Gateway → AUTH reorder, PDPL citation fixes, server-render NFR + Risk catalogs, first 50 FRs via feature-request-author, 7 missing risks, TEN-billing P2 slice, UX defects, memory Layer 2 source-of-truth one-pager, memory decision memory.</li>
+<li class="mb-1 "><strong>Wrote <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">docs/MEMORY_AUTOSYNC_DESIGN.md</code></strong> (~700 lines, design v1.0.0) — universal Personal memory + Lumi's memory architecture. Per Stephen's clarified vision: (1) Personal memory works on any folder, not just cyberos; (2) captures everything including discussions, not just file deliverables; (3) portable by folder copy across user's machines; (4) 2-way sync with Cloud memory aka Lumi's memory (also CUO's memory, CyberSkill's memory — same store, different names for different audiences); (5) multi-memory power + auto-evolve memory at scale.</li>
+<li class="mb-1 ml-6">16 sections: vision, naming, three-layer architecture, Personal memory spec, Capture daemon spec, Lumi's memory spec, Sync orchestrator, Multi-memory auto-evolve, Dependency map, Privacy + governance, AGENTS.md Proposal P13 additions, CyberOS strategic implications, naming/branding decisions, 4-week sprint plan, 5 open questions, where-to-read-next.</li>
+<li class="mb-1 ml-6">Stage gating: <strong>Stage 1 (Personal memory universal) + Stage 2 (capture daemon) are buildable today</strong> — no external dep. Stages 3+ ride the P0+P2 critical path (AUTH + AI Gateway + TEN).</li>
+<li class="mb-1 ml-6">Strategic implication called out: this is <strong>the moat</strong> the reviewer's GTM critique was looking for. Personal memory as OSS distribution; Lumi's memory as the commercial product. The compounding switching cost = value of the org's accumulated memory.</li>
+
+
+ </div>
+</main>
+
+</div>
+
+</body>
+</html>

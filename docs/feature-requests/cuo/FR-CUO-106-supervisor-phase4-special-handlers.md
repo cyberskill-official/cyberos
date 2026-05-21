@@ -3,14 +3,14 @@ id: FR-CUO-106
 title: "CUO supervisor Phase 4 — 5 special-case workflow handlers: time-critical SLA bypass, per-instance iteration, multi-output fan-out, sequential-approval gating, persona-pair partnership"
 module: CUO
 priority: MUST
-status: draft
+status: shipped
 verify: T
 phase: P1
 milestone: P1 · slice 7
 slice: 7
 owner: Stephen Cheng (CDO)
 created: 2026-05-18
-shipped: null
+shipped: 2026-05-18
 memory_chain_hash: null
 related_frs: [FR-CUO-101, FR-CUO-104, FR-CUO-105, FR-SKILL-001, FR-MEMORY-111]
 depends_on: [FR-CUO-104, FR-CUO-105]
@@ -56,7 +56,7 @@ build_envelope:
     - modules/cuo/cuo/cli.py
     - modules/cuo/cuo/__init__.py
     - modules/cuo/pyproject.toml
-    - modules/cuo/README.md
+    - website docs (CUO appendices)
     - 3 time-critical workflow YAML frontmatter (pattern: time_critical, sla_minutes: <N>)
     - chief-sales-officer/quarterly-account-plan.md (pattern: per_instance, instance_descriptor field)
     - chief-legal-officer/quarterly-regulatory-cycle.md (pattern: multi_output, output_recipients field)
@@ -240,7 +240,7 @@ cyberos-cuo execute <persona>/<workflow>  # auto-detects pattern from frontmatte
 16. **Existing 21/22 tests still pass post-change**.
 17. **6 new test files green** (one per handler + dispatch).
 18. **pyproject.toml version bumped to 3.0.0a4**.
-19. **modules/cuo/README.md §12 Roadmap updated** — Phase 4 marked shipped.
+19. **CUO docs site §12 Roadmap updated** — Phase 4 marked shipped.
 20. **No workflow's skill_chain[] mutated at runtime**.
 
 ---

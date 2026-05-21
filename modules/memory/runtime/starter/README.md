@@ -16,8 +16,8 @@ Templates that get copied when starting a new project that should adopt the Cybe
 cp -r /path/to/cyberos/runtime/starter/cyberos-starter ~/Projects/my-thing
 cd ~/Projects/my-thing
 # Edit .cyberos-memory/manifest.json (project.id, project.name)
-ln -s /path/to/cyberos/memory/docs/AGENTS.md AGENTS.md
-ln -s /path/to/cyberos/memory/docs/AGENTS.md CLAUDE.md
+ln -s /path/to/cyberos/modules/memory/AGENTS.md AGENTS.md
+ln -s /path/to/cyberos/modules/memory/AGENTS.md CLAUDE.md
 cyberos onboard
 cyberos verify
 ```
@@ -33,5 +33,5 @@ cyberos onboard
 
 ## Related
 
-- Onboarding tour: [`../../docs/tours/onboarding.tour`](../../docs/tours/onboarding.tour)
-- Starter rationale (Aspect 8.2): [`../../memory/docs/README.md` Part 26.8.2](../../memory/docs/README.md)
+- Starter templates: [`templates/`](templates/)
+- Starter rationale: [`README.md`](../../README.md)

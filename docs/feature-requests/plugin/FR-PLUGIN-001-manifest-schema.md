@@ -57,7 +57,7 @@ build_envelope:
 
   modified_files:
     - modules/plugin/manifest.schema.json
-    - modules/plugin/README.md
+    - website docs (Plugin page)
 
   allowed_tools:
     - file_read: modules/plugin/**

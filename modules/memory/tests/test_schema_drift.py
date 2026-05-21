@@ -1,9 +1,9 @@
 """
 Schema-drift regression test.
 
-The committed ``memory/docs/memory.schema.json`` is generated from the
+The committed ``memory.schema.json`` is generated from the
 msgspec Struct definitions in :mod:`cyberos.core` by
-``memory/tools/cyberos_generate_schema.py``. If someone edits a Struct
+``tools/cyberos_generate_schema.py``. If someone edits a Struct
 (adds a field, narrows a type, etc.) without regenerating the schema,
 the committed file silently goes stale and consumers validate against
 the wrong contract.
