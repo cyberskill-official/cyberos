@@ -1669,6 +1669,265 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
     return 0 if report.ok else 1
 
 
+def _cmd_init(args: argparse.Namespace) -> int:
+    """Initialize a new BRAIN store and optionally auto-index + auto-digest.
+
+    Creates the ``.cyberos-memory/`` directory structure with manifest.json,
+    HEAD, audit/, memories/<kind>/, meta/, and exports/. With ``--auto-index``,
+    builds the FTS5 index from existing memory files (bypassing binlog).
+    With ``--auto-digest``, ingests project knowledge (README.md, docs/, etc.)
+    into memory files.
+    """
+    import hashlib
+    import json
+    import os
+    import struct
+    import time
+
+    store = _store(args)
+
+    # --- Phase 1: Create directory structure ---
+    if store.exists() and (store / "manifest.json").is_file():
+        if not args.force:
+            sys.stderr.write(
+                f"BRAIN store already exists at {store}\n"
+                "Use --force to reinitialize (preserves existing memories)\n"
+            )
+            return 1
+        print(f"Reinitializing existing BRAIN at {store}")
+    else:
+        print(f"Creating new BRAIN at {store}")
+
+    # Create directory structure
+    dirs = [
+        store / "audit",
+        store / "memories" / "decisions",
+        store / "memories" / "facts",
+        store / "memories" / "people",
+        store / "memories" / "projects",
+        store / "memories" / "preferences",
+        store / "memories" / "drift",
+        store / "memories" / "refinements",
+        store / "meta",
+        store / "exports",
+        store / "index",
+    ]
+    for d in dirs:
+        d.mkdir(parents=True, exist_ok=True)
+
+    # Initialize HEAD (8-byte LE u64 sequence counter)
+    head_path = store / "HEAD"
+    if not head_path.exists():
+        fd = os.open(str(head_path), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644)
+        try:
+            os.write(fd, struct.pack("<Q", 0))  # LE u64 = 0
+            if hasattr(os, "fdatasync"):
+                os.fdatasync(fd)
+            else:
+                os.fsync(fd)
+        finally:
+            os.close(fd)
+
+    # Initialize or update manifest.json
+    manifest_path = store / "manifest.json"
+    if manifest_path.exists():
+        manifest = json.loads(manifest_path.read_text())
+    else:
+        manifest = {}
+
+    manifest.setdefault("version", 2)
+    manifest.setdefault("created_at_ns", time.time_ns())
+    manifest.setdefault("fingerprint", hashlib.sha256(
+        str(store.resolve()).encode()
+    ).hexdigest()[:16])
+    manifest.setdefault("actor", args.actor or "cyberos-cli")
+    manifest.setdefault("crypto_mode", "chained")
+    manifest.setdefault("imports", {})
+
+    # Copy AGENTS.md if available
+    source_repo = _find_source_repo()
+    if source_repo:
+        agents_src = source_repo / "cyberos" / "data" / "AGENTS.md"
+        if agents_src.is_file():
+            agents_dst = store / "AGENTS.md"
+            agents_dst.write_bytes(agents_src.read_bytes())
+            print(f"  Copied AGENTS.md from {agents_src}")
+
+    # Write manifest atomically
+    tmp = manifest_path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+    os.replace(str(tmp), str(manifest_path))
+    print(f"  Wrote manifest.json")
+
+    # --- Phase 2: Auto-index existing memories ---
+    if args.auto_index:
+        print("\nAuto-indexing existing memories...")
+        _auto_index(store)
+
+    # --- Phase 3: Auto-digest project knowledge ---
+    if args.auto_digest:
+        print("\nAuto-digesting project knowledge...")
+        _auto_digest(store, args.actor or "cyberos-cli")
+
+    print(f"\nBRAIN initialized at {store}")
+    print("The store is now ready. Run `cyberos doctor` to verify invariants.")
+    return 0
+
+
+def _auto_index(store: Path) -> None:
+    """Build FTS5 index from existing memory files, bypassing binlog."""
+    import hashlib
+    import sqlite3
+
+    from cyberos.core.index import open_index, write_index_manifest
+
+    fingerprint = hashlib.sha256(str(store).encode("utf-8")).hexdigest()[:16]
+    conn = open_index(fingerprint)
+    try:
+        # Clear existing FTS data
+        conn.execute("DELETE FROM memories_fts")
+        conn.execute("DELETE FROM memories")
+
+        count = 0
+        memories_dir = store / "memories"
+        if not memories_dir.exists():
+            print("  No memories/ directory found, skipping index")
+            return
+
+        for md_file in memories_dir.rglob("*.md"):
+            rel_path = str(md_file.relative_to(store))
+            if ".meta.json" in rel_path:
+                continue
+
+            # Read file content
+            try:
+                raw = md_file.read_bytes()
+            except OSError:
+                continue
+
+            # Parse frontmatter to get kind
+            kind = "unknown"
+            body_text = raw.decode("utf-8", errors="replace")
+            if raw.startswith(b"---\n"):
+                end = raw.find(b"\n---\n", 4)
+                if end > 0:
+                    frontmatter = raw[4:end].decode("utf-8", errors="replace")
+                    body_text = raw[end + 5:].decode("utf-8", errors="replace")
+                    for line in frontmatter.split("\n"):
+                        if line.startswith("kind:"):
+                            kind = line.split(":", 1)[1].strip().strip('"').strip("'")
+                            break
+
+            # If no frontmatter kind, infer from path
+            if kind == "unknown":
+                parts = md_file.relative_to(memories_dir).parts
+                if parts and parts[0] in (
+                    "decisions", "facts", "people", "projects",
+                    "preferences", "drift", "refinements",
+                ):
+                    kind = parts[0]
+
+            # Compute content hash
+            content_sha256 = hashlib.sha256(raw).hexdigest()
+
+            # Insert into memories table
+            ts_ns = int(md_file.stat().st_mtime * 1e9)
+            conn.execute(
+                """
+                INSERT INTO memories(rel_path, kind, actor, ts_ns, content_sha256, last_seq, tombstoned)
+                VALUES(?, ?, ?, ?, ?, 0, 0)
+                ON CONFLICT(rel_path) DO UPDATE SET
+                    kind = excluded.kind,
+                    ts_ns = excluded.ts_ns,
+                    content_sha256 = excluded.content_sha256,
+                    tombstoned = 0
+                """,
+                (rel_path, kind, "auto-index", ts_ns, content_sha256),
+            )
+
+            # Insert into FTS index
+            if body_text:
+                conn.execute(
+                    "DELETE FROM memories_fts WHERE rel_path = ?",
+                    (rel_path,),
+                )
+                conn.execute(
+                    "INSERT INTO memories_fts(rel_path, body) VALUES(?, ?)",
+                    (rel_path, body_text),
+                )
+
+            count += 1
+
+        conn.commit()
+        print(f"  Indexed {count} memory files")
+        write_index_manifest(store, 0)
+    finally:
+        conn.close()
+
+
+def _auto_digest(store: Path, actor: str) -> None:
+    """Digest project knowledge files into memory files."""
+    import hashlib
+    import time
+
+    # Find project root (parent of .cyberos-memory/)
+    project_root = store.parent
+    if not project_root.exists():
+        print("  Cannot find project root, skipping digest")
+        return
+
+    # Files to digest
+    digest_targets = []
+    for pattern in ["README.md", "README.rst", "docs/*.md", "docs/**/*.md"]:
+        digest_targets.extend(project_root.glob(pattern))
+
+    if not digest_targets:
+        print("  No project knowledge files found to digest")
+        return
+
+    print(f"  Found {len(digest_targets)} knowledge files to digest")
+
+    # Create digest memories
+    for target in digest_targets[:10]:  # Limit to first 10 for initial digest
+        rel_path = target.relative_to(project_root)
+        try:
+            content = target.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+
+        # Skip empty or very small files
+        if len(content.strip()) < 50:
+            continue
+
+        # Create memory file
+        ts = int(time.time())
+        ts_ns = ts * 1_000_000_000
+        content_hash = hashlib.sha256(content.encode()).hexdigest()[:8]
+        memory_path = (
+            store / "memories" / "facts" / content_hash[:2] / content_hash[2:4] /
+            f"digest-{rel_path.name.replace('.', '-')}-{ts}.md"
+        )
+        memory_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Build memory content with frontmatter
+        frontmatter = {
+            "kind": "facts",
+            "actor": actor,
+            "ts_ns": ts_ns,
+            "content_sha256": hashlib.sha256(content.encode()).hexdigest(),
+            "description": f"Auto-digested from {rel_path}",
+            "source": str(rel_path),
+        }
+
+        import json as _json
+        body = f"---\n{_json.dumps(frontmatter, indent=2, sort_keys=True)}\n---\n\n"
+        body += f"# {rel_path.name}\n\n"
+        body += content[:5000]  # Limit body size
+
+        memory_path.write_text(body, encoding="utf-8")
+        print(f"    Digested: {rel_path}")
+
+
 # --- self-update -----------------------------------------------------------
 
 
@@ -1833,6 +2092,24 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("--actor", default=None, help="principal identifier for audit rows")
     sub = p.add_subparsers(dest="cmd", required=True)
+
+    sp = sub.add_parser(
+        "init",
+        help="initialize a new BRAIN store (auto-index + auto-digest optional)",
+    )
+    sp.add_argument(
+        "--auto-index", action="store_true",
+        help="build FTS5 index from existing memory files",
+    )
+    sp.add_argument(
+        "--auto-digest", action="store_true",
+        help="ingest project knowledge (README.md, docs/) into memory",
+    )
+    sp.add_argument(
+        "--force", action="store_true",
+        help="reinitialize existing store (preserves memories)",
+    )
+    sp.set_defaults(fn=_cmd_init)
 
     sp = sub.add_parser("view", help="read a memory file")
     sp.add_argument("path")

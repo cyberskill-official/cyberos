@@ -311,6 +311,25 @@ def read_index_manifest(store: Path) -> dict | None:
         return None
 
 
+def _sanitize_fts5(query: str) -> str:
+    """Escape FTS5 special characters by quoting terms.
+
+    FTS5 treats ``-``, ``*``, ``"``, ``(``, ``)``, ``:``, ``^``, ``AND``,
+    ``OR``, ``NOT`` as operators.  A bare ``dual-sku`` is parsed as
+    ``dual NOT sku`` which fails when ``sku`` isn't a column.  Quoting
+    each whitespace-delimited token makes it a literal phrase match.
+    """
+    FTS5_SPECIAL = set('-* "()^:')
+    words = query.split()
+    out = []
+    for w in words:
+        if any(c in FTS5_SPECIAL for c in w) or w.upper() in ("AND", "OR", "NOT"):
+            out.append(f'"{w}"')
+        else:
+            out.append(w)
+    return " ".join(out)
+
+
 def search_memories(
     conn: sqlite3.Connection,
     query: str,
@@ -318,6 +337,7 @@ def search_memories(
     limit: int = 50,
 ) -> Iterable[tuple]:
     """FTS5 search over memory bodies. Returns (rel_path, snippet) tuples."""
+    safe = _sanitize_fts5(query)
     return conn.execute(
         """
         SELECT m.rel_path,
@@ -328,7 +348,7 @@ def search_memories(
         ORDER BY rank
         LIMIT ?
         """,
-        (query, limit),
+        (safe, limit),
     )
 
 
