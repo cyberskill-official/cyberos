@@ -3,7 +3,7 @@ id: FR-MEMORY-119
 title: "memory session transcript ledger — opt-in `cyberos session {start,append,end}` writes turn-level transcript rows under sessions/<date>/<id>.binlog.zst; default classification=confidential; configurable retention; feeds FR-MEMORY-115 dream"
 module: memory
 priority: SHOULD
-status: draft
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 3

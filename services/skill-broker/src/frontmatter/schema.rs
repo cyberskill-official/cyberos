@@ -22,9 +22,32 @@ pub struct SkillFrontmatter {
     pub description: String,
 
     #[serde(default)]
+    pub metadata: Option<SkillMetadata>,
+
+    #[serde(default)]
+    pub allowed_memory_scopes: Option<serde_yaml::Value>,
+
+    #[serde(default)]
+    pub allowed_tools: Vec<String>,
+
+    #[serde(default)]
+    pub allowed_mcp_tools: Vec<String>,
+
+    #[serde(default)]
+    pub signature: Option<String>,
+
+    #[serde(default)]
     pub untrusted_inputs: Option<UntrustedInputs>,
 
     /// Catch-all for the remaining 30+ frontmatter fields we don't validate yet.
+    #[serde(flatten)]
+    pub extras: serde_yaml::Mapping,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct SkillMetadata {
+    #[serde(default)]
+    pub version: Option<String>,
     #[serde(flatten)]
     pub extras: serde_yaml::Mapping,
 }

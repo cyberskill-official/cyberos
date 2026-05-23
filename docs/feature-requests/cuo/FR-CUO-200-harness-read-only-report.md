@@ -4,7 +4,7 @@ id: FR-CUO-200
 title: "Harness Wave 1 — read-only daily report of self_audit signals per skill"
 author: "@stephen"
 department: engineering
-status: draft
+status: done
 priority: p1
 created_at: 2026-05-19T20:00:00+07:00
 ai_authorship: assisted

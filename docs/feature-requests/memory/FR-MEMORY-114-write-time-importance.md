@@ -3,7 +3,7 @@ id: FR-MEMORY-114
 title: "memory write-time importance scoring — cuo-Phase-3-pattern Invoker (mock-llm + anthropic); haiku-rated `meta.importance` filters noise at the source; opt-in via `cyberos put --score-importance`"
 module: memory
 priority: SHOULD
-status: draft
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 3

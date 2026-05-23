@@ -3,7 +3,7 @@ id: FR-PROJ-006
 title: "Billable cascade — Member-override → task-class → role-default → fallback; resolution snapshot at time-entry write"
 module: PROJ
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 2

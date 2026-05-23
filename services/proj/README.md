@@ -1,8 +1,8 @@
 # CyberOS PROJ — Issue + Cycle + Engagement model
 
-**Status:** FR-PROJ-001 + FR-PROJ-002/005/009 shipped as service slices — schema + types + FSM + audit row builders + handler orchestration + bidirectional symmetric link writer + memory decision anchoring + rate-card versioning + typed MEMORY_LINK helpers.
+**Status:** FR-PROJ-001..018 shipped as service slices — schema + types + FSM + audit row builders + handler orchestration + bidirectional symmetric link writer + memory decision anchoring + rate-card versioning + typed MEMORY_LINK helpers + CRDT/LWW collaboration + billing cascade/modes + mutation history events + citation drift + blocker detection + cycle review + estimate calibration + board/timeline/gantt/brief view models + design tokens/a11y gate.
 **Depends on:** FR-AUTH-001 (tenants) + FR-AUTH-003 (RLS pattern) — both shipped.
-**Blocks (downstream):** FR-PROJ-003 (Yjs CRDT), FR-PROJ-004 (lifecycle FSM extensions), FR-PROJ-006/007 (billable cascade + billing modes), FR-PROJ-008 (audit-row-per-mutation), FR-PROJ-010 (citation drift), FR-EMAIL-007 (convert-to-issue), FR-RES-001.
+**Blocks (downstream):** FR-EMAIL-007 (convert-to-issue), FR-RES-001, FR-TIME-004/005, FR-HR-008, FR-LEARN-003.
 
 ---
 
@@ -15,6 +15,10 @@
 - **Decision anchor** — immutable `proj.decision` memory row payload per issue state change, with reason, prior-chain link, references, redaction, and retraction payload support.
 - **Rate card** — append-only engagement pricing records with role, currency, hourly rate, billable default, and effective-date supersession.
 - **MEMORY_LINK** — typed Issue ↔ memory relation (`cites | implements | supersedes`) with duplicate, scope, cross-tenant, and future-supersede guards.
+- **Collaboration** — Yjs update journal contract for description/comment bodies, plus LWW scalar merge for metadata.
+- **Billing** — member override → task class → role default → fallback cascade, with T&M/fixed-fee/retainer rollups.
+- **Operations intelligence** — citation drift, blocker detection, cycle review drafts, and estimate calibration snapshots.
+- **Views** — Kanban/timeline/gantt/brief modal view models and `tokens.proj.css` with an axe-style blocking-rule gate.
 
 ---
 
@@ -91,6 +95,7 @@ cargo test  -p cyberos-proj --test status_fsm_test
 cargo test  -p cyberos-proj --test audit_row_test
 cargo test  -p cyberos-proj --test link_types_test
 cargo test  -p cyberos-proj --test error_mapping_test
+cargo test  -p cyberos-proj --test productivity_slice_test
 ```
 
 ---
@@ -114,8 +119,16 @@ services/proj/
 │   ├── status_fsm.rs             allowed_transitions + validate (with same-status no-op)
 │   ├── audit.rs                  4 memory row builders + ProjAuditRow struct
 │   ├── decisions.rs              FR-PROJ-002 memory decision anchoring helpers
+│   ├── crdt.rs                   FR-PROJ-003 collaboration update journal
 │   ├── rate_card.rs              FR-PROJ-005 append-only rate-card helpers
+│   ├── billing.rs                FR-PROJ-006/007 cascade + rollups
+│   ├── history.rs                FR-PROJ-008 history_event hash helpers
 │   ├── memory_link.rs            FR-PROJ-009 typed MEMORY_LINK helpers
+│   ├── drift.rs                  FR-PROJ-010 citation drift detector
+│   ├── blockers.rs               FR-PROJ-011 blocker parser/dwell monitor
+│   ├── cycle_review.rs           FR-PROJ-012 deterministic review draft inputs
+│   ├── estimate.rs               FR-PROJ-013 calibration snapshots
+│   ├── views.rs                  FR-PROJ-014..018 view models + a11y gate
 │   ├── links.rs                  bidirectional symmetric link writer + self-link guard
 │   ├── repo.rs                   sqlx CRUD layer (engagement, cycle, issue) + RLS GUC setter + validators
 │   └── handlers.rs               handler-layer orchestration + audit-row construction
@@ -123,5 +136,6 @@ services/proj/
     ├── status_fsm_test.rs        FR-PROJ-001 §4 #3 + §4 #4 — FSM coverage
     ├── audit_row_test.rs         §4 #1 + §4 #5 — memory row builders
     ├── link_types_test.rs        §4 #10 + §4 #11 — link inverses + cross-module
-    └── error_mapping_test.rs     §4 #3 + §4 #6 + §4 #7 + §4 #14 — error → HTTP status
+    ├── error_mapping_test.rs     §4 #3 + §4 #6 + §4 #7 + §4 #14 — error → HTTP status
+    └── productivity_slice_test.rs FR-PROJ-003..018 coverage
 ```

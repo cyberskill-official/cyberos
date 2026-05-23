@@ -3,7 +3,7 @@ id: FR-SKILL-115
 title: "Sweep stale `<placeholder>` syntax in 134 production SKILL.md files (metadata.stage + description + allowed_memory_scopes)"
 module: SKILL
 priority: SHOULD
-status: draft
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 2

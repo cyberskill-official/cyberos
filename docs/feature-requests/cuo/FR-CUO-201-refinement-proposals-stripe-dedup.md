@@ -4,7 +4,7 @@ id: FR-CUO-201
 title: "Harness Wave 2 — refinement-proposal emitter with stripe-based dedup"
 author: "@stephen"
 department: engineering
-status: draft
+status: done
 priority: p1
 created_at: 2026-05-19T20:15:00+07:00
 ai_authorship: assisted

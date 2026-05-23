@@ -97,32 +97,20 @@ fn render_anthropic_frontmatter(fm: &SkillFrontmatter) -> String {
         out.push_str(&format!("license: {s}\n"));
     }
 
-    if let Some(serde_yaml::Value::Sequence(seq)) = fm
-        .extras
-        .get(serde_yaml::Value::String("allowed_mcp_tools".into()))
-    {
-        let names: Vec<String> = seq
-            .iter()
-            .filter_map(|v| {
-                if let serde_yaml::Value::String(s) = v {
-                    Some(s.clone())
-                } else {
-                    None
-                }
-            })
-            .collect();
-        if !names.is_empty() {
-            // Anthropic format: space-separated string
-            out.push_str(&format!("allowed-tools: {}\n", names.join(" ")));
-        }
+    let mut names = fm.allowed_mcp_tools.clone();
+    names.extend(fm.allowed_tools.clone());
+    if !names.is_empty() {
+        // Anthropic format: space-separated string
+        out.push_str(&format!("allowed-tools: {}\n", names.join(" ")));
     }
 
-    if let Some(serde_yaml::Value::Mapping(m)) =
-        fm.extras.get(serde_yaml::Value::String("metadata".into()))
-    {
-        if !m.is_empty() {
+    if let Some(metadata) = fm.metadata.as_ref() {
+        if metadata.version.is_some() || !metadata.extras.is_empty() {
             out.push_str("metadata:\n");
-            for (k, v) in m {
+            if let Some(version) = metadata.version.as_ref() {
+                out.push_str(&format!("  version: {version}\n"));
+            }
+            for (k, v) in &metadata.extras {
                 if let serde_yaml::Value::String(key) = k {
                     match v {
                         serde_yaml::Value::String(s) => {

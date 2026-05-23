@@ -3,7 +3,7 @@ id: FR-CUO-106
 title: "CUO supervisor Phase 4 — 5 special-case workflow handlers: time-critical SLA bypass, per-instance iteration, multi-output fan-out, sequential-approval gating, persona-pair partnership"
 module: CUO
 priority: MUST
-status: shipped
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 7

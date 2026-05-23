@@ -43,6 +43,20 @@ _VALID_STATUSES = frozenset({
 _SPANS = logging.getLogger("cyberos.cuo.spans")
 
 
+def _resolve_project_root(hand_off: dict) -> Path | None:
+    """Resolve the target project root from hand_off.
+
+    Prefers _project_root (the project being operated on) over _cyberos_root
+    (where CUO is installed). The two differ when CUO runs against an external
+    project via CYBEROS_ROOT.
+    """
+    for key in ("_project_root", "_cyberos_root"):
+        val = hand_off.get(key)
+        if val:
+            return Path(val)
+    return None
+
+
 def apply_step_side_effect(
     skill_name: str,
     step_result: Any,  # StepResult from cuo.core.invoker
@@ -131,7 +145,7 @@ def _apply_backlog_state_update(step_result, hand_off: dict, run_span_id: str) -
         return
 
     # Locate BACKLOG.md — walk up from the output dir's parent until we find it.
-    repo_root = Path(hand_off["_cyberos_root"]) if hand_off.get("_cyberos_root") else None
+    repo_root = _resolve_project_root(hand_off)
     backlog_path = _find_backlog_md(step_result, repo_root=repo_root)
     if backlog_path is None:
         _SPANS.warning(
@@ -457,7 +471,7 @@ def _apply_feature_request_audit(step_result, hand_off: dict, run_span_id: str) 
         return
 
     # Locate the FR spec file.
-    repo_root = Path(hand_off["_cyberos_root"]) if hand_off.get("_cyberos_root") else None
+    repo_root = _resolve_project_root(hand_off)
     output_dir = _get_output_dir(step_result)
     fr_path = _find_fr_file(fr_id, repo_root, output_dir)
     if fr_path is None:
@@ -468,7 +482,13 @@ def _apply_feature_request_audit(step_result, hand_off: dict, run_span_id: str) 
         )
         return
 
-    audit_path = fr_path.with_suffix(".audit.md")
+    # Write audit to .cyberos-memory/audits/ (activity history, not deliverable)
+    if repo_root:
+        audits_dir = repo_root / ".cyberos-memory" / "audits"
+        audits_dir.mkdir(parents=True, exist_ok=True)
+        audit_path = audits_dir / f"{fr_path.stem}.audit.md"
+    else:
+        audit_path = fr_path.with_suffix(".audit.md")
 
     # Determine the audit body.
     if isinstance(output.get("audit_body"), str):
@@ -702,7 +722,7 @@ def _apply_architecture_decision_record(step_result, hand_off: dict, run_span_id
     3. Structured fields (``context``, ``decision``, ``options``) → render to ADR template.
     4. ``artefact_fields`` key (from mock-llm) → render from template fields.
 
-    Target: ``docs/adrs/ADR-{NNN}-{slug}.md`` relative to the repo root.
+    Target: ``.cyberos-memory/adrs/ADR-{NNN}-{slug}.md`` relative to the repo root.
     """
     output = _extract_output(step_result)
     if not output:
@@ -716,7 +736,7 @@ def _apply_architecture_decision_record(step_result, hand_off: dict, run_span_id
 
     # Locate repo root (parent of docs/feature-requests/).
     output_dir = _get_output_dir(step_result)
-    repo_root = Path(hand_off["_cyberos_root"]) if hand_off.get("_cyberos_root") else None
+    repo_root = _resolve_project_root(hand_off)
     if repo_root is None:
         repo_root = _find_repo_root_from_handoff(hand_off)
     if repo_root is None:
@@ -724,7 +744,7 @@ def _apply_architecture_decision_record(step_result, hand_off: dict, run_span_id
     if repo_root is None:
         repo_root = Path.cwd()
 
-    adrs_dir = repo_root / "docs" / "adrs"
+    adrs_dir = repo_root / ".cyberos-memory" / "adrs"
     adrs_dir.mkdir(parents=True, exist_ok=True)
 
     # Clean adr_id for filename (strip non-alphanumeric prefix chars for the number part).
@@ -886,7 +906,7 @@ def _apply_implementation_plan(step_result, hand_off: dict, run_span_id: str) ->
     2. ``code_changes`` list → write/modify files in the working tree (task #7)
     3. Structured fields → render to template format
 
-    The plan document goes to ``docs/feature-requests/<module>/impl-plan-<fr_id>.md``
+    The plan document goes to ``.cyberos-memory/impl-plans/<module>/impl-plan-<fr_id>.md``
     (sibling to the FR spec, or fallback to output_dir).
     """
     output = _extract_output(step_result)
@@ -917,8 +937,9 @@ def _write_impl_plan_doc(output: dict, fr_id: str | None, hand_off: dict, run_sp
     plan_path = _resolve_artifact_path(
         output, fr_id, hand_off,
         filename_prefix="impl-plan",
-        default_dir="docs/feature-requests",
+        default_dir=".cyberos-memory/impl-plans",
         output_dir=output_dir,
+        force_default_dir=True,
     )
     if plan_path is None:
         return
@@ -1041,6 +1062,37 @@ def _apply_code_changes(output: dict, fr_id: str | None, hand_off: dict, run_spa
     """
     code_changes = output.get("code_changes") or output.get("files") or []
     if not code_changes or not isinstance(code_changes, list):
+        # Also check for implementation steps in various LLM output formats.
+        # Format 1: Keys like "## 3. Implementation Steps" with action/file/description
+        # Format 2: task_breakdown with files arrays and descriptions
+        for key, val in output.items():
+            if isinstance(val, list) and val and isinstance(val[0], dict):
+                # Check for action/file format
+                if any("action" in item and ("file" in item or "path" in item) for item in val if isinstance(item, dict)):
+                    code_changes = val
+                    break
+                # Check for files array format (task_breakdown)
+                if any("files" in item and "description" in item for item in val if isinstance(item, dict)):
+                    # Flatten: each task with files[] becomes multiple code_changes
+                    flattened = []
+                    for item in val:
+                        if not isinstance(item, dict):
+                            continue
+                        files = item.get("files", [])
+                        desc = item.get("description", "")
+                        title = item.get("title", "")
+                        for f in files:
+                            if isinstance(f, str):
+                                flattened.append({
+                                    "action": "create",
+                                    "file": f,
+                                    "title": title,
+                                    "description": desc,
+                                })
+                    if flattened:
+                        code_changes = flattened
+                        break
+    if not code_changes or not isinstance(code_changes, list):
         return
 
     repo_root = _find_repo_root(hand_off, output_dir)
@@ -1056,8 +1108,12 @@ def _apply_code_changes(output: dict, fr_id: str | None, hand_off: dict, run_spa
         if not isinstance(change, dict):
             continue
         action = change.get("action", "create")
-        rel_path = change.get("path", "")
-        if not rel_path:
+        rel_path = change.get("path") or change.get("file") or ""
+        if not rel_path or rel_path == "None":
+            continue
+
+        # Skip "verify" actions — they're test/validation steps, not file writes.
+        if action == "verify":
             continue
 
         # Security: reject path traversal.
@@ -1074,7 +1130,14 @@ def _apply_code_changes(output: dict, fr_id: str | None, hand_off: dict, run_spa
         if action == "create":
             content = change.get("content", "")
             if not content:
-                continue
+                # Generate stub from description if no content provided.
+                desc = change.get("description", "")
+                title = change.get("title", rel_path)
+                if desc:
+                    ext = Path(rel_path).suffix
+                    content = _generate_stub(title, desc, ext, fr_id)
+                else:
+                    continue
             try:
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_text(content, encoding="utf-8")
@@ -1091,6 +1154,7 @@ def _apply_code_changes(output: dict, fr_id: str | None, hand_off: dict, run_spa
             if content is not None:
                 # Full replacement
                 try:
+                    target.parent.mkdir(parents=True, exist_ok=True)
                     target.write_text(content, encoding="utf-8")
                     applied += 1
                 except OSError as e:
@@ -1114,6 +1178,22 @@ def _apply_code_changes(output: dict, fr_id: str | None, hand_off: dict, run_spa
                             extra={"event": "applier.code_write_error", "span_id": run_span_id,
                                    "path": rel_path, "error": str(e)},
                         )
+                elif not diff_text and target.is_file():
+                    # No content, no diff — append TODO comment to existing file.
+                    desc = change.get("description", "")
+                    if desc:
+                        try:
+                            existing = target.read_text(encoding="utf-8")
+                            ext = target.suffix
+                            todo = _generate_todo_comment(desc, ext)
+                            target.write_text(existing + "\n" + todo, encoding="utf-8")
+                            applied += 1
+                        except OSError as e:
+                            _SPANS.warning(
+                                "applier.code_write_error",
+                                extra={"event": "applier.code_write_error", "span_id": run_span_id,
+                                       "path": rel_path, "error": str(e)},
+                            )
 
     if applied:
         _SPANS.info(
@@ -1169,6 +1249,75 @@ def _apply_unified_diff(original: str, diff_text: str) -> str | None:
     return "".join(result)
 
 
+def _generate_stub(title: str, description: str, ext: str, fr_id: str | None = None) -> str:
+    """Generate a stub file from a title and description.
+
+    Used when the LLM provides implementation steps with descriptions but no file content.
+    The stub documents what needs to be implemented and serves as a starting point.
+    """
+    fr_tag = f" (FR: {fr_id})" if fr_id else ""
+
+    if ext in (".ts", ".tsx", ".js", ".jsx"):
+        return (
+            f"/**\n"
+            f" * {title}{fr_tag}\n"
+            f" *\n"
+            f" * {description}\n"
+            f" *\n"
+            f" * TODO: Implement this module — description from CUO workflow.\n"
+            f" */\n\n"
+            f"// TODO: Implement {title}\n"
+        )
+    elif ext == ".sql":
+        return (
+            f"-- {title}{fr_tag}\n"
+            f"-- {description}\n"
+            f"--\n"
+            f"-- TODO: Implement this migration — description from CUO workflow.\n\n"
+        )
+    elif ext == ".py":
+        return (
+            f'"""{title}{fr_tag}\n\n'
+            f"{description}\n\n"
+            f"TODO: Implement this module — description from CUO workflow.\n"
+            f'"""\n\n'
+            f"# TODO: Implement {title}\n"
+        )
+    elif ext in (".mjs", ".mts"):
+        return (
+            f"/**\n"
+            f" * {title}{fr_tag}\n"
+            f" *\n"
+            f" * {description}\n"
+            f" *\n"
+            f" * TODO: Implement this module — description from CUO workflow.\n"
+            f" */\n\n"
+            f"// TODO: Implement {title}\n"
+        )
+    else:
+        return (
+            f"# {title}{fr_tag}\n\n"
+            f"{description}\n\n"
+            f"TODO: Implement this file — description from CUO workflow.\n"
+        )
+
+
+def _generate_todo_comment(description: str, ext: str) -> str:
+    """Generate a TODO comment block from a description.
+
+    Used when the LLM describes modifications to an existing file but provides
+    no content or diff.
+    """
+    if ext in (".ts", ".tsx", ".js", ".jsx", ".mjs", ".mts"):
+        return f"\n// TODO (CUO workflow): {description}\n"
+    elif ext == ".py":
+        return f"\n# TODO (CUO workflow): {description}\n"
+    elif ext == ".sql":
+        return f"\n-- TODO (CUO workflow): {description}\n"
+    else:
+        return f"\n# TODO (CUO workflow): {description}\n"
+
+
 def _find_repo_root(hand_off: dict, output_dir: Path | None = None) -> Path | None:
     """Find the repo root by searching from output_dir, hand-off, or CWD.
 
@@ -1217,12 +1366,15 @@ def _resolve_artifact_path(
     filename_prefix: str,
     default_dir: str,
     output_dir: Path | None = None,
+    *,
+    force_default_dir: bool = False,
 ) -> Path | None:
     """Resolve the output path for a document artifact.
 
     Strategy:
     1. If ``output.artifact_path`` or ``output.path`` exists, use it (relative to repo root).
-    2. If fr_id is known, locate the FR file and place the artifact as a sibling.
+    2. If fr_id is known, locate the FR file and place the artifact as a sibling
+       (unless ``force_default_dir`` is True, which skips FR-sibling placement).
     3. Fallback: <repo_root>/<default_dir>/<filename_prefix>-<fr_id>.md
     """
     # Check explicit path in output.
@@ -1234,9 +1386,9 @@ def _resolve_artifact_path(
                 return repo_root / p
             return Path(p)
 
-    # Try to find the FR file and place as sibling.
-    if fr_id:
-        cyberos_root = Path(hand_off["_cyberos_root"]) if hand_off.get("_cyberos_root") else None
+    # Try to find the FR file and place as sibling (unless force_default_dir).
+    if fr_id and not force_default_dir:
+        cyberos_root = _resolve_project_root(hand_off)
         fr_path = _find_fr_file(fr_id, cyberos_root, output_dir)
         if fr_path:
             return fr_path.parent / f"{filename_prefix}-{fr_id}.md"
@@ -1279,8 +1431,9 @@ def _apply_code_review(step_result, hand_off: dict, run_span_id: str) -> None:
     review_path = _resolve_artifact_path(
         output, fr_id, hand_off,
         filename_prefix="code-review",
-        default_dir="docs/feature-requests",
+        default_dir=".cyberos-memory/code-reviews",
         output_dir=output_dir,
+        force_default_dir=True,
     )
     if review_path is None:
         return
@@ -1403,8 +1556,9 @@ def _apply_observability_injection(step_result, hand_off: dict, run_span_id: str
     obs_path = _resolve_artifact_path(
         output, fr_id, hand_off,
         filename_prefix="obs-injection",
-        default_dir="docs/feature-requests",
+        default_dir=".cyberos-memory/obs-injections",
         output_dir=output_dir,
+        force_default_dir=True,
     )
     if obs_path is None:
         return

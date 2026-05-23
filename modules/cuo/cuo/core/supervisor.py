@@ -346,6 +346,10 @@ def execute_chain(
     # clauses like `"step 3 ran"` can be evaluated (Phase 5).
     hand_off: dict = dict(inputs or {})
     hand_off["_cyberos_root"] = str(skill_root.parent.parent)
+    # _project_root points to the TARGET project (where the backlog lives),
+    # not the CUO installation root. Used by appliers for artifact output paths.
+    if backlog_path is not None:
+        hand_off["_project_root"] = str(backlog_path.parent.parent.parent)
     # Resolve FR file content so skills can access it directly.
     _resolve_fr(hand_off)
     step_results: list[StepResult] = []

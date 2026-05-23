@@ -30,14 +30,14 @@ The spec corpus is **closed** and ready for implementation kickoff. Three produc
 >
 > **2026-05-19 — MEMORY Improvement Wave 2026 Q3.** Authored FR-MEMORY-112 (episodic memory + recall-similar) + FR-MEMORY-113 (Park-et-al recency/importance/relevance combined-score) + FR-MEMORY-114 (Haiku-rated write-time importance) + FR-MEMORY-115 (`cyberos dream` out-of-band reflection, **gated on `APPROVE protocol change P19 §7.7`**) + FR-MEMORY-116 (semantic-dedup consolidation phase) + FR-MEMORY-117 (per-store ACL via STORE.yaml, **gated on `APPROVE protocol change P20 §14.4`**) + FR-MEMORY-118 (`put_if` precondition-hash, **gated on `APPROVE protocol change P21 §3.1`**) + FR-MEMORY-119 (session-transcript ledger, **gated on `APPROVE protocol change P22 §18`**) + FR-MEMORY-120 (`cyberos history` projection). All 9 at 10/10. See [`memory/`](memory/) for the FR catalog. Sources: Anthropic Memory+Dreaming talk (`playground/extracts/memory-and-dreaming.transcript.txt`) + Ramakrushna agentic-memory article (`playground/extracts/agentic-memory.article.txt`). Total ~120h across 3 sub-waves (4d / 9d / 8d). Three protocol amendments live independently per Stephen's one-at-a-time decision.
 
-> **2026-05-19 — Anthropic Skills portability wave.** Authored FR-SKILL-111 (description trigger enrichment) + FR-SKILL-112 (TRIGGER_TESTS.md) + FR-SKILL-113 (XML-free frontmatter, registry v0.2.5) + FR-SKILL-114 (BASELINE.md at v1.0 promotion) + FR-SKILL-115 (134-file placeholder sweep, queued for v0.2.6). All 5 at 10/10. See the [SKILL appendices](https://cyberos-wiki.cyberskill.world/modules/skill/appendices.html) for the portability findings (Appendix J) and the 3-session implementation cut (Appendix K, 38-46h).
+> **2026-05-19 — Anthropic Skills portability wave.** Authored and shipped FR-SKILL-111 (description trigger enrichment) + FR-SKILL-112 (TRIGGER_TESTS.md) + FR-SKILL-113 (XML-free frontmatter, registry v0.2.5) + FR-SKILL-114 (BASELINE.md at v1.0 promotion) + FR-SKILL-115 (134-file placeholder sweep, v0.2.6). All 5 at 10/10. See the [SKILL appendices](https://cyberos-wiki.cyberskill.world/modules/skill/appendices.html) for the portability findings (Appendix J) and the 3-session implementation cut (Appendix K, 38-46h).
 
 ### Production module status
 
 | Module | Layer | What's shipped (bootstrap) | What FRs cover next |
 |---|---|---|---|
 | `modules/memory/` | memory protocol + Python impl | 255 green tests; P1–P12 audit proposals + P2 Stage 3 MMR/STH; HTTP REST; cross-memory merge; deterministic export | `memory/FR-MEMORY-101…111` extend Layer-2 ingest, multi-device sync, search API, fs-watcher, capture daemon, pre-ingest PII. **2026 Q3 MEMORY Improvement Wave (`memory/FR-MEMORY-112…120`, all at 10/10)** adds episodic memory + recall-similar (112), Park-et-al recency-decay recall (113), Haiku-rated write-time importance (114), `cyberos dream` out-of-band reflection (115, **§7.7 amendment gated**), semantic-dedup consolidate (116), per-store STORE.yaml ACL (117, **§14.4 amendment gated**), put_if precondition-hash (118, **§3.1 amendment gated**), session transcript ledger (119, **§18 amendment gated**), `cyberos history` projection (120) |
-| `modules/skill/` | Anthropic Agent Skills catalog | 104 author+audit pairs (208 bundles) + 108 contracts; all chain through SDP; zero `planned:` gaps; **registry v0.2.5 (2026-05-19): Anthropic Skills portability — FR-SKILL-111..114 shipped, FR-SKILL-115 queued for v0.2.6**; 209-file `wrap_in:` → `wrap_in_marker:` sweep complete; 3 backfill exemplars (FR-author / FR-audit / PRD-author) carry enriched descriptions + TRIGGER_TESTS.md fixtures; `cuo.trigger_tests` + `cuo.baseline` Python validators shipped | `skill/FR-SKILL-101..115` + `…201` add OCI registry, capability broker, memory-capture/sync system skills, VN-regulatory bundles, plus FR-115 (134-file stale-placeholder sweep). [SKILL_BUNDLE_RUBRIC.md](https://cyberos-wiki.cyberskill.world/modules/skill/appendices.html) (Appendix L on the docs site) |
+| `modules/skill/` | Anthropic Agent Skills catalog | 104 author+audit pairs (208 bundles) + 108 contracts; all chain through SDP; zero `planned:` gaps; **registry v0.2.6: Anthropic Skills portability — FR-SKILL-111..115 shipped**; 239-skill placeholder sweep clean; 209-file `wrap_in:` → `wrap_in_marker:` sweep complete; 3 backfill exemplars (FR-author / FR-audit / PRD-author) carry enriched descriptions + TRIGGER_TESTS.md fixtures; `cuo.trigger_tests` + `cuo.baseline` Python validators shipped | `skill/FR-SKILL-101..115` + `…201` add OCI registry, capability broker, memory-capture/sync system skills, VN-regulatory bundles, plus FR-115 (134-file stale-placeholder sweep). [SKILL_BUNDLE_RUBRIC.md](https://cyberos-wiki.cyberskill.world/modules/skill/appendices.html) (Appendix L on the docs site) |
 | `modules/cuo/` | Python supervisor v3.0.0-a4 | Catalog scanner + 2-stage router with domain-fallback + Invoker ABC (Mock/Subprocess/LLM) + execute_chain + memory bridge + Phase 4 special-case handlers (Linear / TimeCritical / PerInstance / MultiOutput / SequentialApproval / PersonaPair); **49/50 tests pass**; 47/48 personas + 221 workflows (Tier-C1 depth additions shipped) | Implementation phase: deploy modules per the §0.6 roadmap |
 | `modules/plugin/` | Cross-runtime distribution scaffold (2026-05-19) | `README.md` + `INTEROP.md` + `manifest.schema.json` + `AGENTS.md` symlink + commands/ + adapters/ + manifests/ folders scaffolded | **8 FRs at 10/10** (`plugin/FR-PLUGIN-001..008`, 58h): manifest schema + MCP bridge + slash commands + skill playbooks + OAuth-PKCE auth + memory audit emission + 4 P1 runtime adapters (claude-code / cursor / cowork / codex-cli) + marketplace publish to plugins.cyberskill.world with agentskills.io mirror. Runtime lands at `services/plugin-host/` per the implementation order |
 | `services/ai-gateway/` | Rust workspace member (NEW 2026-05-19) | **FR-AI-003 + FR-AI-005 shipped.** FR-AI-003 (memory audit-row bridge): subprocess writer · canonical-JSON serialisation per AGENTS.md §6.2 · NFC normalisation · SHA-256 chain verification · path-traversal guard · 5s timeout w/ SIGTERM-then-SIGKILL · 5 typed builders (precheck · invocation · invocation_failed · hold_expired · persona_loaded) · `check_writer_available` startup health check. FR-AI-005 (tenant-policy YAML loader): `TenantPolicy` schema (cap · warn · hard_stop · provider · fallback_chain · timeout · residency · zdr · emergency_override · allowed_personas) · `ArcSwap`-backed lock-free cache · `notify` file-watcher with NFS polling-mode detection · 10 ACs covered via integration tests · CI gate via `gen-schema` binary · `cyberos-ai policy validate \| list \| serve` CLI · `EXAMPLE.tenant.yaml` reference. Workspace wired in `services/Cargo.toml`. | FR-AI-001 (cost-ledger pre-call) + FR-AI-002 (post-call reconcile) + FR-AI-004 (expiry cleanup) — all unblocked by this ship (FR-AI-003 + FR-AI-005 were their dependencies); land in next session. FR-AI-006..022 (router · PII · residency · cache · operator CLI · OTel) follow per slice 2–5 in §2 P0.1. |
@@ -280,31 +280,31 @@ This document is the **single source of truth** for what CyberOS is going to bui
 |---|---|:-:|:-:|---|---:|
 | FR-CHAT-001 | Mattermost v9.x fork at pinned MIT/Apache commit + license-drift watcher | MUST | done | — | 8h |
 | FR-CHAT-002 | `cyberos-chat-authbridge` plugin — Mattermost auth delegates to AUTH JWT | MUST | done | FR-CHAT-001, FR-AUTH-004 | 10h |
-| FR-CHAT-003 | Per-tenant deployment via Fargate + RDS Multi-AZ + Redis | MUST | ready_to_implement | FR-CHAT-001 | 6h |
+| FR-CHAT-003 | Per-tenant deployment via Fargate + RDS Multi-AZ + Redis | MUST | done | FR-CHAT-001 | 6h |
 
 #### Slice 2 — VN search + memory bridge
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-CHAT-004 | PGroonga + TinySegmenter VN bigram tokeniser; recall ≥ 80% CI gate | MUST | ready_to_implement | FR-CHAT-003 | 12h |
-| FR-CHAT-005 | memory bridge — logical-replication from Postgres → memory Layer-3 ingest, p95 ≤ 5 s | MUST | ready_to_implement | FR-CHAT-003 | 10h |
+| FR-CHAT-004 | PGroonga + TinySegmenter VN bigram tokeniser; recall ≥ 80% CI gate | MUST | done | FR-CHAT-003 | 12h |
+| FR-CHAT-005 | memory bridge — logical-replication from Postgres → memory Layer-3 ingest, p95 ≤ 5 s | MUST | done | FR-CHAT-003 | 10h |
 
 #### Slice 3 — Slack/Zalo migration + @lumi capture
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-CHAT-006 | Slack import (`cyberos-chat import slack` — 8-step idempotent + checkpointed) | MUST | ready_to_implement | FR-CHAT-005 | 12h |
-| FR-CHAT-007 | Zalo manual export importer (`cyberos-chat import zalo --bundle.zip`) | SHOULD | ready_to_implement | FR-CHAT-005 | 8h |
-| FR-CHAT-008 | `@lumi` mention parser → CUO route → memory capture row | MUST | ready_to_implement | FR-CHAT-005, FR-AI-014 | 6h |
-| FR-CHAT-009 | Retro-capture flow — `@lumi remember the last N messages` with per-message opt-in | SHOULD | ready_to_implement | FR-CHAT-008 | 6h |
+| FR-CHAT-006 | Slack import (`cyberos-chat import slack` — 8-step idempotent + checkpointed) | MUST | done | FR-CHAT-005 | 12h |
+| FR-CHAT-007 | Zalo manual export importer (`cyberos-chat import zalo --bundle.zip`) | SHOULD | done | FR-CHAT-005 | 8h |
+| FR-CHAT-008 | `@lumi` mention parser → CUO route → memory capture row | MUST | done | FR-CHAT-005, FR-AI-014 | 6h |
+| FR-CHAT-009 | Retro-capture flow — `@lumi remember the last N messages` with per-message opt-in | SHOULD | done | FR-CHAT-008 | 6h |
 
 #### Slice 4 — decommission instrumentation + DSAR
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-CHAT-010 | `decommission_signal := (chat msgs) / (chat + slack + zalo msgs) ≥ 0.95` over 14-day rolling window | MUST | ready_to_implement | FR-CHAT-006 | 5h |
-| FR-CHAT-011 | Mobile push delivery (privacy-preserving payload: title + sender only) | MUST | ready_to_implement | FR-CHAT-003 | 6h |
-| FR-CHAT-012 | DSAR export — every message a subject authored + chained memory audit hashes | MUST | ready_to_implement | FR-CHAT-005 | 6h |
+| FR-CHAT-010 | `decommission_signal := (chat msgs) / (chat + slack + zalo msgs) ≥ 0.95` over 14-day rolling window | MUST | done | FR-CHAT-006 | 5h |
+| FR-CHAT-011 | Mobile push delivery (privacy-preserving payload: title + sender only) | MUST | done | FR-CHAT-003 | 6h |
+| FR-CHAT-012 | DSAR export — every message a subject authored + chained memory audit hashes | MUST | done | FR-CHAT-005 | 6h |
 
 ---
 
@@ -365,25 +365,25 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-SKILL-101 | SKILL.md frontmatter extension: `allowed_memory_scopes` + `allowed_tools` enforced by broker | MUST | ready_to_implement | FR-MEMORY-101 | 5h |
-| FR-SKILL-102 | Capability broker: subprocess sandbox enforces `allowed_tools` at invoke time | MUST | ready_to_implement | FR-MCP-006 | 8h |
-| FR-SKILL-103 | Pre + post audit rows on every skill invocation (memory Writer dual-write) | MUST | ready_to_implement | FR-SKILL-102 | 5h |
+| FR-SKILL-101 | SKILL.md frontmatter extension: `allowed_memory_scopes` + `allowed_tools` enforced by broker | MUST | done | FR-MEMORY-101 | 5h |
+| FR-SKILL-102 | Capability broker: subprocess sandbox enforces `allowed_tools` at invoke time | MUST | done | FR-MCP-006 | 8h |
+| FR-SKILL-103 | Pre + post audit rows on every skill invocation (memory Writer dual-write) | MUST | done | FR-SKILL-102 | 5h |
 
 #### Slice 2 — universal-protocol skill bundles
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-SKILL-104 | `memory-capture@1` skill bundle (canonical capture entry point) | MUST | ready_to_implement | FR-MEMORY-107 | 6h |
-| FR-SKILL-105 | `memory-sync@1` skill bundle (defers to Stage 4 sync orchestrator at P2) | SHOULD | ready_to_implement | FR-SKILL-104 | 4h |
-| FR-SKILL-106 | `synthesis-author@1` skill (multi-memory auto-evolve; runs nightly at P3) | COULD | ready_to_implement | FR-SKILL-105 | 8h |
+| FR-SKILL-104 | `memory-capture@1` skill bundle (canonical capture entry point) | MUST | done | FR-MEMORY-107 | 6h |
+| FR-SKILL-105 | `memory-sync@1` skill bundle (defers to Stage 4 sync orchestrator at P2) | SHOULD | done | FR-SKILL-104 | 4h |
+| FR-SKILL-106 | `synthesis-author@1` skill (multi-memory auto-evolve; runs nightly at P3) | COULD | done | FR-SKILL-105 | 8h |
 
 #### Slice 3 — vertical pack scaffolding (cyberskill-vn first)
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-SKILL-107 | `cyberskill-vn` pack — `vietnam-mst-validate` skill against GDT API | MUST | ready_to_implement | FR-SKILL-102 | 6h |
-| FR-SKILL-108 | `cyberskill-vn` pack — `vietnam-bank-transfer` skill (VietQR / Napas247 code generator) | MUST | ready_to_implement | FR-SKILL-102 | 6h |
-| FR-SKILL-109 | `cyberskill-vn` pack — `vietnam-vat-invoice` skill (hóa đơn Decree 123 XML emitter) | MUST | ready_to_implement | FR-SKILL-102 | 10h |
+| FR-SKILL-107 | `cyberskill-vn` pack — `vietnam-mst-validate` skill against GDT API | MUST | done | FR-SKILL-102 | 6h |
+| FR-SKILL-108 | `cyberskill-vn` pack — `vietnam-bank-transfer` skill (VietQR / Napas247 code generator) | MUST | done | FR-SKILL-102 | 6h |
+| FR-SKILL-109 | `cyberskill-vn` pack — `vietnam-vat-invoice` skill (hóa đơn Decree 123 XML emitter) | MUST | done | FR-SKILL-102 | 10h |
 
 ---
 
@@ -395,16 +395,16 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-CUO-101 | LangGraph supervisor wired to LiteLLM router (escalate when 0.10 ≤ conf ≤ 0.50) | MUST | ready_to_implement | FR-AI-008 | 12h |
-| FR-CUO-102 | Postgres checkpointer for LangGraph state (EU AI Act Art. 12 logging) | MUST | ready_to_implement | FR-CUO-101 | 5h |
-| FR-CUO-103 | Phase 2 trace rows include prompt + model + temperature + seed for replay | MUST | ready_to_implement | FR-CUO-102 | 4h |
+| FR-CUO-101 | LangGraph supervisor wired to LiteLLM router (escalate when 0.10 ≤ conf ≤ 0.50) | MUST | done | FR-AI-008 | 12h |
+| FR-CUO-102 | Postgres checkpointer for LangGraph state (EU AI Act Art. 12 logging) | MUST | done | FR-CUO-101 | 5h |
+| FR-CUO-103 | Phase 2 trace rows include prompt + model + temperature + seed for replay | MUST | done | FR-CUO-102 | 4h |
 
 #### Phase 3 — multi-skill chains via `depends_on`
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-CUO-104 | Topological walk of `depends_on` chain with composite audit row + sub-rows | MUST | ready_to_implement | FR-CUO-101 | 10h |
-| FR-CUO-105 | Per-step rollback on chain failure; partial-execution audit preserved | MUST | ready_to_implement | FR-CUO-104 | 6h |
+| FR-CUO-104 | Topological walk of `depends_on` chain with composite audit row + sub-rows | MUST | done | FR-CUO-101 | 10h |
+| FR-CUO-105 | Per-step rollback on chain failure; partial-execution audit preserved | MUST | done | FR-CUO-104 | 6h |
 
 ---
 
@@ -418,42 +418,42 @@ This document is the **single source of truth** for what CyberOS is going to bui
 |---|---|:-:|:-:|---|---:|
 | FR-PROJ-001 | Issue / Cycle / Project / Engagement Postgres schema with `engagement_id` FK | MUST | done | FR-AUTH-003 | 8h |
 | FR-PROJ-002 | memory-anchored `proj.decision` row per Issue state change | MUST | done | FR-PROJ-001 | 16h |
-| FR-PROJ-003 | Yjs CRDT for description + comment-body fields; LWW for scalars | MUST | ready_to_implement | FR-PROJ-002 | 10h |
-| FR-PROJ-004 | Issue lifecycle state machine (backlog → todo → in-progress → in-review → done / cancelled) | MUST | ready_to_implement | FR-PROJ-001 | 5h |
+| FR-PROJ-003 | Yjs CRDT for description + comment-body fields; LWW for scalars | MUST | done | FR-PROJ-002 | 10h |
+| FR-PROJ-004 | Issue lifecycle state machine (backlog → todo → in-progress → in-review → done / cancelled) | MUST | done | FR-PROJ-001 | 5h |
 
 #### Slice 2 — Engagement economics + billable rules
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
 | FR-PROJ-005 | Rate-card schema per Engagement (role × currency × hourly rate × billable_default) | MUST | done | FR-PROJ-001 | 4h |
-| FR-PROJ-006 | Billable cascade: Member override → task class → role default → fallback | MUST | ready_to_implement | FR-PROJ-005 | 6h |
-| FR-PROJ-007 | Three billing modes (T&M / fixed-fee / retainer) with mode-aware rollup | MUST | ready_to_implement | FR-PROJ-005 | 6h |
+| FR-PROJ-006 | Billable cascade: Member override → task class → role default → fallback | MUST | done | FR-PROJ-005 | 6h |
+| FR-PROJ-007 | Three billing modes (T&M / fixed-fee / retainer) with mode-aware rollup | MUST | done | FR-PROJ-005 | 6h |
 
 #### Slice 3 — memory integration + cross-module join contracts
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-PROJ-008 | memory audit row per Issue mutation (chained to PROJ `history_event` table) | MUST | ready_to_implement | FR-MEMORY-101 | 5h |
+| FR-PROJ-008 | memory audit row per Issue mutation (chained to PROJ `history_event` table) | MUST | done | FR-MEMORY-101 | 5h |
 | FR-PROJ-009 | `MEMORY_LINK` schema: Issue cites memory via (cites / implements / supersedes) | MUST | done | FR-PROJ-001 | 5h |
-| FR-PROJ-010 | Citation-drift detector (nightly sweep flags stale citations) | SHOULD | ready_to_implement | FR-PROJ-009 | 4h |
+| FR-PROJ-010 | Citation-drift detector (nightly sweep flags stale citations) | SHOULD | done | FR-PROJ-009 | 4h |
 
 #### Slice 4 — AI features (blocker detection + cycle review + calibration)
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-PROJ-011 | Blocker detector from comment stream (`blocked by` + dwell time → CUO Notify) | MUST | ready_to_implement | FR-CUO-101 | 6h |
-| FR-PROJ-012 | Cycle-review draft generator (CUO/COO persona) at cycle close | MUST | ready_to_implement | FR-CUO-101 | 8h |
-| FR-PROJ-013 | Estimate calibration snapshot (per Member per task class, nightly batch) | MUST | ready_to_implement | FR-PROJ-002 | 6h |
+| FR-PROJ-011 | Blocker detector from comment stream (`blocked by` + dwell time → CUO Notify) | MUST | done | FR-CUO-101 | 6h |
+| FR-PROJ-012 | Cycle-review draft generator (CUO/COO persona) at cycle close | MUST | done | FR-CUO-101 | 8h |
+| FR-PROJ-013 | Estimate calibration snapshot (per Member per task class, nightly batch) | MUST | done | FR-PROJ-002 | 6h |
 
 #### Slice 5 — UI surfaces (Board · Timeline · Gantt · Brief)
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-PROJ-014 | Kanban Board (drag + drop, keyboard-first) | MUST | ready_to_implement | FR-PROJ-002 | 12h |
-| FR-PROJ-015 | Timeline view (cycle window × assignee) | MUST | ready_to_implement | FR-PROJ-002 | 10h |
-| FR-PROJ-016 | Gantt view with dependency arrows | SHOULD | ready_to_implement | FR-PROJ-002 | 12h |
-| FR-PROJ-017 | Brief modal (issue deep-view with Yjs description + comments + meta sidebar) | MUST | ready_to_implement | FR-PROJ-003 | 8h |
-| FR-PROJ-018 | Liquid-Glass design tokens (`tokens.proj.css`) + axe-core CI accessibility gate | MUST | ready_to_implement | FR-PROJ-014 | 6h |
+| FR-PROJ-014 | Kanban Board (drag + drop, keyboard-first) | MUST | done | FR-PROJ-002 | 12h |
+| FR-PROJ-015 | Timeline view (cycle window × assignee) | MUST | done | FR-PROJ-002 | 10h |
+| FR-PROJ-016 | Gantt view with dependency arrows | SHOULD | done | FR-PROJ-002 | 12h |
+| FR-PROJ-017 | Brief modal (issue deep-view with Yjs description + comments + meta sidebar) | MUST | done | FR-PROJ-003 | 8h |
+| FR-PROJ-018 | Liquid-Glass design tokens (`tokens.proj.css`) + axe-core CI accessibility gate | MUST | done | FR-PROJ-014 | 6h |
 
 ---
 
@@ -807,9 +807,9 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-SKILL-201 | OCI registry deploy for `.skill` bundles (R3 distribution stage) | MUST | ready_to_implement | FR-SKILL-102 | 8h |
-| FR-SKILL-202 | `cyberskill-sg` pack (Singapore: ACRA filings + GST e-invoice + CPF) | SHOULD | ready_to_implement | FR-SKILL-107 | 16h |
-| FR-SKILL-203 | `cyberskill-id` pack (Indonesia: NPWP + e-Faktur) | COULD | ready_to_implement | FR-SKILL-107 | 16h |
+| FR-SKILL-201 | OCI registry deploy for `.skill` bundles (R3 distribution stage) | MUST | done | FR-SKILL-102 | 8h |
+| FR-SKILL-202 | `cyberskill-sg` pack (Singapore: ACRA filings + GST e-invoice + CPF) | SHOULD | done | FR-SKILL-107 | 16h |
+| FR-SKILL-203 | `cyberskill-id` pack (Indonesia: NPWP + e-Faktur) | COULD | done | FR-SKILL-107 | 16h |
 | FR-TEN-201 | Singapore HoldCo flip CLI (`cyberos-ten holdco-flip`) ACRA filings | MUST | ready_to_implement | FR-ESOP-001 | 16h |
 | FR-TEN-202 | Hostile-termination override (legal-trigger fast-track with CEO+CLO+CSO sign-off) | SHOULD | ready_to_implement | FR-TEN-104 | 5h |
 | FR-TEN-203 | Margin watchdog for fixed-fee engagements (alarm < 30% projected) | SHOULD | ready_to_implement | FR-PROJ-007 | 5h |

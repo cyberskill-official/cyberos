@@ -3,7 +3,7 @@ id: FR-MEMORY-116
 title: "memory consolidate — semantic-dedup phase (Walk → Compact → Sign → Publish → SemanticDedup); shares duplicates detector with FR-MEMORY-115; opt-in via --semantic-dedup; dry-run by default"
 module: memory
 priority: SHOULD
-status: draft
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 3

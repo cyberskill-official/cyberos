@@ -13,6 +13,46 @@
 
 use crate::errors::{IssueError, IssueResult};
 use crate::types::IssueStatus;
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum LifecycleStatus {
+    Backlog,
+    Todo,
+    InProgress,
+    InReview,
+    Done,
+    Cancelled,
+}
+
+pub const fn allowed_lifecycle_transitions(from: LifecycleStatus) -> &'static [LifecycleStatus] {
+    match from {
+        LifecycleStatus::Backlog => &[LifecycleStatus::Todo, LifecycleStatus::Cancelled],
+        LifecycleStatus::Todo => &[
+            LifecycleStatus::InProgress,
+            LifecycleStatus::Backlog,
+            LifecycleStatus::Cancelled,
+        ],
+        LifecycleStatus::InProgress => &[
+            LifecycleStatus::InReview,
+            LifecycleStatus::Todo,
+            LifecycleStatus::Done,
+            LifecycleStatus::Cancelled,
+        ],
+        LifecycleStatus::InReview => &[
+            LifecycleStatus::Done,
+            LifecycleStatus::InProgress,
+            LifecycleStatus::Todo,
+            LifecycleStatus::Cancelled,
+        ],
+        LifecycleStatus::Done | LifecycleStatus::Cancelled => &[],
+    }
+}
+
+pub fn validate_lifecycle(from: LifecycleStatus, to: LifecycleStatus) -> bool {
+    from == to || allowed_lifecycle_transitions(from).contains(&to)
+}
 
 pub const fn allowed_transitions(from: IssueStatus) -> &'static [IssueStatus] {
     match from {
@@ -114,5 +154,33 @@ mod tests {
         ] {
             assert!(validate(IssueStatus::Deleted, to).is_err());
         }
+    }
+
+    #[test]
+    fn canonical_lifecycle_matches_fr_proj_004() {
+        assert!(validate_lifecycle(
+            LifecycleStatus::Backlog,
+            LifecycleStatus::Todo
+        ));
+        assert!(validate_lifecycle(
+            LifecycleStatus::Todo,
+            LifecycleStatus::InProgress
+        ));
+        assert!(validate_lifecycle(
+            LifecycleStatus::InProgress,
+            LifecycleStatus::InReview
+        ));
+        assert!(validate_lifecycle(
+            LifecycleStatus::InReview,
+            LifecycleStatus::Done
+        ));
+        assert!(validate_lifecycle(
+            LifecycleStatus::Todo,
+            LifecycleStatus::Cancelled
+        ));
+        assert!(!validate_lifecycle(
+            LifecycleStatus::Done,
+            LifecycleStatus::InProgress
+        ));
     }
 }

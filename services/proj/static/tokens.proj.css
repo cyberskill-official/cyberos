@@ -1,0 +1,9 @@
+:root {
+  --proj-radius: 8px;
+  --proj-focus-ring: #2563eb;
+  --proj-status-triage: #64748b;
+  --proj-status-todo: #0f766e;
+  --proj-status-doing: #b45309;
+  --proj-status-review: #7c3aed;
+  --proj-status-done: #15803d;
+}

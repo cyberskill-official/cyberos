@@ -3,7 +3,7 @@ id: FR-CHAT-012
 title: "DSAR export — Data Subject Access Request: every message a subject authored + chained memory audit hashes for tamper-evidence"
 module: CHAT
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 2

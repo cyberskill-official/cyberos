@@ -15,15 +15,23 @@
 //!   * [`links`] — bidirectional symmetric-link writer
 
 pub mod audit;
+pub mod billing;
+pub mod blockers;
+pub mod crdt;
+pub mod cycle_review;
 pub mod decisions;
+pub mod drift;
 pub mod errors;
+pub mod estimate;
 pub mod handlers;
+pub mod history;
 pub mod links;
 pub mod memory_link;
 pub mod rate_card;
 pub mod repo;
 pub mod status_fsm;
 pub mod types;
+pub mod views;
 
 pub use errors::IssueError;
 pub use types::*;

@@ -3,7 +3,7 @@ id: FR-CHAT-010
 title: "Decommission signal — (chat msgs) / (chat + slack + zalo msgs) ≥ 0.95 over 14-day rolling window with per-tenant trigger"
 module: CHAT
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 2

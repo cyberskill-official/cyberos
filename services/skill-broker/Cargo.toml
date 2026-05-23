@@ -28,6 +28,7 @@ thiserror = { workspace = true }
 # Validation
 regex = "1.11"
 once_cell = "1.20"
+sha2 = { workspace = true }
 
 # CLI
 clap = { workspace = true }

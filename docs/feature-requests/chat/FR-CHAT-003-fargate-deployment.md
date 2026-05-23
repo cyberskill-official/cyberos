@@ -3,7 +3,7 @@ id: FR-CHAT-003
 title: "Per-tenant CHAT deployment — AWS Fargate + RDS Multi-AZ + Redis ElastiCache with Terraform module and per-tenant isolation"
 module: CHAT
 priority: MUST
-status: ready_to_implement
+status: done
 verify: I
 phase: P1
 milestone: P1 · slice 1

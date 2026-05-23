@@ -3,7 +3,7 @@ id: FR-CHAT-011
 title: "Mobile push delivery — APNS + FCM with privacy-preserving payload (title + sender only; no body)"
 module: CHAT
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 2

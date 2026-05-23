@@ -3,7 +3,7 @@ id: FR-PROJ-010
 title: "Citation drift detector — nightly sweep flags stale MEMORY_LINKs (deleted target, superseded chain, broken memory_row_id) with operator notification"
 module: PROJ
 priority: SHOULD
-status: ready_to_implement
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 3

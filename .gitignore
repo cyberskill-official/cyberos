@@ -7,6 +7,10 @@
 # does not. Backup the BRAIN out-of-band (memory-export-<DATE>-<scope>.zip).
 .cyberos-memory
 
+# CUO workflow activity history (step JSON cache, ADRs, audits, impl plans,
+# code reviews, obs injections) — lives in .cyberos-memory/ subdirectories,
+# not in docs/. Covered by the .cyberos-memory gitignore above.
+
 # Aspect 13.5 audit (2026-05-12) — transient build/cache, editor junk, local analytics
 .DS_Store
 

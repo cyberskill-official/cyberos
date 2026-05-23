@@ -1,6 +1,6 @@
 # CyberOS CHAT — Mattermost fork at pinned MIT-Apache commit
 
-**Status:** FR-CHAT-001 + FR-CHAT-002 shipped as service slices. FR-CHAT-001 pins the fork, license-drift watcher, and cherry-pick policy; FR-CHAT-002 adds the CyberOS AuthBridge plugin scaffold for AUTH JWT login and tenant propagation.
+**Status:** FR-CHAT-001..012 shipped as service slices. FR-CHAT-001 pins the fork, license-drift watcher, and cherry-pick policy; FR-CHAT-002 adds the CyberOS AuthBridge plugin scaffold for AUTH JWT login and tenant propagation; FR-CHAT-003..012 add deploy planning, Vietnamese search, memory bridge, imports, Lumi routing, retro-capture, decommission signal, privacy push, and DSAR export helpers.
 **Upstream:** [`mattermost/mattermost-server`](https://github.com/mattermost/mattermost-server)
 **Pinned commit:** see [`PINNED_COMMIT`](PINNED_COMMIT)
 **CyberOS patch version:** see [`CYBEROS_PATCH_VERSION`](CYBEROS_PATCH_VERSION)
@@ -128,12 +128,15 @@ services/chat/
 ├── plugins/
 │   └── cyberos-authbridge/              FR-CHAT-002 plugin source + tests
 ├── scripts/
+│   ├── cyberos-chat                    operator CLI for CyberOS helper surfaces
 │   ├── check-license-drift.sh          drift watcher entry point
 │   └── cherry-pick-upstream.sh         operator cherry-pick helper
+├── cyberos_chat/                       FR-CHAT-003..012 helper package
 └── tests/
     ├── license_drift_test.sh           §5 test: drift detector finds license commits
     ├── pinned_commit_test.sh           §5 test: SHA is 40-char hex
-    └── patch_apply_test.sh             §5 test: patch series applies cleanly
+    ├── patch_apply_test.sh             §5 test: patch series applies cleanly
+    └── test_cyberos_chat.py            FR-CHAT-003..012 control-plane tests
 ```
 
 ---
@@ -145,6 +148,4 @@ services/chat/
 - DEC-422 — cherry-pick only via reviewed PR; no rebase.
 - FR-CHAT-001 — feature request authoring this fork policy.
 - FR-CHAT-002 — `cyberos-chat-authbridge` plugin: delegates Mattermost auth to AUTH JWTs.
-- FR-CHAT-003 (downstream) — per-tenant Fargate deployment.
-- FR-CHAT-005 (downstream) — memory bridge via Postgres logical replication.
-- FR-CHAT-011 (downstream) — mobile push via the plugin system.
+- FR-CHAT-003..012 — deployment, search, memory bridge, imports, Lumi, decommission, push, and DSAR slices.

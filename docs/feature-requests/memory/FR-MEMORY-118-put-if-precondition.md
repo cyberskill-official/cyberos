@@ -3,7 +3,7 @@ id: FR-MEMORY-118
 title: "memory put_if — optimistic-concurrency primitive with content-hash preconditions; many-agent contention without clobbering; canonical-ops extension §3.1"
 module: memory
 priority: SHOULD
-status: draft
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 3

@@ -67,7 +67,7 @@ class LLMInvoker(Invoker):
         model: str | None = None,
         api_key: str | None = None,
         base_url: str | None = None,
-        max_tokens: int = 4000,
+        max_tokens: int = 16000,
         mock_only: bool = False,
     ):
         self.api_key = (
@@ -173,8 +173,9 @@ class LLMInvoker(Invoker):
             f"You are invoking the `{skill_name}` skill within a CUO workflow chain.\n"
             f"Your inputs (resolved from the prior chain step's outputs) are below.\n\n"
             f"# Inputs\n\n```json\n{json.dumps(stringified, indent=2, sort_keys=True)}\n```\n\n"
-            f"# Output format\n\n"
-            f"Respond with a single JSON object containing the artefact's structured fields.\n"
+            f"# Output format — CRITICAL\n\n"
+            f"Your ENTIRE response must be a SINGLE valid JSON object. No markdown, no prose, no preamble.\n"
+            f"Do NOT use CONTRACT_ECHO format. Do NOT wrap in ``` fences. Output raw JSON only.\n"
             f"For author skills, the keys should be the H2 headings of the artefact template.\n"
             f"For audit skills, return: `{{rule_outcomes: {{...}}, score: 0-10, pass: bool, fixes: [...]}}`.\n"
         )
@@ -338,19 +339,111 @@ class LLMInvoker(Invoker):
             return json.loads(text)
         except json.JSONDecodeError:
             pass
-        # Look for ```json ... ``` fence.
-        fence_match = re.search(r"```(?:json)?\n(.*?)\n```", text, re.DOTALL)
-        if fence_match:
+        # Look for ```json ... ``` fence (explicit json, not ```text or bare ```).
+        for fence_match in re.finditer(r"```json\n(.*?)\n```", text, re.DOTALL):
             try:
                 return json.loads(fence_match.group(1))
             except json.JSONDecodeError:
                 pass
-        # Look for first {...} balanced block (greedy from first `{`).
+        # Also try ```json without closing fence (truncated output).
+        json_start = text.find("```json\n")
+        if json_start >= 0:
+            content = text[json_start + len("```json\n"):]
+            # Strip trailing ``` if present
+            if content.rstrip().endswith("```"):
+                content = content.rstrip()[:-3].rstrip()
+            result = LLMInvoker._try_parse_json_or_repair(content)
+            if result is not None:
+                return result
+        # Look for {...} using brace-depth matching to find the outermost object.
         first_brace = text.find("{")
-        last_brace = text.rfind("}")
-        if first_brace >= 0 and last_brace > first_brace:
-            try:
-                return json.loads(text[first_brace:last_brace + 1])
-            except json.JSONDecodeError:
-                pass
+        if first_brace >= 0:
+            result = LLMInvoker._extract_json_from_brace(text, first_brace)
+            if result is not None:
+                return result
         return None
+
+    @staticmethod
+    def _extract_json_from_brace(text: str, start: int):
+        """Extract a JSON object starting at text[start] using brace-depth matching."""
+        depth = 0
+        in_string = False
+        escape_next = False
+        for i in range(start, len(text)):
+            c = text[i]
+            if escape_next:
+                escape_next = False
+                continue
+            if c == "\\" and in_string:
+                escape_next = True
+                continue
+            if c == '"' and not escape_next:
+                in_string = not in_string
+                continue
+            if in_string:
+                continue
+            if c == "{":
+                depth += 1
+            elif c == "}":
+                depth -= 1
+                if depth == 0:
+                    candidate = text[start:i + 1]
+                    try:
+                        return json.loads(candidate)
+                    except json.JSONDecodeError:
+                        # Object didn't parse — try next {
+                        next_brace = text.find("{", start + 1)
+                        if next_brace >= 0 and next_brace <= i:
+                            return LLMInvoker._extract_json_from_brace(text, next_brace)
+                        return None
+        # Reached end of text with unclosed braces — try to repair truncated JSON.
+        return LLMInvoker._try_parse_json_or_repair(text[start:])
+
+    @staticmethod
+    def _try_parse_json_or_repair(text: str):
+        """Try to parse JSON; if it fails, attempt to repair truncated JSON."""
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            pass
+        # Attempt repair: close open strings, then close containers in nesting order.
+        repaired = text.rstrip()
+        # Track open containers using a stack (for correct nesting order).
+        container_stack: list[str] = []
+        in_string = False
+        escape_next = False
+        string_was_open = False
+        for c in repaired:
+            if escape_next:
+                escape_next = False
+                continue
+            if c == "\\" and in_string:
+                escape_next = True
+                continue
+            if c == '"':
+                in_string = not in_string
+                continue
+            if in_string:
+                continue
+            if c == "{":
+                container_stack.append("}")
+            elif c == "[":
+                container_stack.append("]")
+            elif c in ("}", "]"):
+                if container_stack and container_stack[-1] == c:
+                    container_stack.pop()
+        # Close open string
+        if in_string:
+            repaired += '"'
+            string_was_open = True
+        # Remove trailing comma if any
+        repaired = repaired.rstrip()
+        if repaired.endswith(","):
+            repaired = repaired[:-1].rstrip()
+        # Close open containers in reverse nesting order (innermost first)
+        for closer in reversed(container_stack):
+            repaired += closer
+        try:
+            return json.loads(repaired)
+        except json.JSONDecodeError:
+            return None

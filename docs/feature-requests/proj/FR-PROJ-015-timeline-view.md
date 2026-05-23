@@ -3,7 +3,7 @@ id: FR-PROJ-015
 title: "Timeline view — cycle window × assignee swimlane with day-grid layout, drag-resize for date changes, and milestone markers"
 module: PROJ
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 3

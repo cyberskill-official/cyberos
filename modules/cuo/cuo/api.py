@@ -162,7 +162,10 @@ def run(
     audit_dir = cuo_path.parent.parent / ".cyberos-memory" / "audit"
 
     if output_dir is None:
-        output_dir = backlog_path.parent
+        # Backlog lives at docs/feature-requests/BACKLOG.md — walk up 3 levels
+        # to reach the project root for .cyberos-memory/ placement.
+        project_root = backlog_path.parent.parent.parent
+        output_dir = project_root / ".cyberos-memory" / "cuo-steps"
     output_dir.mkdir(parents=True, exist_ok=True)
     halt_reason_path = output_dir / "DRAIN_HALT.md"
 
