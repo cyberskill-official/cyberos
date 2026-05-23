@@ -1,0 +1,27 @@
+{
+  "id": "world.cyberos.chat.authbridge",
+  "name": "CyberOS AuthBridge",
+  "description": "Delegates Mattermost login to CyberOS AUTH JWTs and propagates tenant_id.",
+  "version": "0.1.0",
+  "server": {
+    "executables": {
+      "linux-amd64": "server/dist/cyberos-authbridge-linux-amd64"
+    }
+  },
+  "settings_schema": {
+    "settings": [
+      {
+        "key": "jwks_url",
+        "display_name": "CyberOS AUTH JWKS URL",
+        "type": "text",
+        "default": "http://cyberos-auth:7700/.well-known/jwks.json"
+      },
+      {
+        "key": "revocation_url",
+        "display_name": "CyberOS AUTH revocation check URL",
+        "type": "text",
+        "default": "http://cyberos-auth:7700/v1/auth/revoked"
+      }
+    ]
+  }
+}

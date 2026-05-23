@@ -3,14 +3,14 @@ id: FR-PROJ-002
 title: "memory-anchored proj.decision row per Issue state change — reason + prior_chain link + cross-module references + ACL + audit-before-action"
 module: PROJ
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 1
 slice: 1
 owner: Stephen Cheng (CPO)
 created: 2026-05-15
-shipped: null
+shipped: 2026-05-23
 memory_chain_hash: null
 related_frs: [FR-PROJ-001, FR-AI-003, FR-MEMORY-106, FR-MEMORY-108]
 depends_on: [FR-PROJ-001, FR-AI-003]
@@ -895,4 +895,4 @@ All resolved. Deferred:
 
 ---
 
-*End of FR-PROJ-002. Status: draft (10/10 target).*
+*End of FR-PROJ-002. Status: done (implemented 2026-05-23).*

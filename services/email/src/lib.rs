@@ -1,4 +1,4 @@
-//! `cyberos-email` — FR-EMAIL-001 slice 1.
+//! `cyberos-email` — EMAIL module service slices.
 //!
 //! Mirror layer between Stalwart (the canonical mail server) and CyberOS
 //! cluster state. Responsibilities:
@@ -15,9 +15,7 @@
 //! The Stalwart server itself runs as a separate container (see
 //! `docker/Dockerfile` + `docker/stalwart.toml`).
 //!
-//! ### Scope at slice 1
-//!
-//! What lands:
+//! ### Shipped service surfaces
 //!   - Migrations 0001–0004 — message + thread metadata, bounce log, DKIM
 //!     keystore, residency routing.
 //!   - Types module — `EmailMessage`, `EmailThread`, `BounceEvent`,
@@ -32,14 +30,17 @@
 //!   - Health + per-message status + list handlers.
 //!   - `cyberos-email-cli provision` slice-1 user-provisioning entry.
 //!
-//! What is intentionally deferred (per the FR's §9 + `disallowed_tools`):
-//!   - Real Stalwart container wiring + JMAP/IMAP/SMTP listeners (FR-EMAIL-002).
-//!   - CaMeL dual-LLM quarantine (FR-EMAIL-005).
+//!   - DKIM/ARC/BIMI deliverability helpers and DNS setup records
+//!     (FR-EMAIL-004).
+//!   - CaMeL dual-LLM quarantine data-flow gate (FR-EMAIL-005).
+//!   - Outbound 1:1 compose/confirm/queue state machine (FR-EMAIL-009).
+//!   - DSAR subject-scoped JSONL export primitives (FR-EMAIL-011).
+//!
+//! Remaining integrations intentionally sit at module boundaries:
+//!   - Real JMAP/IMAP/SMTP JWT bridge inside Stalwart (FR-EMAIL-002).
 //!   - Shared-inbox UX (FR-EMAIL-003).
-//!   - DKIM/ARC/BIMI hardening (FR-EMAIL-004).
 //!   - Convert-to-issue (FR-EMAIL-007).
 //!   - Bulk-send approval (FR-EMAIL-010).
-//!   - DSAR per-subject export (FR-EMAIL-011).
 //!
 //! ### RLS pattern
 //!
@@ -67,9 +68,13 @@
 #![allow(dead_code)]
 
 pub mod audit;
+pub mod camel;
+pub mod delivery_auth;
 pub mod dkim;
+pub mod dsar;
 pub mod errors;
 pub mod handlers;
+pub mod outbound;
 pub mod repo;
 pub mod residency;
 pub mod stalwart_adapter;

@@ -3,14 +3,14 @@ id: FR-MEMORY-102
 title: "Layer-2 rebuild-from-Layer-1 CI gate — deterministic rebuild + spot-check + 30min budget + mid-rebuild resume + multi-tenant"
 module: memory
 priority: MUST
-status: implementing
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 1
 slice: 1
 owner: Stephen Cheng (CDO)
 created: 2026-05-15
-shipped: null
+shipped: 2026-05-23
 memory_chain_hash: null
 related_frs: [FR-MEMORY-101, FR-MEMORY-110, FR-AI-019]
 depends_on: [FR-MEMORY-101]
@@ -604,4 +604,4 @@ All resolved. Deferred:
 
 ---
 
-*End of FR-MEMORY-102. Status: draft (10/10 target).*
+*End of FR-MEMORY-102. Status: done (implemented 2026-05-23).*

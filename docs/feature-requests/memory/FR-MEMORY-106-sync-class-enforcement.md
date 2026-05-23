@@ -3,14 +3,14 @@ id: FR-MEMORY-106
 title: "memory sync_class enforcement — private vs shareable + ACL filtering + structural compensation exclusion + property test"
 module: memory
 priority: MUST
-status: implementing
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 1
 slice: 1
 owner: Stephen Cheng (CDO)
 created: 2026-05-15
-shipped: null
+shipped: 2026-05-23
 memory_chain_hash: null
 related_frs: [FR-MEMORY-103, FR-MEMORY-107, FR-MEMORY-108]
 depends_on: [FR-MEMORY-101, FR-MEMORY-103]
@@ -481,4 +481,4 @@ All resolved. Deferred:
 
 ---
 
-*End of FR-MEMORY-106. Status: draft (10/10 target).*
+*End of FR-MEMORY-106. Status: done (implemented 2026-05-23).*

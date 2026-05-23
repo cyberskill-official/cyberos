@@ -3,14 +3,14 @@ id: FR-EMAIL-005
 title: "EMAIL CaMeL dual-LLM security layer — Privileged-LLM plans, Quarantined-LLM parses untrusted email content (prompt-injection defense)"
 module: EMAIL
 priority: MUST
-status: draft
+status: done
 verify: T
 phase: P2
 milestone: P2 · slice 2
 slice: 2
 owner: Stephen Cheng (CISO)
 created: 2026-05-17
-shipped: null
+shipped: 2026-05-23
 memory_chain_hash: null
 related_frs: [FR-EMAIL-001, FR-EMAIL-008, FR-AI-003, FR-MCP-006, FR-MEMORY-111]
 depends_on: [FR-EMAIL-001, FR-AI-003]

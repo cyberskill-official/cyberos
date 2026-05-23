@@ -9,6 +9,9 @@ description = "CyberOS memory module — local-first, audit-chained personal mem
 requires-python = ">=3.11"
 dynamic = ["dependencies"]
 
+[project.optional-dependencies]
+cuo = ["cyberos-cuo"]
+
 [project.scripts]
 cyberos = "cyberos.__main__:main"
 

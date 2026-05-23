@@ -19,7 +19,8 @@ import pytest
 
 from cuo.core.memory_bridge import memory_is_available, emit_chain_result
 from cuo.core.catalog import discover_personas, discover_workflows
-from cuo.core.invoker import MockInvoker, SubprocessInvoker, select_invoker
+from cuo.core.invoker import SubprocessInvoker, select_invoker
+from tests.conftest import FakeInvoker
 from cuo.core.llm_invoker import LLMInvoker
 from cuo.core.router import route
 from cuo.core.supervisor import dry_run_chain, execute_chain
@@ -162,22 +163,28 @@ def test_total_workflow_count_post_session_n(cuo_root: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_select_invoker_returns_mock_when_no_binary() -> None:
-    """In a sandbox with no cyberos-skill on PATH, auto-select must yield MockInvoker."""
-    inv = select_invoker("auto")
-    # MockInvoker is the expected fallback when SubprocessInvoker is unavailable.
-    if not SubprocessInvoker.is_available():
-        assert isinstance(inv, MockInvoker), f"expected MockInvoker, got {type(inv).__name__}"
+def test_select_invoker_raises_when_no_invoker_available(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """When no invoker binary on PATH and no anthropic SDK, select_invoker raises."""
+    import shutil
+    import cuo.core.invoker as inv_mod
+    monkeypatch.setattr(shutil, "which", lambda _: None)
+    # Make the 'import anthropic' inside select_invoker fail
+    import builtins
+    real_import = builtins.__import__
+    def block_anthropic(name, *args, **kwargs):
+        if name == "anthropic":
+            raise ImportError("blocked for test")
+        return real_import(name, *args, **kwargs)
+    monkeypatch.setattr(builtins, "__import__", block_anthropic)
+    with pytest.raises(RuntimeError, match="No skill invoker available"):
+        select_invoker("auto")
 
 
-def test_select_invoker_force_mock() -> None:
-    inv = select_invoker("mock")
-    assert isinstance(inv, MockInvoker)
-
-
-def test_mock_invoker_writes_output(cuo_root: Path, skill_root: Path, tmp_path: Path) -> None:
-    """MockInvoker should write a JSON file per step with synthetic output."""
-    inv = MockInvoker()
+def test_fake_invoker_writes_output(cuo_root: Path, skill_root: Path, tmp_path: Path) -> None:
+    """FakeInvoker should write a JSON file per step with synthetic output."""
+    inv = FakeInvoker()
     out_dir = tmp_path / "step-output"
     result = inv.invoke(
         skill_name="statement-of-work-author",
@@ -193,7 +200,7 @@ def test_mock_invoker_writes_output(cuo_root: Path, skill_root: Path, tmp_path: 
 
 
 def test_execute_cto_architect_with_mock(cuo_root: Path, skill_root: Path, tmp_path: Path) -> None:
-    """End-to-end execute of CTO architect-new-system through MockInvoker.
+    """End-to-end execute of CTO architect-new-system through FakeInvoker.
 
     Catalog-completeness invariant under execution: all 10 chain steps walk and produce
     output. No FAILED steps; status is COMPLETED.
@@ -207,7 +214,7 @@ def test_execute_cto_architect_with_mock(cuo_root: Path, skill_root: Path, tmp_p
         workflow_slug="architect-new-system",
         skill_root=skill_root,
         output_dir=out_dir,
-        invoker=MockInvoker(),
+        invoker=FakeInvoker(),
     )
 
     assert result.outcome == "COMPLETED", (
@@ -243,7 +250,7 @@ def test_execute_blocks_on_planned_skill(cuo_root: Path, skill_root: Path, tmp_p
                             workflow_slug=wf.slug,
                             skill_root=skill_root,
                             output_dir=tmp_path / "blocked",
-                            invoker=MockInvoker(),
+                            invoker=FakeInvoker(),
                         )
                         assert result.outcome == "BLOCKED", (
                             f"workflow {wf.workflow_id} with planned: step should BLOCK, got {result.outcome}"
@@ -257,13 +264,12 @@ def test_execute_blocks_on_planned_skill(cuo_root: Path, skill_root: Path, tmp_p
 # ---------------------------------------------------------------------------
 
 
-def test_llm_invoker_defaults_to_mock_llm() -> None:
-    """Without ANTHROPIC_API_KEY env, LLMInvoker should be in 'mock-llm' mode."""
-    import os
-    if os.environ.get("ANTHROPIC_API_KEY"):
-        pytest.skip("API key present in env — mock-mode test only runs when absent")
+def test_llm_invoker_unconfigured_without_api_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Without API key env vars, LLMInvoker should be in 'unconfigured' mode."""
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("ANTHROPIC_AUTH_TOKEN", raising=False)
     inv = LLMInvoker()
-    assert inv.mode == "mock-llm"
+    assert inv.mode == "unconfigured"
 
 
 def test_llm_invoker_force_mock_only() -> None:
@@ -343,7 +349,7 @@ def test_memory_emit_no_op_when_unavailable(cuo_root: Path, skill_root: Path, tm
         workflow_slug="adr-quick-capture",
         skill_root=skill_root,
         output_dir=tmp_path / "for-memory-emit",
-        invoker=MockInvoker(),
+        invoker=FakeInvoker(),
     )
 
     # Force a non-existent memory_root to verify graceful skip.
@@ -358,7 +364,7 @@ def test_chain_handoff_propagates_outputs(cuo_root: Path, skill_root: Path, tmp_
     """Step N's output should be available to step N+1 via the hand-off map.
 
     Verified by checking that the second step's input file paths point at the
-    first step's output file. MockInvoker stringifies inputs into its output
+    first step's output file. FakeInvoker stringifies inputs into its output
     so we can read them back.
     """
     personas = discover_personas(cuo_root)
@@ -371,7 +377,7 @@ def test_chain_handoff_propagates_outputs(cuo_root: Path, skill_root: Path, tmp_
         workflow_slug="adr-quick-capture",
         skill_root=skill_root,
         output_dir=out_dir,
-        invoker=MockInvoker(),
+        invoker=FakeInvoker(),
     )
     assert result.outcome == "COMPLETED"
     assert len(result.step_results) == 2
@@ -582,7 +588,7 @@ def test_linear_handler_executes_chain_through_supervisor(cuo_root: Path, skill_
         workflow=adr,
         skill_root=skill_root,
         output_dir=out_dir,
-        invoker=MockInvoker(),
+        invoker=FakeInvoker(),
     )
     assert result.handler_kind == "LinearHandler"
     assert result.chain_result.outcome == "COMPLETED"
@@ -603,11 +609,11 @@ def test_time_critical_handler_runs_chain_synchronously(cuo_root: Path, skill_ro
         workflow=adr,
         skill_root=skill_root,
         output_dir=out_dir,
-        invoker=MockInvoker(),
+        invoker=FakeInvoker(),
     )
     assert result.handler_kind == "TimeCriticalHandler"
     assert result.chain_result.outcome == "COMPLETED"
-    # MockInvoker runs essentially instantly — should NOT breach SLA
+    # FakeInvoker runs essentially instantly — should NOT breach SLA
     sla_breach_rows = [a for a in result.extra_audit_kinds if a.get("kind") == "cuo.time_critical_sla_breach"]
     assert len(sla_breach_rows) == 0
 
@@ -690,11 +696,11 @@ def test_time_critical_e2e_executes_and_audits(cuo_root: Path, skill_root: Path,
         workflow=breach,
         skill_root=skill_root,
         output_dir=out_dir,
-        invoker=MockInvoker(),
+        invoker=FakeInvoker(),
     )
     assert result.chain_result.outcome == "COMPLETED"
     assert result.handler_kind == "TimeCriticalHandler"
-    # MockInvoker is fast — should NOT trigger SLA breach
+    # FakeInvoker is fast — should NOT trigger SLA breach
     sla_breach = [a for a in result.extra_audit_kinds if a.get("kind") == "cuo.time_critical_sla_breach"]
     assert len(sla_breach) == 0  # 0ms << 240min
 
@@ -714,7 +720,7 @@ def test_per_instance_e2e_iterates(cuo_root: Path, skill_root: Path, tmp_path: P
         workflow=qap,
         skill_root=skill_root,
         output_dir=out_dir,
-        invoker=MockInvoker(),
+        invoker=FakeInvoker(),
     )
     assert result.handler_kind == "PerInstanceHandler"
     assert len(result.per_instance) == n_instances
@@ -739,7 +745,7 @@ def test_multi_output_e2e_fans_out(cuo_root: Path, skill_root: Path, tmp_path: P
         workflow=qrc,
         skill_root=skill_root,
         output_dir=out_dir,
-        invoker=MockInvoker(),
+        invoker=FakeInvoker(),
     )
     assert result.handler_kind == "MultiOutputHandler"
     fanout_rows = [a for a in result.extra_audit_kinds if a.get("kind") == "cuo.multi_output_fanout"]
@@ -764,7 +770,7 @@ def test_persona_pair_e2e_runs_both_legs(cuo_root: Path, skill_root: Path, tmp_p
         workflow=pir,
         skill_root=skill_root,
         output_dir=out_dir,
-        invoker=MockInvoker(),
+        invoker=FakeInvoker(),
     )
     assert result.handler_kind == "PersonaPairHandler"
     assert result.chain_result.outcome == "COMPLETED"

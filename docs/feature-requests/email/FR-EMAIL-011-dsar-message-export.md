@@ -3,14 +3,14 @@ id: FR-EMAIL-011
 title: "EMAIL DSAR message export — every message a subject authored or received + chained memory audit hashes for FR-PORTAL-008 bundle"
 module: EMAIL
 priority: MUST
-status: draft
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 2
 slice: 2
 owner: Stephen Cheng (CLO)
 created: 2026-05-17
-shipped: null
+shipped: 2026-05-23
 memory_chain_hash: null
 related_frs: [FR-EMAIL-001, FR-EMAIL-009, FR-PORTAL-008, FR-AUTH-101, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-EMAIL-001]

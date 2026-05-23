@@ -3,14 +3,14 @@ id: FR-AUTH-109
 title: "AUTH stub → full migration enforcer — 30-day grace window + cutover timestamp + rejection metric + per-tenant override"
 module: AUTH
 priority: MUST
-status: implementing
+status: done
 verify: T
 phase: P3
 milestone: P3 · slice 1
 slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-16
-shipped: null
+shipped: 2026-05-23
 memory_chain_hash: null
 related_frs: [FR-AUTH-004, FR-AUTH-101, FR-AUTH-108, FR-AI-003, FR-MEMORY-101, FR-OBS-007]
 depends_on: [FR-AUTH-101]

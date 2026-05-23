@@ -1,8 +1,8 @@
 # CyberOS PROJ — Issue + Cycle + Engagement model
 
-**Status:** FR-PROJ-001 shipped (slice 1) — schema + types + FSM + audit row builders + handler orchestration + bidirectional symmetric link writer.
+**Status:** FR-PROJ-001 + FR-PROJ-002/005/009 shipped as service slices — schema + types + FSM + audit row builders + handler orchestration + bidirectional symmetric link writer + memory decision anchoring + rate-card versioning + typed MEMORY_LINK helpers.
 **Depends on:** FR-AUTH-001 (tenants) + FR-AUTH-003 (RLS pattern) — both shipped.
-**Blocks (downstream):** FR-PROJ-002 (memory decision anchoring), FR-PROJ-003 (Yjs CRDT), FR-PROJ-004 (lifecycle FSM extensions), FR-PROJ-005 (rate card), FR-PROJ-008 (audit-row-per-mutation), FR-PROJ-009 (MEMORY_LINK), FR-EMAIL-007 (convert-to-issue), FR-RES-001.
+**Blocks (downstream):** FR-PROJ-003 (Yjs CRDT), FR-PROJ-004 (lifecycle FSM extensions), FR-PROJ-006/007 (billable cascade + billing modes), FR-PROJ-008 (audit-row-per-mutation), FR-PROJ-010 (citation drift), FR-EMAIL-007 (convert-to-issue), FR-RES-001.
 
 ---
 
@@ -12,6 +12,9 @@
 - **Cycle** — time-boxed window within an engagement (`starts_at < ends_at`).
 - **Issue** — the unit of work. 5-status FSM + 4-priority enum. Optional cycle membership; assignee must be same-tenant.
 - **Issue link** — `(issue_id, linked_to_id, link_type)` triple. Symmetric types auto-insert the inverse direction.
+- **Decision anchor** — immutable `proj.decision` memory row payload per issue state change, with reason, prior-chain link, references, redaction, and retraction payload support.
+- **Rate card** — append-only engagement pricing records with role, currency, hourly rate, billable default, and effective-date supersession.
+- **MEMORY_LINK** — typed Issue ↔ memory relation (`cites | implements | supersedes`) with duplicate, scope, cross-tenant, and future-supersede guards.
 
 ---
 
@@ -59,7 +62,7 @@ Symmetric types (`blocks`/`blocked_by`, `duplicates`/`duplicated_by`) auto-inser
 
 ## §4 — memory audit row kinds
 
-Four canonical kinds emitted by handlers in this FR:
+Canonical kinds emitted by the PROJ service slices:
 
 | Kind | When | Payload |
 |---|---|---|
@@ -67,8 +70,14 @@ Four canonical kinds emitted by handlers in this FR:
 | `proj.issue_status_changed` | PATCH that mutates status | from_status, to_status, by_subject_id |
 | `proj.issue_assigned` | PATCH that changes assignee | from_subject_id, to_subject_id, by_subject_id |
 | `proj.issue_linked` | POST /v1/proj/issues/{id}/links | linked_to_id, link_type, by_subject_id |
+| `proj.decision_recorded` | Issue state-change decision is anchored | issue_id, from_status, to_status, reason_code, prior_chain |
+| `proj.decision_retracted` | Decision anchor is retracted with replacement context | decision_id, retraction_reason, replacement_decision_id |
+| `proj.rate_card_created` | Engagement rate-card row is created | engagement_id, role, currency, hourly_rate, effective_from |
+| `proj.rate_card_superseded` | Rate-card row is superseded | old_rate_card_id, new_rate_card_id |
+| `proj.memory_link_created` | Issue cites/implements/supersedes a memory | issue_id, memory_id, relation |
+| `proj.memory_link_removed` | MEMORY_LINK is soft-removed | link_id, reason |
 
-The memory write transport is wired in the binary (FR-PROJ-008 expands the kinds + carries the chain-anchor responsibility).
+The memory write transport is wired in the binary (FR-PROJ-008 expands handler-level mutation coverage and carries the chain-anchor responsibility).
 
 ---
 
@@ -104,6 +113,9 @@ services/proj/
 │   ├── errors.rs                 IssueError + .code() + .http_status()
 │   ├── status_fsm.rs             allowed_transitions + validate (with same-status no-op)
 │   ├── audit.rs                  4 memory row builders + ProjAuditRow struct
+│   ├── decisions.rs              FR-PROJ-002 memory decision anchoring helpers
+│   ├── rate_card.rs              FR-PROJ-005 append-only rate-card helpers
+│   ├── memory_link.rs            FR-PROJ-009 typed MEMORY_LINK helpers
 │   ├── links.rs                  bidirectional symmetric link writer + self-link guard
 │   ├── repo.rs                   sqlx CRUD layer (engagement, cycle, issue) + RLS GUC setter + validators
 │   └── handlers.rs               handler-layer orchestration + audit-row construction

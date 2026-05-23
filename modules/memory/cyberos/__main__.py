@@ -1677,6 +1677,9 @@ def _cmd_init(args: argparse.Namespace) -> int:
     builds the FTS5 index from existing memory files (bypassing binlog).
     With ``--auto-digest``, ingests project knowledge (README.md, docs/, etc.)
     into memory files.
+
+    Tracks the cyberos release version in ``manifest.json:cyberos_version``.
+    On ``--force`` re-init, detects version changes and prints migration info.
     """
     import hashlib
     import json
@@ -1685,22 +1688,37 @@ def _cmd_init(args: argparse.Namespace) -> int:
     import time
 
     store = _store(args)
+    source_repo = _find_source_repo()
+    current_version = _read_source_version(source_repo) if source_repo else None
 
     # --- Phase 1: Create directory structure ---
+    is_reinit = False
+    stored_version = None
     if store.exists() and (store / "manifest.json").is_file():
+        existing_manifest = json.loads((store / "manifest.json").read_text())
+        stored_version = existing_manifest.get("cyberos_version")
         if not args.force:
-            sys.stderr.write(
-                f"BRAIN store already exists at {store}\n"
-                "Use --force to reinitialize (preserves existing memories)\n"
-            )
-            return 1
-        print(f"Reinitializing existing BRAIN at {store}")
+            # Check if version changed — auto-migrate without --force
+            if stored_version and current_version and stored_version != current_version:
+                print(f"  Version change detected: {stored_version} → {current_version}")
+                print(f"  Migrating BRAIN at {store}...")
+                is_reinit = True
+            else:
+                sys.stderr.write(
+                    f"BRAIN store already exists at {store}\n"
+                    "Use --force to reinitialize (preserves existing memories)\n"
+                )
+                return 1
+        else:
+            print(f"Reinitializing existing BRAIN at {store}")
+            is_reinit = True
     else:
         print(f"Creating new BRAIN at {store}")
 
-    # Create directory structure
+    # Create directory structure (superset of all known layouts)
     dirs = [
         store / "audit",
+        store / "audit" / "checkpoints",
         store / "memories" / "decisions",
         store / "memories" / "facts",
         store / "memories" / "people",
@@ -1709,6 +1727,13 @@ def _cmd_init(args: argparse.Namespace) -> int:
         store / "memories" / "drift",
         store / "memories" / "refinements",
         store / "meta",
+        store / "company",
+        store / "module",
+        store / "member",
+        store / "client",
+        store / "project",
+        store / "persona",
+        store / "conflicts",
         store / "exports",
         store / "index",
     ]
@@ -1743,21 +1768,34 @@ def _cmd_init(args: argparse.Namespace) -> int:
     manifest.setdefault("actor", args.actor or "cyberos-cli")
     manifest.setdefault("crypto_mode", "chained")
     manifest.setdefault("imports", {})
+    if current_version:
+        manifest["cyberos_version"] = current_version
 
-    # Copy AGENTS.md if available
-    source_repo = _find_source_repo()
+    # Copy protocol files into the store (self-contained)
     if source_repo:
-        agents_src = source_repo / "cyberos" / "data" / "AGENTS.md"
+        # AGENTS.md may be at top-level or inside cyberos/data/
+        agents_src = source_repo / "AGENTS.md"
+        if not agents_src.is_file():
+            agents_src = source_repo / "cyberos" / "data" / "AGENTS.md"
         if agents_src.is_file():
             agents_dst = store / "AGENTS.md"
             agents_dst.write_bytes(agents_src.read_bytes())
-            print(f"  Copied AGENTS.md from {agents_src}")
+            print(f"  Copied AGENTS.md")
+        for proto_file in ("memory.schema.json", "memory.invariants.yaml"):
+            src = source_repo / proto_file
+            if src.is_file():
+                dst = store / proto_file
+                dst.write_bytes(src.read_bytes())
+                print(f"  Copied {proto_file}")
 
     # Write manifest atomically
     tmp = manifest_path.with_suffix(".tmp")
     tmp.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
     os.replace(str(tmp), str(manifest_path))
-    print(f"  Wrote manifest.json")
+    if is_reinit:
+        print(f"  Updated manifest.json (cyberos_version={current_version})")
+    else:
+        print(f"  Wrote manifest.json")
 
     # --- Phase 2: Auto-index existing memories ---
     if args.auto_index:
@@ -1770,6 +1808,8 @@ def _cmd_init(args: argparse.Namespace) -> int:
         _auto_digest(store, args.actor or "cyberos-cli", limit=args.digest_limit)
 
     print(f"\nBRAIN initialized at {store}")
+    if is_reinit:
+        print(f"  Migrated from {stored_version or '(unknown)'} → {current_version}")
     print("The store is now ready. Run `cyberos doctor` to verify invariants.")
     return 0
 
@@ -1964,7 +2004,13 @@ def _find_source_repo() -> Path | None:
     """
     pkg_dir = Path(__file__).resolve().parent          # cyberos/
     memory_dir = pkg_dir.parent                        # modules/memory/
+    # Check both locations: top-level and inside cyberos/data/
     if (memory_dir / "AGENTS.md").is_file():
+        return memory_dir
+    if (memory_dir / "cyberos" / "data" / "AGENTS.md").is_file():
+        return memory_dir
+    # Fallback: check if protocol files exist at the top level
+    if (memory_dir / "memory.schema.json").is_file():
         return memory_dir
     return None
 
@@ -2101,6 +2147,368 @@ def _maybe_check_version(store: Path) -> None:
             )
     except Exception:
         pass
+
+
+# --- workflow subcommand (delegates to cyberos-cuo) ----------------------
+
+
+_SUBCOMMANDS = {"list-personas", "list-workflows", "dry-run", "route"}
+
+
+def _find_skill_root() -> Path | None:
+    """Find the skill/ module directory.
+
+    Walks up from CWD looking for modules/skill/MODULE.md.
+    Also checks CYBEROS_ROOT env var.
+    """
+    import os
+    env_root = os.environ.get("CYBEROS_ROOT")
+    if env_root:
+        candidate = Path(env_root) / "modules" / "skill"
+        if (candidate / "MODULE.md").is_file():
+            return candidate
+    probe = Path.cwd()
+    while True:
+        candidate = probe / "modules" / "skill"
+        if (candidate / "MODULE.md").is_file():
+            return candidate
+        parent = probe.parent
+        if parent == probe:
+            break
+        probe = parent
+    return None
+
+
+def _cmd_skill(args: argparse.Namespace) -> int:
+    """Dispatch ``cyberos skill`` to cyberos-skill binary or built-in Python."""
+    import shutil
+    import subprocess
+
+    skill_args = args.skill_args or []
+
+    if not skill_args or skill_args[0] in ("-h", "--help"):
+        print("usage: cyberos skill <sub-command> [args]")
+        print("")
+        print("sub-commands:")
+        print("  list                  list installed skills")
+        print("  info <name>           show skill frontmatter + body preview")
+        print("  run <name>            invoke a skill (reads JSON from stdin)")
+        print("  validate [name ...]   validate SKILL.md files")
+        return 0
+
+    subcmd = skill_args[0]
+    rest = skill_args[1:]
+
+    # If cyberos-skill binary is on PATH, delegate to it
+    binary = shutil.which("cyberos-skill")
+    if binary:
+        cmd = [binary]
+        # Add --root if we can find the skill root
+        skill_root = _find_skill_root()
+        if skill_root:
+            cmd.extend(["--root", str(skill_root)])
+        cmd.append(subcmd)
+        cmd.extend(rest)
+        # For 'run', pass stdin through
+        proc = subprocess.run(cmd, capture_input=(subcmd != "run"))
+        if subcmd == "run":
+            import sys
+            proc = subprocess.run(cmd, stdin=sys.stdin)
+        return proc.returncode
+
+    # Built-in Python fallback for list/info/validate
+    skill_root = _find_skill_root()
+    if skill_root is None:
+        sys.stderr.write(
+            "error: cyberos-skill binary not on PATH and skill/ module not found.\n"
+            "       Either:\n"
+            "         1. cargo install --path modules/skill/crates/cli\n"
+            "         2. Run from within a CyberOS project\n"
+        )
+        return 1
+
+    if subcmd == "list":
+        count = 0
+        for d in sorted(skill_root.iterdir()):
+            if d.is_dir() and (d / "SKILL.md").is_file():
+                # Read first line of description from frontmatter
+                desc = ""
+                try:
+                    txt = (d / "SKILL.md").read_text(encoding="utf-8")
+                    for line in txt.splitlines():
+                        if line.startswith("description:"):
+                            desc = line.split(":", 1)[1].strip().strip('"')
+                            break
+                except (OSError, UnicodeDecodeError):
+                    pass
+                print(f"  {d.name:50s} {desc}")
+                count += 1
+        print(f"\n{count} skill(s) installed")
+        return 0
+
+    if subcmd == "info":
+        if not rest:
+            sys.stderr.write("error: info requires a skill name\n")
+            return 2
+        name = rest[0]
+        skill_md = skill_root / name / "SKILL.md"
+        if not skill_md.is_file():
+            sys.stderr.write(f"error: skill not found: {skill_md}\n")
+            return 1
+        print(skill_md.read_text(encoding="utf-8")[:2000])
+        return 0
+
+    if subcmd == "validate":
+        names = rest if rest else [
+            d.name for d in sorted(skill_root.iterdir())
+            if d.is_dir() and (d / "SKILL.md").is_file()
+        ]
+        errors = 0
+        for name in names:
+            skill_md = skill_root / name / "SKILL.md"
+            if not skill_md.is_file():
+                print(f"  FAIL {name}: SKILL.md not found")
+                errors += 1
+                continue
+            try:
+                txt = skill_md.read_text(encoding="utf-8")
+                if not txt.startswith("---"):
+                    print(f"  FAIL {name}: no YAML frontmatter")
+                    errors += 1
+                else:
+                    print(f"  OK   {name}")
+            except (OSError, UnicodeDecodeError) as e:
+                print(f"  FAIL {name}: {e}")
+                errors += 1
+        return 1 if errors else 0
+
+    if subcmd == "run":
+        sys.stderr.write(
+            "error: 'cyberos skill run' requires cyberos-skill binary on PATH.\n"
+            "       For prompt-only skills, use 'cyberos workflow' which invokes LLM directly.\n"
+        )
+        return 1
+
+    sys.stderr.write(f"error: unknown skill sub-command '{subcmd}'\n")
+    return 2
+
+
+def _auto_init_if_needed() -> None:
+    """Check if memory store exists; auto-init if not."""
+    store_name = ".cyberos-memory"
+    # Walk up from CWD looking for existing store
+    probe = Path.cwd()
+    while True:
+        if (probe / store_name).is_dir():
+            return  # already initialized
+        parent = probe.parent
+        if parent == probe:
+            break
+        probe = parent
+    # Not found — auto-init in CWD
+    sys.stderr.write("cyberos: memory store not found — running auto-init...\n")
+    store_root = Path.cwd() / store_name
+    store_root.mkdir(parents=True, exist_ok=True)
+    # Create directory structure
+    for subdir in [
+        "memories/decisions", "memories/facts", "memories/people",
+        "memories/projects", "memories/preferences", "memories/drift",
+        "memories/refinements",
+        "meta/company", "meta/module", "meta/member", "meta/client",
+        "meta/project", "meta/persona",
+        "conflicts", "exports", "audit/checkpoints",
+    ]:
+        (store_root / subdir).mkdir(parents=True, exist_ok=True)
+    # Write HEAD
+    (store_root / "HEAD").write_bytes(b"\x00" * 8)
+    # Write manifest
+    import json as _json
+    manifest = {
+        "version": 2,
+        "created_at": __import__("datetime").datetime.utcnow().isoformat() + "Z",
+        "audit_chain_head": "",
+    }
+    (store_root / "manifest.json").write_text(
+        _json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8"
+    )
+    # Copy protocol files from cyberos source repo if available
+    src_repo = _find_source_repo()
+    if src_repo:
+        import shutil
+        for fname in ("AGENTS.md", "memory.schema.json", "memory.invariants.yaml"):
+            # Check both locations: top-level and cyberos/data/
+            src = src_repo / fname
+            if not src.is_file():
+                src = src_repo / "cyberos" / "data" / fname
+            if src.is_file():
+                shutil.copy2(src, Path.cwd() / fname)
+    # Add .cyberos-memory to .gitignore if not already present
+    gitignore = Path.cwd() / ".gitignore"
+    markers = [".cyberos-memory"]
+    try:
+        existing = gitignore.read_text(encoding="utf-8") if gitignore.is_file() else ""
+    except (OSError, UnicodeDecodeError):
+        existing = ""
+    missing = [m for m in markers if m not in existing]
+    if missing:
+        entry = "\n# CyberOS\n" + "\n".join(f"{m}/" for m in missing) + "\n"
+        try:
+            with open(gitignore, "a", encoding="utf-8") as f:
+                f.write(entry)
+            sys.stderr.write(f"cyberos: added {', '.join(m + '/' for m in missing)} to .gitignore\n")
+        except OSError:
+            pass
+    sys.stderr.write(f"cyberos: initialized memory store at {store_root}\n")
+
+
+def _cmd_workflow(args: argparse.Namespace) -> int:
+    """Dispatch ``cyberos workflow`` to the CUO API.
+
+    If the first arg after ``workflow`` is a known sub-command, dispatch to it.
+    Otherwise treat it as a workflow path and run the drain loop.
+    """
+    try:
+        from cuo import api as cuo_api
+    except ImportError:
+        sys.stderr.write(
+            "error: cyberos-cuo package not installed.\n"
+            "       Install with: pip install -e /path/to/cyberos/modules/cuo\n"
+        )
+        return 1
+
+    # Auto-init memory store if not found
+    _auto_init_if_needed()
+
+    wf_args = args.workflow_args or []
+
+    if not wf_args or wf_args[0] in ("-h", "--help"):
+        print("usage: cyberos workflow <persona-workflow> [--rework] [options]")
+        print("       cyberos workflow list-personas [--show-extinct]")
+        print("       cyberos workflow list-workflows <persona-slug>")
+        print("       cyberos workflow dry-run <persona-workflow>")
+        print("")
+        print("Run 'cyberos workflow <cmd> --help' for more info on a command.")
+        return 0
+
+    subcmd = wf_args[0]
+
+    if subcmd == "list-personas":
+        show_extinct = "--show-extinct" in wf_args
+        cuo_api.list_personas(show_extinct=show_extinct)
+        return 0
+
+    if subcmd == "list-workflows":
+        if len(wf_args) < 2:
+            sys.stderr.write("error: list-workflows requires a persona-slug\n")
+            return 2
+        cuo_api.list_workflows(wf_args[1])
+        return 0
+
+    if subcmd == "dry-run":
+        if len(wf_args) < 2:
+            sys.stderr.write("error: dry-run requires a persona-workflow path\n")
+            return 2
+        cuo_api.dry_run(wf_args[1])
+        return 0
+
+    if subcmd == "route":
+        if len(wf_args) < 2:
+            sys.stderr.write("error: route requires a query string\n")
+            return 2
+        from cuo.core.router import route
+        from cuo.core.catalog import discover_personas
+        from cuo.cli import _resolve_roots
+        cuo_path, _ = _resolve_roots(None, None)
+        personas = discover_personas(cuo_path)
+        decision = route(" ".join(wf_args[1:]), personas)
+        if decision is None:
+            print("NO_MATCH")
+            return 1
+        print(f"{decision.persona_slug}/{decision.workflow_slug} (confidence={decision.confidence:.2f})")
+        return 0
+
+    # Default: treat as workflow path → run drain
+    persona_workflow = subcmd
+    # Parse remaining flags
+    rework = "--rework" in wf_args
+    output_dir = None
+    module = None
+    backlog_path = None
+    max_frs = 0
+    invoker = "auto"
+    no_memory_emit = "--no-memory-emit" in wf_args
+    actor = "cuo-drain"
+    halt_on_repeat_rework = 2
+
+    # Simple flag parsing for the remaining args
+    i = 1  # skip the workflow path
+    while i < len(wf_args):
+        arg = wf_args[i]
+        if arg == "--rework":
+            rework = True
+        elif arg == "--no-rework":
+            rework = False
+        elif arg == "--output-dir" and i + 1 < len(wf_args):
+            i += 1
+            output_dir = Path(wf_args[i])
+        elif arg.startswith("--output-dir="):
+            output_dir = Path(arg.split("=", 1)[1])
+        elif arg == "--module" and i + 1 < len(wf_args):
+            i += 1
+            module = wf_args[i]
+        elif arg.startswith("--module="):
+            module = arg.split("=", 1)[1]
+        elif arg == "--backlog" and i + 1 < len(wf_args):
+            i += 1
+            backlog_path = Path(wf_args[i])
+        elif arg.startswith("--backlog="):
+            backlog_path = Path(arg.split("=", 1)[1])
+        elif arg == "--max-frs" and i + 1 < len(wf_args):
+            i += 1
+            max_frs = int(wf_args[i])
+        elif arg == "--invoker" and i + 1 < len(wf_args):
+            i += 1
+            invoker = wf_args[i]
+        elif arg == "--no-memory-emit":
+            no_memory_emit = True
+        elif arg == "--actor" and i + 1 < len(wf_args):
+            i += 1
+            actor = wf_args[i]
+        elif arg == "--halt-on-repeat-rework" and i + 1 < len(wf_args):
+            i += 1
+            halt_on_repeat_rework = int(wf_args[i])
+        elif arg in ("-h", "--help"):
+            print("usage: cyberos workflow <persona-workflow> [options]")
+            print("")
+            print("options:")
+            print("  --rework              re-run done FRs from implementing to done")
+            print("  --output-dir DIR      directory for per-FR artefacts (default: cwd)")
+            print("  --backlog PATH        path to BACKLOG.md (default: auto-discover)")
+            print("  --module MODULE       filter FRs by module slug")
+            print("  --max-frs N           max FRs to drain (0 = unbounded)")
+            print("  --invoker INVOKER     auto|subprocess|llm")
+            print("  --no-memory-emit      skip memory audit emission")
+            print("  --actor NAME          actor name for memory rows")
+            print("  --halt-on-repeat-rework N  halt after N re-routes (default 2)")
+            return 0
+        else:
+            sys.stderr.write(f"error: unknown option '{arg}'\n")
+            return 2
+        i += 1
+
+    cuo_api.run(
+        persona_workflow,
+        output_dir=output_dir,
+        module=module,
+        backlog_path=backlog_path,
+        max_frs=max_frs,
+        invoker=invoker,
+        memory_emit=not no_memory_emit,
+        actor=actor,
+        halt_on_repeat_rework=halt_on_repeat_rework,
+        rework=rework,
+    )
+    return 0
 
 
 # --- argparse wiring ------------------------------------------------------
@@ -2614,6 +3022,24 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--force", action="store_true",
                     help="re-copy AGENTS.md even if version matches")
     sp.set_defaults(fn=_cmd_self_update)
+
+    # --- skill (delegates to cyberos-skill binary or built-in) ---
+    sp = sub.add_parser(
+        "skill",
+        help="skill operations (list, info, run, validate)",
+    )
+    sp.add_argument("skill_args", nargs=argparse.REMAINDER,
+                    help="skill sub-command + args (list, info, run, validate)")
+    sp.set_defaults(fn=_cmd_skill)
+
+    # --- workflow (delegates to cyberos-cuo) ---
+    sp = sub.add_parser(
+        "workflow",
+        help="run persona workflows (requires cyberos-cuo package)",
+    )
+    sp.add_argument("workflow_args", nargs=argparse.REMAINDER,
+                    help="persona-workflow path + flags, or sub-command (list-personas, list-workflows, dry-run)")
+    sp.set_defaults(fn=_cmd_workflow)
 
     return p
 

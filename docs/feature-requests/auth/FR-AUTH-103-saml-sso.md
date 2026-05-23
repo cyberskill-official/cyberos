@@ -3,14 +3,14 @@ id: FR-AUTH-103
 title: "AUTH SAML 2.0 SSO — SP-initiated flow + per-tenant IdP config + XML signature verification + assertion validation + JIT provisioning + attribute → role mapping + replay defense"
 module: AUTH
 priority: MUST
-status: implementing
+status: done
 verify: T
 phase: P3
 milestone: P3 · slice 1
 slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-16
-shipped: null
+shipped: 2026-05-23
 memory_chain_hash: null
 related_frs: [FR-AUTH-002, FR-AUTH-004, FR-AUTH-101, FR-AI-003, FR-MEMORY-101, FR-AUTH-104, FR-PORTAL-003]
 depends_on: [FR-AUTH-004]

@@ -4,9 +4,9 @@ Phase 1: dry-run mode (`dry_run_chain`). Prints what would be invoked without
 actually executing.
 
 Phase 2 (added 2026-05-18): actual chain execution via pluggable `Invoker`
-(`execute_chain`). Defaults to `MockInvoker` (deterministic placeholder
-output) when no `cyberos-skill` binary is available; uses `SubprocessInvoker`
-otherwise. Each step's output is persisted to the workflow output dir for
+(`execute_chain`). Uses `SubprocessInvoker` (cyberos-skill binary) or
+`LLMInvoker` (Anthropic API); raises if neither is available.
+Each step's output is persisted to the workflow output dir for
 hand-off to the next step.
 
 Phase 3 (added 2026-05-18): emit decision rows to the memory audit chain per
@@ -46,13 +46,14 @@ import logging
 import os
 import re
 import secrets
+import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 from cuo.core.catalog import PersonaEntry, WorkflowEntry, discover_workflows
-from cuo.core.invoker import Invoker, MockInvoker, StepResult, select_invoker
+from cuo.core.invoker import Invoker, StepResult, select_invoker
 from cuo.core.validator import ValidationResult, validate_chain
 
 
@@ -204,6 +205,72 @@ class ChainResult:
         )
 
 
+def _resolve_fr(hand_off: dict) -> None:
+    """Populate next_fr_id, next_fr, and fr_file_path in the hand_off.
+
+    Looks up the FR file in docs/feature-requests/{module}/FR-{ID}-*.md
+    relative to the cyberos root or CWD. Reads the file content into
+    `next_fr` so skills can access the FR spec directly.
+    """
+    fr_id = hand_off.get("fr_id")
+    if not fr_id:
+        return
+
+    # Ensure next_fr_id is always set
+    hand_off.setdefault("next_fr_id", fr_id)
+
+    # Already resolved
+    if "next_fr" in hand_off:
+        return
+
+    # Find the FR file — search in docs/feature-requests/{module}/
+    module = hand_off.get("module", "")
+    cyberos_root = hand_off.get("_cyberos_root", "")
+    search_roots = []
+    if cyberos_root:
+        search_roots.append(Path(cyberos_root))
+    search_roots.append(Path.cwd())
+
+    for root in search_roots:
+        # Try module-specific directory first
+        if module:
+            fr_dir = root / "docs" / "feature-requests" / module
+            if fr_dir.is_dir():
+                fr_path = _find_fr_file(fr_dir, fr_id)
+                if fr_path:
+                    _load_fr_file(hand_off, fr_path)
+                    return
+        # Try all module directories
+        base = root / "docs" / "feature-requests"
+        if base.is_dir():
+            for subdir in sorted(base.iterdir()):
+                if subdir.is_dir():
+                    fr_path = _find_fr_file(subdir, fr_id)
+                    if fr_path:
+                        _load_fr_file(hand_off, fr_path)
+                        return
+
+
+def _find_fr_file(directory: Path, fr_id: str) -> Path | None:
+    """Find the FR markdown file matching fr_id in a directory."""
+    # Match files like FR-AUTH-001-google-oauth-authjs-v5.md (not .audit.md)
+    pattern = re.compile(re.escape(fr_id) + r"[-\.].*\.md$")
+    for f in directory.iterdir():
+        if f.is_file() and pattern.match(f.name) and ".audit." not in f.name:
+            return f
+    return None
+
+
+def _load_fr_file(hand_off: dict, fr_path: Path) -> None:
+    """Read FR file content into hand_off."""
+    try:
+        content = fr_path.read_text(encoding="utf-8")
+        hand_off["next_fr"] = content
+        hand_off["fr_file_path"] = str(fr_path)
+    except (OSError, UnicodeDecodeError):
+        pass
+
+
 def execute_chain(
     persona: PersonaEntry,
     workflow_slug: str,
@@ -213,6 +280,8 @@ def execute_chain(
     inputs: dict | None = None,
     invoker: Invoker | None = None,
     stop_on_failure: bool = True,
+    fr_id: str | None = None,
+    backlog_path: Path | None = None,
 ) -> ChainResult:
     """Execute (not just plan) the skill chain for a workflow.
 
@@ -276,6 +345,9 @@ def execute_chain(
     # The map also tracks "step_<N>_ran" booleans so downstream `condition:`
     # clauses like `"step 3 ran"` can be evaluated (Phase 5).
     hand_off: dict = dict(inputs or {})
+    hand_off["_cyberos_root"] = str(skill_root.parent.parent)
+    # Resolve FR file content so skills can access it directly.
+    _resolve_fr(hand_off)
     step_results: list[StepResult] = []
     outcome = "COMPLETED"
 
@@ -292,8 +364,15 @@ def execute_chain(
 
     # Load any existing step outputs from the output directory to recognize
     # half-way/in-construction developed deliverables.
+    _prefix = f"{fr_id}_" if fr_id else ""
+    # Scan both prefixed (FR-ID_step*) and unprefixed (step*) patterns so
+    # that brief-mode output files (no prefix) and normal invoker output
+    # files (with prefix) are both detected during resume.
+    _scan_patterns = [f"{_prefix}step*_*.json"]
+    if _prefix:
+        _scan_patterns.append("step*_*.json")
     for step_file in output_dir.glob("step*_*.json"):
-        m = re.match(r"^step(\d+)_(.+)\.json$", step_file.name)
+        m = re.match(rf"^(?:{re.escape(_prefix)})?step(\d+)_(.+)\.json$", step_file.name)
         if m:
             s_num = int(m.group(1))
             try:
@@ -325,7 +404,8 @@ def execute_chain(
         fr_id = hand_off.get("fr_id")
         if fr_id:
             cyberos_root = skill_root.parent.parent
-            backlog_path = cyberos_root / "docs" / "feature-requests" / "BACKLOG.md"
+            if backlog_path is None:
+                backlog_path = cyberos_root / "docs" / "feature-requests" / "BACKLOG.md"
             if backlog_path.is_file():
                 try:
                     from cuo.core.backlog_reader import parse_backlog
@@ -357,10 +437,22 @@ def execute_chain(
                 notes=[f"Bypassed: FR status is {current_status!r} (starting from step {start_step})"],
             )
             step_results.append(skipped)
+            sys.stderr.write(f"  [SKILL] step {step_num:02d} {skill_name} − skipped (FR already {current_status})\n")
+            sys.stderr.flush()
             continue
 
-        # Check if the output file already exists to avoid re-executing completed work
-        output_path = output_dir / f"step{step_num:02d}_{skill_name}.json"
+        # Check if the output file already exists to avoid re-executing completed work.
+        # Smart reuse (rework mode): only reuse outputs from real LLM invocations
+        # (status OK). Skip MOCKED/synthetic outputs so they get regenerated.
+        # Check both prefixed (normal invoker) and unprefixed (brief mode) filenames.
+        _prefixed = output_dir / f"{_prefix}step{step_num:02d}_{skill_name}.json"
+        _unprefixed = output_dir / f"step{step_num:02d}_{skill_name}.json"
+        if _prefixed.is_file():
+            output_path = _prefixed
+        elif _prefix and _unprefixed.is_file():
+            output_path = _unprefixed
+        else:
+            output_path = _prefixed  # doesn't exist; skip reuse below
         step_result = None
         reused = False
         if output_path.is_file():
@@ -370,24 +462,34 @@ def execute_chain(
                 loaded_status = "OK"
                 if isinstance(data, dict) and data.get("synthetic"):
                     loaded_status = "MOCKED"
-                step_result = StepResult(
-                    step=step_num,
-                    skill=skill_name,
-                    status=loaded_status,
-                    output=data if isinstance(data, dict) else {"value": data},
-                    output_path=output_path,
-                    duration_ms=0,
-                    notes=["Reused existing deliverable from disk (resume/rework)"],
-                )
-                reused = True
-                _SPANS_LOGGER.info(
-                    "skill.reuse",
-                    extra={
-                        "event": "skill.reuse", "span_id": run_span_id,
-                        "step": step_num, "skill": skill_name,
-                        "output_path": str(output_path),
-                    },
-                )
+                # In rework mode, skip mock outputs — regenerate them instead.
+                if rework and loaded_status == "MOCKED":
+                    sys.stderr.write(
+                        f"  [SKILL] step {step_num:02d} {skill_name} "
+                        f"↻ regenerating (mock output on disk, rework mode)\n"
+                    )
+                    sys.stderr.flush()
+                else:
+                    step_result = StepResult(
+                        step=step_num,
+                        skill=skill_name,
+                        status=loaded_status,
+                        output=data if isinstance(data, dict) else {"value": data},
+                        output_path=output_path,
+                        duration_ms=0,
+                        notes=["Reused existing deliverable from disk (resume/rework)"],
+                    )
+                    reused = True
+                    sys.stderr.write(f"  [SKILL] step {step_num:02d} {skill_name} ⊛ reused from disk\n")
+                    sys.stderr.flush()
+                    _SPANS_LOGGER.info(
+                        "skill.reuse",
+                        extra={
+                            "event": "skill.reuse", "span_id": run_span_id,
+                            "step": step_num, "skill": skill_name,
+                            "output_path": str(output_path),
+                        },
+                    )
             except Exception:
                 pass
 
@@ -405,6 +507,8 @@ def execute_chain(
                     notes=[f"condition false: {condition!r}"],
                 )
                 step_results.append(skipped)
+                sys.stderr.write(f"  [SKILL] step {step_num:02d} {skill_name} − skipped (condition false)\n")
+                sys.stderr.flush()
                 hand_off[f"step_{step_num}_ran"] = False
                 _SPANS_LOGGER.info(
                     "skill.skip",
@@ -418,6 +522,10 @@ def execute_chain(
 
             # Resolve inputs for this step from the hand-off map.
             step_inputs = _resolve_step_inputs(step_spec.get("inputs_from"), hand_off)
+
+            # ── User-facing status ───────────────────────────────────────────
+            sys.stderr.write(f"  [SKILL] step {step_num:02d} {skill_name} processing...\n")
+            sys.stderr.flush()
 
             # ── Phase 5: span emission ───────────────────────────────────────
             step_span_id = secrets.token_hex(4)
@@ -437,6 +545,7 @@ def execute_chain(
                 skill_root=skill_root,
                 output_dir=output_dir,
                 step_num=step_num,
+                file_prefix=_prefix,
             )
 
             _SPANS_LOGGER.info(
@@ -450,6 +559,16 @@ def execute_chain(
             )
 
         step_results.append(step_result)
+
+        # ── User-facing status ───────────────────────────────────────────────
+        status_icon = {"OK": "✓", "MOCKED": "○", "FAILED": "✗", "SKIPPED": "−"}.get(step_result.status, "?")
+        reused_tag = " (reused)" if reused else ""
+        sys.stderr.write(
+            f"  [SKILL] step {step_num:02d} {skill_name} "
+            f"{status_icon} {step_result.status.lower()}{reused_tag}"
+            f" ({step_result.duration_ms}ms)\n"
+        )
+        sys.stderr.flush()
 
         # Mark this step as ran (regardless of OK/FAILED — the work was attempted).
         hand_off[f"step_{step_num}_ran"] = step_result.status in ("OK", "MOCKED")
@@ -536,6 +655,7 @@ def execute_chain(
             skill_root=skill_root,
             output_dir=output_dir,
             step_num=99,  # synthesized; not a real chain step
+            file_prefix=_prefix,
         )
         step_results.append(rework_result)
         if rework_result.status in ("OK", "MOCKED"):
@@ -581,6 +701,68 @@ def execute_chain(
         output_dir=output_dir,
         invoker_kind=invoker_kind,
     )
+
+
+def brief_chain(
+    persona: PersonaEntry,
+    workflow_slug: str,
+    skill_root: Path,
+    output_dir: Path,
+    *,
+    inputs: dict | None = None,
+    fr_id: str | None = None,
+    project_root: Path | None = None,
+    backlog_path: Path | None = None,
+) -> str:
+    """Generate an execution brief for the workflow chain.
+
+    Does NOT execute the chain. Returns the brief as a markdown string
+    for the host LLM to consume and follow.
+
+    Runs the same planning phase as `execute_chain()` — finding the workflow,
+    validating the chain, resolving FR — but instead of the step loop,
+    delegates to BriefGenerator to produce the brief.
+
+    Args:
+        persona: the PersonaEntry owning the workflow.
+        workflow_slug: workflow's slug (filename without `.md`).
+        skill_root: path to `skill/` for validation + SKILL.md reading.
+        output_dir: directory where step outputs would be written.
+        inputs: optional dict of initial workflow inputs.
+        fr_id: specific FR to generate the brief for.
+        project_root: the user's project root (for context detection).
+
+    Returns:
+        The execution brief as a markdown string.
+    """
+    from cuo.core.brief_generator import BriefGenerator
+
+    wf = _find_workflow(persona, workflow_slug)
+    if wf is None:
+        return f"# ERROR: workflow {workflow_slug!r} not found for persona {persona.slug!r}"
+
+    validation = validate_chain(wf, skill_root)
+    if not validation.valid:
+        return (
+            f"# ERROR: workflow {wf.workflow_id} has invalid chain\n"
+            f"Missing: {validation.missing_skills}\n"
+            f"Planned: {validation.planned_skills}\n"
+        )
+
+    if fr_id is None:
+        return "# ERROR: fr_id is required for brief generation"
+
+    generator = BriefGenerator(
+        persona=persona,
+        workflow=wf,
+        skill_root=skill_root,
+        output_dir=output_dir,
+        fr_id=fr_id,
+        inputs=inputs,
+        project_root=project_root,
+        backlog_path=backlog_path,
+    )
+    return generator.generate()
 
 
 # ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 # CyberOS CHAT — Mattermost fork at pinned MIT-Apache commit
 
-**Status:** FR-CHAT-001 shipped — slice 1 (fork pin + license-drift watcher + cherry-pick policy)
+**Status:** FR-CHAT-001 + FR-CHAT-002 shipped as service slices. FR-CHAT-001 pins the fork, license-drift watcher, and cherry-pick policy; FR-CHAT-002 adds the CyberOS AuthBridge plugin scaffold for AUTH JWT login and tenant propagation.
 **Upstream:** [`mattermost/mattermost-server`](https://github.com/mattermost/mattermost-server)
 **Pinned commit:** see [`PINNED_COMMIT`](PINNED_COMMIT)
 **CyberOS patch version:** see [`CYBEROS_PATCH_VERSION`](CYBEROS_PATCH_VERSION)
@@ -123,7 +123,10 @@ services/chat/
 ├── config/
 │   └── config.json                     default config baked into image
 ├── patches/
-│   └── *.patch                         CyberOS deltas applied at Docker build
+│   ├── 010-disable-builtin-auth.patch   route password auth to AuthBridge
+│   └── 011-load-authbridge-plugin.patch package AuthBridge at boot
+├── plugins/
+│   └── cyberos-authbridge/              FR-CHAT-002 plugin source + tests
 ├── scripts/
 │   ├── check-license-drift.sh          drift watcher entry point
 │   └── cherry-pick-upstream.sh         operator cherry-pick helper
@@ -141,7 +144,7 @@ services/chat/
 - DEC-421 — drift watcher cron; CI fails on drift.
 - DEC-422 — cherry-pick only via reviewed PR; no rebase.
 - FR-CHAT-001 — feature request authoring this fork policy.
-- FR-CHAT-002 (downstream) — `cyberos-chat-authbridge` plugin: delegates Mattermost auth to AUTH JWTs.
+- FR-CHAT-002 — `cyberos-chat-authbridge` plugin: delegates Mattermost auth to AUTH JWTs.
 - FR-CHAT-003 (downstream) — per-tenant Fargate deployment.
 - FR-CHAT-005 (downstream) — memory bridge via Postgres logical replication.
 - FR-CHAT-011 (downstream) — mobile push via the plugin system.

@@ -14,8 +14,8 @@ Two modes:
 
   1. **Mock-LLM mode** (default, no API key required) — simulates an LLM
      response by parroting the contract template's H2 headings as keys and
-     "[mock-llm output]" as the value. Better than MockInvoker because the
-     output keys reflect the actual artefact structure the skill produces.
+     "[mock-llm output]" as the value. Output keys reflect the actual artefact
+     structure the skill produces.
 
   2. **Anthropic API mode** (when `ANTHROPIC_API_KEY` env var is set OR an
      api_key is passed to __init__) — uses the Anthropic Messages API
@@ -27,9 +27,9 @@ Future modes (Phase 3.1+):
   - Local-host (LM Studio / Ollama)
   - Multi-model cascade (LiteLLM)
 
-This is Phase 3 of the v3.0.0 supervisor build. Phase 2's `MockInvoker` and
-`SubprocessInvoker` cover deterministic mocking + Rust-binary subprocess; this
-adds the LLM-driven path that prompt-only SDP skills need.
+This is Phase 3 of the v3.0.0 supervisor build. Phase 2's `SubprocessInvoker`
+covers Rust-binary subprocess invocation; this adds the LLM-driven path that
+prompt-only SDP skills need.
 """
 
 from __future__ import annotations
@@ -64,13 +64,19 @@ class LLMInvoker(Invoker):
     def __init__(
         self,
         *,
-        model: str = _DEFAULT_MODEL,
+        model: str | None = None,
         api_key: str | None = None,
+        base_url: str | None = None,
         max_tokens: int = 4000,
         mock_only: bool = False,
     ):
-        self.model = model
-        self.api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
+        self.api_key = (
+            api_key
+            or os.environ.get("ANTHROPIC_API_KEY")
+            or os.environ.get("ANTHROPIC_AUTH_TOKEN")
+        )
+        self.base_url = base_url or os.environ.get("ANTHROPIC_BASE_URL")
+        self.model = model or os.environ.get("ANTHROPIC_MODEL") or _DEFAULT_MODEL
         self.max_tokens = max_tokens
         self.mock_only = mock_only
         self._client = None  # lazy init
@@ -81,9 +87,7 @@ class LLMInvoker(Invoker):
         if self.mock_only:
             return "mock-llm"
         if not self.api_key:
-            return "mock-llm"
-        if self._try_import_anthropic() is None:
-            return "mock-llm"
+            return "unconfigured"
         return "real"
 
     def invoke(
@@ -93,6 +97,8 @@ class LLMInvoker(Invoker):
         skill_root: Path,
         output_dir: Path,
         step_num: int,
+        *,
+        file_prefix: str = "",
     ) -> StepResult:
         t0 = time.monotonic_ns()
         result = StepResult(step=step_num, skill=skill_name, status="FAILED")
@@ -128,12 +134,20 @@ class LLMInvoker(Invoker):
 
         # Dispatch to real-API or mock-LLM.
         output_dir.mkdir(parents=True, exist_ok=True)
-        output_path = output_dir / f"step{step_num:02d}_{skill_name}.json"
+        output_path = output_dir / f"{file_prefix}step{step_num:02d}_{skill_name}.json"
 
         if self.mode == "real":
             output, status, notes = self._call_anthropic(system_prompt, user_prompt)
-        else:
+        elif self.mode == "mock-llm":
             output, status, notes = self._mock_llm(skill_name, skill_root, inputs)
+        else:
+            # unconfigured — cannot invoke
+            result.notes.append(
+                "LLMInvoker: no ANTHROPIC_API_KEY set. "
+                "Export ANTHROPIC_API_KEY or install cyberos-skill binary."
+            )
+            result.duration_ms = (time.monotonic_ns() - t0) // 1_000_000
+            return result
 
         try:
             output_path.write_text(json.dumps(output, indent=2, sort_keys=True), encoding="utf-8")
@@ -154,7 +168,7 @@ class LLMInvoker(Invoker):
     def _build_user_prompt(self, skill_name: str, inputs: dict) -> str:
         """Build the user prompt — JSON-encoded inputs + task framing."""
         stringified = _stringify_inputs(inputs)
-        return (
+        base = (
             f"# Task\n\n"
             f"You are invoking the `{skill_name}` skill within a CUO workflow chain.\n"
             f"Your inputs (resolved from the prior chain step's outputs) are below.\n\n"
@@ -164,6 +178,44 @@ class LLMInvoker(Invoker):
             f"For author skills, the keys should be the H2 headings of the artefact template.\n"
             f"For audit skills, return: `{{rule_outcomes: {{...}}, score: 0-10, pass: bool, fixes: [...]}}`.\n"
         )
+
+        # Skill-specific prompts for file-materializing skills.
+        if "implementation-plan" in skill_name:
+            base += (
+                f"\n# Additional output\n\n"
+                f"Include a `code_changes` array with file-level changes to implement the plan.\n"
+                f"Each entry: `{{\"action\": \"create\"|\"modify\", \"path\": \"<relative-path>\", "
+                f"\"content\": \"<full-file-content>\"}}`.\n"
+                f"Only include files that need to be created or changed. Use `\"action\": \"modify\"` "
+                f"with `\"content\"` for full replacement or `\"diff\"` for unified-diff patches.\n"
+            )
+        elif "feature-request-audit" in skill_name:
+            base += (
+                f"\n# Additional output\n\n"
+                f"Include an `audit_body` string field containing the full markdown audit report "
+                f"(frontmatter will be added by the applier). Include `fr_id` and `verdict` fields.\n"
+            )
+        elif "code-review" in skill_name:
+            base += (
+                f"\n# Additional output\n\n"
+                f"Include a `code_review_body` string field with the full markdown review. "
+                f"Include `fr_id` and `verdict` fields.\n"
+            )
+        elif "architecture-decision-record" in skill_name:
+            base += (
+                f"\n# Additional output\n\n"
+                f"Include a `body` string field with the full ADR markdown (frontmatter will be added). "
+                f"Include `adr_id`, `title`, `status`, `context`, `decision`, "
+                f"`options` (array of `{{name, pros, cons}}`), and `consequences` fields.\n"
+            )
+        elif "observability-injection" in skill_name:
+            base += (
+                f"\n# Additional output\n\n"
+                f"Include `fr_id`, `language`, `subscriber`, `log_points` (array), "
+                f"`trace_spans` (array), `error_counters` (array), and `branch_coverage` (object).\n"
+            )
+
+        return base
 
     def _mock_llm(self, skill_name: str, skill_root: Path, inputs: dict) -> tuple[dict, str, list[str]]:
         """Simulate an LLM response by parroting the contract template structure."""
@@ -226,7 +278,10 @@ class LLMInvoker(Invoker):
             )
 
         if self._client is None:
-            self._client = anthropic_mod.Anthropic(api_key=self.api_key)
+            kwargs = {"api_key": self.api_key}
+            if self.base_url:
+                kwargs["base_url"] = self.base_url
+            self._client = anthropic_mod.Anthropic(**kwargs)
 
         try:
             msg = self._client.messages.create(

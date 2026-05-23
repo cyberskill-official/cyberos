@@ -3,14 +3,14 @@ id: FR-MEMORY-108
 title: "memory search — vector + graph + full-text in parallel + RRF fusion + BGE-rerank + RLS + ACL + chain_anchor verify + 250ms p95"
 module: memory
 priority: MUST
-status: implementing
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 2
 slice: 2
 owner: Stephen Cheng (CDO)
 created: 2026-05-15
-shipped: null
+shipped: 2026-05-23
 memory_chain_hash: null
 related_frs: [FR-MEMORY-101, FR-MEMORY-106, FR-AI-019, FR-AI-020, FR-AUTH-003, FR-AUTH-004]
 depends_on: [FR-MEMORY-101, FR-MEMORY-107]
@@ -562,4 +562,4 @@ All resolved. Deferred:
 
 ---
 
-*End of FR-MEMORY-108. Status: draft (10/10 target).*
+*End of FR-MEMORY-108. Status: done (implemented 2026-05-23).*

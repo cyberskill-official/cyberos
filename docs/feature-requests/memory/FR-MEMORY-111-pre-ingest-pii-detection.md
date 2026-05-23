@@ -3,14 +3,14 @@ id: FR-MEMORY-111
 title: "memory pre-ingest PII detection — Presidio EN + custom VN recognisers; ≥ 99.5% held-back recall on labelled fixture; auto-redact at capture boundary"
 module: memory
 priority: MUST
-status: implementing
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 2
 slice: 2
 owner: Stephen Cheng
 created: 2026-05-16
-shipped: null
+shipped: 2026-05-23
 memory_chain_hash: null
 related_frs: [FR-MEMORY-107, FR-MEMORY-109, FR-AI-011, FR-AI-012, FR-AI-013, FR-OBS-007]
 depends_on: [FR-MEMORY-107, FR-AI-012]

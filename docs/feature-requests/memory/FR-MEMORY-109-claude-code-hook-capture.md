@@ -3,14 +3,14 @@ id: FR-MEMORY-109
 title: "Claude Code hook capture — UserPromptSubmit + PostToolUse + Stop hooks emit memory memories with prompt + diff + trace correlation"
 module: memory
 priority: MUST
-status: implementing
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 2
 slice: 2
 owner: Stephen Cheng
 created: 2026-05-16
-shipped: null
+shipped: 2026-05-23
 memory_chain_hash: null
 related_frs: [FR-MEMORY-101, FR-MEMORY-107, FR-MEMORY-108, FR-MEMORY-110, FR-MEMORY-111, FR-AI-022, FR-AI-014, FR-SKILL-101]
 depends_on: [FR-MEMORY-107]

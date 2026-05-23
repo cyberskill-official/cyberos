@@ -51,16 +51,17 @@ for p in "${patches[@]}"; do
 done
 ok "All patches have git-format-patch / diff --git shape"
 
-# Verify no two patches share the same NNN prefix.
-declare -A prefixes
+# Verify no two patches share the same NNN prefix. Keep this bash-3
+# compatible for macOS runners.
+prefixes=$(mktemp)
 for p in "${patches[@]}"; do
-    base=$(basename "$p")
-    prefix="${base:0:3}"
-    if [[ -n "${prefixes[$prefix]:-}" ]]; then
-        fail "Two patches share NNN prefix $prefix: ${prefixes[$prefix]} and $base"
-    fi
-    prefixes[$prefix]="$base"
+    basename "$p" | cut -c1-3 >> "$prefixes"
 done
+dupe=$(sort "$prefixes" | uniq -d | head -1)
+rm -f "$prefixes"
+if [[ -n "$dupe" ]]; then
+    fail "Two patches share NNN prefix $dupe"
+fi
 ok "All patch NNN prefixes are unique"
 
 echo "✓ patch_apply_test: ${#patches[@]} patches verified"

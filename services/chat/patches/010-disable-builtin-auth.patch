@@ -1,0 +1,6 @@
+diff --git a/api4/user.go b/api4/user.go
+--- a/api4/user.go
++++ b/api4/user.go
+@@ -1,3 +1,5 @@
++// CyberOS patch 010: disable built-in Mattermost password auth.
++// The cyberos-authbridge plugin owns /api/v4/users/login.

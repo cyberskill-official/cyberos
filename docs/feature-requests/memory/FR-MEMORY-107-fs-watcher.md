@@ -3,14 +3,14 @@ id: FR-MEMORY-107
 title: "memory capture daemon — Rust + notify crate FS watcher with rate-limit + content-dedup + backpressure + W3C trace propagation"
 module: memory
 priority: MUST
-status: implementing
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 2
 slice: 2
 owner: Stephen Cheng
 created: 2026-05-16
-shipped: null
+shipped: 2026-05-23
 memory_chain_hash: null
 related_frs: [FR-MEMORY-101, FR-MEMORY-102, FR-MEMORY-104, FR-MEMORY-105, FR-MEMORY-108, FR-MEMORY-109, FR-MEMORY-110, FR-MEMORY-111]
 depends_on: [FR-MEMORY-102, FR-MEMORY-105, FR-MEMORY-106]

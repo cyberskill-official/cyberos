@@ -3,14 +3,14 @@ id: FR-PROJ-009
 title: "MEMORY_LINK schema — Issue ↔ memory memory linkage (cites | implements | supersedes) with bidirectional traversal and link-graph queries"
 module: PROJ
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 2
 slice: 2
 owner: Stephen Cheng
 created: 2026-05-16
-shipped: null
+shipped: 2026-05-23
 memory_chain_hash: null
 related_frs: [FR-PROJ-001, FR-PROJ-010, FR-MEMORY-101, FR-MEMORY-108]
 depends_on: [FR-PROJ-001]

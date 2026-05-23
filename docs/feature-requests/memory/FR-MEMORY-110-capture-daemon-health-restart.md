@@ -3,14 +3,14 @@ id: FR-MEMORY-110
 title: "memory capture daemon supervision — systemd + launchd units + /healthz + watchdog + crash-restart with exponential backoff + sweeper cron"
 module: memory
 priority: MUST
-status: implementing
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 2
 slice: 2
 owner: Stephen Cheng
 created: 2026-05-16
-shipped: null
+shipped: 2026-05-23
 memory_chain_hash: null
 related_frs: [FR-MEMORY-105, FR-MEMORY-107, FR-MEMORY-108, FR-MEMORY-109, FR-OBS-001, FR-OBS-007]
 depends_on: [FR-MEMORY-105, FR-MEMORY-107, FR-MEMORY-109]

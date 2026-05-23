@@ -1,21 +1,15 @@
 """Invoker — runs a single skill given inputs and returns its output.
 
-Phase 2 defines a pluggable `Invoker` interface with two implementations:
-
-- `MockInvoker` (always available) — returns deterministic placeholder output
-  shaped per the skill's contract template. Useful for end-to-end workflow
-  testing without skill execution. This is the default.
+Two invoker implementations:
 
 - `SubprocessInvoker` (requires `cyberos-skill` binary on PATH) — invokes the
   Rust CLI via subprocess, passing JSON inputs on stdin and capturing JSON
-  outputs from stdout. Works for skills that ship an executable (VN bundles
-  with `scripts/<name>.py`); SDP-driven prompt-only skills will likely return
-  an empty or instructional body since they need LLM-side execution.
+  outputs from stdout.
 
-Phase 3 will add an `LLMInvoker` that reads the skill's body (SKILL.md after
-frontmatter) as a system prompt, prompts an LLM with the inputs, and parses
-the response as the structured output. That's the path that makes prompt-only
-SDP skills actually compute.
+- `LLMInvoker` (requires `ANTHROPIC_API_KEY` or similar) — drives prompt-only
+  SDP skills via LLM API. See `llm_invoker.py`.
+
+If neither is available, `select_invoker()` raises an error. No silent fallbacks.
 
 Per cuo/docs/SPEC.md, each invocation returns a `StepResult` with status +
 output + audit fields. Workflow chain hand-off happens via the workflow
@@ -69,6 +63,8 @@ class Invoker(abc.ABC):
         skill_root: Path,
         output_dir: Path,
         step_num: int,
+        *,
+        file_prefix: str = "",
     ) -> StepResult:
         """Invoke `skill_name` with `inputs` and write its output to `output_dir`.
 
@@ -79,6 +75,7 @@ class Invoker(abc.ABC):
             skill_root: filesystem path to `skill/` (must contain MODULE.md).
             output_dir: directory where step output JSON is written.
             step_num: 1-based step number for filename suffix.
+            file_prefix: optional prefix for output filename (e.g. "FR-AUTH-001_").
 
         Returns:
             StepResult with status + output + output_path + duration.
@@ -86,94 +83,15 @@ class Invoker(abc.ABC):
         raise NotImplementedError
 
 
-class MockInvoker(Invoker):
-    """Deterministic placeholder invoker — does not actually run the skill.
-
-    Returns a synthetic output dict shaped from the skill's contract template
-    (if `skill/contracts/<base>/template.md` exists). Useful for:
-
-    - Phase 2 end-to-end workflow walking without real skill execution
-    - Test scaffolding (the smoke suite uses this)
-    - Operator dry-runs that need realistic-looking output for downstream
-      step planning
-
-    Output shape: {"skill": ..., "step": ..., "synthetic": True, "inputs": ...,
-                   "fields_from_template": [...], "ts_ns": ...}
-    """
-
-    def invoke(
-        self,
-        skill_name: str,
-        inputs: dict,
-        skill_root: Path,
-        output_dir: Path,
-        step_num: int,
-    ) -> StepResult:
-        t0 = time.monotonic_ns()
-        result = StepResult(step=step_num, skill=skill_name, status="MOCKED")
-
-        # Confirm the skill exists on disk before mocking.
-        skill_dir = skill_root / skill_name
-        if not (skill_dir / "SKILL.md").is_file():
-            result.status = "FAILED"
-            result.notes.append(f"skill not found at {skill_dir}/SKILL.md")
-            result.duration_ms = (time.monotonic_ns() - t0) // 1_000_000
-            return result
-
-        # If a contract template exists, extract its H2 headings as the output
-        # "field" set the MOCK will pretend to have produced.
-        base_name = _strip_role_suffix(skill_name)
-        template_path = skill_root / "contracts" / base_name / "template.md"
-        fields_from_template: list[str] = []
-        if template_path.is_file():
-            try:
-                txt = template_path.read_text(encoding="utf-8")
-                fields_from_template = [
-                    line[3:].strip()
-                    for line in txt.splitlines()
-                    if line.startswith("## ") and not line.startswith("## §")
-                ]
-            except (OSError, UnicodeDecodeError):
-                pass
-
-        # Build a deterministic synthetic output.
-        output_dir.mkdir(parents=True, exist_ok=True)
-        output_path = output_dir / f"step{step_num:02d}_{skill_name}.json"
-        output = {
-            "skill": skill_name,
-            "step": step_num,
-            "synthetic": True,
-            "inputs": _stringify_inputs(inputs),
-            "fields_from_template": fields_from_template,
-            "ts_ns": time.time_ns(),
-        }
-        try:
-            output_path.write_text(json.dumps(output, indent=2, sort_keys=True), encoding="utf-8")
-        except OSError as e:
-            result.status = "FAILED"
-            result.notes.append(f"could not write output: {e}")
-            result.duration_ms = (time.monotonic_ns() - t0) // 1_000_000
-            return result
-
-        result.output = output
-        result.output_path = output_path
-        result.duration_ms = (time.monotonic_ns() - t0) // 1_000_000
-        result.notes.append(
-            f"MOCKED (no skill execution); contract template fields: {len(fields_from_template)}"
-        )
-        return result
-
-
 class SubprocessInvoker(Invoker):
     """Subprocess invoker — calls `cyberos-skill run <name>` via the OS PATH.
 
     Passes a JSON inputs object on stdin and parses stdout as JSON output.
-    Requires the Rust binary to be built and on PATH. On systems without
-    the binary, callers should fall back to `MockInvoker`.
+    Requires the Rust binary to be built and on PATH.
 
     The Rust CLI uses `--executor auto` by default (WASM if compiled, otherwise
     script). SDP-driven prompt-only skills will likely produce minimal output;
-    they're meant to be driven by an LLM, which Phase 3 will add.
+    they're meant to be driven by an LLM (see `LLMInvoker`).
     """
 
     def __init__(self, binary: str | None = None, timeout_s: int = 600):
@@ -192,6 +110,8 @@ class SubprocessInvoker(Invoker):
         skill_root: Path,
         output_dir: Path,
         step_num: int,
+        *,
+        file_prefix: str = "",
     ) -> StepResult:
         t0 = time.monotonic_ns()
         result = StepResult(step=step_num, skill=skill_name, status="FAILED")
@@ -199,12 +119,12 @@ class SubprocessInvoker(Invoker):
         if not self.is_available(self.binary):
             result.notes.append(
                 f"binary {self.binary!r} not on PATH — "
-                "build skill/ via `cargo build --release` or use MockInvoker"
+                "build skill/ via `cargo install --path modules/skill/crates/cli`"
             )
             result.duration_ms = (time.monotonic_ns() - t0) // 1_000_000
             return result
 
-        stdin_json = json.dumps({"skill": skill_name, "step": step_num, "inputs": inputs})
+        stdin_json = json.dumps({"skill": skill_name, "step": step_num, "inputs": _stringify_inputs(inputs)})
 
         try:
             proc = subprocess.run(
@@ -240,7 +160,7 @@ class SubprocessInvoker(Invoker):
 
         # Persist output to disk for next-step hand-off.
         output_dir.mkdir(parents=True, exist_ok=True)
-        output_path = output_dir / f"step{step_num:02d}_{skill_name}.json"
+        output_path = output_dir / f"{file_prefix}step{step_num:02d}_{skill_name}.json"
         try:
             output_path.write_text(json.dumps(output, indent=2, sort_keys=True), encoding="utf-8")
         except OSError as e:
@@ -253,28 +173,89 @@ class SubprocessInvoker(Invoker):
         return result
 
 
+class CompositeInvoker(Invoker):
+    """Tries SubprocessInvoker first, falls back to LLMInvoker on failure.
+
+    This handles the common case where some skills have scripts/WASM (need
+    SubprocessInvoker) and others are prompt-only (need LLMInvoker).
+    """
+
+    def __init__(self, primary: Invoker, fallback: Invoker):
+        self.primary = primary
+        self.fallback = fallback
+
+    def invoke(
+        self,
+        skill_name: str,
+        inputs: dict,
+        skill_root: Path,
+        output_dir: Path,
+        step_num: int,
+        *,
+        file_prefix: str = "",
+    ) -> StepResult:
+        result = self.primary.invoke(skill_name, inputs, skill_root, output_dir, step_num, file_prefix=file_prefix)
+        if result.status == "FAILED":
+            # Primary failed — try fallback
+            fallback_result = self.fallback.invoke(
+                skill_name, inputs, skill_root, output_dir, step_num, file_prefix=file_prefix
+            )
+            if fallback_result.status != "FAILED":
+                return fallback_result
+            # Both failed — merge notes so the user sees why each path failed,
+            # not just the subprocess error.
+            result.notes.extend(
+                [f"[fallback {type(self.fallback).__name__}] {n}" for n in fallback_result.notes]
+            )
+        return result
+
+
 def select_invoker(prefer: str = "auto") -> Invoker:
     """Pick an invoker based on environment + preference.
 
     Args:
-        prefer: "auto" | "mock" | "subprocess".
-            auto → SubprocessInvoker if binary on PATH, else MockInvoker.
-            mock → always MockInvoker.
-            subprocess → always SubprocessInvoker (caller checks .invoke notes
-                         for binary-not-found errors).
+        prefer: "auto" | "subprocess" | "llm".
+            auto → SubprocessInvoker if binary on PATH, else LLMInvoker if
+                    API key available, else raises RuntimeError.
+            subprocess → always SubprocessInvoker.
+            llm → always LLMInvoker.
 
     Returns:
         Invoker instance ready to use.
+
+    Raises:
+        RuntimeError: if no suitable invoker is available.
     """
     prefer = prefer.lower()
-    if prefer == "mock":
-        return MockInvoker()
     if prefer == "subprocess":
         return SubprocessInvoker()
-    # auto
-    if SubprocessInvoker.is_available():
+    if prefer == "llm":
+        from cuo.core.llm_invoker import LLMInvoker
+        return LLMInvoker()
+    # auto — CompositeInvoker tries SubprocessInvoker first (handles script +
+    # WASM skills), falls back to LLMInvoker (handles prompt-only skills).
+    has_subprocess = SubprocessInvoker.is_available()
+    has_llm = False
+    try:
+        import anthropic  # noqa: F401
+        has_llm = True
+    except ImportError:
+        pass
+
+    if has_subprocess and has_llm:
+        from cuo.core.llm_invoker import LLMInvoker
+        return CompositeInvoker(SubprocessInvoker(), LLMInvoker())
+    if has_subprocess:
         return SubprocessInvoker()
-    return MockInvoker()
+    if has_llm:
+        from cuo.core.llm_invoker import LLMInvoker
+        return LLMInvoker()
+    raise RuntimeError(
+        "No skill invoker available. Either:\n"
+        "  1. Build and install cyberos-skill: cargo install --path modules/skill/crates/cli\n"
+        "  2. Install anthropic SDK: pip install anthropic\n"
+        "     Then set ANTHROPIC_API_KEY environment variable"
+    )
 
 
 def _strip_role_suffix(skill_name: str) -> str:
@@ -313,3 +294,21 @@ def _stringify_one(v):
     if isinstance(v, (str, int, float, bool, type(None))):
         return v
     return repr(v)
+
+
+def detect_host_environment() -> str | None:
+    """Detect if running inside a host LLM environment.
+
+    Returns the host type string ('claude-code', 'cursor', 'codex')
+    or None if running in a plain terminal.
+    """
+    if os.environ.get("CLAUDE_CODE_SESSION"):
+        return "claude-code"
+    if os.environ.get("CURSOR_SESSION"):
+        return "cursor"
+    if os.environ.get("CODEX_SESSION"):
+        return "codex"
+    # Also check for generic MCP/tool context indicators
+    if os.environ.get("MCP_SERVER_NAME"):
+        return "mcp-host"
+    return None

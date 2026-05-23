@@ -3,14 +3,14 @@ id: FR-AUTH-108
 title: "AUTH Lumi tenant-identity JWT shape — agent_persona + tenant_residency + lumi_org_tenant claims + persona-version stamping + cross-tenant sync identity"
 module: AUTH
 priority: MUST
-status: implementing
+status: done
 verify: T
 phase: P3
 milestone: P3 · slice 1
 slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-16
-shipped: null
+shipped: 2026-05-23
 memory_chain_hash: null
 related_frs: [FR-AUTH-004, FR-AUTH-101, FR-AI-014, FR-AI-016, FR-AI-003, FR-MEMORY-101, FR-CUO-101, FR-AUTH-109]
 depends_on: [FR-AUTH-101]

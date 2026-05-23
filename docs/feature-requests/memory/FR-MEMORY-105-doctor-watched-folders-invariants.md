@@ -4,14 +4,14 @@ id: FR-MEMORY-105
 title: "cyberos doctor — watched-folders integrity invariants (manifest ↔ filesystem ↔ HEAD reconciliation; 5 new invariants in memory.invariants.yaml)"
 module: memory
 priority: MUST
-status: implementing
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 2
 slice: 2
 owner: Stephen Cheng
 created: 2026-05-16
-shipped: null
+shipped: 2026-05-23
 memory_chain_hash: null
 related_frs: [FR-MEMORY-101, FR-MEMORY-102, FR-MEMORY-103, FR-MEMORY-104, FR-MEMORY-107, FR-MEMORY-110]
 depends_on: [FR-MEMORY-101, FR-MEMORY-103, FR-MEMORY-104]

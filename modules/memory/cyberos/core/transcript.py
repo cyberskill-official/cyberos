@@ -573,6 +573,24 @@ def list_sessions(store: Path, *, since: Optional[timedelta] = None) -> list[dic
     if not root.is_dir():
         return []
     cutoff = (datetime.now(timezone.utc) - since) if since else None
+    ended_ids: set[str] = set()
+    purged_ids: set[str] = set()
+    try:
+        from cyberos.core.dream._audit_iter import iter_audit_rows
+
+        for row in iter_audit_rows(store):
+            session_id = row.get("extra", {}).get("session_id")
+            if not session_id:
+                continue
+            if row.get("op") == "session.end":
+                ended_ids.add(str(session_id))
+            elif row.get("op") == "session.purged":
+                purged_ids.add(str(session_id))
+    except Exception:
+        # Listing should remain best-effort even when the main chain is not
+        # readable; the binlog suffix/tombstone checks below still provide a
+        # useful local view.
+        pass
     out: list[dict] = []
     for date_dir in sorted(root.iterdir()):
         if not date_dir.is_dir() or date_dir.name == ".active":
@@ -586,11 +604,15 @@ def list_sessions(store: Path, *, since: Optional[timedelta] = None) -> list[dic
         for binlog in sorted(date_dir.glob("*.binlog*")):
             session_id = binlog.stem.replace(".binlog", "")
             sealed = binlog.suffix == ".zst"
-            state = "ended" if sealed else "active"
+            state = "ended" if sealed or session_id in ended_ids else "active"
             # Detect tombstone
             try:
                 head = binlog.read_bytes()[:300]
-                if b'"tombstone": true' in head or b'"tombstone":true' in head:
+                if (
+                    session_id in purged_ids
+                    or b'"tombstone": true' in head
+                    or b'"tombstone":true' in head
+                ):
                     state = "purged"
             except Exception:
                 pass

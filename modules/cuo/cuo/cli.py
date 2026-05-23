@@ -38,7 +38,25 @@ def _find_cyberos_root(start: Path) -> tuple[Path, str] | None:
       - "modules"   — modules at <root>/modules/{cuo,skill}/  (current layout)
       - "flat"      — modules at <root>/{cuo,skill}/          (legacy layout)
     Or None if neither found within 8 ancestors.
+
+    Resolution order:
+      1. CYBEROS_ROOT env var (highest priority after CLI flags)
+      2. Walk up from `start`
     """
+    import os
+
+    # 1. Explicit env var
+    env_root = os.environ.get("CYBEROS_ROOT")
+    if env_root:
+        root = Path(env_root).resolve()
+        if (root / "modules" / "cuo" / "MODULE.md").is_file() and (
+            root / "modules" / "skill" / "MODULE.md"
+        ).is_file():
+            return (root, "modules")
+        if (root / "cuo" / "MODULE.md").is_file() and (root / "skill" / "MODULE.md").is_file():
+            return (root, "flat")
+
+    # 2. Walk up from start
     cur = start.resolve()
     for _ in range(8):
         # Prefer the new modules/ layout
@@ -64,7 +82,7 @@ def _resolve_roots(cuo_root: Path | None, skill_root: Path | None) -> tuple[Path
     if discovered is None:
         click.echo(
             "error: could not locate cuo/MODULE.md + skill/MODULE.md by walking from cwd.\n"
-            "       Pass --cuo-root and --skill-root explicitly.",
+            "       Set CYBEROS_ROOT env var or pass --cuo-root and --skill-root explicitly.",
             err=True,
         )
         sys.exit(2)
@@ -96,21 +114,8 @@ def main(ctx: click.Context, cuo_root: Path | None, skill_root: Path | None) -> 
 @click.pass_context
 def cmd_list_personas(ctx: click.Context, show_extinct: bool, show_planned: bool) -> None:
     """Enumerate persona folders under cuo/ — shipped, planned, extinct."""
-    personas = discover_personas(ctx.obj["cuo_root"])
-    n_total = len(personas)
-    n_shipped = sum(1 for p in personas if p.has_workflows)
-    n_extinct = sum(1 for p in personas if p.is_extinct)
-    click.echo(f"# {n_shipped} shipped + {n_total - n_shipped - n_extinct} planned + {n_extinct} extinct = {n_total} total")
-
-    for p in personas:
-        if p.is_extinct and not show_extinct:
-            continue
-        if not p.has_workflows and not p.is_extinct and not show_planned:
-            continue
-        flag = "EXTINCT" if p.is_extinct else ("shipped" if p.has_workflows else "planned")
-        n_wf = len(list(p.workflows_dir.glob("*.md"))) if p.workflows_dir.is_dir() else 0
-        title_suffix = f" — {p.disambiguated_title}" if p.disambiguated_title else ""
-        click.echo(f"  {p.slug:35s} [{flag:8s}] {n_wf} workflows{title_suffix}")
+    from cuo.api import list_personas
+    list_personas(show_extinct=show_extinct, show_planned=show_planned, cuo_root=ctx.obj["cuo_root"])
 
 
 @main.command("list-workflows")
@@ -118,24 +123,8 @@ def cmd_list_personas(ctx: click.Context, show_extinct: bool, show_planned: bool
 @click.pass_context
 def cmd_list_workflows(ctx: click.Context, persona_slug: str) -> None:
     """Enumerate workflows for a persona with validation status."""
-    personas = discover_personas(ctx.obj["cuo_root"])
-    persona = next((p for p in personas if p.slug == persona_slug), None)
-    if persona is None:
-        click.echo(f"error: persona {persona_slug!r} not found", err=True)
-        sys.exit(2)
-
-    workflows = discover_workflows(persona)
-    if not workflows:
-        click.echo(f"# {persona_slug}: no workflows shipped")
-        return
-
-    click.echo(f"# {persona_slug}: {len(workflows)} workflow(s)")
-    for wf in workflows:
-        v = validate_chain(wf, ctx.obj["skill_root"])
-        valid_flag = "valid" if v.valid else f"BLOCKED ({len(v.missing_skills)} missing + {len(v.planned_skills)} planned)"
-        click.echo(
-            f"  {wf.slug:50s} cadence={wf.cadence:10s} chain={v.chain_length:2d} [{valid_flag}]"
-        )
+    from cuo.api import list_workflows
+    list_workflows(persona_slug, cuo_root=ctx.obj["cuo_root"], skill_root=ctx.obj["skill_root"])
 
 
 @main.command("route")
@@ -171,34 +160,8 @@ def cmd_dry_run(ctx: click.Context, persona_workflow: str) -> None:
 
     PERSONA_WORKFLOW format: <persona-slug>/<workflow-slug>, e.g. chief-technology-officer/architect-new-system.
     """
-    if "/" not in persona_workflow:
-        click.echo("error: PERSONA_WORKFLOW must be <persona-slug>/<workflow-slug>", err=True)
-        sys.exit(2)
-
-    persona_slug, workflow_slug = persona_workflow.split("/", 1)
-    personas = discover_personas(ctx.obj["cuo_root"])
-    persona = next((p for p in personas if p.slug == persona_slug), None)
-    if persona is None:
-        click.echo(f"error: persona {persona_slug!r} not found", err=True)
-        sys.exit(2)
-
-    result = dry_run_chain(persona, workflow_slug, ctx.obj["skill_root"])
-    flag = "RUNNABLE" if result.runnable else "BLOCKED"
-    click.echo(f"# dry-run {result.workflow_id} → {flag}")
-    click.echo(f"  chain length: {result.validation.chain_length}")
-    click.echo(f"  found:        {len(result.validation.found_skills)}")
-    click.echo(f"  missing:      {len(result.validation.missing_skills)}")
-    click.echo(f"  planned:      {len(result.validation.planned_skills)}")
-    click.echo("")
-    click.echo("# step plan")
-    for line in result.step_plan:
-        click.echo(f"  {line}")
-    if result.notes:
-        click.echo("")
-        click.echo("# notes")
-        for note in result.notes:
-            click.echo(f"  * {note}")
-    sys.exit(0 if result.runnable else 1)
+    from cuo.api import dry_run
+    dry_run(persona_workflow, cuo_root=ctx.obj["cuo_root"], skill_root=ctx.obj["skill_root"])
 
 
 @main.command("execute")
@@ -211,9 +174,10 @@ def cmd_dry_run(ctx: click.Context, persona_workflow: str) -> None:
 )
 @click.option(
     "--invoker",
-    type=click.Choice(["auto", "mock", "subprocess", "llm"]),
+    type=click.Choice(["auto", "subprocess", "llm", "brief"]),
     default="auto",
-    help="Skill invoker: auto, mock (deterministic), subprocess (cyberos-skill binary), llm (Anthropic API / mock-llm).",
+    help="Skill invoker: auto, subprocess (cyberos-skill binary), llm (Anthropic API / mock-llm), "
+         "brief (generate execution brief for host LLM).",
 )
 @click.option(
     "--input",
@@ -263,6 +227,18 @@ def cmd_dry_run(ctx: click.Context, persona_workflow: str) -> None:
     default=False,
     help="Rework mode: allow bypass of current status checks and force restart.",
 )
+@click.option(
+    "--brief-output",
+    type=click.Path(dir_okay=False, path_type=Path),
+    default=None,
+    help="Write execution brief to FILE instead of stdout (brief mode only).",
+)
+@click.option(
+    "--backlog",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    default=None,
+    help="Path to BACKLOG.md for FR status lookup. Defaults to cyberos docs/feature-requests/BACKLOG.md.",
+)
 @click.pass_context
 def cmd_execute(
     ctx: click.Context,
@@ -278,12 +254,14 @@ def cmd_execute(
     fr_id: str | None,
     auto_claim: bool,
     rework: bool,
+    brief_output: Path | None,
+    backlog: Path | None,
 ) -> None:
     """Execute a workflow chain (Phase 2 — actual invocation, not dry-run).
 
     Walks the workflow's skill_chain step-by-step via the selected invoker.
     With --invoker=auto, uses the `cyberos-skill` binary if it's on PATH,
-    otherwise falls back to MockInvoker (deterministic placeholder output).
+    otherwise tries LLMInvoker. Raises an error if neither is available.
 
     PERSONA_WORKFLOW format: <persona-slug>/<workflow-slug>.
     """
@@ -314,6 +292,41 @@ def cmd_execute(
     # transitions can read it from the hand-off map.
     parsed_inputs["auto_claim"] = auto_claim
     parsed_inputs["rework"] = rework
+
+    # Auto-detect host LLM environment → brief mode (disabled: user wants real execution)
+    # if invoker == "auto":
+    #     from cuo.core.invoker import detect_host_environment
+    #     _host_env = detect_host_environment()
+    #     if _host_env:
+    #         invoker = "brief"
+
+    # Brief mode: generate an execution brief instead of executing.
+    if invoker == "brief":
+        from cuo.core.supervisor import brief_chain
+        cuo_path = ctx.obj["cuo_root"]
+        skill_path = ctx.obj["skill_root"]
+        personas = discover_personas(cuo_path)
+        persona = next((p for p in personas if p.slug == persona_slug), None)
+        if persona is None:
+            click.echo(f"error: persona {persona_slug!r} not found", err=True)
+            sys.exit(2)
+        brief = brief_chain(
+            persona=persona,
+            workflow_slug=workflow_slug,
+            skill_root=skill_path,
+            output_dir=output_dir,
+            inputs=parsed_inputs,
+            fr_id=fr_id,
+            project_root=Path.cwd(),
+            backlog_path=backlog,
+        )
+        if brief_output:
+            brief_output.parent.mkdir(parents=True, exist_ok=True)
+            brief_output.write_text(brief, encoding="utf-8")
+            click.echo(f"# brief written to {brief_output}", err=True)
+        else:
+            click.echo(brief)
+        sys.exit(0)
 
     if invoker == "llm":
         inv = LLMInvoker()
@@ -386,6 +399,7 @@ def cmd_execute(
             inputs=parsed_inputs,
             invoker=inv,
             stop_on_failure=not continue_on_failure,
+            backlog_path=backlog,
         )
 
     click.echo(f"# execute {result.workflow_id} → {result.outcome}")
@@ -433,6 +447,102 @@ def cmd_execute(
     sys.exit(0 if result.outcome in ("COMPLETED", "COMPLETED_BATCH") else 1)
 
 
+@main.command("resume")
+@click.argument("persona_workflow")
+@click.option(
+    "--output-dir",
+    type=click.Path(file_okay=False, path_type=Path),
+    required=True,
+    help="Directory containing existing step output JSON files from a previous run.",
+)
+@click.option(
+    "--fr-id",
+    required=True,
+    help="FR to resume (e.g. FR-MEMORY-117).",
+)
+@click.option(
+    "--invoker",
+    type=click.Choice(["auto", "subprocess", "llm"]),
+    default="auto",
+    help="Skill invoker for remaining steps.",
+)
+@click.option(
+    "--backlog",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    default=None,
+    help="Path to BACKLOG.md for FR status lookup.",
+)
+@click.pass_context
+def cmd_resume(
+    ctx: click.Context,
+    persona_workflow: str,
+    output_dir: Path,
+    fr_id: str,
+    invoker: str,
+    backlog: Path | None,
+) -> None:
+    """Resume a workflow chain from existing step output files.
+
+    Scans OUTPUT_DIR for previously completed step JSON files (stepNN_*.json),
+    rebuilds the hand-off map, and continues execution from the next uncompleted
+    step in the chain.
+    """
+    if "/" not in persona_workflow:
+        click.echo("error: PERSONA_WORKFLOW must be <persona-slug>/<workflow-slug>", err=True)
+        sys.exit(2)
+    persona_slug, workflow_slug = persona_workflow.split("/", 1)
+
+    cuo_path = ctx.obj["cuo_root"]
+    skill_path = ctx.obj["skill_root"]
+    personas = discover_personas(cuo_path)
+    persona = next((p for p in personas if p.slug == persona_slug), None)
+    if persona is None:
+        click.echo(f"error: persona {persona_slug!r} not found", err=True)
+        sys.exit(2)
+
+    # Show what we found
+    existing = sorted(output_dir.glob(f"step*_*.json"))
+    click.echo(f"# resume {persona_workflow}")
+    click.echo(f"  output dir: {output_dir}")
+    click.echo(f"  fr_id:      {fr_id}")
+    click.echo(f"  existing:   {len(existing)} step file(s)")
+    for f in existing:
+        click.echo(f"    {f.name}")
+
+    if invoker == "llm":
+        inv = LLMInvoker()
+    elif invoker == "auto":
+        from cuo.core.invoker import detect_host_environment
+        _host_env = detect_host_environment()
+        if _host_env:
+            click.echo(
+                f"# auto-detected host environment: {_host_env} — "
+                "use `--invoker=llm` or `--invoker=subprocess` to continue execution",
+                err=True,
+            )
+            click.echo("# cannot resume with brief invoker — host LLM must complete remaining steps manually", err=True)
+            sys.exit(1)
+        inv = select_invoker(invoker)
+    else:
+        inv = select_invoker(invoker)
+
+    result = execute_chain(
+        persona=persona,
+        workflow_slug=workflow_slug,
+        skill_root=skill_path,
+        output_dir=output_dir,
+        fr_id=fr_id,
+        inputs={"fr_id": fr_id, "auto_claim": True},
+        invoker=inv,
+        stop_on_failure=True,
+        backlog_path=backlog,
+    )
+    click.echo(f"\n# outcome: {result.outcome} ({len(result.step_results)} steps, {result.total_duration_ms} ms)")
+    for sr in result.step_results:
+        click.echo(f"  step {sr.step:2d} [{sr.status:7s}] {sr.skill}")
+    sys.exit(0 if result.outcome == "COMPLETED" else 1)
+
+
 @main.command("drain")
 @click.argument("persona_workflow")
 @click.option(
@@ -463,7 +573,7 @@ def cmd_execute(
 )
 @click.option(
     "--invoker",
-    type=click.Choice(["auto", "mock", "subprocess", "llm"]),
+    type=click.Choice(["auto", "subprocess", "llm", "brief"]),
     default="auto",
 )
 @click.option("--memory-emit/--no-memory-emit", default=True)
@@ -480,6 +590,12 @@ def cmd_execute(
     default=False,
     help="Rework mode: allow selecting done FRs and re-running them from implementing to done.",
 )
+@click.option(
+    "--brief-output",
+    type=click.Path(dir_okay=False, path_type=Path),
+    default=None,
+    help="Write execution brief(s) to FILE instead of stdout (brief mode only).",
+)
 @click.pass_context
 def cmd_drain(
     ctx: click.Context,
@@ -493,150 +609,25 @@ def cmd_drain(
     actor: str,
     halt_on_repeat_rework: int,
     rework: bool,
+    brief_output: Path | None,
 ) -> None:
-    """Drain a module's BACKLOG by running PERSONA_WORKFLOW on each eligible FR.
-
-    Designed for the "ship next eligible FR until empty or HITL needed" prompt
-    pattern. The loop:
-
-      1. Reads BACKLOG.md
-      2. Finds the next FR in ready_to_implement with all deps done
-        (optionally filtered to a single module via --module).
-      3. Runs PERSONA_WORKFLOW with --fr-id=<id> and auto-claim on.
-      4. On COMPLETED → next iteration.
-      5. On ROUTED_BACK → check routed_back_count; if >= --halt-on-repeat-rework,
-        write a halt-reason file and stop. Otherwise, continue.
-      6. On HITL_HALT (escalation match, circuit-breaker trip): write halt
-        reason, stop the loop.
-      7. On BACKLOG drained (no more eligible FRs): clean exit.
-
-    This is the high-level zero-touch entry point. Use plain `execute` for
-    single-FR runs.
-    """
-    from cuo.core.backlog_reader import (
-        parse_backlog, next_eligible, routed_back_count,
+    """Drain a module's BACKLOG by running PERSONA_WORKFLOW on each eligible FR."""
+    from cuo.api import run
+    run(
+        persona_workflow,
+        output_dir=output_dir,
+        module=module_filter,
+        backlog_path=backlog_path,
+        max_frs=max_frs,
+        invoker=invoker,
+        memory_emit=memory_emit,
+        actor=actor,
+        halt_on_repeat_rework=halt_on_repeat_rework,
+        rework=rework,
+        brief_output=brief_output,
+        cuo_root=ctx.obj["cuo_root"],
+        skill_root=ctx.obj["skill_root"],
     )
-
-    if "/" not in persona_workflow:
-        click.echo("error: PERSONA_WORKFLOW must be <persona-slug>/<workflow-slug>", err=True)
-        sys.exit(2)
-    persona_slug, workflow_slug = persona_workflow.split("/", 1)
-
-    personas = discover_personas(ctx.obj["cuo_root"])
-    persona = next((p for p in personas if p.slug == persona_slug), None)
-    if persona is None:
-        click.echo(f"error: persona {persona_slug!r} not found", err=True)
-        sys.exit(2)
-
-    # Resolve BACKLOG path
-    if backlog_path is None:
-        cyberos_root = ctx.obj["cuo_root"].parent.parent  # modules/cuo → cyberos
-        backlog_path = cyberos_root / "docs" / "feature-requests" / "BACKLOG.md"
-    if not backlog_path.is_file():
-        click.echo(f"error: BACKLOG.md not found at {backlog_path}", err=True)
-        sys.exit(2)
-
-    audit_dir = ctx.obj["cuo_root"].parent.parent / ".cyberos-memory" / "audit"
-
-    output_dir.mkdir(parents=True, exist_ok=True)
-    halt_reason_path = output_dir / "DRAIN_HALT.md"
-
-    if invoker == "llm":
-        inv = LLMInvoker()
-        inv_kind = f"LLMInvoker(mode={inv.mode})"
-    else:
-        inv = select_invoker(invoker)
-        inv_kind = type(inv).__name__
-
-    click.echo(f"# drain {persona_workflow}")
-    click.echo(f"  module filter:  {module_filter or '(none — all modules)'}")
-    click.echo(f"  invoker:        {inv_kind}")
-    click.echo(f"  memory emit:    {memory_emit}")
-    click.echo(f"  halt on repeat rework count: {halt_on_repeat_rework}")
-    click.echo("")
-
-    frs_run = 0
-    completed = 0
-    routed_back = 0
-    while True:
-        if max_frs and frs_run >= max_frs:
-            click.echo(f"# drain halted: --max-frs={max_frs} reached")
-            break
-        rows = parse_backlog(backlog_path)
-        eligible = next_eligible(rows, module=module_filter, rework=rework)
-        if eligible is None:
-            click.echo(f"# drain complete: no more eligible FRs"
-                       f"{' in module=' + module_filter if module_filter else ''}")
-            break
-
-        fr_output_dir = output_dir / eligible.fr_id
-        fr_output_dir.mkdir(parents=True, exist_ok=True)
-        click.echo(f"## [{frs_run + 1}] {eligible.fr_id} — {eligible.title[:60]}")
-
-        from cuo.core.supervisor import execute_chain
-        result = execute_chain(
-            persona=persona,
-            workflow_slug=workflow_slug,
-            skill_root=ctx.obj["skill_root"],
-            output_dir=fr_output_dir,
-            inputs={"fr_id": eligible.fr_id, "auto_claim": True,
-                    "module": module_filter or eligible.module,
-                    "rework": rework},
-            invoker=inv,
-            stop_on_failure=True,
-        )
-        frs_run += 1
-        click.echo(f"   outcome: {result.outcome}  ({len(result.step_results)} steps, "
-                   f"{result.total_duration_ms} ms)")
-
-        if memory_emit:
-            from cuo.core.memory_bridge import memory_is_available, emit_chain_result
-            if memory_is_available(ctx.obj["skill_root"]):
-                emit_chain_result(result, ctx.obj["skill_root"], actor=actor)
-
-        if result.outcome == "COMPLETED":
-            completed += 1
-        elif result.outcome == "ROUTED_BACK":
-            routed_back += 1
-            rbc = routed_back_count(eligible.fr_id, audit_dir)
-            click.echo(f"   routed_back_count for {eligible.fr_id}: {rbc}")
-            if halt_on_repeat_rework and rbc >= halt_on_repeat_rework:
-                click.echo(f"# drain HALTED: {eligible.fr_id} routed back "
-                           f"{rbc} times (>= --halt-on-repeat-rework={halt_on_repeat_rework})")
-                halt_reason_path.write_text(
-                    f"# DRAIN HALT\n\n"
-                    f"FR `{eligible.fr_id}` has been rework-routed {rbc} times — "
-                    f"likely a real spec issue. HITL inspection required.\n\n"
-                    f"## Last attempt\n\n"
-                    f"- outcome: {result.outcome}\n"
-                    f"- notes: {result.notes}\n"
-                    f"- output dir: {fr_output_dir}\n\n"
-                    f"## Next action\n\n"
-                    f"Review the FR spec + last debug trace. Either patch the spec, "
-                    f"flip status to on_hold/closed, or override routed_back_count.\n",
-                    encoding="utf-8",
-                )
-                sys.exit(2)
-        elif result.outcome in ("FAILED", "HITL_HALT"):
-            click.echo(f"# drain HALTED: {eligible.fr_id} hit {result.outcome}")
-            halt_reason_path.write_text(
-                f"# DRAIN HALT\n\n"
-                f"FR `{eligible.fr_id}` outcome: **{result.outcome}**.\n\n"
-                f"- notes: {result.notes}\n"
-                f"- step results:\n"
-                + "\n".join(f"  - step {s.step} [{s.status}] {s.skill}: "
-                            f"{', '.join(s.notes[:2])}"
-                            for s in result.step_results)
-                + f"\n\n## Next action\n\nReview the failure, decide whether to "
-                  f"patch + retry or mark on_hold.\n",
-                encoding="utf-8",
-            )
-            sys.exit(2)
-
-    click.echo("")
-    click.echo(f"# drain summary: {frs_run} FRs run, {completed} completed, "
-               f"{routed_back} routed back")
-    sys.exit(0 if frs_run > 0 else 0)
 
 
 @main.group("harness")

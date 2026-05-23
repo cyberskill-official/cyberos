@@ -3,14 +3,14 @@ id: FR-MEMORY-104
 title: "Tauri 2.x desktop app — macOS + Windows + Linux signed/notarised + auto-update + tray + quick capture + Full Disk Access"
 module: memory
 priority: SHOULD
-status: implementing
+status: done
 verify: D
 phase: P1
 milestone: P1 · slice 2
 slice: 2
 owner: Stephen Cheng (CDO)
 created: 2026-05-15
-shipped: null
+shipped: 2026-05-23
 memory_chain_hash: null
 related_frs: [FR-MEMORY-103, FR-MEMORY-105, FR-MEMORY-108]
 depends_on: [FR-MEMORY-103]
@@ -592,4 +592,4 @@ All resolved. Deferred:
 
 ---
 
-*End of FR-MEMORY-104. Status: draft (10/10 target).*
+*End of FR-MEMORY-104. Status: done (implemented 2026-05-23).*

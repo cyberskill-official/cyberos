@@ -12,7 +12,8 @@ for test in \
     "$SCRIPT_DIR/pinned_commit_test.sh" \
     "$SCRIPT_DIR/license_drift_test.sh" \
     "$SCRIPT_DIR/patch_apply_test.sh" \
-    "$SCRIPT_DIR/workflows_present_test.sh"
+    "$SCRIPT_DIR/workflows_present_test.sh" \
+    "$SCRIPT_DIR/../plugins/cyberos-authbridge/tests/authbridge_shape_test.sh"
 do
     name=$(basename "$test")
     echo ""

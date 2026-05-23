@@ -3,14 +3,14 @@ id: FR-MEMORY-103
 title: "memory-sync daemon — laptop A ↔ Cloud memory ↔ laptop B with sync_class gating + CRDT conflict + 10K offline buffer + device-id stamp"
 module: memory
 priority: MUST
-status: implementing
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 1
 slice: 1
 owner: Stephen Cheng (CDO)
 created: 2026-05-15
-shipped: null
+shipped: 2026-05-23
 memory_chain_hash: null
 related_frs: [FR-MEMORY-101, FR-MEMORY-104, FR-MEMORY-105, FR-MEMORY-106]
 depends_on: [FR-MEMORY-101]
@@ -563,4 +563,4 @@ All resolved. Deferred:
 
 ---
 
-*End of FR-MEMORY-103. Status: draft (10/10 target).*
+*End of FR-MEMORY-103. Status: done (implemented 2026-05-23).*

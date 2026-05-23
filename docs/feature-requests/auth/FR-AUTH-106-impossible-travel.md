@@ -3,7 +3,7 @@ id: FR-AUTH-106
 title: "Impossible-travel detection + adaptive MFA challenge"
 module: AUTH
 priority: SHOULD
-status: implementing
+status: done
 accepted_at: 2026-05-16
 accepted_by: Stephen Cheng
 verify: T
@@ -12,7 +12,7 @@ milestone: P2 · auth-hardening
 slice: 1
 owner: Stephen Cheng
 created: 2026-05-16
-shipped: null
+shipped: 2026-05-23
 memory_chain_hash: null
 related_frs: [FR-AUTH-002, FR-AUTH-005, FR-AUTH-102, FR-AUTH-101, FR-MEMORY-111]
 depends_on: [FR-AUTH-002, FR-AUTH-102]

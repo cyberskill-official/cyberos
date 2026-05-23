@@ -278,8 +278,8 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-CHAT-001 | Mattermost v9.x fork at pinned MIT/Apache commit + license-drift watcher | MUST | ready_to_implement | — | 8h |
-| FR-CHAT-002 | `cyberos-chat-authbridge` plugin — Mattermost auth delegates to AUTH JWT | MUST | ready_to_implement | FR-CHAT-001, FR-AUTH-004 | 10h |
+| FR-CHAT-001 | Mattermost v9.x fork at pinned MIT/Apache commit + license-drift watcher | MUST | done | — | 8h |
+| FR-CHAT-002 | `cyberos-chat-authbridge` plugin — Mattermost auth delegates to AUTH JWT | MUST | done | FR-CHAT-001, FR-AUTH-004 | 10h |
 | FR-CHAT-003 | Per-tenant deployment via Fargate + RDS Multi-AZ + Redis | MUST | ready_to_implement | FR-CHAT-001 | 6h |
 
 #### Slice 2 — VN search + memory bridge
@@ -338,22 +338,22 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-MEMORY-101 | `cyberos memory init <path>` — any-folder bootstrap (manifest, audit/, memories/, HEAD) | MUST | ready_to_implement | — | 6h |
-| FR-MEMORY-102 | `cyberos memory watch / unwatch / status` — multi-folder watcher registry | MUST | ready_to_implement | FR-MEMORY-101 | 6h |
-| FR-MEMORY-103 | Privacy-floor flag in manifest (`sync_class_default: private`) + per-memory override | MUST | ready_to_implement | FR-MEMORY-101 | 4h |
-| FR-MEMORY-104 | Portable folder-copy round-trip (export to zip + import on another machine) | MUST | ready_to_implement | FR-MEMORY-101 | 6h |
-| FR-MEMORY-105 | Doctor invariants extended (+2 new for watched-folders integrity) | MUST | ready_to_implement | FR-MEMORY-101 | 4h |
-| FR-MEMORY-106 | `watched_folders` schema migration + idempotent re-watch on restart | MUST | ready_to_implement | FR-MEMORY-102 | 4h |
+| FR-MEMORY-101 | Layer-2 ingest pipeline (binlog → pgvector + Apache AGE) with chain-anchor verification | MUST | done | — | 6h |
+| FR-MEMORY-102 | Layer-2 rebuild-from-Layer-1 CI gate with deterministic rebuild + spot-check | MUST | done | FR-MEMORY-101 | 6h |
+| FR-MEMORY-103 | memory-sync daemon — laptop A ↔ Cloud memory ↔ laptop B with sync_class gating | MUST | done | FR-MEMORY-101 | 4h |
+| FR-MEMORY-104 | Tauri 2.x desktop app — signed/notarised client + tray + quick capture | MUST | done | FR-MEMORY-103 | 6h |
+| FR-MEMORY-105 | cyberos doctor watched-folders integrity invariants | MUST | done | FR-MEMORY-101 | 4h |
+| FR-MEMORY-106 | memory sync_class enforcement — private vs shareable + ACL filtering | MUST | done | FR-MEMORY-101, FR-MEMORY-103 | 4h |
 
 #### Stage 2 — Capture daemon (FS watcher + Cowork hook + Claude Code hook)
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-MEMORY-107 | FS watcher via Rust + `notify` crate; rate-limited + content-deduped | MUST | ready_to_implement | FR-MEMORY-102 | 12h |
-| FR-MEMORY-108 | Cowork session-hook capture (Claude Code Cowork mode emits memories) | MUST | ready_to_implement | FR-MEMORY-107 | 6h |
-| FR-MEMORY-109 | Claude Code hook capture (CLI / IDE plugin emits per-prompt memories) | MUST | ready_to_implement | FR-MEMORY-107 | 5h |
-| FR-MEMORY-110 | Capture daemon health check + restart on crash (systemd / launchd unit) | MUST | ready_to_implement | FR-MEMORY-107 | 4h |
-| FR-MEMORY-111 | Pre-ingest PII detection (Presidio EN + VN); held-back rate ≥ 99.5% | MUST | ready_to_implement | FR-AI-012 | 6h |
+| FR-MEMORY-107 | memory capture daemon FS watcher with rate-limit + content-dedup + backpressure | MUST | done | FR-MEMORY-102 | 12h |
+| FR-MEMORY-108 | memory search API — vector + graph + full-text recall with RRF fusion | MUST | done | FR-MEMORY-107 | 6h |
+| FR-MEMORY-109 | Claude Code hook capture emits prompt/tool/stop memories with trace correlation | MUST | done | FR-MEMORY-107 | 5h |
+| FR-MEMORY-110 | Capture daemon supervision — health check + restart on crash | MUST | done | FR-MEMORY-107 | 4h |
+| FR-MEMORY-111 | Pre-ingest PII detection (Presidio EN + VN); held-back rate ≥ 99.5% | MUST | done | FR-AI-012 | 6h |
 
 ---
 
@@ -416,8 +416,8 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-PROJ-001 | Issue / Cycle / Project / Engagement Postgres schema with `engagement_id` FK | MUST | ready_to_implement | FR-AUTH-003 | 8h |
-| FR-PROJ-002 | WebSocket sync engine (axum + NATS JetStream) with optimistic client apply + server rebase | MUST | ready_to_implement | FR-PROJ-001 | 16h |
+| FR-PROJ-001 | Issue / Cycle / Project / Engagement Postgres schema with `engagement_id` FK | MUST | done | FR-AUTH-003 | 8h |
+| FR-PROJ-002 | memory-anchored `proj.decision` row per Issue state change | MUST | done | FR-PROJ-001 | 16h |
 | FR-PROJ-003 | Yjs CRDT for description + comment-body fields; LWW for scalars | MUST | ready_to_implement | FR-PROJ-002 | 10h |
 | FR-PROJ-004 | Issue lifecycle state machine (backlog → todo → in-progress → in-review → done / cancelled) | MUST | ready_to_implement | FR-PROJ-001 | 5h |
 
@@ -425,7 +425,7 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-PROJ-005 | Rate-card schema per Engagement (role × currency × hourly rate × billable_default) | MUST | ready_to_implement | FR-PROJ-001 | 4h |
+| FR-PROJ-005 | Rate-card schema per Engagement (role × currency × hourly rate × billable_default) | MUST | done | FR-PROJ-001 | 4h |
 | FR-PROJ-006 | Billable cascade: Member override → task class → role default → fallback | MUST | ready_to_implement | FR-PROJ-005 | 6h |
 | FR-PROJ-007 | Three billing modes (T&M / fixed-fee / retainer) with mode-aware rollup | MUST | ready_to_implement | FR-PROJ-005 | 6h |
 
@@ -434,7 +434,7 @@ This document is the **single source of truth** for what CyberOS is going to bui
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
 | FR-PROJ-008 | memory audit row per Issue mutation (chained to PROJ `history_event` table) | MUST | ready_to_implement | FR-MEMORY-101 | 5h |
-| FR-PROJ-009 | `MEMORY_LINK` schema: Issue cites memory via (cites / implements / supersedes) | MUST | ready_to_implement | FR-PROJ-001 | 5h |
+| FR-PROJ-009 | `MEMORY_LINK` schema: Issue cites memory via (cites / implements / supersedes) | MUST | done | FR-PROJ-001 | 5h |
 | FR-PROJ-010 | Citation-drift detector (nightly sweep flags stale citations) | SHOULD | ready_to_implement | FR-PROJ-009 | 4h |
 
 #### Slice 4 — AI features (blocker detection + cycle review + calibration)
@@ -556,16 +556,16 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-EMAIL-001 | Stalwart Rust mail server deployed (JMAP/IMAP/SMTP/ManageSieve all transports) | MUST | ready_to_implement | — | 12h |
+| FR-EMAIL-001 | Stalwart Rust mail server deployed (JMAP/IMAP/SMTP/ManageSieve all transports) | MUST | done | — | 12h |
 | FR-EMAIL-002 | `cyberos-email-authbridge` plugin — Stalwart JMAP auth delegates to AUTH JWT | MUST | ready_to_implement | FR-EMAIL-001, FR-AUTH-004 | 6h |
 | FR-EMAIL-003 | Missive-style shared-inbox UX (assignment, internal comments, snooze, tag) | MUST | ready_to_implement | FR-EMAIL-001 | 16h |
-| FR-EMAIL-004 | DKIM signing + ARC chain forward + BIMI brand indicator | MUST | ready_to_implement | FR-EMAIL-001 | 6h |
+| FR-EMAIL-004 | DKIM signing + ARC chain forward + BIMI brand indicator | MUST | done | FR-EMAIL-001 | 6h |
 
 #### Slice 2 — CaMeL quarantine + capture
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-EMAIL-005 | CaMeL dual-LLM: quarantine LLM (no tools, no memory) extracts → privileged CUO consumes only sanitised | MUST | ready_to_implement | FR-CUO-101 | 12h |
+| FR-EMAIL-005 | CaMeL dual-LLM: quarantine LLM (no tools, no memory) extracts → privileged CUO consumes only sanitised | MUST | done | FR-CUO-101 | 12h |
 | FR-EMAIL-006 | Tracked-domain auto-log to CRM activity feed (per-tenant tracked-domain config) | MUST | ready_to_implement | FR-CRM-002, FR-EMAIL-001 | 5h |
 | FR-EMAIL-007 | "Convert to issue" — thread → PROJ Issue with body as description, replies as comments | MUST | ready_to_implement | FR-PROJ-001, FR-EMAIL-001 | 6h |
 
@@ -574,9 +574,9 @@ This document is the **single source of truth** for what CyberOS is going to bui
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
 | FR-EMAIL-008 | "Genie:" subject prefix → CUO draft grounded in thread + CRM + memory + KB (sync_class permitting) | MUST | ready_to_implement | FR-CUO-101, FR-KB-007 | 8h |
-| FR-EMAIL-009 | Outbound 1:1 send (DKIM-signed, AM confirms) | MUST | ready_to_implement | FR-EMAIL-004 | 4h |
+| FR-EMAIL-009 | Outbound 1:1 send (DKIM-signed, AM confirms) | MUST | done | FR-EMAIL-004 | 4h |
 | FR-EMAIL-010 | Bulk send (≥ 10 recipients) requires AM + CFO/marketing approval token | MUST | ready_to_implement | FR-EMAIL-009 | 5h |
-| FR-EMAIL-011 | DSAR export — every message a subject authored + chained memory audit hashes | MUST | ready_to_implement | FR-EMAIL-001 | 5h |
+| FR-EMAIL-011 | DSAR export — every message a subject authored + chained memory audit hashes | MUST | done | FR-EMAIL-001 | 5h |
 
 ---
 
@@ -715,13 +715,13 @@ This document is the **single source of truth** for what CyberOS is going to bui
 |---|---|:-:|:-:|---|---:|
 | FR-AUTH-101 | 22-role RBAC catalogue (full bands: root-admin → tenant-member + 17 specialist roles) | MUST | done | FR-AUTH-005 | 12h |
 | FR-AUTH-102 | TOTP + WebAuthn MFA flows | MUST | done | FR-AUTH-002 | 10h |
-| FR-AUTH-103 | SAML 2.0 SSO (per-tenant IdP config) | MUST | implementing | FR-AUTH-004 | 12h |
-| FR-AUTH-104 | OIDC SSO with discovery + JWKS rotation | MUST | ready_to_implement | FR-AUTH-004 | 10h |
-| FR-AUTH-105 | Passkey enrolment + login | MUST | ready_to_implement | FR-AUTH-102 | 8h |
-| FR-AUTH-106 | Impossible-travel detection + adaptive challenge | SHOULD | implementing | FR-AUTH-002 | 8h |
-| FR-AUTH-107 | HIBP password breach check on signup + rotation | SHOULD | ready_to_implement | FR-AUTH-002 | 4h |
-| FR-AUTH-108 | Lumi tenant-identity JWT shape (`agent_persona` + `tenant_residency` claims) | MUST | ready_to_implement | FR-AUTH-101 | 6h |
-| FR-AUTH-109 | Stub → full migration path (existing tokens valid for grace window) | MUST | ready_to_implement | FR-AUTH-101 | 5h |
+| FR-AUTH-103 | SAML 2.0 SSO (per-tenant IdP config) | MUST | done | FR-AUTH-004 | 12h |
+| FR-AUTH-104 | OIDC SSO with discovery + JWKS rotation | MUST | done | FR-AUTH-004 | 10h |
+| FR-AUTH-105 | Passkey enrolment + login | MUST | done | FR-AUTH-102 | 8h |
+| FR-AUTH-106 | Impossible-travel detection + adaptive challenge | SHOULD | done | FR-AUTH-002 | 8h |
+| FR-AUTH-107 | HIBP password breach check on signup + rotation | SHOULD | done | FR-AUTH-002 | 4h |
+| FR-AUTH-108 | Lumi tenant-identity JWT shape (`agent_persona` + `tenant_residency` claims) | MUST | done | FR-AUTH-101 | 6h |
+| FR-AUTH-109 | Stub → full migration path (existing tokens valid for grace window) | MUST | done | FR-AUTH-101 | 5h |
 
 ### P3.2 — TEN (full self-serve)
 

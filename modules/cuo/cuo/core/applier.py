@@ -58,6 +58,11 @@ def apply_step_side_effect(
     dispatcher = {
         "backlog-state-update-author": _apply_backlog_state_update,
         "coverage-gate-author": _apply_coverage_gate,
+        "feature-request-audit": _apply_feature_request_audit,
+        "architecture-decision-record-author": _apply_architecture_decision_record,
+        "implementation-plan-author": _apply_implementation_plan,
+        "code-review-author": _apply_code_review,
+        "observability-injection-author": _apply_observability_injection,
     }
     applier = dispatcher.get(skill_name)
     if applier is None:
@@ -126,7 +131,8 @@ def _apply_backlog_state_update(step_result, hand_off: dict, run_span_id: str) -
         return
 
     # Locate BACKLOG.md — walk up from the output dir's parent until we find it.
-    backlog_path = _find_backlog_md(step_result)
+    repo_root = Path(hand_off["_cyberos_root"]) if hand_off.get("_cyberos_root") else None
+    backlog_path = _find_backlog_md(step_result, repo_root=repo_root)
     if backlog_path is None:
         _SPANS.warning(
             "applier.no_backlog",
@@ -141,7 +147,9 @@ def _apply_backlog_state_update(step_result, hand_off: dict, run_span_id: str) -
     text = backlog_path.read_text(encoding="utf-8")
     lines = text.splitlines(keepends=True)
 
-    fr_row_pattern = re.compile(r"^\|\s*" + re.escape(fr_id) + r"\s*\|")
+    # Match FR-ID with optional bold markdown (**FR-ID**) or plain FR-ID
+    fr_escaped = re.escape(fr_id)
+    fr_row_pattern = re.compile(r"^\|\s*\**\s*" + fr_escaped + r"\s*\**\s*\|")
     target_idx = None
     for idx, line in enumerate(lines):
         if fr_row_pattern.match(line):
@@ -236,8 +244,12 @@ def _extract_status_from_line(line: str) -> str:
     return parts[4].strip()
 
 
-def _find_backlog_md(step_result) -> Path | None:
-    """Walk up from the step's output_path looking for docs/feature-requests/BACKLOG.md."""
+def _find_backlog_md(step_result, repo_root: Path | None = None) -> Path | None:
+    """Walk up from the step's output_path looking for docs/feature-requests/BACKLOG.md.
+
+    Falls back to ``repo_root`` if the walk fails (e.g. when output_dir is
+    outside the cyberos repo tree).
+    """
     start = getattr(step_result, "output_path", None)
     if start is None:
         start = Path.cwd()
@@ -256,6 +268,18 @@ def _find_backlog_md(step_result) -> Path | None:
         if cur.parent == cur:
             break
         cur = cur.parent
+
+    # Fallback: search from the known cyberos repo root
+    if repo_root is not None:
+        candidate = repo_root / "docs" / "feature-requests" / "BACKLOG.md"
+        if candidate.is_file():
+            return candidate
+
+    # Fallback: search from CWD (project where workflow was invoked)
+    candidate = Path.cwd() / "docs" / "feature-requests" / "BACKLOG.md"
+    if candidate.is_file():
+        return candidate
+
     return None
 
 
@@ -271,6 +295,17 @@ def _extract_output(step_result) -> dict:
         except (OSError, json.JSONDecodeError, ValueError):
             pass
     return {}
+
+
+def _get_output_dir(step_result) -> Path | None:
+    """Extract the output directory from a step result's output_path."""
+    p = getattr(step_result, "output_path", None)
+    if p is None:
+        return None
+    try:
+        return Path(p).resolve().parent
+    except (TypeError, ValueError):
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -394,3 +429,1106 @@ def _find_test_root(start: Any) -> Path | None:
             break
         cur = cur.parent
     return None
+
+
+# ---------------------------------------------------------------------------
+# feature-request-audit applier — writes sibling .audit.md
+# ---------------------------------------------------------------------------
+
+
+def _apply_feature_request_audit(step_result, hand_off: dict, run_span_id: str) -> None:
+    """Write a sibling .audit.md for the audited FR from the LLM's JSON output.
+
+    The LLM produces structured audit output. We extract findings and write a
+    markdown audit report next to the FR spec file.  Handles three shapes:
+
+    1. ``audit_body`` key present → write it verbatim as the .audit.md body.
+    2. ``findings`` or ``issues`` list → render ISSUE blocks + SUMMARY.
+    3. Fallback → wrap the entire JSON output in a minimal audit shell.
+    """
+    output = _extract_output(step_result)
+    fr_id = output.get("fr_id") or hand_off.get("fr_id")
+    if not fr_id:
+        _SPANS.debug(
+            "applier.skip",
+            extra={"event": "applier.skip", "span_id": run_span_id,
+                   "skill": "feature-request-audit", "reason": "missing fr_id"},
+        )
+        return
+
+    # Locate the FR spec file.
+    repo_root = Path(hand_off["_cyberos_root"]) if hand_off.get("_cyberos_root") else None
+    output_dir = _get_output_dir(step_result)
+    fr_path = _find_fr_file(fr_id, repo_root, output_dir)
+    if fr_path is None:
+        _SPANS.warning(
+            "applier.fr_not_found",
+            extra={"event": "applier.fr_not_found", "span_id": run_span_id,
+                   "fr_id": fr_id},
+        )
+        return
+
+    audit_path = fr_path.with_suffix(".audit.md")
+
+    # Determine the audit body.
+    if isinstance(output.get("audit_body"), str):
+        body = output["audit_body"]
+    elif isinstance(output.get("raw_response"), str):
+        body = output["raw_response"]
+    else:
+        body = _render_audit_markdown(output, fr_id, fr_path)
+
+    # Compute a simple hash of the FR for the frontmatter.
+    try:
+        import hashlib
+        fr_hash = hashlib.sha256(fr_path.read_text(encoding="utf-8").encode("utf-8")).hexdigest()
+    except OSError:
+        fr_hash = "unknown"
+
+    verdict = output.get("verdict") or output.get("overall_status", "pass")
+    if isinstance(output.get("overall_status_counts"), dict):
+        counts = output["overall_status_counts"]
+        if counts.get("fail", 0) > 0:
+            verdict = "fail"
+        elif counts.get("needs_human", 0) > 0:
+            verdict = "needs_human"
+        else:
+            verdict = "pass"
+
+    score = output.get("score")
+    issues_open = output.get("issues_open", 0)
+    if isinstance(output.get("per_artefact"), list):
+        for pa in output["per_artefact"]:
+            if pa.get("artefact_path", "").endswith(fr_path.name):
+                issues_open = pa.get("issues_open", issues_open)
+                break
+
+    frontmatter = (
+        f"---\n"
+        f"fr_id: {fr_id}\n"
+        f"audited: {_today_iso()}\n"
+        f"auditor: cuo-workflow (feature-request-audit)\n"
+        f"verdict: {verdict}\n"
+        f"audited_file_sha256: {fr_hash}\n"
+        f"issues_open: {issues_open}\n"
+        f"template: feature_request@1\n"
+        f"---\n"
+    )
+
+    content = frontmatter + "\n" + body.strip() + "\n"
+
+    try:
+        tmp = audit_path.with_suffix(".audit.md.tmp")
+        tmp.write_text(content, encoding="utf-8")
+        os.replace(tmp, audit_path)
+        _SPANS.info(
+            "applier.audit_written",
+            extra={"event": "applier.audit_written", "span_id": run_span_id,
+                   "fr_id": fr_id, "audit_path": str(audit_path),
+                   "verdict": verdict},
+        )
+    except OSError as e:
+        _SPANS.warning(
+            "applier.audit_write_error",
+            extra={"event": "applier.audit_write_error", "span_id": run_span_id,
+                   "fr_id": fr_id, "error": str(e)},
+        )
+
+
+def _render_audit_markdown(output: dict, fr_id: str, fr_path: Path) -> str:
+    """Render a structured LLM output into audit markdown.
+
+    Handles the common shapes the LLM produces for audit skills:
+    - ``findings`` or ``issues`` list → ISSUE blocks
+    - ``rule_outcomes`` dict → per-rule summary
+    - ``score``, ``pass``, ``fixes`` → summary block
+    """
+    parts: list[str] = []
+
+    # Verdict summary
+    score = output.get("score")
+    pass_val = output.get("pass")
+    verdict = output.get("verdict") or output.get("overall_status", "pass")
+    parts.append(f"## Verdict summary\n")
+    if score is not None:
+        parts.append(f"**Score = {score}/10.**")
+    if pass_val is not None:
+        verdict_label = "PASS" if pass_val else "FAIL"
+        parts.append(f" Verdict: **{verdict_label}**.")
+    elif verdict:
+        parts.append(f" Verdict: **{verdict}**.")
+    parts.append("\n")
+
+    # Issues / findings
+    issues = output.get("findings") or output.get("issues") or []
+    if issues and isinstance(issues, list):
+        parts.append("## Findings\n")
+        for i, issue in enumerate(issues, 1):
+            if isinstance(issue, dict):
+                iid = issue.get("id", f"ISS-{i:03d}")
+                rule = issue.get("rule_id", "")
+                sev = issue.get("severity", "warning")
+                status = issue.get("status", "open")
+                desc = issue.get("description", issue.get("message", ""))
+                suggestion = issue.get("suggestion", "")
+                parts.append(f"### {iid}" + (f" — {rule}" if rule else ""))
+                parts.append(f"- **severity:** {sev}")
+                parts.append(f"- **status:** {status}")
+                if desc:
+                    parts.append(f"- **description:** {desc}")
+                if suggestion:
+                    parts.append(f"- **suggestion:** {suggestion}")
+                parts.append("")
+            elif isinstance(issue, str):
+                parts.append(f"- {issue}")
+        parts.append("")
+
+    # Rule outcomes
+    rule_outcomes = output.get("rule_outcomes")
+    if rule_outcomes and isinstance(rule_outcomes, dict):
+        parts.append("## Rule outcomes\n")
+        for rule_id, outcome in rule_outcomes.items():
+            if isinstance(outcome, dict):
+                status = outcome.get("status", outcome.get("result", "pass"))
+                note = outcome.get("note", outcome.get("description", ""))
+                parts.append(f"- **{rule_id}:** {status}" + (f" — {note}" if note else ""))
+            else:
+                parts.append(f"- **{rule_id}:** {outcome}")
+        parts.append("")
+
+    # Fixes applied
+    fixes = output.get("fixes")
+    if fixes and isinstance(fixes, list):
+        parts.append("## Fixes applied\n")
+        for fix in fixes:
+            if isinstance(fix, dict):
+                parts.append(f"- {fix.get('description', fix.get('rule_id', str(fix)))}")
+            elif isinstance(fix, str):
+                parts.append(f"- {fix}")
+        parts.append("")
+
+    # Strengths / notes
+    for key in ("strengths", "notes", "observations"):
+        items = output.get(key)
+        if items and isinstance(items, list):
+            parts.append(f"## {key.replace('_', ' ').title()}\n")
+            for item in items:
+                parts.append(f"- {item}" if isinstance(item, str) else f"- {item}")
+            parts.append("")
+
+    if not parts or all(not p.strip() for p in parts):
+        # Absolute fallback
+        parts.append("## Audit output\n")
+        parts.append("```json")
+        parts.append(json.dumps(output, indent=2, sort_keys=True)[:4000])
+        parts.append("```\n")
+
+    return "\n".join(parts)
+
+
+def _find_fr_file(
+    fr_id: str,
+    repo_root: Path | None = None,
+    output_dir: Path | None = None,
+) -> Path | None:
+    """Locate the FR spec file by searching for ``*<fr_id>*.md`` under docs/feature-requests/.
+
+    Search order:
+    1. Walk up from output_dir looking for docs/feature-requests/
+    2. repo_root (typically _cyberos_root — works when project IS cyberos)
+    3. CWD walk-up as last resort
+    """
+    search_roots: list[Path] = []
+
+    # 1) Walk up from output_dir — the most reliable source since outputs
+    #    are always written to the correct project directory.
+    if output_dir is not None:
+        cur = output_dir.resolve()
+        if cur.is_file():
+            cur = cur.parent
+        for _ in range(12):
+            candidate = cur / "docs" / "feature-requests"
+            if candidate.is_dir() and candidate not in search_roots:
+                search_roots.append(candidate)
+                break
+            if cur.parent == cur:
+                break
+            cur = cur.parent
+
+    # 2) Explicit repo_root (may be cyberos root — works when project IS cyberos)
+    if repo_root is not None:
+        candidate = repo_root / "docs" / "feature-requests"
+        if candidate.is_dir() and candidate not in search_roots:
+            search_roots.append(candidate)
+
+    # 3) Fallback: walk up from CWD
+    cur = Path.cwd()
+    for _ in range(8):
+        candidate = cur / "docs" / "feature-requests"
+        if candidate.is_dir() and candidate not in search_roots:
+            search_roots.append(candidate)
+            break
+        if cur.parent == cur:
+            break
+        cur = cur.parent
+
+    fr_lower = fr_id.lower()
+    for root in search_roots:
+        if not root.is_dir():
+            continue
+        for md in root.rglob("*.md"):
+            if fr_lower in md.stem.lower() and not md.stem.endswith(".audit"):
+                return md
+    return None
+
+
+def _today_iso() -> str:
+    """Return today's date as ISO-8601 (YYYY-MM-DD)."""
+    import datetime
+    return datetime.date.today().isoformat()
+
+
+# ---------------------------------------------------------------------------
+# architecture-decision-record-author applier — writes ADR to docs/adrs/
+# ---------------------------------------------------------------------------
+
+
+def _apply_architecture_decision_record(step_result, hand_off: dict, run_span_id: str) -> None:
+    """Write an ADR markdown file from the LLM's JSON output.
+
+    Output shapes supported:
+    1. ``adr_body`` or ``body`` key → write verbatim.
+    2. ``raw_response`` key → write verbatim.
+    3. Structured fields (``context``, ``decision``, ``options``) → render to ADR template.
+    4. ``artefact_fields`` key (from mock-llm) → render from template fields.
+
+    Target: ``docs/adrs/ADR-{NNN}-{slug}.md`` relative to the repo root.
+    """
+    output = _extract_output(step_result)
+    if not output:
+        return
+
+    # Derive ADR id and slug.
+    adr_id = output.get("adr_id") or output.get("id", "ADR-0001")
+    title = output.get("title", output.get("decision", "untitled"))
+    slug = _slugify(title)[:60] if title else "untitled"
+    status = output.get("status", "proposed")
+
+    # Locate repo root (parent of docs/feature-requests/).
+    output_dir = _get_output_dir(step_result)
+    repo_root = Path(hand_off["_cyberos_root"]) if hand_off.get("_cyberos_root") else None
+    if repo_root is None:
+        repo_root = _find_repo_root_from_handoff(hand_off)
+    if repo_root is None:
+        repo_root = _find_repo_root(hand_off, output_dir)
+    if repo_root is None:
+        repo_root = Path.cwd()
+
+    adrs_dir = repo_root / "docs" / "adrs"
+    adrs_dir.mkdir(parents=True, exist_ok=True)
+
+    # Clean adr_id for filename (strip non-alphanumeric prefix chars for the number part).
+    adr_num = re.sub(r"[^0-9]", "", adr_id) or "0001"
+    filename = f"ADR-{adr_num}-{slug}.md"
+    adr_path = adrs_dir / filename
+
+    # Determine body.
+    for key in ("adr_body", "body", "raw_response"):
+        if isinstance(output.get(key), str) and output[key].strip():
+            body = output[key]
+            break
+    else:
+        body = _render_adr_markdown(output, adr_id, title, status)
+
+    # Build frontmatter.
+    decision_date = output.get("decision_date") or _today_iso()
+    decided_by = output.get("decided_by", [])
+    if isinstance(decided_by, list) and decided_by:
+        dm = "\n".join(f"  - {d}" if isinstance(d, str) else
+                       f"  - {{ handle: \"{d.get('handle', '')}\", role: \"{d.get('role', '')}\" }}"
+                       for d in decided_by)
+    else:
+        dm = '  - { handle: "@cuo-cto", role: "CTO" }'
+
+    frontmatter = (
+        f"---\n"
+        f"template: architecture-decision-record@1\n"
+        f"title: \"{title}\"\n"
+        f"adr_id: {adr_id}\n"
+        f"status: {status}\n"
+        f"decision_date: \"{decision_date}\"\n"
+        f"decided_by:\n{dm}\n"
+        f"---\n"
+    )
+
+    content = frontmatter + "\n" + body.strip() + "\n"
+
+    try:
+        tmp = adr_path.with_suffix(".md.tmp")
+        tmp.write_text(content, encoding="utf-8")
+        os.replace(tmp, adr_path)
+        _SPANS.info(
+            "applier.adr_written",
+            extra={"event": "applier.adr_written", "span_id": run_span_id,
+                   "adr_id": adr_id, "adr_path": str(adr_path)},
+        )
+    except OSError as e:
+        _SPANS.warning(
+            "applier.adr_write_error",
+            extra={"event": "applier.adr_write_error", "span_id": run_span_id,
+                   "adr_id": adr_id, "error": str(e)},
+        )
+
+
+def _render_adr_markdown(output: dict, adr_id: str, title: str, status: str) -> str:
+    """Render structured LLM output into ADR markdown."""
+    parts: list[str] = []
+    parts.append(f"# {adr_id}: {title}\n")
+
+    # Context
+    context = output.get("context", "")
+    if context:
+        parts.append("## 1. Context\n")
+        parts.append(str(context) + "\n")
+
+    # Options
+    options = output.get("options") or output.get("options_considered") or []
+    if options and isinstance(options, list):
+        parts.append("## 2. Options Considered\n")
+        for i, opt in enumerate(options):
+            if isinstance(opt, dict):
+                name = opt.get("name", f"Option {chr(65+i)}")
+                pros = opt.get("pros", [])
+                cons = opt.get("cons", [])
+                parts.append(f"### {name}")
+                if pros:
+                    parts.append(f"- **Pros:** {'; '.join(str(p) for p in pros)}")
+                if cons:
+                    parts.append(f"- **Cons:** {'; '.join(str(c) for c in cons)}")
+                parts.append("")
+            elif isinstance(opt, str):
+                parts.append(f"- {opt}")
+        parts.append("")
+
+    # Decision
+    decision = output.get("decision", "")
+    if decision:
+        parts.append("## 3. Decision\n")
+        parts.append(str(decision) + "\n")
+
+    # Consequences
+    consequences = output.get("consequences", {})
+    if consequences and isinstance(consequences, dict):
+        parts.append("## 4. Consequences\n")
+        for label in ("positive", "negative", "neutral"):
+            items = consequences.get(label, [])
+            if items:
+                cap = label.capitalize()
+                for item in (items if isinstance(items, list) else [items]):
+                    parts.append(f"- **{cap}:** {item}")
+        parts.append("")
+    elif isinstance(consequences, list) and consequences:
+        parts.append("## 4. Consequences\n")
+        for item in consequences:
+            parts.append(f"- {item}")
+        parts.append("")
+
+    # Artefact fields (from mock-llm or template-parroting output)
+    artefact = output.get("artefact_fields")
+    if artefact and isinstance(artefact, dict):
+        for heading, value in artefact.items():
+            parts.append(f"## {heading}\n")
+            parts.append(str(value) + "\n")
+
+    # Fallback: raw JSON summary
+    if not parts or all(not p.strip() for p in parts[1:]):
+        parts.append("## ADR output\n")
+        parts.append("```json")
+        parts.append(json.dumps(output, indent=2, sort_keys=True)[:4000])
+        parts.append("```\n")
+
+    return "\n".join(parts)
+
+
+def _find_repo_root_from_handoff(hand_off: dict) -> Path | None:
+    """Try to derive the repo root from hand-off map entries."""
+    # Try step output paths — they live under the output dir which may be at repo root.
+    for key, val in hand_off.items():
+        if isinstance(val, Path) and val.suffix == ".json":
+            candidate = val.parent
+            if (candidate / "docs").is_dir():
+                return candidate
+            # Walk up a few levels
+            for _ in range(3):
+                candidate = candidate.parent
+                if (candidate / "docs").is_dir():
+                    return candidate
+    return None
+
+
+def _slugify(text: str) -> str:
+    """Convert text to a filename-safe slug."""
+    text = text.lower().strip()
+    text = re.sub(r"[^a-z0-9]+", "-", text)
+    return text.strip("-") or "untitled"
+
+
+# ---------------------------------------------------------------------------
+# implementation-plan-author applier — writes impl plan + applies code changes
+# ---------------------------------------------------------------------------
+
+
+def _apply_implementation_plan(step_result, hand_off: dict, run_span_id: str) -> None:
+    """Write the implementation plan document AND apply any code changes.
+
+    The LLM's output can contain:
+    1. ``impl_plan_body`` / ``body`` / ``raw_response`` → write as ``IMPL-PLAN-<fr_id>.md``
+    2. ``code_changes`` list → write/modify files in the working tree (task #7)
+    3. Structured fields → render to template format
+
+    The plan document goes to ``docs/feature-requests/<module>/impl-plan-<fr_id>.md``
+    (sibling to the FR spec, or fallback to output_dir).
+    """
+    output = _extract_output(step_result)
+    if not output:
+        return
+
+    fr_id = output.get("fr_id") or hand_off.get("fr_id")
+    output_dir = _get_output_dir(step_result)
+
+    # ── Write the plan document ──
+    _write_impl_plan_doc(output, fr_id, hand_off, run_span_id, output_dir)
+
+    # ── Apply code changes (task #7) ──
+    _apply_code_changes(output, fr_id, hand_off, run_span_id, output_dir)
+
+
+def _write_impl_plan_doc(output: dict, fr_id: str | None, hand_off: dict, run_span_id: str, output_dir: Path | None = None) -> None:
+    """Write the IMPL-PLAN markdown document."""
+    # Determine plan body.
+    for key in ("impl_plan_body", "body", "raw_response"):
+        if isinstance(output.get(key), str) and output[key].strip():
+            body = output[key]
+            break
+    else:
+        body = _render_impl_plan_markdown(output)
+
+    # Determine target path.
+    plan_path = _resolve_artifact_path(
+        output, fr_id, hand_off,
+        filename_prefix="impl-plan",
+        default_dir="docs/feature-requests",
+        output_dir=output_dir,
+    )
+    if plan_path is None:
+        return
+
+    plan_path.parent.mkdir(parents=True, exist_ok=True)
+
+    title = output.get("title", f"Implementation Plan — {fr_id}" if fr_id else "Implementation Plan")
+    frontmatter = (
+        f"---\n"
+        f"template: impl_plan@1\n"
+        f"title: \"{title}\"\n"
+        f"created_at: \"{_today_iso()}\"\n"
+        f"---\n"
+    )
+
+    content = frontmatter + "\n" + body.strip() + "\n"
+
+    try:
+        tmp = plan_path.with_suffix(".md.tmp")
+        tmp.write_text(content, encoding="utf-8")
+        os.replace(tmp, plan_path)
+        _SPANS.info(
+            "applier.impl_plan_written",
+            extra={"event": "applier.impl_plan_written", "span_id": run_span_id,
+                   "path": str(plan_path)},
+        )
+    except OSError as e:
+        _SPANS.warning(
+            "applier.impl_plan_write_error",
+            extra={"event": "applier.impl_plan_write_error", "span_id": run_span_id,
+                   "error": str(e)},
+        )
+
+
+def _render_impl_plan_markdown(output: dict) -> str:
+    """Render structured LLM output into impl-plan markdown."""
+    parts: list[str] = []
+
+    # Background
+    bg = output.get("background", output.get("Background", ""))
+    if bg:
+        parts.append("## Background\n")
+        parts.append(str(bg) + "\n")
+
+    # Tickets table
+    tickets = output.get("tickets", output.get("Tickets", []))
+    if tickets and isinstance(tickets, list):
+        parts.append("## Tickets\n")
+        parts.append("| # | Title | Sizing | Dependencies | Acceptance criteria |")
+        parts.append("| --- | --- | --- | --- | --- |")
+        for i, t in enumerate(tickets, 1):
+            if isinstance(t, dict):
+                title = t.get("title", t.get("name", f"Ticket {i}"))
+                sizing = t.get("sizing", t.get("size", "M"))
+                deps = t.get("dependencies", t.get("deps", "—"))
+                if isinstance(deps, list):
+                    deps = ", ".join(str(d) for d in deps)
+                ac = t.get("acceptance_criteria", t.get("ac", "—"))
+                parts.append(f"| {i} | {title} | {sizing} | {deps} | {ac} |")
+            elif isinstance(t, str):
+                parts.append(f"| {i} | {t} | M | — | — |")
+        parts.append("")
+
+    # Sprint suggestion
+    sprint = output.get("sprint_suggestion", output.get("Sprint Suggestion", ""))
+    if sprint:
+        parts.append("## Sprint Suggestion\n")
+        parts.append(str(sprint) + "\n")
+
+    # Risks
+    risks = output.get("risks", output.get("Risks", []))
+    if risks:
+        parts.append("## Risks\n")
+        if isinstance(risks, list):
+            parts.append("| Risk | Mitigation |")
+            parts.append("| --- | --- |")
+            for r in risks:
+                if isinstance(r, dict):
+                    parts.append(f"| {r.get('risk', '')} | {r.get('mitigation', '')} |")
+                elif isinstance(r, str):
+                    parts.append(f"| {r} | — |")
+        else:
+            parts.append(str(risks) + "\n")
+        parts.append("")
+
+    # Open questions
+    questions = output.get("open_questions", output.get("Open Questions", []))
+    if questions:
+        parts.append("## Open Questions\n")
+        if isinstance(questions, list):
+            for q in questions:
+                parts.append(f"1. {q}")
+        else:
+            parts.append(str(questions))
+        parts.append("")
+
+    # Artefact fields (from mock-llm)
+    artefact = output.get("artefact_fields")
+    if artefact and isinstance(artefact, dict):
+        for heading, value in artefact.items():
+            parts.append(f"## {heading}\n")
+            parts.append(str(value) + "\n")
+
+    if not parts or all(not p.strip() for p in parts):
+        parts.append("## Implementation Plan\n")
+        parts.append("```json")
+        parts.append(json.dumps(output, indent=2, sort_keys=True)[:4000])
+        parts.append("```\n")
+
+    return "\n".join(parts)
+
+
+def _apply_code_changes(output: dict, fr_id: str | None, hand_off: dict, run_span_id: str, output_dir: Path | None = None) -> None:
+    """Apply file-level code changes from the LLM's structured output.
+
+    The LLM can include a ``code_changes`` list with entries like:
+    {"action": "create"|"modify", "path": "src/auth/login.ts", "content": "..."}
+    or
+    {"action": "create"|"modify", "path": "src/auth/login.ts", "diff": "..."}
+    """
+    code_changes = output.get("code_changes") or output.get("files") or []
+    if not code_changes or not isinstance(code_changes, list):
+        return
+
+    repo_root = _find_repo_root(hand_off, output_dir)
+    if repo_root is None:
+        _SPANS.debug(
+            "applier.no_repo_root",
+            extra={"event": "applier.no_repo_root", "span_id": run_span_id},
+        )
+        return
+
+    applied = 0
+    for change in code_changes:
+        if not isinstance(change, dict):
+            continue
+        action = change.get("action", "create")
+        rel_path = change.get("path", "")
+        if not rel_path:
+            continue
+
+        # Security: reject path traversal.
+        if ".." in Path(rel_path).parts:
+            _SPANS.warning(
+                "applier.path_traversal_rejected",
+                extra={"event": "applier.path_traversal_rejected", "span_id": run_span_id,
+                       "path": rel_path},
+            )
+            continue
+
+        target = repo_root / rel_path
+
+        if action == "create":
+            content = change.get("content", "")
+            if not content:
+                continue
+            try:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(content, encoding="utf-8")
+                applied += 1
+            except OSError as e:
+                _SPANS.warning(
+                    "applier.code_write_error",
+                    extra={"event": "applier.code_write_error", "span_id": run_span_id,
+                           "path": rel_path, "error": str(e)},
+                )
+
+        elif action == "modify":
+            content = change.get("content")
+            if content is not None:
+                # Full replacement
+                try:
+                    target.write_text(content, encoding="utf-8")
+                    applied += 1
+                except OSError as e:
+                    _SPANS.warning(
+                        "applier.code_write_error",
+                        extra={"event": "applier.code_write_error", "span_id": run_span_id,
+                               "path": rel_path, "error": str(e)},
+                    )
+            else:
+                # Diff-based modification
+                diff_text = change.get("diff", "")
+                if diff_text and target.is_file():
+                    try:
+                        result = _apply_unified_diff(target.read_text(encoding="utf-8"), diff_text)
+                        if result is not None:
+                            target.write_text(result, encoding="utf-8")
+                            applied += 1
+                    except OSError as e:
+                        _SPANS.warning(
+                            "applier.code_write_error",
+                            extra={"event": "applier.code_write_error", "span_id": run_span_id,
+                                   "path": rel_path, "error": str(e)},
+                        )
+
+    if applied:
+        _SPANS.info(
+            "applier.code_changes_applied",
+            extra={"event": "applier.code_changes_applied", "span_id": run_span_id,
+                   "files_changed": applied, "fr_id": fr_id},
+        )
+
+
+def _apply_unified_diff(original: str, diff_text: str) -> str | None:
+    """Best-effort application of a unified diff. Returns patched text or None on failure."""
+    lines = original.splitlines(keepends=True)
+    diff_lines = diff_text.splitlines(keepends=True)
+
+    result: list[str] = []
+    i = 0  # index into original lines
+    d = 0  # index into diff lines
+
+    while d < len(diff_lines):
+        line = diff_lines[d]
+        if line.startswith("@@"):
+            # Parse hunk header: @@ -old_start,old_count +new_start,new_count @@
+            m = re.match(r"^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@", line)
+            if not m:
+                return None
+            old_start = int(m.group(1)) - 1  # 0-indexed
+            # Copy unchanged lines before this hunk
+            while i < old_start and i < len(lines):
+                result.append(lines[i])
+                i += 1
+            d += 1
+            # Process hunk body
+            while d < len(diff_lines) and not diff_lines[d].startswith("@@"):
+                hunk_line = diff_lines[d]
+                if hunk_line.startswith("+"):
+                    result.append(hunk_line[1:] if hunk_line.endswith("\n") else hunk_line[1:] + "\n")
+                elif hunk_line.startswith("-"):
+                    i += 1  # skip original line
+                else:
+                    # context line
+                    if i < len(lines):
+                        result.append(lines[i])
+                        i += 1
+                d += 1
+        else:
+            d += 1
+
+    # Copy remaining original lines
+    while i < len(lines):
+        result.append(lines[i])
+        i += 1
+
+    return "".join(result)
+
+
+def _find_repo_root(hand_off: dict, output_dir: Path | None = None) -> Path | None:
+    """Find the repo root by searching from output_dir, hand-off, or CWD.
+
+    Search order:
+    1. Walk up from output_dir (project outputs are always in the right project)
+    2. hand_off["_cyberos_root"] (works when project IS cyberos)
+    3. CWD walk-up as last resort
+    """
+    seen: set[Path] = set()
+
+    # 1) Walk up from output_dir
+    if output_dir is not None:
+        cur = output_dir.resolve()
+        if cur.is_file():
+            cur = cur.parent
+        for _ in range(12):
+            if (cur / "docs").is_dir():
+                seen.add(cur)
+                return cur
+            if cur.parent == cur:
+                break
+            cur = cur.parent
+
+    # 2) hand_off _cyberos_root
+    root = hand_off.get("_cyberos_root")
+    if root:
+        p = Path(root)
+        if (p / "docs").is_dir() and p not in seen:
+            return p
+
+    # 3) Walk up from CWD
+    cur = Path.cwd()
+    for _ in range(8):
+        if (cur / "docs").is_dir() and cur not in seen:
+            return cur
+        if cur.parent == cur:
+            break
+        cur = cur.parent
+    return None
+
+
+def _resolve_artifact_path(
+    output: dict,
+    fr_id: str | None,
+    hand_off: dict,
+    filename_prefix: str,
+    default_dir: str,
+    output_dir: Path | None = None,
+) -> Path | None:
+    """Resolve the output path for a document artifact.
+
+    Strategy:
+    1. If ``output.artifact_path`` or ``output.path`` exists, use it (relative to repo root).
+    2. If fr_id is known, locate the FR file and place the artifact as a sibling.
+    3. Fallback: <repo_root>/<default_dir>/<filename_prefix>-<fr_id>.md
+    """
+    # Check explicit path in output.
+    for key in ("artifact_path", "path", "audit_path"):
+        p = output.get(key)
+        if isinstance(p, str) and p:
+            repo_root = _find_repo_root(hand_off, output_dir)
+            if repo_root and not Path(p).is_absolute():
+                return repo_root / p
+            return Path(p)
+
+    # Try to find the FR file and place as sibling.
+    if fr_id:
+        cyberos_root = Path(hand_off["_cyberos_root"]) if hand_off.get("_cyberos_root") else None
+        fr_path = _find_fr_file(fr_id, cyberos_root, output_dir)
+        if fr_path:
+            return fr_path.parent / f"{filename_prefix}-{fr_id}.md"
+
+    # Fallback: <repo_root>/<default_dir>/
+    repo_root = _find_repo_root(hand_off, output_dir)
+    if repo_root:
+        slug = _slugify(fr_id) if fr_id else "untitled"
+        target_dir = repo_root / default_dir
+        target_dir.mkdir(parents=True, exist_ok=True)
+        return target_dir / f"{filename_prefix}-{slug}.md"
+
+    return None
+
+
+# ---------------------------------------------------------------------------
+# code-review-author applier — writes code-review markdown
+# ---------------------------------------------------------------------------
+
+
+def _apply_code_review(step_result, hand_off: dict, run_span_id: str) -> None:
+    """Write a code-review@1 markdown document from the LLM's output.
+
+    Target: sibling to the FR spec or ``docs/feature-requests/<module>/code-review-<fr_id>.md``.
+    """
+    output = _extract_output(step_result)
+    if not output:
+        return
+
+    fr_id = output.get("fr_id") or hand_off.get("fr_id")
+    output_dir = _get_output_dir(step_result)
+
+    for key in ("code_review_body", "body", "raw_response"):
+        if isinstance(output.get(key), str) and output[key].strip():
+            body = output[key]
+            break
+    else:
+        body = _render_code_review_markdown(output)
+
+    review_path = _resolve_artifact_path(
+        output, fr_id, hand_off,
+        filename_prefix="code-review",
+        default_dir="docs/feature-requests",
+        output_dir=output_dir,
+    )
+    if review_path is None:
+        return
+
+    review_path.parent.mkdir(parents=True, exist_ok=True)
+
+    verdict = output.get("verdict", "approved")
+    frontmatter = (
+        f"---\n"
+        f"template: code-review@1\n"
+        f"verdict: {verdict}\n"
+        f"reviewed_at: \"{_today_iso()}\"\n"
+        f"---\n"
+    )
+
+    content = frontmatter + "\n" + body.strip() + "\n"
+
+    try:
+        tmp = review_path.with_suffix(".md.tmp")
+        tmp.write_text(content, encoding="utf-8")
+        os.replace(tmp, review_path)
+        _SPANS.info(
+            "applier.code_review_written",
+            extra={"event": "applier.code_review_written", "span_id": run_span_id,
+                   "path": str(review_path), "verdict": verdict},
+        )
+    except OSError as e:
+        _SPANS.warning(
+            "applier.code_review_write_error",
+            extra={"event": "applier.code_review_write_error", "span_id": run_span_id,
+                   "error": str(e)},
+        )
+
+
+def _render_code_review_markdown(output: dict) -> str:
+    """Render structured LLM output into code-review markdown."""
+    parts: list[str] = []
+
+    # Verdict
+    verdict = output.get("verdict", "")
+    if verdict:
+        parts.append(f"**Verdict: {verdict}**\n")
+
+    # Template sections (1-12 from code-review@1)
+    section_map = {
+        "correctness": ("1. Correctness vs Ticket", output.get("correctness", "")),
+        "readability": ("2. Readability", output.get("readability", "")),
+        "test_coverage": ("3. Test Coverage", output.get("test_coverage", "")),
+        "secrets": ("4. Secrets / Credentials", output.get("secrets", "")),
+        "injection_surfaces": ("5. Injection Surfaces", output.get("injection_surfaces", "")),
+        "input_validation": ("6. Input Validation", output.get("input_validation", "")),
+        "error_handling": ("7. Error Handling", output.get("error_handling", "")),
+        "logging": ("8. Logging", output.get("logging", "")),
+        "performance": ("9. Performance Considerations", output.get("performance", "")),
+        "backwards_compat": ("10. Backwards Compatibility", output.get("backwards_compat", "")),
+        "sast_sca": ("11. SAST / SCA Results", output.get("sast_sca", "")),
+        "sbom": ("12. SBOM Impact", output.get("sbom", "")),
+    }
+
+    for _key, (heading, content) in section_map.items():
+        if content:
+            parts.append(f"## {heading}\n")
+            parts.append(str(content) + "\n")
+
+    # Issues / findings
+    issues = output.get("issues") or output.get("findings") or []
+    if issues and isinstance(issues, list):
+        parts.append("## Findings\n")
+        for issue in issues:
+            if isinstance(issue, dict):
+                sev = issue.get("severity", "info")
+                desc = issue.get("description", issue.get("message", ""))
+                location = issue.get("location", "")
+                loc_str = f" ({location})" if location else ""
+                parts.append(f"- **[{sev}]** {desc}{loc_str}")
+            elif isinstance(issue, str):
+                parts.append(f"- {issue}")
+        parts.append("")
+
+    # Artefact fields (mock-llm)
+    artefact = output.get("artefact_fields")
+    if artefact and isinstance(artefact, dict):
+        for heading, value in artefact.items():
+            parts.append(f"## {heading}\n")
+            parts.append(str(value) + "\n")
+
+    if not parts or all(not p.strip() for p in parts):
+        parts.append("## Code Review\n")
+        parts.append("```json")
+        parts.append(json.dumps(output, indent=2, sort_keys=True)[:4000])
+        parts.append("```\n")
+
+    return "\n".join(parts)
+
+
+# ---------------------------------------------------------------------------
+# observability-injection-author applier — writes observability plan
+# ---------------------------------------------------------------------------
+
+
+def _apply_observability_injection(step_result, hand_off: dict, run_span_id: str) -> None:
+    """Write an observability-injection@1 document from the LLM's output.
+
+    Target: sibling to the FR spec or ``docs/feature-requests/<module>/obs-injection-<fr_id>.md``.
+    """
+    output = _extract_output(step_result)
+    if not output:
+        return
+
+    fr_id = output.get("fr_id") or hand_off.get("fr_id")
+    output_dir = _get_output_dir(step_result)
+
+    for key in ("obs_injection_body", "body", "raw_response"):
+        if isinstance(output.get(key), str) and output[key].strip():
+            body = output[key]
+            break
+    else:
+        body = _render_obs_injection_markdown(output)
+
+    obs_path = _resolve_artifact_path(
+        output, fr_id, hand_off,
+        filename_prefix="obs-injection",
+        default_dir="docs/feature-requests",
+        output_dir=output_dir,
+    )
+    if obs_path is None:
+        return
+
+    obs_path.parent.mkdir(parents=True, exist_ok=True)
+
+    language = output.get("language", "typescript")
+    subscriber = output.get("subscriber", "tracing")
+    frontmatter = (
+        f"---\n"
+        f"template: observability-injection@1\n"
+        f"fr_id: {fr_id or 'unknown'}\n"
+        f"language: {language}\n"
+        f"subscriber: {subscriber}\n"
+        f"generated_at: \"{_today_iso()}\"\n"
+        f"---\n"
+    )
+
+    content = frontmatter + "\n" + body.strip() + "\n"
+
+    try:
+        tmp = obs_path.with_suffix(".md.tmp")
+        tmp.write_text(content, encoding="utf-8")
+        os.replace(tmp, obs_path)
+        _SPANS.info(
+            "applier.obs_injection_written",
+            extra={"event": "applier.obs_injection_written", "span_id": run_span_id,
+                   "path": str(obs_path)},
+        )
+    except OSError as e:
+        _SPANS.warning(
+            "applier.obs_injection_write_error",
+            extra={"event": "applier.obs_injection_write_error", "span_id": run_span_id,
+                   "error": str(e)},
+        )
+
+
+def _render_obs_injection_markdown(output: dict) -> str:
+    """Render structured LLM output into observability-injection markdown."""
+    parts: list[str] = []
+
+    # Log points
+    log_points = output.get("log_points", [])
+    if log_points and isinstance(log_points, list):
+        parts.append("## Log Points\n")
+        parts.append("| ID | File | Level | Message | Carries |")
+        parts.append("| --- | --- | --- | --- | --- |")
+        for lp in log_points:
+            if isinstance(lp, dict):
+                lid = lp.get("id", "")
+                fpath = lp.get("file", "")
+                level = lp.get("level", "info")
+                msg = lp.get("message_shape", lp.get("message", ""))
+                carries = lp.get("carries", [])
+                if isinstance(carries, list):
+                    carries = ", ".join(str(c) for c in carries)
+                parts.append(f"| {lid} | `{fpath}` | {level} | {msg} | {carries} |")
+        parts.append("")
+
+    # Trace spans
+    trace_spans = output.get("trace_spans", [])
+    if trace_spans and isinstance(trace_spans, list):
+        parts.append("## Trace Spans\n")
+        parts.append("| ID | File | Wraps | Attributes |")
+        parts.append("| --- | --- | --- | --- |")
+        for ts in trace_spans:
+            if isinstance(ts, dict):
+                tid = ts.get("id", "")
+                fpath = ts.get("file", "")
+                wraps = ts.get("wraps", "")
+                attrs = ts.get("attributes", [])
+                if isinstance(attrs, list):
+                    attrs = ", ".join(str(a) for a in attrs)
+                parts.append(f"| {tid} | `{fpath}` | {wraps} | {attrs} |")
+        parts.append("")
+
+    # Error counters
+    error_counters = output.get("error_counters", [])
+    if error_counters and isinstance(error_counters, list):
+        parts.append("## Error Counters\n")
+        parts.append("| ID | Metric Name | Labels | Increments At |")
+        parts.append("| --- | --- | --- | --- |")
+        for ec in error_counters:
+            if isinstance(ec, dict):
+                eid = ec.get("id", "")
+                metric = ec.get("metric_name", "")
+                labels = ec.get("labels", [])
+                if isinstance(labels, list):
+                    labels = ", ".join(str(l) for l in labels)
+                increments = ec.get("increments_at", "")
+                parts.append(f"| {eid} | `{metric}` | {labels} | {increments} |")
+        parts.append("")
+
+    # Branch coverage
+    coverage = output.get("branch_coverage", {})
+    if coverage and isinstance(coverage, dict):
+        parts.append("## Branch Coverage\n")
+        total = coverage.get("total_branches", 0)
+        covered = coverage.get("branches_with_obs_point", 0)
+        pct = coverage.get("coverage_pct", 0)
+        parts.append(f"- **Total branches:** {total}")
+        parts.append(f"- **With observability point:** {covered}")
+        parts.append(f"- **Coverage:** {pct}%\n")
+
+    # Redaction policy
+    redaction = output.get("redaction_policy", [])
+    if redaction and isinstance(redaction, list):
+        parts.append("## Redaction Policy\n")
+        for r in redaction:
+            if isinstance(r, dict):
+                parts.append(f"- `{r.get('field_pattern', '')}` → {r.get('action', '')}")
+        parts.append("")
+
+    # Artefact fields (mock-llm)
+    artefact = output.get("artefact_fields")
+    if artefact and isinstance(artefact, dict):
+        for heading, value in artefact.items():
+            parts.append(f"## {heading}\n")
+            parts.append(str(value) + "\n")
+
+    if not parts or all(not p.strip() for p in parts):
+        parts.append("## Observability Injection Plan\n")
+        parts.append("```json")
+        parts.append(json.dumps(output, indent=2, sort_keys=True)[:4000])
+        parts.append("```\n")
+
+    return "\n".join(parts)

@@ -3,14 +3,14 @@ id: FR-MEMORY-101
 title: "Layer-2 ingest pipeline (binlog → pgvector + Apache AGE) — chain-anchor verification + 1s p95 lag + per-tenant cursor + idempotent UPSERT"
 module: memory
 priority: MUST
-status: implementing
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 1
 slice: 1
 owner: Stephen Cheng (CDO)
 created: 2026-05-15
-shipped: null
+shipped: 2026-05-23
 memory_chain_hash: null
 related_frs: [FR-MEMORY-102, FR-MEMORY-108, FR-MEMORY-110, FR-AI-019, FR-AUTH-003, FR-OBS-001]
 depends_on: [FR-AI-019, FR-AUTH-003]
@@ -530,4 +530,4 @@ All resolved. Deferred:
 
 ---
 
-*End of FR-MEMORY-101. Status: draft (10/10 target).*
+*End of FR-MEMORY-101. Status: done (implemented 2026-05-23).*

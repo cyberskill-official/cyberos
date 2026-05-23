@@ -3,14 +3,14 @@ id: FR-EMAIL-009
 title: "EMAIL outbound 1:1 send — DKIM-signed via FR-EMAIL-004 + AM confirm-before-send + queue + bounce handling"
 module: EMAIL
 priority: MUST
-status: draft
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 1
 slice: 1
 owner: Stephen Cheng (CCO)
 created: 2026-05-17
-shipped: null
+shipped: 2026-05-23
 memory_chain_hash: null
 related_frs: [FR-EMAIL-004, FR-EMAIL-010, FR-EMAIL-011, FR-AUTH-101, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-EMAIL-004]

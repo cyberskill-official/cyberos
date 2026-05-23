@@ -138,10 +138,16 @@ def check_layout_root_canonical(store: Path) -> tuple[bool, str]:
 
 def check_layout_no_sandbox_path(store: Path) -> tuple[bool, str]:
     """Verify §0.1 — store is not under any forbidden sandbox path."""
-    resolved = str(store.resolve()).lower()
+    resolved_path = store.resolve()
+    resolved = str(resolved_path).lower()
     exempt_prefix = os.environ.get("CYBEROS_HOST_MOUNT_PREFIX", "").strip()
-    if exempt_prefix and str(store.resolve()).startswith(exempt_prefix):
-        return True, "store under CYBEROS_HOST_MOUNT_PREFIX (exempt)"
+    if exempt_prefix:
+        exempt_path = Path(exempt_prefix).expanduser().resolve()
+        try:
+            resolved_path.relative_to(exempt_path)
+            return True, "store under CYBEROS_HOST_MOUNT_PREFIX (exempt)"
+        except ValueError:
+            pass
     for fragment in _SANDBOX_FRAGMENTS:
         if fragment.lower() in resolved:
             return False, (

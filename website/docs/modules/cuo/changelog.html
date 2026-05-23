@@ -50,6 +50,7 @@
  <div class="bbg-card p-5">
  <div class="h-eyebrow mb-3">On this page</div>
  <ul class="space-y-0.5 text-sm">
+      <a class="block py-1 px-2 text-sm rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900" href="#2026-05-22-unified-cyberos-workflow-cli-api-extraction-workflow-stability-fixes">2026-05-22 — Unified <code>cyberos workflow</code> CLI + API extraction + workflow stability fixes</a>
       <a class="block py-1 px-2 text-sm rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900" href="#2026-05-18-modules-refactor-doc-consolidation-cuo-v3-0-0-a4-supervisor-phases-1-2-3-4-sessions-a-n-catalog-completion-changelog-centralisation-fr-cuo-106">2026-05-18 — Modules refactor + doc consolidation + CUO v3.0.0-a4 supervisor (Phases 1+2+3+4) + Sessions A–N catalog completion + CHANGELOG centralisation + FR-CUO-106</a>
       <a class="block py-1 px-2 text-sm rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900" href="#2026-05-15-cuo-module-page-rewritten-to-gold-agent-orchestrator-lumi-identity-wrapper-skill-broker-contract-cross-module-surfaces">2026-05-15 — CUO module page rewritten to Gold (agent orchestrator + Lumi identity wrapper + skill broker contract + cross-module surfaces)</a>
  </ul>
@@ -59,6 +60,28 @@
 
 <main class="lg:col-span-9 prose prose-slate max-w-none">
  <div class="bg-white rounded-xl p-6 lg:p-8 shadow-sm border border-slate-200">
+<h3 id="2026-05-22-unified-cyberos-workflow-cli-api-extraction-workflow-stability-fixes" class="text-xl font-bold mt-8 mb-3 text-slate-900">2026-05-22 — Unified <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos workflow</code> CLI + API extraction + workflow stability fixes</h3>
+
+<p class="mb-3 leading-relaxed"><strong>Unified CLI:</strong> Added <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos workflow</code> subcommand to the main <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos</code> CLI. Users can now run workflows from any project without needing the separate <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos-cuo</code> command:</p>
+<ul class="list-disc pl-6 mb-3 space-y-1">
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos workflow &lt;persona-workflow&gt; [--rework]</code> — drain eligible FRs</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos workflow list-personas</code> — enumerate personas</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos workflow list-workflows &lt;slug&gt;</code> — enumerate workflows</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos workflow dry-run &lt;path&gt;</code> — plan without executing</li>
+</ul>
+
+<p class="mb-3 leading-relaxed"><strong>API extraction:</strong> Created <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cuo/api.py</code> — pure-Python functions (no Click dependency) for all CUO workflow operations. Refactored <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cuo/cli.py</code> to delegate to the API layer. <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">cyberos-cuo</code> still works for backward compatibility.</p>
+
+<p class="mb-3 leading-relaxed"><strong>Workflow stability from external projects:</strong></p>
+<ul class="list-disc pl-6 mb-3 space-y-1">
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">CYBEROS_ROOT</code> env var — primary discovery mechanism for the cyberos repo root (checked before CWD walk in <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">_find_cyberos_root</code>)</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">_find_backlog_md</code> falls back to repo root when <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">output_dir</code> is outside the repo tree (fixes silent applier failure)</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">execute_chain</code> injects <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">_cyberos_root</code> into <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">hand_off</code> for applier access</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">select_invoker</code> now warns visibly when falling back to <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">MockInvoker</code></li>
+</ul>
+
+<hr class="my-6 border-slate-200">
+
 <h3 id="2026-05-18-modules-refactor-doc-consolidation-cuo-v3-0-0-a4-supervisor-phases-1-2-3-4-sessions-a-n-catalog-completion-changelog-centralisation-fr-cuo-106" class="text-xl font-bold mt-8 mb-3 text-slate-900">2026-05-18 — Modules refactor + doc consolidation + CUO v3.0.0-a4 supervisor (Phases 1+2+3+4) + Sessions A–N catalog completion + CHANGELOG centralisation + FR-CUO-106</h3>
 
 <p class="mb-3 leading-relaxed">Massive multi-stream day. Four parallel programs landed end-to-end:</p>

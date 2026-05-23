@@ -11,7 +11,7 @@ The CUO ("Chief Universal Officer") routes natural-language requests through:
     6. record           — emit decision row to the memory audit chain
 
 Phase 1 (a1): steps 1–3 + dry-run mode for step 5.
-Phase 2 (a2): MockInvoker / SubprocessInvoker / select_invoker + execute_chain.
+Phase 2 (a2): SubprocessInvoker / select_invoker + execute_chain.
 Phase 3 (a3): LLMInvoker (mock-llm + Anthropic API) + memory audit emission.
 Phase 4 (a4): 5 special-case workflow handlers (time_critical / per_instance /
               multi_output / sequential_approval / persona_pair); dispatched
@@ -40,7 +40,7 @@ from cuo.core.handlers import (
     pattern_of,
     pick_handler,
 )
-from cuo.core.invoker import Invoker, MockInvoker, StepResult, SubprocessInvoker, select_invoker
+from cuo.core.invoker import CompositeInvoker, Invoker, StepResult, SubprocessInvoker, select_invoker
 from cuo.core.llm_invoker import LLMInvoker
 from cuo.core.router import RoutingDecision, route
 from cuo.core.supervisor import ChainResult, DryRunResult, dry_run_chain, execute_chain
@@ -61,7 +61,7 @@ __all__ = [
     "route",
     # invoker (Phase 2)
     "Invoker",
-    "MockInvoker",
+    "CompositeInvoker",
     "SubprocessInvoker",
     "StepResult",
     "select_invoker",

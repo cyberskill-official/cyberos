@@ -3,14 +3,14 @@ id: FR-EMAIL-004
 title: "EMAIL DKIM signing + ARC chain forward + BIMI brand indicator — RFC 6376 + RFC 8617 + BIMI 1.0 per-tenant outbound auth"
 module: EMAIL
 priority: MUST
-status: draft
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 1
 slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-17
-shipped: null
+shipped: 2026-05-23
 memory_chain_hash: null
 related_frs: [FR-EMAIL-001, FR-EMAIL-002, FR-EMAIL-009, FR-PORTAL-002, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-EMAIL-001]

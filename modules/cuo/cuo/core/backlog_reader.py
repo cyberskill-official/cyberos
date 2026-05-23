@@ -96,6 +96,7 @@ def next_eligible(
     module: Optional[str] = None,
     current_status: str | list[str] | tuple[str, ...] | None = None,
     rework: bool = False,
+    skip_fr_ids: set[str] | None = None,
 ) -> Optional[FrRow]:
     """Return the first FR in the matching status list whose deps are all `done`.
 
@@ -116,6 +117,8 @@ def next_eligible(
     done_ids = {r.fr_id for r in rows if r.status == "done"}
     for row in rows:
         if row.status not in statuses:
+            continue
+        if skip_fr_ids and row.fr_id in skip_fr_ids:
             continue
         if module and row.module != module.lower():
             continue

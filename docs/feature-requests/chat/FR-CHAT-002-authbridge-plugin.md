@@ -3,14 +3,14 @@ id: FR-CHAT-002
 title: "cyberos-chat-authbridge plugin — Mattermost auth delegates to FR-AUTH-004 JWT with tenant_id propagation and SCIM-free provisioning"
 module: CHAT
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 1
 slice: 1
 owner: Stephen Cheng
 created: 2026-05-16
-shipped: null
+shipped: 2026-05-23
 memory_chain_hash: null
 related_frs: [FR-CHAT-001, FR-CHAT-003, FR-AUTH-004, FR-AUTH-005]
 depends_on: [FR-CHAT-001, FR-AUTH-004]

@@ -110,12 +110,22 @@ def _find_memory_root(skill_root: Path) -> Path | None:
     Under the legacy flat layout, skill_root is `<cyberos_root>/skill/`, so
     memory is at `skill_root.parent`.
 
-    Try both. Returns None if neither resolves.
+    Falls back to ``CYBEROS_ROOT`` env var if neither resolves.
     """
+    import os
+
     for candidate in (skill_root.parent.parent, skill_root.parent):
         memory = candidate / ".cyberos-memory"
         if memory.is_dir():
             return memory
+
+    # Fallback: CYBEROS_ROOT env var
+    env_root = os.environ.get("CYBEROS_ROOT")
+    if env_root:
+        memory = Path(env_root).resolve() / ".cyberos-memory"
+        if memory.is_dir():
+            return memory
+
     return None
 
 

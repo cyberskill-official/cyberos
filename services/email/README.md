@@ -1,6 +1,6 @@
 # CyberOS EMAIL — Stalwart adapter + per-tenant DKIM + residency-pinned bodies
 
-**Status:** FR-EMAIL-001 shipped (slice 1) — Stalwart container config + per-tenant DKIM keystore + residency-pinned S3+KMS body storage + 5 `email.*` memory audit row builders + slice-1 user-provisioning CLI.
+**Status:** FR-EMAIL-001 + FR-EMAIL-004/005/009/011 shipped as service slices — Stalwart container config, per-tenant DKIM keystore, residency-pinned S3+KMS body storage, delivery-auth hardening, CaMeL quarantine gate, outbound confirm-before-send queue, DSAR export helpers, and memory audit row builders.
 **Mail server:** [Stalwart Mail Server](https://stalw.art) v0.10.x (AGPL-3.0; container pinned in `docker/stalwart.toml`).
 **Protocols:** JMAP + IMAP + SMTP + POP3 + ManageSieve + MTA-STS + DANE + DKIM + ARC + BIMI.
 
@@ -42,7 +42,7 @@
 
 ---
 
-## §2 — What ships at slice 1
+## §2 — What ships
 
 | Concern | Status | Where |
 |---|---|---|
@@ -57,22 +57,22 @@
 | Health + per-message status REST | ✅ | `src/handlers/status.rs` |
 | `cyberos-email-cli provision` | ✅ | `src/bin/cli.rs` |
 | Tests — types + residency + DKIM + audit + adapter + subject normalisation | ✅ | `tests/` + inline `#[cfg(test)]` |
+| DKIM+ARC+BIMI delivery hardening | ✅ | `src/delivery_auth.rs` |
+| CaMeL dual-LLM quarantine gate | ✅ | `src/camel.rs` |
+| Outbound 1:1 confirm-before-send queue | ✅ | `src/outbound.rs` |
+| DSAR message export aggregation | ✅ | `src/dsar.rs` |
 
 ---
 
-## §3 — What is deferred (per FR §9)
+## §3 — What remains deferred (per FR §9)
 
 | Concern | FR | Notes |
 |---|---|---|
 | JMAP / IMAP / SMTP JWT bridge | FR-EMAIL-002 | Stalwart's auth delegates to AUTH JWT validator |
 | Shared-inbox UX (assignment, comments, snooze) | FR-EMAIL-003 | TypeScript SPA + backend handlers |
-| DKIM+ARC+BIMI hardening | FR-EMAIL-004 | Ed25519 keys, ARC forwarding, BIMI brand indicator |
-| CaMeL dual-LLM quarantine | FR-EMAIL-005 | Quarantine + privileged LLM split |
 | Tracked-domain auto-log to CRM | FR-EMAIL-006 | CRM activity-feed integration |
 | Convert thread → PROJ issue | FR-EMAIL-007 | One-click issue derivation |
-| Outbound 1:1 send with AM confirm | FR-EMAIL-009 | Confirm-before-send guard |
 | Bulk send approval | FR-EMAIL-010 | CFO/marketing dual-token |
-| DSAR per-subject message export | FR-EMAIL-011 | Chain-of-custody export |
 
 ---
 
@@ -117,7 +117,7 @@ DATABASE_URL=postgres://... cyberos-email-cli resolve-residency \
 
 ## §6 — memory audit row kinds emitted
 
-Per FR-EMAIL-001 §1 #13:
+FR-EMAIL-001 defines the core message row kinds; FR-EMAIL-004/005/009/011 add service-specific helper rows:
 
 | Kind | Trigger | PII handling |
 |---|---|---|
@@ -126,8 +126,12 @@ Per FR-EMAIL-001 §1 #13:
 | `email.message_bounced` | bounce_log append | No address PII |
 | `email.message_quarantined` | spam_score ≥ 5.0 | Same as received, plus `spam_score_band` |
 | `email.dkim_key_rotated` | `rotate_key` | `rotated_by_subject_id_hash16` |
+| `email.delivery_auth_*` | DKIM/ARC/BIMI DNS, signing, and verification decisions | Tenant/domain metadata only |
+| `email.camel_*` | CaMeL quarantine parse, trust-list, and execute decisions | Sanitised variables only |
+| `email.outbound_*` | Draft, confirm, send, bounce, complaint, suppression events | Recipient address hashed where emitted |
+| `email.dsar_*` | DSAR export request/completion | Attachment refs only; no raw body in memory |
 
-The full row body is defined by `src/audit/email_events.rs` (`EmailAuditRow`).
+The core row body is defined by `src/audit/email_events.rs` (`EmailAuditRow`).
 Postgres `message_metadata` carries raw addresses (RLS-scoped); memory holds
 only the 16-char hash prefix per §1 #14.
 
@@ -162,6 +166,10 @@ services/email/
 │   ├── types.rs                    EmailMessage, EmailThread, BounceEvent, DkimKey, enums
 │   ├── errors.rs                   EmailError + structured codes
 │   ├── residency.rs                FR-AI-016 resolver + fail-closed assert
+│   ├── delivery_auth.rs            FR-EMAIL-004 DKIM/ARC/BIMI hardening helpers
+│   ├── camel.rs                    FR-EMAIL-005 CaMeL quarantine gate
+│   ├── outbound.rs                 FR-EMAIL-009 outbound confirm/send queue
+│   ├── dsar.rs                     FR-EMAIL-011 DSAR export helpers
 │   ├── dkim/
 │   │   ├── mod.rs
 │   │   └── keystore.rs             provision + rotate + KmsEncryptor trait + MockKmsEncryptor

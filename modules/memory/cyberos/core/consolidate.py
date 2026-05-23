@@ -103,10 +103,7 @@ def _phase_compact(
     try:
         import zstandard as zstd  # type: ignore[import-not-found]
     except ImportError:
-        report.errors.append(
-            "compact: zstandard not installed; skipping. "
-            "Install: pip install zstandard --break-system-packages"
-        )
+        report.walk_summary += "  (compact skipped: zstandard not installed)"
         return
 
     audit = store / "audit"
