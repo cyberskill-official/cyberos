@@ -7,7 +7,10 @@
 //!   4. Builds the memory audit row (the binary wires the actual emit).
 
 use crate::audit;
+use crate::decisions::{self, DecisionPolicy, DecisionRetractionRow, DecisionRow};
 use crate::errors::{IssueError, IssueResult};
+use crate::memory_link::{self, LinkStrength, MemoryLinkRow, MemoryLinkType, MemoryTarget};
+use crate::rate_card::{self, BillingRole, Currency, RateCardRow};
 use crate::repo;
 use crate::status_fsm;
 use crate::types::*;
@@ -53,6 +56,7 @@ pub async fn create_issue(
 pub struct PatchIssueResult {
     pub issue: Issue,
     pub audit_rows: Vec<audit::ProjAuditRow>,
+    pub decision: Option<DecisionRow>,
 }
 
 pub async fn patch_issue(
@@ -99,7 +103,48 @@ pub async fn patch_issue(
         }
     }
 
-    let (_, updated) = repo::patch_issue_row(db, actor, id, if_match, &req).await?;
+    let mut decision = None;
+    let (_, updated) = if let Some(new_status) = req.status {
+        if new_status != current.status {
+            let request_id = format!(
+                "patch-{id}-{}",
+                Utc::now().timestamp_nanos_opt().unwrap_or(0)
+            );
+            let (issue, row) = decisions::patch_issue_status_with_decision(
+                db,
+                actor,
+                id,
+                if_match,
+                new_status,
+                None,
+                &request_id,
+                &DecisionPolicy::default(),
+                serde_json::Value::Object(Default::default()),
+                None,
+            )
+            .await?;
+            decision = Some(row);
+            let rest = PatchIssueRequest {
+                status: None,
+                ..req.clone()
+            };
+            if rest.title.is_some()
+                || rest.body.is_some()
+                || rest.priority.is_some()
+                || rest.assignee_subject_id.is_some()
+                || rest.estimate_hours.is_some()
+            {
+                let (_, patched) = repo::patch_issue_row(db, actor, id, None, &rest).await?;
+                (current.clone(), patched)
+            } else {
+                (current.clone(), issue)
+            }
+        } else {
+            repo::patch_issue_row(db, actor, id, if_match, &req).await?
+        }
+    } else {
+        repo::patch_issue_row(db, actor, id, if_match, &req).await?
+    };
 
     let mut audit_rows = Vec::new();
     if let Some(new_status) = req.status {
@@ -126,6 +171,7 @@ pub async fn patch_issue(
     Ok(PatchIssueResult {
         issue: updated,
         audit_rows,
+        decision,
     })
 }
 
@@ -144,4 +190,153 @@ pub async fn list_issues(
 ) -> IssueResult<Vec<Issue>> {
     let limit = limit.unwrap_or(50);
     repo::list_issues(db, actor, engagement_id, cycle_id, assignee, status, limit).await
+}
+
+pub struct DecisionTransitionResult {
+    pub issue: Issue,
+    pub decision: DecisionRow,
+}
+
+pub async fn transition_issue_with_decision(
+    db: &PgPool,
+    actor: Actor,
+    id: Uuid,
+    if_match: Option<DateTime<Utc>>,
+    to_status: IssueStatus,
+    reason: Option<&str>,
+    request_id: &str,
+    decision_attributes: serde_json::Value,
+    memory_chain_hash: Option<String>,
+) -> IssueResult<DecisionTransitionResult> {
+    let (issue, decision) = decisions::patch_issue_status_with_decision(
+        db,
+        actor,
+        id,
+        if_match,
+        to_status,
+        reason,
+        request_id,
+        &DecisionPolicy::default(),
+        decision_attributes,
+        memory_chain_hash,
+    )
+    .await?;
+    Ok(DecisionTransitionResult { issue, decision })
+}
+
+pub async fn retract_decision(
+    db: &PgPool,
+    actor: Actor,
+    decision_id: Uuid,
+    reason: &str,
+    request_id: &str,
+) -> IssueResult<DecisionRetractionRow> {
+    decisions::retract_decision(db, actor, decision_id, reason, request_id).await
+}
+
+pub async fn list_issue_decisions(
+    db: &PgPool,
+    actor: Actor,
+    issue_id: Uuid,
+    limit: Option<i64>,
+) -> IssueResult<Vec<DecisionRow>> {
+    decisions::list_issue_decisions(db, actor, issue_id, limit.unwrap_or(100)).await
+}
+
+pub async fn create_rate_card(
+    db: &PgPool,
+    actor: Actor,
+    engagement_id: Uuid,
+    role: BillingRole,
+    currency: Currency,
+    hourly_rate_minor: i64,
+    billable_default: bool,
+    effective_from: chrono::NaiveDate,
+) -> IssueResult<RateCardRow> {
+    rate_card::create_rate_card_persisted(
+        db,
+        actor,
+        engagement_id,
+        role,
+        currency,
+        hourly_rate_minor,
+        billable_default,
+        effective_from,
+    )
+    .await
+}
+
+pub async fn lookup_rate_card(
+    db: &PgPool,
+    actor: Actor,
+    engagement_id: Uuid,
+    role: BillingRole,
+    currency: Currency,
+    at: chrono::NaiveDate,
+) -> IssueResult<RateCardRow> {
+    rate_card::lookup_rate_card_persisted(db, actor, engagement_id, role, currency, at).await
+}
+
+pub async fn list_rate_cards(
+    db: &PgPool,
+    actor: Actor,
+    engagement_id: Uuid,
+    include_archived: bool,
+) -> IssueResult<Vec<RateCardRow>> {
+    rate_card::list_rate_cards_persisted(db, actor, engagement_id, include_archived).await
+}
+
+pub async fn create_memory_link(
+    db: &PgPool,
+    actor: Actor,
+    issue_id: Uuid,
+    target: MemoryTarget,
+    link_type: MemoryLinkType,
+    annotation: Option<&str>,
+    quoted_text: Option<&str>,
+    link_strength: Option<LinkStrength>,
+    review_pending: bool,
+    metadata: serde_json::Value,
+) -> IssueResult<MemoryLinkRow> {
+    memory_link::create_link_persisted(
+        db,
+        actor,
+        issue_id,
+        target,
+        link_type,
+        annotation,
+        quoted_text,
+        link_strength,
+        review_pending,
+        metadata,
+    )
+    .await
+}
+
+pub async fn remove_memory_link(
+    db: &PgPool,
+    actor: Actor,
+    issue_id: Uuid,
+    link_id: Uuid,
+    reason: &str,
+) -> IssueResult<MemoryLinkRow> {
+    memory_link::remove_link_persisted(db, actor, issue_id, link_id, reason).await
+}
+
+pub async fn list_outgoing_memory_links(
+    db: &PgPool,
+    actor: Actor,
+    issue_id: Uuid,
+    include_removed: bool,
+) -> IssueResult<Vec<MemoryLinkRow>> {
+    memory_link::list_outgoing_persisted(db, actor, issue_id, include_removed).await
+}
+
+pub async fn list_incoming_memory_links(
+    db: &PgPool,
+    actor: Actor,
+    memory_path: &str,
+    include_removed: bool,
+) -> IssueResult<Vec<MemoryLinkRow>> {
+    memory_link::list_incoming_persisted(db, actor, memory_path, include_removed).await
 }

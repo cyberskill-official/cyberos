@@ -5,11 +5,13 @@
 //! enums, per-tenant signing material selection, ARC header extension, BIMI
 //! gating on DMARC enforcement, DNS setup records, and audit-row builders.
 
-use serde::Serialize;
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use sqlx::{FromRow, PgPool};
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum DkimOutcome {
     SignedEd25519,
@@ -213,13 +215,10 @@ pub fn tinify_svg(svg: &str) -> Result<String, BimiError> {
     if !trimmed.starts_with("<svg") || trimmed.contains("<script") || trimmed.contains("onload=") {
         return Err(BimiError::InvalidSvg);
     }
-    Ok(trimmed
-        .replace('\n', "")
-        .replace('\t', "")
-        .replace("  ", " "))
+    Ok(trimmed.replace(['\n', '\t'], "").replace("  ", " "))
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DnsSetupRecords {
     pub dkim_txt_name: String,
     pub dkim_txt_value: String,
@@ -256,6 +255,231 @@ pub struct DeliveryAuthAuditRow {
     pub selector: Option<String>,
     pub domain: Option<String>,
     pub trace_id: Option<String>,
+}
+
+#[derive(Debug, Clone, FromRow, Serialize)]
+pub struct TenantDnsSetupRow {
+    pub id: Uuid,
+    pub tenant_id: Uuid,
+    pub domain: String,
+    pub selector: String,
+    pub dkim_txt_name: String,
+    pub dkim_txt_value: String,
+    pub spf_txt_value: String,
+    pub dmarc_txt_name: String,
+    pub dmarc_txt_value: String,
+    pub bimi_txt_name: String,
+    pub bimi_txt_value: String,
+    pub status: String,
+    pub last_checked_at: Option<DateTime<Utc>>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, FromRow, Serialize)]
+pub struct DeliveryAuthEventRow {
+    pub id: Uuid,
+    pub tenant_id: Uuid,
+    pub message_id: Option<Uuid>,
+    pub event_kind: String,
+    pub domain: Option<String>,
+    pub selector: Option<String>,
+    pub outcome: Option<String>,
+    pub payload: serde_json::Value,
+    pub trace_id: Option<String>,
+    pub created_at: DateTime<Utc>,
+}
+
+pub async fn load_active_dkim_material(
+    pool: &PgPool,
+    tenant_id: Uuid,
+    selector: &str,
+    domain: &str,
+) -> Result<Option<DkimMaterial>, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    set_tenant(&mut tx, tenant_id).await?;
+    let row: Option<(String, String)> = sqlx::query_as(
+        "SELECT key_algorithm, public_key_pem
+         FROM dkim_keys
+         WHERE tenant_id = $1 AND dkim_selector = $2 AND status = 'active'
+         ORDER BY created_at DESC
+         LIMIT 1",
+    )
+    .bind(tenant_id)
+    .bind(selector)
+    .fetch_optional(&mut *tx)
+    .await?;
+    tx.commit().await?;
+
+    Ok(row.map(|(algorithm, public_dns_txt)| DkimMaterial {
+        tenant_id,
+        selector: selector.to_owned(),
+        domain: domain.to_owned(),
+        key_kind: if algorithm == "ed25519" {
+            DkimKeyKind::Ed25519
+        } else {
+            DkimKeyKind::Rsa2048
+        },
+        public_dns_txt,
+        // Private key unwrapping is performed by the caller's KMS adapter.
+        // Returning None here keeps this DB loader from handling key material.
+        signing_secret: None,
+    }))
+}
+
+pub async fn upsert_dns_setup(
+    pool: &PgPool,
+    tenant_id: Uuid,
+    domain: &str,
+    selector: &str,
+    records: &DnsSetupRecords,
+) -> Result<TenantDnsSetupRow, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    set_tenant(&mut tx, tenant_id).await?;
+    let row: TenantDnsSetupRow = sqlx::query_as(
+        "INSERT INTO tenant_dns_setup (
+            tenant_id, domain, selector, dkim_txt_name, dkim_txt_value,
+            spf_txt_value, dmarc_txt_name, dmarc_txt_value, bimi_txt_name,
+            bimi_txt_value
+         )
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+         ON CONFLICT (tenant_id, domain, selector) DO UPDATE SET
+            dkim_txt_name = EXCLUDED.dkim_txt_name,
+            dkim_txt_value = EXCLUDED.dkim_txt_value,
+            spf_txt_value = EXCLUDED.spf_txt_value,
+            dmarc_txt_name = EXCLUDED.dmarc_txt_name,
+            dmarc_txt_value = EXCLUDED.dmarc_txt_value,
+            bimi_txt_name = EXCLUDED.bimi_txt_name,
+            bimi_txt_value = EXCLUDED.bimi_txt_value,
+            status = 'pending',
+            last_checked_at = NULL
+         RETURNING *",
+    )
+    .bind(tenant_id)
+    .bind(domain)
+    .bind(selector)
+    .bind(&records.dkim_txt_name)
+    .bind(&records.dkim_txt_value)
+    .bind(&records.spf_txt_value)
+    .bind(&records.dmarc_txt_name)
+    .bind(&records.dmarc_txt_value)
+    .bind(&records.bimi_txt_name)
+    .bind(&records.bimi_txt_value)
+    .fetch_one(&mut *tx)
+    .await?;
+    tx.commit().await?;
+    Ok(row)
+}
+
+pub async fn mark_dns_verification(
+    pool: &PgPool,
+    tenant_id: Uuid,
+    domain: &str,
+    selector: &str,
+    passed: bool,
+    trace_id: Option<&str>,
+) -> Result<DeliveryAuthEventRow, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    set_tenant(&mut tx, tenant_id).await?;
+    let status = if passed { "verified" } else { "failed" };
+    sqlx::query(
+        "UPDATE tenant_dns_setup
+         SET status = $1, last_checked_at = now()
+         WHERE tenant_id = $2 AND domain = $3 AND selector = $4",
+    )
+    .bind(status)
+    .bind(tenant_id)
+    .bind(domain)
+    .bind(selector)
+    .execute(&mut *tx)
+    .await?;
+    let event_kind = if passed {
+        "email.dns_verification_passed"
+    } else {
+        "email.dns_verification_failed"
+    };
+    let event = insert_delivery_auth_event_tx(
+        &mut tx,
+        tenant_id,
+        None,
+        event_kind,
+        Some(domain),
+        Some(selector),
+        None,
+        serde_json::json!({"status": status}),
+        trace_id,
+    )
+    .await?;
+    tx.commit().await?;
+    Ok(event)
+}
+
+pub async fn record_signed_message(
+    pool: &PgPool,
+    tenant_id: Uuid,
+    message_id: Uuid,
+    signed: &SignedMessage,
+    selector: &str,
+    domain: &str,
+    trace_id: Option<&str>,
+) -> Result<DeliveryAuthEventRow, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    set_tenant(&mut tx, tenant_id).await?;
+    let event = insert_delivery_auth_event_tx(
+        &mut tx,
+        tenant_id,
+        Some(message_id),
+        "email.dkim_signed",
+        Some(domain),
+        Some(selector),
+        Some(signed.outcome.as_str()),
+        serde_json::json!({"headers": signed.headers}),
+        trace_id,
+    )
+    .await?;
+    tx.commit().await?;
+    Ok(event)
+}
+
+async fn insert_delivery_auth_event_tx(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    tenant_id: Uuid,
+    message_id: Option<Uuid>,
+    event_kind: &str,
+    domain: Option<&str>,
+    selector: Option<&str>,
+    outcome: Option<&str>,
+    payload: serde_json::Value,
+    trace_id: Option<&str>,
+) -> Result<DeliveryAuthEventRow, sqlx::Error> {
+    sqlx::query_as::<_, DeliveryAuthEventRow>(
+        "INSERT INTO delivery_auth_events (
+            tenant_id, message_id, event_kind, domain, selector, outcome, payload, trace_id
+         )
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+         RETURNING *",
+    )
+    .bind(tenant_id)
+    .bind(message_id)
+    .bind(event_kind)
+    .bind(domain)
+    .bind(selector)
+    .bind(outcome)
+    .bind(payload)
+    .bind(trace_id)
+    .fetch_one(&mut **tx)
+    .await
+}
+
+async fn set_tenant(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    tenant_id: Uuid,
+) -> Result<(), sqlx::Error> {
+    sqlx::query("SET LOCAL app.current_tenant_id = $1")
+        .bind(tenant_id.to_string())
+        .execute(&mut **tx)
+        .await?;
+    Ok(())
 }
 
 pub fn dkim_signed_row(

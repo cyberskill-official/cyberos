@@ -268,6 +268,7 @@ def run(
                     "rework": rework},
             invoker=inv,
             stop_on_failure=True,
+            backlog_path=backlog_path,
         )
         frs_run += 1
         processed_fr_ids.add(eligible.fr_id)

@@ -5,8 +5,10 @@
 //! extraction returns opaque variables, and the policy checker blocks hostile
 //! variable flow before a tool can execute.
 
+use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use sqlx::{FromRow, PgPool};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -178,6 +180,309 @@ pub struct CamelAuditRow {
     pub outcome: &'static str,
     pub variables_referenced: Vec<Uuid>,
     pub trace_id: Option<String>,
+}
+
+#[derive(Debug, Clone, FromRow, Serialize)]
+pub struct CamelVariableRow {
+    pub id: Uuid,
+    pub tenant_id: Uuid,
+    pub source_email_id: Uuid,
+    pub schema_name: String,
+    pub value_hash16: String,
+    pub expires_at: DateTime<Utc>,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, FromRow, Serialize)]
+pub struct CamelTrustListRow {
+    pub id: Uuid,
+    pub tenant_id: Uuid,
+    pub domain: String,
+    pub op_kind: String,
+    pub full_bypass: bool,
+    pub ciso_audit_row_id: Option<Uuid>,
+    pub created_by: Uuid,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, FromRow, Serialize)]
+pub struct CamelAuditLogRow {
+    pub id: Uuid,
+    pub tenant_id: Uuid,
+    pub plan_id: Uuid,
+    pub event_kind: String,
+    pub outcome: String,
+    pub variables: Vec<Uuid>,
+    pub payload: serde_json::Value,
+    pub trace_id: Option<String>,
+    pub created_at: DateTime<Utc>,
+}
+
+pub async fn persist_variable(
+    pool: &PgPool,
+    tenant_id: Uuid,
+    variable: &CamelVariable,
+    ttl: Duration,
+) -> Result<CamelVariableRow, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    set_tenant(&mut tx, tenant_id).await?;
+    let row: CamelVariableRow = sqlx::query_as(
+        "INSERT INTO camel_variables (
+            id, tenant_id, source_email_id, schema_name, value_hash16, expires_at
+         )
+         VALUES ($1,$2,$3,$4,$5,$6)
+         RETURNING *",
+    )
+    .bind(variable.var_id)
+    .bind(tenant_id)
+    .bind(variable.source_email_id)
+    .bind(&variable.schema)
+    .bind(&variable.value_hash16)
+    .bind(Utc::now() + ttl)
+    .fetch_one(&mut *tx)
+    .await?;
+    tx.commit().await?;
+    Ok(row)
+}
+
+pub async fn upsert_trust_list_entry(
+    pool: &PgPool,
+    tenant_id: Uuid,
+    domain: &str,
+    op_kind: &str,
+    full_bypass: bool,
+    ciso_audit_row_id: Option<Uuid>,
+    created_by: Uuid,
+) -> Result<CamelTrustListRow, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    set_tenant(&mut tx, tenant_id).await?;
+    let row: CamelTrustListRow = sqlx::query_as(
+        "INSERT INTO camel_trust_list (
+            tenant_id, domain, op_kind, full_bypass, ciso_audit_row_id, created_by
+         )
+         VALUES ($1,$2,$3,$4,$5,$6)
+         ON CONFLICT (tenant_id, domain, op_kind) DO UPDATE SET
+            full_bypass = EXCLUDED.full_bypass,
+            ciso_audit_row_id = EXCLUDED.ciso_audit_row_id,
+            created_by = EXCLUDED.created_by
+         RETURNING *",
+    )
+    .bind(tenant_id)
+    .bind(domain.to_ascii_lowercase())
+    .bind(op_kind)
+    .bind(full_bypass)
+    .bind(ciso_audit_row_id)
+    .bind(created_by)
+    .fetch_one(&mut *tx)
+    .await?;
+    tx.commit().await?;
+    Ok(row)
+}
+
+pub async fn trust_list_bypass_allowed_persisted(
+    pool: &PgPool,
+    tenant_id: Uuid,
+    domain: &str,
+    op_kind: &str,
+) -> Result<bool, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    set_tenant(&mut tx, tenant_id).await?;
+    let row: Option<(bool, Option<Uuid>)> = sqlx::query_as(
+        "SELECT full_bypass, ciso_audit_row_id
+         FROM camel_trust_list
+         WHERE tenant_id = $1 AND domain = $2 AND op_kind = $3",
+    )
+    .bind(tenant_id)
+    .bind(domain.to_ascii_lowercase())
+    .bind(op_kind)
+    .fetch_optional(&mut *tx)
+    .await?;
+    tx.commit().await?;
+
+    Ok(match row {
+        Some((true, Some(_))) => true,
+        Some((false, audit_row)) => trust_list_bypass_allowed(domain, op_kind, audit_row),
+        _ => false,
+    })
+}
+
+pub async fn insert_audit_log(
+    pool: &PgPool,
+    tenant_id: Uuid,
+    event_kind: &str,
+    decision: &CamelDecision,
+    payload: serde_json::Value,
+    trace_id: Option<&str>,
+) -> Result<CamelAuditLogRow, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    set_tenant(&mut tx, tenant_id).await?;
+    let row =
+        insert_audit_log_tx(&mut tx, tenant_id, event_kind, decision, payload, trace_id).await?;
+    tx.commit().await?;
+    Ok(row)
+}
+
+pub async fn execute_persisted(
+    pool: &PgPool,
+    tenant_id: Uuid,
+    user_intent: &str,
+    email_id: Uuid,
+    email_content: &str,
+    tools_available: &[&str],
+    trace_id: Option<&str>,
+) -> Result<(CamelDecision, Vec<CamelAuditLogRow>), sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    set_tenant(&mut tx, tenant_id).await?;
+
+    let plan = privileged_plan(user_intent, tools_available, email_id);
+    let plan_decision = CamelDecision {
+        plan_id: plan.plan_id,
+        outcome: CamelCheckOutcome::Safe,
+        variables_referenced: Vec::new(),
+        blocked_reason: None,
+    };
+    let plan_row = insert_audit_log_tx(
+        &mut tx,
+        tenant_id,
+        "email.camel_plan_built",
+        &plan_decision,
+        serde_json::json!({"tool_name": plan.tool_name}),
+        trace_id,
+    )
+    .await?;
+
+    if looks_like_prompt_injection(email_content) {
+        let decision = blocked(
+            &plan,
+            Vec::new(),
+            "quarantined email content contains prompt-injection markers",
+        );
+        let blocked_row = insert_audit_log_tx(
+            &mut tx,
+            tenant_id,
+            "email.camel_blocked",
+            &decision,
+            serde_json::json!({"reason": decision.blocked_reason.clone()}),
+            trace_id,
+        )
+        .await?;
+        tx.commit().await?;
+        return Ok((decision, vec![plan_row, blocked_row]));
+    }
+
+    let var = quarantined_extract(email_id, "email.summary", email_content);
+    let persisted_var: CamelVariableRow = sqlx::query_as(
+        "INSERT INTO camel_variables (
+            id, tenant_id, source_email_id, schema_name, value_hash16, expires_at
+         )
+         VALUES ($1,$2,$3,$4,$5,$6)
+         RETURNING *",
+    )
+    .bind(var.var_id)
+    .bind(tenant_id)
+    .bind(var.source_email_id)
+    .bind(&var.schema)
+    .bind(&var.value_hash16)
+    .bind(Utc::now() + Duration::hours(24))
+    .fetch_one(&mut *tx)
+    .await?;
+    let extracted_row = insert_audit_log_tx(
+        &mut tx,
+        tenant_id,
+        "email.camel_quarantined_extracted",
+        &plan_decision,
+        serde_json::json!({
+            "var_id": persisted_var.id,
+            "schema": persisted_var.schema_name,
+            "value_hash16": persisted_var.value_hash16,
+            "source_email_id": persisted_var.source_email_id
+        }),
+        trace_id,
+    )
+    .await?;
+
+    let arg = ToolArg {
+        name: "body".into(),
+        source: ToolArgSource::QuarantinedVariable(var.var_id),
+    };
+    let decision = check_tool_args(&plan, &[var], &[arg]);
+    let event_kind = if decision.outcome == CamelCheckOutcome::Safe {
+        "email.camel_executed"
+    } else {
+        "email.camel_blocked"
+    };
+    let executed_row = insert_audit_log_tx(
+        &mut tx,
+        tenant_id,
+        event_kind,
+        &decision,
+        serde_json::json!({
+            "blocked_reason": decision.blocked_reason.clone(),
+            "variables_referenced": decision.variables_referenced.clone(),
+        }),
+        trace_id,
+    )
+    .await?;
+    tx.commit().await?;
+    Ok((decision, vec![plan_row, extracted_row, executed_row]))
+}
+
+pub async fn list_audit_log(
+    pool: &PgPool,
+    tenant_id: Uuid,
+    limit: i64,
+) -> Result<Vec<CamelAuditLogRow>, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    set_tenant(&mut tx, tenant_id).await?;
+    let rows: Vec<CamelAuditLogRow> = sqlx::query_as(
+        "SELECT * FROM camel_audit
+         WHERE tenant_id = $1
+         ORDER BY created_at DESC
+         LIMIT $2",
+    )
+    .bind(tenant_id)
+    .bind(limit.clamp(1, 500))
+    .fetch_all(&mut *tx)
+    .await?;
+    tx.commit().await?;
+    Ok(rows)
+}
+
+async fn insert_audit_log_tx(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    tenant_id: Uuid,
+    event_kind: &str,
+    decision: &CamelDecision,
+    payload: serde_json::Value,
+    trace_id: Option<&str>,
+) -> Result<CamelAuditLogRow, sqlx::Error> {
+    sqlx::query_as(
+        "INSERT INTO camel_audit (
+            tenant_id, plan_id, event_kind, outcome, variables, payload, trace_id
+         )
+         VALUES ($1,$2,$3,$4,$5,$6,$7)
+         RETURNING *",
+    )
+    .bind(tenant_id)
+    .bind(decision.plan_id)
+    .bind(event_kind)
+    .bind(decision.outcome.as_str())
+    .bind(&decision.variables_referenced)
+    .bind(payload)
+    .bind(trace_id)
+    .fetch_one(&mut **tx)
+    .await
+}
+
+async fn set_tenant(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    tenant_id: Uuid,
+) -> Result<(), sqlx::Error> {
+    sqlx::query("SET LOCAL app.current_tenant_id = $1")
+        .bind(tenant_id.to_string())
+        .execute(&mut **tx)
+        .await?;
+    Ok(())
 }
 
 pub fn audit_row(

@@ -14,6 +14,8 @@
 //!   * [`handlers`] — axum handler functions
 //!   * [`links`] — bidirectional symmetric-link writer
 
+#![allow(clippy::too_many_arguments)]
+
 pub mod audit;
 pub mod billing;
 pub mod blockers;

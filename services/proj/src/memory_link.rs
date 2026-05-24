@@ -2,7 +2,12 @@
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use sqlx::{FromRow, PgPool};
 use uuid::Uuid;
+
+use crate::errors::{IssueError, IssueResult};
+use crate::repo;
+use crate::types::{Actor, Issue};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -30,6 +35,16 @@ pub enum LinkStrength {
     Weak,
     Medium,
     Strong,
+}
+
+impl LinkStrength {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Weak => "weak",
+            Self::Medium => "medium",
+            Self::Strong => "strong",
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -69,6 +84,26 @@ pub enum MemoryLinkError {
     DuplicateActive,
     #[error("removal_reason required")]
     RemovalReasonRequired,
+}
+
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct MemoryLinkRow {
+    pub id: Uuid,
+    pub tenant_id: Uuid,
+    pub issue_id: Uuid,
+    pub memory_path: String,
+    pub memory_row_id: Option<String>,
+    pub link_type: String,
+    pub annotation: Option<String>,
+    pub quoted_text: Option<String>,
+    pub link_strength: String,
+    pub review_pending: bool,
+    pub metadata: serde_json::Value,
+    pub created_by_subject_id: Uuid,
+    pub created_at: DateTime<Utc>,
+    pub removed_at: Option<DateTime<Utc>>,
+    pub removed_by_subject_id: Option<Uuid>,
+    pub removal_reason: Option<String>,
 }
 
 pub fn create_link(
@@ -116,6 +151,160 @@ pub fn create_link(
     })
 }
 
+pub async fn create_link_persisted(
+    db: &PgPool,
+    actor: Actor,
+    issue_id: Uuid,
+    target: MemoryTarget,
+    link_type: MemoryLinkType,
+    annotation: Option<&str>,
+    quoted_text: Option<&str>,
+    link_strength: Option<LinkStrength>,
+    review_pending: bool,
+    metadata: serde_json::Value,
+) -> IssueResult<MemoryLinkRow> {
+    if !target.readable {
+        return Err(IssueError::Validation(
+            MemoryLinkError::ScopeDenied(target.path).to_string(),
+        ));
+    }
+    if target.tenant_id != actor.tenant_id {
+        return Err(IssueError::Validation(
+            MemoryLinkError::CrossTenantForbidden.to_string(),
+        ));
+    }
+    let mut tx = db.begin().await?;
+    repo::set_tenant(&mut tx, actor.tenant_id).await?;
+    let issue: Option<Issue> = sqlx::query_as("SELECT * FROM issues WHERE id = $1")
+        .bind(issue_id)
+        .fetch_optional(&mut *tx)
+        .await?;
+    let issue = issue.ok_or(IssueError::NotFound)?;
+    if link_type == MemoryLinkType::Supersedes && target.created_at >= issue.created_at {
+        return Err(IssueError::Validation(
+            MemoryLinkError::SupersedeViolatesTime.to_string(),
+        ));
+    }
+
+    let row: MemoryLinkRow = sqlx::query_as(
+        "INSERT INTO memory_links (
+            tenant_id, issue_id, memory_path, memory_row_id, link_type,
+            annotation, quoted_text, link_strength, review_pending, metadata,
+            created_by_subject_id
+         )
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+         RETURNING *",
+    )
+    .bind(actor.tenant_id)
+    .bind(issue_id)
+    .bind(&target.path)
+    .bind(Option::<String>::None)
+    .bind(link_type.as_str())
+    .bind(annotation.map(redact_annotation))
+    .bind(quoted_text)
+    .bind(link_strength.unwrap_or(LinkStrength::Medium).as_str())
+    .bind(review_pending)
+    .bind(metadata)
+    .bind(actor.subject_id)
+    .fetch_one(&mut *tx)
+    .await
+    .map_err(|err| {
+        if let sqlx::Error::Database(db_err) = &err {
+            if db_err.constraint() == Some("memory_links_active_unique") {
+                return IssueError::Validation(MemoryLinkError::DuplicateActive.to_string());
+            }
+        }
+        IssueError::Db(err)
+    })?;
+    tx.commit().await?;
+    Ok(row)
+}
+
+pub async fn remove_link_persisted(
+    db: &PgPool,
+    actor: Actor,
+    issue_id: Uuid,
+    link_id: Uuid,
+    reason: &str,
+) -> IssueResult<MemoryLinkRow> {
+    if reason.trim().is_empty() {
+        return Err(IssueError::Validation(
+            MemoryLinkError::RemovalReasonRequired.to_string(),
+        ));
+    }
+    let mut tx = db.begin().await?;
+    repo::set_tenant(&mut tx, actor.tenant_id).await?;
+    let row: MemoryLinkRow = sqlx::query_as(
+        "UPDATE memory_links
+         SET removed_at = now(),
+             removed_by_subject_id = $4,
+             removal_reason = $5
+         WHERE tenant_id = $1
+           AND issue_id = $2
+           AND id = $3
+           AND removed_at IS NULL
+         RETURNING *",
+    )
+    .bind(actor.tenant_id)
+    .bind(issue_id)
+    .bind(link_id)
+    .bind(actor.subject_id)
+    .bind(redact_annotation(reason))
+    .fetch_optional(&mut *tx)
+    .await?
+    .ok_or(IssueError::NotFound)?;
+    tx.commit().await?;
+    Ok(row)
+}
+
+pub async fn list_outgoing_persisted(
+    db: &PgPool,
+    actor: Actor,
+    issue_id: Uuid,
+    include_removed: bool,
+) -> IssueResult<Vec<MemoryLinkRow>> {
+    let mut tx = db.begin().await?;
+    repo::set_tenant(&mut tx, actor.tenant_id).await?;
+    let rows: Vec<MemoryLinkRow> = sqlx::query_as(
+        "SELECT * FROM memory_links
+         WHERE tenant_id = $1
+           AND issue_id = $2
+           AND ($3::bool = true OR removed_at IS NULL)
+         ORDER BY created_at DESC",
+    )
+    .bind(actor.tenant_id)
+    .bind(issue_id)
+    .bind(include_removed)
+    .fetch_all(&mut *tx)
+    .await?;
+    tx.commit().await?;
+    Ok(rows)
+}
+
+pub async fn list_incoming_persisted(
+    db: &PgPool,
+    actor: Actor,
+    memory_path: &str,
+    include_removed: bool,
+) -> IssueResult<Vec<MemoryLinkRow>> {
+    let mut tx = db.begin().await?;
+    repo::set_tenant(&mut tx, actor.tenant_id).await?;
+    let rows: Vec<MemoryLinkRow> = sqlx::query_as(
+        "SELECT * FROM memory_links
+         WHERE tenant_id = $1
+           AND memory_path = $2
+           AND ($3::bool = true OR removed_at IS NULL)
+         ORDER BY created_at DESC",
+    )
+    .bind(actor.tenant_id)
+    .bind(memory_path)
+    .bind(include_removed)
+    .fetch_all(&mut *tx)
+    .await?;
+    tx.commit().await?;
+    Ok(rows)
+}
+
 pub fn soft_remove(
     link: &mut MemoryLink,
     reason: &str,
@@ -129,7 +318,7 @@ pub fn soft_remove(
     Ok(())
 }
 
-pub fn outgoing<'a>(issue_id: Uuid, links: &'a [MemoryLink]) -> Vec<&'a MemoryLink> {
+pub fn outgoing(issue_id: Uuid, links: &[MemoryLink]) -> Vec<&MemoryLink> {
     links
         .iter()
         .filter(|l| l.issue_id == issue_id && l.removed_at.is_none())

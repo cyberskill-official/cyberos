@@ -1,6 +1,6 @@
 # CyberOS EMAIL — Stalwart adapter + per-tenant DKIM + residency-pinned bodies
 
-**Status:** FR-EMAIL-001 + FR-EMAIL-004/005/009/011 shipped as service slices — Stalwart container config, per-tenant DKIM keystore, residency-pinned S3+KMS body storage, delivery-auth hardening, CaMeL quarantine gate, outbound confirm-before-send queue, DSAR export helpers, and memory audit row builders.
+**Status:** FR-EMAIL-001 + FR-EMAIL-004/005/009/011 shipped as service slices — Stalwart container config, per-tenant DKIM keystore, residency-pinned S3+KMS body storage, delivery-auth hardening, CaMeL quarantine gate, outbound confirm-before-send queue, DSAR export jobs, HTTP routes, and memory audit row builders.
 **Mail server:** [Stalwart Mail Server](https://stalw.art) v0.10.x (AGPL-3.0; container pinned in `docker/stalwart.toml`).
 **Protocols:** JMAP + IMAP + SMTP + POP3 + ManageSieve + MTA-STS + DANE + DKIM + ARC + BIMI.
 
@@ -57,10 +57,10 @@
 | Health + per-message status REST | ✅ | `src/handlers/status.rs` |
 | `cyberos-email-cli provision` | ✅ | `src/bin/cli.rs` |
 | Tests — types + residency + DKIM + audit + adapter + subject normalisation | ✅ | `tests/` + inline `#[cfg(test)]` |
-| DKIM+ARC+BIMI delivery hardening | ✅ | `src/delivery_auth.rs` |
-| CaMeL dual-LLM quarantine gate | ✅ | `src/camel.rs` |
-| Outbound 1:1 confirm-before-send queue | ✅ | `src/outbound.rs` |
-| DSAR message export aggregation | ✅ | `src/dsar.rs` |
+| DKIM+ARC+BIMI delivery hardening | ✅ | `migrations/0005_delivery_auth.sql` + `src/delivery_auth.rs` + `src/handlers/delivery_auth.rs` |
+| Outbound 1:1 confirm-before-send queue | ✅ | `migrations/0006_outbound_messages.sql` + `src/outbound.rs` + `src/handlers/outbound.rs` |
+| DSAR message export aggregation | ✅ | `migrations/0007_dsar_export_jobs.sql` + `src/dsar.rs` + `src/handlers/dsar.rs` |
+| CaMeL dual-LLM quarantine gate | ✅ | `migrations/0011_camel_audit.sql` + `src/camel.rs` + `src/handlers/camel.rs` |
 
 ---
 
@@ -160,7 +160,11 @@ services/email/
 │   ├── 0001_messages.sql           message_metadata + thread_metadata + enums + RLS
 │   ├── 0002_bounce_log.sql         append-only bounce log + RLS
 │   ├── 0003_dkim_keys.sql          per-tenant keystore + rotation history + RLS
-│   └── 0004_residency_routing.sql  tenant_residency table + RLS
+│   ├── 0004_residency_routing.sql  tenant_residency table + RLS
+│   ├── 0005_delivery_auth.sql      tenant DNS setup + delivery auth event rows
+│   ├── 0006_outbound_messages.sql  outbound queue + suppression + delivery events
+│   ├── 0007_dsar_export_jobs.sql   DSAR jobs + subject/attachment refs
+│   └── 0011_camel_audit.sql        CaMeL variable/trust/audit tables
 ├── src/
 │   ├── lib.rs                      crate root
 │   ├── types.rs                    EmailMessage, EmailThread, BounceEvent, DkimKey, enums
@@ -186,7 +190,11 @@ services/email/
 │   │   └── email_events.rs         5 row builders + hash16 + spam_band
 │   ├── handlers/
 │   │   ├── mod.rs
-│   │   └── status.rs               healthz + message_status REST
+│   │   ├── status.rs               healthz + message_status REST
+│   │   ├── delivery_auth.rs        DNS setup / verify / BIMI handlers
+│   │   ├── outbound.rs             compose / send / suppression handlers
+│   │   ├── dsar.rs                 export / job status handlers
+│   │   └── camel.rs                execute / trust-list / audit-log handlers
 │   └── bin/
 │       ├── server.rs               cyberos-email HTTP server
 │       └── cli.rs                  cyberos-email-cli operator entry

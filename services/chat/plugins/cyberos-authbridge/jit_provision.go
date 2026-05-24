@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 	"unicode"
@@ -33,7 +34,11 @@ func (p *JitProvisioner) Provision(subject, email, tenant string) (MattermostUse
 	name := sanitizeUsername(email)
 	if n := p.byName[name]; n > 0 {
 		p.byName[name] = n + 1
-		name = name + "_" + string(rune('0'+n))
+		suffix := fmt.Sprintf("_%d", n)
+		if len(name)+len(suffix) > 22 {
+			name = name[:22-len(suffix)]
+		}
+		name += suffix
 	} else {
 		p.byName[name] = 1
 	}

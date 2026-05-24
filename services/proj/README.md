@@ -14,7 +14,7 @@
 - **Issue link** — `(issue_id, linked_to_id, link_type)` triple. Symmetric types auto-insert the inverse direction.
 - **Decision anchor** — immutable `proj.decision` memory row payload per issue state change, with reason, prior-chain link, references, redaction, and retraction payload support.
 - **Rate card** — append-only engagement pricing records with role, currency, hourly rate, billable default, and effective-date supersession.
-- **MEMORY_LINK** — typed Issue ↔ memory relation (`cites | implements | supersedes`) with duplicate, scope, cross-tenant, and future-supersede guards.
+- **MEMORY_LINK** — typed Issue ↔ memory relation (`cites | implements | supersedes | cites_with_quote`) with duplicate, scope, cross-tenant, and future-supersede guards.
 - **Collaboration** — Yjs update journal contract for description/comment bodies, plus LWW scalar merge for metadata.
 - **Billing** — member override → task class → role default → fallback cascade, with T&M/fixed-fee/retainer rollups.
 - **Operations intelligence** — citation drift, blocker detection, cycle review drafts, and estimate calibration snapshots.
@@ -74,7 +74,7 @@ Canonical kinds emitted by the PROJ service slices:
 | `proj.issue_status_changed` | PATCH that mutates status | from_status, to_status, by_subject_id |
 | `proj.issue_assigned` | PATCH that changes assignee | from_subject_id, to_subject_id, by_subject_id |
 | `proj.issue_linked` | POST /v1/proj/issues/{id}/links | linked_to_id, link_type, by_subject_id |
-| `proj.decision_recorded` | Issue state-change decision is anchored | issue_id, from_status, to_status, reason_code, prior_chain |
+| `proj.decision_recorded` | Issue state-change decision is anchored | issue_id, from_status, to_status, reason, prior_chain |
 | `proj.decision_retracted` | Decision anchor is retracted with replacement context | decision_id, retraction_reason, replacement_decision_id |
 | `proj.rate_card_created` | Engagement rate-card row is created | engagement_id, role, currency, hourly_rate, effective_from |
 | `proj.rate_card_superseded` | Rate-card row is superseded | old_rate_card_id, new_rate_card_id |
@@ -111,19 +111,22 @@ services/proj/
 │   ├── 0001_engagements.sql      engagements + RLS + tenant_scoped policy
 │   ├── 0002_cycles.sql           cycles + RLS + ends_at > starts_at CHECK
 │   ├── 0003_issues.sql           issues + RLS + updated_at trigger
-│   └── 0004_issue_links.sql      issue_links + RLS via issues join + self-ref CHECK
+│   ├── 0004_issue_links.sql      issue_links + RLS via issues join + self-ref CHECK
+│   ├── 0005_proj_decisions.sql   decision anchors + retraction rows + RLS
+│   ├── 0006_rate_cards.sql       append-only rate cards + active uniqueness + RLS
+│   └── 0007_memory_links.sql     typed Issue-memory links + soft remove + RLS
 ├── src/
 │   ├── lib.rs
 │   ├── types.rs                  IssueStatus, IssuePriority, LinkType, Issue, Engagement, Cycle, Actor, requests
 │   ├── errors.rs                 IssueError + .code() + .http_status()
 │   ├── status_fsm.rs             allowed_transitions + validate (with same-status no-op)
 │   ├── audit.rs                  4 memory row builders + ProjAuditRow struct
-│   ├── decisions.rs              FR-PROJ-002 memory decision anchoring helpers
+│   ├── decisions.rs              FR-PROJ-002 memory decision anchoring + DB writer
 │   ├── crdt.rs                   FR-PROJ-003 collaboration update journal
-│   ├── rate_card.rs              FR-PROJ-005 append-only rate-card helpers
+│   ├── rate_card.rs              FR-PROJ-005 append-only rate-card DB writer
 │   ├── billing.rs                FR-PROJ-006/007 cascade + rollups
 │   ├── history.rs                FR-PROJ-008 history_event hash helpers
-│   ├── memory_link.rs            FR-PROJ-009 typed MEMORY_LINK helpers
+│   ├── memory_link.rs            FR-PROJ-009 typed MEMORY_LINK DB writer
 │   ├── drift.rs                  FR-PROJ-010 citation drift detector
 │   ├── blockers.rs               FR-PROJ-011 blocker parser/dwell monitor
 │   ├── cycle_review.rs           FR-PROJ-012 deterministic review draft inputs

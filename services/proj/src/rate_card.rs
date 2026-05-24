@@ -2,7 +2,12 @@
 
 use chrono::{Duration, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
+use sqlx::{FromRow, PgPool};
 use uuid::Uuid;
+
+use crate::errors::{IssueError, IssueResult};
+use crate::repo;
+use crate::types::Actor;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -24,6 +29,17 @@ impl BillingRole {
         Self::Analyst,
         Self::Exec,
     ];
+
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Engineer => "engineer",
+            Self::Designer => "designer",
+            Self::Pm => "pm",
+            Self::Qa => "qa",
+            Self::Analyst => "analyst",
+            Self::Exec => "exec",
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -42,6 +58,16 @@ impl Currency {
         match self {
             Self::VND | Self::JPY => 0,
             Self::USD | Self::SGD | Self::EUR => 2,
+        }
+    }
+
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::VND => "VND",
+            Self::USD => "USD",
+            Self::SGD => "SGD",
+            Self::EUR => "EUR",
+            Self::JPY => "JPY",
         }
     }
 }
@@ -74,6 +100,23 @@ pub enum RateCardError {
     NotFound,
 }
 
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct RateCardRow {
+    pub id: Uuid,
+    pub tenant_id: Uuid,
+    pub engagement_id: Uuid,
+    pub role: String,
+    pub currency: String,
+    pub hourly_rate_minor: i64,
+    pub billable_default: bool,
+    pub effective_from: NaiveDate,
+    pub effective_to: Option<NaiveDate>,
+    pub archived: bool,
+    pub supersedes_rate_card_id: Option<Uuid>,
+    pub created_by_subject_id: Uuid,
+    pub created_at: chrono::DateTime<Utc>,
+}
+
 pub fn create_rate_card(
     tenant_id: Uuid,
     engagement_id: Uuid,
@@ -98,6 +141,146 @@ pub fn create_rate_card(
         archived: false,
         created_by_subject_id,
     })
+}
+
+pub async fn create_rate_card_persisted(
+    db: &PgPool,
+    actor: Actor,
+    engagement_id: Uuid,
+    role: BillingRole,
+    currency: Currency,
+    hourly_rate_minor: i64,
+    billable_default: bool,
+    effective_from: NaiveDate,
+) -> IssueResult<RateCardRow> {
+    validate_rate(hourly_rate_minor, effective_from)
+        .map_err(|e| IssueError::Validation(e.to_string()))?;
+    let mut tx = db.begin().await?;
+    repo::set_tenant(&mut tx, actor.tenant_id).await?;
+
+    let overlapping: Option<(Uuid,)> = sqlx::query_as(
+        "SELECT id FROM rate_cards
+         WHERE tenant_id = $1
+           AND engagement_id = $2
+           AND role = $3
+           AND currency = $4
+           AND archived = false
+           AND effective_to IS NOT NULL
+           AND $5::date < effective_to
+           AND effective_from < '9999-12-31'::date
+         LIMIT 1",
+    )
+    .bind(actor.tenant_id)
+    .bind(engagement_id)
+    .bind(role.as_str())
+    .bind(currency.as_str())
+    .bind(effective_from)
+    .fetch_optional(&mut *tx)
+    .await?;
+    if overlapping.is_some() {
+        return Err(IssueError::Validation(
+            RateCardError::OverlapConflict.to_string(),
+        ));
+    }
+
+    let supersedes: Option<(Uuid,)> = sqlx::query_as(
+        "UPDATE rate_cards
+         SET effective_to = $5
+         WHERE tenant_id = $1
+           AND engagement_id = $2
+           AND role = $3
+           AND currency = $4
+           AND effective_to IS NULL
+           AND archived = false
+         RETURNING id",
+    )
+    .bind(actor.tenant_id)
+    .bind(engagement_id)
+    .bind(role.as_str())
+    .bind(currency.as_str())
+    .bind(effective_from)
+    .fetch_optional(&mut *tx)
+    .await?;
+
+    let row: RateCardRow = sqlx::query_as(
+        "INSERT INTO rate_cards (
+            tenant_id, engagement_id, role, currency, hourly_rate_minor,
+            billable_default, effective_from, supersedes_rate_card_id,
+            created_by_subject_id
+         )
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+         RETURNING *",
+    )
+    .bind(actor.tenant_id)
+    .bind(engagement_id)
+    .bind(role.as_str())
+    .bind(currency.as_str())
+    .bind(hourly_rate_minor)
+    .bind(billable_default)
+    .bind(effective_from)
+    .bind(supersedes.map(|s| s.0))
+    .bind(actor.subject_id)
+    .fetch_one(&mut *tx)
+    .await?;
+    tx.commit().await?;
+    Ok(row)
+}
+
+pub async fn lookup_rate_card_persisted(
+    db: &PgPool,
+    actor: Actor,
+    engagement_id: Uuid,
+    role: BillingRole,
+    currency: Currency,
+    at: NaiveDate,
+) -> IssueResult<RateCardRow> {
+    let mut tx = db.begin().await?;
+    repo::set_tenant(&mut tx, actor.tenant_id).await?;
+    let row: Option<RateCardRow> = sqlx::query_as(
+        "SELECT * FROM rate_cards
+         WHERE tenant_id = $1
+           AND engagement_id = $2
+           AND role = $3
+           AND currency = $4
+           AND archived = false
+           AND effective_from <= $5
+           AND (effective_to IS NULL OR $5 < effective_to)
+         ORDER BY effective_from DESC
+         LIMIT 1",
+    )
+    .bind(actor.tenant_id)
+    .bind(engagement_id)
+    .bind(role.as_str())
+    .bind(currency.as_str())
+    .bind(at)
+    .fetch_optional(&mut *tx)
+    .await?;
+    tx.commit().await?;
+    row.ok_or_else(|| IssueError::Validation(RateCardError::NotFound.to_string()))
+}
+
+pub async fn list_rate_cards_persisted(
+    db: &PgPool,
+    actor: Actor,
+    engagement_id: Uuid,
+    include_archived: bool,
+) -> IssueResult<Vec<RateCardRow>> {
+    let mut tx = db.begin().await?;
+    repo::set_tenant(&mut tx, actor.tenant_id).await?;
+    let rows: Vec<RateCardRow> = sqlx::query_as(
+        "SELECT * FROM rate_cards
+         WHERE tenant_id = $1
+           AND engagement_id = $2
+           AND ($3::bool = true OR archived = false)
+         ORDER BY role ASC, currency ASC, effective_from DESC",
+    )
+    .bind(actor.tenant_id)
+    .bind(engagement_id)
+    .bind(include_archived)
+    .fetch_all(&mut *tx)
+    .await?;
+    tx.commit().await?;
+    Ok(rows)
 }
 
 pub fn supersede_active(
