@@ -3,7 +3,7 @@ id: FR-CRM-001
 title: "CRM Account/Contact/Deal Postgres schema — closed entity primitives + custom pipelines + closed stage-template enum + RLS + deal status FSM"
 module: CRM
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 1

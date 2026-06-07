@@ -4,7 +4,7 @@ id: FR-MEMORY-105
 title: "cyberos doctor — watched-folders integrity invariants (manifest ↔ filesystem ↔ HEAD reconciliation; 5 new invariants in memory.invariants.yaml)"
 module: memory
 priority: MUST
-status: done
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 2

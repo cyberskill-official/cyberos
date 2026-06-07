@@ -3,7 +3,7 @@ id: FR-PORTAL-001
 title: "PORTAL scoped read-only views — PROJ/INV/DOC/CHAT filtered by Engagement membership + sync_class=client-visible + per-row redaction + GraphQL-style projection"
 module: PORTAL
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P4
 milestone: P4 · slice 1

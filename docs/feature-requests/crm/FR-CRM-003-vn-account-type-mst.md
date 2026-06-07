@@ -3,7 +3,7 @@ id: FR-CRM-003
 title: "CRM VN account types + MST — legal entity classification (Sole/LLC/JSC/FDI) + tax ID field with format validation"
 module: CRM
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 5

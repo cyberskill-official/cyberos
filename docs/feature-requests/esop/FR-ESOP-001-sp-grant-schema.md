@@ -3,7 +3,7 @@ id: FR-ESOP-001
 title: "ESOP SP grant schema — Stock Plan grant with 4-year vesting + 12-month cliff default + per-grant immutable params"
 module: ESOP
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 1

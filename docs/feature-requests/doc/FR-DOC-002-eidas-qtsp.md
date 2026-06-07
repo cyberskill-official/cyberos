@@ -3,7 +3,7 @@ id: FR-DOC-002
 title: "DOC eIDAS QTSP integration — GlobalSign or Cryptomathic partner for EU residency qualified signatures"
 module: DOC
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 3

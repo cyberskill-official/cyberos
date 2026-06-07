@@ -3,7 +3,7 @@ id: FR-CRM-005
 title: "CRM CUO crm.next-action@1 skill — AI-ranked top-3 next moves per open deal with rationale and deep-links"
 module: CRM
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 6

@@ -3,7 +3,7 @@ id: FR-REW-010
 title: "REW memory structural exclusion CI gate — no comp fields appear in memory-ingest paths; static analysis + runtime check"
 module: REW
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 1

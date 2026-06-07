@@ -3,7 +3,7 @@ id: FR-DOC-009
 title: "DOC renewal proposal CUO draft — auto-generate renewal terms + price adjustment + send-to-customer flow with AM approval"
 module: DOC
 priority: SHOULD
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 1

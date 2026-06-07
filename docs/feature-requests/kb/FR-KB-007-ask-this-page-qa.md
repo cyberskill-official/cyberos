@@ -3,7 +3,7 @@ id: FR-KB-007
 title: "KB Ask-this-page Q&A — CUO-grounded answer over current + linked docs with span-level citations and answer-or-decline gate"
 module: KB
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 5

@@ -3,7 +3,7 @@ id: FR-INV-003
 title: "INV Stripe webhook handler — Stripe-Signature verify + closed event-type allowlist + idempotent receipt insert + multi-currency + append-only ledger + memory audit"
 module: INV
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 2

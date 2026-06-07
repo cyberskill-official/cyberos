@@ -3,7 +3,7 @@ id: FR-REW-009
 title: "REW VietQR bank payroll batch send — bulk transfer file generation with CFO manual confirm at submission to bank"
 module: REW
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 2

@@ -3,7 +3,7 @@ id: FR-LEARN-005
 title: "LEARN per-judge score isolation — never exit LEARN boundary; HR receives only summary + recommendation"
 module: LEARN
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 7

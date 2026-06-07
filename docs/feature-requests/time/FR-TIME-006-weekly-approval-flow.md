@@ -3,7 +3,7 @@ id: FR-TIME-006
 title: "TIME weekly approval flow — Member submit → AM (engagement_admin) review → CFO visibility with auto-lock + bulk-approve + diff view"
 module: TIME
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 1

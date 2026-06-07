@@ -3,7 +3,7 @@ id: FR-PORTAL-005
 title: "PORTAL branded Genie chat — CUO scope-narrowed by JWT scope_grants + per-Engagement brand pack + IdP-auth session integration + cross-tenant boundary enforcement"
 module: PORTAL
 priority: SHOULD
-status: draft
+status: ready_to_implement
 verify: T
 phase: P4
 milestone: P4 · slice 2

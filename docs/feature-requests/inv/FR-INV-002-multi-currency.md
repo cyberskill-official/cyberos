@@ -3,7 +3,7 @@ id: FR-INV-002
 title: "INV multi-currency support — VND/USD/SGD/EUR/GBP with daily SBV FX snapshot + per-invoice currency lock + cross-currency reporting"
 module: INV
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 1

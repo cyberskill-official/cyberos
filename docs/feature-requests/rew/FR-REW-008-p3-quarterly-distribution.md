@@ -3,7 +3,7 @@ id: FR-REW-008
 title: "REW quarterly P3 distribution from BP fund — CEO+CFO sign-off + LEARN-007 VP share splits + debit BP balances"
 module: REW
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 2

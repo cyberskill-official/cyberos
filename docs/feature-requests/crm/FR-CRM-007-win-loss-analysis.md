@@ -3,7 +3,7 @@ id: FR-CRM-007
 title: "CRM win/loss analysis CUO draft — auto-generate analysis at deal close + memory memory persistence for institutional learning"
 module: CRM
 priority: SHOULD
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 6

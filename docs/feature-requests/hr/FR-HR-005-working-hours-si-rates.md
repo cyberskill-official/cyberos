@@ -3,7 +3,7 @@ id: FR-HR-005
 title: "HR Decree 145/2020 working-hour caps + Decree 152/2020 SI rates — version-pinned policy constants with annual refresh + tenant override"
 module: HR
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 6

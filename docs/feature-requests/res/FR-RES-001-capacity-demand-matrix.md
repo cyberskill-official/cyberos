@@ -3,7 +3,7 @@ id: FR-RES-001
 title: "RES capacity-vs-demand matrix — nightly join across HR + PROJ + TIME + LEARN producing per-member-week capacity/demand grid"
 module: RES
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 7

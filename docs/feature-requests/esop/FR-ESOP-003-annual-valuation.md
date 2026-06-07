@@ -3,7 +3,7 @@ id: FR-ESOP-003
 title: "ESOP annual valuation — CFO base + Board multiplier sign-off with immutable share-price snapshot per year"
 module: ESOP
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 1

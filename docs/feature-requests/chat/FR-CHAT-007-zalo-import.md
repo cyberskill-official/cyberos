@@ -3,7 +3,7 @@ id: FR-CHAT-007
 title: "Zalo manual export importer — `cyberos-chat import zalo --bundle.zip` with VN-Unicode normalisation and Zalo-specific message kinds"
 module: CHAT
 priority: SHOULD
-status: done
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 2

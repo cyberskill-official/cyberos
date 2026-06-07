@@ -3,7 +3,7 @@ id: FR-HR-003
 title: "HR CCCD photo KMS — separate keyspace for VN citizen ID photos with sev-1 access audit + ROOT-CHRO-only key access"
 module: HR
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 6

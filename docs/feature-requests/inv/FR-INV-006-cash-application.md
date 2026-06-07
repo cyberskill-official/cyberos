@@ -3,7 +3,7 @@ id: FR-INV-006
 title: "INV cash application — closed 4-step matching cascade (exact-ref → amount+date → fuzzy-fraction → manual) + atomic ledger reconciliation + partial allocation + over-allocation block + memory audit per match"
 module: INV
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 2

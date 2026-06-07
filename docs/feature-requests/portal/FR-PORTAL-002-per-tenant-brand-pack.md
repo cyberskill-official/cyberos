@@ -3,7 +3,7 @@ id: FR-PORTAL-002
 title: "PORTAL per-tenant brand pack — logo + colour palette + custom CNAME + email template overrides + ACME-issued TLS cert + brand-asset versioning"
 module: PORTAL
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P4
 milestone: P4 · slice 1

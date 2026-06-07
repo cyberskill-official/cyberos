@@ -3,7 +3,7 @@ id: FR-REW-001
 title: "REW 3P income schema — P1 Base + P2 Allowance + P3 Performance with separate encrypted comp keyspace isolated from HR"
 module: REW
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 1

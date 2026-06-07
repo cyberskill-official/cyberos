@@ -3,7 +3,7 @@ id: FR-TEN-201
 title: "TEN Singapore HoldCo flip CLI — `cyberos-ten holdco-flip` orchestrates ACRA filings + shareholder migration + ESOP transfer for VN → SG corporate restructure"
 module: TEN
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P3
 milestone: P3 · slice 1

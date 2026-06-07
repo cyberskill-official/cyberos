@@ -3,7 +3,7 @@ id: FR-DOC-010
 title: "DOC third-party import — DocuSign / Adobe Sign / HelloSign migration with LTV (long-term-validation) preservation"
 module: DOC
 priority: SHOULD
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 3

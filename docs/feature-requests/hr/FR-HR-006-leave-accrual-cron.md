@@ -3,7 +3,7 @@ id: FR-HR-006
 title: "HR annual leave accrual nightly batch — Decree 145 formula (1d/month + 1d/5yr seniority bonus) with immutable accrual ledger"
 module: HR
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 6

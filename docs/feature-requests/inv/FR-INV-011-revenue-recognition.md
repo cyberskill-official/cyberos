@@ -3,7 +3,7 @@ id: FR-INV-011
 title: "INV revenue recognition — ASC 606 / IFRS 15 compliant deferred-revenue rollforward with monthly journal entries + per-engagement schedule"
 module: INV
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 2

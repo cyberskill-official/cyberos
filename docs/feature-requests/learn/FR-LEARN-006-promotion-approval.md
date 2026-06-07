@@ -3,7 +3,7 @@ id: FR-LEARN-006
 title: "LEARN promotion approval workflow — CEO + CHRO sign-off after council vote with cascade to HR + REW comp band update"
 module: LEARN
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 7

@@ -3,7 +3,7 @@ id: FR-HR-008
 title: "HR performance signal aggregator — read-only consumer of PROJ + TIME + LEARN signals for periodic performance snapshots"
 module: HR
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 7

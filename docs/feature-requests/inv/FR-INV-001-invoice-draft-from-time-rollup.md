@@ -3,7 +3,7 @@ id: FR-INV-001
 title: "INV invoice substrate — draft invoices from TIME per-cycle rollup with rate-card snapshot preservation + closed enums + lifecycle FSM + per-line traceability"
 module: INV
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 1

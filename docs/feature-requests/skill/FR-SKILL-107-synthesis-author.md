@@ -3,7 +3,7 @@ id: FR-SKILL-107
 title: "synthesis-author@1 skill — nightly multi-memory auto-evolve composes derived memories from clustered raw captures (P3 — stub scaffold in P1)"
 module: SKILL
 priority: COULD
-status: done
+status: ready_to_implement
 verify: I
 phase: P3
 milestone: P3 · slice 1

@@ -3,7 +3,7 @@ id: FR-CRM-004
 title: "CRM convert-to-engagement — deal.won → PROJ Engagement creation with rate card + billing_currency + recognition_method + AM assignment"
 module: CRM
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 5

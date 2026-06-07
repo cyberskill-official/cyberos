@@ -3,7 +3,7 @@ id: FR-EMAIL-003
 title: "EMAIL Missive-style team UX — shared inbox, thread assignment, internal comments, Genie actions panel, keyboard shortcuts"
 module: EMAIL
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 2

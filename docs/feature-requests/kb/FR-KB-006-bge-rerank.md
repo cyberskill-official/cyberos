@@ -3,7 +3,7 @@ id: FR-KB-006
 title: "KB BGE-rerank-v2-m3 cross-encoder — reranks top-K results from FR-KB-004 lexical + FR-KB-005 semantic to final ordering"
 module: KB
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 5

@@ -3,7 +3,7 @@ id: FR-RES-003
 title: "RES over/under-allocation flags — 110% warning / 60% under-utilization threshold with weekly digest to CHRO"
 module: RES
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 8

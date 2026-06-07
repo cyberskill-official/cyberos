@@ -3,7 +3,7 @@ id: FR-HR-001
 title: "HR Member schema — profile + role + level + contract type + leave balance + sabbatical accrual + status FSM + comp-exclusion CI gate"
 module: HR
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 1

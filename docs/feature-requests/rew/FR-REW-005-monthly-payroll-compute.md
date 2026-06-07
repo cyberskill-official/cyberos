@@ -3,7 +3,7 @@ id: FR-REW-005
 title: "REW monthly payroll compute + CFO+CHRO co-sign commit gate — orchestrates 3P + deductions + net pay with dual-sign before bank send"
 module: REW
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 2

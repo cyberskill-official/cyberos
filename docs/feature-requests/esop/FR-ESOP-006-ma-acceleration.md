@@ -3,7 +3,7 @@ id: FR-ESOP-006
 title: "ESOP M&A acceleration trigger — Board declares M&A event + 5-business-day Member notice + full vesting acceleration for all active grants"
 module: ESOP
 priority: SHOULD
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 2

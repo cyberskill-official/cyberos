@@ -3,7 +3,7 @@ id: FR-REW-004
 title: "REW statutory deductions — BHXH 10.5% + BHYT 1.5% + BHTN 1% + PIT progressive per Decree 152/2020 with FR-HR-005 policy lookup"
 module: REW
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 1

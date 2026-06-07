@@ -3,7 +3,7 @@ id: FR-KB-003
 title: "KB 3 permission tiers — public / org-only / role-restricted with share-link tokens for time-bounded external access"
 module: KB
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 4

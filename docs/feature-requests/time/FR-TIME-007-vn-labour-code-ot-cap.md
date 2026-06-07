@@ -3,7 +3,7 @@ id: FR-TIME-007
 title: "TIME VN Labour Code Art. 107 OT cap — hard-block at entry write when monthly OT > 40h or yearly OT > 200h (300h with regulator approval)"
 module: TIME
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 1

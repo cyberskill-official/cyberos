@@ -3,7 +3,7 @@ id: FR-TEN-202
 title: "TEN hostile-termination override — legal-trigger fast-track with CEO+CLO+CSO triple-sign for hostile actor offboarding"
 module: TEN
 priority: SHOULD
-status: draft
+status: ready_to_implement
 verify: T
 phase: P3
 milestone: P3 · slice 1

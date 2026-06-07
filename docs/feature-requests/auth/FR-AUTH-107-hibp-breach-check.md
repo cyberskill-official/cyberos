@@ -3,7 +3,7 @@ id: FR-AUTH-107
 title: "HIBP password breach check (k-anonymity) on signup + rotation"
 module: AUTH
 priority: SHOULD
-status: done
+status: ready_to_implement
 accepted_at: 2026-05-16
 accepted_by: Stephen Cheng
 verify: T

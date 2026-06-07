@@ -3,7 +3,7 @@ id: FR-AUTH-105
 title: "AUTH Passkey enrolment + login — discoverable credentials (resident keys) + autofill UI + cross-platform sync + closed enrolment FSM + downgrade-resistance + memory audit per lifecycle event"
 module: AUTH
 priority: MUST
-status: done
+status: ready_to_implement
 verify: T
 phase: P3
 milestone: P3 · slice 1

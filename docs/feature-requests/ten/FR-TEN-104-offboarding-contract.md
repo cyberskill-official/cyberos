@@ -3,7 +3,7 @@ id: FR-TEN-104
 title: "TEN 90-day offboarding contract — closed 4-state FSM (Active → Terminating-A → Terminating-B → Terminated) + day-pinned transitions + scheduled jobs + read-only freeze + dead-letter recovery + dual-signoff irreversible wipe"
 module: TEN
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P4
 milestone: P4 · slice 1

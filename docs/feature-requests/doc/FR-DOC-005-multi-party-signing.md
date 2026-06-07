@@ -3,7 +3,7 @@ id: FR-DOC-005
 title: "DOC multi-party signing workflow — ordered + parallel + counter-sign with reminder cadence and full audit trail"
 module: DOC
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 2

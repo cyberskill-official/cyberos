@@ -3,7 +3,7 @@ id: FR-TEN-106
 title: "TEN permanent-delete attestation — CSO + CLO dual-sign + chain-anchored evidence + cascade hard-purge across all tenant data with verification"
 module: TEN
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P4
 milestone: P4 · slice 2

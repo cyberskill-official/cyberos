@@ -3,7 +3,7 @@ id: FR-LEARN-003
 title: "LEARN VP (Voting Power) deterministic nightly roll-up — aggregates PROJ + TIME + KB contributions into per-Member VP score"
 module: LEARN
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 7

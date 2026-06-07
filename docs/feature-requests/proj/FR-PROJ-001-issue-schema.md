@@ -3,7 +3,7 @@ id: FR-PROJ-001
 title: "PROJ Issue + Cycle + Engagement schema — RLS + cross-module linkable + status FSM + audit + assignee validation"
 module: PROJ
 priority: MUST
-status: done
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 1

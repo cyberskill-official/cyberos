@@ -3,7 +3,7 @@ id: FR-OKR-003
 title: "OKR KR progress_source DSL — declarative query against PROJ / INV / HR / LEARN modules for auto-progress feed"
 module: OKR
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 3

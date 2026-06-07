@@ -3,7 +3,7 @@ id: FR-DOC-011
 title: "DOC PAdES-B-LT format + year-9 LTV re-stamping — extend B-T signatures with validation data + re-timestamp before signature/TS authority expires"
 module: DOC
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 3

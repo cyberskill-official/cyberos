@@ -3,7 +3,7 @@ id: FR-MCP-001
 title: "MCP Gateway 2025-11-25 spec compliance — initialize + tools/list + tools/call + capabilities negotiation + Streamable HTTP transport + tool annotations"
 module: MCP
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 4 (MCP Gateway)

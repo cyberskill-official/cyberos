@@ -3,7 +3,7 @@ id: FR-ESOP-005
 title: "ESOP Good/Bad Leaver branch on HR offboarding — CFO+CEO co-sign to apply forfeiture/acceleration per termination_kind"
 module: ESOP
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 2

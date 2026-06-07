@@ -3,7 +3,7 @@ id: FR-KB-005
 title: "KB BGE-M3 semantic search — memory Layer 2 vector ingest + dense embedding query with chunk-level retrieval"
 module: KB
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 5

@@ -3,7 +3,7 @@ id: FR-TIME-003
 title: "TIME manual entry form — retroactive time logging with date validation + per-day total cap + FR-TIME-007 VN Labour Code cap integration"
 module: TIME
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 1

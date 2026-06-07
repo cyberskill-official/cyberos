@@ -3,7 +3,7 @@ id: FR-MCP-005
 title: "MCP Protected Resource Metadata (RFC 9728) at `/.well-known/oauth-protected-resource` — closed audience-binding advertisement for federated MCP clients"
 module: MCP
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 2

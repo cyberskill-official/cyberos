@@ -3,7 +3,7 @@ id: FR-TIME-002
 title: "TIME timer start/stop — single-active-timer per Member + auto-stop on logout + ≤15-min resolution snap + idle-detection at 10min"
 module: TIME
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 1

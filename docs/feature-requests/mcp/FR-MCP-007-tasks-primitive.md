@@ -3,7 +3,7 @@ id: FR-MCP-007
 title: "MCP Tasks primitive — long-running tool calls with status polling + resume-on-reconnect + cancellation + per-task memory audit chain"
 module: MCP
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 3

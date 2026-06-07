@@ -3,7 +3,7 @@ id: FR-OKR-004
 title: "OKR auto-progress nightly batch — resolves all KR progress_sources + updates current_value + emits drift alerts"
 module: OKR
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 3

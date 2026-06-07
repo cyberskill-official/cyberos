@@ -3,7 +3,7 @@ id: FR-MEMORY-107
 title: "memory capture daemon — Rust + notify crate FS watcher with rate-limit + content-dedup + backpressure + W3C trace propagation"
 module: memory
 priority: MUST
-status: done
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 2

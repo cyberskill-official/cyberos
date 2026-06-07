@@ -3,7 +3,7 @@ id: FR-DOC-003
 title: "DOC AATL CA integration — Adobe Approved Trust List CA partner (DigiCert / Entrust / IdenTrust) for US/non-EU/non-VN residency"
 module: DOC
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 3

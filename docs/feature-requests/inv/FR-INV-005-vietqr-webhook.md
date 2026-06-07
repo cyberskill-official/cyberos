@@ -3,7 +3,7 @@ id: FR-INV-005
 title: "INV VietQR / Napas247 webhook handler — HMAC-SHA256 signature + idempotent receipt insert + reference memo parsing + append-only ledger + memory audit"
 module: INV
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 2

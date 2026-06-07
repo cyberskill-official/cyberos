@@ -3,7 +3,7 @@ id: FR-PROJ-003
 title: "Yjs CRDT for issue description + comment-body fields; LWW for scalar metadata; reconnection state recovery; conflict-free multi-cursor editing"
 module: PROJ
 priority: MUST
-status: done
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 2

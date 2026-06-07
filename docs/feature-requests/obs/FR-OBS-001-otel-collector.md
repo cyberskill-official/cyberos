@@ -3,7 +3,7 @@ id: FR-OBS-001
 title: "OTel Collector + LGTM stack (Loki + Prometheus + Tempo + Grafana) with mTLS ingress + per-service tokens + retention + file-buffer"
 module: OBS
 priority: MUST
-status: ready_to_test
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 2 (after AI Gateway slice 1)

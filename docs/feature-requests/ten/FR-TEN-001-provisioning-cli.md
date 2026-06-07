@@ -3,7 +3,7 @@ id: FR-TEN-001
 title: "TEN tenant provisioning CLI — `cyberos-ten provision` ops-driven flow with schema namespace + NATS subject + S3 prefix + initial root-admin subject + memory audit"
 module: TEN
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 1

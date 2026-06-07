@@ -4,7 +4,7 @@ id: FR-AI-011
 title: "Presidio EN-base PII redaction in-flight (every prompt)"
 module: AI
 priority: MUST
-status: done
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 3

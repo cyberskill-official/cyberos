@@ -3,7 +3,7 @@ id: FR-LEARN-004
 title: "LEARN Hội đồng Chuyên môn (Specialist Council) — 3-5 judges + multi-dim scoring + per-judge anonymity within council"
 module: LEARN
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 7

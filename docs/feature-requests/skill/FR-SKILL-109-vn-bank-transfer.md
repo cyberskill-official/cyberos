@@ -3,7 +3,7 @@ id: FR-SKILL-109
 title: "vietnam-bank-transfer@1 skill — VietQR + Napas247 transfer-code generator with bank-prefix validation, memory audit, and per-transfer idempotency"
 module: SKILL
 priority: MUST
-status: done
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 3

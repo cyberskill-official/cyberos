@@ -3,7 +3,7 @@ id: FR-PORTAL-007
 title: "PORTAL PWA installable — mobile-first Progressive Web App with offline-capable view cache + push notifications + per-tenant manifest"
 module: PORTAL
 priority: SHOULD
-status: draft
+status: ready_to_implement
 verify: T
 phase: P4
 milestone: P4 · slice 2

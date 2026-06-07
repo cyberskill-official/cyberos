@@ -3,7 +3,7 @@ id: FR-LEARN-002
 title: "LEARN bằng cấp + chứng chỉ — degree + certification evidence types with issuer + expiry + verification link"
 module: LEARN
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 7

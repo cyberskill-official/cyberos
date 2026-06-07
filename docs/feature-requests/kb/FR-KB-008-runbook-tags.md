@@ -3,7 +3,7 @@ id: FR-KB-008
 title: "KB runbook category — applicability tags (provider / region / severity) for OBS triage with FR-OBS-007 incident routing"
 module: KB
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 5

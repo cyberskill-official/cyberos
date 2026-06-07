@@ -3,7 +3,7 @@ id: FR-KB-009
 title: "KB dual-language `translation_of` link — vi/en pairing with locale-aware reader display and translation parity audit"
 module: KB
 priority: SHOULD
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 5

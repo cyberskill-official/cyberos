@@ -3,7 +3,7 @@ id: FR-REW-007
 title: "REW BP (Bonus Points) ledger with ACB-rate interest accrual nightly + per-Member balance + immutable transaction log"
 module: REW
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 2

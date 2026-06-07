@@ -3,7 +3,7 @@ id: FR-ESOP-007
 title: "ESOP Member dashboard — personal view only (own grants + vesting + estimated value); cross-Member access requires CFO audit"
 module: ESOP
 priority: SHOULD
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 2

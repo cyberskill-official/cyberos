@@ -3,7 +3,7 @@ id: FR-CHAT-006
 title: "Slack import — `cyberos-chat import slack` with 8-step idempotent checkpoint-driven workflow"
 module: CHAT
 priority: MUST
-status: done
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 2

@@ -3,7 +3,7 @@ id: FR-LEARN-001
 title: "LEARN skill tree schema — 1-5 mastery levels per skill per Member with parent-child skill graph"
 module: LEARN
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 7

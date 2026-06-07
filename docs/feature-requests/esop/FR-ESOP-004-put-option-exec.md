@@ -3,7 +3,7 @@ id: FR-ESOP-004
 title: "ESOP put-option exec flow — Year 3+ eligibility + per-Member annual cap + CFO approve + bank wire via FR-INV-005"
 module: ESOP
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 2

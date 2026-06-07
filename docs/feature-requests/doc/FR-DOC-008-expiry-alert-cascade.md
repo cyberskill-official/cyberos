@@ -3,7 +3,7 @@ id: FR-DOC-008
 title: "DOC expiry alert cascade — 90/30/7-day notifications to parties + CLO with deduplication and snooze support"
 module: DOC
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 1

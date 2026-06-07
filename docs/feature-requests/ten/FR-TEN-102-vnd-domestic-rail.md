@@ -3,7 +3,7 @@ id: FR-TEN-102
 title: "VND domestic billing rail — VnPay + Momo + ZaloPay subscription, recurring-charge, refund, dunning + per-PSP webhook bridge for vn-1 tenants"
 module: TEN
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P3
 milestone: P3 · billing-substrate-vn

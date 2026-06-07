@@ -3,7 +3,7 @@ id: FR-LEARN-007
 title: "LEARN VP score → REW BP fund distribution handoff — quarter-close trigger emits aggregate VP shares per member to REW for fund allocation"
 module: LEARN
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 7

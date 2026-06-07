@@ -3,7 +3,7 @@ id: FR-CRM-008
 title: "CRM vietnam-mst-validate skill — synchronous GDT lookup on Account write to confirm MST format + entity name match"
 module: CRM
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 7

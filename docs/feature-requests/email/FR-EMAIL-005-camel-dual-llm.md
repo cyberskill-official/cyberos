@@ -3,7 +3,7 @@ id: FR-EMAIL-005
 title: "EMAIL CaMeL dual-LLM security layer — Privileged-LLM plans, Quarantined-LLM parses untrusted email content (prompt-injection defense)"
 module: EMAIL
 priority: MUST
-status: done
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 2

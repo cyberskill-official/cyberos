@@ -3,7 +3,7 @@ id: FR-INV-010
 title: "INV CUO dunning draft — auto-generate polite/firm/legal-warning email drafts per aging bucket + CFO review queue + send-via-FR-EMAIL-009"
 module: INV
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 2

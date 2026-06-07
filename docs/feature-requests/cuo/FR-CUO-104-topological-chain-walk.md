@@ -3,7 +3,7 @@ id: FR-CUO-104
 title: "CUO topological walk of `depends_on` chain — orchestrates multi-step skill invocations with composite audit row + per-step sub-rows"
 module: CUO
 priority: MUST
-status: done
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 6

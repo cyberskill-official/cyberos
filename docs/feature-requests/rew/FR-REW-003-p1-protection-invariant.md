@@ -3,7 +3,7 @@ id: FR-REW-003
 title: "REW P1 protection invariant — DB CHECK constraint + service-layer guard forbidding any P1 cash reduction (raise-only)"
 module: REW
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 1

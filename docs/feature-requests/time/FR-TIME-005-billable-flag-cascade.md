@@ -3,7 +3,7 @@ id: FR-TIME-005
 title: "TIME billable flag cascade — 4-step resolver (entry override → project default → engagement policy → tenant default) with snapshot on row"
 module: TIME
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 1

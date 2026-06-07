@@ -3,7 +3,7 @@ id: FR-PORTAL-008
 title: "PORTAL DSAR self-service — GDPR Art. 15 + PDPL Art. 17 client-initiated data subject access request with 30-day SLA + async export bundle + redaction audit"
 module: PORTAL
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P4
 milestone: P4 · slice 2

@@ -3,7 +3,7 @@ id: FR-RES-005
 title: "RES VN Labour Code Art. 107 OT cap hard-block — propose-time validation gate preventing weekly + annual OT overflow"
 module: RES
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 8

@@ -3,7 +3,7 @@ id: FR-MCP-003
 title: "MCP SEP-986 naming convention validator — `cyberos.{module}.{verb}_{noun}` pattern enforced at skill registration + CI gate"
 module: MCP
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 2

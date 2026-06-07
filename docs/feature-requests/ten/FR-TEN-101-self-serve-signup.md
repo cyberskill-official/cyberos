@@ -3,7 +3,7 @@ id: FR-TEN-101
 title: "Self-serve signup form ≤ 30 s end-to-end — email OTP + slug + plan + currency + payment + provisioning + root-admin + first-login JWT in one orchestrated flow"
 module: TEN
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P3
 milestone: P3 · self-serve

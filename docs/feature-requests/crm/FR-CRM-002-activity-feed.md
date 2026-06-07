@@ -3,7 +3,7 @@ id: FR-CRM-002
 title: "CRM activity feed — auto-log inbound email + outbound send + chat mention + calendar event to per-contact timeline"
 module: CRM
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 5

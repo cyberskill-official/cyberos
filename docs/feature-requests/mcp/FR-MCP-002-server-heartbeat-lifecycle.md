@@ -3,7 +3,7 @@ id: FR-MCP-002
 title: "MCP per-module server registration + heartbeat lifecycle — 3-miss → unhealthy with automatic skill_unavailable propagation"
 module: MCP
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 2

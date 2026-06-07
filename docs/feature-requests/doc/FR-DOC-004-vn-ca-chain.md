@@ -3,7 +3,7 @@ id: FR-DOC-004
 title: "DOC VN CA chain — VNeID + VnPay/MK Group/Viettel-CA partners for VN-residency qualified digital signatures per Decree 130/2018"
 module: DOC
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 3

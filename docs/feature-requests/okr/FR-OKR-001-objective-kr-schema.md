@@ -3,7 +3,7 @@ id: FR-OKR-001
 title: "OKR Objective × Key Result schema — Company → Team → Member cascade + quarterly Cycle + closed alignment FSM + RLS + face-saving status enum"
 module: OKR
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P3
 milestone: P3 · slice 1

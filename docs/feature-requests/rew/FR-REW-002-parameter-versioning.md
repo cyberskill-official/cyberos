@@ -3,7 +3,7 @@ id: FR-REW-002
 title: "REW parameter versioning — immutable versioned formula parameters with 100% replay-equivalence on prior payslips"
 module: REW
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 1

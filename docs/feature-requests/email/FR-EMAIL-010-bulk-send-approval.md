@@ -3,7 +3,7 @@ id: FR-EMAIL-010
 title: "EMAIL bulk send (≥ 10 recipients) — AM + CFO/marketing dual-approval token + suppression-list filter + rate-pacing"
 module: EMAIL
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 1

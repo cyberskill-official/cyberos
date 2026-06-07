@@ -3,7 +3,7 @@ id: FR-EMAIL-006
 title: "EMAIL tracked-domain → CRM auto-link — inbound message from tenant-tracked domain auto-creates/links CRM contact + thread association"
 module: EMAIL
 priority: SHOULD
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 1

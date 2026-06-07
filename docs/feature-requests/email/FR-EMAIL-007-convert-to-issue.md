@@ -3,7 +3,7 @@ id: FR-EMAIL-007
 title: "EMAIL convert-to-issue — one-click create FR-PROJ issue from message with thread backlink + attachment carry-over + AI summary"
 module: EMAIL
 priority: SHOULD
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 1

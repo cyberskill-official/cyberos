@@ -3,7 +3,7 @@ id: FR-RES-002
 title: "RES allocation Gantt UI — drag-rebalance interface over capacity matrix with optimistic concurrency + commit-on-save"
 module: RES
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 8

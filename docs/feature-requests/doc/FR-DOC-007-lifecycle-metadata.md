@@ -3,7 +3,7 @@ id: FR-DOC-007
 title: "DOC lifecycle metadata — parties + effective_date + expiry_date + renewal_terms + parent_contract_id for contract document substrate"
 module: DOC
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 1

@@ -3,7 +3,7 @@ id: FR-OKR-002
 title: "OKR 3 KR types — hit_target + improvement + milestone with type-specific progress calculation"
 module: OKR
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 3

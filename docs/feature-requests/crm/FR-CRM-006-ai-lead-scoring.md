@@ -3,7 +3,7 @@ id: FR-CRM-006
 title: "CRM AI lead scoring — contact-creation-time score + nightly refresh based on activity signals, account tier, engagement history"
 module: CRM
 priority: SHOULD
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 6

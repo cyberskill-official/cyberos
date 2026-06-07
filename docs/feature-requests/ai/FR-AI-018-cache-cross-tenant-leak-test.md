@@ -4,7 +4,7 @@ id: FR-AI-018
 title: "Cross-tenant cache leak property-test (hard zero) — 200K random ops + 7 regression scenarios + adversarial inputs"
 module: AI
 priority: MUST
-status: done
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 4

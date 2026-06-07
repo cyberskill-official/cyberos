@@ -3,7 +3,7 @@ id: FR-INV-009
 title: "INV AR aging report — current/30/60/90/120+ bucket rollup per customer + per engagement with as-of date determinism"
 module: INV
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 2

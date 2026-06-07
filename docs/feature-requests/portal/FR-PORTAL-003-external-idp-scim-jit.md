@@ -3,7 +3,7 @@ id: FR-PORTAL-003
 title: "PORTAL external IdP — SAML 2.0 + OIDC sign-in for client-tenant users + SCIM 2.0 JIT provisioning + per-Engagement IdP binding + claim → role mapping + signed-attr trust chain"
 module: PORTAL
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P4
 milestone: P4 · slice 1

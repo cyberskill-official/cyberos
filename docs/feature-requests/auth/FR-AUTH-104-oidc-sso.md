@@ -3,7 +3,7 @@ id: FR-AUTH-104
 title: "AUTH OIDC SSO — RFC 8414 discovery + RFC 7517 JWKS rotation + per-tenant IdP config + PKCE + JIT subject provisioning + claim → role mapping"
 module: AUTH
 priority: MUST
-status: done
+status: ready_to_implement
 verify: T
 phase: P3
 milestone: P3 · slice 1

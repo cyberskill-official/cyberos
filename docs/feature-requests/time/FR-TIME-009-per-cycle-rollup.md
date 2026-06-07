@@ -3,7 +3,7 @@ id: FR-TIME-009
 title: "TIME per-cycle billable rollup → INV — per-Member × role × Engagement aggregation with rate-card application + idempotent emit"
 module: TIME
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 1

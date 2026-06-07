@@ -3,7 +3,7 @@ id: FR-OKR-006
 title: "OKR Monday-morning CUO digest — auto-progress + check-ins → founder summary delivered via email/chat at 08:00 Monday"
 module: OKR
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 3

@@ -3,7 +3,7 @@ id: FR-TEN-105
 title: "TEN signed-bundle export — deterministic zip + Ed25519 signature + memory audit anchor + chain-of-custody manifest for tenant offboarding"
 module: TEN
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P4
 milestone: P4 · slice 2

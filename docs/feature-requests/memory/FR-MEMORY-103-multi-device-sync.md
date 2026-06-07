@@ -3,7 +3,7 @@ id: FR-MEMORY-103
 title: "memory-sync daemon — laptop A ↔ Cloud memory ↔ laptop B with sync_class gating + CRDT conflict + 10K offline buffer + device-id stamp"
 module: memory
 priority: MUST
-status: done
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 1

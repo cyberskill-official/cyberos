@@ -3,7 +3,7 @@ id: FR-ESOP-002
 title: "ESOP monthly vesting accrual deterministic batch — runs EOM tenant_tz computing per-grant vested shares with cliff respect + immutable accrual rows"
 module: ESOP
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 1

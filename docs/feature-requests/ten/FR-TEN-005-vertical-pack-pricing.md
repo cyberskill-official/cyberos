@@ -3,7 +3,7 @@ id: FR-TEN-005
 title: "TEN vertical-pack pricing add-on — per-pack monthly fee (not per-seat) on top of base plan tier; multi-currency; prorate on install/uninstall"
 module: TEN
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P4
 milestone: P4 · marketplace

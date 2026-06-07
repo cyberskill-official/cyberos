@@ -149,48 +149,48 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| **FR-AI-001** | AI Gateway cost-ledger pre-call check | MUST | done | FR-AI-003, FR-AI-005 | 8h |
-| **FR-AI-002** | AI Gateway cost-ledger post-call reconcile | MUST | done | FR-AI-001, FR-AI-003 | 6h |
-| **FR-AI-003** | memory audit-row bridge (`ai.invocation` chained row per call) | MUST | done | — | 5h |
-| **FR-AI-004** | Cost-hold expiry cleanup job (Postgres scheduled) | MUST | done | FR-AI-001, FR-AI-003 | 3h |
-| **FR-AI-005** | Tenant-policy YAML loader (per-tenant cap + warn threshold + override) | MUST | done | — | 5h |
+| **FR-AI-001** | AI Gateway cost-ledger pre-call check | MUST | ready_to_implement | FR-AI-003, FR-AI-005 | 8h |
+| **FR-AI-002** | AI Gateway cost-ledger post-call reconcile | MUST | ready_to_implement | FR-AI-001, FR-AI-003 | 6h |
+| **FR-AI-003** | memory audit-row bridge (`ai.invocation` chained row per call) | MUST | ready_to_implement | — | 5h |
+| **FR-AI-004** | Cost-hold expiry cleanup job (Postgres scheduled) | MUST | ready_to_implement | FR-AI-001, FR-AI-003 | 3h |
+| **FR-AI-005** | Tenant-policy YAML loader (per-tenant cap + warn threshold + override) | MUST | ready_to_implement | — | 5h |
 
 #### Slice 2 — multi-provider router (Bedrock + Anthropic + OpenAI)
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| **FR-AI-006** | Model-alias resolution (`chat.smart` → `bedrock:claude-3.5-sonnet`) with per-tenant override | MUST | done | FR-AI-005 | 6h |
-| **FR-AI-007** | Provider cost-table loader (YAML, hot-reload) | MUST | done | — | 4h |
-| **FR-AI-008** | LiteLLM-derived router with retry + 30 s failover SLA | MUST | done | FR-AI-006, FR-AI-007 | 10h |
-| **FR-AI-009** | Circuit-breaker per (provider, model) with half-open recovery probing | MUST | done | FR-AI-008 | 6h |
-| **FR-AI-010** | Streaming SSE end-to-end (token-by-token to client) | SHOULD | done | FR-AI-008 | 8h |
+| **FR-AI-006** | Model-alias resolution (`chat.smart` → `bedrock:claude-3.5-sonnet`) with per-tenant override | MUST | ready_to_implement | FR-AI-005 | 6h |
+| **FR-AI-007** | Provider cost-table loader (YAML, hot-reload) | MUST | ready_to_implement | — | 4h |
+| **FR-AI-008** | LiteLLM-derived router with retry + 30 s failover SLA | MUST | ready_to_implement | FR-AI-006, FR-AI-007 | 10h |
+| **FR-AI-009** | Circuit-breaker per (provider, model) with half-open recovery probing | MUST | ready_to_implement | FR-AI-008 | 6h |
+| **FR-AI-010** | Streaming SSE end-to-end (token-by-token to client) | SHOULD | ready_to_implement | FR-AI-008 | 8h |
 
 #### Slice 3 — PII redaction + persona stamping
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| **FR-AI-011** | Presidio EN-base PII redaction in-flight (every prompt) | MUST | done | FR-AI-008 | 6h |
-| **FR-AI-012** | VN-PII Presidio plugin (CCCD · MST · VN phone · NĐD · VN address · bank account) | MUST | done | FR-AI-011 | 10h |
-| **FR-AI-013** | VN-PII recall ≥ 99% CI gate on 200-sample test set | MUST | done | FR-AI-012 | 4h |
-| **FR-AI-014** | Persona-version system-prompt injection from memory `memories/personas/<version>.md` | MUST | done | FR-AI-003 | 5h |
-| **FR-AI-015** | ZDR check — refuse non-ZDR provider when tenant policy requires it | MUST | done | FR-AI-006 | 3h |
+| **FR-AI-011** | Presidio EN-base PII redaction in-flight (every prompt) | MUST | ready_to_implement | FR-AI-008 | 6h |
+| **FR-AI-012** | VN-PII Presidio plugin (CCCD · MST · VN phone · NĐD · VN address · bank account) | MUST | ready_to_implement | FR-AI-011 | 10h |
+| **FR-AI-013** | VN-PII recall ≥ 99% CI gate on 200-sample test set | MUST | ready_to_implement | FR-AI-012 | 4h |
+| **FR-AI-014** | Persona-version system-prompt injection from memory `memories/personas/<version>.md` | MUST | ready_to_implement | FR-AI-003 | 5h |
+| **FR-AI-015** | ZDR check — refuse non-ZDR provider when tenant policy requires it | MUST | ready_to_implement | FR-AI-006 | 3h |
 
 #### Slice 4 — geographic residency + per-tenant cache
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| **FR-AI-016** | Tenant residency pinning (`sg-1` / `eu-1` / `us-1` / `vn-1`) propagating to provider selection | MUST | done | FR-AI-006 | 5h |
-| **FR-AI-017** | Cache (Redis) keyed by (tenant_id × prompt_hash × model); ≥ 30% hit rate P0 target | SHOULD | done | FR-AI-008 | 6h |
-| **FR-AI-018** | Cross-tenant cache leak property-test (hard zero) | MUST | done | FR-AI-017 | 3h |
-| **FR-AI-019** | Self-hosted BGE-M3 embeddings (single L4 GPU pod) + CPU fallback | SHOULD | done | — | 8h |
-| **FR-AI-020** | BGE-rerank-v2-m3 cross-encoder for KB reranking | COULD | done | FR-AI-019 | 5h |
+| **FR-AI-016** | Tenant residency pinning (`sg-1` / `eu-1` / `us-1` / `vn-1`) propagating to provider selection | MUST | ready_to_implement | FR-AI-006 | 5h |
+| **FR-AI-017** | Cache (Redis) keyed by (tenant_id × prompt_hash × model); ≥ 30% hit rate P0 target | SHOULD | ready_to_implement | FR-AI-008 | 6h |
+| **FR-AI-018** | Cross-tenant cache leak property-test (hard zero) | MUST | ready_to_implement | FR-AI-017 | 3h |
+| **FR-AI-019** | Self-hosted BGE-M3 embeddings (single L4 GPU pod) + CPU fallback | SHOULD | ready_to_implement | — | 8h |
+| **FR-AI-020** | BGE-rerank-v2-m3 cross-encoder for KB reranking | COULD | ready_to_implement | FR-AI-019 | 5h |
 
 #### Slice 5 — operator surface + observability
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| **FR-AI-021** | `cyberos-ai` operator CLI (usage · models list · policy set · failover drill · invoice export) | MUST | done | FR-AI-008, FR-AI-005 | 8h |
-| **FR-AI-022** | OTel trace + span emission for every call (caller → router → provider → response) | MUST | done | FR-AI-008 | 4h |
+| **FR-AI-021** | `cyberos-ai` operator CLI (usage · models list · policy set · failover drill · invoice export) | MUST | ready_to_implement | FR-AI-008, FR-AI-005 | 8h |
+| **FR-AI-022** | OTel trace + span emission for every call (caller → router → provider → response) | MUST | ready_to_implement | FR-AI-008 | 4h |
 
 ---
 
@@ -202,7 +202,7 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| **FR-OBS-001** | OTel collector deployed (Loki + Prometheus + Tempo backends) | MUST | ready_to_test | — | 6h |
+| **FR-OBS-001** | OTel collector deployed (Loki + Prometheus + Tempo backends) | MUST | ready_to_implement | — | 6h |
 | FR-OBS-002 | Grafana stood up with tenant-aware query proxy (Rust) injecting `tenant_id` label | MUST | ready_to_implement | **FR-OBS-001** | 8h |
 | FR-OBS-003 | Per-service RED metrics emitted (rate / errors / duration) via OTel SDK | MUST | ready_to_implement | **FR-OBS-001** | 5h |
 
@@ -232,12 +232,12 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-AUTH-001 | Tenant create (root-admin in tenant 0 calls `POST /v1/admin/tenants`) | MUST | done | — | 6h |
-| FR-AUTH-002 | Subject create (`POST /v1/admin/subjects`) with bcrypt hashed password | MUST | done | FR-AUTH-001 | 5h |
-| FR-AUTH-003 | RLS enforcement at every table (Postgres `current_setting('app.tenant')` predicate) | MUST | done | FR-AUTH-001 | 8h |
-| FR-AUTH-004 | JWT issuance + JWKS endpoint (RS256) with `tenant_id` + `agent_persona` + `scope_grants` claims | MUST | done | FR-AUTH-002 | 6h |
-| FR-AUTH-005 | Admin REST: list tenants + list subjects + revoke subject | MUST | done | FR-AUTH-001, FR-AUTH-002 | 5h |
-| FR-AUTH-006 | `cyberos-auth bootstrap` CLI for tenant-0 root-admin (no UI required) | MUST | done | FR-AUTH-001 | 3h |
+| FR-AUTH-001 | Tenant create (root-admin in tenant 0 calls `POST /v1/admin/tenants`) | MUST | ready_to_implement | — | 6h |
+| FR-AUTH-002 | Subject create (`POST /v1/admin/subjects`) with bcrypt hashed password | MUST | ready_to_implement | FR-AUTH-001 | 5h |
+| FR-AUTH-003 | RLS enforcement at every table (Postgres `current_setting('app.tenant')` predicate) | MUST | ready_to_implement | FR-AUTH-001 | 8h |
+| FR-AUTH-004 | JWT issuance + JWKS endpoint (RS256) with `tenant_id` + `agent_persona` + `scope_grants` claims | MUST | ready_to_implement | FR-AUTH-002 | 6h |
+| FR-AUTH-005 | Admin REST: list tenants + list subjects + revoke subject | MUST | ready_to_implement | FR-AUTH-001, FR-AUTH-002 | 5h |
+| FR-AUTH-006 | `cyberos-auth bootstrap` CLI for tenant-0 root-admin (no UI required) | MUST | ready_to_implement | FR-AUTH-001 | 3h |
 
 ---
 
@@ -249,7 +249,7 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-MCP-001 | MCP 2025-11-25 spec compliance — `tools/list`, `tools/call`, `capabilities` | MUST | implementing | FR-AUTH-004 | 12h |
+| FR-MCP-001 | MCP 2025-11-25 spec compliance — `tools/list`, `tools/call`, `capabilities` | MUST | ready_to_implement | FR-AUTH-004 | 12h |
 | FR-MCP-002 | Per-module server registration + heartbeat lifecycle (3-miss → unhealthy) | MUST | ready_to_implement | FR-MCP-001 | 6h |
 | FR-MCP-003 | SEP-986 naming convention validator (`cyberos.{module}.{verb}_{noun}`) | MUST | ready_to_implement | FR-MCP-001 | 3h |
 
@@ -278,33 +278,33 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-CHAT-001 | Mattermost v9.x fork at pinned MIT/Apache commit + license-drift watcher | MUST | done | — | 8h |
-| FR-CHAT-002 | `cyberos-chat-authbridge` plugin — Mattermost auth delegates to AUTH JWT | MUST | done | FR-CHAT-001, FR-AUTH-004 | 10h |
-| FR-CHAT-003 | Per-tenant deployment via Fargate + RDS Multi-AZ + Redis | MUST | done | FR-CHAT-001 | 6h |
+| FR-CHAT-001 | Mattermost v9.x fork at pinned MIT/Apache commit + license-drift watcher | MUST | ready_to_implement | — | 8h |
+| FR-CHAT-002 | `cyberos-chat-authbridge` plugin — Mattermost auth delegates to AUTH JWT | MUST | ready_to_implement | FR-CHAT-001, FR-AUTH-004 | 10h |
+| FR-CHAT-003 | Per-tenant deployment via Fargate + RDS Multi-AZ + Redis | MUST | ready_to_implement | FR-CHAT-001 | 6h |
 
 #### Slice 2 — VN search + memory bridge
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-CHAT-004 | PGroonga + TinySegmenter VN bigram tokeniser; recall ≥ 80% CI gate | MUST | done | FR-CHAT-003 | 12h |
-| FR-CHAT-005 | memory bridge — logical-replication from Postgres → memory Layer-3 ingest, p95 ≤ 5 s | MUST | done | FR-CHAT-003 | 10h |
+| FR-CHAT-004 | PGroonga + TinySegmenter VN bigram tokeniser; recall ≥ 80% CI gate | MUST | ready_to_implement | FR-CHAT-003 | 12h |
+| FR-CHAT-005 | memory bridge — logical-replication from Postgres → memory Layer-3 ingest, p95 ≤ 5 s | MUST | ready_to_implement | FR-CHAT-003 | 10h |
 
 #### Slice 3 — Slack/Zalo migration + @lumi capture
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-CHAT-006 | Slack import (`cyberos-chat import slack` — 8-step idempotent + checkpointed) | MUST | done | FR-CHAT-005 | 12h |
-| FR-CHAT-007 | Zalo manual export importer (`cyberos-chat import zalo --bundle.zip`) | SHOULD | done | FR-CHAT-005 | 8h |
-| FR-CHAT-008 | `@lumi` mention parser → CUO route → memory capture row | MUST | done | FR-CHAT-005, FR-AI-014 | 6h |
-| FR-CHAT-009 | Retro-capture flow — `@lumi remember the last N messages` with per-message opt-in | SHOULD | done | FR-CHAT-008 | 6h |
+| FR-CHAT-006 | Slack import (`cyberos-chat import slack` — 8-step idempotent + checkpointed) | MUST | ready_to_implement | FR-CHAT-005 | 12h |
+| FR-CHAT-007 | Zalo manual export importer (`cyberos-chat import zalo --bundle.zip`) | SHOULD | ready_to_implement | FR-CHAT-005 | 8h |
+| FR-CHAT-008 | `@lumi` mention parser → CUO route → memory capture row | MUST | ready_to_implement | FR-CHAT-005, FR-AI-014 | 6h |
+| FR-CHAT-009 | Retro-capture flow — `@lumi remember the last N messages` with per-message opt-in | SHOULD | ready_to_implement | FR-CHAT-008 | 6h |
 
 #### Slice 4 — decommission instrumentation + DSAR
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-CHAT-010 | `decommission_signal := (chat msgs) / (chat + slack + zalo msgs) ≥ 0.95` over 14-day rolling window | MUST | done | FR-CHAT-006 | 5h |
-| FR-CHAT-011 | Mobile push delivery (privacy-preserving payload: title + sender only) | MUST | done | FR-CHAT-003 | 6h |
-| FR-CHAT-012 | DSAR export — every message a subject authored + chained memory audit hashes | MUST | done | FR-CHAT-005 | 6h |
+| FR-CHAT-010 | `decommission_signal := (chat msgs) / (chat + slack + zalo msgs) ≥ 0.95` over 14-day rolling window | MUST | ready_to_implement | FR-CHAT-006 | 5h |
+| FR-CHAT-011 | Mobile push delivery (privacy-preserving payload: title + sender only) | MUST | ready_to_implement | FR-CHAT-003 | 6h |
+| FR-CHAT-012 | DSAR export — every message a subject authored + chained memory audit hashes | MUST | ready_to_implement | FR-CHAT-005 | 6h |
 
 ---
 
@@ -338,22 +338,22 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-MEMORY-101 | Layer-2 ingest pipeline (binlog → pgvector + Apache AGE) with chain-anchor verification | MUST | done | — | 6h |
-| FR-MEMORY-102 | Layer-2 rebuild-from-Layer-1 CI gate with deterministic rebuild + spot-check | MUST | done | FR-MEMORY-101 | 6h |
-| FR-MEMORY-103 | memory-sync daemon — laptop A ↔ Cloud memory ↔ laptop B with sync_class gating | MUST | done | FR-MEMORY-101 | 4h |
-| FR-MEMORY-104 | Tauri 2.x desktop app — signed/notarised client + tray + quick capture | MUST | done | FR-MEMORY-103 | 6h |
-| FR-MEMORY-105 | cyberos doctor watched-folders integrity invariants | MUST | done | FR-MEMORY-101 | 4h |
-| FR-MEMORY-106 | memory sync_class enforcement — private vs shareable + ACL filtering | MUST | done | FR-MEMORY-101, FR-MEMORY-103 | 4h |
+| FR-MEMORY-101 | Layer-2 ingest pipeline (binlog → pgvector + Apache AGE) with chain-anchor verification | MUST | ready_to_implement | — | 6h |
+| FR-MEMORY-102 | Layer-2 rebuild-from-Layer-1 CI gate with deterministic rebuild + spot-check | MUST | ready_to_implement | FR-MEMORY-101 | 6h |
+| FR-MEMORY-103 | memory-sync daemon — laptop A ↔ Cloud memory ↔ laptop B with sync_class gating | MUST | ready_to_implement | FR-MEMORY-101 | 4h |
+| FR-MEMORY-104 | Tauri 2.x desktop app — signed/notarised client + tray + quick capture | MUST | ready_to_implement | FR-MEMORY-103 | 6h |
+| FR-MEMORY-105 | cyberos doctor watched-folders integrity invariants | MUST | ready_to_implement | FR-MEMORY-101 | 4h |
+| FR-MEMORY-106 | memory sync_class enforcement — private vs shareable + ACL filtering | MUST | ready_to_implement | FR-MEMORY-101, FR-MEMORY-103 | 4h |
 
 #### Stage 2 — Capture daemon (FS watcher + Cowork hook + Claude Code hook)
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-MEMORY-107 | memory capture daemon FS watcher with rate-limit + content-dedup + backpressure | MUST | done | FR-MEMORY-102 | 12h |
-| FR-MEMORY-108 | memory search API — vector + graph + full-text recall with RRF fusion | MUST | done | FR-MEMORY-107 | 6h |
-| FR-MEMORY-109 | Claude Code hook capture emits prompt/tool/stop memories with trace correlation | MUST | done | FR-MEMORY-107 | 5h |
-| FR-MEMORY-110 | Capture daemon supervision — health check + restart on crash | MUST | done | FR-MEMORY-107 | 4h |
-| FR-MEMORY-111 | Pre-ingest PII detection (Presidio EN + VN); held-back rate ≥ 99.5% | MUST | done | FR-AI-012 | 6h |
+| FR-MEMORY-107 | memory capture daemon FS watcher with rate-limit + content-dedup + backpressure | MUST | ready_to_implement | FR-MEMORY-102 | 12h |
+| FR-MEMORY-108 | memory search API — vector + graph + full-text recall with RRF fusion | MUST | ready_to_implement | FR-MEMORY-107 | 6h |
+| FR-MEMORY-109 | Claude Code hook capture emits prompt/tool/stop memories with trace correlation | MUST | ready_to_implement | FR-MEMORY-107 | 5h |
+| FR-MEMORY-110 | Capture daemon supervision — health check + restart on crash | MUST | ready_to_implement | FR-MEMORY-107 | 4h |
+| FR-MEMORY-111 | Pre-ingest PII detection (Presidio EN + VN); held-back rate ≥ 99.5% | MUST | ready_to_implement | FR-AI-012 | 6h |
 
 ---
 
@@ -365,25 +365,25 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-SKILL-101 | SKILL.md frontmatter extension: `allowed_memory_scopes` + `allowed_tools` enforced by broker | MUST | done | FR-MEMORY-101 | 5h |
-| FR-SKILL-102 | Capability broker: subprocess sandbox enforces `allowed_tools` at invoke time | MUST | done | FR-MCP-006 | 8h |
-| FR-SKILL-103 | Pre + post audit rows on every skill invocation (memory Writer dual-write) | MUST | done | FR-SKILL-102 | 5h |
+| FR-SKILL-101 | SKILL.md frontmatter extension: `allowed_memory_scopes` + `allowed_tools` enforced by broker | MUST | ready_to_implement | FR-MEMORY-101 | 5h |
+| FR-SKILL-102 | Capability broker: subprocess sandbox enforces `allowed_tools` at invoke time | MUST | ready_to_implement | FR-MCP-006 | 8h |
+| FR-SKILL-103 | Pre + post audit rows on every skill invocation (memory Writer dual-write) | MUST | ready_to_implement | FR-SKILL-102 | 5h |
 
 #### Slice 2 — universal-protocol skill bundles
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-SKILL-104 | `memory-capture@1` skill bundle (canonical capture entry point) | MUST | done | FR-MEMORY-107 | 6h |
-| FR-SKILL-105 | `memory-sync@1` skill bundle (defers to Stage 4 sync orchestrator at P2) | SHOULD | done | FR-SKILL-104 | 4h |
-| FR-SKILL-106 | `synthesis-author@1` skill (multi-memory auto-evolve; runs nightly at P3) | COULD | done | FR-SKILL-105 | 8h |
+| FR-SKILL-104 | `memory-capture@1` skill bundle (canonical capture entry point) | MUST | ready_to_implement | FR-MEMORY-107 | 6h |
+| FR-SKILL-105 | `memory-sync@1` skill bundle (defers to Stage 4 sync orchestrator at P2) | SHOULD | ready_to_implement | FR-SKILL-104 | 4h |
+| FR-SKILL-106 | `synthesis-author@1` skill (multi-memory auto-evolve; runs nightly at P3) | COULD | ready_to_implement | FR-SKILL-105 | 8h |
 
 #### Slice 3 — vertical pack scaffolding (cyberskill-vn first)
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-SKILL-107 | `cyberskill-vn` pack — `vietnam-mst-validate` skill against GDT API | MUST | done | FR-SKILL-102 | 6h |
-| FR-SKILL-108 | `cyberskill-vn` pack — `vietnam-bank-transfer` skill (VietQR / Napas247 code generator) | MUST | done | FR-SKILL-102 | 6h |
-| FR-SKILL-109 | `cyberskill-vn` pack — `vietnam-vat-invoice` skill (hóa đơn Decree 123 XML emitter) | MUST | done | FR-SKILL-102 | 10h |
+| FR-SKILL-107 | `cyberskill-vn` pack — `vietnam-mst-validate` skill against GDT API | MUST | ready_to_implement | FR-SKILL-102 | 6h |
+| FR-SKILL-108 | `cyberskill-vn` pack — `vietnam-bank-transfer` skill (VietQR / Napas247 code generator) | MUST | ready_to_implement | FR-SKILL-102 | 6h |
+| FR-SKILL-109 | `cyberskill-vn` pack — `vietnam-vat-invoice` skill (hóa đơn Decree 123 XML emitter) | MUST | ready_to_implement | FR-SKILL-102 | 10h |
 
 ---
 
@@ -395,16 +395,16 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-CUO-101 | LangGraph supervisor wired to LiteLLM router (escalate when 0.10 ≤ conf ≤ 0.50) | MUST | done | FR-AI-008 | 12h |
-| FR-CUO-102 | Postgres checkpointer for LangGraph state (EU AI Act Art. 12 logging) | MUST | done | FR-CUO-101 | 5h |
-| FR-CUO-103 | Phase 2 trace rows include prompt + model + temperature + seed for replay | MUST | done | FR-CUO-102 | 4h |
+| FR-CUO-101 | LangGraph supervisor wired to LiteLLM router (escalate when 0.10 ≤ conf ≤ 0.50) | MUST | ready_to_implement | FR-AI-008 | 12h |
+| FR-CUO-102 | Postgres checkpointer for LangGraph state (EU AI Act Art. 12 logging) | MUST | ready_to_implement | FR-CUO-101 | 5h |
+| FR-CUO-103 | Phase 2 trace rows include prompt + model + temperature + seed for replay | MUST | ready_to_implement | FR-CUO-102 | 4h |
 
 #### Phase 3 — multi-skill chains via `depends_on`
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-CUO-104 | Topological walk of `depends_on` chain with composite audit row + sub-rows | MUST | done | FR-CUO-101 | 10h |
-| FR-CUO-105 | Per-step rollback on chain failure; partial-execution audit preserved | MUST | done | FR-CUO-104 | 6h |
+| FR-CUO-104 | Topological walk of `depends_on` chain with composite audit row + sub-rows | MUST | ready_to_implement | FR-CUO-101 | 10h |
+| FR-CUO-105 | Per-step rollback on chain failure; partial-execution audit preserved | MUST | ready_to_implement | FR-CUO-104 | 6h |
 
 ---
 
@@ -416,44 +416,44 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-PROJ-001 | Issue / Cycle / Project / Engagement Postgres schema with `engagement_id` FK | MUST | done | FR-AUTH-003 | 8h |
-| FR-PROJ-002 | memory-anchored `proj.decision` row per Issue state change | MUST | done | FR-PROJ-001 | 16h |
-| FR-PROJ-003 | Yjs CRDT for description + comment-body fields; LWW for scalars | MUST | done | FR-PROJ-002 | 10h |
-| FR-PROJ-004 | Issue lifecycle state machine (backlog → todo → in-progress → in-review → done / cancelled) | MUST | done | FR-PROJ-001 | 5h |
+| FR-PROJ-001 | Issue / Cycle / Project / Engagement Postgres schema with `engagement_id` FK | MUST | ready_to_implement | FR-AUTH-003 | 8h |
+| FR-PROJ-002 | memory-anchored `proj.decision` row per Issue state change | MUST | ready_to_implement | FR-PROJ-001 | 16h |
+| FR-PROJ-003 | Yjs CRDT for description + comment-body fields; LWW for scalars | MUST | ready_to_implement | FR-PROJ-002 | 10h |
+| FR-PROJ-004 | Issue lifecycle state machine (backlog → todo → in-progress → in-review → done / cancelled) | MUST | ready_to_implement | FR-PROJ-001 | 5h |
 
 #### Slice 2 — Engagement economics + billable rules
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-PROJ-005 | Rate-card schema per Engagement (role × currency × hourly rate × billable_default) | MUST | done | FR-PROJ-001 | 4h |
-| FR-PROJ-006 | Billable cascade: Member override → task class → role default → fallback | MUST | done | FR-PROJ-005 | 6h |
-| FR-PROJ-007 | Three billing modes (T&M / fixed-fee / retainer) with mode-aware rollup | MUST | done | FR-PROJ-005 | 6h |
+| FR-PROJ-005 | Rate-card schema per Engagement (role × currency × hourly rate × billable_default) | MUST | ready_to_implement | FR-PROJ-001 | 4h |
+| FR-PROJ-006 | Billable cascade: Member override → task class → role default → fallback | MUST | ready_to_implement | FR-PROJ-005 | 6h |
+| FR-PROJ-007 | Three billing modes (T&M / fixed-fee / retainer) with mode-aware rollup | MUST | ready_to_implement | FR-PROJ-005 | 6h |
 
 #### Slice 3 — memory integration + cross-module join contracts
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-PROJ-008 | memory audit row per Issue mutation (chained to PROJ `history_event` table) | MUST | done | FR-MEMORY-101 | 5h |
-| FR-PROJ-009 | `MEMORY_LINK` schema: Issue cites memory via (cites / implements / supersedes) | MUST | done | FR-PROJ-001 | 5h |
-| FR-PROJ-010 | Citation-drift detector (nightly sweep flags stale citations) | SHOULD | done | FR-PROJ-009 | 4h |
+| FR-PROJ-008 | memory audit row per Issue mutation (chained to PROJ `history_event` table) | MUST | ready_to_implement | FR-MEMORY-101 | 5h |
+| FR-PROJ-009 | `MEMORY_LINK` schema: Issue cites memory via (cites / implements / supersedes) | MUST | ready_to_implement | FR-PROJ-001 | 5h |
+| FR-PROJ-010 | Citation-drift detector (nightly sweep flags stale citations) | SHOULD | ready_to_implement | FR-PROJ-009 | 4h |
 
 #### Slice 4 — AI features (blocker detection + cycle review + calibration)
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-PROJ-011 | Blocker detector from comment stream (`blocked by` + dwell time → CUO Notify) | MUST | done | FR-CUO-101 | 6h |
-| FR-PROJ-012 | Cycle-review draft generator (CUO/COO persona) at cycle close | MUST | done | FR-CUO-101 | 8h |
-| FR-PROJ-013 | Estimate calibration snapshot (per Member per task class, nightly batch) | MUST | done | FR-PROJ-002 | 6h |
+| FR-PROJ-011 | Blocker detector from comment stream (`blocked by` + dwell time → CUO Notify) | MUST | ready_to_implement | FR-CUO-101 | 6h |
+| FR-PROJ-012 | Cycle-review draft generator (CUO/COO persona) at cycle close | MUST | ready_to_implement | FR-CUO-101 | 8h |
+| FR-PROJ-013 | Estimate calibration snapshot (per Member per task class, nightly batch) | MUST | ready_to_implement | FR-PROJ-002 | 6h |
 
 #### Slice 5 — UI surfaces (Board · Timeline · Gantt · Brief)
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-PROJ-014 | Kanban Board (drag + drop, keyboard-first) | MUST | done | FR-PROJ-002 | 12h |
-| FR-PROJ-015 | Timeline view (cycle window × assignee) | MUST | done | FR-PROJ-002 | 10h |
-| FR-PROJ-016 | Gantt view with dependency arrows | SHOULD | done | FR-PROJ-002 | 12h |
-| FR-PROJ-017 | Brief modal (issue deep-view with Yjs description + comments + meta sidebar) | MUST | done | FR-PROJ-003 | 8h |
-| FR-PROJ-018 | Liquid-Glass design tokens (`tokens.proj.css`) + axe-core CI accessibility gate | MUST | done | FR-PROJ-014 | 6h |
+| FR-PROJ-014 | Kanban Board (drag + drop, keyboard-first) | MUST | ready_to_implement | FR-PROJ-002 | 12h |
+| FR-PROJ-015 | Timeline view (cycle window × assignee) | MUST | ready_to_implement | FR-PROJ-002 | 10h |
+| FR-PROJ-016 | Gantt view with dependency arrows | SHOULD | ready_to_implement | FR-PROJ-002 | 12h |
+| FR-PROJ-017 | Brief modal (issue deep-view with Yjs description + comments + meta sidebar) | MUST | ready_to_implement | FR-PROJ-003 | 8h |
+| FR-PROJ-018 | Liquid-Glass design tokens (`tokens.proj.css`) + axe-core CI accessibility gate | MUST | ready_to_implement | FR-PROJ-014 | 6h |
 
 ---
 
@@ -556,16 +556,16 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-EMAIL-001 | Stalwart Rust mail server deployed (JMAP/IMAP/SMTP/ManageSieve all transports) | MUST | done | — | 12h |
+| FR-EMAIL-001 | Stalwart Rust mail server deployed (JMAP/IMAP/SMTP/ManageSieve all transports) | MUST | ready_to_implement | — | 12h |
 | FR-EMAIL-002 | `cyberos-email-authbridge` plugin — Stalwart JMAP auth delegates to AUTH JWT | MUST | ready_to_implement | FR-EMAIL-001, FR-AUTH-004 | 6h |
 | FR-EMAIL-003 | Missive-style shared-inbox UX (assignment, internal comments, snooze, tag) | MUST | ready_to_implement | FR-EMAIL-001 | 16h |
-| FR-EMAIL-004 | DKIM signing + ARC chain forward + BIMI brand indicator | MUST | done | FR-EMAIL-001 | 6h |
+| FR-EMAIL-004 | DKIM signing + ARC chain forward + BIMI brand indicator | MUST | ready_to_implement | FR-EMAIL-001 | 6h |
 
 #### Slice 2 — CaMeL quarantine + capture
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-EMAIL-005 | CaMeL dual-LLM: quarantine LLM (no tools, no memory) extracts → privileged CUO consumes only sanitised | MUST | done | FR-CUO-101 | 12h |
+| FR-EMAIL-005 | CaMeL dual-LLM: quarantine LLM (no tools, no memory) extracts → privileged CUO consumes only sanitised | MUST | ready_to_implement | FR-CUO-101 | 12h |
 | FR-EMAIL-006 | Tracked-domain auto-log to CRM activity feed (per-tenant tracked-domain config) | MUST | ready_to_implement | FR-CRM-002, FR-EMAIL-001 | 5h |
 | FR-EMAIL-007 | "Convert to issue" — thread → PROJ Issue with body as description, replies as comments | MUST | ready_to_implement | FR-PROJ-001, FR-EMAIL-001 | 6h |
 
@@ -574,9 +574,9 @@ This document is the **single source of truth** for what CyberOS is going to bui
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
 | FR-EMAIL-008 | "Genie:" subject prefix → CUO draft grounded in thread + CRM + memory + KB (sync_class permitting) | MUST | ready_to_implement | FR-CUO-101, FR-KB-007 | 8h |
-| FR-EMAIL-009 | Outbound 1:1 send (DKIM-signed, AM confirms) | MUST | done | FR-EMAIL-004 | 4h |
+| FR-EMAIL-009 | Outbound 1:1 send (DKIM-signed, AM confirms) | MUST | ready_to_implement | FR-EMAIL-004 | 4h |
 | FR-EMAIL-010 | Bulk send (≥ 10 recipients) requires AM + CFO/marketing approval token | MUST | ready_to_implement | FR-EMAIL-009 | 5h |
-| FR-EMAIL-011 | DSAR export — every message a subject authored + chained memory audit hashes | MUST | done | FR-EMAIL-001 | 5h |
+| FR-EMAIL-011 | DSAR export — every message a subject authored + chained memory audit hashes | MUST | ready_to_implement | FR-EMAIL-001 | 5h |
 
 ---
 
@@ -713,15 +713,15 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-AUTH-101 | 22-role RBAC catalogue (full bands: root-admin → tenant-member + 17 specialist roles) | MUST | done | FR-AUTH-005 | 12h |
-| FR-AUTH-102 | TOTP + WebAuthn MFA flows | MUST | done | FR-AUTH-002 | 10h |
-| FR-AUTH-103 | SAML 2.0 SSO (per-tenant IdP config) | MUST | done | FR-AUTH-004 | 12h |
-| FR-AUTH-104 | OIDC SSO with discovery + JWKS rotation | MUST | done | FR-AUTH-004 | 10h |
-| FR-AUTH-105 | Passkey enrolment + login | MUST | done | FR-AUTH-102 | 8h |
-| FR-AUTH-106 | Impossible-travel detection + adaptive challenge | SHOULD | done | FR-AUTH-002 | 8h |
-| FR-AUTH-107 | HIBP password breach check on signup + rotation | SHOULD | done | FR-AUTH-002 | 4h |
-| FR-AUTH-108 | Lumi tenant-identity JWT shape (`agent_persona` + `tenant_residency` claims) | MUST | done | FR-AUTH-101 | 6h |
-| FR-AUTH-109 | Stub → full migration path (existing tokens valid for grace window) | MUST | done | FR-AUTH-101 | 5h |
+| FR-AUTH-101 | 22-role RBAC catalogue (full bands: root-admin → tenant-member + 17 specialist roles) | MUST | ready_to_implement | FR-AUTH-005 | 12h |
+| FR-AUTH-102 | TOTP + WebAuthn MFA flows | MUST | ready_to_implement | FR-AUTH-002 | 10h |
+| FR-AUTH-103 | SAML 2.0 SSO (per-tenant IdP config) | MUST | ready_to_implement | FR-AUTH-004 | 12h |
+| FR-AUTH-104 | OIDC SSO with discovery + JWKS rotation | MUST | ready_to_implement | FR-AUTH-004 | 10h |
+| FR-AUTH-105 | Passkey enrolment + login | MUST | ready_to_implement | FR-AUTH-102 | 8h |
+| FR-AUTH-106 | Impossible-travel detection + adaptive challenge | SHOULD | ready_to_implement | FR-AUTH-002 | 8h |
+| FR-AUTH-107 | HIBP password breach check on signup + rotation | SHOULD | ready_to_implement | FR-AUTH-002 | 4h |
+| FR-AUTH-108 | Lumi tenant-identity JWT shape (`agent_persona` + `tenant_residency` claims) | MUST | ready_to_implement | FR-AUTH-101 | 6h |
+| FR-AUTH-109 | Stub → full migration path (existing tokens valid for grace window) | MUST | ready_to_implement | FR-AUTH-101 | 5h |
 
 ### P3.2 — TEN (full self-serve)
 
@@ -807,9 +807,9 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-SKILL-201 | OCI registry deploy for `.skill` bundles (R3 distribution stage) | MUST | done | FR-SKILL-102 | 8h |
-| FR-SKILL-202 | `cyberskill-sg` pack (Singapore: ACRA filings + GST e-invoice + CPF) | SHOULD | done | FR-SKILL-107 | 16h |
-| FR-SKILL-203 | `cyberskill-id` pack (Indonesia: NPWP + e-Faktur) | COULD | done | FR-SKILL-107 | 16h |
+| FR-SKILL-201 | OCI registry deploy for `.skill` bundles (R3 distribution stage) | MUST | ready_to_implement | FR-SKILL-102 | 8h |
+| FR-SKILL-202 | `cyberskill-sg` pack (Singapore: ACRA filings + GST e-invoice + CPF) | SHOULD | ready_to_implement | FR-SKILL-107 | 16h |
+| FR-SKILL-203 | `cyberskill-id` pack (Indonesia: NPWP + e-Faktur) | COULD | ready_to_implement | FR-SKILL-107 | 16h |
 | FR-TEN-201 | Singapore HoldCo flip CLI (`cyberos-ten holdco-flip`) ACRA filings | MUST | ready_to_implement | FR-ESOP-001 | 16h |
 | FR-TEN-202 | Hostile-termination override (legal-trigger fast-track with CEO+CLO+CSO sign-off) | SHOULD | ready_to_implement | FR-TEN-104 | 5h |
 | FR-TEN-203 | Margin watchdog for fixed-fee engagements (alarm < 30% projected) | SHOULD | ready_to_implement | FR-PROJ-007 | 5h |

@@ -3,7 +3,7 @@ id: FR-HR-002
 title: "HR 5 contract types — indefinite + fixed_term + probation + part_time + contractor with per-type leave + benefit rules"
 module: HR
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 6

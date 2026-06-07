@@ -3,7 +3,7 @@ id: FR-TIME-001
 title: "TIME TimeEntry append-only schema — correction_to link semantics + tenant-scoped RLS + invoice-grade integrity"
 module: TIME
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 1

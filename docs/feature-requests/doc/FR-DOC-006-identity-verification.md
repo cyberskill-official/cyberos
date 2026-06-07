@@ -3,7 +3,7 @@ id: FR-DOC-006
 title: "DOC identity verification — 4 methods (WebAuthn / VNeID / SMS-OTP / email-link) with per-document method selection + audit"
 module: DOC
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 2

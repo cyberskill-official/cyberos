@@ -3,7 +3,7 @@ id: FR-RES-004
 title: "RES hiring memo CUO draft — skill-gap × CRM pipeline trigger → CEO+CFO review queue with cost-benefit projection"
 module: RES
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 8

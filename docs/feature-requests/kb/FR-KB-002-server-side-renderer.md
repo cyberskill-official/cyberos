@@ -3,7 +3,7 @@ id: FR-KB-002
 title: "KB server-side renderer — markdown → sanitised HTML (ammonia) + sanitised plaintext for memory ingest"
 module: KB
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 4

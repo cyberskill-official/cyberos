@@ -3,7 +3,7 @@ id: FR-CRM-009
 title: "CRM vietnam-bank-transfer skill — VietQR payment image generation for deal collection with embedded amount + memo + bank routing"
 module: CRM
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 7

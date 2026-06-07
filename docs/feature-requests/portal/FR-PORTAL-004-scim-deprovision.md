@@ -3,7 +3,7 @@ id: FR-PORTAL-004
 title: "PORTAL SCIM deprovision — session invalidation ≤ 30 s on IdP user removal + grace period + cascade revocation + dual-channel kill (JWT blacklist + WebSocket close)"
 module: PORTAL
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P4
 milestone: P4 · slice 2

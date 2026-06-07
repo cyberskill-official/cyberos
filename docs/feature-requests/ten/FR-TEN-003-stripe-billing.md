@@ -3,7 +3,7 @@ id: FR-TEN-003
 title: "Stripe billing integration — USD/EUR/SGD/GBP customer + subscription + per-period invoice + overage push for international tenants"
 module: TEN
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · billing-substrate

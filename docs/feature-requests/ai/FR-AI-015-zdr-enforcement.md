@@ -4,7 +4,7 @@ id: FR-AI-015
 title: "ZDR (Zero Data Retention) attestation table + enforcement when tenant policy requires"
 module: AI
 priority: MUST
-status: done
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 3

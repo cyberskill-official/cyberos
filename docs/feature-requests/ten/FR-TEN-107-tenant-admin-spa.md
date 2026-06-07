@@ -3,7 +3,7 @@ id: FR-TEN-107
 title: "TEN tenant-admin SPA — seats + billing + audit + residency + retention dashboard for ROOT-CFO tenant administration"
 module: TEN
 priority: SHOULD
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 3

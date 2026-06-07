@@ -3,7 +3,7 @@ id: FR-TEN-103
 title: "4-residency provisioning — sg-1 / eu-1 / us-1 / vn-1 region pinning across Postgres + S3 + NATS + Stripe + KMS with cross-residency-write trip-wire"
 module: TEN
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P3
 milestone: P3 · residency-GA

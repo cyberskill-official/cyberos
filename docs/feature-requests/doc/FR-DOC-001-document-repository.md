@@ -3,7 +3,7 @@ id: FR-DOC-001
 title: "DOC Document repository — S3 Object-Lock Compliance bucket + per-tenant residency pinning + versioned + ACL'd + 10-year retention + hash-chained audit"
 module: DOC
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P4
 milestone: P4 · slice 1

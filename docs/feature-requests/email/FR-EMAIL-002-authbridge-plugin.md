@@ -3,7 +3,7 @@ id: FR-EMAIL-002
 title: "EMAIL Stalwart authbridge plugin — JMAP/IMAP/SMTP auth delegates to AUTH JWT validation + per-tenant mailbox scoping"
 module: EMAIL
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 1

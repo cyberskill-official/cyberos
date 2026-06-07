@@ -3,7 +3,7 @@ id: FR-EMAIL-008
 title: "EMAIL Genie prefix — inbound subject prefix routes message to Genie (Branded AI) for automated drafting + action proposals"
 module: EMAIL
 priority: SHOULD
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 2

@@ -3,7 +3,7 @@ id: FR-PROJ-013
 title: "Estimate calibration snapshot — per-member per-task-class nightly batch with Bayesian update and operator-visible accuracy trend"
 module: PROJ
 priority: MUST
-status: done
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 3

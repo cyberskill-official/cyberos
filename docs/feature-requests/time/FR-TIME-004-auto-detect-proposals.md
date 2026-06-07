@@ -3,7 +3,7 @@ id: FR-TIME-004
 title: "TIME auto-detect proposals — Member-confirm suggestions from PROJ activity (status changes + comment patterns + commit/PR activity)"
 module: TIME
 priority: SHOULD
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 2

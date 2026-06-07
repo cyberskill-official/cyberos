@@ -3,7 +3,7 @@ id: FR-REW-006
 title: "REW byte-identical payslip PDF render — Tectonic + pinned fonts produces deterministic PDF bytes for verification"
 module: REW
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 2

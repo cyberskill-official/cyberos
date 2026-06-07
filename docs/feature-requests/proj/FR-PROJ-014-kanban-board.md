@@ -3,7 +3,7 @@ id: FR-PROJ-014
 title: "Kanban Board view — drag/drop status transition + keyboard-first navigation + 60fps virtualised list rendering"
 module: PROJ
 priority: MUST
-status: done
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 3

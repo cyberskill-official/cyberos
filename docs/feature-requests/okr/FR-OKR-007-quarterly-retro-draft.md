@@ -3,7 +3,7 @@ id: FR-OKR-007
 title: "OKR quarterly retro CUO draft — auto-generated retro with face-saving Vietnamese framing for honest reflection"
 module: OKR
 priority: SHOULD
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 3

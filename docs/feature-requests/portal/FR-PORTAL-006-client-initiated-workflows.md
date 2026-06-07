@@ -3,7 +3,7 @@ id: FR-PORTAL-006
 title: "PORTAL client-initiated workflows — new project request / billing inquiry / support ticket → CHAT thread with SLA + auto-routing + status tracking"
 module: PORTAL
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P4
 milestone: P4 · slice 2

@@ -3,7 +3,7 @@ id: FR-OKR-005
 title: "OKR weekly check-in — 1-10 confidence + rationale per KR with rolling 4-week history + trend visualization"
 module: OKR
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 3

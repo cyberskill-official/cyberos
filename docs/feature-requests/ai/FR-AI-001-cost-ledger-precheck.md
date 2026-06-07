@@ -4,7 +4,7 @@ id: FR-AI-001
 title: "AI Gateway cost-ledger pre-call check"
 module: AI
 priority: MUST
-status: done
+status: ready_to_implement
 accepted_at: 2026-05-15
 accepted_by: Stephen Cheng
 verify: T

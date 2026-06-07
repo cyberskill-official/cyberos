@@ -3,7 +3,7 @@ id: FR-INV-008
 title: "INV VN hóa đơn cancellation flow — Decree 123 Art. 19 replacement-or-cancellation protocol with GDT 1-1 mapping + amendment audit"
 module: INV
 priority: MUST
-status: draft
+status: ready_to_implement
 verify: T
 phase: P2
 milestone: P2 · slice 2
