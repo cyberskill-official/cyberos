@@ -1,0 +1,8 @@
+repos:
+  - repo: local
+    hooks:
+      - id: no-real-pii-in-corpus
+        name: no real PII in VN corpus
+        entry: .pre-commit-hooks/no-real-pii-in-corpus.sh
+        language: system
+        files: ^services/ai-gateway/pii/fixtures/vn_pii_200_samples\.yaml$

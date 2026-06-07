@@ -1,418 +1,2415 @@
-# FR-AI-012 — 200-sample VN PII test fixture.
-# Curated from anonymised CyberSkill customer data + synthetic edge cases.
-# Used by FR-AI-013 recall-floor CI gate.
+# FR-AI-013 — 200-positive / 30-negative VN PII recall fixture.
+# Synthetic corpus; preserves format validity while destroying identity linkage.
+# Used by the VN PII recall CI gate.
 
 samples:
-  # ── VN_CCCD (30 samples) ──────────────────────────────────────────────────
-  - text: "CCCD: 012345678901"
-    expected_entities: ["VN_CCCD"]
-  - text: "cccd: 031123456789"
-    expected_entities: ["VN_CCCD"]
-  - text: "Căn cước công dân: 079123456789"
-    expected_entities: ["VN_CCCD"]
-  - text: "Định danh: 048123456789"
-    expected_entities: ["VN_CCCD"]
-  - text: "Số CCCD 025123456789"
-    expected_entities: ["VN_CCCD"]
-  - text: "012345678901"
-    expected_entities: ["VN_CCCD"]
-  - text: "031123456789"
-    expected_entities: ["VN_CCCD"]
-  - text: "079123456789"
-    expected_entities: ["VN_CCCD"]
-  - text: "048123456789"
-    expected_entities: ["VN_CCCD"]
-  - text: "025123456789"
-    expected_entities: ["VN_CCCD"]
-  - text: "CCCD: 001123456789"
-    expected_entities: ["VN_CCCD"]
-  - text: "CCCD: 099123456789"
-    expected_entities: ["VN_CCCD"]
-  - text: "Căn cước: 064123456789"
-    expected_entities: ["VN_CCCD"]
-  - text: "CMND: 052123456789"
-    expected_entities: ["VN_CCCD"]
-  - text: "Số định danh cá nhân: 092123456789"
-    expected_entities: ["VN_CCCD"]
-  - text: "CCCD 019123456789 còn hiệu lực"
-    expected_entities: ["VN_CCCD"]
-  - text: "Theo CCCD số 036123456789"
-    expected_entities: ["VN_CCCD"]
-  - text: "Nhập CCCD: 082123456789 để xác thực"
-    expected_entities: ["VN_CCCD"]
-  - text: "CCCD: 010123456789; họ tên: Nguyễn Văn A"
-    expected_entities: ["VN_CCCD"]
-  - text: "044123456789 - Nguyễn Thị B"
-    expected_entities: ["VN_CCCD"]
-  - text: "căn cước công dân số 058123456789"
-    expected_entities: ["VN_CCCD"]
-  - text: "định danh 068123456789"
-    expected_entities: ["VN_CCCD"]
-  - text: "CCCD: 033123456789"
-    expected_entities: ["VN_CCCD"]
-  - text: "Số CCCD: 034123456789"
-    expected_entities: ["VN_CCCD"]
-  - text: "CCCD: 035123456789"
-    expected_entities: ["VN_CCCD"]
-  - text: "CCCD: 037123456789"
-    expected_entities: ["VN_CCCD"]
-  - text: "CCCD: 038123456789"
-    expected_entities: ["VN_CCCD"]
-  - text: "CCCD: 040123456789"
-    expected_entities: ["VN_CCCD"]
-  - text: "CCCD: 042123456789"
-    expected_entities: ["VN_CCCD"]
-  - text: "CCCD: 045123456789"
-    expected_entities: ["VN_CCCD"]
-
-  # ── VN_MST (30 samples) ───────────────────────────────────────────────────
-  - text: "MST: 0301234567"
-    expected_entities: ["VN_MST"]
-  - text: "Mã số thuế: 0301234567"
-    expected_entities: ["VN_MST"]
-  - text: "MST 0101234567"
-    expected_entities: ["VN_MST"]
-  - text: "MST: 0101234567-001"
-    expected_entities: ["VN_MST"]
-  - text: "mst: 0301234567"
-    expected_entities: ["VN_MST"]
-  - text: "Mã thuế: 0701234567"
-    expected_entities: ["VN_MST"]
-  - text: "0301234567"
-    expected_entities: ["VN_MST"]
-  - text: "0101234567"
-    expected_entities: ["VN_MST"]
-  - text: "0701234567"
-    expected_entities: ["VN_MST"]
-  - text: "0301234567-001"
-    expected_entities: ["VN_MST"]
-  - text: "MST: 0101234567-002"
-    expected_entities: ["VN_MST"]
-  - text: "Mã số thuế 0301234567-003"
-    expected_entities: ["VN_MST"]
-  - text: "Số MST: 0401234567"
-    expected_entities: ["VN_MST"]
-  - text: "MST doanh nghiệp: 0501234567"
-    expected_entities: ["VN_MST"]
-  - text: "Đăng ký MST 0601234567"
-    expected_entities: ["VN_MST"]
-  - text: "MST: 0201234567"
-    expected_entities: ["VN_MST"]
-  - text: "MST: 0801234567"
-    expected_entities: ["VN_MST"]
-  - text: "MST: 0901234567"
-    expected_entities: ["VN_MST"]
-  - text: "MST: 0111234567"
-    expected_entities: ["VN_MST"]
-  - text: "MST: 0121234567"
-    expected_entities: ["VN_MST"]
-  - text: "MST: 0141234567"
-    expected_entities: ["VN_MST"]
-  - text: "MST: 0151234567"
-    expected_entities: ["VN_MST"]
-  - text: "MST: 0171234567"
-    expected_entities: ["VN_MST"]
-  - text: "MST: 0191234567"
-    expected_entities: ["VN_MST"]
-  - text: "MST: 0221234567"
-    expected_entities: ["VN_MST"]
-  - text: "MST: 0241234567"
-    expected_entities: ["VN_MST"]
-  - text: "MST: 0251234567"
-    expected_entities: ["VN_MST"]
-  - text: "MST: 0261234567"
-    expected_entities: ["VN_MST"]
-  - text: "MST: 0271234567"
-    expected_entities: ["VN_MST"]
-  - text: "0301234567-001"
-    expected_entities: ["VN_MST"]
-
-  # ── VN_PHONE (30 samples) ─────────────────────────────────────────────────
-  - text: "+84901234567"
-    expected_entities: ["VN_PHONE"]
-  - text: "+84 901234567"
-    expected_entities: ["VN_PHONE"]
-  - text: "0901234567"
-    expected_entities: ["VN_PHONE"]
-  - text: "SĐT: 0901234567"
-    expected_entities: ["VN_PHONE"]
-  - text: "Điện thoại: 0912345678"
-    expected_entities: ["VN_PHONE"]
-  - text: "+84312345678"
-    expected_entities: ["VN_PHONE"]
-  - text: "0312345678"
-    expected_entities: ["VN_PHONE"]
-  - text: "+84701234567"
-    expected_entities: ["VN_PHONE"]
-  - text: "0701234567"
-    expected_entities: ["VN_PHONE"]
-  - text: "+84812345678"
-    expected_entities: ["VN_PHONE"]
-  - text: "0812345678"
-    expected_entities: ["VN_PHONE"]
-  - text: "+84512345678"
-    expected_entities: ["VN_PHONE"]
-  - text: "0512345678"
-    expected_entities: ["VN_PHONE"]
-  - text: "Phone: 0901234567"
-    expected_entities: ["VN_PHONE"]
-  - text: "Mobile: +84901234567"
-    expected_entities: ["VN_PHONE"]
-  - text: "SĐT 0901234567 hoặc 0912345678"
-    expected_entities: ["VN_PHONE", "VN_PHONE"]
-  - text: "Liên hệ: 0901234567"
-    expected_entities: ["VN_PHONE"]
-  - text: "Gọi 0901234567 để biết thêm"
-    expected_entities: ["VN_PHONE"]
-  - text: "+84 312 345 678"
-    expected_entities: ["VN_PHONE"]
-  - text: "090-123-4567"
-    expected_entities: ["VN_PHONE"]
-  - text: "Số điện thoại: 0901234567"
-    expected_entities: ["VN_PHONE"]
-  - text: "ĐT: 0901234567"
-    expected_entities: ["VN_PHONE"]
-  - text: "Tel: +84901234567"
-    expected_entities: ["VN_PHONE"]
-  - text: "0901234567 (chính)"
-    expected_entities: ["VN_PHONE"]
-  - text: "+84901234567 (di động)"
-    expected_entities: ["VN_PHONE"]
-  - text: "Hotline: 0901234567"
-    expected_entities: ["VN_PHONE"]
-  - text: "Fax: 02812345678"
-    expected_entities: ["VN_PHONE"]
-  - text: "02812345678"
-    expected_entities: ["VN_PHONE"]
-  - text: "+842812345678"
-    expected_entities: ["VN_PHONE"]
-  - text: "0901234567 ext 123"
-    expected_entities: ["VN_PHONE"]
-
-  # ── VN_NDD (20 samples) ───────────────────────────────────────────────────
-  - text: "NĐD: Nguyễn Văn A"
-    expected_entities: ["VN_NDD"]
-  - text: "Người đại diện: Trần Thị B"
-    expected_entities: ["VN_NDD"]
-  - text: "Legal representative: Lê Văn C"
-    expected_entities: ["VN_NDD"]
-  - text: "NĐD: Phạm Thị D"
-    expected_entities: ["VN_NDD"]
-  - text: "Người đại diện: Hoàng Văn E"
-    expected_entities: ["VN_NDD"]
-  - text: "NĐD: Vũ Thị F"
-    expected_entities: ["VN_NDD"]
-  - text: "Người đại diện pháp luật: Đặng Văn G"
-    expected_entities: ["VN_NDD"]
-  - text: "NĐD: Bùi Thị H"
-    expected_entities: ["VN_NDD"]
-  - text: "Legal representative: Nguyễn Văn I"
-    expected_entities: ["VN_NDD"]
-  - text: "NĐD: Trịnh Thị K"
-    expected_entities: ["VN_NDD"]
-  - text: "Người đại diện: Mai Văn L"
-    expected_entities: ["VN_NDD"]
-  - text: "NĐD: Lý Thị M"
-    expected_entities: ["VN_NDD"]
-  - text: "NĐD: Tạ Văn N"
-    expected_entities: ["VN_NDD"]
-  - text: "Người đại diện: Ngô Thị O"
-    expected_entities: ["VN_NDD"]
-  - text: "NĐD: Cao Văn P"
-    expected_entities: ["VN_NDD"]
-  - text: "NĐD: Đoàn Thị Q"
-    expected_entities: ["VN_NDD"]
-  - text: "NĐD: Hà Văn R"
-    expected_entities: ["VN_NDD"]
-  - text: "Người đại diện: Lương Thị S"
-    expected_entities: ["VN_NDD"]
-  - text: "NĐD: Từ Văn T"
-    expected_entities: ["VN_NDD"]
-  - text: "NĐD: Đinh Thị U"
-    expected_entities: ["VN_NDD"]
-
-  # ── VN_ADDRESS (30 samples) ───────────────────────────────────────────────
-  - text: "123 Nguyễn Thị Minh Khai, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "456 Lê Lợi, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "789 Trần Hưng Đạo, Phường Cầu Ông Lãnh, Quận 1, TP. Hồ Chí Minh"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "12 Lý Thường Kiệt, Phường Cửa Nam, Quận Hoàn Kiếm, TP. Hà Nội"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "34 Hai Bà Trưng, Phường Tràng Tiền, Quận Hoàn Kiếm, TP. Hà Nội"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "56 Bạch Đằng, Phường Hải Châu I, Quận Hải Châu, TP. Đà Nẵng"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "78 Nguyễn Huệ, Phường 1, Quận 1, TP. Hồ Chí Minh"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "90 Pasteur, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "123 Điện Biên Phủ, Phường 15, Quận Bình Thạnh, TP. Hồ Chí Minh"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "456 Cách Mạng Tháng 8, Phường 10, Quận 3, TP. Hồ Chí Minh"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "1 Võ Văn Ngân, Phường Linh Chiểu, Quận Thủ Đức, TP. Hồ Chí Minh"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "234 Phan Xích Long, Phường 7, Quận Phú Nhuận, TP. Hồ Chí Minh"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "56 Nguyễn Văn Linh, Phường Hòa Minh, Quận Liên Chiểu, TP. Đà Nẵng"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "78 Hùng Vương, Phường 1, TP. Đà Lạt"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "90 Nguyễn Thái Học, Phường 7, TP. Vũng Tàu"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "Địa chỉ: 123 Lê Duẩn, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "Address: 456 Nguyễn Huệ, Phường 1, Quận 1, TP. Hồ Chí Minh"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "12 Phạm Văn Đồng, Phường Linh Tây, Quận Thủ Đức, TP. Hồ Chí Minh"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "34 Quang Trung, Phường 10, Quận Gò Vấp, TP. Hồ Chí Minh"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "56 Trường Chinh, Phường Tân Thới Nhất, Quận 12, TP. Hồ Chí Minh"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "78 Tô Hiến Thành, Phường 15, Quận 10, TP. Hồ Chí Minh"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "90 Sư Vạn Hạnh, Phường 12, Quận 10, TP. Hồ Chí Minh"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "12 Lý Chính Thắng, Phường Võ Thị Sáu, Quận 3, TP. Hồ Chí Minh"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "34 Nam Kỳ Khởi Nghĩa, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "56 Đồng Khởi, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "78 Hàm Nghi, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "90 Nguyễn Đình Chiểu, Phường Đa Kao, Quận 1, TP. Hồ Chí Minh"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "12 Võ Thị Sáu, Phường 8, Quận 3, TP. Hồ Chí Minh"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "34 Hoàng Văn Thụ, Phường 9, Quận Phú Nhuận, TP. Hồ Chí Minh"
-    expected_entities: ["VN_ADDRESS"]
-  - text: "56 Phan Đình Phùng, Phường 17, Quận Phú Nhuận, TP. Hồ Chí Minh"
-    expected_entities: ["VN_ADDRESS"]
-
-  # ── VN_BANK_ACCOUNT (30 samples) ──────────────────────────────────────────
-  - text: "STK Vietcombank: 1234567890123"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "STK BIDV: 123456789012"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "Số tài khoản Techcombank: 12345678901"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "STK Sacombank: 12345678901234"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "STK Agribank: 1234567890"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "account number MBBank: 12345678901"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "STK VPBank: 123456789012"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "STK ACB: 1234567890123"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "STK VIB: 12345678901"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "STK TPBank: 123456789012"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "STK SHB: 1234567890123"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "STK HDBank: 12345678901"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "tài khoản Vietcombank: 98765432101"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "STK: 1234567890123 Vietcombank"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "Số tài khoản: 123456789012 Techcombank"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "STK Vietcombank 12345678901"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "BIDV STK: 23456789012"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "Techcombank: 34567890123"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "Sacombank STK 45678901234"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "Agribank tài khoản: 56789012345"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "MBBank account: 67890123456"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "VPBank STK: 78901234567"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "ACB số tài khoản: 89012345678"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "VIB: 90123456789"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "TPBank: 01234567890"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "SHB STK: 11234567890"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "HDBank: 22345678901"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "OCB tài khoản: 33456789012"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "SCB STK: 44567890123"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-  - text: "SeABank: 55678901234"
-    expected_entities: ["VN_BANK_ACCOUNT"]
-
-  # ── Negative examples (30 samples) ────────────────────────────────────────
-  - text: "Ngày 12/05/2026 hợp đồng ký kết"
-    expected_entities: []
-  - text: "Sinh năm 1990 tại Hà Nội"
-    expected_entities: []
-  - text: "Hợp đồng số 2024-001 ngày 12/05/2026"
-    expected_entities: []
-  - text: "100,000,000 VND"
-    expected_entities: []
-  - text: "Phí 50.000 VNĐ"
-    expected_entities: []
-  - text: "1,234,567,890 đồng"
-    expected_entities: []
-  - text: "Khách hàng Nguyễn Văn A đã thanh toán"
-    expected_entities: []
-  - text: "Sản phẩm: iPhone 15 Pro Max 256GB"
-    expected_entities: []
-  - text: "Đơn hàng #20260521-001"
-    expected_entities: []
-  - text: "Thời gian: 14:30 ngày 21/05/2026"
-    expected_entities: []
-  - text: "Số lượng: 1,000 sản phẩm"
-    expected_entities: []
-  - text: "Giá: 25,000,000 VND/sp"
-    expected_entities: []
-  - text: "Tỷ lệ: 12.5%/năm"
-    expected_entities: []
-  - text: "Khoảng cách: 123.45 km"
-    expected_entities: []
-  - text: "Nhiệt độ: 35.2°C"
-    expected_entities: []
-  - text: "Diện tích: 1,500 m²"
-    expected_entities: []
-  - text: "Trọng lượng: 500 kg"
-    expected_entities: []
-  - text: "Thể tích: 200 lít"
-    expected_entities: []
-  - text: "Tốc độ: 120 km/h"
-    expected_entities: []
-  - text: "Áp suất: 101.3 kPa"
-    expected_entities: []
-  - text: "Chiều cao: 175 cm"
-    expected_entities: []
-  - text: "Cân nặng: 70 kg"
-    expected_entities: []
-  - text: "Tuổi: 35 năm"
-    expected_entities: []
-  - text: "Kinh nghiệm: 10 năm"
-    expected_entities: []
-  - text: "Lương: 20,000,000 VND/tháng"
-    expected_entities: []
-  - text: "Thưởng: 5,000,000 VND"
-    expected_entities: []
-  - text: "Phí bảo hiểm: 1,500,000 VND/năm"
-    expected_entities: []
-  - text: "Thuế: 10%"
-    expected_entities: []
-  - text: "Lãi suất: 8.5%/năm"
-    expected_entities: []
-  - text: "Tổng cộng: 150,000,000 VND"
-    expected_entities: []
+- id: cccd_001
+  text: 'CCCD: 012345678901'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_002
+  text: 'cccd: 031123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_003
+  text: 'Căn cước công dân: 079123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 19
+    end: 31
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_004
+  text: 'Định danh: 048123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 11
+    end: 23
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_005
+  text: Số CCCD 025123456789
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 8
+    end: 20
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_006
+  text: 012345678901
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 0
+    end: 12
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_007
+  text: 031123456789
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 0
+    end: 12
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_008
+  text: 079123456789
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 0
+    end: 12
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_009
+  text: 048123456789
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 0
+    end: 12
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_010
+  text: 025123456789
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 0
+    end: 12
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_011
+  text: 'CCCD: 001123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_012
+  text: 'CCCD: 099123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_013
+  text: 'Căn cước: 064123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 10
+    end: 22
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_014
+  text: 'CMND: 052123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_015
+  text: 'Số định danh cá nhân: 092123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 22
+    end: 34
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_016
+  text: CCCD 019123456789 còn hiệu lực
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 5
+    end: 17
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_017
+  text: Theo CCCD số 036123456789
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 13
+    end: 25
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_018
+  text: 'Nhập CCCD: 082123456789 để xác thực'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 11
+    end: 23
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_019
+  text: 'CCCD: 010123456789; họ tên: Nguyễn Văn A'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_020
+  text: 044123456789 - Nguyễn Thị B
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 0
+    end: 12
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_021
+  text: căn cước công dân số 058123456789
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 21
+    end: 33
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_022
+  text: định danh 068123456789
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 10
+    end: 22
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_023
+  text: 'CCCD: 033123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_024
+  text: 'Số CCCD: 034123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 9
+    end: 21
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_025
+  text: 'CCCD: 035123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_026
+  text: 'CCCD: 037123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_027
+  text: 'CCCD: 038123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_028
+  text: 'CCCD: 040123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_029
+  text: 'CCCD: 042123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_030
+  text: 'CCCD: 045123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_031
+  text: 'CCCD: 046123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_032
+  text: 'Căn cước công dân: 049123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 19
+    end: 31
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_033
+  text: 'Định danh: 051123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 11
+    end: 23
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_034
+  text: Số căn cước 053123456789
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 12
+    end: 24
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_035
+  text: 'CCCD: 054123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_036
+  text: CCCD 055123456789
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 5
+    end: 17
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_037
+  text: 'định danh cá nhân: 056123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 19
+    end: 31
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_038
+  text: 'CCCD: 060123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_039
+  text: 'CCCD: 062123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_040
+  text: 'Căn cước: 066123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 10
+    end: 22
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_041
+  text: 'CCCD: 070123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_042
+  text: 'CCCD: 072123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_043
+  text: 'CCCD: 074123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_044
+  text: 'CCCD: 075123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_045
+  text: 'CCCD: 077123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_046
+  text: 'CCCD: 080123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_047
+  text: 'CCCD: 084123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_048
+  text: 'CCCD: 086123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_049
+  text: 'CCCD: 087123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: cccd_050
+  text: 'CCCD: 088123456789'
+  expected_entities:
+  - VN_CCCD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_CCCD
+    start: 6
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_CCCD recall fixture row.
+- id: mst_001
+  text: 'MST: 0301234567'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 5
+    end: 15
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_002
+  text: 'Mã số thuế: 0301234567'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 12
+    end: 22
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_003
+  text: MST 0101234567
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 4
+    end: 14
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_004
+  text: 'MST: 0101234567-001'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 5
+    end: 19
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_005
+  text: 'mst: 0301234567'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 5
+    end: 15
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_006
+  text: 'Mã thuế: 0701234567'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 9
+    end: 19
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_007
+  text: '0301234567'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 0
+    end: 10
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_008
+  text: '0101234567'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 0
+    end: 10
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_009
+  text: '0701234567'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 0
+    end: 10
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_010
+  text: 0301234567-001
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 0
+    end: 14
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_011
+  text: 'MST: 0101234567-002'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 5
+    end: 19
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_012
+  text: Mã số thuế 0301234567-003
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 11
+    end: 25
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_013
+  text: 'Số MST: 0401234567'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 8
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_014
+  text: 'MST doanh nghiệp: 0501234567'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 18
+    end: 28
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_015
+  text: Đăng ký MST 0601234567
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 12
+    end: 22
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_016
+  text: 'MST: 0201234567'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 5
+    end: 15
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_017
+  text: 'MST: 0801234567'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 5
+    end: 15
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_018
+  text: 'MST: 0901234567'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 5
+    end: 15
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_019
+  text: 'MST: 0111234567'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 5
+    end: 15
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_020
+  text: 'MST: 0121234567'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 5
+    end: 15
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_021
+  text: 'MST: 0141234567'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 5
+    end: 15
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_022
+  text: 'MST: 0151234567'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 5
+    end: 15
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_023
+  text: 'MST: 0171234567'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 5
+    end: 15
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_024
+  text: 'MST: 0191234567'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 5
+    end: 15
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_025
+  text: 'MST: 0221234567'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 5
+    end: 15
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_026
+  text: 'MST: 0241234567'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 5
+    end: 15
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_027
+  text: 'MST: 0251234567'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 5
+    end: 15
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_028
+  text: 'MST: 0261234567'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 5
+    end: 15
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_029
+  text: 'MST: 0271234567'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 5
+    end: 15
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: mst_030
+  text: 'Mã số thuế: 0301234567-004'
+  expected_entities:
+  - VN_MST
+  expected_count: 1
+  expected_spans:
+  - entity: VN_MST
+    start: 12
+    end: 26
+  provenance: synthetic
+  notes: Deterministic synthetic VN_MST recall fixture row.
+- id: phone_001
+  text: '+84901234567'
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 0
+    end: 12
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_002
+  text: +84 901234567
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 0
+    end: 13
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_003
+  text: 0901234567
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 0
+    end: 10
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_004
+  text: 'SĐT: 0901234567'
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 5
+    end: 15
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_005
+  text: 'Điện thoại: 0912345678'
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 12
+    end: 22
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_006
+  text: '+84312345678'
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 0
+    end: 12
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_007
+  text: 0312345678
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 0
+    end: 10
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_008
+  text: '+84701234567'
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 0
+    end: 12
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_009
+  text: '0701234567'
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 0
+    end: 10
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_010
+  text: '+84812345678'
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 0
+    end: 12
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_011
+  text: 0812345678
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 0
+    end: 10
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_012
+  text: '+84512345678'
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 0
+    end: 12
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_013
+  text: 0512345678
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 0
+    end: 10
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_014
+  text: 'Phone: 0901234567'
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 7
+    end: 17
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_015
+  text: 'Mobile: +84901234567'
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 8
+    end: 20
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_016
+  text: 'SĐT: 0923456789'
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 5
+    end: 15
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_017
+  text: 'Liên hệ: 0901234567'
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 9
+    end: 19
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_018
+  text: Gọi 0901234567 để biết thêm
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 4
+    end: 14
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_019
+  text: +84 312 345 678
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 0
+    end: 15
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_020
+  text: 090-123-4567
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 0
+    end: 12
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_021
+  text: 'Số điện thoại: 0901234567'
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 15
+    end: 25
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_022
+  text: 'ĐT: 0901234567'
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 4
+    end: 14
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_023
+  text: 'Tel: +84901234567'
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 5
+    end: 17
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_024
+  text: 0901234567 (chính)
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 0
+    end: 10
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_025
+  text: +84901234567 (di động)
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 0
+    end: 12
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_026
+  text: 'Hotline: 0901234567'
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 9
+    end: 19
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_027
+  text: 'Fax: 02812345678'
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 5
+    end: 16
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_028
+  text: 02812345678
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 0
+    end: 11
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_029
+  text: '+842812345678'
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 0
+    end: 13
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_030
+  text: 0901234567 ext 123
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 0
+    end: 10
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_031
+  text: 'SĐT khách hàng: 0934567890'
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 16
+    end: 26
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_032
+  text: 'Điện thoại bàn: 02412345678'
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 16
+    end: 27
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_033
+  text: 'Hotline miền Bắc: +842412345678'
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 18
+    end: 31
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_034
+  text: 'Mobile phụ: 0345678901'
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 12
+    end: 22
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_035
+  text: Số liên hệ 0765432109
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 11
+    end: 21
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_036
+  text: Gọi lại qua 0856789012
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 12
+    end: 22
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_037
+  text: 'Zalo: 0567890123'
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 6
+    end: 16
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_038
+  text: Liên hệ +84765432109
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 8
+    end: 20
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_039
+  text: 'SĐT: 0387654321'
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 5
+    end: 15
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: phone_040
+  text: 'Điện thoại: 0598765432'
+  expected_entities:
+  - VN_PHONE
+  expected_count: 1
+  expected_spans:
+  - entity: VN_PHONE
+    start: 12
+    end: 22
+  provenance: synthetic
+  notes: Deterministic synthetic VN_PHONE recall fixture row.
+- id: ndd_001
+  text: 'NĐD: Nguyễn Văn A'
+  expected_entities:
+  - VN_NDD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_NDD
+    start: 5
+    end: 17
+  provenance: synthetic
+  notes: Deterministic synthetic VN_NDD recall fixture row.
+- id: ndd_002
+  text: 'Người đại diện: Trần Thị B'
+  expected_entities:
+  - VN_NDD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_NDD
+    start: 16
+    end: 26
+  provenance: synthetic
+  notes: Deterministic synthetic VN_NDD recall fixture row.
+- id: ndd_003
+  text: 'Legal representative: Lê Văn C'
+  expected_entities:
+  - VN_NDD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_NDD
+    start: 22
+    end: 30
+  provenance: synthetic
+  notes: Deterministic synthetic VN_NDD recall fixture row.
+- id: ndd_004
+  text: 'NĐD: Phạm Thị D'
+  expected_entities:
+  - VN_NDD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_NDD
+    start: 5
+    end: 15
+  provenance: synthetic
+  notes: Deterministic synthetic VN_NDD recall fixture row.
+- id: ndd_005
+  text: 'Người đại diện: Hoàng Văn E'
+  expected_entities:
+  - VN_NDD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_NDD
+    start: 16
+    end: 27
+  provenance: synthetic
+  notes: Deterministic synthetic VN_NDD recall fixture row.
+- id: ndd_006
+  text: 'NĐD: Vũ Thị F'
+  expected_entities:
+  - VN_NDD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_NDD
+    start: 5
+    end: 13
+  provenance: synthetic
+  notes: Deterministic synthetic VN_NDD recall fixture row.
+- id: ndd_007
+  text: 'Người đại diện pháp luật: Đặng Văn G'
+  expected_entities:
+  - VN_NDD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_NDD
+    start: 26
+    end: 36
+  provenance: synthetic
+  notes: Deterministic synthetic VN_NDD recall fixture row.
+- id: ndd_008
+  text: 'NĐD: Bùi Thị H'
+  expected_entities:
+  - VN_NDD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_NDD
+    start: 5
+    end: 14
+  provenance: synthetic
+  notes: Deterministic synthetic VN_NDD recall fixture row.
+- id: ndd_009
+  text: 'Legal representative: Nguyễn Văn I'
+  expected_entities:
+  - VN_NDD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_NDD
+    start: 22
+    end: 34
+  provenance: synthetic
+  notes: Deterministic synthetic VN_NDD recall fixture row.
+- id: ndd_010
+  text: 'NĐD: Trịnh Thị K'
+  expected_entities:
+  - VN_NDD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_NDD
+    start: 5
+    end: 16
+  provenance: synthetic
+  notes: Deterministic synthetic VN_NDD recall fixture row.
+- id: ndd_011
+  text: 'Người đại diện: Mai Văn L'
+  expected_entities:
+  - VN_NDD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_NDD
+    start: 16
+    end: 25
+  provenance: synthetic
+  notes: Deterministic synthetic VN_NDD recall fixture row.
+- id: ndd_012
+  text: 'NĐD: Lý Thị M'
+  expected_entities:
+  - VN_NDD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_NDD
+    start: 5
+    end: 13
+  provenance: synthetic
+  notes: Deterministic synthetic VN_NDD recall fixture row.
+- id: ndd_013
+  text: 'NĐD: Tạ Văn N'
+  expected_entities:
+  - VN_NDD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_NDD
+    start: 5
+    end: 13
+  provenance: synthetic
+  notes: Deterministic synthetic VN_NDD recall fixture row.
+- id: ndd_014
+  text: 'Người đại diện: Ngô Thị O'
+  expected_entities:
+  - VN_NDD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_NDD
+    start: 16
+    end: 25
+  provenance: synthetic
+  notes: Deterministic synthetic VN_NDD recall fixture row.
+- id: ndd_015
+  text: 'NĐD: Cao Văn P'
+  expected_entities:
+  - VN_NDD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_NDD
+    start: 5
+    end: 14
+  provenance: synthetic
+  notes: Deterministic synthetic VN_NDD recall fixture row.
+- id: ndd_016
+  text: 'NĐD: Đoàn Thị Q'
+  expected_entities:
+  - VN_NDD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_NDD
+    start: 5
+    end: 15
+  provenance: synthetic
+  notes: Deterministic synthetic VN_NDD recall fixture row.
+- id: ndd_017
+  text: 'NĐD: Hà Văn R'
+  expected_entities:
+  - VN_NDD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_NDD
+    start: 5
+    end: 13
+  provenance: synthetic
+  notes: Deterministic synthetic VN_NDD recall fixture row.
+- id: ndd_018
+  text: 'Người đại diện: Lương Thị S'
+  expected_entities:
+  - VN_NDD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_NDD
+    start: 16
+    end: 27
+  provenance: synthetic
+  notes: Deterministic synthetic VN_NDD recall fixture row.
+- id: ndd_019
+  text: 'NĐD: Từ Văn T'
+  expected_entities:
+  - VN_NDD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_NDD
+    start: 5
+    end: 13
+  provenance: synthetic
+  notes: Deterministic synthetic VN_NDD recall fixture row.
+- id: ndd_020
+  text: 'NĐD: Đinh Thị U'
+  expected_entities:
+  - VN_NDD
+  expected_count: 1
+  expected_spans:
+  - entity: VN_NDD
+    start: 5
+    end: 15
+  provenance: synthetic
+  notes: Deterministic synthetic VN_NDD recall fixture row.
+- id: address_001
+  text: 123 Nguyễn Thị Minh Khai, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 66
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_002
+  text: 456 Lê Lợi, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 53
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_003
+  text: 789 Trần Hưng Đạo, Phường Cầu Ông Lãnh, Quận 1, TP. Hồ Chí Minh
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 63
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_004
+  text: 12 Lý Thường Kiệt, Phường Cửa Nam, Quận Hoàn Kiếm, TP. Hà Nội
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 61
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_005
+  text: 34 Hai Bà Trưng, Phường Tràng Tiền, Quận Hoàn Kiếm, TP. Hà Nội
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 62
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_006
+  text: 56 Bạch Đằng, Phường Hải Châu I, Quận Hải Châu, TP. Đà Nẵng
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 59
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_007
+  text: 78 Nguyễn Huệ, Phường 1, Quận 1, TP. Hồ Chí Minh
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 48
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_008
+  text: 90 Pasteur, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 52
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_009
+  text: 123 Điện Biên Phủ, Phường 15, Quận Bình Thạnh, TP. Hồ Chí Minh
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 62
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_010
+  text: 456 Cách Mạng Tháng 8, Phường 10, Quận 3, TP. Hồ Chí Minh
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 57
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_011
+  text: 1 Võ Văn Ngân, Phường Linh Chiểu, Quận Thủ Đức, TP. Hồ Chí Minh
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 63
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_012
+  text: 234 Phan Xích Long, Phường 7, Quận Phú Nhuận, TP. Hồ Chí Minh
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 61
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_013
+  text: 56 Nguyễn Văn Linh, Phường Hòa Minh, Quận Liên Chiểu, TP. Đà Nẵng
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 65
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_014
+  text: 78 Hùng Vương, Phường 1, Quận 1, TP. Đà Lạt
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 43
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_015
+  text: 90 Nguyễn Thái Học, Phường 7, Quận 1, TP. Vũng Tàu
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 50
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_016
+  text: 'Địa chỉ: 123 Lê Duẩn, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh'
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 9
+    end: 62
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_017
+  text: 'Address: 456 Nguyễn Huệ, Phường 1, Quận 1, TP. Hồ Chí Minh'
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 9
+    end: 58
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_018
+  text: 12 Phạm Văn Đồng, Phường Linh Tây, Quận Thủ Đức, TP. Hồ Chí Minh
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 64
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_019
+  text: 34 Quang Trung, Phường 10, Quận Gò Vấp, TP. Hồ Chí Minh
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 55
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_020
+  text: 56 Trường Chinh, Phường Tân Thới Nhất, Quận 12, TP. Hồ Chí Minh
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 63
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_021
+  text: 78 Tô Hiến Thành, Phường 15, Quận 10, TP. Hồ Chí Minh
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 53
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_022
+  text: 90 Sư Vạn Hạnh, Phường 12, Quận 10, TP. Hồ Chí Minh
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 51
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_023
+  text: 12 Lý Chính Thắng, Phường Võ Thị Sáu, Quận 3, TP. Hồ Chí Minh
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 61
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_024
+  text: 34 Nam Kỳ Khởi Nghĩa, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 62
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_025
+  text: 56 Đồng Khởi, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 54
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_026
+  text: 78 Hàm Nghi, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 53
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_027
+  text: 90 Nguyễn Đình Chiểu, Phường Đa Kao, Quận 1, TP. Hồ Chí Minh
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 60
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_028
+  text: 12 Võ Thị Sáu, Phường 8, Quận 3, TP. Hồ Chí Minh
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 48
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_029
+  text: 34 Hoàng Văn Thụ, Phường 9, Quận Phú Nhuận, TP. Hồ Chí Minh
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 59
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_030
+  text: 56 Phan Đình Phùng, Phường 17, Quận Phú Nhuận, TP. Hồ Chí Minh
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 62
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_031
+  text: 88 Nguyễn Trãi, Phường Thanh Xuân Trung, Quận Thanh Xuân, TP. Hà Nội
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 68
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_032
+  text: 17 Cầu Giấy, Phường Dịch Vọng, Quận Cầu Giấy, TP. Hà Nội
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 56
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_033
+  text: 25 Nguyễn Văn Cừ, Phường Ngọc Lâm, Quận Long Biên, TP. Hà Nội
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 61
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_034
+  text: 99 Trần Phú, Phường Mộ Lao, Quận Hà Đông, TP. Hà Nội
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 52
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_035
+  text: 41 Nguyễn Tri Phương, Phường Thạch Thang, Quận Hải Châu, TP. Đà Nẵng
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 68
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_036
+  text: 67 Lê Hồng Phong, Phường Phước Ninh, Quận Hải Châu, TP. Đà Nẵng
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 63
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_037
+  text: 12 Võ Nguyên Giáp, Phường Phước Mỹ, Quận Sơn Trà, TP. Đà Nẵng
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 61
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_038
+  text: 39 Trần Não, Phường Bình An, Quận 2, TP. Hồ Chí Minh
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 52
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_039
+  text: 144 Xuân Thủy, Phường Thảo Điền, Quận 2, TP. Hồ Chí Minh
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 56
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: address_040
+  text: 22 Nguyễn Oanh, Phường 17, Quận Gò Vấp, TP. Hồ Chí Minh
+  expected_entities:
+  - VN_ADDRESS
+  expected_count: 1
+  expected_spans:
+  - entity: VN_ADDRESS
+    start: 0
+    end: 55
+  provenance: synthetic
+  notes: Deterministic synthetic VN_ADDRESS recall fixture row.
+- id: bank_001
+  text: 'STK Vietcombank: 1234567890123'
+  expected_entities:
+  - VN_BANK_ACCOUNT
+  expected_count: 1
+  expected_spans:
+  - entity: VN_BANK_ACCOUNT
+    start: 17
+    end: 30
+  provenance: synthetic
+  notes: Deterministic synthetic VN_BANK_ACCOUNT recall fixture row.
+- id: bank_002
+  text: 'STK BIDV: 123456789012'
+  expected_entities:
+  - VN_BANK_ACCOUNT
+  expected_count: 1
+  expected_spans:
+  - entity: VN_BANK_ACCOUNT
+    start: 10
+    end: 22
+  provenance: synthetic
+  notes: Deterministic synthetic VN_BANK_ACCOUNT recall fixture row.
+- id: bank_003
+  text: 'Số tài khoản Techcombank: 12345678901'
+  expected_entities:
+  - VN_BANK_ACCOUNT
+  expected_count: 1
+  expected_spans:
+  - entity: VN_BANK_ACCOUNT
+    start: 26
+    end: 37
+  provenance: synthetic
+  notes: Deterministic synthetic VN_BANK_ACCOUNT recall fixture row.
+- id: bank_004
+  text: 'STK Sacombank: 12345678901234'
+  expected_entities:
+  - VN_BANK_ACCOUNT
+  expected_count: 1
+  expected_spans:
+  - entity: VN_BANK_ACCOUNT
+    start: 15
+    end: 29
+  provenance: synthetic
+  notes: Deterministic synthetic VN_BANK_ACCOUNT recall fixture row.
+- id: bank_005
+  text: 'STK Agribank: 1234567890'
+  expected_entities:
+  - VN_BANK_ACCOUNT
+  expected_count: 1
+  expected_spans:
+  - entity: VN_BANK_ACCOUNT
+    start: 14
+    end: 24
+  provenance: synthetic
+  notes: Deterministic synthetic VN_BANK_ACCOUNT recall fixture row.
+- id: bank_006
+  text: 'account number MBBank: 12345678901'
+  expected_entities:
+  - VN_BANK_ACCOUNT
+  expected_count: 1
+  expected_spans:
+  - entity: VN_BANK_ACCOUNT
+    start: 23
+    end: 34
+  provenance: synthetic
+  notes: Deterministic synthetic VN_BANK_ACCOUNT recall fixture row.
+- id: bank_007
+  text: 'STK VPBank: 123456789012'
+  expected_entities:
+  - VN_BANK_ACCOUNT
+  expected_count: 1
+  expected_spans:
+  - entity: VN_BANK_ACCOUNT
+    start: 12
+    end: 24
+  provenance: synthetic
+  notes: Deterministic synthetic VN_BANK_ACCOUNT recall fixture row.
+- id: bank_008
+  text: 'STK ACB: 1234567890123'
+  expected_entities:
+  - VN_BANK_ACCOUNT
+  expected_count: 1
+  expected_spans:
+  - entity: VN_BANK_ACCOUNT
+    start: 9
+    end: 22
+  provenance: synthetic
+  notes: Deterministic synthetic VN_BANK_ACCOUNT recall fixture row.
+- id: bank_009
+  text: 'STK VIB: 12345678901'
+  expected_entities:
+  - VN_BANK_ACCOUNT
+  expected_count: 1
+  expected_spans:
+  - entity: VN_BANK_ACCOUNT
+    start: 9
+    end: 20
+  provenance: synthetic
+  notes: Deterministic synthetic VN_BANK_ACCOUNT recall fixture row.
+- id: bank_010
+  text: 'STK TPBank: 123456789012'
+  expected_entities:
+  - VN_BANK_ACCOUNT
+  expected_count: 1
+  expected_spans:
+  - entity: VN_BANK_ACCOUNT
+    start: 12
+    end: 24
+  provenance: synthetic
+  notes: Deterministic synthetic VN_BANK_ACCOUNT recall fixture row.
+- id: bank_011
+  text: 'STK SHB: 1234567890123'
+  expected_entities:
+  - VN_BANK_ACCOUNT
+  expected_count: 1
+  expected_spans:
+  - entity: VN_BANK_ACCOUNT
+    start: 9
+    end: 22
+  provenance: synthetic
+  notes: Deterministic synthetic VN_BANK_ACCOUNT recall fixture row.
+- id: bank_012
+  text: 'STK HDBank: 12345678901'
+  expected_entities:
+  - VN_BANK_ACCOUNT
+  expected_count: 1
+  expected_spans:
+  - entity: VN_BANK_ACCOUNT
+    start: 12
+    end: 23
+  provenance: synthetic
+  notes: Deterministic synthetic VN_BANK_ACCOUNT recall fixture row.
+- id: bank_013
+  text: 'tài khoản Vietcombank: 98765432101'
+  expected_entities:
+  - VN_BANK_ACCOUNT
+  expected_count: 1
+  expected_spans:
+  - entity: VN_BANK_ACCOUNT
+    start: 23
+    end: 34
+  provenance: synthetic
+  notes: Deterministic synthetic VN_BANK_ACCOUNT recall fixture row.
+- id: bank_014
+  text: 'STK: 1234567890123 Vietcombank'
+  expected_entities:
+  - VN_BANK_ACCOUNT
+  expected_count: 1
+  expected_spans:
+  - entity: VN_BANK_ACCOUNT
+    start: 5
+    end: 18
+  provenance: synthetic
+  notes: Deterministic synthetic VN_BANK_ACCOUNT recall fixture row.
+- id: bank_015
+  text: 'Số tài khoản: 123456789012 Techcombank'
+  expected_entities:
+  - VN_BANK_ACCOUNT
+  expected_count: 1
+  expected_spans:
+  - entity: VN_BANK_ACCOUNT
+    start: 14
+    end: 26
+  provenance: synthetic
+  notes: Deterministic synthetic VN_BANK_ACCOUNT recall fixture row.
+- id: bank_016
+  text: STK Vietcombank 12345678901
+  expected_entities:
+  - VN_BANK_ACCOUNT
+  expected_count: 1
+  expected_spans:
+  - entity: VN_BANK_ACCOUNT
+    start: 16
+    end: 27
+  provenance: synthetic
+  notes: Deterministic synthetic VN_BANK_ACCOUNT recall fixture row.
+- id: bank_017
+  text: 'BIDV STK: 23456789012'
+  expected_entities:
+  - VN_BANK_ACCOUNT
+  expected_count: 1
+  expected_spans:
+  - entity: VN_BANK_ACCOUNT
+    start: 10
+    end: 21
+  provenance: synthetic
+  notes: Deterministic synthetic VN_BANK_ACCOUNT recall fixture row.
+- id: bank_018
+  text: 'Techcombank: 34567890123'
+  expected_entities:
+  - VN_BANK_ACCOUNT
+  expected_count: 1
+  expected_spans:
+  - entity: VN_BANK_ACCOUNT
+    start: 13
+    end: 24
+  provenance: synthetic
+  notes: Deterministic synthetic VN_BANK_ACCOUNT recall fixture row.
+- id: bank_019
+  text: Sacombank STK 45678901234
+  expected_entities:
+  - VN_BANK_ACCOUNT
+  expected_count: 1
+  expected_spans:
+  - entity: VN_BANK_ACCOUNT
+    start: 14
+    end: 25
+  provenance: synthetic
+  notes: Deterministic synthetic VN_BANK_ACCOUNT recall fixture row.
+- id: bank_020
+  text: 'Agribank tài khoản: 56789012345'
+  expected_entities:
+  - VN_BANK_ACCOUNT
+  expected_count: 1
+  expected_spans:
+  - entity: VN_BANK_ACCOUNT
+    start: 20
+    end: 31
+  provenance: synthetic
+  notes: Deterministic synthetic VN_BANK_ACCOUNT recall fixture row.
+- id: neg_001
+  text: Ngày 12/05/2026 hợp đồng ký kết
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_002
+  text: Sinh năm 1990 tại Hà Nội
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_003
+  text: Hợp đồng số 2024-001 ngày 12/05/2026
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_004
+  text: 100,000,000 VND
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_005
+  text: Phí 50.000 VNĐ
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_006
+  text: 1,234,567,890 đồng
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_007
+  text: Khách hàng Nguyễn Văn A đã thanh toán
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_008
+  text: 'Sản phẩm: iPhone 15 Pro Max 256GB'
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_009
+  text: 'Đơn hàng #20260521-001'
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_010
+  text: 'Thời gian: 14:30 ngày 21/05/2026'
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_011
+  text: 'Số lượng: 1,000 sản phẩm'
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_012
+  text: 'Giá: 25,000,000 VND/sp'
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_013
+  text: 'Tỷ lệ: 12.5%/năm'
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_014
+  text: 'Khoảng cách: 123.45 km'
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_015
+  text: 'Nhiệt độ: 35.2°C'
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_016
+  text: 'Diện tích: 1,500 m²'
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_017
+  text: 'Trọng lượng: 500 kg'
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_018
+  text: 'Thể tích: 200 lít'
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_019
+  text: 'Tốc độ: 120 km/h'
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_020
+  text: 'Áp suất: 101.3 kPa'
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_021
+  text: 'Chiều cao: 175 cm'
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_022
+  text: 'Cân nặng: 70 kg'
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_023
+  text: 'Tuổi: 35 năm'
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_024
+  text: 'Kinh nghiệm: 10 năm'
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_025
+  text: 'Lương: 20,000,000 VND/tháng'
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_026
+  text: 'Thưởng: 5,000,000 VND'
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_027
+  text: 'Phí bảo hiểm: 1,500,000 VND/năm'
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_028
+  text: 'Thuế: 10%'
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: synthetic
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_029
+  text: 'Lãi suất: 8.5%/năm'
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: gov.vn-public
+  notes: 'Negative control: Vietnamese text without VN PII.'
+- id: neg_030
+  text: 'Tổng cộng: 150,000,000 VND'
+  expected_entities: []
+  expected_count: 0
+  expected_spans: []
+  provenance: gov.vn-public
+  notes: 'Negative control: Vietnamese text without VN PII.'

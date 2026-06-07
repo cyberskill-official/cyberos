@@ -1,79 +1,210 @@
 #!/usr/bin/env python3
-"""FR-AI-013 §1 #15 — Validate the VN PII corpus format.
+"""Validate the FR-AI-013 VN PII recall corpus format."""
 
-Checks:
-- Every sample has id, text, expected_entities
-- Every entity is one of the 6 VN_* types
-- Sample counts match manifest
-"""
+from __future__ import annotations
 
+import argparse
+import json
+import re
 import sys
+from collections import Counter
 from pathlib import Path
+from typing import Any
 
 import yaml
 
 VALID_ENTITIES = {
-    "VN_CCCD", "VN_MST", "VN_PHONE", "VN_NDD", "VN_ADDRESS", "VN_BANK_ACCOUNT",
+    "VN_CCCD",
+    "VN_MST",
+    "VN_PHONE",
+    "VN_NDD",
+    "VN_ADDRESS",
+    "VN_BANK_ACCOUNT",
+    "PERSON",
+}
+COUNTED_ENTITIES = VALID_ENTITIES - {"PERSON"}
+VALID_PROVENANCE = {"synthetic", "anonymised-real", "gov.vn-public"}
+REQUIRED_SAMPLE_FIELDS = {
+    "id",
+    "text",
+    "expected_entities",
+    "expected_count",
+    "expected_spans",
+    "provenance",
+}
+
+ENTITY_PATTERNS = {
+    "VN_CCCD": re.compile(r"\d{12}"),
+    "VN_MST": re.compile(r"\d{10}(?:-\d{3})?"),
+    "VN_PHONE": re.compile(r"(?:\+84[\s.-]?)?0?\d(?:[\s.-]?\d){8,10}"),
+    "VN_NDD": re.compile(r"[\w\sÀ-ỹ]+", re.UNICODE),
+    "VN_ADDRESS": re.compile(r"\d+[\w\sÀ-ỹ.,]+", re.UNICODE),
+    "VN_BANK_ACCOUNT": re.compile(r"\d{10,14}"),
+    "PERSON": re.compile(r"[\w\sÀ-ỹ]+", re.UNICODE),
 }
 
 
-def validate():
-    fixtures_dir = Path(__file__).parent.parent / "fixtures"
+def _fixtures_dir() -> Path:
+    return Path(__file__).resolve().parents[1] / "fixtures"
+
+
+def _load_yaml(path: Path) -> Any:
+    with path.open(encoding="utf-8") as fh:
+        return yaml.safe_load(fh)
+
+
+def _sample_schema() -> dict[str, Any]:
+    entities = sorted(VALID_ENTITIES)
+    provenance = sorted(VALID_PROVENANCE)
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": ["samples"],
+        "properties": {
+            "samples": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "required": sorted(REQUIRED_SAMPLE_FIELDS),
+                    "properties": {
+                        "id": {"type": "string", "pattern": "^[a-z]+_\\d{3}$"},
+                        "text": {"type": "string", "minLength": 1},
+                        "expected_entities": {
+                            "type": "array",
+                            "items": {"type": "string", "enum": entities},
+                        },
+                        "expected_count": {"type": "integer", "minimum": 0},
+                        "expected_spans": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "required": ["entity", "start", "end"],
+                                "properties": {
+                                    "entity": {"type": "string", "enum": entities},
+                                    "start": {"type": "integer", "minimum": 0},
+                                    "end": {"type": "integer", "minimum": 1},
+                                },
+                            },
+                        },
+                        "provenance": {"type": "string", "enum": provenance},
+                        "notes": {"type": "string"},
+                    },
+                },
+            }
+        },
+    }
+
+
+def validate(fixtures_dir: Path | None = None) -> list[str]:
+    fixtures_dir = fixtures_dir or _fixtures_dir()
     corpus_path = fixtures_dir / "vn_pii_200_samples.yaml"
     manifest_path = fixtures_dir / "fixture_manifest.yaml"
 
-    if not corpus_path.exists():
-        print(f"ERROR: Corpus not found: {corpus_path}", file=sys.stderr)
-        return 1
-
-    corpus = yaml.safe_load(corpus_path.read_text())
+    corpus = _load_yaml(corpus_path)
+    manifest = _load_yaml(manifest_path)
     samples = corpus.get("samples", [])
 
-    errors = []
-    entity_counts = {}
+    errors: list[str] = []
+    ids: Counter[str] = Counter()
+    entity_counts: Counter[str] = Counter()
+    negative_count = 0
 
-    for i, sample in enumerate(samples):
-        if "text" not in sample:
-            errors.append(f"Sample {i}: missing 'text' field")
-        if "expected_entities" not in sample:
-            errors.append(f"Sample {i}: missing 'expected_entities' field")
+    for index, sample in enumerate(samples):
+        label = sample.get("id", f"<index:{index}>")
+        missing = REQUIRED_SAMPLE_FIELDS - set(sample)
+        if missing:
+            errors.append(f"{label}: missing required fields {sorted(missing)}")
             continue
 
-        for entity in sample["expected_entities"]:
-            entity_counts[entity] = entity_counts.get(entity, 0) + 1
+        ids[sample["id"]] += 1
+        text = sample["text"]
+        entities = sample["expected_entities"]
+        spans = sample["expected_spans"]
+
+        if not isinstance(text, str) or not text.strip():
+            errors.append(f"{label}: text must be a non-empty string")
+        if sample["provenance"] not in VALID_PROVENANCE:
+            errors.append(f"{label}: invalid provenance {sample['provenance']!r}")
+        if sample["expected_count"] != len(entities):
+            errors.append(
+                f"{label}: expected_count={sample['expected_count']} but "
+                f"expected_entities has {len(entities)} item(s)"
+            )
+        if len(spans) != len(entities):
+            errors.append(
+                f"{label}: expected_spans has {len(spans)} item(s) but "
+                f"expected_entities has {len(entities)} item(s)"
+            )
+
+        if not entities:
+            negative_count += 1
+        for entity in entities:
             if entity not in VALID_ENTITIES:
+                errors.append(f"{label}: invalid entity {entity!r}")
+            if entity in COUNTED_ENTITIES:
+                entity_counts[entity] += 1
+
+        for span in spans:
+            entity = span.get("entity")
+            start = span.get("start")
+            end = span.get("end")
+            if entity not in VALID_ENTITIES:
+                errors.append(f"{label}: invalid span entity {entity!r}")
+                continue
+            if not isinstance(start, int) or not isinstance(end, int):
+                errors.append(f"{label}: span offsets must be integers")
+                continue
+            if start < 0 or end > len(text) or start >= end:
                 errors.append(
-                    f"Sample {i}: invalid entity '{entity}'; "
-                    f"must be one of {VALID_ENTITIES}"
+                    f"{label}: span ({start},{end}) out of range for text length {len(text)}"
+                )
+                continue
+            substring = text[start:end]
+            if not substring.strip():
+                errors.append(f"{label}: span ({start},{end}) is blank")
+                continue
+            pattern = ENTITY_PATTERNS[entity]
+            if not pattern.fullmatch(substring) and not pattern.search(substring):
+                errors.append(
+                    f"{label}: span for {entity} does not match expected pattern: {substring!r}"
                 )
 
-    # Check manifest counts if manifest exists.
-    if manifest_path.exists():
-        manifest = yaml.safe_load(manifest_path.read_text())
-        expected_counts = manifest.get("sample_counts", {})
-        for entity, expected in expected_counts.items():
-            actual = entity_counts.get(entity, 0)
-            if entity == "negative":
-                neg_count = sum(
-                    1 for s in samples if not s.get("expected_entities")
-                )
-                if neg_count < expected:
-                    errors.append(
-                        f"Negative samples: expected {expected}, got {neg_count}"
-                    )
-            elif actual != expected:
-                errors.append(
-                    f"{entity}: expected {expected} samples, got {actual}"
-                )
+    duplicates = sorted(sample_id for sample_id, count in ids.items() if count > 1)
+    if duplicates:
+        errors.append(f"duplicate sample ids: {duplicates}")
 
+    expected_counts = manifest["sample_counts"]
+    for entity, expected in expected_counts.items():
+        actual = negative_count if entity == "negative" else entity_counts[entity]
+        if actual != expected:
+            errors.append(f"{entity}: expected {expected} sample(s), got {actual}")
+
+    if len(samples) != manifest["total_samples"]:
+        errors.append(
+            f"total_samples mismatch: manifest={manifest['total_samples']} actual={len(samples)}"
+        )
+
+    return errors
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--schema-out", action="store_true")
+    args = parser.parse_args()
+
+    if args.schema_out:
+        print(json.dumps(_sample_schema(), indent=2, sort_keys=True))
+        return 0
+
+    errors = validate()
     if errors:
-        for e in errors:
-            print(f"ERROR: {e}", file=sys.stderr)
+        for error in errors:
+            print(f"ERROR: {error}", file=sys.stderr)
         return 1
 
-    print(f"Corpus OK: {len(samples)} samples, {len(entity_counts)} entity types")
+    print("Corpus OK: 230 samples, 6 VN entity types, 30 negatives")
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(validate())
+    sys.exit(main())

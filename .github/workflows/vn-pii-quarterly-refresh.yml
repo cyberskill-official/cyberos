@@ -1,23 +1,53 @@
-# vn-pii-quarterly-refresh.yml — STUB
-#
-# Auto-generated 2026-05-17 from FR build_envelope references.
-# Declared by: FR-AI-013
-#
-# Implementation team: replace this stub with the real workflow YAML
-# per the spec details in the declaring FR(s) above.
-# Many FRs embed the canonical workflow YAML in their §6 skeleton section.
-
-name: vn-pii-quarterly-refresh
+name: VN PII Corpus Quarterly Refresh Reminder
 
 on:
-  pull_request:
-    paths:
-      # TODO: per declaring FR
-      - 'services/**'
+  schedule:
+    - cron: '0 0 1 1,4,7,10 *'
+  workflow_dispatch: {}
 
 jobs:
-  placeholder:
-    runs-on: ubuntu-latest
+  open-refresh-issue:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      issues: write
     steps:
-      - name: TODO — implement per FR(s) FR-AI-013
-        run: echo 'Stub — see FR specs for canonical workflow YAML'
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const now = new Date();
+            const quarter = Math.floor(now.getUTCMonth() / 3) + 1;
+            const year = now.getUTCFullYear();
+            const title = `VN PII corpus refresh due — quarter Q${quarter}${year}`;
+            const body = [
+              'FR-AI-013 requires a quarterly refresh of the VN PII recall corpus.',
+              '',
+              '**Codeowner:** @cyberos/engineering (default owner from `.github/CODEOWNERS`)',
+              '',
+              'Runbook:',
+              '1. Review new VN province codes, telco prefixes, bank account formats, and production edge cases.',
+              '2. Update `services/ai-gateway/pii/fixtures/vn_pii_200_samples.yaml` while preserving the manifest distribution.',
+              '3. Run `cd services/ai-gateway/pii && python scripts/regen_fixture.py`.',
+              '4. Run `cd services/ai-gateway/pii && make pii-all`.',
+              '5. Commit the refreshed fixture, manifest version/date, and README maintenance note.',
+            ].join('\n');
+
+            const {owner, repo} = context.repo;
+            const existing = await github.paginate(github.rest.issues.listForRepo, {
+              owner,
+              repo,
+              state: 'open',
+              labels: 'vn-pii-corpus-refresh',
+            });
+            if (existing.some(issue => issue.title === title)) {
+              core.info(`Issue already exists: ${title}`);
+              return;
+            }
+
+            await github.rest.issues.create({
+              owner,
+              repo,
+              title,
+              body,
+              labels: ['vn-pii-corpus-refresh', 'compliance', 'ai-gateway'],
+            });

@@ -6,14 +6,14 @@ generated_at: "2026-05-21T00:00:00Z"
 regenerated_due: "2026-07-01"
 
 sample_counts:
-  VN_CCCD: 30
+  VN_CCCD: 50
   VN_MST: 30
-  VN_PHONE: 30
+  VN_PHONE: 40
   VN_NDD: 20
-  VN_ADDRESS: 30
-  VN_BANK_ACCOUNT: 30
+  VN_ADDRESS: 40
+  VN_BANK_ACCOUNT: 20
   negative: 30
-total_samples: 200
+total_samples: 230
 
 # Pinned recognizer versions — test_recall_gate reads /recognizers/version
 # and asserts these match before computing recall.

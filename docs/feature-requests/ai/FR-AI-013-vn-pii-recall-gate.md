@@ -4,14 +4,14 @@ id: FR-AI-013
 title: "VN-PII recall ≥ 99% per-recognizer CI gate on 200-sample fixture"
 module: AI
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 3
 slice: 3
 owner: Stephen Cheng
 created: 2026-05-15
-shipped: 2026-05-21
+shipped: 2026-06-08
 memory_chain_hash: null
 related_frs: [FR-AI-011, FR-AI-012, FR-AI-022]
 depends_on: [FR-AI-012, FR-AI-011]
@@ -1069,4 +1069,4 @@ All resolved at authoring time. Items deferred to later FRs:
 
 ---
 
-*End of FR-AI-013. Status: draft (10/10 target).*
+*End of FR-AI-013. Status: done (10/10 target).*
