@@ -12,7 +12,7 @@ pub mod clock;
 pub mod state;
 
 pub use clock::Clock;
-pub use state::{BreakerState, BreakerStatus, CallOutcome, SystemTimeUnix};
+pub use state::{BreakerState, BreakerStatus, BreakerTransitionEvent, CallOutcome, SystemTimeUnix};
 
 const FAILURE_THRESHOLD: u32 = 5;
 const WINDOW_NANOS: u64 = 60 * 1_000_000_000;
@@ -26,27 +26,11 @@ struct BreakerKey {
     model: String,
 }
 
-#[derive(Debug, Hash, PartialEq, Eq)]
-struct BreakerKeyRef<'a> {
-    provider: ProviderKind,
-    model: &'a str,
-}
-
-impl<'a> std::borrow::Borrow<BreakerKeyRef<'a>> for BreakerKey {
-    fn borrow(&self) -> &BreakerKeyRef<'a> {
-        // SAFETY: BreakerKey { provider, model: String } and
-        // BreakerKeyRef { provider, model: &str } have identical layout.
-        // ProviderKind is Copy; String and &str are both (ptr, len) fat pointers.
-        // The Borrow impl only uses the returned reference for Hash + Eq,
-        // which read the same fields at the same offsets.
-        unsafe { std::mem::transmute::<&BreakerKey, &BreakerKeyRef<'a>>(self) }
-    }
-}
-
 // ─── Global state ─────────────────────────────────────────────────────────────
 
 static BREAKERS: OnceCell<DashMap<BreakerKey, Arc<Breaker>>> = OnceCell::new();
 static CLOCK: OnceCell<Mutex<Box<dyn Clock>>> = OnceCell::new();
+static TRANSITION_EVENTS: OnceCell<Mutex<Vec<BreakerTransitionEvent>>> = OnceCell::new();
 
 // ─── Metrics ──────────────────────────────────────────────────────────────────
 
@@ -127,6 +111,7 @@ impl Breaker {
 pub fn init(clock: Box<dyn Clock>) {
     BREAKERS.get_or_init(DashMap::new);
     CLOCK.get_or_init(|| Mutex::new(clock));
+    TRANSITION_EVENTS.get_or_init(|| Mutex::new(Vec::new()));
 }
 
 /// Swap the clock (for tests that need deterministic time). Panics if not initialized.
@@ -142,15 +127,33 @@ pub fn reset_for_tests() {
     if let Some(map) = BREAKERS.get() {
         map.clear();
     }
+    if let Some(events) = TRANSITION_EVENTS.get() {
+        events.lock().unwrap().clear();
+    }
 }
 
 fn now_nanos() -> u64 {
     CLOCK
-        .get()
-        .expect("circuit_breaker not initialized")
+        .get_or_init(|| Mutex::new(Box::new(clock::SystemClock::new())))
         .lock()
         .unwrap()
         .nanos_now()
+}
+
+fn breakers() -> &'static DashMap<BreakerKey, Arc<Breaker>> {
+    BREAKERS.get_or_init(DashMap::new)
+}
+
+fn transition_events() -> &'static Mutex<Vec<BreakerTransitionEvent>> {
+    TRANSITION_EVENTS.get_or_init(|| Mutex::new(Vec::new()))
+}
+
+/// Snapshot transition events emitted by this process.
+///
+/// OBS/audit adapters can project these into durable rows; tests assert
+/// deterministic order and probe-start/probe-end pairing from this shape.
+pub fn transition_events_snapshot() -> Vec<BreakerTransitionEvent> {
+    transition_events().lock().unwrap().clone()
 }
 
 /// Returns `true` if the breaker for `(provider, model)` is Open.
@@ -158,7 +161,7 @@ fn now_nanos() -> u64 {
 /// When Open elapses to HalfOpen, the FIRST caller that wins the CAS
 /// gets `false` (probe slot); subsequent callers see `true`.
 pub fn is_open(provider: &ProviderKind, model: &str) -> bool {
-    let map = BREAKERS.get().expect("circuit_breaker not initialized");
+    let map = breakers();
     let key = BreakerKey {
         provider: *provider,
         model: model.to_string(),
@@ -168,12 +171,12 @@ pub fn is_open(provider: &ProviderKind, model: &str) -> bool {
         return false;
     };
 
-    let now = now_nanos();
     let state = BreakerState::from_u8(b.state.load(Ordering::Acquire));
 
     match state {
         BreakerState::Closed => false,
         BreakerState::Open => {
+            let now = now_nanos();
             if now >= b.open_until_nanos.load(Ordering::Acquire) {
                 // Try CAS Open → HalfOpen.
                 let won_cas = b
@@ -217,7 +220,7 @@ pub fn is_open(provider: &ProviderKind, model: &str) -> bool {
 
 /// Record the outcome of a call. Drives the state machine.
 pub fn record_outcome(provider: &ProviderKind, model: &str, outcome: CallOutcome) {
-    let map = BREAKERS.get().expect("circuit_breaker not initialized");
+    let map = breakers();
     let now = now_nanos();
 
     let key = BreakerKey {
@@ -336,7 +339,7 @@ pub fn status_all() -> Vec<BreakerStatus> {
 /// Force-close a breaker (operator override). Returns `true` if the breaker
 /// existed AND was open/half-open before reset.
 pub fn reset(provider: &ProviderKind, model: &str) -> bool {
-    let map = BREAKERS.get().expect("circuit_breaker not initialized");
+    let map = breakers();
     let key = BreakerKey {
         provider: *provider,
         model: model.to_string(),
@@ -363,6 +366,17 @@ pub fn reset(provider: &ProviderKind, model: &str) -> bool {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 fn emit_transition(provider: &ProviderKind, model: &str, from: BreakerState, to: BreakerState) {
+    transition_events()
+        .lock()
+        .unwrap()
+        .push(BreakerTransitionEvent {
+            ts_ns: now_nanos(),
+            provider: *provider,
+            model: model.to_string(),
+            from,
+            to,
+            row_kind: transition_row_kind(from, to),
+        });
     metrics::TRANSITIONS
         .with_label_values(&[
             provider.as_metric_label(),
@@ -380,5 +394,16 @@ fn emit_transition(provider: &ProviderKind, model: &str, from: BreakerState, to:
         metrics::STATE
             .with_label_values(&[provider.as_metric_label(), model, s.as_metric_label()])
             .set(if s == to { 1.0 } else { 0.0 });
+    }
+}
+
+fn transition_row_kind(from: BreakerState, to: BreakerState) -> &'static str {
+    match (from, to) {
+        (BreakerState::Closed, BreakerState::Open) => "breaker_opened",
+        (BreakerState::Open, BreakerState::HalfOpen) => "probe_started",
+        (BreakerState::HalfOpen, BreakerState::Closed) => "probe_succeeded",
+        (BreakerState::HalfOpen, BreakerState::Open) => "probe_failed",
+        (_, BreakerState::Closed) => "breaker_closed",
+        _ => "breaker_transition",
     }
 }

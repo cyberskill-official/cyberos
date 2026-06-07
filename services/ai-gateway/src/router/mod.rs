@@ -28,6 +28,7 @@ use prometheus::{register_counter_vec, register_histogram_vec, CounterVec, Histo
 use tracing::{error, warn};
 
 use crate::alias::ResolvedModel;
+use crate::circuit_breaker::{self, CallOutcome};
 use crate::policy::{ProviderKind, TenantPolicy};
 pub use failover::ProviderEndpoint;
 
@@ -246,6 +247,7 @@ pub async fn call_provider_with_chain(
                     RETRIES
                         .with_label_values(&[pk.as_metric_label(), "timeout"])
                         .inc();
+                    record_breaker_outcome(pk, model, CallOutcome::Timeout);
                     DEADLINE_EXCEEDED.inc();
                     ATTEMPTS_PER_CALL
                         .with_label_values(&["deadline_exceeded"])
@@ -272,6 +274,7 @@ pub async fn call_provider_with_chain(
                     CALLS
                         .with_label_values(&[ep.as_metric_label(), model, "terminal_4xx"])
                         .inc();
+                    record_breaker_outcome(ep, model, CallOutcome::Failure4xx);
                     return Err(RouterError::TerminalProviderError {
                         provider: ep,
                         status: 400,
@@ -299,6 +302,7 @@ pub async fn call_provider_with_chain(
                     CALLS
                         .with_label_values(&[ep.as_metric_label(), model, "terminal_4xx"])
                         .inc();
+                    record_breaker_outcome(ep, model, CallOutcome::Failure4xx);
                     warn!(provider = ?ep, model = %model, "router_404_terminal_check_alias_resolver");
                     return Err(RouterError::TerminalProviderError {
                         provider: ep,
@@ -325,6 +329,7 @@ pub async fn call_provider_with_chain(
                     CALLS
                         .with_label_values(&[ep.as_metric_label(), model, "auth_error"])
                         .inc();
+                    record_breaker_outcome(ep, model, CallOutcome::Failure4xx);
                     error!(
                         provider = ?ep,
                         status = status,
@@ -356,6 +361,7 @@ pub async fn call_provider_with_chain(
                     RETRIES
                         .with_label_values(&[ep.as_metric_label(), "429"])
                         .inc();
+                    record_breaker_outcome(ep, model, CallOutcome::Failure429);
                     last_error = Some(RouterError::TerminalProviderError {
                         provider: ep,
                         status: 429,
@@ -389,6 +395,7 @@ pub async fn call_provider_with_chain(
                         None,
                     ));
                     DEADLINE_EXCEEDED.inc();
+                    record_breaker_outcome(pk, model, CallOutcome::Timeout);
                     ATTEMPTS_PER_CALL
                         .with_label_values(&["deadline_exceeded"])
                         .observe(attempts.len() as f64);
@@ -413,6 +420,7 @@ pub async fn call_provider_with_chain(
                     RETRIES
                         .with_label_values(&[pk.as_metric_label(), "5xx"])
                         .inc();
+                    record_breaker_outcome(pk, model, breaker_outcome_for_error(&e));
                     last_error = Some(e);
                 }
 
@@ -431,6 +439,7 @@ pub async fn call_provider_with_chain(
                     CALLS
                         .with_label_values(&[pk.as_metric_label(), model, "succeeded"])
                         .inc();
+                    record_breaker_outcome(pk, model, CallOutcome::Success);
                     ATTEMPTS_PER_CALL
                         .with_label_values(&["succeeded"])
                         .observe(resp.attempts.len() as f64);
@@ -510,4 +519,25 @@ fn make_record(
         elapsed_ms,
         http_status,
     }
+}
+
+fn breaker_outcome_for_error(error: &RouterError) -> CallOutcome {
+    match error {
+        RouterError::TerminalProviderError { status: 429, .. } => CallOutcome::Failure429,
+        RouterError::TerminalProviderError { status, .. } if *status >= 500 => {
+            CallOutcome::Failure5xx
+        }
+        RouterError::DeadlineExceeded => CallOutcome::Timeout,
+        RouterError::AuthError { .. } | RouterError::TerminalProviderError { .. } => {
+            CallOutcome::Failure4xx
+        }
+        RouterError::SerializationError { .. }
+        | RouterError::InvalidResponse { .. }
+        | RouterError::AllProvidersFailed { .. }
+        | RouterError::StreamingNotImplemented => CallOutcome::Failure5xx,
+    }
+}
+
+fn record_breaker_outcome(provider: ProviderKind, model: &str, outcome: CallOutcome) {
+    circuit_breaker::record_outcome(&provider, model, outcome);
 }

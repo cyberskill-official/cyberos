@@ -103,6 +103,29 @@ async fn half_open_probe_success_closes() {
     assert_eq!(status.failure_count_window, 0);
 }
 
+/// AC #15: probe_started is paired with probe_succeeded on successful probe.
+#[tokio::test]
+async fn probe_started_pairs_with_probe_succeeded() {
+    let (clock, _guard) = ensure_initialized();
+    let model = "test-probe-pair-success";
+    for _ in 0..5 {
+        circuit_breaker::record_outcome(&ProviderKind::Bedrock, model, CallOutcome::Failure5xx);
+    }
+    clock.advance(Duration::from_secs(31));
+    assert!(!circuit_breaker::is_open(&ProviderKind::Bedrock, model));
+    circuit_breaker::record_outcome(&ProviderKind::Bedrock, model, CallOutcome::Success);
+
+    let row_kinds = circuit_breaker::transition_events_snapshot()
+        .into_iter()
+        .filter(|event| event.model == model)
+        .map(|event| event.row_kind)
+        .collect::<Vec<_>>();
+    assert_eq!(
+        row_kinds,
+        vec!["breaker_opened", "probe_started", "probe_succeeded"]
+    );
+}
+
 /// AC #4 (partial): HalfOpen → Open on probe failure with timer reset.
 #[tokio::test]
 async fn half_open_probe_failure_reopens_with_reset_timer() {
@@ -387,4 +410,31 @@ async fn reset_force_closes_open_breaker() {
     assert!(did_reset);
     assert!(!circuit_breaker::is_open(&ProviderKind::Bedrock, model));
     assert!(!circuit_breaker::reset(&ProviderKind::Bedrock, model)); // already closed
+}
+
+/// AC #16: identical inputs and MockClock values produce identical transition rows.
+#[tokio::test]
+async fn transition_sequence_deterministic_across_runs() {
+    let (_clock, _guard) = ensure_initialized();
+
+    fn run_sequence(
+        model: &str,
+    ) -> Vec<cyberos_ai_gateway::circuit_breaker::BreakerTransitionEvent> {
+        for _ in 0..5 {
+            circuit_breaker::record_outcome(&ProviderKind::Bedrock, model, CallOutcome::Failure5xx);
+        }
+        circuit_breaker::record_outcome(&ProviderKind::Bedrock, model, CallOutcome::Success);
+        circuit_breaker::transition_events_snapshot()
+            .into_iter()
+            .filter(|event| event.model == model)
+            .collect()
+    }
+
+    let first = run_sequence("test-deterministic-sequence");
+    circuit_breaker::reset_for_tests();
+    let clock = Arc::new(MockClock::new());
+    circuit_breaker::swap_clock(Box::new(clock));
+    let second = run_sequence("test-deterministic-sequence");
+
+    assert_eq!(first, second);
 }

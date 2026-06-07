@@ -1,6 +1,7 @@
 //! FR-AI-008 §3 — Failover chain construction.
 
 use crate::alias::ResolvedModel;
+use crate::circuit_breaker;
 use crate::policy::{ProviderKind, TenantPolicy};
 
 use super::Provider;
@@ -60,11 +61,13 @@ pub fn build_provider_chain(
     let mut chain = Vec::new();
 
     if let Some(provider) = make_provider(resolved.provider_kind) {
-        chain.push(ProviderEndpoint::new(
-            provider,
-            resolved.model.clone(),
-            resolved.fallback_position,
-        ));
+        if !circuit_breaker::is_open(&resolved.provider_kind, &resolved.model) {
+            chain.push(ProviderEndpoint::new(
+                provider,
+                resolved.model.clone(),
+                resolved.fallback_position,
+            ));
+        }
     }
 
     // Fallback chain. If `resolved` already came from fallback N, continue at
@@ -75,7 +78,11 @@ pub fn build_provider_chain(
             continue;
         }
         if let Some(model) = fb.model_for_alias(alias) {
-            if let Some(provider) = make_provider(fb.kind()) {
+            let kind = fb.kind();
+            if circuit_breaker::is_open(&kind, model) {
+                continue;
+            }
+            if let Some(provider) = make_provider(kind) {
                 chain.push(ProviderEndpoint::new(
                     provider,
                     model.to_string(),

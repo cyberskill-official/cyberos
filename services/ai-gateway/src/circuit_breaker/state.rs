@@ -62,3 +62,18 @@ pub struct BreakerStatus {
 
 /// Nanoseconds since process-relative epoch (clock start).
 pub type SystemTimeUnix = u64;
+
+/// Deterministic transition event emitted whenever a breaker changes state.
+///
+/// This is the in-process event shape consumed by OBS/audit adapters; tests use it
+/// to verify probe-pairing and deterministic transition order without writing to
+/// the project BRAIN from the router hot path.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BreakerTransitionEvent {
+    pub ts_ns: SystemTimeUnix,
+    pub provider: ProviderKind,
+    pub model: String,
+    pub from: BreakerState,
+    pub to: BreakerState,
+    pub row_kind: &'static str,
+}

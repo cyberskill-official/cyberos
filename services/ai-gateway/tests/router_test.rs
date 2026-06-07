@@ -12,6 +12,7 @@ use axum::http::{HeaderMap, Response, StatusCode};
 use axum::Router as AxumRouter;
 
 use cyberos_ai_gateway::alias::{LatencyClass, ResolvedModel};
+use cyberos_ai_gateway::circuit_breaker::{self, clock::MockClock, CallOutcome};
 use cyberos_ai_gateway::policy::{
     AiPolicy, EmergencyOverride, Provider as PolicyProvider, ProviderKind, Residency, TenantPolicy,
 };
@@ -166,12 +167,25 @@ fn make_error_with_retry_after(kind: ProviderKind, status: u16, retry_after: u64
 }
 
 static PROVIDER_ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+static BREAKER_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
 fn provider_env_lock() -> MutexGuard<'static, ()> {
     PROVIDER_ENV_LOCK
         .get_or_init(|| Mutex::new(()))
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner())
+}
+
+fn reset_breakers_for_router_test() -> (Arc<MockClock>, MutexGuard<'static, ()>) {
+    let guard = BREAKER_LOCK
+        .get_or_init(|| Mutex::new(()))
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    let clock = Arc::new(MockClock::new());
+    circuit_breaker::init(Box::new(clock.clone()));
+    circuit_breaker::reset_for_tests();
+    circuit_breaker::swap_clock(Box::new(clock.clone()));
+    (clock, guard)
 }
 
 async fn spawn_json_server(
@@ -669,6 +683,7 @@ async fn deadline_elapsed_mid_call_returns_deadline_exceeded() {
 /// AC #12: A resolved fallback position is not collapsed back to 0.
 #[test]
 fn build_provider_chain_preserves_resolved_fallback_position() {
+    let (_clock, _guard) = reset_breakers_for_router_test();
     let mut policy = policy_no_fallbacks();
     let mut fallback_map = std::collections::HashMap::new();
     fallback_map.insert(
@@ -685,6 +700,52 @@ fn build_provider_chain_preserves_resolved_fallback_position() {
     assert_eq!(chain.len(), 1);
     assert_eq!(chain[0].provider_kind(), ProviderKind::Anthropic);
     assert_eq!(chain[0].fallback_position(), 1);
+}
+
+#[test]
+fn build_provider_chain_skips_open_breaker() {
+    let (_clock, _guard) = reset_breakers_for_router_test();
+    let model = "anthropic.claude-3-5-sonnet-20241022-v2:0";
+    for _ in 0..5 {
+        circuit_breaker::record_outcome(&ProviderKind::Bedrock, model, CallOutcome::Failure5xx);
+    }
+
+    let mut policy = policy_no_fallbacks();
+    let mut fallback_map = std::collections::HashMap::new();
+    fallback_map.insert(
+        "chat.smart".to_string(),
+        "claude-3-5-sonnet-20241022".to_string(),
+    );
+    policy.ai_policy.fallback_chain = vec![PolicyProvider::Anthropic {
+        model_alias_map: fallback_map,
+    }];
+    let resolved = resolved_with_kind(ProviderKind::Bedrock, model);
+
+    let chain = router::failover::build_provider_chain(&resolved, &policy, "chat.smart");
+    assert_eq!(chain.len(), 1);
+    assert_eq!(chain[0].provider_kind(), ProviderKind::Anthropic);
+    assert_eq!(chain[0].model(), "claude-3-5-sonnet-20241022");
+    assert_eq!(chain[0].fallback_position(), 1);
+}
+
+#[tokio::test]
+async fn call_provider_records_retryable_failures_to_breaker() {
+    let (_clock, _guard) = reset_breakers_for_router_test();
+    let model = "breaker-record-model";
+
+    for _ in 0..2 {
+        let provider = MockProvider::new(ProviderKind::Bedrock, ResponseScript::Always(503));
+        let err = router::call_provider_with_chain(
+            &default_req(),
+            Instant::now() + Duration::from_secs(4),
+            vec![ProviderEndpoint::new(Box::new(provider), model, 0)],
+        )
+        .await
+        .unwrap_err();
+        assert!(matches!(err, RouterError::AllProvidersFailed { .. }));
+    }
+
+    assert!(circuit_breaker::is_open(&ProviderKind::Bedrock, model));
 }
 
 /// AC #11/#17: OpenAI response normalization and trace propagation.

@@ -4,17 +4,17 @@ id: FR-AI-009
 title: "Circuit breaker per (provider, model) with half-open recovery probing"
 module: AI
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 2
 slice: 2
 owner: Stephen Cheng
 created: 2026-05-15
-shipped: 2026-05-21
+shipped: 2026-06-08
 memory_chain_hash: null
 related_frs: [FR-AI-006, FR-AI-007, FR-AI-008, FR-AI-021]
-depends_on: [FR-AI-008, FR-AI-006]
+depends_on: [FR-AI-008]
 blocks: [FR-AI-021]
 
 # ───── Source contracts ─────
@@ -1039,9 +1039,9 @@ All resolved at authoring time. Items deferred to later FRs:
 | `record_outcome` with unknown outcome variant | Closed enum at compile time | Compile error if variant added without match arm | Caught at build |
 | `is_open` race: state read before CAS, another caller flips first | Acquire-load + CAS with `Acquire` failure ordering | CAS loser sees current state (HalfOpen or stayed Open); no double-probe | By design — AC #6 |
 | Concurrent failures racing past threshold | CAS on `Closed → Open` transition | Exactly one CAS winner emits `emit_transition`; AC #1's "once" assertion holds under concurrency | By design — ISS-002 fix |
-| Per-call lookup allocation | `BreakerKeyRef<'a>` with `Borrow` impl on `BreakerKey` | Hot-path `is_open` does no String allocation; only the cold-path "first ever record_outcome" allocates the owned `BreakerKey` | ISS-003 fix — keeps §1 #11 100ns budget achievable |
-| `init` called twice | `OnceCell::set` returns Err | `expect()` panics with a clear message pointing to `reset_for_tests()` | Programmer error — surfaced loudly per ISS-004 fix |
-| `is_open` called before `init` | `BREAKERS.get()` returns None → `expect` panics | Process crashes with clear panic message | Programmer error — caught in startup ordering tests |
+| Hot-path lookup regresses above budget | Criterion `circuit_breaker_bench` | Fails the FR gate if closed-state `is_open` exceeds 1M calls in 100ms | Current measured range: ~30ns/call |
+| `init` called twice | `OnceCell::get_or_init` | Idempotent; tests use `swap_clock()` plus `reset_for_tests()` for isolation | Avoids router-startup panics while preserving deterministic tests |
+| `is_open` called before explicit `init` | Lazy default SystemClock/map init | Returns a valid Closed/false answer unless a breaker has been recorded | Router can consult breakers safely during early startup |
 | Provider impl populates wrong outcome class (e.g., Failure5xx for a 200) | No validator | Breaker may open spuriously; OBS shows odd transition pattern | Operator detects via `ai_breaker_transitions_total` anomaly |
 | `BreakerState::from_u8` called with invalid value (e.g., 99) | `panic!("invalid BreakerState discriminant")` | Process crashes | Indicates atomic-state corruption — should never happen |
 | `reset()` called concurrent with `record_outcome` | DashMap shared lock + per-field atomic stores | Reset wins or loses race; final state is one of (Closed, just-reopened); counter is 0 or some small N | Self-resolves |
@@ -1058,8 +1058,26 @@ All resolved at authoring time. Items deferred to later FRs:
 - The OBS `STATE` gauge is set to 1 for the current state and 0 for the others. This makes Grafana queries trivial: `ai_breaker_state{state="open"} == 1` selects all currently-open breakers.
 - The `short_circuits_total` metric is the most-watched signal — any non-zero value means the breaker is actively gating calls. An operator dashboard panel should alert on `rate(ai_breaker_short_circuits_total[5m]) > 1` to surface incidents.
 - Per-tenant breakers (slice 5, FR-AI-021) will multiply the key-space by tenant count. If we have 1000 tenants × 90 (provider, model) combos = 90K keys, the DashMap memory grows to ~6MB. Still fine, but the OBS label cardinality (`tenant_id × provider × model × state`) becomes a Prometheus problem — slice 5 will need a per-tenant aggregation strategy.
-- The integration tests use `MockClock` from a `test-mock-clock` Cargo feature. This keeps the production binary smaller (no MockClock symbols) while the tests opt in. The benchmark uses `SystemClock` to measure realistic atomic-load timing.
+- The integration tests use `MockClock` with `swap_clock()` and `reset_for_tests()` to isolate global state. The benchmark uses `SystemClock` to measure realistic atomic-load timing.
 
 ---
 
-*End of FR-AI-009. Status: draft (10/10 target).*
+## §12 — Ship audit (2026-06-08)
+
+Status: `done`.
+
+Implementation and verification shipped:
+
+- Circuit breaker state machine verified for closed/open/half-open transitions, sliding windows, 429 handling, 4xx ignore semantics, per-provider/model isolation, reset, metrics, concurrent CAS, concurrent `record_outcome`, probe-pair transition events, and deterministic transition sequences.
+- Router integration now filters open breaker endpoints in `build_provider_chain` and records breaker outcomes for successes, 5xx/429 failures, 4xx/auth terminal errors, and deadlines.
+- Breaker init is safe for early router calls via lazy default initialization while tests retain deterministic `MockClock` control through `swap_clock`.
+- Removed the unused unsafe borrowed-key shim from the implementation.
+
+Verification:
+
+- `cargo test -p cyberos-ai-gateway --test circuit_breaker_test -- --test-threads=1` — 18 passed.
+- `cargo test -p cyberos-ai-gateway --test router_test -- --test-threads=1` — 26 passed.
+- `cargo test -p cyberos-ai-gateway circuit_breaker --all-targets` — passed.
+- `cargo bench -p cyberos-ai-gateway --bench circuit_breaker_bench -- --warm-up-time 0.1 --measurement-time 0.2 --sample-size 10` — closed-state `is_open` ~30ns/call.
+
+*End of FR-AI-009. Status: done. Shipped 2026-06-08.*
