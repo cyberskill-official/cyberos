@@ -19,11 +19,13 @@
 
 pub mod canonical;
 
+use std::path::PathBuf;
 use std::process::Stdio;
 use std::time::Duration;
 
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use sha2::{Digest, Sha256};
 use thiserror::Error;
 use tokio::io::AsyncWriteExt;
@@ -35,6 +37,15 @@ use uuid::Uuid;
 const WRITER_BIN: &str = "python3";
 const WRITER_ARGS: &[&str] = &["-m", "cyberos.writer", "put"];
 const WRITER_TIMEOUT: Duration = Duration::from_secs(5);
+const MEMORY_KINDS: &[&str] = &[
+    "decisions",
+    "facts",
+    "people",
+    "projects",
+    "preferences",
+    "drift",
+    "refinements",
+];
 
 // --- Types ------------------------------------------------------------------
 
@@ -173,10 +184,15 @@ pub async fn emit(req: MemoryEmit) -> Result<EmittedRow, MemoryWriterError> {
     // 2. Build canonical JSON payload.
     let payload = canonical::serialise(&req)
         .map_err(|reason| MemoryWriterError::CanonicalisationFailed { reason })?;
+    let payload_value: Value = serde_json::from_str(&payload).map_err(|e| {
+        MemoryWriterError::CanonicalisationFailed {
+            reason: format!("canonical payload reparse failed: {e}"),
+        }
+    })?;
 
     // 3. Spawn Writer.
-    let mut child = Command::new(WRITER_BIN)
-        .args(WRITER_ARGS)
+    let mut child = writer_command(WRITER_ARGS);
+    let mut child = child
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -249,7 +265,7 @@ pub async fn emit(req: MemoryEmit) -> Result<EmittedRow, MemoryWriterError> {
         })?;
 
     // 7. Verify chain hash locally (FR-AI-003 §1 #7).
-    let expected = compute_chain(&payload, &row.prev_chain);
+    let expected = compute_chain(&payload_value, &row)?;
     let got_vec = hex::decode(&row.chain).unwrap_or_default();
     let mut got = [0u8; 32];
     if got_vec.len() == 32 {
@@ -270,14 +286,17 @@ pub async fn emit(req: MemoryEmit) -> Result<EmittedRow, MemoryWriterError> {
         seq: row.seq,
         ts_ns: row.ts_ns,
         chain: expected,
-        path: req.path,
+        path: payload_value
+            .get("path")
+            .and_then(Value::as_str)
+            .unwrap_or(&req.path)
+            .to_string(),
     })
 }
 
 /// FR-AI-003 §1 #10 — Startup health check.
 pub async fn check_writer_available() -> Result<WriterVersion, MemoryWriterError> {
-    let out = Command::new(WRITER_BIN)
-        .args(["-m", "cyberos.writer", "--version"])
+    let out = writer_command(&["-m", "cyberos.writer", "--version"])
         .output()
         .await
         .map_err(|e| MemoryWriterError::WriterUnreachable {
@@ -319,15 +338,113 @@ fn validate_path(path: &str) -> Result<(), String> {
             return Err(format!("reserved: {reserved}"));
         }
     }
+    if let Some(rest) = path.strip_prefix("memories/") {
+        let kind = rest.split('/').next().unwrap_or_default();
+        if !MEMORY_KINDS.contains(&kind) {
+            return Err(format!("invalid memory kind: {kind}"));
+        }
+    }
     Ok(())
 }
 
-fn compute_chain(canonical_payload: &str, prev_chain_hex: &str) -> [u8; 32] {
-    let prev = hex::decode(prev_chain_hex).unwrap_or_default();
+fn writer_command(args: &[&str]) -> Command {
+    let mut cmd = Command::new(WRITER_BIN);
+    cmd.args(args);
+    if let Some(path) = local_memory_pythonpath() {
+        match std::env::var_os("PYTHONPATH") {
+            Some(existing) if !existing.is_empty() => {
+                let mut paths = vec![path];
+                paths.extend(std::env::split_paths(&existing));
+                if let Ok(joined) = std::env::join_paths(paths) {
+                    cmd.env("PYTHONPATH", joined);
+                }
+            }
+            _ => {
+                cmd.env("PYTHONPATH", path);
+            }
+        }
+    }
+    cmd
+}
+
+fn local_memory_pythonpath() -> Option<PathBuf> {
+    let cwd = std::env::current_dir().ok()?;
+    for dir in cwd.ancestors() {
+        let candidate = dir.join("modules").join("memory");
+        if candidate.join("cyberos").join("writer.py").is_file() {
+            return Some(candidate);
+        }
+    }
+    None
+}
+
+fn compute_chain(
+    canonical_payload: &Value,
+    row: &WriterStdout,
+) -> Result<[u8; 32], MemoryWriterError> {
+    let prev = hex::decode(&row.prev_chain).unwrap_or_default();
+    let body = canonical_payload
+        .get("body")
+        .and_then(Value::as_str)
+        .ok_or_else(|| MemoryWriterError::CanonicalisationFailed {
+            reason: "canonical payload missing string body".to_string(),
+        })?;
+    let meta = canonical_payload
+        .get("meta")
+        .and_then(Value::as_object)
+        .ok_or_else(|| MemoryWriterError::CanonicalisationFailed {
+            reason: "canonical payload missing object meta".to_string(),
+        })?;
+    let actor = meta
+        .get("actor")
+        .and_then(Value::as_str)
+        .ok_or_else(|| MemoryWriterError::CanonicalisationFailed {
+            reason: "canonical payload missing string meta.actor".to_string(),
+        })?;
+    let kind = meta
+        .get("kind")
+        .and_then(Value::as_str)
+        .ok_or_else(|| MemoryWriterError::CanonicalisationFailed {
+            reason: "canonical payload missing string meta.kind".to_string(),
+        })?;
+    let path = canonical_payload
+        .get("path")
+        .and_then(Value::as_str)
+        .ok_or_else(|| MemoryWriterError::CanonicalisationFailed {
+            reason: "canonical payload missing string path".to_string(),
+        })?;
+    let mut extra = serde_json::Map::new();
+    extra.insert("kind".to_string(), Value::String(kind.to_string()));
+    match meta.get("extra") {
+        Some(Value::Object(map)) => {
+            for (key, value) in map {
+                extra.insert(key.clone(), value.clone());
+            }
+        }
+        Some(_) => {
+            return Err(MemoryWriterError::CanonicalisationFailed {
+                reason: "canonical payload meta.extra must be an object".to_string(),
+            })
+        }
+        None => {}
+    }
+
+    let record_minus_chain = serde_json::json!({
+        "actor": actor,
+        "chain": "",
+        "content_sha256": hex::encode(Sha256::digest(body.as_bytes())),
+        "extra": Value::Object(extra),
+        "op": "put",
+        "path": path,
+        "prev_chain": row.prev_chain,
+        "ts_ns": row.ts_ns,
+    });
+    let canonical_record = canonical::canonicalise(&record_minus_chain)
+        .map_err(|reason| MemoryWriterError::CanonicalisationFailed { reason })?;
     let mut hasher = Sha256::new();
-    hasher.update(canonical_payload.as_bytes());
+    hasher.update(canonical_record.as_bytes());
     hasher.update(&prev);
-    hasher.finalize().into()
+    Ok(hasher.finalize().into())
 }
 
 fn parse_version_line(line: &str) -> (String, String, u32) {
@@ -496,7 +613,7 @@ pub mod builders {
     fn row_path(folder: &str, tenant_id: &str, key: &str) -> String {
         let now = chrono::Utc::now().timestamp_millis().max(0) as u128;
         let safe_tenant = tenant_id.replace(':', "-");
-        format!("memories/{folder}/{now}_{safe_tenant}_{key}.md")
+        format!("memories/decisions/{folder}/{now}_{safe_tenant}_{key}.md")
     }
 }
 
@@ -518,8 +635,9 @@ mod tests {
 
     #[test]
     fn validate_path_accepts_memories_subdirs() {
-        assert!(validate_path("memories/ai-invocations/abc.md").is_ok());
-        assert!(validate_path("memories/ai-personas/xyz.md").is_ok());
+        assert!(validate_path("memories/decisions/ai-invocations/abc.md").is_ok());
+        assert!(validate_path("memories/decisions/ai-personas/xyz.md").is_ok());
+        assert!(validate_path("memories/ai-invocations/abc.md").is_err());
     }
 
     #[test]
@@ -544,9 +662,23 @@ mod tests {
 
     #[test]
     fn compute_chain_is_deterministic() {
-        let prev = "00".repeat(32);
-        let a = compute_chain(r#"{"x":1}"#, &prev);
-        let b = compute_chain(r#"{"x":1}"#, &prev);
+        let payload = serde_json::json!({
+            "body": "---\nkind: ai.precheck\n---\n",
+            "meta": {
+                "actor": "agent:cyberos-ai-gateway",
+                "extra": {"tenant_id": "org:cyberskill"},
+                "kind": "ai.precheck",
+            },
+            "path": "memories/decisions/ai-invocations/test.md",
+        });
+        let row = WriterStdout {
+            seq: 1,
+            ts_ns: 123,
+            chain: "00".repeat(32),
+            prev_chain: "00".repeat(32),
+        };
+        let a = compute_chain(&payload, &row).unwrap();
+        let b = compute_chain(&payload, &row).unwrap();
         assert_eq!(a, b);
     }
 }

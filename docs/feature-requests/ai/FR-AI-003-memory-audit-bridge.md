@@ -4,7 +4,7 @@ id: FR-AI-003
 title: "memory audit-row bridge — canonical Writer for AI Gateway"
 module: AI
 priority: MUST
-status: ready_to_implement
+status: done
 accepted_at: 2026-05-15
 accepted_by: Stephen Cheng
 verify: T
@@ -13,7 +13,7 @@ milestone: P0 · slice 1
 slice: 1
 owner: Stephen Cheng
 created: 2026-05-15
-shipped: null
+shipped: 2026-06-08
 memory_chain_hash: null
 related_frs: [FR-AI-001, FR-AI-002, FR-AI-014, FR-OBS-008]
 depends_on: []
@@ -299,7 +299,7 @@ timeout:      5 seconds; if exceeded, kill -SIGTERM, then kill -SIGKILL after 1s
 
 ## §4 — Acceptance criteria (testable, ordered, numbered)
 
-1. **Happy path (precheck row)** — `memory_writer::emit(canonical::precheck(...))` MUST return `Ok(EmittedRow { seq, ts_ns, chain })`. The row MUST appear at `<memory-root>/memories/ai-invocations/<ts_ns>_<tenant>_<key>.md`. The returned `seq` MUST equal the memory's HEAD seq counter immediately after emission. The chain hash MUST equal SHA-256(canonical(row_minus_chain) ‖ prev_chain).
+1. **Happy path (precheck row)** — `memory_writer::emit(canonical::precheck(...))` MUST return `Ok(EmittedRow { seq, ts_ns, chain })`. The row MUST appear at `<memory-root>/memories/decisions/ai-invocations/<ts_ns>_<tenant>_<key>.md`. The returned `seq` MUST equal the memory's HEAD seq counter immediately after emission. The chain hash MUST equal SHA-256(canonical(row_minus_chain) ‖ prev_chain).
 2. **Concurrent emission serialises** — 16 tokio tasks calling `emit()` concurrently MUST result in 16 distinct rows on the chain, with monotonically increasing seq numbers and `chain` linkage preserved end-to-end. Test: parallel `for i in 0..16 { tokio::spawn(emit(...)) }`; assert seq is contiguous and chain verification passes for all 16 rows.
 3. **Writer non-zero exit → Err** — When the subprocess returns exit code `3` (path traversal), `emit()` MUST return `Err(MemoryWriterError::PathRejected)` carrying the stderr's `detail` field; MUST NOT emit a row; MUST NOT mutate `<memory-root>/`.
 4. **Writer timeout → kill + Err** — When the subprocess hangs for >5s (test injects a `time.sleep(10)` via a Writer fixture), `emit()` MUST send SIGTERM, wait 1s, send SIGKILL, and return `Err(MemoryWriterError::Timeout { waited_ms: 5000 })`. MUST NOT leave a zombie process; MUST NOT leave a partial row on disk.
@@ -569,7 +569,7 @@ memory_writer::emit(
 ### Subprocess stdin (canonical JSON, single line, NL-terminated)
 
 ```
-{"meta":{"actor":"agent:cyberos-ai-gateway","actor_version":"0.1.0","extra":{"agent_persona":"cuo-cpo@0.4.1","current_spent_usd":47.23,"estimated_usd":0.0085,"idempotency_key":"01HZK9R7A2B4C8D6","model_alias":"chat.smart","resolved_model":"anthropic.claude-3.5-sonnet","resolved_provider":"bedrock","tenant_id":"org:cyberskill"},"kind":"ai.precheck"},"body":"---\nkind: ai.precheck\nactor: agent:cyberos-ai-gateway\ntenant_id: org:cyberskill\n…\n---\n","path":"memories/ai-invocations/1763112131000_org-cyberskill_01HZK9R7A2B4C8D6.md"}
+{"meta":{"actor":"agent:cyberos-ai-gateway","actor_version":"0.1.0","extra":{"agent_persona":"cuo-cpo@0.4.1","current_spent_usd":47.23,"estimated_usd":0.0085,"idempotency_key":"01HZK9R7A2B4C8D6","model_alias":"chat.smart","resolved_model":"anthropic.claude-3.5-sonnet","resolved_provider":"bedrock","tenant_id":"org:cyberskill"},"kind":"ai.precheck"},"body":"---\nkind: ai.precheck\nactor: agent:cyberos-ai-gateway\ntenant_id: org:cyberskill\n…\n---\n","path":"memories/decisions/ai-invocations/1763112131000_org-cyberskill_01HZK9R7A2B4C8D6.md"}
 ```
 
 ### Subprocess stdout (canonical JSON, single line, NL-terminated)
@@ -585,7 +585,7 @@ EmittedRow {
     seq: 18421,
     ts_ns: 1763112131000000000,
     chain: [0xa3, 0xf9, /* … 30 more bytes */ 0xf9],
-    path: "memories/ai-invocations/1763112131000_org-cyberskill_01HZK9R7A2B4C8D6.md".to_string(),
+    path: "memories/decisions/ai-invocations/1763112131000_org-cyberskill_01HZK9R7A2B4C8D6.md".to_string(),
 }
 ```
 

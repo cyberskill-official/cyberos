@@ -83,7 +83,7 @@ fn nfc_value(v: &Value) -> Value {
 
 /// Sorted-key, no-extra-whitespace JSON. Matches `python -c "json.dumps(d, sort_keys=True,
 /// separators=(',', ':'))"`.
-fn canonicalise(v: &Value) -> Result<String, String> {
+pub(crate) fn canonicalise(v: &Value) -> Result<String, String> {
     fn write(v: &Value, out: &mut String) -> Result<(), String> {
         match v {
             Value::Null => out.push_str("null"),
@@ -186,7 +186,7 @@ mod tests {
     fn serialise_memory_emit_round_trips() {
         let req = MemoryEmit {
             kind: AiInvocationKind::Precheck,
-            path: "memories/ai-invocations/test.md".to_string(),
+            path: "memories/decisions/ai-invocations/test.md".to_string(),
             extra: json!({"tenant_id": "org:test", "estimated_usd": "0.0085"}),
         };
         let s = serialise(&req).unwrap();

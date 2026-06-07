@@ -68,3 +68,18 @@ The round-1/round-2 ISSes above were merged into the original prose; feature-req
 ---
 
 *End of FR-AI-003 audit. Status: PASS at 10/10. feature-request-audit skill compliant 2026-05-16.*
+
+## §5 — Post-implementation closure (2026-06-08)
+
+Status: PASS. The shipped closure added the missing `python3 -m cyberos.writer`
+subprocess entry point, routed it through `cyberos.core.ops.put`, returned
+`seq`/`ts_ns`/`prev_chain`/`chain`, tightened AI Gateway memory paths to the
+protocol-valid `memories/decisions/ai-*` subtrees, and fixed the Rust verifier
+to recompute the BRAIN `AuditRecord` chain hash rather than hashing the
+subprocess input envelope.
+
+Verification passed:
+
+- `PYTHONPATH=modules/memory python3 -m pytest modules/memory/tests/test_writer_cli.py modules/memory/tests/core/test_writer_basic.py -q`
+- `cargo test -p cyberos-ai-gateway memory_writer --all-targets`
+- `PYTHONPATH=modules/memory:modules/cuo python3 -m cyberos --store .cyberos-memory doctor`
