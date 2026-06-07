@@ -5,7 +5,7 @@
 
 use std::time::Duration;
 
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, watch};
 
 use super::StreamEvent;
 
@@ -16,15 +16,35 @@ pub async fn run(
     provider_label: &str,
     model_label: &str,
 ) {
+    let (_done_tx, done_rx) = watch::channel(false);
+    run_until_done(tx, interval, provider_label, model_label, done_rx).await;
+}
+
+/// Run the heartbeat loop until the receiver drops or the stream completes.
+pub async fn run_until_done(
+    tx: mpsc::Sender<StreamEvent>,
+    interval: Duration,
+    provider_label: &str,
+    model_label: &str,
+    mut done_rx: watch::Receiver<bool>,
+) {
     let mut tick = tokio::time::interval(interval);
     tick.tick().await; // skip the immediate first tick
     loop {
-        tick.tick().await;
-        if tx.send(StreamEvent::Heartbeat).await.is_err() {
-            return; // receiver dropped; stop heartbeat task
+        tokio::select! {
+            changed = done_rx.changed() => {
+                if changed.is_err() || *done_rx.borrow() {
+                    return;
+                }
+            }
+            _ = tick.tick() => {
+                if tx.send(StreamEvent::Heartbeat).await.is_err() {
+                    return; // receiver dropped; stop heartbeat task
+                }
+                super::metrics::HEARTBEATS
+                    .with_label_values(&[provider_label, model_label])
+                    .inc();
+            }
         }
-        super::metrics::HEARTBEATS
-            .with_label_values(&[provider_label, model_label])
-            .inc();
     }
 }

@@ -281,6 +281,20 @@ All 6 mechanical revisions applied:
 
 **Score = 10/10.** Ship as-is. Ready to transition `draft → accepted`.
 
+## §5 — Implementation closure (2026-06-08)
+
+FR-AI-010 shipped in the AI Gateway router/streaming layer. The slice replaces the FR-AI-008 streaming stub with `call_provider_streaming` retry/failover, normalizes OpenAI/Anthropic/Bedrock SSE frames into token/usage/done events, preserves pre-first-token retry semantics, and adds the first-token latency bench.
+
+Verification passed:
+
+- `cargo test -p cyberos-ai-gateway --test router_test -- --test-threads=1` — 30 passed.
+- `cargo test -p cyberos-ai-gateway --test streaming_test -- --test-threads=1` — 19 passed.
+- `cargo test -p cyberos-ai-gateway router --all-targets` — passed.
+- `cargo test -p cyberos-ai-gateway streaming --all-targets` — passed.
+- `cargo bench -p cyberos-ai-gateway --bench streaming_first_token_bench -- --warm-up-time 0.1 --measurement-time 0.2 --sample-size 10` — passed; sample time ~87-100 us.
+
+Known environment boundary: the full database-backed `handle_streaming_chat` precheck/reconcile flow still depends on FR-AI-001/FR-AI-002 live Postgres verification. The streaming implementation keeps those calls in the production path and verifies the provider/router/SSE contract independently with local mock providers and HTTP SSE servers.
+
 ---
 
 *End of FR-AI-010 audit (final). Status: PASS at 10/10.*

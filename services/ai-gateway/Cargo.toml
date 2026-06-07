@@ -73,7 +73,7 @@ regex = "1"
 # FR-AI-008 specific (multi-provider router)
 async-trait = "0.1"
 rand = "0.8"
-reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
+reqwest = { version = "0.12", features = ["json", "rustls-tls", "stream"], default-features = false }
 
 # FR-AI-009 specific (circuit breaker)
 dashmap = "6"
@@ -123,4 +123,8 @@ harness = false
 
 [[bench]]
 name = "alias_resolution_bench"
+harness = false
+
+[[bench]]
+name = "streaming_first_token_bench"
 harness = false

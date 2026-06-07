@@ -71,6 +71,46 @@ impl Provider for OpenAIProvider {
             reason: "OpenAI embed not yet wired".into(),
         })
     }
+
+    async fn call_chat_streaming(
+        &self,
+        req: &ChatCompleteRequest,
+        model: &str,
+        deadline: Instant,
+    ) -> Result<ProviderStreamResponse, RouterError> {
+        let base_url = std::env::var("CYBEROS_AI_GATEWAY_OPENAI_BASE_URL")
+            .unwrap_or_else(|_| "https://api.openai.com".to_string());
+        let url = format!("{}/v1/chat/completions", base_url.trim_end_matches('/'));
+        let client = reqwest::Client::new();
+        let mut builder = client.post(url).json(&json!({
+            "model": model,
+            "messages": req.messages.iter().map(|message| {
+                json!({
+                    "role": message.role,
+                    "content": message.content,
+                })
+            }).collect::<Vec<_>>(),
+            "max_tokens": req.max_tokens,
+            "temperature": req.temperature,
+            "stream": true,
+            "stream_options": { "include_usage": true },
+        }));
+        if let Ok(api_key) = std::env::var("CYBEROS_AI_GATEWAY_OPENAI_API_KEY") {
+            builder = builder.bearer_auth(api_key);
+        }
+        builder = super::http::apply_trace_headers(builder, req);
+
+        let response =
+            super::http::send_with_deadline(builder, deadline, ProviderKind::Openai).await?;
+        if !response.status().is_success() {
+            return Err(super::http::error_from_response(ProviderKind::Openai, response).await);
+        }
+        Ok(super::streaming::response_to_provider_stream(
+            response,
+            ProviderKind::Openai,
+            super::streaming::StreamDialect::OpenAi,
+        ))
+    }
 }
 
 #[derive(Debug, Deserialize)]

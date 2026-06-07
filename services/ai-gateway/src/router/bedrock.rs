@@ -76,6 +76,53 @@ impl Provider for BedrockProvider {
             reason: "Bedrock embed not yet wired".into(),
         })
     }
+
+    async fn call_chat_streaming(
+        &self,
+        req: &ChatCompleteRequest,
+        model: &str,
+        deadline: Instant,
+    ) -> Result<ProviderStreamResponse, RouterError> {
+        let region = std::env::var("CYBEROS_AI_GATEWAY_BEDROCK_REGION")
+            .unwrap_or_else(|_| "us-east-1".to_string());
+        let base_url = std::env::var("CYBEROS_AI_GATEWAY_BEDROCK_BASE_URL")
+            .unwrap_or_else(|_| format!("https://bedrock-runtime.{region}.amazonaws.com"));
+        let url = format!(
+            "{}/model/{}/invoke-with-response-stream",
+            base_url.trim_end_matches('/'),
+            model
+        );
+        let client = reqwest::Client::new();
+        let mut builder = client
+            .post(url)
+            .header("content-type", "application/json")
+            .json(&json!({
+                "anthropic_version": "bedrock-2023-05-31",
+                "messages": req.messages.iter().map(|message| {
+                    json!({
+                        "role": message.role,
+                        "content": message.content,
+                    })
+                }).collect::<Vec<_>>(),
+                "max_tokens": req.max_tokens.unwrap_or(1024),
+                "temperature": req.temperature,
+            }));
+        if let Ok(api_key) = std::env::var("CYBEROS_AI_GATEWAY_BEDROCK_API_KEY") {
+            builder = builder.bearer_auth(api_key);
+        }
+        builder = super::http::apply_trace_headers(builder, req);
+
+        let response =
+            super::http::send_with_deadline(builder, deadline, ProviderKind::Bedrock).await?;
+        if !response.status().is_success() {
+            return Err(super::http::error_from_response(ProviderKind::Bedrock, response).await);
+        }
+        Ok(super::streaming::response_to_provider_stream(
+            response,
+            ProviderKind::Bedrock,
+            super::streaming::StreamDialect::Bedrock,
+        ))
+    }
 }
 
 #[derive(Debug, Deserialize)]

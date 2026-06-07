@@ -11,7 +11,7 @@ use cyberos_ai_gateway::streaming::heartbeat;
 use cyberos_ai_gateway::streaming::{
     ErrorCode, ProviderStreamEvent, ProviderStreamUsage, ReconcileReason, StreamEvent,
 };
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, watch};
 
 // ─── SSE serialization tests ─────────────────────────────────────────────────
 
@@ -154,6 +154,29 @@ async fn heartbeat_stops_when_receiver_dropped() {
         result.is_ok(),
         "heartbeat task did not stop after receiver drop"
     );
+}
+
+#[tokio::test]
+async fn heartbeat_stops_when_stream_done_signal_fires() {
+    let (tx, mut rx) = mpsc::channel::<StreamEvent>(32);
+    let (done_tx, done_rx) = watch::channel(false);
+
+    let handle = tokio::spawn(async move {
+        heartbeat::run_until_done(tx, Duration::from_millis(50), "test", "test-model", done_rx)
+            .await;
+    });
+
+    tokio::time::sleep(Duration::from_millis(125)).await;
+    let mut count = 0;
+    while let Ok(ev) = rx.try_recv() {
+        assert!(matches!(ev, StreamEvent::Heartbeat));
+        count += 1;
+    }
+    assert!(count >= 1, "expected at least one heartbeat before done");
+
+    done_tx.send(true).unwrap();
+    let result = tokio::time::timeout(Duration::from_millis(200), handle).await;
+    assert!(result.is_ok(), "heartbeat task did not stop after done");
 }
 
 // ─── Backpressure test ───────────────────────────────────────────────────────

@@ -125,7 +125,7 @@ mod metrics {
 // ─── Public types ─────────────────────────────────────────────────────────────
 
 /// Events yielded by the provider's streaming response.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ProviderStreamEvent {
     Token { text: String },
     Usage(ProviderStreamUsage),
@@ -133,7 +133,7 @@ pub enum ProviderStreamEvent {
 }
 
 /// Usage reported by the provider mid-stream.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ProviderStreamUsage {
     pub prompt_tokens: u32,
     pub completion_tokens: u32,
@@ -400,6 +400,7 @@ pub async fn handle_streaming_chat(
     // Step 3: Channel + disconnect signal + reconcile guard.
     let (tx, rx) = mpsc::channel::<StreamEvent>(CHANNEL_CAPACITY);
     let (disconnect_tx, disconnect_rx) = watch::channel(false);
+    let (stream_done_tx, stream_done_rx) = watch::channel(false);
     let guard = Arc::new(ReconcileGuard::new(hold_id, pool.clone()));
     let deadline =
         Instant::now() + Duration::from_secs(policy.ai_policy.call_timeout_seconds as u64);
@@ -422,6 +423,7 @@ pub async fn handle_streaming_chat(
             disconnect_rx_for_task,
         )
         .await;
+        let _ = stream_done_tx.send(true);
         guard_for_task.record(result).await;
         guard_for_task.fire().await;
     });
@@ -431,7 +433,14 @@ pub async fn handle_streaming_chat(
     let provider_label = resolved.provider_kind.as_metric_label().to_owned();
     let model_label = resolved.model.clone();
     tokio::spawn(async move {
-        heartbeat::run(tx_for_hb, HEARTBEAT_INTERVAL, &provider_label, &model_label).await;
+        heartbeat::run_until_done(
+            tx_for_hb,
+            HEARTBEAT_INTERVAL,
+            &provider_label,
+            &model_label,
+            stream_done_rx,
+        )
+        .await;
     });
 
     // Step 6: Wire disconnect signal on SSE stream drop.
@@ -441,7 +450,7 @@ pub async fn handle_streaming_chat(
         ReceiverStream::new(rx).map(move |ev| Ok::<_, std::convert::Infallible>(ev.to_sse_event()));
     let stream = DisconnectAwareStream {
         inner: stream,
-        _disconnect_tx: disconnect_tx,
+        disconnect_tx,
     };
 
     // Step 7: Return SSE.
@@ -482,10 +491,6 @@ async fn run_provider_stream(
             }
         };
 
-    // Convert the provider response into a stream of ProviderStreamEvent.
-    // For now, ProviderStreamResponse is empty (stub); this will be wired
-    // when real provider impls land. The infrastructure below handles all
-    // event types correctly.
     let mut provider_stream = provider_stream_from_response(stream_response);
 
     let mut first_token_at: Option<Instant> = None;
@@ -558,7 +563,7 @@ async fn run_provider_stream(
             }
             Ok(None) => {
                 // Provider stream ended.
-                if !got_done {
+                if !got_done || last_usage.is_none() {
                     let _ = tx
                         .send(StreamEvent::Error {
                             code: ErrorCode::MissingUsage,
@@ -566,12 +571,12 @@ async fn run_provider_stream(
                         })
                         .await;
                     return StreamResult::ProviderError {
-                        partial_usage: None,
+                        partial_usage: last_usage,
                         code: ErrorCode::MissingUsage,
                         message: "missing usage".into(),
                     };
                 }
-                let usage = last_usage.expect("got_done implies last_usage was set");
+                let usage = last_usage.expect("checked above");
                 let elapsed = started.elapsed().as_millis() as f64;
                 metrics::TOTAL_DURATION_MS
                     .with_label_values(&[provider_label, model_label, "success"])
@@ -682,18 +687,10 @@ async fn run_provider_stream(
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/// Convert a `ProviderStreamResponse` into a stream of `ProviderStreamEvent`.
-///
-/// Currently `ProviderStreamResponse` is an empty struct (stub from FR-AI-008).
-/// When real provider impls land, this will extract the mpsc receiver from the
-/// response. For now, returns an empty stream.
 fn provider_stream_from_response(
-    _resp: router::ProviderStreamResponse,
-) -> impl futures::Stream<Item = Result<ProviderStreamEvent, Box<dyn std::error::Error + Send + Sync>>>
-{
-    // Empty stream — provider streaming not yet implemented.
-    // Real impls will populate this from the provider's response body.
-    futures::stream::empty()
+    resp: router::ProviderStreamResponse,
+) -> impl futures::Stream<Item = Result<ProviderStreamEvent, router::RouterError>> {
+    resp.into_events()
 }
 
 /// Convert `StreamResult` to `cost_reconcile::CallOutcome`.
@@ -766,7 +763,13 @@ fn stream_result_to_call_outcome(result: StreamResult) -> crate::cost_reconcile:
 /// Wrapper stream that signals disconnect when dropped.
 struct DisconnectAwareStream<S> {
     inner: S,
-    _disconnect_tx: watch::Sender<bool>,
+    disconnect_tx: watch::Sender<bool>,
+}
+
+impl<S> Drop for DisconnectAwareStream<S> {
+    fn drop(&mut self) {
+        let _ = self.disconnect_tx.send(true);
+    }
 }
 
 impl<S, T, E> futures::Stream for DisconnectAwareStream<S>

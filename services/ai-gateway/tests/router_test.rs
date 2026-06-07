@@ -10,6 +10,7 @@ use async_trait::async_trait;
 use axum::body::Body;
 use axum::http::{HeaderMap, Response, StatusCode};
 use axum::Router as AxumRouter;
+use futures::StreamExt;
 
 use cyberos_ai_gateway::alias::{LatencyClass, ResolvedModel};
 use cyberos_ai_gateway::circuit_breaker::{self, clock::MockClock, CallOutcome};
@@ -22,8 +23,9 @@ use cyberos_ai_gateway::router::openai::OpenAIProvider;
 use cyberos_ai_gateway::router::types::{Choice, FinishReason};
 use cyberos_ai_gateway::router::{
     self, AttemptStatus, ChatCompleteRequest, EmbedRequest, EmbedResponse, Message, Provider,
-    ProviderEndpoint, ProviderResponse, ProviderUsage, RouterError,
+    ProviderEndpoint, ProviderResponse, ProviderStreamResponse, ProviderUsage, RouterError,
 };
+use cyberos_ai_gateway::streaming::{ProviderStreamEvent, ProviderStreamUsage};
 
 // ─── Mock infrastructure ─────────────────────────────────────────────────────
 
@@ -119,6 +121,47 @@ impl Provider for MockProvider {
             reason: "mock embed not implemented".into(),
         })
     }
+
+    async fn call_chat_streaming(
+        &self,
+        _req: &ChatCompleteRequest,
+        _model: &str,
+        _deadline: Instant,
+    ) -> Result<ProviderStreamResponse, RouterError> {
+        let count = self
+            .call_count
+            .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        let status = match &self.script {
+            ResponseScript::Always(s) => *s,
+            ResponseScript::Sequence(v) => {
+                if count < v.len() {
+                    v[count]
+                } else {
+                    *v.last().unwrap()
+                }
+            }
+            ResponseScript::DelayedOk(d) => {
+                tokio::time::sleep(*d).await;
+                return Ok(mock_stream_response());
+            }
+            ResponseScript::RetryAfter {
+                status,
+                retry_after,
+            } => {
+                return Err(make_error_with_retry_after(
+                    self.kind,
+                    *status,
+                    *retry_after,
+                ));
+            }
+        };
+
+        if status == 200 {
+            Ok(mock_stream_response())
+        } else {
+            Err(make_error(self.kind, status))
+        }
+    }
 }
 
 fn make_ok_response(id: &str) -> ProviderResponse {
@@ -164,6 +207,20 @@ fn make_error_with_retry_after(kind: ProviderKind, status: u16, retry_after: u64
         message: format!("mock error {}", status),
         retry_after_secs: Some(retry_after),
     }
+}
+
+fn mock_stream_response() -> ProviderStreamResponse {
+    ProviderStreamResponse::new(futures::stream::iter(vec![
+        Ok(ProviderStreamEvent::Token {
+            text: "mock-token".to_string(),
+        }),
+        Ok(ProviderStreamEvent::Usage(ProviderStreamUsage {
+            prompt_tokens: 10,
+            completion_tokens: 1,
+            cached_input_tokens: 0,
+        })),
+        Ok(ProviderStreamEvent::Done(FinishReason::Stop)),
+    ]))
 }
 
 static PROVIDER_ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
@@ -220,6 +277,49 @@ async fn spawn_json_server(
         axum::serve(listener, app).await.unwrap();
     });
     (format!("http://{}", addr), captured_headers)
+}
+
+async fn spawn_sse_server(
+    status: StatusCode,
+    body: &'static str,
+    retry_after: Option<&'static str>,
+) -> (String, Arc<Mutex<Vec<HeaderMap>>>) {
+    let captured_headers = Arc::new(Mutex::new(Vec::new()));
+    let route_headers = Arc::clone(&captured_headers);
+    let body = body.to_string();
+    let retry_after = retry_after.map(str::to_string);
+
+    let app = AxumRouter::new().fallback(move |headers: HeaderMap| {
+        let route_headers = Arc::clone(&route_headers);
+        let body = body.clone();
+        let retry_after = retry_after.clone();
+        async move {
+            route_headers.lock().expect("capture mutex").push(headers);
+            let mut builder = Response::builder()
+                .status(status)
+                .header("content-type", "text/event-stream");
+            if let Some(retry_after) = retry_after {
+                builder = builder.header("retry-after", retry_after);
+            }
+            builder.body(Body::from(body)).expect("response")
+        }
+    });
+
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap();
+    tokio::spawn(async move {
+        axum::serve(listener, app).await.unwrap();
+    });
+    (format!("http://{}", addr), captured_headers)
+}
+
+async fn collect_provider_events(resp: ProviderStreamResponse) -> Vec<ProviderStreamEvent> {
+    resp.into_events()
+        .collect::<Vec<_>>()
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap()
 }
 
 // ─── Test helpers ─────────────────────────────────────────────────────────────
@@ -311,19 +411,71 @@ fn router_error_display() {
     assert!(format!("{}", e).contains("400"));
 }
 
-/// AC #16: Streaming stub returns Err.
+/// AC #16 / FR-AI-010: streaming retries before a provider stream is accepted.
 #[tokio::test]
-async fn streaming_returns_not_implemented() {
-    let resolved = resolved_with_kind(ProviderKind::Bedrock, "test-model");
-    let err = router::call_provider_streaming(
+async fn call_provider_streaming_retries_before_first_token_then_succeeds() {
+    let provider = MockProvider::new(
+        ProviderKind::Bedrock,
+        ResponseScript::Sequence(vec![503, 200]),
+    );
+    let calls = Arc::clone(&provider.call_count);
+
+    let response = router::call_provider_streaming_with_chain(
         &default_req(),
-        &resolved,
-        Instant::now() + Duration::from_secs(30),
-        &policy_no_fallbacks(),
+        Instant::now() + Duration::from_secs(5),
+        vec![ProviderEndpoint::new(Box::new(provider), "test-model", 0)],
     )
     .await
-    .unwrap_err();
-    assert!(matches!(err, RouterError::StreamingNotImplemented));
+    .unwrap();
+
+    assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 2);
+    assert_eq!(response.attempts().len(), 2);
+    assert_eq!(
+        response.attempts()[0].status,
+        AttemptStatus::RetriedAfter5xx
+    );
+    assert_eq!(response.attempts()[1].status, AttemptStatus::Succeeded);
+
+    let events = collect_provider_events(response).await;
+    assert_eq!(
+        events,
+        vec![
+            ProviderStreamEvent::Token {
+                text: "mock-token".into()
+            },
+            ProviderStreamEvent::Usage(ProviderStreamUsage {
+                prompt_tokens: 10,
+                completion_tokens: 1,
+                cached_input_tokens: 0,
+            }),
+            ProviderStreamEvent::Done(FinishReason::Stop),
+        ]
+    );
+}
+
+#[tokio::test]
+async fn call_provider_streaming_fails_over_after_primary_exhausts() {
+    let primary = MockProvider::new(ProviderKind::Bedrock, ResponseScript::Always(503));
+    let fallback = MockProvider::new(ProviderKind::Anthropic, ResponseScript::Always(200));
+    let primary_calls = Arc::clone(&primary.call_count);
+    let fallback_calls = Arc::clone(&fallback.call_count);
+
+    let response = router::call_provider_streaming_with_chain(
+        &default_req(),
+        Instant::now() + Duration::from_secs(6),
+        vec![
+            ProviderEndpoint::new(Box::new(primary), "primary-model", 0),
+            ProviderEndpoint::new(Box::new(fallback), "fallback-model", 1),
+        ],
+    )
+    .await
+    .unwrap();
+
+    assert_eq!(primary_calls.load(std::sync::atomic::Ordering::SeqCst), 3);
+    assert_eq!(fallback_calls.load(std::sync::atomic::Ordering::SeqCst), 1);
+    assert_eq!(response.attempts().len(), 4);
+    assert_eq!(response.attempts()[2].status, AttemptStatus::FailedOver);
+    assert_eq!(response.attempts()[3].status, AttemptStatus::Succeeded);
 }
 
 /// Test mock provider returns success.
@@ -881,4 +1033,147 @@ async fn bedrock_provider_normalizes_message_response() {
     assert_eq!(response.usage.completion_tokens, 9);
     assert_eq!(response.choices[0].content, "bedrock hello");
     assert_eq!(response.finish_reason, FinishReason::Stop);
+}
+
+#[tokio::test]
+async fn openai_provider_streaming_normalizes_sse_and_propagates_trace_headers() {
+    let _guard = provider_env_lock();
+    let body = r#"data: {"choices":[{"delta":{"content":"Hel"}}]}
+
+data: {"choices":[{"delta":{"content":"lo"}}]}
+
+data: {"usage":{"prompt_tokens":4,"completion_tokens":2,"prompt_tokens_details":{"cached_tokens":1}},"choices":[]}
+
+data: [DONE]
+
+"#;
+    let (base_url, captured) = spawn_sse_server(StatusCode::OK, body, None).await;
+    std::env::set_var("CYBEROS_AI_GATEWAY_OPENAI_BASE_URL", base_url);
+    std::env::set_var("CYBEROS_AI_GATEWAY_OPENAI_API_KEY", "test-key");
+
+    let mut req = default_req();
+    req.traceparent = Some("00-11111111111111111111111111111111-2222222222222222-01".into());
+
+    let response = OpenAIProvider
+        .call_chat_streaming(&req, "gpt-4o", Instant::now() + Duration::from_secs(5))
+        .await
+        .unwrap();
+    let events = collect_provider_events(response).await;
+
+    assert_eq!(
+        events,
+        vec![
+            ProviderStreamEvent::Token { text: "Hel".into() },
+            ProviderStreamEvent::Token { text: "lo".into() },
+            ProviderStreamEvent::Usage(ProviderStreamUsage {
+                prompt_tokens: 4,
+                completion_tokens: 2,
+                cached_input_tokens: 1,
+            }),
+            ProviderStreamEvent::Done(FinishReason::Stop),
+        ]
+    );
+
+    let headers = captured.lock().unwrap();
+    let first = headers.first().expect("captured request");
+    assert_eq!(
+        first
+            .get("traceparent")
+            .and_then(|value| value.to_str().ok()),
+        req.traceparent.as_deref()
+    );
+}
+
+#[tokio::test]
+async fn anthropic_provider_streaming_normalizes_sse() {
+    let _guard = provider_env_lock();
+    let body = r#"event: message_start
+data: {"type":"message_start","message":{"usage":{"input_tokens":5,"cache_read_input_tokens":1}}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"hi"}}
+
+event: message_delta
+data: {"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":1}}
+
+event: message_stop
+data: {"type":"message_stop"}
+
+"#;
+    let (base_url, _captured) = spawn_sse_server(StatusCode::OK, body, None).await;
+    std::env::set_var("CYBEROS_AI_GATEWAY_ANTHROPIC_BASE_URL", base_url);
+    std::env::set_var("CYBEROS_AI_GATEWAY_ANTHROPIC_API_KEY", "test-key");
+
+    let response = AnthropicProvider
+        .call_chat_streaming(
+            &default_req(),
+            "claude-3-5-sonnet-20241022",
+            Instant::now() + Duration::from_secs(5),
+        )
+        .await
+        .unwrap();
+    let events = collect_provider_events(response).await;
+
+    assert_eq!(
+        events,
+        vec![
+            ProviderStreamEvent::Token { text: "hi".into() },
+            ProviderStreamEvent::Usage(ProviderStreamUsage {
+                prompt_tokens: 5,
+                completion_tokens: 1,
+                cached_input_tokens: 1,
+            }),
+            ProviderStreamEvent::Done(FinishReason::Stop),
+        ]
+    );
+}
+
+#[tokio::test]
+async fn bedrock_provider_streaming_normalizes_anthropic_family_sse() {
+    let _guard = provider_env_lock();
+    let body = r#"event: message_start
+data: {"type":"message_start","message":{"usage":{"input_tokens":7}}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"bed"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"rock"}}
+
+event: message_delta
+data: {"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":2}}
+
+event: message_stop
+data: {"type":"message_stop"}
+
+"#;
+    let (base_url, _captured) = spawn_sse_server(StatusCode::OK, body, None).await;
+    std::env::set_var("CYBEROS_AI_GATEWAY_BEDROCK_BASE_URL", base_url);
+    std::env::set_var("CYBEROS_AI_GATEWAY_BEDROCK_API_KEY", "test-key");
+
+    let response = BedrockProvider
+        .call_chat_streaming(
+            &default_req(),
+            "anthropic.claude-3-5-sonnet-20241022-v2:0",
+            Instant::now() + Duration::from_secs(5),
+        )
+        .await
+        .unwrap();
+    let events = collect_provider_events(response).await;
+
+    assert_eq!(
+        events,
+        vec![
+            ProviderStreamEvent::Token { text: "bed".into() },
+            ProviderStreamEvent::Token {
+                text: "rock".into()
+            },
+            ProviderStreamEvent::Usage(ProviderStreamUsage {
+                prompt_tokens: 7,
+                completion_tokens: 2,
+                cached_input_tokens: 0,
+            }),
+            ProviderStreamEvent::Done(FinishReason::Stop),
+        ]
+    );
 }

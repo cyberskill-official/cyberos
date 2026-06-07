@@ -1,6 +1,11 @@
 //! FR-AI-008 §3 — Router types (ProviderResponse, AttemptRecord, etc.).
 
+use std::pin::Pin;
+
+use futures::Stream;
+
 use crate::policy::ProviderKind;
+use crate::streaming::ProviderStreamEvent;
 
 /// Normalized response from any LLM provider.
 #[derive(Debug, Clone, PartialEq)]
@@ -149,9 +154,55 @@ pub struct EmbedResponse {
     pub usage: ProviderUsage,
 }
 
-/// Streaming response placeholder (slice 2 returns StreamingNotImplemented).
-#[derive(Debug)]
-pub struct ProviderStreamResponse;
+/// Normalized streaming response from any LLM provider.
+///
+/// The router owns retry/failover until a provider accepts the streaming HTTP
+/// request. Once this stream is returned, later provider failures are yielded
+/// as stream items and are never retried behind the client's partial response.
+pub struct ProviderStreamResponse {
+    events: Pin<Box<dyn Stream<Item = Result<ProviderStreamEvent, RouterError>> + Send + 'static>>,
+    attempts: Vec<AttemptRecord>,
+}
+
+impl ProviderStreamResponse {
+    /// Construct a streaming response from normalized provider events.
+    pub fn new<S>(events: S) -> Self
+    where
+        S: Stream<Item = Result<ProviderStreamEvent, RouterError>> + Send + 'static,
+    {
+        Self {
+            events: Box::pin(events),
+            attempts: Vec::new(),
+        }
+    }
+
+    /// Attach router attempt metadata collected before the stream was accepted.
+    pub fn with_attempts(mut self, attempts: Vec<AttemptRecord>) -> Self {
+        self.attempts = attempts;
+        self
+    }
+
+    /// Consume the response and return its event stream.
+    pub fn into_events(
+        self,
+    ) -> Pin<Box<dyn Stream<Item = Result<ProviderStreamEvent, RouterError>> + Send + 'static>>
+    {
+        self.events
+    }
+
+    /// Router attempts made before the stream was accepted.
+    pub fn attempts(&self) -> &[AttemptRecord] {
+        &self.attempts
+    }
+}
+
+impl std::fmt::Debug for ProviderStreamResponse {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ProviderStreamResponse")
+            .field("attempts", &self.attempts)
+            .finish_non_exhaustive()
+    }
+}
 
 /// Errors from the router.
 #[derive(Debug, thiserror::Error)]
