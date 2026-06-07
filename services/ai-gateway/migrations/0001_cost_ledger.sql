@@ -1,6 +1,8 @@
 -- FR-AI-001: cost-ledger tables for pre-call budget gating.
 -- Replaces the placeholder migration.
 
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TABLE cost_ledger (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id       TEXT NOT NULL,

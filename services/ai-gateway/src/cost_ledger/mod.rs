@@ -242,7 +242,7 @@ fn validate_idempotency_key(key: &str) -> Result<(), String> {
     if key.is_empty() || key.len() > IDEMPOTENCY_KEY_MAX_LEN {
         return Err("invalid_idempotency_key: length must be 1..=64".into());
     }
-    if !key.chars().all(|c| c.is_ascii_graphic()) {
+    if !key.chars().all(|c| c.is_ascii() && !c.is_ascii_control()) {
         return Err("invalid_idempotency_key: charset must be ASCII printable".into());
     }
     Ok(())
@@ -258,4 +258,19 @@ fn estimate_cost(
     let completion_cost =
         (Decimal::from(expected_completion_tokens) / per_1k) * rate.output_per_1k_usd;
     prompt_cost + completion_cost
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn idempotency_key_validation_matches_printable_ascii_contract() {
+        assert!(validate_idempotency_key("key with space").is_ok());
+        assert!(validate_idempotency_key("visible-ASCII_123").is_ok());
+        assert!(validate_idempotency_key("").is_err());
+        assert!(validate_idempotency_key(&"a".repeat(IDEMPOTENCY_KEY_MAX_LEN + 1)).is_err());
+        assert!(validate_idempotency_key("key\x00with-control").is_err());
+        assert!(validate_idempotency_key("unicode-✓").is_err());
+    }
 }

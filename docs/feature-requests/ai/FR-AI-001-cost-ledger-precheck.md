@@ -478,4 +478,33 @@ All resolved 2026-05-15. Promoted to §1 normative clauses:
 
 ---
 
+## §12 — Route-back note (2026-06-08)
+
+Status remains `ready_to_implement`; do not mark this FR shipped yet.
+
+Reason: live Postgres verification could not run on this host. Docker is installed, but pulling `postgres:16-alpine` produced no progress and timed out after 300 seconds. No local `postgres`, `pg_ctl`, or `initdb` binary is installed.
+
+Work preserved for the next attempt:
+- The placeholder migration was removed so the AI Gateway migration set has a single `0001` version.
+- `0001_cost_ledger.sql` now enables `pgcrypto` before using `gen_random_uuid()`.
+- `cost_precheck_test.rs` now applies migrations automatically when `DATABASE_URL` is set.
+- Budget-boundary tests now use token counts that actually cross or exactly meet the cap under the FR-AI-007 YAML rates.
+- Memory-writing allow-path tests require `CYBEROS_AI_GATEWAY_TEST_MEMORY_WRITES=1` plus `CYBEROS_STORE`, preventing accidental writes to the project BRAIN.
+- Idempotency-key validation now accepts all non-control ASCII printable characters, including space, and has a unit test.
+
+Verification completed:
+- `cargo test -p cyberos-ai-gateway --test cost_precheck_test -- --test-threads=1` — 8 passed without `DATABASE_URL` (DB cases skipped by design).
+- `cargo test -p cyberos-ai-gateway cost_ledger::tests::idempotency_key_validation_matches_printable_ascii_contract --lib` — 1 passed.
+- `cargo test -p cyberos-ai-gateway cost_precheck --all-targets` — filtered all-target compile/check passed.
+- Isolated target BRAIN initialized at `target/fr-ai-001-memory`; `cyberos doctor` on that target store passed.
+
+Required next verification before shipping:
+
+```bash
+CYBEROS_STORE="$PWD/target/fr-ai-001-memory" \
+CYBEROS_AI_GATEWAY_TEST_MEMORY_WRITES=1 \
+DATABASE_URL="postgres://cyberos:cyberos@127.0.0.1:55432/cyberos_ai_test" \
+cargo test -p cyberos-ai-gateway --test cost_precheck_test -- --test-threads=1
+```
+
 *End of FR-AI-001. Run `feature-request-audit` next: `cargo run -p cyberos-skill-cli -- run feature-request-audit --input '{"fr_path": "docs/feature-requests/ai/FR-AI-001-cost-ledger-precheck.md"}'`*

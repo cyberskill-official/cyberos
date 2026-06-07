@@ -20,7 +20,14 @@ use cyberos_ai_gateway::policy::*;
 
 async fn test_pool() -> Option<PgPool> {
     let url = std::env::var("DATABASE_URL").ok()?;
-    PgPool::connect(&url).await.ok()
+    let pool = PgPool::connect(&url)
+        .await
+        .unwrap_or_else(|e| panic!("DATABASE_URL is set but Postgres connection failed: {e}"));
+    sqlx::migrate!("./migrations")
+        .run(&pool)
+        .await
+        .expect("cost-ledger migrations should apply");
+    Some(pool)
 }
 
 fn lazy_pool() -> PgPool {
@@ -85,6 +92,33 @@ fn chat_request(tenant_id: &str, prompt_tokens: u32, model: &str) -> ChatComplet
     }
 }
 
+fn chat_request_with_completion(
+    tenant_id: &str,
+    prompt_tokens: u32,
+    expected_completion_tokens: u32,
+    model: &str,
+) -> ChatCompleteRequest {
+    let mut req = chat_request(tenant_id, prompt_tokens, model);
+    req.expected_completion_tokens = expected_completion_tokens;
+    req
+}
+
+fn memory_writes_enabled() -> bool {
+    std::env::var("CYBEROS_AI_GATEWAY_TEST_MEMORY_WRITES").as_deref() == Ok("1")
+        && std::env::var_os("CYBEROS_STORE").is_some()
+}
+
+fn require_memory_writes_enabled() -> bool {
+    if memory_writes_enabled() {
+        true
+    } else {
+        eprintln!(
+            "CYBEROS_AI_GATEWAY_TEST_MEMORY_WRITES=1 and CYBEROS_STORE are required; skipping memory-writing precheck case"
+        );
+        false
+    }
+}
+
 async fn seed_tenant(pool: &PgPool, tenant_id: &str, cap: Decimal, spent: Decimal) {
     let period = chrono::Utc::now().date_naive().with_day(1).unwrap();
     sqlx::query(
@@ -134,6 +168,9 @@ async fn precheck_allows_under_budget() {
         }
     };
     let tenant = "test:precheck-allow";
+    if !require_memory_writes_enabled() {
+        return;
+    }
     cleanup_tenant(&pool, tenant).await;
 
     let policy = test_policy(tenant, dec!(100));
@@ -142,7 +179,6 @@ async fn precheck_allows_under_budget() {
     let req = chat_request(tenant, 1000, "chat.smart");
     let outcome = precheck(&req, &pool, &policy).await;
 
-    // May fail if memory writer not available; that's OK for CI without full env
     match outcome {
         Ok(PrecheckOutcome::Allow {
             estimated_usd,
@@ -155,10 +191,6 @@ async fn precheck_allows_under_budget() {
         }
         Ok(PrecheckOutcome::Refuse { reason, .. }) => {
             panic!("expected Allow, got Refuse({:?})", reason);
-        }
-        Err(PrecheckError::MemoryWriterFailed { .. }) => {
-            // Memory writer not available in test env — expected
-            eprintln!("memory writer unavailable; AC #1 partial verification only");
         }
         Err(e) => panic!("unexpected error: {e}"),
     }
@@ -183,7 +215,7 @@ async fn precheck_refuses_over_budget() {
     let policy = test_policy(tenant, dec!(100));
     seed_tenant(&pool, tenant, dec!(100), dec!(98)).await;
 
-    let req = chat_request(tenant, 1000, "chat.smart");
+    let req = chat_request_with_completion(tenant, 1_000_000, 0, "chat.smart");
     let outcome = precheck(&req, &pool, &policy).await.unwrap();
 
     match outcome {
@@ -215,28 +247,23 @@ async fn precheck_allows_at_exact_cap() {
         }
     };
     let tenant = "test:precheck-exact-cap";
+    if !require_memory_writes_enabled() {
+        return;
+    }
     cleanup_tenant(&pool, tenant).await;
 
     let policy = test_policy(tenant, dec!(100));
-    // spent=95, estimated=5 → exactly at cap (100)
-    seed_tenant(&pool, tenant, dec!(100), dec!(95)).await;
+    // spent=97, estimated=3 from 1,000,000 prompt tokens at $0.003/1k.
+    seed_tenant(&pool, tenant, dec!(100), dec!(97)).await;
 
-    let req = chat_request(tenant, 1000, "chat.smart");
+    let req = chat_request_with_completion(tenant, 1_000_000, 0, "chat.smart");
     let outcome = precheck(&req, &pool, &policy).await;
 
     match outcome {
         Ok(PrecheckOutcome::Allow { .. }) => {
             // Boundary inclusive — correct
         }
-        Ok(PrecheckOutcome::Refuse { .. }) => {
-            // The estimate may be slightly > $5 depending on cost table values,
-            // so refuse is also a valid outcome. The key invariant is that
-            // spent + estimated == cap is permitted.
-            eprintln!("boundary test: Refused (estimate may exceed $5 with current cost table)");
-        }
-        Err(PrecheckError::MemoryWriterFailed { .. }) => {
-            eprintln!("memory writer unavailable; AC #3 partial");
-        }
+        Ok(PrecheckOutcome::Refuse { reason, .. }) => panic!("expected Allow, got {reason:?}"),
         Err(e) => panic!("unexpected error: {e}"),
     }
 
@@ -255,6 +282,9 @@ async fn precheck_idempotent_retry() {
         }
     };
     let tenant = "test:precheck-idempotent";
+    if !require_memory_writes_enabled() {
+        return;
+    }
     cleanup_tenant(&pool, tenant).await;
 
     let policy = test_policy(tenant, dec!(100));
@@ -280,10 +310,6 @@ async fn precheck_idempotent_retry() {
                 1,
                 "must not insert second row"
             );
-        }
-        (Err(PrecheckError::MemoryWriterFailed { .. }), _)
-        | (_, Err(PrecheckError::MemoryWriterFailed { .. })) => {
-            eprintln!("memory writer unavailable; AC #4 partial");
         }
         (Ok(PrecheckOutcome::Refuse { .. }), _) | (_, Ok(PrecheckOutcome::Refuse { .. })) => {
             eprintln!("refuse due to cost estimate; AC #4 partial");
@@ -340,6 +366,9 @@ async fn precheck_latency_under_50ms() {
         }
     };
     let tenant = "test:precheck-latency";
+    if !require_memory_writes_enabled() {
+        return;
+    }
     cleanup_tenant(&pool, tenant).await;
 
     let policy = test_policy(tenant, dec!(1000));
