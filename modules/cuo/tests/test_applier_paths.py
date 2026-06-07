@@ -12,7 +12,12 @@ from pathlib import Path
 
 import pytest
 
-from cuo.core.applier import _find_fr_file, _find_repo_root, _resolve_artifact_path
+from cuo.core.applier import (
+    _find_fr_file,
+    _find_repo_root,
+    _resolve_artifact_path,
+    _resolve_cuo_artifact_dir,
+)
 
 
 @pytest.fixture()
@@ -158,3 +163,40 @@ class TestResolveArtifactPath:
         assert result is not None
         assert result.parent == project / "docs" / "feature-requests"
         assert "code-review" in result.name
+
+    def test_cuo_default_artifact_dir_uses_target(self, mock_project):
+        """CUO workflow artifacts should not create top-level BRAIN dirs."""
+        artifact_dir = _resolve_cuo_artifact_dir(
+            "impl-plans",
+            hand_off={},
+            output_dir=mock_project["output_dir"],
+        )
+        assert artifact_dir == (
+            mock_project["project"]
+            / "target"
+            / "cuo-workflow"
+            / "artifacts"
+            / "impl-plans"
+        )
+
+        result = _resolve_artifact_path(
+            output={},
+            fr_id="FR-MISSING-999",
+            hand_off={},
+            filename_prefix="impl-plan",
+            default_dir=str(artifact_dir),
+            output_dir=mock_project["output_dir"],
+            force_default_dir=True,
+        )
+        assert result is not None
+        assert result.parent == artifact_dir
+
+    def test_cuo_artifact_dir_honors_relative_env_override(self, mock_project, monkeypatch):
+        """Operators can redirect artifacts without using .cyberos-memory."""
+        monkeypatch.setenv("CYBEROS_CUO_ARTIFACT_ROOT", "tmp/cuo-artifacts")
+        artifact_dir = _resolve_cuo_artifact_dir(
+            "audits",
+            hand_off={},
+            output_dir=mock_project["output_dir"],
+        )
+        assert artifact_dir == mock_project["project"] / "tmp" / "cuo-artifacts" / "audits"

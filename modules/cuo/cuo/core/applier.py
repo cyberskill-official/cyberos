@@ -57,6 +57,36 @@ def _resolve_project_root(hand_off: dict) -> Path | None:
     return None
 
 
+def _resolve_cuo_artifact_root(hand_off: dict, output_dir: Path | None = None) -> Path:
+    """Resolve the gitignored root for CUO workflow artifacts.
+
+    BRAIN (`.cyberos-memory/`) has a closed top-level layout. Workflow scratch
+    documents are operational artifacts, not memory files, so keep them under
+    `target/` unless the operator explicitly overrides the location.
+    """
+    repo_root = _find_repo_root(hand_off, output_dir) or _resolve_project_root(hand_off)
+    configured = os.environ.get("CYBEROS_CUO_ARTIFACT_ROOT", "").strip()
+    if configured:
+        root = Path(configured).expanduser()
+        if not root.is_absolute() and repo_root is not None:
+            root = repo_root / root
+        return root
+    if repo_root is not None:
+        return repo_root / "target" / "cuo-workflow" / "artifacts"
+    if output_dir is not None:
+        return output_dir.resolve().parent / "artifacts"
+    return Path("target") / "cuo-workflow" / "artifacts"
+
+
+def _resolve_cuo_artifact_dir(
+    subdir: str,
+    hand_off: dict,
+    output_dir: Path | None = None,
+) -> Path:
+    """Resolve a named CUO artifact directory under the artifact root."""
+    return _resolve_cuo_artifact_root(hand_off, output_dir) / subdir
+
+
 def apply_step_side_effect(
     skill_name: str,
     step_result: Any,  # StepResult from cuo.core.invoker
@@ -482,13 +512,9 @@ def _apply_feature_request_audit(step_result, hand_off: dict, run_span_id: str) 
         )
         return
 
-    # Write audit to .cyberos-memory/audits/ (activity history, not deliverable)
-    if repo_root:
-        audits_dir = repo_root / ".cyberos-memory" / "audits"
-        audits_dir.mkdir(parents=True, exist_ok=True)
-        audit_path = audits_dir / f"{fr_path.stem}.audit.md"
-    else:
-        audit_path = fr_path.with_suffix(".audit.md")
+    audits_dir = _resolve_cuo_artifact_dir("audits", hand_off, output_dir)
+    audits_dir.mkdir(parents=True, exist_ok=True)
+    audit_path = audits_dir / f"{fr_path.stem}.audit.md"
 
     # Determine the audit body.
     if isinstance(output.get("audit_body"), str):
@@ -722,7 +748,7 @@ def _apply_architecture_decision_record(step_result, hand_off: dict, run_span_id
     3. Structured fields (``context``, ``decision``, ``options``) → render to ADR template.
     4. ``artefact_fields`` key (from mock-llm) → render from template fields.
 
-    Target: ``.cyberos-memory/adrs/ADR-{NNN}-{slug}.md`` relative to the repo root.
+    Target: ``target/cuo-workflow/artifacts/adrs/ADR-{NNN}-{slug}.md`` by default.
     """
     output = _extract_output(step_result)
     if not output:
@@ -744,7 +770,7 @@ def _apply_architecture_decision_record(step_result, hand_off: dict, run_span_id
     if repo_root is None:
         repo_root = Path.cwd()
 
-    adrs_dir = repo_root / ".cyberos-memory" / "adrs"
+    adrs_dir = _resolve_cuo_artifact_dir("adrs", hand_off, output_dir)
     adrs_dir.mkdir(parents=True, exist_ok=True)
 
     # Clean adr_id for filename (strip non-alphanumeric prefix chars for the number part).
@@ -906,8 +932,8 @@ def _apply_implementation_plan(step_result, hand_off: dict, run_span_id: str) ->
     2. ``code_changes`` list → write/modify files in the working tree (task #7)
     3. Structured fields → render to template format
 
-    The plan document goes to ``.cyberos-memory/impl-plans/<module>/impl-plan-<fr_id>.md``
-    (sibling to the FR spec, or fallback to output_dir).
+    The plan document goes to ``target/cuo-workflow/artifacts/impl-plans/``
+    by default.
     """
     output = _extract_output(step_result)
     if not output:
@@ -937,7 +963,7 @@ def _write_impl_plan_doc(output: dict, fr_id: str | None, hand_off: dict, run_sp
     plan_path = _resolve_artifact_path(
         output, fr_id, hand_off,
         filename_prefix="impl-plan",
-        default_dir=".cyberos-memory/impl-plans",
+        default_dir=str(_resolve_cuo_artifact_dir("impl-plans", hand_off, output_dir)),
         output_dir=output_dir,
         force_default_dir=True,
     )
@@ -1431,7 +1457,7 @@ def _apply_code_review(step_result, hand_off: dict, run_span_id: str) -> None:
     review_path = _resolve_artifact_path(
         output, fr_id, hand_off,
         filename_prefix="code-review",
-        default_dir=".cyberos-memory/code-reviews",
+        default_dir=str(_resolve_cuo_artifact_dir("code-reviews", hand_off, output_dir)),
         output_dir=output_dir,
         force_default_dir=True,
     )
@@ -1556,7 +1582,7 @@ def _apply_observability_injection(step_result, hand_off: dict, run_span_id: str
     obs_path = _resolve_artifact_path(
         output, fr_id, hand_off,
         filename_prefix="obs-injection",
-        default_dir=".cyberos-memory/obs-injections",
+        default_dir=str(_resolve_cuo_artifact_dir("obs-injections", hand_off, output_dir)),
         output_dir=output_dir,
         force_default_dir=True,
     )
