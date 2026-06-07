@@ -14,14 +14,20 @@ use once_cell::sync::Lazy;
 use prometheus::{
     register_counter_vec, register_histogram_vec, CounterVec, Histogram, HistogramVec,
 };
+use regex::Regex;
+use url::Url;
 
 use crate::policy::TenantPolicy;
+use crate::router::{ChatCompleteRequest, Message};
 
 pub use types::{PiiType, RedactError, RedactionResult, RestorationMap};
 
 const SIDECAR_URL: &str = "http://127.0.0.1:5050/redact";
+const SIDECAR_URL_ENV: &str = "CYBEROS_AI_GATEWAY_PRESIDIO_URL";
 const SIDECAR_TIMEOUT: Duration = Duration::from_secs(2);
+const SIDECAR_TIMEOUT_MS_ENV: &str = "CYBEROS_AI_GATEWAY_PRESIDIO_TIMEOUT_MS";
 const MAX_PROMPT_BYTES: usize = 64 * 1024;
+const LOG_REDACTION_TOKEN: &str = "[REDACTED_PII]";
 
 // ─── Metrics ──────────────────────────────────────────────────────────────────
 
@@ -75,6 +81,16 @@ mod metrics {
     });
 }
 
+static LOG_REDACTION_PATTERNS: Lazy<Vec<Regex>> = Lazy::new(|| {
+    vec![
+        Regex::new(r"(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b").unwrap(),
+        Regex::new(r"\b\d{3}-\d{2}-\d{4}\b").unwrap(),
+        Regex::new(r"\b(?:\d[ -]*?){13,19}\b").unwrap(),
+        Regex::new(r"\b(?:\d{1,3}\.){3}\d{1,3}\b").unwrap(),
+        Regex::new(r"\+?\d[\d .()/-]{7,}\d").unwrap(),
+    ]
+});
+
 // ─── Sidecar request/response types ──────────────────────────────────────────
 
 #[derive(serde::Serialize)]
@@ -118,6 +134,20 @@ pub async fn redact(prompt: &str, policy: &TenantPolicy) -> Result<RedactionResu
         });
     }
 
+    let sidecar_url = match sidecar_url() {
+        Ok(url) => url,
+        Err(err) => {
+            metrics::CALLS
+                .with_label_values(&["sidecar_unreachable"])
+                .inc();
+            metrics::LATENCY_MS
+                .with_label_values(&["sidecar_unreachable"])
+                .observe(started.elapsed().as_millis() as f64);
+            return Err(err);
+        }
+    };
+    let timeout = sidecar_timeout();
+
     let extra_entities: Vec<&str> = policy
         .ai_policy
         .pii_redaction_extra
@@ -133,9 +163,9 @@ pub async fn redact(prompt: &str, policy: &TenantPolicy) -> Result<RedactionResu
     };
 
     let resp_result = tokio::time::timeout(
-        SIDECAR_TIMEOUT,
+        timeout,
         reqwest::Client::new()
-            .post(SIDECAR_URL)
+            .post(sidecar_url)
             .json(&req_body)
             .send(),
     )
@@ -148,7 +178,7 @@ pub async fn redact(prompt: &str, policy: &TenantPolicy) -> Result<RedactionResu
                 .with_label_values(&["sidecar_timeout"])
                 .observe(started.elapsed().as_millis() as f64);
             return Err(RedactError::SidecarTimeout {
-                waited_ms: SIDECAR_TIMEOUT.as_millis() as u32,
+                waited_ms: timeout.as_millis() as u32,
             });
         }
         Ok(Err(e)) => {
@@ -218,6 +248,40 @@ pub async fn redact(prompt: &str, policy: &TenantPolicy) -> Result<RedactionResu
     })
 }
 
+/// Redact every chat message before it reaches a provider implementation.
+///
+/// The returned redaction results intentionally retain restoration maps only in
+/// memory; callers may use them to restore tool-call arguments and then drop
+/// them. Free-form text responses must not be restored.
+pub async fn redact_chat_request(
+    req: &ChatCompleteRequest,
+    policy: &TenantPolicy,
+) -> Result<(ChatCompleteRequest, Vec<RedactionResult>), RedactError> {
+    let mut redacted_messages = Vec::with_capacity(req.messages.len());
+    let mut redactions = Vec::with_capacity(req.messages.len());
+
+    for message in &req.messages {
+        let redaction = redact(&message.content, policy).await?;
+        redacted_messages.push(Message {
+            role: message.role.clone(),
+            content: redaction.redacted_text.clone(),
+        });
+        redactions.push(redaction);
+    }
+
+    Ok((
+        ChatCompleteRequest {
+            alias: req.alias.clone(),
+            messages: redacted_messages,
+            max_tokens: req.max_tokens,
+            temperature: req.temperature,
+            traceparent: req.traceparent.clone(),
+            tracestate: req.tracestate.clone(),
+        },
+        redactions,
+    ))
+}
+
 /// Restore typed placeholders in the LLM response.
 ///
 /// MUST be called only on tool-call argument fields, NEVER on free-form text
@@ -230,7 +294,56 @@ pub fn restore(text: &str, map: &RestorationMap) -> String {
     out
 }
 
+/// Best-effort log sanitizer for code paths that need to mention untrusted text.
+///
+/// This helper is deliberately conservative and sidecar-free so logging paths
+/// never block on Presidio and never emit common PII shapes verbatim.
+pub fn redact_for_log(text: &str) -> String {
+    let mut out = text.to_string();
+    for pattern in LOG_REDACTION_PATTERNS.iter() {
+        out = pattern.replace_all(&out, LOG_REDACTION_TOKEN).into_owned();
+    }
+    out
+}
+
 // ─── Internal helpers ─────────────────────────────────────────────────────────
+
+fn sidecar_url() -> Result<String, RedactError> {
+    let raw = std::env::var(SIDECAR_URL_ENV).unwrap_or_else(|_| SIDECAR_URL.to_string());
+    validate_sidecar_url(&raw)?;
+    Ok(raw)
+}
+
+fn validate_sidecar_url(raw: &str) -> Result<(), RedactError> {
+    let url = Url::parse(raw).map_err(|_| RedactError::SidecarUnreachable {
+        reason: "invalid sidecar config: URL must parse".to_string(),
+    })?;
+    if url.scheme() != "http" {
+        return Err(RedactError::SidecarUnreachable {
+            reason: "invalid sidecar config: sidecar URL must use http".to_string(),
+        });
+    }
+    let Some(host) = url.host_str() else {
+        return Err(RedactError::SidecarUnreachable {
+            reason: "invalid sidecar config: sidecar URL must include loopback host".to_string(),
+        });
+    };
+    if !matches!(host, "127.0.0.1" | "localhost" | "::1") {
+        return Err(RedactError::SidecarUnreachable {
+            reason: "invalid sidecar config: sidecar URL must use a loopback host".to_string(),
+        });
+    }
+    Ok(())
+}
+
+fn sidecar_timeout() -> Duration {
+    std::env::var(SIDECAR_TIMEOUT_MS_ENV)
+        .ok()
+        .and_then(|value| value.parse::<u64>().ok())
+        .filter(|millis| *millis > 0)
+        .map(Duration::from_millis)
+        .unwrap_or(SIDECAR_TIMEOUT)
+}
 
 /// Sanitize sidecar error messages to forbid prompt-fragment leaks (§1 #12).
 fn sanitize_sidecar_error_message(body: &str) -> String {
@@ -243,11 +356,12 @@ fn sanitize_sidecar_error_message(body: &str) -> String {
         "response_parse_error",
     ];
     let trimmed = body.trim();
-    if KNOWN_ERROR_CODES.iter().any(|code| trimmed.contains(code)) {
-        trimmed.chars().take(128).collect()
-    } else {
-        "sidecar_returned_unrecognized_message_redacted".to_string()
+    for code in KNOWN_ERROR_CODES {
+        if trimmed.contains(code) {
+            return (*code).to_string();
+        }
     }
+    "sidecar_returned_unrecognized_message_redacted".to_string()
 }
 
 /// Build the restoration map and counts from the sidecar response.
@@ -384,7 +498,7 @@ mod tests {
     fn sanitize_known_error_codes() {
         assert_eq!(
             sanitize_sidecar_error_message(r#"{"detail":"redaction_internal_error"}"#),
-            r#"{"detail":"redaction_internal_error"}"#
+            "redaction_internal_error"
         );
         assert_eq!(
             sanitize_sidecar_error_message("validation_error"),

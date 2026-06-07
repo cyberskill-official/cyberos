@@ -128,3 +128,7 @@ harness = false
 [[bench]]
 name = "streaming_first_token_bench"
 harness = false
+
+[[bench]]
+name = "redact_latency_bench"
+harness = false

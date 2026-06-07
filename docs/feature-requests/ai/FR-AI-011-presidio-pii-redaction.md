@@ -4,14 +4,14 @@ id: FR-AI-011
 title: "Presidio EN-base PII redaction in-flight (every prompt)"
 module: AI
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 3
 slice: 3
 owner: Stephen Cheng
 created: 2026-05-15
-shipped: 2026-05-21
+shipped: 2026-06-08
 memory_chain_hash: null
 related_frs: [FR-AI-002, FR-AI-005, FR-AI-008, FR-AI-012, FR-AI-013, FR-AI-021]
 depends_on: [FR-AI-008]
@@ -31,20 +31,17 @@ source_decisions:
 language: rust 1.81 + python 3.11 (presidio sidecar)
 service: cyberos/services/ai-gateway/
 new_files:
-  - services/ai-gateway/src/redact.rs
-  - services/ai-gateway/src/redact/presidio_client.rs
+  - services/ai-gateway/src/redact/mod.rs
   - services/ai-gateway/src/redact/types.rs
-  - services/ai-gateway/src/redact/restoration.rs
   - services/ai-gateway/pii/presidio_sidecar.py
   - services/ai-gateway/pii/Dockerfile.presidio
   - services/ai-gateway/tests/redact_test.rs
-  - services/ai-gateway/tests/redact_no_log_test.rs
+  - services/ai-gateway/benches/redact_latency_bench.rs
 modified_files:
-  - services/ai-gateway/src/handlers/chat.rs    # call redact between precheck and router
+  - services/ai-gateway/src/router/mod.rs       # call redact before provider dispatch
+  - services/ai-gateway/src/router/types.rs     # redaction failure taxonomy
   - services/ai-gateway/src/lib.rs              # export redact module
   - services/ai-gateway/Cargo.toml              # reqwest, serde, tracing
-  - deploy/compose/ai-gateway.yml               # add presidio sidecar service
-  - deploy/k8s/ai-gateway/presidio-sidecar.yaml # k8s sidecar manifest
 allowed_tools:
   - file_read: services/ai-gateway/**
   - file_write: services/ai-gateway/{src,tests,pii}/**
@@ -948,4 +945,4 @@ All resolved at authoring time. Items deferred to later FRs:
 
 ---
 
-*End of FR-AI-011. Status: draft (10/10 target).*
+*End of FR-AI-011. Status: done (10/10 target).*

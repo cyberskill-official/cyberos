@@ -158,8 +158,13 @@ pub async fn call_provider(
     deadline: Instant,
     policy: &TenantPolicy,
 ) -> Result<ProviderResponse, RouterError> {
+    let (redacted_req, redactions) = crate::redact::redact_chat_request(req, policy)
+        .await
+        .map_err(redaction_error)?;
     let chain = failover::build_provider_chain(resolved, policy, &req.alias);
-    call_provider_with_chain(req, deadline, chain).await
+    let mut response = call_provider_with_chain(&redacted_req, deadline, chain).await?;
+    restore_tool_call_arguments(&mut response, &redactions);
+    Ok(response)
 }
 
 /// Test/contract entry point for exercising the router loop with injected providers.
@@ -502,8 +507,11 @@ pub async fn call_provider_streaming(
     deadline: Instant,
     policy: &TenantPolicy,
 ) -> Result<ProviderStreamResponse, RouterError> {
+    let (redacted_req, _redactions) = crate::redact::redact_chat_request(req, policy)
+        .await
+        .map_err(redaction_error)?;
     let chain = failover::build_provider_chain(resolved, policy, &req.alias);
-    call_provider_streaming_with_chain(req, deadline, chain).await
+    call_provider_streaming_with_chain(&redacted_req, deadline, chain).await
 }
 
 /// Test/contract entry point for exercising streaming retry/failover with injected providers.
@@ -851,6 +859,7 @@ fn breaker_outcome_for_error(error: &RouterError) -> CallOutcome {
         }
         RouterError::SerializationError { .. }
         | RouterError::InvalidResponse { .. }
+        | RouterError::RedactionFailed { .. }
         | RouterError::AllProvidersFailed { .. }
         | RouterError::StreamingNotImplemented => CallOutcome::Failure5xx,
     }
@@ -858,4 +867,25 @@ fn breaker_outcome_for_error(error: &RouterError) -> CallOutcome {
 
 fn record_breaker_outcome(provider: ProviderKind, model: &str, outcome: CallOutcome) {
     circuit_breaker::record_outcome(&provider, model, outcome);
+}
+
+fn redaction_error(error: crate::redact::RedactError) -> RouterError {
+    RouterError::RedactionFailed {
+        reason: error.to_string(),
+    }
+}
+
+fn restore_tool_call_arguments(
+    response: &mut ProviderResponse,
+    redactions: &[crate::redact::RedactionResult],
+) {
+    for choice in &mut response.choices {
+        for tool_call in &mut choice.tool_calls {
+            let mut restored = tool_call.arguments.clone();
+            for redaction in redactions {
+                restored = crate::redact::restore(&restored, &redaction.map);
+            }
+            tool_call.arguments = restored;
+        }
+    }
 }

@@ -1,0 +1,12 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY pii/requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY pii/ ./
+
+EXPOSE 5050
+
+CMD ["uvicorn", "presidio_sidecar:app", "--host", "127.0.0.1", "--port", "5050"]

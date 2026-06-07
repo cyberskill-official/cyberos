@@ -234,6 +234,9 @@ pub enum RouterError {
     #[error("invalid response: {reason}")]
     InvalidResponse { reason: String },
 
+    #[error("redaction failed: {reason}")]
+    RedactionFailed { reason: String },
+
     #[error("streaming not implemented in slice 2")]
     StreamingNotImplemented,
 }
