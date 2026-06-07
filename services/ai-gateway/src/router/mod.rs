@@ -8,7 +8,9 @@
 pub mod anthropic;
 pub mod bedrock;
 pub mod failover;
+mod http;
 pub mod jitter;
+mod normalize;
 pub mod openai;
 pub mod types;
 
@@ -23,11 +25,11 @@ use std::time::{Duration, Instant};
 use async_trait::async_trait;
 use once_cell::sync::Lazy;
 use prometheus::{register_counter_vec, register_histogram_vec, CounterVec, HistogramVec};
-use rand::Rng;
 use tracing::{error, warn};
 
 use crate::alias::ResolvedModel;
 use crate::policy::{ProviderKind, TenantPolicy};
+pub use failover::ProviderEndpoint;
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -154,18 +156,32 @@ pub async fn call_provider(
     deadline: Instant,
     policy: &TenantPolicy,
 ) -> Result<ProviderResponse, RouterError> {
+    let chain = failover::build_provider_chain(resolved, policy, &req.alias);
+    call_provider_with_chain(req, deadline, chain).await
+}
+
+/// Test/contract entry point for exercising the router loop with injected providers.
+///
+/// Production callers should use [`call_provider`], which constructs this chain from
+/// the resolved alias and tenant policy.
+#[doc(hidden)]
+pub async fn call_provider_with_chain(
+    req: &ChatCompleteRequest,
+    deadline: Instant,
+    chain: Vec<ProviderEndpoint>,
+) -> Result<ProviderResponse, RouterError> {
     let started = Instant::now();
     let failover_deadline = started + FAILOVER_BUDGET;
     let effective_deadline = deadline.min(failover_deadline);
 
-    let chain = failover::build_provider_chain(resolved, policy, &req.alias);
     let mut attempts: Vec<AttemptRecord> = Vec::with_capacity(ATTEMPTS_CAP);
     let mut last_error: Option<RouterError> = None;
     let mut prev_provider_kind: Option<ProviderKind> = None;
     let mut rng = rand::thread_rng();
 
-    for (chain_idx, (provider, model)) in chain.iter().enumerate() {
-        let pk = provider.kind();
+    for endpoint in &chain {
+        let pk = endpoint.provider.kind();
+        let model = endpoint.model.as_str();
 
         // §1 #14: Emit failover counter when transitioning between providers.
         if let Some(prev) = prev_provider_kind {
@@ -206,7 +222,7 @@ pub async fn call_provider(
             // §1 #6: Propagate deadline via tokio::time::timeout.
             let outcome = tokio::time::timeout(
                 remaining,
-                provider.call_chat(req, model, effective_deadline),
+                endpoint.provider.call_chat(req, model, effective_deadline),
             )
             .await;
 
@@ -222,7 +238,7 @@ pub async fn call_provider(
                         pk,
                         model,
                         attempt_num,
-                        chain_idx,
+                        endpoint.fallback_position,
                         AttemptStatus::TimeoutBeforeFirstToken,
                         elapsed_ms,
                         None,
@@ -230,7 +246,11 @@ pub async fn call_provider(
                     RETRIES
                         .with_label_values(&[pk.as_metric_label(), "timeout"])
                         .inc();
-                    last_error = Some(RouterError::DeadlineExceeded);
+                    DEADLINE_EXCEEDED.inc();
+                    ATTEMPTS_PER_CALL
+                        .with_label_values(&["deadline_exceeded"])
+                        .observe(attempts.len() as f64);
+                    return Err(RouterError::DeadlineExceeded);
                 }
 
                 // §1 #7: 400 is terminal — no retry, no failover.
@@ -244,7 +264,7 @@ pub async fn call_provider(
                         ep,
                         model,
                         attempt_num,
-                        chain_idx,
+                        endpoint.fallback_position,
                         AttemptStatus::Terminal400,
                         elapsed_ms,
                         Some(400),
@@ -271,7 +291,7 @@ pub async fn call_provider(
                         ep,
                         model,
                         attempt_num,
-                        chain_idx,
+                        endpoint.fallback_position,
                         AttemptStatus::Terminal404,
                         elapsed_ms,
                         Some(404),
@@ -297,7 +317,7 @@ pub async fn call_provider(
                         ep,
                         model,
                         attempt_num,
-                        chain_idx,
+                        endpoint.fallback_position,
                         AttemptStatus::TerminalAuth,
                         elapsed_ms,
                         Some(status),
@@ -328,7 +348,7 @@ pub async fn call_provider(
                         ep,
                         model,
                         attempt_num,
-                        chain_idx,
+                        endpoint.fallback_position,
                         AttemptStatus::RetriedAfter429,
                         elapsed_ms,
                         Some(429),
@@ -358,6 +378,23 @@ pub async fn call_provider(
                     // No Retry-After — fall through to exponential backoff.
                 }
 
+                Ok(Err(RouterError::DeadlineExceeded)) => {
+                    attempts.push(make_record(
+                        pk,
+                        model,
+                        attempt_num,
+                        endpoint.fallback_position,
+                        AttemptStatus::DeadlineExceededMidCall,
+                        elapsed_ms,
+                        None,
+                    ));
+                    DEADLINE_EXCEEDED.inc();
+                    ATTEMPTS_PER_CALL
+                        .with_label_values(&["deadline_exceeded"])
+                        .observe(attempts.len() as f64);
+                    return Err(RouterError::DeadlineExceeded);
+                }
+
                 // Other errors (5xx, conn reset, etc.)
                 Ok(Err(e)) => {
                     let status_opt = match &e {
@@ -368,7 +405,7 @@ pub async fn call_provider(
                         pk,
                         model,
                         attempt_num,
-                        chain_idx,
+                        endpoint.fallback_position,
                         AttemptStatus::RetriedAfter5xx,
                         elapsed_ms,
                         status_opt,
@@ -386,7 +423,7 @@ pub async fn call_provider(
                         pk,
                         model,
                         attempt_num,
-                        chain_idx,
+                        endpoint.fallback_position,
                         AttemptStatus::Succeeded,
                         elapsed_ms,
                         Some(200),
@@ -459,7 +496,7 @@ fn make_record(
     provider: ProviderKind,
     model: &str,
     attempt_num: u8,
-    chain_idx: usize,
+    fallback_position: u8,
     status: AttemptStatus,
     elapsed_ms: u32,
     http_status: Option<u16>,
@@ -468,7 +505,7 @@ fn make_record(
         provider,
         model: model.to_string(),
         attempt_num,
-        fallback_position: chain_idx as u8,
+        fallback_position,
         status,
         elapsed_ms,
         http_status,

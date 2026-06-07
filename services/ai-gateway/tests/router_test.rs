@@ -3,19 +3,25 @@
 //! Tests use mock providers that return scripted responses to verify
 //! retry, failover, deadline, and error handling behavior.
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex, MutexGuard, OnceLock};
 use std::time::{Duration, Instant};
 
 use async_trait::async_trait;
+use axum::body::Body;
+use axum::http::{HeaderMap, Response, StatusCode};
+use axum::Router as AxumRouter;
 
 use cyberos_ai_gateway::alias::{LatencyClass, ResolvedModel};
 use cyberos_ai_gateway::policy::{
     AiPolicy, EmergencyOverride, Provider as PolicyProvider, ProviderKind, Residency, TenantPolicy,
 };
+use cyberos_ai_gateway::router::anthropic::AnthropicProvider;
+use cyberos_ai_gateway::router::bedrock::BedrockProvider;
+use cyberos_ai_gateway::router::openai::OpenAIProvider;
 use cyberos_ai_gateway::router::types::{Choice, FinishReason};
 use cyberos_ai_gateway::router::{
     self, AttemptStatus, ChatCompleteRequest, EmbedRequest, EmbedResponse, Message, Provider,
-    ProviderResponse, ProviderStreamResponse, ProviderUsage, RouterError,
+    ProviderEndpoint, ProviderResponse, ProviderUsage, RouterError,
 };
 
 // ─── Mock infrastructure ─────────────────────────────────────────────────────
@@ -29,10 +35,8 @@ enum ResponseScript {
     Sequence(Vec<u16>),
     /// Return 200 after a delay.
     DelayedOk(Duration),
-    /// Always return 200 with a specific response.
-    OkResponse(ProviderResponse),
-    /// Return 200 with a specific response ID.
-    OkWithId(String),
+    /// Always return a retryable 429 with Retry-After.
+    RetryAfter { status: u16, retry_after: u64 },
 }
 
 struct MockProvider {
@@ -48,10 +52,6 @@ impl MockProvider {
             script,
             call_count: Arc::new(std::sync::atomic::AtomicUsize::new(0)),
         }
-    }
-
-    fn call_count(&self) -> usize {
-        self.call_count.load(std::sync::atomic::Ordering::SeqCst)
     }
 }
 
@@ -86,8 +86,16 @@ impl Provider for MockProvider {
                     self.kind.as_metric_label()
                 )));
             }
-            ResponseScript::OkResponse(resp) => return Ok(resp.clone()),
-            ResponseScript::OkWithId(id) => return Ok(make_ok_response(id)),
+            ResponseScript::RetryAfter {
+                status,
+                retry_after,
+            } => {
+                return Err(make_error_with_retry_after(
+                    self.kind,
+                    *status,
+                    *retry_after,
+                ));
+            }
         };
 
         if status == 200 {
@@ -155,6 +163,49 @@ fn make_error_with_retry_after(kind: ProviderKind, status: u16, retry_after: u64
         message: format!("mock error {}", status),
         retry_after_secs: Some(retry_after),
     }
+}
+
+static PROVIDER_ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+fn provider_env_lock() -> MutexGuard<'static, ()> {
+    PROVIDER_ENV_LOCK
+        .get_or_init(|| Mutex::new(()))
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+}
+
+async fn spawn_json_server(
+    status: StatusCode,
+    body: &'static str,
+    retry_after: Option<&'static str>,
+) -> (String, Arc<Mutex<Vec<HeaderMap>>>) {
+    let captured_headers = Arc::new(Mutex::new(Vec::new()));
+    let route_headers = Arc::clone(&captured_headers);
+    let body = body.to_string();
+    let retry_after = retry_after.map(str::to_string);
+
+    let app = AxumRouter::new().fallback(move |headers: HeaderMap| {
+        let route_headers = Arc::clone(&route_headers);
+        let body = body.clone();
+        let retry_after = retry_after.clone();
+        async move {
+            route_headers.lock().expect("capture mutex").push(headers);
+            let mut builder = Response::builder()
+                .status(status)
+                .header("content-type", "application/json");
+            if let Some(retry_after) = retry_after {
+                builder = builder.header("retry-after", retry_after);
+            }
+            builder.body(Body::from(body)).expect("response")
+        }
+    });
+
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap();
+    tokio::spawn(async move {
+        axum::serve(listener, app).await.unwrap();
+    });
+    (format!("http://{}", addr), captured_headers)
 }
 
 // ─── Test helpers ─────────────────────────────────────────────────────────────
@@ -447,4 +498,326 @@ fn provider_usage_is_copy() {
     };
     let u2 = u;
     assert_eq!(u, u2);
+}
+
+/// AC #3: Retry transient 5xx failures before success.
+#[tokio::test]
+async fn call_provider_retries_transient_5xx_then_succeeds() {
+    let provider = MockProvider::new(
+        ProviderKind::Bedrock,
+        ResponseScript::Sequence(vec![503, 200]),
+    );
+    let calls = Arc::clone(&provider.call_count);
+    let response = router::call_provider_with_chain(
+        &default_req(),
+        Instant::now() + Duration::from_secs(5),
+        vec![ProviderEndpoint::new(
+            Box::new(provider),
+            "anthropic.claude-3-5-sonnet-20241022-v2:0",
+            0,
+        )],
+    )
+    .await
+    .unwrap();
+
+    assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 2);
+    assert_eq!(response.attempts.len(), 2);
+    assert_eq!(response.attempts[0].status, AttemptStatus::RetriedAfter5xx);
+    assert_eq!(response.attempts[1].status, AttemptStatus::Succeeded);
+}
+
+/// AC #5/#12: Exhausted primary fails over and preserves attempt metadata.
+#[tokio::test]
+async fn call_provider_fails_over_after_primary_exhausts_retries() {
+    let primary = MockProvider::new(ProviderKind::Bedrock, ResponseScript::Always(503));
+    let fallback = MockProvider::new(ProviderKind::Anthropic, ResponseScript::Always(200));
+    let primary_calls = Arc::clone(&primary.call_count);
+    let fallback_calls = Arc::clone(&fallback.call_count);
+
+    let response = router::call_provider_with_chain(
+        &default_req(),
+        Instant::now() + Duration::from_secs(6),
+        vec![
+            ProviderEndpoint::new(
+                Box::new(primary),
+                "anthropic.claude-3-5-sonnet-20241022-v2:0",
+                0,
+            ),
+            ProviderEndpoint::new(Box::new(fallback), "claude-3-5-sonnet-20241022", 1),
+        ],
+    )
+    .await
+    .unwrap();
+
+    assert_eq!(primary_calls.load(std::sync::atomic::Ordering::SeqCst), 3);
+    assert_eq!(fallback_calls.load(std::sync::atomic::Ordering::SeqCst), 1);
+    assert_eq!(response.attempts.len(), 4);
+    assert_eq!(response.attempts[2].status, AttemptStatus::FailedOver);
+    assert_eq!(response.attempts[3].fallback_position, 1);
+    assert_eq!(response.attempts[3].status, AttemptStatus::Succeeded);
+}
+
+/// AC #7/#8/#9: Terminal provider errors do not retry or fail over.
+#[tokio::test]
+async fn call_provider_terminal_400_does_not_retry_or_failover() {
+    let primary = MockProvider::new(ProviderKind::Bedrock, ResponseScript::Always(400));
+    let fallback = MockProvider::new(ProviderKind::Anthropic, ResponseScript::Always(200));
+    let primary_calls = Arc::clone(&primary.call_count);
+    let fallback_calls = Arc::clone(&fallback.call_count);
+
+    let err = router::call_provider_with_chain(
+        &default_req(),
+        Instant::now() + Duration::from_secs(5),
+        vec![
+            ProviderEndpoint::new(Box::new(primary), "bad-model", 0),
+            ProviderEndpoint::new(Box::new(fallback), "fallback-model", 1),
+        ],
+    )
+    .await
+    .unwrap_err();
+
+    assert!(matches!(
+        err,
+        RouterError::TerminalProviderError { status: 400, .. }
+    ));
+    assert_eq!(primary_calls.load(std::sync::atomic::Ordering::SeqCst), 1);
+    assert_eq!(fallback_calls.load(std::sync::atomic::Ordering::SeqCst), 0);
+}
+
+#[tokio::test]
+async fn call_provider_auth_error_does_not_retry_or_failover() {
+    let primary = MockProvider::new(ProviderKind::Openai, ResponseScript::Always(401));
+    let fallback = MockProvider::new(ProviderKind::Anthropic, ResponseScript::Always(200));
+    let primary_calls = Arc::clone(&primary.call_count);
+    let fallback_calls = Arc::clone(&fallback.call_count);
+
+    let err = router::call_provider_with_chain(
+        &default_req(),
+        Instant::now() + Duration::from_secs(5),
+        vec![
+            ProviderEndpoint::new(Box::new(primary), "gpt-4o", 0),
+            ProviderEndpoint::new(Box::new(fallback), "claude-3-5-sonnet-20241022", 1),
+        ],
+    )
+    .await
+    .unwrap_err();
+
+    assert!(matches!(
+        err,
+        RouterError::AuthError {
+            provider: ProviderKind::Openai,
+            status: 401
+        }
+    ));
+    assert_eq!(primary_calls.load(std::sync::atomic::Ordering::SeqCst), 1);
+    assert_eq!(fallback_calls.load(std::sync::atomic::Ordering::SeqCst), 0);
+}
+
+/// AC #10: Retry-After beyond budget fails over immediately.
+#[tokio::test]
+async fn retry_after_past_budget_fails_over_without_sleeping() {
+    let primary = MockProvider::new(
+        ProviderKind::Bedrock,
+        ResponseScript::RetryAfter {
+            status: 429,
+            retry_after: 60,
+        },
+    );
+    let fallback = MockProvider::new(ProviderKind::Anthropic, ResponseScript::Always(200));
+    let primary_calls = Arc::clone(&primary.call_count);
+    let fallback_calls = Arc::clone(&fallback.call_count);
+
+    let response = router::call_provider_with_chain(
+        &default_req(),
+        Instant::now() + Duration::from_secs(5),
+        vec![
+            ProviderEndpoint::new(
+                Box::new(primary),
+                "anthropic.claude-3-5-sonnet-20241022-v2:0",
+                0,
+            ),
+            ProviderEndpoint::new(Box::new(fallback), "claude-3-5-sonnet-20241022", 1),
+        ],
+    )
+    .await
+    .unwrap();
+
+    assert_eq!(primary_calls.load(std::sync::atomic::Ordering::SeqCst), 1);
+    assert_eq!(fallback_calls.load(std::sync::atomic::Ordering::SeqCst), 1);
+    assert_eq!(response.attempts[0].status, AttemptStatus::FailedOver);
+    assert_eq!(response.attempts[1].status, AttemptStatus::Succeeded);
+}
+
+/// AC #15: Caller deadline is enforced during provider calls.
+#[tokio::test]
+async fn deadline_elapsed_mid_call_returns_deadline_exceeded() {
+    let provider = MockProvider::new(
+        ProviderKind::Bedrock,
+        ResponseScript::DelayedOk(Duration::from_millis(100)),
+    );
+    let err = router::call_provider_with_chain(
+        &default_req(),
+        Instant::now() + Duration::from_millis(10),
+        vec![ProviderEndpoint::new(Box::new(provider), "slow-model", 0)],
+    )
+    .await
+    .unwrap_err();
+
+    assert!(matches!(err, RouterError::DeadlineExceeded));
+}
+
+/// AC #12: A resolved fallback position is not collapsed back to 0.
+#[test]
+fn build_provider_chain_preserves_resolved_fallback_position() {
+    let mut policy = policy_no_fallbacks();
+    let mut fallback_map = std::collections::HashMap::new();
+    fallback_map.insert(
+        "chat.long".to_string(),
+        "claude-3-5-sonnet-20241022".to_string(),
+    );
+    policy.ai_policy.fallback_chain = vec![PolicyProvider::Anthropic {
+        model_alias_map: fallback_map,
+    }];
+    let mut resolved = resolved_with_kind(ProviderKind::Anthropic, "claude-3-5-sonnet-20241022");
+    resolved.fallback_position = 1;
+
+    let chain = router::failover::build_provider_chain(&resolved, &policy, "chat.long");
+    assert_eq!(chain.len(), 1);
+    assert_eq!(chain[0].provider_kind(), ProviderKind::Anthropic);
+    assert_eq!(chain[0].fallback_position(), 1);
+}
+
+/// AC #11/#17: OpenAI response normalization and trace propagation.
+#[tokio::test]
+async fn openai_provider_normalizes_response_and_propagates_trace_headers() {
+    let _guard = provider_env_lock();
+    let body = r#"{
+        "id": "chatcmpl-test",
+        "usage": { "prompt_tokens": 11, "completion_tokens": 7 },
+        "choices": [
+          { "index": 0, "message": { "content": "hello" }, "finish_reason": "stop" }
+        ]
+    }"#;
+    let (base_url, captured) = spawn_json_server(StatusCode::OK, body, None).await;
+    std::env::set_var("CYBEROS_AI_GATEWAY_OPENAI_BASE_URL", base_url);
+    std::env::set_var("CYBEROS_AI_GATEWAY_OPENAI_API_KEY", "test-key");
+
+    let mut req = default_req();
+    req.traceparent = Some("00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01".into());
+    req.tracestate = Some("vendor=value".into());
+
+    let response = OpenAIProvider
+        .call_chat(&req, "gpt-4o", Instant::now() + Duration::from_secs(5))
+        .await
+        .unwrap();
+
+    assert_eq!(response.id, "chatcmpl-test");
+    assert_eq!(response.usage.prompt_tokens, 11);
+    assert_eq!(response.usage.completion_tokens, 7);
+    assert_eq!(response.choices[0].content, "hello");
+
+    let headers = captured.lock().unwrap();
+    let first = headers.first().expect("captured request");
+    assert_eq!(
+        first
+            .get("traceparent")
+            .and_then(|value| value.to_str().ok()),
+        req.traceparent.as_deref()
+    );
+    assert_eq!(
+        first
+            .get("tracestate")
+            .and_then(|value| value.to_str().ok()),
+        req.tracestate.as_deref()
+    );
+}
+
+/// AC #10: Provider impls parse Retry-After from headers, not response text.
+#[tokio::test]
+async fn openai_provider_maps_retry_after_header() {
+    let _guard = provider_env_lock();
+    let (base_url, _captured) = spawn_json_server(
+        StatusCode::TOO_MANY_REQUESTS,
+        r#"{"error":"slow down"}"#,
+        Some("2"),
+    )
+    .await;
+    std::env::set_var("CYBEROS_AI_GATEWAY_OPENAI_BASE_URL", base_url);
+    std::env::set_var("CYBEROS_AI_GATEWAY_OPENAI_API_KEY", "test-key");
+
+    let err = OpenAIProvider
+        .call_chat(
+            &default_req(),
+            "gpt-4o",
+            Instant::now() + Duration::from_secs(5),
+        )
+        .await
+        .unwrap_err();
+
+    match err {
+        RouterError::TerminalProviderError {
+            status: 429,
+            retry_after_secs: Some(2),
+            ..
+        } => {}
+        other => panic!("expected 429 with retry-after, got {other:?}"),
+    }
+}
+
+#[tokio::test]
+async fn anthropic_provider_normalizes_message_response() {
+    let _guard = provider_env_lock();
+    let body = r#"{
+        "id": "msg-test",
+        "content": [{ "type": "text", "text": "anthropic hello" }],
+        "usage": { "input_tokens": 13, "output_tokens": 8 },
+        "stop_reason": "end_turn"
+    }"#;
+    let (base_url, _captured) = spawn_json_server(StatusCode::OK, body, None).await;
+    std::env::set_var("CYBEROS_AI_GATEWAY_ANTHROPIC_BASE_URL", base_url);
+    std::env::set_var("CYBEROS_AI_GATEWAY_ANTHROPIC_API_KEY", "test-key");
+
+    let response = AnthropicProvider
+        .call_chat(
+            &default_req(),
+            "claude-3-5-sonnet-20241022",
+            Instant::now() + Duration::from_secs(5),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.id, "msg-test");
+    assert_eq!(response.usage.prompt_tokens, 13);
+    assert_eq!(response.usage.completion_tokens, 8);
+    assert_eq!(response.choices[0].content, "anthropic hello");
+    assert_eq!(response.finish_reason, FinishReason::Stop);
+}
+
+#[tokio::test]
+async fn bedrock_provider_normalizes_message_response() {
+    let _guard = provider_env_lock();
+    let body = r#"{
+        "id": "bedrock-test",
+        "content": [{ "type": "text", "text": "bedrock hello" }],
+        "usage": { "input_tokens": 17, "output_tokens": 9 },
+        "stop_reason": "end_turn"
+    }"#;
+    let (base_url, _captured) = spawn_json_server(StatusCode::OK, body, None).await;
+    std::env::set_var("CYBEROS_AI_GATEWAY_BEDROCK_BASE_URL", base_url);
+    std::env::set_var("CYBEROS_AI_GATEWAY_BEDROCK_API_KEY", "test-key");
+
+    let response = BedrockProvider
+        .call_chat(
+            &default_req(),
+            "anthropic.claude-3-5-sonnet-20241022-v2:0",
+            Instant::now() + Duration::from_secs(5),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.id, "bedrock-test");
+    assert_eq!(response.usage.prompt_tokens, 17);
+    assert_eq!(response.usage.completion_tokens, 9);
+    assert_eq!(response.choices[0].content, "bedrock hello");
+    assert_eq!(response.finish_reason, FinishReason::Stop);
 }

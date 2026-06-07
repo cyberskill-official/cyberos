@@ -4,17 +4,17 @@ id: FR-AI-008
 title: "LiteLLM-derived multi-provider router with retry + 30s failover SLA"
 module: AI
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 2
 slice: 2
 owner: Stephen Cheng
 created: 2026-05-15
-shipped: 2026-05-21
+shipped: 2026-06-08
 memory_chain_hash: null
 related_frs: [FR-AI-001, FR-AI-002, FR-AI-006, FR-AI-007, FR-AI-009, FR-AI-010, FR-AI-015, FR-AI-021]
-depends_on: [FR-AI-006, FR-AI-007, FR-AI-002]
+depends_on: [FR-AI-006, FR-AI-007]
 blocks: [FR-AI-009, FR-AI-010, FR-AI-021, FR-AI-011, FR-AI-017, FR-AI-022, FR-CUO-101]
 
 # ───── Source contracts ─────
@@ -1147,22 +1147,41 @@ All resolved at authoring time. Items deferred to later FRs:
 | `Retry-After` header unparseable (e.g., `"abc"`) | provider-impl `parse::<u64>` returns Err | `retry_after_secs = None`; router uses exponential backoff | None (fall-through behaviour) |
 | Provider impl forgets to populate `retry_after_secs` on 429 | Always `None` even when header present | Router uses exponential backoff (correct but suboptimal — sleeps shorter than provider asked) | Lint: per-provider impl tests MUST include a 429-with-Retry-After fixture and assert `retry_after_secs == Some(N)` |
 | Jitter helper given `factor = 0.0` | guard at top of `jitter_ms` | Returns `base_ms` unchanged (no panic from modulo by zero) | None (defensive code) |
-| `make_provider` called with `ProviderKind::Vertex` in slice 2 | `unimplemented!()` panic | Process panics, supervisor restarts | Slice 4 implements Vertex |
+| `make_provider` called with `ProviderKind::Vertex` or `Bge` in slice 2 | unsupported provider arm | Endpoint omitted from the slice-2 chain; if no supported endpoints remain, `AllProvidersFailed` | Slice 4 implements Vertex; BGE remains embedding-only |
 
 ---
 
 ## §11 — Notes
 
 - This is the largest FR in slice 2 (10h). Worth doing carefully — every other consumer module's reliability rides on this code path. A 5-line bug in the failover loop becomes a sev-1 incident affecting every tenant.
-- The 3-impl provider trait (Bedrock, Anthropic, OpenAI) is sufficient for slice 2. Vertex AI (Gemini) lands in slice 4 (FR-AI-017 area). The `ProviderKind::Vertex` arm in `make_provider` panics with `unimplemented!()` deliberately — fail loud if a slice-2 deploy gets a Vertex-bearing policy.
+- The 3-impl provider trait (Bedrock, Anthropic, OpenAI) is sufficient for slice 2. Vertex AI (Gemini) lands in slice 4 (FR-AI-017 area). Unsupported slice-2 provider kinds are omitted from the constructed chain rather than panicking, so a malformed policy produces a typed router error.
 - The deadline propagation pattern is non-obvious in Rust — readers may want to look at `tokio::time::timeout` docs before reviewing the skeleton. Key insight: `tokio::time::timeout(d, fut)` cancels `fut` when `d` elapses, but the cancellation point is at the next `.await`. Provider impls must yield frequently enough that cancellation is responsive (in practice, the underlying HTTP client's read loop yields per chunk).
 - Streaming (FR-AI-010) layers ON TOP of this FR. The non-streaming code path stays as the "synchronous" workhorse; streaming uses the same retry/failover policy but consumes the response as an SSE stream. The trait's `call_chat_streaming` default impl returns `StreamingNotImplemented` so slice-2 consumers that try to stream get a clean error rather than silent fall-through.
 - The `RETRY_DELAYS_MS` constant is `&[200, 800]` (length 2, matching `MAX_RETRIES_PER_PROVIDER - 1 = 2` — attempts 2 and 3 each have a backoff; attempt 1 is immediate). An off-by-one bug here would either (a) panic on index out of bounds on attempt 3, or (b) skip the attempt-2 backoff. The unit test `retries_on_503_then_succeeds` would catch either.
 - The `jitter_ms` helper is in its own module specifically so the proptest can target it. The same helper is reused by FR-AI-009's circuit breaker reset timing — keep it pure and deterministic given its `Rng`.
 - The `ATTEMPTS_CAP = 16` constant catches infinite-loop bugs in `build_provider_chain`. Without it, a misconfigured policy with a self-referential fallback chain (theoretically prevented by FR-AI-005 validation, but defence in depth) would produce unbounded `attempts` vecs. The cap is loud rather than silent — the resulting `InvalidResponse` returns to the caller and triggers a sev-2 alarm.
-- Mock-provider construction for tests is centralized in `tests/mocks/mod.rs`. The `ResponseScript` builder lets each test declare a sequence of `(status, optional headers, optional body, optional delay)` tuples that the mock will play back. This keeps individual test bodies short and makes the "what the provider did" intent obvious in the test code.
-- The `Retry-After` parsing in the skeleton uses a placeholder `parse_retry_after(message)` that scrapes the message body for the literal substring — the production impl will read from `reqwest::Response::headers()` directly. The placeholder is in the skeleton so the retry-honour logic shape is reviewable; the real wiring is provider-impl-local.
+- Mock-provider construction for tests lives in `router_test.rs`. The `ResponseScript` builder lets each test declare status, delay, and `Retry-After` behavior that the mock will play back. This keeps individual test bodies short and makes the provider behavior explicit.
+- `Retry-After` parsing is provider-impl-local and reads `reqwest::Response::headers()` directly. The OpenAI contract test asserts `retry_after_secs == Some(N)` for a 429 fixture.
 
 ---
 
-*End of FR-AI-008. Status: draft (10/10 target).*
+## §12 — Ship audit (2026-06-08)
+
+Status: `done`.
+
+Implementation and verification shipped:
+
+- Replaced Bedrock, Anthropic, and OpenAI chat stubs with reqwest-backed HTTP implementations that map terminal/auth/retryable status, parse `Retry-After`, propagate `traceparent`/`tracestate`, enforce provider deadlines, and normalize successful responses.
+- Added a shared router HTTP helper and normalization module.
+- Added `ProviderEndpoint` and `call_provider_with_chain` so the retry/failover loop is directly contract-testable without external provider credentials.
+- Fixed failover-chain construction so a resolved fallback provider is not attempted twice and its `fallback_position` is preserved in `AttemptRecord`.
+- Changed mid-call deadline expiry to return `RouterError::DeadlineExceeded` immediately.
+- Removed stale `FR-AI-002` from active `depends_on`; reconcile consumes router outputs later, but is not required to build or verify this FR.
+
+Verification:
+
+- `cargo test -p cyberos-ai-gateway --test router_test -- --test-threads=1` — 24 passed.
+- `cargo test -p cyberos-ai-gateway --test router_proptest` — 3 passed.
+- `cargo test -p cyberos-ai-gateway router --all-targets` — passed.
+
+*End of FR-AI-008. Status: done. Shipped 2026-06-08.*
