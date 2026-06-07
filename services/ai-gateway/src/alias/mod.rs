@@ -16,7 +16,7 @@ use once_cell::sync::Lazy;
 use prometheus::{register_counter_vec, register_histogram, CounterVec, Histogram};
 
 use crate::cost_table;
-use crate::policy::{ProviderKind, Residency, TenantPolicy};
+use crate::policy::{Residency, TenantPolicy};
 use crate::residency;
 use crate::zdr;
 

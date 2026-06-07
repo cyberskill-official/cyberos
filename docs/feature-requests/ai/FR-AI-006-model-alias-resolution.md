@@ -4,17 +4,17 @@ id: FR-AI-006
 title: "Model-alias resolution (chat.smart → bedrock:claude-3.5-sonnet) with per-tenant override"
 module: AI
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 2
 slice: 2
 owner: Stephen Cheng
 created: 2026-05-15
-shipped: null
+shipped: 2026-06-08
 memory_chain_hash: null
 related_frs: [FR-AI-005, FR-AI-007, FR-AI-008, FR-AI-015, FR-AI-016, FR-AI-022]
-depends_on: [FR-AI-005, FR-AI-007, FR-AUTH-004]
+depends_on: [FR-AI-005, FR-AI-007]
 blocks: [FR-AI-008, FR-AI-009, FR-AI-015, FR-AI-016]
 
 # ───── Source contracts (where the spec authority lives) ─────
@@ -712,7 +712,7 @@ Err(AliasError::UnknownAlias {
 
 ```rust
 Err(AliasError::ZdrViolation {
-    resolved_provider: ProviderKind::OpenAI,
+    resolved_provider: ProviderKind::Openai,
     resolved_model: "gpt-4o".to_string(),
 })
 ```
@@ -767,10 +767,10 @@ Err(AliasError::ResolvedModelMissingCostEntry {
 ```
 # HELP ai_alias_resolutions_total Successful alias resolutions
 # TYPE ai_alias_resolutions_total counter
-ai_alias_resolutions_total{alias="chat.smart",resolved_provider="Bedrock",fallback_position="0"} 78
-ai_alias_resolutions_total{alias="chat.smart",resolved_provider="Anthropic",fallback_position="1"} 7
-ai_alias_resolutions_total{alias="chat.fast",resolved_provider="Bedrock",fallback_position="0"} 12
-ai_alias_resolutions_total{alias="chat.long",resolved_provider="Anthropic",fallback_position="0"} 3
+ai_alias_resolutions_total{alias="chat.smart",resolved_provider="bedrock",fallback_position="0"} 78
+ai_alias_resolutions_total{alias="chat.smart",resolved_provider="anthropic",fallback_position="1"} 7
+ai_alias_resolutions_total{alias="chat.fast",resolved_provider="bedrock",fallback_position="0"} 12
+ai_alias_resolutions_total{alias="chat.long",resolved_provider="anthropic",fallback_position="0"} 3
 
 # HELP ai_alias_resolution_latency_ns Latency of alias::resolve calls
 # TYPE ai_alias_resolution_latency_ns histogram
@@ -822,8 +822,24 @@ For reference, the questions considered + resolved during authoring:
 - The "override reports as `fallback_position: 0`" choice is debatable. The alternative — reporting some marker like `255` — would make "this call used an override" visible in OBS. The current choice prioritises simplicity (no special case). If operators report that override visibility is needed, we add a `was_override: bool` field in slice 4 (FR-AI-006a).
 - Latency budget on this function is so tight that the OBS histogram has nano-second buckets (100ns / 500ns / 1µs / 5µs / 10µs). Any call landing in the >10µs bucket triggers an investigation — likely a CPU pegged elsewhere.
 - The latency-class → timeout-budget mapping (`LatencyClass::timeout_budget_seconds`) is a convenience helper for FR-AI-008. The policy field `call_timeout_seconds` is still the canonical config; this helper just translates it.
-- FR-AI-006 + FR-AI-007 + FR-AI-015 + FR-AI-016 together form the "policy enforcement layer" that sits between consumers and the provider layer. Treat the four as a unit — none ships alone.
+- FR-AI-006 + FR-AI-007 + FR-AI-015 + FR-AI-016 together form the "policy enforcement layer" that sits between consumers and the provider layer. FR-AI-006 ships the resolution/enforcement call point; FR-AI-015 and FR-AI-016 remain the source-table FRs for their specialised policy surfaces.
 
 ---
 
-*End of FR-AI-006. Status: draft (10/10 target, expanded from compressed first-pass per workflow correction 2026-05-15). Run `feature-request-audit` next: `cargo run -p cyberos-skill-cli -- run feature-request-audit --input '{"fr_path": "docs/feature-requests/ai/FR-AI-006-model-alias-resolution.md"}'`*
+## §12 — Ship audit (2026-06-08)
+
+Status: `done`.
+
+Implementation and verification shipped:
+
+- `alias::resolve` verified for the six-alias closed set, primary lookup, fallback order, override precedence, terminal override failures, cost-table validation, ZDR rejection, residency rejection, supported-alias enumeration, malformed override YAML rejection at the policy-schema boundary, metrics emission, determinism, and concurrent safety.
+- Added `alias_resolution_bench` with Criterion coverage for primary and fallback resolution.
+- Removed the stale `FR-AUTH-004` dependency from this FR's active `depends_on`; JWT issuance is not needed for alias resolution. ZDR/residency source modules remain related implementation surfaces, but FR-AI-015 and FR-AI-016 stay separate FRs.
+
+Verification:
+
+- `cargo test -p cyberos-ai-gateway --test alias_resolution_test -- --test-threads=1` — 19 passed.
+- `cargo test -p cyberos-ai-gateway alias --all-targets` — passed.
+- `cargo bench -p cyberos-ai-gateway --bench alias_resolution_bench -- --warm-up-time 0.1 --measurement-time 0.2 --sample-size 10` — primary ~514 ns; fallback ~345 ns.
+
+*End of FR-AI-006. Status: done. Shipped 2026-06-08.*

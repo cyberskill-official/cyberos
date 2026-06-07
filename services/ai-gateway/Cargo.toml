@@ -120,3 +120,7 @@ harness = false
 [[bench]]
 name = "cost_table_lookup_bench"
 harness = false
+
+[[bench]]
+name = "alias_resolution_bench"
+harness = false
