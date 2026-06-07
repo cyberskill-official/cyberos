@@ -150,10 +150,18 @@ impl Provider {
     /// Look up a model alias in this provider's model_alias_map.
     pub fn model_for_alias(&self, alias: &str) -> Option<&str> {
         let map = match self {
-            Self::Bedrock { model_alias_map, .. } => model_alias_map,
-            Self::Anthropic { model_alias_map, .. } => model_alias_map,
-            Self::Openai { model_alias_map, .. } => model_alias_map,
-            Self::Vertex { model_alias_map, .. } => model_alias_map,
+            Self::Bedrock {
+                model_alias_map, ..
+            } => model_alias_map,
+            Self::Anthropic {
+                model_alias_map, ..
+            } => model_alias_map,
+            Self::Openai {
+                model_alias_map, ..
+            } => model_alias_map,
+            Self::Vertex {
+                model_alias_map, ..
+            } => model_alias_map,
         };
         map.get(alias).map(|s| s.as_str())
     }

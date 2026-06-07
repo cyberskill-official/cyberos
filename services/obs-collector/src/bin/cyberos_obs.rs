@@ -10,11 +10,12 @@
 //! pipeline is wired in next session. The Cargo bin's slice-1 job is the
 //! pre-flight validation that catches misconfiguration at deploy time.
 
+use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
-use cyberos_obs_collector::{auth, config, SERVICE_BANNER};
+use cyberos_obs_collector::{auth, config, ingress, SERVICE_BANNER};
 
 #[derive(Debug, Parser)]
 #[command(
@@ -41,9 +42,31 @@ enum Cmd {
     },
     /// Print the banner and exit (smoke test for the binary itself).
     Banner,
+    /// Run the CyberOS service-token OTLP ingress gate.
+    Ingress {
+        /// Public HTTP listen address for OTLP/HTTP and `/ready`.
+        #[arg(long, default_value = "0.0.0.0:4318")]
+        http_listen: SocketAddr,
+        /// Public gRPC listen address for OTLP/gRPC.
+        #[arg(long, default_value = "0.0.0.0:4317")]
+        grpc_listen: SocketAddr,
+        /// CyberOS token map: `<service-name> <bearer-token>`.
+        #[arg(long)]
+        tokens: PathBuf,
+        /// Internal single-token file used between this gate and otelcol.
+        #[arg(long)]
+        collector_token: PathBuf,
+        /// Upstream collector OTLP/HTTP base URL.
+        #[arg(long, default_value = "http://collector:4318")]
+        upstream_http: String,
+        /// Upstream collector OTLP/gRPC endpoint.
+        #[arg(long, default_value = "http://collector:4317")]
+        upstream_grpc: String,
+    },
 }
 
-fn main() -> ExitCode {
+#[tokio::main]
+async fn main() -> ExitCode {
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()
@@ -85,6 +108,30 @@ fn main() -> ExitCode {
         Cmd::Banner => {
             println!("{SERVICE_BANNER}");
             ExitCode::SUCCESS
+        }
+        Cmd::Ingress {
+            http_listen,
+            grpc_listen,
+            tokens,
+            collector_token,
+            upstream_http,
+            upstream_grpc,
+        } => {
+            let cfg = ingress::IngressConfig {
+                http_listen,
+                grpc_listen,
+                token_file: tokens,
+                collector_token_file: collector_token,
+                upstream_http,
+                upstream_grpc,
+            };
+            match ingress::serve(cfg).await {
+                Ok(()) => ExitCode::SUCCESS,
+                Err(e) => {
+                    eprintln!("ERROR: {e:#}");
+                    ExitCode::FAILURE
+                }
+            }
         }
     }
 }

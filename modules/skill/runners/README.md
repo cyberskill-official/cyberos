@@ -1,11 +1,14 @@
-# `skill/runners/` — LLM-driven skill execution framework
+# `modules/skill/runners/` — LLM-driven skill execution framework
 
 > **Status: legacy.** These Python runners ship today. They are preserved for parity testing while the Rust + Wasmtime host is built out (see `../docs/SPEC.md` migration plan). They will be retired in Phase 7 once WASM execution proves equivalent behaviour on the full skill catalogue.
 
 ---
 
 
-Concrete Python runners that execute the 11 chain skills under [`../skills/cuo/`](../skills/cuo/). Each runner wraps an LLM call (Anthropic SDK), applies that skill's `INVARIANTS.md` validations, and re-prompts on validation failure (multi-iteration self-audit, Tier α.3).
+Concrete Python runners preserved for the legacy chain path while the Rust +
+Wasmtime host is built out. Each runner wraps an LLM call (Anthropic SDK),
+applies that skill's invariant validations, and re-prompts on validation
+failure (multi-iteration self-audit, Tier alpha.3).
 
 ## Files
 
@@ -18,7 +21,7 @@ Concrete Python runners that execute the 11 chain skills under [`../skills/cuo/`
 
 1. Copy `fr_with_tasks.py` to `<skill_id>.py` (e.g. `fr_audit.py`).
 2. Override:
-   - `skill_id` — matches the SKILL.md location under `docs/skills/`.
+   - `skill_id` — matches the skill route used by the chain dispatcher.
    - `output_filename_pattern` — what the emitted artefact is called.
    - `interview_questions` — standalone-mode prompts (used only when run outside a chain).
    - `build_prompt(inputs, prior_artefacts)` — compose the prompt from SKILL.md + contract templates + inputs.
@@ -29,7 +32,12 @@ Concrete Python runners that execute the 11 chain skills under [`../skills/cuo/`
 
 Directly:
 ```shell
-python3 runtime/skill_runners/fr_with_tasks.py <output_dir> --pitch "..." [--spec-file path] [--max-iterations 3]
+python3 modules/skill/runners/fr_with_tasks.py <output_dir> --pitch "..." [--spec-file path] [--max-iterations 3]
+```
+
+Repo-local corpus smoke:
+```shell
+python3 modules/skill/tests/run_corpus.py fr-with-tasks --no-llm
 ```
 
 Through the chain:

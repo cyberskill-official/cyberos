@@ -1,0 +1,194 @@
+name: cyberos
+
+x-restart-policy: &restart_policy
+  restart: unless-stopped
+
+services:
+  postgres:
+    <<: *restart_policy
+    build:
+      context: ../..
+      dockerfile: deploy/vps/postgres.Dockerfile
+      args:
+        AGE_IMAGE: ${CYBEROS_AGE_IMAGE:-apache/age:release_PG16_1.6.0}
+        PGVECTOR_VERSION: ${CYBEROS_PGVECTOR_VERSION:-v0.8.0}
+    image: cyberos/postgres-age-pgvector:${CYBEROS_POSTGRES_IMAGE_TAG:-pg16}
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-cyberos}
+      POSTGRES_USER: ${POSTGRES_USER:-cyberos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      AUTH_DB: ${AUTH_DB:-cyberos_auth}
+      MEMORY_DB: ${MEMORY_DB:-cyberos_memory}
+      PROJ_DB: ${PROJ_DB:-cyberos_proj}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - cyberos-postgres-data:/var/lib/postgresql/data
+      - ./postgres-init.sh:/docker-entrypoint-initdb.d/00-cyberos-init.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    <<: *restart_policy
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - cyberos-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  migrator:
+    image: postgres:16-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER:-cyberos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      AUTH_DB: ${AUTH_DB:-cyberos_auth}
+      MEMORY_DB: ${MEMORY_DB:-cyberos_memory}
+      PROJ_DB: ${PROJ_DB:-cyberos_proj}
+    volumes:
+      - ../../services:/workspace/services:ro
+      - ./scripts/migrate.sh:/usr/local/bin/cyberos-migrate:ro
+    entrypoint: ["/bin/sh", "/usr/local/bin/cyberos-migrate"]
+
+  cyberos-auth:
+    <<: *restart_policy
+    build:
+      context: ../..
+      dockerfile: deploy/vps/Dockerfile.rust-service
+      args:
+        PACKAGE: cyberos-auth
+        BINARY: cyberos-auth
+        RUST_VERSION: ${CYBEROS_RUST_VERSION:-1.88.0}
+    image: cyberos/auth:${CYBEROS_IMAGE_TAG:-local}
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: ${AUTH_DATABASE_URL:?AUTH_DATABASE_URL is required}
+      AUTH_LISTEN_ADDR: 0.0.0.0:7700
+      AUTH_JWT_ISSUER: ${AUTH_JWT_ISSUER:-https://auth.cyberos.local}
+      AUTH_CURSOR_SIGNING_SECRET: ${AUTH_CURSOR_SIGNING_SECRET:?AUTH_CURSOR_SIGNING_SECRET is required}
+      RUST_LOG: ${AUTH_RUST_LOG:-cyberos_auth=info,info}
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:7700/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+
+  cyberos-memory:
+    <<: *restart_policy
+    build:
+      context: ../..
+      dockerfile: deploy/vps/Dockerfile.rust-service
+      args:
+        PACKAGE: cyberos-memory
+        BINARY: cyberos-memory
+        RUST_VERSION: ${CYBEROS_RUST_VERSION:-1.88.0}
+    image: cyberos/memory:${CYBEROS_IMAGE_TAG:-local}
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: ${MEMORY_DATABASE_URL:?MEMORY_DATABASE_URL is required}
+      MEMORY_LISTEN_ADDR: 0.0.0.0:7800
+      MEMORY_INGEST_BATCH_SIZE: ${MEMORY_INGEST_BATCH_SIZE:-256}
+      MEMORY_TAIL_POLL_MS: ${MEMORY_TAIL_POLL_MS:-200}
+      RUST_LOG: ${MEMORY_RUST_LOG:-cyberos_memory=info,info}
+    volumes:
+      - ${CYBEROS_MEMORY_ROOT:-./data/memory-root}:/var/lib/cyberos/memory-root
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:7800/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+
+  caddy:
+    <<: *restart_policy
+    image: caddy:2-alpine
+    depends_on:
+      cyberos-auth:
+        condition: service_healthy
+      cyberos-memory:
+        condition: service_healthy
+    environment:
+      CYBEROS_CADDY_SITE: ${CYBEROS_CADDY_SITE:-:80}
+    ports:
+      - "${CYBEROS_HTTP_BIND:-127.0.0.1:8080}:80"
+      - "${CYBEROS_HTTPS_BIND:-127.0.0.1:8443}:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - cyberos-caddy-data:/data
+      - cyberos-caddy-config:/config
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+
+  chat-postgres:
+    <<: *restart_policy
+    image: postgres:16-alpine
+    profiles: ["chat"]
+    environment:
+      POSTGRES_DB: ${CHAT_POSTGRES_DB:-mattermost}
+      POSTGRES_USER: ${CHAT_POSTGRES_USER:-mmuser}
+      POSTGRES_PASSWORD: ${CHAT_POSTGRES_PASSWORD:?CHAT_POSTGRES_PASSWORD is required when chat profile is enabled}
+    volumes:
+      - cyberos-chat-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  chat-redis:
+    <<: *restart_policy
+    image: redis:7-alpine
+    profiles: ["chat"]
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - cyberos-chat-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  cyberos-chat:
+    <<: *restart_policy
+    profiles: ["chat"]
+    build:
+      context: ../../services/chat
+      args:
+        PINNED_COMMIT: ${CHAT_PINNED_COMMIT:?CHAT_PINNED_COMMIT is required when chat profile is enabled}
+        CYBEROS_PATCH_VERSION: ${CHAT_PATCH_VERSION:-0.1.0}
+    image: cyberos/chat:${CHAT_IMAGE_TAG:-local}
+    depends_on:
+      chat-postgres:
+        condition: service_healthy
+      chat-redis:
+        condition: service_healthy
+    environment:
+      MM_SQLSETTINGS_DRIVERNAME: postgres
+      MM_SQLSETTINGS_DATASOURCE: "postgres://${CHAT_POSTGRES_USER:-mmuser}:${CHAT_POSTGRES_PASSWORD}@chat-postgres:5432/${CHAT_POSTGRES_DB:-mattermost}?sslmode=disable&connect_timeout=10"
+      MM_SERVICESETTINGS_SITEURL: ${CHAT_SITE_URL:-http://localhost:8080/chat}
+      MM_CACHESETTINGS_CACHETYPE: redis
+      MM_CACHESETTINGS_REDISADDRESS: chat-redis:6379
+
+volumes:
+  cyberos-postgres-data:
+  cyberos-redis-data:
+  cyberos-caddy-data:
+  cyberos-caddy-config:
+  cyberos-chat-postgres-data:
+  cyberos-chat-redis-data:

@@ -4,13 +4,25 @@ mod support;
 use support::redis_isolation_helper::RedisTestNamespace;
 use support::test_provider_response;
 
+use std::sync::{Mutex, MutexGuard, OnceLock};
+
 use cyberos_ai_gateway::cache::{self, CacheKey, CacheLookupOutcome};
+
+static REGRESSION_CACHE_TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+fn regression_cache_test_lock() -> MutexGuard<'static, ()> {
+    REGRESSION_CACHE_TEST_LOCK
+        .get_or_init(|| Mutex::new(()))
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+}
 
 /// REGRESSION-001 (incident 2026-04-12, pre-fix):
 /// `tenant_a` and `tenanta` previously collided due to insufficient input separation
 /// when the key derivation used naive concat without unit-separator.
 #[tokio::test]
 async fn regression_001_underscore_collision() {
+    let _guard = regression_cache_test_lock();
     cache::redis_backend::init(
         &std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string()),
     );
@@ -28,6 +40,7 @@ async fn regression_001_underscore_collision() {
 /// produced different hashes; the cache treats them as distinct (FR-AI-005 enforces NFC).
 #[tokio::test]
 async fn regression_002_unicode_normalization() {
+    let _guard = regression_cache_test_lock();
     cache::redis_backend::init(
         &std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string()),
     );
@@ -45,6 +58,7 @@ async fn regression_002_unicode_normalization() {
 /// REGRESSION-003: trailing whitespace must NOT collapse two distinct tenant ids.
 #[tokio::test]
 async fn regression_003_trailing_whitespace() {
+    let _guard = regression_cache_test_lock();
     cache::redis_backend::init(
         &std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string()),
     );
@@ -59,6 +73,7 @@ async fn regression_003_trailing_whitespace() {
 /// REGRESSION-004: tenant ids are case-sensitive; "Tenant_A" ≠ "tenant_a".
 #[tokio::test]
 async fn regression_004_case_folding() {
+    let _guard = regression_cache_test_lock();
     cache::redis_backend::init(
         &std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string()),
     );
@@ -73,6 +88,7 @@ async fn regression_004_case_folding() {
 /// REGRESSION-005: empty prompt vs. single-space prompt must NOT collide.
 #[tokio::test]
 async fn regression_005_empty_prompt() {
+    let _guard = regression_cache_test_lock();
     cache::redis_backend::init(
         &std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string()),
     );
@@ -87,6 +103,7 @@ async fn regression_005_empty_prompt() {
 /// Pre-fix, persona changes didn't invalidate cache.
 #[tokio::test]
 async fn regression_006_persona_omitted() {
+    let _guard = regression_cache_test_lock();
     cache::redis_backend::init(
         &std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string()),
     );
@@ -100,6 +117,7 @@ async fn regression_006_persona_omitted() {
 /// REGRESSION-007: model substring "chat.smart" vs. "chat.smartx" must NOT collide.
 #[tokio::test]
 async fn regression_007_model_substring() {
+    let _guard = regression_cache_test_lock();
     cache::redis_backend::init(
         &std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string()),
     );

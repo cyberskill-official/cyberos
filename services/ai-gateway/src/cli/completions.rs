@@ -1,7 +1,10 @@
 //! FR-AI-021 §1 #15 — Shell completion generation.
 
 use clap::CommandFactory;
-use clap_complete::{generate, shells::{Bash, Fish, Zsh}};
+use clap_complete::{
+    generate,
+    shells::{Bash, Fish, Zsh},
+};
 use std::io;
 
 use super::{Cli, Shell};

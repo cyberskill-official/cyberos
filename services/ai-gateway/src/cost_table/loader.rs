@@ -7,7 +7,7 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 use arc_swap::ArcSwap;
@@ -17,7 +17,9 @@ use once_cell::sync::OnceCell;
 use rust_decimal::Decimal;
 use tokio::sync::mpsc;
 
-use super::schema::{CostRate, CostTableHandle, FileFailure, LoaderInitError, RawCostRate, RawCostTable};
+use super::schema::{
+    CostRate, CostTableHandle, FileFailure, LoaderInitError, RawCostRate, RawCostTable,
+};
 use crate::policy::ProviderKind;
 
 /// In-memory cost table: (ProviderKind, model_name) → CostRate.
@@ -26,6 +28,10 @@ static TABLE: OnceCell<ArcSwap<HashMap<(ProviderKind, String), CostRate>>> = Onc
 /// Timestamp of last successful load.
 static LOADED_AT: OnceCell<ArcSwap<Option<DateTime<Utc>>>> = OnceCell::new();
 
+/// Serialises init/re-init publication so tests and CLIs can reload fixtures
+/// without racing the global ArcSwap cells.
+static INIT_LOCK: Mutex<()> = Mutex::new(());
+
 /// Debounce interval for file-watch events (milliseconds).
 const DEBOUNCE_MS: u64 = 100;
 
@@ -33,7 +39,10 @@ const DEBOUNCE_MS: u64 = 100;
 
 mod metrics {
     use once_cell::sync::Lazy;
-    use prometheus::{register_counter_vec, register_histogram, register_int_gauge, CounterVec, Histogram, IntGauge};
+    use prometheus::{
+        register_counter_vec, register_histogram, register_int_gauge, CounterVec, Histogram,
+        IntGauge,
+    };
 
     pub static LOOKUPS: Lazy<CounterVec> = Lazy::new(|| {
         register_counter_vec!(
@@ -54,11 +63,19 @@ mod metrics {
     });
 
     pub static ENTRY_COUNT: Lazy<IntGauge> = Lazy::new(|| {
-        register_int_gauge!("ai_cost_table_entries_total", "Current count of (provider, model) entries").unwrap()
+        register_int_gauge!(
+            "ai_cost_table_entries_total",
+            "Current count of (provider, model) entries"
+        )
+        .unwrap()
     });
 
     pub static LOADED_AT_TS: Lazy<IntGauge> = Lazy::new(|| {
-        register_int_gauge!("ai_cost_table_loaded_at_ts", "UNIX timestamp of last successful load").unwrap()
+        register_int_gauge!(
+            "ai_cost_table_loaded_at_ts",
+            "UNIX timestamp of last successful load"
+        )
+        .unwrap()
     });
 
     pub static LOOKUP_LATENCY: Lazy<Histogram> = Lazy::new(|| {
@@ -82,7 +99,9 @@ pub fn lookup(provider: &ProviderKind, model: &str) -> Option<CostRate> {
         .get()
         .and_then(|s| s.load().get(&(*provider, model.to_string())).copied());
     let outcome = if result.is_some() { "hit" } else { "miss" };
-    metrics::LOOKUPS.with_label_values(&[provider.as_metric_label(), outcome]).inc();
+    metrics::LOOKUPS
+        .with_label_values(&[provider.as_metric_label(), outcome])
+        .inc();
     metrics::LOOKUP_LATENCY.observe(started.elapsed().as_nanos() as f64);
     result
 }
@@ -105,16 +124,30 @@ pub fn entry_count() -> usize {
 pub async fn init_cost_table(config_path: &Path) -> Result<CostTableHandle, LoaderInitError> {
     let table = load_and_validate(config_path).await?;
     let count = table.len();
+    let loaded_at = Utc::now();
 
-    TABLE
-        .set(ArcSwap::from_pointee(table))
-        .map_err(|_| LoaderInitError::AlreadyInitialised)?;
-    LOADED_AT
-        .set(ArcSwap::from_pointee(Some(Utc::now())))
-        .map_err(|_| LoaderInitError::AlreadyInitialised)?;
+    {
+        let _guard = INIT_LOCK
+            .lock()
+            .expect("cost-table init mutex should not be poisoned");
+        if let Some(cell) = TABLE.get() {
+            cell.store(Arc::new(table));
+        } else {
+            TABLE
+                .set(ArcSwap::from_pointee(table))
+                .map_err(|_| LoaderInitError::AlreadyInitialised)?;
+        }
+        if let Some(cell) = LOADED_AT.get() {
+            cell.store(Arc::new(Some(loaded_at)));
+        } else {
+            LOADED_AT
+                .set(ArcSwap::from_pointee(Some(loaded_at)))
+                .map_err(|_| LoaderInitError::AlreadyInitialised)?;
+        }
 
-    metrics::ENTRY_COUNT.set(count as i64);
-    metrics::LOADED_AT_TS.set(Utc::now().timestamp());
+        metrics::ENTRY_COUNT.set(count as i64);
+        metrics::LOADED_AT_TS.set(loaded_at.timestamp());
+    }
 
     let watcher = spawn_watcher(config_path).await?;
     Ok(CostTableHandle { _watcher: watcher })
@@ -122,7 +155,9 @@ pub async fn init_cost_table(config_path: &Path) -> Result<CostTableHandle, Load
 
 // ─── Internal: load + validate ────────────────────────────────────────────────
 
-async fn load_and_validate(path: &Path) -> Result<HashMap<(ProviderKind, String), CostRate>, LoaderInitError> {
+async fn load_and_validate(
+    path: &Path,
+) -> Result<HashMap<(ProviderKind, String), CostRate>, LoaderInitError> {
     let yaml = std::fs::read_to_string(path).map_err(|source| LoaderInitError::IoError {
         path: path.to_path_buf(),
         source,
@@ -175,7 +210,10 @@ fn validate_and_flatten(
                 ));
             }
             if model.is_empty() || model.len() > 256 {
-                model_errors.push(format!("model name length must be 1..=256, got {}", model.len()));
+                model_errors.push(format!(
+                    "model name length must be 1..=256, got {}",
+                    model.len()
+                ));
             }
             // FR-AI-007 §1 #12: is_embedding ⇒ output_per_1k_usd == 0.0
             if rate.is_embedding && rate.output_per_1k_usd > Decimal::ZERO {
@@ -248,7 +286,10 @@ async fn spawn_watcher(path: &Path) -> Result<RecommendedWatcher, LoaderInitErro
     let watch_dir: PathBuf = match path.parent() {
         Some(p) if !p.as_os_str().is_empty() => p.to_path_buf(),
         _ => {
-            tracing::warn!(?path, "cost_rates.yaml has no parent dir; watching CWD instead");
+            tracing::warn!(
+                ?path,
+                "cost_rates.yaml has no parent dir; watching CWD instead"
+            );
             PathBuf::from(".")
         }
     };
@@ -257,6 +298,14 @@ async fn spawn_watcher(path: &Path) -> Result<RecommendedWatcher, LoaderInitErro
         .map_err(LoaderInitError::WatcherSetup)?;
 
     let path = path.to_path_buf();
+    if tokio::runtime::Handle::try_current().is_err() {
+        tracing::warn!(
+            ?path,
+            "cost table watcher registered without a Tokio runtime; hot reload disabled"
+        );
+        return Ok(watcher);
+    }
+
     tokio::spawn(async move {
         let mut last_event_at: Option<Instant> = None;
         loop {

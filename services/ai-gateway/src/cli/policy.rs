@@ -5,9 +5,9 @@ use std::path::Path;
 use rust_decimal::Decimal;
 use serde_json::json;
 
-use super::{CliError, PolicyAction};
 use super::auth::{OperatorClaims, Role};
 use super::output;
+use super::{CliError, PolicyAction};
 use crate::policy;
 use sqlx::PgPool;
 
@@ -50,12 +50,30 @@ pub async fn run(
     pool: &PgPool,
 ) -> Result<(), CliError> {
     match args {
-        PolicyAction::Set { tenant, cap_usd, zdr_required, residency, allowed_personas } => {
-            super::auth::require_role(claims, &Role::Mutate).map_err(|e| CliError::InsufficientRole {
-                needed: e.needed(),
-                has: e.has(),
+        PolicyAction::Set {
+            tenant,
+            cap_usd,
+            zdr_required,
+            residency,
+            allowed_personas,
+        } => {
+            super::auth::require_role(claims, &Role::Mutate).map_err(|e| {
+                CliError::InsufficientRole {
+                    needed: e.needed(),
+                    has: e.has(),
+                }
             })?;
-            set(pool, &tenant, cap_usd, zdr_required, residency, allowed_personas, json, confirm).await
+            set(
+                pool,
+                &tenant,
+                cap_usd,
+                zdr_required,
+                residency,
+                allowed_personas,
+                json,
+                confirm,
+            )
+            .await
         }
         PolicyAction::Validate { yaml_file } => validate(&yaml_file),
         PolicyAction::Diff { tenant, vs } => diff(pool, &tenant, &vs, json).await,
@@ -63,8 +81,9 @@ pub async fn run(
 }
 
 fn validate(yaml_file: &Path) -> Result<(), CliError> {
-    let yaml = std::fs::read_to_string(yaml_file)
-        .map_err(|e| CliError::UserError { reason: format!("read {}: {e}", yaml_file.display()) })?;
+    let yaml = std::fs::read_to_string(yaml_file).map_err(|e| CliError::UserError {
+        reason: format!("read {}: {e}", yaml_file.display()),
+    })?;
 
     match policy::validate_yaml(&yaml) {
         Ok(p) => {
@@ -78,7 +97,9 @@ fn validate(yaml_file: &Path) -> Result<(), CliError> {
             for e in &errs {
                 eprintln!("ERROR {e}");
             }
-            Err(CliError::SchemaViolation { reason: errs.join("; ") })
+            Err(CliError::SchemaViolation {
+                reason: errs.join("; "),
+            })
         }
     }
 }
@@ -86,10 +107,13 @@ fn validate(yaml_file: &Path) -> Result<(), CliError> {
 async fn diff(pool: &PgPool, tenant: &str, yaml_file: &Path, json: bool) -> Result<(), CliError> {
     let current = query_policy(pool, tenant).await?;
 
-    let yaml = std::fs::read_to_string(yaml_file)
-        .map_err(|e| CliError::UserError { reason: format!("read {}: {e}", yaml_file.display()) })?;
-    let proposed: policy::TenantPolicy = serde_yaml::from_str(&yaml)
-        .map_err(|e| CliError::SchemaViolation { reason: e.to_string() })?;
+    let yaml = std::fs::read_to_string(yaml_file).map_err(|e| CliError::UserError {
+        reason: format!("read {}: {e}", yaml_file.display()),
+    })?;
+    let proposed: policy::TenantPolicy =
+        serde_yaml::from_str(&yaml).map_err(|e| CliError::SchemaViolation {
+            reason: e.to_string(),
+        })?;
 
     let mut changes = Vec::new();
 
@@ -154,8 +178,9 @@ async fn set(
     let mut changes = Vec::new();
 
     if let Some(cap) = cap_usd {
-        let new_val = Decimal::try_from(cap)
-            .map_err(|e| CliError::UserError { reason: format!("invalid cap_usd: {e}") })?;
+        let new_val = Decimal::try_from(cap).map_err(|e| CliError::UserError {
+            reason: format!("invalid cap_usd: {e}"),
+        })?;
         if current.ai_policy.monthly_cap_usd != new_val {
             changes.push(PolicyChange {
                 field: "cap_usd".into(),
@@ -212,12 +237,17 @@ async fn set(
         return Err(CliError::DestructiveWithoutConfirm);
     }
 
-    let mut tx = pool.begin().await
-        .map_err(|e| CliError::RemoteUnreachable { reason: e.to_string() })?;
+    let mut tx = pool
+        .begin()
+        .await
+        .map_err(|e| CliError::RemoteUnreachable {
+            reason: e.to_string(),
+        })?;
 
     if let Some(cap) = cap_usd {
-        let val = Decimal::try_from(cap)
-            .map_err(|e| CliError::UserError { reason: format!("invalid cap_usd: {e}") })?;
+        let val = Decimal::try_from(cap).map_err(|e| CliError::UserError {
+            reason: format!("invalid cap_usd: {e}"),
+        })?;
         sqlx::query("UPDATE tenant_policies SET ai_policy = jsonb_set(ai_policy, '{monthly_cap_usd}', to_jsonb($1::text), true) WHERE tenant_id = $2")
             .bind(val.to_string())
             .bind(tenant)
@@ -226,8 +256,9 @@ async fn set(
             .map_err(|e| CliError::RemoteUnreachable { reason: e.to_string() })?;
     }
 
-    tx.commit().await
-        .map_err(|e| CliError::RemoteUnreachable { reason: e.to_string() })?;
+    tx.commit().await.map_err(|e| CliError::RemoteUnreachable {
+        reason: e.to_string(),
+    })?;
 
     // Emit audit row
     let _ = crate::memory_writer::emit(crate::memory_writer::MemoryEmit {
@@ -246,17 +277,22 @@ async fn set(
 }
 
 async fn query_policy(pool: &PgPool, tenant: &str) -> Result<policy::TenantPolicy, CliError> {
-    let row: (serde_json::Value,) = sqlx::query_as(
-        "SELECT ai_policy FROM tenant_policies WHERE tenant_id = $1",
-    )
-    .bind(tenant)
-    .fetch_optional(pool)
-    .await
-    .map_err(|e| CliError::RemoteUnreachable { reason: e.to_string() })?
-    .ok_or_else(|| CliError::UserError { reason: format!("tenant not found: {tenant}") })?;
+    let row: (serde_json::Value,) =
+        sqlx::query_as("SELECT ai_policy FROM tenant_policies WHERE tenant_id = $1")
+            .bind(tenant)
+            .fetch_optional(pool)
+            .await
+            .map_err(|e| CliError::RemoteUnreachable {
+                reason: e.to_string(),
+            })?
+            .ok_or_else(|| CliError::UserError {
+                reason: format!("tenant not found: {tenant}"),
+            })?;
 
-    let ai_policy: policy::AiPolicy = serde_json::from_value(row.0)
-        .map_err(|e| CliError::InternalError { reason: format!("policy deserialization: {e}") })?;
+    let ai_policy: policy::AiPolicy =
+        serde_json::from_value(row.0).map_err(|e| CliError::InternalError {
+            reason: format!("policy deserialization: {e}"),
+        })?;
 
     Ok(policy::TenantPolicy {
         tenant_id: tenant.to_string(),
@@ -267,21 +303,25 @@ async fn query_policy(pool: &PgPool, tenant: &str) -> Result<policy::TenantPolic
 impl From<crate::policy::PolicyError> for CliError {
     fn from(e: crate::policy::PolicyError) -> Self {
         match e {
-            crate::policy::PolicyError::PolicyMissing { tenant_id } => {
-                CliError::UserError { reason: format!("policy missing for tenant {tenant_id}") }
-            }
+            crate::policy::PolicyError::PolicyMissing { tenant_id } => CliError::UserError {
+                reason: format!("policy missing for tenant {tenant_id}"),
+            },
             crate::policy::PolicyError::PolicyInvalid { tenant_id, .. } => {
-                CliError::SchemaViolation { reason: format!("policy invalid for tenant {tenant_id}") }
+                CliError::SchemaViolation {
+                    reason: format!("policy invalid for tenant {tenant_id}"),
+                }
             }
-            crate::policy::PolicyError::InvalidTenantId { reason } => {
-                CliError::UserError { reason: format!("invalid tenant_id: {reason}") }
-            }
+            crate::policy::PolicyError::InvalidTenantId { reason } => CliError::UserError {
+                reason: format!("invalid tenant_id: {reason}"),
+            },
             crate::policy::PolicyError::IoError { tenant_id, source } => {
-                CliError::RemoteUnreachable { reason: format!("io error for tenant {tenant_id}: {source}") }
+                CliError::RemoteUnreachable {
+                    reason: format!("io error for tenant {tenant_id}: {source}"),
+                }
             }
-            crate::policy::PolicyError::NotInitialised => {
-                CliError::InternalError { reason: "loader not initialised".into() }
-            }
+            crate::policy::PolicyError::NotInitialised => CliError::InternalError {
+                reason: "loader not initialised".into(),
+            },
         }
     }
 }

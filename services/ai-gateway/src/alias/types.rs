@@ -35,7 +35,9 @@ pub enum AliasError {
         model: String,
     },
     /// Policy requires ZDR but the resolved provider isn't attested.
-    #[error("ZDR violation: {resolved_model} (provider {resolved_provider:?}) is not ZDR-attested")]
+    #[error(
+        "ZDR violation: {resolved_model} (provider {resolved_provider:?}) is not ZDR-attested"
+    )]
     ZdrViolation {
         resolved_provider: ProviderKind,
         resolved_model: String,
@@ -52,10 +54,7 @@ pub enum AliasError {
     },
     /// No provider in the chain has this alias.
     #[error("no provider has alias '{alias}' (tried {providers_tried} providers)")]
-    NoProviderHasAlias {
-        alias: String,
-        providers_tried: u8,
-    },
+    NoProviderHasAlias { alias: String, providers_tried: u8 },
 }
 
 /// Latency class for timeout budgeting. FR-AI-006 §3.

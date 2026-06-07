@@ -45,14 +45,26 @@ exporters:
         service.name: "service_name"
         tenant_id: "tenant_id"
         deployment.environment: "env"
+    sending_queue:
+      enabled: true
+      storage: file_storage
+      queue_size: 1024
   prometheusremotewrite:
     endpoint: http://prometheus:9090/api/v1/write
     external_labels:
       source: "otelcol"
+    sending_queue:
+      enabled: true
+      storage: file_storage
+      queue_size: 1024
   otlp/tempo:
     endpoint: tempo:4317
     tls:
       insecure: true
+    sending_queue:
+      enabled: true
+      storage: file_storage
+      queue_size: 1024
 
 extensions:
   file_storage:
@@ -60,7 +72,7 @@ extensions:
     timeout: 1s
   bearertokenauth:
     scheme: "Bearer"
-    filename: /etc/otelcol/auth.tokens
+    filename: /etc/otelcol/collector.token
   health_check:
     endpoint: 0.0.0.0:13133
 

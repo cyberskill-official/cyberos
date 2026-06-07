@@ -145,7 +145,7 @@ exporters:
   prometheusremotewrite: { endpoint: "http://prometheus:9090/api/v1/write" }
   otlp/tempo: { endpoint: "tempo:4317" }
 extensions:
-  bearertokenauth: { scheme: "Bearer", filename: "/etc/otelcol/auth.tokens" }
+  bearertokenauth: { scheme: "Bearer", filename: "/etc/otelcol/collector.token" }
   file_storage: { directory: "/var/lib/otelcol/file_storage" }
 service:
   extensions: [file_storage, bearertokenauth]

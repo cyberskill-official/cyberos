@@ -6,11 +6,11 @@
 
 use std::time::Duration;
 
+use cyberos_ai_gateway::router::FinishReason;
 use cyberos_ai_gateway::streaming::heartbeat;
 use cyberos_ai_gateway::streaming::{
     ErrorCode, ProviderStreamEvent, ProviderStreamUsage, ReconcileReason, StreamEvent,
 };
-use cyberos_ai_gateway::router::FinishReason;
 use tokio::sync::mpsc;
 
 // ─── SSE serialization tests ─────────────────────────────────────────────────
@@ -61,15 +61,27 @@ fn heartbeat_event_sse_does_not_panic() {
 
 #[test]
 fn error_code_metric_labels_are_stable() {
-    assert_eq!(ErrorCode::ProviderDisconnect.as_metric_label(), "provider_disconnect");
-    assert_eq!(ErrorCode::FirstTokenTimeout.as_metric_label(), "first_token_timeout");
-    assert_eq!(ErrorCode::MidStreamTimeout.as_metric_label(), "mid_stream_timeout");
+    assert_eq!(
+        ErrorCode::ProviderDisconnect.as_metric_label(),
+        "provider_disconnect"
+    );
+    assert_eq!(
+        ErrorCode::FirstTokenTimeout.as_metric_label(),
+        "first_token_timeout"
+    );
+    assert_eq!(
+        ErrorCode::MidStreamTimeout.as_metric_label(),
+        "mid_stream_timeout"
+    );
     assert_eq!(
         ErrorCode::MaxStreamDurationExceeded.as_metric_label(),
         "max_stream_duration_exceeded"
     );
     assert_eq!(ErrorCode::MissingUsage.as_metric_label(), "missing_usage");
-    assert_eq!(ErrorCode::BackpressureDrop.as_metric_label(), "backpressure_drop");
+    assert_eq!(
+        ErrorCode::BackpressureDrop.as_metric_label(),
+        "backpressure_drop"
+    );
     assert_eq!(ErrorCode::InternalError.as_metric_label(), "internal_error");
 }
 
@@ -77,12 +89,30 @@ fn error_code_metric_labels_are_stable() {
 
 #[test]
 fn reconcile_reason_metric_labels_are_stable() {
-    assert_eq!(ReconcileReason::ClientDisconnect.as_metric_label(), "client_disconnect");
-    assert_eq!(ReconcileReason::FirstTokenTimeout.as_metric_label(), "first_token_timeout");
-    assert_eq!(ReconcileReason::MidStreamTimeout.as_metric_label(), "mid_stream_timeout");
-    assert_eq!(ReconcileReason::ProviderDisconnect.as_metric_label(), "provider_disconnect");
-    assert_eq!(ReconcileReason::MaxDurationExceeded.as_metric_label(), "max_duration_exceeded");
-    assert_eq!(ReconcileReason::InternalError.as_metric_label(), "internal_error");
+    assert_eq!(
+        ReconcileReason::ClientDisconnect.as_metric_label(),
+        "client_disconnect"
+    );
+    assert_eq!(
+        ReconcileReason::FirstTokenTimeout.as_metric_label(),
+        "first_token_timeout"
+    );
+    assert_eq!(
+        ReconcileReason::MidStreamTimeout.as_metric_label(),
+        "mid_stream_timeout"
+    );
+    assert_eq!(
+        ReconcileReason::ProviderDisconnect.as_metric_label(),
+        "provider_disconnect"
+    );
+    assert_eq!(
+        ReconcileReason::MaxDurationExceeded.as_metric_label(),
+        "max_duration_exceeded"
+    );
+    assert_eq!(
+        ReconcileReason::InternalError.as_metric_label(),
+        "internal_error"
+    );
 }
 
 // ─── Heartbeat tests ─────────────────────────────────────────────────────────
@@ -120,7 +150,10 @@ async fn heartbeat_stops_when_receiver_dropped() {
     drop(rx);
 
     let result = tokio::time::timeout(Duration::from_millis(200), handle).await;
-    assert!(result.is_ok(), "heartbeat task did not stop after receiver drop");
+    assert!(
+        result.is_ok(),
+        "heartbeat task did not stop after receiver drop"
+    );
 }
 
 // ─── Backpressure test ───────────────────────────────────────────────────────

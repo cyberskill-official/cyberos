@@ -1,8 +1,8 @@
 //! FR-AI-021 — `cyberos-ai models` subcommand.
 
-use super::{CliError, ModelsAction};
 use super::auth::OperatorClaims;
 use super::output;
+use super::{CliError, ModelsAction};
 use sqlx::PgPool;
 
 pub async fn run(
@@ -24,7 +24,9 @@ async fn list_models(json: bool, pool: &PgPool) -> Result<(), CliError> {
     )
     .fetch_all(pool)
     .await
-    .map_err(|e| CliError::RemoteUnreachable { reason: e.to_string() })?;
+    .map_err(|e| CliError::RemoteUnreachable {
+        reason: e.to_string(),
+    })?;
 
     if json {
         let data = serde_json::json!({
@@ -48,7 +50,9 @@ async fn show_pricing(json: bool, pool: &PgPool) -> Result<(), CliError> {
     )
     .fetch_all(pool)
     .await
-    .map_err(|e| CliError::RemoteUnreachable { reason: e.to_string() })?;
+    .map_err(|e| CliError::RemoteUnreachable {
+        reason: e.to_string(),
+    })?;
 
     if json {
         let data = serde_json::json!({

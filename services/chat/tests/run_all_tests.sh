@@ -30,7 +30,18 @@ done
 
 echo ""
 echo "============================================================"
-echo "FR-CHAT-001 test summary"
+echo "  Running: test_cyberos_chat.py"
+echo "============================================================"
+if python -m pytest "$SCRIPT_DIR/test_cyberos_chat.py"; then
+    PASS=$((PASS + 1))
+else
+    FAIL=$((FAIL + 1))
+    FAILED+=("test_cyberos_chat.py")
+fi
+
+echo ""
+echo "============================================================"
+echo "CHAT test summary"
 echo "============================================================"
 echo "  Passed: $PASS"
 echo "  Failed: $FAIL"
@@ -41,4 +52,4 @@ if [[ $FAIL -gt 0 ]]; then
     exit 1
 fi
 echo ""
-echo "✓ All FR-CHAT-001 tests pass."
+echo "✓ All CHAT tests pass."

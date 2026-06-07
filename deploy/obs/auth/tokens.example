@@ -1,0 +1,7 @@
+# Service-token file consumed by CyberOS scripts and validators.
+# Real deployments mount auth/tokens.live from the operator secret store.
+ai-gateway token-ai-gateway-example
+auth-service token-auth-service-example
+chat-service token-chat-service-example
+memory-writer token-memory-writer-example
+mcp-router token-mcp-router-example

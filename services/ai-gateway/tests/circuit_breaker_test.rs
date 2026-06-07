@@ -4,7 +4,9 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use cyberos_ai_gateway::circuit_breaker::{self, clock::MockClock, BreakerState, CallOutcome, Clock};
+use cyberos_ai_gateway::circuit_breaker::{
+    self, clock::MockClock, BreakerState, CallOutcome, Clock,
+};
 use cyberos_ai_gateway::policy::ProviderKind;
 use once_cell::sync::Lazy;
 
@@ -132,17 +134,15 @@ async fn concurrent_cas_during_half_open_transition() {
 
     let handles: Vec<_> = (0..100)
         .map(|_| {
-            tokio::spawn(async move {
-                !circuit_breaker::is_open(&ProviderKind::Bedrock, model)
-            })
+            tokio::spawn(async move { !circuit_breaker::is_open(&ProviderKind::Bedrock, model) })
         })
         .collect();
     let results = futures::future::join_all(handles).await;
-    let probe_winners = results
-        .into_iter()
-        .filter(|r| *r.as_ref().unwrap())
-        .count();
-    assert_eq!(probe_winners, 1, "exactly one caller MUST win the probe slot");
+    let probe_winners = results.into_iter().filter(|r| *r.as_ref().unwrap()).count();
+    assert_eq!(
+        probe_winners, 1,
+        "exactly one caller MUST win the probe slot"
+    );
 }
 
 /// AC #6: 4xx ignored.
@@ -274,7 +274,11 @@ async fn opens_after_5_failures_emits_transition_metric() {
             ("to", "open"),
         ],
     );
-    assert_eq!(after - before, 1.0, "transition counter MUST increment exactly once");
+    assert_eq!(
+        after - before,
+        1.0,
+        "transition counter MUST increment exactly once"
+    );
 }
 
 /// AC #2 metric: blocked call increments short_circuits.
@@ -294,7 +298,11 @@ async fn open_blocked_call_emits_short_circuit() {
         "ai_breaker_short_circuits_total",
         &[("provider", "bedrock"), ("model", model)],
     );
-    assert_eq!(after - before, 1.0, "blocked call MUST increment short_circuits once");
+    assert_eq!(
+        after - before,
+        1.0,
+        "blocked call MUST increment short_circuits once"
+    );
 }
 
 /// AC #4 metric: probe success emits probes_total{outcome=succeeded}.
@@ -324,7 +332,11 @@ async fn half_open_success_emits_probe_succeeded() {
             ("outcome", "succeeded"),
         ],
     );
-    assert_eq!(after - before, 1.0, "probe success MUST increment probes_total{{succeeded}} once");
+    assert_eq!(
+        after - before,
+        1.0,
+        "probe success MUST increment probes_total{{succeeded}} once"
+    );
 }
 
 /// AC #5 metric: probe failure emits probes_total{outcome=failed}.
@@ -354,7 +366,11 @@ async fn half_open_failure_emits_probe_failed() {
             ("outcome", "failed"),
         ],
     );
-    assert_eq!(after - before, 1.0, "probe failure MUST increment probes_total{{failed}} once");
+    assert_eq!(
+        after - before,
+        1.0,
+        "probe failure MUST increment probes_total{{failed}} once"
+    );
 }
 
 // ─── Operator reset (AC #14) ─────────────────────────────────────────────────

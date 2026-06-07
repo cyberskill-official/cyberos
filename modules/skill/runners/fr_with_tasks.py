@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-runtime/skill_runners/fr_with_tasks.py — concrete runner for cuo/cpo/fr-with-tasks.
+modules/skill/runners/fr_with_tasks.py — concrete runner for cuo/cpo/fr-with-tasks.
 
 Tier α.1 — reference implementation. Other 10 skills copy this template,
 adjust `skill_id` + `output_filename_pattern` + interview / invariant lists,
@@ -263,7 +263,7 @@ Output ONLY the artefact body starting with `---`. No commentary, no surrounding
 
 
 if __name__ == "__main__":
-    # Direct CLI: python3 runtime/skill_runners/fr_with_tasks.py <output_dir> <pitch-or-spec-file>
+    # Direct CLI: python3 modules/skill/runners/fr_with_tasks.py <output_dir> --pitch "..."
     import argparse
     p = argparse.ArgumentParser()
     p.add_argument("output_dir")

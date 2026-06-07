@@ -1,8 +1,8 @@
 //! FR-AI-021 — `cyberos-ai usage` subcommand.
 
-use super::{CliError, UsageArgs};
 use super::auth::OperatorClaims;
 use super::output;
+use super::{CliError, UsageArgs};
 use sqlx::PgPool;
 
 #[derive(serde::Serialize)]
@@ -34,7 +34,16 @@ impl std::fmt::Display for UsageOutput {
             "SPENT:  ${:.2}  ({:.1}% of cap)",
             self.spent_usd, self.spent_pct
         )?;
-        writeln!(f, "CALLS:  {}   (avg ${:.4} per call)", self.calls, if self.calls > 0 { self.spent_usd / self.calls as f64 } else { 0.0 })
+        writeln!(
+            f,
+            "CALLS:  {}   (avg ${:.4} per call)",
+            self.calls,
+            if self.calls > 0 {
+                self.spent_usd / self.calls as f64
+            } else {
+                0.0
+            }
+        )
     }
 }
 
@@ -54,7 +63,11 @@ pub async fn run(
         query_tenant_usage(pool, tenant, month).await?
     };
 
-    let spent_pct = if cap > 0.0 { (spent / cap) * 100.0 } else { 0.0 };
+    let spent_pct = if cap > 0.0 {
+        (spent / cap) * 100.0
+    } else {
+        0.0
+    };
 
     let data = UsageOutput {
         schema_version: "v1",
@@ -104,7 +117,9 @@ async fn query_all_usage(
     .bind(month)
     .fetch_optional(pool)
     .await
-    .map_err(|e| CliError::RemoteUnreachable { reason: e.to_string() })?
+    .map_err(|e| CliError::RemoteUnreachable {
+        reason: e.to_string(),
+    })?
     .unwrap_or((None, None, None));
 
     let cap = row.0.unwrap_or(0.0);
@@ -120,7 +135,9 @@ async fn query_all_usage(
     .bind(month)
     .fetch_all(pool)
     .await
-    .map_err(|e| CliError::RemoteUnreachable { reason: e.to_string() })?;
+    .map_err(|e| CliError::RemoteUnreachable {
+        reason: e.to_string(),
+    })?;
 
     let top_models = models
         .into_iter()
@@ -145,7 +162,9 @@ async fn query_tenant_usage(
     .bind(month)
     .fetch_optional(pool)
     .await
-    .map_err(|e| CliError::RemoteUnreachable { reason: e.to_string() })?
+    .map_err(|e| CliError::RemoteUnreachable {
+        reason: e.to_string(),
+    })?
     .unwrap_or((None, None, None));
 
     let cap = row.0.unwrap_or(0.0);
@@ -162,7 +181,9 @@ async fn query_tenant_usage(
     .bind(month)
     .fetch_all(pool)
     .await
-    .map_err(|e| CliError::RemoteUnreachable { reason: e.to_string() })?;
+    .map_err(|e| CliError::RemoteUnreachable {
+        reason: e.to_string(),
+    })?;
 
     let top_models = models
         .into_iter()

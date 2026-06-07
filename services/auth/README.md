@@ -16,8 +16,8 @@ cd ../dev && docker compose up -d
 
 # 2. Apply migrations + start the service
 cd ../auth
-export DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos
-sqlx migrate run                    # applies 0001..0005
+export DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos_auth
+sqlx migrate run                    # applies 0001..0026
 cargo run
 
 # 3. Smoke-test — create a tenant
@@ -41,18 +41,18 @@ curl -X POST http://localhost:7700/v1/admin/subjects \
 | FR-AUTH-002 | `POST /v1/admin/subjects` + bcrypt | ✓ shipped |
 | FR-AUTH-003 | RLS USING + WITH CHECK on tenants/subjects/admin_idempotency | ✓ shipped (migrations 0004 + 0005) |
 | FR-AUTH-003 | RLS isolation integration test | ✓ shipped (`tests/rls_isolation_test.rs`, `#[ignore]` until CI sets up Postgres) |
-| FR-AUTH-004 | JWT issuance + JWKS endpoint | not yet |
-| FR-AUTH-005 | Admin REST (list/revoke/unrevoke + cursor pagination) | not yet |
-| FR-AUTH-006 | `cyberos-auth bootstrap` CLI | not yet |
-| FR-AUTH-101 | 22-role RBAC catalogue | not yet |
-| FR-AUTH-102 | TOTP + WebAuthn MFA | not yet |
-| FR-AUTH-103 | SAML 2.0 SSO | not yet |
-| FR-AUTH-104 | OIDC SSO | not yet |
-| FR-AUTH-105 | Passkey enrolment + login | not yet |
-| FR-AUTH-106 | Impossible-travel detection | not yet |
-| FR-AUTH-107 | HIBP breach check | not yet |
-| FR-AUTH-108 | Lumi tenant identity JWT | not yet |
-| FR-AUTH-109 | Stub-to-full migration tooling | not yet |
+| FR-AUTH-004 | JWT issuance + JWKS endpoint | ✓ shipped |
+| FR-AUTH-005 | Admin REST (list/revoke + cursor pagination) | ✓ shipped |
+| FR-AUTH-006 | `cyberos-auth bootstrap` CLI | ✓ shipped |
+| FR-AUTH-101 | 22-role RBAC catalogue | ✓ shipped |
+| FR-AUTH-102 | TOTP + WebAuthn MFA | ✓ shipped |
+| FR-AUTH-103 | SAML 2.0 SSO | ✓ shipped |
+| FR-AUTH-104 | OIDC SSO | ✓ shipped |
+| FR-AUTH-105 | Passkey enrolment + login | ✓ shipped |
+| FR-AUTH-106 | Impossible-travel detection | ✓ shipped |
+| FR-AUTH-107 | HIBP breach check | ✓ shipped |
+| FR-AUTH-108 | Lumi tenant identity JWT | ✓ shipped |
+| FR-AUTH-109 | Stub-to-full migration tooling | ✓ shipped |
 
 ## Layout
 
@@ -64,7 +64,8 @@ auth/
 │   ├── 0002_admin_idempotency.sql     # Idempotency-Key dedupe
 │   ├── 0003_subjects.sql              # subjects table + constraints
 │   ├── 0004_rls_roles.sql             # cyberos_app + cyberos_ro roles
-│   └── 0005_rls_enable_on_tables.sql  # ENABLE RLS + policies (USING + WITH CHECK)
+│   ├── 0005_rls_enable_on_tables.sql  # ENABLE RLS + policies (USING + WITH CHECK)
+│   └── 0006..0026_*.sql               # JWT/JWKS, RBAC, MFA, SSO, travel, sessions
 ├── src/
 │   ├── main.rs                # axum binary entry
 │   ├── lib.rs
@@ -85,7 +86,9 @@ auth/
 
 ## Next implementation steps
 
-Per the BACKLOG `§0.6` deploy roadmap, Wave 2 advances in this order: FR-AUTH-001/002/003 (this slice) → 004 (JWT) → 005 (admin REST) → 006 (bootstrap CLI) → 101 (RBAC) → 102 (MFA) → 103/104 (SAML/OIDC) → 105 (Passkey) → 106 (impossible-travel) → 107 (HIBP) → 108 (Lumi) → 109 (migration).
+AUTH's FR-AUTH-001..006 and FR-AUTH-101..109 are implemented. Before live
+testing, boot Postgres/Redis, apply all migrations, and run the Postgres-gated
+tests with `cargo test -p cyberos-auth -- --ignored`.
 
 ## License
 

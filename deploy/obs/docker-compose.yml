@@ -1,0 +1,160 @@
+services:
+  ingress:
+    build:
+      context: ../..
+      dockerfile: deploy/obs/ingress.Dockerfile
+    command:
+      - ingress
+      - --tokens
+      - /etc/cyberos-obs/tokens.live
+      - --collector-token
+      - /etc/cyberos-obs/collector.token
+      - --upstream-http
+      - http://collector:4318
+      - --upstream-grpc
+      - http://collector:4317
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    volumes:
+      - ./auth/tokens.live:/etc/cyberos-obs/tokens.live:ro
+      - ./auth/collector.token.live:/etc/cyberos-obs/collector.token:ro
+    depends_on:
+      collector:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:4318/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512M"
+
+  collector:
+    image: otel/opentelemetry-collector-contrib:0.110.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    ports:
+      - "13133:13133"
+      - "8888:8888"
+    environment:
+      ENV: "${DEPLOYMENT_ENV:-production}"
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
+      - ./auth/collector.token.live:/etc/otelcol/collector.token:ro
+      - otel-buffer:/var/lib/otelcol
+    depends_on:
+      loki:
+        condition: service_healthy
+      prometheus:
+        condition: service_healthy
+      tempo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:13133"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: "1G"
+
+  loki:
+    image: grafana/loki:3.0.0
+    command: ["-config.file=/etc/loki/config.yaml"]
+    volumes:
+      - ./loki-config.yaml:/etc/loki/config.yaml:ro
+      - loki-data:/loki
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:3100/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: "4G"
+
+  prometheus:
+    image: prom/prometheus:v2.55.0
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--web.enable-remote-write-receiver"
+      - "--storage.tsdb.retention.time=90d"
+    volumes:
+      - ./prometheus-config.yaml:/etc/prometheus/prometheus.yml:ro
+      - prom-data:/prometheus
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:9090/-/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: "4G"
+
+  tempo:
+    image: grafana/tempo:2.6.0
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./tempo-config.yaml:/etc/tempo.yaml:ro
+      - tempo-data:/var/tempo
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:3200/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: "2G"
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD}"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - ./grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      loki:
+        condition: service_healthy
+      prometheus:
+        condition: service_healthy
+      tempo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512M"
+
+volumes:
+  otel-buffer:
+  loki-data:
+  prom-data:
+  tempo-data:
+  grafana-data:

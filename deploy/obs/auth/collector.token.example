@@ -1,0 +1,3 @@
+# Internal token used only from the CyberOS ingress gate to otelcol.
+# Real deployments mount auth/collector.token.live from the operator secret store.
+collector-internal-token-example

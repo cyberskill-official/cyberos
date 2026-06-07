@@ -98,6 +98,17 @@ cargo test  -p cyberos-proj --test error_mapping_test
 cargo test  -p cyberos-proj --test productivity_slice_test
 ```
 
+Local DB migration smoke:
+
+```bash
+cd services/proj
+export DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos_proj
+sqlx migrate run
+```
+
+PROJ currently ships as a Rust library/test surface. There is no local HTTP
+daemon to start yet.
+
 ---
 
 ## §6 — Layout

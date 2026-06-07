@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-runtime/tests/skills/run_corpus.py — run a skill's test corpus.
+modules/skill/tests/run_corpus.py — run a skill's test corpus.
 
 Tier α.5 (Batch 22).
 
-Loads YAML fixtures from runtime/tests/skills/<skill>/fixtures/*.yaml,
+Loads YAML fixtures from modules/skill/tests/<skill>/fixtures/*.yaml,
 invokes the skill runner per fixture, scores the result against the
 fixture's expectations.
 
 Usage:
-    python3 runtime/tests/skills/run_corpus.py fr-with-tasks
-    python3 runtime/tests/skills/run_corpus.py fr-with-tasks --max-iterations 2 --no-llm
+    python3 modules/skill/tests/run_corpus.py fr-with-tasks
+    python3 modules/skill/tests/run_corpus.py fr-with-tasks --max-iterations 2 --no-llm
     cyberos skill-test fr-with-tasks   # umbrella alias
 
 Scoring: each fixture passes if:
@@ -30,13 +30,13 @@ import tempfile
 from pathlib import Path
 
 
-def find_memory(start: Path = None) -> Path:
+def find_repo_root(start: Path = None) -> Path:
     cur = (start or Path.cwd()).resolve()
     while cur != cur.parent:
-        if (cur / ".cyberos-memory").is_dir():
+        if (cur / ".cyberos-memory").is_dir() or (cur / "modules" / "skill").is_dir():
             return cur
         cur = cur.parent
-    raise SystemExit("no .cyberos-memory/ found")
+    raise SystemExit("could not find CyberOS repo root")
 
 
 def main():
@@ -48,8 +48,11 @@ def main():
     p.add_argument("--json", action="store_true")
     args = p.parse_args()
 
-    memory_root = find_memory()
-    fixtures_dir = memory_root / "runtime" / "tests" / "skills" / args.skill_id / "fixtures"
+    repo_root = find_repo_root()
+    module_root = repo_root / "modules" / "skill"
+    fixtures_dir = module_root / "tests" / args.skill_id / "fixtures"
+    if not fixtures_dir.exists():
+        fixtures_dir = repo_root / "runtime" / "tests" / "skills" / args.skill_id / "fixtures"
     if not fixtures_dir.exists():
         print(f"  ✗ no fixtures at {fixtures_dir}", file=sys.stderr); return 2
 
@@ -62,18 +65,19 @@ def main():
     if not fixtures:
         print(f"  ✗ no .yaml fixtures in {fixtures_dir}", file=sys.stderr); return 2
 
-    sys.path.insert(0, str(memory_root / "runtime" / "skill_runners"))
+    sys.path.insert(0, str(module_root / "runners"))
+    sys.path.insert(0, str(repo_root / "runtime" / "skill_runners"))
     try:
         from base import load_runner, SkillCache  # type: ignore
     except ImportError as e:
         print(f"  ✗ couldn't load runner base: {e}", file=sys.stderr); return 3
 
     skill_id = args.skill_id if "/" in args.skill_id else f"cuo/cpo/{args.skill_id}"
-    runner = load_runner(skill_id, memory_root)
+    runner = load_runner(skill_id, repo_root)
     if runner is None:
         # Try CTO path
         skill_id = args.skill_id if "/" in args.skill_id else f"cuo/chief-technology-officer/{args.skill_id}"
-        runner = load_runner(skill_id, memory_root)
+        runner = load_runner(skill_id, repo_root)
     if runner is None:
         print(f"  ✗ no runner found for {args.skill_id}", file=sys.stderr); return 2
 

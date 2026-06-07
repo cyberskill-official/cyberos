@@ -2,8 +2,8 @@
 
 use sha2::{Digest, Sha256};
 
-use super::{CliError, ExpiryAction};
 use super::auth::{OperatorClaims, Role};
+use super::{CliError, ExpiryAction};
 
 pub async fn run(
     args: ExpiryAction,
@@ -14,9 +14,11 @@ pub async fn run(
     match args {
         ExpiryAction::Status => status(json, pool).await,
         ExpiryAction::Repair => {
-            super::auth::require_role(claims, &Role::Admin).map_err(|e| CliError::InsufficientRole {
-                needed: e.needed(),
-                has: e.has(),
+            super::auth::require_role(claims, &Role::Admin).map_err(|e| {
+                CliError::InsufficientRole {
+                    needed: e.needed(),
+                    has: e.has(),
+                }
             })?;
             repair(claims, pool).await
         }
@@ -24,12 +26,13 @@ pub async fn run(
 }
 
 async fn status(json: bool, pool: &sqlx::PgPool) -> Result<(), CliError> {
-    let row: (i64,) = sqlx::query_as(
-        "SELECT COUNT(*)::int8 FROM cost_holds WHERE state = 'pending'",
-    )
-    .fetch_one(pool)
-    .await
-    .map_err(|e| CliError::RemoteUnreachable { reason: e.to_string() })?;
+    let row: (i64,) =
+        sqlx::query_as("SELECT COUNT(*)::int8 FROM cost_holds WHERE state = 'pending'")
+            .fetch_one(pool)
+            .await
+            .map_err(|e| CliError::RemoteUnreachable {
+                reason: e.to_string(),
+            })?;
 
     let pending = row.0;
 
@@ -56,10 +59,7 @@ async fn status(json: bool, pool: &sqlx::PgPool) -> Result<(), CliError> {
     Ok(())
 }
 
-async fn repair(
-    claims: &OperatorClaims,
-    pool: &sqlx::PgPool,
-) -> Result<(), CliError> {
+async fn repair(claims: &OperatorClaims, pool: &sqlx::PgPool) -> Result<(), CliError> {
     // Find duplicate hold_expired audit rows
     let duplicates: Vec<(String, i64)> = sqlx::query_as(
         "SELECT (payload->>'hold_id')::text, COUNT(*)::int8
@@ -68,7 +68,9 @@ async fn repair(
     )
     .fetch_all(pool)
     .await
-    .map_err(|e| CliError::RemoteUnreachable { reason: e.to_string() })?;
+    .map_err(|e| CliError::RemoteUnreachable {
+        reason: e.to_string(),
+    })?;
 
     if duplicates.is_empty() {
         println!("No duplicate hold_expired rows found.");
@@ -78,7 +80,11 @@ async fn repair(
     let total_deduped: i64 = duplicates.iter().map(|(_, c)| c - 1).sum();
 
     println!("Scanning for duplicate ai.hold_expired rows\u{2026}");
-    println!("Found {} duplicates:", duplicates.iter().map(|(_, c)| c).sum::<i64>() - duplicates.len() as i64 + duplicates.len() as i64);
+    println!(
+        "Found {} duplicates:",
+        duplicates.iter().map(|(_, c)| c).sum::<i64>() - duplicates.len() as i64
+            + duplicates.len() as i64
+    );
 
     let command_line = std::env::args().collect::<Vec<String>>().join(" ");
     let mut hasher = Sha256::new();

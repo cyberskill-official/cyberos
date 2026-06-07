@@ -28,7 +28,10 @@ attestations:
     let table = result.unwrap();
     assert_eq!(table.len(), 1);
     let att = table
-        .get(&(ProviderKind::Bedrock, "anthropic.claude-3-5-sonnet-20241022-v2:0".into()))
+        .get(&(
+            ProviderKind::Bedrock,
+            "anthropic.claude-3-5-sonnet-20241022-v2:0".into(),
+        ))
         .unwrap();
     assert!(att.is_zdr);
     assert_eq!(att.notes.as_deref(), Some("Test note"));
@@ -211,10 +214,9 @@ fn parse_yaml_for_test(
 fn parse_attestations_public(
     yaml: &str,
 ) -> Result<std::collections::HashMap<(ProviderKind, String), ZdrAttestation>, ZdrInitError> {
-    let raw: serde_yaml::Value =
-        serde_yaml::from_str(yaml).map_err(|e| ZdrInitError::Schema {
-            reason: e.to_string(),
-        })?;
+    let raw: serde_yaml::Value = serde_yaml::from_str(yaml).map_err(|e| ZdrInitError::Schema {
+        reason: e.to_string(),
+    })?;
 
     let attestations = raw
         .get("attestations")
@@ -223,29 +225,23 @@ fn parse_attestations_public(
         })?;
 
     let mut out = std::collections::HashMap::new();
-    for (provider_yaml, models) in attestations
-        .as_mapping()
-        .ok_or_else(|| ZdrInitError::Schema {
-            reason: "'attestations' must be a mapping".into(),
-        })?
-    {
-        let provider_str = provider_yaml
-            .as_str()
-            .ok_or_else(|| ZdrInitError::Schema {
-                reason: format!("provider key must be a string"),
-            })?;
-        let provider = parse_provider_kind(provider_str).ok_or_else(|| {
-            ZdrInitError::Schema {
-                reason: format!("unknown provider: {}", provider_str),
-            }
-        })?;
-
-        for (model_yaml, fields) in models
+    for (provider_yaml, models) in
+        attestations
             .as_mapping()
             .ok_or_else(|| ZdrInitError::Schema {
-                reason: format!("{}/models must be a mapping", provider_str),
+                reason: "'attestations' must be a mapping".into(),
             })?
-        {
+    {
+        let provider_str = provider_yaml.as_str().ok_or_else(|| ZdrInitError::Schema {
+            reason: format!("provider key must be a string"),
+        })?;
+        let provider = parse_provider_kind(provider_str).ok_or_else(|| ZdrInitError::Schema {
+            reason: format!("unknown provider: {}", provider_str),
+        })?;
+
+        for (model_yaml, fields) in models.as_mapping().ok_or_else(|| ZdrInitError::Schema {
+            reason: format!("{}/models must be a mapping", provider_str),
+        })? {
             let model = model_yaml
                 .as_str()
                 .ok_or_else(|| ZdrInitError::Schema {
@@ -283,10 +279,8 @@ fn parse_one_public(
             reason: format!("{}/{}: missing verified_at", provider, model),
         })?;
     let verified_at =
-        NaiveDate::parse_from_str(verified_at_s, "%Y-%m-%d").map_err(|e| {
-            ZdrInitError::Schema {
-                reason: format!("{}/{}: bad verified_at: {}", provider, model, e),
-            }
+        NaiveDate::parse_from_str(verified_at_s, "%Y-%m-%d").map_err(|e| ZdrInitError::Schema {
+            reason: format!("{}/{}: bad verified_at: {}", provider, model, e),
         })?;
 
     let source_url = map

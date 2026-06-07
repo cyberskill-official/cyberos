@@ -38,7 +38,7 @@ chat-license-check:
 	bash scripts/check-license-drift.sh "$(SINCE_WINDOW)"
 
 chat-compose-up:
-	docker compose up -d
+	PINNED_COMMIT=$(PINNED) CYBEROS_PATCH_VERSION=$(PATCH_VERSION) docker compose up -d --build
 	@echo "✓ Local CHAT stack running on http://localhost:8065"
 
 chat-compose-down:

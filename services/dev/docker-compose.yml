@@ -1,22 +1,28 @@
 # CyberOS — Local dev infrastructure
 # Starts Postgres 16 + pgvector + Apache AGE + Redis on standard ports.
-# Used by FR-MEMORY-101 (Layer-2 ingest) and FR-AUTH-001..003 (tenant/subject/RLS).
+# Used by FR-MEMORY-101 (Layer-2 ingest), FR-AUTH-001..109, and
+# FR-PROJ-001..018 local database tests.
 #
 # Quick start (from this directory):
 #   docker compose up -d           # Boot Postgres + Redis
 #   docker compose logs -f         # Watch logs
 #   docker compose down -v         # Tear down + wipe volumes
 #
-# Connection string for sqlx tooling:
-#   export DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos
+# Connection strings for sqlx tooling. Use one DB per module because each
+# service owns its own migration sequence starting at 0001.
+#   export AUTH_DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos_auth
+#   export MEMORY_DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos_memory
+#   export PROJ_DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos_proj
 #
-# Postgres ships with pgvector preinstalled. Apache AGE is included via the
-# `apache/age:release_PG16_1.6.0` image (community-maintained). pgcrypto/uuid-ossp
-# are stdlib extensions enabled in `postgres-init.sql`.
+# The Postgres image is shared with deploy/vps so dev, live-test, and VPS
+# deploys use the same AGE + pgvector extension surface.
 
 services:
   postgres:
-    image: apache/age:release_PG16_1.6.0  # Postgres 16 + Apache AGE
+    image: cyberos/postgres-age-pgvector:pg16
+    build:
+      context: ../..
+      dockerfile: deploy/vps/postgres.Dockerfile
     container_name: cyberos-postgres
     restart: unless-stopped
     ports:
@@ -49,6 +55,25 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  migrator:
+    image: postgres:16-alpine
+    profiles: ["tools"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: cyberos
+      POSTGRES_PASSWORD: cyberos
+      AUTH_DB: cyberos_auth
+      MEMORY_DB: cyberos_memory
+      PROJ_DB: cyberos_proj
+      MIGRATION_ROOT: /workspace/services
+    volumes:
+      - ../..:/workspace:ro
+    entrypoint: ["/bin/sh", "/workspace/deploy/vps/scripts/migrate.sh"]
 
 volumes:
   cyberos-pg-data:

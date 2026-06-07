@@ -10,8 +10,8 @@ pub struct RedisTestNamespace {
 impl RedisTestNamespace {
     pub fn new() -> Self {
         let prefix = format!("test_{}_", Uuid::new_v4().simple());
-        let conn_str = std::env::var("REDIS_URL")
-            .unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string());
+        let conn_str =
+            std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string());
         Self { prefix, conn_str }
     }
 

@@ -6,7 +6,7 @@ For each skill that has BOTH:
 invoke both paths with the same fixture input, normalise outputs (sort
 JSON keys, strip whitespace), compare. Report per-skill pass/fail.
 
-Run: python skill/tests/parity/run_parity.py
+Run: python modules/skill/tests/parity/run_parity.py
 """
 
 from __future__ import annotations
@@ -17,8 +17,8 @@ import sys
 from pathlib import Path
 
 
-REPO = Path(__file__).resolve().parents[3]
-SKILL_ROOT = REPO / "skill" / "skills"
+MODULE_ROOT = Path(__file__).resolve().parents[2]
+PUBLIC_SKILL_ROOT = MODULE_ROOT / "public"
 
 
 def canonical(s: str) -> str:
@@ -46,12 +46,40 @@ def invoke_rust_host(skill_name: str, input_data: str, cwd: Path) -> tuple[int, 
     release_bin = cwd / "target" / "release" / "cyberos-skill"
     debug_bin = cwd / "target" / "debug" / "cyberos-skill"
     if release_bin.is_file():
-        argv = [str(release_bin), "run", skill_name, "--executor", "script"]
+        argv = [
+            str(release_bin),
+            "--root",
+            str(PUBLIC_SKILL_ROOT),
+            "run",
+            skill_name,
+            "--executor",
+            "script",
+        ]
     elif debug_bin.is_file():
-        argv = [str(debug_bin), "run", skill_name, "--executor", "script"]
+        argv = [
+            str(debug_bin),
+            "--root",
+            str(PUBLIC_SKILL_ROOT),
+            "run",
+            skill_name,
+            "--executor",
+            "script",
+        ]
     else:
-        argv = ["cargo", "run", "-q", "-p", "cyberos-skill-cli", "--",
-                "run", skill_name, "--executor", "script"]
+        argv = [
+            "cargo",
+            "run",
+            "-q",
+            "-p",
+            "cyberos-skill-cli",
+            "--",
+            "--root",
+            str(PUBLIC_SKILL_ROOT),
+            "run",
+            skill_name,
+            "--executor",
+            "script",
+        ]
     out = subprocess.run(
         argv, input=input_data, text=True, capture_output=True, timeout=60,
         cwd=str(cwd),
@@ -60,12 +88,16 @@ def invoke_rust_host(skill_name: str, input_data: str, cwd: Path) -> tuple[int, 
 
 
 def main() -> int:
-    skill_dir_root = REPO / "skill"
     fixtures_seen = 0
     parity_pass = 0
     parity_fail = 0
+    skills_seen = 0
 
-    for skill_md in SKILL_ROOT.rglob("SKILL.md"):
+    if not PUBLIC_SKILL_ROOT.is_dir():
+        print(f"Missing public skill root: {PUBLIC_SKILL_ROOT}", file=sys.stderr)
+        return 2
+
+    for skill_md in PUBLIC_SKILL_ROOT.rglob("SKILL.md"):
         sd = skill_md.parent
         name = sd.name
         fp = sd / "tests" / "fixtures.json"
@@ -82,10 +114,12 @@ def main() -> int:
         script_path = sd / from_runner_map[name]
         if not script_path.is_file():
             continue
+        skills_seen += 1
         fixtures = json.loads(fp.read_text(encoding="utf-8"))
 
         print(f"\n=== {name} ===")
-        for case in fixtures.get("valid", [])[:3]:   # first 3 cases per skill
+        cases = fixtures.get("valid", []) + fixtures.get("invalid", [])
+        for case in cases:
             inp = case.get("input")
             if isinstance(inp, (dict, list)):
                 inp = json.dumps(inp)
@@ -95,7 +129,7 @@ def main() -> int:
                 inp = json.dumps(payload, ensure_ascii=False)
             fixtures_seen += 1
             r_code, r_out = invoke_script(script_path, str(inp))
-            h_code, h_out = invoke_rust_host(name, str(inp), skill_dir_root)
+            h_code, h_out = invoke_rust_host(name, str(inp), MODULE_ROOT)
             if r_code == h_code and canonical(r_out) == canonical(h_out):
                 parity_pass += 1
                 print(f"  OK    {str(inp)[:40]:<40} -> exit={r_code}, equal outputs")
@@ -106,6 +140,9 @@ def main() -> int:
                 print(f"        host:   exit={h_code} out={h_out[:80]!r}")
 
     print(f"\nTotal: {parity_pass}/{fixtures_seen} parity-match")
+    if skills_seen == 0 or fixtures_seen == 0:
+        print("No script-backed public skill fixtures were exercised.", file=sys.stderr)
+        return 2
     return 0 if parity_fail == 0 else 1
 
 

@@ -5,10 +5,22 @@ use support::proptest_strategies::adversarial_tenant_strings;
 use support::redis_isolation_helper::RedisTestNamespace;
 use support::test_provider_response;
 
+use std::sync::{Mutex, MutexGuard, OnceLock};
+
 use cyberos_ai_gateway::cache::{self, CacheKey, CacheLookupOutcome};
+
+static ADVERSARIAL_CACHE_TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+fn adversarial_cache_test_lock() -> MutexGuard<'static, ()> {
+    ADVERSARIAL_CACHE_TEST_LOCK
+        .get_or_init(|| Mutex::new(()))
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+}
 
 #[tokio::test]
 async fn adversarial_tenant_strings_dont_leak() {
+    let _guard = adversarial_cache_test_lock();
     cache::redis_backend::init(
         &std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string()),
     );
@@ -29,6 +41,7 @@ async fn adversarial_tenant_strings_dont_leak() {
 
 #[tokio::test]
 async fn unit_separator_in_tenant_id_is_distinct() {
+    let _guard = adversarial_cache_test_lock();
     cache::redis_backend::init(
         &std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string()),
     );
@@ -42,6 +55,7 @@ async fn unit_separator_in_tenant_id_is_distinct() {
 
 #[tokio::test]
 async fn very_long_tenant_id_distinct_from_short() {
+    let _guard = adversarial_cache_test_lock();
     cache::redis_backend::init(
         &std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string()),
     );

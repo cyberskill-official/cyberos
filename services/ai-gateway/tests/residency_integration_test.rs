@@ -42,7 +42,7 @@ fn make_bedrock_policy(residency: Residency, region: &str) -> TenantPolicy {
             allowed_personas: None,
             alias_overrides: None,
             residency_requires_regional_provider: None,
-                pii_redaction_extra: None,
+            pii_redaction_extra: None,
         },
     }
 }
@@ -59,7 +59,11 @@ fn alias_resolve_refuses_when_region_mismatch() {
     assert!(result.is_err(), "expected refusal, got: {:?}", result);
     match &result {
         Err(AliasError::ResidencyViolation {
-            policy_residency, resolved_region, vn1_no_provider, attempted_alias, ..
+            policy_residency,
+            resolved_region,
+            vn1_no_provider,
+            attempted_alias,
+            ..
         }) => {
             assert_eq!(*policy_residency, Residency::Sg1);
             assert_eq!(resolved_region.as_deref(), Some("us-east-1"));

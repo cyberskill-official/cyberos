@@ -70,6 +70,24 @@ impl TokenFile {
                     reason: "extra columns after token".into(),
                 });
             }
+            if svc.is_empty() {
+                return Err(AuthError::Parse {
+                    line_no: i + 1,
+                    reason: "empty service name".into(),
+                });
+            }
+            if tok.is_empty() {
+                return Err(AuthError::Parse {
+                    line_no: i + 1,
+                    reason: "empty token".into(),
+                });
+            }
+            if tokens.values().any(|existing| existing == tok) {
+                return Err(AuthError::Parse {
+                    line_no: i + 1,
+                    reason: "token is reused by another service".into(),
+                });
+            }
             tokens.insert(svc.to_string(), tok.to_string());
         }
         Ok(Self { tokens })
@@ -78,6 +96,13 @@ impl TokenFile {
     /// Lookup a token by service name.
     pub fn token_for(&self, service: &str) -> Option<&str> {
         self.tokens.get(service).map(|s| s.as_str())
+    }
+
+    /// Return the service that owns the bearer token.
+    pub fn service_for_token(&self, token: &str) -> Option<&str> {
+        self.tokens
+            .iter()
+            .find_map(|(service, candidate)| (candidate == token).then_some(service.as_str()))
     }
 }
 
@@ -97,6 +122,12 @@ mod tests {
     #[test]
     fn parse_rejects_extra_columns() {
         let raw = "ai-gateway token1 stray-third-column\n";
+        assert!(TokenFile::parse(raw).is_err());
+    }
+
+    #[test]
+    fn parse_rejects_duplicate_tokens() {
+        let raw = "ai-gateway same-token\nauth-service same-token\n";
         assert!(TokenFile::parse(raw).is_err());
     }
 }

@@ -3,9 +3,7 @@
 pub mod proptest_strategies;
 pub mod redis_isolation_helper;
 
-use cyberos_ai_gateway::router::types::{
-    Choice, FinishReason, ProviderResponse, ProviderUsage,
-};
+use cyberos_ai_gateway::router::types::{Choice, FinishReason, ProviderResponse, ProviderUsage};
 
 pub fn test_provider_response() -> ProviderResponse {
     ProviderResponse {

@@ -10,7 +10,7 @@
 //! roll back the materialized l2_memory / l2_entity row. The graph is a
 //! query-side projection of the canonical relational tables.
 
-use sqlx::PgPool;
+use sqlx::{pool::PoolConnection, PgPool, Postgres};
 use thiserror::Error;
 use tracing::warn;
 
@@ -22,21 +22,25 @@ pub enum AgeError {
 
 /// Ensure the AGE graph exists. Call once at boot. Idempotent.
 pub async fn ensure_graph(pool: &PgPool) -> Result<(), AgeError> {
-    // SELECT create_graph('cyberos_graph') is a one-shot setup. Idempotency is
-    // handled by SELECT … WHERE NOT EXISTS guard.
-    let stmt = r#"
-        LOAD 'age';
-        SET search_path = ag_catalog, "$user", public;
-        DO $$
-        BEGIN
-            IF NOT EXISTS (
-                SELECT 1 FROM ag_catalog.ag_graph WHERE name = 'cyberos_graph'
-            ) THEN
-                PERFORM create_graph('cyberos_graph');
-            END IF;
-        END$$;
-    "#;
-    sqlx::query(stmt).execute(pool).await?;
+    // AGE's LOAD/search_path setup is connection-local, so keep the bootstrap
+    // commands on one acquired connection. sqlx prepared statements cannot
+    // contain multiple commands in a single query string.
+    let mut conn = pool.acquire().await?;
+    prepare_age_session(&mut conn).await?;
+
+    let (exists,): (bool,) =
+        sqlx::query_as("SELECT EXISTS (SELECT 1 FROM ag_catalog.ag_graph WHERE name = $1)")
+            .bind("cyberos_graph")
+            .fetch_one(&mut *conn)
+            .await?;
+
+    if !exists {
+        sqlx::query("SELECT create_graph($1)")
+            .bind("cyberos_graph")
+            .execute(&mut *conn)
+            .await?;
+    }
+
     Ok(())
 }
 
@@ -71,9 +75,30 @@ pub async fn mirror_entity(
         path_esc = escape_cypher_string(source_path),
     );
 
-    if let Err(e) = sqlx::query(&cypher).execute(pool).await {
+    let mut conn = match pool.acquire().await {
+        Ok(conn) => conn,
+        Err(e) => {
+            warn!(error = %e, %tenant_id, %kind, %name, "AGE mirror_entity failed to acquire connection — relational table still authoritative");
+            return;
+        }
+    };
+
+    if let Err(e) = prepare_age_session(&mut conn).await {
+        warn!(error = %e, %tenant_id, %kind, %name, "AGE mirror_entity failed to prepare session — relational table still authoritative");
+        return;
+    }
+
+    if let Err(e) = sqlx::query(&cypher).execute(&mut *conn).await {
         warn!(error = %e, %tenant_id, %kind, %name, "AGE mirror_entity failed — relational table still authoritative");
     }
+}
+
+async fn prepare_age_session(conn: &mut PoolConnection<Postgres>) -> Result<(), sqlx::Error> {
+    sqlx::query("LOAD 'age'").execute(&mut **conn).await?;
+    sqlx::query(r#"SET search_path = ag_catalog, "$user", public"#)
+        .execute(&mut **conn)
+        .await?;
+    Ok(())
 }
 
 /// Trivial Cypher-string escaper. AGE accepts standard SQL-style single-quote

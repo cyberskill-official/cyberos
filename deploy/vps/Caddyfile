@@ -1,0 +1,35 @@
+{$CYBEROS_CADDY_SITE}
+
+encode zstd gzip
+
+handle_path /auth/* {
+	reverse_proxy cyberos-auth:7700
+}
+
+handle /auth {
+	redir /auth/healthz 302
+}
+
+handle_path /memory/* {
+	reverse_proxy cyberos-memory:7800
+}
+
+handle /memory {
+	redir /memory/healthz 302
+}
+
+handle_path /chat/* {
+	reverse_proxy cyberos-chat:8065
+}
+
+handle /chat {
+	redir /chat/ 302
+}
+
+handle /healthz {
+	respond "cyberos gateway ok" 200
+}
+
+handle {
+	respond "CyberOS VPS gateway. Try /auth/healthz or /memory/healthz." 200
+}

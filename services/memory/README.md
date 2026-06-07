@@ -13,7 +13,7 @@ docker compose up -d
 
 # 2. Run migrations + start the service (another terminal)
 cd ../memory
-export DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos
+export DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos_memory
 sqlx migrate run                    # applies Layer-2 + cursor + Layer-1 audit mirror tables
 cargo run
 

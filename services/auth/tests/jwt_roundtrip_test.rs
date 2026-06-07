@@ -91,29 +91,33 @@ async fn jwks_publishes_active_key() {
     .expect("insert");
 
     let svc = JwtService::new(pool.clone(), "https://auth.test.cyberos".to_string());
-    
+
     let db_now: chrono::DateTime<chrono::Utc> = sqlx::query_scalar("SELECT NOW()")
         .fetch_one(&pool)
         .await
         .expect("select now");
-    let keys_in_db = sqlx::query_as::<_, (String, String, String, chrono::DateTime<chrono::Utc>)> (
-        "SELECT kid, status, public_pem, expires_at FROM auth_signing_keys"
+    let keys_in_db = sqlx::query_as::<_, (String, String, String, chrono::DateTime<chrono::Utc>)>(
+        "SELECT kid, status, public_pem, expires_at FROM auth_signing_keys",
     )
     .fetch_all(&pool)
     .await
     .expect("select keys");
-    
+
     println!("DEBUG: db_now={db_now:?}, expires={expires:?}");
     for (k_kid, k_status, k_pem, k_expires) in &keys_in_db {
         println!("DEBUG: key in db: kid={k_kid}, status={k_status}, expires_at={k_expires:?}");
         if k_kid == &kid {
-            let has_pub = k_pem.contains("-----BEGIN PUBLIC KEY-----") || k_pem.contains("-----BEGIN RSA PUBLIC KEY-----");
+            let has_pub = k_pem.contains("-----BEGIN PUBLIC KEY-----")
+                || k_pem.contains("-----BEGIN RSA PUBLIC KEY-----");
             println!("DEBUG: pem has public block: {has_pub}");
         }
     }
 
     let doc = svc.jwks_for_publication().await.expect("jwks");
-    println!("DEBUG: doc keys = {:?}", doc.keys.iter().map(|k| &k.kid).collect::<Vec<_>>());
+    println!(
+        "DEBUG: doc keys = {:?}",
+        doc.keys.iter().map(|k| &k.kid).collect::<Vec<_>>()
+    );
 
     assert!(
         doc.keys

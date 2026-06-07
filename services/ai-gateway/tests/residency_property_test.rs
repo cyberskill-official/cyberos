@@ -32,7 +32,8 @@ fn any_region() -> impl Strategy<Value = Region> {
         "ca-central-1",
         "sa-east-1",
     ];
-    prop::sample::select(known_regions.to_vec()).prop_map(|r| Region::from_provider_string(r).unwrap())
+    prop::sample::select(known_regions.to_vec())
+        .prop_map(|r| Region::from_provider_string(r).unwrap())
 }
 
 proptest! {

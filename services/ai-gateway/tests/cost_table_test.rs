@@ -1,23 +1,38 @@
 //! FR-AI-007 §5 — Integration tests for the cost-table loader.
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
+use std::sync::{Mutex, MutexGuard, OnceLock};
 use std::time::Instant;
 
 use rust_decimal_macros::dec;
 
-use cyberos_ai_gateway::cost_table::{self, init_cost_table, CostRate, LoaderInitError};
+use cyberos_ai_gateway::cost_table::{self, init_cost_table, LoaderInitError};
 use cyberos_ai_gateway::policy::ProviderKind;
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from("tests/fixtures/cost_table").join(name)
 }
 
+static COST_TABLE_TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+fn cost_table_test_lock() -> MutexGuard<'static, ()> {
+    COST_TABLE_TEST_LOCK
+        .get_or_init(|| Mutex::new(()))
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+}
+
 // ─── AC #1: Happy lookup ──────────────────────────────────────────────────────
 
 #[tokio::test]
 async fn lookup_bedrock_claude_sonnet() {
+    let _guard = cost_table_test_lock();
     let _handle = init_cost_table(&fixture("valid_rates.yaml")).await.unwrap();
-    let rate = cost_table::lookup(&ProviderKind::Bedrock, "anthropic.claude-3-5-sonnet-20241022-v2:0").unwrap();
+    let rate = cost_table::lookup(
+        &ProviderKind::Bedrock,
+        "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    )
+    .unwrap();
     assert_eq!(rate.input_per_1k_usd, dec!(0.003));
     assert_eq!(rate.output_per_1k_usd, dec!(0.015));
     assert!(!rate.is_embedding);
@@ -27,6 +42,7 @@ async fn lookup_bedrock_claude_sonnet() {
 
 #[tokio::test]
 async fn miss_returns_none() {
+    let _guard = cost_table_test_lock();
     let _handle = init_cost_table(&fixture("valid_rates.yaml")).await.unwrap();
     assert!(cost_table::lookup(&ProviderKind::Anthropic, "nonexistent-model").is_none());
 }
@@ -35,6 +51,7 @@ async fn miss_returns_none() {
 
 #[tokio::test]
 async fn embedding_flag_set_for_titan() {
+    let _guard = cost_table_test_lock();
     let _handle = init_cost_table(&fixture("valid_rates.yaml")).await.unwrap();
     let rate = cost_table::lookup(&ProviderKind::Bedrock, "amazon.titan-embed-text-v2:0").unwrap();
     assert!(rate.is_embedding);
@@ -45,6 +62,7 @@ async fn embedding_flag_set_for_titan() {
 
 #[tokio::test]
 async fn bge_rates_are_zero() {
+    let _guard = cost_table_test_lock();
     let _handle = init_cost_table(&fixture("valid_rates.yaml")).await.unwrap();
     let rate = cost_table::lookup(&ProviderKind::Bge, "bge-m3").unwrap();
     assert_eq!(rate.input_per_1k_usd, dec!(0.0));
@@ -56,7 +74,10 @@ async fn bge_rates_are_zero() {
 
 #[tokio::test]
 async fn aggregate_three_failures() {
-    let err = init_cost_table(&fixture("three_failures.yaml")).await.unwrap_err();
+    let _guard = cost_table_test_lock();
+    let err = init_cost_table(&fixture("three_failures.yaml"))
+        .await
+        .unwrap_err();
     match err {
         LoaderInitError::Schema { failures } => {
             assert_eq!(failures.len(), 3, "expected 3 aggregated failures");
@@ -69,11 +90,16 @@ async fn aggregate_three_failures() {
 
 #[tokio::test]
 async fn negative_rate_rejected_at_init() {
-    let err = init_cost_table(&fixture("negative_rate.yaml")).await.unwrap_err();
+    let _guard = cost_table_test_lock();
+    let err = init_cost_table(&fixture("negative_rate.yaml"))
+        .await
+        .unwrap_err();
     match err {
         LoaderInitError::Schema { failures } => {
             assert!(
-                failures.iter().any(|f| f.errors.iter().any(|e| e.contains("non-negative"))),
+                failures
+                    .iter()
+                    .any(|f| f.errors.iter().any(|e| e.contains("non-negative"))),
                 "expected 'non-negative' error message"
             );
         }
@@ -85,27 +111,33 @@ async fn negative_rate_rejected_at_init() {
 
 #[tokio::test]
 async fn loaded_at_populated_after_init() {
+    let _guard = cost_table_test_lock();
     let before = chrono::Utc::now();
     let _handle = init_cost_table(&fixture("valid_rates.yaml")).await.unwrap();
     let after = chrono::Utc::now();
 
     let loaded = cost_table::loaded_at().expect("loaded_at should be Some");
-    assert!(loaded >= before && loaded <= after, "loaded_at should be within init window");
+    assert!(
+        loaded >= before && loaded <= after,
+        "loaded_at should be within init window"
+    );
 }
 
 // ─── AC #15: is_embedding consistency ─────────────────────────────────────────
 
 #[tokio::test]
 async fn is_embedding_with_nonzero_output_rejected() {
+    let _guard = cost_table_test_lock();
     let err = init_cost_table(&fixture("embedding_inconsistency.yaml"))
         .await
         .unwrap_err();
     match err {
         LoaderInitError::Schema { failures } => {
             assert!(
-                failures
+                failures.iter().any(|f| f
+                    .errors
                     .iter()
-                    .any(|f| f.errors.iter().any(|e| e.contains("is_embedding: true requires"))),
+                    .any(|e| e.contains("is_embedding: true requires"))),
                 "expected 'is_embedding: true requires' error"
             );
         }
@@ -117,6 +149,7 @@ async fn is_embedding_with_nonzero_output_rejected() {
 
 #[tokio::test]
 async fn hot_reload_invalid_preserves_cache() {
+    let _guard = cost_table_test_lock();
     let tmp = tempfile::TempDir::new().unwrap();
     let path = tmp.path().join("cost_rates.yaml");
     std::fs::copy(fixture("valid_rates.yaml"), &path).unwrap();
@@ -124,8 +157,10 @@ async fn hot_reload_invalid_preserves_cache() {
     let _handle = init_cost_table(&path).await.unwrap();
 
     // Verify initial load works
-    let rate_before =
-        cost_table::lookup(&ProviderKind::Bedrock, "anthropic.claude-3-5-sonnet-20241022-v2:0");
+    let rate_before = cost_table::lookup(
+        &ProviderKind::Bedrock,
+        "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    );
     assert!(rate_before.is_some());
 
     // Corrupt the YAML
@@ -133,25 +168,32 @@ async fn hot_reload_invalid_preserves_cache() {
     tokio::time::sleep(std::time::Duration::from_millis(300)).await;
 
     // Cache should still serve the original valid rate
-    let rate_after =
-        cost_table::lookup(&ProviderKind::Bedrock, "anthropic.claude-3-5-sonnet-20241022-v2:0");
-    assert!(rate_after.is_some(), "cache should be preserved after invalid YAML");
+    let rate_after = cost_table::lookup(
+        &ProviderKind::Bedrock,
+        "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    );
+    assert!(
+        rate_after.is_some(),
+        "cache should be preserved after invalid YAML"
+    );
 }
 
 // ─── AC #9: Hot reload picks up new model ─────────────────────────────────────
 
 #[tokio::test]
 async fn hot_reload_picks_up_new_model() {
+    let _guard = cost_table_test_lock();
     let tmp = tempfile::TempDir::new().unwrap();
     let path = tmp.path().join("cost_rates.yaml");
     std::fs::copy(fixture("valid_rates.yaml"), &path).unwrap();
 
     let _handle = init_cost_table(&path).await.unwrap();
 
-    // Add a new model to the YAML
-    let mut yaml = std::fs::read_to_string(&path).unwrap();
-    yaml.push_str(
-        "\n    claude-99-future:\n      input_per_1k_usd:  0.001\n      output_per_1k_usd: 0.005\n",
+    // Add a new model to the Anthropic provider block.
+    let yaml = std::fs::read_to_string(&path).unwrap();
+    let yaml = yaml.replace(
+        "\n  openai:\n",
+        "\n    claude-99-future:\n      input_per_1k_usd:  0.001\n      output_per_1k_usd: 0.005\n\n  openai:\n",
     );
     std::fs::write(&path, yaml).unwrap();
 
@@ -173,6 +215,7 @@ async fn hot_reload_picks_up_new_model() {
 
 #[tokio::test]
 async fn concurrent_1000_tasks_no_contention() {
+    let _guard = cost_table_test_lock();
     let _handle = init_cost_table(&fixture("valid_rates.yaml")).await.unwrap();
     let start = Instant::now();
 

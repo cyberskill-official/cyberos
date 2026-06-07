@@ -63,10 +63,7 @@ mod tests {
 
     #[test]
     fn rerank_ttl() {
-        assert_eq!(
-            ttl_for_alias("rerank.fast"),
-            Some(Duration::from_secs(900))
-        );
+        assert_eq!(ttl_for_alias("rerank.fast"), Some(Duration::from_secs(900)));
     }
 
     #[test]

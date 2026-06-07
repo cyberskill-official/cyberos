@@ -17,7 +17,10 @@ pub fn build_provider_chain(
     let mut chain: Vec<(Box<dyn Provider>, String)> = Vec::new();
 
     // Primary provider
-    chain.push((make_provider(resolved.provider_kind), resolved.model.clone()));
+    chain.push((
+        make_provider(resolved.provider_kind),
+        resolved.model.clone(),
+    ));
 
     // Fallback chain
     for fb in &policy.ai_policy.fallback_chain {

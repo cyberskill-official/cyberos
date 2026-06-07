@@ -22,8 +22,17 @@
 #![warn(missing_docs)]
 
 pub mod auth;
+pub mod compliance;
 pub mod config;
+pub mod custody;
+pub mod grafana_proxy;
+pub mod ingress;
+pub mod langsmith;
 pub mod metrics;
+pub mod red;
+pub mod runbook;
+pub mod tail_sampling;
+pub mod tracecontext;
 
 /// Banner emitted by the supervisor binary on startup.
 pub const SERVICE_BANNER: &str = concat!(

@@ -3,8 +3,8 @@
 use std::collections::HashMap;
 
 use cyberos_ai_gateway::alias::{self, AliasError, LatencyClass, ResolvedModel};
-use cyberos_ai_gateway::policy::*;
 use cyberos_ai_gateway::cost_table;
+use cyberos_ai_gateway::policy::*;
 
 // ─── Test helpers ─────────────────────────────────────────────────────────────
 
@@ -18,9 +18,18 @@ fn test_policy_with_bedrock_primary() -> TenantPolicy {
     init_cost_table_for_tests();
 
     let mut model_alias_map = HashMap::new();
-    model_alias_map.insert("chat.smart".into(), "anthropic.claude-3-5-sonnet-20241022-v2:0".into());
-    model_alias_map.insert("chat.fast".into(), "anthropic.claude-3-haiku-20240307-v1:0".into());
-    model_alias_map.insert("embed.standard".into(), "amazon.titan-embed-text-v2:0".into());
+    model_alias_map.insert(
+        "chat.smart".into(),
+        "anthropic.claude-3-5-sonnet-20241022-v2:0".into(),
+    );
+    model_alias_map.insert(
+        "chat.fast".into(),
+        "anthropic.claude-3-haiku-20240307-v1:0".into(),
+    );
+    model_alias_map.insert(
+        "embed.standard".into(),
+        "amazon.titan-embed-text-v2:0".into(),
+    );
 
     TenantPolicy {
         tenant_id: "org:test".into(),
@@ -40,7 +49,7 @@ fn test_policy_with_bedrock_primary() -> TenantPolicy {
             allowed_personas: None,
             alias_overrides: None,
             residency_requires_regional_provider: None,
-                pii_redaction_extra: None,
+            pii_redaction_extra: None,
         },
     }
 }

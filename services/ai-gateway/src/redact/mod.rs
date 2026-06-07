@@ -11,7 +11,9 @@ use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
 use once_cell::sync::Lazy;
-use prometheus::{register_counter_vec, register_histogram_vec, CounterVec, Histogram, HistogramVec};
+use prometheus::{
+    register_counter_vec, register_histogram_vec, CounterVec, Histogram, HistogramVec,
+};
 
 use crate::policy::TenantPolicy;
 
@@ -241,10 +243,7 @@ fn sanitize_sidecar_error_message(body: &str) -> String {
         "response_parse_error",
     ];
     let trimmed = body.trim();
-    if KNOWN_ERROR_CODES
-        .iter()
-        .any(|code| trimmed.contains(code))
-    {
+    if KNOWN_ERROR_CODES.iter().any(|code| trimmed.contains(code)) {
         trimmed.chars().take(128).collect()
     } else {
         "sidecar_returned_unrecognized_message_redacted".to_string()
@@ -293,16 +292,34 @@ mod tests {
 
     #[test]
     fn pii_type_from_presidio_known_types() {
-        assert_eq!(PiiType::from_presidio("CREDIT_CARD"), Some(PiiType::CreditCard));
-        assert_eq!(PiiType::from_presidio("EMAIL_ADDRESS"), Some(PiiType::EmailAddress));
+        assert_eq!(
+            PiiType::from_presidio("CREDIT_CARD"),
+            Some(PiiType::CreditCard)
+        );
+        assert_eq!(
+            PiiType::from_presidio("EMAIL_ADDRESS"),
+            Some(PiiType::EmailAddress)
+        );
         assert_eq!(PiiType::from_presidio("US_SSN"), Some(PiiType::UsSsn));
-        assert_eq!(PiiType::from_presidio("PHONE_NUMBER"), Some(PiiType::PhoneNumber));
+        assert_eq!(
+            PiiType::from_presidio("PHONE_NUMBER"),
+            Some(PiiType::PhoneNumber)
+        );
         assert_eq!(PiiType::from_presidio("PERSON"), Some(PiiType::Person));
         assert_eq!(PiiType::from_presidio("LOCATION"), Some(PiiType::Location));
-        assert_eq!(PiiType::from_presidio("IP_ADDRESS"), Some(PiiType::IpAddress));
+        assert_eq!(
+            PiiType::from_presidio("IP_ADDRESS"),
+            Some(PiiType::IpAddress)
+        );
         assert_eq!(PiiType::from_presidio("IBAN_CODE"), Some(PiiType::IbanCode));
-        assert_eq!(PiiType::from_presidio("US_BANK_NUMBER"), Some(PiiType::UsBankNumber));
-        assert_eq!(PiiType::from_presidio("MEDICAL_LICENSE"), Some(PiiType::MedicalLicense));
+        assert_eq!(
+            PiiType::from_presidio("US_BANK_NUMBER"),
+            Some(PiiType::UsBankNumber)
+        );
+        assert_eq!(
+            PiiType::from_presidio("MEDICAL_LICENSE"),
+            Some(PiiType::MedicalLicense)
+        );
     }
 
     #[test]
@@ -310,7 +327,10 @@ mod tests {
         assert_eq!(PiiType::from_presidio("VN_CCCD"), Some(PiiType::VnCccd));
         assert_eq!(PiiType::from_presidio("VN_MST"), Some(PiiType::VnMst));
         assert_eq!(PiiType::from_presidio("VN_PHONE"), Some(PiiType::VnPhone));
-        assert_eq!(PiiType::from_presidio("VN_ADDRESS"), Some(PiiType::VnAddress));
+        assert_eq!(
+            PiiType::from_presidio("VN_ADDRESS"),
+            Some(PiiType::VnAddress)
+        );
     }
 
     #[test]

@@ -31,12 +31,17 @@ tracing-subscriber.workspace = true
 uuid.workspace = true
 chrono.workspace = true
 clap.workspace = true
+sha2.workspace = true
 
 # OTel surface (slice-1 scaffold; the heavy lifting is the otelcol binary itself
 # which we operate via Helm / docker-compose; this crate hosts the supervisor +
 # tenant-isolation extension hook for FR-OBS-002).
 prost = "0.13"
+opentelemetry-proto = "0.27"
+reqwest = { version = "0.12", features = ["rustls-tls"], default-features = false }
 serde_yaml = "0.9"
+ed25519-dalek = "2.2"
+tonic = { version = "0.12", features = ["transport"] }
 
 cyberos-types.workspace = true
 

@@ -1773,20 +1773,32 @@ def _cmd_init(args: argparse.Namespace) -> int:
 
     # Copy protocol files into the store (self-contained)
     if source_repo:
-        # AGENTS.md may be at top-level or inside cyberos/data/
-        agents_src = source_repo / "AGENTS.md"
-        if not agents_src.is_file():
-            agents_src = source_repo / "cyberos" / "data" / "AGENTS.md"
-        if agents_src.is_file():
+        agents_src = _resolve_protocol_file(source_repo, "AGENTS.md")
+        if agents_src is not None:
             agents_dst = store / "AGENTS.md"
             agents_dst.write_bytes(agents_src.read_bytes())
-            print(f"  Copied AGENTS.md")
+            print("  Copied AGENTS.md")
         for proto_file in ("memory.schema.json", "memory.invariants.yaml"):
-            src = source_repo / proto_file
-            if src.is_file():
+            src = _resolve_protocol_file(source_repo, proto_file)
+            if src is not None:
                 dst = store / proto_file
                 dst.write_bytes(src.read_bytes())
                 print(f"  Copied {proto_file}")
+
+    # Keep project root AGENTS.md in place for agents that load it directly.
+    project_agents = store.parent / "AGENTS.md"
+    if not project_agents.exists():
+        protocol_candidates: list[Path] = []
+        if source_repo:
+            src = _resolve_protocol_file(source_repo, "AGENTS.md")
+            if src is not None:
+                protocol_candidates.append(src)
+        protocol_candidates.append(store / "AGENTS.md")
+        for src in protocol_candidates:
+            if src.is_file():
+                project_agents.write_bytes(src.read_bytes())
+                print("  Wrote project AGENTS.md")
+                break
 
     # Write manifest atomically
     tmp = manifest_path.with_suffix(".tmp")
@@ -2012,6 +2024,19 @@ def _find_source_repo() -> Path | None:
     # Fallback: check if protocol files exist at the top level
     if (memory_dir / "memory.schema.json").is_file():
         return memory_dir
+    return None
+
+
+def _resolve_protocol_file(source_repo: Path | None, filename: str) -> Path | None:
+    """Resolve protocol files from either module root or cyberos/data/."""
+    if source_repo is None:
+        return None
+    top_level = source_repo / filename
+    if top_level.is_file():
+        return top_level
+    data_dir = source_repo / "cyberos" / "data" / filename
+    if data_dir.is_file():
+        return data_dir
     return None
 
 

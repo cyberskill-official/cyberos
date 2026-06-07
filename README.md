@@ -41,6 +41,10 @@ cd ../cuo && pip install -e .
 cyberos-cuo list-personas                        # → 47 active personas
 ```
 
+For the local test path across SKILL, MEMORY, CUO, AUTH, CHAT, and PROJ, use
+[`docs/local-live-test.md`](docs/local-live-test.md) and
+`scripts/local-live-test.sh`.
+
 ## Versioning
 
 ```bash

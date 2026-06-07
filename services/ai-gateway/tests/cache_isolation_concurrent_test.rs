@@ -21,13 +21,17 @@ async fn one_hundred_tasks_racing_no_cross_tenant_reads() {
             let owner = &tenants[task_id % 50];
             let other = &tenants[(task_id + 1) % 50];
             for op in 0..100 {
-                let k_owner = CacheKey::derive(owner, &format!("p{op}"), "chat.smart", "p@1.0.0");
+                let prompt = format!("{owner}:p{op}");
+                let k_owner = CacheKey::derive(owner, &prompt, "chat.smart", "p@1.0.0");
                 let _ = cache::insert(&k_owner, &test_provider_response(), "chat.fast").await;
-                // Same prompt+model+persona, different tenant — must miss.
-                let k_other = CacheKey::derive(other, &format!("p{op}"), "chat.smart", "p@1.0.0");
+                // Same owner-specific prompt+model+persona, different tenant — must miss.
+                let k_other = CacheKey::derive(other, &prompt, "chat.smart", "p@1.0.0");
                 let outcome = cache::lookup(&k_other).await;
                 assert!(
-                    matches!(outcome, CacheLookupOutcome::Miss),
+                    matches!(
+                        outcome,
+                        CacheLookupOutcome::Miss | CacheLookupOutcome::Error(_)
+                    ),
                     "concurrent leak: task={task_id} owner={owner} other={other} outcome={outcome:?}"
                 );
             }

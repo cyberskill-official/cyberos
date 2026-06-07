@@ -1,0 +1,27 @@
+ARG RUST_VERSION=1.88.0
+
+FROM rust:${RUST_VERSION}-bookworm AS build
+
+ARG PACKAGE
+ARG BINARY
+
+WORKDIR /app
+
+COPY services/ ./services/
+
+WORKDIR /app/services
+RUN cargo build --release -p "${PACKAGE}" --bin "${BINARY}"
+
+FROM debian:bookworm-slim AS runtime
+
+ARG BINARY
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates curl \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd --system --uid 10001 --home-dir /nonexistent --shell /usr/sbin/nologin cyberos
+
+COPY --from=build /app/services/target/release/${BINARY} /usr/local/bin/cyberos-service
+
+USER cyberos:cyberos
+ENTRYPOINT ["/usr/local/bin/cyberos-service"]

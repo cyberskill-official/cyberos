@@ -81,7 +81,10 @@ async fn read_ledger_spent(pool: &PgPool, tenant_id: &str) -> Decimal {
     .unwrap()
 }
 
-async fn read_hold_state(pool: &PgPool, hold_id: Uuid) -> (String, Option<Decimal>, Option<String>) {
+async fn read_hold_state(
+    pool: &PgPool,
+    hold_id: Uuid,
+) -> (String, Option<Decimal>, Option<String>) {
     sqlx::query_as::<_, (String, Option<Decimal>, Option<String>)>(
         "SELECT state, actual_usd, refund_reason FROM cost_ledger_hold WHERE id = $1",
     )
@@ -121,7 +124,14 @@ async fn reconcile_success_updates_ledger() {
     cleanup_tenant(&pool, tenant).await;
     seed_tenant(&pool, tenant, dec!(100), dec!(12.50)).await;
 
-    let hold_id = seed_hold(&pool, tenant, dec!(0.0085), "bedrock", "anthropic.claude-3-5-sonnet-20241022-v2:0").await;
+    let hold_id = seed_hold(
+        &pool,
+        tenant,
+        dec!(0.0085),
+        "bedrock",
+        "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    )
+    .await;
 
     let outcome = reconcile(
         hold_id,
@@ -183,7 +193,14 @@ async fn reconcile_idempotent_double_call() {
     cleanup_tenant(&pool, tenant).await;
     seed_tenant(&pool, tenant, dec!(100), dec!(50)).await;
 
-    let hold_id = seed_hold(&pool, tenant, dec!(0.0085), "bedrock", "anthropic.claude-3-5-sonnet-20241022-v2:0").await;
+    let hold_id = seed_hold(
+        &pool,
+        tenant,
+        dec!(0.0085),
+        "bedrock",
+        "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    )
+    .await;
 
     let outcome1 = reconcile(
         hold_id,
@@ -238,7 +255,10 @@ async fn reconcile_idempotent_double_call() {
 
     // Verify no double-counting: spent_usd should not have been incremented twice.
     let spent = read_ledger_spent(&pool, tenant).await;
-    assert!(spent <= dec!(50.01), "spend should not be double-counted: {spent}");
+    assert!(
+        spent <= dec!(50.01),
+        "spend should not be double-counted: {spent}"
+    );
 
     cleanup_tenant(&pool, tenant).await;
 }
@@ -260,7 +280,14 @@ async fn reconcile_provider_error_refunds() {
     cleanup_tenant(&pool, tenant).await;
     seed_tenant(&pool, tenant, dec!(100), dec!(50)).await;
 
-    let hold_id = seed_hold(&pool, tenant, dec!(0.0085), "bedrock", "anthropic.claude-3-5-sonnet-20241022-v2:0").await;
+    let hold_id = seed_hold(
+        &pool,
+        tenant,
+        dec!(0.0085),
+        "bedrock",
+        "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    )
+    .await;
 
     let outcome = reconcile(
         hold_id,
@@ -316,7 +343,14 @@ async fn reconcile_cancelled_partial_charges_partial() {
     cleanup_tenant(&pool, tenant).await;
     seed_tenant(&pool, tenant, dec!(100), dec!(50)).await;
 
-    let hold_id = seed_hold(&pool, tenant, dec!(0.0085), "bedrock", "anthropic.claude-3-5-sonnet-20241022-v2:0").await;
+    let hold_id = seed_hold(
+        &pool,
+        tenant,
+        dec!(0.0085),
+        "bedrock",
+        "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    )
+    .await;
 
     let outcome = reconcile(
         hold_id,
@@ -346,7 +380,10 @@ async fn reconcile_cancelled_partial_charges_partial() {
     let (state, actual_usd, _) = read_hold_state(&pool, hold_id).await;
     if state == "reconciled" {
         assert!(actual_usd.is_some());
-        assert!(actual_usd.unwrap() >= dec!(0.0001), "floor at column precision");
+        assert!(
+            actual_usd.unwrap() >= dec!(0.0001),
+            "floor at column precision"
+        );
     }
 
     cleanup_tenant(&pool, tenant).await;
@@ -369,7 +406,14 @@ async fn reconcile_cancelled_no_stream_refunds() {
     cleanup_tenant(&pool, tenant).await;
     seed_tenant(&pool, tenant, dec!(100), dec!(50)).await;
 
-    let hold_id = seed_hold(&pool, tenant, dec!(0.0085), "bedrock", "anthropic.claude-3-5-sonnet-20241022-v2:0").await;
+    let hold_id = seed_hold(
+        &pool,
+        tenant,
+        dec!(0.0085),
+        "bedrock",
+        "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    )
+    .await;
 
     let outcome = reconcile(
         hold_id,
@@ -416,7 +460,14 @@ async fn reconcile_cost_table_missing_errors() {
     cleanup_tenant(&pool, tenant).await;
     seed_tenant(&pool, tenant, dec!(100), dec!(50)).await;
 
-    let hold_id = seed_hold(&pool, tenant, dec!(0.0085), "fake_provider", "nonexistent_model").await;
+    let hold_id = seed_hold(
+        &pool,
+        tenant,
+        dec!(0.0085),
+        "fake_provider",
+        "nonexistent_model",
+    )
+    .await;
 
     let outcome = reconcile(
         hold_id,
@@ -465,7 +516,14 @@ async fn reconcile_400_bad_request_refunds() {
     cleanup_tenant(&pool, tenant).await;
     seed_tenant(&pool, tenant, dec!(100), dec!(50)).await;
 
-    let hold_id = seed_hold(&pool, tenant, dec!(0.0085), "bedrock", "anthropic.claude-3-5-sonnet-20241022-v2:0").await;
+    let hold_id = seed_hold(
+        &pool,
+        tenant,
+        dec!(0.0085),
+        "bedrock",
+        "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    )
+    .await;
 
     let outcome = reconcile(
         hold_id,
@@ -518,7 +576,14 @@ async fn reconcile_already_finalised_carries_outcome() {
     seed_tenant(&pool, tenant, dec!(100), dec!(50)).await;
 
     // Seed a hold that's already reconciled.
-    let hold_id = seed_hold(&pool, tenant, dec!(0.0085), "bedrock", "anthropic.claude-3-5-sonnet-20241022-v2:0").await;
+    let hold_id = seed_hold(
+        &pool,
+        tenant,
+        dec!(0.0085),
+        "bedrock",
+        "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    )
+    .await;
 
     // Manually set to reconciled state.
     sqlx::query(

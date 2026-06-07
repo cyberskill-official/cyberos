@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-runtime/skill_runners/base.py — base class for deterministic per-skill runners.
+modules/skill/runners/base.py — base class for deterministic per-skill runners.
 
 Tier α.1 (Batch 21).
 
@@ -331,10 +331,20 @@ def llm_call_streaming(model: str, prompt: str, max_tokens: int,
 # ---- Discovery helper for the chain orchestrator --------------------------
 
 def load_runner(skill_id: str, memory_root: Path) -> "BaseSkillRunner | None":
-    """Find runtime/skill_runners/<basename>.py for skill_id. Return instance or None."""
+    """Find the runner implementation for skill_id. Return instance or None.
+
+    The historical runtime path was `runtime/skill_runners/`. The current
+    checked-in module path is `modules/skill/runners/`; keep both so older
+    stores and the repo-local test harness stay honest.
+    """
     base = skill_id.split("/")[-1].replace("-", "_")
-    runner_path = memory_root / "runtime" / "skill_runners" / f"{base}.py"
-    if not runner_path.exists():
+    runner_paths = [
+        memory_root / "runtime" / "skill_runners" / f"{base}.py",
+        memory_root / "modules" / "skill" / "runners" / f"{base}.py",
+        Path(__file__).resolve().parent / f"{base}.py",
+    ]
+    runner_path = next((path for path in runner_paths if path.exists()), None)
+    if runner_path is None:
         return None
     spec = importlib.util.spec_from_file_location(f"skill_runner_{base}", runner_path)
     mod = importlib.util.module_from_spec(spec)

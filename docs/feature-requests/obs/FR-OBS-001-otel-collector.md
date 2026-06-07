@@ -3,7 +3,7 @@ id: FR-OBS-001
 title: "OTel Collector + LGTM stack (Loki + Prometheus + Tempo + Grafana) with mTLS ingress + per-service tokens + retention + file-buffer"
 module: OBS
 priority: MUST
-status: ready_to_implement
+status: ready_to_test
 verify: T
 phase: P0
 milestone: P0 · slice 2 (after AI Gateway slice 1)
@@ -36,13 +36,21 @@ new_files:
   - deploy/obs/grafana/datasources.yaml
   - deploy/obs/grafana/provisioning/dashboards/.keep
   - deploy/obs/auth/tokens.example
+  - deploy/obs/auth/collector.token.example
+  - deploy/obs/ingress.Dockerfile
   - deploy/obs/scripts/rotate_tokens.sh
   - deploy/obs/scripts/healthcheck.sh
   - deploy/obs/README.md
   - deploy/obs/tests/smoke_test.sh
   - deploy/obs/tests/auth_required_test.sh
+  - deploy/obs/tests/per_service_token_binding_test.sh
   - deploy/obs/tests/buffer_survives_restart_test.sh
-modified_files: []
+modified_files:
+  - services/obs-collector/Cargo.toml
+  - services/obs-collector/src/auth.rs
+  - services/obs-collector/src/bin/cyberos_obs.rs
+  - services/obs-collector/src/ingress.rs
+  - services/obs-collector/src/lib.rs
 allowed_tools:
   - file_read: deploy/obs/**
   - file_write: deploy/obs/**
@@ -75,7 +83,7 @@ risk_if_skipped: "FR-AI-022 has no destination for traces. FR-OBS-002 (tenant-aw
 The observability plane **MUST** deploy a self-hosted OpenTelemetry Collector receiving OTLP from all CyberOS services, routing to LGTM backends (Loki for logs, Prometheus for metrics, Tempo for traces). Each piece:
 
 1. **MUST** accept OTLP/gRPC on `:4317` and OTLP/HTTP on `:4318` from all CyberOS services. Both protocols required (services may pick); both configured identically (same processors, same exporters).
-2. **MUST** authenticate ingress via per-service bearer token. Tokens live in `/etc/otelcol/auth.tokens` (mounted from the operator's secret store; NEVER committed to git). One token per service (`ai-gateway`, `auth-service`, `chat-service`, etc.); rotation cadence 90 days via `scripts/rotate_tokens.sh` (FR-AUTH-006-style sweeper). Missing or invalid token → ingress returns `401 UNAUTHORIZED`.
+2. **MUST** authenticate ingress via per-service bearer token. Public service tokens live in `/etc/cyberos-obs/tokens.live` on the CyberOS OTLP ingress gate (mounted from the operator's secret store; NEVER committed to git). The upstream collector receives only an internal proxy token from `/etc/otelcol/collector.token`. One public token per service (`ai-gateway`, `auth-service`, `chat-service`, etc.); rotation cadence 90 days via `scripts/rotate_tokens.sh` (FR-AUTH-006-style sweeper). Missing or invalid token → ingress returns `401 UNAUTHORIZED`.
 3. **MUST** retain backend data per slice-1 floors:
     - Loki: 30 days (P2 extends to 90 with S3 backend).
     - Prometheus: 90 days raw (P2 extends to 1 year with downsampling via Mimir).
@@ -198,7 +206,7 @@ extensions:
     timeout: 1s
   bearertokenauth:
     scheme: "Bearer"
-    filename: /etc/otelcol/auth.tokens
+    filename: /etc/otelcol/collector.token
   health_check: { endpoint: 0.0.0.0:13133 }
 
 service:
@@ -215,7 +223,7 @@ service:
 ### Token file format
 
 ```text
-# deploy/obs/auth/tokens.example  (committed; real tokens.live mounted separately)
+# deploy/obs/auth/tokens.example  (committed; real tokens.live mounted into the ingress gate)
 ai-gateway   <token-from-secret-store>
 auth-service <token-from-secret-store>
 chat-service <token-from-secret-store>
@@ -236,7 +244,7 @@ services:
     environment: { ENV: "${DEPLOYMENT_ENV:-production}" }
     volumes:
       - ./otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
-      - ./auth/tokens.live:/etc/otelcol/auth.tokens:ro
+      - ./auth/collector.token.live:/etc/otelcol/collector.token:ro
       - otel-buffer:/var/lib/otelcol
     depends_on:
       loki:       { condition: service_healthy }
@@ -440,7 +448,7 @@ See §3.
 # deploy/obs/scripts/rotate_tokens.sh
 #!/usr/bin/env bash
 set -euo pipefail
-TOKENS_FILE=/etc/otelcol/auth.tokens
+TOKENS_FILE=auth/tokens.live
 NEW_TOKENS_FILE=$(mktemp)
 for service in ai-gateway auth-service chat-service memory-writer mcp-router; do
     new_token=$(openssl rand -hex 32)
@@ -458,7 +466,7 @@ echo "✅ Tokens rotated"
 
 - Docker Compose v2.0+ (k8s + Helm at slice 5+).
 - 6.5 vCPU + 11.5GB RAM + 100GB disk (slice 1 baseline; scales linearly).
-- Operator's secret store (1Password Connect, AWS Secrets Manager, etc.) for `auth.tokens.live`.
+- Operator's secret store (1Password Connect, AWS Secrets Manager, etc.) for `auth/tokens.live`.
 - Ports: 4317, 4318 (collector), 3000 (Grafana), 13133 (collector health), 8888 (collector self-metrics).
 
 ---

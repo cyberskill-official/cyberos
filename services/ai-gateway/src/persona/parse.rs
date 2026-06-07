@@ -35,12 +35,11 @@ pub fn parse_persona_md(path: &str, raw: &str) -> Result<Persona, PersonaInitErr
     let (frontmatter_yaml, body_raw) = split_frontmatter(raw, path)?;
 
     // 2. Parse YAML frontmatter
-    let fm: PersonaFrontmatter = serde_yaml::from_str(frontmatter_yaml).map_err(|e| {
-        PersonaInitError::Schema {
+    let fm: PersonaFrontmatter =
+        serde_yaml::from_str(frontmatter_yaml).map_err(|e| PersonaInitError::Schema {
             path: path.into(),
             reason: e.to_string(),
-        }
-    })?;
+        })?;
 
     // 3. Forbid 'system_prompt' in frontmatter
     if fm.system_prompt.is_some() {
@@ -55,11 +54,9 @@ pub fn parse_persona_md(path: &str, raw: &str) -> Result<Persona, PersonaInitErr
 
     // 6. Parse handle from frontmatter id + version
     let persona_id = PersonaId::new(&fm.id);
-    let version = semver::Version::parse(&fm.version).map_err(|e| {
-        PersonaInitError::Schema {
-            path: path.into(),
-            reason: format!("invalid semver '{}': {}", fm.version, e),
-        }
+    let version = semver::Version::parse(&fm.version).map_err(|e| PersonaInitError::Schema {
+        path: path.into(),
+        reason: format!("invalid semver '{}': {}", fm.version, e),
     })?;
     let handle = PersonaHandle {
         id: persona_id,
@@ -169,7 +166,10 @@ mod tests {
     fn canonicalisation_strips_bom_and_nfc_normalises() {
         let bom_crlf_combining = "\u{FEFF}cafe\u{0301}\r\n";
         let lf_precomposed = "café\n";
-        assert_eq!(canonicalise_body(bom_crlf_combining), canonicalise_body(lf_precomposed));
+        assert_eq!(
+            canonicalise_body(bom_crlf_combining),
+            canonicalise_body(lf_precomposed)
+        );
     }
 
     #[test]
@@ -213,7 +213,10 @@ mod tests {
     fn parse_rejects_forbidden_system_prompt_field() {
         let raw = "---\nid: cuo-cpo\nversion: 0.4.1\nsystem_prompt: forbidden\n---\n\nbody\n";
         let err = parse_persona_md("memories/personas/cuo-cpo@0.4.1.md", raw).unwrap_err();
-        assert!(matches!(err, PersonaInitError::ForbiddenFrontmatterField { .. }));
+        assert!(matches!(
+            err,
+            PersonaInitError::ForbiddenFrontmatterField { .. }
+        ));
     }
 
     #[test]
