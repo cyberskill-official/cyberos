@@ -22,6 +22,23 @@ fn cost_table_test_lock() -> MutexGuard<'static, ()> {
         .unwrap_or_else(|poisoned| poisoned.into_inner())
 }
 
+fn counter_value(name: &str, labels: &[(&str, &str)]) -> f64 {
+    prometheus::gather()
+        .into_iter()
+        .filter(|family| family.get_name() == name)
+        .flat_map(|family| family.get_metric().to_vec())
+        .find(|metric| {
+            labels.iter().all(|(key, value)| {
+                metric
+                    .get_label()
+                    .iter()
+                    .any(|label| label.get_name() == *key && label.get_value() == *value)
+            })
+        })
+        .map(|metric| metric.get_counter().get_value())
+        .unwrap_or(0.0)
+}
+
 // ─── AC #1: Happy lookup ──────────────────────────────────────────────────────
 
 #[tokio::test]
@@ -81,6 +98,13 @@ async fn aggregate_three_failures() {
     match err {
         LoaderInitError::Schema { failures } => {
             assert_eq!(failures.len(), 3, "expected 3 aggregated failures");
+            assert!(
+                failures.iter().any(|f| f
+                    .errors
+                    .iter()
+                    .any(|e| e.contains("output_per_1k_usd is required"))),
+                "expected missing output_per_1k_usd to be aggregated"
+            );
         }
         _ => panic!("expected Schema error"),
     }
@@ -240,4 +264,43 @@ async fn concurrent_1000_tasks_no_contention() {
         start.elapsed() < std::time::Duration::from_millis(500),
         "1000 tasks × 1000 lookups should complete in <500ms"
     );
+}
+
+// ─── AC #13: Metrics emit correctly ──────────────────────────────────────────
+
+#[tokio::test]
+async fn lookup_metrics_emit_hit_and_miss_counters() {
+    let _guard = cost_table_test_lock();
+    let _handle = init_cost_table(&fixture("valid_rates.yaml")).await.unwrap();
+
+    let hit_before = counter_value(
+        "ai_cost_table_lookups_total",
+        &[("provider", "bedrock"), ("outcome", "hit")],
+    );
+    let miss_before = counter_value(
+        "ai_cost_table_lookups_total",
+        &[("provider", "bedrock"), ("outcome", "miss")],
+    );
+
+    for _ in 0..90 {
+        let _ = cost_table::lookup(
+            &ProviderKind::Bedrock,
+            "anthropic.claude-3-5-sonnet-20241022-v2:0",
+        );
+    }
+    for _ in 0..10 {
+        let _ = cost_table::lookup(&ProviderKind::Bedrock, "not-a-real-model");
+    }
+
+    let hit_after = counter_value(
+        "ai_cost_table_lookups_total",
+        &[("provider", "bedrock"), ("outcome", "hit")],
+    );
+    let miss_after = counter_value(
+        "ai_cost_table_lookups_total",
+        &[("provider", "bedrock"), ("outcome", "miss")],
+    );
+
+    assert_eq!(hit_after - hit_before, 90.0);
+    assert_eq!(miss_after - miss_before, 10.0);
 }

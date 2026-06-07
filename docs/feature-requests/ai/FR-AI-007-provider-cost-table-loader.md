@@ -4,14 +4,14 @@ id: FR-AI-007
 title: "Provider cost-table loader — YAML-backed, hot-reloadable rate table"
 module: AI
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 2
 slice: 2
 owner: Stephen Cheng
 created: 2026-05-15
-shipped: null
+shipped: 2026-06-08
 memory_chain_hash: null
 related_frs: [FR-AI-001, FR-AI-002, FR-AI-005, FR-AI-006, FR-AI-008]
 depends_on: []
@@ -828,8 +828,8 @@ Err(LoaderInitError::Schema {
         FileFailure {
             path: PathBuf::from("config/cost_rates.yaml"),
             provider: Some("openai".into()),
-            model: Some("".into()),
-            errors: vec!["model name length must be 1..=256, got 0".into()],
+            model: Some("missing-output".into()),
+            errors: vec!["output_per_1k_usd is required".into()],
         },
     ],
 })
@@ -878,11 +878,24 @@ For reference, the questions considered + resolved during authoring:
 - The 6-decimal precision (`NUMERIC(12,6)`) accommodates `gpt-4o-mini`'s `$0.00015/1k` and `text-embedding-3-small`'s `$0.00002/1k` without precision loss. If a future provider publishes 8-decimal rates, the schema needs to widen — but unlikely in slice 2's horizon.
 - Multi-currency support is intentionally NOT in this FR. The invoicing module (FR-INV-002, P2) handles VND/USD/SGD/EUR conversion using SBV's daily FX rate. Cost-ledger comparisons happen in USD throughout.
 - The `is_embedding` flag is the only schema field with no provider-published equivalent — we set it manually in the YAML based on operational knowledge of which model produces vectors. If an operator forgets to set it on a new embedding model, FR-AI-002's reconcile path emits a warn log but doesn't crash; the embedding cost would still be `0.0` because `output_per_1k_usd: 0.0` in the YAML.
-- The watcher's 100ms debounce can be tuned via env var `CYBEROS_AI_COST_TABLE_DEBOUNCE_MS` (default 100, min 10, max 5000). Most operators never touch it.
+- The watcher's 100ms debounce is fixed in slice 2. Most operators never need to touch this interval; if a later FR adds configuration, keep the default at 100ms.
 - Cost-table reload doesn't invalidate in-flight precheck/reconcile transactions; each one captures the rate at its own time. If a price changes mid-call (rare), the call uses the rate that was active when precheck ran — not the rate at reconcile. This is intentional: estimate-and-reconcile arithmetic must use the same rate for consistency.
 - This FR is the simplest "config-loader" pattern in slice 2. The same pattern repeats in FR-AI-005 (tenant policy), FR-AI-015 (ZDR attestations). All three share idioms (ArcSwap, notify, aggregate failures); a shared crate is a future refactor (slice 4) once we have 3+ instances to extract from.
 - **Decimal vs BIGINT minor (feature-request-audit skill §3.4 rule 11) — boundary clarification:** rates here use `rust_decimal::Decimal` for `input_per_1k_usd` / `output_per_1k_usd` because rates are **constants** with 7–9 decimal places (e.g. `$0.00015/1k`), not stored monetary state. feature-request-audit skill §3.4 rule 11 "money MUST be stored as BIGINT minor" applies at the **storage tier** — i.e. `cost_ledger.estimated_cost_minor` and `actual_cost_minor` (FR-AI-001 §3). The product `rate × tokens` IS BIGINT minor when stored. The cross-boundary conversion happens in `cost_ledger::estimate_cost_minor`, which multiplies the Decimal rate by token count and rounds to the currency-decimal-aware minor unit via `Currency::USD.decimals()`. Future maintainers: do not "fix" rates to BIGINT minor — sub-cent precision matters for embedding pricing.
 
 ---
 
-*End of FR-AI-007. Status: draft (10/10 target, expanded from compressed first-pass per workflow correction 2026-05-15). Run `feature-request-audit` next.*
+## §12 — Ship audit (2026-06-08)
+
+Status: `done`.
+
+Implementation shipped in `services/ai-gateway/src/cost_table/*`, the canonical `services/ai-gateway/config/cost_rates.yaml`, FR fixtures/tests, and `services/ai-gateway/benches/cost_table_lookup_bench.rs`.
+
+Verification:
+- `cargo test -p cyberos-ai-gateway --test cost_table_test -- --test-threads=1` — 12 passed.
+- `cargo test -p cyberos-ai-gateway cost_table --all-targets` — related alias/precheck/reconcile cost-table checks passed and bench target compiled.
+- `cargo bench -p cyberos-ai-gateway --bench cost_table_lookup_bench -- --warm-up-time 0.1 --measurement-time 0.2 --sample-size 10` — hit p95 approximately 104 ns; miss p95 approximately 98 ns.
+
+Dependency note: BACKLOG now records `FR-AI-007` as an explicit dependency of `FR-AI-001`, matching this FR's `blocks` field and `FR-AI-001` frontmatter.
+
+*End of FR-AI-007. Status: done.*

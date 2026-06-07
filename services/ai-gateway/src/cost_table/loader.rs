@@ -12,14 +12,12 @@ use std::time::Instant;
 
 use arc_swap::ArcSwap;
 use chrono::{DateTime, Utc};
-use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
+use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::OnceCell;
 use rust_decimal::Decimal;
 use tokio::sync::mpsc;
 
-use super::schema::{
-    CostRate, CostTableHandle, FileFailure, LoaderInitError, RawCostRate, RawCostTable,
-};
+use super::schema::{CostRate, CostTableHandle, FileFailure, LoaderInitError, RawCostTable};
 use crate::policy::ProviderKind;
 
 /// In-memory cost table: (ProviderKind, model_name) → CostRate.
@@ -39,10 +37,7 @@ const DEBOUNCE_MS: u64 = 100;
 
 mod metrics {
     use once_cell::sync::Lazy;
-    use prometheus::{
-        register_counter_vec, register_histogram, register_int_gauge, CounterVec, Histogram,
-        IntGauge,
-    };
+    use prometheus::{register_counter_vec, register_int_gauge, CounterVec, Histogram, IntGauge};
 
     pub static LOOKUPS: Lazy<CounterVec> = Lazy::new(|| {
         register_counter_vec!(
@@ -180,6 +175,30 @@ fn validate_and_flatten(
     let mut failures: Vec<FileFailure> = Vec::new();
     let mut out = HashMap::new();
 
+    if raw.version != 1 {
+        failures.push(FileFailure {
+            path: path.to_path_buf(),
+            provider: None,
+            model: None,
+            errors: vec![format!("version must be 1, got {}", raw.version)],
+        });
+    }
+    let age_days = Utc::now()
+        .date_naive()
+        .signed_duration_since(raw.last_updated)
+        .num_days();
+    if age_days > 90 {
+        tracing::warn!(
+            ?path,
+            last_updated = %raw.last_updated,
+            age_days,
+            "cost_rates_yaml_older_than_90_days"
+        );
+    }
+    if raw.source.trim().is_empty() {
+        tracing::warn!(?path, "cost_rates_yaml_source_empty");
+    }
+
     for (provider_str, models) in raw.rates {
         let kind = match parse_provider(&provider_str) {
             Ok(k) => k,
@@ -197,29 +216,49 @@ fn validate_and_flatten(
         for (model, rate) in models {
             let mut model_errors: Vec<String> = Vec::new();
 
-            if rate.input_per_1k_usd < Decimal::ZERO {
-                model_errors.push(format!(
-                    "input_per_1k_usd must be non-negative, got {}",
-                    rate.input_per_1k_usd
-                ));
-            }
-            if rate.output_per_1k_usd < Decimal::ZERO {
-                model_errors.push(format!(
-                    "output_per_1k_usd must be non-negative, got {}",
-                    rate.output_per_1k_usd
-                ));
+            let input_per_1k_usd = match rate.input_per_1k_usd {
+                Some(value) => {
+                    if value < Decimal::ZERO {
+                        model_errors.push(format!(
+                            "input_per_1k_usd must be non-negative, got {}",
+                            value
+                        ));
+                    }
+                    Some(value)
+                }
+                None => {
+                    model_errors.push("input_per_1k_usd is required".to_string());
+                    None
+                }
+            };
+            let output_per_1k_usd = match rate.output_per_1k_usd {
+                Some(value) => {
+                    if value < Decimal::ZERO {
+                        model_errors.push(format!(
+                            "output_per_1k_usd must be non-negative, got {}",
+                            value
+                        ));
+                    }
+                    Some(value)
+                }
+                None => {
+                    model_errors.push("output_per_1k_usd is required".to_string());
+                    None
+                }
+            };
+            if let Some(output_per_1k_usd) = output_per_1k_usd {
+                // FR-AI-007 §1 #12: is_embedding ⇒ output_per_1k_usd == 0.0
+                if rate.is_embedding && output_per_1k_usd > Decimal::ZERO {
+                    model_errors.push(format!(
+                        "is_embedding: true requires output_per_1k_usd == 0.0, got {}",
+                        output_per_1k_usd
+                    ));
+                }
             }
             if model.is_empty() || model.len() > 256 {
                 model_errors.push(format!(
                     "model name length must be 1..=256, got {}",
                     model.len()
-                ));
-            }
-            // FR-AI-007 §1 #12: is_embedding ⇒ output_per_1k_usd == 0.0
-            if rate.is_embedding && rate.output_per_1k_usd > Decimal::ZERO {
-                model_errors.push(format!(
-                    "is_embedding: true requires output_per_1k_usd == 0.0, got {}",
-                    rate.output_per_1k_usd
                 ));
             }
 
@@ -236,8 +275,8 @@ fn validate_and_flatten(
             out.insert(
                 (kind, model),
                 CostRate {
-                    input_per_1k_usd: rate.input_per_1k_usd,
-                    output_per_1k_usd: rate.output_per_1k_usd,
+                    input_per_1k_usd: input_per_1k_usd.expect("validated input rate exists"),
+                    output_per_1k_usd: output_per_1k_usd.expect("validated output rate exists"),
                     is_embedding: rate.is_embedding,
                 },
             );
@@ -270,6 +309,15 @@ fn parse_provider(s: &str) -> Result<ProviderKind, String> {
             other
         )),
     }
+}
+
+fn has_yaml_parse_failure(failures: &[FileFailure]) -> bool {
+    failures.iter().any(|failure| {
+        failure
+            .errors
+            .iter()
+            .any(|error| error.starts_with("yaml parse:"))
+    })
 }
 
 // ─── Internal: hot-reload watcher ─────────────────────────────────────────────
@@ -344,6 +392,9 @@ async fn apply_reload(path: &Path) {
         }
         Err(e) => {
             let reason = match &e {
+                LoaderInitError::Schema { failures } if has_yaml_parse_failure(failures) => {
+                    "parse_error"
+                }
                 LoaderInitError::Schema { .. } => "validation_error",
                 LoaderInitError::IoError { .. } => "io_error",
                 _ => "unknown",

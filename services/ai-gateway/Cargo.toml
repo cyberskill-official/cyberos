@@ -116,3 +116,7 @@ predicates = "3"
 [[bench]]
 name = "circuit_breaker_bench"
 harness = false
+
+[[bench]]
+name = "cost_table_lookup_bench"
+harness = false

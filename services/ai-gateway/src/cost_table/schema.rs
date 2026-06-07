@@ -9,8 +9,6 @@ use chrono::NaiveDate;
 use rust_decimal::Decimal;
 use serde::Deserialize;
 
-use crate::policy::ProviderKind;
-
 /// A single cost-rate entry for a (provider, model) pair.
 ///
 /// All rates are in USD per 1,000 tokens. Embedding models have
@@ -79,8 +77,10 @@ pub(crate) struct RawCostTable {
 /// Per-model YAML entry before validation.
 #[derive(Debug, Deserialize)]
 pub(crate) struct RawCostRate {
-    pub input_per_1k_usd: Decimal,
-    pub output_per_1k_usd: Decimal,
+    #[serde(default)]
+    pub input_per_1k_usd: Option<Decimal>,
+    #[serde(default)]
+    pub output_per_1k_usd: Option<Decimal>,
     #[serde(default)]
     pub is_embedding: bool,
 }

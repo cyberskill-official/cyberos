@@ -14,6 +14,5 @@ rates:
       output_per_1k_usd: 0.002
 
   openai:
-    "":
+    missing-output:
       input_per_1k_usd:  0.001
-      output_per_1k_usd: 0.002
