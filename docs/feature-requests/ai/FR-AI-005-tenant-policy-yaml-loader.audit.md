@@ -61,3 +61,22 @@ feature-request-audit skill §3.12 rule 36 requires ≥6 canonical ISS-NNN findi
 ---
 
 *End of FR-AI-005 audit. Status: PASS at 10/10. feature-request-audit skill compliant 2026-05-16.*
+
+## §5 — Post-implementation closure (2026-06-08)
+
+Status: PASS. The shipped closure added the committed generated
+`config/tenants/SCHEMA.json`, tightened loader observability for polling-mode
+watch detection, and added the required filename-vs-tenant warning while keeping
+the in-file `tenant_id` authoritative.
+
+Verification passed:
+
+- `cargo run -p cyberos-ai-gateway --bin gen-schema -- --out ai-gateway/config/tenants/SCHEMA.json`
+- `cargo test -p cyberos-ai-gateway policy --all-targets`
+- `cargo test -p cyberos-ai-gateway --test policy_loader_test -- --test-threads=1`
+- `cargo test -p cyberos-ai-gateway --test policy_loader_test -- --ignored --test-threads=1`
+- `cargo test -p cyberos-ai-gateway policy:: --lib`
+
+Note: `cyberos-ai policy validate ...` is operator-auth gated and returned
+`auth_failed: missing CYBEROS_AI_OPERATOR_TOKEN` in this environment; the
+underlying `policy::validate_yaml` path was verified by the policy tests above.

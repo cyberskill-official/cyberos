@@ -1,0 +1,338 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TenantPolicy",
+  "description": "Top-level per-tenant policy. One YAML file per tenant; loaded keyed by `tenant_id`.",
+  "type": "object",
+  "required": [
+    "ai_policy",
+    "tenant_id"
+  ],
+  "properties": {
+    "ai_policy": {
+      "description": "AI-gate-specific policy block.",
+      "allOf": [
+        {
+          "$ref": "#/definitions/AiPolicy"
+        }
+      ]
+    },
+    "tenant_id": {
+      "description": "Canonical tenant identifier (e.g. `org:cyberskill`).",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "AiPolicy": {
+      "description": "AI Gateway policy knobs. Consumed by FR-AI-001 (cost ledger), FR-AI-006/008 (router), FR-AI-015 (ZDR), FR-AI-016 (residency).",
+      "type": "object",
+      "required": [
+        "monthly_cap_usd",
+        "primary_provider",
+        "residency"
+      ],
+      "properties": {
+        "alias_overrides": {
+          "description": "Per-alias overrides — beats primary + fallback chain. FR-AI-006 §1 #2.",
+          "default": null,
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/definitions/OverrideTarget"
+          }
+        },
+        "allowed_personas": {
+          "description": "Persona pinning — restrict calls to this exact `agent_persona` version. `None` = any registered persona allowed.",
+          "default": null,
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "call_timeout_seconds": {
+          "description": "Per-call timeout (precheck + provider + reconcile combined; seconds; range [1, 600]).",
+          "default": 60,
+          "type": "integer",
+          "format": "uint32",
+          "maximum": 600.0,
+          "minimum": 1.0
+        },
+        "emergency_override": {
+          "description": "Emergency override (CFO-signed) to allow over-cap calls.",
+          "default": {
+            "enabled": false,
+            "max_multiplier": 0.0,
+            "requires": []
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/EmergencyOverride"
+            }
+          ]
+        },
+        "fallback_chain": {
+          "description": "Fallback chain (in order); empty = no fallback.",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Provider"
+          }
+        },
+        "hard_stop": {
+          "description": "If true, precheck() refuses at cap; if false, allows over-spend.",
+          "default": true,
+          "type": "boolean"
+        },
+        "monthly_cap_usd": {
+          "description": "Hard cap on monthly USD spend across all providers. YAML accepts string (`\"150.00\"`) or number (`150`). Range checked at load time: [0.01, 1_000_000].",
+          "type": "string"
+        },
+        "pii_redaction_extra": {
+          "description": "Extra PII entity types to redact beyond the EN baseline (FR-AI-011 §1 #10). Values are Presidio entity-type names (e.g. \"VN_CCCD\", \"VN_MST\").",
+          "default": null,
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "primary_provider": {
+          "description": "Primary provider for routing (FR-AI-006/008 consumes this).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Provider"
+            }
+          ]
+        },
+        "residency": {
+          "description": "Residency pin — provider selection respects this (FR-AI-016).",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Residency"
+            }
+          ]
+        },
+        "residency_requires_regional_provider": {
+          "description": "If true, providers without regional pinning (e.g. Anthropic native) fail residency checks. Default false. FR-AI-006 §1 #7.",
+          "default": null,
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "warn_threshold": {
+          "description": "Fraction of cap at which to emit a warn event (default 0.80; range [0.5, 0.95]).",
+          "default": 0.8,
+          "type": "number",
+          "format": "double",
+          "maximum": 0.95,
+          "minimum": 0.5
+        },
+        "zdr_required": {
+          "description": "Require ZDR (Zero Data Retention) — refuse non-ZDR providers (FR-AI-015).",
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "EmergencyOverride": {
+      "description": "Emergency-override block — allows over-cap calls when signed by the listed approvers.",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "description": "Whether the override is enabled at all.",
+          "default": false,
+          "type": "boolean"
+        },
+        "max_multiplier": {
+          "description": "Maximum cap multiplier this override permits (e.g. 1.5 = 150% of cap).",
+          "default": 1.0,
+          "type": "number",
+          "format": "double"
+        },
+        "requires": {
+          "description": "Required attestations (e.g. `[\"cfo_signoff\", \"audit_row\"]`).",
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "OverrideTarget": {
+      "description": "Override target for a specific alias. FR-AI-006 §3.",
+      "type": "object",
+      "required": [
+        "provider"
+      ],
+      "properties": {
+        "provider": {
+          "description": "The provider + model_alias_map to use for this alias.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Provider"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "Provider": {
+      "description": "Provider tag union. FR-AI-005 §3.",
+      "oneOf": [
+        {
+          "description": "AWS Bedrock provider.",
+          "type": "object",
+          "required": [
+            "kind",
+            "model_alias_map",
+            "region"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "bedrock"
+              ]
+            },
+            "model_alias_map": {
+              "description": "Map of model alias → provider-specific model id.",
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "region": {
+              "description": "Region (e.g. `ap-southeast-1`).",
+              "type": "string",
+              "pattern": "^(us|eu|ap|sa|af|ca|me)-[a-z]+-\\d+$"
+            }
+          }
+        },
+        {
+          "description": "Anthropic API provider.",
+          "type": "object",
+          "required": [
+            "kind",
+            "model_alias_map"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "anthropic"
+              ]
+            },
+            "model_alias_map": {
+              "description": "Map of model alias → provider-specific model id.",
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "description": "OpenAI API provider.",
+          "type": "object",
+          "required": [
+            "kind",
+            "model_alias_map"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "openai"
+              ]
+            },
+            "model_alias_map": {
+              "description": "Map of model alias → provider-specific model id.",
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "description": "Google Vertex AI provider.",
+          "type": "object",
+          "required": [
+            "kind",
+            "model_alias_map",
+            "project",
+            "region"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "vertex"
+              ]
+            },
+            "model_alias_map": {
+              "description": "Map of model alias → provider-specific model id.",
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "project": {
+              "description": "GCP project id.",
+              "type": "string"
+            },
+            "region": {
+              "description": "Region.",
+              "type": "string",
+              "pattern": "^[a-z]+-[a-z]+\\d*$"
+            }
+          }
+        }
+      ]
+    },
+    "Residency": {
+      "description": "Residency pin. Slice 1 records the value; FR-AI-016 enforces it at routing time.\n\nWire form is hyphenated (`sg-1`, `eu-1`, `us-1`, `vn-1`) per FR-AI-005 §3 + the EXAMPLE.tenant.yaml reference. `rename_all = \"kebab-case\"` would emit `sg1` (no hyphen — serde treats `Sg1` as one word + digit) so each variant carries an explicit `rename`.",
+      "oneOf": [
+        {
+          "description": "Singapore.",
+          "type": "string",
+          "enum": [
+            "sg-1"
+          ]
+        },
+        {
+          "description": "Frankfurt.",
+          "type": "string",
+          "enum": [
+            "eu-1"
+          ]
+        },
+        {
+          "description": "us-east-1.",
+          "type": "string",
+          "enum": [
+            "us-1"
+          ]
+        },
+        {
+          "description": "Vietnam.",
+          "type": "string",
+          "enum": [
+            "vn-1"
+          ]
+        }
+      ]
+    }
+  }
+}

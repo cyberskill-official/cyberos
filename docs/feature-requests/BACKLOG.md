@@ -153,7 +153,7 @@ This document is the **single source of truth** for what CyberOS is going to bui
 | **FR-AI-002** | AI Gateway cost-ledger post-call reconcile | MUST | ready_to_implement | FR-AI-001, FR-AI-003 | 6h |
 | **FR-AI-003** | memory audit-row bridge (`ai.invocation` chained row per call) | MUST | done | — | 5h |
 | **FR-AI-004** | Cost-hold expiry cleanup job (Postgres scheduled) | MUST | ready_to_implement | FR-AI-001, FR-AI-003 | 3h |
-| **FR-AI-005** | Tenant-policy YAML loader (per-tenant cap + warn threshold + override) | MUST | ready_to_implement | — | 5h |
+| **FR-AI-005** | Tenant-policy YAML loader (per-tenant cap + warn threshold + override) | MUST | done | — | 5h |
 
 #### Slice 2 — multi-provider router (Bedrock + Anthropic + OpenAI)
 

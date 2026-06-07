@@ -17,7 +17,7 @@ use std::sync::Arc;
 use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use thiserror::Error;
 use tokio::sync::mpsc;
-use tracing::{error, info};
+use tracing::{error, info, warn};
 
 use super::cache::PolicyCache;
 use super::schema::TenantPolicy;
@@ -148,6 +148,7 @@ pub async fn init_loader(config_dir: &Path) -> Result<Loader, LoaderInitError> {
         match load_file(&path) {
             Ok(policy) => {
                 let tenant_id = policy.tenant_id.clone();
+                warn_if_filename_mismatch(&path, &tenant_id);
                 cache.insert(tenant_id.clone(), Arc::new(policy));
                 info!(tenant_id = %tenant_id, path = %path.display(), "policy loaded");
             }
@@ -173,6 +174,14 @@ pub async fn init_loader(config_dir: &Path) -> Result<Loader, LoaderInitError> {
         *guard_cache = Some(cache);
         *guard_dir = Some(config_dir.to_path_buf());
     }
+
+    let polling_mode = detect_polling_mode(config_dir);
+    info!(
+        policy_loader_polling_mode = polling_mode,
+        hot_reload_latency_budget_ms = if polling_mode { 35_000 } else { 500 },
+        path = %config_dir.display(),
+        "policy loader watch mode detected"
+    );
 
     let watcher = spawn_watcher(config_dir)?;
 
@@ -393,6 +402,7 @@ async fn handle_event(config_dir: &Path, event: Event) {
                 match load_file(&full) {
                     Ok(policy) => {
                         let id = policy.tenant_id.clone();
+                        warn_if_filename_mismatch(&full, &id);
                         cache.insert(id.clone(), Arc::new(policy));
                         info!(tenant_id = %id, file = %full.display(), "policy hot-reloaded");
                     }
@@ -405,6 +415,37 @@ async fn handle_event(config_dir: &Path, event: Event) {
             _ => {}
         }
     }
+}
+
+fn warn_if_filename_mismatch(path: &Path, tenant_id: &str) {
+    let Some(stem) = path.file_stem().and_then(|s| s.to_str()) else {
+        return;
+    };
+    let expected = tenant_id.replace(':', "-");
+    if stem != expected {
+        warn!(
+            tenant_id = %tenant_id,
+            filename_stem = %stem,
+            expected_filename_stem = %expected,
+            file = %path.display(),
+            "tenant policy filename does not match in-file tenant_id; accepting in-file tenant_id"
+        );
+    }
+}
+
+fn detect_polling_mode(config_dir: &Path) -> bool {
+    if std::env::var("CYBEROS_AI_POLICY_WATCH_MODE")
+        .map(|v| v.eq_ignore_ascii_case("poll") || v.eq_ignore_ascii_case("polling"))
+        .unwrap_or(false)
+    {
+        return true;
+    }
+
+    // Docker bind mounts and NFS paths are commonly backed by polling watchers.
+    // Native inotify/FSEvents remains the normal path; the env override exists
+    // for deployment manifests that know their volume type.
+    let path = config_dir.to_string_lossy().to_ascii_lowercase();
+    path.contains("/nfs/") || path.contains("/mnt/")
 }
 
 // --- Tests ------------------------------------------------------------------
@@ -449,6 +490,13 @@ mod tests {
         assert!(!is_loadable_filename("Caps.yaml"));
         assert!(!is_loadable_filename("notyaml.txt"));
         assert!(!is_loadable_filename(".yaml"));
+    }
+
+    #[test]
+    fn detect_polling_mode_accepts_known_mount_hints() {
+        assert!(detect_polling_mode(Path::new("/mnt/policies")));
+        assert!(detect_polling_mode(Path::new("/srv/nfs/policies")));
+        assert!(!detect_polling_mode(Path::new("/var/lib/cyberos/policies")));
     }
 
     #[test]

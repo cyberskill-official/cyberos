@@ -4,7 +4,7 @@ id: FR-AI-005
 title: "Tenant-policy YAML loader — per-tenant cap + warn + override + residency"
 module: AI
 priority: MUST
-status: ready_to_implement
+status: done
 accepted_at: 2026-05-15
 accepted_by: Stephen Cheng
 verify: T
@@ -13,7 +13,7 @@ milestone: P0 · slice 1
 slice: 1
 owner: Stephen Cheng
 created: 2026-05-15
-shipped: null
+shipped: 2026-06-08
 memory_chain_hash: null
 related_frs: [FR-AI-001, FR-AI-006, FR-AI-015, FR-AI-016]
 depends_on: []
