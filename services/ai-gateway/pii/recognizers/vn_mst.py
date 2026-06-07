@@ -18,12 +18,12 @@ class VnMstRecognizer(PatternRecognizer):
     PATTERNS = [
         Pattern(
             name="vn_mst_with_context_10",
-            regex=r"(?:MST|mst|M[aã] s(?:ố|o) thu(?:ế|e)|m[aã] thu(?:ế|e))\s*[:\.]?\s*(\d{10})",
+            regex=r"(?:MST|mst|M[aã] s(?:ố|o) thu(?:ế|e)|m[aã] thu(?:ế|e))(?:\s+doanh nghi(?:ệ|e)p)?\s*[:\.]?\s*(\d{10})",
             score=CONFIDENCE_HIGH,
         ),
         Pattern(
             name="vn_mst_with_context_13",
-            regex=r"(?:MST|mst|M[aã] s(?:ố|o) thu(?:ế|e))\s*[:\.]?\s*(\d{10}-\d{3})",
+            regex=r"(?:MST|mst|M[aã] s(?:ố|o) thu(?:ế|e))(?:\s+doanh nghi(?:ệ|e)p)?\s*[:\.]?\s*(\d{10}-\d{3})",
             score=CONFIDENCE_HIGH,
         ),
         Pattern(
@@ -43,9 +43,18 @@ class VnMstRecognizer(PatternRecognizer):
             supported_entity="VN_MST",
             patterns=self.PATTERNS,
             context=["MST", "mã số thuế", "thuế"],
+            supported_language="vi",
         )
 
     def validate_result(self, pattern_text: str) -> bool:
         """First 2 digits are the province code (without leading 0)."""
-        digits = pattern_text.replace("-", "")[:2]
-        return digits in VALID_PROVINCE_CODES_2DIGIT
+        digits = "".join(c for c in pattern_text if c.isdigit())
+        if len(digits) not in (10, 13):
+            return False
+        has_mst_label = any(
+            keyword in pattern_text.lower()
+            for keyword in ("mst", "mã số thuế", "ma so thue", "mã thuế", "ma thue")
+        )
+        if not has_mst_label and len(digits) == 10 and digits[:2] == "09":
+            return False
+        return digits[:2] in VALID_PROVINCE_CODES_2DIGIT

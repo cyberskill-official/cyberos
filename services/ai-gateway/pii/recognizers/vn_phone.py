@@ -18,13 +18,28 @@ class VnPhoneRecognizer(PatternRecognizer):
     PATTERNS = [
         Pattern(
             name="vn_phone_84_mobile",
-            regex=r"\+84\s?(?:9\d{8}|3\d{8}|7\d{8}|8\d{8}|5\d{8})",
+            regex=r"\+84[\s\.-]?(?:9\d{8}|3\d{8}|7\d{8}|8\d{8}|5\d{8})",
+            score=CONFIDENCE_HIGH,
+        ),
+        Pattern(
+            name="vn_phone_84_mobile_grouped",
+            regex=r"\+84[\s\.-]?(?:9|3|7|8|5)\d{2}[\s\.-]?\d{3}[\s\.-]?\d{3}",
             score=CONFIDENCE_HIGH,
         ),
         Pattern(
             name="vn_phone_0_mobile",
             regex=r"0(?:9\d{8}|3\d{8}|7\d{8}|8\d{8}|5\d{8})\b",
             score=CONFIDENCE_HIGH,
+        ),
+        Pattern(
+            name="vn_phone_0_mobile_grouped",
+            regex=r"0(?:9|3|7|8|5)\d{1}[\s\.-]?\d{3}[\s\.-]?\d{4}\b",
+            score=CONFIDENCE_HIGH,
+        ),
+        Pattern(
+            name="vn_phone_84_landline",
+            regex=r"\+84[\s\.-]?2[0-9]\d{7,8}\b",
+            score=CONFIDENCE_MED,
         ),
         Pattern(
             name="vn_phone_landline",
@@ -38,4 +53,5 @@ class VnPhoneRecognizer(PatternRecognizer):
             supported_entity="VN_PHONE",
             patterns=self.PATTERNS,
             context=["SĐT", "điện thoại", "phone", "mobile"],
+            supported_language="vi",
         )

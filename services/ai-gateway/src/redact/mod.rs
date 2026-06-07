@@ -97,12 +97,15 @@ static LOG_REDACTION_PATTERNS: Lazy<Vec<Regex>> = Lazy::new(|| {
 struct SidecarRequest<'a> {
     text: &'a str,
     extra_entities: Vec<&'a str>,
+    pii_allowlist: Vec<&'a str>,
 }
 
 #[derive(Debug, serde::Deserialize)]
 struct SidecarResponse {
     redacted_text: String,
     items: Vec<SidecarItem>,
+    #[serde(default)]
+    allowlist_hit_count: u32,
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -156,10 +159,19 @@ pub async fn redact(prompt: &str, policy: &TenantPolicy) -> Result<RedactionResu
         .iter()
         .map(|s| s.as_str())
         .collect();
+    let pii_allowlist: Vec<&str> = policy
+        .ai_policy
+        .pii_allowlist
+        .as_deref()
+        .unwrap_or(&[])
+        .iter()
+        .map(|s| s.as_str())
+        .collect();
 
     let req_body = SidecarRequest {
         text: prompt,
         extra_entities,
+        pii_allowlist,
     };
 
     let resp_result = tokio::time::timeout(
@@ -244,6 +256,7 @@ pub async fn redact(prompt: &str, policy: &TenantPolicy) -> Result<RedactionResu
         redacted_text,
         map,
         counts,
+        allowlist_hit_count: body.allowlist_hit_count,
         latency_ms: elapsed_ms,
     })
 }
@@ -304,6 +317,71 @@ pub fn redact_for_log(text: &str) -> String {
         out = pattern.replace_all(&out, LOG_REDACTION_TOKEN).into_owned();
     }
     out
+}
+
+pub mod vn {
+    /// Marker trait for VN PII audit display redactors.
+    pub trait AuditRedactor {
+        fn redact(value: &str) -> String;
+    }
+
+    #[derive(Debug)]
+    pub struct VnMst;
+    #[derive(Debug)]
+    pub struct VnCccd;
+    #[derive(Debug)]
+    pub struct VnPhone;
+    #[derive(Debug)]
+    pub struct VnBankAccount;
+
+    pub fn redact_for_audit<T: AuditRedactor>(value: &str) -> String {
+        T::redact(value)
+    }
+
+    impl AuditRedactor for VnMst {
+        fn redact(value: &str) -> String {
+            redact_prefix_suffix(value, 2, 2, "******")
+        }
+    }
+
+    impl AuditRedactor for VnCccd {
+        fn redact(value: &str) -> String {
+            redact_prefix_suffix(value, 3, 3, "******")
+        }
+    }
+
+    impl AuditRedactor for VnPhone {
+        fn redact(value: &str) -> String {
+            redact_prefix_suffix(value, 2, 4, "***")
+        }
+    }
+
+    impl AuditRedactor for VnBankAccount {
+        fn redact(value: &str) -> String {
+            let digits = digits_only(value);
+            if digits.len() <= 4 {
+                return "*".repeat(digits.len().max(1));
+            }
+            format!("***{}", &digits[digits.len() - 4..])
+        }
+    }
+
+    fn redact_prefix_suffix(value: &str, prefix: usize, suffix: usize, mask: &str) -> String {
+        let digits = digits_only(value);
+        if digits.len() <= prefix + suffix {
+            return "*".repeat(digits.len().max(1));
+        }
+        format!(
+            "{}{}{}",
+            &digits[..prefix],
+            mask,
+            &digits[digits.len() - suffix..]
+        )
+    }
+
+    fn digits_only(value: &str) -> String {
+        value.chars().filter(|c| c.is_ascii_digit()).collect()
+    }
 }
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
@@ -441,9 +519,14 @@ mod tests {
         assert_eq!(PiiType::from_presidio("VN_CCCD"), Some(PiiType::VnCccd));
         assert_eq!(PiiType::from_presidio("VN_MST"), Some(PiiType::VnMst));
         assert_eq!(PiiType::from_presidio("VN_PHONE"), Some(PiiType::VnPhone));
+        assert_eq!(PiiType::from_presidio("VN_NDD"), Some(PiiType::VnNdd));
         assert_eq!(
             PiiType::from_presidio("VN_ADDRESS"),
             Some(PiiType::VnAddress)
+        );
+        assert_eq!(
+            PiiType::from_presidio("VN_BANK_ACCOUNT"),
+            Some(PiiType::VnBankAccount)
         );
     }
 
@@ -458,6 +541,7 @@ mod tests {
         assert_eq!(PiiType::EmailAddress.as_metric_label(), "email_address");
         assert_eq!(PiiType::UsSsn.as_metric_label(), "us_ssn");
         assert_eq!(PiiType::VnCccd.as_metric_label(), "vn_cccd");
+        assert_eq!(PiiType::VnBankAccount.as_metric_label(), "vn_bank_account");
     }
 
     #[test]
@@ -492,6 +576,26 @@ mod tests {
         let map = RestorationMap::default();
         let result = restore("No placeholders here", &map);
         assert_eq!(result, "No placeholders here");
+    }
+
+    #[test]
+    fn vn_audit_redactors_preserve_safe_display_shapes() {
+        assert_eq!(
+            vn::redact_for_audit::<vn::VnMst>("0312345678"),
+            "03******78"
+        );
+        assert_eq!(
+            vn::redact_for_audit::<vn::VnCccd>("031234567678"),
+            "031******678"
+        );
+        assert_eq!(
+            vn::redact_for_audit::<vn::VnPhone>("0901234567"),
+            "09***4567"
+        );
+        assert_eq!(
+            vn::redact_for_audit::<vn::VnBankAccount>("1234567890"),
+            "***7890"
+        );
     }
 
     #[test]
@@ -554,6 +658,7 @@ mod tests {
                     original: "alice@x.com".into(),
                 },
             ],
+            allowlist_hit_count: 0,
         };
         // Even though items are out of order, the result should be sorted by start.
         let (text, map, counts) = build_placeholder_map_and_counts("test", &body);

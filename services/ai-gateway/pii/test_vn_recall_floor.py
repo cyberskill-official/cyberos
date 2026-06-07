@@ -5,19 +5,22 @@ Used by FR-AI-013 recall-floor CI gate.
 """
 
 from collections import defaultdict
+import os
 from pathlib import Path
 
 import pytest
 import yaml
 
-from presidio_analyzer import AnalyzerEngine
+os.environ["CYBEROS_PII_PATTERN_ONLY_NLP"] = "1"
 
 from recognizers import VN_RECOGNIZERS
 
 
 @pytest.fixture
 def analyzer():
-    a = AnalyzerEngine()
+    from pattern_nlp import create_pattern_analyzer
+
+    a = create_pattern_analyzer()
     for rec in VN_RECOGNIZERS:
         a.registry.add_recognizer(rec)
     return a

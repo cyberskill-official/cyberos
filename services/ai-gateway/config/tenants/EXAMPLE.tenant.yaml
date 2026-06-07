@@ -54,3 +54,11 @@ ai_policy:
   # Persona pinning — restrict calls to this exact agent_persona version.
   # Empty / null = any registered persona allowed.
   allowed_personas: null
+
+  # Additional Presidio entity types to request from the sidecar.
+  # EN baseline types are always active; VN-specific types are enabled per tenant.
+  pii_redaction_extra: ["VN_CCCD", "VN_MST", "VN_PHONE", "VN_NDD", "VN_ADDRESS", "VN_BANK_ACCOUNT"]
+
+  # Tenant-scoped regex allowlist for identifiers that are legitimate subject matter.
+  # Matches suppress VN_MST/VN_CCCD/VN_PHONE/VN_BANK_ACCOUNT redaction and are counted.
+  pii_allowlist: []

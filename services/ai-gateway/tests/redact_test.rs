@@ -78,6 +78,7 @@ fn policy_with_provider(primary_provider: Provider) -> TenantPolicy {
             alias_overrides: None,
             residency_requires_regional_provider: None,
             pii_redaction_extra: None,
+            pii_allowlist: None,
         },
     }
 }
@@ -222,6 +223,7 @@ async fn redacts_credit_card_via_sidecar_contract() {
     let request: Value = serde_json::from_str(&request_body).unwrap();
     assert_eq!(request["text"], "My card is 4111-1111-1111-1111");
     assert_eq!(request["extra_entities"], json!([]));
+    assert_eq!(request["pii_allowlist"], json!([]));
 }
 
 #[tokio::test]
@@ -231,6 +233,7 @@ async fn sends_policy_extra_entities_to_sidecar() {
     let _env = EnvOverride::new(&sidecar_url, 2_000);
     let mut policy = minimal_policy();
     policy.ai_policy.pii_redaction_extra = Some(vec!["VN_CCCD".into(), "VN_MST".into()]);
+    policy.ai_policy.pii_allowlist = Some(vec![r"^03\d{8}$".into()]);
 
     redact::redact("email secret@example.com", &policy)
         .await
@@ -239,6 +242,28 @@ async fn sends_policy_extra_entities_to_sidecar() {
     let request_body = captured.lock().expect("capture mutex")[0].clone();
     let request: Value = serde_json::from_str(&request_body).unwrap();
     assert_eq!(request["extra_entities"], json!(["VN_CCCD", "VN_MST"]));
+    assert_eq!(request["pii_allowlist"], json!([r"^03\d{8}$"]));
+}
+
+#[tokio::test]
+async fn preserves_sidecar_allowlist_hit_count() {
+    let sidecar_body = json!({
+        "redacted_text": "MST 0312345678",
+        "items": [],
+        "allowlist_hit_count": 1
+    })
+    .to_string();
+    let (sidecar_url, _) = spawn_sidecar(StatusCode::OK, sidecar_body, Duration::ZERO).await;
+    let _env = EnvOverride::new(&sidecar_url, 2_000);
+    let mut policy = minimal_policy();
+    policy.ai_policy.pii_redaction_extra = Some(vec!["VN_MST".into()]);
+    policy.ai_policy.pii_allowlist = Some(vec![r"^03\d{8}$".into()]);
+
+    let result = redact::redact("MST 0312345678", &policy)
+        .await
+        .expect("redaction succeeds");
+
+    assert_eq!(result.allowlist_hit_count, 1);
 }
 
 // ── AC #7: Sidecar unreachable returns error ─────────────────────────────────
@@ -542,7 +567,9 @@ fn pii_type_from_presidio_all_variants() {
         ("VN_CCCD", PiiType::VnCccd),
         ("VN_MST", PiiType::VnMst),
         ("VN_PHONE", PiiType::VnPhone),
+        ("VN_NDD", PiiType::VnNdd),
         ("VN_ADDRESS", PiiType::VnAddress),
+        ("VN_BANK_ACCOUNT", PiiType::VnBankAccount),
     ];
 
     for (presidio_name, expected) in cases {
@@ -571,7 +598,9 @@ fn pii_type_metric_labels_match_expected() {
     assert_eq!(PiiType::VnCccd.as_metric_label(), "vn_cccd");
     assert_eq!(PiiType::VnMst.as_metric_label(), "vn_mst");
     assert_eq!(PiiType::VnPhone.as_metric_label(), "vn_phone");
+    assert_eq!(PiiType::VnNdd.as_metric_label(), "vn_ndd");
     assert_eq!(PiiType::VnAddress.as_metric_label(), "vn_address");
+    assert_eq!(PiiType::VnBankAccount.as_metric_label(), "vn_bank_account");
 }
 
 // ── RestorationMap edge cases ────────────────────────────────────────────────

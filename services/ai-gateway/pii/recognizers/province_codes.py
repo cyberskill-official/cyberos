@@ -19,9 +19,12 @@ VALID_PROVINCE_CODES_3DIGIT = frozenset([
     "097", "098", "099",
 ])
 
-# 2-digit codes derived from 3-digit (strip leading zero) — used by MST.
+# 2-digit codes derived from 3-digit codes — used by MST. Keep both the
+# leading-two form ("03" from "030") and the stripped form ("30") because VN tax
+# code examples appear in both operator docs and legacy datasets.
 VALID_PROVINCE_CODES_2DIGIT = frozenset(
-    code[1:] for code in VALID_PROVINCE_CODES_3DIGIT
+    {code[:2] for code in VALID_PROVINCE_CODES_3DIGIT if code[:2] != "00"}
+    | {code[1:] for code in VALID_PROVINCE_CODES_3DIGIT}
 )
 
 # Major Vietnamese banks for bank-account context matching.

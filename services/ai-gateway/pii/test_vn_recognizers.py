@@ -1,7 +1,10 @@
 """FR-AI-012 §5 — Positive fixture tests for VN PII recognizers."""
 
+import os
 import pytest
 import re
+
+os.environ["CYBEROS_PII_PATTERN_ONLY_NLP"] = "1"
 
 from recognizers import (
     VnCccdRecognizer,
@@ -17,9 +20,9 @@ from recognizers.confidence import CONFIDENCE_HIGH, CONFIDENCE_MED, CONFIDENCE_L
 
 @pytest.fixture
 def analyzer():
-    from presidio_analyzer import AnalyzerEngine
+    from pattern_nlp import create_pattern_analyzer
 
-    a = AnalyzerEngine()
+    a = create_pattern_analyzer()
     for rec in VN_RECOGNIZERS:
         a.registry.add_recognizer(rec)
     return a
@@ -189,6 +192,30 @@ def test_version_endpoint_returns_six_entries():
     semver = re.compile(r"^\d+\.\d+\.\d+$")
     for entity, version in body.items():
         assert semver.match(version), f"{entity}: {version!r} is not semver"
+
+
+def test_redact_endpoint_allowlist_suppresses_vn_mst():
+    """§1 #17: tenant allowlist suppresses matching VN_MST only."""
+    from presidio_sidecar import app, reset_vn_for_tests
+    from fastapi.testclient import TestClient
+
+    reset_vn_for_tests()
+    client = TestClient(app)
+    resp = client.post(
+        "/redact",
+        json={
+            "text": "MST: 0312345678; MST: 0412345678",
+            "extra_entities": ["VN_MST"],
+            "pii_allowlist": [r"^03\d{8}$"],
+        },
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["allowlist_hit_count"] == 1
+    assert "0312345678" in body["redacted_text"]
+    assert "0412345678" not in body["redacted_text"]
+    assert all("0312345678" not in item["original"] for item in body["items"])
+    assert any(item["entity"] == "VN_MST" for item in body["items"])
 
 
 # ── Determinism ──────────────────────────────────────────────────────────────

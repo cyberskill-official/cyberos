@@ -19,7 +19,9 @@ pub enum PiiType {
     VnCccd,
     VnMst,
     VnPhone,
+    VnNdd,
     VnAddress,
+    VnBankAccount,
 }
 
 impl PiiType {
@@ -39,7 +41,9 @@ impl PiiType {
             Self::VnCccd => "vn_cccd",
             Self::VnMst => "vn_mst",
             Self::VnPhone => "vn_phone",
+            Self::VnNdd => "vn_ndd",
             Self::VnAddress => "vn_address",
+            Self::VnBankAccount => "vn_bank_account",
         }
     }
 
@@ -59,7 +63,9 @@ impl PiiType {
             "VN_CCCD" => Some(Self::VnCccd),
             "VN_MST" => Some(Self::VnMst),
             "VN_PHONE" => Some(Self::VnPhone),
+            "VN_NDD" => Some(Self::VnNdd),
             "VN_ADDRESS" => Some(Self::VnAddress),
+            "VN_BANK_ACCOUNT" => Some(Self::VnBankAccount),
             _ => None,
         }
     }
@@ -74,6 +80,8 @@ pub struct RedactionResult {
     pub map: RestorationMap,
     /// Per-type PII counts for audit row.
     pub counts: HashMap<PiiType, u32>,
+    /// Number of sidecar suppressions caused by tenant allowlist regexes.
+    pub allowlist_hit_count: u32,
     /// Redaction latency in ms.
     pub latency_ms: u32,
 }

@@ -11,6 +11,8 @@ Usage:
 from __future__ import annotations
 
 import logging
+import os
+import re
 from typing import List
 
 from fastapi import FastAPI, HTTPException
@@ -26,6 +28,7 @@ logger = logging.getLogger(__name__)
 class RedactRequest(BaseModel):
     text: str
     extra_entities: List[str] = []
+    pii_allowlist: List[str] = []
 
 
 class RedactItem(BaseModel):
@@ -38,6 +41,7 @@ class RedactItem(BaseModel):
 class RedactResponse(BaseModel):
     redacted_text: str
     items: List[RedactItem]
+    allowlist_hit_count: int = 0
 
 
 # ── App setup ────────────────────────────────────────────────────────────────
@@ -69,10 +73,22 @@ DEFAULT_ENTITIES = [
     "MEDICAL_LICENSE",
 ]
 
+ALLOWLIST_ELIGIBLE_ENTITIES = {
+    "VN_MST",
+    "VN_CCCD",
+    "VN_PHONE",
+    "VN_BANK_ACCOUNT",
+}
+
 
 def _create_analyzer():
     """Create AnalyzerEngine; separated for testability."""
     from presidio_analyzer import AnalyzerEngine
+
+    if os.getenv("CYBEROS_PII_PATTERN_ONLY_NLP") == "1":
+        from pattern_nlp import create_pattern_analyzer
+
+        return create_pattern_analyzer()
 
     return AnalyzerEngine()
 
@@ -143,8 +159,10 @@ def _ensure_vn_recognizers():
 
 def reset_vn_for_tests():
     """Test-only: reset the registration guard. NOT for production use."""
-    global _VN_REGISTERED
+    global _VN_REGISTERED, _analyzer, _anonymizer
     _VN_REGISTERED = False
+    _analyzer = None
+    _anonymizer = None
 
 
 # ── Redaction logic ──────────────────────────────────────────────────────────
@@ -156,11 +174,42 @@ def _build_placeholder_operator(entity_type: str):
 
     counter = {"n": 0}
 
-    def _replace(original_text: str, params):
+    def _replace(original_text: str, params=None):
         counter["n"] += 1
         return f"<{entity_type}_{counter['n']}>"
 
     return OperatorConfig("custom", {"lambda": _replace})
+
+
+def _compile_allowlist(patterns: List[str]):
+    compiled = []
+    for pattern in patterns:
+        try:
+            compiled.append(re.compile(pattern))
+        except re.error:
+            raise HTTPException(status_code=400, detail="validation_error")
+    return compiled
+
+
+def _filter_allowlisted_results(text, results, allowlist_patterns):
+    if not allowlist_patterns:
+        return results, 0
+
+    filtered = []
+    hit_count = 0
+    for result in results:
+        original = text[result.start:result.end]
+        digits_only = "".join(ch for ch in original if ch.isdigit())
+        allowlist_hit = any(
+            pattern.search(original) or pattern.search(digits_only)
+            for pattern in allowlist_patterns
+        )
+        if allowlist_hit:
+            if result.entity_type in ALLOWLIST_ELIGIBLE_ENTITIES:
+                hit_count += 1
+            continue
+        filtered.append(result)
+    return filtered, hit_count
 
 
 @app.post("/redact", response_model=RedactResponse)
@@ -193,6 +242,10 @@ async def redact_endpoint(req: RedactRequest):
 
         # Sort by start offset for deterministic placeholder assignment (§1 #11).
         results.sort(key=lambda r: r.start)
+        allowlist_patterns = _compile_allowlist(req.pii_allowlist)
+        results, allowlist_hit_count = _filter_allowlisted_results(
+            req.text, results, allowlist_patterns
+        )
 
         operators = {e: _build_placeholder_operator(e) for e in entities}
 
@@ -213,7 +266,11 @@ async def redact_endpoint(req: RedactRequest):
                 )
             )
 
-        return RedactResponse(redacted_text=anonymized.text, items=items)
+        return RedactResponse(
+            redacted_text=anonymized.text,
+            items=items,
+            allowlist_hit_count=allowlist_hit_count,
+        )
 
     except HTTPException:
         raise

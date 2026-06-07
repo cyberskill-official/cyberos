@@ -17,10 +17,10 @@ class VnAddressRecognizer(PatternRecognizer):
         Pattern(
             name="vn_address_full",
             regex=(
-                r"\d+\s+[\w\sÀ-ỹ]+,\s*"
-                r"(?:Ph(?:ư|u)(?:ơ|o)ng|X[aã]|Qu(?:ậ|a)n|Huy(?:ệ|e)n|Tp\.?|TP\.?|Th(?:à|a)nh ph(?:ố|o))"
+                r"\d+\s+[^,\n]+,\s*"
+                r"(?:Ph(?:ư|u)(?:ờ|ơ|o)ng|X[aã])"
                 r"[^,]+,\s*"
-                r"(?:Qu(?:ậ|a)n|Huy(?:ệ|e)n|Tp\.?|TP\.?)"
+                r"(?:Qu(?:ậ|a)n|Huy(?:ệ|e)n)"
                 r"[^,]+,\s*"
                 r"(?:Tp\.?|TP\.?|Th(?:à|a)nh ph(?:ố|o))"
                 r"[\w\sÀ-ỹ\.]+"
@@ -42,4 +42,5 @@ class VnAddressRecognizer(PatternRecognizer):
             supported_entity="VN_ADDRESS",
             patterns=self.PATTERNS,
             context=["địa chỉ", "address"],
+            supported_language="vi",
         )

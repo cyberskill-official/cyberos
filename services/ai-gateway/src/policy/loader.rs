@@ -15,6 +15,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
+use regex::Regex;
 use thiserror::Error;
 use tokio::sync::mpsc;
 use tracing::{error, info, warn};
@@ -306,6 +307,23 @@ fn validate_policy_value(p: &TenantPolicy) -> Result<(), Vec<String>> {
         }
     }
 
+    if let Some(patterns) = &p.ai_policy.pii_allowlist {
+        for (idx, pattern) in patterns.iter().enumerate() {
+            if pattern.len() > 512 {
+                errors.push(format!(
+                    "ai_policy.pii_allowlist[{idx}]: regex length {} exceeds 512",
+                    pattern.len()
+                ));
+                continue;
+            }
+            if let Err(err) = Regex::new(pattern) {
+                errors.push(format!(
+                    "ai_policy.pii_allowlist[{idx}]: invalid regex: {err}"
+                ));
+            }
+        }
+    }
+
     if errors.is_empty() {
         Ok(())
     } else {
@@ -532,5 +550,45 @@ ai_policy:
         assert!(res.is_ok(), "expected ok but got {:?}", res);
         let p = res.unwrap();
         assert_eq!(p.tenant_id, "org:test");
+    }
+
+    #[test]
+    fn validate_yaml_rejects_invalid_pii_allowlist_regex() {
+        let yaml = r#"
+tenant_id: org:test
+ai_policy:
+  monthly_cap_usd: "150"
+  warn_threshold: 0.8
+  primary_provider:
+    kind: anthropic
+    model_alias_map:
+      chat.smart: claude-3-5-sonnet
+  residency: sg-1
+  pii_allowlist:
+    - "[unterminated"
+"#;
+        let res = validate_yaml(yaml);
+        assert!(res.is_err(), "expected invalid regex to fail validation");
+        let errors = res.unwrap_err().join("\n");
+        assert!(errors.contains("pii_allowlist"));
+    }
+
+    #[test]
+    fn validate_yaml_accepts_valid_pii_allowlist_regex() {
+        let yaml = r#"
+tenant_id: org:test
+ai_policy:
+  monthly_cap_usd: "150"
+  warn_threshold: 0.8
+  primary_provider:
+    kind: anthropic
+    model_alias_map:
+      chat.smart: claude-3-5-sonnet
+  residency: sg-1
+  pii_allowlist:
+    - "^03\\d{8}$"
+"#;
+        let res = validate_yaml(yaml);
+        assert!(res.is_ok(), "expected valid allowlist regex, got {res:?}");
     }
 }

@@ -4,14 +4,14 @@ id: FR-AI-012
 title: "VN-PII Presidio plugin (CCCD · MST · VN phone · NĐD · VN address · bank account)"
 module: AI
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 3
 slice: 3
 owner: Stephen Cheng
 created: 2026-05-15
-shipped: 2026-05-21
+shipped: 2026-06-08
 memory_chain_hash: null
 related_frs: [FR-AI-002, FR-AI-005, FR-AI-008, FR-AI-011, FR-AI-013]
 depends_on: [FR-AI-011]
@@ -40,12 +40,15 @@ new_files:
   - services/ai-gateway/pii/recognizers/vn_bank.py
   - services/ai-gateway/pii/recognizers/province_codes.py
   - services/ai-gateway/pii/recognizers/confidence.py
+  - services/ai-gateway/pii/pattern_nlp.py
   - services/ai-gateway/pii/test_vn_recognizers.py
   - services/ai-gateway/pii/test_vn_no_false_positives.py
   - services/ai-gateway/pii/fixtures/vn_pii_200_samples.yaml
 modified_files:
   - services/ai-gateway/pii/presidio_sidecar.py    # register VN recognizers at sidecar startup
   - services/ai-gateway/src/redact/types.rs        # PiiType already includes VN variants from FR-AI-011 §3
+  - services/ai-gateway/src/policy/schema.rs       # pii_allowlist policy field
+  - services/ai-gateway/config/tenants/SCHEMA.json # regenerated tenant policy schema
 allowed_tools:
   - file_read: services/ai-gateway/pii/**
   - file_write: services/ai-gateway/pii/**
@@ -833,4 +836,4 @@ All resolved at authoring time. Items deferred to later FRs:
 
 ---
 
-*End of FR-AI-012. Status: draft (10/10 target).*
+*End of FR-AI-012. Status: done (10/10 target).*

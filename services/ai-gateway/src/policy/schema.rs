@@ -82,6 +82,11 @@ pub struct AiPolicy {
     /// Values are Presidio entity-type names (e.g. "VN_CCCD", "VN_MST").
     #[serde(default)]
     pub pii_redaction_extra: Option<Vec<String>>,
+
+    /// Tenant-scoped PII allowlist regexes for legitimate subject-matter identifiers.
+    /// FR-AI-012 uses this for KYC/vendor flows where selected VN identifiers may pass through.
+    #[serde(default)]
+    pub pii_allowlist: Option<Vec<String>>,
 }
 
 /// Override target for a specific alias. FR-AI-006 §3.

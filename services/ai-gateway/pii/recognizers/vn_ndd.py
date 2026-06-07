@@ -19,6 +19,7 @@ class VnNddRecognizer(EntityRecognizer):
     # Match name after label; capture only the name portion.
     LABEL_REGEX = re.compile(
         r"(?:Ng(?:ười|uoi) [đd][aạ]i di(?:ệ|e)n|N[ĐD]D|Legal representative)"
+        r"(?:\s+ph[aá]p lu(?:ậ|a)t)?"
         r"\s*[:\.]?\s*([A-ZÀÁẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬĐÈÉẺẼẸÊẾỀỂỄỆÌÍỈĨỊ"
         r"ÒÓỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÙÚỦŨỤƯỨỪỬỮỰỲÝỶỸỴ]"
         r"[\w\sÀ-ỹ]+?)(?=[\n,.;]|$)",

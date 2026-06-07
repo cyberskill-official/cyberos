@@ -4,7 +4,10 @@ Ensures recognizers do NOT false-positive on plain Vietnamese text,
 dates, VND amounts, and bare names without NĐD labels.
 """
 
+import os
 import pytest
+
+os.environ["CYBEROS_PII_PATTERN_ONLY_NLP"] = "1"
 
 from recognizers import VN_RECOGNIZERS
 from recognizers.confidence import CONFIDENCE_HIGH, CONFIDENCE_MED
@@ -12,9 +15,9 @@ from recognizers.confidence import CONFIDENCE_HIGH, CONFIDENCE_MED
 
 @pytest.fixture
 def analyzer():
-    from presidio_analyzer import AnalyzerEngine
+    from pattern_nlp import create_pattern_analyzer
 
-    a = AnalyzerEngine()
+    a = create_pattern_analyzer()
     for rec in VN_RECOGNIZERS:
         a.registry.add_recognizer(rec)
     return a

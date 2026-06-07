@@ -40,11 +40,18 @@ class VnBankAccountRecognizer(PatternRecognizer):
             supported_entity="VN_BANK_ACCOUNT",
             patterns=self.PATTERNS,
             context=["STK", "tài khoản", "account", "số tài khoản"],
+            supported_language="vi",
         )
 
     def validate_result(self, pattern_text: str) -> bool:
         """Distinguish from VN_CCCD (12 digits) and VN_MST (10 digits)."""
         digits = "".join(c for c in pattern_text if c.isdigit())
+        lowered = pattern_text.lower()
+        if any(
+            keyword in lowered
+            for keyword in ("stk", "tài khoản", "tai khoan", "account", "vietcombank")
+        ):
+            return 10 <= len(digits) <= 14
         if len(digits) == 12 and digits[:3] in VALID_PROVINCE_CODES_3DIGIT:
             return False  # likely a CCCD
         if len(digits) == 10 and digits[:2] in VALID_PROVINCE_CODES_2DIGIT:

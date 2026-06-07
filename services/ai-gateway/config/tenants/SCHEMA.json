@@ -92,6 +92,17 @@
           "description": "Hard cap on monthly USD spend across all providers. YAML accepts string (`\"150.00\"`) or number (`150`). Range checked at load time: [0.01, 1_000_000].",
           "type": "string"
         },
+        "pii_allowlist": {
+          "description": "Tenant-scoped PII allowlist regexes for legitimate subject-matter identifiers. FR-AI-012 uses this for KYC/vendor flows where selected VN identifiers may pass through.",
+          "default": null,
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
         "pii_redaction_extra": {
           "description": "Extra PII entity types to redact beyond the EN baseline (FR-AI-011 §1 #10). Values are Presidio entity-type names (e.g. \"VN_CCCD\", \"VN_MST\").",
           "default": null,
