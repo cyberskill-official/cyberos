@@ -54,15 +54,15 @@ proptest! {
                 let _ = cache::insert(&k, &test_provider_response(), model).await;
             }
             // Lookup under tenant_b — MUST all miss.
-            for (prompt, model, persona) in &ops {
+            for (step, (prompt, model, persona)) in ops.iter().enumerate() {
                 let k = CacheKey::derive(&t_b, prompt, model, persona);
                 match cache::lookup(&k).await {
                     CacheLookupOutcome::Miss | CacheLookupOutcome::Error(_) => {}
                     other => prop_assert!(
                         false,
-                        "cross-tenant leak: t_a={} t_b={} prompt={:?} model={} persona={} \
+                        "cross-tenant leak: t_a={} t_b={} prompt={:?} model={} persona={} step={} \
                          k_a_hash={} k_b_hash={} outcome={:?}",
-                        t_a, t_b, prompt, model, persona,
+                        t_a, t_b, prompt, model, persona, step,
                         hex::encode(CacheKey::derive(&t_a, prompt, model, persona).prompt_hash),
                         hex::encode(k.prompt_hash), other,
                     ),
@@ -88,8 +88,8 @@ proptest! {
         let h_a = hex::encode(k_a.prompt_hash);
         let h_b = hex::encode(k_b.prompt_hash);
         prop_assert_ne!(k_a.prompt_hash, k_b.prompt_hash,
-            "cache-key collision: tenant_a={} tenant_b={} prompt={:?} k_a={} k_b={}",
-            a, b, prompt, h_a, h_b);
+            "cache-key collision: tenant_a={} tenant_b={} prompt={:?} model={} persona={} step=0 k_a={} k_b={}",
+            a, b, prompt, model, persona, h_a, h_b);
     }
 }
 

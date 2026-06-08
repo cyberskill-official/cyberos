@@ -188,6 +188,19 @@ All 6 mechanical revisions applied (2026-05-16) within the FR itself:
 
 **Score = 10/10.** Ship as-is. Ready to transition `draft → accepted`.
 
+## §5 — Implementation closure
+
+Closed on 2026-06-08 against the existing FR-AI-017 Redis response-cache implementation.
+
+Verification passed:
+
+- `cargo test -p cyberos-ai-gateway --test cache_isolation_property_test --release -- --test-threads=1`
+- `cargo test -p cyberos-ai-gateway --test cache_isolation_regression_scenarios --release -- --test-threads=1`
+- `cargo test -p cyberos-ai-gateway --test cache_isolation_adversarial_test --release -- --test-threads=1`
+- `cargo test -p cyberos-ai-gateway --test cache_isolation_concurrent_test --release -- --test-threads=1`
+
+The CI gate is now implemented in `.github/workflows/cache-isolation-gate.yml` with explicit test-target execution, Redis service isolation, non-skip enforcement, and a JSON artefact upload.
+
 ---
 
 *End of FR-AI-018 audit (final). Status: PASS at 10/10.*

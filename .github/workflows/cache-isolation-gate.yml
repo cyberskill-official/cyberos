@@ -1,23 +1,116 @@
-# cache-isolation-gate.yml — STUB
-#
-# Auto-generated 2026-05-17 from FR build_envelope references.
-# Declared by: FR-AI-018
-#
-# Implementation team: replace this stub with the real workflow YAML
-# per the spec details in the declaring FR(s) above.
-# Many FRs embed the canonical workflow YAML in their §6 skeleton section.
-
-name: cache-isolation-gate
+name: Cache Cross-Tenant Isolation Gate
 
 on:
   pull_request:
     paths:
-      # TODO: per declaring FR
-      - 'services/**'
+      - 'services/ai-gateway/src/cache/**'
+      - 'services/ai-gateway/tests/cache_isolation*.rs'
+      - 'services/ai-gateway/tests/support/**'
+      - '.github/workflows/cache-isolation-gate.yml'
 
 jobs:
-  placeholder:
-    runs-on: ubuntu-latest
+  isolation-gate:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
     steps:
-      - name: TODO — implement per FR(s) FR-AI-018
-        run: echo 'Stub — see FR specs for canonical workflow YAML'
+      - uses: actions/checkout@v4
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Run cache isolation suite
+        working-directory: services
+        env:
+          REDIS_URL: redis://127.0.0.1:6379
+          PROPTEST_CASES: "256"
+        run: |
+          set -o pipefail
+          : > ai-gateway/cache_isolation_output.txt
+          cargo test -p cyberos-ai-gateway --test cache_isolation_property_test --release -- --test-threads=1 | tee -a ai-gateway/cache_isolation_output.txt
+          cargo test -p cyberos-ai-gateway --test cache_isolation_regression_scenarios --release -- --test-threads=1 | tee -a ai-gateway/cache_isolation_output.txt
+          cargo test -p cyberos-ai-gateway --test cache_isolation_adversarial_test --release -- --test-threads=1 | tee -a ai-gateway/cache_isolation_output.txt
+          cargo test -p cyberos-ai-gateway --test cache_isolation_concurrent_test --release -- --test-threads=1 | tee -a ai-gateway/cache_isolation_output.txt
+
+      - name: Enforce no skipped cache isolation tests
+        working-directory: services/ai-gateway
+        run: |
+          if grep -R -n '#\[ignore\]' tests/cache_isolation*.rs; then
+            echo "cache isolation tests must not use #[ignore]"
+            exit 1
+          fi
+          if grep -E -n '; [1-9][0-9]* ignored;' cache_isolation_output.txt; then
+            echo "cache isolation test output reported ignored tests"
+            exit 1
+          fi
+
+      - name: Emit JSON artefact
+        if: always()
+        working-directory: services/ai-gateway
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+          output_path = Path("cache_isolation_output.txt")
+          output = output_path.read_text() if output_path.exists() else ""
+          summaries = [
+              {
+                  "passed": int(passed),
+                  "failed": int(failed),
+                  "ignored": int(ignored),
+              }
+              for passed, failed, ignored in re.findall(
+                  r"test result: .*?(\d+) passed; (\d+) failed; (\d+) ignored;",
+                  output,
+              )
+          ]
+          report = {
+              "sha": os.environ.get("GITHUB_SHA"),
+              "case_count": 256,
+              "estimated_randomized_ops_floor": 200_000,
+              "summaries": summaries,
+              "regression_scenarios": [
+                  "regression_001_underscore_collision",
+                  "regression_002_unicode_normalization",
+                  "regression_003_trailing_whitespace",
+                  "regression_004_case_folding",
+                  "regression_005_empty_prompt",
+                  "regression_006_persona_omitted",
+                  "regression_007_model_substring",
+              ],
+              "adversarial_pass_list": [
+                  "empty",
+                  "null_byte",
+                  "unit_separator_prefix",
+                  "unit_separator_mid_string",
+                  "rtl_override",
+                  "zero_width_joiner",
+                  "sql_injection_shape",
+                  "path_traversal_shape",
+                  "bom_prefixed",
+                  "case_variant",
+              ],
+              "output_path": str(output_path),
+          }
+          Path(f"cache_isolation_report_{os.environ.get('GITHUB_SHA', 'local')}.json").write_text(
+              json.dumps(report, indent=2, sort_keys=True) + "\n"
+          )
+          PY
+
+      - name: Upload JSON artefact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cache_isolation_report_${{ github.sha }}
+          path: services/ai-gateway/cache_isolation_report_${{ github.sha }}.json
