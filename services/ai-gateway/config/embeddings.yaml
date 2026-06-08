@@ -1,0 +1,9 @@
+# FR-AI-019 — Region-local self-hosted BGE-M3 sidecars.
+
+bge_sidecars:
+  - region: ap-southeast-1
+    url: http://bge-sidecar-sg-1:5060
+  - region: eu-central-1
+    url: http://bge-sidecar-eu-1:5060
+  - region: us-east-1
+    url: http://bge-sidecar-us-1:5060

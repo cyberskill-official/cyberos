@@ -11,7 +11,7 @@ milestone: P0 · slice 4
 slice: 4
 owner: Stephen Cheng
 created: 2026-05-15
-shipped: 2026-05-18
+shipped: null
 memory_chain_hash: null
 related_frs: [FR-AI-001, FR-AI-006, FR-AI-007, FR-AI-008, FR-AI-009, FR-AI-016, FR-AI-020]
 depends_on: []
@@ -710,4 +710,42 @@ All resolved at authoring time. Items deferred to later FRs:
 
 ---
 
-*End of FR-AI-019. Status: draft (10/10 target).*
+## §12 — Route-back note (2026-06-08)
+
+Status remains `ready_to_implement`; do not mark this FR shipped yet.
+
+Reason: the gateway adapter, batching layer, sidecar scaffold, and mock-sidecar contract tests are implemented, but the live model-output clauses cannot be verified on this host. There is no mounted BGE-M3 model artefact and no real checksum for `embeddings/checksums/bge-m3.sha256`; using mock embedding vectors is not sufficient to mark a model-output FR done under the active execution plan.
+
+Work preserved for the next attempt:
+- `BgeProvider` is now a first-class provider with per-region sidecar config from `config/embeddings.yaml`, zero marginal cost, health checks, device flip detection, and circuit-breaker-protected embed dispatch.
+- The adaptive batch buffer coalesces up to 32 texts, preserves per-tenant fairness by round-robin dispatch, keeps incompatible model/task requests in separate batches, and maps sidecar 413/5xx/deadline errors into router errors.
+- The tenant policy schema now supports the `bge` provider variant and the generated `config/tenants/SCHEMA.json` is updated.
+- The Python FastAPI sidecar scaffold loads a real mounted model path, verifies SHA-256 before readiness, exposes `/health`, validates the 8192-token limit, reports model identity, and fails closed on checksum/model startup errors.
+- CPU/GPU Dockerfiles and a local compose file are present, but require a real mounted model artefact and checksum before health can pass.
+
+Verification completed:
+- `cargo test -p cyberos-ai-gateway --test bge_test -- --test-threads=1` — 9 passed.
+- `cargo test -p cyberos-ai-gateway --test bge_batch_test -- --test-threads=1` — 3 passed.
+- `cargo test -p cyberos-ai-gateway --test bge_fallback_test -- --test-threads=1` — 1 passed.
+- `cargo test -p cyberos-ai-gateway --test policy_loader_test -- --test-threads=1` — 3 passed, 5 pre-existing ignored.
+- `cargo test -p cyberos-ai-gateway --test alias_resolution_test -- --test-threads=1` — 23 passed.
+- `cargo test -p cyberos-ai-gateway --test cost_table_test -- --test-threads=1` — 12 passed.
+- `cargo test -p cyberos-ai-gateway --test router_test -- --test-threads=1` — 30 passed.
+- `python3 -m py_compile embeddings/sidecar/bge_m3_sidecar.py embeddings/sidecar/batch.py embeddings/sidecar/checksum.py embeddings/sidecar/health.py` — passed.
+- `cargo run -p cyberos-ai-gateway --bin gen-schema -- --out ai-gateway/config/tenants/SCHEMA.json` — schema regenerated.
+
+Required next verification before shipping:
+
+```bash
+cd services/ai-gateway
+# Replace embeddings/checksums/bge-m3.sha256 with the SHA-256 of the mounted BGE-M3 model artefact.
+docker compose -f embeddings/docker-compose.yml up -d --build
+curl -fsS http://127.0.0.1:5060/health
+cargo test -p cyberos-ai-gateway --test bge_test -- --test-threads=1
+cargo test -p cyberos-ai-gateway --test bge_batch_test -- --test-threads=1
+cargo test -p cyberos-ai-gateway --test bge_fallback_test -- --test-threads=1
+```
+
+Only after a real sidecar returns BGE-M3 embeddings and the checksum/health path passes should this FR move to `done`.
+
+*End of FR-AI-019. Status: ready_to_implement (routed back 2026-06-08).*

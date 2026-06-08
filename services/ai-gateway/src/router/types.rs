@@ -155,18 +155,44 @@ pub struct Message {
     pub content: String,
 }
 
-/// Embed request (stub for slice 2).
-#[derive(Debug, Clone)]
-pub struct EmbedRequest {
-    pub input: Vec<String>,
-    pub model: String,
+/// Embed task variant served by BGE-M3.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum EmbedTask {
+    /// Default passage/query embedding mode.
+    Passage,
+    /// Code-tuned prompt-template mode.
+    Code,
 }
 
-/// Embed response (stub for slice 2).
-#[derive(Debug, Clone)]
+/// Embed request.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EmbedRequest {
+    /// Texts to embed. A single-text request is represented as a batch of one.
+    pub texts: Vec<String>,
+    /// Tenant submitting the request; used for batching fairness and metrics.
+    pub tenant_id: String,
+    /// BGE task/prompt-template variant.
+    pub task: EmbedTask,
+    /// Provider region selected by alias resolution / residency policy.
+    pub region: String,
+}
+
+/// Embed response.
+#[derive(Debug, Clone, PartialEq)]
 pub struct EmbedResponse {
     pub embeddings: Vec<Vec<f32>>,
     pub usage: ProviderUsage,
+    /// Running model identity, e.g. `bge-m3`.
+    pub model_name: String,
+    /// First 16 hex chars of the model checksum.
+    pub model_sha256: String,
+    /// Sidecar semver string.
+    pub sidecar_version: String,
+    /// Runtime device: `cuda` or `cpu`.
+    pub device: String,
+    /// Sidecar-reported inference time.
+    pub elapsed_ms: u32,
 }
 
 /// Normalized streaming response from any LLM provider.
@@ -266,4 +292,7 @@ pub enum RouterError {
 
     #[error("streaming not implemented in slice 2")]
     StreamingNotImplemented,
+
+    #[error("no BGE sidecar configured for region {region}")]
+    NoSidecarForRegion { region: String },
 }

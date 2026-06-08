@@ -1,0 +1,3 @@
+# Replace during deployment with the SHA-256 of the mounted BGE-M3 model artefact.
+# The sidecar refuses to become ready unless the model path hash matches this file.
+0000000000000000000000000000000000000000000000000000000000000000

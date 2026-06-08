@@ -7,6 +7,8 @@
 
 pub mod anthropic;
 pub mod bedrock;
+pub mod bge_batch_buffer;
+pub mod bge_provider;
 pub mod failover;
 mod http;
 pub mod jitter;
@@ -17,8 +19,8 @@ pub mod types;
 
 pub use types::{
     AttemptRecord, AttemptStatus, CacheState, ChatCompleteRequest, Choice, EmbedRequest,
-    EmbedResponse, FinishReason, MadeByGenie, Message, ProviderResponse, ProviderStreamResponse,
-    ProviderUsage, RouterError, ToolCall,
+    EmbedResponse, EmbedTask, FinishReason, MadeByGenie, Message, ProviderResponse,
+    ProviderStreamResponse, ProviderUsage, RouterError, ToolCall,
 };
 
 use std::time::{Duration, Instant};
@@ -541,6 +543,89 @@ pub async fn call_provider_with_chain(
     })
 }
 
+/// Call the resolved embedding provider with retry + circuit-breaker semantics.
+pub async fn call_embed_provider(
+    req: &EmbedRequest,
+    resolved: &ResolvedModel,
+    deadline: Instant,
+    policy: &TenantPolicy,
+) -> Result<EmbedResponse, RouterError> {
+    let alias = match req.task {
+        EmbedTask::Passage => "embed.standard",
+        EmbedTask::Code => "embed.code",
+    };
+    let chain = failover::build_provider_chain(resolved, policy, alias);
+    call_embed_provider_with_chain(req, deadline, chain).await
+}
+
+/// Test/contract entry point for embedding provider dispatch.
+#[doc(hidden)]
+pub async fn call_embed_provider_with_chain(
+    req: &EmbedRequest,
+    deadline: Instant,
+    chain: Vec<ProviderEndpoint>,
+) -> Result<EmbedResponse, RouterError> {
+    let mut last_error: Option<RouterError> = None;
+
+    for endpoint in &chain {
+        let pk = endpoint.provider.kind();
+        let model = endpoint.model.as_str();
+        if circuit_breaker::is_open(&pk, model) {
+            continue;
+        }
+
+        for _attempt_num in 1..=MAX_RETRIES_PER_PROVIDER {
+            if Instant::now() >= deadline {
+                record_breaker_outcome(pk, model, CallOutcome::Timeout);
+                return Err(RouterError::DeadlineExceeded);
+            }
+
+            let remaining = deadline
+                .duration_since(Instant::now())
+                .min(PROVIDER_DEFAULT_TIMEOUT);
+            let outcome = tokio::time::timeout(
+                remaining,
+                endpoint.provider.call_embed(req, model, deadline),
+            )
+            .await;
+
+            match outcome {
+                Err(_) => {
+                    record_breaker_outcome(pk, model, CallOutcome::Timeout);
+                    return Err(RouterError::DeadlineExceeded);
+                }
+                Ok(Ok(resp)) => {
+                    record_breaker_outcome(pk, model, CallOutcome::Success);
+                    return Ok(resp);
+                }
+                Ok(Err(err @ RouterError::NoSidecarForRegion { .. })) => {
+                    record_breaker_outcome(pk, model, CallOutcome::Failure4xx);
+                    return Err(err);
+                }
+                Ok(Err(
+                    err @ RouterError::TerminalProviderError {
+                        status: 400..=499, ..
+                    },
+                )) => {
+                    record_breaker_outcome(pk, model, CallOutcome::Failure4xx);
+                    return Err(err);
+                }
+                Ok(Err(err)) => {
+                    record_breaker_outcome(pk, model, breaker_outcome_for_error(&err));
+                    last_error = Some(err);
+                }
+            }
+        }
+    }
+
+    Err(RouterError::AllProvidersFailed {
+        last_error: Box::new(last_error.unwrap_or(RouterError::InvalidResponse {
+            reason: "no embedding providers in chain".into(),
+        })),
+        attempts: Vec::new(),
+    })
+}
+
 /// Call the resolved LLM provider streaming endpoint with retry + failover.
 ///
 /// Retries and failovers happen only while opening the provider stream. Once a
@@ -955,9 +1040,9 @@ fn breaker_outcome_for_error(error: &RouterError) -> CallOutcome {
             CallOutcome::Failure5xx
         }
         RouterError::DeadlineExceeded => CallOutcome::Timeout,
-        RouterError::AuthError { .. } | RouterError::TerminalProviderError { .. } => {
-            CallOutcome::Failure4xx
-        }
+        RouterError::AuthError { .. }
+        | RouterError::TerminalProviderError { .. }
+        | RouterError::NoSidecarForRegion { .. } => CallOutcome::Failure4xx,
         RouterError::SerializationError { .. }
         | RouterError::InvalidResponse { .. }
         | RouterError::RedactionFailed { .. }

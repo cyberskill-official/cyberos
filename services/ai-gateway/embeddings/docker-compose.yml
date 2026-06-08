@@ -1,0 +1,16 @@
+services:
+  bge-sidecar-sg-1:
+    build:
+      context: .
+      dockerfile: Dockerfile.cpu
+    ports:
+      - "5060:5060"
+    volumes:
+      - ./models/bge-m3:/models/bge-m3:ro
+      - ./checksums/bge-m3.sha256:/app/checksums/bge-m3.sha256:ro
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5060/health', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped

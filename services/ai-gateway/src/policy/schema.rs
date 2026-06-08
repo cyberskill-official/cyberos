@@ -141,6 +141,14 @@ pub enum Provider {
         /// Map of model alias → provider-specific model id.
         model_alias_map: HashMap<String, String>,
     },
+    /// Self-hosted BGE sidecar provider.
+    Bge {
+        /// AWS-style region where this sidecar is deployed.
+        #[schemars(regex(pattern = r"^(us|eu|ap|sa|af|ca|me)-[a-z]+-\d+$"))]
+        region: String,
+        /// Map of model alias → provider-specific model id.
+        model_alias_map: HashMap<String, String>,
+    },
 }
 
 impl Provider {
@@ -151,6 +159,7 @@ impl Provider {
             Self::Anthropic { .. } => ProviderKind::Anthropic,
             Self::Openai { .. } => ProviderKind::Openai,
             Self::Vertex { .. } => ProviderKind::Vertex,
+            Self::Bge { .. } => ProviderKind::Bge,
         }
     }
 
@@ -161,6 +170,7 @@ impl Provider {
             Self::Anthropic { .. } => None,
             Self::Openai { .. } => None,
             Self::Vertex { region, .. } => Some(region.clone()),
+            Self::Bge { region, .. } => Some(region.clone()),
         }
     }
 
@@ -177,6 +187,9 @@ impl Provider {
                 model_alias_map, ..
             } => model_alias_map,
             Self::Vertex {
+                model_alias_map, ..
+            } => model_alias_map,
+            Self::Bge {
                 model_alias_map, ..
             } => model_alias_map,
         };

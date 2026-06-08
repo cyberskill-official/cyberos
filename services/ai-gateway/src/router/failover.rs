@@ -100,6 +100,9 @@ fn make_provider(kind: ProviderKind) -> Option<Box<dyn Provider>> {
         ProviderKind::Bedrock => Some(Box::new(super::bedrock::BedrockProvider)),
         ProviderKind::Anthropic => Some(Box::new(super::anthropic::AnthropicProvider)),
         ProviderKind::Openai => Some(Box::new(super::openai::OpenAIProvider)),
-        ProviderKind::Vertex | ProviderKind::Bge => None,
+        ProviderKind::Bge => super::bge_provider::BgeProvider::from_default_config()
+            .ok()
+            .map(|provider| Box::new(provider) as Box<dyn Provider>),
+        ProviderKind::Vertex => None,
     }
 }

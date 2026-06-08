@@ -1,0 +1,18 @@
+FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 python3-pip ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY sidecar/requirements.txt /app/requirements.txt
+RUN pip3 install --no-cache-dir -r /app/requirements.txt
+
+COPY sidecar /app/sidecar
+COPY checksums /app/checksums
+
+ENV BGE_M3_MODEL_PATH=/models/bge-m3
+ENV BGE_M3_CHECKSUM_PATH=/app/checksums/bge-m3.sha256
+EXPOSE 5060
+
+CMD ["uvicorn", "sidecar.bge_m3_sidecar:app", "--host", "0.0.0.0", "--port", "5060"]

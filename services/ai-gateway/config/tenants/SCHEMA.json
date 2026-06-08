@@ -328,6 +328,35 @@
               "pattern": "^[a-z]+-[a-z]+\\d*$"
             }
           }
+        },
+        {
+          "description": "Self-hosted BGE sidecar provider.",
+          "type": "object",
+          "required": [
+            "kind",
+            "model_alias_map",
+            "region"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "bge"
+              ]
+            },
+            "model_alias_map": {
+              "description": "Map of model alias → provider-specific model id.",
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "region": {
+              "description": "AWS-style region where this sidecar is deployed.",
+              "type": "string",
+              "pattern": "^(us|eu|ap|sa|af|ca|me)-[a-z]+-\\d+$"
+            }
+          }
         }
       ]
     },
