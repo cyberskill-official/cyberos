@@ -63,6 +63,25 @@ async fn cache_hit_returns_response() {
 }
 
 #[tokio::test]
+async fn insert_reports_nominal_and_jittered_ttl_separately() {
+    let _guard = cache_test_lock();
+    cache::redis_backend::init("redis://127.0.0.1:6379");
+    let key = k("tenant_ttl", "prompt", "cuo-cpo@0.4.1");
+
+    match cache::insert(&key, &test_provider_response(), "chat.fast").await {
+        CacheInsertOutcome::Inserted { ttl, jittered_ttl } => {
+            assert_eq!(ttl, std::time::Duration::from_secs(3600));
+            let ratio = jittered_ttl.as_secs_f64() / ttl.as_secs_f64();
+            assert!(
+                (0.9..=1.1).contains(&ratio),
+                "unexpected jitter ratio {ratio}"
+            );
+        }
+        outcome => panic!("expected cache insert, got {outcome:?}"),
+    }
+}
+
+#[tokio::test]
 async fn cache_miss_returns_miss() {
     let _guard = cache_test_lock();
     cache::redis_backend::init("redis://127.0.0.1:6379");

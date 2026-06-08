@@ -163,8 +163,48 @@ pub async fn call_provider(
         crate::redact::redact_chat_request(&persona_applied.request, policy)
             .await
             .map_err(redaction_error)?;
+
+    let (cache_key, mut cache_state) = response_cache_key(&redacted_req, resolved, policy);
+    if let Some(cache_key) = &cache_key {
+        match crate::cache::lookup(cache_key).await {
+            crate::cache::CacheLookupOutcome::Hit(cached, lookup_latency) => {
+                let mut response = provider_response_from_cache(
+                    cache_key,
+                    *cached,
+                    lookup_latency,
+                    persona_applied.made_by_genie,
+                );
+                restore_tool_call_arguments(&mut response, &redactions);
+                return Ok(response);
+            }
+            crate::cache::CacheLookupOutcome::Miss
+            | crate::cache::CacheLookupOutcome::SchemaMismatch => {
+                cache_state = CacheState::Miss;
+            }
+            crate::cache::CacheLookupOutcome::Error(err) => {
+                warn!(error = %err, "response_cache_lookup_failed; continuing to provider");
+                cache_state = CacheState::Error;
+            }
+        }
+    }
+
     let chain = failover::build_provider_chain(resolved, policy, &req.alias);
     let mut response = call_provider_with_chain(&redacted_req, deadline, chain).await?;
+    response.cache_state = cache_state;
+
+    if let Some(cache_key) = &cache_key {
+        match crate::cache::insert(cache_key, &response, &req.alias).await {
+            crate::cache::CacheInsertOutcome::Inserted { .. } => {}
+            crate::cache::CacheInsertOutcome::Skipped(_) => {
+                response.cache_state = CacheState::Skipped;
+            }
+            crate::cache::CacheInsertOutcome::Error(err) => {
+                warn!(error = %err, "response_cache_insert_failed");
+                response.cache_state = CacheState::Error;
+            }
+        }
+    }
+
     restore_tool_call_arguments(&mut response, &redactions);
     if response.made_by_genie.is_none() {
         response.made_by_genie = persona_applied.made_by_genie;
@@ -834,6 +874,60 @@ pub async fn call_provider_streaming_with_chain(
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+fn response_cache_key(
+    req: &ChatCompleteRequest,
+    resolved: &ResolvedModel,
+    policy: &TenantPolicy,
+) -> (Option<crate::cache::CacheKey>, CacheState) {
+    if crate::cache::ttl::ttl_for_alias(&req.alias).is_none() {
+        return (None, CacheState::Skipped);
+    }
+    let redacted_prompt = cache_prompt_material(req);
+    let persona_handle = req.agent_persona.as_deref().unwrap_or("");
+    (
+        Some(crate::cache::CacheKey::derive(
+            &policy.tenant_id,
+            &redacted_prompt,
+            &resolved.model,
+            persona_handle,
+        )),
+        CacheState::Miss,
+    )
+}
+
+fn cache_prompt_material(req: &ChatCompleteRequest) -> String {
+    let mut material = String::new();
+    for message in &req.messages {
+        material.push_str(&message.role);
+        material.push('\x1e');
+        material.push_str(&message.content);
+        material.push('\x1f');
+    }
+    material
+}
+
+fn provider_response_from_cache(
+    key: &crate::cache::CacheKey,
+    cached: crate::cache::CachedResponse,
+    lookup_latency: Duration,
+    made_by_genie: Option<MadeByGenie>,
+) -> ProviderResponse {
+    let saved_tokens = cached
+        .usage
+        .prompt_tokens
+        .saturating_add(cached.usage.completion_tokens);
+    ProviderResponse {
+        id: format!("cache-{}", hex::encode(&key.prompt_hash[..8])),
+        usage: cached.usage,
+        choices: cached.choices,
+        finish_reason: cached.finish_reason,
+        latency_ms: lookup_latency.as_millis().min(u128::from(u32::MAX)) as u32,
+        cache_state: CacheState::Hit { saved_tokens },
+        attempts: vec![],
+        made_by_genie,
+    }
+}
+
 fn make_record(
     provider: ProviderKind,
     model: &str,
@@ -877,6 +971,60 @@ fn breaker_outcome_for_error(error: &RouterError) -> CallOutcome {
 
 fn record_breaker_outcome(provider: ProviderKind, model: &str, outcome: CallOutcome) {
     circuit_breaker::record_outcome(&provider, model, outcome);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn cache_prompt_material_includes_roles_and_message_boundaries() {
+        let req = ChatCompleteRequest {
+            alias: "chat.smart".to_string(),
+            messages: vec![
+                Message {
+                    role: "system".to_string(),
+                    content: "A".to_string(),
+                },
+                Message {
+                    role: "user".to_string(),
+                    content: "B".to_string(),
+                },
+            ],
+            max_tokens: None,
+            temperature: None,
+            agent_persona: Some("cuo-cpo@0.4.1".to_string()),
+            traceparent: None,
+            tracestate: None,
+        };
+
+        assert_eq!(
+            cache_prompt_material(&req),
+            "system\u{1e}A\u{1f}user\u{1e}B\u{1f}"
+        );
+    }
+
+    #[test]
+    fn cache_prompt_material_distinguishes_role_swaps() {
+        let mut a = ChatCompleteRequest {
+            alias: "chat.smart".to_string(),
+            messages: vec![Message {
+                role: "user".to_string(),
+                content: "same".to_string(),
+            }],
+            max_tokens: None,
+            temperature: None,
+            agent_persona: None,
+            traceparent: None,
+            tracestate: None,
+        };
+        let mut b = a.clone();
+        b.messages[0].role = "system".to_string();
+
+        assert_ne!(cache_prompt_material(&a), cache_prompt_material(&b));
+        a.messages[0].content = "other".to_string();
+        assert_ne!(cache_prompt_material(&a), cache_prompt_material(&b));
+    }
 }
 
 fn redaction_error(error: crate::redact::RedactError) -> RouterError {

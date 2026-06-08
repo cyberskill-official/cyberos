@@ -235,7 +235,7 @@ pub async fn reconcile(
         CallOutcome::Success {
             usage,
             latency_ms,
-            cache_state: _,
+            cache_state,
             provider_request_id,
         } => {
             let actual_usd = compute_actual_cost(&hold, &usage)?;
@@ -253,6 +253,7 @@ pub async fn reconcile(
                 actual_usd,
                 hold_id,
                 latency_ms,
+                cache_state.as_str(),
             );
             emit_audit(&mut tx, emit_req).await?;
 
@@ -316,6 +317,7 @@ pub async fn reconcile(
                 actual_usd,
                 hold_id,
                 0,
+                CacheState::Partial.as_str(),
             );
             // Tag as cancelled.
             emit_req

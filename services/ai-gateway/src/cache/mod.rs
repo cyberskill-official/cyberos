@@ -22,6 +22,12 @@ pub const CACHE_SCHEMA_VERSION: &str = "v1";
 /// §1 #8: max payload size per cache entry.
 pub const MAX_PAYLOAD_BYTES: usize = 1_048_576; // 1 MB
 
+/// §1 #12: intended per-tenant cache budget.
+pub const PER_TENANT_BUDGET_BYTES: usize = 100 * 1_048_576; // 100 MB
+
+/// §1 #11: P0 break-even hit-rate target.
+pub const HIT_RATE_FLOOR: f64 = 0.30;
+
 /// Redis timeout for all cache operations.
 pub const REDIS_TIMEOUT_MS: u64 = 200;
 
@@ -176,8 +182,19 @@ pub async fn insert(
     }
 
     let jittered = ttl::jittered_ttl(nominal_ttl, &mut rand::thread_rng());
-    redis_backend::insert(key, &bytes, jittered).await
+    match redis_backend::insert(key, &bytes, jittered).await {
+        CacheInsertOutcome::Inserted { .. } => CacheInsertOutcome::Inserted {
+            ttl: nominal_ttl,
+            jittered_ttl: jittered,
+        },
+        other => other,
+    }
 }
+
+/// Slice-4 no-op cache warming hook.
+///
+/// FR-AI-022 can replace this with workload-derived warmups once hit-rate data exists.
+pub async fn warm_known_prompts() {}
 
 #[cfg(test)]
 mod tests {
@@ -239,6 +256,21 @@ mod tests {
     #[test]
     fn max_payload_is_1mb() {
         assert_eq!(MAX_PAYLOAD_BYTES, 1_048_576);
+    }
+
+    #[test]
+    fn per_tenant_budget_is_100mb() {
+        assert_eq!(PER_TENANT_BUDGET_BYTES, 100 * 1_048_576);
+    }
+
+    #[test]
+    fn hit_rate_floor_is_30_percent() {
+        assert!((HIT_RATE_FLOOR - 0.30).abs() < f64::EPSILON);
+    }
+
+    #[tokio::test]
+    async fn warm_known_prompts_is_currently_noop() {
+        warm_known_prompts().await;
     }
 
     #[test]

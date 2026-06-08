@@ -82,10 +82,14 @@ pub enum FinishReason {
 pub enum CacheState {
     /// No caching used.
     None,
-    /// Prompt-cache served some tokens.
+    /// Response cache or provider prompt-cache served tokens.
     Hit { saved_tokens: u32 },
-    /// Requested cache, didn't hit.
+    /// Requested cache, did not hit.
     Miss,
+    /// Cache intentionally bypassed.
+    Skipped,
+    /// Cache backend errored; provider call continued.
+    Error,
 }
 
 /// Metadata for a single attempt within a call.

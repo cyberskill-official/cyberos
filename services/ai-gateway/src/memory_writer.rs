@@ -525,6 +525,7 @@ pub mod builders {
         actual_usd: Decimal,
         hold_id: Uuid,
         latency_ms: u32,
+        cache_state: &str,
     ) -> MemoryEmit {
         MemoryEmit {
             kind: AiInvocationKind::Invocation,
@@ -539,6 +540,7 @@ pub mod builders {
                 "actual_usd": actual_usd.to_string(),
                 "hold_id": hold_id,
                 "latency_ms": latency_ms,
+                "cache_state": cache_state,
             }),
         }
     }
@@ -760,6 +762,25 @@ mod tests {
         assert_eq!(row.extra["resolved_region"], "ap-southeast-1");
         assert_eq!(row.extra["vn1_no_provider"], true);
         assert_eq!(row.extra["request_id"], "req-123");
+    }
+
+    #[test]
+    fn invocation_builder_carries_cache_state() {
+        let hold_id = Uuid::nil();
+        let row = builders::invocation(
+            "tenant:alpha",
+            "cuo-cpo@0.4.1",
+            "bedrock",
+            "claude",
+            10,
+            20,
+            Decimal::new(12, 4),
+            hold_id,
+            42,
+            "hit",
+        );
+        assert_eq!(row.kind.tag(), "ai.invocation");
+        assert_eq!(row.extra["cache_state"], "hit");
     }
 
     #[test]
