@@ -10,7 +10,7 @@ milestone: P1 · slice 1
 slice: 1
 owner: Stephen Cheng
 created: 2026-05-16
-shipped: 2026-05-19
+shipped: null
 memory_chain_hash: pending
 related_frs: [FR-CHAT-002, FR-CHAT-003, FR-CHAT-005, FR-CHAT-011]
 depends_on: []
@@ -277,4 +277,38 @@ All resolved. Deferred:
 
 ---
 
-*End of FR-CHAT-001.*
+## §12 — Route-back note (2026-06-08)
+
+Status remains `ready_to_implement`; do not mark this FR shipped yet.
+
+Reason: the FR-CHAT-001 implementation files and local structural tests are present, but the required Docker image build could not complete on this host. The build reached Dockerfile parsing and resolved `gcr.io/distroless/base-debian12`, then failed while loading metadata for `docker.io/library/golang:1.22-bookworm` with `DeadlineExceeded: context deadline exceeded`. Alternate manifest probes for `mirror.gcr.io/library/golang:1.22-bookworm` and `public.ecr.aws/docker/library/golang:1.22-bookworm` also hung and were stopped. Because acceptance criteria #2 and #9 require a real image build/tag check, marking this FR `done` now would be a false ship.
+
+Work preserved for the next attempt:
+- `services/chat/PINNED_COMMIT` carries a 40-char pinned SHA and rationale.
+- `services/chat/Dockerfile` builds from the pinned source archive, applies `services/chat/patches/*.patch`, and tags via pinned SHA plus `CYBEROS_PATCH_VERSION`.
+- `services/chat/scripts/check-license-drift.sh` supports real GitHub API execution and mock-mode tests.
+- `.github/workflows/chat-license-drift-watcher.yml` and `.github/workflows/chat-cherry-pick-review.yml` are present with the required weekly cron and `legal-reviewed` label gate.
+- `services/chat/README.md` and `CHANGELOG.cyberos.md` document fork policy, no-rebase policy, patch categories, and the image tag contract.
+
+Verification completed:
+- `bash services/chat/tests/run_all_tests.sh` — passed; 6 harness groups passed including pinned commit shape, drift watcher mock scenarios, patch shape, workflow shape, authbridge shape, and 7 Python control-plane tests.
+- `docker build --progress=plain --build-arg PINNED_COMMIT=$(grep -E '^[0-9a-f]{40}' services/chat/PINNED_COMMIT | head -1) --build-arg CYBEROS_PATCH_VERSION=$(tr -d '[:space:]' < services/chat/CYBEROS_PATCH_VERSION) -t cyberos/chat:<pinned-short>-0.1.0 services/chat` — failed before code build on `golang:1.22-bookworm` registry metadata timeout.
+
+Required next verification before shipping:
+
+```bash
+cd /Users/stephencheng/Projects/CyberSkill/cyberos
+bash services/chat/tests/run_all_tests.sh
+PINNED=$(grep -E '^[0-9a-f]{40}' services/chat/PINNED_COMMIT | head -1)
+PATCH_VERSION=$(tr -d '[:space:]' < services/chat/CYBEROS_PATCH_VERSION)
+docker build --progress=plain \
+  --build-arg PINNED_COMMIT="$PINNED" \
+  --build-arg CYBEROS_PATCH_VERSION="$PATCH_VERSION" \
+  -t "cyberos/chat:${PINNED:0:12}-${PATCH_VERSION}" \
+  services/chat
+docker images cyberos/chat --format '{{.Tag}}' | grep -qx "${PINNED:0:12}-${PATCH_VERSION}"
+```
+
+Only after the real Docker build and tag verification pass should this FR move to `done`.
+
+*End of FR-CHAT-001. Status: ready_to_implement (routed back 2026-06-08).*
