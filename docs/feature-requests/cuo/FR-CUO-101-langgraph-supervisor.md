@@ -1013,4 +1013,42 @@ All other questions resolved.
 
 ---
 
-*End of FR-CUO-101.*
+## §12 — Route-back note (2026-06-08)
+
+Status remains `ready_to_implement`; do not mark this FR shipped yet.
+
+Reason: the FR-CUO-101 supervisor scaffold, CLI, deterministic rule path, structured cascade contract, persona matrix, audit-row builder, and tests are now implemented, but this host has no live AI Gateway listening on `127.0.0.1:8088`, so the required real LLM cascade path through FR-AI-008 cannot be verified. The user explicitly disallowed marking LLM-backed FRs done from mock LLM output alone. The current tests use an injected gateway transport to prove CUO routes through the AI Gateway shape and rejects direct provider imports; that is necessary but not sufficient for `done`. Production memory audit emission is also still represented by an injectable sink rather than a canonical memory-writer call, so `cuo.routing_decision` rows are structurally tested but not chain-committed live.
+
+Work preserved for the next attempt:
+- `cuo.supervisor` package with state schemas, 11-persona catalogue, confidence-band branch logic, in-memory checkpointer, LiteLLM-shaped AI Gateway proxy, audit-row builder, transparency payload, and node helpers.
+- Existing Phase-1 router now exposes deterministic `score_one_off()` for supervisor reuse.
+- `cyberos-cuo supervisor route --query ...` CLI is wired with `--persona`, `--invoke/--no-invoke`, `--record/--no-record`, and `--json`.
+- FR-CUO-101 tests cover graph topology, auto/ask/defer/cascade paths, structured-pick validation, timeout fallback, persona JWT mismatch, persona defer-matrix blocking, PII scrubbing in audit payloads, no direct provider SDK imports, and replay equivalence.
+
+Verification completed:
+- `PYTHONPATH=modules/cuo python3 -m pytest modules/cuo/tests/test_supervisor_fr_cuo_101.py -q` — passed, 13 tests.
+- `PYTHONPATH=modules/cuo python3 -m pytest modules/cuo/tests -q` — passed, 192 passed / 2 skipped.
+- `PYTHONPATH=modules/cuo python3 -m cuo.cli supervisor route --query "ship feature requests" --no-invoke --no-record --json` — passed; rule path selected `chief-technology-officer/ship-feature-requests` at 0.85 confidence.
+- `python3 -m compileall -q modules/cuo/cuo/supervisor modules/cuo/cuo/cli.py modules/cuo/cuo/core/router.py` — passed.
+- `curl --max-time 5 http://127.0.0.1:8088/{health,v1/health,v1/ai/health}` — failed to connect; no local AI Gateway listener.
+
+Required next verification before shipping:
+
+```bash
+cd /Users/stephencheng/Projects/CyberSkill/cyberos
+# Start the FR-AI-008 AI Gateway HTTP service on 127.0.0.1:8088 with real provider credentials.
+# This repo currently exposes AI Gateway CLI/helper binaries, so the HTTP-service launch path
+# must be provided or added before FR-CUO-101 can complete live cascade verification.
+PYTHONPATH=modules/cuo python3 -m pytest modules/cuo/tests/test_supervisor_fr_cuo_101.py -q
+PYTHONPATH=modules/cuo python3 -m cuo.cli supervisor route \
+  --query "ambiguous feature request routing" \
+  --persona genie \
+  --invoke \
+  --record \
+  --json
+PYTHONPATH=modules/memory python3 -m cyberos doctor
+```
+
+Only after a real AI Gateway-backed cascade succeeds, the gateway receives `X-CUO-Decision-Id`, and the `cuo.routing_decision` audit row is committed through the canonical memory writer should this FR move to `done`.
+
+*End of FR-CUO-101. Status: ready_to_implement (routed back 2026-06-08).*

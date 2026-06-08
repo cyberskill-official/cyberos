@@ -45,6 +45,7 @@ from cuo.core.llm_invoker import LLMInvoker
 from cuo.core.router import RoutingDecision, route
 from cuo.core.supervisor import ChainResult, DryRunResult, dry_run_chain, execute_chain
 from cuo.core.validator import ValidationResult, validate_chain
+from cuo.supervisor import Supervisor, run_supervisor
 
 __all__ = [
     "__version__",
@@ -70,6 +71,8 @@ __all__ = [
     "dry_run_chain",
     "ChainResult",
     "execute_chain",
+    "Supervisor",
+    "run_supervisor",
     # Phase 3: LLM invoker
     "LLMInvoker",
     # Phase 3: memory bridge

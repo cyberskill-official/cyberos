@@ -16,6 +16,7 @@ walking up from the current working directory looking for cuo/MODULE.md + skill/
 from __future__ import annotations
 
 import sys
+import json
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -162,6 +163,68 @@ def cmd_dry_run(ctx: click.Context, persona_workflow: str) -> None:
     """
     from cuo.api import dry_run
     dry_run(persona_workflow, cuo_root=ctx.obj["cuo_root"], skill_root=ctx.obj["skill_root"])
+
+
+@main.group("supervisor")
+def cmd_supervisor() -> None:
+    """FR-CUO-101 LangGraph-style routing supervisor."""
+
+
+@cmd_supervisor.command("route")
+@click.option("--query", required=True, help="Natural-language request to route.")
+@click.option("--persona", "persona_key", default="genie", show_default=True)
+@click.option("--tenant-id", default="tenant-0", show_default=True)
+@click.option("--subject-id", default="subject-0", show_default=True)
+@click.option("--agent-persona", default=None, help="JWT agent_persona claim, e.g. cuo-genie@1.0.0.")
+@click.option("--invoke/--no-invoke", default=True, show_default=True)
+@click.option("--record/--no-record", default=True, show_default=True)
+@click.option("--json", "as_json", is_flag=True, default=False)
+@click.pass_context
+def cmd_supervisor_route(
+    ctx: click.Context,
+    query: str,
+    persona_key: str,
+    tenant_id: str,
+    subject_id: str,
+    agent_persona: str | None,
+    invoke: bool,
+    record: bool,
+    as_json: bool,
+) -> None:
+    """Route one request through the Phase-2 supervisor."""
+    from cuo.supervisor import Supervisor
+
+    supervisor = Supervisor(cuo_root=ctx.obj["cuo_root"])
+    decision = supervisor.route(
+        query,
+        tenant_id=tenant_id,
+        subject_id=subject_id,
+        persona_key=persona_key,
+        agent_persona=agent_persona,
+        invoke=invoke,
+        record=record,
+    )
+    if as_json:
+        click.echo(json.dumps(decision.model_dump(mode="json"), indent=2, sort_keys=True))
+    else:
+        routed = "routed" if decision.routed else "not-routed"
+        click.echo(
+            f"# supervisor route({query!r}) -> {routed} "
+            f"path={decision.path_taken} confidence={decision.confidence:.2f}"
+        )
+        if decision.skill_name:
+            click.echo(f"  skill: {decision.skill_name}")
+        if decision.reason:
+            click.echo(f"  reason: {decision.reason}")
+        if decision.transparency.alternatives:
+            click.echo("  alternatives:")
+            for alt in decision.transparency.alternatives:
+                click.echo(f"    {alt['skill']:45s} {alt['confidence']:.2f}")
+    if decision.routed:
+        raise SystemExit(0)
+    if decision.path_taken in {"ask", "cascade_then_ask"}:
+        raise SystemExit(1)
+    raise SystemExit(2)
 
 
 @main.command("execute")

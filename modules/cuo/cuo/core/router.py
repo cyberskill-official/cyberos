@@ -316,3 +316,66 @@ def route(
         alternative_personas=persona_scores[1:4],
         alternative_workflows=[(wf.slug, sc) for _, wf, sc in workflow_scores[1:4]],
     )
+
+
+def score_one_off(
+    query: str,
+    personas: list[PersonaEntry],
+    *,
+    persona_threshold: float = 0.0,
+    workflow_threshold: float = 0.0,
+) -> list[RoutingDecision]:
+    """Return sorted rule-score candidates for a single query.
+
+    FR-CUO-101's supervisor needs the Phase 1 scorer unchanged but as a ranked
+    list rather than a single terminal decision. This function shares the same
+    primitive scoring helpers as `route()` and keeps deterministic ordering for
+    replay-equivalence tests.
+    """
+    query_norm = _normalize(query)
+    if not query_norm:
+        return []
+
+    active_personas = [p for p in personas if not p.is_extinct and p.has_workflows]
+    if not active_personas:
+        return []
+
+    persona_scores: list[tuple[str, float]] = []
+    for persona in active_personas:
+        keywords = _PERSONA_KEYWORDS.get(persona.slug, [persona.slug])
+        sc = _score_persona(query_norm, persona.slug, keywords)
+        if sc > 0:
+            persona_scores.append((persona.slug, sc))
+    persona_scores.sort(key=lambda x: (-x[1], x[0]))
+
+    candidates: list[RoutingDecision] = []
+    for persona in active_personas:
+        persona_conf = next((sc for s, sc in persona_scores if s == persona.slug), 0.0)
+        for wf in discover_workflows(persona):
+            wf_conf = _score_workflow(query_norm, wf)
+            if wf_conf <= 0:
+                continue
+            if persona_conf > 0 and persona_conf >= persona_threshold:
+                combined_conf = (persona_conf * wf_conf) ** 0.5
+                path = "persona-first"
+            else:
+                combined_conf = wf_conf * 0.85
+                path = "domain-language fallback"
+            if combined_conf < workflow_threshold:
+                continue
+            candidates.append(
+                RoutingDecision(
+                    persona_slug=persona.slug,
+                    workflow_slug=wf.slug,
+                    confidence=combined_conf,
+                    rationale=(
+                        f"[{path}] persona {persona.slug!r} scored "
+                        f"{persona_conf:.2f}; workflow {wf.slug!r} scored {wf_conf:.2f}"
+                    ),
+                    alternative_personas=persona_scores[1:4],
+                    alternative_workflows=[],
+                )
+            )
+
+    candidates.sort(key=lambda d: (-d.confidence, d.persona_slug, d.workflow_slug))
+    return candidates
