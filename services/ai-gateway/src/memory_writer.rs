@@ -184,11 +184,10 @@ pub async fn emit(req: MemoryEmit) -> Result<EmittedRow, MemoryWriterError> {
     // 2. Build canonical JSON payload.
     let payload = canonical::serialise(&req)
         .map_err(|reason| MemoryWriterError::CanonicalisationFailed { reason })?;
-    let payload_value: Value = serde_json::from_str(&payload).map_err(|e| {
-        MemoryWriterError::CanonicalisationFailed {
+    let payload_value: Value =
+        serde_json::from_str(&payload).map_err(|e| MemoryWriterError::CanonicalisationFailed {
             reason: format!("canonical payload reparse failed: {e}"),
-        }
-    })?;
+        })?;
 
     // 3. Spawn Writer.
     let mut child = writer_command(WRITER_ARGS);
@@ -395,18 +394,16 @@ fn compute_chain(
         .ok_or_else(|| MemoryWriterError::CanonicalisationFailed {
             reason: "canonical payload missing object meta".to_string(),
         })?;
-    let actor = meta
-        .get("actor")
-        .and_then(Value::as_str)
-        .ok_or_else(|| MemoryWriterError::CanonicalisationFailed {
+    let actor = meta.get("actor").and_then(Value::as_str).ok_or_else(|| {
+        MemoryWriterError::CanonicalisationFailed {
             reason: "canonical payload missing string meta.actor".to_string(),
-        })?;
-    let kind = meta
-        .get("kind")
-        .and_then(Value::as_str)
-        .ok_or_else(|| MemoryWriterError::CanonicalisationFailed {
+        }
+    })?;
+    let kind = meta.get("kind").and_then(Value::as_str).ok_or_else(|| {
+        MemoryWriterError::CanonicalisationFailed {
             reason: "canonical payload missing string meta.kind".to_string(),
-        })?;
+        }
+    })?;
     let path = canonical_payload
         .get("path")
         .and_then(Value::as_str)
@@ -594,8 +591,10 @@ pub mod builders {
         tenant_id: &str,
         persona_id: &str,
         persona_version: &str,
+        persona_handle: &str,
         source_path: &str,
         source_hash: [u8; 32],
+        request_id: &str,
     ) -> MemoryEmit {
         MemoryEmit {
             kind: AiInvocationKind::PersonaLoaded,
@@ -604,8 +603,10 @@ pub mod builders {
                 "tenant_id": tenant_id,
                 "persona_id": persona_id,
                 "persona_version": persona_version,
+                "persona_handle": persona_handle,
                 "source_path": source_path,
                 "source_hash": hex::encode(source_hash),
+                "request_id": request_id,
             }),
         }
     }

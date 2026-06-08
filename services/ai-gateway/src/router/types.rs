@@ -24,6 +24,15 @@ pub struct ProviderResponse {
     pub cache_state: CacheState,
     /// Full attempt history for audit trail.
     pub attempts: Vec<AttemptRecord>,
+    /// EU AI Act Art. 50 attribution metadata for persona-authored outputs.
+    pub made_by_genie: Option<MadeByGenie>,
+}
+
+/// User-facing attribution metadata rendered by clients as "Made by Genie".
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct MadeByGenie {
+    pub id: String,
+    pub version: String,
 }
 
 /// Token usage from the provider.
@@ -127,6 +136,8 @@ pub struct ChatCompleteRequest {
     pub max_tokens: Option<u32>,
     /// Temperature.
     pub temperature: Option<f32>,
+    /// Optional CyberOS persona handle, e.g. `cuo-cpo@0.4.1`.
+    pub agent_persona: Option<String>,
     /// W3C traceparent header value.
     pub traceparent: Option<String>,
     /// W3C tracestate header value.
@@ -236,6 +247,18 @@ pub enum RouterError {
 
     #[error("redaction failed: {reason}")]
     RedactionFailed { reason: String },
+
+    #[error("unknown persona {agent_persona}; available: {available:?}")]
+    UnknownPersona {
+        agent_persona: String,
+        available: Vec<String>,
+    },
+
+    #[error("persona tampered: {handle}")]
+    PersonaTampered { handle: String },
+
+    #[error("persona audit failed: {reason}")]
+    PersonaAuditFailed { reason: String },
 
     #[error("streaming not implemented in slice 2")]
     StreamingNotImplemented,

@@ -1,10 +1,11 @@
 //! FR-AI-014 — Persona type definitions.
 
 use std::collections::HashMap;
+use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
 use arc_swap::ArcSwap;
-use once_cell::sync::OnceCell;
+use once_cell::sync::Lazy;
 use semver::Version;
 
 /// Persona ID (kebab-case, e.g. "cuo-cpo").
@@ -42,7 +43,10 @@ impl PersonaHandle {
         if id_str.is_empty()
             || !id_str
                 .chars()
-                .all(|c| c.is_ascii_alphanumeric() || c == '-')
+                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+            || id_str.starts_with('-')
+            || id_str.ends_with('-')
+            || id_str.contains("--")
         {
             return Err(PersonaParseError::InvalidId(id_str.to_string()));
         }
@@ -115,6 +119,9 @@ pub enum PersonaError {
 
     #[error("registry not initialised")]
     RegistryNotInitialised,
+
+    #[error("memory read failed: {0}")]
+    MemoryReadFailed(String),
 }
 
 /// Error from `init_persona_registry()`.
@@ -156,7 +163,10 @@ pub enum PersonaParseError {
 
 // ─── Registry (ArcSwap-backed, lock-free reads) ──────────────────────────────
 
-/// Global persona registry. `OnceCell` ensures single init; `ArcSwap` enables
-/// lock-free concurrent reads with atomic swap on hot-reload.
-pub(crate) static REGISTRY: OnceCell<ArcSwap<HashMap<PersonaHandle, Arc<Persona>>>> =
-    OnceCell::new();
+/// Global persona registry. `ArcSwap` enables lock-free concurrent reads with
+/// atomic swap on hot-reload.
+pub(crate) static REGISTRY: Lazy<ArcSwap<HashMap<PersonaHandle, Arc<Persona>>>> =
+    Lazy::new(|| ArcSwap::from_pointee(HashMap::new()));
+
+/// Separate init flag so tests can reset the registry without unsafe code.
+pub(crate) static REGISTRY_INITIALISED: AtomicBool = AtomicBool::new(false);

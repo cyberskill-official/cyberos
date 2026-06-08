@@ -177,5 +177,6 @@ fn normalize_bedrock(
         latency_ms: 0,
         cache_state: CacheState::None,
         attempts: vec![],
+        made_by_genie: None,
     })
 }

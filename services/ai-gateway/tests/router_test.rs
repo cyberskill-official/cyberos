@@ -182,6 +182,7 @@ fn make_ok_response(id: &str) -> ProviderResponse {
         latency_ms: 100,
         cache_state: router::CacheState::None,
         attempts: vec![],
+        made_by_genie: None,
     }
 }
 
@@ -333,6 +334,7 @@ fn default_req() -> ChatCompleteRequest {
         }],
         max_tokens: Some(100),
         temperature: Some(0.7),
+        agent_persona: None,
         traceparent: None,
         tracestate: None,
     }

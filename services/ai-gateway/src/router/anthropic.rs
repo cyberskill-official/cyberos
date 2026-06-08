@@ -164,5 +164,6 @@ fn normalize_anthropic(raw: AnthropicMessageResponse) -> Result<ProviderResponse
         latency_ms: 0,
         cache_state: CacheState::None,
         attempts: vec![],
+        made_by_genie: None,
     })
 }

@@ -17,8 +17,8 @@ pub mod types;
 
 pub use types::{
     AttemptRecord, AttemptStatus, CacheState, ChatCompleteRequest, Choice, EmbedRequest,
-    EmbedResponse, FinishReason, Message, ProviderResponse, ProviderStreamResponse, ProviderUsage,
-    RouterError, ToolCall,
+    EmbedResponse, FinishReason, MadeByGenie, Message, ProviderResponse, ProviderStreamResponse,
+    ProviderUsage, RouterError, ToolCall,
 };
 
 use std::time::{Duration, Instant};
@@ -158,12 +158,17 @@ pub async fn call_provider(
     deadline: Instant,
     policy: &TenantPolicy,
 ) -> Result<ProviderResponse, RouterError> {
-    let (redacted_req, redactions) = crate::redact::redact_chat_request(req, policy)
-        .await
-        .map_err(redaction_error)?;
+    let persona_applied = apply_persona_and_emit(req, policy).await?;
+    let (redacted_req, redactions) =
+        crate::redact::redact_chat_request(&persona_applied.request, policy)
+            .await
+            .map_err(redaction_error)?;
     let chain = failover::build_provider_chain(resolved, policy, &req.alias);
     let mut response = call_provider_with_chain(&redacted_req, deadline, chain).await?;
     restore_tool_call_arguments(&mut response, &redactions);
+    if response.made_by_genie.is_none() {
+        response.made_by_genie = persona_applied.made_by_genie;
+    }
     Ok(response)
 }
 
@@ -507,9 +512,11 @@ pub async fn call_provider_streaming(
     deadline: Instant,
     policy: &TenantPolicy,
 ) -> Result<ProviderStreamResponse, RouterError> {
-    let (redacted_req, _redactions) = crate::redact::redact_chat_request(req, policy)
-        .await
-        .map_err(redaction_error)?;
+    let persona_applied = apply_persona_and_emit(req, policy).await?;
+    let (redacted_req, _redactions) =
+        crate::redact::redact_chat_request(&persona_applied.request, policy)
+            .await
+            .map_err(redaction_error)?;
     let chain = failover::build_provider_chain(resolved, policy, &req.alias);
     call_provider_streaming_with_chain(&redacted_req, deadline, chain).await
 }
@@ -860,6 +867,9 @@ fn breaker_outcome_for_error(error: &RouterError) -> CallOutcome {
         RouterError::SerializationError { .. }
         | RouterError::InvalidResponse { .. }
         | RouterError::RedactionFailed { .. }
+        | RouterError::UnknownPersona { .. }
+        | RouterError::PersonaTampered { .. }
+        | RouterError::PersonaAuditFailed { .. }
         | RouterError::AllProvidersFailed { .. }
         | RouterError::StreamingNotImplemented => CallOutcome::Failure5xx,
     }
@@ -872,6 +882,43 @@ fn record_breaker_outcome(provider: ProviderKind, model: &str, outcome: CallOutc
 fn redaction_error(error: crate::redact::RedactError) -> RouterError {
     RouterError::RedactionFailed {
         reason: error.to_string(),
+    }
+}
+
+async fn apply_persona_and_emit(
+    req: &ChatCompleteRequest,
+    policy: &TenantPolicy,
+) -> Result<crate::persona::AppliedPersona, RouterError> {
+    let request_id = uuid::Uuid::new_v4().to_string();
+    let applied = crate::persona::apply_to_request(req, &policy.tenant_id, &request_id)
+        .map_err(persona_error)?;
+    if let Some(row) = applied.audit_row.clone() {
+        crate::memory_writer::emit(row)
+            .await
+            .map_err(|err| RouterError::PersonaAuditFailed {
+                reason: err.to_string(),
+            })?;
+    }
+    Ok(applied)
+}
+
+fn persona_error(error: crate::persona::PersonaError) -> RouterError {
+    match error {
+        crate::persona::PersonaError::UnknownPersona { handle, available } => {
+            RouterError::UnknownPersona {
+                agent_persona: handle,
+                available,
+            }
+        }
+        crate::persona::PersonaError::Tampered { handle, .. } => RouterError::PersonaTampered {
+            handle: handle.display(),
+        },
+        crate::persona::PersonaError::RegistryNotInitialised => RouterError::InvalidResponse {
+            reason: "persona registry not initialised".to_string(),
+        },
+        crate::persona::PersonaError::MemoryReadFailed(reason) => RouterError::InvalidResponse {
+            reason: format!("persona memory read failed: {reason}"),
+        },
     }
 }
 

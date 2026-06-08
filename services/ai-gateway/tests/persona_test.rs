@@ -1,9 +1,39 @@
 //! FR-AI-014 §5 — Integration tests for persona parsing, hashing, and handle parsing.
 
-use std::path::PathBuf;
 use std::sync::Arc;
+use std::sync::{Mutex, OnceLock};
 
 use cyberos_ai_gateway::persona::*;
+use cyberos_ai_gateway::router::{ChatCompleteRequest, Message};
+
+static TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+fn registry_guard() -> std::sync::MutexGuard<'static, ()> {
+    TEST_LOCK
+        .get_or_init(|| Mutex::new(()))
+        .lock()
+        .expect("persona test mutex poisoned")
+}
+
+fn persona_file_body(body: &str) -> String {
+    format!(
+        "\
+---
+id: test-persona
+version: 0.1.0
+allowed_tools:
+  - tool1
+traits:
+  - friendly
+llm_hints:
+  temperature: 0.4
+  max_tokens: 321
+---
+
+{body}
+"
+    )
+}
 
 // ─── Handle parsing ───────────────────────────────────────────────────────────
 
@@ -155,6 +185,13 @@ fn parse_rejects_invalid_frontmatter_yaml() {
     assert!(matches!(err, PersonaInitError::Schema { .. }));
 }
 
+#[test]
+fn parse_rejects_unknown_frontmatter_field() {
+    let raw = "---\nid: cuo-cpo\nversion: 0.4.1\nunknown: true\n---\n\nbody\n";
+    let err = parse::parse_persona_md("memories/personas/cuo-cpo@0.4.1.md", raw).unwrap_err();
+    assert!(matches!(err, PersonaInitError::Schema { .. }));
+}
+
 // ─── Hash verification ───────────────────────────────────────────────────────
 
 #[test]
@@ -217,6 +254,172 @@ fn registry_init_and_load_roundtrip() {
     assert_eq!(persona.allowed_tools, vec!["tool1"]);
     assert_eq!(persona.traits, vec!["friendly"]);
     assert!(persona.body.contains("Hello, I am a test persona."));
+}
+
+#[test]
+fn registry_init_load_and_apply_persona_request() {
+    let _guard = registry_guard();
+    reset_for_tests();
+    let dir = tempfile::tempdir().unwrap();
+    let persona_dir = dir.path().to_path_buf();
+    std::fs::write(
+        persona_dir.join("test-persona@0.1.0.md"),
+        persona_file_body("System persona prompt."),
+    )
+    .unwrap();
+
+    init_persona_registry(&persona_dir).unwrap();
+
+    let req = ChatCompleteRequest {
+        alias: "chat.smart".into(),
+        agent_persona: Some("test-persona@0.1.0".into()),
+        messages: vec![
+            Message {
+                role: "system".into(),
+                content: "caller system".into(),
+            },
+            Message {
+                role: "user".into(),
+                content: "hello".into(),
+            },
+        ],
+        max_tokens: None,
+        temperature: None,
+        traceparent: None,
+        tracestate: None,
+    };
+
+    let applied = apply_to_request(&req, "tenant-a", "req-123").unwrap();
+    assert_eq!(applied.request.messages[0].role, "system");
+    assert!(applied.request.messages[0]
+        .content
+        .contains("System persona prompt."));
+    assert_eq!(applied.request.messages[1].content, "caller system");
+    assert_eq!(applied.request.messages[2].content, "hello");
+    assert_eq!(applied.request.temperature, Some(0.4));
+    assert_eq!(applied.request.max_tokens, Some(321));
+    assert_eq!(
+        applied.made_by_genie.unwrap().id,
+        "test-persona".to_string()
+    );
+    assert_eq!(applied.source_hash_hex16.unwrap().len(), 16);
+
+    let row = applied.audit_row.unwrap();
+    assert_eq!(row.kind.tag(), "ai.persona_loaded");
+    assert_eq!(row.extra["tenant_id"], "tenant-a");
+    assert_eq!(row.extra["persona_id"], "test-persona");
+    assert_eq!(row.extra["persona_version"], "0.1.0");
+    assert_eq!(row.extra["persona_handle"], "test-persona@0.1.0");
+    assert_eq!(row.extra["request_id"], "req-123");
+}
+
+#[test]
+fn registry_load_detects_source_file_tamper() {
+    let _guard = registry_guard();
+    reset_for_tests();
+    let dir = tempfile::tempdir().unwrap();
+    let persona_dir = dir.path().to_path_buf();
+    let path = persona_dir.join("test-persona@0.1.0.md");
+    std::fs::write(&path, persona_file_body("Original prompt.")).unwrap();
+    init_persona_registry(&persona_dir).unwrap();
+
+    let handle = PersonaHandle::parse("test-persona@0.1.0").unwrap();
+    load(&handle).unwrap();
+
+    std::fs::write(&path, persona_file_body("Tampered prompt.")).unwrap();
+    let err = load(&handle).unwrap_err();
+    assert!(matches!(err, PersonaError::Tampered { .. }));
+}
+
+#[test]
+fn registry_reload_swaps_map_atomically() {
+    let _guard = registry_guard();
+    reset_for_tests();
+    let dir = tempfile::tempdir().unwrap();
+    let persona_dir = dir.path().to_path_buf();
+    let path = persona_dir.join("test-persona@0.1.0.md");
+    std::fs::write(&path, persona_file_body("Original prompt.")).unwrap();
+    init_persona_registry(&persona_dir).unwrap();
+
+    std::fs::write(&path, persona_file_body("Reloaded prompt.")).unwrap();
+    reload(&persona_dir);
+
+    let handle = PersonaHandle::parse("test-persona@0.1.0").unwrap();
+    let loaded = load(&handle).unwrap();
+    assert!(loaded.body.contains("Reloaded prompt."));
+}
+
+#[test]
+fn registry_reload_parse_error_keeps_existing_cache() {
+    let _guard = registry_guard();
+    reset_for_tests();
+    let dir = tempfile::tempdir().unwrap();
+    let persona_dir = dir.path().to_path_buf();
+    let path = persona_dir.join("test-persona@0.1.0.md");
+    std::fs::write(&path, persona_file_body("Original prompt.")).unwrap();
+    init_persona_registry(&persona_dir).unwrap();
+
+    std::fs::write(
+        &path,
+        "\
+---
+id: test-persona
+version: 0.1.0
+unknown: true
+---
+
+Broken reload prompt.
+",
+    )
+    .unwrap();
+    reload(&persona_dir);
+
+    let handle = PersonaHandle::parse("test-persona@0.1.0").unwrap();
+    let loaded = load(&handle).unwrap();
+    assert!(loaded.body.contains("Original prompt."));
+}
+
+#[test]
+fn registry_concurrent_loads_share_same_arc() {
+    let _guard = registry_guard();
+    reset_for_tests();
+    let dir = tempfile::tempdir().unwrap();
+    let persona_dir = dir.path().to_path_buf();
+    std::fs::write(
+        persona_dir.join("test-persona@0.1.0.md"),
+        persona_file_body("Concurrent prompt."),
+    )
+    .unwrap();
+    init_persona_registry(&persona_dir).unwrap();
+
+    let handle = PersonaHandle::parse("test-persona@0.1.0").unwrap();
+    let first = load(&handle).unwrap();
+    let mut threads = Vec::new();
+    for _ in 0..100 {
+        let h = handle.clone();
+        threads.push(std::thread::spawn(move || load(&h).unwrap()));
+    }
+    for thread in threads {
+        let loaded = thread.join().unwrap();
+        assert!(Arc::ptr_eq(&first, &loaded));
+    }
+}
+
+#[test]
+fn registry_double_init_returns_error() {
+    let _guard = registry_guard();
+    reset_for_tests();
+    let dir = tempfile::tempdir().unwrap();
+    let persona_dir = dir.path().to_path_buf();
+    std::fs::write(
+        persona_dir.join("test-persona@0.1.0.md"),
+        persona_file_body("Prompt."),
+    )
+    .unwrap();
+
+    init_persona_registry(&persona_dir).unwrap();
+    let err = init_persona_registry(&persona_dir).unwrap_err();
+    assert!(matches!(err, PersonaInitError::AlreadyInitialised));
 }
 
 // ─── Source hash determinism ─────────────────────────────────────────────────

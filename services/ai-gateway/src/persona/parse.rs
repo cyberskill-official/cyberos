@@ -1,10 +1,11 @@
 //! FR-AI-014 — Persona Markdown parser (YAML frontmatter + body extraction).
 
 use super::hash;
-use super::types::{LlmHints, Persona, PersonaHandle, PersonaId, PersonaInitError};
+use super::types::{LlmHints, Persona, PersonaHandle, PersonaInitError};
 
 /// Frontmatter shape for YAML deserialization.
 #[derive(Debug, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 struct PersonaFrontmatter {
     id: String,
     version: String,
@@ -19,6 +20,7 @@ struct PersonaFrontmatter {
 }
 
 #[derive(Debug, Default, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 struct LlmHintsRaw {
     temperature: Option<f32>,
     max_tokens: Option<u32>,
@@ -52,16 +54,14 @@ pub fn parse_persona_md(path: &str, raw: &str) -> Result<Persona, PersonaInitErr
     // 5. Compute source_hash
     let source_hash = hash::sha256(body.as_bytes());
 
-    // 6. Parse handle from frontmatter id + version
-    let persona_id = PersonaId::new(&fm.id);
-    let version = semver::Version::parse(&fm.version).map_err(|e| PersonaInitError::Schema {
-        path: path.into(),
-        reason: format!("invalid semver '{}': {}", fm.version, e),
+    // 6. Parse handle from frontmatter id + version using the same strict
+    // rules as request-time handles.
+    let handle = PersonaHandle::parse(&format!("{}@{}", fm.id, fm.version)).map_err(|e| {
+        PersonaInitError::Schema {
+            path: path.into(),
+            reason: e.to_string(),
+        }
     })?;
-    let handle = PersonaHandle {
-        id: persona_id,
-        version,
-    };
 
     // 7. Assert filename matches handle
     let expected_filename = format!("{}.md", handle.display());

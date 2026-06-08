@@ -23,5 +23,6 @@ pub fn test_provider_response() -> ProviderResponse {
         latency_ms: 150,
         cache_state: cyberos_ai_gateway::router::types::CacheState::None,
         attempts: vec![],
+        made_by_genie: None,
     }
 }

@@ -182,6 +182,7 @@ fn default_chat_request(content: &str) -> ChatCompleteRequest {
         }],
         max_tokens: Some(100),
         temperature: Some(0.2),
+        agent_persona: None,
         traceparent: None,
         tracestate: None,
     }

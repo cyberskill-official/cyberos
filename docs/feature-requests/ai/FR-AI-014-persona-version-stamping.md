@@ -989,4 +989,30 @@ All resolved at authoring time. Items deferred to later FRs:
 
 ---
 
-*End of FR-AI-014. Status: draft (10/10 target).*
+## §12 — Route-back note (2026-06-08)
+
+Status remains `ready_to_implement`; do not mark this FR shipped yet.
+
+Reason: the gateway implementation and tests can be staged, but the required seed persona memory paths cannot be written through the canonical Writer under the current Layer-1 path grammar. FR-AI-014 requires files named `<memory-root>/memories/personas/<id>@<version>.md`; the canonical path guard rejects `@` in both `memories/personas/cuo-cpo@0.4.1.md` and `persona/cuo-cpo@0.4.1.md` before any write occurs. Widening `memory.schema.json#/definitions/MemoryPath` and the matching writer path regex is a normative protocol change, so it requires the existing AGENTS.md §0.2 approval path before this FR can be marked done.
+
+Work preserved for the next attempt:
+- Persona parsing now rejects unknown frontmatter fields and the forbidden `system_prompt` key.
+- The registry uses resettable `ArcSwap<HashMap<PersonaHandle, Arc<Persona>>>` state for lock-free reads and atomic hot reloads.
+- Request-time persona application prepends the persona body as `messages[0]`, preserves caller system messages, applies persona LLM hints only as defaults, and builds `made_by_genie` response metadata.
+- Router dispatch emits the `ai.persona_loaded` row before provider calls when a request carries `agent_persona`.
+- Hot reload is all-or-nothing; malformed files leave the previous cache in place.
+- Tamper tests cover valid source-body mutation on the cache-hit path.
+
+Verification completed:
+- `PYTHONPATH=modules/memory python3 -m cyberos doctor` — 13 checks passed; BRAIN READY.
+- `PYTHONPATH=modules/memory python3 - <<'PY' ... _check_rel_path(...) ... PY` — confirmed current writer path guard rejects `@` in the required seed paths.
+- `cargo test -p cyberos-ai-gateway --test persona_test -- --test-threads=1` — 29 passed.
+- `cargo test -p cyberos-ai-gateway persona -- --test-threads=1` — persona-filtered all-target compile/check passed.
+- `cargo test -p cyberos-ai-gateway --test router_test -- --test-threads=1` — 30 passed.
+- `cargo test -p cyberos-ai-gateway --test redact_test -- --test-threads=1` — 23 passed.
+- `cargo test -p cyberos-ai-gateway --test cache_test -- --test-threads=1` — 10 passed.
+- `cargo test -p cyberos-ai-gateway memory_writer --lib` — 10 passed.
+
+Required next step before shipping: approve the protocol/schema path amendment explicitly, then update the memory schema and writer path guard to allow persona handle filenames containing `@`, seed `cuo-cpo@0.4.1.md`, `cuo-cfo@0.4.1.md`, and `cuo-cto@0.4.1.md` through `python3 -m cyberos.writer put`, rerun doctor, and only then set this FR to `done`.
+
+*End of FR-AI-014. Status: ready_to_implement (routed back 2026-06-08).*

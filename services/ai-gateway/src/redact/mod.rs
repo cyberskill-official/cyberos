@@ -288,6 +288,7 @@ pub async fn redact_chat_request(
             messages: redacted_messages,
             max_tokens: req.max_tokens,
             temperature: req.temperature,
+            agent_persona: req.agent_persona.clone(),
             traceparent: req.traceparent.clone(),
             tracestate: req.tracestate.clone(),
         },
