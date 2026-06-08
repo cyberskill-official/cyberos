@@ -10,7 +10,7 @@ milestone: P1 · slice 1
 slice: 1
 owner: Stephen Cheng (interim CCO)
 created: 2026-05-16
-shipped: 2026-05-19
+shipped: null
 memory_chain_hash: pending
 related_frs: [FR-AI-016, FR-AI-003, FR-MEMORY-101, FR-OBS-001, FR-EMAIL-002, FR-EMAIL-003, FR-EMAIL-004, FR-EMAIL-005, FR-EMAIL-006, FR-EMAIL-007, FR-EMAIL-009, FR-EMAIL-011]
 depends_on: []
@@ -889,4 +889,37 @@ All other questions resolved.
 
 ---
 
-*End of FR-EMAIL-001.*
+## §12 — Route-back note (2026-06-08)
+
+Status remains `ready_to_implement`; do not mark this FR shipped yet.
+
+Reason: the EMAIL Stalwart substrate and Rust gateway tests are present, and the local compose file now has the missing gateway Dockerfile it referenced, but the required live Stalwart/Postgres/Minio runtime could not be started on this host. The bounded live compose run timed out after 240 seconds while pulling `postgres:16-alpine` and `minio/minio:latest`, before Stalwart or the Rust gateway could build/start. Because this FR's acceptance surface includes a real containerized mail-server deployment, marking it `done` from Rust tests plus static compose validation would be a false ship.
+
+Work preserved for the next attempt:
+- `services/email/docker/Dockerfile` builds the Stalwart container from `stalwartlabs/mail-server:0.10` with CyberOS config.
+- `services/email/docker/compose.yml` defines Postgres, Minio, Stalwart, and the `cyberos-email` gateway service.
+- `services/email/Dockerfile` now provides the missing Rust gateway image required by the compose file.
+- Migrations, adapters, audit-row builders, DKIM/residency helpers, REST handlers, CLI, and docs remain in place.
+
+Verification completed:
+- `cd services && cargo test -p cyberos-email -- --test-threads=1` — passed; 45 library tests plus integration tests for audit rows, inbound quarantine, residency pinning, and subject normalization.
+- `docker compose -f services/email/docker/compose.yml config` — passed after adding `services/email/Dockerfile`.
+- `PYTHONPATH=modules/memory python3 -m cyberos doctor` — passed; BRAIN remains READY.
+- `docker compose -f services/email/docker/compose.yml up -d --build` — timed out after 240 seconds while pulling base runtime images.
+
+Required next verification before shipping:
+
+```bash
+cd /Users/stephencheng/Projects/CyberSkill/cyberos
+cd services && cargo test -p cyberos-email -- --test-threads=1
+cd ..
+docker compose -f services/email/docker/compose.yml up -d --build
+curl --fail http://127.0.0.1:8085/v1/email/healthz
+curl --fail http://127.0.0.1:8080/admin/health
+docker compose -f services/email/docker/compose.yml down --remove-orphans
+PYTHONPATH=modules/memory python3 -m cyberos doctor
+```
+
+Only after the real Stalwart, Postgres, Minio, and `cyberos-email` gateway containers build, start, and pass health checks should this FR move to `done`.
+
+*End of FR-EMAIL-001. Status: ready_to_implement (routed back 2026-06-08).*
