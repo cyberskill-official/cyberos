@@ -567,4 +567,40 @@ All resolved. Deferred:
 
 ---
 
-*End of FR-OBS-001. Status: draft (10/10 target).*
+## §12 — Route-back note (2026-06-08)
+
+Status remains `ready_to_implement`; do not mark this FR shipped yet.
+
+Reason: the slice-1 deployment scaffold, ingress policy, and static/Rust checks are present, but live LGTM stack verification cannot complete on this host. Docker is available, but none of the required images are local and `docker compose -f deploy/obs/docker-compose.yml pull` stalled for about 150 seconds with no pull progress after starting the image downloads. No OBS containers were started.
+
+Work preserved for the next attempt:
+- `deploy/obs/` contains the compose stack, collector/Loki/Prometheus/Tempo/Grafana configs, ingress Dockerfile, token examples, rotation/health scripts, and smoke/auth/buffer tests.
+- `services/obs-collector` validates collector config and service token files, exposes the `cyberos-obs ingress` gate, and enforces per-service token-to-`service.name` binding for OTLP HTTP/gRPC payloads.
+- The collector config includes OTLP gRPC/HTTP receivers, `bearertokenauth`, `file_storage`, resource/batch processors, PII-scrub for logs/traces, Loki/Prometheus/Tempo exporters, and self-telemetry.
+
+Verification completed:
+- `cargo test -p cyberos-obs-collector -- --test-threads=1` — 15 passed.
+- `cargo run -p cyberos-obs-collector --bin cyberos-obs -- validate-config ../deploy/obs/otel-collector-config.yaml` — passed.
+- `cargo run -p cyberos-obs-collector --bin cyberos-obs -- validate-tokens ../deploy/obs/auth/tokens.example` — passed.
+- `cargo run -p cyberos-obs-collector --bin cyberos-obs -- banner` — passed.
+- `GRAFANA_ADMIN_PASSWORD=cyberos-local-dev docker compose -f deploy/obs/docker-compose.yml config` — passed.
+- `bash -n deploy/obs/scripts/healthcheck.sh deploy/obs/scripts/rotate_tokens.sh deploy/obs/tests/smoke_test.sh deploy/obs/tests/auth_required_test.sh deploy/obs/tests/per_service_token_binding_test.sh deploy/obs/tests/buffer_survives_restart_test.sh` — passed.
+- `PYTHONPATH=modules/memory python3 -m cyberos doctor` — READY, 13/13 pass.
+
+Required next verification before shipping:
+
+```bash
+cd /Users/stephencheng/Projects/CyberSkill/cyberos
+GRAFANA_ADMIN_PASSWORD=cyberos-local-dev docker compose -f deploy/obs/docker-compose.yml pull
+./deploy/obs/scripts/rotate_tokens.sh
+GRAFANA_ADMIN_PASSWORD=cyberos-local-dev docker compose -f deploy/obs/docker-compose.yml up -d
+./deploy/obs/scripts/healthcheck.sh
+./deploy/obs/tests/auth_required_test.sh
+./deploy/obs/tests/per_service_token_binding_test.sh
+./deploy/obs/tests/smoke_test.sh
+./deploy/obs/tests/buffer_survives_restart_test.sh
+```
+
+Only after the live stack starts healthy, accepts OTLP HTTP/gRPC, enforces bearer auth/service binding, stores traces/logs/metrics in the intended backends, and verifies file-buffer replay should this FR move to `done`.
+
+*End of FR-OBS-001. Status: ready_to_implement (routed back 2026-06-08).*
