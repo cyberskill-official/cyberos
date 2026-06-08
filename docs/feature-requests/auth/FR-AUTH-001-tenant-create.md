@@ -11,7 +11,7 @@ milestone: P0 · slice 2
 slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
-shipped: 2026-05-19
+shipped: null
 memory_chain_hash: null
 related_frs: [FR-AUTH-002, FR-AUTH-003, FR-AUTH-004, FR-AUTH-005, FR-AUTH-006]
 depends_on: []
@@ -735,4 +735,34 @@ All resolved at authoring time. Items deferred to later FRs:
 
 ---
 
-*End of FR-AUTH-001. Status: draft (10/10 target).*
+## §12 — Route-back note (2026-06-08)
+
+Status remains `ready_to_implement`; do not mark this FR shipped yet.
+
+Reason: the AUTH service implementation and non-live test suite are present, but FR-AUTH-001's acceptance path is explicitly Postgres/RLS/memory-outbox gated. The tenant-create tests that cover root-admin authz, idempotency replay, reserved-slug rejection, memory audit row, RLS, and p95 latency are all `#[ignore]` with `requires Postgres`. This host has no local Postgres/Redis dev containers or images running, and the earlier Docker image pulls in this session stalled; marking this done without the ignored integration tests would be a false ship.
+
+Work preserved for the next attempt:
+- `POST /v1/admin/tenants` handler exists with root-admin-in-tenant-0 guard, structured invalid-input errors, reserved `root` slug rejection, idempotency lookup/recording, and tenant insert flow.
+- AUTH migrations define tenants, admin idempotency, subjects, RLS roles, and tenant-scoped RLS policies.
+- The non-live test suite validates slug/display-name guards, root-admin authorization helpers, memory-bridge payload safety, RBAC catalogue invariants, cursor security, password rules, and other AUTH primitives.
+
+Verification completed:
+- `cargo test -p cyberos-auth -- --test-threads=1` — passed; 189 unit tests plus non-live integration tests passed, with Postgres-gated FR-AUTH-001/RLS tests ignored.
+- `PYTHONPATH=modules/memory python3 -m cyberos doctor` — READY, 13/13 pass.
+
+Required next verification before shipping:
+
+```bash
+cd /Users/stephencheng/Projects/CyberSkill/cyberos
+docker compose -f services/dev/docker-compose.yml up -d
+scripts/local-live-test.sh migrate
+cd services
+DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos_auth \
+  cargo test -p cyberos-auth --test admin_tenant_create_test -- --ignored --test-threads=1
+DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos_auth \
+  cargo test -p cyberos-auth --test rls_isolation_test --test rls_property_test --test rls_registry_completeness_test -- --ignored --test-threads=1
+```
+
+Only after the ignored live tests pass against Postgres and the tenant-created memory audit/outbox path is verified should this FR move to `done`.
+
+*End of FR-AUTH-001. Status: ready_to_implement (routed back 2026-06-08).*
