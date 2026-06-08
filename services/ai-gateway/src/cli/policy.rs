@@ -72,6 +72,7 @@ pub async fn run(
                 allowed_personas,
                 json,
                 confirm,
+                claims,
             )
             .await
         }
@@ -172,6 +173,7 @@ async fn set(
     allowed_personas: Option<Vec<String>>,
     _json: bool,
     confirm: bool,
+    claims: &OperatorClaims,
 ) -> Result<(), CliError> {
     let current = query_policy(pool, tenant).await?;
 
@@ -203,6 +205,7 @@ async fn set(
     }
 
     if let Some(ref res) = residency {
+        validate_residency(res)?;
         changes.push(PolicyChange {
             field: "residency".into(),
             before: json!(format!("{:?}", current.ai_policy.residency)),
@@ -237,6 +240,45 @@ async fn set(
         return Err(CliError::DestructiveWithoutConfirm);
     }
 
+    let command_line = super::current_command_line();
+    let command_sha256 = super::command_sha256(&command_line);
+    let request_id = super::request_id();
+    let audit_changes = diff
+        .changes
+        .iter()
+        .map(|c| {
+            serde_json::json!({
+                "field": c.field,
+                "before": c.before,
+                "after": c.after,
+                "secret_changed": c.secret_changed.unwrap_or(false),
+            })
+        })
+        .collect::<Vec<_>>();
+
+    crate::memory_writer::emit(crate::memory_writer::MemoryEmit {
+        kind: crate::memory_writer::AiInvocationKind::CliPolicyUpdated,
+        path: super::cli_audit_path("policy-updates", tenant),
+        extra: serde_json::json!({
+            "operator_id": claims.operator_id,
+            "command": "policy set",
+            "args": {
+                "tenant": tenant,
+                "cap_usd": cap_usd,
+                "zdr_required": zdr_required,
+                "residency": residency,
+                "allowed_personas": allowed_personas,
+            },
+            "tenant": tenant,
+            "changes": audit_changes,
+            "command_sha256": command_sha256,
+            "request_id": request_id,
+            "outcome": "confirmed",
+        }),
+    })
+    .await
+    .map_err(super::memory_writer_error)?;
+
     let mut tx = pool
         .begin()
         .await
@@ -256,24 +298,64 @@ async fn set(
             .map_err(|e| CliError::RemoteUnreachable { reason: e.to_string() })?;
     }
 
+    if let Some(zdr) = zdr_required {
+        sqlx::query(
+            "UPDATE tenant_policies SET ai_policy = jsonb_set(ai_policy, '{zdr_required}', to_jsonb($1::bool), true) WHERE tenant_id = $2",
+        )
+        .bind(zdr)
+        .bind(tenant)
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| CliError::RemoteUnreachable {
+            reason: e.to_string(),
+        })?;
+    }
+
+    if let Some(res) = residency {
+        sqlx::query(
+            "UPDATE tenant_policies SET ai_policy = jsonb_set(ai_policy, '{residency}', to_jsonb($1::text), true) WHERE tenant_id = $2",
+        )
+        .bind(res)
+        .bind(tenant)
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| CliError::RemoteUnreachable {
+            reason: e.to_string(),
+        })?;
+    }
+
+    if let Some(personas) = allowed_personas {
+        let value = serde_json::to_value(personas).map_err(|e| CliError::InternalError {
+            reason: format!("serialise allowed_personas: {e}"),
+        })?;
+        sqlx::query(
+            "UPDATE tenant_policies SET ai_policy = jsonb_set(ai_policy, '{allowed_personas}', $1::jsonb, true) WHERE tenant_id = $2",
+        )
+        .bind(value)
+        .bind(tenant)
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| CliError::RemoteUnreachable {
+            reason: e.to_string(),
+        })?;
+    }
+
     tx.commit().await.map_err(|e| CliError::RemoteUnreachable {
         reason: e.to_string(),
     })?;
 
-    // Emit audit row
-    let _ = crate::memory_writer::emit(crate::memory_writer::MemoryEmit {
-        kind: crate::memory_writer::AiInvocationKind::Precheck,
-        path: format!("memories/ai-policy-updates/{}_{}.md", tenant, chrono::Utc::now().timestamp_millis()),
-        extra: serde_json::json!({
-            "operator_id": "cli-operator",
-            "tenant": tenant,
-            "changes": diff.changes.iter().map(|c| serde_json::json!({"field": c.field, "before": c.before, "after": c.after})).collect::<Vec<_>>(),
-        }),
-    }).await;
-
     println!("{diff}");
     println!("Policy updated successfully.");
     Ok(())
+}
+
+fn validate_residency(residency: &str) -> Result<(), CliError> {
+    match residency {
+        "sg-1" | "eu-1" | "us-1" | "vn-1" => Ok(()),
+        _ => Err(CliError::UserError {
+            reason: format!("invalid residency '{residency}' (use sg-1, eu-1, us-1, or vn-1)"),
+        }),
+    }
 }
 
 async fn query_policy(pool: &PgPool, tenant: &str) -> Result<policy::TenantPolicy, CliError> {

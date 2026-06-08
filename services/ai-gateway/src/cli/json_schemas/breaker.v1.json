@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "cyberos-ai breaker status v1",
+  "type": "object",
+  "required": ["schema_version", "breakers"],
+  "properties": {
+    "schema_version": { "const": "v1" },
+    "breakers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["provider", "model", "state", "failures", "next_half_open"],
+        "properties": {
+          "provider": { "type": "string" },
+          "model": { "type": "string" },
+          "state": { "type": "string" },
+          "failures": { "type": "integer", "minimum": 0 },
+          "next_half_open": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

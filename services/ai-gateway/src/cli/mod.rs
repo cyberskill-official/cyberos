@@ -19,6 +19,7 @@ pub mod usage;
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
+use sha2::{Digest, Sha256};
 
 #[derive(Debug, Parser)]
 #[command(
@@ -261,14 +262,58 @@ pub enum CliError {
 impl CliError {
     pub fn exit_code(&self) -> i32 {
         match self {
-            CliError::AuthFailed { .. } | CliError::InsufficientRole { .. } => {
-                exit_codes::ExitCode::AuthError as i32
-            }
-            CliError::UserError { .. } => exit_codes::ExitCode::Generic as i32,
-            CliError::RemoteUnreachable { .. } => exit_codes::ExitCode::NetworkError as i32,
-            CliError::DestructiveWithoutConfirm => exit_codes::ExitCode::UsageError as i32,
-            CliError::SchemaViolation { .. } => exit_codes::ExitCode::PreconditionFailed as i32,
-            CliError::InternalError { .. } => exit_codes::ExitCode::Interrupted as i32,
+            CliError::AuthFailed { .. } | CliError::InsufficientRole { .. } => 2,
+            CliError::UserError { .. } => 1,
+            CliError::RemoteUnreachable { .. } => 3,
+            CliError::DestructiveWithoutConfirm => 4,
+            CliError::SchemaViolation { .. } => 6,
+            CliError::InternalError { .. } => 7,
         }
+    }
+}
+
+pub(crate) fn current_command_line() -> String {
+    std::env::args().collect::<Vec<String>>().join(" ")
+}
+
+pub(crate) fn command_sha256(command_line: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(command_line.as_bytes());
+    format!("{:x}", hasher.finalize())
+}
+
+pub(crate) fn request_id() -> String {
+    uuid::Uuid::new_v4().to_string()
+}
+
+pub(crate) fn cli_audit_path(namespace: &str, subject: &str) -> String {
+    let ts = chrono::Utc::now().timestamp_millis();
+    format!(
+        "memories/decisions/ai-cli/{namespace}/{}_{}.md",
+        slug(subject),
+        ts
+    )
+}
+
+fn slug(value: &str) -> String {
+    let mut out = String::with_capacity(value.len());
+    for c in value.chars() {
+        if c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.') {
+            out.push(c);
+        } else {
+            out.push('-');
+        }
+    }
+    let trimmed = out.trim_matches('-');
+    if trimmed.is_empty() {
+        "row".to_string()
+    } else {
+        trimmed.to_string()
+    }
+}
+
+pub(crate) fn memory_writer_error(err: crate::memory_writer::MemoryWriterError) -> CliError {
+    CliError::RemoteUnreachable {
+        reason: format!("memory writer: {err}"),
     }
 }

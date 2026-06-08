@@ -1,7 +1,5 @@
 //! FR-AI-021 — `cyberos-ai breaker` subcommand.
 
-use sha2::{Digest, Sha256};
-
 use super::auth::{OperatorClaims, Role};
 use super::output;
 use super::{BreakerAction, CliError};
@@ -9,6 +7,7 @@ use super::{BreakerAction, CliError};
 pub async fn run(
     args: BreakerAction,
     json: bool,
+    confirm: bool,
     claims: &OperatorClaims,
     pool: &sqlx::PgPool,
 ) -> Result<(), CliError> {
@@ -21,7 +20,7 @@ pub async fn run(
                     has: e.has(),
                 }
             })?;
-            reset(claims, &target, pool).await
+            reset(claims, &target, confirm, pool).await
         }
     }
 }
@@ -57,7 +56,12 @@ async fn status(json: bool, pool: &sqlx::PgPool) -> Result<(), CliError> {
     Ok(())
 }
 
-async fn reset(claims: &OperatorClaims, target: &str, pool: &sqlx::PgPool) -> Result<(), CliError> {
+async fn reset(
+    claims: &OperatorClaims,
+    target: &str,
+    confirm: bool,
+    pool: &sqlx::PgPool,
+) -> Result<(), CliError> {
     let parts: Vec<&str> = target.split(':').collect();
     if parts.len() != 2 {
         return Err(CliError::UserError {
@@ -65,10 +69,33 @@ async fn reset(claims: &OperatorClaims, target: &str, pool: &sqlx::PgPool) -> Re
         });
     }
 
-    let command_line = std::env::args().collect::<Vec<String>>().join(" ");
-    let mut hasher = Sha256::new();
-    hasher.update(command_line.as_bytes());
-    let command_sha256 = format!("{:x}", hasher.finalize());
+    if !confirm {
+        println!("Breaker reset preview:");
+        println!("  target: {target}");
+        println!("  after:  Closed");
+        eprintln!("To apply, re-run with --confirm");
+        return Err(CliError::DestructiveWithoutConfirm);
+    }
+
+    let command_line = super::current_command_line();
+    let command_sha256 = super::command_sha256(&command_line);
+    let request_id = super::request_id();
+
+    crate::memory_writer::emit(crate::memory_writer::MemoryEmit {
+        kind: crate::memory_writer::AiInvocationKind::CliBreakerReset,
+        path: super::cli_audit_path("breaker-resets", target),
+        extra: serde_json::json!({
+            "operator_id": claims.operator_id,
+            "command": "breaker reset",
+            "args": {"target": target},
+            "target": target,
+            "command_sha256": command_sha256,
+            "request_id": request_id,
+            "outcome": "confirmed",
+        }),
+    })
+    .await
+    .map_err(super::memory_writer_error)?;
 
     // Force-close the breaker
     sqlx::query(
@@ -82,21 +109,6 @@ async fn reset(claims: &OperatorClaims, target: &str, pool: &sqlx::PgPool) -> Re
     .map_err(|e| CliError::RemoteUnreachable {
         reason: e.to_string(),
     })?;
-
-    let _ = crate::memory_writer::emit(crate::memory_writer::MemoryEmit {
-        kind: crate::memory_writer::AiInvocationKind::Precheck,
-        path: format!(
-            "memories/ai-breaker-resets/{}_{}.md",
-            target.replace(':', "-"),
-            chrono::Utc::now().timestamp_millis()
-        ),
-        extra: serde_json::json!({
-            "operator_id": claims.operator_id,
-            "target": target,
-            "command_sha256": command_sha256,
-        }),
-    })
-    .await;
 
     println!("Breaker reset: {target} \u{2192} Closed");
     Ok(())

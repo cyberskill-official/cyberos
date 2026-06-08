@@ -8,7 +8,7 @@ use sqlx::PgPool;
 pub async fn run(
     args: InvoiceAction,
     json: bool,
-    _claims: &OperatorClaims,
+    claims: &OperatorClaims,
     pool: &PgPool,
 ) -> Result<(), CliError> {
     match args {
@@ -16,12 +16,13 @@ pub async fn run(
             tenant,
             period,
             format,
-        } => export(pool, &tenant, &period, &format, json).await,
+        } => export(pool, claims, &tenant, &period, &format, json).await,
     }
 }
 
 async fn export(
     pool: &PgPool,
+    claims: &OperatorClaims,
     tenant: &str,
     period: &str,
     format: &str,
@@ -50,6 +51,34 @@ async fn export(
             cost_usd: cost,
         })
         .collect();
+
+    let command_line = super::current_command_line();
+    let command_sha256 = super::command_sha256(&command_line);
+    let request_id = super::request_id();
+
+    crate::memory_writer::emit(crate::memory_writer::MemoryEmit {
+        kind: crate::memory_writer::AiInvocationKind::CliInvoiceExported,
+        path: super::cli_audit_path("invoice-exports", tenant),
+        extra: serde_json::json!({
+            "operator_id": claims.operator_id,
+            "command": "invoice export",
+            "args": {
+                "tenant": tenant,
+                "period": period,
+                "format": format,
+            },
+            "tenant": tenant,
+            "period": period,
+            "format": format,
+            "row_count": invoice_rows.len(),
+            "total_usd": total,
+            "command_sha256": command_sha256,
+            "request_id": request_id,
+            "outcome": "exported",
+        }),
+    })
+    .await
+    .map_err(super::memory_writer_error)?;
 
     match format {
         "json" => {

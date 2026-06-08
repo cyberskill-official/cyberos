@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "cyberos-ai memory audit-trail v1",
+  "type": "object",
+  "required": ["schema_version", "rows"],
+  "properties": {
+    "schema_version": { "const": "v1" },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["seq", "timestamp", "kind", "payload_brief"],
+        "properties": {
+          "seq": { "type": "integer", "minimum": 0 },
+          "timestamp": { "type": "string" },
+          "kind": { "type": "string" },
+          "payload_brief": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -29,7 +29,7 @@ async fn main() {
         Ok(c) => c,
         Err(e) => {
             eprintln!("auth_failed: {e}");
-            process::exit(ExitCode::AuthError as i32);
+            process::exit(2);
         }
     };
 
@@ -38,7 +38,7 @@ async fn main() {
         Ok(p) => p,
         Err(e) => {
             eprintln!("remote_unreachable: {e}");
-            process::exit(ExitCode::NetworkError as i32);
+            process::exit(3);
         }
     };
 
@@ -53,19 +53,19 @@ async fn main() {
             cyberos_ai_gateway::cli::policy::run(args.action, json, confirm, &claims, &pool).await
         }
         Command::Failover(args) => {
-            cyberos_ai_gateway::cli::failover::run(args.action, json, &claims, &pool).await
+            cyberos_ai_gateway::cli::failover::run(args.action, json, confirm, &claims, &pool).await
         }
         Command::Invoice(args) => {
             cyberos_ai_gateway::cli::invoice::run(args.action, json, &claims, &pool).await
         }
         Command::Breaker(args) => {
-            cyberos_ai_gateway::cli::breaker::run(args.action, json, &claims, &pool).await
+            cyberos_ai_gateway::cli::breaker::run(args.action, json, confirm, &claims, &pool).await
         }
         Command::Expiry(args) => {
-            cyberos_ai_gateway::cli::expiry::run(args.action, json, &claims, &pool).await
+            cyberos_ai_gateway::cli::expiry::run(args.action, json, confirm, &claims, &pool).await
         }
         Command::Memory(args) => {
-            cyberos_ai_gateway::cli::memory::run(args.action, json, &claims, &pool).await
+            cyberos_ai_gateway::cli::memory::run(args.action, json, confirm, &claims, &pool).await
         }
         Command::Completions(_) => unreachable!(),
     };

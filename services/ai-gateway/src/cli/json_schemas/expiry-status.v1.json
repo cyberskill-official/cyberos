@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "cyberos-ai expiry status v1",
+  "type": "object",
+  "required": ["schema_version", "pending_holds", "stale_expired"],
+  "properties": {
+    "schema_version": { "const": "v1" },
+    "pending_holds": { "type": "integer", "minimum": 0 },
+    "stale_expired": { "type": "integer", "minimum": 0 }
+  },
+  "additionalProperties": false
+}

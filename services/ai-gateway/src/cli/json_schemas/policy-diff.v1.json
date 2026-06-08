@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "cyberos-ai policy diff v1",
+  "type": "object",
+  "required": ["schema_version", "tenant", "changes"],
+  "properties": {
+    "schema_version": { "const": "v1" },
+    "tenant": { "type": "string" },
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["field", "before", "after"],
+        "properties": {
+          "field": { "type": "string" },
+          "before": {},
+          "after": {},
+          "secret_changed": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

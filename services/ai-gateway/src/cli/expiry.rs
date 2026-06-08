@@ -1,13 +1,12 @@
 //! FR-AI-021 — `cyberos-ai expiry` subcommand.
 
-use sha2::{Digest, Sha256};
-
 use super::auth::{OperatorClaims, Role};
 use super::{CliError, ExpiryAction};
 
 pub async fn run(
     args: ExpiryAction,
     json: bool,
+    confirm: bool,
     claims: &OperatorClaims,
     pool: &sqlx::PgPool,
 ) -> Result<(), CliError> {
@@ -20,7 +19,7 @@ pub async fn run(
                     has: e.has(),
                 }
             })?;
-            repair(claims, pool).await
+            repair(claims, confirm, pool).await
         }
     }
 }
@@ -59,7 +58,18 @@ async fn status(json: bool, pool: &sqlx::PgPool) -> Result<(), CliError> {
     Ok(())
 }
 
-async fn repair(claims: &OperatorClaims, pool: &sqlx::PgPool) -> Result<(), CliError> {
+async fn repair(
+    claims: &OperatorClaims,
+    confirm: bool,
+    pool: &sqlx::PgPool,
+) -> Result<(), CliError> {
+    if !confirm {
+        println!("Expiry repair preview:");
+        println!("  action: dedupe duplicate ai.hold_expired rows");
+        eprintln!("To apply, re-run with --confirm");
+        return Err(CliError::DestructiveWithoutConfirm);
+    }
+
     // Find duplicate hold_expired audit rows
     let duplicates: Vec<(String, i64)> = sqlx::query_as(
         "SELECT (payload->>'hold_id')::text, COUNT(*)::int8
@@ -86,24 +96,25 @@ async fn repair(claims: &OperatorClaims, pool: &sqlx::PgPool) -> Result<(), CliE
             + duplicates.len() as i64
     );
 
-    let command_line = std::env::args().collect::<Vec<String>>().join(" ");
-    let mut hasher = Sha256::new();
-    hasher.update(command_line.as_bytes());
-    let command_sha256 = format!("{:x}", hasher.finalize());
+    let command_line = super::current_command_line();
+    let command_sha256 = super::command_sha256(&command_line);
+    let request_id = super::request_id();
 
-    let _ = crate::memory_writer::emit(crate::memory_writer::MemoryEmit {
-        kind: crate::memory_writer::AiInvocationKind::Precheck,
-        path: format!(
-            "memories/ai-expiry-repairs/{}.md",
-            chrono::Utc::now().timestamp_millis()
-        ),
+    crate::memory_writer::emit(crate::memory_writer::MemoryEmit {
+        kind: crate::memory_writer::AiInvocationKind::CliExpiryRepaired,
+        path: super::cli_audit_path("expiry-repairs", "repair"),
         extra: serde_json::json!({
             "operator_id": claims.operator_id,
+            "command": "expiry repair",
+            "args": {},
             "deduped_count": total_deduped,
             "command_sha256": command_sha256,
+            "request_id": request_id,
+            "outcome": "confirmed",
         }),
     })
-    .await;
+    .await
+    .map_err(super::memory_writer_error)?;
 
     println!("Deduped: {total_deduped} rows removed");
     println!("Audit: ai.cli_expiry_repaired emitted");

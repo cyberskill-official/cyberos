@@ -49,7 +49,7 @@ const MEMORY_KINDS: &[&str] = &[
 
 // --- Types ------------------------------------------------------------------
 
-/// FR-AI-003 §1 #8 — closed initial set of `ai.*` row kinds for slice 1.
+/// FR-AI-003 §1 #8 — closed set of `ai.*` row kinds emitted by the AI Gateway.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AiInvocationKind {
@@ -67,6 +67,18 @@ pub enum AiInvocationKind {
     ZdrViolation,
     /// Emitted by FR-AI-016 (residency refusal).
     ResidencyViolation,
+    /// Emitted by FR-AI-021 (`cyberos-ai policy set`).
+    CliPolicyUpdated,
+    /// Emitted by FR-AI-021 (`cyberos-ai failover drill`).
+    CliFailoverDrill,
+    /// Emitted by FR-AI-021 (`cyberos-ai invoice export`).
+    CliInvoiceExported,
+    /// Emitted by FR-AI-021 (`cyberos-ai breaker reset`).
+    CliBreakerReset,
+    /// Emitted by FR-AI-021 (`cyberos-ai expiry repair`).
+    CliExpiryRepaired,
+    /// Emitted by FR-AI-021 (`cyberos-ai memory emit`).
+    CliMemoryEmitted,
 }
 
 impl AiInvocationKind {
@@ -80,6 +92,12 @@ impl AiInvocationKind {
             Self::PersonaLoaded => "ai.persona_loaded",
             Self::ZdrViolation => "ai.zdr_violation",
             Self::ResidencyViolation => "ai.residency_violation",
+            Self::CliPolicyUpdated => "ai.cli_policy_updated",
+            Self::CliFailoverDrill => "ai.cli_failover_drill",
+            Self::CliInvoiceExported => "ai.cli_invoice_exported",
+            Self::CliBreakerReset => "ai.cli_breaker_reset",
+            Self::CliExpiryRepaired => "ai.cli_expiry_repaired",
+            Self::CliMemoryEmitted => "ai.cli_memory_emitted",
         }
     }
 }

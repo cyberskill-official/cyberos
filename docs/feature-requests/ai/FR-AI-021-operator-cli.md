@@ -11,7 +11,7 @@ milestone: P0 · slice 5
 slice: 5
 owner: Stephen Cheng
 created: 2026-05-15
-shipped: 2026-05-21
+shipped: null
 memory_chain_hash: null
 related_frs: [FR-AI-001, FR-AI-002, FR-AI-003, FR-AI-004, FR-AI-005, FR-AI-007, FR-AI-008, FR-AI-009, FR-AI-014, FR-AI-015, FR-AI-022]
 depends_on: [FR-AI-005, FR-AI-008, FR-AI-002, FR-AI-004, FR-AI-009]
@@ -782,4 +782,45 @@ All resolved at authoring time. Items deferred to later FRs:
 
 ---
 
-*End of FR-AI-021. Status: draft (10/10 target).*
+## §12 — Route-back note (2026-06-08)
+
+Status remains `ready_to_implement`; do not mark this FR shipped yet.
+
+Reason: the operator CLI hardening and local contract tests are implemented, but the FR's live acceptance path depends on a reachable Postgres-backed AI Gateway dataset and memory writer integration for mutating/read-audit commands. This host still has no live Postgres service for `ai_invocations`, `tenant_policies`, `circuit_breakers`, `cost_holds`, and `memory_rows`, so the declared end-to-end commands (`usage`, `policy set --confirm`, `invoice export`, `breaker status/reset`, `expiry repair`) cannot be honestly verified.
+
+Work preserved for the next attempt:
+- The memory writer now has first-class `ai.cli_*` row kinds for policy updates, failover drills, invoice exports, breaker resets, expiry repairs, and manual memory emits.
+- Mutating CLI paths now receive the global `--confirm` flag; `failover drill` requires `admin`, `--confirm`, and production drill guards; `breaker reset`, `expiry repair`, and non-dry-run `memory emit` refuse without `--confirm`.
+- CLI audit rows now use valid `memories/decisions/ai-cli/...` paths and include `operator_id`, `command`, `args`, `request_id`, `command_sha256`, and `outcome`.
+- `policy set` now stages cap, ZDR, residency, and allowed-persona updates in a single transaction after an audit row.
+- Versioned JSON schemas exist under `src/cli/json_schemas/`, schema loading is manifest-relative, and `memory audit-trail --json` no longer panics on array output.
+- `docs/cli-reference.md` documents commands, roles, audit rows, exit codes, schema location, and production drill safety.
+
+Verification completed:
+- `cargo test -p cyberos-ai-gateway --test cli_test --test cli_audit_test --test cli_failover_drill_safety_test --test cli_json_schema_test -- --test-threads=1` — 11 passed.
+- `cargo test -p cyberos-ai-gateway cli -- --test-threads=1` — passed; only pre-existing warnings in unrelated tests.
+- `cargo build -p cyberos-ai-gateway --bin cyberos-ai` — passed.
+- `git diff --check` — passed.
+- `PYTHONPATH=modules/memory python3 -m cyberos doctor` — READY, 13/13 pass.
+
+Required next verification before shipping:
+
+```bash
+cd services
+# Requires a real Postgres instance with FR-AI-001/002/004 tables and seeded AI Gateway rows.
+cargo test -p cyberos-ai-gateway --test cli_test -- --test-threads=1
+CYBEROS_AI_OPERATOR_TOKEN=<read-token> DATABASE_URL=<postgres-url> \
+  cargo run -p cyberos-ai-gateway --bin cyberos-ai -- usage --tenant org:test
+CYBEROS_AI_OPERATOR_TOKEN=<mutate-token> DATABASE_URL=<postgres-url> \
+  cargo run -p cyberos-ai-gateway --bin cyberos-ai -- policy set org:test --cap-usd 200 --confirm
+CYBEROS_AI_OPERATOR_TOKEN=<admin-token> DATABASE_URL=<postgres-url> \
+  cargo run -p cyberos-ai-gateway --bin cyberos-ai -- expiry repair --confirm
+CYBEROS_AI_OPERATOR_TOKEN=<mutate-token> DATABASE_URL=<postgres-url> \
+  cargo run -p cyberos-ai-gateway --bin cyberos-ai -- breaker reset bedrock:claude-3-5-sonnet --confirm
+CYBEROS_AI_OPERATOR_TOKEN=<read-token> DATABASE_URL=<postgres-url> \
+  cargo run -p cyberos-ai-gateway --bin cyberos-ai -- invoice export org:test --period 2026-05 --format json
+```
+
+Only after those live Postgres-backed commands run successfully and the corresponding `ai.cli_*` audit rows are present should this FR move to `done`.
+
+*End of FR-AI-021. Status: ready_to_implement (routed back 2026-06-08).*

@@ -216,13 +216,21 @@ pub struct AuditTrailRow {
 /// Output JSON or human-readable.
 pub fn emit_output<T: Serialize>(json: bool, data: &T, human_fn: impl FnOnce(&T)) {
     if json {
-        let envelope = JsonEnvelope {
-            schema_version: "v1",
-            data,
+        let mut value = serde_json::to_value(data).expect("json serialisation");
+        let output = match value {
+            serde_json::Value::Object(ref mut map) => {
+                map.entry("schema_version")
+                    .or_insert_with(|| serde_json::Value::String("v1".to_string()));
+                serde_json::Value::Object(map.clone())
+            }
+            other => serde_json::json!({
+                "schema_version": "v1",
+                "rows": other,
+            }),
         };
         println!(
             "{}",
-            serde_json::to_string_pretty(&envelope).expect("json serialisation")
+            serde_json::to_string_pretty(&output).expect("json serialisation")
         );
     } else {
         human_fn(data);

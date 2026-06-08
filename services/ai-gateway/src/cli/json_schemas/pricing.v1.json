@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "cyberos-ai models pricing v1",
+  "type": "object",
+  "required": ["schema_version", "pricing"],
+  "properties": {
+    "schema_version": { "const": "v1" },
+    "pricing": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["provider", "model", "input_per_1k", "output_per_1k"],
+        "properties": {
+          "provider": { "type": "string" },
+          "model": { "type": "string" },
+          "input_per_1k": { "type": "number" },
+          "output_per_1k": { "type": "number" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

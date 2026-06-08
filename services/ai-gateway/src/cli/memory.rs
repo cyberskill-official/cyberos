@@ -1,7 +1,5 @@
 //! FR-AI-021 — `cyberos-ai memory` subcommand.
 
-use sha2::{Digest, Sha256};
-
 use super::auth::{OperatorClaims, Role};
 use super::output;
 use super::{CliError, MemoryAction};
@@ -10,18 +8,18 @@ use sqlx::PgPool;
 pub async fn run(
     args: MemoryAction,
     json: bool,
+    confirm: bool,
     claims: &OperatorClaims,
     pool: &PgPool,
 ) -> Result<(), CliError> {
     match args {
         MemoryAction::Emit { yaml_file, dry_run } => {
-            super::auth::require_role(claims, &Role::Admin).map_err(|e| {
-                CliError::InsufficientRole {
-                    needed: e.needed(),
-                    has: e.has(),
-                }
+            let role = if dry_run { Role::Read } else { Role::Admin };
+            super::auth::require_role(claims, &role).map_err(|e| CliError::InsufficientRole {
+                needed: e.needed(),
+                has: e.has(),
             })?;
-            emit(&yaml_file, dry_run).await
+            emit(claims, &yaml_file, dry_run, confirm).await
         }
         MemoryAction::AuditTrail { tenant, since } => {
             audit_trail(json, pool, &tenant, &since).await
@@ -29,7 +27,12 @@ pub async fn run(
     }
 }
 
-async fn emit(yaml_file: &std::path::Path, dry_run: bool) -> Result<(), CliError> {
+async fn emit(
+    claims: &OperatorClaims,
+    yaml_file: &std::path::Path,
+    dry_run: bool,
+    confirm: bool,
+) -> Result<(), CliError> {
     let yaml = std::fs::read_to_string(yaml_file).map_err(|e| CliError::UserError {
         reason: format!("read {}: {e}", yaml_file.display()),
     })?;
@@ -52,25 +55,35 @@ async fn emit(yaml_file: &std::path::Path, dry_run: bool) -> Result<(), CliError
         return Ok(());
     }
 
-    let command_line = std::env::args().collect::<Vec<String>>().join(" ");
-    let mut hasher = Sha256::new();
-    hasher.update(command_line.as_bytes());
-    let command_sha256 = format!("{:x}", hasher.finalize());
+    if !confirm {
+        println!("Memory emit preview:");
+        println!("  kind:   {kind}");
+        println!("  payload: {payload}");
+        eprintln!("To apply, re-run with --confirm");
+        return Err(CliError::DestructiveWithoutConfirm);
+    }
 
-    let _ = crate::memory_writer::emit(crate::memory_writer::MemoryEmit {
-        kind: crate::memory_writer::AiInvocationKind::Precheck,
-        path: format!(
-            "memories/ai-manual-emits/{}_{}.md",
-            kind,
-            chrono::Utc::now().timestamp_millis()
-        ),
+    let command_line = super::current_command_line();
+    let command_sha256 = super::command_sha256(&command_line);
+    let request_id = super::request_id();
+
+    crate::memory_writer::emit(crate::memory_writer::MemoryEmit {
+        kind: crate::memory_writer::AiInvocationKind::CliMemoryEmitted,
+        path: super::cli_audit_path("manual-emits", &kind),
         extra: serde_json::json!({
-            "operator_id": "cli",
+            "operator_id": claims.operator_id,
+            "command": "memory emit",
+            "args": {
+                "yaml_file": yaml_file.display().to_string(),
+            },
             "emitted_kind": kind,
             "command_sha256": command_sha256,
+            "request_id": request_id,
+            "outcome": "confirmed",
         }),
     })
-    .await;
+    .await
+    .map_err(super::memory_writer_error)?;
 
     println!("Memory row emitted: {kind}");
     Ok(())
