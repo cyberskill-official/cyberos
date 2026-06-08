@@ -35,6 +35,8 @@ pub enum RefuseReason {
     PersonaNotAllowed,
     /// Tenant policy requires ZDR but alias resolved to a non-ZDR model.
     ZdrViolation,
+    /// Tenant policy residency pin does not match the resolved provider region.
+    ResidencyViolation,
 }
 
 /// Error taxonomy for precheck.

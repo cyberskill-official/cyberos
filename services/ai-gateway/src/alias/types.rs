@@ -52,6 +52,19 @@ pub enum AliasError {
         attempted_alias: String,
         vn1_no_provider: bool,
     },
+    /// Multiple residency override globs match the alias.
+    #[error("residency override ambiguous for alias '{alias}': {patterns:?}")]
+    ResidencyOverrideAmbiguous {
+        alias: String,
+        patterns: Vec<String>,
+    },
+    /// A residency override glob has invalid syntax.
+    #[error("residency override invalid for alias '{alias}': {pattern}: {reason}")]
+    ResidencyOverrideInvalid {
+        alias: String,
+        pattern: String,
+        reason: String,
+    },
     /// No provider in the chain has this alias.
     #[error("no provider has alias '{alias}' (tried {providers_tried} providers)")]
     NoProviderHasAlias { alias: String, providers_tried: u8 },

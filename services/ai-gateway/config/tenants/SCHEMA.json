@@ -19,6 +19,14 @@
     "tenant_id": {
       "description": "Canonical tenant identifier (e.g. `org:cyberskill`).",
       "type": "string"
+    },
+    "tenant_jurisdiction": {
+      "description": "Optional jurisdiction tag used by residency defaulting rules.\n\n`VN` tenants must explicitly pin residency; non-VN tenants missing a pin default to Sg1 in the loader.",
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
     }
   },
   "additionalProperties": false,
@@ -28,8 +36,7 @@
       "type": "object",
       "required": [
         "monthly_cap_usd",
-        "primary_provider",
-        "residency"
+        "primary_provider"
       ],
       "properties": {
         "alias_overrides": {
@@ -124,11 +131,23 @@
         },
         "residency": {
           "description": "Residency pin — provider selection respects this (FR-AI-016).",
+          "default": "sg-1",
           "allOf": [
             {
               "$ref": "#/definitions/Residency"
             }
           ]
+        },
+        "residency_override": {
+          "description": "Per-alias residency overrides. Glob syntax supports exact aliases plus `*` wildcards; ambiguous matches are refused at alias-resolution time.",
+          "default": null,
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/definitions/Residency"
+          }
         },
         "residency_requires_regional_provider": {
           "description": "If true, providers without regional pinning (e.g. Anthropic native) fail residency checks. Default false. FR-AI-006 §1 #7.",

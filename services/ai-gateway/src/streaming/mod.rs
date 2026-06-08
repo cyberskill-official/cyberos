@@ -357,15 +357,35 @@ pub async fn handle_streaming_chat(
     StreamingHandlerError,
 > {
     // Step 1: Resolve alias and check streaming support.
-    let resolved = crate::alias::resolve(&req.alias, &policy).map_err(|e| {
-        StreamingHandlerError::PrecheckFailed {
+    let resolved = crate::alias::resolve(&req.alias, &policy).map_err(|e| match &e {
+        crate::alias::AliasError::ZdrViolation { .. } => StreamingHandlerError::PrecheckFailed {
             reason: format!("{e:?}"),
-            http_status: if matches!(e, crate::alias::AliasError::ZdrViolation { .. }) {
-                403
-            } else {
-                400
-            },
+            http_status: 403,
+        },
+        crate::alias::AliasError::ResidencyViolation {
+            resolved_region,
+            policy_residency,
+            vn1_no_provider,
+            ..
+        } => {
+            let mut body = serde_json::json!({
+                "error": "residency_violation",
+                "policy_residency": crate::residency::residency_label(*policy_residency),
+                "resolved_region": resolved_region,
+                "contact": "ops@cyberos.world",
+            });
+            if *vn1_no_provider {
+                body["reason"] = serde_json::json!("no_vn_provider_yet");
+            }
+            StreamingHandlerError::PrecheckFailed {
+                reason: body.to_string(),
+                http_status: 403,
+            }
         }
+        _ => StreamingHandlerError::PrecheckFailed {
+            reason: format!("{e:?}"),
+            http_status: 400,
+        },
     })?;
     if !provider_supports_streaming(resolved.provider_kind) {
         metrics::UNSUPPORTED_FALLBACK

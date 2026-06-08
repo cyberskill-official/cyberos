@@ -23,6 +23,7 @@ use crate::alias;
 use crate::cost_table;
 use crate::memory_writer;
 use crate::policy::TenantPolicy;
+use crate::residency;
 use crate::zdr;
 
 // ─── Metrics (FR-AI-001 §1 #14) ──────────────────────────────────────────────
@@ -137,6 +138,32 @@ pub async fn precheck(
             PRECHECK_CALLS.with_label_values(&["refuse"]).inc();
             return Ok(PrecheckOutcome::Refuse {
                 reason: RefuseReason::ZdrViolation,
+                current_spent_usd: Decimal::ZERO,
+                cap_usd: policy.ai_policy.monthly_cap_usd,
+            });
+        }
+        Err(alias::AliasError::ResidencyViolation {
+            resolved_region,
+            policy_residency,
+            attempted_alias,
+            vn1_no_provider,
+        }) => {
+            memory_writer::emit(memory_writer::builders::residency_violation(
+                &req.tenant_id,
+                &req.agent_persona,
+                &attempted_alias,
+                residency::residency_label(policy_residency),
+                resolved_region.as_deref(),
+                vn1_no_provider,
+                &req.idempotency_key,
+            ))
+            .await
+            .map_err(|e| PrecheckError::MemoryWriterFailed {
+                stderr: e.to_string(),
+            })?;
+            PRECHECK_CALLS.with_label_values(&["refuse"]).inc();
+            return Ok(PrecheckOutcome::Refuse {
+                reason: RefuseReason::ResidencyViolation,
                 current_spent_usd: Decimal::ZERO,
                 cap_usd: policy.ai_policy.monthly_cap_usd,
             });

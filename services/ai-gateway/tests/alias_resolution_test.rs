@@ -91,6 +91,7 @@ fn test_policy_with_bedrock_primary() -> TenantPolicy {
 
     TenantPolicy {
         tenant_id: "org:test".into(),
+        tenant_jurisdiction: None,
         ai_policy: AiPolicy {
             monthly_cap_usd: rust_decimal_macros::dec!(100.00),
             warn_threshold: 0.80,
@@ -102,6 +103,7 @@ fn test_policy_with_bedrock_primary() -> TenantPolicy {
             fallback_chain: vec![],
             call_timeout_seconds: 60,
             residency: Residency::Sg1,
+            residency_override: None,
             zdr_required: false,
             emergency_override: EmergencyOverride::default(),
             allowed_personas: None,
@@ -327,6 +329,70 @@ fn residency_pin_mismatch_errors() {
     }
 }
 
+#[test]
+fn per_alias_residency_override_allows_eu_alias_for_sg_tenant() {
+    let mut policy = test_policy_with_bedrock_primary();
+    policy.ai_policy.primary_provider = bedrock_provider(
+        "eu-central-1",
+        &[("chat.smart", "anthropic.claude-3-5-sonnet-20241022-v2:0")],
+    );
+    policy.ai_policy.residency_override =
+        Some(HashMap::from([("chat.smart".to_string(), Residency::Eu1)]));
+
+    let r = alias::resolve("chat.smart", &policy).unwrap();
+    assert_eq!(r.provider_kind, ProviderKind::Bedrock);
+    assert_eq!(r.region, Some("eu-central-1".to_string()));
+}
+
+#[test]
+fn ambiguous_residency_override_errors() {
+    let mut policy = test_policy_with_bedrock_primary();
+    policy.ai_policy.residency_override = Some(HashMap::from([
+        ("chat.*".to_string(), Residency::Eu1),
+        ("chat.smart".to_string(), Residency::Us1),
+    ]));
+
+    let err = alias::resolve("chat.smart", &policy).unwrap_err();
+    assert!(matches!(
+        err,
+        AliasError::ResidencyOverrideAmbiguous { alias, patterns }
+            if alias == "chat.smart" && patterns.len() == 2
+    ));
+}
+
+#[test]
+fn invalid_residency_override_errors() {
+    let mut policy = test_policy_with_bedrock_primary();
+    policy.ai_policy.residency_override =
+        Some(HashMap::from([("chat.?".to_string(), Residency::Eu1)]));
+
+    let err = alias::resolve("chat.smart", &policy).unwrap_err();
+    assert!(matches!(
+        err,
+        AliasError::ResidencyOverrideInvalid { alias, pattern, .. }
+            if alias == "chat.smart" && pattern == "chat.?"
+    ));
+}
+
+#[test]
+fn vn1_refuses_non_regional_provider_too() {
+    let mut policy = test_policy_with_bedrock_primary();
+    policy.ai_policy.residency = Residency::Vn1;
+    policy.ai_policy.primary_provider =
+        anthropic_provider(&[("chat.smart", "claude-3-5-sonnet-20241022")]);
+
+    let err = alias::resolve("chat.smart", &policy).unwrap_err();
+    assert!(matches!(
+        err,
+        AliasError::ResidencyViolation {
+            resolved_region: None,
+            policy_residency: Residency::Vn1,
+            vn1_no_provider: true,
+            ..
+        }
+    ));
+}
+
 // ─── AC #8: No provider has alias after trying fallback chain ────────────────
 
 #[test]
@@ -493,6 +559,7 @@ fn policy_strategy() -> impl Strategy<Value = TenantPolicy> {
                 residency_requires_regional_provider,
             )| TenantPolicy {
                 tenant_id: "org:prop".into(),
+                tenant_jurisdiction: None,
                 ai_policy: AiPolicy {
                     monthly_cap_usd: rust_decimal_macros::dec!(100.00),
                     warn_threshold: 0.80,
@@ -501,6 +568,7 @@ fn policy_strategy() -> impl Strategy<Value = TenantPolicy> {
                     fallback_chain,
                     call_timeout_seconds: 60,
                     residency,
+                    residency_override: None,
                     zdr_required,
                     emergency_override: EmergencyOverride::default(),
                     allowed_personas: None,

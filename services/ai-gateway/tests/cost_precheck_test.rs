@@ -60,6 +60,7 @@ fn test_policy(tenant_id: &str, monthly_cap: Decimal) -> TenantPolicy {
 
     TenantPolicy {
         tenant_id: tenant_id.into(),
+        tenant_jurisdiction: None,
         ai_policy: AiPolicy {
             monthly_cap_usd: monthly_cap,
             warn_threshold: 0.80,
@@ -71,6 +72,7 @@ fn test_policy(tenant_id: &str, monthly_cap: Decimal) -> TenantPolicy {
             fallback_chain: vec![],
             call_timeout_seconds: 60,
             residency: Residency::Sg1,
+            residency_override: None,
             zdr_required: false,
             emergency_override: EmergencyOverride::default(),
             allowed_personas: None,

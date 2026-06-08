@@ -9,6 +9,7 @@
 # documented schema reference.
 
 tenant_id: org:cyberskill
+tenant_jurisdiction: SG
 
 ai_policy:
   # Hard cap on monthly USD spend across all providers. Range [0.01, 1_000_000].
@@ -41,6 +42,11 @@ ai_policy:
   # Residency pin — FR-AI-016 enforces this at provider selection time.
   # Values: sg-1 (Singapore) · eu-1 (Frankfurt) · us-1 (us-east-1) · vn-1 (Vietnam).
   residency: sg-1
+
+  # Per-alias residency override. Exact aliases and `*` wildcards are supported;
+  # ambiguous matches fail closed.
+  residency_override:
+    chat.eu-*: eu-1
 
   # Require ZDR (Zero Data Retention) — FR-AI-015 refuses non-ZDR providers when true.
   zdr_required: true

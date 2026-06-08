@@ -19,6 +19,7 @@ use std::collections::HashMap;
 fn make_bedrock_policy(residency: Residency, region: &str) -> TenantPolicy {
     TenantPolicy {
         tenant_id: "test-tenant".into(),
+        tenant_jurisdiction: None,
         ai_policy: AiPolicy {
             monthly_cap_usd: "100.00".parse().unwrap(),
             warn_threshold: 0.80,
@@ -37,6 +38,7 @@ fn make_bedrock_policy(residency: Residency, region: &str) -> TenantPolicy {
             fallback_chain: vec![],
             call_timeout_seconds: 60,
             residency,
+            residency_override: None,
             zdr_required: false,
             emergency_override: EmergencyOverride::default(),
             allowed_personas: None,

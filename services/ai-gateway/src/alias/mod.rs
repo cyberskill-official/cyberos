@@ -35,6 +35,12 @@ pub fn supported_aliases() -> &'static [&'static str] {
     SUPPORTED_ALIASES
 }
 
+#[derive(Debug, Clone)]
+struct EffectiveResidency {
+    residency: Residency,
+    override_pattern: Option<String>,
+}
+
 // ─── Metrics ──────────────────────────────────────────────────────────────────
 
 static ALIAS_RESOLUTIONS: Lazy<CounterVec> = Lazy::new(|| {
@@ -172,24 +178,48 @@ fn check_and_build_with_model(
     }
 
     // Residency check (FR-AI-016) — runs AFTER ZDR check (§1 #10)
+    let effective_residency = effective_residency(alias, policy)?;
+    if effective_residency.override_pattern.is_some() {
+        residency::record_override_used(&policy.tenant_id, alias);
+    }
+
+    if effective_residency.residency == Residency::Vn1 {
+        ALIAS_FAILURES
+            .with_label_values(&[alias, "residency"])
+            .inc();
+        residency::record_vn1_refused(&policy.tenant_id);
+        tracing::warn!(
+            tenant_id = %policy.tenant_id,
+            alias = %alias,
+            "vn1 residency refused; FR-AI-104 Viettel integration needed"
+        );
+        if let Some(region_str) = &region {
+            if let Ok(r) = residency::Region::from_provider_string(region_str) {
+                residency::record_mismatch(effective_residency.residency, &r);
+            }
+        }
+        return Err(AliasError::ResidencyViolation {
+            resolved_region: region.clone(),
+            policy_residency: effective_residency.residency,
+            attempted_alias: alias.to_string(),
+            vn1_no_provider: true,
+        });
+    }
+
     if let Some(region_str) = &region {
         let region = residency::Region::from_provider_string(region_str);
         match region {
             Ok(r) => {
-                if !residency::matches(policy.ai_policy.residency, &r) {
+                if !residency::matches(effective_residency.residency, &r) {
                     ALIAS_FAILURES
                         .with_label_values(&[alias, "residency"])
                         .inc();
-                    let vn1_no_provider = policy.ai_policy.residency == Residency::Vn1;
-                    residency::record_mismatch(policy.ai_policy.residency, &r);
-                    if vn1_no_provider {
-                        residency::record_vn1_refused(&policy.tenant_id);
-                    }
+                    residency::record_mismatch(effective_residency.residency, &r);
                     return Err(AliasError::ResidencyViolation {
                         resolved_region: Some(region_str.clone()),
-                        policy_residency: policy.ai_policy.residency,
+                        policy_residency: effective_residency.residency,
                         attempted_alias: alias.to_string(),
-                        vn1_no_provider,
+                        vn1_no_provider: false,
                     });
                 }
             }
@@ -200,7 +230,7 @@ fn check_and_build_with_model(
                     .inc();
                 return Err(AliasError::ResidencyViolation {
                     resolved_region: Some(region_str.clone()),
-                    policy_residency: policy.ai_policy.residency,
+                    policy_residency: effective_residency.residency,
                     attempted_alias: alias.to_string(),
                     vn1_no_provider: false,
                 });
@@ -213,7 +243,7 @@ fn check_and_build_with_model(
     {
         return Err(AliasError::ResidencyViolation {
             resolved_region: None,
-            policy_residency: policy.ai_policy.residency,
+            policy_residency: effective_residency.residency,
             attempted_alias: alias.to_string(),
             vn1_no_provider: false,
         });
@@ -227,6 +257,48 @@ fn check_and_build_with_model(
         is_zdr: zdr::is_zdr(&kind, model),
         latency_class: latency_class_for_alias(alias),
     })
+}
+
+fn effective_residency(
+    alias: &str,
+    policy: &TenantPolicy,
+) -> Result<EffectiveResidency, AliasError> {
+    let Some(overrides) = &policy.ai_policy.residency_override else {
+        return Ok(EffectiveResidency {
+            residency: policy.ai_policy.residency,
+            override_pattern: None,
+        });
+    };
+
+    match residency::resolve_override(overrides, alias) {
+        Ok(Some(resolved)) => Ok(EffectiveResidency {
+            residency: resolved.residency,
+            override_pattern: Some(resolved.pattern),
+        }),
+        Ok(None) => Ok(EffectiveResidency {
+            residency: policy.ai_policy.residency,
+            override_pattern: None,
+        }),
+        Err(residency::OverrideError::OverrideAmbiguous { patterns, .. }) => {
+            ALIAS_FAILURES
+                .with_label_values(&[alias, "residency_override_ambiguous"])
+                .inc();
+            Err(AliasError::ResidencyOverrideAmbiguous {
+                alias: alias.to_string(),
+                patterns,
+            })
+        }
+        Err(residency::OverrideError::InvalidPattern { pattern, reason }) => {
+            ALIAS_FAILURES
+                .with_label_values(&[alias, "residency_override_invalid"])
+                .inc();
+            Err(AliasError::ResidencyOverrideInvalid {
+                alias: alias.to_string(),
+                pattern,
+                reason,
+            })
+        }
+    }
 }
 
 fn latency_class_for_alias(alias: &str) -> LatencyClass {

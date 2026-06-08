@@ -296,6 +296,7 @@ async fn query_policy(pool: &PgPool, tenant: &str) -> Result<policy::TenantPolic
 
     Ok(policy::TenantPolicy {
         tenant_id: tenant.to_string(),
+        tenant_jurisdiction: None,
         ai_policy,
     })
 }

@@ -64,6 +64,7 @@ fn minimal_policy() -> TenantPolicy {
 fn policy_with_provider(primary_provider: Provider) -> TenantPolicy {
     TenantPolicy {
         tenant_id: "test-tenant".into(),
+        tenant_jurisdiction: None,
         ai_policy: AiPolicy {
             monthly_cap_usd: rust_decimal_macros::dec!(100),
             warn_threshold: 0.80,
@@ -72,6 +73,7 @@ fn policy_with_provider(primary_provider: Provider) -> TenantPolicy {
             fallback_chain: vec![],
             call_timeout_seconds: 60,
             residency: Residency::Sg1,
+            residency_override: None,
             zdr_required: false,
             emergency_override: EmergencyOverride::default(),
             allowed_personas: None,

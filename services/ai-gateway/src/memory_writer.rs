@@ -10,7 +10,7 @@
 //!   spawn + stdin/stdout/stderr piping, 5s timeout with SIGTERM-then-SIGKILL, exit-code
 //!   taxonomy, chain-hash verification — all implemented.
 //! - Typed builders for the slice-1 closed set: `precheck`, `invocation`, `invocation_failed`,
-//!   `hold_expired`, `persona_loaded`, `zdr_violation` — all implemented.
+//!   `hold_expired`, `persona_loaded`, `zdr_violation`, `residency_violation` — all implemented.
 //! - Startup health check (`check_writer_available`) implemented.
 //! - The `python3 -m cyberos.writer put` Python subprocess is supplied by
 //!   `modules/memory/runtime/`. When that interface is not on PATH, `check_writer_available`
@@ -65,6 +65,8 @@ pub enum AiInvocationKind {
     PersonaLoaded,
     /// Emitted by FR-AI-015 (ZDR refusal).
     ZdrViolation,
+    /// Emitted by FR-AI-016 (residency refusal).
+    ResidencyViolation,
 }
 
 impl AiInvocationKind {
@@ -77,6 +79,7 @@ impl AiInvocationKind {
             Self::HoldExpired => "ai.hold_expired",
             Self::PersonaLoaded => "ai.persona_loaded",
             Self::ZdrViolation => "ai.zdr_violation",
+            Self::ResidencyViolation => "ai.residency_violation",
         }
     }
 }
@@ -642,6 +645,32 @@ pub mod builders {
         }
     }
 
+    /// `ai.residency_violation` row (FR-AI-016).
+    #[allow(clippy::too_many_arguments)]
+    pub fn residency_violation(
+        tenant_id: &str,
+        agent_persona: &str,
+        requested_alias: &str,
+        policy_residency: &str,
+        resolved_region: Option<&str>,
+        vn1_no_provider: bool,
+        request_id: &str,
+    ) -> MemoryEmit {
+        MemoryEmit {
+            kind: AiInvocationKind::ResidencyViolation,
+            path: row_path("ai-residency-violations", tenant_id, request_id),
+            extra: serde_json::json!({
+                "tenant_id": tenant_id,
+                "agent_persona": agent_persona,
+                "requested_alias": requested_alias,
+                "policy_residency": policy_residency,
+                "resolved_region": resolved_region,
+                "request_id": request_id,
+                "vn1_no_provider": vn1_no_provider,
+            }),
+        }
+    }
+
     fn row_path(folder: &str, tenant_id: &str, key: &str) -> String {
         let now = chrono::Utc::now().timestamp_millis().max(0) as u128;
         let safe_tenant = tenant_id.replace(':', "-");
@@ -683,6 +712,10 @@ mod tests {
         assert_eq!(AiInvocationKind::HoldExpired.tag(), "ai.hold_expired");
         assert_eq!(AiInvocationKind::PersonaLoaded.tag(), "ai.persona_loaded");
         assert_eq!(AiInvocationKind::ZdrViolation.tag(), "ai.zdr_violation");
+        assert_eq!(
+            AiInvocationKind::ResidencyViolation.tag(),
+            "ai.residency_violation"
+        );
     }
 
     #[test]
@@ -705,6 +738,27 @@ mod tests {
         assert_eq!(row.extra["resolved_model"], "gpt-4o");
         assert_eq!(row.extra["policy_requires_zdr"], true);
         assert_eq!(row.extra["attestation_present"], true);
+        assert_eq!(row.extra["request_id"], "req-123");
+    }
+
+    #[test]
+    fn residency_violation_builder_carries_required_payload() {
+        let row = builders::residency_violation(
+            "tenant:alpha",
+            "cuo-cpo@0.4.1",
+            "chat.smart",
+            "vn-1",
+            Some("ap-southeast-1"),
+            true,
+            "req-123",
+        );
+        assert_eq!(row.kind.tag(), "ai.residency_violation");
+        assert_eq!(row.extra["tenant_id"], "tenant:alpha");
+        assert_eq!(row.extra["agent_persona"], "cuo-cpo@0.4.1");
+        assert_eq!(row.extra["requested_alias"], "chat.smart");
+        assert_eq!(row.extra["policy_residency"], "vn-1");
+        assert_eq!(row.extra["resolved_region"], "ap-southeast-1");
+        assert_eq!(row.extra["vn1_no_provider"], true);
         assert_eq!(row.extra["request_id"], "req-123");
     }
 

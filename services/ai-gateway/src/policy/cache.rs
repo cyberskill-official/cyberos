@@ -79,6 +79,7 @@ mod tests {
     fn dummy_policy(id: &str) -> Arc<TenantPolicy> {
         Arc::new(TenantPolicy {
             tenant_id: id.to_string(),
+            tenant_jurisdiction: None,
             ai_policy: AiPolicy {
                 monthly_cap_usd: dec!(150),
                 warn_threshold: 0.8,
@@ -89,6 +90,7 @@ mod tests {
                 fallback_chain: vec![],
                 call_timeout_seconds: 60,
                 residency: Residency::Sg1,
+                residency_override: None,
                 zdr_required: true,
                 emergency_override: Default::default(),
                 allowed_personas: None,

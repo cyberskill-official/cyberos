@@ -75,6 +75,15 @@ static RESIDENCY_OVERRIDES_USED: Lazy<CounterVec> = Lazy::new(|| {
     .unwrap()
 });
 
+static RESIDENCY_DEFAULT_APPLIED: Lazy<CounterVec> = Lazy::new(|| {
+    register_counter_vec!(
+        "ai_residency_default_applied_total",
+        "Missing residency default/refusal outcomes",
+        &["outcome"]
+    )
+    .unwrap()
+});
+
 // ─── Public types ─────────────────────────────────────────────────────────────
 
 /// Newtype wrapping a validated AWS region string (no AZ suffix).
@@ -110,6 +119,23 @@ pub enum ResidencyParseError {
     Invalid(String),
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ResolvedResidencyOverride {
+    pub pattern: String,
+    pub residency: Residency,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+pub enum OverrideError {
+    #[error("ambiguous residency override for alias {alias:?}: {patterns:?}")]
+    OverrideAmbiguous {
+        alias: String,
+        patterns: Vec<String>,
+    },
+    #[error("invalid residency override pattern {pattern:?}: {reason}")]
+    InvalidPattern { pattern: String, reason: String },
+}
+
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 /// §1 #1: Check if a provider region satisfies the policy's residency pin.
@@ -134,6 +160,57 @@ pub fn parse_residency(s: &str) -> Result<Residency, ResidencyParseError> {
     }
 }
 
+/// Resolve a per-alias residency override for an alias.
+///
+/// Patterns are deterministic, shell-style subsets: exact aliases or `*` wildcards.
+/// Multiple matching patterns are rejected because the policy would be ambiguous.
+pub fn resolve_override(
+    overrides: &HashMap<String, Residency>,
+    alias: &str,
+) -> Result<Option<ResolvedResidencyOverride>, OverrideError> {
+    let mut matches = Vec::new();
+    for (pattern, residency) in overrides {
+        validate_override_pattern(pattern)?;
+        if alias_glob_matches(pattern, alias) {
+            matches.push(ResolvedResidencyOverride {
+                pattern: pattern.clone(),
+                residency: *residency,
+            });
+        }
+    }
+
+    matches.sort_by(|a, b| a.pattern.cmp(&b.pattern));
+
+    match matches.len() {
+        0 => Ok(None),
+        1 => Ok(matches.pop()),
+        _ => Err(OverrideError::OverrideAmbiguous {
+            alias: alias.to_string(),
+            patterns: matches.into_iter().map(|m| m.pattern).collect(),
+        }),
+    }
+}
+
+/// Validate the supported alias-glob subset for policy loading.
+pub fn validate_override_pattern(pattern: &str) -> Result<(), OverrideError> {
+    if pattern.is_empty() {
+        return Err(OverrideError::InvalidPattern {
+            pattern: pattern.to_string(),
+            reason: "empty".to_string(),
+        });
+    }
+    if !pattern
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_' | '*'))
+    {
+        return Err(OverrideError::InvalidPattern {
+            pattern: pattern.to_string(),
+            reason: "allowed characters are [A-Za-z0-9._-*]".to_string(),
+        });
+    }
+    Ok(())
+}
+
 /// Record a residency mismatch metric.
 pub fn record_mismatch(policy_residency: Residency, resolved_region: &Region) {
     RESIDENCY_MISMATCHES
@@ -153,13 +230,59 @@ pub fn record_override_used(tenant_id: &str, alias: &str) {
         .inc();
 }
 
-fn residency_label(r: Residency) -> &'static str {
+/// Stable wire/metric label for residency values.
+pub fn residency_label(r: Residency) -> &'static str {
     match r {
         Residency::Sg1 => "sg-1",
         Residency::Eu1 => "eu-1",
         Residency::Us1 => "us-1",
         Residency::Vn1 => "vn-1",
     }
+}
+
+/// Record missing-residency default/refusal outcomes.
+pub fn record_default_applied(outcome: &str) {
+    RESIDENCY_DEFAULT_APPLIED
+        .with_label_values(&[outcome])
+        .inc();
+}
+
+fn alias_glob_matches(pattern: &str, alias: &str) -> bool {
+    if !pattern.contains('*') {
+        return pattern == alias;
+    }
+
+    let parts: Vec<&str> = pattern.split('*').collect();
+    let mut pos = 0usize;
+
+    for (idx, part) in parts.iter().enumerate() {
+        if part.is_empty() {
+            continue;
+        }
+        if idx == 0 && !pattern.starts_with('*') {
+            let remaining = &alias[pos..];
+            if !remaining.starts_with(part) {
+                return false;
+            }
+            pos += part.len();
+            continue;
+        }
+
+        let remaining = &alias[pos..];
+        let Some(found) = remaining.find(part) else {
+            return false;
+        };
+        pos += found + part.len();
+    }
+
+    if !pattern.ends_with('*') {
+        let Some(last) = parts.iter().rev().find(|part| !part.is_empty()) else {
+            return true;
+        };
+        return alias.ends_with(last);
+    }
+
+    true
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
@@ -295,5 +418,41 @@ mod tests {
         let r1 = matches(Residency::Sg1, &region);
         let r2 = matches(Residency::Sg1, &region);
         assert_eq!(r1, r2);
+    }
+
+    #[test]
+    fn exact_residency_override_matches_alias() {
+        let overrides = HashMap::from([("chat.smart".to_string(), Residency::Eu1)]);
+        let resolved = resolve_override(&overrides, "chat.smart").unwrap().unwrap();
+        assert_eq!(resolved.pattern, "chat.smart");
+        assert_eq!(resolved.residency, Residency::Eu1);
+        assert!(resolve_override(&overrides, "chat.fast").unwrap().is_none());
+    }
+
+    #[test]
+    fn wildcard_residency_override_matches_alias() {
+        let overrides = HashMap::from([("chat.eu-*".to_string(), Residency::Eu1)]);
+        let resolved = resolve_override(&overrides, "chat.eu-customer-data")
+            .unwrap()
+            .unwrap();
+        assert_eq!(resolved.pattern, "chat.eu-*");
+        assert_eq!(resolved.residency, Residency::Eu1);
+    }
+
+    #[test]
+    fn ambiguous_residency_override_is_rejected() {
+        let overrides = HashMap::from([
+            ("chat.*".to_string(), Residency::Eu1),
+            ("chat.eu-*".to_string(), Residency::Sg1),
+        ]);
+        let err = resolve_override(&overrides, "chat.eu-customer-data").unwrap_err();
+        assert!(matches!(err, OverrideError::OverrideAmbiguous { .. }));
+    }
+
+    #[test]
+    fn invalid_residency_override_pattern_is_rejected() {
+        let overrides = HashMap::from([("chat.?".to_string(), Residency::Eu1)]);
+        let err = resolve_override(&overrides, "chat.smart").unwrap_err();
+        assert!(matches!(err, OverrideError::InvalidPattern { .. }));
     }
 }

@@ -16,12 +16,14 @@ use std::sync::Arc;
 
 use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use regex::Regex;
+use serde_yaml::Value as YamlValue;
 use thiserror::Error;
 use tokio::sync::mpsc;
 use tracing::{error, info, warn};
 
 use super::cache::PolicyCache;
 use super::schema::TenantPolicy;
+use crate::residency;
 
 // --- Errors ------------------------------------------------------------------
 
@@ -236,8 +238,33 @@ pub async fn load_for_tenant(tenant_id: &str) -> Result<Arc<TenantPolicy>, Polic
 
 /// FR-AI-005 §1 #13 — Pure-function validator used by `cyberos-ai policy validate`.
 pub fn validate_yaml(yaml: &str) -> Result<TenantPolicy, Vec<String>> {
-    let policy: TenantPolicy = serde_yaml::from_str(yaml).map_err(|e| vec![e.to_string()])?;
-    validate_policy_value(&policy)?;
+    let raw: YamlValue = serde_yaml::from_str(yaml).map_err(|e| vec![e.to_string()])?;
+    let policy: TenantPolicy =
+        serde_yaml::from_value(raw.clone()).map_err(|e| vec![e.to_string()])?;
+
+    let mut errors = Vec::new();
+    let residency_missing = !raw_ai_policy_has_key(&raw, "residency");
+    if residency_missing {
+        if policy
+            .tenant_jurisdiction
+            .as_deref()
+            .is_some_and(|j| j.eq_ignore_ascii_case("VN"))
+        {
+            residency::record_default_applied("refused_pdpl_no_pin");
+            errors.push("ai_policy.residency: required when tenant_jurisdiction is VN".to_string());
+        } else {
+            residency::record_default_applied("sg1_default");
+        }
+    }
+
+    if let Err(mut validation_errors) = validate_policy_value(&policy) {
+        errors.append(&mut validation_errors);
+    }
+
+    if !errors.is_empty() {
+        return Err(errors);
+    }
+
     Ok(policy)
 }
 
@@ -324,11 +351,32 @@ fn validate_policy_value(p: &TenantPolicy) -> Result<(), Vec<String>> {
         }
     }
 
+    if let Some(overrides) = &p.ai_policy.residency_override {
+        for pattern in overrides.keys() {
+            if let Err(err) = residency::validate_override_pattern(pattern) {
+                errors.push(format!("ai_policy.residency_override[{pattern:?}]: {err}"));
+            }
+        }
+    }
+
     if errors.is_empty() {
         Ok(())
     } else {
         Err(errors)
     }
+}
+
+fn raw_ai_policy_has_key(raw: &YamlValue, key: &str) -> bool {
+    let YamlValue::Mapping(root) = raw else {
+        return false;
+    };
+    let Some(ai_policy) = root.get(&YamlValue::String("ai_policy".to_string())) else {
+        return false;
+    };
+    let YamlValue::Mapping(ai_policy) = ai_policy else {
+        return false;
+    };
+    ai_policy.contains_key(&YamlValue::String(key.to_string()))
 }
 
 fn validate_tenant_id_chars(id: &str) -> Result<(), String> {
@@ -550,6 +598,85 @@ ai_policy:
         assert!(res.is_ok(), "expected ok but got {:?}", res);
         let p = res.unwrap();
         assert_eq!(p.tenant_id, "org:test");
+    }
+
+    #[test]
+    fn validate_yaml_defaults_missing_residency_for_non_vn_tenants() {
+        let yaml = r#"
+tenant_id: org:test
+ai_policy:
+  monthly_cap_usd: "150"
+  warn_threshold: 0.8
+  primary_provider:
+    kind: anthropic
+    model_alias_map:
+      chat.smart: claude-3-5-sonnet
+"#;
+        let p = validate_yaml(yaml).expect("non-VN tenant should default to sg-1");
+        assert_eq!(p.ai_policy.residency, crate::policy::Residency::Sg1);
+    }
+
+    #[test]
+    fn validate_yaml_rejects_missing_residency_for_vn_tenants() {
+        let yaml = r#"
+tenant_id: org:test
+tenant_jurisdiction: VN
+ai_policy:
+  monthly_cap_usd: "150"
+  warn_threshold: 0.8
+  primary_provider:
+    kind: anthropic
+    model_alias_map:
+      chat.smart: claude-3-5-sonnet
+"#;
+        let errors = validate_yaml(yaml).unwrap_err().join("\n");
+        assert!(errors.contains("ai_policy.residency"));
+        assert!(errors.contains("tenant_jurisdiction is VN"));
+    }
+
+    #[test]
+    fn validate_yaml_accepts_residency_override() {
+        let yaml = r#"
+tenant_id: org:test
+ai_policy:
+  monthly_cap_usd: "150"
+  warn_threshold: 0.8
+  primary_provider:
+    kind: anthropic
+    model_alias_map:
+      chat.smart: claude-3-5-sonnet
+  residency: sg-1
+  residency_override:
+    chat.eu-*: eu-1
+"#;
+        let p = validate_yaml(yaml).expect("valid residency override");
+        assert_eq!(
+            p.ai_policy
+                .residency_override
+                .unwrap()
+                .get("chat.eu-*")
+                .copied(),
+            Some(crate::policy::Residency::Eu1)
+        );
+    }
+
+    #[test]
+    fn validate_yaml_rejects_invalid_residency_override_pattern() {
+        let yaml = r#"
+tenant_id: org:test
+ai_policy:
+  monthly_cap_usd: "150"
+  warn_threshold: 0.8
+  primary_provider:
+    kind: anthropic
+    model_alias_map:
+      chat.smart: claude-3-5-sonnet
+  residency: sg-1
+  residency_override:
+    chat.?: eu-1
+"#;
+        let errors = validate_yaml(yaml).unwrap_err().join("\n");
+        assert!(errors.contains("residency_override"));
     }
 
     #[test]

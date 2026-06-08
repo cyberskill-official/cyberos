@@ -16,6 +16,12 @@ use serde::{Deserialize, Serialize};
 pub struct TenantPolicy {
     /// Canonical tenant identifier (e.g. `org:cyberskill`).
     pub tenant_id: String,
+    /// Optional jurisdiction tag used by residency defaulting rules.
+    ///
+    /// `VN` tenants must explicitly pin residency; non-VN tenants missing a pin default
+    /// to Sg1 in the loader.
+    #[serde(default)]
+    pub tenant_jurisdiction: Option<String>,
     /// AI-gate-specific policy block.
     pub ai_policy: AiPolicy,
 }
@@ -53,7 +59,13 @@ pub struct AiPolicy {
     pub call_timeout_seconds: u32,
 
     /// Residency pin — provider selection respects this (FR-AI-016).
+    #[serde(default = "default_residency")]
     pub residency: Residency,
+
+    /// Per-alias residency overrides. Glob syntax supports exact aliases plus `*`
+    /// wildcards; ambiguous matches are refused at alias-resolution time.
+    #[serde(default)]
+    pub residency_override: Option<HashMap<String, Residency>>,
 
     /// Require ZDR (Zero Data Retention) — refuse non-ZDR providers (FR-AI-015).
     #[serde(default)]
@@ -253,6 +265,9 @@ fn default_hard_stop() -> bool {
 }
 fn default_call_timeout_seconds() -> u32 {
     60
+}
+fn default_residency() -> Residency {
+    Residency::Sg1
 }
 fn default_override_multiplier() -> f64 {
     1.0

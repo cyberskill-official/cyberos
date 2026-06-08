@@ -354,6 +354,7 @@ fn resolved_with_kind(kind: ProviderKind, model: &str) -> ResolvedModel {
 fn policy_no_fallbacks() -> TenantPolicy {
     TenantPolicy {
         tenant_id: "test-tenant".into(),
+        tenant_jurisdiction: None,
         ai_policy: AiPolicy {
             monthly_cap_usd: "100.00".parse().unwrap(),
             warn_threshold: 0.80,
@@ -365,6 +366,7 @@ fn policy_no_fallbacks() -> TenantPolicy {
             fallback_chain: vec![],
             call_timeout_seconds: 60,
             residency: Residency::Sg1,
+            residency_override: None,
             zdr_required: false,
             emergency_override: EmergencyOverride::default(),
             allowed_personas: None,
