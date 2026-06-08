@@ -33,6 +33,8 @@ pub enum RefuseReason {
     InvalidIdempotencyKey,
     /// agent_persona not in allowed_personas.
     PersonaNotAllowed,
+    /// Tenant policy requires ZDR but alias resolved to a non-ZDR model.
+    ZdrViolation,
 }
 
 /// Error taxonomy for precheck.

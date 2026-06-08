@@ -4,14 +4,14 @@ id: FR-AI-015
 title: "ZDR (Zero Data Retention) attestation table + enforcement when tenant policy requires"
 module: AI
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 3
 slice: 3
 owner: Stephen Cheng
 created: 2026-05-15
-shipped: null
+shipped: 2026-06-08
 memory_chain_hash: null
 related_frs: [FR-AI-001, FR-AI-005, FR-AI-006, FR-AI-008, FR-AI-016]
 depends_on: [FR-AI-006]
@@ -867,4 +867,4 @@ All resolved at authoring time. Items deferred to later FRs:
 
 ---
 
-*End of FR-AI-015. Status: draft (10/10 target).*
+*End of FR-AI-015. Status: done (shipped 2026-06-08).*

@@ -2,7 +2,10 @@
 //!
 //! Tests the parse/validation logic and the is_zdr gate.
 
-use chrono::{Duration, NaiveDate, Utc};
+use std::collections::HashMap;
+use std::path::Path;
+
+use chrono::{Duration, Utc};
 
 use cyberos_ai_gateway::policy::ProviderKind;
 use cyberos_ai_gateway::zdr::*;
@@ -23,7 +26,7 @@ attestations:
       notes: "Test note"
 "#;
     // Parse directly (not init_zdr_table which uses OnceCell).
-    let result = parse_yaml_for_test(yaml);
+    let result = parse_attestations(yaml);
     assert!(result.is_ok());
     let table = result.unwrap();
     assert_eq!(table.len(), 1);
@@ -49,7 +52,7 @@ attestations:
       source_url: "http://platform.openai.com/policy"
       attested_by: "stephen@cyberos.world"
 "#;
-    let err = parse_yaml_for_test(yaml).unwrap_err();
+    let err = parse_attestations(yaml).unwrap_err();
     assert!(format!("{}", err).contains("https"));
 }
 
@@ -65,7 +68,7 @@ attestations:
       source_url: "https://platform.openai.com/policy"
       attested_by: "alice"
 "#;
-    let err = parse_yaml_for_test(yaml).unwrap_err();
+    let err = parse_attestations(yaml).unwrap_err();
     assert!(format!("{}", err).contains("attested_by"));
 }
 
@@ -81,7 +84,7 @@ attestations:
       source_url: "https://platform.openai.com/policy"
       attested_by: "alice@gmail.com"
 "#;
-    let err = parse_yaml_for_test(yaml).unwrap_err();
+    let err = parse_attestations(yaml).unwrap_err();
     assert!(format!("{}", err).contains("attested_by"));
 }
 
@@ -96,7 +99,7 @@ attestations:
       verified_at: 2026-05-21
       attested_by: "stephen@cyberos.world"
 "#;
-    let err = parse_yaml_for_test(yaml).unwrap_err();
+    let err = parse_attestations(yaml).unwrap_err();
     assert!(format!("{}", err).contains("source_url"));
 }
 
@@ -111,7 +114,7 @@ attestations:
       verified_at: 2026-05-21
       source_url: "https://platform.openai.com/policy"
 "#;
-    let err = parse_yaml_for_test(yaml).unwrap_err();
+    let err = parse_attestations(yaml).unwrap_err();
     assert!(format!("{}", err).contains("attested_by"));
 }
 
@@ -126,7 +129,7 @@ attestations:
       source_url: "https://platform.openai.com/policy"
       attested_by: "stephen@cyberos.world"
 "#;
-    let err = parse_yaml_for_test(yaml).unwrap_err();
+    let err = parse_attestations(yaml).unwrap_err();
     assert!(format!("{}", err).contains("is_zdr"));
 }
 
@@ -142,7 +145,7 @@ attestations:
       source_url: "https://example.com"
       attested_by: "stephen@cyberos.world"
 "#;
-    let err = parse_yaml_for_test(yaml).unwrap_err();
+    let err = parse_attestations(yaml).unwrap_err();
     assert!(format!("{}", err).contains("unknown provider"));
 }
 
@@ -199,164 +202,132 @@ fn soft_stale_boundary_at_90_days() {
     assert!(!is_soft_stale(&att));
 }
 
-// ─── Helper ──────────────────────────────────────────────────────────────────
-
-/// Expose the internal parser for testing without going through OnceCell.
-fn parse_yaml_for_test(
-    yaml: &str,
-) -> Result<std::collections::HashMap<(ProviderKind, String), ZdrAttestation>, ZdrInitError> {
-    // We can't call init_zdr_table twice (OnceCell), so we replicate the parse logic.
-    // The actual parse_attestations is private; for tests we re-implement the same logic.
-    // This is acceptable because the tests verify the YAML schema validation.
-    parse_attestations_public(yaml)
+#[test]
+fn init_loads_fixture_and_double_init_rejected() {
+    reset_for_tests();
+    init_zdr_table(Path::new("config/zdr_attestations.yaml")).unwrap();
+    assert!(is_zdr(
+        &ProviderKind::Bedrock,
+        "anthropic.claude-3-5-sonnet-20241022-v2:0"
+    ));
+    let err = init_zdr_table(Path::new("config/zdr_attestations.yaml")).unwrap_err();
+    assert!(matches!(err, ZdrInitError::AlreadyInitialised));
+    reset_for_tests();
 }
 
-fn parse_attestations_public(
-    yaml: &str,
-) -> Result<std::collections::HashMap<(ProviderKind, String), ZdrAttestation>, ZdrInitError> {
-    let raw: serde_yaml::Value = serde_yaml::from_str(yaml).map_err(|e| ZdrInitError::Schema {
-        reason: e.to_string(),
-    })?;
-
-    let attestations = raw
-        .get("attestations")
-        .ok_or_else(|| ZdrInitError::Schema {
-            reason: "missing 'attestations' root key".into(),
-        })?;
-
-    let mut out = std::collections::HashMap::new();
-    for (provider_yaml, models) in
-        attestations
-            .as_mapping()
-            .ok_or_else(|| ZdrInitError::Schema {
-                reason: "'attestations' must be a mapping".into(),
-            })?
-    {
-        let provider_str = provider_yaml.as_str().ok_or_else(|| ZdrInitError::Schema {
-            reason: format!("provider key must be a string"),
-        })?;
-        let provider = parse_provider_kind(provider_str).ok_or_else(|| ZdrInitError::Schema {
-            reason: format!("unknown provider: {}", provider_str),
-        })?;
-
-        for (model_yaml, fields) in models.as_mapping().ok_or_else(|| ZdrInitError::Schema {
-            reason: format!("{}/models must be a mapping", provider_str),
-        })? {
-            let model = model_yaml
-                .as_str()
-                .ok_or_else(|| ZdrInitError::Schema {
-                    reason: format!("model key must be a string"),
-                })?
-                .to_string();
-            let att = parse_one_public(provider_str, &model, fields)?;
-            out.insert((provider, model), att);
-        }
-    }
-
-    Ok(out)
+#[test]
+fn missing_entry_fails_closed() {
+    reset_for_tests();
+    init_zdr_table(Path::new("config/zdr_attestations.yaml")).unwrap();
+    assert!(!is_zdr(&ProviderKind::Vertex, "gemini-9.9.9"));
+    assert!(attestation_for(&ProviderKind::Vertex, "gemini-9.9.9").is_none());
+    reset_for_tests();
 }
 
-fn parse_one_public(
-    provider: &str,
-    model: &str,
-    fields: &serde_yaml::Value,
-) -> Result<ZdrAttestation, ZdrInitError> {
-    let map = fields.as_mapping().ok_or_else(|| ZdrInitError::Schema {
-        reason: format!("{}/{}: not a mapping", provider, model),
-    })?;
-
-    let is_zdr = map
-        .get(&serde_yaml::Value::String("is_zdr".into()))
-        .and_then(|v| v.as_bool())
-        .ok_or_else(|| ZdrInitError::Schema {
-            reason: format!("{}/{}: missing or non-bool is_zdr", provider, model),
-        })?;
-
-    let verified_at_s = map
-        .get(&serde_yaml::Value::String("verified_at".into()))
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| ZdrInitError::Schema {
-            reason: format!("{}/{}: missing verified_at", provider, model),
-        })?;
-    let verified_at =
-        NaiveDate::parse_from_str(verified_at_s, "%Y-%m-%d").map_err(|e| ZdrInitError::Schema {
-            reason: format!("{}/{}: bad verified_at: {}", provider, model, e),
-        })?;
-
-    let source_url = map
-        .get(&serde_yaml::Value::String("source_url".into()))
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| ZdrInitError::Schema {
-            reason: format!("{}/{}: missing source_url", provider, model),
-        })?
-        .to_string();
-    validate_url(provider, model, &source_url)?;
-
-    let attested_by = map
-        .get(&serde_yaml::Value::String("attested_by".into()))
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| ZdrInitError::Schema {
-            reason: format!("{}/{}: missing attested_by", provider, model),
-        })?
-        .to_string();
-    validate_attestor(provider, model, &attested_by)?;
-
-    let notes = map
-        .get(&serde_yaml::Value::String("notes".into()))
-        .and_then(|v| v.as_str())
-        .map(|s| s.to_string());
-
-    Ok(ZdrAttestation {
-        is_zdr,
-        verified_at,
-        source_url,
-        attested_by,
-        notes,
-    })
+#[test]
+fn hard_stale_override_forces_is_zdr_false() {
+    reset_for_tests();
+    let mut table = HashMap::new();
+    table.insert(
+        (ProviderKind::Bedrock, "test-model".to_string()),
+        ZdrAttestation {
+            is_zdr: true,
+            verified_at: Utc::now().date_naive() - Duration::days(366),
+            source_url: "https://example.com".into(),
+            attested_by: "stephen@cyberos.world".into(),
+            notes: None,
+        },
+    );
+    replace_for_tests(table);
+    assert!(!is_zdr(&ProviderKind::Bedrock, "test-model"));
+    reset_for_tests();
 }
 
-fn validate_url(provider: &str, model: &str, url: &str) -> Result<(), ZdrInitError> {
-    let parsed = url::Url::parse(url).map_err(|_| ZdrInitError::InvalidSourceUrl {
-        provider: provider.into(),
-        model: model.into(),
-        url: url.into(),
-    })?;
-    if parsed.scheme() != "https" {
-        return Err(ZdrInitError::InvalidSourceUrl {
-            provider: provider.into(),
-            model: model.into(),
-            url: url.into(),
-        });
-    }
-    Ok(())
+#[test]
+fn reload_adds_new_attestation_and_detects_revocation() {
+    reset_for_tests();
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("zdr_attestations.yaml");
+    std::fs::write(
+        &path,
+        r#"
+version: 1
+attestations:
+  bedrock:
+    "model-a":
+      is_zdr: true
+      verified_at: 2026-05-21
+      source_url: "https://aws.amazon.com/bedrock/data-privacy/"
+      attested_by: "stephen@cyberos.world"
+"#,
+    )
+    .unwrap();
+    init_zdr_table(&path).unwrap();
+    assert!(is_zdr(&ProviderKind::Bedrock, "model-a"));
+
+    std::fs::write(
+        &path,
+        r#"
+version: 1
+attestations:
+  bedrock:
+    "model-a":
+      is_zdr: false
+      verified_at: 2026-05-21
+      source_url: "https://aws.amazon.com/bedrock/data-privacy/"
+      attested_by: "stephen@cyberos.world"
+    "model-b":
+      is_zdr: true
+      verified_at: 2026-05-21
+      source_url: "https://aws.amazon.com/bedrock/data-privacy/"
+      attested_by: "stephen@cyberos.world"
+"#,
+    )
+    .unwrap();
+    reload_zdr_table(&path).unwrap();
+    assert!(!is_zdr(&ProviderKind::Bedrock, "model-a"));
+    assert!(is_zdr(&ProviderKind::Bedrock, "model-b"));
+    reset_for_tests();
 }
 
-fn validate_attestor(provider: &str, model: &str, value: &str) -> Result<(), ZdrInitError> {
-    let Some((_local, domain)) = value.split_once('@') else {
-        return Err(ZdrInitError::InvalidAttestor {
-            provider: provider.into(),
-            model: model.into(),
-            value: value.into(),
-        });
-    };
-    const APPROVED: &[&str] = &["cyberos.world", "kpmg.com.vn", "ey.com", "deloitte.com"];
-    if !APPROVED.contains(&domain) {
-        return Err(ZdrInitError::InvalidAttestor {
-            provider: provider.into(),
-            model: model.into(),
-            value: value.into(),
-        });
-    }
-    Ok(())
-}
+#[test]
+fn reload_deleted_true_attestation_fails_closed() {
+    reset_for_tests();
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("zdr_attestations.yaml");
+    std::fs::write(
+        &path,
+        r#"
+version: 1
+attestations:
+  bedrock:
+    "model-a":
+      is_zdr: true
+      verified_at: 2026-05-21
+      source_url: "https://aws.amazon.com/bedrock/data-privacy/"
+      attested_by: "stephen@cyberos.world"
+"#,
+    )
+    .unwrap();
+    init_zdr_table(&path).unwrap();
+    assert!(is_zdr(&ProviderKind::Bedrock, "model-a"));
 
-fn parse_provider_kind(s: &str) -> Option<ProviderKind> {
-    match s {
-        "bedrock" => Some(ProviderKind::Bedrock),
-        "anthropic" => Some(ProviderKind::Anthropic),
-        "openai" => Some(ProviderKind::Openai),
-        "vertex" => Some(ProviderKind::Vertex),
-        "bge" => Some(ProviderKind::Bge),
-        _ => None,
-    }
+    std::fs::write(
+        &path,
+        r#"
+version: 1
+attestations:
+  bedrock:
+    "model-b":
+      is_zdr: true
+      verified_at: 2026-05-21
+      source_url: "https://aws.amazon.com/bedrock/data-privacy/"
+      attested_by: "stephen@cyberos.world"
+"#,
+    )
+    .unwrap();
+    reload_zdr_table(&path).unwrap();
+    assert!(!is_zdr(&ProviderKind::Bedrock, "model-a"));
+    assert!(attestation_for(&ProviderKind::Bedrock, "model-a").is_none());
+    reset_for_tests();
 }

@@ -8,14 +8,16 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::thread::JoinHandle;
+use std::time::{Duration as StdDuration, Instant};
 
 use arc_swap::ArcSwap;
-use chrono::{Duration, NaiveDate, Utc};
+use chrono::{Duration as ChronoDuration, NaiveDate, Utc};
+use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
-use once_cell::sync::OnceCell;
 use prometheus::{register_counter_vec, register_gauge, CounterVec, Gauge};
-use serde_yaml;
 use tracing::{error, info, warn};
 use url::Url;
 
@@ -124,9 +126,20 @@ pub enum ZdrInitError {
 
 // ─── Global state ─────────────────────────────────────────────────────────────
 
-type AttestationTable = HashMap<(ProviderKind, String), ZdrAttestation>;
+pub type AttestationTable = HashMap<(ProviderKind, String), ZdrAttestation>;
 
-static TABLE: OnceCell<ArcSwap<AttestationTable>> = OnceCell::new();
+static TABLE: Lazy<ArcSwap<AttestationTable>> = Lazy::new(|| ArcSwap::from_pointee(HashMap::new()));
+static TABLE_INITIALISED: AtomicBool = AtomicBool::new(false);
+
+const WATCH_DEBOUNCE: StdDuration = StdDuration::from_millis(250);
+const WATCH_POLL: StdDuration = StdDuration::from_millis(25);
+
+/// Keeps the notify watcher and debounce worker alive.
+#[derive(Debug)]
+pub struct ZdrWatcher {
+    _watcher: RecommendedWatcher,
+    _worker: JoinHandle<()>,
+}
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
@@ -136,10 +149,10 @@ static TABLE: OnceCell<ArcSwap<AttestationTable>> = OnceCell::new();
 /// Hard-stale entries (>365 days) are forced to `false` (§1 #9).
 pub fn is_zdr(provider: &ProviderKind, model: &str) -> bool {
     ensure_default_table_loaded();
-    let table = match TABLE.get() {
-        Some(t) => t.load(),
-        None => return false,
-    };
+    if !TABLE_INITIALISED.load(Ordering::SeqCst) {
+        return false;
+    }
+    let table = TABLE.load();
     let key = (*provider, model.to_string());
     match table.get(&key) {
         None => {
@@ -184,31 +197,125 @@ pub fn is_zdr(provider: &ProviderKind, model: &str) -> bool {
 /// FR-AI-015 §1 #2 — Get the full attestation for a (provider, model) pair.
 pub fn attestation_for(provider: &ProviderKind, model: &str) -> Option<ZdrAttestation> {
     ensure_default_table_loaded();
-    let table = TABLE.get()?.load();
+    if !TABLE_INITIALISED.load(Ordering::SeqCst) {
+        return None;
+    }
+    let table = TABLE.load();
     table.get(&(*provider, model.to_string())).cloned()
 }
 
 /// FR-AI-015 §1 #1 — Load the ZDR attestation table from YAML.
 pub fn init_zdr_table(config_path: &Path) -> Result<(), ZdrInitError> {
-    if TABLE.get().is_some() {
-        return Err(ZdrInitError::AlreadyInitialised);
-    }
-
     let yaml = std::fs::read_to_string(config_path)?;
     let parsed = parse_attestations(&yaml)?;
 
+    TABLE_INITIALISED
+        .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+        .map_err(|_| ZdrInitError::AlreadyInitialised)?;
+
     ZDR_TABLE_SIZE.set(parsed.len() as f64);
     info!(count = parsed.len(), "zdr_table_loaded");
-
-    TABLE
-        .set(ArcSwap::from_pointee(parsed))
-        .map_err(|_| ZdrInitError::AlreadyInitialised)?;
+    TABLE.store(Arc::new(parsed));
 
     Ok(())
 }
 
+/// Reload the ZDR table and atomically swap it into the read path.
+pub fn reload_zdr_table(config_path: &Path) -> Result<(), ZdrInitError> {
+    if !TABLE_INITIALISED.load(Ordering::SeqCst) {
+        return init_zdr_table(config_path);
+    }
+
+    let yaml = std::fs::read_to_string(config_path)?;
+    let parsed = parse_attestations(&yaml)?;
+    let previous = TABLE.load();
+
+    for ((provider, model), old) in previous.iter() {
+        let revoked = old.is_zdr
+            && match parsed.get(&(*provider, model.clone())) {
+                Some(new) => !new.is_zdr,
+                None => true,
+            };
+        if revoked {
+            warn!(
+                provider = provider.as_metric_label(),
+                model = %model,
+                "zdr attestation revoked"
+            );
+            ZDR_REVOKED
+                .with_label_values(&[provider.as_metric_label(), model])
+                .inc();
+        }
+    }
+
+    ZDR_TABLE_SIZE.set(parsed.len() as f64);
+    TABLE.store(Arc::new(parsed));
+    info!(count = TABLE.load().len(), "zdr_table_reloaded");
+
+    Ok(())
+}
+
+/// Watch `config_path` and reload after a 250ms debounce window.
+pub fn start_watcher(config_path: PathBuf) -> notify::Result<ZdrWatcher> {
+    let (tx, rx) = std::sync::mpsc::channel::<()>();
+    let mut watcher = notify::recommended_watcher(move |res: notify::Result<notify::Event>| {
+        if res.is_ok() {
+            let _ = tx.send(());
+        }
+    })?;
+    watcher.watch(&config_path, RecursiveMode::NonRecursive)?;
+
+    let worker_path = config_path.clone();
+    let worker = std::thread::spawn(move || {
+        let mut pending_since: Option<Instant> = None;
+        loop {
+            match rx.recv_timeout(WATCH_POLL) {
+                Ok(()) => pending_since = Some(Instant::now()),
+                Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {}
+                Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => return,
+            }
+
+            if pending_since
+                .map(|started| started.elapsed() >= WATCH_DEBOUNCE)
+                .unwrap_or(false)
+            {
+                if let Err(err) = reload_zdr_table(&worker_path) {
+                    warn!(?err, path = %worker_path.display(), "zdr table reload failed; cache unchanged");
+                }
+                pending_since = None;
+            }
+        }
+    });
+
+    Ok(ZdrWatcher {
+        _watcher: watcher,
+        _worker: worker,
+    })
+}
+
+/// Record a ZDR violation metric for the tenant.
+pub fn record_violation(tenant_id: &str) {
+    ZDR_VIOLATIONS.with_label_values(&[tenant_id]).inc();
+}
+
+/// Reset global table state for integration tests.
+#[doc(hidden)]
+pub fn reset_for_tests() {
+    TABLE.store(Arc::new(HashMap::new()));
+    TABLE_INITIALISED.store(false, Ordering::SeqCst);
+    ZDR_TABLE_SIZE.set(0.0);
+}
+
+/// Replace global table state for integration tests.
+#[doc(hidden)]
+pub fn replace_for_tests(table: AttestationTable) {
+    ZDR_TABLE_SIZE.set(table.len() as f64);
+    TABLE.store(Arc::new(table));
+    TABLE_INITIALISED.store(true, Ordering::SeqCst);
+}
+
 fn ensure_default_table_loaded() {
-    if TABLE.get().is_some() {
+    if TABLE_INITIALISED.load(Ordering::SeqCst) {
         return;
     }
 
@@ -232,17 +339,18 @@ fn ensure_default_table_loaded() {
 
 /// Check if an attestation is soft-stale (>90 days).
 pub fn is_soft_stale(att: &ZdrAttestation) -> bool {
-    Utc::now().date_naive() - att.verified_at > Duration::days(SOFT_STALE_DAYS)
+    Utc::now().date_naive() - att.verified_at > ChronoDuration::days(SOFT_STALE_DAYS)
 }
 
 /// Check if an attestation is hard-stale (>365 days).
 pub fn is_hard_stale(att: &ZdrAttestation) -> bool {
-    Utc::now().date_naive() - att.verified_at > Duration::days(HARD_STALE_DAYS)
+    Utc::now().date_naive() - att.verified_at > ChronoDuration::days(HARD_STALE_DAYS)
 }
 
 // ─── Parser ───────────────────────────────────────────────────────────────────
 
-fn parse_attestations(yaml: &str) -> Result<AttestationTable, ZdrInitError> {
+/// Parse and validate a ZDR attestation YAML document.
+pub fn parse_attestations(yaml: &str) -> Result<AttestationTable, ZdrInitError> {
     let raw: serde_yaml::Value = serde_yaml::from_str(yaml).map_err(|e| ZdrInitError::Schema {
         reason: e.to_string(),
     })?;
@@ -357,18 +465,37 @@ fn validate_source_url(provider: &str, model: &str, url: &str) -> Result<(), Zdr
             url: url.into(),
         });
     }
+    let Some(host) = parsed.host_str() else {
+        return Err(ZdrInitError::InvalidSourceUrl {
+            provider: provider.into(),
+            model: model.into(),
+            url: url.into(),
+        });
+    };
+    if !is_valid_dns_host(host) {
+        return Err(ZdrInitError::InvalidSourceUrl {
+            provider: provider.into(),
+            model: model.into(),
+            url: url.into(),
+        });
+    }
     Ok(())
 }
 
 fn validate_attested_by(provider: &str, model: &str, value: &str) -> Result<(), ZdrInitError> {
-    let Some((_local, domain)) = value.split_once('@') else {
+    let Some((local, domain)) = value.split_once('@') else {
         return Err(ZdrInitError::InvalidAttestor {
             provider: provider.into(),
             model: model.into(),
             value: value.into(),
         });
     };
-    if !APPROVED_AUDITOR_DOMAINS.contains(&domain) {
+    if local.is_empty()
+        || !local
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-'))
+        || !APPROVED_AUDITOR_DOMAINS.contains(&domain)
+    {
         return Err(ZdrInitError::InvalidAttestor {
             provider: provider.into(),
             model: model.into(),
@@ -376,6 +503,19 @@ fn validate_attested_by(provider: &str, model: &str, value: &str) -> Result<(), 
         });
     }
     Ok(())
+}
+
+fn is_valid_dns_host(host: &str) -> bool {
+    if host.is_empty() || host.len() > 253 {
+        return false;
+    }
+    host.split('.').all(|label| {
+        !label.is_empty()
+            && label.len() <= 63
+            && !label.starts_with('-')
+            && !label.ends_with('-')
+            && label.chars().all(|c| c.is_ascii_alphanumeric() || c == '-')
+    })
 }
 
 fn parse_provider_kind(s: &str) -> Option<ProviderKind> {
@@ -533,7 +673,7 @@ attestations:
     fn soft_stale_at_91_days() {
         let att = ZdrAttestation {
             is_zdr: true,
-            verified_at: Utc::now().date_naive() - Duration::days(91),
+            verified_at: Utc::now().date_naive() - ChronoDuration::days(91),
             source_url: "https://x".into(),
             attested_by: "stephen@cyberos.world".into(),
             notes: None,
@@ -546,7 +686,7 @@ attestations:
     fn hard_stale_at_366_days() {
         let att = ZdrAttestation {
             is_zdr: true,
-            verified_at: Utc::now().date_naive() - Duration::days(366),
+            verified_at: Utc::now().date_naive() - ChronoDuration::days(366),
             source_url: "https://x".into(),
             attested_by: "stephen@cyberos.world".into(),
             notes: None,
@@ -558,7 +698,7 @@ attestations:
     fn not_stale_at_30_days() {
         let att = ZdrAttestation {
             is_zdr: true,
-            verified_at: Utc::now().date_naive() - Duration::days(30),
+            verified_at: Utc::now().date_naive() - ChronoDuration::days(30),
             source_url: "https://x".into(),
             attested_by: "stephen@cyberos.world".into(),
             notes: None,

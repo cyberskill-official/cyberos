@@ -360,7 +360,11 @@ pub async fn handle_streaming_chat(
     let resolved = crate::alias::resolve(&req.alias, &policy).map_err(|e| {
         StreamingHandlerError::PrecheckFailed {
             reason: format!("{e:?}"),
-            http_status: 400,
+            http_status: if matches!(e, crate::alias::AliasError::ZdrViolation { .. }) {
+                403
+            } else {
+                400
+            },
         }
     })?;
     if !provider_supports_streaming(resolved.provider_kind) {

@@ -10,7 +10,7 @@
 //!   spawn + stdin/stdout/stderr piping, 5s timeout with SIGTERM-then-SIGKILL, exit-code
 //!   taxonomy, chain-hash verification — all implemented.
 //! - Typed builders for the slice-1 closed set: `precheck`, `invocation`, `invocation_failed`,
-//!   `hold_expired`, `persona_loaded` — all implemented.
+//!   `hold_expired`, `persona_loaded`, `zdr_violation` — all implemented.
 //! - Startup health check (`check_writer_available`) implemented.
 //! - The `python3 -m cyberos.writer put` Python subprocess is supplied by
 //!   `modules/memory/runtime/`. When that interface is not on PATH, `check_writer_available`
@@ -63,6 +63,8 @@ pub enum AiInvocationKind {
     HoldExpired,
     /// Emitted by FR-AI-014 (persona stamping).
     PersonaLoaded,
+    /// Emitted by FR-AI-015 (ZDR refusal).
+    ZdrViolation,
 }
 
 impl AiInvocationKind {
@@ -74,6 +76,7 @@ impl AiInvocationKind {
             Self::InvocationFailed => "ai.invocation_failed",
             Self::HoldExpired => "ai.hold_expired",
             Self::PersonaLoaded => "ai.persona_loaded",
+            Self::ZdrViolation => "ai.zdr_violation",
         }
     }
 }
@@ -611,6 +614,34 @@ pub mod builders {
         }
     }
 
+    /// `ai.zdr_violation` row (FR-AI-015).
+    #[allow(clippy::too_many_arguments)]
+    pub fn zdr_violation(
+        tenant_id: &str,
+        agent_persona: &str,
+        requested_alias: &str,
+        resolved_provider: &str,
+        resolved_model: &str,
+        policy_requires_zdr: bool,
+        attestation_present: bool,
+        request_id: &str,
+    ) -> MemoryEmit {
+        MemoryEmit {
+            kind: AiInvocationKind::ZdrViolation,
+            path: row_path("ai-zdr-violations", tenant_id, request_id),
+            extra: serde_json::json!({
+                "tenant_id": tenant_id,
+                "agent_persona": agent_persona,
+                "requested_alias": requested_alias,
+                "resolved_provider": resolved_provider,
+                "resolved_model": resolved_model,
+                "policy_requires_zdr": policy_requires_zdr,
+                "attestation_present": attestation_present,
+                "request_id": request_id,
+            }),
+        }
+    }
+
     fn row_path(folder: &str, tenant_id: &str, key: &str) -> String {
         let now = chrono::Utc::now().timestamp_millis().max(0) as u128;
         let safe_tenant = tenant_id.replace(':', "-");
@@ -651,6 +682,30 @@ mod tests {
         );
         assert_eq!(AiInvocationKind::HoldExpired.tag(), "ai.hold_expired");
         assert_eq!(AiInvocationKind::PersonaLoaded.tag(), "ai.persona_loaded");
+        assert_eq!(AiInvocationKind::ZdrViolation.tag(), "ai.zdr_violation");
+    }
+
+    #[test]
+    fn zdr_violation_builder_carries_required_payload() {
+        let row = builders::zdr_violation(
+            "tenant:alpha",
+            "cuo-cpo@0.4.1",
+            "chat.smart",
+            "openai",
+            "gpt-4o",
+            true,
+            true,
+            "req-123",
+        );
+        assert_eq!(row.kind.tag(), "ai.zdr_violation");
+        assert_eq!(row.extra["tenant_id"], "tenant:alpha");
+        assert_eq!(row.extra["agent_persona"], "cuo-cpo@0.4.1");
+        assert_eq!(row.extra["requested_alias"], "chat.smart");
+        assert_eq!(row.extra["resolved_provider"], "openai");
+        assert_eq!(row.extra["resolved_model"], "gpt-4o");
+        assert_eq!(row.extra["policy_requires_zdr"], true);
+        assert_eq!(row.extra["attestation_present"], true);
+        assert_eq!(row.extra["request_id"], "req-123");
     }
 
     #[test]

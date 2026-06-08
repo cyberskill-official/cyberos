@@ -25,6 +25,10 @@ path = "src/bin/gen_schema.rs"
 name = "cost-hold-expiry"
 path = "src/bin/cost_hold_expiry.rs"
 
+[[bin]]
+name = "zdr-staleness-check"
+path = "src/bin/zdr_staleness_check.rs"
+
 # --- Dependencies ---
 [dependencies]
 # Workspace-pinned shared deps
