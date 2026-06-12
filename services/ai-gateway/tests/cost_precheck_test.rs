@@ -91,7 +91,7 @@ fn chat_request(tenant_id: &str, prompt_tokens: u32, model: &str) -> ChatComplet
         model_alias: model.into(),
         prompt_tokens,
         expected_completion_tokens: 500,
-        idempotency_key: format!("test-{}-{}", tenant_id, Uuid::new_v4()),
+        idempotency_key: format!("test-{}", Uuid::new_v4().simple()),
     }
 }
 

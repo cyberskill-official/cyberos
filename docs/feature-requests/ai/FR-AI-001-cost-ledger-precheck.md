@@ -4,7 +4,7 @@ id: FR-AI-001
 title: "AI Gateway cost-ledger pre-call check"
 module: AI
 priority: MUST
-status: ready_to_implement
+status: done
 accepted_at: 2026-05-15
 accepted_by: Stephen Cheng
 verify: T
@@ -13,7 +13,7 @@ milestone: P0 · slice 1
 slice: 1
 owner: Stephen Cheng
 created: 2026-05-15
-shipped: null
+shipped: 2026-06-13
 memory_chain_hash: null
 related_frs: [FR-AI-002, FR-AI-003, FR-AI-004, FR-AI-005]
 depends_on: [FR-AI-003, FR-AI-005, FR-AI-007]
@@ -480,7 +480,7 @@ All resolved 2026-05-15. Promoted to §1 normative clauses:
 
 ## §12 — Route-back note (2026-06-08)
 
-Status remains `ready_to_implement`; do not mark this FR shipped yet.
+Resolved on 2026-06-13; this note records the prior route-back.
 
 Reason: live Postgres verification could not run on this host. Docker is installed, but pulling `postgres:16-alpine` produced no progress and timed out after 300 seconds. No local `postgres`, `pg_ctl`, or `initdb` binary is installed.
 
@@ -498,7 +498,7 @@ Verification completed:
 - `cargo test -p cyberos-ai-gateway cost_precheck --all-targets` — filtered all-target compile/check passed.
 - Isolated target BRAIN initialized at `target/fr-ai-001-memory`; `cyberos doctor` on that target store passed.
 
-Required next verification before shipping:
+Verification that was required before shipping:
 
 ```bash
 CYBEROS_STORE="$PWD/target/fr-ai-001-memory" \
@@ -507,4 +507,17 @@ DATABASE_URL="postgres://cyberos:cyberos@127.0.0.1:55432/cyberos_ai_test" \
 cargo test -p cyberos-ai-gateway --test cost_precheck_test -- --test-threads=1
 ```
 
-*End of FR-AI-001. Run `feature-request-audit` next: `cargo run -p cyberos-skill-cli -- run feature-request-audit --input '{"fr_path": "docs/feature-requests/ai/FR-AI-001-cost-ledger-precheck.md"}'`*
+## §13 — Ship note (2026-06-13)
+
+Status moved to `done` after the live Postgres + memory-writer gate passed.
+
+Implementation/test adjustment made during this retry:
+- `services/ai-gateway/tests/cost_precheck_test.rs` now generates short printable idempotency keys (`test-<uuid-simple>`) so every DB-backed allow-path test obeys FR-AI-001 §1 #10 instead of accidentally exceeding 64 characters for long tenant fixture names.
+
+Verification completed:
+- Disposable Postgres `postgres:16-alpine` started on `127.0.0.1:55432` with database `cyberos_ai_test`.
+- `CYBEROS_STORE=/Users/stephencheng/Projects/CyberSkill/cyberos/target/fr-ai-001-memory CYBEROS_AI_GATEWAY_TEST_MEMORY_WRITES=1 DATABASE_URL=postgres://cyberos:cyberos@127.0.0.1:55432/cyberos_ai_test PYTHONPATH=/Users/stephencheng/Projects/CyberSkill/cyberos/target/codex-python-memory:/Users/stephencheng/Projects/CyberSkill/cyberos/modules/memory cargo test -p cyberos-ai-gateway --test cost_precheck_test -- --test-threads=1` — passed, 8/8.
+- `cargo test -p cyberos-ai-gateway --lib` — passed, 120/120.
+- `PYTHONPATH=/Users/stephencheng/Projects/CyberSkill/cyberos/target/codex-python-memory:/Users/stephencheng/Projects/CyberSkill/cyberos/modules/memory python3 -m cyberos --store target/fr-ai-001-memory doctor` — passed; isolated test BRAIN remains READY with 105 audit rows.
+
+*End of FR-AI-001. Status: done (shipped 2026-06-13).*
