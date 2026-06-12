@@ -1,0 +1,20 @@
+[Unit]
+Description=CyberOS AI Gateway cost-hold expiry cleanup
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=cyberos
+ExecStart=/usr/local/bin/cost-hold-expiry
+EnvironmentFile=/etc/cyberos/ai-gateway.env
+Restart=always
+RestartSec=5
+TimeoutStopSec=10
+KillSignal=SIGTERM
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=cyberos-ai-expiry
+
+[Install]
+WantedBy=multi-user.target

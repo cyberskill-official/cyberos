@@ -605,6 +605,7 @@ pub mod builders {
         hold_id: Uuid,
         expired_at: chrono::DateTime<chrono::Utc>,
         refund_amount_usd: Decimal,
+        tick_id: &str,
     ) -> MemoryEmit {
         MemoryEmit {
             kind: AiInvocationKind::HoldExpired,
@@ -614,6 +615,7 @@ pub mod builders {
                 "hold_id": hold_id,
                 "expired_at": expired_at.to_rfc3339(),
                 "refund_amount_usd": refund_amount_usd.to_string(),
+                "tick_id": tick_id,
             }),
         }
     }

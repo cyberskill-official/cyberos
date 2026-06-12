@@ -7,6 +7,7 @@ use chrono::{DateTime, Datelike, Duration, Utc};
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use sqlx::PgPool;
+use std::path::Path;
 use uuid::Uuid;
 
 use cyberos_ai_gateway::cost_hold_expiry::*;
@@ -15,7 +16,58 @@ use cyberos_ai_gateway::cost_hold_expiry::*;
 
 async fn test_pool() -> Option<PgPool> {
     let url = std::env::var("DATABASE_URL").ok()?;
-    PgPool::connect(&url).await.ok()
+    let pool = PgPool::connect(&url)
+        .await
+        .unwrap_or_else(|e| panic!("DATABASE_URL is set but Postgres connection failed: {e}"));
+    sqlx::migrate!("./migrations")
+        .run(&pool)
+        .await
+        .expect("cost-ledger migrations should apply");
+    Some(pool)
+}
+
+fn memory_writes_enabled() -> bool {
+    std::env::var("CYBEROS_AI_GATEWAY_TEST_MEMORY_WRITES").as_deref() == Ok("1")
+        && std::env::var_os("CYBEROS_STORE").is_some()
+}
+
+fn require_memory_writes_enabled() -> bool {
+    if memory_writes_enabled() {
+        true
+    } else {
+        eprintln!(
+            "CYBEROS_AI_GATEWAY_TEST_MEMORY_WRITES=1 and CYBEROS_STORE are required; skipping memory-writing expiry case"
+        );
+        false
+    }
+}
+
+fn memory_row_body(hold_id: Uuid, kind: &str) -> String {
+    let store = std::env::var_os("CYBEROS_STORE").expect("CYBEROS_STORE should be set");
+    let dir = Path::new(&store).join("memories/decisions/ai-invocations");
+    let hold = hold_id.to_string();
+    std::fs::read_dir(dir)
+        .expect("ai-invocations directory should exist")
+        .flatten()
+        .filter_map(|entry| std::fs::read_to_string(entry.path()).ok())
+        .find(|body| body.contains(&format!("kind: {kind}")) && body.contains(&hold))
+        .unwrap_or_else(|| panic!("missing {kind} row for hold {hold}"))
+}
+
+fn count_memory_rows(hold_id: Uuid, kind: &str) -> usize {
+    let Some(store) = std::env::var_os("CYBEROS_STORE") else {
+        return 0;
+    };
+    let dir = Path::new(&store).join("memories/decisions/ai-invocations");
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return 0;
+    };
+    let hold = hold_id.to_string();
+    entries
+        .flatten()
+        .filter_map(|entry| std::fs::read_to_string(entry.path()).ok())
+        .filter(|body| body.contains(&format!("kind: {kind}")) && body.contains(&hold))
+        .count()
 }
 
 async fn seed_tenant(pool: &PgPool, tenant_id: &str, cap: Decimal, spent: Decimal) {
@@ -121,24 +173,30 @@ async fn tick_processes_expired_holds() {
     };
 
     let tenant = "test:expiry-happy";
+    if !require_memory_writes_enabled() {
+        return;
+    }
     cleanup_tenant(&pool, tenant).await;
     seed_tenant(&pool, tenant, dec!(100), dec!(50)).await;
 
     // Seed 3 expired holds.
     let expired_at = Utc::now() - Duration::seconds(10);
+    let mut hold_ids = Vec::new();
     for _ in 0..3 {
-        seed_hold(&pool, tenant, dec!(0.0085), expired_at, "held").await;
+        hold_ids.push(seed_hold(&pool, tenant, dec!(0.0085), expired_at, "held").await);
     }
 
     let report = run_tick(&pool).await.unwrap();
+    assert_eq!(report.holds_processed, 3);
+    assert_eq!(report.holds_succeeded, 3);
+    assert_eq!(report.holds_failed, 0);
 
-    // Memory writer may not be available; check what we can.
-    assert!(report.holds_processed == 3 || report.holds_failed > 0);
+    assert_eq!(count_holds_by_state(&pool, tenant, "expired").await, 3);
+    assert_eq!(count_holds_by_state(&pool, tenant, "held").await, 0);
 
-    // All should be expired (or failed if memory writer unavailable).
-    if report.holds_succeeded == 3 {
-        assert_eq!(count_holds_by_state(&pool, tenant, "expired").await, 3);
-        assert_eq!(count_holds_by_state(&pool, tenant, "held").await, 0);
+    for hold_id in hold_ids {
+        assert_eq!(count_memory_rows(hold_id, "ai.hold_expired"), 1);
+        assert!(memory_row_body(hold_id, "ai.hold_expired").contains("tick_id: "));
     }
 
     // Ledger should be unchanged.
@@ -161,6 +219,9 @@ async fn tick_skips_non_expired_holds() {
     };
 
     let tenant = "test:expiry-skip-future";
+    if !require_memory_writes_enabled() {
+        return;
+    }
     cleanup_tenant(&pool, tenant).await;
     seed_tenant(&pool, tenant, dec!(100), dec!(50)).await;
 
@@ -177,7 +238,9 @@ async fn tick_skips_non_expired_holds() {
     let report = run_tick(&pool).await.unwrap();
 
     // Only the 2 expired should be processed.
-    assert!(report.holds_processed <= 2);
+    assert_eq!(report.holds_processed, 2);
+    assert_eq!(report.holds_succeeded, 2);
+    assert_eq!(report.holds_failed, 0);
     assert_eq!(count_holds_by_state(&pool, tenant, "held").await, 3);
 
     cleanup_tenant(&pool, tenant).await;
@@ -237,6 +300,9 @@ async fn tick_skips_locked_rows() {
     };
 
     let tenant = "test:expiry-skip-locked";
+    if !require_memory_writes_enabled() {
+        return;
+    }
     cleanup_tenant(&pool, tenant).await;
     seed_tenant(&pool, tenant, dec!(100), dec!(50)).await;
 
@@ -253,13 +319,22 @@ async fn tick_skips_locked_rows() {
         .unwrap();
 
     let report = run_tick(&pool).await.unwrap();
+    assert_eq!(report.holds_processed, 1);
+    assert_eq!(report.holds_succeeded, 1);
+    assert_eq!(report.holds_failed, 0);
 
-    // Should process the unlocked one, skip the locked one.
-    // (Memory writer may cause failures, but the locked one should not be touched.)
     let (locked_state, _) = read_hold_state(&pool, locked_id).await;
     assert_eq!(locked_state, "held", "locked row should remain held");
+    let (other_state, _) = read_hold_state(&pool, other_id).await;
+    assert_eq!(other_state, "expired", "unlocked row should expire");
 
     blocking_tx.rollback().await.unwrap();
+
+    let report2 = run_tick(&pool).await.unwrap();
+    assert_eq!(report2.holds_processed, 1);
+    assert_eq!(report2.holds_succeeded, 1);
+    let (locked_state, _) = read_hold_state(&pool, locked_id).await;
+    assert_eq!(locked_state, "expired");
 
     cleanup_tenant(&pool, tenant).await;
 }
@@ -277,6 +352,9 @@ async fn tick_respects_batch_limit() {
     };
 
     let tenant = "test:expiry-batch-limit";
+    if !require_memory_writes_enabled() {
+        return;
+    }
     cleanup_tenant(&pool, tenant).await;
     seed_tenant(&pool, tenant, dec!(1000), dec!(50)).await;
 
@@ -289,7 +367,9 @@ async fn tick_respects_batch_limit() {
     let report = run_tick(&pool).await.unwrap();
 
     // All 10 should be processed (well under the 500 limit).
-    assert!(report.holds_processed <= 10);
+    assert_eq!(report.holds_processed, 10);
+    assert_eq!(report.holds_succeeded, 10);
+    assert_eq!(report.holds_failed, 0);
 
     cleanup_tenant(&pool, tenant).await;
 }
@@ -307,6 +387,9 @@ async fn tick_orders_by_id() {
     };
 
     let tenant = "test:expiry-order";
+    if !require_memory_writes_enabled() {
+        return;
+    }
     cleanup_tenant(&pool, tenant).await;
     seed_tenant(&pool, tenant, dec!(100), dec!(50)).await;
 
@@ -320,7 +403,7 @@ async fn tick_orders_by_id() {
     ids.sort();
 
     let report = run_tick(&pool).await.unwrap();
-    assert!(report.holds_processed <= 5);
+    assert_eq!(report.holds_processed, 5);
 
     cleanup_tenant(&pool, tenant).await;
 }

@@ -561,4 +561,48 @@ All resolved 2026-05-15 (round 2). Promoted to §1 normative clauses or deferred
 
 ---
 
+## §12 — Ship workflow routeback (2026-06-13)
+
+Status remains `ready_to_implement`; this FR is not shipped.
+
+Implemented and verified during the ship workflow:
+
+- Added the missing `deploy/systemd/cyberos-ai-gateway-expiry.service` unit.
+- Updated `run_tick()` to process one bounded 500-row batch per tick instead of draining every expired hold in one call.
+- Added outer `FOR UPDATE SKIP LOCKED` selection and fixed `TickReport.holds_processed` so locked/skipped rows are not counted as processed.
+- Added per-tick ULID-style `tick_id` correlation to `ai.hold_expired` audit rows.
+- Hardened the live integration tests so memory-writing cases require the canonical Writer, apply migrations, verify exact report counts, verify one `ai.hold_expired` row per hold, and verify locked rows are picked up on the next tick.
+
+Verification completed:
+
+```bash
+CYBEROS_STORE=/Users/stephencheng/Projects/CyberSkill/cyberos/target/fr-ai-002-memory \
+CYBEROS_AI_GATEWAY_TEST_MEMORY_WRITES=1 \
+DATABASE_URL=postgres://cyberos:cyberos@127.0.0.1:55433/cyberos_ai_test \
+PYTHONPATH=/Users/stephencheng/Projects/CyberSkill/cyberos/target/codex-python-memory:/Users/stephencheng/Projects/CyberSkill/cyberos/modules/memory \
+cargo test -p cyberos-ai-gateway --test cost_hold_expiry_test -- --test-threads=1
+```
+
+Result: 6 passed.
+
+Additional regression checks passed:
+
+- `cargo build -p cyberos-ai-gateway --bin cost-hold-expiry`.
+- `cargo test -p cyberos-ai-gateway --lib`: 120 passed.
+- `cyberos doctor` on both the isolated FR-AI-002/004 store and project BRAIN: OK.
+
+Routeback blockers before this FR may be marked `done`:
+
+- AC #5 still lacks deterministic memory-writer failure injection proving one hold rolls back while others succeed.
+- AC #6 is functionally fixed to one 500-row batch per tick, but the declared 5,000-row bounded-batch verification has not been run because live Writer emission for 500 rows is too slow for the current ship loop.
+- AC #7 and AC #8 still lack process-level binary tests for SIGTERM shutdown and Postgres drop/reconnect behavior.
+- AC #9 still lacks crash-restart verification for duplicate `ai.hold_expired` rows after a kill between memory emit and DB commit.
+- AC #10 / #12 / #14 metric assertions are not complete; the code registers metrics, but tests do not scrape/assert all required counters, histogram observations, gauges, or pending backlog behavior.
+- AC #15 is not implemented as specified: there are no `ai.hold_expired_started` / `ai.hold_expired_completed` pair-write rows or captured event-order test.
+- AC #16 deterministic ordering is partially covered by `ORDER BY id ASC`, but `ai.cleanup_run_completed.extra.expired_hold_ids` is not implemented.
+
+Next implementation pass should address the blockers above before changing frontmatter or BACKLOG status to `done`.
+
+---
+
 *End of FR-AI-004. Run `feature-request-audit` next: `cargo run -p cyberos-skill-cli -- run feature-request-audit --input '{"fr_path": "docs/feature-requests/ai/FR-AI-004-cost-hold-expiry-cleanup.md"}'`*

@@ -9,6 +9,7 @@ use once_cell::sync::Lazy;
 use prometheus::{
     register_counter_vec, register_gauge, register_histogram, CounterVec, Gauge, Histogram,
 };
+use rand::RngCore;
 use rust_decimal::Decimal;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -112,58 +113,49 @@ struct HoldRow {
 /// `ai.hold_expired` memory audit rows, and returns a summary report.
 pub async fn run_tick(pool: &PgPool) -> Result<TickReport, TickError> {
     let started = std::time::Instant::now();
+    let tick_id = new_tick_id();
     let mut processed = 0u32;
     let mut succeeded = 0u32;
     let mut failed = 0u32;
 
-    loop {
-        // Fetch a batch of expired hold IDs.
-        let ids: Vec<Uuid> = sqlx::query_scalar(
-            "SELECT id FROM cost_ledger_hold \
-             WHERE state = 'held' AND expires_at < NOW() \
-             ORDER BY id ASC \
-             LIMIT $1",
-        )
-        .bind(BATCH_SIZE)
-        .fetch_all(pool)
-        .await?;
+    // Fetch one bounded batch of expired hold IDs.
+    let ids: Vec<Uuid> = sqlx::query_scalar(
+        "SELECT id FROM cost_ledger_hold \
+         WHERE state = 'held' AND expires_at < NOW() \
+         ORDER BY id ASC \
+         LIMIT $1 \
+         FOR UPDATE SKIP LOCKED",
+    )
+    .bind(BATCH_SIZE)
+    .fetch_all(pool)
+    .await?;
 
-        if ids.is_empty() {
-            break;
-        }
+    // Update pending gauge.
+    let pending_count: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM cost_ledger_hold \
+         WHERE state = 'held' AND expires_at < NOW()",
+    )
+    .fetch_one(pool)
+    .await
+    .unwrap_or(0);
+    PENDING_GAUGE.set(pending_count as f64);
 
-        // Update pending gauge.
-        let pending_count: i64 = sqlx::query_scalar(
-            "SELECT COUNT(*) FROM cost_ledger_hold \
-             WHERE state = 'held' AND expires_at < NOW()",
-        )
-        .fetch_one(pool)
-        .await
-        .unwrap_or(0);
-        PENDING_GAUGE.set(pending_count as f64);
-
-        let batch_len = ids.len() as u32;
-        for id in ids {
-            processed += 1;
-            match process_one_hold(pool, id).await {
-                Ok(HoldDisposition::Transitioned) => {
-                    succeeded += 1;
-                    HOLDS_PROCESSED.with_label_values(&["succeeded"]).inc();
-                }
-                Ok(HoldDisposition::AlreadyTransitioned) => {
-                    // Already processed (reconciled/expired/locked); skip.
-                }
-                Err(e) => {
-                    failed += 1;
-                    HOLDS_PROCESSED.with_label_values(&["failed"]).inc();
-                    tracing::warn!(?id, ?e, "expiry_hold_failed");
-                }
+    for id in ids {
+        match process_one_hold(pool, id, &tick_id).await {
+            Ok(HoldDisposition::Transitioned) => {
+                processed += 1;
+                succeeded += 1;
+                HOLDS_PROCESSED.with_label_values(&["succeeded"]).inc();
             }
-        }
-
-        // If partial batch, we're done.
-        if batch_len < BATCH_SIZE as u32 {
-            break;
+            Ok(HoldDisposition::AlreadyTransitioned) => {
+                // Already processed, reconciled, expired, or locked; do not count as processed.
+            }
+            Err(e) => {
+                processed += 1;
+                failed += 1;
+                HOLDS_PROCESSED.with_label_values(&["failed"]).inc();
+                tracing::warn!(?id, ?e, "expiry_hold_failed");
+            }
         }
     }
 
@@ -187,7 +179,11 @@ pub async fn run_tick(pool: &PgPool) -> Result<TickReport, TickError> {
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
-async fn process_one_hold(pool: &PgPool, hold_id: Uuid) -> Result<HoldDisposition, HoldError> {
+async fn process_one_hold(
+    pool: &PgPool,
+    hold_id: Uuid,
+    tick_id: &str,
+) -> Result<HoldDisposition, HoldError> {
     let mut tx = pool.begin().await?;
 
     // Lock + load the hold. SKIP LOCKED means we bail if someone else took it.
@@ -212,6 +208,7 @@ async fn process_one_hold(pool: &PgPool, hold_id: Uuid) -> Result<HoldDispositio
         hold.id,
         hold.expires_at,
         hold.estimated_usd,
+        tick_id,
     );
     memory_writer::emit(emit_req)
         .await
@@ -229,4 +226,21 @@ async fn process_one_hold(pool: &PgPool, hold_id: Uuid) -> Result<HoldDispositio
 
     tx.commit().await?;
     Ok(HoldDisposition::Transitioned)
+}
+
+fn new_tick_id() -> String {
+    const ENCODING: &[u8; 32] = b"0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+
+    let now_ms = chrono::Utc::now().timestamp_millis().max(0) as u64;
+    let mut bytes = [0u8; 16];
+    bytes[..6].copy_from_slice(&now_ms.to_be_bytes()[2..]);
+    rand::thread_rng().fill_bytes(&mut bytes[6..]);
+
+    let mut value = u128::from_be_bytes(bytes);
+    let mut out = [b'0'; 26];
+    for slot in out.iter_mut().rev() {
+        *slot = ENCODING[(value & 0x1f) as usize];
+        value >>= 5;
+    }
+    String::from_utf8(out.to_vec()).expect("ULID alphabet is valid UTF-8")
 }
