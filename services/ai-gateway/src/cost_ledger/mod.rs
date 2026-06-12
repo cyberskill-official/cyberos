@@ -240,8 +240,9 @@ pub async fn precheck(
     // 5. Insert hold (idempotent via UNIQUE on (tenant_id, idempotency_key))
     let hold_id = sqlx::query_scalar::<_, Uuid>(
         "INSERT INTO cost_ledger_hold \
-         (tenant_id, idempotency_key, estimated_usd, resolved_provider, resolved_model, expires_at, state) \
-         VALUES ($1, $2, $3, $4, $5, NOW() + INTERVAL '60 seconds', 'held') \
+         (tenant_id, idempotency_key, estimated_usd, agent_persona, model_alias, \
+          resolved_provider, resolved_model, expires_at, state) \
+         VALUES ($1, $2, $3, $4, $5, $6, $7, NOW() + INTERVAL '60 seconds', 'held') \
          ON CONFLICT (tenant_id, idempotency_key) DO UPDATE \
          SET state = cost_ledger_hold.state \
          RETURNING id",
@@ -249,6 +250,8 @@ pub async fn precheck(
     .bind(&req.tenant_id)
     .bind(&req.idempotency_key)
     .bind(estimated_usd)
+    .bind(&req.agent_persona)
+    .bind(&req.model_alias)
     .bind(resolved.provider_kind.as_metric_label())
     .bind(&resolved.model)
     .fetch_one(&mut *tx)

@@ -3,7 +3,7 @@
 //! Requires a running Postgres instance. Set DATABASE_URL env var.
 //! Tests are ignored when DATABASE_URL is not set.
 
-use std::collections::HashMap;
+use std::path::Path;
 
 use chrono::Datelike;
 use rust_decimal::Decimal;
@@ -13,13 +13,22 @@ use uuid::Uuid;
 
 use cyberos_ai_gateway::cost_reconcile::*;
 use cyberos_ai_gateway::cost_table;
-use cyberos_ai_gateway::policy::*;
+
+const AGENT_PERSONA: &str = "cuo-cpo@0.4.1";
+const MODEL_ALIAS: &str = "chat.smart";
 
 // ─── Test helpers ─────────────────────────────────────────────────────────────
 
 async fn test_pool() -> Option<PgPool> {
     let url = std::env::var("DATABASE_URL").ok()?;
-    PgPool::connect(&url).await.ok()
+    let pool = PgPool::connect(&url)
+        .await
+        .unwrap_or_else(|e| panic!("DATABASE_URL is set but Postgres connection failed: {e}"));
+    sqlx::migrate!("./migrations")
+        .run(&pool)
+        .await
+        .expect("cost-ledger migrations should apply");
+    Some(pool)
 }
 
 fn init_cost_table_for_tests() {
@@ -53,20 +62,66 @@ async fn seed_hold(
     let hold_id = Uuid::new_v4();
     sqlx::query(
         "INSERT INTO cost_ledger_hold \
-         (id, tenant_id, idempotency_key, estimated_usd, resolved_provider, resolved_model, \
-          expires_at, state) \
-         VALUES ($1, $2, $3, $4, $5, $6, NOW() + INTERVAL '60 seconds', 'held')",
+         (id, tenant_id, idempotency_key, estimated_usd, agent_persona, model_alias, \
+          resolved_provider, resolved_model, expires_at, state) \
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW() + INTERVAL '60 seconds', 'held')",
     )
     .bind(hold_id)
     .bind(tenant_id)
     .bind(format!("recon-{}", Uuid::new_v4()))
     .bind(estimated_usd)
+    .bind(AGENT_PERSONA)
+    .bind(MODEL_ALIAS)
     .bind(resolved_provider)
     .bind(resolved_model)
     .execute(pool)
     .await
     .unwrap();
     hold_id
+}
+
+fn memory_writes_enabled() -> bool {
+    std::env::var("CYBEROS_AI_GATEWAY_TEST_MEMORY_WRITES").as_deref() == Ok("1")
+        && std::env::var_os("CYBEROS_STORE").is_some()
+}
+
+fn require_memory_writes_enabled() -> bool {
+    if memory_writes_enabled() {
+        true
+    } else {
+        eprintln!(
+            "CYBEROS_AI_GATEWAY_TEST_MEMORY_WRITES=1 and CYBEROS_STORE are required; skipping memory-writing reconcile case"
+        );
+        false
+    }
+}
+
+fn count_memory_rows(hold_id: Uuid, kind: &str) -> usize {
+    let Some(store) = std::env::var_os("CYBEROS_STORE") else {
+        return 0;
+    };
+    let dir = Path::new(&store).join("memories/decisions/ai-invocations");
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return 0;
+    };
+    let hold = hold_id.to_string();
+    entries
+        .flatten()
+        .filter_map(|entry| std::fs::read_to_string(entry.path()).ok())
+        .filter(|body| body.contains(&format!("kind: {kind}")) && body.contains(&hold))
+        .count()
+}
+
+fn memory_row_body(hold_id: Uuid, kind: &str) -> String {
+    let store = std::env::var_os("CYBEROS_STORE").expect("CYBEROS_STORE should be set");
+    let dir = Path::new(&store).join("memories/decisions/ai-invocations");
+    let hold = hold_id.to_string();
+    std::fs::read_dir(dir)
+        .expect("ai-invocations directory should exist")
+        .flatten()
+        .filter_map(|entry| std::fs::read_to_string(entry.path()).ok())
+        .find(|body| body.contains(&format!("kind: {kind}")) && body.contains(&hold))
+        .unwrap_or_else(|| panic!("missing {kind} row for hold {hold}"))
 }
 
 async fn read_ledger_spent(pool: &PgPool, tenant_id: &str) -> Decimal {
@@ -121,6 +176,9 @@ async fn reconcile_success_updates_ledger() {
     init_cost_table_for_tests();
 
     let tenant = "test:reconcile-success";
+    if !require_memory_writes_enabled() {
+        return;
+    }
     cleanup_tenant(&pool, tenant).await;
     seed_tenant(&pool, tenant, dec!(100), dec!(12.50)).await;
 
@@ -157,14 +215,8 @@ async fn reconcile_success_updates_ledger() {
             assert!(actual_usd > dec!(0));
             assert!(new_spent_total_usd > dec!(12.50));
         }
-        Ok(ReconcileOutcome::Refunded { .. }) => {
-            // Memory writer may not be available; refund is acceptable in CI
-            eprintln!("memory writer unavailable; AC #1 partial");
-        }
-        Err(ReconcileError::MemoryWriterFailed { .. }) => {
-            eprintln!("memory writer unavailable; AC #1 partial");
-        }
         Err(e) => panic!("unexpected error: {e}"),
+        Ok(other) => panic!("expected Reconciled, got {:?}", other),
     }
 
     // Verify hold state transition.
@@ -172,6 +224,11 @@ async fn reconcile_success_updates_ledger() {
     if state == "reconciled" {
         assert!(actual_usd.is_some());
     }
+    assert_eq!(count_memory_rows(hold_id, "ai.invocation"), 1);
+    let body = memory_row_body(hold_id, "ai.invocation");
+    assert!(body.contains("agent_persona: cuo-cpo@0.4.1"));
+    assert!(body.contains("model_alias: chat.smart"));
+    assert!(body.contains("provider_request_id: prv_abc123"));
 
     cleanup_tenant(&pool, tenant).await;
 }
@@ -190,6 +247,9 @@ async fn reconcile_idempotent_double_call() {
     init_cost_table_for_tests();
 
     let tenant = "test:reconcile-idempotent";
+    if !require_memory_writes_enabled() {
+        return;
+    }
     cleanup_tenant(&pool, tenant).await;
     seed_tenant(&pool, tenant, dec!(100), dec!(50)).await;
 
@@ -216,6 +276,10 @@ async fn reconcile_idempotent_double_call() {
         &pool,
     )
     .await;
+    assert!(
+        matches!(outcome1, Ok(ReconcileOutcome::Reconciled { .. })),
+        "first call should reconcile: {outcome1:?}"
+    );
 
     // Second call should return AlreadyFinalised.
     let outcome2 = reconcile(
@@ -237,20 +301,7 @@ async fn reconcile_idempotent_double_call() {
         Err(ReconcileError::AlreadyFinalised { current_state, .. }) => {
             assert_eq!(current_state, "reconciled");
         }
-        Err(ReconcileError::MemoryWriterFailed { .. }) => {
-            // First call may have failed due to memory writer; second would be
-            // AlreadyFinalised or still held depending on transaction outcome.
-            eprintln!("memory writer unavailable; AC #2 partial");
-        }
-        Ok(ReconcileOutcome::Refunded { .. }) => {
-            // First call refunded due to memory writer failure; second should be AlreadyFinalised.
-            eprintln!("first call refunded; checking second");
-        }
-        other => {
-            // If memory writer is unavailable, the first call may have rolled back,
-            // so the second call would succeed as if it were the first.
-            eprintln!("AC #2: second call returned {:?}", other);
-        }
+        other => panic!("expected AlreadyFinalised, got {:?}", other),
     }
 
     // Verify no double-counting: spent_usd should not have been incremented twice.
@@ -259,6 +310,7 @@ async fn reconcile_idempotent_double_call() {
         spent <= dec!(50.01),
         "spend should not be double-counted: {spent}"
     );
+    assert_eq!(count_memory_rows(hold_id, "ai.invocation"), 1);
 
     cleanup_tenant(&pool, tenant).await;
 }
@@ -277,6 +329,9 @@ async fn reconcile_provider_error_refunds() {
     init_cost_table_for_tests();
 
     let tenant = "test:reconcile-refund";
+    if !require_memory_writes_enabled() {
+        return;
+    }
     cleanup_tenant(&pool, tenant).await;
     seed_tenant(&pool, tenant, dec!(100), dec!(50)).await;
 
@@ -308,9 +363,6 @@ async fn reconcile_provider_error_refunds() {
             assert_eq!(hold_estimated_usd, dec!(0.0085));
             assert_eq!(reason, RefundReason::ProviderError { http_status: 503 });
         }
-        Err(ReconcileError::MemoryWriterFailed { .. }) => {
-            eprintln!("memory writer unavailable; AC #3 partial");
-        }
         Err(e) => panic!("unexpected error: {e}"),
         Ok(other) => panic!("expected Refunded, got {:?}", other),
     }
@@ -322,6 +374,7 @@ async fn reconcile_provider_error_refunds() {
     // Hold should be refunded.
     let (state, _, _) = read_hold_state(&pool, hold_id).await;
     assert_eq!(state, "refunded");
+    assert_eq!(count_memory_rows(hold_id, "ai.invocation_failed"), 1);
 
     cleanup_tenant(&pool, tenant).await;
 }
@@ -340,6 +393,9 @@ async fn reconcile_cancelled_partial_charges_partial() {
     init_cost_table_for_tests();
 
     let tenant = "test:reconcile-cancel-partial";
+    if !require_memory_writes_enabled() {
+        return;
+    }
     cleanup_tenant(&pool, tenant).await;
     seed_tenant(&pool, tenant, dec!(100), dec!(50)).await;
 
@@ -370,9 +426,6 @@ async fn reconcile_cancelled_partial_charges_partial() {
             // Should charge for 120 prompt + 200 completion tokens.
             assert!(actual_usd > dec!(0));
         }
-        Err(ReconcileError::MemoryWriterFailed { .. }) => {
-            eprintln!("memory writer unavailable; AC #4 partial");
-        }
         Err(e) => panic!("unexpected error: {e}"),
         Ok(other) => panic!("expected Reconciled, got {:?}", other),
     }
@@ -385,6 +438,8 @@ async fn reconcile_cancelled_partial_charges_partial() {
             "floor at column precision"
         );
     }
+    assert_eq!(count_memory_rows(hold_id, "ai.invocation"), 1);
+    assert!(memory_row_body(hold_id, "ai.invocation").contains("cancelled: true"));
 
     cleanup_tenant(&pool, tenant).await;
 }
@@ -403,6 +458,9 @@ async fn reconcile_cancelled_no_stream_refunds() {
     init_cost_table_for_tests();
 
     let tenant = "test:reconcile-cancel-none";
+    if !require_memory_writes_enabled() {
+        return;
+    }
     cleanup_tenant(&pool, tenant).await;
     seed_tenant(&pool, tenant, dec!(100), dec!(50)).await;
 
@@ -429,9 +487,6 @@ async fn reconcile_cancelled_no_stream_refunds() {
         Ok(ReconcileOutcome::Refunded { reason, .. }) => {
             assert_eq!(reason, RefundReason::ProviderUnreachable);
         }
-        Err(ReconcileError::MemoryWriterFailed { .. }) => {
-            eprintln!("memory writer unavailable; AC #5 partial");
-        }
         Err(e) => panic!("unexpected error: {e}"),
         Ok(other) => panic!("expected Refunded, got {:?}", other),
     }
@@ -439,6 +494,7 @@ async fn reconcile_cancelled_no_stream_refunds() {
     // Ledger should be unchanged.
     let spent = read_ledger_spent(&pool, tenant).await;
     assert_eq!(spent, dec!(50));
+    assert_eq!(count_memory_rows(hold_id, "ai.invocation_failed"), 1);
 
     cleanup_tenant(&pool, tenant).await;
 }
@@ -495,6 +551,86 @@ async fn reconcile_cost_table_missing_errors() {
     // Hold should still be in 'held' state (transaction rolled back).
     let (state, _, _) = read_hold_state(&pool, hold_id).await;
     assert_eq!(state, "held", "hold should remain held on CostTableMissing");
+    assert_eq!(count_memory_rows(hold_id, "ai.invocation"), 0);
+
+    cleanup_tenant(&pool, tenant).await;
+}
+
+// ─── AC #7: Warn-threshold crossing de-dupes ────────────────────────────────
+
+#[tokio::test]
+async fn reconcile_warn_threshold_crosses_once() {
+    let pool = match test_pool().await {
+        Some(p) => p,
+        None => {
+            eprintln!("DATABASE_URL not set; skipping");
+            return;
+        }
+    };
+    init_cost_table_for_tests();
+
+    let tenant = "test:reconcile-warn";
+    if !require_memory_writes_enabled() {
+        return;
+    }
+    cleanup_tenant(&pool, tenant).await;
+    seed_tenant(&pool, tenant, dec!(100), dec!(79.90)).await;
+
+    let first_hold = seed_hold(
+        &pool,
+        tenant,
+        dec!(1.0000),
+        "bedrock",
+        "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    )
+    .await;
+    let first = reconcile(
+        first_hold,
+        CallOutcome::Success {
+            usage: ProviderUsage {
+                prompt_tokens: 10_000,
+                completion_tokens: 10_000,
+            },
+            latency_ms: 50,
+            cache_state: CacheState::Miss,
+            provider_request_id: "prv_warn_1".to_string(),
+        },
+        &pool,
+    )
+    .await
+    .unwrap();
+    match first {
+        ReconcileOutcome::Reconciled { warn_crossed, .. } => assert!(warn_crossed),
+        other => panic!("expected Reconciled, got {:?}", other),
+    }
+
+    let second_hold = seed_hold(
+        &pool,
+        tenant,
+        dec!(1.0000),
+        "bedrock",
+        "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    )
+    .await;
+    let second = reconcile(
+        second_hold,
+        CallOutcome::Success {
+            usage: ProviderUsage {
+                prompt_tokens: 100,
+                completion_tokens: 100,
+            },
+            latency_ms: 50,
+            cache_state: CacheState::Miss,
+            provider_request_id: "prv_warn_2".to_string(),
+        },
+        &pool,
+    )
+    .await
+    .unwrap();
+    match second {
+        ReconcileOutcome::Reconciled { warn_crossed, .. } => assert!(!warn_crossed),
+        other => panic!("expected Reconciled, got {:?}", other),
+    }
 
     cleanup_tenant(&pool, tenant).await;
 }
@@ -513,6 +649,9 @@ async fn reconcile_400_bad_request_refunds() {
     init_cost_table_for_tests();
 
     let tenant = "test:reconcile-400";
+    if !require_memory_writes_enabled() {
+        return;
+    }
     cleanup_tenant(&pool, tenant).await;
     seed_tenant(&pool, tenant, dec!(100), dec!(50)).await;
 
@@ -544,9 +683,6 @@ async fn reconcile_400_bad_request_refunds() {
             assert_eq!(reason, RefundReason::ProviderError { http_status: 400 });
             assert_eq!(hold_estimated_usd, dec!(0.0085));
         }
-        Err(ReconcileError::MemoryWriterFailed { .. }) => {
-            eprintln!("memory writer unavailable; AC #11 partial");
-        }
         Err(e) => panic!("unexpected error: {e}"),
         Ok(other) => panic!("expected Refunded, got {:?}", other),
     }
@@ -554,6 +690,7 @@ async fn reconcile_400_bad_request_refunds() {
     // Ledger should be unchanged.
     let spent = read_ledger_spent(&pool, tenant).await;
     assert_eq!(spent, dec!(50));
+    assert_eq!(count_memory_rows(hold_id, "ai.invocation_failed"), 1);
 
     cleanup_tenant(&pool, tenant).await;
 }
@@ -588,7 +725,7 @@ async fn reconcile_already_finalised_carries_outcome() {
     // Manually set to reconciled state.
     sqlx::query(
         "UPDATE cost_ledger_hold SET state = 'reconciled', actual_usd = 0.0078, \
-         reconciled_at = NOW() WHERE id = $1",
+         reconciled_at = NOW(), warn_crossed = TRUE WHERE id = $1",
     )
     .bind(hold_id)
     .execute(&pool)
@@ -617,8 +754,13 @@ async fn reconcile_already_finalised_carries_outcome() {
         }) => {
             assert_eq!(current_state, "reconciled");
             match original_outcome {
-                ReconcileOutcome::Reconciled { actual_usd, .. } => {
+                ReconcileOutcome::Reconciled {
+                    actual_usd,
+                    warn_crossed,
+                    ..
+                } => {
                     assert_eq!(actual_usd, dec!(0.0078));
+                    assert!(warn_crossed);
                 }
                 other => panic!("expected Reconciled in original_outcome, got {:?}", other),
             }

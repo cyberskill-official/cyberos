@@ -577,4 +577,44 @@ All resolved 2026-05-15 (round 2). Promoted to §1/§4 normative clauses:
 
 ---
 
+## §12 — Ship workflow routeback (2026-06-13)
+
+Status remains `ready_to_implement`; this FR is not shipped.
+
+Implemented and verified during the ship workflow:
+
+- Added additive migration `0003_cost_reconcile_context.sql` so holds persist `agent_persona`, `model_alias`, and per-hold `warn_crossed`.
+- Updated precheck hold inserts and reconcile audit builders so `ai.invocation` rows carry `model_alias` and `provider_request_id`; refund rows carry `model_alias`.
+- Reworked warn-threshold accounting to compute crossing from the locked pre-update ledger row and persist the result on the hold.
+- Hardened live integration coverage to require the canonical memory Writer when memory-writing cases run, assert exactly one final audit row per hold, assert no second row on idempotent retry, and verify warning de-duplication.
+
+Verification completed:
+
+```bash
+CYBEROS_STORE=/Users/stephencheng/Projects/CyberSkill/cyberos/target/fr-ai-002-memory \
+CYBEROS_AI_GATEWAY_TEST_MEMORY_WRITES=1 \
+DATABASE_URL=postgres://cyberos:cyberos@127.0.0.1:55433/cyberos_ai_test \
+PYTHONPATH=/Users/stephencheng/Projects/CyberSkill/cyberos/target/codex-python-memory:/Users/stephencheng/Projects/CyberSkill/cyberos/modules/memory \
+cargo test -p cyberos-ai-gateway --test cost_reconcile_test -- --test-threads=1
+```
+
+Result: 10 passed.
+
+Additional regression checks passed:
+
+- `cargo test -p cyberos-ai-gateway --test cost_precheck_test -- --test-threads=1` with live Postgres and isolated memory writes: 8 passed.
+- `cargo test -p cyberos-ai-gateway --test cost_hold_expiry_test -- --test-threads=1` with live Postgres and isolated memory writes: 6 passed.
+- `cargo test -p cyberos-ai-gateway --lib`: 120 passed.
+- `cyberos doctor` on both the isolated FR-AI-002 store and project BRAIN: OK.
+
+Routeback blockers before this FR may be marked `done`:
+
+- AC #6 still lacks the declared crash-point property test (`100 reconcile calls × random crash points × ledger consistency invariant`).
+- AC #9 still lacks the declared 1000-call warm-pool p95 reconcile latency gate; current live coverage proves behavior but does not prove the 80ms p95 budget.
+- AC #15 is not implemented as specified: there are no `ai.reconcile_started` / `ai.reconcile_completed` / `ai.reconcile_failed` pair-write audit rows or captured event-order test. The existing implementation still emits the final `ai.invocation` / `ai.invocation_failed` row before commit and rolls back DB state if that emit fails, but it does not satisfy the later audit appendix ordering contract.
+
+Next implementation pass should address the three blockers above before changing frontmatter or BACKLOG status to `done`.
+
+---
+
 *End of FR-AI-002. Run `feature-request-audit` next: `cargo run -p cyberos-skill-cli -- run feature-request-audit --input '{"fr_path": "docs/feature-requests/ai/FR-AI-002-cost-ledger-postcall-reconcile.md"}'`*

@@ -69,6 +69,8 @@ pub struct CostLedgerHoldRow {
     pub tenant_id: String,
     pub idempotency_key: String,
     pub estimated_usd: Decimal,
+    pub agent_persona: String,
+    pub model_alias: String,
     pub resolved_provider: String,
     pub resolved_model: String,
     pub created_at: chrono::DateTime<chrono::Utc>,

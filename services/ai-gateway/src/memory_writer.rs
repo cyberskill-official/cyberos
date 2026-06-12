@@ -536,6 +536,7 @@ pub mod builders {
     pub fn invocation(
         tenant_id: &str,
         agent_persona: &str,
+        model_alias: &str,
         resolved_provider: &str,
         resolved_model: &str,
         prompt_tokens: u32,
@@ -544,6 +545,7 @@ pub mod builders {
         hold_id: Uuid,
         latency_ms: u32,
         cache_state: &str,
+        provider_request_id: &str,
     ) -> MemoryEmit {
         MemoryEmit {
             kind: AiInvocationKind::Invocation,
@@ -551,6 +553,7 @@ pub mod builders {
             extra: serde_json::json!({
                 "tenant_id": tenant_id,
                 "agent_persona": agent_persona,
+                "model_alias": model_alias,
                 "resolved_provider": resolved_provider,
                 "resolved_model": resolved_model,
                 "prompt_tokens": prompt_tokens,
@@ -559,6 +562,7 @@ pub mod builders {
                 "hold_id": hold_id,
                 "latency_ms": latency_ms,
                 "cache_state": cache_state,
+                "provider_request_id": provider_request_id,
             }),
         }
     }
@@ -568,6 +572,7 @@ pub mod builders {
     pub fn invocation_failed(
         tenant_id: &str,
         agent_persona: &str,
+        model_alias: &str,
         resolved_provider: &str,
         resolved_model: &str,
         http_status: u16,
@@ -582,6 +587,7 @@ pub mod builders {
             extra: serde_json::json!({
                 "tenant_id": tenant_id,
                 "agent_persona": agent_persona,
+                "model_alias": model_alias,
                 "resolved_provider": resolved_provider,
                 "resolved_model": resolved_model,
                 "http_status": http_status,
@@ -788,6 +794,7 @@ mod tests {
         let row = builders::invocation(
             "tenant:alpha",
             "cuo-cpo@0.4.1",
+            "chat.smart",
             "bedrock",
             "claude",
             10,
@@ -796,9 +803,12 @@ mod tests {
             hold_id,
             42,
             "hit",
+            "prv-test",
         );
         assert_eq!(row.kind.tag(), "ai.invocation");
         assert_eq!(row.extra["cache_state"], "hit");
+        assert_eq!(row.extra["model_alias"], "chat.smart");
+        assert_eq!(row.extra["provider_request_id"], "prv-test");
     }
 
     #[test]
