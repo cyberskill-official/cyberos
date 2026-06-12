@@ -11,6 +11,7 @@
 use crate::errors::{EmailError, EmailResult};
 use crate::types::{DkimKey, DkimKeyStatus, KeyAlgorithm};
 use chrono::Utc;
+use sha2::{Digest, Sha256};
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -65,19 +66,35 @@ impl MockKmsEncryptor {
 /// `src/bin/server.rs`) wires `openssl` or a pure-Rust RSA crate behind a
 /// feature flag; that lands in slice 2.
 pub fn generate_rsa_2048_pem_pair() -> EmailResult<(String, Vec<u8>)> {
+    generate_rsa_2048_pem_pair_for_seed("slice-1-default")
+}
+
+pub fn generate_rsa_2048_pem_pair_for_seed(seed: &str) -> EmailResult<(String, Vec<u8>)> {
     // Slice 1 produces deterministic placeholders so the migration's CHECK
     // constraint (length 100..=10000 for PEM, 100..=8192 for blob) is
     // satisfied without invoking actual crypto. The CLI binary wires a
     // proper generator behind a feature flag in slice 2.
     let public_pem = format!(
         "-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----",
-        "A".repeat(380) // representative RSA-2048 SPKI base64 length
+        deterministic_pem_body(&format!("{seed}:public"), 380)
     );
     let private_pem_plaintext = format!(
         "-----BEGIN RSA PRIVATE KEY-----\n{}\n-----END RSA PRIVATE KEY-----",
-        "B".repeat(1600) // representative RSA-2048 PKCS#1 base64 length
+        deterministic_pem_body(&format!("{seed}:private"), 1600)
     );
     Ok((public_pem, private_pem_plaintext.into_bytes()))
+}
+
+fn deterministic_pem_body(seed: &str, len: usize) -> String {
+    let mut out = String::with_capacity(len);
+    let mut counter = 0_u64;
+    while out.len() < len {
+        let digest = Sha256::digest(format!("{seed}:{counter}").as_bytes());
+        out.push_str(&format!("{digest:x}"));
+        counter += 1;
+    }
+    out.truncate(len);
+    out
 }
 
 /// FR-EMAIL-001 §4 #7 — provision a per-tenant DKIM key. The unique partial
@@ -108,8 +125,11 @@ pub async fn provision_key(
         ));
     }
 
+    let id = Uuid::new_v4();
     let (public_pem, private_plaintext) = match algorithm {
-        KeyAlgorithm::Rsa2048 => generate_rsa_2048_pem_pair()?,
+        KeyAlgorithm::Rsa2048 => {
+            generate_rsa_2048_pem_pair_for_seed(&format!("{tenant_id}:{selector}:{id}"))?
+        }
         KeyAlgorithm::Ed25519 => {
             return Err(EmailError::DkimKeyGen(
                 "ed25519 deferred to FR-EMAIL-004 / slice 2".into(),
@@ -119,7 +139,6 @@ pub async fn provision_key(
 
     let encrypted_blob = encryptor.encrypt(kms_key_id, &private_plaintext).await?;
 
-    let id = Uuid::new_v4();
     let now = Utc::now();
 
     sqlx::query(
@@ -185,9 +204,10 @@ pub async fn rotate_key(
     }
 
     // Mint a new key.
-    let (public_pem, private_plaintext) = generate_rsa_2048_pem_pair()?;
-    let encrypted_blob = encryptor.encrypt(kms_key_id, &private_plaintext).await?;
     let new_id = Uuid::new_v4();
+    let (public_pem, private_plaintext) =
+        generate_rsa_2048_pem_pair_for_seed(&format!("{tenant_id}:{selector}:{new_id}"))?;
+    let encrypted_blob = encryptor.encrypt(kms_key_id, &private_plaintext).await?;
 
     sqlx::query(
         "INSERT INTO dkim_keys (id, tenant_id, dkim_selector, key_algorithm, public_key_pem,
@@ -229,5 +249,12 @@ mod tests {
         assert!(priv_pem.len() >= 100 && priv_pem.len() <= 8192);
         assert!(pub_pem.contains("-----BEGIN PUBLIC KEY-----"));
         assert!(pub_pem.contains("-----END PUBLIC KEY-----"));
+    }
+
+    #[test]
+    fn seeded_rsa_2048_placeholders_are_distinct() {
+        let (a, _) = generate_rsa_2048_pem_pair_for_seed("tenant-a").unwrap();
+        let (b, _) = generate_rsa_2048_pem_pair_for_seed("tenant-b").unwrap();
+        assert_ne!(a, b);
     }
 }

@@ -27,14 +27,46 @@ services:
       interval: 5s
       retries: 12
 
+  migrate:
+    image: postgres:16-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres-local
+    volumes:
+      - ../migrations:/migrations:ro
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        export PGPASSWORD="$${POSTGRES_PASSWORD}"
+
+        if ! psql -h postgres -U "$${POSTGRES_USER}" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = 'stalwart_metadata'" | grep -q 1; then
+          psql -h postgres -U "$${POSTGRES_USER}" -d postgres -c "CREATE DATABASE stalwart_metadata"
+        fi
+
+        if ! psql -h postgres -U "$${POSTGRES_USER}" -d cyberos_email -tAc "SELECT 1 FROM pg_roles WHERE rolname = 'cyberos_app'" | grep -q 1; then
+          psql -h postgres -U "$${POSTGRES_USER}" -d cyberos_email -c "CREATE ROLE cyberos_app LOGIN"
+        fi
+
+        if psql -h postgres -U "$${POSTGRES_USER}" -d cyberos_email -tAc "SELECT to_regclass('public.message_metadata')" | grep -q message_metadata; then
+          echo "email migrations already applied"
+        else
+          for f in /migrations/*.sql; do
+            echo "applying $$f"
+            psql -v ON_ERROR_STOP=1 -h postgres -U "$${POSTGRES_USER}" -d cyberos_email -f "$$f"
+          done
+        fi
+
   stalwart:
     build:
       context: .
     depends_on:
-      postgres:
-        condition: service_healthy
       minio:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_USER: postgres
@@ -57,8 +89,8 @@ services:
       context: ../../..
       dockerfile: services/email/Dockerfile
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     environment:
       DATABASE_URL: "postgres://postgres:postgres-local@postgres:5432/cyberos_email?sslmode=disable"
       EMAIL_BIND: "0.0.0.0:8085"

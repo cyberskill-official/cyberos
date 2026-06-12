@@ -1,5 +1,5 @@
 # FR-EMAIL-001 §3.1 — Stalwart server config baked into the CyberOS image.
-# Pin: stalwartlabs/mail-server:0.10
+# Pin: stalwartlabs/mail-server:v0.10.7
 #
 # Env vars resolved at container start:
 #   POSTGRES_HOST, POSTGRES_USER, POSTGRES_PASSWORD

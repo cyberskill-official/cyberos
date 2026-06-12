@@ -893,19 +893,26 @@ All other questions resolved.
 
 Status remains `ready_to_implement`; do not mark this FR shipped yet.
 
-Reason: the EMAIL Stalwart substrate and Rust gateway tests are present, and the local compose file now has the missing gateway Dockerfile it referenced, but the required live Stalwart/Postgres/Minio runtime could not be started on this host. The bounded live compose run timed out after 240 seconds while pulling `postgres:16-alpine` and `minio/minio:latest`, before Stalwart or the Rust gateway could build/start. Because this FR's acceptance surface includes a real containerized mail-server deployment, marking it `done` from Rust tests plus static compose validation would be a false ship.
+Reason: the previous Docker-runtime blocker is resolved, but this FR still cannot honestly move to `done` because several TRACE-004 acceptance items remain unimplemented or lack passing gates. The live stack now builds and starts with Stalwart, Postgres, Minio, the Rust gateway, and an automatic migration service. However, `cyberos-email-cli provision` still prints `memory audit row email.user_provisioned: pending (wired in FR-EMAIL-002)`, which violates §1 #16. The Stalwart/DKIM slice also still uses deterministic placeholder PEM material rather than real RSA-2048 generation, and the FR-declared OTel span/metric gates (§1 #22-23 / §4 #22-25) plus inbound p95 perf gate (§4 #26) are not present as passing tests. Marking this FR `done` would still overstate the evidence.
 
 Work preserved for the next attempt:
-- `services/email/docker/Dockerfile` builds the Stalwart container from `stalwartlabs/mail-server:0.10` with CyberOS config.
+- `services/email/docker/Dockerfile` builds the Stalwart container from the resolvable v0.10.x image `stalwartlabs/mail-server:v0.10.7` with CyberOS config.
 - `services/email/docker/compose.yml` defines Postgres, Minio, Stalwart, and the `cyberos-email` gateway service.
+- `services/email/docker/compose.yml` now includes a one-shot `migrate` service that creates `stalwart_metadata`, creates `cyberos_app` before grants are applied, and applies all EMAIL SQL migrations before Stalwart/gateway startup.
 - `services/email/Dockerfile` now provides the missing Rust gateway image required by the compose file.
+- `services/email/src/dkim/keystore.rs` now generates distinct deterministic placeholder PEM material per tenant/selector/key id, so slice-1 provisioning no longer shares the same public key across tenants.
 - Migrations, adapters, audit-row builders, DKIM/residency helpers, REST handlers, CLI, and docs remain in place.
 
 Verification completed:
-- `cd services && cargo test -p cyberos-email -- --test-threads=1` — passed; 45 library tests plus integration tests for audit rows, inbound quarantine, residency pinning, and subject normalization.
-- `docker compose -f services/email/docker/compose.yml config` — passed after adding `services/email/Dockerfile`.
+- `cd services && cargo test -p cyberos-email -- --test-threads=1` — passed; 46 library tests plus integration tests for audit rows, inbound quarantine, residency pinning, and subject normalization.
+- `docker compose -f services/email/docker/compose.yml config` — passed after adding the migration service.
+- `docker compose -f services/email/docker/compose.yml up -d --build` — passed from a fresh compose state; `migrate` exited 0 and applied `0001_messages.sql`, `0002_bounce_log.sql`, `0003_dkim_keys.sql`, `0004_residency_routing.sql`, `0005_delivery_auth.sql`, `0006_outbound_messages.sql`, `0007_dsar_export_jobs.sql`, and `0011_camel_audit.sql`.
+- `curl --fail http://127.0.0.1:8085/v1/email/healthz` — passed with `postgres_status:"ok"`.
+- `curl --fail http://127.0.0.1:8080/` — passed; Stalwart management UI returned HTML.
+- `nc -zv 127.0.0.1 {25,465,587,143,993,4190,8080,8085}` — passed when checked individually.
+- `cyberos-email-cli provision` against compose Postgres — passed in 0.65s for one tenant.
+- Two fresh tenants provisioned after the DKIM fix produced 2 active keys with 2 distinct `public_key_pem` values.
 - `PYTHONPATH=modules/memory python3 -m cyberos doctor` — passed; BRAIN remains READY.
-- `docker compose -f services/email/docker/compose.yml up -d --build` — timed out after 240 seconds while pulling base runtime images.
 
 Required next verification before shipping:
 
@@ -915,11 +922,16 @@ cd services && cargo test -p cyberos-email -- --test-threads=1
 cd ..
 docker compose -f services/email/docker/compose.yml up -d --build
 curl --fail http://127.0.0.1:8085/v1/email/healthz
-curl --fail http://127.0.0.1:8080/admin/health
+curl --fail http://127.0.0.1:8080/
+env DATABASE_URL='postgres://postgres:postgres-local@127.0.0.1:5434/cyberos_email?sslmode=disable' \
+  services/target/debug/cyberos-email-cli provision \
+  --tenant-id <uuid> --local-part ops --display-name Ops
+# Then prove email.user_provisioned is committed through the canonical memory writer,
+# OTel email.* spans/metrics are emitted, and inbound_perf_test p95 < 200ms passes.
 docker compose -f services/email/docker/compose.yml down --remove-orphans
 PYTHONPATH=modules/memory python3 -m cyberos doctor
 ```
 
-Only after the real Stalwart, Postgres, Minio, and `cyberos-email` gateway containers build, start, and pass health checks should this FR move to `done`.
+Only after the live stack, canonical memory audit emission, OTel spans/metrics, real-key/provisioning gate, and inbound performance gate all pass should this FR move to `done`.
 
-*End of FR-EMAIL-001. Status: ready_to_implement (routed back 2026-06-08).*
+*End of FR-EMAIL-001. Status: ready_to_implement (routed back 2026-06-08; retried 2026-06-13).*

@@ -4,7 +4,7 @@
 # separate container — see services/email/Cargo.toml. This Dockerfile
 # is the Stalwart server container only.
 
-ARG STALWART_VERSION=0.10
+ARG STALWART_VERSION=v0.10.7
 
 FROM stalwartlabs/mail-server:${STALWART_VERSION}
 
