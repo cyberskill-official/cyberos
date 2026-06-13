@@ -26,7 +26,7 @@ pub async fn run(
 }
 
 async fn status(json: bool, pool: &sqlx::PgPool) -> Result<(), CliError> {
-    let breakers: Vec<(String, String, String, i32, String)> = sqlx::query_as(
+    let breakers: Vec<(String, String, String, i32, Option<String>)> = sqlx::query_as(
         "SELECT provider, model, state, failure_count, next_half_open::text
          FROM circuit_breakers ORDER BY provider, model",
     )
@@ -38,7 +38,7 @@ async fn status(json: bool, pool: &sqlx::PgPool) -> Result<(), CliError> {
 
     let breaker_data: Vec<(String, String, String, u32, String)> = breakers
         .into_iter()
-        .map(|(p, m, s, f, n)| (p, m, s, f as u32, n))
+        .map(|(p, m, s, f, n)| (p, m, s, f as u32, n.unwrap_or_default()))
         .collect();
 
     if json {

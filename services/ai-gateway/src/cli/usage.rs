@@ -108,23 +108,22 @@ async fn query_all_usage(
     pool: &PgPool,
     month: &str,
 ) -> Result<(f64, f64, u64, Vec<(String, f64, u64)>), CliError> {
-    let row: (Option<f64>, Option<f64>, Option<i64>) = sqlx::query_as(
-        "SELECT SUM(ai_policy->>'monthly_cap_usd')::float8, SUM(actual_usd)::float8, COUNT(*)::int8
-         FROM ai_invocations inv
-         LEFT JOIN tenant_policies tp ON inv.tenant_id = tp.tenant_id
-         WHERE TO_CHAR(inv.created_at, 'YYYY-MM') = $1",
+    let row: (f64, f64, i64) = sqlx::query_as(
+        "SELECT
+            COALESCE((SELECT SUM((ai_policy->>'monthly_cap_usd')::float8) FROM tenant_policies), 0)::float8,
+            COALESCE((SELECT SUM(actual_usd)::float8 FROM ai_invocations WHERE TO_CHAR(created_at, 'YYYY-MM') = $1), 0)::float8,
+            (SELECT COUNT(*)::int8 FROM ai_invocations WHERE TO_CHAR(created_at, 'YYYY-MM') = $1)",
     )
     .bind(month)
-    .fetch_optional(pool)
+    .fetch_one(pool)
     .await
     .map_err(|e| CliError::RemoteUnreachable {
         reason: e.to_string(),
-    })?
-    .unwrap_or((None, None, None));
+    })?;
 
-    let cap = row.0.unwrap_or(0.0);
-    let spent = row.1.unwrap_or(0.0);
-    let calls = row.2.unwrap_or(0) as u64;
+    let cap = row.0;
+    let spent = row.1;
+    let calls = row.2 as u64;
 
     let models: Vec<(String, f64, i64)> = sqlx::query_as(
         "SELECT resolved_model, SUM(actual_usd)::float8, COUNT(*)::int8
@@ -152,24 +151,25 @@ async fn query_tenant_usage(
     tenant: &str,
     month: &str,
 ) -> Result<(f64, f64, u64, Vec<(String, f64, u64)>), CliError> {
-    let row: (Option<f64>, Option<f64>, Option<i64>) = sqlx::query_as(
-        "SELECT (ai_policy->>'monthly_cap_usd')::float8, SUM(actual_usd)::float8, COUNT(*)::int8
-         FROM ai_invocations inv
-         JOIN tenant_policies tp ON inv.tenant_id = tp.tenant_id
-         WHERE inv.tenant_id = $1 AND TO_CHAR(inv.created_at, 'YYYY-MM') = $2",
+    let row: (Option<f64>, f64, i64) = sqlx::query_as(
+        "SELECT
+            (SELECT (ai_policy->>'monthly_cap_usd')::float8 FROM tenant_policies WHERE tenant_id = $1),
+            COALESCE(SUM(actual_usd)::float8, 0)::float8,
+            COUNT(*)::int8
+         FROM ai_invocations
+         WHERE tenant_id = $1 AND TO_CHAR(created_at, 'YYYY-MM') = $2",
     )
     .bind(tenant)
     .bind(month)
-    .fetch_optional(pool)
+    .fetch_one(pool)
     .await
     .map_err(|e| CliError::RemoteUnreachable {
         reason: e.to_string(),
-    })?
-    .unwrap_or((None, None, None));
+    })?;
 
     let cap = row.0.unwrap_or(0.0);
-    let spent = row.1.unwrap_or(0.0);
-    let calls = row.2.unwrap_or(0) as u64;
+    let spent = row.1;
+    let calls = row.2 as u64;
 
     let models: Vec<(String, f64, i64)> = sqlx::query_as(
         "SELECT resolved_model, SUM(actual_usd)::float8, COUNT(*)::int8

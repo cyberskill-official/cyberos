@@ -116,7 +116,37 @@ async fn repair(
     .await
     .map_err(super::memory_writer_error)?;
 
-    println!("Deduped: {total_deduped} rows removed");
+    let deleted = sqlx::query(
+        "WITH ranked AS (
+             SELECT
+               seq,
+               ROW_NUMBER() OVER (
+                 PARTITION BY payload->>'hold_id'
+                 ORDER BY seq ASC
+               ) AS rn
+             FROM memory_rows
+             WHERE kind = 'ai.hold_expired'
+               AND payload ? 'hold_id'
+         )
+         DELETE FROM memory_rows
+         WHERE seq IN (SELECT seq FROM ranked WHERE rn > 1)",
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| CliError::RemoteUnreachable {
+        reason: e.to_string(),
+    })?
+    .rows_affected();
+
+    if deleted != total_deduped as u64 {
+        return Err(CliError::InternalError {
+            reason: format!(
+                "expiry repair expected to delete {total_deduped} rows; deleted {deleted}"
+            ),
+        });
+    }
+
+    println!("Deduped: {deleted} rows removed");
     println!("Audit: ai.cli_expiry_repaired emitted");
     Ok(())
 }

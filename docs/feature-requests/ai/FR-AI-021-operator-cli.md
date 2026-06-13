@@ -4,14 +4,14 @@ id: FR-AI-021
 title: "cyberos-ai operator CLI (usage · models · policy · failover · invoice · breaker · expiry · memory) with --confirm + --json + audit"
 module: AI
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 5
 slice: 5
 owner: Stephen Cheng
 created: 2026-05-15
-shipped: null
+shipped: 2026-06-13
 memory_chain_hash: null
 related_frs: [FR-AI-001, FR-AI-002, FR-AI-003, FR-AI-004, FR-AI-005, FR-AI-007, FR-AI-008, FR-AI-009, FR-AI-014, FR-AI-015, FR-AI-022]
 depends_on: [FR-AI-005, FR-AI-008, FR-AI-002, FR-AI-004, FR-AI-009]
@@ -784,7 +784,7 @@ All resolved at authoring time. Items deferred to later FRs:
 
 ## §12 — Route-back note (2026-06-08)
 
-Status remains `ready_to_implement`; do not mark this FR shipped yet.
+Historical status at route-back: `ready_to_implement`; resolved by §13.
 
 Reason: the operator CLI hardening and local contract tests are implemented, but the FR's live acceptance path depends on a reachable Postgres-backed AI Gateway dataset and memory writer integration for mutating/read-audit commands. This host still has no live Postgres service for `ai_invocations`, `tenant_policies`, `circuit_breakers`, `cost_holds`, and `memory_rows`, so the declared end-to-end commands (`usage`, `policy set --confirm`, `invoice export`, `breaker status/reset`, `expiry repair`) cannot be honestly verified.
 
@@ -821,6 +821,23 @@ CYBEROS_AI_OPERATOR_TOKEN=<read-token> DATABASE_URL=<postgres-url> \
   cargo run -p cyberos-ai-gateway --bin cyberos-ai -- invoice export org:test --period 2026-05 --format json
 ```
 
-Only after those live Postgres-backed commands run successfully and the corresponding `ai.cli_*` audit rows are present should this FR move to `done`.
+This route-back condition is now met by §13.
 
-*End of FR-AI-021. Status: ready_to_implement (routed back 2026-06-08).*
+## §13 — Shipment note (2026-06-13)
+
+Status: `done`.
+
+Route-back resolved: live Postgres-backed CLI verification ran against `tenant_policies`, `ai_invocations`, `circuit_breakers`, `cost_holds`, `memory_rows`, and `cost_table` fixture data with memory writer integration enabled. The declared `usage`, `policy set --confirm`, `expiry repair --confirm`, `breaker reset --confirm`, and `invoice export --format json` commands completed successfully, and `ai.cli_policy_updated`, `ai.cli_breaker_reset`, `ai.cli_expiry_repaired`, and `ai.cli_invoice_exported` audit files were emitted under the isolated target memory store.
+
+Implementation fixes made during shipment:
+- `usage` now uses valid Postgres aggregates for tenant and all-tenant summaries without over-counting caps.
+- `breaker status` accepts `NULL next_half_open` for closed breakers.
+- `expiry repair` now actually deletes duplicate `ai.hold_expired` rows after audit emission, with a live regression test.
+
+Verification completed:
+- `DATABASE_URL=postgres://cyberos:cyberos@127.0.0.1:55433/cyberos_ai_test CYBEROS_AI_GATEWAY_TEST_MEMORY_WRITES=1 CYBEROS_STORE=<repo>/target/fr-ai-002-memory cargo test -p cyberos-ai-gateway --test cli_test --test cli_audit_test --test cli_failover_drill_safety_test --test cli_json_schema_test -- --test-threads=1` — 12 passed.
+- `cargo build -p cyberos-ai-gateway --bin cyberos-ai` — passed.
+- Live CLI route-back commands — passed; DB post-checks showed `monthly_cap_usd=200`, breaker `Closed:0`, and duplicate `ai.hold_expired` groups `0`.
+- `cargo test -p cyberos-ai-gateway --lib` — 120 passed.
+
+*End of FR-AI-021. Status: done (shipped 2026-06-13).*

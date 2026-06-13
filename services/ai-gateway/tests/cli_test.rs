@@ -1,9 +1,11 @@
 use assert_cmd::prelude::*;
 use clap::Parser;
+use cyberos_ai_gateway::cli::auth::{OperatorClaims, Role};
+use cyberos_ai_gateway::cli::{expiry, Cli, ExpiryAction};
 use predicates::prelude::*;
+use sqlx::postgres::PgPoolOptions;
 use std::process::Command;
-
-use cyberos_ai_gateway::cli::Cli;
+use uuid::Uuid;
 
 #[test]
 fn version_returns_binary_version() {
@@ -138,4 +140,86 @@ fn shell_completion_emits_script_without_auth() {
         .assert()
         .success()
         .stdout(predicate::str::contains("cyberos-ai"));
+}
+
+#[tokio::test]
+async fn expiry_repair_deletes_duplicate_hold_expired_rows_when_live_enabled() {
+    if std::env::var_os("CYBEROS_AI_GATEWAY_TEST_MEMORY_WRITES").is_none()
+        || std::env::var_os("CYBEROS_STORE").is_none()
+    {
+        eprintln!(
+            "CYBEROS_AI_GATEWAY_TEST_MEMORY_WRITES=1 and CYBEROS_STORE are required; skipping live CLI expiry repair case"
+        );
+        return;
+    }
+
+    let Some(database_url) = std::env::var("DATABASE_URL").ok() else {
+        eprintln!("DATABASE_URL not set; skipping live CLI expiry repair case");
+        return;
+    };
+    let pool = PgPoolOptions::new()
+        .max_connections(1)
+        .connect(&database_url)
+        .await
+        .unwrap_or_else(|e| panic!("DATABASE_URL is set but Postgres connection failed: {e}"));
+
+    sqlx::query(
+        "CREATE TABLE IF NOT EXISTS memory_rows (
+            seq BIGSERIAL PRIMARY KEY,
+            ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            kind TEXT NOT NULL,
+            payload JSONB NOT NULL
+        )",
+    )
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    let hold_id = format!("cli-test-{}", Uuid::new_v4());
+    sqlx::query(
+        "INSERT INTO memory_rows (kind, payload)
+         VALUES ('ai.hold_expired', jsonb_build_object('tenant_id', 'org:test', 'hold_id', $1)),
+                ('ai.hold_expired', jsonb_build_object('tenant_id', 'org:test', 'hold_id', $1))",
+    )
+    .bind(&hold_id)
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    let claims = OperatorClaims {
+        operator_id: "ops@cyberos.world".to_string(),
+        roles: vec![Role::Admin],
+        exp: None,
+    };
+
+    expiry::run(ExpiryAction::Repair, false, true, &claims, &pool)
+        .await
+        .unwrap();
+
+    let duplicate_groups: (i64,) = sqlx::query_as(
+        "SELECT COUNT(*)::int8
+         FROM (
+             SELECT payload->>'hold_id'
+             FROM memory_rows
+             WHERE kind = 'ai.hold_expired' AND payload->>'hold_id' = $1
+             GROUP BY payload->>'hold_id'
+             HAVING COUNT(*) > 1
+         ) d",
+    )
+    .bind(&hold_id)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(duplicate_groups.0, 0);
+
+    let remaining: (i64,) = sqlx::query_as(
+        "SELECT COUNT(*)::int8
+         FROM memory_rows
+         WHERE kind = 'ai.hold_expired' AND payload->>'hold_id' = $1",
+    )
+    .bind(&hold_id)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(remaining.0, 1);
 }
