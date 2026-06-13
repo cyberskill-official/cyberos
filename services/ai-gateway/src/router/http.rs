@@ -17,6 +17,9 @@ pub(crate) fn apply_trace_headers(
     if let Some(tracestate) = &req.tracestate {
         builder = builder.header("tracestate", tracestate);
     }
+    if let Some(baggage) = &req.baggage {
+        builder = builder.header("baggage", baggage);
+    }
     builder
 }
 

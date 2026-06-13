@@ -1,6 +1,8 @@
 //! FR-AI-022 §5 — W3C TraceContext propagation tests.
 
 use cyberos_ai_gateway::otel::propagation;
+use cyberos_ai_gateway::otel::spans;
+use cyberos_ai_gateway::router::{ChatCompleteRequest, Message};
 use opentelemetry::trace::{SpanContext, SpanId, TraceContextExt, TraceFlags, TraceId, TraceState};
 use opentelemetry::Context;
 
@@ -59,4 +61,33 @@ fn extract_malformed_traceparent_is_safe() {
     );
     // Should not panic — malformed header is safely ignored.
     let _ctx = propagation::extract_context_from_headers(&headers);
+}
+
+#[test]
+fn otel_root_span_preserves_incoming_trace_id_and_parent_span_id() {
+    spans::clear_finished_spans();
+    let req = ChatCompleteRequest {
+        alias: "chat.smart".into(),
+        messages: vec![Message {
+            role: "user".into(),
+            content: "hello".into(),
+        }],
+        max_tokens: None,
+        temperature: None,
+        agent_persona: Some("cuo-cpo@0.4.1".into()),
+        traceparent: Some("00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01".into()),
+        tracestate: None,
+        baggage: None,
+    };
+
+    let mut root = spans::start_chat_root(&req, "tenant:test", "req-123", false);
+    root.end_ok();
+
+    let finished = spans::finished_spans();
+    assert_eq!(finished.len(), 1);
+    assert_eq!(finished[0].trace_id, "4bf92f3577b34da6a3ce929d0e0e4736");
+    assert_eq!(
+        finished[0].parent_span_id.as_deref(),
+        Some("00f067aa0ba902b7")
+    );
 }

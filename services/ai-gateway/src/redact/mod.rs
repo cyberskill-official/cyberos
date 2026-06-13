@@ -291,6 +291,7 @@ pub async fn redact_chat_request(
             agent_persona: req.agent_persona.clone(),
             traceparent: req.traceparent.clone(),
             tracestate: req.tracestate.clone(),
+            baggage: req.baggage.clone(),
         },
         redactions,
     ))

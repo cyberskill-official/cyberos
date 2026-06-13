@@ -2,4 +2,6 @@
 
 pub mod attributes;
 pub mod init;
+pub mod pii_lint;
 pub mod propagation;
+pub mod spans;

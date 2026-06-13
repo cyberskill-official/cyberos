@@ -287,6 +287,7 @@ fn registry_init_load_and_apply_persona_request() {
         temperature: None,
         traceparent: None,
         tracestate: None,
+        baggage: None,
     };
 
     let applied = apply_to_request(&req, "tenant-a", "req-123").unwrap();

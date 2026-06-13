@@ -4,6 +4,8 @@ use opentelemetry::{global, KeyValue};
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::{runtime, trace::TracerProvider, Resource};
 
+use super::attributes;
+
 /// Initialise the OTel SDK with an OTLP gRPC exporter.
 ///
 /// # Errors
@@ -19,8 +21,8 @@ pub fn init_otel(endpoint: &str) -> Result<TracerProvider, OtelInitError> {
     let provider = TracerProvider::builder()
         .with_batch_exporter(exporter, runtime::Tokio)
         .with_resource(Resource::new(vec![
-            KeyValue::new("service.name", "ai-gateway"),
-            KeyValue::new("service.version", env!("CARGO_PKG_VERSION")),
+            KeyValue::new(attributes::SERVICE_NAME, "ai-gateway"),
+            KeyValue::new(attributes::SERVICE_VERSION, env!("CARGO_PKG_VERSION")),
         ]))
         .build();
 

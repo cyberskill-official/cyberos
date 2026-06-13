@@ -32,6 +32,7 @@ use tracing::{error, warn};
 
 use crate::alias::ResolvedModel;
 use crate::circuit_breaker::{self, CallOutcome};
+use crate::otel::{attributes as otel_attributes, spans as otel_spans};
 use crate::policy::{ProviderKind, TenantPolicy};
 pub use failover::ProviderEndpoint;
 
@@ -160,58 +161,154 @@ pub async fn call_provider(
     deadline: Instant,
     policy: &TenantPolicy,
 ) -> Result<ProviderResponse, RouterError> {
-    let persona_applied = apply_persona_and_emit(req, policy).await?;
-    let (redacted_req, redactions) =
-        crate::redact::redact_chat_request(&persona_applied.request, policy)
+    let request_id = uuid::Uuid::new_v4().to_string();
+    let baggage =
+        otel_spans::baggage_header(&policy.tenant_id, req.agent_persona.as_deref(), &request_id);
+    let mut root = otel_spans::start_chat_root(req, &policy.tenant_id, &request_id, false);
+
+    let result = async {
+        let mut persona_span = root.child(
+            otel_spans::PERSONA_LOAD_SPAN,
+            opentelemetry::trace::SpanKind::Internal,
+        );
+        let persona_result = apply_persona_and_emit(req, policy, &request_id).await;
+        match &persona_result {
+            Ok(_) => {
+                persona_span.set_str(otel_attributes::OUTCOME, "allow");
+                persona_span.end_ok();
+            }
+            Err(err) => {
+                persona_span.set_str(otel_attributes::OUTCOME, "error");
+                persona_span.end_error(router_error_label(err));
+            }
+        }
+        let persona_applied = persona_result?;
+
+        let mut redact_span = root.child(
+            otel_spans::REDACT_SPAN,
+            opentelemetry::trace::SpanKind::Internal,
+        );
+        let redact_result = crate::redact::redact_chat_request(&persona_applied.request, policy)
             .await
-            .map_err(redaction_error)?;
+            .map_err(redaction_error);
+        match &redact_result {
+            Ok(_) => {
+                redact_span.set_str(otel_attributes::OUTCOME, "allow");
+                redact_span.end_ok();
+            }
+            Err(err) => {
+                redact_span.set_str(otel_attributes::OUTCOME, "error");
+                redact_span.end_error(router_error_label(err));
+            }
+        }
+        let (mut redacted_req, redactions) = redact_result?;
+        redacted_req.baggage = Some(baggage.clone());
 
-    let (cache_key, mut cache_state) = response_cache_key(&redacted_req, resolved, policy);
-    if let Some(cache_key) = &cache_key {
-        match crate::cache::lookup(cache_key).await {
-            crate::cache::CacheLookupOutcome::Hit(cached, lookup_latency) => {
-                let mut response = provider_response_from_cache(
-                    cache_key,
-                    *cached,
-                    lookup_latency,
-                    persona_applied.made_by_genie,
-                );
-                restore_tool_call_arguments(&mut response, &redactions);
-                return Ok(response);
+        let (cache_key, mut cache_state) = response_cache_key(&redacted_req, resolved, policy);
+        if let Some(cache_key) = &cache_key {
+            let mut cache_span = root.child(
+                otel_spans::CACHE_LOOKUP_SPAN,
+                opentelemetry::trace::SpanKind::Internal,
+            );
+            match crate::cache::lookup(cache_key).await {
+                crate::cache::CacheLookupOutcome::Hit(cached, lookup_latency) => {
+                    cache_span.set_str(otel_attributes::CACHE_STATE, "hit");
+                    cache_span.set_str(
+                        otel_attributes::CACHE_KEY_HASH16,
+                        cache_key_hash16(cache_key),
+                    );
+                    cache_span.set_str(otel_attributes::OUTCOME, "allow");
+                    cache_span.end_ok();
+                    let mut response = provider_response_from_cache(
+                        cache_key,
+                        *cached,
+                        lookup_latency,
+                        persona_applied.made_by_genie,
+                    );
+                    restore_tool_call_arguments(&mut response, &redactions);
+                    return Ok(response);
+                }
+                crate::cache::CacheLookupOutcome::Miss
+                | crate::cache::CacheLookupOutcome::SchemaMismatch => {
+                    cache_span.set_str(otel_attributes::CACHE_STATE, "miss");
+                    cache_span.set_str(
+                        otel_attributes::CACHE_KEY_HASH16,
+                        cache_key_hash16(cache_key),
+                    );
+                    cache_span.set_str(otel_attributes::OUTCOME, "allow");
+                    cache_span.end_ok();
+                    cache_state = CacheState::Miss;
+                }
+                crate::cache::CacheLookupOutcome::Error(err) => {
+                    cache_span.set_str(otel_attributes::CACHE_STATE, "error");
+                    cache_span.set_str(
+                        otel_attributes::CACHE_KEY_HASH16,
+                        cache_key_hash16(cache_key),
+                    );
+                    cache_span.set_str(otel_attributes::OUTCOME, "error");
+                    cache_span.end_error("cache_lookup_error");
+                    warn!(error = %err, "response_cache_lookup_failed; continuing to provider");
+                    cache_state = CacheState::Error;
+                }
             }
-            crate::cache::CacheLookupOutcome::Miss
-            | crate::cache::CacheLookupOutcome::SchemaMismatch => {
-                cache_state = CacheState::Miss;
+        }
+
+        let chain = failover::build_provider_chain(resolved, policy, &req.alias);
+        let mut response = call_provider_with_chain_traced(
+            &redacted_req,
+            deadline,
+            chain,
+            Some(&root),
+            Some(&baggage),
+        )
+        .await?;
+        response.cache_state = cache_state;
+
+        if let Some(cache_key) = &cache_key {
+            match crate::cache::insert(cache_key, &response, &req.alias).await {
+                crate::cache::CacheInsertOutcome::Inserted { .. } => {}
+                crate::cache::CacheInsertOutcome::Skipped(_) => {
+                    response.cache_state = CacheState::Skipped;
+                }
+                crate::cache::CacheInsertOutcome::Error(err) => {
+                    warn!(error = %err, "response_cache_insert_failed");
+                    response.cache_state = CacheState::Error;
+                }
             }
-            crate::cache::CacheLookupOutcome::Error(err) => {
-                warn!(error = %err, "response_cache_lookup_failed; continuing to provider");
-                cache_state = CacheState::Error;
-            }
+        }
+
+        restore_tool_call_arguments(&mut response, &redactions);
+        if response.made_by_genie.is_none() {
+            response.made_by_genie = persona_applied.made_by_genie;
+        }
+        Ok(response)
+    }
+    .await;
+
+    match &result {
+        Ok(response) => {
+            root.set_str(otel_attributes::OUTCOME, "allow");
+            root.set_i64(
+                otel_attributes::PROMPT_TOKENS,
+                i64::from(response.usage.prompt_tokens),
+            );
+            root.set_i64(
+                otel_attributes::COMPLETION_TOKENS,
+                i64::from(response.usage.completion_tokens),
+            );
+            root.set_str(
+                otel_attributes::CACHE_STATE,
+                cache_state_label(response.cache_state),
+            );
+            root.end_ok();
+        }
+        Err(err) => {
+            root.set_str(otel_attributes::OUTCOME, "error");
+            root.end_error(router_error_label(err));
         }
     }
 
-    let chain = failover::build_provider_chain(resolved, policy, &req.alias);
-    let mut response = call_provider_with_chain(&redacted_req, deadline, chain).await?;
-    response.cache_state = cache_state;
-
-    if let Some(cache_key) = &cache_key {
-        match crate::cache::insert(cache_key, &response, &req.alias).await {
-            crate::cache::CacheInsertOutcome::Inserted { .. } => {}
-            crate::cache::CacheInsertOutcome::Skipped(_) => {
-                response.cache_state = CacheState::Skipped;
-            }
-            crate::cache::CacheInsertOutcome::Error(err) => {
-                warn!(error = %err, "response_cache_insert_failed");
-                response.cache_state = CacheState::Error;
-            }
-        }
-    }
-
-    restore_tool_call_arguments(&mut response, &redactions);
-    if response.made_by_genie.is_none() {
-        response.made_by_genie = persona_applied.made_by_genie;
-    }
-    Ok(response)
+    result
 }
 
 /// Test/contract entry point for exercising the router loop with injected providers.
@@ -223,6 +320,16 @@ pub async fn call_provider_with_chain(
     req: &ChatCompleteRequest,
     deadline: Instant,
     chain: Vec<ProviderEndpoint>,
+) -> Result<ProviderResponse, RouterError> {
+    call_provider_with_chain_traced(req, deadline, chain, None, req.baggage.as_deref()).await
+}
+
+async fn call_provider_with_chain_traced(
+    req: &ChatCompleteRequest,
+    deadline: Instant,
+    chain: Vec<ProviderEndpoint>,
+    parent_span: Option<&otel_spans::OtelSpan>,
+    baggage: Option<&str>,
 ) -> Result<ProviderResponse, RouterError> {
     let started = Instant::now();
     let failover_deadline = started + FAILOVER_BUDGET;
@@ -270,11 +377,22 @@ pub async fn call_provider_with_chain(
                 .duration_since(Instant::now())
                 .min(PROVIDER_DEFAULT_TIMEOUT);
             let call_started = Instant::now();
+            let mut provider_span = provider_attempt_span(
+                parent_span,
+                req,
+                pk,
+                model,
+                attempt_num,
+                endpoint.fallback_position,
+            );
+            let traced_req = otel_spans::apply_outgoing_trace(req, &provider_span, baggage);
 
             // §1 #6: Propagate deadline via tokio::time::timeout.
             let outcome = tokio::time::timeout(
                 remaining,
-                endpoint.provider.call_chat(req, model, effective_deadline),
+                endpoint
+                    .provider
+                    .call_chat(&traced_req, model, effective_deadline),
             )
             .await;
 
@@ -299,6 +417,8 @@ pub async fn call_provider_with_chain(
                         .with_label_values(&[pk.as_metric_label(), "timeout"])
                         .inc();
                     record_breaker_outcome(pk, model, CallOutcome::Timeout);
+                    annotate_provider_error(&mut provider_span, None, "error");
+                    provider_span.end_error("deadline_exceeded");
                     DEADLINE_EXCEEDED.inc();
                     ATTEMPTS_PER_CALL
                         .with_label_values(&["deadline_exceeded"])
@@ -326,6 +446,8 @@ pub async fn call_provider_with_chain(
                         .with_label_values(&[ep.as_metric_label(), model, "terminal_4xx"])
                         .inc();
                     record_breaker_outcome(ep, model, CallOutcome::Failure4xx);
+                    annotate_provider_error(&mut provider_span, Some(400), "refuse");
+                    provider_span.end_error("terminal_400");
                     return Err(RouterError::TerminalProviderError {
                         provider: ep,
                         status: 400,
@@ -354,6 +476,8 @@ pub async fn call_provider_with_chain(
                         .with_label_values(&[ep.as_metric_label(), model, "terminal_4xx"])
                         .inc();
                     record_breaker_outcome(ep, model, CallOutcome::Failure4xx);
+                    annotate_provider_error(&mut provider_span, Some(404), "refuse");
+                    provider_span.end_error("terminal_404");
                     warn!(provider = ?ep, model = %model, "router_404_terminal_check_alias_resolver");
                     return Err(RouterError::TerminalProviderError {
                         provider: ep,
@@ -381,6 +505,8 @@ pub async fn call_provider_with_chain(
                         .with_label_values(&[ep.as_metric_label(), model, "auth_error"])
                         .inc();
                     record_breaker_outcome(ep, model, CallOutcome::Failure4xx);
+                    annotate_provider_error(&mut provider_span, Some(status), "error");
+                    provider_span.end_error("auth_error");
                     error!(
                         provider = ?ep,
                         status = status,
@@ -413,6 +539,7 @@ pub async fn call_provider_with_chain(
                         .with_label_values(&[ep.as_metric_label(), "429"])
                         .inc();
                     record_breaker_outcome(ep, model, CallOutcome::Failure429);
+                    annotate_provider_error(&mut provider_span, Some(429), "error");
                     last_error = Some(RouterError::TerminalProviderError {
                         provider: ep,
                         status: 429,
@@ -427,8 +554,15 @@ pub async fn call_provider_with_chain(
                             if let Some(last) = attempts.last_mut() {
                                 last.status = AttemptStatus::FailedOver;
                             }
+                            provider_span.end_error("retry_after_exceeded_deadline");
                             break;
                         }
+                        provider_span.add_retry_event(
+                            attempt_num.saturating_add(1),
+                            sleep.as_millis().min(u128::from(u64::MAX)) as u64,
+                            Some(429),
+                        );
+                        provider_span.end_error("retry_after_429");
                         tokio::time::sleep(sleep).await;
                         continue;
                     }
@@ -447,6 +581,8 @@ pub async fn call_provider_with_chain(
                     ));
                     DEADLINE_EXCEEDED.inc();
                     record_breaker_outcome(pk, model, CallOutcome::Timeout);
+                    annotate_provider_error(&mut provider_span, None, "error");
+                    provider_span.end_error("deadline_exceeded");
                     ATTEMPTS_PER_CALL
                         .with_label_values(&["deadline_exceeded"])
                         .observe(attempts.len() as f64);
@@ -472,11 +608,14 @@ pub async fn call_provider_with_chain(
                         .with_label_values(&[pk.as_metric_label(), "5xx"])
                         .inc();
                     record_breaker_outcome(pk, model, breaker_outcome_for_error(&e));
+                    annotate_provider_error(&mut provider_span, status_opt, "error");
                     last_error = Some(e);
                 }
 
                 // Success
                 Ok(Ok(mut resp)) => {
+                    annotate_provider_success(&mut provider_span, &resp);
+                    provider_span.end_ok();
                     resp.attempts = std::mem::take(&mut attempts);
                     resp.attempts.push(make_record(
                         pk,
@@ -507,9 +646,19 @@ pub async fn call_provider_with_chain(
                 };
                 let sleep_dur = Duration::from_millis(sleep_ms as u64);
                 if Instant::now() + sleep_dur > effective_deadline {
+                    provider_span.end_error("retry_backoff_exceeded_deadline");
                     break;
                 }
+                let prior_status = attempts.last().and_then(|attempt| attempt.http_status);
+                provider_span.add_retry_event(
+                    attempt_num.saturating_add(1),
+                    u64::from(sleep_ms),
+                    prior_status,
+                );
+                provider_span.end_error("retrying_provider_call");
                 tokio::time::sleep(sleep_dur).await;
+            } else {
+                provider_span.end_error("provider_attempt_failed");
             }
         }
 
@@ -554,8 +703,29 @@ pub async fn call_embed_provider(
         EmbedTask::Passage => "embed.standard",
         EmbedTask::Code => "embed.code",
     };
+    let request_id = uuid::Uuid::new_v4().to_string();
+    let mut root = otel_spans::start_embed_root(req, alias, &request_id);
     let chain = failover::build_provider_chain(resolved, policy, alias);
-    call_embed_provider_with_chain(req, deadline, chain).await
+    let result = call_embed_provider_with_chain_traced(req, deadline, chain, Some(&root)).await;
+    match &result {
+        Ok(response) => {
+            root.set_str(otel_attributes::OUTCOME, "allow");
+            root.set_i64(
+                otel_attributes::PROMPT_TOKENS,
+                i64::from(response.usage.prompt_tokens),
+            );
+            root.set_i64(
+                otel_attributes::COMPLETION_TOKENS,
+                i64::from(response.usage.completion_tokens),
+            );
+            root.end_ok();
+        }
+        Err(err) => {
+            root.set_str(otel_attributes::OUTCOME, "error");
+            root.end_error(router_error_label(err));
+        }
+    }
+    result
 }
 
 /// Test/contract entry point for embedding provider dispatch.
@@ -564,6 +734,32 @@ pub async fn call_embed_provider_with_chain(
     req: &EmbedRequest,
     deadline: Instant,
     chain: Vec<ProviderEndpoint>,
+) -> Result<EmbedResponse, RouterError> {
+    let request_id = uuid::Uuid::new_v4().to_string();
+    let mut root = otel_spans::start_embed_root(req, "embed.chain", &request_id);
+    let result = call_embed_provider_with_chain_traced(req, deadline, chain, Some(&root)).await;
+    match &result {
+        Ok(response) => {
+            root.set_str(otel_attributes::OUTCOME, "allow");
+            root.set_i64(
+                otel_attributes::PROMPT_TOKENS,
+                i64::from(response.usage.prompt_tokens),
+            );
+            root.end_ok();
+        }
+        Err(err) => {
+            root.set_str(otel_attributes::OUTCOME, "error");
+            root.end_error(router_error_label(err));
+        }
+    }
+    result
+}
+
+async fn call_embed_provider_with_chain_traced(
+    req: &EmbedRequest,
+    deadline: Instant,
+    chain: Vec<ProviderEndpoint>,
+    parent_span: Option<&otel_spans::OtelSpan>,
 ) -> Result<EmbedResponse, RouterError> {
     let mut last_error: Option<RouterError> = None;
 
@@ -574,7 +770,7 @@ pub async fn call_embed_provider_with_chain(
             continue;
         }
 
-        for _attempt_num in 1..=MAX_RETRIES_PER_PROVIDER {
+        for attempt_num in 1..=MAX_RETRIES_PER_PROVIDER {
             if Instant::now() >= deadline {
                 record_breaker_outcome(pk, model, CallOutcome::Timeout);
                 return Err(RouterError::DeadlineExceeded);
@@ -583,6 +779,25 @@ pub async fn call_embed_provider_with_chain(
             let remaining = deadline
                 .duration_since(Instant::now())
                 .min(PROVIDER_DEFAULT_TIMEOUT);
+            let mut provider_span = parent_span
+                .map(|parent| {
+                    parent.child(
+                        otel_spans::PROVIDER_CALL_SPAN,
+                        opentelemetry::trace::SpanKind::Client,
+                    )
+                })
+                .unwrap_or_else(|| {
+                    let request_id = uuid::Uuid::new_v4().to_string();
+                    otel_spans::start_embed_root(req, "embed.chain", &request_id)
+                });
+            provider_span.set_str(otel_attributes::PROVIDER, pk.as_metric_label());
+            provider_span.set_str(otel_attributes::MODEL, model);
+            provider_span.set_i64(otel_attributes::ATTEMPT_NUM, i64::from(attempt_num));
+            provider_span.set_i64(
+                otel_attributes::FALLBACK_POSITION,
+                i64::from(endpoint.fallback_position),
+            );
+            provider_span.set_bool(otel_attributes::RETRIED, attempt_num > 1);
             let outcome = tokio::time::timeout(
                 remaining,
                 endpoint.provider.call_embed(req, model, deadline),
@@ -592,14 +807,25 @@ pub async fn call_embed_provider_with_chain(
             match outcome {
                 Err(_) => {
                     record_breaker_outcome(pk, model, CallOutcome::Timeout);
+                    annotate_provider_error(&mut provider_span, None, "error");
+                    provider_span.end_error("deadline_exceeded");
                     return Err(RouterError::DeadlineExceeded);
                 }
                 Ok(Ok(resp)) => {
                     record_breaker_outcome(pk, model, CallOutcome::Success);
+                    provider_span.set_i64(otel_attributes::STATUS_CODE, 200);
+                    provider_span.set_str(otel_attributes::OUTCOME, "allow");
+                    provider_span.set_i64(
+                        otel_attributes::PROMPT_TOKENS,
+                        i64::from(resp.usage.prompt_tokens),
+                    );
+                    provider_span.end_ok();
                     return Ok(resp);
                 }
                 Ok(Err(err @ RouterError::NoSidecarForRegion { .. })) => {
                     record_breaker_outcome(pk, model, CallOutcome::Failure4xx);
+                    annotate_provider_error(&mut provider_span, None, "error");
+                    provider_span.end_error(router_error_label(&err));
                     return Err(err);
                 }
                 Ok(Err(
@@ -608,10 +834,22 @@ pub async fn call_embed_provider_with_chain(
                     },
                 )) => {
                     record_breaker_outcome(pk, model, CallOutcome::Failure4xx);
+                    let status = match &err {
+                        RouterError::TerminalProviderError { status, .. } => Some(*status),
+                        _ => None,
+                    };
+                    annotate_provider_error(&mut provider_span, status, "error");
+                    provider_span.end_error(router_error_label(&err));
                     return Err(err);
                 }
                 Ok(Err(err)) => {
                     record_breaker_outcome(pk, model, breaker_outcome_for_error(&err));
+                    let status = match &err {
+                        RouterError::TerminalProviderError { status, .. } => Some(*status),
+                        _ => None,
+                    };
+                    annotate_provider_error(&mut provider_span, status, "error");
+                    provider_span.end_error(router_error_label(&err));
                     last_error = Some(err);
                 }
             }
@@ -637,13 +875,71 @@ pub async fn call_provider_streaming(
     deadline: Instant,
     policy: &TenantPolicy,
 ) -> Result<ProviderStreamResponse, RouterError> {
-    let persona_applied = apply_persona_and_emit(req, policy).await?;
-    let (redacted_req, _redactions) =
-        crate::redact::redact_chat_request(&persona_applied.request, policy)
+    let request_id = uuid::Uuid::new_v4().to_string();
+    let baggage =
+        otel_spans::baggage_header(&policy.tenant_id, req.agent_persona.as_deref(), &request_id);
+    let mut root = otel_spans::start_chat_root(req, &policy.tenant_id, &request_id, true);
+
+    let result = async {
+        let mut persona_span = root.child(
+            otel_spans::PERSONA_LOAD_SPAN,
+            opentelemetry::trace::SpanKind::Internal,
+        );
+        let persona_result = apply_persona_and_emit(req, policy, &request_id).await;
+        match &persona_result {
+            Ok(_) => {
+                persona_span.set_str(otel_attributes::OUTCOME, "allow");
+                persona_span.end_ok();
+            }
+            Err(err) => {
+                persona_span.set_str(otel_attributes::OUTCOME, "error");
+                persona_span.end_error(router_error_label(err));
+            }
+        }
+        let persona_applied = persona_result?;
+
+        let mut redact_span = root.child(
+            otel_spans::REDACT_SPAN,
+            opentelemetry::trace::SpanKind::Internal,
+        );
+        let redact_result = crate::redact::redact_chat_request(&persona_applied.request, policy)
             .await
-            .map_err(redaction_error)?;
-    let chain = failover::build_provider_chain(resolved, policy, &req.alias);
-    call_provider_streaming_with_chain(&redacted_req, deadline, chain).await
+            .map_err(redaction_error);
+        match &redact_result {
+            Ok(_) => {
+                redact_span.set_str(otel_attributes::OUTCOME, "allow");
+                redact_span.end_ok();
+            }
+            Err(err) => {
+                redact_span.set_str(otel_attributes::OUTCOME, "error");
+                redact_span.end_error(router_error_label(err));
+            }
+        }
+        let (mut redacted_req, _redactions) = redact_result?;
+        redacted_req.baggage = Some(baggage.clone());
+        let chain = failover::build_provider_chain(resolved, policy, &req.alias);
+        call_provider_streaming_with_chain_traced(
+            &redacted_req,
+            deadline,
+            chain,
+            Some(&root),
+            Some(&baggage),
+        )
+        .await
+    }
+    .await;
+
+    match &result {
+        Ok(_) => {
+            root.set_str(otel_attributes::OUTCOME, "allow");
+            root.end_ok();
+        }
+        Err(err) => {
+            root.set_str(otel_attributes::OUTCOME, "error");
+            root.end_error(router_error_label(err));
+        }
+    }
+    result
 }
 
 /// Test/contract entry point for exercising streaming retry/failover with injected providers.
@@ -652,6 +948,17 @@ pub async fn call_provider_streaming_with_chain(
     req: &ChatCompleteRequest,
     deadline: Instant,
     chain: Vec<ProviderEndpoint>,
+) -> Result<ProviderStreamResponse, RouterError> {
+    call_provider_streaming_with_chain_traced(req, deadline, chain, None, req.baggage.as_deref())
+        .await
+}
+
+async fn call_provider_streaming_with_chain_traced(
+    req: &ChatCompleteRequest,
+    deadline: Instant,
+    chain: Vec<ProviderEndpoint>,
+    parent_span: Option<&otel_spans::OtelSpan>,
+    baggage: Option<&str>,
 ) -> Result<ProviderStreamResponse, RouterError> {
     let started = Instant::now();
     let failover_deadline = started + FAILOVER_BUDGET;
@@ -696,11 +1003,20 @@ pub async fn call_provider_streaming_with_chain(
                 .duration_since(Instant::now())
                 .min(PROVIDER_DEFAULT_TIMEOUT);
             let call_started = Instant::now();
+            let mut provider_span = provider_attempt_span(
+                parent_span,
+                req,
+                pk,
+                model,
+                attempt_num,
+                endpoint.fallback_position,
+            );
+            let traced_req = otel_spans::apply_outgoing_trace(req, &provider_span, baggage);
             let outcome = tokio::time::timeout(
                 remaining,
                 endpoint
                     .provider
-                    .call_chat_streaming(req, model, effective_deadline),
+                    .call_chat_streaming(&traced_req, model, effective_deadline),
             )
             .await;
 
@@ -724,6 +1040,8 @@ pub async fn call_provider_streaming_with_chain(
                         .with_label_values(&[pk.as_metric_label(), "streaming_timeout"])
                         .inc();
                     record_breaker_outcome(pk, model, CallOutcome::Timeout);
+                    annotate_provider_error(&mut provider_span, None, "error");
+                    provider_span.end_error("streaming_deadline_exceeded");
                     DEADLINE_EXCEEDED.inc();
                     ATTEMPTS_PER_CALL
                         .with_label_values(&["streaming_deadline_exceeded"])
@@ -750,6 +1068,8 @@ pub async fn call_provider_streaming_with_chain(
                         .with_label_values(&[ep.as_metric_label(), model, "streaming_terminal_4xx"])
                         .inc();
                     record_breaker_outcome(ep, model, CallOutcome::Failure4xx);
+                    annotate_provider_error(&mut provider_span, Some(400), "refuse");
+                    provider_span.end_error("streaming_terminal_400");
                     return Err(RouterError::TerminalProviderError {
                         provider: ep,
                         status: 400,
@@ -777,6 +1097,8 @@ pub async fn call_provider_streaming_with_chain(
                         .with_label_values(&[ep.as_metric_label(), model, "streaming_terminal_4xx"])
                         .inc();
                     record_breaker_outcome(ep, model, CallOutcome::Failure4xx);
+                    annotate_provider_error(&mut provider_span, Some(404), "refuse");
+                    provider_span.end_error("streaming_terminal_404");
                     warn!(provider = ?ep, model = %model, "router_streaming_404_terminal_check_alias_resolver");
                     return Err(RouterError::TerminalProviderError {
                         provider: ep,
@@ -803,6 +1125,8 @@ pub async fn call_provider_streaming_with_chain(
                         .with_label_values(&[ep.as_metric_label(), model, "streaming_auth_error"])
                         .inc();
                     record_breaker_outcome(ep, model, CallOutcome::Failure4xx);
+                    annotate_provider_error(&mut provider_span, Some(status), "error");
+                    provider_span.end_error("streaming_auth_error");
                     error!(
                         provider = ?ep,
                         status = status,
@@ -834,6 +1158,7 @@ pub async fn call_provider_streaming_with_chain(
                         .with_label_values(&[ep.as_metric_label(), "streaming_429"])
                         .inc();
                     record_breaker_outcome(ep, model, CallOutcome::Failure429);
+                    annotate_provider_error(&mut provider_span, Some(429), "error");
                     last_error = Some(RouterError::TerminalProviderError {
                         provider: ep,
                         status: 429,
@@ -847,8 +1172,15 @@ pub async fn call_provider_streaming_with_chain(
                             if let Some(last) = attempts.last_mut() {
                                 last.status = AttemptStatus::FailedOver;
                             }
+                            provider_span.end_error("streaming_retry_after_exceeded_deadline");
                             break;
                         }
+                        provider_span.add_retry_event(
+                            attempt_num.saturating_add(1),
+                            sleep.as_millis().min(u128::from(u64::MAX)) as u64,
+                            Some(429),
+                        );
+                        provider_span.end_error("streaming_retry_after_429");
                         tokio::time::sleep(sleep).await;
                         continue;
                     }
@@ -866,6 +1198,8 @@ pub async fn call_provider_streaming_with_chain(
                     ));
                     DEADLINE_EXCEEDED.inc();
                     record_breaker_outcome(pk, model, CallOutcome::Timeout);
+                    annotate_provider_error(&mut provider_span, None, "error");
+                    provider_span.end_error("streaming_deadline_exceeded");
                     ATTEMPTS_PER_CALL
                         .with_label_values(&["streaming_deadline_exceeded"])
                         .observe(attempts.len() as f64);
@@ -890,10 +1224,14 @@ pub async fn call_provider_streaming_with_chain(
                         .with_label_values(&[pk.as_metric_label(), "streaming_5xx"])
                         .inc();
                     record_breaker_outcome(pk, model, breaker_outcome_for_error(&e));
+                    annotate_provider_error(&mut provider_span, status_opt, "error");
                     last_error = Some(e);
                 }
 
                 Ok(Ok(resp)) => {
+                    provider_span.set_i64(otel_attributes::STATUS_CODE, 200);
+                    provider_span.set_str(otel_attributes::OUTCOME, "allow");
+                    provider_span.end_ok();
                     let mut final_attempts = std::mem::take(&mut attempts);
                     final_attempts.push(make_record(
                         pk,
@@ -923,9 +1261,19 @@ pub async fn call_provider_streaming_with_chain(
                 };
                 let sleep_dur = Duration::from_millis(sleep_ms as u64);
                 if Instant::now() + sleep_dur > effective_deadline {
+                    provider_span.end_error("streaming_retry_backoff_exceeded_deadline");
                     break;
                 }
+                let prior_status = attempts.last().and_then(|attempt| attempt.http_status);
+                provider_span.add_retry_event(
+                    attempt_num.saturating_add(1),
+                    u64::from(sleep_ms),
+                    prior_status,
+                );
+                provider_span.end_error("streaming_retrying_provider_call");
                 tokio::time::sleep(sleep_dur).await;
+            } else {
+                provider_span.end_error("streaming_provider_attempt_failed");
             }
         }
 
@@ -1033,6 +1381,91 @@ fn make_record(
     }
 }
 
+fn provider_attempt_span(
+    parent_span: Option<&otel_spans::OtelSpan>,
+    req: &ChatCompleteRequest,
+    provider: ProviderKind,
+    model: &str,
+    attempt_num: u8,
+    fallback_position: u8,
+) -> otel_spans::OtelSpan {
+    let mut span = parent_span
+        .map(|parent| {
+            parent.child(
+                otel_spans::PROVIDER_CALL_SPAN,
+                opentelemetry::trace::SpanKind::Client,
+            )
+        })
+        .unwrap_or_else(|| otel_spans::start_detached_provider_span(req));
+    span.set_str(otel_attributes::PROVIDER, provider.as_metric_label());
+    span.set_str(otel_attributes::MODEL, model);
+    span.set_i64(otel_attributes::ATTEMPT_NUM, i64::from(attempt_num));
+    span.set_i64(
+        otel_attributes::FALLBACK_POSITION,
+        i64::from(fallback_position),
+    );
+    span.set_bool(otel_attributes::RETRIED, attempt_num > 1);
+    span
+}
+
+fn annotate_provider_success(span: &mut otel_spans::OtelSpan, response: &ProviderResponse) {
+    span.set_i64(otel_attributes::STATUS_CODE, 200);
+    span.set_i64(
+        otel_attributes::PROMPT_TOKENS,
+        i64::from(response.usage.prompt_tokens),
+    );
+    span.set_i64(
+        otel_attributes::COMPLETION_TOKENS,
+        i64::from(response.usage.completion_tokens),
+    );
+    span.set_str(otel_attributes::OUTCOME, "allow");
+}
+
+fn annotate_provider_error(
+    span: &mut otel_spans::OtelSpan,
+    status_code: Option<u16>,
+    outcome: &'static str,
+) {
+    if let Some(status_code) = status_code {
+        span.set_i64(otel_attributes::STATUS_CODE, i64::from(status_code));
+    }
+    span.set_str(otel_attributes::OUTCOME, outcome);
+}
+
+fn cache_key_hash16(key: &crate::cache::CacheKey) -> String {
+    hex::encode(&key.prompt_hash[..8])
+}
+
+fn cache_state_label(state: CacheState) -> &'static str {
+    match state {
+        CacheState::None => "none",
+        CacheState::Hit { .. } => "hit",
+        CacheState::Miss => "miss",
+        CacheState::Skipped => "skipped",
+        CacheState::Error => "error",
+    }
+}
+
+fn router_error_label(error: &RouterError) -> &'static str {
+    match error {
+        RouterError::DeadlineExceeded => "deadline_exceeded",
+        RouterError::AuthError { .. } => "auth_error",
+        RouterError::TerminalProviderError { status: 400, .. } => "terminal_400",
+        RouterError::TerminalProviderError { status: 404, .. } => "terminal_404",
+        RouterError::TerminalProviderError { status: 429, .. } => "rate_limited",
+        RouterError::TerminalProviderError { .. } => "provider_error",
+        RouterError::NoSidecarForRegion { .. } => "no_sidecar_for_region",
+        RouterError::RedactionFailed { .. } => "redaction_failed",
+        RouterError::UnknownPersona { .. } => "unknown_persona",
+        RouterError::PersonaTampered { .. } => "persona_tampered",
+        RouterError::PersonaAuditFailed { .. } => "persona_audit_failed",
+        RouterError::SerializationError { .. } => "serialization_error",
+        RouterError::InvalidResponse { .. } => "invalid_response",
+        RouterError::AllProvidersFailed { .. } => "all_providers_failed",
+        RouterError::StreamingNotImplemented => "streaming_not_implemented",
+    }
+}
+
 fn breaker_outcome_for_error(error: &RouterError) -> CallOutcome {
     match error {
         RouterError::TerminalProviderError { status: 429, .. } => CallOutcome::Failure429,
@@ -1081,6 +1514,7 @@ mod tests {
             agent_persona: Some("cuo-cpo@0.4.1".to_string()),
             traceparent: None,
             tracestate: None,
+            baggage: None,
         };
 
         assert_eq!(
@@ -1102,6 +1536,7 @@ mod tests {
             agent_persona: None,
             traceparent: None,
             tracestate: None,
+            baggage: None,
         };
         let mut b = a.clone();
         b.messages[0].role = "system".to_string();
@@ -1121,9 +1556,9 @@ fn redaction_error(error: crate::redact::RedactError) -> RouterError {
 async fn apply_persona_and_emit(
     req: &ChatCompleteRequest,
     policy: &TenantPolicy,
+    request_id: &str,
 ) -> Result<crate::persona::AppliedPersona, RouterError> {
-    let request_id = uuid::Uuid::new_v4().to_string();
-    let applied = crate::persona::apply_to_request(req, &policy.tenant_id, &request_id)
+    let applied = crate::persona::apply_to_request(req, &policy.tenant_id, request_id)
         .map_err(persona_error)?;
     if let Some(row) = applied.audit_row.clone() {
         crate::memory_writer::emit(row)

@@ -15,6 +15,7 @@ use uuid::Uuid;
 
 use crate::cost_table;
 use crate::memory_writer;
+use crate::otel::{attributes as otel_attributes, spans as otel_spans};
 
 // ─── Metrics (FR-AI-002 §4 #14) ──────────────────────────────────────────────
 
@@ -221,6 +222,31 @@ pub async fn reconcile(
     outcome: CallOutcome,
     pool: &PgPool,
 ) -> Result<ReconcileOutcome, ReconcileError> {
+    let mut span = otel_spans::start_reconcile_span(&hold_id.to_string());
+    let result = reconcile_inner(hold_id, outcome, pool).await;
+    match &result {
+        Ok(ReconcileOutcome::Reconciled { actual_usd, .. }) => {
+            span.set_str(otel_attributes::OUTCOME, "allow");
+            span.set_str(otel_attributes::ACTUAL_USD, actual_usd.to_string());
+            span.end_ok();
+        }
+        Ok(ReconcileOutcome::Refunded { .. }) => {
+            span.set_str(otel_attributes::OUTCOME, "refuse");
+            span.end_error("refunded");
+        }
+        Err(err) => {
+            span.set_str(otel_attributes::OUTCOME, "error");
+            span.end_error(reconcile_error_label(err));
+        }
+    }
+    result
+}
+
+async fn reconcile_inner(
+    hold_id: Uuid,
+    outcome: CallOutcome,
+    pool: &PgPool,
+) -> Result<ReconcileOutcome, ReconcileError> {
     let started = std::time::Instant::now();
 
     let mut tx: Transaction<'_, Postgres> = pool.begin().await?;
@@ -286,6 +312,16 @@ pub async fn reconcile(
 }
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
+
+fn reconcile_error_label(error: &ReconcileError) -> &'static str {
+    match error {
+        ReconcileError::DbError(_) => "db_error",
+        ReconcileError::HoldNotFound(_) => "hold_not_found",
+        ReconcileError::AlreadyFinalised { .. } => "already_finalised",
+        ReconcileError::CostTableMissing { .. } => "cost_table_missing",
+        ReconcileError::MemoryWriterFailed { .. } => "memory_writer_failed",
+    }
+}
 
 async fn apply_outcome(
     tx: &mut Transaction<'_, Postgres>,

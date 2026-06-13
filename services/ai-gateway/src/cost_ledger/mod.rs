@@ -22,6 +22,7 @@ use uuid::Uuid;
 use crate::alias;
 use crate::cost_table;
 use crate::memory_writer;
+use crate::otel::{attributes as otel_attributes, spans as otel_spans};
 use crate::policy::TenantPolicy;
 use crate::residency;
 use crate::zdr;
@@ -75,6 +76,36 @@ static BUDGET_WARNS: Lazy<CounterVec> = Lazy::new(|| {
 /// The cap-check and hold-creation execute inside a single Postgres transaction
 /// with `FOR UPDATE` row locking to prevent concurrent cap-races (FR-AI-001 §1 #12).
 pub async fn precheck(
+    req: &ChatCompleteRequest,
+    pool: &PgPool,
+    policy: &TenantPolicy,
+) -> Result<PrecheckOutcome, PrecheckError> {
+    let mut span = otel_spans::start_precheck_span(
+        &req.tenant_id,
+        &req.agent_persona,
+        &req.model_alias,
+        &req.idempotency_key,
+    );
+    let result = precheck_inner(req, pool, policy).await;
+    match &result {
+        Ok(PrecheckOutcome::Allow { estimated_usd, .. }) => {
+            span.set_str(otel_attributes::OUTCOME, "allow");
+            span.set_str(otel_attributes::ESTIMATED_USD, estimated_usd.to_string());
+            span.end_ok();
+        }
+        Ok(PrecheckOutcome::Refuse { reason, .. }) => {
+            span.set_str(otel_attributes::OUTCOME, "refuse");
+            span.end_error(precheck_refuse_label(reason));
+        }
+        Err(err) => {
+            span.set_str(otel_attributes::OUTCOME, "error");
+            span.end_error(precheck_error_label(err));
+        }
+    }
+    result
+}
+
+async fn precheck_inner(
     req: &ChatCompleteRequest,
     pool: &PgPool,
     policy: &TenantPolicy,
@@ -296,6 +327,26 @@ pub async fn precheck(
 }
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
+
+fn precheck_refuse_label(reason: &RefuseReason) -> &'static str {
+    match reason {
+        RefuseReason::BudgetCapExceeded => "budget_cap_exceeded",
+        RefuseReason::TenantSuspended => "tenant_suspended",
+        RefuseReason::ProviderUnavailable => "provider_unavailable",
+        RefuseReason::InvalidIdempotencyKey => "invalid_idempotency_key",
+        RefuseReason::PersonaNotAllowed => "persona_not_allowed",
+        RefuseReason::ZdrViolation => "zdr_violation",
+        RefuseReason::ResidencyViolation => "residency_violation",
+    }
+}
+
+fn precheck_error_label(error: &PrecheckError) -> &'static str {
+    match error {
+        PrecheckError::DbError(_) => "db_error",
+        PrecheckError::MemoryWriterFailed { .. } => "memory_writer_failed",
+        PrecheckError::CostEstimateFailed { .. } => "cost_estimate_failed",
+    }
+}
 
 fn validate_idempotency_key(key: &str) -> Result<(), String> {
     if key.is_empty() || key.len() > IDEMPOTENCY_KEY_MAX_LEN {

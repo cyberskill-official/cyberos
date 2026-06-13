@@ -187,6 +187,7 @@ fn default_chat_request(content: &str) -> ChatCompleteRequest {
         agent_persona: None,
         traceparent: None,
         tracestate: None,
+        baggage: None,
     }
 }
 
@@ -467,8 +468,18 @@ async fn no_prompt_fragment_in_error_variants() {
 
 #[tokio::test]
 async fn router_redacts_before_openai_dispatch() {
-    let (sidecar_url, _) =
-        spawn_sidecar(StatusCode::OK, redacted_email_response(), Duration::ZERO).await;
+    let nonce = uuid::Uuid::new_v4();
+    let sidecar_body = json!({
+        "redacted_text": format!("email <EMAIL_ADDRESS_1> {nonce}"),
+        "items": [{
+            "entity": "EMAIL_ADDRESS",
+            "start": 6,
+            "end": 24,
+            "original": "secret@example.com"
+        }]
+    })
+    .to_string();
+    let (sidecar_url, _) = spawn_sidecar(StatusCode::OK, sidecar_body, Duration::ZERO).await;
     let (openai_url, captured_provider_bodies) = spawn_openai_server().await;
     let _env = EnvOverride::new(&sidecar_url, 2_000).with_openai_base_url(&openai_url);
 

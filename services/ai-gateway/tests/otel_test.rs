@@ -39,6 +39,8 @@ fn attribute_keys_are_pii_safe() {
         attributes::CACHE_KEY_HASH16,
         attributes::REQUEST_ID,
         attributes::REGION,
+        attributes::SERVICE_NAME,
+        attributes::SERVICE_VERSION,
         attributes::RETRY_ATTEMPT,
         attributes::RETRY_BACKOFF_MS,
         attributes::RETRY_PRIOR_STATUS,
@@ -46,5 +48,29 @@ fn attribute_keys_are_pii_safe() {
     // All keys should be ASCII-only (no unicode PII sneaking in).
     for key in &all_keys {
         assert!(key.is_ascii(), "attribute key contains non-ASCII: {key}");
+    }
+}
+
+#[test]
+fn otel_span_names_are_documented() {
+    let doc = std::fs::read_to_string("docs/span-names.md").expect("span names doc");
+    for span_name in [
+        cyberos_ai_gateway::otel::spans::CHAT_COMPLETION_SPAN,
+        cyberos_ai_gateway::otel::spans::EMBED_SPAN,
+        cyberos_ai_gateway::otel::spans::RERANK_SPAN,
+        cyberos_ai_gateway::otel::spans::PRECHECK_SPAN,
+        cyberos_ai_gateway::otel::spans::ALIAS_RESOLVE_SPAN,
+        cyberos_ai_gateway::otel::spans::PERSONA_LOAD_SPAN,
+        cyberos_ai_gateway::otel::spans::ZDR_CHECK_SPAN,
+        cyberos_ai_gateway::otel::spans::RESIDENCY_CHECK_SPAN,
+        cyberos_ai_gateway::otel::spans::CACHE_LOOKUP_SPAN,
+        cyberos_ai_gateway::otel::spans::REDACT_SPAN,
+        cyberos_ai_gateway::otel::spans::PROVIDER_CALL_SPAN,
+        cyberos_ai_gateway::otel::spans::RECONCILE_SPAN,
+    ] {
+        assert!(
+            doc.contains(span_name),
+            "{span_name} missing from docs/span-names.md"
+        );
     }
 }

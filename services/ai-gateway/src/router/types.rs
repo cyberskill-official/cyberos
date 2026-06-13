@@ -146,6 +146,8 @@ pub struct ChatCompleteRequest {
     pub traceparent: Option<String>,
     /// W3C tracestate header value.
     pub tracestate: Option<String>,
+    /// W3C baggage header value.
+    pub baggage: Option<String>,
 }
 
 /// A single message in a chat completion request.

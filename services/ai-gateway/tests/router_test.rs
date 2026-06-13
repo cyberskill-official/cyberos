@@ -14,6 +14,7 @@ use futures::StreamExt;
 
 use cyberos_ai_gateway::alias::{LatencyClass, ResolvedModel};
 use cyberos_ai_gateway::circuit_breaker::{self, clock::MockClock, CallOutcome};
+use cyberos_ai_gateway::otel::spans as otel_spans;
 use cyberos_ai_gateway::policy::{
     AiPolicy, EmergencyOverride, Provider as PolicyProvider, ProviderKind, Residency, TenantPolicy,
 };
@@ -337,6 +338,7 @@ fn default_req() -> ChatCompleteRequest {
         agent_persona: None,
         traceparent: None,
         tracestate: None,
+        baggage: None,
     }
 }
 
@@ -923,6 +925,7 @@ async fn openai_provider_normalizes_response_and_propagates_trace_headers() {
     let mut req = default_req();
     req.traceparent = Some("00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01".into());
     req.tracestate = Some("vendor=value".into());
+    req.baggage = Some("tenant_id=test-tenant,request_id=req-1".into());
 
     let response = OpenAIProvider
         .call_chat(&req, "gpt-4o", Instant::now() + Duration::from_secs(5))
@@ -948,6 +951,62 @@ async fn openai_provider_normalizes_response_and_propagates_trace_headers() {
             .and_then(|value| value.to_str().ok()),
         req.tracestate.as_deref()
     );
+    assert_eq!(
+        first.get("baggage").and_then(|value| value.to_str().ok()),
+        req.baggage.as_deref()
+    );
+}
+
+#[tokio::test]
+async fn otel_provider_spans_record_retry_attempts_and_status() {
+    otel_spans::clear_finished_spans();
+    let provider = Box::new(MockProvider::new(
+        ProviderKind::Openai,
+        ResponseScript::Sequence(vec![503, 200]),
+    ));
+    let mut req = default_req();
+    req.traceparent = Some("00-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bbbbbbbbbbbbbbbb-01".into());
+    req.baggage = Some("tenant_id=test-tenant,request_id=req-otel".into());
+
+    let response = router::call_provider_with_chain(
+        &req,
+        Instant::now() + Duration::from_secs(5),
+        vec![ProviderEndpoint::new(provider, "gpt-4o", 0)],
+    )
+    .await
+    .expect("second provider attempt should succeed");
+
+    assert_eq!(response.attempts.len(), 2);
+    let spans = otel_spans::finished_spans();
+    let provider_spans = spans
+        .iter()
+        .filter(|span| {
+            span.name == otel_spans::PROVIDER_CALL_SPAN
+                && span.trace_id == "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(provider_spans.len(), 2, "finished spans: {spans:#?}");
+    assert_eq!(
+        provider_spans[0].trace_id,
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    );
+    assert_eq!(
+        provider_spans[0].parent_span_id.as_deref(),
+        Some("bbbbbbbbbbbbbbbb")
+    );
+    assert_eq!(
+        provider_spans[0].status,
+        otel_spans::RecordedSpanStatus::Error
+    );
+    assert_eq!(provider_spans[1].status, otel_spans::RecordedSpanStatus::Ok);
+    assert!(provider_spans[0]
+        .events
+        .iter()
+        .any(|event| event.name == "retry.attempt"));
+    assert!(provider_spans[1]
+        .attributes
+        .iter()
+        .any(|(key, value)| key == "ai_gateway.status_code" && value == "200"));
 }
 
 /// AC #10: Provider impls parse Retry-After from headers, not response text.

@@ -23,11 +23,41 @@ pub const CACHE_STATE: &str = "ai_gateway.cache_state"; // PII-safe: enum (hit|m
 pub const CACHE_KEY_HASH16: &str = "ai_gateway.cache_key_hash16"; // PII-safe: hash, not content
 pub const REQUEST_ID: &str = "ai_gateway.request_id"; // PII-safe: UUID-shape, not personal
 pub const REGION: &str = "ai_gateway.region"; // PII-safe: AWS region string
+pub const SERVICE_NAME: &str = "service.name"; // PII-safe: static service identifier
+pub const SERVICE_VERSION: &str = "service.version"; // PII-safe: package semver
 
 // Span event attribute keys (used in events, not spans)
 pub const RETRY_ATTEMPT: &str = "retry.attempt";
 pub const RETRY_BACKOFF_MS: &str = "retry.backoff_ms";
 pub const RETRY_PRIOR_STATUS: &str = "retry.prior_status_code";
+
+pub const APPROVED_ATTRIBUTE_KEYS: &[&str] = &[
+    TENANT_ID,
+    MODEL_ALIAS,
+    AGENT_PERSONA,
+    IDEMPOTENCY_KEY,
+    STREAM,
+    OUTCOME,
+    PROVIDER,
+    MODEL,
+    ATTEMPT_NUM,
+    FALLBACK_POSITION,
+    STATUS_CODE,
+    RETRIED,
+    PROMPT_TOKENS,
+    COMPLETION_TOKENS,
+    ESTIMATED_USD,
+    ACTUAL_USD,
+    CACHE_STATE,
+    CACHE_KEY_HASH16,
+    REQUEST_ID,
+    REGION,
+    SERVICE_NAME,
+    SERVICE_VERSION,
+    RETRY_ATTEMPT,
+    RETRY_BACKOFF_MS,
+    RETRY_PRIOR_STATUS,
+];
 
 // FORBIDDEN at compile time (PII; requires FR amendment + DPO sign-off):
 // pub const USER_EMAIL:    &str = ... — would leak personal email

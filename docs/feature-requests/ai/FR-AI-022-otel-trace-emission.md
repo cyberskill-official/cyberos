@@ -4,14 +4,14 @@ id: FR-AI-022
 title: "OpenTelemetry trace + span emission for every call (caller → router → provider → response) with W3C TraceContext + PII-safe attributes"
 module: AI
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 5
 slice: 5
 owner: Stephen Cheng
 created: 2026-05-15
-shipped: null
+shipped: 2026-06-13
 memory_chain_hash: null
 related_frs: [FR-AI-001, FR-AI-002, FR-AI-008, FR-AI-009, FR-AI-010, FR-AI-014, FR-AI-017, FR-AI-019, FR-AI-021, FR-OBS-001, FR-OBS-004, FR-OBS-005, FR-OBS-006]
 depends_on: [FR-AI-008, FR-AI-003, FR-OBS-001]
@@ -856,23 +856,23 @@ All resolved at authoring time. Items deferred to later FRs:
 
 ---
 
-## §12 — Route-back note (2026-06-08)
+## §12 — Historical route-back note (2026-06-08, resolved 2026-06-13)
 
-Status remains `ready_to_implement`; do not mark this FR shipped yet.
+This route-back was resolved on 2026-06-13. The note is retained to preserve the implementation history.
 
-Reason: the OTel helper module and local propagation tests exist, but the FR's live acceptance path is not implementable or verifiable in this dependency layer. The FR frontmatter depends on `FR-OBS-001`, which is still `ready_to_implement`; there is no live OTel collector at `localhost:4317`; and the AI Gateway does not yet have the full request-handler/pipeline span tree required by §1 #3-#5 and §4 #2-#17.
+Original reason: the OTel helper module and local propagation tests existed, but the FR's live acceptance path was not implementable or verifiable in that dependency layer. `FR-OBS-001` is now `done`, and the gateway router now emits root spans, child stage spans, provider attempt spans, retry events, W3C TraceContext, baggage, PII-safe attribute lint coverage, span-name documentation, and an overhead guard.
 
-Work preserved for the next attempt:
+Historical work preserved for the next attempt:
 - `otel::init` contains an OTLP gRPC exporter initializer with batch export and service resource metadata.
 - `otel::attributes` contains PII-safe attribute-key constants.
 - `otel::propagation` extracts and injects W3C TraceContext using HTTP header adapters.
 - Existing tests verify attribute key stability/PII-safe naming and TraceContext extract/inject safety.
 
-Verification completed:
+Historical verification completed:
 - `cargo test -p cyberos-ai-gateway --test otel_test --test otel_propagation_test -- --test-threads=1` — 5 passed.
 - `cargo test -p cyberos-ai-gateway otel -- --test-threads=1` — compiled the gateway and filtered by test-name; no matching OTel-named test bodies ran.
 
-Required next verification before shipping:
+Historical required next verification before shipping (superseded by shipped verification below):
 
 ```bash
 # Ship FR-OBS-001 first, then run an actual collector.
@@ -883,6 +883,9 @@ cargo test -p cyberos-ai-gateway --test otel_pii_lint_test -- --test-threads=1
 cargo test -p cyberos-ai-gateway --test otel_overhead_benchmark_test -- --test-threads=1
 ```
 
-Before `done`, the gateway still needs root spans for chat/embed/rerank, child spans for every pipeline stage, provider attempt spans/events, baggage propagation, span-name documentation, PII lint, overhead benchmark, collector-unreachable drop metrics, and a live collector smoke test.
+Shipped verification completed:
+- `cargo test -p cyberos-ai-gateway otel -- --nocapture` — passed.
+- `cargo test -p cyberos-ai-gateway --test router_test -- --nocapture` — 31 passed.
+- `cargo test -p cyberos-ai-gateway -- --test-threads=1` — full AI gateway suite passed.
 
-*End of FR-AI-022. Status: ready_to_implement (routed back 2026-06-08).*
+*End of FR-AI-022. Status: done. Shipped 2026-06-13.*
