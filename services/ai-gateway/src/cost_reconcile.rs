@@ -10,6 +10,7 @@ use once_cell::sync::Lazy;
 use prometheus::{register_counter_vec, register_histogram, CounterVec, Histogram};
 use rust_decimal::Decimal;
 use sqlx::{PgPool, Postgres, Transaction};
+use std::sync::Mutex;
 use uuid::Uuid;
 
 use crate::cost_table;
@@ -61,6 +62,24 @@ static SPEND_TOTAL: Lazy<CounterVec> = Lazy::new(|| {
     )
     .unwrap()
 });
+
+static RECONCILE_EVENT_LOG: Lazy<Mutex<Vec<ReconcileEventRecord>>> =
+    Lazy::new(|| Mutex::new(Vec::new()));
+const MAX_RECONCILE_EVENT_LOG: usize = 4096;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ReconcileEventRecord {
+    pub hold_id: Uuid,
+    pub event: &'static str,
+}
+
+pub fn clear_reconcile_event_log() {
+    RECONCILE_EVENT_LOG.lock().unwrap().clear();
+}
+
+pub fn reconcile_event_log_snapshot() -> Vec<ReconcileEventRecord> {
+    RECONCILE_EVENT_LOG.lock().unwrap().clone()
+}
 
 // ─── Public types ─────────────────────────────────────────────────────────────
 
@@ -232,19 +251,59 @@ pub async fn reconcile(
         });
     }
 
+    emit_reconcile_started(&mut tx, &hold, outcome_kind(&outcome)).await?;
+    record_reconcile_event(hold.id, "reconcile_started");
+
     // 3. Branch by outcome.
-    let result = match outcome {
+    let result = match apply_outcome(&mut tx, &hold, hold_id, outcome).await {
+        Ok(result) => result,
+        Err(err) => {
+            drop(tx);
+            emit_reconcile_failed_best_effort(&hold, &err.to_string()).await;
+            record_reconcile_event(hold.id, "reconcile_failed");
+            return Err(err);
+        }
+    };
+
+    // 4. Commit — hold transition + ledger update + final audit row are durable together.
+    if let Err(err) = tx.commit().await {
+        let err = ReconcileError::DbError(err);
+        emit_reconcile_failed_best_effort(&hold, &err.to_string()).await;
+        record_reconcile_event(hold.id, "reconcile_failed");
+        return Err(err);
+    }
+    record_reconcile_event(hold.id, "commit");
+
+    emit_reconcile_completed(&hold, &result).await?;
+    record_reconcile_event(hold.id, "reconcile_completed");
+
+    record_reconcile_metrics(&hold, &result);
+
+    let elapsed_ms = started.elapsed().as_millis() as f64;
+    RECONCILE_LATENCY.observe(elapsed_ms);
+
+    Ok(result)
+}
+
+// ─── Internal helpers ─────────────────────────────────────────────────────────
+
+async fn apply_outcome(
+    tx: &mut Transaction<'_, Postgres>,
+    hold: &HoldRow,
+    hold_id: Uuid,
+    outcome: CallOutcome,
+) -> Result<ReconcileOutcome, ReconcileError> {
+    match outcome {
         CallOutcome::Success {
             usage,
             latency_ms,
             cache_state,
             provider_request_id,
         } => {
-            let actual_usd = compute_actual_cost(&hold, &usage)?;
+            let actual_usd = compute_actual_cost(hold, &usage)?;
             let (new_spent, warn_crossed) =
-                apply_success(&mut tx, &hold, actual_usd, &provider_request_id).await?;
+                apply_success(tx, hold, actual_usd, &provider_request_id).await?;
 
-            // Emit memory audit INSIDE transaction (audit-before-action).
             let emit_req = memory_writer::builders::invocation(
                 &hold.tenant_id,
                 &hold.agent_persona,
@@ -259,26 +318,20 @@ pub async fn reconcile(
                 cache_state.as_str(),
                 &provider_request_id,
             );
-            emit_audit(&mut tx, emit_req).await?;
+            emit_audit(tx, emit_req).await?;
 
-            RECONCILE_CALLS.with_label_values(&["reconciled"]).inc();
-            HOLDS_RECONCILED.with_label_values(&[&hold.tenant_id]).inc();
-            SPEND_TOTAL
-                .with_label_values(&[&hold.tenant_id, "current"])
-                .inc_by(actual_usd.to_string().parse::<f64>().unwrap_or(0.0));
-
-            ReconcileOutcome::Reconciled {
+            Ok(ReconcileOutcome::Reconciled {
                 actual_usd,
                 new_spent_total_usd: new_spent,
                 warn_crossed,
-            }
+            })
         }
         CallOutcome::ProviderError {
             http_status,
             retryable,
             provider_error_message,
         } => {
-            apply_refund(&mut tx, &hold, RefundReason::ProviderError { http_status }).await?;
+            apply_refund(tx, hold, RefundReason::ProviderError { http_status }).await?;
 
             let emit_req = memory_writer::builders::invocation_failed(
                 &hold.tenant_id,
@@ -292,25 +345,20 @@ pub async fn reconcile(
                 hold_id,
                 hold.estimated_usd,
             );
-            emit_audit(&mut tx, emit_req).await?;
+            emit_audit(tx, emit_req).await?;
 
-            RECONCILE_CALLS.with_label_values(&["refunded"]).inc();
-            HOLDS_REFUNDED.with_label_values(&["provider_error"]).inc();
-
-            ReconcileOutcome::Refunded {
+            Ok(ReconcileOutcome::Refunded {
                 hold_estimated_usd: hold.estimated_usd,
                 reason: RefundReason::ProviderError { http_status },
-            }
+            })
         }
         CallOutcome::Cancelled {
             partial_usage: Some(usage),
             ..
         } => {
-            let actual_usd = compute_actual_cost(&hold, &usage)?;
-            // Floor at column precision (AC #12).
-            let actual_usd = actual_usd.max(Decimal::new(1, 4)); // 0.0001
-
-            let (new_spent, warn_crossed) = apply_success(&mut tx, &hold, actual_usd, "").await?;
+            let actual_usd = compute_actual_cost(hold, &usage)?;
+            let actual_usd = actual_usd.max(Decimal::new(1, 4)); // AC #12: floor at 0.0001.
+            let (new_spent, warn_crossed) = apply_success(tx, hold, actual_usd, "").await?;
 
             let mut emit_req = memory_writer::builders::invocation(
                 &hold.tenant_id,
@@ -326,28 +374,24 @@ pub async fn reconcile(
                 CacheState::Partial.as_str(),
                 "",
             );
-            // Tag as cancelled.
             emit_req
                 .extra
                 .as_object_mut()
                 .unwrap()
                 .insert("cancelled".to_string(), serde_json::json!(true));
-            emit_audit(&mut tx, emit_req).await?;
+            emit_audit(tx, emit_req).await?;
 
-            RECONCILE_CALLS.with_label_values(&["reconciled"]).inc();
-            HOLDS_RECONCILED.with_label_values(&[&hold.tenant_id]).inc();
-
-            ReconcileOutcome::Reconciled {
+            Ok(ReconcileOutcome::Reconciled {
                 actual_usd,
                 new_spent_total_usd: new_spent,
                 warn_crossed,
-            }
+            })
         }
         CallOutcome::Cancelled {
             partial_usage: None,
             ..
         } => {
-            apply_refund(&mut tx, &hold, RefundReason::ProviderUnreachable).await?;
+            apply_refund(tx, hold, RefundReason::ProviderUnreachable).await?;
 
             let emit_req = memory_writer::builders::invocation_failed(
                 &hold.tenant_id,
@@ -361,30 +405,110 @@ pub async fn reconcile(
                 hold_id,
                 hold.estimated_usd,
             );
-            emit_audit(&mut tx, emit_req).await?;
+            emit_audit(tx, emit_req).await?;
 
-            RECONCILE_CALLS.with_label_values(&["refunded"]).inc();
-            HOLDS_REFUNDED
-                .with_label_values(&["provider_unreachable"])
-                .inc();
-
-            ReconcileOutcome::Refunded {
+            Ok(ReconcileOutcome::Refunded {
                 hold_estimated_usd: hold.estimated_usd,
                 reason: RefundReason::ProviderUnreachable,
-            }
+            })
         }
-    };
-
-    // 4. Commit — hold transition + ledger update + audit row all durable together.
-    tx.commit().await?;
-
-    let elapsed_ms = started.elapsed().as_millis() as f64;
-    RECONCILE_LATENCY.observe(elapsed_ms);
-
-    Ok(result)
+    }
 }
 
-// ─── Internal helpers ─────────────────────────────────────────────────────────
+async fn emit_reconcile_started(
+    tx: &mut Transaction<'_, Postgres>,
+    hold: &HoldRow,
+    outcome_kind: &str,
+) -> Result<(), ReconcileError> {
+    let emit_req = memory_writer::builders::reconcile_started(
+        &hold.tenant_id,
+        &hold.agent_persona,
+        &hold.model_alias,
+        &hold.resolved_provider,
+        &hold.resolved_model,
+        hold.id,
+        outcome_kind,
+    );
+    emit_audit(tx, emit_req).await
+}
+
+async fn emit_reconcile_completed(
+    hold: &HoldRow,
+    result: &ReconcileOutcome,
+) -> Result<(), ReconcileError> {
+    let (outcome, actual, spent, warn, refund_reason): (
+        &str,
+        Option<Decimal>,
+        Option<Decimal>,
+        bool,
+        Option<String>,
+    ) = match result {
+        ReconcileOutcome::Reconciled {
+            actual_usd,
+            new_spent_total_usd,
+            warn_crossed,
+        } => (
+            "reconciled",
+            Some(*actual_usd),
+            Some(*new_spent_total_usd),
+            *warn_crossed,
+            None,
+        ),
+        ReconcileOutcome::Refunded { reason, .. } => (
+            "refunded",
+            None,
+            None,
+            false,
+            Some(refund_reason_tag(reason)),
+        ),
+    };
+    let emit_req = memory_writer::builders::reconcile_completed(
+        &hold.tenant_id,
+        &hold.agent_persona,
+        &hold.model_alias,
+        &hold.resolved_provider,
+        &hold.resolved_model,
+        hold.id,
+        outcome,
+        actual,
+        spent,
+        warn,
+        refund_reason.as_deref(),
+    );
+    emit_audit_after_commit(emit_req).await
+}
+
+async fn emit_reconcile_failed_best_effort(hold: &HoldRow, error: &str) {
+    let emit_req = memory_writer::builders::reconcile_failed(
+        &hold.tenant_id,
+        &hold.agent_persona,
+        &hold.model_alias,
+        &hold.resolved_provider,
+        &hold.resolved_model,
+        hold.id,
+        error,
+    );
+    let _ = emit_audit_after_commit(emit_req).await;
+}
+
+fn record_reconcile_metrics(hold: &HoldRow, result: &ReconcileOutcome) {
+    match result {
+        ReconcileOutcome::Reconciled { actual_usd, .. } => {
+            RECONCILE_CALLS.with_label_values(&["reconciled"]).inc();
+            HOLDS_RECONCILED.with_label_values(&[&hold.tenant_id]).inc();
+            SPEND_TOTAL
+                .with_label_values(&[&hold.tenant_id, "current"])
+                .inc_by(actual_usd.to_string().parse::<f64>().unwrap_or(0.0));
+        }
+        ReconcileOutcome::Refunded { reason, .. } => {
+            let reason_tag = refund_reason_tag(reason);
+            RECONCILE_CALLS.with_label_values(&["refunded"]).inc();
+            HOLDS_REFUNDED
+                .with_label_values(&[reason_tag.as_str()])
+                .inc();
+        }
+    }
+}
 
 fn compute_actual_cost(hold: &HoldRow, usage: &ProviderUsage) -> Result<Decimal, ReconcileError> {
     let provider_kind = parse_provider_kind(&hold.resolved_provider).ok_or_else(|| {
@@ -404,6 +528,37 @@ fn compute_actual_cost(hold: &HoldRow, usage: &ProviderUsage) -> Result<Decimal,
     let completion_cost =
         (Decimal::from(usage.completion_tokens) / per_1k) * rate.output_per_1k_usd;
     Ok(prompt_cost + completion_cost)
+}
+
+fn record_reconcile_event(hold_id: Uuid, event: &'static str) {
+    tracing::info!(%hold_id, event, "cost_reconcile_event");
+    let mut log = RECONCILE_EVENT_LOG.lock().unwrap();
+    if log.len() >= MAX_RECONCILE_EVENT_LOG {
+        log.remove(0);
+    }
+    log.push(ReconcileEventRecord { hold_id, event });
+}
+
+fn outcome_kind(outcome: &CallOutcome) -> &'static str {
+    match outcome {
+        CallOutcome::Success { .. } => "success",
+        CallOutcome::ProviderError { .. } => "provider_error",
+        CallOutcome::Cancelled {
+            partial_usage: Some(_),
+            ..
+        } => "cancelled_partial",
+        CallOutcome::Cancelled {
+            partial_usage: None,
+            ..
+        } => "cancelled_no_stream",
+    }
+}
+
+fn refund_reason_tag(reason: &RefundReason) -> String {
+    match reason {
+        RefundReason::ProviderError { http_status } => format!("provider_error_{http_status}"),
+        RefundReason::ProviderUnreachable => "provider_unreachable".to_string(),
+    }
 }
 
 fn parse_provider_kind(s: &str) -> Option<crate::policy::ProviderKind> {
@@ -474,6 +629,7 @@ async fn apply_success(
     .bind(hold.id)
     .execute(&mut **tx)
     .await?;
+    record_reconcile_event(hold.id, "sql_update");
 
     Ok(row)
 }
@@ -483,10 +639,7 @@ async fn apply_refund(
     hold: &HoldRow,
     reason: RefundReason,
 ) -> Result<(), ReconcileError> {
-    let reason_str = match &reason {
-        RefundReason::ProviderError { http_status } => format!("provider_error_{http_status}"),
-        RefundReason::ProviderUnreachable => "provider_unreachable".to_string(),
-    };
+    let reason_str = refund_reason_tag(&reason);
 
     sqlx::query(
         "UPDATE cost_ledger_hold \
@@ -497,6 +650,7 @@ async fn apply_refund(
     .bind(hold.id)
     .execute(&mut **tx)
     .await?;
+    record_reconcile_event(hold.id, "sql_update");
 
     Ok(())
 }
@@ -506,6 +660,15 @@ async fn emit_audit(
     req: memory_writer::MemoryEmit,
 ) -> Result<(), ReconcileError> {
     // Emit via memory writer. If this fails, the transaction will roll back.
+    memory_writer::emit(req)
+        .await
+        .map_err(|e| ReconcileError::MemoryWriterFailed {
+            stderr: e.to_string(),
+        })?;
+    Ok(())
+}
+
+async fn emit_audit_after_commit(req: memory_writer::MemoryEmit) -> Result<(), ReconcileError> {
     memory_writer::emit(req)
         .await
         .map_err(|e| ReconcileError::MemoryWriterFailed {

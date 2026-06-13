@@ -3,7 +3,7 @@
 //! Requires a running Postgres instance. Set DATABASE_URL env var.
 //! Tests are ignored when DATABASE_URL is not set.
 
-use std::path::Path;
+use std::{path::Path, time::Instant};
 
 use chrono::Datelike;
 use rust_decimal::Decimal;
@@ -767,6 +767,278 @@ async fn reconcile_already_finalised_carries_outcome() {
         }
         other => panic!("expected AlreadyFinalised, got {:?}", other),
     }
+
+    cleanup_tenant(&pool, tenant).await;
+}
+
+// ─── AC #6: Crash-point consistency ─────────────────────────────────────────
+
+#[tokio::test]
+async fn reconcile_transaction_crash_points_preserve_ledger_consistency() {
+    let pool = match test_pool().await {
+        Some(p) => p,
+        None => {
+            eprintln!("DATABASE_URL not set; skipping");
+            return;
+        }
+    };
+    init_cost_table_for_tests();
+    if !require_memory_writes_enabled() {
+        return;
+    }
+
+    let tenant = "test:reconcile-crash-points";
+    cleanup_tenant(&pool, tenant).await;
+
+    for i in 0..100_u32 {
+        cleanup_tenant(&pool, tenant).await;
+        seed_tenant(&pool, tenant, dec!(1000), dec!(12.50)).await;
+        let hold_id = seed_hold(
+            &pool,
+            tenant,
+            dec!(0.0085),
+            "bedrock",
+            "anthropic.claude-3-5-sonnet-20241022-v2:0",
+        )
+        .await;
+
+        match i % 6 {
+            0 => {
+                // Crash before the transaction mutates anything.
+            }
+            1 => {
+                let mut tx = pool.begin().await.unwrap();
+                sqlx::query("SELECT id FROM cost_ledger_hold WHERE id = $1 FOR UPDATE")
+                    .bind(hold_id)
+                    .fetch_one(&mut *tx)
+                    .await
+                    .unwrap();
+                tx.rollback().await.unwrap();
+            }
+            2 => {
+                let mut tx = pool.begin().await.unwrap();
+                sqlx::query(
+                    "UPDATE cost_ledger SET spent_usd = spent_usd + 0.0078 \
+                     WHERE tenant_id = $1 AND period = date_trunc('month', NOW())::date",
+                )
+                .bind(tenant)
+                .execute(&mut *tx)
+                .await
+                .unwrap();
+                tx.rollback().await.unwrap();
+            }
+            3 => {
+                let mut tx = pool.begin().await.unwrap();
+                sqlx::query(
+                    "UPDATE cost_ledger SET spent_usd = spent_usd + 0.0078 \
+                     WHERE tenant_id = $1 AND period = date_trunc('month', NOW())::date",
+                )
+                .bind(tenant)
+                .execute(&mut *tx)
+                .await
+                .unwrap();
+                sqlx::query(
+                    "UPDATE cost_ledger_hold SET state = 'reconciled', actual_usd = 0.0078, \
+                     reconciled_at = NOW() WHERE id = $1",
+                )
+                .bind(hold_id)
+                .execute(&mut *tx)
+                .await
+                .unwrap();
+                tx.rollback().await.unwrap();
+            }
+            _ => {
+                reconcile(
+                    hold_id,
+                    CallOutcome::Success {
+                        usage: ProviderUsage {
+                            prompt_tokens: 120,
+                            completion_tokens: 450,
+                        },
+                        latency_ms: 25,
+                        cache_state: CacheState::Miss,
+                        provider_request_id: format!("prv_crash_{i}"),
+                    },
+                    &pool,
+                )
+                .await
+                .unwrap();
+            }
+        }
+
+        let spent = read_ledger_spent(&pool, tenant).await;
+        let (state, actual_usd, _) = read_hold_state(&pool, hold_id).await;
+        match state.as_str() {
+            "held" => {
+                assert_eq!(spent, dec!(12.50), "held rows must not consume spend");
+                assert!(
+                    actual_usd.is_none(),
+                    "held rows must not carry actual spend"
+                );
+            }
+            "reconciled" => {
+                let actual = actual_usd.expect("reconciled row should carry actual_usd");
+                assert!(
+                    spent >= dec!(12.50) + actual,
+                    "ledger spend must include reconciled actual_usd"
+                );
+            }
+            other => panic!("unexpected crash-test state: {other}"),
+        }
+    }
+
+    cleanup_tenant(&pool, tenant).await;
+}
+
+// ─── AC #9: Reconcile latency budget ────────────────────────────────────────
+
+#[tokio::test]
+async fn reconcile_latency_p95_under_80ms_over_1000_warm_calls() {
+    let pool = match test_pool().await {
+        Some(p) => p,
+        None => {
+            eprintln!("DATABASE_URL not set; skipping");
+            return;
+        }
+    };
+    init_cost_table_for_tests();
+    if !require_memory_writes_enabled() {
+        return;
+    }
+
+    let tenant = "test:reconcile-latency";
+    cleanup_tenant(&pool, tenant).await;
+    seed_tenant(&pool, tenant, dec!(100000), dec!(0)).await;
+
+    let warm_hold = seed_hold(
+        &pool,
+        tenant,
+        dec!(0.0085),
+        "bedrock",
+        "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    )
+    .await;
+    reconcile(
+        warm_hold,
+        CallOutcome::Success {
+            usage: ProviderUsage {
+                prompt_tokens: 120,
+                completion_tokens: 450,
+            },
+            latency_ms: 20,
+            cache_state: CacheState::Miss,
+            provider_request_id: "prv_latency_warm".to_string(),
+        },
+        &pool,
+    )
+    .await
+    .unwrap();
+
+    let mut elapsed_ms = Vec::with_capacity(1000);
+    for i in 0..1000_u32 {
+        let hold_id = seed_hold(
+            &pool,
+            tenant,
+            dec!(0.0085),
+            "bedrock",
+            "anthropic.claude-3-5-sonnet-20241022-v2:0",
+        )
+        .await;
+        let started = Instant::now();
+        reconcile(
+            hold_id,
+            CallOutcome::Success {
+                usage: ProviderUsage {
+                    prompt_tokens: 120,
+                    completion_tokens: 450,
+                },
+                latency_ms: 20,
+                cache_state: CacheState::Miss,
+                provider_request_id: format!("prv_latency_{i}"),
+            },
+            &pool,
+        )
+        .await
+        .unwrap();
+        elapsed_ms.push(started.elapsed().as_secs_f64() * 1000.0);
+    }
+
+    elapsed_ms.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let p95 = elapsed_ms[949];
+    assert!(
+        p95 <= 80.0,
+        "reconcile p95 latency exceeded 80ms: p95={p95:.2}ms max={:.2}ms",
+        elapsed_ms[999]
+    );
+
+    cleanup_tenant(&pool, tenant).await;
+}
+
+// ─── AC #15: Pair-write ordering ────────────────────────────────────────────
+
+#[tokio::test]
+async fn reconcile_pair_write_order_is_start_update_commit_completed() {
+    let pool = match test_pool().await {
+        Some(p) => p,
+        None => {
+            eprintln!("DATABASE_URL not set; skipping");
+            return;
+        }
+    };
+    init_cost_table_for_tests();
+    if !require_memory_writes_enabled() {
+        return;
+    }
+
+    let tenant = "test:reconcile-pair-write";
+    cleanup_tenant(&pool, tenant).await;
+    seed_tenant(&pool, tenant, dec!(100), dec!(12.50)).await;
+    clear_reconcile_event_log();
+
+    let hold_id = seed_hold(
+        &pool,
+        tenant,
+        dec!(0.0085),
+        "bedrock",
+        "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    )
+    .await;
+
+    reconcile(
+        hold_id,
+        CallOutcome::Success {
+            usage: ProviderUsage {
+                prompt_tokens: 120,
+                completion_tokens: 450,
+            },
+            latency_ms: 850,
+            cache_state: CacheState::Miss,
+            provider_request_id: "prv_pair_write".to_string(),
+        },
+        &pool,
+    )
+    .await
+    .unwrap();
+
+    let events: Vec<&'static str> = reconcile_event_log_snapshot()
+        .into_iter()
+        .filter(|record| record.hold_id == hold_id)
+        .map(|record| record.event)
+        .collect();
+    assert_eq!(
+        events,
+        vec![
+            "reconcile_started",
+            "sql_update",
+            "commit",
+            "reconcile_completed"
+        ]
+    );
+    assert_eq!(count_memory_rows(hold_id, "ai.reconcile_started"), 1);
+    assert_eq!(count_memory_rows(hold_id, "ai.reconcile_completed"), 1);
+    assert_eq!(count_memory_rows(hold_id, "ai.reconcile_failed"), 0);
+    assert!(memory_row_body(hold_id, "ai.reconcile_started").contains("outcome_kind: success"));
+    assert!(memory_row_body(hold_id, "ai.reconcile_completed").contains("outcome: reconciled"));
 
     cleanup_tenant(&pool, tenant).await;
 }

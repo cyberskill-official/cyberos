@@ -4,7 +4,7 @@ id: FR-AI-002
 title: "AI Gateway cost-ledger post-call reconcile"
 module: AI
 priority: MUST
-status: ready_to_implement
+status: done
 accepted_at: 2026-05-15
 accepted_by: Stephen Cheng
 verify: T
@@ -13,7 +13,7 @@ milestone: P0 · slice 1
 slice: 1
 owner: Stephen Cheng
 created: 2026-05-15
-shipped: null
+shipped: 2026-06-13
 memory_chain_hash: null
 related_frs: [FR-AI-001, FR-AI-003, FR-AI-004]
 depends_on: [FR-AI-001, FR-AI-007, FR-AI-003]
@@ -577,43 +577,38 @@ All resolved 2026-05-15 (round 2). Promoted to §1/§4 normative clauses:
 
 ---
 
-## §12 — Ship workflow routeback (2026-06-13)
+## §12 — Ship workflow completion (2026-06-13)
 
-Status remains `ready_to_implement`; this FR is not shipped.
+Status is `done`.
 
-Implemented and verified during the ship workflow:
+Final implementation pass:
 
-- Added additive migration `0003_cost_reconcile_context.sql` so holds persist `agent_persona`, `model_alias`, and per-hold `warn_crossed`.
-- Updated precheck hold inserts and reconcile audit builders so `ai.invocation` rows carry `model_alias` and `provider_request_id`; refund rows carry `model_alias`.
-- Reworked warn-threshold accounting to compute crossing from the locked pre-update ledger row and persist the result on the hold.
-- Hardened live integration coverage to require the canonical memory Writer when memory-writing cases run, assert exactly one final audit row per hold, assert no second row on idempotent retry, and verify warning de-duplication.
+- Added the `ai.reconcile_started`, `ai.reconcile_completed`, and `ai.reconcile_failed` typed memory rows and kept all writes routed through the canonical Writer bridge.
+- Added a streaming `python3 -m cyberos.writer stream` subprocess path so hot-path reconcile emits multiple real memory rows without paying Python startup per row; the one-shot `put` path remains as fallback.
+- Reordered reconcile so `ai.reconcile_started` is emitted before SQL mutation, final invocation rows remain inside the transaction, and `ai.reconcile_completed` is emitted after commit. Rollback paths best-effort emit `ai.reconcile_failed`.
+- Added bounded in-process reconcile event capture for the AC #15 order assertion: `reconcile_started -> sql_update -> commit -> reconcile_completed`.
+- Added the declared AC #6 crash-point consistency test over 100 iterations.
+- Added the declared AC #9 1000-call warm-pool p95 latency gate with live Postgres and live memory Writer rows.
 
 Verification completed:
 
 ```bash
-CYBEROS_STORE=/Users/stephencheng/Projects/CyberSkill/cyberos/target/fr-ai-002-memory \
-CYBEROS_AI_GATEWAY_TEST_MEMORY_WRITES=1 \
 DATABASE_URL=postgres://cyberos:cyberos@127.0.0.1:55433/cyberos_ai_test \
+CYBEROS_AI_GATEWAY_TEST_MEMORY_WRITES=1 \
+CYBEROS_STORE=/Users/stephencheng/Projects/CyberSkill/cyberos/target/fr-ai-002-memory \
 PYTHONPATH=/Users/stephencheng/Projects/CyberSkill/cyberos/target/codex-python-memory:/Users/stephencheng/Projects/CyberSkill/cyberos/modules/memory \
-cargo test -p cyberos-ai-gateway --test cost_reconcile_test -- --test-threads=1
+cargo test -p cyberos-ai-gateway --test cost_reconcile_test -- --test-threads=1 --nocapture
 ```
 
-Result: 10 passed.
+Result: 13 passed.
 
 Additional regression checks passed:
 
 - `cargo test -p cyberos-ai-gateway --test cost_precheck_test -- --test-threads=1` with live Postgres and isolated memory writes: 8 passed.
 - `cargo test -p cyberos-ai-gateway --test cost_hold_expiry_test -- --test-threads=1` with live Postgres and isolated memory writes: 6 passed.
 - `cargo test -p cyberos-ai-gateway --lib`: 120 passed.
+- `python3 -m pytest modules/memory/tests/test_writer_cli.py modules/memory/tests/core/test_writer_basic.py modules/memory/tests/core/test_ops_and_reader.py -q`: 12 passed.
 - `cyberos doctor` on both the isolated FR-AI-002 store and project BRAIN: OK.
-
-Routeback blockers before this FR may be marked `done`:
-
-- AC #6 still lacks the declared crash-point property test (`100 reconcile calls × random crash points × ledger consistency invariant`).
-- AC #9 still lacks the declared 1000-call warm-pool p95 reconcile latency gate; current live coverage proves behavior but does not prove the 80ms p95 budget.
-- AC #15 is not implemented as specified: there are no `ai.reconcile_started` / `ai.reconcile_completed` / `ai.reconcile_failed` pair-write audit rows or captured event-order test. The existing implementation still emits the final `ai.invocation` / `ai.invocation_failed` row before commit and rolls back DB state if that emit fails, but it does not satisfy the later audit appendix ordering contract.
-
-Next implementation pass should address the three blockers above before changing frontmatter or BACKLOG status to `done`.
 
 ---
 

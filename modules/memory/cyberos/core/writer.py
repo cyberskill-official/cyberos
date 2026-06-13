@@ -329,6 +329,16 @@ class Writer:
         TimeoutError
             The commit thread did not flush within ``flush_timeout_s``.
         """
+        seq, _record = self.submit_with_record(rec)
+        return seq
+
+    def submit_with_record(self, rec: AuditRecord) -> tuple[int, AuditRecord]:
+        """Submit one audit record and return the committed row.
+
+        This is the same durability path as :meth:`submit`, with the final
+        timestamp, previous chain, and chain returned to callers that need to
+        verify the row without rescanning the binlog.
+        """
         if self._closed:
             raise WriterClosedError("Writer is closed")
         if self._fatal is not None:
@@ -341,6 +351,7 @@ class Writer:
             done=threading.Event(),
             seq=[-1],
             error=[None],
+            committed=[None],
         )
         with self._cv:
             self._pending.append(pending)
@@ -352,7 +363,10 @@ class Writer:
             )
         if pending.error[0] is not None:
             raise CommitFailed("flush failed") from pending.error[0]
-        return pending.seq[0]
+        committed = pending.committed[0]
+        if committed is None:
+            raise CommitFailed("flush completed without committed record")
+        return pending.seq[0], committed
 
     def checkpoint(self) -> None:
         """Force a power-loss-safe sync of the ledger.
@@ -434,6 +448,7 @@ class Writer:
             )
             frames.append(hdr + payload)
             self._last_chain = chain
+            pending.committed[0] = final_rec
 
         # ONE syscall for the write...
         if hasattr(os, "writev"):
@@ -552,6 +567,7 @@ class _PendingRecord:
     done: threading.Event
     seq: list[int]
     error: list[BaseException | None]
+    committed: list[AuditRecord | None]
 
 
 __all__ = [

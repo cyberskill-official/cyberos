@@ -19,6 +19,7 @@
 
 pub mod canonical;
 
+use once_cell::sync::Lazy;
 use std::path::PathBuf;
 use std::process::Stdio;
 use std::time::Duration;
@@ -28,14 +29,16 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use thiserror::Error;
-use tokio::io::AsyncWriteExt;
-use tokio::process::Command;
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::process::{Child, ChildStdin, Command};
+use tokio::sync::Mutex;
 use tokio::time::timeout;
 use tracing::error;
 use uuid::Uuid;
 
 const WRITER_BIN: &str = "python3";
 const WRITER_ARGS: &[&str] = &["-m", "cyberos.writer", "put"];
+const WRITER_STREAM_ARGS: &[&str] = &["-m", "cyberos.writer", "stream"];
 const WRITER_TIMEOUT: Duration = Duration::from_secs(5);
 const MEMORY_KINDS: &[&str] = &[
     "decisions",
@@ -46,6 +49,8 @@ const MEMORY_KINDS: &[&str] = &[
     "drift",
     "refinements",
 ];
+
+static STREAM_SESSION: Lazy<Mutex<Option<WriterStreamSession>>> = Lazy::new(|| Mutex::new(None));
 
 // --- Types ------------------------------------------------------------------
 
@@ -59,6 +64,12 @@ pub enum AiInvocationKind {
     Invocation,
     /// Emitted by FR-AI-002 (refund path).
     InvocationFailed,
+    /// Emitted by FR-AI-002 before applying a reconcile state transition.
+    ReconcileStarted,
+    /// Emitted by FR-AI-002 after the reconcile transaction commits.
+    ReconcileCompleted,
+    /// Emitted by FR-AI-002 after a reconcile attempt rolls back.
+    ReconcileFailed,
     /// Emitted by FR-AI-004 (cleanup job).
     HoldExpired,
     /// Emitted by FR-AI-014 (persona stamping).
@@ -88,6 +99,9 @@ impl AiInvocationKind {
             Self::Precheck => "ai.precheck",
             Self::Invocation => "ai.invocation",
             Self::InvocationFailed => "ai.invocation_failed",
+            Self::ReconcileStarted => "ai.reconcile_started",
+            Self::ReconcileCompleted => "ai.reconcile_completed",
+            Self::ReconcileFailed => "ai.reconcile_failed",
             Self::HoldExpired => "ai.hold_expired",
             Self::PersonaLoaded => "ai.persona_loaded",
             Self::ZdrViolation => "ai.zdr_violation",
@@ -195,6 +209,19 @@ struct WriterStdout {
     prev_chain: String,
 }
 
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum WriterResponse {
+    Ok(WriterStdout),
+    Err { error: String },
+}
+
+struct WriterStreamSession {
+    _child: Child,
+    stdin: ChildStdin,
+    stdout: BufReader<tokio::process::ChildStdout>,
+}
+
 // --- Public entry points ----------------------------------------------------
 
 /// FR-AI-003 §3 — Emit one audit row via the canonical Writer subprocess.
@@ -213,7 +240,33 @@ pub async fn emit(req: MemoryEmit) -> Result<EmittedRow, MemoryWriterError> {
             reason: format!("canonical payload reparse failed: {e}"),
         })?;
 
-    // 3. Spawn Writer.
+    let row = emit_payload_streaming(&payload).await?;
+    finish_emit(&req, &payload_value, row)
+}
+
+async fn emit_payload_streaming(payload: &str) -> Result<WriterStdout, MemoryWriterError> {
+    let mut guard = STREAM_SESSION.lock().await;
+    if guard.is_none() {
+        *guard = Some(WriterStreamSession::start().await?);
+    }
+
+    let result = match guard.as_mut() {
+        Some(session) => session.emit(payload).await,
+        None => unreachable!("stream session was just initialised"),
+    };
+
+    match result {
+        Ok(row) => Ok(row),
+        Err(first_err) => {
+            *guard = None;
+            drop(guard);
+            emit_payload_once(payload).await.or(Err(first_err))
+        }
+    }
+}
+
+async fn emit_payload_once(payload: &str) -> Result<WriterStdout, MemoryWriterError> {
+    // Spawn Writer for one row. Kept as fallback for a failed stream process.
     let mut child = writer_command(WRITER_ARGS);
     let mut child = child
         .stdin(Stdio::piped())
@@ -280,15 +333,16 @@ pub async fn emit(req: MemoryEmit) -> Result<EmittedRow, MemoryWriterError> {
         });
     }
 
-    // 6. Parse stdout → typed row.
-    let row: WriterStdout =
-        serde_json::from_slice(&stdout_bytes).map_err(|e| MemoryWriterError::WriterFailed {
-            exit_code: 0,
-            stderr: format!("stdout parse: {e}"),
-        })?;
+    parse_writer_stdout(&stdout_bytes)
+}
 
-    // 7. Verify chain hash locally (FR-AI-003 §1 #7).
-    let expected = compute_chain(&payload_value, &row)?;
+fn finish_emit(
+    req: &MemoryEmit,
+    payload_value: &Value,
+    row: WriterStdout,
+) -> Result<EmittedRow, MemoryWriterError> {
+    // Verify chain hash locally (FR-AI-003 §1 #7).
+    let expected = compute_chain(payload_value, &row)?;
     let got_vec = hex::decode(&row.chain).unwrap_or_default();
     let mut got = [0u8; 32];
     if got_vec.len() == 32 {
@@ -299,7 +353,11 @@ pub async fn emit(req: MemoryEmit) -> Result<EmittedRow, MemoryWriterError> {
             expected_chain = hex::encode(expected),
             actual_chain = hex::encode(got),
             seq = row.seq,
-            payload_canonical_hash = hex::encode(Sha256::digest(payload.as_bytes())),
+            payload_canonical_hash = hex::encode(Sha256::digest(
+                canonical::canonicalise(payload_value)
+                    .unwrap_or_default()
+                    .as_bytes()
+            )),
             "chain_hash_mismatch — refusing row",
         );
         return Err(MemoryWriterError::ChainHashMismatch { expected, got });
@@ -315,6 +373,21 @@ pub async fn emit(req: MemoryEmit) -> Result<EmittedRow, MemoryWriterError> {
             .unwrap_or(&req.path)
             .to_string(),
     })
+}
+
+fn parse_writer_stdout(stdout_bytes: &[u8]) -> Result<WriterStdout, MemoryWriterError> {
+    let response: WriterResponse =
+        serde_json::from_slice(stdout_bytes).map_err(|e| MemoryWriterError::WriterFailed {
+            exit_code: 0,
+            stderr: format!("stdout parse: {e}"),
+        })?;
+    match response {
+        WriterResponse::Ok(row) => Ok(row),
+        WriterResponse::Err { error } => Err(MemoryWriterError::WriterFailed {
+            exit_code: 0,
+            stderr: error,
+        }),
+    }
 }
 
 /// FR-AI-003 §1 #10 — Startup health check.
@@ -497,6 +570,77 @@ async fn read_all(mut stream: impl tokio::io::AsyncRead + Unpin) -> std::io::Res
     Ok(buf)
 }
 
+impl WriterStreamSession {
+    async fn start() -> Result<Self, MemoryWriterError> {
+        let mut child = writer_command(WRITER_STREAM_ARGS);
+        let mut child = child
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::inherit())
+            .kill_on_drop(true)
+            .spawn()
+            .map_err(|e| MemoryWriterError::WriterUnreachable {
+                reason: e.to_string(),
+            })?;
+
+        let stdin = child
+            .stdin
+            .take()
+            .ok_or_else(|| MemoryWriterError::WriterUnreachable {
+                reason: "stream stdin unavailable".to_string(),
+            })?;
+        let stdout = child
+            .stdout
+            .take()
+            .ok_or_else(|| MemoryWriterError::WriterUnreachable {
+                reason: "stream stdout unavailable".to_string(),
+            })?;
+
+        Ok(Self {
+            _child: child,
+            stdin,
+            stdout: BufReader::new(stdout),
+        })
+    }
+
+    async fn emit(&mut self, payload: &str) -> Result<WriterStdout, MemoryWriterError> {
+        self.stdin
+            .write_all(payload.as_bytes())
+            .await
+            .map_err(|e| MemoryWriterError::WriterUnreachable {
+                reason: format!("stream write: {e}"),
+            })?;
+        self.stdin
+            .write_all(b"\n")
+            .await
+            .map_err(|e| MemoryWriterError::WriterUnreachable {
+                reason: format!("stream newline: {e}"),
+            })?;
+        self.stdin
+            .flush()
+            .await
+            .map_err(|e| MemoryWriterError::WriterUnreachable {
+                reason: format!("stream flush: {e}"),
+            })?;
+
+        let mut line = String::new();
+        let n = timeout(WRITER_TIMEOUT, self.stdout.read_line(&mut line))
+            .await
+            .map_err(|_| MemoryWriterError::Timeout {
+                waited_ms: WRITER_TIMEOUT.as_millis() as u32,
+            })?
+            .map_err(|e| MemoryWriterError::WriterUnreachable {
+                reason: format!("stream read: {e}"),
+            })?;
+        if n == 0 {
+            return Err(MemoryWriterError::WriterUnreachable {
+                reason: "stream exited".to_string(),
+            });
+        }
+        parse_writer_stdout(line.as_bytes())
+    }
+}
+
 // --- Public typed builders --------------------------------------------------
 
 /// FR-AI-003 §3 — Typed builders for the slice-1 closed set.
@@ -595,6 +739,104 @@ pub mod builders {
                 "provider_error_message": provider_error_message,
                 "hold_id": hold_id,
                 "refund_amount_usd": refund_amount_usd.to_string(),
+            }),
+        }
+    }
+
+    /// `ai.reconcile_started` row (FR-AI-002 pair-write start).
+    #[allow(clippy::too_many_arguments)]
+    pub fn reconcile_started(
+        tenant_id: &str,
+        agent_persona: &str,
+        model_alias: &str,
+        resolved_provider: &str,
+        resolved_model: &str,
+        hold_id: Uuid,
+        outcome_kind: &str,
+    ) -> MemoryEmit {
+        MemoryEmit {
+            kind: AiInvocationKind::ReconcileStarted,
+            path: row_path(
+                "ai-invocations",
+                tenant_id,
+                &format!("{hold_id}-reconcile-started"),
+            ),
+            extra: serde_json::json!({
+                "tenant_id": tenant_id,
+                "agent_persona": agent_persona,
+                "model_alias": model_alias,
+                "resolved_provider": resolved_provider,
+                "resolved_model": resolved_model,
+                "hold_id": hold_id,
+                "outcome_kind": outcome_kind,
+            }),
+        }
+    }
+
+    /// `ai.reconcile_completed` row (FR-AI-002 pair-write completion).
+    #[allow(clippy::too_many_arguments)]
+    pub fn reconcile_completed(
+        tenant_id: &str,
+        agent_persona: &str,
+        model_alias: &str,
+        resolved_provider: &str,
+        resolved_model: &str,
+        hold_id: Uuid,
+        outcome: &str,
+        actual_usd: Option<Decimal>,
+        new_spent_total_usd: Option<Decimal>,
+        warn_crossed: bool,
+        refund_reason: Option<&str>,
+    ) -> MemoryEmit {
+        MemoryEmit {
+            kind: AiInvocationKind::ReconcileCompleted,
+            path: row_path(
+                "ai-invocations",
+                tenant_id,
+                &format!("{hold_id}-reconcile-completed"),
+            ),
+            extra: serde_json::json!({
+                "tenant_id": tenant_id,
+                "agent_persona": agent_persona,
+                "model_alias": model_alias,
+                "resolved_provider": resolved_provider,
+                "resolved_model": resolved_model,
+                "hold_id": hold_id,
+                "outcome": outcome,
+                "actual_usd": actual_usd.map(|v| v.to_string()),
+                "new_spent_total_usd": new_spent_total_usd.map(|v| v.to_string()),
+                "warn_crossed": warn_crossed,
+                "refund_reason": refund_reason,
+            }),
+        }
+    }
+
+    /// `ai.reconcile_failed` row (FR-AI-002 pair-write failure).
+    #[allow(clippy::too_many_arguments)]
+    pub fn reconcile_failed(
+        tenant_id: &str,
+        agent_persona: &str,
+        model_alias: &str,
+        resolved_provider: &str,
+        resolved_model: &str,
+        hold_id: Uuid,
+        error: &str,
+    ) -> MemoryEmit {
+        MemoryEmit {
+            kind: AiInvocationKind::ReconcileFailed,
+            path: row_path(
+                "ai-invocations",
+                tenant_id,
+                &format!("{hold_id}-reconcile-failed"),
+            ),
+            extra: serde_json::json!({
+                "tenant_id": tenant_id,
+                "agent_persona": agent_persona,
+                "model_alias": model_alias,
+                "resolved_provider": resolved_provider,
+                "resolved_model": resolved_model,
+                "hold_id": hold_id,
+                "error": error,
             }),
         }
     }
@@ -736,6 +978,18 @@ mod tests {
         assert_eq!(
             AiInvocationKind::InvocationFailed.tag(),
             "ai.invocation_failed"
+        );
+        assert_eq!(
+            AiInvocationKind::ReconcileStarted.tag(),
+            "ai.reconcile_started"
+        );
+        assert_eq!(
+            AiInvocationKind::ReconcileCompleted.tag(),
+            "ai.reconcile_completed"
+        );
+        assert_eq!(
+            AiInvocationKind::ReconcileFailed.tag(),
+            "ai.reconcile_failed"
         );
         assert_eq!(AiInvocationKind::HoldExpired.tag(), "ai.hold_expired");
         assert_eq!(AiInvocationKind::PersonaLoaded.tag(), "ai.persona_loaded");

@@ -225,6 +225,27 @@ def put(
     emits a `memory.acl_denied` aux row and refuses the put (or, in
     WARN-ONLY mode pre-§14.4-anchor, emits the row and proceeds).
     """
+    seq, _record = put_with_record(
+        writer,
+        rel_path,
+        body,
+        actor=actor,
+        kind=kind,
+        extra=extra,
+    )
+    return seq
+
+
+def put_with_record(
+    writer: Writer,
+    rel_path: str,
+    body: bytes,
+    *,
+    actor: str,
+    kind: str = "unknown",
+    extra: dict | None = None,
+):
+    """Canonical v2 put, returning both seq and the committed audit record."""
     _check_rel_path(rel_path)
     if len(body) > _MAX_BYTES:
         raise ContentTooLarge(f"{len(body)} > {_MAX_BYTES}")
@@ -245,7 +266,7 @@ def put(
         rec_extra["before_sha256"] = before_sha
     if extra:
         rec_extra.update(extra)
-    return writer.submit(
+    return writer.submit_with_record(
         AuditRecord(
             op="put",
             path=rel_path,
@@ -614,6 +635,7 @@ __all__ = [
     # canonical ops (AGENTS.md §3.1)
     "view",
     "put",
+    "put_with_record",
     "move",
     "delete",
     # exceptions

@@ -55,11 +55,7 @@ def _payload_from_stdin() -> dict[str, Any]:
     return payload
 
 
-def _cmd_put(args: argparse.Namespace) -> int:
-    from cyberos.core.ops import put
-    from cyberos.core.writer import Writer
-
-    payload = _payload_from_stdin()
+def _parse_payload(payload: dict[str, Any], args: argparse.Namespace):
     path = payload.get("path")
     body = payload.get("body")
     meta = payload.get("meta")
@@ -79,32 +75,70 @@ def _cmd_put(args: argparse.Namespace) -> int:
     extra = meta.get("extra")
     if extra is not None and not isinstance(extra, dict):
         raise ValueError("payload.meta.extra must be an object when present")
+    return path, body, actor, kind, extra
+
+
+def _emit_payload(writer, payload: dict[str, Any], args: argparse.Namespace) -> dict[str, Any]:
+    from cyberos.core.ops import put_with_record
+
+    path, body, actor, kind, extra = _parse_payload(payload, args)
+    seq, rec = put_with_record(
+        writer,
+        path,
+        body.encode("utf-8"),
+        actor=actor,
+        kind=kind,
+        extra=extra,
+    )
+    return {
+        "seq": seq,
+        "ts_ns": rec.ts_ns,
+        "prev_chain": rec.prev_chain,
+        "chain": rec.chain,
+    }
+
+
+def _cmd_put(args: argparse.Namespace) -> int:
+    from cyberos.core.writer import Writer
+
+    payload = _payload_from_stdin()
 
     store = _store(args)
     with Writer(store) as writer:
-        seq = put(
-            writer,
-            path,
-            body.encode("utf-8"),
-            actor=actor,
-            kind=kind,
-            extra=extra,
-        )
+        row = _emit_payload(writer, payload, args)
 
-    rec = _last_record(store, seq)
     sys.stdout.write(
         json.dumps(
-            {
-                "seq": seq,
-                "ts_ns": rec.ts_ns,
-                "prev_chain": rec.prev_chain,
-                "chain": rec.chain,
-            },
+            row,
             sort_keys=True,
             separators=(",", ":"),
         )
         + "\n"
     )
+    return 0
+
+
+def _cmd_stream(args: argparse.Namespace) -> int:
+    from cyberos.core.writer import Writer
+
+    store = _store(args)
+    with Writer(store) as writer:
+        for raw in sys.stdin:
+            raw = raw.strip()
+            if not raw:
+                continue
+            try:
+                payload = json.loads(raw)
+                if not isinstance(payload, dict):
+                    raise ValueError("stdin payload must be a JSON object")
+                row = _emit_payload(writer, payload, args)
+                out = row
+            except BaseException as exc:  # noqa: BLE001 - surface structured subprocess errors
+                out = {
+                    "error": f"{type(exc).__name__}: {exc}",
+                }
+            sys.stdout.write(json.dumps(out, sort_keys=True, separators=(",", ":")) + "\n")
+            sys.stdout.flush()
     return 0
 
 
@@ -120,6 +154,11 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="cmd")
     put_parser = sub.add_parser("put", help="read one canonical put payload from stdin")
     put_parser.set_defaults(fn=_cmd_put)
+    stream_parser = sub.add_parser(
+        "stream",
+        help="read canonical put payloads as JSON Lines from stdin",
+    )
+    stream_parser.set_defaults(fn=_cmd_stream)
     return parser
 
 

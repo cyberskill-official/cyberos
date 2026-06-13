@@ -3,14 +3,14 @@
 **P0 module · the cost-of-everything gate.**
 Implements [`docs/feature-requests/ai/FR-AI-001..022`](../../docs/feature-requests/ai/) — pre-call cost-ledger, multi-provider router, PII redaction, persona injection, residency pinning, audit-row emission. Every LLM call across the platform routes through this service.
 
-## Status (2026-05-19 wave)
+## Status (2026-06-13 wave)
 
 | FR | Title | Status |
 |---|---|---|
-| **FR-AI-003** | memory audit-row bridge (canonical Writer subprocess) | **shipped** (core path + path-validation + chain-verify + 5s timeout-with-SIGTERM; typed builders for the slice-1 closed set: precheck · invocation · invocation_failed · hold_expired · persona_loaded) |
+| **FR-AI-003** | memory audit-row bridge (canonical Writer subprocess) | **shipped** (stream + one-shot paths, path-validation, chain-verify, 5s timeout; typed builders for the slice-1 closed set: precheck · invocation · invocation_failed · reconcile_started · reconcile_completed · reconcile_failed · hold_expired · persona_loaded) |
 | **FR-AI-005** | Tenant-policy YAML loader | **shipped** (10/10 ACs covered by unit + integration tests; `ArcSwap` lock-free cache; `notify` file-watcher; `cyberos-ai policy validate` + `policy list` CLI) |
-| FR-AI-001 | Cost-ledger pre-call check | pending (next session — depends on FR-AI-003 + FR-AI-005, both now ✅) |
-| FR-AI-002 | Cost-ledger post-call reconcile | pending |
+| **FR-AI-001** | Cost-ledger pre-call check | **shipped** |
+| **FR-AI-002** | Cost-ledger post-call reconcile | **shipped** (live Postgres + canonical Writer coverage, 1000-call p95 latency gate, crash-point consistency, reconcile pair-write ordering) |
 | FR-AI-004 | Cost-hold expiry cleanup job | pending |
 | FR-AI-006..022 | Router · PII · residency · cache · operator CLI · OTel | pending (slices 2–5) |
 
@@ -64,7 +64,7 @@ cargo run -p cyberos-ai-gateway --bin gen-schema -- \
 
 ## FR-AI-003 dependency note
 
-`emit()` invokes `python3 -m cyberos.writer put` as a subprocess. The Writer ships from `modules/memory/runtime/` and MUST be on the PATH at runtime. The startup health check (`memory_writer::check_writer_available`) is the contract gate per FR-AI-003 §1 #10.
+`emit()` prefers a long-lived `python3 -m cyberos.writer stream` subprocess and falls back to the compatible one-shot `python3 -m cyberos.writer put` path. The Writer ships from `modules/memory/runtime/` and MUST be on the PATH at runtime. The startup health check (`memory_writer::check_writer_available`) is the contract gate per FR-AI-003 §1 #10.
 
 Integration-tested behaviour requires a live `<memory-root>/` and the Python Writer module installed. The slice-1 ship lands the Rust-side bridge fully; the cross-language smoke tests sit behind a feature flag (`integration-writer`) until the memory runtime install path is documented for CI.
 
@@ -74,8 +74,6 @@ This module participates in the `AGENTS.md §14.1` protocol — every commit tha
 
 ## Next-session todo
 
-1. Wire FR-AI-001 (cost-ledger pre-call) on top of `policy::load_for_tenant` + `memory_writer::emit`. Migration `services/ai-gateway/migrations/0001_cost_ledger.sql` per FR-AI-001 §3.
-2. FR-AI-002 reconcile path.
-3. FR-AI-004 expiry-cleanup pg-scheduler job.
-4. FR-AI-006/008 router → wire residency + provider selection.
-5. FR-AI-022 OTel traces — required by FR-OBS-004 (cross-pillar correlation).
+1. FR-AI-004 expiry-cleanup pg-scheduler job.
+2. FR-AI-006/008 router → wire residency + provider selection.
+3. FR-AI-022 OTel traces — required by FR-OBS-004 (cross-pillar correlation).
