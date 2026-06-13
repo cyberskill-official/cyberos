@@ -189,7 +189,27 @@ while ! stop_signal:
 
 The supervisor handles persistence (state survives across sessions because the truth is in BACKLOG.md + the memory chain), parallelism (multiple FRs may run in parallel when their dependency cones don't overlap), and observability (the per-phase `workflow_phase_complete` + the final `workflow_complete` rows are enough to reconstruct the run).
 
-## 12. No partial-ship-and-pause within an FR
+## 12. Cross-agent handoff packets
+
+This workflow is allowed to move between AI agents when the current agent is close to a usage limit, loses tool access, or the operator wants to switch surfaces. The handoff mechanism is a generated packet under `target/cuo-workflow/handoffs/`, produced by:
+
+```bash
+python3 scripts/agent_handoff.py --reason <reason> --active-fr <FR-ID> --note "<current phase, tests, blockers>"
+```
+
+The packet contains `HANDOFF.md`, `RESUME_PROMPT.md`, `STATE.json`, git status/diff snapshots, recent commits, and the ready queue. `target/` is ignored, so packets are local operational state, not implementation commits.
+
+Rules:
+
+1. Produce a handoff packet before any voluntary stop caused by usage limits or agent switching.
+2. The next agent MUST read the packet and run `git status --short --branch` before editing.
+3. If `STATE.json.active_fr` is set and the worktree is dirty, the next agent MUST finish or route back that FR before selecting another FR.
+4. If the previous agent stopped between FRs with a clean worktree, the next agent selects the first dependency-eligible BACKLOG row.
+5. Switching agents never relaxes the per-FR commit rule and never authorises staging unrelated dirty files.
+
+See `docs/feature-requests/.workflow/AGENT_HANDOFF.md` for the operator runbook.
+
+## 13. No partial-ship-and-pause within an FR
 
 The workflow MUST drive **all phases of an FR to completion in one continuous session** (or route back to `ready_to_implement` cleanly). Pause only between FRs.
 
