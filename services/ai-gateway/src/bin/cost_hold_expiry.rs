@@ -8,7 +8,7 @@
 use std::time::Duration;
 
 use tokio::signal::unix::{signal, SignalKind};
-use tracing::info;
+use tracing::{error, info};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -24,10 +24,11 @@ async fn main() -> anyhow::Result<()> {
         .unwrap_or(30)
         .clamp(5, 300);
 
-    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-
-    let pool = sqlx::PgPool::connect(&database_url).await?;
     let mut shutdown = signal(SignalKind::terminate())?;
+    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let Some(pool) = connect_with_backoff(&database_url, &mut shutdown).await? else {
+        return Ok(());
+    };
     let mut tick = tokio::time::interval(Duration::from_secs(tick_seconds));
     let mut consecutive_failures: u32 = 0;
 
@@ -67,4 +68,56 @@ async fn main() -> anyhow::Result<()> {
     }
 
     Ok(())
+}
+
+async fn connect_with_backoff(
+    database_url: &str,
+    shutdown: &mut tokio::signal::unix::Signal,
+) -> anyhow::Result<Option<sqlx::PgPool>> {
+    let mut backoff = Duration::from_secs(1);
+    loop {
+        let connect_attempt =
+            tokio::time::timeout(Duration::from_secs(1), sqlx::PgPool::connect(database_url));
+        match tokio::select! {
+            result = connect_attempt => Some(result),
+            _ = shutdown.recv() => None,
+        } {
+            Some(Ok(Ok(pool))) => return Ok(Some(pool)),
+            Some(Ok(Err(e))) => {
+                error!(
+                    ?e,
+                    backoff_seconds = backoff.as_secs(),
+                    "expiry_db_connect_failed"
+                );
+                tokio::select! {
+                    _ = tokio::time::sleep(backoff) => {
+                        backoff = (backoff * 2).min(Duration::from_secs(30));
+                    }
+                    _ = shutdown.recv() => {
+                        info!("process_shutdown");
+                        return Ok(None);
+                    }
+                }
+            }
+            Some(Err(_elapsed)) => {
+                error!(
+                    backoff_seconds = backoff.as_secs(),
+                    "expiry_db_connect_timeout"
+                );
+                tokio::select! {
+                    _ = tokio::time::sleep(backoff) => {
+                        backoff = (backoff * 2).min(Duration::from_secs(30));
+                    }
+                    _ = shutdown.recv() => {
+                        info!("process_shutdown");
+                        return Ok(None);
+                    }
+                }
+            }
+            None => {
+                info!("process_shutdown");
+                return Ok(None);
+            }
+        }
+    }
 }

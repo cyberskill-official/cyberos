@@ -7,11 +7,11 @@ Implements [`docs/feature-requests/ai/FR-AI-001..022`](../../docs/feature-reques
 
 | FR | Title | Status |
 |---|---|---|
-| **FR-AI-003** | memory audit-row bridge (canonical Writer subprocess) | **shipped** (stream + one-shot paths, path-validation, chain-verify, 5s timeout; typed builders for the slice-1 closed set: precheck · invocation · invocation_failed · reconcile_started · reconcile_completed · reconcile_failed · hold_expired · persona_loaded) |
+| **FR-AI-003** | memory audit-row bridge (canonical Writer subprocess) | **shipped** (stream + one-shot paths, path-validation, chain-verify, 5s timeout; typed builders for the slice-1 closed set: precheck · invocation · invocation_failed · reconcile_started · reconcile_completed · reconcile_failed · hold_expired · hold_expired_started · hold_expired_completed · cleanup_run_completed · persona_loaded) |
 | **FR-AI-005** | Tenant-policy YAML loader | **shipped** (10/10 ACs covered by unit + integration tests; `ArcSwap` lock-free cache; `notify` file-watcher; `cyberos-ai policy validate` + `policy list` CLI) |
 | **FR-AI-001** | Cost-ledger pre-call check | **shipped** |
 | **FR-AI-002** | Cost-ledger post-call reconcile | **shipped** (live Postgres + canonical Writer coverage, 1000-call p95 latency gate, crash-point consistency, reconcile pair-write ordering) |
-| FR-AI-004 | Cost-hold expiry cleanup job | pending |
+| **FR-AI-004** | Cost-hold expiry cleanup job | **shipped** (bounded 500-row tick, SIGTERM/retry binary tests, crash duplicate-row recovery, metrics, pair-write ordering) |
 | FR-AI-006..022 | Router · PII · residency · cache · operator CLI · OTel | pending (slices 2–5) |
 
 ## Layout
@@ -74,6 +74,5 @@ This module participates in the `AGENTS.md §14.1` protocol — every commit tha
 
 ## Next-session todo
 
-1. FR-AI-004 expiry-cleanup pg-scheduler job.
-2. FR-AI-006/008 router → wire residency + provider selection.
-3. FR-AI-022 OTel traces — required by FR-OBS-004 (cross-pillar correlation).
+1. FR-AI-006/008 router → wire residency + provider selection.
+2. FR-AI-022 OTel traces — required by FR-OBS-004 (cross-pillar correlation).

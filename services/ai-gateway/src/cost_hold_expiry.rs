@@ -7,11 +7,13 @@
 
 use once_cell::sync::Lazy;
 use prometheus::{
-    register_counter_vec, register_gauge, register_histogram, CounterVec, Gauge, Histogram,
+    register_counter, register_counter_vec, register_gauge, register_histogram, Counter,
+    CounterVec, Gauge, Histogram,
 };
 use rand::RngCore;
 use rust_decimal::Decimal;
 use sqlx::PgPool;
+use std::sync::Mutex;
 use uuid::Uuid;
 
 use crate::memory_writer;
@@ -27,6 +29,22 @@ static HOLDS_PROCESSED: Lazy<CounterVec> = Lazy::new(|| {
         "ai_expiry_holds_processed_total",
         "Total holds processed by expiry job",
         &["result"]
+    )
+    .unwrap()
+});
+
+static HOLDS_SUCCEEDED: Lazy<Counter> = Lazy::new(|| {
+    register_counter!(
+        "ai_expiry_holds_succeeded_total",
+        "Total holds successfully expired by expiry job"
+    )
+    .unwrap()
+});
+
+static HOLDS_FAILED: Lazy<Counter> = Lazy::new(|| {
+    register_counter!(
+        "ai_expiry_holds_failed_total",
+        "Total holds that failed expiry processing"
     )
     .unwrap()
 });
@@ -59,6 +77,31 @@ static PENDING_GAUGE: Lazy<Gauge> = Lazy::new(|| {
     )
     .unwrap()
 });
+
+static CLEANUP_PENDING_GAUGE: Lazy<Gauge> = Lazy::new(|| {
+    register_gauge!(
+        "cleanup_holds_pending_gauge",
+        "Expired holds pending cleanup, for operator dashboards"
+    )
+    .unwrap()
+});
+
+static EXPIRY_EVENT_LOG: Lazy<Mutex<Vec<ExpiryEventRecord>>> = Lazy::new(|| Mutex::new(Vec::new()));
+const MAX_EXPIRY_EVENT_LOG: usize = 4096;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExpiryEventRecord {
+    pub hold_id: Uuid,
+    pub event: &'static str,
+}
+
+pub fn clear_expiry_event_log() {
+    EXPIRY_EVENT_LOG.lock().unwrap().clear();
+}
+
+pub fn expiry_event_log_snapshot() -> Vec<ExpiryEventRecord> {
+    EXPIRY_EVENT_LOG.lock().unwrap().clone()
+}
 
 // ─── Public types ─────────────────────────────────────────────────────────────
 
@@ -117,6 +160,7 @@ pub async fn run_tick(pool: &PgPool) -> Result<TickReport, TickError> {
     let mut processed = 0u32;
     let mut succeeded = 0u32;
     let mut failed = 0u32;
+    let mut expired_hold_ids = Vec::new();
 
     // Fetch one bounded batch of expired hold IDs.
     let ids: Vec<Uuid> = sqlx::query_scalar(
@@ -130,7 +174,7 @@ pub async fn run_tick(pool: &PgPool) -> Result<TickReport, TickError> {
     .fetch_all(pool)
     .await?;
 
-    // Update pending gauge.
+    // Update pending gauge before the tick for operators watching backlog pressure.
     let pending_count: i64 = sqlx::query_scalar(
         "SELECT COUNT(*) FROM cost_ledger_hold \
          WHERE state = 'held' AND expires_at < NOW()",
@@ -139,13 +183,16 @@ pub async fn run_tick(pool: &PgPool) -> Result<TickReport, TickError> {
     .await
     .unwrap_or(0);
     PENDING_GAUGE.set(pending_count as f64);
+    CLEANUP_PENDING_GAUGE.set(pending_count as f64);
 
     for id in ids {
         match process_one_hold(pool, id, &tick_id).await {
             Ok(HoldDisposition::Transitioned) => {
                 processed += 1;
                 succeeded += 1;
+                expired_hold_ids.push(id);
                 HOLDS_PROCESSED.with_label_values(&["succeeded"]).inc();
+                HOLDS_SUCCEEDED.inc();
             }
             Ok(HoldDisposition::AlreadyTransitioned) => {
                 // Already processed, reconciled, expired, or locked; do not count as processed.
@@ -154,10 +201,34 @@ pub async fn run_tick(pool: &PgPool) -> Result<TickReport, TickError> {
                 processed += 1;
                 failed += 1;
                 HOLDS_PROCESSED.with_label_values(&["failed"]).inc();
+                HOLDS_FAILED.inc();
                 tracing::warn!(?id, ?e, "expiry_hold_failed");
             }
         }
     }
+
+    if !expired_hold_ids.is_empty() {
+        let emit_req = memory_writer::builders::cleanup_run_completed(
+            &tick_id,
+            &expired_hold_ids,
+            succeeded,
+            failed,
+        );
+        if let Err(e) = memory_writer::emit(emit_req).await {
+            tracing::warn!(?e, tick_id, "cleanup_run_completed_emit_failed");
+        }
+    }
+
+    // Publish the remaining pending backlog after this tick's bounded work.
+    let remaining_pending_count: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM cost_ledger_hold \
+         WHERE state = 'held' AND expires_at < NOW()",
+    )
+    .fetch_one(pool)
+    .await
+    .unwrap_or(pending_count);
+    PENDING_GAUGE.set(remaining_pending_count as f64);
+    CLEANUP_PENDING_GAUGE.set(remaining_pending_count as f64);
 
     let duration_ms = started.elapsed().as_millis() as u32;
     TICK_DURATION.observe(duration_ms as f64 / 1000.0);
@@ -202,7 +273,20 @@ async fn process_one_hold(
         None => return Ok(HoldDisposition::AlreadyTransitioned),
     };
 
-    // Emit memory audit row INSIDE the transaction (audit-before-action).
+    let started_req =
+        memory_writer::builders::hold_expired_started(&hold.tenant_id, hold.id, tick_id);
+    memory_writer::emit(started_req)
+        .await
+        .map_err(|e| HoldError::MemoryEmitFailed(e.to_string()))?;
+    record_expiry_event(hold.id, "hold_expired_started");
+
+    if env_hold_id_matches("CYBEROS_AI_EXPIRY_FAIL_HOLD_ID", hold.id) {
+        return Err(HoldError::MemoryEmitFailed(
+            "injected memory writer failure".to_string(),
+        ));
+    }
+
+    // Emit memory audit row before the state transition.
     let emit_req = memory_writer::builders::hold_expired(
         &hold.tenant_id,
         hold.id,
@@ -214,6 +298,10 @@ async fn process_one_hold(
         .await
         .map_err(|e| HoldError::MemoryEmitFailed(e.to_string()))?;
 
+    if env_hold_id_matches("CYBEROS_AI_EXPIRY_EXIT_AFTER_HOLD_EMIT", hold.id) {
+        std::process::exit(42);
+    }
+
     // Transition the hold.
     sqlx::query(
         "UPDATE cost_ledger_hold \
@@ -223,9 +311,36 @@ async fn process_one_hold(
     .bind(hold.id)
     .execute(&mut *tx)
     .await?;
+    record_expiry_event(hold.id, "sql_update");
 
     tx.commit().await?;
+    record_expiry_event(hold.id, "commit");
+
+    let completed_req = memory_writer::builders::hold_expired_completed(
+        &hold.tenant_id,
+        hold.id,
+        tick_id,
+        "tick_expired",
+    );
+    memory_writer::emit(completed_req)
+        .await
+        .map_err(|e| HoldError::MemoryEmitFailed(e.to_string()))?;
+    record_expiry_event(hold.id, "hold_expired_completed");
+
     Ok(HoldDisposition::Transitioned)
+}
+
+fn record_expiry_event(hold_id: Uuid, event: &'static str) {
+    tracing::info!(%hold_id, event, "cost_hold_expiry_event");
+    let mut log = EXPIRY_EVENT_LOG.lock().unwrap();
+    if log.len() >= MAX_EXPIRY_EVENT_LOG {
+        log.remove(0);
+    }
+    log.push(ExpiryEventRecord { hold_id, event });
+}
+
+fn env_hold_id_matches(name: &str, hold_id: Uuid) -> bool {
+    matches!(std::env::var(name), Ok(value) if value == hold_id.to_string())
 }
 
 fn new_tick_id() -> String {

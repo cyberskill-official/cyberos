@@ -72,6 +72,12 @@ pub enum AiInvocationKind {
     ReconcileFailed,
     /// Emitted by FR-AI-004 (cleanup job).
     HoldExpired,
+    /// Emitted by FR-AI-004 before an expiry state transition.
+    HoldExpiredStarted,
+    /// Emitted by FR-AI-004 after an expiry state transition commits.
+    HoldExpiredCompleted,
+    /// Emitted by FR-AI-004 after a deterministic cleanup sweep.
+    CleanupRunCompleted,
     /// Emitted by FR-AI-014 (persona stamping).
     PersonaLoaded,
     /// Emitted by FR-AI-015 (ZDR refusal).
@@ -103,6 +109,9 @@ impl AiInvocationKind {
             Self::ReconcileCompleted => "ai.reconcile_completed",
             Self::ReconcileFailed => "ai.reconcile_failed",
             Self::HoldExpired => "ai.hold_expired",
+            Self::HoldExpiredStarted => "ai.hold_expired_started",
+            Self::HoldExpiredCompleted => "ai.hold_expired_completed",
+            Self::CleanupRunCompleted => "ai.cleanup_run_completed",
             Self::PersonaLoaded => "ai.persona_loaded",
             Self::ZdrViolation => "ai.zdr_violation",
             Self::ResidencyViolation => "ai.residency_violation",
@@ -862,6 +871,69 @@ pub mod builders {
         }
     }
 
+    /// `ai.hold_expired_started` row (FR-AI-004 pair-write start).
+    pub fn hold_expired_started(tenant_id: &str, hold_id: Uuid, tick_id: &str) -> MemoryEmit {
+        MemoryEmit {
+            kind: AiInvocationKind::HoldExpiredStarted,
+            path: row_path(
+                "ai-invocations",
+                tenant_id,
+                &format!("{hold_id}-hold-expired-started"),
+            ),
+            extra: serde_json::json!({
+                "tenant_id": tenant_id,
+                "hold_id": hold_id,
+                "tick_id": tick_id,
+            }),
+        }
+    }
+
+    /// `ai.hold_expired_completed` row (FR-AI-004 pair-write completion).
+    pub fn hold_expired_completed(
+        tenant_id: &str,
+        hold_id: Uuid,
+        tick_id: &str,
+        refund_reason: &str,
+    ) -> MemoryEmit {
+        MemoryEmit {
+            kind: AiInvocationKind::HoldExpiredCompleted,
+            path: row_path(
+                "ai-invocations",
+                tenant_id,
+                &format!("{hold_id}-hold-expired-completed"),
+            ),
+            extra: serde_json::json!({
+                "tenant_id": tenant_id,
+                "hold_id": hold_id,
+                "tick_id": tick_id,
+                "refund_reason": refund_reason,
+            }),
+        }
+    }
+
+    /// `ai.cleanup_run_completed` row (FR-AI-004 deterministic sweep summary).
+    pub fn cleanup_run_completed(
+        tick_id: &str,
+        expired_hold_ids: &[Uuid],
+        holds_succeeded: u32,
+        holds_failed: u32,
+    ) -> MemoryEmit {
+        MemoryEmit {
+            kind: AiInvocationKind::CleanupRunCompleted,
+            path: row_path(
+                "ai-invocations",
+                "system",
+                &format!("{tick_id}-cleanup-run-completed"),
+            ),
+            extra: serde_json::json!({
+                "tick_id": tick_id,
+                "expired_hold_ids": expired_hold_ids,
+                "holds_succeeded": holds_succeeded,
+                "holds_failed": holds_failed,
+            }),
+        }
+    }
+
     /// `ai.persona_loaded` row (FR-AI-014).
     pub fn persona_loaded(
         tenant_id: &str,
@@ -992,6 +1064,18 @@ mod tests {
             "ai.reconcile_failed"
         );
         assert_eq!(AiInvocationKind::HoldExpired.tag(), "ai.hold_expired");
+        assert_eq!(
+            AiInvocationKind::HoldExpiredStarted.tag(),
+            "ai.hold_expired_started"
+        );
+        assert_eq!(
+            AiInvocationKind::HoldExpiredCompleted.tag(),
+            "ai.hold_expired_completed"
+        );
+        assert_eq!(
+            AiInvocationKind::CleanupRunCompleted.tag(),
+            "ai.cleanup_run_completed"
+        );
         assert_eq!(AiInvocationKind::PersonaLoaded.tag(), "ai.persona_loaded");
         assert_eq!(AiInvocationKind::ZdrViolation.tag(), "ai.zdr_violation");
         assert_eq!(
