@@ -14,7 +14,7 @@ docker compose up -d
 deadline=$((SECONDS + 60))
 for svc in ingress collector loki prometheus tempo grafana; do
   while true; do
-    health="$(docker compose ps --format json "$svc" | jq -r '.[0].Health // .Health // ""' 2>/dev/null || true)"
+    health="$(docker compose ps --format json "$svc" | jq -r 'if type == "array" then (.[0].Health // "") else (.Health // "") end' 2>/dev/null || true)"
     [[ "$health" == "healthy" ]] && break
     if (( SECONDS > deadline )); then
       echo "FAIL: $svc did not become healthy; health=$health"

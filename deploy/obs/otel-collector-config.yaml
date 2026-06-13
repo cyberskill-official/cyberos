@@ -35,11 +35,6 @@ processors:
 exporters:
   loki:
     endpoint: http://loki:3100/loki/api/v1/push
-    labels:
-      attributes:
-        service.name: service_name
-        tenant_id: tenant_id
-        deployment.environment: env
     sending_queue:
       enabled: true
       storage: file_storage
@@ -48,10 +43,6 @@ exporters:
     endpoint: http://prometheus:9090/api/v1/write
     external_labels:
       source: otelcol
-    sending_queue:
-      enabled: true
-      storage: file_storage
-      queue_size: 1024
   otlp/tempo:
     endpoint: tempo:4317
     tls:
@@ -64,6 +55,7 @@ exporters:
 extensions:
   file_storage:
     directory: /var/lib/otelcol/file_storage
+    create_directory: true
     timeout: 1s
   bearertokenauth:
     scheme: Bearer

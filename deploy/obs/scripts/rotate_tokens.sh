@@ -21,7 +21,7 @@ install -m 0600 "$tmp_tokens" "$TOKENS_FILE"
 
 if [[ ! -f "$COLLECTOR_TOKEN_FILE" || "${ROTATE_COLLECTOR_TOKEN:-0}" == "1" ]]; then
   tmp_collector="$(mktemp)"
-  openssl rand -hex 32 > "$tmp_collector"
+  printf "%s" "$(openssl rand -hex 32)" > "$tmp_collector"
   install -m 0600 "$tmp_collector" "$COLLECTOR_TOKEN_FILE"
   rm -f "$tmp_collector"
 fi

@@ -3,14 +3,14 @@ id: FR-OBS-001
 title: "OTel Collector + LGTM stack (Loki + Prometheus + Tempo + Grafana) with mTLS ingress + per-service tokens + retention + file-buffer"
 module: OBS
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 2 (after AI Gateway slice 1)
 slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
-shipped: null
+shipped: 2026-06-13
 memory_chain_hash: null
 related_frs: [FR-OBS-002, FR-OBS-003, FR-OBS-004, FR-OBS-005, FR-OBS-006, FR-OBS-007, FR-OBS-008, FR-OBS-009, FR-AI-022]
 depends_on: []
@@ -567,9 +567,9 @@ All resolved. Deferred:
 
 ---
 
-## §12 — Route-back note (2026-06-08)
+## §12 — Historical route-back note (2026-06-08)
 
-Status remains `ready_to_implement`; do not mark this FR shipped yet.
+Historical status at route-back: `ready_to_implement`.
 
 Reason: the slice-1 deployment scaffold, ingress policy, and static/Rust checks are present, but live LGTM stack verification cannot complete on this host. Docker is available, but none of the required images are local and `docker compose -f deploy/obs/docker-compose.yml pull` stalled for about 150 seconds with no pull progress after starting the image downloads. No OBS containers were started.
 
@@ -603,4 +603,23 @@ GRAFANA_ADMIN_PASSWORD=cyberos-local-dev docker compose -f deploy/obs/docker-com
 
 Only after the live stack starts healthy, accepts OTLP HTTP/gRPC, enforces bearer auth/service binding, stores traces/logs/metrics in the intended backends, and verifies file-buffer replay should this FR move to `done`.
 
-*End of FR-OBS-001. Status: ready_to_implement (routed back 2026-06-08).*
+## §13 — Ship note (2026-06-13)
+
+Status: `done`.
+
+The live LGTM stack now starts and verifies on this host. The shipped slice fixes the otelcol-contrib 0.110.0 schema drift, exposes the backend ports required by the health/smoke scripts, uses an executable collector healthcheck for the distroless upstream image, writes the internal collector token without a trailing newline, and verifies file-backed trace replay across a collector restart.
+
+Verification completed:
+- `cargo test -p cyberos-obs-collector -- --test-threads=1` — 17 passed.
+- `./target/debug/cyberos-obs validate-config ../deploy/obs/otel-collector-config.yaml` — passed.
+- `./target/debug/cyberos-obs validate-config obs-collector/config/otel-collector-config.yaml` — passed.
+- `./target/debug/cyberos-obs validate-tokens ../deploy/obs/auth/tokens.example` — passed.
+- `GRAFANA_ADMIN_PASSWORD=cyberos-local-dev docker compose -f deploy/obs/docker-compose.yml config` — passed.
+- `docker run --rm ... otel/opentelemetry-collector-contrib:0.110.0 validate --config=/cfg.yaml` — passed against the deploy YAML.
+- `./deploy/obs/scripts/healthcheck.sh` — passed.
+- `./deploy/obs/tests/auth_required_test.sh` — passed.
+- `./deploy/obs/tests/per_service_token_binding_test.sh` — passed.
+- `./deploy/obs/tests/smoke_test.sh` — passed; trace was found in Tempo.
+- `./deploy/obs/tests/buffer_survives_restart_test.sh` — passed; 100/100 traces recovered after Tempo outage plus collector restart.
+
+*End of FR-OBS-001. Status: done (shipped 2026-06-13).*

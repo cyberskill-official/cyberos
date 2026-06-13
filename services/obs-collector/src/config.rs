@@ -79,7 +79,42 @@ pub fn validate(path: &Path) -> Result<(), ConfigError> {
         ));
     }
 
+    // The local stack pins otelcol-contrib 0.110.0. Keep a small guard for
+    // fields that passed our shape check but are rejected by that collector.
+    if has_mapping_key(cfg.exporters.loki.as_ref(), "labels") {
+        return Err(ConfigError::Validation(
+            "exporter loki: labels is not supported by otelcol-contrib 0.110.0".into(),
+        ));
+    }
+    if has_mapping_key(
+        cfg.exporters.prometheusremotewrite.as_ref(),
+        "sending_queue",
+    ) {
+        return Err(ConfigError::Validation(
+            "exporter prometheusremotewrite: sending_queue is not supported by otelcol-contrib 0.110.0"
+                .into(),
+        ));
+    }
+    if !mapping_bool(cfg.extensions.file_storage.as_ref(), "create_directory").unwrap_or(false) {
+        return Err(ConfigError::Validation(
+            "extension file_storage: create_directory must be true".into(),
+        ));
+    }
+
     Ok(())
+}
+
+fn has_mapping_key(value: Option<&serde_yaml::Value>, key: &str) -> bool {
+    value
+        .and_then(serde_yaml::Value::as_mapping)
+        .is_some_and(|m| m.contains_key(serde_yaml::Value::String(key.to_string())))
+}
+
+fn mapping_bool(value: Option<&serde_yaml::Value>, key: &str) -> Option<bool> {
+    value
+        .and_then(serde_yaml::Value::as_mapping)
+        .and_then(|m| m.get(serde_yaml::Value::String(key.to_string())))
+        .and_then(serde_yaml::Value::as_bool)
 }
 
 #[derive(Debug, Deserialize)]
@@ -146,7 +181,7 @@ exporters:
   otlp/tempo: { endpoint: "tempo:4317" }
 extensions:
   bearertokenauth: { scheme: "Bearer", filename: "/etc/otelcol/collector.token" }
-  file_storage: { directory: "/var/lib/otelcol/file_storage" }
+  file_storage: { directory: "/var/lib/otelcol/file_storage", create_directory: true }
 service:
   extensions: [file_storage, bearertokenauth]
   pipelines:
@@ -157,6 +192,14 @@ service:
         let f = NamedTempFile::new().unwrap();
         std::fs::write(f.path(), yaml).unwrap();
         validate(f.path()).expect("validate");
+    }
+
+    #[test]
+    fn validate_accepts_repo_configs() {
+        let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        validate(&manifest_dir.join("config/otel-collector-config.yaml")).expect("service config");
+        validate(&manifest_dir.join("../../deploy/obs/otel-collector-config.yaml"))
+            .expect("deploy config");
     }
 
     #[test]
@@ -181,5 +224,73 @@ service:
         std::fs::write(f.path(), yaml).unwrap();
         let res = validate(f.path());
         assert!(res.is_err());
+    }
+
+    #[test]
+    fn validate_rejects_collector_schema_regressions() {
+        let cases = [
+            (
+                "loki labels",
+                r#"
+receivers: { otlp: {} }
+exporters:
+  loki: { endpoint: "http://loki:3100", labels: { service: "service.name" } }
+  prometheusremotewrite: { endpoint: "http://prometheus:9090/api/v1/write" }
+  otlp/tempo: { endpoint: "tempo:4317" }
+extensions:
+  bearertokenauth: {}
+  file_storage: { directory: "/var/lib/otelcol/file_storage", create_directory: true }
+service:
+  pipelines:
+    logs:    { receivers: [otlp], processors: [attributes/pii_scrub], exporters: [loki] }
+    metrics: { receivers: [otlp], processors: [], exporters: [prometheusremotewrite] }
+    traces:  { receivers: [otlp], processors: [attributes/pii_scrub], exporters: [otlp/tempo] }
+"#,
+            ),
+            (
+                "prometheusremotewrite sending_queue",
+                r#"
+receivers: { otlp: {} }
+exporters:
+  loki: { endpoint: "http://loki:3100" }
+  prometheusremotewrite:
+    endpoint: "http://prometheus:9090/api/v1/write"
+    sending_queue: { enabled: true }
+  otlp/tempo: { endpoint: "tempo:4317" }
+extensions:
+  bearertokenauth: {}
+  file_storage: { directory: "/var/lib/otelcol/file_storage", create_directory: true }
+service:
+  pipelines:
+    logs:    { receivers: [otlp], processors: [attributes/pii_scrub], exporters: [loki] }
+    metrics: { receivers: [otlp], processors: [], exporters: [prometheusremotewrite] }
+    traces:  { receivers: [otlp], processors: [attributes/pii_scrub], exporters: [otlp/tempo] }
+"#,
+            ),
+            (
+                "file_storage create_directory",
+                r#"
+receivers: { otlp: {} }
+exporters:
+  loki: { endpoint: "http://loki:3100" }
+  prometheusremotewrite: { endpoint: "http://prometheus:9090/api/v1/write" }
+  otlp/tempo: { endpoint: "tempo:4317" }
+extensions:
+  bearertokenauth: {}
+  file_storage: { directory: "/var/lib/otelcol/file_storage" }
+service:
+  pipelines:
+    logs:    { receivers: [otlp], processors: [attributes/pii_scrub], exporters: [loki] }
+    metrics: { receivers: [otlp], processors: [], exporters: [prometheusremotewrite] }
+    traces:  { receivers: [otlp], processors: [attributes/pii_scrub], exporters: [otlp/tempo] }
+"#,
+            ),
+        ];
+
+        for (name, yaml) in cases {
+            let f = NamedTempFile::new().unwrap();
+            std::fs::write(f.path(), yaml).unwrap();
+            assert!(validate(f.path()).is_err(), "{name}");
+        }
     }
 }

@@ -232,11 +232,8 @@ async fn proxy_http_signal(
         .and_then(|h| h.to_str().ok())
         .unwrap_or("application/json");
 
-    let service_names = match service_names_from_http_body(signal, content_type, &body) {
-        Ok(names) => names,
-        Err(e) => return auth_error_response(e),
-    };
-
+    // Authentication failures should not depend on whether the telemetry body is
+    // well-formed. FR-OBS-001 requires missing/invalid bearer tokens to return 401.
     let bearer = match bearer_from_headers(&headers) {
         Ok(token) => token,
         Err(e) => return auth_error_response(e),
@@ -245,6 +242,12 @@ async fn proxy_http_signal(
         Ok(tokens) => tokens,
         Err(e) => return auth_error_response(e),
     };
+
+    let service_names = match service_names_from_http_body(signal, content_type, &body) {
+        Ok(names) => names,
+        Err(e) => return auth_error_response(e),
+    };
+
     let owner = match authorize_service_names(&tokens, &bearer, &service_names) {
         Ok(owner) => owner,
         Err(e) => return auth_error_response(e),
