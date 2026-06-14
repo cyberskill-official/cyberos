@@ -32,6 +32,10 @@ async fn main() -> anyhow::Result<()> {
         .json()
         .init();
 
+    if let Err(e) = cyberos_obs_sdk::init("email-service", env!("CARGO_PKG_VERSION")) {
+        tracing::warn!(error = %e, "obs sdk init failed");
+    }
+
     let db_url = std::env::var("DATABASE_URL").map_err(|_| {
         anyhow::anyhow!("DATABASE_URL not set — set it to a Postgres connection string")
     })?;
@@ -74,7 +78,8 @@ async fn main() -> anyhow::Result<()> {
         )
         .route("/v1/email/dsar/export", post(dsar_export))
         .route("/v1/email/dsar/jobs/:tenant_id/:job_id", get(dsar_job))
-        .with_state(pool);
+        .with_state(pool)
+        .layer(cyberos_obs_sdk::red::RedLayer::new("email-service"));
 
     let listener = tokio::net::TcpListener::bind(bind).await?;
     axum::serve(listener, app).await?;

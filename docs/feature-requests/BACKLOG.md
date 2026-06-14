@@ -204,7 +204,7 @@ This document is the **single source of truth** for what CyberOS is going to bui
 |---|---|:-:|:-:|---|---:|
 | **FR-OBS-001** | OTel collector deployed (Loki + Prometheus + Tempo backends) | MUST | done | — | 6h |
 | FR-OBS-002 | Grafana stood up with tenant-aware query proxy (Rust) injecting `tenant_id` label | MUST | done | **FR-OBS-001** | 8h |
-| FR-OBS-003 | Per-service RED metrics emitted (rate / errors / duration) via OTel SDK | MUST | ready_to_implement | **FR-OBS-001** | 5h |
+| FR-OBS-003 | Per-service RED metrics emitted (rate / errors / duration) via OTel SDK | MUST | done | **FR-OBS-001** | 5h |
 
 #### Slice 2 — AI traces + cross-pillar correlation
 

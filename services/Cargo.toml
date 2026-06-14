@@ -9,6 +9,8 @@ members = [
     "mcp-gateway",
     "email",
     "proj",
+    "shared/cyberos-obs-sdk",
+    "shared/cyberos-obs-sdk-macros",
     "shared/cyberos-cli-exit",
     "shared/cyberos-types",
 ]
@@ -73,6 +75,7 @@ tokio-test          = "0.4"
 
 # Internal
 cyberos-cli-exit    = { path = "shared/cyberos-cli-exit" }
+cyberos-obs-sdk     = { path = "shared/cyberos-obs-sdk" }
 cyberos-types       = { path = "shared/cyberos-types" }
 
 [profile.dev]

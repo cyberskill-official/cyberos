@@ -60,6 +60,7 @@ clap = { workspace = true }
 zeroize = { version = "1.8", features = ["zeroize_derive"] }
 
 cyberos-cli-exit.workspace = true
+cyberos-obs-sdk.workspace = true
 cyberos-types.workspace = true
 
 [dev-dependencies]

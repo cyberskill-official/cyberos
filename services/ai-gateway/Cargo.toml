@@ -106,6 +106,7 @@ jsonschema = "0.18"
 
 # Internal
 cyberos-types.workspace = true
+cyberos-obs-sdk.workspace = true
 cyberos-cli-exit.workspace = true
 
 [dev-dependencies]

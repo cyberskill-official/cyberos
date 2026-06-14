@@ -40,6 +40,7 @@ jsonrpsee = { version = "0.24", features = ["server", "client"] }
 async-trait = "0.1"
 base64 = "0.22"
 
+cyberos-obs-sdk.workspace = true
 cyberos-types.workspace = true
 
 [dev-dependencies]

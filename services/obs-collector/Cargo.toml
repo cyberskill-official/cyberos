@@ -45,6 +45,7 @@ serde_yaml = "0.9"
 ed25519-dalek = "2.2"
 tonic = { version = "0.12", features = ["transport"] }
 
+cyberos-obs-sdk.workspace = true
 cyberos-types.workspace = true
 
 [dev-dependencies]

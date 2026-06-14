@@ -45,6 +45,7 @@ pub fn build_router(state: AppState) -> Router {
         .route("/mcp", post(handle_mcp))
         .route("/mcp/healthz", get(handle_healthz))
         .with_state(state)
+        .layer(cyberos_obs_sdk::red::RedLayer::new("mcp-gateway"))
 }
 
 async fn handle_healthz(State(state): State<AppState>) -> (StatusCode, Json<HealthZ>) {

@@ -931,6 +931,7 @@ dependencies = [
  "comfy-table",
  "criterion",
  "cyberos-cli-exit",
+ "cyberos-obs-sdk",
  "cyberos-types",
  "dashmap",
  "futures",
@@ -986,6 +987,7 @@ dependencies = [
  "chrono",
  "clap",
  "cyberos-cli-exit",
+ "cyberos-obs-sdk",
  "cyberos-types",
  "futures-util",
  "ipnetwork 0.21.1",
@@ -1025,6 +1027,7 @@ dependencies = [
  "chrono",
  "clap",
  "cyberos-cli-exit",
+ "cyberos-obs-sdk",
  "cyberos-types",
  "hyper",
  "serde",
@@ -1051,6 +1054,7 @@ dependencies = [
  "base64 0.22.1",
  "chrono",
  "clap",
+ "cyberos-obs-sdk",
  "cyberos-types",
  "hyper",
  "jsonrpsee",
@@ -1077,6 +1081,7 @@ dependencies = [
  "axum",
  "chrono",
  "cyberos-cli-exit",
+ "cyberos-obs-sdk",
  "cyberos-types",
  "regex",
  "reqwest",
@@ -1102,6 +1107,7 @@ dependencies = [
  "axum",
  "chrono",
  "clap",
+ "cyberos-obs-sdk",
  "cyberos-types",
  "ed25519-dalek",
  "hyper",
@@ -1123,6 +1129,32 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "uuid",
+]
+
+[[package]]
+name = "cyberos-obs-sdk"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "cyberos-obs-sdk-macros",
+ "http",
+ "opentelemetry",
+ "opentelemetry-otlp",
+ "opentelemetry_sdk",
+ "thiserror 2.0.18",
+ "tokio",
+ "tonic",
+ "tower 0.5.3",
+ "tracing",
+]
+
+[[package]]
+name = "cyberos-obs-sdk-macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
 ]
 
 [[package]]

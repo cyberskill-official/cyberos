@@ -98,6 +98,10 @@ pub enum IngressAuthError {
 
 /// Start the HTTP and gRPC ingress gate.
 pub async fn serve(config: IngressConfig) -> anyhow::Result<()> {
+    if let Err(e) = cyberos_obs_sdk::init("obs-collector", env!("CARGO_PKG_VERSION")) {
+        tracing::warn!(error = %e, "obs sdk init failed");
+    }
+
     let http_state = HttpState {
         token_file: config.token_file.clone(),
         collector_token_file: config.collector_token_file.clone(),
@@ -112,7 +116,11 @@ pub async fn serve(config: IngressConfig) -> anyhow::Result<()> {
         .route("/v1/traces", post(proxy_traces_http))
         .route("/v1/logs", post(proxy_logs_http))
         .route("/v1/metrics", post(proxy_metrics_http))
-        .with_state(http_state);
+        .with_state(http_state)
+        .layer(
+            cyberos_obs_sdk::red::RedLayer::new("obs-collector")
+                .with_extra_label("component", "ingress"),
+        );
 
     let grpc_proxy = GrpcProxy {
         token_file: config.token_file.clone(),

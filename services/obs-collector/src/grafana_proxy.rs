@@ -49,6 +49,10 @@ pub struct GrafanaProxyConfig {
 
 /// Start the tenant-aware Grafana proxy.
 pub async fn serve(config: GrafanaProxyConfig) -> anyhow::Result<()> {
+    if let Err(e) = cyberos_obs_sdk::init("obs-collector", env!("CARGO_PKG_VERSION")) {
+        tracing::warn!(error = %e, "obs sdk init failed");
+    }
+
     let listen = config.listen;
     let state = ProxyState::new(
         BackendUrls {
@@ -62,7 +66,11 @@ pub async fn serve(config: GrafanaProxyConfig) -> anyhow::Result<()> {
         .route("/ready", get(proxy_ready))
         .route("/metrics", get(proxy_metrics))
         .fallback(any(proxy_http))
-        .with_state(state);
+        .with_state(state)
+        .layer(
+            cyberos_obs_sdk::red::RedLayer::new("obs-collector")
+                .with_extra_label("component", "grafana_proxy"),
+        );
     let listener = TcpListener::bind(listen)
         .await
         .with_context(|| format!("bind Grafana proxy {listen}"))?;

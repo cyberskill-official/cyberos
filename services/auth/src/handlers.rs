@@ -58,6 +58,10 @@ pub fn router(state: AppState) -> Router {
         .route(
             "/v1/auth/saml/idp-configs/:id/sp-metadata",
             get(crate::saml::sp_metadata),
+        )
+        .layer(
+            cyberos_obs_sdk::red::RedLayer::new("auth-service")
+                .with_extra_label("endpoint_type", "public"),
         );
 
     let admin = Router::new()
@@ -156,7 +160,11 @@ pub fn router(state: AppState) -> Router {
         .route_layer(axum::middleware::from_fn_with_state(
             state.clone(),
             crate::middleware::verify_jwt,
-        ));
+        ))
+        .layer(
+            cyberos_obs_sdk::red::RedLayer::new("auth-service")
+                .with_extra_label("endpoint_type", "admin"),
+        );
 
     public.merge(admin).with_state(state)
 }

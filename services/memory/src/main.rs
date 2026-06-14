@@ -41,6 +41,10 @@ async fn main() -> ExitCode {
         .json()
         .init();
 
+    if let Err(e) = cyberos_obs_sdk::init("memory", VERSION) {
+        warn!(error = %e, "obs sdk init failed");
+    }
+
     let state = match AppState::connect_from_env().await {
         Ok(s) => s,
         Err(e) => {
@@ -68,7 +72,8 @@ async fn main() -> ExitCode {
         .route("/healthz", get(healthz))
         .route("/metrics", get(metrics))
         .route("/v1/memory/search", post(search::search))
-        .with_state(state.clone());
+        .with_state(state.clone())
+        .layer(cyberos_obs_sdk::red::RedLayer::new("memory"));
 
     // Best-effort AGE graph init at boot — the ingest path uses MERGE which
     // is idempotent, but we ensure the graph exists once so first writes

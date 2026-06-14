@@ -17,6 +17,10 @@ async fn main() -> ExitCode {
         .json()
         .init();
 
+    if let Err(e) = cyberos_obs_sdk::init("auth-service", VERSION) {
+        tracing::warn!(error = %e, "obs sdk init failed");
+    }
+
     let state = match AppState::connect_from_env().await {
         Ok(s) => s,
         Err(e) => {

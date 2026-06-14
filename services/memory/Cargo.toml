@@ -39,6 +39,7 @@ regex = "1.11"
 reqwest = { version = "0.12.9", features = ["rustls-tls", "json"], default-features = false }
 
 cyberos-cli-exit.workspace = true
+cyberos-obs-sdk.workspace = true
 cyberos-types.workspace = true
 
 [dev-dependencies]

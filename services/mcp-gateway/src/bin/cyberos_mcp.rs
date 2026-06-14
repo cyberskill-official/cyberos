@@ -26,6 +26,10 @@ async fn main() {
         )
         .init();
 
+    if let Err(e) = cyberos_obs_sdk::init("mcp-gateway", env!("CARGO_PKG_VERSION")) {
+        tracing::warn!(error = %e, "obs sdk init failed");
+    }
+
     println!("{SERVICE_BANNER}");
     let cli = Cli::parse();
 

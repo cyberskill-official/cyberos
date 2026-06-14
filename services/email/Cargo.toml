@@ -55,6 +55,7 @@ clap        = { workspace = true, features = ["derive"] }
 
 # Shared CyberOS crates
 cyberos-cli-exit   = { workspace = true }
+cyberos-obs-sdk    = { workspace = true }
 cyberos-types      = { workspace = true }
 
 [dev-dependencies]

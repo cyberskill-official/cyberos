@@ -3,14 +3,14 @@ id: FR-OBS-003
 title: "Per-service RED metrics (rate/errors/duration) via cyberos-obs-sdk shared crate with macro + CI lint + standardised buckets"
 module: OBS
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 2
 slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
-shipped: null
+shipped: 2026-06-14
 memory_chain_hash: null
 related_frs: [FR-OBS-001, FR-OBS-002, FR-OBS-007, FR-AI-022]
 depends_on: [FR-OBS-001]
@@ -482,4 +482,15 @@ All resolved. Deferred:
 
 ---
 
-*End of FR-OBS-003. Status: draft (10/10 target).*
+## §12 — Shipped implementation note
+
+Shipped 2026-06-14 in the current workspace layout under `services/shared/cyberos-obs-sdk/` plus `services/shared/cyberos-obs-sdk-macros/`. The SDK exposes `red::record_request`, `obs_sdk::init`, standard RED bucket boundaries, status/error class derivation, cardinality blocking, self-metrics, the `#[red_instrument]` proc macro, and a `RedLayer` axum/tower layer. Current Rust axum services are instrumented at router boundaries so all mounted routes emit RED metrics without per-handler drift; the macro remains available and tested for handler-level use. `services/chat` is a Python/vendor integration in this repository and is explicitly excluded from the Rust macro completeness lint.
+
+Verification run:
+
+- `cargo test -p cyberos-obs-sdk --tests -- --nocapture`
+- `cargo test -p cyberos-memory -p cyberos-auth -p cyberos-email -p cyberos-mcp-gateway -p cyberos-obs-collector -p cyberos-ai-gateway --no-run`
+- `cargo test -p cyberos-mcp-gateway -- --nocapture`
+- `cargo test -p cyberos-obs-collector grafana_proxy -- --nocapture`
+
+*End of FR-OBS-003. Status: done.*
