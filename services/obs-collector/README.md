@@ -9,8 +9,8 @@ Implements [`docs/feature-requests/obs/FR-OBS-001..009`](../../docs/feature-requ
 |---|---|---|
 | **FR-OBS-001** | OTel collector + LGTM backends + PII scrub + bearer-token auth | **done** |
 | **FR-OBS-002** | Grafana tenant-aware query proxy (Rust) | **done** (`cyberos-obs grafana-proxy`; AUTH JWKS/RS256 verification plus HS256 local dev, PromQL AST injection via `promql-parser`, LogQL/TraceQL subset injection, reserved tenant-label rejection, root-admin audited bypass, datasource Compose wiring) |
-| FR-OBS-003 | Per-service RED metrics via cyberos-obs-sdk | pending |
-| FR-OBS-004 | LangSmith integration for AI traces | pending |
+| **FR-OBS-003** | Per-service RED metrics via cyberos-obs-sdk | **done** (`cyberos-obs-sdk` RED helpers + `#[red_instrument]` macro applied to Rust HTTP services) |
+| **FR-OBS-004** | LangSmith integration for AI traces | **done** (AI Gateway self-hosted LangSmith exporter, per-tenant opt-in, redacted payload newtypes, W3C trace-id correlation, async retry/drop metrics) |
 | FR-OBS-005 | W3C TraceContext correlation | pending |
 | FR-OBS-006 | Tail-based sampling | pending |
 | FR-OBS-007 | Alertmanager → CUO obs.triage-alert routing | pending |

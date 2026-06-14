@@ -47,6 +47,7 @@ pub mod cost_hold_expiry;
 pub mod cost_ledger;
 pub mod cost_reconcile;
 pub mod cost_table;
+pub mod langsmith;
 pub mod memory_writer;
 pub mod otel;
 pub mod persona;

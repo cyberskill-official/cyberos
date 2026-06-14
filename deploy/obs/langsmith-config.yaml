@@ -1,0 +1,17 @@
+# FR-OBS-004 — self-hosted LangSmith endpoints by residency.
+#
+# These URLs are consumed by deployment and operator configuration. Runtime can override
+# any region with LANGSMITH_URL_<REGION>, for example LANGSMITH_URL_SG_1.
+default_region: sg-1
+regions:
+  sg-1:
+    url: https://langsmith.sg-1.cyberos.world
+  eu-1:
+    url: https://langsmith.eu-1.cyberos.world
+  us-1:
+    url: https://langsmith.us-1.cyberos.world
+  vn-1:
+    url: https://langsmith.vn-1.cyberos.world
+forbidden_hosts:
+  - langchain.com
+  - api.smith.langchain.com

@@ -1,0 +1,50 @@
+services:
+  langsmith:
+    image: langchain/langsmith:0.6.0
+    environment:
+      LANGSMITH_LICENSE_KEY: "${LANGSMITH_LICENSE_KEY:?set LANGSMITH_LICENSE_KEY}"
+      LANGSMITH_API_TOKEN: "${LANGSMITH_API_TOKEN:?set LANGSMITH_API_TOKEN}"
+      DATABASE_URL: "postgres://langsmith:${LANGSMITH_POSTGRES_PASSWORD:?set LANGSMITH_POSTGRES_PASSWORD}@postgres-langsmith:5432/langsmith"
+      REDIS_URL: "redis://redis-langsmith:6379/0"
+    ports:
+      - "1984:1984"
+    volumes:
+      - langsmith-data:/data
+    depends_on:
+      postgres-langsmith:
+        condition: service_healthy
+      redis-langsmith:
+        condition: service_healthy
+    restart: always
+
+  postgres-langsmith:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: langsmith
+      POSTGRES_PASSWORD: "${LANGSMITH_POSTGRES_PASSWORD:?set LANGSMITH_POSTGRES_PASSWORD}"
+      POSTGRES_DB: langsmith
+    volumes:
+      - postgres-langsmith-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U langsmith -d langsmith"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+    restart: always
+
+  redis-langsmith:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-langsmith-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+    restart: always
+
+volumes:
+  langsmith-data:
+  postgres-langsmith-data:
+  redis-langsmith-data:

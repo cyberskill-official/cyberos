@@ -54,6 +54,8 @@ fn subcommands_parse_with_expected_flags() {
         "200",
         "--zdr-required",
         "true",
+        "--langsmith-export",
+        "true",
         "--residency",
         "eu-1",
         "--allowed-personas",

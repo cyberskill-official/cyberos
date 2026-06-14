@@ -86,6 +86,8 @@ pub enum AiInvocationKind {
     ResidencyViolation,
     /// Emitted by FR-AI-021 (`cyberos-ai policy set`).
     CliPolicyUpdated,
+    /// Emitted by FR-OBS-004 when a tenant opts into LangSmith exports.
+    ObsLangsmithExportEnabled,
     /// Emitted by FR-AI-021 (`cyberos-ai failover drill`).
     CliFailoverDrill,
     /// Emitted by FR-AI-021 (`cyberos-ai invoice export`).
@@ -116,6 +118,7 @@ impl AiInvocationKind {
             Self::ZdrViolation => "ai.zdr_violation",
             Self::ResidencyViolation => "ai.residency_violation",
             Self::CliPolicyUpdated => "ai.cli_policy_updated",
+            Self::ObsLangsmithExportEnabled => "obs.langsmith_export_enabled",
             Self::CliFailoverDrill => "ai.cli_failover_drill",
             Self::CliInvoiceExported => "ai.cli_invoice_exported",
             Self::CliBreakerReset => "ai.cli_breaker_reset",
@@ -752,6 +755,26 @@ pub mod builders {
         }
     }
 
+    /// `obs.langsmith_export_enabled` row (FR-OBS-004 tenant opt-in).
+    pub fn obs_langsmith_export_enabled(
+        tenant_id: &str,
+        operator_id: &str,
+        request_id: &str,
+        command_sha256: &str,
+    ) -> MemoryEmit {
+        MemoryEmit {
+            kind: AiInvocationKind::ObsLangsmithExportEnabled,
+            path: row_path("obs-langsmith-exports", tenant_id, request_id),
+            extra: serde_json::json!({
+                "tenant_id": tenant_id,
+                "operator_id": operator_id,
+                "enabled": true,
+                "request_id": request_id,
+                "command_sha256": command_sha256,
+            }),
+        }
+    }
+
     /// `ai.reconcile_started` row (FR-AI-002 pair-write start).
     #[allow(clippy::too_many_arguments)]
     pub fn reconcile_started(
@@ -1081,6 +1104,10 @@ mod tests {
         assert_eq!(
             AiInvocationKind::ResidencyViolation.tag(),
             "ai.residency_violation"
+        );
+        assert_eq!(
+            AiInvocationKind::ObsLangsmithExportEnabled.tag(),
+            "obs.langsmith_export_enabled"
         );
     }
 

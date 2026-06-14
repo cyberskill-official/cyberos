@@ -95,6 +95,11 @@
           "default": true,
           "type": "boolean"
         },
+        "langsmith_export": {
+          "description": "Export redacted AI traces to the self-hosted LangSmith stack.\n\nDefault false; tenants must explicitly opt in through the operator CLI.",
+          "default": false,
+          "type": "boolean"
+        },
         "monthly_cap_usd": {
           "description": "Hard cap on monthly USD spend across all providers. YAML accepts string (`\"150.00\"`) or number (`150`). Range checked at load time: [0.01, 1_000_000].",
           "type": "string"

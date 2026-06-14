@@ -225,6 +225,7 @@ pub async fn call_provider(
                         lookup_latency,
                         persona_applied.made_by_genie,
                     );
+                    emit_langsmith_trace(&root, &redacted_req, &response, resolved, policy).await;
                     restore_tool_call_arguments(&mut response, &redactions);
                     return Ok(response);
                 }
@@ -277,6 +278,7 @@ pub async fn call_provider(
             }
         }
 
+        emit_langsmith_trace(&root, &redacted_req, &response, resolved, policy).await;
         restore_tool_call_arguments(&mut response, &redactions);
         if response.made_by_genie.is_none() {
             response.made_by_genie = persona_applied.made_by_genie;
@@ -1359,6 +1361,48 @@ fn provider_response_from_cache(
         attempts: vec![],
         made_by_genie,
     }
+}
+
+async fn emit_langsmith_trace(
+    root: &otel_spans::OtelSpan,
+    redacted_req: &ChatCompleteRequest,
+    response: &ProviderResponse,
+    resolved: &ResolvedModel,
+    policy: &TenantPolicy,
+) {
+    let trace_id = root.trace_id();
+    let (provider, model) = langsmith_provider_model(response, resolved);
+    let metadata = crate::langsmith::payload::metadata_from_router_response(
+        trace_id,
+        redacted_req,
+        response,
+        provider,
+        model,
+        &policy.tenant_id,
+    );
+    crate::langsmith::export(
+        trace_id,
+        crate::langsmith::prompt_from_messages(&redacted_req.messages),
+        crate::langsmith::response_from_choices(&response.choices),
+        metadata,
+        policy,
+    )
+    .await;
+}
+
+fn langsmith_provider_model<'a>(
+    response: &'a ProviderResponse,
+    resolved: &'a ResolvedModel,
+) -> (ProviderKind, &'a str) {
+    if let Some(attempt) = response
+        .attempts
+        .iter()
+        .rev()
+        .find(|attempt| attempt.status == AttemptStatus::Succeeded)
+    {
+        return (attempt.provider, attempt.model.as_str());
+    }
+    (resolved.provider_kind, resolved.model.as_str())
 }
 
 fn make_record(

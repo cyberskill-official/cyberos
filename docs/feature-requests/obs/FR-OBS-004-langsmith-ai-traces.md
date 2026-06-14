@@ -3,14 +3,14 @@ id: FR-OBS-004
 title: "LangSmith integration for AI traces — self-hosted + per-tenant opt-in + redacted-prompts-only + W3C TraceContext correlation + async non-blocking"
 module: OBS
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 2
 slice: 2
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
-shipped: null
+shipped: 2026-06-14
 memory_chain_hash: null
 related_frs: [FR-AI-011, FR-AI-014, FR-AI-022, FR-OBS-001, FR-OBS-005]
 depends_on: [FR-AI-022, FR-OBS-001]
@@ -500,9 +500,23 @@ All resolved. Deferred:
 - 3 retries with exponential backoff (100/250/500ms = 850ms total) covers transient errors without indefinite queuing. Permanent errors (auth, malformed payload) drop on first attempt.
 - Idempotency-Key (the trace_id) prevents duplicate-trace ingestion if a retry succeeds after the original eventually delivers.
 - 100KB payload truncation prevents LangSmith UI degradation. Rare oversized cases (full-document RAG) get truncated with a marker so the operator knows to inspect via Tempo.
-- Per-region LangSmith deployment (sg-1, eu-1) satisfies FR-AI-016 residency. Tenants pinning to vn-1 currently can't use LangSmith (no VN deployment); the `dropped_residency_no_langsmith` metric label tracks this.
+- Per-region LangSmith deployment (sg-1, eu-1, us-1, vn-1) satisfies FR-AI-016 residency. The runtime resolves region-specific URLs from `deploy/obs/langsmith-config.yaml` and `LANGSMITH_URL_<REGION>` overrides.
 - The langchain.com SaaS endpoint is forbidden via egress firewall + integration-test assertion. A rogue commit pointing at langchain.com would fail the integration test before merge.
 
 ---
 
-*End of FR-OBS-004. Status: draft (10/10 target).*
+## §12 — Shipped verification
+
+- `cargo test -p cyberos-ai-gateway --test langsmith_test -- --nocapture`
+- `cargo test -p cyberos-ai-gateway --test langsmith_no_pii_test -- --nocapture`
+- `cargo test -p cyberos-ai-gateway --test langsmith_async_test -- --nocapture`
+- `cargo test -p cyberos-ai-gateway --test cli_failover_drill_safety_test -- --nocapture`
+- `cargo test -p cyberos-ai-gateway --test zdr_test -- --nocapture`
+- `cargo test -p cyberos-ai-gateway --tests -- --nocapture`
+- `cargo test -p cyberos-obs-collector langsmith -- --nocapture`
+- `GRAFANA_ADMIN_PASSWORD=dummy LANGSMITH_LICENSE_KEY=dummy LANGSMITH_API_TOKEN=dummy LANGSMITH_POSTGRES_PASSWORD=dummy docker compose -f deploy/obs/docker-compose.yml config`
+- `LANGSMITH_LICENSE_KEY=dummy LANGSMITH_API_TOKEN=dummy LANGSMITH_POSTGRES_PASSWORD=dummy docker compose -f deploy/obs/langsmith-docker-compose.yml config`
+- `git diff --check`
+- `cyberos doctor`
+
+*End of FR-OBS-004. Status: done.*

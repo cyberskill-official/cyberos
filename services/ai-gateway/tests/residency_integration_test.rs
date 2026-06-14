@@ -40,6 +40,7 @@ fn make_bedrock_policy(residency: Residency, region: &str) -> TenantPolicy {
             residency,
             residency_override: None,
             zdr_required: false,
+            langsmith_export: false,
             emergency_override: EmergencyOverride::default(),
             allowed_personas: None,
             alias_overrides: None,

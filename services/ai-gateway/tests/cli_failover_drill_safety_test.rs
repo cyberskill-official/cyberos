@@ -2,6 +2,13 @@ use cyberos_ai_gateway::cli::auth::{OperatorClaims, Role};
 use cyberos_ai_gateway::cli::failover;
 use cyberos_ai_gateway::cli::{CliError, FailoverAction};
 use sqlx::postgres::PgPoolOptions;
+use std::sync::OnceLock;
+
+static ENV_LOCK: OnceLock<tokio::sync::Mutex<()>> = OnceLock::new();
+
+fn env_lock() -> &'static tokio::sync::Mutex<()> {
+    ENV_LOCK.get_or_init(|| tokio::sync::Mutex::new(()))
+}
 
 fn lazy_pool() -> sqlx::PgPool {
     PgPoolOptions::new()
@@ -19,6 +26,7 @@ fn claims(roles: Vec<Role>) -> OperatorClaims {
 
 #[tokio::test]
 async fn failover_drill_requires_admin_role() {
+    let _guard = env_lock().lock().await;
     std::env::set_var("CYBEROS_DEPLOYMENT_TIER", "staging");
     let err = failover::run(
         FailoverAction::Drill {
@@ -39,6 +47,7 @@ async fn failover_drill_requires_admin_role() {
 
 #[tokio::test]
 async fn failover_drill_requires_global_confirm() {
+    let _guard = env_lock().lock().await;
     std::env::set_var("CYBEROS_DEPLOYMENT_TIER", "staging");
     let err = failover::run(
         FailoverAction::Drill {
@@ -60,6 +69,7 @@ async fn failover_drill_requires_global_confirm() {
 
 #[tokio::test]
 async fn production_failover_drill_requires_extra_guard() {
+    let _guard = env_lock().lock().await;
     std::env::set_var("CYBEROS_DEPLOYMENT_TIER", "production");
     let err = failover::run(
         FailoverAction::Drill {

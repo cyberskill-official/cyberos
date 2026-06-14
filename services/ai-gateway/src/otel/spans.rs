@@ -139,6 +139,10 @@ impl OtelSpan {
         format!("00-{}-{}-01", self.trace_id, self.span_id)
     }
 
+    pub fn trace_id(&self) -> &str {
+        &self.trace_id
+    }
+
     pub fn end_ok(&mut self) {
         self.status = Some(RecordedSpanStatus::Ok);
         self.ctx.span().set_status(Status::Ok);

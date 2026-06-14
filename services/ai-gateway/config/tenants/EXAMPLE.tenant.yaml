@@ -51,6 +51,9 @@ ai_policy:
   # Require ZDR (Zero Data Retention) — FR-AI-015 refuses non-ZDR providers when true.
   zdr_required: true
 
+  # Export redacted AI traces to self-hosted LangSmith. Default false; enable per tenant only.
+  langsmith_export: false
+
   # Emergency override (CFO-signed) to allow over-cap calls.
   emergency_override:
     enabled: true

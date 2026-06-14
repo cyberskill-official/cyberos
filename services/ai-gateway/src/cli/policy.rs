@@ -54,6 +54,7 @@ pub async fn run(
             tenant,
             cap_usd,
             zdr_required,
+            langsmith_export,
             residency,
             allowed_personas,
         } => {
@@ -68,6 +69,7 @@ pub async fn run(
                 &tenant,
                 cap_usd,
                 zdr_required,
+                langsmith_export,
                 residency,
                 allowed_personas,
                 json,
@@ -136,6 +138,15 @@ async fn diff(pool: &PgPool, tenant: &str, yaml_file: &Path, json: bool) -> Resu
         });
     }
 
+    if current.ai_policy.langsmith_export != proposed.ai_policy.langsmith_export {
+        changes.push(PolicyChange {
+            field: "langsmith_export".into(),
+            before: json!(current.ai_policy.langsmith_export),
+            after: json!(proposed.ai_policy.langsmith_export),
+            secret_changed: None,
+        });
+    }
+
     if current.ai_policy.residency != proposed.ai_policy.residency {
         changes.push(PolicyChange {
             field: "residency".into(),
@@ -169,6 +180,7 @@ async fn set(
     tenant: &str,
     cap_usd: Option<f64>,
     zdr_required: Option<bool>,
+    langsmith_export: Option<bool>,
     residency: Option<String>,
     allowed_personas: Option<Vec<String>>,
     _json: bool,
@@ -199,6 +211,17 @@ async fn set(
                 field: "zdr_required".into(),
                 before: json!(current.ai_policy.zdr_required),
                 after: json!(zdr),
+                secret_changed: None,
+            });
+        }
+    }
+
+    if let Some(enabled) = langsmith_export {
+        if current.ai_policy.langsmith_export != enabled {
+            changes.push(PolicyChange {
+                field: "langsmith_export".into(),
+                before: json!(current.ai_policy.langsmith_export),
+                after: json!(enabled),
                 secret_changed: None,
             });
         }
@@ -266,6 +289,7 @@ async fn set(
                 "tenant": tenant,
                 "cap_usd": cap_usd,
                 "zdr_required": zdr_required,
+                "langsmith_export": langsmith_export,
                 "residency": residency,
                 "allowed_personas": allowed_personas,
             },
@@ -278,6 +302,19 @@ async fn set(
     })
     .await
     .map_err(super::memory_writer_error)?;
+
+    if langsmith_export == Some(true) && !current.ai_policy.langsmith_export {
+        crate::memory_writer::emit(
+            crate::memory_writer::builders::obs_langsmith_export_enabled(
+                tenant,
+                &claims.operator_id,
+                &request_id,
+                &command_sha256,
+            ),
+        )
+        .await
+        .map_err(super::memory_writer_error)?;
+    }
 
     let mut tx = pool
         .begin()
@@ -303,6 +340,19 @@ async fn set(
             "UPDATE tenant_policies SET ai_policy = jsonb_set(ai_policy, '{zdr_required}', to_jsonb($1::bool), true) WHERE tenant_id = $2",
         )
         .bind(zdr)
+        .bind(tenant)
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| CliError::RemoteUnreachable {
+            reason: e.to_string(),
+        })?;
+    }
+
+    if let Some(enabled) = langsmith_export {
+        sqlx::query(
+            "UPDATE tenant_policies SET ai_policy = jsonb_set(ai_policy, '{langsmith_export}', to_jsonb($1::bool), true) WHERE tenant_id = $2",
+        )
+        .bind(enabled)
         .bind(tenant)
         .execute(&mut *tx)
         .await

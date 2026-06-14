@@ -4,11 +4,21 @@
 
 use std::collections::HashMap;
 use std::path::Path;
+use std::sync::{Mutex, OnceLock};
 
 use chrono::{Duration, Utc};
 
 use cyberos_ai_gateway::policy::ProviderKind;
 use cyberos_ai_gateway::zdr::*;
+
+static ZDR_TABLE_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+fn zdr_table_lock() -> std::sync::MutexGuard<'static, ()> {
+    ZDR_TABLE_LOCK
+        .get_or_init(|| Mutex::new(()))
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+}
 
 // ─── Parse validation tests ──────────────────────────────────────────────────
 
@@ -204,6 +214,7 @@ fn soft_stale_boundary_at_90_days() {
 
 #[test]
 fn init_loads_fixture_and_double_init_rejected() {
+    let _guard = zdr_table_lock();
     reset_for_tests();
     init_zdr_table(Path::new("config/zdr_attestations.yaml")).unwrap();
     assert!(is_zdr(
@@ -217,6 +228,7 @@ fn init_loads_fixture_and_double_init_rejected() {
 
 #[test]
 fn missing_entry_fails_closed() {
+    let _guard = zdr_table_lock();
     reset_for_tests();
     init_zdr_table(Path::new("config/zdr_attestations.yaml")).unwrap();
     assert!(!is_zdr(&ProviderKind::Vertex, "gemini-9.9.9"));
@@ -226,6 +238,7 @@ fn missing_entry_fails_closed() {
 
 #[test]
 fn hard_stale_override_forces_is_zdr_false() {
+    let _guard = zdr_table_lock();
     reset_for_tests();
     let mut table = HashMap::new();
     table.insert(
@@ -245,6 +258,7 @@ fn hard_stale_override_forces_is_zdr_false() {
 
 #[test]
 fn reload_adds_new_attestation_and_detects_revocation() {
+    let _guard = zdr_table_lock();
     reset_for_tests();
     let dir = tempfile::tempdir().unwrap();
     let path = dir.path().join("zdr_attestations.yaml");
@@ -292,6 +306,7 @@ attestations:
 
 #[test]
 fn reload_deleted_true_attestation_fails_closed() {
+    let _guard = zdr_table_lock();
     reset_for_tests();
     let dir = tempfile::tempdir().unwrap();
     let path = dir.path().join("zdr_attestations.yaml");

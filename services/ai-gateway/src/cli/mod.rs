@@ -102,6 +102,9 @@ pub enum PolicyAction {
         /// Require ZDR.
         #[arg(long)]
         zdr_required: Option<bool>,
+        /// Export redacted AI traces to self-hosted LangSmith.
+        #[arg(long)]
+        langsmith_export: Option<bool>,
         /// Residency pin.
         #[arg(long)]
         residency: Option<String>,

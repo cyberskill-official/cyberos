@@ -92,6 +92,7 @@ mod tests {
                 residency: Residency::Sg1,
                 residency_override: None,
                 zdr_required: true,
+                langsmith_export: false,
                 emergency_override: Default::default(),
                 allowed_personas: None,
                 alias_overrides: None,

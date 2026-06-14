@@ -71,6 +71,12 @@ pub struct AiPolicy {
     #[serde(default)]
     pub zdr_required: bool,
 
+    /// Export redacted AI traces to the self-hosted LangSmith stack.
+    ///
+    /// Default false; tenants must explicitly opt in through the operator CLI.
+    #[serde(default)]
+    pub langsmith_export: bool,
+
     /// Emergency override (CFO-signed) to allow over-cap calls.
     #[serde(default)]
     pub emergency_override: EmergencyOverride,
