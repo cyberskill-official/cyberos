@@ -20,6 +20,7 @@ use prometheus::{
 };
 use tokio::sync::{mpsc, watch, Mutex};
 use tokio_stream::wrappers::ReceiverStream;
+use tracing::Instrument;
 
 use crate::alias::ResolvedModel;
 use crate::cost_ledger;
@@ -309,16 +310,19 @@ impl Drop for ReconcileGuard {
         if let Ok(handle) = tokio::runtime::Handle::try_current() {
             let hold = self.hold_id;
             let pool = self.pool.clone();
-            handle.spawn(async move {
-                metrics::RECONCILES
-                    .with_label_values(&["panic_recovery"])
-                    .inc();
-                let outcome = crate::cost_reconcile::CallOutcome::Cancelled {
-                    partial_usage: None,
-                    reason: crate::cost_reconcile::CancelReason::GatewayShutdown,
-                };
-                let _ = crate::cost_reconcile::reconcile(hold, outcome, &pool).await;
-            });
+            handle.spawn(
+                async move {
+                    metrics::RECONCILES
+                        .with_label_values(&["panic_recovery"])
+                        .inc();
+                    let outcome = crate::cost_reconcile::CallOutcome::Cancelled {
+                        partial_usage: None,
+                        reason: crate::cost_reconcile::CancelReason::GatewayShutdown,
+                    };
+                    let _ = crate::cost_reconcile::reconcile(hold, outcome, &pool).await;
+                }
+                .in_current_span(),
+            );
         } else {
             metrics::DROP_OUTSIDE_RUNTIME.inc();
             tracing::error!(
@@ -437,35 +441,41 @@ pub async fn handle_streaming_chat(
     let tx_for_task = tx.clone();
     let disconnect_rx_for_task = disconnect_rx.clone();
 
-    tokio::spawn(async move {
-        let result = run_provider_stream(
-            req_for_task,
-            resolved_for_task,
-            deadline,
-            policy_for_task,
-            tx_for_task,
-            disconnect_rx_for_task,
-        )
-        .await;
-        let _ = stream_done_tx.send(true);
-        guard_for_task.record(result).await;
-        guard_for_task.fire().await;
-    });
+    tokio::spawn(
+        async move {
+            let result = run_provider_stream(
+                req_for_task,
+                resolved_for_task,
+                deadline,
+                policy_for_task,
+                tx_for_task,
+                disconnect_rx_for_task,
+            )
+            .await;
+            let _ = stream_done_tx.send(true);
+            guard_for_task.record(result).await;
+            guard_for_task.fire().await;
+        }
+        .in_current_span(),
+    );
 
     // Step 5: Heartbeat task (cancels when tx drops).
     let tx_for_hb = tx.clone();
     let provider_label = resolved.provider_kind.as_metric_label().to_owned();
     let model_label = resolved.model.clone();
-    tokio::spawn(async move {
-        heartbeat::run_until_done(
-            tx_for_hb,
-            HEARTBEAT_INTERVAL,
-            &provider_label,
-            &model_label,
-            stream_done_rx,
-        )
-        .await;
-    });
+    tokio::spawn(
+        async move {
+            heartbeat::run_until_done(
+                tx_for_hb,
+                HEARTBEAT_INTERVAL,
+                &provider_label,
+                &model_label,
+                stream_done_rx,
+            )
+            .await;
+        }
+        .in_current_span(),
+    );
 
     // Step 6: Wire disconnect signal on SSE stream drop.
     // The disconnect_tx is dropped when this function returns, but we need it

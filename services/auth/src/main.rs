@@ -6,15 +6,19 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::Notify;
 use tracing::info;
+use tracing_subscriber::prelude::*;
 
 #[tokio::main]
 async fn main() -> ExitCode {
-    tracing_subscriber::fmt()
-        .with_env_filter(
+    tracing_subscriber::registry()
+        .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
                 .unwrap_or_else(|_| "cyberos_auth=info,info".into()),
         )
-        .json()
+        .with(tracing_subscriber::fmt::layer().json())
+        .with(cyberos_obs_sdk::logging::ObsContextLayer::new(
+            "auth-service",
+        ))
         .init();
 
     if let Err(e) = cyberos_obs_sdk::init("auth-service", VERSION) {

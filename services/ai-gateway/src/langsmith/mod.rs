@@ -8,7 +8,7 @@ use std::time::Instant;
 use once_cell::sync::Lazy;
 use prometheus::{register_counter_vec, register_histogram, register_int_gauge, CounterVec};
 use prometheus::{Histogram, IntGauge};
-use tracing::warn;
+use tracing::{warn, Instrument};
 
 use crate::policy::TenantPolicy;
 
@@ -92,20 +92,23 @@ pub async fn export_with_config(
     let trace_id = trace_id.to_ascii_lowercase();
     let tenant_id = metadata.tenant_id.clone();
     QUEUE_DEPTH.inc();
-    tokio::spawn(async move {
-        let _queue_guard = QueueDepthGuard;
-        let started = Instant::now();
-        let payload = build_payload(&trace_id, redacted_prompt, redacted_response, metadata);
-        let outcome = match client::post_with_retry_with_config(&config, &payload).await {
-            Ok(()) => "ok",
-            Err(err) => {
-                warn!(error = %err, trace_id = %trace_id, "langsmith_export_failed");
-                err.metric_outcome()
-            }
-        };
-        EXPORT_LATENCY_MS.observe(started.elapsed().as_secs_f64() * 1000.0);
-        record_export(outcome, &tenant_id);
-    });
+    tokio::spawn(
+        async move {
+            let _queue_guard = QueueDepthGuard;
+            let started = Instant::now();
+            let payload = build_payload(&trace_id, redacted_prompt, redacted_response, metadata);
+            let outcome = match client::post_with_retry_with_config(&config, &payload).await {
+                Ok(()) => "ok",
+                Err(err) => {
+                    warn!(error = %err, trace_id = %trace_id, "langsmith_export_failed");
+                    err.metric_outcome()
+                }
+            };
+            EXPORT_LATENCY_MS.observe(started.elapsed().as_secs_f64() * 1000.0);
+            record_export(outcome, &tenant_id);
+        }
+        .in_current_span(),
+    );
 
     ExportDecision::Spawned
 }

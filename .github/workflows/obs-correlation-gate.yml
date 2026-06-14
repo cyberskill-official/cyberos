@@ -1,23 +1,34 @@
-# obs-correlation-gate.yml — STUB
-#
-# Auto-generated 2026-05-17 from FR build_envelope references.
-# Declared by: FR-OBS-005
-#
-# Implementation team: replace this stub with the real workflow YAML
-# per the spec details in the declaring FR(s) above.
-# Many FRs embed the canonical workflow YAML in their §6 skeleton section.
-
 name: obs-correlation-gate
 
 on:
   pull_request:
     paths:
-      # TODO: per declaring FR
       - 'services/**'
+      - '.github/workflows/obs-correlation-gate.yml'
+  push:
+    branches:
+      - main
+      - 'codex/**'
+    paths:
+      - 'services/**'
+      - '.github/workflows/obs-correlation-gate.yml'
 
 jobs:
-  placeholder:
+  correlation:
     runs-on: ubuntu-latest
     steps:
-      - name: TODO — implement per FR(s) FR-OBS-005
-        run: echo 'Stub — see FR specs for canonical workflow YAML'
+      - uses: actions/checkout@v4
+
+      - name: Install Rust 1.88
+        uses: dtolnay/rust-toolchain@1.88.0
+
+      - name: Run OBS correlation gate
+        working-directory: services
+        env:
+          CYBEROS_OBS_SDK_DISABLE_OTLP: "1"
+          CYBEROS_OBS_SDK_CAPTURE: "1"
+        run: |
+          cargo test -p cyberos-obs-sdk tracecontext -- --nocapture
+          cargo test -p cyberos-obs-sdk log_enrichment -- --nocapture
+          cargo test -p cyberos-obs-sdk exemplar -- --nocapture
+          cargo test -p cyberos-obs-sdk end_to_end_correlation -- --nocapture

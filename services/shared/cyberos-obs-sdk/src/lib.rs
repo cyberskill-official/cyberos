@@ -5,7 +5,10 @@
 
 pub mod axum_layer;
 pub mod cardinality_guard;
+pub mod exemplar;
+pub mod logging;
 pub mod red;
+pub mod tracecontext;
 
 pub use axum_layer::RedLayer;
 pub use cyberos_obs_sdk_macros::red_instrument;

@@ -165,127 +165,132 @@ pub async fn call_provider(
     let baggage =
         otel_spans::baggage_header(&policy.tenant_id, req.agent_persona.as_deref(), &request_id);
     let mut root = otel_spans::start_chat_root(req, &policy.tenant_id, &request_id, false);
+    let writer_trace_id = root.trace_id().to_string();
+    let writer_span_id = root.span_id().to_string();
 
-    let result = async {
-        let mut persona_span = root.child(
-            otel_spans::PERSONA_LOAD_SPAN,
-            opentelemetry::trace::SpanKind::Internal,
-        );
-        let persona_result = apply_persona_and_emit(req, policy, &request_id).await;
-        match &persona_result {
-            Ok(_) => {
-                persona_span.set_str(otel_attributes::OUTCOME, "allow");
-                persona_span.end_ok();
-            }
-            Err(err) => {
-                persona_span.set_str(otel_attributes::OUTCOME, "error");
-                persona_span.end_error(router_error_label(err));
-            }
-        }
-        let persona_applied = persona_result?;
-
-        let mut redact_span = root.child(
-            otel_spans::REDACT_SPAN,
-            opentelemetry::trace::SpanKind::Internal,
-        );
-        let redact_result = crate::redact::redact_chat_request(&persona_applied.request, policy)
-            .await
-            .map_err(redaction_error);
-        match &redact_result {
-            Ok(_) => {
-                redact_span.set_str(otel_attributes::OUTCOME, "allow");
-                redact_span.end_ok();
-            }
-            Err(err) => {
-                redact_span.set_str(otel_attributes::OUTCOME, "error");
-                redact_span.end_error(router_error_label(err));
-            }
-        }
-        let (mut redacted_req, redactions) = redact_result?;
-        redacted_req.baggage = Some(baggage.clone());
-
-        let (cache_key, mut cache_state) = response_cache_key(&redacted_req, resolved, policy);
-        if let Some(cache_key) = &cache_key {
-            let mut cache_span = root.child(
-                otel_spans::CACHE_LOOKUP_SPAN,
+    let result =
+        crate::memory_writer::with_trace_context(&writer_trace_id, &writer_span_id, async {
+            let mut persona_span = root.child(
+                otel_spans::PERSONA_LOAD_SPAN,
                 opentelemetry::trace::SpanKind::Internal,
             );
-            match crate::cache::lookup(cache_key).await {
-                crate::cache::CacheLookupOutcome::Hit(cached, lookup_latency) => {
-                    cache_span.set_str(otel_attributes::CACHE_STATE, "hit");
-                    cache_span.set_str(
-                        otel_attributes::CACHE_KEY_HASH16,
-                        cache_key_hash16(cache_key),
-                    );
-                    cache_span.set_str(otel_attributes::OUTCOME, "allow");
-                    cache_span.end_ok();
-                    let mut response = provider_response_from_cache(
-                        cache_key,
-                        *cached,
-                        lookup_latency,
-                        persona_applied.made_by_genie,
-                    );
-                    emit_langsmith_trace(&root, &redacted_req, &response, resolved, policy).await;
-                    restore_tool_call_arguments(&mut response, &redactions);
-                    return Ok(response);
+            let persona_result = apply_persona_and_emit(req, policy, &request_id).await;
+            match &persona_result {
+                Ok(_) => {
+                    persona_span.set_str(otel_attributes::OUTCOME, "allow");
+                    persona_span.end_ok();
                 }
-                crate::cache::CacheLookupOutcome::Miss
-                | crate::cache::CacheLookupOutcome::SchemaMismatch => {
-                    cache_span.set_str(otel_attributes::CACHE_STATE, "miss");
-                    cache_span.set_str(
-                        otel_attributes::CACHE_KEY_HASH16,
-                        cache_key_hash16(cache_key),
-                    );
-                    cache_span.set_str(otel_attributes::OUTCOME, "allow");
-                    cache_span.end_ok();
-                    cache_state = CacheState::Miss;
-                }
-                crate::cache::CacheLookupOutcome::Error(err) => {
-                    cache_span.set_str(otel_attributes::CACHE_STATE, "error");
-                    cache_span.set_str(
-                        otel_attributes::CACHE_KEY_HASH16,
-                        cache_key_hash16(cache_key),
-                    );
-                    cache_span.set_str(otel_attributes::OUTCOME, "error");
-                    cache_span.end_error("cache_lookup_error");
-                    warn!(error = %err, "response_cache_lookup_failed; continuing to provider");
-                    cache_state = CacheState::Error;
+                Err(err) => {
+                    persona_span.set_str(otel_attributes::OUTCOME, "error");
+                    persona_span.end_error(router_error_label(err));
                 }
             }
-        }
+            let persona_applied = persona_result?;
 
-        let chain = failover::build_provider_chain(resolved, policy, &req.alias);
-        let mut response = call_provider_with_chain_traced(
-            &redacted_req,
-            deadline,
-            chain,
-            Some(&root),
-            Some(&baggage),
-        )
-        .await?;
-        response.cache_state = cache_state;
-
-        if let Some(cache_key) = &cache_key {
-            match crate::cache::insert(cache_key, &response, &req.alias).await {
-                crate::cache::CacheInsertOutcome::Inserted { .. } => {}
-                crate::cache::CacheInsertOutcome::Skipped(_) => {
-                    response.cache_state = CacheState::Skipped;
+            let mut redact_span = root.child(
+                otel_spans::REDACT_SPAN,
+                opentelemetry::trace::SpanKind::Internal,
+            );
+            let redact_result =
+                crate::redact::redact_chat_request(&persona_applied.request, policy)
+                    .await
+                    .map_err(redaction_error);
+            match &redact_result {
+                Ok(_) => {
+                    redact_span.set_str(otel_attributes::OUTCOME, "allow");
+                    redact_span.end_ok();
                 }
-                crate::cache::CacheInsertOutcome::Error(err) => {
-                    warn!(error = %err, "response_cache_insert_failed");
-                    response.cache_state = CacheState::Error;
+                Err(err) => {
+                    redact_span.set_str(otel_attributes::OUTCOME, "error");
+                    redact_span.end_error(router_error_label(err));
                 }
             }
-        }
+            let (mut redacted_req, redactions) = redact_result?;
+            redacted_req.baggage = Some(baggage.clone());
 
-        emit_langsmith_trace(&root, &redacted_req, &response, resolved, policy).await;
-        restore_tool_call_arguments(&mut response, &redactions);
-        if response.made_by_genie.is_none() {
-            response.made_by_genie = persona_applied.made_by_genie;
-        }
-        Ok(response)
-    }
-    .await;
+            let (cache_key, mut cache_state) = response_cache_key(&redacted_req, resolved, policy);
+            if let Some(cache_key) = &cache_key {
+                let mut cache_span = root.child(
+                    otel_spans::CACHE_LOOKUP_SPAN,
+                    opentelemetry::trace::SpanKind::Internal,
+                );
+                match crate::cache::lookup(cache_key).await {
+                    crate::cache::CacheLookupOutcome::Hit(cached, lookup_latency) => {
+                        cache_span.set_str(otel_attributes::CACHE_STATE, "hit");
+                        cache_span.set_str(
+                            otel_attributes::CACHE_KEY_HASH16,
+                            cache_key_hash16(cache_key),
+                        );
+                        cache_span.set_str(otel_attributes::OUTCOME, "allow");
+                        cache_span.end_ok();
+                        let mut response = provider_response_from_cache(
+                            cache_key,
+                            *cached,
+                            lookup_latency,
+                            persona_applied.made_by_genie,
+                        );
+                        emit_langsmith_trace(&root, &redacted_req, &response, resolved, policy)
+                            .await;
+                        restore_tool_call_arguments(&mut response, &redactions);
+                        return Ok(response);
+                    }
+                    crate::cache::CacheLookupOutcome::Miss
+                    | crate::cache::CacheLookupOutcome::SchemaMismatch => {
+                        cache_span.set_str(otel_attributes::CACHE_STATE, "miss");
+                        cache_span.set_str(
+                            otel_attributes::CACHE_KEY_HASH16,
+                            cache_key_hash16(cache_key),
+                        );
+                        cache_span.set_str(otel_attributes::OUTCOME, "allow");
+                        cache_span.end_ok();
+                        cache_state = CacheState::Miss;
+                    }
+                    crate::cache::CacheLookupOutcome::Error(err) => {
+                        cache_span.set_str(otel_attributes::CACHE_STATE, "error");
+                        cache_span.set_str(
+                            otel_attributes::CACHE_KEY_HASH16,
+                            cache_key_hash16(cache_key),
+                        );
+                        cache_span.set_str(otel_attributes::OUTCOME, "error");
+                        cache_span.end_error("cache_lookup_error");
+                        warn!(error = %err, "response_cache_lookup_failed; continuing to provider");
+                        cache_state = CacheState::Error;
+                    }
+                }
+            }
+
+            let chain = failover::build_provider_chain(resolved, policy, &req.alias);
+            let mut response = call_provider_with_chain_traced(
+                &redacted_req,
+                deadline,
+                chain,
+                Some(&root),
+                Some(&baggage),
+            )
+            .await?;
+            response.cache_state = cache_state;
+
+            if let Some(cache_key) = &cache_key {
+                match crate::cache::insert(cache_key, &response, &req.alias).await {
+                    crate::cache::CacheInsertOutcome::Inserted { .. } => {}
+                    crate::cache::CacheInsertOutcome::Skipped(_) => {
+                        response.cache_state = CacheState::Skipped;
+                    }
+                    crate::cache::CacheInsertOutcome::Error(err) => {
+                        warn!(error = %err, "response_cache_insert_failed");
+                        response.cache_state = CacheState::Error;
+                    }
+                }
+            }
+
+            emit_langsmith_trace(&root, &redacted_req, &response, resolved, policy).await;
+            restore_tool_call_arguments(&mut response, &redactions);
+            if response.made_by_genie.is_none() {
+                response.made_by_genie = persona_applied.made_by_genie;
+            }
+            Ok(response)
+        })
+        .await;
 
     match &result {
         Ok(response) => {
@@ -881,55 +886,59 @@ pub async fn call_provider_streaming(
     let baggage =
         otel_spans::baggage_header(&policy.tenant_id, req.agent_persona.as_deref(), &request_id);
     let mut root = otel_spans::start_chat_root(req, &policy.tenant_id, &request_id, true);
+    let writer_trace_id = root.trace_id().to_string();
+    let writer_span_id = root.span_id().to_string();
 
-    let result = async {
-        let mut persona_span = root.child(
-            otel_spans::PERSONA_LOAD_SPAN,
-            opentelemetry::trace::SpanKind::Internal,
-        );
-        let persona_result = apply_persona_and_emit(req, policy, &request_id).await;
-        match &persona_result {
-            Ok(_) => {
-                persona_span.set_str(otel_attributes::OUTCOME, "allow");
-                persona_span.end_ok();
+    let result =
+        crate::memory_writer::with_trace_context(&writer_trace_id, &writer_span_id, async {
+            let mut persona_span = root.child(
+                otel_spans::PERSONA_LOAD_SPAN,
+                opentelemetry::trace::SpanKind::Internal,
+            );
+            let persona_result = apply_persona_and_emit(req, policy, &request_id).await;
+            match &persona_result {
+                Ok(_) => {
+                    persona_span.set_str(otel_attributes::OUTCOME, "allow");
+                    persona_span.end_ok();
+                }
+                Err(err) => {
+                    persona_span.set_str(otel_attributes::OUTCOME, "error");
+                    persona_span.end_error(router_error_label(err));
+                }
             }
-            Err(err) => {
-                persona_span.set_str(otel_attributes::OUTCOME, "error");
-                persona_span.end_error(router_error_label(err));
-            }
-        }
-        let persona_applied = persona_result?;
+            let persona_applied = persona_result?;
 
-        let mut redact_span = root.child(
-            otel_spans::REDACT_SPAN,
-            opentelemetry::trace::SpanKind::Internal,
-        );
-        let redact_result = crate::redact::redact_chat_request(&persona_applied.request, policy)
+            let mut redact_span = root.child(
+                otel_spans::REDACT_SPAN,
+                opentelemetry::trace::SpanKind::Internal,
+            );
+            let redact_result =
+                crate::redact::redact_chat_request(&persona_applied.request, policy)
+                    .await
+                    .map_err(redaction_error);
+            match &redact_result {
+                Ok(_) => {
+                    redact_span.set_str(otel_attributes::OUTCOME, "allow");
+                    redact_span.end_ok();
+                }
+                Err(err) => {
+                    redact_span.set_str(otel_attributes::OUTCOME, "error");
+                    redact_span.end_error(router_error_label(err));
+                }
+            }
+            let (mut redacted_req, _redactions) = redact_result?;
+            redacted_req.baggage = Some(baggage.clone());
+            let chain = failover::build_provider_chain(resolved, policy, &req.alias);
+            call_provider_streaming_with_chain_traced(
+                &redacted_req,
+                deadline,
+                chain,
+                Some(&root),
+                Some(&baggage),
+            )
             .await
-            .map_err(redaction_error);
-        match &redact_result {
-            Ok(_) => {
-                redact_span.set_str(otel_attributes::OUTCOME, "allow");
-                redact_span.end_ok();
-            }
-            Err(err) => {
-                redact_span.set_str(otel_attributes::OUTCOME, "error");
-                redact_span.end_error(router_error_label(err));
-            }
-        }
-        let (mut redacted_req, _redactions) = redact_result?;
-        redacted_req.baggage = Some(baggage.clone());
-        let chain = failover::build_provider_chain(resolved, policy, &req.alias);
-        call_provider_streaming_with_chain_traced(
-            &redacted_req,
-            deadline,
-            chain,
-            Some(&root),
-            Some(&baggage),
-        )
-        .await
-    }
-    .await;
+        })
+        .await;
 
     match &result {
         Ok(_) => {

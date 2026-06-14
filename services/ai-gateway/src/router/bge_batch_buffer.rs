@@ -7,6 +7,7 @@ use std::time::{Duration, Instant};
 
 use serde::{Deserialize, Serialize};
 use tokio::sync::{oneshot, Mutex};
+use tracing::Instrument;
 
 use super::{EmbedRequest, EmbedResponse, EmbedTask, ProviderUsage, RouterError};
 use crate::policy::ProviderKind;
@@ -147,9 +148,12 @@ impl BatchBuffer {
             let inner = self.inner.clone();
             let state_clone = state.clone();
             let url = url.to_string();
-            tokio::spawn(async move {
-                worker_loop(inner, state_clone, url).await;
-            });
+            tokio::spawn(
+                async move {
+                    worker_loop(inner, state_clone, url).await;
+                }
+                .in_current_span(),
+            );
         }
 
         rx.await.map_err(|_| RouterError::InvalidResponse {

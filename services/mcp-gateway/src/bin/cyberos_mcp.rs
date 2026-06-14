@@ -8,6 +8,7 @@ use cyberos_mcp_gateway::{
     router::{build_router, AppState},
     SERVICE_BANNER,
 };
+use tracing_subscriber::prelude::*;
 
 #[derive(Debug, Parser)]
 #[command(name = "cyberos-mcp", version, about = "CyberOS MCP Gateway")]
@@ -19,11 +20,15 @@ struct Cli {
 
 #[tokio::main]
 async fn main() {
-    tracing_subscriber::fmt()
-        .with_env_filter(
+    tracing_subscriber::registry()
+        .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
                 .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
         )
+        .with(tracing_subscriber::fmt::layer())
+        .with(cyberos_obs_sdk::logging::ObsContextLayer::new(
+            "mcp-gateway",
+        ))
         .init();
 
     if let Err(e) = cyberos_obs_sdk::init("mcp-gateway", env!("CARGO_PKG_VERSION")) {

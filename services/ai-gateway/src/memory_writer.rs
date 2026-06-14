@@ -20,6 +20,7 @@
 pub mod canonical;
 
 use once_cell::sync::Lazy;
+use std::future::Future;
 use std::path::PathBuf;
 use std::process::Stdio;
 use std::time::Duration;
@@ -33,7 +34,7 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::process::{Child, ChildStdin, Command};
 use tokio::sync::Mutex;
 use tokio::time::timeout;
-use tracing::error;
+use tracing::{error, Instrument};
 use uuid::Uuid;
 
 const WRITER_BIN: &str = "python3";
@@ -51,6 +52,10 @@ const MEMORY_KINDS: &[&str] = &[
 ];
 
 static STREAM_SESSION: Lazy<Mutex<Option<WriterStreamSession>>> = Lazy::new(|| Mutex::new(None));
+
+tokio::task_local! {
+    static WRITER_TRACE_CONTEXT: WriterTraceContext;
+}
 
 // --- Types ------------------------------------------------------------------
 
@@ -138,6 +143,15 @@ pub struct MemoryEmit {
     /// Per-kind structured payload (no schema validation at the bridge; typed builders
     /// constrain it at the call site).
     pub extra: serde_json::Value,
+}
+
+/// Trace context exported to the Writer subprocess environment.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WriterTraceContext {
+    /// W3C trace id.
+    pub trace_id: String,
+    /// Current span id.
+    pub span_id: String,
 }
 
 /// FR-AI-003 §3 — Outcome of a successful emit.
@@ -252,8 +266,34 @@ pub async fn emit(req: MemoryEmit) -> Result<EmittedRow, MemoryWriterError> {
             reason: format!("canonical payload reparse failed: {e}"),
         })?;
 
-    let row = emit_payload_streaming(&payload).await?;
+    let trace_context = current_writer_trace_context();
+    let row = if trace_context.is_some() {
+        emit_payload_once_with_context(&payload, trace_context.as_ref()).await?
+    } else {
+        emit_payload_streaming(&payload).await?
+    };
     finish_emit(&req, &payload_value, row)
+}
+
+/// Run memory emissions with subprocess `OTEL_TRACE_ID` and `OTEL_SPAN_ID`.
+pub async fn with_trace_context<F>(trace_id: &str, span_id: &str, future: F) -> F::Output
+where
+    F: Future,
+{
+    WRITER_TRACE_CONTEXT
+        .scope(
+            WriterTraceContext {
+                trace_id: trace_id.to_string(),
+                span_id: span_id.to_string(),
+            },
+            future,
+        )
+        .await
+}
+
+/// Read the current task-local Writer trace context.
+pub fn current_writer_trace_context() -> Option<WriterTraceContext> {
+    WRITER_TRACE_CONTEXT.try_with(Clone::clone).ok()
 }
 
 async fn emit_payload_streaming(payload: &str) -> Result<WriterStdout, MemoryWriterError> {
@@ -278,8 +318,16 @@ async fn emit_payload_streaming(payload: &str) -> Result<WriterStdout, MemoryWri
 }
 
 async fn emit_payload_once(payload: &str) -> Result<WriterStdout, MemoryWriterError> {
+    emit_payload_once_with_context(payload, None).await
+}
+
+async fn emit_payload_once_with_context(
+    payload: &str,
+    trace_context: Option<&WriterTraceContext>,
+) -> Result<WriterStdout, MemoryWriterError> {
     // Spawn Writer for one row. Kept as fallback for a failed stream process.
     let mut child = writer_command(WRITER_ARGS);
+    apply_writer_trace_env(&mut child, trace_context);
     let mut child = child
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -296,11 +344,14 @@ async fn emit_payload_once(payload: &str) -> Result<WriterStdout, MemoryWriterEr
 
     // 4. Pipe payload + signal EOF.
     let payload_bytes = format!("{payload}\n").into_bytes();
-    let write_task = tokio::spawn(async move {
-        stdin.write_all(&payload_bytes).await?;
-        stdin.shutdown().await?;
-        Ok::<_, std::io::Error>(())
-    });
+    let write_task = tokio::spawn(
+        async move {
+            stdin.write_all(&payload_bytes).await?;
+            stdin.shutdown().await?;
+            Ok::<_, std::io::Error>(())
+        }
+        .in_current_span(),
+    );
 
     // 5. Wait for child + read stdout/stderr concurrently, with 5s timeout.
     let outcome = timeout(WRITER_TIMEOUT, async move {
@@ -473,6 +524,13 @@ fn writer_command(args: &[&str]) -> Command {
         }
     }
     cmd
+}
+
+fn apply_writer_trace_env(cmd: &mut Command, trace_context: Option<&WriterTraceContext>) {
+    if let Some(context) = trace_context {
+        cmd.env("OTEL_TRACE_ID", &context.trace_id);
+        cmd.env("OTEL_SPAN_ID", &context.span_id);
+    }
 }
 
 fn local_memory_pythonpath() -> Option<PathBuf> {
@@ -1109,6 +1167,23 @@ mod tests {
             AiInvocationKind::ObsLangsmithExportEnabled.tag(),
             "obs.langsmith_export_enabled"
         );
+    }
+
+    #[tokio::test]
+    async fn writer_trace_context_is_task_local() {
+        assert!(current_writer_trace_context().is_none());
+
+        let inside = with_trace_context(
+            "4bf92f3577b34da6a3ce929d0e0e4736",
+            "00f067aa0ba902b7",
+            async { current_writer_trace_context() },
+        )
+        .await
+        .expect("context inside scope");
+
+        assert_eq!(inside.trace_id, "4bf92f3577b34da6a3ce929d0e0e4736");
+        assert_eq!(inside.span_id, "00f067aa0ba902b7");
+        assert!(current_writer_trace_context().is_none());
     }
 
     #[test]

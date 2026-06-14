@@ -20,16 +20,18 @@ use serde::Deserialize;
 use sqlx::PgPool;
 use std::net::SocketAddr;
 use tracing::info;
+use tracing_subscriber::prelude::*;
 use tracing_subscriber::EnvFilter;
 use uuid::Uuid;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")),
-        )
-        .json()
+    tracing_subscriber::registry()
+        .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")))
+        .with(tracing_subscriber::fmt::layer().json())
+        .with(cyberos_obs_sdk::logging::ObsContextLayer::new(
+            "email-service",
+        ))
         .init();
 
     if let Err(e) = cyberos_obs_sdk::init("email-service", env!("CARGO_PKG_VERSION")) {

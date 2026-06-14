@@ -7,7 +7,6 @@ use std::time::Instant;
 use once_cell::sync::Lazy;
 use opentelemetry::trace::{SpanKind, Status, TraceContextExt, Tracer};
 use opentelemetry::{global, Context, KeyValue};
-use sha2::{Digest, Sha256};
 use tracing::warn;
 
 use super::attributes;
@@ -141,6 +140,10 @@ impl OtelSpan {
 
     pub fn trace_id(&self) -> &str {
         &self.trace_id
+    }
+
+    pub fn span_id(&self) -> &str {
+        &self.span_id
     }
 
     pub fn end_ok(&mut self) {
@@ -295,10 +298,11 @@ fn start_root_from_headers(
     traceparent: Option<&str>,
     tracestate: Option<&str>,
 ) -> OtelSpan {
-    let parent_ids = traceparent.and_then(parse_traceparent);
+    let parent_ids =
+        traceparent.and_then(|value| cyberos_obs_sdk::tracecontext::parse_traceparent(value).ok());
     if traceparent.is_some() && parent_ids.is_none() {
         warn!(
-            traceparent_hash16 = %hash16(traceparent.unwrap_or_default()),
+            traceparent_hash16 = %cyberos_obs_sdk::tracecontext::hash16(traceparent.unwrap_or_default().as_bytes()),
             "malformed_traceparent_ignored"
         );
     }
@@ -370,39 +374,8 @@ fn parent_trace_id(parent_ctx: &Context) -> Option<String> {
     parent.is_valid().then(|| parent.trace_id().to_string())
 }
 
-fn parse_traceparent(value: &str) -> Option<TraceparentIds> {
-    let mut parts = value.split('-');
-    let version = parts.next()?;
-    let trace_id = parts.next()?;
-    let span_id = parts.next()?;
-    let flags = parts.next()?;
-    if parts.next().is_some()
-        || version != "00"
-        || trace_id.len() != 32
-        || span_id.len() != 16
-        || flags.len() != 2
-        || trace_id.chars().all(|ch| ch == '0')
-        || span_id.chars().all(|ch| ch == '0')
-        || !trace_id.chars().all(|ch| ch.is_ascii_hexdigit())
-        || !span_id.chars().all(|ch| ch.is_ascii_hexdigit())
-        || !flags.chars().all(|ch| ch.is_ascii_hexdigit())
-    {
-        return None;
-    }
-    Some(TraceparentIds {
-        trace_id: trace_id.to_ascii_lowercase(),
-        parent_span_id: span_id.to_ascii_lowercase(),
-    })
-}
-
 fn header_value(value: &str) -> Option<http::HeaderValue> {
     http::HeaderValue::from_str(value).ok()
-}
-
-fn hash16(value: &str) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(value.as_bytes());
-    hex::encode(&hasher.finalize()[..8])
 }
 
 fn new_trace_id() -> String {
@@ -424,10 +397,4 @@ fn baggage_escape(value: &str) -> String {
         }
     }
     out
-}
-
-#[derive(Debug, Clone)]
-struct TraceparentIds {
-    trace_id: String,
-    parent_span_id: String,
 }

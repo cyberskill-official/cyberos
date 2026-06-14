@@ -4,6 +4,7 @@ use futures::StreamExt;
 use serde_json::Value;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
+use tracing::Instrument;
 
 use super::{FinishReason, ProviderStreamResponse, RouterError};
 use crate::policy::ProviderKind;
@@ -41,81 +42,84 @@ pub(crate) fn response_to_provider_stream(
     let (tx, rx) =
         mpsc::channel::<Result<ProviderStreamEvent, RouterError>>(PROVIDER_EVENT_CHANNEL_CAPACITY);
 
-    tokio::spawn(async move {
-        let mut bytes = response.bytes_stream();
-        let mut pending = String::new();
-        let mut state = ParserState::default();
+    tokio::spawn(
+        async move {
+            let mut bytes = response.bytes_stream();
+            let mut pending = String::new();
+            let mut state = ParserState::default();
 
-        while let Some(next) = bytes.next().await {
-            match next {
-                Ok(chunk) => {
-                    let chunk = match std::str::from_utf8(&chunk) {
-                        Ok(chunk) => chunk,
-                        Err(err) => {
-                            let _ = tx
-                                .send(Err(RouterError::InvalidResponse {
-                                    reason: format!(
-                                        "{} streaming chunk was not utf-8: {err}",
-                                        provider.as_metric_label()
-                                    ),
-                                }))
-                                .await;
-                            return;
-                        }
-                    };
-                    pending.push_str(chunk);
+            while let Some(next) = bytes.next().await {
+                match next {
+                    Ok(chunk) => {
+                        let chunk = match std::str::from_utf8(&chunk) {
+                            Ok(chunk) => chunk,
+                            Err(err) => {
+                                let _ = tx
+                                    .send(Err(RouterError::InvalidResponse {
+                                        reason: format!(
+                                            "{} streaming chunk was not utf-8: {err}",
+                                            provider.as_metric_label()
+                                        ),
+                                    }))
+                                    .await;
+                                return;
+                            }
+                        };
+                        pending.push_str(chunk);
 
-                    while let Some((raw_frame, consumed)) = take_frame(&pending) {
-                        let raw_frame = raw_frame.to_string();
-                        pending.drain(..consumed);
-                        if let Some(frame) = parse_sse_frame(&raw_frame) {
-                            match parse_frame(&mut state, dialect, &frame) {
-                                Ok(events) => {
-                                    for event in events {
-                                        if tx.send(Ok(event)).await.is_err() {
-                                            return;
+                        while let Some((raw_frame, consumed)) = take_frame(&pending) {
+                            let raw_frame = raw_frame.to_string();
+                            pending.drain(..consumed);
+                            if let Some(frame) = parse_sse_frame(&raw_frame) {
+                                match parse_frame(&mut state, dialect, &frame) {
+                                    Ok(events) => {
+                                        for event in events {
+                                            if tx.send(Ok(event)).await.is_err() {
+                                                return;
+                                            }
                                         }
                                     }
+                                    Err(err) => {
+                                        let _ = tx.send(Err(err)).await;
+                                        return;
+                                    }
                                 }
-                                Err(err) => {
-                                    let _ = tx.send(Err(err)).await;
-                                    return;
-                                }
-                            }
-                        }
-                    }
-                }
-                Err(err) => {
-                    let _ = tx
-                        .send(Err(RouterError::TerminalProviderError {
-                            provider,
-                            status: 503,
-                            message: format!("provider streaming body error: {err}"),
-                            retry_after_secs: None,
-                        }))
-                        .await;
-                    return;
-                }
-            }
-        }
-
-        if !pending.trim().is_empty() {
-            if let Some(frame) = parse_sse_frame(pending.trim_end()) {
-                match parse_frame(&mut state, dialect, &frame) {
-                    Ok(events) => {
-                        for event in events {
-                            if tx.send(Ok(event)).await.is_err() {
-                                return;
                             }
                         }
                     }
                     Err(err) => {
-                        let _ = tx.send(Err(err)).await;
+                        let _ = tx
+                            .send(Err(RouterError::TerminalProviderError {
+                                provider,
+                                status: 503,
+                                message: format!("provider streaming body error: {err}"),
+                                retry_after_secs: None,
+                            }))
+                            .await;
+                        return;
+                    }
+                }
+            }
+
+            if !pending.trim().is_empty() {
+                if let Some(frame) = parse_sse_frame(pending.trim_end()) {
+                    match parse_frame(&mut state, dialect, &frame) {
+                        Ok(events) => {
+                            for event in events {
+                                if tx.send(Ok(event)).await.is_err() {
+                                    return;
+                                }
+                            }
+                        }
+                        Err(err) => {
+                            let _ = tx.send(Err(err)).await;
+                        }
                     }
                 }
             }
         }
-    });
+        .in_current_span(),
+    );
 
     ProviderStreamResponse::new(ReceiverStream::new(rx))
 }

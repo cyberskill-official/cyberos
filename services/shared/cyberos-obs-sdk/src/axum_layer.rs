@@ -8,8 +8,11 @@ use std::time::Instant;
 use axum::extract::MatchedPath;
 use http::{HeaderMap, Request, Response};
 use tower::{Layer, Service};
+use tracing::Instrument;
 
+use crate::logging;
 use crate::red;
+use crate::tracecontext::{self, ExtractOutcome, TraceContext};
 
 /// Tower layer that records RED metrics for every routed axum request.
 #[derive(Clone, Debug)]
@@ -70,29 +73,64 @@ where
         self.inner.poll_ready(cx)
     }
 
-    fn call(&mut self, req: Request<ReqBody>) -> Self::Future {
+    fn call(&mut self, mut req: Request<ReqBody>) -> Self::Future {
         let started = Instant::now();
         let route = route_label(&req);
         let tenant_id = tenant_id(req.headers());
         let service = self.service.clone();
         let extra_labels = self.extra_labels.clone();
+        let extracted = tracecontext::extract_or_generate(req.headers());
+        if extracted.outcome == ExtractOutcome::Malformed {
+            if let Some(hash16) = &extracted.malformed_hash16 {
+                tracing::warn!(
+                    traceparent_hash16 = %hash16,
+                    "malformed_traceparent_ignored"
+                );
+            }
+        }
+        let trace_context = extracted.context;
+        req.extensions_mut().insert(trace_context.clone());
         let future = self.inner.call(req);
 
         Box::pin(async move {
-            let result = future.await;
-            let status = result
-                .as_ref()
-                .map(|response| response.status().as_u16())
-                .unwrap_or(500);
-            let duration_ms = started.elapsed().as_millis().min(u32::MAX as u128) as u32;
-            let extra: Vec<(&str, String)> = extra_labels
-                .iter()
-                .map(|(key, value)| (key.as_str(), value.clone()))
-                .collect();
-            red::record_request(&service, &route, &tenant_id, status, duration_ms, &extra);
-            result
+            let span = logging::request_span(
+                &service,
+                &route,
+                &tenant_id,
+                &trace_context.trace_id,
+                &trace_context.span_id,
+            );
+            async move {
+                let result = future.await;
+                let status = result
+                    .as_ref()
+                    .map(|response| response.status().as_u16())
+                    .unwrap_or(500);
+                let duration_ms = started.elapsed().as_millis().min(u32::MAX as u128) as u32;
+                let extra: Vec<(&str, String)> = extra_labels
+                    .iter()
+                    .map(|(key, value)| (key.as_str(), value.clone()))
+                    .collect();
+                red::record_request_with_trace(
+                    &service,
+                    &route,
+                    &tenant_id,
+                    status,
+                    duration_ms,
+                    &extra,
+                    Some(&trace_context.trace_id),
+                );
+                result
+            }
+            .instrument(span)
+            .await
         })
     }
+}
+
+/// Read the request TraceContext inserted by [`RedLayer`].
+pub fn request_trace_context<B>(req: &Request<B>) -> Option<&TraceContext> {
+    req.extensions().get::<TraceContext>()
 }
 
 fn route_label<B>(req: &Request<B>) -> String {

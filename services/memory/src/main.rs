@@ -30,15 +30,17 @@ use std::time::Duration;
 use tokio::sync::Notify;
 use tokio::time;
 use tracing::{error, info, warn};
+use tracing_subscriber::prelude::*;
 
 #[tokio::main]
 async fn main() -> ExitCode {
-    tracing_subscriber::fmt()
-        .with_env_filter(
+    tracing_subscriber::registry()
+        .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
                 .unwrap_or_else(|_| "cyberos_memory=info,info".into()),
         )
-        .json()
+        .with(tracing_subscriber::fmt::layer().json())
+        .with(cyberos_obs_sdk::logging::ObsContextLayer::new("memory"))
         .init();
 
     if let Err(e) = cyberos_obs_sdk::init("memory", VERSION) {

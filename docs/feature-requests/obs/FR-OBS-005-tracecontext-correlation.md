@@ -3,14 +3,14 @@ id: FR-OBS-005
 title: "W3C TraceContext correlation across logs/metrics/traces/AI-traces — propagate, embed, exemplar, end-to-end CI test"
 module: OBS
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 2
 slice: 2
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
-shipped: null
+shipped: 2026-06-14
 memory_chain_hash: null
 related_frs: [FR-OBS-001, FR-OBS-002, FR-OBS-003, FR-OBS-004, FR-AI-022]
 depends_on: [FR-OBS-001, FR-OBS-003, FR-OBS-004]
@@ -24,25 +24,28 @@ source_decisions:
   - DEC-161 (trace_id embedded in EVERY log + metric exemplar; correlation primitive)
   - DEC-162 (CI gate enforces end-to-end correlation; single test verifies log/span/AI-trace alignment)
 
-language: rust 1.81
-service: cyberos/crates/cyberos-obs-sdk/
+language: rust 1.88
+service: services/shared/cyberos-obs-sdk/
 new_files:
-  - crates/cyberos-obs-sdk/src/tracecontext.rs
-  - crates/cyberos-obs-sdk/src/logging.rs
-  - crates/cyberos-obs-sdk/src/exemplar.rs
-  - crates/cyberos-obs-sdk/tests/tracecontext_test.rs
-  - crates/cyberos-obs-sdk/tests/log_enrichment_test.rs
-  - crates/cyberos-obs-sdk/tests/end_to_end_correlation_test.rs
+  - services/shared/cyberos-obs-sdk/src/tracecontext.rs
+  - services/shared/cyberos-obs-sdk/src/logging.rs
+  - services/shared/cyberos-obs-sdk/src/exemplar.rs
+  - services/shared/cyberos-obs-sdk/tests/tracecontext_test.rs
+  - services/shared/cyberos-obs-sdk/tests/log_enrichment_test.rs
+  - services/shared/cyberos-obs-sdk/tests/exemplar_test.rs
+  - services/shared/cyberos-obs-sdk/tests/end_to_end_correlation_test.rs
   - .github/workflows/obs-correlation-gate.yml
 modified_files:
   - services/ai-gateway/**                                # use with_trace_context wrapper
   - services/auth/**
-  - services/chat/**
   - services/memory/**
-  - crates/cyberos-obs-sdk/src/red.rs                     # exemplar emission
+  - services/mcp-gateway/**
+  - services/email/**
+  - services/obs-collector/**
+  - services/shared/cyberos-obs-sdk/src/red.rs            # exemplar emission
 allowed_tools:
-  - file_read: services/**, crates/cyberos-obs-sdk/**
-  - file_write: services/**, crates/cyberos-obs-sdk/**
+  - file_read: services/**, services/shared/cyberos-obs-sdk/**
+  - file_write: services/**, services/shared/cyberos-obs-sdk/**
   - bash: cargo test -p cyberos-obs-sdk tracecontext
 disallowed_tools:
   - strip trace_id from any structured log line (per §1 #2)
@@ -493,4 +496,24 @@ All resolved. Deferred:
 
 ---
 
-*End of FR-OBS-005. Status: draft (10/10 target).*
+## §12 — Shipped implementation (2026-06-14)
+
+FR-OBS-005 shipped through the existing Rust workspace layout:
+
+- `services/shared/cyberos-obs-sdk/src/tracecontext.rs` owns strict W3C `traceparent` parsing, lowercase canonicalisation, malformed-header hash16 logging support, random trace/span generation, request extraction metrics, and outbound injection.
+- `services/shared/cyberos-obs-sdk/src/logging.rs` provides `ObsContextLayer` plus canonical request spans carrying `service`, `route`, `tenant_id`, `trace_id`, and `span_id`.
+- `services/shared/cyberos-obs-sdk/src/exemplar.rs` plus `red.rs` capture `trace_id` exemplars for `cyberos_duration_ms` without adding trace IDs as metric labels, and emit `obs_exemplar_emission_total`.
+- `RedLayer` now extracts/generates TraceContext, stores it in request extensions, instruments the request future, and records duration exemplars tied to the active trace.
+- AI Gateway root spans use the shared parser/hash, LangSmith/provider stream/BGE/streaming background tasks preserve current spans, and memory-writer emits can scope subprocesses with `OTEL_TRACE_ID` and `OTEL_SPAN_ID`.
+- Rust HTTP service bootstraps that use the shared SDK install `ObsContextLayer`: AUTH, memory, MCP gateway, email, and the OBS supervisor.
+- `.github/workflows/obs-correlation-gate.yml` is no longer a stub; it runs the OBS SDK TraceContext, log enrichment, exemplar, and synthetic end-to-end correlation tests.
+
+Verification run:
+
+- `cargo test -p cyberos-obs-sdk --tests -- --nocapture`
+- `cargo test -p cyberos-ai-gateway --test otel_propagation_test -- --nocapture`
+- `cargo test -p cyberos-ai-gateway --tests -- --nocapture`
+- `cargo test -p cyberos-auth -p cyberos-memory -p cyberos-mcp-gateway -p cyberos-email -p cyberos-obs-collector --no-run`
+- `cargo test -p cyberos-obs-collector --tests -- --nocapture`
+
+*End of FR-OBS-005. Status: done.*

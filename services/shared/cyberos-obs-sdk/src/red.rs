@@ -15,6 +15,8 @@ use thiserror::Error;
 use tonic::metadata::{MetadataMap, MetadataValue};
 
 use crate::cardinality_guard;
+use crate::exemplar::HistogramExemplar;
+use crate::tracecontext;
 
 pub use crate::axum_layer::RedLayer;
 
@@ -30,6 +32,12 @@ pub const SDK_RECORD_CALLS_TOTAL: &str = "obs_sdk_record_calls_total";
 pub const SDK_RECORD_LATENCY_NS: &str = "obs_sdk_record_latency_ns";
 /// SDK self-metric for cardinality refusals.
 pub const SDK_CARDINALITY_BLOCKED_TOTAL: &str = "obs_sdk_cardinality_blocked_total";
+/// TraceContext extraction self-metric.
+pub const TRACECONTEXT_EXTRACTED_TOTAL: &str = "obs_tracecontext_extracted_total";
+/// Log-enrichment coverage self-metric.
+pub const LOG_ENRICHMENT_TOTAL: &str = "obs_log_enrichment_total";
+/// Exemplar emission self-metric.
+pub const EXEMPLAR_EMISSION_TOTAL: &str = "obs_exemplar_emission_total";
 
 /// Standard RED duration histogram buckets in milliseconds.
 pub const STANDARD_BUCKETS_MS: &[f64] = &[
@@ -52,6 +60,9 @@ struct SdkState {
     record_calls: Counter<u64>,
     record_latency: Histogram<u64>,
     cardinality_blocked: Counter<u64>,
+    tracecontext_extracted: Counter<u64>,
+    log_enrichment: Counter<u64>,
+    exemplar_emission: Counter<u64>,
     _provider: SdkMeterProvider,
 }
 
@@ -103,6 +114,7 @@ pub struct RecordOutcome {
 pub struct MetricSnapshot {
     counters: BTreeMap<SeriesKey, u64>,
     histograms: BTreeMap<SeriesKey, Vec<u64>>,
+    exemplars: BTreeMap<SeriesKey, Vec<HistogramExemplar>>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -131,6 +143,16 @@ impl MetricSnapshot {
             return 0;
         };
         values.get(index).copied().unwrap_or(0)
+    }
+
+    /// Read captured histogram exemplars for an exact metric series.
+    pub fn histogram_exemplars(
+        &self,
+        metric: &str,
+        labels: &[(&str, &str)],
+    ) -> Vec<HistogramExemplar> {
+        let key = SeriesKey::new(metric, labels);
+        self.exemplars.get(&key).cloned().unwrap_or_default()
     }
 }
 
@@ -184,6 +206,9 @@ pub fn init(service_name: &str, version: &str) -> Result<(), InitError> {
             .with_unit("ns")
             .build(),
         cardinality_blocked: meter.u64_counter(SDK_CARDINALITY_BLOCKED_TOTAL).build(),
+        tracecontext_extracted: meter.u64_counter(TRACECONTEXT_EXTRACTED_TOTAL).build(),
+        log_enrichment: meter.u64_counter(LOG_ENRICHMENT_TOTAL).build(),
+        exemplar_emission: meter.u64_counter(EXEMPLAR_EMISSION_TOTAL).build(),
         _provider: provider,
     };
     let _ = SDK.set(state);
@@ -199,6 +224,27 @@ pub fn record_request(
     status: u16,
     duration_ms: u32,
     extra_labels: &[(&str, String)],
+) -> RecordOutcome {
+    record_request_with_trace(
+        service,
+        route,
+        tenant_id,
+        status,
+        duration_ms,
+        extra_labels,
+        None,
+    )
+}
+
+/// Record one request's RED metrics and attach a trace exemplar to duration.
+pub fn record_request_with_trace(
+    service: &str,
+    route: &str,
+    tenant_id: &str,
+    status: u16,
+    duration_ms: u32,
+    extra_labels: &[(&str, String)],
+    trace_id: Option<&str>,
 ) -> RecordOutcome {
     let started = Instant::now();
     let status_class = status_class(status);
@@ -232,6 +278,17 @@ pub fn record_request(
     }
     capture_counter(REQUESTS_TOTAL, &request_labels, 1);
     capture_histogram(DURATION_MS, &duration_labels, duration_ms as f64);
+    if let Some(trace_id) = trace_id.filter(|value| tracecontext::is_valid_trace_id(value)) {
+        capture_exemplar(
+            DURATION_MS,
+            &duration_labels,
+            HistogramExemplar {
+                trace_id: trace_id.to_ascii_lowercase(),
+                value: duration_ms as f64,
+            },
+        );
+        record_exemplar_emission(service);
+    }
 
     if let Some(error_class) = error_class {
         let error_labels = error_labels(service, route, tenant_id, error_class, extra_labels);
@@ -252,6 +309,32 @@ pub fn record_request(
         status_class,
         error_class,
     }
+}
+
+/// Record how request TraceContext was established.
+pub fn record_tracecontext_extraction(outcome: &str) {
+    let labels = vec![Label::new("outcome", outcome)];
+    if let Some(sdk) = SDK.get() {
+        sdk.tracecontext_extracted.add(1, &to_key_values(&labels));
+    }
+    capture_counter(TRACECONTEXT_EXTRACTED_TOTAL, &labels, 1);
+}
+
+/// Record that a structured log event was emitted inside OBS context.
+pub fn record_log_enrichment(service: &str) {
+    let labels = vec![Label::new("service", service)];
+    if let Some(sdk) = SDK.get() {
+        sdk.log_enrichment.add(1, &to_key_values(&labels));
+    }
+    capture_counter(LOG_ENRICHMENT_TOTAL, &labels, 1);
+}
+
+fn record_exemplar_emission(service: &str) {
+    let labels = vec![Label::new("service", service)];
+    if let Some(sdk) = SDK.get() {
+        sdk.exemplar_emission.add(1, &to_key_values(&labels));
+    }
+    capture_counter(EXEMPLAR_EMISSION_TOTAL, &labels, 1);
 }
 
 /// Derive the bounded status class label.
@@ -448,6 +531,18 @@ fn capture_histogram(metric: &str, labels: &[Label], value: f64) {
     }
 }
 
+fn capture_exemplar(metric: &str, labels: &[Label], exemplar: HistogramExemplar) {
+    if !capture_enabled() {
+        return;
+    }
+    let mut snapshot = SNAPSHOT.lock().expect("metric snapshot lock");
+    snapshot
+        .exemplars
+        .entry(SeriesKey::from_labels(metric, labels))
+        .or_default()
+        .push(exemplar);
+}
+
 fn capture_enabled() -> bool {
     CAPTURE_FOR_TESTS.load(Ordering::SeqCst)
         || env::var("CYBEROS_OBS_SDK_CAPTURE").as_deref() == Ok("1")
@@ -457,5 +552,6 @@ impl MetricSnapshot {
     fn clear(&mut self) {
         self.counters.clear();
         self.histograms.clear();
+        self.exemplars.clear();
     }
 }

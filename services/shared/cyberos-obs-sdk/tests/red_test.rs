@@ -2,10 +2,20 @@ use cyberos_obs_sdk::red::{
     self, DURATION_MS, ERRORS_TOTAL, RECORD_OVERHEAD_TARGET_NS, REQUESTS_TOTAL,
     SDK_RECORD_CALLS_TOTAL, STANDARD_BUCKETS_MS,
 };
+use std::sync::{Mutex, MutexGuard};
 use std::thread;
+
+static TEST_LOCK: Mutex<()> = Mutex::new(());
+
+fn test_lock() -> MutexGuard<'static, ()> {
+    TEST_LOCK
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+}
 
 #[test]
 fn record_emits_request_error_and_duration_metrics() {
+    let _guard = test_lock();
     red::reset_for_tests();
 
     let outcome = red::record_request(
@@ -76,6 +86,7 @@ fn status_class_is_bounded() {
 
 #[test]
 fn client_errors_use_client_error_class() {
+    let _guard = test_lock();
     red::reset_for_tests();
     red::record_request("auth-service", "/v1/auth/token", "tenant-a", 401, 5, &[]);
     assert_eq!(
@@ -94,6 +105,7 @@ fn client_errors_use_client_error_class() {
 
 #[test]
 fn buckets_and_self_metrics_are_standardised() {
+    let _guard = test_lock();
     red::reset_for_tests();
     assert_eq!(
         STANDARD_BUCKETS_MS,
@@ -110,6 +122,7 @@ fn buckets_and_self_metrics_are_standardised() {
 
 #[test]
 fn concurrent_record_request_is_thread_safe() {
+    let _guard = test_lock();
     red::reset_for_tests();
     let handles: Vec<_> = (0..8)
         .map(|_| {
@@ -139,6 +152,7 @@ fn concurrent_record_request_is_thread_safe() {
 
 #[test]
 fn init_can_run_without_otlp_exporter_for_tests() {
+    let _guard = test_lock();
     std::env::set_var("CYBEROS_OBS_SDK_DISABLE_OTLP", "1");
     assert!(red::init("init-test", "0.0.0").is_ok());
 }

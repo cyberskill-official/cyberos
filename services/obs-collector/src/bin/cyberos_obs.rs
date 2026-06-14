@@ -17,6 +17,7 @@ use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
 use cyberos_obs_collector::{auth, config, grafana_proxy, ingress, SERVICE_BANNER};
+use tracing_subscriber::prelude::*;
 
 #[derive(Debug, Parser)]
 #[command(
@@ -101,11 +102,15 @@ enum Cmd {
 
 #[tokio::main]
 async fn main() -> ExitCode {
-    tracing_subscriber::fmt()
-        .with_env_filter(
+    tracing_subscriber::registry()
+        .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
                 .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
         )
+        .with(tracing_subscriber::fmt::layer())
+        .with(cyberos_obs_sdk::logging::ObsContextLayer::new(
+            "obs-collector",
+        ))
         .init();
 
     let cli = Cli::parse();
