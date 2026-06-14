@@ -7,7 +7,10 @@ gate, OpenTelemetry Collector, Loki, Prometheus, Tempo, and Grafana.
 
 ```bash
 ./deploy/obs/scripts/rotate_tokens.sh
-GRAFANA_ADMIN_PASSWORD=cyberos-local-dev docker compose -f deploy/obs/docker-compose.yml up -d
+cp deploy/obs/auth/grafana.jwt.secret.example deploy/obs/auth/grafana.jwt.secret.live
+GRAFANA_ADMIN_PASSWORD=cyberos-local-dev \
+GRAFANA_USER_JWT=<dev-jwt-signed-with-grafana-secret> \
+docker compose -f deploy/obs/docker-compose.yml up -d
 ./deploy/obs/scripts/healthcheck.sh
 ./deploy/obs/tests/auth_required_test.sh
 ./deploy/obs/tests/per_service_token_binding_test.sh
@@ -20,6 +23,13 @@ validation tooling and the ingress gate enforces that each token can emit only
 for its owning `service.name`. `auth/collector.token.live` is a single internal
 token used only between the ingress gate and otelcol; the collector ports are not
 published directly.
+
+Grafana datasources are provisioned through `obs-proxy` on port 8088. The proxy
+requires `Authorization: Bearer <JWT>` and injects the caller's `tenant_id` into
+PromQL, LogQL, and TraceQL before forwarding to the backends. Local/dev stacks
+use `auth/grafana.jwt.secret.live` for HS256 tokens; production SHOULD mount an
+AUTH JWKS source and run `cyberos-obs grafana-proxy --jwt-jwks-url ...` (or
+`--jwt-jwks-file ...` for boot-time secret-store mounts).
 
 ## Retention
 

@@ -3,14 +3,14 @@ id: FR-OBS-002
 title: "Tenant-aware Grafana proxy (Rust) — AST-injects tenant_id into PromQL/LogQL/TraceQL with anti-bypass + property test + audit log"
 module: OBS
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 2
 slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
-shipped: null
+shipped: 2026-06-14
 memory_chain_hash: null
 related_frs: [FR-OBS-001, FR-OBS-007, FR-OBS-008, FR-OBS-009, FR-AUTH-004, FR-AUTH-108, FR-AI-018]
 depends_on: [FR-OBS-001, FR-AUTH-004]
@@ -505,16 +505,26 @@ All resolved. Deferred:
 
 ## §11 — Notes
 
-- `promql-parser` crate is the load-bearing dep. If it lacks a feature (e.g., specific PromQL functions), patch upstream OR use the official Prometheus Go parser via FFI as fallback.
+- The shipped PromQL/LogQL/TraceQL injectors live in `services/obs-collector/src/grafana_proxy.rs`, preserving the repo's existing OBS supervisor crate instead of adding a second workspace member. PromQL uses `promql-parser@0.4.3` AST mutation and refuses reserved tenant label matchers before injection.
 - LogQL + TraceQL parsers are hand-rolled because no mature Rust crates exist. The hand-rolled parsers cover only the subset Grafana actually emits — full grammar coverage would be over-engineering. Coverage tests in §5 ensure the subset works.
 - The proxy IS the security boundary. Grafana itself runs as a non-tenant-aware app; the proxy makes it multi-tenant. Bypassing the proxy (e.g., querying Loki directly via `localhost:3100`) is prevented by network policy — Loki/Prometheus/Tempo only accept connections from the proxy.
-- AST-based injection prevents the bypass class of "user crafts a query that escapes the wrapper." String concat would be susceptible; AST is robust.
+- AST-based PromQL injection plus parsed LogQL/TraceQL subset injection prevents the bypass class of "user crafts a query that escapes the wrapper." String concat would be susceptible.
 - The cross-tenant property test (§5) mirrors FR-AI-018's pattern. 1000 random queries × tenant pairs ensures the AST injection works across the full PromQL grammar.
 - Root-admin gets unfiltered access (§1 #11) but every such query is audited — compliance reviews can ask "who did cross-tenant queries last week?" The sev-2 informational alarm makes the activity visible without being a false-positive incident.
 - Audit-row payload uses query_sha256 (not raw query) because queries can contain tenant-business semantics. The hash preserves uniqueness for forensic correlation; ops can re-run the query to inspect the actual content if needed.
-- The 5ms overhead budget is achievable because parsing is pure-CPU (no I/O); promql-parser is fast (~10µs per typical query).
+- The 5ms overhead budget is achievable because parsing is pure-CPU (no I/O); the shipped integration test records p95 under the budget for 200 representative queries.
 - Query-result caching (deferred to slice 5+) would reduce backend load further; for now the proxy is stateless.
 
 ---
 
-*End of FR-OBS-002. Status: draft (10/10 target).*
+## §12 — Shipped implementation (2026-06-14)
+
+- Implemented `cyberos-obs grafana-proxy` inside `services/obs-collector`, with boot-time JWKS file/URL caching for AUTH-issued RS256 tokens, an RS256 public-PEM fallback, and HS256 local/dev verification.
+- Added tenant injection for PromQL, LogQL, and TraceQL; PromQL is AST-mutated via `promql-parser@0.4.3`; user-supplied `tenant_id` / `resource.tenant_id` is rejected and recorded as `obs.cross_tenant_query_attempt`.
+- Added per-query audit events with SHA-256 query hashes, root-admin unfiltered audit path, in-process metrics, and datasource/Compose wiring so Grafana points at `obs-proxy`.
+- Verification passed:
+  - `cargo test -p cyberos-obs-collector grafana_proxy -- --nocapture`
+  - `cargo test -p cyberos-obs-collector --test grafana_proxy_test -- --nocapture`
+  - `cargo test -p cyberos-obs-collector -- --nocapture`
+
+*End of FR-OBS-002. Status: done.*

@@ -129,6 +129,43 @@ services:
           cpus: "1"
           memory: "2G"
 
+  obs-proxy:
+    build:
+      context: ../..
+      dockerfile: deploy/obs/ingress.Dockerfile
+    command:
+      - grafana-proxy
+      - --jwt-hs256-secret-file
+      - /etc/cyberos-obs/grafana.jwt.secret
+      - --prometheus-url
+      - http://prometheus:9090
+      - --loki-url
+      - http://loki:3100
+      - --tempo-url
+      - http://tempo:3200
+    ports:
+      - "8088:8088"
+    volumes:
+      - ./auth/grafana.jwt.secret.live:/etc/cyberos-obs/grafana.jwt.secret:ro
+    depends_on:
+      loki:
+        condition: service_healthy
+      prometheus:
+        condition: service_healthy
+      tempo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8088/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512M"
+
   grafana:
     image: grafana/grafana:11.3.0
     ports:
@@ -141,11 +178,7 @@ services:
       - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
       - grafana-data:/var/lib/grafana
     depends_on:
-      loki:
-        condition: service_healthy
-      prometheus:
-        condition: service_healthy
-      tempo:
+      obs-proxy:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:3000/api/health"]

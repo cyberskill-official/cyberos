@@ -4,15 +4,27 @@ datasources:
   - name: Loki
     type: loki
     access: proxy
-    url: http://loki:3100
+    url: http://obs-proxy:8088/loki
     isDefault: false
+    jsonData:
+      httpHeaderName1: Authorization
+    secureJsonData:
+      httpHeaderValue1: Bearer ${GRAFANA_USER_JWT}
   - name: Prometheus
     type: prometheus
     access: proxy
-    url: http://prometheus:9090
+    url: http://obs-proxy:8088/api/v1
     isDefault: true
+    jsonData:
+      httpHeaderName1: Authorization
+    secureJsonData:
+      httpHeaderValue1: Bearer ${GRAFANA_USER_JWT}
   - name: Tempo
     type: tempo
     access: proxy
-    url: http://tempo:3200
+    url: http://obs-proxy:8088/tempo
     isDefault: false
+    jsonData:
+      httpHeaderName1: Authorization
+    secureJsonData:
+      httpHeaderValue1: Bearer ${GRAFANA_USER_JWT}
