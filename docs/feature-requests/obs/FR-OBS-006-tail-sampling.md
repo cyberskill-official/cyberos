@@ -3,14 +3,14 @@ id: FR-OBS-006
 title: "Tail-based sampling at OTel collector — 100% errors/5xx/slow/flagged + 10% normal + decision_wait + flagged-tenants config"
 module: OBS
 priority: SHOULD
-status: ready_to_implement
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 2
 slice: 2
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
-shipped: null
+shipped: 2026-06-15
 memory_chain_hash: null
 related_frs: [FR-OBS-001, FR-OBS-005, FR-AI-022, FR-AI-021]
 depends_on: [FR-OBS-001]
@@ -339,4 +339,27 @@ All resolved. Deferred:
 
 ---
 
-*End of FR-OBS-006. Status: draft (10/10 target).*
+## §12 — Shipped implementation (2026-06-15)
+
+- `deploy/obs/otel-collector-config.yaml` and `services/obs-collector/config/otel-collector-config.yaml` now wire `tail_sampling` into the traces pipeline after `attributes/pii_scrub` and before `batch`.
+- `services/obs-collector/src/tail_sampling.rs` implements deterministic first-match sampling decisions for errors, HTTP 5xx, flagged tenants, slow traces, normal 10% sampling, and drops, with YAML loaders for flagged tenants and per-route budgets.
+- `services/obs-collector/src/config.rs` validates that the collector config keeps tail sampling traces-only, preserves the processor order, and includes the required policy types, decision wait, buffer size, and normal sample rate.
+- `deploy/obs/tail_sampling_config.yaml`, `deploy/obs/flagged_tenants.yaml`, `deploy/obs/route_latency_budgets.yaml`, `deploy/obs/scripts/flag_tenant.sh`, and `deploy/obs/tests/sampling_test.sh` provide the operator-facing config and focused sampling gate.
+- `cyberos-ai flag-tenant <tenant> --confirm` updates `deploy/obs/flagged_tenants.yaml` and emits the `obs.tenant_flagged_for_sampling` memory audit row.
+
+Verification completed:
+
+```bash
+cd services
+cargo fmt -p cyberos-obs-collector -p cyberos-ai-gateway
+cargo test -p cyberos-obs-collector tail_sampling -- --nocapture
+cargo test -p cyberos-obs-collector config::tests -- --nocapture
+cargo test -p cyberos-ai-gateway --test cli_test -- --nocapture
+./deploy/obs/tests/sampling_test.sh
+cargo test -p cyberos-obs-collector --tests -- --nocapture
+cargo test -p cyberos-ai-gateway --tests -- --nocapture
+```
+
+---
+
+*End of FR-OBS-006. Status: done (10/10 target).*

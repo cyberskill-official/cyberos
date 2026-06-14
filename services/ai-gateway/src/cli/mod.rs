@@ -8,6 +8,7 @@ pub mod completions;
 pub mod exit_codes;
 pub mod expiry;
 pub mod failover;
+pub mod flag_tenant;
 pub mod invoice;
 pub mod json_schemas;
 pub mod memory;
@@ -54,6 +55,8 @@ pub enum Command {
     Breaker(BreakerArgs),
     /// Hold-expiry job management.
     Expiry(ExpiryArgs),
+    /// Flag a tenant for 100% OBS trace sampling.
+    FlagTenant(FlagTenantArgs),
     /// Memory audit row operations.
     Memory(MemoryArgs),
     /// Generate shell completions.
@@ -198,6 +201,15 @@ pub enum ExpiryAction {
     Status,
     /// Deduplicate duplicate hold_expired rows.
     Repair,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct FlagTenantArgs {
+    /// Tenant identifier to sample at 100%.
+    pub tenant: String,
+    /// Flagged tenants file.
+    #[arg(long, default_value = "deploy/obs/flagged_tenants.yaml")]
+    pub file: PathBuf,
 }
 
 #[derive(Debug, clap::Args)]

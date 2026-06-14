@@ -93,6 +93,8 @@ pub enum AiInvocationKind {
     CliPolicyUpdated,
     /// Emitted by FR-OBS-004 when a tenant opts into LangSmith exports.
     ObsLangsmithExportEnabled,
+    /// Emitted by FR-OBS-006 when a tenant is flagged for 100% trace sampling.
+    ObsTenantFlaggedForSampling,
     /// Emitted by FR-AI-021 (`cyberos-ai failover drill`).
     CliFailoverDrill,
     /// Emitted by FR-AI-021 (`cyberos-ai invoice export`).
@@ -124,6 +126,7 @@ impl AiInvocationKind {
             Self::ResidencyViolation => "ai.residency_violation",
             Self::CliPolicyUpdated => "ai.cli_policy_updated",
             Self::ObsLangsmithExportEnabled => "obs.langsmith_export_enabled",
+            Self::ObsTenantFlaggedForSampling => "obs.tenant_flagged_for_sampling",
             Self::CliFailoverDrill => "ai.cli_failover_drill",
             Self::CliInvoiceExported => "ai.cli_invoice_exported",
             Self::CliBreakerReset => "ai.cli_breaker_reset",
@@ -833,6 +836,25 @@ pub mod builders {
         }
     }
 
+    /// `obs.tenant_flagged_for_sampling` row (FR-OBS-006 operator action).
+    pub fn obs_tenant_flagged_for_sampling(
+        tenant_id: &str,
+        operator_id: &str,
+        request_id: &str,
+        command_sha256: &str,
+    ) -> MemoryEmit {
+        MemoryEmit {
+            kind: AiInvocationKind::ObsTenantFlaggedForSampling,
+            path: row_path("obs-sampling-flags", tenant_id, request_id),
+            extra: serde_json::json!({
+                "tenant_id": tenant_id,
+                "flagged_by_subject_id": operator_id,
+                "request_id": request_id,
+                "command_sha256": command_sha256,
+            }),
+        }
+    }
+
     /// `ai.reconcile_started` row (FR-AI-002 pair-write start).
     #[allow(clippy::too_many_arguments)]
     pub fn reconcile_started(
@@ -1166,6 +1188,10 @@ mod tests {
         assert_eq!(
             AiInvocationKind::ObsLangsmithExportEnabled.tag(),
             "obs.langsmith_export_enabled"
+        );
+        assert_eq!(
+            AiInvocationKind::ObsTenantFlaggedForSampling.tag(),
+            "obs.tenant_flagged_for_sampling"
         );
     }
 

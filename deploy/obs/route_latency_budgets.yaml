@@ -1,0 +1,13 @@
+# FR-OBS-006 route-specific slow-trace budgets.
+
+default_ms: 2000
+routes:
+  - service: ai-gateway
+    route: /v1/chat/completions
+    threshold_ms: 5000
+  - service: ai-gateway
+    route: /v1/embeddings
+    threshold_ms: 500
+  - service: auth-service
+    route: /v1/auth/token
+    threshold_ms: 250

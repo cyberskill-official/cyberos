@@ -50,6 +50,9 @@ pub fn validate(path: &Path) -> Result<(), ConfigError> {
             "missing exporter: otlp/tempo (FR-OBS-001 §3)".into(),
         ));
     }
+    let tail_sampling = cfg.processors.tail_sampling.as_ref().ok_or_else(|| {
+        ConfigError::Validation("missing processor: tail_sampling (FR-OBS-006 §1)".into())
+    })?;
 
     // FR-OBS-001 §1 #11 — pii_scrub processor MUST be present on logs+traces pipelines.
     let pipelines = &cfg.service.pipelines;
@@ -64,6 +67,7 @@ pub fn validate(path: &Path) -> Result<(), ConfigError> {
             )));
         }
     }
+    validate_tail_sampling_pipeline(pipelines, tail_sampling)?;
 
     // FR-OBS-001 §1 #2 — bearertokenauth extension MUST be configured.
     if cfg.extensions.bearertokenauth.is_none() {
@@ -117,9 +121,172 @@ fn mapping_bool(value: Option<&serde_yaml::Value>, key: &str) -> Option<bool> {
         .and_then(serde_yaml::Value::as_bool)
 }
 
+fn validate_tail_sampling_pipeline(
+    pipelines: &Pipelines,
+    tail_sampling: &serde_yaml::Value,
+) -> Result<(), ConfigError> {
+    if pipelines
+        .logs
+        .processors
+        .iter()
+        .any(|processor| processor == "tail_sampling")
+        || pipelines
+            .metrics
+            .processors
+            .iter()
+            .any(|processor| processor == "tail_sampling")
+    {
+        return Err(ConfigError::Validation(
+            "tail_sampling processor must be traces-only (FR-OBS-006 §1 #10)".into(),
+        ));
+    }
+
+    let traces = &pipelines.traces.processors;
+    let pii = traces
+        .iter()
+        .position(|processor| processor.contains("pii_scrub"));
+    let tail = traces
+        .iter()
+        .position(|processor| processor == "tail_sampling");
+    let batch = traces.iter().position(|processor| processor == "batch");
+    match (pii, tail, batch) {
+        (Some(pii), Some(tail), Some(batch)) if pii < tail && tail < batch => {}
+        _ => {
+            return Err(ConfigError::Validation(
+                "traces pipeline must order attributes/pii_scrub before tail_sampling before batch"
+                    .into(),
+            ));
+        }
+    }
+
+    let decision_wait = mapping_string(Some(tail_sampling), "decision_wait")
+        .ok_or_else(|| ConfigError::Validation("tail_sampling missing decision_wait".into()))?;
+    let decision_wait_seconds = parse_duration_seconds(&decision_wait).ok_or_else(|| {
+        ConfigError::Validation("tail_sampling decision_wait must be duration seconds".into())
+    })?;
+    if decision_wait_seconds < 20 {
+        return Err(ConfigError::Validation(
+            "tail_sampling decision_wait must be at least 20s".into(),
+        ));
+    }
+
+    if mapping_i64(Some(tail_sampling), "num_traces").unwrap_or_default() < 100_000 {
+        return Err(ConfigError::Validation(
+            "tail_sampling num_traces must be at least 100000".into(),
+        ));
+    }
+
+    let policies = mapping_seq(Some(tail_sampling), "policies")
+        .ok_or_else(|| ConfigError::Validation("tail_sampling missing policies".into()))?;
+    require_tail_policy(policies, "status_code")?;
+    require_http_5xx_policy(policies)?;
+    require_tail_policy(policies, "string_attribute")?;
+    require_tail_policy(policies, "latency")?;
+    require_probabilistic_10_policy(policies)?;
+    Ok(())
+}
+
+fn require_tail_policy(policies: &[serde_yaml::Value], typ: &str) -> Result<(), ConfigError> {
+    if policies
+        .iter()
+        .any(|policy| mapping_string(Some(policy), "type").as_deref() == Some(typ))
+    {
+        return Ok(());
+    }
+    Err(ConfigError::Validation(format!(
+        "tail_sampling missing {typ} policy"
+    )))
+}
+
+fn require_http_5xx_policy(policies: &[serde_yaml::Value]) -> Result<(), ConfigError> {
+    let has_http_5xx = policies.iter().any(|policy| {
+        if mapping_string(Some(policy), "type").as_deref() != Some("numeric_attribute") {
+            return false;
+        }
+        let Some(numeric) = mapping_value(Some(policy), "numeric_attribute") else {
+            return false;
+        };
+        let key = mapping_string(Some(numeric), "key");
+        let min = mapping_i64(Some(numeric), "min_value");
+        let max = mapping_i64(Some(numeric), "max_value");
+        matches!(
+            (key.as_deref(), min, max),
+            (
+                Some("http.response.status_code" | "http.status_code"),
+                Some(500),
+                Some(599..)
+            )
+        )
+    });
+    if has_http_5xx {
+        Ok(())
+    } else {
+        Err(ConfigError::Validation(
+            "tail_sampling missing HTTP 5xx numeric_attribute policy".into(),
+        ))
+    }
+}
+
+fn require_probabilistic_10_policy(policies: &[serde_yaml::Value]) -> Result<(), ConfigError> {
+    let has_10 = policies.iter().any(|policy| {
+        if mapping_string(Some(policy), "type").as_deref() != Some("probabilistic") {
+            return false;
+        }
+        let Some(probabilistic) = mapping_value(Some(policy), "probabilistic") else {
+            return false;
+        };
+        mapping_f64(Some(probabilistic), "sampling_percentage")
+            .is_some_and(|pct| (pct - 10.0).abs() < f64::EPSILON)
+    });
+    if has_10 {
+        Ok(())
+    } else {
+        Err(ConfigError::Validation(
+            "tail_sampling missing 10 percent probabilistic policy".into(),
+        ))
+    }
+}
+
+fn mapping_value<'a>(
+    value: Option<&'a serde_yaml::Value>,
+    key: &str,
+) -> Option<&'a serde_yaml::Value> {
+    value
+        .and_then(serde_yaml::Value::as_mapping)
+        .and_then(|m| m.get(serde_yaml::Value::String(key.to_string())))
+}
+
+fn mapping_string(value: Option<&serde_yaml::Value>, key: &str) -> Option<String> {
+    mapping_value(value, key)
+        .and_then(serde_yaml::Value::as_str)
+        .map(ToOwned::to_owned)
+}
+
+fn mapping_i64(value: Option<&serde_yaml::Value>, key: &str) -> Option<i64> {
+    mapping_value(value, key).and_then(serde_yaml::Value::as_i64)
+}
+
+fn mapping_f64(value: Option<&serde_yaml::Value>, key: &str) -> Option<f64> {
+    mapping_value(value, key).and_then(serde_yaml::Value::as_f64)
+}
+
+fn mapping_seq<'a>(
+    value: Option<&'a serde_yaml::Value>,
+    key: &str,
+) -> Option<&'a Vec<serde_yaml::Value>> {
+    mapping_value(value, key).and_then(serde_yaml::Value::as_sequence)
+}
+
+fn parse_duration_seconds(value: &str) -> Option<u64> {
+    value
+        .strip_suffix('s')
+        .and_then(|raw| raw.parse::<u64>().ok())
+}
+
 #[derive(Debug, Deserialize)]
 struct CollectorConfig {
     receivers: Receivers,
+    processors: Processors,
     exporters: Exporters,
     extensions: Extensions,
     service: ServiceBlock,
@@ -128,6 +295,11 @@ struct CollectorConfig {
 #[derive(Debug, Deserialize)]
 struct Receivers {
     otlp: Option<serde_yaml::Value>,
+}
+
+#[derive(Debug, Deserialize)]
+struct Processors {
+    tail_sampling: Option<serde_yaml::Value>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -152,7 +324,6 @@ struct ServiceBlock {
 #[derive(Debug, Deserialize)]
 struct Pipelines {
     logs: Pipeline,
-    #[allow(dead_code)]
     metrics: Pipeline,
     traces: Pipeline,
 }
@@ -175,6 +346,26 @@ receivers:
   otlp: { protocols: { grpc: { endpoint: "0.0.0.0:4317" } } }
 processors:
   batch: { timeout: 10s }
+  tail_sampling:
+    decision_wait: 30s
+    num_traces: 100000
+    expected_new_traces_per_sec: 1000
+    policies:
+      - name: errors_100pct
+        type: status_code
+        status_code: { status_codes: [ERROR] }
+      - name: http_5xx_100pct
+        type: numeric_attribute
+        numeric_attribute: { key: http.response.status_code, min_value: 500, max_value: 599 }
+      - name: flagged_tenants_100pct
+        type: string_attribute
+        string_attribute: { key: tenant_id, values: [tenant-a] }
+      - name: slow_traces_100pct
+        type: latency
+        latency: { threshold_ms: 2000 }
+      - name: normal_sample_10pct
+        type: probabilistic
+        probabilistic: { sampling_percentage: 10 }
 exporters:
   loki: { endpoint: "http://loki:3100" }
   prometheusremotewrite: { endpoint: "http://prometheus:9090/api/v1/write" }
@@ -187,7 +378,7 @@ service:
   pipelines:
     logs:    { receivers: [otlp], processors: [resource, attributes/pii_scrub, batch], exporters: [loki] }
     metrics: { receivers: [otlp], processors: [resource, batch], exporters: [prometheusremotewrite] }
-    traces:  { receivers: [otlp], processors: [resource, attributes/pii_scrub, batch], exporters: [otlp/tempo] }
+    traces:  { receivers: [otlp], processors: [resource, attributes/pii_scrub, tail_sampling, batch], exporters: [otlp/tempo] }
 "#;
         let f = NamedTempFile::new().unwrap();
         std::fs::write(f.path(), yaml).unwrap();

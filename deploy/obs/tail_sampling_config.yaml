@@ -1,0 +1,55 @@
+# FR-OBS-006 canonical tail-sampling policy.
+#
+# This file is the operator-readable source of truth for the policy mirrored in
+# otel-collector-config.yaml. Keep decision_wait >= 20s.
+
+decision_wait: 30s
+num_traces: 100000
+expected_new_traces_per_sec: 1000
+normal_sampling_percentage: 10
+
+policies:
+  - name: errors_100pct
+    reason: error
+    type: status_code
+    status_codes: [ERROR]
+    sample: 100
+
+  - name: http_5xx_response_100pct
+    reason: http_5xx
+    type: numeric_attribute
+    key: http.response.status_code
+    min_value: 500
+    max_value: 599
+    sample: 100
+
+  - name: http_5xx_legacy_100pct
+    reason: http_5xx
+    type: numeric_attribute
+    key: http.status_code
+    min_value: 500
+    max_value: 599
+    sample: 100
+
+  - name: flagged_tenants_100pct
+    reason: flagged_tenant
+    type: string_attribute
+    key: tenant_id
+    values_file: deploy/obs/flagged_tenants.yaml
+    sample: 100
+
+  - name: slow_traces_100pct
+    reason: slow
+    type: latency
+    route_budgets_file: deploy/obs/route_latency_budgets.yaml
+    default_threshold_ms: 2000
+    sample: 100
+
+  - name: normal_sample_10pct
+    reason: normal_sample
+    type: probabilistic
+    sampling_percentage: 10
+
+metrics:
+  sampled_traces_total: obs_sampled_traces_total
+  sampling_buffer_depth: obs_sampling_buffer_depth

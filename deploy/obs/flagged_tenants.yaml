@@ -1,0 +1,4 @@
+# FR-OBS-006 flagged tenants for 100% trace capture.
+#
+# One tenant_id per line. Operators should use:
+#   cyberos-ai flag-tenant <tenant_id> --confirm

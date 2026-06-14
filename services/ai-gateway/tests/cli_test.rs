@@ -29,6 +29,7 @@ fn top_level_help_lists_operator_subcommands() {
         .stdout(predicate::str::contains("invoice"))
         .stdout(predicate::str::contains("breaker"))
         .stdout(predicate::str::contains("expiry"))
+        .stdout(predicate::str::contains("flag-tenant"))
         .stdout(predicate::str::contains("memory"));
 }
 
@@ -111,6 +112,15 @@ fn subcommands_parse_with_expected_flags() {
     ])
     .unwrap();
     Cli::try_parse_from(["cyberos-ai", "expiry", "repair", "--confirm"]).unwrap();
+    Cli::try_parse_from([
+        "cyberos-ai",
+        "flag-tenant",
+        "org:test",
+        "--file",
+        "deploy/obs/flagged_tenants.yaml",
+        "--confirm",
+    ])
+    .unwrap();
     Cli::try_parse_from(["cyberos-ai", "memory", "emit", "row.yaml", "--dry-run"]).unwrap();
     Cli::try_parse_from([
         "cyberos-ai",

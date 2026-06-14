@@ -12,7 +12,7 @@ Implements [`docs/feature-requests/obs/FR-OBS-001..009`](../../docs/feature-requ
 | **FR-OBS-003** | Per-service RED metrics via cyberos-obs-sdk | **done** (`cyberos-obs-sdk` RED helpers + `#[red_instrument]` macro applied to Rust HTTP services) |
 | **FR-OBS-004** | LangSmith integration for AI traces | **done** (AI Gateway self-hosted LangSmith exporter, per-tenant opt-in, redacted payload newtypes, W3C trace-id correlation, async retry/drop metrics) |
 | **FR-OBS-005** | W3C TraceContext correlation | **done** (`cyberos-obs-sdk` strict W3C parser/generator/injector, request log context spans, duration exemplars, AI Gateway subprocess/task preservation, and OBS correlation CI gate) |
-| FR-OBS-006 | Tail-based sampling | pending |
+| **FR-OBS-006** | Tail-based sampling | **done** (`tail_sampling` processor after PII scrub, deterministic policy evaluator, flagged-tenant and route-budget configs, `cyberos-ai flag-tenant`, and focused sampling/config gates) |
 | FR-OBS-007 | Alertmanager → CUO obs.triage-alert routing | pending |
 | FR-OBS-008 | Compliance view scoping (EU AI Act / PDPL / SOC 2 / ISO 27001) | pending |
 | FR-OBS-009 | Chain-of-custody manifest on compliance exports | pending |

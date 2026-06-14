@@ -64,6 +64,9 @@ async fn main() {
         Command::Expiry(args) => {
             cyberos_ai_gateway::cli::expiry::run(args.action, json, confirm, &claims, &pool).await
         }
+        Command::FlagTenant(args) => {
+            cyberos_ai_gateway::cli::flag_tenant::run(args, json, confirm, &claims, &pool).await
+        }
         Command::Memory(args) => {
             cyberos_ai_gateway::cli::memory::run(args.action, json, confirm, &claims, &pool).await
         }

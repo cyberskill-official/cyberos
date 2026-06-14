@@ -19,6 +19,26 @@ pub mod names {
     pub const BUFFER_BYTES: &str = "obs_collector_buffer_bytes";
     /// Histogram — exporter-side latency by backend (`loki`/`prometheusremotewrite`/`otlp/tempo`).
     pub const EXPORT_LATENCY_MS: &str = "obs_collector_export_latency_ms";
+    /// Counter — sampled trace decisions by reason (`error` | `http_5xx` | `flagged_tenant` | `slow` | `normal_sample` | `dropped`).
+    pub const SAMPLED_TRACES_TOTAL: &str = "obs_sampled_traces_total";
+    /// Gauge — in-flight traces buffered by the tail-sampling processor.
+    pub const SAMPLING_BUFFER_DEPTH: &str = "obs_sampling_buffer_depth";
+}
+
+/// FR-OBS-006 tail-sampling decision label values.
+pub mod sampling_reasons {
+    /// Span status.code was ERROR.
+    pub const ERROR: &str = "error";
+    /// HTTP status was 5xx.
+    pub const HTTP_5XX: &str = "http_5xx";
+    /// Tenant is in the flagged-tenants list.
+    pub const FLAGGED_TENANT: &str = "flagged_tenant";
+    /// Trace exceeded the route latency budget.
+    pub const SLOW: &str = "slow";
+    /// Normal trace kept by 10% deterministic sampling.
+    pub const NORMAL_SAMPLE: &str = "normal_sample";
+    /// Trace dropped by sampling or buffer pressure.
+    pub const DROPPED: &str = "dropped";
 }
 
 /// Slice-1 self-metric label values for `dropped_total{reason=…}`.
