@@ -199,13 +199,24 @@ python3 scripts/agent_handoff.py --reason <reason> --active-fr <FR-ID> --note "<
 
 The packet contains `HANDOFF.md`, `RESUME_PROMPT.md`, `STATE.json`, git status/diff snapshots, recent commits, and the ready queue. `target/` is ignored, so packets are local operational state, not implementation commits.
 
+Agent edit ownership is tracked by an advisory local claim:
+
+```bash
+python3 scripts/agent_handoff.py resume --agent <agent-name> --packet latest
+python3 scripts/agent_handoff.py release --agent <agent-name>
+```
+
+`resume` validates the packet and writes `target/cuo-workflow/agent-session/CLAIM.json`; `release` archives and removes that claim. A second agent MUST NOT edit over an active unexpired claim unless the operator intentionally uses `--force` after verifying the first agent is no longer running.
+
 Rules:
 
 1. Produce a handoff packet before any voluntary stop caused by usage limits or agent switching.
-2. The next agent MUST read the packet and run `git status --short --branch` before editing.
+2. The next agent MUST run `python3 scripts/agent_handoff.py resume --agent <agent-name> --packet latest`, read the packet, and run `git status --short --branch` before editing.
 3. If `STATE.json.active_fr` is set and the worktree is dirty, the next agent MUST finish or route back that FR before selecting another FR.
 4. If the previous agent stopped between FRs with a clean worktree, the next agent selects the first dependency-eligible BACKLOG row.
 5. Switching agents never relaxes the per-FR commit rule and never authorises staging unrelated dirty files.
+6. Before switching back, the current agent MUST create a fresh packet naming `--handoff-to codex` and release its claim.
+7. If a hard usage limit happens before a fresh packet, the next agent may generate an `emergency-recovery` packet from the current worktree, but it must inspect diffs before marking any FR done.
 
 See `docs/feature-requests/.workflow/AGENT_HANDOFF.md` for the operator runbook.
 
