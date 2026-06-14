@@ -28,3 +28,12 @@ datasources:
       httpHeaderName1: Authorization
     secureJsonData:
       httpHeaderValue1: Bearer ${GRAFANA_USER_JWT}
+  - name: obs-compliance-view
+    type: marcusolsson-json-datasource
+    access: proxy
+    url: http://obs-compliance-view:7788
+    isDefault: false
+    jsonData:
+      httpHeaderName1: Authorization
+    secureJsonData:
+      httpHeaderValue1: Bearer ${GRAFANA_AUDITOR_JWT}

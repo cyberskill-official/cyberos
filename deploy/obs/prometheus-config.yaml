@@ -33,3 +33,10 @@ scrape_configs:
       - targets: ["obs-router:7777"]
         labels:
           service: obs-router
+
+  - job_name: obs-compliance-view
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["obs-compliance-view:7788"]
+        labels:
+          service: obs-compliance-view

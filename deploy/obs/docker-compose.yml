@@ -162,6 +162,31 @@ services:
           cpus: "0.5"
           memory: "512M"
 
+  obs-compliance-view:
+    build:
+      context: ../..
+      dockerfile: deploy/obs/obs-compliance-view.Dockerfile
+    ports:
+      - "7788:7788"
+    environment:
+      OBS_COMPLIANCE_HS256_SECRET: "${OBS_COMPLIANCE_HS256_SECRET:-cyberos-local-dev}"
+      OBS_COMPLIANCE_ED25519_SEED_HEX: "${OBS_COMPLIANCE_ED25519_SEED_HEX:-0707070707070707070707070707070707070707070707070707070707070707}"
+      OBS_COMPLIANCE_ROWS_JSONL: /var/lib/cyberos-obs-compliance/rows.jsonl
+      OBS_COMPLIANCE_AUDIT_JSONL: /var/lib/cyberos-obs-compliance/audit.jsonl
+    volumes:
+      - obs-compliance-data:/var/lib/cyberos-obs-compliance
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:7788/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512M"
+
   tempo:
     image: grafana/tempo:2.6.0
     command: ["-config.file=/etc/tempo.yaml"]
@@ -286,6 +311,7 @@ services:
     environment:
       GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD}"
       GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_INSTALL_PLUGINS: "marcusolsson-json-datasource"
     volumes:
       - ./grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
       - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
@@ -315,3 +341,4 @@ volumes:
   redis-langsmith-data:
   grafana-data:
   alertmanager-data:
+  obs-compliance-data:

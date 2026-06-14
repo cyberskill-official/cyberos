@@ -1132,6 +1132,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "cyberos-obs-compliance-view"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "axum",
+ "base64 0.22.1",
+ "chrono",
+ "ed25519-dalek",
+ "hyper",
+ "jsonwebtoken",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 2.0.18",
+ "tokio",
+ "tower 0.5.3",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+]
+
+[[package]]
 name = "cyberos-obs-router"
 version = "0.1.0"
 dependencies = [

@@ -7,6 +7,7 @@ members = [
     "ai-gateway",
     "obs-collector",
     "obs-router",
+    "obs-compliance-view",
     "mcp-gateway",
     "email",
     "proj",

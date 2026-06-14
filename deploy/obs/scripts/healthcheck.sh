@@ -11,6 +11,7 @@ for endpoint in \
   "prometheus:http://localhost:9090/-/ready" \
   "alertmanager:http://localhost:9093/-/ready" \
   "obs-router:http://localhost:7777/ready" \
+  "obs-compliance-view:http://localhost:7788/ready" \
   "tempo:http://localhost:3200/ready" \
   "grafana:http://localhost:3000/api/health"; do
   name="${endpoint%%:*}"

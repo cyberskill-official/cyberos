@@ -1,0 +1,40 @@
+[package]
+name = "cyberos-obs-compliance-view"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "CyberOS OBS compliance views over memory audit rows (FR-OBS-008)"
+
+[lib]
+name = "cyberos_obs_compliance_view"
+path = "src/lib.rs"
+
+[[bin]]
+name = "cyberos-obs-compliance-view"
+path = "src/main.rs"
+
+[dependencies]
+tokio.workspace = true
+axum.workspace = true
+tower.workspace = true
+tower-http.workspace = true
+hyper.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+uuid.workspace = true
+chrono.workspace = true
+jsonwebtoken.workspace = true
+sha2.workspace = true
+async-trait = "0.1"
+ed25519-dalek = "2.2"
+base64 = "0.22"
+
+[dev-dependencies]
+tower.workspace = true

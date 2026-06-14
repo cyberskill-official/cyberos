@@ -1,0 +1,39 @@
+{
+  "title": "Compliance Views",
+  "schemaVersion": 39,
+  "version": 1,
+  "panels": [
+    {
+      "title": "EU AI Act",
+      "type": "table",
+      "datasource": "obs-compliance-view",
+      "targets": [
+        { "url": "/eu-ai-act/?since=$__from&until=$__to&format=json" }
+      ]
+    },
+    {
+      "title": "PDPL",
+      "type": "table",
+      "datasource": "obs-compliance-view",
+      "targets": [
+        { "url": "/pdpl/?since=$__from&until=$__to&format=json" }
+      ]
+    },
+    {
+      "title": "SOC 2",
+      "type": "table",
+      "datasource": "obs-compliance-view",
+      "targets": [
+        { "url": "/soc2/?since=$__from&until=$__to&format=json" }
+      ]
+    },
+    {
+      "title": "ISO 27001",
+      "type": "table",
+      "datasource": "obs-compliance-view",
+      "targets": [
+        { "url": "/iso27001/?since=$__from&until=$__to&format=json" }
+      ]
+    }
+  ]
+}
