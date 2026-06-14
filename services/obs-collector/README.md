@@ -3,7 +3,7 @@
 **P0 module · observability spine.**
 Implements [`docs/feature-requests/obs/FR-OBS-001..009`](../../docs/feature-requests/obs/) — CyberOS OTLP ingress + OTel collector + Loki + Prometheus + Tempo + Grafana stack, with tenant-isolation extension hooks, PII scrubbing in-flight, and memory-anchored compliance views.
 
-## Status (2026-06-14 wave)
+## Status (2026-06-15 wave)
 
 | FR | Title | Status |
 |---|---|---|
@@ -13,7 +13,7 @@ Implements [`docs/feature-requests/obs/FR-OBS-001..009`](../../docs/feature-requ
 | **FR-OBS-004** | LangSmith integration for AI traces | **done** (AI Gateway self-hosted LangSmith exporter, per-tenant opt-in, redacted payload newtypes, W3C trace-id correlation, async retry/drop metrics) |
 | **FR-OBS-005** | W3C TraceContext correlation | **done** (`cyberos-obs-sdk` strict W3C parser/generator/injector, request log context spans, duration exemplars, AI Gateway subprocess/task preservation, and OBS correlation CI gate) |
 | **FR-OBS-006** | Tail-based sampling | **done** (`tail_sampling` processor after PII scrub, deterministic policy evaluator, flagged-tenant and route-budget configs, `cyberos-ai flag-tenant`, and focused sampling/config gates) |
-| FR-OBS-007 | Alertmanager → CUO obs.triage-alert routing | pending |
+| **FR-OBS-007** | Alertmanager → CUO obs.triage-alert routing | **done** (`services/obs-router` workspace member, Alertmanager webhook auth, CUO confidence routing, CHAT/PagerDuty fallbacks, ack/escalate callbacks, dedup, metrics, and audit rows) |
 | FR-OBS-008 | Compliance view scoping (EU AI Act / PDPL / SOC 2 / ISO 27001) | pending |
 | FR-OBS-009 | Chain-of-custody manifest on compliance exports | pending |
 

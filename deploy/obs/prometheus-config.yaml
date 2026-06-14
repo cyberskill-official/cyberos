@@ -2,6 +2,11 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
 
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
+
 scrape_configs:
   - job_name: cyberos-obs-ingress
     metrics_path: /metrics
@@ -21,3 +26,10 @@ scrape_configs:
       - targets: ["localhost:9090"]
         labels:
           service: prometheus
+
+  - job_name: obs-router
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["obs-router:7777"]
+        labels:
+          service: obs-router

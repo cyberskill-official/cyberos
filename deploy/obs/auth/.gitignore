@@ -1,3 +1,4 @@
 tokens.live
 collector.token.live
 grafana.jwt.secret.live
+webhook.secret.live

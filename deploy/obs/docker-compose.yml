@@ -109,6 +109,59 @@ services:
           cpus: "2"
           memory: "4G"
 
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager-config.yaml:/etc/alertmanager/alertmanager.yml:ro
+      - ./auth/webhook.secret.live:/etc/alertmanager/webhook.secret:ro
+      - alertmanager-data:/alertmanager
+    depends_on:
+      obs-router:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:9093/-/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: "256M"
+
+  obs-router:
+    build:
+      context: ../..
+      dockerfile: deploy/obs/obs-router.Dockerfile
+    ports:
+      - "7777:7777"
+    environment:
+      OBS_ROUTER_WEBHOOK_SECRET_FILE: /etc/cyberos-obs/webhook.secret
+      CUO_TRIAGE_URL: "${CUO_TRIAGE_URL:-http://cuo:8080/skills/invoke}"
+      CHAT_WEBHOOK_URL: "${CHAT_WEBHOOK_URL:-http://chat:8065/hooks/cyberos-obs-router}"
+      PAGERDUTY_EVENTS_URL: "${PAGERDUTY_EVENTS_URL:-https://events.pagerduty.com/v2/enqueue}"
+      PAGERDUTY_ROUTING_KEY: "${PAGERDUTY_ROUTING_KEY:-}"
+      OBS_ROUTER_TEMPO_BASE_URL: "${OBS_ROUTER_TEMPO_BASE_URL:-http://grafana:3000}"
+    volumes:
+      - ./auth/webhook.secret.live:/etc/cyberos-obs/webhook.secret:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:7777/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512M"
+
   tempo:
     image: grafana/tempo:2.6.0
     command: ["-config.file=/etc/tempo.yaml"]
@@ -261,3 +314,4 @@ volumes:
   postgres-langsmith-data:
   redis-langsmith-data:
   grafana-data:
+  alertmanager-data:

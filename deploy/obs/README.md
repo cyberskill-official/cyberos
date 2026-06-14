@@ -1,7 +1,8 @@
 # CyberOS OBS Stack
 
-`deploy/obs` is the FR-OBS-001 slice-1 LGTM deployment: a CyberOS OTLP ingress
-gate, OpenTelemetry Collector, Loki, Prometheus, Tempo, and Grafana.
+`deploy/obs` is the FR-OBS-001..007 LGTM deployment: a CyberOS OTLP ingress
+gate, OpenTelemetry Collector, Loki, Prometheus, Tempo, Grafana,
+Alertmanager, and `obs-router`.
 
 ## Local Run
 
@@ -31,6 +32,12 @@ use `auth/grafana.jwt.secret.live` for HS256 tokens; production SHOULD mount an
 AUTH JWKS source and run `cyberos-obs grafana-proxy --jwt-jwks-url ...` (or
 `--jwt-jwks-file ...` for boot-time secret-store mounts).
 
+Alertmanager posts to `obs-router` on port 7777 using the rotated
+`auth/webhook.secret.live` secret. `obs-router` invokes the CUO
+`obs.triage-alert@1` skill, routes high-confidence sev-2..sev-4 alerts to CHAT,
+routes low-confidence or CUO-failed alerts to PagerDuty, and always routes sev-1
+alerts to both.
+
 ## Retention
 
 - Loki logs: 30 days.
@@ -39,4 +46,4 @@ AUTH JWKS source and run `cyberos-obs grafana-proxy --jwt-jwks-url ...` (or
 
 ## Sizing
 
-Slice 1 reserves 6.5 vCPU, 11.5 GB RAM, and 100 GB disk across the stack.
+Slice 3 reserves 7.25 vCPU, 12.25 GB RAM, and 100 GB disk across the stack.

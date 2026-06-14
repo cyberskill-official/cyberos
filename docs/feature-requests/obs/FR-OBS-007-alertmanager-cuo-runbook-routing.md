@@ -3,14 +3,14 @@ id: FR-OBS-007
 title: "obs-router: Alertmanager → CUO obs.triage-alert@1 skill → CHAT (≥0.70 conf) OR PagerDuty + sev-1 always pages + ack-button + audit"
 module: OBS
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 3
 slice: 3
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
-shipped: null
+shipped: 2026-06-15
 memory_chain_hash: null
 related_frs: [FR-OBS-001, FR-OBS-003, FR-OBS-005, FR-CUO-101, FR-KB-008]
 depends_on: [FR-OBS-002, FR-OBS-003]
@@ -504,4 +504,27 @@ All resolved. Deferred:
 
 ---
 
-*End of FR-OBS-007. Status: draft (10/10 target).*
+## §12 — Shipped implementation (2026-06-15)
+
+- Added `services/obs-router/` as a Rust workspace member with `cyberos-obs-router` binary and testable library modules for Alertmanager payload parsing, severity routing, CUO triage, CHAT posts, PagerDuty Events API v2, deduplication, ack/escalation callbacks, metrics, and audit rows.
+- `/alert` enforces `X-CyberOS-Webhook-Secret` and also accepts Alertmanager's `Authorization: X-CyberOS-Webhook-Secret <secret>` form for deploy compatibility.
+- Routing now follows the FR matrix: sev-1 routes to both CHAT and PagerDuty; sev-2..sev-4 with CUO confidence >= 0.70 routes to CHAT; lower confidence, CUO failure, and CUO timeout fall back to PagerDuty.
+- CHAT rendering includes alert name, severity, CUO summary, suspected cause, runbook link, trace link, Ack, and Escalate-to-PagerDuty buttons.
+- `/ack/<alert_id>` updates CHAT, resolves PagerDuty for dual-routed sev-1 alerts, and emits `obs.alert_acked`; `/escalate/<alert_id>` triggers PagerDuty post-hoc and emits an escalation audit row with `escalated_from_chat: true`.
+- Added five-minute fingerprint deduplication with CHAT counter updates, `/metrics` counters/histogram samples, and `obs.alert_triaged` audit rows.
+- Added `skills/obs.triage-alert/SKILL.md` and `skills/obs.triage-alert/runbooks-corpus/.keep`.
+- Added deploy wiring: `deploy/obs/alertmanager-config.yaml`, `deploy/obs/obs-router.Dockerfile`, Alertmanager + obs-router Compose services, Prometheus Alertmanager target, obs-router scrape target, and webhook secret rotation/healthcheck wiring.
+
+Verification completed:
+
+```bash
+cd services
+cargo fmt -p cyberos-obs-router
+cargo test -p cyberos-obs-router --tests -- --nocapture
+LANGSMITH_LICENSE_KEY=dummy LANGSMITH_API_TOKEN=dummy LANGSMITH_POSTGRES_PASSWORD=dummy GRAFANA_ADMIN_PASSWORD=dummy \
+  docker compose -f deploy/obs/docker-compose.yml config >/tmp/cyberos-obs-compose.yml
+```
+
+---
+
+*End of FR-OBS-007. Status: done (10/10 target).*

@@ -6,6 +6,7 @@ members = [
     "skill-broker",
     "ai-gateway",
     "obs-collector",
+    "obs-router",
     "mcp-gateway",
     "email",
     "proj",

@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TOKENS_FILE="${TOKENS_FILE:-$ROOT_DIR/auth/tokens.live}"
 COLLECTOR_TOKEN_FILE="${COLLECTOR_TOKEN_FILE:-$ROOT_DIR/auth/collector.token.live}"
+WEBHOOK_SECRET_FILE="${WEBHOOK_SECRET_FILE:-$ROOT_DIR/auth/webhook.secret.live}"
 SERVICES=(ai-gateway auth-service chat-service memory-writer mcp-router)
 
 tmp_tokens="$(mktemp)"
@@ -26,6 +27,13 @@ if [[ ! -f "$COLLECTOR_TOKEN_FILE" || "${ROTATE_COLLECTOR_TOKEN:-0}" == "1" ]]; 
   rm -f "$tmp_collector"
 fi
 
+if [[ ! -f "$WEBHOOK_SECRET_FILE" || "${ROTATE_OBS_ROUTER_WEBHOOK_SECRET:-0}" == "1" ]]; then
+  tmp_webhook="$(mktemp)"
+  printf "%s" "$(openssl rand -hex 32)" > "$tmp_webhook"
+  install -m 0600 "$tmp_webhook" "$WEBHOOK_SECRET_FILE"
+  rm -f "$tmp_webhook"
+fi
+
 if docker compose -f "$ROOT_DIR/docker-compose.yml" ps ingress >/dev/null 2>&1; then
   docker compose -f "$ROOT_DIR/docker-compose.yml" restart ingress >/dev/null 2>&1 || true
 fi
@@ -33,6 +41,11 @@ fi
 if [[ "${ROTATE_COLLECTOR_TOKEN:-0}" == "1" ]] \
   && docker compose -f "$ROOT_DIR/docker-compose.yml" ps collector >/dev/null 2>&1; then
   docker compose -f "$ROOT_DIR/docker-compose.yml" restart collector >/dev/null 2>&1 || true
+fi
+
+if [[ "${ROTATE_OBS_ROUTER_WEBHOOK_SECRET:-0}" == "1" ]] \
+  && docker compose -f "$ROOT_DIR/docker-compose.yml" ps obs-router alertmanager >/dev/null 2>&1; then
+  docker compose -f "$ROOT_DIR/docker-compose.yml" restart obs-router alertmanager >/dev/null 2>&1 || true
 fi
 
 echo "Tokens rotated: $TOKENS_FILE"
