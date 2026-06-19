@@ -4,7 +4,7 @@ id: FR-AI-006
 title: "Model-alias resolution (chat.smart → bedrock:claude-3.5-sonnet) with per-tenant override"
 module: AI
 priority: MUST
-status: ready_to_test
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 2

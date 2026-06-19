@@ -4,7 +4,7 @@ id: FR-AI-013
 title: "VN-PII recall ≥ 99% per-recognizer CI gate on 200-sample fixture"
 module: AI
 priority: MUST
-status: ready_to_test
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 3

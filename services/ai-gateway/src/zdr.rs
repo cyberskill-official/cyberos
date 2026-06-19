@@ -195,19 +195,18 @@ pub fn attestation_for(provider: &ProviderKind, model: &str) -> Option<ZdrAttest
 
 /// FR-AI-015 §1 #1 — Load the ZDR attestation table from YAML.
 pub fn init_zdr_table(config_path: &Path) -> Result<(), ZdrInitError> {
-    if TABLE.get().is_some() {
-        return Err(ZdrInitError::AlreadyInitialised);
-    }
-
     let yaml = std::fs::read_to_string(config_path)?;
     let parsed = parse_attestations(&yaml)?;
 
     ZDR_TABLE_SIZE.set(parsed.len() as f64);
     info!(count = parsed.len(), "zdr_table_loaded");
 
+    // Idempotent: create the cell once, then atomically swap the freshly parsed table in
+    // (mirrors the cost-table loader). A single-shot OnceCell::set made every call after the
+    // first fail with AlreadyInitialised, which broke re-init in tests and any live reload.
     TABLE
-        .set(ArcSwap::from_pointee(parsed))
-        .map_err(|_| ZdrInitError::AlreadyInitialised)?;
+        .get_or_init(|| ArcSwap::from_pointee(AttestationTable::new()))
+        .store(Arc::new(parsed));
 
     Ok(())
 }

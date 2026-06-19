@@ -4,7 +4,7 @@ id: FR-AI-022
 title: "OpenTelemetry trace + span emission for every call (caller → router → provider → response) with W3C TraceContext + PII-safe attributes"
 module: AI
 priority: MUST
-status: ready_to_test
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 5

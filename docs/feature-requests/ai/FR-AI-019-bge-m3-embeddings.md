@@ -4,7 +4,7 @@ id: FR-AI-019
 title: "Self-hosted BGE-M3 embeddings (single L4 GPU sidecar) + ONNX-CPU fallback + adaptive batching"
 module: AI
 priority: SHOULD
-status: ready_to_test
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 4

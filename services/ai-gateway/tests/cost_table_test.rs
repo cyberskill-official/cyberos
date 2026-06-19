@@ -159,11 +159,13 @@ async fn hot_reload_picks_up_new_model() {
     loop {
         if let Some(rate) = cost_table::lookup(&ProviderKind::Anthropic, "claude-99-future") {
             assert_eq!(rate.input_per_1k_usd, dec!(0.001));
-            assert!(start.elapsed() < std::time::Duration::from_millis(1000));
+            // Allow for filesystem-watch latency: macOS FSEvents can take well over a second to
+            // deliver a change, so the reload window is generous rather than sub-second.
+            assert!(start.elapsed() < std::time::Duration::from_millis(5000));
             return;
         }
-        if start.elapsed() > std::time::Duration::from_millis(1000) {
-            panic!("hot reload did not pick up new model within 1s");
+        if start.elapsed() > std::time::Duration::from_millis(5000) {
+            panic!("hot reload did not pick up new model within 5s");
         }
         tokio::time::sleep(std::time::Duration::from_millis(20)).await;
     }

@@ -4,7 +4,7 @@ id: FR-AI-002
 title: "AI Gateway cost-ledger post-call reconcile"
 module: AI
 priority: MUST
-status: ready_to_test
+status: done
 accepted_at: 2026-05-15
 accepted_by: Stephen Cheng
 verify: T

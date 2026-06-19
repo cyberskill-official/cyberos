@@ -106,12 +106,17 @@ pub async fn init_cost_table(config_path: &Path) -> Result<CostTableHandle, Load
     let table = load_and_validate(config_path).await?;
     let count = table.len();
 
+    // Idempotent init: create each cell once, then atomically swap in the freshly loaded
+    // table. Re-calling init_cost_table reloads (the same lock-free swap the hot-reload
+    // watcher uses) instead of failing with AlreadyInitialised. ArcSwap exists precisely so a
+    // reload never blocks readers; a single-shot OnceCell::set defeated that and made every
+    // call after the first (each integration test, any re-init) error.
     TABLE
-        .set(ArcSwap::from_pointee(table))
-        .map_err(|_| LoaderInitError::AlreadyInitialised)?;
+        .get_or_init(|| ArcSwap::from_pointee(HashMap::new()))
+        .store(Arc::new(table));
     LOADED_AT
-        .set(ArcSwap::from_pointee(Some(Utc::now())))
-        .map_err(|_| LoaderInitError::AlreadyInitialised)?;
+        .get_or_init(|| ArcSwap::from_pointee(None))
+        .store(Arc::new(Some(Utc::now())));
 
     metrics::ENTRY_COUNT.set(count as i64);
     metrics::LOADED_AT_TS.set(Utc::now().timestamp());
@@ -257,24 +262,36 @@ async fn spawn_watcher(path: &Path) -> Result<RecommendedWatcher, LoaderInitErro
         .map_err(LoaderInitError::WatcherSetup)?;
 
     let path = path.to_path_buf();
-    tokio::spawn(async move {
-        let mut last_event_at: Option<Instant> = None;
-        loop {
-            tokio::select! {
-                Some(_event) = rx.recv() => {
-                    last_event_at = Some(Instant::now());
-                }
-                _ = tokio::time::sleep(std::time::Duration::from_millis(DEBOUNCE_MS)) => {
-                    if let Some(t) = last_event_at {
-                        if t.elapsed() >= std::time::Duration::from_millis(DEBOUNCE_MS) {
-                            last_event_at = None;
-                            apply_reload(&path).await;
+    // The debounced reload loop needs a Tokio runtime. In the server, init runs inside the
+    // main runtime; sync callers (block_on-based tests) have none, where `tokio::spawn` would
+    // panic with "there is no reactor running". Spawn only when a runtime is present - the table
+    // is already loaded by this point, so the only thing skipped without a runtime is live
+    // hot-reload, which those contexts do not need.
+    match tokio::runtime::Handle::try_current() {
+        Ok(rt) => {
+            rt.spawn(async move {
+                let mut last_event_at: Option<Instant> = None;
+                loop {
+                    tokio::select! {
+                        Some(_event) = rx.recv() => {
+                            last_event_at = Some(Instant::now());
+                        }
+                        _ = tokio::time::sleep(std::time::Duration::from_millis(DEBOUNCE_MS)) => {
+                            if let Some(t) = last_event_at {
+                                if t.elapsed() >= std::time::Duration::from_millis(DEBOUNCE_MS) {
+                                    last_event_at = None;
+                                    apply_reload(&path).await;
+                                }
+                            }
                         }
                     }
                 }
-            }
+            });
         }
-    });
+        Err(_) => {
+            tracing::warn!("init_cost_table called outside a Tokio runtime; hot-reload disabled");
+        }
+    }
 
     Ok(watcher)
 }

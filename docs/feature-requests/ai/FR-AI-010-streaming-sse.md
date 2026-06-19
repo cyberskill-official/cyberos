@@ -4,7 +4,7 @@ id: FR-AI-010
 title: "Streaming SSE end-to-end (token-by-token to client)"
 module: AI
 priority: SHOULD
-status: ready_to_test
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 2

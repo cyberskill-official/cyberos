@@ -14,8 +14,15 @@ fn init_cost_table_for_tests() {
     let _ = futures::executor::block_on(cost_table::init_cost_table(&fixture_path));
 }
 
+fn init_zdr_for_tests() {
+    let fixture_path = std::path::PathBuf::from("tests/fixtures/zdr/valid_attestations.yaml");
+    // Idempotent init; ignore the result if another test initialised first.
+    let _ = cyberos_ai_gateway::zdr::init_zdr_table(&fixture_path);
+}
+
 fn test_policy_with_bedrock_primary() -> TenantPolicy {
     init_cost_table_for_tests();
+    init_zdr_for_tests();
 
     let mut model_alias_map = HashMap::new();
     model_alias_map.insert("chat.smart".into(), "anthropic.claude-3-5-sonnet-20241022-v2:0".into());

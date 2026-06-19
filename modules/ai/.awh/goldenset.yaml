@@ -1,0 +1,31 @@
+# AI module (ai-gateway) golden set (awh). AI was red-deferred during the absorption; this
+# golden set wires its gate so the 20 ai FRs can reach done once the suite is verified GREEN.
+#
+# REQUIRES a running Redis (the cache-isolation tests connect to 127.0.0.1:6379):
+#   docker run -d --name cyberos-redis -p 6379:6379 redis:7
+#
+# Capture + gate (use scripts/awh_ai_gate.sh, which refuses to capture a baseline from a red run):
+#   awh eval modules/ai/.awh/goldenset.yaml --base-dir . --seeds 1 --out modules/ai/.awh/eval-baseline.json
+#   awh eval modules/ai/.awh/goldenset.yaml --base-dir . --seeds 1 --baseline modules/ai/.awh/eval-baseline.json --max-regression 0.0
+#
+# Tests live in the Rust crate cyberos-ai-gateway (services/ai-gateway): 24 integration tests.
+# Run with --test-threads=1: these are stateful integration tests that share a process-global
+# cost table (ArcSwap singleton) and one Redis, so parallel threads within a binary interfere
+# (hot-reload swaps the table a reader is asserting on; concurrent lookups contend on Redis).
+# Serial execution removes that test-mutual-interference; the product's own concurrency is still
+# exercised inside individual tests (e.g. the 100-task cross-tenant race). It does NOT reduce
+# coverage - every test still runs and must pass.
+tasks:
+  - id: ai-gateway-rust
+    description: AI gateway full suite (services/ai-gateway), serial. Requires Redis at 127.0.0.1:6379.
+    cmd: "cd services && cargo test -p cyberos-ai-gateway -- --test-threads=1"
+    weight: 3.0
+    timeout_sec: 1800
+
+  # Held-out acceptance: FR-AI-018 cross-tenant cache isolation (adversarial). Sealed read-only
+  # so the agent cannot edit the security bar it is graded against. Requires Redis.
+  - id: acceptance-ai-cross-tenant-cache-isolation
+    description: held-out FR-AI-018 adversarial cross-tenant cache-isolation test
+    cmd: "cd services && cargo test -p cyberos-ai-gateway --test cache_isolation_adversarial_test -- --test-threads=1"
+    weight: 5.0
+    timeout_sec: 900

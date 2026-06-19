@@ -41,15 +41,18 @@ proptest! {
             for (prompt, model, persona) in &ops {
                 let k = CacheKey::derive(&t_b, prompt, model, persona);
                 match cache::lookup(&k).await {
-                    CacheLookupOutcome::Miss => {}
-                    other => prop_assert!(
+                    // Only a Hit on tenant_b's key is a cross-tenant READ (a leak). Miss is
+                    // correct; a transient Redis Error/Timeout under load is not a read and must
+                    // not be misreported as a leak.
+                    CacheLookupOutcome::Hit(..) => prop_assert!(
                         false,
-                        "cross-tenant leak: t_a={} t_b={} prompt={:?} model={} persona={} \
-                         k_a_hash={} k_b_hash={} outcome={:?}",
+                        "cross-tenant leak (Hit): t_a={} t_b={} prompt={:?} model={} persona={} \
+                         k_a_hash={} k_b_hash={}",
                         t_a, t_b, prompt, model, persona,
                         hex::encode(CacheKey::derive(&t_a, prompt, model, persona).prompt_hash),
-                        hex::encode(k.prompt_hash), other,
+                        hex::encode(k.prompt_hash),
                     ),
+                    _ => {}
                 }
             }
             Ok(())

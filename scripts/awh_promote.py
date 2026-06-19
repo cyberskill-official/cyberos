@@ -30,8 +30,11 @@ import tempfile
 import time
 from pathlib import Path
 
-GATED = ["memory", "skill", "cuo", "auth", "chat", "proj", "email"]
 REPO = Path(subprocess.check_output(["git", "rev-parse", "--show-toplevel"], text=True).strip())
+# A module is "gated" if it has a golden set. Auto-detected so adding modules/<m>/.awh/
+# goldenset.yaml (e.g. ai) includes it with no edit here. A goldenset without a captured
+# baseline still counts as gated but reruns RED (run_gate returns "no goldenset/baseline").
+GATED = sorted(p.parent.parent.name for p in (REPO / "modules").glob("*/.awh/goldenset.yaml"))
 FR_DIR = REPO / "docs" / "feature-requests"
 LEDGER = REPO / ".awh" / "promotion-log.jsonl"
 # Hardened for quoted/trailing values, same shape as scripts/rebaseline_fr_status.py.

@@ -4,7 +4,7 @@ id: FR-AI-008
 title: "LiteLLM-derived multi-provider router with retry + 30s failover SLA"
 module: AI
 priority: MUST
-status: ready_to_test
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 2
