@@ -4,7 +4,7 @@ id: FR-AI-021
 title: "cyberos-ai operator CLI (usage · models · policy · failover · invoice · breaker · expiry · memory) with --confirm + --json + audit"
 module: AI
 priority: MUST
-status: done
+status: ready_to_test
 verify: T
 phase: P0
 milestone: P0 · slice 5

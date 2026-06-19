@@ -3,7 +3,7 @@ id: FR-AUTH-003
 title: "RLS enforcement at every tenant-scoped table — USING + WITH CHECK + per-connection app.tenant_id + property test"
 module: AUTH
 priority: MUST
-status: done
+status: ready_to_test
 verify: T
 phase: P0
 milestone: P0 · slice 2

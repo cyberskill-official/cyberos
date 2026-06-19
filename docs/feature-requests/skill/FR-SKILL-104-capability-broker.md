@@ -3,7 +3,7 @@ id: FR-SKILL-104
 title: "Capability broker — subprocess sandbox enforces allowed_tools + allowed_memory_scopes at invoke time; tool-name allowlist + path-glob allowlist + timeout enforcement"
 module: SKILL
 priority: MUST
-status: done
+status: ready_to_test
 verify: T
 phase: P1
 milestone: P1 · slice 1

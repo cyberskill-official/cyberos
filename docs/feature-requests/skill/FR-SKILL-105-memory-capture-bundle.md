@@ -3,7 +3,7 @@ id: FR-SKILL-105
 title: "memory-capture@1 skill bundle — canonical SDK-style entry point for emitting memory capture rows from tools, scripts, and external integrations"
 module: SKILL
 priority: MUST
-status: done
+status: ready_to_test
 verify: T
 phase: P1
 milestone: P1 · slice 2

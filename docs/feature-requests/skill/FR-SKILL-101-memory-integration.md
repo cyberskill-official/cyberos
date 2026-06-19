@@ -3,7 +3,7 @@ id: FR-SKILL-101
 title: "Skill memory integration — skill.invoked_started + skill.invoked_completed audit rows (skill.* namespace) + args_hash + trace_id propagation + panic-recovery"
 module: SKILL
 priority: MUST
-status: done
+status: ready_to_test
 verify: T
 phase: P1
 milestone: P1 · slice 1

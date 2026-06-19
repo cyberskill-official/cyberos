@@ -3,7 +3,7 @@ id: FR-SKILL-201
 title: "SKILL OCI registry deploy for `.skill` bundles — R3 distribution stage with signed bundles + tag immutability + tenant-scoped pulls"
 module: SKILL
 priority: MUST
-status: done
+status: ready_to_test
 verify: T
 phase: P3
 milestone: P3 · slice 1

@@ -4,7 +4,7 @@ id: FR-AI-016
 title: "Tenant residency pinning (sg-1 / eu-1 / us-1 / vn-1) propagating to provider region selection"
 module: AI
 priority: MUST
-status: done
+status: ready_to_test
 verify: T
 phase: P0
 milestone: P0 · slice 4

@@ -3,7 +3,7 @@ id: FR-CHAT-002
 title: "cyberos-chat-authbridge plugin — Mattermost auth delegates to FR-AUTH-004 JWT with tenant_id propagation and SCIM-free provisioning"
 module: CHAT
 priority: MUST
-status: done
+status: ready_to_test
 verify: T
 phase: P1
 milestone: P1 · slice 1

@@ -3,7 +3,7 @@ id: FR-CUO-102
 title: "CUO Postgres checkpointer for LangGraph state — persists supervisor graph state per run with EU AI Act Art. 12 logging"
 module: CUO
 priority: MUST
-status: done
+status: ready_to_test
 verify: T
 phase: P1
 milestone: P1 · slice 6

@@ -3,7 +3,7 @@ id: FR-SKILL-110
 title: "vietnam-vat-invoice@1 skill — Vietnamese e-invoice (hóa đơn) Decree 123 XML emitter with GDT submission, digital signature, and per-invoice audit trail"
 module: SKILL
 priority: MUST
-status: done
+status: ready_to_test
 verify: T
 phase: P1
 milestone: P1 · slice 3

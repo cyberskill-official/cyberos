@@ -3,7 +3,7 @@ id: FR-CHAT-005
 title: "memory bridge — Postgres logical replication from chat to memory Layer-3 ingest with p95 ≤ 5s latency"
 module: CHAT
 priority: MUST
-status: done
+status: ready_to_test
 verify: T
 phase: P1
 milestone: P1 · slice 1

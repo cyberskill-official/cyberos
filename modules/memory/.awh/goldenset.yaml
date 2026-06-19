@@ -1,0 +1,33 @@
+# MEMORY module golden set (awh). Per-module gate for roadmap wave 1.
+#
+# Run from the repo root (awh runs each task's cmd with shell=True, cwd = --base-dir):
+#   awh eval modules/memory/.awh/goldenset.yaml --base-dir . --seeds 1 \
+#       --out modules/memory/.awh/eval-baseline.json                 # capture baseline
+#   awh eval modules/memory/.awh/goldenset.yaml --base-dir . --seeds 1 \
+#       --baseline modules/memory/.awh/eval-baseline.json --max-regression 0.0   # gate
+#
+# Deterministic suites => 1 seed is enough; every task has a bounded timeout.
+# NOTE on the acceptance task: the FR spec cites `modules/memory/tests/test_consolidate_semantic_dedup.py`,
+# but the real file lives under `tests/core/`. FR cited-test paths are systematically stale
+# (missing the `core/` segment, plus some renames); golden-set derivation needs a cited->real
+# mapping pass. This pilot uses the real path.
+tasks:
+  - id: memory-module-suite
+    description: MEMORY module Python suite (modules/memory) - deterministic core, 509 passing on main
+    cmd: "cd modules/memory && python -m pytest -q"
+    weight: 3.0
+    timeout_sec: 900
+
+  - id: memory-service-rust
+    description: MEMORY Rust service (services/memory) unit + integration tests
+    cmd: "cd services && cargo test -p cyberos-memory"
+    weight: 3.0
+    timeout_sec: 1200
+
+  # Held-out acceptance for the pilot FR. Sealed read-only via `awh lock modules/memory/tests`
+  # so the authoring agent cannot edit the bar it is graded against.
+  - id: acceptance-fr-memory-116
+    description: pilot FR-MEMORY-116 (semantic-dedup consolidate) cited test, held-out
+    cmd: "cd modules/memory && python -m pytest tests/core/test_consolidate_semantic_dedup.py -q"
+    weight: 5.0
+    timeout_sec: 300

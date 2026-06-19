@@ -3,7 +3,7 @@ id: FR-MEMORY-111
 title: "memory pre-ingest PII detection — Presidio EN + custom VN recognisers; ≥ 99.5% held-back recall on labelled fixture; auto-redact at capture boundary"
 module: memory
 priority: MUST
-status: done
+status: ready_to_test
 verify: T
 phase: P1
 milestone: P1 · slice 2

@@ -3,7 +3,7 @@ id: FR-SKILL-114
 title: "BASELINE.md artefact at v0.x → v1.0 promotion — design-time performance baseline + with/without-skill comparison + token-budget transparency"
 module: SKILL
 priority: MAY
-status: done
+status: ready_to_test
 verify: T
 phase: P2
 milestone: P2 · slice 1

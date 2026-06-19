@@ -3,7 +3,7 @@ id: FR-PROJ-004
 title: "Issue lifecycle FSM — backlog → todo → in-progress → in-review → done | cancelled with FR-PROJ-002 audit trail, validation, and forward-only enforcement"
 module: PROJ
 priority: MUST
-status: done
+status: ready_to_test
 verify: T
 phase: P1
 milestone: P1 · slice 2

@@ -3,7 +3,7 @@ id: FR-PROJ-011
 title: "Blocker detector from comment stream — `blocked by` parser + dwell-time monitor + CUO Notify on stale blockers"
 module: PROJ
 priority: MUST
-status: done
+status: ready_to_test
 verify: T
 phase: P1
 milestone: P1 · slice 3

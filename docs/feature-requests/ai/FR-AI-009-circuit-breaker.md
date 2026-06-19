@@ -4,7 +4,7 @@ id: FR-AI-009
 title: "Circuit breaker per (provider, model) with half-open recovery probing"
 module: AI
 priority: MUST
-status: done
+status: ready_to_test
 verify: T
 phase: P0
 milestone: P0 · slice 2

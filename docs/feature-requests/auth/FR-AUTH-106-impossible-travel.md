@@ -3,7 +3,7 @@ id: FR-AUTH-106
 title: "Impossible-travel detection + adaptive MFA challenge"
 module: AUTH
 priority: SHOULD
-status: done
+status: ready_to_test
 accepted_at: 2026-05-16
 accepted_by: Stephen Cheng
 verify: T

@@ -3,7 +3,7 @@ id: FR-AUTH-002
 title: "Subject create — POST /v1/admin/subjects with bcrypt + role allow-list + idempotency + RLS-enforced cross-tenant blocking"
 module: AUTH
 priority: MUST
-status: done
+status: ready_to_test
 verify: T
 phase: P0
 milestone: P0 · slice 2

@@ -3,7 +3,7 @@ id: FR-CUO-105
 title: "CUO per-step rollback on chain failure — execute compensating actions in reverse order with partial-execution audit preserved"
 module: CUO
 priority: MUST
-status: done
+status: ready_to_test
 verify: T
 phase: P1
 milestone: P1 · slice 6

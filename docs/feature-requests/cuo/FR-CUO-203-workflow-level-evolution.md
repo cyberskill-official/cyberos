@@ -4,7 +4,7 @@ id: FR-CUO-203
 title: "Harness Wave 4 — workflow-level evolution via outcome distribution"
 author: "@stephen"
 department: engineering
-status: done
+status: ready_to_test
 priority: p2
 created_at: 2026-05-19T20:45:00+07:00
 ai_authorship: assisted

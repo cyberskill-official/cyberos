@@ -3,7 +3,7 @@ id: FR-MEMORY-104
 title: "Tauri 2.x desktop app — macOS + Windows + Linux signed/notarised + auto-update + tray + quick capture + Full Disk Access"
 module: memory
 priority: SHOULD
-status: done
+status: ready_to_test
 verify: D
 phase: P1
 milestone: P1 · slice 2

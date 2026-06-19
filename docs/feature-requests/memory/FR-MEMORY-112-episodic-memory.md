@@ -3,7 +3,7 @@ id: FR-MEMORY-112
 title: "memory episodic memory — `kind: episode` frontmatter + `cyberos recall-similar` API; task / approach / outcome / quality_score per Episode; reflection-loop foundation"
 module: memory
 priority: MUST
-status: done
+status: ready_to_test
 verify: T
 phase: P1
 milestone: P1 · slice 3

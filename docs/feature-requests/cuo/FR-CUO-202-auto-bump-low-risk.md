@@ -4,7 +4,7 @@ id: FR-CUO-202
 title: "Harness Wave 3 — auto-bump applier for low-risk refinement proposals"
 author: "@stephen"
 department: engineering
-status: done
+status: ready_to_test
 priority: p2
 created_at: 2026-05-19T20:30:00+07:00
 ai_authorship: assisted

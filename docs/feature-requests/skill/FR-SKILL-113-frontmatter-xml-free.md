@@ -3,7 +3,7 @@ id: FR-SKILL-113
 title: "SKILL.md frontmatter — replace XML-bracket sentinel `wrap_in: <untrusted_content/>` with string-form `wrap_in_marker: \"untrusted_content\"` for host-portable load"
 module: SKILL
 priority: SHOULD
-status: done
+status: ready_to_test
 verify: T
 phase: P1
 milestone: P1 · slice 2

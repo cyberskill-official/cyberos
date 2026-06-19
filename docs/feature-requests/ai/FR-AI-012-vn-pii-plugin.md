@@ -4,7 +4,7 @@ id: FR-AI-012
 title: "VN-PII Presidio plugin (CCCD · MST · VN phone · NĐD · VN address · bank account)"
 module: AI
 priority: MUST
-status: done
+status: ready_to_test
 verify: T
 phase: P0
 milestone: P0 · slice 3

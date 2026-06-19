@@ -3,7 +3,7 @@ id: FR-PROJ-016
 title: "Gantt view with dependency arrows — issue-to-issue precedence + critical path highlighting + roll-up to parent issue"
 module: PROJ
 priority: SHOULD
-status: done
+status: ready_to_test
 verify: T
 phase: P1
 milestone: P1 · slice 3

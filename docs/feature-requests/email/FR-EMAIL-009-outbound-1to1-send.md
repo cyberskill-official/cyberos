@@ -3,7 +3,7 @@ id: FR-EMAIL-009
 title: "EMAIL outbound 1:1 send — DKIM-signed via FR-EMAIL-004 + AM confirm-before-send + queue + bounce handling"
 module: EMAIL
 priority: MUST
-status: done
+status: ready_to_test
 verify: T
 phase: P1
 milestone: P1 · slice 1

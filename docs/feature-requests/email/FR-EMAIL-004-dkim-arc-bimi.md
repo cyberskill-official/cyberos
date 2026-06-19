@@ -3,7 +3,7 @@ id: FR-EMAIL-004
 title: "EMAIL DKIM signing + ARC chain forward + BIMI brand indicator — RFC 6376 + RFC 8617 + BIMI 1.0 per-tenant outbound auth"
 module: EMAIL
 priority: MUST
-status: done
+status: ready_to_test
 verify: T
 phase: P1
 milestone: P1 · slice 1

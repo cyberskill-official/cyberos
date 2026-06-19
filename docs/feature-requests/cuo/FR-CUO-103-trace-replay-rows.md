@@ -3,7 +3,7 @@ id: FR-CUO-103
 title: "CUO Phase 2 trace rows include prompt + model + temperature + seed for deterministic replay"
 module: CUO
 priority: MUST
-status: done
+status: ready_to_test
 verify: T
 phase: P1
 milestone: P1 · slice 6

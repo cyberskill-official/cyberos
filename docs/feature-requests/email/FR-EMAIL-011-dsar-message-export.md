@@ -3,7 +3,7 @@ id: FR-EMAIL-011
 title: "EMAIL DSAR message export — every message a subject authored or received + chained memory audit hashes for FR-PORTAL-008 bundle"
 module: EMAIL
 priority: MUST
-status: done
+status: ready_to_test
 verify: T
 phase: P1
 milestone: P1 · slice 2

@@ -3,7 +3,7 @@ id: FR-MEMORY-115
 title: "memory dreaming — `cyberos dream` out-of-band batch reflection that mines transcripts + episode rows for cross-session patterns; produces reviewable diffs that consolidate / mark-stale / verify / propose-new memories under explicit operator gate"
 module: memory
 priority: SHOULD
-status: done
+status: ready_to_test
 verify: T
 phase: P1
 milestone: P1 · slice 3

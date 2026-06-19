@@ -1,0 +1,53 @@
+name: awh gate
+
+# Out-of-band verification gate. For each changed module that has a golden set,
+# awh independently reruns that module's real build+test against the sealed baseline
+# and blocks the merge on any regression. Mark this job "required" in branch
+# protection on main so it is the merge gate.
+
+on:
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  awh-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install awh (vendored under tools/awh)
+        run: pip install -e tools/awh
+
+      - name: Run awh gate for changed modules
+        run: |
+          set -euo pipefail
+          git fetch origin "${{ github.base_ref }}" --depth=1 || true
+          base="origin/${{ github.base_ref }}"
+          changed=$(git diff --name-only "$base"...HEAD | awk -F/ '/^modules\//{print $2} /^services\//{print $2}' | sort -u)
+          gated=0
+          for m in $changed; do
+            gs="modules/$m/.awh/goldenset.yaml"
+            [ -f "$gs" ] || continue
+            echo "::group::awh gate: $m"
+            base_json="modules/$m/.awh/eval-baseline.json"
+            if [ -f "$base_json" ]; then
+              awh eval "$gs" --base-dir . --seeds 1 --baseline "$base_json" --max-regression 0.0
+            else
+              awh eval "$gs" --base-dir . --seeds 1
+            fi
+            echo "::endgroup::"
+            gated=$((gated+1))
+          done
+          echo "modules gated: $gated"

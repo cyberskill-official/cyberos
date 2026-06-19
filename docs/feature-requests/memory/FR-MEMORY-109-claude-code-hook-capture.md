@@ -3,7 +3,7 @@ id: FR-MEMORY-109
 title: "Claude Code hook capture — UserPromptSubmit + PostToolUse + Stop hooks emit memory memories with prompt + diff + trace correlation"
 module: memory
 priority: MUST
-status: done
+status: ready_to_test
 verify: T
 phase: P1
 milestone: P1 · slice 2

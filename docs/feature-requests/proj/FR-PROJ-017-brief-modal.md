@@ -3,7 +3,7 @@ id: FR-PROJ-017
 title: "Brief Modal — issue deep-view with Yjs description editor + threaded comments + LWW meta sidebar + presence cursors"
 module: PROJ
 priority: MUST
-status: done
+status: ready_to_test
 verify: T
 phase: P1
 milestone: P1 · slice 3

@@ -1,0 +1,31 @@
+# SKILL module golden set (awh). Per-module gate for roadmap wave 2.
+#
+# Run from the repo root:
+#   awh eval modules/skill/.awh/goldenset.yaml --base-dir . --seeds 1 \
+#       --out modules/skill/.awh/eval-baseline.json
+#   awh eval modules/skill/.awh/goldenset.yaml --base-dir . --seeds 1 \
+#       --baseline modules/skill/.awh/eval-baseline.json --max-regression 0.0
+#
+# SKILL verification is split: the deterministic Rust broker + the trigger-tests/baseline
+# validators (in cuo) gate here. The LLM-driven parity runners
+# (modules/skill/tests/run_corpus.py, tests/parity/run_parity.py) are NOT in this gate;
+# they become a Stage-2 LLM-judge eval once the deterministic floor is locked.
+tasks:
+  - id: skill-broker-rust
+    description: SKILL Rust broker (services/skill-broker) - deterministic, green on main
+    cmd: "cd services && cargo test -p cyberos-skill-broker"
+    weight: 3.0
+    timeout_sec: 1200
+
+  - id: skill-validators
+    description: SKILL deterministic validators (trigger-tests + baseline) implemented in cuo
+    cmd: "cd modules/cuo && python -m pytest tests/test_trigger_tests.py tests/test_baseline.py -q"
+    weight: 3.0
+    timeout_sec: 600
+
+  # Held-out acceptance for the wave-2 pilot FR. Sealed read-only.
+  - id: acceptance-fr-skill-113
+    description: pilot FR-SKILL-113 (XML-free frontmatter marker validator) cited test, held-out
+    cmd: "cd services && cargo test -p cyberos-skill-broker --test marker_validator_test"
+    weight: 5.0
+    timeout_sec: 600

@@ -3,7 +3,7 @@ id: FR-SKILL-106
 title: "memory-sync@1 skill bundle — operator-facing sync trigger that defers to Stage 4 orchestrator (slice-3 stub; full sync ships P2)"
 module: SKILL
 priority: SHOULD
-status: done
+status: ready_to_test
 verify: I
 phase: P1
 milestone: P1 · slice 3
