@@ -32,8 +32,8 @@ new_files:
   - services/proj-sync/src/lifecycle/fsm.rs
   - services/proj-sync/src/lifecycle/transitions.rs
   - services/proj-sync/migrations/0004_issue_status_history.sql
-  - services/proj-sync/tests/fsm_test.rs
-  - services/proj-sync/tests/transition_e2e_test.rs
+  - services/proj/tests/status_fsm_test.rs
+  - services/proj/tests/audit_row_test.rs
   - web/proj-client/src/lifecycle/StatusPicker.tsx
   - web/proj-client/src/lifecycle/allowed_transitions.ts
 modified_files:
@@ -470,7 +470,7 @@ export function StatusPicker({ issueId, current, onChange }: Props) {
 ## §5 — Verification
 
 ```rust
-// services/proj-sync/tests/fsm_test.rs
+// services/proj/tests/status_fsm_test.rs
 
 #[test]
 fn legal_transitions_table() {

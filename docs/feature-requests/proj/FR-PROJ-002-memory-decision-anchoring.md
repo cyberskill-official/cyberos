@@ -29,8 +29,8 @@ new_files:
   - services/proj/src/decisions.rs
   - services/proj/src/decision_chain.rs
   - services/proj/src/decision_acl.rs
-  - services/proj/tests/decisions_test.rs
-  - services/proj/tests/decision_chain_test.rs
+  - services/proj/tests/audit_row_test.rs
+  - services/proj/tests/error_mapping_test.rs
   - services/proj/tests/decision_acl_test.rs
 modified_files:
   - services/proj/src/handlers/issues.rs                 # call decisions::emit on status change

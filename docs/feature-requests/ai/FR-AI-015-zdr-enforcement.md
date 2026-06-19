@@ -38,9 +38,9 @@ new_files:
   - services/ai-gateway/src/zdr/staleness.rs
   - services/ai-gateway/config/zdr_attestations.yaml          # provider × model ZDR status
   - services/ai-gateway/tests/zdr_test.rs
-  - services/ai-gateway/tests/zdr_revocation_test.rs
-  - services/ai-gateway/tests/zdr_staleness_test.rs
-  - services/ai-gateway/tests/zdr_url_validation_test.rs
+  - services/ai-gateway/tests/alias_resolution_test.rs
+  - services/ai-gateway/tests/zdr_test.rs
+  - services/ai-gateway/tests/otel_propagation_test.rs
   - .github/workflows/zdr-staleness-check.yml                 # weekly cron: warn if attestations >90d old
 modified_files:
   - services/ai-gateway/src/alias.rs                          # FR-AI-006 §1 #6 invokes zdr::is_zdr
@@ -543,7 +543,7 @@ async fn missing_source_url_rejected() {
 ```
 
 ```rust
-// services/ai-gateway/tests/zdr_revocation_test.rs
+// services/ai-gateway/tests/alias_resolution_test.rs
 #[tokio::test]
 async fn revocation_warns_and_metricises() {
     init_zdr_table(Path::new("config/zdr_attestations.yaml")).await.unwrap();
@@ -568,7 +568,7 @@ async fn revocation_warns_and_metricises() {
 ```
 
 ```rust
-// services/ai-gateway/tests/zdr_staleness_test.rs
+// services/ai-gateway/tests/zdr_test.rs
 #[test]
 fn soft_stale_at_91_days() {
     let att = ZdrAttestation {

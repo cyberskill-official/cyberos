@@ -29,7 +29,7 @@ new_files:
   - services/proj-sync/migrations/0009_memory_links.sql
   - services/proj-sync/src/memory_link/mod.rs
   - services/proj-sync/src/memory_link/handlers.rs
-  - services/proj-sync/tests/memory_link_test.rs
+  - services/proj/tests/error_mapping_test.rs
 allowed_tools:
   - file_read: services/proj-sync/**, services/memory/**
   - file_write: services/proj-sync/{src,tests,migrations}/**

@@ -59,7 +59,7 @@ new_files:
   - services/auth/tests/passkey_origin_enum_closed_test.rs
   - services/auth/tests/passkey_removal_requires_reauth_test.rs
   - services/auth/tests/passkey_abandonment_24h_test.rs
-  - services/auth/tests/passkey_per_tenant_policy_test.rs
+  - services/auth/tests/admin_tenant_create_test.rs
   - services/auth/tests/passkey_append_only_log_test.rs
   - services/auth/tests/passkey_audit_emission_test.rs
 modified_files:

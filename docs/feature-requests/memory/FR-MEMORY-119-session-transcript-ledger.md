@@ -30,8 +30,8 @@ service: modules/memory/cyberos/
 new_files:
   - modules/memory/cyberos/core/session.py
   - modules/memory/cyberos/cli/session.py
-  - modules/memory/tests/test_session_transcript_ledger.py
-  - modules/memory/tests/test_session_retention.py
+  - modules/memory/tests/core/test_transcript.py
+  - modules/memory/tests/core/test_session.py
 modified_files:
   - modules/memory/cyberos/__main__.py            # wire `cyberos session start|append|end|read|list|purge-expired` subcommands
   - modules/memory/cyberos/core/writer.py         # add session-aware emit path; sessions/<date>/<id>.binlog.zst storage
@@ -58,8 +58,8 @@ sub_tasks:
   - "1.5h: writer.py — session-aware emit path; reuse FR §3 atomic-write + §4 lock; sessions chain INDEPENDENTLY from the main audit chain (own binlog segment) but emit summary rows (session.start, session.end) onto the main chain for FR-MEMORY-115 dream consumption"
   - "1.5h: encryption integration — when classification: restricted, body of each turn is encrypted per §5.4 envelope before storage; meta sidecar plaintext per §5.4"
   - "2.0h: purge job — `cyberos session purge-expired` scans manifest retention_days and purges expired sessions with `delete(purge)` semantics on the chain"
-  - "3.0h: tests/test_session_transcript_ledger.py — 18 cases (full lifecycle, append-without-start rejected, out-of-order rejected, dual-end rejected, encryption when restricted, read round-trip, list-by-date, classification override per-call)"
-  - "1.5h: tests/test_session_retention.py — 8 cases (purge-expired removes session body, audit row of purge emitted, retention overridden by --retain flag, expired but unpurged read fails)"
+  - "3.0h: modules/memory/tests/core/test_transcript.py — 18 cases (full lifecycle, append-without-start rejected, out-of-order rejected, dual-end rejected, encryption when restricted, read round-trip, list-by-date, classification override per-call)"
+  - "1.5h: modules/memory/tests/core/test_session.py — 8 cases (purge-expired removes session body, audit row of purge emitted, retention overridden by --retain flag, expired but unpurged read fails)"
   - "1.0h: CLI integration test against the seeded memory"
   - "0.5h: CHANGELOG entry + AGENTS.md cross-ref to FR-MEMORY-115 #1 #3 input-sessions"
 risk_if_skipped: "Without the session transcript ledger, FR-MEMORY-115 dream's `patterns` detector operates only on `episode.logged` aux rows and memory bodies — not on the conversational context that produced them. The talk's headline use case (`5 agents all hit the same 60-second retry pattern across sessions`) is detectable from episodes alone, but the richer 'why' (specific phrasing of error messages, sequence of tool calls, context the operator gave) lives in transcripts. The talk's product positions transcripts as the primary input to dreaming. Without FR-MEMORY-119, FR-MEMORY-115 ships at slice-3 with degraded pattern-detection quality; the gap closes when transcripts feed in. Additionally: without transcripts the memory has no audit trail for 'what did the agent actually say to the user that led to this memory write?' — critical for FR-MEMORY-115 stale-detection (the most powerful signal for marking memory stale is 'the agent said this fact, the user corrected it, the next write reflected the correction')."
@@ -415,7 +415,7 @@ active at a time per memory.
 ## §5 — Verification
 
 ```python
-# modules/memory/tests/test_session_transcript_ledger.py
+# modules/memory/tests/core/test_transcript.py
 import pytest, json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -529,7 +529,7 @@ def test_walker_catches_lifecycle_violation(memory_with_orphan_end, ensure_secti
 ```
 
 ```python
-# modules/memory/tests/test_session_retention.py
+# modules/memory/tests/core/test_session.py
 import pytest
 from datetime import datetime, timedelta, timezone
 from cyberos.core.session import purge_expired

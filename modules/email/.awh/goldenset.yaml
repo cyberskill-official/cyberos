@@ -1,0 +1,20 @@
+# EMAIL module golden set (awh). Non-roadmap but implemented and green; gated to extend
+# coverage beyond the six roadmap waves (north star: the gate covers every module).
+#
+#   awh eval modules/email/.awh/goldenset.yaml --base-dir . --seeds 1 --out modules/email/.awh/eval-baseline.json
+#   awh eval modules/email/.awh/goldenset.yaml --base-dir . --seeds 1 --baseline modules/email/.awh/eval-baseline.json --max-regression 0.0
+#
+# Tests live in the Rust service (services/email): 4 integration tests, green on main.
+tasks:
+  - id: email-service-rust
+    description: EMAIL Rust service (services/email) full suite - green on main
+    cmd: "cd services && cargo test -p cyberos-email"
+    weight: 3.0
+    timeout_sec: 1200
+
+  # Held-out acceptance: the memory audit-row test. Sealed read-only.
+  - id: acceptance-email-audit-row
+    description: held-out EMAIL audit-row test
+    cmd: "cd services && cargo test -p cyberos-email --test audit_row_test"
+    weight: 5.0
+    timeout_sec: 600

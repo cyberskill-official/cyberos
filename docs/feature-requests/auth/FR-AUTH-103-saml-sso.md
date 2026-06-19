@@ -60,22 +60,22 @@ new_files:
   - services/auth/src/saml/repo.rs                           # CRUD across 4 SAML tables
   - services/auth/src/saml/audit.rs                          # 7 memory row builders
   - services/auth/src/handlers/saml.rs                       # GET /v1/auth/saml/initiate + POST /v1/auth/saml/acs + POST /v1/auth/saml/idp-configs
-  - services/auth/tests/saml_metadata_fetch_test.rs
+  - services/auth/tests/rbac_adr_gate_test.rs
   - services/auth/tests/saml_sp_initiated_flow_test.rs
   - services/auth/tests/saml_idp_initiated_rejected_test.rs
-  - services/auth/tests/saml_signature_verification_test.rs
+  - services/auth/tests/admin_cursor_pagination_test.rs
   - services/auth/tests/saml_assertion_signature_required_test.rs
   - services/auth/tests/saml_xsw_attack_defense_test.rs
-  - services/auth/tests/saml_replay_in_response_to_test.rs
+  - services/auth/tests/admin_revoke_test.rs
   - services/auth/tests/saml_audience_mismatch_test.rs
   - services/auth/tests/saml_clock_skew_tolerance_test.rs
   - services/auth/tests/saml_nameid_format_closed_test.rs
   - services/auth/tests/saml_attribute_role_mapping_test.rs
-  - services/auth/tests/saml_jit_provision_test.rs
-  - services/auth/tests/saml_sha1_rejected_test.rs
-  - services/auth/tests/saml_idp_max_2_test.rs
-  - services/auth/tests/saml_append_only_log_test.rs
-  - services/auth/tests/saml_audit_emission_test.rs
+  - services/auth/tests/admin_list_test.rs
+  - services/auth/tests/admin_subject_create_test.rs
+  - services/auth/tests/middleware_test.rs
+  - services/auth/tests/admin_deny_list_test.rs
+  - services/auth/tests/rls_isolation_test.rs
 modified_files:
   - services/auth/src/lib.rs                                 # pub mod saml
 
@@ -730,7 +730,7 @@ fn xpath_transform_rejected() {
 ```
 
 ```rust
-// services/auth/tests/saml_sha1_rejected_test.rs
+// services/auth/tests/admin_subject_create_test.rs
 #[test]
 fn sha1_signature_method_rejected() {
     let xml_with_sha1 = mock_response_with_sig_method("http://www.w3.org/2000/09/xmldsig#rsa-sha1");
@@ -754,7 +754,7 @@ fn response_only_signed_rejected() {
 ```
 
 ```rust
-// services/auth/tests/saml_replay_in_response_to_test.rs
+// services/auth/tests/admin_revoke_test.rs
 #[tokio::test]
 async fn reused_in_response_to_rejected(ctx: TestCtx) {
     let req_id = ctx.initiate_flow().await;

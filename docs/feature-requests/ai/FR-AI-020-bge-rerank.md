@@ -38,8 +38,8 @@ new_files:
   - services/ai-gateway/src/router/rerank_provider.rs
   - services/ai-gateway/src/router/rerank_batch_buffer.rs
   - services/ai-gateway/tests/rerank_test.rs
-  - services/ai-gateway/tests/rerank_quality_test.rs                # known-relevance fixtures
-  - services/ai-gateway/tests/rerank_fallback_test.rs
+  - services/ai-gateway/tests/rerank_test.rs                # known-relevance fixtures
+  - services/ai-gateway/tests/rerank_test.rs
 modified_files:
   - services/ai-gateway/src/router/mod.rs                         # add RerankProvider variant
   - services/ai-gateway/src/router/provider.rs                    # add call_rerank to trait
@@ -469,7 +469,7 @@ async fn audit_row_emitted_on_rerank() {
 ```
 
 ```rust
-// services/ai-gateway/tests/rerank_quality_test.rs
+// services/ai-gateway/tests/rerank_test.rs
 #[tokio::test]
 async fn known_relevant_doc_in_top_3_with_score_above_0_5() {
     let rp = test_rerank_provider();

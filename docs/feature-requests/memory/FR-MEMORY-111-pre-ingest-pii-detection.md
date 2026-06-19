@@ -34,7 +34,7 @@ new_files:
   - services/memory-capture/src/pii/ruleset.rs
   - services/memory-capture/install/presidio/Cargo-deps.toml.sub        # NER deps subset
   - services/memory-capture/install/presidio/requirements.txt
-  - services/memory-capture/tests/pii_recall_test.rs
+  - services/memory/tests/ingest_test.rs
   - services/memory-capture/tests/fixtures/pii-corpus.jsonl
   - services/memory-capture/tests/fixtures/pii-corpus-vn.jsonl
 modified_files:
@@ -443,7 +443,7 @@ impl PresidioResponse {
 ## §5 — Verification
 
 ```rust
-// services/memory-capture/tests/pii_recall_test.rs
+// services/memory/tests/ingest_test.rs
 
 #[derive(serde::Deserialize)]
 struct CorpusLine {

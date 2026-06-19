@@ -1,0 +1,5 @@
+{
+  "deny_write_globs": [
+    "test_cyberos_chat.py"
+  ]
+}

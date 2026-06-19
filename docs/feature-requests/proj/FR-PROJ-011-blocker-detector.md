@@ -29,7 +29,7 @@ new_files:
   - services/proj-sync/src/blocker/mod.rs
   - services/proj-sync/src/blocker/parser.rs
   - services/proj-sync/src/blocker/dwell.rs
-  - services/proj-sync/tests/blocker_test.rs
+  - services/proj/tests/link_types_test.rs
 modified_files:
   - services/proj-sync/src/main.rs                    # spawn hourly dwell scan
   - services/proj-sync/migrations/0011_blocker_state.sql

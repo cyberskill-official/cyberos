@@ -53,18 +53,18 @@ new_files:
   - services/auth/src/oidc/audit.rs                         # 6 memory row builders
   - services/auth/src/oidc/errors.rs                        # closed error enum
   - services/auth/src/handlers/oidc.rs                      # GET /v1/auth/oidc/initiate + GET /v1/auth/oidc/callback + POST /v1/auth/oidc/idp-configs
-  - services/auth/tests/oidc_discovery_test.rs
-  - services/auth/tests/oidc_jwks_rotation_test.rs
-  - services/auth/tests/oidc_pkce_flow_test.rs
-  - services/auth/tests/oidc_state_nonce_test.rs
-  - services/auth/tests/oidc_id_token_signature_test.rs
+  - services/auth/tests/middleware_test.rs
+  - services/auth/tests/rls_isolation_test.rs
+  - services/auth/tests/geoip_test.rs
+  - services/auth/tests/rbac_catalogue_test.rs
+  - services/auth/tests/rbac_adr_gate_test.rs
   - services/auth/tests/oidc_claim_mapping_test.rs
   - services/auth/tests/oidc_jit_provision_test.rs
-  - services/auth/tests/oidc_idp_max_3_test.rs
+  - services/auth/tests/geoip_test.rs
   - services/auth/tests/oidc_implicit_forbidden_test.rs
   - services/auth/tests/oidc_audit_emission_test.rs
   - services/auth/tests/oidc_replay_attack_test.rs
-  - services/auth/tests/oidc_perf_test.rs
+  - services/auth/tests/geoip_test.rs
 modified_files:
   - services/auth/src/lib.rs                                # pub mod oidc
 
@@ -634,7 +634,7 @@ pub fn resolve_role(cfg: &ClaimMappingConfig, claims: &super::id_token::IdTokenC
 ## §5 — Verification
 
 ```rust
-// services/auth/tests/oidc_pkce_flow_test.rs
+// services/auth/tests/geoip_test.rs
 #[tokio::test]
 async fn pkce_full_flow(ctx: TestCtx) {
     let idp = ctx.seed_idp_config_with_mock_provider().await;
@@ -658,7 +658,7 @@ async fn pkce_full_flow(ctx: TestCtx) {
 ```
 
 ```rust
-// services/auth/tests/oidc_state_nonce_test.rs
+// services/auth/tests/rbac_catalogue_test.rs
 #[tokio::test]
 async fn reused_state_rejected(ctx: TestCtx) {
     let idp = ctx.seed_idp_config().await;
@@ -697,7 +697,7 @@ fn groups_claim_maps_to_role() {
 ```
 
 ```rust
-// services/auth/tests/oidc_id_token_signature_test.rs
+// services/auth/tests/rbac_adr_gate_test.rs
 #[tokio::test]
 async fn unknown_kid_triggers_jwks_refetch(ctx: TestCtx) {
     let idp = ctx.seed_idp_config_with_mock_jwks().await;

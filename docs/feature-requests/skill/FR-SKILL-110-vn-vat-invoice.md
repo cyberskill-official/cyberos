@@ -39,7 +39,7 @@ new_files:
   - skills/vietnam-vat-invoice/src/template.rs
   - skills/vietnam-vat-invoice/tests/xml_schema_test.rs
   - skills/vietnam-vat-invoice/tests/signer_test.rs
-  - skills/vietnam-vat-invoice/tests/integration_test.rs
+  - skills/vietnam-vat-invoice/services/skill-broker/tests/integration.rs
   - skills/vietnam-vat-invoice/schemas/HDDT_v123_2020.xsd      # Decree 123 schema
 allowed_tools:
   - file_read: skills/vietnam-vat-invoice/**
@@ -493,7 +493,7 @@ fn amount_in_words_populated() {
 ```
 
 ```rust
-// skills/vietnam-vat-invoice/tests/integration_test.rs
+// skills/vietnam-vat-invoice/services/skill-broker/tests/integration.rs
 
 #[tokio::test]
 async fn happy_path_emit_and_submit() {

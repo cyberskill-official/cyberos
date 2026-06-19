@@ -63,16 +63,16 @@ new_files:
   - services/email/src/handlers/status.rs                             # GET /v1/email/healthz + GET /v1/email/messages/{id}/status
   - services/email/src/cli/provision.rs                               # cyberos-email-cli provision (slice-1 user provisioning until FR-EMAIL-002 ships)
   - services/email/Cargo.toml                                         # +tokio, +sqlx, +uuid, +serde, +reqwest, +aws-sdk-s3, +cyberos-cli-exit
-  - services/email/tests/stalwart_inbound_test.rs                     # mock Stalwart inbound; verify metadata + memory row
+  - services/email/tests/inbound_quarantine_test.rs                     # mock Stalwart inbound; verify metadata + memory row
   - services/email/tests/stalwart_outbound_test.rs                    # mock SMTP queue; verify DKIM applied
   - services/email/tests/residency_pin_test.rs                        # VN tenant → vn-1 storage; EU → eu-1; assert no cross-region leakage
   - services/email/tests/dkim_per_tenant_test.rs                      # each tenant has its own key; rotation produces new key + new row
   - services/email/tests/bounce_log_append_only_test.rs               # UPDATE/DELETE rejected by SQL grant
-  - services/email/tests/spam_quarantine_test.rs                      # known-spam patterns → Trash; memory row email.message_quarantined
+  - services/email/tests/inbound_quarantine_test.rs                      # known-spam patterns → Trash; memory row email.message_quarantined
   - services/email/tests/protocol_endpoints_test.rs                   # SMTP 25/465/587 + IMAP 143/993 + JMAP 443 + ManageSieve 4190 all listening
   - services/email/tests/mta_sts_dane_test.rs                         # outbound peer with MTA-STS policy → enforces TLS; peer with DANE TLSA → uses certificate pin
-  - services/email/tests/dsar_query_test.rs                           # per-subject message list returns all messages where subject was sender or recipient
-  - services/email/tests/audit_emission_test.rs                       # received + sent + bounced + quarantined each emit exactly one memory row
+  - services/email/tests/audit_row_test.rs                           # per-subject message list returns all messages where subject was sender or recipient
+  - services/email/tests/audit_row_test.rs                       # received + sent + bounced + quarantined each emit exactly one memory row
 modified_files:
   - services/auth/src/rls/templates.rs                                # add message_metadata, thread_metadata, bounce_log, dkim_keys to TENANT_SCOPED_TABLES
 
@@ -665,7 +665,7 @@ async fn each_tenant_has_distinct_active_key() {
 ```
 
 ```rust
-// services/email/tests/append_only_test.rs
+// services/email/tests/audit_row_test.rs
 #[sqlx::test]
 async fn metadata_update_blocked(pool: sqlx::PgPool) {
     set_role_app(&pool).await;

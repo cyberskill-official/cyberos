@@ -32,9 +32,9 @@ new_files:
   - services/memory/src/rebuild/spot_check.rs
   - services/memory/src/rebuild/determinism.rs
   - services/memory/src/cli/rebuild_cli.rs
-  - services/memory/tests/rebuild_test.rs
+  - services/memory/tests/ingest_test.rs
   - services/memory/tests/rebuild_determinism_test.rs
-  - services/memory/tests/rebuild_resume_test.rs
+  - services/memory/tests/ingest_test.rs
   - .github/workflows/memory-rebuild.yml
 modified_files:
   - services/memory/src/layer2/ingest.rs                    # add `run_one_pass` for rebuild
@@ -370,7 +370,7 @@ jobs:
 ## §5 — Verification
 
 ```rust
-// services/memory/tests/rebuild_test.rs
+// services/memory/tests/ingest_test.rs
 #[tokio::test]
 async fn fresh_rebuild_succeeds_with_100_spot_checks() {
     let pool = test_pool().await;

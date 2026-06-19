@@ -42,11 +42,11 @@ build_envelope:
     - services/email/src/audit/camel_events.rs
     - services/email/src/handlers/camel_routes.rs
     - services/email/tests/camel_plan_isolated_test.rs
-    - services/email/tests/camel_no_inline_quarantined_test.rs
+    - services/email/tests/inbound_quarantine_test.rs
     - services/email/tests/camel_injection_attempt_blocked_test.rs
     - services/email/tests/camel_outcome_enum_cardinality_test.rs
     - services/email/tests/camel_trust_list_bypass_test.rs
-    - services/email/tests/camel_audit_emission_test.rs
+    - services/email/tests/audit_row_test.rs
 
   modified_files:
     - services/email/src/genie/portal_bridge.rs

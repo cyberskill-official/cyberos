@@ -33,7 +33,7 @@ new_files:
   - services/proj-sync/src/state_persistence.rs
   - services/proj-sync/migrations/0003_yjs_state_snapshots.sql
   - services/proj-sync/tests/yjs_relay_test.rs
-  - services/proj-sync/tests/snapshot_test.rs
+  - services/proj/tests/audit_row_test.rs
   - web/proj-client/src/collab/YjsProvider.ts
   - web/proj-client/src/collab/CursorTracker.ts
   - web/proj-client/src/collab/ConnectionStatus.ts

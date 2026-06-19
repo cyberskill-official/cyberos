@@ -1,0 +1,41 @@
+{
+  "label": "eval",
+  "created": 1781853680.586795,
+  "seeds": [
+    0
+  ],
+  "k": 1,
+  "aggregate": {
+    "n_tasks": 2,
+    "macro_pass_at_1": 1.0,
+    "weighted_pass_at_1": 1.0,
+    "mean_pass_hat_1": 1.0,
+    "fully_consistent_tasks": 2
+  },
+  "tasks": [
+    {
+      "task_id": "chat-verify",
+      "weight": 3.0,
+      "n": 1,
+      "c": 1,
+      "pass_at_1": 1.0,
+      "pass_hat_1": 1.0,
+      "wilson95": [
+        0.206549,
+        1.0
+      ]
+    },
+    {
+      "task_id": "acceptance-chat-authbridge",
+      "weight": 5.0,
+      "n": 1,
+      "c": 1,
+      "pass_at_1": 1.0,
+      "pass_hat_1": 1.0,
+      "wilson95": [
+        0.206549,
+        1.0
+      ]
+    }
+  ]
+}

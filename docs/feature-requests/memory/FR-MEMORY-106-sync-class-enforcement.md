@@ -28,7 +28,7 @@ service: cyberos/services/memory-sync/
 new_files:
   - services/memory-sync/src/sync_class.rs
   - services/memory-sync/src/structural_exclusion.rs
-  - services/memory-sync/tests/sync_class_test.rs
+  - services/memory/tests/ingest_test.rs
   - services/memory-sync/tests/sync_class_property_test.rs
   - services/memory-sync/tests/structural_exclusion_test.rs
 modified_files:

@@ -37,9 +37,9 @@ new_files:
   - services/ai-gateway/src/persona/watch.rs
   - services/ai-gateway/src/persona/hash.rs
   - services/ai-gateway/tests/persona_test.rs
-  - services/ai-gateway/tests/persona_tamper_test.rs
-  - services/ai-gateway/tests/persona_hot_reload_test.rs
-  - services/ai-gateway/tests/persona_concurrent_test.rs
+  - services/ai-gateway/tests/persona_test.rs
+  - services/ai-gateway/tests/persona_test.rs
+  - services/ai-gateway/tests/cache_isolation_concurrent_test.rs
   - <memory-root>/memories/personas/cuo-cpo@0.4.1.md       # seed: chief-of-product persona
   - <memory-root>/memories/personas/cuo-cfo@0.4.1.md       # seed: chief-of-finance persona
   - <memory-root>/memories/personas/cuo-cto@0.4.1.md       # seed: chief-of-technology persona
@@ -478,7 +478,7 @@ async fn double_init_rejected() {
 ### Tamper detection test
 
 ```rust
-// services/ai-gateway/tests/persona_tamper_test.rs
+// services/ai-gateway/tests/persona_test.rs
 #[tokio::test]
 async fn tamper_detection_fires_with_metric() {
     persona::init_persona_registry().await.unwrap();
@@ -515,7 +515,7 @@ async fn tamper_detection_fires_with_metric() {
 ### Hot-reload test
 
 ```rust
-// services/ai-gateway/tests/persona_hot_reload_test.rs
+// services/ai-gateway/tests/persona_test.rs
 #[tokio::test]
 async fn hot_reload_within_500ms() {
     persona::init_persona_registry().await.unwrap();
@@ -595,7 +595,7 @@ fn canonicalisation_strips_bom_and_nfc_normalises() {
 ### Concurrent-load test
 
 ```rust
-// services/ai-gateway/tests/persona_concurrent_test.rs
+// services/ai-gateway/tests/cache_isolation_concurrent_test.rs
 #[tokio::test]
 async fn one_hundred_concurrent_loads_no_contention() {
     persona::init_persona_registry().await.unwrap();

@@ -40,15 +40,15 @@ build_envelope:
     - services/email/src/outbound/suppression.rs
     - services/email/src/audit/outbound_events.rs
     - services/email/src/handlers/outbound_routes.rs
-    - services/email/tests/outbound_send_test.rs
+    - services/email/tests/inbound_quarantine_test.rs
     - services/email/tests/outbound_confirm_token_test.rs
-    - services/email/tests/outbound_bounce_hard_test.rs
+    - services/email/tests/inbound_quarantine_test.rs
     - services/email/tests/outbound_bounce_soft_retry_test.rs
     - services/email/tests/outbound_complaint_suppresses_test.rs
-    - services/email/tests/outbound_suppression_check_test.rs
-    - services/email/tests/outbound_rate_limit_test.rs
+    - services/email/tests/inbound_quarantine_test.rs
+    - services/email/tests/inbound_quarantine_test.rs
     - services/email/tests/outbound_status_enum_test.rs
-    - services/email/tests/outbound_audit_emission_test.rs
+    - services/email/tests/audit_row_test.rs
 
   modified_files:
     - services/email/src/lib.rs

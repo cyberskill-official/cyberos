@@ -1,16 +1,16 @@
 {
   "label": "eval",
-  "created": 1781831422.538552,
+  "created": 1781843160.833913,
   "seeds": [
     0
   ],
   "k": 1,
   "aggregate": {
     "n_tasks": 3,
-    "macro_pass_at_1": 0.666667,
-    "weighted_pass_at_1": 0.545455,
-    "mean_pass_hat_1": 0.666667,
-    "fully_consistent_tasks": 2
+    "macro_pass_at_1": 1.0,
+    "weighted_pass_at_1": 1.0,
+    "mean_pass_hat_1": 1.0,
+    "fully_consistent_tasks": 3
   },
   "tasks": [
     {
@@ -38,15 +38,15 @@
       ]
     },
     {
-      "task_id": "acceptance-fr-skill-113",
+      "task_id": "acceptance-skill-broker-runtime-contracts",
       "weight": 5.0,
       "n": 1,
-      "c": 0,
-      "pass_at_1": 0.0,
-      "pass_hat_1": 0.0,
+      "c": 1,
+      "pass_at_1": 1.0,
+      "pass_hat_1": 1.0,
       "wilson95": [
-        0.0,
-        0.793451
+        0.206549,
+        1.0
       ]
     }
   ]

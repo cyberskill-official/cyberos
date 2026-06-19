@@ -44,7 +44,7 @@ build_envelope:
     - services/email/tests/dsar_attachments_referenced_test.rs
     - services/email/tests/dsar_chain_hashes_test.rs
     - services/email/tests/dsar_async_via_tasks_test.rs
-    - services/email/tests/dsar_audit_emission_test.rs
+    - services/email/tests/audit_row_test.rs
 
   modified_files:
     - services/email/src/lib.rs

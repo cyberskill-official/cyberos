@@ -43,10 +43,10 @@ build_envelope:
     - services/auth/src/hibp/local_dump.rs
     - services/auth/src/hibp/policy.rs
     - services/auth/migrations/0015_hibp_audit.sql
-    - services/auth/tests/hibp_signup_test.rs
-    - services/auth/tests/hibp_rotation_test.rs
-    - services/auth/tests/hibp_unreachable_test.rs
-    - services/auth/tests/hibp_cache_test.rs
+    - services/auth/tests/geoip_test.rs
+    - services/auth/tests/rls_isolation_test.rs
+    - services/auth/tests/rbac_catalogue_test.rs
+    - services/auth/tests/rbac_catalogue_test.rs
   modified_files:
     - services/auth/src/handlers/signup.rs (call hibp::check before Argon2)
     - services/auth/src/handlers/password_rotate.rs (call hibp::check before Argon2)

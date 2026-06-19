@@ -50,11 +50,11 @@ build_envelope:
     - services/auth/src/travel/anonymous_ip.rs
     - services/auth/migrations/0016_login_history_geo.sql
     - services/auth/migrations/0017_travel_audit.sql
-    - services/auth/tests/travel_normal_test.rs
-    - services/auth/tests/travel_impossible_test.rs
-    - services/auth/tests/travel_vpn_test.rs
-    - services/auth/tests/travel_allowlist_test.rs
-    - services/auth/tests/travel_policy_test.rs
+    - services/auth/tests/rls_isolation_test.rs
+    - services/auth/tests/rls_isolation_test.rs
+    - services/auth/tests/geoip_test.rs
+    - services/auth/tests/admin_list_test.rs
+    - services/auth/tests/rls_property_test.rs
   modified_files:
     - services/auth/src/handlers/login.rs (invoke travel::evaluate after successful credential check)
     - services/auth/src/handlers/mfa_challenge.rs (mark challenge as travel-driven for audit linkage)

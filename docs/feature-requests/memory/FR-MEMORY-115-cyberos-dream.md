@@ -39,9 +39,9 @@ new_files:
   - modules/memory/cyberos/core/dream/detectors/patterns.py
   - modules/memory/cyberos/core/dream/detectors/verify.py
   - modules/memory/cyberos/cli/dream.py
-  - modules/memory/tests/test_dream_runner.py
-  - modules/memory/tests/test_dream_detectors.py
-  - modules/memory/tests/test_dream_apply.py
+  - modules/memory/tests/core/test_dream.py
+  - modules/memory/tests/core/test_dream.py
+  - modules/memory/tests/core/test_dream.py
   - modules/memory/tests/fixtures/dream_inputs/
 modified_files:
   - modules/memory/cyberos/__main__.py                  # wire `cyberos dream` + `cyberos dream apply` subcommands
@@ -74,9 +74,9 @@ sub_tasks:
   - "3.0h: cyberos/core/dream/runner.py — orchestrator: spin sub-tasks for each detector, aggregate, produce DreamDiff at `dreams/<utc-timestamp>/diff.json`, emit `dream.start`/`dream.complete` audit rows"
   - "2.0h: cyberos/cli/dream.py — `cyberos dream [--since 24h] [--scope <path>] [--detectors ...] [--invoker ...] [--dry-run]` + `cyberos dream apply <dream_id> [--proposal-ids ...] [--interactive]`"
   - "1.5h: writer.py — accept `extra` dict on `put`/`delete`/`move`; validate `extra.dream_id` ULID form when origin is dream"
-  - "3.5h: tests/test_dream_runner.py — 14 cases (end-to-end fixture-driven run, dry-run produces diff but no apply, apply replays into chain, idempotent re-apply rejected, dream_id provenance carried, detectors aggregated correctly)"
-  - "2.0h: tests/test_dream_detectors.py — 18 cases (4 per detector + cross-detector dedup; deterministic outputs given fixed inputs)"
-  - "1.5h: tests/test_dream_apply.py — 8 cases (apply with --proposal-ids filter, --interactive simulated stdin, idempotency, audit-row provenance valid, rollback semantics on partial failure)"
+  - "3.5h: modules/memory/tests/core/test_dream.py — 14 cases (end-to-end fixture-driven run, dry-run produces diff but no apply, apply replays into chain, idempotent re-apply rejected, dream_id provenance carried, detectors aggregated correctly)"
+  - "2.0h: modules/memory/tests/core/test_dream.py — 18 cases (4 per detector + cross-detector dedup; deterministic outputs given fixed inputs)"
+  - "1.5h: modules/memory/tests/core/test_dream.py — 8 cases (apply with --proposal-ids filter, --interactive simulated stdin, idempotency, audit-row provenance valid, rollback semantics on partial failure)"
   - "1.0h: tests/fixtures/dream_inputs/ — JSONL fixtures simulating 3 dream scenarios (5 duplicates / 2 contradictions / 1 cross-session pattern; 1 verification candidate)"
 risk_if_skipped: "Without dreaming, the memory's memory-quality objective is permanently coupled to the task-completion objective — every session sees only its own context and can't notice cross-session patterns. The Anthropic talk's two cited customer outcomes (Harvey 6× task completion; Rakerton 90% mistake-drop) come from precisely this separation. Skipping means: (a) the 0.5M-row cyberos memory keeps accumulating duplicates because nothing dedupes them; (b) stale entries (e.g. 'Linear project INGEST' after we moved to Jira) never get caught until manual cleanup; (c) cross-FR / cross-session learnings ('5 different sessions all had to re-discover the §1↔§4↔§5 traceability rule') never crystallise into a `memories/refinements/` entry. The talk's framing — `memory is going to be increasingly important and load bearing` — is the precise reason this FR is the headline of the 2026-Q3 wave. Worse: FR-MEMORY-116 (`semantic-dedup consolidate`) is a strict subset of FR-MEMORY-115's `duplicates` detector — without FR-MEMORY-115, FR-MEMORY-116 has nowhere to live."
 ---
@@ -502,7 +502,7 @@ mechanism.
 ## §5 — Verification
 
 ```python
-# modules/memory/tests/test_dream_runner.py
+# modules/memory/tests/core/test_dream.py
 import asyncio, json, re
 from datetime import timedelta
 from pathlib import Path
@@ -618,7 +618,7 @@ async def test_snapshot_isolation(seeded_memory, second_process_writer):
 ```
 
 ```python
-# modules/memory/tests/test_dream_detectors.py
+# modules/memory/tests/core/test_dream.py
 import asyncio
 from datetime import timedelta
 from cyberos.core.dream.detectors import duplicates, stale, patterns, verify
@@ -663,7 +663,7 @@ async def test_detectors_deterministic(seeded_memory_with_dupes):
 ```
 
 ```python
-# modules/memory/tests/test_dream_apply.py
+# modules/memory/tests/core/test_dream.py
 import pytest
 from cyberos.core.dream.applier import apply, PreconditionFailed
 

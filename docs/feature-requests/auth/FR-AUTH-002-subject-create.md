@@ -33,8 +33,8 @@ new_files:
   - services/auth/src/admin/roles.rs
   - services/auth/migrations/0003_subjects.sql
   - services/auth/tests/admin_subject_create_test.rs
-  - services/auth/tests/admin_subject_password_test.rs
-  - services/auth/tests/admin_subject_roles_test.rs
+  - services/auth/tests/admin_subject_create_test.rs
+  - services/auth/tests/admin_subject_create_test.rs
 modified_files:
   - services/auth/src/rls/templates.rs                   # add subjects to TENANT_SCOPED_TABLES
 allowed_tools:

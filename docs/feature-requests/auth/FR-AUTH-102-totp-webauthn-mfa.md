@@ -64,14 +64,14 @@ new_files:
   - services/auth/tests/mfa_totp_secret_kms_encrypted_test.rs
   - services/auth/tests/mfa_webauthn_enrol_test.rs
   - services/auth/tests/mfa_webauthn_counter_monotonic_test.rs
-  - services/auth/tests/mfa_challenge_ttl_test.rs
+  - services/auth/tests/rbac_catalogue_test.rs
   - services/auth/tests/mfa_challenge_replay_rejected_test.rs
   - services/auth/tests/mfa_recovery_codes_single_use_test.rs
   - services/auth/tests/mfa_recovery_regen_invalidates_all_test.rs
   - services/auth/tests/mfa_lockout_5_in_15_test.rs
-  - services/auth/tests/mfa_root_admin_unlock_test.rs
-  - services/auth/tests/mfa_policy_role_gate_test.rs
-  - services/auth/tests/mfa_append_only_log_test.rs
+  - services/auth/tests/admin_revoke_test.rs
+  - services/auth/tests/middleware_test.rs
+  - services/auth/tests/admin_deny_list_test.rs
   - services/auth/tests/mfa_audit_emission_test.rs
 modified_files:
   - services/auth/src/jwt/issuer.rs                         # MFA-required gate consults policy before issuing JWT

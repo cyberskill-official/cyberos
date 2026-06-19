@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Verification gate (awh) — CyberOS</title>
+ <meta name="description" content="The out-of-band verification gate absorbed from auto-work-harness. An FR reaches done only when awh independently reruns its tests green against a sealed baseline.">
+ <link rel="stylesheet" href="../assets/tokens.css">
+ <link rel="stylesheet" href="../assets/styles.css">
+ <link rel="stylesheet" href="../assets/tailwind.min.css">
+ <script type="module" src="../assets/scripts.js"></script>
+</head>
+<body data-pagefind-filter="category:Architecture">
+
+<div id="shared-nav"></div>
+
+<header class="hero-gradient border-b border-slate-200">
+ <div class="container py-10 lg:py-14">
+ <nav class="breadcrumbs">
+ <a href="../index.html">Home</a>
+ <span class="sep">&rsaquo;</span>
+ <a href="../index.html#navigate">Architecture</a>
+ <span class="sep">&rsaquo;</span>
+ <span class="current">Verification gate</span>
+ </nav>
+ <div class="flex items-center gap-3 mb-4">
+ <span class="section-badge" style="background:#dcfce7;color:#166534">Self-verifying</span>
+ </div>
+ <h1 class="h-display mb-4">The verification gate (awh)</h1>
+ <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">Agent self-certification is not trust. An FR reaches <code>done</code> only when an out-of-band check reruns its real tests green against a sealed baseline.</p>
+ <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
+ CyberOS already had author and audit skill pairs, a coverage gate, and a feature-request audit. Every one of those is the same model grading its own homework in the same context. The auto-work-harness (awh) was absorbed to add the missing layer: a gate that runs outside the authoring context, reruns the cited tests plus the module suite, holds a sealed acceptance the agent cannot edit, and blocks the transition on regression. This page documents how it is wired, how to run it, and how to retire the standalone tool once CyberOS fully takes over.
+ </p>
+ <div class="flex flex-wrap gap-3 mt-6">
+ <a href="#how" class="btn btn-primary">How it is wired</a>
+ <a href="#run" class="btn btn-secondary">Run the gate</a>
+ <a href="#retire" class="btn btn-secondary">Retire standalone awh</a>
+ </div>
+ </div>
+</header>
+
+<div class="container py-10 lg:py-14 grid lg:grid-cols-12 gap-10">
+
+<aside class="lg:col-span-3 order-2 lg:order-1">
+ <div class="lg:sticky lg:top-20">
+ <div class="bbg-card p-5">
+ <div class="h-eyebrow mb-3">On this page</div>
+ <ul class="space-y-1 text-sm">
+ <li><a href="#principle" class="block py-1.5 px-2 rounded text-slate-700 hover:bg-slate-50">The principle</a></li>
+ <li><a href="#how" class="block py-1.5 px-2 rounded text-slate-700 hover:bg-slate-50">How it is wired</a></li>
+ <li><a href="#goldensets" class="block py-1.5 px-2 rounded text-slate-700 hover:bg-slate-50">Per-module golden sets</a></li>
+ <li><a href="#run" class="block py-1.5 px-2 rounded text-slate-700 hover:bg-slate-50">Running the gate</a></li>
+ <li><a href="#evolve" class="block py-1.5 px-2 rounded text-slate-700 hover:bg-slate-50">Auto-evolve, defined</a></li>
+ <li><a href="#status" class="block py-1.5 px-2 rounded text-slate-700 hover:bg-slate-50">Coverage status</a></li>
+ <li><a href="#retire" class="block py-1.5 px-2 rounded text-slate-700 hover:bg-slate-50">Retiring standalone awh</a></li>
+ </ul>
+ </div>
+ </div>
+</aside>
+
+<main class="lg:col-span-9 order-1 lg:order-2 space-y-12">
+
+ <section id="principle">
+ <h2 class="h-section mb-4">The principle</h2>
+ <p class="text-slate-700 leading-relaxed mb-3">An agent that writes the code, writes the tests, and grades its own work has no independent check. The gate separates the grader from the author: it runs <code>awh eval</code> outside the authoring session, reruns the module's real build and test, and compares the result against a baseline that is captured once and then locked read-only. The agent can change the code, but it cannot change the bar it is measured against.</p>
+ </section>
+
+ <section id="how">
+ <h2 class="h-section mb-4">How it is wired</h2>
+ <p class="text-slate-700 leading-relaxed mb-3">The gate attaches at four seams without refactoring the platform:</p>
+ <div class="bbg-card p-5 space-y-3">
+ <p><strong>1. The CUO workflow.</strong> <code>ship-feature-requests</code> gained step 28 <code>awh-gate</code> between the post-implementation audit (step 27) and the <code>testing &rarr; done</code> flip (step 29). The flip is conditional on <code>awh_gate_report.outcome == GREEN</code>; a RED result routes the FR back to <code>ready_to_implement</code> per STATUS-REFERENCE section 1.3.</p>
+ <p><strong>2. Pre-commit.</strong> <code>.pre-commit-hooks/awh-gate.sh</code> reruns the changed module's gate. A golden set with no committed baseline fails closed (an ungated eval always exits 0, so it must never be used as a gate).</p>
+ <p><strong>3. CI.</strong> <code>.github/workflows/awh-gate.yml</code> runs the gate for every changed module on a pull request, and is marked required in branch protection so it is the merge gate to <code>main</code>.</p>
+ <p><strong>4. The merge gate.</strong> Because CI is required, <code>main</code> stays green by construction.</p>
+ </div>
+ <p class="text-slate-700 leading-relaxed mt-3">Concept mapping: an FR's section 1 cited tests become the golden set; the coverage gate becomes the awh eval; held-out acceptance seals <code>done</code>; results emit into the memory audit chain (proposed row kind <code>memory.awh_gate_result</code>, gated on protocol change P23 section 6).</p>
+ </section>
+
+ <section id="goldensets">
+ <h2 class="h-section mb-4">Per-module golden sets</h2>
+ <p class="text-slate-700 leading-relaxed mb-3">Each gated module carries <code>modules/&lt;module&gt;/.awh/goldenset.yaml</code> whose weighted tasks call that unit's real build and test, plus a held-out acceptance task. The vendored tool lives at <code>tools/awh/</code>; the maturity ledger at <code>.awh/evolution-log.jsonl</code>. A golden set task looks like:</p>
+ <pre class="bbg-card p-4 overflow-x-auto text-sm"><code>tasks:
+  - id: memory-module-suite
+    cmd: "cd modules/memory &amp;&amp; python -m pytest -q"
+    weight: 3.0
+    timeout_sec: 900
+  - id: acceptance-fr-memory-116    # held-out, sealed read-only via awh lock
+    cmd: "cd modules/memory &amp;&amp; python -m pytest tests/core/test_consolidate_semantic_dedup.py -q"
+    weight: 5.0
+    timeout_sec: 300</code></pre>
+ </section>
+
+ <section id="run">
+ <h2 class="h-section mb-4">Running the gate</h2>
+ <p class="text-slate-700 leading-relaxed mb-3">Install the vendored gate, then bootstrap every module in one command:</p>
+ <pre class="bbg-card p-4 overflow-x-auto text-sm"><code>pip install -e tools/awh
+bash scripts/awh_bootstrap_waves.sh          # capture baseline, seal, report green/red per module</code></pre>
+ <p class="text-slate-700 leading-relaxed mt-3 mb-3">Or one module at a time:</p>
+ <pre class="bbg-card p-4 overflow-x-auto text-sm"><code>awh eval modules/auth/.awh/goldenset.yaml --base-dir . --seeds 1 --out modules/auth/.awh/eval-baseline.json
+awh lock services/auth/tests --write-policy
+awh eval modules/auth/.awh/goldenset.yaml --base-dir . --seeds 1 \
+    --baseline modules/auth/.awh/eval-baseline.json --max-regression 0.0</code></pre>
+ <p class="text-slate-700 leading-relaxed mt-3">Helper scripts: <code>scripts/awh_gate_coverage.py</code> (platform coverage view), <code>scripts/awh_build_order.py</code> (dependency layers), <code>scripts/awh_goldenset_from_fr.py</code> and <code>scripts/awh_cited_fixups.py</code> (derive golden sets and audit or correct cited-test drift).</p>
+ </section>
+
+ <section id="evolve">
+ <h2 class="h-section mb-4">Auto-evolve, defined</h2>
+ <p class="text-slate-700 leading-relaxed mb-3">To avoid over-promising: every FR ships through the evidence gate plus eval, and each module carries a maturity ledger entry (<code>awh maturity</code>) that reports convergence as modules are added and re-verified. The eval blocks any regression against the recorded baseline. It is a verification substrate and a convergence tracker, not an autonomous self-improver. awh does not rewrite CyberOS on its own; it gates and measures, and humans plus the CUO workflow drive the changes.</p>
+ <p class="text-slate-700 leading-relaxed">Read the verdict with <code>awh maturity report --log .awh/evolution-log.jsonl</code>. A clean streak of three adoptions with a low recent change rate marks the tool READY.</p>
+ </section>
+
+ <section id="status">
+ <h2 class="h-section mb-4">Coverage status</h2>
+ <div class="bbg-card p-5">
+ <p class="text-slate-700 leading-relaxed">MEMORY and SKILL are green under the gate. CUO, AUTH, CHAT, PROJ, and EMAIL are staged and run by the bootstrap script. The other modules are still draft (not yet implemented), so they are gated when they are built. AI is implemented but red on main, so it is gated only when its failing tests are fixed. Run <code>scripts/awh_gate_coverage.py</code> for the live table.</p>
+ </div>
+ </section>
+
+ <section id="retire">
+ <h2 class="h-section mb-4">Retiring the standalone awh</h2>
+ <p class="text-slate-700 leading-relaxed mb-3">The vendored copy at <code>tools/awh/</code> is self-contained: nothing in the gate machinery depends on the external repo. Once every roadmap module is green under the vendored gate, the standalone <code>auto-work-harness</code> can be retired. Archive first so history is never lost, then remove the working copy:</p>
+ <pre class="bbg-card p-4 overflow-x-auto text-sm"><code>cd ~/Projects/auto-work-harness
+git tag -a archive/pre-cyberos-absorb -m "archived after vendoring into cyberos"
+git push origin archive/pre-cyberos-absorb
+git bundle create ~/Projects/auto-work-harness.bundle --all
+# history preserved in the tag, on origin, and in the bundle; the working copy is now safe to delete</code></pre>
+ <p class="text-slate-700 leading-relaxed mt-3">See <code>tools/awh/RETIREMENT.md</code> for the full checklist, including the fix that should reach the other repos that adopted awh before the standalone is frozen.</p>
+ </section>
+
+</main>
+</div>
+
+</body>
+</html>

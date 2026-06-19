@@ -32,8 +32,8 @@ new_files:
   - services/auth/src/cli/bootstrap.rs
   - services/auth/src/cli/sweepers.rs
   - services/auth/src/cli/rotate_keys.rs
-  - services/auth/tests/bootstrap_test.rs
-  - services/auth/tests/sweepers_test.rs
+  - services/auth/tests/geoip_test.rs
+  - services/auth/tests/geoip_test.rs
   - services/auth/tests/bootstrap_reset_safety_test.rs
 modified_files: []
 allowed_tools:

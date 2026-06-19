@@ -51,16 +51,16 @@ new_files:
   - services/auth/src/lumi/repo.rs                             # issuance log writer
   - services/auth/src/lumi/audit.rs                            # 4 memory row builders
   - services/auth/src/handlers/lumi.rs                         # POST /v1/auth/lumi/issue + GET /v1/auth/lumi/verify
-  - services/auth/tests/lumi_claims_test.rs
-  - services/auth/tests/lumi_issuer_test.rs
-  - services/auth/tests/lumi_verifier_test.rs
+  - services/auth/tests/admin_list_test.rs
+  - services/auth/tests/admin_list_test.rs
+  - services/auth/tests/middleware_test.rs
   - services/auth/tests/lumi_persona_version_stale_test.rs
-  - services/auth/tests/lumi_residency_mismatch_test.rs
+  - services/auth/tests/admin_deny_list_test.rs
   - services/auth/tests/lumi_alg_confusion_test.rs
   - services/auth/tests/lumi_sync_class_closed_test.rs
   - services/auth/tests/lumi_human_cannot_issue_test.rs
-  - services/auth/tests/lumi_audience_check_test.rs
-  - services/auth/tests/lumi_audit_emission_test.rs
+  - services/auth/tests/admin_deny_list_test.rs
+  - services/auth/tests/rls_isolation_test.rs
 modified_files:
   - services/auth/src/jwt.rs                                   # add Lumi-claim deserialisation paths
   - services/auth/src/lib.rs                                   # pub mod lumi
@@ -577,7 +577,7 @@ fn version_2_minors_behind_accepted() {
 ```
 
 ```rust
-// services/auth/tests/lumi_residency_mismatch_test.rs
+// services/auth/tests/admin_deny_list_test.rs
 #[test]
 fn vn1_token_at_eu1_endpoint_rejected() {
     let token = mock_token_with_residency("vn-1");

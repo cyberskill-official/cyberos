@@ -31,7 +31,7 @@ new_files:
   - services/proj-sync/src/billing_mode/rollup.rs
   - services/proj-sync/src/billing_mode/fixed_fee.rs
   - services/proj-sync/src/billing_mode/retainer.rs
-  - services/proj-sync/tests/billing_mode_test.rs
+  - services/proj/tests/link_types_test.rs
 modified_files:
   - services/proj-sync/src/engagement.rs              # billing_mode_id FK
 allowed_tools:
