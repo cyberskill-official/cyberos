@@ -3,7 +3,7 @@ id: FR-PROJ-005
 title: "Rate-card schema per Engagement — (role × currency × hourly_rate × billable_default) with effective-date versioning and FR-AUTH-003 RLS"
 module: PROJ
 priority: MUST
-status: ready_to_test
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 2

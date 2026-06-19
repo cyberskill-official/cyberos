@@ -3,7 +3,7 @@ id: FR-AUTH-006
 title: "cyberos-auth bootstrap CLI: tenant 0 + root-admin + initial signing key + sweepers + idempotency-table cleanup"
 module: AUTH
 priority: MUST
-status: ready_to_test
+status: done
 verify: D
 phase: P0
 milestone: P0 · slice 2

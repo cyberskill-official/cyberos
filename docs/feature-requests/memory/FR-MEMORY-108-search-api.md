@@ -3,7 +3,7 @@ id: FR-MEMORY-108
 title: "memory search — vector + graph + full-text in parallel + RRF fusion + BGE-rerank + RLS + ACL + chain_anchor verify + 250ms p95"
 module: memory
 priority: MUST
-status: ready_to_test
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 2

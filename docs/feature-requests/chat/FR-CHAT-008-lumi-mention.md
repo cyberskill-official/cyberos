@@ -3,7 +3,7 @@ id: FR-CHAT-008
 title: "@lumi mention parser — message mentions trigger CUO routing + memory capture row + reply"
 module: CHAT
 priority: MUST
-status: ready_to_test
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 2

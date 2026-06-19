@@ -3,7 +3,7 @@ id: FR-MEMORY-106
 title: "memory sync_class enforcement — private vs shareable + ACL filtering + structural compensation exclusion + property test"
 module: memory
 priority: MUST
-status: ready_to_test
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 1

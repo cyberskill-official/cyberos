@@ -3,7 +3,7 @@ id: FR-SKILL-112
 title: "`acceptance/TRIGGER_TESTS.md` convention — positive + negative trigger phrases verified against the supervisor classifier"
 module: SKILL
 priority: SHOULD
-status: ready_to_test
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 2

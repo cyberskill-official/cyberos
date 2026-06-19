@@ -3,7 +3,7 @@ id: FR-SKILL-102
 title: "Self-hosted OCI registry for .skill bundles — cosign signing + tenant-scoped + immutable tags + 100MB cap + audit"
 module: SKILL
 priority: MUST
-status: ready_to_test
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 1

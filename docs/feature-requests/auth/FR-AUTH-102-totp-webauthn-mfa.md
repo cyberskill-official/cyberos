@@ -3,7 +3,7 @@ id: FR-AUTH-102
 title: "AUTH TOTP (RFC 6238) + WebAuthn Level 3 MFA — closed factor enum + enrolment FSM + challenge/response + recovery codes + sev-1 lockout + memory audit per factor lifecycle event"
 module: AUTH
 priority: MUST
-status: ready_to_test
+status: done
 verify: T
 phase: P3
 milestone: P3 · slice 1

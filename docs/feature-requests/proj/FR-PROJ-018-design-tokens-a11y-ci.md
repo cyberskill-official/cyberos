@@ -3,7 +3,7 @@ id: FR-PROJ-018
 title: "Liquid-Glass design tokens (tokens.proj.css) + axe-core CI accessibility gate + Storybook visual regression"
 module: PROJ
 priority: MUST
-status: ready_to_test
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 3

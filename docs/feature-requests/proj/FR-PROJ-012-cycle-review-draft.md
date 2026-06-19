@@ -3,7 +3,7 @@ id: FR-PROJ-012
 title: "Cycle-review draft generator — CUO/COO-persona LLM compose at cycle close with completion stats, blocker recap, and editable memory draft"
 module: PROJ
 priority: MUST
-status: ready_to_test
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 3

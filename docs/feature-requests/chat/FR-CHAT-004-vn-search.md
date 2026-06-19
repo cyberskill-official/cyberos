@@ -3,7 +3,7 @@ id: FR-CHAT-004
 title: "PGroonga + custom Vietnamese bigram tokeniser — VN message search with ≥ 80% recall CI gate and dual-path (VN-bigram / EN-PGroonga) hybrid routing"
 module: CHAT
 priority: MUST
-status: ready_to_test
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 1

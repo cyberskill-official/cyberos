@@ -3,7 +3,7 @@ id: FR-SKILL-108
 title: "vietnam-mst-validate@1 skill — Vietnamese Tax ID (MST) validation against General Department of Taxation (GDT) public registry"
 module: SKILL
 priority: MUST
-status: ready_to_test
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 3

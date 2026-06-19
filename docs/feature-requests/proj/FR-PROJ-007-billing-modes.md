@@ -3,7 +3,7 @@ id: FR-PROJ-007
 title: "Three billing modes — Time & Materials, Fixed-Fee, Retainer — with mode-aware rollups and per-mode invoice generation hooks"
 module: PROJ
 priority: MUST
-status: ready_to_test
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 2

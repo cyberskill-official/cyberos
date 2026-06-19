@@ -3,7 +3,7 @@ id: FR-SKILL-103
 title: "SKILL.md frontmatter extension — allowed_memory_scopes + allowed_tools + version + signature enforced by capability broker"
 module: SKILL
 priority: MUST
-status: ready_to_test
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 1

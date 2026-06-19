@@ -3,7 +3,7 @@ id: FR-CHAT-001
 title: "Mattermost v9.x fork at pinned MIT-Apache commit + automated license-drift watcher + CI gate"
 module: CHAT
 priority: MUST
-status: ready_to_test
+status: done
 verify: I
 phase: P1
 milestone: P1 · slice 1

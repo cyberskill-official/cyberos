@@ -3,7 +3,7 @@ id: FR-MEMORY-117
 title: "memory per-store ACL — `STORE.yaml` per top-level subtree (memories/ meta/ company/ client/ project/ persona/ episodes/) auto-generated on migration; writer enforces ACL on every put/move/delete; reads remain unrestricted to local processes"
 module: memory
 priority: SHOULD
-status: ready_to_test
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 3

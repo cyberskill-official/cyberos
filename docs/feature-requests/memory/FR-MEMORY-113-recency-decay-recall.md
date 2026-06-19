@@ -3,7 +3,7 @@ id: FR-MEMORY-113
 title: "memory recall ranking — Park-et-al combined score (relevance · 0.4 + importance · 0.3 + recency · 0.3) with configurable Ebbinghaus decay; MARS-aligned forgetting curve"
 module: memory
 priority: MUST
-status: ready_to_test
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 3

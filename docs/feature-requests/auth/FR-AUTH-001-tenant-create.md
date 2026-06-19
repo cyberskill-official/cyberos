@@ -4,7 +4,7 @@ id: FR-AUTH-001
 title: "Tenant create — root-admin in tenant 0 calls POST /v1/admin/tenants with idempotency + RLS provisioning"
 module: AUTH
 priority: MUST
-status: ready_to_test
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 2

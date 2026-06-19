@@ -3,7 +3,7 @@ id: FR-EMAIL-001
 title: "EMAIL Stalwart Rust mail server deployment — JMAP + IMAP + SMTP + ManageSieve + MTA-STS + DANE + per-tenant residency + S3+KMS body storage + Postgres metadata"
 module: EMAIL
 priority: MUST
-status: ready_to_test
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 1

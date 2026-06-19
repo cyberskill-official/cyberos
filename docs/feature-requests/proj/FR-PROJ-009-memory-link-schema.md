@@ -3,7 +3,7 @@ id: FR-PROJ-009
 title: "MEMORY_LINK schema — Issue ↔ memory memory linkage (cites | implements | supersedes) with bidirectional traversal and link-graph queries"
 module: PROJ
 priority: MUST
-status: ready_to_test
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 2

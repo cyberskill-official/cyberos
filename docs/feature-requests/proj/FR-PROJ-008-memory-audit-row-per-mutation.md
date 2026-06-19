@@ -3,7 +3,7 @@ id: FR-PROJ-008
 title: "memory audit row per issue mutation — chained to PROJ history_event table with field-level diff and chain_anchor verification"
 module: PROJ
 priority: MUST
-status: ready_to_test
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 2

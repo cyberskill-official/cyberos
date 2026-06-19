@@ -3,7 +3,7 @@ id: FR-CUO-101
 title: "CUO Phase 2 — LangGraph supervisor + LiteLLM cascade + confidence-band escalation + persona-aware routing + memory audit per decision"
 module: CUO
 priority: MUST
-status: ready_to_test
+status: done
 verify: T
 phase: P0
 milestone: P0 · exit

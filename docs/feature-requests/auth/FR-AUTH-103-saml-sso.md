@@ -3,7 +3,7 @@ id: FR-AUTH-103
 title: "AUTH SAML 2.0 SSO — SP-initiated flow + per-tenant IdP config + XML signature verification + assertion validation + JIT provisioning + attribute → role mapping + replay defense"
 module: AUTH
 priority: MUST
-status: ready_to_test
+status: done
 verify: T
 phase: P3
 milestone: P3 · slice 1

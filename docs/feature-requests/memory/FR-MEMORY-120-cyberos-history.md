@@ -3,7 +3,7 @@ id: FR-MEMORY-120
 title: "memory history — `cyberos history <path>` surfaces per-file version + attribution from the audit chain; REST `/api/v2/memories/<path>/history`; dream-applied + session_id annotations rendered inline"
 module: memory
 priority: SHOULD
-status: ready_to_test
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 3

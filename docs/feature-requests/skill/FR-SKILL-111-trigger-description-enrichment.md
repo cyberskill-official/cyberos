@@ -3,7 +3,7 @@ id: FR-SKILL-111
 title: "SKILL.md `description:` field — mandated trigger-phrase enrichment + 1024-char budget for host-portable triggering"
 module: SKILL
 priority: SHOULD
-status: ready_to_test
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 2

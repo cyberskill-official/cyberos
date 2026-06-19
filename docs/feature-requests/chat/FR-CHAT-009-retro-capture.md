@@ -3,7 +3,7 @@ id: FR-CHAT-009
 title: "Retro-capture flow — `@lumi remember the last N messages` with per-message opt-in checkboxes and aggregated memory memory"
 module: CHAT
 priority: SHOULD
-status: ready_to_test
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 2

@@ -3,7 +3,7 @@ id: FR-PROJ-002
 title: "memory-anchored proj.decision row per Issue state change — reason + prior_chain link + cross-module references + ACL + audit-before-action"
 module: PROJ
 priority: MUST
-status: ready_to_test
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 1

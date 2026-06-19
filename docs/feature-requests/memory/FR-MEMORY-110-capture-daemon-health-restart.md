@@ -3,7 +3,7 @@ id: FR-MEMORY-110
 title: "memory capture daemon supervision — systemd + launchd units + /healthz + watchdog + crash-restart with exponential backoff + sweeper cron"
 module: memory
 priority: MUST
-status: ready_to_test
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 2
