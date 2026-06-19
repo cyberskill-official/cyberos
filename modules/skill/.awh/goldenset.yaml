@@ -23,9 +23,12 @@ tasks:
     weight: 3.0
     timeout_sec: 600
 
-  # Held-out acceptance for the wave-2 pilot FR. Sealed read-only.
-  - id: acceptance-fr-skill-113
-    description: pilot FR-SKILL-113 (XML-free frontmatter marker validator) cited test, held-out
-    cmd: "cd services && cargo test -p cyberos-skill-broker --test marker_validator_test"
+  # Held-out acceptance: the broker runtime contracts, a real deterministic skill-broker
+  # test. Note: FR-SKILL-113's cited marker_validator_test.rs does not exist on main
+  # (see scripts/awh_goldenset_from_fr.py --audit), so the gate uses a real test instead.
+  # Sealed read-only.
+  - id: acceptance-skill-broker-runtime-contracts
+    description: held-out skill-broker runtime-contracts test
+    cmd: "cd services && cargo test -p cyberos-skill-broker --test runtime_contracts"
     weight: 5.0
     timeout_sec: 600

@@ -1,0 +1,19 @@
+# CUO module golden set (awh). Per-module gate for roadmap wave 3.
+#
+#   awh eval modules/cuo/.awh/goldenset.yaml --base-dir . --seeds 1 --out modules/cuo/.awh/eval-baseline.json
+#   awh eval modules/cuo/.awh/goldenset.yaml --base-dir . --seeds 1 --baseline modules/cuo/.awh/eval-baseline.json --max-regression 0.0
+#
+# CUO is module-only (no Rust service). 177 tests green on main.
+tasks:
+  - id: cuo-module-suite
+    description: CUO module Python suite (modules/cuo) - supervisor, router, applier; 177 green on main
+    cmd: "cd modules/cuo && python -m pytest -q"
+    weight: 3.0
+    timeout_sec: 900
+
+  # Held-out acceptance: the supervisor runtime (FR-CUO-101 territory). Sealed read-only.
+  - id: acceptance-cuo-supervisor-runtime
+    description: held-out CUO supervisor/runtime test
+    cmd: "cd modules/cuo && python -m pytest tests/test_langgraph_runtime.py -q"
+    weight: 5.0
+    timeout_sec: 300

@@ -57,7 +57,7 @@ LEGACY = {
 PAST_IMPLEMENTING = {"ready_to_review", "reviewing", "ready_to_test", "testing", "done"}
 RESET_TARGET = "ready_to_test"
 
-STATUS_RE = re.compile(r"^(status:\s*)([^\s#\"'`]+)(.*)$")
+STATUS_RE = re.compile(r"^(status:\s*[\"'`]?)([A-Za-z_]+)([\"'`]?.*)$")
 
 
 def frontmatter_bounds(lines: list[str]) -> tuple[int, int] | None:

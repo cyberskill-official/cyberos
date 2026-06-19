@@ -314,6 +314,19 @@ def gate(current: EvalReport, baseline: EvalReport, max_regression: float = 0.0)
     for t in current.tasks:
         b = base_by_id.get(t.task_id)
         if b is None:
+            # A current task with no baseline counterpart is NOT silently trusted: the
+            # golden set gained a task (e.g. a renamed or new held-out acceptance) without
+            # a baseline refresh. Fail closed so the operator re-captures the baseline,
+            # rather than skipping the new task (which would leave it un-gated).
+            regressions.append(
+                {
+                    "task_id": t.task_id,
+                    "baseline_pass_at_1": None,
+                    "current_pass_at_1": round(t.pass_at_1, 6),
+                    "drop": None,
+                    "reason": "absent_from_baseline",
+                }
+            )
             continue
         drop = b.pass_at_1 - t.pass_at_1
         if drop > max_regression + 1e-9:

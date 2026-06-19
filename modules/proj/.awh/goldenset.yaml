@@ -1,0 +1,19 @@
+# PROJ module golden set (awh). Per-module gate for roadmap wave 6.
+#
+#   awh eval modules/proj/.awh/goldenset.yaml --base-dir . --seeds 1 --out modules/proj/.awh/eval-baseline.json
+#   awh eval modules/proj/.awh/goldenset.yaml --base-dir . --seeds 1 --baseline modules/proj/.awh/eval-baseline.json --max-regression 0.0
+#
+# PROJ tests live in the Rust service (services/proj). Green on main.
+tasks:
+  - id: proj-service-rust
+    description: PROJ Rust service (services/proj) full suite - green on main
+    cmd: "cd services && cargo test -p cyberos-proj"
+    weight: 3.0
+    timeout_sec: 1200
+
+  # Held-out acceptance: the issue status finite-state-machine. Sealed read-only.
+  - id: acceptance-proj-status-fsm
+    description: held-out PROJ status FSM test
+    cmd: "cd services && cargo test -p cyberos-proj --test status_fsm_test"
+    weight: 5.0
+    timeout_sec: 600
