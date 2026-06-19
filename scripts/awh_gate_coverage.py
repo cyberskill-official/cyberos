@@ -14,8 +14,9 @@ from pathlib import Path
 
 FR_ROOT = Path("docs/feature-requests")
 ROADMAP = ["memory", "skill", "cuo", "auth", "chat", "proj"]
-# modules whose service crate is known red on main (do not gate green)
-KNOWN_RED = {"ai"}
+# modules whose service crate is known red on main (do not gate green).
+# Empty now that ai is gated green (FR-AI-001..022 shipped 2026-06-19).
+KNOWN_RED: set[str] = set()
 
 
 def fr_status_counts(module: str) -> dict[str, int]:
@@ -82,8 +83,14 @@ def main() -> int:
         print(f"  {r['module']:9s} {mark(r['gated'])} {mark(r['baseline']):8s} "
               f"{'RED' if r['red'] else '  -':3s} {r['fr_total']:>4} {mix}")
     print("\nroadmap waves: " + " -> ".join(m.upper() for m in ROADMAP))
-    print("note: ai is implemented but RED on main (one failing crate); gated only as a "
-          "regression floor is deferred until its tests are green.")
+    red_mods = [r["module"] for r in rows if r["red"]]
+    ungated = sum(1 for r in rows if not r["gated"])
+    if red_mods:
+        print("note: " + ", ".join(red_mods) + " implemented but RED on main; gating as a "
+              "regression floor is deferred until the crate's tests are green.")
+    else:
+        print(f"note: every gated module is green; {ungated} ungated modules are still draft "
+              "(not yet implemented, so nothing to gate).")
     return 0
 
 
