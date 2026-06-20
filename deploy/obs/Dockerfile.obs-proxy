@@ -1,0 +1,16 @@
+# Build the obs-proxy binary from the services Cargo workspace (FR-OBS-002).
+# Build context is the services/ directory (see docker-compose.yml), so the whole workspace is present
+# and the member crate resolves. reqwest uses rustls, so no OpenSSL / pkg-config is needed at build.
+FROM rust:1-slim AS build
+WORKDIR /build
+COPY . .
+RUN cargo build --release -p cyberos-obs-proxy --bin obs-proxy
+
+FROM debian:bookworm-slim
+# ca-certificates lets rustls verify the auth JWKS endpoint over HTTPS at boot.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=build /build/target/release/obs-proxy /usr/local/bin/obs-proxy
+EXPOSE 8088
+ENTRYPOINT ["/usr/local/bin/obs-proxy"]

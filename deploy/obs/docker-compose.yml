@@ -1,0 +1,56 @@
+# CyberOS observability stack - the FR-OBS-002 tenant-aware proxy in front of the LGTM backends.
+#
+#   Grafana --> obs-proxy --> { Prometheus | Loki | Tempo }
+#
+# Grafana never talks to a backend directly. The provisioned datasources point at obs-proxy, which
+# injects the caller's tenant_id into every query. Mint a tenant JWT and export it as OBS_TENANT_TOKEN
+# before `docker compose up`. See README.md for the token and the security property.
+name: cyberos-obs
+
+services:
+  obs-proxy:
+    build:
+      context: ../../services
+      dockerfile: ../deploy/obs/Dockerfile.obs-proxy
+    environment:
+      OBS_PROXY_BIND: "0.0.0.0:8088"
+      OBS_PROMETHEUS_URL: "http://prometheus:9090"
+      OBS_LOKI_URL: "http://loki:3100"
+      OBS_TEMPO_URL: "http://tempo:3200"
+      # In a full deployment, verify tenant JWTs against the auth service JWKS:
+      #   OBS_AUTH_JWKS_URL: "http://auth:8080/.well-known/jwks.json"
+      # Left unset here, so the proxy falls back to a DEV HS256 secret - local validation only, never
+      # production. Sign local tenant tokens with the same secret (see README.md).
+      OBS_DEV_HS256_SECRET: "${OBS_DEV_HS256_SECRET:-dev-insecure-secret}"
+    depends_on: [prometheus, loki, tempo]
+    ports: ["8088:8088"]
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    environment:
+      # Forwarded into the datasource provisioning as the tenant bearer token.
+      OBS_TENANT_TOKEN: "${OBS_TENANT_TOKEN:-}"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on: [obs-proxy]
+    ports: ["3000:3000"]
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports: ["9090:9090"]
+
+  loki:
+    image: grafana/loki:3.1.1
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    ports: ["3100:3100"]
+
+  tempo:
+    image: grafana/tempo:2.5.0
+    command: ["-config.file=/etc/tempo/tempo.yaml"]
+    volumes:
+      - ./tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
+    ports: ["3200:3200"]
