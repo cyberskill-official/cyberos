@@ -1,5 +1,42 @@
 # Changelog — OBS
 
+## 2026-06-20 - compliance-view HTTP service + CUO triage endpoint (FR-OBS-008, FR-OBS-007)
+
+### What landed
+
+**`services/obs-compliance-view/` - FR-OBS-008 read-only compliance views, I/O shell built.** The four
+views (eu-ai-act, pdpl, soc2, iso27001) are now served over HTTP on top of the pure core shipped earlier.
+`query.rs` reads `l1_audit_log` by tenant, audit kind, and time window (RLS GUC set per transaction);
+`summary.rs` is the per-kind count block (unit-tested); `main.rs` is the axum server wiring auth
+(external_auditor role) to tenant-scope enforcement, window validation, the kind-filtered query, the
+defence-in-depth PII scan, the Ed25519 chain-proof, and an `obs.compliance_view_accessed` access line.
+Endpoints: `GET /:view?since=&until=` plus `/healthz`.
+
+**`services/memory/migrations/0004_l1_event_type.sql` - the unblock for the query.** A generated
+`event_type` column on `l1_audit_log`, backed by an immutable extractor that returns NULL for the
+non-JSON markdown bodies memory-file `put` rows carry, plus a `(tenant_id, event_type, ts_ns)` index. The
+compliance query filters by audit kind without an unsafe runtime `body::jsonb` cast. Live apply is owner-run.
+
+**`modules/cuo/cuo/triage_server.py` - FR-OBS-007 §1 #2, the CUO triage endpoint obs-router calls.** CUO
+runs skills in-process, so this is the thin HTTP front door that maps `{skill, alert}` to an
+`obs.triage-alert` invocation and returns the verdict contract `cuo_triage.rs` parses. Safe degradation
+is deliberate (SKILL.md §5): when triage cannot reach its inputs it returns HTTP 200 with confidence 0.0,
+so obs-router pages rather than the endpoint failing. `services/obs-router/README.md` documents running it
+and pointing `OBS_CUO_TRIAGE_URL` at it.
+
+### Gates
+
+obs: caf CLEAN, awh 11/11 100% (0.0 regression). cuo: caf CLEAN (192 passed), awh 2/2 100%. 45 new tests.
+
+### Remaining for `shipped`
+
+Live validation needs the real targets: a CUO host with an LLM invoker, the dev Postgres applying 0004,
+and the CHAT webhook plus PagerDuty routing key for obs-router. Writing `obs.alert_triaged` /
+`obs.compliance_view_accessed` to the memory audit chain (rather than the current log line) is the
+follow-up across both services.
+
+---
+
 ## 2026-05-19 — P0 implementation wave — OBS collector slice-1 scaffold shipped (FR-OBS-001)
 
 See [AI changelog](../ai/changelog.html) for AI Gateway and [MCP changelog](../mcp/changelog.html) for MCP Gateway portions of this wave.
