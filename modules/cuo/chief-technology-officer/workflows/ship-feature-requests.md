@@ -1,6 +1,6 @@
 ---
 workflow_id: chief-technology-officer/ship-feature-requests
-workflow_version: 2.1.0
+workflow_version: 2.2.0
 purpose: Drive each eligible FR in `docs/feature-requests/BACKLOG.md` end-to-end through the full lifecycle — from `ready_to_implement` through `implementing → ready_to_review → reviewing → ready_to_test → testing → done` (per `docs/feature-requests/STATUS-REFERENCE.md` §1.1). Deep-maps the repo, generates the edge-case matrix, implements with 90 % coverage on touched files, injects observability, self-approves architectural deviations via ADRs, runs the multi-vector debugger with a 5-fail circuit breaker, runs the testing gate (`coverage-gate-author`/`-audit`), and physically updates BACKLOG.md status between every phase transition. Failure or blocker at any downstream phase routes the FR back to `ready_to_implement` (STATUS-REFERENCE §1.3) with `routed_back_count += 1`.
 persona: chief-technology-officer
 cadence: per-FR (loops continuously over BACKLOG.md)
@@ -197,20 +197,21 @@ The supervisor handles persistence (state survives across sessions because the t
 
 ## 12. No partial-ship-and-pause within an FR
 
-The workflow MUST drive **all phases of an FR to completion in one continuous session** (or route back to `ready_to_implement` cleanly). Pause only between FRs.
+The workflow MUST drive **all phases of an FR to completion in one continuous session** (or route back to `ready_to_implement` cleanly). It runs continuously under the halt-only doctrine in [`../../EXECUTION-DISCIPLINE.md`](../../EXECUTION-DISCIPLINE.md): the agent stops ONLY for an operator-decision fork, a manual/operator-only action (push, deploy, destructive op, secret), a hard blocker past the circuit-breaker budget, or the operator stop signal. Everything else — compile/lint/clippy, a test or module gate the agent's own change broke, the order of slices or FRs — the agent self-resolves and continues.
 
 **Rules:**
 
 1. Read the full gap list + slice plan BEFORE running any step.
 2. Don't ask between phases — continuation is implied by "drive this FR".
 3. Commit per phase for git-history hygiene; each phase = own conventional commit + verify gate.
-4. Only pause between FRs — that's a fresh priority decision.
+4. Do NOT pause between FRs either. The outer loop (§11) advances to the next eligible FR on its own; halt between FRs only on an `EXECUTION-DISCIPLINE.md` §2 condition, never just because one FR finished.
 5. If genuinely blocked mid-FR (e.g. needs ADR-class operator decision), DOCUMENT the block in §10.7 of the .audit.md, route back to `ready_to_implement` with `routed_back_count += 1` and `reason: "<blocker>"`. Do NOT silently ship a partial phase and walk away.
 
 See `feature-request-audit` skill §9.1 for the full clause + grandfathered exceptions.
 
 ## Cross-references
 
+- Execution discipline (continuous run, halt-only conditions): [`../../EXECUTION-DISCIPLINE.md`](../../EXECUTION-DISCIPLINE.md). Added 2026-06-20 (v2.2.0): the agent halts only for an operator-decision fork, a manual/operator-only action, a hard blocker past the budget, or the operator stop signal; it self-resolves everything else and runs continuously across phases and FRs.
 - FR lifecycle: `docs/feature-requests/STATUS-REFERENCE.md` (10-state enum, transitions, HITL semantics).
 - Original prompt source: operator's "Zero-Touch Principal Engineer (Unattended Execution)" — absorbed 2026-05-18.
 - BACKLOG state engine: `docs/feature-requests/BACKLOG.md`.
