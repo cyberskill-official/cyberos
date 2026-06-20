@@ -36,6 +36,31 @@ processors:
   batch:
     timeout: 10s
     send_batch_size: 1024
+  # FR-OBS-006 - tail-based sampling on the traces pipeline. Source-of-truth + rationale in
+  # tail_sampling.yaml; the flagged-tenants list is seeded from flagged_tenants.yaml.
+  tail_sampling:
+    decision_wait: 30s
+    num_traces: 100000
+    expected_new_traces_per_sec: 25000
+    policies:
+      - name: errors
+        type: status_code
+        status_code: { status_codes: [ERROR] }
+      - name: http-5xx
+        type: numeric_attribute
+        numeric_attribute: { key: http.status_code, min_value: 500, max_value: 599 }
+      - name: http-5xx-stable
+        type: numeric_attribute
+        numeric_attribute: { key: http.response.status_code, min_value: 500, max_value: 599 }
+      - name: flagged-tenants
+        type: string_attribute
+        string_attribute: { key: tenant_id, values: [], enabled_regex_matching: false }
+      - name: slow
+        type: latency
+        latency: { threshold_ms: 2000 }
+      - name: normal-sample
+        type: probabilistic
+        probabilistic: { sampling_percentage: 10 }
 
 exporters:
   loki:
@@ -77,7 +102,9 @@ service:
       exporters: [prometheusremotewrite]
     traces:
       receivers: [otlp]
-      processors: [resource, attributes/pii_scrub, batch]
+      # FR-OBS-006 - tail_sampling runs after pii_scrub (scrub first) and before batch; traces pipeline
+      # only (§1 #10). pii_scrub stays present so the FR-OBS-001 validator passes.
+      processors: [resource, attributes/pii_scrub, tail_sampling, batch]
       exporters: [otlp/tempo]
   telemetry:
     metrics:

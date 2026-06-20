@@ -1,0 +1,7 @@
+# FR-OBS-006 §1 #3 - tenants sampled at 100% (one tenant_id per list entry).
+#
+# Operators add a tenant with `cyberos-ai flag-tenant <tenant_id> --confirm`, which appends here; the
+# collector hot-reloads on file change (no restart, reload <= 30s) via the file-watch extension. Remove
+# a tenant to return them to the 10% normal sample. Keep this list small - a flagged tenant sends 100%
+# of its traces to Tempo (a high-traffic tenant can balloon storage; sev-2 alarm on buffer depth).
+flagged_tenants: []

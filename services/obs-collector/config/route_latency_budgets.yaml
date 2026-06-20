@@ -1,0 +1,9 @@
+# FR-OBS-006 §1 #4 - per-route p99 latency budgets. A trace whose end-to-end latency exceeds its
+# route's budget is sampled at 100% (it is the slow trace an investigator wants). The tail_sampling
+# `slow` policy uses the default budget; per-route enforcement is applied by the slow-trace evaluator
+# that reads this file. A malformed file makes the collector refuse to start (§10).
+default_ms: 2000
+routes:
+  "ai-gateway:/v1/chat/completions": 5000
+  "ai-gateway:/v1/embeddings": 500
+  "auth-service:/v1/auth/token": 250
