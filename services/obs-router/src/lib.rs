@@ -9,10 +9,14 @@
 
 pub mod alertmanager_webhook;
 pub mod audit;
+pub mod chat_post;
+pub mod config;
+pub mod cuo_triage;
 pub mod dedup;
 pub mod error;
 pub mod handle;
 pub mod notify;
+pub mod pagerduty;
 pub mod route;
 pub mod severity;
 pub mod triage;

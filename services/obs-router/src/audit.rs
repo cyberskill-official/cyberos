@@ -51,8 +51,9 @@ pub fn alert_acked(alert_fingerprint: &str, acked_by: &str, request_id: &str) ->
     }
 }
 
-/// A sink for audit rows. The production impl writes to the memory chain.
-pub trait AuditSink {
+/// A sink for audit rows. The production impl writes to the memory chain. `Send + Sync` so a
+/// `&dyn AuditSink` can be held across an await in an axum handler (the handler future stays `Send`).
+pub trait AuditSink: Send + Sync {
     fn emit(&self, row: &AuditRow);
 }
 
