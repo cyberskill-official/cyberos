@@ -1,0 +1,6 @@
+id: G06-minimal-valid
+description: The smallest output that satisfies the Phase 2 template - one loop, Mode echo, one honest UNMEASURED baseline, one OPEN task, no HANDOFF (mid-flight run). The template-conformance check must demand the template and nothing more (review F1 minimal-but-valid sibling of B15).
+expect: pass
+expected_violations: []
+exercises_rules: [TEMPLATE]
+protected_areas: []

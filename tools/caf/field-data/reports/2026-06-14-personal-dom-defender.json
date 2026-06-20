@@ -1,0 +1,47 @@
+{
+  "schema": "code-audit-framework/report@1",
+  "generated_at": "2026-06-13T17:27:35+00:00",
+  "run_dir": "/Users/stephencheng/Projects/Personal/dom-defender",
+  "protocol_version": "v1.5.0",
+  "protected_areas": [
+    "src/data/"
+  ],
+  "loops": [
+    {
+      "loop": 1,
+      "date": "2026-06-14",
+      "protocol": "v1.5.0",
+      "mode": "autonomous",
+      "approved": null,
+      "no_significant_findings": false,
+      "tasks": [
+        {
+          "id": "L1-T1",
+          "severity": "High",
+          "status": "DONE",
+          "vector": "Maintainability",
+          "description": "The project's own lint gate is non-functional: eslint-config-next is installed but no ESLint config file exists, so next lint prompts for interactive setup and exits 1 in CI/non-interactive \u2014 quality is unenforced. Added .eslintrc.json (next/core-web-vitals); the now-running lint surfaced 11 react/no-unescaped-entities errors, all escaped ('\u2192&apos;) \u2014 behavior-neutral JSX text. Lint 0 errors.",
+          "verify": "npm run lint"
+        }
+      ]
+    }
+  ],
+  "metrics": [],
+  "summary": {
+    "loops": 1,
+    "tasks": 1,
+    "tasks_by_status": {
+      "DONE": 1
+    },
+    "tasks_by_severity": {
+      "High": 1
+    },
+    "metrics_measured": 0,
+    "violations": 0,
+    "violations_by_code": {},
+    "clean": true,
+    "waived": 0
+  },
+  "violations": [],
+  "waived": []
+}

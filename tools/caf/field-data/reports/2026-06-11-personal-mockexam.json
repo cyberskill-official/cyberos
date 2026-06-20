@@ -1,0 +1,50 @@
+{
+  "schema": "code-audit-framework/report@1",
+  "generated_at": "2026-06-12T18:25:58+00:00",
+  "run_dir": "/Users/stephencheng/Projects/Personal/claude-certified-architect-mock-exam",
+  "protocol_version": "v1.3.0",
+  "protected_areas": [
+    "src/data/",
+    "src/core/"
+  ],
+  "loops": [
+    {
+      "loop": 1,
+      "date": "2026-06-12",
+      "protocol": "v1.3.0",
+      "mode": "gated",
+      "approved": [
+        "L1-T1"
+      ],
+      "no_significant_findings": true,
+      "tasks": [
+        {
+          "id": "L1-T1",
+          "severity": "High",
+          "status": "BLOCKED",
+          "vector": "Security",
+          "description": "src/app/api/exam/submit/route.ts forwards client-supplied payload.p_score straight to supabase.rpc('submit_exam_result', payload) with **no in-repo server-side validation or recomputation** (the score is computed client-side). If the submit_exam_result RPC does not re-derive the score from submitted answers, any client can POST an arbitrary score to the leaderboard \u2014 an exam-integrity break (DOMAIN_NOTES: scoring defines exam integrity). \u2192 Recompute/validate the score server-side (in the RPC or the route) against the submitted answers. \u0394: a POST with an inflated p_score is rejected or corrected to the recomputed value. **Root cause (BLOCKED):** verified by inspection 2026-06-12 \u2014 the route (src/app/api/exam/submit/route.ts) forwards payload unchanged to the RPC; the score is computed client-side in src/hooks/useExamEngine.ts (score1000 = round(correct/total*1000)) and the submit carries only p_score + p_wrong_answers (no per-question chosen answers), so the route cannot faithfully recompute. The authoritative fix belongs in the un-versioned Supabase RPC submit_exam_result (no supabase/ dir in this repo) \u2014 recompute server-side from stored answers \u2014 which only the maintainer can provide/version. An in-route p_score vs p_wrong_answers consistency check is weak (client can fake both) and would give false assurance, so not applied.",
+          "verify": "inspect submit_exam_result definition + POST /api/exam/submit with a tampered p_score, assert stored score = server-recomputed"
+        }
+      ]
+    }
+  ],
+  "metrics": [],
+  "summary": {
+    "loops": 1,
+    "tasks": 1,
+    "tasks_by_status": {
+      "BLOCKED": 1
+    },
+    "tasks_by_severity": {
+      "High": 1
+    },
+    "metrics_measured": 0,
+    "violations": 0,
+    "violations_by_code": {},
+    "clean": true,
+    "waived": 0
+  },
+  "violations": [],
+  "waived": []
+}

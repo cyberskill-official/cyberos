@@ -1,0 +1,9 @@
+# Pilot batch 1 — 2026-06-11. Paths are operator-local (Stephen's Mac).
+# Run from a code-audit-framework checkout:
+#   python3 core/evals/validate.py --batch ../code-audit-field-data/pilot/targets.yaml --batch-out ../code-audit-field-data/reports
+- path: /Users/stephencheng/Projects/CyberSkill/kymondongiap
+  name: 2026-06-11-cyberskill-kymondongiap
+- path: /Users/stephencheng/Projects/Personal/3d-preriodic-table
+  name: 2026-06-11-personal-periodic
+- path: /Users/stephencheng/Projects/Personal/claude-certified-architect-mock-exam
+  name: 2026-06-11-personal-mockexam

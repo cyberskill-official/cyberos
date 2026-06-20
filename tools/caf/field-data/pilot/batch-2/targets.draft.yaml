@@ -1,0 +1,13 @@
+# DRAFT batch-2 targets file — PROPOSAL ONLY (do not run until Stephen approves).
+# Run from a code-audit-framework checkout once the profile is placed at the
+# target and PROTECTED_AREAS/secret_patterns are confirmed:
+#   python3 core/evals/validate.py --batch ../code-audit-field-data/pilot/batch-2/targets.draft.yaml --batch-out ../code-audit-field-data/reports
+#
+# PRIMARY (scoped to the Rust services workspace):
+- path: /Users/stephencheng/Projects/CyberSkill/cyberos/services
+  name: 2026-06-1x-cyberskill-cyberos-services
+  protected: migrations/,src/cli/json_schemas/,services/shared/cyberos-types/,gen_schema.rs
+#
+# TIGHTER FIRST-RUN OPTION (highest security value only) — if a full-workspace
+# loop is too big for loop 1, scope to auth + ai-gateway instead by pointing the
+# profile + --run at each, or narrow Phase 1 vectors to {Security, Architecture}.

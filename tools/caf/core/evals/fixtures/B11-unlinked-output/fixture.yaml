@@ -1,0 +1,6 @@
+id: B11-unlinked-output
+description: Two measured rows but only one command's output pasted - partial fabrication
+expect: fail
+expected_violations: [R1-UNLINKED-OUTPUT]
+exercises_rules: [R1]
+protected_areas: []

@@ -7,7 +7,7 @@ description: >-
   read-only baseline, and blocks the transition on any regression. Emits an awh-eval@1 artefact:
   per-task pass@1, the weighted aggregate, the sealed-baseline hash, and a GREEN or RED verdict.
   Used by chief-technology-officer/ship-feature-requests at step 28, after the post-implementation
-  feature-request-audit (step 27) and before the done flip (step 29). GREEN is required to reach
+  feature-request-audit (step 27) and before the done flip (step 30). GREEN is required to reach
   done; RED routes the feature request back to ready_to_implement per STATUS-REFERENCE section 1.3.
   Use when the user asks to "run the awh gate", "verify this FR out of band", or "gate testing to
   done". Do NOT use for spec correctness (that is feature-request-audit, during draft to
@@ -56,7 +56,7 @@ regression.
 ## When it runs
 
 Step 28 of `chief-technology-officer/ship-feature-requests`, between the post-implementation
-`feature-request-audit` (step 27) and the `backlog-state-update-author` done flip (step 29). The
+`feature-request-audit` (step 27) and the `backlog-state-update-author` done flip (step 30). The
 done flip is conditional on this skill returning GREEN.
 
 ## What it does

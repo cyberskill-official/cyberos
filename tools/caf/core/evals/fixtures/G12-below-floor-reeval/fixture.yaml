@@ -1,0 +1,6 @@
+id: G12-below-floor-reeval
+description: Conformant below-floor re-evaluation (Phase 4) - a deferred sub-floor item whose premise a DONE task changed is promoted into the next loop's backlog; must validate clean
+expect: pass
+expected_violations: []
+exercises_rules: [PHASE4-REEVAL, R7]
+protected_areas: []

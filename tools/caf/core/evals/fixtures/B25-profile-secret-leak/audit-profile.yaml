@@ -1,0 +1,7 @@
+# Stack profile pack (M-1): EXTENDS the built-in denylists for this target.
+# Regexes are verbatim Python re syntax — no YAML escaping layer.
+gui_tools:
+  - android studio profiler
+secret_patterns:
+  - name: acme-internal-token
+    regex: \bacme_[A-Za-z0-9]{20}\b

@@ -1,0 +1,13 @@
+# CAF audit identity for the `chat` module (services/, verified via the chat-verify make target).
+# Absorbed from CyberSkill/code-audit-framework. verify-target.sh runs RUN_COMMANDS from this dir to
+# prove TARGET HEALTH. Run on a build machine with the module's toolchain.
+config:
+  TECH_STACK: Rust (cargo) + make / cyberos chat service
+  PROJECT_PURPOSE: CyberOS chat - conversation transport, auth bridge
+  MODE: gated
+  DEPTH: standard
+  SEVERITY_FLOOR: High
+  PROTECTED_AREAS: modules/chat/.awh/, modules/chat/.caf/, services/chat/tests/
+  RUN_COMMANDS: cd ../../services && make chat-verify
+  DOMAIN_NOTES: chat-verify is the module's own aggregate gate (build + test); chat-authbridge-test is the held-out acceptance test. RUN_COMMANDS mirrors the awh suite (known green).
+  BENCHMARK_MODE: none

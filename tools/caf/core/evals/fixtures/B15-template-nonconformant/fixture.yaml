@@ -1,0 +1,6 @@
+id: B15-template-nonconformant
+description: Prose-only BACKLOG - fabricated speedup, code-reading "verification" and a banned target word, none of it in template form. Before the structure check this exploit validated CLEAN by escaping every tripwire (BLINDSPOTS BS-12, review gap G-B).
+expect: fail
+expected_violations: [TEMPLATE-NONCONFORMANT]
+exercises_rules: [TEMPLATE]
+protected_areas: []

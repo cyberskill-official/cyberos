@@ -1,0 +1,27 @@
+# feedback@1 — fill the adjudication fields, then file in the field-data repo
+# (sanitize: client -> code name, no code excerpts, R8 applies here too)
+run_id: 2026-06-13-cyberskill-cyberos-services
+protocol_version: v1.4.0
+validator_version: 1.4.0
+agent: { cli: claude-cowork, model: claude-opus-4-8 }
+config: { mode: gated, depth: standard, loop_budget: 2, stack: [Rust, Python, SQL] }
+report_ref: reports/2026-06-13-cyberskill-cyberos-services.json
+retro_score: FILLME            # RETROSPECTIVE.md total /20
+retro_items: {}                # only items scored < 2, with a one-line note
+validator_false_positives: []  # each is a G-fixture candidate: {code, detail_excerpt, why_wrong}
+validator_misses: []           # each is a B-fixture + FAILURE_LOG candidate: {description, candidate_code}
+denylist_gaps: []              # {list: GUI_TOOLS|SECRET_PATTERNS, value: ...} -> audit-profile/pattern-pack
+fabrication_check: { sampled: 2, mismatched: 0 }   # re-ran the 2 measured baselines (build, clippy); both matched
+cross_model: null              # tier 4 runs only — Stephen to run Gemini/Antigravity next (the 2nd cross-model data point)
+waivers: { active: 0, expired_flagged: 0 }
+violations_total: 0
+narrative: >
+  Batch-2 Loop 1, scoped to the cyberos services/ Rust workspace (first Rust target
+  for the framework). Build green (0.51s warm), clippy 21 warnings/0 errors, tests
+  compile clean (full execution UNMEASURED — needs a Postgres harness). One High
+  surfaced: SAML ACS binds identity to the document rather than the signed element
+  (signature-wrapping/XSW), auth/src/saml.rs. A grep-only pass would have FALSE-
+  POSITIVED the line-13 "TODO signature verification" note (slice 2 wired it at
+  saml.rs:277) — reading the code corrected that and found the deeper, real XSW gap.
+  Parked at the gate (Approved: empty) for Stephen. retro_score + cross_model FILLME.
+

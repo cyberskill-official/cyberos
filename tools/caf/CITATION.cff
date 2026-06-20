@@ -1,0 +1,14 @@
+# Version is a checked surface: core/evals/scripts/check-docs-sync.py fails CI
+# if this file disagrees with core/AUDIT.md's title version.
+cff-version: 1.2.0
+message: "If you use or study this framework, please cite it."
+title: "code-audit-framework: an honest, self-improving audit protocol for AI coding agents"
+type: software
+version: 1.5.0
+date-released: 2026-06-14
+license: Apache-2.0
+url: "https://github.com/cyberskill-official/code-audit-framework"
+authors:
+  - name: "CyberSkill (CYBERSKILL SOFTWARE SOLUTIONS CONSULTANCY AND DEVELOPMENT JOINT STOCK COMPANY)"
+    email: "info@cyberskill.world"
+    website: "https://cyberskill.world"

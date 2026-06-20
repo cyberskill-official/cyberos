@@ -1,0 +1,29 @@
+# DRAFT audit-profile for batch-2 — cyberos services/ (Rust workspace).
+# Runner mode: the protocol stays in code-audit-framework; this profile is the
+# target's complete audit identity. PROPOSAL ONLY — do NOT copy into the cyberos
+# worktree until Stephen approves the batch (it is the launch step, like batch 1).
+#
+# Scope: place this at  ~/Projects/CyberSkill/cyberos/services/audit-profile.yaml
+# and run --run against services/ so Phase 1 discovery is scoped to the Rust
+# services (cyberos is 5,834 files; the whole repo is too big for one pilot loop).
+config:
+  TECH_STACK: Rust (Cargo workspace) — async services (auth, ai-gateway, mcp-gateway, chat, email, memory, proj, obs-collector, skill-broker) + shared crates (cyberos-types, cyberos-cli-exit); Python embed-sidecar; Postgres/SQL; Docker
+  PROJECT_PURPOSE: CyberOS backend services — the platform CyberSkill is consolidating its tooling into (also the code-audit-framework absorb target)
+  MODE: gated
+  LOOP_BUDGET: 2
+  DEPTH: standard
+  SEVERITY_FLOOR: High
+  PROTECTED_AREAS: migrations/, src/cli/json_schemas/, services/shared/cyberos-types/, gen_schema.rs
+  RUN_COMMANDS: cargo build --workspace; cargo test --workspace; cargo clippy --workspace -- -D warnings; (embed-sidecar: cd services/embed-sidecar && pytest -q)
+  DOMAIN_NOTES: Internal platform, NO external comparator (BENCHMARK_MODE none). Security-sensitive — auth has RLS + signing-keys + idempotency migrations; ai-gateway runs the cost ledger + policy/model gateway. Repo ships CLAUDE.md/AGENTS.md + pre-commit hooks — respect them. SQL migrations and generated json_schemas (built by gen_schema.rs) are protected: behavior-preserving only. cyberos-types is a public contract crate (R3). Confirm/extend PROTECTED_AREAS with Stephen before approving Phase 3.
+  BENCHMARK_MODE: none
+
+# Rust/CLI stack — no GUI profilers to add beyond the built-in denylist.
+gui_tools: []
+
+# Extend per cyberos's own token/secret formats BEFORE launch. No tracked
+# .env/.pem/.key/secret files were found in services/ (good), but confirm the
+# service token prefix(es) so R8 catches a real leak. Do NOT invent regexes —
+# fill from the actual format (FILLME). The built-in denylist (AWS/GitHub/JWT/
+# Stripe/Anthropic/OpenAI/Google/private-key/...) already applies.
+secret_patterns: []

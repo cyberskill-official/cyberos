@@ -1,0 +1,145 @@
+{
+  "schema": "code-audit-framework/report@1",
+  "generated_at": "2026-06-12T07:35:21+00:00",
+  "run_dir": "../kymondongiap",
+  "protocol_version": "v1.3.0",
+  "protected_areas": [
+    "backend/data/",
+    "supabase/migrations/",
+    "de421.bsp"
+  ],
+  "loops": [
+    {
+      "loop": 1,
+      "date": "2026-06-12",
+      "protocol": "v1.3.0",
+      "mode": "gated",
+      "approved": [
+        "L1-T1",
+        "L1-T2",
+        "L1-T3",
+        "L1-T4",
+        "L1-T5",
+        "L1-T6",
+        "L1-T7"
+      ],
+      "no_significant_findings": false,
+      "tasks": [
+        {
+          "id": "L1-T1",
+          "severity": "Critical",
+          "status": "DONE",
+          "vector": "Security",
+          "description": "Unauthenticated GET /api/v1/public/history returned full XAIAuditLog rows (inputs_json, context, output_preview) for ALL users. Maintainer decision (a): keep an anonymized ticker. Done in bd1264d \u2014 projects to non-sensitive fields (timestamp/domain/model/latency) only; full per-user history now belongs behind auth (L1-T2). Regression test pins the projection.",
+          "verify": ".venv/bin/python -m pytest -q tests/test_public_history_projection.py"
+        },
+        {
+          "id": "L1-T2",
+          "severity": "High",
+          "status": "DONE",
+          "vector": "Security",
+          "description": "No authn/authz anywhere; every enterprise route open + billable Gemini calls free to anyone. Done in 8d977a4 \u2014 require_user verifies a Supabase HS256 token (SUPABASE_JWT_SECRET) on hr/negotiation/risk (fail-closed \u2192 503 until secret set, never open); public routes rate-limited (10/min/IP, in-memory). Tests: missing/bad/expired\u2192401, unconfigured\u2192503, POST /hr/scan w/o token\u2192401, limiter\u2192429. **PROD:** set SUPABASE_JWT_SECRET + send the token from the frontend, else protected routes 503.",
+          "verify": ".venv/bin/python -m pytest -q tests/test_auth.py"
+        },
+        {
+          "id": "L1-T3",
+          "severity": "High",
+          "status": "DONE",
+          "vector": "Maintainability",
+          "description": "Frontend build broken (TS1484, XAILog). Done in a1af217: import type \u2192 npm run build exits 0 (was exit 2).",
+          "verify": "cd frontend && npm run build (exit 0)"
+        },
+        {
+          "id": "L1-T4",
+          "severity": "High",
+          "status": "DONE",
+          "vector": "Performance",
+          "description": "Synchronous blocking Gemini calls inside async routes stalled the event loop. Done in dbfa775 \u2014 analyze_* are async + offload generate_content via run_in_executor; 4 callers await. Built scripts/probe_concurrency.py (the missing verify harness): with a 0.5s blocking fake client, 20/20 heartbeats complete during the block (max gap 11ms) \u2014 loop no longer stalled.",
+          "verify": "cd backend && .venv/bin/python scripts/probe_concurrency.py (exit 0)"
+        },
+        {
+          "id": "L1-T5",
+          "severity": "High",
+          "status": "DONE",
+          "vector": "Correctness",
+          "description": "/quick-matrix cached now() resolved inside the cached fn \u2192 stale chart replay. Done in 07a2726: now() resolved in the outer route, cached helper keyed on the resolved instant; regression test added.",
+          "verify": ".venv/bin/python -m pytest -q tests/test_public_quick_matrix_cache.py"
+        },
+        {
+          "id": "L1-T6",
+          "severity": "High",
+          "status": "DONE",
+          "vector": "Testing",
+          "description": "7 behaviour-bearing core calc modules had no tests. Maintainer decision (a/b): derive from canonical sources. Done in 2794cf7 \u2014 invariant + UNIVERSAL-law assertions (\u4e94\u884c\u76f8\u751f/\u76f8\u514b, \u516d\u7532\u65ec\u7a7a 12-branch coverage, 12-stage totality, 24 solar terms strictly ordered, lunar round-trip, canonical Yang/Yin-Dun half). No fabricated school-specific values; timescale exercised indirectly.",
+          "verify": ".venv/bin/python -m pytest -q tests/matrix/test_matrix_invariants_audit.py tests/ephemeris/test_ephemeris_invariants_audit.py"
+        },
+        {
+          "id": "L1-T7",
+          "severity": "High",
+          "status": "DONE",
+          "vector": "Architecture",
+          "description": "XAI audit log on local SQLite is lost on Cloud Run recycle / not shared across instances. Maintainer decision: Supabase Postgres, start fresh. Done (92a2ed0 env-driven engine; bfedf2f URL coercion + drivers + tests; 9a9a94c SSL): the plain dashboard string works unchanged on both engines (async\u2192+asyncpg, sync\u2192psycopg2), SSL handled (asyncpg needs it explicitly), drivers added. **Verified against the live DB** \u2014 Supabase PostgreSQL 17.6, Singapore session pooler: write via sync path \u2192 dispose \u2192 read via fresh async engine \u2192 row present; the transient test table was dropped, prod left pristine. **Prod config (operational, same shape as T2):** set DATABASE_URL to the Supabase **pooler** string in Cloud Run to switch prod off ephemeral SQLite.",
+          "verify": "KYMON_PG_TEST_URL='postgresql://postgres.<ref>:PW@aws-1-<region>.pooler.supabase.com:5432/postgres' .venv/bin/python -m pytest -q tests/test_db_persistence.py -k postgres (passed on the live DB)"
+        }
+      ]
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "Backend test suite",
+      "baseline": "212 passed",
+      "final": "240 passed, 1 skipped",
+      "delta": "+28 audit tests (T1,T2,T4,T5,T6,T7); 1 gated skip = T7 live-Postgres",
+      "target": "INTERNAL TARGET \u2014 0 failures",
+      "verify": "cd backend && .venv/bin/python -m pytest -q tests",
+      "status": "MEASURED",
+      "delta_computed": 28.0
+    },
+    {
+      "metric": "Frontend build",
+      "baseline": "FAIL (TS1484)",
+      "final": "exits 0",
+      "delta": "fixed",
+      "target": "INTERNAL TARGET \u2014 build exits 0",
+      "verify": "cd frontend && npm run build",
+      "status": "MEASURED",
+      "delta_computed": -1484.0
+    },
+    {
+      "metric": "Event-loop blocking under AI call (T4)",
+      "baseline": "loop stalls full call",
+      "final": "20/20 heartbeats, max gap 11ms",
+      "delta": "non-blocking",
+      "target": "INTERNAL TARGET \u2014 probe exits 0",
+      "verify": "cd backend && .venv/bin/python scripts/probe_concurrency.py",
+      "status": "MEASURED"
+    },
+    {
+      "metric": "Audit-log durability (T7)",
+      "baseline": "lost on SQLite recycle",
+      "final": "survives write\u2192teardown\u2192read on live Supabase PG 17.6",
+      "delta": "durable",
+      "target": "INTERNAL TARGET \u2014 live round-trip passes",
+      "verify": "KYMON_PG_TEST_URL=\u2026 .venv/bin/python -m pytest -q tests/test_db_persistence.py -k postgres",
+      "status": "MEASURED"
+    }
+  ],
+  "summary": {
+    "loops": 1,
+    "tasks": 7,
+    "tasks_by_status": {
+      "DONE": 7
+    },
+    "tasks_by_severity": {
+      "Critical": 1,
+      "High": 6
+    },
+    "metrics_measured": 4,
+    "violations": 0,
+    "violations_by_code": {},
+    "clean": true,
+    "waived": 0
+  },
+  "violations": [],
+  "waived": []
+}

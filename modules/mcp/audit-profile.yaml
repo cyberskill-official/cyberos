@@ -1,0 +1,13 @@
+# CAF audit identity for the `mcp` module (Rust crate cyberos-mcp-gateway, services/mcp-gateway).
+# verify-target.sh runs RUN_COMMANDS from this dir to prove TARGET HEALTH. Run on a build machine with
+# the Rust toolchain.
+config:
+  TECH_STACK: Rust (cargo) / cyberos-mcp-gateway / JSON-RPC 2.0 + MCP + Axum
+  PROJECT_PURPOSE: CyberOS MCP gateway - JSON-RPC dispatch, tool registry, permission gate, federation
+  MODE: gated
+  DEPTH: standard
+  SEVERITY_FLOOR: High
+  PROTECTED_AREAS: modules/mcp/.awh/, modules/mcp/.caf/, services/mcp-gateway/src/protocol/
+  RUN_COMMANDS: cd ../../services && cargo test -p cyberos-mcp-gateway
+  DOMAIN_NOTES: The closed error-code map (DEC-272) and the tools/call permission gate are protocol invariants. RUN_COMMANDS mirrors the awh suite; add `cargo clippy -p cyberos-mcp-gateway -- -D warnings` once confirmed clippy-clean.
+  BENCHMARK_MODE: none

@@ -1,0 +1,6 @@
+id: G04-redaction-prose-precision
+description: Properly redacted credentials ([REDACTED:kind] markers), a readable secret_token identifier, and banned target words (High, minimal) appearing in prose rather than Target cells - a compliant security loop that must validate clean (review gap G-C precision pack; regression guard for BS-07 pattern set).
+expect: pass
+expected_violations: []
+exercises_rules: [R8, R2]
+protected_areas: []

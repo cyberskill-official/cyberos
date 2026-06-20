@@ -1,0 +1,4 @@
+# Default owners — review required when branch protection demands PRs.
+*                   @zintaen
+/core/AUDIT.md      @zintaen
+/core/improve/      @zintaen

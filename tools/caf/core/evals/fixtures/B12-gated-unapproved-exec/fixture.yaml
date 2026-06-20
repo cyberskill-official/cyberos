@@ -1,0 +1,6 @@
+id: B12-gated-unapproved-exec
+description: Gated run executed a task the human never approved
+expect: fail
+expected_violations: [GATED-UNAPPROVED-EXEC]
+exercises_rules: [P2-GATE]
+protected_areas: []

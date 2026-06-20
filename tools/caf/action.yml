@@ -1,0 +1,42 @@
+name: "code-audit-validate"
+description: >-
+  Validate AUDIT.md run artifacts (docs/BACKLOG.md, docs/HANDOFF.md) against
+  the protocol's machine-checkable rules — evidence gates, honest targets,
+  closed sets, gated-mode approvals, secret redaction, template conformance,
+  CONFIG preflight. By CyberSkill.
+author: "CyberSkill"
+
+branding:
+  icon: "check-circle"
+  color: "orange"
+
+inputs:
+  path:
+    description: "Target repo root to validate (contains docs/ and, ideally, the filled AUDIT.md)"
+    required: false
+    default: "."
+  protected:
+    description: "Comma-separated protected paths; extends PROTECTED_AREAS auto-loaded from the target's AUDIT.md CONFIG"
+    required: false
+    default: ""
+  report:
+    description: "Optional findings export: 'json' or 'sarif'. Printed to stdout and written to audit-report.<format> in the workspace"
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - name: Validate run artifacts
+      shell: bash
+      run: |
+        ARGS=(--run "${{ inputs.path }}")
+        if [ -n "${{ inputs.protected }}" ]; then
+          ARGS+=(--protected "${{ inputs.protected }}")
+        fi
+        if [ -n "${{ inputs.report }}" ]; then
+          python3 "${{ github.action_path }}/core/evals/validate.py" "${ARGS[@]}" --report "${{ inputs.report }}" \
+            | tee "audit-report.${{ inputs.report }}"
+        else
+          python3 "${{ github.action_path }}/core/evals/validate.py" "${ARGS[@]}"
+        fi

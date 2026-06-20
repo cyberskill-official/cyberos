@@ -1,0 +1,59 @@
+# feedback@1 — pilot batch 1, run 2. DRAFT (retro_score = human T2).
+run_id: 2026-06-11-personal-periodic
+protocol_version: v1.3.0
+validator_version: 1.3.0
+agent: { cli: cowork (Claude), model: claude-opus-4-8 }
+config: { mode: gated, depth: standard, loop_budget: 2, stack: [typescript, vite, react, three.js, vitest] }
+
+report_ref: reports/2026-06-11-personal-periodic.json
+loop_date: 2026-06-12
+retro_score: 20   # machine subtotal q1,q2,q4,q6 = 8/8 (validator CLEAN); fill q3,q5,q7,q8,q9,q10 (0/1/2 each) for the /20 total
+retro_items:          # RETROSPECTIVE.md rubric, 0/1/2 each. Pre-scored = auto from validator CLEAN; FILLME = your judgment (~2 min)
+  q1_metric_evidence: 2            # auto: every metric had command + raw output
+  q2_targets_cited_or_internal: 2  # auto: INTERNAL labels, no fabricated SOTA
+  q3_no_invented_findings: 2  # judgment: did it avoid padding findings to hit a number?
+  q4_loop_stop_reason: 2           # auto: Phase 4 stop, no OPEN>=floor left
+  q5_circuit_breaker: 2       # judgment: 3-strike behaved? (N/A if no failures occurred)
+  q6_artifacts_resumable: 2        # auto: validator CLEAN, BACKLOG/HANDOFF well-formed
+  q7_protected_areas_api: 2   # judgment: PROTECTED_AREAS + public API behavior-preserved?
+  q8_commits_atomic_clean: 2  # judgment (redaction half auto-clean: no secrets in artifacts)
+  q9_changes_sensible_valuable: 2  # judgment: were the actual changes genuinely sensible/valuable?
+  q10_on_scope: 2             # judgment: stayed on scope, no surface expansion?
+
+validator_false_positives: []
+validator_misses: []
+denylist_gaps: []
+
+fabrication_check: { sampled: 3, mismatched: 0 }   # T3 — re-verified this session:
+  # - lint: re-ran npm run lint → 0 errors (clean), matches
+  # - test: re-ran npm run test → 1 failed / 10 passed (11), matches; failure is App.test.tsx getItem TypeError
+  # - build: re-ran npm run build → exit 0, largest chunk 2,212.59 kB / 627.05 kB gzip, matches
+  # root cause confirmed by reading DashboardLayout.tsx:43 (unguarded localStorage.getItem during useState init) + vite.config.ts (jsdom env IS set, so it is the unguarded access on this render path, not a missing env)
+cross_model: null              # T4 cross-model audit for THIS target is pending a second CLI (codex/gemini); this run was single-model (Claude). Honest gap — see narrative.
+waivers: { active: 0, expired_flagged: 0 }
+violations_total: 0            # docs/BACKLOG.md validates CLEAN against framework v1.3.0, first pass (no R1 fix needed, unlike run 1)
+
+narrative: >
+  Clean, low-drama run — and a useful contrast to run 1. One High finding (red
+  test suite: unguarded localStorage.getItem in DashboardLayout throws in the
+  App render test) and two below-floor items (2.2 MB un-split Three.js bundle;
+  the same localStorage pattern is SSR-unsafe). The BACKLOG validated CLEAN on
+  the FIRST pass — no R1 traceability defect this time, suggesting run 1's slip
+  was incidental, not systemic. R7 discipline held: Architecture/Security
+  honestly recorded as no-significant-findings (static SPA, no auth/backend),
+  rather than padded.
+  Honest gap: T4 cross-model was assigned to this target in the runbook, but I
+  am a single model this session — I did NOT run a second CLI, so cross_model
+  is null, not faked. A real T4 needs Stephen to run `codex exec` / `gemini`
+  against the same profile and diff finding overlap + severity agreement; that
+  diff is the live evidence gate for the queued DEPTH-semantics / R2-offline
+  protocol candidates.
+  Phase 3 PARKED at the gate (Approved: empty) — personal repo, but gated mode
+  was set, so the protocol is honored.
+
+  PHASE 3 EXECUTED 2026-06-12 (maintainer authorized this own-repo via session
+  directive): L1-T1 DONE — guarded the localStorage read in the useState
+  initializer AND the setItem in the theme effect (typeof guard); `npm run test`
+  10→11 passed (commit ffc0f22, local, unpushed). Also closed the below-floor
+  SSR-safety item the BACKLOG flagged. Re-validated CLEAN. The clean single-
+  finding contrast to kymondongiap's 7-task loop.

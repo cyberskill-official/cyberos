@@ -1,0 +1,6 @@
+id: B13-bad-metric-status
+description: HANDOFF metrics Status outside the closed set (ESTIMATED is fabrication-adjacent)
+expect: fail
+expected_violations: [HANDOFF-BAD-MSTATUS]
+exercises_rules: [P5]
+protected_areas: []

@@ -1,0 +1,6 @@
+id: B24-missing-protocol-echo
+description: A current-template run that omits the Protocol echo from Scope & method. Without the echo, post-hoc audits cannot tell which protocol version produced the artifact and version-aware validation has nothing to gate on (architect review F-5; v1.3.0 template requirement).
+expect: fail
+expected_violations: [TEMPLATE-NONCONFORMANT]
+exercises_rules: [TEMPLATE]
+protected_areas: []

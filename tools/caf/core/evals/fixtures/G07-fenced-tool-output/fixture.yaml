@@ -1,0 +1,6 @@
+id: G07-fenced-tool-output
+description: R1 forces raw tool output into fences, and tools emit markdown - a coverage report with GFM-table-shaped lines (Blocker/FAILING/COV-1) sits inside the fence. Quoted evidence must not be parsed as run artifacts (architect review F-1, the false-positive side; live exploit produced 3 bogus R5 codes before the fix).
+expect: pass
+expected_violations: []
+exercises_rules: [R5, TEMPLATE]
+protected_areas: []

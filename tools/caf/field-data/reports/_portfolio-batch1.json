@@ -1,0 +1,6 @@
+Run                                      proto    clean viol waived tasks
+../kymondongiap                          v1.3.0   yes      0      0     7
+/Users/stephencheng/Projects/Personal/cl v1.3.0   yes      0      0     1
+/Users/stephencheng/Projects/Personal/3d v1.3.0   yes      0      0     1
+
+3/3 runs clean — 0 active violation(s), 0 waived — by code: {}

@@ -1,0 +1,6 @@
+id: B27-target-health-unverified
+description: v1.5.0 run declared complete (stop condition cited) whose HANDOFF never recorded the Target health gate - the target's RUN_COMMANDS were not verified after the audit
+expect: fail
+expected_violations: [TARGET-HEALTH-UNVERIFIED]
+exercises_rules: [TARGET-HEALTH]
+protected_areas: []

@@ -1,0 +1,20 @@
+# feedback@1 — fill the adjudication fields, then file in the field-data repo
+# (sanitize: client -> code name, no code excerpts, R8 applies here too)
+run_id: 2026-06-14-personal-gam
+protocol_version: v1.5.0
+validator_version: 1.5.0
+agent: { cli: FILLME, model: FILLME }
+config: { mode: FILLME, depth: FILLME, loop_budget: FILLME, stack: [FILLME] }
+report_ref: reports/2026-06-14-personal-gam.json
+retro_score: FILLME            # RETROSPECTIVE.md total /20
+retro_items: {}                # only items scored < 2, with a one-line note
+validator_false_positives: []  # each is a G-fixture candidate: {code, detail_excerpt, why_wrong}
+validator_misses: []           # each is a B-fixture + FAILURE_LOG candidate: {description, candidate_code}
+denylist_gaps: []              # {list: GUI_TOOLS|SECRET_PATTERNS, value: ...} -> audit-profile/pattern-pack
+fabrication_check: { sampled: 0, mismatched: 0 }   # TESTING-PROTOCOL tier 3
+cross_model: null              # tier 4 runs only
+waivers: { active: 0, expired_flagged: 0 }
+violations_total: 0
+narrative: >
+  FILLME — one paragraph: what surprised, what the client said, what the numbers miss.
+

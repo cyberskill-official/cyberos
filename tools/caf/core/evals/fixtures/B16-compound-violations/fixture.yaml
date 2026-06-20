@@ -1,0 +1,6 @@
+id: B16-compound-violations
+description: Three planted faults in one run - banned non-numeric target, invented task status, unredacted AWS key in raw output - verifying exact-set multi-violation reporting (review 4.2 compound fixture). Also exercises escaped-pipe cells in the verify column.
+expect: fail
+expected_violations: [R2-NONNUMERIC, R5-BAD-STATUS, R8-SECRET]
+exercises_rules: [R2, R5, R8]
+protected_areas: []

@@ -1,0 +1,6 @@
+id: B14-gated-missing-approval
+description: Gated run echoes Mode gated, executes a task, and never writes an Approved line - the silent gate-skip exploit (BLINDSPOTS BS-08)
+expect: fail
+expected_violations: [GATED-UNAPPROVED-EXEC]
+exercises_rules: [P2-GATE]
+protected_areas: []

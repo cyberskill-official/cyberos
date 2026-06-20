@@ -1,0 +1,6 @@
+id: B25-profile-secret-leak
+description: A client-specific credential format (acme_ prefix) leaks in a DONE row. The built-in denylist cannot know it - only the target's audit-profile.yaml does. Proves stack profile packs are load-bearing - denylist gaps are closable as engagement data, not validator code edits (deployment review M-1, risk R-5).
+expect: fail
+expected_violations: [R8-SECRET]
+exercises_rules: [R8]
+protected_areas: []

@@ -1,0 +1,6 @@
+id: B08-blocked-no-rootcause
+description: BLOCKED task without a root-cause note
+expect: fail
+expected_violations: [R6-NO-ROOTCAUSE]
+exercises_rules: [R6]
+protected_areas: []

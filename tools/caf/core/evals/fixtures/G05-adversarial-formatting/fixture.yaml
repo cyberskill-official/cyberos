@@ -1,0 +1,6 @@
+id: G05-adversarial-formatting
+description: Tables a human reads as perfectly valid but that stress the parser - bold/italic cells, alignment-colon separator rows, ragged column spacing, and escaped pipes inside verify commands that must round-trip to the literal command in the fenced output (review 4.2 adversarial-formatting fixture; regression guard for the parser work behind the template-conformance check).
+expect: pass
+expected_violations: []
+exercises_rules: [R1, TEMPLATE]
+protected_areas: []

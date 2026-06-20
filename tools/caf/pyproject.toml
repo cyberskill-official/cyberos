@@ -1,0 +1,49 @@
+# Packaging for the validator ONLY (structural review F6 — distribution).
+#
+# The installed entry point supports the per-target commands:
+#   code-audit-validate --run <target> [--protected ...] [--report json|sarif]
+# The fixture suite (--all) is repo-only: fixtures/ and rules.json ship with
+# the repository, not the wheel. Run the suite from a checkout.
+#
+# Install without cloning (@v1 = floating major tag; pin an exact release
+# tag newer than v1.2.0 for immutability — earlier tags predate this file):
+#   uvx  --from git+https://github.com/cyberskill-official/code-audit-framework@v1 code-audit-validate --run .
+#   pipx install git+https://github.com/cyberskill-official/code-audit-framework@v1
+#
+# Version is a checked surface: evals/scripts/check-docs-sync.py fails CI if
+# this file disagrees with AUDIT.md's title version.
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "code-audit-validator"
+version = "1.5.0"
+description = "Deterministic conformance checker for AUDIT.md agent-audit outputs — CyberSkill code-audit-framework"
+readme = { file = "core/evals/README.md", content-type = "text/markdown" }
+license = { file = "LICENSE" }
+requires-python = ">=3.9"
+authors = [{ name = "CyberSkill", email = "info@cyberskill.world" }]
+keywords = ["ai-agents", "code-audit", "llm", "evals", "prompt-engineering"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Topic :: Software Development :: Quality Assurance",
+]
+
+[project.urls]
+Homepage = "https://github.com/cyberskill-official/code-audit-framework"
+Changelog = "https://github.com/cyberskill-official/code-audit-framework/blob/main/core/CHANGELOG.md"
+
+[project.scripts]
+code-audit-validate = "code_audit_validator:main"
+
+[tool.setuptools]
+# Single module, properly namespaced — the wheel must NOT claim the generic
+# top-level name `validate` (core/evals/validate.py is a repo-only CLI shim).
+py-modules = ["code_audit_validator"]
+
+[tool.setuptools.package-dir]
+"" = "core/evals"

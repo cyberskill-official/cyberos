@@ -21,6 +21,23 @@ Changed
 Verified
 - MEMORY green under the awh gate (pilot FR-MEMORY-116, weighted pass@1 = 100%).
 
+## [Unreleased] - CAF (code-audit) absorption (2026-06-20, branch auto/awh-absorb)
+
+Second verification axis. Where awh reruns the tests, CAF reruns the target's own build/lint/typecheck/test and audits the code, catching the class awh cannot see (a build/lint break, a route that 404s, a changed data contract - e.g. the CCAF V2 regression).
+
+Added
+- CAF vendored under `tools/caf/` (from `CyberSkill/code-audit-framework`; validator self-test `code_audit_validator --all` = 40/40 GREEN, no install) + `tools/caf/field-data/` (calibration records from `code-audit-field-data`).
+- `scripts/caf_gate.sh` - deterministic floor: target health (`tools/caf/core/evals/verify-target.sh` runs the module's own RUN_COMMANDS) + `code-audit-validate` of a sealed `modules/<m>/.caf/` audit when present. Fail-closed.
+- `scripts/caf_precommit_check.sh` - structural fail-closed (every gated module must declare an `audit-profile.yaml`).
+- `modules/<m>/audit-profile.yaml` for all 8 gated modules (ai, auth, proj, email, skill, chat, cuo, memory).
+- `tools/caf/RETIREMENT.md`; design at `docs/verification/caf-absorption-design.md`.
+
+Changed
+- `ship-feature-requests` workflow -> v2.1.0: new step 29 `caf-gate` (awh-gate is 28; the done-flip steps renumber to 30/31); `testing -> done` now requires `awh GREEN AND caf CLEAN` (the done-flip dual condition); §10 outcome table adds a caf-RED rework row. New output `caf_gate_report` (emits `memory.caf_gate_result`).
+
+Verified
+- In-sandbox (no toolchain): validator `--all` 40/40 exit 0; pre-commit check 8/8 GREEN; verify-target.sh PASS / FAIL(exit 1) / fail-closed(exit 2) all correct; the 8 profiles parse to the expected commands. The cargo/pytest/make target-health runs are owner-run on a build machine (ai needs Redis).
+
 ## Per-module changelogs
 
 | Module | Changelog |

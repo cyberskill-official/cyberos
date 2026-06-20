@@ -1,0 +1,13 @@
+# CAF audit identity for the `obs` module (Rust crate cyberos-obs-collector, services/obs-collector).
+# verify-target.sh runs RUN_COMMANDS from this dir to prove TARGET HEALTH. Run on a build machine with
+# the Rust toolchain.
+config:
+  TECH_STACK: Rust (cargo) / cyberos-obs-collector / OTel Collector config + LGTM stack
+  PROJECT_PURPOSE: CyberOS observability - OTLP collector, PII scrub, tenant-aware telemetry
+  MODE: gated
+  DEPTH: standard
+  SEVERITY_FLOOR: High
+  PROTECTED_AREAS: modules/obs/.awh/, modules/obs/.caf/, services/obs-collector/tests/
+  RUN_COMMANDS: cd ../../services && cargo test -p cyberos-obs-collector
+  DOMAIN_NOTES: PII scrub (PROMPT_TEXT/RESPONSE_TEXT/USER_EMAIL/CCCD deletion + secret-pattern rule) is a compliance invariant (FR-OBS-001 section 3). RUN_COMMANDS mirrors the awh suite; add `cargo clippy -p cyberos-obs-collector -- -D warnings` once confirmed clippy-clean.
+  BENCHMARK_MODE: none

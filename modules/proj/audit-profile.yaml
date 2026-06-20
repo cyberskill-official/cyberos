@@ -1,0 +1,13 @@
+# CAF audit identity for the `proj` module (Rust crate cyberos-proj, services/). Absorbed from
+# CyberSkill/code-audit-framework. verify-target.sh runs RUN_COMMANDS from this dir to prove
+# TARGET HEALTH. Run on a build machine with the Rust toolchain.
+config:
+  TECH_STACK: Rust (cargo) / cyberos-proj
+  PROJECT_PURPOSE: CyberOS projects - project/work-item state machine
+  MODE: gated
+  DEPTH: standard
+  SEVERITY_FLOOR: High
+  PROTECTED_AREAS: modules/proj/.awh/, modules/proj/.caf/, services/proj/tests/
+  RUN_COMMANDS: cd ../../services && cargo test -p cyberos-proj
+  DOMAIN_NOTES: Status FSM is the core invariant (status_fsm_test). RUN_COMMANDS mirrors the awh suite (known green); add `cargo clippy -p cyberos-proj -- -D warnings` once confirmed clippy-clean.
+  BENCHMARK_MODE: none

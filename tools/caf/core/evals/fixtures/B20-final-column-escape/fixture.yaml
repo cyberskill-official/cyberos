@@ -1,0 +1,6 @@
+id: B20-final-column-escape
+description: A backlog benchmark table with an extra Final column used to skip the R1/R2 checks entirely - an uncited Palantir/Watsonx target plus no-evidence "measured by reading the code" validated CLEAN (architect review F-2, live exploit). Column shape may select semantics but never disable checks.
+expect: fail
+expected_violations: [R1-NO-OUTPUT, R2-UNCITED]
+exercises_rules: [R1, R2]
+protected_areas: []

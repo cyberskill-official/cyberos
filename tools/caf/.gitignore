@@ -1,0 +1,46 @@
+# macOS junk
+.DS_Store
+**/.DS_Store
+
+# When AUDIT.md is run ON this repo, its self-run ARTIFACTS stay out of git —
+# by name, so the committed documentation in docs/ is unaffected.
+# (Target repos decide for themselves whether to commit these.)
+/docs/BACKLOG.md
+/docs/HANDOFF.md
+/docs/AUDIT-WAIVERS.yaml
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Editor noise
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# IDE-local agent state (cross-model runs)
+.antigravity/
+.cursor/
+.cline/
+.continue/
+.windsurf/
+.zed/
+
+# Python packaging build noise
+build/
+dist/
+*.egg-info/

@@ -1,0 +1,6 @@
+id: B23-redaction-distance
+description: A [REDACTED:aws-key] marker appears in the same fence, but the RAW key sits far beyond the 40-char context window - a marker elsewhere in the file never launders an actual secret value (structural review 4.2 open item, intended behavior now pinned). Must trip R8.
+expect: fail
+expected_violations: [R8-SECRET]
+exercises_rules: [R8]
+protected_areas: []

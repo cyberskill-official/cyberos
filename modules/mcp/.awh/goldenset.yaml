@@ -1,0 +1,25 @@
+# MCP module (mcp-gateway) golden set (awh). FR-MCP-001 (JSON-RPC 2.0 parser + initialize handshake +
+# capabilities + tools/list pagination + tools/call permission gate + router dispatch) has shipped with
+# protocol unit tests; FR-MCP-002..008 follow. This wires the awh gate so each mcp FR reaches done only
+# once its suite verifies GREEN against the sealed baseline.
+#
+#   awh eval modules/mcp/.awh/goldenset.yaml --base-dir . --seeds 1 --out modules/mcp/.awh/eval-baseline.json
+#   awh lock services/mcp-gateway/src/protocol --write-policy
+#   awh eval modules/mcp/.awh/goldenset.yaml --base-dir . --seeds 1 \
+#       --baseline modules/mcp/.awh/eval-baseline.json --max-regression 0.0
+#
+# Tests live in cyberos-mcp-gateway (services/mcp-gateway): jsonrpc parsing, the closed error-code map,
+# initialize match/mismatch, capabilities, tools/list pagination, the tools/call permission gate, and
+# router dispatch (all inline unit tests under src/protocol and src/router).
+tasks:
+  - id: mcp-gateway-rust
+    description: mcp-gateway full suite (services/mcp-gateway)
+    cmd: "cd services && cargo test -p cyberos-mcp-gateway"
+    weight: 3.0
+    timeout_sec: 900
+
+  - id: acceptance-mcp-error-codes
+    description: held-out closed JSON-RPC/MCP error-code map (protocol::errors path), sealed read-only
+    cmd: "cd services && cargo test -p cyberos-mcp-gateway errors"
+    weight: 5.0
+    timeout_sec: 300

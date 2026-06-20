@@ -1,0 +1,6 @@
+id: B04-nonnumeric-target
+description: Banned non-numeric target word
+expect: fail
+expected_violations: [R2-NONNUMERIC]
+exercises_rules: [R2]
+protected_areas: []

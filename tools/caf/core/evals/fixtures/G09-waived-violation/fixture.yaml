@@ -1,0 +1,6 @@
+id: G09-waived-violation
+description: A real R2-UNCITED finding covered by a valid docs/AUDIT-WAIVERS.yaml entry (reason + approver + future expiry). The run must validate clean with the waiver surfaced separately - enterprise exception handling distinct from weakening fixtures (architect review 3.1).
+expect: pass
+expected_violations: []
+exercises_rules: [WAIVERS, R2]
+protected_areas: []

@@ -1,0 +1,50 @@
+{
+  "schema": "code-audit-framework/report@1",
+  "generated_at": "2026-06-13T06:55:06+00:00",
+  "run_dir": "/Users/stephencheng/Projects/CyberSkill/cyberos/services",
+  "protocol_version": "v1.4.0",
+  "protected_areas": [
+    "migrations/",
+    "src/cli/json_schemas/",
+    "services/shared/cyberos-types/",
+    "gen_schema.rs"
+  ],
+  "loops": [
+    {
+      "loop": 1,
+      "date": "2026-06-13",
+      "protocol": "v1.4.0",
+      "mode": "gated",
+      "approved": null,
+      "no_significant_findings": false,
+      "tasks": [
+        {
+          "id": "L1-T1",
+          "severity": "High",
+          "status": "OPEN",
+          "vector": "Security",
+          "description": "SAML ACS binds identity to the document, not the signed element \u2192 signature wrapping (XSW). auth/src/saml.rs:177-191 extracts NameID/Issuer/Audience from the whole SAMLResponse via naive first-match string parsing (extract_xml_element/extract_xml_attr, saml.rs:529-559); saml_sig::verify (saml.rs:277) returns only signed_id and does not constrain extraction to the signed subtree. An attacker holding any one validly-signed assertion for the tenant's IdP can wrap it and inject an attacker-controlled NameID/Issuer elsewhere in the XML; the signature still verifies but the injected identity is consumed \u2192 impersonation of arbitrary users within a SAML-enabled tenant (Critical if a signed assertion is readily obtainable). Compounded by the audience check being skipped when <Audience> is absent (saml.rs:257, if let Some(aud)). Expected delta: re-extract NameID/Issuer/Audience from WITHIN the element verified by signed_id (reject if they fall outside it); require an AudienceRestriction; add an XSW/wrapping regression test that must be rejected.",
+          "verify": "cargo test -p auth saml"
+        }
+      ]
+    }
+  ],
+  "metrics": [],
+  "summary": {
+    "loops": 1,
+    "tasks": 1,
+    "tasks_by_status": {
+      "OPEN": 1
+    },
+    "tasks_by_severity": {
+      "High": 1
+    },
+    "metrics_measured": 0,
+    "violations": 0,
+    "violations_by_code": {},
+    "clean": true,
+    "waived": 0
+  },
+  "violations": [],
+  "waived": []
+}

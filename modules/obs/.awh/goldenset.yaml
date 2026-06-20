@@ -1,0 +1,28 @@
+# OBS module (obs-collector) golden set (awh). obs is the next module in the locked build order
+# (AI Gateway -> OBS -> AUTH stub -> MCP Gateway -> CHAT); all 9 obs FRs are ready_to_implement and the
+# FR-OBS-001 collector scaffold has shipped. This wires the awh gate so each obs FR reaches done only
+# once its suite verifies GREEN against the sealed baseline.
+#
+# Capture + gate:
+#   awh eval modules/obs/.awh/goldenset.yaml --base-dir . --seeds 1 --out modules/obs/.awh/eval-baseline.json
+#   awh eval modules/obs/.awh/goldenset.yaml --base-dir . --seeds 1 \
+#       --baseline modules/obs/.awh/eval-baseline.json --max-regression 0.0
+#
+# Tests live in the Rust crate cyberos-obs-collector (services/obs-collector) as LIB UNIT TESTS - the
+# config validators (validate_accepts_canonical_config, validate_rejects_missing_pii_scrub) and the
+# bearer-token parser. There is no tests/ integration directory yet, so the held-out acceptance task is
+# a name-filtered run of the PII-scrub invariant rather than a separate `--test` target. When FR-OBS-001
+# grows a dedicated integration test under tests/, switch the acceptance task to `--test <name>` and
+# seal it with `awh lock services/obs-collector/tests`.
+tasks:
+  - id: obs-collector-rust
+    description: obs-collector full suite (services/obs-collector)
+    cmd: "cd services && cargo test -p cyberos-obs-collector"
+    weight: 3.0
+    timeout_sec: 900
+
+  - id: acceptance-obs-pii-scrub
+    description: held-out FR-OBS-001 PII-scrub invariant - collector config without PII scrub is rejected
+    cmd: "cd services && cargo test -p cyberos-obs-collector validate_rejects_missing_pii_scrub"
+    weight: 5.0
+    timeout_sec: 300

@@ -1,0 +1,6 @@
+id: G02-no-findings-valid
+description: A loop with zero findings is a VALID outcome (R7) - must validate clean
+expect: pass
+expected_violations: []
+exercises_rules: [R7]
+protected_areas: []

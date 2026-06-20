@@ -1,0 +1,6 @@
+id: G10-legacy-version-artifact
+description: An artifact that states Protocol v1.0.0 and accordingly has NO Mode echo (that requirement arrived in v1.1.0). Version-aware validation must judge it by ITS template, not today's - mixed-version fleets must not false-positive (architect review F-5 precision sibling of B24).
+expect: pass
+expected_violations: []
+exercises_rules: [TEMPLATE]
+protected_areas: []

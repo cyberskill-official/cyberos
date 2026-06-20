@@ -1,0 +1,6 @@
+id: B10-unmeasured-no-reason
+description: UNMEASURED escape hatch used without a reason
+expect: fail
+expected_violations: [R1-NO-REASON]
+exercises_rules: [R1]
+protected_areas: []
