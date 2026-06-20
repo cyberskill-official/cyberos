@@ -55,6 +55,7 @@ pub mod redact;
 pub mod rerank;
 pub mod residency;
 pub mod router;
+pub mod server;
 pub mod streaming;
 pub mod zdr;
 

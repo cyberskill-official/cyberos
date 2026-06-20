@@ -1,0 +1,342 @@
+//! The AI Gateway HTTP serving surface — the axum listener that ties the existing pipeline modules
+//! (policy loader, alias resolver, router/provider call) into a request handler.
+//!
+//! Until now the gateway shipped as a library plus the operator CLI: every module existed (alias, policy,
+//! redact, router, cost ledger, otel) but nothing bound them behind an HTTP endpoint, so several FRs that
+//! say "before binding the HTTP server" referred to a listener that did not exist. This module is that
+//! listener. It is also the surface FR-OBS-003 (RED middleware), FR-OBS-004 (LangSmith export), and
+//! FR-OBS-005 (TraceContext) attach to.
+//!
+//! Two seams keep the handler testable and runnable without external systems:
+//!   - `PolicySource` — production resolves per-tenant policy via the FR-AI-005 loader; tests inject a
+//!     fixed policy.
+//!   - `ChatBackend` — the provider call. The real provider adapters (FR-AI-008 Anthropic / OpenAI /
+//!     Bedrock) are still stubs, so `EchoBackend` is the in-repo backend that lets the gateway return a
+//!     completion for local development, the OBS correlation path, and tests. A real backend that drives
+//!     `router::call_provider` is wired when the provider adapters land.
+
+use std::sync::Arc;
+
+use async_trait::async_trait;
+use axum::extract::{rejection::JsonRejection, State};
+use axum::http::{HeaderMap, StatusCode};
+use axum::response::{IntoResponse, Response};
+use axum::routing::{get, post};
+use axum::{Json, Router};
+use serde::{Deserialize, Serialize};
+
+use crate::policy::TenantPolicy;
+use crate::router::types::{
+    CacheState, ChatCompleteRequest, Choice, FinishReason, Message, ProviderResponse, ProviderUsage,
+};
+
+/// Resolves a tenant's policy. Production uses the FR-AI-005 cached loader; tests inject a fixed policy.
+/// `Debug` is required so `GatewayState` satisfies the crate's `missing_debug_implementations` lint.
+#[async_trait]
+pub trait PolicySource: Send + Sync + std::fmt::Debug {
+    async fn for_tenant(&self, tenant_id: &str) -> Result<Arc<TenantPolicy>, String>;
+}
+
+/// The production policy source: the FR-AI-005 loader (must be `init_loader`-ed at boot).
+#[derive(Debug, Default)]
+pub struct LoaderPolicySource;
+
+#[async_trait]
+impl PolicySource for LoaderPolicySource {
+    async fn for_tenant(&self, tenant_id: &str) -> Result<Arc<TenantPolicy>, String> {
+        crate::policy::load_for_tenant(tenant_id)
+            .await
+            .map_err(|e| format!("{e:?}"))
+    }
+}
+
+/// The provider call. Returns a `ProviderResponse` or an error string the handler maps to HTTP 502.
+#[async_trait]
+pub trait ChatBackend: Send + Sync + std::fmt::Debug {
+    async fn complete(&self, req: &ChatCompleteRequest, model: &str) -> Result<ProviderResponse, String>;
+}
+
+/// In-repo backend that echoes the last user message. The real provider adapters (FR-AI-008) are still
+/// stubs, so this is what lets the gateway return a completion for local dev, the OBS correlation path,
+/// and tests - deterministic, no API key, no network.
+#[derive(Debug, Default)]
+pub struct EchoBackend;
+
+#[async_trait]
+impl ChatBackend for EchoBackend {
+    async fn complete(&self, req: &ChatCompleteRequest, _model: &str) -> Result<ProviderResponse, String> {
+        let last_user = req
+            .messages
+            .iter()
+            .rev()
+            .find(|m| m.role == "user")
+            .map(|m| m.content.clone())
+            .unwrap_or_default();
+        let content = format!("echo: {last_user}");
+        let completion_tokens = content.split_whitespace().count().max(1) as u32;
+        let prompt_tokens = req
+            .messages
+            .iter()
+            .map(|m| m.content.split_whitespace().count() as u32)
+            .sum();
+        Ok(ProviderResponse {
+            id: format!("echo-{}", uuid::Uuid::new_v4()),
+            usage: ProviderUsage {
+                prompt_tokens,
+                completion_tokens,
+                cached_input_tokens: 0,
+            },
+            choices: vec![Choice {
+                index: 0,
+                content,
+                tool_calls: vec![],
+                finish_reason: FinishReason::Stop,
+            }],
+            finish_reason: FinishReason::Stop,
+            latency_ms: 0,
+            cache_state: CacheState::None,
+            attempts: vec![],
+        })
+    }
+}
+
+/// The shared state behind every request.
+#[derive(Clone, Debug)]
+pub struct GatewayState {
+    pub policy: Arc<dyn PolicySource>,
+    pub backend: Arc<dyn ChatBackend>,
+}
+
+impl GatewayState {
+    /// The production wiring: the FR-AI-005 loader plus the echo backend (until FR-AI-008 providers land).
+    pub fn production() -> Self {
+        Self {
+            policy: Arc::new(LoaderPolicySource),
+            backend: Arc::new(EchoBackend),
+        }
+    }
+}
+
+/// One message in the wire request. `ChatCompleteRequest::Message` is not `Deserialize`, so the HTTP body
+/// has its own DTO that maps onto it.
+#[derive(Debug, Deserialize)]
+pub struct ApiMessage {
+    pub role: String,
+    pub content: String,
+}
+
+/// The `POST /v1/chat` request body.
+#[derive(Debug, Deserialize)]
+pub struct ApiChatRequest {
+    pub alias: String,
+    pub messages: Vec<ApiMessage>,
+    #[serde(default)]
+    pub max_tokens: Option<u32>,
+    #[serde(default)]
+    pub temperature: Option<f32>,
+}
+
+/// The `POST /v1/chat` response body.
+#[derive(Debug, Serialize)]
+pub struct ApiChatResponse {
+    pub id: String,
+    pub model: String,
+    pub content: String,
+    pub prompt_tokens: u32,
+    pub completion_tokens: u32,
+    pub finish_reason: String,
+}
+
+/// Build the gateway router: liveness, a metrics stub (RED exports via OTLP, not a scrape), and the chat
+/// endpoint.
+pub fn build_router(state: GatewayState) -> Router {
+    Router::new()
+        .route("/healthz", get(|| async { "ok" }))
+        .route("/metrics", get(|| async { "# cyberos-ai-gateway: RED metrics export via OTLP\n" }))
+        .route("/v1/chat", post(chat))
+        .with_state(state)
+}
+
+/// `POST /v1/chat` - the non-streaming completion path. Pipeline: require a tenant, load its policy,
+/// resolve the alias to a model, call the backend, map the provider response to the wire response.
+async fn chat(
+    State(st): State<GatewayState>,
+    headers: HeaderMap,
+    body: Result<Json<ApiChatRequest>, JsonRejection>,
+) -> Response {
+    let tenant = match header(&headers, "x-tenant-id") {
+        Some(t) => t,
+        None => return err(StatusCode::BAD_REQUEST, "missing x-tenant-id header"),
+    };
+    let Json(req) = match body {
+        Ok(j) => j,
+        Err(e) => return err(StatusCode::BAD_REQUEST, &format!("invalid request body: {e}")),
+    };
+    if req.messages.is_empty() {
+        return err(StatusCode::BAD_REQUEST, "messages must not be empty");
+    }
+
+    let policy = match st.policy.for_tenant(&tenant).await {
+        Ok(p) => p,
+        Err(e) => return err(StatusCode::NOT_FOUND, &format!("policy unavailable for tenant: {e}")),
+    };
+
+    let resolved = match crate::alias::resolve(&req.alias, &policy) {
+        Ok(r) => r,
+        Err(e) => return err(StatusCode::BAD_REQUEST, &format!("alias resolution failed: {e:?}")),
+    };
+
+    let ccr = ChatCompleteRequest {
+        alias: req.alias.clone(),
+        messages: req
+            .messages
+            .iter()
+            .map(|m| Message {
+                role: m.role.clone(),
+                content: m.content.clone(),
+            })
+            .collect(),
+        max_tokens: req.max_tokens,
+        temperature: req.temperature,
+        traceparent: header(&headers, "traceparent"),
+        tracestate: header(&headers, "tracestate"),
+    };
+
+    let resp = match st.backend.complete(&ccr, &resolved.model).await {
+        Ok(r) => r,
+        Err(e) => return err(StatusCode::BAD_GATEWAY, &format!("provider call failed: {e}")),
+    };
+
+    let content = resp.choices.first().map(|c| c.content.clone()).unwrap_or_default();
+    let api = ApiChatResponse {
+        id: resp.id,
+        model: resolved.model,
+        content,
+        prompt_tokens: resp.usage.prompt_tokens,
+        completion_tokens: resp.usage.completion_tokens,
+        finish_reason: format!("{:?}", resp.finish_reason),
+    };
+    (StatusCode::OK, Json(api)).into_response()
+}
+
+fn header(headers: &HeaderMap, name: &str) -> Option<String> {
+    headers
+        .get(name)
+        .and_then(|h| h.to_str().ok())
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(str::to_string)
+}
+
+fn err(status: StatusCode, msg: &str) -> Response {
+    (status, Json(serde_json::json!({ "error": msg }))).into_response()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::body::Body;
+    use axum::http::Request;
+    use tower::ServiceExt; // oneshot
+
+    /// A policy source that always errors - used for tests whose request is rejected before policy load.
+    #[derive(Debug)]
+    struct UnreachablePolicy;
+    #[async_trait]
+    impl PolicySource for UnreachablePolicy {
+        async fn for_tenant(&self, _t: &str) -> Result<Arc<TenantPolicy>, String> {
+            Err("policy source must not be reached in this test".into())
+        }
+    }
+
+    fn test_state() -> GatewayState {
+        GatewayState {
+            policy: Arc::new(UnreachablePolicy),
+            backend: Arc::new(EchoBackend),
+        }
+    }
+
+    fn msg(role: &str, content: &str) -> Message {
+        Message {
+            role: role.to_string(),
+            content: content.to_string(),
+        }
+    }
+
+    #[tokio::test]
+    async fn echo_backend_echoes_last_user_message() {
+        let req = ChatCompleteRequest {
+            alias: "chat.smart".into(),
+            messages: vec![msg("system", "be terse"), msg("user", "hello there world")],
+            max_tokens: None,
+            temperature: None,
+            traceparent: None,
+            tracestate: None,
+        };
+        let resp = EchoBackend.complete(&req, "any-model").await.unwrap();
+        assert_eq!(resp.choices[0].content, "echo: hello there world");
+        assert_eq!(resp.choices[0].finish_reason, FinishReason::Stop);
+        // "echo: hello there world" is 4 whitespace-separated words.
+        assert_eq!(resp.usage.completion_tokens, 4);
+        assert!(resp.id.starts_with("echo-"));
+    }
+
+    #[tokio::test]
+    async fn healthz_is_ok() {
+        let app = build_router(test_state());
+        let res = app
+            .oneshot(Request::get("/healthz").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn chat_without_tenant_header_is_400() {
+        let app = build_router(test_state());
+        let body = r#"{"alias":"chat.smart","messages":[{"role":"user","content":"hi"}]}"#;
+        let res = app
+            .oneshot(
+                Request::post("/v1/chat")
+                    .header("content-type", "application/json")
+                    .body(Body::from(body))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn chat_with_empty_messages_is_400() {
+        let app = build_router(test_state());
+        let body = r#"{"alias":"chat.smart","messages":[]}"#;
+        let res = app
+            .oneshot(
+                Request::post("/v1/chat")
+                    .header("content-type", "application/json")
+                    .header("x-tenant-id", "org:cyberskill")
+                    .body(Body::from(body))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn chat_with_malformed_json_is_400() {
+        let app = build_router(test_state());
+        let res = app
+            .oneshot(
+                Request::post("/v1/chat")
+                    .header("content-type", "application/json")
+                    .header("x-tenant-id", "org:cyberskill")
+                    .body(Body::from("not json"))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+    }
+}
