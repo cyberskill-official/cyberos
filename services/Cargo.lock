@@ -931,6 +931,7 @@ dependencies = [
  "comfy-table",
  "criterion",
  "cyberos-cli-exit",
+ "cyberos-obs-sdk",
  "cyberos-types",
  "dashmap",
  "futures",

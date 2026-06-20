@@ -148,13 +148,38 @@ pub struct ApiChatResponse {
 }
 
 /// Build the gateway router: liveness, a metrics stub (RED exports via OTLP, not a scrape), and the chat
-/// endpoint.
+/// endpoint, with the FR-OBS-003 RED middleware wrapping every route.
 pub fn build_router(state: GatewayState) -> Router {
     Router::new()
         .route("/healthz", get(|| async { "ok" }))
         .route("/metrics", get(|| async { "# cyberos-ai-gateway: RED metrics export via OTLP\n" }))
         .route("/v1/chat", post(chat))
+        // FR-OBS-003 (ADR-OBS-003-001): tenant_ctx (route_layer, inner) stamps the request's tenant onto
+        // the response; red_mw (layer, outer) reads it for the metric's tenant_id label. Same wiring as
+        // auth and memory.
+        .route_layer(axum::middleware::from_fn(tenant_ctx))
+        .layer(axum::middleware::from_fn_with_state(
+            cyberos_obs_sdk::RedState::new("ai-gateway"),
+            cyberos_obs_sdk::red_mw,
+        ))
         .with_state(state)
+}
+
+/// FR-OBS-003 - stamp the request's tenant (from `x-tenant-id`) onto the response so `red_mw` can label
+/// the metric with the real tenant; absent, the metric falls back to "unknown".
+async fn tenant_ctx(req: axum::extract::Request, next: axum::middleware::Next) -> Response {
+    let tenant = req
+        .headers()
+        .get("x-tenant-id")
+        .and_then(|h| h.to_str().ok())
+        .map(str::to_string);
+    let mut response = next.run(req).await;
+    if let Some(t) = tenant {
+        response
+            .extensions_mut()
+            .insert(cyberos_obs_sdk::TenantCtx(t));
+    }
+    response
 }
 
 /// `POST /v1/chat` - the non-streaming completion path. Pipeline: require a tenant, load its policy,

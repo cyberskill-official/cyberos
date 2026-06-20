@@ -35,6 +35,10 @@ async fn main() {
         }
     };
 
+    // FR-OBS-003 - build the RED instruments and install the OTLP meter provider (when
+    // OBS_OTLP_ENDPOINT is set) before serving.
+    cyberos_obs_sdk::init("ai-gateway", env!("CARGO_PKG_VERSION"));
+
     let app = build_router(GatewayState::production());
     let bind = std::env::var("AI_GATEWAY_BIND").unwrap_or_else(|_| "0.0.0.0:8080".to_string());
     let listener = match tokio::net::TcpListener::bind(&bind).await {
