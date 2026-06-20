@@ -1124,14 +1124,19 @@ dependencies = [
 name = "cyberos-obs-compliance-view"
 version = "0.1.0"
 dependencies = [
+ "axum",
  "base64 0.22.1",
+ "chrono",
  "ed25519-dalek",
  "jsonwebtoken",
  "regex",
  "serde",
  "serde_json",
  "sha2",
+ "sqlx",
  "thiserror 2.0.18",
+ "tokio",
+ "uuid",
 ]
 
 [[package]]
