@@ -1051,6 +1051,7 @@ dependencies = [
  "axum",
  "chrono",
  "cyberos-cli-exit",
+ "cyberos-obs-sdk",
  "cyberos-types",
  "regex",
  "reqwest",
@@ -1115,6 +1116,8 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "opentelemetry",
+ "opentelemetry-otlp",
+ "opentelemetry_sdk",
  "tokio",
  "tower 0.5.3",
 ]

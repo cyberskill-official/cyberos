@@ -12,7 +12,11 @@
 
 use opentelemetry::metrics::{Counter, Histogram};
 use opentelemetry::{global, KeyValue};
+use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_sdk::metrics::{PeriodicReader, SdkMeterProvider};
+use opentelemetry_sdk::{runtime, Resource};
 use std::sync::OnceLock;
+use std::time::Duration;
 
 use crate::cardinality_guard;
 
@@ -29,10 +33,15 @@ const DURATION_METRIC: &str = "cyberos_duration_ms";
 static REQUESTS: OnceLock<Counter<u64>> = OnceLock::new();
 static ERRORS: OnceLock<Counter<u64>> = OnceLock::new();
 static DURATION: OnceLock<Histogram<f64>> = OnceLock::new();
+/// Keeps the installed meter provider alive for the process lifetime (dropping it shuts it down).
+static METER_PROVIDER: OnceLock<SdkMeterProvider> = OnceLock::new();
 
-/// Build the RED instruments off the global meter and initialise the cardinality guard for `service`.
-/// Idempotent: a second call is a no-op (the `OnceLock`s keep the first instruments).
-pub fn init(service: &str, _version: &str) {
+/// Install the OTLP exporter (if configured), then build the RED instruments off the global meter and
+/// initialise the cardinality guard for `service`. Idempotent: a second call is a no-op (the
+/// `OnceLock`s keep the first instruments). Call once at service boot, inside the tokio runtime.
+pub fn init(service: &str, version: &str) {
+    install_exporter(service, version);
+
     let meter = global::meter("cyberos");
     let _ = REQUESTS.set(meter.u64_counter(REQUESTS_METRIC).build());
     let _ = ERRORS.set(meter.u64_counter(ERRORS_METRIC).build());
@@ -44,6 +53,56 @@ pub fn init(service: &str, _version: &str) {
             .build(),
     );
     cardinality_guard::init(service);
+}
+
+/// The OTLP collector endpoint, from `OBS_OTLP_ENDPOINT` or the standard `OTEL_EXPORTER_OTLP_ENDPOINT`.
+fn endpoint_from_env() -> Option<String> {
+    std::env::var("OBS_OTLP_ENDPOINT")
+        .or_else(|_| std::env::var("OTEL_EXPORTER_OTLP_ENDPOINT"))
+        .ok()
+        .filter(|s| !s.trim().is_empty())
+}
+
+/// If an OTLP endpoint is configured, install an OTLP gRPC meter provider as the global meter so the RED
+/// instruments export to the collector (FR-OBS-001). Unset means no exporter: the instruments record to
+/// the default no-op meter, so a dev/local run without a collector stays quiet. Best-effort: an exporter
+/// that fails to build logs and leaves metrics disabled rather than crashing the service.
+fn install_exporter(service: &str, version: &str) {
+    let Some(endpoint) = endpoint_from_env() else {
+        return;
+    };
+    match build_meter_provider(&endpoint, service, version) {
+        Ok(provider) => {
+            global::set_meter_provider(provider.clone());
+            let _ = METER_PROVIDER.set(provider);
+        }
+        Err(e) => {
+            eprintln!("obs-sdk: OTLP metric exporter init failed ({e}); RED metrics disabled for {service}");
+        }
+    }
+}
+
+fn build_meter_provider(
+    endpoint: &str,
+    service: &str,
+    version: &str,
+) -> Result<SdkMeterProvider, Box<dyn std::error::Error>> {
+    let exporter = opentelemetry_otlp::MetricExporter::builder()
+        .with_tonic()
+        .with_endpoint(endpoint)
+        .with_timeout(Duration::from_secs(10))
+        .build()?;
+    let reader = PeriodicReader::builder(exporter, runtime::Tokio)
+        .with_interval(Duration::from_secs(10))
+        .build();
+    let resource = Resource::new(vec![
+        KeyValue::new("service.name", service.to_string()),
+        KeyValue::new("service.version", version.to_string()),
+    ]);
+    Ok(SdkMeterProvider::builder()
+        .with_reader(reader)
+        .with_resource(resource)
+        .build())
 }
 
 /// The HTTP status class label (DEC-152): coarse bands, not raw codes, to bound cardinality.

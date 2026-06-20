@@ -17,6 +17,10 @@ path = "src/lib.rs"
 # is also required because opentelemetry 0.27's always-compiled `propagation` module pulls in thiserror
 # through the `trace` feature, so a metrics-only build fails to compile.
 opentelemetry = { workspace = true, features = ["metrics", "trace"] }
+# The OTLP meter-provider/exporter that init() installs so RED metrics leave the process (FR-OBS-003 §1
+# #10). `metrics` is added on top of the workspace `rt-tokio` for the SDK side.
+opentelemetry_sdk = { workspace = true, features = ["rt-tokio", "metrics"] }
+opentelemetry-otlp.workspace = true
 # axum powers the RED middleware layer (the per-service instrumentation point, ADR-OBS-003-001). RED is
 # for HTTP services, which already use axum, so it is a hard dependency rather than an optional feature.
 axum.workspace = true
