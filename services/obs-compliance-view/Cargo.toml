@@ -13,7 +13,8 @@ name = "cyberos_obs_compliance_view"
 path = "src/lib.rs"
 
 [dependencies]
-# Slice 1 is the pure core: the per-view audit-kind table, window validation, and the Ed25519
-# chain-proof. Later slices add serde / axum / sqlx / a PDF lib for the HTTP shell + memory query.
+# The pure core: the per-view audit-kind table, window validation, the Ed25519 chain-proof, and the
+# defence-in-depth PII scan. Later slices add serde / axum / sqlx / a PDF lib for the HTTP shell.
 ed25519-dalek = "2"
+regex = "1"
 thiserror.workspace = true

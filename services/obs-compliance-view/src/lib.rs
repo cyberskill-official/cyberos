@@ -6,10 +6,12 @@
 //! read-only memory query, the PII-scan defence, the summary rendering, the PDF / JSON export, and the
 //! axum shell. See `docs/feature-requests/obs/FR-OBS-008-compliance-view-scoping.md`.
 
+pub mod pii_scan;
 pub mod proof;
 pub mod views;
 pub mod window;
 
+pub use pii_scan::{is_clean, scan, PiiMatch};
 pub use proof::{sign, verify, Proof};
 pub use views::View;
 pub use window::{validate, WindowError, MAX_WINDOW_SECS};

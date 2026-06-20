@@ -1125,6 +1125,7 @@ name = "cyberos-obs-compliance-view"
 version = "0.1.0"
 dependencies = [
  "ed25519-dalek",
+ "regex",
  "thiserror 2.0.18",
 ]
 
