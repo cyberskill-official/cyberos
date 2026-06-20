@@ -28,12 +28,29 @@ and pointing `OBS_CUO_TRIAGE_URL` at it.
 
 obs: caf CLEAN, awh 11/11 100% (0.0 regression). cuo: caf CLEAN (192 passed), awh 2/2 100%. 45 new tests.
 
+### Also in this wave
+
+**Memory-chain audit writes (FR-OBS-007 §1 #6, FR-OBS-008 §1 #10).** New shared crate
+`services/shared/cyberos-audit-chain` (chain anchor byte-identical to memory's canonical and auth's
+`memory_bridge`; best-effort genesis-row insert). obs-router now writes `obs.alert_triaged` /
+`obs.alert_acked` to `l1_audit_log` off the request path when `DATABASE_URL` is set (else the log sink),
+and obs-compliance-view appends `obs.compliance_view_accessed` best-effort. The earlier log-line
+placeholders are gone.
+
+**W3C TraceContext core (FR-OBS-005 §1 #1, #4, #11).** FR-AI-022 (gateway OTel trace emission) is already
+shipped, so FR-OBS-004/005 are unblocked. `cyberos-obs-sdk/src/tracecontext.rs` ships the pure
+correlation primitive: strict version-00 `traceparent` parse/validate, format/inject/extract over axum
+headers, and a forensic `hash16` so a malformed value is logged as a hash, never raw. The
+`with_trace_context` wrapper, the log-enrichment layer, the exemplar, the end-to-end CI test, and
+FR-OBS-004's LangSmith per-call export are deferred: they need the ai-gateway request-serving surface
+that does not exist in-repo (the same blocker as the RED ai-gateway deferral, ADR-OBS-003-001).
+
 ### Remaining for `shipped`
 
 Live validation needs the real targets: a CUO host with an LLM invoker, the dev Postgres applying 0004,
-and the CHAT webhook plus PagerDuty routing key for obs-router. Writing `obs.alert_triaged` /
-`obs.compliance_view_accessed` to the memory audit chain (rather than the current log line) is the
-follow-up across both services.
+and the CHAT webhook plus PagerDuty routing key for obs-router. The migration was validated against the
+real PostgreSQL grammar (pglast/libpg_query) and the triage endpoint end-to-end over HTTP this session;
+applying 0004 to a live Postgres and the chain-reconcile check on obs-written rows remain owner-run.
 
 ---
 
