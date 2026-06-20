@@ -1,5 +1,37 @@
 # Changelog — OBS
 
+## 2026-06-20 - ai-gateway HTTP surface unblocks the obs-AI integration (FR-OBS-003, 004, 005)
+
+### What landed
+
+The AI Gateway gained an HTTP serving surface (`services/ai-gateway/src/server` + `bin/cyberos_gateway`):
+an axum listener (`POST /v1/chat`, `/healthz`, `/metrics`) that binds the existing pipeline (policy loader,
+alias resolver, provider call) behind injectable `PolicySource` and `ChatBackend` seams, with an
+`EchoBackend` since the FR-AI-008 provider adapters are still stubs. This is the surface the obs-AI FRs
+needed.
+
+On it:
+
+- **FR-OBS-003** - the RED middleware (`tenant_ctx` + `red_mw` + `init`) now wraps the gateway, so RED
+  covers all three CyberOS-authored HTTP services (auth, memory, ai-gateway). ADR-OBS-003-001 updated;
+  only `chat` (a pinned image) remains deferred.
+- **FR-OBS-005** - a `trace_ctx` middleware ensures every request carries a W3C trace context (extract the
+  inbound `traceparent` strictly, or generate one), stamps it as a request extension, and echoes it on the
+  response for downstream correlation. Builds on the obs-sdk `tracecontext` primitive.
+- **FR-OBS-004** - the LangSmith export: a `langsmith` module (redaction newtypes, payload + 100KB
+  truncation, opt-in gate, fire-and-forget dispatch, retry + `Idempotency-Key`, error/outcome taxonomy),
+  a `langsmith_export` opt-in field on `AiPolicy` (default false), and the gateway handler dispatching the
+  redacted, trace-correlated export when a tenant opts in.
+
+### Gates
+
+ai-gateway: 7 server tests + 5 langsmith tests pass; all test binaries compile. The full ai gate needs the
+dev Redis/Postgres stack (cache-isolation test) and is owner-run while docker is down this session. The
+LangSmith live POST and the opt-in redaction (Presidio) path are owner-run; the default opt-out path is
+tested.
+
+---
+
 ## 2026-06-20 - compliance-view HTTP service + CUO triage endpoint (FR-OBS-008, FR-OBS-007)
 
 ### What landed
