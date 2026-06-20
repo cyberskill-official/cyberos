@@ -13,5 +13,8 @@ name = "cyberos_obs_router"
 path = "src/lib.rs"
 
 [dependencies]
-# Slice 1 is the pure routing core - no dependencies. Later slices add axum + reqwest + serde +
-# thiserror for the webhook shell and the CUO / CHAT / PagerDuty clients.
+# Slice 2 adds the webhook parser, dedup, and audit-row builders. Later slices add axum + reqwest for
+# the HTTP shell and the CUO / CHAT / PagerDuty clients.
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+thiserror.workspace = true
