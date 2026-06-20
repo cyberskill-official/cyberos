@@ -1,5 +1,24 @@
 # Changelog — OBS
 
+## 2026-06-20 - FR-OBS-005 correlation completed in-repo (exemplars, metrics, log enrichment)
+
+Built on the ai-gateway TraceContext boundary below. obs-sdk now carries the rest of FR-OBS-005's
+correlation surface:
+
+- Histogram exemplars (§1 #3): `exemplar::record_with_exemplar` records a `cyberos_duration_ms` sample so
+  it links to its trace (the trace_id rides via the OTel context at the request boundary);
+  `record_request` routes the duration through it.
+- Correlation metrics (§1 #12): `obs_tracecontext_extracted_total{outcome}` (counted at the gateway
+  boundary by extracted / missing_generated_new / malformed) and `obs_exemplar_emission_total`.
+- Log enrichment (§1 #2): `logging::request_span` carries trace_id / span_id / tenant_id, and
+  `init_json_subscriber` renders the span scope on every event, so every log line emitted while handling a
+  request carries the trace_id - the `loki: {trace_id="..."}` query the whole design hinges on. The
+  gateway instruments each request with the span and ships JSON logs. Verified with an in-memory capture.
+
+With this, the obs module is feature-complete in-repo across FR-OBS-001..009. The only remaining
+FR-OBS-005 clause is the end-to-end correlation CI test (§1 #7), which asserts Loki + Tempo + Prometheus +
+LangSmith all hold the same trace_id for one synthetic call - owner-run, since it needs the live stack.
+
 ## 2026-06-20 - ai-gateway HTTP surface unblocks the obs-AI integration (FR-OBS-003, 004, 005)
 
 ### What landed
