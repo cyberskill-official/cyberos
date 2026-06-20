@@ -47,3 +47,15 @@ tasks:
     cmd: "cd services && cargo test -p cyberos-obs-sdk blocks_past_the_budget_and_is_idempotent_under_it"
     weight: 5.0
     timeout_sec: 300
+
+  - id: obs-router-rust
+    description: obs-router full suite (services/obs-router) - FR-OBS-007 severity + routing-decision core
+    cmd: "cd services && cargo test -p cyberos-obs-router"
+    weight: 3.0
+    timeout_sec: 600
+
+  - id: acceptance-obs-router-routing
+    description: held-out FR-OBS-007 routing table (sev1 -> both; conf >= 0.70 -> chat else pagerduty; no silent drop)
+    cmd: "cd services && cargo test -p cyberos-obs-router --test route_decision_test"
+    weight: 5.0
+    timeout_sec: 300

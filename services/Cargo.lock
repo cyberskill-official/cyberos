@@ -1111,6 +1111,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "cyberos-obs-router"
+version = "0.1.0"
+
+[[package]]
 name = "cyberos-obs-sdk"
 version = "0.1.0"
 dependencies = [

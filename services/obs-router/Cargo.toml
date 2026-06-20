@@ -1,0 +1,17 @@
+[package]
+name = "cyberos-obs-router"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "CyberOS obs-router - Alertmanager -> CUO triage -> CHAT/PagerDuty routing (FR-OBS-007)"
+
+[lib]
+name = "cyberos_obs_router"
+path = "src/lib.rs"
+
+[dependencies]
+# Slice 1 is the pure routing core - no dependencies. Later slices add axum + reqwest + serde +
+# thiserror for the webhook shell and the CUO / CHAT / PagerDuty clients.
