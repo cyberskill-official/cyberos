@@ -71,3 +71,9 @@ tasks:
     cmd: "cd services && cargo test -p cyberos-obs-compliance-view proof::"
     weight: 5.0
     timeout_sec: 300
+
+  - id: acceptance-obs-manifest-custody
+    description: held-out FR-OBS-009 chain-of-custody manifest (sign/verify; tampered rows + tampered field + incomplete + unsigned fail closed)
+    cmd: "cd services && cargo test -p cyberos-obs-compliance-view manifest_signing::"
+    weight: 5.0
+    timeout_sec: 300

@@ -1124,11 +1124,13 @@ dependencies = [
 name = "cyberos-obs-compliance-view"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "ed25519-dalek",
  "jsonwebtoken",
  "regex",
  "serde",
  "serde_json",
+ "sha2",
  "thiserror 2.0.18",
 ]
 

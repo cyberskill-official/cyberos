@@ -40,7 +40,7 @@ pub fn verify(public_key_hex: &str, canonical: &[u8], signature_hex: &str) -> bo
     verifying_key.verify(canonical, &signature).is_ok()
 }
 
-fn to_hex(bytes: &[u8]) -> String {
+pub(crate) fn to_hex(bytes: &[u8]) -> String {
     let mut s = String::with_capacity(bytes.len() * 2);
     for b in bytes {
         let _ = write!(s, "{b:02x}");
@@ -48,7 +48,7 @@ fn to_hex(bytes: &[u8]) -> String {
     s
 }
 
-fn from_hex<const N: usize>(s: &str) -> Option<[u8; N]> {
+pub(crate) fn from_hex<const N: usize>(s: &str) -> Option<[u8; N]> {
     if s.len() != N * 2 {
         return None;
     }

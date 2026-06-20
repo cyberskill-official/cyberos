@@ -1,16 +1,16 @@
 {
   "label": "eval",
-  "created": 1781932072.120809,
+  "created": 1781933004.8590982,
   "seeds": [
     0
   ],
   "k": 1,
   "aggregate": {
-    "n_tasks": 10,
+    "n_tasks": 11,
     "macro_pass_at_1": 1.0,
     "weighted_pass_at_1": 1.0,
     "mean_pass_hat_1": 1.0,
-    "fully_consistent_tasks": 10
+    "fully_consistent_tasks": 11
   },
   "tasks": [
     {
@@ -123,6 +123,18 @@
     },
     {
       "task_id": "acceptance-obs-compliance-proof",
+      "weight": 5.0,
+      "n": 1,
+      "c": 1,
+      "pass_at_1": 1.0,
+      "pass_hat_1": 1.0,
+      "wilson95": [
+        0.206549,
+        1.0
+      ]
+    },
+    {
+      "task_id": "acceptance-obs-manifest-custody",
       "weight": 5.0,
       "n": 1,
       "c": 1,

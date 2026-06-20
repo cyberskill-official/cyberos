@@ -20,4 +20,10 @@ regex = "1"
 jsonwebtoken.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
+sha2.workspace = true
+base64 = "0.22"
 thiserror.workspace = true
+
+[[bin]]
+name = "verify_manifest"
+path = "src/bin/verify_manifest.rs"
