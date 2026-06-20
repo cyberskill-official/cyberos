@@ -82,6 +82,12 @@ pub struct AiPolicy {
     /// Values are Presidio entity-type names (e.g. "VN_CCCD", "VN_MST").
     #[serde(default)]
     pub pii_redaction_extra: Option<Vec<String>>,
+
+    /// FR-OBS-004 §1 #3 - opt in to exporting (redacted) AI traces to self-hosted LangSmith. Default
+    /// false; enabled per tenant via `cyberos-ai policy set <tenant> --langsmith-export=true`. Even
+    /// redacted prompts carry tenant-business semantics, so export is off until the tenant consents.
+    #[serde(default)]
+    pub langsmith_export: bool,
 }
 
 /// Override target for a specific alias. FR-AI-006 §3.

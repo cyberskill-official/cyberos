@@ -48,6 +48,7 @@ fn test_policy_with_bedrock_primary() -> TenantPolicy {
             alias_overrides: None,
             residency_requires_regional_provider: None,
                 pii_redaction_extra: None,
+                langsmith_export: false,
         },
     }
 }

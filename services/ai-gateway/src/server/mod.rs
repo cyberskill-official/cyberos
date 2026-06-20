@@ -26,7 +26,9 @@ use axum::{Json, Router};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
+use crate::langsmith::{self, LangSmithMetadata, RedactedPrompt, RedactedResponse};
 use crate::policy::TenantPolicy;
+use crate::redact;
 use crate::router::types::{
     CacheState, ChatCompleteRequest, Choice, FinishReason, Message, ProviderResponse, ProviderUsage,
 };
@@ -233,6 +235,7 @@ async fn trace_ctx(mut req: axum::extract::Request, next: axum::middleware::Next
 /// resolve the alias to a model, call the backend, map the provider response to the wire response.
 async fn chat(
     State(st): State<GatewayState>,
+    axum::Extension(req_trace): axum::Extension<RequestTrace>,
     headers: HeaderMap,
     body: Result<Json<ApiChatRequest>, JsonRejection>,
 ) -> Response {
@@ -280,6 +283,14 @@ async fn chat(
     };
 
     let content = resp.choices.first().map(|c| c.content.clone()).unwrap_or_default();
+
+    // FR-OBS-004 - opt-in LangSmith export of the (redacted) call, correlated by the request trace id.
+    // Gated on the tenant's opt-in so the default path makes no redaction (Presidio) call; the export
+    // itself is fire-and-forget, so the response is never blocked on LangSmith.
+    if policy.ai_policy.langsmith_export {
+        export_to_langsmith(&policy, &ccr, &resolved, &resp, &content, &req_trace).await;
+    }
+
     let api = ApiChatResponse {
         id: resp.id,
         model: resolved.model,
@@ -289,6 +300,57 @@ async fn chat(
         finish_reason: format!("{:?}", resp.finish_reason),
     };
     (StatusCode::OK, Json(api)).into_response()
+}
+
+/// Redact the prompt and response (FR-AI-011 / Presidio) and dispatch the LangSmith export (FR-OBS-004).
+/// Called only when the tenant has opted in. Redaction failure skips the export (never exports raw text,
+/// never fails the response). The cost is wired from the cost ledger when the non-streaming cost path lands.
+async fn export_to_langsmith(
+    policy: &TenantPolicy,
+    ccr: &ChatCompleteRequest,
+    resolved: &crate::alias::ResolvedModel,
+    resp: &ProviderResponse,
+    content: &str,
+    trace: &RequestTrace,
+) {
+    let prompt_text = ccr
+        .messages
+        .iter()
+        .filter(|m| m.role == "user")
+        .map(|m| m.content.as_str())
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    let (redacted_prompt, redacted_response) =
+        match (redact::redact(&prompt_text, policy).await, redact::redact(content, policy).await) {
+            (Ok(rp), Ok(rr)) => (rp.redacted_text, rr.redacted_text),
+            _ => {
+                eprintln!(
+                    "{{\"sev\":2,\"event\":\"langsmith_redaction_failed_skipping_export\",\"trace_id\":\"{}\"}}",
+                    trace.trace_id
+                );
+                return;
+            }
+        };
+
+    let metadata = LangSmithMetadata {
+        model_alias: ccr.alias.clone(),
+        resolved_model: resolved.model.clone(),
+        provider: resolved.provider_kind.as_metric_label().to_string(),
+        temperature: ccr.temperature,
+        max_tokens: ccr.max_tokens,
+        latency_ms: resp.latency_ms,
+        cost_usd: 0.0,
+        persona_handle: String::new(),
+        tenant_id: policy.tenant_id.clone(),
+        trace_id: trace.trace_id.clone(),
+    };
+    langsmith::export(
+        true,
+        RedactedPrompt(redacted_prompt),
+        RedactedResponse(redacted_response),
+        metadata,
+    );
 }
 
 fn header(headers: &HeaderMap, name: &str) -> Option<String> {
