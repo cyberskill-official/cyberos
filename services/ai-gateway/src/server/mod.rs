@@ -23,6 +23,7 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 use crate::policy::TenantPolicy;
@@ -154,9 +155,10 @@ pub fn build_router(state: GatewayState) -> Router {
         .route("/healthz", get(|| async { "ok" }))
         .route("/metrics", get(|| async { "# cyberos-ai-gateway: RED metrics export via OTLP\n" }))
         .route("/v1/chat", post(chat))
-        // FR-OBS-003 (ADR-OBS-003-001): tenant_ctx (route_layer, inner) stamps the request's tenant onto
-        // the response; red_mw (layer, outer) reads it for the metric's tenant_id label. Same wiring as
-        // auth and memory.
+        // FR-OBS-005: ensure every request carries a trace context (extract or generate) and echo it on
+        // the response. FR-OBS-003 (ADR-OBS-003-001): tenant_ctx stamps the request's tenant onto the
+        // response; red_mw (outer) reads it for the metric's tenant_id label. Same wiring as auth/memory.
+        .route_layer(axum::middleware::from_fn(trace_ctx))
         .route_layer(axum::middleware::from_fn(tenant_ctx))
         .layer(axum::middleware::from_fn_with_state(
             cyberos_obs_sdk::RedState::new("ai-gateway"),
@@ -179,6 +181,51 @@ async fn tenant_ctx(req: axum::extract::Request, next: axum::middleware::Next) -
             .extensions_mut()
             .insert(cyberos_obs_sdk::TenantCtx(t));
     }
+    response
+}
+
+/// The canonical W3C trace id + span id for the current request. Stamped by `trace_ctx` as a request
+/// extension so the handler (and the LangSmith export, FR-OBS-004) read one consistent value.
+#[derive(Debug, Clone)]
+pub struct RequestTrace {
+    pub trace_id: String,
+    pub span_id: String,
+}
+
+/// Generate a fresh W3C trace context (16 random bytes trace id, 8 random bytes span id, sampled).
+fn generate_trace_context() -> cyberos_obs_sdk::TraceContext {
+    let mut rng = rand::thread_rng();
+    let trace_id: String = (0..16).map(|_| format!("{:02x}", rng.gen::<u8>())).collect();
+    let span_id: String = (0..8).map(|_| format!("{:02x}", rng.gen::<u8>())).collect();
+    cyberos_obs_sdk::TraceContext {
+        trace_id,
+        span_id,
+        flags: 1,
+    }
+}
+
+/// FR-OBS-005 (§1 #1, #4, #11) - ensure every request carries a trace context. Extract the incoming W3C
+/// `traceparent` strictly; if it is missing or malformed, generate a fresh one (never reject - trace
+/// context is operational, not security, and an attacker-supplied id is not honoured). The resolved trace
+/// id is stamped as a request extension and echoed on the response `traceparent` header so a downstream
+/// consumer can correlate.
+async fn trace_ctx(mut req: axum::extract::Request, next: axum::middleware::Next) -> Response {
+    let tc = match cyberos_obs_sdk::extract_traceparent(req.headers()) {
+        Ok(tc) => tc,
+        Err(cyberos_obs_sdk::ExtractError::Missing) => generate_trace_context(),
+        Err(cyberos_obs_sdk::ExtractError::Malformed(hash16)) => {
+            eprintln!(
+                "{{\"sev\":2,\"event\":\"malformed_traceparent\",\"hash16\":\"{hash16}\"}}"
+            );
+            generate_trace_context()
+        }
+    };
+    req.extensions_mut().insert(RequestTrace {
+        trace_id: tc.trace_id.clone(),
+        span_id: tc.span_id.clone(),
+    });
+    let mut response = next.run(req).await;
+    cyberos_obs_sdk::inject_traceparent(response.headers_mut(), &tc);
     response
 }
 
@@ -363,5 +410,42 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn response_carries_a_generated_traceparent_when_absent() {
+        let app = build_router(test_state());
+        let res = app
+            .oneshot(Request::get("/healthz").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        let tp = res
+            .headers()
+            .get("traceparent")
+            .expect("a traceparent must be stamped on the response");
+        let s = tp.to_str().unwrap();
+        assert!(
+            cyberos_obs_sdk::parse_w3c_traceparent(s).is_some(),
+            "generated traceparent must be valid W3C: {s}"
+        );
+    }
+
+    #[tokio::test]
+    async fn response_echoes_a_valid_inbound_traceparent() {
+        let app = build_router(test_state());
+        let valid = "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01";
+        let res = app
+            .oneshot(
+                Request::get("/healthz")
+                    .header("traceparent", valid)
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(
+            res.headers().get("traceparent").unwrap().to_str().unwrap(),
+            valid
+        );
     }
 }
