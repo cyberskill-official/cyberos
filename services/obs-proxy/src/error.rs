@@ -23,4 +23,10 @@ pub enum ProxyError {
 
     #[error("query parse failed ({backend:?}): {reason}")]
     ParseFailed { backend: Backend, reason: String },
+
+    #[error("unsupported request path: {0}")]
+    UnsupportedPath(String),
+
+    #[error("backend unreachable: {0}")]
+    BackendUnreachable(String),
 }

@@ -20,5 +20,8 @@ sha2.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 
-# Slice 4b will add: axum, reqwest, tokio (the HTTP router, backend forwarding, and JWKS boot fetch
-# that wrap the pure decision/auth/audit logic in this slice).
+# Slice 4c will add: axum, reqwest (the HTTP router, backend forwarding, and JWKS boot fetch that wrap
+# the request-lifecycle orchestration in handler.rs).
+
+[dev-dependencies]
+tokio.workspace = true
