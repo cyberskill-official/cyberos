@@ -10,6 +10,11 @@
 pub mod cardinality_guard;
 pub mod layer;
 pub mod red;
+pub mod tracecontext;
 
 pub use layer::{red_mw, RedState, TenantCtx};
 pub use red::{init, record_request, status_class, HISTOGRAM_BUCKETS_MS};
+pub use tracecontext::{
+    extract_traceparent, format_traceparent, hash16, inject_traceparent, parse_w3c_traceparent,
+    ExtractError, TraceContext,
+};

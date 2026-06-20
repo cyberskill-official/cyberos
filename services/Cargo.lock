@@ -1190,6 +1190,8 @@ dependencies = [
  "opentelemetry",
  "opentelemetry-otlp",
  "opentelemetry_sdk",
+ "sha2",
+ "thiserror 2.0.18",
  "tokio",
  "tower 0.5.3",
 ]
