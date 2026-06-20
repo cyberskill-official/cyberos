@@ -10,11 +10,13 @@
 pub mod cardinality_guard;
 pub mod exemplar;
 pub mod layer;
+pub mod logging;
 pub mod red;
 pub mod tracecontext;
 
 pub use exemplar::record_with_exemplar;
 pub use layer::{red_mw, RedState, TenantCtx};
+pub use logging::{init_json_subscriber, request_span};
 pub use red::{
     init, record_request, record_tracecontext_extracted, status_class, HISTOGRAM_BUCKETS_MS,
 };

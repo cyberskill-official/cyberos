@@ -12,12 +12,9 @@ use cyberos_ai_gateway::server::{build_router, GatewayState};
 
 #[tokio::main]
 async fn main() {
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
-        )
-        .init();
+    // FR-OBS-005 §1 #2 - JSON logs that render the request span scope, so every line emitted while
+    // handling a request carries trace_id / span_id / tenant_id for cross-tool correlation.
+    cyberos_obs_sdk::init_json_subscriber();
 
     let config_dir = std::env::var("AI_GATEWAY_CONFIG_DIR")
         .map(PathBuf::from)

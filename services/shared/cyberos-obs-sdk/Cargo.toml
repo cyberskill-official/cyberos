@@ -28,6 +28,11 @@ axum.workspace = true
 # #11: a bad traceparent is logged as a hash, never raw, since the value may be attacker-controlled).
 thiserror.workspace = true
 sha2.workspace = true
+# The log-enrichment layer (FR-OBS-005 §1 #2): the canonical request span carrying trace_id/span_id/
+# tenant_id, plus a JSON subscriber that renders the span scope on every event so the fields appear on
+# every log line.
+tracing.workspace = true
+tracing-subscriber.workspace = true
 
 [dev-dependencies]
 tokio.workspace = true

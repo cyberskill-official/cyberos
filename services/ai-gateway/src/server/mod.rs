@@ -25,6 +25,7 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+use tracing::Instrument;
 
 use crate::langsmith::{self, LangSmithMetadata, RedactedPrompt, RedactedResponse};
 use crate::policy::TenantPolicy;
@@ -233,7 +234,16 @@ async fn trace_ctx(mut req: axum::extract::Request, next: axum::middleware::Next
         trace_id: tc.trace_id.clone(),
         span_id: tc.span_id.clone(),
     });
-    let mut response = next.run(req).await;
+    // FR-OBS-005 §1 #2 - instrument the request with the canonical span so every log line emitted while
+    // handling it carries trace_id / span_id / tenant_id (the JSON subscriber renders the span scope).
+    let tenant = req
+        .headers()
+        .get("x-tenant-id")
+        .and_then(|h| h.to_str().ok())
+        .unwrap_or("unknown")
+        .to_string();
+    let span = cyberos_obs_sdk::request_span(&tc.trace_id, &tc.span_id, &tenant);
+    let mut response = async move { next.run(req).await }.instrument(span).await;
     cyberos_obs_sdk::inject_traceparent(response.headers_mut(), &tc);
     response
 }
