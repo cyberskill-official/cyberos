@@ -1112,7 +1112,10 @@ dependencies = [
 name = "cyberos-obs-sdk"
 version = "0.1.0"
 dependencies = [
+ "axum",
  "opentelemetry",
+ "tokio",
+ "tower 0.5.3",
 ]
 
 [[package]]

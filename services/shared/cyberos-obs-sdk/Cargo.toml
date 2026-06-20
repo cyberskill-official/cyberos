@@ -17,3 +17,11 @@ path = "src/lib.rs"
 # is also required because opentelemetry 0.27's always-compiled `propagation` module pulls in thiserror
 # through the `trace` feature, so a metrics-only build fails to compile.
 opentelemetry = { workspace = true, features = ["metrics", "trace"] }
+# axum powers the RED middleware layer (the per-service instrumentation point, ADR-OBS-003-001). RED is
+# for HTTP services, which already use axum, so it is a hard dependency rather than an optional feature.
+axum.workspace = true
+
+[dev-dependencies]
+tokio.workspace = true
+# `util` brings ServiceExt::oneshot for driving the middleware in tests.
+tower = { workspace = true, features = ["util"] }

@@ -8,6 +8,8 @@
 //! completeness lint land in the next slice. See `docs/feature-requests/obs/FR-OBS-003-red-metrics.md`.
 
 pub mod cardinality_guard;
+pub mod layer;
 pub mod red;
 
+pub use layer::{red_mw, RedState, TenantCtx};
 pub use red::{init, record_request, status_class, HISTOGRAM_BUCKETS_MS};
