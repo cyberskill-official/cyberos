@@ -23,3 +23,8 @@ thiserror.workspace = true
 tokio.workspace = true
 axum.workspace = true
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+# Optional memory-chain audit sink (FR-OBS-007 §1 #6): when DATABASE_URL is set the router appends
+# obs.alert_triaged / obs.alert_acked rows to l1_audit_log; unset, it keeps the log sink.
+sqlx.workspace = true
+uuid.workspace = true
+cyberos-audit-chain = { path = "../shared/cyberos-audit-chain" }

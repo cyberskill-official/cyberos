@@ -976,6 +976,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "cyberos-audit-chain"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "sha2",
+ "sqlx",
+ "uuid",
+]
+
+[[package]]
 name = "cyberos-auth"
 version = "0.1.0"
 dependencies = [
@@ -1127,6 +1137,7 @@ dependencies = [
  "axum",
  "base64 0.22.1",
  "chrono",
+ "cyberos-audit-chain",
  "ed25519-dalek",
  "jsonwebtoken",
  "regex",
@@ -1161,11 +1172,14 @@ name = "cyberos-obs-router"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "cyberos-audit-chain",
  "reqwest",
  "serde",
  "serde_json",
+ "sqlx",
  "thiserror 2.0.18",
  "tokio",
+ "uuid",
 ]
 
 [[package]]

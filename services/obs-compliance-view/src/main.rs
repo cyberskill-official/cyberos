@@ -209,17 +209,38 @@ async fn view_handler(
     // 8. Sign the canonical bytes with the Ed25519 chain-proof (§1 #5).
     let p = proof::sign(&st.signing_key, &canonical);
 
-    // 9. Emit the access audit line (§1 #8). The real memory-chain append is owner-wired; this is the
-    //    structured placeholder so the access is observable now.
-    println!(
-        "{{\"event_type\":\"obs.compliance_view_accessed\",\"view\":\"{}\",\"tenant_id\":\"{}\",\"auditor\":\"{}\",\"rows\":{},\"since_ns\":{},\"until_ns\":{}}}",
-        view.slug(),
-        claims.tenant_id,
-        claims.sub,
-        payload.summary.total_rows,
-        since_ns,
-        until_ns
-    );
+    // 9. Append the access-audit row to the memory chain (§1 #10), best-effort: a failed audit write must
+    //    not fail the auditor's read. obs.compliance_view_accessed records who read which view over what
+    //    window so a later auditor can see the views themselves were accessed.
+    {
+        let auditor_subject = Uuid::parse_str(&claims.sub).unwrap_or_else(|_| Uuid::nil());
+        let audit_body = serde_json::json!({
+            "event_type": "obs.compliance_view_accessed",
+            "view": view.slug(),
+            "tenant_id": claims.tenant_id,
+            "auditor": claims.sub,
+            "rows": payload.summary.total_rows,
+            "since_ns": since_ns,
+            "until_ns": until_ns,
+        })
+        .to_string();
+        let audit_path = format!("obs/compliance/{}/{}/accessed", tenant_uuid, view.slug());
+        if let Err(e) = cyberos_audit_chain::emit_genesis(
+            &st.pool,
+            tenant_uuid,
+            auditor_subject,
+            &audit_path,
+            &audit_body,
+        )
+        .await
+        {
+            eprintln!(
+                "{{\"sev\":2,\"event\":\"compliance_audit_emit_failed\",\"view\":\"{}\",\"error\":\"{}\"}}",
+                view.slug(),
+                e
+            );
+        }
+    }
 
     let envelope = ViewEnvelope {
         payload,

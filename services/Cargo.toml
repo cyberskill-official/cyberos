@@ -15,6 +15,7 @@ members = [
     "shared/cyberos-cli-exit",
     "shared/cyberos-types",
     "shared/cyberos-obs-sdk",
+    "shared/cyberos-audit-chain",
 ]
 
 [workspace.package]

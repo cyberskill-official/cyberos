@@ -29,6 +29,8 @@ axum.workspace = true
 sqlx.workspace = true
 uuid.workspace = true
 chrono.workspace = true
+# The access-audit row (obs.compliance_view_accessed) appended to the memory chain (FR-OBS-008 §1 #10).
+cyberos-audit-chain = { path = "../shared/cyberos-audit-chain" }
 
 [[bin]]
 name = "obs-compliance-view"
