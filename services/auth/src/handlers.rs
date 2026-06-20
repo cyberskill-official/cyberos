@@ -158,7 +158,15 @@ pub fn router(state: AppState) -> Router {
             crate::middleware::verify_jwt,
         ));
 
-    public.merge(admin).with_state(state)
+    // FR-OBS-003 - RED metrics for every route (ADR-OBS-003-001). Outermost layer so it sees the
+    // matched route and wraps verify_jwt; verify_jwt sets TenantCtx on the response for the tenant label.
+    public
+        .merge(admin)
+        .layer(axum::middleware::from_fn_with_state(
+            cyberos_obs_sdk::RedState::new("auth"),
+            cyberos_obs_sdk::red_mw,
+        ))
+        .with_state(state)
 }
 
 async fn healthz(State(state): State<AppState>) -> (StatusCode, Json<Value>) {

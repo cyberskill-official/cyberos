@@ -76,6 +76,7 @@ tokio-test          = "0.4"
 # Internal
 cyberos-cli-exit    = { path = "shared/cyberos-cli-exit" }
 cyberos-types       = { path = "shared/cyberos-types" }
+cyberos-obs-sdk     = { path = "shared/cyberos-obs-sdk" }
 
 [profile.dev]
 opt-level = 0

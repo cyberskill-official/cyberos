@@ -959,6 +959,7 @@ dependencies = [
  "chrono",
  "clap",
  "cyberos-cli-exit",
+ "cyberos-obs-sdk",
  "cyberos-types",
  "futures-util",
  "ipnetwork 0.21.1",
