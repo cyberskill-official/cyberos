@@ -8,6 +8,7 @@ members = [
     "obs-collector",
     "obs-proxy",
     "obs-router",
+    "obs-compliance-view",
     "mcp-gateway",
     "email",
     "proj",

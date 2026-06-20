@@ -1,0 +1,19 @@
+[package]
+name = "cyberos-obs-compliance-view"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "CyberOS obs-compliance-view - read-only compliance views over the memory audit chain (FR-OBS-008)"
+
+[lib]
+name = "cyberos_obs_compliance_view"
+path = "src/lib.rs"
+
+[dependencies]
+# Slice 1 is the pure core: the per-view audit-kind table, window validation, and the Ed25519
+# chain-proof. Later slices add serde / axum / sqlx / a PDF lib for the HTTP shell + memory query.
+ed25519-dalek = "2"
+thiserror.workspace = true

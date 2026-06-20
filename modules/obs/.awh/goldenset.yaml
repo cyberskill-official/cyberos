@@ -59,3 +59,15 @@ tasks:
     cmd: "cd services && cargo test -p cyberos-obs-router --test route_decision_test"
     weight: 5.0
     timeout_sec: 300
+
+  - id: obs-compliance-view-rust
+    description: obs-compliance-view full suite (services/obs-compliance-view) - FR-OBS-008 views + window + Ed25519 proof
+    cmd: "cd services && cargo test -p cyberos-obs-compliance-view"
+    weight: 3.0
+    timeout_sec: 600
+
+  - id: acceptance-obs-compliance-proof
+    description: held-out FR-OBS-008 Ed25519 chain-proof (sign/verify roundtrip; tamper + wrong-key + malformed fail closed)
+    cmd: "cd services && cargo test -p cyberos-obs-compliance-view proof::"
+    weight: 5.0
+    timeout_sec: 300
