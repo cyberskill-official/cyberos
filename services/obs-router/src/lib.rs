@@ -11,12 +11,18 @@ pub mod alertmanager_webhook;
 pub mod audit;
 pub mod dedup;
 pub mod error;
+pub mod handle;
+pub mod notify;
 pub mod route;
 pub mod severity;
+pub mod triage;
 
 pub use alertmanager_webhook::{Alert, AlertStatus, Webhook};
 pub use audit::{AuditRow, AuditSink, RecordingSink};
 pub use dedup::{DedupOutcome, Deduper};
 pub use error::RouterError;
+pub use handle::{route_alert, RouteOutcome};
+pub use notify::{ChatClient, NotifyError, PagerDutyClient};
 pub use route::{clamp_confidence, decide, Route, CONFIDENCE_FLOOR};
 pub use severity::Severity;
+pub use triage::{Triage, TriageClient, TriageError};
