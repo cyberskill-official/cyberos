@@ -213,9 +213,16 @@ fn generate_trace_context() -> cyberos_obs_sdk::TraceContext {
 /// consumer can correlate.
 async fn trace_ctx(mut req: axum::extract::Request, next: axum::middleware::Next) -> Response {
     let tc = match cyberos_obs_sdk::extract_traceparent(req.headers()) {
-        Ok(tc) => tc,
-        Err(cyberos_obs_sdk::ExtractError::Missing) => generate_trace_context(),
+        Ok(tc) => {
+            cyberos_obs_sdk::record_tracecontext_extracted("extracted");
+            tc
+        }
+        Err(cyberos_obs_sdk::ExtractError::Missing) => {
+            cyberos_obs_sdk::record_tracecontext_extracted("missing_generated_new");
+            generate_trace_context()
+        }
         Err(cyberos_obs_sdk::ExtractError::Malformed(hash16)) => {
+            cyberos_obs_sdk::record_tracecontext_extracted("malformed");
             eprintln!(
                 "{{\"sev\":2,\"event\":\"malformed_traceparent\",\"hash16\":\"{hash16}\"}}"
             );

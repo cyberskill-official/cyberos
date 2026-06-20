@@ -29,10 +29,15 @@ pub const HISTOGRAM_BUCKETS_MS: &[f64] = &[
 const REQUESTS_METRIC: &str = "cyberos_requests_total";
 const ERRORS_METRIC: &str = "cyberos_errors_total";
 const DURATION_METRIC: &str = "cyberos_duration_ms";
+// FR-OBS-005 §1 #12 - correlation self-observability.
+const TRACECONTEXT_EXTRACTED_METRIC: &str = "obs_tracecontext_extracted_total";
+const EXEMPLAR_EMISSION_METRIC: &str = "obs_exemplar_emission_total";
 
 static REQUESTS: OnceLock<Counter<u64>> = OnceLock::new();
 static ERRORS: OnceLock<Counter<u64>> = OnceLock::new();
 static DURATION: OnceLock<Histogram<f64>> = OnceLock::new();
+static TRACECONTEXT_EXTRACTED: OnceLock<Counter<u64>> = OnceLock::new();
+static EXEMPLAR_EMISSIONS: OnceLock<Counter<u64>> = OnceLock::new();
 /// Keeps the installed meter provider alive for the process lifetime (dropping it shuts it down).
 static METER_PROVIDER: OnceLock<SdkMeterProvider> = OnceLock::new();
 
@@ -52,7 +57,26 @@ pub fn init(service: &str, version: &str) {
             .with_boundaries(HISTOGRAM_BUCKETS_MS.to_vec())
             .build(),
     );
+    let _ = TRACECONTEXT_EXTRACTED.set(meter.u64_counter(TRACECONTEXT_EXTRACTED_METRIC).build());
+    let _ = EXEMPLAR_EMISSIONS.set(meter.u64_counter(EXEMPLAR_EMISSION_METRIC).build());
     cardinality_guard::init(service);
+}
+
+/// FR-OBS-005 §1 #12 - count a traceparent extraction by outcome. `outcome` is the bounded set
+/// `extracted | malformed | missing_generated_new`, mirroring the `trace_ctx` boundary's three paths.
+/// A safe no-op before `init`.
+pub fn record_tracecontext_extracted(outcome: &str) {
+    if let Some(counter) = TRACECONTEXT_EXTRACTED.get() {
+        counter.add(1, &[KeyValue::new("outcome", outcome.to_string())]);
+    }
+}
+
+/// Count one histogram exemplar emission (FR-OBS-005 §1 #12). Called by `exemplar::record_with_exemplar`
+/// each time a sample is recorded with a trace in context. A safe no-op before `init`.
+pub(crate) fn note_exemplar_emission() {
+    if let Some(counter) = EXEMPLAR_EMISSIONS.get() {
+        counter.add(1, &[]);
+    }
 }
 
 /// The OTLP collector endpoint, from `OBS_OTLP_ENDPOINT` or the standard `OTEL_EXPORTER_OTLP_ENDPOINT`.
@@ -154,7 +178,9 @@ pub fn record_request(
         requests.add(1, &labels);
     }
     if let Some(duration) = DURATION.get() {
-        duration.record(f64::from(duration_ms), &labels);
+        // FR-OBS-005 §1 #3 - record with an exemplar so a duration sample links to its trace (the
+        // trace_id rides via the current OTel context set at the request boundary).
+        crate::exemplar::record_with_exemplar(duration, f64::from(duration_ms), &labels);
     }
     if status >= 400 {
         if let Some(errors) = ERRORS.get() {
@@ -209,5 +235,21 @@ mod tests {
         // shared cardinality guard does not collide with other tests.
         record_request("noop-svc", "/x", "t", 200, 5, &[]);
         record_request("noop-svc", "/x", "t", 503, 5, &[("model_alias", "chat.smart".into())]);
+    }
+
+    #[test]
+    fn record_tracecontext_extracted_is_a_safe_noop_before_init() {
+        // The three bounded outcomes; before init the counter is absent, so these must not panic.
+        record_tracecontext_extracted("extracted");
+        record_tracecontext_extracted("malformed");
+        record_tracecontext_extracted("missing_generated_new");
+    }
+
+    #[test]
+    fn record_with_exemplar_is_a_safe_noop_on_a_noop_meter() {
+        // A histogram off the default (no-op) meter, with the emission counter not yet built: recording
+        // must not panic and must count the emission as a no-op.
+        let h = global::meter("test").f64_histogram("test_hist").build();
+        crate::exemplar::record_with_exemplar(&h, 12.5, &[KeyValue::new("route", "/x".to_string())]);
     }
 }
