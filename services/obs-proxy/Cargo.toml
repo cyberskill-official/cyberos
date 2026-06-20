@@ -1,0 +1,24 @@
+[package]
+name = "cyberos-obs-proxy"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "CyberOS tenant-aware Grafana proxy - AST-injects tenant_id into PromQL/LogQL/TraceQL (FR-OBS-002)"
+
+[lib]
+name = "cyberos_obs_proxy"
+path = "src/lib.rs"
+
+[dependencies]
+thiserror.workspace = true
+promql-parser = "0.4"
+jsonwebtoken.workspace = true
+sha2.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+# Slice 4b will add: axum, reqwest, tokio (the HTTP router, backend forwarding, and JWKS boot fetch
+# that wrap the pure decision/auth/audit logic in this slice).
