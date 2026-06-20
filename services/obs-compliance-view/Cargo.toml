@@ -23,6 +23,16 @@ serde_json.workspace = true
 sha2.workspace = true
 base64 = "0.22"
 thiserror.workspace = true
+# The read-only HTTP service (the four view endpoints): axum server, sqlx query over l1_audit_log.
+tokio.workspace = true
+axum.workspace = true
+sqlx.workspace = true
+uuid.workspace = true
+chrono.workspace = true
+
+[[bin]]
+name = "obs-compliance-view"
+path = "src/main.rs"
 
 [[bin]]
 name = "verify_manifest"

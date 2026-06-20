@@ -11,6 +11,8 @@ pub mod manifest;
 pub mod manifest_signing;
 pub mod pii_scan;
 pub mod proof;
+pub mod query;
+pub mod summary;
 pub mod views;
 pub mod window;
 
@@ -19,5 +21,7 @@ pub use manifest::{ExportState, Manifest};
 pub use manifest_signing::{sign as sign_manifest, verify as verify_manifest, Verdict};
 pub use pii_scan::{is_clean, scan, PiiMatch};
 pub use proof::{sign, verify, Proof};
+pub use query::{fetch_rows, AuditRow};
+pub use summary::{summarize, Summary};
 pub use views::View;
 pub use window::{validate, WindowError, MAX_WINDOW_SECS};
