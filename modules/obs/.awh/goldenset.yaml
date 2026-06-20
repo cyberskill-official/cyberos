@@ -1,19 +1,16 @@
-# OBS module (obs-collector) golden set (awh). obs is the next module in the locked build order
-# (AI Gateway -> OBS -> AUTH stub -> MCP Gateway -> CHAT); all 9 obs FRs are ready_to_implement and the
-# FR-OBS-001 collector scaffold has shipped. This wires the awh gate so each obs FR reaches done only
-# once its suite verifies GREEN against the sealed baseline.
+# OBS module golden set (awh). obs is the next module in the locked build order
+# (AI Gateway -> OBS -> AUTH stub -> MCP Gateway -> CHAT). Covers two crates now:
+#   - cyberos-obs-collector (FR-OBS-001 OTel collector scaffold).
+#   - cyberos-obs-proxy     (FR-OBS-002 tenant-aware Grafana proxy: LogQL/PromQL/TraceQL injectors,
+#                            JWT auth, audit, the proxy decision + request lifecycle).
 #
 # Capture + gate:
 #   awh eval modules/obs/.awh/goldenset.yaml --base-dir . --seeds 1 --out modules/obs/.awh/eval-baseline.json
 #   awh eval modules/obs/.awh/goldenset.yaml --base-dir . --seeds 1 \
 #       --baseline modules/obs/.awh/eval-baseline.json --max-regression 0.0
 #
-# Tests live in the Rust crate cyberos-obs-collector (services/obs-collector) as LIB UNIT TESTS - the
-# config validators (validate_accepts_canonical_config, validate_rejects_missing_pii_scrub) and the
-# bearer-token parser. There is no tests/ integration directory yet, so the held-out acceptance task is
-# a name-filtered run of the PII-scrub invariant rather than a separate `--test` target. When FR-OBS-001
-# grows a dedicated integration test under tests/, switch the acceptance task to `--test <name>` and
-# seal it with `awh lock services/obs-collector/tests`.
+# All tasks are lib + integration tests (no external services needed). Held-out acceptance tasks are
+# name/file-filtered runs of each crate's headline security invariant.
 tasks:
   - id: obs-collector-rust
     description: obs-collector full suite (services/obs-collector)
@@ -24,5 +21,17 @@ tasks:
   - id: acceptance-obs-pii-scrub
     description: held-out FR-OBS-001 PII-scrub invariant - collector config without PII scrub is rejected
     cmd: "cd services && cargo test -p cyberos-obs-collector validate_rejects_missing_pii_scrub"
+    weight: 5.0
+    timeout_sec: 300
+
+  - id: obs-proxy-rust
+    description: obs-proxy full suite (services/obs-proxy) - FR-OBS-002 injectors + auth + audit + decide + lifecycle
+    cmd: "cd services && cargo test -p cyberos-obs-proxy"
+    weight: 3.0
+    timeout_sec: 900
+
+  - id: acceptance-obs-proxy-cross-tenant
+    description: held-out FR-OBS-002 cross-tenant property test (no tenant leak; user-supplied tenant refused)
+    cmd: "cd services && cargo test -p cyberos-obs-proxy --test cross_tenant_property_test"
     weight: 5.0
     timeout_sec: 300

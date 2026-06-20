@@ -8,6 +8,6 @@ config:
   DEPTH: standard
   SEVERITY_FLOOR: High
   PROTECTED_AREAS: modules/obs/.awh/, modules/obs/.caf/, services/obs-collector/tests/
-  RUN_COMMANDS: cd ../../services && cargo test -p cyberos-obs-collector
-  DOMAIN_NOTES: PII scrub (PROMPT_TEXT/RESPONSE_TEXT/USER_EMAIL/CCCD deletion + secret-pattern rule) is a compliance invariant (FR-OBS-001 section 3). RUN_COMMANDS mirrors the awh suite; add `cargo clippy -p cyberos-obs-collector -- -D warnings` once confirmed clippy-clean.
+  RUN_COMMANDS: cd ../../services && cargo test -p cyberos-obs-collector; cd ../../services && cargo test -p cyberos-obs-proxy; cd ../../services && cargo clippy -p cyberos-obs-proxy --all-targets -- -D warnings
+  DOMAIN_NOTES: Two crates - obs-collector (FR-OBS-001 PII scrub is the compliance invariant) and obs-proxy (FR-OBS-002 tenant isolation; the cross-tenant no-leak property is the security invariant). obs-proxy is clippy-clean so its clippy -D warnings is gated; add `cargo clippy -p cyberos-obs-collector -- -D warnings` once obs-collector is confirmed clippy-clean too.
   BENCHMARK_MODE: none
