@@ -6,11 +6,13 @@
 //! read-only memory query, the PII-scan defence, the summary rendering, the PDF / JSON export, and the
 //! axum shell. See `docs/feature-requests/obs/FR-OBS-008-compliance-view-scoping.md`.
 
+pub mod auth;
 pub mod pii_scan;
 pub mod proof;
 pub mod views;
 pub mod window;
 
+pub use auth::{enforce_tenant_scope, AuthError, Authenticator, Claims, AUDITOR_ROLE};
 pub use pii_scan::{is_clean, scan, PiiMatch};
 pub use proof::{sign, verify, Proof};
 pub use views::View;
