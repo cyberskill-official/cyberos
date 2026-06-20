@@ -1095,9 +1095,12 @@ dependencies = [
 name = "cyberos-obs-proxy"
 version = "0.1.0"
 dependencies = [
+ "axum",
+ "form_urlencoded",
  "jsonwebtoken",
  "promql-parser",
  "proptest",
+ "reqwest",
  "serde",
  "serde_json",
  "sha2",

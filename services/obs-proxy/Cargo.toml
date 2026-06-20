@@ -12,6 +12,10 @@ description = "CyberOS tenant-aware Grafana proxy - AST-injects tenant_id into P
 name = "cyberos_obs_proxy"
 path = "src/lib.rs"
 
+[[bin]]
+name = "obs-proxy"
+path = "src/main.rs"
+
 [dependencies]
 thiserror.workspace = true
 promql-parser = "0.4"
@@ -19,10 +23,10 @@ jsonwebtoken.workspace = true
 sha2.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-
-# Slice 4c will add: axum, reqwest (the HTTP router, backend forwarding, and JWKS boot fetch that wrap
-# the request-lifecycle orchestration in handler.rs).
+tokio.workspace = true
+axum.workspace = true
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+form_urlencoded = "1"
 
 [dev-dependencies]
-tokio.workspace = true
 proptest = "1"
