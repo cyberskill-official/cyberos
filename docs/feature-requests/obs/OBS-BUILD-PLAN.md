@@ -35,13 +35,16 @@ Tests: `validate_accepts_canonical_config`, `validate_rejects_missing_pii_scrub`
 integration test. Remaining: the live LGTM stack (Helm + docker-compose for otelcol-contrib + Loki +
 Prometheus + Tempo + Grafana) lands at `deploy/obs/`. Gate: already covered by the obs goldenset.
 
-### FR-OBS-002 - Tenant-aware Grafana proxy  (MUST; dep 001 + AUTH-004)
-Build out `services/obs-proxy` (currently a stub): a Rust proxy that AST-injects `tenant_id` into LogQL
-and PromQL queries so a tenant can never read another's telemetry. Files: `inject/logql.rs`,
-`inject/promql.rs` (parse + inject), `auth.rs` (tenant from the AUTH JWT), `audit.rs` (emit to the
-memory chain). Test plan: parse-and-inject unit tests per query language (a query without a tenant
-filter gets one; a query that tries to spoof another tenant is rejected), plus an auth test. Invariant:
-no cross-tenant read path exists.
+### FR-OBS-002 - Tenant-aware Grafana proxy  (MUST; dep 001 + AUTH-004)  -- DONE 2026-06-20
+Shipped: `services/obs-proxy` - a Rust proxy that AST-injects `tenant_id` into LogQL, PromQL, and
+TraceQL so a tenant can never read another's telemetry. `inject/{logql,promql,traceql}.rs` (PromQL via
+promql-parser; LogQL/TraceQL hand-rolled quote-aware), `auth.rs` (RS256 JWKS, kid-aware, + nil-UUID
+root admin), `audit.rs` (query_proxied + cross_tenant_query_attempt rows), `proxy.rs` (the pure
+`decide`), `handler.rs` (request lifecycle, param-preserving), `forwarder.rs` (reqwest), `main.rs` (axum
+router). Anti-bypass: a query that supplies its own `tenant_id` is refused (400 + sev-1 audit). Proven
+by a 2000-case property test (forwarded query carries only the caller's tenant; user-supplied tenant
+always refused). Deploy: `deploy/obs/` (Grafana -> obs-proxy -> LGTM, datasources via the proxy). Gated
+green: awh obs 4/4=100%, caf obs CLEAN. Commits 2e2c143..d1036f6.
 
 ### FR-OBS-003 - Per-service RED metrics  (MUST; dep 001)
 A `cyberos` metrics SDK emitting rate / errors / duration per service, wired first into ai-gateway

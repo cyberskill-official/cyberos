@@ -1,0 +1,19 @@
+[package]
+name = "cyberos-obs-sdk"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "CyberOS shared RED metrics SDK (rate/errors/duration) - FR-OBS-003"
+
+[lib]
+name = "cyberos_obs_sdk"
+path = "src/lib.rs"
+
+[dependencies]
+# The workspace pins opentelemetry with default-features = false. Re-enable the metrics API here; `trace`
+# is also required because opentelemetry 0.27's always-compiled `propagation` module pulls in thiserror
+# through the `trace` feature, so a metrics-only build fails to compile.
+opentelemetry = { workspace = true, features = ["metrics", "trace"] }

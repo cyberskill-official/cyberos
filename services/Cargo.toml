@@ -12,6 +12,7 @@ members = [
     "proj",
     "shared/cyberos-cli-exit",
     "shared/cyberos-types",
+    "shared/cyberos-obs-sdk",
 ]
 
 [workspace.package]

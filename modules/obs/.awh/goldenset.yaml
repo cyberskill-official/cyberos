@@ -35,3 +35,15 @@ tasks:
     cmd: "cd services && cargo test -p cyberos-obs-proxy --test cross_tenant_property_test"
     weight: 5.0
     timeout_sec: 300
+
+  - id: obs-sdk-rust
+    description: obs-sdk full suite (services/shared/cyberos-obs-sdk) - FR-OBS-003 RED metrics core + cardinality guard
+    cmd: "cd services && cargo test -p cyberos-obs-sdk"
+    weight: 3.0
+    timeout_sec: 600
+
+  - id: acceptance-obs-sdk-cardinality
+    description: held-out FR-OBS-003 cardinality-guard invariant - blocks past the per-metric series budget
+    cmd: "cd services && cargo test -p cyberos-obs-sdk blocks_past_the_budget_and_is_idempotent_under_it"
+    weight: 5.0
+    timeout_sec: 300
