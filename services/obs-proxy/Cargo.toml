@@ -25,3 +25,4 @@ serde_json.workspace = true
 
 [dev-dependencies]
 tokio.workspace = true
+proptest = "1"
