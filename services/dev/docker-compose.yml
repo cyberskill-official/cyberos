@@ -16,7 +16,12 @@
 
 services:
   postgres:
-    image: apache/age:release_PG16_1.6.0  # Postgres 16 + Apache AGE
+    # Postgres 16 + Apache AGE (graph) + pgvector (embeddings). The base apache/age image lacks pgvector,
+    # which the memory layer-2 migration needs, so Dockerfile.postgres adds it. See that file for why.
+    build:
+      context: .
+      dockerfile: Dockerfile.postgres
+    image: cyberos/postgres-age-pgvector:pg16
     container_name: cyberos-postgres
     restart: unless-stopped
     ports:

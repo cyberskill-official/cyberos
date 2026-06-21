@@ -1,0 +1,11 @@
+# CyberOS dev Postgres: Apache AGE (graph) + pgvector (embeddings) on PG16.
+#
+# The community `apache/age:release_PG16_1.6.0` image ships Apache AGE but NOT pgvector, which the memory
+# layer-2 migration (0001_layer2.sql, VECTOR(1024) columns) needs. The image is Debian-based with the
+# PGDG apt repo configured, so we add the prebuilt pgvector package on top. This keeps a single image
+# with both extensions so `docker compose up --build` is reproducible.
+FROM apache/age:release_PG16_1.6.0
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends postgresql-16-pgvector \
+ && rm -rf /var/lib/apt/lists/*
