@@ -3,7 +3,14 @@
 Pre-go-live issues found during local live testing. Each entry has the symptom, the root cause with
 evidence, the impact, and the fix options.
 
-## 1. AI gateway memory-audit bridge is broken (FR-AI-003 contract drift) - blocker
+## 1. AI gateway memory-audit bridge (FR-AI-003 contract drift) - fixed, with a follow-up decision
+
+Status: fixed. The missing `cyberos.writer` module was added (`modules/memory/cyberos/writer.py`), a
+stdlib-only FR-AI-003-conformant Writer that reads `{path, body, meta}` on stdin, computes
+`chain = SHA-256(payload || prev_chain)` exactly as the gateway recomputes it, advances its own chain
+head, and prints `{seq, ts_ns, chain, prev_chain}`. With it reachable (memory package importable), all six
+`cost_hold_expiry` tests pass. The original analysis is kept below; the remaining decision is in
+"Follow-up" at the end of this entry.
 
 Symptom. The cost-hold expiry tick never transitions expired holds. The integration tests
 `ai-gateway::cost_hold_expiry::tick_skips_non_expired_holds` and `tick_skips_reconciled_holds` fail:
@@ -49,9 +56,15 @@ Fix options (a design decision, not a one-liner).
 3. Replace the subprocess bridge with an HTTP/IPC call to the memory service (it already runs as an HTTP
    server), removing the Python-subprocess dependency from the gateway hot path entirely.
 
-Either way, add one integration test that actually round-trips through the real Writer so the contract
-cannot drift again, and (per FR-AI-003 §1 #10) wire the documented startup health check
-(`python3 -m cyberos.writer --version`) so a broken bridge fails at deploy time, not silently at runtime.
+Follow-up (option 1 shipped). Option 1 is implemented: `modules/memory/cyberos/writer.py` satisfies the
+FR-AI-003 contract and the bridge now works (six `cost_hold_expiry` tests green). Two things remain:
+- The new Writer keeps a separate AI-audit chain (its own `head.json` + `ledger.jsonl`), because its chain
+  hashes the wire payload while the memory module's main L1 ledger hashes the decomposed `AuditRecord` -
+  two different chain definitions. Decide whether to unify them (one chain model, one ledger) or keep the
+  AI-audit chain separate by design. Unifying touches everything that verifies the main ledger.
+- Still recommended: wire FR-AI-003 §1 #10's startup health check (`python3 -m cyberos.writer --version`,
+  which now exists) into the gateway boot so a missing or broken Writer fails at deploy time, and ensure
+  the deploy installs the memory package (`pip install -e modules/memory`) so the subprocess resolves.
 
 ## 2. AUTH p95 latency assertion is environment-sensitive - minor
 

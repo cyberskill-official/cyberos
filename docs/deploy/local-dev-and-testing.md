@@ -98,11 +98,11 @@ pure and need no database: `cargo test -p cyberos-obs-sdk` and so on.
 - `auth::create_subject_p95_latency_under_200ms` asserts a p95 under 200 ms. Docker Desktop on macOS is
   slower than CI, so it can trip locally. Not a logic failure - relax or skip that threshold for local
   runs (`--skip create_subject_p95`).
-- `ai-gateway::cost_hold_expiry::tick_skips_non_expired_holds` and `tick_skips_reconciled_holds` fail
-  because the AI gateway memory-audit bridge (FR-AI-003) invokes a Python Writer module
-  (`python3 -m cyberos.writer put`) that the memory package never shipped, so the audit-before-action
-  emit fails and the expiry rolls back. This is a real cross-module contract gap, not an environment
-  artifact, and is a go-live blocker for hold expiry and gateway audit writes. See
+- `ai-gateway::cost_hold_expiry::*` spawn the FR-AI-003 Writer (`python3 -m cyberos.writer put`), so the
+  memory package must be importable when you run the ai-gateway suite. Either `pip install -e
+  modules/memory` once, or set `PYTHONPATH=$PWD/../modules/memory` (from `services/`) before `cargo test`.
+  Without it the audit emit fails, the expiry rolls back, and the two `tick_skips_*` tests fail. This was
+  a real cross-module contract gap (the `cyberos.writer` module was missing); it is fixed - see
   `docs/KNOWN-ISSUES.md` issue 1.
 - If a run leaves the DB dirty and a later run fails, reset with a clean volume: `docker compose
   -f dev/docker-compose.yml down -v && docker compose -f dev/docker-compose.yml up -d --build`, then

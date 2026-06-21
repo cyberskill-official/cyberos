@@ -3,6 +3,8 @@
 # TARGET HEALTH (the half awh does not run). Run on a build machine with the Rust toolchain.
 # PRECONDITION: the ai suite needs Redis at 127.0.0.1:6379 (docker run -d -p 6379:6379 redis:7)
 # and runs serial (--test-threads=1): stateful integration tests share a process-global cost table.
+# PRECONDITION: the cost-hold-expiry tests spawn the FR-AI-003 Writer (python3 -m cyberos.writer), so the
+# memory package must be importable - `pip install -e modules/memory` or PYTHONPATH=modules/memory.
 config:
   TECH_STACK: Rust (cargo) / cyberos-ai-gateway / Redis cache / ArcSwap cost table
   PROJECT_PURPOSE: CyberOS AI gateway - provider routing, cost table, cross-tenant cache isolation
