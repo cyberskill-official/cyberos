@@ -1067,6 +1067,7 @@ dependencies = [
  "hyper",
  "jsonrpsee",
  "jsonwebtoken",
+ "reqwest",
  "serde",
  "serde_json",
  "sha2",

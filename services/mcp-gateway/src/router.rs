@@ -1,6 +1,8 @@
-//! FR-MCP-001 §1 #25 + §1 #26 — Axum router mounting `POST /mcp` + `GET /mcp/healthz`.
+//! FR-MCP-001 §1 #25 + §1 #26 — Axum router mounting `POST /mcp` + `GET /mcp/healthz`,
+//! plus the FR-MCP-002 control plane (`/v1/mcp/register`, `/heartbeat`, `/deregister`).
 
 use std::sync::Arc;
+use std::time::SystemTime;
 
 use axum::extract::State;
 use axum::http::StatusCode;
@@ -9,8 +11,11 @@ use axum::Json;
 use axum::Router;
 use serde::Serialize;
 use serde_json::{json, Value};
-use tracing::warn;
+use tracing::{info, warn};
 
+use crate::federation::register::{
+    apply as apply_registration, validate as validate_registration, RegisterRequest,
+};
 use crate::federation::registry::ToolRegistry;
 use crate::protocol::errors::{codes, err};
 use crate::protocol::initialize::{build_response_value, InitializeParams};
@@ -37,17 +42,87 @@ pub struct HealthZ {
     pub registered_modules: usize,
     /// Total tools registered.
     pub registered_tools: usize,
+    /// Per-module server health (FR-MCP-002).
+    pub servers: Vec<serde_json::Value>,
 }
 
-/// Build the slice-1 Axum router.
+/// Whether the FR-MCP-002 control-plane routes (register/heartbeat/deregister) are enabled.
+/// Off unless `MCP_DEV_REGISTRATION=1`, because they mutate what the gateway dispatches to.
+fn control_plane_enabled() -> bool {
+    std::env::var("MCP_DEV_REGISTRATION").as_deref() == Ok("1")
+}
+
+fn control_plane_disabled_response() -> (StatusCode, Json<Value>) {
+    (
+        StatusCode::FORBIDDEN,
+        Json(json!({
+            "error": "registration_disabled",
+            "detail": "set MCP_DEV_REGISTRATION=1 to enable the dev control plane; production requires authenticated registration (FR-MCP-004)"
+        })),
+    )
+}
+
+/// Build the Axum router. `POST /mcp` + `GET /mcp/healthz` are the MCP protocol surface;
+/// `/v1/mcp/{register,heartbeat,deregister}` are the FR-MCP-002 control plane.
 pub fn build_router(state: AppState) -> Router {
     Router::new()
         .route("/mcp", post(handle_mcp))
         .route("/mcp/healthz", get(handle_healthz))
+        .route("/v1/mcp/register", post(handle_register))
+        .route("/v1/mcp/heartbeat", post(handle_heartbeat))
+        .route("/v1/mcp/deregister", post(handle_deregister))
         .with_state(state)
 }
 
+/// FR-MCP-002 control-plane: a module registers its tool catalogue so `tools/list` and
+/// `tools/call` can see it.
+///
+/// Trust boundary: registration changes what the gateway will forward `tools/call` to, so
+/// it is privileged. This dev slice gates the route behind `MCP_DEV_REGISTRATION=1` (off by
+/// default). Production must replace this with authenticated registration (FR-MCP-004) plus
+/// an endpoint allowlist before exposing it, and the heartbeat/health lifecycle
+/// (DEC-2350/2351) is the next slice on top of this one.
+async fn handle_register(
+    State(state): State<AppState>,
+    body: axum::body::Bytes,
+) -> (StatusCode, Json<Value>) {
+    if !control_plane_enabled() {
+        return control_plane_disabled_response();
+    }
+
+    let req: RegisterRequest = match serde_json::from_slice(&body) {
+        Ok(r) => r,
+        Err(e) => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(json!({ "error": "invalid_body", "detail": e.to_string() })),
+            );
+        }
+    };
+
+    if let Err(e) = validate_registration(&req) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(json!({ "error": "invalid_registration", "detail": e.message() })),
+        );
+    }
+
+    let n = apply_registration(&state.registry, &req);
+    let names: Vec<&str> = req.tools.iter().map(|t| t.name.as_str()).collect();
+    info!(module = %req.module, endpoint = %req.endpoint, tools = n, "module registered");
+    (
+        StatusCode::OK,
+        Json(json!({ "registered": n, "module": req.module, "tools": names })),
+    )
+}
+
 async fn handle_healthz(State(state): State<AppState>) -> (StatusCode, Json<HealthZ>) {
+    let servers: Vec<Value> = state
+        .registry
+        .server_health(SystemTime::now())
+        .into_iter()
+        .map(|(module, status)| json!({ "module": module, "status": status.as_str() }))
+        .collect();
     (
         StatusCode::OK,
         Json(HealthZ {
@@ -55,8 +130,73 @@ async fn handle_healthz(State(state): State<AppState>) -> (StatusCode, Json<Heal
             protocol_version: MCP_PROTOCOL_VERSION,
             registered_modules: state.registry.modules().len(),
             registered_tools: state.registry.len(),
+            servers,
         }),
     )
+}
+
+/// FR-MCP-002 control-plane: a module heartbeats to stay healthy. Body: `{"module": "..."}`.
+async fn handle_heartbeat(
+    State(state): State<AppState>,
+    body: axum::body::Bytes,
+) -> (StatusCode, Json<Value>) {
+    if !control_plane_enabled() {
+        return control_plane_disabled_response();
+    }
+    let module = match parse_module_field(&body) {
+        Ok(m) => m,
+        Err(resp) => return resp,
+    };
+    if state.registry.record_heartbeat(&module, SystemTime::now()) {
+        let status = state
+            .registry
+            .server_status(&module, SystemTime::now())
+            .map(|s| s.as_str())
+            .unwrap_or("healthy");
+        (StatusCode::OK, Json(json!({ "module": module, "status": status })))
+    } else {
+        (
+            StatusCode::NOT_FOUND,
+            Json(json!({ "error": "unknown_module", "detail": format!("{module} is not registered; register before heartbeating") })),
+        )
+    }
+}
+
+/// FR-MCP-002 control-plane: a module deregisters (its tools are withdrawn until it
+/// registers again). Body: `{"module": "..."}`.
+async fn handle_deregister(
+    State(state): State<AppState>,
+    body: axum::body::Bytes,
+) -> (StatusCode, Json<Value>) {
+    if !control_plane_enabled() {
+        return control_plane_disabled_response();
+    }
+    let module = match parse_module_field(&body) {
+        Ok(m) => m,
+        Err(resp) => return resp,
+    };
+    if state.registry.mark_deregistered(&module) {
+        info!(module = %module, "module deregistered");
+        (StatusCode::OK, Json(json!({ "module": module, "status": "deregistered" })))
+    } else {
+        (
+            StatusCode::NOT_FOUND,
+            Json(json!({ "error": "unknown_module", "detail": format!("{module} is not registered") })),
+        )
+    }
+}
+
+/// Parse `{"module": "..."}` from a control-plane request body, or return the error response.
+fn parse_module_field(body: &[u8]) -> Result<String, (StatusCode, Json<Value>)> {
+    let v: Value = serde_json::from_slice(body)
+        .map_err(|e| (StatusCode::BAD_REQUEST, Json(json!({ "error": "invalid_body", "detail": e.to_string() }))))?;
+    match v.get("module").and_then(|m| m.as_str()) {
+        Some(m) if !m.trim().is_empty() => Ok(m.to_string()),
+        _ => Err((
+            StatusCode::BAD_REQUEST,
+            Json(json!({ "error": "invalid_body", "detail": "expected a non-empty \"module\" string" })),
+        )),
+    }
 }
 
 async fn handle_mcp(

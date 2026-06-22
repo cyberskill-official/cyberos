@@ -48,7 +48,9 @@ pub fn build_response(registry: &ToolRegistry, params: &ToolsListParams) -> Tool
         .and_then(decode_cursor)
         .unwrap_or(0);
 
-    let all = registry.snapshot_sorted();
+    // FR-MCP-002: only list tools whose owning module is currently available (healthy or
+    // degraded). Unhealthy/deregistered modules' tools are withdrawn until heartbeats resume.
+    let all = registry.available_descriptors_sorted(std::time::SystemTime::now());
     let total = all.len();
     let end = (offset + PAGE_SIZE).min(total);
     let tools = all[offset..end].to_vec();
