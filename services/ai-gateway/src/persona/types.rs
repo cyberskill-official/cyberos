@@ -101,11 +101,13 @@ pub enum PersonaError {
         available: Vec<String>,
     },
 
-    #[error("persona body hash mismatch — possible tampering: handle={handle}")]
+    #[error("persona body hash mismatch - possible tampering: handle={handle}")]
     Tampered {
         handle: PersonaHandle,
-        expected_hash: [u8; 32],
-        actual_hash: [u8; 32],
+        // Boxed to keep PersonaError small (clippy::result_large_err): two 32-byte hashes would
+        // bloat every Result<_, PersonaError> on the happy path.
+        expected_hash: Box<[u8; 32]>,
+        actual_hash: Box<[u8; 32]>,
     },
 
     #[error("registry not initialised")]

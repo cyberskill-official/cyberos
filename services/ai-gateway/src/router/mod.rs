@@ -9,6 +9,8 @@ pub mod anthropic;
 pub mod bedrock;
 pub mod failover;
 pub mod jitter;
+pub mod local_openai;
+pub mod ollama;
 pub mod openai;
 pub mod types;
 
@@ -23,7 +25,6 @@ use std::time::{Duration, Instant};
 use async_trait::async_trait;
 use once_cell::sync::Lazy;
 use prometheus::{register_counter_vec, register_histogram_vec, CounterVec, HistogramVec};
-use rand::Rng;
 use tracing::{error, warn};
 
 use crate::alias::ResolvedModel;
@@ -164,7 +165,6 @@ pub async fn call_provider(
     let mut attempts: Vec<AttemptRecord> = Vec::with_capacity(ATTEMPTS_CAP);
     let mut last_error: Option<RouterError> = None;
     let mut prev_provider_kind: Option<ProviderKind> = None;
-    let mut rng = rand::thread_rng();
 
     for (chain_idx, (provider, model)) in chain.iter().enumerate() {
         let pk = provider.kind();
@@ -342,7 +342,13 @@ pub async fn call_provider(
             // §1 #3: Exponential backoff before next retry within same provider.
             if attempt_num < MAX_RETRIES_PER_PROVIDER {
                 let base_ms = RETRY_DELAYS_MS[(attempt_num - 1) as usize];
-                let sleep_ms = jitter::jitter_ms(base_ms, JITTER_FACTOR, &mut rng);
+                // Scope the (!Send) thread rng to this synchronous jitter call so it is never held across
+                // the sleep await below. Otherwise call_provider's future is not Send and cannot be driven
+                // from the Send + Sync ChatBackend trait object (the FR-AI-105 serving path).
+                let sleep_ms = {
+                    let mut rng = rand::thread_rng();
+                    jitter::jitter_ms(base_ms, JITTER_FACTOR, &mut rng)
+                };
                 let sleep_dur = Duration::from_millis(sleep_ms as u64);
                 if Instant::now() + sleep_dur > effective_deadline {
                     break;

@@ -1,7 +1,5 @@
 //! FR-AI-014 §5 — Integration tests for persona parsing, hashing, and handle parsing.
 
-use std::path::PathBuf;
-use std::sync::Arc;
 
 use cyberos_ai_gateway::persona::*;
 

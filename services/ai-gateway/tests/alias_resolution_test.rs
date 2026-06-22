@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use cyberos_ai_gateway::alias::{self, AliasError, LatencyClass, ResolvedModel};
+use cyberos_ai_gateway::alias::{self, AliasError, LatencyClass};
 use cyberos_ai_gateway::policy::*;
 use cyberos_ai_gateway::cost_table;
 
@@ -153,7 +153,7 @@ fn cost_table_missing_errors() {
 
 #[test]
 fn empty_fallback_returns_no_provider() {
-    let mut policy = test_policy_with_bedrock_primary();
+    let policy = test_policy_with_bedrock_primary();
     // Remove chat.long from primary (it's not there by default)
     // And don't add any fallbacks
     let err = alias::resolve("chat.long", &policy).unwrap_err();

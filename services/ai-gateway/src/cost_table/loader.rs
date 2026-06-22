@@ -12,12 +12,12 @@ use std::time::Instant;
 
 use arc_swap::ArcSwap;
 use chrono::{DateTime, Utc};
-use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
+use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::OnceCell;
 use rust_decimal::Decimal;
 use tokio::sync::mpsc;
 
-use super::schema::{CostRate, CostTableHandle, FileFailure, LoaderInitError, RawCostRate, RawCostTable};
+use super::schema::{CostRate, CostTableHandle, FileFailure, LoaderInitError, RawCostTable};
 use crate::policy::ProviderKind;
 
 /// In-memory cost table: (ProviderKind, model_name) → CostRate.
@@ -33,7 +33,7 @@ const DEBOUNCE_MS: u64 = 100;
 
 mod metrics {
     use once_cell::sync::Lazy;
-    use prometheus::{register_counter_vec, register_histogram, register_int_gauge, CounterVec, Histogram, IntGauge};
+    use prometheus::{register_counter_vec, register_int_gauge, CounterVec, Histogram, IntGauge};
 
     pub static LOOKUPS: Lazy<CounterVec> = Lazy::new(|| {
         register_counter_vec!(
@@ -232,8 +232,10 @@ fn parse_provider(s: &str) -> Result<ProviderKind, String> {
         "openai" => Ok(ProviderKind::Openai),
         "vertex" => Ok(ProviderKind::Vertex),
         "bge" => Ok(ProviderKind::Bge),
+        "ollama" => Ok(ProviderKind::Ollama),
+        "local_openai" => Ok(ProviderKind::LocalOpenai),
         other => Err(format!(
-            "unknown provider '{}'; supported: bedrock|anthropic|openai|vertex|bge",
+            "unknown provider '{}'; supported: bedrock|anthropic|openai|vertex|bge|ollama|local_openai",
             other
         )),
     }

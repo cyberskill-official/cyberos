@@ -242,7 +242,7 @@ async fn tick_skips_locked_rows() {
 
     let expired_at = Utc::now() - Duration::seconds(10);
     let locked_id = seed_hold(&pool, tenant, dec!(0.0085), expired_at, "held").await;
-    let other_id = seed_hold(&pool, tenant, dec!(0.0085), expired_at, "held").await;
+    let _other_id = seed_hold(&pool, tenant, dec!(0.0085), expired_at, "held").await;
 
     // Lock the first hold from another transaction.
     let mut blocking_tx = pool.begin().await.unwrap();
@@ -252,7 +252,7 @@ async fn tick_skips_locked_rows() {
         .await
         .unwrap();
 
-    let report = run_tick(&pool).await.unwrap();
+    let _report = run_tick(&pool).await.unwrap();
 
     // Should process the unlocked one, skip the locked one.
     // (Memory writer may cause failures, but the locked one should not be touched.)

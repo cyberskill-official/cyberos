@@ -159,7 +159,7 @@ async fn schema_mismatch_treated_as_miss() {
 
     // Insert raw via Redis.
     use redis::AsyncCommands;
-    use tokio::time::timeout;
+    
     let client = redis::Client::open("redis://127.0.0.1:6379").unwrap();
     let mut conn = client.get_async_connection().await.unwrap();
     let _: Result<(), _> = conn.set_ex(

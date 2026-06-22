@@ -2,6 +2,7 @@
 //!
 //! Tests use mock providers that return scripted responses to verify
 //! retry, failover, deadline, and error handling behavior.
+#![allow(dead_code)] // intentional test scaffolding (scripted variants + helper fns)
 
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -14,7 +15,7 @@ use cyberos_ai_gateway::policy::{
 };
 use cyberos_ai_gateway::router::{
     self, AttemptStatus, ChatCompleteRequest, EmbedRequest, EmbedResponse, Message, Provider,
-    ProviderResponse, ProviderStreamResponse, ProviderUsage, RouterError,
+    ProviderResponse, ProviderUsage, RouterError,
 };
 use cyberos_ai_gateway::router::types::{Choice, FinishReason};
 
@@ -194,24 +195,24 @@ fn policy_no_fallbacks() -> TenantPolicy {
     }
 }
 
-/// Wrap a mock provider for use as a `dyn Provider` in the chain.
-/// The router's `build_provider_chain` creates providers from policy,
-/// but for testing we inject mocks directly.
-///
-/// Since `call_provider` uses `build_provider_chain` internally,
-/// we test through the mock provider trait directly by testing
-/// the retry/failover logic at a lower level.
-///
-/// For integration-level tests, we test the individual components:
-/// - jitter bounds (unit tests in jitter.rs)
-/// - Provider trait behavior (mock tests here)
-/// - Router error handling (direct calls with mock chain)
+// Wrap a mock provider for use as a `dyn Provider` in the chain.
+// The router's `build_provider_chain` creates providers from policy,
+// but for testing we inject mocks directly.
+//
+// Since `call_provider` uses `build_provider_chain` internally,
+// we test through the mock provider trait directly by testing
+// the retry/failover logic at a lower level.
+//
+// For integration-level tests, we test the individual components:
+// - jitter bounds (unit tests in jitter.rs)
+// - Provider trait behavior (mock tests here)
+// - Router error handling (direct calls with mock chain)
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
-/// AC #11: Jitter bounds — proptest in router_proptest.rs
+// AC #11: Jitter bounds - proptest in router_proptest.rs
 
-/// Test that RouterError variants are constructed correctly.
+// Test that RouterError variants are constructed correctly.
 #[test]
 fn router_error_display() {
     let e = RouterError::DeadlineExceeded;

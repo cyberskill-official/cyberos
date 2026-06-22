@@ -1,11 +1,11 @@
 //! FR-AI-007 §5 — Integration tests for the cost-table loader.
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::time::Instant;
 
 use rust_decimal_macros::dec;
 
-use cyberos_ai_gateway::cost_table::{self, init_cost_table, CostRate, LoaderInitError};
+use cyberos_ai_gateway::cost_table::{self, init_cost_table, LoaderInitError};
 use cyberos_ai_gateway::policy::ProviderKind;
 
 fn fixture(name: &str) -> PathBuf {

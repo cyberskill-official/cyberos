@@ -16,7 +16,7 @@ use once_cell::sync::OnceCell;
 use once_cell::sync::Lazy;
 use prometheus::{register_counter_vec, register_gauge, CounterVec, Gauge};
 use serde_yaml;
-use tracing::{error, info, warn};
+use tracing::{error, info};
 use url::Url;
 
 use crate::policy::ProviderKind;
@@ -285,14 +285,14 @@ fn parse_one_attestation(
     })?;
 
     let is_zdr = map
-        .get(&serde_yaml::Value::String("is_zdr".into()))
+        .get(serde_yaml::Value::String("is_zdr".into()))
         .and_then(|v| v.as_bool())
         .ok_or_else(|| ZdrInitError::Schema {
             reason: format!("{}/{}: missing or non-bool is_zdr", provider, model),
         })?;
 
     let verified_at_s = map
-        .get(&serde_yaml::Value::String("verified_at".into()))
+        .get(serde_yaml::Value::String("verified_at".into()))
         .and_then(|v| v.as_str())
         .ok_or_else(|| ZdrInitError::Schema {
             reason: format!("{}/{}: missing verified_at", provider, model),
@@ -305,7 +305,7 @@ fn parse_one_attestation(
         })?;
 
     let source_url = map
-        .get(&serde_yaml::Value::String("source_url".into()))
+        .get(serde_yaml::Value::String("source_url".into()))
         .and_then(|v| v.as_str())
         .ok_or_else(|| ZdrInitError::Schema {
             reason: format!("{}/{}: missing source_url", provider, model),
@@ -314,7 +314,7 @@ fn parse_one_attestation(
     validate_source_url(provider, model, &source_url)?;
 
     let attested_by = map
-        .get(&serde_yaml::Value::String("attested_by".into()))
+        .get(serde_yaml::Value::String("attested_by".into()))
         .and_then(|v| v.as_str())
         .ok_or_else(|| ZdrInitError::Schema {
             reason: format!("{}/{}: missing attested_by", provider, model),
@@ -323,7 +323,7 @@ fn parse_one_attestation(
     validate_attested_by(provider, model, &attested_by)?;
 
     let notes = map
-        .get(&serde_yaml::Value::String("notes".into()))
+        .get(serde_yaml::Value::String("notes".into()))
         .and_then(|v| v.as_str())
         .map(|s| s.to_string());
 
@@ -385,6 +385,8 @@ fn parse_provider_kind(s: &str) -> Option<ProviderKind> {
         "openai" => Some(ProviderKind::Openai),
         "vertex" => Some(ProviderKind::Vertex),
         "bge" => Some(ProviderKind::Bge),
+        "ollama" => Some(ProviderKind::Ollama),
+        "local_openai" => Some(ProviderKind::LocalOpenai),
         _ => None,
     }
 }

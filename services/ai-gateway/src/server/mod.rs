@@ -27,6 +27,7 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use tracing::Instrument;
 
+use crate::alias::ResolvedModel;
 use crate::langsmith::{self, LangSmithMetadata, RedactedPrompt, RedactedResponse};
 use crate::policy::TenantPolicy;
 use crate::redact;
@@ -55,20 +56,33 @@ impl PolicySource for LoaderPolicySource {
 }
 
 /// The provider call. Returns a `ProviderResponse` or an error string the handler maps to HTTP 502.
+///
+/// The handler hands the backend the resolved model (FR-AI-006) and the tenant policy (FR-AI-005) so a real
+/// backend can drive `router::call_provider`. `EchoBackend` ignores both; `RouterBackend` uses them.
 #[async_trait]
 pub trait ChatBackend: Send + Sync + std::fmt::Debug {
-    async fn complete(&self, req: &ChatCompleteRequest, model: &str) -> Result<ProviderResponse, String>;
+    async fn complete(
+        &self,
+        req: &ChatCompleteRequest,
+        resolved: &ResolvedModel,
+        policy: &TenantPolicy,
+    ) -> Result<ProviderResponse, String>;
 }
 
-/// In-repo backend that echoes the last user message. The real provider adapters (FR-AI-008) are still
-/// stubs, so this is what lets the gateway return a completion for local dev, the OBS correlation path,
-/// and tests - deterministic, no API key, no network.
+/// In-repo backend that echoes the last user message - deterministic, no API key, no network. Since
+/// FR-AI-105 made `RouterBackend` the default serving path, this is now a dev/test-only backend (the OBS
+/// correlation path and the handler tests use it); production no longer wires it.
 #[derive(Debug, Default)]
 pub struct EchoBackend;
 
 #[async_trait]
 impl ChatBackend for EchoBackend {
-    async fn complete(&self, req: &ChatCompleteRequest, _model: &str) -> Result<ProviderResponse, String> {
+    async fn complete(
+        &self,
+        req: &ChatCompleteRequest,
+        _resolved: &ResolvedModel,
+        _policy: &TenantPolicy,
+    ) -> Result<ProviderResponse, String> {
         let last_user = req
             .messages
             .iter()
@@ -104,6 +118,30 @@ impl ChatBackend for EchoBackend {
     }
 }
 
+/// The production serving backend (FR-AI-105 §1 #6). Drives `router::call_provider`, so a tenant whose
+/// resolved provider is a real adapter - local (Ollama, LM Studio) or a keyed cloud provider - gets a real
+/// completion with the router's retry and failover. The per-call deadline comes from the tenant policy's
+/// `call_timeout_seconds`. Fails closed: an unreachable or erroring provider becomes an `Err`, never a
+/// fabricated completion.
+#[derive(Debug, Default)]
+pub struct RouterBackend;
+
+#[async_trait]
+impl ChatBackend for RouterBackend {
+    async fn complete(
+        &self,
+        req: &ChatCompleteRequest,
+        resolved: &ResolvedModel,
+        policy: &TenantPolicy,
+    ) -> Result<ProviderResponse, String> {
+        let timeout = std::time::Duration::from_secs(u64::from(policy.ai_policy.call_timeout_seconds));
+        let deadline = std::time::Instant::now() + timeout;
+        crate::router::call_provider(req, resolved, deadline, policy)
+            .await
+            .map_err(|e| format!("{e:?}"))
+    }
+}
+
 /// The shared state behind every request.
 #[derive(Clone, Debug)]
 pub struct GatewayState {
@@ -112,11 +150,11 @@ pub struct GatewayState {
 }
 
 impl GatewayState {
-    /// The production wiring: the FR-AI-005 loader plus the echo backend (until FR-AI-008 providers land).
+    /// The production wiring: the FR-AI-005 policy loader plus the real router backend (FR-AI-105).
     pub fn production() -> Self {
         Self {
             policy: Arc::new(LoaderPolicySource),
-            backend: Arc::new(EchoBackend),
+            backend: Arc::new(RouterBackend),
         }
     }
 }
@@ -154,7 +192,7 @@ pub struct ApiChatResponse {
 /// Build the gateway router: liveness, a metrics stub (RED exports via OTLP, not a scrape), and the chat
 /// endpoint, with the FR-OBS-003 RED middleware wrapping every route.
 pub fn build_router(state: GatewayState) -> Router {
-    Router::new()
+    let mut app = Router::new()
         .route("/healthz", get(|| async { "ok" }))
         .route("/metrics", get(|| async { "# cyberos-ai-gateway: RED metrics export via OTLP\n" }))
         .route("/v1/chat", post(chat))
@@ -167,7 +205,16 @@ pub fn build_router(state: GatewayState) -> Router {
             cyberos_obs_sdk::RedState::new("ai-gateway"),
             cyberos_obs_sdk::red_mw,
         ))
-        .with_state(state)
+        .with_state(state);
+
+    // FR-APP-001: opt-in permissive CORS so a local browser console (the CDS web console) can call the
+    // gateway. Off by default, so the production posture is unchanged; enable for local dev with
+    // AI_GATEWAY_DEV_CORS=1. Restrict to a known origin allowlist before exposing the gateway to untrusted
+    // browsers.
+    if std::env::var("AI_GATEWAY_DEV_CORS").is_ok() {
+        app = app.layer(tower_http::cors::CorsLayer::permissive());
+    }
+    app
 }
 
 /// FR-OBS-003 - stamp the request's tenant (from `x-tenant-id`) onto the response so `red_mw` can label
@@ -294,7 +341,7 @@ async fn chat(
         tracestate: header(&headers, "tracestate"),
     };
 
-    let resp = match st.backend.complete(&ccr, &resolved.model).await {
+    let resp = match st.backend.complete(&ccr, &resolved, &policy).await {
         Ok(r) => r,
         Err(e) => return err(StatusCode::BAD_GATEWAY, &format!("provider call failed: {e}")),
     };
@@ -414,6 +461,43 @@ mod tests {
         }
     }
 
+    fn fixture_resolved() -> ResolvedModel {
+        ResolvedModel {
+            provider_kind: crate::policy::ProviderKind::Anthropic,
+            region: None,
+            model: "any-model".to_string(),
+            fallback_position: 0,
+            is_zdr: true,
+            latency_class: crate::alias::LatencyClass::Standard,
+        }
+    }
+
+    fn fixture_policy() -> Arc<TenantPolicy> {
+        use crate::policy::schema::{AiPolicy, Provider, Residency};
+        use rust_decimal_macros::dec;
+        Arc::new(TenantPolicy {
+            tenant_id: "org:cyberskill".to_string(),
+            ai_policy: AiPolicy {
+                monthly_cap_usd: dec!(150),
+                warn_threshold: 0.8,
+                hard_stop: true,
+                primary_provider: Provider::Anthropic {
+                    model_alias_map: Default::default(),
+                },
+                fallback_chain: vec![],
+                call_timeout_seconds: 60,
+                residency: Residency::Sg1,
+                zdr_required: true,
+                emergency_override: Default::default(),
+                allowed_personas: None,
+                alias_overrides: None,
+                residency_requires_regional_provider: None,
+                pii_redaction_extra: None,
+                langsmith_export: false,
+            },
+        })
+    }
+
     #[tokio::test]
     async fn echo_backend_echoes_last_user_message() {
         let req = ChatCompleteRequest {
@@ -424,7 +508,10 @@ mod tests {
             traceparent: None,
             tracestate: None,
         };
-        let resp = EchoBackend.complete(&req, "any-model").await.unwrap();
+        let resp = EchoBackend
+            .complete(&req, &fixture_resolved(), &fixture_policy())
+            .await
+            .unwrap();
         assert_eq!(resp.choices[0].content, "echo: hello there world");
         assert_eq!(resp.choices[0].finish_reason, FinishReason::Stop);
         // "echo: hello there world" is 4 whitespace-separated words.

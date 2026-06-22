@@ -3,7 +3,6 @@
 //! Requires a running Postgres instance. Set DATABASE_URL env var.
 //! Tests are ignored when DATABASE_URL is not set.
 
-use std::collections::HashMap;
 
 use chrono::Datelike;
 use rust_decimal::Decimal;
@@ -13,7 +12,6 @@ use uuid::Uuid;
 
 use cyberos_ai_gateway::cost_reconcile::*;
 use cyberos_ai_gateway::cost_table;
-use cyberos_ai_gateway::policy::*;
 
 // ─── Test helpers ─────────────────────────────────────────────────────────────
 
@@ -185,7 +183,7 @@ async fn reconcile_idempotent_double_call() {
 
     let hold_id = seed_hold(&pool, tenant, dec!(0.0085), "bedrock", "anthropic.claude-3-5-sonnet-20241022-v2:0").await;
 
-    let outcome1 = reconcile(
+    let _outcome1 = reconcile(
         hold_id,
         CallOutcome::Success {
             usage: ProviderUsage {

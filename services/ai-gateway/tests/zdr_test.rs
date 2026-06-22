@@ -232,7 +232,7 @@ fn parse_attestations_public(
         let provider_str = provider_yaml
             .as_str()
             .ok_or_else(|| ZdrInitError::Schema {
-                reason: format!("provider key must be a string"),
+                reason: "provider key must be a string".to_string(),
             })?;
         let provider = parse_provider_kind(provider_str).ok_or_else(|| {
             ZdrInitError::Schema {
@@ -249,7 +249,7 @@ fn parse_attestations_public(
             let model = model_yaml
                 .as_str()
                 .ok_or_else(|| ZdrInitError::Schema {
-                    reason: format!("model key must be a string"),
+                    reason: "model key must be a string".to_string(),
                 })?
                 .to_string();
             let att = parse_one_public(provider_str, &model, fields)?;
@@ -270,14 +270,14 @@ fn parse_one_public(
     })?;
 
     let is_zdr = map
-        .get(&serde_yaml::Value::String("is_zdr".into()))
+        .get(serde_yaml::Value::String("is_zdr".into()))
         .and_then(|v| v.as_bool())
         .ok_or_else(|| ZdrInitError::Schema {
             reason: format!("{}/{}: missing or non-bool is_zdr", provider, model),
         })?;
 
     let verified_at_s = map
-        .get(&serde_yaml::Value::String("verified_at".into()))
+        .get(serde_yaml::Value::String("verified_at".into()))
         .and_then(|v| v.as_str())
         .ok_or_else(|| ZdrInitError::Schema {
             reason: format!("{}/{}: missing verified_at", provider, model),
@@ -290,7 +290,7 @@ fn parse_one_public(
         })?;
 
     let source_url = map
-        .get(&serde_yaml::Value::String("source_url".into()))
+        .get(serde_yaml::Value::String("source_url".into()))
         .and_then(|v| v.as_str())
         .ok_or_else(|| ZdrInitError::Schema {
             reason: format!("{}/{}: missing source_url", provider, model),
@@ -299,7 +299,7 @@ fn parse_one_public(
     validate_url(provider, model, &source_url)?;
 
     let attested_by = map
-        .get(&serde_yaml::Value::String("attested_by".into()))
+        .get(serde_yaml::Value::String("attested_by".into()))
         .and_then(|v| v.as_str())
         .ok_or_else(|| ZdrInitError::Schema {
             reason: format!("{}/{}: missing attested_by", provider, model),
@@ -308,7 +308,7 @@ fn parse_one_public(
     validate_attestor(provider, model, &attested_by)?;
 
     let notes = map
-        .get(&serde_yaml::Value::String("notes".into()))
+        .get(serde_yaml::Value::String("notes".into()))
         .and_then(|v| v.as_str())
         .map(|s| s.to_string());
 

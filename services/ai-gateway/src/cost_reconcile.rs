@@ -402,6 +402,8 @@ fn parse_provider_kind(s: &str) -> Option<crate::policy::ProviderKind> {
         "openai" => Some(crate::policy::ProviderKind::Openai),
         "vertex" => Some(crate::policy::ProviderKind::Vertex),
         "bge" => Some(crate::policy::ProviderKind::Bge),
+        "ollama" => Some(crate::policy::ProviderKind::Ollama),
+        "local_openai" => Some(crate::policy::ProviderKind::LocalOpenai),
         _ => None,
     }
 }

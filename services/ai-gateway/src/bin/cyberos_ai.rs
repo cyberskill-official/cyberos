@@ -59,7 +59,7 @@ async fn main() {
         Ok(()) => process::exit(ExitCode::Ok as i32),
         Err(e) => {
             eprintln!("{e}");
-            process::exit(e.exit_code() as i32);
+            process::exit(e.exit_code());
         }
     }
 }

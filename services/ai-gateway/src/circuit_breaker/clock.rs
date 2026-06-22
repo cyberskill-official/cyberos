@@ -14,6 +14,12 @@ pub struct SystemClock {
     epoch: Instant,
 }
 
+impl Default for SystemClock {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SystemClock {
     pub fn new() -> Self {
         Self {
@@ -39,6 +45,12 @@ impl<T: Clock> Clock for std::sync::Arc<T> {
 #[derive(Debug)]
 pub struct MockClock {
     inner: AtomicU64,
+}
+
+impl Default for MockClock {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl MockClock {

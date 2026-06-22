@@ -329,6 +329,12 @@ fn provider_supports_streaming(kind: ProviderKind) -> bool {
         ProviderKind::Bedrock | ProviderKind::Anthropic | ProviderKind::Openai => true,
         ProviderKind::Vertex => true,
         ProviderKind::Bge => false,
+        // Ollama serves SSE on /api/chat (stream=true), but the gateway adapter has not wired the
+        // streaming path yet (call_chat_streaming uses the default stub), so report false until it does.
+        ProviderKind::Ollama => false,
+        // LM Studio / OpenAI-compatible local servers support SSE, but the adapter has not wired
+        // streaming yet (FR-AI-105 scopes it out), so report false until it does.
+        ProviderKind::LocalOpenai => false,
     }
 }
 

@@ -9,8 +9,6 @@ use chrono::NaiveDate;
 use rust_decimal::Decimal;
 use serde::Deserialize;
 
-use crate::policy::ProviderKind;
-
 /// A single cost-rate entry for a (provider, model) pair.
 ///
 /// All rates are in USD per 1,000 tokens. Embedding models have
