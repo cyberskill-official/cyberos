@@ -74,20 +74,32 @@ where
         }
         Route::Chat => {
             if chat.post(alert, triage, request_id).await.is_ok() {
-                RouteOutcome { delivered: Route::Chat, fully_delivered: true }
+                RouteOutcome {
+                    delivered: Route::Chat,
+                    fully_delivered: true,
+                }
             } else {
                 // §1 #11 - CHAT failed -> PagerDuty fallback. A fallback is never "fully delivered".
                 let _pd_ok = pagerduty.trigger(alert, triage, request_id).await.is_ok();
-                RouteOutcome { delivered: Route::PagerDuty, fully_delivered: false }
+                RouteOutcome {
+                    delivered: Route::PagerDuty,
+                    fully_delivered: false,
+                }
             }
         }
         Route::PagerDuty => {
             if pagerduty.trigger(alert, triage, request_id).await.is_ok() {
-                RouteOutcome { delivered: Route::PagerDuty, fully_delivered: true }
+                RouteOutcome {
+                    delivered: Route::PagerDuty,
+                    fully_delivered: true,
+                }
             } else {
                 // §1 #11 - PagerDuty failed -> last-resort CHAT. A fallback is never "fully delivered".
                 let _chat_ok = chat.post(alert, triage, request_id).await.is_ok();
-                RouteOutcome { delivered: Route::Chat, fully_delivered: false }
+                RouteOutcome {
+                    delivered: Route::Chat,
+                    fully_delivered: false,
+                }
             }
         }
     }
@@ -177,22 +189,37 @@ mod tests {
     #[tokio::test]
     async fn confident_non_sev1_goes_to_chat_and_audits() {
         let (t, c, p, s) = (
-            FixedTriage { confidence: 0.9, fail: false },
+            FixedTriage {
+                confidence: 0.9,
+                fail: false,
+            },
             CountingChat::default(),
             CountingPd::default(),
             RecordingSink::default(),
         );
         let out = route_alert(&t, &c, &p, &s, &alert(Severity::Sev2), "req").await;
-        assert_eq!(out, RouteOutcome { delivered: Route::Chat, fully_delivered: true });
+        assert_eq!(
+            out,
+            RouteOutcome {
+                delivered: Route::Chat,
+                fully_delivered: true
+            }
+        );
         assert_eq!(c.calls.load(Ordering::SeqCst), 1);
         assert_eq!(p.calls.load(Ordering::SeqCst), 0);
-        assert_eq!(s.latest("obs.alert_triaged").unwrap().payload["route"], "chat");
+        assert_eq!(
+            s.latest("obs.alert_triaged").unwrap().payload["route"],
+            "chat"
+        );
     }
 
     #[tokio::test]
     async fn sev1_pages_both() {
         let (t, c, p, s) = (
-            FixedTriage { confidence: 0.99, fail: false },
+            FixedTriage {
+                confidence: 0.99,
+                fail: false,
+            },
             CountingChat::default(),
             CountingPd::default(),
             RecordingSink::default(),
@@ -207,7 +234,10 @@ mod tests {
     #[tokio::test]
     async fn triage_failure_pages_pagerduty() {
         let (t, c, p, s) = (
-            FixedTriage { confidence: 0.0, fail: true },
+            FixedTriage {
+                confidence: 0.0,
+                fail: true,
+            },
             CountingChat::default(),
             CountingPd::default(),
             RecordingSink::default(),
@@ -220,8 +250,14 @@ mod tests {
     #[tokio::test]
     async fn chat_failure_falls_back_to_pagerduty() {
         let (t, c, p, s) = (
-            FixedTriage { confidence: 0.9, fail: false },
-            CountingChat { fail: true, ..Default::default() },
+            FixedTriage {
+                confidence: 0.9,
+                fail: false,
+            },
+            CountingChat {
+                fail: true,
+                ..Default::default()
+            },
             CountingPd::default(),
             RecordingSink::default(),
         );
@@ -234,9 +270,15 @@ mod tests {
     #[tokio::test]
     async fn pagerduty_failure_last_resorts_to_chat() {
         let (t, c, p, s) = (
-            FixedTriage { confidence: 0.0, fail: false },
+            FixedTriage {
+                confidence: 0.0,
+                fail: false,
+            },
             CountingChat::default(),
-            CountingPd { fail: true, ..Default::default() },
+            CountingPd {
+                fail: true,
+                ..Default::default()
+            },
             RecordingSink::default(),
         );
         let out = route_alert(&t, &c, &p, &s, &alert(Severity::Sev3), "req").await;

@@ -38,7 +38,9 @@ pub fn add_label(query: &str, key: &str, value: &str) -> Result<String, ProxyErr
 /// True if the first stream selector already contains a matcher named `key`.
 pub fn has_label(query: &str, key: &str) -> Result<bool, ProxyError> {
     let (open, close) = find_selector(query)?;
-    Ok(matcher_names(&query[open + 1..close]).iter().any(|n| n == key))
+    Ok(matcher_names(&query[open + 1..close])
+        .iter()
+        .any(|n| n == key))
 }
 
 /// Byte offsets of the first `{` and its matching `}`, honoring quoted strings.

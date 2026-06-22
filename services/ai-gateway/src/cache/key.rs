@@ -105,7 +105,9 @@ mod tests {
         // must keep these distinct even though the naive joined streams were identical.
         let victim = CacheKey::derive("a", "b\u{1f}c", "chat.smart", "p");
         let attacker = CacheKey::derive("a\u{1f}b", "c", "chat.smart", "p");
-        assert_ne!(victim.prompt_hash, attacker.prompt_hash,
-            "cross-tenant cache-key collision via separator injection");
+        assert_ne!(
+            victim.prompt_hash, attacker.prompt_hash,
+            "cross-tenant cache-key collision via separator injection"
+        );
     }
 }

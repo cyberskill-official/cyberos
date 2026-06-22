@@ -74,7 +74,9 @@ pub fn resolve(alias: &str, policy: &TenantPolicy) -> Result<ResolvedModel, Alia
 
     // 1. Closed-set check — cheapest reject path
     if !SUPPORTED_ALIASES.contains(&alias) {
-        ALIAS_FAILURES.with_label_values(&[alias, "unknown_alias"]).inc();
+        ALIAS_FAILURES
+            .with_label_values(&[alias, "unknown_alias"])
+            .inc();
         return Err(AliasError::UnknownAlias {
             alias: alias.to_string(),
             supported: SUPPORTED_ALIASES.iter().map(|s| s.to_string()).collect(),

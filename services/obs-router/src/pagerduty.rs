@@ -35,9 +35,16 @@ fn pagerduty_severity(severity: Severity) -> &'static str {
 }
 
 impl PagerDutyClient for HttpPagerDutyClient {
-    async fn trigger(&self, alert: &Alert, triage: &Triage, request_id: &str) -> Result<(), NotifyError> {
+    async fn trigger(
+        &self,
+        alert: &Alert,
+        triage: &Triage,
+        request_id: &str,
+    ) -> Result<(), NotifyError> {
         let Some(routing_key) = self.routing_key.as_ref() else {
-            return Err(NotifyError("OBS_PAGERDUTY_ROUTING_KEY not configured".into()));
+            return Err(NotifyError(
+                "OBS_PAGERDUTY_ROUTING_KEY not configured".into(),
+            ));
         };
         let body = serde_json::json!({
             "routing_key": routing_key,

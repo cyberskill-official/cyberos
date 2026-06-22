@@ -30,7 +30,10 @@ pub enum LoaderInitError {
     /// One or more YAML entries failed validation; ALL failures reported.
     Schema { failures: Vec<FileFailure> },
     /// IO error reading the file (missing, permission denied, etc.).
-    IoError { path: PathBuf, source: std::io::Error },
+    IoError {
+        path: PathBuf,
+        source: std::io::Error,
+    },
     /// Loader already initialised (programmer error — init called twice).
     AlreadyInitialised,
     /// `notify` watcher setup failed.

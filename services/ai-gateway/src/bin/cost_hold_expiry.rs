@@ -24,8 +24,7 @@ async fn main() -> anyhow::Result<()> {
         .unwrap_or(30)
         .clamp(5, 300);
 
-    let database_url = std::env::var("DATABASE_URL")
-        .expect("DATABASE_URL must be set");
+    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
     let pool = sqlx::PgPool::connect(&database_url).await?;
     let mut shutdown = signal(SignalKind::terminate())?;

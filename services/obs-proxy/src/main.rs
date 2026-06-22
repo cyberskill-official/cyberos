@@ -35,16 +35,16 @@ async fn main() {
         sink: Arc::new(RecordingSink::default()),
     });
 
-    let app = Router::new()
-        .fallback(proxy_handler)
-        .with_state(state);
+    let app = Router::new().fallback(proxy_handler).with_state(state);
 
     let bind = std::env::var("OBS_PROXY_BIND").unwrap_or_else(|_| "0.0.0.0:8088".into());
     let listener = tokio::net::TcpListener::bind(&bind)
         .await
         .unwrap_or_else(|e| panic!("obs-proxy: cannot bind {bind}: {e}"));
     eprintln!("obs-proxy listening on {bind}");
-    axum::serve(listener, app).await.expect("obs-proxy: serve failed");
+    axum::serve(listener, app)
+        .await
+        .expect("obs-proxy: serve failed");
 }
 
 /// Build the JWT verifier: from the auth JWKS in production, or a dev HS256 secret locally.
@@ -62,8 +62,8 @@ async fn build_authenticator() -> Authenticator {
             Authenticator::from_jwks(&body).unwrap_or_else(|e| panic!("obs-proxy: parse jwks: {e}"))
         }
         Err(_) => {
-            let secret =
-                std::env::var("OBS_DEV_HS256_SECRET").unwrap_or_else(|_| "dev-insecure-secret".into());
+            let secret = std::env::var("OBS_DEV_HS256_SECRET")
+                .unwrap_or_else(|_| "dev-insecure-secret".into());
             eprintln!(
                 "obs-proxy: OBS_AUTH_JWKS_URL unset - using a DEV HS256 secret (NOT for production)"
             );

@@ -19,9 +19,7 @@ fn injects_resource_tenant_id_filter() {
 
 #[test]
 fn detects_user_supplied_tenant_id() {
-    assert!(traceql::has_label(
-        "{ resource.tenant_id = \"other\" }",
-        "resource.tenant_id"
-    )
-    .unwrap());
+    assert!(
+        traceql::has_label("{ resource.tenant_id = \"other\" }", "resource.tenant_id").unwrap()
+    );
 }

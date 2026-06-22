@@ -153,11 +153,16 @@ async fn handle_heartbeat(
             .server_status(&module, SystemTime::now())
             .map(|s| s.as_str())
             .unwrap_or("healthy");
-        (StatusCode::OK, Json(json!({ "module": module, "status": status })))
+        (
+            StatusCode::OK,
+            Json(json!({ "module": module, "status": status })),
+        )
     } else {
         (
             StatusCode::NOT_FOUND,
-            Json(json!({ "error": "unknown_module", "detail": format!("{module} is not registered; register before heartbeating") })),
+            Json(
+                json!({ "error": "unknown_module", "detail": format!("{module} is not registered; register before heartbeating") }),
+            ),
         )
     }
 }
@@ -177,24 +182,35 @@ async fn handle_deregister(
     };
     if state.registry.mark_deregistered(&module) {
         info!(module = %module, "module deregistered");
-        (StatusCode::OK, Json(json!({ "module": module, "status": "deregistered" })))
+        (
+            StatusCode::OK,
+            Json(json!({ "module": module, "status": "deregistered" })),
+        )
     } else {
         (
             StatusCode::NOT_FOUND,
-            Json(json!({ "error": "unknown_module", "detail": format!("{module} is not registered") })),
+            Json(
+                json!({ "error": "unknown_module", "detail": format!("{module} is not registered") }),
+            ),
         )
     }
 }
 
 /// Parse `{"module": "..."}` from a control-plane request body, or return the error response.
 fn parse_module_field(body: &[u8]) -> Result<String, (StatusCode, Json<Value>)> {
-    let v: Value = serde_json::from_slice(body)
-        .map_err(|e| (StatusCode::BAD_REQUEST, Json(json!({ "error": "invalid_body", "detail": e.to_string() }))))?;
+    let v: Value = serde_json::from_slice(body).map_err(|e| {
+        (
+            StatusCode::BAD_REQUEST,
+            Json(json!({ "error": "invalid_body", "detail": e.to_string() })),
+        )
+    })?;
     match v.get("module").and_then(|m| m.as_str()) {
         Some(m) if !m.trim().is_empty() => Ok(m.to_string()),
         _ => Err((
             StatusCode::BAD_REQUEST,
-            Json(json!({ "error": "invalid_body", "detail": "expected a non-empty \"module\" string" })),
+            Json(
+                json!({ "error": "invalid_body", "detail": "expected a non-empty \"module\" string" }),
+            ),
         )),
     }
 }

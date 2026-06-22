@@ -37,7 +37,8 @@ pub async fn handle<F: Forwarder>(
 ) -> Result<String, ProxyError> {
     let token = token.ok_or_else(|| ProxyError::AuthFailed("missing bearer token".into()))?;
     let claims = auth.verify(token)?;
-    let backend = detect_backend(path).ok_or_else(|| ProxyError::UnsupportedPath(path.to_string()))?;
+    let backend =
+        detect_backend(path).ok_or_else(|| ProxyError::UnsupportedPath(path.to_string()))?;
 
     let mut params: Vec<(String, String)> = form_urlencoded::parse(raw_query.as_bytes())
         .into_owned()
@@ -127,7 +128,10 @@ mod tests {
         /// The forwarded value of the `query` parameter, if any.
         fn forwarded_query(&self) -> Option<String> {
             self.last().and_then(|(_, _, params)| {
-                params.into_iter().find(|(k, _)| k == "query").map(|(_, v)| v)
+                params
+                    .into_iter()
+                    .find(|(k, _)| k == "query")
+                    .map(|(_, v)| v)
             })
         }
     }
@@ -174,18 +178,34 @@ mod tests {
     #[tokio::test]
     async fn missing_token_is_unauthorized() {
         let (r, s) = (Recording::new(), RecordingSink::default());
-        let e = handle(&auth(), &r, &s, None, "/api/v1/query", "query=rate(foo[5m])", "id1")
-            .await
-            .unwrap_err();
+        let e = handle(
+            &auth(),
+            &r,
+            &s,
+            None,
+            "/api/v1/query",
+            "query=rate(foo[5m])",
+            "id1",
+        )
+        .await
+        .unwrap_err();
         assert!(matches!(e, ProxyError::AuthFailed(_)));
     }
 
     #[tokio::test]
     async fn invalid_token_is_unauthorized() {
         let (r, s) = (Recording::new(), RecordingSink::default());
-        let e = handle(&auth(), &r, &s, Some("bad.jwt"), "/api/v1/query", "query=up", "id1")
-            .await
-            .unwrap_err();
+        let e = handle(
+            &auth(),
+            &r,
+            &s,
+            Some("bad.jwt"),
+            "/api/v1/query",
+            "query=up",
+            "id1",
+        )
+        .await
+        .unwrap_err();
         assert!(matches!(e, ProxyError::AuthFailed(_)));
     }
 

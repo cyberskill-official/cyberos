@@ -145,7 +145,11 @@ mod tests {
 
     #[test]
     fn validate_accepts_a_well_formed_request() {
-        let req = sample("memory", "http://memory.internal/mcp", &["cyberos.memory.search"]);
+        let req = sample(
+            "memory",
+            "http://memory.internal/mcp",
+            &["cyberos.memory.search"],
+        );
         assert_eq!(validate(&req), Ok(()));
     }
 
@@ -155,7 +159,7 @@ mod tests {
         req.module = "  ".into();
         assert_eq!(validate(&req), Err(RegisterError::EmptyModule));
 
-        let mut req = sample("memory", "", &["a"]);
+        let req = sample("memory", "", &["a"]);
         assert_eq!(validate(&req), Err(RegisterError::EmptyEndpoint));
 
         let mut req = sample("memory", "ftp://x/mcp", &["a"]);
@@ -190,12 +194,20 @@ mod tests {
     #[test]
     fn apply_upserts_on_re_registration_without_duplicating() {
         let registry = ToolRegistry::new();
-        let first = sample("memory", "http://old.internal/mcp", &["cyberos.memory.search"]);
+        let first = sample(
+            "memory",
+            "http://old.internal/mcp",
+            &["cyberos.memory.search"],
+        );
         apply(&registry, &first);
         assert_eq!(registry.len(), 1);
 
         // Same module + tool, new endpoint -> refresh, not duplicate.
-        let second = sample("memory", "http://new.internal/mcp", &["cyberos.memory.search"]);
+        let second = sample(
+            "memory",
+            "http://new.internal/mcp",
+            &["cyberos.memory.search"],
+        );
         apply(&registry, &second);
         assert_eq!(registry.len(), 1);
         assert_eq!(

@@ -47,11 +47,9 @@ impl ToolEntry {
 }
 
 /// Per-module server record backing the FR-MCP-002 heartbeat lifecycle. One per registered
-/// module; its tools share its health.
+/// module; its tools share its health. (The module's endpoint lives on each `ToolEntry`.)
 #[derive(Debug, Clone)]
 struct ServerRecord {
-    /// The module's MCP endpoint (last registered).
-    endpoint: String,
     /// When the module last registered or heartbeated.
     last_heartbeat: SystemTime,
     /// Set by an explicit deregister; terminal until the module registers again.
@@ -96,7 +94,7 @@ impl ToolRegistry {
                         input_schema,
                         annotations,
                         module: module.clone(),
-                        endpoint: endpoint.clone(),
+                        endpoint,
                         requires_scope,
                     },
                 )
@@ -109,7 +107,6 @@ impl ToolRegistry {
             servers.insert(
                 module,
                 ServerRecord {
-                    endpoint,
                     last_heartbeat: SystemTime::now(),
                     deregistered: false,
                 },
@@ -296,7 +293,9 @@ mod tests {
             r.server_status("a", std::time::SystemTime::now()).unwrap(),
             ServerHealthStatus::Healthy
         );
-        assert!(r.server_status("unknown", std::time::SystemTime::now()).is_none());
+        assert!(r
+            .server_status("unknown", std::time::SystemTime::now())
+            .is_none());
     }
 
     #[test]
@@ -311,14 +310,19 @@ mod tests {
             ServerHealthStatus::Healthy
         );
         assert_eq!(
-            r.server_status("a", base + Duration::from_secs(20)).unwrap(),
+            r.server_status("a", base + Duration::from_secs(20))
+                .unwrap(),
             ServerHealthStatus::Degraded
         );
         assert_eq!(
-            r.server_status("a", base + Duration::from_secs(40)).unwrap(),
+            r.server_status("a", base + Duration::from_secs(40))
+                .unwrap(),
             ServerHealthStatus::Unhealthy
         );
-        assert!(!r.record_heartbeat("unknown", base), "heartbeat for unknown module is rejected");
+        assert!(
+            !r.record_heartbeat("unknown", base),
+            "heartbeat for unknown module is rejected"
+        );
     }
 
     #[test]
@@ -353,7 +357,11 @@ mod tests {
             .into_iter()
             .map(|d| d.name)
             .collect();
-        assert_eq!(names, vec!["cyberos.b.t".to_string()], "unhealthy a is withdrawn, b remains");
+        assert_eq!(
+            names,
+            vec!["cyberos.b.t".to_string()],
+            "unhealthy a is withdrawn, b remains"
+        );
         // healthz still reports both modules.
         assert_eq!(r.server_health(now).len(), 2);
     }

@@ -221,7 +221,9 @@ pub async fn reconcile(
     // 2. Idempotency check — reconstruct original outcome from persisted state.
     if hold.state != "held" {
         let original_outcome = reconstruct_outcome(&hold);
-        RECONCILE_CALLS.with_label_values(&["already_finalised"]).inc();
+        RECONCILE_CALLS
+            .with_label_values(&["already_finalised"])
+            .inc();
         return Err(ReconcileError::AlreadyFinalised {
             current_state: hold.state.clone(),
             original_outcome,
@@ -287,9 +289,7 @@ pub async fn reconcile(
             emit_audit(&mut tx, emit_req).await?;
 
             RECONCILE_CALLS.with_label_values(&["refunded"]).inc();
-            HOLDS_REFUNDED
-                .with_label_values(&["provider_error"])
-                .inc();
+            HOLDS_REFUNDED.with_label_values(&["provider_error"]).inc();
 
             ReconcileOutcome::Refunded {
                 hold_estimated_usd: hold.estimated_usd,
@@ -304,8 +304,7 @@ pub async fn reconcile(
             // Floor at column precision (AC #12).
             let actual_usd = actual_usd.max(Decimal::new(1, 4)); // 0.0001
 
-            let (new_spent, warn_crossed) =
-                apply_success(&mut tx, &hold, actual_usd, "").await?;
+            let (new_spent, warn_crossed) = apply_success(&mut tx, &hold, actual_usd, "").await?;
 
             let mut emit_req = memory_writer::builders::invocation(
                 &hold.tenant_id,
@@ -378,11 +377,12 @@ pub async fn reconcile(
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
 fn compute_actual_cost(hold: &HoldRow, usage: &ProviderUsage) -> Result<Decimal, ReconcileError> {
-    let provider_kind = parse_provider_kind(&hold.resolved_provider)
-        .ok_or_else(|| ReconcileError::CostTableMissing {
+    let provider_kind = parse_provider_kind(&hold.resolved_provider).ok_or_else(|| {
+        ReconcileError::CostTableMissing {
             provider: hold.resolved_provider.clone(),
             model: hold.resolved_model.clone(),
-        })?;
+        }
+    })?;
     let rate = cost_table::lookup(&provider_kind, &hold.resolved_model).ok_or(
         ReconcileError::CostTableMissing {
             provider: hold.resolved_provider.clone(),
@@ -391,7 +391,8 @@ fn compute_actual_cost(hold: &HoldRow, usage: &ProviderUsage) -> Result<Decimal,
     )?;
     let per_1k = Decimal::from(1000u32);
     let prompt_cost = (Decimal::from(usage.prompt_tokens) / per_1k) * rate.input_per_1k_usd;
-    let completion_cost = (Decimal::from(usage.completion_tokens) / per_1k) * rate.output_per_1k_usd;
+    let completion_cost =
+        (Decimal::from(usage.completion_tokens) / per_1k) * rate.output_per_1k_usd;
     Ok(prompt_cost + completion_cost)
 }
 
@@ -497,7 +498,11 @@ fn reconstruct_outcome(hold: &HoldRow) -> ReconcileOutcome {
             warn_crossed: hold.warn_crossed.unwrap_or(false),
         },
         "refunded" => {
-            let reason = if hold.refund_reason.as_deref().unwrap_or("").starts_with("provider_error_")
+            let reason = if hold
+                .refund_reason
+                .as_deref()
+                .unwrap_or("")
+                .starts_with("provider_error_")
             {
                 let status = hold
                     .refund_reason
@@ -506,7 +511,9 @@ fn reconstruct_outcome(hold: &HoldRow) -> ReconcileOutcome {
                     .trim_start_matches("provider_error_")
                     .parse::<u16>()
                     .unwrap_or(0);
-                RefundReason::ProviderError { http_status: status }
+                RefundReason::ProviderError {
+                    http_status: status,
+                }
             } else {
                 RefundReason::ProviderUnreachable
             };

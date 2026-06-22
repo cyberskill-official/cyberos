@@ -148,7 +148,12 @@ async fn view_handler(
     };
 
     // 3. Enforce tenant scope: an explicit ?tenant_id= must match the JWT tenant (§1 #3).
-    if enforce_tenant_scope(&claims.tenant_id, params.get("tenant_id").map(String::as_str)).is_err() {
+    if enforce_tenant_scope(
+        &claims.tenant_id,
+        params.get("tenant_id").map(String::as_str),
+    )
+    .is_err()
+    {
         return err(StatusCode::FORBIDDEN, "cross-tenant refused");
     }
     let tenant_uuid = match Uuid::parse_str(&claims.tenant_id) {
@@ -161,22 +166,24 @@ async fn view_handler(
         Ok(w) => w,
         Err(m) => return err(StatusCode::BAD_REQUEST, &m),
     };
-    if let Err(e) = window::validate(since_ns.div_euclid(NS_PER_SEC), until_ns.div_euclid(NS_PER_SEC))
-    {
+    if let Err(e) = window::validate(
+        since_ns.div_euclid(NS_PER_SEC),
+        until_ns.div_euclid(NS_PER_SEC),
+    ) {
         return err(StatusCode::BAD_REQUEST, &e.to_string());
     }
 
     // 5. Query the kind-filtered, tenant-scoped, windowed audit rows (§1 #4).
-    let rows = match query::fetch_rows(&st.pool, tenant_uuid, view.kinds(), since_ns, until_ns).await
-    {
-        Ok(r) => r,
-        Err(e) => {
-            return err(
-                StatusCode::SERVICE_UNAVAILABLE,
-                &format!("audit store unavailable: {e}"),
-            )
-        }
-    };
+    let rows =
+        match query::fetch_rows(&st.pool, tenant_uuid, view.kinds(), since_ns, until_ns).await {
+            Ok(r) => r,
+            Err(e) => {
+                return err(
+                    StatusCode::SERVICE_UNAVAILABLE,
+                    &format!("audit store unavailable: {e}"),
+                )
+            }
+        };
 
     // 6. Summarise, then build the canonical payload.
     let summary = summary::summarize(&rows);
@@ -190,7 +197,12 @@ async fn view_handler(
     };
     let canonical = match serde_json::to_vec(&payload) {
         Ok(b) => b,
-        Err(e) => return err(StatusCode::INTERNAL_SERVER_ERROR, &format!("serialize: {e}")),
+        Err(e) => {
+            return err(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                &format!("serialize: {e}"),
+            )
+        }
     };
 
     // 7. Defence-in-depth PII scan: the chain stores placeholders, so any raw PII is a sev-1, not a leak.
@@ -290,10 +302,7 @@ fn err(status: StatusCode, msg: &str) -> Response {
 async fn build_pool() -> Result<PgPool, sqlx::Error> {
     let url = std::env::var("DATABASE_URL")
         .unwrap_or_else(|_| "postgres://cyberos:cyberos@localhost:5432/cyberos".to_string());
-    PgPoolOptions::new()
-        .max_connections(5)
-        .connect(&url)
-        .await
+    PgPoolOptions::new().max_connections(5).connect(&url).await
 }
 
 /// Build the auditor JWT verifier: RS256 from `OBS_COMPLIANCE_JWKS_JSON` if set, else HS256 from
@@ -317,7 +326,10 @@ fn signing_key_from_env() -> Result<[u8; 32], String> {
         .map_err(|_| "OBS_COMPLIANCE_SIGNING_KEY_HEX not set".to_string())?;
     let hex = hex.trim();
     if hex.len() != 64 {
-        return Err(format!("signing key must be 64 hex chars, got {}", hex.len()));
+        return Err(format!(
+            "signing key must be 64 hex chars, got {}",
+            hex.len()
+        ));
     }
     let mut key = [0u8; 32];
     for (i, slot) in key.iter_mut().enumerate() {

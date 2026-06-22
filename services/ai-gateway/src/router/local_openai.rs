@@ -139,7 +139,10 @@ impl Provider for LocalOpenaiProvider {
         if timeout.is_zero() {
             return Err(RouterError::DeadlineExceeded);
         }
-        let url = format!("{}/v1/chat/completions", self.endpoint.trim_end_matches('/'));
+        let url = format!(
+            "{}/v1/chat/completions",
+            self.endpoint.trim_end_matches('/')
+        );
         let resp = self
             .client
             .post(&url)
@@ -161,9 +164,12 @@ impl Provider for LocalOpenaiProvider {
                 retry_after_secs: None,
             });
         }
-        let body: Value = resp.json().await.map_err(|e| RouterError::InvalidResponse {
-            reason: format!("local-openai response parse: {e}"),
-        })?;
+        let body: Value = resp
+            .json()
+            .await
+            .map_err(|e| RouterError::InvalidResponse {
+                reason: format!("local-openai response parse: {e}"),
+            })?;
         let latency_ms = started.elapsed().as_millis() as u32;
         Self::parse_response(&body, latency_ms)
     }
@@ -188,8 +194,14 @@ mod tests {
         ChatCompleteRequest {
             alias: "chat.smart".into(),
             messages: vec![
-                Message { role: "system".into(), content: "be terse".into() },
-                Message { role: "user".into(), content: "hello".into() },
+                Message {
+                    role: "system".into(),
+                    content: "be terse".into(),
+                },
+                Message {
+                    role: "user".into(),
+                    content: "hello".into(),
+                },
             ],
             max_tokens: Some(128),
             // 0.5 is exact in both f32 and f64, so the JSON number compares cleanly (0.3_f32
@@ -234,7 +246,9 @@ mod tests {
             "choices": [ { "message": { "content": "x" }, "finish_reason": "length" } ]
         });
         assert_eq!(
-            LocalOpenaiProvider::parse_response(&body, 1).unwrap().finish_reason,
+            LocalOpenaiProvider::parse_response(&body, 1)
+                .unwrap()
+                .finish_reason,
             FinishReason::Length
         );
     }
@@ -254,7 +268,10 @@ mod tests {
 
     #[test]
     fn kind_is_local_openai() {
-        assert_eq!(LocalOpenaiProvider::new("http://x").kind(), ProviderKind::LocalOpenai);
+        assert_eq!(
+            LocalOpenaiProvider::new("http://x").kind(),
+            ProviderKind::LocalOpenai
+        );
     }
 
     #[tokio::test]
@@ -263,6 +280,9 @@ mod tests {
         // completion (FR-AI-105 clause 4, fail-closed). Deterministic: no server required.
         let p = LocalOpenaiProvider::new("http://127.0.0.1:1");
         let deadline = std::time::Instant::now() + std::time::Duration::from_millis(500);
-        assert!(p.call_chat(&req(), "qwen2.5-7b-instruct", deadline).await.is_err());
+        assert!(p
+            .call_chat(&req(), "qwen2.5-7b-instruct", deadline)
+            .await
+            .is_err());
     }
 }

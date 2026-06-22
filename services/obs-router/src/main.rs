@@ -142,10 +142,16 @@ async fn main() {
         .await
         .unwrap_or_else(|e| panic!("obs-router: cannot bind {bind}: {e}"));
     eprintln!("obs-router listening on {bind}");
-    axum::serve(listener, app).await.expect("obs-router: serve failed");
+    axum::serve(listener, app)
+        .await
+        .expect("obs-router: serve failed");
 }
 
-async fn handle_alert(State(st): State<Arc<AppState>>, headers: HeaderMap, body: String) -> Response {
+async fn handle_alert(
+    State(st): State<Arc<AppState>>,
+    headers: HeaderMap,
+    body: String,
+) -> Response {
     if let Some(secret) = st.config.webhook_secret.as_ref() {
         let got = headers
             .get("x-cyberos-webhook-secret")
@@ -195,7 +201,10 @@ async fn handle_ack(State(st): State<Arc<AppState>>, Path(fingerprint): Path<Str
     (StatusCode::OK, "acked").into_response()
 }
 
-async fn handle_escalate(State(_st): State<Arc<AppState>>, Path(_fingerprint): Path<String>) -> Response {
+async fn handle_escalate(
+    State(_st): State<Arc<AppState>>,
+    Path(_fingerprint): Path<String>,
+) -> Response {
     // Minimal stub: a full escalate re-pages PagerDuty for the stored alert (follow-up needs alert state).
     (StatusCode::OK, "escalation noted").into_response()
 }

@@ -41,8 +41,8 @@
 
 pub mod alias;
 pub mod cache;
-pub mod cli;
 pub mod circuit_breaker;
+pub mod cli;
 pub mod cost_hold_expiry;
 pub mod cost_ledger;
 pub mod cost_reconcile;

@@ -66,8 +66,14 @@ impl Manifest {
         m.insert("time_range_start", self.time_range_start.clone().into());
         m.insert("time_range_end", self.time_range_end.clone().into());
         m.insert("row_count", self.row_count.into());
-        m.insert("chain_head_at_export", self.chain_head_at_export.clone().into());
-        m.insert("exporter_subject_id", self.exporter_subject_id.clone().into());
+        m.insert(
+            "chain_head_at_export",
+            self.chain_head_at_export.clone().into(),
+        );
+        m.insert(
+            "exporter_subject_id",
+            self.exporter_subject_id.clone().into(),
+        );
         m.insert("exporter_email", self.exporter_email.clone().into());
         m.insert("exported_at", self.exported_at.clone().into());
         m.insert("sha256_of_rows", self.sha256_of_rows.clone().into());
@@ -102,8 +108,14 @@ mod tests {
 
     #[test]
     fn sha256_of_rows_is_deterministic() {
-        assert_eq!(Manifest::sha256_of_rows(b"[]"), Manifest::sha256_of_rows(b"[]"));
-        assert_ne!(Manifest::sha256_of_rows(b"[]"), Manifest::sha256_of_rows(b"[1]"));
+        assert_eq!(
+            Manifest::sha256_of_rows(b"[]"),
+            Manifest::sha256_of_rows(b"[]")
+        );
+        assert_ne!(
+            Manifest::sha256_of_rows(b"[]"),
+            Manifest::sha256_of_rows(b"[1]")
+        );
         assert_eq!(Manifest::sha256_of_rows(b"[]").len(), 64); // 32 bytes hex
     }
 

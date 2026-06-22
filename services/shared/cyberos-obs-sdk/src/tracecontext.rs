@@ -106,7 +106,9 @@ pub fn hash16(bytes: &[u8]) -> String {
 }
 
 fn is_lower_hex(s: &str) -> bool {
-    !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+    !s.is_empty()
+        && s.bytes()
+            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
 }
 
 fn is_all_zero(s: &str) -> bool {
@@ -137,21 +139,39 @@ mod tests {
 
     #[test]
     fn rejects_non_zero_version() {
-        assert!(parse_w3c_traceparent("01-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01").is_none());
-        assert!(parse_w3c_traceparent("ff-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01").is_none());
+        assert!(
+            parse_w3c_traceparent("01-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01")
+                .is_none()
+        );
+        assert!(
+            parse_w3c_traceparent("ff-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01")
+                .is_none()
+        );
     }
 
     #[test]
     fn rejects_all_zero_trace_or_span_id() {
-        assert!(parse_w3c_traceparent("00-00000000000000000000000000000000-00f067aa0ba902b7-01").is_none());
-        assert!(parse_w3c_traceparent("00-4bf92f3577b34da6a3ce929d0e0e4736-0000000000000000-01").is_none());
+        assert!(
+            parse_w3c_traceparent("00-00000000000000000000000000000000-00f067aa0ba902b7-01")
+                .is_none()
+        );
+        assert!(
+            parse_w3c_traceparent("00-4bf92f3577b34da6a3ce929d0e0e4736-0000000000000000-01")
+                .is_none()
+        );
     }
 
     #[test]
     fn rejects_wrong_lengths_and_uppercase() {
         assert!(parse_w3c_traceparent("00-4bf9-00f067aa0ba902b7-01").is_none()); // short trace id
-        assert!(parse_w3c_traceparent("00-4BF92F3577B34DA6A3CE929D0E0E4736-00f067aa0ba902b7-01").is_none()); // upper
-        assert!(parse_w3c_traceparent("00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-1").is_none()); // 1-char flags
+        assert!(
+            parse_w3c_traceparent("00-4BF92F3577B34DA6A3CE929D0E0E4736-00f067aa0ba902b7-01")
+                .is_none()
+        ); // upper
+        assert!(
+            parse_w3c_traceparent("00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-1")
+                .is_none()
+        ); // 1-char flags
         assert!(parse_w3c_traceparent("not-a-traceparent").is_none());
         assert!(parse_w3c_traceparent("").is_none());
     }
@@ -168,7 +188,10 @@ mod tests {
         }
 
         headers.insert("traceparent", VALID.parse().unwrap());
-        assert_eq!(extract_traceparent(&headers).unwrap().trace_id, "4bf92f3577b34da6a3ce929d0e0e4736");
+        assert_eq!(
+            extract_traceparent(&headers).unwrap().trace_id,
+            "4bf92f3577b34da6a3ce929d0e0e4736"
+        );
     }
 
     #[test]
@@ -189,7 +212,8 @@ mod tests {
 
     #[test]
     fn unsampled_flag_is_detected() {
-        let tc = parse_w3c_traceparent("00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-00").unwrap();
+        let tc = parse_w3c_traceparent("00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-00")
+            .unwrap();
         assert!(!tc.sampled());
     }
 }

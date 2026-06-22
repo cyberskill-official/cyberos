@@ -41,7 +41,10 @@ pub fn scan(body: &str) -> Vec<PiiMatch> {
         (vn_phone_re(), "vn_phone"),
     ] {
         for m in re.find_iter(body) {
-            out.push(PiiMatch { kind, at: m.start() });
+            out.push(PiiMatch {
+                kind,
+                at: m.start(),
+            });
         }
     }
     out.sort_by_key(|m| m.at);
@@ -78,7 +81,11 @@ mod tests {
 
     #[test]
     fn raw_vn_phone_is_caught() {
-        assert!(scan("call +84906878091 now").iter().any(|x| x.kind == "vn_phone"));
-        assert!(scan("call 0906878091 now").iter().any(|x| x.kind == "vn_phone"));
+        assert!(scan("call +84906878091 now")
+            .iter()
+            .any(|x| x.kind == "vn_phone"));
+        assert!(scan("call 0906878091 now")
+            .iter()
+            .any(|x| x.kind == "vn_phone"));
     }
 }

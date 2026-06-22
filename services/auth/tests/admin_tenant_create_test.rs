@@ -324,7 +324,11 @@ async fn create_tenant_p95_latency_under_100ms() {
     let mut latencies_ms = Vec::with_capacity(N);
 
     for i in 0..N {
-        let slug = format!("slo-{}-{}", &uuid::Uuid::new_v4().simple().to_string()[..8], i);
+        let slug = format!(
+            "slo-{}-{}",
+            &uuid::Uuid::new_v4().simple().to_string()[..8],
+            i
+        );
         let req = post_request(
             &token,
             &format!("slo-idem-{i}-{}", uuid::Uuid::new_v4().simple()),
@@ -369,7 +373,10 @@ async fn idempotent_replay_returns_same_tenant_id() {
     let token = root_admin_token(&pool).await;
     let app = build_app().await;
 
-    let slug = format!("idem-rep-{}", &uuid::Uuid::new_v4().simple().to_string()[..8]);
+    let slug = format!(
+        "idem-rep-{}",
+        &uuid::Uuid::new_v4().simple().to_string()[..8]
+    );
     let key = format!("idem-key-{}", uuid::Uuid::new_v4().simple());
 
     // First call → 201 CREATED
@@ -406,7 +413,10 @@ async fn idempotency_key_long_string_currently_accepted() {
     let token = root_admin_token(&pool).await;
     let app = build_app().await;
 
-    let slug = format!("idem-lng-{}", &uuid::Uuid::new_v4().simple().to_string()[..8]);
+    let slug = format!(
+        "idem-lng-{}",
+        &uuid::Uuid::new_v4().simple().to_string()[..8]
+    );
     let long_key = "k".repeat(120); // 120 chars
     let res = app
         .oneshot(post_request(&token, &long_key, happy_body(&slug)))

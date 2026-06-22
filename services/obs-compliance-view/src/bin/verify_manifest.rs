@@ -45,7 +45,9 @@ fn main() {
         arg(&args, "--rows"),
         arg(&args, "--pubkey"),
     ) else {
-        eprintln!("usage: verify_manifest --manifest <manifest.json> --rows <rows.json> --pubkey <hex32>");
+        eprintln!(
+            "usage: verify_manifest --manifest <manifest.json> --rows <rows.json> --pubkey <hex32>"
+        );
         std::process::exit(2);
     };
 

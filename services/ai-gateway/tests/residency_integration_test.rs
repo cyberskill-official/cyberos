@@ -42,8 +42,8 @@ fn make_bedrock_policy(residency: Residency, region: &str) -> TenantPolicy {
             allowed_personas: None,
             alias_overrides: None,
             residency_requires_regional_provider: None,
-                pii_redaction_extra: None,
-                langsmith_export: false,
+            pii_redaction_extra: None,
+            langsmith_export: false,
         },
     }
 }
@@ -57,10 +57,14 @@ fn make_bedrock_policy(residency: Residency, region: &str) -> TenantPolicy {
 fn alias_resolve_refuses_when_region_mismatch() {
     let policy = make_bedrock_policy(Residency::Sg1, "us-east-1");
     let result = alias::resolve("chat.smart", &policy);
-    assert!(result.is_err(), "expected refusal, got: {:?}", result);
+    assert!(result.is_err(), "expected refusal, got: {result:?}");
     match &result {
         Err(AliasError::ResidencyViolation {
-            policy_residency, resolved_region, vn1_no_provider, attempted_alias, ..
+            policy_residency,
+            resolved_region,
+            vn1_no_provider,
+            attempted_alias,
+            ..
         }) => {
             assert_eq!(*policy_residency, Residency::Sg1);
             assert_eq!(resolved_region.as_deref(), Some("us-east-1"));
@@ -69,7 +73,7 @@ fn alias_resolve_refuses_when_region_mismatch() {
         }
         // Cost-table gate fires before residency — also a valid refusal
         Err(AliasError::ResolvedModelMissingCostEntry { .. }) => {}
-        other => panic!("expected refusal error, got: {:?}", other),
+        other => panic!("expected refusal error, got: {other:?}"),
     }
 }
 
@@ -91,7 +95,7 @@ fn alias_resolve_region_matches() {
         Err(AliasError::ResidencyViolation { .. }) => {
             panic!("residency should have matched for sg-1 + ap-southeast-1");
         }
-        other => panic!("unexpected error: {:?}", other),
+        other => panic!("unexpected error: {other:?}"),
     }
 }
 
@@ -109,8 +113,7 @@ fn vn1_carries_no_provider_flag() {
         // Cost-table may fire first
         Err(AliasError::ResolvedModelMissingCostEntry { .. }) => {}
         other => panic!(
-            "expected ResidencyViolation(vn1_no_provider=true) or cost missing, got: {:?}",
-            other
+            "expected ResidencyViolation(vn1_no_provider=true) or cost missing, got: {other:?}"
         ),
     }
 }
@@ -129,7 +132,7 @@ fn zdr_check_before_residency() {
         Err(AliasError::ResidencyViolation { .. }) => {
             panic!("ZDR should fire before residency when both fail");
         }
-        other => panic!("expected error, got: {:?}", other),
+        other => panic!("expected error, got: {other:?}"),
     }
 }
 
@@ -146,7 +149,7 @@ fn eu1_accepts_eu_central_1() {
         Err(AliasError::ResidencyViolation { .. }) => {
             panic!("Eu1 should accept eu-central-1");
         }
-        other => panic!("unexpected: {:?}", other),
+        other => panic!("unexpected: {other:?}"),
     }
 }
 
@@ -161,6 +164,6 @@ fn us1_rejects_ap_region() {
             ..
         }) => {}
         Err(AliasError::ResolvedModelMissingCostEntry { .. }) => {}
-        other => panic!("expected refusal, got: {:?}", other),
+        other => panic!("expected refusal, got: {other:?}"),
     }
 }

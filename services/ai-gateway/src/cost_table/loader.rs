@@ -54,11 +54,19 @@ mod metrics {
     });
 
     pub static ENTRY_COUNT: Lazy<IntGauge> = Lazy::new(|| {
-        register_int_gauge!("ai_cost_table_entries_total", "Current count of (provider, model) entries").unwrap()
+        register_int_gauge!(
+            "ai_cost_table_entries_total",
+            "Current count of (provider, model) entries"
+        )
+        .unwrap()
     });
 
     pub static LOADED_AT_TS: Lazy<IntGauge> = Lazy::new(|| {
-        register_int_gauge!("ai_cost_table_loaded_at_ts", "UNIX timestamp of last successful load").unwrap()
+        register_int_gauge!(
+            "ai_cost_table_loaded_at_ts",
+            "UNIX timestamp of last successful load"
+        )
+        .unwrap()
     });
 
     pub static LOOKUP_LATENCY: Lazy<Histogram> = Lazy::new(|| {
@@ -82,7 +90,9 @@ pub fn lookup(provider: &ProviderKind, model: &str) -> Option<CostRate> {
         .get()
         .and_then(|s| s.load().get(&(*provider, model.to_string())).copied());
     let outcome = if result.is_some() { "hit" } else { "miss" };
-    metrics::LOOKUPS.with_label_values(&[provider.as_metric_label(), outcome]).inc();
+    metrics::LOOKUPS
+        .with_label_values(&[provider.as_metric_label(), outcome])
+        .inc();
     metrics::LOOKUP_LATENCY.observe(started.elapsed().as_nanos() as f64);
     result
 }
@@ -127,7 +137,9 @@ pub async fn init_cost_table(config_path: &Path) -> Result<CostTableHandle, Load
 
 // ─── Internal: load + validate ────────────────────────────────────────────────
 
-async fn load_and_validate(path: &Path) -> Result<HashMap<(ProviderKind, String), CostRate>, LoaderInitError> {
+async fn load_and_validate(
+    path: &Path,
+) -> Result<HashMap<(ProviderKind, String), CostRate>, LoaderInitError> {
     let yaml = std::fs::read_to_string(path).map_err(|source| LoaderInitError::IoError {
         path: path.to_path_buf(),
         source,
@@ -180,7 +192,10 @@ fn validate_and_flatten(
                 ));
             }
             if model.is_empty() || model.len() > 256 {
-                model_errors.push(format!("model name length must be 1..=256, got {}", model.len()));
+                model_errors.push(format!(
+                    "model name length must be 1..=256, got {}",
+                    model.len()
+                ));
             }
             // FR-AI-007 §1 #12: is_embedding ⇒ output_per_1k_usd == 0.0
             if rate.is_embedding && rate.output_per_1k_usd > Decimal::ZERO {
@@ -255,7 +270,10 @@ async fn spawn_watcher(path: &Path) -> Result<RecommendedWatcher, LoaderInitErro
     let watch_dir: PathBuf = match path.parent() {
         Some(p) if !p.as_os_str().is_empty() => p.to_path_buf(),
         _ => {
-            tracing::warn!(?path, "cost_rates.yaml has no parent dir; watching CWD instead");
+            tracing::warn!(
+                ?path,
+                "cost_rates.yaml has no parent dir; watching CWD instead"
+            );
             PathBuf::from(".")
         }
     };

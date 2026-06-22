@@ -4,11 +4,9 @@
 //! Run with: docker run -d --name test-redis -p 6379:6379 redis:7
 
 use cyberos_ai_gateway::cache::{
-    self, CacheKey, CacheInsertOutcome, CacheLookupOutcome, SkipReason, CACHE_SCHEMA_VERSION,
+    self, CacheInsertOutcome, CacheKey, CacheLookupOutcome, SkipReason, CACHE_SCHEMA_VERSION,
 };
-use cyberos_ai_gateway::router::types::{
-    Choice, FinishReason, ProviderResponse, ProviderUsage,
-};
+use cyberos_ai_gateway::router::types::{Choice, FinishReason, ProviderResponse, ProviderUsage};
 
 fn k(tenant: &str, prompt: &str, persona: &str) -> CacheKey {
     CacheKey::derive(tenant, prompt, "chat.smart", persona)
@@ -92,12 +90,20 @@ async fn persona_version_change_invalidates() {
 async fn chat_long_skipped() {
     cache::redis_backend::init("redis://127.0.0.1:6379");
     let key = k("tenant_a", "long story prompt", "cuo-cpo@0.4.1");
-    let outcome = cache::insert(&key, &test_provider_response(), "chat.long-resolved-bedrock").await;
+    let outcome = cache::insert(
+        &key,
+        &test_provider_response(),
+        "chat.long-resolved-bedrock",
+    )
+    .await;
     assert!(matches!(
         outcome,
         CacheInsertOutcome::Skipped(SkipReason::ChatLongOrUnknownAlias)
     ));
-    assert!(matches!(cache::lookup(&key).await, CacheLookupOutcome::Miss));
+    assert!(matches!(
+        cache::lookup(&key).await,
+        CacheLookupOutcome::Miss
+    ));
 }
 
 #[tokio::test]
@@ -159,14 +165,12 @@ async fn schema_mismatch_treated_as_miss() {
 
     // Insert raw via Redis.
     use redis::AsyncCommands;
-    
+
     let client = redis::Client::open("redis://127.0.0.1:6379").unwrap();
     let mut conn = client.get_async_connection().await.unwrap();
-    let _: Result<(), _> = conn.set_ex(
-        key.redis_key(),
-        bad.to_string().as_bytes().to_vec(),
-        3600,
-    ).await;
+    let _: Result<(), _> = conn
+        .set_ex(key.redis_key(), bad.to_string().as_bytes().to_vec(), 3600)
+        .await;
 
     match cache::lookup(&key).await {
         CacheLookupOutcome::SchemaMismatch => {}
@@ -207,9 +211,13 @@ async fn redis_keys_are_tenant_isolated() {
             .unwrap();
         all_keys.extend(keys);
         cursor = next;
-        if cursor == 0 { break; }
+        if cursor == 0 {
+            break;
+        }
     }
 
-    assert!(all_keys.iter().all(|k| k.starts_with(&format!("ai_cache:v1:{tenant_a}:"))));
+    assert!(all_keys
+        .iter()
+        .all(|k| k.starts_with(&format!("ai_cache:v1:{tenant_a}:"))));
     assert_eq!(all_keys.len(), 5);
 }

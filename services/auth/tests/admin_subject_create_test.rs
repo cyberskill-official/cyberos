@@ -365,7 +365,11 @@ async fn create_subject_p95_latency_under_200ms() {
     let mut latencies_ms = Vec::with_capacity(N);
 
     for i in 0..N {
-        let handle = format!("@slo-{}-{}", &uuid::Uuid::new_v4().simple().to_string()[..8], i);
+        let handle = format!(
+            "@slo-{}-{}",
+            &uuid::Uuid::new_v4().simple().to_string()[..8],
+            i
+        );
         let email = format!("{}@example.com", &handle[1..]);
         let req = post_subject(
             &token,
@@ -394,7 +398,11 @@ async fn create_subject_p95_latency_under_200ms() {
     // 50ms budget covers HIBP API + DB + validation + audit. If a CI runner
     // is slower than a typical prod cell, this test may flake — track CI
     // flake rate and tune cost downward only via explicit FR amendment.
-    let threshold = if std::env::var("CI").is_ok() { 500.0 } else { 200.0 };
+    let threshold = if std::env::var("CI").is_ok() {
+        500.0
+    } else {
+        200.0
+    };
     assert!(
         p95 < threshold,
         "p95 latency MUST be < {threshold}ms per §1 #10; got {p95:.1} ms (p50={p50:.1}, max={max:.1})"

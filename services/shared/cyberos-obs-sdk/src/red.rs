@@ -185,7 +185,10 @@ pub fn record_request(
     if status >= 400 {
         if let Some(errors) = ERRORS.get() {
             let mut err_labels = labels.clone();
-            err_labels.push(KeyValue::new("error_class", error_class(status).to_string()));
+            err_labels.push(KeyValue::new(
+                "error_class",
+                error_class(status).to_string(),
+            ));
             errors.add(1, &err_labels);
         }
     }
@@ -234,7 +237,14 @@ mod tests {
         // No provider installed and no init() called: must not panic. Unique service name so the
         // shared cardinality guard does not collide with other tests.
         record_request("noop-svc", "/x", "t", 200, 5, &[]);
-        record_request("noop-svc", "/x", "t", 503, 5, &[("model_alias", "chat.smart".into())]);
+        record_request(
+            "noop-svc",
+            "/x",
+            "t",
+            503,
+            5,
+            &[("model_alias", "chat.smart".into())],
+        );
     }
 
     #[test]
@@ -250,6 +260,10 @@ mod tests {
         // A histogram off the default (no-op) meter, with the emission counter not yet built: recording
         // must not panic and must count the emission as a no-op.
         let h = global::meter("test").f64_histogram("test_hist").build();
-        crate::exemplar::record_with_exemplar(&h, 12.5, &[KeyValue::new("route", "/x".to_string())]);
+        crate::exemplar::record_with_exemplar(
+            &h,
+            12.5,
+            &[KeyValue::new("route", "/x".to_string())],
+        );
     }
 }

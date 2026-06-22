@@ -134,7 +134,8 @@ impl ChatBackend for RouterBackend {
         resolved: &ResolvedModel,
         policy: &TenantPolicy,
     ) -> Result<ProviderResponse, String> {
-        let timeout = std::time::Duration::from_secs(u64::from(policy.ai_policy.call_timeout_seconds));
+        let timeout =
+            std::time::Duration::from_secs(u64::from(policy.ai_policy.call_timeout_seconds));
         let deadline = std::time::Instant::now() + timeout;
         crate::router::call_provider(req, resolved, deadline, policy)
             .await
@@ -194,7 +195,10 @@ pub struct ApiChatResponse {
 pub fn build_router(state: GatewayState) -> Router {
     let mut app = Router::new()
         .route("/healthz", get(|| async { "ok" }))
-        .route("/metrics", get(|| async { "# cyberos-ai-gateway: RED metrics export via OTLP\n" }))
+        .route(
+            "/metrics",
+            get(|| async { "# cyberos-ai-gateway: RED metrics export via OTLP\n" }),
+        )
         .route("/v1/chat", post(chat))
         // FR-OBS-005: ensure every request carries a trace context (extract or generate) and echo it on
         // the response. FR-OBS-003 (ADR-OBS-003-001): tenant_ctx stamps the request's tenant onto the
@@ -245,7 +249,9 @@ pub struct RequestTrace {
 /// Generate a fresh W3C trace context (16 random bytes trace id, 8 random bytes span id, sampled).
 fn generate_trace_context() -> cyberos_obs_sdk::TraceContext {
     let mut rng = rand::thread_rng();
-    let trace_id: String = (0..16).map(|_| format!("{:02x}", rng.gen::<u8>())).collect();
+    let trace_id: String = (0..16)
+        .map(|_| format!("{:02x}", rng.gen::<u8>()))
+        .collect();
     let span_id: String = (0..8).map(|_| format!("{:02x}", rng.gen::<u8>())).collect();
     cyberos_obs_sdk::TraceContext {
         trace_id,
@@ -271,9 +277,7 @@ async fn trace_ctx(mut req: axum::extract::Request, next: axum::middleware::Next
         }
         Err(cyberos_obs_sdk::ExtractError::Malformed(hash16)) => {
             cyberos_obs_sdk::record_tracecontext_extracted("malformed");
-            eprintln!(
-                "{{\"sev\":2,\"event\":\"malformed_traceparent\",\"hash16\":\"{hash16}\"}}"
-            );
+            eprintln!("{{\"sev\":2,\"event\":\"malformed_traceparent\",\"hash16\":\"{hash16}\"}}");
             generate_trace_context()
         }
     };
@@ -309,7 +313,12 @@ async fn chat(
     };
     let Json(req) = match body {
         Ok(j) => j,
-        Err(e) => return err(StatusCode::BAD_REQUEST, &format!("invalid request body: {e}")),
+        Err(e) => {
+            return err(
+                StatusCode::BAD_REQUEST,
+                &format!("invalid request body: {e}"),
+            )
+        }
     };
     if req.messages.is_empty() {
         return err(StatusCode::BAD_REQUEST, "messages must not be empty");
@@ -317,12 +326,22 @@ async fn chat(
 
     let policy = match st.policy.for_tenant(&tenant).await {
         Ok(p) => p,
-        Err(e) => return err(StatusCode::NOT_FOUND, &format!("policy unavailable for tenant: {e}")),
+        Err(e) => {
+            return err(
+                StatusCode::NOT_FOUND,
+                &format!("policy unavailable for tenant: {e}"),
+            )
+        }
     };
 
     let resolved = match crate::alias::resolve(&req.alias, &policy) {
         Ok(r) => r,
-        Err(e) => return err(StatusCode::BAD_REQUEST, &format!("alias resolution failed: {e:?}")),
+        Err(e) => {
+            return err(
+                StatusCode::BAD_REQUEST,
+                &format!("alias resolution failed: {e:?}"),
+            )
+        }
     };
 
     let ccr = ChatCompleteRequest {
@@ -343,10 +362,19 @@ async fn chat(
 
     let resp = match st.backend.complete(&ccr, &resolved, &policy).await {
         Ok(r) => r,
-        Err(e) => return err(StatusCode::BAD_GATEWAY, &format!("provider call failed: {e}")),
+        Err(e) => {
+            return err(
+                StatusCode::BAD_GATEWAY,
+                &format!("provider call failed: {e}"),
+            )
+        }
     };
 
-    let content = resp.choices.first().map(|c| c.content.clone()).unwrap_or_default();
+    let content = resp
+        .choices
+        .first()
+        .map(|c| c.content.clone())
+        .unwrap_or_default();
 
     // FR-OBS-004 - opt-in LangSmith export of the (redacted) call, correlated by the request trace id.
     // Gated on the tenant's opt-in so the default path makes no redaction (Presidio) call; the export
@@ -385,17 +413,19 @@ async fn export_to_langsmith(
         .collect::<Vec<_>>()
         .join("\n");
 
-    let (redacted_prompt, redacted_response) =
-        match (redact::redact(&prompt_text, policy).await, redact::redact(content, policy).await) {
-            (Ok(rp), Ok(rr)) => (rp.redacted_text, rr.redacted_text),
-            _ => {
-                eprintln!(
+    let (redacted_prompt, redacted_response) = match (
+        redact::redact(&prompt_text, policy).await,
+        redact::redact(content, policy).await,
+    ) {
+        (Ok(rp), Ok(rr)) => (rp.redacted_text, rr.redacted_text),
+        _ => {
+            eprintln!(
                     "{{\"sev\":2,\"event\":\"langsmith_redaction_failed_skipping_export\",\"trace_id\":\"{}\"}}",
                     trace.trace_id
                 );
-                return;
-            }
-        };
+            return;
+        }
+    };
 
     let metadata = LangSmithMetadata {
         model_alias: ccr.alias.clone(),

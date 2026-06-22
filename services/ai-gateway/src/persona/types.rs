@@ -39,17 +39,22 @@ impl PersonaHandle {
             .split_once('@')
             .ok_or_else(|| PersonaParseError::MissingAt(s.to_string()))?;
 
-        if id_str.is_empty() || !id_str.chars().all(|c| c.is_ascii_alphanumeric() || c == '-') {
+        if id_str.is_empty()
+            || !id_str
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '-')
+        {
             return Err(PersonaParseError::InvalidId(id_str.to_string()));
         }
 
-        let version = Version::parse(version_str).map_err(|e| {
-            PersonaParseError::InvalidSemver(format!("{}: {}", version_str, e))
-        })?;
+        let version = Version::parse(version_str)
+            .map_err(|e| PersonaParseError::InvalidSemver(format!("{}: {}", version_str, e)))?;
 
         // Reject pre-release (§1 #14)
         if !version.pre.is_empty() {
-            return Err(PersonaParseError::PreReleaseUnsupported(version.to_string()));
+            return Err(PersonaParseError::PreReleaseUnsupported(
+                version.to_string(),
+            ));
         }
 
         Ok(Self {
@@ -123,7 +128,9 @@ pub enum PersonaInitError {
     #[error("filename {path} does not match frontmatter handle {handle}")]
     FilenameMismatch { path: String, handle: String },
 
-    #[error("forbidden field 'system_prompt' in frontmatter at {path}; body is the canonical source")]
+    #[error(
+        "forbidden field 'system_prompt' in frontmatter at {path}; body is the canonical source"
+    )]
     ForbiddenFrontmatterField { path: String },
 
     #[error("registry already initialised; init_persona_registry called twice")]

@@ -81,7 +81,10 @@ mod tests {
         let d = Deduper::new();
         assert_eq!(d.observe("fp", 0), DedupOutcome::FirstInWindow);
         // exactly at the window boundary the old window has elapsed -> fresh.
-        assert_eq!(d.observe("fp", DEDUP_WINDOW_MS), DedupOutcome::FirstInWindow);
+        assert_eq!(
+            d.observe("fp", DEDUP_WINDOW_MS),
+            DedupOutcome::FirstInWindow
+        );
     }
 
     #[test]

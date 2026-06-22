@@ -153,7 +153,12 @@ async fn forward_to_module(
         .timeout(std::time::Duration::from_secs(FORWARD_TIMEOUT_SECS))
         .connect_timeout(std::time::Duration::from_secs(CONNECT_TIMEOUT_SECS))
         .build()
-        .map_err(|e| err(codes::INTERNAL_ERROR, &format!("http_client_build_failed: {e}")))?;
+        .map_err(|e| {
+            err(
+                codes::INTERNAL_ERROR,
+                &format!("http_client_build_failed: {e}"),
+            )
+        })?;
 
     let resp = client
         .post(endpoint)
@@ -258,14 +263,22 @@ mod tests {
 
     #[test]
     fn prepare_missing_scope_returns_unauthorized() {
-        let r = registry_with("cyberos.test.tool_0", "http://localhost/test", vec!["scope:admin".into()]);
+        let r = registry_with(
+            "cyberos.test.tool_0",
+            "http://localhost/test",
+            vec!["scope:admin".into()],
+        );
         let e = prepare(&r, &params("cyberos.test.tool_0"), &["mcp:tools".into()]).unwrap_err();
         assert_eq!(e.code, codes::UNAUTHORIZED);
     }
 
     #[test]
     fn prepare_with_all_scopes_resolves_the_entry() {
-        let r = registry_with("cyberos.test.tool_0", "http://mod.internal/mcp", vec!["mcp:tools".into()]);
+        let r = registry_with(
+            "cyberos.test.tool_0",
+            "http://mod.internal/mcp",
+            vec!["mcp:tools".into()],
+        );
         let entry = prepare(&r, &params("cyberos.test.tool_0"), &["mcp:tools".into()]).unwrap();
         assert_eq!(entry.endpoint, "http://mod.internal/mcp");
     }
@@ -304,8 +317,13 @@ mod tests {
 
     #[test]
     fn parse_forward_response_missing_result_and_error_is_internal() {
-        let e = parse_forward_response(true, serde_json::json!({"jsonrpc": "2.0"}), "memory", "http://m/mcp")
-            .unwrap_err();
+        let e = parse_forward_response(
+            true,
+            serde_json::json!({"jsonrpc": "2.0"}),
+            "memory",
+            "http://m/mcp",
+        )
+        .unwrap_err();
         assert_eq!(e.code, codes::INTERNAL_ERROR);
     }
 
@@ -315,7 +333,11 @@ mod tests {
     async fn dispatch_to_unreachable_module_is_module_unreachable() {
         // Loopback discard port refuses immediately, so this exercises the real reqwest
         // path (bounded by connect_timeout) without depending on any live module.
-        let r = registry_with("cyberos.test.tool_0", "http://127.0.0.1:9/mcp", vec!["mcp:tools".into()]);
+        let r = registry_with(
+            "cyberos.test.tool_0",
+            "http://127.0.0.1:9/mcp",
+            vec!["mcp:tools".into()],
+        );
         let e = dispatch(&r, &params("cyberos.test.tool_0"), &["mcp:tools".into()])
             .await
             .unwrap_err();
@@ -327,7 +349,11 @@ mod tests {
         use std::time::{Duration, SystemTime};
         // A reachable endpoint would be fine, but the module has missed its heartbeats, so
         // the call must be refused before any network attempt.
-        let r = registry_with("cyberos.test.tool_0", "http://127.0.0.1:9/mcp", vec!["mcp:tools".into()]);
+        let r = registry_with(
+            "cyberos.test.tool_0",
+            "http://127.0.0.1:9/mcp",
+            vec!["mcp:tools".into()],
+        );
         r.record_heartbeat("test-module", SystemTime::now() - Duration::from_secs(60));
         let e = dispatch(&r, &params("cyberos.test.tool_0"), &["mcp:tools".into()])
             .await

@@ -56,7 +56,12 @@ impl HttpChatClient {
 }
 
 impl ChatClient for HttpChatClient {
-    async fn post(&self, alert: &Alert, triage: &Triage, request_id: &str) -> Result<(), NotifyError> {
+    async fn post(
+        &self,
+        alert: &Alert,
+        triage: &Triage,
+        request_id: &str,
+    ) -> Result<(), NotifyError> {
         let Some(url) = self.webhook_url.as_ref() else {
             return Err(NotifyError("OBS_CHAT_WEBHOOK_URL not configured".into()));
         };

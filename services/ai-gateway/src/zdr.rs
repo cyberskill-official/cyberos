@@ -12,8 +12,8 @@ use std::sync::Arc;
 
 use arc_swap::ArcSwap;
 use chrono::{Duration, NaiveDate, Utc};
-use once_cell::sync::OnceCell;
 use once_cell::sync::Lazy;
+use once_cell::sync::OnceCell;
 use prometheus::{register_counter_vec, register_gauge, CounterVec, Gauge};
 use serde_yaml;
 use tracing::{error, info};
@@ -30,12 +30,8 @@ pub const SOFT_STALE_DAYS: i64 = 90;
 pub const HARD_STALE_DAYS: i64 = 365;
 
 /// Approved attestor domains per FR-AI-015 §1 #11.
-const APPROVED_AUDITOR_DOMAINS: &[&str] = &[
-    "cyberos.world",
-    "kpmg.com.vn",
-    "ey.com",
-    "deloitte.com",
-];
+const APPROVED_AUDITOR_DOMAINS: &[&str] =
+    &["cyberos.world", "kpmg.com.vn", "ey.com", "deloitte.com"];
 
 // ─── Metrics (FR-AI-015 §4 #14) ──────────────────────────────────────────────
 
@@ -84,9 +80,8 @@ static ZDR_EXPIRED: Lazy<CounterVec> = Lazy::new(|| {
     .unwrap()
 });
 
-static ZDR_TABLE_SIZE: Lazy<Gauge> = Lazy::new(|| {
-    register_gauge!("ai_zdr_table_size", "Current ZDR attestation count").unwrap()
-});
+static ZDR_TABLE_SIZE: Lazy<Gauge> =
+    Lazy::new(|| register_gauge!("ai_zdr_table_size", "Current ZDR attestation count").unwrap());
 
 // ─── Public types ─────────────────────────────────────────────────────────────
 
@@ -188,9 +183,7 @@ pub fn is_zdr(provider: &ProviderKind, model: &str) -> bool {
 /// FR-AI-015 §1 #2 — Get the full attestation for a (provider, model) pair.
 pub fn attestation_for(provider: &ProviderKind, model: &str) -> Option<ZdrAttestation> {
     let table = TABLE.get()?.load();
-    table
-        .get(&(*provider, model.to_string()))
-        .cloned()
+    table.get(&(*provider, model.to_string())).cloned()
 }
 
 /// FR-AI-015 §1 #1 — Load the ZDR attestation table from YAML.
@@ -226,10 +219,9 @@ pub fn is_hard_stale(att: &ZdrAttestation) -> bool {
 // ─── Parser ───────────────────────────────────────────────────────────────────
 
 fn parse_attestations(yaml: &str) -> Result<AttestationTable, ZdrInitError> {
-    let raw: serde_yaml::Value =
-        serde_yaml::from_str(yaml).map_err(|e| ZdrInitError::Schema {
-            reason: e.to_string(),
-        })?;
+    let raw: serde_yaml::Value = serde_yaml::from_str(yaml).map_err(|e| ZdrInitError::Schema {
+        reason: e.to_string(),
+    })?;
 
     let attestations = raw
         .get("attestations")
@@ -238,29 +230,23 @@ fn parse_attestations(yaml: &str) -> Result<AttestationTable, ZdrInitError> {
         })?;
 
     let mut out = HashMap::new();
-    for (provider_yaml, models) in attestations
-        .as_mapping()
-        .ok_or_else(|| ZdrInitError::Schema {
-            reason: "'attestations' must be a mapping".into(),
-        })?
-    {
-        let provider_str = provider_yaml
-            .as_str()
-            .ok_or_else(|| ZdrInitError::Schema {
-                reason: format!("provider key must be a string, got: {:?}", provider_yaml),
-            })?;
-        let provider = parse_provider_kind(provider_str).ok_or_else(|| {
-            ZdrInitError::Schema {
-                reason: format!("unknown provider: {}", provider_str),
-            }
-        })?;
-
-        for (model_yaml, fields) in models
+    for (provider_yaml, models) in
+        attestations
             .as_mapping()
             .ok_or_else(|| ZdrInitError::Schema {
-                reason: format!("{}/models must be a mapping", provider_str),
+                reason: "'attestations' must be a mapping".into(),
             })?
-        {
+    {
+        let provider_str = provider_yaml.as_str().ok_or_else(|| ZdrInitError::Schema {
+            reason: format!("provider key must be a string, got: {:?}", provider_yaml),
+        })?;
+        let provider = parse_provider_kind(provider_str).ok_or_else(|| ZdrInitError::Schema {
+            reason: format!("unknown provider: {}", provider_str),
+        })?;
+
+        for (model_yaml, fields) in models.as_mapping().ok_or_else(|| ZdrInitError::Schema {
+            reason: format!("{}/models must be a mapping", provider_str),
+        })? {
             let model = model_yaml
                 .as_str()
                 .ok_or_else(|| ZdrInitError::Schema {
@@ -298,10 +284,8 @@ fn parse_one_attestation(
             reason: format!("{}/{}: missing verified_at", provider, model),
         })?;
     let verified_at =
-        NaiveDate::parse_from_str(verified_at_s, "%Y-%m-%d").map_err(|e| {
-            ZdrInitError::Schema {
-                reason: format!("{}/{}: bad verified_at: {}", provider, model, e),
-            }
+        NaiveDate::parse_from_str(verified_at_s, "%Y-%m-%d").map_err(|e| ZdrInitError::Schema {
+            reason: format!("{}/{}: bad verified_at: {}", provider, model, e),
         })?;
 
     let source_url = map
@@ -336,11 +320,7 @@ fn parse_one_attestation(
     })
 }
 
-fn validate_source_url(
-    provider: &str,
-    model: &str,
-    url: &str,
-) -> Result<(), ZdrInitError> {
+fn validate_source_url(provider: &str, model: &str, url: &str) -> Result<(), ZdrInitError> {
     let parsed = Url::parse(url).map_err(|_| ZdrInitError::InvalidSourceUrl {
         provider: provider.into(),
         model: model.into(),
@@ -356,11 +336,7 @@ fn validate_source_url(
     Ok(())
 }
 
-fn validate_attested_by(
-    provider: &str,
-    model: &str,
-    value: &str,
-) -> Result<(), ZdrInitError> {
+fn validate_attested_by(provider: &str, model: &str, value: &str) -> Result<(), ZdrInitError> {
     let Some((_local, domain)) = value.split_once('@') else {
         return Err(ZdrInitError::InvalidAttestor {
             provider: provider.into(),
@@ -417,10 +393,16 @@ attestations:
         let table = parse_attestations(yaml).unwrap();
         assert_eq!(table.len(), 1);
         let att = table
-            .get(&(ProviderKind::Bedrock, "anthropic.claude-3-5-sonnet-20241022-v2:0".into()))
+            .get(&(
+                ProviderKind::Bedrock,
+                "anthropic.claude-3-5-sonnet-20241022-v2:0".into(),
+            ))
             .unwrap();
         assert!(att.is_zdr);
-        assert_eq!(att.verified_at, NaiveDate::from_ymd_opt(2026, 5, 21).unwrap());
+        assert_eq!(
+            att.verified_at,
+            NaiveDate::from_ymd_opt(2026, 5, 21).unwrap()
+        );
     }
 
     #[test]
@@ -566,7 +548,10 @@ attestations:
     #[test]
     fn parse_provider_kind_variants() {
         assert_eq!(parse_provider_kind("bedrock"), Some(ProviderKind::Bedrock));
-        assert_eq!(parse_provider_kind("anthropic"), Some(ProviderKind::Anthropic));
+        assert_eq!(
+            parse_provider_kind("anthropic"),
+            Some(ProviderKind::Anthropic)
+        );
         assert_eq!(parse_provider_kind("openai"), Some(ProviderKind::Openai));
         assert_eq!(parse_provider_kind("vertex"), Some(ProviderKind::Vertex));
         assert_eq!(parse_provider_kind("bge"), Some(ProviderKind::Bge));

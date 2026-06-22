@@ -63,8 +63,7 @@ impl AuthError {
 
 /// Parse and validate the operator token from the environment.
 pub fn require_token() -> Result<OperatorClaims, AuthError> {
-    let token = std::env::var("CYBEROS_AI_OPERATOR_TOKEN")
-        .map_err(|_| AuthError::MissingToken)?;
+    let token = std::env::var("CYBEROS_AI_OPERATOR_TOKEN").map_err(|_| AuthError::MissingToken)?;
     parse_token(&token)
 }
 
@@ -78,7 +77,9 @@ pub fn parse_token(token: &str) -> Result<OperatorClaims, AuthError> {
         &DecodingKey::from_secret(secret.as_bytes()),
         &Validation::default(),
     )
-    .map_err(|e| AuthError::InvalidToken { reason: e.to_string() })?;
+    .map_err(|e| AuthError::InvalidToken {
+        reason: e.to_string(),
+    })?;
 
     let claims = token_data.claims;
 

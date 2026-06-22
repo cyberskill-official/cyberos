@@ -24,7 +24,9 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
-use cyberos_ai_gateway::policy::schema::{AiPolicy, Provider, ProviderKind, Residency, TenantPolicy};
+use cyberos_ai_gateway::policy::schema::{
+    AiPolicy, Provider, ProviderKind, Residency, TenantPolicy,
+};
 use cyberos_ai_gateway::server::{build_router, GatewayState, PolicySource, RouterBackend};
 use tower::ServiceExt;
 
@@ -34,9 +36,13 @@ fn local_policy(kind: &str, model: &str) -> TenantPolicy {
     let mut map = HashMap::new();
     map.insert("chat.smart".to_string(), model.to_string());
     let primary = if kind == "ollama" {
-        Provider::Ollama { model_alias_map: map }
+        Provider::Ollama {
+            model_alias_map: map,
+        }
     } else {
-        Provider::LocalOpenai { model_alias_map: map }
+        Provider::LocalOpenai {
+            model_alias_map: map,
+        }
     };
     TenantPolicy {
         tenant_id: "org:cyberskill".to_string(),
@@ -99,7 +105,8 @@ fn local_provider_resolves_without_cost_or_zdr_fixture() {
 #[ignore = "owner-run: needs a local LM Studio/Ollama server with LOCAL_TEST_MODEL loaded"]
 async fn local_provider_live_round_trip() {
     let kind = std::env::var("LOCAL_TEST_KIND").unwrap_or_else(|_| "local_openai".to_string());
-    let model = std::env::var("LOCAL_TEST_MODEL").unwrap_or_else(|_| "qwen2.5-7b-instruct".to_string());
+    let model =
+        std::env::var("LOCAL_TEST_MODEL").unwrap_or_else(|_| "qwen2.5-7b-instruct".to_string());
 
     let state = GatewayState {
         policy: Arc::new(FixedPolicy(Arc::new(local_policy(&kind, &model)))),
@@ -120,7 +127,9 @@ async fn local_provider_live_round_trip() {
         .unwrap();
 
     let status = res.status();
-    let bytes = axum::body::to_bytes(res.into_body(), usize::MAX).await.unwrap();
+    let bytes = axum::body::to_bytes(res.into_body(), usize::MAX)
+        .await
+        .unwrap();
     let v: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
 
     // On a non-200 the handler returns 502 with the provider error in the body. Surface it, since the
@@ -133,7 +142,9 @@ async fn local_provider_live_round_trip() {
          http://localhost:1234 (override LMSTUDIO_ENDPOINT), Ollama default http://localhost:11434 \
          (override OLLAMA_ENDPOINT); (2) LOCAL_TEST_MODEL={model:?} names a model that is actually \
          loaded and served; (3) for Ollama set LOCAL_TEST_KIND=ollama.",
-        v.get("error").and_then(|e| e.as_str()).unwrap_or("(no error field in body)")
+        v.get("error")
+            .and_then(|e| e.as_str())
+            .unwrap_or("(no error field in body)")
     );
 
     let content = v["content"].as_str().unwrap_or("");
@@ -143,5 +154,9 @@ async fn local_provider_live_round_trip() {
         !content.starts_with("echo:"),
         "must be the real router, not EchoBackend - dispatch flip is not in effect"
     );
-    assert_eq!(v["model"].as_str(), Some(model.as_str()), "response model echoes the resolved local model");
+    assert_eq!(
+        v["model"].as_str(),
+        Some(model.as_str()),
+        "response model echoes the resolved local model"
+    );
 }

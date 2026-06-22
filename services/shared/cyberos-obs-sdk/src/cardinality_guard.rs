@@ -82,7 +82,10 @@ mod tests {
     fn blocks_past_the_budget_and_is_idempotent_under_it() {
         let svc = "card-test-a";
         for i in 0..MAX_CARDINALITY_PER_METRIC {
-            assert!(check(svc, "m", &route(&format!("/r{i}"))), "combo {i} should be allowed");
+            assert!(
+                check(svc, "m", &route(&format!("/r{i}"))),
+                "combo {i} should be allowed"
+            );
         }
         // the 1001st distinct combo is refused
         assert!(!check(svc, "m", &route("/r-overflow")));

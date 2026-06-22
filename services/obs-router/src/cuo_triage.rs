@@ -47,7 +47,9 @@ struct RunbookDto {
 impl TriageClient for HttpTriageClient {
     async fn triage(&self, alert: &Alert) -> Result<Triage, TriageError> {
         let Some(url) = self.url.as_ref() else {
-            return Err(TriageError::Failed("OBS_CUO_TRIAGE_URL not configured".into()));
+            return Err(TriageError::Failed(
+                "OBS_CUO_TRIAGE_URL not configured".into(),
+            ));
         };
         let body = serde_json::json!({
             "skill": "obs.triage-alert@1",
@@ -82,7 +84,10 @@ impl TriageClient for HttpTriageClient {
         Ok(Triage {
             confidence: dto.confidence,
             summary: dto.summary,
-            suggested_runbook: dto.suggested_runbook.map(|r| r.url).filter(|u| !u.is_empty()),
+            suggested_runbook: dto
+                .suggested_runbook
+                .map(|r| r.url)
+                .filter(|u| !u.is_empty()),
             suspected_cause: dto.suspected_cause,
         })
     }

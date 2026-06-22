@@ -30,7 +30,11 @@ mod tests {
         let mut rng = StdRng::seed_from_u64(42);
         for _ in 0..10_000 {
             let result = jitter_ms(200, 0.20, &mut rng);
-            assert!((160..=240).contains(&result), "jitter out of band: {}", result);
+            assert!(
+                (160..=240).contains(&result),
+                "jitter out of band: {}",
+                result
+            );
         }
     }
 
@@ -39,7 +43,11 @@ mod tests {
         let mut rng = StdRng::seed_from_u64(42);
         for _ in 0..10_000 {
             let result = jitter_ms(800, 0.20, &mut rng);
-            assert!((640..=960).contains(&result), "jitter out of band: {}", result);
+            assert!(
+                (640..=960).contains(&result),
+                "jitter out of band: {}",
+                result
+            );
         }
     }
 

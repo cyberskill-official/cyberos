@@ -135,7 +135,9 @@ mod tests {
 
     #[test]
     fn missing_alertname_and_severity_get_safe_defaults() {
-        let wh = Webhook::parse(r#"{"alerts":[{"status":"firing","labels":{},"fingerprint":"f"}]}"#).unwrap();
+        let wh =
+            Webhook::parse(r#"{"alerts":[{"status":"firing","labels":{},"fingerprint":"f"}]}"#)
+                .unwrap();
         let a = &wh.alerts()[0];
         assert_eq!(a.name, "unknown");
         assert_eq!(a.severity, Severity::Sev2); // unknown severity -> cautious sev2

@@ -2,9 +2,9 @@
 
 use sha2::{Digest, Sha256};
 
-use super::{CliError, BreakerAction};
 use super::auth::{OperatorClaims, Role};
 use super::output;
+use super::{BreakerAction, CliError};
 
 pub async fn run(
     args: BreakerAction,
@@ -15,9 +15,11 @@ pub async fn run(
     match args {
         BreakerAction::Status => status(json, pool).await,
         BreakerAction::Reset { target } => {
-            super::auth::require_role(claims, &Role::Mutate).map_err(|e| CliError::InsufficientRole {
-                needed: e.needed(),
-                has: e.has(),
+            super::auth::require_role(claims, &Role::Mutate).map_err(|e| {
+                CliError::InsufficientRole {
+                    needed: e.needed(),
+                    has: e.has(),
+                }
             })?;
             reset(claims, &target, pool).await
         }
@@ -31,7 +33,9 @@ async fn status(json: bool, pool: &sqlx::PgPool) -> Result<(), CliError> {
     )
     .fetch_all(pool)
     .await
-    .map_err(|e| CliError::RemoteUnreachable { reason: e.to_string() })?;
+    .map_err(|e| CliError::RemoteUnreachable {
+        reason: e.to_string(),
+    })?;
 
     let breaker_data: Vec<(String, String, String, u32, String)> = breakers
         .into_iter()
@@ -53,11 +57,7 @@ async fn status(json: bool, pool: &sqlx::PgPool) -> Result<(), CliError> {
     Ok(())
 }
 
-async fn reset(
-    claims: &OperatorClaims,
-    target: &str,
-    pool: &sqlx::PgPool,
-) -> Result<(), CliError> {
+async fn reset(claims: &OperatorClaims, target: &str, pool: &sqlx::PgPool) -> Result<(), CliError> {
     let parts: Vec<&str> = target.split(':').collect();
     if parts.len() != 2 {
         return Err(CliError::UserError {
@@ -79,7 +79,9 @@ async fn reset(
     .bind(parts[1])
     .execute(pool)
     .await
-    .map_err(|e| CliError::RemoteUnreachable { reason: e.to_string() })?;
+    .map_err(|e| CliError::RemoteUnreachable {
+        reason: e.to_string(),
+    })?;
 
     let _ = crate::memory_writer::emit(crate::memory_writer::MemoryEmit {
         kind: crate::memory_writer::AiInvocationKind::Precheck,

@@ -54,7 +54,11 @@ pub fn has_user_supplied_tenant_id(query: &str, backend: Backend) -> Result<bool
 /// - a user-supplied tenant label is refused (`UserSuppliedTenantId` -> 400 + sev-1 audit);
 /// - a root-admin (nil-UUID tenant) query is forwarded unchanged (`RootAdminUnfiltered`);
 /// - otherwise the tenant label is AST-injected into every selector.
-pub fn decide(claims: &Claims, query: &str, backend: Backend) -> Result<(String, Outcome), ProxyError> {
+pub fn decide(
+    claims: &Claims,
+    query: &str,
+    backend: Backend,
+) -> Result<(String, Outcome), ProxyError> {
     if has_user_supplied_tenant_id(query, backend)? {
         return Err(ProxyError::UserSuppliedTenantId);
     }
@@ -86,23 +90,39 @@ mod tests {
 
     #[test]
     fn detect_backend_maps_paths() {
-        assert_eq!(detect_backend("/api/v1/query?query=x"), Some(Backend::Prometheus));
+        assert_eq!(
+            detect_backend("/api/v1/query?query=x"),
+            Some(Backend::Prometheus)
+        );
         assert_eq!(detect_backend("/loki/api/v1/query"), Some(Backend::Loki));
         assert_eq!(detect_backend("/api/search?q=x"), Some(Backend::Tempo));
-        assert_eq!(detect_backend("/tempo/api/traces/abc"), Some(Backend::Tempo));
+        assert_eq!(
+            detect_backend("/tempo/api/traces/abc"),
+            Some(Backend::Tempo)
+        );
         assert_eq!(detect_backend("/nope"), None);
     }
 
     #[test]
     fn injects_for_a_regular_tenant() {
-        let (q, o) = decide(&claims("org:cyberskill"), "rate(foo[5m])", Backend::Prometheus).unwrap();
+        let (q, o) = decide(
+            &claims("org:cyberskill"),
+            "rate(foo[5m])",
+            Backend::Prometheus,
+        )
+        .unwrap();
         assert!(q.contains("tenant_id=\"org:cyberskill\""));
         assert_eq!(o, Outcome::Proxied);
     }
 
     #[test]
     fn refuses_user_supplied_tenant_id() {
-        let e = decide(&claims("T"), "foo{tenant_id=\"other\"}", Backend::Prometheus).unwrap_err();
+        let e = decide(
+            &claims("T"),
+            "foo{tenant_id=\"other\"}",
+            Backend::Prometheus,
+        )
+        .unwrap_err();
         assert!(matches!(e, ProxyError::UserSuppliedTenantId));
     }
 

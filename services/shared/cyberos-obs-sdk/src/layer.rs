@@ -57,12 +57,22 @@ pub async fn red_mw(
     let response = next.run(req).await;
 
     // An inner layer (the service's auth middleware) may set TenantCtx on the response extensions.
-    let tenant = response.extensions().get::<TenantCtx>().map(|t| t.0.clone());
+    let tenant = response
+        .extensions()
+        .get::<TenantCtx>()
+        .map(|t| t.0.clone());
     let (route_label, tenant_label) = labels(route.as_deref(), tenant.as_deref());
     let status = response.status().as_u16();
     let duration_ms = u32::try_from(start.elapsed().as_millis()).unwrap_or(u32::MAX);
 
-    red::record_request(state.service, route_label, tenant_label, status, duration_ms, &[]);
+    red::record_request(
+        state.service,
+        route_label,
+        tenant_label,
+        status,
+        duration_ms,
+        &[],
+    );
     response
 }
 
@@ -105,7 +115,12 @@ mod tests {
     #[tokio::test]
     async fn middleware_is_transparent_to_the_response() {
         let res = app()
-            .oneshot(Request::builder().uri("/v1/ping").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/v1/ping")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
         assert_eq!(res.status(), 200);
@@ -114,7 +129,12 @@ mod tests {
     #[tokio::test]
     async fn middleware_runs_for_a_tenant_route_without_panicking() {
         let res = app()
-            .oneshot(Request::builder().uri("/v1/tenant").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/v1/tenant")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
         assert_eq!(res.status(), 200);

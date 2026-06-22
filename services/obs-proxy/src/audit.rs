@@ -60,7 +60,11 @@ pub fn query_proxied(
 }
 
 /// `obs.cross_tenant_query_attempt` (sev-1) - a caller supplied a `tenant_id` label (FR §1 #4 / §8).
-pub fn cross_tenant_query_attempt(caller_tenant_id: &str, query: &str, request_id: &str) -> AuditRow {
+pub fn cross_tenant_query_attempt(
+    caller_tenant_id: &str,
+    query: &str,
+    request_id: &str,
+) -> AuditRow {
     AuditRow {
         kind: "obs.cross_tenant_query_attempt",
         payload: json!({
@@ -108,7 +112,9 @@ mod tests {
     fn sha256_is_64_lowercase_hex() {
         let s = query_sha256("rate(foo[5m])");
         assert_eq!(s.len(), 64);
-        assert!(s.chars().all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase()));
+        assert!(s
+            .chars()
+            .all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase()));
     }
 
     #[test]

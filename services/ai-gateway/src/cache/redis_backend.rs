@@ -32,7 +32,10 @@ static CONN: Mutex<Option<redis::aio::ConnectionManager>> = Mutex::const_new(Non
 
 async fn build_conn() -> Result<redis::aio::ConnectionManager, redis::RedisError> {
     let url = REDIS_URL.get().ok_or_else(|| {
-        redis::RedisError::from((redis::ErrorKind::InvalidClientConfig, "redis URL not initialized"))
+        redis::RedisError::from((
+            redis::ErrorKind::InvalidClientConfig,
+            "redis URL not initialized",
+        ))
     })?;
     let client = redis::Client::open(url.as_str())?;
     redis::aio::ConnectionManager::new(client).await
@@ -69,7 +72,11 @@ async fn fetch_bytes(redis_key: &str) -> Result<Option<Vec<u8>>, redis::RedisErr
 }
 
 /// SET (with TTL) with one transparent rebuild-and-retry if the cached connection is dead.
-async fn store_bytes(redis_key: &str, bytes: &[u8], ttl_secs: u64) -> Result<(), redis::RedisError> {
+async fn store_bytes(
+    redis_key: &str,
+    bytes: &[u8],
+    ttl_secs: u64,
+) -> Result<(), redis::RedisError> {
     let mut conn = get_conn().await?;
     let first: Result<(), redis::RedisError> = conn.set_ex(redis_key, bytes, ttl_secs).await;
     match first {
@@ -87,7 +94,12 @@ pub async fn lookup(key: &super::CacheKey) -> CacheLookupOutcome {
     let t0 = std::time::Instant::now();
     let redis_key = key.redis_key();
 
-    let raw = match timeout(Duration::from_millis(REDIS_TIMEOUT_MS), fetch_bytes(&redis_key)).await {
+    let raw = match timeout(
+        Duration::from_millis(REDIS_TIMEOUT_MS),
+        fetch_bytes(&redis_key),
+    )
+    .await
+    {
         Ok(Ok(v)) => v,
         Ok(Err(e)) => {
             super::error_metric("unreachable");

@@ -12,11 +12,7 @@ impl StreamEvent {
     /// Convert to an axum SSE event.
     pub fn to_sse_event(&self) -> SseEvent {
         match self {
-            StreamEvent::Token {
-                text,
-                model,
-                index,
-            } => SseEvent::default()
+            StreamEvent::Token { text, model, index } => SseEvent::default()
                 .event("token")
                 .json_data(serde_json::json!({
                     "text": text,
@@ -53,9 +49,7 @@ impl StreamEvent {
                 }))
                 .unwrap_or_else(|_| SseEvent::default().event("error").data("{}")),
 
-            StreamEvent::Heartbeat => {
-                SseEvent::default().event("heartbeat").data("{}")
-            }
+            StreamEvent::Heartbeat => SseEvent::default().event("heartbeat").data("{}"),
         }
     }
 }

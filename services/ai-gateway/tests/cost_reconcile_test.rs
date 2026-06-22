@@ -3,7 +3,6 @@
 //! Requires a running Postgres instance. Set DATABASE_URL env var.
 //! Tests are ignored when DATABASE_URL is not set.
 
-
 use chrono::Datelike;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
@@ -79,7 +78,10 @@ async fn read_ledger_spent(pool: &PgPool, tenant_id: &str) -> Decimal {
     .unwrap()
 }
 
-async fn read_hold_state(pool: &PgPool, hold_id: Uuid) -> (String, Option<Decimal>, Option<String>) {
+async fn read_hold_state(
+    pool: &PgPool,
+    hold_id: Uuid,
+) -> (String, Option<Decimal>, Option<String>) {
     sqlx::query_as::<_, (String, Option<Decimal>, Option<String>)>(
         "SELECT state, actual_usd, refund_reason FROM cost_ledger_hold WHERE id = $1",
     )
@@ -119,7 +121,14 @@ async fn reconcile_success_updates_ledger() {
     cleanup_tenant(&pool, tenant).await;
     seed_tenant(&pool, tenant, dec!(100), dec!(12.50)).await;
 
-    let hold_id = seed_hold(&pool, tenant, dec!(0.0085), "bedrock", "anthropic.claude-3-5-sonnet-20241022-v2:0").await;
+    let hold_id = seed_hold(
+        &pool,
+        tenant,
+        dec!(0.0085),
+        "bedrock",
+        "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    )
+    .await;
 
     let outcome = reconcile(
         hold_id,
@@ -181,7 +190,14 @@ async fn reconcile_idempotent_double_call() {
     cleanup_tenant(&pool, tenant).await;
     seed_tenant(&pool, tenant, dec!(100), dec!(50)).await;
 
-    let hold_id = seed_hold(&pool, tenant, dec!(0.0085), "bedrock", "anthropic.claude-3-5-sonnet-20241022-v2:0").await;
+    let hold_id = seed_hold(
+        &pool,
+        tenant,
+        dec!(0.0085),
+        "bedrock",
+        "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    )
+    .await;
 
     let _outcome1 = reconcile(
         hold_id,
@@ -230,13 +246,16 @@ async fn reconcile_idempotent_double_call() {
         other => {
             // If memory writer is unavailable, the first call may have rolled back,
             // so the second call would succeed as if it were the first.
-            eprintln!("AC #2: second call returned {:?}", other);
+            eprintln!("AC #2: second call returned {other:?}");
         }
     }
 
     // Verify no double-counting: spent_usd should not have been incremented twice.
     let spent = read_ledger_spent(&pool, tenant).await;
-    assert!(spent <= dec!(50.01), "spend should not be double-counted: {spent}");
+    assert!(
+        spent <= dec!(50.01),
+        "spend should not be double-counted: {spent}"
+    );
 
     cleanup_tenant(&pool, tenant).await;
 }
@@ -258,7 +277,14 @@ async fn reconcile_provider_error_refunds() {
     cleanup_tenant(&pool, tenant).await;
     seed_tenant(&pool, tenant, dec!(100), dec!(50)).await;
 
-    let hold_id = seed_hold(&pool, tenant, dec!(0.0085), "bedrock", "anthropic.claude-3-5-sonnet-20241022-v2:0").await;
+    let hold_id = seed_hold(
+        &pool,
+        tenant,
+        dec!(0.0085),
+        "bedrock",
+        "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    )
+    .await;
 
     let outcome = reconcile(
         hold_id,
@@ -283,7 +309,7 @@ async fn reconcile_provider_error_refunds() {
             eprintln!("memory writer unavailable; AC #3 partial");
         }
         Err(e) => panic!("unexpected error: {e}"),
-        Ok(other) => panic!("expected Refunded, got {:?}", other),
+        Ok(other) => panic!("expected Refunded, got {other:?}"),
     }
 
     // Ledger should be unchanged.
@@ -314,7 +340,14 @@ async fn reconcile_cancelled_partial_charges_partial() {
     cleanup_tenant(&pool, tenant).await;
     seed_tenant(&pool, tenant, dec!(100), dec!(50)).await;
 
-    let hold_id = seed_hold(&pool, tenant, dec!(0.0085), "bedrock", "anthropic.claude-3-5-sonnet-20241022-v2:0").await;
+    let hold_id = seed_hold(
+        &pool,
+        tenant,
+        dec!(0.0085),
+        "bedrock",
+        "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    )
+    .await;
 
     let outcome = reconcile(
         hold_id,
@@ -338,13 +371,16 @@ async fn reconcile_cancelled_partial_charges_partial() {
             eprintln!("memory writer unavailable; AC #4 partial");
         }
         Err(e) => panic!("unexpected error: {e}"),
-        Ok(other) => panic!("expected Reconciled, got {:?}", other),
+        Ok(other) => panic!("expected Reconciled, got {other:?}"),
     }
 
     let (state, actual_usd, _) = read_hold_state(&pool, hold_id).await;
     if state == "reconciled" {
         assert!(actual_usd.is_some());
-        assert!(actual_usd.unwrap() >= dec!(0.0001), "floor at column precision");
+        assert!(
+            actual_usd.unwrap() >= dec!(0.0001),
+            "floor at column precision"
+        );
     }
 
     cleanup_tenant(&pool, tenant).await;
@@ -367,7 +403,14 @@ async fn reconcile_cancelled_no_stream_refunds() {
     cleanup_tenant(&pool, tenant).await;
     seed_tenant(&pool, tenant, dec!(100), dec!(50)).await;
 
-    let hold_id = seed_hold(&pool, tenant, dec!(0.0085), "bedrock", "anthropic.claude-3-5-sonnet-20241022-v2:0").await;
+    let hold_id = seed_hold(
+        &pool,
+        tenant,
+        dec!(0.0085),
+        "bedrock",
+        "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    )
+    .await;
 
     let outcome = reconcile(
         hold_id,
@@ -387,7 +430,7 @@ async fn reconcile_cancelled_no_stream_refunds() {
             eprintln!("memory writer unavailable; AC #5 partial");
         }
         Err(e) => panic!("unexpected error: {e}"),
-        Ok(other) => panic!("expected Refunded, got {:?}", other),
+        Ok(other) => panic!("expected Refunded, got {other:?}"),
     }
 
     // Ledger should be unchanged.
@@ -414,7 +457,14 @@ async fn reconcile_cost_table_missing_errors() {
     cleanup_tenant(&pool, tenant).await;
     seed_tenant(&pool, tenant, dec!(100), dec!(50)).await;
 
-    let hold_id = seed_hold(&pool, tenant, dec!(0.0085), "fake_provider", "nonexistent_model").await;
+    let hold_id = seed_hold(
+        &pool,
+        tenant,
+        dec!(0.0085),
+        "fake_provider",
+        "nonexistent_model",
+    )
+    .await;
 
     let outcome = reconcile(
         hold_id,
@@ -436,7 +486,7 @@ async fn reconcile_cost_table_missing_errors() {
             assert_eq!(provider, "fake_provider");
             assert_eq!(model, "nonexistent_model");
         }
-        other => panic!("expected CostTableMissing, got {:?}", other),
+        other => panic!("expected CostTableMissing, got {other:?}"),
     }
 
     // Hold should still be in 'held' state (transaction rolled back).
@@ -463,7 +513,14 @@ async fn reconcile_400_bad_request_refunds() {
     cleanup_tenant(&pool, tenant).await;
     seed_tenant(&pool, tenant, dec!(100), dec!(50)).await;
 
-    let hold_id = seed_hold(&pool, tenant, dec!(0.0085), "bedrock", "anthropic.claude-3-5-sonnet-20241022-v2:0").await;
+    let hold_id = seed_hold(
+        &pool,
+        tenant,
+        dec!(0.0085),
+        "bedrock",
+        "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    )
+    .await;
 
     let outcome = reconcile(
         hold_id,
@@ -488,7 +545,7 @@ async fn reconcile_400_bad_request_refunds() {
             eprintln!("memory writer unavailable; AC #11 partial");
         }
         Err(e) => panic!("unexpected error: {e}"),
-        Ok(other) => panic!("expected Refunded, got {:?}", other),
+        Ok(other) => panic!("expected Refunded, got {other:?}"),
     }
 
     // Ledger should be unchanged.
@@ -516,7 +573,14 @@ async fn reconcile_already_finalised_carries_outcome() {
     seed_tenant(&pool, tenant, dec!(100), dec!(50)).await;
 
     // Seed a hold that's already reconciled.
-    let hold_id = seed_hold(&pool, tenant, dec!(0.0085), "bedrock", "anthropic.claude-3-5-sonnet-20241022-v2:0").await;
+    let hold_id = seed_hold(
+        &pool,
+        tenant,
+        dec!(0.0085),
+        "bedrock",
+        "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    )
+    .await;
 
     // Manually set to reconciled state.
     sqlx::query(
@@ -553,10 +617,10 @@ async fn reconcile_already_finalised_carries_outcome() {
                 ReconcileOutcome::Reconciled { actual_usd, .. } => {
                     assert_eq!(actual_usd, dec!(0.0078));
                 }
-                other => panic!("expected Reconciled in original_outcome, got {:?}", other),
+                other => panic!("expected Reconciled in original_outcome, got {other:?}"),
             }
         }
-        other => panic!("expected AlreadyFinalised, got {:?}", other),
+        other => panic!("expected AlreadyFinalised, got {other:?}"),
     }
 
     cleanup_tenant(&pool, tenant).await;
@@ -592,6 +656,6 @@ async fn reconcile_hold_not_found() {
 
     match outcome {
         Err(ReconcileError::HoldNotFound(id)) => assert_eq!(id, fake_id),
-        other => panic!("expected HoldNotFound, got {:?}", other),
+        other => panic!("expected HoldNotFound, got {other:?}"),
     }
 }

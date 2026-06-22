@@ -47,7 +47,10 @@ impl ServerHealthStatus {
     /// still counts as available (a transient miss should not withdraw the tool); unhealthy
     /// and deregistered do not.
     pub fn is_available(&self) -> bool {
-        matches!(self, ServerHealthStatus::Healthy | ServerHealthStatus::Degraded)
+        matches!(
+            self,
+            ServerHealthStatus::Healthy | ServerHealthStatus::Degraded
+        )
     }
 }
 
@@ -73,26 +76,50 @@ mod tests {
 
     #[test]
     fn fresh_and_within_one_interval_is_healthy() {
-        assert_eq!(classify(Duration::from_secs(0), false), ServerHealthStatus::Healthy);
-        assert_eq!(classify(Duration::from_secs(10), false), ServerHealthStatus::Healthy);
+        assert_eq!(
+            classify(Duration::from_secs(0), false),
+            ServerHealthStatus::Healthy
+        );
+        assert_eq!(
+            classify(Duration::from_secs(10), false),
+            ServerHealthStatus::Healthy
+        );
     }
 
     #[test]
     fn one_to_two_missed_beats_is_degraded() {
-        assert_eq!(classify(Duration::from_secs(11), false), ServerHealthStatus::Degraded);
-        assert_eq!(classify(Duration::from_secs(30), false), ServerHealthStatus::Degraded);
+        assert_eq!(
+            classify(Duration::from_secs(11), false),
+            ServerHealthStatus::Degraded
+        );
+        assert_eq!(
+            classify(Duration::from_secs(30), false),
+            ServerHealthStatus::Degraded
+        );
     }
 
     #[test]
     fn three_or_more_missed_beats_is_unhealthy() {
-        assert_eq!(classify(Duration::from_millis(30_001), false), ServerHealthStatus::Unhealthy);
-        assert_eq!(classify(Duration::from_secs(120), false), ServerHealthStatus::Unhealthy);
+        assert_eq!(
+            classify(Duration::from_millis(30_001), false),
+            ServerHealthStatus::Unhealthy
+        );
+        assert_eq!(
+            classify(Duration::from_secs(120), false),
+            ServerHealthStatus::Unhealthy
+        );
     }
 
     #[test]
     fn deregistered_beats_any_age() {
-        assert_eq!(classify(Duration::from_secs(0), true), ServerHealthStatus::Deregistered);
-        assert_eq!(classify(Duration::from_secs(120), true), ServerHealthStatus::Deregistered);
+        assert_eq!(
+            classify(Duration::from_secs(0), true),
+            ServerHealthStatus::Deregistered
+        );
+        assert_eq!(
+            classify(Duration::from_secs(120), true),
+            ServerHealthStatus::Deregistered
+        );
     }
 
     #[test]

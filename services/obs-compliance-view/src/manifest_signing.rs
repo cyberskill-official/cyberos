@@ -46,7 +46,10 @@ pub fn verify(public_key: &[u8; 32], manifest: &Manifest, canonical_rows: &[u8])
         return Verdict::Fail("public key is invalid");
     };
     let signature = Signature::from_bytes(&sig_arr);
-    if verifying_key.verify(&manifest.signable_bytes(), &signature).is_ok() {
+    if verifying_key
+        .verify(&manifest.signable_bytes(), &signature)
+        .is_ok()
+    {
         Verdict::Pass
     } else {
         Verdict::Fail("ed25519 signature mismatch")
@@ -119,13 +122,19 @@ mod tests {
         let rows = b"[]";
         let mut m = manifest(ExportState::Incomplete, rows);
         sign(&SEED, &mut m);
-        assert_eq!(verify(&public_key(), &m, rows), Verdict::Fail("export state is Incomplete"));
+        assert_eq!(
+            verify(&public_key(), &m, rows),
+            Verdict::Fail("export state is Incomplete")
+        );
     }
 
     #[test]
     fn an_unsigned_manifest_fails() {
         let rows = b"[]";
         let m = manifest(ExportState::Complete, rows);
-        assert_eq!(verify(&public_key(), &m, rows), Verdict::Fail("manifest is unsigned"));
+        assert_eq!(
+            verify(&public_key(), &m, rows),
+            Verdict::Fail("manifest is unsigned")
+        );
     }
 }

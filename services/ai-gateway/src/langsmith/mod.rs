@@ -249,7 +249,10 @@ mod tests {
 
     #[test]
     fn error_taxonomy_renders() {
-        assert_eq!(LangSmithError::AuthFailed.to_string(), "langsmith auth failed");
+        assert_eq!(
+            LangSmithError::AuthFailed.to_string(),
+            "langsmith auth failed"
+        );
         assert_eq!(
             LangSmithError::InvalidPayload(422).to_string(),
             "langsmith rejected payload (status 422)"

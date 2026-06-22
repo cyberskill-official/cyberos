@@ -103,7 +103,7 @@ proptest! {
             // Scan Redis for tenant_a's keys only.
             let client = redis::Client::open("redis://127.0.0.1:6379").unwrap();
             let mut conn = client.get_async_connection().await.unwrap();
-            let pattern = format!("ai_cache:v1:{}:*", t_a);
+            let pattern = format!("ai_cache:v1:{t_a}:*");
             let mut cursor: u64 = 0;
             let mut all_keys: Vec<String> = Vec::new();
             loop {
@@ -122,7 +122,7 @@ proptest! {
             }
 
             for key in &all_keys {
-                prop_assert!(key.starts_with(&format!("ai_cache:v1:{}:", t_a)),
+                prop_assert!(key.starts_with(&format!("ai_cache:v1:{t_a}:")),
                     "namespace leak: scan returned {key} when filtering for {t_a}");
             }
             prop_assert_eq!(all_keys.len(), n_ops as usize);

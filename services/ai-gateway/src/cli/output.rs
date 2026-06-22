@@ -20,7 +20,11 @@ pub fn print_usage_human(
     calls: u64,
     top_models: &[(String, f64, u64)],
 ) {
-    let pct = if cap > 0.0 { (spent / cap) * 100.0 } else { 0.0 };
+    let pct = if cap > 0.0 {
+        (spent / cap) * 100.0
+    } else {
+        0.0
+    };
     let avg = if calls > 0 { spent / calls as f64 } else { 0.0 };
 
     println!("PERIOD: {month}");
@@ -63,9 +67,7 @@ pub fn print_usage_human(
 }
 
 /// Print breaker status in human-readable format.
-pub fn print_breaker_status_human(
-    breakers: &[(String, String, String, u32, String)],
-) {
+pub fn print_breaker_status_human(breakers: &[(String, String, String, u32, String)]) {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL);
     table.set_header(vec![
@@ -105,7 +107,11 @@ pub fn print_models_human(models: &[(String, String, String)]) {
     ]);
 
     for (provider, model, alias) in models {
-        table.add_row(vec![Cell::new(provider), Cell::new(model), Cell::new(alias)]);
+        table.add_row(vec![
+            Cell::new(provider),
+            Cell::new(model),
+            Cell::new(alias),
+        ]);
     }
 
     println!("{table}");
@@ -135,12 +141,7 @@ pub fn print_pricing_human(pricing: &[(String, String, f64, f64)]) {
 }
 
 /// Print invoice data in human-readable format.
-pub fn print_invoice_human(
-    tenant: &str,
-    period: &str,
-    total_usd: f64,
-    rows: &[InvoiceRow],
-) {
+pub fn print_invoice_human(tenant: &str, period: &str, total_usd: f64, rows: &[InvoiceRow]) {
     println!("INVOICE for {tenant} — period {period}");
     println!("TOTAL: ${total_usd:.2}");
     println!();
@@ -213,11 +214,7 @@ pub struct AuditTrailRow {
 }
 
 /// Output JSON or human-readable.
-pub fn emit_output<T: Serialize>(
-    json: bool,
-    data: &T,
-    human_fn: impl FnOnce(&T),
-) {
+pub fn emit_output<T: Serialize>(json: bool, data: &T, human_fn: impl FnOnce(&T)) {
     if json {
         let envelope = JsonEnvelope {
             schema_version: "v1",

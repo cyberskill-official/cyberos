@@ -14,7 +14,11 @@ struct FlaggedTenants {
     flagged_tenants: Vec<String>,
 }
 
-pub async fn run(args: FlagTenantArgs, json: bool, claims: &OperatorClaims) -> Result<(), CliError> {
+pub async fn run(
+    args: FlagTenantArgs,
+    json: bool,
+    claims: &OperatorClaims,
+) -> Result<(), CliError> {
     super::auth::require_role(claims, &Role::Mutate).map_err(|e| CliError::InsufficientRole {
         needed: e.needed(),
         has: e.has(),
@@ -25,7 +29,8 @@ pub async fn run(args: FlagTenantArgs, json: bool, claims: &OperatorClaims) -> R
         });
     }
 
-    let path = std::env::var("OBS_FLAGGED_TENANTS_FILE").unwrap_or_else(|_| DEFAULT_FILE.to_string());
+    let path =
+        std::env::var("OBS_FLAGGED_TENANTS_FILE").unwrap_or_else(|_| DEFAULT_FILE.to_string());
     let mut doc: FlaggedTenants = match std::fs::read_to_string(&path) {
         Ok(s) => serde_yaml::from_str(&s).map_err(|e| CliError::UserError {
             reason: format!("flagged_tenants.yaml is malformed: {e}"),
@@ -48,8 +53,9 @@ pub async fn run(args: FlagTenantArgs, json: bool, claims: &OperatorClaims) -> R
         "flagged"
     };
 
-    let yaml =
-        serde_yaml::to_string(&doc).map_err(|e| CliError::InternalError { reason: e.to_string() })?;
+    let yaml = serde_yaml::to_string(&doc).map_err(|e| CliError::InternalError {
+        reason: e.to_string(),
+    })?;
     std::fs::write(&path, yaml).map_err(|e| CliError::RemoteUnreachable {
         reason: format!("cannot write {path}: {e}"),
     })?;

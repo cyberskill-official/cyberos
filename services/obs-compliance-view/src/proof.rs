@@ -28,9 +28,10 @@ pub fn sign(secret_key: &[u8; 32], canonical: &[u8]) -> Proof {
 /// Verify a proof over `canonical`, as an auditor would: parse the published public key and the
 /// signature, then check them. Returns false on any malformed input or signature mismatch.
 pub fn verify(public_key_hex: &str, canonical: &[u8], signature_hex: &str) -> bool {
-    let (Some(pk_bytes), Some(sig_bytes)) =
-        (from_hex::<32>(public_key_hex), from_hex::<64>(signature_hex))
-    else {
+    let (Some(pk_bytes), Some(sig_bytes)) = (
+        from_hex::<32>(public_key_hex),
+        from_hex::<64>(signature_hex),
+    ) else {
         return false;
     };
     let Ok(verifying_key) = VerifyingKey::from_bytes(&pk_bytes) else {
@@ -83,13 +84,21 @@ mod tests {
         let proof = sign(&SEED, canonical);
         assert_eq!(proof.signature_hex.len(), 128); // 64 bytes
         assert_eq!(proof.public_key_hex.len(), 64); // 32 bytes
-        assert!(verify(&proof.public_key_hex, canonical, &proof.signature_hex));
+        assert!(verify(
+            &proof.public_key_hex,
+            canonical,
+            &proof.signature_hex
+        ));
     }
 
     #[test]
     fn a_tampered_response_fails_verification() {
         let proof = sign(&SEED, b"original");
-        assert!(!verify(&proof.public_key_hex, b"tampered", &proof.signature_hex));
+        assert!(!verify(
+            &proof.public_key_hex,
+            b"tampered",
+            &proof.signature_hex
+        ));
     }
 
     #[test]

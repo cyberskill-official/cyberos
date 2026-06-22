@@ -24,10 +24,18 @@ fn routing_table_matches_spec_section_1_3() {
 #[test]
 fn every_alert_routes_somewhere_no_silent_drop() {
     // §1 #11 - exhaustive over a grid of severities x confidences: the decision is always a real route.
-    for sev in [Severity::Sev1, Severity::Sev2, Severity::Sev3, Severity::Sev4] {
+    for sev in [
+        Severity::Sev1,
+        Severity::Sev2,
+        Severity::Sev3,
+        Severity::Sev4,
+    ] {
         for c in [f64::NAN, -1.0, 0.0, 0.5, 0.7, 1.0, 2.0] {
             let r = decide(sev, c);
-            assert!(matches!(r, Route::Chat | Route::PagerDuty | Route::Both), "{sev:?} {c}");
+            assert!(
+                matches!(r, Route::Chat | Route::PagerDuty | Route::Both),
+                "{sev:?} {c}"
+            );
         }
     }
 }

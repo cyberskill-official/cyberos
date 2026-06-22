@@ -75,7 +75,10 @@ impl OllamaProvider {
                 reason: "ollama response missing message.content".into(),
             })?
             .to_string();
-        let prompt_tokens = body.get("prompt_eval_count").and_then(Value::as_u64).unwrap_or(0) as u32;
+        let prompt_tokens = body
+            .get("prompt_eval_count")
+            .and_then(Value::as_u64)
+            .unwrap_or(0) as u32;
         let completion_tokens = body.get("eval_count").and_then(Value::as_u64).unwrap_or(0) as u32;
         let finish_reason = match body.get("done_reason").and_then(Value::as_str) {
             Some("length") => FinishReason::Length,
@@ -142,9 +145,12 @@ impl Provider for OllamaProvider {
                 retry_after_secs: None,
             });
         }
-        let body: Value = resp.json().await.map_err(|e| RouterError::InvalidResponse {
-            reason: format!("ollama response parse: {e}"),
-        })?;
+        let body: Value = resp
+            .json()
+            .await
+            .map_err(|e| RouterError::InvalidResponse {
+                reason: format!("ollama response parse: {e}"),
+            })?;
         let latency_ms = started.elapsed().as_millis() as u32;
         Self::parse_response(&body, latency_ms)
     }
@@ -169,8 +175,14 @@ mod tests {
         ChatCompleteRequest {
             alias: "chat.smart".into(),
             messages: vec![
-                Message { role: "system".into(), content: "be terse".into() },
-                Message { role: "user".into(), content: "hello".into() },
+                Message {
+                    role: "system".into(),
+                    content: "be terse".into(),
+                },
+                Message {
+                    role: "user".into(),
+                    content: "hello".into(),
+                },
             ],
             max_tokens: Some(256),
             // 0.5 is exact in both f32 and f64, so the JSON number compares cleanly (0.2_f32
@@ -224,7 +236,9 @@ mod tests {
     fn parse_response_maps_length_finish_reason() {
         let body = json!({ "message": { "content": "x" }, "done_reason": "length" });
         assert_eq!(
-            OllamaProvider::parse_response(&body, 1).unwrap().finish_reason,
+            OllamaProvider::parse_response(&body, 1)
+                .unwrap()
+                .finish_reason,
             FinishReason::Length
         );
     }

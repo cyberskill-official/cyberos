@@ -53,7 +53,11 @@ static PERSONA_RELOADS: Lazy<CounterVec> = Lazy::new(|| {
 });
 
 static REGISTRY_SIZE: Lazy<IntGauge> = Lazy::new(|| {
-    register_int_gauge!("ai_persona_registry_size", "Current persona registry entry count").unwrap()
+    register_int_gauge!(
+        "ai_persona_registry_size",
+        "Current persona registry entry count"
+    )
+    .unwrap()
 });
 
 // ─── Public API ───────────────────────────────────────────────────────────────

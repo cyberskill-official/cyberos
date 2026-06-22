@@ -1,6 +1,5 @@
 //! FR-AI-014 §5 — Integration tests for persona parsing, hashing, and handle parsing.
 
-
 use cyberos_ai_gateway::persona::*;
 
 // ─── Handle parsing ───────────────────────────────────────────────────────────
@@ -64,14 +63,20 @@ fn canonicalisation_lf_normalised() {
 fn canonicalisation_strips_bom() {
     let bom = "\u{FEFF}Hello\n";
     let no_bom = "Hello\n";
-    assert_eq!(parse::canonicalise_body(bom), parse::canonicalise_body(no_bom));
+    assert_eq!(
+        parse::canonicalise_body(bom),
+        parse::canonicalise_body(no_bom)
+    );
 }
 
 #[test]
 fn canonicalisation_nfc_normalises() {
     let combining = "cafe\u{0301}\n";
     let precomposed = "café\n";
-    assert_eq!(parse::canonicalise_body(combining), parse::canonicalise_body(precomposed));
+    assert_eq!(
+        parse::canonicalise_body(combining),
+        parse::canonicalise_body(precomposed)
+    );
 }
 
 #[test]
@@ -127,7 +132,10 @@ Constraints:
 fn parse_rejects_forbidden_system_prompt_field() {
     let raw = "---\nid: cuo-cpo\nversion: 0.4.1\nsystem_prompt: forbidden\n---\n\nbody\n";
     let err = parse::parse_persona_md("memories/personas/cuo-cpo@0.4.1.md", raw).unwrap_err();
-    assert!(matches!(err, PersonaInitError::ForbiddenFrontmatterField { .. }));
+    assert!(matches!(
+        err,
+        PersonaInitError::ForbiddenFrontmatterField { .. }
+    ));
 }
 
 #[test]
