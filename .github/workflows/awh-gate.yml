@@ -90,7 +90,11 @@ jobs:
           pip install pytest pytest-cov
           for m in $changed; do
             if [ -f "modules/$m/pyproject.toml" ]; then
-              pip install -e "modules/$m[test]" 2>/dev/null || pip install -e "modules/$m" || true
+              # Some pyprojects declare `readme = "README.md"`; the editable build fails with
+              # "Readme file does not exist" when it is missing. Stub one so the install proceeds
+              # (CI-only; not committed, and a README has no effect on the tests).
+              [ -f "modules/$m/README.md" ] || echo "# $m" > "modules/$m/README.md"
+              pip install -e "modules/$m[test]" || pip install -e "modules/$m" || true
             fi
             if [ -f "modules/$m/requirements.txt" ]; then
               pip install -r "modules/$m/requirements.txt" || true
