@@ -1,0 +1,75 @@
+# FR-CUO-204 - idle-time "dream loop" configuration.
+#
+# The loop can self-modify CyberOS, so it runs under three independent gates (the AWH test gate, the
+# FR-CUO-202 low-risk classifier, and the path envelope below) plus the `mode` ladder here. Even fully
+# enabled, it touches NOTHING outside the allowlist, and never anything on the denylist.
+#
+# Enablement ladder (`mode`), each step strictly more capable than the last:
+#   off     - the loop never runs. (Fully disabled; the historical default.)
+#   propose - the loop RUNS when idle, evaluates every proposal through all gates, and RECORDS what it
+#             would do, but applies NOTHING. This is the safe "on": observe + propose for human review.
+#   auto    - the loop may AUTO-APPLY a change, but only when it clears all three gates AND the operator
+#             also passes an explicit runtime opt-in (the runner's --allow-auto-apply). Triple-locked.
+#
+# `enabled` must also be true, and the kill switch (env CYBEROS_DREAM_KILL) must be unset, for any run.
+# To move to `auto`, review this whole file - especially the denylist - then set mode: auto and pass the
+# runner's explicit flag. Until then the loop proposes and records; it does not change code on its own.
+
+enabled: true               # master switch. With mode: propose this arms observe-only; it applies nothing.
+mode: propose               # off | propose | auto. Shipped at propose: runs + records, never auto-applies.
+
+idle_window_minutes: 30     # only dream after this long with no human activity.
+max_changes_per_window: 5   # hard cap on auto-applied changes per idle window (auto mode only).
+max_wall_clock_seconds: 600 # hard cap on how long one cycle may run.
+
+# Allowlist: the ONLY artifacts the loop may ever auto-modify, and only when the change is also low-risk
+# and gate-green. These are human-readable, test-covered, reversible files - prompts, workflow shape,
+# thresholds. Default-deny: anything not matched here is held for a human.
+allowlist:
+  - "modules/*/skills/*/SKILL.md"          # skill prompt bodies
+  - "modules/*/skills/*/RUBRIC.md"         # audit rubrics (wording only; rule changes are major -> queued)
+  - "modules/cuo/*/workflows/*.md"         # workflow step ordering / chain shape
+  - "modules/*/.awh/goldenset.yaml"        # goldenset thresholds
+  - "modules/*/.awh/*.yaml"                # other goldenset knobs
+
+# Denylist: invariants the loop must NEVER auto-modify. A target matching ANY of these halts for a human
+# regardless of how benign the change looks. Denylist beats allowlist. Strict on purpose - over-denying
+# only means more goes to human review.
+denylist:
+  # The loop's own safety machinery - it must never weaken the boundary that fences it.
+  - "*dream*"                  # dream_loop, dream.yaml, the runner
+  - "*evolution_envelope*"     # the path envelope itself
+  # Security and isolation invariants.
+  - "*auth*"                   # auth and RBAC
+  - "*/audit*"                 # the audit chain
+  - "*audit_chain*"
+  - "*cross_tenant*"           # cross-tenant isolation
+  - "*tenant_isolation*"
+  - "config/tenants/*"         # tenant policies
+  - "*/config/tenants/*"
+  - "*rls*"                    # row-level security
+  - "*pii*"                    # PII recall gates
+  - "*presidio*"
+  - "*redact*"
+  - "*zdr*"                    # zero-data-retention enforcement
+  # Money math.
+  - "*cost_ledger*"
+  - "*cost_table*"
+  - "*cost_reconcile*"
+  - "*precheck*"
+  # Secrets and credentials.
+  - "*secret*"
+  - "*credential*"
+  - "*.live"                   # live secret files
+  - "*.env"
+  - "*.env.*"
+  - "*.pem"
+  - "*.key"
+  # Build, deploy, CI, release, and the verification harness itself.
+  - "deploy/*"                 # deploy configuration
+  - ".github/*"                # CI
+  - "*release*"
+  - "tools/*"                  # the AWH gate / verification harness - never self-modify the grader
+  - "scripts/*"                # operator scripts
+  - "services/*/migrations/*"  # schema and migrations
+  - "*.binlog"                 # the memory chain log files
