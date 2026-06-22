@@ -5,6 +5,13 @@ name: awh gate
 # and blocks the merge on any regression. A golden set with no committed baseline
 # FAILS CLOSED (an ungated eval always exits 0, so it must never be used as a gate).
 # Mark this job "required" in branch protection on main so it is the merge gate.
+#
+# The gate provisions the SAME environment as services.yml's integration job
+# (Postgres + Apache AGE + pgvector + Redis, with migrations applied) and additionally
+# installs pytest plus each changed module's Python deps, so the golden tasks - which run
+# real `cargo test` and `python -m pytest` commands - have everything they need. Without
+# this, Python-suite modules fail on "No module named pytest" and DB/Redis-backed cargo
+# tests fail for lack of services, even though the code is green.
 
 on:
   pull_request:
@@ -16,6 +23,9 @@ permissions:
 jobs:
   awh-gate:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgres://cyberos:cyberos@localhost:5432/cyberos
+      REDIS_URL: redis://127.0.0.1:6379
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,6 +37,42 @@ jobs:
 
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.88.0
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            services/target
+          key: cargo-awh-${{ runner.os }}-${{ hashFiles('services/**/Cargo.lock', 'services/**/Cargo.toml') }}
+
+      - name: Boot dev stack (Postgres + Apache AGE + Redis)
+        run: |
+          cd services/dev
+          docker compose up -d
+          # Wait until Postgres reports healthy.
+          for i in {1..30}; do
+            if docker compose ps postgres | grep -q '(healthy)'; then echo "postgres is up"; break; fi
+            sleep 2
+          done
+
+      - name: Install pgvector in Postgres container
+        run: |
+          docker exec -u 0 cyberos-postgres apt-get update
+          docker exec -u 0 cyberos-postgres apt-get install -y postgresql-16-pgvector
+          docker exec -i cyberos-postgres psql -U cyberos -d cyberos -c "CREATE EXTENSION IF NOT EXISTS vector;"
+
+      - name: Install sqlx-cli
+        run: cargo install --locked --version 0.8.0 sqlx-cli --no-default-features --features postgres
+
+      - name: Apply migrations — auth
+        run: cd services/auth && sqlx migrate run
+
+      - name: Apply migrations — memory
+        run: cat services/memory/migrations/*.sql | docker exec -i cyberos-postgres psql -U cyberos -d cyberos
 
       - name: Install awh (vendored under tools/awh)
         run: pip install -e tools/awh
@@ -37,6 +83,20 @@ jobs:
           git fetch origin "${{ github.base_ref }}" --depth=1 || true
           base="origin/${{ github.base_ref }}"
           changed=$(git diff --name-only "$base"...HEAD | awk -F/ '/^modules\//{print $2} /^services\//{print $2}' | sort -u)
+
+          # Install each changed module's Python test deps so its real pytest suite can import.
+          # A module's golden task can run another module's pytest (e.g. skill runs cuo tests),
+          # so install all of them before evaluating any.
+          pip install pytest pytest-cov
+          for m in $changed; do
+            if [ -f "modules/$m/pyproject.toml" ]; then
+              pip install -e "modules/$m[test]" 2>/dev/null || pip install -e "modules/$m" || true
+            fi
+            if [ -f "modules/$m/requirements.txt" ]; then
+              pip install -r "modules/$m/requirements.txt" || true
+            fi
+          done
+
           gated=0; failed=0
           for m in $changed; do
             gs="modules/$m/.awh/goldenset.yaml"
@@ -54,3 +114,7 @@ jobs:
           done
           echo "modules gated: $gated"
           exit $failed
+
+      - name: Tear down dev stack
+        if: always()
+        run: cd services/dev && docker compose down -v
