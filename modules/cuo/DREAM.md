@@ -29,20 +29,31 @@ python3 -m cuo.core.dream_runner --audit-log /tmp/dream-audit.jsonl
 ```
 
 It prints a report (seen / applied / halted-for-human) and appends one JSON row per action to the log.
-With the shipped wiring it proposes nothing yet - the proposal source is bound separately (see below) - so
-a clean run reports `seen=0`. That is the safe baseline: the runtime and all the gates are live and proven,
-waiting only for a proposal feed.
+With no proposal source it reports `seen=0` - the safe baseline.
 
-## What still has to be wired before it does real work
+To feed it real candidates, point it at a refinement-proposals directory (one with an `open/` subdir) and
+the skill root under which `<skill_name>/SKILL.md` live:
 
-The runner ships with an empty proposer and no real applier on purpose. Two deliberate steps remain, both
-flowing through this same gated runner:
+```
+python3 -m cuo.core.dream_runner \
+  --proposals-dir path/to/proposals \
+  --skill-root path/to/skills \
+  --audit-log /tmp/dream-audit.jsonl
+```
 
-1. Bind the FR-CUO-201 refinement proposer as `propose_fn` and the FR-CUO-202 `classify_proposal` as
-   `classify_fn`, so real candidates (driven by the harness self-audit signals) appear in propose runs.
-   This is safe to do immediately: propose mode still applies nothing.
-2. Only when you trust what propose mode surfaces, bind the FR-CUO-202 `apply_proposal` as `real_apply_fn`
-   and move to auto.
+Now each open proposal is mapped to its target SKILL.md, run through the path envelope and the real
+FR-CUO-202 classifier, and recorded - and still applied to nothing in propose mode. The proposal files are
+read only; the feed never moves or edits them.
+
+## What is wired, and what is left
+
+The FR-CUO-201 proposal feed and the FR-CUO-202 classifier are now bound through the runner: pass
+`--proposals-dir` and `--skill-root` and propose mode surfaces real candidates, evaluates each through every
+gate, and records them. It still applies nothing.
+
+One deliberate step remains: only when you trust what propose mode surfaces, bind the FR-CUO-202
+`apply_proposal` as the real applier and move to auto (the four locks above). That binding is intentionally
+not wired into the runner yet, so today nothing can auto-apply by any path.
 
 ## Going to auto (the four locks)
 

@@ -124,6 +124,70 @@ def _review_required_classifier(_prop: object) -> object:
     return SimpleNamespace(will_auto_apply=False, risk_class="minor")
 
 
+@dataclass
+class _RefinementProposal:
+    """One open refinement proposal, adapted to the dream loop's contract: `.target` is the repo-relative
+    SKILL.md the change would write (what the envelope gates on); the rest lets the classifier read it."""
+
+    target: str
+    proposal_path: Path
+    skill_root: Path
+    skill_name: str
+
+
+def build_refinement_bindings(
+    proposals_root, skill_root, repo_root=None
+) -> tuple[Callable[[], Iterable], Callable[[object], object]]:
+    """Bind the real FR-CUO-201 proposal feed and FR-CUO-202 classifier for propose mode.
+
+    `propose_fn` enumerates OPEN refinement proposals under `proposals_root` and maps each to its target
+    SKILL.md (`skill_root/<skill_name>/SKILL.md`, expressed repo-relative so the path envelope matches).
+    `classify_fn` is the real `classify_proposal`. Both are read-only - they never move or apply a proposal,
+    so they are safe to run in propose mode, which applies nothing regardless. Imports are lazy so the
+    runner's safety core does not depend on the proposer modules loading.
+    """
+    proposals_root = Path(proposals_root)
+    skill_root = Path(skill_root)
+    repo_root = Path(repo_root) if repo_root else (_find_repo_root(skill_root) or skill_root)
+
+    def propose_fn() -> Iterable:
+        from cuo.core.proposal_applier import _extract_frontmatter
+        from cuo.core.refinement_proposal import list_proposals
+
+        try:
+            open_proposals = list_proposals(proposals_root).get("open", [])
+        except OSError:
+            return []
+        out: list = []
+        for pf in open_proposals:
+            try:
+                fm = _extract_frontmatter(pf.read_text(encoding="utf-8"))
+            except OSError:
+                continue
+            skill_name = str(fm.get("skill_name", "") or "")
+            if skill_name:
+                skill_md = skill_root / skill_name / "SKILL.md"
+                try:
+                    target = str(skill_md.resolve().relative_to(repo_root.resolve()))
+                except ValueError:
+                    target = str(skill_md)  # not under repo_root - the envelope will deny it
+            else:
+                target = "(unknown)"  # no skill_name - default-deny, recorded for a human
+            out.append(
+                _RefinementProposal(
+                    target=target, proposal_path=pf, skill_root=skill_root, skill_name=skill_name
+                )
+            )
+        return out
+
+    def classify_fn(prop: object) -> object:
+        from cuo.core.proposal_applier import classify_proposal
+
+        return classify_proposal(prop.proposal_path, prop.skill_root)
+
+    return propose_fn, classify_fn
+
+
 def _jsonl_audit(path: Optional[Path]) -> Callable[[str, dict], None]:
     """An audit sink that appends one JSON object per row to `path` (and is a no-op if path is None)."""
 
@@ -222,6 +286,16 @@ def main(argv: Optional[list] = None) -> int:
         help="explicit opt-in required (with mode=auto + a dream branch) for any auto-apply",
     )
     parser.add_argument("--audit-log", default=None, help="append a JSONL audit row per action here")
+    parser.add_argument(
+        "--proposals-dir",
+        default=None,
+        help="root of refinement proposals (with an open/ subdir) to feed propose mode",
+    )
+    parser.add_argument(
+        "--skill-root",
+        default=None,
+        help="root under which <skill_name>/SKILL.md live (required with --proposals-dir)",
+    )
     args = parser.parse_args(argv)
 
     envelope = EvolutionEnvelope.load(Path(args.config))
@@ -238,11 +312,20 @@ def main(argv: Optional[list] = None) -> int:
             "(name contains 'dream'). Propose mode is unaffected."
         )
 
-    # The real proposer/classifier/applier are deliberately NOT bound here: the shipped runner proposes
-    # nothing and applies nothing. Binding the FR-CUO-201 proposer (propose_fn / classify_fn) and, for
-    # auto, the FR-CUO-202 applier (real_apply_fn) is the operator's explicit next step.
+    # Bind the real FR-CUO-201 proposer + FR-CUO-202 classifier when an operator points at a proposals
+    # directory; otherwise the runner proposes nothing (safe default). The real applier (real_apply_fn) is
+    # still NOT bound here - auto-apply wiring is the operator's separate, explicit step.
+    propose_fn = _empty_proposer
+    classify_fn = _review_required_classifier
+    if args.proposals_dir and args.skill_root:
+        propose_fn, classify_fn = build_refinement_bindings(args.proposals_dir, args.skill_root)
+    elif args.proposals_dir or args.skill_root:
+        parser.error("--proposals-dir and --skill-root must be given together")
+
     result = run_dream_safely(
         envelope,
+        propose_fn=propose_fn,
+        classify_fn=classify_fn,
         audit_fn=audit_fn,
         allow_auto_apply=args.allow_auto_apply,
         branch=branch,
