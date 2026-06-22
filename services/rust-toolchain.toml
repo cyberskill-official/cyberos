@@ -1,0 +1,6 @@
+# Pin the local toolchain to match the CI awh gate (.github/workflows/services.yml uses 1.88.0).
+# This makes `cargo` and `cargo clippy` in this workspace use 1.88 automatically, so local lint
+# runs match the gate exactly and never surface newer-clippy lints the gate does not enforce.
+[toolchain]
+channel = "1.88.0"
+components = ["rustfmt", "clippy"]
