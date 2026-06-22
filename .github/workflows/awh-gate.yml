@@ -74,6 +74,11 @@ jobs:
       - name: Apply migrations — memory
         run: cat services/memory/migrations/*.sql | docker exec -i cyberos-postgres psql -U cyberos -d cyberos
 
+      - name: Apply migrations — ai-gateway (cost ledger)
+        # The ai-gateway cost tests skip when DATABASE_URL is unset but run when it is set
+        # (which it is here), so the cost_ledger tables must exist or they fail on missing relations.
+        run: cat services/ai-gateway/migrations/*.sql | docker exec -i cyberos-postgres psql -U cyberos -d cyberos
+
       - name: Install awh (vendored under tools/awh)
         run: pip install -e tools/awh
 
