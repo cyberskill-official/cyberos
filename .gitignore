@@ -87,3 +87,4 @@ services/target/
 # own .git histories and would bloat cyberos commits. They live on disk for
 # browsing, but stay out of git. See playground/CONSUMED-FROM-WORKBENCH.md.
 playground
+.claude/
