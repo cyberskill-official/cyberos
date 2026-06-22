@@ -1,0 +1,6 @@
+# Rust build output
+/target
+
+# Tauri generated code + generated icons (regenerate with `cargo tauri icon`)
+/gen
+/icons

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CyberOS</title>
+<style>
+  :root {
+    --cds-umber: #45210E; --cds-ochre: #F4BA17;
+    --cds-umber-700: #5a2e16; --cds-umber-900: #2c1409;
+    --cds-ink: #f6ecdd; --cds-muted: #c9b79f; --cds-ok: #6fbf73; --cds-bad: #e1654f;
+    --cds-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { font-family: var(--cds-font); background: var(--cds-umber-900); color: var(--cds-ink); display: flex; flex-direction: column; }
+  header { background: var(--cds-umber); border-bottom: 2px solid var(--cds-ochre); padding: 10px 18px; display: flex; align-items: center; gap: 14px; }
+  header .wordmark { font-weight: 800; font-size: 18px; }
+  header .wordmark .os { color: var(--cds-ochre); }
+  header .slogan { color: var(--cds-muted); font-size: 12px; font-style: italic; }
+  header nav { display: flex; gap: 6px; }
+  header nav button { background: transparent; color: var(--cds-muted); border: 1px solid transparent; border-radius: 7px; padding: 5px 12px; font-size: 13px; cursor: pointer; }
+  header nav button.active { color: var(--cds-umber-900); background: var(--cds-ochre); font-weight: 700; }
+  header .spacer { flex: 1; }
+  header .health { font-size: 12px; color: var(--cds-muted); display: flex; align-items: center; gap: 6px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--cds-muted); }
+  .dot.ok { background: var(--cds-ok); } .dot.bad { background: var(--cds-bad); }
+  .config { background: var(--cds-umber-700); padding: 9px 18px; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+  .config label { font-size: 11px; color: var(--cds-muted); display: flex; flex-direction: column; gap: 2px; }
+  .config input { background: var(--cds-umber-900); border: 1px solid var(--cds-umber); color: var(--cds-ink); border-radius: 6px; padding: 5px 7px; font-size: 13px; min-width: 180px; }
+  .config input.small { min-width: 110px; }
+  .config button { background: transparent; color: var(--cds-ochre); border: 1px solid var(--cds-ochre); border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: pointer; }
+
+  .view { flex: 1; min-height: 0; display: none; flex-direction: column; }
+  .view.active { display: flex; }
+
+  /* Chat view */
+  #log { flex: 1; overflow: auto; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+  .msg { max-width: 760px; padding: 9px 13px; border-radius: 10px; white-space: pre-wrap; line-height: 1.45; }
+  .msg.user { align-self: flex-end; background: var(--cds-ochre); color: var(--cds-umber-900); font-weight: 500; }
+  .msg.assistant { align-self: flex-start; background: var(--cds-umber); border: 1px solid var(--cds-umber-700); }
+  .msg.system { align-self: center; background: transparent; color: var(--cds-muted); font-size: 12px; font-style: italic; }
+  .msg .who { font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px; opacity: 0.7; margin-bottom: 3px; }
+  .msg .meta { font-size: 11px; color: var(--cds-muted); margin-top: 6px; }
+  footer { background: var(--cds-umber); border-top: 1px solid var(--cds-ochre); padding: 11px 18px; }
+  footer form { display: flex; gap: 9px; }
+  footer textarea { flex: 1; resize: none; height: 44px; background: var(--cds-umber-900); color: var(--cds-ink); border: 1px solid var(--cds-umber-700); border-radius: 8px; padding: 11px; font-family: var(--cds-font); font-size: 14px; }
+  footer button { background: var(--cds-ochre); color: var(--cds-umber-900); border: none; border-radius: 8px; padding: 0 20px; font-weight: 700; cursor: pointer; }
+  footer button:disabled { opacity: 0.5; cursor: default; }
+
+  /* Tools view */
+  #view-tools { overflow: hidden; }
+  .tools-bar { padding: 10px 18px; display: flex; gap: 10px; align-items: flex-end; border-bottom: 1px solid var(--cds-umber); }
+  .tools-body { flex: 1; min-height: 0; display: flex; }
+  .tools-list { width: 360px; overflow: auto; border-right: 1px solid var(--cds-umber); }
+  .tool { padding: 10px 14px; border-bottom: 1px solid var(--cds-umber); cursor: pointer; }
+  .tool:hover { background: var(--cds-umber); }
+  .tool.selected { background: var(--cds-umber); border-left: 3px solid var(--cds-ochre); }
+  .tool .name { font-weight: 600; font-size: 13px; word-break: break-all; }
+  .tool .desc { font-size: 12px; color: var(--cds-muted); margin-top: 3px; }
+  .badge { display: inline-block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; padding: 1px 6px; margin-top: 5px; margin-right: 5px; }
+  .badge.ro { background: rgba(111,191,115,0.18); color: var(--cds-ok); }
+  .badge.destr { background: rgba(225,101,79,0.2); color: var(--cds-bad); }
+  .tool-detail { flex: 1; padding: 16px 18px; overflow: auto; display: flex; flex-direction: column; gap: 10px; }
+  .tool-detail h2 { font-size: 16px; margin: 0; word-break: break-all; }
+  .tool-detail pre { background: var(--cds-umber); border: 1px solid var(--cds-umber-700); border-radius: 8px; padding: 10px; font-size: 12px; overflow: auto; margin: 0; }
+  .tool-detail textarea { background: var(--cds-umber-900); color: var(--cds-ink); border: 1px solid var(--cds-umber-700); border-radius: 8px; padding: 10px; font-family: ui-monospace, monospace; font-size: 13px; height: 90px; resize: vertical; }
+  .tool-detail .run { background: var(--cds-ochre); color: var(--cds-umber-900); border: none; border-radius: 8px; padding: 8px 18px; font-weight: 700; cursor: pointer; align-self: flex-start; }
+  .tool-detail .result { white-space: pre-wrap; }
+  .muted { color: var(--cds-muted); font-size: 13px; }
+</style>
+</head>
+<body>
+  <header>
+    <span class="wordmark">Cyber<span class="os">OS</span></span>
+    <span class="slogan">Turn Your Will Into Real</span>
+    <nav>
+      <button id="nav-chat" class="active">Chat</button>
+      <button id="nav-tools">Tools</button>
+    </nav>
+    <span class="spacer"></span>
+    <span class="health"><span id="health-dot" class="dot"></span><span id="health-text">checking...</span></span>
+  </header>
+
+  <div class="config">
+    <label>Gateway URL<input id="cfg-gateway" value="http://127.0.0.1:8080" spellcheck="false" /></label>
+    <label>mcp-gateway URL<input id="cfg-mcp" value="http://127.0.0.1:8090" spellcheck="false" /></label>
+    <label>Tenant<input id="cfg-tenant" class="small" value="org:cyberskill" spellcheck="false" /></label>
+    <label>Alias<input id="cfg-alias" class="small" value="chat.smart" spellcheck="false" /></label>
+    <label>Token (OS keychain)<input id="cfg-token" type="password" placeholder="optional" spellcheck="false" /></label>
+    <button id="save-token">Save</button>
+    <button id="clear-token">Clear</button>
+  </div>
+
+  <section id="view-chat" class="view active">
+    <main id="log">
+      <div class="msg system">Triggering CyberOS through the gateway. The Rust backend makes the call, so there is no CORS to configure. The gateway routes to whatever provider your tenant policy resolves - locally, your LM Studio or Ollama model.</div>
+    </main>
+    <footer>
+      <form id="chat-form">
+        <textarea id="input" placeholder="Type a message, Enter to send (Shift+Enter for newline)" autocomplete="off"></textarea>
+        <button id="send" type="submit">Send</button>
+      </form>
+    </footer>
+  </section>
+
+  <section id="view-tools" class="view">
+    <div class="tools-bar">
+      <span class="muted">Workflows and skills exposed by the mcp-gateway.</span>
+      <span class="spacer" style="flex:1"></span>
+      <button id="refresh-tools" class="run" style="padding:6px 14px">Refresh</button>
+    </div>
+    <div class="tools-body">
+      <div id="tools-list" class="tools-list"><div class="tool"><div class="muted">Press Refresh to load tools.</div></div></div>
+      <div id="tool-detail" class="tool-detail"><div class="muted">Select a tool to see its schema and run it.</div></div>
+    </div>
+  </section>
+
+  <script src="main.js"></script>
+</body>
+</html>

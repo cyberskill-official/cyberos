@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Core permissions for the main CyberOS window. HTTP and keychain access run in the Rust backend via Tauri commands, so no extra plugin permissions are needed here.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

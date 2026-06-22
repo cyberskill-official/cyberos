@@ -1,0 +1,29 @@
+[package]
+name = "cyberos-desktop"
+version = "0.1.0"
+description = "CyberOS desktop - trigger CyberOS workflows and skills from your Mac"
+authors = ["CyberSkill <info@cyberskill.world>"]
+edition = "2021"
+rust-version = "1.77"
+
+# The Tauri app is a library (the desktop binary plus future mobile targets call `run()`).
+[lib]
+name = "cyberos_desktop_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# The Rust backend makes the HTTP calls, so the webview never hits CORS - it talks only to Tauri commands.
+reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+# OS keychain (macOS Keychain; Windows Credential Manager / Linux Secret Service on the follow-on targets).
+keyring = "3"
+
+[features]
+# Tauri's default custom-protocol for production builds.
+custom-protocol = ["tauri/custom-protocol"]
