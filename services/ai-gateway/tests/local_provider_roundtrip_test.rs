@@ -104,9 +104,20 @@ fn local_provider_resolves_without_cost_or_zdr_fixture() {
 #[tokio::test]
 #[ignore = "owner-run: needs a local LM Studio/Ollama server with LOCAL_TEST_MODEL loaded"]
 async fn local_provider_live_round_trip() {
+    // Owner-run only: opt in by setting LOCAL_TEST_MODEL (see the module docs above). This test is
+    // #[ignore]d so a plain `cargo test` skips it, but the integration job runs `--ignored`, which
+    // would otherwise execute it against a local LM Studio/Ollama server that does not exist in CI
+    // and fail on an environmental 502. With no model named there is nothing to talk to, so skip
+    // cleanly instead of failing - mirroring how the DATABASE_URL/Redis-backed tests skip when their
+    // backend is absent.
+    let model = match std::env::var("LOCAL_TEST_MODEL") {
+        Ok(m) => m,
+        Err(_) => {
+            eprintln!("LOCAL_TEST_MODEL not set; skipping owner-run live local round trip");
+            return;
+        }
+    };
     let kind = std::env::var("LOCAL_TEST_KIND").unwrap_or_else(|_| "local_openai".to_string());
-    let model =
-        std::env::var("LOCAL_TEST_MODEL").unwrap_or_else(|_| "qwen2.5-7b-instruct".to_string());
 
     let state = GatewayState {
         policy: Arc::new(FixedPolicy(Arc::new(local_policy(&kind, &model)))),
