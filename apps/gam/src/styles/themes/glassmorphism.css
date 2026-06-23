@@ -1,0 +1,200 @@
+/* ═══════════════════════════════════════════════════════════════
+   Glassmorphism Theme — Vivid frosted glass, neon orbs, deep gradients
+   Effects: multi-color floating orbs, intense backdrop blur, holographic strip,
+            neon card glow on hover, gradient primary buttons
+   Ref: Deep dark bg (#0a0e27), vivid cyan/emerald/blue neon tints
+   ═══════════════════════════════════════════════════════════════ */
+
+:root[data-style='glassmorphism'][data-mode='dark'] {
+    --color-bg: #06091a;
+    --color-bg-gradient: linear-gradient(135deg, #06091a 0%, #0f1535 40%, #0a1228 70%, #06091a 100%);
+    --color-surface: rgba(255, 255, 255, 0.04);
+    --color-surface-hover: rgba(255, 255, 255, 0.07);
+    --color-surface-raised: #111830;
+    --color-text: #e2e8f0;
+    --color-text-secondary: #94a3b8;
+    --color-text-muted: #64748b;
+    --color-border: rgba(255, 255, 255, 0.08);
+    --color-border-strong: rgba(255, 255, 255, 0.15);
+    --color-primary: #22d3ee;
+    --color-primary-muted: rgba(34, 211, 238, 0.15);
+    --color-accent: #10b981;
+    --color-accent-muted: rgba(16, 185, 129, 0.15);
+    --color-success: #22c55e;
+    --color-success-muted: rgba(34, 197, 94, 0.15);
+    --color-warning: #f59e0b;
+    --color-warning-muted: rgba(245, 158, 11, 0.15);
+    --color-danger: #ef4444;
+    --color-danger-muted: rgba(239, 68, 68, 0.15);
+    --color-info: #3b82f6;
+    --color-info-muted: rgba(59, 130, 246, 0.15);
+    --color-focus: #22d3ee;
+    --color-scrollbar: rgba(255, 255, 255, 0.06);
+    --color-scrollbar-hover: rgba(255, 255, 255, 0.12);
+    --color-selection-bg: rgba(34, 211, 238, 0.3);
+    --color-selection-text: #e2e8f0;
+    --color-badge-global-bg: rgba(34, 211, 238, 0.1);
+    --color-badge-global-text: #22d3ee;
+    --color-badge-global-border: rgba(34, 211, 238, 0.25);
+    --color-badge-local-bg: rgba(16, 185, 129, 0.1);
+    --color-badge-local-text: #10b981;
+    --color-badge-local-border: rgba(16, 185, 129, 0.25);
+    --color-scope-active-bg: rgba(255, 255, 255, 0.06);
+
+    --theme-font-sans: 'Inter', 'Space Grotesk', sans-serif;
+    --theme-font-mono: 'JetBrains Mono', monospace;
+    --theme-card-radius: 16px;
+    --theme-card-shadow:
+        0 4px 30px rgba(0, 0, 0, 0.4), 0 0 60px rgba(34, 211, 238, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    --theme-card-backdrop: blur(20px) saturate(1.6);
+    --theme-btn-radius: 12px;
+    --theme-row-hover-bg: rgba(255, 255, 255, 0.03);
+}
+
+:root[data-style='glassmorphism'][data-mode='light'] {
+    --color-bg: #dde4f0;
+    --color-bg-gradient: linear-gradient(135deg, #dde4f0 0%, #e8eefa 40%, #f0f4ff 70%, #e4eaf6 100%);
+    --color-surface: rgba(255, 255, 255, 0.55);
+    --color-surface-hover: rgba(255, 255, 255, 0.7);
+    --color-surface-raised: #eef2fc;
+    --color-text: #0f172a;
+    --color-text-secondary: #475569;
+    --color-text-muted: #64748b;
+    --color-border: rgba(0, 0, 0, 0.06);
+    --color-border-strong: rgba(0, 0, 0, 0.12);
+    --color-primary: #0891b2;
+    --color-primary-muted: rgba(8, 145, 178, 0.12);
+    --color-accent: #059669;
+    --color-accent-muted: rgba(5, 150, 105, 0.12);
+    --color-success: #16a34a;
+    --color-success-muted: rgba(22, 163, 74, 0.12);
+    --color-warning: #d97706;
+    --color-warning-muted: rgba(217, 119, 6, 0.12);
+    --color-danger: #dc2626;
+    --color-danger-muted: rgba(220, 38, 38, 0.12);
+    --color-info: #2563eb;
+    --color-info-muted: rgba(37, 99, 235, 0.12);
+    --color-focus: #0891b2;
+    --color-scrollbar: rgba(0, 0, 0, 0.06);
+    --color-scrollbar-hover: rgba(0, 0, 0, 0.12);
+    --color-selection-bg: rgba(8, 145, 178, 0.25);
+    --color-selection-text: #0f172a;
+    --color-badge-global-bg: rgba(8, 145, 178, 0.1);
+    --color-badge-global-text: #0891b2;
+    --color-badge-global-border: rgba(8, 145, 178, 0.2);
+    --color-badge-local-bg: rgba(5, 150, 105, 0.1);
+    --color-badge-local-text: #059669;
+    --color-badge-local-border: rgba(5, 150, 105, 0.2);
+    --color-scope-active-bg: rgba(255, 255, 255, 0.6);
+
+    --theme-font-sans: 'Inter', 'Space Grotesk', sans-serif;
+    --theme-font-mono: 'JetBrains Mono', monospace;
+    --theme-card-radius: 16px;
+    --theme-card-shadow:
+        0 4px 30px rgba(0, 0, 0, 0.06), 0 0 40px rgba(8, 145, 178, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    --theme-card-backdrop: blur(20px) saturate(1.6);
+    --theme-btn-radius: 12px;
+    --theme-row-hover-bg: rgba(0, 0, 0, 0.02);
+}
+
+/* ── Glass body — gradient + vivid floating orbs ─── */
+:root[data-style='glassmorphism'] body {
+    background-image: none;
+    background: var(--color-bg-gradient);
+}
+
+:root[data-style='glassmorphism'][data-mode='dark'] body::before {
+    content: '';
+    position: fixed;
+    top: -120%;
+    left: -120%;
+    width: 340%;
+    height: 340%;
+    background:
+        radial-gradient(ellipse 600px 400px at 15% 55%, rgba(34, 211, 238, 0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 500px 500px at 85% 25%, rgba(16, 185, 129, 0.09) 0%, transparent 70%),
+        radial-gradient(ellipse 400px 600px at 55% 85%, rgba(59, 130, 246, 0.08) 0%, transparent 70%),
+        radial-gradient(ellipse 300px 300px at 30% 10%, rgba(245, 158, 11, 0.04) 0%, transparent 60%);
+    animation: orbFloat 25s ease-in-out infinite;
+    pointer-events: none;
+    z-index: -1;
+}
+
+:root[data-style='glassmorphism'][data-mode='light'] body::before {
+    content: '';
+    position: fixed;
+    top: -100%;
+    left: -100%;
+    width: 300%;
+    height: 300%;
+    background:
+        radial-gradient(ellipse 500px 400px at 20% 60%, rgba(8, 145, 178, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 400px 400px at 80% 30%, rgba(5, 150, 105, 0.06) 0%, transparent 60%);
+    animation: orbFloat 25s ease-in-out infinite;
+    pointer-events: none;
+    z-index: -1;
+}
+
+@keyframes orbFloat {
+    0%,
+    100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+
+    25% {
+        transform: translate(3%, -2%) rotate(1deg);
+    }
+
+    50% {
+        transform: translate(-2%, 3%) rotate(-0.5deg);
+    }
+
+    75% {
+        transform: translate(1%, -1%) rotate(0.5deg);
+    }
+}
+
+/* ── Glass card ─── */
+:root[data-style='glassmorphism'] .theme-card {
+    backdrop-filter: var(--theme-card-backdrop);
+    -webkit-backdrop-filter: var(--theme-card-backdrop);
+    border-radius: var(--theme-card-radius);
+    box-shadow: var(--theme-card-shadow);
+    border: 1px solid var(--color-border);
+}
+
+:root[data-style='glassmorphism'][data-mode='dark'] .theme-card:hover {
+    border-color: var(--color-border-strong);
+    box-shadow:
+        var(--theme-card-shadow),
+        0 0 30px rgba(34, 211, 238, 0.06),
+        0 0 60px rgba(34, 211, 238, 0.03);
+}
+
+/* ── Gradient neon button ─── */
+:root[data-style='glassmorphism'] .theme-btn-primary {
+    background: linear-gradient(135deg, #22d3ee 0%, #10b981 100%);
+    border: none;
+    border-radius: var(--theme-btn-radius);
+}
+
+:root[data-style='glassmorphism'][data-mode='dark'] .theme-btn-primary {
+    box-shadow:
+        0 2px 20px rgba(34, 211, 238, 0.3),
+        0 4px 40px rgba(16, 185, 129, 0.15);
+}
+
+:root[data-style='glassmorphism'][data-mode='light'] .theme-btn-primary {
+    box-shadow: 0 2px 12px rgba(8, 145, 178, 0.2);
+}
+
+/* ── Holographic gradient accent strip ─── */
+:root[data-style='glassmorphism'] .theme-gradient-accent {
+    background: linear-gradient(90deg, #22d3ee, #10b981, #3b82f6, #a855f7, #22d3ee);
+    background-size: 300% 100%;
+    animation: gradientShift 8s ease infinite;
+}
+
+:root[data-style='glassmorphism'] .nb-margin-line {
+    display: none;
+}

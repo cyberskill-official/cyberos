@@ -1,0 +1,154 @@
+/* ═══════════════════════════════════════════════════════════════
+   Tailwind @utility — Single-declaration custom utilities
+   ═══════════════════════════════════════════════════════════════ */
+
+@utility glass {
+    backdrop-filter: blur(12px) saturate(1.4);
+    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+}
+
+@utility titlebar {
+    -webkit-app-region: drag;
+}
+
+@utility theme-toggle {
+    -webkit-app-region: no-drag;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Complex Utility Classes (use semantic CSS variables)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Focus glow ring ───────────────────────────────────── */
+.focus-glow:focus {
+    outline: none;
+    border-color: var(--color-focus) !important;
+    box-shadow:
+        0 0 0 3px color-mix(in srgb, var(--color-focus) 20%, transparent),
+        0 0 12px color-mix(in srgb, var(--color-focus) 10%, transparent);
+}
+
+/* ── Row hover lift ────────────────────────────────────── */
+.row-hover-lift {
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        background-color 0.15s ease;
+}
+
+.row-hover-lift:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* ── Button press effect ───────────────────────────────── */
+.btn-press {
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease,
+        opacity 0.15s ease;
+}
+
+.btn-press:hover {
+    transform: translateY(-1px) scale(1.02);
+}
+
+.btn-press:active {
+    transform: translateY(1px) scale(0.98);
+}
+
+/* ── Danger glow ───────────────────────────────────────── */
+.danger-glow:hover {
+    box-shadow: 0 0 12px var(--color-danger-muted);
+}
+
+/* ── Toast accent bar ──────────────────────────────────── */
+.toast-accent {
+    position: relative;
+    overflow: hidden;
+}
+
+.toast-accent::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    border-radius: 3px 0 0 3px;
+}
+
+.toast-accent--success::before {
+    background: var(--color-success);
+}
+
+.toast-accent--error::before {
+    background: var(--color-danger);
+}
+
+.toast-accent--warning::before {
+    background: var(--color-warning);
+}
+
+.toast-accent--info::before {
+    background: var(--color-info);
+}
+
+/* ── Shimmer loading bar ───────────────────────────────── */
+.shimmer-bg {
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        color-mix(in srgb, var(--color-focus) 8%, transparent) 50%,
+        transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.8s ease-in-out infinite;
+}
+
+/* ── Ink-spread underline for focused inputs ───────────── */
+.ink-underline {
+    position: relative;
+}
+
+.ink-underline::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--color-focus);
+    transition:
+        width 0.3s ease,
+        left 0.3s ease;
+    border-radius: 1px;
+}
+
+.ink-underline:focus-within::after {
+    width: 100%;
+    left: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Notebook-only utilities (only apply when data-style=notebook)
+   ═══════════════════════════════════════════════════════════════ */
+
+:root[data-style='notebook'] .theme-card {
+    box-shadow: var(--theme-card-shadow);
+    border-radius: var(--theme-card-radius);
+}
+
+/* ── Gradient accent strip ─────────────────────────────── */
+.gradient-accent {
+    height: 2px;
+    width: 100%;
+}
+
+/* ── Page fold inset shadow (for list container) ──────── */
+.page-fold {
+    box-shadow:
+        inset 0 4px 8px -4px rgba(0, 0, 0, 0.05),
+        var(--theme-card-shadow);
+    border-radius: var(--theme-card-radius);
+}

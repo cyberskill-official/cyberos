@@ -1,0 +1,217 @@
+/* ═══════════════════════════════════════════════════════════════
+   Conceptual Sketch — Bold ink on craft paper, raw creative energy
+   Effects: crosshatch grid, torn-edge borders, ink splatter, pencil wobble,
+            ruled margin line, hand-drawn feel everywhere
+   Ref: High-contrast B&W, ink illustrations, jazz poster rawness
+   ═══════════════════════════════════════════════════════════════ */
+
+:root[data-style='sketch'][data-mode='light'] {
+    --color-bg: #f5f0e2;
+    --color-bg-gradient: none;
+    --color-surface: #efe8d6;
+    --color-surface-hover: #e8dfca;
+    --color-surface-raised: #f2ebda;
+    --color-text: #1a1008;
+    --color-text-secondary: #4a3a2a;
+    --color-text-muted: #8a7a6a;
+    --color-border: rgba(60, 48, 30, 0.18);
+    --color-border-strong: rgba(60, 48, 30, 0.4);
+    --color-primary: #1a6638;
+    --color-primary-muted: rgba(26, 102, 56, 0.1);
+    --color-accent: #1a4a8a;
+    --color-accent-muted: rgba(26, 74, 138, 0.1);
+    --color-success: #1a6638;
+    --color-success-muted: rgba(26, 102, 56, 0.12);
+    --color-warning: #cc8800;
+    --color-warning-muted: rgba(204, 136, 0, 0.12);
+    --color-danger: #aa2222;
+    --color-danger-muted: rgba(170, 34, 34, 0.08);
+    --color-info: #1a4a8a;
+    --color-info-muted: rgba(26, 74, 138, 0.12);
+    --color-focus: #cc8800;
+    --color-scrollbar: #d4c8aa;
+    --color-scrollbar-hover: #6a5a4a;
+    --color-selection-bg: rgba(204, 136, 0, 0.3);
+    --color-selection-text: #1a1008;
+    --color-badge-global-bg: rgba(26, 74, 138, 0.06);
+    --color-badge-global-text: #1a4a8a;
+    --color-badge-global-border: rgba(26, 74, 138, 0.15);
+    --color-badge-local-bg: rgba(26, 102, 56, 0.08);
+    --color-badge-local-text: #1a6638;
+    --color-badge-local-border: rgba(26, 102, 56, 0.15);
+    --color-scope-active-bg: #f5f0e2;
+
+    --theme-font-sans: 'Architects Daughter', cursive;
+    --theme-font-mono: 'JetBrains Mono', monospace;
+    --theme-card-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+    --theme-card-shadow: 3px 3px 0 #5a4a3a, -1px -1px 0 rgba(90, 74, 58, 0.2);
+    --theme-card-backdrop: none;
+    --theme-btn-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+    --theme-row-hover-bg: rgba(204, 136, 0, 0.06);
+}
+
+:root[data-style='sketch'][data-mode='dark'] {
+    --color-bg: #181610;
+    --color-bg-gradient: none;
+    --color-surface: #222018;
+    --color-surface-hover: #2c2820;
+    --color-surface-raised: #262218;
+    --color-text: #efe0c8;
+    --color-text-secondary: #c0a880;
+    --color-text-muted: #807060;
+    --color-border: rgba(192, 168, 128, 0.15);
+    --color-border-strong: rgba(192, 168, 128, 0.35);
+    --color-primary: #55cc88;
+    --color-primary-muted: rgba(85, 204, 136, 0.12);
+    --color-accent: #66aadd;
+    --color-accent-muted: rgba(102, 170, 221, 0.12);
+    --color-success: #55cc88;
+    --color-success-muted: rgba(85, 204, 136, 0.1);
+    --color-warning: #ddaa33;
+    --color-warning-muted: rgba(221, 170, 51, 0.1);
+    --color-danger: #cc4444;
+    --color-danger-muted: rgba(204, 68, 68, 0.12);
+    --color-info: #66aadd;
+    --color-info-muted: rgba(102, 170, 221, 0.1);
+    --color-focus: #ddaa33;
+    --color-scrollbar: #2c2820;
+    --color-scrollbar-hover: #c0a880;
+    --color-selection-bg: rgba(221, 170, 51, 0.2);
+    --color-selection-text: #efe0c8;
+    --color-badge-global-bg: rgba(102, 170, 221, 0.08);
+    --color-badge-global-text: #66aadd;
+    --color-badge-global-border: rgba(102, 170, 221, 0.15);
+    --color-badge-local-bg: rgba(85, 204, 136, 0.08);
+    --color-badge-local-text: #55cc88;
+    --color-badge-local-border: rgba(85, 204, 136, 0.15);
+    --color-scope-active-bg: #222018;
+
+    --theme-font-sans: 'Architects Daughter', cursive;
+    --theme-font-mono: 'JetBrains Mono', monospace;
+    --theme-card-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+    --theme-card-shadow: 3px 3px 0 rgba(192, 168, 128, 0.25), -1px -1px 0 rgba(192, 168, 128, 0.1);
+    --theme-card-backdrop: none;
+    --theme-btn-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+    --theme-row-hover-bg: rgba(221, 170, 51, 0.04);
+}
+
+/* ── Sketch body — crosshatch graph paper ─── */
+:root[data-style='sketch'][data-mode='light'] body {
+    background-color: var(--color-bg);
+    background-image:
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 27px,
+            rgba(60, 48, 30, 0.08) 27px,
+            rgba(60, 48, 30, 0.08) 28px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 27px,
+            rgba(60, 48, 30, 0.05) 27px,
+            rgba(60, 48, 30, 0.05) 28px
+        );
+}
+
+:root[data-style='sketch'][data-mode='dark'] body {
+    background-color: var(--color-bg);
+    background-image:
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 27px,
+            rgba(192, 168, 128, 0.04) 27px,
+            rgba(192, 168, 128, 0.04) 28px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 27px,
+            rgba(192, 168, 128, 0.025) 27px,
+            rgba(192, 168, 128, 0.025) 28px
+        );
+}
+
+/* ── Sketch card — bold ink border, pencil shadow ─── */
+:root[data-style='sketch'] .theme-card {
+    border-radius: var(--theme-card-radius);
+    box-shadow: var(--theme-card-shadow);
+    backdrop-filter: none;
+    border: 2.5px solid var(--color-border-strong);
+}
+
+/* ── Sketch wobble animation on hover ─── */
+:root[data-style='sketch'] .theme-card:hover {
+    animation: sketchWobble 0.4s ease-in-out;
+}
+
+@keyframes sketchWobble {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    20% {
+        transform: rotate(0.5deg);
+    }
+
+    40% {
+        transform: rotate(-0.4deg);
+    }
+
+    60% {
+        transform: rotate(0.3deg);
+    }
+
+    80% {
+        transform: rotate(-0.15deg);
+    }
+
+    100% {
+        transform: rotate(0deg);
+    }
+}
+
+/* ── Hand-drawn ink button ─── */
+:root[data-style='sketch'] .theme-btn-primary {
+    background: var(--color-text);
+    color: var(--color-bg);
+    border: 2.5px solid var(--color-text);
+    border-radius: var(--theme-btn-radius);
+    box-shadow: var(--theme-card-shadow);
+    font-weight: 700;
+}
+
+/* ── Crayon color accent strip ─── */
+:root[data-style='sketch'] .theme-gradient-accent {
+    background: linear-gradient(
+        90deg,
+        var(--color-danger) 0%,
+        var(--color-danger) 20%,
+        var(--color-warning) 20%,
+        var(--color-warning) 40%,
+        var(--color-primary) 40%,
+        var(--color-primary) 60%,
+        var(--color-accent) 60%,
+        var(--color-accent) 80%,
+        var(--color-text-muted) 80%,
+        var(--color-text-muted) 100%
+    );
+    animation: none;
+    opacity: 0.5;
+    height: 4px;
+}
+
+:root[data-style='sketch'][data-mode='dark'] .theme-gradient-accent {
+    opacity: 0.3;
+}
+
+/* ── Red margin line (sketch only) ─── */
+:root[data-style='sketch'] .nb-margin-line {
+    display: block;
+}
+
+:root:not([data-style='sketch']) .nb-margin-line {
+    display: none;
+}

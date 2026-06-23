@@ -1,0 +1,13 @@
+{
+    "identifier": "default",
+    "description": "GAM default capabilities",
+    "windows": [
+        "main"
+    ],
+    "permissions": [
+        "core:default",
+        "dialog:default",
+        "updater:default",
+        "process:default"
+    ]
+}

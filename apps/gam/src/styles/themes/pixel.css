@@ -1,0 +1,169 @@
+/* ═══════════════════════════════════════════════════════════════
+   Pixel Art Theme — Retro 8-bit/16-bit gaming nostalgia, chunky pixels
+   Effects: stepped box-shadows, sharp zero-radius, pixel font,
+            color band accent, CRT-style, sprite hover movement
+   Ref: Star Wars pixel art, Japanese station scenes, "I want to believe"
+   ═══════════════════════════════════════════════════════════════ */
+
+:root[data-style='pixel'][data-mode='dark'] {
+    --color-bg: #18182a;
+    --color-bg-gradient: none;
+    --color-surface: #202040;
+    --color-surface-hover: #282850;
+    --color-surface-raised: #222244;
+    --color-text: #e0e0ff;
+    --color-text-secondary: #9898cc;
+    --color-text-muted: #5858aa;
+    --color-border: #303060;
+    --color-border-strong: #404088;
+    --color-primary: #00cc66;
+    --color-primary-muted: rgba(0, 204, 102, 0.12);
+    --color-accent: #ff6644;
+    --color-accent-muted: rgba(255, 102, 68, 0.1);
+    --color-success: #00cc66;
+    --color-success-muted: rgba(0, 204, 102, 0.1);
+    --color-warning: #ffcc00;
+    --color-warning-muted: rgba(255, 204, 0, 0.1);
+    --color-danger: #ff2244;
+    --color-danger-muted: rgba(255, 34, 68, 0.12);
+    --color-info: #4488ff;
+    --color-info-muted: rgba(68, 136, 255, 0.1);
+    --color-focus: #00cc66;
+    --color-scrollbar: #303060;
+    --color-scrollbar-hover: #5858aa;
+    --color-selection-bg: rgba(0, 204, 102, 0.3);
+    --color-selection-text: #18182a;
+    --color-badge-global-bg: rgba(68, 136, 255, 0.08);
+    --color-badge-global-text: #4488ff;
+    --color-badge-global-border: #4488ff;
+    --color-badge-local-bg: rgba(255, 102, 68, 0.08);
+    --color-badge-local-text: #ff6644;
+    --color-badge-local-border: #ff6644;
+    --color-scope-active-bg: #282850;
+
+    --theme-font-sans: 'Press Start 2P', monospace;
+    --theme-font-mono: 'Press Start 2P', monospace;
+    --theme-card-radius: 0;
+    --theme-card-shadow: 4px 4px 0 #0a0a18;
+    --theme-card-backdrop: none;
+    --theme-btn-radius: 0;
+    --theme-row-hover-bg: rgba(0, 204, 102, 0.05);
+}
+
+:root[data-style='pixel'][data-mode='light'] {
+    --color-bg: #e0e0ee;
+    --color-bg-gradient: none;
+    --color-surface: #eaeaf6;
+    --color-surface-hover: #d8d8ee;
+    --color-surface-raised: #f0f0fa;
+    --color-text: #181830;
+    --color-text-secondary: #404068;
+    --color-text-muted: #6868aa;
+    --color-border: #b8b8dd;
+    --color-border-strong: #9898cc;
+    --color-primary: #008844;
+    --color-primary-muted: rgba(0, 136, 68, 0.08);
+    --color-accent: #cc4422;
+    --color-accent-muted: rgba(204, 68, 34, 0.08);
+    --color-success: #008844;
+    --color-success-muted: rgba(0, 136, 68, 0.08);
+    --color-warning: #cc9900;
+    --color-warning-muted: rgba(204, 153, 0, 0.08);
+    --color-danger: #cc1133;
+    --color-danger-muted: rgba(204, 17, 51, 0.06);
+    --color-info: #3366cc;
+    --color-info-muted: rgba(51, 102, 204, 0.08);
+    --color-focus: #008844;
+    --color-scrollbar: #b8b8dd;
+    --color-scrollbar-hover: #6868aa;
+    --color-selection-bg: rgba(0, 136, 68, 0.18);
+    --color-selection-text: #181830;
+    --color-badge-global-bg: rgba(51, 102, 204, 0.06);
+    --color-badge-global-text: #3366cc;
+    --color-badge-global-border: #3366cc;
+    --color-badge-local-bg: rgba(204, 68, 34, 0.06);
+    --color-badge-local-text: #cc4422;
+    --color-badge-local-border: #cc4422;
+    --color-scope-active-bg: #eaeaf6;
+
+    --theme-font-sans: 'Press Start 2P', monospace;
+    --theme-font-mono: 'Press Start 2P', monospace;
+    --theme-card-radius: 0;
+    --theme-card-shadow: 3px 3px 0 #9898cc;
+    --theme-card-backdrop: none;
+    --theme-btn-radius: 0;
+    --theme-row-hover-bg: rgba(0, 136, 68, 0.03);
+}
+
+/* ── Pixel body — dot grid ─── */
+:root[data-style='pixel'][data-mode='dark'] body {
+    background-color: var(--color-bg);
+    background-image: radial-gradient(circle 1px at 10px 10px, rgba(88, 88, 170, 0.08) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+:root[data-style='pixel'][data-mode='light'] body {
+    background-color: var(--color-bg);
+    background-image: radial-gradient(circle 1px at 10px 10px, rgba(104, 104, 170, 0.06) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+/* ── Pixel card — hard stepped shadow ─── */
+:root[data-style='pixel'] .theme-card {
+    border-radius: 0;
+    box-shadow: var(--theme-card-shadow);
+    border: 2px solid var(--color-border-strong);
+    backdrop-filter: none;
+    image-rendering: pixelated;
+}
+
+:root[data-style='pixel'] .theme-card:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 var(--color-border);
+    transition: all 0.1s steps(2);
+}
+
+/* ── Chunky arcade button ─── */
+:root[data-style='pixel'] .theme-btn-primary {
+    background: var(--color-primary);
+    border: 2px solid var(--color-border-strong);
+    border-radius: 0;
+    box-shadow: var(--theme-card-shadow);
+    text-transform: uppercase;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--color-bg);
+    font-weight: 700;
+}
+
+:root[data-style='pixel'] .theme-btn-primary:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 5px 5px 0 var(--color-border);
+    transition: all 0.1s steps(2);
+}
+
+/* ── 8-bit color band accent strip ─── */
+:root[data-style='pixel'] .theme-gradient-accent {
+    background: repeating-linear-gradient(
+        90deg,
+        #ff2244 0px,
+        #ff2244 20%,
+        #ffcc00 20%,
+        #ffcc00 40%,
+        #00cc66 40%,
+        #00cc66 60%,
+        #4488ff 60%,
+        #4488ff 80%,
+        #ff6644 80%,
+        #ff6644 100%
+    );
+    animation: none;
+    height: 4px;
+    image-rendering: pixelated;
+}
+
+/* Pixel font applied via --theme-font-sans, no global font-size override */
+
+:root[data-style='pixel'] .nb-margin-line {
+    display: none;
+}

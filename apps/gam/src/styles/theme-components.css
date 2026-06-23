@@ -1,0 +1,251 @@
+/* ═══════════════════════════════════════════════════════════════
+   Theme Components — Per-theme styling for inputs, tables, and UI
+   Each theme transforms the shape, shadow, and feel of components
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── GLASSMORPHISM — Glass inputs, frosted table ─── */
+:root[data-style='glassmorphism'] .theme-input {
+    border-radius: 10px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    backdrop-filter: blur(8px);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+:root[data-style='glassmorphism'] .theme-input:focus {
+    box-shadow:
+        0 0 0 2px var(--color-primary-muted),
+        inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-color: var(--color-primary);
+}
+
+:root[data-style='glassmorphism'] .theme-table {
+    border-radius: 12px;
+    overflow: hidden;
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--color-border);
+}
+
+:root[data-style='glassmorphism'] .theme-scope-tab {
+    border-radius: 8px;
+}
+
+/* ── SKETCH — Rough pencil-drawn inputs ─── */
+:root[data-style='sketch'] .theme-input {
+    border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+    border: 2px solid var(--color-border-strong);
+    background: var(--color-surface);
+    box-shadow: 1px 1px 0 var(--color-text-muted);
+}
+
+:root[data-style='sketch'] .theme-input:focus {
+    box-shadow: 2px 2px 0 var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+:root[data-style='sketch'] .theme-table {
+    border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+    overflow: hidden;
+    border: 2px solid var(--color-border-strong);
+    box-shadow: 2px 2px 0 var(--color-text-muted);
+}
+
+:root[data-style='sketch'] .theme-scope-tab {
+    border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+}
+
+/* ── CYBERCORE — Terminal-style inputs, neon glow ─── */
+:root[data-style='cybercore'] .theme-input {
+    border-radius: 2px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    font-family: 'Share Tech Mono', monospace;
+}
+
+:root[data-style='cybercore'][data-mode='dark'] .theme-input:focus {
+    box-shadow:
+        0 0 8px var(--color-primary-muted),
+        0 0 20px rgba(0, 255, 136, 0.05);
+    border-color: var(--color-primary);
+}
+
+:root[data-style='cybercore'] .theme-table {
+    border-radius: 0;
+    border: 1px solid var(--color-border);
+}
+
+:root[data-style='cybercore'][data-mode='dark'] .theme-table {
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.05);
+}
+
+:root[data-style='cybercore'] .theme-scope-tab {
+    border-radius: 2px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* ── BAROQUE — Ornate double-borders, gold inlay ─── */
+:root[data-style='baroque'] .theme-input {
+    border-radius: 4px;
+    border: 1px solid var(--color-border-strong);
+    background: var(--color-surface);
+    outline: 1px solid var(--color-border);
+    outline-offset: 2px;
+}
+
+:root[data-style='baroque'] .theme-input:focus {
+    outline-color: var(--color-primary);
+    border-color: var(--color-primary);
+    box-shadow: 0 2px 8px rgba(212, 160, 48, 0.15);
+}
+
+:root[data-style='baroque'] .theme-table {
+    border-radius: 4px;
+    border: 1px solid var(--color-border-strong);
+    outline: 1px solid var(--color-border);
+    outline-offset: 3px;
+}
+
+:root[data-style='baroque'] .theme-scope-tab {
+    border-radius: 4px;
+}
+
+/* ── SHABBY CHIC — Soft rounded, dashed lace ─── */
+:root[data-style='shabby'] .theme-input {
+    border-radius: 20px;
+    border: 1px dashed var(--color-border-strong);
+    background: var(--color-surface);
+}
+
+:root[data-style='shabby'] .theme-input:focus {
+    border-style: solid;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-muted);
+}
+
+:root[data-style='shabby'] .theme-table {
+    border-radius: 16px;
+    border: 1px dashed var(--color-border-strong);
+}
+
+:root[data-style='shabby'] .theme-scope-tab {
+    border-radius: 20px;
+}
+
+/* ── GOTHIC — Heavy stone borders, crimson accents ─── */
+:root[data-style='gothic'] .theme-input {
+    border-radius: 2px;
+    border: 1px solid var(--color-border-strong);
+    border-bottom: 2px solid var(--color-primary);
+    background: var(--color-surface);
+}
+
+:root[data-style='gothic'] .theme-input:focus {
+    border-bottom-color: var(--color-danger);
+    box-shadow: 0 2px 0 var(--color-danger);
+}
+
+:root[data-style='gothic'] .theme-table {
+    border-radius: 2px;
+    border: 1px solid var(--color-border-strong);
+    border-top: 3px solid var(--color-primary);
+}
+
+:root[data-style='gothic'] .theme-scope-tab {
+    border-radius: 2px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+/* ── VICTORIAN — Double-line frame, serif elegance ─── */
+:root[data-style='victorian'] .theme-input {
+    border-radius: 0;
+    border: 2px double var(--color-border-strong);
+    background: var(--color-surface);
+}
+
+:root[data-style='victorian'] .theme-input:focus {
+    border-color: var(--color-warning);
+}
+
+:root[data-style='victorian'] .theme-table {
+    border-radius: 0;
+    border: 2px double var(--color-border-strong);
+}
+
+:root[data-style='victorian'] .theme-scope-tab {
+    border-radius: 0;
+    letter-spacing: 1px;
+}
+
+/* ── COTTAGECORE — Warm rounded, earthy feel ─── */
+:root[data-style='cottagecore'] .theme-input {
+    border-radius: 14px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+}
+
+:root[data-style='cottagecore'] .theme-input:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-muted);
+}
+
+:root[data-style='cottagecore'] .theme-table {
+    border-radius: 14px;
+    border: 1px solid var(--color-border);
+}
+
+:root[data-style='cottagecore'] .theme-scope-tab {
+    border-radius: 14px;
+}
+
+/* ── PIXEL ART — Sharp, chunky, zero-radius ─── */
+:root[data-style='pixel'] .theme-input {
+    border-radius: 0;
+    border: 2px solid var(--color-border-strong);
+    background: var(--color-surface);
+    box-shadow: 3px 3px 0 var(--color-border);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+}
+
+:root[data-style='pixel'] .theme-input:focus {
+    box-shadow: 4px 4px 0 var(--color-primary);
+    border-color: var(--color-primary);
+    transform: translate(-1px, -1px);
+}
+
+:root[data-style='pixel'] .theme-table {
+    border-radius: 0;
+    border: 2px solid var(--color-border-strong);
+    box-shadow: 4px 4px 0 var(--color-border);
+}
+
+:root[data-style='pixel'] .theme-scope-tab {
+    border-radius: 0;
+    text-transform: uppercase;
+    font-size: 10px;
+}
+
+/* ── FILIGREE — Fine inset, delicate metallic ─── */
+:root[data-style='filigree'] .theme-input {
+    border-radius: 4px;
+    border: 1px solid var(--color-border-strong);
+    background: var(--color-surface);
+    box-shadow: inset 0 0 0 1px var(--color-border);
+}
+
+:root[data-style='filigree'] .theme-input:focus {
+    box-shadow: inset 0 0 0 1px var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+:root[data-style='filigree'] .theme-table {
+    border-radius: 4px;
+    border: 1px solid var(--color-border-strong);
+    box-shadow: inset 0 0 0 1px var(--color-border);
+}
+
+:root[data-style='filigree'] .theme-scope-tab {
+    border-radius: 4px;
+}

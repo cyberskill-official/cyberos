@@ -1,0 +1,169 @@
+/* ═══════════════════════════════════════════════════════════════
+   Gothic Theme — Dark medieval cathedrals, crimson & moonlight
+   Effects: stone noise texture, pointed crimson top-border, heavy depth,
+            blood-red accents, Blackletter-inspired uppercase, stained-glass strip
+   NO PURPLE — uses deep charcoal (#0a0a0e), crimson (#8b0000), midnight navy
+   Ref: Cathedral arches, Dracula covers, dark romanticism, ornate red frames
+   ═══════════════════════════════════════════════════════════════ */
+
+:root[data-style='gothic'][data-mode='dark'] {
+    --color-bg: #060608;
+    --color-bg-gradient: none;
+    --color-surface: #100e12;
+    --color-surface-hover: #1a181e;
+    --color-surface-raised: #141218;
+    --color-text: #ccc8c0;
+    --color-text-secondary: #908880;
+    --color-text-muted: #585450;
+    --color-border: rgba(140, 130, 120, 0.1);
+    --color-border-strong: rgba(140, 130, 120, 0.22);
+    --color-primary: #cc2828;
+    --color-primary-muted: rgba(204, 40, 40, 0.1);
+    --color-accent: #3a5a7a;
+    --color-accent-muted: rgba(58, 90, 122, 0.1);
+    --color-success: #305a30;
+    --color-success-muted: rgba(48, 90, 48, 0.1);
+    --color-warning: #c8a020;
+    --color-warning-muted: rgba(200, 160, 32, 0.08);
+    --color-danger: #990000;
+    --color-danger-muted: rgba(153, 0, 0, 0.15);
+    --color-info: #3a5a7a;
+    --color-info-muted: rgba(58, 90, 122, 0.08);
+    --color-focus: #cc2828;
+    --color-scrollbar: #1a181e;
+    --color-scrollbar-hover: #585450;
+    --color-selection-bg: rgba(204, 40, 40, 0.25);
+    --color-selection-text: #ccc8c0;
+    --color-badge-global-bg: rgba(58, 90, 122, 0.06);
+    --color-badge-global-text: #5a8aaa;
+    --color-badge-global-border: rgba(58, 90, 122, 0.18);
+    --color-badge-local-bg: rgba(204, 40, 40, 0.05);
+    --color-badge-local-text: #cc5050;
+    --color-badge-local-border: rgba(204, 40, 40, 0.12);
+    --color-scope-active-bg: #1a181e;
+
+    --theme-font-sans: 'Cinzel', serif;
+    --theme-font-mono: 'JetBrains Mono', monospace;
+    --theme-card-radius: 0;
+    --theme-card-shadow: 0 6px 30px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(140, 130, 120, 0.04);
+    --theme-card-backdrop: none;
+    --theme-btn-radius: 0;
+    --theme-row-hover-bg: rgba(204, 40, 40, 0.03);
+}
+
+:root[data-style='gothic'][data-mode='light'] {
+    --color-bg: #eee8e4;
+    --color-bg-gradient: none;
+    --color-surface: #e4dcd4;
+    --color-surface-hover: #dcd0c8;
+    --color-surface-raised: #eae2da;
+    --color-text: #141418;
+    --color-text-secondary: #3a3a40;
+    --color-text-muted: #6a6a70;
+    --color-border: rgba(50, 50, 60, 0.08);
+    --color-border-strong: rgba(50, 50, 60, 0.18);
+    --color-primary: #7a0e0e;
+    --color-primary-muted: rgba(122, 14, 14, 0.06);
+    --color-accent: #1e3a5a;
+    --color-accent-muted: rgba(30, 58, 90, 0.06);
+    --color-success: #1e4a1e;
+    --color-success-muted: rgba(30, 74, 30, 0.06);
+    --color-warning: #8a7020;
+    --color-warning-muted: rgba(138, 112, 32, 0.06);
+    --color-danger: #7a0000;
+    --color-danger-muted: rgba(122, 0, 0, 0.06);
+    --color-info: #1e3a5a;
+    --color-info-muted: rgba(30, 58, 90, 0.06);
+    --color-focus: #7a0e0e;
+    --color-scrollbar: #dcd0c8;
+    --color-scrollbar-hover: #6a6a70;
+    --color-selection-bg: rgba(122, 14, 14, 0.12);
+    --color-selection-text: #141418;
+    --color-badge-global-bg: rgba(30, 58, 90, 0.04);
+    --color-badge-global-text: #1e3a5a;
+    --color-badge-global-border: rgba(30, 58, 90, 0.12);
+    --color-badge-local-bg: rgba(122, 14, 14, 0.04);
+    --color-badge-local-text: #7a0e0e;
+    --color-badge-local-border: rgba(122, 14, 14, 0.1);
+    --color-scope-active-bg: #e4dcd4;
+
+    --theme-font-sans: 'Cinzel', serif;
+    --theme-font-mono: 'JetBrains Mono', monospace;
+    --theme-card-radius: 0;
+    --theme-card-shadow: 0 2px 10px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    --theme-card-backdrop: none;
+    --theme-btn-radius: 0;
+    --theme-row-hover-bg: rgba(122, 14, 14, 0.02);
+}
+
+/* ── Gothic body — stone grain + faint cathedral arches ─── */
+:root[data-style='gothic'][data-mode='dark'] body {
+    background-color: var(--color-bg);
+    background-image:
+        radial-gradient(ellipse at 50% 0%, rgba(204, 40, 40, 0.02) 0%, transparent 60%),
+        url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+}
+
+:root[data-style='gothic'][data-mode='light'] body {
+    background-color: var(--color-bg);
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
+}
+
+/* ── Gothic card — heavy crimson top-border, deep shadow ─── */
+:root[data-style='gothic'] .theme-card {
+    border-radius: 0;
+    box-shadow: var(--theme-card-shadow);
+    border: 1px solid var(--color-border-strong);
+    border-top: 3px solid var(--color-primary);
+    backdrop-filter: none;
+}
+
+:root[data-style='gothic'][data-mode='dark'] .theme-card:hover {
+    border-top-color: #ee2222;
+    box-shadow:
+        0 6px 30px rgba(0, 0, 0, 0.7),
+        0 -2px 20px rgba(204, 40, 40, 0.06);
+}
+
+/* ── Blood-red button — iron & fire ─── */
+:root[data-style='gothic'] .theme-btn-primary {
+    background: linear-gradient(180deg, #cc2828, #7a0000);
+    border: 1px solid rgba(204, 40, 40, 0.3);
+    border-radius: 0;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+:root[data-style='gothic'][data-mode='dark'] .theme-btn-primary {
+    box-shadow:
+        0 2px 12px rgba(204, 40, 40, 0.25),
+        0 0 30px rgba(204, 40, 40, 0.08);
+}
+
+/* ── Stained glass accent strip — rich multicolor ─── */
+:root[data-style='gothic'] .theme-gradient-accent {
+    background: linear-gradient(
+        90deg,
+        #7a0000 0%,
+        #cc2828 15%,
+        #1e3a5a 30%,
+        #3a5a7a 45%,
+        #c8a020 55%,
+        #8a7020 65%,
+        #1e4a1e 80%,
+        #7a0000 100%
+    );
+    background-size: 200% 100%;
+    animation: gradientShift 6s ease infinite;
+    height: 3px;
+}
+
+:root[data-style='gothic'][data-mode='dark'] .theme-gradient-accent {
+    box-shadow: 0 0 8px rgba(204, 40, 40, 0.15);
+}
+
+:root[data-style='gothic'] .nb-margin-line {
+    display: none;
+}

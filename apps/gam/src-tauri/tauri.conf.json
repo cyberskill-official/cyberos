@@ -1,0 +1,51 @@
+{
+    "productName": "GAM",
+    "version": "1.0.11",
+    "identifier": "com.github.zintaen.gam",
+    "build": {
+        "frontendDist": "../dist",
+        "devUrl": "http://localhost:5173",
+        "beforeDevCommand": "pnpm vite",
+        "beforeBuildCommand": "pnpm vite build"
+    },
+    "app": {
+        "windows": [
+            {
+                "title": "GAM — Git Alias Manager",
+                "width": 1100,
+                "height": 750,
+                "minWidth": 800,
+                "minHeight": 550,
+                "visible": true,
+                "decorations": true,
+                "transparent": false
+            }
+        ],
+        "security": {
+            "csp": "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src ipc: http://ipc.localhost https://github.com/zintaen/gam/releases/ https://objects.githubusercontent.com"
+        }
+    },
+    "bundle": {
+        "createUpdaterArtifacts": true,
+        "active": true,
+        "targets": "all",
+        "icon": [
+            "icons/32x32.png",
+            "icons/128x128.png",
+            "icons/128x128@2x.png",
+            "icons/icon.icns",
+            "icons/icon.ico"
+        ],
+        "macOS": {
+            "minimumSystemVersion": "10.13"
+        }
+    },
+    "plugins": {
+        "updater": {
+            "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEE1NURCOUVENUFFNEMwRDEKUldUUndPUmE3YmxkcFFVYWRVR0JWenEvZ1Z6NFlUbVFpMW55NnppM0F5S3g4a2VOQ1N4QmI0WFEK",
+            "endpoints": [
+                "https://github.com/zintaen/gam/releases/latest/download/latest.json"
+            ]
+        }
+    }
+}

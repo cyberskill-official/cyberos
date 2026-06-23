@@ -1,0 +1,157 @@
+/* ═══════════════════════════════════════════════════════════════
+   Shabby Chic Theme — Romantic vintage florals, soft pastels, lace elegance
+   Effects: floral dot radials, dashed lace borders, watercolor strip,
+            soft rose/sage/lavender palette, ultra-rounded pills
+   Ref: New Yorker covers, FLEURS typography, botanical drawings, soft pinks
+   ═══════════════════════════════════════════════════════════════ */
+
+:root[data-style='shabby'][data-mode='light'] {
+    --color-bg: #fdf8f4;
+    --color-bg-gradient: none;
+    --color-surface: #fff9f5;
+    --color-surface-hover: #fff2eb;
+    --color-surface-raised: #fff6f0;
+    --color-text: #4a2e2e;
+    --color-text-secondary: #7a5555;
+    --color-text-muted: #a88080;
+    --color-border: rgba(170, 120, 120, 0.12);
+    --color-border-strong: rgba(170, 120, 120, 0.28);
+    --color-primary: #c87878;
+    --color-primary-muted: rgba(200, 120, 120, 0.1);
+    --color-accent: #7aacb8;
+    --color-accent-muted: rgba(122, 172, 184, 0.1);
+    --color-success: #7aaa7a;
+    --color-success-muted: rgba(122, 170, 122, 0.1);
+    --color-warning: #c8a868;
+    --color-warning-muted: rgba(200, 168, 104, 0.1);
+    --color-danger: #b84848;
+    --color-danger-muted: rgba(184, 72, 72, 0.06);
+    --color-info: #7aacb8;
+    --color-info-muted: rgba(122, 172, 184, 0.1);
+    --color-focus: #c87878;
+    --color-scrollbar: #f0ddd5;
+    --color-scrollbar-hover: #a88080;
+    --color-selection-bg: rgba(200, 120, 120, 0.18);
+    --color-selection-text: #4a2e2e;
+    --color-badge-global-bg: rgba(122, 172, 184, 0.06);
+    --color-badge-global-text: #5a9aaa;
+    --color-badge-global-border: rgba(122, 172, 184, 0.18);
+    --color-badge-local-bg: rgba(200, 120, 120, 0.06);
+    --color-badge-local-text: #c87878;
+    --color-badge-local-border: rgba(200, 120, 120, 0.18);
+    --color-scope-active-bg: #fff9f5;
+
+    --theme-font-sans: 'Cormorant Garamond', serif;
+    --theme-font-mono: 'JetBrains Mono', monospace;
+    --theme-card-radius: 20px;
+    --theme-card-shadow: 0 2px 16px rgba(170, 120, 120, 0.08);
+    --theme-card-backdrop: none;
+    --theme-btn-radius: 24px;
+    --theme-row-hover-bg: rgba(200, 120, 120, 0.04);
+}
+
+:root[data-style='shabby'][data-mode='dark'] {
+    --color-bg: #161012;
+    --color-bg-gradient: none;
+    --color-surface: #20181c;
+    --color-surface-hover: #2a2024;
+    --color-surface-raised: #221a1e;
+    --color-text: #f2dce2;
+    --color-text-secondary: #c8a0aa;
+    --color-text-muted: #886068;
+    --color-border: rgba(200, 160, 170, 0.1);
+    --color-border-strong: rgba(200, 160, 170, 0.22);
+    --color-primary: #e09090;
+    --color-primary-muted: rgba(224, 144, 144, 0.1);
+    --color-accent: #88bcc8;
+    --color-accent-muted: rgba(136, 188, 200, 0.08);
+    --color-success: #88b888;
+    --color-success-muted: rgba(136, 184, 136, 0.08);
+    --color-warning: #d0b888;
+    --color-warning-muted: rgba(208, 184, 136, 0.08);
+    --color-danger: #c06060;
+    --color-danger-muted: rgba(192, 96, 96, 0.1);
+    --color-info: #88bcc8;
+    --color-info-muted: rgba(136, 188, 200, 0.08);
+    --color-focus: #e09090;
+    --color-scrollbar: #2a2024;
+    --color-scrollbar-hover: #c8a0aa;
+    --color-selection-bg: rgba(224, 144, 144, 0.18);
+    --color-selection-text: #f2dce2;
+    --color-badge-global-bg: rgba(136, 188, 200, 0.06);
+    --color-badge-global-text: #88bcc8;
+    --color-badge-global-border: rgba(136, 188, 200, 0.12);
+    --color-badge-local-bg: rgba(224, 144, 144, 0.06);
+    --color-badge-local-text: #e09090;
+    --color-badge-local-border: rgba(224, 144, 144, 0.12);
+    --color-scope-active-bg: #20181c;
+
+    --theme-font-sans: 'Cormorant Garamond', serif;
+    --theme-font-mono: 'JetBrains Mono', monospace;
+    --theme-card-radius: 20px;
+    --theme-card-shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
+    --theme-card-backdrop: none;
+    --theme-btn-radius: 24px;
+    --theme-row-hover-bg: rgba(224, 144, 144, 0.03);
+}
+
+/* ── Shabby body — romantic floral radials ─── */
+:root[data-style='shabby'][data-mode='light'] body {
+    background-color: var(--color-bg);
+    background-image:
+        radial-gradient(circle 200px at 10% 20%, rgba(200, 120, 120, 0.06) 0%, transparent 100%),
+        radial-gradient(circle 150px at 90% 80%, rgba(122, 172, 184, 0.05) 0%, transparent 100%),
+        radial-gradient(circle 100px at 50% 60%, rgba(200, 168, 104, 0.04) 0%, transparent 100%),
+        radial-gradient(circle 80px at 30% 85%, rgba(170, 120, 170, 0.03) 0%, transparent 100%),
+        url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='1' fill='%23c87878' opacity='.04'/%3E%3Ccircle cx='10' cy='10' r='.5' fill='%237aacb8' opacity='.03'/%3E%3Ccircle cx='50' cy='50' r='.5' fill='%23c8a868' opacity='.03'/%3E%3C/svg%3E");
+}
+
+:root[data-style='shabby'][data-mode='dark'] body {
+    background-color: var(--color-bg);
+    background-image:
+        radial-gradient(circle 200px at 10% 20%, rgba(224, 144, 144, 0.03) 0%, transparent 100%),
+        radial-gradient(circle 150px at 90% 80%, rgba(136, 188, 200, 0.02) 0%, transparent 100%);
+}
+
+/* ── Shabby card — romantic lace border ─── */
+:root[data-style='shabby'] .theme-card {
+    border-radius: var(--theme-card-radius);
+    box-shadow: var(--theme-card-shadow);
+    border: 1.5px dashed var(--color-border-strong);
+    backdrop-filter: none;
+}
+
+:root[data-style='shabby'] .theme-card:hover {
+    border-style: solid;
+    border-color: var(--color-primary);
+    box-shadow:
+        var(--theme-card-shadow),
+        0 0 20px rgba(200, 120, 120, 0.06);
+}
+
+/* ── Pill button — soft rose gradient ─── */
+:root[data-style='shabby'] .theme-btn-primary {
+    background: linear-gradient(135deg, #c87878, #d8a088);
+    border: none;
+    border-radius: var(--theme-btn-radius);
+    box-shadow: 0 2px 12px rgba(200, 120, 120, 0.2);
+    letter-spacing: 0.5px;
+}
+
+:root[data-style='shabby'][data-mode='dark'] .theme-btn-primary {
+    background: linear-gradient(135deg, #c07070, #d09080);
+    box-shadow: 0 2px 12px rgba(192, 112, 112, 0.15);
+}
+
+/* ── Watercolor pastel accent strip ─── */
+:root[data-style='shabby'] .theme-gradient-accent {
+    background: linear-gradient(90deg, #c87878 0%, #d8a888 20%, #7aacb8 40%, #a8c8a8 60%, #c8a0c0 80%, #c87878 100%);
+    background-size: 200% 100%;
+    animation: gradientShift 10s ease infinite;
+    opacity: 0.5;
+    height: 3px;
+}
+
+:root[data-style='shabby'] .nb-margin-line {
+    display: none;
+}

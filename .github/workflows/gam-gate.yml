@@ -1,0 +1,85 @@
+name: gam gate
+
+# Build + test gate for the absorbed gam desktop app (apps/gam).
+# gam is a standalone crate (its own Cargo.lock + pnpm-lock.yaml), not part of the
+# services workspace, so it is gated on its own here. This mirrors the checks gam
+# runs upstream: frontend lint, types, tests, and a build check, then Rust clippy,
+# tests, and cargo-deny. Compiling the Tauri crate on Linux needs the GTK/webkit
+# system libraries, so they are installed before the cargo steps.
+# Mark this job required in branch protection on main.
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'apps/gam/**'
+      - '.github/workflows/gam-gate.yml'
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: apps/gam
+
+jobs:
+  gam-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: apps/gam/.nvmrc
+          cache: pnpm
+          cache-dependency-path: apps/gam/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm exec tsc --noEmit
+
+      - name: Frontend tests
+        run: pnpm test
+
+      - name: Build verification
+        run: pnpm vite:build
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: 'apps/gam/src-tauri -> target'
+
+      - name: Install Linux Tauri system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libayatana-appindicator3-dev patchelf
+
+      - name: Rust clippy
+        working-directory: apps/gam/src-tauri
+        run: cargo clippy --locked -- -D warnings
+
+      - name: Rust tests
+        working-directory: apps/gam/src-tauri
+        run: cargo test --lib --locked
+
+      - name: cargo-deny
+        working-directory: apps/gam/src-tauri
+        run: |
+          cargo install cargo-deny --locked
+          cargo deny check
