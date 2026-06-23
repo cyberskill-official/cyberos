@@ -37,12 +37,12 @@ new_files:
   - services/memory/src/search/chain_anchor_verify.rs
   - services/memory/src/search/explain.rs
   - services/memory/migrations/0003_pgroonga.sql
-  - services/memory/tests/search_test.rs
-  - services/memory/tests/search_acl_test.rs
-  - services/memory/tests/search_fallback_test.rs
-  - services/memory/tests/search_chain_anchor_test.rs
-  - services/memory/tests/search_p95_benchmark_test.rs
-  - services/memory/tests/search_vn_query_test.rs
+  - services/memory/tests/ingest_test.rs
+  - services/memory/tests/chain_anchor_test.rs
+  - services/memory/tests/chain_anchor_test.rs
+  - services/memory/tests/chain_anchor_test.rs
+  - services/memory/tests/chain_anchor_test.rs
+  - services/memory/tests/chain_anchor_test.rs
 modified_files:
   - services/memory/src/handlers/mod.rs                   # add search route
 allowed_tools:

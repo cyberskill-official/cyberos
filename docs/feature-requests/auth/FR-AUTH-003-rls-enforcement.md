@@ -33,10 +33,10 @@ new_files:
   - services/auth/src/rls/registry.rs
   - services/auth/migrations/0004_rls_roles.sql
   - services/auth/migrations/0005_rls_enable_on_tables.sql
-  - services/auth/tests/rls_basic_test.rs
-  - services/auth/tests/rls_with_check_test.rs
+  - services/auth/tests/rls_isolation_test.rs
+  - services/auth/tests/rls_isolation_test.rs
   - services/auth/tests/rls_property_test.rs
-  - services/auth/tests/rls_role_separation_test.rs
+  - services/auth/tests/rls_isolation_test.rs
   - services/auth/tests/rls_registry_completeness_test.rs
   - .github/workflows/rls-property-gate.yml
 modified_files:
@@ -276,7 +276,7 @@ pub struct RlsCheckViolation { pub detail: String }
 ## §5 — Verification
 
 ```rust
-// services/auth/tests/rls_basic_test.rs
+// services/auth/tests/rls_isolation_test.rs
 #[tokio::test]
 async fn select_returns_only_current_tenant_rows() {
     let pool = test_pool_as_cyberos_app().await;
@@ -300,7 +300,7 @@ async fn select_returns_only_current_tenant_rows() {
 ```
 
 ```rust
-// services/auth/tests/rls_with_check_test.rs
+// services/auth/tests/rls_isolation_test.rs
 #[tokio::test]
 async fn insert_with_wrong_tenant_id_blocked_by_with_check() {
     let pool = test_pool_as_cyberos_app().await;
@@ -365,7 +365,7 @@ proptest! {
 ```
 
 ```rust
-// services/auth/tests/rls_role_separation_test.rs
+// services/auth/tests/rls_isolation_test.rs
 #[tokio::test]
 async fn cyberos_app_cannot_bypass_rls() {
     let pool = test_pool_as_cyberos_app().await;

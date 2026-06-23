@@ -1,0 +1,77 @@
+name: evals
+
+# The eval gate, enforced at the remote (structural review G-A / F2).
+# Branch protection on `main` should require this workflow — that makes
+# "all fixtures green before merge" a property of the repository, not of
+# contributor discipline.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# CyberSkill standard: Node >= 24 (forces SHA-pinned actions onto the Node 24 runtime)
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  evals:
+    name: fixture suite + release invariants
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
+        with:
+          python-version: "3.12"
+
+      - name: Full fixture suite (validate.py --all)
+        run: python3 core/evals/validate.py --all
+
+      - name: Version sync — AUDIT.md = package.json = baseline.json (BLINDSPOTS BS-11)
+        run: |
+          set -e
+          AUD="$(head -1 core/AUDIT.md | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+')"
+          PKG="v$(python3 -c "import json;print(json.load(open('package.json'))['version'])")"
+          BASE="$(python3 -c "import json;print(json.load(open('core/evals/baseline.json'))['audit_md_version'])")"
+          echo "AUDIT.md=$AUD package.json=$PKG baseline.json=$BASE"
+          if [ "$AUD" != "$PKG" ] || [ "$AUD" != "$BASE" ]; then
+            echo "::error::VERSION DRIFT — align AUDIT.md title, package.json and baseline.json (./core/evals/run-evals.sh --record)"
+            exit 1
+          fi
+
+      - name: Baseline integrity — AUDIT.md unchanged since last --record
+        run: |
+          set -e
+          SHA="$(sha256sum core/AUDIT.md | cut -d' ' -f1)"
+          BSHA="$(python3 -c "import json;print(json.load(open('core/evals/baseline.json'))['audit_md_sha256'])")"
+          if [ "$SHA" != "$BSHA" ]; then
+            echo "::error::AUDIT.md was edited without re-recording the baseline — run ./core/evals/run-evals.sh --record in the same change"
+            exit 1
+          fi
+
+      - name: Release snapshot — current protocol matches its immutable copy
+        run: |
+          set -e
+          V="$(head -1 core/AUDIT.md | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+')"
+          cmp core/AUDIT.md "core/improve/versions/AUDIT-$V.md" \
+            || { echo "::error::core/AUDIT.md ($V) differs from core/improve/versions/AUDIT-$V.md — every release must be snapshotted"; exit 1; }
+
+      - name: Docs sync — every version / fixture-count surface agrees (BS-11)
+        run: python3 core/evals/scripts/check-docs-sync.py
+
+      - name: Report contract — live report validates against schemas/report.v1.json
+        run: |
+          python3 -m pip install --quiet jsonschema
+          python3 core/evals/validate.py --run core/evals/fixtures/G01-clean-run --report json > /tmp/r.json
+          python3 core/evals/validate.py --run core/evals/fixtures/G11-runner-config-valid --report json > /tmp/r_runner.json
+          python3 - <<'PY'
+          import json, jsonschema
+          schema = json.load(open('core/schemas/report.v1.json'))
+          jsonschema.validate(json.load(open('/tmp/r.json')), schema)
+          # Runner-mode provenance must survive into the report (FAILURE_LOG 2026-06-12):
+          runner = json.load(open('/tmp/r_runner.json'))
+          jsonschema.validate(runner, schema)
+          assert runner['protocol_version'] == 'v1.3.0', f"runner-mode report dropped provenance: {runner['protocol_version']}"
+          print("report@1 contract holds; runner-mode provenance carried")
+          PY

@@ -82,6 +82,12 @@ pub struct AiPolicy {
     /// Values are Presidio entity-type names (e.g. "VN_CCCD", "VN_MST").
     #[serde(default)]
     pub pii_redaction_extra: Option<Vec<String>>,
+
+    /// FR-OBS-004 §1 #3 - opt in to exporting (redacted) AI traces to self-hosted LangSmith. Default
+    /// false; enabled per tenant via `cyberos-ai policy set <tenant> --langsmith-export=true`. Even
+    /// redacted prompts carry tenant-business semantics, so export is off until the tenant consents.
+    #[serde(default)]
+    pub langsmith_export: bool,
 }
 
 /// Override target for a specific alias. FR-AI-006 §3.
@@ -124,6 +130,19 @@ pub enum Provider {
         /// Map of model alias → provider-specific model id.
         model_alias_map: HashMap<String, String>,
     },
+    /// Ollama provider — local / self-hosted models, no API key. Endpoint comes from the
+    /// `OLLAMA_ENDPOINT` env var (default `http://localhost:11434`), not the policy file, since one
+    /// Ollama serves a whole deployment. FR-AI-008.
+    Ollama {
+        /// Map of model alias → Ollama model id (e.g. `chat.smart` → `llama3.1:8b`).
+        model_alias_map: HashMap<String, String>,
+    },
+    /// LM Studio / OpenAI-compatible local provider, no API key. Endpoint comes from
+    /// `LMSTUDIO_ENDPOINT` (default `http://localhost:1234`), not the policy file. FR-AI-105.
+    LocalOpenai {
+        /// Map of model alias to local model id (e.g. `chat.smart` to `qwen2.5-7b-instruct`).
+        model_alias_map: HashMap<String, String>,
+    },
 }
 
 impl Provider {
@@ -134,6 +153,8 @@ impl Provider {
             Self::Anthropic { .. } => ProviderKind::Anthropic,
             Self::Openai { .. } => ProviderKind::Openai,
             Self::Vertex { .. } => ProviderKind::Vertex,
+            Self::Ollama { .. } => ProviderKind::Ollama,
+            Self::LocalOpenai { .. } => ProviderKind::LocalOpenai,
         }
     }
 
@@ -144,16 +165,32 @@ impl Provider {
             Self::Anthropic { .. } => None,
             Self::Openai { .. } => None,
             Self::Vertex { region, .. } => Some(region.clone()),
+            Self::Ollama { .. } => None,
+            Self::LocalOpenai { .. } => None,
         }
     }
 
     /// Look up a model alias in this provider's model_alias_map.
     pub fn model_for_alias(&self, alias: &str) -> Option<&str> {
         let map = match self {
-            Self::Bedrock { model_alias_map, .. } => model_alias_map,
-            Self::Anthropic { model_alias_map, .. } => model_alias_map,
-            Self::Openai { model_alias_map, .. } => model_alias_map,
-            Self::Vertex { model_alias_map, .. } => model_alias_map,
+            Self::Bedrock {
+                model_alias_map, ..
+            } => model_alias_map,
+            Self::Anthropic {
+                model_alias_map, ..
+            } => model_alias_map,
+            Self::Openai {
+                model_alias_map, ..
+            } => model_alias_map,
+            Self::Vertex {
+                model_alias_map, ..
+            } => model_alias_map,
+            Self::Ollama {
+                model_alias_map, ..
+            } => model_alias_map,
+            Self::LocalOpenai {
+                model_alias_map, ..
+            } => model_alias_map,
         };
         map.get(alias).map(|s| s.as_str())
     }
@@ -177,6 +214,11 @@ pub enum ProviderKind {
     Vertex,
     /// Self-hosted BGE (FR-AI-019).
     Bge,
+    /// Ollama — local / self-hosted models (FR-AI-008).
+    Ollama,
+    /// LM Studio / OpenAI-compatible local provider (FR-AI-105).
+    #[serde(rename = "local_openai")]
+    LocalOpenai,
 }
 
 impl ProviderKind {
@@ -191,6 +233,8 @@ impl ProviderKind {
             Self::Openai => "openai",
             Self::Vertex => "vertex",
             Self::Bge => "bge",
+            Self::Ollama => "ollama",
+            Self::LocalOpenai => "local_openai",
         }
     }
 }

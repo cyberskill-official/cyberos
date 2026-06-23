@@ -1,0 +1,6 @@
+id: B17-config-placeholder
+description: Target AUDIT.md whose CONFIG still contains unedited placeholder text plus an out-of-set DEPTH value. The Phase 0 preflight must stop this run instead of letting the agent improvise CONFIG (review gap G-D, FAILURE_LOG 2026-06-10 config-improvisation row).
+expect: fail
+expected_violations: [CONFIG-BAD-ENUM, CONFIG-PLACEHOLDER]
+exercises_rules: [P0-CONFIG]
+protected_areas: []

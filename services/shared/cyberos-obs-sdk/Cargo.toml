@@ -1,0 +1,40 @@
+[package]
+name = "cyberos-obs-sdk"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "CyberOS shared RED metrics SDK (rate/errors/duration) - FR-OBS-003"
+
+[lib]
+name = "cyberos_obs_sdk"
+path = "src/lib.rs"
+
+[dependencies]
+# The workspace pins opentelemetry with default-features = false. Re-enable the metrics API here; `trace`
+# is also required because opentelemetry 0.27's always-compiled `propagation` module pulls in thiserror
+# through the `trace` feature, so a metrics-only build fails to compile.
+opentelemetry = { workspace = true, features = ["metrics", "trace"] }
+# The OTLP meter-provider/exporter that init() installs so RED metrics leave the process (FR-OBS-003 §1
+# #10). `metrics` is added on top of the workspace `rt-tokio` for the SDK side.
+opentelemetry_sdk = { workspace = true, features = ["rt-tokio", "metrics"] }
+opentelemetry-otlp.workspace = true
+# axum powers the RED middleware layer (the per-service instrumentation point, ADR-OBS-003-001). RED is
+# for HTTP services, which already use axum, so it is a hard dependency rather than an optional feature.
+axum.workspace = true
+# thiserror for the traceparent extract error; sha2 for the malformed-value forensic hash (FR-OBS-005 §1
+# #11: a bad traceparent is logged as a hash, never raw, since the value may be attacker-controlled).
+thiserror.workspace = true
+sha2.workspace = true
+# The log-enrichment layer (FR-OBS-005 §1 #2): the canonical request span carrying trace_id/span_id/
+# tenant_id, plus a JSON subscriber that renders the span scope on every event so the fields appear on
+# every log line.
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[dev-dependencies]
+tokio.workspace = true
+# `util` brings ServiceExt::oneshot for driving the middleware in tests.
+tower = { workspace = true, features = ["util"] }

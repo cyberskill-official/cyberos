@@ -61,8 +61,15 @@ pub async fn verify_jwt(
             .await;
     }
 
+    // FR-OBS-003 - hand the tenant to the RED middleware (outer layer) via the response extensions, so
+    // the metric's tenant_id label is real rather than "unknown".
+    let tenant_id = claims.tenant_id.clone();
     request.extensions_mut().insert(claims);
-    Ok(next.run(request).await)
+    let mut response = next.run(request).await;
+    response
+        .extensions_mut()
+        .insert(cyberos_obs_sdk::TenantCtx(tenant_id));
+    Ok(response)
 }
 
 /// Optional middleware that REQUIRES a specific scope grant. Layer this AFTER

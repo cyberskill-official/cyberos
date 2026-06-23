@@ -35,7 +35,7 @@ new_files:
   - skills/vietnam-mst-validate/src/gdt_client.rs
   - skills/vietnam-mst-validate/src/cache.rs
   - skills/vietnam-mst-validate/tests/checksum_test.rs
-  - skills/vietnam-mst-validate/tests/integration_test.rs
+  - skills/vietnam-mst-validate/services/skill-broker/tests/integration.rs
 modified_files:
   - cyberos/Cargo.toml                                  # workspace member
 allowed_tools:
@@ -407,7 +407,7 @@ fn invalid_length_rejected() {
 ```
 
 ```rust
-// skills/vietnam-mst-validate/tests/integration_test.rs
+// skills/vietnam-mst-validate/services/skill-broker/tests/integration.rs
 #[tokio::test]
 async fn happy_path_against_mock_gdt() {
     let mock = MockGdt::start_with("0312345678", "00", "CYBERSKILL JSC").await;

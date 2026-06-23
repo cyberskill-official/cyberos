@@ -12,12 +12,12 @@ use std::time::Instant;
 
 use arc_swap::ArcSwap;
 use chrono::{DateTime, Utc};
-use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
+use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::OnceCell;
 use rust_decimal::Decimal;
 use tokio::sync::mpsc;
 
-use super::schema::{CostRate, CostTableHandle, FileFailure, LoaderInitError, RawCostRate, RawCostTable};
+use super::schema::{CostRate, CostTableHandle, FileFailure, LoaderInitError, RawCostTable};
 use crate::policy::ProviderKind;
 
 /// In-memory cost table: (ProviderKind, model_name) → CostRate.
@@ -33,7 +33,7 @@ const DEBOUNCE_MS: u64 = 100;
 
 mod metrics {
     use once_cell::sync::Lazy;
-    use prometheus::{register_counter_vec, register_histogram, register_int_gauge, CounterVec, Histogram, IntGauge};
+    use prometheus::{register_counter_vec, register_int_gauge, CounterVec, Histogram, IntGauge};
 
     pub static LOOKUPS: Lazy<CounterVec> = Lazy::new(|| {
         register_counter_vec!(
@@ -54,11 +54,19 @@ mod metrics {
     });
 
     pub static ENTRY_COUNT: Lazy<IntGauge> = Lazy::new(|| {
-        register_int_gauge!("ai_cost_table_entries_total", "Current count of (provider, model) entries").unwrap()
+        register_int_gauge!(
+            "ai_cost_table_entries_total",
+            "Current count of (provider, model) entries"
+        )
+        .unwrap()
     });
 
     pub static LOADED_AT_TS: Lazy<IntGauge> = Lazy::new(|| {
-        register_int_gauge!("ai_cost_table_loaded_at_ts", "UNIX timestamp of last successful load").unwrap()
+        register_int_gauge!(
+            "ai_cost_table_loaded_at_ts",
+            "UNIX timestamp of last successful load"
+        )
+        .unwrap()
     });
 
     pub static LOOKUP_LATENCY: Lazy<Histogram> = Lazy::new(|| {
@@ -82,7 +90,9 @@ pub fn lookup(provider: &ProviderKind, model: &str) -> Option<CostRate> {
         .get()
         .and_then(|s| s.load().get(&(*provider, model.to_string())).copied());
     let outcome = if result.is_some() { "hit" } else { "miss" };
-    metrics::LOOKUPS.with_label_values(&[provider.as_metric_label(), outcome]).inc();
+    metrics::LOOKUPS
+        .with_label_values(&[provider.as_metric_label(), outcome])
+        .inc();
     metrics::LOOKUP_LATENCY.observe(started.elapsed().as_nanos() as f64);
     result
 }
@@ -106,12 +116,17 @@ pub async fn init_cost_table(config_path: &Path) -> Result<CostTableHandle, Load
     let table = load_and_validate(config_path).await?;
     let count = table.len();
 
+    // Idempotent init: create each cell once, then atomically swap in the freshly loaded
+    // table. Re-calling init_cost_table reloads (the same lock-free swap the hot-reload
+    // watcher uses) instead of failing with AlreadyInitialised. ArcSwap exists precisely so a
+    // reload never blocks readers; a single-shot OnceCell::set defeated that and made every
+    // call after the first (each integration test, any re-init) error.
     TABLE
-        .set(ArcSwap::from_pointee(table))
-        .map_err(|_| LoaderInitError::AlreadyInitialised)?;
+        .get_or_init(|| ArcSwap::from_pointee(HashMap::new()))
+        .store(Arc::new(table));
     LOADED_AT
-        .set(ArcSwap::from_pointee(Some(Utc::now())))
-        .map_err(|_| LoaderInitError::AlreadyInitialised)?;
+        .get_or_init(|| ArcSwap::from_pointee(None))
+        .store(Arc::new(Some(Utc::now())));
 
     metrics::ENTRY_COUNT.set(count as i64);
     metrics::LOADED_AT_TS.set(Utc::now().timestamp());
@@ -122,7 +137,9 @@ pub async fn init_cost_table(config_path: &Path) -> Result<CostTableHandle, Load
 
 // ─── Internal: load + validate ────────────────────────────────────────────────
 
-async fn load_and_validate(path: &Path) -> Result<HashMap<(ProviderKind, String), CostRate>, LoaderInitError> {
+async fn load_and_validate(
+    path: &Path,
+) -> Result<HashMap<(ProviderKind, String), CostRate>, LoaderInitError> {
     let yaml = std::fs::read_to_string(path).map_err(|source| LoaderInitError::IoError {
         path: path.to_path_buf(),
         source,
@@ -175,7 +192,10 @@ fn validate_and_flatten(
                 ));
             }
             if model.is_empty() || model.len() > 256 {
-                model_errors.push(format!("model name length must be 1..=256, got {}", model.len()));
+                model_errors.push(format!(
+                    "model name length must be 1..=256, got {}",
+                    model.len()
+                ));
             }
             // FR-AI-007 §1 #12: is_embedding ⇒ output_per_1k_usd == 0.0
             if rate.is_embedding && rate.output_per_1k_usd > Decimal::ZERO {
@@ -227,8 +247,10 @@ fn parse_provider(s: &str) -> Result<ProviderKind, String> {
         "openai" => Ok(ProviderKind::Openai),
         "vertex" => Ok(ProviderKind::Vertex),
         "bge" => Ok(ProviderKind::Bge),
+        "ollama" => Ok(ProviderKind::Ollama),
+        "local_openai" => Ok(ProviderKind::LocalOpenai),
         other => Err(format!(
-            "unknown provider '{}'; supported: bedrock|anthropic|openai|vertex|bge",
+            "unknown provider '{}'; supported: bedrock|anthropic|openai|vertex|bge|ollama|local_openai",
             other
         )),
     }
@@ -248,7 +270,10 @@ async fn spawn_watcher(path: &Path) -> Result<RecommendedWatcher, LoaderInitErro
     let watch_dir: PathBuf = match path.parent() {
         Some(p) if !p.as_os_str().is_empty() => p.to_path_buf(),
         _ => {
-            tracing::warn!(?path, "cost_rates.yaml has no parent dir; watching CWD instead");
+            tracing::warn!(
+                ?path,
+                "cost_rates.yaml has no parent dir; watching CWD instead"
+            );
             PathBuf::from(".")
         }
     };
@@ -257,24 +282,36 @@ async fn spawn_watcher(path: &Path) -> Result<RecommendedWatcher, LoaderInitErro
         .map_err(LoaderInitError::WatcherSetup)?;
 
     let path = path.to_path_buf();
-    tokio::spawn(async move {
-        let mut last_event_at: Option<Instant> = None;
-        loop {
-            tokio::select! {
-                Some(_event) = rx.recv() => {
-                    last_event_at = Some(Instant::now());
-                }
-                _ = tokio::time::sleep(std::time::Duration::from_millis(DEBOUNCE_MS)) => {
-                    if let Some(t) = last_event_at {
-                        if t.elapsed() >= std::time::Duration::from_millis(DEBOUNCE_MS) {
-                            last_event_at = None;
-                            apply_reload(&path).await;
+    // The debounced reload loop needs a Tokio runtime. In the server, init runs inside the
+    // main runtime; sync callers (block_on-based tests) have none, where `tokio::spawn` would
+    // panic with "there is no reactor running". Spawn only when a runtime is present - the table
+    // is already loaded by this point, so the only thing skipped without a runtime is live
+    // hot-reload, which those contexts do not need.
+    match tokio::runtime::Handle::try_current() {
+        Ok(rt) => {
+            rt.spawn(async move {
+                let mut last_event_at: Option<Instant> = None;
+                loop {
+                    tokio::select! {
+                        Some(_event) = rx.recv() => {
+                            last_event_at = Some(Instant::now());
+                        }
+                        _ = tokio::time::sleep(std::time::Duration::from_millis(DEBOUNCE_MS)) => {
+                            if let Some(t) = last_event_at {
+                                if t.elapsed() >= std::time::Duration::from_millis(DEBOUNCE_MS) {
+                                    last_event_at = None;
+                                    apply_reload(&path).await;
+                                }
+                            }
                         }
                     }
                 }
-            }
+            });
         }
-    });
+        Err(_) => {
+            tracing::warn!("init_cost_table called outside a Tokio runtime; hot-reload disabled");
+        }
+    }
 
     Ok(watcher)
 }

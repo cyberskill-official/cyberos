@@ -1,0 +1,46 @@
+name: pages
+
+# Deploys the community page — and ONLY it. The site/ folder is the artifact;
+# fixtures, protocol internals and eval machinery never reach the web server.
+# (Replaces the legacy branch build, which ran Jekyll over the whole repo and
+# choked on the deliberately-invalid-UTF-8 eval fixture.)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+# CyberSkill standard: Node >= 24
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b  # v5
+
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa  # v3
+        with:
+          path: site
+
+      - id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e  # v4

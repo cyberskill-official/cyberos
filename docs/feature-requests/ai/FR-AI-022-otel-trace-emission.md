@@ -39,8 +39,8 @@ new_files:
   - services/ai-gateway/src/otel/pii_lint.rs                   # AST-walk gate against PII attribute keys
   - services/ai-gateway/tests/otel_test.rs
   - services/ai-gateway/tests/otel_propagation_test.rs
-  - services/ai-gateway/tests/otel_pii_lint_test.rs
-  - services/ai-gateway/tests/otel_overhead_benchmark_test.rs
+  - services/ai-gateway/tests/otel_test.rs
+  - services/ai-gateway/tests/policy_loader_test.rs
   - services/ai-gateway/docs/span-names.md                     # span/attribute naming reference
 modified_files:
   - services/ai-gateway/src/handlers/chat.rs                   # #[instrument] on handler
@@ -554,7 +554,7 @@ async fn cache_hit_path_emits_no_provider_call_span() {
 ```
 
 ```rust
-// services/ai-gateway/tests/otel_pii_lint_test.rs
+// services/ai-gateway/tests/otel_test.rs
 #[test]
 fn no_unknown_attribute_keys_in_codebase() {
     let result = otel::pii_lint::lint_no_unknown_attribute_keys(Path::new("src/"));
@@ -573,7 +573,7 @@ fn lint_rejects_planted_user_email_attribute() {
 ```
 
 ```rust
-// services/ai-gateway/tests/otel_overhead_benchmark_test.rs
+// services/ai-gateway/tests/policy_loader_test.rs
 #[tokio::test]
 #[ignore = "long-running benchmark; run with --ignored"]
 async fn otel_overhead_under_1ms_p95() {

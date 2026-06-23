@@ -43,9 +43,8 @@ static REGIONS_BY_RESIDENCY: LazyLock<HashMap<Residency, HashSet<&'static str>>>
     });
 
 /// §1 #5: AZ-suffix strip regex. Captures the region portion before any trailing AZ letter.
-static AZ_STRIP_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"^(?P<region>[a-z]{2}-[a-z]+-\d+)[a-z]?$").unwrap()
-});
+static AZ_STRIP_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^(?P<region>[a-z]{2}-[a-z]+-\d+)[a-z]?$").unwrap());
 
 // ─── Metrics (FR-AI-016 §1 #13) ──────────────────────────────────────────────
 
@@ -91,9 +90,7 @@ impl Region {
         let caps = AZ_STRIP_RE
             .captures(raw)
             .ok_or_else(|| RegionParseError::Invalid(raw.into()))?;
-        Ok(Region(
-            caps.name("region").unwrap().as_str().to_string(),
-        ))
+        Ok(Region(caps.name("region").unwrap().as_str().to_string()))
     }
 
     pub fn as_str(&self) -> &str {
@@ -140,10 +137,7 @@ pub fn parse_residency(s: &str) -> Result<Residency, ResidencyParseError> {
 /// Record a residency mismatch metric.
 pub fn record_mismatch(policy_residency: Residency, resolved_region: &Region) {
     RESIDENCY_MISMATCHES
-        .with_label_values(&[
-            residency_label(policy_residency),
-            resolved_region.as_str(),
-        ])
+        .with_label_values(&[residency_label(policy_residency), resolved_region.as_str()])
         .inc();
 }
 

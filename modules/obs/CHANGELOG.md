@@ -1,5 +1,110 @@
 # Changelog — OBS
 
+## 2026-06-20 - FR-OBS-005 correlation completed in-repo (exemplars, metrics, log enrichment)
+
+Built on the ai-gateway TraceContext boundary below. obs-sdk now carries the rest of FR-OBS-005's
+correlation surface:
+
+- Histogram exemplars (§1 #3): `exemplar::record_with_exemplar` records a `cyberos_duration_ms` sample so
+  it links to its trace (the trace_id rides via the OTel context at the request boundary);
+  `record_request` routes the duration through it.
+- Correlation metrics (§1 #12): `obs_tracecontext_extracted_total{outcome}` (counted at the gateway
+  boundary by extracted / missing_generated_new / malformed) and `obs_exemplar_emission_total`.
+- Log enrichment (§1 #2): `logging::request_span` carries trace_id / span_id / tenant_id, and
+  `init_json_subscriber` renders the span scope on every event, so every log line emitted while handling a
+  request carries the trace_id - the `loki: {trace_id="..."}` query the whole design hinges on. The
+  gateway instruments each request with the span and ships JSON logs. Verified with an in-memory capture.
+
+With this, the obs module is feature-complete in-repo across FR-OBS-001..009. The only remaining
+FR-OBS-005 clause is the end-to-end correlation CI test (§1 #7), which asserts Loki + Tempo + Prometheus +
+LangSmith all hold the same trace_id for one synthetic call - owner-run, since it needs the live stack.
+
+## 2026-06-20 - ai-gateway HTTP surface unblocks the obs-AI integration (FR-OBS-003, 004, 005)
+
+### What landed
+
+The AI Gateway gained an HTTP serving surface (`services/ai-gateway/src/server` + `bin/cyberos_gateway`):
+an axum listener (`POST /v1/chat`, `/healthz`, `/metrics`) that binds the existing pipeline (policy loader,
+alias resolver, provider call) behind injectable `PolicySource` and `ChatBackend` seams, with an
+`EchoBackend` since the FR-AI-008 provider adapters are still stubs. This is the surface the obs-AI FRs
+needed.
+
+On it:
+
+- **FR-OBS-003** - the RED middleware (`tenant_ctx` + `red_mw` + `init`) now wraps the gateway, so RED
+  covers all three CyberOS-authored HTTP services (auth, memory, ai-gateway). ADR-OBS-003-001 updated;
+  only `chat` (a pinned image) remains deferred.
+- **FR-OBS-005** - a `trace_ctx` middleware ensures every request carries a W3C trace context (extract the
+  inbound `traceparent` strictly, or generate one), stamps it as a request extension, and echoes it on the
+  response for downstream correlation. Builds on the obs-sdk `tracecontext` primitive.
+- **FR-OBS-004** - the LangSmith export: a `langsmith` module (redaction newtypes, payload + 100KB
+  truncation, opt-in gate, fire-and-forget dispatch, retry + `Idempotency-Key`, error/outcome taxonomy),
+  a `langsmith_export` opt-in field on `AiPolicy` (default false), and the gateway handler dispatching the
+  redacted, trace-correlated export when a tenant opts in.
+
+### Gates
+
+ai-gateway: 7 server tests + 5 langsmith tests pass; all test binaries compile. The full ai gate needs the
+dev Redis/Postgres stack (cache-isolation test) and is owner-run while docker is down this session. The
+LangSmith live POST and the opt-in redaction (Presidio) path are owner-run; the default opt-out path is
+tested.
+
+---
+
+## 2026-06-20 - compliance-view HTTP service + CUO triage endpoint (FR-OBS-008, FR-OBS-007)
+
+### What landed
+
+**`services/obs-compliance-view/` - FR-OBS-008 read-only compliance views, I/O shell built.** The four
+views (eu-ai-act, pdpl, soc2, iso27001) are now served over HTTP on top of the pure core shipped earlier.
+`query.rs` reads `l1_audit_log` by tenant, audit kind, and time window (RLS GUC set per transaction);
+`summary.rs` is the per-kind count block (unit-tested); `main.rs` is the axum server wiring auth
+(external_auditor role) to tenant-scope enforcement, window validation, the kind-filtered query, the
+defence-in-depth PII scan, the Ed25519 chain-proof, and an `obs.compliance_view_accessed` access line.
+Endpoints: `GET /:view?since=&until=` plus `/healthz`.
+
+**`services/memory/migrations/0004_l1_event_type.sql` - the unblock for the query.** A generated
+`event_type` column on `l1_audit_log`, backed by an immutable extractor that returns NULL for the
+non-JSON markdown bodies memory-file `put` rows carry, plus a `(tenant_id, event_type, ts_ns)` index. The
+compliance query filters by audit kind without an unsafe runtime `body::jsonb` cast. Live apply is owner-run.
+
+**`modules/cuo/cuo/triage_server.py` - FR-OBS-007 §1 #2, the CUO triage endpoint obs-router calls.** CUO
+runs skills in-process, so this is the thin HTTP front door that maps `{skill, alert}` to an
+`obs.triage-alert` invocation and returns the verdict contract `cuo_triage.rs` parses. Safe degradation
+is deliberate (SKILL.md §5): when triage cannot reach its inputs it returns HTTP 200 with confidence 0.0,
+so obs-router pages rather than the endpoint failing. `services/obs-router/README.md` documents running it
+and pointing `OBS_CUO_TRIAGE_URL` at it.
+
+### Gates
+
+obs: caf CLEAN, awh 11/11 100% (0.0 regression). cuo: caf CLEAN (192 passed), awh 2/2 100%. 45 new tests.
+
+### Also in this wave
+
+**Memory-chain audit writes (FR-OBS-007 §1 #6, FR-OBS-008 §1 #10).** New shared crate
+`services/shared/cyberos-audit-chain` (chain anchor byte-identical to memory's canonical and auth's
+`memory_bridge`; best-effort genesis-row insert). obs-router now writes `obs.alert_triaged` /
+`obs.alert_acked` to `l1_audit_log` off the request path when `DATABASE_URL` is set (else the log sink),
+and obs-compliance-view appends `obs.compliance_view_accessed` best-effort. The earlier log-line
+placeholders are gone.
+
+**W3C TraceContext core (FR-OBS-005 §1 #1, #4, #11).** FR-AI-022 (gateway OTel trace emission) is already
+shipped, so FR-OBS-004/005 are unblocked. `cyberos-obs-sdk/src/tracecontext.rs` ships the pure
+correlation primitive: strict version-00 `traceparent` parse/validate, format/inject/extract over axum
+headers, and a forensic `hash16` so a malformed value is logged as a hash, never raw. The
+`with_trace_context` wrapper, the log-enrichment layer, the exemplar, the end-to-end CI test, and
+FR-OBS-004's LangSmith per-call export are deferred: they need the ai-gateway request-serving surface
+that does not exist in-repo (the same blocker as the RED ai-gateway deferral, ADR-OBS-003-001).
+
+### Remaining for `shipped`
+
+Live validation needs the real targets: a CUO host with an LLM invoker, the dev Postgres applying 0004,
+and the CHAT webhook plus PagerDuty routing key for obs-router. The migration was validated against the
+real PostgreSQL grammar (pglast/libpg_query) and the triage endpoint end-to-end over HTTP this session;
+applying 0004 to a live Postgres and the chain-reconcile check on obs-written rows remain owner-run.
+
+---
+
 ## 2026-05-19 — P0 implementation wave — OBS collector slice-1 scaffold shipped (FR-OBS-001)
 
 See [AI changelog](../ai/changelog.html) for AI Gateway and [MCP changelog](../mcp/changelog.html) for MCP Gateway portions of this wave.

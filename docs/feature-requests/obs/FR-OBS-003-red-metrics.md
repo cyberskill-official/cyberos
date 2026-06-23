@@ -12,6 +12,7 @@ owner: Stephen Cheng (CTO)
 created: 2026-05-15
 shipped: null
 memory_chain_hash: null
+progress: "Substantially implemented (2026-06-20, commits bca06c8..fba003f). DONE: the cyberos-obs-sdk crate (record_request rate/errors/duration, status_class bands, 13 std buckets, cardinality guard); the axum RED middleware (one .layer per service, ADR-OBS-003-001 - chosen over the per-handler proc-macro), wired into the two services that serve HTTP today, auth (TenantCtx from verify_jwt claims) and memory (TenantCtx from the x-tenant-id header); and the OTLP meter-provider/exporter in init() (installs a gRPC meter provider as the global meter when OBS_OTLP_ENDPOINT is set, so the RED metrics export to the FR-OBS-001 collector; unset = quiet no-op). All build + clippy-clean + tests green; obs gate (awh+caf) green. REMAINING before done: (1) live end-to-end validation against deploy/obs (services need OBS_OTLP_ENDPOINT set to the collector's OTLP receiver - a core-deploy env wiring + validation step); (2) ai-gateway - no HTTP listener exists yet, add the one-line layer + init + TenantCtx when it does; (3) chat - pinned image, no src here. The #[red_instrument] proc-macro + AST completeness lint (§1 #5/#11) are superseded by the middleware per ADR-OBS-003-001 (route coverage is structural)."
 related_frs: [FR-OBS-001, FR-OBS-002, FR-OBS-007, FR-AI-022]
 depends_on: [FR-OBS-001]
 blocks: [FR-OBS-007, FR-OBS-005]

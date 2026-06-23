@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CyberOS Console</title>
+<!--
+  FR-APP-001 - CyberOS operator web console (first slice).
+
+  A self-contained page styled with the CyberSkill Design System palette. It consumes the EXISTING
+  ai-gateway HTTP surface - it adds no backend. The first panel is chat: it POSTs to the gateway's
+  /v1/chat, which routes to whatever provider the tenant policy resolves (locally, your LM Studio or
+  Ollama model). A health dot polls /healthz.
+
+  Run: open this file in a browser, or serve it (any static server). The gateway must allow browser
+  calls - start it with AI_GATEWAY_DEV_CORS=1 for local use. In production, Caddy serves this page and
+  proxies the gateway under one origin, so CORS is not needed there.
+
+  Branding note: per the CyberSkill brand doctrine the official logo-mark.svg must be used as-is and never
+  recreated, so this slice uses the wordmark in CDS colours rather than drawing a mark. Drop the real
+  design-system/packages/brand-assets/assets/logo-mark.svg into the header when wiring the full design system.
+-->
+<style>
+  :root {
+    /* CyberSkill Design System core palette */
+    --cds-umber: #45210E;     /* ground */
+    --cds-ochre: #F4BA17;     /* figure / accent */
+    --cds-umber-700: #5a2e16;
+    --cds-umber-900: #2c1409;
+    --cds-ink: #f6ecdd;
+    --cds-muted: #c9b79f;
+    --cds-ok: #6fbf73;
+    --cds-bad: #e1654f;
+    --cds-radius: 10px;
+    --cds-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: var(--cds-font);
+    background: var(--cds-umber-900);
+    color: var(--cds-ink);
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    background: var(--cds-umber);
+    border-bottom: 2px solid var(--cds-ochre);
+    padding: 14px 20px;
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+  header .wordmark { font-weight: 800; font-size: 20px; letter-spacing: 0.5px; }
+  header .wordmark .cyber { color: var(--cds-ink); }
+  header .wordmark .os { color: var(--cds-ochre); }
+  header .slogan { color: var(--cds-muted); font-size: 13px; font-style: italic; }
+  header .spacer { flex: 1; }
+  header .health { font-size: 12px; color: var(--cds-muted); display: flex; align-items: center; gap: 6px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--cds-muted); display: inline-block; }
+  .dot.ok { background: var(--cds-ok); }
+  .dot.bad { background: var(--cds-bad); }
+
+  .config {
+    background: var(--cds-umber-700);
+    padding: 10px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    border-bottom: 1px solid var(--cds-umber);
+  }
+  .config label { font-size: 12px; color: var(--cds-muted); display: flex; flex-direction: column; gap: 3px; }
+  .config input {
+    background: var(--cds-umber-900);
+    border: 1px solid var(--cds-umber);
+    color: var(--cds-ink);
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 13px;
+    min-width: 220px;
+  }
+  .config input.small { min-width: 130px; }
+
+  main { flex: 1; overflow: auto; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
+  .msg { max-width: 760px; padding: 10px 14px; border-radius: var(--cds-radius); white-space: pre-wrap; line-height: 1.45; }
+  .msg.user { align-self: flex-end; background: var(--cds-ochre); color: var(--cds-umber-900); font-weight: 500; }
+  .msg.assistant { align-self: flex-start; background: var(--cds-umber); border: 1px solid var(--cds-umber-700); }
+  .msg.system { align-self: center; background: transparent; color: var(--cds-muted); font-size: 12px; font-style: italic; }
+  .msg .who { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; opacity: 0.7; margin-bottom: 3px; }
+  .msg .meta { font-size: 11px; color: var(--cds-muted); margin-top: 6px; }
+
+  footer { background: var(--cds-umber); border-top: 1px solid var(--cds-ochre); padding: 12px 20px; }
+  footer form { display: flex; gap: 10px; }
+  footer textarea {
+    flex: 1; resize: none; height: 46px;
+    background: var(--cds-umber-900); color: var(--cds-ink);
+    border: 1px solid var(--cds-umber-700); border-radius: 8px; padding: 12px;
+    font-family: var(--cds-font); font-size: 14px;
+  }
+  footer button {
+    background: var(--cds-ochre); color: var(--cds-umber-900);
+    border: none; border-radius: 8px; padding: 0 22px; font-weight: 700; font-size: 14px; cursor: pointer;
+  }
+  footer button:disabled { opacity: 0.5; cursor: default; }
+</style>
+</head>
+<body>
+  <header>
+    <span class="wordmark"><span class="cyber">Cyber</span><span class="os">OS</span></span>
+    <span class="slogan">Turn Your Will Into Real</span>
+    <span class="spacer"></span>
+    <span class="health"><span id="health-dot" class="dot"></span><span id="health-text">checking gateway...</span></span>
+  </header>
+
+  <div class="config">
+    <label>Gateway URL
+      <input id="cfg-gateway" value="http://127.0.0.1:8080" spellcheck="false" />
+    </label>
+    <label>Tenant
+      <input id="cfg-tenant" class="small" value="org:cyberskill" spellcheck="false" />
+    </label>
+    <label>Alias
+      <input id="cfg-alias" class="small" value="chat.smart" spellcheck="false" />
+    </label>
+  </div>
+
+  <main id="log">
+    <div class="msg system">Chatting through the CyberOS gateway. The gateway routes to whatever provider your tenant policy resolves - locally, your LM Studio or Ollama model. Say hello.</div>
+  </main>
+
+  <footer>
+    <form id="chat-form">
+      <textarea id="input" placeholder="Type a message, then Enter to send (Shift+Enter for a newline)" autocomplete="off"></textarea>
+      <button id="send" type="submit">Send</button>
+    </form>
+  </footer>
+
+<script>
+(function () {
+  "use strict";
+  var log = document.getElementById("log");
+  var form = document.getElementById("chat-form");
+  var input = document.getElementById("input");
+  var sendBtn = document.getElementById("send");
+  var healthDot = document.getElementById("health-dot");
+  var healthText = document.getElementById("health-text");
+
+  // The running chat transcript sent to the gateway each turn.
+  var messages = [];
+
+  function gatewayUrl() { return document.getElementById("cfg-gateway").value.replace(/\/+$/, ""); }
+  function tenant() { return document.getElementById("cfg-tenant").value.trim(); }
+  function alias() { return document.getElementById("cfg-alias").value.trim(); }
+
+  function addMessage(role, content, meta) {
+    var el = document.createElement("div");
+    el.className = "msg " + role;
+    if (role !== "system") {
+      var who = document.createElement("div");
+      who.className = "who";
+      who.textContent = role;
+      el.appendChild(who);
+    }
+    var body = document.createElement("div");
+    body.textContent = content;
+    el.appendChild(body);
+    if (meta) {
+      var m = document.createElement("div");
+      m.className = "meta";
+      m.textContent = meta;
+      el.appendChild(m);
+    }
+    log.appendChild(el);
+    log.scrollTop = log.scrollHeight;
+    return el;
+  }
+
+  async function checkHealth() {
+    try {
+      var res = await fetch(gatewayUrl() + "/healthz", { method: "GET" });
+      if (res.ok) {
+        healthDot.className = "dot ok";
+        healthText.textContent = "gateway reachable";
+        return;
+      }
+      throw new Error("status " + res.status);
+    } catch (e) {
+      healthDot.className = "dot bad";
+      healthText.textContent = "gateway unreachable";
+    }
+  }
+
+  async function send(text) {
+    messages.push({ role: "user", content: text });
+    addMessage("user", text);
+    sendBtn.disabled = true;
+    var pending = addMessage("assistant", "...", null);
+    try {
+      var res = await fetch(gatewayUrl() + "/v1/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-tenant-id": tenant() },
+        body: JSON.stringify({ alias: alias(), messages: messages }),
+      });
+      var text2 = await res.text();
+      var data;
+      try { data = JSON.parse(text2); } catch (e) { data = null; }
+      if (!res.ok) {
+        var err = data && data.error ? data.error : text2 || ("HTTP " + res.status);
+        pending.querySelector("div:last-child").textContent = "[" + res.status + "] " + err;
+        pending.className = "msg system";
+        return;
+      }
+      var content = data && data.content ? data.content : "(empty)";
+      messages.push({ role: "assistant", content: content });
+      pending.querySelector(".who").textContent = "assistant";
+      pending.querySelector("div:last-child").textContent = content;
+      var meta = [];
+      if (data.model) meta.push(data.model);
+      if (typeof data.prompt_tokens === "number") meta.push(data.prompt_tokens + " in / " + data.completion_tokens + " out tokens");
+      if (data.finish_reason) meta.push(String(data.finish_reason).toLowerCase());
+      if (meta.length) {
+        var m = document.createElement("div");
+        m.className = "meta";
+        m.textContent = meta.join(" - ");
+        pending.appendChild(m);
+      }
+    } catch (e) {
+      pending.className = "msg system";
+      pending.querySelector("div:last-child").textContent = "request failed: " + e.message +
+        " (is the gateway running, and started with AI_GATEWAY_DEV_CORS=1?)";
+    } finally {
+      sendBtn.disabled = false;
+      input.focus();
+    }
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var text = input.value.trim();
+    if (!text) return;
+    input.value = "";
+    send(text);
+  });
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      form.requestSubmit();
+    }
+  });
+
+  checkHealth();
+  setInterval(checkHealth, 5000);
+  input.focus();
+})();
+</script>
+</body>
+</html>

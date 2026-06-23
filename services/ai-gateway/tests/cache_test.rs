@@ -4,11 +4,9 @@
 //! Run with: docker run -d --name test-redis -p 6379:6379 redis:7
 
 use cyberos_ai_gateway::cache::{
-    self, CacheKey, CacheInsertOutcome, CacheLookupOutcome, SkipReason, CACHE_SCHEMA_VERSION,
+    self, CacheInsertOutcome, CacheKey, CacheLookupOutcome, SkipReason, CACHE_SCHEMA_VERSION,
 };
-use cyberos_ai_gateway::router::types::{
-    Choice, FinishReason, ProviderResponse, ProviderUsage,
-};
+use cyberos_ai_gateway::router::types::{Choice, FinishReason, ProviderResponse, ProviderUsage};
 
 fn k(tenant: &str, prompt: &str, persona: &str) -> CacheKey {
     CacheKey::derive(tenant, prompt, "chat.smart", persona)
@@ -35,8 +33,25 @@ fn test_provider_response() -> ProviderResponse {
     }
 }
 
+/// True when a Redis is reachable at the test URL; probed once and cached. The Redis-backed tests
+/// below skip when it is false so the no-Redis `lint + test` job stays green, while the integration
+/// job and the awh gate - which both provide Redis - run them for real. Mirrors how the cost tests
+/// skip when `DATABASE_URL` is unset: an absent backend is "cannot run here", not a failure.
+fn redis_available() -> bool {
+    use std::sync::OnceLock;
+    static AVAILABLE: OnceLock<bool> = OnceLock::new();
+    *AVAILABLE.get_or_init(|| {
+        redis::Client::open("redis://127.0.0.1:6379")
+            .and_then(|c| c.get_connection())
+            .is_ok()
+    })
+}
+
 #[tokio::test]
 async fn cache_hit_returns_response() {
+    if !redis_available() {
+        return;
+    }
     cache::redis_backend::init("redis://127.0.0.1:6379");
     let key = k("tenant_a", "What's the weather?", "cuo-cpo@0.4.1");
     let resp = test_provider_response();
@@ -53,6 +68,9 @@ async fn cache_hit_returns_response() {
 
 #[tokio::test]
 async fn cache_miss_returns_miss() {
+    if !redis_available() {
+        return;
+    }
     cache::redis_backend::init("redis://127.0.0.1:6379");
     let key = CacheKey::derive("nonexistent", "no-such-prompt", "chat.smart", "p@1.0");
 
@@ -64,6 +82,9 @@ async fn cache_miss_returns_miss() {
 
 #[tokio::test]
 async fn cross_tenant_miss() {
+    if !redis_available() {
+        return;
+    }
     cache::redis_backend::init("redis://127.0.0.1:6379");
     let k_a = k("tenant_x", "same prompt", "cuo-cpo@0.4.1");
     let k_b = k("tenant_y", "same prompt", "cuo-cpo@0.4.1");
@@ -77,6 +98,9 @@ async fn cross_tenant_miss() {
 
 #[tokio::test]
 async fn persona_version_change_invalidates() {
+    if !redis_available() {
+        return;
+    }
     cache::redis_backend::init("redis://127.0.0.1:6379");
     let k1 = k("tenant_a", "prompt", "cuo-cpo@0.4.1");
     let k2 = k("tenant_a", "prompt", "cuo-cpo@0.4.2");
@@ -92,12 +116,25 @@ async fn persona_version_change_invalidates() {
 async fn chat_long_skipped() {
     cache::redis_backend::init("redis://127.0.0.1:6379");
     let key = k("tenant_a", "long story prompt", "cuo-cpo@0.4.1");
-    let outcome = cache::insert(&key, &test_provider_response(), "chat.long-resolved-bedrock").await;
+    let outcome = cache::insert(
+        &key,
+        &test_provider_response(),
+        "chat.long-resolved-bedrock",
+    )
+    .await;
     assert!(matches!(
         outcome,
         CacheInsertOutcome::Skipped(SkipReason::ChatLongOrUnknownAlias)
     ));
-    assert!(matches!(cache::lookup(&key).await, CacheLookupOutcome::Miss));
+    // The Skipped assertion above needs no Redis; the Miss lookup below does. Gate just the
+    // lookup so the no-Redis lint job still exercises the chat.long skip decision.
+    if !redis_available() {
+        return;
+    }
+    assert!(matches!(
+        cache::lookup(&key).await,
+        CacheLookupOutcome::Miss
+    ));
 }
 
 #[tokio::test]
@@ -142,6 +179,9 @@ async fn failed_response_not_cached() {
 
 #[tokio::test]
 async fn schema_mismatch_treated_as_miss() {
+    if !redis_available() {
+        return;
+    }
     cache::redis_backend::init("redis://127.0.0.1:6379");
     // This test inserts a payload with a different schema version directly.
     // We'll use a key that has a "v0" schema_version in the payload.
@@ -159,14 +199,12 @@ async fn schema_mismatch_treated_as_miss() {
 
     // Insert raw via Redis.
     use redis::AsyncCommands;
-    use tokio::time::timeout;
+
     let client = redis::Client::open("redis://127.0.0.1:6379").unwrap();
     let mut conn = client.get_async_connection().await.unwrap();
-    let _: Result<(), _> = conn.set_ex(
-        key.redis_key(),
-        bad.to_string().as_bytes().to_vec(),
-        3600,
-    ).await;
+    let _: Result<(), _> = conn
+        .set_ex(key.redis_key(), bad.to_string().as_bytes().to_vec(), 3600)
+        .await;
 
     match cache::lookup(&key).await {
         CacheLookupOutcome::SchemaMismatch => {}
@@ -176,6 +214,9 @@ async fn schema_mismatch_treated_as_miss() {
 
 #[tokio::test]
 async fn redis_keys_are_tenant_isolated() {
+    if !redis_available() {
+        return;
+    }
     cache::redis_backend::init("redis://127.0.0.1:6379");
     let tenant_a = "isolation_test_a";
     let tenant_b = "isolation_test_b";
@@ -207,9 +248,13 @@ async fn redis_keys_are_tenant_isolated() {
             .unwrap();
         all_keys.extend(keys);
         cursor = next;
-        if cursor == 0 { break; }
+        if cursor == 0 {
+            break;
+        }
     }
 
-    assert!(all_keys.iter().all(|k| k.starts_with(&format!("ai_cache:v1:{tenant_a}:"))));
+    assert!(all_keys
+        .iter()
+        .all(|k| k.starts_with(&format!("ai_cache:v1:{tenant_a}:"))));
     assert_eq!(all_keys.len(), 5);
 }

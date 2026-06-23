@@ -1,0 +1,10 @@
+# Runner mode: NO AUDIT.md copy in this target — the profile carries CONFIG.
+config:
+  TECH_STACK: Python 3.12 / FastAPI
+  PROJECT_PURPOSE: Invoice processing API
+  MODE: autonomous
+  DEPTH: standard
+  SEVERITY_FLOOR: High
+  PROTECTED_AREAS: src/billing/
+  RUN_COMMANDS: pytest -q
+  BENCHMARK_MODE: none

@@ -1,6 +1,6 @@
 ---
 workflow_id: chief-technology-officer/ship-feature-requests
-workflow_version: 2.0.0
+workflow_version: 2.2.0
 purpose: Drive each eligible FR in `docs/feature-requests/BACKLOG.md` end-to-end through the full lifecycle — from `ready_to_implement` through `implementing → ready_to_review → reviewing → ready_to_test → testing → done` (per `docs/feature-requests/STATUS-REFERENCE.md` §1.1). Deep-maps the repo, generates the edge-case matrix, implements with 90 % coverage on touched files, injects observability, self-approves architectural deviations via ADRs, runs the multi-vector debugger with a 5-fail circuit breaker, runs the testing gate (`coverage-gate-author`/`-audit`), and physically updates BACKLOG.md status between every phase transition. Failure or blocker at any downstream phase routes the FR back to `ready_to_implement` (STATUS-REFERENCE §1.3) with `routed_back_count += 1`.
 persona: chief-technology-officer
 cadence: per-FR (loops continuously over BACKLOG.md)
@@ -21,6 +21,8 @@ outputs:
   - { name: debug_trace,               format: debug-trace@1 (one per failed FR attempt),          recipient: memory audit chain }
   - { name: fr_audit_report,           format: feature-request-audit@2.0 (pre-flight, one per FR), recipient: memory audit chain + <FR>.audit.md §10 }
   - { name: coverage_gate_report,      format: coverage-gate-audit@1 (one per FR),                 recipient: memory audit chain + <FR>.audit.md §10.4 }
+  - { name: awh_gate_report,           format: awh-eval@1 (one per FR, out-of-band rerun),         recipient: memory audit chain (memory.awh_gate_result) + <FR>.audit.md §10.5 }
+  - { name: caf_gate_report,           format: caf-gate@1 (one per FR, code-audit floor),          recipient: memory audit chain (memory.caf_gate_result) + <FR>.audit.md §10.6 }
 
 skill_chain:
   # ── Phase: ready_to_implement → implementing (workflow start) ──
@@ -54,8 +56,10 @@ skill_chain:
   - { step: 25, skill: debugging-cycle-author,                     inputs_from: { fr: next_fr, coverage_report: coverage_gate_report },   outputs_to: debug_cycle_draft,                         condition: "coverage_gate_report.tests_failed > 0" }
   - { step: 26, skill: debugging-cycle-audit,                      inputs_from: debug_cycle_draft,                                        outputs_to: debug_trace,                               condition: "step 25 ran" }
   - { step: 27, skill: feature-request-audit,                      inputs_from: { fr: next_fr, coverage_report: coverage_gate_report },   outputs_to: fr_audit_report,                           description: "Post-implementation TRACE-004 closure — every §1 clause's cited test MUST be passed in coverage_gate_report. Pre-flight spec audit (`draft → ready_to_implement` transition) ran earlier, BEFORE this workflow; this is the closure check just before marking the FR done." }
-  - { step: 28, skill: backlog-state-update-author,                inputs_from: { fr: next_fr, transition: "testing → done", outcome: fr_audit_report }, outputs_to: backlog_mutation_phase_5 }
-  - { step: 29, skill: backlog-state-update-audit,                 inputs_from: backlog_mutation_phase_5,                                 outputs_to: updated_backlog }
+  - { step: 28, skill: awh-gate,                                   inputs_from: { fr: next_fr, module: next_fr.module, goldenset: "modules/<module>/.awh/goldenset.yaml", baseline: "modules/<module>/.awh/eval-baseline.json" }, outputs_to: awh_gate_report, description: "Out-of-band independent rerun (the check step 27 is NOT). `awh eval <goldenset> --base-dir . --seeds 1 --baseline <baseline> --max-regression 0.0` reruns the FR's §1 cited tests plus the module suite against the sealed, read-only baseline. GREEN (no task regressed) is REQUIRED to reach the done-flip; RED routes the FR back to ready_to_implement per STATUS-REFERENCE §1.3 with routed_back_count += 1. Tests sealed via `awh lock modules/<module>/tests`. Emits memory.awh_gate_result." }
+  - { step: 29, skill: caf-gate,                                 inputs_from: { fr: next_fr, module: next_fr.module, audit_profile: "modules/<module>/audit-profile.yaml", audit_baseline: "modules/<module>/.caf/" }, outputs_to: caf_gate_report, description: "Code-audit gate (absorbed from CyberSkill/code-audit-framework). Deterministic floor, no LLM: `bash scripts/caf_gate.sh <module>` runs the module's TARGET HEALTH via tools/caf/core/evals/verify-target.sh (the module's own RUN_COMMANDS - build/lint/typecheck/test - from modules/<module>/audit-profile.yaml, fail-closed) AND, when a sealed audit exists at modules/<module>/.caf/, `code-audit-validate --run modules/<module>/.caf --fail-on High` (no new High/Critical finding vs the sealed baseline). CLEAN is REQUIRED alongside the awh gate to reach the done-flip; RED routes the FR back to ready_to_implement per STATUS-REFERENCE §1.3 with routed_back_count += 1. Catches the class awh cannot: build/lint breaks, route 404s, changed data contracts (the CCAF/kymondongiap class). Emits memory.caf_gate_result. See docs/verification/caf-absorption-design.md." }
+  - { step: 30, skill: backlog-state-update-author,                inputs_from: { fr: next_fr, transition: "testing → done", outcome: { fr_audit_report: fr_audit_report, awh_gate_report: awh_gate_report, caf_gate_report: caf_gate_report } }, outputs_to: backlog_mutation_phase_5, condition: "awh_gate_report.outcome == GREEN AND caf_gate_report.outcome == CLEAN" }
+  - { step: 31, skill: backlog-state-update-audit,                 inputs_from: backlog_mutation_phase_5,                                 outputs_to: updated_backlog }
 
 escalates_to:
   - { persona: chief-information-security-officer,                 when: "step 6 edge-case-matrix flags a SECURITY-class entry above warning + no corresponding ADR exists yet" }
@@ -68,8 +72,8 @@ consults:
 
 audit_hooks:
   - each skill emits one artefact_write row to the memory audit chain per its frontmatter audit.row_kind
-  - between every phase transition (steps 13-14, 15-16, 19-20, 21-22, 28-29) backlog-state-update emits a `workflow_phase_complete` memory row
-  - on successful `testing → done` transition (step 28) backlog-state-update emits a `workflow_complete` memory row with the full artefact summary
+  - between every phase transition (steps 13-14, 15-16, 19-20, 21-22, 30-31) backlog-state-update emits a `workflow_phase_complete` memory row
+  - on successful `testing → done` transition (step 30) backlog-state-update emits a `workflow_complete` memory row with the full artefact summary
   - on circuit-breaker trip or any in-cycle failure → status reverts to `ready_to_implement` and the writer emits `fr_routed_back` with the rework reason
   - HITL pauses (typically at step 4 ADR-self-approval boundary, step 24 coverage < 90 %, step 26 5-fail circuit-breaker trip) halt the chain
 
@@ -77,7 +81,7 @@ circuit_breaker:
   consecutive_test_failures_per_fr: 5
   on_trip:
     - revert files to pre-execution state (`git restore` on touched paths)
-    - mark FR `ready_to_implement` in BACKLOG.md (with `routed_back_count += 1`) via step 28's rework branch
+    - mark FR `ready_to_implement` in BACKLOG.md (with `routed_back_count += 1`) via step 30's rework branch
     - emit a `fr_routed_back` memory audit row with the last debug_trace + reason `"circuit_breaker_5_consecutive_test_failures"`
     - proceed to the next eligible FR (do NOT halt the outer loop)
 ---
@@ -92,13 +96,13 @@ The canonical CTO workflow for **shipping** each `BACKLOG.md` FR end-to-end thro
 
 - **Eligible FR** = first row whose status is `ready_to_implement` AND whose declared `depends_on` rows are all in `done` status.
 - **Skipped statuses**: `draft` (not yet audited — handled by the `draft → ready_to_implement` chain, not this workflow), `implementing`, `ready_to_review`, `reviewing`, `ready_to_test`, `testing` (in-flight under another invocation — possibly the previous session of this workflow; pick those up by re-entering at the matching phase), `done` (terminal success — no work to do), `on_hold` / `closed` (operator-decided off-ramps).
-- Pick the first eligible FR. Run all 29 steps end-to-end. Between every phase transition the workflow physically updates the BACKLOG.md status cell via `backlog-state-update-author/-audit`. The mutation is atomic — same write that emits the `workflow_phase_complete` (or `workflow_complete` for the final transition) memory row.
+- Pick the first eligible FR. Run all 30 steps end-to-end. Between every phase transition the workflow physically updates the BACKLOG.md status cell via `backlog-state-update-author/-audit`. The mutation is atomic — same write that emits the `workflow_phase_complete` (or `workflow_complete` for the final transition) memory row.
 
 ### HITL — human-in-the-loop is OPTIONAL
 
 The workflow auto-flips status cells along the §1.1 lifecycle as each phase passes. **An operator can override any cell to any other cell at any time** (STATUS-REFERENCE.md §1.4) — there is no machine-enforced transition restriction. Common scenarios:
 
-- **Re-audit a shipped FR** (replaces the v1.2.0 `mode: re_audit`): operator flips `done → ready_to_review` directly via the BACKLOG editor; on next invocation, this workflow picks up at the `reviewing` phase and re-runs steps 15-29.
+- **Re-audit a shipped FR** (replaces the v1.2.0 `mode: re_audit`): operator flips `done → ready_to_review` directly via the BACKLOG editor; on next invocation, this workflow picks up at the `reviewing` phase and re-runs steps 15-30.
 - **Skip review** for a trivial FR: operator flips `ready_to_review → ready_to_test` directly; this workflow picks up at the `testing` phase.
 - **Park an in-flight FR**: operator flips `implementing → on_hold`; this workflow exits the loop on next iteration since `on_hold` is skipped.
 
@@ -106,7 +110,7 @@ Every HITL override emits one `memory.status_overridden` aux row (written by the
 
 ### Failure / blocker semantics — route back to `ready_to_implement`
 
-Any failure in `implementing` (steps 1-12), `reviewing` (steps 17-18), or `testing` (steps 23-27) routes the FR back to `ready_to_implement` with `routed_back_count += 1`. The reason is recorded in:
+Any failure in `implementing` (steps 1-12), `reviewing` (steps 17-18), or `testing` (steps 23-28) routes the FR back to `ready_to_implement` with `routed_back_count += 1`. The reason is recorded in:
 
 1. A `memory.fr_routed_back` aux audit row with the failure context (debug_trace, failing-test-name, or blocker reason).
 2. A comment cell on the BACKLOG row (`<!-- routed back: <reason> -->`).
@@ -156,7 +160,7 @@ On approval, status flips to `ready_to_test` (steps 19-20). On rejection — rev
 
 > v1.x note — v2.0.0 introduces `code-review-author` and `code-review-audit` as new skills covering the explicit `reviewing` phase. Before v2.0.0 the review work was implicit in the post-impl `feature-request-audit` call; v2.0.0 separates them so the reviewer phase has its own audit row + handoff point. If those skill files don't exist yet in `modules/skill/`, they need to be authored before this workflow can run end-to-end — see the BACKLOG for `FR-SKILL-code-review-author` and `-audit` placeholders.
 
-## 9. Testing phase: coverage gate + post-impl FR audit (steps 21-27)
+## 9. Testing phase: coverage gate + post-impl FR audit + awh + caf gates (steps 21-29)
 
 Status flips to `testing` (steps 21-22). `coverage-gate-author` runs the test suite, computes coverage on touched files, and fails the gate if per-file coverage on files touched in this FR is < 90 %. The audit emits the raw terminal output of the coverage tool as the artefact.
 
@@ -164,14 +168,16 @@ If any test fails, `debugging-cycle-author` runs the multi-vector pass (classify
 
 After coverage + debugging settle, `feature-request-audit` runs the post-impl pass at step 27 to enforce **TRACE-004** — every §1 clause's cited test MUST appear as `passed` in `coverage_gate_report`. A §1 clause may have an AC and a named test from the pre-flight pass, but if the actual test is failing or absent from the coverage report, the FR cannot ship `done`.
 
-## 10. Phase transition: `testing → done` (steps 28-29)
+## 10. Phase transition: `testing → done` (steps 30-31)
 
-The final phase transition. Outcomes derived by step 28:
+The final phase transition. Outcomes derived by steps 27-29 (post-impl audit + the awh out-of-band test-rerun gate + the caf code-audit gate). Both gates must pass: awh proves the tests still pass; caf proves the module's own build/lint/typecheck/test still run and the audit finds no new High/Critical issue. They are complementary - awh catches test regressions, caf catches the class awh cannot see (a build/lint break, a route that 404s, a changed data contract).
 
-| Step 27 result + circuit breaker status | New status | Mutation |
+| Step 27 audit + step 28 awh gate + step 29 caf gate + circuit breaker status | New status | Mutation |
 |---|---|---|
-| All TRACE-001..005 still passing + 0 failed tests | `done` | `workflow_complete` memory row, BACKLOG cell `testing → done` |
+| All TRACE-001..005 passing + 0 failed tests + awh gate GREEN (independent rerun, no task regressed vs the sealed baseline) + caf gate CLEAN (target health PASS + no new High/Critical audit finding) | `done` | `workflow_complete` memory row, BACKLOG cell `testing → done` |
 | TRACE-004 fails (test exists per spec but isn't passing) | `ready_to_implement` (rework) | `fr_routed_back` memory row with `reason: "trace-004: <test_name> not in coverage_gate_report"` |
+| awh gate RED (a task regressed vs the sealed baseline, or the FR's cited test is not passing on independent rerun) | `ready_to_implement` (rework) | `fr_routed_back` + `memory.awh_gate_result{outcome: RED}`, `reason: "awh-gate: <task> regressed"` |
+| caf gate RED (target health failed - a RUN_COMMAND broke - or the audit raised a new High/Critical finding) | `ready_to_implement` (rework) | `fr_routed_back` + `memory.caf_gate_result{outcome: RED}`, `reason: "caf-gate: <target-health-fail or finding>"` |
 | Circuit breaker tripped during steps 25-26 | `ready_to_implement` (rework) | `fr_routed_back` memory row with `reason: "circuit_breaker_5_consecutive_test_failures"` |
 
 The workflow commits the diff to the working tree (operator runs `git add . && git commit && git push` to publish).
@@ -191,20 +197,21 @@ The supervisor handles persistence (state survives across sessions because the t
 
 ## 12. No partial-ship-and-pause within an FR
 
-The workflow MUST drive **all phases of an FR to completion in one continuous session** (or route back to `ready_to_implement` cleanly). Pause only between FRs.
+The workflow MUST drive **all phases of an FR to completion in one continuous session** (or route back to `ready_to_implement` cleanly). It runs continuously under the halt-only doctrine in [`../../EXECUTION-DISCIPLINE.md`](../../EXECUTION-DISCIPLINE.md): the agent stops ONLY for an operator-decision fork, a manual/operator-only action (push, deploy, destructive op, secret), a hard blocker past the circuit-breaker budget, or the operator stop signal. Everything else — compile/lint/clippy, a test or module gate the agent's own change broke, the order of slices or FRs — the agent self-resolves and continues.
 
 **Rules:**
 
 1. Read the full gap list + slice plan BEFORE running any step.
 2. Don't ask between phases — continuation is implied by "drive this FR".
 3. Commit per phase for git-history hygiene; each phase = own conventional commit + verify gate.
-4. Only pause between FRs — that's a fresh priority decision.
+4. Do NOT pause between FRs either. The outer loop (§11) advances to the next eligible FR on its own; halt between FRs only on an `EXECUTION-DISCIPLINE.md` §2 condition, never just because one FR finished.
 5. If genuinely blocked mid-FR (e.g. needs ADR-class operator decision), DOCUMENT the block in §10.7 of the .audit.md, route back to `ready_to_implement` with `routed_back_count += 1` and `reason: "<blocker>"`. Do NOT silently ship a partial phase and walk away.
 
 See `feature-request-audit` skill §9.1 for the full clause + grandfathered exceptions.
 
 ## Cross-references
 
+- Execution discipline (continuous run, halt-only conditions): [`../../EXECUTION-DISCIPLINE.md`](../../EXECUTION-DISCIPLINE.md). Added 2026-06-20 (v2.2.0): the agent halts only for an operator-decision fork, a manual/operator-only action, a hard blocker past the budget, or the operator stop signal; it self-resolves everything else and runs continuously across phases and FRs.
 - FR lifecycle: `docs/feature-requests/STATUS-REFERENCE.md` (10-state enum, transitions, HITL semantics).
 - Original prompt source: operator's "Zero-Touch Principal Engineer (Unattended Execution)" — absorbed 2026-05-18.
 - BACKLOG state engine: `docs/feature-requests/BACKLOG.md`.
@@ -212,5 +219,7 @@ See `feature-request-audit` skill §9.1 for the full clause + grandfathered exce
 - No-partial-ship rule: `feature-request-audit` skill §9.1.
 - Pre-flight spec audit (separate chain): `feature-request-audit` skill — drives `draft → ready_to_implement`.
 - Test coverage audit: `coverage-gate-audit` skill — drives `testing → done`.
+- Out-of-band gate (step 28): `awh eval` against `modules/<module>/.awh/goldenset.yaml` seals `testing → done`. An FR cannot reach `done` unless awh independently re-runs its §1 cited tests + module suite GREEN against the sealed, read-only baseline. See the awh absorption design.
+- Code-audit gate (step 29): `bash scripts/caf_gate.sh <module>` (absorbed from CyberSkill/code-audit-framework, vendored at `tools/caf/`). Deterministic floor - target health (`tools/caf/core/evals/verify-target.sh` runs the module's own RUN_COMMANDS from `modules/<module>/audit-profile.yaml`) plus, when present, `code-audit-validate` against the sealed audit at `modules/<module>/.caf/`. CLEAN is required alongside the awh gate. See `docs/verification/caf-absorption-design.md`.
 
 *End of `chief-technology-officer/ship-feature-requests.md` workflow.*

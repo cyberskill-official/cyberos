@@ -42,6 +42,9 @@ async fn main() -> ExitCode {
         shutdown.clone(),
     );
 
+    // FR-OBS-003 - build the RED instruments off the global meter before serving.
+    cyberos_obs_sdk::init("auth", cyberos_auth::VERSION);
+
     let app = handlers::router(state);
 
     let addr: SocketAddr = std::env::var("AUTH_LISTEN_ADDR")

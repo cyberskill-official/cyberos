@@ -1,0 +1,6 @@
+id: B07-secret-leak
+description: Unredacted AWS key inside pasted command output (v1 fixture F005 scenario)
+expect: fail
+expected_violations: [R8-SECRET]
+exercises_rules: [R8]
+protected_areas: []

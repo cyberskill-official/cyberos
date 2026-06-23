@@ -1,0 +1,269 @@
+{
+  "audit_md_version": "v1.5.0",
+  "audit_md_sha256": "c7fb3dba325c4448cfa779fd393b1c4b03adbb7eb251f63bb77d3b839ddd10f9",
+  "recorded_at": "2026-06-13T17:09:18+00:00",
+  "fixtures": 40,
+  "passed": 40,
+  "all_ok": true,
+  "matrix": {
+    "B01-fabricated-metric": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "R1-NO-OUTPUT"
+      ]
+    },
+    "B02-gui-tool-verify": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "R1-GUI-TOOL"
+      ]
+    },
+    "B03-uncited-sota": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "R2-UNCITED"
+      ]
+    },
+    "B04-nonnumeric-target": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "R2-NONNUMERIC"
+      ]
+    },
+    "B05-bad-status": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "R5-BAD-STATUS"
+      ]
+    },
+    "B06-missing-stop-reason": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "P5-NO-STOP-REASON"
+      ]
+    },
+    "B07-secret-leak": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "R8-SECRET"
+      ]
+    },
+    "B08-blocked-no-rootcause": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "R6-NO-ROOTCAUSE"
+      ]
+    },
+    "B09-protected-area-touched": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "R3-PROTECTED"
+      ]
+    },
+    "B10-unmeasured-no-reason": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "R1-NO-REASON"
+      ]
+    },
+    "B11-unlinked-output": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "R1-UNLINKED-OUTPUT"
+      ]
+    },
+    "B12-gated-unapproved-exec": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "GATED-UNAPPROVED-EXEC"
+      ]
+    },
+    "B13-bad-metric-status": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "HANDOFF-BAD-MSTATUS"
+      ]
+    },
+    "B14-gated-missing-approval": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "GATED-UNAPPROVED-EXEC"
+      ]
+    },
+    "B15-template-nonconformant": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "TEMPLATE-NONCONFORMANT"
+      ]
+    },
+    "B16-compound-violations": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "R2-NONNUMERIC",
+        "R5-BAD-STATUS",
+        "R8-SECRET"
+      ]
+    },
+    "B17-config-placeholder": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "CONFIG-BAD-ENUM",
+        "CONFIG-PLACEHOLDER"
+      ]
+    },
+    "B18-config-autoprotect": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "R3-PROTECTED"
+      ]
+    },
+    "B19-fence-only-template": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "TEMPLATE-NONCONFORMANT"
+      ]
+    },
+    "B20-final-column-escape": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "R1-NO-OUTPUT",
+        "R2-UNCITED"
+      ]
+    },
+    "B21-malformed-encoding": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "MALFORMED-FILE"
+      ]
+    },
+    "B22-expired-waiver": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "R2-UNCITED",
+        "WAIVER-EXPIRED"
+      ]
+    },
+    "B23-redaction-distance": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "R8-SECRET"
+      ]
+    },
+    "B24-missing-protocol-echo": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "TEMPLATE-NONCONFORMANT"
+      ]
+    },
+    "B25-profile-secret-leak": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "R8-SECRET"
+      ]
+    },
+    "B26-runner-config-autoprotect": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "R3-PROTECTED"
+      ]
+    },
+    "B27-target-health-unverified": {
+      "expect": "fail",
+      "ok": true,
+      "codes": [
+        "TARGET-HEALTH-UNVERIFIED"
+      ]
+    },
+    "G01-clean-run": {
+      "expect": "pass",
+      "ok": true,
+      "codes": []
+    },
+    "G02-no-findings-valid": {
+      "expect": "pass",
+      "ok": true,
+      "codes": []
+    },
+    "G03-protected-prose-precision": {
+      "expect": "pass",
+      "ok": true,
+      "codes": []
+    },
+    "G04-redaction-prose-precision": {
+      "expect": "pass",
+      "ok": true,
+      "codes": []
+    },
+    "G05-adversarial-formatting": {
+      "expect": "pass",
+      "ok": true,
+      "codes": []
+    },
+    "G06-minimal-valid": {
+      "expect": "pass",
+      "ok": true,
+      "codes": []
+    },
+    "G07-fenced-tool-output": {
+      "expect": "pass",
+      "ok": true,
+      "codes": []
+    },
+    "G08-config-realworld": {
+      "expect": "pass",
+      "ok": true,
+      "codes": []
+    },
+    "G09-waived-violation": {
+      "expect": "pass",
+      "ok": true,
+      "codes": []
+    },
+    "G10-legacy-version-artifact": {
+      "expect": "pass",
+      "ok": true,
+      "codes": []
+    },
+    "G11-runner-config-valid": {
+      "expect": "pass",
+      "ok": true,
+      "codes": []
+    },
+    "G12-below-floor-reeval": {
+      "expect": "pass",
+      "ok": true,
+      "codes": []
+    },
+    "G13-target-health-pass": {
+      "expect": "pass",
+      "ok": true,
+      "codes": []
+    }
+  }
+}

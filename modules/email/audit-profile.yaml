@@ -1,0 +1,13 @@
+# CAF audit identity for the `email` module (Rust crate cyberos-email, services/). Absorbed from
+# CyberSkill/code-audit-framework. verify-target.sh runs RUN_COMMANDS from this dir to prove
+# TARGET HEALTH. Run on a build machine with the Rust toolchain.
+config:
+  TECH_STACK: Rust (cargo) / cyberos-email
+  PROJECT_PURPOSE: CyberOS email - outbound/inbound mail, audit rows
+  MODE: gated
+  DEPTH: standard
+  SEVERITY_FLOOR: High
+  PROTECTED_AREAS: modules/email/.awh/, modules/email/.caf/, services/email/tests/
+  RUN_COMMANDS: cd ../../services && cargo test -p cyberos-email
+  DOMAIN_NOTES: RUN_COMMANDS mirrors the awh suite (known green); add `cargo clippy -p cyberos-email -- -D warnings` once confirmed clippy-clean.
+  BENCHMARK_MODE: none

@@ -1,0 +1,13 @@
+# CAF audit identity for the `skill` module (Rust crate cyberos-skill-broker, services/). Absorbed
+# from CyberSkill/code-audit-framework. verify-target.sh runs RUN_COMMANDS from this dir to prove
+# TARGET HEALTH. Run on a build machine with the Rust toolchain.
+config:
+  TECH_STACK: Rust (cargo) / cyberos-skill-broker
+  PROJECT_PURPOSE: CyberOS skill broker - skill registry, trigger matching, runtime contracts
+  MODE: gated
+  DEPTH: standard
+  SEVERITY_FLOOR: High
+  PROTECTED_AREAS: modules/skill/.awh/, modules/skill/.caf/, services/skill-broker/tests/
+  RUN_COMMANDS: cd ../../services && cargo test -p cyberos-skill-broker
+  DOMAIN_NOTES: runtime_contracts is the held-out acceptance test. RUN_COMMANDS mirrors the awh suite (known green); add `cargo clippy -p cyberos-skill-broker -- -D warnings` once confirmed clippy-clean.
+  BENCHMARK_MODE: none

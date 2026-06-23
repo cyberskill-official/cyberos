@@ -41,12 +41,13 @@
 
 pub mod alias;
 pub mod cache;
-pub mod cli;
 pub mod circuit_breaker;
+pub mod cli;
 pub mod cost_hold_expiry;
 pub mod cost_ledger;
 pub mod cost_reconcile;
 pub mod cost_table;
+pub mod langsmith;
 pub mod memory_writer;
 pub mod otel;
 pub mod persona;
@@ -55,6 +56,7 @@ pub mod redact;
 pub mod rerank;
 pub mod residency;
 pub mod router;
+pub mod server;
 pub mod streaming;
 pub mod zdr;
 

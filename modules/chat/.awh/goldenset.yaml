@@ -1,0 +1,21 @@
+# CHAT module golden set (awh). Per-module gate for roadmap wave 5.
+#
+#   awh eval modules/chat/.awh/goldenset.yaml --base-dir . --seeds 1 --out modules/chat/.awh/eval-baseline.json
+#   awh eval modules/chat/.awh/goldenset.yaml --base-dir . --seeds 1 --baseline modules/chat/.awh/eval-baseline.json --max-regression 0.0
+#
+# CHAT is the license-gated service (services/chat), built separately from the workspace.
+# chat-verify runs the structural invariant suite (PINNED_COMMIT, patches, workflows,
+# FR-CHAT-001 layout, FR-CHAT-002 authbridge). All green on main.
+tasks:
+  - id: chat-verify
+    description: CHAT structural invariant suite (services/chat make chat-verify) - green on main
+    cmd: "cd services && make chat-verify"
+    weight: 3.0
+    timeout_sec: 900
+
+  # Held-out acceptance: the authbridge structural tests (FR-CHAT-002). Sealed read-only.
+  - id: acceptance-chat-authbridge
+    description: held-out CHAT authbridge (FR-CHAT-002) test
+    cmd: "cd services/chat && make chat-authbridge-test"
+    weight: 5.0
+    timeout_sec: 600

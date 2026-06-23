@@ -1,0 +1,6 @@
+id: B05-bad-status
+description: Task status outside the closed set
+expect: fail
+expected_violations: [R5-BAD-STATUS]
+exercises_rules: [R5]
+protected_areas: []

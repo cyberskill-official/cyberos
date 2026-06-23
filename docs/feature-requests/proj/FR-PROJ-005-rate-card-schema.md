@@ -31,7 +31,7 @@ new_files:
   - services/proj-sync/src/rate_card/mod.rs
   - services/proj-sync/src/rate_card/handlers.rs
   - services/proj-sync/src/rate_card/effective.rs
-  - services/proj-sync/tests/rate_card_test.rs
+  - services/proj/tests/status_fsm_test.rs
 modified_files:
   - services/proj-sync/src/types.rs                  # Role enum + Currency enum
 allowed_tools:
@@ -320,7 +320,7 @@ pub async fn lookup_at(
 ## §5 — Verification
 
 ```rust
-// services/proj-sync/tests/rate_card_test.rs
+// services/proj/tests/status_fsm_test.rs
 
 #[tokio::test]
 async fn create_and_supersede() {

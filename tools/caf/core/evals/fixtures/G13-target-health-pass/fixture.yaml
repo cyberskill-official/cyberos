@@ -1,0 +1,6 @@
+id: G13-target-health-pass
+description: v1.5.0 completed run whose HANDOFF records the Target health gate (RUN_COMMANDS pass) - must validate clean
+expect: pass
+expected_violations: []
+exercises_rules: [TARGET-HEALTH, P5]
+protected_areas: []

@@ -1,0 +1,6 @@
+id: G08-config-realworld
+description: Fully legitimate filled-in CONFIG - Java generics in TECH_STACK, shell redirection in RUN_COMMANDS, "ticket #4211" after a single space, inline comment after the MODE enum. The preflight must pass all of it (architect review F-4 precision pack; sibling of trap B17).
+expect: pass
+expected_violations: []
+exercises_rules: [P0-CONFIG]
+protected_areas: []

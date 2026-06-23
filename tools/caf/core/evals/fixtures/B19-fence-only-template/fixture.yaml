@@ -1,0 +1,6 @@
+id: B19-fence-only-template
+description: The only "tables" live inside a fenced example block - quoted illustrations, not artifacts. Before fence-aware parsing they satisfied the template check (architect review F-1, the false-conformance side). Must be TEMPLATE-NONCONFORMANT.
+expect: fail
+expected_violations: [TEMPLATE-NONCONFORMANT]
+exercises_rules: [TEMPLATE]
+protected_areas: []

@@ -74,7 +74,9 @@ pub fn resolve(alias: &str, policy: &TenantPolicy) -> Result<ResolvedModel, Alia
 
     // 1. Closed-set check — cheapest reject path
     if !SUPPORTED_ALIASES.contains(&alias) {
-        ALIAS_FAILURES.with_label_values(&[alias, "unknown_alias"]).inc();
+        ALIAS_FAILURES
+            .with_label_values(&[alias, "unknown_alias"])
+            .inc();
         return Err(AliasError::UnknownAlias {
             alias: alias.to_string(),
             supported: SUPPORTED_ALIASES.iter().map(|s| s.to_string()).collect(),
@@ -147,9 +149,14 @@ fn check_and_build_with_model(
 ) -> Result<ResolvedModel, AliasError> {
     let kind = provider.kind();
     let region = provider.region();
+    // FR-AI-105: local providers (Ollama, LM Studio) run on the operator's own host, so they are
+    // zero-cost (clause 7) and inherently zero-retention (clause 5). They are exempt from the cost-table
+    // and ZDR gates that the cloud providers must pass. Residency still applies via the region check
+    // below (local providers carry region None, so they pass unless the tenant requires a regional one).
+    let is_local = matches!(kind, ProviderKind::Ollama | ProviderKind::LocalOpenai);
 
-    // Cost-table check (FR-AI-007)
-    if cost_table::lookup(&kind, model).is_none() {
+    // Cost-table check (FR-AI-007) - skipped for local providers (zero cost).
+    if !is_local && cost_table::lookup(&kind, model).is_none() {
         ALIAS_FAILURES
             .with_label_values(&[alias, "cost_missing"])
             .inc();
@@ -159,8 +166,8 @@ fn check_and_build_with_model(
         });
     }
 
-    // ZDR check (FR-AI-015)
-    if policy.ai_policy.zdr_required && !zdr::is_zdr(&kind, model) {
+    // ZDR check (FR-AI-015) - local providers are inherently ZDR.
+    if !is_local && policy.ai_policy.zdr_required && !zdr::is_zdr(&kind, model) {
         ALIAS_FAILURES.with_label_values(&[alias, "zdr"]).inc();
         return Err(AliasError::ZdrViolation {
             resolved_provider: kind,
@@ -222,7 +229,7 @@ fn check_and_build_with_model(
         region,
         model: model.to_string(),
         fallback_position,
-        is_zdr: zdr::is_zdr(&kind, model),
+        is_zdr: is_local || zdr::is_zdr(&kind, model),
         latency_class: latency_class_for_alias(alias),
     })
 }

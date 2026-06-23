@@ -29,8 +29,8 @@ service: modules/memory/cyberos/
 new_files:
   - modules/memory/cyberos/core/history.py
   - modules/memory/cyberos/cli/history.py
-  - modules/memory/tests/test_history_projection.py
-  - modules/memory/tests/test_history_move_following.py
+  - modules/memory/tests/core/test_history.py
+  - modules/memory/tests/core/test_history.py
 modified_files:
   - modules/memory/cyberos/__main__.py            # wire `cyberos history <path>` subcommand
   - modules/memory/cyberos/core/serve.py          # add GET /api/v2/memories/<path>/history endpoint
@@ -50,8 +50,8 @@ sub_tasks:
   - "1.0h: diff computation — for adjacent put rows on the same path, compute unified diff of body bytes + structured frontmatter diff"
   - "1.5h: cyberos/cli/history.py — `cyberos history <path> [--limit 10] [--chronological] [--json] [--no-follow-moves] [--show-body]`"
   - "1.0h: cyberos/core/serve.py — REST endpoint with same parameters as CLI; returns JSON"
-  - "1.0h: tests/test_history_projection.py — 12 cases (single-write, multi-write, diff between versions, tombstone shown, dream-applied annotation, session_id annotation, importance-scored annotation, JSON format, limit cap, chronological order)"
-  - "1.0h: tests/test_history_move_following.py — 8 cases (move-once history, move-chain history, --no-follow-moves boundary, deleted-then-recreated, never-existed path, history for tombstoned path)"
+  - "1.0h: modules/memory/tests/core/test_history.py — 12 cases (single-write, multi-write, diff between versions, tombstone shown, dream-applied annotation, session_id annotation, importance-scored annotation, JSON format, limit cap, chronological order)"
+  - "1.0h: modules/memory/tests/core/test_history.py — 8 cases (move-once history, move-chain history, --no-follow-moves boundary, deleted-then-recreated, never-existed path, history for tombstoned path)"
   - "0.5h: integration test against seeded memory with all FR-MEMORY-112..119 row kinds present"
   - "0.5h: CHANGELOG entry + sample-usage doc"
 risk_if_skipped: "Without `cyberos history`, the audit chain's rich per-path provenance is INVISIBLE to operators and agents. Two failure modes follow: (1) Debugging 'why does this memory say X?' requires manually scanning the raw audit binlog — operationally unusable. (2) FR-MEMORY-115 dream-applied annotations, FR-MEMORY-119 session_id linkage, FR-MEMORY-114 importance-scored attribution all become dead-weight data that operators can't access without writing custom scripts. The talk's demo segment showcases this exact feature: clicking through to see 'when was each entry written, by which agent, with what change?' The 8-hour effort is dominantly projection logic (no new data) and CLI/REST glue. Skipping means we've shipped the data layer of memory governance (FR-MEMORY-115/117/118/119) without the visibility layer. The infrastructure becomes hard to operate."
@@ -314,7 +314,7 @@ async def memory_history(
 ## §5 — Verification
 
 ```python
-# modules/memory/tests/test_history_projection.py
+# modules/memory/tests/core/test_history.py
 import json, pytest, subprocess
 from datetime import datetime, timezone
 from cyberos.core.history import walk
@@ -474,7 +474,7 @@ def test_rest_endpoint_matches_cli(running_cyberos_serve):
 ```
 
 ```python
-# modules/memory/tests/test_history_move_following.py
+# modules/memory/tests/core/test_history.py
 import pytest
 from cyberos.core.history import walk
 

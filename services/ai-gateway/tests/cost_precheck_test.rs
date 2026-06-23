@@ -70,6 +70,7 @@ fn test_policy(tenant_id: &str, monthly_cap: Decimal) -> TenantPolicy {
             alias_overrides: None,
             residency_requires_regional_provider: None,
             pii_redaction_extra: None,
+            langsmith_export: false,
         },
     }
 }
@@ -154,7 +155,7 @@ async fn precheck_allows_under_budget() {
             assert_eq!(count_holds(&pool, tenant).await, 1);
         }
         Ok(PrecheckOutcome::Refuse { reason, .. }) => {
-            panic!("expected Allow, got Refuse({:?})", reason);
+            panic!("expected Allow, got Refuse({reason:?})");
         }
         Err(PrecheckError::MemoryWriterFailed { .. }) => {
             // Memory writer not available in test env — expected
@@ -183,7 +184,11 @@ async fn precheck_refuses_over_budget() {
     let policy = test_policy(tenant, dec!(100));
     seed_tenant(&pool, tenant, dec!(100), dec!(98)).await;
 
-    let req = chat_request(tenant, 1000, "chat.smart");
+    // Only $2 of headroom remains (cap 100, spent 98). At the fixture's realistic chat.smart rate
+    // ($0.003/1k input, $0.015/1k output) a 1000-token request estimates ~$0.01 and would stay
+    // under cap, so size the request so its estimate clearly exceeds the $2 remaining: ~1,000,000
+    // input tokens is ~$3, pushing spent + estimate over the cap and triggering BudgetCapExceeded.
+    let req = chat_request(tenant, 1_000_000, "chat.smart");
     let outcome = precheck(&req, &pool, &policy).await.unwrap();
 
     match outcome {
@@ -360,14 +365,13 @@ async fn precheck_latency_under_50ms() {
 
     durations.sort();
     let p95 = durations[94]; // 95th percentile
-    eprintln!("precheck p95 latency: {:?}", p95);
+    eprintln!("precheck p95 latency: {p95:?}");
     // Note: memory writer subprocess adds ~30ms, so p95 may exceed 50ms in test env.
     // The 50ms budget applies to the Postgres path only; memory writer is separate.
     // We assert < 200ms as a relaxed bound for CI.
     assert!(
         p95.as_millis() < 200,
-        "p95 latency too high: {:?} (relaxed bound for CI with memory writer)",
-        p95
+        "p95 latency too high: {p95:?} (relaxed bound for CI with memory writer)"
     );
 
     cleanup_tenant(&pool, tenant).await;

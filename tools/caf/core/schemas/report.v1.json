@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/cyberskill-official/code-audit-framework/blob/main/schemas/report.v1.json",
+  "title": "code-audit-framework per-run findings report (report@1)",
+  "description": "Published contract for `code-audit-validate --run DIR --report json` (architect review 3.3). Additive evolution only within @1; breaking changes bump the schema tag.",
+  "type": "object",
+  "required": ["schema", "generated_at", "run_dir", "loops", "metrics", "summary", "violations"],
+  "properties": {
+    "schema": { "const": "code-audit-framework/report@1" },
+    "generated_at": { "type": "string" },
+    "run_dir": { "type": "string" },
+    "protocol_version": { "type": ["string", "null"], "pattern": "^v\\d+\\.\\d+\\.\\d+$" },
+    "protected_areas": { "type": "array", "items": { "type": "string" } },
+    "loops": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["loop", "tasks"],
+        "properties": {
+          "loop": { "type": ["integer", "null"] },
+          "date": { "type": ["string", "null"] },
+          "protocol": { "type": ["string", "null"], "pattern": "^v\\d+\\.\\d+\\.\\d+$" },
+          "mode": { "type": ["string", "null"] },
+          "approved": { "type": ["array", "null"], "items": { "type": "string" } },
+          "no_significant_findings": { "type": "boolean" },
+          "tasks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "status"],
+              "properties": {
+                "id": { "type": "string" },
+                "severity": { "type": "string" },
+                "status": { "type": "string" },
+                "vector": { "type": "string" },
+                "description": { "type": "string" },
+                "verify": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "metrics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["metric"],
+        "properties": {
+          "metric": { "type": "string" },
+          "baseline": { "type": "string" },
+          "final": { "type": "string" },
+          "delta": { "type": "string" },
+          "delta_computed": { "type": "number" },
+          "target": { "type": "string" },
+          "verify": { "type": "string" },
+          "status": { "type": "string" }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["loops", "tasks", "violations", "clean"],
+      "properties": {
+        "loops": { "type": "integer" },
+        "tasks": { "type": "integer" },
+        "tasks_by_status": { "type": "object", "additionalProperties": { "type": "integer" } },
+        "tasks_by_severity": { "type": "object", "additionalProperties": { "type": "integer" } },
+        "metrics_measured": { "type": "integer" },
+        "violations": { "type": "integer" },
+        "violations_by_code": { "type": "object", "additionalProperties": { "type": "integer" } },
+        "waived": { "type": "integer" },
+        "clean": { "type": "boolean" }
+      }
+    },
+    "violations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code", "file", "detail"],
+        "properties": {
+          "code": { "type": "string" },
+          "file": { "type": "string" },
+          "detail": { "type": "string" }
+        }
+      }
+    },
+    "waived": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code", "file", "detail", "expires"],
+        "properties": {
+          "code": { "type": "string" },
+          "file": { "type": "string" },
+          "detail": { "type": "string" },
+          "reason": { "type": "string" },
+          "approved_by": { "type": "string" },
+          "expires": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+# Example golden set — self-contained so `awh eval` runs anywhere with no fixtures.
+# Replace these with ~20-50 tasks mined from YOUR repos and production failures.
+# Each task's pass/fail varies with $AWH_SEED to demonstrate multi-seed pass@k.
+tasks:
+  - id: deterministic-pass
+    description: A task that always succeeds (sanity anchor for the harness).
+    cmd: "python3 -c \"import sys; sys.exit(0)\""
+    weight: 1.0
+
+  - id: flaky-3-of-4
+    description: Passes on 3 of every 4 seeds — exposes the gap between pass@1 and pass^k.
+    cmd: "python3 -c \"import os,sys; sys.exit(0 if int(os.environ['AWH_SEED']) % 4 else 1)\""
+    weight: 2.0
+
+  - id: end-state-checked
+    description: Uses a separate end-state check (the agent step runs, the check scores).
+    cmd: "python3 -c \"print('did work')\""
+    check: "python3 -c \"import os,sys; sys.exit(0 if int(os.environ['AWH_SEED']) % 2 else 1)\""
+    weight: 1.0

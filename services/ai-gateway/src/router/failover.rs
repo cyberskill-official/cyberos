@@ -17,7 +17,10 @@ pub fn build_provider_chain(
     let mut chain: Vec<(Box<dyn Provider>, String)> = Vec::new();
 
     // Primary provider
-    chain.push((make_provider(resolved.provider_kind), resolved.model.clone()));
+    chain.push((
+        make_provider(resolved.provider_kind),
+        resolved.model.clone(),
+    ));
 
     // Fallback chain
     for fb in &policy.ai_policy.fallback_chain {
@@ -34,6 +37,8 @@ fn make_provider(kind: ProviderKind) -> Box<dyn Provider> {
         ProviderKind::Bedrock => Box::new(super::bedrock::BedrockProvider),
         ProviderKind::Anthropic => Box::new(super::anthropic::AnthropicProvider),
         ProviderKind::Openai => Box::new(super::openai::OpenAIProvider),
+        ProviderKind::Ollama => Box::new(super::ollama::OllamaProvider::from_env()),
+        ProviderKind::LocalOpenai => Box::new(super::local_openai::LocalOpenaiProvider::from_env()),
         ProviderKind::Vertex => unimplemented!("Vertex lands in slice 4 (FR-AI-017)"),
         ProviderKind::Bge => unimplemented!("BGE is embedding-only; chat path doesn't use BGE"),
     }

@@ -490,7 +490,7 @@ mod tests {
             issue_created,
             Some(target(tenant, issue_created)),
             MemoryLinkType::Cites,
-            &[link.clone()],
+            std::slice::from_ref(&link),
             None,
             None,
         )

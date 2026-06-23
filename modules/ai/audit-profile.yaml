@@ -1,0 +1,17 @@
+# CAF audit identity for the `ai` module (Rust crate cyberos-ai-gateway, services/ai-gateway).
+# Absorbed from CyberSkill/code-audit-framework. verify-target.sh reads RUN_COMMANDS to prove
+# TARGET HEALTH (the half awh does not run). Run on a build machine with the Rust toolchain.
+# PRECONDITION: the ai suite needs Redis at 127.0.0.1:6379 (docker run -d -p 6379:6379 redis:7)
+# and runs serial (--test-threads=1): stateful integration tests share a process-global cost table.
+# PRECONDITION: the cost-hold-expiry tests spawn the FR-AI-003 Writer (python3 -m cyberos.writer), so the
+# memory package must be importable - `pip install -e modules/memory` or PYTHONPATH=modules/memory.
+config:
+  TECH_STACK: Rust (cargo) / cyberos-ai-gateway / Redis cache / ArcSwap cost table
+  PROJECT_PURPOSE: CyberOS AI gateway - provider routing, cost table, cross-tenant cache isolation
+  MODE: gated
+  DEPTH: standard
+  SEVERITY_FLOOR: High
+  PROTECTED_AREAS: modules/ai/.awh/, modules/ai/.caf/, services/ai-gateway/tests/
+  RUN_COMMANDS: cd ../../services && cargo test -p cyberos-ai-gateway -- --test-threads=1
+  DOMAIN_NOTES: Cross-tenant cache isolation is a security invariant (FR-AI-018, held-out adversarial test). RUN_COMMANDS mirrors the awh suite (known green); add `cargo clippy -p cyberos-ai-gateway -- -D warnings` once confirmed clippy-clean.
+  BENCHMARK_MODE: none

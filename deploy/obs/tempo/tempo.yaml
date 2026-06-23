@@ -1,0 +1,18 @@
+# Minimal single-binary Tempo config for the local obs stack. Local block storage, OTLP receivers on.
+server:
+  http_listen_port: 3200
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        http:
+        grpc:
+
+storage:
+  trace:
+    backend: local
+    local:
+      path: /var/tempo/blocks
+    wal:
+      path: /var/tempo/wal

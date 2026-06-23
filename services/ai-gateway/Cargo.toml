@@ -25,6 +25,10 @@ path = "src/bin/gen_schema.rs"
 name = "cost-hold-expiry"
 path = "src/bin/cost_hold_expiry.rs"
 
+[[bin]]
+name = "cyberos-gateway"
+path = "src/bin/cyberos_gateway.rs"
+
 # --- Dependencies ---
 [dependencies]
 # Workspace-pinned shared deps
@@ -77,6 +81,9 @@ reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-feature
 
 # FR-AI-009 specific (circuit breaker)
 dashmap = "6"
+
+# FR-OBS-003/004/005 - RED metrics middleware + shared W3C TraceContext primitives for the HTTP server.
+cyberos-obs-sdk = { path = "../shared/cyberos-obs-sdk" }
 
 # FR-AI-017 specific (per-tenant cache)
 redis = { version = "0.24", features = ["tokio-comp", "connection-manager"] }

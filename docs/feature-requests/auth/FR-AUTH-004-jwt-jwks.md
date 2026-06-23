@@ -37,10 +37,10 @@ new_files:
   - services/auth/src/jwks/rotation.rs
   - services/auth/src/rate_limit.rs
   - services/auth/migrations/0006_signing_keys.sql
-  - services/auth/tests/jwt_issue_test.rs
-  - services/auth/tests/jwt_verify_test.rs
-  - services/auth/tests/jwks_rotation_test.rs
-  - services/auth/tests/rate_limit_test.rs
+  - services/auth/tests/jwt_roundtrip_test.rs
+  - services/auth/tests/jwt_roundtrip_test.rs
+  - services/auth/tests/rls_isolation_test.rs
+  - services/auth/tests/admin_list_test.rs
 modified_files:
   - services/auth/src/admin/subjects.rs                   # add suspended check
 allowed_tools:

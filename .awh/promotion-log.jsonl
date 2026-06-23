@@ -1,0 +1,136 @@
+{"ts": 1781858619.563633, "action": "HOLD", "module": "ai", "fr": "FR-AI-001-cost-ledger-precheck.md", "reason": "module not gated (red-deferred)"}
+{"ts": 1781858619.5636532, "action": "HOLD", "module": "ai", "fr": "FR-AI-002-cost-ledger-postcall-reconcile.md", "reason": "module not gated (red-deferred)"}
+{"ts": 1781858619.563659, "action": "HOLD", "module": "ai", "fr": "FR-AI-004-cost-hold-expiry-cleanup.md", "reason": "module not gated (red-deferred)"}
+{"ts": 1781858619.563663, "action": "HOLD", "module": "ai", "fr": "FR-AI-006-model-alias-resolution.md", "reason": "module not gated (red-deferred)"}
+{"ts": 1781858619.5636659, "action": "HOLD", "module": "ai", "fr": "FR-AI-007-provider-cost-table-loader.md", "reason": "module not gated (red-deferred)"}
+{"ts": 1781858619.563668, "action": "HOLD", "module": "ai", "fr": "FR-AI-008-multi-provider-router.md", "reason": "module not gated (red-deferred)"}
+{"ts": 1781858619.56367, "action": "HOLD", "module": "ai", "fr": "FR-AI-009-circuit-breaker.md", "reason": "module not gated (red-deferred)"}
+{"ts": 1781858619.563672, "action": "HOLD", "module": "ai", "fr": "FR-AI-010-streaming-sse.md", "reason": "module not gated (red-deferred)"}
+{"ts": 1781858619.563673, "action": "HOLD", "module": "ai", "fr": "FR-AI-011-presidio-pii-redaction.md", "reason": "module not gated (red-deferred)"}
+{"ts": 1781858619.563675, "action": "HOLD", "module": "ai", "fr": "FR-AI-012-vn-pii-plugin.md", "reason": "module not gated (red-deferred)"}
+{"ts": 1781858619.5636768, "action": "HOLD", "module": "ai", "fr": "FR-AI-013-vn-pii-recall-gate.md", "reason": "module not gated (red-deferred)"}
+{"ts": 1781858619.563678, "action": "HOLD", "module": "ai", "fr": "FR-AI-014-persona-version-stamping.md", "reason": "module not gated (red-deferred)"}
+{"ts": 1781858619.56368, "action": "HOLD", "module": "ai", "fr": "FR-AI-015-zdr-enforcement.md", "reason": "module not gated (red-deferred)"}
+{"ts": 1781858619.563682, "action": "HOLD", "module": "ai", "fr": "FR-AI-016-residency-pinning.md", "reason": "module not gated (red-deferred)"}
+{"ts": 1781858619.563683, "action": "HOLD", "module": "ai", "fr": "FR-AI-017-per-tenant-cache.md", "reason": "module not gated (red-deferred)"}
+{"ts": 1781858619.5636852, "action": "HOLD", "module": "ai", "fr": "FR-AI-018-cache-cross-tenant-leak-test.md", "reason": "module not gated (red-deferred)"}
+{"ts": 1781858619.5636868, "action": "HOLD", "module": "ai", "fr": "FR-AI-019-bge-m3-embeddings.md", "reason": "module not gated (red-deferred)"}
+{"ts": 1781858619.563689, "action": "HOLD", "module": "ai", "fr": "FR-AI-020-bge-rerank.md", "reason": "module not gated (red-deferred)"}
+{"ts": 1781858619.56369, "action": "HOLD", "module": "ai", "fr": "FR-AI-021-operator-cli.md", "reason": "module not gated (red-deferred)"}
+{"ts": 1781858619.563692, "action": "HOLD", "module": "ai", "fr": "FR-AI-022-otel-trace-emission.md", "reason": "module not gated (red-deferred)"}
+{"ts": 1781858619.563693, "action": "PROMOTE", "module": "auth", "fr": "FR-AUTH-001-tenant-create.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5636952, "action": "PROMOTE", "module": "auth", "fr": "FR-AUTH-002-subject-create.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5636969, "action": "PROMOTE", "module": "auth", "fr": "FR-AUTH-003-rls-enforcement.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5636978, "action": "PROMOTE", "module": "auth", "fr": "FR-AUTH-004-jwt-jwks.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5637, "action": "PROMOTE", "module": "auth", "fr": "FR-AUTH-005-admin-rest.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563702, "action": "PROMOTE", "module": "auth", "fr": "FR-AUTH-006-bootstrap-cli.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563703, "action": "PROMOTE", "module": "auth", "fr": "FR-AUTH-101-rbac-catalogue.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5637052, "action": "PROMOTE", "module": "auth", "fr": "FR-AUTH-102-totp-webauthn-mfa.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5637069, "action": "PROMOTE", "module": "auth", "fr": "FR-AUTH-103-saml-sso.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5637078, "action": "PROMOTE", "module": "auth", "fr": "FR-AUTH-104-oidc-sso.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.56371, "action": "PROMOTE", "module": "auth", "fr": "FR-AUTH-105-passkey-enrolment-login.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563711, "action": "PROMOTE", "module": "auth", "fr": "FR-AUTH-106-impossible-travel.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563713, "action": "PROMOTE", "module": "auth", "fr": "FR-AUTH-107-hibp-breach-check.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563715, "action": "PROMOTE", "module": "auth", "fr": "FR-AUTH-108-lumi-tenant-identity-jwt.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5637162, "action": "PROMOTE", "module": "auth", "fr": "FR-AUTH-109-stub-to-full-migration.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5637178, "action": "PROMOTE", "module": "chat", "fr": "FR-CHAT-001-mattermost-fork.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5637188, "action": "PROMOTE", "module": "chat", "fr": "FR-CHAT-002-authbridge-plugin.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563721, "action": "PROMOTE", "module": "chat", "fr": "FR-CHAT-003-fargate-deployment.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563723, "action": "PROMOTE", "module": "chat", "fr": "FR-CHAT-004-vn-search.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563724, "action": "PROMOTE", "module": "chat", "fr": "FR-CHAT-005-memory-bridge.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5637262, "action": "PROMOTE", "module": "chat", "fr": "FR-CHAT-006-slack-import.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5637271, "action": "PROMOTE", "module": "chat", "fr": "FR-CHAT-007-zalo-import.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5637288, "action": "PROMOTE", "module": "chat", "fr": "FR-CHAT-008-lumi-mention.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.56373, "action": "PROMOTE", "module": "chat", "fr": "FR-CHAT-009-retro-capture.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563732, "action": "PROMOTE", "module": "chat", "fr": "FR-CHAT-010-decommission-signal.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563734, "action": "PROMOTE", "module": "chat", "fr": "FR-CHAT-011-mobile-push.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563735, "action": "PROMOTE", "module": "chat", "fr": "FR-CHAT-012-dsar-export.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5637372, "action": "PROMOTE", "module": "cuo", "fr": "FR-CUO-101-langgraph-supervisor.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5637388, "action": "PROMOTE", "module": "cuo", "fr": "FR-CUO-102-langgraph-postgres-checkpointer.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.56374, "action": "PROMOTE", "module": "cuo", "fr": "FR-CUO-103-trace-replay-rows.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563742, "action": "PROMOTE", "module": "cuo", "fr": "FR-CUO-104-topological-chain-walk.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5637429, "action": "PROMOTE", "module": "cuo", "fr": "FR-CUO-105-per-step-rollback.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563745, "action": "PROMOTE", "module": "cuo", "fr": "FR-CUO-106-supervisor-phase4-special-handlers.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5637472, "action": "PROMOTE", "module": "cuo", "fr": "FR-CUO-200-harness-read-only-report.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563749, "action": "PROMOTE", "module": "cuo", "fr": "FR-CUO-201-refinement-proposals-stripe-dedup.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5637498, "action": "PROMOTE", "module": "cuo", "fr": "FR-CUO-202-auto-bump-low-risk.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563752, "action": "PROMOTE", "module": "cuo", "fr": "FR-CUO-203-workflow-level-evolution.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563753, "action": "PROMOTE", "module": "email", "fr": "FR-EMAIL-001-stalwart-deployment.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563755, "action": "PROMOTE", "module": "email", "fr": "FR-EMAIL-004-dkim-arc-bimi.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563779, "action": "PROMOTE", "module": "email", "fr": "FR-EMAIL-005-camel-dual-llm.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563783, "action": "PROMOTE", "module": "email", "fr": "FR-EMAIL-009-outbound-1to1-send.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563784, "action": "PROMOTE", "module": "email", "fr": "FR-EMAIL-011-dsar-message-export.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563786, "action": "PROMOTE", "module": "memory", "fr": "FR-MEMORY-101-layer2-ingest-pipeline.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563788, "action": "PROMOTE", "module": "memory", "fr": "FR-MEMORY-102-layer2-rebuild-ci-gate.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5637891, "action": "PROMOTE", "module": "memory", "fr": "FR-MEMORY-103-multi-device-sync.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563791, "action": "PROMOTE", "module": "memory", "fr": "FR-MEMORY-104-tauri-app.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563793, "action": "PROMOTE", "module": "memory", "fr": "FR-MEMORY-105-doctor-watched-folders-invariants.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563794, "action": "PROMOTE", "module": "memory", "fr": "FR-MEMORY-106-sync-class-enforcement.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563796, "action": "PROMOTE", "module": "memory", "fr": "FR-MEMORY-107-fs-watcher.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563798, "action": "PROMOTE", "module": "memory", "fr": "FR-MEMORY-108-search-api.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5637991, "action": "PROMOTE", "module": "memory", "fr": "FR-MEMORY-109-claude-code-hook-capture.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563801, "action": "PROMOTE", "module": "memory", "fr": "FR-MEMORY-110-capture-daemon-health-restart.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563802, "action": "PROMOTE", "module": "memory", "fr": "FR-MEMORY-111-pre-ingest-pii-detection.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563804, "action": "PROMOTE", "module": "memory", "fr": "FR-MEMORY-112-episodic-memory.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563806, "action": "PROMOTE", "module": "memory", "fr": "FR-MEMORY-113-recency-decay-recall.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563807, "action": "PROMOTE", "module": "memory", "fr": "FR-MEMORY-114-write-time-importance.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563809, "action": "PROMOTE", "module": "memory", "fr": "FR-MEMORY-115-cyberos-dream.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.56381, "action": "PROMOTE", "module": "memory", "fr": "FR-MEMORY-116-semantic-dedup-consolidate.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563812, "action": "PROMOTE", "module": "memory", "fr": "FR-MEMORY-117-per-store-acl.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563814, "action": "PROMOTE", "module": "memory", "fr": "FR-MEMORY-118-put-if-precondition.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5638149, "action": "PROMOTE", "module": "memory", "fr": "FR-MEMORY-119-session-transcript-ledger.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563817, "action": "PROMOTE", "module": "memory", "fr": "FR-MEMORY-120-cyberos-history.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563818, "action": "PROMOTE", "module": "proj", "fr": "FR-PROJ-001-issue-schema.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5638201, "action": "PROMOTE", "module": "proj", "fr": "FR-PROJ-002-memory-decision-anchoring.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563822, "action": "PROMOTE", "module": "proj", "fr": "FR-PROJ-003-yjs-crdt-collaboration.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5638232, "action": "PROMOTE", "module": "proj", "fr": "FR-PROJ-004-issue-lifecycle-fsm.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563825, "action": "PROMOTE", "module": "proj", "fr": "FR-PROJ-005-rate-card-schema.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5638258, "action": "PROMOTE", "module": "proj", "fr": "FR-PROJ-006-billable-cascade.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563828, "action": "PROMOTE", "module": "proj", "fr": "FR-PROJ-007-billing-modes.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.56383, "action": "PROMOTE", "module": "proj", "fr": "FR-PROJ-008-memory-audit-row-per-mutation.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563831, "action": "PROMOTE", "module": "proj", "fr": "FR-PROJ-009-memory-link-schema.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563833, "action": "PROMOTE", "module": "proj", "fr": "FR-PROJ-010-citation-drift-detector.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5638342, "action": "PROMOTE", "module": "proj", "fr": "FR-PROJ-011-blocker-detector.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5638359, "action": "PROMOTE", "module": "proj", "fr": "FR-PROJ-012-cycle-review-draft.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563838, "action": "PROMOTE", "module": "proj", "fr": "FR-PROJ-013-estimate-calibration.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563839, "action": "PROMOTE", "module": "proj", "fr": "FR-PROJ-014-kanban-board.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563841, "action": "PROMOTE", "module": "proj", "fr": "FR-PROJ-015-timeline-view.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563842, "action": "PROMOTE", "module": "proj", "fr": "FR-PROJ-016-gantt-view.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5638442, "action": "PROMOTE", "module": "proj", "fr": "FR-PROJ-017-brief-modal.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5638452, "action": "PROMOTE", "module": "proj", "fr": "FR-PROJ-018-design-tokens-a11y-ci.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5638468, "action": "PROMOTE", "module": "skill", "fr": "FR-SKILL-101-memory-integration.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563849, "action": "PROMOTE", "module": "skill", "fr": "FR-SKILL-102-oci-registry.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.56385, "action": "PROMOTE", "module": "skill", "fr": "FR-SKILL-103-frontmatter-extension.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563852, "action": "PROMOTE", "module": "skill", "fr": "FR-SKILL-104-capability-broker.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563853, "action": "PROMOTE", "module": "skill", "fr": "FR-SKILL-105-memory-capture-bundle.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5638552, "action": "PROMOTE", "module": "skill", "fr": "FR-SKILL-106-memory-sync-bundle.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563856, "action": "PROMOTE", "module": "skill", "fr": "FR-SKILL-107-synthesis-author.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563858, "action": "PROMOTE", "module": "skill", "fr": "FR-SKILL-108-vn-mst-validate.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.56386, "action": "PROMOTE", "module": "skill", "fr": "FR-SKILL-109-vn-bank-transfer.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563861, "action": "PROMOTE", "module": "skill", "fr": "FR-SKILL-110-vn-vat-invoice.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563863, "action": "PROMOTE", "module": "skill", "fr": "FR-SKILL-111-trigger-description-enrichment.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563864, "action": "PROMOTE", "module": "skill", "fr": "FR-SKILL-112-trigger-tests-fixtures.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5638661, "action": "PROMOTE", "module": "skill", "fr": "FR-SKILL-113-frontmatter-xml-free.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.5638678, "action": "PROMOTE", "module": "skill", "fr": "FR-SKILL-114-baseline-artefact.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563869, "action": "PROMOTE", "module": "skill", "fr": "FR-SKILL-115-stale-placeholder-sweep.md", "reason": "module gate GREEN"}
+{"ts": 1781858619.563871, "action": "PROMOTE", "module": "skill", "fr": "FR-SKILL-201-oci-registry-deploy.md", "reason": "module gate GREEN"}
+{"ts": 1781869558.924547, "action": "PROMOTE", "module": "ai", "fr": "FR-AI-001-cost-ledger-precheck.md", "reason": "module gate GREEN"}
+{"ts": 1781869558.9245708, "action": "PROMOTE", "module": "ai", "fr": "FR-AI-002-cost-ledger-postcall-reconcile.md", "reason": "module gate GREEN"}
+{"ts": 1781869558.924575, "action": "PROMOTE", "module": "ai", "fr": "FR-AI-004-cost-hold-expiry-cleanup.md", "reason": "module gate GREEN"}
+{"ts": 1781869558.924577, "action": "PROMOTE", "module": "ai", "fr": "FR-AI-006-model-alias-resolution.md", "reason": "module gate GREEN"}
+{"ts": 1781869558.9245791, "action": "PROMOTE", "module": "ai", "fr": "FR-AI-007-provider-cost-table-loader.md", "reason": "module gate GREEN"}
+{"ts": 1781869558.924581, "action": "PROMOTE", "module": "ai", "fr": "FR-AI-008-multi-provider-router.md", "reason": "module gate GREEN"}
+{"ts": 1781869558.924582, "action": "PROMOTE", "module": "ai", "fr": "FR-AI-009-circuit-breaker.md", "reason": "module gate GREEN"}
+{"ts": 1781869558.924584, "action": "PROMOTE", "module": "ai", "fr": "FR-AI-010-streaming-sse.md", "reason": "module gate GREEN"}
+{"ts": 1781869558.9245849, "action": "PROMOTE", "module": "ai", "fr": "FR-AI-011-presidio-pii-redaction.md", "reason": "module gate GREEN"}
+{"ts": 1781869558.924587, "action": "PROMOTE", "module": "ai", "fr": "FR-AI-012-vn-pii-plugin.md", "reason": "module gate GREEN"}
+{"ts": 1781869558.924588, "action": "PROMOTE", "module": "ai", "fr": "FR-AI-013-vn-pii-recall-gate.md", "reason": "module gate GREEN"}
+{"ts": 1781869558.9245892, "action": "PROMOTE", "module": "ai", "fr": "FR-AI-014-persona-version-stamping.md", "reason": "module gate GREEN"}
+{"ts": 1781869558.924591, "action": "PROMOTE", "module": "ai", "fr": "FR-AI-015-zdr-enforcement.md", "reason": "module gate GREEN"}
+{"ts": 1781869558.924592, "action": "PROMOTE", "module": "ai", "fr": "FR-AI-016-residency-pinning.md", "reason": "module gate GREEN"}
+{"ts": 1781869558.924594, "action": "PROMOTE", "module": "ai", "fr": "FR-AI-017-per-tenant-cache.md", "reason": "module gate GREEN"}
+{"ts": 1781869558.9245949, "action": "PROMOTE", "module": "ai", "fr": "FR-AI-018-cache-cross-tenant-leak-test.md", "reason": "module gate GREEN"}
+{"ts": 1781869558.924596, "action": "PROMOTE", "module": "ai", "fr": "FR-AI-019-bge-m3-embeddings.md", "reason": "module gate GREEN"}
+{"ts": 1781869558.924598, "action": "PROMOTE", "module": "ai", "fr": "FR-AI-020-bge-rerank.md", "reason": "module gate GREEN"}
+{"ts": 1781869558.924599, "action": "PROMOTE", "module": "ai", "fr": "FR-AI-021-operator-cli.md", "reason": "module gate GREEN"}
+{"ts": 1781869558.9246001, "action": "PROMOTE", "module": "ai", "fr": "FR-AI-022-otel-trace-emission.md", "reason": "module gate GREEN"}

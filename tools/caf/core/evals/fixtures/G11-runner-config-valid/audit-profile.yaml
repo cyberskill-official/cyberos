@@ -1,0 +1,9 @@
+config:
+  TECH_STACK: TypeScript / Vite / Vitest
+  PROJECT_PURPOSE: Internal dashboard
+  MODE: gated
+  DEPTH: quick
+  SEVERITY_FLOOR: High
+  PROTECTED_AREAS:
+  RUN_COMMANDS: npm run test
+  BENCHMARK_MODE: none

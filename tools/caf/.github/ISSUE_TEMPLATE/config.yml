@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/cyberskill-official/code-audit-framework/blob/main/docs/SECURITY.md
+    about: Do NOT open a public issue — email info@cyberskill.world per the security policy.

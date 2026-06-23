@@ -1,0 +1,17 @@
+{
+  "deny_write_globs": [
+    "conftest.py",
+    "test_applier_paths.py",
+    "test_baseline.py",
+    "test_brief_generator.py",
+    "test_harness_report.py",
+    "test_langgraph_runtime.py",
+    "test_placeholder_check.py",
+    "test_proposal_applier.py",
+    "test_refinement_proposal.py",
+    "test_rework_mode.py",
+    "test_smoke.py",
+    "test_trigger_tests.py",
+    "test_workflow_evolution.py"
+  ]
+}

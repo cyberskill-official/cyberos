@@ -29,8 +29,8 @@ language: python 3.10
 service: modules/memory/cyberos/
 new_files:
   - modules/memory/cyberos/core/store_acl.py
-  - modules/memory/tests/test_store_acl_enforcement.py
-  - modules/memory/tests/test_store_acl_migration.py
+  - modules/memory/tests/core/test_store_acl.py
+  - modules/memory/tests/core/test_store_acl.py
   - modules/memory/scripts/migrate-store-acl.py
 modified_files:
   - modules/memory/cyberos/core/writer.py        # enforce ACL on every put/move/delete; lazy-load STORE.yaml per top-level dir
@@ -57,8 +57,8 @@ sub_tasks:
   - "3.0h: cyberos/core/writer.py — on every put/move/delete: walk up from target path to nearest STORE.yaml; if present, check ACL; if absent or path not in any subtree, permissive default; cache parsed STORE.yaml in-memory; invalidate cache on `STORE.yaml` mtime change"
   - "1.0h: walker invariant + doctor surface — `cyberos doctor` lists per-store ACL with resolved mode for the active actor"
   - "2.0h: scripts/migrate-store-acl.py — walks `<memory-root>/` for top-level dirs without STORE.yaml; writes default STORE.yaml (`acl: [{actor: '*', mode: 'read-write'}]` ≡ permissive) per DEC-230 back-compat"
-  - "3.0h: tests/test_store_acl_enforcement.py — 18 cases (permissive default, wildcard actor, explicit actor read-only, explicit deny overrides allow, glob actor matching, path-not-in-subtree permissive, write blocked → returns 'acl_denied' audit row, move respects both src + dst ACL, delete respects target ACL)"
-  - "2.0h: tests/test_store_acl_migration.py — 8 cases (idempotent migration, existing STORE.yaml not overwritten, dry-run prints planned writes, missing directories created on-the-fly only if --create-dirs, invalid STORE.yaml after manual edit triggers walker error)"
+  - "3.0h: modules/memory/tests/core/test_store_acl.py — 18 cases (permissive default, wildcard actor, explicit actor read-only, explicit deny overrides allow, glob actor matching, path-not-in-subtree permissive, write blocked → returns 'acl_denied' audit row, move respects both src + dst ACL, delete respects target ACL)"
+  - "2.0h: modules/memory/tests/core/test_store_acl.py — 8 cases (idempotent migration, existing STORE.yaml not overwritten, dry-run prints planned writes, missing directories created on-the-fly only if --create-dirs, invalid STORE.yaml after manual edit triggers walker error)"
   - "2.0h: cyberos/__main__.py — `cyberos acl show` / `cyberos acl validate` / `cyberos acl explain <path>` operator surfaces"
   - "1.0h: INTEROP.md one-line note (gated on §14.4 amendment)"
   - "1.0h: CHANGELOG + migration runbook entry"
@@ -304,7 +304,7 @@ for writes; reads MAY ignore.
 ## §5 — Verification
 
 ```python
-# modules/memory/tests/test_store_acl_enforcement.py
+# modules/memory/tests/core/test_store_acl.py
 import pytest, yaml
 from pathlib import Path
 from cyberos.core.store_acl import StoreAcl, check_write, find_governing_store_yaml
@@ -418,7 +418,7 @@ def test_built_in_actors_match_literally(tmp_memory):
 ```
 
 ```python
-# modules/memory/tests/test_store_acl_migration.py
+# modules/memory/tests/core/test_store_acl.py
 import pytest, yaml, subprocess
 from pathlib import Path
 

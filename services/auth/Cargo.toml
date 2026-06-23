@@ -61,6 +61,7 @@ zeroize = { version = "1.8", features = ["zeroize_derive"] }
 
 cyberos-cli-exit.workspace = true
 cyberos-types.workspace = true
+cyberos-obs-sdk.workspace = true
 
 [dev-dependencies]
 tokio-test.workspace = true

@@ -12,7 +12,7 @@ proptest! {
         let mut rng = StdRng::seed_from_u64(seed);
         for _ in 0..1000 {
             let result = jitter_ms(200, 0.20, &mut rng);
-            prop_assert!(result >= 160 && result <= 240, "jitter out of band: {}", result);
+            prop_assert!((160..=240).contains(&result), "jitter out of band: {}", result);
         }
     }
 
@@ -22,7 +22,7 @@ proptest! {
         let mut rng = StdRng::seed_from_u64(seed);
         for _ in 0..1000 {
             let result = jitter_ms(800, 0.20, &mut rng);
-            prop_assert!(result >= 640 && result <= 960, "jitter out of band: {}", result);
+            prop_assert!((640..=960).contains(&result), "jitter out of band: {}", result);
         }
     }
 

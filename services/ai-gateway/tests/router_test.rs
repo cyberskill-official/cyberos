@@ -2,6 +2,7 @@
 //!
 //! Tests use mock providers that return scripted responses to verify
 //! retry, failover, deadline, and error handling behavior.
+#![allow(dead_code)] // intentional test scaffolding (scripted variants + helper fns)
 
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -12,11 +13,11 @@ use cyberos_ai_gateway::alias::{LatencyClass, ResolvedModel};
 use cyberos_ai_gateway::policy::{
     AiPolicy, EmergencyOverride, Provider as PolicyProvider, ProviderKind, Residency, TenantPolicy,
 };
+use cyberos_ai_gateway::router::types::{Choice, FinishReason};
 use cyberos_ai_gateway::router::{
     self, AttemptStatus, ChatCompleteRequest, EmbedRequest, EmbedResponse, Message, Provider,
-    ProviderResponse, ProviderStreamResponse, ProviderUsage, RouterError,
+    ProviderResponse, ProviderUsage, RouterError,
 };
-use cyberos_ai_gateway::router::types::{Choice, FinishReason};
 
 // ─── Mock infrastructure ─────────────────────────────────────────────────────
 
@@ -67,22 +68,34 @@ impl Provider for MockProvider {
         _model: &str,
         _deadline: Instant,
     ) -> Result<ProviderResponse, RouterError> {
-        let count = self.call_count.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        let count = self
+            .call_count
+            .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         let status = match &self.script {
             ResponseScript::Always(s) => *s,
             ResponseScript::Sequence(v) => {
-                if count < v.len() { v[count] } else { *v.last().unwrap() }
+                if count < v.len() {
+                    v[count]
+                } else {
+                    *v.last().unwrap()
+                }
             }
             ResponseScript::DelayedOk(d) => {
                 tokio::time::sleep(*d).await;
-                return Ok(make_ok_response(&format!("mock-{}", self.kind.as_metric_label())));
+                return Ok(make_ok_response(&format!(
+                    "mock-{}",
+                    self.kind.as_metric_label()
+                )));
             }
             ResponseScript::OkResponse(resp) => return Ok(resp.clone()),
             ResponseScript::OkWithId(id) => return Ok(make_ok_response(id)),
         };
 
         if status == 200 {
-            Ok(make_ok_response(&format!("mock-{}", self.kind.as_metric_label())))
+            Ok(make_ok_response(&format!(
+                "mock-{}",
+                self.kind.as_metric_label()
+            )))
         } else {
             Err(make_error(self.kind, status))
         }
@@ -123,11 +136,14 @@ fn make_ok_response(id: &str) -> ProviderResponse {
 
 fn make_error(kind: ProviderKind, status: u16) -> RouterError {
     match status {
-        401 | 403 => RouterError::AuthError { provider: kind, status },
+        401 | 403 => RouterError::AuthError {
+            provider: kind,
+            status,
+        },
         _ => RouterError::TerminalProviderError {
             provider: kind,
             status,
-            message: format!("mock error {}", status),
+            message: format!("mock error {status}"),
             retry_after_secs: None,
         },
     }
@@ -137,7 +153,7 @@ fn make_error_with_retry_after(kind: ProviderKind, status: u16, retry_after: u64
     RouterError::TerminalProviderError {
         provider: kind,
         status,
-        message: format!("mock error {}", status),
+        message: format!("mock error {status}"),
         retry_after_secs: Some(retry_after),
     }
 }
@@ -188,39 +204,40 @@ fn policy_no_fallbacks() -> TenantPolicy {
             allowed_personas: None,
             alias_overrides: None,
             residency_requires_regional_provider: None,
-                pii_redaction_extra: None,
+            pii_redaction_extra: None,
+            langsmith_export: false,
         },
     }
 }
 
-/// Wrap a mock provider for use as a `dyn Provider` in the chain.
-/// The router's `build_provider_chain` creates providers from policy,
-/// but for testing we inject mocks directly.
-///
-/// Since `call_provider` uses `build_provider_chain` internally,
-/// we test through the mock provider trait directly by testing
-/// the retry/failover logic at a lower level.
-///
-/// For integration-level tests, we test the individual components:
-/// - jitter bounds (unit tests in jitter.rs)
-/// - Provider trait behavior (mock tests here)
-/// - Router error handling (direct calls with mock chain)
+// Wrap a mock provider for use as a `dyn Provider` in the chain.
+// The router's `build_provider_chain` creates providers from policy,
+// but for testing we inject mocks directly.
+//
+// Since `call_provider` uses `build_provider_chain` internally,
+// we test through the mock provider trait directly by testing
+// the retry/failover logic at a lower level.
+//
+// For integration-level tests, we test the individual components:
+// - jitter bounds (unit tests in jitter.rs)
+// - Provider trait behavior (mock tests here)
+// - Router error handling (direct calls with mock chain)
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
-/// AC #11: Jitter bounds — proptest in router_proptest.rs
+// AC #11: Jitter bounds - proptest in router_proptest.rs
 
-/// Test that RouterError variants are constructed correctly.
+// Test that RouterError variants are constructed correctly.
 #[test]
 fn router_error_display() {
     let e = RouterError::DeadlineExceeded;
-    assert!(format!("{}", e).contains("deadline"));
+    assert!(format!("{e}").contains("deadline"));
 
     let e = RouterError::AuthError {
         provider: ProviderKind::Bedrock,
         status: 401,
     };
-    assert!(format!("{}", e).contains("401"));
+    assert!(format!("{e}").contains("401"));
 
     let e = RouterError::TerminalProviderError {
         provider: ProviderKind::Openai,
@@ -228,7 +245,7 @@ fn router_error_display() {
         message: "bad request".into(),
         retry_after_secs: None,
     };
-    assert!(format!("{}", e).contains("400"));
+    assert!(format!("{e}").contains("400"));
 }
 
 /// AC #16: Streaming stub returns Err.
@@ -251,7 +268,11 @@ async fn streaming_returns_not_implemented() {
 async fn mock_provider_success() {
     let mock = MockProvider::new(ProviderKind::Bedrock, ResponseScript::Always(200));
     let resp = mock
-        .call_chat(&default_req(), "test-model", Instant::now() + Duration::from_secs(30))
+        .call_chat(
+            &default_req(),
+            "test-model",
+            Instant::now() + Duration::from_secs(30),
+        )
         .await
         .unwrap();
     assert_eq!(resp.id, "mock-bedrock");
@@ -263,12 +284,16 @@ async fn mock_provider_success() {
 async fn mock_provider_503() {
     let mock = MockProvider::new(ProviderKind::Bedrock, ResponseScript::Always(503));
     let err = mock
-        .call_chat(&default_req(), "test-model", Instant::now() + Duration::from_secs(30))
+        .call_chat(
+            &default_req(),
+            "test-model",
+            Instant::now() + Duration::from_secs(30),
+        )
         .await
         .unwrap_err();
     match err {
         RouterError::TerminalProviderError { status, .. } => assert_eq!(status, 503),
-        other => panic!("expected TerminalProviderError, got: {:?}", other),
+        other => panic!("expected TerminalProviderError, got: {other:?}"),
     }
 }
 
@@ -281,13 +306,24 @@ async fn mock_provider_sequence() {
     );
     // First call: 503
     let err = mock
-        .call_chat(&default_req(), "test-model", Instant::now() + Duration::from_secs(30))
+        .call_chat(
+            &default_req(),
+            "test-model",
+            Instant::now() + Duration::from_secs(30),
+        )
         .await
         .unwrap_err();
-    assert!(matches!(err, RouterError::TerminalProviderError { status: 503, .. }));
+    assert!(matches!(
+        err,
+        RouterError::TerminalProviderError { status: 503, .. }
+    ));
     // Second call: 200
     let resp = mock
-        .call_chat(&default_req(), "test-model", Instant::now() + Duration::from_secs(30))
+        .call_chat(
+            &default_req(),
+            "test-model",
+            Instant::now() + Duration::from_secs(30),
+        )
         .await
         .unwrap();
     assert_eq!(resp.id, "mock-bedrock");
@@ -298,12 +334,16 @@ async fn mock_provider_sequence() {
 async fn mock_provider_400_terminal() {
     let mock = MockProvider::new(ProviderKind::Bedrock, ResponseScript::Always(400));
     let err = mock
-        .call_chat(&default_req(), "test-model", Instant::now() + Duration::from_secs(30))
+        .call_chat(
+            &default_req(),
+            "test-model",
+            Instant::now() + Duration::from_secs(30),
+        )
         .await
         .unwrap_err();
     match err {
         RouterError::TerminalProviderError { status: 400, .. } => {}
-        other => panic!("expected 400 terminal, got: {:?}", other),
+        other => panic!("expected 400 terminal, got: {other:?}"),
     }
 }
 
@@ -312,12 +352,19 @@ async fn mock_provider_400_terminal() {
 async fn mock_provider_401_auth_error() {
     let mock = MockProvider::new(ProviderKind::Bedrock, ResponseScript::Always(401));
     let err = mock
-        .call_chat(&default_req(), "test-model", Instant::now() + Duration::from_secs(30))
+        .call_chat(
+            &default_req(),
+            "test-model",
+            Instant::now() + Duration::from_secs(30),
+        )
         .await
         .unwrap_err();
     match err {
-        RouterError::AuthError { provider: ProviderKind::Bedrock, status: 401 } => {}
-        other => panic!("expected AuthError 401, got: {:?}", other),
+        RouterError::AuthError {
+            provider: ProviderKind::Bedrock,
+            status: 401,
+        } => {}
+        other => panic!("expected AuthError 401, got: {other:?}"),
     }
 }
 
@@ -326,12 +373,16 @@ async fn mock_provider_401_auth_error() {
 async fn mock_provider_404_terminal() {
     let mock = MockProvider::new(ProviderKind::Bedrock, ResponseScript::Always(404));
     let err = mock
-        .call_chat(&default_req(), "test-model", Instant::now() + Duration::from_secs(30))
+        .call_chat(
+            &default_req(),
+            "test-model",
+            Instant::now() + Duration::from_secs(30),
+        )
         .await
         .unwrap_err();
     match err {
         RouterError::TerminalProviderError { status: 404, .. } => {}
-        other => panic!("expected 404 terminal, got: {:?}", other),
+        other => panic!("expected 404 terminal, got: {other:?}"),
     }
 }
 
@@ -343,7 +394,11 @@ async fn mock_provider_delayed_ok() {
         ResponseScript::DelayedOk(Duration::from_millis(50)),
     );
     let resp = mock
-        .call_chat(&default_req(), "test-model", Instant::now() + Duration::from_secs(30))
+        .call_chat(
+            &default_req(),
+            "test-model",
+            Instant::now() + Duration::from_secs(30),
+        )
         .await
         .unwrap();
     assert_eq!(resp.id, "mock-bedrock");

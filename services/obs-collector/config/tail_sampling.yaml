@@ -1,0 +1,59 @@
+# FR-OBS-006 - tail-based sampling for the traces pipeline.
+#
+# This is the source-of-truth tail_sampling processor block. It is merged into
+# `otel-collector-config.yaml` under `processors:` and added to the `traces` pipeline
+# (after attributes/pii_scrub, before batch). Kept here standalone so the policy set is reviewable on
+# its own and so `flag_tenant.sh` / the sampling test have a single file to point at.
+#
+# Policy intent (§1): keep 100% of the interesting traces (errors, 5xx, flagged tenants, slow) and a
+# 10% probabilistic sample of the rest. The OTel tail_sampling processor samples a trace if ANY policy
+# matches; the per-reason accounting and strict first-match single-count (§1 #6/#7) are a metrics-layer
+# refinement on top of this union, noted below.
+tail_sampling:
+  # Wait for the full trace before deciding (§1 #8). Traces still in flight are buffered.
+  decision_wait: 30s
+  # In-flight buffer cap (§1 #9); ~1GB at slice-2 load. Oldest dropped past this (reason=dropped).
+  num_traces: 100000
+  expected_new_traces_per_sec: 25000
+  policies:
+    # §1 #1 - any span with status ERROR.
+    - name: errors
+      type: status_code
+      status_code:
+        status_codes: [ERROR]
+
+    # §1 #2 - any span with HTTP status >= 500. Two attribute keys cover the OTel semconv versions.
+    - name: http-5xx
+      type: numeric_attribute
+      numeric_attribute:
+        key: http.status_code
+        min_value: 500
+        max_value: 599
+    - name: http-5xx-stable
+      type: numeric_attribute
+      numeric_attribute:
+        key: http.response.status_code
+        min_value: 500
+        max_value: 599
+
+    # §1 #3 - flagged tenants, kept at 100%. `values` is populated from flagged_tenants.yaml; operators
+    # add via `cyberos-ai flag-tenant <id> --confirm`. Hot-reload via the file-watch extension (§1 #11).
+    - name: flagged-tenants
+      type: string_attribute
+      string_attribute:
+        key: tenant_id
+        values: []
+        enabled_regex_matching: false
+
+    # §1 #4 - slow traces above the default route budget. Per-route budgets live in
+    # route_latency_budgets.yaml; the default (unspecified routes) is 2000ms.
+    - name: slow
+      type: latency
+      latency:
+        threshold_ms: 2000
+
+    # §1 #5 - 10% probabilistic sample of everything else (trace_id hash).
+    - name: normal-sample
+      type: probabilistic
+      probabilistic:
+        sampling_percentage: 10

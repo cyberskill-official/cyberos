@@ -28,6 +28,9 @@ pub mod codes {
     pub const MODULE_UNREACHABLE: i32 = -32004;
     /// Destructive tool requires Elicitation flow (FR-MCP-006).
     pub const ELICITATION_REQUIRED: i32 = -32005;
+    /// Owning module's server is unhealthy/deregistered (FR-MCP-002 DEC-2351): the tool is
+    /// known but its module missed its heartbeats, so the call is refused before dispatch.
+    pub const SKILL_UNAVAILABLE: i32 = -32006;
 }
 
 /// Build an `RpcError` from the closed code map.

@@ -1,0 +1,6 @@
+id: B03-uncited-sota
+description: Target cites a big-name comparator with no URL and no INTERNAL label
+expect: fail
+expected_violations: [R2-UNCITED]
+exercises_rules: [R2]
+protected_areas: []

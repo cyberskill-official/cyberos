@@ -29,8 +29,8 @@ service: modules/memory/cyberos/
 new_files:
   - modules/memory/cyberos/core/ranking.py
   - modules/memory/cyberos/core/decay.py
-  - modules/memory/tests/test_ranking_combined_score.py
-  - modules/memory/tests/test_decay_profiles.py
+  - modules/memory/tests/core/test_ranking_and_decay.py
+  - modules/memory/tests/core/test_digest.py
   - modules/memory/bench/bench_recall_latency.py
 modified_files:
   - modules/memory/cyberos/core/semantic.py            # delegate ranking to ranking.score_hits()
@@ -43,7 +43,7 @@ modified_files:
 allowed_tools:
   - file_read: modules/memory/**
   - file_write: modules/memory/cyberos/**, modules/memory/tests/**, modules/memory/bench/**, modules/memory/memory.schema.json, modules/memory/memory.invariants.yaml
-  - bash: cd modules/memory && python -m pytest tests/test_ranking_combined_score.py tests/test_decay_profiles.py -v
+  - bash: cd modules/memory && python -m pytest modules/memory/tests/core/test_ranking_and_decay.py modules/memory/tests/core/test_digest.py -v
   - bash: cd modules/memory && python bench/bench_recall_latency.py --episodes 10000 --trials 100
 disallowed_tools:
   - silently swallow malformed `manifest.recall_weights` (per §1 #11 — fail-fast at writer construction)
@@ -60,8 +60,8 @@ sub_tasks:
   - "0.5h: cyberos/core/semantic.py — replace inline relevance-sort with `ranking.score_hits(...)`; back-compat preserved (caller can pass `weights=None` ⇒ legacy relevance-only)"
   - "0.5h: cyberos/core/reader.py — same swap for FTS5 path; same `weights=None` fallback"
   - "0.5h: cyberos/cli/recall.py — replace FR-MEMORY-112's `combined_score` stub with `ranking.score_hits(...)` call; CLI accepts `--decay-profile {exponential,ebbinghaus}` override"
-  - "1.0h: tests/test_ranking_combined_score.py — 14 cases (weight permutations, importance defaults to 0.5, recency=1.0 fallback when last_seen absent, weights sum check, regression vs FR-MEMORY-112 default ordering)"
-  - "1.0h: tests/test_decay_profiles.py — 8 cases (exponential half-life property, Ebbinghaus monotonic decreasing, both bounded in [0.0, 1.0], invalid params rejected)"
+  - "1.0h: modules/memory/tests/core/test_ranking_and_decay.py — 14 cases (weight permutations, importance defaults to 0.5, recency=1.0 fallback when last_seen absent, weights sum check, regression vs FR-MEMORY-112 default ordering)"
+  - "1.0h: modules/memory/tests/core/test_digest.py — 8 cases (exponential half-life property, Ebbinghaus monotonic decreasing, both bounded in [0.0, 1.0], invalid params rejected)"
   - "1.0h: bench/bench_recall_latency.py — fixture-driven benchmark, asserts p95 budget for 10K-Episode store with ranking applied (within FR-MEMORY-112's 500 ms semantic budget + ≤ 10% ranking-overhead headroom)"
 risk_if_skipped: "Without recency decay and importance weighting, `cyberos recall-similar` (FR-MEMORY-112) ranks purely by semantic relevance. Two pathologies follow: (1) Old, low-quality, lucky-similarity hits dominate fresh, high-quality recent hits — the memory's recall surface degrades monotonically as the store grows. (2) FR-MEMORY-115 (`cyberos dream`) can't use recall to find candidate episodes for cross-session pattern detection without a quality signal — every episode of the same task looks the same regardless of whether the agent did a good job. The article (Ramakrushna §'Time-based decay') and MARS [1] both single out time-decay forgetting as the load-bearing primitive that prevents old facts from drowning new ones. Park et al. 2023 'Generative Agents' uses the exact 0.4 / 0.3 / 0.3 weighting we adopt, validated on a benchmark generative-agents simulation. Skipping this FR means we'd later have to retrofit the ranking call sites in `semantic.py`, `reader.py`, `recall.py`, and FR-MEMORY-115's input pipeline — and we'd ship a recall surface that's known to degrade. Cheaper to ship the right shape now."
 ---
@@ -329,7 +329,7 @@ def score_hits(
 ## §5 — Verification
 
 ```python
-# modules/memory/tests/test_ranking_combined_score.py
+# modules/memory/tests/core/test_ranking_and_decay.py
 import pytest
 from datetime import datetime, timedelta, timezone
 from cyberos.core.ranking import RecallWeights, ScoredHit, score_hits
@@ -441,7 +441,7 @@ def test_scored_hit_annotations():
 ```
 
 ```python
-# modules/memory/tests/test_decay_profiles.py
+# modules/memory/tests/core/test_digest.py
 import pytest
 from cyberos.core.decay import Exponential, Ebbinghaus, build_profile
 
@@ -651,7 +651,7 @@ All resolved. Deferred:
 - **`Exponential.half_life_hours` property** — exposed because operators want to reason about decay in human terms ("a memory at 1 week old has X% recency"). The math is in the type so the operator doesn't have to redo it.
 - **Why `recall_weights` lives on `manifest.json`, not a separate config file.** Manifest is already loaded at writer construction; reusing it keeps the failure surface narrow. A separate config means one more file to manage + one more invariant.
 - **`build_profile()` is the slice-4 plug-point** — when third-party profiles land via `entry_points`, `build_profile()` becomes the dispatcher. For now it's a stub if/elif because the slice-3 surface is exactly two profiles.
-- **Bench fixture lives in `tests/fixtures/hit_factory.py`** — generates deterministic hits given a seed so the bench is reproducible across runs. Seed: `42`.
+- **Bench fixture lives in `modules/memory/tests/core/test_history.py`** — generates deterministic hits given a seed so the bench is reproducible across runs. Seed: `42`.
 - **The `test_pure_function_no_now_internal` test is the load-bearing invariant** — without it, someone will eventually add `datetime.now()` inside `score_hits` and FR-MEMORY-115's batch dream will start producing non-deterministic scores. The unit test prevents that regression.
 - **Ranking is applied AFTER the engine's k-limit, not before.** Engines retrieve top-k by their own internal score (relevance for vector, BM25 for FTS); we then re-rank with the combined score. This means the very top of the underlying engine's rank survives — the post-ranking is a fine-grained reordering, not a wholesale reordering.
 - **The 10% overhead budget is generous** — empirically the operation is sub-millisecond for typical k=20. The budget exists to catch accidental regressions (e.g. someone forgetting to call `last_seen_at` from a derived index and going back to the filesystem).

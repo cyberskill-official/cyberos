@@ -28,7 +28,7 @@ service: cyberos/services/proj-sync/
 new_files:
   - services/proj-sync/src/drift/mod.rs
   - services/proj-sync/src/drift/sweep.rs
-  - services/proj-sync/tests/drift_test.rs
+  - services/proj/tests/audit_row_test.rs
 modified_files:
   - services/proj-sync/src/main.rs                    # spawn nightly cron task
   - services/proj-sync/migrations/0010_drift_state.sql # last-sweep-at, last-known-target-version cache

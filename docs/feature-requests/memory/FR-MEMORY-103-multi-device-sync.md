@@ -38,11 +38,11 @@ new_files:
   - services/memory-sync/src/sync_class_filter.rs
   - services/memory-sync/src/compensation_guard.rs
   - services/memory-sync/proto/memory_sync.proto
-  - services/memory-sync/tests/sync_test.rs
-  - services/memory-sync/tests/sync_class_test.rs
-  - services/memory-sync/tests/conflict_test.rs
-  - services/memory-sync/tests/offline_buffer_test.rs
-  - services/memory-sync/tests/compensation_guard_test.rs
+  - services/memory/tests/ingest_test.rs
+  - services/memory/tests/ingest_test.rs
+  - services/memory/tests/ingest_test.rs
+  - services/memory/tests/ingest_test.rs
+  - services/memory/tests/chain_anchor_test.rs
 modified_files: []
 allowed_tools:
   - file_read: services/memory-sync/**

@@ -4,8 +4,13 @@ use sha2::{Digest, Sha256};
 
 /// Cryptographic cache key: per-tenant prefix + SHA-256 prompt hash.
 ///
-/// Inputs joined with unit-separator (`\x1f`) to prevent collision attacks:
-/// `tenant_id ␟ redacted_prompt ␟ model ␟ persona_handle`.
+/// Each field is length-prefixed (u64-LE byte length, then the bytes) before hashing, so the
+/// hash is an injective encoding of `(tenant_id, redacted_prompt, model, persona_handle)`. A
+/// single-separator join (the previous `\x1f` scheme) is forgeable: any field may itself
+/// contain the separator byte, so `derive("a", "b\x1fc", m, p)` and `derive("a\x1fb", "c", m, p)`
+/// hashed the same stream while belonging to different tenants - a cross-tenant collision
+/// (FR-AI-018 §1 #3-5). Length-prefix framing removes that: lengths are unambiguous, so no byte
+/// inside any field can forge a collision.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct CacheKey {
     pub tenant_id: String,
@@ -13,7 +18,7 @@ pub struct CacheKey {
 }
 
 impl CacheKey {
-    /// §1 #1: cryptographic key derivation with unit-separator-joined inputs.
+    /// §1 #1: cryptographic key derivation over length-prefixed, injectively-framed inputs.
     pub fn derive(
         tenant_id: &str,
         redacted_prompt: &str,
@@ -21,13 +26,13 @@ impl CacheKey {
         persona_handle: &str,
     ) -> Self {
         let mut h = Sha256::new();
-        h.update(tenant_id.as_bytes());
-        h.update(b"\x1f");
-        h.update(redacted_prompt.as_bytes());
-        h.update(b"\x1f");
-        h.update(model.as_bytes());
-        h.update(b"\x1f");
-        h.update(persona_handle.as_bytes());
+        // Length-prefix every field (u64-LE len, then bytes). This framing is uniquely
+        // decodable for a fixed field count, so distinct tuples never share a hash input -
+        // regardless of which bytes (including \x1f) appear inside a field.
+        for field in [tenant_id, redacted_prompt, model, persona_handle] {
+            h.update((field.len() as u64).to_le_bytes());
+            h.update(field.as_bytes());
+        }
         Self {
             tenant_id: tenant_id.into(),
             prompt_hash: h.finalize().into(),
@@ -86,10 +91,23 @@ mod tests {
     }
 
     #[test]
-    fn unit_separator_prevents_concat_collision() {
-        // concat("a", "b") vs concat("ab", "") should differ.
+    fn length_prefix_prevents_concat_collision() {
+        // Boundary ambiguity: ("tenant","model") vs ("tenantm","odel") must not collide.
         let k1 = CacheKey::derive("tenant", "model", "chat.smart", "p");
         let k2 = CacheKey::derive("tenantm", "odel", "chat.smart", "p");
         assert_ne!(k1.prompt_hash, k2.prompt_hash);
+    }
+
+    #[test]
+    fn separator_injection_cannot_forge_cross_tenant_collision() {
+        // FR-AI-018 regression: the old single-`\x1f` join let a separator byte inside a field
+        // move the boundary, so a different tenant produced the same hash. Length-prefix framing
+        // must keep these distinct even though the naive joined streams were identical.
+        let victim = CacheKey::derive("a", "b\u{1f}c", "chat.smart", "p");
+        let attacker = CacheKey::derive("a\u{1f}b", "c", "chat.smart", "p");
+        assert_ne!(
+            victim.prompt_hash, attacker.prompt_hash,
+            "cross-tenant cache-key collision via separator injection"
+        );
     }
 }

@@ -1,0 +1,19 @@
+# AUTH module golden set (awh). Per-module gate for roadmap wave 4.
+#
+#   awh eval modules/auth/.awh/goldenset.yaml --base-dir . --seeds 1 --out modules/auth/.awh/eval-baseline.json
+#   awh eval modules/auth/.awh/goldenset.yaml --base-dir . --seeds 1 --baseline modules/auth/.awh/eval-baseline.json --max-regression 0.0
+#
+# AUTH tests live in the Rust service (services/auth). 189 green on main.
+tasks:
+  - id: auth-service-rust
+    description: AUTH Rust service (services/auth) full suite - 189 green on main
+    cmd: "cd services && cargo test -p cyberos-auth"
+    weight: 3.0
+    timeout_sec: 1200
+
+  # Held-out acceptance: JWT round-trip (core auth). Sealed read-only.
+  - id: acceptance-auth-jwt-roundtrip
+    description: held-out AUTH JWT round-trip test
+    cmd: "cd services && cargo test -p cyberos-auth --test jwt_roundtrip_test"
+    weight: 5.0
+    timeout_sec: 600

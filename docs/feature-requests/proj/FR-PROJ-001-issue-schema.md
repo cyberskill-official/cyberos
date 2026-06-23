@@ -40,10 +40,10 @@ new_files:
   - services/proj/migrations/0002_cycles.sql
   - services/proj/migrations/0003_issues.sql
   - services/proj/migrations/0004_issue_links.sql
-  - services/proj/tests/issues_test.rs
-  - services/proj/tests/issues_status_fsm_test.rs
-  - services/proj/tests/issues_links_test.rs
-  - services/proj/tests/issues_rls_test.rs
+  - services/proj/tests/status_fsm_test.rs
+  - services/proj/tests/status_fsm_test.rs
+  - services/proj/tests/status_fsm_test.rs
+  - services/proj/tests/status_fsm_test.rs
 modified_files:
   - services/auth/src/rls/templates.rs                    # add engagements/cycles/issues/issue_links to TENANT_SCOPED_TABLES
 allowed_tools:

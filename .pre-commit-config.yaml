@@ -1,0 +1,8 @@
+- repo: local
+    hooks:
+      - id: awh-gate
+        name: awh module gate (changed modules)
+        entry: .pre-commit-hooks/awh-gate.sh
+        language: script
+        pass_filenames: false
+        stages: [pre-commit]

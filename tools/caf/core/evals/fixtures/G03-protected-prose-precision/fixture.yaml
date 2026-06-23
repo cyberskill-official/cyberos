@@ -1,0 +1,6 @@
+id: G03-protected-prose-precision
+description: Protected path mentioned in narrative prose, in a fenced output block, and in an OPEN (not executed) task row - none of which is a protected-area change. The R3 tripwire must stay scoped to DONE rows and not over-fire (review gap G-C; BLINDSPOTS BS-05 precision boundary).
+expect: pass
+expected_violations: []
+exercises_rules: [R3]
+protected_areas: [src/billing/]

@@ -2,8 +2,8 @@
 
 use sha2::{Digest, Sha256};
 
-use super::{CliError, FailoverAction};
 use super::auth::OperatorClaims;
+use super::{CliError, FailoverAction};
 
 pub async fn run(
     args: FailoverAction,
@@ -26,8 +26,7 @@ async fn drill(
     duration: u32,
     prod_confirmed_aware: bool,
 ) -> Result<(), CliError> {
-    let tier = std::env::var("CYBEROS_DEPLOYMENT_TIER")
-        .unwrap_or_else(|_| "staging".into());
+    let tier = std::env::var("CYBEROS_DEPLOYMENT_TIER").unwrap_or_else(|_| "staging".into());
 
     if tier == "production" && !prod_confirmed_aware {
         return Err(CliError::DestructiveWithoutConfirm);

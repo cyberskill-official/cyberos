@@ -37,10 +37,10 @@ new_files:
   - services/memory-capture/src/queue.rs
   - services/memory-capture/src/emit.rs
   - services/memory-capture/src/trace.rs
-  - services/memory-capture/tests/watcher_test.rs
-  - services/memory-capture/tests/dedup_test.rs
-  - services/memory-capture/tests/rate_limit_test.rs
-  - services/memory-capture/tests/end_to_end_test.rs
+  - services/memory/tests/chain_anchor_test.rs
+  - services/memory/tests/ingest_test.rs
+  - services/memory/tests/ingest_test.rs
+  - services/memory/tests/ingest_test.rs
 modified_files:
   - cyberos/Cargo.toml                                      # workspace member
   - services/memory/src/cli/watch.rs                         # `cyberos memory watch` registers folder with capture daemon
@@ -542,7 +542,7 @@ async fn main() -> ExitCode {
 ## §5 — Verification
 
 ```rust
-// services/memory-capture/tests/end_to_end_test.rs
+// services/memory/tests/ingest_test.rs
 
 #[tokio::test]
 async fn single_file_write_captures_one_row() {
@@ -635,7 +635,7 @@ async fn doctor_gate_refuses_to_start() {
 ```
 
 ```rust
-// services/memory-capture/tests/dedup_test.rs
+// services/memory/tests/ingest_test.rs
 #[test]
 fn cache_hit_same_path_is_idempotent() {
     let cache = DedupCache::new();

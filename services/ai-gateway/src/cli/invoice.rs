@@ -1,8 +1,8 @@
 //! FR-AI-021 — `cyberos-ai invoice` subcommand.
 
-use super::{CliError, InvoiceAction};
 use super::auth::OperatorClaims;
 use super::output::{self, InvoiceRow};
+use super::{CliError, InvoiceAction};
 use sqlx::PgPool;
 
 pub async fn run(
@@ -12,9 +12,11 @@ pub async fn run(
     pool: &PgPool,
 ) -> Result<(), CliError> {
     match args {
-        InvoiceAction::Export { tenant, period, format } => {
-            export(pool, &tenant, &period, &format, json).await
-        }
+        InvoiceAction::Export {
+            tenant,
+            period,
+            format,
+        } => export(pool, &tenant, &period, &format, json).await,
     }
 }
 

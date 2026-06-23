@@ -29,8 +29,8 @@ service: modules/memory/cyberos/
 new_files:
   - modules/memory/cyberos/core/episode.py
   - modules/memory/cyberos/cli/recall.py
-  - modules/memory/tests/test_episode_log_and_recall.py
-  - modules/memory/tests/test_episode_schema.py
+  - modules/memory/tests/core/test_episode.py
+  - modules/memory/tests/core/test_episode.py
   - modules/memory/tests/fixtures/episode_corpus.jsonl
 modified_files:
   - modules/memory/memory.schema.json           # add `episode` to MemoryKind enum + per-kind required fields
@@ -43,7 +43,7 @@ modified_files:
 allowed_tools:
   - file_read: modules/memory/**
   - file_write: modules/memory/cyberos/**, modules/memory/tests/**, modules/memory/memory.schema.json, modules/memory/memory.invariants.yaml, AGENTS.md
-  - bash: cd modules/memory && python -m pytest tests/test_episode_log_and_recall.py tests/test_episode_schema.py -v
+  - bash: cd modules/memory && python -m pytest modules/memory/tests/core/test_episode.py modules/memory/tests/core/test_episode.py -v
   - bash: cd modules/memory && python -m cyberos --store /tmp/memory doctor
 disallowed_tools:
   - emit episodes whose `outcome` is outside the closed enum (per §1 #5 — walker rejects)
@@ -59,8 +59,8 @@ sub_tasks:
   - "1.0h: cyberos/core/semantic.py — extend `recall(memory_kind=)` filter; existing call sites unaffected (kind=None retains current behaviour)"
   - "1.5h: cyberos/cli/recall.py — `cyberos recall-similar <task> [--k 3] [--min-relevance 0.65]`; ranks by relevance · 0.4 + quality_score · 0.3 + recency · 0.3 (recency mock for now; FR-MEMORY-113 will fold proper decay in)"
   - "1.0h: cyberos/__main__.py — wire `episode log`, `recall-similar` subcommands; existing `cyberos put memories/episodes/x.md -` continues to work; the new subcommand is a strict convenience that fills in the frontmatter"
-  - "1.5h: tests/test_episode_log_and_recall.py — 12 cases (log success/partial/failure, recall ranks correctly, FTS-only fallback when sentence-transformers missing, top-K cap, min_relevance cutoff, quality_score absence defaults to 0.5)"
-  - "1.0h: tests/test_episode_schema.py — 8 cases (outcome enum closed, quality_score range guard, duration_ms negative rejected, task empty rejected, frontmatter `kind: episode` round-trips through reader)"
+  - "1.5h: modules/memory/tests/core/test_episode.py — 12 cases (log success/partial/failure, recall ranks correctly, FTS-only fallback when sentence-transformers missing, top-K cap, min_relevance cutoff, quality_score absence defaults to 0.5)"
+  - "1.0h: modules/memory/tests/core/test_episode.py — 8 cases (outcome enum closed, quality_score range guard, duration_ms negative rejected, task empty rejected, frontmatter `kind: episode` round-trips through reader)"
   - "0.5h: tests/fixtures/episode_corpus.jsonl — 40-row fixture: 10 success, 10 partial, 10 failure, 10 edge (zero duration, quality_score=0.0, etc.)"
   - "0.5h: walker.py — wire the new invariants so `cyberos doctor` catches violations the same way it catches frontmatter drift"
   - "0.5h: AGENTS.md + CHANGELOG.md — additive doc updates; AGENTS.md §2 gets one line for `memories/episodes/`; no §0.2 protocol-amendment chat-turn required because adding to the closed enum is exactly the §5.2 evolution path"
@@ -381,7 +381,7 @@ def run(writer: Writer, args: argparse.Namespace, actor: str) -> str:
 
 1. **Schema accepts new kind** — `episode` is a valid `MemoryKind`; `jsonschema.validate(meta, MemoryKind)` passes for `episode` and continues to pass for every existing kind. *(traces_to: §1 #1)*
 2. **Episode frontmatter required fields** — a memory file with `kind: episode` and any of `{task, approach, outcome, duration_ms}` missing → walker fails with rule id `episode-frontmatter-required-field`. *(traces_to: §1 #2)*
-3. **Existing memory kinds unchanged** — every existing memory file under `memories/{decisions,facts,...}/` continues to validate against `MemoryFrontmatter` exactly as before the schema migration. Regression suite `tests/test_frontmatter_legacy.py` passes unchanged. *(traces_to: §1 #3)*
+3. **Existing memory kinds unchanged** — every existing memory file under `memories/{decisions,facts,...}/` continues to validate against `MemoryFrontmatter` exactly as before the schema migration. Regression suite `modules/memory/tests/core/test_frontmatter.py` passes unchanged. *(traces_to: §1 #3)*
 4. **Writer routes Episode writes** — `cyberos.core.episode.log(writer, ep)` results in one `put` audit row + one `episode.logged` audit row; HEAD advances by exactly 2 seq positions. No direct file write to `audit/`, `HEAD`, or `.lock`. *(traces_to: §1 #4, §1 #12)*
 5. **Outcome enum closed** — `Episode(outcome="success")` accepted; `Episode(outcome="kinda-worked")` raises `ValueError`. Walker rejects file-level violations as error severity. *(traces_to: §1 #5)*
 6. **Quality_score range enforced** — `quality_score=1.0` accepted; `quality_score=1.1` rejected at construction; `quality_score=-0.0001` rejected. Same checks at walker time. *(traces_to: §1 #6)*
@@ -395,7 +395,7 @@ def run(writer: Writer, args: argparse.Namespace, actor: str) -> str:
 14. **Min-relevance cutoff** — three Episodes with relevances 0.80 / 0.70 / 0.60, `--min-relevance 0.65` → top-K returns 2 (the 0.60 is filtered out). *(traces_to: §1 #9)*
 15. **Top-K cap** — 10 Episodes match, `--k 3` → exactly 3 returned. *(traces_to: §1 #9)*
 16. **FTS5 fallback when sentence-transformers absent** — when `cyberos.core.semantic.available()` returns False, `cyberos recall-similar` runs the FTS5 path; response `backend: "fts5"`. *(traces_to: §1 #9, DEC-183)*
-17. **`recall` back-compat** — every existing call site to `cyberos.core.semantic.recall(...)` that does not pass `memory_kind=` continues to return the same set of hits it did before the migration. Regression covered by `tests/test_recall_back_compat.py`. *(traces_to: §1 #11)*
+17. **`recall` back-compat** — every existing call site to `cyberos.core.semantic.recall(...)` that does not pass `memory_kind=` continues to return the same set of hits it did before the migration. Regression covered by `modules/memory/tests/core/test_dream.py`. *(traces_to: §1 #11)*
 18. **`episode.logged` projection row shape** — the aux audit row's payload matches `{path, outcome, duration_ms, token_cost, quality_score, logged_at}`; `quality_score` is `0.5` literal when the source Episode had it absent. *(traces_to: §1 #12, DEC-181)*
 19. **Fixture corpus parses** — `tests/fixtures/episode_corpus.jsonl` has ≥ 40 rows; every row constructs a valid `Episode` and round-trips through `frontmatter()` → schema-validate → reconstruct without loss. *(traces_to: §1 #13)*
 20. **Recall-similar latency p95** — 10K-Episode store, 100 trial runs of `cyberos recall-similar` → p95 ≤ 500 ms (semantic) / ≤ 150 ms (FTS). *(traces_to: §1 #14)*
@@ -408,7 +408,7 @@ def run(writer: Writer, args: argparse.Namespace, actor: str) -> str:
 ## §5 — Verification
 
 ```python
-# modules/memory/tests/test_episode_log_and_recall.py
+# modules/memory/tests/core/test_episode.py
 import json
 from pathlib import Path
 
@@ -531,7 +531,7 @@ def test_fixture_corpus_parses():
 ```
 
 ```python
-# modules/memory/tests/test_episode_schema.py
+# modules/memory/tests/core/test_episode.py
 import jsonschema, json
 from pathlib import Path
 
@@ -710,7 +710,7 @@ All resolved. Deferred:
 - **Recall path is over-fetch + filter, not query-level kind filter at the engine.** Reason: SQLite FTS5 doesn't natively filter on JSON metadata; vector store does but each backend has its own filter syntax. Over-fetching 4× the requested k and filtering in Python is portable + fast enough (vector retrieval is O(log N); filter is O(k·4) post-step).
 - **Fixture corpus is 40+ rows because that's the threshold below which CI flakes.** Adding 10 more rows per quarter as the team observes new failure modes is the maintenance cadence (same as FR-MEMORY-111's PII corpus).
 - **`memory_kind` is a string, not an enum, in the Python API.** Enum would be cleaner but it forces every caller to import the enum; a string is easier for the CLI to pass through. The schema is the source of truth; runtime validation is on the schema side.
-- **`tmp_memory` and `seeded_memory` pytest fixtures** — defined in `modules/memory/tests/conftest.py`. `tmp_memory` is a fresh empty store; `seeded_memory` has 5 episodes + 5 facts pre-loaded for recall tests. Add `empty_memory` and `broken_memory` (with a hand-written invalid Episode) in this FR.
+- **`tmp_memory` and `seeded_memory` pytest fixtures** — defined in `modules/memory/tests/core/test_mmr.py`. `tmp_memory` is a fresh empty store; `seeded_memory` has 5 episodes + 5 facts pre-loaded for recall tests. Add `empty_memory` and `broken_memory` (with a hand-written invalid Episode) in this FR.
 - **Why we don't auto-set `last_seen_at` on the frontmatter.** The audit chain already records when the put happened; duplicating it in the body would be drift-prone. FR-MEMORY-120 (`cyberos history`) projects `last_seen_at` from the latest audit row touching that path.
 
 ---

@@ -1,0 +1,13 @@
+# CAF audit identity for the `cuo` module (Python, modules/cuo). Absorbed from
+# CyberSkill/code-audit-framework. verify-target.sh runs RUN_COMMANDS from THIS dir (modules/cuo),
+# so the pytest command needs no cd. Run with the module's Python env (deps installed).
+config:
+  TECH_STACK: Python (pytest) / LangGraph runtime / CUO persona workflows
+  PROJECT_PURPOSE: CyberOS chief-of-staff orchestration - personas, workflows, langgraph runtime
+  MODE: gated
+  DEPTH: standard
+  SEVERITY_FLOOR: High
+  PROTECTED_AREAS: modules/cuo/.awh/, modules/cuo/.caf/, modules/cuo/chief-technology-officer/workflows/
+  RUN_COMMANDS: python -m pytest -q
+  DOMAIN_NOTES: This module owns ship-feature-requests itself (the gate host). RUN_COMMANDS mirrors the awh suite (known green); add `ruff check .` once confirmed lint-clean.
+  BENCHMARK_MODE: none

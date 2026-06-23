@@ -37,7 +37,7 @@ new_files:
   - services/ai-gateway/src/residency/mod.rs
   - services/ai-gateway/src/residency/parse.rs
   - services/ai-gateway/src/residency/region_table.rs
-  - services/ai-gateway/tests/residency_test.rs
+  - services/ai-gateway/tests/residency_property_test.rs
   - services/ai-gateway/tests/residency_property_test.rs
   - services/ai-gateway/tests/residency_integration_test.rs
 modified_files:
@@ -312,7 +312,7 @@ ai_policy:
 ### Happy + matcher tests
 
 ```rust
-// services/ai-gateway/tests/residency_test.rs
+// services/ai-gateway/tests/residency_property_test.rs
 use cyberos_ai_gateway::residency::{self, Residency, Region};
 
 #[test]

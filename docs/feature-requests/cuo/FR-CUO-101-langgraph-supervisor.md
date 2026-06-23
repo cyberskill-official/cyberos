@@ -57,10 +57,10 @@ new_files:
   - cuo/cuo/supervisor/errors.py                      # ExitCode re-export from cyberos-cli-exit + supervisor-specific codes
   - cuo/cuo/cli/supervisor.py                         # `cyberos-cuo supervisor route --query "..." [--invoke] [--record]`
   - cuo/tests/test_supervisor_graph.py                # graph topology — exactly 5 nodes, closed transitions
-  - cuo/tests/test_supervisor_rule_path.py            # confidence ≥ 0.70 → auto-invoke, no LLM
-  - cuo/tests/test_supervisor_ask_path.py             # confidence 0.50–0.70 → clarification with top 3
-  - cuo/tests/test_supervisor_cascade_path.py         # confidence 0.10–0.50 → LLM cascade, structured pick validation
-  - cuo/tests/test_supervisor_defer_path.py           # confidence < 0.10 → defer-to-human, no invocation
+  - cuo/modules/cuo/tests/test_applier_paths.py            # confidence ≥ 0.70 → auto-invoke, no LLM
+  - cuo/modules/cuo/tests/test_applier_paths.py             # confidence 0.50–0.70 → clarification with top 3
+  - cuo/modules/cuo/tests/test_applier_paths.py         # confidence 0.10–0.50 → LLM cascade, structured pick validation
+  - cuo/modules/cuo/tests/test_applier_paths.py           # confidence < 0.10 → defer-to-human, no invocation
   - cuo/tests/test_supervisor_persona_defer_matrix.py # destructive op never auto-invoked regardless of confidence
   - cuo/tests/test_supervisor_audit_row.py            # every path emits exactly one cuo.routing_decision row
   - cuo/tests/test_supervisor_litellm_routes_via_gateway.py  # litellm_proxy MUST call AI Gateway, MUST NOT direct provider

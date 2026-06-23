@@ -1,0 +1,6 @@
+# Audit waivers — audit-trailed, expiring suppressions (validator: apply_waivers)
+- code: R2-UNCITED
+  match: "LegacyVendor"
+  reason: "comparator mandated by the client contract; no public URL exists for their internal importer"
+  approved_by: "stephen@cyberskill.world"
+  expires: 2099-12-31

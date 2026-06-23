@@ -1,0 +1,6 @@
+id: B01-fabricated-metric
+description: Measured-looking baseline with no verbatim output block (the v1 reward-hack)
+expect: fail
+expected_violations: [R1-NO-OUTPUT]
+exercises_rules: [R1]
+protected_areas: []

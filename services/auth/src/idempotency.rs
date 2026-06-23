@@ -35,7 +35,7 @@ pub async fn record(
     .bind(response_body)
     .execute(&mut *tx)
     .await?;
-    
+
     tx.commit().await
 }
 

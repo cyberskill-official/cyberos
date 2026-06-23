@@ -34,8 +34,8 @@ new_files:
   - services/memory-capture/install/launchd/world.cyberos.memory-capture.plist
   - services/memory-capture/install/install-daemon.sh
   - services/memory-capture/install/uninstall-daemon.sh
-  - services/memory-capture/tests/healthz_test.rs
-  - services/memory-capture/tests/sweeper_test.rs
+  - services/memory/tests/ingest_test.rs
+  - services/memory/tests/ingest_test.rs
   - services/memory-capture/tests/restart_e2e_test.sh
 modified_files:
   - services/memory-capture/src/main.rs                  # bind /healthz; start sweeper; install signal handlers
@@ -422,7 +422,7 @@ esac
 ## §5 — Verification
 
 ```rust
-// services/memory-capture/tests/healthz_test.rs
+// services/memory/tests/ingest_test.rs
 
 #[tokio::test]
 async fn returns_200_when_healthy() {
@@ -461,7 +461,7 @@ async fn returns_503_when_queue_saturated() {
 ```
 
 ```rust
-// services/memory-capture/tests/sweeper_test.rs
+// services/memory/tests/ingest_test.rs
 #[test]
 fn prunes_files_older_than_ttl() {
     let tmpdir = tempdir().unwrap();

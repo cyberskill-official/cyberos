@@ -2,20 +2,22 @@ version: 1
 last_updated: 2026-05-15
 source: test fixture
 
+# NOTE: `anthropic:` is intentionally the LAST provider section. The hot-reload test
+# (cost_table_test::hot_reload_picks_up_new_model) appends a new model to the end of this file
+# and then looks it up as ProviderKind::Anthropic, so the appended entry must land under the
+# anthropic block. Keep anthropic last.
 rates:
   bedrock:
     anthropic.claude-3-5-sonnet-20241022-v2:0:
       input_per_1k_usd:  0.003
       output_per_1k_usd: 0.015
+    anthropic.claude-3-haiku-20240307-v1:0:
+      input_per_1k_usd:  0.00025
+      output_per_1k_usd: 0.00125
     amazon.titan-embed-text-v2:0:
       input_per_1k_usd:  0.00002
       output_per_1k_usd: 0.0
       is_embedding: true
-
-  anthropic:
-    claude-3-5-sonnet-20241022:
-      input_per_1k_usd:  0.003
-      output_per_1k_usd: 0.015
 
   openai:
     gpt-4o:
@@ -27,3 +29,8 @@ rates:
       input_per_1k_usd:  0.0
       output_per_1k_usd: 0.0
       is_embedding: true
+
+  anthropic:
+    claude-3-5-sonnet-20241022:
+      input_per_1k_usd:  0.003
+      output_per_1k_usd: 0.015

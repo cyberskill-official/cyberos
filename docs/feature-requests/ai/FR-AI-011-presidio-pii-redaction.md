@@ -38,7 +38,7 @@ new_files:
   - services/ai-gateway/pii/presidio_sidecar.py
   - services/ai-gateway/pii/Dockerfile.presidio
   - services/ai-gateway/tests/redact_test.rs
-  - services/ai-gateway/tests/redact_no_log_test.rs
+  - services/ai-gateway/tests/redact_test.rs
 modified_files:
   - services/ai-gateway/src/handlers/chat.rs    # call redact between precheck and router
   - services/ai-gateway/src/lib.rs              # export redact module
@@ -477,7 +477,7 @@ async fn idempotency_holds_when_sidecar_returns_unsorted() {
 }
 
 // ISS-004 fix: CI test — every Presidio recognizer entity has a PiiType variant.
-// Lives in tests/redact_pii_type_coverage_test.rs to avoid pulling Presidio deps into the main test bin.
+// Lives in services/ai-gateway/tests/redact_test.rs to avoid pulling Presidio deps into the main test bin.
 #[test]
 fn every_presidio_entity_has_pii_type_variant() {
     let entities = mocks::sidecar_client::list_entities();
@@ -527,7 +527,7 @@ async fn no_prompt_fragment_in_error_variants() {
 }
 ```
 
-**No-log test:** `services/ai-gateway/tests/redact_no_log_test.rs`
+**No-log test:** `services/ai-gateway/tests/redact_test.rs`
 
 ```rust
 use cyberos_ai_gateway::redact;

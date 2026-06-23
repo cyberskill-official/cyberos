@@ -1,0 +1,52 @@
+name: "Protocol failure report"
+description: "An agent run satisfied AUDIT.md's letter while violating its intent — the most valuable contribution this repo accepts (docs/CONTRIBUTING.md)."
+title: "failure: <one line>"
+labels: ["failure-report"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Protocol version
+      description: From the run's Scope & method line (e.g. v1.3.0)
+      placeholder: v1.3.0
+    validations:
+      required: true
+  - type: input
+    id: agent
+    attributes:
+      label: Agent / model
+      placeholder: "claude code / <model>, codex cli / <model>, ..."
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: What the agent did (letter vs intent)
+      description: What AUDIT.md's wording permitted that it shouldn't have — or what the validator missed/over-flagged.
+    validations:
+      required: true
+  - type: textarea
+    id: artifact
+    attributes:
+      label: Artifact excerpt
+      description: "Relevant BACKLOG/HANDOFF lines. REDACT secrets per R8 — [REDACTED:<kind>]."
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+    validations:
+      required: true
+  - type: dropdown
+    id: validator
+    attributes:
+      label: Did the validator catch it?
+      options:
+        - "No — validated CLEAN (a miss; B-fixture candidate)"
+        - "Yes, but wrongly (a false positive; G-fixture candidate)"
+        - "Yes, correctly (reporting for the record)"
+        - "Not applicable / didn't run it"
+    validations:
+      required: true

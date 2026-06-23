@@ -13,8 +13,8 @@ pub fn verify_persona(persona: &Persona) -> Result<(), PersonaError> {
     if actual != persona.source_hash {
         return Err(PersonaError::Tampered {
             handle: persona.handle.clone(),
-            expected_hash: persona.source_hash,
-            actual_hash: actual,
+            expected_hash: Box::new(persona.source_hash),
+            actual_hash: Box::new(actual),
         });
     }
     Ok(())

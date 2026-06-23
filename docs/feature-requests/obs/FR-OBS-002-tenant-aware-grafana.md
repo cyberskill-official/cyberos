@@ -3,15 +3,16 @@ id: FR-OBS-002
 title: "Tenant-aware Grafana proxy (Rust) — AST-injects tenant_id into PromQL/LogQL/TraceQL with anti-bypass + property test + audit log"
 module: OBS
 priority: MUST
-status: ready_to_implement
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 2
 slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
-shipped: null
+shipped: 2026-06-20
 memory_chain_hash: null
+shipped_notes: "services/obs-proxy crate (LogQL/PromQL/TraceQL injectors, RS256 JWKS auth, audit, decide + request lifecycle, axum binary, reqwest forwarder) + deploy/obs stack. Gated green: awh obs 4/4=100%, caf obs CLEAN. 42 lib tests + integration + 2000-case cross-tenant property test. Commits 2e2c143..d1036f6."
 related_frs: [FR-OBS-001, FR-OBS-007, FR-OBS-008, FR-OBS-009, FR-AUTH-004, FR-AUTH-108, FR-AI-018]
 depends_on: [FR-OBS-001, FR-AUTH-004]
 blocks: [FR-OBS-007, FR-OBS-008]

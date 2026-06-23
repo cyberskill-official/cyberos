@@ -36,10 +36,10 @@ new_files:
   - services/ai-gateway/src/cache/ttl.rs
   - services/ai-gateway/src/cache/redis_backend.rs
   - services/ai-gateway/tests/cache_test.rs
-  - services/ai-gateway/tests/cache_property_test.rs
+  - services/ai-gateway/tests/cache_isolation_property_test.rs
   - services/ai-gateway/tests/cache_ttl_test.rs
-  - services/ai-gateway/tests/cache_size_eviction_test.rs
-  - services/ai-gateway/tests/cache_workload_simulation_test.rs
+  - services/ai-gateway/tests/cache_ttl_test.rs
+  - services/ai-gateway/tests/cache_isolation_property_test.rs
   - services/ai-gateway/docker/redis/redis.conf                      # production-tuned config (maxmemory + LRU policy)
 modified_files:
   - services/ai-gateway/src/handlers/chat.rs                         # check cache before router::call_provider
@@ -586,7 +586,7 @@ async fn entry_expires_after_jittered_ttl() {
 ### Property test (cross-tenant)
 
 ```rust
-// services/ai-gateway/tests/cache_property_test.rs
+// services/ai-gateway/tests/cache_isolation_property_test.rs
 use proptest::prelude::*;
 
 fn any_tenant() -> impl Strategy<Value = String> {
@@ -618,7 +618,7 @@ proptest! {
 ### Workload-simulation test
 
 ```rust
-// services/ai-gateway/tests/cache_workload_simulation_test.rs
+// services/ai-gateway/tests/cache_isolation_property_test.rs
 #[tokio::test]
 #[ignore = "long-running; run with `cargo test workload -- --ignored`"]
 async fn 30_percent_hit_rate_over_7_days() {

@@ -6,11 +6,16 @@ members = [
     "skill-broker",
     "ai-gateway",
     "obs-collector",
+    "obs-proxy",
+    "obs-router",
+    "obs-compliance-view",
     "mcp-gateway",
     "email",
     "proj",
     "shared/cyberos-cli-exit",
     "shared/cyberos-types",
+    "shared/cyberos-obs-sdk",
+    "shared/cyberos-audit-chain",
 ]
 
 [workspace.package]
@@ -74,6 +79,7 @@ tokio-test          = "0.4"
 # Internal
 cyberos-cli-exit    = { path = "shared/cyberos-cli-exit" }
 cyberos-types       = { path = "shared/cyberos-types" }
+cyberos-obs-sdk     = { path = "shared/cyberos-obs-sdk" }
 
 [profile.dev]
 opt-level = 0

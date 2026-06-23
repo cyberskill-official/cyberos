@@ -28,7 +28,10 @@ attestations:
     let table = result.unwrap();
     assert_eq!(table.len(), 1);
     let att = table
-        .get(&(ProviderKind::Bedrock, "anthropic.claude-3-5-sonnet-20241022-v2:0".into()))
+        .get(&(
+            ProviderKind::Bedrock,
+            "anthropic.claude-3-5-sonnet-20241022-v2:0".into(),
+        ))
         .unwrap();
     assert!(att.is_zdr);
     assert_eq!(att.notes.as_deref(), Some("Test note"));
@@ -47,7 +50,7 @@ attestations:
       attested_by: "stephen@cyberos.world"
 "#;
     let err = parse_yaml_for_test(yaml).unwrap_err();
-    assert!(format!("{}", err).contains("https"));
+    assert!(format!("{err}").contains("https"));
 }
 
 #[test]
@@ -63,7 +66,7 @@ attestations:
       attested_by: "alice"
 "#;
     let err = parse_yaml_for_test(yaml).unwrap_err();
-    assert!(format!("{}", err).contains("attested_by"));
+    assert!(format!("{err}").contains("attested_by"));
 }
 
 #[test]
@@ -79,7 +82,7 @@ attestations:
       attested_by: "alice@gmail.com"
 "#;
     let err = parse_yaml_for_test(yaml).unwrap_err();
-    assert!(format!("{}", err).contains("attested_by"));
+    assert!(format!("{err}").contains("attested_by"));
 }
 
 #[test]
@@ -94,7 +97,7 @@ attestations:
       attested_by: "stephen@cyberos.world"
 "#;
     let err = parse_yaml_for_test(yaml).unwrap_err();
-    assert!(format!("{}", err).contains("source_url"));
+    assert!(format!("{err}").contains("source_url"));
 }
 
 #[test]
@@ -109,7 +112,7 @@ attestations:
       source_url: "https://platform.openai.com/policy"
 "#;
     let err = parse_yaml_for_test(yaml).unwrap_err();
-    assert!(format!("{}", err).contains("attested_by"));
+    assert!(format!("{err}").contains("attested_by"));
 }
 
 #[test]
@@ -124,7 +127,7 @@ attestations:
       attested_by: "stephen@cyberos.world"
 "#;
     let err = parse_yaml_for_test(yaml).unwrap_err();
-    assert!(format!("{}", err).contains("is_zdr"));
+    assert!(format!("{err}").contains("is_zdr"));
 }
 
 #[test]
@@ -140,7 +143,7 @@ attestations:
       attested_by: "stephen@cyberos.world"
 "#;
     let err = parse_yaml_for_test(yaml).unwrap_err();
-    assert!(format!("{}", err).contains("unknown provider"));
+    assert!(format!("{err}").contains("unknown provider"));
 }
 
 // ─── Staleness tests ─────────────────────────────────────────────────────────
@@ -211,10 +214,9 @@ fn parse_yaml_for_test(
 fn parse_attestations_public(
     yaml: &str,
 ) -> Result<std::collections::HashMap<(ProviderKind, String), ZdrAttestation>, ZdrInitError> {
-    let raw: serde_yaml::Value =
-        serde_yaml::from_str(yaml).map_err(|e| ZdrInitError::Schema {
-            reason: e.to_string(),
-        })?;
+    let raw: serde_yaml::Value = serde_yaml::from_str(yaml).map_err(|e| ZdrInitError::Schema {
+        reason: e.to_string(),
+    })?;
 
     let attestations = raw
         .get("attestations")
@@ -223,33 +225,27 @@ fn parse_attestations_public(
         })?;
 
     let mut out = std::collections::HashMap::new();
-    for (provider_yaml, models) in attestations
-        .as_mapping()
-        .ok_or_else(|| ZdrInitError::Schema {
-            reason: "'attestations' must be a mapping".into(),
-        })?
-    {
-        let provider_str = provider_yaml
-            .as_str()
-            .ok_or_else(|| ZdrInitError::Schema {
-                reason: format!("provider key must be a string"),
-            })?;
-        let provider = parse_provider_kind(provider_str).ok_or_else(|| {
-            ZdrInitError::Schema {
-                reason: format!("unknown provider: {}", provider_str),
-            }
-        })?;
-
-        for (model_yaml, fields) in models
+    for (provider_yaml, models) in
+        attestations
             .as_mapping()
             .ok_or_else(|| ZdrInitError::Schema {
-                reason: format!("{}/models must be a mapping", provider_str),
+                reason: "'attestations' must be a mapping".into(),
             })?
-        {
+    {
+        let provider_str = provider_yaml.as_str().ok_or_else(|| ZdrInitError::Schema {
+            reason: "provider key must be a string".to_string(),
+        })?;
+        let provider = parse_provider_kind(provider_str).ok_or_else(|| ZdrInitError::Schema {
+            reason: format!("unknown provider: {provider_str}"),
+        })?;
+
+        for (model_yaml, fields) in models.as_mapping().ok_or_else(|| ZdrInitError::Schema {
+            reason: format!("{provider_str}/models must be a mapping"),
+        })? {
             let model = model_yaml
                 .as_str()
                 .ok_or_else(|| ZdrInitError::Schema {
-                    reason: format!("model key must be a string"),
+                    reason: "model key must be a string".to_string(),
                 })?
                 .to_string();
             let att = parse_one_public(provider_str, &model, fields)?;
@@ -266,49 +262,47 @@ fn parse_one_public(
     fields: &serde_yaml::Value,
 ) -> Result<ZdrAttestation, ZdrInitError> {
     let map = fields.as_mapping().ok_or_else(|| ZdrInitError::Schema {
-        reason: format!("{}/{}: not a mapping", provider, model),
+        reason: format!("{provider}/{model}: not a mapping"),
     })?;
 
     let is_zdr = map
-        .get(&serde_yaml::Value::String("is_zdr".into()))
+        .get(serde_yaml::Value::String("is_zdr".into()))
         .and_then(|v| v.as_bool())
         .ok_or_else(|| ZdrInitError::Schema {
-            reason: format!("{}/{}: missing or non-bool is_zdr", provider, model),
+            reason: format!("{provider}/{model}: missing or non-bool is_zdr"),
         })?;
 
     let verified_at_s = map
-        .get(&serde_yaml::Value::String("verified_at".into()))
+        .get(serde_yaml::Value::String("verified_at".into()))
         .and_then(|v| v.as_str())
         .ok_or_else(|| ZdrInitError::Schema {
-            reason: format!("{}/{}: missing verified_at", provider, model),
+            reason: format!("{provider}/{model}: missing verified_at"),
         })?;
     let verified_at =
-        NaiveDate::parse_from_str(verified_at_s, "%Y-%m-%d").map_err(|e| {
-            ZdrInitError::Schema {
-                reason: format!("{}/{}: bad verified_at: {}", provider, model, e),
-            }
+        NaiveDate::parse_from_str(verified_at_s, "%Y-%m-%d").map_err(|e| ZdrInitError::Schema {
+            reason: format!("{provider}/{model}: bad verified_at: {e}"),
         })?;
 
     let source_url = map
-        .get(&serde_yaml::Value::String("source_url".into()))
+        .get(serde_yaml::Value::String("source_url".into()))
         .and_then(|v| v.as_str())
         .ok_or_else(|| ZdrInitError::Schema {
-            reason: format!("{}/{}: missing source_url", provider, model),
+            reason: format!("{provider}/{model}: missing source_url"),
         })?
         .to_string();
     validate_url(provider, model, &source_url)?;
 
     let attested_by = map
-        .get(&serde_yaml::Value::String("attested_by".into()))
+        .get(serde_yaml::Value::String("attested_by".into()))
         .and_then(|v| v.as_str())
         .ok_or_else(|| ZdrInitError::Schema {
-            reason: format!("{}/{}: missing attested_by", provider, model),
+            reason: format!("{provider}/{model}: missing attested_by"),
         })?
         .to_string();
     validate_attestor(provider, model, &attested_by)?;
 
     let notes = map
-        .get(&serde_yaml::Value::String("notes".into()))
+        .get(serde_yaml::Value::String("notes".into()))
         .and_then(|v| v.as_str())
         .map(|s| s.to_string());
 

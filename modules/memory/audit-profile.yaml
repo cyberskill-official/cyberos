@@ -1,0 +1,15 @@
+# CAF audit identity for the `memory` module - it has BOTH a Python suite (modules/memory) and a
+# Rust crate (cyberos-memory, services/). Absorbed from CyberSkill/code-audit-framework.
+# verify-target.sh runs RUN_COMMANDS from THIS dir (modules/memory): the pytest segment runs in
+# place, the cargo segment hops to ../../services. Each ';' segment is run independently from this
+# dir. Run on a build machine with both the Python env and the Rust toolchain.
+config:
+  TECH_STACK: Python (pytest) + Rust (cargo) / cyberos-memory / semantic dedup + consolidation
+  PROJECT_PURPOSE: CyberOS memory - episodic/semantic store, consolidation, audit chain
+  MODE: gated
+  DEPTH: standard
+  SEVERITY_FLOOR: High
+  PROTECTED_AREAS: modules/memory/.awh/, modules/memory/.caf/, services/memory/tests/
+  RUN_COMMANDS: python -m pytest -q; cd ../../services && cargo test -p cyberos-memory
+  DOMAIN_NOTES: The memory audit chain is the system's source of truth - do not weaken its tests. RUN_COMMANDS mirrors the awh suite (known green).
+  BENCHMARK_MODE: none

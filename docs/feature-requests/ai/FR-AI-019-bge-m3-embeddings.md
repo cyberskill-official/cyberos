@@ -41,9 +41,9 @@ new_files:
   - services/ai-gateway/embeddings/checksums/bge-m3.sha256
   - services/ai-gateway/src/router/bge_provider.rs
   - services/ai-gateway/src/router/bge_batch_buffer.rs
-  - services/ai-gateway/tests/bge_test.rs
-  - services/ai-gateway/tests/bge_batch_test.rs
-  - services/ai-gateway/tests/bge_fallback_test.rs
+  - services/ai-gateway/tests/otel_test.rs
+  - services/ai-gateway/tests/cache_test.rs
+  - services/ai-gateway/tests/rerank_test.rs
 modified_files:
   - services/ai-gateway/src/router/mod.rs               # add BgeProvider variant
   - services/ai-gateway/src/router/provider.rs          # Provider trait covers call_embed
@@ -406,7 +406,7 @@ Content-Type: application/json
 ## §5 — Verification
 
 ```rust
-// services/ai-gateway/tests/bge_test.rs
+// services/ai-gateway/tests/otel_test.rs
 use cyberos_ai_gateway::router::bge_provider::{BgeProvider, EmbedRequest, EmbedTask};
 
 #[tokio::test]
@@ -478,7 +478,7 @@ async fn no_sidecar_in_region_returns_residency_violation() {
 ```
 
 ```rust
-// services/ai-gateway/tests/bge_batch_test.rs
+// services/ai-gateway/tests/cache_test.rs
 #[tokio::test]
 async fn 32_concurrent_calls_dispatch_in_one_batch() {
     let mock_sidecar = MockSidecar::start();

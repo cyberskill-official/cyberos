@@ -2,9 +2,9 @@
 
 use sha2::{Digest, Sha256};
 
-use super::{CliError, MemoryAction};
 use super::auth::{OperatorClaims, Role};
 use super::output;
+use super::{CliError, MemoryAction};
 use sqlx::PgPool;
 
 pub async fn run(
@@ -15,9 +15,11 @@ pub async fn run(
 ) -> Result<(), CliError> {
     match args {
         MemoryAction::Emit { yaml_file, dry_run } => {
-            super::auth::require_role(claims, &Role::Admin).map_err(|e| CliError::InsufficientRole {
-                needed: e.needed(),
-                has: e.has(),
+            super::auth::require_role(claims, &Role::Admin).map_err(|e| {
+                CliError::InsufficientRole {
+                    needed: e.needed(),
+                    has: e.has(),
+                }
             })?;
             emit(&yaml_file, dry_run).await
         }
@@ -28,13 +30,17 @@ pub async fn run(
 }
 
 async fn emit(yaml_file: &std::path::Path, dry_run: bool) -> Result<(), CliError> {
-    let yaml = std::fs::read_to_string(yaml_file)
-        .map_err(|e| CliError::UserError { reason: format!("read {}: {e}", yaml_file.display()) })?;
+    let yaml = std::fs::read_to_string(yaml_file).map_err(|e| CliError::UserError {
+        reason: format!("read {}: {e}", yaml_file.display()),
+    })?;
 
-    let payload: serde_json::Value = serde_yaml::from_str(&yaml)
-        .map_err(|e| CliError::SchemaViolation { reason: e.to_string() })?;
+    let payload: serde_json::Value =
+        serde_yaml::from_str(&yaml).map_err(|e| CliError::SchemaViolation {
+            reason: e.to_string(),
+        })?;
 
-    let kind = payload.get("kind")
+    let kind = payload
+        .get("kind")
         .and_then(|v| v.as_str())
         .unwrap_or("unknown")
         .to_string();
@@ -70,12 +76,7 @@ async fn emit(yaml_file: &std::path::Path, dry_run: bool) -> Result<(), CliError
     Ok(())
 }
 
-async fn audit_trail(
-    json: bool,
-    pool: &PgPool,
-    tenant: &str,
-    since: &str,
-) -> Result<(), CliError> {
+async fn audit_trail(json: bool, pool: &PgPool, tenant: &str, since: &str) -> Result<(), CliError> {
     let rows: Vec<(i64, String, String, serde_json::Value)> = sqlx::query_as(
         "SELECT seq, ts::text, kind, payload
          FROM memory_rows
@@ -87,17 +88,18 @@ async fn audit_trail(
     .bind(since)
     .fetch_all(pool)
     .await
-    .map_err(|e| CliError::RemoteUnreachable { reason: e.to_string() })?;
+    .map_err(|e| CliError::RemoteUnreachable {
+        reason: e.to_string(),
+    })?;
 
     let audit_rows: Vec<output::AuditTrailRow> = rows
         .into_iter()
         .map(|(seq, ts, kind, payload)| {
-            let brief = payload.as_object()
+            let brief = payload
+                .as_object()
                 .map(|o| {
-                    let mut parts: Vec<String> = o.iter()
-                        .take(3)
-                        .map(|(k, v)| format!("{k}={v}"))
-                        .collect();
+                    let mut parts: Vec<String> =
+                        o.iter().take(3).map(|(k, v)| format!("{k}={v}")).collect();
                     if o.len() > 3 {
                         parts.push("...".into());
                     }

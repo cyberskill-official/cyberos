@@ -1,0 +1,52 @@
+name: publish
+
+# Publishes code-audit-validator to PyPI when a GitHub Release is published.
+# Auth: PyPI Trusted Publishing (OIDC) — this repo + this workflow are
+# registered as a trusted publisher on pypi.org (configured 2026-06-11).
+# No long-lived credential exists anywhere; the job mints a short-lived
+# identity token per run (`id-token: write`).
+
+on:
+  release:
+    types: [published]
+
+# CyberSkill standard: Node >= 24
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write   # OIDC token for PyPI Trusted Publishing
+      contents: read
+    # Protocol releases are tagged vX.Y.Z; skip floating tags like v1.
+    if: ${{ startsWith(github.event.release.tag_name, 'v') && contains(github.event.release.tag_name, '.') }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
+        with:
+          python-version: "3.12"
+
+      - name: Gate — suite + docs sync must be green before anything ships
+        run: |
+          python3 core/evals/validate.py --all
+          python3 core/evals/scripts/check-docs-sync.py
+
+      - name: Gate — release tag must match the protocol version
+        run: |
+          V="$(head -1 core/AUDIT.md | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+')"
+          [ "${{ github.event.release.tag_name }}" = "$V" ] \
+            || { echo "::error::release tag ${{ github.event.release.tag_name }} != protocol $V"; exit 1; }
+
+      - name: Build sdist + wheel
+        run: |
+          python3 -m pip install --quiet build
+          python3 -m build
+
+      - name: Publish to PyPI (Trusted Publishing / OIDC)
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b  # release/v1

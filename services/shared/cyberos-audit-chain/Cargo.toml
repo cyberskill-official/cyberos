@@ -1,0 +1,19 @@
+[package]
+name = "cyberos-audit-chain"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Shared memory audit-chain emit for the obs services - genesis rows mirroring memory's canonical anchor"
+
+[lib]
+name = "cyberos_audit_chain"
+path = "src/lib.rs"
+
+[dependencies]
+sha2.workspace = true
+sqlx.workspace = true
+uuid.workspace = true
+chrono.workspace = true

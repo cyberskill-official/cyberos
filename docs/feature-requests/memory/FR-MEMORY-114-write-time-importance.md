@@ -33,9 +33,9 @@ new_files:
   - modules/memory/cyberos/core/invokers/base.py
   - modules/memory/cyberos/core/invokers/mock.py
   - modules/memory/cyberos/core/invokers/anthropic_invoker.py
-  - modules/memory/tests/test_importance_scoring.py
-  - modules/memory/tests/test_importance_invoker_selection.py
-  - modules/memory/tests/test_importance_cache.py
+  - modules/memory/tests/core/test_importance.py
+  - modules/memory/tests/core/test_importance.py
+  - modules/memory/tests/core/test_importance.py
 modified_files:
   - modules/memory/cyberos/__main__.py       # add `--score-importance` flag to `put` subcommand
   - modules/memory/cyberos/core/writer.py    # if --score-importance, route through importance.score() before put; merge into frontmatter
@@ -60,9 +60,9 @@ sub_tasks:
   - "0.5h: cache layer — SQLite single-table `(content_sha256 BLOB PK, score REAL, model TEXT, scored_at INTEGER); UNIQUE(content_sha256)`"
   - "0.5h: cyberos/core/writer.py — `--score-importance` path: score before put; merge `meta.importance` into frontmatter; preserve back-compat (caller can override with explicit `--importance 0.7`)"
   - "1.0h: __main__.py — wire `--score-importance` + `--importance <float>` + `--dry-run` (prints what would be written, no write)"
-  - "1.0h: tests/test_importance_scoring.py — 10 cases (MockInvoker deterministic, AnthropicInvoker mocked HTTP, parse first float, clamp out-of-range to [0, 1], fallback on timeout, fallback on parse error)"
-  - "0.5h: tests/test_importance_invoker_selection.py — 6 cases (env var precedence, manifest precedence, default to mock, unknown invoker raises, CYBEROS_DISABLE_LLM=1 forces mock)"
-  - "0.5h: tests/test_importance_cache.py — 6 cases (cache hit returns same score, cache miss calls invoker, sha256 mismatch invalidates, cache survives Writer restart, cache file gracefully created)"
+  - "1.0h: modules/memory/tests/core/test_importance.py — 10 cases (MockInvoker deterministic, AnthropicInvoker mocked HTTP, parse first float, clamp out-of-range to [0, 1], fallback on timeout, fallback on parse error)"
+  - "0.5h: modules/memory/tests/core/test_importance.py — 6 cases (env var precedence, manifest precedence, default to mock, unknown invoker raises, CYBEROS_DISABLE_LLM=1 forces mock)"
+  - "0.5h: modules/memory/tests/core/test_importance.py — 6 cases (cache hit returns same score, cache miss calls invoker, sha256 mismatch invalidates, cache survives Writer restart, cache file gracefully created)"
   - "0.5h: schema + invariant for `manifest.importance` block"
 risk_if_skipped: "Without write-time importance scoring, every memory in the memory has `meta.importance` absent → ranking defaults all to 0.5 (DEC-192 + FR-MEMORY-113 #3). The combined-score formula then degenerates: importance contribution is a constant 0.15 (= 0.5 · 0.3), so ranking is effectively `relevance · 0.4 + recency · 0.3 + 0.15`. The article (Ramakrushna §'Memory management') flags this as the noise-at-source problem — trivia accumulates in the store at the same weight as decisions. As stores grow past 1K memories, recall surface degrades. Skipping this FR means we have the *infrastructure* to rank by importance (FR-MEMORY-113) but no signal feeding it. We'd be in the same place as if we'd skipped FR-MEMORY-113. Shipping FR-MEMORY-114 closes Wave 1 — gives FR-MEMORY-115 (dream) a real signal to use when proposing 'this memory is stale, that one matters'."
 ---
@@ -391,7 +391,7 @@ async def score(content: str, invoker: ImportanceInvoker, cache: Optional[Import
 ## §5 — Verification
 
 ```python
-# modules/memory/tests/test_importance_scoring.py
+# modules/memory/tests/core/test_importance.py
 import pytest, asyncio
 from unittest.mock import patch, AsyncMock, MagicMock
 
@@ -484,7 +484,7 @@ def test_default_timeout_5_seconds():
 ```
 
 ```python
-# modules/memory/tests/test_importance_invoker_selection.py
+# modules/memory/tests/core/test_importance.py
 import pytest, os
 from cyberos.core.importance import select_invoker
 
@@ -539,7 +539,7 @@ def test_missing_api_key_for_anthropic(monkeypatch):
 ```
 
 ```python
-# modules/memory/tests/test_importance_cache.py
+# modules/memory/tests/core/test_importance.py
 import asyncio, hashlib
 from cyberos.core.importance import ImportanceCache, score
 from cyberos.core.invokers.mock import MockInvoker
@@ -711,7 +711,7 @@ All resolved. Deferred:
 - **The `aux_emitter` callable is the same shim FR-MEMORY-112 uses for `episode.logged`.** Keeps the importance.py module decoupled from Writer (no direct call into Writer.emit_aux).
 - **Why we don't batch invoker calls** — Haiku's per-call latency is ~1.5s; batching would require structured-output prompting and complicate fallback handling. The Slice-4 `score-all` mode can batch internally without changing this FR's API.
 - **AnthropicInvoker uses `AsyncAnthropic`, not `Anthropic`** — non-blocking. Lets the Writer overlap scoring with the file-write fsync if it wanted to (it currently doesn't, but the option is preserved).
-- **The `test_anthropic_invoker_parse_paths` test scaffold is simplified for readability.** Real tests use `responses.RequestsMock` or `aioresponses` to mock the HTTP layer. The fixture lives in `tests/conftest.py`.
+- **The `test_anthropic_invoker_parse_paths` test scaffold is simplified for readability.** Real tests use `responses.RequestsMock` or `aioresponses` to mock the HTTP layer. The fixture lives in `modules/memory/tests/core/test_mmr.py`.
 
 ---
 

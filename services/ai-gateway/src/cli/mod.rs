@@ -8,6 +8,7 @@ pub mod completions;
 pub mod exit_codes;
 pub mod expiry;
 pub mod failover;
+pub mod flag_tenant;
 pub mod invoice;
 pub mod json_schemas;
 pub mod memory;
@@ -55,8 +56,23 @@ pub enum Command {
     Expiry(ExpiryArgs),
     /// Memory audit row operations.
     Memory(MemoryArgs),
+    /// Flag a tenant for 100% trace sampling (FR-OBS-006).
+    FlagTenant(FlagTenantArgs),
     /// Generate shell completions.
     Completions(CompletionsArgs),
+}
+
+/// `flag-tenant <tenant_id> --confirm [--remove]` (FR-OBS-006 §1 #3).
+#[derive(Debug, clap::Args)]
+pub struct FlagTenantArgs {
+    /// The tenant id to flag (or unflag with --remove).
+    pub tenant_id: String,
+    /// Remove the tenant from the flagged list instead of adding it.
+    #[arg(long)]
+    pub remove: bool,
+    /// Confirm the mutation to the sampling config.
+    #[arg(long)]
+    pub confirm: bool,
 }
 
 #[derive(Debug, clap::Args)]

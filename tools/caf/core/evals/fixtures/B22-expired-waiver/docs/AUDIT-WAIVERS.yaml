@@ -1,0 +1,5 @@
+- code: R2-UNCITED
+  match: "LegacyVendor"
+  reason: "contract comparator"
+  approved_by: "stephen@cyberskill.world"
+  expires: 2020-01-01

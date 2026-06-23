@@ -35,7 +35,7 @@ new_files:
   - services/memory-claude-hook/src/redact.rs
   - services/memory-claude-hook/install/.claude/settings.json.template
   - services/memory-claude-hook/install/install-hooks.sh
-  - services/memory-claude-hook/tests/hook_e2e_test.rs
+  - services/memory/tests/ingest_test.rs
   - services/memory-claude-hook/tests/redact_test.rs
 modified_files:
   - services/memory/manifest.json                        # add `claude_hooks` section with opt-in per-project list
@@ -474,7 +474,7 @@ echo "✓ installed hooks → $SETTINGS"
 ## §5 — Verification
 
 ```rust
-// services/memory-claude-hook/tests/hook_e2e_test.rs
+// services/memory/tests/ingest_test.rs
 
 #[tokio::test]
 async fn userpromptsubmit_emits_claude_prompt_row() {

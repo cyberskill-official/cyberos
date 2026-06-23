@@ -45,9 +45,6 @@ fn attribute_keys_are_pii_safe() {
     ];
     // All keys should be ASCII-only (no unicode PII sneaking in).
     for key in &all_keys {
-        assert!(
-            key.is_ascii(),
-            "attribute key contains non-ASCII: {key}"
-        );
+        assert!(key.is_ascii(), "attribute key contains non-ASCII: {key}");
     }
 }

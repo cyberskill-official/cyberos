@@ -1,0 +1,29 @@
+# Optional alternative CI harness using promptfoo (open-source, MIT).
+# The harness ships its own multi-seed gate (`awh eval`/`make eval`), which is the
+# primary path. This file is for teams already standardized on promptfoo who want
+# the golden-set gate to run as a promptfoo eval in CI.
+#
+# It treats each golden task as a test case and delegates scoring to the harness
+# runner via a python assertion, so pass@k math stays in one tested place.
+#
+# Run:  npx promptfoo@latest eval -c promptfooconfig.yaml
+description: "auto-work-harness golden-set gate (promptfoo wrapper)"
+
+prompts:
+  - "{{task_id}}"   # the unit under test is a task id, not a chat prompt
+
+providers:
+  # A no-op echo provider; the real work happens in the python assertion below,
+  # which runs the harness against the task id across multiple seeds.
+  - id: echo
+    config: {}
+
+defaultTest:
+  assert:
+    - type: python
+      value: file://promptfoo_gate.py   # returns {pass, score, reason} from the harness
+
+tests:
+  - vars: { task_id: deterministic-pass }
+  - vars: { task_id: flaky-3-of-4 }
+  - vars: { task_id: end-state-checked }

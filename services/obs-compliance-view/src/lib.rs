@@ -1,0 +1,27 @@
+//! cyberos-obs-compliance-view - read-only compliance views over the memory audit chain (FR-OBS-008).
+//!
+//! Slice 1 (this file set) ships the pure core: the per-view audit-kind table (which row kinds each
+//! regulation's view selects - the auditable contract), the time-window validation, and the Ed25519
+//! chain-proof an auditor verifies independently of CyberOS. Later slices add the auditor-JWT auth, the
+//! read-only memory query, the PII-scan defence, the summary rendering, the PDF / JSON export, and the
+//! axum shell. See `docs/feature-requests/obs/FR-OBS-008-compliance-view-scoping.md`.
+
+pub mod auth;
+pub mod manifest;
+pub mod manifest_signing;
+pub mod pii_scan;
+pub mod proof;
+pub mod query;
+pub mod summary;
+pub mod views;
+pub mod window;
+
+pub use auth::{enforce_tenant_scope, AuthError, Authenticator, Claims, AUDITOR_ROLE};
+pub use manifest::{ExportState, Manifest};
+pub use manifest_signing::{sign as sign_manifest, verify as verify_manifest, Verdict};
+pub use pii_scan::{is_clean, scan, PiiMatch};
+pub use proof::{sign, verify, Proof};
+pub use query::{fetch_rows, AuditRow};
+pub use summary::{summarize, Summary};
+pub use views::View;
+pub use window::{validate, WindowError, MAX_WINDOW_SECS};

@@ -6,7 +6,9 @@
 //! See FR-AI-004 for normative behaviour and acceptance criteria.
 
 use once_cell::sync::Lazy;
-use prometheus::{register_counter_vec, register_gauge, register_histogram, CounterVec, Gauge, Histogram};
+use prometheus::{
+    register_counter_vec, register_gauge, register_histogram, CounterVec, Gauge, Histogram,
+};
 use rust_decimal::Decimal;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -38,12 +40,7 @@ static TICK_DURATION: Lazy<Histogram> = Lazy::new(|| {
 });
 
 static TICKS_TOTAL: Lazy<CounterVec> = Lazy::new(|| {
-    register_counter_vec!(
-        "ai_expiry_ticks_total",
-        "Total ticks executed",
-        &["result"]
-    )
-    .unwrap()
+    register_counter_vec!("ai_expiry_ticks_total", "Total ticks executed", &["result"]).unwrap()
 });
 
 static CONSECUTIVE_FAILURES: Lazy<Gauge> = Lazy::new(|| {

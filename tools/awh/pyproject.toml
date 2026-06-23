@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cyberos-awh"
+version = "0.1.0"
+description = "Vendored auto-work-harness (awh): the out-of-band verification gate for CyberOS."
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = ["PyYAML>=6.0"]
+
+[project.scripts]
+awh = "harness.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["harness*"]

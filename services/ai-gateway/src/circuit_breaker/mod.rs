@@ -224,7 +224,9 @@ pub fn record_outcome(provider: &ProviderKind, model: &str, outcome: CallOutcome
         provider: *provider,
         model: model.to_string(),
     };
-    let entry = map.entry(key).or_insert_with(|| Arc::new(Breaker::new(now)));
+    let entry = map
+        .entry(key)
+        .or_insert_with(|| Arc::new(Breaker::new(now)));
     let b = entry.value();
 
     match outcome {
@@ -236,8 +238,7 @@ pub fn record_outcome(provider: &ProviderKind, model: &str, outcome: CallOutcome
 
             if prior_state == BreakerState::HalfOpen {
                 // Probe failed — re-open with reset 30s timer.
-                b.state
-                    .store(BreakerState::Open.as_u8(), Ordering::Release);
+                b.state.store(BreakerState::Open.as_u8(), Ordering::Release);
                 b.open_until_nanos
                     .store(now + OPEN_DURATION_NANOS, Ordering::Release);
                 b.last_state_change.store(now, Ordering::Release);
@@ -289,7 +290,12 @@ pub fn record_outcome(provider: &ProviderKind, model: &str, outcome: CallOutcome
                 metrics::PROBES
                     .with_label_values(&[provider.as_metric_label(), model, "succeeded"])
                     .inc();
-                emit_transition(provider, model, BreakerState::HalfOpen, BreakerState::Closed);
+                emit_transition(
+                    provider,
+                    model,
+                    BreakerState::HalfOpen,
+                    BreakerState::Closed,
+                );
             } else if prior_state != BreakerState::Closed {
                 emit_transition(provider, model, prior_state, BreakerState::Closed);
             }
@@ -366,7 +372,11 @@ fn emit_transition(provider: &ProviderKind, model: &str, from: BreakerState, to:
         ])
         .inc();
     // Update STATE gauge: set the new state to 1, others to 0.
-    for s in [BreakerState::Closed, BreakerState::Open, BreakerState::HalfOpen] {
+    for s in [
+        BreakerState::Closed,
+        BreakerState::Open,
+        BreakerState::HalfOpen,
+    ] {
         metrics::STATE
             .with_label_values(&[provider.as_metric_label(), model, s.as_metric_label()])
             .set(if s == to { 1.0 } else { 0.0 });

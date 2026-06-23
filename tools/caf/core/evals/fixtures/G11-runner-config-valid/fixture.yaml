@@ -1,0 +1,6 @@
+id: G11-runner-config-valid
+description: Runner mode, fully valid profile config (gated, empty PROTECTED_AREAS, enums in-set) and a conformant no-findings loop - must validate clean. Precision sibling of B26 - the profile path must not over-fire.
+expect: pass
+expected_violations: []
+exercises_rules: [P0-CONFIG]
+protected_areas: []

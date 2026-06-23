@@ -44,6 +44,7 @@
    <aside class="lg:col-span-1 no-print">
      <div class="sticky top-20 max-h-[calc(100vh-100px)] overflow-y-auto p-3 rounded-lg" style="background:var(--bg-card,#f8fafc);border:1px solid var(--border,#e2e8f0)">
        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 px-2">Entries</h3>
+      <a class="block py-1 px-2 text-sm rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900" href="#unreleased-awh-absorption-2026-06-19-branch-auto-awh-absorb">[Unreleased] - awh absorption (2026-06-19, branch auto/awh-absorb)</a>
       <a class="block py-1 px-2 text-sm rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900" href="#per-module-changelogs">Per-module changelogs</a>
       <a class="block py-1 px-2 text-sm rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900" href="#repository-level-changes">Repository-level changes</a>
      </div>
@@ -53,6 +54,25 @@
    <main class="lg:col-span-3 prose prose-slate max-w-none">
      <div class="bg-white rounded-xl p-6 lg:p-8 shadow-sm border border-slate-200">
 <p class="mb-3 leading-relaxed">This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.</p>
+
+<h3 id="unreleased-awh-absorption-2026-06-19-branch-auto-awh-absorb" class="text-xl font-bold mt-8 mb-3 text-slate-900">[Unreleased] - awh absorption (2026-06-19, branch auto/awh-absorb)</h3>
+
+<p class="mb-3 leading-relaxed">Platform-wide verification substrate. Agent self-certification at <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">testing -> done</code> is replaced at the seam by an out-of-band gate that reruns the real tests against a sealed baseline and blocks on regression.</p>
+
+<p class="mb-3 leading-relaxed">Added</p>
+<li class="mb-1 ">awh vendored under <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">tools/awh/</code> (out-of-band verification gate; source sha c1f2c77, pure stdlib + PyYAML).</li>
+<li class="mb-1 ">Per-module golden sets: <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/memory/.awh/</code>, <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">modules/skill/.awh/</code>.</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">ship-feature-requests</code> workflow: new step 28 <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">awh-gate</code>; <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">testing -> done</code> now requires an independent GREEN rerun against a sealed, read-only baseline (the done-flip is conditional; RED routes back to <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">ready_to_implement</code>).</li>
+<li class="mb-1 ">CI merge gate <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">.github/workflows/awh-gate.yml</code>; pre-commit hook <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">.pre-commit-hooks/awh-gate.sh</code>.</li>
+<li class="mb-1 "><code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">scripts/rebaseline_fr_status.py</code> (deterministic, idempotent FR status re-baseline).</li>
+<li class="mb-1 ">FR-MEMORY-121 (draft): <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">memory.awh_gate_result</code> audit row, gated on protocol change P23 §6.</li>
+<li class="mb-1 ">Maturity ledger migrated to <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">.awh/evolution-log.jsonl</code> (6 prior adoptions).</li>
+
+<p class="mb-3 leading-relaxed">Changed</p>
+<li class="mb-1 ">FR statuses re-baselined: 116 <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">done</code> -> <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">ready_to_test</code> (independent awh re-verification pending; the code already exists on <code class="px-1.5 py-0.5 rounded text-sm" style="background:var(--bg-code,#e2e8f0);color:#334155">main</code>).</li>
+
+<p class="mb-3 leading-relaxed">Verified</p>
+<li class="mb-1 ">MEMORY green under the awh gate (pilot FR-MEMORY-116, weighted pass@1 = 100%).</li>
 
 <h3 id="per-module-changelogs" class="text-xl font-bold mt-8 mb-3 text-slate-900">Per-module changelogs</h3>
 

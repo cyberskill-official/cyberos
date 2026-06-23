@@ -43,12 +43,12 @@ build_envelope:
     - modules/cuo/cuo/core/handlers/sequential_approval.py
     - modules/cuo/cuo/core/handlers/persona_pair.py
     - modules/cuo/cuo/core/handlers/dispatch.py
-    - modules/cuo/tests/test_handler_dispatch.py
-    - modules/cuo/tests/test_time_critical_handler.py
+    - modules/cuo/tests/test_applier_paths.py
+    - modules/cuo/tests/test_proposal_applier.py
     - modules/cuo/tests/test_per_instance_handler.py
     - modules/cuo/tests/test_multi_output_handler.py
-    - modules/cuo/tests/test_sequential_approval_handler.py
-    - modules/cuo/tests/test_persona_pair_handler.py
+    - modules/cuo/tests/test_proposal_applier.py
+    - modules/cuo/tests/test_proposal_applier.py
 
   modified_files:
     - modules/cuo/cuo/core/supervisor.py
@@ -248,7 +248,7 @@ cyberos-cuo execute <persona>/<workflow>  # auto-detects pattern from frontmatte
 ## §5 — Verification
 
 ```python
-# tests/test_handler_dispatch.py
+# modules/cuo/tests/test_applier_paths.py
 def test_dispatch_default_is_linear():
     """Workflows without a pattern: field route to LinearHandler (= existing execute_chain)."""
     from cuo.core.handlers.dispatch import pick_handler
@@ -265,7 +265,7 @@ def test_dispatch_reads_pattern_frontmatter():
     assert handler.sla_minutes == 240
 
 
-# tests/test_time_critical_handler.py
+# modules/cuo/tests/test_proposal_applier.py
 def test_time_critical_emits_sla_breach_when_slow(tmp_memory):
     """If actual_duration > sla, memory gets a cuo.time_critical_sla_breach row."""
     from cuo.core.handlers.time_critical import TimeCriticalHandler
@@ -303,7 +303,7 @@ def test_multi_output_fanout_to_recipients():
     assert len(fanout_rows) == 3
 
 
-# tests/test_sequential_approval_handler.py
+# modules/cuo/tests/test_proposal_applier.py
 def test_sequential_approval_halts_on_ethics_reject():
     """If ethics-sign-off chain fails, model-card-release does NOT execute."""
     from cuo.core.handlers.sequential_approval import SequentialApprovalHandler
@@ -318,7 +318,7 @@ def test_sequential_approval_halts_on_ethics_reject():
     assert len(halt_rows) == 1
 
 
-# tests/test_persona_pair_handler.py
+# modules/cuo/tests/test_proposal_applier.py
 def test_persona_pair_handoff_at_declared_step():
     """At handoff_step, primary pauses + peer invoked + result threaded back."""
     from cuo.core.handlers.persona_pair import PersonaPairHandler

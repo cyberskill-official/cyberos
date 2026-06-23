@@ -29,6 +29,7 @@ _Generated 2026-05-17 — 23 FRs, 175 engineering-hours total._
 | [FR-AI-021](FR-AI-021-operator-cli.md) | MUST | 5 | 14 | cyberos-ai operator CLI (usage · models · policy · failover · invoice · breaker · expiry · memory) wi |
 | [FR-AI-022](FR-AI-022-otel-trace-emission.md) | MUST | 5 | 8 | OpenTelemetry trace + span emission for every call (caller → router → provider → response) with W3C  |
 | [FR-AI-104](FR-AI-104-vn-provider-integration.md) | SHOULD | 1 | 12 | AI VN provider integration — Viettel Cloud + FPT Cloud as Vn1-residency LLM/embedding providers with |
+| [FR-AI-105](FR-AI-105-local-model-providers.md) | MUST | 1 | 10 | Local + external model providers (LM Studio + Ollama, no-key local) |
 
 ## Cross-module dependencies
 

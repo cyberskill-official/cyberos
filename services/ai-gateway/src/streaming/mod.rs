@@ -279,16 +279,23 @@ impl ReconcileGuard {
         if self.fired.swap(true, Ordering::SeqCst) {
             return;
         }
-        let outcome = self.outcome.lock().await.take().unwrap_or(StreamResult::Cancelled {
-            partial_usage: None,
-            reason: ReconcileReason::InternalError,
-        });
+        let outcome = self
+            .outcome
+            .lock()
+            .await
+            .take()
+            .unwrap_or(StreamResult::Cancelled {
+                partial_usage: None,
+                reason: ReconcileReason::InternalError,
+            });
         let outcome_label = match &outcome {
             StreamResult::Completed { .. } => "success",
             StreamResult::Cancelled { reason, .. } => reason.as_metric_label(),
             StreamResult::ProviderError { .. } => "provider_error",
         };
-        metrics::RECONCILES.with_label_values(&[outcome_label]).inc();
+        metrics::RECONCILES
+            .with_label_values(&[outcome_label])
+            .inc();
         let call_outcome = stream_result_to_call_outcome(outcome);
         let _ = crate::cost_reconcile::reconcile(self.hold_id, call_outcome, &self.pool).await;
     }
@@ -303,7 +310,9 @@ impl Drop for ReconcileGuard {
             let hold = self.hold_id;
             let pool = self.pool.clone();
             handle.spawn(async move {
-                metrics::RECONCILES.with_label_values(&["panic_recovery"]).inc();
+                metrics::RECONCILES
+                    .with_label_values(&["panic_recovery"])
+                    .inc();
                 let outcome = crate::cost_reconcile::CallOutcome::Cancelled {
                     partial_usage: None,
                     reason: crate::cost_reconcile::CancelReason::GatewayShutdown,
@@ -329,6 +338,12 @@ fn provider_supports_streaming(kind: ProviderKind) -> bool {
         ProviderKind::Bedrock | ProviderKind::Anthropic | ProviderKind::Openai => true,
         ProviderKind::Vertex => true,
         ProviderKind::Bge => false,
+        // Ollama serves SSE on /api/chat (stream=true), but the gateway adapter has not wired the
+        // streaming path yet (call_chat_streaming uses the default stub), so report false until it does.
+        ProviderKind::Ollama => false,
+        // LM Studio / OpenAI-compatible local servers support SSE, but the adapter has not wired
+        // streaming yet (FR-AI-105 scopes it out), so report false until it does.
+        ProviderKind::LocalOpenai => false,
     }
 }
 
@@ -343,8 +358,10 @@ pub async fn handle_streaming_chat(
     req: router::ChatCompleteRequest,
     pool: sqlx::PgPool,
     policy: Arc<TenantPolicy>,
-) -> Result<Sse<impl futures::Stream<Item = Result<SseEvent, std::convert::Infallible>>>, StreamingHandlerError>
-{
+) -> Result<
+    Sse<impl futures::Stream<Item = Result<SseEvent, std::convert::Infallible>>>,
+    StreamingHandlerError,
+> {
     // Step 1: Resolve alias and check streaming support.
     let resolved = crate::alias::resolve(&req.alias, &policy).map_err(|e| {
         StreamingHandlerError::PrecheckFailed {
@@ -368,10 +385,7 @@ pub async fn handle_streaming_chat(
         model_alias: req.alias.clone(),
         prompt_tokens: 0, // unknown until provider responds; precheck uses estimate
         expected_completion_tokens: 1024, // estimate; real impl derives from model
-        idempotency_key: req
-            .tracestate
-            .clone()
-            .unwrap_or_default(), // placeholder; real impl uses proper key
+        idempotency_key: req.tracestate.clone().unwrap_or_default(), // placeholder; real impl uses proper key
     };
     let hold_id = match cost_ledger::precheck(&precheck_req, &pool, &policy).await {
         Ok(cost_ledger::PrecheckOutcome::Allow { hold_id, .. }) => hold_id,
@@ -393,8 +407,8 @@ pub async fn handle_streaming_chat(
     let (tx, rx) = mpsc::channel::<StreamEvent>(CHANNEL_CAPACITY);
     let (disconnect_tx, disconnect_rx) = watch::channel(false);
     let guard = Arc::new(ReconcileGuard::new(hold_id, pool.clone()));
-    let deadline = Instant::now()
-        + Duration::from_secs(policy.ai_policy.call_timeout_seconds as u64);
+    let deadline =
+        Instant::now() + Duration::from_secs(policy.ai_policy.call_timeout_seconds as u64);
 
     // Step 4: Spawn provider task.
     let guard_for_task = guard.clone();
@@ -429,9 +443,8 @@ pub async fn handle_streaming_chat(
     // Step 6: Wire disconnect signal on SSE stream drop.
     // The disconnect_tx is dropped when this function returns, but we need it
     // to signal when the SSE response is dropped. We wrap the stream to hold it.
-    let stream = ReceiverStream::new(rx).map(move |ev| {
-        Ok::<_, std::convert::Infallible>(ev.to_sse_event())
-    });
+    let stream =
+        ReceiverStream::new(rx).map(move |ev| Ok::<_, std::convert::Infallible>(ev.to_sse_event()));
     let stream = DisconnectAwareStream {
         inner: stream,
         _disconnect_tx: disconnect_tx,
@@ -458,28 +471,22 @@ async fn run_provider_stream(
     let model_label = &resolved.model;
 
     // Call provider streaming (pre-first-token retries handled inside).
-    let stream_response = match router::call_provider_streaming(
-        &req,
-        &resolved,
-        effective_deadline,
-        &policy,
-    )
-    .await
-    {
-        Ok(s) => s,
-        Err(e) => {
-            let _ = tx
-                .send(StreamEvent::Error {
-                    code: ErrorCode::FirstTokenTimeout,
-                    message: format!("{e:?}"),
-                })
-                .await;
-            return StreamResult::Cancelled {
-                partial_usage: None,
-                reason: ReconcileReason::FirstTokenTimeout,
-            };
-        }
-    };
+    let stream_response =
+        match router::call_provider_streaming(&req, &resolved, effective_deadline, &policy).await {
+            Ok(s) => s,
+            Err(e) => {
+                let _ = tx
+                    .send(StreamEvent::Error {
+                        code: ErrorCode::FirstTokenTimeout,
+                        message: format!("{e:?}"),
+                    })
+                    .await;
+                return StreamResult::Cancelled {
+                    partial_usage: None,
+                    reason: ReconcileReason::FirstTokenTimeout,
+                };
+            }
+        };
 
     // Convert the provider response into a stream of ProviderStreamEvent.
     // For now, ProviderStreamResponse is empty (stub); this will be wired
@@ -663,11 +670,7 @@ async fn run_provider_stream(
                     }
                 }
                 ProviderStreamEvent::Done(finish_reason) => {
-                    if tx
-                        .send(StreamEvent::Done { finish_reason })
-                        .await
-                        .is_err()
-                    {
+                    if tx.send(StreamEvent::Done { finish_reason }).await.is_err() {
                         metrics::DISCONNECTS
                             .with_label_values(&[provider_label, model_label, "after_first_token"])
                             .inc();
@@ -707,7 +710,7 @@ fn stream_result_to_call_outcome(result: StreamResult) -> crate::cost_reconcile:
                 prompt_tokens: usage.prompt_tokens,
                 completion_tokens: usage.completion_tokens,
             },
-            latency_ms: 0,      // not tracked at stream level
+            latency_ms: 0, // not tracked at stream level
             cache_state: crate::cost_reconcile::CacheState::Miss,
             provider_request_id: String::new(),
         },

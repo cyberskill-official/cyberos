@@ -2,9 +2,9 @@
 
 use std::collections::HashMap;
 
-use cyberos_ai_gateway::alias::{self, AliasError, LatencyClass, ResolvedModel};
-use cyberos_ai_gateway::policy::*;
+use cyberos_ai_gateway::alias::{self, AliasError, LatencyClass};
 use cyberos_ai_gateway::cost_table;
+use cyberos_ai_gateway::policy::*;
 
 // ─── Test helpers ─────────────────────────────────────────────────────────────
 
@@ -14,13 +14,29 @@ fn init_cost_table_for_tests() {
     let _ = futures::executor::block_on(cost_table::init_cost_table(&fixture_path));
 }
 
+fn init_zdr_for_tests() {
+    let fixture_path = std::path::PathBuf::from("tests/fixtures/zdr/valid_attestations.yaml");
+    // Idempotent init; ignore the result if another test initialised first.
+    let _ = cyberos_ai_gateway::zdr::init_zdr_table(&fixture_path);
+}
+
 fn test_policy_with_bedrock_primary() -> TenantPolicy {
     init_cost_table_for_tests();
+    init_zdr_for_tests();
 
     let mut model_alias_map = HashMap::new();
-    model_alias_map.insert("chat.smart".into(), "anthropic.claude-3-5-sonnet-20241022-v2:0".into());
-    model_alias_map.insert("chat.fast".into(), "anthropic.claude-3-haiku-20240307-v1:0".into());
-    model_alias_map.insert("embed.standard".into(), "amazon.titan-embed-text-v2:0".into());
+    model_alias_map.insert(
+        "chat.smart".into(),
+        "anthropic.claude-3-5-sonnet-20241022-v2:0".into(),
+    );
+    model_alias_map.insert(
+        "chat.fast".into(),
+        "anthropic.claude-3-haiku-20240307-v1:0".into(),
+    );
+    model_alias_map.insert(
+        "embed.standard".into(),
+        "amazon.titan-embed-text-v2:0".into(),
+    );
 
     TenantPolicy {
         tenant_id: "org:test".into(),
@@ -40,7 +56,8 @@ fn test_policy_with_bedrock_primary() -> TenantPolicy {
             allowed_personas: None,
             alias_overrides: None,
             residency_requires_regional_provider: None,
-                pii_redaction_extra: None,
+            pii_redaction_extra: None,
+            langsmith_export: false,
         },
     }
 }
@@ -116,7 +133,7 @@ fn unknown_alias_errors_with_supported_list() {
             assert_eq!(supported.len(), 6);
             assert!(supported.contains(&"chat.smart".to_string()));
         }
-        _ => panic!("expected UnknownAlias, got {:?}", err),
+        _ => panic!("expected UnknownAlias, got {err:?}"),
     }
 }
 
@@ -145,7 +162,7 @@ fn cost_table_missing_errors() {
 
 #[test]
 fn empty_fallback_returns_no_provider() {
-    let mut policy = test_policy_with_bedrock_primary();
+    let policy = test_policy_with_bedrock_primary();
     // Remove chat.long from primary (it's not there by default)
     // And don't add any fallbacks
     let err = alias::resolve("chat.long", &policy).unwrap_err();

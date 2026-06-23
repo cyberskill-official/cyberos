@@ -12,7 +12,7 @@ fn jitter_within_10_percent() {
         let actual = jittered_ttl(nominal, &mut rng);
         let ratio = actual.as_secs_f64() / nominal.as_secs_f64();
         assert!(
-            ratio >= 0.9 && ratio <= 1.1,
+            (0.9..=1.1).contains(&ratio),
             "TTL jitter outside ±10%: {ratio}"
         );
     }

@@ -40,6 +40,7 @@ reqwest = { version = "0.12.9", features = ["rustls-tls", "json"], default-featu
 
 cyberos-cli-exit.workspace = true
 cyberos-types.workspace = true
+cyberos-obs-sdk.workspace = true
 
 [dev-dependencies]
 tokio-test.workspace = true

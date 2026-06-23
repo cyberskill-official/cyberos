@@ -1,0 +1,170 @@
+name: awh gate
+
+# Out-of-band verification gate. For each changed module that has a golden set,
+# awh independently reruns that module's real build+test against the SEALED baseline
+# and blocks the merge on any regression. A golden set with no committed baseline
+# FAILS CLOSED (an ungated eval always exits 0, so it must never be used as a gate).
+# Mark this job "required" in branch protection on main so it is the merge gate.
+#
+# The gate provisions the SAME environment as services.yml's integration job
+# (Postgres + Apache AGE + pgvector + Redis, with migrations applied) and additionally
+# installs pytest plus each changed module's Python deps, so the golden tasks - which run
+# real `cargo test` and `python -m pytest` commands - have everything they need. Without
+# this, Python-suite modules fail on "No module named pytest" and DB/Redis-backed cargo
+# tests fail for lack of services, even though the code is green.
+
+on:
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  awh-gate:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgres://cyberos:cyberos@localhost:5432/cyberos
+      REDIS_URL: redis://127.0.0.1:6379
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.88.0
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            services/target
+          key: cargo-awh-${{ runner.os }}-${{ hashFiles('services/**/Cargo.lock', 'services/**/Cargo.toml') }}
+
+      - name: Boot dev stack (Postgres + Apache AGE + Redis)
+        run: |
+          cd services/dev
+          docker compose up -d
+          # Wait until Postgres reports healthy.
+          for i in {1..30}; do
+            if docker compose ps postgres | grep -q '(healthy)'; then echo "postgres is up"; break; fi
+            sleep 2
+          done
+
+      - name: Install pgvector in Postgres container
+        run: |
+          docker exec -u 0 cyberos-postgres apt-get update
+          docker exec -u 0 cyberos-postgres apt-get install -y postgresql-16-pgvector
+          docker exec -i cyberos-postgres psql -U cyberos -d cyberos -c "CREATE EXTENSION IF NOT EXISTS vector;"
+
+      - name: Install sqlx-cli
+        run: cargo install --locked --version 0.8.0 sqlx-cli --no-default-features --features postgres
+
+      - name: Apply migrations — auth
+        run: cd services/auth && sqlx migrate run
+
+      - name: Apply migrations — memory
+        run: cat services/memory/migrations/*.sql | docker exec -i cyberos-postgres psql -U cyberos -d cyberos
+
+      - name: Apply migrations — ai-gateway (cost ledger)
+        # The ai-gateway cost tests skip when DATABASE_URL is unset but run when it is set
+        # (which it is here), so the cost_ledger tables must exist or they fail on missing relations.
+        run: cat services/ai-gateway/migrations/*.sql | docker exec -i cyberos-postgres psql -U cyberos -d cyberos
+
+      - name: Install awh (vendored under tools/awh)
+        run: pip install -e tools/awh
+
+      # awh captures each task's stdout/stderr and prints only a pass/fail summary, which hides
+      # WHY a task regressed. This step re-runs the commands of the historically-red modules
+      # (ai, memory) with output visible so a failure is diagnosable from the CI log in a single
+      # run instead of a blind retry loop. It never fails the job (|| true after each); the awh
+      # eval below remains the gate. Remove this step once ai and memory are green and stable.
+      - name: Diagnostic — raw output for ai + memory golden tasks (non-failing)
+        env:
+          DATABASE_URL: postgres://cyberos:cyberos@localhost:5432/cyberos
+          REDIS_URL: redis://127.0.0.1:6379
+        run: |
+          git fetch origin "${{ github.base_ref }}" --depth=1 || true
+          changed=$(git diff --name-only "origin/${{ github.base_ref }}"...HEAD | awk -F/ '/^modules\//{print $2} /^services\//{print $2}' | sort -u || true)
+          echo "changed modules: $changed"
+
+          # The eval step installs Python deps later, so provision them here too or the pytest
+          # diagnostics below would just print "No module named pytest". This installs pytest plus
+          # each changed module's [test] extra (the memory suite needs pytest-asyncio + numpy),
+          # and the editable module so the ai writer subprocess (`python3 -m cyberos.writer`) resolves.
+          pip install -q pytest pytest-cov pytest-asyncio || true
+          for m in $changed; do
+            if [ -f "modules/$m/pyproject.toml" ]; then
+              [ -f "modules/$m/README.md" ] || echo "# $m" > "modules/$m/README.md"
+              pip install -q -e "modules/$m[test]" 2>/dev/null || pip install -q -e "modules/$m" || true
+            fi
+          done
+
+          if echo "$changed" | grep -qx ai; then
+            echo "::group::diag: ai-gateway-rust — cargo test -p cyberos-ai-gateway (serial, --nocapture)"
+            ( cd services && cargo test -p cyberos-ai-gateway -- --test-threads=1 --nocapture ) 2>&1 | tail -n 400 || true
+            echo "::endgroup::"
+          fi
+
+          if echo "$changed" | grep -qx memory; then
+            echo "::group::diag: memory-module-suite — python -m pytest modules/memory (-rA)"
+            ( cd modules/memory && python -m pytest -q -rA ) 2>&1 | tail -n 400 || true
+            echo "::endgroup::"
+            echo "::group::diag: memory-service-rust — cargo test -p cyberos-memory (--nocapture)"
+            ( cd services && cargo test -p cyberos-memory -- --nocapture ) 2>&1 | tail -n 400 || true
+            echo "::endgroup::"
+          fi
+
+      - name: Run awh gate for changed modules
+        run: |
+          set -euo pipefail
+          git fetch origin "${{ github.base_ref }}" --depth=1 || true
+          base="origin/${{ github.base_ref }}"
+          changed=$(git diff --name-only "$base"...HEAD | awk -F/ '/^modules\//{print $2} /^services\//{print $2}' | sort -u)
+
+          # Install each changed module's Python test deps so its real pytest suite can import.
+          # A module's golden task can run another module's pytest (e.g. skill runs cuo tests),
+          # so install all of them before evaluating any.
+          pip install pytest pytest-cov
+          for m in $changed; do
+            if [ -f "modules/$m/pyproject.toml" ]; then
+              # Some pyprojects declare `readme = "README.md"`; the editable build fails with
+              # "Readme file does not exist" when it is missing. Stub one so the install proceeds
+              # (CI-only; not committed, and a README has no effect on the tests).
+              [ -f "modules/$m/README.md" ] || echo "# $m" > "modules/$m/README.md"
+              pip install -e "modules/$m[test]" || pip install -e "modules/$m" || true
+            fi
+            if [ -f "modules/$m/requirements.txt" ]; then
+              pip install -r "modules/$m/requirements.txt" || true
+            fi
+          done
+
+          gated=0; failed=0
+          for m in $changed; do
+            gs="modules/$m/.awh/goldenset.yaml"
+            [ -f "$gs" ] || continue
+            base_json="modules/$m/.awh/eval-baseline.json"
+            if [ ! -f "$base_json" ]; then
+              echo "::error::module '$m' has a golden set but no baseline ($base_json); failing closed."
+              failed=1
+              continue
+            fi
+            echo "::group::awh gate: $m"
+            awh eval "$gs" --base-dir . --seeds 1 --baseline "$base_json" --max-regression 0.0 || failed=1
+            echo "::endgroup::"
+            gated=$((gated+1))
+          done
+          echo "modules gated: $gated"
+          exit $failed
+
+      - name: Tear down dev stack
+        if: always()
+        run: cd services/dev && docker compose down -v

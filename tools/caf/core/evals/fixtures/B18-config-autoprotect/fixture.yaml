@@ -1,0 +1,6 @@
+id: B18-config-autoprotect
+description: DONE task touches src/billing/ which is protected ONLY by the target AUDIT.md's CONFIG - no protected_areas are passed here. Proves the validator auto-loads PROTECTED_AREAS from the target's CONFIG, closing the double-entry drift gap (review item G-F).
+expect: fail
+expected_violations: [R3-PROTECTED]
+exercises_rules: [P0-CONFIG, R3]
+protected_areas: []

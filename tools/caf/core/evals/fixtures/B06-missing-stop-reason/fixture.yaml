@@ -1,0 +1,6 @@
+id: B06-missing-stop-reason
+description: HANDOFF.md does not cite which stop condition fired
+expect: fail
+expected_violations: [P5-NO-STOP-REASON]
+exercises_rules: [P5]
+protected_areas: []

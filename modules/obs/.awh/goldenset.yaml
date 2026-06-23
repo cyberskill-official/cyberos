@@ -1,0 +1,79 @@
+# OBS module golden set (awh). obs is the next module in the locked build order
+# (AI Gateway -> OBS -> AUTH stub -> MCP Gateway -> CHAT). Covers two crates now:
+#   - cyberos-obs-collector (FR-OBS-001 OTel collector scaffold).
+#   - cyberos-obs-proxy     (FR-OBS-002 tenant-aware Grafana proxy: LogQL/PromQL/TraceQL injectors,
+#                            JWT auth, audit, the proxy decision + request lifecycle).
+#
+# Capture + gate:
+#   awh eval modules/obs/.awh/goldenset.yaml --base-dir . --seeds 1 --out modules/obs/.awh/eval-baseline.json
+#   awh eval modules/obs/.awh/goldenset.yaml --base-dir . --seeds 1 \
+#       --baseline modules/obs/.awh/eval-baseline.json --max-regression 0.0
+#
+# All tasks are lib + integration tests (no external services needed). Held-out acceptance tasks are
+# name/file-filtered runs of each crate's headline security invariant.
+tasks:
+  - id: obs-collector-rust
+    description: obs-collector full suite (services/obs-collector)
+    cmd: "cd services && cargo test -p cyberos-obs-collector"
+    weight: 3.0
+    timeout_sec: 900
+
+  - id: acceptance-obs-pii-scrub
+    description: held-out FR-OBS-001 PII-scrub invariant - collector config without PII scrub is rejected
+    cmd: "cd services && cargo test -p cyberos-obs-collector validate_rejects_missing_pii_scrub"
+    weight: 5.0
+    timeout_sec: 300
+
+  - id: obs-proxy-rust
+    description: obs-proxy full suite (services/obs-proxy) - FR-OBS-002 injectors + auth + audit + decide + lifecycle
+    cmd: "cd services && cargo test -p cyberos-obs-proxy"
+    weight: 3.0
+    timeout_sec: 900
+
+  - id: acceptance-obs-proxy-cross-tenant
+    description: held-out FR-OBS-002 cross-tenant property test (no tenant leak; user-supplied tenant refused)
+    cmd: "cd services && cargo test -p cyberos-obs-proxy --test cross_tenant_property_test"
+    weight: 5.0
+    timeout_sec: 300
+
+  - id: obs-sdk-rust
+    description: obs-sdk full suite (services/shared/cyberos-obs-sdk) - FR-OBS-003 RED metrics core + cardinality guard
+    cmd: "cd services && cargo test -p cyberos-obs-sdk"
+    weight: 3.0
+    timeout_sec: 600
+
+  - id: acceptance-obs-sdk-cardinality
+    description: held-out FR-OBS-003 cardinality-guard invariant - blocks past the per-metric series budget
+    cmd: "cd services && cargo test -p cyberos-obs-sdk blocks_past_the_budget_and_is_idempotent_under_it"
+    weight: 5.0
+    timeout_sec: 300
+
+  - id: obs-router-rust
+    description: obs-router full suite (services/obs-router) - FR-OBS-007 severity + routing-decision core
+    cmd: "cd services && cargo test -p cyberos-obs-router"
+    weight: 3.0
+    timeout_sec: 600
+
+  - id: acceptance-obs-router-routing
+    description: held-out FR-OBS-007 routing table (sev1 -> both; conf >= 0.70 -> chat else pagerduty; no silent drop)
+    cmd: "cd services && cargo test -p cyberos-obs-router --test route_decision_test"
+    weight: 5.0
+    timeout_sec: 300
+
+  - id: obs-compliance-view-rust
+    description: obs-compliance-view full suite (services/obs-compliance-view) - FR-OBS-008 views + window + Ed25519 proof
+    cmd: "cd services && cargo test -p cyberos-obs-compliance-view"
+    weight: 3.0
+    timeout_sec: 600
+
+  - id: acceptance-obs-compliance-proof
+    description: held-out FR-OBS-008 Ed25519 chain-proof (sign/verify roundtrip; tamper + wrong-key + malformed fail closed)
+    cmd: "cd services && cargo test -p cyberos-obs-compliance-view proof::"
+    weight: 5.0
+    timeout_sec: 300
+
+  - id: acceptance-obs-manifest-custody
+    description: held-out FR-OBS-009 chain-of-custody manifest (sign/verify; tampered rows + tampered field + incomplete + unsigned fail closed)
+    cmd: "cd services && cargo test -p cyberos-obs-compliance-view manifest_signing::"
+    weight: 5.0
+    timeout_sec: 300

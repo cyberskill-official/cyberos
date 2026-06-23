@@ -43,17 +43,17 @@ new_files:
   - services/auth/src/migration/refresh_hook.rs           # hook into FR-AUTH-004 refresh to inject rbac_v
   - services/auth/src/migration/audit.rs                  # 4 memory row builders
   - services/auth/src/handlers/migration.rs               # GET /preview + POST /extend-grace
-  - services/auth/tests/migration_state_test.rs
-  - services/auth/tests/grace_window_calc_test.rs
-  - services/auth/tests/stub_token_accepted_during_grace_test.rs
-  - services/auth/tests/stub_token_rejected_post_grace_test.rs
+  - services/auth/tests/admin_list_test.rs
+  - services/auth/tests/rbac_catalogue_test.rs
+  - services/auth/tests/jwt_token_endpoint_test.rs
+  - services/auth/tests/jwt_token_endpoint_test.rs
   - services/auth/tests/refresh_hook_injects_rbac_v_test.rs
-  - services/auth/tests/extend_grace_test.rs
+  - services/auth/tests/geoip_test.rs
   - services/auth/tests/extend_grace_root_admin_only_test.rs
   - services/auth/tests/cutover_immutable_test.rs
-  - services/auth/tests/preview_counts_test.rs
-  - services/auth/tests/append_only_migration_state_test.rs
-  - services/auth/tests/audit_emission_test.rs
+  - services/auth/tests/jwt_roundtrip_test.rs
+  - services/auth/tests/admin_list_test.rs
+  - services/auth/tests/rls_isolation_test.rs
 modified_files:
   - services/auth/src/jwt/verifier.rs                     # hook in migration::verifier_hook before successful verify
   - services/auth/src/jwt/refresh.rs                      # hook in migration::refresh_hook after refresh
@@ -530,7 +530,7 @@ pub async fn extend_grace(
 ## §5 — Verification
 
 ```rust
-// services/auth/tests/stub_token_accepted_during_grace_test.rs
+// services/auth/tests/jwt_token_endpoint_test.rs
 #[tokio::test]
 async fn stub_token_accepted_with_5_days_remaining(ctx: TestCtx) {
     let tenant = ctx.create_tenant_with_cutover_in_days(5).await;
@@ -556,7 +556,7 @@ async fn stub_token_accepted_100pct_in_last_24h(ctx: TestCtx) {
 ```
 
 ```rust
-// services/auth/tests/stub_token_rejected_post_grace_test.rs
+// services/auth/tests/jwt_token_endpoint_test.rs
 #[tokio::test]
 async fn post_grace_stub_token_rejected_with_clear_reason(ctx: TestCtx) {
     let tenant = ctx.create_tenant_with_past_cutover().await;
@@ -584,7 +584,7 @@ async fn first_post_grace_request_triggers_cutover(ctx: TestCtx) {
 ```
 
 ```rust
-// services/auth/tests/extend_grace_test.rs
+// services/auth/tests/geoip_test.rs
 #[tokio::test]
 async fn second_extension_rejected(ctx: TestCtx) {
     let tenant = ctx.tenant_in_grace().await;

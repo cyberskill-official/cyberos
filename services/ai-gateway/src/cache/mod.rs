@@ -182,7 +182,7 @@ pub async fn insert(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::router::types::{AttemptRecord, Choice, ProviderResponse, ProviderUsage};
+    use crate::router::types::{Choice, ProviderResponse, ProviderUsage};
 
     fn test_provider_response() -> ProviderResponse {
         ProviderResponse {

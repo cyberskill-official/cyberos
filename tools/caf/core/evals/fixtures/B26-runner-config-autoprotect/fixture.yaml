@@ -1,0 +1,6 @@
+id: B26-runner-config-autoprotect
+description: Runner mode - no AUDIT.md copy in the target; PROTECTED_AREAS lives only in audit-profile.yaml's config section. A DONE task touching it must still trip R3, proving the preflight auto-load works from the profile path exactly as from a protocol copy (single-source protocol, zero per-target drift).
+expect: fail
+expected_violations: [R3-PROTECTED]
+exercises_rules: [P0-CONFIG, R3]
+protected_areas: []

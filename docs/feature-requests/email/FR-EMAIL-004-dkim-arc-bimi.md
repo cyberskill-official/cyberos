@@ -48,13 +48,13 @@ build_envelope:
     - services/email/src/handlers/dkim_routes.rs
     - services/email/tests/dkim_ed25519_sign_test.rs
     - services/email/tests/dkim_rsa_fallback_test.rs
-    - services/email/tests/arc_chain_test.rs
+    - services/email/tests/residency_pin_test.rs
     - services/email/tests/bimi_svg_tinify_test.rs
     - services/email/tests/dns_setup_wizard_test.rs
-    - services/email/tests/dns_verification_test.rs
+    - services/email/tests/subject_normalisation_test.rs
     - services/email/tests/dkim_outcome_enum_test.rs
     - services/email/tests/dkim_per_tenant_isolation_test.rs
-    - services/email/tests/dkim_audit_emission_test.rs
+    - services/email/tests/audit_row_test.rs
 
   modified_files:
     - services/email/src/lib.rs

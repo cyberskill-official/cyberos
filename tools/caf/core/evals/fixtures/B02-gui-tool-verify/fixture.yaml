@@ -1,0 +1,6 @@
+id: B02-gui-tool-verify
+description: GUI profiler listed as a verify command (observed v1 failure)
+expect: fail
+expected_violations: [R1-GUI-TOOL]
+exercises_rules: [R1]
+protected_areas: []

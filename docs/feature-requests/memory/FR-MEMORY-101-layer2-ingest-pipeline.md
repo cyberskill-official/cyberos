@@ -39,8 +39,8 @@ new_files:
   - services/memory/src/layer2/entity_extract.rs
   - services/memory/migrations/0001_layer2.sql
   - services/memory/migrations/0002_layer2_cursor.sql
-  - services/memory/tests/layer2_ingest_test.rs
-  - services/memory/tests/layer2_chain_anchor_test.rs
+  - services/memory/tests/ingest_test.rs
+  - services/memory/tests/chain_anchor_test.rs
   - services/memory/tests/layer2_cursor_resume_test.rs
   - services/memory/tests/layer2_idempotency_test.rs
   - services/memory/tests/layer2_tenant_isolation_test.rs

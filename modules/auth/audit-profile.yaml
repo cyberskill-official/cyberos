@@ -1,0 +1,13 @@
+# CAF audit identity for the `auth` module (Rust crate cyberos-auth, services/). Absorbed from
+# CyberSkill/code-audit-framework. verify-target.sh runs RUN_COMMANDS from this dir to prove
+# TARGET HEALTH. Run on a build machine with the Rust toolchain.
+config:
+  TECH_STACK: Rust (cargo) / cyberos-auth / JWT
+  PROJECT_PURPOSE: CyberOS auth - identity, JWT issue/verify, session
+  MODE: gated
+  DEPTH: standard
+  SEVERITY_FLOOR: High
+  PROTECTED_AREAS: modules/auth/.awh/, modules/auth/.caf/, services/auth/tests/
+  RUN_COMMANDS: cd ../../services && cargo test -p cyberos-auth
+  DOMAIN_NOTES: Auth is security-critical. RUN_COMMANDS mirrors the awh suite (known green); add `cargo clippy -p cyberos-auth -- -D warnings` once confirmed clippy-clean.
+  BENCHMARK_MODE: none

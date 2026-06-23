@@ -64,10 +64,20 @@ async fn main() -> ExitCode {
         }
     });
 
+    // FR-OBS-003 - build the RED instruments off the global meter before serving.
+    cyberos_obs_sdk::init("memory", VERSION);
+
     let app = Router::new()
         .route("/healthz", get(healthz))
         .route("/metrics", get(metrics))
         .route("/v1/memory/search", post(search::search))
+        // tenant_ctx (route_layer, inner) stamps the request's tenant onto the response; red_mw (layer,
+        // outer) reads it for the metric's tenant_id label (ADR-OBS-003-001).
+        .route_layer(axum::middleware::from_fn(tenant_ctx))
+        .layer(axum::middleware::from_fn_with_state(
+            cyberos_obs_sdk::RedState::new("memory"),
+            cyberos_obs_sdk::red_mw,
+        ))
         .with_state(state.clone());
 
     // Best-effort AGE graph init at boot — the ingest path uses MERGE which
@@ -231,7 +241,8 @@ async fn healthz(State(state): State<AppState>) -> (StatusCode, Json<Value>) {
 
 /// Cheap text-format metrics endpoint for Prometheus scraping. Returns a
 /// minimal Prometheus exposition: ingest cursor lag per tenant + row counts.
-/// FR-OBS-003 will swap this for the obs-sdk RED-metrics emitter once it lands.
+/// RED metrics (FR-OBS-003) are emitted separately via the obs-sdk middleware over OTLP; this endpoint
+/// keeps the memory-specific ingest-cursor gauges.
 async fn metrics(State(state): State<AppState>) -> Result<String, (StatusCode, String)> {
     let rows: Vec<(uuid::Uuid, i64, i64)> =
         sqlx::query_as("SELECT tenant_id, last_seq, last_lag_ms FROM l2_ingest_cursor")
@@ -257,6 +268,28 @@ async fn metrics(State(state): State<AppState>) -> Result<String, (StatusCode, S
         ));
     }
     Ok(out)
+}
+
+/// FR-OBS-003 - hand the request's tenant (the `x-tenant-id` header memory scopes by) to the RED
+/// middleware via the response extensions, so the metric's tenant_id label is real rather than
+/// "unknown". Runs as a route_layer (inner of the RED layer); the tenant header is absent on
+/// `/healthz` and `/metrics`, which is fine - those are not tenant-scoped.
+async fn tenant_ctx(
+    req: axum::extract::Request,
+    next: axum::middleware::Next,
+) -> axum::response::Response {
+    let tenant = req
+        .headers()
+        .get("x-tenant-id")
+        .and_then(|h| h.to_str().ok())
+        .map(std::string::ToString::to_string);
+    let mut response = next.run(req).await;
+    if let Some(t) = tenant {
+        response
+            .extensions_mut()
+            .insert(cyberos_obs_sdk::TenantCtx(t));
+    }
+    response
 }
 
 async fn wait_or_shutdown(d: Duration, shutdown: &Notify) {

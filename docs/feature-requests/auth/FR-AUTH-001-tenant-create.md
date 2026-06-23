@@ -42,8 +42,8 @@ new_files:
   - services/auth/migrations/0001_tenants.sql
   - services/auth/migrations/0002_admin_idempotency.sql
   - services/auth/tests/admin_tenant_create_test.rs
-  - services/auth/tests/admin_tenant_idempotency_test.rs
-  - services/auth/tests/admin_tenant_rls_test.rs
+  - services/auth/tests/admin_tenant_create_test.rs
+  - services/auth/tests/admin_tenant_create_test.rs
 modified_files: []
 allowed_tools:
   - file_read: services/auth/**

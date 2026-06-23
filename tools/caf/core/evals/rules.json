@@ -1,0 +1,223 @@
+{
+  "$schema_version": "2.0.0",
+  "description": "Registry of machine-checkable rules in AUDIT.md. Every rule the validator enforces is anchored to its section in AUDIT.md and to the fixtures that prove it load-bearing. A rule with no fixture is a coverage gap; list it honestly.",
+  "protocol_file": "AUDIT.md",
+  "rules": [
+    {
+      "rule_id": "R1",
+      "anchor": "CORE RULES > R1 — EVIDENCE OR NOTHING",
+      "violation_codes": [
+        "R1-NO-OUTPUT",
+        "R1-UNLINKED-OUTPUT",
+        "R1-NO-REASON",
+        "R1-GUI-TOOL"
+      ],
+      "fixtures_exercising": [
+        "G01-clean-run",
+        "G05-adversarial-formatting",
+        "B01-fabricated-metric",
+        "B02-gui-tool-verify",
+        "B10-unmeasured-no-reason",
+        "B11-unlinked-output",
+        "B20-final-column-escape"
+      ]
+    },
+    {
+      "rule_id": "R2",
+      "anchor": "CORE RULES > R2 — HONEST TARGETS ONLY",
+      "violation_codes": [
+        "R2-UNCITED",
+        "R2-NONNUMERIC"
+      ],
+      "fixtures_exercising": [
+        "G01-clean-run",
+        "G04-redaction-prose-precision",
+        "B03-uncited-sota",
+        "B04-nonnumeric-target",
+        "B16-compound-violations",
+        "B20-final-column-escape",
+        "G09-waived-violation",
+        "B22-expired-waiver"
+      ],
+      "coverage_note": "Banned-word matching is exact on the normalized Target cell only; the same words in prose are legitimate (precision fixture G04)."
+    },
+    {
+      "rule_id": "R3",
+      "anchor": "CORE RULES > R3 — PROTECT THE CORE",
+      "violation_codes": [
+        "R3-PROTECTED"
+      ],
+      "fixtures_exercising": [
+        "B09-protected-area-touched",
+        "B18-config-autoprotect",
+        "G03-protected-prose-precision",
+        "B26-runner-config-autoprotect"
+      ],
+      "coverage_note": "Validator checks DONE task rows against protected areas (fixture-declared, --protected, or auto-loaded from the target AUDIT.md's CONFIG — B18). Scoped to DONE rows so narrative/OPEN-row mentions don't over-fire (G03); a DONE row whose prose merely NAMES a protected path still trips — that residual false-positive is BLINDSPOTS BS-05, accepted. Behavioral preservation itself is NOT machine-checkable here — enforce with tests/hooks in the target repo."
+    },
+    {
+      "rule_id": "R4",
+      "anchor": "CORE RULES > R4 — FILE IS MEMORY",
+      "violation_codes": [],
+      "fixtures_exercising": [],
+      "coverage_note": "Resume behavior is a live-agent property; not checkable from artifacts alone. Acknowledged gap."
+    },
+    {
+      "rule_id": "R5",
+      "anchor": "CORE RULES > R5 — ONE TASK AT A TIME (closed sets)",
+      "violation_codes": [
+        "R5-BAD-STATUS",
+        "R5-BAD-SEV",
+        "R5-BAD-ID"
+      ],
+      "fixtures_exercising": [
+        "G01-clean-run",
+        "B05-bad-status",
+        "B16-compound-violations",
+        "G07-fenced-tool-output"
+      ]
+    },
+    {
+      "rule_id": "R6",
+      "anchor": "CORE RULES > R6 — CIRCUIT BREAKER",
+      "violation_codes": [
+        "R6-NO-ROOTCAUSE"
+      ],
+      "fixtures_exercising": [
+        "G01-clean-run",
+        "B08-blocked-no-rootcause"
+      ],
+      "coverage_note": "The 3-strike count itself is a live-agent property; only the BLOCKED+root-cause artifact is checked."
+    },
+    {
+      "rule_id": "R7",
+      "anchor": "CORE RULES > R7 — SEVERITY-WEIGHTED, NOT QUOTA'D",
+      "violation_codes": [],
+      "fixtures_exercising": [
+        "G02-no-findings-valid"
+      ],
+      "coverage_note": "Positive-path fixture: a zero-findings loop MUST validate clean. Padding detection is judgment-based — covered by retrospective item 3, not the validator."
+    },
+    {
+      "rule_id": "PHASE4-REEVAL",
+      "anchor": "PHASE 4 — re-evaluate below-floor items whose premise a completed task changed (v1.4.0)",
+      "violation_codes": [],
+      "fixtures_exercising": [
+        "G12-below-floor-reeval"
+      ],
+      "coverage_note": "Behavior rule, gold-only (like R7): when a task completed this loop changes the premise of an issue logged below SEVERITY_FLOOR, Phase 4 must re-rate it and carry any that now cross the floor into the next loop's backlog. Whether the agent actually re-rated is a semantic/recall property — not soundly machine-detectable without false positives — so the validator does not flag the omission; G12 pins the conformant two-loop re-promotion as a tested, locked example so a future validator change cannot wrongly flag it. Trigger: FAILURE_LOG 2026-06-13 (below-floor staleness); promoted at maintainer request at 1 observation (Rule of Three explicitly waived). A sound opt-in enforcement (a structured 'escalates to <Sev> when <ID> done' clause plus a check) is proposed for a future cycle in the session handoff."
+    },
+    {
+      "rule_id": "R8",
+      "anchor": "CORE RULES > R8 — REDACT SECRETS",
+      "violation_codes": [
+        "R8-SECRET"
+      ],
+      "fixtures_exercising": [
+        "G01-clean-run",
+        "G04-redaction-prose-precision",
+        "B07-secret-leak",
+        "B16-compound-violations",
+        "B23-redaction-distance",
+        "B25-profile-secret-leak"
+      ],
+      "coverage_note": "Pattern set is a finite denylist (BLINDSPOTS BS-07). A [REDACTED:kind] marker suppresses matches only within a 40-char context window; a raw value beyond it still trips even with a marker elsewhere in the file (B16, B23 — intended behavior pinned per structural review 4.2). Targets extend the pattern set per stack via audit-profile.yaml (B25); an invalid profile regex yields MALFORMED-FILE."
+    },
+    {
+      "rule_id": "P2-GATE",
+      "anchor": "PHASE 2 — gated-mode approval artifact; Mode echoed in Scope & method (v1.1.0)",
+      "violation_codes": [
+        "GATED-UNAPPROVED-EXEC"
+      ],
+      "fixtures_exercising": [
+        "G01-clean-run",
+        "B12-gated-unapproved-exec",
+        "B14-gated-missing-approval"
+      ],
+      "coverage_note": "Fires when a loop section carries an `Approved:` line OR echoes `Mode: gated` (v1.1.0 closed the omitted-line evasion, BLINDSPOTS BS-08). A run that suppresses the Mode echo entirely is now caught by TEMPLATE-NONCONFORMANT (BS-12) instead of escaping; autonomous runs carry no gate."
+    },
+    {
+      "rule_id": "TEMPLATE",
+      "anchor": "PHASE 2 — WRITE THE BACKLOG (exact template; Protocol echo since v1.3.0)",
+      "violation_codes": [
+        "TEMPLATE-NONCONFORMANT"
+      ],
+      "fixtures_exercising": [
+        "B15-template-nonconformant",
+        "G05-adversarial-formatting",
+        "G06-minimal-valid",
+        "G07-fenced-tool-output",
+        "B19-fence-only-template",
+        "B24-missing-protocol-echo",
+        "G10-legacy-version-artifact"
+      ],
+      "coverage_note": "The meta-tripwire (BLINDSPOTS BS-12): every other check activates only when output looks like the template, so non-template output used to escape ALL of them. Requires per loop section: a Mode: line, and (benchmark table AND task table) OR the R7 no-significant-findings line. G06 pins the floor (the template and nothing more); G05 pins parser tolerance for human-valid formatting. Fence-aware since the F-1 fix: quoted tables inside ``` blocks neither satisfy the template (B19) nor trip other checks (G07). Version-aware since v1.3.0 (F-5): requirements gate on the section's stated Protocol echo — a v1.0.0 artifact is judged by the v1.0.0 template (G10); omitting the echo on a current run is itself nonconformant (B24)."
+    },
+    {
+      "rule_id": "P0-CONFIG",
+      "anchor": "PHASE 0 — RECOVER STATE (CONFIG preflight, v1.2.0)",
+      "violation_codes": [
+        "CONFIG-PLACEHOLDER",
+        "CONFIG-BAD-ENUM"
+      ],
+      "fixtures_exercising": [
+        "B17-config-placeholder",
+        "B18-config-autoprotect",
+        "G08-config-realworld",
+        "B26-runner-config-autoprotect",
+        "G11-runner-config-valid"
+      ],
+      "coverage_note": "Runs only when the target repo's AUDIT.md sits next to docs/ (true for --run on a real target; fixtures opt in by shipping an AUDIT.md). Placeholder = any <...> remnant; enums checked for MODE / DEPTH / BENCHMARK_MODE / SEVERITY_FLOOR. PROTECTED_AREAS auto-loads into the R3 tripwire (B18), closing the --protected double-entry gap. The protocol-side STOP lives in Phase 0 (v1.2.0); the validator side is this mechanical check. Placeholder = whole-value <...> wrap or canonical template stems; comments strip at >=2 spaces before '#'; enums compared on the first token (F-4 precision: G08 keeps generics, redirection and 'ticket #4211' valid). Runner mode: when the target has no AUDIT.md copy, the same preflight + auto-load run against audit-profile.yaml's config: section (B26 trap, G11 precision) — the protocol stays single-source in this repo; an AUDIT.md copy wins precedence when both exist."
+    },
+    {
+      "rule_id": "P5",
+      "anchor": "PHASE 5 — HANDOFF (stop-condition citation; closed metric-status set)",
+      "violation_codes": [
+        "P5-NO-STOP-REASON",
+        "HANDOFF-BAD-MSTATUS"
+      ],
+      "fixtures_exercising": [
+        "G01-clean-run",
+        "G02-no-findings-valid",
+        "B06-missing-stop-reason",
+        "B13-bad-metric-status"
+      ],
+      "coverage_note": "HANDOFF.md presence itself is not required by --run (mid-flight runs are legitimate), so a 'finished' run that skipped Phase 5 validates clean — reviewers of completed runs must confirm the file exists. See improve/BLINDSPOTS.md BS-09."
+    },
+    {
+      "rule_id": "TARGET-HEALTH",
+      "anchor": "PHASE 4/5 — target health gate (v1.5.0): the audited target must still pass its own RUN_COMMANDS",
+      "violation_codes": [
+        "TARGET-HEALTH-UNVERIFIED"
+      ],
+      "fixtures_exercising": [
+        "G13-target-health-pass",
+        "B27-target-health-unverified"
+      ],
+      "coverage_note": "Two halves: (1) executable — core/evals/verify-target.sh runs the target's RUN_COMMANDS (build/lint/typecheck/test) with a timeout and exits non-zero on any failure/hang; this is the actual 'did the target still run after the audit' check, since the validator cannot run builds. (2) artifact — a HANDOFF that cites a stop condition (a completed run) must carry a `Target health: PASS|FAIL` line proving RUN_COMMANDS were re-run; absence is TARGET-HEALTH-UNVERIFIED. Version-gated to v1.5.0+ artifacts (older runs judged by their own template, like the Mode/Protocol echoes). Trigger: FAILURE_LOG 2026-06-13 — a lint fix scoped to src/ shipped while the target's own `ruff check .` (tests/ + E402) stayed red because RUN_COMMANDS were never run post-change. G13 pins the conformant PASS handoff; B27 the missing-record violation."
+    },
+    {
+      "rule_id": "ARTIFACT-IO",
+      "anchor": "R4 / Phase 2 — artifacts are UTF-8 text files of sane size",
+      "violation_codes": [
+        "MALFORMED-FILE"
+      ],
+      "fixtures_exercising": [
+        "B21-malformed-encoding"
+      ],
+      "coverage_note": "Artifact problems become verdicts, never tracebacks (architect review F-3): invalid UTF-8, unreadable files, and >10 MB artifacts each yield MALFORMED-FILE; remaining checks on that file are skipped."
+    },
+    {
+      "rule_id": "WAIVERS",
+      "anchor": "validator feature — docs/AUDIT-WAIVERS.yaml (not a protocol rule)",
+      "violation_codes": [
+        "WAIVER-EXPIRED"
+      ],
+      "fixtures_exercising": [
+        "G09-waived-violation",
+        "B22-expired-waiver"
+      ],
+      "coverage_note": "Audit-trailed, expiring suppressions in the TARGET repo (reason + approved_by + mandatory ISO expires). Valid waiver suppresses with the waiver surfaced separately (G09); expired/undated waiver un-suppresses the original violation and is itself flagged (B22). Deliberately distinct from eval fixtures, which may never be weakened."
+    }
+  ]
+}

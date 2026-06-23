@@ -9,6 +9,8 @@ pub mod anthropic;
 pub mod bedrock;
 pub mod failover;
 pub mod jitter;
+pub mod local_openai;
+pub mod ollama;
 pub mod openai;
 pub mod types;
 
@@ -23,7 +25,6 @@ use std::time::{Duration, Instant};
 use async_trait::async_trait;
 use once_cell::sync::Lazy;
 use prometheus::{register_counter_vec, register_histogram_vec, CounterVec, HistogramVec};
-use rand::Rng;
 use tracing::{error, warn};
 
 use crate::alias::ResolvedModel;
@@ -83,9 +84,7 @@ static LATENCY_MS: Lazy<HistogramVec> = Lazy::new(|| {
         "ai_router_latency_ms",
         "Per-attempt latency in ms",
         &["provider", "model"],
-        vec![
-            50.0, 100.0, 250.0, 500.0, 1_000.0, 2_500.0, 5_000.0, 10_000.0, 30_000.0
-        ]
+        vec![50.0, 100.0, 250.0, 500.0, 1_000.0, 2_500.0, 5_000.0, 10_000.0, 30_000.0]
     )
     .unwrap()
 });
@@ -164,7 +163,6 @@ pub async fn call_provider(
     let mut attempts: Vec<AttemptRecord> = Vec::with_capacity(ATTEMPTS_CAP);
     let mut last_error: Option<RouterError> = None;
     let mut prev_provider_kind: Option<ProviderKind> = None;
-    let mut rng = rand::thread_rng();
 
     for (chain_idx, (provider, model)) in chain.iter().enumerate() {
         let pk = provider.kind();
@@ -180,7 +178,10 @@ pub async fn call_provider(
         for attempt_num in 1..=MAX_RETRIES_PER_PROVIDER {
             // §1 #13: ATTEMPTS_CAP guard.
             if attempts.len() >= ATTEMPTS_CAP {
-                error!(attempts_len = attempts.len(), "router_attempts_cap_exceeded");
+                error!(
+                    attempts_len = attempts.len(),
+                    "router_attempts_cap_exceeded"
+                );
                 return Err(RouterError::InvalidResponse {
                     reason: format!(
                         "attempts cap exceeded ({ATTEMPTS_CAP}); programmer error in failover loop"
@@ -203,9 +204,11 @@ pub async fn call_provider(
             let call_started = Instant::now();
 
             // §1 #6: Propagate deadline via tokio::time::timeout.
-            let outcome =
-                tokio::time::timeout(remaining, provider.call_chat(req, model, effective_deadline))
-                    .await;
+            let outcome = tokio::time::timeout(
+                remaining,
+                provider.call_chat(req, model, effective_deadline),
+            )
+            .await;
 
             let elapsed_ms = call_started.elapsed().as_millis() as u32;
             LATENCY_MS
@@ -216,8 +219,13 @@ pub async fn call_provider(
                 // Timeout
                 Err(_timeout) => {
                     attempts.push(make_record(
-                        pk, model, attempt_num, chain_idx,
-                        AttemptStatus::TimeoutBeforeFirstToken, elapsed_ms, None,
+                        pk,
+                        model,
+                        attempt_num,
+                        chain_idx,
+                        AttemptStatus::TimeoutBeforeFirstToken,
+                        elapsed_ms,
+                        None,
                     ));
                     RETRIES
                         .with_label_values(&[pk.as_metric_label(), "timeout"])
@@ -227,42 +235,72 @@ pub async fn call_provider(
 
                 // §1 #7: 400 is terminal — no retry, no failover.
                 Ok(Err(RouterError::TerminalProviderError {
-                    status: 400, provider: ep, message, ..
+                    status: 400,
+                    provider: ep,
+                    message,
+                    ..
                 })) => {
                     attempts.push(make_record(
-                        ep, model, attempt_num, chain_idx,
-                        AttemptStatus::Terminal400, elapsed_ms, Some(400),
+                        ep,
+                        model,
+                        attempt_num,
+                        chain_idx,
+                        AttemptStatus::Terminal400,
+                        elapsed_ms,
+                        Some(400),
                     ));
                     CALLS
                         .with_label_values(&[ep.as_metric_label(), model, "terminal_4xx"])
                         .inc();
                     return Err(RouterError::TerminalProviderError {
-                        provider: ep, status: 400, message, retry_after_secs: None,
+                        provider: ep,
+                        status: 400,
+                        message,
+                        retry_after_secs: None,
                     });
                 }
 
                 // §1 #9: 404 is terminal — no retry, no failover.
                 Ok(Err(RouterError::TerminalProviderError {
-                    status: 404, provider: ep, message, ..
+                    status: 404,
+                    provider: ep,
+                    message,
+                    ..
                 })) => {
                     attempts.push(make_record(
-                        ep, model, attempt_num, chain_idx,
-                        AttemptStatus::Terminal404, elapsed_ms, Some(404),
+                        ep,
+                        model,
+                        attempt_num,
+                        chain_idx,
+                        AttemptStatus::Terminal404,
+                        elapsed_ms,
+                        Some(404),
                     ));
                     CALLS
                         .with_label_values(&[ep.as_metric_label(), model, "terminal_4xx"])
                         .inc();
                     warn!(provider = ?ep, model = %model, "router_404_terminal_check_alias_resolver");
                     return Err(RouterError::TerminalProviderError {
-                        provider: ep, status: 404, message, retry_after_secs: None,
+                        provider: ep,
+                        status: 404,
+                        message,
+                        retry_after_secs: None,
                     });
                 }
 
                 // §1 #8: 401/403 is terminal — sev-1 log.
-                Ok(Err(RouterError::AuthError { provider: ep, status })) => {
+                Ok(Err(RouterError::AuthError {
+                    provider: ep,
+                    status,
+                })) => {
                     attempts.push(make_record(
-                        ep, model, attempt_num, chain_idx,
-                        AttemptStatus::TerminalAuth, elapsed_ms, Some(status),
+                        ep,
+                        model,
+                        attempt_num,
+                        chain_idx,
+                        AttemptStatus::TerminalAuth,
+                        elapsed_ms,
+                        Some(status),
                     ));
                     CALLS
                         .with_label_values(&[ep.as_metric_label(), model, "auth_error"])
@@ -273,22 +311,36 @@ pub async fn call_provider(
                         severity = "sev-1",
                         "router_auth_error_terminal"
                     );
-                    return Err(RouterError::AuthError { provider: ep, status });
+                    return Err(RouterError::AuthError {
+                        provider: ep,
+                        status,
+                    });
                 }
 
                 // §1 #10: 429 — honour Retry-After if present.
                 Ok(Err(RouterError::TerminalProviderError {
-                    status: 429, provider: ep, message, retry_after_secs,
+                    status: 429,
+                    provider: ep,
+                    message,
+                    retry_after_secs,
                 })) => {
                     attempts.push(make_record(
-                        ep, model, attempt_num, chain_idx,
-                        AttemptStatus::RetriedAfter429, elapsed_ms, Some(429),
+                        ep,
+                        model,
+                        attempt_num,
+                        chain_idx,
+                        AttemptStatus::RetriedAfter429,
+                        elapsed_ms,
+                        Some(429),
                     ));
                     RETRIES
                         .with_label_values(&[ep.as_metric_label(), "429"])
                         .inc();
                     last_error = Some(RouterError::TerminalProviderError {
-                        provider: ep, status: 429, message, retry_after_secs,
+                        provider: ep,
+                        status: 429,
+                        message,
+                        retry_after_secs,
                     });
 
                     if let Some(secs) = retry_after_secs {
@@ -313,8 +365,13 @@ pub async fn call_provider(
                         _ => None,
                     };
                     attempts.push(make_record(
-                        pk, model, attempt_num, chain_idx,
-                        AttemptStatus::RetriedAfter5xx, elapsed_ms, status_opt,
+                        pk,
+                        model,
+                        attempt_num,
+                        chain_idx,
+                        AttemptStatus::RetriedAfter5xx,
+                        elapsed_ms,
+                        status_opt,
                     ));
                     RETRIES
                         .with_label_values(&[pk.as_metric_label(), "5xx"])
@@ -326,8 +383,13 @@ pub async fn call_provider(
                 Ok(Ok(mut resp)) => {
                     resp.attempts = std::mem::take(&mut attempts);
                     resp.attempts.push(make_record(
-                        pk, model, attempt_num, chain_idx,
-                        AttemptStatus::Succeeded, elapsed_ms, Some(200),
+                        pk,
+                        model,
+                        attempt_num,
+                        chain_idx,
+                        AttemptStatus::Succeeded,
+                        elapsed_ms,
+                        Some(200),
                     ));
                     CALLS
                         .with_label_values(&[pk.as_metric_label(), model, "succeeded"])
@@ -342,7 +404,13 @@ pub async fn call_provider(
             // §1 #3: Exponential backoff before next retry within same provider.
             if attempt_num < MAX_RETRIES_PER_PROVIDER {
                 let base_ms = RETRY_DELAYS_MS[(attempt_num - 1) as usize];
-                let sleep_ms = jitter::jitter_ms(base_ms, JITTER_FACTOR, &mut rng);
+                // Scope the (!Send) thread rng to this synchronous jitter call so it is never held across
+                // the sleep await below. Otherwise call_provider's future is not Send and cannot be driven
+                // from the Send + Sync ChatBackend trait object (the FR-AI-105 serving path).
+                let sleep_ms = {
+                    let mut rng = rand::thread_rng();
+                    jitter::jitter_ms(base_ms, JITTER_FACTOR, &mut rng)
+                };
                 let sleep_dur = Duration::from_millis(sleep_ms as u64);
                 if Instant::now() + sleep_dur > effective_deadline {
                     break;

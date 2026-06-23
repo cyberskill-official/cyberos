@@ -1,0 +1,49 @@
+{
+  "_comment": "Stage-0 deterministic gates for Claude Code. Merge into ~/.claude/settings.json (global) or <project>/.claude/settings.json (per-project). install.sh substitutes __AWH_ROOT__ with the absolute path to this repo. Exit code 2 from a hook blocks the action and returns stderr to the model.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Read|Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"__AWH_ROOT__/harness/stage0_verification/hooks/pretooluse_deny.py\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"__AWH_ROOT__/harness/stage0_verification/hooks/posttooluse_format.py\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"__AWH_ROOT__/harness/stage0_verification/hooks/stop_gate.py\""
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"__AWH_ROOT__/harness/stage0_verification/hooks/stop_gate.py\""
+          }
+        ]
+      }
+    ]
+  }
+}

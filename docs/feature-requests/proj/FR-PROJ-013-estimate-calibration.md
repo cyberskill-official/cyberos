@@ -30,7 +30,7 @@ new_files:
   - services/proj-sync/src/calibration/mod.rs
   - services/proj-sync/src/calibration/bayes.rs
   - services/proj-sync/src/calibration/nightly.rs
-  - services/proj-sync/tests/calibration_test.rs
+  - services/proj/tests/audit_row_test.rs
 modified_files:
   - services/proj-sync/src/main.rs                    # cron schedule
 allowed_tools:

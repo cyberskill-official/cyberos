@@ -1,0 +1,6 @@
+id: B09-protected-area-touched
+description: DONE task reports edits under a PROTECTED_AREAS path
+expect: fail
+expected_violations: [R3-PROTECTED]
+exercises_rules: [R3]
+protected_areas: [src/billing/]

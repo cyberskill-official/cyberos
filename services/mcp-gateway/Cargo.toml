@@ -39,6 +39,8 @@ jsonwebtoken.workspace = true
 jsonrpsee = { version = "0.24", features = ["server", "client"] }
 async-trait = "0.1"
 base64 = "0.22"
+# FR-MCP-002 federation: forward tools/call to a module's registered MCP endpoint.
+reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
 
 cyberos-types.workspace = true
 

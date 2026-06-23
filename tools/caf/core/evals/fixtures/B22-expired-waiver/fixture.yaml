@@ -1,0 +1,6 @@
+id: B22-expired-waiver
+description: The same waiver, expired - the original violation must come back AND the stale waiver itself must be flagged so exceptions cannot rot silently (architect review 3.1).
+expect: fail
+expected_violations: [R2-UNCITED, WAIVER-EXPIRED]
+exercises_rules: [WAIVERS, R2]
+protected_areas: []

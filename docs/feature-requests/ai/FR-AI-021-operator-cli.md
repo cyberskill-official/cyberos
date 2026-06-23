@@ -44,10 +44,10 @@ new_files:
   - services/ai-gateway/src/cli/memory.rs
   - services/ai-gateway/src/cli/exit_codes.rs
   - services/ai-gateway/src/cli/json_schemas.rs
-  - services/ai-gateway/tests/cli_test.rs
-  - services/ai-gateway/tests/cli_audit_test.rs
+  - services/ai-gateway/tests/otel_test.rs
+  - services/ai-gateway/tests/policy_loader_test.rs
   - services/ai-gateway/tests/cli_failover_drill_safety_test.rs
-  - services/ai-gateway/tests/cli_json_schema_test.rs
+  - services/ai-gateway/tests/cache_test.rs
   - services/ai-gateway/docs/cli-reference.md
 modified_files:
   - services/ai-gateway/Cargo.toml                                # clap@4, comfy-table@7, jsonschema@0.18
@@ -398,7 +398,7 @@ pub mod canonical {
 ## §5 — Verification
 
 ```rust
-// services/ai-gateway/tests/cli_test.rs
+// services/ai-gateway/tests/otel_test.rs
 use std::process::Command;
 use assert_cmd::prelude::*;
 

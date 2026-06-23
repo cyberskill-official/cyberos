@@ -1,0 +1,6 @@
+id: B21-malformed-encoding
+description: BACKLOG.md contains invalid UTF-8 byte sequences (latin-1 editor, Windows runtime). Previously an unhandled UnicodeDecodeError traceback - a gate that crashes is neither pass nor fail (architect review F-3). Must be the MALFORMED-FILE verdict.
+expect: fail
+expected_violations: [MALFORMED-FILE]
+exercises_rules: [ARTIFACT-IO]
+protected_areas: []

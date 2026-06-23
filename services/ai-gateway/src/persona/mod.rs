@@ -53,7 +53,11 @@ static PERSONA_RELOADS: Lazy<CounterVec> = Lazy::new(|| {
 });
 
 static REGISTRY_SIZE: Lazy<IntGauge> = Lazy::new(|| {
-    register_int_gauge!("ai_persona_registry_size", "Current persona registry entry count").unwrap()
+    register_int_gauge!(
+        "ai_persona_registry_size",
+        "Current persona registry entry count"
+    )
+    .unwrap()
 });
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -117,14 +121,13 @@ pub fn load(handle: &PersonaHandle) -> Result<Arc<Persona>, PersonaError> {
     };
 
     // Tamper check on every load (§1 #7)
-    hash::verify_persona(persona).map_err(|e| {
+    hash::verify_persona(persona).inspect_err(|_| {
         PERSONA_TAMPERED
             .with_label_values(&[&handle.display()])
             .inc();
         PERSONA_LOADS
             .with_label_values(&[&handle.display(), "tampered"])
             .inc();
-        e
     })?;
 
     PERSONA_LOADS
