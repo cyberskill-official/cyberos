@@ -1,6 +1,6 @@
 # GAM module — feature request index
 
-gam (Git Alias Manager) is a Tauri v2 desktop app absorbed from zintaen/gam. Unlike the from-scratch module catalogs, these entries are written at as-built fidelity: every FR is already shipped, so each records what the app does today and points at the tests that prove it, rather than specifying work to be done. Expanding any entry into a full per-FR spec (proj-module depth) is a follow-up.
+gam (Git Alias Manager) is a Tauri v2 desktop app absorbed from zintaen/gam. Unlike the from-scratch module catalogs, these entries are written at as-built fidelity: every FR is already shipped, so each records what the app does today and points at the tests that prove it, rather than specifying work to be done. Each FR now has a per-file spec and a paired audit beside this index (FR-GAM-NNN-<slug>.md and .audit.md), authored 2026-06-24.
 
 Normative keywords follow BCP-14 (MUST, SHOULD, MAY).
 

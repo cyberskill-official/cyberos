@@ -31,4 +31,4 @@ Version reconciliation. gam is at 1.0.11 because real installs depend on the upd
 
 Updater signing. The updater public key in src-tauri/tauri.conf.json was rotated on 2026-06-23. The matching private key lives in the upstream repo's GitHub secrets. Releasing gam from CyberOS needs those signing secrets configured here too.
 
-Requirements. The gam catalog lives at docs/feature-requests/gam/ (FR-GAM) and docs/non-functional-requirements/gam/ (NFR-GAM), written at as-built fidelity. Expanding any entry into a full per-FR spec, matching the depth of the proj module, is a follow-up slice.
+Requirements. The gam catalog lives at docs/feature-requests/gam/ (FR-GAM-001..008) and docs/non-functional-requirements/gam/ (NFR-GAM-001..003). Each entry has a per-file spec and a paired .audit.md, authored at as-built fidelity 2026-06-24.

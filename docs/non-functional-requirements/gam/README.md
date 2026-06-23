@@ -1,6 +1,6 @@
 # GAM module — non-functional requirements
 
-As-built NFRs for the absorbed gam desktop app. Normative keywords follow BCP-14.
+As-built NFRs for the absorbed gam desktop app. Normative keywords follow BCP-14. Each NFR has a per-file statement and a paired audit beside this index (NFR-GAM-NNN-<slug>.md and .audit.md), authored 2026-06-24.
 
 | NFR | Title |
 |---|---|
