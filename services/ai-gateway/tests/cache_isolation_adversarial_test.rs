@@ -2,13 +2,19 @@
 
 mod support;
 use support::proptest_strategies::adversarial_tenant_strings;
-use support::redis_isolation_helper::RedisTestNamespace;
+use support::redis_isolation_helper::{redis_available, RedisTestNamespace};
 use support::test_provider_response;
 
 use cyberos_ai_gateway::cache::{self, CacheKey, CacheLookupOutcome};
 
 #[tokio::test]
 async fn adversarial_tenant_strings_dont_leak() {
+    // Needs a live Redis to look up against; skip cleanly where there is none (the no-Redis
+    // lint job) so a connect timeout is not misread as a cross-tenant leak.
+    if !redis_available() {
+        eprintln!("skipping adversarial_tenant_strings_dont_leak: no Redis at REDIS_URL");
+        return;
+    }
     cache::redis_backend::init(
         &std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string()),
     );

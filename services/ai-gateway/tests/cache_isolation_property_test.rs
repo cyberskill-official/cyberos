@@ -5,7 +5,7 @@
 
 mod support;
 use support::proptest_strategies::*;
-use support::redis_isolation_helper::RedisTestNamespace;
+use support::redis_isolation_helper::{redis_available, RedisTestNamespace};
 use support::test_provider_response;
 
 use cyberos_ai_gateway::cache::{self, CacheKey, CacheLookupOutcome};
@@ -26,6 +26,8 @@ proptest! {
         (tenant_a, tenant_b) in any_tenant_pair(),
         ops in prop::collection::vec(any_cache_op(), 800..1200),
     ) {
+        // No Redis (the no-Redis lint job): skip rather than time out on every op for minutes.
+        if !redis_available() { return Ok(()); }
         let ns = RedisTestNamespace::new();
         let t_a = ns.tenant(&tenant_a);
         let t_b = ns.tenant(&tenant_b);
@@ -87,6 +89,8 @@ proptest! {
         (a, b) in any_tenant_pair(),
         n_ops in 10..100u32,
     ) {
+        // No Redis (the no-Redis lint job): skip rather than panic on the connection unwrap below.
+        if !redis_available() { return Ok(()); }
         let ns = RedisTestNamespace::new();
         let t_a = ns.tenant(&a);
         let t_b = ns.tenant(&b);

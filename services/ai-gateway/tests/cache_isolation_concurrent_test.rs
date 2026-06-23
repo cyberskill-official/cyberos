@@ -1,13 +1,19 @@
 //! FR-AI-018 §1 #8 — Concurrent-load test for cache isolation.
 
 mod support;
-use support::redis_isolation_helper::RedisTestNamespace;
+use support::redis_isolation_helper::{redis_available, RedisTestNamespace};
 use support::test_provider_response;
 
 use cyberos_ai_gateway::cache::{self, CacheKey, CacheLookupOutcome};
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
 async fn one_hundred_tasks_racing_no_cross_tenant_reads() {
+    // Skip without a live Redis (the no-Redis lint job): every op would time out, dragging the
+    // run out for minutes. The integration job and the awh gate provide Redis and run it for real.
+    if !redis_available() {
+        eprintln!("skipping one_hundred_tasks_racing_no_cross_tenant_reads: no Redis at REDIS_URL");
+        return;
+    }
     cache::redis_backend::init(
         &std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string()),
     );
