@@ -179,7 +179,9 @@ struct HoldRow {
     state: String,
     actual_usd: Option<Decimal>,
     refund_reason: Option<String>,
-    warn_crossed: Option<bool>,
+    // `warn_crossed` is not a stored column; it is derived from `warn_emitted_at` (see
+    // reconstruct_outcome). The lock query below selects `warn_emitted_at`, not `warn_crossed`,
+    // so a `warn_crossed` field here makes sqlx's FromRow fail with ColumnNotFound.
     warn_emitted_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
@@ -495,7 +497,8 @@ fn reconstruct_outcome(hold: &HoldRow) -> ReconcileOutcome {
         "reconciled" => ReconcileOutcome::Reconciled {
             actual_usd: hold.actual_usd.unwrap_or(Decimal::ZERO),
             new_spent_total_usd: Decimal::ZERO, // reconstructed without re-reading ledger
-            warn_crossed: hold.warn_crossed.unwrap_or(false),
+            // Derive from the ledger's warn timestamp: warn was emitted iff the threshold crossed.
+            warn_crossed: hold.warn_emitted_at.is_some(),
         },
         "refunded" => {
             let reason = if hold
