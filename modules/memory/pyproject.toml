@@ -11,6 +11,19 @@ dynamic = ["dependencies"]
 
 [project.optional-dependencies]
 cuo = ["cyberos-cuo"]
+# Test-only dependencies. The suite is otherwise import-tolerant (jsonschema/cryptography/
+# zstandard are guarded with try/except or pytest.importorskip), but the async dream tests use
+# @pytest.mark.asyncio and so require pytest-asyncio, and test_semantic imports numpy directly.
+# This mirrors the canonical set in .github/workflows/voice-and-consistency.yml plus pytest-asyncio,
+# so `pip install -e modules/memory[test]` provisions a runnable suite in CI.
+test = [
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+    "cryptography",
+    "zstandard",
+    "jsonschema",
+    "numpy",
+]
 
 [project.scripts]
 cyberos = "cyberos.__main__:main"

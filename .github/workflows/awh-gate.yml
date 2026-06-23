@@ -96,6 +96,18 @@ jobs:
           changed=$(git diff --name-only "origin/${{ github.base_ref }}"...HEAD | awk -F/ '/^modules\//{print $2} /^services\//{print $2}' | sort -u || true)
           echo "changed modules: $changed"
 
+          # The eval step installs Python deps later, so provision them here too or the pytest
+          # diagnostics below would just print "No module named pytest". This installs pytest plus
+          # each changed module's [test] extra (the memory suite needs pytest-asyncio + numpy),
+          # and the editable module so the ai writer subprocess (`python3 -m cyberos.writer`) resolves.
+          pip install -q pytest pytest-cov pytest-asyncio || true
+          for m in $changed; do
+            if [ -f "modules/$m/pyproject.toml" ]; then
+              [ -f "modules/$m/README.md" ] || echo "# $m" > "modules/$m/README.md"
+              pip install -q -e "modules/$m[test]" 2>/dev/null || pip install -q -e "modules/$m" || true
+            fi
+          done
+
           if echo "$changed" | grep -qx ai; then
             echo "::group::diag: ai-gateway-rust — cargo test -p cyberos-ai-gateway (serial, --nocapture)"
             ( cd services && cargo test -p cyberos-ai-gateway -- --test-threads=1 --nocapture ) 2>&1 | tail -n 400 || true
