@@ -32,6 +32,7 @@
 
 pub mod annotations;
 pub mod federation;
+pub mod naming;
 pub mod protocol;
 pub mod router;
 
