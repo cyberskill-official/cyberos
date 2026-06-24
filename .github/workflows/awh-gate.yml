@@ -82,47 +82,6 @@ jobs:
       - name: Install awh (vendored under tools/awh)
         run: pip install -e tools/awh
 
-      # awh captures each task's stdout/stderr and prints only a pass/fail summary, which hides
-      # WHY a task regressed. This step re-runs the commands of the historically-red modules
-      # (ai, memory) with output visible so a failure is diagnosable from the CI log in a single
-      # run instead of a blind retry loop. It never fails the job (|| true after each); the awh
-      # eval below remains the gate. Remove this step once ai and memory are green and stable.
-      - name: Diagnostic — raw output for ai + memory golden tasks (non-failing)
-        env:
-          DATABASE_URL: postgres://cyberos:cyberos@localhost:5432/cyberos
-          REDIS_URL: redis://127.0.0.1:6379
-        run: |
-          git fetch origin "${{ github.base_ref }}" --depth=1 || true
-          changed=$(git diff --name-only "origin/${{ github.base_ref }}"...HEAD | awk -F/ '/^modules\//{print $2} /^services\//{print $2}' | sort -u || true)
-          echo "changed modules: $changed"
-
-          # The eval step installs Python deps later, so provision them here too or the pytest
-          # diagnostics below would just print "No module named pytest". This installs pytest plus
-          # each changed module's [test] extra (the memory suite needs pytest-asyncio + numpy),
-          # and the editable module so the ai writer subprocess (`python3 -m cyberos.writer`) resolves.
-          pip install -q pytest pytest-cov pytest-asyncio || true
-          for m in $changed; do
-            if [ -f "modules/$m/pyproject.toml" ]; then
-              [ -f "modules/$m/README.md" ] || echo "# $m" > "modules/$m/README.md"
-              pip install -q -e "modules/$m[test]" 2>/dev/null || pip install -q -e "modules/$m" || true
-            fi
-          done
-
-          if echo "$changed" | grep -qx ai; then
-            echo "::group::diag: ai-gateway-rust — cargo test -p cyberos-ai-gateway (serial, --nocapture)"
-            ( cd services && cargo test -p cyberos-ai-gateway -- --test-threads=1 --nocapture ) 2>&1 | tail -n 400 || true
-            echo "::endgroup::"
-          fi
-
-          if echo "$changed" | grep -qx memory; then
-            echo "::group::diag: memory-module-suite — python -m pytest modules/memory (-rA)"
-            ( cd modules/memory && python -m pytest -q -rA ) 2>&1 | tail -n 400 || true
-            echo "::endgroup::"
-            echo "::group::diag: memory-service-rust — cargo test -p cyberos-memory (--nocapture)"
-            ( cd services && cargo test -p cyberos-memory -- --nocapture ) 2>&1 | tail -n 400 || true
-            echo "::endgroup::"
-          fi
-
       - name: Run awh gate for changed modules
         run: |
           set -euo pipefail
