@@ -15,20 +15,25 @@ set -euo pipefail
 
 GATEWAY_ADDR="${GATEWAY_ADDR:-127.0.0.1:8090}"
 MODULE_ADDR="${MODULE_ADDR:-127.0.0.1:8099}"
+OBS_MODULE_ADDR="${OBS_MODULE_ADDR:-127.0.0.1:8101}"
 
 # Resolve paths relative to this script so it runs from anywhere.
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SERVICES_DIR="$(cd "$HERE/../.." && pwd)"   # .../cyberos/services
+REPO_ROOT="$(cd "$SERVICES_DIR/.." && pwd)" # .../cyberos
 LOG_DIR="$(mktemp -d "${TMPDIR:-/tmp}/cyberos-mcp-demo.XXXXXX")"
 GATEWAY_LOG="$LOG_DIR/gateway.log"
 MODULE_LOG="$LOG_DIR/module.log"
+OBS_MODULE_LOG="$LOG_DIR/obs-module.log"
 
 GATEWAY_PID=""
 MODULE_PID=""
+OBS_MODULE_PID=""
 
 cleanup() {
   echo
   echo "[run-demo] shutting down..."
+  [ -n "$OBS_MODULE_PID" ] && kill "$OBS_MODULE_PID" 2>/dev/null || true
   [ -n "$MODULE_PID" ] && kill "$MODULE_PID" 2>/dev/null || true
   [ -n "$GATEWAY_PID" ] && kill "$GATEWAY_PID" 2>/dev/null || true
   wait 2>/dev/null || true
@@ -82,11 +87,30 @@ if ! wait_health "http://$MODULE_ADDR/healthz" "reference module" 20; then
   exit 1
 fi
 
+# 3) Obs triage module: serves /mcp and self-registers cyberos.obs.triage. Run from modules/cuo so
+# the `cuo` package imports; CYBEROS_ROOT lets it resolve the skill root. With no LLM invoker on the
+# host it still serves (safe-degrade verdicts), so the demo never needs an API key.
+( cd "$REPO_ROOT/modules/cuo" && exec env CYBEROS_ROOT="$REPO_ROOT" \
+    python3 -m cuo.triage_mcp_module \
+      --gateway "http://$GATEWAY_ADDR" \
+      --listen "$OBS_MODULE_ADDR" ) \
+    >"$OBS_MODULE_LOG" 2>&1 &
+OBS_MODULE_PID=$!
+
+if ! wait_health "http://$OBS_MODULE_ADDR/healthz" "obs triage module" 20; then
+  echo "[run-demo] obs triage module did not become healthy; last log lines:"
+  tail -n 20 "$OBS_MODULE_LOG" || true
+  exit 1
+fi
+
 # Show how registration went and what is now listed.
 sleep 1
 echo
 echo "[run-demo] module log:"
 sed 's/^/    /' "$MODULE_LOG" | tail -n 4
+echo
+echo "[run-demo] obs triage module log:"
+sed 's/^/    /' "$OBS_MODULE_LOG" | tail -n 4
 echo
 echo "[run-demo] tools the gateway now lists:"
 curl -fsS -X POST "http://$GATEWAY_ADDR/mcp" \
@@ -102,13 +126,16 @@ cat <<EOF
     - Headless, from the repo root:
           bash scripts/mcp_call.sh cyberos.demo.now
           bash scripts/mcp_call.sh cyberos.demo.echo '{"message":"hello"}'
+          bash scripts/mcp_call.sh cyberos.obs.triage '{"alert":{"name":"HighErrorRate","severity":"sev2","summary":"5xx above 2%"}}'
 
-Press Ctrl-C to stop the gateway and the module.
+Press Ctrl-C to stop the gateway and the modules.
 EOF
 
-# Stay in the foreground until interrupted; surface a crash of either child. (Portable to
+# Stay in the foreground until interrupted; surface a crash of any child. (Portable to
 # macOS bash 3.2, which lacks `wait -n`.)
-while kill -0 "$GATEWAY_PID" 2>/dev/null && kill -0 "$MODULE_PID" 2>/dev/null; do
+while kill -0 "$GATEWAY_PID" 2>/dev/null \
+   && kill -0 "$MODULE_PID" 2>/dev/null \
+   && kill -0 "$OBS_MODULE_PID" 2>/dev/null; do
   sleep 1
 done
 echo "[run-demo] a process exited; shutting down (see logs in $LOG_DIR)."

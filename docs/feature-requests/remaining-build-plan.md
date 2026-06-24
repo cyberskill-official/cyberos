@@ -4,6 +4,14 @@ Written 2026-06-20 (branch auto/awh-absorb) to turn the 261-FR backlog into an e
 modules that are not yet shipped. It is grounded in `docs/feature-requests/BACKLOG.md` (the state
 engine, 13-layer locked build order) and the per-FR `status:` frontmatter.
 
+Update 2026-06-24: obs is feature-complete in-repo across FR-OBS-001..009 and now also exposes its
+triage path as the mcp-gateway tool `cyberos.obs.triage`, so the live front of the P0 path has moved to
+mcp. A per-FR mcp plan is at `mcp/MCP-BUILD-PLAN.md`. Its headline: FR-MCP-001 (spec-compliance) and
+FR-MCP-002 (heartbeat lifecycle) are already shipped in `services/mcp-gateway` but still read `draft`, so
+the chain is blocked by a status-lag, not by missing code - reconcile those two to `done` via the gate
+first (FR-AUTH-004, the root dep, is already `done`), then FR-MCP-003 (small, independent) and FR-MCP-004
+(OAuth, the one ready FR) are buildable.
+
 ## The honest frontier
 
 The spec corpus is closed: 261 FRs, all at 10/10 audit, 25 modules with full spec coverage. But two

@@ -1,0 +1,3 @@
+# Moved. Unproven outside sources now live in the gitignored playground/ at the repo
+# root (Stage 0 of the funnel). See ../INTAKE.md and ../PLAYGROUND-TRIAGE.md. This
+# directory is retained only as a redirect and can be deleted on the host.

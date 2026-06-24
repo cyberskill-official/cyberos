@@ -1,5 +1,30 @@
 # Changelog — OBS
 
+## 2026-06-24 - obs triage reachable as an mcp-gateway tool (FR-OBS-007 x FR-MCP-002)
+
+The `obs.triage-alert` path obs-router already calls over HTTP is now also exposed on the mcp-gateway as
+the tool `cyberos.obs.triage`, so an alert can be triaged through `tools/call` and shows up in the
+desktop Tools tab alongside other federated module tools.
+
+- **`modules/cuo/cuo/triage_mcp_module.py`** - the obs federation surface. It adopts the reference-module
+  contract verbatim (serves the JSON-RPC the gateway forwards over `/mcp`, self-registers its catalogue at
+  `/v1/mcp/register`, heartbeats, deregisters on shutdown). The registering module identity is `obs` and
+  the tool is `cyberos.obs.triage`; the code lives in the cuo package because triage is a CUO skill. The
+  tool body runs triage in-process through `triage_server.handle_triage_request` - the same pure handler
+  the HTTP endpoint uses - so there is no second hop and no duplicated logic. With no LLM invoker on the
+  host it serves the skill's safe-degrade verdict (confidence 0.0), so the demo needs no API key. A
+  missing `alert` or `alert.name` is an in-band tool error (`isError: true`), not a transport failure; a
+  successful triage returns the verdict as both a text block and `structuredContent`.
+- **`modules/cuo/tests/test_triage_mcp_module.py`** - 8 tests with a fake invoker (no LLM, no network, no
+  live gateway): the `tools/list` descriptor, the verdict projection through `tools/call`, the bad-alert
+  in-band error, the no-invoker safe-degrade verdict, the unknown-tool error, and the registration body.
+  The full cuo suite stays green (235 passed, 2 skipped).
+- **`services/mcp-gateway/examples/run-demo.sh`** - the one-command demo now starts this module alongside
+  the reference module, so `bash scripts/mcp_demo.sh` lights up `cyberos.obs.triage` end to end. Verified
+  the serve path live in the sandbox (healthz, `tools/list`, `tools/call` happy + bad-alert paths). The
+  Rust gateway itself compiles and runs on the build host.
+- **`services/obs-router/README.md`** - documents the MCP-tool path next to the HTTP triage endpoint.
+
 ## 2026-06-20 - FR-OBS-005 correlation completed in-repo (exemplars, metrics, log enrichment)
 
 Built on the ai-gateway TraceContext boundary below. obs-sdk now carries the rest of FR-OBS-005's

@@ -58,6 +58,25 @@ the endpoint returns HTTP 200 with confidence 0.0 and a summary that says triage
 then pages, which is the correct outcome for an alert that could not be assessed. The endpoint does not
 return a 5xx for this case, because an unsure triage is a low-confidence answer, not a server fault.
 
+## Triage as an MCP-gateway tool
+
+The same triage path is also reachable through the mcp-gateway as the tool `cyberos.obs.triage`, so an
+alert can be triaged via `tools/call` the way any federated module tool is. The adapter is
+`modules/cuo/cuo/triage_mcp_module.py`: it serves the JSON-RPC the gateway forwards, self-registers the
+tool, and runs triage in-process through the same `handle_triage_request` the HTTP endpoint uses - no
+second hop, same safe-degrade behaviour. Run it next to a gateway started with `MCP_DEV_REGISTRATION=1`:
+
+```sh
+# In modules/cuo.
+export CYBEROS_ROOT="$(git rev-parse --show-toplevel)"
+python -m cuo.triage_mcp_module --gateway http://127.0.0.1:8090 --listen 127.0.0.1:8101
+```
+
+`bash scripts/mcp_demo.sh` starts the gateway and this module together. The tool takes
+`{"alert":{"name","severity","fingerprint","trace_id","summary"}}` (only `name` is required) and returns
+the same verdict the HTTP endpoint does. A missing `alert` or `alert.name` is an in-band tool error
+(`isError: true`); an unsure triage is a confidence-0.0 verdict, not an error.
+
 ## What still needs a live environment
 
 The in-repo router and the triage endpoint are unit- and property-tested. End-to-end validation needs the

@@ -188,6 +188,28 @@ def build_refinement_bindings(
     return propose_fn, classify_fn
 
 
+def build_apply_binding(proposals_root, skill_root, repo_root=None) -> Callable[[object], object]:
+    """Bind the real FR-CUO-202 applier (`apply_proposal`) as the dream loop's `real_apply_fn`.
+
+    This only makes auto-apply POSSIBLE; it never decides to apply. Three independent layers still stand in
+    front of an actual file change: `choose_apply_fn` requires all four locks (enabled + mode=auto +
+    --allow-auto-apply + dream branch) before this binding is ever selected; the dream loop gates each
+    proposal on the path envelope + classifier + test gate before calling apply; and `apply_proposal` itself
+    re-classifies, queues anything not auto-applicable for human approval, and runs the per-skill test gate.
+    Binding is a deliberate, separate operator opt-in (`--apply-proposals`). The import stays lazy so the
+    runner's safety core never depends on the applier module loading.
+    """
+    proposals_root = Path(proposals_root)
+    skill_root = Path(skill_root)
+
+    def apply_fn(prop: object) -> object:
+        from cuo.core.proposal_applier import apply_proposal
+
+        return apply_proposal(prop.proposal_path, skill_root, proposals_root=proposals_root)
+
+    return apply_fn
+
+
 def _jsonl_audit(path: Optional[Path]) -> Callable[[str, dict], None]:
     """An audit sink that appends one JSON object per row to `path` (and is a no-op if path is None)."""
 
@@ -296,6 +318,13 @@ def main(argv: Optional[list] = None) -> int:
         default=None,
         help="root under which <skill_name>/SKILL.md live (required with --proposals-dir)",
     )
+    parser.add_argument(
+        "--apply-proposals",
+        action="store_true",
+        help="bind the real FR-CUO-202 applier so auto mode can actually apply (still requires "
+        "--allow-auto-apply + mode=auto + a dream branch; requires --proposals-dir/--skill-root). "
+        "Without it the runner records only and changes nothing.",
+    )
     args = parser.parse_args(argv)
 
     envelope = EvolutionEnvelope.load(Path(args.config))
@@ -314,18 +343,25 @@ def main(argv: Optional[list] = None) -> int:
 
     # Bind the real FR-CUO-201 proposer + FR-CUO-202 classifier when an operator points at a proposals
     # directory; otherwise the runner proposes nothing (safe default). The real applier (real_apply_fn) is
-    # still NOT bound here - auto-apply wiring is the operator's separate, explicit step.
+    # bound only when the operator additionally passes --apply-proposals; even then it is reached only when
+    # all four auto-apply locks hold (see choose_apply_fn), so every other path records and changes nothing.
     propose_fn = _empty_proposer
     classify_fn = _review_required_classifier
+    real_apply_fn: Optional[Callable[[object], object]] = None
     if args.proposals_dir and args.skill_root:
         propose_fn, classify_fn = build_refinement_bindings(args.proposals_dir, args.skill_root)
+        if args.apply_proposals:
+            real_apply_fn = build_apply_binding(args.proposals_dir, args.skill_root)
     elif args.proposals_dir or args.skill_root:
         parser.error("--proposals-dir and --skill-root must be given together")
+    if args.apply_proposals and real_apply_fn is None:
+        parser.error("--apply-proposals requires --proposals-dir and --skill-root")
 
     result = run_dream_safely(
         envelope,
         propose_fn=propose_fn,
         classify_fn=classify_fn,
+        real_apply_fn=real_apply_fn,
         audit_fn=audit_fn,
         allow_auto_apply=args.allow_auto_apply,
         branch=branch,
