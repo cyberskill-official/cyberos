@@ -9,7 +9,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from cuo.core.dream_runner import build_refinement_bindings, run_dream_safely
+import pytest
+
+from cuo.core.dream_runner import (
+    build_apply_binding,
+    build_refinement_bindings,
+    main,
+    run_dream_safely,
+)
 from cuo.core.evolution_envelope import EvolutionEnvelope
 
 
@@ -105,3 +112,55 @@ def test_missing_proposals_dir_yields_no_candidates(tmp_path):
     repo, skill_root, _ = _make_repo(tmp_path)
     propose_fn, _ = build_refinement_bindings(repo / "nope", skill_root, repo_root=repo)
     assert list(propose_fn()) == []
+
+
+# ── FR-CUO-204 real applier binding (--apply-proposals) ──────────────────────────────────────────
+
+
+def test_build_apply_binding_invokes_the_real_applier(tmp_path):
+    """build_apply_binding wraps the real apply_proposal: applying a candidate runs its lifecycle and moves
+    it out of open/ (to applied/ or pending_approval/), which a dry run never does."""
+    repo, skill_root, proposals = _make_repo(tmp_path)
+    _write_proposal(proposals, "p1.md", skill_name="demo", risk_class="minor", body="Improve the wording.")
+    propose_fn, _ = build_refinement_bindings(proposals, skill_root, repo_root=repo)
+    apply_fn = build_apply_binding(proposals, skill_root, repo_root=repo)
+
+    result = apply_fn(list(propose_fn())[0])
+
+    assert hasattr(result, "outcome"), "returns an ApplyResult the loop can read"
+    assert not (proposals / "open" / "p1.md").is_file(), "the real applier moved the proposal out of open/"
+
+
+def test_armed_run_without_real_binding_is_a_dry_run(tmp_path):
+    """Omitting --apply-proposals (real_apply_fn is None) keeps even a fully-armed auto run a dry run:
+    nothing is applied and the open proposal is untouched."""
+    repo, skill_root, proposals = _make_repo(tmp_path)
+    _write_proposal(proposals, "p1.md", skill_name="demo", risk_class="minor", body="Improve the wording.")
+    propose_fn, classify_fn = build_refinement_bindings(proposals, skill_root, repo_root=repo)
+
+    res = run_dream_safely(
+        _env(mode="auto"),
+        propose_fn=propose_fn,
+        classify_fn=classify_fn,
+        real_apply_fn=None,
+        allow_auto_apply=True,
+        branch="auto/dream",
+        env={},
+    )
+
+    assert res.auto_apply_armed is False, "no real applier bound => not armed"
+    assert res.report.applied == 0
+    assert (proposals / "open" / "p1.md").is_file(), "the proposal is untouched without a bound applier"
+
+
+def test_main_apply_proposals_requires_proposals_and_skill_root(tmp_path):
+    """The CLI refuses --apply-proposals without the proposals dir + skill root it needs, so the applier is
+    never bound from an incomplete invocation."""
+    cfg = tmp_path / "dream.yaml"
+    cfg.write_text(
+        "enabled: true\nmode: propose\nallowlist: []\ndenylist: []\n"
+        "idle_window_minutes: 30\nmax_changes_per_window: 5\nmax_wall_clock_seconds: 600\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(SystemExit):
+        main(["--config", str(cfg), "--apply-proposals"])
