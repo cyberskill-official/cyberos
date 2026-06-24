@@ -1,0 +1,176 @@
+/* ═══════════════════════════════════════════════════════════════
+   Baroque Theme — Opulent gold filigree, deep velvet, dramatic grandeur
+   Effects: ornate SVG border-image, gold text glow, marble veins,
+            warm candlelight ambience, theatrical shadows
+   Ref: Rich gold leaf on jet black, ornate filigree borders, book covers
+   ═══════════════════════════════════════════════════════════════ */
+
+:root[data-style='baroque'][data-mode='dark'] {
+    --color-bg: #080400;
+    --color-bg-gradient: none;
+    --color-surface: #150e04;
+    --color-surface-hover: #221608;
+    --color-surface-raised: #1a1208;
+    --color-text: #f0d8a0;
+    --color-text-secondary: #c8a060;
+    --color-text-muted: #8a6840;
+    --color-border: rgba(200, 160, 96, 0.12);
+    --color-border-strong: rgba(200, 160, 96, 0.3);
+    --color-primary: #dab040;
+    --color-primary-muted: rgba(218, 176, 64, 0.12);
+    --color-accent: #c88020;
+    --color-accent-muted: rgba(200, 128, 32, 0.1);
+    --color-success: #88a840;
+    --color-success-muted: rgba(136, 168, 64, 0.1);
+    --color-warning: #dab040;
+    --color-warning-muted: rgba(218, 176, 64, 0.1);
+    --color-danger: #aa2020;
+    --color-danger-muted: rgba(170, 32, 32, 0.12);
+    --color-info: #5080b0;
+    --color-info-muted: rgba(80, 128, 176, 0.1);
+    --color-focus: #dab040;
+    --color-scrollbar: #221608;
+    --color-scrollbar-hover: #c8a060;
+    --color-selection-bg: rgba(218, 176, 64, 0.3);
+    --color-selection-text: #f0d8a0;
+    --color-badge-global-bg: rgba(218, 176, 64, 0.06);
+    --color-badge-global-text: #dab040;
+    --color-badge-global-border: rgba(218, 176, 64, 0.2);
+    --color-badge-local-bg: rgba(200, 128, 32, 0.06);
+    --color-badge-local-text: #c88020;
+    --color-badge-local-border: rgba(200, 128, 32, 0.15);
+    --color-scope-active-bg: #221608;
+
+    --theme-font-sans: 'Playfair Display', serif;
+    --theme-font-mono: 'JetBrains Mono', monospace;
+    --theme-card-radius: 2px;
+    --theme-card-shadow:
+        0 6px 30px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(218, 176, 64, 0.12), inset 0 1px 0 rgba(218, 176, 64, 0.06);
+    --theme-card-backdrop: none;
+    --theme-btn-radius: 2px;
+    --theme-row-hover-bg: rgba(218, 176, 64, 0.04);
+}
+
+:root[data-style='baroque'][data-mode='light'] {
+    --color-bg: #f8f2e4;
+    --color-bg-gradient: none;
+    --color-surface: #f0e6cc;
+    --color-surface-hover: #e8dcc0;
+    --color-surface-raised: #f4ecd6;
+    --color-text: #221004;
+    --color-text-secondary: #4a3018;
+    --color-text-muted: #806840;
+    --color-border: rgba(80, 56, 20, 0.1);
+    --color-border-strong: rgba(80, 56, 20, 0.25);
+    --color-primary: #906820;
+    --color-primary-muted: rgba(144, 104, 32, 0.08);
+    --color-accent: #885818;
+    --color-accent-muted: rgba(136, 88, 24, 0.08);
+    --color-success: #607830;
+    --color-success-muted: rgba(96, 120, 48, 0.08);
+    --color-warning: #906820;
+    --color-warning-muted: rgba(144, 104, 32, 0.08);
+    --color-danger: #801818;
+    --color-danger-muted: rgba(128, 24, 24, 0.06);
+    --color-info: #406080;
+    --color-info-muted: rgba(64, 96, 128, 0.08);
+    --color-focus: #906820;
+    --color-scrollbar: #e8dcc0;
+    --color-scrollbar-hover: #806840;
+    --color-selection-bg: rgba(144, 104, 32, 0.2);
+    --color-selection-text: #221004;
+    --color-badge-global-bg: rgba(144, 104, 32, 0.05);
+    --color-badge-global-text: #906820;
+    --color-badge-global-border: rgba(144, 104, 32, 0.15);
+    --color-badge-local-bg: rgba(136, 88, 24, 0.05);
+    --color-badge-local-text: #885818;
+    --color-badge-local-border: rgba(136, 88, 24, 0.12);
+    --color-scope-active-bg: #f0e6cc;
+
+    --theme-font-sans: 'Playfair Display', serif;
+    --theme-font-mono: 'JetBrains Mono', monospace;
+    --theme-card-radius: 2px;
+    --theme-card-shadow: 0 2px 14px rgba(80, 56, 20, 0.12), 0 1px 0 rgba(144, 104, 32, 0.15);
+    --theme-card-backdrop: none;
+    --theme-btn-radius: 2px;
+    --theme-row-hover-bg: rgba(144, 104, 32, 0.03);
+}
+
+/* ── Baroque body — candlelight radials + ornament texture ─── */
+:root[data-style='baroque'][data-mode='dark'] body {
+    background-color: var(--color-bg);
+    background-image:
+        radial-gradient(ellipse at 30% 70%, rgba(218, 176, 64, 0.05) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 20%, rgba(200, 128, 32, 0.04) 0%, transparent 40%),
+        url("data:image/svg+xml,%3Csvg width='80' height='80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 10C45 20 50 25 50 30C50 35 45 40 40 40C35 40 30 35 30 30C30 25 35 20 40 10Z' fill='none' stroke='%23dab040' stroke-width='.3' opacity='.04'/%3E%3Cpath d='M0 50C5 60 10 65 10 70C10 75 5 80 0 80' fill='none' stroke='%23dab040' stroke-width='.3' opacity='.04'/%3E%3Cpath d='M80 50C75 60 70 65 70 70C70 75 75 80 80 80' fill='none' stroke='%23dab040' stroke-width='.3' opacity='.04'/%3E%3C/svg%3E");
+}
+
+:root[data-style='baroque'][data-mode='light'] body {
+    background-color: var(--color-bg);
+    background-image:
+        radial-gradient(ellipse at 30% 70%, rgba(144, 104, 32, 0.04) 0%, transparent 50%),
+        url("data:image/svg+xml,%3Csvg width='80' height='80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 10C45 20 50 25 50 30C50 35 45 40 40 40C35 40 30 35 30 30C30 25 35 20 40 10Z' fill='none' stroke='%23906820' stroke-width='.3' opacity='.05'/%3E%3C/svg%3E");
+}
+
+/* ── Baroque card — ornate triple-border frame ─── */
+:root[data-style='baroque'] .theme-card {
+    border-radius: var(--theme-card-radius);
+    box-shadow: var(--theme-card-shadow);
+    border: 1px solid var(--color-border-strong);
+    backdrop-filter: none;
+    outline: 1px solid var(--color-border);
+    outline-offset: 4px;
+}
+
+:root[data-style='baroque'][data-mode='dark'] .theme-card {
+    border-top: 2px solid rgba(218, 176, 64, 0.2);
+    border-bottom: 2px solid rgba(218, 176, 64, 0.2);
+}
+
+:root[data-style='baroque'] .theme-card:hover {
+    outline-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+/* ── Gold shine button with metallic gradient ─── */
+:root[data-style='baroque'] .theme-btn-primary {
+    background: linear-gradient(135deg, #8a6818, #c89830, #e0b850, #c89830, #8a6818);
+    background-size: 200% 100%;
+    animation: goldShimmer 3s ease infinite;
+    border: 1px solid rgba(255, 215, 0, 0.25);
+    border-radius: var(--theme-btn-radius);
+    color: #080400;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-shadow: 0 1px 0 rgba(255, 215, 0, 0.2);
+    box-shadow:
+        0 2px 10px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+@keyframes goldShimmer {
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+/* ── Gilded multi-color accent strip ─── */
+:root[data-style='baroque'] .theme-gradient-accent {
+    background: linear-gradient(90deg, #5a4010, #8a6818, #c89830, #e0b850, #c89830, #8a6818, #5a4010);
+    background-size: 300% 100%;
+    animation: gradientShift 5s ease infinite;
+    height: 3px;
+}
+
+:root[data-style='baroque'][data-mode='dark'] .theme-gradient-accent {
+    box-shadow: 0 0 10px rgba(218, 176, 64, 0.2);
+}
+
+:root[data-style='baroque'] .nb-margin-line {
+    display: none;
+}

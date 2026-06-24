@@ -1,0 +1,75 @@
+/* ── Layout utilities ── extracted from inline styles ── */
+
+/* Group sidebar container (App.tsx) */
+.sidebar-container {
+    border-color: var(--color-border);
+    background-color: var(--color-surface);
+    width: 200px;
+}
+
+/* ErrorBoundary */
+.error-boundary-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+}
+
+.error-boundary-card {
+    text-align: center;
+    max-width: 460px;
+    padding: 2rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    background-color: var(--color-surface);
+}
+
+.error-boundary-detail {
+    padding: 0.75rem;
+    border-radius: 0.25rem;
+    margin-bottom: 1.25rem;
+    overflow-x: auto;
+    background-color: var(--color-surface-hover);
+}
+
+.error-boundary-message {
+    color: var(--color-text-secondary);
+}
+
+.error-boundary-btn {
+    color: var(--color-text);
+    border-color: var(--color-border);
+}
+
+/* Content area error banner */
+.error-banner {
+    background-color: var(--color-danger-muted);
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+}
+
+.error-banner-btn {
+    background-color: var(--color-danger);
+    border-color: var(--color-danger);
+    color: #fff;
+}
+
+/* Margin line */
+.nb-margin-line {
+    background-color: var(--color-danger);
+    opacity: 0.15;
+}
+
+.nb-margin-line--subtle {
+    background-color: var(--color-danger);
+    opacity: 0.08;
+}
+
+/* Alias list row virtualization */
+.alias-row {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 48px;
+}

@@ -3,15 +3,15 @@ id: FR-MCP-002
 title: "MCP per-module server registration + heartbeat lifecycle — 3-miss → unhealthy with automatic skill_unavailable propagation"
 module: MCP
 priority: MUST
-status: draft
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 2
 slice: 2
 owner: Stephen Cheng (CTO)
 created: 2026-05-17
-shipped: null
-memory_chain_hash: null
+shipped: 2026-06-24
+memory_chain_hash: pending
 related_frs: [FR-MCP-001, FR-MCP-003, FR-OBS-007, FR-MEMORY-111]
 depends_on: [FR-MCP-001]
 blocks: []

@@ -1,0 +1,153 @@
+/* ═══════════════════════════════════════════════════════════════
+   Victorian Theme — Grand ornate heritage, deep reds & greens, gilt
+   Effects: damask SVG pattern, double-line borders, striped accent,
+            ornate serif typography, vintage poster feel
+   Ref: Christmas party posters, medical almanacs, Pears' soap vintage ads
+   ═══════════════════════════════════════════════════════════════ */
+
+:root[data-style='victorian'][data-mode='dark'] {
+    --color-bg: #0c0806;
+    --color-bg-gradient: none;
+    --color-surface: #181210;
+    --color-surface-hover: #221a16;
+    --color-surface-raised: #1c1410;
+    --color-text: #e8d8c0;
+    --color-text-secondary: #b8a080;
+    --color-text-muted: #786050;
+    --color-border: rgba(184, 160, 128, 0.1);
+    --color-border-strong: rgba(184, 160, 128, 0.22);
+    --color-primary: #8b1818;
+    --color-primary-muted: rgba(139, 24, 24, 0.1);
+    --color-accent: #1a5a2a;
+    --color-accent-muted: rgba(26, 90, 42, 0.1);
+    --color-success: #1a5a2a;
+    --color-success-muted: rgba(26, 90, 42, 0.08);
+    --color-warning: #c8a030;
+    --color-warning-muted: rgba(200, 160, 48, 0.08);
+    --color-danger: #8b0808;
+    --color-danger-muted: rgba(139, 8, 8, 0.12);
+    --color-info: #3a5a80;
+    --color-info-muted: rgba(58, 90, 128, 0.08);
+    --color-focus: #c8a030;
+    --color-scrollbar: #221a16;
+    --color-scrollbar-hover: #b8a080;
+    --color-selection-bg: rgba(139, 24, 24, 0.2);
+    --color-selection-text: #e8d8c0;
+    --color-badge-global-bg: rgba(26, 90, 42, 0.05);
+    --color-badge-global-text: #3a8a4a;
+    --color-badge-global-border: rgba(26, 90, 42, 0.12);
+    --color-badge-local-bg: rgba(139, 24, 24, 0.05);
+    --color-badge-local-text: #bb4040;
+    --color-badge-local-border: rgba(139, 24, 24, 0.12);
+    --color-scope-active-bg: #221a16;
+
+    --theme-font-sans: 'EB Garamond', serif;
+    --theme-font-mono: 'JetBrains Mono', monospace;
+    --theme-card-radius: 0;
+    --theme-card-shadow: 0 3px 18px rgba(0, 0, 0, 0.5);
+    --theme-card-backdrop: none;
+    --theme-btn-radius: 0;
+    --theme-row-hover-bg: rgba(200, 160, 48, 0.03);
+}
+
+:root[data-style='victorian'][data-mode='light'] {
+    --color-bg: #f6eee0;
+    --color-bg-gradient: none;
+    --color-surface: #eee2cc;
+    --color-surface-hover: #e6d8c0;
+    --color-surface-raised: #f2eada;
+    --color-text: #181004;
+    --color-text-secondary: #3a2a14;
+    --color-text-muted: #7a6850;
+    --color-border: rgba(80, 60, 30, 0.1);
+    --color-border-strong: rgba(80, 60, 30, 0.22);
+    --color-primary: #6a1010;
+    --color-primary-muted: rgba(106, 16, 16, 0.06);
+    --color-accent: #104a18;
+    --color-accent-muted: rgba(16, 74, 24, 0.06);
+    --color-success: #104a18;
+    --color-success-muted: rgba(16, 74, 24, 0.06);
+    --color-warning: #8a6818;
+    --color-warning-muted: rgba(138, 104, 24, 0.06);
+    --color-danger: #6a0404;
+    --color-danger-muted: rgba(106, 4, 4, 0.06);
+    --color-info: #2a4a6a;
+    --color-info-muted: rgba(42, 74, 106, 0.06);
+    --color-focus: #8a6818;
+    --color-scrollbar: #e6d8c0;
+    --color-scrollbar-hover: #7a6850;
+    --color-selection-bg: rgba(106, 16, 16, 0.12);
+    --color-selection-text: #181004;
+    --color-badge-global-bg: rgba(16, 74, 24, 0.04);
+    --color-badge-global-text: #104a18;
+    --color-badge-global-border: rgba(16, 74, 24, 0.1);
+    --color-badge-local-bg: rgba(106, 16, 16, 0.04);
+    --color-badge-local-text: #6a1010;
+    --color-badge-local-border: rgba(106, 16, 16, 0.1);
+    --color-scope-active-bg: #eee2cc;
+
+    --theme-font-sans: 'EB Garamond', serif;
+    --theme-font-mono: 'JetBrains Mono', monospace;
+    --theme-card-radius: 0;
+    --theme-card-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+    --theme-card-backdrop: none;
+    --theme-btn-radius: 0;
+    --theme-row-hover-bg: rgba(138, 104, 24, 0.02);
+}
+
+/* ── Victorian body — damask diamond + stripe pattern ─── */
+:root[data-style='victorian'] body {
+    background-color: var(--color-bg);
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 2L58 30L30 58L2 30Z' fill='none' stroke='%23000' stroke-width='.3' opacity='.03'/%3E%3Ccircle cx='30' cy='30' r='3' fill='none' stroke='%23000' stroke-width='.2' opacity='.025'/%3E%3C/svg%3E");
+}
+
+/* ── Victorian card — double-line ornate frame ─── */
+:root[data-style='victorian'] .theme-card {
+    border-radius: 0;
+    box-shadow: var(--theme-card-shadow);
+    border: 2px double var(--color-border-strong);
+    backdrop-filter: none;
+}
+
+:root[data-style='victorian'][data-mode='dark'] .theme-card {
+    border-top: 3px double rgba(200, 160, 48, 0.2);
+    border-bottom: 3px double rgba(200, 160, 48, 0.2);
+}
+
+:root[data-style='victorian'] .theme-card:hover {
+    border-color: var(--color-warning);
+}
+
+/* ── Deep burgundy button ─── */
+:root[data-style='victorian'] .theme-btn-primary {
+    background: linear-gradient(180deg, #8b1818, #5a0808);
+    border: 1px solid rgba(200, 160, 48, 0.15);
+    border-radius: 0;
+    letter-spacing: 2px;
+    font-weight: 700;
+}
+
+:root[data-style='victorian'][data-mode='light'] .theme-btn-primary {
+    background: linear-gradient(180deg, #6a1010, #4a0606);
+}
+
+/* ── Red-green-gold stripe accent (vintage poster) ─── */
+:root[data-style='victorian'] .theme-gradient-accent {
+    background: repeating-linear-gradient(
+        90deg,
+        #6a1010 0px,
+        #6a1010 4px,
+        #c8a030 4px,
+        #c8a030 5px,
+        #104a18 5px,
+        #104a18 9px,
+        #c8a030 9px,
+        #c8a030 10px
+    );
+    animation: none;
+    height: 4px;
+}
+
+:root[data-style='victorian'] .nb-margin-line {
+    display: none;
+}

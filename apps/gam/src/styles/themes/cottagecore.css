@@ -1,0 +1,181 @@
+/* ═══════════════════════════════════════════════════════════════
+   Cottagecore Theme — Cozy rural garden, hand-drawn warmth, nature tones
+   Effects: soft gingham weave, warm earthy rounded edges, garden colors,
+            watercolor washes, slow-living typography
+   Ref: Cottage garden paintings, "Beautiful Life" vintage, warm watercolors
+   ═══════════════════════════════════════════════════════════════ */
+
+:root[data-style='cottagecore'][data-mode='light'] {
+    --color-bg: #f6f0e4;
+    --color-bg-gradient: none;
+    --color-surface: #efe6d4;
+    --color-surface-hover: #e6dcc6;
+    --color-surface-raised: #f2eadc;
+    --color-text: #302418;
+    --color-text-secondary: #5a4830;
+    --color-text-muted: #8a7860;
+    --color-border: rgba(90, 72, 48, 0.1);
+    --color-border-strong: rgba(90, 72, 48, 0.22);
+    --color-primary: #4a7a30;
+    --color-primary-muted: rgba(74, 122, 48, 0.08);
+    --color-accent: #b87038;
+    --color-accent-muted: rgba(184, 112, 56, 0.08);
+    --color-success: #4a7a30;
+    --color-success-muted: rgba(74, 122, 48, 0.08);
+    --color-warning: #c09030;
+    --color-warning-muted: rgba(192, 144, 48, 0.08);
+    --color-danger: #a03828;
+    --color-danger-muted: rgba(160, 56, 40, 0.06);
+    --color-info: #4080a0;
+    --color-info-muted: rgba(64, 128, 160, 0.08);
+    --color-focus: #b87038;
+    --color-scrollbar: #e6dcc6;
+    --color-scrollbar-hover: #8a7860;
+    --color-selection-bg: rgba(74, 122, 48, 0.18);
+    --color-selection-text: #302418;
+    --color-badge-global-bg: rgba(74, 122, 48, 0.05);
+    --color-badge-global-text: #4a7a30;
+    --color-badge-global-border: rgba(74, 122, 48, 0.12);
+    --color-badge-local-bg: rgba(184, 112, 56, 0.05);
+    --color-badge-local-text: #b87038;
+    --color-badge-local-border: rgba(184, 112, 56, 0.12);
+    --color-scope-active-bg: #efe6d4;
+
+    --theme-font-sans: 'Lora', serif;
+    --theme-font-mono: 'JetBrains Mono', monospace;
+    --theme-card-radius: 14px;
+    --theme-card-shadow: 0 2px 10px rgba(90, 72, 48, 0.08);
+    --theme-card-backdrop: none;
+    --theme-btn-radius: 14px;
+    --theme-row-hover-bg: rgba(184, 112, 56, 0.04);
+}
+
+:root[data-style='cottagecore'][data-mode='dark'] {
+    --color-bg: #14100c;
+    --color-bg-gradient: none;
+    --color-surface: #1e1814;
+    --color-surface-hover: #28221c;
+    --color-surface-raised: #201c16;
+    --color-text: #e8d8c0;
+    --color-text-secondary: #b8a080;
+    --color-text-muted: #706050;
+    --color-border: rgba(184, 160, 128, 0.08);
+    --color-border-strong: rgba(184, 160, 128, 0.18);
+    --color-primary: #6aa050;
+    --color-primary-muted: rgba(106, 160, 80, 0.1);
+    --color-accent: #c88848;
+    --color-accent-muted: rgba(200, 136, 72, 0.08);
+    --color-success: #6aa050;
+    --color-success-muted: rgba(106, 160, 80, 0.08);
+    --color-warning: #d0a848;
+    --color-warning-muted: rgba(208, 168, 72, 0.08);
+    --color-danger: #b84838;
+    --color-danger-muted: rgba(184, 72, 56, 0.1);
+    --color-info: #5098b0;
+    --color-info-muted: rgba(80, 152, 176, 0.08);
+    --color-focus: #c88848;
+    --color-scrollbar: #28221c;
+    --color-scrollbar-hover: #b8a080;
+    --color-selection-bg: rgba(106, 160, 80, 0.18);
+    --color-selection-text: #e8d8c0;
+    --color-badge-global-bg: rgba(106, 160, 80, 0.05);
+    --color-badge-global-text: #6aa050;
+    --color-badge-global-border: rgba(106, 160, 80, 0.12);
+    --color-badge-local-bg: rgba(200, 136, 72, 0.05);
+    --color-badge-local-text: #c88848;
+    --color-badge-local-border: rgba(200, 136, 72, 0.1);
+    --color-scope-active-bg: #1e1814;
+
+    --theme-font-sans: 'Lora', serif;
+    --theme-font-mono: 'JetBrains Mono', monospace;
+    --theme-card-radius: 14px;
+    --theme-card-shadow: 0 2px 14px rgba(0, 0, 0, 0.3);
+    --theme-card-backdrop: none;
+    --theme-btn-radius: 14px;
+    --theme-row-hover-bg: rgba(200, 136, 72, 0.03);
+}
+
+/* ── Cottagecore body — gingham weave pattern ─── */
+:root[data-style='cottagecore'][data-mode='light'] body {
+    background-color: var(--color-bg);
+    background-image:
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 15px,
+            rgba(74, 122, 48, 0.025) 15px,
+            rgba(74, 122, 48, 0.025) 16px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 15px,
+            rgba(74, 122, 48, 0.025) 15px,
+            rgba(74, 122, 48, 0.025) 16px
+        ),
+        radial-gradient(circle 300px at 70% 30%, rgba(184, 112, 56, 0.04) 0%, transparent 100%),
+        radial-gradient(circle 200px at 20% 80%, rgba(74, 122, 48, 0.04) 0%, transparent 100%);
+}
+
+:root[data-style='cottagecore'][data-mode='dark'] body {
+    background-color: var(--color-bg);
+    background-image:
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 15px,
+            rgba(106, 160, 80, 0.015) 15px,
+            rgba(106, 160, 80, 0.015) 16px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 15px,
+            rgba(106, 160, 80, 0.015) 15px,
+            rgba(106, 160, 80, 0.015) 16px
+        ),
+        radial-gradient(circle 200px at 70% 30%, rgba(200, 136, 72, 0.02) 0%, transparent 100%);
+}
+
+/* ── Cottagecore card — warm rounded, gentle lift ─── */
+:root[data-style='cottagecore'] .theme-card {
+    border-radius: var(--theme-card-radius);
+    box-shadow: var(--theme-card-shadow);
+    border: 1px solid var(--color-border);
+    backdrop-filter: none;
+}
+
+:root[data-style='cottagecore'] .theme-card:hover {
+    border-color: var(--color-accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 18px rgba(90, 72, 48, 0.12);
+    transition: all 0.25s ease;
+}
+
+/* ── Earthy gradient button ─── */
+:root[data-style='cottagecore'] .theme-btn-primary {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    border: none;
+    border-radius: var(--theme-btn-radius);
+    box-shadow: 0 2px 8px rgba(74, 122, 48, 0.15);
+}
+
+/* ── Autumn harvest accent strip ─── */
+:root[data-style='cottagecore'] .theme-gradient-accent {
+    background: linear-gradient(
+        90deg,
+        #4a7a30 0%,
+        #6aa050 20%,
+        #c09030 35%,
+        #c88848 50%,
+        #b87038 65%,
+        #a03828 80%,
+        #4a7a30 100%
+    );
+    background-size: 200% 100%;
+    animation: gradientShift 10s ease infinite;
+}
+
+:root[data-style='cottagecore'] .nb-margin-line {
+    display: none;
+}

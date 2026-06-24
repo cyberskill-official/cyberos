@@ -3,15 +3,15 @@ id: FR-MCP-001
 title: "MCP Gateway 2025-11-25 spec compliance — initialize + tools/list + tools/call + capabilities negotiation + Streamable HTTP transport + tool annotations"
 module: MCP
 priority: MUST
-status: draft
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 4 (MCP Gateway)
 slice: 4
 owner: Stephen Cheng (CTO)
 created: 2026-05-16
-shipped: null
-memory_chain_hash: null
+shipped: 2026-06-24
+memory_chain_hash: pending
 related_frs: [FR-AUTH-004, FR-AUTH-101, FR-AI-003, FR-MEMORY-101, FR-MCP-002, FR-MCP-003, FR-MCP-004, FR-MCP-005, FR-MCP-006, FR-MCP-007, FR-MCP-008]
 depends_on: [FR-AUTH-004]
 blocks: [FR-MCP-002, FR-MCP-003, FR-MCP-004, FR-MCP-006, FR-MCP-007, FR-MCP-008]

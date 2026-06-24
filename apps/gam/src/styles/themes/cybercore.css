@@ -1,0 +1,211 @@
+/* ═══════════════════════════════════════════════════════════════
+   Cybercore Theme — Intense neon hacker terminal, dystopian chrome
+   Effects: CRT scanlines, phosphor vignette, neon text glow, glitch animation,
+            data rain texture, chromatic aberration accent
+   Ref: Green/cyan neon on pure black, glitch effects, chrome 3D
+   ═══════════════════════════════════════════════════════════════ */
+
+:root[data-style='cybercore'][data-mode='dark'] {
+    --color-bg: #050505;
+    --color-bg-gradient: none;
+    --color-surface: #0c0c0c;
+    --color-surface-hover: #141414;
+    --color-surface-raised: #101010;
+    --color-text: #00ff88;
+    --color-text-secondary: #00cc66;
+    --color-text-muted: #338855;
+    --color-border: rgba(0, 255, 136, 0.1);
+    --color-border-strong: rgba(0, 255, 136, 0.25);
+    --color-primary: #00ff88;
+    --color-primary-muted: rgba(0, 255, 136, 0.1);
+    --color-accent: #00eeff;
+    --color-accent-muted: rgba(0, 238, 255, 0.1);
+    --color-success: #00ff88;
+    --color-success-muted: rgba(0, 255, 136, 0.1);
+    --color-warning: #ffdd00;
+    --color-warning-muted: rgba(255, 221, 0, 0.1);
+    --color-danger: #ff2244;
+    --color-danger-muted: rgba(255, 34, 68, 0.12);
+    --color-info: #00eeff;
+    --color-info-muted: rgba(0, 238, 255, 0.1);
+    --color-focus: #00ff88;
+    --color-scrollbar: #141414;
+    --color-scrollbar-hover: #00ff88;
+    --color-selection-bg: rgba(0, 255, 136, 0.3);
+    --color-selection-text: #050505;
+    --color-badge-global-bg: rgba(0, 238, 255, 0.08);
+    --color-badge-global-text: #00eeff;
+    --color-badge-global-border: rgba(0, 238, 255, 0.25);
+    --color-badge-local-bg: rgba(255, 221, 0, 0.06);
+    --color-badge-local-text: #ffdd00;
+    --color-badge-local-border: rgba(255, 221, 0, 0.2);
+    --color-scope-active-bg: #141414;
+
+    --theme-font-sans: 'Share Tech Mono', monospace;
+    --theme-font-mono: 'Share Tech Mono', monospace;
+    --theme-card-radius: 0;
+    --theme-card-shadow:
+        0 0 15px rgba(0, 255, 136, 0.08), 0 0 40px rgba(0, 255, 136, 0.02), inset 0 0 30px rgba(0, 255, 136, 0.01);
+    --theme-card-backdrop: none;
+    --theme-btn-radius: 0;
+    --theme-row-hover-bg: rgba(0, 255, 136, 0.04);
+}
+
+:root[data-style='cybercore'][data-mode='light'] {
+    --color-bg: #eaf5ee;
+    --color-bg-gradient: none;
+    --color-surface: #ddeee2;
+    --color-surface-hover: #d0e8d8;
+    --color-surface-raised: #e4f2e8;
+    --color-text: #061a0e;
+    --color-text-secondary: #1a4a28;
+    --color-text-muted: #3a7a4a;
+    --color-border: rgba(0, 80, 40, 0.1);
+    --color-border-strong: rgba(0, 80, 40, 0.22);
+    --color-primary: #007744;
+    --color-primary-muted: rgba(0, 119, 68, 0.1);
+    --color-accent: #007788;
+    --color-accent-muted: rgba(0, 119, 136, 0.1);
+    --color-success: #007744;
+    --color-success-muted: rgba(0, 119, 68, 0.1);
+    --color-warning: #aa7700;
+    --color-warning-muted: rgba(170, 119, 0, 0.1);
+    --color-danger: #bb1133;
+    --color-danger-muted: rgba(187, 17, 51, 0.08);
+    --color-info: #007788;
+    --color-info-muted: rgba(0, 119, 136, 0.1);
+    --color-focus: #007744;
+    --color-scrollbar: #d0e8d8;
+    --color-scrollbar-hover: #3a7a4a;
+    --color-selection-bg: rgba(0, 119, 68, 0.2);
+    --color-selection-text: #061a0e;
+    --color-badge-global-bg: rgba(0, 119, 136, 0.06);
+    --color-badge-global-text: #007788;
+    --color-badge-global-border: rgba(0, 119, 136, 0.15);
+    --color-badge-local-bg: rgba(170, 119, 0, 0.06);
+    --color-badge-local-text: #aa7700;
+    --color-badge-local-border: rgba(170, 119, 0, 0.12);
+    --color-scope-active-bg: #ddeee2;
+
+    --theme-font-sans: 'Share Tech Mono', monospace;
+    --theme-font-mono: 'Share Tech Mono', monospace;
+    --theme-card-radius: 0;
+    --theme-card-shadow: 0 1px 4px rgba(0, 80, 40, 0.1);
+    --theme-card-backdrop: none;
+    --theme-btn-radius: 0;
+    --theme-row-hover-bg: rgba(0, 119, 68, 0.04);
+}
+
+/* ── Cybercore body ─── */
+:root[data-style='cybercore'] body {
+    background-color: var(--color-bg);
+    background-image: none;
+}
+
+/* ── CRT scanlines overlay ─── */
+:root[data-style='cybercore'][data-mode='dark'] body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 1px,
+        rgba(0, 255, 136, 0.02) 1px,
+        rgba(0, 255, 136, 0.02) 2px
+    );
+    pointer-events: none;
+    z-index: 9999;
+}
+
+/* ── Phosphor vignette ─── */
+:root[data-style='cybercore'][data-mode='dark'] body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.4) 80%, rgba(0, 0, 0, 0.7) 100%);
+    pointer-events: none;
+    z-index: 9998;
+}
+
+/* ── Card — neon border glow ─── */
+:root[data-style='cybercore'] .theme-card {
+    border-radius: 0;
+    box-shadow: var(--theme-card-shadow);
+    border: 1px solid var(--color-border);
+    backdrop-filter: none;
+}
+
+:root[data-style='cybercore'][data-mode='dark'] .theme-card:hover {
+    box-shadow:
+        0 0 20px rgba(0, 255, 136, 0.12),
+        0 0 50px rgba(0, 255, 136, 0.04),
+        inset 0 0 20px rgba(0, 255, 136, 0.02);
+    border-color: rgba(0, 255, 136, 0.4);
+}
+
+/* ── Neon glowing button ─── */
+:root[data-style='cybercore'] .theme-btn-primary {
+    background: var(--color-primary);
+    color: var(--color-bg);
+    border: none;
+    border-radius: 0;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+:root[data-style='cybercore'][data-mode='dark'] .theme-btn-primary {
+    box-shadow:
+        0 0 15px rgba(0, 255, 136, 0.5),
+        0 0 40px rgba(0, 255, 136, 0.2),
+        0 0 80px rgba(0, 255, 136, 0.08);
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+/* ── Glitch accent strip ─── */
+:root[data-style='cybercore'] .theme-gradient-accent {
+    background: var(--color-primary);
+    animation: cyberGlitch 4s infinite;
+    height: 2px;
+}
+
+:root[data-style='cybercore'][data-mode='dark'] .theme-gradient-accent {
+    box-shadow:
+        0 0 10px var(--color-primary),
+        0 0 30px rgba(0, 255, 136, 0.3);
+}
+
+@keyframes cyberGlitch {
+    0%,
+    88%,
+    100% {
+        opacity: 1;
+        transform: translateX(0) scaleY(1);
+    }
+
+    89% {
+        opacity: 0.7;
+        transform: translateX(-3px) scaleY(2);
+    }
+
+    91% {
+        opacity: 1;
+        transform: translateX(2px) scaleY(0.5);
+    }
+
+    93% {
+        opacity: 0.5;
+        transform: translateX(-1px) scaleY(1.5);
+    }
+
+    95% {
+        opacity: 1;
+        transform: translateX(1px) scaleY(1);
+    }
+}
+
+:root[data-style='cybercore'] .nb-margin-line {
+    display: none;
+}
