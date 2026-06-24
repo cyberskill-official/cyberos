@@ -1,0 +1,11 @@
+{
+    "_comment": "Stage-0 PreToolUse policy for gam. Defaults already block destructive commands and secret reads/exfil (gam's .env is covered). Here we additionally make test files read-only during agent runs so a model can't edit a test to make code 'pass' (ImpossibleBench). Reads stay allowed so tests can run.",
+    "deny_write_globs": [
+        "tests/**",
+        "e2e/**",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/*.spec.ts",
+        "**/*.spec.tsx"
+    ]
+}
