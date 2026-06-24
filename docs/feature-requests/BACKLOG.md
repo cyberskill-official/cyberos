@@ -249,8 +249,8 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-MCP-001 | MCP 2025-11-25 spec compliance — `tools/list`, `tools/call`, `capabilities` | MUST | implementing | FR-AUTH-004 | 12h |
-| FR-MCP-002 | Per-module server registration + heartbeat lifecycle (3-miss → unhealthy) | MUST | ready_to_implement | FR-MCP-001 | 6h |
+| FR-MCP-001 | MCP 2025-11-25 spec compliance — `tools/list`, `tools/call`, `capabilities` | MUST | done | FR-AUTH-004 | 12h |
+| FR-MCP-002 | Per-module server registration + heartbeat lifecycle (3-miss → unhealthy) | MUST | done | FR-MCP-001 | 6h |
 | FR-MCP-003 | SEP-986 naming convention validator (`cyberos.{module}.{verb}_{noun}`) | MUST | ready_to_implement | FR-MCP-001 | 3h |
 
 #### Slice 2 — OAuth 2.1 PKCE + audience binding
