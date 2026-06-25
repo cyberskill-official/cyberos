@@ -60,7 +60,7 @@ return a 5xx for this case, because an unsure triage is a low-confidence answer,
 
 ## Triage as an MCP-gateway tool
 
-The same triage path is also reachable through the mcp-gateway as the tool `cyberos.obs.triage`, so an
+The same triage path is also reachable through the mcp-gateway as the tool `cyberos.obs.execute_triage`, so an
 alert can be triaged via `tools/call` the way any federated module tool is. The adapter is
 `modules/cuo/cuo/triage_mcp_module.py`: it serves the JSON-RPC the gateway forwards, self-registers the
 tool, and runs triage in-process through the same `handle_triage_request` the HTTP endpoint uses - no

@@ -87,7 +87,7 @@ if ! wait_health "http://$MODULE_ADDR/healthz" "reference module" 20; then
   exit 1
 fi
 
-# 3) Obs triage module: serves /mcp and self-registers cyberos.obs.triage. Run from modules/cuo so
+# 3) Obs triage module: serves /mcp and self-registers cyberos.obs.execute_triage. Run from modules/cuo so
 # the `cuo` package imports; CYBEROS_ROOT lets it resolve the skill root. With no LLM invoker on the
 # host it still serves (safe-degrade verdicts), so the demo never needs an API key.
 ( cd "$REPO_ROOT/modules/cuo" && exec env CYBEROS_ROOT="$REPO_ROOT" \
@@ -126,7 +126,7 @@ cat <<EOF
     - Headless, from the repo root:
           bash scripts/mcp_call.sh cyberos.demo.now
           bash scripts/mcp_call.sh cyberos.demo.echo '{"message":"hello"}'
-          bash scripts/mcp_call.sh cyberos.obs.triage '{"alert":{"name":"HighErrorRate","severity":"sev2","summary":"5xx above 2%"}}'
+          bash scripts/mcp_call.sh cyberos.obs.execute_triage '{"alert":{"name":"HighErrorRate","severity":"sev2","summary":"5xx above 2%"}}'
 
 Press Ctrl-C to stop the gateway and the modules.
 EOF

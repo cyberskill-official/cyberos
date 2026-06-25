@@ -1,10 +1,13 @@
 //! SEP-986 naming convention validator (FR-MCP-003).
 //!
-//! Enforces the `cyberos.{module}.{verb}_{noun}` skill ID pattern. This slice ships the pure
-//! validator: the closed [`Sep986Verb`] enum, the pre-compiled regex, and the module registry.
-//! The registration-enforcement hook (DEC-2362) and the memory-audit emission (DEC-2364) land in a
-//! follow-on slice, because enforcing the pattern at registration first requires the existing
-//! non-conforming tool names (`cyberos.demo.echo`, `cyberos.obs.triage`) to be migrated.
+//! Enforces the `cyberos.{module}.{verb}_{noun}` skill ID pattern. Slice 1 shipped the pure
+//! validator here: the closed [`Sep986Verb`] enum, the pre-compiled regex, and the module registry.
+//! Slice 2 wired it into registration ([`crate::federation::register::validate`], DEC-2362): a real
+//! module that registers a non-conforming tool ID is rejected before the tool can become callable.
+//! As part of that, the one pre-existing non-conforming production tool was migrated
+//! (`cyberos.obs.triage` -> `cyberos.obs.execute_triage`); the dev/reference fixture
+//! (`cyberos.demo.echo` / `cyberos.demo.now`) is exempt via `NAMING_EXEMPT_MODULES`. The CI grep gate
+//! (DEC-2362) and the memory-audit emission (DEC-2364) are the remaining slice-3 work.
 //!
 //! ## Governance
 //!

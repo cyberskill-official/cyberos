@@ -5,7 +5,7 @@ modules that are not yet shipped. It is grounded in `docs/feature-requests/BACKL
 engine, 13-layer locked build order) and the per-FR `status:` frontmatter.
 
 Update 2026-06-24: obs is feature-complete in-repo across FR-OBS-001..009 and now also exposes its
-triage path as the mcp-gateway tool `cyberos.obs.triage`, so the live front of the P0 path has moved to
+triage path as the mcp-gateway tool `cyberos.obs.execute_triage`, so the live front of the P0 path has moved to
 mcp. A per-FR mcp plan is at `mcp/MCP-BUILD-PLAN.md`. Its headline: FR-MCP-001 (spec-compliance) and
 FR-MCP-002 (heartbeat lifecycle) are already shipped in `services/mcp-gateway` but still read `draft`, so
 the chain is blocked by a status-lag, not by missing code - reconcile those two to `done` via the gate
