@@ -58,10 +58,12 @@ build_envelope:
     - services/mcp-gateway/src/oauth/discovery.rs
     - services/mcp-gateway/src/oauth/audience.rs
     - services/mcp-gateway/src/oauth/scope.rs
+    - services/mcp-gateway/src/oauth/enums.rs
     - services/mcp-gateway/src/oauth/error.rs
-    - services/mcp-gateway/migrations/0010_oauth_clients.sql
-    - services/mcp-gateway/migrations/0011_oauth_codes.sql
-    - services/mcp-gateway/migrations/0012_oauth_refresh_families.sql
+    # migrations renumbered 0010-0012 -> 0013-0015 (0010-0012 reserved for FR-MCP-007/008 per BACKLOG)
+    - services/mcp-gateway/migrations/0013_oauth_clients.sql
+    - services/mcp-gateway/migrations/0014_oauth_codes.sql
+    - services/mcp-gateway/migrations/0015_oauth_refresh_families.sql
     - services/mcp-gateway/tests/oauth_authorize_test.rs
     - services/mcp-gateway/tests/oauth_token_test.rs
     - services/mcp-gateway/tests/oauth_refresh_rotation_test.rs
