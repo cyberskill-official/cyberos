@@ -257,7 +257,7 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-MCP-004 | OAuth 2.1 PKCE authorization-code flow with audience-bound tokens | MUST | ready_to_implement | FR-AUTH-004 | 10h |
+| FR-MCP-004 | OAuth 2.1 PKCE authorization-code flow with audience-bound tokens | MUST | implementing | FR-AUTH-004 | 10h |
 | FR-MCP-005 | Protected Resource Metadata (PRM, RFC 9728) at `/.well-known/oauth-protected-resource` | MUST | ready_to_implement | FR-MCP-004 | 3h |
 | FR-MCP-006 | Tool-annotation gating (`destructive` requires explicit confirm or Elicitation flow) | MUST | ready_to_implement | FR-MCP-001 | 6h |
 
