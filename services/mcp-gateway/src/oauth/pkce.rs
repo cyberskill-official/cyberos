@@ -16,8 +16,7 @@ use sha2::{Digest, Sha256};
 /// - verifier length outside [43, 128] (RFC 7636 §4.1)
 /// - SHA-256 result does not match stored challenge
 pub fn verify_pkce(code_verifier: &str, stored_code_challenge: &str) -> bool {
-    let len = code_verifier.len();
-    if len < 43 || len > 128 {
+    if !(43..=128).contains(&code_verifier.len()) {
         return false;
     }
     let computed = URL_SAFE_NO_PAD.encode(Sha256::digest(code_verifier.as_bytes()));
@@ -27,8 +26,6 @@ pub fn verify_pkce(code_verifier: &str, stored_code_challenge: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
-    use sha2::{Digest, Sha256};
 
     fn make_challenge(verifier: &str) -> String {
         URL_SAFE_NO_PAD.encode(Sha256::digest(verifier.as_bytes()))
