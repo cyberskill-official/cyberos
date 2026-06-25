@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CyberOS roadmap</title>
+<style>
+  :root{
+    --bg:#ffffff; --surface:#f7f6f2; --line:#e4e2da; --ink:#1f1e1b; --muted:#6b6a64;
+    --done:#3b6d11; --done-bg:#eaf3de; --active:#854f0b; --active-bg:#faeeda; --spec:#5f5e5a; --spec-bg:#f1efe8;
+    --accent:#9a4a2f;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{ --bg:#1a1916; --surface:#23211d; --line:#37352f; --ink:#ece9e2; --muted:#a3a097;
+      --done:#97c459; --done-bg:#1c2b0c; --active:#ef9f27; --active-bg:#33240a; --spec:#b4b2a9; --spec-bg:#26251f; --accent:#d85a30; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1040px;margin:0 auto;padding:32px 24px 64px}
+  header{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 16px;border-bottom:1px solid var(--line);padding-bottom:16px}
+  h1{font-size:24px;font-weight:600;margin:0}
+  .sub{color:var(--muted);font-size:14px}
+  .updated{margin-left:auto;color:var(--muted);font-size:13px}
+  h2{font-size:15px;font-weight:600;margin:32px 0 12px;letter-spacing:.01em}
+  .stats{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 16px;min-width:130px}
+  .stat b{display:block;font-size:22px;font-weight:600}
+  .stat span{color:var(--muted);font-size:13px}
+  .phases{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .phase{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--surface);position:relative}
+  .phase .n{font-size:12px;color:var(--muted)}
+  .phase .t{font-weight:600;font-size:15px;margin:2px 0}
+  .phase .d{font-size:13px;color:var(--muted)}
+  .phase.now{border-color:var(--active);box-shadow:inset 0 0 0 1px var(--active)}
+  .nowtag{position:absolute;top:-9px;left:14px;background:var(--active-bg);color:var(--active);
+    font-size:11px;font-weight:600;padding:1px 8px;border-radius:999px;border:1px solid var(--active)}
+  .path{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px}
+  .node{flex:1;min-width:90px;border:1px solid var(--line);border-radius:10px;padding:10px 8px;text-align:center;background:var(--surface)}
+  .node .nm{font-weight:600;font-size:14px}
+  .node .st{font-size:12px;margin-top:2px}
+  .arrow{align-self:center;color:var(--muted);font-size:18px;padding:0 2px}
+  .group{margin-top:8px}
+  .grouphd{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin:18px 0 8px}
+  .swatch{width:10px;height:10px;border-radius:3px;display:inline-block}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .card{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface)}
+  .card .top{display:flex;justify-content:space-between;align-items:baseline}
+  .card .nm{font-weight:600;font-size:15px}
+  .card .ct{font-size:12px;color:var(--muted)}
+  .bar{height:5px;background:var(--line);border-radius:99px;margin-top:8px;overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:99px}
+  .card .note{font-size:12px;color:var(--muted);margin-top:6px}
+  .pill{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;color:var(--muted);font-size:13px;margin-top:8px}
+  .legend i{width:11px;height:11px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px}
+  .howto{margin-top:36px;border:1px dashed var(--line);border-radius:10px;padding:14px 16px;background:var(--surface);font-size:13px;color:var(--muted)}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+  @media(max-width:680px){.phases{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>CyberOS roadmap</h1>
+    <span class="sub">platform build status, tracked against the locked P0 path</span>
+    <span class="updated" id="updated"></span>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <h2>Phases</h2>
+  <div class="phases" id="phases"></div>
+
+  <h2>P0 critical path</h2>
+  <div class="path" id="path"></div>
+
+  <h2>Modules</h2>
+  <div class="legend">
+    <span><i style="background:var(--done)"></i>done</span>
+    <span><i style="background:var(--active)"></i>in progress</span>
+    <span><i style="background:var(--spec)"></i>specified, not built</span>
+  </div>
+  <div id="board"></div>
+
+  <div class="howto">
+    To update: edit the <code>DATA</code> block near the bottom of this file and reload. Each module has a
+    <code>status</code> of <code>done</code>, <code>active</code>, or <code>spec</code>, plus <code>done</code>/<code>total</code>
+    FR counts and an optional <code>note</code>. The stats, bars, and grouping recompute automatically. Commit the file to keep history.
+  </div>
+</div>
+
+<script>
+const UPDATED = "2026-06-24";
+
+const PHASES = [
+  {n:"Phase 1", t:"Platform spine", d:"core infrastructure", state:"done"},
+  {n:"Phase 2", t:"Federation + obs", d:"MCP gateway, observability", state:"now"},
+  {n:"Phase 3", t:"Business modules", d:"14 verticals, specified", state:"next"},
+  {n:"Phase 4", t:"Deploy + scale", d:"VPS go-live", state:"later"}
+];
+
+const P0 = [
+  {nm:"AI gateway", status:"done"},
+  {nm:"Obs", status:"done", note:"feature-complete"},
+  {nm:"Auth", status:"done"},
+  {nm:"MCP", status:"active", note:"building"},
+  {nm:"Chat", status:"done"}
+];
+
+const DATA = [
+  {nm:"auth",   status:"done", done:15, total:15},
+  {nm:"chat",   status:"done", done:12, total:12},
+  {nm:"proj",   status:"done", done:18, total:18},
+  {nm:"skill",  status:"done", done:16, total:16},
+  {nm:"memory", status:"done", done:20, total:21},
+  {nm:"cuo",    status:"done", done:10, total:11},
+  {nm:"ai",     status:"done", done:20, total:24, note:"2 FRs ready to build"},
+
+  {nm:"obs",    status:"active", done:1, total:9,  note:"feature-complete in-repo, reconcile + deploy"},
+  {nm:"mcp",    status:"active", done:2, total:8,  note:"001/002 done, 003 slice 1 shipped, 004 next"},
+  {nm:"email",  status:"active", done:5, total:11, note:"5 of 11 shipped"},
+
+  {nm:"crm",    status:"spec", done:0, total:10},
+  {nm:"doc",    status:"spec", done:0, total:11},
+  {nm:"esop",   status:"spec", done:0, total:7},
+  {nm:"hr",     status:"spec", done:0, total:9},
+  {nm:"inv",    status:"spec", done:0, total:11},
+  {nm:"kb",     status:"spec", done:0, total:9},
+  {nm:"learn",  status:"spec", done:0, total:7},
+  {nm:"okr",    status:"spec", done:0, total:7},
+  {nm:"plugin", status:"spec", done:0, total:8},
+  {nm:"portal", status:"spec", done:0, total:8},
+  {nm:"res",    status:"spec", done:0, total:5},
+  {nm:"rew",    status:"spec", done:0, total:10},
+  {nm:"ten",    status:"spec", done:0, total:14},
+  {nm:"time",   status:"spec", done:0, total:9}
+];
+
+const C = {done:{c:"var(--done)",bg:"var(--done-bg)",label:"done"},
+           active:{c:"var(--active)",bg:"var(--active-bg)",label:"in progress"},
+           spec:{c:"var(--spec)",bg:"var(--spec-bg)",label:"specified"}};
+
+document.getElementById("updated").textContent = "updated " + UPDATED;
+
+const totFR = DATA.reduce((a,m)=>a+m.total,0);
+const doneFR = DATA.reduce((a,m)=>a+m.done,0);
+const byStatus = s => DATA.filter(m=>m.status===s).length;
+document.getElementById("stats").innerHTML = [
+  ["Modules built", byStatus("done")+" / "+DATA.length],
+  ["In progress", byStatus("active")],
+  ["Not yet built", byStatus("spec")],
+  ["FRs shipped", doneFR+" / "+totFR],
+  ["P0 path", P0.filter(n=>n.status==="done").length+" / "+P0.length]
+].map(([s,b])=>`<div class="stat"><b>${b}</b><span>${s}</span></div>`).join("");
+
+document.getElementById("phases").innerHTML = PHASES.map(p=>`
+  <div class="phase ${p.state==='now'?'now':''}">
+    ${p.state==='now'?'<span class="nowtag">you are here</span>':''}
+    <div class="n">${p.n}</div><div class="t">${p.t}</div><div class="d">${p.d}</div>
+  </div>`).join("");
+
+document.getElementById("path").innerHTML = P0.map((n,i)=>{
+  const k=n.status==="done"?C.done:C.active;
+  const cell=`<div class="node" style="border-color:${k.c}">
+    <div class="nm">${n.nm}</div>
+    <div class="st" style="color:${k.c}">${n.note||k.label}</div></div>`;
+  return i<P0.length-1 ? cell+'<span class="arrow">&rarr;</span>' : cell;
+}).join("");
+
+function cards(list){
+  return `<div class="grid">`+list.map(m=>{
+    const k=C[m.status];
+    const pct = m.total? Math.round(100*m.done/m.total):0;
+    return `<div class="card">
+      <div class="top"><span class="nm">${m.nm}</span>
+        <span class="pill" style="background:${k.bg};color:${k.c}">${k.label}</span></div>
+      <div class="ct">${m.done} / ${m.total} FRs</div>
+      <div class="bar"><i style="width:${pct}%;background:${k.c}"></i></div>
+      ${m.note?`<div class="note">${m.note}</div>`:''}
+    </div>`;
+  }).join("")+`</div>`;
+}
+document.getElementById("board").innerHTML =
+  `<div class="group"><div class="grouphd"><span class="swatch" style="background:var(--done)"></span>Done (${byStatus("done")})</div>${cards(DATA.filter(m=>m.status==="done"))}</div>
+   <div class="group"><div class="grouphd"><span class="swatch" style="background:var(--active)"></span>Active (${byStatus("active")})</div>${cards(DATA.filter(m=>m.status==="active"))}</div>
+   <div class="group"><div class="grouphd"><span class="swatch" style="background:var(--spec)"></span>Specified, not built (${byStatus("spec")})</div>${cards(DATA.filter(m=>m.status==="spec"))}</div>`;
+</script>
+</body>
+</html>
