@@ -4,7 +4,7 @@
 This exposes the `obs.triage-alert` path the obs-router already calls over HTTP as a tool on the
 mcp-gateway, so an observability alert can be triaged through `tools/call` the same way any other
 federated module tool is. It is the obs federation surface: the registering module identity is `obs`
-and the tool is `cyberos.obs.triage`, even though the code lives in the cuo package next to
+and the tool is `cyberos.obs.execute_triage`, even though the code lives in the cuo package next to
 `triage_server.py` - because triage is a CUO skill (`obs.triage-alert@1`) invoked in-process.
 
 It adopts the reference-module contract verbatim (services/mcp-gateway/examples/reference_module.py):
@@ -12,7 +12,7 @@ It adopts the reference-module contract verbatim (services/mcp-gateway/examples/
   1. It serves JSON-RPC 2.0 over `POST /mcp` for the methods the gateway forwards
      (`initialize`, `tools/list`, `tools/call`).
   2. At startup it self-registers its one tool with the gateway by POSTing to `/v1/mcp/register`,
-     so `cyberos.obs.triage` shows up in the gateway's `tools/list` and the desktop Tools tab. The
+     so `cyberos.obs.execute_triage` shows up in the gateway's `tools/list` and the desktop Tools tab. The
      gateway then forwards `tools/call` for it back to this server's `/mcp` endpoint.
 
 The tool body runs triage in-process through `triage_server.handle_triage_request` - the same pure
@@ -26,7 +26,7 @@ Run it next to a gateway started with `MCP_DEV_REGISTRATION=1`:
 
     python3 -m cuo.triage_mcp_module --gateway http://127.0.0.1:8090 --listen 127.0.0.1:8101
 
-Then refresh the desktop Tools tab: `cyberos.obs.triage` appears, and calling it with an alert
+Then refresh the desktop Tools tab: `cyberos.obs.execute_triage` appears, and calling it with an alert
 forwards through the gateway to here and returns the triage verdict.
 """
 
@@ -49,7 +49,7 @@ from cuo.triage_server import (
 )
 
 MODULE_NAME = "obs"
-TRIAGE_TOOL_NAME = "cyberos.obs.triage"
+TRIAGE_TOOL_NAME = "cyberos.obs.execute_triage"
 HEARTBEAT_INTERVAL_SECS = 10  # match the gateway's DEC-2350 cadence
 
 # The tool catalogue this module exposes. `inputSchema` and `annotations` follow the MCP
@@ -102,7 +102,7 @@ def run_triage_tool(
     skill_root: Path,
     output_dir: Path,
 ) -> dict[str, Any]:
-    """Execute `cyberos.obs.triage`: run triage in-process and project the verdict to an MCP result.
+    """Execute `cyberos.obs.execute_triage`: run triage in-process and project the verdict to an MCP result.
 
     Pure: the invoker and roots are injected, so this is unit-tested with a fake invoker (no LLM, no
     network). It wraps the existing `handle_triage_request`, so the request contract and the

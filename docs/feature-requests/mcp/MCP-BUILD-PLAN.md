@@ -28,7 +28,7 @@ them `draft -> done` on GREEN+CLEAN. That single reconciliation unblocks the res
 ```
 FR-MCP-001 spec-compliance            [FR-AUTH-004 done]   SHIPPED -> gate-verify -> done
   ├─ FR-MCP-002 heartbeat lifecycle   [001]                SHIPPED -> gate-verify -> done
-  ├─ FR-MCP-003 SEP-986 naming validator [001]             PARTIAL  (independent of 004 - buildable now)
+  ├─ FR-MCP-003 SEP-986 naming validator [001]             slices 1-2 SHIPPED -> slice 3 (CI grep + audit) left
   └─ FR-MCP-004 OAuth 2.1 + PKCE      [FR-AUTH-004 + 001]  NOT BUILT (the ready FR - buildable now)
        ├─ FR-MCP-005 protected-resource-metadata [004]     NOT BUILT
        ├─ FR-MCP-008 elicitation                 [001+004] NOT BUILT  (build before 006's gating)
@@ -54,14 +54,19 @@ owning module is unhealthy. Routes `/v1/mcp/heartbeat` + `/v1/mcp/deregister` be
 `MCP_DEV_REGISTRATION` dev-gate; `/mcp/healthz` returns a per-module `servers` array. Remaining:
 gate-verify and flip to done.
 
-### FR-MCP-003 - SEP-986 naming validator  (dep 001; PARTIAL - buildable now)
-Today `register::validate` only rejects an empty tool name; the field is labelled "SEP-986 tool name"
-but the grammar is not enforced. Build the validator: accept dot-separated lowercase segments
-(`namespace.module.tool`, the `cyberos.<module>.<tool>` shape the modules already use), reject empty
-segments, uppercase, spaces, and disallowed characters, at registration time. Test plan: a valid name
-passes; each malformed shape is rejected with a specific RegisterError; existing module names
-(`cyberos.demo.echo`, `cyberos.obs.triage`, `cyberos.memory.search_memory`) all pass. Independent of
-OAuth, so it can ship alongside the 001/002 reconciliation.
+### FR-MCP-003 - SEP-986 naming validator  (dep 001; slices 1-2 SHIPPED, slice 3 left)
+Slice 1 shipped the pure validator in `src/naming/` (closed 15-verb `Sep986Verb` enum, the
+`^cyberos\.(module)\.(verb)_(noun)$` regex compiled once, the 23-module binary-search registry,
+`validate_sync`). Slice 2 wired it into registration: `register::validate` now rejects any real
+module's non-conforming tool ID with `RegisterError::NonConformingToolName` before it can become
+callable, and the one pre-existing non-conforming production tool was migrated
+(`cyberos.obs.triage` -> `cyberos.obs.execute_triage`). The dev/reference fixture
+(`cyberos.demo.echo` / `cyberos.demo.now`) is exempt via `NAMING_EXEMPT_MODULES` - it predates the
+convention and never ships in production. Both slices are pure Rust (cargo test + clippy, no DB).
+Slice 3 left (DB/CI-bound, bundled with the next Postgres session): the CI grep gate
+(`scripts/check_sep986_naming.sh` + `.github/workflows/mcp-sep986-check.yml`, DEC-2362) and the four
+memory-audit kinds (`mcp.skill_name_validated` / `_rejected` / `naming_ci_check_passed` / `_failed`,
+DEC-2364). Independent of OAuth.
 
 ### FR-MCP-004 - OAuth 2.1 + PKCE  (dep AUTH-004 + 001; NOT BUILT - the ready FR)
 The authorization-code + PKCE flow that lets a real MCP client authenticate to the gateway, building on

@@ -19,6 +19,16 @@ use serde_json::Value;
 
 use crate::annotations::ToolAnnotations;
 use crate::federation::registry::ToolRegistry;
+use crate::naming::validate_sync;
+
+/// Modules exempt from SEP-986 naming enforcement at registration (FR-MCP-003 DEC-2362).
+///
+/// Only the dev/reference fixture (`services/mcp-gateway/examples/reference_module.py`, which
+/// self-registers `cyberos.demo.echo` / `cyberos.demo.now`) is exempt: it is a copy-paste example
+/// that predates the convention and never ships in production. Every real module is validated
+/// strictly. Keeping the exemption an explicit, named allowlist - rather than a silent skip - makes
+/// it auditable and hard to abuse.
+const NAMING_EXEMPT_MODULES: &[&str] = &["demo"];
 
 /// One tool in a module's registration payload. Field names accept both the MCP wire form
 /// (`inputSchema`, `requiresScope`) and snake_case for convenience.
@@ -64,6 +74,14 @@ pub enum RegisterError {
     NoTools,
     /// The tool at this index had an empty `name`.
     EmptyToolName(usize),
+    /// The tool at this index has a name that violates SEP-986 (FR-MCP-003 DEC-2362). The detail is
+    /// the specific `NamingError` explanation: malformed pattern, unknown module, or invalid verb.
+    NonConformingToolName {
+        /// Index of the offending tool in `tools`.
+        index: usize,
+        /// The SEP-986 validation failure detail (from `naming::NamingError`).
+        detail: String,
+    },
 }
 
 impl RegisterError {
@@ -77,11 +95,19 @@ impl RegisterError {
             }
             RegisterError::NoTools => "tools must contain at least one tool".to_string(),
             RegisterError::EmptyToolName(i) => format!("tools[{i}].name must not be empty"),
+            RegisterError::NonConformingToolName { index, detail } => {
+                format!("tools[{index}].name violates SEP-986 naming: {detail}")
+            }
         }
     }
 }
 
 /// Validate a registration request before mutating the registry. Pure (no I/O).
+///
+/// Beyond the structural checks, every tool name is validated against SEP-986
+/// (FR-MCP-003 DEC-2362): a real module that registers a non-conforming tool ID is rejected here,
+/// before the tool can become callable. The dev/reference fixture (`NAMING_EXEMPT_MODULES`) is the
+/// only exception.
 pub fn validate(req: &RegisterRequest) -> Result<(), RegisterError> {
     if req.module.trim().is_empty() {
         return Err(RegisterError::EmptyModule);
@@ -95,9 +121,18 @@ pub fn validate(req: &RegisterRequest) -> Result<(), RegisterError> {
     if req.tools.is_empty() {
         return Err(RegisterError::NoTools);
     }
+    let naming_exempt = NAMING_EXEMPT_MODULES.contains(&req.module.trim());
     for (i, t) in req.tools.iter().enumerate() {
         if t.name.trim().is_empty() {
             return Err(RegisterError::EmptyToolName(i));
+        }
+        // SEP-986 enforcement (DEC-2362): a non-conforming tool ID from a real module is a hard
+        // registration refusal. The fixture module is exempt; its echo/now tools predate SEP-986.
+        if !naming_exempt {
+            validate_sync(&t.name).map_err(|e| RegisterError::NonConformingToolName {
+                index: i,
+                detail: e.to_string(),
+            })?;
         }
     }
     Ok(())
@@ -148,7 +183,7 @@ mod tests {
         let req = sample(
             "memory",
             "http://memory.internal/mcp",
-            &["cyberos.memory.search"],
+            &["cyberos.memory.search_memory"],
         );
         assert_eq!(validate(&req), Ok(()));
     }
@@ -168,7 +203,7 @@ mod tests {
         req = sample("memory", "http://x/mcp", &[]);
         assert_eq!(validate(&req), Err(RegisterError::NoTools));
 
-        let mut req = sample("memory", "http://x/mcp", &["a", ""]);
+        let mut req = sample("memory", "http://x/mcp", &["cyberos.memory.get_record", ""]);
         req.tools[1].name = "".into();
         assert_eq!(validate(&req), Err(RegisterError::EmptyToolName(1)));
     }
@@ -179,13 +214,13 @@ mod tests {
         let req = sample(
             "memory",
             "http://memory.internal/mcp",
-            &["cyberos.memory.search", "cyberos.memory.write"],
+            &["cyberos.memory.search_memory", "cyberos.memory.update_memory"],
         );
         let n = apply(&registry, &req);
         assert_eq!(n, 2);
         assert_eq!(registry.len(), 2);
 
-        let entry = registry.lookup("cyberos.memory.search").unwrap();
+        let entry = registry.lookup("cyberos.memory.search_memory").unwrap();
         assert_eq!(entry.module, "memory");
         assert_eq!(entry.endpoint, "http://memory.internal/mcp");
         assert_eq!(entry.requires_scope, vec!["mcp:tools".to_string()]);
@@ -197,7 +232,7 @@ mod tests {
         let first = sample(
             "memory",
             "http://old.internal/mcp",
-            &["cyberos.memory.search"],
+            &["cyberos.memory.search_memory"],
         );
         apply(&registry, &first);
         assert_eq!(registry.len(), 1);
@@ -206,12 +241,12 @@ mod tests {
         let second = sample(
             "memory",
             "http://new.internal/mcp",
-            &["cyberos.memory.search"],
+            &["cyberos.memory.search_memory"],
         );
         apply(&registry, &second);
         assert_eq!(registry.len(), 1);
         assert_eq!(
-            registry.lookup("cyberos.memory.search").unwrap().endpoint,
+            registry.lookup("cyberos.memory.search_memory").unwrap().endpoint,
             "http://new.internal/mcp"
         );
     }
@@ -223,7 +258,7 @@ mod tests {
             "module": "memory",
             "endpoint": "http://memory.internal/mcp",
             "tools": [{
-                "name": "cyberos.memory.search",
+                "name": "cyberos.memory.search_memory",
                 "description": "search memory",
                 "inputSchema": {"type": "object"},
                 "annotations": {"title": "Search", "readOnlyHint": true, "idempotentHint": true},
@@ -232,8 +267,85 @@ mod tests {
         });
         let req: RegisterRequest = serde_json::from_value(raw).unwrap();
         assert_eq!(req.tools.len(), 1);
-        assert_eq!(req.tools[0].name, "cyberos.memory.search");
+        assert_eq!(req.tools[0].name, "cyberos.memory.search_memory");
         assert!(req.tools[0].annotations.read_only_hint);
         assert_eq!(req.tools[0].requires_scope, vec!["mcp:tools".to_string()]);
+    }
+
+    // ---- SEP-986 naming enforcement (FR-MCP-003 DEC-2362) ----
+
+    #[test]
+    fn validate_accepts_the_renamed_obs_triage_tool() {
+        // The SEP-986 migration target for the old cyberos.obs.triage: `execute` is an approved verb.
+        let req = sample(
+            "obs",
+            "http://127.0.0.1:8101/mcp",
+            &["cyberos.obs.execute_triage"],
+        );
+        assert_eq!(validate(&req), Ok(()));
+    }
+
+    #[test]
+    fn validate_rejects_a_malformed_tool_name() {
+        // The pre-migration name has no {verb}_{noun}, so it fails the SEP-986 pattern.
+        let req = sample("obs", "http://x/mcp", &["cyberos.obs.triage"]);
+        assert!(matches!(
+            validate(&req),
+            Err(RegisterError::NonConformingToolName { index: 0, .. })
+        ));
+    }
+
+    #[test]
+    fn validate_rejects_an_unknown_module_tool() {
+        // Well-formed but `calendar` is not one of the 23 registered modules.
+        let req = sample("calendar", "http://x/mcp", &["cyberos.calendar.list_events"]);
+        assert!(matches!(
+            validate(&req),
+            Err(RegisterError::NonConformingToolName { index: 0, .. })
+        ));
+    }
+
+    #[test]
+    fn validate_rejects_an_unapproved_verb() {
+        // `retrieve` is not in the closed Sep986Verb enum.
+        let req = sample("obs", "http://x/mcp", &["cyberos.obs.retrieve_alert"]);
+        assert!(matches!(
+            validate(&req),
+            Err(RegisterError::NonConformingToolName { index: 0, .. })
+        ));
+    }
+
+    #[test]
+    fn validate_reports_the_offending_tool_index() {
+        // First tool conforms, second does not: the error must point at index 1.
+        let req = sample(
+            "obs",
+            "http://x/mcp",
+            &["cyberos.obs.execute_triage", "cyberos.obs.triage"],
+        );
+        assert!(matches!(
+            validate(&req),
+            Err(RegisterError::NonConformingToolName { index: 1, .. })
+        ));
+    }
+
+    #[test]
+    fn validate_exempts_the_demo_fixture_module() {
+        // The reference fixture self-registers non-conforming echo/now tools; it is exempt so the
+        // demo keeps working while every real module is strict.
+        let req = sample(
+            "demo",
+            "http://127.0.0.1:8099/mcp",
+            &["cyberos.demo.echo", "cyberos.demo.now"],
+        );
+        assert_eq!(validate(&req), Ok(()));
+    }
+
+    #[test]
+    fn non_conforming_error_message_carries_the_sep986_detail() {
+        let req = sample("obs", "http://x/mcp", &["cyberos.obs.triage"]);
+        let msg = validate(&req).unwrap_err().message();
+        assert!(msg.contains("tools[0]"));
+        assert!(msg.contains("SEP-986"));
     }
 }

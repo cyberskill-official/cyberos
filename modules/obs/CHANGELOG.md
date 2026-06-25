@@ -1,5 +1,15 @@
 # Changelog — OBS
 
+## 2026-06-25 - obs triage tool renamed to conform to SEP-986 (FR-MCP-003 slice 2)
+
+FR-MCP-003 slice 2 turned on SEP-986 naming enforcement at mcp-gateway registration, so the obs triage
+tool was renamed from `cyberos.obs.triage` to `cyberos.obs.execute_triage` (`execute` is an approved
+verb; `triage` alone had no `{verb}_{noun}` form). Only the tool ID changed - the triage behaviour,
+inputs, and verdict are identical. The constant `TRIAGE_TOOL_NAME` in
+`modules/cuo/cuo/triage_mcp_module.py` carries the new value and every call site follows it; the demo
+call in `run-demo.sh` and the obs-router README were updated to match. Anything calling the old name
+through `tools/call` must switch to `cyberos.obs.execute_triage`.
+
 ## 2026-06-24 - obs triage reachable as an mcp-gateway tool (FR-OBS-007 x FR-MCP-002)
 
 The `obs.triage-alert` path obs-router already calls over HTTP is now also exposed on the mcp-gateway as
