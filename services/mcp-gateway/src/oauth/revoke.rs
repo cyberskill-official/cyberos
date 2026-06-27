@@ -10,7 +10,7 @@ use sqlx::PgPool;
 
 use super::response::EndpointError;
 use super::secret::sha256_hex;
-use super::store;
+use super::{audit, store};
 
 /// The RFC 7009 revocation request body.
 #[derive(Debug, Deserialize)]
@@ -28,6 +28,7 @@ pub async fn revoke(pool: &PgPool, req: RevokeRequest) -> Result<(), EndpointErr
     let hash = sha256_hex(&req.token);
     if let Some(row) = store::get_refresh_by_hash(pool, &hash).await? {
         store::compromise_family(pool, row.family_id).await?;
+        audit::token_revoked(pool, row.family_id).await;
     }
     Ok(())
 }
