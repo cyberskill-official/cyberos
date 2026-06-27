@@ -183,6 +183,27 @@ fn oauth_resource() -> String {
     std::env::var("MCP_RESOURCE_URL").unwrap_or_else(|_| oauth_issuer())
 }
 
+/// The FR-AUTH-004 issuer whose session JWTs `/authorize` and confidential `/register` accept (env
+/// `MCP_AUTH_ISSUER`, dev default). Distinct from `oauth_issuer()`, which issues the gateway's own
+/// access tokens.
+fn oauth_auth_issuer() -> String {
+    std::env::var("MCP_AUTH_ISSUER").unwrap_or_else(|_| "http://localhost:8081".to_string())
+}
+
+/// Extract a bearer auth JWT from `Authorization` and verify it into an `AuthSession`. `None` when the
+/// header is absent or the token does not verify, so confidential registration fails closed (an
+/// unauthenticated caller cannot mint a confidential client).
+async fn oauth_auth_session(
+    pool: &sqlx::PgPool,
+    headers: &HeaderMap,
+) -> Option<crate::oauth::authsession::AuthSession> {
+    let token = headers
+        .get(axum::http::header::AUTHORIZATION)
+        .and_then(|v| v.to_str().ok())
+        .and_then(|s| s.strip_prefix("Bearer "))?;
+    crate::oauth::authsession::verify_auth_session(pool, token, &oauth_auth_issuer()).await
+}
+
 /// Whether the MCP surface requires a valid audience-bound OAuth token (FR-MCP-004 clause #23). Off
 /// unless `MCP_REQUIRE_AUTH=1`, so the dev demo works with no token and production sets it on - the
 /// same gating shape as `MCP_DEV_REGISTRATION`.
@@ -211,10 +232,23 @@ async fn enforce_oauth(
         .and_then(|v| v.to_str().ok())
         .and_then(|s| s.strip_prefix("Bearer "))
         .ok_or_else(|| unauth("missing_bearer_token"))?;
-    let claims =
-        crate::oauth::jwt::verify_access_token(pool, token, &oauth_issuer(), &oauth_resource())
-            .await
-            .map_err(|_| unauth("token_verification_failed"))?;
+    let claims = match crate::oauth::jwt::verify_access_token(
+        pool,
+        token,
+        &oauth_issuer(),
+        &oauth_resource(),
+    )
+    .await
+    {
+        Ok(c) => c,
+        Err(crate::oauth::jwt::JwtError::AudienceMismatch) => {
+            // Clause #23: a token bound to another resource server was presented here. Record it
+            // before refusing, so cross-server replay attempts are visible in the audit chain.
+            crate::oauth::audit::audience_mismatch(pool).await;
+            return Err(unauth("audience_mismatch"));
+        }
+        Err(_) => return Err(unauth("token_verification_failed")),
+    };
     if let Ok(jti) = uuid::Uuid::parse_str(&claims.jti) {
         if crate::oauth::store::is_jti_revoked(pool, jti)
             .await
@@ -227,15 +261,20 @@ async fn enforce_oauth(
 }
 
 /// FR-MCP-004 RFC 7591 dynamic client registration. JSON body; 503 when no database is configured.
+/// Public clients register openly; confidential clients require a tenant-admin auth JWT in
+/// `Authorization` (verified into the `caller` session). The body-consuming `Json` extractor stays
+/// last per axum's extractor ordering.
 async fn handle_oauth_register(
     State(state): State<AppState>,
+    headers: HeaderMap,
     Json(req): Json<crate::oauth::dcr::RegisterRequest>,
 ) -> Result<Json<crate::oauth::dcr::RegisterResponse>, crate::oauth::response::EndpointError> {
     let pool = state
         .oauth_pool
         .as_ref()
         .ok_or(crate::oauth::response::EndpointError::Unconfigured)?;
-    Ok(Json(crate::oauth::dcr::register(pool, req).await?))
+    let caller = oauth_auth_session(pool, &headers).await;
+    Ok(Json(crate::oauth::dcr::register(pool, req, caller).await?))
 }
 
 /// FR-MCP-004 token endpoint. Form-encoded body (RFC 6749 §6).
@@ -296,12 +335,10 @@ async fn handle_oauth_authorize(
         .and_then(|v| v.to_str().ok())
         .and_then(|s| s.strip_prefix("Bearer "))
         .map(|s| s.to_string());
-    let auth_issuer =
-        std::env::var("MCP_AUTH_ISSUER").unwrap_or_else(|_| "http://localhost:8081".to_string());
     let url = crate::oauth::authorize::authorize(
         pool,
         &oauth_resource(),
-        &auth_issuer,
+        &oauth_auth_issuer(),
         params,
         bearer,
     )

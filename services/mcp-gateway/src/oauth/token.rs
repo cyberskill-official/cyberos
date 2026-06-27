@@ -15,7 +15,7 @@ use super::error::OAuthError;
 use super::response::EndpointError;
 use super::secret::{opaque_token_256, sha256_hex};
 use super::store::{self, CodeConsumption};
-use super::{jwt, pkce};
+use super::{audit, jwt, pkce};
 
 /// Refresh-token lifetime in days (DEC-805).
 const REFRESH_TTL_DAYS: i64 = 30;
@@ -88,8 +88,9 @@ async fn authorization_code(
             return Err(OAuthError::invalid_grant("unknown or already-used code").into())
         }
         CodeConsumption::Expired => return Err(OAuthError::invalid_grant("code_expired").into()),
-        CodeConsumption::Replay(_) => {
-            return Err(OAuthError::invalid_grant("code_replay_detected").into())
+        CodeConsumption::Replay(replayed) => {
+            audit::code_reuse_detected(pool, replayed.client_id).await;
+            return Err(OAuthError::invalid_grant("code_replay_detected").into());
         }
     };
 
@@ -131,6 +132,7 @@ async fn refresh(
     // Reuse of a rotated-out (`used`) or poisoned (`compromised`) token poisons the whole family.
     if row.state != "active" {
         store::compromise_family(pool, row.family_id).await?;
+        audit::refresh_reuse_detected(pool, row.family_id).await;
         return Err(OAuthError::invalid_grant("refresh_token_reuse_detected").into());
     }
     if Utc::now() >= row.expires_at {
@@ -196,6 +198,15 @@ async fn issue_pair(
         &sha256_hex(&new_hash),
     )
     .await?;
+
+    match &rotate {
+        None => {
+            audit::token_issued(pool, tenant_id, subject_id, client_id, &minted.jti, scope).await
+        }
+        Some(_) => {
+            audit::token_refreshed(pool, tenant_id, subject_id, client_id, &minted.jti).await
+        }
+    }
 
     Ok(TokenResponse {
         access_token: minted.access_token,

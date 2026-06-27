@@ -12,14 +12,14 @@
 //! consent screen is a UI follow-up.
 
 use chrono::{Duration, Utc};
-use jsonwebtoken::{decode, decode_header, Algorithm, DecodingKey, Validation};
 use serde::Deserialize;
 use sqlx::PgPool;
 use uuid::Uuid;
 
+use super::authsession;
 use super::error::OAuthError;
 use super::response::EndpointError;
-use super::{scope, secret, store};
+use super::{audit, scope, secret, store};
 
 /// The query parameters of an authorization request.
 #[derive(Debug, Deserialize)]
@@ -48,19 +48,6 @@ pub struct AuthorizeParams {
     /// Optional `prompt` (e.g. `none` for silent re-auth).
     #[serde(default)]
     pub prompt: Option<String>,
-}
-
-/// The authorizing subject extracted from a verified auth JWT.
-struct AuthSubject {
-    subject_id: Uuid,
-    tenant_id: Uuid,
-}
-
-/// Minimal auth-service claim set we read; `exp` is still validated by jsonwebtoken from the payload.
-#[derive(Debug, Deserialize)]
-struct AuthClaims {
-    sub: String,
-    tenant_id: String,
 }
 
 /// Process an authorization request and return the URL to redirect the user-agent to (carrying either
@@ -106,7 +93,7 @@ pub async fn authorize(
 
     // 2. Subject identity from the auth bearer JWT.
     let subject = match &bearer {
-        Some(token) => match verify_auth_subject(pool, token, auth_issuer).await {
+        Some(token) => match authsession::verify_auth_session(pool, token, auth_issuer).await {
             Some(s) => s,
             None => return err("login_required"),
         },
@@ -145,35 +132,12 @@ pub async fn authorize(
     )
     .await?;
 
+    audit::authorize_started(pool, subject.tenant_id, subject.subject_id, client_id).await;
+
     Ok(build_redirect(
         &redirect_uri,
         &[("code", &code), ("state", &state)],
     ))
-}
-
-/// Verify an auth-service JWT against the shared signing keys and extract the subject + tenant. Returns
-/// None on any failure (the caller treats that as `login_required`).
-async fn verify_auth_subject(pool: &PgPool, token: &str, auth_issuer: &str) -> Option<AuthSubject> {
-    let kid = decode_header(token).ok()?.kid?;
-    let public_pem: String =
-        sqlx::query_scalar("SELECT public_pem FROM auth_signing_keys WHERE kid = $1")
-            .bind(&kid)
-            .fetch_optional(pool)
-            .await
-            .ok()??;
-    let mut v = Validation::new(Algorithm::RS256);
-    v.set_issuer(&[auth_issuer]);
-    v.validate_aud = false;
-    let data = decode::<AuthClaims>(
-        token,
-        &DecodingKey::from_rsa_pem(public_pem.as_bytes()).ok()?,
-        &v,
-    )
-    .ok()?;
-    Some(AuthSubject {
-        subject_id: Uuid::parse_str(&data.claims.sub).ok()?,
-        tenant_id: Uuid::parse_str(&data.claims.tenant_id).ok()?,
-    })
 }
 
 /// Build `base?k1=v1&k2=v2`, percent-encoding each value. Assumes `base` has no existing query.
