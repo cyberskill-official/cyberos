@@ -29,6 +29,10 @@ use crate::MCP_PROTOCOL_VERSION;
 pub struct AppState {
     /// Federated tool registry.
     pub registry: Arc<ToolRegistry>,
+    /// Postgres pool for the FR-MCP-004 OAuth endpoints. `None` when `MCP_DATABASE_URL` is unset: the
+    /// OAuth endpoints then report unconfigured and the rest of the gateway runs unaffected, so the
+    /// dev demo needs no database.
+    pub oauth_pool: Option<sqlx::PgPool>,
 }
 
 /// FR-MCP-001 §1 #25 healthz payload.
@@ -44,6 +48,8 @@ pub struct HealthZ {
     pub registered_tools: usize,
     /// Per-module server health (FR-MCP-002).
     pub servers: Vec<serde_json::Value>,
+    /// Whether the FR-MCP-004 OAuth endpoints are configured (a database is connected).
+    pub oauth_configured: bool,
 }
 
 /// Whether the FR-MCP-002 control-plane routes (register/heartbeat/deregister) are enabled.
@@ -131,6 +137,7 @@ async fn handle_healthz(State(state): State<AppState>) -> (StatusCode, Json<Heal
             registered_modules: state.registry.modules().len(),
             registered_tools: state.registry.len(),
             servers,
+            oauth_configured: state.oauth_pool.is_some(),
         }),
     )
 }
@@ -364,6 +371,7 @@ mod tests {
         }
         AppState {
             registry: Arc::new(r),
+            oauth_pool: None,
         }
     }
 
