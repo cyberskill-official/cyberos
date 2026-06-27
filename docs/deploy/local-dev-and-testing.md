@@ -137,6 +137,67 @@ Loki + Prometheus + Tempo + the obs-proxy with `cd deploy/obs && docker compose 
 `OBS_OTLP_ENDPOINT` on each service so its metrics and traces export. See `deploy/obs/README.md`. This
 is heavier (it pulls four backend images) and is only needed for the end-to-end correlation path.
 
+## Step 6 - end-to-end smoke (the demoable path)
+
+Steps 1-5 prove each module in isolation. This step runs the live P0 path so you can see the stack work
+as one system. Do it in tiers; each tier stands alone.
+
+Tier 1 - chat path through the gateway (no model needed). With infra up (Step 1) and migrations applied
+(Step 2), run the gateway with the in-repo echo backend and hit it:
+
+```bash
+cd services
+export DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos
+AI_GATEWAY_BIND=127.0.0.1:8080 AI_GATEWAY_CONFIG_DIR=ai-gateway/config/tenants \
+  cargo run -p cyberos-ai-gateway --bin cyberos-gateway
+# another shell:
+curl -fsS http://127.0.0.1:8080/healthz
+curl -fsS -X POST http://127.0.0.1:8080/v1/chat -H 'content-type: application/json' \
+  -H 'x-tenant-id: org:cyberskill' \
+  -d '{"alias":"chat.smart","messages":[{"role":"user","content":"hello"}]}'
+```
+
+Tier 2 - real inference through the stack (the demo). Start LM Studio (or Ollama) with a model loaded,
+then point the gateway at it. The tenant config `ai-gateway/config/tenants/org-cyberskill.yaml` maps
+`chat.smart` to the local model - edit the model id there if yours differs. The audit path (FR-AI-003)
+shells out to the memory Writer, so make the memory package importable first:
+
+```bash
+cd services
+export DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos
+export PYTHONPATH=$PWD/../modules/memory          # or: pip install -e ../modules/memory
+AI_GATEWAY_BIND=127.0.0.1:8080 AI_GATEWAY_CONFIG_DIR=ai-gateway/config/tenants \
+  LMSTUDIO_ENDPOINT=http://127.0.0.1:1234 \
+  cargo run -p cyberos-ai-gateway --bin cyberos-gateway
+# the same /v1/chat curl now returns a real completion from your local model.
+```
+
+Tier 3 - MCP tool federation (independent of the gateway above). One command starts the mcp-gateway,
+the reference module, and the obs triage module, all self-registering:
+
+```bash
+bash scripts/mcp_demo.sh
+# another shell - list and call tools through the gateway:
+bash scripts/mcp_call.sh cyberos.demo.echo '{"message":"hi"}'
+bash scripts/mcp_call.sh cyberos.obs.execute_triage \
+  '{"alert":{"name":"HighErrorRate","severity":"sev2","summary":"5xx above 2%"}}'
+```
+
+The triage tool name is `cyberos.obs.execute_triage` (the SEP-986 form); a non-conforming registration
+is now rejected at the gateway, so this is also a live check of FR-MCP-003 enforcement.
+
+Tier 4 - the desktop app (optional, Tauri build on your Mac). Build and run `apps/desktop` per its
+README; it drives the running gateway's chat-trigger path and, next iteration, the `tools/list` picker.
+
+Tier 5 - telemetry correlation (optional, heavier). Bring up `deploy/obs/` (Step 5) and set
+`OBS_OTLP_ENDPOINT` on the gateway; the `traceparent` from the `/v1/chat` response should resolve to a
+trace in Grafana.
+
+What success looks like: infra healthy with all five extensions; every crate suite GREEN under
+`--include-ignored`; `/v1/chat` returns an echo (Tier 1) then a real model completion (Tier 2); the two
+MCP tool calls return their results (Tier 3). At that point the core is proven locally and the next step
+is finishing MCP (the 004 OAuth endpoints), then the VPS deploy.
+
 ## Teardown
 
 ```bash
