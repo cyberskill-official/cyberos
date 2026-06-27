@@ -74,6 +74,10 @@ pub fn build_router(state: AppState) -> Router {
     Router::new()
         .route("/mcp", post(handle_mcp))
         .route("/mcp/healthz", get(handle_healthz))
+        .route(
+            "/.well-known/oauth-authorization-server",
+            get(handle_oauth_metadata),
+        )
         .route("/v1/mcp/register", post(handle_register))
         .route("/v1/mcp/heartbeat", post(handle_heartbeat))
         .route("/v1/mcp/deregister", post(handle_deregister))
@@ -140,6 +144,25 @@ async fn handle_healthz(State(state): State<AppState>) -> (StatusCode, Json<Heal
             oauth_configured: state.oauth_pool.is_some(),
         }),
     )
+}
+
+/// FR-MCP-004 clause #20 - RFC 8414 authorization-server metadata at
+/// `/.well-known/oauth-authorization-server`. Read-only; the issuer, JWKS URI, and supported scopes
+/// come from env (`MCP_ISSUER_URL`, `MCP_JWKS_URI`, `MCP_OAUTH_SCOPES`) with dev defaults. Scopes
+/// default to `mcp:tools` - the scope every current tool requires; refine to compute the union from
+/// the registry when the scope set diversifies.
+async fn handle_oauth_metadata() -> (StatusCode, Json<Value>) {
+    let issuer =
+        std::env::var("MCP_ISSUER_URL").unwrap_or_else(|_| "http://localhost:8090".to_string());
+    let jwks_uri = std::env::var("MCP_JWKS_URI")
+        .unwrap_or_else(|_| format!("{}/.well-known/jwks.json", issuer.trim_end_matches('/')));
+    let scopes: Vec<String> = std::env::var("MCP_OAUTH_SCOPES")
+        .ok()
+        .filter(|s| !s.trim().is_empty())
+        .map(|s| s.split_whitespace().map(String::from).collect())
+        .unwrap_or_else(|| vec!["mcp:tools".to_string()]);
+    let doc = crate::oauth::discovery::authorization_server_metadata(&issuer, &jwks_uri, &scopes);
+    (StatusCode::OK, Json(doc))
 }
 
 /// FR-MCP-002 control-plane: a module heartbeats to stay healthy. Body: `{"module": "..."}`.
