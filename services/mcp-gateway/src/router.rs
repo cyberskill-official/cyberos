@@ -183,6 +183,49 @@ fn oauth_resource() -> String {
     std::env::var("MCP_RESOURCE_URL").unwrap_or_else(|_| oauth_issuer())
 }
 
+/// Whether the MCP surface requires a valid audience-bound OAuth token (FR-MCP-004 clause #23). Off
+/// unless `MCP_REQUIRE_AUTH=1`, so the dev demo works with no token and production sets it on - the
+/// same gating shape as `MCP_DEV_REGISTRATION`.
+fn require_auth() -> bool {
+    std::env::var("MCP_REQUIRE_AUTH").as_deref() == Ok("1")
+}
+
+/// Verify the request's bearer access token against this resource server: signature + issuer + expiry +
+/// exact audience (enforced inside `verify_access_token`) + not-revoked (clauses #23, #24). Returns the
+/// 401 response on any failure, or `Ok(())` to let the request proceed.
+async fn enforce_oauth(
+    state: &AppState,
+    headers: &HeaderMap,
+) -> Result<(), (StatusCode, Json<Value>)> {
+    let unauth = |reason: &str| {
+        (
+            StatusCode::UNAUTHORIZED,
+            Json(json!({ "error": "invalid_token", "error_description": reason })),
+        )
+    };
+    let Some(pool) = state.oauth_pool.as_ref() else {
+        return Err(unauth("oauth_not_configured"));
+    };
+    let token = headers
+        .get(axum::http::header::AUTHORIZATION)
+        .and_then(|v| v.to_str().ok())
+        .and_then(|s| s.strip_prefix("Bearer "))
+        .ok_or_else(|| unauth("missing_bearer_token"))?;
+    let claims =
+        crate::oauth::jwt::verify_access_token(pool, token, &oauth_issuer(), &oauth_resource())
+            .await
+            .map_err(|_| unauth("token_verification_failed"))?;
+    if let Ok(jti) = uuid::Uuid::parse_str(&claims.jti) {
+        if crate::oauth::store::is_jti_revoked(pool, jti)
+            .await
+            .unwrap_or(false)
+        {
+            return Err(unauth("token_revoked"));
+        }
+    }
+    Ok(())
+}
+
 /// FR-MCP-004 RFC 7591 dynamic client registration. JSON body; 503 when no database is configured.
 async fn handle_oauth_register(
     State(state): State<AppState>,
@@ -348,8 +391,16 @@ fn parse_module_field(body: &[u8]) -> Result<String, (StatusCode, Json<Value>)> 
 
 async fn handle_mcp(
     State(state): State<AppState>,
+    headers: HeaderMap,
     body: axum::body::Bytes,
 ) -> (StatusCode, Json<Value>) {
+    // FR-MCP-004 clauses #23/#24: when enabled, the MCP surface requires a valid audience-bound,
+    // unrevoked access token. Off in dev (no token) so the demo keeps working.
+    if require_auth() {
+        if let Err(resp) = enforce_oauth(&state, &headers).await {
+            return resp;
+        }
+    }
     let inbound = match Inbound::parse(&body) {
         Ok(i) => i,
         Err(e) => {
