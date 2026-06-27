@@ -1,5 +1,14 @@
--- FR-MCP-004 Migration 0010: oauth_clients + closed enums
+-- FR-MCP-004 Migration 0013: oauth_clients + closed enums
 -- DEC-803, DEC-807, DEC-808, DEC-820
+
+-- Least-privilege roles the OAuth grants below (and in 0014/0015) target. Created here, in the first
+-- OAuth migration, so every later GRANT finds them. Idempotent DO blocks (mirrors auth/0004_rls_roles)
+-- so re-applying against a populated database succeeds silently. cyberos_app is created by the auth
+-- migrations, which run before these in deploy order.
+DO $$ BEGIN CREATE ROLE oauth_writer NOLOGIN;        EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE ROLE oauth_reader NOLOGIN;        EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE ROLE oauth_code_consumer NOLOGIN; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE ROLE oauth_refresh_writer NOLOGIN;EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 CREATE TYPE client_type AS ENUM ('public', 'confidential');
 CREATE TYPE oauth_grant_type AS ENUM ('authorization_code', 'refresh_token');
