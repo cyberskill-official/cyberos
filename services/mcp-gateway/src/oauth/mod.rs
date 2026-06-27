@@ -23,7 +23,10 @@
 //! FR-MCP-007 tasks and FR-MCP-008 elicitation tables.
 
 pub mod audience;
+pub mod discovery;
 pub mod enums;
 pub mod error;
+pub mod jwt;
 pub mod pkce;
 pub mod scope;
+pub mod store;
