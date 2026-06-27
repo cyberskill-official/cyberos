@@ -4,8 +4,9 @@
 use std::sync::Arc;
 use std::time::SystemTime;
 
-use axum::extract::State;
-use axum::http::StatusCode;
+use axum::extract::{Query, State};
+use axum::http::{HeaderMap, StatusCode};
+use axum::response::Redirect;
 use axum::routing::{get, post};
 use axum::Form;
 use axum::Json;
@@ -79,6 +80,7 @@ pub fn build_router(state: AppState) -> Router {
             "/.well-known/oauth-authorization-server",
             get(handle_oauth_metadata),
         )
+        .route("/authorize", get(handle_oauth_authorize))
         .route("/register", post(handle_oauth_register))
         .route("/token", post(handle_oauth_token))
         .route("/revoke", post(handle_oauth_revoke))
@@ -232,6 +234,36 @@ async fn handle_oauth_introspect(
     Ok(Json(
         crate::oauth::introspect::introspect(pool, &oauth_issuer(), &oauth_resource(), req).await?,
     ))
+}
+
+/// FR-MCP-004 authorize endpoint. The calling subject's identity comes from an auth-service bearer
+/// JWT (`Authorization: Bearer <auth_jwt>`); on success it 302-redirects to the client's redirect_uri
+/// carrying a one-time code.
+async fn handle_oauth_authorize(
+    State(state): State<AppState>,
+    Query(params): Query<crate::oauth::authorize::AuthorizeParams>,
+    headers: HeaderMap,
+) -> Result<Redirect, crate::oauth::response::EndpointError> {
+    let pool = state
+        .oauth_pool
+        .as_ref()
+        .ok_or(crate::oauth::response::EndpointError::Unconfigured)?;
+    let bearer = headers
+        .get(axum::http::header::AUTHORIZATION)
+        .and_then(|v| v.to_str().ok())
+        .and_then(|s| s.strip_prefix("Bearer "))
+        .map(|s| s.to_string());
+    let auth_issuer =
+        std::env::var("MCP_AUTH_ISSUER").unwrap_or_else(|_| "http://localhost:8081".to_string());
+    let url = crate::oauth::authorize::authorize(
+        pool,
+        &oauth_resource(),
+        &auth_issuer,
+        params,
+        bearer,
+    )
+    .await?;
+    Ok(Redirect::to(&url))
 }
 
 /// FR-MCP-002 control-plane: a module heartbeats to stay healthy. Body: `{"module": "..."}`.

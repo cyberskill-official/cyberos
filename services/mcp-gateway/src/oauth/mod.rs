@@ -23,6 +23,7 @@
 //! FR-MCP-007 tasks and FR-MCP-008 elicitation tables.
 
 pub mod audience;
+pub mod authorize;
 pub mod dcr;
 pub mod discovery;
 pub mod enums;
