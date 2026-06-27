@@ -33,6 +33,7 @@ pub mod error;
 pub mod introspect;
 pub mod jwt;
 pub mod pkce;
+pub mod prm;
 pub mod response;
 pub mod revoke;
 pub mod scope;

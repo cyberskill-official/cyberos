@@ -222,6 +222,23 @@ impl ToolRegistry {
             snap.values().map(|e| e.module.clone()).collect();
         mods.into_iter().collect()
     }
+
+    /// The sorted, distinct union of scopes the named module's tools require, or `None` if no tool of
+    /// that module is registered. Backs the FR-MCP-005 per-module Protected Resource Metadata: a
+    /// `Some(vec)` (possibly empty) means the module exists and advertises that `scopes_supported`; a
+    /// `None` means the module is unknown and the PRM endpoint returns 404.
+    pub fn module_scopes(&self, module: &str) -> Option<Vec<String>> {
+        let snap = self.inner.read().expect("poisoned");
+        let mut found = false;
+        let mut scopes: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+        for e in snap.values() {
+            if e.module == module {
+                found = true;
+                scopes.extend(e.requires_scope.iter().cloned());
+            }
+        }
+        found.then(|| scopes.into_iter().collect())
+    }
 }
 
 #[cfg(test)]
@@ -364,5 +381,38 @@ mod tests {
         );
         // healthz still reports both modules.
         assert_eq!(r.server_health(now).len(), 2);
+    }
+
+    #[test]
+    fn module_scopes_unions_sorted_dedup_and_404s_unknown() {
+        let r = ToolRegistry::new();
+        r.register(
+            "cyberos.projects.read_board".into(),
+            "x".into(),
+            json!({}),
+            ToolAnnotations::default(),
+            "projects".into(),
+            "http://x/mcp".into(),
+            vec!["projects.write".into(), "projects.read".into()],
+        );
+        r.register(
+            "cyberos.projects.list_boards".into(),
+            "x".into(),
+            json!({}),
+            ToolAnnotations::default(),
+            "projects".into(),
+            "http://x/mcp".into(),
+            vec!["projects.read".into()], // duplicate read across tools
+        );
+        // Union, sorted, de-duplicated.
+        assert_eq!(
+            r.module_scopes("projects"),
+            Some(vec!["projects.read".to_string(), "projects.write".to_string()])
+        );
+        // A module whose only tool requires no scope exists with an empty scope list (not a 404).
+        reg(&r, "cyberos.echo.ping", "echo");
+        assert_eq!(r.module_scopes("echo"), Some(vec![]));
+        // Unknown module is None (the PRM endpoint maps this to 404).
+        assert_eq!(r.module_scopes("nope"), None);
     }
 }

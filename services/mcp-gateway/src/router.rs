@@ -4,9 +4,9 @@
 use std::sync::Arc;
 use std::time::SystemTime;
 
-use axum::extract::{Query, State};
+use axum::extract::{Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
-use axum::response::Redirect;
+use axum::response::{IntoResponse, Redirect};
 use axum::routing::{get, post};
 use axum::Form;
 use axum::Json;
@@ -79,6 +79,14 @@ pub fn build_router(state: AppState) -> Router {
         .route(
             "/.well-known/oauth-authorization-server",
             get(handle_oauth_metadata),
+        )
+        .route(
+            "/.well-known/oauth-protected-resource",
+            get(handle_prm_aggregate).options(handle_prm_options),
+        )
+        .route(
+            "/.well-known/oauth-protected-resource/:module",
+            get(handle_prm_module).options(handle_prm_options),
         )
         .route("/authorize", get(handle_oauth_authorize))
         .route("/register", post(handle_oauth_register))
@@ -172,6 +180,95 @@ async fn handle_oauth_metadata() -> (StatusCode, Json<Value>) {
     (StatusCode::OK, Json(doc))
 }
 
+/// FR-MCP-005 gateway-aggregate Protected Resource Metadata (RFC 9728). Public and unauthenticated per
+/// DEC-896; cacheable via ETag. `get(...)` also serves HEAD (axum strips the body).
+async fn handle_prm_aggregate(headers: HeaderMap) -> axum::response::Response {
+    let doc = crate::oauth::prm::protected_resource_metadata(
+        &oauth_resource(),
+        &oauth_authorization_servers(),
+    );
+    prm_http_response(&doc, if_none_match(&headers))
+}
+
+/// FR-MCP-005 per-module Protected Resource Metadata. The path segment is `cyberos.<module>` (DEC-897);
+/// `scopes_supported` is the union of the module's tools' required scopes from the FR-MCP-002 registry.
+/// An unknown module returns 404 and emits a best-effort `mcp.prm_unknown_module_requested` audit row.
+async fn handle_prm_module(
+    State(state): State<AppState>,
+    Path(segment): Path<String>,
+    headers: HeaderMap,
+) -> axum::response::Response {
+    let module = segment.strip_prefix("cyberos.").unwrap_or(&segment);
+    match state.registry.module_scopes(module) {
+        Some(scopes) => {
+            let resource = format!("{}/{module}", oauth_resource().trim_end_matches('/'));
+            let doc = crate::oauth::prm::protected_resource_metadata_for_module(
+                &resource,
+                &oauth_authorization_servers(),
+                &scopes,
+            );
+            prm_http_response(&doc, if_none_match(&headers))
+        }
+        None => {
+            if let Some(pool) = state.oauth_pool.as_ref() {
+                crate::oauth::audit::prm_unknown_module_requested(pool, module).await;
+            }
+            (
+                StatusCode::NOT_FOUND,
+                Json(json!({ "error": "not_found", "error_description": "unknown module" })),
+            )
+                .into_response()
+        }
+    }
+}
+
+/// CORS preflight for the PRM endpoints (§1 #15): metadata is public and identical for every requester,
+/// so allow any origin for `GET`/`HEAD`.
+async fn handle_prm_options() -> axum::response::Response {
+    use axum::http::header;
+    axum::http::Response::builder()
+        .status(StatusCode::NO_CONTENT)
+        .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
+        .header(header::ACCESS_CONTROL_ALLOW_METHODS, "GET, HEAD")
+        .header(header::ACCESS_CONTROL_MAX_AGE, "3600")
+        .body(axum::body::Body::empty())
+        .expect("static response builds")
+}
+
+/// Borrow the request's `If-None-Match` header value, if present and valid UTF-8.
+fn if_none_match(headers: &HeaderMap) -> Option<&str> {
+    headers
+        .get(axum::http::header::IF_NONE_MATCH)
+        .and_then(|v| v.to_str().ok())
+}
+
+/// Render a PRM document as an RFC 9728 response with the spec's caching, CORS, and robots headers.
+/// Honours `If-None-Match`: a matching ETag yields `304 Not Modified` with an empty body. The body is
+/// serialized identically to the ETag input, so revalidation is exact.
+fn prm_http_response(doc: &Value, if_none_match: Option<&str>) -> axum::response::Response {
+    use axum::http::header;
+    let etag = crate::oauth::prm::etag(doc);
+    let builder = axum::http::Response::builder()
+        .header(header::CACHE_CONTROL, "max-age=3600")
+        .header(header::ETAG, etag.as_str())
+        .header("X-Robots-Tag", "noindex, nofollow, nosnippet")
+        .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
+        .header(header::ACCESS_CONTROL_ALLOW_METHODS, "GET, HEAD")
+        .header(header::ACCESS_CONTROL_MAX_AGE, "3600");
+    if if_none_match == Some(etag.as_str()) {
+        return builder
+            .status(StatusCode::NOT_MODIFIED)
+            .body(axum::body::Body::empty())
+            .expect("static response builds");
+    }
+    let body = serde_json::to_string(doc).unwrap_or_else(|_| "{}".to_string());
+    builder
+        .status(StatusCode::OK)
+        .header(header::CONTENT_TYPE, "application/json; charset=utf-8")
+        .body(axum::body::Body::from(body))
+        .expect("static response builds")
+}
+
 /// Gateway issuer URL for minted tokens (env `MCP_ISSUER_URL`, dev default).
 fn oauth_issuer() -> String {
     std::env::var("MCP_ISSUER_URL").unwrap_or_else(|_| "http://localhost:8090".to_string())
@@ -188,6 +285,33 @@ fn oauth_resource() -> String {
 /// access tokens.
 fn oauth_auth_issuer() -> String {
     std::env::var("MCP_AUTH_ISSUER").unwrap_or_else(|_| "http://localhost:8081".to_string())
+}
+
+/// FR-MCP-005 `authorization_servers`: the issuer URLs whose access tokens this MCP resource accepts.
+/// The gateway is its own authorization server (it mints the tokens `enforce_oauth` verifies), so this
+/// defaults to `[oauth_issuer()]`. `MCP_AUTHORIZATION_SERVERS` (comma- or whitespace-separated)
+/// overrides it for a future multi-issuer residency map (FR-AUTH-004).
+fn oauth_authorization_servers() -> Vec<String> {
+    std::env::var("MCP_AUTHORIZATION_SERVERS")
+        .ok()
+        .filter(|s| !s.trim().is_empty())
+        .map(|s| {
+            s.split(|c: char| c == ',' || c.is_whitespace())
+                .filter(|t| !t.is_empty())
+                .map(|t| t.trim_end_matches('/').to_string())
+                .collect()
+        })
+        .unwrap_or_else(|| vec![oauth_issuer().trim_end_matches('/').to_string()])
+}
+
+/// The `WWW-Authenticate` challenge for a 401 from the MCP surface (FR-MCP-005 §1 #19, RFC 9728 §5.1):
+/// `Bearer` with the `resource_metadata` parameter pointing at this gateway's Protected Resource
+/// Metadata, so a client that is refused can discover where to authenticate.
+fn www_authenticate_challenge() -> String {
+    format!(
+        "Bearer realm=\"cyberos-mcp\", error=\"invalid_token\", resource_metadata=\"{}/.well-known/oauth-protected-resource\"",
+        oauth_issuer().trim_end_matches('/')
+    )
 }
 
 /// Extract a bearer auth JWT from `Authorization` and verify it into an `AuthSession`. `None` when the
@@ -217,12 +341,20 @@ fn require_auth() -> bool {
 async fn enforce_oauth(
     state: &AppState,
     headers: &HeaderMap,
-) -> Result<(), (StatusCode, Json<Value>)> {
-    let unauth = |reason: &str| {
-        (
+) -> Result<(), axum::response::Response> {
+    // Every 401 carries the FR-MCP-005 `WWW-Authenticate: Bearer ... resource_metadata=...` challenge
+    // so a refused client can discover the Protected Resource Metadata and re-authenticate.
+    let unauth = |reason: &str| -> axum::response::Response {
+        let mut resp = (
             StatusCode::UNAUTHORIZED,
             Json(json!({ "error": "invalid_token", "error_description": reason })),
         )
+            .into_response();
+        if let Ok(v) = axum::http::HeaderValue::from_str(&www_authenticate_challenge()) {
+            resp.headers_mut()
+                .insert(axum::http::header::WWW_AUTHENTICATE, v);
+        }
+        resp
     };
     let Some(pool) = state.oauth_pool.as_ref() else {
         return Err(unauth("oauth_not_configured"));
@@ -430,9 +562,10 @@ async fn handle_mcp(
     State(state): State<AppState>,
     headers: HeaderMap,
     body: axum::body::Bytes,
-) -> (StatusCode, Json<Value>) {
+) -> axum::response::Response {
     // FR-MCP-004 clauses #23/#24: when enabled, the MCP surface requires a valid audience-bound,
-    // unrevoked access token. Off in dev (no token) so the demo keeps working.
+    // unrevoked access token. Off in dev (no token) so the demo keeps working. A 401 here carries the
+    // FR-MCP-005 `WWW-Authenticate` resource-metadata challenge.
     if require_auth() {
         if let Err(resp) = enforce_oauth(&state, &headers).await {
             return resp;
@@ -448,7 +581,8 @@ async fn handle_mcp(
                     serde_json::to_value(Response::error(Value::Null, err(codes::PARSE_ERROR, &e)))
                         .expect("serialise"),
                 ),
-            );
+            )
+                .into_response();
         }
     };
 
@@ -456,13 +590,14 @@ async fn handle_mcp(
         Inbound::Single(req) => {
             if req.is_notification() {
                 // Per JSON-RPC 2.0, no response is emitted for notifications.
-                return (StatusCode::OK, Json(json!(null)));
+                return (StatusCode::OK, Json(json!(null))).into_response();
             }
             let resp = dispatch_one(&state, req).await;
             (
                 StatusCode::OK,
                 Json(serde_json::to_value(resp).expect("serialise")),
             )
+                .into_response()
         }
         Inbound::Batch(reqs) => {
             let mut out: Vec<Response> = Vec::with_capacity(reqs.len());
@@ -476,6 +611,7 @@ async fn handle_mcp(
                 StatusCode::OK,
                 Json(serde_json::to_value(out).expect("serialise")),
             )
+                .into_response()
         }
     }
 }
@@ -629,5 +765,96 @@ mod tests {
         assert!(r.error.is_none());
         let tools = &r.result.unwrap()["tools"];
         assert_eq!(tools.as_array().unwrap().len(), 3);
+    }
+
+    // ---- FR-MCP-005 Protected Resource Metadata ------------------------------------------
+
+    #[test]
+    fn www_authenticate_challenge_points_at_the_prm() {
+        let c = www_authenticate_challenge();
+        assert!(c.starts_with("Bearer "));
+        assert!(c.contains("resource_metadata=\""));
+        assert!(c.contains("/.well-known/oauth-protected-resource"));
+    }
+
+    #[tokio::test]
+    async fn prm_aggregate_is_public_json_with_caching_headers() {
+        use tower::ServiceExt;
+        let res = build_router(state_with_tools(0))
+            .oneshot(
+                axum::http::Request::get("/.well-known/oauth-protected-resource")
+                    .body(axum::body::Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::OK);
+        assert_eq!(
+            res.headers()["content-type"].to_str().unwrap(),
+            "application/json; charset=utf-8"
+        );
+        assert_eq!(res.headers()["cache-control"].to_str().unwrap(), "max-age=3600");
+        assert!(res.headers().contains_key("etag"));
+        assert!(res.headers().contains_key("x-robots-tag"));
+        assert_eq!(res.headers()["access-control-allow-origin"].to_str().unwrap(), "*");
+    }
+
+    #[tokio::test]
+    async fn prm_etag_revalidation_returns_304() {
+        use tower::ServiceExt;
+        let state = state_with_tools(0);
+        let first = build_router(state.clone())
+            .oneshot(
+                axum::http::Request::get("/.well-known/oauth-protected-resource")
+                    .body(axum::body::Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        let etag = first.headers()["etag"].to_str().unwrap().to_owned();
+        let second = build_router(state)
+            .oneshot(
+                axum::http::Request::get("/.well-known/oauth-protected-resource")
+                    .header("if-none-match", &etag)
+                    .body(axum::body::Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(second.status(), StatusCode::NOT_MODIFIED);
+    }
+
+    #[tokio::test]
+    async fn prm_per_module_known_ok_unknown_404() {
+        use tower::ServiceExt;
+        let state = state_with_tools(0);
+        state.registry.register(
+            "cyberos.projects.read_board".into(),
+            "t".into(),
+            json!({"type":"object"}),
+            crate::annotations::ToolAnnotations::read_only_idempotent("t"),
+            "projects".into(),
+            "http://localhost/projects".into(),
+            vec!["projects.read".into()],
+        );
+        let known = build_router(state.clone())
+            .oneshot(
+                axum::http::Request::get("/.well-known/oauth-protected-resource/cyberos.projects")
+                    .body(axum::body::Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(known.status(), StatusCode::OK);
+
+        let unknown = build_router(state)
+            .oneshot(
+                axum::http::Request::get("/.well-known/oauth-protected-resource/cyberos.bogus")
+                    .body(axum::body::Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(unknown.status(), StatusCode::NOT_FOUND);
     }
 }

@@ -63,3 +63,10 @@ pub async fn client_registered(pool: &PgPool, tenant: Uuid, subject: Uuid, clien
     emit(pool, tenant, subject, "mcp.oauth_client_registered",
          json!({ "sev": 2, "client_id": client_id, "client_type": client_type })).await;
 }
+
+/// `mcp.prm_unknown_module_requested` (sev-3) - FR-MCP-005 Protected Resource Metadata was requested
+/// for a module not in the registry (client misconfiguration or a scanner probing module namespaces).
+pub async fn prm_unknown_module_requested(pool: &PgPool, module: &str) {
+    emit(pool, Uuid::nil(), Uuid::nil(), "mcp.prm_unknown_module_requested",
+         json!({ "sev": 3, "module": module })).await;
+}
