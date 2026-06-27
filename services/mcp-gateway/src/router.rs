@@ -7,6 +7,7 @@ use std::time::SystemTime;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::routing::{get, post};
+use axum::Form;
 use axum::Json;
 use axum::Router;
 use serde::Serialize;
@@ -78,6 +79,10 @@ pub fn build_router(state: AppState) -> Router {
             "/.well-known/oauth-authorization-server",
             get(handle_oauth_metadata),
         )
+        .route("/register", post(handle_oauth_register))
+        .route("/token", post(handle_oauth_token))
+        .route("/revoke", post(handle_oauth_revoke))
+        .route("/introspect", post(handle_oauth_introspect))
         .route("/v1/mcp/register", post(handle_register))
         .route("/v1/mcp/heartbeat", post(handle_heartbeat))
         .route("/v1/mcp/deregister", post(handle_deregister))
@@ -163,6 +168,70 @@ async fn handle_oauth_metadata() -> (StatusCode, Json<Value>) {
         .unwrap_or_else(|| vec!["mcp:tools".to_string()]);
     let doc = crate::oauth::discovery::authorization_server_metadata(&issuer, &jwks_uri, &scopes);
     (StatusCode::OK, Json(doc))
+}
+
+/// Gateway issuer URL for minted tokens (env `MCP_ISSUER_URL`, dev default).
+fn oauth_issuer() -> String {
+    std::env::var("MCP_ISSUER_URL").unwrap_or_else(|_| "http://localhost:8090".to_string())
+}
+
+/// This resource server's canonical URL - the audience tokens are bound to (env `MCP_RESOURCE_URL`,
+/// defaulting to the issuer).
+fn oauth_resource() -> String {
+    std::env::var("MCP_RESOURCE_URL").unwrap_or_else(|_| oauth_issuer())
+}
+
+/// FR-MCP-004 RFC 7591 dynamic client registration. JSON body; 503 when no database is configured.
+async fn handle_oauth_register(
+    State(state): State<AppState>,
+    Json(req): Json<crate::oauth::dcr::RegisterRequest>,
+) -> Result<Json<crate::oauth::dcr::RegisterResponse>, crate::oauth::response::EndpointError> {
+    let pool = state
+        .oauth_pool
+        .as_ref()
+        .ok_or(crate::oauth::response::EndpointError::Unconfigured)?;
+    Ok(Json(crate::oauth::dcr::register(pool, req).await?))
+}
+
+/// FR-MCP-004 token endpoint. Form-encoded body (RFC 6749 §6).
+async fn handle_oauth_token(
+    State(state): State<AppState>,
+    Form(req): Form<crate::oauth::token::TokenRequest>,
+) -> Result<Json<crate::oauth::token::TokenResponse>, crate::oauth::response::EndpointError> {
+    let pool = state
+        .oauth_pool
+        .as_ref()
+        .ok_or(crate::oauth::response::EndpointError::Unconfigured)?;
+    Ok(Json(
+        crate::oauth::token::token(pool, &oauth_issuer(), req).await?,
+    ))
+}
+
+/// FR-MCP-004 token revocation (RFC 7009). Always 200.
+async fn handle_oauth_revoke(
+    State(state): State<AppState>,
+    Form(req): Form<crate::oauth::revoke::RevokeRequest>,
+) -> Result<StatusCode, crate::oauth::response::EndpointError> {
+    let pool = state
+        .oauth_pool
+        .as_ref()
+        .ok_or(crate::oauth::response::EndpointError::Unconfigured)?;
+    crate::oauth::revoke::revoke(pool, req).await?;
+    Ok(StatusCode::OK)
+}
+
+/// FR-MCP-004 token introspection (RFC 7662).
+async fn handle_oauth_introspect(
+    State(state): State<AppState>,
+    Form(req): Form<crate::oauth::introspect::IntrospectRequest>,
+) -> Result<Json<Value>, crate::oauth::response::EndpointError> {
+    let pool = state
+        .oauth_pool
+        .as_ref()
+        .ok_or(crate::oauth::response::EndpointError::Unconfigured)?;
+    Ok(Json(
+        crate::oauth::introspect::introspect(pool, &oauth_issuer(), &oauth_resource(), req).await?,
+    ))
 }
 
 /// FR-MCP-002 control-plane: a module heartbeats to stay healthy. Body: `{"module": "..."}`.
