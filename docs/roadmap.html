@@ -178,6 +178,14 @@
     <code>pgvector/pgvector:pg16</code> and any managed Postgres. Go-live (docker-validate <code>deploy/vps/</code>
     compose + Caddyfile, the one DB-role-grant hardening, rotate any in-tree secrets) is the separate next phase.</p>
 
+  <p class="note">Product surface (2026-06-29): the P0 modules are backend services with no GUI of their own.
+    The operator UI is one unified CyberOS admin console (the <code>app</code> module). FR-APP-001/002 shipped
+    the console shell (obs + ai-gateway screens) and the desktop trigger; FR-APP-003..006 (drafted, paired
+    audits PASS) add one read-only panel per engine - AI ops, MCP registry, memory + audit browser, and CUO
+    workflows + GENIE assistant - each a front-end over already-shipped APIs, no new backend. The end-user
+    product (team chat with login, client portal) is CHAT + GENIE + <code>portal</code>; those are scaffolded,
+    not yet stood up (CHAT is a pinned Mattermost fork whose AUTH login bridge is still a stub).</p>
+
   <h2>Beyond P0 - Phase-3 business modules</h2>
   <p class="note">Specified (FRs drafted) but largely unbuilt. Out of scope for the local test milestone;
     listed for the whole picture. Supporting pieces cuo, memory, proj, skill, and the app console / desktop
