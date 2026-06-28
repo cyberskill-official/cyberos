@@ -43,6 +43,9 @@ pub mod router;
 pub mod tasks;
 pub mod tasks_pg;
 
+#[cfg(test)]
+mod db_slice_test;
+
 /// Banner emitted by the binary on startup.
 pub const SERVICE_BANNER: &str = concat!(
     "cyberos-mcp-gateway v",

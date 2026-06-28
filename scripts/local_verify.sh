@@ -5,9 +5,9 @@
 # Usage:  bash scripts/local_verify.sh        (from anywhere in the repo)
 # Exit:   0 = all green, N = number of failed steps (details above the summary).
 #
-# Note: this runs the in-memory MCP unit suite (143 tests). The MCP store-of-record DB path (the DB slice)
-# has no automated integration test yet; exercise it manually per the "two local modes" section of
-# docs/deploy/local-dev-and-testing.md (MCP_DATABASE_URL + MCP_REQUIRE_AUTH=1 + MCP_KMS_KEY + a token).
+# Note: the mcp-gateway suite runs with --include-ignored, so it now covers BOTH the in-memory MCP unit
+# tests AND the DB-slice store-of-record integration tests (src/db_slice_test.rs: elicitation + task
+# persistence, KMS sealing at rest, caller-scoping, idempotency, restart-resume) against live Postgres.
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -31,12 +31,20 @@ $DC exec -T postgres psql -U cyberos -d cyberos -tAc \
 echo
 echo "== Step 2: apply migrations (auth -> mcp-gateway -> memory -> ai-gateway -> email -> proj) =="
 # mcp-gateway right after auth: its 0013-0017 reference auth's tenants/subjects/cyberos_app/signing keys.
+# Re-runnable: this loop is raw psql with no applied-migration ledger (unlike `sqlx migrate run` in
+# prod), so on a second pass against an already-migrated volume every CREATE errors "already exists".
+# That is not a failure - the schema is present. So: rc==0 -> ok; rc!=0 but stderr is only
+# "already exists" -> skip (already applied); any other error -> a real FAIL.
 for crate in auth mcp-gateway memory ai-gateway email proj; do
   for f in $(ls "$crate"/migrations/*.sql 2>/dev/null | sort); do
-    if $DC exec -T postgres psql -U cyberos -d cyberos -v ON_ERROR_STOP=1 -q -f - < "$f" >/dev/null; then
+    err=$($DC exec -T postgres psql -U cyberos -d cyberos -v ON_ERROR_STOP=1 -q -f - < "$f" 2>&1 1>/dev/null)
+    rc=$?
+    if [ "$rc" -eq 0 ]; then
       echo "  ok   $f"
+    elif printf '%s\n' "$err" | grep -qi "already exists"; then
+      echo "  skip $f (already applied)"
     else
-      echo "  FAIL $f"; fails=$((fails + 1))
+      echo "  FAIL $f"; printf '%s\n' "$err" | sed 's/^/        /'; fails=$((fails + 1))
     fi
   done
 done
@@ -64,6 +72,8 @@ done
 echo
 if [ "$fails" -eq 0 ]; then
   echo "LOCAL VERIFY GREEN - infra + migrations + every module suite passed."
+  echo "('skip (already applied)' on migrations is normal on a re-run; for a from-scratch apply,"
+  echo " reset the volume first: docker compose -f dev/docker-compose.yml down -v && up -d --build.)"
   echo "Next: the Step 6 smoke (bash scripts/mcp_demo.sh) and the /v1/chat tiers in"
   echo "docs/deploy/local-dev-and-testing.md."
 else

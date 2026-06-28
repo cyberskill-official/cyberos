@@ -176,16 +176,23 @@ curl -fsS -X POST http://127.0.0.1:8080/v1/chat -H 'content-type: application/js
 Tier 2 - real inference through the stack (the demo). Start LM Studio (or Ollama) with a model loaded,
 then point the gateway at it. The tenant config `ai-gateway/config/tenants/org-cyberskill.yaml` maps
 `chat.smart` to the local model - edit the model id there if yours differs. The audit path (FR-AI-003)
-shells out to the memory Writer, so make the memory package importable first:
+shells out to the memory Writer, so make the memory package importable first.
+
+Timeout budget for slow local models: the router caps each call at the smallest of the tenant
+`call_timeout_seconds` and two env vars, `AI_GATEWAY_FAILOVER_BUDGET_SECS` and
+`AI_GATEWAY_PROVIDER_TIMEOUT_SECS` (whole seconds, both default 30 to stay safe in production). A large
+on-device reasoning model can take ~50s; left at 30 it returns 502 and LM Studio logs "client
+disconnected". Raise all three together (the tenant file already ships `call_timeout_seconds: 120`):
 
 ```bash
 cd services
 export DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos
 export PYTHONPATH=$PWD/../modules/memory          # or: pip install -e ../modules/memory
 AI_GATEWAY_BIND=127.0.0.1:8080 AI_GATEWAY_CONFIG_DIR=ai-gateway/config/tenants \
+  AI_GATEWAY_FAILOVER_BUDGET_SECS=120 AI_GATEWAY_PROVIDER_TIMEOUT_SECS=120 \
   LMSTUDIO_ENDPOINT=http://127.0.0.1:1234 \
   cargo run -p cyberos-ai-gateway --bin cyberos-gateway
-# the same /v1/chat curl now returns a real completion from your local model.
+# the same /v1/chat curl now returns a real completion from your local model (give a 35B ~50s).
 ```
 
 Tier 3 - MCP tool federation (independent of the gateway above). One command starts the mcp-gateway,

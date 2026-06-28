@@ -35,7 +35,9 @@ use crate::policy::{ProviderKind, TenantPolicy};
 /// Max retry attempts per provider.
 const MAX_RETRIES_PER_PROVIDER: u8 = 3;
 
-/// Total failover budget across all providers + retries.
+/// Total failover budget across all providers + retries (default). Override with the
+/// `AI_GATEWAY_FAILOVER_BUDGET_SECS` env var so a slow local model (e.g. an on-device
+/// reasoning model) can finish; production keeps the 30s default.
 const FAILOVER_BUDGET: Duration = Duration::from_secs(30);
 
 /// Safety cap on attempts vec to catch infinite-loop bugs.
@@ -47,8 +49,19 @@ const RETRY_DELAYS_MS: &[u32] = &[200, 800];
 /// Jitter factor (±20%).
 const JITTER_FACTOR: f64 = 0.20;
 
-/// Default per-provider timeout.
+/// Default per-provider timeout. Override with `AI_GATEWAY_PROVIDER_TIMEOUT_SECS`.
 const PROVIDER_DEFAULT_TIMEOUT: Duration = Duration::from_secs(30);
+
+/// Read a whole-seconds duration from `key`, falling back to `default` when the var is
+/// unset or unparseable. Lets an operator raise the local-model budget without a recompile;
+/// production keeps the 30s defaults above.
+fn env_duration_secs(key: &str, default: Duration) -> Duration {
+    std::env::var(key)
+        .ok()
+        .and_then(|v| v.trim().parse::<u64>().ok())
+        .map(Duration::from_secs)
+        .unwrap_or(default)
+}
 
 // ─── Metrics ──────────────────────────────────────────────────────────────────
 
@@ -156,7 +169,9 @@ pub async fn call_provider(
     policy: &TenantPolicy,
 ) -> Result<ProviderResponse, RouterError> {
     let started = Instant::now();
-    let failover_deadline = started + FAILOVER_BUDGET;
+    let failover_budget = env_duration_secs("AI_GATEWAY_FAILOVER_BUDGET_SECS", FAILOVER_BUDGET);
+    let provider_timeout = env_duration_secs("AI_GATEWAY_PROVIDER_TIMEOUT_SECS", PROVIDER_DEFAULT_TIMEOUT);
+    let failover_deadline = started + failover_budget;
     let effective_deadline = deadline.min(failover_deadline);
 
     let chain = failover::build_provider_chain(resolved, policy, &req.alias);
@@ -200,7 +215,7 @@ pub async fn call_provider(
 
             let remaining = effective_deadline
                 .duration_since(Instant::now())
-                .min(PROVIDER_DEFAULT_TIMEOUT);
+                .min(provider_timeout);
             let call_started = Instant::now();
 
             // §1 #6: Propagate deadline via tokio::time::timeout.
