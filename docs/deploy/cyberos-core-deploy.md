@@ -10,15 +10,15 @@ notes before you run anything.
 Production is a Docker Compose stack on a VPS, with Caddy terminating TLS in front. The shape is
 declared by `deploy/vps/.env.local`:
 
-- One Postgres (Postgres 16 + Apache AGE + pgvector, built from `services/dev/Dockerfile.postgres` since
-  the base `apache/age` image lacks pgvector) holding a separate database per service: `AUTH_DB`,
+- One Postgres (Postgres 16 + pgvector, the official `pgvector/pgvector:pg16` image via
+  `services/dev/Dockerfile.postgres`) holding a separate database per service: `AUTH_DB`,
   `MEMORY_DB`, `PROJ_DB`, `CHAT_POSTGRES_DB`. Redis alongside it.
 - Caddy reverse proxy and TLS: `CYBEROS_CADDY_SITE`, `CYBEROS_HTTP_BIND`, `CYBEROS_HTTPS_BIND`.
 - Image-tag pinning: `CYBEROS_IMAGE_TAG`, `CYBEROS_POSTGRES_IMAGE_TAG`, `CYBEROS_PGVECTOR_VERSION`,
   `CYBEROS_RUST_VERSION`; chat is pinned separately (`CHAT_IMAGE_TAG`, `CHAT_PINNED_COMMIT`).
 
 Local infra equivalent for testing the steps: `services/dev/docker-compose.yml` boots the same
-Postgres 16 (AGE + pgvector) + Redis on 5432 / 6379, seeded by `services/dev/postgres-init.sql`.
+Postgres 16 (pgvector) + Redis on 5432 / 6379, seeded by `services/dev/postgres-init.sql`.
 
 ### What each core module is, in deploy terms
 
@@ -41,9 +41,9 @@ binary), and CUO is the Python orchestration layer. Treat those two specially.
   login breaks).
 - To build from source rather than pull images: Rust `1.88` (`rustup toolchain install 1.88.0`) and
   the Python env for `modules/cuo`.
-- Postgres 16 with pgvector and Apache AGE. The `apache/age:release_PG16_*` image ships AGE but NOT
-  pgvector, so the dev image is built from `services/dev/Dockerfile.postgres` (apache/age + the
-  `postgresql-16-pgvector` package); pgcrypto, uuid-ossp, vector, and age are then enabled by
+- Postgres 16 with pgvector (Apache AGE removed; the memory graph is the relational l2_edge table). The
+  dev image is the official `pgvector/pgvector:pg16` via `services/dev/Dockerfile.postgres`; pgcrypto,
+  uuid-ossp, and vector are then enabled by
   `services/dev/postgres-init.sql` on first init. In production, mirror this - the base AGE image alone
   will fail the memory layer-2 migration (`VECTOR(1024)` columns). Redis 7.
 

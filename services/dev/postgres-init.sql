@@ -8,9 +8,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Required for the BRAIN module (FR-BRAIN-101 Layer-2 ingest).
 CREATE EXTENSION IF NOT EXISTS vector;        -- pgvector for embeddings
-CREATE EXTENSION IF NOT EXISTS age;           -- Apache AGE for graph queries
-LOAD 'age';
-SET search_path = ag_catalog, "$user", public;
+-- Graph edges live in the relational l2_edge table (traversed via recursive CTEs); no graph extension.
 
 -- A single dev role with broad grants. Production deploys use per-service
 -- least-privilege roles (see services/auth/migrations/0004_rls_roles.sql).

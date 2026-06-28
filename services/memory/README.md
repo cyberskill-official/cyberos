@@ -2,7 +2,7 @@
 
 Implements the **Layer-2 ingest pipeline**, rebuild/reconcile gate, and search/graph projection on top of the personal-memory Layer-1 chain. Spec source: [`docs/feature-requests/memory/FR-MEMORY-101…111`](../../docs/feature-requests/memory/).
 
-Wave 1 is now shipped across the Rust Layer-2 service, the Tauri desktop scaffold, and the pre-existing Python Layer-1 CLI. The Rust service reads Layer 1 only, ingests append-only audit rows into `l2_memory`/`l2_entity`, mirrors graph edges into Apache AGE when available, exposes `/v1/memory/search`, and ships `cyberos-memory-admin rebuild|reconcile` for the FR-MEMORY-102 gate.
+Wave 1 is now shipped across the Rust Layer-2 service, the Tauri desktop scaffold, and the pre-existing Python Layer-1 CLI. The Rust service reads Layer 1 only, ingests append-only audit rows into `l2_memory`/`l2_entity` (with graph edges in the relational `l2_edge` table), exposes `/v1/memory/search`, and ships `cyberos-memory-admin rebuild|reconcile` for the FR-MEMORY-102 gate.
 
 ## Quick start
 
@@ -46,7 +46,6 @@ memory/
 │       ├── chain_anchor.rs         # SHA-256 verifier (working + tested)
 │       ├── entity_extract.rs       # @handle / #slug / [[link]] puller
 │       ├── pgvector.rs             # l2_memory + l2_entity upsert helpers
-│       ├── age.rs                  # Apache AGE graph mirror
 │       └── cursor.rs               # per-tenant cursor (working)
 ├── tests/
     ├── chain_anchor_test.rs        # pure-Rust hashing tests
@@ -67,7 +66,7 @@ memory/
 | `binlog_tail` poll loop | ✓ shipped | deterministic batch polling + append helper for sync imports |
 | `entity_extract` | ✓ shipped | regex extraction for handles, tags, and wikilinks |
 | `pgvector` upsert + embedding | ✓ shipped | degrades gracefully when embedding sidecar is unavailable |
-| `age` graph mirror | ✓ shipped | best-effort AGE mirror; ingest survives AGE absence |
+| `l2_edge` graph edges | relational | entity->entity edges in Postgres; traversed via recursive CTEs (Phase-3 link extraction) |
 | `/v1/memory/search` endpoint | ✓ shipped | lexical + vector recall with RRF-style fusion |
 | `cyberos-memory-admin rebuild|reconcile` | ✓ shipped | FR-MEMORY-102 rebuild gate + sample spot-check |
 | Multi-device sync + sync_class gate | ✓ shipped | Python Layer-1 CLI and sync helpers cover FR-MEMORY-103/106 |

@@ -17,7 +17,7 @@ export DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos
 export REDIS_URL=redis://127.0.0.1:6379
 fails=0
 
-echo "== Step 1: bring up Postgres (AGE + pgvector) and Redis =="
+echo "== Step 1: bring up Postgres (pgvector) and Redis =="
 $DC up -d --build || { echo "compose up failed"; exit 1; }
 echo -n "waiting for postgres"
 for _ in $(seq 1 30); do

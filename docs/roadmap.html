@@ -83,7 +83,7 @@
     <div class="stat"><b>5 / 5</b><span>P0 path modules built</span></div>
     <div class="stat"><b>4 / 5</b><span>audited green at last full bring-up (2026-06-25)</span></div>
     <div class="stat"><b>MCP</b><span>the one delta since: DB slice green local (unit + clippy), 2026-06-28</span></div>
-    <div class="stat"><b>4 steps</b><span>operator steps left to 100% (the 2 audit items are done)</span></div>
+    <div class="stat"><b>local: green</b><span>verified 2026-06-28 - infra + all migrations + every module suite passed</span></div>
   </div>
 
   <h2>P0 critical path</h2>
@@ -103,9 +103,9 @@
       <div class="gates"><span class="pill g-done">built</span><span class="pill g-done">audited</span><span class="pill g-done">local</span></div>
     </div>
     <div class="arrow">&rarr;</div>
-    <div class="node now">
+    <div class="node">
       <div class="nm">MCP</div><div class="role">tool federation door</div>
-      <div class="gates"><span class="pill g-done">built</span><span class="pill g-active">re-audit</span><span class="pill g-active">verify</span></div>
+      <div class="gates"><span class="pill g-done">built</span><span class="pill g-done">audited</span><span class="pill g-done">local</span></div>
     </div>
     <div class="arrow">&rarr;</div>
     <div class="node">
@@ -147,9 +147,9 @@
       <tr>
         <td class="mod">MCP gateway</td>
         <td><span class="pill g-done">yes</span></td>
-        <td><span class="pill g-active">re-audit</span></td>
-        <td><span class="pill g-active">verify</span></td>
-        <td class="rem">All 8 FRs + DB slice built; 143 unit tests + clippy green (2026-06-28) on <code>auto/mcp-db-slice</code>. Needs: merge, apply migrations 0016 + 0017, set <code>MCP_KMS_KEY</code>, run the DB-path integration tests, gate-flip. Deferred (post-P0): worker pool, NATS, sweepers, S3, rate limiting.</td>
+        <td><span class="pill g-done">green</span></td>
+        <td><span class="pill g-done">yes</span></td>
+        <td class="rem">All 8 FRs + DB slice; 143 tests + clippy green; independently audited (four hardenings applied). Migrations 0013-0017 apply cleanly and the suite passes against live local Postgres (verified 2026-06-28). One sliver still untested: a DB-gated store-of-record integration test (set <code>MCP_KMS_KEY</code> + run the OAuth flow to exercise the sealed persist path). Deferred post-P0: worker pool, NATS, sweepers, S3, rate limiting.</td>
       </tr>
       <tr>
         <td class="mod">CHAT</td>
@@ -162,19 +162,21 @@
   </table>
 
   <h2>Gap to 100% (complete + audited + locally deployable)</h2>
-  <p class="note">The P0 code is complete. What stands between here and a clean local test run is the MCP
-    DB slice (the one change since the last full green bring-up on 2026-06-25) plus a fresh end-to-end
-    verification. In order:</p>
+  <p class="note">Local verify is green as of 2026-06-28: <code>bash scripts/local_verify.sh</code> brought up
+    the stack on the stock pgvector image, applied every migration (incl. mcp-gateway 0013-0017), and passed
+    every module suite. What's left:</p>
   <ol class="gap">
-    <li><span class="who">operator</span> Merge <code>auto/mcp-db-slice</code> into main.</li>
-    <li><span class="who">operator</span> Bring up the local stack (<code>services/dev/docker-compose.yml</code>) and apply every migration, including mcp-gateway <code>0013</code>-<code>0017</code> (add mcp-gateway to the migrate loop after auth).</li>
-    <li><span class="who">operator</span> Put a real <code>MCP_KMS_KEY</code> (base64 of 32 bytes) in the local <code>.env</code>; required for the sealed elicitation / task payload path.</li>
-    <li><span class="who">verify</span> Run every module suite (auth with <code>--skip create_subject_p95</code>, memory, email, proj, obs-*, mcp-gateway, ai-gateway) plus the MCP DB-path integration tests, plus the end-to-end chat smoke (step 6 of the local-dev guide).</li>
+    <li><span class="who">operator</span> Merge <code>auto/mcp-db-slice</code> and <code>auto/drop-age</code> into main (git).</li>
+    <li><span class="who">done</span> Bring up the local stack + apply all migrations (incl. mcp-gateway 0013-0017) - green via <code>scripts/local_verify.sh</code>.</li>
+    <li><span class="who">done</span> Run every module suite against live local Postgres + Redis - all green (auth with the p95 skip, memory, email, proj, obs-*, mcp-gateway, ai-gateway, shared crates).</li>
+    <li><span class="who">optional</span> The one untested sliver: set <code>MCP_KMS_KEY</code> + run the OAuth flow to exercise the MCP store-of-record persist path (no automated integration test yet), plus the live chat smoke (<code>mcp_demo.sh</code> + the <code>/v1/chat</code> tiers).</li>
     <li><span class="who">done</span> Independent audit of the DB-slice diff - complete 2026-06-28. Verdict: logic sound. Four hardenings applied and green: gate fail-closed on unresolved caller, caller-scoped confirmation verdict, boot fail-closed without KMS, doc honesty. One go-live item recorded (repo-wide DB role grants, see deploy/vps/README).</li>
     <li><span class="who">done</span> FR status reconcile - applied. obs 001/003/005/006/007/008/009 moved to implementing; mcp left honest (003 + 004 are done-candidates pending the gate run).</li>
   </ol>
-  <p class="note">After these, P0 is 100% complete, audited, and locally test-ready. Go-live (docker-validate
-    <code>deploy/vps/</code> compose + Caddyfile, rotate any in-tree secrets) is the separate next phase.</p>
+  <p class="note">P0 is complete, audited, and now verified running on local. Apache AGE was also dropped
+    (the memory graph is the relational <code>l2_edge</code> table), so the stack runs on stock
+    <code>pgvector/pgvector:pg16</code> and any managed Postgres. Go-live (docker-validate <code>deploy/vps/</code>
+    compose + Caddyfile, the one DB-role-grant hardening, rotate any in-tree secrets) is the separate next phase.</p>
 
   <h2>Beyond P0 - Phase-3 business modules</h2>
   <p class="note">Specified (FRs drafted) but largely unbuilt. Out of scope for the local test milestone;

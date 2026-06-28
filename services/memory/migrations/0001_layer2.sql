@@ -2,11 +2,11 @@
 --
 -- Layer 2 is a READ scale-out of Layer 1 (the append-only chain in BRAIN
 -- Personal). Per DEC-070, Layer 1 is the source of truth; Layer 2 holds
--- materialized projections (pgvector for similarity, Apache AGE for graph)
--- with chain_anchor verification on read.
+-- materialized projections (pgvector for similarity; graph edges in the relational
+-- l2_edge table) with chain_anchor verification on read.
 --
--- This migration creates the projection tables. The pgvector + age
--- extensions are loaded by services/dev/postgres-init.sql at container init.
+-- This migration creates the projection tables. The pgvector extension is loaded
+-- by services/dev/postgres-init.sql at container init.
 
 -- ---------------------------------------------------------------------------
 -- l2_memory — projection of every memory row from Layer 1.
@@ -64,7 +64,7 @@ CREATE INDEX l2_entity_name_idx ON l2_entity USING GIN (to_tsvector('simple', na
 
 -- ---------------------------------------------------------------------------
 -- l2_edge — graph edges between entities (cites | implements | supersedes …).
--- Mirrored into Apache AGE for traversal queries.
+-- Traversed with recursive CTEs (Phase-3 typed link extraction); no graph extension needed.
 -- ---------------------------------------------------------------------------
 CREATE TABLE l2_edge (
     tenant_id   UUID NOT NULL,

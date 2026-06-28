@@ -3,7 +3,7 @@
 //! Implements FR-MEMORY-101 (Layer-2 ingest), FR-MEMORY-102 (rebuild CI gate),
 //! FR-MEMORY-108 (search API). Per DEC-070, Layer 1 (the append-only chain
 //! in the personal memory) is the source of truth — this service maintains
-//! a read scale-out projection in Postgres + pgvector + Apache AGE.
+//! a read scale-out projection in Postgres + pgvector (relational graph edges in l2_edge).
 
 #![forbid(unsafe_code)]
 // `missing_docs` is deferred — see services/auth/src/lib.rs for the rationale.

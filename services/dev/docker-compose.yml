@@ -1,5 +1,5 @@
 # CyberOS — Local dev infrastructure
-# Starts Postgres 16 + pgvector + Apache AGE + Redis on standard ports.
+# Starts Postgres 16 + pgvector + Redis on standard ports.
 # Used by FR-MEMORY-101 (Layer-2 ingest) and FR-AUTH-001..003 (tenant/subject/RLS).
 #
 # Quick start (from this directory):
@@ -10,18 +10,17 @@
 # Connection string for sqlx tooling:
 #   export DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos
 #
-# Postgres ships with pgvector preinstalled. Apache AGE is included via the
-# `apache/age:release_PG16_1.6.0` image (community-maintained). pgcrypto/uuid-ossp
-# are stdlib extensions enabled in `postgres-init.sql`.
+# Postgres is the official `pgvector/pgvector:pg16` image (Postgres 16 + pgvector). pgcrypto/uuid-ossp are
+# stdlib extensions enabled in `postgres-init.sql`. Apache AGE was removed - the memory graph is the
+# relational l2_edge table - so this matches any managed Postgres.
 
 services:
   postgres:
-    # Postgres 16 + Apache AGE (graph) + pgvector (embeddings). The base apache/age image lacks pgvector,
-    # which the memory layer-2 migration needs, so Dockerfile.postgres adds it. See that file for why.
+    # Postgres 16 + pgvector (embeddings), via Dockerfile.postgres (FROM pgvector/pgvector:pg16).
     build:
       context: .
       dockerfile: Dockerfile.postgres
-    image: cyberos/postgres-age-pgvector:pg16
+    image: cyberos/postgres-pgvector:pg16
     container_name: cyberos-postgres
     restart: unless-stopped
     ports:

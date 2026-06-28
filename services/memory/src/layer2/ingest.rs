@@ -11,8 +11,7 @@
 //! is fully rewound — re-running picks up from the unchanged cursor.
 
 use crate::layer2::{
-    age, binlog_tail, chain_anchor, cursor::CursorStore, cursor::PgCursorStore, entity_extract,
-    pgvector,
+    binlog_tail, chain_anchor, cursor::CursorStore, cursor::PgCursorStore, entity_extract, pgvector,
 };
 use cyberos_types::TenantId;
 use sqlx::PgPool;
@@ -110,8 +109,8 @@ pub async fn run_batch(
                     &e.source_path,
                 )
                 .await?;
-                // Best-effort AGE graph mirror — failures don't block ingest.
-                age::mirror_entity(pool, r.tenant_id, &e.kind, &e.name, &e.source_path).await;
+                // The doc->entity MENTIONS relationship is captured by l2_entity (source_path /
+                // source_seq); entity->entity edges (l2_edge) are written by Phase-3 link extraction.
             }
         }
     }

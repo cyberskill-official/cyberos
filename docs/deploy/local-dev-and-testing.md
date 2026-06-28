@@ -7,8 +7,8 @@ current tree. For the VPS go-live procedure see `cyberos-core-deploy.md`; this d
 
 ## What runs where
 
-Local infra is two containers from `services/dev/docker-compose.yml`: one Postgres 16 (Apache AGE +
-pgvector) on `localhost:5432` and one Redis 7 on `localhost:6379`. Credentials are `cyberos` / `cyberos`
+Local infra is two containers from `services/dev/docker-compose.yml`: one Postgres 16 (pgvector, the
+official `pgvector/pgvector:pg16` image) on `localhost:5432` and one Redis 7 on `localhost:6379`. Credentials are `cyberos` / `cyberos`
 / `cyberos`. The Rust services and their test suites connect to those over `DATABASE_URL` and
 `REDIS_URL`.
 
@@ -29,16 +29,16 @@ cd services
 docker compose -f dev/docker-compose.yml up -d --build
 ```
 
-The `--build` matters: the base `apache/age` image does not ship pgvector, which the memory layer-2
-migration needs, so `dev/Dockerfile.postgres` layers pgvector on top. On first boot (a fresh volume)
-`dev/postgres-init.sql` enables pgcrypto, uuid-ossp, vector, and age. Confirm both containers are
-healthy and the extensions are present:
+The image is the official `pgvector/pgvector:pg16` (Postgres 16 + pgvector) via `dev/Dockerfile.postgres`;
+Apache AGE was removed, so a stock pgvector image is all the memory layer-2 schema needs. On first boot
+(a fresh volume) `dev/postgres-init.sql` enables pgcrypto, uuid-ossp, and vector. Confirm both containers
+are healthy and the extensions are present:
 
 ```bash
 docker compose -f dev/docker-compose.yml ps
 docker compose -f dev/docker-compose.yml exec -T postgres \
   psql -U cyberos -d cyberos -tAc "SELECT extname FROM pg_extension ORDER BY 1;"
-# expect: age, pgcrypto, plpgsql, uuid-ossp, vector
+# expect: pgcrypto, plpgsql, uuid-ossp, vector
 ```
 
 ## Step 2 - apply the migrations

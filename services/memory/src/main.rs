@@ -80,13 +80,6 @@ async fn main() -> ExitCode {
         ))
         .with_state(state.clone());
 
-    // Best-effort AGE graph init at boot — the ingest path uses MERGE which
-    // is idempotent, but we ensure the graph exists once so first writes
-    // don't pay the create-graph cost.
-    if let Err(e) = layer2::age::ensure_graph(&state.pg).await {
-        warn!(error = %e, "AGE ensure_graph failed at boot — graph mirror will retry");
-    }
-
     let addr: SocketAddr = std::env::var("MEMORY_LISTEN_ADDR")
         .unwrap_or_else(|_| "0.0.0.0:7800".into())
         .parse()

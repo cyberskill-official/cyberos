@@ -1,11 +1,8 @@
-# CyberOS dev Postgres: Apache AGE (graph) + pgvector (embeddings) on PG16.
+# CyberOS dev Postgres: pgvector (embeddings) on PG16.
 #
-# The community `apache/age:release_PG16_1.6.0` image ships Apache AGE but NOT pgvector, which the memory
-# layer-2 migration (0001_layer2.sql, VECTOR(1024) columns) needs. The image is Debian-based with the
-# PGDG apt repo configured, so we add the prebuilt pgvector package on top. This keeps a single image
-# with both extensions so `docker compose up --build` is reproducible.
-FROM apache/age:release_PG16_1.6.0
-
-RUN apt-get update \
- && apt-get install -y --no-install-recommends postgresql-16-pgvector \
- && rm -rf /var/lib/apt/lists/*
+# Stock Postgres 16 plus pgvector, via the official pgvector/pgvector image. Apache AGE was removed: the
+# memory layer-2 graph is the relational l2_entity / l2_edge tables (traversed with recursive CTEs), so no
+# graph extension is needed. pgcrypto and uuid-ossp ship in the base image's contrib and are enabled by
+# services/dev/postgres-init.sql. This image now matches any managed Postgres (pgvector-only), so local
+# and a managed cloud Postgres run the same schema.
+FROM pgvector/pgvector:pg16
