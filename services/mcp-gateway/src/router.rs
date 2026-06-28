@@ -22,7 +22,7 @@ use crate::federation::registry::ToolRegistry;
 use crate::protocol::errors::{codes, err};
 use crate::protocol::initialize::{build_response_value, InitializeParams};
 use crate::protocol::jsonrpc::{Inbound, Request, Response};
-use crate::protocol::tools_call::{dispatch as call_dispatch, ToolsCallParams};
+use crate::protocol::tools_call::{dispatch as call_dispatch, prepare as call_prepare, ToolsCallParams};
 use crate::protocol::tools_list::{build_response as build_tools_list, ToolsListParams};
 use crate::MCP_PROTOCOL_VERSION;
 
@@ -35,6 +35,12 @@ pub struct AppState {
     /// OAuth endpoints then report unconfigured and the rest of the gateway runs unaffected, so the
     /// dev demo needs no database.
     pub oauth_pool: Option<sqlx::PgPool>,
+    /// FR-MCP-008 in-memory elicitation store (the dev-real analog of the registry; the persistent
+    /// table lands in the DB slice).
+    pub elicitations: Arc<crate::elicitation::ElicitationStore>,
+    /// FR-MCP-007 in-memory task store for long-running tool calls (the persistent table + worker pool
+    /// land in the DB slice).
+    pub tasks: Arc<crate::tasks::TaskStore>,
 }
 
 /// FR-MCP-001 §1 #25 healthz payload.
@@ -96,6 +102,17 @@ pub fn build_router(state: AppState) -> Router {
         .route("/v1/mcp/register", post(handle_register))
         .route("/v1/mcp/heartbeat", post(handle_heartbeat))
         .route("/v1/mcp/deregister", post(handle_deregister))
+        .route("/v1/mcp/elicitations", get(handle_elicitation_poll))
+        .route(
+            "/v1/mcp/elicitations/:id/respond",
+            post(handle_elicitation_respond),
+        )
+        .route(
+            "/v1/mcp/elicitations/:id/cancel",
+            post(handle_elicitation_cancel),
+        )
+        .route("/v1/mcp/tasks/:id", get(handle_task_status))
+        .route("/v1/mcp/tasks/:id/cancel", post(handle_task_cancel))
         .with_state(state)
 }
 
@@ -539,6 +556,135 @@ async fn handle_deregister(
     }
 }
 
+/// FR-MCP-008 caller poll: the pending elicitations awaiting a response.
+async fn handle_elicitation_poll(State(state): State<AppState>) -> (StatusCode, Json<Value>) {
+    (
+        StatusCode::OK,
+        Json(json!({ "elicitations": state.elicitations.pending() })),
+    )
+}
+
+/// FR-MCP-008 caller response. Validates against the elicitation's fixed type schema, transitions it,
+/// and audits best-effort. 200 recorded, 422 on validation failure (with `validation_errors`), 404
+/// unknown, 409 no longer pending, 400 on a malformed id.
+async fn handle_elicitation_respond(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    Json(req): Json<crate::elicitation::ElicitationRespondReq>,
+) -> (StatusCode, Json<Value>) {
+    let Ok(id) = uuid::Uuid::parse_str(&id) else {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(json!({ "error": "invalid_elicitation_id" })),
+        );
+    };
+    match state.elicitations.respond(id, req.response_payload) {
+        crate::elicitation::RespondOutcome::Recorded { confirmed } => {
+            if let Some(pool) = state.oauth_pool.as_ref() {
+                crate::oauth::audit::elicitation_responded(pool, id).await;
+            }
+            (
+                StatusCode::OK,
+                Json(json!({ "status": "responded", "confirmed": confirmed })),
+            )
+        }
+        crate::elicitation::RespondOutcome::AlreadyRecorded { confirmed } => (
+            StatusCode::OK,
+            Json(json!({ "status": "responded", "confirmed": confirmed })),
+        ),
+        crate::elicitation::RespondOutcome::Invalid(errors) => (
+            StatusCode::UNPROCESSABLE_ENTITY,
+            Json(json!({ "validation_errors": errors })),
+        ),
+        crate::elicitation::RespondOutcome::ValidationFailed(errors) => {
+            if let Some(pool) = state.oauth_pool.as_ref() {
+                crate::oauth::audit::elicitation_validation_failed(pool, id).await;
+            }
+            (
+                StatusCode::UNPROCESSABLE_ENTITY,
+                Json(json!({ "status": "validation_failed", "validation_errors": errors })),
+            )
+        }
+        crate::elicitation::RespondOutcome::NotFound => {
+            (StatusCode::NOT_FOUND, Json(json!({ "error": "not_found" })))
+        }
+        crate::elicitation::RespondOutcome::NotPending => (
+            StatusCode::CONFLICT,
+            Json(json!({ "error": "not_pending" })),
+        ),
+    }
+}
+
+/// FR-MCP-008 caller cancellation of a pending elicitation.
+async fn handle_elicitation_cancel(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> (StatusCode, Json<Value>) {
+    let Ok(id) = uuid::Uuid::parse_str(&id) else {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(json!({ "error": "invalid_elicitation_id" })),
+        );
+    };
+    if state.elicitations.cancel(id) {
+        if let Some(pool) = state.oauth_pool.as_ref() {
+            crate::oauth::audit::elicitation_cancelled(pool, id).await;
+        }
+        (StatusCode::OK, Json(json!({ "status": "cancelled" })))
+    } else {
+        (
+            StatusCode::NOT_FOUND,
+            Json(json!({ "error": "not_found_or_not_pending" })),
+        )
+    }
+}
+
+/// FR-MCP-007 task status poll. 200 with the task's status view, or 404 for an unknown handle (or a
+/// malformed id).
+async fn handle_task_status(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> (StatusCode, Json<Value>) {
+    let Ok(id) = uuid::Uuid::parse_str(&id) else {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(json!({ "error": "invalid_task_id" })),
+        );
+    };
+    match state.tasks.get(id) {
+        Some(task) => (StatusCode::OK, Json(task.status_view())),
+        None => (StatusCode::NOT_FOUND, Json(json!({ "error": "not_found" }))),
+    }
+}
+
+/// FR-MCP-007 task cancellation. 200 cancelled, 404 unknown, 409 already terminal, 400 malformed id.
+async fn handle_task_cancel(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> (StatusCode, Json<Value>) {
+    let Ok(id) = uuid::Uuid::parse_str(&id) else {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(json!({ "error": "invalid_task_id" })),
+        );
+    };
+    match state.tasks.cancel(id) {
+        crate::tasks::CancelOutcome::Cancelled => {
+            if let Some(pool) = state.oauth_pool.as_ref() {
+                crate::oauth::audit::task_cancelled(pool, id).await;
+            }
+            (StatusCode::OK, Json(json!({ "status": "cancelled" })))
+        }
+        crate::tasks::CancelOutcome::NotFound => {
+            (StatusCode::NOT_FOUND, Json(json!({ "error": "not_found" })))
+        }
+        crate::tasks::CancelOutcome::AlreadyTerminal => (
+            StatusCode::CONFLICT,
+            Json(json!({ "error": "task_terminal" })),
+        ),
+    }
+}
+
 /// Parse `{"module": "..."}` from a control-plane request body, or return the error response.
 fn parse_module_field(body: &[u8]) -> Result<String, (StatusCode, Json<Value>)> {
     let v: Value = serde_json::from_slice(body).map_err(|e| {
@@ -679,6 +825,52 @@ async fn dispatch_one(state: &AppState, req: Request) -> Response {
                 }
             };
             let caller_scopes = vec!["mcp:tools".to_string()];
+
+            // FR-MCP-006: a destructive tool is held for an elicited confirmation (FR-MCP-008) before
+            // forwarding. Resolve the entry first for its annotations; lookup/scope errors are the same
+            // ones `call_dispatch` would raise. Non-destructive tools fall straight through.
+            let entry = match call_prepare(&state.registry, &params, &caller_scopes) {
+                Ok(e) => e,
+                Err(e) => return Response::error(id, e),
+            };
+            if entry.annotations.destructive_hint {
+                let confirmed = params
+                    .meta
+                    .as_ref()
+                    .and_then(|m| m.confirmation_id.as_deref())
+                    .and_then(|cid| uuid::Uuid::parse_str(cid).ok())
+                    .and_then(|cid| state.elicitations.confirmation_state(cid));
+                match crate::gating::evaluate(true, confirmed) {
+                    crate::gating::ConfirmationOutcome::Declined => {
+                        return Response::success(
+                            id,
+                            serde_json::to_value(crate::gating::user_rejected_result())
+                                .expect("serialise"),
+                        );
+                    }
+                    crate::gating::ConfirmationOutcome::NeedsConfirmation => {
+                        let held = state.elicitations.create_confirmation(
+                            &params.name,
+                            crate::gating::confirmation_prompt(&params.name),
+                        );
+                        if let Some(pool) = state.oauth_pool.as_ref() {
+                            crate::oauth::audit::elicitation_requested(
+                                pool,
+                                held.id,
+                                &params.name,
+                                "confirmation",
+                            )
+                            .await;
+                        }
+                        return Response::success(
+                            id,
+                            serde_json::to_value(crate::gating::held_result(&held))
+                                .expect("serialise"),
+                        );
+                    }
+                    crate::gating::ConfirmationOutcome::Proceed => {}
+                }
+            }
             match call_dispatch(&state.registry, &params, &caller_scopes).await {
                 Ok(r) => Response::success(id, serde_json::to_value(r).expect("serialise")),
                 Err(e) => Response::error(id, e),
@@ -720,6 +912,8 @@ mod tests {
         AppState {
             registry: Arc::new(r),
             oauth_pool: None,
+            elicitations: Arc::new(crate::elicitation::ElicitationStore::new()),
+            tasks: Arc::new(crate::tasks::TaskStore::new()),
         }
     }
 
@@ -856,5 +1050,244 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(unknown.status(), StatusCode::NOT_FOUND);
+    }
+
+    // ---- FR-MCP-008 elicitation HTTP surface ---------------------------------------------
+
+    #[tokio::test]
+    async fn elicitation_poll_respond_validate_and_404() {
+        use tower::ServiceExt;
+        let state = state_with_tools(0);
+
+        // Poll is reachable and empty initially.
+        let empty = build_router(state.clone())
+            .oneshot(
+                axum::http::Request::get("/v1/mcp/elicitations")
+                    .body(axum::body::Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(empty.status(), StatusCode::OK);
+
+        // Responding to an unknown id is a 404.
+        let unknown = build_router(state.clone())
+            .oneshot(
+                axum::http::Request::post(format!(
+                    "/v1/mcp/elicitations/{}/respond",
+                    uuid::Uuid::new_v4()
+                ))
+                .header("content-type", "application/json")
+                .body(axum::body::Body::from(r#"{"response_payload":{"value":"x"}}"#))
+                .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(unknown.status(), StatusCode::NOT_FOUND);
+
+        // A server-created confirmation, approved, records and reads back as confirmed.
+        let e = state
+            .elicitations
+            .create_confirmation("cyberos.kb.bulk_delete", json!({ "title": "ok?" }));
+        let ok = build_router(state.clone())
+            .oneshot(
+                axum::http::Request::post(format!("/v1/mcp/elicitations/{}/respond", e.id))
+                    .header("content-type", "application/json")
+                    .body(axum::body::Body::from(r#"{"response_payload":{"confirmed":true}}"#))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(ok.status(), StatusCode::OK);
+        assert!(state.elicitations.is_confirmed(e.id));
+
+        // A missing required field is a 422.
+        let e2 = state.elicitations.create(
+            "t",
+            crate::elicitation::ElicitationType::StringInput,
+            json!({}),
+            Vec::new(),
+        );
+        let invalid = build_router(state)
+            .oneshot(
+                axum::http::Request::post(format!("/v1/mcp/elicitations/{}/respond", e2.id))
+                    .header("content-type", "application/json")
+                    .body(axum::body::Body::from(r#"{"response_payload":{}}"#))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(invalid.status(), StatusCode::UNPROCESSABLE_ENTITY);
+    }
+
+    // ---- FR-MCP-006 destructive-tool gating ----------------------------------------------
+
+    fn register_gated_tool(
+        state: &AppState,
+        name: &str,
+        annotations: crate::annotations::ToolAnnotations,
+    ) {
+        state.registry.register(
+            name.into(),
+            "t".into(),
+            json!({"type":"object"}),
+            annotations,
+            "kb".into(),
+            "http://127.0.0.1:9/mcp".into(), // refused -> module_unreachable when forwarded
+            vec!["mcp:tools".into()],
+        );
+    }
+
+    fn tools_call_req(params: Value) -> Request {
+        Request {
+            jsonrpc: "2.0".into(),
+            id: Some(json!(1)),
+            method: "tools/call".into(),
+            params: Some(params),
+        }
+    }
+
+    #[tokio::test]
+    async fn read_only_tool_forwards_through_the_gate() {
+        let state = state_with_tools(0);
+        register_gated_tool(
+            &state,
+            "cyberos.kb.search",
+            crate::annotations::ToolAnnotations::read_only_idempotent("Search"),
+        );
+        let r = dispatch_one(
+            &state,
+            tools_call_req(json!({ "name": "cyberos.kb.search", "arguments": {} })),
+        )
+        .await;
+        // Not held: it forwards and the (refused) module is unreachable.
+        assert_eq!(r.error.unwrap().code, codes::MODULE_UNREACHABLE);
+    }
+
+    #[tokio::test]
+    async fn destructive_tool_without_confirmation_is_held() {
+        let state = state_with_tools(0);
+        register_gated_tool(
+            &state,
+            "cyberos.kb.bulk_delete",
+            crate::annotations::ToolAnnotations::destructive("Bulk delete"),
+        );
+        let r = dispatch_one(
+            &state,
+            tools_call_req(json!({ "name": "cyberos.kb.bulk_delete", "arguments": {} })),
+        )
+        .await;
+        assert!(r.error.is_none(), "held is a success result, not an error");
+        assert_eq!(
+            r.result.unwrap()["structuredContent"]["elicitation_required"],
+            true
+        );
+        assert_eq!(state.elicitations.pending().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn destructive_tool_with_confirmation_forwards() {
+        let state = state_with_tools(0);
+        register_gated_tool(
+            &state,
+            "cyberos.kb.bulk_delete",
+            crate::annotations::ToolAnnotations::destructive("Bulk delete"),
+        );
+        let e = state
+            .elicitations
+            .create_confirmation("cyberos.kb.bulk_delete", json!({}));
+        state.elicitations.respond(e.id, json!({ "confirmed": true }));
+        let r = dispatch_one(
+            &state,
+            tools_call_req(json!({
+                "name": "cyberos.kb.bulk_delete",
+                "arguments": {},
+                "_meta": { "confirmation_id": e.id.to_string() }
+            })),
+        )
+        .await;
+        // Confirmed: it forwards, and the (refused) module is unreachable.
+        assert_eq!(r.error.unwrap().code, codes::MODULE_UNREACHABLE);
+    }
+
+    #[tokio::test]
+    async fn destructive_tool_declined_aborts_cleanly() {
+        let state = state_with_tools(0);
+        register_gated_tool(
+            &state,
+            "cyberos.kb.bulk_delete",
+            crate::annotations::ToolAnnotations::destructive("Bulk delete"),
+        );
+        let e = state
+            .elicitations
+            .create_confirmation("cyberos.kb.bulk_delete", json!({}));
+        state.elicitations.respond(e.id, json!({ "confirmed": false }));
+        let r = dispatch_one(
+            &state,
+            tools_call_req(json!({
+                "name": "cyberos.kb.bulk_delete",
+                "arguments": {},
+                "_meta": { "confirmation_id": e.id.to_string() }
+            })),
+        )
+        .await;
+        assert!(r.error.is_none(), "declined returns an in-band tool error result");
+        assert_eq!(r.result.unwrap()["structuredContent"]["user_rejected"], true);
+    }
+
+    // ---- FR-MCP-007 tasks HTTP surface ---------------------------------------------------
+
+    #[tokio::test]
+    async fn task_status_and_cancel_over_http() {
+        use tower::ServiceExt;
+        let state = state_with_tools(0);
+        let t = state.tasks.start("cyberos.kb.reindex");
+
+        // Status of a running task is reachable.
+        let running = build_router(state.clone())
+            .oneshot(
+                axum::http::Request::get(format!("/v1/mcp/tasks/{}", t.id))
+                    .body(axum::body::Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(running.status(), StatusCode::OK);
+
+        // An unknown handle is a 404.
+        let unknown = build_router(state.clone())
+            .oneshot(
+                axum::http::Request::get(format!("/v1/mcp/tasks/{}", uuid::Uuid::new_v4()))
+                    .body(axum::body::Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(unknown.status(), StatusCode::NOT_FOUND);
+
+        // Cancel transitions the task; a second cancel is a 409.
+        let cancelled = build_router(state.clone())
+            .oneshot(
+                axum::http::Request::post(format!("/v1/mcp/tasks/{}/cancel", t.id))
+                    .body(axum::body::Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(cancelled.status(), StatusCode::OK);
+        assert_eq!(
+            state.tasks.get(t.id).unwrap().status,
+            crate::tasks::TaskStatus::Cancelled
+        );
+
+        let again = build_router(state)
+            .oneshot(
+                axum::http::Request::post(format!("/v1/mcp/tasks/{}/cancel", t.id))
+                    .body(axum::body::Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(again.status(), StatusCode::CONFLICT);
     }
 }

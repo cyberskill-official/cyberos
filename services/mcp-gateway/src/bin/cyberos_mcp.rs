@@ -4,8 +4,10 @@ use std::sync::Arc;
 
 use clap::Parser;
 use cyberos_mcp_gateway::{
+    elicitation::ElicitationStore,
     federation::registry::ToolRegistry,
     router::{build_router, AppState},
+    tasks::TaskStore,
     SERVICE_BANNER,
 };
 
@@ -58,7 +60,12 @@ async fn main() {
         }
     };
 
-    let state = AppState { registry, oauth_pool };
+    let state = AppState {
+        registry,
+        oauth_pool,
+        elicitations: Arc::new(ElicitationStore::new()),
+        tasks: Arc::new(TaskStore::new()),
+    };
     let app = build_router(state);
 
     let listener = tokio::net::TcpListener::bind(&cli.listen)

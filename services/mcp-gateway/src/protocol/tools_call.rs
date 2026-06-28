@@ -28,6 +28,18 @@ pub struct ToolsCallParams {
     /// Arguments object (validated against the tool's `inputSchema` server-side).
     #[serde(default)]
     pub arguments: Value,
+    /// Optional MCP `_meta` envelope. The gateway reads the FR-MCP-006 confirmation reference from it
+    /// when a caller re-invokes a destructive tool after answering its confirmation elicitation.
+    #[serde(rename = "_meta", default, skip_serializing_if = "Option::is_none")]
+    pub meta: Option<ToolCallMeta>,
+}
+
+/// The subset of MCP `_meta` the gateway reads on `tools/call`.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct ToolCallMeta {
+    /// The id of an elicited confirmation (FR-MCP-006), set when re-invoking after confirming.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub confirmation_id: Option<String>,
 }
 
 /// One content block per the spec.
@@ -249,6 +261,7 @@ mod tests {
         ToolsCallParams {
             name: name.into(),
             arguments: serde_json::json!({}),
+            meta: None,
         }
     }
 
