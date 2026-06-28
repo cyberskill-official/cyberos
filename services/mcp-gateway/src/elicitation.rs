@@ -55,6 +55,12 @@ impl ElicitationType {
             ElicitationType::FileUpload => "file_upload",
         }
     }
+
+    /// Parse the snake_case wire label (the Postgres `elicitation_type` enum text) back to a variant.
+    /// Used by the DB-slice store ([`crate::elicitation_pg`]) when reading a persisted row.
+    pub fn from_wire(s: &str) -> Option<ElicitationType> {
+        ElicitationType::ALL.into_iter().find(|t| t.as_str() == s)
+    }
 }
 
 /// The lifecycle of an elicitation - linear, no reverse transitions. [`ElicitationStatus::ALL`] pins 5.
@@ -439,6 +445,14 @@ mod tests {
                 "string_input"
             ]
         );
+    }
+
+    #[test]
+    fn from_wire_round_trips_every_variant_and_rejects_unknown() {
+        for t in ElicitationType::ALL {
+            assert_eq!(ElicitationType::from_wire(t.as_str()), Some(t));
+        }
+        assert_eq!(ElicitationType::from_wire("nope"), None);
     }
 
     #[test]

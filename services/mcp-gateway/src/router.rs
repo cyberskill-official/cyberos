@@ -35,12 +35,16 @@ pub struct AppState {
     /// OAuth endpoints then report unconfigured and the rest of the gateway runs unaffected, so the
     /// dev demo needs no database.
     pub oauth_pool: Option<sqlx::PgPool>,
-    /// FR-MCP-008 in-memory elicitation store (the dev-real analog of the registry; the persistent
-    /// table lands in the DB slice).
+    /// FR-MCP-008 in-memory elicitation store. The no-database fallback (dev/demo); when `oauth_pool`
+    /// and an authenticated caller are present the router uses the [`crate::elicitation_pg`]
+    /// store-of-record against `mcp_elicitations` instead.
     pub elicitations: Arc<crate::elicitation::ElicitationStore>,
     /// FR-MCP-007 in-memory task store for long-running tool calls (the persistent table + worker pool
     /// land in the DB slice).
     pub tasks: Arc<crate::tasks::TaskStore>,
+    /// FR-MCP-007/008 payload sealer for the DB store-of-record (`None` when `MCP_KMS_KEY` is unset, the
+    /// no-database path). The destructive-tool confirmation flow seals caller responses with this.
+    pub kms: Option<Arc<dyn crate::kms::Kms>>,
 }
 
 /// FR-MCP-001 §1 #25 healthz payload.
@@ -143,13 +147,22 @@ async fn handle_register(
     };
 
     if let Err(e) = validate_registration(&req) {
+        let detail = e.message();
+        // FR-MCP-003 DEC-2364: a non-conforming tool ID was rejected at registration (best-effort audit).
+        if let Some(pool) = state.oauth_pool.as_ref() {
+            crate::oauth::audit::skill_name_rejected(pool, &req.module, detail.as_ref()).await;
+        }
         return (
             StatusCode::BAD_REQUEST,
-            Json(json!({ "error": "invalid_registration", "detail": e.message() })),
+            Json(json!({ "error": "invalid_registration", "detail": detail })),
         );
     }
 
     let n = apply_registration(&state.registry, &req);
+    // FR-MCP-003 DEC-2364: the module's tool IDs validated (best-effort audit).
+    if let Some(pool) = state.oauth_pool.as_ref() {
+        crate::oauth::audit::skill_name_validated(pool, &req.module, n).await;
+    }
     let names: Vec<&str> = req.tools.iter().map(|t| t.name.as_str()).collect();
     info!(module = %req.module, endpoint = %req.endpoint, tools = n, "module registered");
     (
@@ -354,11 +367,12 @@ fn require_auth() -> bool {
 
 /// Verify the request's bearer access token against this resource server: signature + issuer + expiry +
 /// exact audience (enforced inside `verify_access_token`) + not-revoked (clauses #23, #24). Returns the
-/// 401 response on any failure, or `Ok(())` to let the request proceed.
+/// 401 response on any failure, or the verified [`McpAccessClaims`](crate::oauth::jwt::McpAccessClaims)
+/// (carrying the caller's tenant + subject) to let the request proceed.
 async fn enforce_oauth(
     state: &AppState,
     headers: &HeaderMap,
-) -> Result<(), axum::response::Response> {
+) -> Result<crate::oauth::jwt::McpAccessClaims, axum::response::Response> {
     // Every 401 carries the FR-MCP-005 `WWW-Authenticate: Bearer ... resource_metadata=...` challenge
     // so a refused client can discover the Protected Resource Metadata and re-authenticate.
     let unauth = |reason: &str| -> axum::response::Response {
@@ -406,7 +420,24 @@ async fn enforce_oauth(
             return Err(unauth("token_revoked"));
         }
     }
-    Ok(())
+    Ok(claims)
+}
+
+/// Parse a verified token's `(tenant_id, subject)` into UUIDs for the DB store-of-record. `None` if
+/// either claim is not a UUID (a malformed token that nonetheless verified - treated as no caller).
+fn caller_ids(claims: &crate::oauth::jwt::McpAccessClaims) -> Option<(uuid::Uuid, uuid::Uuid)> {
+    Some((
+        uuid::Uuid::parse_str(&claims.tenant_id).ok()?,
+        uuid::Uuid::parse_str(&claims.sub).ok()?,
+    ))
+}
+
+/// Whether the elicitation/task store-of-record (DB path) is active: a database is connected and the MCP
+/// surface authenticates callers, so every row has a real `tenant_id`/`subject`. Off in dev (no
+/// `MCP_REQUIRE_AUTH`), where the in-memory stores are used and isolation is moot. Keying create and the
+/// REST reads/mutations on the same flag keeps both stores' rows in one backend.
+fn use_db_store(state: &AppState) -> bool {
+    require_auth() && state.oauth_pool.is_some()
 }
 
 /// FR-MCP-004 RFC 7591 dynamic client registration. JSON body; 503 when no database is configured.
@@ -556,11 +587,72 @@ async fn handle_deregister(
     }
 }
 
-/// FR-MCP-008 caller poll: the pending elicitations awaiting a response.
-async fn handle_elicitation_poll(State(state): State<AppState>) -> (StatusCode, Json<Value>) {
+/// Map a [`RespondOutcome`](crate::elicitation::RespondOutcome) to the HTTP status + body. Shared by the
+/// in-memory and DB-backed respond paths so both answer identically.
+fn respond_outcome_http(outcome: &crate::elicitation::RespondOutcome) -> (StatusCode, Json<Value>) {
+    use crate::elicitation::RespondOutcome::{
+        AlreadyRecorded, Invalid, NotFound, NotPending, Recorded, ValidationFailed,
+    };
+    match outcome {
+        Recorded { confirmed } | AlreadyRecorded { confirmed } => (
+            StatusCode::OK,
+            Json(json!({ "status": "responded", "confirmed": confirmed })),
+        ),
+        Invalid(errors) => (
+            StatusCode::UNPROCESSABLE_ENTITY,
+            Json(json!({ "validation_errors": errors })),
+        ),
+        ValidationFailed(errors) => (
+            StatusCode::UNPROCESSABLE_ENTITY,
+            Json(json!({ "status": "validation_failed", "validation_errors": errors })),
+        ),
+        NotFound => (StatusCode::NOT_FOUND, Json(json!({ "error": "not_found" }))),
+        NotPending => (
+            StatusCode::CONFLICT,
+            Json(json!({ "error": "not_pending" })),
+        ),
+    }
+}
+
+/// FR-MCP-008 caller poll: the pending elicitations awaiting a response. When the store-of-record is
+/// active the caller is authenticated and sees only their own pending elicitations (DEC-1159); in dev the
+/// in-memory store is returned unscoped.
+async fn handle_elicitation_poll(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+) -> (StatusCode, Json<Value>) {
+    let elicitations = if use_db_store(&state) {
+        let claims = match enforce_oauth(&state, &headers).await {
+            Ok(c) => c,
+            Err(_) => {
+                return (
+                    StatusCode::UNAUTHORIZED,
+                    Json(json!({ "error": "unauthorized" })),
+                )
+            }
+        };
+        let (Some(pool), Some((_, subject))) = (state.oauth_pool.as_ref(), caller_ids(&claims)) else {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({ "error": "store_not_ready" })),
+            );
+        };
+        match crate::elicitation_pg::pending(pool, subject).await {
+            Ok(v) => v,
+            Err(e) => {
+                warn!(error = %e, "elicitation poll (db) failed");
+                return (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({ "error": "internal" })),
+                );
+            }
+        }
+    } else {
+        state.elicitations.pending()
+    };
     (
         StatusCode::OK,
-        Json(json!({ "elicitations": state.elicitations.pending() })),
+        Json(json!({ "elicitations": elicitations })),
     )
 }
 
@@ -569,6 +661,7 @@ async fn handle_elicitation_poll(State(state): State<AppState>) -> (StatusCode, 
 /// unknown, 409 no longer pending, 400 on a malformed id.
 async fn handle_elicitation_respond(
     State(state): State<AppState>,
+    headers: HeaderMap,
     Path(id): Path<String>,
     Json(req): Json<crate::elicitation::ElicitationRespondReq>,
 ) -> (StatusCode, Json<Value>) {
@@ -578,46 +671,60 @@ async fn handle_elicitation_respond(
             Json(json!({ "error": "invalid_elicitation_id" })),
         );
     };
-    match state.elicitations.respond(id, req.response_payload) {
-        crate::elicitation::RespondOutcome::Recorded { confirmed } => {
-            if let Some(pool) = state.oauth_pool.as_ref() {
+    // Store-of-record path: authenticate, scope to the caller, seal the payload through the KMS. Dev
+    // path: the in-memory store. Both yield a `RespondOutcome` mapped identically below.
+    let outcome = if use_db_store(&state) {
+        let claims = match enforce_oauth(&state, &headers).await {
+            Ok(c) => c,
+            Err(_) => {
+                return (
+                    StatusCode::UNAUTHORIZED,
+                    Json(json!({ "error": "unauthorized" })),
+                )
+            }
+        };
+        let (Some(pool), Some((_, subject)), Some(kms)) = (
+            state.oauth_pool.as_ref(),
+            caller_ids(&claims),
+            state.kms.as_deref(),
+        ) else {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({ "error": "store_not_ready" })),
+            );
+        };
+        match crate::elicitation_pg::respond(pool, kms, id, subject, req.response_payload).await {
+            Ok(o) => o,
+            Err(e) => {
+                warn!(error = %e, "elicitation respond (db) failed");
+                return (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({ "error": "internal" })),
+                );
+            }
+        }
+    } else {
+        state.elicitations.respond(id, req.response_payload)
+    };
+    // Best-effort audit (pool-gated), same kinds as before, for whichever backend produced the outcome.
+    if let Some(pool) = state.oauth_pool.as_ref() {
+        match &outcome {
+            crate::elicitation::RespondOutcome::Recorded { .. } => {
                 crate::oauth::audit::elicitation_responded(pool, id).await;
             }
-            (
-                StatusCode::OK,
-                Json(json!({ "status": "responded", "confirmed": confirmed })),
-            )
-        }
-        crate::elicitation::RespondOutcome::AlreadyRecorded { confirmed } => (
-            StatusCode::OK,
-            Json(json!({ "status": "responded", "confirmed": confirmed })),
-        ),
-        crate::elicitation::RespondOutcome::Invalid(errors) => (
-            StatusCode::UNPROCESSABLE_ENTITY,
-            Json(json!({ "validation_errors": errors })),
-        ),
-        crate::elicitation::RespondOutcome::ValidationFailed(errors) => {
-            if let Some(pool) = state.oauth_pool.as_ref() {
+            crate::elicitation::RespondOutcome::ValidationFailed(_) => {
                 crate::oauth::audit::elicitation_validation_failed(pool, id).await;
             }
-            (
-                StatusCode::UNPROCESSABLE_ENTITY,
-                Json(json!({ "status": "validation_failed", "validation_errors": errors })),
-            )
+            _ => {}
         }
-        crate::elicitation::RespondOutcome::NotFound => {
-            (StatusCode::NOT_FOUND, Json(json!({ "error": "not_found" })))
-        }
-        crate::elicitation::RespondOutcome::NotPending => (
-            StatusCode::CONFLICT,
-            Json(json!({ "error": "not_pending" })),
-        ),
     }
+    respond_outcome_http(&outcome)
 }
 
-/// FR-MCP-008 caller cancellation of a pending elicitation.
+/// FR-MCP-008 caller cancellation of a pending elicitation. Caller-scoped on the store-of-record path.
 async fn handle_elicitation_cancel(
     State(state): State<AppState>,
+    headers: HeaderMap,
     Path(id): Path<String>,
 ) -> (StatusCode, Json<Value>) {
     let Ok(id) = uuid::Uuid::parse_str(&id) else {
@@ -626,7 +733,36 @@ async fn handle_elicitation_cancel(
             Json(json!({ "error": "invalid_elicitation_id" })),
         );
     };
-    if state.elicitations.cancel(id) {
+    let cancelled = if use_db_store(&state) {
+        let claims = match enforce_oauth(&state, &headers).await {
+            Ok(c) => c,
+            Err(_) => {
+                return (
+                    StatusCode::UNAUTHORIZED,
+                    Json(json!({ "error": "unauthorized" })),
+                )
+            }
+        };
+        let (Some(pool), Some((_, subject))) = (state.oauth_pool.as_ref(), caller_ids(&claims)) else {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({ "error": "store_not_ready" })),
+            );
+        };
+        match crate::elicitation_pg::cancel(pool, id, subject).await {
+            Ok(b) => b,
+            Err(e) => {
+                warn!(error = %e, "elicitation cancel (db) failed");
+                return (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({ "error": "internal" })),
+                );
+            }
+        }
+    } else {
+        state.elicitations.cancel(id)
+    };
+    if cancelled {
         if let Some(pool) = state.oauth_pool.as_ref() {
             crate::oauth::audit::elicitation_cancelled(pool, id).await;
         }
@@ -640,9 +776,10 @@ async fn handle_elicitation_cancel(
 }
 
 /// FR-MCP-007 task status poll. 200 with the task's status view, or 404 for an unknown handle (or a
-/// malformed id).
+/// malformed id). Caller-scoped on the store-of-record path; the result payload is opened through the KMS.
 async fn handle_task_status(
     State(state): State<AppState>,
+    headers: HeaderMap,
     Path(id): Path<String>,
 ) -> (StatusCode, Json<Value>) {
     let Ok(id) = uuid::Uuid::parse_str(&id) else {
@@ -651,15 +788,50 @@ async fn handle_task_status(
             Json(json!({ "error": "invalid_task_id" })),
         );
     };
-    match state.tasks.get(id) {
-        Some(task) => (StatusCode::OK, Json(task.status_view())),
+    let view: Option<Value> = if use_db_store(&state) {
+        let claims = match enforce_oauth(&state, &headers).await {
+            Ok(c) => c,
+            Err(_) => {
+                return (
+                    StatusCode::UNAUTHORIZED,
+                    Json(json!({ "error": "unauthorized" })),
+                )
+            }
+        };
+        let (Some(pool), Some((_, subject)), Some(kms)) = (
+            state.oauth_pool.as_ref(),
+            caller_ids(&claims),
+            state.kms.as_deref(),
+        ) else {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({ "error": "store_not_ready" })),
+            );
+        };
+        match crate::tasks_pg::status_view(pool, kms, id, subject).await {
+            Ok(v) => v,
+            Err(e) => {
+                warn!(error = %e, "task status (db) failed");
+                return (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({ "error": "internal" })),
+                );
+            }
+        }
+    } else {
+        state.tasks.get(id).map(|t| t.status_view())
+    };
+    match view {
+        Some(v) => (StatusCode::OK, Json(v)),
         None => (StatusCode::NOT_FOUND, Json(json!({ "error": "not_found" }))),
     }
 }
 
 /// FR-MCP-007 task cancellation. 200 cancelled, 404 unknown, 409 already terminal, 400 malformed id.
+/// Caller-scoped on the store-of-record path.
 async fn handle_task_cancel(
     State(state): State<AppState>,
+    headers: HeaderMap,
     Path(id): Path<String>,
 ) -> (StatusCode, Json<Value>) {
     let Ok(id) = uuid::Uuid::parse_str(&id) else {
@@ -668,7 +840,36 @@ async fn handle_task_cancel(
             Json(json!({ "error": "invalid_task_id" })),
         );
     };
-    match state.tasks.cancel(id) {
+    let outcome = if use_db_store(&state) {
+        let claims = match enforce_oauth(&state, &headers).await {
+            Ok(c) => c,
+            Err(_) => {
+                return (
+                    StatusCode::UNAUTHORIZED,
+                    Json(json!({ "error": "unauthorized" })),
+                )
+            }
+        };
+        let (Some(pool), Some((_, subject))) = (state.oauth_pool.as_ref(), caller_ids(&claims)) else {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({ "error": "store_not_ready" })),
+            );
+        };
+        match crate::tasks_pg::cancel(pool, id, subject).await {
+            Ok(o) => o,
+            Err(e) => {
+                warn!(error = %e, "task cancel (db) failed");
+                return (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({ "error": "internal" })),
+                );
+            }
+        }
+    } else {
+        state.tasks.cancel(id)
+    };
+    match outcome {
         crate::tasks::CancelOutcome::Cancelled => {
             if let Some(pool) = state.oauth_pool.as_ref() {
                 crate::oauth::audit::task_cancelled(pool, id).await;
@@ -711,12 +912,16 @@ async fn handle_mcp(
 ) -> axum::response::Response {
     // FR-MCP-004 clauses #23/#24: when enabled, the MCP surface requires a valid audience-bound,
     // unrevoked access token. Off in dev (no token) so the demo keeps working. A 401 here carries the
-    // FR-MCP-005 `WWW-Authenticate` resource-metadata challenge.
-    if require_auth() {
-        if let Err(resp) = enforce_oauth(&state, &headers).await {
-            return resp;
+    // FR-MCP-005 `WWW-Authenticate` resource-metadata challenge. The verified claims carry the caller's
+    // tenant + subject, which the destructive-tool gate writes into the persisted confirmation row.
+    let caller = if require_auth() {
+        match enforce_oauth(&state, &headers).await {
+            Ok(claims) => Some(claims),
+            Err(resp) => return resp,
         }
-    }
+    } else {
+        None
+    };
     let inbound = match Inbound::parse(&body) {
         Ok(i) => i,
         Err(e) => {
@@ -738,7 +943,7 @@ async fn handle_mcp(
                 // Per JSON-RPC 2.0, no response is emitted for notifications.
                 return (StatusCode::OK, Json(json!(null))).into_response();
             }
-            let resp = dispatch_one(&state, req).await;
+            let resp = dispatch_one(&state, req, caller.as_ref()).await;
             (
                 StatusCode::OK,
                 Json(serde_json::to_value(resp).expect("serialise")),
@@ -751,7 +956,7 @@ async fn handle_mcp(
                 if r.is_notification() {
                     continue;
                 }
-                out.push(dispatch_one(&state, r).await);
+                out.push(dispatch_one(&state, r, caller.as_ref()).await);
             }
             (
                 StatusCode::OK,
@@ -762,7 +967,11 @@ async fn handle_mcp(
     }
 }
 
-async fn dispatch_one(state: &AppState, req: Request) -> Response {
+async fn dispatch_one(
+    state: &AppState,
+    req: Request,
+    caller: Option<&crate::oauth::jwt::McpAccessClaims>,
+) -> Response {
     let id = req.id.clone().unwrap_or(Value::Null);
     match req.method.as_str() {
         "initialize" => {
@@ -834,12 +1043,39 @@ async fn dispatch_one(state: &AppState, req: Request) -> Response {
                 Err(e) => return Response::error(id, e),
             };
             if entry.annotations.destructive_hint {
-                let confirmed = params
+                // FR-MCP-008 store-of-record: persist the confirmation to `mcp_elicitations` when a
+                // database + authenticated caller are present (so it survives a restart and is
+                // caller-scoped); otherwise the in-memory store (dev/demo). `pg` is `Copy` (a `&PgPool`
+                // plus two UUIDs), so it is consulted for both the verdict read and the create.
+                let pg: Option<(&sqlx::PgPool, uuid::Uuid, uuid::Uuid)> = if use_db_store(state) {
+                    match (state.oauth_pool.as_ref(), caller.and_then(caller_ids)) {
+                        (Some(pool), Some((tenant, subject))) => Some((pool, tenant, subject)),
+                        _ => None,
+                    }
+                } else {
+                    None
+                };
+                // Fail closed: under the store-of-record the confirmation must be persisted, so an
+                // authenticated caller whose tenant/subject did not resolve is an internal error, never a
+                // silent drop to the in-memory store (which the respond/cancel handlers would not consult).
+                if use_db_store(state) && pg.is_none() {
+                    warn!("destructive tools/call under store-of-record with unresolved caller ids; failing closed");
+                    return Response::error(id, err(codes::INTERNAL_ERROR, "caller_unresolved"));
+                }
+                let cid = params
                     .meta
                     .as_ref()
                     .and_then(|m| m.confirmation_id.as_deref())
-                    .and_then(|cid| uuid::Uuid::parse_str(cid).ok())
-                    .and_then(|cid| state.elicitations.confirmation_state(cid));
+                    .and_then(|c| uuid::Uuid::parse_str(c).ok());
+                let confirmed = match pg {
+                    Some((pool, _, subject)) => match cid {
+                        Some(c) => crate::elicitation_pg::confirmation_state(pool, c, subject)
+                            .await
+                            .unwrap_or(None),
+                        None => None,
+                    },
+                    None => cid.and_then(|c| state.elicitations.confirmation_state(c)),
+                };
                 match crate::gating::evaluate(true, confirmed) {
                     crate::gating::ConfirmationOutcome::Declined => {
                         return Response::success(
@@ -849,10 +1085,47 @@ async fn dispatch_one(state: &AppState, req: Request) -> Response {
                         );
                     }
                     crate::gating::ConfirmationOutcome::NeedsConfirmation => {
-                        let held = state.elicitations.create_confirmation(
-                            &params.name,
-                            crate::gating::confirmation_prompt(&params.name),
-                        );
+                        let prompt = crate::gating::confirmation_prompt(&params.name);
+                        if let Some((pool, tenant, subject)) = pg {
+                            match crate::elicitation_pg::create_confirmation(
+                                pool,
+                                tenant,
+                                subject,
+                                &params.name,
+                                prompt.clone(),
+                            )
+                            .await
+                            {
+                                Ok(eid) => {
+                                    crate::oauth::audit::elicitation_requested(
+                                        pool,
+                                        eid,
+                                        &params.name,
+                                        "confirmation",
+                                    )
+                                    .await;
+                                    return Response::success(
+                                        id,
+                                        serde_json::to_value(crate::gating::held_result_parts(
+                                            eid,
+                                            &params.name,
+                                            &prompt,
+                                        ))
+                                        .expect("serialise"),
+                                    );
+                                }
+                                Err(e) => {
+                                    // Fail closed: a destructive call is never forwarded if its
+                                    // confirmation could not be persisted.
+                                    warn!(error = %e, "elicitation persist failed");
+                                    return Response::error(
+                                        id,
+                                        err(codes::INTERNAL_ERROR, "elicitation_persist_failed"),
+                                    );
+                                }
+                            }
+                        }
+                        let held = state.elicitations.create_confirmation(&params.name, prompt);
                         if let Some(pool) = state.oauth_pool.as_ref() {
                             crate::oauth::audit::elicitation_requested(
                                 pool,
@@ -914,6 +1187,7 @@ mod tests {
             oauth_pool: None,
             elicitations: Arc::new(crate::elicitation::ElicitationStore::new()),
             tasks: Arc::new(crate::tasks::TaskStore::new()),
+            kms: None,
         }
     }
 
@@ -926,7 +1200,7 @@ mod tests {
             method: "no/such/thing".into(),
             params: None,
         };
-        let r = dispatch_one(&state, req).await;
+        let r = dispatch_one(&state, req, None).await;
         assert!(r.error.is_some());
         assert_eq!(r.error.unwrap().code, -32601);
     }
@@ -940,7 +1214,7 @@ mod tests {
             method: "initialize".into(),
             params: Some(json!({"protocolVersion": MCP_PROTOCOL_VERSION})),
         };
-        let r = dispatch_one(&state, req).await;
+        let r = dispatch_one(&state, req, None).await;
         assert!(r.error.is_none(), "got {:?}", r.error);
         let result = r.result.unwrap();
         assert_eq!(result["protocolVersion"], MCP_PROTOCOL_VERSION);
@@ -955,7 +1229,7 @@ mod tests {
             method: "tools/list".into(),
             params: None,
         };
-        let r = dispatch_one(&state, req).await;
+        let r = dispatch_one(&state, req, None).await;
         assert!(r.error.is_none());
         let tools = &r.result.unwrap()["tools"];
         assert_eq!(tools.as_array().unwrap().len(), 3);
@@ -1158,6 +1432,7 @@ mod tests {
         let r = dispatch_one(
             &state,
             tools_call_req(json!({ "name": "cyberos.kb.search", "arguments": {} })),
+            None,
         )
         .await;
         // Not held: it forwards and the (refused) module is unreachable.
@@ -1175,6 +1450,7 @@ mod tests {
         let r = dispatch_one(
             &state,
             tools_call_req(json!({ "name": "cyberos.kb.bulk_delete", "arguments": {} })),
+            None,
         )
         .await;
         assert!(r.error.is_none(), "held is a success result, not an error");
@@ -1204,6 +1480,7 @@ mod tests {
                 "arguments": {},
                 "_meta": { "confirmation_id": e.id.to_string() }
             })),
+            None,
         )
         .await;
         // Confirmed: it forwards, and the (refused) module is unreachable.
@@ -1229,6 +1506,7 @@ mod tests {
                 "arguments": {},
                 "_meta": { "confirmation_id": e.id.to_string() }
             })),
+            None,
         )
         .await;
         assert!(r.error.is_none(), "declined returns an in-band tool error result");

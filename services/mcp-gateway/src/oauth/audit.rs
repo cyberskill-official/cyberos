@@ -135,3 +135,29 @@ pub async fn task_expired(pool: &PgPool, id: Uuid) {
     emit(pool, Uuid::nil(), Uuid::nil(), "mcp.task_expired",
          json!({ "sev": 3, "task_id": id })).await;
 }
+
+// ---- FR-MCP-003 SEP-986 naming (DEC-2364) ------------------------------------------
+
+/// `mcp.skill_name_validated` (sev-3) - a module registered with SEP-986-conforming tool IDs.
+pub async fn skill_name_validated(pool: &PgPool, module: &str, tool_count: usize) {
+    emit(pool, Uuid::nil(), Uuid::nil(), "mcp.skill_name_validated",
+         json!({ "sev": 3, "module": module, "tools": tool_count })).await;
+}
+
+/// `mcp.skill_name_rejected` (sev-2) - a registration was refused for a non-conforming tool ID.
+pub async fn skill_name_rejected(pool: &PgPool, module: &str, detail: &str) {
+    emit(pool, Uuid::nil(), Uuid::nil(), "mcp.skill_name_rejected",
+         json!({ "sev": 2, "module": module, "detail": detail })).await;
+}
+
+/// `mcp.naming_ci_check_passed` (sev-3) - the CI grep gate (scripts/check_sep986_naming.sh) passed.
+/// Emitted when CI can reach the memory chain; until then the gate's exit code is the signal.
+pub async fn naming_ci_check_passed(pool: &PgPool) {
+    emit(pool, Uuid::nil(), Uuid::nil(), "mcp.naming_ci_check_passed", json!({ "sev": 3 })).await;
+}
+
+/// `mcp.naming_ci_check_failed` (sev-2) - the CI grep gate found a non-conforming skill ID.
+pub async fn naming_ci_check_failed(pool: &PgPool, detail: &str) {
+    emit(pool, Uuid::nil(), Uuid::nil(), "mcp.naming_ci_check_failed",
+         json!({ "sev": 2, "detail": detail })).await;
+}

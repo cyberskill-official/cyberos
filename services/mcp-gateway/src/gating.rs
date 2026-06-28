@@ -8,8 +8,9 @@
 //! already noted "requires Elicitation per FR-MCP-006".
 
 use serde_json::{json, Value};
+use uuid::Uuid;
 
-use crate::elicitation::Elicitation;
+use crate::elicitation::{response_schema, Elicitation, ElicitationType};
 use crate::protocol::tools_call::{Content, ToolsCallResult};
 
 /// What a `tools/call` needs before the gateway forwards it.
@@ -46,22 +47,30 @@ pub fn confirmation_prompt(tool_name: &str) -> Value {
     })
 }
 
-/// The `tools/call` result returned when a destructive call is held: not an error, but it carries the
-/// confirmation elicitation the caller must answer (then re-invoke with `_meta.confirmation_id`).
-pub fn held_result(e: &Elicitation) -> ToolsCallResult {
+/// The held-result body from primitives, for the DB store-of-record path where the gate holds only the
+/// new confirmation's id (not an [`Elicitation`]). Confirmation-shaped: type and schema are the fixed
+/// confirmation ones.
+pub fn held_result_parts(elicitation_id: Uuid, tool_id: &str, prompt: &Value) -> ToolsCallResult {
     ToolsCallResult {
         content: vec![Content::Text {
-            text: format!("Confirmation required before running {}.", e.tool_id),
+            text: format!("Confirmation required before running {tool_id}."),
         }],
         is_error: false,
         structured_content: Some(json!({
             "elicitation_required": true,
-            "elicitation_id": e.id,
-            "elicitation_type": e.elicitation_type.as_str(),
-            "prompt": e.prompt,
-            "response_schema": e.response_schema,
+            "elicitation_id": elicitation_id,
+            "elicitation_type": ElicitationType::Confirmation.as_str(),
+            "prompt": prompt,
+            "response_schema": response_schema(ElicitationType::Confirmation, &[]),
         })),
     }
+}
+
+/// The `tools/call` result returned when a destructive call is held: not an error, but it carries the
+/// confirmation elicitation the caller must answer (then re-invoke with `_meta.confirmation_id`). The
+/// in-memory path passes the created [`Elicitation`]; the shape matches [`held_result_parts`].
+pub fn held_result(e: &Elicitation) -> ToolsCallResult {
+    held_result_parts(e.id, &e.tool_id, &e.prompt)
 }
 
 /// The `tools/call` result returned when the caller declined the confirmation: an in-band tool error.
