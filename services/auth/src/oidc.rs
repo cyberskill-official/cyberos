@@ -317,14 +317,26 @@ pub async fn callback(
         )
     })?;
 
-    // Decode the ID token's payload (slice 1: we DO NOT verify the signature
-    // against the IdP JWKS here; slice 2 wires that. Justified because we just
-    // received it over TLS from the discovery-pinned token_endpoint and won't
-    // accept it from any other source.)
-    let id_claims = decode_jwt_payload(&token_resp.id_token).map_err(|e| {
+    // Verify the ID token (FR-AUTH-104, RFC 7517): fetch the IdP JWKS and check
+    // the RS256 signature, the issuer, the audience (our client_id), and expiry
+    // before trusting any claim. The JWKS is fetched fresh per login so a key
+    // rotation at the IdP is picked up without a stale cache.
+    let jwks = fetch_jwks(&discovery.jwks_uri).await.map_err(|e| {
         (
             StatusCode::BAD_GATEWAY,
-            Json(json!({"error": "id_token_decode_failed", "detail": e.to_string()})),
+            Json(json!({"error": "jwks_fetch_failed", "detail": e.to_string()})),
+        )
+    })?;
+    let id_claims = verify_id_token(
+        &token_resp.id_token,
+        &jwks,
+        &discovery.issuer,
+        &idp.client_id,
+    )
+    .map_err(|e| {
+        (
+            StatusCode::UNAUTHORIZED,
+            Json(json!({"error": "id_token_verification_failed", "detail": e.to_string()})),
         )
     })?;
     let idp_sub: String = id_claims
@@ -478,6 +490,8 @@ struct DiscoveryDoc {
     token_endpoint: String,
     #[serde(default)]
     jwks_uri: String,
+    #[serde(default)]
+    issuer: String,
 }
 
 async fn discover(url: &str) -> Result<DiscoveryDoc, Box<dyn std::error::Error + Send + Sync>> {
@@ -531,15 +545,79 @@ async fn exchange_code(
     Ok(resp.json().await?)
 }
 
-/// Decode the JWT payload without signature verification (slice 1). The
-/// payload IS the middle base64-url segment.
-fn decode_jwt_payload(jwt: &str) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
-    let parts: Vec<&str> = jwt.split('.').collect();
-    if parts.len() != 3 {
-        return Err("malformed JWT".into());
+/// The IdP JWKS document (RFC 7517) and one RSA signing key.
+#[derive(Debug, Deserialize)]
+struct Jwks {
+    #[serde(default)]
+    keys: Vec<Jwk>,
+}
+
+#[derive(Debug, Deserialize)]
+struct Jwk {
+    #[serde(default)]
+    kid: String,
+    #[serde(default)]
+    kty: String,
+    /// RSA modulus, base64url (RFC 7518 section 6.3.1.1).
+    #[serde(default)]
+    n: String,
+    /// RSA public exponent, base64url.
+    #[serde(default)]
+    e: String,
+}
+
+/// Fetch the IdP JWKS from its `jwks_uri`. Fetched per login so a key rotation
+/// is handled without a stale cache (a TTL cache is a later optimisation).
+async fn fetch_jwks(jwks_uri: &str) -> Result<Jwks, Box<dyn std::error::Error + Send + Sync>> {
+    if jwks_uri.is_empty() {
+        return Err("discovery document has no jwks_uri".into());
     }
-    let payload = URL_SAFE_NO_PAD.decode(parts[1])?;
-    Ok(serde_json::from_slice(&payload)?)
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(5))
+        .user_agent("cyberos-auth/0.1")
+        .build()?;
+    Ok(client
+        .get(jwks_uri)
+        .send()
+        .await?
+        .error_for_status()?
+        .json()
+        .await?)
+}
+
+/// Verify the IdP ID token: match its `kid` to a JWKS RSA key, check the RS256
+/// signature, and validate `iss` (when the discovery doc names one), `aud` (our
+/// client_id), and `exp`. Returns the verified claims. A forged, mis-audienced,
+/// or expired token errors rather than being trusted.
+fn verify_id_token(
+    id_token: &str,
+    jwks: &Jwks,
+    issuer: &str,
+    audience: &str,
+) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
+    use jsonwebtoken::{decode, decode_header, Algorithm, DecodingKey, Validation};
+
+    let header = decode_header(id_token)?;
+    let kid = header.kid.ok_or("id_token header has no kid")?;
+    let jwk = jwks
+        .keys
+        .iter()
+        .find(|k| k.kid == kid)
+        .ok_or("no JWKS key matches the id_token kid")?;
+    if jwk.kty != "RSA" {
+        return Err(format!("unsupported JWKS key type: {}", jwk.kty).into());
+    }
+    let key = DecodingKey::from_rsa_components(&jwk.n, &jwk.e)?;
+
+    let mut validation = Validation::new(Algorithm::RS256);
+    validation.set_audience(&[audience]);
+    if !issuer.is_empty() {
+        validation.set_issuer(&[issuer]);
+    }
+    validation.validate_exp = true;
+
+    let data = decode::<Value>(id_token, &key, &validation)?;
+    Ok(data.claims)
 }
 
 async fn resolve_subject(
@@ -606,9 +684,15 @@ async fn resolve_subject(
         .execute(&mut *tx)
         .await
         .map_err(internal)?;
+    // SSO subjects have no local password. The subjects_human_has_password
+    // constraint requires a non-null hash for a human, so store a bcrypt hash of
+    // an unguessable random value: a password-grant login then fails closed (no
+    // one knows it), and the IdP stays the only way in.
+    let sso_password_hash = bcrypt::hash(random_b64(32), bcrypt::DEFAULT_COST)
+        .map_err(|e| internal(format!("bcrypt hash failed: {e}")))?;
     let row: (Uuid,) = sqlx::query_as(
-        "INSERT INTO subjects (tenant_id, handle, display_name, email, kind, status, roles)
-              VALUES ($1, $2, $3, $4, 'human', 'active', $5)
+        "INSERT INTO subjects (tenant_id, handle, display_name, email, kind, status, password_hash, roles)
+              VALUES ($1, $2, $3, $4, 'human', 'active', $5, $6)
          ON CONFLICT (tenant_id, handle) DO UPDATE
             SET email = COALESCE(EXCLUDED.email, subjects.email),
                 updated_at = NOW()
@@ -618,6 +702,7 @@ async fn resolve_subject(
     .bind(&handle)
     .bind(idp_email.unwrap_or(""))
     .bind(idp_email)
+    .bind(&sso_password_hash)
     .bind(&idp.default_roles)
     .fetch_one(&mut *tx)
     .await
@@ -717,13 +802,30 @@ mod tests {
     }
 
     #[test]
-    fn decode_jwt_payload_round_trips() {
-        // Hand-crafted: header.{"sub":"abc"}.sig
-        let header = URL_SAFE_NO_PAD.encode(b"{\"alg\":\"none\"}");
-        let payload = URL_SAFE_NO_PAD.encode(b"{\"sub\":\"abc\",\"email\":\"a@b.c\"}");
-        let jwt = format!("{header}.{payload}.sig");
-        let v = decode_jwt_payload(&jwt).unwrap();
-        assert_eq!(v["sub"], "abc");
-        assert_eq!(v["email"], "a@b.c");
+    fn jwks_parses_rsa_keys() {
+        let body = r#"{"keys":[{"kid":"abc","kty":"RSA","alg":"RS256","use":"sig","n":"AQAB","e":"AQAB"}]}"#;
+        let jwks: Jwks = serde_json::from_str(body).unwrap();
+        assert_eq!(jwks.keys.len(), 1);
+        assert_eq!(jwks.keys[0].kid, "abc");
+        assert_eq!(jwks.keys[0].kty, "RSA");
+    }
+
+    #[test]
+    fn verify_id_token_rejects_unknown_kid() {
+        // A well-formed JWT header naming a kid the JWKS does not contain.
+        let header = URL_SAFE_NO_PAD.encode(br#"{"alg":"RS256","kid":"missing"}"#);
+        let payload = URL_SAFE_NO_PAD.encode(br#"{"sub":"x","aud":"client","iss":"https://idp"}"#);
+        let token = format!("{header}.{payload}.sig");
+        let jwks = Jwks { keys: vec![] };
+        let err = verify_id_token(&token, &jwks, "https://idp", "client")
+            .unwrap_err()
+            .to_string();
+        assert!(err.contains("kid"), "expected a kid mismatch error, got: {err}");
+    }
+
+    #[test]
+    fn verify_id_token_rejects_malformed_token() {
+        let jwks = Jwks { keys: vec![] };
+        assert!(verify_id_token("not-a-jwt", &jwks, "iss", "client").is_err());
     }
 }
