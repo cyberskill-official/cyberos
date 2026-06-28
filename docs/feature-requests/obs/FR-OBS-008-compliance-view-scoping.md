@@ -3,7 +3,7 @@ id: FR-OBS-008
 title: "obs-compliance-view: pre-built read-only views (EU AI Act / PDPL / SOC 2 / ISO 27001) over memory audit chain with Ed25519 chain-proof + tenant-scoped + PDF/JSON export"
 module: OBS
 priority: MUST
-status: ready_to_implement
+status: implementing
 verify: T
 phase: P0
 milestone: P0 · slice 3

@@ -3,7 +3,7 @@ id: FR-OBS-003
 title: "Per-service RED metrics (rate/errors/duration) via cyberos-obs-sdk shared crate with macro + CI lint + standardised buckets"
 module: OBS
 priority: MUST
-status: ready_to_implement
+status: implementing
 verify: T
 phase: P0
 milestone: P0 · slice 2

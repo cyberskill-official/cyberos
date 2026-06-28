@@ -3,7 +3,7 @@ id: FR-OBS-005
 title: "W3C TraceContext correlation across logs/metrics/traces/AI-traces — propagate, embed, exemplar, end-to-end CI test"
 module: OBS
 priority: MUST
-status: ready_to_implement
+status: implementing
 verify: T
 phase: P0
 milestone: P0 · slice 2

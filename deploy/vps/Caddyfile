@@ -1,0 +1,42 @@
+# CyberOS reverse proxy + TLS. One site per service, matching the per-service issuer origins in .env
+# (AUTH_JWT_ISSUER=https://auth.<domain>, MCP_ISSUER_URL=https://mcp.<domain>). A subdomain model (not
+# path prefixes) is required so each service owns its origin root - the OAuth discovery documents
+# (/.well-known/oauth-authorization-server, /.well-known/oauth-protected-resource) MUST sit at the root
+# of the MCP origin per RFC 8414 / RFC 9728.
+#
+# Set CYBEROS_BASE_DOMAIN in .env (e.g. cyberos.world). Caddy auto-provisions TLS for real domains.
+# CRITICAL: the AUTH WebAuthn origin/id must equal https://auth.${CYBEROS_BASE_DOMAIN} exactly, or
+# WebAuthn login breaks (deploy doc Step 1).
+
+auth.{$CYBEROS_BASE_DOMAIN} {
+	reverse_proxy auth:7700
+}
+
+memory.{$CYBEROS_BASE_DOMAIN} {
+	reverse_proxy memory:7710
+}
+
+mcp.{$CYBEROS_BASE_DOMAIN} {
+	reverse_proxy mcp-gateway:8090
+}
+
+ai.{$CYBEROS_BASE_DOMAIN} {
+	reverse_proxy ai-gateway:8086
+}
+
+# Optional services (bring up with their compose profiles before exposing these).
+# email.{$CYBEROS_BASE_DOMAIN}  { reverse_proxy email:8085 }
+# chat.{$CYBEROS_BASE_DOMAIN}   { reverse_proxy chat:8065 }   # CONFIRM chat container port
+
+# ---- local / single-host dev fallback ---------------------------------------------------------------
+# For local smoke tests without DNS (CYBEROS_CADDY_SITE=:80, CYBEROS_HTTP_BIND=127.0.0.1:8080), replace
+# the blocks above with one path-routed site. Note: MCP's /.well-known/oauth-* will then live under
+# /mcp/.well-known, which is fine for a local smoke but not for real OAuth clients.
+#
+# {$CYBEROS_CADDY_SITE} {
+# 	handle_path /auth/*   { reverse_proxy auth:7700 }
+# 	handle_path /memory/* { reverse_proxy memory:7710 }
+# 	handle_path /ai/*     { reverse_proxy ai-gateway:8086 }
+# 	handle           /mcp* { reverse_proxy mcp-gateway:8090 }
+# 	respond /healthz 200
+# }

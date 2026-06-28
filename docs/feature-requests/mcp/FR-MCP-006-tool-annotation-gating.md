@@ -3,7 +3,7 @@ id: FR-MCP-006
 title: "MCP tool-annotation gating — destructive / write / external-effect tools require explicit confirm or Elicitation pre-execution per MCP 2025-11-25 spec"
 module: MCP
 priority: MUST
-status: draft
+status: implementing
 verify: T
 phase: P0
 milestone: P0 · slice 2

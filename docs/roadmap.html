@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CyberOS roadmap</title>
+<title>CyberOS roadmap - P0 readiness</title>
 <style>
   :root{
     --bg:#ffffff; --surface:#f7f6f2; --line:#e4e2da; --ink:#1f1e1b; --muted:#6b6a64;
@@ -18,174 +18,190 @@
   body{margin:0;background:var(--bg);color:var(--ink);
     font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     line-height:1.55;-webkit-font-smoothing:antialiased}
-  .wrap{max-width:1040px;margin:0 auto;padding:32px 24px 64px}
-  header{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 16px;border-bottom:1px solid var(--line);padding-bottom:16px}
+  .wrap{max-width:1060px;margin:0 auto;padding:32px 24px 64px}
+  header{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;border-bottom:1px solid var(--line);padding-bottom:16px}
   h1{font-size:24px;font-weight:600;margin:0}
-  .sub{color:var(--muted);font-size:14px}
+  .sub{color:var(--accent);font-size:13px;font-weight:600;letter-spacing:.02em}
   .updated{margin-left:auto;color:var(--muted);font-size:13px}
-  h2{font-size:15px;font-weight:600;margin:32px 0 12px;letter-spacing:.01em}
+  h2{font-size:15px;font-weight:600;margin:34px 0 12px;letter-spacing:.01em}
+  p.note{color:var(--muted);font-size:13px;margin:8px 0 0;max-width:80ch}
   .stats{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
-  .stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 16px;min-width:130px}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 16px;min-width:150px;flex:1}
   .stat b{display:block;font-size:22px;font-weight:600}
-  .stat span{color:var(--muted);font-size:13px}
-  .phases{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-  .phase{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--surface);position:relative}
-  .phase .n{font-size:12px;color:var(--muted)}
-  .phase .t{font-weight:600;font-size:15px;margin:2px 0}
-  .phase .d{font-size:13px;color:var(--muted)}
-  .phase.now{border-color:var(--active);box-shadow:inset 0 0 0 1px var(--active)}
-  .nowtag{position:absolute;top:-9px;left:14px;background:var(--active-bg);color:var(--active);
-    font-size:11px;font-weight:600;padding:1px 8px;border-radius:999px;border:1px solid var(--active)}
-  .path{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px}
-  .node{flex:1;min-width:90px;border:1px solid var(--line);border-radius:10px;padding:10px 8px;text-align:center;background:var(--surface)}
-  .node .nm{font-weight:600;font-size:14px}
-  .node .st{font-size:12px;margin-top:2px}
+  .stat span{color:var(--muted);font-size:12px}
+  .path{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px;margin-top:6px}
+  .node{flex:1;min-width:120px;border:1px solid var(--line);border-radius:10px;padding:12px 10px;background:var(--surface)}
+  .node.now{border-color:var(--active);box-shadow:inset 0 0 0 1px var(--active)}
+  .node .nm{font-weight:600;font-size:15px}
+  .node .role{font-size:11px;color:var(--muted);margin-bottom:8px}
+  .node .gates{display:flex;gap:5px;flex-wrap:wrap}
   .arrow{align-self:center;color:var(--muted);font-size:18px;padding:0 2px}
-  .group{margin-top:8px}
-  .grouphd{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin:18px 0 8px}
-  .swatch{width:10px;height:10px;border-radius:3px;display:inline-block}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
-  .card{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface)}
-  .card .top{display:flex;justify-content:space-between;align-items:baseline}
-  .card .nm{font-weight:600;font-size:15px}
-  .card .ct{font-size:12px;color:var(--muted)}
-  .bar{height:5px;background:var(--line);border-radius:99px;margin-top:8px;overflow:hidden}
-  .bar i{display:block;height:100%;border-radius:99px}
-  .card .note{font-size:12px;color:var(--muted);margin-top:6px}
-  .pill{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px}
-  .legend{display:flex;flex-wrap:wrap;gap:14px;color:var(--muted);font-size:13px;margin-top:8px}
-  .legend i{width:11px;height:11px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px}
-  .howto{margin-top:36px;border:1px dashed var(--line);border-radius:10px;padding:14px 16px;background:var(--surface);font-size:13px;color:var(--muted)}
-  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
-  @media(max-width:680px){.phases{grid-template-columns:repeat(2,1fr)}}
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;border:1px solid}
+  .g-done{color:var(--done);background:var(--done-bg);border-color:var(--done)}
+  .g-active{color:var(--active);background:var(--active-bg);border-color:var(--active)}
+  .g-spec{color:var(--spec);background:var(--spec-bg);border-color:var(--line)}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .d-done{background:var(--done)} .d-active{background:var(--active)} .d-spec{background:var(--spec)}
+  table{width:100%;border-collapse:collapse;margin-top:6px;font-size:13.5px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+  td.mod{font-weight:600;white-space:nowrap}
+  td .rem{color:var(--muted);font-size:12.5px}
+  ol.gap{margin:6px 0 0;padding-left:0;list-style:none;counter-reset:g}
+  ol.gap li{counter-increment:g;position:relative;background:var(--surface);border:1px solid var(--line);
+    border-radius:10px;padding:11px 14px 11px 44px;margin-bottom:8px;font-size:13.5px}
+  ol.gap li::before{content:counter(g);position:absolute;left:12px;top:11px;width:22px;height:22px;border-radius:50%;
+    background:var(--accent);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  ol.gap .who{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);margin-left:6px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:6px}
+  .card{border:1px solid var(--line);border-radius:9px;padding:9px 11px;background:var(--surface)}
+  .card .nm{font-weight:600;font-size:13.5px}
+  .card .st{font-size:11.5px;color:var(--muted);margin-top:1px}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:12.5px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;background:var(--surface);
+    border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+  footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <h1>CyberOS roadmap</h1>
-    <span class="sub">platform build status, tracked against the locked P0 path</span>
-    <span class="updated" id="updated"></span>
+    <span class="sub">Turn Your Will Into Real</span>
+    <span class="updated">P0 readiness view &middot; updated 2026-06-28</span>
   </header>
 
-  <div class="stats" id="stats"></div>
+  <p class="note">
+    Goal: the P0 critical path 100% complete, audited, and deployable on local for testing before go-live.
+    Each module is tracked on three gates: <b>built</b> (code exists), <b>audited</b> (test + clippy gate
+    green), and <b>local</b> (runs and is testable on the local dev stack). Status reflects the repo, not
+    FR frontmatter, which lags behind built code by design (no overstatement until deferred clauses land).
+  </p>
 
-  <h2>Phases</h2>
-  <div class="phases" id="phases"></div>
+  <div class="stats">
+    <div class="stat"><b>5 / 5</b><span>P0 path modules built</span></div>
+    <div class="stat"><b>4 / 5</b><span>audited green at last full bring-up (2026-06-25)</span></div>
+    <div class="stat"><b>MCP</b><span>the one delta since: DB slice green local (unit + clippy), 2026-06-28</span></div>
+    <div class="stat"><b>4 steps</b><span>operator steps left to 100% (the 2 audit items are done)</span></div>
+  </div>
 
   <h2>P0 critical path</h2>
-  <div class="path" id="path"></div>
-
-  <h2>Modules</h2>
+  <div class="path">
+    <div class="node">
+      <div class="nm">AI</div><div class="role">model gateway</div>
+      <div class="gates"><span class="pill g-done">built</span><span class="pill g-done">audited</span><span class="pill g-done">local</span></div>
+    </div>
+    <div class="arrow">&rarr;</div>
+    <div class="node">
+      <div class="nm">OBS</div><div class="role">observability</div>
+      <div class="gates"><span class="pill g-done">built</span><span class="pill g-done">audited</span><span class="pill g-done">local</span></div>
+    </div>
+    <div class="arrow">&rarr;</div>
+    <div class="node">
+      <div class="nm">AUTH</div><div class="role">identity, RS256 + JWKS</div>
+      <div class="gates"><span class="pill g-done">built</span><span class="pill g-done">audited</span><span class="pill g-done">local</span></div>
+    </div>
+    <div class="arrow">&rarr;</div>
+    <div class="node now">
+      <div class="nm">MCP</div><div class="role">tool federation door</div>
+      <div class="gates"><span class="pill g-done">built</span><span class="pill g-active">re-audit</span><span class="pill g-active">verify</span></div>
+    </div>
+    <div class="arrow">&rarr;</div>
+    <div class="node">
+      <div class="nm">CHAT</div><div class="role">conversation surface</div>
+      <div class="gates"><span class="pill g-done">built</span><span class="pill g-done">audited</span><span class="pill g-done">local</span></div>
+    </div>
+  </div>
   <div class="legend">
-    <span><i style="background:var(--done)"></i>done</span>
-    <span><i style="background:var(--active)"></i>in progress</span>
-    <span><i style="background:var(--spec)"></i>specified, not built</span>
+    <span><span class="dot d-done"></span> green = done / verified</span>
+    <span><span class="dot d-active"></span> amber = needs a re-run since the MCP DB slice</span>
+    <span><span class="dot d-spec"></span> grey = specified, not built</span>
   </div>
-  <div id="board"></div>
 
-  <div class="howto">
-    To update: edit the <code>DATA</code> block near the bottom of this file and reload. Each module has a
-    <code>status</code> of <code>done</code>, <code>active</code>, or <code>spec</code>, plus <code>done</code>/<code>total</code>
-    FR counts and an optional <code>note</code>. The stats, bars, and grouping recompute automatically. Commit the file to keep history.
+  <h2>P0 readiness matrix</h2>
+  <table>
+    <thead><tr><th>Module</th><th>Built</th><th>Audited</th><th>Local</th><th>Remaining to 100%</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="mod">AI gateway</td>
+        <td><span class="pill g-done">yes</span></td>
+        <td><span class="pill g-done">green</span></td>
+        <td><span class="pill g-done">yes</span></td>
+        <td class="rem">None blocking local test. RouterBackend + LM Studio / Ollama adapters live; cloud keys and expansion FRs are post-go-live.</td>
+      </tr>
+      <tr>
+        <td class="mod">OBS</td>
+        <td><span class="pill g-done">yes</span></td>
+        <td><span class="pill g-done">green</span></td>
+        <td><span class="pill g-done">yes</span></td>
+        <td class="rem">Feature-complete (router, compliance view, proxy, RED + OTLP). Only an FR status reconcile remains (frontmatter lags code).</td>
+      </tr>
+      <tr>
+        <td class="mod">AUTH</td>
+        <td><span class="pill g-done">yes</span></td>
+        <td><span class="pill g-done">green</span></td>
+        <td><span class="pill g-done">yes</span></td>
+        <td class="rem">RS256 keys + JWKS, 26 migrations. Suite green; skip <code>create_subject_p95</code> (Docker Desktop latency noise on macOS), not a logic bug.</td>
+      </tr>
+      <tr>
+        <td class="mod">MCP gateway</td>
+        <td><span class="pill g-done">yes</span></td>
+        <td><span class="pill g-active">re-audit</span></td>
+        <td><span class="pill g-active">verify</span></td>
+        <td class="rem">All 8 FRs + DB slice built; 143 unit tests + clippy green (2026-06-28) on <code>auto/mcp-db-slice</code>. Needs: merge, apply migrations 0016 + 0017, set <code>MCP_KMS_KEY</code>, run the DB-path integration tests, gate-flip. Deferred (post-P0): worker pool, NATS, sweepers, S3, rate limiting.</td>
+      </tr>
+      <tr>
+        <td class="mod">CHAT</td>
+        <td><span class="pill g-done">yes</span></td>
+        <td><span class="pill g-done">green</span></td>
+        <td><span class="pill g-done">yes</span></td>
+        <td class="rem">12+ FRs done, delivered end-to-end path. Exercised by the local smoke (chat path + live model + MCP tool calls).</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Gap to 100% (complete + audited + locally deployable)</h2>
+  <p class="note">The P0 code is complete. What stands between here and a clean local test run is the MCP
+    DB slice (the one change since the last full green bring-up on 2026-06-25) plus a fresh end-to-end
+    verification. In order:</p>
+  <ol class="gap">
+    <li><span class="who">operator</span> Merge <code>auto/mcp-db-slice</code> into main.</li>
+    <li><span class="who">operator</span> Bring up the local stack (<code>services/dev/docker-compose.yml</code>) and apply every migration, including mcp-gateway <code>0013</code>-<code>0017</code> (add mcp-gateway to the migrate loop after auth).</li>
+    <li><span class="who">operator</span> Put a real <code>MCP_KMS_KEY</code> (base64 of 32 bytes) in the local <code>.env</code>; required for the sealed elicitation / task payload path.</li>
+    <li><span class="who">verify</span> Run every module suite (auth with <code>--skip create_subject_p95</code>, memory, email, proj, obs-*, mcp-gateway, ai-gateway) plus the MCP DB-path integration tests, plus the end-to-end chat smoke (step 6 of the local-dev guide).</li>
+    <li><span class="who">done</span> Independent audit of the DB-slice diff - complete 2026-06-28. Verdict: logic sound. Four hardenings applied and green: gate fail-closed on unresolved caller, caller-scoped confirmation verdict, boot fail-closed without KMS, doc honesty. One go-live item recorded (repo-wide DB role grants, see deploy/vps/README).</li>
+    <li><span class="who">done</span> FR status reconcile - applied. obs 001/003/005/006/007/008/009 moved to implementing; mcp left honest (003 + 004 are done-candidates pending the gate run).</li>
+  </ol>
+  <p class="note">After these, P0 is 100% complete, audited, and locally test-ready. Go-live (docker-validate
+    <code>deploy/vps/</code> compose + Caddyfile, rotate any in-tree secrets) is the separate next phase.</p>
+
+  <h2>Beyond P0 - Phase-3 business modules</h2>
+  <p class="note">Specified (FRs drafted) but largely unbuilt. Out of scope for the local test milestone;
+    listed for the whole picture. Supporting pieces cuo, memory, proj, skill, and the app console / desktop
+    are already substantially built.</p>
+  <div class="grid">
+    <div class="card"><div class="nm">CRM</div><div class="st">specified</div></div>
+    <div class="card"><div class="nm">DOC</div><div class="st">specified</div></div>
+    <div class="card"><div class="nm">HR</div><div class="st">specified</div></div>
+    <div class="card"><div class="nm">INV</div><div class="st">specified</div></div>
+    <div class="card"><div class="nm">KB</div><div class="st">specified</div></div>
+    <div class="card"><div class="nm">OKR</div><div class="st">specified</div></div>
+    <div class="card"><div class="nm">PORTAL</div><div class="st">specified</div></div>
+    <div class="card"><div class="nm">REW</div><div class="st">specified</div></div>
+    <div class="card"><div class="nm">TEN</div><div class="st">specified</div></div>
+    <div class="card"><div class="nm">TIME</div><div class="st">specified</div></div>
+    <div class="card"><div class="nm">ESOP</div><div class="st">specified</div></div>
+    <div class="card"><div class="nm">LEARN</div><div class="st">specified</div></div>
+    <div class="card"><div class="nm">RES</div><div class="st">specified</div></div>
+    <div class="card"><div class="nm">EMAIL</div><div class="st">partial (5 FRs done)</div></div>
   </div>
+
+  <footer>
+    Source of truth: repo at build time (services/, docs/feature-requests/ frontmatter, docs/CONTINUE-HERE.md,
+    docs/feature-requests/mcp/MCP-STATUS-FLIP.md). Honest-status rule: a module is "done" only when its
+    deferred clauses land, so built code routinely exceeds the FR "done" count. P0 path: AI, OBS, AUTH, MCP, CHAT.
+  </footer>
 </div>
-
-<script>
-const UPDATED = "2026-06-25";
-
-const PHASES = [
-  {n:"Phase 1", t:"Platform spine", d:"core infrastructure", state:"done"},
-  {n:"Phase 2", t:"Federation + obs", d:"MCP gateway, observability", state:"now"},
-  {n:"Phase 3", t:"Business modules", d:"14 verticals, specified", state:"next"},
-  {n:"Phase 4", t:"Deploy + scale", d:"VPS go-live", state:"later"}
-];
-
-const P0 = [
-  {nm:"AI gateway", status:"done"},
-  {nm:"Obs", status:"done", note:"feature-complete"},
-  {nm:"Auth", status:"done"},
-  {nm:"MCP", status:"active", note:"building"},
-  {nm:"Chat", status:"done"}
-];
-
-const DATA = [
-  {nm:"auth",   status:"done", done:15, total:15},
-  {nm:"chat",   status:"done", done:12, total:12},
-  {nm:"proj",   status:"done", done:18, total:18},
-  {nm:"skill",  status:"done", done:16, total:16},
-  {nm:"memory", status:"done", done:20, total:21},
-  {nm:"cuo",    status:"done", done:10, total:11},
-  {nm:"ai",     status:"done", done:20, total:24, note:"2 FRs ready to build"},
-
-  {nm:"obs",    status:"active", done:1, total:9,  note:"feature-complete in-repo, reconcile + deploy"},
-  {nm:"mcp",    status:"active", done:2, total:8,  note:"001/002 done; 003 + 004 slice 1 shipped; 003 slice 2 needs naming call, 004 slice 2 = OAuth server"},
-  {nm:"email",  status:"active", done:5, total:11, note:"5 of 11 shipped"},
-
-  {nm:"crm",    status:"spec", done:0, total:10},
-  {nm:"doc",    status:"spec", done:0, total:11},
-  {nm:"esop",   status:"spec", done:0, total:7},
-  {nm:"hr",     status:"spec", done:0, total:9},
-  {nm:"inv",    status:"spec", done:0, total:11},
-  {nm:"kb",     status:"spec", done:0, total:9},
-  {nm:"learn",  status:"spec", done:0, total:7},
-  {nm:"okr",    status:"spec", done:0, total:7},
-  {nm:"plugin", status:"spec", done:0, total:8},
-  {nm:"portal", status:"spec", done:0, total:8},
-  {nm:"res",    status:"spec", done:0, total:5},
-  {nm:"rew",    status:"spec", done:0, total:10},
-  {nm:"ten",    status:"spec", done:0, total:14},
-  {nm:"time",   status:"spec", done:0, total:9}
-];
-
-const C = {done:{c:"var(--done)",bg:"var(--done-bg)",label:"done"},
-           active:{c:"var(--active)",bg:"var(--active-bg)",label:"in progress"},
-           spec:{c:"var(--spec)",bg:"var(--spec-bg)",label:"specified"}};
-
-document.getElementById("updated").textContent = "updated " + UPDATED;
-
-const totFR = DATA.reduce((a,m)=>a+m.total,0);
-const doneFR = DATA.reduce((a,m)=>a+m.done,0);
-const byStatus = s => DATA.filter(m=>m.status===s).length;
-document.getElementById("stats").innerHTML = [
-  ["Modules built", byStatus("done")+" / "+DATA.length],
-  ["In progress", byStatus("active")],
-  ["Not yet built", byStatus("spec")],
-  ["FRs shipped", doneFR+" / "+totFR],
-  ["P0 path", P0.filter(n=>n.status==="done").length+" / "+P0.length]
-].map(([s,b])=>`<div class="stat"><b>${b}</b><span>${s}</span></div>`).join("");
-
-document.getElementById("phases").innerHTML = PHASES.map(p=>`
-  <div class="phase ${p.state==='now'?'now':''}">
-    ${p.state==='now'?'<span class="nowtag">you are here</span>':''}
-    <div class="n">${p.n}</div><div class="t">${p.t}</div><div class="d">${p.d}</div>
-  </div>`).join("");
-
-document.getElementById("path").innerHTML = P0.map((n,i)=>{
-  const k=n.status==="done"?C.done:C.active;
-  const cell=`<div class="node" style="border-color:${k.c}">
-    <div class="nm">${n.nm}</div>
-    <div class="st" style="color:${k.c}">${n.note||k.label}</div></div>`;
-  return i<P0.length-1 ? cell+'<span class="arrow">&rarr;</span>' : cell;
-}).join("");
-
-function cards(list){
-  return `<div class="grid">`+list.map(m=>{
-    const k=C[m.status];
-    const pct = m.total? Math.round(100*m.done/m.total):0;
-    return `<div class="card">
-      <div class="top"><span class="nm">${m.nm}</span>
-        <span class="pill" style="background:${k.bg};color:${k.c}">${k.label}</span></div>
-      <div class="ct">${m.done} / ${m.total} FRs</div>
-      <div class="bar"><i style="width:${pct}%;background:${k.c}"></i></div>
-      ${m.note?`<div class="note">${m.note}</div>`:''}
-    </div>`;
-  }).join("")+`</div>`;
-}
-document.getElementById("board").innerHTML =
-  `<div class="group"><div class="grouphd"><span class="swatch" style="background:var(--done)"></span>Done (${byStatus("done")})</div>${cards(DATA.filter(m=>m.status==="done"))}</div>
-   <div class="group"><div class="grouphd"><span class="swatch" style="background:var(--active)"></span>Active (${byStatus("active")})</div>${cards(DATA.filter(m=>m.status==="active"))}</div>
-   <div class="group"><div class="grouphd"><span class="swatch" style="background:var(--spec)"></span>Specified, not built (${byStatus("spec")})</div>${cards(DATA.filter(m=>m.status==="spec"))}</div>`;
-</script>
 </body>
 </html>

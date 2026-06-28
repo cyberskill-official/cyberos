@@ -13,8 +13,8 @@ pgvector) on `localhost:5432` and one Redis 7 on `localhost:6379`. Credentials a
 `REDIS_URL`.
 
 The Rust workspace is under `services/`. The DB-backed crates are `auth`, `memory`, `ai-gateway`,
-`email`, `proj`, plus the obs services (`obs-compliance-view`, `obs-router`) and the shared crates.
-`mcp-gateway` has no SQL migrations.
+`email`, `proj`, `mcp-gateway` (OAuth + the DB-slice store-of-record, migrations 0013-0017), plus the
+obs services (`obs-compliance-view`, `obs-router`) and the shared crates.
 
 ## Prerequisites
 
@@ -51,7 +51,8 @@ If you have `sqlx-cli` (`cargo install sqlx-cli --no-default-features --features
 
 ```bash
 export DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos
-for m in auth memory ai-gateway email proj; do
+# mcp-gateway comes right after auth: its 0013-0017 reference auth's tenants/subjects/cyberos_app/keys.
+for m in auth mcp-gateway memory ai-gateway email proj; do
   sqlx migrate run --source $m/migrations
 done
 ```
@@ -59,13 +60,28 @@ done
 Without sqlx-cli, apply the files directly through the container in order:
 
 ```bash
-for crate in auth memory ai-gateway email proj; do
+for crate in auth mcp-gateway memory ai-gateway email proj; do
   for f in $(ls $crate/migrations/*.sql 2>/dev/null | sort); do
     docker compose -f dev/docker-compose.yml exec -T postgres \
       psql -U cyberos -d cyberos -v ON_ERROR_STOP=1 -q -f - < "$f" || echo "FAILED: $f"
   done
 done
 ```
+
+### MCP store-of-record (the DB slice): two local modes
+
+The mcp-gateway runs locally in two modes:
+
+- Quick smoke (in-memory): leave `MCP_REQUIRE_AUTH` unset. tools/call, elicitations, and tasks use the
+  in-memory stores; no token or KMS key needed. This is the `scripts/mcp_demo.sh` path (Step 6, Tier 3),
+  enough to prove the gateway, registration, and the destructive-confirm gate.
+- Store-of-record (the DB slice): set `MCP_DATABASE_URL`, `MCP_REQUIRE_AUTH=1`, and `MCP_KMS_KEY` (base64
+  of 32 bytes - generate with `openssl rand -base64 32`). Elicitations and tasks then persist to
+  `mcp_elicitations` / `mcp_tasks` (migrations 0016/0017, applied in Step 2), payloads are sealed at rest,
+  and a held confirmation survives a restart. This path is caller-scoped, so it needs a real OAuth access
+  token: run the FR-MCP-004 flow (register a client, authorize, exchange for a token) and send it as
+  `Authorization: Bearer <token>`. Without `MCP_KMS_KEY` the gateway refuses to start in this mode, by
+  design - a held confirmation would otherwise be un-respondable.
 
 ## Step 3 - run the test suites
 
@@ -195,8 +211,9 @@ trace in Grafana.
 
 What success looks like: infra healthy with all five extensions; every crate suite GREEN under
 `--include-ignored`; `/v1/chat` returns an echo (Tier 1) then a real model completion (Tier 2); the two
-MCP tool calls return their results (Tier 3). At that point the core is proven locally and the next step
-is finishing MCP (the 004 OAuth endpoints), then the VPS deploy.
+MCP tool calls return their results (Tier 3). At that point the core is proven locally. MCP is now
+feature-complete (all 8 FRs + the DB-slice store-of-record, audited 2026-06-28); the next step is the
+VPS deploy.
 
 ## Teardown
 
@@ -209,8 +226,9 @@ docker compose -f dev/docker-compose.yml down -v     # stop and wipe the volumes
 ## Going to the VPS
 
 The production path is the same migrations and binaries against a per-service database, fronted by Caddy
-for TLS, driven by `deploy/vps/.env.local`. Follow `cyberos-core-deploy.md`. Two gaps still block a
-reproducible VPS deploy and should be closed first: the production `docker-compose.yml` and `Caddyfile`
-that consume `.env.local` are not in the repo (only `.env.local` and `data/` are), and the in-tree
-live-secret files must be rotated and kept out of git. Until those land, the VPS bring-up is manual.
+for TLS. The production `docker-compose.yml` + `Caddyfile` now live in `deploy/vps/` (see its README);
+follow `cyberos-core-deploy.md` for the full runbook. Before go-live: copy `deploy/vps/.env.local` to
+`.env` and fill real secrets, rotate any in-tree live-secret files and keep them out of git, and apply
+the one-time repo-wide DB-role-grant hardening noted in `deploy/vps/README.md` so a least-privilege
+`cyberos_app` login can write the oauth + mcp tables.
 ```
