@@ -32,13 +32,16 @@
 
 pub mod annotations;
 pub mod elicitation;
+pub mod elicitation_pg;
 pub mod federation;
 pub mod gating;
+pub mod kms;
 pub mod naming;
 pub mod oauth;
 pub mod protocol;
 pub mod router;
 pub mod tasks;
+pub mod tasks_pg;
 
 /// Banner emitted by the binary on startup.
 pub const SERVICE_BANNER: &str = concat!(

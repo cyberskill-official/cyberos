@@ -3,7 +3,7 @@ id: FR-OBS-007
 title: "obs-router: Alertmanager → CUO obs.triage-alert@1 skill → CHAT (≥0.70 conf) OR PagerDuty + sev-1 always pages + ack-button + audit"
 module: OBS
 priority: MUST
-status: ready_to_implement
+status: implementing
 verify: T
 phase: P0
 milestone: P0 · slice 3

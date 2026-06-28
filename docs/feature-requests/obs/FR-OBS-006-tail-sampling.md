@@ -3,7 +3,7 @@ id: FR-OBS-006
 title: "Tail-based sampling at OTel collector — 100% errors/5xx/slow/flagged + 10% normal + decision_wait + flagged-tenants config"
 module: OBS
 priority: SHOULD
-status: ready_to_implement
+status: implementing
 verify: T
 phase: P0
 milestone: P0 · slice 2

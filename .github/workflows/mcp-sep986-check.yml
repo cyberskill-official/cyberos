@@ -1,23 +1,24 @@
-# mcp-sep986-check.yml — STUB
-#
-# Auto-generated 2026-05-17 from FR build_envelope references.
-# Declared by: FR-MCP-003
-#
-# Implementation team: replace this stub with the real workflow YAML
-# per the spec details in the declaring FR(s) above.
-# Many FRs embed the canonical workflow YAML in their §6 skeleton section.
-
 name: mcp-sep986-check
+
+# FR-MCP-003 slice 3 / DEC-2362 - the SEP-986 skill-ID naming gate as CI. Runs the source-side grep
+# tripwire (scripts/check_sep986_naming.sh) so a non-conforming `cyberos.<module>.<tool>` ID in a real
+# registry module is caught in review, complementing the runtime validator in
+# services/mcp-gateway/src/naming. Pure bash; no toolchain, services, or database.
 
 on:
   pull_request:
     paths:
-      # TODO: per declaring FR
-      - 'services/**'
+      - "modules/**"
+      - "services/**"
+      - "scripts/check_sep986_naming.sh"
+      - ".github/workflows/mcp-sep986-check.yml"
+  push:
+    branches: [main]
 
 jobs:
-  placeholder:
+  sep986:
     runs-on: ubuntu-latest
     steps:
-      - name: TODO — implement per FR(s) FR-MCP-003
-        run: echo 'Stub — see FR specs for canonical workflow YAML'
+      - uses: actions/checkout@v4
+      - name: SEP-986 skill-ID naming gate
+        run: bash scripts/check_sep986_naming.sh

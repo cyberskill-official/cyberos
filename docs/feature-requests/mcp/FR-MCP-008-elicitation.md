@@ -3,7 +3,7 @@ id: FR-MCP-008
 title: "MCP Elicitation — server-initiated structured prompts for mid-call user input (clarifications, confirmations, missing args) with timeout + cancellation"
 module: MCP
 priority: MUST
-status: draft
+status: implementing
 verify: T
 phase: P0
 milestone: P0 · slice 3

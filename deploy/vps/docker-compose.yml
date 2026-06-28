@@ -1,0 +1,229 @@
+# CyberOS production stack (VPS). Consumes deploy/vps/.env (copy .env.local -> .env on the host and
+# replace every placeholder; .env is gitignored). Caddy terminates TLS in front; one Postgres (AGE +
+# pgvector) holds a database per service; Redis alongside. Pairs with docs/deploy/cyberos-core-deploy.md.
+#
+#   cd deploy/vps && cp .env.local .env   # then edit .env on the VPS
+#   docker compose up -d --build
+#   docker compose --profile chat --profile email up -d --build   # optional services
+#
+# Build context for the Rust services is the repo root (../..) so the whole Cargo workspace is in scope.
+# CONFIRM markers flag the few things the repo cannot settle on its own (read the deploy doc gaps).
+
+name: ${COMPOSE_PROJECT_NAME:-cyberos}
+
+networks:
+  cyberos:
+    driver: bridge
+
+volumes:
+  pg-data:
+  redis-data:
+  caddy-data:
+  caddy-config:
+
+services:
+  postgres:
+    build:
+      context: ../../services/dev
+      dockerfile: Dockerfile.postgres
+    image: cyberos/postgres-age-pgvector:${CYBEROS_POSTGRES_IMAGE_TAG:-pg16}
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ../../services/dev/postgres-init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [cyberos]
+    # CONFIRM: first init creates only POSTGRES_DB. Create AUTH_DB / MEMORY_DB / PROJ_DB (and a dedicated
+    # DB if MCP OAuth is enabled) once, then run each service's sqlx migrations - deploy doc Step 2.
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [cyberos]
+
+  auth:
+    build:
+      context: ../..
+      dockerfile: services/Dockerfile
+      args:
+        RUST_VERSION: ${CYBEROS_RUST_VERSION:-1.88.0}
+        PACKAGE: cyberos-auth
+        BIN: cyberos-auth
+    image: cyberos-auth:${CYBEROS_IMAGE_TAG:-local}
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      AUTH_LISTEN_ADDR: 0.0.0.0:7700
+      DATABASE_URL: ${AUTH_DATABASE_URL}
+      # WebAuthn origin/id MUST equal the public Caddy site or login breaks (deploy doc Step 1).
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:7700/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks: [cyberos]
+
+  memory:
+    build:
+      context: ../..
+      dockerfile: services/Dockerfile
+      args:
+        RUST_VERSION: ${CYBEROS_RUST_VERSION:-1.88.0}
+        PACKAGE: cyberos-memory
+        BIN: cyberos-memory
+    image: cyberos-memory:${CYBEROS_IMAGE_TAG:-local}
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      MEMORY_LISTEN_ADDR: 0.0.0.0:7710
+      DATABASE_URL: ${MEMORY_DATABASE_URL}
+      # CONFIRM: memory needs an embeddings endpoint. Point at the embed sidecar (services/embed-sidecar,
+      # which has no Dockerfile yet) or an external embedder, then uncomment the embed service below.
+      MEMORY_EMBED_URL: ${MEMORY_EMBED_URL:-http://embed:5050}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:7710/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks: [cyberos]
+
+  mcp-gateway:
+    build:
+      context: ../..
+      dockerfile: services/Dockerfile
+      args:
+        RUST_VERSION: ${CYBEROS_RUST_VERSION:-1.88.0}
+        PACKAGE: cyberos-mcp-gateway
+        BIN: cyberos-mcp
+    image: cyberos-mcp-gateway:${CYBEROS_IMAGE_TAG:-local}
+    restart: unless-stopped
+    env_file: [.env]
+    command: ["--listen", "0.0.0.0:8090"]
+    environment:
+      # OAuth (FR-MCP-004) turns on only when MCP_DATABASE_URL is set; leave unset to run open in dev.
+      # CONFIRM: to enable OAuth, add MCP_DATABASE_URL to .env, create its DB, run mcp-gateway migrations.
+      MCP_ISSUER_URL: ${MCP_ISSUER_URL:-https://mcp.example.com}
+      MCP_AUTH_ISSUER: ${MCP_AUTH_ISSUER:-https://auth.example.com}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8090/mcp/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks: [cyberos]
+
+  ai-gateway:
+    build:
+      context: ../..
+      dockerfile: services/Dockerfile
+      args:
+        RUST_VERSION: ${CYBEROS_RUST_VERSION:-1.88.0}
+        PACKAGE: cyberos-ai-gateway
+        BIN: cyberos-ai-gateway
+    image: cyberos-ai-gateway:${CYBEROS_IMAGE_TAG:-local}
+    restart: unless-stopped
+    env_file: [.env]
+    # CONFIRM: ai-gateway's listen env var + default port, and whether it needs Redis/DB at boot. Health
+    # route is /healthz. Set its bind here once confirmed (assumed 0.0.0.0:8086 below).
+    environment:
+      AI_GATEWAY_BIND: ${AI_GATEWAY_BIND:-0.0.0.0:8086}
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8086/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks: [cyberos]
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "${CYBEROS_HTTP_BIND:-127.0.0.1:8080}:80"
+      - "${CYBEROS_HTTPS_BIND:-127.0.0.1:8443}:443"
+    environment:
+      CYBEROS_CADDY_SITE: ${CYBEROS_CADDY_SITE:-:80}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - auth
+      - memory
+      - mcp-gateway
+      - ai-gateway
+    networks: [cyberos]
+
+  # ---- optional services (profiles) ------------------------------------------------------------------
+
+  email:
+    profiles: ["email"]
+    build:
+      context: ../..
+      dockerfile: services/email/docker/Dockerfile
+    image: cyberos-email:${CYBEROS_IMAGE_TAG:-local}
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      EMAIL_BIND: 0.0.0.0:8085
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8085/v1/email/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks: [cyberos]
+
+  chat:
+    profiles: ["chat"]
+    build:
+      context: ../../services/chat
+      dockerfile: Dockerfile
+    image: cyberos-chat:${CHAT_IMAGE_TAG:-local}
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      MM_SQLSETTINGS_DRIVERNAME: postgres
+      MM_SERVICESETTINGS_SITEURL: ${CHAT_SITE_URL:-http://localhost:8080/chat}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [cyberos]
+    # CONFIRM: chat (Mattermost-based) DB + datasource wiring per services/chat; set CHAT_POSTGRES_* in .env
+    # and create CHAT_POSTGRES_DB. CHAT_PINNED_COMMIT pins the build.
+
+# ---- not wired here (need a decision; see deploy doc gaps + README) ---------------------------------
+# embed-sidecar : services/embed-sidecar has no Dockerfile; memory.MEMORY_EMBED_URL must point at it.
+# proj          : cyberos_proj is a LIBRARY, not a server - confirm which binary serves the proj API.
+# cuo           : Python orchestration (modules/cuo) - supervise via its [project.scripts] entrypoint.
+# skill-broker  : ships CLI bins (validate/transpile) + OCI artifacts, not a long-running HTTP service.
+# obs stack     : already has its own compose at deploy/obs/docker-compose.yml - run it separately.

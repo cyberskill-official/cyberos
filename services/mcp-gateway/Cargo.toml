@@ -46,6 +46,9 @@ constant_time_eq = "0.3"
 # FR-MCP-004 close-out: Argon2 for confidential client secrets; audit-chain for the 8 memory audit kinds.
 argon2 = "0.5"
 cyberos-audit-chain = { path = "../shared/cyberos-audit-chain" }
+# FR-MCP-007/008 DB slice: AEAD envelope encryption for payloads at rest (src/kms.rs). XChaCha20-Poly1305
+# under an operator-supplied MCP_KMS_KEY; swappable for a managed KMS behind the Kms trait.
+chacha20poly1305 = "0.10"
 # FR-MCP-002 federation: forward tools/call to a module's registered MCP endpoint.
 reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
 

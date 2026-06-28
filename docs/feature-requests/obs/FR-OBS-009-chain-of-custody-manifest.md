@@ -3,7 +3,7 @@ id: FR-OBS-009
 title: "Chain-of-custody manifest with Ed25519 signature on every compliance export — PDF cover + JSON sidecar + audit row + verifier CLI"
 module: OBS
 priority: MUST
-status: ready_to_implement
+status: implementing
 verify: T
 phase: P0
 milestone: P0 · slice 3
