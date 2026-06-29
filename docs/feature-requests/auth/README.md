@@ -1,6 +1,6 @@
 # AUTH module — feature request index
 
-_Generated 2026-05-17 — 15 FRs, 127 engineering-hours total._
+_Generated 2026-05-17 - 16 FRs, 139 engineering-hours total (FR-AUTH-110 OIDC provider added 2026-06-29)._
 
 ## FRs
 
@@ -21,6 +21,7 @@ _Generated 2026-05-17 — 15 FRs, 127 engineering-hours total._
 | [FR-AUTH-107](FR-AUTH-107-hibp-breach-check.md) | SHOULD | 1 | 4 | HIBP password breach check (k-anonymity) on signup + rotation |
 | [FR-AUTH-108](FR-AUTH-108-lumi-tenant-identity-jwt.md) | MUST | 1 | 6 | AUTH Lumi tenant-identity JWT shape — agent_persona + tenant_residency + lumi_org_tenant claims + pe |
 | [FR-AUTH-109](FR-AUTH-109-stub-to-full-migration.md) | MUST | 1 | 5 | AUTH stub → full migration enforcer — 30-day grace window + cutover timestamp + rejection metric + p |
+| [FR-AUTH-110](FR-AUTH-110-oidc-provider.md) | MUST | 1 | 12 | AUTH OIDC Provider - first-party authorization server: CHAT/PORTAL federate to one CyberOS identity; authorize brokers via SSO cookie / Google + revoke-gated; token + id_token + userinfo; PKCE S256; JWKS reuse |
 
 ## Cross-module dependencies
 
@@ -28,7 +29,7 @@ _Generated 2026-05-17 — 15 FRs, 127 engineering-hours total._
 
 - **AI**: FR-AI-006→FR-AUTH-004
 - **memory**: FR-MEMORY-101→FR-AUTH-003
-- **CHAT**: FR-CHAT-002→FR-AUTH-004
+- **CHAT**: FR-CHAT-002→FR-AUTH-004, FR-CHAT-002→FR-AUTH-110 (unified-path SSO via OIDC; supersedes the AuthBridge-plugin approach)
 - **CRM**: FR-CRM-001→FR-AUTH-003, FR-CRM-001→FR-AUTH-101
 - **DOC**: FR-DOC-001→FR-AUTH-101, FR-DOC-006→FR-AUTH-105
 - **EMAIL**: FR-EMAIL-002→FR-AUTH-004
@@ -38,7 +39,7 @@ _Generated 2026-05-17 — 15 FRs, 127 engineering-hours total._
 - **MCP**: FR-MCP-001→FR-AUTH-004, FR-MCP-004→FR-AUTH-004
 - **OBS**: FR-OBS-002→FR-AUTH-004
 - **OKR**: FR-OKR-001→FR-AUTH-003, FR-OKR-001→FR-AUTH-101
-- **PORTAL**: FR-PORTAL-003→FR-AUTH-103, FR-PORTAL-003→FR-AUTH-104
+- **PORTAL**: FR-PORTAL-003→FR-AUTH-103, FR-PORTAL-003→FR-AUTH-104, FR-PORTAL-003→FR-AUTH-110
 - **PROJ**: FR-PROJ-001→FR-AUTH-001, FR-PROJ-001→FR-AUTH-003
 - **REW**: FR-REW-001→FR-AUTH-101
 - **TEN**: FR-TEN-001→FR-AUTH-001, FR-TEN-004→FR-AUTH-003, FR-TEN-101→FR-AUTH-104

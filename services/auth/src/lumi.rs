@@ -128,7 +128,7 @@ pub async fn issue(
 
     // Audit row.
     let mut tx = state.pg.begin().await.map_err(internal)?;
-    sqlx::query("SET LOCAL app.current_tenant_id = $1")
+    sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
         .bind(tenant_id.to_string())
         .execute(&mut *tx)
         .await
@@ -314,7 +314,7 @@ pub async fn revoke(
     let tenant_id = Uuid::parse_str(&claims.tenant_id).map_err(internal)?;
 
     let mut tx = state.pg.begin().await.map_err(internal)?;
-    sqlx::query("SET LOCAL app.current_tenant_id = $1")
+    sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
         .bind(tenant_id.to_string())
         .execute(&mut *tx)
         .await

@@ -1,0 +1,16 @@
+{
+  "GitLabSettings": {
+    "Enable": true,
+    "Id": "cyberos-chat",
+    "Secret": "${CYBEROS_CHAT_OIDC_SECRET}",
+    "Scope": "openid email profile",
+    "AuthEndpoint": "https://auth.cyberos.world/v1/auth/op/authorize",
+    "TokenEndpoint": "https://auth.cyberos.world/v1/auth/op/token",
+    "UserAPIEndpoint": "https://auth.cyberos.world/v1/auth/op/userinfo"
+  },
+  "EmailSettings": {
+    "EnableSignUpWithEmail": false,
+    "EnableSignInWithEmail": false,
+    "EnableSignInWithUsername": false
+  }
+}

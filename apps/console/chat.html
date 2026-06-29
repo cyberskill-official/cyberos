@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CyberOS Chat</title>
+<!--
+  FR-APP-007 - CyberOS chat web client (first slice).
+
+  A self-contained operator chat surface for the first-party cyberos-chat service (FR-CHAT-101). It
+  consumes only the EXISTING chat HTTP + websocket surface and adds no backend:
+    - REST  : channels, messages, members, presence, read/unread (Authorization: Bearer <token>)
+    - WS    : /v1/chat/ws?channel=<id>&access_token=<token> for live message/presence/typing events
+  Identity is the CyberOS access token (FR-AUTH-110). Paste a token; the subject and tenant come from
+  it. In dev, mint an HS256 token with the same secret the service runs with.
+
+  Run: serve this folder (any static server) and start cyberos-chat with CHAT_DEV_CORS=1 so the browser
+  may call it cross-origin. In production Caddy serves this page and proxies the chat service under one
+  origin, so CORS is not needed there.
+
+  Branding: per the CyberSkill brand doctrine the official logo-mark.svg is used as-is and never
+  recreated, so this slice uses the wordmark in CDS colours; drop the real mark into the header when
+  wiring the full design system.
+-->
+<style>
+  :root {
+    --cds-umber: #45210E;
+    --cds-ochre: #F4BA17;
+    --cds-umber-700: #5a2e16;
+    --cds-umber-900: #2c1409;
+    --cds-ink: #f6ecdd;
+    --cds-muted: #c9b79f;
+    --cds-ok: #6fbf73;
+    --cds-bad: #e1654f;
+    --cds-radius: 10px;
+    --cds-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { font-family: var(--cds-font); background: var(--cds-umber-900); color: var(--cds-ink); display: flex; flex-direction: column; }
+  header { background: var(--cds-umber); border-bottom: 2px solid var(--cds-ochre); padding: 14px 20px; display: flex; align-items: baseline; gap: 14px; }
+  header .wordmark { font-weight: 800; font-size: 20px; letter-spacing: 0.5px; }
+  header .wordmark .cyber { color: var(--cds-ink); }
+  header .wordmark .os { color: var(--cds-ochre); }
+  header .slogan { color: var(--cds-muted); font-size: 13px; font-style: italic; }
+  header .spacer { flex: 1; }
+  header .health { font-size: 12px; color: var(--cds-muted); display: flex; align-items: center; gap: 6px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--cds-muted); display: inline-block; }
+  .dot.ok { background: var(--cds-ok); }
+  .dot.bad { background: var(--cds-bad); }
+
+  .config { background: var(--cds-umber-700); padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; border-bottom: 1px solid var(--cds-umber); }
+  .config label { font-size: 12px; color: var(--cds-muted); display: flex; flex-direction: column; gap: 3px; }
+  .config input { background: var(--cds-umber-900); border: 1px solid var(--cds-umber); color: var(--cds-ink); border-radius: 6px; padding: 6px 8px; font-size: 13px; min-width: 200px; }
+  .config input.token { min-width: 360px; }
+  .config button { background: var(--cds-ochre); color: var(--cds-umber-900); border: none; border-radius: 6px; padding: 8px 16px; font-weight: 700; font-size: 13px; cursor: pointer; }
+
+  .shell { flex: 1; display: flex; min-height: 0; }
+  .sidebar { width: 260px; background: var(--cds-umber); border-right: 1px solid var(--cds-umber-700); display: flex; flex-direction: column; min-height: 0; }
+  .sidebar h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--cds-muted); margin: 0; padding: 12px 16px 6px; }
+  .channels { flex: 1; overflow: auto; }
+  .channel { padding: 10px 16px; cursor: pointer; display: flex; align-items: center; gap: 8px; border-left: 3px solid transparent; }
+  .channel:hover { background: var(--cds-umber-700); }
+  .channel.active { background: var(--cds-umber-900); border-left-color: var(--cds-ochre); }
+  .channel .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .channel .badge { background: var(--cds-ochre); color: var(--cds-umber-900); font-size: 11px; font-weight: 700; border-radius: 10px; padding: 1px 7px; min-width: 18px; text-align: center; }
+  .channel .badge.zero { display: none; }
+  .newchan { padding: 10px 16px; border-top: 1px solid var(--cds-umber-700); display: flex; gap: 6px; }
+  .newchan input { flex: 1; background: var(--cds-umber-900); border: 1px solid var(--cds-umber-700); color: var(--cds-ink); border-radius: 6px; padding: 6px 8px; font-size: 13px; min-width: 0; }
+  .newchan button { background: var(--cds-ochre); color: var(--cds-umber-900); border: none; border-radius: 6px; padding: 0 12px; font-weight: 700; cursor: pointer; }
+
+  .pane { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+  .pane .topbar { padding: 10px 18px; border-bottom: 1px solid var(--cds-umber-700); display: flex; align-items: center; gap: 12px; background: var(--cds-umber); }
+  .pane .topbar .title { font-weight: 700; }
+  .pane .topbar .presence { font-size: 12px; color: var(--cds-muted); flex: 1; }
+  .pane .topbar input { background: var(--cds-umber-900); border: 1px solid var(--cds-umber-700); color: var(--cds-ink); border-radius: 6px; padding: 5px 8px; font-size: 12px; min-width: 230px; }
+  .pane .topbar button { background: transparent; color: var(--cds-ochre); border: 1px solid var(--cds-umber-700); border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: pointer; }
+
+  main { flex: 1; overflow: auto; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; }
+  .msg { max-width: 70%; padding: 9px 13px; border-radius: var(--cds-radius); white-space: pre-wrap; line-height: 1.45; }
+  .msg.mine { align-self: flex-end; background: var(--cds-ochre); color: var(--cds-umber-900); }
+  .msg.theirs { align-self: flex-start; background: var(--cds-umber); border: 1px solid var(--cds-umber-700); }
+  .msg.system { align-self: center; background: transparent; color: var(--cds-muted); font-size: 12px; font-style: italic; }
+  .msg .who { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; opacity: 0.7; margin-bottom: 3px; }
+  .msg .meta { font-size: 10px; opacity: 0.6; margin-top: 5px; }
+  .typing { padding: 2px 20px 0; height: 16px; font-size: 12px; color: var(--cds-muted); font-style: italic; }
+
+  footer { background: var(--cds-umber); border-top: 1px solid var(--cds-ochre); padding: 12px 20px; }
+  footer form { display: flex; gap: 10px; }
+  footer textarea { flex: 1; resize: none; height: 46px; background: var(--cds-umber-900); color: var(--cds-ink); border: 1px solid var(--cds-umber-700); border-radius: 8px; padding: 12px; font-family: var(--cds-font); font-size: 14px; }
+  footer button { background: var(--cds-ochre); color: var(--cds-umber-900); border: none; border-radius: 8px; padding: 0 22px; font-weight: 700; font-size: 14px; cursor: pointer; }
+  footer button:disabled { opacity: 0.5; cursor: default; }
+</style>
+</head>
+<body>
+  <header>
+    <span class="wordmark"><span class="cyber">Cyber</span><span class="os">OS</span></span>
+    <span class="slogan">Turn Your Will Into Real</span>
+    <a href="app.html" style="color:var(--cds-ochre);text-decoration:none;font-size:13px;">&larr; Dashboard</a>
+    <span class="spacer"></span>
+    <span class="health"><span id="health-dot" class="dot"></span><span id="health-text">checking service...</span></span>
+  </header>
+
+  <div class="config">
+    <label>Chat service URL
+      <input id="cfg-base" value="http://127.0.0.1:7720" spellcheck="false" />
+    </label>
+    <label>Access token (JWT)
+      <input id="cfg-token" class="token" placeholder="paste a CyberOS access token" spellcheck="false" />
+    </label>
+    <button id="cfg-connect" type="button">Connect</button>
+    <span id="cfg-me" style="font-size:12px;color:var(--cds-muted);"></span>
+  </div>
+
+  <div class="shell">
+    <aside class="sidebar">
+      <h2>Channels</h2>
+      <div class="channels" id="channels"></div>
+      <div class="newchan">
+        <input id="newchan-name" placeholder="new channel name" />
+        <button id="newchan-btn" type="button">+</button>
+      </div>
+    </aside>
+
+    <section class="pane">
+      <div class="topbar">
+        <span class="title" id="chan-title">No channel selected</span>
+        <span class="presence" id="presence"></span>
+        <input id="addmember-id" placeholder="add member: subject UUID" />
+        <button id="addmember-btn" type="button">Add</button>
+      </div>
+      <main id="log">
+        <div class="msg system">Paste a token and Connect, then pick or create a channel.</div>
+      </main>
+      <div class="typing" id="typing"></div>
+      <footer>
+        <form id="chat-form">
+          <textarea id="input" placeholder="Message (Enter to send, Shift+Enter for newline)" autocomplete="off"></textarea>
+          <button id="send" type="submit" disabled>Send</button>
+        </form>
+      </footer>
+    </section>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var state = { base: "", token: "", me: "", channel: null, ws: null, seen: {}, typingTimer: null, typingSentAt: 0 };
+
+  function baseUrl() { return $("cfg-base").value.replace(/\/+$/, ""); }
+  function shortId(u) { return u ? String(u).slice(0, 8) : "?"; }
+  function fmtTime(s) { try { return new Date(s).toLocaleTimeString(); } catch (e) { return ""; } }
+
+  function decodeSub(token) {
+    try {
+      var p = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+      var pad = p.length % 4 ? "====".slice(p.length % 4) : "";
+      return JSON.parse(atob(p + pad)).sub || "";
+    } catch (e) { return ""; }
+  }
+
+  async function api(method, path, body) {
+    var res = await fetch(baseUrl() + path, {
+      method: method,
+      headers: Object.assign({ "Authorization": "Bearer " + state.token },
+        body !== undefined ? { "content-type": "application/json" } : {}),
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+    var text = await res.text();
+    var data = null;
+    try { data = text ? JSON.parse(text) : null; } catch (e) { data = text; }
+    if (!res.ok) { throw new Error("[" + res.status + "] " + (data && data.error ? data.error : text)); }
+    return data;
+  }
+
+  function sysMsg(text) {
+    var el = document.createElement("div");
+    el.className = "msg system";
+    el.textContent = text;
+    $("log").appendChild(el);
+    $("log").scrollTop = $("log").scrollHeight;
+  }
+
+  function renderMessage(m) {
+    if (!m || !m.id || state.seen[m.id]) return;
+    state.seen[m.id] = true;
+    var mine = m.sender_subject_id === state.me;
+    var el = document.createElement("div");
+    el.className = "msg " + (mine ? "mine" : "theirs");
+    var who = document.createElement("div");
+    who.className = "who";
+    who.textContent = mine ? "you" : shortId(m.sender_subject_id);
+    el.appendChild(who);
+    var body = document.createElement("div");
+    body.textContent = m.body;
+    el.appendChild(body);
+    var meta = document.createElement("div");
+    meta.className = "meta";
+    meta.textContent = fmtTime(m.created_at) + (m.edited_at ? " (edited)" : "");
+    el.appendChild(meta);
+    $("log").appendChild(el);
+    $("log").scrollTop = $("log").scrollHeight;
+  }
+
+  async function checkHealth() {
+    try {
+      var res = await fetch(baseUrl() + "/healthz");
+      $("health-dot").className = res.ok ? "dot ok" : "dot bad";
+      $("health-text").textContent = res.ok ? "service reachable" : "service error";
+    } catch (e) {
+      $("health-dot").className = "dot bad";
+      $("health-text").textContent = "service unreachable";
+    }
+  }
+
+  async function loadChannels() {
+    var list;
+    try { list = await api("GET", "/v1/chat/channels"); }
+    catch (e) { sysMsg("could not load channels: " + e.message); return; }
+    var box = $("channels");
+    box.innerHTML = "";
+    (list || []).forEach(function (c) {
+      var row = document.createElement("div");
+      row.className = "channel" + (state.channel && state.channel.id === c.id ? " active" : "");
+      var name = document.createElement("span");
+      name.className = "name";
+      name.textContent = c.name || shortId(c.id);
+      var badge = document.createElement("span");
+      badge.className = "badge zero";
+      badge.id = "badge-" + c.id;
+      badge.textContent = "0";
+      row.appendChild(name);
+      row.appendChild(badge);
+      row.onclick = function () { openChannel(c); };
+      box.appendChild(row);
+      refreshUnread(c.id);
+    });
+  }
+
+  async function refreshUnread(id) {
+    try {
+      var u = await api("GET", "/v1/chat/channels/" + id + "/unread");
+      var badge = $("badge-" + id);
+      if (!badge) return;
+      var n = u && typeof u.unread === "number" ? u.unread : 0;
+      badge.textContent = String(n);
+      badge.className = "badge" + (n ? "" : " zero");
+    } catch (e) { /* best-effort */ }
+  }
+
+  async function openChannel(c) {
+    state.channel = c;
+    state.seen = {};
+    $("chan-title").textContent = c.name || shortId(c.id);
+    $("send").disabled = false;
+    $("log").innerHTML = "";
+    // reflect active state in the sidebar
+    Array.prototype.forEach.call(document.querySelectorAll(".channel"), function (el) { el.classList.remove("active"); });
+    loadChannels();
+    var msgs;
+    try { msgs = await api("GET", "/v1/chat/channels/" + c.id + "/messages"); }
+    catch (e) { sysMsg("could not load messages: " + e.message); return; }
+    (msgs || []).forEach(renderMessage);
+    if (msgs && msgs.length) { markRead(c.id, msgs[msgs.length - 1].id); }
+    loadPresence();
+    connectWs();
+  }
+
+  async function markRead(channelId, messageId) {
+    try { await api("POST", "/v1/chat/channels/" + channelId + "/read", { message_id: messageId }); refreshUnread(channelId); }
+    catch (e) { /* best-effort */ }
+  }
+
+  async function loadPresence() {
+    if (!state.channel) return;
+    try {
+      var on = await api("GET", "/v1/chat/channels/" + state.channel.id + "/presence");
+      renderPresence(on || []);
+    } catch (e) { /* best-effort */ }
+  }
+  var presenceSet = {};
+  function renderPresence(list) {
+    presenceSet = {};
+    list.forEach(function (u) { presenceSet[u] = true; });
+    paintPresence();
+  }
+  function paintPresence() {
+    var ids = Object.keys(presenceSet);
+    $("presence").textContent = ids.length ? ("online: " + ids.map(shortId).join(", ")) : "no one else here";
+  }
+
+  function wsUrl(channelId) {
+    var b = baseUrl().replace(/^http/, "ws");
+    return b + "/v1/chat/ws?channel=" + encodeURIComponent(channelId) + "&access_token=" + encodeURIComponent(state.token);
+  }
+
+  function connectWs() {
+    if (state.ws) { try { state.ws.close(); } catch (e) {} state.ws = null; }
+    if (!state.channel) return;
+    var ch = state.channel.id;
+    var ws = new WebSocket(wsUrl(ch));
+    state.ws = ws;
+    ws.onmessage = function (ev) {
+      var data;
+      try { data = JSON.parse(ev.data); } catch (e) { return; }
+      if (!state.channel || state.channel.id !== ch) return;
+      if (data.type === "message") {
+        renderMessage(data);
+        markRead(ch, data.id);
+      } else if (data.type === "presence") {
+        if (data.status === "online") presenceSet[data.subject] = true; else delete presenceSet[data.subject];
+        paintPresence();
+      } else if (data.type === "typing") {
+        showTyping(data.subject);
+      }
+    };
+    ws.onclose = function () {
+      if (state.ws === ws && state.channel && state.channel.id === ch) {
+        setTimeout(function () { if (state.channel && state.channel.id === ch) connectWs(); }, 1500);
+      }
+    };
+  }
+
+  var typingClear = null;
+  function showTyping(subject) {
+    $("typing").textContent = shortId(subject) + " is typing...";
+    if (typingClear) clearTimeout(typingClear);
+    typingClear = setTimeout(function () { $("typing").textContent = ""; }, 2500);
+  }
+
+  function sendTypingPing() {
+    var now = Date.now();
+    if (state.ws && state.ws.readyState === 1 && now - state.typingSentAt > 1500) {
+      state.typingSentAt = now;
+      try { state.ws.send(JSON.stringify({ type: "typing" })); } catch (e) {}
+    }
+  }
+
+  async function sendMessage(text) {
+    if (!state.channel) return;
+    $("send").disabled = true;
+    try {
+      var m = await api("POST", "/v1/chat/channels/" + state.channel.id + "/messages", { body: text });
+      renderMessage(m); // ws will echo too; renderMessage dedupes by id
+    } catch (e) {
+      sysMsg("send failed: " + e.message);
+    } finally {
+      $("send").disabled = false;
+      $("input").focus();
+    }
+  }
+
+  // wiring
+  $("cfg-connect").onclick = function () {
+    state.base = baseUrl();
+    state.token = $("cfg-token").value.trim();
+    state.me = decodeSub(state.token);
+    $("cfg-me").textContent = state.me ? ("you = " + shortId(state.me)) : "invalid token";
+    try { localStorage.setItem("cyberos_chat_base", state.base); localStorage.setItem("cyberos_chat_token", state.token); } catch (e) {}
+    if (!state.me) return;
+    loadChannels();
+  };
+  $("newchan-btn").onclick = async function () {
+    var name = $("newchan-name").value.trim();
+    if (!name || !state.token) return;
+    try { var c = await api("POST", "/v1/chat/channels", { name: name }); $("newchan-name").value = ""; await loadChannels(); openChannel(c); }
+    catch (e) { sysMsg("create channel failed: " + e.message); }
+  };
+  $("addmember-btn").onclick = async function () {
+    var sub = $("addmember-id").value.trim();
+    if (!sub || !state.channel) return;
+    try { await api("POST", "/v1/chat/channels/" + state.channel.id + "/members", { subject_id: sub, role: "member" }); $("addmember-id").value = ""; sysMsg("added member " + shortId(sub)); }
+    catch (e) { sysMsg("add member failed: " + e.message); }
+  };
+  $("chat-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var text = $("input").value.trim();
+    if (!text) return;
+    $("input").value = "";
+    sendMessage(text);
+  });
+  $("input").addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("chat-form").requestSubmit(); }
+    else { sendTypingPing(); }
+  });
+
+  // restore prior session
+  try {
+    var b = localStorage.getItem("cyberos_chat_base"); if (b) $("cfg-base").value = b;
+    var t = localStorage.getItem("cyberos_chat_token"); if (t) $("cfg-token").value = t;
+  } catch (e) {}
+  // arriving from the dashboard with a stored token: connect automatically
+  if ($("cfg-token").value.trim()) { $("cfg-connect").click(); }
+
+  checkHealth();
+  setInterval(checkHealth, 5000);
+})();
+</script>
+</body>
+</html>

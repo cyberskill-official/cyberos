@@ -281,8 +281,9 @@ This document is the **single source of truth** for what CyberOS is going to bui
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
 | FR-CHAT-001 | Mattermost v9.x fork at pinned MIT/Apache commit + license-drift watcher | MUST | done | — | 8h |
-| FR-CHAT-002 | `cyberos-chat-authbridge` plugin — Mattermost auth delegates to AUTH JWT | MUST | done | FR-CHAT-001, FR-AUTH-004 | 10h |
+| FR-CHAT-002 | `cyberos-chat-authbridge` plugin (CLOSED - superseded by FR-CHAT-013; a Mattermost plugin cannot replace the login route, and the shipped plugin is a non-working simulation) | MUST | closed | FR-CHAT-001, FR-AUTH-004 | 10h |
 | FR-CHAT-003 | Per-tenant deployment via Fargate + RDS Multi-AZ + Redis | MUST | done | FR-CHAT-001 | 6h |
+| FR-CHAT-013 | CHAT native OIDC SSO - Mattermost federates to the FR-AUTH-110 provider via its native connector (replaces FR-CHAT-002) | MUST | implementing | FR-AUTH-110, FR-CHAT-001, FR-CHAT-003 | 6h |
 
 #### Slice 2 — VN search + memory bridge
 
@@ -724,6 +725,7 @@ This document is the **single source of truth** for what CyberOS is going to bui
 | FR-AUTH-107 | HIBP password breach check on signup + rotation | SHOULD | done | FR-AUTH-002 | 4h |
 | FR-AUTH-108 | Lumi tenant-identity JWT shape (`agent_persona` + `tenant_residency` claims) | MUST | done | FR-AUTH-101 | 6h |
 | FR-AUTH-109 | Stub → full migration path (existing tokens valid for grace window) | MUST | done | FR-AUTH-101 | 5h |
+| FR-AUTH-110 | OIDC Provider - first-party authorization server (CHAT/PORTAL federate to one CyberOS identity; authorize brokers via SSO cookie / Google + revoke-gated; id_token + userinfo; PKCE S256; JWKS reuse) | MUST | draft | FR-AUTH-004, FR-AUTH-104, FR-AUTH-005, FR-AUTH-101 | 12h |
 
 ### P3.2 — TEN (full self-serve)
 

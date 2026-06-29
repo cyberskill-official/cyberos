@@ -3,7 +3,10 @@ id: FR-CHAT-002
 title: "cyberos-chat-authbridge plugin — Mattermost auth delegates to FR-AUTH-004 JWT with tenant_id propagation and SCIM-free provisioning"
 module: CHAT
 priority: MUST
-status: done
+status: closed
+superseded_by: [FR-AUTH-110, FR-CHAT-013]
+closed: 2026-06-29
+closed_reason: "superseded - the AuthBridge plugin approach does not work (a Mattermost plugin cannot replace the core login route, and the shipped plugin is a non-working simulation); the unified path is Mattermost's native OIDC connector federating to the FR-AUTH-110 provider, specified in FR-CHAT-013"
 verify: T
 phase: P1
 milestone: P1 · slice 1
@@ -12,7 +15,7 @@ owner: Stephen Cheng
 created: 2026-05-16
 shipped: 2026-05-23
 memory_chain_hash: null
-related_frs: [FR-CHAT-001, FR-CHAT-003, FR-AUTH-004, FR-AUTH-005]
+related_frs: [FR-CHAT-001, FR-CHAT-003, FR-AUTH-004, FR-AUTH-005, FR-AUTH-110]
 depends_on: [FR-CHAT-001, FR-AUTH-004]
 blocks: [FR-CHAT-003]
 
@@ -57,6 +60,16 @@ sub_tasks:
   - "0.5h: Makefile — build plugin .tar.gz for Mattermost upload"
 risk_if_skipped: "Without authbridge, Mattermost runs its own user database — two sources of truth (AUTH-004 + Mattermost). Users get confused (different password per service). Token revocation requires double-cleanup. Without tenant_id propagation, Mattermost shows messages from all tenants in one team. JIT provisioning means no IT-admin friction on user onboarding."
 ---
+
+> CLOSED - SUPERSEDED (2026-06-29). This FR is retained for history only; do not implement it. The
+> AuthBridge plugin it specifies cannot work: a Mattermost plugin cannot replace the core
+> `/api/v4/users/login` route (plugins only serve under `/plugins/<id>/`), and the shipped
+> `services/chat/plugins/cyberos-authbridge/` is a non-working simulation - it does not use the Mattermost
+> plugin SDK, its `JitProvisioner` writes in-memory map entries rather than real Mattermost users, and the
+> "session" it returns is a fabricated string, not a Mattermost session. The unified path is Mattermost's
+> own native OIDC connector federating to the FR-AUTH-110 CyberOS OIDC provider, specified in
+> [[FR-CHAT-013]]. The DEC-430/431/432 ids below also collided with FR-AUTH-110's first draft and were
+> renumbered there (DEC-2480+); these originals stand as the CHAT-002 record.
 
 ## §1 — Description (BCP-14 normative)
 

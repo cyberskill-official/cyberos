@@ -73,7 +73,7 @@ impl<'a> TenantCreatedPayload<'a> {
 /// Compute the row's chain anchor. Genesis rows pass `prev_hash_hex = None`.
 /// Mirrors `cyberos_memory::layer2::chain_anchor::compute` so the memory's
 /// reconcile invariant accepts auth-written rows.
-fn chain_anchor(prev_hash_hex: Option<&str>, body: &str) -> String {
+pub fn chain_anchor(prev_hash_hex: Option<&str>, body: &str) -> String {
     let mut h = Sha256::new();
     if let Some(prev) = prev_hash_hex {
         h.update(prev.as_bytes());

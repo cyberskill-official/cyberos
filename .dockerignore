@@ -1,0 +1,17 @@
+# Build artifacts + caches - rebuilt inside the image; never ship as context.
+**/target/
+.git/
+**/node_modules/
+**/__pycache__/
+**/.venv/
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+# Large trees not needed by the Rust service builds.
+playground/
+# Runtime data + logs + local env (keep secrets out of images).
+deploy/*/data/
+**/*.log
+**/.DS_Store
+**/.env
+**/.env.*

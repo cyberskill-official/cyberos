@@ -118,7 +118,7 @@ impl PolicyCache {
 
 async fn load_policy(pool: &PgPool, tenant_id: Uuid) -> Result<TravelPolicy, sqlx::Error> {
     let mut tx = pool.begin().await?;
-    sqlx::query("SET LOCAL app.current_tenant_id = $1")
+    sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
         .bind(tenant_id.to_string())
         .execute(&mut *tx)
         .await?;

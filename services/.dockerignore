@@ -1,0 +1,8 @@
+# Build context is services/ (the Cargo workspace root). Keep build artifacts and
+# caches out of the image context - they are rebuilt inside the image.
+target/
+**/target/
+**/*.log
+**/.DS_Store
+**/__pycache__/
+**/.pytest_cache/

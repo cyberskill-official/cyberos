@@ -16,7 +16,7 @@
 use axum::{
     extract::{Json as JsonInput, Query, State},
     http::StatusCode,
-    response::Json,
+    response::{IntoResponse, Json, Redirect, Response},
 };
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
 use rand::RngCore;
@@ -64,7 +64,7 @@ pub async fn create_idp_config(
         .unwrap_or_else(|| vec!["tenant-member".into()]);
 
     let mut tx = state.pg.begin().await.map_err(internal)?;
-    sqlx::query("SET LOCAL app.current_tenant_id = $1")
+    sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
         .bind(tenant_id.to_string())
         .execute(&mut *tx)
         .await
@@ -175,7 +175,7 @@ pub async fn initiate(
 
     // Persist the initiate row so the callback can re-find the verifier.
     let mut tx = state.pg.begin().await.map_err(internal)?;
-    sqlx::query("SET LOCAL app.current_tenant_id = $1")
+    sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
         .bind(tenant_id.to_string())
         .execute(&mut *tx)
         .await
@@ -221,6 +221,7 @@ pub async fn initiate(
             redirect_uri,
             code_verifier,
             issued_at_secs: now_secs(),
+            op_resume: None,
         },
     );
 
@@ -231,6 +232,107 @@ pub async fn initiate(
             state: state_token,
         }),
     ))
+}
+
+/// FR-AUTH-110 broker - begin an upstream-IdP (Google) auth-code flow for a
+/// tenant **by id**, carrying an `op_resume` URL the callback returns to after
+/// it mints the AUTH SSO session. Returns the provider authorization URL the
+/// browser should be redirected to. Deliberately kept separate from `initiate`
+/// (which is by tenant slug and carries no `op_resume`) so the live Google
+/// sign-in path is untouched; the small duplication is the safe trade.
+pub(crate) async fn begin_idp_flow(
+    state: &AppState,
+    tenant_id: Uuid,
+    idp_name: &str,
+    op_resume: Option<String>,
+) -> Result<String, (StatusCode, Json<Value>)> {
+    let mut tx = state.pg.begin().await.map_err(internal)?;
+    sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
+    let row: Option<(Uuid, String, String, String, Vec<String>)> = sqlx::query_as(
+        "SELECT id, discovery_url, client_id, redirect_uri, scopes
+             FROM oidc_idp_configs
+            WHERE tenant_id = $1 AND name = $2 AND status = 'active'",
+    )
+    .bind(tenant_id)
+    .bind(idp_name)
+    .fetch_optional(&mut *tx)
+    .await
+    .map_err(internal)?;
+    tx.commit().await.map_err(internal)?;
+
+    let (idp_config_id, discovery_url, client_id, registered_redirect, scopes) =
+        row.ok_or_else(|| {
+            (
+                StatusCode::NOT_FOUND,
+                Json(json!({
+                    "error": "idp_not_found",
+                    "tenant_id": tenant_id.to_string(),
+                    "idp": idp_name
+                })),
+            )
+        })?;
+
+    let discovery = discover(&discovery_url).await.map_err(|e| {
+        (
+            StatusCode::BAD_GATEWAY,
+            Json(json!({"error": "discovery_failed", "detail": e.to_string()})),
+        )
+    })?;
+
+    let state_token = random_b64(STATE_BYTES);
+    let code_verifier = random_b64(VERIFIER_BYTES);
+    let code_challenge = pkce_challenge(&code_verifier);
+    let code_verifier_hash = sha256_hex(code_verifier.as_bytes());
+
+    let mut tx = state.pg.begin().await.map_err(internal)?;
+    sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
+        .bind(tenant_id.to_string())
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
+    sqlx::query(
+        "INSERT INTO oidc_login_history
+                (tenant_id, idp_config_id, flow_state, state_token, code_verifier_hash, ts_ns)
+         VALUES ($1, $2, 'initiated', $3, $4, $5)",
+    )
+    .bind(tenant_id)
+    .bind(idp_config_id)
+    .bind(&state_token)
+    .bind(&code_verifier_hash)
+    .bind(chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0))
+    .execute(&mut *tx)
+    .await
+    .map_err(internal)?;
+    tx.commit().await.map_err(internal)?;
+
+    let scope_str = scopes.join(" ");
+    let url = format!(
+        "{authz}?response_type=code&client_id={cid}&redirect_uri={ru}\
+&scope={scope}&state={state}&code_challenge={ch}&code_challenge_method=S256",
+        authz = discovery.authorization_endpoint,
+        cid = urlencode(&client_id),
+        ru = urlencode(&registered_redirect),
+        scope = urlencode(&scope_str),
+        state = urlencode(&state_token),
+        ch = code_challenge,
+    );
+
+    state.oidc_pending.write().await.insert(
+        state_token,
+        PendingState {
+            tenant_id,
+            idp_config_id,
+            redirect_uri: registered_redirect,
+            code_verifier,
+            issued_at_secs: now_secs(),
+            op_resume,
+        },
+    );
+
+    Ok(url)
 }
 
 #[derive(Debug, Deserialize)]
@@ -249,7 +351,7 @@ pub async fn callback(
     State(state): State<AppState>,
     headers: axum::http::HeaderMap,
     Query(q): Query<CallbackQuery>,
-) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+) -> Result<Response, (StatusCode, Json<Value>)> {
     let caller_ip = crate::handlers::caller_ip(&headers);
     let user_agent = headers
         .get("user-agent")
@@ -415,11 +517,38 @@ pub async fn callback(
     )
     .await
     .ok();
-    match outcome {
-        Some(crate::travel::TravelOutcome::Block { kind, .. }) => Err((
+    // Impossible-travel Block applies to both the API flow and the broker.
+    if let Some(crate::travel::TravelOutcome::Block { kind, .. }) = &outcome {
+        return Err((
             StatusCode::FORBIDDEN,
             Json(json!({"error": "impossible_travel_blocked", "kind": kind})),
-        )),
+        ));
+    }
+
+    // FR-AUTH-110 broker resume: a no-cookie /v1/auth/op/authorize sent the user
+    // here via Google. Mint an AUTH SSO session, set the __Host-cyberos_sso
+    // cookie, and 302 back to the original /authorize, which now succeeds via
+    // silent SSO. The non-broker path (op_resume = None) is unchanged below.
+    if let Some(resume) = pending.op_resume.as_deref() {
+        let sso_id = match crate::op::sso_session::create(&state.pg, idp.tenant_id, subject_id).await {
+            Ok(id) => id,
+            Err(_) => {
+                return Err((
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({"error": "sso_session_create_failed"})),
+                ))
+            }
+        };
+        let cookie =
+            format!("__Host-cyberos_sso={sso_id}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=86400");
+        let mut resp = Redirect::to(resume).into_response();
+        if let Ok(hv) = cookie.parse() {
+            resp.headers_mut().insert(axum::http::header::SET_COOKIE, hv);
+        }
+        return Ok(resp);
+    }
+
+    match outcome {
         Some(crate::travel::TravelOutcome::Challenge { kind, login_id, .. }) => Ok(Json(json!({
             "access_token": tokens.access_token,
             "refresh_token": tokens.refresh_token,
@@ -429,14 +558,16 @@ pub async fn callback(
             "needs_mfa_challenge": true,
             "challenge_reason": kind,
             "challenge_login_id": login_id,
-        }))),
+        }))
+        .into_response()),
         _ => Ok(Json(json!({
             "access_token": tokens.access_token,
             "refresh_token": tokens.refresh_token,
             "token_type": tokens.token_type,
             "expires_in": tokens.expires_in,
             "subject_id": subject_id,
-        }))),
+        }))
+        .into_response()),
     }
 }
 
@@ -628,7 +759,7 @@ async fn resolve_subject(
 ) -> Result<Uuid, (StatusCode, Json<Value>)> {
     // 1. Existing link?
     let mut tx = state.pg.begin().await.map_err(internal)?;
-    sqlx::query("SET LOCAL app.current_tenant_id = $1")
+    sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
         .bind(idp.tenant_id.to_string())
         .execute(&mut *tx)
         .await
@@ -679,7 +810,7 @@ async fn resolve_subject(
         None => format!("@oidc-{}", &idp_sub[..idp_sub.len().min(12)]),
     };
     let mut tx = state.pg.begin().await.map_err(internal)?;
-    sqlx::query("SET LOCAL app.current_tenant_id = $1")
+    sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
         .bind(idp.tenant_id.to_string())
         .execute(&mut *tx)
         .await
@@ -722,7 +853,54 @@ async fn resolve_subject(
     .bind(idp_email)
     .execute(&mut *tx).await.map_err(internal)?;
     tx.commit().await.map_err(internal)?;
+
+    // Grant the IdP's default roles in the RBAC table so the minted token carries
+    // them (FR-AUTH-101). Provision-time only - we do NOT re-grant on later logins,
+    // so an admin can still remove a role without it reappearing.
+    grant_default_roles(state, idp.tenant_id, subject_id, &idp.default_roles).await;
     Ok(subject_id)
+}
+
+/// Best-effort: grant a freshly provisioned subject the IdP's default roles in the
+/// RBAC `subject_roles` table (FR-AUTH-101), so the minted token carries them. Runs
+/// in its own transaction after the subject is committed - a misconfigured role name
+/// (which violates the `roles(name)` FK) rolls back only this grant and never aborts
+/// the login. `granted_by` is the nil UUID, marking a system/IdP grant.
+async fn grant_default_roles(state: &AppState, tenant_id: Uuid, subject_id: Uuid, roles: &[String]) {
+    if roles.is_empty() {
+        return;
+    }
+    let Ok(mut tx) = state.pg.begin().await else {
+        return;
+    };
+    if sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
+        .bind(tenant_id.to_string())
+        .execute(&mut *tx)
+        .await
+        .is_err()
+    {
+        let _ = tx.rollback().await;
+        return;
+    }
+    for role in roles {
+        if sqlx::query(
+            "INSERT INTO subject_roles (tenant_id, subject_id, role, granted_by)
+                  VALUES ($1, $2, $3, $4)
+             ON CONFLICT (subject_id, role) DO NOTHING",
+        )
+        .bind(tenant_id)
+        .bind(subject_id)
+        .bind(role)
+        .bind(Uuid::nil())
+        .execute(&mut *tx)
+        .await
+        .is_err()
+        {
+            let _ = tx.rollback().await;
+            return;
+        }
+    }
+    let _ = tx.commit().await;
 }
 
 fn random_b64(n: usize) -> String {
@@ -772,6 +950,9 @@ pub struct PendingState {
     pub redirect_uri: String,
     pub code_verifier: String,
     pub issued_at_secs: u64,
+    /// FR-AUTH-110 broker: when set, the callback mints an AUTH SSO session and
+    /// 302s back to this `/v1/auth/op/authorize` URL instead of returning JSON.
+    pub op_resume: Option<String>,
 }
 
 fn internal<E: std::fmt::Display>(e: E) -> (StatusCode, Json<Value>) {

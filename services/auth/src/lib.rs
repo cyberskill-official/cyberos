@@ -61,6 +61,7 @@ pub mod middleware;
 pub mod migration_state;
 pub mod models;
 pub mod oidc;
+pub mod op;
 pub mod passkey;
 pub mod password;
 pub mod rate_limit;

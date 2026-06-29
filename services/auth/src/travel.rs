@@ -201,7 +201,7 @@ pub async fn record_login_and_assess(
     // 1. Look up the previous login. We pull country_iso + lat + lon now so
     //    the kind-2/3 detectors have both endpoints to reason over.
     let mut tx = pool.begin().await?;
-    sqlx::query("SET LOCAL app.current_tenant_id = $1")
+    sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
         .bind(tenant_id.to_string())
         .execute(&mut *tx)
         .await?;

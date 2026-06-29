@@ -1,13 +1,14 @@
 # syntax=docker/dockerfile:1
 # Shared multi-stage build for the CyberOS Rust workspace HTTP services (auth, memory, ai-gateway,
-# mcp-gateway). Build one binary by passing its Cargo package and bin name; the build CONTEXT must be the
-# repo root so the whole workspace (root Cargo.toml + all crates + shared/) is available.
+# mcp-gateway). Build one binary by passing its Cargo package and bin name; the build CONTEXT must be
+# services/ (the Cargo workspace root: services/Cargo.toml + all crates + services/shared/).
 #
-#   docker build -f services/Dockerfile \
+#   cd services && docker build -f Dockerfile \
 #     --build-arg PACKAGE=cyberos-auth --build-arg BIN=cyberos-auth \
 #     -t cyberos-auth:local .
 #
-# The production compose (deploy/vps/docker-compose.yml) passes these args per service.
+# The production compose (deploy/vps/docker-compose.yml) passes these args per service with
+# build.context = ../../services.
 
 ARG RUST_VERSION=1.88.0
 
@@ -18,8 +19,8 @@ ARG BIN
 COPY . .
 # Cache the registry + target across builds; the binary must be copied out inside the same RUN, before
 # the target cache mount is unmounted.
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    --mount=type=cache,target=/build/target \
+RUN --mount=type=cache,target=/usr/local/cargo/registry,sharing=locked \
+    --mount=type=cache,target=/build/target,sharing=locked \
     cargo build --release -p "${PACKAGE}" --bin "${BIN}" \
     && cp "/build/target/release/${BIN}" /usr/local/bin/app
 

@@ -40,6 +40,20 @@ pub fn router(state: AppState) -> Router {
         .route("/healthz", get(healthz))
         .route("/v1/auth/token", post(issue_token))
         .route("/.well-known/jwks.json", get(jwks))
+        // FR-AUTH-110 OIDC provider — public discovery + userinfo
+        .route(
+            "/.well-known/openid-configuration",
+            get(crate::op::handlers::discovery),
+        )
+        .route(
+            "/v1/auth/op/userinfo",
+            get(crate::op::handlers::userinfo),
+        )
+        .route(
+            "/v1/auth/op/authorize",
+            get(crate::op::handlers::authorize),
+        )
+        .route("/v1/auth/op/token", post(crate::op::handlers::token))
         // FR-AUTH-104 OIDC SSO — public flow (no JWT required to initiate)
         .route("/v1/auth/oidc/initiate", get(crate::oidc::initiate))
         .route("/v1/auth/oidc/callback", get(crate::oidc::callback))
@@ -62,6 +76,15 @@ pub fn router(state: AppState) -> Router {
 
     let admin = Router::new()
         .route("/v1/admin/tenants", post(create_tenant).get(list_tenants))
+        // FR-AUTH-110 OIDC provider — first-party RP-client registry (tenant-admin)
+        .route(
+            "/v1/admin/op/rp-clients",
+            post(crate::op::handlers::create_rp_client).get(crate::op::handlers::list_rp_clients),
+        )
+        .route(
+            "/v1/admin/op/rp-clients/:client_id",
+            axum::routing::delete(crate::op::handlers::delete_rp_client),
+        )
         .route(
             "/v1/admin/subjects",
             post(create_subject).get(list_subjects),
@@ -160,13 +183,22 @@ pub fn router(state: AppState) -> Router {
 
     // FR-OBS-003 - RED metrics for every route (ADR-OBS-003-001). Outermost layer so it sees the
     // matched route and wraps verify_jwt; verify_jwt sets TenantCtx on the response for the tenant label.
-    public
+    let app = public
         .merge(admin)
         .layer(axum::middleware::from_fn_with_state(
             cyberos_obs_sdk::RedState::new("auth"),
             cyberos_obs_sdk::red_mw,
         ))
-        .with_state(state)
+        .with_state(state);
+
+    // FR-APP-001 shell - opt-in permissive CORS so a local browser (the CyberOS sign-in page) can call
+    // the token endpoint cross-origin in dev. Off by default; production serves the page and auth under
+    // one Caddy origin, so this stays off. Set AUTH_DEV_CORS=1 only for local development.
+    if std::env::var("AUTH_DEV_CORS").is_ok() {
+        app.layer(tower_http::cors::CorsLayer::permissive())
+    } else {
+        app
+    }
 }
 
 async fn healthz(State(state): State<AppState>) -> (StatusCode, Json<Value>) {

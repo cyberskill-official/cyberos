@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CyberOS</title>
+<!--
+  FR-APP-001 shell - the auth-gated CyberOS operator console: login, then a dashboard of modules.
+
+  Flow: login (password grant against cyberos-auth, FR-AUTH-004) -> dashboard -> pick a module. The
+  access token is stored client-side and handed to each module. The Chat tile opens the chat client
+  (apps/console/chat.html, FR-APP-007), which auto-connects from the stored token; the chat service
+  verifies that token against the auth JWKS. No backend of its own.
+
+  Run: serve this folder and open app.html. Auth on :7700, chat on :7720 (started with CHAT_DEV_CORS=1
+  for local cross-origin). In production Caddy serves the page and proxies the services under one origin.
+-->
+<style>
+  :root {
+    --cds-umber: #45210E; --cds-ochre: #F4BA17; --cds-umber-700: #5a2e16; --cds-umber-900: #2c1409;
+    --cds-ink: #f6ecdd; --cds-muted: #c9b79f; --cds-ok: #6fbf73; --cds-bad: #e1654f; --cds-radius: 10px;
+    --cds-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { font-family: var(--cds-font); background: var(--cds-umber-900); color: var(--cds-ink); display: flex; flex-direction: column; min-height: 100%; }
+  header { background: var(--cds-umber); border-bottom: 2px solid var(--cds-ochre); padding: 14px 20px; display: flex; align-items: baseline; gap: 14px; }
+  header .wordmark { font-weight: 800; font-size: 20px; letter-spacing: 0.5px; }
+  header .wordmark .cyber { color: var(--cds-ink); }
+  header .wordmark .os { color: var(--cds-ochre); }
+  header .slogan { color: var(--cds-muted); font-size: 13px; font-style: italic; }
+  header .spacer { flex: 1; }
+  header .who { font-size: 13px; color: var(--cds-muted); }
+  header button.logout { background: transparent; color: var(--cds-ochre); border: 1px solid var(--cds-umber-700); border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; }
+
+  .center { flex: 1; display: flex; align-items: center; justify-content: center; padding: 30px; }
+  .card { background: var(--cds-umber); border: 1px solid var(--cds-umber-700); border-radius: var(--cds-radius); padding: 28px; width: 380px; max-width: 100%; }
+  .card h1 { margin: 0 0 4px; font-size: 22px; }
+  .card .sub { color: var(--cds-muted); font-size: 13px; margin-bottom: 20px; }
+  .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+  .field label { font-size: 12px; color: var(--cds-muted); }
+  .field input { background: var(--cds-umber-900); border: 1px solid var(--cds-umber-700); color: var(--cds-ink); border-radius: 6px; padding: 10px; font-size: 14px; }
+  .card button.primary { width: 100%; background: var(--cds-ochre); color: var(--cds-umber-900); border: none; border-radius: 8px; padding: 12px; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 4px; }
+  .card button.primary:disabled { opacity: 0.5; cursor: default; }
+  .err { color: var(--cds-bad); font-size: 13px; min-height: 18px; margin-top: 8px; }
+  .advanced { margin-top: 16px; font-size: 12px; color: var(--cds-muted); }
+  .advanced summary { cursor: pointer; }
+  .advanced input { width: 100%; background: var(--cds-umber-900); border: 1px solid var(--cds-umber-700); color: var(--cds-ink); border-radius: 6px; padding: 7px; font-size: 12px; margin-top: 6px; }
+
+  main.dash { flex: 1; padding: 30px 40px; }
+  main.dash h2 { margin: 0 0 4px; font-size: 18px; }
+  main.dash .hint { color: var(--cds-muted); font-size: 13px; margin-bottom: 22px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  .tile { background: var(--cds-umber); border: 1px solid var(--cds-umber-700); border-radius: var(--cds-radius); padding: 20px; cursor: pointer; display: flex; flex-direction: column; gap: 8px; min-height: 120px; transition: border-color 0.12s; }
+  .tile:hover { border-color: var(--cds-ochre); }
+  .tile.soon { opacity: 0.55; cursor: default; }
+  .tile.soon:hover { border-color: var(--cds-umber-700); }
+  .tile .icon { font-size: 22px; }
+  .tile .name { font-weight: 700; font-size: 16px; }
+  .tile .desc { color: var(--cds-muted); font-size: 12px; line-height: 1.4; }
+  .tile .badge { align-self: flex-start; margin-top: auto; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; background: var(--cds-umber-700); color: var(--cds-muted); padding: 2px 7px; border-radius: 10px; }
+  .tile .badge.live { background: var(--cds-ochre); color: var(--cds-umber-900); }
+</style>
+</head>
+<body>
+  <header>
+    <span class="wordmark"><span class="cyber">Cyber</span><span class="os">OS</span></span>
+    <span class="slogan">Turn Your Will Into Real</span>
+    <span class="spacer"></span>
+    <span class="who" id="who"></span>
+    <button class="logout" id="logout" type="button" style="display:none;">Sign out</button>
+  </header>
+
+  <div class="center" id="login-view">
+    <div class="card">
+      <h1>Sign in</h1>
+      <div class="sub">to your CyberOS workspace</div>
+      <form id="login-form">
+        <div class="field">
+          <label>Workspace (tenant)</label>
+          <input id="f-tenant" value="cyberskill" autocomplete="organization" spellcheck="false" />
+        </div>
+        <div class="field">
+          <label>Handle</label>
+          <input id="f-handle" value="@stephen" autocomplete="username" spellcheck="false" />
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input id="f-password" type="password" autocomplete="current-password" />
+        </div>
+        <button class="primary" id="login-btn" type="submit">Sign in</button>
+        <div class="err" id="login-err"></div>
+      </form>
+      <details class="advanced">
+        <summary>Service endpoints</summary>
+        <label>Auth URL<input id="f-auth" value="http://127.0.0.1:7700" spellcheck="false" /></label>
+        <label>Chat URL<input id="f-chat" value="http://127.0.0.1:7720" spellcheck="false" /></label>
+      </details>
+    </div>
+  </div>
+
+  <main class="dash" id="dash-view" style="display:none;">
+    <h2 id="greeting">Workspace</h2>
+    <div class="hint">Pick a module to begin.</div>
+    <div class="tiles" id="tiles"></div>
+  </main>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var LS = {
+    token: "cyberos_chat_token", chatBase: "cyberos_chat_base", authBase: "cyberos_auth_base",
+    email: "cyberos_user_email"
+  };
+
+  function get(k) { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } }
+  function set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+
+  function decode(token) {
+    try {
+      var p = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+      p += "====".slice(p.length % 4 || 4);
+      return JSON.parse(atob(p));
+    } catch (e) { return null; }
+  }
+  function tokenValid(token) {
+    var c = decode(token);
+    return !!(c && c.exp && c.exp * 1000 > Date.now());
+  }
+
+  var MODULES = [
+    { id: "chat", icon: "💬", name: "Chat", desc: "Channels, messages, and live presence on the CyberOS identity.", live: true, href: "chat.html" },
+    { id: "assistant", icon: "✨", name: "Assistant", desc: "Talk to your model through the CyberOS AI gateway.", live: true, href: "index.html" },
+    { id: "ai", icon: "🛠", name: "AI Ops", desc: "Providers, routing, usage, and health (FR-APP-003).", live: false },
+    { id: "mcp", icon: "🔌", name: "MCP Registry", desc: "Registered servers and tools (FR-APP-004).", live: false },
+    { id: "memory", icon: "🧾", name: "Memory & Audit", desc: "Browse the memory and the audit chain (FR-APP-005).", live: false },
+    { id: "cuo", icon: "🧠", name: "Workflows & GENIE", desc: "CUO workflows and the GENIE assistant (FR-APP-006).", live: false }
+  ];
+
+  function renderDashboard() {
+    var email = get(LS.email);
+    $("greeting").textContent = email ? ("Welcome, " + email) : "Workspace";
+    $("who").textContent = email || "";
+    $("logout").style.display = "inline-block";
+    var box = $("tiles");
+    box.innerHTML = "";
+    MODULES.forEach(function (m) {
+      var t = document.createElement(m.live ? "a" : "div");
+      t.className = "tile" + (m.live ? "" : " soon");
+      if (m.live && m.href) { t.setAttribute("href", m.href); t.style.textDecoration = "none"; t.style.color = "inherit"; }
+      t.innerHTML = '<div class="icon">' + m.icon + '</div><div class="name">' + m.name +
+        '</div><div class="desc">' + m.desc + '</div><div class="badge' + (m.live ? " live" : "") + '">' +
+        (m.live ? "Open" : "Soon") + '</div>';
+      box.appendChild(t);
+    });
+    $("login-view").style.display = "none";
+    $("dash-view").style.display = "block";
+  }
+
+  function showLogin() {
+    $("dash-view").style.display = "none";
+    $("login-view").style.display = "flex";
+    $("logout").style.display = "none";
+    $("who").textContent = "";
+  }
+
+  async function login(tenant, handle, password) {
+    var authBase = $("f-auth").value.replace(/\/+$/, "");
+    var chatBase = $("f-chat").value.replace(/\/+$/, "");
+    var res = await fetch(authBase + "/v1/auth/token", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ grant_type: "password", tenant_slug: tenant, handle: handle, password: password })
+    });
+    var data = await res.json().catch(function () { return null; });
+    if (!res.ok || !data || !data.access_token) {
+      throw new Error(data && data.error ? data.error : ("sign-in failed (" + res.status + ")"));
+    }
+    set(LS.token, data.access_token);
+    set(LS.chatBase, chatBase);
+    set(LS.authBase, authBase);
+    var claims = decode(data.access_token);
+    set(LS.email, (claims && claims.email) || handle);
+    renderDashboard();
+  }
+
+  $("login-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    $("login-err").textContent = "";
+    $("login-btn").disabled = true;
+    try {
+      await login($("f-tenant").value.trim(), $("f-handle").value.trim(), $("f-password").value);
+    } catch (err) {
+      $("login-err").textContent = err.message;
+    } finally {
+      $("login-btn").disabled = false;
+    }
+  });
+  $("logout").onclick = function () { del(LS.token); del(LS.email); showLogin(); };
+
+  // auto-skip login if a valid token is already stored
+  if (tokenValid(get(LS.token))) { renderDashboard(); } else { del(LS.token); showLogin(); $("f-password").focus(); }
+})();
+</script>
+</body>
+</html>

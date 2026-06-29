@@ -122,11 +122,14 @@ services/chat/
 ├── compose.yml                         local-dev compose (Postgres + Redis)
 ├── config/
 │   └── config.json                     default config baked into image
-├── patches/
-│   ├── 010-disable-builtin-auth.patch   route password auth to AuthBridge
-│   └── 011-load-authbridge-plugin.patch package AuthBridge at boot
+├── patches/                            CyberOS patch series (currently empty)
+│   ├── README.md                       why the series is empty (FR-CHAT-013)
+│   └── superseded/                     closed FR-CHAT-002 auth patches (010, 011)
+├── deploy/
+│   ├── oidc-sso-config.md              FR-CHAT-013 native OIDC SSO runbook
+│   └── mattermost-oidc.config.json     SSO config fragment (secret via env)
 ├── plugins/
-│   └── cyberos-authbridge/              FR-CHAT-002 plugin source + tests
+│   └── cyberos-authbridge/              FR-CHAT-002 plugin source (closed; superseded by FR-CHAT-013)
 ├── scripts/
 │   ├── cyberos-chat                    operator CLI for CyberOS helper surfaces
 │   ├── check-license-drift.sh          drift watcher entry point
@@ -147,5 +150,6 @@ services/chat/
 - DEC-421 — drift watcher cron; CI fails on drift.
 - DEC-422 — cherry-pick only via reviewed PR; no rebase.
 - FR-CHAT-001 — feature request authoring this fork policy.
-- FR-CHAT-002 — `cyberos-chat-authbridge` plugin: delegates Mattermost auth to AUTH JWTs.
+- FR-CHAT-002 - `cyberos-chat-authbridge` plugin (CLOSED, superseded by FR-CHAT-013; a Mattermost plugin cannot replace the core login route).
+- FR-CHAT-013 - native OIDC SSO: Mattermost federates to the FR-AUTH-110 CyberOS OIDC provider via its built-in connector (see `deploy/oidc-sso-config.md`).
 - FR-CHAT-003..012 — deployment, search, memory bridge, imports, Lumi, decommission, push, and DSAR slices.

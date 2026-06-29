@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "memory",
     "auth",
+    "chat",
     "skill-broker",
     "ai-gateway",
     "obs-collector",

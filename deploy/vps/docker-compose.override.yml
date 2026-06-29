@@ -1,0 +1,12 @@
+# Local validation override (track 2/3): provisions config the base images/compose do not yet wire.
+services:
+  ai-gateway:
+    environment:
+      AI_GATEWAY_CONFIG_DIR: /config/tenants
+    volumes:
+      - ../../services/ai-gateway/config:/config:ro
+  chat:
+    build:
+      args:
+        PINNED_COMMIT: ${CHAT_PINNED_COMMIT}
+        CYBEROS_PATCH_VERSION: ${CHAT_PATCH_VERSION:-0.1.0}

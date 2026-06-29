@@ -362,7 +362,7 @@ fn parse_actor(claims: &Claims) -> Result<Uuid, (StatusCode, Json<Value>)> {
 }
 
 async fn set_tenant(state: &AppState, tenant_id: Uuid) -> Result<(), (StatusCode, Json<Value>)> {
-    sqlx::query("SET LOCAL app.current_tenant_id = $1")
+    sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
         .bind(tenant_id.to_string())
         .execute(&state.pg)
         .await

@@ -208,6 +208,14 @@ impl JwtService {
         Ok(data.claims)
     }
 
+    /// FR-AUTH-110 — expose the active signing key (kid + private PEM) so the
+    /// OIDC provider's id_token (`op::id_token::sign_id_token`) signs against the
+    /// same FR-AUTH-004 key the JWKS publishes (DEC-2481, one key system).
+    pub async fn active_signing_key(&self) -> Result<(String, String), JwtError> {
+        let k = self.load_active_key().await?;
+        Ok((k.kid, k.private_pem))
+    }
+
     /// Build the JWKS payload from currently-published keys.
     pub async fn jwks_for_publication(&self) -> Result<JwksDocument, JwtError> {
         let keys = sqlx::query_as::<_, (String, String)>(

@@ -99,7 +99,7 @@ pub async fn initiate(
 
     // Persist the request_id for ACS correlation.
     let mut tx = state.pg.begin().await.map_err(internal)?;
-    sqlx::query("SET LOCAL app.current_tenant_id = $1")
+    sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
         .bind(tenant_id.to_string())
         .execute(&mut *tx)
         .await
@@ -474,7 +474,7 @@ pub async fn create_idp_config(
         .unwrap_or_else(|| vec!["tenant-member".into()]);
 
     let mut tx = state.pg.begin().await.map_err(internal)?;
-    sqlx::query("SET LOCAL app.current_tenant_id = $1")
+    sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
         .bind(tenant_id.to_string())
         .execute(&mut *tx)
         .await
@@ -580,7 +580,7 @@ async fn resolve_subject(
 ) -> Result<Uuid, (StatusCode, Json<Value>)> {
     // Existing link?
     let mut tx = state.pg.begin().await.map_err(internal)?;
-    sqlx::query("SET LOCAL app.current_tenant_id = $1")
+    sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
         .bind(tenant_id.to_string())
         .execute(&mut *tx)
         .await
@@ -625,7 +625,7 @@ async fn resolve_subject(
         None => format!("@saml-{}", &name_id[..name_id.len().min(12)]),
     };
     let mut tx = state.pg.begin().await.map_err(internal)?;
-    sqlx::query("SET LOCAL app.current_tenant_id = $1")
+    sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
         .bind(tenant_id.to_string())
         .execute(&mut *tx)
         .await

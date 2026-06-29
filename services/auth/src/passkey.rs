@@ -89,7 +89,7 @@ pub async fn enrol_begin(
 
     // Persist the registration state under a fresh ceremony_id so finish can pick it up.
     let mut tx = state.pg.begin().await.map_err(internal)?;
-    sqlx::query("SET LOCAL app.current_tenant_id = $1")
+    sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
         .bind(tenant_id.to_string())
         .execute(&mut *tx)
         .await
@@ -134,7 +134,7 @@ pub async fn enrol_finish(
 
     // Load + drop the pending state.
     let mut tx = state.pg.begin().await.map_err(internal)?;
-    sqlx::query("SET LOCAL app.current_tenant_id = $1")
+    sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
         .bind(tenant_id.to_string())
         .execute(&mut *tx)
         .await
@@ -252,7 +252,7 @@ pub async fn login_begin(
         .map_err(|e| webauthn_err("start_passkey_authentication", e))?;
 
     let mut tx = state.pg.begin().await.map_err(internal)?;
-    sqlx::query("SET LOCAL app.current_tenant_id = $1")
+    sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
         .bind(tenant_id.to_string())
         .execute(&mut *tx)
         .await
@@ -417,7 +417,7 @@ async fn load_subject_passkeys(
     subject_id: Uuid,
 ) -> Result<Vec<Passkey>, (StatusCode, Json<Value>)> {
     let mut tx = state.pg.begin().await.map_err(internal)?;
-    sqlx::query("SET LOCAL app.current_tenant_id = $1")
+    sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
         .bind(tenant_id.to_string())
         .execute(&mut *tx)
         .await

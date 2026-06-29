@@ -60,8 +60,8 @@ services:
 
   auth:
     build:
-      context: ../..
-      dockerfile: services/Dockerfile
+      context: ../../services
+      dockerfile: Dockerfile
       args:
         RUST_VERSION: ${CYBEROS_RUST_VERSION:-1.88.0}
         PACKAGE: cyberos-auth
@@ -85,8 +85,8 @@ services:
 
   memory:
     build:
-      context: ../..
-      dockerfile: services/Dockerfile
+      context: ../../services
+      dockerfile: Dockerfile
       args:
         RUST_VERSION: ${CYBEROS_RUST_VERSION:-1.88.0}
         PACKAGE: cyberos-memory
@@ -112,8 +112,8 @@ services:
 
   mcp-gateway:
     build:
-      context: ../..
-      dockerfile: services/Dockerfile
+      context: ../../services
+      dockerfile: Dockerfile
       args:
         RUST_VERSION: ${CYBEROS_RUST_VERSION:-1.88.0}
         PACKAGE: cyberos-mcp-gateway
@@ -139,12 +139,12 @@ services:
 
   ai-gateway:
     build:
-      context: ../..
-      dockerfile: services/Dockerfile
+      context: ../../services
+      dockerfile: Dockerfile
       args:
         RUST_VERSION: ${CYBEROS_RUST_VERSION:-1.88.0}
         PACKAGE: cyberos-ai-gateway
-        BIN: cyberos-ai-gateway
+        BIN: cyberos-gateway
     image: cyberos-ai-gateway:${CYBEROS_IMAGE_TAG:-local}
     restart: unless-stopped
     env_file: [.env]
