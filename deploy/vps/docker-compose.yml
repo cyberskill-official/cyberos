@@ -206,20 +206,28 @@ services:
   chat:
     profiles: ["chat"]
     build:
-      context: ../../services/chat
+      context: ../../services
       dockerfile: Dockerfile
-    image: cyberos-chat:${CHAT_IMAGE_TAG:-local}
+      args:
+        RUST_VERSION: ${CYBEROS_RUST_VERSION:-1.88.0}
+        PACKAGE: cyberos-chat
+        BIN: cyberos-chat
+    image: cyberos-chat:${CYBEROS_IMAGE_TAG:-local}
     restart: unless-stopped
     env_file: [.env]
     environment:
-      MM_SQLSETTINGS_DRIVERNAME: postgres
-      MM_SERVICESETTINGS_SITEURL: ${CHAT_SITE_URL:-http://localhost:8080/chat}
+      CHAT_LISTEN_ADDR: 0.0.0.0:7720
+      DATABASE_URL: ${CHAT_DATABASE_URL}
+      CHAT_AUTH_JWKS_URL: ${CHAT_AUTH_JWKS_URL:-http://auth:7700/.well-known/jwks.json}
     depends_on:
       postgres:
         condition: service_healthy
+      auth:
+        condition: service_healthy
     networks: [cyberos]
-    # CONFIRM: chat (Mattermost-based) DB + datasource wiring per services/chat; set CHAT_POSTGRES_* in .env
-    # and create CHAT_POSTGRES_DB. CHAT_PINNED_COMMIT pins the build.
+    # Native cyberos-chat (Rust); Mattermost is retired. The current P0 product runs chat via the
+    # single-origin deploy/vps/docker-compose.p0.images.yml on Supabase - this full-platform compose
+    # keeps chat on the local Postgres for an all-modules bring-up.
 
 # ---- not wired here (need a decision; see deploy doc gaps + README) ---------------------------------
 # embed-sidecar : services/embed-sidecar has no Dockerfile; memory.MEMORY_EMBED_URL must point at it.

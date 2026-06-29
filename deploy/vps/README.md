@@ -1,14 +1,23 @@
 # deploy/vps - production stack
 
-This closes gap #1 in docs/deploy/cyberos-core-deploy.md: the production compose and Caddyfile that
-consume this directory's env file now live in the repo, so the deploy is reproducible. Read the deploy
-doc for the full runbook; this README covers only what is new here.
+There are two deploys in this directory.
+
+CURRENT - the P0 product (Google login plus team chat, DMs, and file sharing), live at
+https://os.cyberskill.world: the `*.p0` files. docker-compose.p0.images.yml runs auth, chat, and Caddy
+from prebuilt GHCR images on a single origin, backed by Supabase (no Postgres container). Caddyfile.p0 is
+the single-origin router. Stand up a fresh server with docs/deploy/p0-server-provisioning.md; auto-deploy
+on push to main is in auto-deploy.md; the Google and tenant setup is in
+docs/deploy/p0-google-chat-runbook.md.
+
+FUTURE - the full all-modules platform: docker-compose.yml plus Caddyfile (the subdomain model). It brings
+up Postgres, Redis, and the core Rust services, and is not used by P0. The rest of this README documents
+that full deploy.
 
 ## Files
 
-- docker-compose.yml - the stack: one Postgres (AGE + pgvector, built from services/dev/Dockerfile.postgres),
+- docker-compose.yml - the full stack: one Postgres (pgvector, built from services/dev/Dockerfile.postgres),
   Redis, the four core Rust HTTP services (auth, memory, mcp-gateway, ai-gateway), Caddy in front, and
-  email + chat behind compose profiles.
+  email + native chat behind compose profiles.
 - Caddyfile - TLS + reverse proxy, one site per service subdomain (auth./memory./mcp./ai.<base>).
 - ../../services/Dockerfile - shared multi-stage build for the workspace binaries; each service passes
   its own PACKAGE and BIN build args.
@@ -45,7 +54,8 @@ are not committed. Verify once: `git ls-files | grep -E '\.live$|/\.env$'` must 
 - PROJ: cyberos_proj is a library, not a server. Decide which binary serves the proj API and add it.
 - CUO: Python orchestration (modules/cuo); supervise via its [project.scripts] entrypoint (compose
   service or systemd), not wired here.
-- chat: confirm the container's listen port for the Caddy route, and the Mattermost DB wiring.
+- chat: native cyberos-chat (Rust) on port 7720; Mattermost is retired. For P0, chat is already wired in
+  the .p0 compose against Supabase - this CONFIRM applies only to the full-platform docker-compose.yml.
 - obs stack: already has its own compose at deploy/obs/docker-compose.yml; run it alongside this one.
 - health paths: auth /healthz, memory /healthz, mcp-gateway /mcp/healthz, email /v1/email/healthz are
   confirmed from source; ai-gateway /healthz assumed - verify before trusting the healthchecks.
