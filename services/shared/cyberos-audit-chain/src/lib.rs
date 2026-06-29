@@ -25,9 +25,17 @@ pub fn chain_anchor(prev_hash_hex: Option<&str>, body: &str) -> String {
     h.finalize().iter().map(|b| format!("{b:02x}")).collect()
 }
 
+/// The `op` values the `l1_audit_log` `l1_op_enum` CHECK accepts (migration 0003). The chain stores a
+/// mutation-vs-read distinction here; `emit_genesis` only ever produced `'put'`, but read-only producers
+/// (FR-MEMORY-121 interaction-events) need `'view'`. Keep this in sync with the migration's CHECK.
+const ALLOWED_OPS: [&str; 4] = ["put", "move", "delete", "view"];
+
 /// Best-effort insert of a genesis audit row into `l1_audit_log` (`op = 'put'`, `prev_hash_hex = NULL`).
 /// Returns the new `seq`. The caller decides what to do on error - the obs callers log and swallow so the
 /// alert route or the view response still completes (the FR's best-effort contract).
+///
+/// This is now a thin `'put'` shim over [`emit_genesis_with_op`]; every existing caller (auth, chat, eval,
+/// obs-router, obs-compliance-view, mcp-gateway) keeps its exact 5-argument signature and `'put'` behaviour.
 pub async fn emit_genesis(
     pool: &PgPool,
     tenant_id: Uuid,
@@ -35,16 +43,45 @@ pub async fn emit_genesis(
     path: &str,
     body: &str,
 ) -> Result<i64, sqlx::Error> {
+    emit_genesis_with_op(pool, tenant_id, subject_id, "put", path, body).await
+}
+
+/// Best-effort insert of a genesis audit row into `l1_audit_log` with an explicit `op`
+/// (`prev_hash_hex = NULL`). Returns the new `seq`. Added for FR-MEMORY-121 §1 #6 so read-only
+/// interaction-events chain as `'view'` rather than `'put'`; `emit_genesis` is the `'put'` shim over it,
+/// so no existing caller changes.
+///
+/// `op` MUST be one of the values the `l1_op_enum` CHECK accepts (`put | move | delete | view`). An
+/// unknown `op` is rejected here (returning a `sqlx` protocol error) so a typo never reaches the INSERT
+/// only to fail on the CHECK with a less specific message; in debug builds it also trips a `debug_assert`.
+pub async fn emit_genesis_with_op(
+    pool: &PgPool,
+    tenant_id: Uuid,
+    subject_id: Uuid,
+    op: &str,
+    path: &str,
+    body: &str,
+) -> Result<i64, sqlx::Error> {
+    debug_assert!(
+        ALLOWED_OPS.contains(&op),
+        "op must be one of {ALLOWED_OPS:?}, got {op:?}"
+    );
+    if !ALLOWED_OPS.contains(&op) {
+        return Err(sqlx::Error::Protocol(format!(
+            "invalid audit op {op:?}; must be one of {ALLOWED_OPS:?}"
+        )));
+    }
     let anchor = chain_anchor(None, body);
     let ts_ns = chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0);
     let row: (i64,) = sqlx::query_as(
         "INSERT INTO l1_audit_log
             (tenant_id, subject_id, op, path, body, prev_hash_hex, chain_anchor_hex, ts_ns)
-         VALUES ($1, $2, 'put', $3, $4, NULL, $5, $6)
+         VALUES ($1, $2, $3, $4, $5, NULL, $6, $7)
          RETURNING seq",
     )
     .bind(tenant_id)
     .bind(subject_id)
+    .bind(op)
     .bind(path)
     .bind(body)
     .bind(&anchor)
@@ -76,5 +113,17 @@ mod tests {
     #[test]
     fn anchor_is_64_hex_chars() {
         assert_eq!(chain_anchor(None, "anything").len(), 64);
+    }
+
+    #[test]
+    fn allowed_ops_match_the_l1_op_enum_check() {
+        // The set must stay in lockstep with migration 0003's CHECK (op IN (...)). FR-MEMORY-121 relies on
+        // 'view' being accepted so read-only interaction-events chain as view, not put.
+        assert!(ALLOWED_OPS.contains(&"put"));
+        assert!(ALLOWED_OPS.contains(&"view"));
+        assert!(ALLOWED_OPS.contains(&"move"));
+        assert!(ALLOWED_OPS.contains(&"delete"));
+        assert!(!ALLOWED_OPS.contains(&"frobnicate"));
+        assert_eq!(ALLOWED_OPS.len(), 4);
     }
 }

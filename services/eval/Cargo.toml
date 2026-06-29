@@ -25,7 +25,17 @@ tracing-subscriber.workspace = true
 tower-http.workspace = true
 uuid.workspace = true
 chrono.workspace = true
+# Slice 2 (governance HTTP surface + caller identity): verify the CyberOS RS256
+# access token against AUTH's JWKS, exactly as cyberos-chat does. Versions mirror
+# services/chat/Cargo.toml so the two services pin the same crates.
+jsonwebtoken.workspace = true
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 cyberos-audit-chain = { path = "../shared/cyberos-audit-chain" }
+
+[dev-dependencies]
+# `util` brings `tower::ServiceExt::oneshot` for driving the router in the
+# endpoints integration test, the same way the auth tests do.
+tower = { workspace = true, features = ["util"] }
 
 [[bin]]
 name = "cyberos-eval"

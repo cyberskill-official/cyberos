@@ -342,8 +342,8 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | Step | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|---|---|---|---|---:|
-| 0 · governance | FR-EVAL-001 | governance, consent, access-control + retention — versioned notice + per-subject acknowledgment gate, category/purpose registry, retention sweeper, founder/manager/self access grants (RLS + audit row per read), data-subject rights | MUST | draft | FR-AUTH-003 | 14h |
-| 1 · capture | FR-MEMORY-121 | interaction-event schema & contract — the one work-interaction event shape every module emits into `l1_audit_log` | MUST | draft | FR-MEMORY-101, FR-EVAL-001 | 9h |
+| 0 · governance | FR-EVAL-001 | governance, consent, access-control + retention — versioned notice + per-subject acknowledgment gate, category/purpose registry, retention sweeper, founder/manager/self access grants (RLS + audit row per read), data-subject rights | MUST | implementing | FR-AUTH-003 | 14h |
+| 1 · capture | FR-MEMORY-121 | interaction-event schema & contract — the one work-interaction event shape every module emits into `l1_audit_log` | MUST | implementing | FR-MEMORY-101, FR-EVAL-001 | 9h |
 | 1 · capture | FR-MEMORY-122 | capture emitters — wire AUTH + CHAT to emit, turn ON the chat→brain audit link, define the PROJ/EMAIL/APP/MCP emitter contract, consent-gated | MUST | draft | FR-MEMORY-121, FR-AUTH-002, FR-CHAT-101 | 10h |
 | 2 · brain | FR-MEMORY-123 | BRAIN ingestion + embedding (pgvector HNSW) + rolling summaries + hot/warm/cold tiering + access-scoped recall with provenance | MUST | draft | FR-MEMORY-121, FR-MEMORY-122 | 26h |
 | 3 · rubric | FR-EVAL-002 | rubric from the three signed documents — versioned, effective-dated, bilingual VN/EN; each item cites its exact source clause | MUST | draft | FR-EVAL-001 | 8h |

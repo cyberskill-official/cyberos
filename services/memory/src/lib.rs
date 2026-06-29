@@ -28,6 +28,9 @@
 #![allow(dead_code)]
 
 pub mod embeddings;
+// FR-MEMORY-121 — the interaction-event capture primitive (event shape + emit + content_ref + consent
+// gate). Aux rows on the existing l1_audit_log chain; no second store.
+pub mod interaction;
 pub mod layer2;
 pub mod rebuild;
 pub mod search;

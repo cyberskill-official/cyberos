@@ -68,9 +68,11 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # eval is the BRAIN/EVAL governance service (FR-EVAL-001). It is independent: if its build or boot
-      # fails, the auth/chat/caddy stack is unaffected and the status page simply shows it down.
+      # eval is the BRAIN/EVAL governance service (FR-EVAL-001), still stabilising. continue-on-error keeps
+      # a failed eval build from failing the job, so the auth + chat images still push and the deploy still
+      # runs. The deploy script treats eval as best-effort too, so the team's chat stack is never blocked.
       - name: Build + push eval
+        continue-on-error: true
         uses: docker/build-push-action@v6
         with:
           context: services

@@ -155,7 +155,9 @@ BEGIN
     -- Append-only governance ledgers: no UPDATE/DELETE for the runtime role.
     GRANT SELECT, INSERT ON monitoring_notice      TO cyberos_app;
     GRANT SELECT, INSERT ON subject_acknowledgment TO cyberos_app;
-    GRANT SELECT, INSERT ON access_grant           TO cyberos_app;  -- revoke (UPDATE revoked_at) = admin role
+    GRANT SELECT, INSERT ON access_grant           TO cyberos_app;
+    -- Revoke flips only revoked_at; every other access_grant column stays immutable for the runtime role.
+    GRANT UPDATE (revoked_at) ON access_grant       TO cyberos_app;
     -- Operator-configured registry + retention: runtime reads; admin role manages.
     GRANT SELECT, INSERT ON data_category          TO cyberos_app;
     GRANT SELECT, INSERT ON retention_policy        TO cyberos_app;

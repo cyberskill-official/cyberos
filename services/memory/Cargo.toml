@@ -30,7 +30,10 @@ anyhow.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
-uuid.workspace = true
+# FR-MEMORY-121 needs UUIDv7 for interaction-event ids (time-sortable, dedup-safe). The `v7` feature is
+# additive over the workspace `uuid` (which already enables v4 + serde); it is the one feature this crate
+# needs beyond the shared default, so it is pinned here rather than widening the workspace floor.
+uuid = { workspace = true, features = ["v7"] }
 chrono.workspace = true
 sha2.workspace = true
 # Versions floored to latest-stable as of 2026 Q2.
@@ -38,9 +41,19 @@ async-trait = "0.1.83"
 regex = "1.11"
 reqwest = { version = "0.12.9", features = ["rustls-tls", "json"], default-features = false }
 
+# FR-MEMORY-121 §1 #5: interaction-events ride the shared hash-chained audit writer (op-aware genesis),
+# byte-identical to the rest of the memory chain. Same crate auth / chat / eval / obs use.
+cyberos-audit-chain = { path = "../shared/cyberos-audit-chain" }
+
 cyberos-cli-exit.workspace = true
 cyberos-types.workspace = true
 cyberos-obs-sdk.workspace = true
 
 [dev-dependencies]
 tokio-test.workspace = true
+# FR-MEMORY-121 §5: the contract test validates every emitted interaction-event body against the published
+# JSON Schema (contracts/interaction-event.schema.json). Test-only; not linked into the service binary.
+# Pinned to 0.18 to match services/ai-gateway (already in services/Cargo.lock) so this dev-dep adds no new
+# major version and `cargo test --locked` resolves without a lockfile bump. The `draft202012` feature is
+# required because the contract is a draft 2020-12 schema.
+jsonschema = { version = "0.18", features = ["draft202012"] }

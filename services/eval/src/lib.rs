@@ -15,12 +15,16 @@
 
 pub mod access;
 pub mod audit;
+pub mod auth;
 pub mod db;
 pub mod gate;
+pub mod handlers;
+
+use std::sync::Arc;
 
 use axum::extract::State;
 use axum::http::StatusCode;
-use axum::routing::get;
+use axum::routing::{get, post};
 use axum::{Json, Router};
 
 #[derive(Clone)]
@@ -31,16 +35,21 @@ pub struct AppState {
     /// The memory module's Postgres (holds l1_audit_log). When set, EVAL appends a hash-chained audit row
     /// per governance mutation (clause 12); when unset (tests/local), the event is logged. Mirrors chat.
     pub audit_pool: Option<db::Pool>,
+    /// Verifies the CyberOS access token (RS256 against AUTH's JWKS, FR-AUTH-004) and yields the caller
+    /// identity for every governance endpoint (slice 2). Built once at boot; mirrors chat.
+    pub authenticator: Arc<auth::Authenticator>,
     /// Crate version, surfaced in /healthz for at-a-glance build identification.
     pub version: &'static str,
 }
 
 impl AppState {
-    /// Build state with no audit pool (tests / local). Governance mutations are logged, not chained.
+    /// Build state with no audit pool and an HS256 test verifier (tests / local). Governance mutations
+    /// are logged, not chained. Production builds state in `main` with the JWKS-backed authenticator.
     pub fn new(pool: db::Pool) -> Self {
         Self {
             pool,
             audit_pool: None,
+            authenticator: Arc::new(auth::Authenticator::from_hs256_secret(b"eval-dev-secret")),
             version: env!("CARGO_PKG_VERSION"),
         }
     }
@@ -54,6 +63,23 @@ pub fn internal<E: std::fmt::Display>(e: E) -> (StatusCode, String) {
 pub fn router(state: AppState) -> Router {
     let mut app = Router::new()
         .route("/healthz", get(health))
+        // Notice (clause 1): publish a new version (founder), read the current one (founder/manager).
+        .route(
+            "/v1/eval/notice",
+            post(handlers::publish_notice).get(handlers::get_notice),
+        )
+        // Data-category registry (clause 4, 5): register/update a category (founder).
+        .route("/v1/eval/categories", post(handlers::register_category))
+        // Acknowledgment (clause 2, 3): the HR action that flips the consent gate for a subject.
+        .route("/v1/eval/ack", post(handlers::record_ack))
+        // Access grants (clause 7, 8): grant (founder) and revoke (founder).
+        .route("/v1/eval/access", post(handlers::grant_access))
+        .route("/v1/eval/access/revoke", post(handlers::revoke_access))
+        // Retention (clause 6): set/replace a per-category retention policy (founder).
+        .route("/v1/eval/retention", post(handlers::set_retention))
+        // Data-subject self surface (clause 10): own record + file a request.
+        .route("/v1/eval/me", get(handlers::get_me))
+        .route("/v1/eval/me/requests", post(handlers::file_request))
         .with_state(state);
 
     // Opt-in permissive CORS so a local browser (a future EVAL governance-status console) can call the

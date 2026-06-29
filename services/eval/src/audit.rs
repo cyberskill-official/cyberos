@@ -9,15 +9,20 @@
 use serde_json::{json, Value};
 use uuid::Uuid;
 
-/// The clause-12 governance event kinds. Slice 1 emits the first five; the later sub-tasks
-/// (DSR, sweeper) add `eval.dsr_filed`, `eval.dsr_resolved`, `eval.retention_swept`,
-/// `eval.subject_erased`, and the gated-capture skip `eval.capture_gated`.
+/// The clause-12 governance event kinds. Slice 1 emitted the gate / access set; slice 2 adds the two
+/// governance-mutation kinds its HTTP surface needs - category registration and a filed data-subject
+/// request. The remaining later sub-tasks (sweeper) add `eval.retention_swept`, `eval.subject_erased`,
+/// and the gated-capture skip `eval.capture_gated`.
 pub mod kind {
     pub const NOTICE_PUBLISHED: &str = "eval.notice_published";
     pub const ACK_RECORDED: &str = "eval.ack_recorded";
     pub const ACCESS_GRANTED: &str = "eval.access_granted";
     pub const ACCESS_REVOKED: &str = "eval.access_revoked";
     pub const RETENTION_CHANGED: &str = "eval.retention_changed";
+    /// A data-category registered / updated in the registry (clause 4), per slice 2 POST /categories.
+    pub const CATEGORY_REGISTERED: &str = "eval.category_registered";
+    /// A subject filed a data-subject request about their own record (clause 10b), per POST /me/requests.
+    pub const SUBJECT_REQUEST: &str = "eval.subject_request";
     /// A cross-subject read of evaluation data (reader != target), per clause 9.
     pub const EVALUATION_READ: &str = "eval.evaluation_read";
     /// A subject reading their OWN record (lighter weight), per clause 9.

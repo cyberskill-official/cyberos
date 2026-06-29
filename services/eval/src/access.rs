@@ -51,6 +51,7 @@ pub enum AccessError {
 ///   2. a non-revoked `founder` grant held by the viewer ⇒ allowed (clause 7a);
 ///   3. a non-revoked `manager_of` grant for the exact (viewer, target) pair ⇒ allowed (clause 7b);
 ///   4. otherwise denied.
+///
 /// All grant lookups run inside a tenant-scoped transaction so RLS confines them to this tenant.
 pub async fn may_read(
     pool: &Pool,

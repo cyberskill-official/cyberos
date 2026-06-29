@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberos.cyberskill.world/contracts/interaction-event/v1",
+  "title": "CyberOS interaction-event",
+  "description": "FR-MEMORY-121: the one work-interaction event every CyberOS module emits as an aux row on the hash-chained l1_audit_log (row kind 'memory.interaction_event'). This is the payload object — the audit row wraps it as {\"event_type\":\"memory.interaction_event\",\"payload\":<this>}. Platform work-interactions ONLY; content is referenced via content_ref (pointer/hash), never inlined. Subject capture is gated upstream on the FR-EVAL-001 monitoring-notice acknowledgment (the emit-time consent gate). Frozen at schema_version 1; downstream emitters (FR-MEMORY-122 and later) pin this file, not each other.",
+  "x-evolution": "additive-only: new optional fields and new '<module>.<verb>' event_type values are allowed without a version bump; removing or retyping a field, or changing the 'required' set, requires schema_version 2 + a migration note (see §1 #15).",
+  "x-row-kind": "memory.interaction_event",
+  "x-aux-audit-kinds": [
+    "memory.interaction_event",
+    "memory.precondition_failed",
+    "memory.acl_denied",
+    "memory.status_overridden",
+    "memory.awh_gate_result"
+  ],
+  "type": "object",
+  "comment-additive": "The root object intentionally does NOT set additionalProperties:false: the x-evolution rule (§1 #15) permits new OPTIONAL top-level fields at schema_version 1 without a version bump, so an additive field from a future emitter must not fail validation. The closed unions (target_ref, content_ref arms) DO set additionalProperties:false because those vocabularies are frozen. Removing/retyping a field or changing 'required' still requires schema_version 2.",
+  "required": [
+    "schema_version",
+    "event_id",
+    "tenant_id",
+    "subject_id",
+    "occurred_at_ns",
+    "module",
+    "event_type",
+    "event_class",
+    "target_ref",
+    "content_ref",
+    "session_id",
+    "trace_id",
+    "source_channel"
+  ],
+  "properties": {
+    "schema_version": {
+      "description": "Frozen contract version. const 1 for FR-MEMORY-121; downstream emitters pin it.",
+      "const": 1
+    },
+    "event_id": {
+      "description": "Globally-unique UUIDv7 — time-sortable, dedup-safe across replay. Idempotency key at ingest (§1 #17).",
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "description": "The emitting subject's tenant; drives l1_audit_log RLS (§1 #14).",
+      "type": "string",
+      "format": "uuid"
+    },
+    "subject_id": {
+      "description": "The person who acted (FR-AUTH-002 subject). null ONLY for genuine system actors (a scheduled job), NEVER to anonymise a real person's action.",
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "occurred_at_ns": {
+      "description": "Nanoseconds since the Unix epoch at the moment of the interaction (not ingest time).",
+      "type": "integer"
+    },
+    "module": {
+      "description": "The emitting module. Closed set; unknown values are rejected at emit (§1 #9).",
+      "enum": ["auth", "chat", "proj", "email", "app", "mcp", "memory", "ai", "obs", "cuo"]
+    },
+    "event_type": {
+      "description": "The specific interaction, namespaced '<module>.<verb>' (e.g. chat.message_created, auth.signed_in). New verbs are additive — no schema bump. The leading segment MUST equal 'module'.",
+      "type": "string",
+      "pattern": "^[a-z]+\\.[a-z0-9_]+$"
+    },
+    "event_class": {
+      "description": "Coarse class for ingestion + the op derivation (read -> 'view', else 'put'); stable even as event_type grows.",
+      "enum": ["auth", "presence", "content", "activity", "admin", "read"]
+    },
+    "target_ref": {
+      "description": "What the interaction was about — a reference, never raw content.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id"],
+          "properties": {
+            "kind": {
+              "enum": ["channel", "dm", "message", "issue", "document", "thread", "tool", "session", "subject"]
+            },
+            "id": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": { "kind": { "const": "none" } }
+        }
+      ]
+    },
+    "content_ref": {
+      "description": "Pointer or hash of any content the interaction carried (§1 #4). NEVER the raw body where a pointer/hash suffices.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "store", "id"],
+          "properties": {
+            "kind": { "const": "pointer" },
+            "store": { "enum": ["chat_messages", "proj_documents", "email_objects", "memory", "attachments"] },
+            "id": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "sha256", "bytes", "preview_len"],
+          "properties": {
+            "kind": { "const": "hash" },
+            "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "bytes": { "type": "integer", "minimum": 0 },
+            "preview_len": { "type": "integer", "minimum": 0 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": { "kind": { "const": "none" } }
+        }
+      ]
+    },
+    "session_id": {
+      "description": "The AUTH session (FR-AUTH-004 jti-derived) the action happened in. null when the interaction has no session.",
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "trace_id": {
+      "description": "The W3C traceparent trace-id (FR-OBS-003) so the interaction correlates with its request span. null when absent.",
+      "type": ["string", "null"]
+    },
+    "source_channel": {
+      "description": "How the interaction reached the platform. Closed set.",
+      "enum": ["web", "desktop", "mobile", "api", "cli", "system", "import"]
+    },
+    "attributes": {
+      "description": "A small, bounded bag of module-specific scalars (e.g. {prev_status,new_status}). MUST NOT carry raw content; MUST be <= 2 KiB serialised (§1 #10). Optional; defaults to {}.",
+      "type": "object"
+    }
+  }
+}
