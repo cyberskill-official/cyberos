@@ -90,7 +90,9 @@ pub async fn publish_notice(
 ) -> Result<(StatusCode, Json<Notice>), (StatusCode, String)> {
     let caller = auth::caller(&st, &headers)?;
     if !caller.is_founder {
-        return Err(forbidden("only the founder may publish a monitoring notice"));
+        return Err(forbidden(
+            "only the founder may publish a monitoring notice",
+        ));
     }
     let en = body.lang_en.trim();
     let vi = body.lang_vi.trim();
@@ -174,7 +176,9 @@ pub async fn get_notice(
         .map_err(crate::internal)?;
         if is_manager.is_none() {
             let _ = tx.commit().await;
-            return Err(forbidden("only the founder or a manager may read the notice"));
+            return Err(forbidden(
+                "only the founder or a manager may read the notice",
+            ));
         }
     }
     let row: Option<NoticeRow> = sqlx::query_as(
@@ -264,7 +268,10 @@ pub async fn register_category(
         return Err((StatusCode::BAD_REQUEST, "name is required".to_string()));
     }
     if purpose.is_empty() {
-        return Err((StatusCode::BAD_REQUEST, "declared purpose is required".to_string()));
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "declared purpose is required".to_string(),
+        ));
     }
     if !LAWFUL_BASES.contains(&basis) {
         return Err((
@@ -610,7 +617,10 @@ pub async fn set_retention(
         return Err((StatusCode::BAD_REQUEST, "category is required".to_string()));
     }
     if body.retain_days <= 0 {
-        return Err((StatusCode::BAD_REQUEST, "retain_days must be > 0".to_string()));
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "retain_days must be > 0".to_string(),
+        ));
     }
     let basis = body.basis.as_deref().unwrap_or("legitimate_interest");
 
@@ -777,13 +787,15 @@ pub async fn get_me(
             .collect(),
         access_grants_about_me: grants
             .into_iter()
-            .map(|(id, viewer_subject_id, scope, granted_at, revoked_at)| MyGrant {
-                id,
-                viewer_subject_id,
-                scope,
-                granted_at,
-                revoked_at,
-            })
+            .map(
+                |(id, viewer_subject_id, scope, granted_at, revoked_at)| MyGrant {
+                    id,
+                    viewer_subject_id,
+                    scope,
+                    granted_at,
+                    revoked_at,
+                },
+            )
             .collect(),
     }))
 }

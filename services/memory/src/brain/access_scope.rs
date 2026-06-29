@@ -102,12 +102,11 @@ pub async fn deny_reason(
     let mut tx = pool.begin().await?;
     set_access_guc(&mut tx, caller.tenant_id).await?;
     // Is this subject known to the access model at all (any grant where they are the target)?
-    let known: Option<i64> = sqlx::query_scalar(
-        "SELECT 1 FROM access_grant WHERE target_subject_id = $1 LIMIT 1",
-    )
-    .bind(subject_id)
-    .fetch_optional(&mut *tx)
-    .await?;
+    let known: Option<i64> =
+        sqlx::query_scalar("SELECT 1 FROM access_grant WHERE target_subject_id = $1 LIMIT 1")
+            .bind(subject_id)
+            .fetch_optional(&mut *tx)
+            .await?;
     tx.commit().await?;
     Ok(if known.is_some() {
         DenyReason::SubjectScope

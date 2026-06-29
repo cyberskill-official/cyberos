@@ -407,7 +407,10 @@ mod tests {
         // Union, sorted, de-duplicated.
         assert_eq!(
             r.module_scopes("projects"),
-            Some(vec!["projects.read".to_string(), "projects.write".to_string()])
+            Some(vec![
+                "projects.read".to_string(),
+                "projects.write".to_string()
+            ])
         );
         // A module whose only tool requires no scope exists with an empty scope list (not a 404).
         reg(&r, "cyberos.echo.ping", "echo");

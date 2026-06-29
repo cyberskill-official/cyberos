@@ -52,7 +52,9 @@ pub async fn register(
 
     // Common validation.
     if req.redirect_uris.is_empty() || req.redirect_uris.len() > 5 {
-        return Err(OAuthError::invalid_request("redirect_uris must contain 1 to 5 entries").into());
+        return Err(
+            OAuthError::invalid_request("redirect_uris must contain 1 to 5 entries").into(),
+        );
     }
     for uri in &req.redirect_uris {
         if !is_allowed_redirect(uri) {
@@ -111,8 +113,14 @@ pub async fn register(
                 &req.scope,
             )
             .await?;
-            audit::client_registered(pool, caller.tenant_id, caller.subject_id, id, "confidential")
-                .await;
+            audit::client_registered(
+                pool,
+                caller.tenant_id,
+                caller.subject_id,
+                id,
+                "confidential",
+            )
+            .await;
             Ok(RegisterResponse {
                 client_id: id.to_string(),
                 client_secret: Some(client_secret),

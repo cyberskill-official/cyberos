@@ -16,7 +16,9 @@
 //!     `Skipped` outcome and zero rows) and swallows any error. A capture failure NEVER fails or delays the
 //!     send. Call sites further spawn the emit so it cannot delay the HTTP response (see messages.rs).
 
-use cyberos_capture::{Capturer, ContentRef, EventClass, InteractionEvent, Module, SourceChannel, TargetRef};
+use cyberos_capture::{
+    Capturer, ContentRef, EventClass, InteractionEvent, Module, SourceChannel, TargetRef,
+};
 use uuid::Uuid;
 
 /// Build the right `target_ref` for a channel-scoped event: a DM channel uses `dm{id}`, any other kind
@@ -68,7 +70,9 @@ pub async fn emit_message_created(
         .build();
     match ev {
         Ok(ev) => cap.capture_metered(&ev).await,
-        Err(e) => tracing::warn!(error = %e, "chat.message_created event build failed (best-effort)"),
+        Err(e) => {
+            tracing::warn!(error = %e, "chat.message_created event build failed (best-effort)")
+        }
     }
 }
 
@@ -96,7 +100,9 @@ pub async fn emit_message_edited(
         .build();
     match ev {
         Ok(ev) => cap.capture_metered(&ev).await,
-        Err(e) => tracing::warn!(error = %e, "chat.message_edited event build failed (best-effort)"),
+        Err(e) => {
+            tracing::warn!(error = %e, "chat.message_edited event build failed (best-effort)")
+        }
     }
 }
 
@@ -122,16 +128,26 @@ pub async fn emit_message_deleted(
             "channel_kind",
             serde_json::Value::String(channel_kind.to_string()),
         )
-        .attribute("message_id", serde_json::Value::String(message_id.to_string()))
+        .attribute(
+            "message_id",
+            serde_json::Value::String(message_id.to_string()),
+        )
         .build();
     match ev {
         Ok(ev) => cap.capture_metered(&ev).await,
-        Err(e) => tracing::warn!(error = %e, "chat.message_deleted event build failed (best-effort)"),
+        Err(e) => {
+            tracing::warn!(error = %e, "chat.message_deleted event build failed (best-effort)")
+        }
     }
 }
 
 /// §1 #4 — `chat.channel_created` (`admin`, `target_ref: channel{id}`). Best-effort no-op when `None`.
-pub async fn emit_channel_created(cap: Option<&Capturer>, tenant: Uuid, creator: Uuid, channel_id: Uuid) {
+pub async fn emit_channel_created(
+    cap: Option<&Capturer>,
+    tenant: Uuid,
+    creator: Uuid,
+    channel_id: Uuid,
+) {
     let Some(cap) = cap else { return };
     let ev = InteractionEvent::builder(Module::Chat, "chat.channel_created", EventClass::Admin)
         .tenant(tenant)
@@ -145,7 +161,9 @@ pub async fn emit_channel_created(cap: Option<&Capturer>, tenant: Uuid, creator:
         .build();
     match ev {
         Ok(ev) => cap.capture_metered(&ev).await,
-        Err(e) => tracing::warn!(error = %e, "chat.channel_created event build failed (best-effort)"),
+        Err(e) => {
+            tracing::warn!(error = %e, "chat.channel_created event build failed (best-effort)")
+        }
     }
 }
 
@@ -176,7 +194,9 @@ pub async fn emit_channel_membership(
         .build();
     match ev {
         Ok(ev) => cap.capture_metered(&ev).await,
-        Err(e) => tracing::warn!(error = %e, verb, "chat channel-membership event build failed (best-effort)"),
+        Err(e) => {
+            tracing::warn!(error = %e, verb, "chat channel-membership event build failed (best-effort)")
+        }
     }
 }
 
@@ -225,7 +245,9 @@ pub async fn emit_presence_changed(
         .build();
     match ev {
         Ok(ev) => cap.capture_metered(&ev).await,
-        Err(e) => tracing::warn!(error = %e, "chat.presence_changed event build failed (best-effort)"),
+        Err(e) => {
+            tracing::warn!(error = %e, "chat.presence_changed event build failed (best-effort)")
+        }
     }
 }
 
@@ -236,10 +258,7 @@ mod tests {
     #[test]
     fn channel_target_maps_kind() {
         let id = Uuid::nil();
-        assert!(matches!(
-            channel_target(id, "direct"),
-            TargetRef::Dm { .. }
-        ));
+        assert!(matches!(channel_target(id, "direct"), TargetRef::Dm { .. }));
         assert!(matches!(
             channel_target(id, "group"),
             TargetRef::Channel { .. }

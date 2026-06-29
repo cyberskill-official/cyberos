@@ -69,6 +69,19 @@ pub async fn emit_governance(
 
 /// Convenience over [`emit_governance`] for handler code that already holds `AppState`. Mirrors
 /// `cyberos_chat::audit::emit(state, ...)`.
-pub async fn emit(state: &crate::AppState, tenant: Uuid, actor: Uuid, event_type: &str, payload: Value) {
-    emit_governance(state.audit_pool.as_ref(), tenant, actor, event_type, payload).await
+pub async fn emit(
+    state: &crate::AppState,
+    tenant: Uuid,
+    actor: Uuid,
+    event_type: &str,
+    payload: Value,
+) {
+    emit_governance(
+        state.audit_pool.as_ref(),
+        tenant,
+        actor,
+        event_type,
+        payload,
+    )
+    .await
 }

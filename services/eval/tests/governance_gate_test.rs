@@ -44,11 +44,13 @@ async fn seed_tx(pool: &PgPool, tenant: Uuid) -> sqlx::Transaction<'_, sqlx::Pos
 async fn publish_notice(pool: &PgPool, tenant: Uuid, version: i32, publisher: Uuid) -> Uuid {
     let mut tx = seed_tx(pool, tenant).await;
     // Flip any prior current notice for this tenant to non-current (mirrors clause-1 publish semantics).
-    sqlx::query("UPDATE monitoring_notice SET is_current = FALSE WHERE tenant_id = $1 AND is_current")
-        .bind(tenant)
-        .execute(&mut *tx)
-        .await
-        .unwrap();
+    sqlx::query(
+        "UPDATE monitoring_notice SET is_current = FALSE WHERE tenant_id = $1 AND is_current",
+    )
+    .bind(tenant)
+    .execute(&mut *tx)
+    .await
+    .unwrap();
     let (id,): (Uuid,) = sqlx::query_as(
         "INSERT INTO monitoring_notice
             (tenant_id, version, lang_en, lang_vi, lawful_basis, is_current, published_by)
@@ -113,7 +115,9 @@ async fn gate_denies_unacknowledged_and_allows_acknowledged() {
 
     // No notice published yet ⇒ everyone gated (capture NOT allowed).
     assert!(
-        !gate::is_capture_allowed(&pool, tenant, subject).await.unwrap(),
+        !gate::is_capture_allowed(&pool, tenant, subject)
+            .await
+            .unwrap(),
         "with no published notice the subject must be gated"
     );
 
@@ -124,7 +128,9 @@ async fn gate_denies_unacknowledged_and_allows_acknowledged() {
         Some(gate::GateReason::NoAck),
         "un-acknowledged subject must be gated with reason NoAck"
     );
-    assert!(!gate::is_capture_allowed(&pool, tenant, subject).await.unwrap());
+    assert!(!gate::is_capture_allowed(&pool, tenant, subject)
+        .await
+        .unwrap());
 
     // Record the subject's acknowledgment of v1 ⇒ no longer gated, capture allowed.
     record_ack(&pool, tenant, subject, notice_v1, 1).await;
@@ -134,7 +140,9 @@ async fn gate_denies_unacknowledged_and_allows_acknowledged() {
         "acknowledged subject must not be gated"
     );
     assert!(
-        gate::is_capture_allowed(&pool, tenant, subject).await.unwrap(),
+        gate::is_capture_allowed(&pool, tenant, subject)
+            .await
+            .unwrap(),
         "acknowledged subject must be capture-allowed"
     );
 
@@ -145,7 +153,9 @@ async fn gate_denies_unacknowledged_and_allows_acknowledged() {
         Some(gate::GateReason::StaleAckVersion),
         "a notice-version bump must re-gate the subject until they re-acknowledge"
     );
-    assert!(!gate::is_capture_allowed(&pool, tenant, subject).await.unwrap());
+    assert!(!gate::is_capture_allowed(&pool, tenant, subject)
+        .await
+        .unwrap());
 }
 
 #[tokio::test]
@@ -161,44 +171,62 @@ async fn access_denies_stranger_allows_founder_self_and_manager() {
 
     // Self: reading one's own record is always permitted (clause 7c), no grant row needed.
     assert!(
-        access::can_read_evaluation(&pool, tenant, target, target).await.unwrap(),
+        access::can_read_evaluation(&pool, tenant, target, target)
+            .await
+            .unwrap(),
         "a subject must be able to read their own record"
     );
     assert_eq!(
-        access::may_read(&pool, tenant, target, target).await.unwrap(),
+        access::may_read(&pool, tenant, target, target)
+            .await
+            .unwrap(),
         Some(access::GrantKind::Self_)
     );
 
     // Stranger with no grant: denied by default.
     assert!(
-        !access::can_read_evaluation(&pool, tenant, stranger, target).await.unwrap(),
+        !access::can_read_evaluation(&pool, tenant, stranger, target)
+            .await
+            .unwrap(),
         "a stranger with no grant must be denied"
     );
     assert_eq!(
-        access::may_read(&pool, tenant, stranger, target).await.unwrap(),
+        access::may_read(&pool, tenant, stranger, target)
+            .await
+            .unwrap(),
         None
     );
 
     // Founder: a non-revoked founder-scope grant ⇒ may read anyone in the tenant (clause 7a).
     grant(&pool, tenant, founder, target, "founder", granter).await;
     assert_eq!(
-        access::may_read(&pool, tenant, founder, target).await.unwrap(),
+        access::may_read(&pool, tenant, founder, target)
+            .await
+            .unwrap(),
         Some(access::GrantKind::Founder)
     );
-    assert!(access::can_read_evaluation(&pool, tenant, founder, target).await.unwrap());
+    assert!(access::can_read_evaluation(&pool, tenant, founder, target)
+        .await
+        .unwrap());
 
     // Manager-of: a non-revoked manager_of grant for the exact pair ⇒ allowed (clause 7b).
     grant(&pool, tenant, manager, target, "manager_of", granter).await;
     assert_eq!(
-        access::may_read(&pool, tenant, manager, target).await.unwrap(),
+        access::may_read(&pool, tenant, manager, target)
+            .await
+            .unwrap(),
         Some(access::GrantKind::ManagerOf)
     );
-    assert!(access::can_read_evaluation(&pool, tenant, manager, target).await.unwrap());
+    assert!(access::can_read_evaluation(&pool, tenant, manager, target)
+        .await
+        .unwrap());
 
     // The manager_of grant is pair-specific: it must NOT let the manager read a different subject.
     let other_target = Uuid::new_v4();
     assert!(
-        !access::can_read_evaluation(&pool, tenant, manager, other_target).await.unwrap(),
+        !access::can_read_evaluation(&pool, tenant, manager, other_target)
+            .await
+            .unwrap(),
         "a manager_of grant must not generalise to other targets"
     );
 }

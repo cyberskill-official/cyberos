@@ -53,7 +53,11 @@ pub async fn create(pool: &PgPool, tenant_id: Uuid, subject_id: Uuid) -> Result<
 
 /// Silent-SSO read: returns the session iff it is not revoked, still inside the
 /// 24h absolute window, and was seen within the 8h sliding window.
-pub async fn lookup_active(pool: &PgPool, tenant_id: Uuid, id: Uuid) -> Result<Option<SsoSession>, OpError> {
+pub async fn lookup_active(
+    pool: &PgPool,
+    tenant_id: Uuid,
+    id: Uuid,
+) -> Result<Option<SsoSession>, OpError> {
     let mut tx = pool.begin().await.map_err(|_| OpError::ServerError)?;
     sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
         .bind(tenant_id.to_string())
@@ -73,7 +77,11 @@ pub async fn lookup_active(pool: &PgPool, tenant_id: Uuid, id: Uuid) -> Result<O
     .await
     .map_err(|_| OpError::ServerError)?;
     tx.commit().await.map_err(|_| OpError::ServerError)?;
-    Ok(row.map(|(id, tenant_id, subject_id)| SsoSession { id, tenant_id, subject_id }))
+    Ok(row.map(|(id, tenant_id, subject_id)| SsoSession {
+        id,
+        tenant_id,
+        subject_id,
+    }))
 }
 
 /// Extend the sliding window (called on each silent-SSO use).
@@ -84,18 +92,24 @@ pub async fn touch(pool: &PgPool, tenant_id: Uuid, id: Uuid) -> Result<(), OpErr
         .execute(&mut *tx)
         .await
         .map_err(|_| OpError::ServerError)?;
-    sqlx::query("UPDATE auth_sso_sessions SET last_seen_at = NOW() WHERE id = $1 AND revoked_at IS NULL")
-        .bind(id)
-        .execute(&mut *tx)
-        .await
-        .map_err(|_| OpError::ServerError)?;
+    sqlx::query(
+        "UPDATE auth_sso_sessions SET last_seen_at = NOW() WHERE id = $1 AND revoked_at IS NULL",
+    )
+    .bind(id)
+    .execute(&mut *tx)
+    .await
+    .map_err(|_| OpError::ServerError)?;
     tx.commit().await.map_err(|_| OpError::ServerError)?;
     Ok(())
 }
 
 /// Revoke every live session for `subject_id` (the §1 #26 cascade). Returns the
 /// number of sessions revoked.
-pub async fn revoke_for_subject(pool: &PgPool, tenant_id: Uuid, subject_id: Uuid) -> Result<u64, OpError> {
+pub async fn revoke_for_subject(
+    pool: &PgPool,
+    tenant_id: Uuid,
+    subject_id: Uuid,
+) -> Result<u64, OpError> {
     let mut tx = pool.begin().await.map_err(|_| OpError::ServerError)?;
     sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
         .bind(tenant_id.to_string())

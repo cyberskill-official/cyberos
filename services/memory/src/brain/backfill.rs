@@ -21,7 +21,11 @@ use super::EmbedClient;
 /// Rebuild the entire derived lens for `tenant_id` from Layer 1 (§1 #14). Resets the cursor to 0 then drains
 /// the event stream through the normal ingest path, so the rebuilt state is byte-for-byte what a fresh ingest
 /// of the same chain range produces. Returns the number of events re-ingested. The chain is never written.
-pub async fn rebuild(tenant_id: Uuid, pool: &PgPool, gw: &EmbedClient) -> Result<usize, sqlx::Error> {
+pub async fn rebuild(
+    tenant_id: Uuid,
+    pool: &PgPool,
+    gw: &EmbedClient,
+) -> Result<usize, sqlx::Error> {
     // Reset the ingest cursor to 0 (admin path; nil-tenant RLS bypass via the tx).
     {
         let mut tx = super::tenant_tx(pool, tenant_id).await?;

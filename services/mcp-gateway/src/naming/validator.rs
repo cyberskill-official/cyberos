@@ -196,7 +196,10 @@ pub fn validate_sync(skill_id: &str) -> Result<ValidationResult, NamingError> {
              module and noun are snake_case identifiers"
                 .to_string()
         };
-        NamingError::MalformedSkillId { skill_id: skill_id.to_string(), reason }
+        NamingError::MalformedSkillId {
+            skill_id: skill_id.to_string(),
+            reason,
+        }
     })?;
 
     // The regex guarantees three capture groups when it matches, so these indices are safe.

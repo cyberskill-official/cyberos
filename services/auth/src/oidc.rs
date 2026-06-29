@@ -574,20 +574,23 @@ pub async fn callback(
     // cookie, and 302 back to the original /authorize, which now succeeds via
     // silent SSO. The non-broker path (op_resume = None) is unchanged below.
     if let Some(resume) = pending.op_resume.as_deref() {
-        let sso_id = match crate::op::sso_session::create(&state.pg, idp.tenant_id, subject_id).await {
-            Ok(id) => id,
-            Err(_) => {
-                return Err((
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(json!({"error": "sso_session_create_failed"})),
-                ))
-            }
-        };
-        let cookie =
-            format!("__Host-cyberos_sso={sso_id}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=86400");
+        let sso_id =
+            match crate::op::sso_session::create(&state.pg, idp.tenant_id, subject_id).await {
+                Ok(id) => id,
+                Err(_) => {
+                    return Err((
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(json!({"error": "sso_session_create_failed"})),
+                    ))
+                }
+            };
+        let cookie = format!(
+            "__Host-cyberos_sso={sso_id}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=86400"
+        );
         let mut resp = Redirect::to(resume).into_response();
         if let Ok(hv) = cookie.parse() {
-            resp.headers_mut().insert(axum::http::header::SET_COOKIE, hv);
+            resp.headers_mut()
+                .insert(axum::http::header::SET_COOKIE, hv);
         }
         return Ok(resp);
     }
@@ -609,7 +612,10 @@ pub async fn callback(
                 })),
             ));
         }
-        let challenge = matches!(outcome, Some(crate::travel::TravelOutcome::Challenge { .. }));
+        let challenge = matches!(
+            outcome,
+            Some(crate::travel::TravelOutcome::Challenge { .. })
+        );
         let sep = if return_to.contains('#') { '&' } else { '#' };
         let frag = format!(
             "{sep}access_token={at}&refresh_token={rt}&token_type={tt}&expires_in={ei}{ch}",
@@ -617,7 +623,11 @@ pub async fn callback(
             rt = urlencode(&tokens.refresh_token),
             tt = urlencode(&tokens.token_type),
             ei = tokens.expires_in,
-            ch = if challenge { "&needs_mfa_challenge=1" } else { "" },
+            ch = if challenge {
+                "&needs_mfa_challenge=1"
+            } else {
+                ""
+            },
         );
         return Ok(Redirect::to(&format!("{return_to}{frag}")).into_response());
     }
@@ -988,7 +998,12 @@ async fn resolve_subject(
 /// in its own transaction after the subject is committed - a misconfigured role name
 /// (which violates the `roles(name)` FK) rolls back only this grant and never aborts
 /// the login. `granted_by` is the nil UUID, marking a system/IdP grant.
-async fn grant_default_roles(state: &AppState, tenant_id: Uuid, subject_id: Uuid, roles: &[String]) {
+async fn grant_default_roles(
+    state: &AppState,
+    tenant_id: Uuid,
+    subject_id: Uuid,
+    roles: &[String],
+) {
     if roles.is_empty() {
         return;
     }
@@ -1178,7 +1193,10 @@ mod tests {
         let err = verify_id_token(&token, &jwks, "https://idp", "client")
             .unwrap_err()
             .to_string();
-        assert!(err.contains("kid"), "expected a kid mismatch error, got: {err}");
+        assert!(
+            err.contains("kid"),
+            "expected a kid mismatch error, got: {err}"
+        );
     }
 
     #[test]
@@ -1190,12 +1208,15 @@ mod tests {
     #[test]
     fn return_to_dev_default_allows_localhost_only() {
         // No allow-list configured -> only localhost / 127.0.0.1 hand-backs.
-        assert!(return_to_allowed_with("http://localhost:8090/app.html", None));
-        assert!(return_to_allowed_with("http://127.0.0.1:8090/app.html", Some("")));
-        assert!(!return_to_allowed_with(
-            "https://evil.example/steal",
+        assert!(return_to_allowed_with(
+            "http://localhost:8090/app.html",
             None
         ));
+        assert!(return_to_allowed_with(
+            "http://127.0.0.1:8090/app.html",
+            Some("")
+        ));
+        assert!(!return_to_allowed_with("https://evil.example/steal", None));
     }
 
     #[test]
@@ -1206,7 +1227,10 @@ mod tests {
             allow
         ));
         // A configured allow-list does NOT implicitly permit localhost.
-        assert!(!return_to_allowed_with("http://localhost:8090/app.html", allow));
+        assert!(!return_to_allowed_with(
+            "http://localhost:8090/app.html",
+            allow
+        ));
         // An attacker-chosen origin that merely contains the allowed host is rejected.
         assert!(!return_to_allowed_with(
             "https://evil.example/?x=https://os.cyberskill.world/",

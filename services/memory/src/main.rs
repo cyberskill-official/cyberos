@@ -247,7 +247,12 @@ async fn run_brain_daemon(
 
             match brain::ingest_worker::ingest_one_tenant(tid, &pool, &gw).await {
                 Ok(s) if s.embedded > 0 || s.pending > 0 => {
-                    info!(?tenant, embedded = s.embedded, pending = s.pending, "brain ingest batch");
+                    info!(
+                        ?tenant,
+                        embedded = s.embedded,
+                        pending = s.pending,
+                        "brain ingest batch"
+                    );
                 }
                 Ok(_) => { /* quiet: nothing new this tick */ }
                 Err(e) => warn!(?tenant, error = %e, "brain ingest batch failed — retry next tick"),

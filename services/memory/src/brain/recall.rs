@@ -21,8 +21,8 @@ use std::collections::HashMap;
 use uuid::Uuid;
 
 use super::{
-    access_scope, metrics, now_ns, provenance, BrainConfig, Caller, EmbedClient, EmbedError, HitSource,
-    Provenance, RecallHit, RecallQuery, RecallResults, MAX_RECALL_LIMIT,
+    access_scope, metrics, now_ns, provenance, BrainConfig, Caller, EmbedClient, EmbedError,
+    HitSource, Provenance, RecallHit, RecallQuery, RecallResults, MAX_RECALL_LIMIT,
 };
 use crate::embeddings::to_pgvector_literal;
 
@@ -82,25 +82,33 @@ pub async fn recall(
 
     // Narrow a caller-supplied subject_scope to what they may actually see (never widens; §1 #7). The per-
     // hit access check below remains the load-bearing authority.
-    let visible_scope = access_scope::intersect_visible_scope(pool, caller, &q.subject_scope).await?;
+    let visible_scope =
+        access_scope::intersect_visible_scope(pool, caller, &q.subject_scope).await?;
 
     // 1. Embed the query (graceful degrade to full-text over summaries if the gateway is down — §1 #18).
     let q_vec: Option<Vec<f32>> = match gw.embed(tenant_id, &q.q).await {
         Ok(emb) => Some(emb.vector),
-        Err(EmbedError::SpendCapExhausted) | Err(EmbedError::GatewayDown(_)) | Err(EmbedError::Malformed(_)) => {
+        Err(EmbedError::SpendCapExhausted)
+        | Err(EmbedError::GatewayDown(_))
+        | Err(EmbedError::Malformed(_)) => {
             degraded.push("query_embed".to_string());
             None
         }
     };
 
     // 2. Summaries-first.
-    let summary_hits = summary_search(pool, tenant_id, q_vec.as_deref(), &q, &visible_scope).await?;
+    let summary_hits =
+        summary_search(pool, tenant_id, q_vec.as_deref(), &q, &visible_scope).await?;
     let best_summary = summary_hits.first().map(|_| 1.0f32).unwrap_or(0.0);
 
     // 3. Drill into hot events on demand or below the confidence floor (§1 #5). When the query couldn't be
     // embedded, summaries-only full-text is the path (drill needs a vector for hot events).
     let drill = q.drill || best_summary < cfg.recall_confidence_floor;
-    let path_label = if drill && q_vec.is_some() { "drill" } else { "summary" };
+    let path_label = if drill && q_vec.is_some() {
+        "drill"
+    } else {
+        "summary"
+    };
     let mut candidates: Vec<Candidate> = summary_hits;
     if drill {
         if let Some(v) = q_vec.as_deref() {
@@ -187,7 +195,12 @@ async fn summary_search(
               ORDER BY embedding <=> $2::vector ASC
               LIMIT $3"
         );
-        sqlx::query(&sql).bind(tenant_id).bind(&lit).bind(FETCH_K).fetch_all(&mut *tx).await?
+        sqlx::query(&sql)
+            .bind(tenant_id)
+            .bind(&lit)
+            .bind(FETCH_K)
+            .fetch_all(&mut *tx)
+            .await?
     } else {
         // Full-text fallback over the digest (§1 #18).
         let sql = format!(
@@ -200,7 +213,12 @@ async fn summary_search(
               ORDER BY ts_rank_cd(to_tsvector('simple', digest), websearch_to_tsquery('simple', $2)) DESC
               LIMIT $3"
         );
-        sqlx::query(&sql).bind(tenant_id).bind(&q.q).bind(FETCH_K).fetch_all(&mut *tx).await?
+        sqlx::query(&sql)
+            .bind(tenant_id)
+            .bind(&q.q)
+            .bind(FETCH_K)
+            .fetch_all(&mut *tx)
+            .await?
     };
     tx.commit().await?;
 
@@ -265,7 +283,12 @@ async fn hot_event_search(
           LIMIT $3"
     );
     let mut tx = super::tenant_tx(pool, tenant_id).await?;
-    let rows = sqlx::query(&sql).bind(tenant_id).bind(&lit).bind(FETCH_K).fetch_all(&mut *tx).await?;
+    let rows = sqlx::query(&sql)
+        .bind(tenant_id)
+        .bind(&lit)
+        .bind(FETCH_K)
+        .fetch_all(&mut *tx)
+        .await?;
     tx.commit().await?;
 
     Ok(rows
@@ -281,7 +304,9 @@ async fn hot_event_search(
                 kind: r.try_get::<String, _>("kind").unwrap_or_default(),
                 ts_ns: r.try_get("ts_ns").unwrap_or_default(),
                 snippet: String::new(), // filled from Layer 1 during verify (keeps the hot query cheap)
-                chain_anchor_hex: r.try_get::<String, _>("chain_anchor_hex").unwrap_or_default(),
+                chain_anchor_hex: r
+                    .try_get::<String, _>("chain_anchor_hex")
+                    .unwrap_or_default(),
                 source: HitSource::Event,
                 summary_rank: None,
                 event_rank: Some(i),
@@ -304,7 +329,8 @@ async fn verify_candidate(
 ) -> Result<bool, sqlx::Error> {
     match c.source {
         HitSource::Event => {
-            provenance::verify_chain_anchor(pool, tenant_id, c.source_seq, &c.chain_anchor_hex).await
+            provenance::verify_chain_anchor(pool, tenant_id, c.source_seq, &c.chain_anchor_hex)
+                .await
         }
         HitSource::Summary => {
             // Verify via the top contributor's Layer-1 row (recompute its anchor from the live chain).
@@ -409,8 +435,12 @@ fn dedup_key(c: &Candidate) -> String {
 
 /// RRF score = Σ 1/(k + rank) across the retrievers that returned the candidate.
 fn rrf_score(summary_rank: Option<usize>, event_rank: Option<usize>) -> f32 {
-    let s = summary_rank.map(|r| 1.0 / (RRF_K + r as f64 + 1.0)).unwrap_or(0.0);
-    let e = event_rank.map(|r| 1.0 / (RRF_K + r as f64 + 1.0)).unwrap_or(0.0);
+    let s = summary_rank
+        .map(|r| 1.0 / (RRF_K + r as f64 + 1.0))
+        .unwrap_or(0.0);
+    let e = event_rank
+        .map(|r| 1.0 / (RRF_K + r as f64 + 1.0))
+        .unwrap_or(0.0);
     (s + e) as f32
 }
 
@@ -434,7 +464,9 @@ async fn summaries_empty(pool: &PgPool, tenant_id: Uuid) -> Result<bool, sqlx::E
 fn subject_scope_sql(visible: &Option<Vec<Uuid>>, col: &str) -> String {
     match visible {
         None => String::new(),
-        Some(list) if list.is_empty() => format!(" AND {col} = '00000000-0000-0000-0000-000000000000'::uuid AND FALSE"),
+        Some(list) if list.is_empty() => {
+            format!(" AND {col} = '00000000-0000-0000-0000-000000000000'::uuid AND FALSE")
+        }
         Some(list) => {
             let ids: Vec<String> = list.iter().map(|u| format!("'{u}'::uuid")).collect();
             format!(" AND {col} IN ({})", ids.join(","))
@@ -470,7 +502,9 @@ fn ts_window_sql(q: &RecallQuery, upper_col: &str, lower_col: &str) -> String {
 /// Fetch the raw Layer-1 body for an event hit and build its snippet (§1 #8 cold raw retrieval + snippet).
 /// Exposed for the handler / drill path to enrich a hit's snippet on demand.
 pub async fn enrich_snippet(pool: &PgPool, audit_row_id: &str, max: usize) -> Option<String> {
-    let body = provenance::fetch_raw_by_audit_row_id(pool, audit_row_id).await.ok()??;
+    let body = provenance::fetch_raw_by_audit_row_id(pool, audit_row_id)
+        .await
+        .ok()??;
     Some(provenance::snippet_from_body(&body, max))
 }
 
@@ -488,7 +522,10 @@ mod tests {
     fn rrf_score_rewards_presence_in_both_retrievers() {
         let both = rrf_score(Some(0), Some(0));
         let one = rrf_score(Some(0), None);
-        assert!(both > one, "a hit in both retrievers must outrank one in only summary");
+        assert!(
+            both > one,
+            "a hit in both retrievers must outrank one in only summary"
+        );
     }
 
     #[test]
@@ -517,7 +554,8 @@ mod tests {
 
     #[test]
     fn ts_window_builds_bounds() {
-        let q: RecallQuery = serde_json::from_str(r#"{"q":"x","ts_since":100,"ts_until":200}"#).unwrap();
+        let q: RecallQuery =
+            serde_json::from_str(r#"{"q":"x","ts_since":100,"ts_until":200}"#).unwrap();
         let s = ts_window_sql(&q, "ts_ns", "ts_ns");
         assert!(s.contains(">= 100"));
         assert!(s.contains("<= 200"));

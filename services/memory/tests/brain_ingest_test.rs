@@ -14,14 +14,28 @@ async fn event_ingested_then_embedding_visible() {
     // audit_row_id and tier='hot'.
     let env = BrainTestEnv::new().await;
     let ev = env
-        .append_interaction_event(env.subject_alice(), "chat.message_created", "shipped the proj sync")
+        .append_interaction_event(
+            env.subject_alice(),
+            "chat.message_created",
+            "shipped the proj sync",
+        )
         .await;
     env.run_ingest_once().await;
 
-    let row = env.embedding_row(ev.source_seq).await.expect("embedding row exists");
+    let row = env
+        .embedding_row(ev.source_seq)
+        .await
+        .expect("embedding row exists");
     assert_eq!(row.0, "hot", "freshly ingested event is hot");
-    assert_eq!(row.1, ev.audit_row_id, "row carries the event's provenance audit_row_id");
-    assert_eq!(row.2.as_deref(), Some("complete"), "embedded via the stub gateway");
+    assert_eq!(
+        row.1, ev.audit_row_id,
+        "row carries the event's provenance audit_row_id"
+    );
+    assert_eq!(
+        row.2.as_deref(),
+        Some("complete"),
+        "embedded via the stub gateway"
+    );
 
     env.cleanup().await;
 }
@@ -33,7 +47,11 @@ async fn idempotent_ingest_replay_produces_one_row() {
     // resumes without re-embedding earlier rows.
     let env = BrainTestEnv::new().await;
     let ev = env
-        .append_interaction_event(env.subject_alice(), "chat.message_created", "idempotent body")
+        .append_interaction_event(
+            env.subject_alice(),
+            "chat.message_created",
+            "idempotent body",
+        )
         .await;
 
     env.run_ingest_once().await;
@@ -72,7 +90,11 @@ async fn cursor_resumes_and_picks_up_new_events() {
     env.append_interaction_event(env.subject_alice(), "chat.message_created", "fourth")
         .await;
     env.run_ingest_once().await;
-    assert_eq!(env.embedding_count().await, 4, "cursor resumed and ingested the new events");
+    assert_eq!(
+        env.embedding_count().await,
+        4,
+        "cursor resumed and ingested the new events"
+    );
 
     env.cleanup().await;
 }

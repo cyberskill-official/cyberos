@@ -20,9 +20,17 @@ async fn pool() -> PgPool {
         .or_else(|_| std::env::var("MEMORY_DATABASE_URL"))
         .expect("DATABASE_URL env var");
     let pool = PgPool::connect(&url).await.expect("connect");
-    apply_lenient(&pool, include_str!("../migrations/0003_layer1_audit_log.sql")).await;
+    apply_lenient(
+        &pool,
+        include_str!("../migrations/0003_layer1_audit_log.sql"),
+    )
+    .await;
     apply_lenient(&pool, include_str!("../migrations/0004_l1_event_type.sql")).await;
-    apply_lenient(&pool, include_str!("../migrations/0005_interaction_event.sql")).await;
+    apply_lenient(
+        &pool,
+        include_str!("../migrations/0005_interaction_event.sql"),
+    )
+    .await;
     pool
 }
 
@@ -88,7 +96,10 @@ async fn tenant_a_rows_invisible_to_tenant_b_read() {
     .fetch_one(&pool)
     .await
     .unwrap();
-    assert_eq!(visible_to_b, 0, "tenant B must not see tenant A's interaction-event");
+    assert_eq!(
+        visible_to_b, 0,
+        "tenant B must not see tenant A's interaction-event"
+    );
 
     // The same read scoped to tenant A sees exactly the one row — isolation does not hide it from its owner.
     let visible_to_a: i64 = sqlx::query_scalar(
@@ -100,7 +111,10 @@ async fn tenant_a_rows_invisible_to_tenant_b_read() {
     .fetch_one(&pool)
     .await
     .unwrap();
-    assert_eq!(visible_to_a, 1, "tenant A must see its own interaction-event");
+    assert_eq!(
+        visible_to_a, 1,
+        "tenant A must see its own interaction-event"
+    );
     cleanup(&pool, tenant_a).await;
     cleanup(&pool, tenant_b).await;
 }
@@ -113,8 +127,12 @@ async fn per_subject_index_scan_is_tenant_scoped() {
     let tenant_b = Uuid::new_v4();
     let shared_subject = Uuid::new_v4(); // same subject id used under both tenants (worst case)
 
-    let _ = emit(&pool, &ev(tenant_a, shared_subject), &AllowAll).await.unwrap();
-    let _ = emit(&pool, &ev(tenant_b, shared_subject), &AllowAll).await.unwrap();
+    let _ = emit(&pool, &ev(tenant_a, shared_subject), &AllowAll)
+        .await
+        .unwrap();
+    let _ = emit(&pool, &ev(tenant_b, shared_subject), &AllowAll)
+        .await
+        .unwrap();
 
     // The l1_iev_subject_idx scan (tenant_id, subject_id, ts_ns) for tenant A + the shared subject must
     // return only tenant A's row, even though tenant B has a row for the same subject id.
@@ -127,7 +145,10 @@ async fn per_subject_index_scan_is_tenant_scoped() {
     .fetch_one(&pool)
     .await
     .unwrap();
-    assert_eq!(n_a, 1, "the subject-scoped scan must not bleed across tenants");
+    assert_eq!(
+        n_a, 1,
+        "the subject-scoped scan must not bleed across tenants"
+    );
     cleanup(&pool, tenant_a).await;
     cleanup(&pool, tenant_b).await;
 }

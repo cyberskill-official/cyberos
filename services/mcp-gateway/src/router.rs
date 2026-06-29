@@ -22,7 +22,9 @@ use crate::federation::registry::ToolRegistry;
 use crate::protocol::errors::{codes, err};
 use crate::protocol::initialize::{build_response_value, InitializeParams};
 use crate::protocol::jsonrpc::{Inbound, Request, Response};
-use crate::protocol::tools_call::{dispatch as call_dispatch, prepare as call_prepare, ToolsCallParams};
+use crate::protocol::tools_call::{
+    dispatch as call_dispatch, prepare as call_prepare, ToolsCallParams,
+};
 use crate::protocol::tools_list::{build_response as build_tools_list, ToolsListParams};
 use crate::MCP_PROTOCOL_VERSION;
 
@@ -640,7 +642,8 @@ async fn handle_elicitation_poll(
                 )
             }
         };
-        let (Some(pool), Some((_, subject))) = (state.oauth_pool.as_ref(), caller_ids(&claims)) else {
+        let (Some(pool), Some((_, subject))) = (state.oauth_pool.as_ref(), caller_ids(&claims))
+        else {
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(json!({ "error": "store_not_ready" })),
@@ -752,7 +755,8 @@ async fn handle_elicitation_cancel(
                 )
             }
         };
-        let (Some(pool), Some((_, subject))) = (state.oauth_pool.as_ref(), caller_ids(&claims)) else {
+        let (Some(pool), Some((_, subject))) = (state.oauth_pool.as_ref(), caller_ids(&claims))
+        else {
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(json!({ "error": "store_not_ready" })),
@@ -859,7 +863,8 @@ async fn handle_task_cancel(
                 )
             }
         };
-        let (Some(pool), Some((_, subject))) = (state.oauth_pool.as_ref(), caller_ids(&claims)) else {
+        let (Some(pool), Some((_, subject))) = (state.oauth_pool.as_ref(), caller_ids(&claims))
+        else {
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(json!({ "error": "store_not_ready" })),
@@ -1270,10 +1275,18 @@ mod tests {
             res.headers()["content-type"].to_str().unwrap(),
             "application/json; charset=utf-8"
         );
-        assert_eq!(res.headers()["cache-control"].to_str().unwrap(), "max-age=3600");
+        assert_eq!(
+            res.headers()["cache-control"].to_str().unwrap(),
+            "max-age=3600"
+        );
         assert!(res.headers().contains_key("etag"));
         assert!(res.headers().contains_key("x-robots-tag"));
-        assert_eq!(res.headers()["access-control-allow-origin"].to_str().unwrap(), "*");
+        assert_eq!(
+            res.headers()["access-control-allow-origin"]
+                .to_str()
+                .unwrap(),
+            "*"
+        );
     }
 
     #[tokio::test]
@@ -1361,7 +1374,9 @@ mod tests {
                     uuid::Uuid::new_v4()
                 ))
                 .header("content-type", "application/json")
-                .body(axum::body::Body::from(r#"{"response_payload":{"value":"x"}}"#))
+                .body(axum::body::Body::from(
+                    r#"{"response_payload":{"value":"x"}}"#,
+                ))
                 .unwrap(),
             )
             .await
@@ -1376,7 +1391,9 @@ mod tests {
             .oneshot(
                 axum::http::Request::post(format!("/v1/mcp/elicitations/{}/respond", e.id))
                     .header("content-type", "application/json")
-                    .body(axum::body::Body::from(r#"{"response_payload":{"confirmed":true}}"#))
+                    .body(axum::body::Body::from(
+                        r#"{"response_payload":{"confirmed":true}}"#,
+                    ))
                     .unwrap(),
             )
             .await
@@ -1481,7 +1498,9 @@ mod tests {
         let e = state
             .elicitations
             .create_confirmation("cyberos.kb.bulk_delete", json!({}));
-        state.elicitations.respond(e.id, json!({ "confirmed": true }));
+        state
+            .elicitations
+            .respond(e.id, json!({ "confirmed": true }));
         let r = dispatch_one(
             &state,
             tools_call_req(json!({
@@ -1507,7 +1526,9 @@ mod tests {
         let e = state
             .elicitations
             .create_confirmation("cyberos.kb.bulk_delete", json!({}));
-        state.elicitations.respond(e.id, json!({ "confirmed": false }));
+        state
+            .elicitations
+            .respond(e.id, json!({ "confirmed": false }));
         let r = dispatch_one(
             &state,
             tools_call_req(json!({
@@ -1518,8 +1539,14 @@ mod tests {
             None,
         )
         .await;
-        assert!(r.error.is_none(), "declined returns an in-band tool error result");
-        assert_eq!(r.result.unwrap()["structuredContent"]["user_rejected"], true);
+        assert!(
+            r.error.is_none(),
+            "declined returns an in-band tool error result"
+        );
+        assert_eq!(
+            r.result.unwrap()["structuredContent"]["user_rejected"],
+            true
+        );
     }
 
     // ---- FR-MCP-007 tasks HTTP surface ---------------------------------------------------

@@ -15,13 +15,34 @@ async fn hot_warm_cold_tiering_is_idempotent() {
     let env = BrainTestEnv::new().await;
     // 2 hot (today), 2 warm (~90d), 2 cold (~365d).
     for i in 0..2 {
-        env.append_interaction_event_at(env.subject_alice(), "chat.message_created", &format!("hot {i}"), days_ago_ns(1), None).await;
+        env.append_interaction_event_at(
+            env.subject_alice(),
+            "chat.message_created",
+            &format!("hot {i}"),
+            days_ago_ns(1),
+            None,
+        )
+        .await;
     }
     for i in 0..2 {
-        env.append_interaction_event_at(env.subject_alice(), "chat.message_created", &format!("warm {i}"), days_ago_ns(90), None).await;
+        env.append_interaction_event_at(
+            env.subject_alice(),
+            "chat.message_created",
+            &format!("warm {i}"),
+            days_ago_ns(90),
+            None,
+        )
+        .await;
     }
     for i in 0..2 {
-        env.append_interaction_event_at(env.subject_alice(), "chat.message_created", &format!("cold {i}"), days_ago_ns(365), None).await;
+        env.append_interaction_event_at(
+            env.subject_alice(),
+            "chat.message_created",
+            &format!("cold {i}"),
+            days_ago_ns(365),
+            None,
+        )
+        .await;
     }
     env.run_ingest_once().await;
 
@@ -45,7 +66,13 @@ async fn cold_raw_retrievable_on_demand_and_absent_from_hot_index() {
     // (so it is not in the partial hot HNSW index).
     let env = BrainTestEnv::new().await;
     let ev = env
-        .append_interaction_event_at(env.subject_alice(), "chat.message_created", "ancient decision", days_ago_ns(400), None)
+        .append_interaction_event_at(
+            env.subject_alice(),
+            "chat.message_created",
+            "ancient decision",
+            days_ago_ns(400),
+            None,
+        )
         .await;
     env.run_ingest_once().await;
     env.run_tiering_pass().await;
@@ -58,7 +85,10 @@ async fn cold_raw_retrievable_on_demand_and_absent_from_hot_index() {
     let raw = brain::provenance::fetch_raw_by_audit_row_id(env.pool(), &ev.audit_row_id)
         .await
         .unwrap();
-    assert!(raw.is_some(), "cold raw stays in Layer 1, retrievable on demand");
+    assert!(
+        raw.is_some(),
+        "cold raw stays in Layer 1, retrievable on demand"
+    );
 
     env.cleanup().await;
 }

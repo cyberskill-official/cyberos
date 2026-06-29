@@ -29,11 +29,12 @@ pub async fn role_in_channel(
     channel: Uuid,
     subject: Uuid,
 ) -> Result<Option<String>, sqlx::Error> {
-    let row: Option<(String,)> =
-        sqlx::query_as("SELECT role FROM chat_channel_members WHERE channel_id = $1 AND subject_id = $2")
-            .bind(channel)
-            .bind(subject)
-            .fetch_optional(&mut **tx)
-            .await?;
+    let row: Option<(String,)> = sqlx::query_as(
+        "SELECT role FROM chat_channel_members WHERE channel_id = $1 AND subject_id = $2",
+    )
+    .bind(channel)
+    .bind(subject)
+    .fetch_optional(&mut **tx)
+    .await?;
     Ok(row.map(|r| r.0))
 }

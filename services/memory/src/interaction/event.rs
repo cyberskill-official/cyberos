@@ -398,29 +398,34 @@ mod tests {
             .tenant(Uuid::nil())
             .subject(Uuid::nil())
             .build();
-        assert!(r.is_err(), "event_type without the module prefix must not build");
+        assert!(
+            r.is_err(),
+            "event_type without the module prefix must not build"
+        );
     }
 
     #[test]
     fn builder_accepts_well_formed_event() {
-        let r = InteractionEvent::builder(Module::Chat, "chat.message_created", EventClass::Content)
-            .tenant(Uuid::nil())
-            .subject(Uuid::nil())
-            .occurred_now()
-            .target(TargetRef::Message { id: "msg-1".into() })
-            .content(ContentRef::pointer("chat_messages", "msg-1"))
-            .source(SourceChannel::Web)
-            .build();
+        let r =
+            InteractionEvent::builder(Module::Chat, "chat.message_created", EventClass::Content)
+                .tenant(Uuid::nil())
+                .subject(Uuid::nil())
+                .occurred_now()
+                .target(TargetRef::Message { id: "msg-1".into() })
+                .content(ContentRef::pointer("chat_messages", "msg-1"))
+                .source(SourceChannel::Web)
+                .build();
         assert!(r.is_ok());
     }
 
     #[test]
     fn builder_rejects_oversize_attributes() {
-        let r = InteractionEvent::builder(Module::Chat, "chat.message_created", EventClass::Content)
-            .tenant(Uuid::nil())
-            .subject(Uuid::nil())
-            .attribute("blob", serde_json::json!("x".repeat(3000)))
-            .build();
+        let r =
+            InteractionEvent::builder(Module::Chat, "chat.message_created", EventClass::Content)
+                .tenant(Uuid::nil())
+                .subject(Uuid::nil())
+                .attribute("blob", serde_json::json!("x".repeat(3000)))
+                .build();
         assert!(r.is_err());
     }
 

@@ -37,7 +37,10 @@ pub async fn register(
     let platform = body.platform.trim().to_string();
     let token = body.token.trim().to_string();
     if platform.is_empty() || token.is_empty() {
-        return Err((StatusCode::BAD_REQUEST, "platform and token are required".to_string()));
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "platform and token are required".to_string(),
+        ));
     }
 
     let mut tx = db::tenant_tx(&st.pool, &tenant)

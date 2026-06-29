@@ -155,25 +155,27 @@ async fn main() -> ExitCode {
                 ExitCode::UsageError
             }
         },
-        "brain-resummarize" => match parse_tenant(&args) {
-            Ok(t) => {
-                let gw = brain::EmbedClient::from_env();
-                match brain::backfill::resummarize(t.as_uuid(), &pool, &gw, None).await {
-                    Ok(n) => {
-                        println!("✓ brain resummarize complete for tenant {t}: {n} scopes re-summarised");
-                        ExitCode::Ok
-                    }
-                    Err(e) => {
-                        eprintln!("brain resummarize failed: {e}");
-                        ExitCode::Generic
+        "brain-resummarize" => {
+            match parse_tenant(&args) {
+                Ok(t) => {
+                    let gw = brain::EmbedClient::from_env();
+                    match brain::backfill::resummarize(t.as_uuid(), &pool, &gw, None).await {
+                        Ok(n) => {
+                            println!("✓ brain resummarize complete for tenant {t}: {n} scopes re-summarised");
+                            ExitCode::Ok
+                        }
+                        Err(e) => {
+                            eprintln!("brain resummarize failed: {e}");
+                            ExitCode::Generic
+                        }
                     }
                 }
+                Err(msg) => {
+                    eprintln!("{msg}");
+                    ExitCode::UsageError
+                }
             }
-            Err(msg) => {
-                eprintln!("{msg}");
-                ExitCode::UsageError
-            }
-        },
+        }
         "brain-reindex" => match brain::backfill::reindex_hot_hnsw(&pool).await {
             Ok(()) => {
                 println!("✓ brain hot HNSW index reindexed");

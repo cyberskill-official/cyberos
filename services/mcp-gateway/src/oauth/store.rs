@@ -81,14 +81,16 @@ pub async fn get_client(pool: &PgPool, id: Uuid) -> Result<Option<ClientRow>, sq
     .fetch_optional(pool)
     .await?;
     Ok(row.map(
-        |(id, tenant_id, client_type, client_secret_hash, redirect_uris, scope, revoked_at)| ClientRow {
-            id,
-            tenant_id,
-            client_type,
-            client_secret_hash,
-            redirect_uris: serde_json::from_str(&redirect_uris).unwrap_or_default(),
-            scope,
-            revoked_at,
+        |(id, tenant_id, client_type, client_secret_hash, redirect_uris, scope, revoked_at)| {
+            ClientRow {
+                id,
+                tenant_id,
+                client_type,
+                client_secret_hash,
+                redirect_uris: serde_json::from_str(&redirect_uris).unwrap_or_default(),
+                scope,
+                revoked_at,
+            }
         },
     ))
 }
@@ -381,10 +383,12 @@ pub async fn insert_revocation(
 
 /// Whether an access token's `jti` is on the revocation list (checked on every verified request).
 pub async fn is_jti_revoked(pool: &PgPool, jti: Uuid) -> Result<bool, sqlx::Error> {
-    sqlx::query_scalar::<_, bool>("SELECT EXISTS(SELECT 1 FROM oauth_revocation_list WHERE jti = $1)")
-        .bind(jti)
-        .fetch_one(pool)
-        .await
+    sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS(SELECT 1 FROM oauth_revocation_list WHERE jti = $1)",
+    )
+    .bind(jti)
+    .fetch_one(pool)
+    .await
 }
 
 // ---- consents (clause #29) ---------------------------------------------------------

@@ -37,7 +37,10 @@ pub enum ScopeError {
 /// Returns the de-duplicated requested tokens on success. Fails on the first malformed token, then on
 /// the first unknown token - the error names the offending scope so the `invalid_scope` response is
 /// specific. Comparison is case-sensitive (RFC 6749 §3.3).
-pub fn validate_scopes(requested: &[String], registered: &[String]) -> Result<Vec<String>, ScopeError> {
+pub fn validate_scopes(
+    requested: &[String],
+    registered: &[String],
+) -> Result<Vec<String>, ScopeError> {
     for s in requested {
         if !is_valid_scope_token(s) {
             return Err(ScopeError::Malformed(s.clone()));
@@ -87,7 +90,10 @@ mod tests {
     #[test]
     fn parse_splits_on_single_space_and_drops_empties() {
         assert_eq!(parse_scope("mcp:tools read"), v(&["mcp:tools", "read"]));
-        assert_eq!(parse_scope("  mcp:tools   read  "), v(&["mcp:tools", "read"]));
+        assert_eq!(
+            parse_scope("  mcp:tools   read  "),
+            v(&["mcp:tools", "read"])
+        );
         assert_eq!(parse_scope(""), Vec::<String>::new());
     }
 

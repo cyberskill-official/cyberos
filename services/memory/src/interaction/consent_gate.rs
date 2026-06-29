@@ -159,7 +159,11 @@ mod tests {
         for _ in 0..5 {
             assert!(gate.is_capture_allowed(t, s).await.unwrap());
         }
-        assert_eq!(calls.load(Ordering::SeqCst), 1, "burst must hit the inner gate once");
+        assert_eq!(
+            calls.load(Ordering::SeqCst),
+            1,
+            "burst must hit the inner gate once"
+        );
     }
 
     #[tokio::test]
@@ -170,6 +174,10 @@ mod tests {
         assert!(gate.is_capture_allowed(t, s).await.unwrap());
         tokio::time::sleep(Duration::from_millis(40)).await;
         assert!(gate.is_capture_allowed(t, s).await.unwrap());
-        assert_eq!(calls.load(Ordering::SeqCst), 2, "a query past the TTL must re-hit the inner gate");
+        assert_eq!(
+            calls.load(Ordering::SeqCst),
+            2,
+            "a query past the TTL must re-hit the inner gate"
+        );
     }
 }

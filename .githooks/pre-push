@@ -37,7 +37,13 @@ fi
 
 cd "$ROOT/services"
 echo "==> cargo fmt --all --check"
-cargo fmt --all --check
+if ! cargo fmt --all --check; then
+  echo "" >&2
+  echo "pre-push: formatting check failed. Fix it in one step:" >&2
+  echo "    (cd services && cargo fmt --all) && git commit -am 'style: cargo fmt' " >&2
+  echo "Then push again. To bypass once: SKIP_LOCAL_CHECKS=1 git push" >&2
+  exit 1
+fi
 echo "==> cargo clippy --workspace --all-targets -- -D warnings"
 cargo clippy --workspace --all-targets -- -D warnings
 echo "==> cargo test --workspace (unit tests; DB-gated #[ignore] tests skipped)"

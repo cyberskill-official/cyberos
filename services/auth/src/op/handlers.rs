@@ -46,12 +46,19 @@ fn op_err(e: OpError) -> ApiErr {
 pub async fn discovery(State(state): State<AppState>) -> Json<Value> {
     let issuer = state.jwt_issuer.trim_end_matches('/');
     let jwks_uri = format!("{issuer}/.well-known/jwks.json");
-    Json(openid_configuration(issuer, &jwks_uri, &["authorization_code"]))
+    Json(openid_configuration(
+        issuer,
+        &jwks_uri,
+        &["authorization_code"],
+    ))
 }
 
 /// GET /v1/auth/op/userinfo (public; bearer access_token, DEC-2487). Revoke-gated
 /// (§1 #11): a revoked subject's token is refused even if otherwise valid.
-pub async fn userinfo(State(state): State<AppState>, headers: HeaderMap) -> Result<Json<Value>, ApiErr> {
+pub async fn userinfo(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+) -> Result<Json<Value>, ApiErr> {
     let token = bearer(&headers).ok_or_else(|| unauthorized("missing_bearer"))?;
     let svc = JwtService::new(state.pg.clone(), state.jwt_issuer.clone());
     let claims = svc
@@ -127,7 +134,13 @@ pub async fn authorize(
         None => return broker_to_google(&state, &rp, &q).await,
     };
     // Revoke gate (DEC-2488): a revoked subject cannot obtain a code.
-    if !subject_is_active(&state, &rp.tenant_id.to_string(), &session.subject_id.to_string()).await {
+    if !subject_is_active(
+        &state,
+        &rp.tenant_id.to_string(),
+        &session.subject_id.to_string(),
+    )
+    .await
+    {
         let _ = super::audit::emit(
             &state.pg,
             rp.tenant_id,
@@ -174,7 +187,12 @@ pub async fn authorize(
         .to_body_string(),
     )
     .await;
-    let url = format!("{}?code={}&state={}", q.redirect_uri, pct(&code), pct(&q.state));
+    let url = format!(
+        "{}?code={}&state={}",
+        q.redirect_uri,
+        pct(&code),
+        pct(&q.state)
+    );
     Redirect::to(&url).into_response()
 }
 
@@ -224,7 +242,13 @@ pub async fn token(
     {
         return Err(op_err(OpError::InvalidGrant));
     }
-    if !subject_is_active(&state, &rp.tenant_id.to_string(), &stored.subject_id.to_string()).await {
+    if !subject_is_active(
+        &state,
+        &rp.tenant_id.to_string(),
+        &stored.subject_id.to_string(),
+    )
+    .await
+    {
         return Err(op_err(OpError::AccessDenied));
     }
     // Single-use: consume before minting, so a replay yields invalid_grant and
@@ -450,7 +474,9 @@ fn pct(s: &str) -> String {
     let mut out = String::with_capacity(s.len());
     for b in s.bytes() {
         match b {
-            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => out.push(b as char),
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                out.push(b as char)
+            }
             _ => out.push_str(&format!("%{b:02X}")),
         }
     }
@@ -546,7 +572,11 @@ fn client_credentials(headers: &HeaderMap, form: &TokenForm) -> Option<(String, 
 
 /// Load `(email, kind)` for a subject under its tenant GUC. Defaults to
 /// `("", "human")` on any miss so the mint still produces a usable token.
-async fn load_subject_identity(state: &AppState, tenant_id: Uuid, subject_id: Uuid) -> (String, String) {
+async fn load_subject_identity(
+    state: &AppState,
+    tenant_id: Uuid,
+    subject_id: Uuid,
+) -> (String, String) {
     let mut tx = match state.pg.begin().await {
         Ok(t) => t,
         Err(_) => return (String::new(), "human".to_string()),
@@ -575,7 +605,11 @@ async fn load_subject_identity(state: &AppState, tenant_id: Uuid, subject_id: Uu
 /// FR-AUTH-110 broker: no usable SSO session, so send the user through the
 /// tenant's Google IdP (FR-AUTH-104) and resume this authorize on return. The
 /// callback mints the SSO session, sets the cookie, and 302s back here.
-async fn broker_to_google(state: &AppState, rp: &rp_client::RpClient, q: &AuthorizeQuery) -> Response {
+async fn broker_to_google(
+    state: &AppState,
+    rp: &rp_client::RpClient,
+    q: &AuthorizeQuery,
+) -> Response {
     let resume = authorize_url(state, q);
     match crate::oidc::begin_idp_flow(state, rp.tenant_id, "google-workspace", Some(resume)).await {
         Ok(url) => Redirect::to(&url).into_response(),

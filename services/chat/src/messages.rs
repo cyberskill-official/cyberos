@@ -104,7 +104,10 @@ pub async fn post(
         .subject_id()
         .map_err(|e| (StatusCode::UNAUTHORIZED, e.to_string()))?;
     if body.body.trim().is_empty() && body.attachment_id.is_none() {
-        return Err((StatusCode::BAD_REQUEST, "body or attachment_id is required".to_string()));
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "body or attachment_id is required".to_string(),
+        ));
     }
 
     let mut tx = db::tenant_tx(&st.pool, &tenant)
@@ -120,7 +123,10 @@ pub async fn post(
                 .await
                 .map_err(crate::internal)?;
         if a.is_none() {
-            return Err((StatusCode::BAD_REQUEST, "attachment not in this channel".to_string()));
+            return Err((
+                StatusCode::BAD_REQUEST,
+                "attachment not in this channel".to_string(),
+            ));
         }
     }
     if let Some(pid) = body.parent_id {
@@ -133,18 +139,20 @@ pub async fn post(
         .await
         .map_err(crate::internal)?;
         if parent.is_none() {
-            return Err((StatusCode::BAD_REQUEST, "parent message not in this channel".to_string()));
+            return Err((
+                StatusCode::BAD_REQUEST,
+                "parent message not in this channel".to_string(),
+            ));
         }
     }
     // FR-MEMORY-122 §1 #4 — read the channel kind in this same tx (a cheap PK lookup) so the capture
     // emitter can tag channel vs DM. Off-by-default (only matters when capture is on); never fails the send.
-    let channel_kind: String =
-        sqlx::query_scalar("SELECT kind FROM chat_channels WHERE id = $1")
-            .bind(channel)
-            .fetch_optional(&mut *tx)
-            .await
-            .map_err(crate::internal)?
-            .unwrap_or_else(|| "group".to_string());
+    let channel_kind: String = sqlx::query_scalar("SELECT kind FROM chat_channels WHERE id = $1")
+        .bind(channel)
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(crate::internal)?
+        .unwrap_or_else(|| "group".to_string());
     let sql = format!(
         "INSERT INTO chat_messages (tenant_id, channel_id, sender_subject_id, body, parent_id, attachment_id)
          VALUES ($1, $2, $3, $4, $5, $6) RETURNING {COLS}"
@@ -162,8 +170,10 @@ pub async fn post(
     tx.commit().await.map_err(crate::internal)?;
 
     let message = to_message(row);
-    st.hub
-        .publish(channel, crate::realtime::ChatEvent::Message(message.clone()));
+    st.hub.publish(
+        channel,
+        crate::realtime::ChatEvent::Message(message.clone()),
+    );
     tokio::spawn(crate::push::notify(
         st.clone(),
         channel,
@@ -274,13 +284,12 @@ pub async fn edit(
         .await
         .map_err(crate::internal)?;
     require_member(&mut tx, channel, caller).await?;
-    let channel_kind: String =
-        sqlx::query_scalar("SELECT kind FROM chat_channels WHERE id = $1")
-            .bind(channel)
-            .fetch_optional(&mut *tx)
-            .await
-            .map_err(crate::internal)?
-            .unwrap_or_else(|| "group".to_string());
+    let channel_kind: String = sqlx::query_scalar("SELECT kind FROM chat_channels WHERE id = $1")
+        .bind(channel)
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(crate::internal)?
+        .unwrap_or_else(|| "group".to_string());
     let sql = format!(
         "UPDATE chat_messages SET body = $1, edited_at = now()
          WHERE id = $2 AND channel_id = $3 AND sender_subject_id = $4 AND deleted_at IS NULL
@@ -332,7 +341,10 @@ pub async fn edit(
             }
             Ok(Json(m))
         }
-        None => Err((StatusCode::NOT_FOUND, "message not found or not yours".to_string())),
+        None => Err((
+            StatusCode::NOT_FOUND,
+            "message not found or not yours".to_string(),
+        )),
     }
 }
 
@@ -353,13 +365,12 @@ pub async fn delete(
         .await
         .map_err(crate::internal)?;
     let role = require_member(&mut tx, channel, caller).await?;
-    let channel_kind: String =
-        sqlx::query_scalar("SELECT kind FROM chat_channels WHERE id = $1")
-            .bind(channel)
-            .fetch_optional(&mut *tx)
-            .await
-            .map_err(crate::internal)?
-            .unwrap_or_else(|| "group".to_string());
+    let channel_kind: String = sqlx::query_scalar("SELECT kind FROM chat_channels WHERE id = $1")
+        .bind(channel)
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(crate::internal)?
+        .unwrap_or_else(|| "group".to_string());
     let snd: Option<(Uuid,)> = sqlx::query_as(
         "SELECT sender_subject_id FROM chat_messages WHERE id = $1 AND channel_id = $2 AND deleted_at IS NULL",
     )
@@ -373,7 +384,10 @@ pub async fn delete(
         None => return Err((StatusCode::NOT_FOUND, "message not found".to_string())),
     };
     if sender != caller && !db::is_manager(&role) {
-        return Err((StatusCode::FORBIDDEN, "cannot delete another member's message".to_string()));
+        return Err((
+            StatusCode::FORBIDDEN,
+            "cannot delete another member's message".to_string(),
+        ));
     }
     sqlx::query("UPDATE chat_messages SET deleted_at = now(), body = '' WHERE id = $1")
         .bind(msg)
@@ -382,8 +396,10 @@ pub async fn delete(
         .map_err(crate::internal)?;
     tx.commit().await.map_err(crate::internal)?;
 
-    st.hub
-        .publish(channel, crate::realtime::ChatEvent::MessageDeleted { id: msg });
+    st.hub.publish(
+        channel,
+        crate::realtime::ChatEvent::MessageDeleted { id: msg },
+    );
     audit::emit(
         &st,
         tenant,

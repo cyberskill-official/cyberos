@@ -202,7 +202,11 @@ async fn build_and_supersede(
     );
     let mut tx = super::tenant_tx(pool, tenant_id).await?;
     let rows = if bind_scope {
-        sqlx::query(&q).bind(tenant_id).bind(scope_id).fetch_all(&mut *tx).await?
+        sqlx::query(&q)
+            .bind(tenant_id)
+            .bind(scope_id)
+            .fetch_all(&mut *tx)
+            .await?
     } else {
         sqlx::query(&q).bind(tenant_id).fetch_all(&mut *tx).await?
     };
@@ -239,7 +243,11 @@ async fn build_and_supersede(
     // fills the vector.
     let (embedding_lit, model_version, summary_state): (Option<String>, String, &str) =
         match gw.embed(tenant_id, &digest).await {
-            Ok(emb) => (Some(to_pgvector_literal(&emb.vector)), emb.model_version, "complete"),
+            Ok(emb) => (
+                Some(to_pgvector_literal(&emb.vector)),
+                emb.model_version,
+                "complete",
+            ),
             Err(EmbedError::SpendCapExhausted) | Err(EmbedError::GatewayDown(_)) => {
                 (None, "pending".to_string(), "pending_summary_retry")
             }

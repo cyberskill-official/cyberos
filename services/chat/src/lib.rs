@@ -103,5 +103,7 @@ async fn health(
         .execute(&st.pool)
         .await
         .map_err(internal)?;
-    Ok(Json(serde_json::json!({"status":"ok","service":"cyberos-chat"})))
+    Ok(Json(
+        serde_json::json!({"status":"ok","service":"cyberos-chat"}),
+    ))
 }

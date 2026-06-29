@@ -45,14 +45,8 @@ pub fn router(state: AppState) -> Router {
             "/.well-known/openid-configuration",
             get(crate::op::handlers::discovery),
         )
-        .route(
-            "/v1/auth/op/userinfo",
-            get(crate::op::handlers::userinfo),
-        )
-        .route(
-            "/v1/auth/op/authorize",
-            get(crate::op::handlers::authorize),
-        )
+        .route("/v1/auth/op/userinfo", get(crate::op::handlers::userinfo))
+        .route("/v1/auth/op/authorize", get(crate::op::handlers::authorize))
         .route("/v1/auth/op/token", post(crate::op::handlers::token))
         // FR-AUTH-104 OIDC SSO — public flow (no JWT required to initiate)
         .route("/v1/auth/oidc/initiate", get(crate::oidc::initiate))

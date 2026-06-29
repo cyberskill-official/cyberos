@@ -51,7 +51,12 @@ pub async fn mark(
             .map_err(crate::internal)?;
     let at = match m {
         Some(x) => x.0,
-        None => return Err((StatusCode::NOT_FOUND, "message not in this channel".to_string())),
+        None => {
+            return Err((
+                StatusCode::NOT_FOUND,
+                "message not in this channel".to_string(),
+            ))
+        }
     };
     sqlx::query(
         "INSERT INTO chat_read_markers (channel_id, tenant_id, subject_id, last_read_message_id, last_read_at)
@@ -94,13 +99,14 @@ pub async fn unread(
     {
         return Err((StatusCode::FORBIDDEN, "not a channel member".to_string()));
     }
-    let marker: Option<(chrono::DateTime<chrono::Utc>,)> =
-        sqlx::query_as("SELECT last_read_at FROM chat_read_markers WHERE channel_id = $1 AND subject_id = $2")
-            .bind(channel)
-            .bind(subject)
-            .fetch_optional(&mut *tx)
-            .await
-            .map_err(crate::internal)?;
+    let marker: Option<(chrono::DateTime<chrono::Utc>,)> = sqlx::query_as(
+        "SELECT last_read_at FROM chat_read_markers WHERE channel_id = $1 AND subject_id = $2",
+    )
+    .bind(channel)
+    .bind(subject)
+    .fetch_optional(&mut *tx)
+    .await
+    .map_err(crate::internal)?;
     let count: (i64,) = if let Some((at,)) = marker {
         sqlx::query_as(
             "SELECT count(*) FROM chat_messages

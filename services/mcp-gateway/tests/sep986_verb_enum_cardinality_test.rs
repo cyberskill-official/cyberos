@@ -17,7 +17,10 @@ fn sep986_verb_all_known_verbs_parse() {
         "get", "list", "create", "update", "delete", "send", "fetch", "sync", "validate",
         "generate", "execute", "search", "replay", "accept", "reject",
     ] {
-        assert!(Sep986Verb::from_verb_str(verb_str).is_some(), "expected verb '{verb_str}' to parse");
+        assert!(
+            Sep986Verb::from_verb_str(verb_str).is_some(),
+            "expected verb '{verb_str}' to parse"
+        );
     }
 }
 
@@ -25,13 +28,20 @@ fn sep986_verb_all_known_verbs_parse() {
 fn sep986_verb_round_trip() {
     for variant in Sep986Verb::all_variants() {
         let s = variant.as_str();
-        assert_eq!(Sep986Verb::from_verb_str(s), Some(*variant), "round-trip failed for {variant:?}");
+        assert_eq!(
+            Sep986Verb::from_verb_str(s),
+            Some(*variant),
+            "round-trip failed for {variant:?}"
+        );
     }
 }
 
 #[test]
 fn sep986_verb_unknown_returns_none() {
     for s in ["retrieve", "read", "post", "put", "GET", "List", ""] {
-        assert!(Sep986Verb::from_verb_str(s).is_none(), "expected '{s}' to NOT parse as a verb");
+        assert!(
+            Sep986Verb::from_verb_str(s).is_none(),
+            "expected '{s}' to NOT parse as a verb"
+        );
     }
 }

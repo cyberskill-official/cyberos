@@ -18,7 +18,9 @@
 //! No raw credentials, emails, or IPs are ever placed in an event; AUTH passes the same privacy-safe
 //! `source_ip_hash16` digest it already computes for the audit row.
 
-use cyberos_capture::{Capturer, ContentRef, EventClass, InteractionEvent, Module, SourceChannel, TargetRef};
+use cyberos_capture::{
+    Capturer, ContentRef, EventClass, InteractionEvent, Module, SourceChannel, TargetRef,
+};
 use uuid::Uuid;
 
 /// Map a request's `User-Agent` (when present) to the closed `SourceChannel`. The CDS web console and the
@@ -62,7 +64,9 @@ pub async fn emit_signed_in(
         .tenant(tenant)
         .subject(subject)
         .occurred_now()
-        .target(TargetRef::Session { id: jti.to_string() })
+        .target(TargetRef::Session {
+            id: jti.to_string(),
+        })
         .content(ContentRef::None)
         .source(source)
         .attribute("method", serde_json::Value::String(method.to_string()))
@@ -118,7 +122,9 @@ pub async fn emit_sign_in_failed(
     }
     match b.build() {
         Ok(ev) => cap.capture_metered(&ev).await,
-        Err(e) => tracing::warn!(error = %e, "auth.sign_in_failed event build failed (best-effort)"),
+        Err(e) => {
+            tracing::warn!(error = %e, "auth.sign_in_failed event build failed (best-effort)")
+        }
     }
 }
 
@@ -140,7 +146,10 @@ mod tests {
             source_channel_from_ua(Some("cyberos-authctl/0.1")),
             SourceChannel::Cli
         );
-        assert_eq!(source_channel_from_ua(Some("some-bot/1.0")), SourceChannel::Api);
+        assert_eq!(
+            source_channel_from_ua(Some("some-bot/1.0")),
+            SourceChannel::Api
+        );
         assert_eq!(source_channel_from_ua(None), SourceChannel::Api);
     }
 

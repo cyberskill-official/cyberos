@@ -9,8 +9,8 @@
 //! Uses jsonschema 0.18 (the version already in the workspace lockfile) with the `draft202012` feature.
 
 use cyberos_memory::interaction::{
-    canonical_audit_body, ContentRef, EventClass, InteractionEvent, Module, SourceChannel, TargetRef,
-    AUDIT_ROW_KIND,
+    canonical_audit_body, ContentRef, EventClass, InteractionEvent, Module, SourceChannel,
+    TargetRef, AUDIT_ROW_KIND,
 };
 use jsonschema::{Draft, JSONSchema};
 use serde_json::json;
@@ -69,7 +69,9 @@ fn every_emitted_body_validates_against_schema() {
             Module::Auth,
             "auth.signed_in",
             EventClass::Auth,
-            TargetRef::Session { id: "jti-abc".into() },
+            TargetRef::Session {
+                id: "jti-abc".into(),
+            },
             ContentRef::None,
             Some(Uuid::now_v7()),
         ),
@@ -77,7 +79,9 @@ fn every_emitted_body_validates_against_schema() {
             Module::Chat,
             "chat.message_created",
             EventClass::Content,
-            TargetRef::Channel { id: "chan-1".into() },
+            TargetRef::Channel {
+                id: "chan-1".into(),
+            },
             ContentRef::pointer("chat_messages", "msg-1"),
             Some(Uuid::now_v7()),
         ),
@@ -109,7 +113,9 @@ fn every_emitted_body_validates_against_schema() {
             Module::App,
             "app.tile_opened",
             EventClass::Presence,
-            TargetRef::Subject { id: Uuid::new_v4().to_string() },
+            TargetRef::Subject {
+                id: Uuid::new_v4().to_string(),
+            },
             ContentRef::None,
             Some(Uuid::now_v7()),
         ),

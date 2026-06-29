@@ -5,10 +5,17 @@
 use serde_json::{json, Value};
 use uuid::Uuid;
 
-pub async fn emit(state: &crate::AppState, tenant: Uuid, actor: Uuid, event_type: &str, payload: Value) {
+pub async fn emit(
+    state: &crate::AppState,
+    tenant: Uuid,
+    actor: Uuid,
+    event_type: &str,
+    payload: Value,
+) {
     let body = json!({ "event_type": event_type, "payload": payload }).to_string();
     if let Some(pool) = &state.audit_pool {
-        if let Err(e) = cyberos_audit_chain::emit_genesis(pool, tenant, actor, event_type, &body).await
+        if let Err(e) =
+            cyberos_audit_chain::emit_genesis(pool, tenant, actor, event_type, &body).await
         {
             tracing::warn!(target: "cyberos_chat::audit", event_type, error = %e, "audit emit failed (best-effort)");
         }

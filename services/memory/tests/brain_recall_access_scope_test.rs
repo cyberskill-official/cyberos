@@ -16,18 +16,28 @@ async fn recall_excludes_closest_neighbour_outside_access_scope() {
     let env = BrainTestEnv::new().await;
 
     // Bob's event is the exact-match for the query text (its embedding will be closest).
-    env.append_interaction_event(env.subject_bob(), "chat.message_created", "exact query text match")
-        .await;
+    env.append_interaction_event(
+        env.subject_bob(),
+        "chat.message_created",
+        "exact query text match",
+    )
+    .await;
     // Alice has an unrelated event so the caller (entitled to alice) has something legitimately visible.
-    env.append_interaction_event(env.subject_alice(), "chat.message_created", "totally different note")
-        .await;
+    env.append_interaction_event(
+        env.subject_alice(),
+        "chat.message_created",
+        "totally different note",
+    )
+    .await;
     env.run_ingest_once().await;
 
     // Caller is entitled to ALICE only — NOT bob.
     let caller = env.caller_entitled_to(&[env.subject_alice()]).await;
     let mut q = query("exact query text match");
     q.drill = true; // force raw-event search so bob's exact-match event is a candidate
-    let res = brain::recall::recall(q, &caller, env.pool(), env.gw()).await.unwrap();
+    let res = brain::recall::recall(q, &caller, env.pool(), env.gw())
+        .await
+        .unwrap();
 
     assert!(
         res.items.iter().all(|h| h.subject_id != env.subject_bob()),
@@ -52,7 +62,9 @@ async fn deny_by_default_on_unknown_subject() {
     let caller = env.caller_entitled_to(&[]).await;
     let mut q = query("stranger says hello");
     q.drill = true;
-    let res = brain::recall::recall(q, &caller, env.pool(), env.gw()).await.unwrap();
+    let res = brain::recall::recall(q, &caller, env.pool(), env.gw())
+        .await
+        .unwrap();
     assert!(
         res.items.is_empty(),
         "deny-by-default: an unentitled caller sees no hits for an unknown subject"
@@ -66,17 +78,25 @@ async fn deny_by_default_on_unknown_subject() {
 async fn founder_sees_any_subject_self_sees_own() {
     // The positive access paths: a founder caller sees a hit for any subject; a subject sees their own.
     let env = BrainTestEnv::new().await;
-    env.append_interaction_event(env.subject_bob(), "chat.message_created", "bob ships the launch")
-        .await;
+    env.append_interaction_event(
+        env.subject_bob(),
+        "chat.message_created",
+        "bob ships the launch",
+    )
+    .await;
     env.run_ingest_once().await;
 
     // Founder may see bob.
     let founder = env.founder_caller().await;
     let mut q = query("bob ships the launch");
     q.drill = true;
-    let res = brain::recall::recall(q, &founder, env.pool(), env.gw()).await.unwrap();
+    let res = brain::recall::recall(q, &founder, env.pool(), env.gw())
+        .await
+        .unwrap();
     assert!(
-        res.items.iter().any(|h| h.subject_id == env.subject_bob() && matches!(h.source, HitSource::Event)),
+        res.items
+            .iter()
+            .any(|h| h.subject_id == env.subject_bob() && matches!(h.source, HitSource::Event)),
         "founder must see bob's event"
     );
 
@@ -87,7 +107,9 @@ async fn founder_sees_any_subject_self_sees_own() {
     };
     let mut q2 = query("bob ships the launch");
     q2.drill = true;
-    let res2 = brain::recall::recall(q2, &bob_self, env.pool(), env.gw()).await.unwrap();
+    let res2 = brain::recall::recall(q2, &bob_self, env.pool(), env.gw())
+        .await
+        .unwrap();
     assert!(
         res2.items.iter().any(|h| h.subject_id == env.subject_bob()),
         "bob sees his own record via the self path"
@@ -103,15 +125,24 @@ async fn tenant_rls_excludes_other_tenants_rows() {
     // second env (separate tenant) and confirm A's recall, even as founder, returns nothing of B's.
     let a = BrainTestEnv::new().await;
     let b = BrainTestEnv::new().await;
-    b.append_interaction_event(b.subject_alice(), "chat.message_created", "tenant B secret note")
-        .await;
+    b.append_interaction_event(
+        b.subject_alice(),
+        "chat.message_created",
+        "tenant B secret note",
+    )
+    .await;
     b.run_ingest_once().await;
 
     let a_founder = a.founder_caller().await;
     let mut q = query("tenant B secret note");
     q.drill = true;
-    let res = brain::recall::recall(q, &a_founder, a.pool(), a.gw()).await.unwrap();
-    assert!(res.items.is_empty(), "tenant A recall must not see tenant B rows (RLS)");
+    let res = brain::recall::recall(q, &a_founder, a.pool(), a.gw())
+        .await
+        .unwrap();
+    assert!(
+        res.items.is_empty(),
+        "tenant A recall must not see tenant B rows (RLS)"
+    );
 
     a.cleanup().await;
     b.cleanup().await;

@@ -50,13 +50,33 @@ impl BrainTestEnv {
         let pool = PgPool::connect(&url).await.expect("connect");
 
         // Memory chain + interaction-event columns.
-        apply_lenient(&pool, include_str!("../migrations/0003_layer1_audit_log.sql")).await;
+        apply_lenient(
+            &pool,
+            include_str!("../migrations/0003_layer1_audit_log.sql"),
+        )
+        .await;
         apply_lenient(&pool, include_str!("../migrations/0004_l1_event_type.sql")).await;
-        apply_lenient(&pool, include_str!("../migrations/0005_interaction_event.sql")).await;
+        apply_lenient(
+            &pool,
+            include_str!("../migrations/0005_interaction_event.sql"),
+        )
+        .await;
         // Brain tables (this FR).
-        apply_lenient(&pool, include_str!("../migrations/0006_brain_event_embeddings.sql")).await;
-        apply_lenient(&pool, include_str!("../migrations/0007_brain_summaries.sql")).await;
-        apply_lenient(&pool, include_str!("../migrations/0008_brain_tier_cursor.sql")).await;
+        apply_lenient(
+            &pool,
+            include_str!("../migrations/0006_brain_event_embeddings.sql"),
+        )
+        .await;
+        apply_lenient(
+            &pool,
+            include_str!("../migrations/0007_brain_summaries.sql"),
+        )
+        .await;
+        apply_lenient(
+            &pool,
+            include_str!("../migrations/0008_brain_tier_cursor.sql"),
+        )
+        .await;
         // FR-EVAL-001 access_grant table (the recall access predicate reads it). Applied leniently so it is
         // present whether or not the eval migration already ran against this DB.
         apply_lenient(&pool, ACCESS_GRANT_DDL).await;
@@ -161,12 +181,11 @@ impl BrainTestEnv {
             .source(SourceChannel::Web)
             .attribute("text", serde_json::json!(body_text));
         if let Some(ch) = channel {
-            b = b.target(TargetRef::Channel {
-                id: ch.to_string(),
-            });
+            b = b.target(TargetRef::Channel { id: ch.to_string() });
         }
         let ev = b.build().expect("valid event");
-        let EmitOutcome::Recorded { seq } = emit(&self.pool, &ev, &AllowAll).await.expect("emit") else {
+        let EmitOutcome::Recorded { seq } = emit(&self.pool, &ev, &AllowAll).await.expect("emit")
+        else {
             panic!("expected Recorded");
         };
         SeededEvent {
@@ -184,10 +203,22 @@ impl BrainTestEnv {
     }
 
     /// Run the summarise pass + force a subject re-summarise so a summary exists for assertions.
-    pub async fn run_summarize_once(&self, scope_kind: &str, scope_id: &str, subject: Option<Uuid>) {
-        brain::summarize::resummarize_now(&self.pool, self.tenant, scope_kind, scope_id, subject, &self.gw)
-            .await
-            .expect("resummarize");
+    pub async fn run_summarize_once(
+        &self,
+        scope_kind: &str,
+        scope_id: &str,
+        subject: Option<Uuid>,
+    ) {
+        brain::summarize::resummarize_now(
+            &self.pool,
+            self.tenant,
+            scope_kind,
+            scope_id,
+            subject,
+            &self.gw,
+        )
+        .await
+        .expect("resummarize");
         brain::summarize::run_summary_pass(&self.pool, self.tenant)
             .await
             .expect("summary pass");
@@ -261,7 +292,11 @@ impl BrainTestEnv {
             "DELETE FROM access_grant WHERE tenant_id = $1",
             "DELETE FROM l1_audit_log WHERE tenant_id = $1",
         ] {
-            sqlx::query(sql).bind(self.tenant).execute(&self.pool).await.ok();
+            sqlx::query(sql)
+                .bind(self.tenant)
+                .execute(&self.pool)
+                .await
+                .ok();
         }
     }
 }

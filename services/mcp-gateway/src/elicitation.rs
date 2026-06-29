@@ -187,8 +187,9 @@ pub fn validate_response(
                                 errs.push("values must be unique".to_string());
                             }
                         }
-                        _ => errs
-                            .push("each value must be one of the declared choices".to_string()),
+                        _ => {
+                            errs.push("each value must be one of the declared choices".to_string())
+                        }
                     }
                 }
             }
@@ -502,25 +503,30 @@ mod tests {
             &json!({ "value": "z" })
         )
         .is_empty());
-        assert!(!validate_response(
-            ElicitationType::MultiChoice,
-            &choices,
-            &json!({ "values": ["a", "a"] })
-        )
-        .is_empty(), "duplicates rejected");
+        assert!(
+            !validate_response(
+                ElicitationType::MultiChoice,
+                &choices,
+                &json!({ "values": ["a", "a"] })
+            )
+            .is_empty(),
+            "duplicates rejected"
+        );
     }
 
     #[test]
     fn confirmation_round_trip_accept_and_decline() {
         let store = ElicitationStore::new();
-        let approved = store.create_confirmation("cyberos.kb.bulk_delete", json!({ "title": "ok?" }));
+        let approved =
+            store.create_confirmation("cyberos.kb.bulk_delete", json!({ "title": "ok?" }));
         assert_eq!(
             store.respond(approved.id, json!({ "confirmed": true })),
             RespondOutcome::Recorded { confirmed: true }
         );
         assert!(store.is_confirmed(approved.id));
 
-        let declined = store.create_confirmation("cyberos.kb.bulk_delete", json!({ "title": "ok?" }));
+        let declined =
+            store.create_confirmation("cyberos.kb.bulk_delete", json!({ "title": "ok?" }));
         assert_eq!(
             store.respond(declined.id, json!({ "confirmed": false })),
             RespondOutcome::Recorded { confirmed: false }
@@ -542,7 +548,10 @@ mod tests {
             store.respond(e.id, json!({})),
             RespondOutcome::ValidationFailed(_)
         ));
-        assert_eq!(store.get(e.id).unwrap().status, ElicitationStatus::ValidationFailed);
+        assert_eq!(
+            store.get(e.id).unwrap().status,
+            ElicitationStatus::ValidationFailed
+        );
     }
 
     #[test]

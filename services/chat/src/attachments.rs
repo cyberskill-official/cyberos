@@ -57,12 +57,20 @@ pub async fn upload(
     }
     let bytes = base64::engine::general_purpose::STANDARD
         .decode(body.data_base64.as_bytes())
-        .map_err(|_| (StatusCode::BAD_REQUEST, "data_base64 is not valid base64".to_string()))?;
+        .map_err(|_| {
+            (
+                StatusCode::BAD_REQUEST,
+                "data_base64 is not valid base64".to_string(),
+            )
+        })?;
     if bytes.is_empty() {
         return Err((StatusCode::BAD_REQUEST, "empty file".to_string()));
     }
     if bytes.len() > MAX_BYTES {
-        return Err((StatusCode::PAYLOAD_TOO_LARGE, "file exceeds the 5 MB limit".to_string()));
+        return Err((
+            StatusCode::PAYLOAD_TOO_LARGE,
+            "file exceeds the 5 MB limit".to_string(),
+        ));
     }
     let size = bytes.len() as i64;
 
@@ -154,7 +162,10 @@ pub async fn download(
     Response::builder()
         .status(StatusCode::OK)
         .header("content-type", content_type)
-        .header("content-disposition", format!("attachment; filename=\"{safe}\""))
+        .header(
+            "content-disposition",
+            format!("attachment; filename=\"{safe}\""),
+        )
         .body(Body::from(data))
         .map_err(crate::internal)
 }

@@ -37,7 +37,8 @@ pub use gate::{build_default as build_default_gate, SqlConsentGate};
 // Re-export the FR-MEMORY-121 event surface emitters need, so a module's `capture.rs` imports from
 // `cyberos_capture` alone and never has to also reach into `cyberos_memory::interaction` for the builder.
 pub use cyberos_memory::interaction::{
-    ContentRef, EmitError, EmitOutcome, EventClass, InteractionEvent, Module, SourceChannel, TargetRef,
+    ContentRef, EmitError, EmitOutcome, EventClass, InteractionEvent, Module, SourceChannel,
+    TargetRef,
 };
 
 use sqlx::PgPool;

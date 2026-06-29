@@ -73,10 +73,15 @@ pub fn build_id_token_claims(
 /// Sign the id_token with the active FR-AUTH-004 RSA private key (PEM) under
 /// `kid`. The `kid` MUST be a key published in `/.well-known/jwks.json` so the RP
 /// can verify. Same RS256 path as [`crate::jwt::JwtService`] minting.
-pub fn sign_id_token(claims: &IdTokenClaims, kid: &str, private_pem: &str) -> Result<String, OpError> {
+pub fn sign_id_token(
+    claims: &IdTokenClaims,
+    kid: &str,
+    private_pem: &str,
+) -> Result<String, OpError> {
     let mut header = Header::new(Algorithm::RS256);
     header.kid = Some(kid.to_string());
-    let key = EncodingKey::from_rsa_pem(private_pem.as_bytes()).map_err(|_| OpError::ServerError)?;
+    let key =
+        EncodingKey::from_rsa_pem(private_pem.as_bytes()).map_err(|_| OpError::ServerError)?;
     encode(&header, claims, &key).map_err(|_| OpError::ServerError)
 }
 

@@ -65,10 +65,14 @@ mod tests {
 
     #[test]
     fn pins_the_safe_oidc_profile() {
-        let doc = openid_configuration("https://auth", "https://auth/jwks", &["authorization_code"]);
+        let doc =
+            openid_configuration("https://auth", "https://auth/jwks", &["authorization_code"]);
         assert_eq!(doc["response_types_supported"], json!(["code"]));
         assert_eq!(doc["code_challenge_methods_supported"], json!(["S256"]));
-        assert_eq!(doc["id_token_signing_alg_values_supported"], json!(["RS256"]));
+        assert_eq!(
+            doc["id_token_signing_alg_values_supported"],
+            json!(["RS256"])
+        );
     }
 
     #[test]

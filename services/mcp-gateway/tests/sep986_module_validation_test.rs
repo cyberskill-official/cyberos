@@ -9,19 +9,31 @@ fn all_approved_modules_pass() {
         "ai", "auth", "chat", "crm", "cuo", "doc", "email", "esop", "hr", "inv", "kb", "learn",
         "mcp", "memory", "obs", "okr", "portal", "proj", "res", "rew", "skill", "ten", "time",
     ] {
-        assert!(is_valid_module(module), "module '{module}' should be approved");
+        assert!(
+            is_valid_module(module),
+            "module '{module}' should be approved"
+        );
     }
 }
 
 #[test]
 fn module_count_is_23() {
-    assert_eq!(all_modules().len(), 23, "approved module count must be 23 per FR-MCP-003");
+    assert_eq!(
+        all_modules().len(),
+        23,
+        "approved module count must be 23 per FR-MCP-003"
+    );
 }
 
 #[test]
 fn unknown_modules_rejected() {
-    for module in ["calendar", "unknown", "payroll", "finance", "MEMORY", "Mcp", "", "hr2"] {
-        assert!(!is_valid_module(module), "module '{module}' should NOT be approved");
+    for module in [
+        "calendar", "unknown", "payroll", "finance", "MEMORY", "Mcp", "", "hr2",
+    ] {
+        assert!(
+            !is_valid_module(module),
+            "module '{module}' should NOT be approved"
+        );
     }
 }
 

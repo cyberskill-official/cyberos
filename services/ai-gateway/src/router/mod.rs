@@ -170,7 +170,8 @@ pub async fn call_provider(
 ) -> Result<ProviderResponse, RouterError> {
     let started = Instant::now();
     let failover_budget = env_duration_secs("AI_GATEWAY_FAILOVER_BUDGET_SECS", FAILOVER_BUDGET);
-    let provider_timeout = env_duration_secs("AI_GATEWAY_PROVIDER_TIMEOUT_SECS", PROVIDER_DEFAULT_TIMEOUT);
+    let provider_timeout =
+        env_duration_secs("AI_GATEWAY_PROVIDER_TIMEOUT_SECS", PROVIDER_DEFAULT_TIMEOUT);
     let failover_deadline = started + failover_budget;
     let effective_deadline = deadline.min(failover_deadline);
 

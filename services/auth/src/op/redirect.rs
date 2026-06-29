@@ -33,10 +33,10 @@ mod tests {
         for bad in [
             "https://chat.cyberos.world/signin/oidc/complete/", // trailing slash
             "https://chat.cyberos.world/signin/oidc/complete?x=1", // extra query
-            "https://chat.cyberos.world/signin/oidc", // shorter path
+            "https://chat.cyberos.world/signin/oidc",           // shorter path
             "https://chat.cyberos.world/signin/oidc/complete/extra", // longer path
-            "http://chat.cyberos.world/signin/oidc/complete",  // wrong scheme
-            "https://evil.example/signin/oidc/complete",       // wrong host
+            "http://chat.cyberos.world/signin/oidc/complete",   // wrong scheme
+            "https://evil.example/signin/oidc/complete",        // wrong host
         ] {
             assert!(!redirect_uri_registered(&reg, bad), "should reject {bad}");
         }
@@ -44,6 +44,9 @@ mod tests {
 
     #[test]
     fn empty_registry_rejects_everything() {
-        assert!(!redirect_uri_registered(&[], "https://chat.cyberos.world/x"));
+        assert!(!redirect_uri_registered(
+            &[],
+            "https://chat.cyberos.world/x"
+        ));
     }
 }

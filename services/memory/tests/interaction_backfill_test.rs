@@ -88,15 +88,22 @@ async fn backfill_is_idempotent_and_keeps_original_time() {
 
     // AllowAll stands in for "alice has acknowledged" so every message is eligible.
     let gate = AllowAll;
-    let r1 = backfill_chat(&pool, &pool, &gate, tenant, 30, true).await.unwrap();
-    let r2 = backfill_chat(&pool, &pool, &gate, tenant, 30, true).await.unwrap();
+    let r1 = backfill_chat(&pool, &pool, &gate, tenant, 30, true)
+        .await
+        .unwrap();
+    let r2 = backfill_chat(&pool, &pool, &gate, tenant, 30, true)
+        .await
+        .unwrap();
 
     assert_eq!(r1.recorded, 5, "first run records all 5 messages");
     assert_eq!(
         r2.recorded, 0,
         "re-run records nothing (idempotent on the deterministic event_id / audit path)"
     );
-    assert_eq!(r2.already_present, 5, "re-run sees all 5 as already present");
+    assert_eq!(
+        r2.already_present, 5,
+        "re-run sees all 5 as already present"
+    );
     assert_eq!(
         count_backfilled(&pool, alice).await,
         5,
@@ -132,12 +139,18 @@ async fn backfill_skips_unacknowledged_authors() {
 
     // DenyAll stands in for "bob never acknowledged": every message is counted but none is written.
     let gate = DenyAll;
-    let r = backfill_chat(&pool, &pool, &gate, tenant, 30, true).await.unwrap();
+    let r = backfill_chat(&pool, &pool, &gate, tenant, 30, true)
+        .await
+        .unwrap();
 
     assert_eq!(r.seen, 3);
     assert_eq!(r.recorded, 0);
     assert_eq!(r.skipped_consent, 3, "all 3 skipped by the consent gate");
-    assert_eq!(count_backfilled(&pool, bob).await, 0, "nothing written for an unacknowledged author");
+    assert_eq!(
+        count_backfilled(&pool, bob).await,
+        0,
+        "nothing written for an unacknowledged author"
+    );
 }
 
 #[tokio::test]
@@ -149,7 +162,9 @@ async fn dry_run_writes_nothing_but_counts() {
     seed_messages(&pool, tenant, carol, 4, 1).await;
 
     let gate = AllowAll;
-    let r = backfill_chat(&pool, &pool, &gate, tenant, 30, false).await.unwrap();
+    let r = backfill_chat(&pool, &pool, &gate, tenant, 30, false)
+        .await
+        .unwrap();
     assert_eq!(r.seen, 4, "dry-run counts the candidates");
     assert_eq!(r.recorded, 0, "dry-run writes nothing");
     assert_eq!(count_backfilled(&pool, carol).await, 0);

@@ -77,7 +77,10 @@ mod tests {
             doc["resource_signing_alg_values_supported"],
             json!(["RS256"])
         );
-        assert_eq!(doc["authorization_servers"], json!(["https://auth.example"]));
+        assert_eq!(
+            doc["authorization_servers"],
+            json!(["https://auth.example"])
+        );
         assert_eq!(doc["resource_documentation"], "https://mcp.example/docs");
         assert!(
             doc.get("scopes_supported").is_none(),
@@ -89,7 +92,9 @@ mod tests {
     fn signing_algs_never_advertise_eddsa_or_hs256() {
         // The verifier is RS256-only; advertising anything else would invite unverifiable tokens.
         let doc = protected_resource_metadata("https://mcp", &[]);
-        let algs = doc["resource_signing_alg_values_supported"].as_array().unwrap();
+        let algs = doc["resource_signing_alg_values_supported"]
+            .as_array()
+            .unwrap();
         assert!(algs.iter().all(|a| a == "RS256"));
         assert!(!algs.iter().any(|a| a == "EdDSA" || a == "HS256"));
     }
@@ -123,7 +128,11 @@ mod tests {
         let b = protected_resource_metadata("https://mcp", &["https://a".to_string()]);
         let c = protected_resource_metadata("https://mcp", &["https://b".to_string()]);
         assert_eq!(etag(&a), etag(&b), "same document yields the same etag");
-        assert_ne!(etag(&a), etag(&c), "different document yields a different etag");
+        assert_ne!(
+            etag(&a),
+            etag(&c),
+            "different document yields a different etag"
+        );
         let tag = etag(&a);
         assert_eq!(tag.len(), 18, "two quotes plus sixteen hex chars");
         assert!(tag.starts_with('"') && tag.ends_with('"'));

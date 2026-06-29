@@ -177,11 +177,9 @@ impl EmbedClient {
                             .json()
                             .await
                             .map_err(|e| EmbedError::Malformed(e.to_string()))?;
-                        let vector = parsed
-                            .embeddings
-                            .into_iter()
-                            .next()
-                            .ok_or_else(|| EmbedError::Malformed("no embedding in response".into()))?;
+                        let vector = parsed.embeddings.into_iter().next().ok_or_else(|| {
+                            EmbedError::Malformed("no embedding in response".into())
+                        })?;
                         if vector.len() != EMBED_DIM {
                             return Err(EmbedError::Malformed(format!(
                                 "embedding dim {} != {EMBED_DIM}",
@@ -262,7 +260,10 @@ mod tests {
     async fn stub_distinguishes_different_text() {
         let c = EmbedClient::stub();
         let a = c.embed(Uuid::nil(), "shipped the proj sync").await.unwrap();
-        let b = c.embed(Uuid::nil(), "completely unrelated text").await.unwrap();
+        let b = c
+            .embed(Uuid::nil(), "completely unrelated text")
+            .await
+            .unwrap();
         assert_ne!(a.vector, b.vector);
     }
 

@@ -47,9 +47,10 @@ mod tests {
 
     #[test]
     fn bind_audience_emits_single_resource() {
-        assert_eq!(bind_audience("https://mcp.cyberos.world"), vec![
-            "https://mcp.cyberos.world".to_string()
-        ]);
+        assert_eq!(
+            bind_audience("https://mcp.cyberos.world"),
+            vec!["https://mcp.cyberos.world".to_string()]
+        );
     }
 
     #[test]

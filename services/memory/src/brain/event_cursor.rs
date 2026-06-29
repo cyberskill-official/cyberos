@@ -130,7 +130,9 @@ pub async fn read_after(
                 kind: r.try_get::<String, _>("kind").unwrap_or_default(),
                 ts_ns: r.try_get("ts_ns").unwrap_or_default(),
                 body: r.try_get::<String, _>("body").unwrap_or_default(),
-                chain_anchor_hex: r.try_get::<String, _>("chain_anchor_hex").unwrap_or_default(),
+                chain_anchor_hex: r
+                    .try_get::<String, _>("chain_anchor_hex")
+                    .unwrap_or_default(),
             }
         })
         .collect())

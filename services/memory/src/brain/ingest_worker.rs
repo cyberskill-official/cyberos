@@ -126,7 +126,11 @@ async fn insert_complete(
 /// UPSERT an event row with NO embedding, marked `pending_embed_retry` (§1 #13). Still advances the cursor:
 /// the row exists and is on the retry list, so the worker makes forward progress rather than re-pulling the
 /// same event forever. `retry_pending` fills the vector later.
-async fn insert_pending(pool: &PgPool, tenant_id: Uuid, ev: &BrainEvent) -> Result<(), sqlx::Error> {
+async fn insert_pending(
+    pool: &PgPool,
+    tenant_id: Uuid,
+    ev: &BrainEvent,
+) -> Result<(), sqlx::Error> {
     let mut tx = super::tenant_tx(pool, tenant_id).await?;
     sqlx::query(
         "INSERT INTO brain_event_embedding

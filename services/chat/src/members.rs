@@ -53,7 +53,10 @@ pub async fn add(
         .subject_id()
         .map_err(|e| (StatusCode::UNAUTHORIZED, e.to_string()))?;
     if !matches!(body.role.as_str(), "owner" | "admin" | "member") {
-        return Err((StatusCode::BAD_REQUEST, "role must be owner, admin, or member".to_string()));
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "role must be owner, admin, or member".to_string(),
+        ));
     }
 
     let mut tx = db::tenant_tx(&st.pool, &tenant)
@@ -64,7 +67,12 @@ pub async fn add(
         .map_err(crate::internal)?
     {
         Some(role) if db::is_manager(&role) => {}
-        Some(_) => return Err((StatusCode::FORBIDDEN, "only owner or admin can add members".to_string())),
+        Some(_) => {
+            return Err((
+                StatusCode::FORBIDDEN,
+                "only owner or admin can add members".to_string(),
+            ))
+        }
         None => return Err((StatusCode::FORBIDDEN, "not a channel member".to_string())),
     }
 
@@ -96,8 +104,14 @@ pub async fn add(
     if let Some(cap) = st.capturer.clone() {
         let joined_subject = body.subject_id;
         tokio::spawn(async move {
-            crate::capture::emit_channel_membership(Some(&cap), tenant, joined_subject, channel, true)
-                .await;
+            crate::capture::emit_channel_membership(
+                Some(&cap),
+                tenant,
+                joined_subject,
+                channel,
+                true,
+            )
+            .await;
         });
     }
     Ok((StatusCode::CREATED, Json(to_member(row))))
@@ -160,15 +174,21 @@ pub async fn remove(
         .map_err(crate::internal)?
     {
         Some(role) if role == "owner" => {}
-        Some(_) => return Err((StatusCode::FORBIDDEN, "only the owner can remove members".to_string())),
+        Some(_) => {
+            return Err((
+                StatusCode::FORBIDDEN,
+                "only the owner can remove members".to_string(),
+            ))
+        }
         None => return Err((StatusCode::FORBIDDEN, "not a channel member".to_string())),
     }
-    let res = sqlx::query("DELETE FROM chat_channel_members WHERE channel_id = $1 AND subject_id = $2")
-        .bind(channel)
-        .bind(subject)
-        .execute(&mut *tx)
-        .await
-        .map_err(crate::internal)?;
+    let res =
+        sqlx::query("DELETE FROM chat_channel_members WHERE channel_id = $1 AND subject_id = $2")
+            .bind(channel)
+            .bind(subject)
+            .execute(&mut *tx)
+            .await
+            .map_err(crate::internal)?;
     tx.commit().await.map_err(crate::internal)?;
     if res.rows_affected() == 0 {
         return Err((StatusCode::NOT_FOUND, "member not found".to_string()));
@@ -186,7 +206,8 @@ pub async fn remove(
     // unless capture on.
     if let Some(cap) = st.capturer.clone() {
         tokio::spawn(async move {
-            crate::capture::emit_channel_membership(Some(&cap), tenant, subject, channel, false).await;
+            crate::capture::emit_channel_membership(Some(&cap), tenant, subject, channel, false)
+                .await;
         });
     }
     Ok(StatusCode::NO_CONTENT)

@@ -28,9 +28,17 @@ async fn pool() -> PgPool {
         .or_else(|_| std::env::var("MEMORY_DATABASE_URL"))
         .expect("DATABASE_URL env var");
     let pool = PgPool::connect(&url).await.expect("connect");
-    apply_lenient(&pool, include_str!("../migrations/0003_layer1_audit_log.sql")).await;
+    apply_lenient(
+        &pool,
+        include_str!("../migrations/0003_layer1_audit_log.sql"),
+    )
+    .await;
     apply_lenient(&pool, include_str!("../migrations/0004_l1_event_type.sql")).await;
-    apply_lenient(&pool, include_str!("../migrations/0005_interaction_event.sql")).await;
+    apply_lenient(
+        &pool,
+        include_str!("../migrations/0005_interaction_event.sql"),
+    )
+    .await;
     pool
 }
 
@@ -96,13 +104,12 @@ async fn valid_event_chains_into_audit_log_as_put() {
         other => panic!("expected Recorded, got {other:?}"),
     };
 
-    let (op, event_type, anchor): (String, String, String) = sqlx::query_as(
-        "SELECT op, event_type, chain_anchor_hex FROM l1_audit_log WHERE seq = $1",
-    )
-    .bind(seq)
-    .fetch_one(&pool)
-    .await
-    .unwrap();
+    let (op, event_type, anchor): (String, String, String) =
+        sqlx::query_as("SELECT op, event_type, chain_anchor_hex FROM l1_audit_log WHERE seq = $1")
+            .bind(seq)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
     assert_eq!(event_type, "memory.interaction_event");
     assert_eq!(op, "put", "Content class chains as put");
     assert_eq!(anchor.len(), 64, "chain anchor is 64-hex SHA-256");
@@ -158,7 +165,12 @@ async fn consent_gate_blocks_unacknowledged_subject_no_row_written() {
     let tenant = Uuid::new_v4();
     let subject = Uuid::new_v4();
 
-    let ev = event(tenant, Some(subject), "chat.message_created", EventClass::Content);
+    let ev = event(
+        tenant,
+        Some(subject),
+        "chat.message_created",
+        EventClass::Content,
+    );
     // DenyAll = the default-deny stub: a subject without consent is skipped, NO row written.
     let out = emit(&pool, &ev, &DenyAll).await.unwrap();
     assert!(
@@ -189,7 +201,12 @@ async fn acknowledged_subject_records() {
     let pool = pool().await;
     let tenant = Uuid::new_v4();
     let subject = Uuid::new_v4();
-    let ev = event(tenant, Some(subject), "chat.message_created", EventClass::Content);
+    let ev = event(
+        tenant,
+        Some(subject),
+        "chat.message_created",
+        EventClass::Content,
+    );
     // AllowAll stands in for an acknowledged subject (the real ack lives in FR-EVAL-001 / FR-MEMORY-122).
     assert!(matches!(
         emit(&pool, &ev, &AllowAll).await.unwrap(),
@@ -225,7 +242,12 @@ async fn replay_same_event_id_is_idempotent() {
     let pool = pool().await;
     let tenant = Uuid::new_v4();
     let subject = Uuid::new_v4();
-    let ev = event(tenant, Some(subject), "chat.message_created", EventClass::Content);
+    let ev = event(
+        tenant,
+        Some(subject),
+        "chat.message_created",
+        EventClass::Content,
+    );
 
     let _ = emit(&pool, &ev, &AllowAll).await.unwrap();
     // Re-emit the SAME event_id: the unique partial index (l1_iev_event_id_uq) rejects the duplicate, so
@@ -256,7 +278,12 @@ async fn recorded_anchor_reverifies_like_memory_reconcile() {
     let pool = pool().await;
     let tenant = Uuid::new_v4();
     let subject = Uuid::new_v4();
-    let ev = event(tenant, Some(subject), "chat.message_created", EventClass::Content);
+    let ev = event(
+        tenant,
+        Some(subject),
+        "chat.message_created",
+        EventClass::Content,
+    );
     let EmitOutcome::Recorded { seq } = emit(&pool, &ev, &AllowAll).await.unwrap() else {
         panic!("expected Recorded");
     };

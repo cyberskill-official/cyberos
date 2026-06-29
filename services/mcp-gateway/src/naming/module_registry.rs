@@ -18,29 +18,8 @@
 ///
 /// MUST remain sorted in ASCII order so [`is_valid_module`] can binary-search it.
 const MODULES: &[&str] = &[
-    "ai",
-    "auth",
-    "chat",
-    "crm",
-    "cuo",
-    "doc",
-    "email",
-    "esop",
-    "hr",
-    "inv",
-    "kb",
-    "learn",
-    "mcp",
-    "memory",
-    "obs",
-    "okr",
-    "portal",
-    "proj",
-    "res",
-    "rew",
-    "skill",
-    "ten",
-    "time",
+    "ai", "auth", "chat", "crm", "cuo", "doc", "email", "esop", "hr", "inv", "kb", "learn", "mcp",
+    "memory", "obs", "okr", "portal", "proj", "res", "rew", "skill", "ten", "time",
 ];
 
 /// Returns `true` if `name` is in the approved module list. O(log n) binary search.
@@ -61,11 +40,19 @@ mod tests {
     fn modules_are_sorted() {
         let mut sorted = MODULES.to_vec();
         sorted.sort_unstable();
-        assert_eq!(MODULES, sorted.as_slice(), "MODULES must stay sorted for binary search");
+        assert_eq!(
+            MODULES,
+            sorted.as_slice(),
+            "MODULES must stay sorted for binary search"
+        );
     }
 
     #[test]
     fn module_count_matches_spec() {
-        assert_eq!(MODULES.len(), 23, "module count changed; update this test and the RFC");
+        assert_eq!(
+            MODULES.len(),
+            23,
+            "module count changed; update this test and the RFC"
+        );
     }
 }

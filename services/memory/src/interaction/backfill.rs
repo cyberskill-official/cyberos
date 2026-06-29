@@ -31,7 +31,8 @@ use uuid::Uuid;
 /// The fixed UUIDv5 namespace for backfilled interaction-event ids (§1 #10). A constant namespace + the
 /// source message id => a deterministic, collision-free `event_id` that is stable across runs. This value
 /// is arbitrary-but-fixed; never change it, or a re-run would mint new ids and double-count.
-pub const CAPTURE_BACKFILL_NAMESPACE: Uuid = Uuid::from_u128(0x6361_7074_7572_6562_6163_6b66_696c_6c00);
+pub const CAPTURE_BACKFILL_NAMESPACE: Uuid =
+    Uuid::from_u128(0x6361_7074_7572_6562_6163_6b66_696c_6c00);
 
 /// A bounded chat message row the backfill replays. Bodies are NEVER read — only the metadata the event
 /// needs (the row is referenced by pointer, never inlined).
@@ -97,13 +98,15 @@ async fn recent_messages(
     Ok(rows
         .into_iter()
         .map(
-            |(id, author, channel_id, channel_kind, created_at_ns, has_attachment)| ChatMessageRow {
-                id,
-                author,
-                channel_id,
-                channel_kind,
-                created_at_ns,
-                has_attachment,
+            |(id, author, channel_id, channel_kind, created_at_ns, has_attachment)| {
+                ChatMessageRow {
+                    id,
+                    author,
+                    channel_id,
+                    channel_kind,
+                    created_at_ns,
+                    has_attachment,
+                }
             },
         )
         .collect())
@@ -112,14 +115,17 @@ async fn recent_messages(
 /// §1 #10 idempotency pre-check: has a row with this audit `path` (which embeds the deterministic
 /// event_id) already been written for this tenant? `l1_audit_log` has no RLS, so a direct
 /// `(tenant_id, path)` lookup is correct and cheap (covered by the `(tenant_id, seq)` scan or a path filter).
-async fn already_recorded(audit_pool: &PgPool, tenant: Uuid, path: &str) -> Result<bool, sqlx::Error> {
-    let row: Option<(i64,)> = sqlx::query_as(
-        "SELECT seq FROM l1_audit_log WHERE tenant_id = $1 AND path = $2 LIMIT 1",
-    )
-    .bind(tenant)
-    .bind(path)
-    .fetch_optional(audit_pool)
-    .await?;
+async fn already_recorded(
+    audit_pool: &PgPool,
+    tenant: Uuid,
+    path: &str,
+) -> Result<bool, sqlx::Error> {
+    let row: Option<(i64,)> =
+        sqlx::query_as("SELECT seq FROM l1_audit_log WHERE tenant_id = $1 AND path = $2 LIMIT 1")
+            .bind(tenant)
+            .bind(path)
+            .fetch_optional(audit_pool)
+            .await?;
     Ok(row.is_some())
 }
 
@@ -286,7 +292,7 @@ mod tests {
         assert_eq!(ev.occurred_at_ns, 1_650_000_000_000_000_000); // original time, not now
         assert_eq!(ev.source_channel, SourceChannel::Import); // §1 #13
         assert!(matches!(ev.target_ref, TargetRef::Dm { .. })); // direct -> dm
-        // Pointer to chat's row, never the body (§1 #4).
+                                                                // Pointer to chat's row, never the body (§1 #4).
         assert_eq!(ev.content_ref.kind(), "pointer");
         assert_eq!(ev.event_type, "chat.message_created");
         assert_eq!(ev.event_class, EventClass::Content);

@@ -18,7 +18,9 @@ use serde_json::{json, Value};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::elicitation::{response_schema, validate_response, ElicitationType, RespondOutcome, MAX_RETRIES};
+use crate::elicitation::{
+    response_schema, validate_response, ElicitationType, RespondOutcome, MAX_RETRIES,
+};
 use crate::kms::Kms;
 
 /// Default pending lifetime for a server-raised confirmation (seconds). Well within the 1..=1800 the

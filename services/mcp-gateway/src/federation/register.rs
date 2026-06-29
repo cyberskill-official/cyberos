@@ -214,7 +214,10 @@ mod tests {
         let req = sample(
             "memory",
             "http://memory.internal/mcp",
-            &["cyberos.memory.search_memory", "cyberos.memory.update_memory"],
+            &[
+                "cyberos.memory.search_memory",
+                "cyberos.memory.update_memory",
+            ],
         );
         let n = apply(&registry, &req);
         assert_eq!(n, 2);
@@ -246,7 +249,10 @@ mod tests {
         apply(&registry, &second);
         assert_eq!(registry.len(), 1);
         assert_eq!(
-            registry.lookup("cyberos.memory.search_memory").unwrap().endpoint,
+            registry
+                .lookup("cyberos.memory.search_memory")
+                .unwrap()
+                .endpoint,
             "http://new.internal/mcp"
         );
     }
@@ -298,7 +304,11 @@ mod tests {
     #[test]
     fn validate_rejects_an_unknown_module_tool() {
         // Well-formed but `calendar` is not one of the 23 registered modules.
-        let req = sample("calendar", "http://x/mcp", &["cyberos.calendar.list_events"]);
+        let req = sample(
+            "calendar",
+            "http://x/mcp",
+            &["cyberos.calendar.list_events"],
+        );
         assert!(matches!(
             validate(&req),
             Err(RegisterError::NonConformingToolName { index: 0, .. })

@@ -27,8 +27,9 @@ pub async fn recall_handler(
 ) -> Result<(StatusCode, Json<serde_json::Value>), (StatusCode, Json<serde_json::Value>)> {
     let tenant_id = require_header_uuid(&headers, "x-tenant-id")
         .ok_or_else(|| bad("x-tenant-id header required (UUID)"))?;
-    let viewer_subject_id = require_header_uuid(&headers, "x-subject-id")
-        .ok_or_else(|| bad("x-subject-id header required (UUID) — recall needs the caller identity"))?;
+    let viewer_subject_id = require_header_uuid(&headers, "x-subject-id").ok_or_else(|| {
+        bad("x-subject-id header required (UUID) — recall needs the caller identity")
+    })?;
 
     let caller = Caller {
         tenant_id,
@@ -38,9 +39,11 @@ pub async fn recall_handler(
 
     match recall::recall(q, &caller, &state.pg, &gw).await {
         Ok(results) => {
-            let body = serde_json::to_value(&results).unwrap_or_else(|_| serde_json::json!({
-                "items": [], "degraded_backends": []
-            }));
+            let body = serde_json::to_value(&results).unwrap_or_else(|_| {
+                serde_json::json!({
+                    "items": [], "degraded_backends": []
+                })
+            });
             Ok((StatusCode::OK, Json(body)))
         }
         Err(recall::RecallError::LimitTooLarge) => Err((

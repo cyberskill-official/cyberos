@@ -116,10 +116,30 @@ pub async fn create(pool: &PgPool, c: &NewRpClient<'_>) -> Result<(Uuid, String)
     Ok((id, secret))
 }
 
-type RpRow = (Uuid, Uuid, String, String, String, Vec<String>, Vec<String>, bool, bool);
+type RpRow = (
+    Uuid,
+    Uuid,
+    String,
+    String,
+    String,
+    Vec<String>,
+    Vec<String>,
+    bool,
+    bool,
+);
 
 fn row_to_client(r: RpRow) -> RpClient {
-    let (id, tenant_id, name, client_id, client_secret_hash, redirect_uris, post_logout_redirect_uris, allow_refresh, is_active) = r;
+    let (
+        id,
+        tenant_id,
+        name,
+        client_id,
+        client_secret_hash,
+        redirect_uris,
+        post_logout_redirect_uris,
+        allow_refresh,
+        is_active,
+    ) = r;
     RpClient {
         id,
         tenant_id,
@@ -183,12 +203,14 @@ pub async fn soft_delete(pool: &PgPool, tenant_id: Uuid, client_id: &str) -> Res
         .execute(&mut *tx)
         .await
         .map_err(|_| OpError::ServerError)?;
-    let done = sqlx::query("UPDATE auth_oidc_rp_clients SET is_active = false WHERE tenant_id = $1 AND client_id = $2")
-        .bind(tenant_id)
-        .bind(client_id)
-        .execute(&mut *tx)
-        .await
-        .map_err(|_| OpError::ServerError)?;
+    let done = sqlx::query(
+        "UPDATE auth_oidc_rp_clients SET is_active = false WHERE tenant_id = $1 AND client_id = $2",
+    )
+    .bind(tenant_id)
+    .bind(client_id)
+    .execute(&mut *tx)
+    .await
+    .map_err(|_| OpError::ServerError)?;
     tx.commit().await.map_err(|_| OpError::ServerError)?;
     Ok(done.rows_affected() > 0)
 }

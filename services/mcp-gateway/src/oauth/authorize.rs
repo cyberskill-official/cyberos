@@ -69,17 +69,29 @@ pub async fn authorize(
     if client.revoked_at.is_some() {
         return Err(OAuthError::invalid_request("client is revoked").into());
     }
-    if !client.redirect_uris.iter().any(|u| u == &params.redirect_uri) {
+    if !client
+        .redirect_uris
+        .iter()
+        .any(|u| u == &params.redirect_uri)
+    {
         return Err(OAuthError::invalid_request("redirect_uri_mismatch").into());
     }
 
     // From here, surface errors back to the (validated) redirect_uri.
     let redirect_uri = params.redirect_uri.clone();
     let state = params.state.clone();
-    let err = |code: &str| Ok(build_redirect(&redirect_uri, &[("error", code), ("state", &state)]));
+    let err = |code: &str| {
+        Ok(build_redirect(
+            &redirect_uri,
+            &[("error", code), ("state", &state)],
+        ))
+    };
 
     if state.is_empty() {
-        return Ok(build_redirect(&redirect_uri, &[("error", "invalid_request")]));
+        return Ok(build_redirect(
+            &redirect_uri,
+            &[("error", "invalid_request")],
+        ));
     }
     if params.response_type != "code" {
         return err("unsupported_response_type");

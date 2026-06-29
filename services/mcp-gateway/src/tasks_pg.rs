@@ -166,12 +166,7 @@ pub async fn complete(
 }
 
 /// Mark a non-terminal task failed with an error. Returns whether it transitioned.
-pub async fn fail(
-    pool: &PgPool,
-    id: Uuid,
-    code: &str,
-    message: &str,
-) -> Result<bool, sqlx::Error> {
+pub async fn fail(pool: &PgPool, id: Uuid, code: &str, message: &str) -> Result<bool, sqlx::Error> {
     let res = sqlx::query(
         "UPDATE mcp_tasks
             SET status = 'failed'::task_status, error_code = $2, error_message = $3, completed_at = now()

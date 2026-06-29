@@ -168,7 +168,8 @@ async fn ws_loop(
         // null for a websocket edge (§1 #14 — never fabricated).
         if let Some(cap) = st.capturer.clone() {
             tokio::spawn(async move {
-                crate::capture::emit_presence_changed(Some(&cap), tenant, me, channel, "online").await;
+                crate::capture::emit_presence_changed(Some(&cap), tenant, me, channel, "online")
+                    .await;
             });
         }
     }
@@ -218,7 +219,8 @@ async fn ws_loop(
         // closed). Closing one of several tabs does NOT emit. Spawned + best-effort; no-op unless capture on.
         if let Some(cap) = st.capturer.clone() {
             tokio::spawn(async move {
-                crate::capture::emit_presence_changed(Some(&cap), tenant, me, channel, "offline").await;
+                crate::capture::emit_presence_changed(Some(&cap), tenant, me, channel, "offline")
+                    .await;
             });
         }
     }

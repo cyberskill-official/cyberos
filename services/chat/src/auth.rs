@@ -113,7 +113,8 @@ pub fn authenticate(
     state: &crate::AppState,
     headers: &HeaderMap,
 ) -> Result<Claims, (StatusCode, String)> {
-    let token = bearer(headers).ok_or((StatusCode::UNAUTHORIZED, "missing bearer token".to_string()))?;
+    let token =
+        bearer(headers).ok_or((StatusCode::UNAUTHORIZED, "missing bearer token".to_string()))?;
     state
         .authenticator
         .verify(token)

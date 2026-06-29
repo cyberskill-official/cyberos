@@ -34,7 +34,11 @@ pub struct TierCounts {
 /// Run one tiering pass for `tenant_id` (§1 #6). Demotes rows whose age crosses `hot_max_age` (hot->warm) or
 /// `warm_max_age` (warm->cold), advances the watermark, and emits the per-tier gauges. Idempotent: a second
 /// run with no time passing is a no-op (the same WHERE clauses match nothing new).
-pub async fn run_tier_pass(pool: &PgPool, tenant_id: Uuid, cfg: &BrainConfig) -> Result<TierCounts, sqlx::Error> {
+pub async fn run_tier_pass(
+    pool: &PgPool,
+    tenant_id: Uuid,
+    cfg: &BrainConfig,
+) -> Result<TierCounts, sqlx::Error> {
     let now = now_ns();
     let hot_cutoff = now - cfg.hot_max_age_ns; // events older (ts_ns < cutoff) than this are no longer hot
     let warm_cutoff = now - cfg.warm_max_age_ns; // older than this are cold
@@ -117,7 +121,14 @@ mod tests {
     #[test]
     fn tier_counts_default_is_zero() {
         let c = TierCounts::default();
-        assert_eq!(c, TierCounts { hot: 0, warm: 0, cold: 0 });
+        assert_eq!(
+            c,
+            TierCounts {
+                hot: 0,
+                warm: 0,
+                cold: 0
+            }
+        );
     }
 
     #[test]

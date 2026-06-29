@@ -14,14 +14,20 @@ async fn provenance_points_back_to_audit_rows() {
     // AC #12: each event hit cites exactly one audit_row_id — the row it derived from.
     let env = BrainTestEnv::new().await;
     let ev = env
-        .append_interaction_event(env.subject_alice(), "chat.message_created", "decision recorded")
+        .append_interaction_event(
+            env.subject_alice(),
+            "chat.message_created",
+            "decision recorded",
+        )
         .await;
     env.run_ingest_once().await;
 
     let caller = env.caller_entitled_to(&[env.subject_alice()]).await;
     let mut q = query("decision recorded");
     q.drill = true;
-    let res = brain::recall::recall(q, &caller, env.pool(), env.gw()).await.unwrap();
+    let res = brain::recall::recall(q, &caller, env.pool(), env.gw())
+        .await
+        .unwrap();
 
     let hit = res.items.first().expect("a hit");
     assert!(
@@ -40,7 +46,11 @@ async fn chain_anchor_mismatch_drops_hit() {
     // matches what the row advertises).
     let env = BrainTestEnv::new().await;
     let ev = env
-        .append_interaction_event(env.subject_alice(), "chat.message_created", "verifiable body")
+        .append_interaction_event(
+            env.subject_alice(),
+            "chat.message_created",
+            "verifiable body",
+        )
         .await;
     env.run_ingest_once().await;
 
@@ -50,7 +60,9 @@ async fn chain_anchor_mismatch_drops_hit() {
     let caller = env.caller_entitled_to(&[env.subject_alice()]).await;
     let mut q = query("verifiable body");
     q.drill = true;
-    let res = brain::recall::recall(q, &caller, env.pool(), env.gw()).await.unwrap();
+    let res = brain::recall::recall(q, &caller, env.pool(), env.gw())
+        .await
+        .unwrap();
     // The tampered event's hit must not appear: its read-time anchor recompute fails, so it is dropped.
     assert!(
         !res.items.iter().any(|h| h.audit_row_id == ev.audit_row_id),
@@ -67,14 +79,22 @@ async fn worker_never_writes_audit_chain() {
     // read-only over Layer 1).
     let env = BrainTestEnv::new().await;
     for i in 0..6 {
-        env.append_interaction_event(env.subject_alice(), "chat.message_created", &format!("entry {i}"))
-            .await;
+        env.append_interaction_event(
+            env.subject_alice(),
+            "chat.message_created",
+            &format!("entry {i}"),
+        )
+        .await;
     }
     let head_after_seed = env.audit_head().await;
 
     env.run_ingest_once().await;
-    env.run_summarize_once("subject", &env.subject_alice().to_string(), Some(env.subject_alice()))
-        .await;
+    env.run_summarize_once(
+        "subject",
+        &env.subject_alice().to_string(),
+        Some(env.subject_alice()),
+    )
+    .await;
     env.run_tiering_pass().await;
 
     let head_after_brain = env.audit_head().await;

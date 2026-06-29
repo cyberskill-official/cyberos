@@ -72,9 +72,10 @@ async fn delete_task(pool: &PgPool, id: Uuid) {
 /// Best-effort subject cleanup (child mcp_* rows must be gone first; subjects is FORCE RLS).
 async fn delete_subject(pool: &PgPool, id: Uuid) {
     if let Ok(mut tx) = pool.begin().await {
-        let _ = sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
-            .execute(&mut *tx)
-            .await;
+        let _ =
+            sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
+                .execute(&mut *tx)
+                .await;
         let _ = sqlx::query("DELETE FROM subjects WHERE id = $1")
             .bind(id)
             .execute(&mut *tx)
@@ -113,9 +114,13 @@ async fn elicitation_persists_seals_and_is_caller_scoped() {
             .expect("state pending"),
         None
     );
-    let mine = elicitation_pg::pending(&pool, caller).await.expect("poll mine");
+    let mine = elicitation_pg::pending(&pool, caller)
+        .await
+        .expect("poll mine");
     assert!(mine.iter().any(|e| e["elicitation_id"] == json!(id)));
-    let theirs = elicitation_pg::pending(&pool, other).await.expect("poll other");
+    let theirs = elicitation_pg::pending(&pool, other)
+        .await
+        .expect("poll other");
     assert!(theirs.iter().all(|e| e["elicitation_id"] != json!(id)));
 
     // Respond accept -> recorded, then the verdict reads straight back from Postgres.
@@ -196,9 +201,16 @@ async fn task_persists_seals_result_and_is_caller_scoped() {
     let caller = seed_agent_subject(&pool).await;
     let other = seed_agent_subject(&pool).await;
 
-    let task = tasks_pg::start(&pool, &kms, tenant, caller, "cyberos.demo.echo", json!({ "x": 1 }))
-        .await
-        .expect("start task");
+    let task = tasks_pg::start(
+        &pool,
+        &kms,
+        tenant,
+        caller,
+        "cyberos.demo.echo",
+        json!({ "x": 1 }),
+    )
+    .await
+    .expect("start task");
 
     // Input is sealed at rest and opens back to the original.
     let in_blob = sqlx::query_scalar::<_, Vec<u8>>(
@@ -237,7 +249,10 @@ async fn task_persists_seals_result_and_is_caller_scoped() {
     assert_eq!(done["result"], json!({ "ok": true }));
 
     // Cancelling a terminal task is a no-op transition.
-    match tasks_pg::cancel(&pool, task, caller).await.expect("cancel terminal") {
+    match tasks_pg::cancel(&pool, task, caller)
+        .await
+        .expect("cancel terminal")
+    {
         CancelOutcome::AlreadyTerminal => {}
         other => panic!("expected AlreadyTerminal, got {other:?}"),
     }

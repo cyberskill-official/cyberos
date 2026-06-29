@@ -41,11 +41,17 @@ mod tests {
     #[test]
     fn metadata_derives_endpoints_from_issuer_and_trims_trailing_slash() {
         let scopes = vec!["mcp:tools".to_string()];
-        let doc =
-            authorization_server_metadata("https://mcp.cyberos.world/", "https://auth/jwks", &scopes);
+        let doc = authorization_server_metadata(
+            "https://mcp.cyberos.world/",
+            "https://auth/jwks",
+            &scopes,
+        );
         assert_eq!(doc["issuer"], "https://mcp.cyberos.world");
         assert_eq!(doc["token_endpoint"], "https://mcp.cyberos.world/token");
-        assert_eq!(doc["registration_endpoint"], "https://mcp.cyberos.world/register");
+        assert_eq!(
+            doc["registration_endpoint"],
+            "https://mcp.cyberos.world/register"
+        );
         assert_eq!(doc["jwks_uri"], "https://auth/jwks");
     }
 
@@ -64,6 +70,9 @@ mod tests {
     fn metadata_carries_the_registered_scopes() {
         let scopes = vec!["mcp:tools".to_string(), "mcp:introspect".to_string()];
         let doc = authorization_server_metadata("https://mcp", "https://auth/jwks", &scopes);
-        assert_eq!(doc["scopes_supported"], json!(["mcp:tools", "mcp:introspect"]));
+        assert_eq!(
+            doc["scopes_supported"],
+            json!(["mcp:tools", "mcp:introspect"])
+        );
     }
 }

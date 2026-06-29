@@ -127,7 +127,10 @@ async fn publish_notice_then_get_returns_it() {
     assert_eq!(published["version"], 1);
     assert_eq!(published["is_current"], true);
 
-    let res = app(pool.clone()).oneshot(get("/v1/eval/notice", &ftoken)).await.unwrap();
+    let res = app(pool.clone())
+        .oneshot(get("/v1/eval/notice", &ftoken))
+        .await
+        .unwrap();
     assert_eq!(res.status(), StatusCode::OK);
     let current = body_json(res).await;
     assert_eq!(current["version"], 1);
@@ -156,7 +159,9 @@ async fn ack_record_flips_capture_allowed_for_subject() {
 
     // Before the ack: the subject is gated (capture NOT allowed).
     assert!(
-        !gate::is_capture_allowed(&pool, tenant, subject).await.unwrap(),
+        !gate::is_capture_allowed(&pool, tenant, subject)
+            .await
+            .unwrap(),
         "subject must be gated before acknowledgment"
     );
 
@@ -176,7 +181,9 @@ async fn ack_record_flips_capture_allowed_for_subject() {
 
     // After the ack: the gate is lifted (capture allowed), proven via slice 1's predicate.
     assert!(
-        gate::is_capture_allowed(&pool, tenant, subject).await.unwrap(),
+        gate::is_capture_allowed(&pool, tenant, subject)
+            .await
+            .unwrap(),
         "recording the ack must flip is_capture_allowed to true"
     );
 }
@@ -193,7 +200,9 @@ async fn access_grant_then_can_read_evaluation_passes() {
 
     // Before any grant: the manager is denied reading the report (slice 1 deny-by-default).
     assert!(
-        !access::can_read_evaluation(&pool, tenant, manager, report).await.unwrap(),
+        !access::can_read_evaluation(&pool, tenant, manager, report)
+            .await
+            .unwrap(),
         "manager must be denied before a grant exists"
     );
 
@@ -216,11 +225,15 @@ async fn access_grant_then_can_read_evaluation_passes() {
 
     // After the grant: slice 1's access check passes for that pair.
     assert!(
-        access::can_read_evaluation(&pool, tenant, manager, report).await.unwrap(),
+        access::can_read_evaluation(&pool, tenant, manager, report)
+            .await
+            .unwrap(),
         "an active manager_of grant must let the manager read the report"
     );
     assert_eq!(
-        access::may_read(&pool, tenant, manager, report).await.unwrap(),
+        access::may_read(&pool, tenant, manager, report)
+            .await
+            .unwrap(),
         Some(access::GrantKind::ManagerOf)
     );
 
@@ -235,7 +248,9 @@ async fn access_grant_then_can_read_evaluation_passes() {
         .unwrap();
     assert_eq!(res.status(), StatusCode::NO_CONTENT);
     assert!(
-        !access::can_read_evaluation(&pool, tenant, manager, report).await.unwrap(),
+        !access::can_read_evaluation(&pool, tenant, manager, report)
+            .await
+            .unwrap(),
         "after revoke the manager must be denied again"
     );
 }
@@ -278,7 +293,10 @@ async fn get_me_returns_only_the_callers_own_data() {
         .unwrap();
 
     // Alice reads /me: she sees her OWN ack and no grant about her, and never bob's data.
-    let res = app(pool.clone()).oneshot(get("/v1/eval/me", &atoken)).await.unwrap();
+    let res = app(pool.clone())
+        .oneshot(get("/v1/eval/me", &atoken))
+        .await
+        .unwrap();
     assert_eq!(res.status(), StatusCode::OK);
     let me = body_json(res).await;
     assert_eq!(me["subject_id"], alice.to_string());

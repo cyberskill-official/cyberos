@@ -191,12 +191,11 @@ async fn load_active_signing_key(pool: &PgPool) -> Result<(String, String), JwtE
 
 /// Load a signing key's public PEM by `kid` (for verification).
 async fn load_signing_key_public_pem(pool: &PgPool, kid: &str) -> Result<String, JwtError> {
-    let row = sqlx::query_as::<_, (String,)>(
-        "SELECT public_pem FROM auth_signing_keys WHERE kid = $1",
-    )
-    .bind(kid)
-    .fetch_optional(pool)
-    .await?;
+    let row =
+        sqlx::query_as::<_, (String,)>("SELECT public_pem FROM auth_signing_keys WHERE kid = $1")
+            .bind(kid)
+            .fetch_optional(pool)
+            .await?;
     row.map(|(pem,)| pem)
         .ok_or_else(|| JwtError::UnknownKid(kid.to_string()))
 }
@@ -237,14 +236,28 @@ mod tests {
         );
         assert_eq!(c.aud, vec!["https://server-a.cyberos.world".to_string()]);
         // The bound audience must satisfy the exact-match check and reject a different server.
-        assert!(audience::audience_matches(&c.aud, "https://server-a.cyberos.world"));
-        assert!(!audience::audience_matches(&c.aud, "https://server-b.cyberos.world"));
+        assert!(audience::audience_matches(
+            &c.aud,
+            "https://server-a.cyberos.world"
+        ));
+        assert!(!audience::audience_matches(
+            &c.aud,
+            "https://server-b.cyberos.world"
+        ));
     }
 
     #[test]
     fn claims_carry_scope_client_and_tenant_through() {
         let c = build_access_claims(
-            "iss", "res", "sub-9", "read write", "client-9", "tenant-9", 42, "j", "n",
+            "iss",
+            "res",
+            "sub-9",
+            "read write",
+            "client-9",
+            "tenant-9",
+            42,
+            "j",
+            "n",
         );
         assert_eq!(c.scope, "read write");
         assert_eq!(c.client_id, "client-9");
