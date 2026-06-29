@@ -20,7 +20,7 @@ use std::sync::Arc;
 
 use axum::body::to_bytes;
 use axum::http::{Method, Request, StatusCode};
-use cyberos_eval::{access, auth::Authenticator, db, gate, router, AppState};
+use cyberos_eval::{access, auth::Authenticator, gate, router, AppState};
 use jsonwebtoken::{encode, EncodingKey, Header};
 use serde_json::{json, Value};
 use sqlx::PgPool;

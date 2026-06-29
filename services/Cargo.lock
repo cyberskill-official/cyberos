@@ -1142,6 +1142,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "cyberos-eval"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "chrono",
+ "cyberos-audit-chain",
+ "jsonwebtoken",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror 2.0.18",
+ "tokio",
+ "tower 0.5.3",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+]
+
+[[package]]
 name = "cyberos-mcp-gateway"
 version = "0.1.0"
 dependencies = [
@@ -1182,9 +1204,11 @@ dependencies = [
  "async-trait",
  "axum",
  "chrono",
+ "cyberos-audit-chain",
  "cyberos-cli-exit",
  "cyberos-obs-sdk",
  "cyberos-types",
+ "jsonschema",
  "regex",
  "reqwest",
  "serde",

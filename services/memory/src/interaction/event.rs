@@ -421,7 +421,7 @@ mod tests {
             .subject(Uuid::nil())
             .attribute("blob", serde_json::json!("x".repeat(3000)))
             .build();
-        assert!(matches!(r, Err(_)));
+        assert!(r.is_err());
     }
 
     #[test]

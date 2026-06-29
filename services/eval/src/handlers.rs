@@ -747,13 +747,14 @@ pub async fn get_me(
     .await
     .map_err(crate::internal)?;
     // The grants ABOUT the caller (target = the caller): who may read the caller's record.
-    let grants: Vec<(
+    type GrantRow = (
         Uuid,
         Uuid,
         String,
         chrono::DateTime<chrono::Utc>,
         Option<chrono::DateTime<chrono::Utc>>,
-    )> = sqlx::query_as(
+    );
+    let grants: Vec<GrantRow> = sqlx::query_as(
         "SELECT id, viewer_subject_id, scope, granted_at, revoked_at
            FROM access_grant WHERE target_subject_id = $1 ORDER BY granted_at",
     )
