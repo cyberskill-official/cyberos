@@ -147,8 +147,47 @@ is the Workspace restriction working.
 - The OIDC pending state (state token to PKCE verifier) is an in-memory map, so this assumes a single auth
   instance. For more than one, move it to Redis or a short-TTL table; oidc_login_history already records
   the state token and verifier hash.
-- The chat hash-chained audit log writes to the memory database. P0 leaves CHAT_AUDIT_DATABASE_URL empty,
-  so chat logs events instead of chaining them; set it once the memory service is part of this deploy.
+- The chat hash-chained audit log writes to the memory database via CHAT_AUDIT_DATABASE_URL (the
+  chat->brain link, DEC-2713). See "Company-brain capture (FR-MEMORY-122)" below for how to turn it on and
+  verify it; it stays off by default and does not affect the P0 team test.
 - Real-time voice or video (WebRTC media and TURN), mobile push (APNS or FCM), and the desktop app are
   later phases; the chat signalling relay and device registration that back them already exist server-side.
+
+## Company-brain capture (FR-MEMORY-122)
+
+This is where employee platform work-interactions (sign-ins, presence, chat activity) start flowing into
+the company brain. It is OFF by default and has two independent switches; BOTH must be on for any data to be
+recorded, and even then only for a subject who has acknowledged the monitoring notice.
+
+1. The master switch: `CAPTURE_ENABLED`. Default `false`. When false or unset, AUTH and CHAT emit no
+   interaction-events at all and behave exactly as before. Deploying this build with `CAPTURE_ENABLED`
+   unset changes nothing about sign-in or chat, so it is safe to ship during a live team test. Set it to
+   `true` only when you intend to begin recording.
+2. The chat->brain link: `CHAT_AUDIT_DATABASE_URL` (DEC-2713). Point it at the memory module's
+   `l1_audit_log` database (the same Supabase database in P0). When it is set, chat's audit rows and (when
+   capture is on) its interaction-events chain into MEMORY. When it is empty, chat logs events instead of
+   chaining them. AUTH writes to its own database, which is the same brain database, so no separate variable
+   is needed for AUTH.
+
+The consent prerequisite. Capture routes every event through the FR-MEMORY-121 emit path, which is gated on
+the FR-EVAL-001 acknowledgment ledger. A subject is recorded only after an acknowledgment of the tenant's
+current published monitoring notice is on file (normally the signed employment-document clause, recorded by
+HR). A subject with no acknowledgment produces zero rows, by design - that is why a given person may show no
+capture even when capture is on.
+
+Verify capture is live. With `CAPTURE_ENABLED=true` and the link set, run this against the brain database:
+
+```sql
+SELECT count(*) FROM l1_audit_log
+ WHERE event_type = 'memory.interaction_event'
+   AND body::jsonb -> 'payload' ->> 'module' = 'chat';
 ```
+
+A non-zero count means chat interaction-events are chaining into the brain. (The row-level `event_type`
+column carries the row kind `memory.interaction_event`; the interaction's own verb, like
+`chat.message_created`, is in `body.payload.event_type`.) To see a specific person's capture, add
+`AND subject_id = '<subject-uuid>'`; an empty result for someone who has not acknowledged the notice is
+expected, not a bug.
+
+To turn capture off again, set `CAPTURE_ENABLED=false` (or remove it) and redeploy; emitters immediately go
+back to no-ops.

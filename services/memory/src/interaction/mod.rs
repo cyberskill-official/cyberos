@@ -13,12 +13,14 @@
 //! The published contract other modules depend on is `services/memory/contracts/interaction-event.schema
 //! .json` (frozen at `schema_version: 1`).
 
+pub mod backfill;
 pub mod consent_gate;
 pub mod content_ref;
 pub mod emit;
 pub mod event;
 
 // Public API surface — emitters import from `cyberos_memory::interaction`.
+pub use backfill::{backfill_chat, BackfillReport};
 pub use consent_gate::{AllowAll, CachingGate, ConsentGate, DenyAll};
 pub use content_ref::ContentRef;
 pub use emit::{emit, EmitError, EmitOutcome, SkipReason};

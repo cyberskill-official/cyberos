@@ -91,6 +91,15 @@ pub async fn add(
         serde_json::json!({"channel_id": channel, "subject_id": body.subject_id, "role": body.role}),
     )
     .await;
+    // FR-MEMORY-122 §1 #4, #7 — chat.channel_joined for the ADDED subject (the person whose membership
+    // changed; the consent gate applies to them). Off the response path; no-op unless capture on.
+    if let Some(cap) = st.capturer.clone() {
+        let joined_subject = body.subject_id;
+        tokio::spawn(async move {
+            crate::capture::emit_channel_membership(Some(&cap), tenant, joined_subject, channel, true)
+                .await;
+        });
+    }
     Ok((StatusCode::CREATED, Json(to_member(row))))
 }
 
@@ -173,5 +182,12 @@ pub async fn remove(
         serde_json::json!({"channel_id": channel, "subject_id": subject}),
     )
     .await;
+    // FR-MEMORY-122 §1 #4, #7 — chat.channel_left for the REMOVED subject. Off the response path; no-op
+    // unless capture on.
+    if let Some(cap) = st.capturer.clone() {
+        tokio::spawn(async move {
+            crate::capture::emit_channel_membership(Some(&cap), tenant, subject, channel, false).await;
+        });
+    }
     Ok(StatusCode::NO_CONTENT)
 }

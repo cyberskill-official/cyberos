@@ -144,13 +144,14 @@ pub async fn ws_handler(
     }
 
     let rx = st.hub.sender(channel).subscribe();
-    Ok(ws.on_upgrade(move |socket| ws_loop(socket, rx, st, channel, subject)))
+    Ok(ws.on_upgrade(move |socket| ws_loop(socket, rx, st, tenant, channel, subject)))
 }
 
 async fn ws_loop(
     mut socket: WebSocket,
     mut rx: broadcast::Receiver<ChatEvent>,
     st: AppState,
+    tenant: Uuid,
     channel: Uuid,
     me: Uuid,
 ) {
@@ -162,6 +163,14 @@ async fn ws_loop(
                 status: "online",
             },
         );
+        // FR-MEMORY-122 §1 #8 — presence_changed{online} ONLY on the 0->1 edge (presence.join returned
+        // true). A second tab does NOT re-emit. Spawned + best-effort; no-op unless capture on. trace_id is
+        // null for a websocket edge (§1 #14 — never fabricated).
+        if let Some(cap) = st.capturer.clone() {
+            tokio::spawn(async move {
+                crate::capture::emit_presence_changed(Some(&cap), tenant, me, channel, "online").await;
+            });
+        }
     }
     loop {
         tokio::select! {
@@ -205,6 +214,13 @@ async fn ws_loop(
                 status: "offline",
             },
         );
+        // FR-MEMORY-122 §1 #8 — presence_changed{offline} ONLY on the 1->0 edge (the last connection
+        // closed). Closing one of several tabs does NOT emit. Spawned + best-effort; no-op unless capture on.
+        if let Some(cap) = st.capturer.clone() {
+            tokio::spawn(async move {
+                crate::capture::emit_presence_changed(Some(&cap), tenant, me, channel, "offline").await;
+            });
+        }
     }
 }
 

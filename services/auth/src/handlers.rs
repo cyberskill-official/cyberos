@@ -2022,6 +2022,19 @@ async fn password_grant(
                 },
             )
             .await;
+            // FR-MEMORY-122 §1 #3 — auth.sign_in_failed with subject=None (the email did not resolve, so
+            // there is no person to attribute; mirrors emit_token_failed's nil subject). Best-effort no-op
+            // unless CAPTURE_ENABLED is on.
+            crate::capture::emit_sign_in_failed(
+                state.capturer.as_ref(),
+                Uuid::nil(),
+                None,
+                "invalid_credentials",
+                crate::capture::source_channel_from_ua(user_agent.as_deref()),
+                &source_ip_hash,
+                traceparent.clone(),
+            )
+            .await;
             return Err((
                 StatusCode::UNAUTHORIZED,
                 Json(json!({"error": "invalid credentials"})),
@@ -2039,6 +2052,19 @@ async fn password_grant(
                 source_ip_hash16: &source_ip_hash,
                 request_id: traceparent.as_deref(),
             },
+        )
+        .await;
+        // FR-MEMORY-122 §1 #3 — the subject is known (just suspended), so attribute the failure to them.
+        // Best-effort no-op unless CAPTURE_ENABLED is on; still consent-gated (a known subject must have
+        // acknowledged for a row to land).
+        crate::capture::emit_sign_in_failed(
+            state.capturer.as_ref(),
+            tenant_id,
+            Some(sub_id),
+            "suspended",
+            crate::capture::source_channel_from_ua(user_agent.as_deref()),
+            &source_ip_hash,
+            traceparent.clone(),
         )
         .await;
         return Err((
@@ -2067,6 +2093,18 @@ async fn password_grant(
                 source_ip_hash16: &source_ip_hash,
                 request_id: traceparent.as_deref(),
             },
+        )
+        .await;
+        // FR-MEMORY-122 §1 #3 — wrong password for a known subject; attribute to them. Best-effort no-op
+        // unless CAPTURE_ENABLED is on; consent-gated for the known subject.
+        crate::capture::emit_sign_in_failed(
+            state.capturer.as_ref(),
+            tenant_id,
+            Some(sub_id),
+            "invalid_credentials",
+            crate::capture::source_channel_from_ua(user_agent.as_deref()),
+            &source_ip_hash,
+            traceparent.clone(),
         )
         .await;
         return Err((
@@ -2135,6 +2173,21 @@ async fn password_grant(
             source_ip_hash16: &source_ip_hash,
             request_id: traceparent.as_deref(),
         },
+    )
+    .await;
+
+    // FR-MEMORY-122 §1 #3 — emit the auth.signed_in interaction-event alongside the audit token row, over
+    // the SAME pool (state.capturer wraps state.pg). Best-effort + a complete no-op unless CAPTURE_ENABLED
+    // is on (state.capturer is None by default), so this never gates or delays token issuance.
+    crate::capture::emit_signed_in(
+        state.capturer.as_ref(),
+        tenant_id,
+        sub_id,
+        &jti_for_audit,
+        "password",
+        crate::capture::source_channel_from_ua(user_agent.as_deref()),
+        &source_ip_hash,
+        traceparent.clone(),
     )
     .await;
 

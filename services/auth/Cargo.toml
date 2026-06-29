@@ -62,6 +62,10 @@ zeroize = { version = "1.8", features = ["zeroize_derive"] }
 cyberos-cli-exit.workspace = true
 cyberos-types.workspace = true
 cyberos-obs-sdk.workspace = true
+# FR-MEMORY-122 — shared capture mechanism. AUTH emits auth.signed_in / auth.sign_in_failed
+# interaction-events through this, gated behind CAPTURE_ENABLED (default off). Carries the real consent
+# gate (queries eval's governance tables, not the eval binary).
+cyberos-capture = { path = "../shared/cyberos-capture" }
 
 [dev-dependencies]
 tokio-test.workspace = true

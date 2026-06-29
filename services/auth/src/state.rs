@@ -41,6 +41,13 @@ pub struct AppState {
     /// `verify_jwt`. Populated by revoke handler with the subject's active
     /// jtis. In-memory per DEC-DENY-LIST-001 slice-1 (Redis lift is FR-AUTH-110).
     pub deny_list: crate::deny_list::DenyList,
+    /// FR-MEMORY-122 §1 #3 — the BRAIN capture mechanism. `Some` ONLY when
+    /// `CAPTURE_ENABLED` is set to a truthy value (default off). When `None`,
+    /// every AUTH emitter (`capture::emit_signed_in` / `emit_sign_in_failed`)
+    /// is a complete no-op, so capture costs nothing and sign-in is unchanged.
+    /// It wraps `pg` (auth + memory share a Postgres deployment, so AUTH's
+    /// pool IS the brain audit DB — the same one `memory_bridge` writes to).
+    pub capturer: Option<cyberos_capture::Capturer>,
 }
 
 impl AppState {
@@ -104,6 +111,11 @@ impl AppState {
             }
         };
 
+        // FR-MEMORY-122 §1 #3 — build the capturer over AUTH's own pool (the shared brain audit DB). This
+        // is `None` unless CAPTURE_ENABLED is truthy (default off), so capture is dormant by default and
+        // deploying it during the team load-test changes nothing.
+        let capturer = cyberos_capture::maybe_capturer(Some(pg.clone()));
+
         Ok(Self {
             pg,
             jwt_issuer,
@@ -114,6 +126,7 @@ impl AppState {
             sticky_suppress: StickySuppress::new(),
             rate_limit: Arc::new(RateLimiter::new()),
             deny_list: crate::deny_list::DenyList::new(),
+            capturer,
         })
     }
 

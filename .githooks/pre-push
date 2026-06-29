@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# CyberOS local push gate. GitHub CI is deploy-only, so the heavy Rust checks run HERE, on your Mac, before
+# a push that will deploy - format, clippy (warnings are errors, same as the old CI), and the unit tests.
+# A failure aborts the push.
+#
+#   one-time setup:   git config core.hooksPath .githooks && chmod +x .githooks/pre-push
+#   skip just once:   SKIP_LOCAL_CHECKS=1 git push      (or: git push --no-verify)
+#
+# The Postgres-gated #[ignore] integration tests are NOT run here (they need a database). Run them by hand
+# when you touch that code:  cd services && DATABASE_URL=... cargo test --workspace -- --ignored
+set -euo pipefail
+
+if [ "${SKIP_LOCAL_CHECKS:-}" = "1" ]; then
+  echo "pre-push: SKIP_LOCAL_CHECKS=1 - skipping local checks"
+  exit 0
+fi
+
+ROOT="$(git rev-parse --show-toplevel)"
+
+# Only gate when the commits being pushed actually touch services/ (keeps doc/console-only pushes instant).
+changed=1
+if git rev-parse --verify -q origin/main >/dev/null 2>&1; then
+  if git diff --quiet "origin/main...HEAD" -- services/ 2>/dev/null; then
+    changed=0
+  fi
+fi
+
+if [ "$changed" = "0" ]; then
+  echo "pre-push: no services/ changes in this push - skipping Rust checks"
+  exit 0
+fi
+
+if ! command -v cargo >/dev/null 2>&1; then
+  echo "pre-push: cargo not found - install Rust, or bypass once with SKIP_LOCAL_CHECKS=1 git push" >&2
+  exit 1
+fi
+
+cd "$ROOT/services"
+echo "==> cargo fmt --all --check"
+cargo fmt --all --check
+echo "==> cargo clippy --workspace --all-targets -- -D warnings"
+cargo clippy --workspace --all-targets -- -D warnings
+echo "==> cargo test --workspace (unit tests; DB-gated #[ignore] tests skipped)"
+cargo test --workspace
+echo "pre-push: all local checks passed - pushing"

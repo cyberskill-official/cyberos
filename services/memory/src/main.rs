@@ -18,7 +18,7 @@ use axum::{
     Router,
 };
 use cyberos_cli_exit::ExitCode;
-use cyberos_memory::{layer2, search, state::AppState, VERSION};
+use cyberos_memory::{brain, layer2, search, state::AppState, VERSION};
 use cyberos_types::TenantId;
 use serde_json::{json, Value};
 use sqlx::PgPool;
@@ -64,6 +64,26 @@ async fn main() -> ExitCode {
         }
     });
 
+    // FR-MEMORY-123 — spawn the BRAIN daemon alongside the Layer-2 loop: consume FR-MEMORY-121 events ->
+    // embed via the ai-gateway -> rolling summaries -> hot/warm/cold tiering, per tenant. Shares the same
+    // shutdown signal; on SIGTERM the in-flight ingest tx commits and the cursor + tier watermark are saved
+    // (§1 #19). Disabled with BRAIN_INGEST_ENABLED=0 (keeps the recall API + migrations available without the
+    // background worker, e.g. in a deploy that ingests on a separate node).
+    let brain_handle = tokio::spawn({
+        let pool = state.pg.clone();
+        let shutdown = shutdown.clone();
+        let shutting_down = shutting_down.clone();
+        async move {
+            if std::env::var("BRAIN_INGEST_ENABLED").as_deref() == Ok("0") {
+                info!("brain daemon disabled (BRAIN_INGEST_ENABLED=0) — recall API still served");
+                return;
+            }
+            if let Err(e) = run_brain_daemon(pool, shutdown, shutting_down).await {
+                error!(error = %e, "brain daemon exited with error");
+            }
+        }
+    });
+
     // FR-OBS-003 - build the RED instruments off the global meter before serving.
     cyberos_obs_sdk::init("memory", VERSION);
 
@@ -71,6 +91,8 @@ async fn main() -> ExitCode {
         .route("/healthz", get(healthz))
         .route("/metrics", get(metrics))
         .route("/v1/memory/search", post(search::search))
+        // FR-MEMORY-123 §1 #7 — access-scoped, provenance-carrying BRAIN recall.
+        .route("/v1/memory/recall", post(brain::handler::recall_handler))
         // tenant_ctx (route_layer, inner) stamps the request's tenant onto the response; red_mw (layer,
         // outer) reads it for the metric's tenant_id label (ADR-OBS-003-001).
         .route_layer(axum::middleware::from_fn(tenant_ctx))
@@ -112,8 +134,9 @@ async fn main() -> ExitCode {
     });
 
     let result = serve.await;
-    // Wait briefly for the daemon to drain.
+    // Wait briefly for the daemons to drain (in-flight ingest tx commits, cursor + tier watermark saved).
     let _ = tokio::time::timeout(Duration::from_secs(5), ingest_handle).await;
+    let _ = tokio::time::timeout(Duration::from_secs(5), brain_handle).await;
 
     match result {
         Ok(()) => ExitCode::Ok,
@@ -172,6 +195,84 @@ async fn run_ingest_daemon(
     }
 
     info!("ingest daemon stopped");
+    Ok(())
+}
+
+/// FR-MEMORY-123 — the BRAIN daemon. Per tick, for each tenant: run an ingest pass (consume new events ->
+/// embed -> UPSERT), retry any rows left pending by an earlier gateway/cap failure, and — on a slower
+/// cadence — run the summarise + tiering passes. Loops until `shutdown` fires; on shutdown it stops between
+/// passes so an in-flight ingest transaction always commits (§1 #19).
+async fn run_brain_daemon(
+    pool: PgPool,
+    shutdown: Arc<Notify>,
+    shutting_down: Arc<AtomicBool>,
+) -> Result<(), sqlx::Error> {
+    // The brain polls a touch slower than the raw Layer-2 tail (the embedding round-trip dominates).
+    let poll_ms: u64 = std::env::var("BRAIN_POLL_MS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(1000);
+    let poll = Duration::from_millis(poll_ms);
+    // Run the summarise gauge + tiering pass every N ingest ticks (cheap to skip; expensive to run hot).
+    let maintenance_every: u64 = std::env::var("BRAIN_MAINTENANCE_EVERY_TICKS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(30);
+    let gw = brain::EmbedClient::from_env();
+    let cfg = brain::BrainConfig::from_env();
+
+    info!(?poll, maintenance_every, "brain daemon starting");
+
+    let mut tick: u64 = 0;
+    loop {
+        if shutting_down.load(Ordering::SeqCst) {
+            break;
+        }
+        let tenants = match discover_tenants(&pool).await {
+            Ok(t) => t,
+            Err(e) => {
+                warn!(error = %e, "brain: discover_tenants failed — sleeping and retrying");
+                wait_or_shutdown(poll, &shutdown).await;
+                continue;
+            }
+        };
+
+        let run_maintenance = maintenance_every > 0 && tick % maintenance_every == 0;
+
+        for tenant in &tenants {
+            if shutting_down.load(Ordering::SeqCst) {
+                break;
+            }
+            let tid = tenant.as_uuid();
+
+            match brain::ingest_worker::ingest_one_tenant(tid, &pool, &gw).await {
+                Ok(s) if s.embedded > 0 || s.pending > 0 => {
+                    info!(?tenant, embedded = s.embedded, pending = s.pending, "brain ingest batch");
+                }
+                Ok(_) => { /* quiet: nothing new this tick */ }
+                Err(e) => warn!(?tenant, error = %e, "brain ingest batch failed — retry next tick"),
+            }
+
+            // Re-embed a bounded slice of rows left pending by an earlier gateway/cap failure.
+            if let Err(e) = brain::ingest_worker::retry_pending(tid, &pool, &gw, 64).await {
+                warn!(?tenant, error = %e, "brain retry_pending failed");
+            }
+
+            if run_maintenance {
+                if let Err(e) = brain::summarize::run_summary_pass(&pool, tid).await {
+                    warn!(?tenant, error = %e, "brain summary pass failed");
+                }
+                if let Err(e) = brain::tiering::run_tier_pass(&pool, tid, &cfg).await {
+                    warn!(?tenant, error = %e, "brain tier pass failed");
+                }
+            }
+        }
+
+        tick = tick.wrapping_add(1);
+        wait_or_shutdown(poll, &shutdown).await;
+    }
+
+    info!("brain daemon stopped");
     Ok(())
 }
 

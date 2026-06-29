@@ -46,6 +46,7 @@
 // helpers used only in slice-N+ code paths.
 #![allow(dead_code)]
 
+pub mod capture;
 pub mod cursor;
 pub mod deny_list;
 pub mod geoip;

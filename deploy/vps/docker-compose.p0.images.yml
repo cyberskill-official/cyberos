@@ -44,7 +44,11 @@ services:
       CHAT_LISTEN_ADDR: 0.0.0.0:7720
       DATABASE_URL: ${CHAT_DATABASE_URL}
       CHAT_AUTH_JWKS_URL: http://auth:7700/.well-known/jwks.json
+      # DEC-2713 — the chat->brain audit link (Supabase audit DB). Empty in plain P0; set to turn the link on.
       CHAT_AUDIT_DATABASE_URL: ${CHAT_AUDIT_DATABASE_URL:-}
+      # FR-MEMORY-122 master switch (default OFF). Even with the link set, capture emits interaction-events
+      # only when this is true AND the subject has acknowledged the notice. Default-off = no behaviour change.
+      CAPTURE_ENABLED: ${CAPTURE_ENABLED:-false}
     depends_on:
       auth:
         condition: service_healthy

@@ -65,8 +65,12 @@ services:
       DATABASE_URL: ${CHAT_DATABASE_URL}
       # Chat verifies CyberOS tokens against auth's JWKS over the internal network (no public round trip).
       CHAT_AUTH_JWKS_URL: http://auth:7700/.well-known/jwks.json
-      # Optional: point at the memory DB to write the hash-chained audit log; unset = chat logs events.
+      # DEC-2713 — the chat->brain audit link; point at the memory DB to chain chat audit rows +
+      # interaction-events. Unset = chat logs events instead of chaining them.
       CHAT_AUDIT_DATABASE_URL: ${CHAT_AUDIT_DATABASE_URL:-}
+      # FR-MEMORY-122 master switch (default OFF). Capture emits interaction-events only when this is true
+      # AND the subject has acknowledged the monitoring notice. Default-off = no behaviour change.
+      CAPTURE_ENABLED: ${CAPTURE_ENABLED:-false}
       # CHAT_DEV_CORS intentionally unset - single origin needs no CORS.
       # DATABASE_URL points at Supabase (set in .env.p0).
     depends_on:

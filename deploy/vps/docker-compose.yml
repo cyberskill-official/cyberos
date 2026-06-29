@@ -219,6 +219,13 @@ services:
       CHAT_LISTEN_ADDR: 0.0.0.0:7720
       DATABASE_URL: ${CHAT_DATABASE_URL}
       CHAT_AUTH_JWKS_URL: ${CHAT_AUTH_JWKS_URL:-http://auth:7700/.well-known/jwks.json}
+      # FR-MEMORY-122 / DEC-2713 — the chat->brain audit link. Point this at the memory module's
+      # l1_audit_log database (here the same local Postgres) so chat audit rows AND interaction-events chain
+      # into MEMORY. Defaults to the local memory DB; in P0/Supabase it is set from the env.
+      CHAT_AUDIT_DATABASE_URL: ${CHAT_AUDIT_DATABASE_URL:-${MEMORY_DATABASE_URL}}
+      # FR-MEMORY-122 master switch (default OFF). Capture only emits interaction-events when this is true
+      # AND the subject has acknowledged the monitoring notice. Leave unset to keep capture dormant.
+      CAPTURE_ENABLED: ${CAPTURE_ENABLED:-false}
     depends_on:
       postgres:
         condition: service_healthy

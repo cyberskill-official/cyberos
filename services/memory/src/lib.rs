@@ -27,6 +27,11 @@
 #![allow(clippy::double_ended_iterator_last)]
 #![allow(dead_code)]
 
+// FR-MEMORY-123 — the BRAIN: the captured FR-MEMORY-121 interaction-event log becomes a fast, persistent,
+// citable brain. Ingestion + embedding (via the ai-gateway) + rolling summaries + hot/warm/cold tiering +
+// access-scoped, provenance-carrying recall. A DERIVED, rebuildable lens over l1_audit_log (the chain stays
+// the system of record); it does NOT touch the live auth/chat services.
+pub mod brain;
 pub mod embeddings;
 // FR-MEMORY-121 — the interaction-event capture primitive (event shape + emit + content_ref + consent
 // gate). Aux rows on the existing l1_audit_log chain; no second store.

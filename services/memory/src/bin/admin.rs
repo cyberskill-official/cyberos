@@ -10,7 +10,7 @@
 //!     by an OBS-scheduled cron that shells out to this binary.
 
 use cyberos_cli_exit::ExitCode;
-use cyberos_memory::rebuild;
+use cyberos_memory::{brain, rebuild};
 use cyberos_types::TenantId;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -106,6 +106,84 @@ async fn main() -> ExitCode {
                 ExitCode::UsageError
             }
         },
+        // FR-MEMORY-123 §1 #14 — BRAIN backfill / rebuild paths. The derived lens is reproducible from the
+        // Layer-1 chain; these re-derive it. The embedding client is the env (ai-gateway) one — these still
+        // route every embedding through the gateway (residency + spend cap), never a provider directly.
+        "brain-rebuild" => match parse_tenant(&args) {
+            Ok(t) => {
+                let gw = brain::EmbedClient::from_env();
+                match brain::backfill::rebuild(t.as_uuid(), &pool, &gw).await {
+                    Ok(n) => {
+                        println!("✓ brain rebuild complete for tenant {t}: {n} events re-derived from Layer 1");
+                        ExitCode::Ok
+                    }
+                    Err(e) => {
+                        eprintln!("brain rebuild failed: {e}");
+                        ExitCode::Generic
+                    }
+                }
+            }
+            Err(msg) => {
+                eprintln!("{msg}");
+                ExitCode::UsageError
+            }
+        },
+        "brain-reembed" => match parse_tenant(&args) {
+            Ok(t) => {
+                let model = args
+                    .windows(2)
+                    .find(|w| w[0] == "--model")
+                    .map(|w| w[1].clone())
+                    .unwrap_or_else(|| brain::embed_client::BRAIN_EMBED_MODEL.to_string());
+                let gw = brain::EmbedClient::from_env();
+                let mut total = 0usize;
+                loop {
+                    match brain::backfill::reembed(t.as_uuid(), &pool, &gw, &model, 256).await {
+                        Ok(0) => break,
+                        Ok(n) => total += n,
+                        Err(e) => {
+                            eprintln!("brain reembed failed: {e}");
+                            return ExitCode::Generic;
+                        }
+                    }
+                }
+                println!("✓ brain reembed complete for tenant {t}: {total} rows -> model {model}");
+                ExitCode::Ok
+            }
+            Err(msg) => {
+                eprintln!("{msg}");
+                ExitCode::UsageError
+            }
+        },
+        "brain-resummarize" => match parse_tenant(&args) {
+            Ok(t) => {
+                let gw = brain::EmbedClient::from_env();
+                match brain::backfill::resummarize(t.as_uuid(), &pool, &gw, None).await {
+                    Ok(n) => {
+                        println!("✓ brain resummarize complete for tenant {t}: {n} scopes re-summarised");
+                        ExitCode::Ok
+                    }
+                    Err(e) => {
+                        eprintln!("brain resummarize failed: {e}");
+                        ExitCode::Generic
+                    }
+                }
+            }
+            Err(msg) => {
+                eprintln!("{msg}");
+                ExitCode::UsageError
+            }
+        },
+        "brain-reindex" => match brain::backfill::reindex_hot_hnsw(&pool).await {
+            Ok(()) => {
+                println!("✓ brain hot HNSW index reindexed");
+                ExitCode::Ok
+            }
+            Err(e) => {
+                eprintln!("brain reindex failed: {e}");
+                ExitCode::Generic
+            }
+        },
         "--help" | "-h" => {
             usage();
             ExitCode::Ok
@@ -136,7 +214,12 @@ fn usage() {
     eprintln!("USAGE:");
     eprintln!("  cyberos-memory-admin rebuild   --tenant <UUID>");
     eprintln!("  cyberos-memory-admin reconcile --tenant <UUID> [--sample 100]");
+    eprintln!("  cyberos-memory-admin brain-rebuild     --tenant <UUID>            # FR-MEMORY-123: re-derive embeddings + summaries from Layer 1");
+    eprintln!("  cyberos-memory-admin brain-reembed     --tenant <UUID> [--model bge-m3]   # migrate to a new embedding model version");
+    eprintln!("  cyberos-memory-admin brain-resummarize --tenant <UUID>            # rebuild all current summaries from events");
+    eprintln!("  cyberos-memory-admin brain-reindex                                # REINDEX the partial hot HNSW index");
     eprintln!();
     eprintln!("ENV:");
-    eprintln!("  DATABASE_URL must point at the memory postgres database");
+    eprintln!("  DATABASE_URL    must point at the memory postgres database");
+    eprintln!("  AI_GATEWAY_URL  ai-gateway base for embeddings (default http://127.0.0.1:8080); residency + spend cap enforced there");
 }

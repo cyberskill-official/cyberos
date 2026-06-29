@@ -30,10 +30,11 @@ anyhow.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
-# FR-MEMORY-121 needs UUIDv7 for interaction-event ids (time-sortable, dedup-safe). The `v7` feature is
-# additive over the workspace `uuid` (which already enables v4 + serde); it is the one feature this crate
-# needs beyond the shared default, so it is pinned here rather than widening the workspace floor.
-uuid = { workspace = true, features = ["v7"] }
+# FR-MEMORY-121 needs UUIDv7 for interaction-event ids (time-sortable, dedup-safe). FR-MEMORY-122 backfill
+# additionally needs UUIDv5 to derive a DETERMINISTIC event_id from a source chat message id (so replaying
+# the same message always yields the same event_id and a re-run is a no-op, §1 #10). Both features are
+# additive over the workspace `uuid` (which already enables v4 + serde) and are pinned here.
+uuid = { workspace = true, features = ["v5", "v7"] }
 chrono.workspace = true
 sha2.workspace = true
 # Versions floored to latest-stable as of 2026 Q2.

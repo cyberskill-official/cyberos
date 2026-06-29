@@ -111,6 +111,14 @@ pub async fn create(
         serde_json::json!({"channel_id": channel.id, "name": channel.name}),
     )
     .await;
+    // FR-MEMORY-122 §1 #4, #7 — chat.channel_created off the response path; no-op unless capture on. The
+    // creator is seated as owner, so this one event covers the create (no separate channel_joined).
+    if let Some(cap) = st.capturer.clone() {
+        let cid = channel.id;
+        tokio::spawn(async move {
+            crate::capture::emit_channel_created(Some(&cap), tenant, creator, cid).await;
+        });
+    }
     Ok((StatusCode::CREATED, Json(channel)))
 }
 
@@ -214,6 +222,14 @@ pub async fn create_dm(
         serde_json::json!({"channel_id": row.0, "other_subject_id": other}),
     )
     .await;
+    // FR-MEMORY-122 §1 #4, #7 — chat.dm_opened off the response path, emitted ONLY when a new DM is created
+    // (the find-or-create return above does not re-emit). No-op unless capture on.
+    if let Some(cap) = st.capturer.clone() {
+        let cid = row.0;
+        tokio::spawn(async move {
+            crate::capture::emit_dm_opened(Some(&cap), tenant, caller, cid).await;
+        });
+    }
     Ok((
         StatusCode::CREATED,
         Json(Channel {

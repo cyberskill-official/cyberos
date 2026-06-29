@@ -12,8 +12,8 @@ on:
       - "services/**"
       - "scripts/check_sep986_naming.sh"
       - ".github/workflows/mcp-sep986-check.yml"
-  push:
-    branches: [main]
+  # Runs on PRs and on demand only - GitHub CI is deploy-only on push; this check runs locally via the hook.
+  workflow_dispatch: {}
 
 jobs:
   sep986:

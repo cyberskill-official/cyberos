@@ -1,14 +1,7 @@
 name: voice + doc-consistency
 
 on:
-  push:
-    paths:
-      - "memory/docs/AGENTS.md"
-      - "memory/docs/memory.schema.json"
-      - "memory/cyberos/**"
-      - "memory/tools/voice_check.py"
-      - "memory/tools/cyberos_generate_schema.py"
-      - "memory/tests/**"
+  # GitHub CI is deploy-only on push; this runs on pull requests and on demand only.
   pull_request:
     paths:
       - "memory/docs/AGENTS.md"

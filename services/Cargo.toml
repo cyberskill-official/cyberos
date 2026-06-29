@@ -18,6 +18,7 @@ members = [
     "shared/cyberos-types",
     "shared/cyberos-obs-sdk",
     "shared/cyberos-audit-chain",
+    "shared/cyberos-capture",
 ]
 
 [workspace.package]

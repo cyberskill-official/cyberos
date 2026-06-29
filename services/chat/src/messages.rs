@@ -136,6 +136,15 @@ pub async fn post(
             return Err((StatusCode::BAD_REQUEST, "parent message not in this channel".to_string()));
         }
     }
+    // FR-MEMORY-122 §1 #4 — read the channel kind in this same tx (a cheap PK lookup) so the capture
+    // emitter can tag channel vs DM. Off-by-default (only matters when capture is on); never fails the send.
+    let channel_kind: String =
+        sqlx::query_scalar("SELECT kind FROM chat_channels WHERE id = $1")
+            .bind(channel)
+            .fetch_optional(&mut *tx)
+            .await
+            .map_err(crate::internal)?
+            .unwrap_or_else(|| "group".to_string());
     let sql = format!(
         "INSERT INTO chat_messages (tenant_id, channel_id, sender_subject_id, body, parent_id, attachment_id)
          VALUES ($1, $2, $3, $4, $5, $6) RETURNING {COLS}"
@@ -170,6 +179,25 @@ pub async fn post(
         serde_json::json!({"channel_id": channel, "message_id": message.id, "parent_id": message.parent_id}),
     )
     .await;
+    // FR-MEMORY-122 §1 #4, #7 — emit chat.message_created off the response path (spawned, best-effort). The
+    // capturer is None unless CAPTURE_ENABLED is on, so this is a no-op by default; the body never leaves
+    // chat's DB (content_ref is a pointer to the chat_messages row).
+    if let Some(cap) = st.capturer.clone() {
+        let has_attachment = message.attachment_id.is_some();
+        let (mid, kind) = (message.id, channel_kind);
+        tokio::spawn(async move {
+            crate::capture::emit_message_created(
+                Some(&cap),
+                tenant,
+                sender,
+                channel,
+                &kind,
+                mid,
+                has_attachment,
+            )
+            .await;
+        });
+    }
     Ok((StatusCode::CREATED, Json(message)))
 }
 
@@ -246,6 +274,13 @@ pub async fn edit(
         .await
         .map_err(crate::internal)?;
     require_member(&mut tx, channel, caller).await?;
+    let channel_kind: String =
+        sqlx::query_scalar("SELECT kind FROM chat_channels WHERE id = $1")
+            .bind(channel)
+            .fetch_optional(&mut *tx)
+            .await
+            .map_err(crate::internal)?
+            .unwrap_or_else(|| "group".to_string());
     let sql = format!(
         "UPDATE chat_messages SET body = $1, edited_at = now()
          WHERE id = $2 AND channel_id = $3 AND sender_subject_id = $4 AND deleted_at IS NULL
@@ -280,6 +315,21 @@ pub async fn edit(
                 serde_json::json!({"channel_id": channel, "message_id": m.id}),
             )
             .await;
+            // FR-MEMORY-122 §1 #4, #7 — chat.message_edited off the response path; no-op unless capture on.
+            if let Some(cap) = st.capturer.clone() {
+                let mid = m.id;
+                tokio::spawn(async move {
+                    crate::capture::emit_message_edited(
+                        Some(&cap),
+                        tenant,
+                        caller,
+                        channel,
+                        &channel_kind,
+                        mid,
+                    )
+                    .await;
+                });
+            }
             Ok(Json(m))
         }
         None => Err((StatusCode::NOT_FOUND, "message not found or not yours".to_string())),
@@ -303,6 +353,13 @@ pub async fn delete(
         .await
         .map_err(crate::internal)?;
     let role = require_member(&mut tx, channel, caller).await?;
+    let channel_kind: String =
+        sqlx::query_scalar("SELECT kind FROM chat_channels WHERE id = $1")
+            .bind(channel)
+            .fetch_optional(&mut *tx)
+            .await
+            .map_err(crate::internal)?
+            .unwrap_or_else(|| "group".to_string());
     let snd: Option<(Uuid,)> = sqlx::query_as(
         "SELECT sender_subject_id FROM chat_messages WHERE id = $1 AND channel_id = $2 AND deleted_at IS NULL",
     )
@@ -335,6 +392,21 @@ pub async fn delete(
         serde_json::json!({"channel_id": channel, "message_id": msg}),
     )
     .await;
+    // FR-MEMORY-122 §1 #4, #7 — chat.message_deleted (content_ref:none) off the response path; the actor is
+    // the caller (sender or a manager). No-op unless capture on.
+    if let Some(cap) = st.capturer.clone() {
+        tokio::spawn(async move {
+            crate::capture::emit_message_deleted(
+                Some(&cap),
+                tenant,
+                caller,
+                channel,
+                &channel_kind,
+                msg,
+            )
+            .await;
+        });
+    }
     Ok(StatusCode::NO_CONTENT)
 }
 

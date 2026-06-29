@@ -15,11 +15,8 @@ on:
       - 'services/auth/src/rls.rs'
       - 'services/auth/tests/rls_*.rs'
       - '.github/workflows/rls-property-gate.yml'
-  push:
-    branches: [main]
-    paths:
-      - 'services/auth/migrations/**.sql'
-      - 'services/auth/src/rls.rs'
+  # Runs on PRs and on demand only - GitHub CI is deploy-only on push; run locally via the hook.
+  workflow_dispatch: {}
       - 'services/auth/tests/rls_*.rs'
 
 concurrency:

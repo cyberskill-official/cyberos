@@ -27,6 +27,10 @@ uuid.workspace = true
 chrono.workspace = true
 jsonwebtoken.workspace = true
 cyberos-audit-chain = { path = "../shared/cyberos-audit-chain" }
+# FR-MEMORY-122 — shared capture mechanism. CHAT emits chat.message_created/_edited/_deleted,
+# chat.channel_*, chat.dm_opened, and chat.presence_changed interaction-events through this, over the
+# chat->brain audit pool (CHAT_AUDIT_DATABASE_URL), gated behind CAPTURE_ENABLED (default off).
+cyberos-capture = { path = "../shared/cyberos-capture" }
 base64 = "0.22"
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 

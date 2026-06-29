@@ -1,0 +1,27 @@
+[package]
+name = "cyberos-capture"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "FR-MEMORY-122 shared capture mechanism — turns a domain event into an FR-MEMORY-121 interaction-event and writes it via emit() (consent-gated, validated, best-effort). Shared by AUTH + CHAT (and future PROJ/EMAIL/APP/MCP emitters)."
+
+[lib]
+name = "cyberos_capture"
+path = "src/lib.rs"
+
+[dependencies]
+sqlx.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+uuid = { workspace = true, features = ["v7"] }
+async-trait = "0.1.83"
+
+# The capture mechanism builds + emits FR-MEMORY-121 interaction-events. This is the ONE dependency that
+# carries the event shape, the typed builder, emit(), and the ConsentGate trait + CachingGate decorator.
+# It deliberately does NOT depend on services/eval — the real gate (src/gate.rs) queries eval's governance
+# TABLES directly (subject_acknowledgment + monitoring_notice), so AUTH/CHAT never link the eval binary.
+cyberos-memory = { path = "../../memory" }

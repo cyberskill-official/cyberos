@@ -1,11 +1,9 @@
 name: services
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'services/**'
-      - '.github/workflows/services.yml'
+  # Heavy lint + test runs LOCALLY at push time via .githooks/pre-push - GitHub no longer runs it on push
+  # (CI is deploy-only). Still available on pull requests and on demand.
+  workflow_dispatch: {}
   pull_request:
     paths:
       - 'services/**'

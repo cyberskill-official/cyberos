@@ -6,6 +6,7 @@ pub mod attachments;
 pub mod audit;
 pub mod auditlog;
 pub mod auth;
+pub mod capture;
 pub mod channels;
 pub mod db;
 pub mod devices;
@@ -26,8 +27,14 @@ use axum::{Json, Router};
 pub struct AppState {
     pub pool: db::Pool,
     /// The memory module's Postgres (holds l1_audit_log). When set, chat appends a hash-chained audit
-    /// row per channel/message event; when unset (tests/local), the event is logged.
+    /// row per channel/message event; when unset (tests/local), the event is logged. DEC-2713 makes this
+    /// the chat->brain link.
     pub audit_pool: Option<db::Pool>,
+    /// FR-MEMORY-122 §1 #4 — the BRAIN capture mechanism over `audit_pool`. `Some` ONLY when
+    /// `CAPTURE_ENABLED` is truthy AND `audit_pool` is configured (default off). When `None`, every chat
+    /// emitter (`capture::emit_*`) is a complete no-op, so capture costs nothing and message send / channel
+    /// activity are unchanged — safe to deploy during a live team load-test.
+    pub capturer: Option<cyberos_capture::Capturer>,
     pub authenticator: Arc<auth::Authenticator>,
     pub hub: realtime::Hub,
     pub presence: realtime::Presence,
