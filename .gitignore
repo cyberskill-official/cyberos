@@ -56,6 +56,8 @@ dist/
 .env
 .env.*
 !.env.example
+# Deploy env templates are placeholders only (no secrets) — keep them tracked.
+!.env.p0.example
 *.pem
 *.key
 *.p12
