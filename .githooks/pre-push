@@ -44,8 +44,10 @@ if ! cargo fmt --all --check; then
   echo "Then push again. To bypass once: SKIP_LOCAL_CHECKS=1 git push" >&2
   exit 1
 fi
-echo "==> cargo clippy --workspace --all-targets -- -D warnings"
-cargo clippy --workspace --all-targets -- -D warnings
+# Clippy scope matches the prior CI: production code (lib + bins), not test/bench targets - the deployed
+# binaries are what ship. Run `cargo clippy --workspace --all-targets` by hand to also lint test files.
+echo "==> cargo clippy --workspace -- -D warnings"
+cargo clippy --workspace -- -D warnings
 echo "==> cargo test --workspace (unit tests; DB-gated #[ignore] tests skipped)"
 cargo test --workspace
 echo "pre-push: all local checks passed - pushing"

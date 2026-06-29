@@ -81,14 +81,13 @@ impl BrainTestEnv {
         // present whether or not the eval migration already ran against this DB.
         apply_lenient(&pool, ACCESS_GRANT_DDL).await;
 
-        let env = Self {
+        Self {
             pool,
             tenant: Uuid::new_v4(),
             alice: Uuid::new_v4(),
             bob: Uuid::new_v4(),
             gw: EmbedClient::stub(),
-        };
-        env
+        }
     }
 
     pub fn pool(&self) -> &PgPool {
