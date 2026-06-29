@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CyberOS status</title>
+<!--
+  Public CyberOS status page, served at os.cyberskill.world/status (Caddy rewrites /status to this file).
+  Self-contained, no build, no external dependencies, no localStorage. CyberSkill Design System.
+
+  Live components are probed from the browser against same-origin endpoints that Caddy proxies to each
+  service's /healthz:
+    /status/auth -> cyberos-auth /healthz   (HTTP 200 + healthy JSON body  => Operational)
+    /status/chat -> cyberos-chat /healthz   (same rule)
+    /status/eval -> cyberos-eval /healthz   (same rule; shows "Not deployed" until first healthy)
+  The console + roadmap component is Operational by definition once this page renders. Components in the
+  "Built, not yet deployed" section are NOT probed - they show an honest grey "Not deployed" pill.
+
+  Probes run every 30s, each guarded by a 5s AbortController timeout and a try/catch, so a hanging or
+  failing probe shows Outage rather than spinning forever. The overall banner reflects the live, probed
+  components only.
+-->
+<style>
+  :root {
+    --umber: #45210E; --ochre: #F4BA17; --umber-700: #5a2e16; --umber-900: #2c1409;
+    --ink: #f6ecdd; --muted: #c9b79f; --ok: #6fbf73; --amber: #e0a82e; --grey: #8c7a63;
+    --outage: #d9534f; --radius: 12px;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { font-family: var(--font); background: var(--umber-900); color: var(--ink); line-height: 1.55; }
+  a { color: var(--ochre); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 36px 22px 70px; }
+
+  header.top { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; border-bottom: 2px solid var(--ochre); padding-bottom: 16px; }
+  header.top .mark { font-weight: 800; font-size: 24px; letter-spacing: 0.4px; }
+  header.top .mark .os { color: var(--ochre); }
+  header.top .slogan { color: var(--muted); font-style: italic; font-size: 14px; }
+  header.top .spacer { flex: 1; }
+  header.top .nav { font-size: 13px; }
+  header.top .nav a { margin-left: 14px; }
+
+  /* Overall banner - colour set from JS once the live probes resolve. */
+  .banner { margin: 22px 0 10px; border-radius: var(--radius); padding: 18px 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; border: 1px solid var(--umber-700); background: var(--umber); transition: border-color 0.2s, background 0.2s; }
+  .banner .blob { width: 14px; height: 14px; border-radius: 50%; flex: 0 0 auto; background: var(--grey); box-shadow: 0 0 0 4px rgba(255,255,255,0.06); }
+  .banner .msg { font-size: 18px; font-weight: 700; }
+  .banner .sub { color: var(--muted); font-size: 13px; width: 100%; margin: 2px 0 0; }
+  .banner.ok { border-color: var(--ok); }
+  .banner.ok .blob { background: var(--ok); }
+  .banner.partial { border-color: var(--amber); }
+  .banner.partial .blob { background: var(--amber); }
+  .banner.checking .blob { background: var(--grey); animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .banner.checking .blob { animation: none; } }
+
+  h2 { font-size: 17px; margin: 36px 0 4px; letter-spacing: 0.2px; }
+  .lead { color: var(--muted); font-size: 14px; margin: 0 0 16px; max-width: 760px; }
+
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin: 6px 0 18px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .d-ok { background: var(--ok); } .d-degraded { background: var(--amber); } .d-outage { background: var(--outage); } .d-none { background: var(--grey); }
+
+  /* Component rows, stacked like status.claude.com */
+  .components { display: flex; flex-direction: column; gap: 10px; }
+  .row { display: flex; align-items: center; gap: 14px; background: var(--umber); border: 1px solid var(--umber-700); border-radius: var(--radius); padding: 15px 18px; }
+  .row .body { flex: 1; min-width: 0; }
+  .row .nm { font-weight: 700; font-size: 15px; }
+  .row .desc { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .row .right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex: 0 0 auto; }
+
+  .pill { font-size: 11px; font-weight: 700; padding: 3px 11px; border-radius: 20px; letter-spacing: 0.3px; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+  .pill .pdot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; opacity: 0.85; }
+  .p-ok { background: var(--ok); color: #0c2a12; }
+  .p-degraded { background: var(--amber); color: var(--umber-900); }
+  .p-outage { background: var(--outage); color: #fff; }
+  .p-none { background: var(--umber-700); color: var(--muted); }
+  .p-checking { background: var(--umber-700); color: var(--muted); }
+  .checked { font-size: 11px; color: var(--muted); }
+
+  .note { background: var(--umber); border: 1px solid var(--umber-700); border-left: 3px solid var(--ochre); border-radius: 8px; padding: 12px 15px; color: var(--muted); font-size: 13px; margin: 4px 0 0; }
+
+  footer { margin-top: 42px; border-top: 1px solid var(--umber-700); padding-top: 14px; color: var(--muted); font-size: 12px; }
+  footer .meta { display: block; margin-top: 4px; }
+  .backlink { display: inline-block; margin-top: 18px; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <span class="mark">Cyber<span class="os">OS</span></span>
+    <span class="slogan">Turn Your Will Into Real</span>
+    <span class="spacer"></span>
+    <nav class="nav">
+      <a href="/">Home</a>
+      <a href="/roadmap">Roadmap</a>
+    </nav>
+  </header>
+
+  <div class="banner checking" id="banner" role="status" aria-live="polite">
+    <span class="blob" aria-hidden="true"></span>
+    <span class="msg" id="banner-msg">Checking...</span>
+    <span class="sub" id="banner-sub">Probing live components.</span>
+  </div>
+
+  <h2>Live in production</h2>
+  <p class="lead">These components are checked in real time from your browser against
+  <code>os.cyberskill.world</code>. Status updates every 30 seconds.</p>
+  <div class="legend" aria-hidden="true">
+    <span><span class="dot d-ok"></span> Operational</span>
+    <span><span class="dot d-degraded"></span> Degraded</span>
+    <span><span class="dot d-outage"></span> Outage</span>
+    <span><span class="dot d-none"></span> Not deployed</span>
+  </div>
+  <div class="components" id="live-components"></div>
+
+  <h2>Built, not yet deployed</h2>
+  <p class="lead">These modules are built and verified locally. They are not in production yet, so they are
+  not probed here - they show an honest "Not deployed" status and will appear above as each one ships.</p>
+  <div class="components" id="pending-components"></div>
+  <p class="note" id="pending-note">Built and verified locally, awaiting deployment. As each module goes
+  live it moves up to "Live in production" with a real health probe.</p>
+
+  <footer>
+    CyberOS is CyberSkill's internal platform. This page checks live components directly from your browser;
+    it stores nothing and runs no backend of its own.
+    <span class="meta" id="footer-meta"></span>
+    <a class="backlink" href="/">&larr; Back to CyberOS</a>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  // --- Status vocabulary ----------------------------------------------------
+  var ST = {
+    OK:        { key: "ok",        label: "Operational",  cls: "p-ok" },
+    DEGRADED:  { key: "degraded",  label: "Degraded",     cls: "p-degraded" },
+    OUTAGE:    { key: "outage",    label: "Outage",       cls: "p-outage" },
+    NONE:      { key: "none",      label: "Not deployed", cls: "p-none" },
+    CHECKING:  { key: "checking",  label: "Checking...",  cls: "p-checking" }
+  };
+
+  // --- Components -----------------------------------------------------------
+  // Live components carry a same-origin probe path that Caddy proxies to the service /healthz.
+  var LIVE = [
+    {
+      id: "identity",
+      name: "Identity",
+      desc: "Sign-in and accounts.",
+      probe: "/status/auth"
+    },
+    {
+      id: "chat",
+      name: "Chat",
+      desc: "Channels, direct messages, and files.",
+      probe: "/status/chat"
+    },
+    {
+      id: "eval",
+      name: "Evaluation (EVAL)",
+      desc: "Governance gate for the company brain - consent, access control, and retention.",
+      probe: "/status/eval",
+      // Freshly deploying: until it first reports healthy this session, a failed probe shows a grey
+      // "Not deployed" rather than a red outage; after it has been seen healthy, a later failure shows
+      // as an outage. Drop pendingUntilHealthy once eval is reliably live.
+      pendingUntilHealthy: true
+    },
+    {
+      id: "console",
+      name: "Console + roadmap",
+      desc: "The app shell, dashboard, and this status page.",
+      // No probe: if this page rendered, the console is serving. Always Operational.
+      selfOk: true
+    }
+  ];
+
+  var PENDING = [
+    { id: "ai",    name: "AI gateway",       desc: "Model routing, spend caps, and residency across local and cloud models." },
+    { id: "mcp",   name: "MCP gateway",      desc: "Federated tools the assistant can call." },
+    { id: "memory", name: "Memory (the brain)", desc: "Shared, searchable organizational memory with fast semantic recall." },
+    { id: "genie", name: "GENIE assistant",  desc: "The assistant and workflow brain over the AI gateway." },
+    { id: "obs",   name: "Observability",    desc: "Metrics, traces, and a tamper-evident audit trail." }
+  ];
+
+  var PROBE_TIMEOUT_MS = 5000;
+  var REFRESH_MS = 30000;
+
+  // --- Rendering ------------------------------------------------------------
+  function pill(state) {
+    return '<span class="pill ' + state.cls + '"><span class="pdot" aria-hidden="true"></span>' +
+      state.label + '</span>';
+  }
+
+  function buildRow(c) {
+    var row = document.createElement("div");
+    row.className = "row";
+    row.id = "row-" + c.id;
+    var checkedHtml = c.probe ? '<span class="checked" id="checked-' + c.id + '"></span>' : "";
+    row.innerHTML =
+      '<div class="body"><div class="nm"></div><div class="desc"></div></div>' +
+      '<div class="right"><span id="pill-' + c.id + '"></span>' + checkedHtml + '</div>';
+    // textContent for name/desc to avoid any HTML injection from data.
+    row.querySelector(".nm").textContent = c.name;
+    row.querySelector(".desc").textContent = c.desc;
+    return row;
+  }
+
+  function setPill(id, state) {
+    var el = $("pill-" + id);
+    if (el) el.innerHTML = pill(state);
+  }
+
+  function pad2(n) { return (n < 10 ? "0" : "") + n; }
+  function nowClock() {
+    var d = new Date();
+    return pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + ":" + pad2(d.getSeconds());
+  }
+  function setChecked(id) {
+    var el = $("checked-" + id);
+    if (el) el.textContent = "last checked " + nowClock();
+  }
+
+  // --- Probe ----------------------------------------------------------------
+  // Healthy iff HTTP 200 AND the JSON body looks healthy. The documented rule is
+  // body.status in {"ok","healthy"}; cyberos-auth reports {"postgres":"ok"} with no
+  // top-level status, so we also accept that. A 200 with a body that explicitly signals
+  // failure (status/postgres set to something unhealthy) is treated as an Outage.
+  function bodyLooksHealthy(data) {
+    if (!data || typeof data !== "object") {
+      // 200 with a non-JSON or empty body: treat the 200 as operational.
+      return true;
+    }
+    var healthyWords = { ok: 1, healthy: 1, up: 1, pass: 1, green: 1 };
+    if (typeof data.status === "string") {
+      return healthyWords[data.status.toLowerCase()] === 1;
+    }
+    if (typeof data.postgres === "string") {
+      return data.postgres.toLowerCase() === "ok";
+    }
+    // 200 with a JSON body that carries no known health field: trust the 200.
+    return true;
+  }
+
+  async function probe(c) {
+    var controller = new AbortController();
+    var timer = setTimeout(function () { controller.abort(); }, PROBE_TIMEOUT_MS);
+    // A failed probe is "Not deployed" for a pending service we have not yet seen healthy, otherwise
+    // it is a real Outage (network error, CORS failure, the 5s timeout, or an unhealthy body).
+    function fail() {
+      return (c.pendingUntilHealthy && !seenHealthy[c.id]) ? ST.NONE : ST.OUTAGE;
+    }
+    try {
+      var res = await fetch(c.probe, {
+        method: "GET",
+        cache: "no-store",
+        headers: { "accept": "application/json" },
+        signal: controller.signal
+      });
+      if (!res.ok) return fail();
+      var data = null;
+      try { data = await res.json(); } catch (e) { data = null; }
+      if (bodyLooksHealthy(data)) { seenHealthy[c.id] = true; return ST.OK; }
+      return fail();
+    } catch (e) {
+      return fail();
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  // --- Overall banner -------------------------------------------------------
+  // Reflects the LIVE, probed components only.
+  function paintBanner(states) {
+    var banner = $("banner");
+    var anyOutage = false, anyDegraded = false, anyChecking = false;
+    states.forEach(function (s) {
+      if (s.key === "outage") anyOutage = true;
+      else if (s.key === "degraded") anyDegraded = true;
+      else if (s.key === "checking") anyChecking = true;
+    });
+    banner.classList.remove("ok", "partial", "checking");
+    if (anyChecking) {
+      banner.classList.add("checking");
+      $("banner-msg").textContent = "Checking...";
+      $("banner-sub").textContent = "Probing live components.";
+    } else if (anyOutage || anyDegraded) {
+      banner.classList.add("partial");
+      $("banner-msg").textContent = "Partial outage";
+      $("banner-sub").textContent = "One or more live components are not healthy. Details below.";
+    } else {
+      banner.classList.add("ok");
+      $("banner-msg").textContent = "All systems operational";
+      $("banner-sub").textContent = "All live components are healthy.";
+    }
+  }
+
+  // --- Cycle ----------------------------------------------------------------
+  // Track each live component's current state so the banner can summarise them.
+  var liveState = {};
+  // Components flagged pendingUntilHealthy show "Not deployed" until first seen healthy this session.
+  var seenHealthy = {};
+
+  async function runProbes() {
+    var probed = LIVE.filter(function (c) { return c.probe; });
+    await Promise.all(probed.map(async function (c) {
+      var state = await probe(c);
+      liveState[c.id] = state;
+      setPill(c.id, state);
+      setChecked(c.id);
+    }));
+    repaintBanner();
+    stampFooter();
+  }
+
+  function repaintBanner() {
+    var states = LIVE.map(function (c) {
+      if (c.selfOk) return ST.OK;
+      return liveState[c.id] || ST.CHECKING;
+    });
+    paintBanner(states);
+  }
+
+  function stampFooter() {
+    $("footer-meta").textContent = "Live components last checked at " + nowClock() +
+      " - this page refreshes every 30 seconds.";
+  }
+
+  // --- Boot -----------------------------------------------------------------
+  function boot() {
+    var liveBox = $("live-components");
+    LIVE.forEach(function (c) {
+      liveBox.appendChild(buildRow(c));
+      if (c.selfOk) {
+        liveState[c.id] = ST.OK;
+        setPill(c.id, ST.OK);
+      } else {
+        liveState[c.id] = ST.CHECKING;
+        setPill(c.id, ST.CHECKING);
+      }
+    });
+
+    var pendingBox = $("pending-components");
+    PENDING.forEach(function (c) {
+      pendingBox.appendChild(buildRow(c));
+      setPill(c.id, ST.NONE);
+    });
+
+    repaintBanner();
+    runProbes();
+    setInterval(runProbes, REFRESH_MS);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+})();
+</script>
+</body>
+</html>

@@ -28,10 +28,32 @@
 		reverse_proxy chat:7720
 	}
 
+	# Public health probes for the status page (os.cyberskill.world/status). Each rewrites to the
+	# service root /healthz, which is otherwise not exposed under the /v1/* prefixes.
+	@statushealthauth path /status/auth
+	handle @statushealthauth {
+		rewrite * /healthz
+		reverse_proxy auth:7700
+	}
+	@statushealthchat path /status/chat
+	handle @statushealthchat {
+		rewrite * /healthz
+		reverse_proxy chat:7720
+	}
+	@statushealtheval path /status/eval
+	handle @statushealtheval {
+		rewrite * /healthz
+		reverse_proxy eval:7760
+	}
+
 	handle {
 		root * /srv/console
 		@root path /
 		rewrite @root /app.html
+		@roadmap path /roadmap
+		rewrite @roadmap /roadmap.html
+		@status path /status
+		rewrite @status /status.html
 		file_server
 	}
 }

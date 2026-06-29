@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   build-images:
-    name: build + push images (auth, chat)
+    name: build + push images (auth, chat, eval)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -65,6 +65,23 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository_owner }}/cyberos-chat:latest
             ghcr.io/${{ github.repository_owner }}/cyberos-chat:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # eval is the BRAIN/EVAL governance service (FR-EVAL-001). It is independent: if its build or boot
+      # fails, the auth/chat/caddy stack is unaffected and the status page simply shows it down.
+      - name: Build + push eval
+        uses: docker/build-push-action@v6
+        with:
+          context: services
+          file: services/Dockerfile
+          build-args: |
+            PACKAGE=cyberos-eval
+            BIN=cyberos-eval
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/cyberos-eval:latest
+            ghcr.io/${{ github.repository_owner }}/cyberos-eval:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

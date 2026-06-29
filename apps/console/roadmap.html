@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CyberOS roadmap</title>
+<!--
+  Public, whole-system CyberOS roadmap, served at os.cyberskill.world/roadmap (Caddy rewrites /roadmap to
+  this file). Product and platform view only - internal HR / evaluation specifics live in the strategy
+  doc and the feature-request backlog, not here. Self-contained, no backend, CyberSkill Design System.
+-->
+<style>
+  :root {
+    --umber: #45210E; --ochre: #F4BA17; --umber-700: #5a2e16; --umber-900: #2c1409;
+    --ink: #f6ecdd; --muted: #c9b79f; --ok: #6fbf73; --amber: #e0a82e; --grey: #8c7a63;
+    --radius: 12px; --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { font-family: var(--font); background: var(--umber-900); color: var(--ink); line-height: 1.55; }
+  a { color: var(--ochre); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 36px 22px 70px; }
+
+  header.top { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; border-bottom: 2px solid var(--ochre); padding-bottom: 16px; }
+  header.top .mark { font-weight: 800; font-size: 24px; letter-spacing: 0.4px; }
+  header.top .mark .os { color: var(--ochre); }
+  header.top .slogan { color: var(--muted); font-style: italic; font-size: 14px; }
+  header.top .spacer { flex: 1; }
+  header.top .where { font-size: 13px; color: var(--muted); }
+
+  .live-banner { margin: 22px 0 8px; background: var(--umber); border: 1px solid var(--ochre); border-radius: var(--radius); padding: 16px 18px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .live-banner .tag { background: var(--ok); color: #0c2a12; font-weight: 800; font-size: 12px; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.5px; }
+  .live-banner .txt { font-size: 14px; }
+  .live-banner a { font-weight: 600; }
+
+  h2 { font-size: 17px; margin: 34px 0 6px; letter-spacing: 0.2px; }
+  h2 .num { color: var(--ochre); font-weight: 800; margin-right: 8px; }
+  .lead { color: var(--muted); font-size: 14px; margin: 0 0 16px; max-width: 760px; }
+
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin: 8px 0 18px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .d-live { background: var(--ok); } .d-built { background: var(--ochre); } .d-build { background: var(--amber); } .d-spec { background: var(--grey); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 14px; }
+  .card { background: var(--umber); border: 1px solid var(--umber-700); border-radius: var(--radius); padding: 15px 16px; }
+  .card .h { display: flex; align-items: center; gap: 9px; }
+  .card .h .nm { font-weight: 700; font-size: 15px; flex: 1; }
+  .card .role { color: var(--muted); font-size: 12px; margin: 4px 0 9px; }
+  .pill { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px; }
+  .p-live { background: var(--ok); color: #0c2a12; }
+  .p-built { background: var(--ochre); color: var(--umber-900); }
+  .p-build { background: var(--amber); color: var(--umber-900); }
+  .p-spec { background: var(--umber-700); color: var(--muted); }
+
+  .phases { display: flex; flex-direction: column; gap: 10px; }
+  .phase { display: grid; grid-template-columns: 96px 1fr; gap: 14px; background: var(--umber); border: 1px solid var(--umber-700); border-radius: var(--radius); padding: 13px 15px; }
+  .phase .when { font-weight: 800; font-size: 13px; color: var(--ochre); }
+  .phase .when small { display: block; color: var(--muted); font-weight: 400; font-size: 11px; }
+  .phase .body .t { font-weight: 700; font-size: 14px; }
+  .phase .body .d { color: var(--muted); font-size: 13px; margin-top: 3px; }
+
+  .timeline { display: flex; gap: 0; flex-wrap: wrap; margin: 6px 0 8px; }
+  .tl { flex: 1; min-width: 150px; border-top: 3px solid var(--umber-700); padding: 12px 14px 4px; position: relative; }
+  .tl.now { border-top-color: var(--ok); } .tl.next { border-top-color: var(--ochre); } .tl.later { border-top-color: var(--grey); }
+  .tl .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); }
+  .tl ul { margin: 6px 0 0; padding-left: 16px; font-size: 13px; }
+  .tl li { margin: 3px 0; }
+
+  footer { margin-top: 40px; border-top: 1px solid var(--umber-700); padding-top: 14px; color: var(--muted); font-size: 12px; }
+  .backlink { display: inline-block; margin-top: 18px; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <span class="mark">Cyber<span class="os">OS</span></span>
+    <span class="slogan">Turn Your Will Into Real</span>
+    <span class="spacer"></span>
+    <span class="where">os.cyberskill.world &middot; updated 29 Jun 2026</span>
+  </header>
+
+  <div class="live-banner">
+    <span class="tag">LIVE</span>
+    <span class="txt">CyberOS is in production. The team signs in with Google and uses Chat - channels, direct messages, and file sharing - at <a href="/">os.cyberskill.world</a>. Every push to main deploys itself.</span>
+  </div>
+
+  <p class="lead">CyberOS is CyberSkill's own working platform: one place to sign in, talk, build, and remember.
+  It is a set of first-party modules on a single identity, a shared memory, and an AI gateway - shipped
+  module by module, each one audited before it lands.</p>
+
+  <h2><span class="num">1</span>Where we are</h2>
+  <div class="timeline">
+    <div class="tl now">
+      <div class="k">Now - live</div>
+      <ul>
+        <li>Sign in with Google (Workspace-only)</li>
+        <li>Team chat, DMs, file sharing</li>
+        <li>Single-origin deploy on one server</li>
+        <li>Auto-deploy on every push</li>
+      </ul>
+    </div>
+    <div class="tl next">
+      <div class="k">Next - in flight</div>
+      <ul>
+        <li>Profiles: display name + avatar</li>
+        <li>Organizational memory (the brain)</li>
+        <li>Assistant (GENIE) for the team</li>
+        <li>Self-hosted AI model</li>
+      </ul>
+    </div>
+    <div class="tl later">
+      <div class="k">Later - planned</div>
+      <ul>
+        <li>Projects, email, calendar surfaces</li>
+        <li>Desktop and mobile apps</li>
+        <li>Plugin marketplace</li>
+        <li>Public portal + marketing site</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2><span class="num">2</span>The modules</h2>
+  <p class="lead">CyberOS is built as independent modules on a shared identity and memory. Status reflects
+  what is in production versus built-and-verified versus still specified.</p>
+  <div class="legend">
+    <span><span class="dot d-live"></span> live in production</span>
+    <span><span class="dot d-built"></span> built + verified, not yet deployed</span>
+    <span><span class="dot d-build"></span> in progress</span>
+    <span><span class="dot d-spec"></span> specified</span>
+  </div>
+  <div class="grid">
+    <div class="card"><div class="h"><span class="nm">Identity</span><span class="pill p-live">live</span></div><div class="role">Google sign-in, accounts, roles, per-tenant isolation.</div></div>
+    <div class="card"><div class="h"><span class="nm">Chat</span><span class="pill p-live">live</span></div><div class="role">Channels, direct messages, presence, files, search.</div></div>
+    <div class="card"><div class="h"><span class="nm">Console</span><span class="pill p-live">live</span></div><div class="role">Sign-in, dashboard, the operator panels.</div></div>
+    <div class="card"><div class="h"><span class="nm">AI gateway</span><span class="pill p-built">built</span></div><div class="role">Model routing, spend caps, residency, local + cloud models.</div></div>
+    <div class="card"><div class="h"><span class="nm">Memory (brain)</span><span class="pill p-build">in progress</span></div><div class="role">Shared, searchable memory with fast semantic recall.</div></div>
+    <div class="card"><div class="h"><span class="nm">GENIE / Lumi</span><span class="pill p-built">built</span></div><div class="role">The assistant and workflow brain over the gateway.</div></div>
+    <div class="card"><div class="h"><span class="nm">MCP gateway</span><span class="pill p-built">built</span></div><div class="role">Federated tools the assistant can call.</div></div>
+    <div class="card"><div class="h"><span class="nm">Observability</span><span class="pill p-built">built</span></div><div class="role">Metrics, traces, and a tamper-evident audit trail.</div></div>
+    <div class="card"><div class="h"><span class="nm">Projects</span><span class="pill p-spec">specified</span></div><div class="role">Tasks, plans, and delivery tracking.</div></div>
+    <div class="card"><div class="h"><span class="nm">Email</span><span class="pill p-spec">specified</span></div><div class="role">First-party mail on the CyberOS identity.</div></div>
+    <div class="card"><div class="h"><span class="nm">Skills</span><span class="pill p-built">built</span></div><div class="role">Reusable agent playbooks and the skill registry.</div></div>
+    <div class="card"><div class="h"><span class="nm">Plugins</span><span class="pill p-spec">specified</span></div><div class="role">Distribution and a vetted plugin marketplace.</div></div>
+  </div>
+
+  <h2><span class="num">3</span>The brain: shared memory and insight</h2>
+  <p class="lead">As people work on CyberOS, what happens becomes durable, searchable organizational memory.
+  GENIE reads it to assist the team and to give leadership an evidence-based view of how work is going,
+  aligned to the company's own agreements. Built in responsible phases, with access controlled and a human
+  in the loop for anything that affects people.</p>
+  <div class="phases">
+    <div class="phase"><div class="when">Phase 0<small>governance</small></div><div class="body"><div class="t">Notice, access, and retention</div><div class="d">A clear data-and-insight notice in the company agreements, access limited to leadership and managers, and retention set per data type. Done before anything is analyzed.</div></div></div>
+    <div class="phase"><div class="when">Phase 1<small>capture</small></div><div class="body"><div class="t">One record of work</div><div class="d">A single interaction-event format that every module emits from day one, chained into a tamper-evident log so the record is trustworthy.</div></div></div>
+    <div class="phase"><div class="when">Phase 2<small>memory</small></div><div class="body"><div class="t">The brain that recalls fast</div><div class="d">Events embedded for sub-second semantic recall, rolling summaries to stay compact, and tiered storage so long-term memory stays quick as it grows.</div></div></div>
+    <div class="phase"><div class="when">Phase 3<small>rubric</small></div><div class="body"><div class="t">Grounded in our agreements</div><div class="d">The company's signed documents turned into a structured, versioned framework, so any insight cites the exact source it measures against.</div></div></div>
+    <div class="phase"><div class="when">Phase 4<small>insight</small></div><div class="body"><div class="t">Evidence-based, human-reviewed</div><div class="d">GENIE drafts evidence-linked assessments mapped to the framework; a person reviews and decides. The model assists - it never decides on its own.</div></div></div>
+    <div class="phase"><div class="when">Phase 5<small>surfacing</small></div><div class="body"><div class="t">The right views for the right people</div><div class="d">Leadership and manager views, with access controlled throughout.</div></div></div>
+  </div>
+
+  <h2><span class="num">4</span>How we build</h2>
+  <p class="lead">Every capability starts as a written, audited feature request before code. Modules build in
+  parallel, each one verified locally, and ship through a single pipeline: a push to main builds the images,
+  pushes them, and rolls the live server with no downtime. The platform runs on a small server in Singapore
+  with a managed database, and scales out by adding modules, not by rewrites.</p>
+
+  <footer>
+    CyberOS is CyberSkill's internal platform. This page is a living roadmap and will change as modules ship.
+    <a class="backlink" href="/">&larr; Back to CyberOS</a>
+  </footer>
+</div>
+</body>
+</html>

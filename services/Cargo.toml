@@ -4,6 +4,7 @@ members = [
     "memory",
     "auth",
     "chat",
+    "eval",
     "skill-broker",
     "ai-gateway",
     "obs-collector",

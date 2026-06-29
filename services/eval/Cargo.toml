@@ -1,0 +1,32 @@
+[package]
+name = "cyberos-eval"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "CyberOS EVAL governance core (FR-EVAL-001 slice 1) - versioned monitoring notice + per-subject acknowledgment gate + data-category/purpose registry + founder/manager-of/self access check + per-category retention, all on the CyberOS identity, Postgres per-tenant RLS, and the memory audit chain. The Phase-0 gate every BRAIN/EVAL capture and evaluation depends on."
+
+[lib]
+name = "cyberos_eval"
+path = "src/lib.rs"
+
+[dependencies]
+tokio.workspace = true
+axum.workspace = true
+sqlx.workspace = true
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+tower-http.workspace = true
+uuid.workspace = true
+chrono.workspace = true
+cyberos-audit-chain = { path = "../shared/cyberos-audit-chain" }
+
+[[bin]]
+name = "cyberos-eval"
+path = "src/main.rs"

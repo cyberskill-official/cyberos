@@ -79,6 +79,31 @@ services:
       retries: 10
     networks: [cyberos]
 
+  # BRAIN/EVAL governance service (FR-EVAL-001), built from the same Cargo workspace. Independent of the
+  # live stack. Reads EVAL_DATABASE_URL (Supabase, in .env.p0); apply
+  # services/eval/migrations/0001_governance.sql before it does real work (healthz only needs a connection).
+  eval:
+    build:
+      context: ../../services
+      dockerfile: Dockerfile
+      args:
+        RUST_VERSION: ${CYBEROS_RUST_VERSION:-1.88.0}
+        PACKAGE: cyberos-eval
+        BIN: cyberos-eval
+    image: cyberos-eval:${CYBEROS_IMAGE_TAG:-local}
+    restart: unless-stopped
+    env_file: [.env.p0]
+    environment:
+      EVAL_LISTEN_ADDR: 0.0.0.0:7760
+      EVAL_DATABASE_URL: ${EVAL_DATABASE_URL}
+      EVAL_AUDIT_DATABASE_URL: ${EVAL_AUDIT_DATABASE_URL:-}
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:7760/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks: [cyberos]
+
   caddy:
     image: caddy:2
     restart: unless-stopped

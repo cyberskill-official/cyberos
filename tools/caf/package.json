@@ -4,7 +4,7 @@
   "description": "AUDIT.md \u2014 an honest, self-improving audit protocol for AI coding agents, by CyberSkill",
   "private": true,
   "engines": {
-    "node": ">=24"
+    "node": ">=24.16.0"
   },
   "scripts": {
     "evals": "python3 core/evals/validate.py --all",

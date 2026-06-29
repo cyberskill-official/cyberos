@@ -23,7 +23,7 @@ new_files:
   - apps/console/tests/memory_api_client.test.ts
   - apps/console/tests/memory_search_render.test.ts
   - apps/console/tests/chain_integrity_render.test.ts
-depends_on: [FR-APP-001, FR-AUTH-004, FR-MEMORY-108, FR-MEMORY-121, FR-MEMORY-101]
+depends_on: [FR-APP-001, FR-AUTH-004, FR-MEMORY-108, FR-MEMORY-124, FR-MEMORY-101]
 ---
 
 # Feature Request
@@ -38,7 +38,7 @@ The operator console needs a memory panel: one screen set in the existing consol
 
 CyberOS has a full memory service - a layer-2 knowledge store with vector, graph, and full-text search (FR-MEMORY-108), a relational edge table for entity relationships, and a hash-chained layer-1 audit log that every module appends to - and no operator screen over any of it. To search the knowledge layer, the operator hits `GET /v1/memory/search` by hand and reads JSON. To see how entities relate, there is no surface at all; the edges live in `l2_edge` and are only reachable through a service-side query. To inspect the audit chain or check that it has not been tampered with, the operator has no viewer; the chain-integrity signal (the `chain_anchor` recomputation that FR-MEMORY-108 already runs per result) is computed deep in the service and never shown to a person. The operator cannot answer "what does memory know about X", "how is X linked", or "is the chain intact" from one branded screen.
 
-The APIs to back this panel already exist and ship. Memory search is live (FR-MEMORY-108) and returns ranked results with a snippet, a kind, a path, and a related-entity count, already RLS-scoped to the caller's tenant and already verifying each result's `chain_anchor` against layer 1. The audit ledger and its row kinds are defined (FR-MEMORY-121 enumerates `memory.awh_gate_result` alongside the existing aux kinds in the `l1_audit_log` AuditRecord schema), and the chain-anchor design comes from FR-MEMORY-101. What is missing is the presentation layer that ties search, entities and edges, and the audit chain into one auth-gated, CDS-branded panel in the console. The gap is purely the front-end. Building it as another panel in the existing static SPA adds no server code and reuses the console shell, the auth gate, and the Caddy front that FR-APP-001 already established. One correctness constraint shapes the work: because AGE is gone, the edge and graph data is relational (`l2_edge` traversed by recursive CTE), so the browser must render relational rows and must not assume a property-graph or Cypher result shape.
+The APIs to back this panel already exist and ship. Memory search is live (FR-MEMORY-108) and returns ranked results with a snippet, a kind, a path, and a related-entity count, already RLS-scoped to the caller's tenant and already verifying each result's `chain_anchor` against layer 1. The audit ledger and its row kinds are defined (FR-MEMORY-124 enumerates `memory.awh_gate_result` alongside the existing aux kinds in the `l1_audit_log` AuditRecord schema), and the chain-anchor design comes from FR-MEMORY-101. What is missing is the presentation layer that ties search, entities and edges, and the audit chain into one auth-gated, CDS-branded panel in the console. The gap is purely the front-end. Building it as another panel in the existing static SPA adds no server code and reuses the console shell, the auth gate, and the Caddy front that FR-APP-001 already established. One correctness constraint shapes the work: because AGE is gone, the edge and graph data is relational (`l2_edge` traversed by recursive CTE), so the browser must render relational rows and must not assume a property-graph or Cypher result shape.
 
 ## Proposed Solution
 
@@ -48,7 +48,7 @@ A memory panel added to the console under `apps/console/`, built with the same C
 
 1. The memory panel MUST be one panel in the same static single-page app as FR-APP-001, under `apps/console/`, mounted inside the FR-APP-001 shell and behind its auth gate. It MUST NOT define its own shell, navigation chrome, sign-in flow, or design language; it reuses what FR-APP-001 established.
 
-2. The panel MUST consume only memory service APIs that already ship: the memory search endpoint (FR-MEMORY-108), the entity-and-edge read it exposes over `l2_edge`, and the audit-chain read over `l1_audit_log` (the ledger whose row kinds FR-MEMORY-121 enumerates and whose anchor design is FR-MEMORY-101). It MUST NOT introduce a new backend endpoint or any server-side component; a screen that appears to need a new endpoint is a signal to extend the memory service's FR, not to add a backend in `app`.
+2. The panel MUST consume only memory service APIs that already ship: the memory search endpoint (FR-MEMORY-108), the entity-and-edge read it exposes over `l2_edge`, and the audit-chain read over `l1_audit_log` (the ledger whose row kinds FR-MEMORY-124 enumerates and whose anchor design is FR-MEMORY-101). It MUST NOT introduce a new backend endpoint or any server-side component; a screen that appears to need a new endpoint is a signal to extend the memory service's FR, not to add a backend in `app`.
 
 3. The panel MUST be read-only. It MUST NOT write, edit, delete, or otherwise mutate any memory: no layer-2 row, no entity, no edge, and no audit row. It issues read requests only; memory mutation is out of scope for this panel and stays with the memory service.
 
@@ -81,7 +81,7 @@ Primary metric - operator memory and audit checks done through the console.
 - Baseline: 0%. No memory panel exists; today these checks go to raw JSON endpoints or direct queries.
 - Target: at least 50% of those checks done through the console within six weeks of the panel's first release.
 - Measurement method: the memory request log carries a client-id tag; count requests tagged with the console over total operator requests to the search and audit-chain reads.
-- Source: the memory search request log (FR-MEMORY-108) and the audit-ledger read path over `l1_audit_log` (FR-MEMORY-121).
+- Source: the memory search request log (FR-MEMORY-108) and the audit-ledger read path over `l1_audit_log` (FR-MEMORY-124).
 
 Guardrail metric - new backend endpoints introduced by the memory panel.
 - Definition: number of new server-side endpoints or backend components the memory panel requires in order to function.
@@ -107,12 +107,12 @@ In scope: the three memory screens (knowledge search over FR-MEMORY-108, entitie
 - FR-APP-001 APP CDS web console - the shell, the auth gate, the CDS tokens and components, and the Caddy static-serving path this panel mounts into; this FR adds a panel, not a new app.
 - FR-AUTH-004 JWT and JWKS - the session token the shell holds and the panel carries on every memory read; the token's claims are what the memory service scopes results by.
 - FR-MEMORY-108 memory search - the shipped `GET /v1/memory/search` the knowledge-search screen reads, already RLS-scoped per tenant and already verifying each result's `chain_anchor`; it also backs the entity and `l2_edge` relation reads the entities screen renders.
-- FR-MEMORY-121 awh_gate_result audit row - enumerates the audit row kinds in the `l1_audit_log` AuditRecord schema that the audit-chain viewer lists; the ledger this FR reads is the one that FR defines rows for.
+- FR-MEMORY-124 awh_gate_result audit row - enumerates the audit row kinds in the `l1_audit_log` AuditRecord schema that the audit-chain viewer lists; the ledger this FR reads is the one that FR defines rows for. (Renumbered from FR-MEMORY-121; 121 now carries the BRAIN interaction-event schema.)
 - FR-MEMORY-101 layer-2 ingest pipeline - the source of the `chain_anchor` design and the layer-1-versus-layer-2 trust rule the chain-integrity indication reflects; the console surfaces this verification rather than reimplementing it.
 - Cross-cutting: the existing Caddy front that FR-APP-001 deploys behind; the memory panel ships as part of the same static bundle and adds no new ingress. AGE removal is a standing constraint: the graph data is relational `l2_edge`, not a property graph.
 
 ## AI Authorship Disclosure
 
-- Tools used: Claude (Cowork), authoring this FR from the founder's unified-admin-console decision and the existing module FRs (FR-APP-001 for the console, FR-MEMORY-108 / FR-MEMORY-121 / FR-MEMORY-101 for the memory reads).
+- Tools used: Claude (Cowork), authoring this FR from the founder's unified-admin-console decision and the existing module FRs (FR-APP-001 for the console, FR-MEMORY-108 / FR-MEMORY-124 / FR-MEMORY-101 for the memory reads).
 - Scope: full draft of this specification, including the normative clauses, the alternatives, the metrics, and the scope boundaries. No console code is written by this FR; the memory panel is built in a later session.
 - Human review: Stephen reviews and approves before status moves past draft. The "panel in the same SPA, no new backend, read-only, relational not AGE" boundaries are operator-mandated, and the paired audit (FR-APP-005.audit.md) validates the format before merge.

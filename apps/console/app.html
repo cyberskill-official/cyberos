@@ -51,6 +51,7 @@
   .card button.google { width: 100%; background: #fff; color: #1f1f1f; border: 1px solid #dadce0; border-radius: 8px; padding: 11px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
   .card button.google:hover { background: #f7f8f8; }
   .card button.google .g { font-weight: 800; color: #4285F4; font-size: 16px; }
+  .pwlink { display: inline-block; margin-top: 16px; font-size: 12px; color: var(--cds-muted); text-decoration: underline; cursor: pointer; }
 
   main.dash { flex: 1; padding: 30px 40px; }
   main.dash h2 { margin: 0 0 4px; font-size: 18px; }
@@ -80,7 +81,10 @@
     <div class="card">
       <h1>Sign in</h1>
       <div class="sub">to your CyberOS workspace</div>
-      <form id="login-form">
+      <button class="google" id="google-btn" type="button"><span class="g">G</span> Sign in with Google</button>
+      <div class="err" id="google-err"></div>
+      <a class="pwlink" id="pw-toggle" href="#" role="button">Admin sign-in</a>
+      <form id="login-form" style="display:none;">
         <div class="field">
           <label>Workspace (tenant)</label>
           <input id="f-tenant" value="cyberskill" autocomplete="organization" spellcheck="false" />
@@ -96,9 +100,6 @@
         <button class="primary" id="login-btn" type="submit">Sign in</button>
         <div class="err" id="login-err"></div>
       </form>
-      <div class="or"><span>or</span></div>
-      <button class="google" id="google-btn" type="button"><span class="g">G</span> Sign in with Google</button>
-      <div class="err" id="google-err"></div>
       <details class="advanced">
         <summary>Service endpoints</summary>
         <label>Auth URL<input id="f-auth" value="http://127.0.0.1:7700" spellcheck="false" /></label>
@@ -138,13 +139,15 @@
     return !!(c && c.exp && c.exp * 1000 > Date.now());
   }
 
+  // For the team rollout we show Chat only. The other modules stay defined but hidden:true so they are
+  // easy to bring back later - just remove the hidden flag (operator modules, not for the whole team yet).
   var MODULES = [
     { id: "chat", icon: "💬", name: "Chat", desc: "Channels, messages, and live presence on the CyberOS identity.", live: true, href: "chat.html" },
-    { id: "assistant", icon: "✨", name: "Assistant", desc: "Talk to your model through the CyberOS AI gateway.", live: true, href: "index.html" },
-    { id: "ai", icon: "🛠", name: "AI Ops", desc: "Provider routing, spend caps, residency (FR-APP-003).", live: true, href: "ai.html" },
-    { id: "mcp", icon: "🔌", name: "MCP Registry", desc: "Tools the MCP gateway is serving now (FR-APP-004).", live: true, href: "mcp.html" },
-    { id: "memory", icon: "🧾", name: "Memory & Audit", desc: "Browse the tenant's hash-chained audit log (FR-APP-005).", live: true, href: "audit.html" },
-    { id: "cuo", icon: "🧠", name: "Workflows & GENIE", desc: "Dream-loop envelope and the FR backlog (FR-APP-006).", live: true, href: "cuo.html" }
+    { id: "assistant", icon: "✨", name: "Assistant", desc: "Talk to your model through the CyberOS AI gateway.", live: true, href: "index.html", hidden: true },
+    { id: "ai", icon: "🛠", name: "AI Ops", desc: "Provider routing, spend caps, residency (FR-APP-003).", live: true, href: "ai.html", hidden: true },
+    { id: "mcp", icon: "🔌", name: "MCP Registry", desc: "Tools the MCP gateway is serving now (FR-APP-004).", live: true, href: "mcp.html", hidden: true },
+    { id: "memory", icon: "🧾", name: "Memory & Audit", desc: "Browse the tenant's hash-chained audit log (FR-APP-005).", live: true, href: "audit.html", hidden: true },
+    { id: "cuo", icon: "🧠", name: "Workflows & GENIE", desc: "Dream-loop envelope and the FR backlog (FR-APP-006).", live: true, href: "cuo.html", hidden: true }
   ];
 
   function renderDashboard() {
@@ -154,7 +157,7 @@
     $("logout").style.display = "inline-block";
     var box = $("tiles");
     box.innerHTML = "";
-    MODULES.forEach(function (m) {
+    MODULES.filter(function (m) { return !m.hidden; }).forEach(function (m) {
       var t = document.createElement(m.live ? "a" : "div");
       t.className = "tile" + (m.live ? "" : " soon");
       if (m.live && m.href) { t.setAttribute("href", m.href); t.style.textDecoration = "none"; t.style.color = "inherit"; }
@@ -231,6 +234,13 @@
     } catch (e) { $("google-err").textContent = e.message; }
   }
   $("google-btn").onclick = googleSignIn;
+
+  // Password sign-in is hidden by default (team uses Google). This reveals it as a break-glass path for
+  // admins - the form and its handler are unchanged, just shown on demand.
+  (function () {
+    var t = $("pw-toggle");
+    if (t) t.onclick = function (e) { e.preventDefault(); $("login-form").style.display = "block"; t.style.display = "none"; $("f-password").focus(); };
+  })();
 
   // OIDC hand-back: the auth callback 302'd back here with the token in the URL
   // fragment. Capture it like a password sign-in, then scrub the URL so the token

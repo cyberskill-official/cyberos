@@ -55,6 +55,25 @@ services:
       retries: 10
     networks: [cyberos]
 
+  # BRAIN/EVAL governance service (FR-EVAL-001). Independent - nothing depends on it, so a failed build or
+  # boot does not affect auth/chat/caddy; the status page probes it via Caddy /status/eval and shows it
+  # down until it is healthy. Reads EVAL_DATABASE_URL (Supabase, set in .env.p0); apply
+  # services/eval/migrations/0001_governance.sql before it does real work (healthz only needs a connection).
+  eval:
+    image: ${CYBEROS_REGISTRY:-ghcr.io/cyberskill-official}/cyberos-eval:${CYBEROS_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file: [.env.p0]
+    environment:
+      EVAL_LISTEN_ADDR: 0.0.0.0:7760
+      EVAL_DATABASE_URL: ${EVAL_DATABASE_URL}
+      EVAL_AUDIT_DATABASE_URL: ${EVAL_AUDIT_DATABASE_URL:-}
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:7760/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks: [cyberos]
+
   caddy:
     image: caddy:2
     restart: unless-stopped

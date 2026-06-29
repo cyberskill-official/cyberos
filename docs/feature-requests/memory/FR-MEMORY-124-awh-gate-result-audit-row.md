@@ -1,6 +1,8 @@
 ---
-id: FR-MEMORY-121
+id: FR-MEMORY-124
 title: "memory.awh_gate_result aux audit row - the awh out-of-band gate verdict, emitted into the memory chain by the ship-feature-requests testing->done step (step 28)"
+renumbered_from: FR-MEMORY-121
+renumbered_note: "Renumbered 121 -> 124 on 2026-06-29 so FR-MEMORY-121/122/123 could carry the BRAIN capture trio (interaction-event schema / capture emitters / ingestion) per docs/strategy/cyberos-brain-evaluation-plan.md. The row-kind string `memory.awh_gate_result` is unchanged; only the FR id moved."
 module: MEMORY
 priority: SHOULD
 status: draft

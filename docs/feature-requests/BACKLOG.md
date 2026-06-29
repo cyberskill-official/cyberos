@@ -3,7 +3,7 @@
 **Owner:** Stephen Cheng (CEO) · **Status:** v0.7.0 — **STATUS-WAVE-2026-05 lifecycle simplification** (2026-05-19). The previous "tag soup" status enum (`shipped + strict-audited`, `shipped + mocked-dependency`, `[BLOCKED: …]`, `[FAILED: …]`, `accepted`, `building`, `audited`, `planned`, etc.) is **retired**. The new canonical 10-state enum lives at [`STATUS-REFERENCE.md`](../../modules/skill/contracts/feature-request/STATUS-REFERENCE.md): `draft | ready_to_implement | implementing | ready_to_review | reviewing | ready_to_test | testing | done | on_hold | closed`. Migration applied: `planned/accepted/audited/in_review → ready_to_implement`, `building/in_progress → implementing`, `shipped + … → done`, `deferred → on_hold`, `rejected/superseded → closed`, `[BLOCKED: …]/[FAILED: …] → ready_to_implement` (failures route back to rework — see STATUS-REFERENCE §1.3). The CTO workflow that drives ship was also renamed `implement-backlog-frs → ship-feature-requests`. Plus a global rename `brain → memory` across all memory-module references (FR IDs, file names, code identifiers, audit row_kinds, CHANGELOG tags, prose). The CHAT/PROJ/EMAIL Layer-0/2 wave still applies: FR-CHAT-001 + FR-EMAIL-001 + FR-PROJ-001 all moved to `done` (slice 1) on 2026-05-19. Three new `services/<name>/` directories: chat, email, proj. v0.6.0 — PLUGIN module wave + v0.5.0 MEMORY Improvement Wave still apply.
 **Source of truth:** the markdown files in this folder. This index is regenerated when FRs land or change status.
 **Authoring playbook:** `feature-request-audit` skill (see feature-request skills) (moved 2026-05-18 — was `feature-request-audit` skill at the root of this folder; now co-located with the `feature-request-audit` skill that enforces it)
-**Roadmap:** [`../../website/docs/architecture/milestones.html`](../../website/docs/architecture/milestones.html)
+**Roadmap:** [os.cyberskill.world/roadmap](../../apps/console/roadmap.html) — the live whole-system roadmap, served at `/roadmap` (source: `apps/console/roadmap.html`). The older milestones page (`../../website/docs/architecture/milestones.html`) is a historical doc, superseded by the live roadmap and slated to move into the KB module.
 **Repo layout:** modules live under `../../modules/<name>/` (post-2026-05-18 refactor)
 
 ---
@@ -16,12 +16,12 @@ The spec corpus is **closed** and ready for implementation kickoff. Three produc
 
 | Metric | Value |
 |---|---:|
-| Total FRs authored | **261** |
-| FRs at 10/10 audit score | **261** (100%) |
+| Total FRs authored | **268** |
+| FRs at 10/10 audit score | **268** (100%) |
 | FRs missing audit file | **0** |
 | Reciprocity errors in DAG | **0** |
-| Total engineering-hours | **~2,056h** (+58h from FR-PLUGIN-001..008 cross-runtime distribution wave 2026-05-19; +120h from FR-MEMORY-112..120 MEMORY Improvement Wave 2026-Q3; +58h from earlier FR-SKILL-111..115 Anthropic Skills portability wave) |
-| Modules with full spec coverage | **25** |
+| Total engineering-hours | **~2,146h** (+58h from FR-PLUGIN-001..008 cross-runtime distribution wave 2026-05-19; +120h from FR-MEMORY-112..120 MEMORY Improvement Wave 2026-Q3; +58h from earlier FR-SKILL-111..115 Anthropic Skills portability wave; +90h from the FR-EVAL-001..004 + FR-MEMORY-121..123 BRAIN/EVAL workstream 2026-06-30) |
+| Modules with full spec coverage | **26** |
 | Dependency layers (topo build sequence) | **13** |
 | API endpoints declared in §3 contracts | **262** (+1 from FR-MEMORY-120 history endpoint) |
 | Migration files declared | **327** across 23 modules |
@@ -33,6 +33,8 @@ The spec corpus is **closed** and ready for implementation kickoff. Three produc
 > **2026-05-19 — Anthropic Skills portability wave.** Authored and shipped FR-SKILL-111 (description trigger enrichment) + FR-SKILL-112 (TRIGGER_TESTS.md) + FR-SKILL-113 (XML-free frontmatter, registry v0.2.5) + FR-SKILL-114 (BASELINE.md at v1.0 promotion) + FR-SKILL-115 (134-file placeholder sweep, v0.2.6). All 5 at 10/10. See the [SKILL appendices](https://cyberos-wiki.cyberskill.world/modules/skill/appendices.html) for the portability findings (Appendix J) and the 3-session implementation cut (Appendix K, 38-46h).
 
 > **2026-06-29 - APP unified admin console wave.** Authored FR-APP-003 (AI ops panel: per-tenant cost vs cap, model-alias + provider/circuit-breaker health, cache stats, read-only tenant policy over the ai-gateway) + FR-APP-004 (MCP registry and tools panel: federated modules + tool catalogs, the four-state per-server health from `GET /v1/mcp/servers`, OAuth clients + PRM) + FR-APP-005 (memory and audit-chain browser: layer-2 search + relational `l2_edge` entities and edges, `l1_audit_log` chain viewer with anchor verify - reads relational, not AGE) + FR-APP-006 (CUO workflows + GENIE assistant panel: list/trigger/monitor workflows via mcp `tools/call` + tasks, GENIE chat over the gateway, honoring the destructive-tool confirm gate). All four `draft`, paired audits PASS (9.5/10), authored by parallel agents against the FR-APP-001 format. Decision (Stephen, 2026-06-29): the critical-path engine modules (AI / MCP / OBS / memory / CUO) get NO separate GUI - one unified operator console (the `app` module, extending FR-APP-001) carries one read-only panel per module; the end-user surface stays CHAT + GENIE + the `portal`. Every panel is a front-end over already-shipped service APIs with no new backend. See [`app/`](app/) for the FR catalog (FR-APP-001..006).
+>
+> **2026-06-30 — BRAIN + EVALUATION workstream (the company brain).** New module **EVAL** + 3 MEMORY FRs implement `docs/strategy/cyberos-brain-evaluation-plan.md`: capture every platform work-interaction into the MEMORY brain, let GENIE recall + analyse it, and evaluate work against the three signed employment documents. Authored FR-EVAL-001 (governance/consent/access/retention — the Phase-0 gate) + FR-MEMORY-121 (interaction-event schema) + FR-MEMORY-122 (capture emitters + chat→brain link, day-1 wide capture) + FR-MEMORY-123 (BRAIN ingestion + pgvector recall + summaries + tiering) + FR-EVAL-002 (rubric from the 3 docs, clause-cited) + FR-EVAL-003 (GENIE auto-score + mandatory HITL) + FR-EVAL-004 (manager + employee access-restricted views). 7 FRs, +90h, paired audits PASS 10/10, status `draft`, authored by parallel agents against the FR-PROJ-008 engineering-spec format. Founder decisions (Stephen, 2026-06-29) encoded: wide day-1 capture; access-restricted + contract-disclosed (not covert collection); auto-score AND human-in-the-loop; governance + capture first. Renumber: the old `FR-MEMORY-121` (memory.awh_gate_result) → **FR-MEMORY-124**. Detail + build order in §2.5. See [`eval/`](eval/) and [`memory/`](memory/) for the catalogs. Not legal advice — confirm the monitoring notice with Vietnamese counsel (PDPD Decree 13/2023 + Labor Code 45/2019).
 
 ### Production module status
 
@@ -322,6 +324,37 @@ This document is the **single source of truth** for what CyberOS is going to bui
 - SOC 2 readiness check: RBAC + audit chain + retention policies verifiable via Grafana compliance view (FR-OBS-008)
 
 **Miss decommission_signal → P0→P1 descope gate fires:** 2-week sprint freeze on net-new modules, focused only on CHAT polish + migration tooling. If still &lt; 0.85 after 2 weeks, escalate to platform-thesis review.
+
+---
+
+## §2.5 — BRAIN + EVALUATION workstream · the company brain (NEW · 2026-06-30)
+
+**What this is.** The workstream that turns CyberOS into CyberSkill's company brain: every platform work-interaction is captured into the MEMORY brain, GENIE (Lumi) reads it for fast recall and insight, and on top of that a new **EVAL** module measures work against the three signed employment documents (Labor Contract; NDA / Non-compete / IP; Total Rewards & Career Path Appendix). It implements [`../strategy/cyberos-brain-evaluation-plan.md`](../strategy/cyberos-brain-evaluation-plan.md). 7 FRs, +90h, paired audits PASS 10/10, status `draft`. This is a cross-cutting workstream that starts now (post-P0-live), not a product-maturity wave — the `phase:` field on these FRs marks the workstream's own build order (0 governance → 5 surfacing), not the §2–§6 P-waves.
+
+**Founder decisions encoded (Stephen, 2026-06-29).**
+
+1. **Wide, day-1 capture.** Monitoring works the moment a person logs into the OS — one interaction-event schema every module emits (FR-MEMORY-121/122), live from day one.
+2. **Access-restricted + contract-disclosed.** Analysis and dashboards are visible only to the founder, the relevant manager, and the employee's own record (tenant RLS + access grants — FR-EVAL-001/004). The monitoring + data-processing basis is **disclosed** in the employment documents, and an acknowledgment gate blocks capture for a subject until they acknowledge the notice. Scope is platform work-interactions only — no keystroke logging, no screen capture, no private life. Fully-covert collection (no disclosure) is **out of scope** as a legal-risk item. This is the responsible encoding of "available for me + managers, disclosed legal sections": access is restricted, the basis is disclosed.
+3. **Auto-score AND human-in-the-loop.** GENIE auto-scores against the rubric (FR-EVAL-003), and a human reviewer MUST approve anything affecting pay, progression, or employment — HITL is a hard gate, not optional. The model assists; it never auto-decides.
+4. **Governance + capture first.** Build order: governance → capture → brain → rubric → engine → views.
+
+**Build order.**
+
+| Step | FR-ID | Title | Pri | Status | Depends on | Effort |
+|---|---|---|---|---|---|---:|
+| 0 · governance | FR-EVAL-001 | governance, consent, access-control + retention — versioned notice + per-subject acknowledgment gate, category/purpose registry, retention sweeper, founder/manager/self access grants (RLS + audit row per read), data-subject rights | MUST | draft | FR-AUTH-003 | 14h |
+| 1 · capture | FR-MEMORY-121 | interaction-event schema & contract — the one work-interaction event shape every module emits into `l1_audit_log` | MUST | draft | FR-MEMORY-101, FR-EVAL-001 | 9h |
+| 1 · capture | FR-MEMORY-122 | capture emitters — wire AUTH + CHAT to emit, turn ON the chat→brain audit link, define the PROJ/EMAIL/APP/MCP emitter contract, consent-gated | MUST | draft | FR-MEMORY-121, FR-AUTH-002, FR-CHAT-101 | 10h |
+| 2 · brain | FR-MEMORY-123 | BRAIN ingestion + embedding (pgvector HNSW) + rolling summaries + hot/warm/cold tiering + access-scoped recall with provenance | MUST | draft | FR-MEMORY-121, FR-MEMORY-122 | 26h |
+| 3 · rubric | FR-EVAL-002 | rubric from the three signed documents — versioned, effective-dated, bilingual VN/EN; each item cites its exact source clause | MUST | draft | FR-EVAL-001 | 8h |
+| 4 · engine | FR-EVAL-003 | evaluation engine — GENIE evidence-linked auto-scoring + mandatory HITL gate before any assessment is final; result audit-chained | MUST | draft | FR-MEMORY-123, FR-EVAL-002 | 14h |
+| 5 · views | FR-EVAL-004 | manager + employee views — access-restricted console panel; auto-score shown as DRAFT pending human approval; employee right to see + respond | MUST | draft | FR-EVAL-003, FR-APP-001 | 9h |
+
+**Reuse, not re-architecture.** AUTH (identity + per-tenant RLS), MEMORY (`l1_audit_log` hash chain + pgvector), CUO/GENIE (Lumi on the ai-gateway), obs. The audit chain stays the system of record; the vector index is a derived fast lens. The first capture win is concrete: chat content is already live in production but `CHAT_AUDIT_DATABASE_URL` is off, so none of it reaches the brain — FR-MEMORY-122 turns that link on (gated on consent).
+
+**ID renumber.** The id `FR-MEMORY-121` previously held the `memory.awh_gate_result` aux-row FR; it is renumbered to **FR-MEMORY-124** (`renumbered_from` recorded in its frontmatter) so 121 now carries the BRAIN interaction-event schema. Real reference sites updated: FR-APP-005 (`depends_on` + prose + its audit). Generated `website/` artifacts regenerate from source.
+
+**Not legal advice.** The monitoring notice, lawful basis, and retention terms must be reviewed by Vietnamese counsel before go-live (Vietnam PDPD Decree 13/2023/ND-CP + Labor Code 45/2019/QH14 + Decree 145/2020).
 
 ---
 

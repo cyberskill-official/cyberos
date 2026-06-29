@@ -12,7 +12,7 @@ Added
 - `ship-feature-requests` workflow: new step 28 `awh-gate`; `testing -> done` now requires an independent GREEN rerun against a sealed, read-only baseline (the done-flip is conditional; RED routes back to `ready_to_implement`).
 - CI merge gate `.github/workflows/awh-gate.yml`; pre-commit hook `.pre-commit-hooks/awh-gate.sh`.
 - `scripts/rebaseline_fr_status.py` (deterministic, idempotent FR status re-baseline).
-- FR-MEMORY-121 (draft): `memory.awh_gate_result` audit row, gated on protocol change P23 §6.
+- FR-MEMORY-124 (draft): `memory.awh_gate_result` audit row, gated on protocol change P23 §6. (Renumbered from FR-MEMORY-121; 121/122/123 now carry the BRAIN capture trio.)
 - Maturity ledger migrated to `.awh/evolution-log.jsonl` (6 prior adoptions).
 
 Changed
