@@ -35,6 +35,14 @@ pub enum ChatEvent {
         to: Uuid,
         data: serde_json::Value,
     },
+    MessageEdited {
+        id: Uuid,
+        body: String,
+        edited_at: Option<chrono::DateTime<chrono::Utc>>,
+    },
+    MessageDeleted {
+        id: Uuid,
+    },
 }
 
 /// channel_id -> broadcast sender. Senders live for the process; subscribers come and go.

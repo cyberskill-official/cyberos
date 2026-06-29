@@ -37,7 +37,7 @@ async fn main() -> anyhow::Result<()> {
         }
     };
 
-    let authenticator = build_authenticator()?;
+    let authenticator = build_authenticator().await?;
 
     let state = AppState {
         pool,
@@ -54,8 +54,18 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// JWKS from env or file (production), or an HS256 secret (local dev and tests).
-fn build_authenticator() -> anyhow::Result<Authenticator> {
+/// Token verifier from, in priority order: the auth JWKS URL (fetched once at startup, the
+/// production-aligned path), inline JWKS JSON, a JWKS file, or an HS256 secret (tests / local).
+async fn build_authenticator() -> anyhow::Result<Authenticator> {
+    if let Ok(url) = std::env::var("CHAT_AUTH_JWKS_URL") {
+        let json = reqwest::get(&url)
+            .await
+            .map_err(|e| anyhow::anyhow!("fetch JWKS from {url}: {e}"))?
+            .text()
+            .await
+            .map_err(|e| anyhow::anyhow!("read JWKS body from {url}: {e}"))?;
+        return Authenticator::from_jwks(&json).map_err(|e| anyhow::anyhow!(e.to_string()));
+    }
     if let Ok(json) = std::env::var("CHAT_AUTH_JWKS_JSON") {
         return Authenticator::from_jwks(&json).map_err(|e| anyhow::anyhow!(e.to_string()));
     }

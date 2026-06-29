@@ -5,34 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>CyberOS Chat</title>
 <!--
-  FR-APP-007 - CyberOS chat web client (first slice).
+  FR-APP-007 - CyberOS chat web client.
 
   A self-contained operator chat surface for the first-party cyberos-chat service (FR-CHAT-101). It
   consumes only the EXISTING chat HTTP + websocket surface and adds no backend:
-    - REST  : channels, messages, members, presence, read/unread (Authorization: Bearer <token>)
-    - WS    : /v1/chat/ws?channel=<id>&access_token=<token> for live message/presence/typing events
-  Identity is the CyberOS access token (FR-AUTH-110). Paste a token; the subject and tenant come from
-  it. In dev, mint an HS256 token with the same secret the service runs with.
+    - REST : channels, messages (post/list/edit/delete), members, presence, read/unread, search, attachments
+    - WS   : /v1/chat/ws?channel=<id>&access_token=<token> for live message/presence/typing events
+  Identity is the CyberOS access token (FR-AUTH-110). When opened from the dashboard (app.html) it
+  auto-connects from the stored token; the chat service verifies that token against the auth JWKS.
 
-  Run: serve this folder (any static server) and start cyberos-chat with CHAT_DEV_CORS=1 so the browser
-  may call it cross-origin. In production Caddy serves this page and proxies the chat service under one
-  origin, so CORS is not needed there.
+  Run: serve this folder and start cyberos-chat with CHAT_DEV_CORS=1 so the browser may call it
+  cross-origin. In production Caddy serves this page and proxies the chat service under one origin.
 
-  Branding: per the CyberSkill brand doctrine the official logo-mark.svg is used as-is and never
-  recreated, so this slice uses the wordmark in CDS colours; drop the real mark into the header when
-  wiring the full design system.
+  Attachments: the server stores attachments as standalone channel objects. This client references one
+  from a message with a "cyberos-att:" marker body and renders it inline (image) or as a download chip.
 -->
 <style>
   :root {
-    --cds-umber: #45210E;
-    --cds-ochre: #F4BA17;
-    --cds-umber-700: #5a2e16;
-    --cds-umber-900: #2c1409;
-    --cds-ink: #f6ecdd;
-    --cds-muted: #c9b79f;
-    --cds-ok: #6fbf73;
-    --cds-bad: #e1654f;
-    --cds-radius: 10px;
+    --cds-umber: #45210E; --cds-ochre: #F4BA17; --cds-umber-700: #5a2e16; --cds-umber-900: #2c1409;
+    --cds-ink: #f6ecdd; --cds-muted: #c9b79f; --cds-ok: #6fbf73; --cds-bad: #e1654f; --cds-radius: 10px;
     --cds-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
   * { box-sizing: border-box; }
@@ -56,7 +47,7 @@
   .config button { background: var(--cds-ochre); color: var(--cds-umber-900); border: none; border-radius: 6px; padding: 8px 16px; font-weight: 700; font-size: 13px; cursor: pointer; }
 
   .shell { flex: 1; display: flex; min-height: 0; }
-  .sidebar { width: 260px; background: var(--cds-umber); border-right: 1px solid var(--cds-umber-700); display: flex; flex-direction: column; min-height: 0; }
+  .sidebar { width: 240px; background: var(--cds-umber); border-right: 1px solid var(--cds-umber-700); display: flex; flex-direction: column; min-height: 0; }
   .sidebar h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--cds-muted); margin: 0; padding: 12px 16px 6px; }
   .channels { flex: 1; overflow: auto; }
   .channel { padding: 10px 16px; cursor: pointer; display: flex; align-items: center; gap: 8px; border-left: 3px solid transparent; }
@@ -69,27 +60,74 @@
   .newchan input { flex: 1; background: var(--cds-umber-900); border: 1px solid var(--cds-umber-700); color: var(--cds-ink); border-radius: 6px; padding: 6px 8px; font-size: 13px; min-width: 0; }
   .newchan button { background: var(--cds-ochre); color: var(--cds-umber-900); border: none; border-radius: 6px; padding: 0 12px; font-weight: 700; cursor: pointer; }
 
-  .pane { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
-  .pane .topbar { padding: 10px 18px; border-bottom: 1px solid var(--cds-umber-700); display: flex; align-items: center; gap: 12px; background: var(--cds-umber); }
+  .pane { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; position: relative; }
+  .pane .topbar { padding: 8px 16px; border-bottom: 1px solid var(--cds-umber-700); display: flex; align-items: center; gap: 10px; background: var(--cds-umber); flex-wrap: wrap; }
   .pane .topbar .title { font-weight: 700; }
-  .pane .topbar .presence { font-size: 12px; color: var(--cds-muted); flex: 1; }
-  .pane .topbar input { background: var(--cds-umber-900); border: 1px solid var(--cds-umber-700); color: var(--cds-ink); border-radius: 6px; padding: 5px 8px; font-size: 12px; min-width: 230px; }
+  .pane .topbar .presence { font-size: 12px; color: var(--cds-muted); flex: 1; min-width: 80px; }
+  .pane .topbar input { background: var(--cds-umber-900); border: 1px solid var(--cds-umber-700); color: var(--cds-ink); border-radius: 6px; padding: 5px 8px; font-size: 12px; }
+  .pane .topbar input.search { min-width: 150px; }
+  .pane .topbar input.member { min-width: 170px; }
   .pane .topbar button { background: transparent; color: var(--cds-ochre); border: 1px solid var(--cds-umber-700); border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: pointer; }
 
   main { flex: 1; overflow: auto; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; }
-  .msg { max-width: 70%; padding: 9px 13px; border-radius: var(--cds-radius); white-space: pre-wrap; line-height: 1.45; }
+  .msg { max-width: 70%; padding: 9px 13px; border-radius: var(--cds-radius); white-space: pre-wrap; line-height: 1.45; position: relative; }
   .msg.mine { align-self: flex-end; background: var(--cds-ochre); color: var(--cds-umber-900); }
   .msg.theirs { align-self: flex-start; background: var(--cds-umber); border: 1px solid var(--cds-umber-700); }
   .msg.system { align-self: center; background: transparent; color: var(--cds-muted); font-size: 12px; font-style: italic; }
   .msg .who { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; opacity: 0.7; margin-bottom: 3px; }
   .msg .meta { font-size: 10px; opacity: 0.6; margin-top: 5px; }
+  .msg .actions { margin-top: 6px; display: none; gap: 8px; }
+  .msg:hover .actions { display: flex; }
+  .msg .actions button { background: transparent; border: none; font-size: 11px; cursor: pointer; padding: 0; text-decoration: underline; opacity: 0.8; }
+  .msg.mine .actions button { color: var(--cds-umber-900); }
+  .msg.theirs .actions button { color: var(--cds-ochre); }
+  .msg img.att { max-width: 260px; max-height: 220px; border-radius: 8px; display: block; margin-top: 2px; cursor: pointer; }
+  .msg .att-chip { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; text-decoration: underline; }
+  .msg .edit-area { display: flex; flex-direction: column; gap: 6px; }
+  .msg .edit-area textarea { width: 260px; max-width: 60vw; background: var(--cds-umber-900); color: var(--cds-ink); border: 1px solid var(--cds-umber-700); border-radius: 6px; padding: 6px; font-family: var(--cds-font); font-size: 13px; }
+  .msg .edit-area .row { display: flex; gap: 8px; }
   .typing { padding: 2px 20px 0; height: 16px; font-size: 12px; color: var(--cds-muted); font-style: italic; }
 
   footer { background: var(--cds-umber); border-top: 1px solid var(--cds-ochre); padding: 12px 20px; }
-  footer form { display: flex; gap: 10px; }
+  footer form { display: flex; gap: 10px; align-items: flex-end; }
   footer textarea { flex: 1; resize: none; height: 46px; background: var(--cds-umber-900); color: var(--cds-ink); border: 1px solid var(--cds-umber-700); border-radius: 8px; padding: 12px; font-family: var(--cds-font); font-size: 14px; }
-  footer button { background: var(--cds-ochre); color: var(--cds-umber-900); border: none; border-radius: 8px; padding: 0 22px; font-weight: 700; font-size: 14px; cursor: pointer; }
+  footer button { background: var(--cds-ochre); color: var(--cds-umber-900); border: none; border-radius: 8px; padding: 0 18px; height: 46px; font-weight: 700; font-size: 14px; cursor: pointer; }
+  footer button.attach { background: var(--cds-umber-900); color: var(--cds-ochre); border: 1px solid var(--cds-umber-700); }
   footer button:disabled { opacity: 0.5; cursor: default; }
+
+  .thread { position: absolute; top: 0; right: 0; bottom: 0; width: 360px; max-width: 80%; background: var(--cds-umber-900); border-left: 1px solid var(--cds-ochre); display: none; flex-direction: column; box-shadow: -8px 0 24px rgba(0,0,0,0.35); }
+  .thread.open { display: flex; }
+  .thread .thead { padding: 10px 14px; border-bottom: 1px solid var(--cds-umber-700); display: flex; align-items: center; gap: 10px; background: var(--cds-umber); }
+  .thread .thead .t { font-weight: 700; flex: 1; }
+  .thread .thead button { background: transparent; color: var(--cds-ochre); border: none; font-size: 18px; cursor: pointer; }
+  .thread .tlist { flex: 1; overflow: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .thread .tfoot { padding: 10px 14px; border-top: 1px solid var(--cds-umber-700); display: flex; gap: 8px; }
+  .thread .tfoot textarea { flex: 1; resize: none; height: 40px; background: var(--cds-umber); color: var(--cds-ink); border: 1px solid var(--cds-umber-700); border-radius: 8px; padding: 9px; font-family: var(--cds-font); font-size: 13px; }
+  .thread .tfoot button { background: var(--cds-ochre); color: var(--cds-umber-900); border: none; border-radius: 8px; padding: 0 14px; font-weight: 700; cursor: pointer; }
+  .thread .troot { font-size: 12px; color: var(--cds-muted); border-bottom: 1px dashed var(--cds-umber-700); padding-bottom: 8px; }
+
+  .channel .kind { font-size: 11px; color: var(--cds-muted); width: 12px; text-align: center; }
+  .sidebar .actions2 { padding: 10px 16px; border-top: 1px solid var(--cds-umber-700); display: flex; gap: 6px; }
+  .sidebar .actions2 button { flex: 1; background: var(--cds-umber-900); color: var(--cds-ochre); border: 1px solid var(--cds-umber-700); border-radius: 6px; padding: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .sidebar .actions2 button:hover { border-color: var(--cds-ochre); }
+
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: center; justify-content: center; z-index: 50; }
+  .modal-bg.open { display: flex; }
+  .modal { background: var(--cds-umber); border: 1px solid var(--cds-ochre); border-radius: var(--cds-radius); width: 420px; max-width: 92%; max-height: 80vh; display: flex; flex-direction: column; }
+  .modal h3 { margin: 0; padding: 14px 16px; border-bottom: 1px solid var(--cds-umber-700); font-size: 15px; }
+  .modal .mbody { padding: 14px 16px; overflow: auto; display: flex; flex-direction: column; gap: 10px; }
+  .modal input.q, .modal input.gname { background: var(--cds-umber-900); border: 1px solid var(--cds-umber-700); color: var(--cds-ink); border-radius: 6px; padding: 9px; font-size: 13px; }
+  .people { display: flex; flex-direction: column; gap: 2px; max-height: 320px; overflow: auto; }
+  .person { display: flex; align-items: center; gap: 10px; padding: 9px; border-radius: 6px; cursor: pointer; border-left: 3px solid transparent; }
+  .person:hover { background: var(--cds-umber-700); }
+  .person.sel { background: var(--cds-umber-900); border-left-color: var(--cds-ochre); }
+  .person .pname { flex: 1; }
+  .person .psub { font-size: 11px; color: var(--cds-muted); }
+  .modal .empty { color: var(--cds-muted); font-size: 13px; padding: 8px 0; }
+  .modal .mfoot { padding: 12px 16px; border-top: 1px solid var(--cds-umber-700); display: flex; gap: 10px; justify-content: flex-end; }
+  .modal .mfoot button { border-radius: 6px; padding: 9px 16px; font-weight: 700; font-size: 13px; cursor: pointer; border: none; }
+  .modal .mfoot button.go { background: var(--cds-ochre); color: var(--cds-umber-900); }
+  .modal .mfoot button.cancel { background: transparent; color: var(--cds-muted); border: 1px solid var(--cds-umber-700); }
 </style>
 </head>
 <body>
@@ -102,12 +140,8 @@
   </header>
 
   <div class="config">
-    <label>Chat service URL
-      <input id="cfg-base" value="http://127.0.0.1:7720" spellcheck="false" />
-    </label>
-    <label>Access token (JWT)
-      <input id="cfg-token" class="token" placeholder="paste a CyberOS access token" spellcheck="false" />
-    </label>
+    <label>Chat service URL<input id="cfg-base" value="http://127.0.0.1:7720" spellcheck="false" /></label>
+    <label>Access token (JWT)<input id="cfg-token" class="token" placeholder="paste a CyberOS access token" spellcheck="false" /></label>
     <button id="cfg-connect" type="button">Connect</button>
     <span id="cfg-me" style="font-size:12px;color:var(--cds-muted);"></span>
   </div>
@@ -116,9 +150,9 @@
     <aside class="sidebar">
       <h2>Channels</h2>
       <div class="channels" id="channels"></div>
-      <div class="newchan">
-        <input id="newchan-name" placeholder="new channel name" />
-        <button id="newchan-btn" type="button">+</button>
+      <div class="actions2">
+        <button id="new-dm-btn" type="button">New DM</button>
+        <button id="new-group-btn" type="button">New group</button>
       </div>
     </aside>
 
@@ -126,8 +160,9 @@
       <div class="topbar">
         <span class="title" id="chan-title">No channel selected</span>
         <span class="presence" id="presence"></span>
-        <input id="addmember-id" placeholder="add member: subject UUID" />
-        <button id="addmember-btn" type="button">Add</button>
+        <input id="search-q" class="search" placeholder="search messages" />
+        <button id="search-btn" type="button">Search</button>
+        <button id="addpeople-btn" type="button">Add people</button>
       </div>
       <main id="log">
         <div class="msg system">Paste a token and Connect, then pick or create a channel.</div>
@@ -136,17 +171,44 @@
       <footer>
         <form id="chat-form">
           <textarea id="input" placeholder="Message (Enter to send, Shift+Enter for newline)" autocomplete="off"></textarea>
+          <button class="attach" id="attach-btn" type="button" title="Attach a file">&#128206;</button>
           <button id="send" type="submit" disabled>Send</button>
+          <input id="file-input" type="file" style="display:none;" />
         </form>
       </footer>
+
+      <div class="thread" id="thread">
+        <div class="thead"><span class="t">Thread</span><button id="thread-close" type="button">&times;</button></div>
+        <div class="tlist" id="thread-list"></div>
+        <div class="tfoot">
+          <textarea id="thread-input" placeholder="Reply..."></textarea>
+          <button id="thread-send" type="button">Reply</button>
+        </div>
+      </div>
     </section>
+  </div>
+
+  <div class="modal-bg" id="picker-bg">
+    <div class="modal">
+      <h3 id="picker-title">People</h3>
+      <div class="mbody">
+        <input id="picker-gname" class="gname" placeholder="group name" style="display:none;" />
+        <input id="picker-q" class="q" placeholder="search teammates by name or email" />
+        <div class="people" id="picker-people"></div>
+      </div>
+      <div class="mfoot">
+        <button class="cancel" id="picker-cancel" type="button">Cancel</button>
+        <button class="go" id="picker-go" type="button">Create</button>
+      </div>
+    </div>
   </div>
 
 <script>
 (function () {
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
-  var state = { base: "", token: "", me: "", channel: null, ws: null, seen: {}, typingTimer: null, typingSentAt: 0 };
+  var ATT = "cyberos-att:";
+  var state = { base: "", token: "", me: "", channel: null, ws: null, seen: {}, threadSeen: {}, openThread: null, typingSentAt: 0, dir: {}, dirList: [], picker: { mode: null, sel: {} } };
 
   function baseUrl() { return $("cfg-base").value.replace(/\/+$/, ""); }
   function shortId(u) { return u ? String(u).slice(0, 8) : "?"; }
@@ -155,18 +217,69 @@
   function decodeSub(token) {
     try {
       var p = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-      var pad = p.length % 4 ? "====".slice(p.length % 4) : "";
-      return JSON.parse(atob(p + pad)).sub || "";
+      p += "====".slice(p.length % 4 || 4);
+      return JSON.parse(atob(p)).sub || "";
     } catch (e) { return ""; }
   }
 
-  async function api(method, path, body) {
+  function authBaseLs() { try { return (localStorage.getItem("cyberos_auth_base") || "").replace(/\/+$/, ""); } catch (e) { return ""; } }
+
+  // Pull the tenant people directory from cyberos-auth so DMs and groups can be
+  // started by name, and senders / DMs can be labelled by name instead of a raw
+  // id. The same CyberOS access token authenticates here (auth verifies its own
+  // JWT). Best-effort: chat still works without names if the directory is absent.
+  async function loadDirectory() {
+    var ab = authBaseLs();
+    if (!ab || !state.token) return;
+    try {
+      var res = await fetch(ab + "/v1/auth/directory", { headers: { "Authorization": "Bearer " + state.token } });
+      if (!res.ok) return;
+      var data = await res.json();
+      var items = (data && data.items) || [];
+      state.dirList = items;
+      state.dir = {};
+      items.forEach(function (p) { state.dir[p.subject_id] = p; });
+    } catch (e) { /* directory is best-effort */ }
+  }
+  function nameFor(id) {
+    if (!id) return "?";
+    if (id === state.me) return "you";
+    var p = state.dir[id];
+    return (p && (p.display_name || p.handle)) || shortId(id);
+  }
+  function channelLabel(c) {
+    if (c.kind === "direct") { return nameFor(c.other_subject_id) || "Direct message"; }
+    return c.name || shortId(c.id);
+  }
+
+  // Exchange the stored refresh token for a fresh access token (the access token lives 1h). Returns
+  // true if the token was renewed.
+  async function tryRefresh() {
+    var rt, ab;
+    try { rt = localStorage.getItem("cyberos_refresh_token"); ab = localStorage.getItem("cyberos_auth_base"); } catch (e) {}
+    if (!rt || !ab) return false;
+    try {
+      var res = await fetch(ab.replace(/\/+$/, "") + "/v1/auth/token", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ grant_type: "refresh_token", refresh_token: rt }) });
+      if (!res.ok) return false;
+      var data = await res.json();
+      if (!data || !data.access_token) return false;
+      state.token = data.access_token;
+      try { localStorage.setItem("cyberos_chat_token", data.access_token); if (data.refresh_token) localStorage.setItem("cyberos_refresh_token", data.refresh_token); } catch (e) {}
+      return true;
+    } catch (e) { return false; }
+  }
+
+  async function api(method, path, body, retried) {
     var res = await fetch(baseUrl() + path, {
       method: method,
-      headers: Object.assign({ "Authorization": "Bearer " + state.token },
-        body !== undefined ? { "content-type": "application/json" } : {}),
+      headers: Object.assign({ "Authorization": "Bearer " + state.token }, body !== undefined ? { "content-type": "application/json" } : {}),
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
+    if (res.status === 401 && !retried) {
+      if (await tryRefresh()) return api(method, path, body, true);
+      location.href = "app.html";
+      throw new Error("[401] session expired - returning to sign-in");
+    }
     var text = await res.text();
     var data = null;
     try { data = text ? JSON.parse(text) : null; } catch (e) { data = text; }
@@ -182,119 +295,230 @@
     $("log").scrollTop = $("log").scrollHeight;
   }
 
-  function renderMessage(m) {
-    if (!m || !m.id || state.seen[m.id]) return;
-    state.seen[m.id] = true;
+  // ---- attachments ----
+  function attMarker(att) { return ATT + att.id + ":" + encodeURIComponent(att.content_type) + ":" + encodeURIComponent(att.filename); }
+  function parseAtt(body) {
+    if (body.indexOf(ATT) !== 0) return null;
+    var parts = body.split(":");
+    return { id: parts[1], contentType: decodeURIComponent(parts[2] || ""), filename: decodeURIComponent(parts[3] || "file") };
+  }
+  async function attBlobUrl(id) {
+    var res = await fetch(baseUrl() + "/v1/chat/attachments/" + id, { headers: { "Authorization": "Bearer " + state.token } });
+    if (!res.ok) throw new Error("attachment " + res.status);
+    return URL.createObjectURL(await res.blob());
+  }
+  function renderAttById(bodyDiv, id) {
+    api("GET", "/v1/chat/attachments/" + id + "/meta")
+      .then(function (meta) { renderAttInto(bodyDiv, { id: id, contentType: meta.content_type, filename: meta.filename }); })
+      .catch(function () { bodyDiv.textContent = "[attachment]"; });
+  }
+  function renderAttInto(bodyDiv, att) {
+    if (/^image\//.test(att.contentType)) {
+      var img = document.createElement("img");
+      img.className = "att";
+      img.alt = att.filename;
+      attBlobUrl(att.id).then(function (u) { img.src = u; }).catch(function () { bodyDiv.textContent = "[image unavailable] " + att.filename; });
+      img.onclick = function () { attBlobUrl(att.id).then(function (u) { window.open(u, "_blank"); }); };
+      bodyDiv.appendChild(img);
+    } else {
+      var chip = document.createElement("span");
+      chip.className = "att-chip";
+      chip.textContent = "📎 " + att.filename;
+      chip.onclick = function () {
+        attBlobUrl(att.id).then(function (u) { var a = document.createElement("a"); a.href = u; a.download = att.filename; a.click(); });
+      };
+      bodyDiv.appendChild(chip);
+    }
+  }
+
+  // ---- message bubble ----
+  function buildBubble(m, inThread) {
     var mine = m.sender_subject_id === state.me;
     var el = document.createElement("div");
     el.className = "msg " + (mine ? "mine" : "theirs");
+    el.dataset.id = m.id;
     var who = document.createElement("div");
     who.className = "who";
-    who.textContent = mine ? "you" : shortId(m.sender_subject_id);
+    who.textContent = nameFor(m.sender_subject_id);
     el.appendChild(who);
-    var body = document.createElement("div");
-    body.textContent = m.body;
-    el.appendChild(body);
+    var bodyDiv = document.createElement("div");
+    bodyDiv.className = "body";
+    var marker = parseAtt(m.body || "");
+    var isAtt = !!m.attachment_id || !!marker;
+    if (m.attachment_id) { renderAttById(bodyDiv, m.attachment_id); }
+    else if (marker) { renderAttInto(bodyDiv, marker); }
+    else { bodyDiv.textContent = m.body; el.dataset.body = m.body; }
+    el.appendChild(bodyDiv);
     var meta = document.createElement("div");
     meta.className = "meta";
     meta.textContent = fmtTime(m.created_at) + (m.edited_at ? " (edited)" : "");
     el.appendChild(meta);
-    $("log").appendChild(el);
+    // actions
+    var actions = document.createElement("div");
+    actions.className = "actions";
+    if (!inThread) {
+      var reply = document.createElement("button");
+      reply.textContent = "Reply";
+      reply.onclick = function () { openThread(m); };
+      actions.appendChild(reply);
+    }
+    if (mine && !isAtt) {
+      var edit = document.createElement("button");
+      edit.textContent = "Edit";
+      edit.onclick = function () { startEdit(el, m); };
+      actions.appendChild(edit);
+    }
+    if (mine) {
+      var del = document.createElement("button");
+      del.textContent = "Delete";
+      del.onclick = function () { deleteMessage(el, m); };
+      actions.appendChild(del);
+    }
+    el.appendChild(actions);
+    return el;
+  }
+
+  function renderMain(m) {
+    if (!m || !m.id || state.seen[m.id]) return;
+    state.seen[m.id] = true;
+    $("log").appendChild(buildBubble(m, false));
     $("log").scrollTop = $("log").scrollHeight;
   }
-
-  async function checkHealth() {
-    try {
-      var res = await fetch(baseUrl() + "/healthz");
-      $("health-dot").className = res.ok ? "dot ok" : "dot bad";
-      $("health-text").textContent = res.ok ? "service reachable" : "service error";
-    } catch (e) {
-      $("health-dot").className = "dot bad";
-      $("health-text").textContent = "service unreachable";
-    }
+  function renderThreadMsg(m) {
+    if (!m || !m.id || state.threadSeen[m.id]) return;
+    state.threadSeen[m.id] = true;
+    $("thread-list").appendChild(buildBubble(m, true));
+    $("thread-list").scrollTop = $("thread-list").scrollHeight;
   }
 
+  // Apply a live edit/delete (from the ws) to any bubble with this id, in the main list or the thread.
+  function bubblesById(id) { return document.querySelectorAll('.msg[data-id="' + id + '"]'); }
+  function updateBubble(id, body, editedAt) {
+    bubblesById(id).forEach(function (el) {
+      var bodyDiv = el.querySelector(".body");
+      if (bodyDiv && el.dataset.body !== undefined) { bodyDiv.textContent = body; el.dataset.body = body; }
+      var meta = el.querySelector(".meta");
+      if (meta && meta.textContent.indexOf("(edited)") === -1) { meta.textContent = meta.textContent + " (edited)"; }
+    });
+  }
+  function removeBubble(id) { bubblesById(id).forEach(function (el) { el.remove(); }); }
+
+  // ---- edit / delete ----
+  function startEdit(el, m) {
+    var bodyDiv = el.querySelector(".body");
+    var current = el.dataset.body || "";
+    var wrap = document.createElement("div");
+    wrap.className = "edit-area";
+    var ta = document.createElement("textarea");
+    ta.value = current;
+    var row = document.createElement("div");
+    row.className = "row";
+    var save = document.createElement("button");
+    save.textContent = "Save";
+    var cancel = document.createElement("button");
+    cancel.textContent = "Cancel";
+    row.appendChild(save); row.appendChild(cancel);
+    wrap.appendChild(ta); wrap.appendChild(row);
+    bodyDiv.replaceWith(wrap);
+    ta.focus();
+    cancel.onclick = function () { var d = document.createElement("div"); d.className = "body"; d.textContent = current; wrap.replaceWith(d); };
+    save.onclick = async function () {
+      var next = ta.value;
+      try {
+        var updated = await api("PATCH", "/v1/chat/channels/" + m.channel_id + "/messages/" + m.id, { body: next });
+        var d = document.createElement("div"); d.className = "body"; d.textContent = updated.body;
+        wrap.replaceWith(d);
+        el.dataset.body = updated.body;
+        var meta = el.querySelector(".meta");
+        if (meta) meta.textContent = fmtTime(updated.created_at) + " (edited)";
+      } catch (e) { alert("edit failed: " + e.message); }
+    };
+  }
+  async function deleteMessage(el, m) {
+    if (!confirm("Delete this message?")) return;
+    try { await api("DELETE", "/v1/chat/channels/" + m.channel_id + "/messages/" + m.id); el.remove(); }
+    catch (e) { alert("delete failed: " + e.message); }
+  }
+
+  // ---- threads ----
+  async function openThread(root) {
+    state.openThread = root.id;
+    state.threadSeen = {};
+    $("thread").classList.add("open");
+    $("thread-list").innerHTML = "";
+    var rootInfo = document.createElement("div");
+    rootInfo.className = "troot";
+    rootInfo.textContent = "Replying to " + (parseAtt(root.body || "") ? "an attachment" : (root.body || "")).slice(0, 140);
+    $("thread-list").appendChild(rootInfo);
+    try {
+      var replies = await api("GET", "/v1/chat/channels/" + root.channel_id + "/messages?parent_id=" + root.id);
+      (replies || []).forEach(renderThreadMsg);
+    } catch (e) { /* best-effort */ }
+    $("thread-input").focus();
+  }
+  $("thread-close").onclick = function () { $("thread").classList.remove("open"); state.openThread = null; };
+  $("thread-send").onclick = async function () {
+    var text = $("thread-input").value.trim();
+    if (!text || !state.openThread || !state.channel) return;
+    $("thread-input").value = "";
+    try { await api("POST", "/v1/chat/channels/" + state.channel.id + "/messages", { body: text, parent_id: state.openThread }); }
+    catch (e) { alert("reply failed: " + e.message); }
+  };
+
+  // ---- health / channels ----
+  async function checkHealth() {
+    try { var res = await fetch(baseUrl() + "/healthz"); $("health-dot").className = res.ok ? "dot ok" : "dot bad"; $("health-text").textContent = res.ok ? "service reachable" : "service error"; }
+    catch (e) { $("health-dot").className = "dot bad"; $("health-text").textContent = "service unreachable"; }
+  }
   async function loadChannels() {
     var list;
-    try { list = await api("GET", "/v1/chat/channels"); }
-    catch (e) { sysMsg("could not load channels: " + e.message); return; }
-    var box = $("channels");
-    box.innerHTML = "";
+    try { list = await api("GET", "/v1/chat/channels"); } catch (e) { sysMsg("could not load channels: " + e.message); return; }
+    var box = $("channels"); box.innerHTML = "";
     (list || []).forEach(function (c) {
       var row = document.createElement("div");
       row.className = "channel" + (state.channel && state.channel.id === c.id ? " active" : "");
-      var name = document.createElement("span");
-      name.className = "name";
-      name.textContent = c.name || shortId(c.id);
-      var badge = document.createElement("span");
-      badge.className = "badge zero";
-      badge.id = "badge-" + c.id;
-      badge.textContent = "0";
-      row.appendChild(name);
-      row.appendChild(badge);
+      var kind = document.createElement("span"); kind.className = "kind"; kind.textContent = c.kind === "direct" ? "@" : "#";
+      var name = document.createElement("span"); name.className = "name"; name.textContent = channelLabel(c);
+      var badge = document.createElement("span"); badge.className = "badge zero"; badge.id = "badge-" + c.id; badge.textContent = "0";
+      row.appendChild(kind); row.appendChild(name); row.appendChild(badge);
       row.onclick = function () { openChannel(c); };
       box.appendChild(row);
       refreshUnread(c.id);
     });
   }
-
   async function refreshUnread(id) {
-    try {
-      var u = await api("GET", "/v1/chat/channels/" + id + "/unread");
-      var badge = $("badge-" + id);
-      if (!badge) return;
-      var n = u && typeof u.unread === "number" ? u.unread : 0;
-      badge.textContent = String(n);
-      badge.className = "badge" + (n ? "" : " zero");
-    } catch (e) { /* best-effort */ }
+    try { var u = await api("GET", "/v1/chat/channels/" + id + "/unread"); var b = $("badge-" + id); if (!b) return; var n = u && typeof u.unread === "number" ? u.unread : 0; b.textContent = String(n); b.className = "badge" + (n ? "" : " zero"); }
+    catch (e) {}
   }
-
   async function openChannel(c) {
-    state.channel = c;
-    state.seen = {};
-    $("chan-title").textContent = c.name || shortId(c.id);
+    state.channel = c; state.seen = {};
+    $("thread").classList.remove("open"); state.openThread = null;
+    $("chan-title").textContent = channelLabel(c);
     $("send").disabled = false;
     $("log").innerHTML = "";
-    // reflect active state in the sidebar
-    Array.prototype.forEach.call(document.querySelectorAll(".channel"), function (el) { el.classList.remove("active"); });
     loadChannels();
     var msgs;
-    try { msgs = await api("GET", "/v1/chat/channels/" + c.id + "/messages"); }
-    catch (e) { sysMsg("could not load messages: " + e.message); return; }
-    (msgs || []).forEach(renderMessage);
+    try { msgs = await api("GET", "/v1/chat/channels/" + c.id + "/messages"); } catch (e) { sysMsg("could not load messages: " + e.message); return; }
+    (msgs || []).forEach(renderMain);
     if (msgs && msgs.length) { markRead(c.id, msgs[msgs.length - 1].id); }
     loadPresence();
     connectWs();
   }
-
   async function markRead(channelId, messageId) {
-    try { await api("POST", "/v1/chat/channels/" + channelId + "/read", { message_id: messageId }); refreshUnread(channelId); }
-    catch (e) { /* best-effort */ }
+    try { await api("POST", "/v1/chat/channels/" + channelId + "/read", { message_id: messageId }); refreshUnread(channelId); } catch (e) {}
   }
 
+  // ---- presence ----
+  var presenceSet = {};
   async function loadPresence() {
     if (!state.channel) return;
-    try {
-      var on = await api("GET", "/v1/chat/channels/" + state.channel.id + "/presence");
-      renderPresence(on || []);
-    } catch (e) { /* best-effort */ }
+    try { var on = await api("GET", "/v1/chat/channels/" + state.channel.id + "/presence"); renderPresence(on || []); } catch (e) {}
   }
-  var presenceSet = {};
-  function renderPresence(list) {
-    presenceSet = {};
-    list.forEach(function (u) { presenceSet[u] = true; });
-    paintPresence();
-  }
-  function paintPresence() {
-    var ids = Object.keys(presenceSet);
-    $("presence").textContent = ids.length ? ("online: " + ids.map(shortId).join(", ")) : "no one else here";
-  }
+  function renderPresence(list) { presenceSet = {}; list.forEach(function (u) { presenceSet[u] = true; }); paintPresence(); }
+  function paintPresence() { var ids = Object.keys(presenceSet); $("presence").textContent = ids.length ? ("online: " + ids.map(nameFor).join(", ")) : "no one else here"; }
 
-  function wsUrl(channelId) {
-    var b = baseUrl().replace(/^http/, "ws");
-    return b + "/v1/chat/ws?channel=" + encodeURIComponent(channelId) + "&access_token=" + encodeURIComponent(state.token);
-  }
-
+  // ---- websocket ----
+  function wsUrl(channelId) { return baseUrl().replace(/^http/, "ws") + "/v1/chat/ws?channel=" + encodeURIComponent(channelId) + "&access_token=" + encodeURIComponent(state.token); }
   function connectWs() {
     if (state.ws) { try { state.ws.close(); } catch (e) {} state.ws = null; }
     if (!state.channel) return;
@@ -302,95 +526,175 @@
     var ws = new WebSocket(wsUrl(ch));
     state.ws = ws;
     ws.onmessage = function (ev) {
-      var data;
-      try { data = JSON.parse(ev.data); } catch (e) { return; }
+      var data; try { data = JSON.parse(ev.data); } catch (e) { return; }
       if (!state.channel || state.channel.id !== ch) return;
       if (data.type === "message") {
-        renderMessage(data);
-        markRead(ch, data.id);
+        if (data.parent_id) { if (state.openThread && data.parent_id === state.openThread) renderThreadMsg(data); }
+        else { renderMain(data); markRead(ch, data.id); }
       } else if (data.type === "presence") {
         if (data.status === "online") presenceSet[data.subject] = true; else delete presenceSet[data.subject];
         paintPresence();
-      } else if (data.type === "typing") {
-        showTyping(data.subject);
-      }
+      } else if (data.type === "typing") { showTyping(data.subject); }
+      else if (data.type === "message_edited") { updateBubble(data.id, data.body, data.edited_at); }
+      else if (data.type === "message_deleted") { removeBubble(data.id); }
     };
-    ws.onclose = function () {
-      if (state.ws === ws && state.channel && state.channel.id === ch) {
-        setTimeout(function () { if (state.channel && state.channel.id === ch) connectWs(); }, 1500);
-      }
-    };
+    ws.onclose = function () { if (state.ws === ws && state.channel && state.channel.id === ch) setTimeout(function () { if (state.channel && state.channel.id === ch) connectWs(); }, 1500); };
   }
-
   var typingClear = null;
-  function showTyping(subject) {
-    $("typing").textContent = shortId(subject) + " is typing...";
-    if (typingClear) clearTimeout(typingClear);
-    typingClear = setTimeout(function () { $("typing").textContent = ""; }, 2500);
-  }
+  function showTyping(subject) { $("typing").textContent = shortId(subject) + " is typing..."; if (typingClear) clearTimeout(typingClear); typingClear = setTimeout(function () { $("typing").textContent = ""; }, 2500); }
+  function sendTypingPing() { var now = Date.now(); if (state.ws && state.ws.readyState === 1 && now - state.typingSentAt > 1500) { state.typingSentAt = now; try { state.ws.send(JSON.stringify({ type: "typing" })); } catch (e) {} } }
 
-  function sendTypingPing() {
-    var now = Date.now();
-    if (state.ws && state.ws.readyState === 1 && now - state.typingSentAt > 1500) {
-      state.typingSentAt = now;
-      try { state.ws.send(JSON.stringify({ type: "typing" })); } catch (e) {}
-    }
-  }
-
+  // ---- send / attach / search ----
   async function sendMessage(text) {
     if (!state.channel) return;
     $("send").disabled = true;
+    try { var m = await api("POST", "/v1/chat/channels/" + state.channel.id + "/messages", { body: text }); renderMain(m); }
+    catch (e) { sysMsg("send failed: " + e.message); }
+    finally { $("send").disabled = false; $("input").focus(); }
+  }
+  function fileToBase64(file) {
+    return new Promise(function (resolve, reject) {
+      var r = new FileReader();
+      r.onload = function () { var s = r.result; resolve(String(s).split(",")[1]); };
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+  }
+  async function uploadAndPost(file) {
+    if (!state.channel) return;
     try {
-      var m = await api("POST", "/v1/chat/channels/" + state.channel.id + "/messages", { body: text });
-      renderMessage(m); // ws will echo too; renderMessage dedupes by id
-    } catch (e) {
-      sysMsg("send failed: " + e.message);
-    } finally {
-      $("send").disabled = false;
-      $("input").focus();
-    }
+      var b64 = await fileToBase64(file);
+      var att = await api("POST", "/v1/chat/channels/" + state.channel.id + "/attachments", { filename: file.name, content_type: file.type || "application/octet-stream", data_base64: b64 });
+      await api("POST", "/v1/chat/channels/" + state.channel.id + "/messages", { body: "", attachment_id: att.id });
+    } catch (e) { sysMsg("attach failed: " + e.message); }
+  }
+  async function runSearch(q) {
+    if (!state.channel || !q) return;
+    try {
+      var rows = await api("GET", "/v1/chat/channels/" + state.channel.id + "/search?q=" + encodeURIComponent(q));
+      $("log").innerHTML = "";
+      state.seen = {};
+      var head = document.createElement("div"); head.className = "msg system";
+      head.textContent = (rows && rows.length ? rows.length : "no") + " result(s) for \"" + q + "\" - click Clear to return";
+      $("log").appendChild(head);
+      (rows || []).forEach(renderMain);
+    } catch (e) { sysMsg("search failed: " + e.message); }
   }
 
-  // wiring
+  // ---- wiring ----
   $("cfg-connect").onclick = function () {
-    state.base = baseUrl();
-    state.token = $("cfg-token").value.trim();
-    state.me = decodeSub(state.token);
+    state.base = baseUrl(); state.token = $("cfg-token").value.trim(); state.me = decodeSub(state.token);
     $("cfg-me").textContent = state.me ? ("you = " + shortId(state.me)) : "invalid token";
     try { localStorage.setItem("cyberos_chat_base", state.base); localStorage.setItem("cyberos_chat_token", state.token); } catch (e) {}
     if (!state.me) return;
     loadChannels();
+    loadDirectory();
   };
-  $("newchan-btn").onclick = async function () {
-    var name = $("newchan-name").value.trim();
-    if (!name || !state.token) return;
-    try { var c = await api("POST", "/v1/chat/channels", { name: name }); $("newchan-name").value = ""; await loadChannels(); openChannel(c); }
-    catch (e) { sysMsg("create channel failed: " + e.message); }
+  // ---- people picker (New DM / New group / Add people) ----
+  function openPicker(mode) {
+    if (!state.token) return;
+    if (mode === "add" && !state.channel) { sysMsg("open a channel first to add people"); return; }
+    state.picker = { mode: mode, sel: {} };
+    $("picker-title").textContent = mode === "dm" ? "New direct message" : mode === "group" ? "New group" : "Add people";
+    $("picker-gname").style.display = mode === "group" ? "block" : "none";
+    $("picker-gname").value = "";
+    $("picker-go").style.display = mode === "dm" ? "none" : "inline-block";
+    $("picker-go").textContent = mode === "add" ? "Add" : "Create";
+    $("picker-q").value = "";
+    $("picker-bg").classList.add("open");
+    var go = function () { renderPeople(""); $("picker-q").focus(); };
+    if (state.dirList.length) go(); else loadDirectory().then(go);
+  }
+  function closePicker() { $("picker-bg").classList.remove("open"); state.picker = { mode: null, sel: {} }; }
+  function renderPeople(filter) {
+    var box = $("picker-people"); box.innerHTML = "";
+    var f = (filter || "").toLowerCase();
+    var list = state.dirList.filter(function (p) {
+      if (p.subject_id === state.me) return false;
+      if (!f) return true;
+      return ((p.display_name || "") + " " + (p.handle || "") + " " + (p.email || "")).toLowerCase().indexOf(f) !== -1;
+    });
+    if (!list.length) {
+      var e = document.createElement("div"); e.className = "empty";
+      e.textContent = state.dirList.length ? "no teammates match" : "directory unavailable (sign in via the dashboard)";
+      box.appendChild(e); return;
+    }
+    list.forEach(function (p) {
+      var row = document.createElement("div");
+      row.className = "person" + (state.picker.sel[p.subject_id] ? " sel" : "");
+      var nm = document.createElement("span"); nm.className = "pname"; nm.textContent = p.display_name || p.handle || shortId(p.subject_id);
+      var sub = document.createElement("span"); sub.className = "psub"; sub.textContent = p.email || p.handle || "";
+      row.appendChild(nm); row.appendChild(sub);
+      row.onclick = function () {
+        if (state.picker.mode === "dm") { closePicker(); createDm(p.subject_id); return; }
+        if (state.picker.sel[p.subject_id]) delete state.picker.sel[p.subject_id]; else state.picker.sel[p.subject_id] = true;
+        row.className = "person" + (state.picker.sel[p.subject_id] ? " sel" : "");
+      };
+      box.appendChild(row);
+    });
+  }
+  async function createDm(subjectId) {
+    try { var c = await api("POST", "/v1/chat/dms", { subject_id: subjectId }); await loadChannels(); openChannel(c); }
+    catch (e) { sysMsg("could not start DM: " + e.message); }
+  }
+  async function createGroup(name, ids) {
+    try {
+      var c = await api("POST", "/v1/chat/channels", { name: name });
+      for (var i = 0; i < ids.length; i++) { try { await api("POST", "/v1/chat/channels/" + c.id + "/members", { subject_id: ids[i], role: "member" }); } catch (e) {} }
+      await loadChannels(); openChannel(c);
+    } catch (e) { sysMsg("create group failed: " + e.message); }
+  }
+  async function addPeople(ids) {
+    if (!state.channel) return;
+    for (var i = 0; i < ids.length; i++) {
+      try { await api("POST", "/v1/chat/channels/" + state.channel.id + "/members", { subject_id: ids[i], role: "member" }); }
+      catch (e) { sysMsg("add failed for " + nameFor(ids[i]) + ": " + e.message); }
+    }
+    sysMsg("added " + ids.length + " to " + channelLabel(state.channel));
+    loadPresence();
+  }
+  $("new-dm-btn").onclick = function () { openPicker("dm"); };
+  $("new-group-btn").onclick = function () { openPicker("group"); };
+  $("addpeople-btn").onclick = function () { openPicker("add"); };
+  $("picker-cancel").onclick = closePicker;
+  $("picker-bg").addEventListener("click", function (e) { if (e.target === $("picker-bg")) closePicker(); });
+  $("picker-q").addEventListener("input", function () { renderPeople(this.value); });
+  $("picker-go").onclick = function () {
+    var ids = Object.keys(state.picker.sel);
+    var mode = state.picker.mode;
+    if (mode === "group") {
+      var nm = $("picker-gname").value.trim();
+      if (!nm) { $("picker-gname").focus(); return; }
+      if (!ids.length) { sysMsg("pick at least one teammate"); return; }
+      closePicker(); createGroup(nm, ids);
+    } else if (mode === "add") {
+      if (!ids.length) { closePicker(); return; }
+      closePicker(); addPeople(ids);
+    }
   };
-  $("addmember-btn").onclick = async function () {
-    var sub = $("addmember-id").value.trim();
-    if (!sub || !state.channel) return;
-    try { await api("POST", "/v1/chat/channels/" + state.channel.id + "/members", { subject_id: sub, role: "member" }); $("addmember-id").value = ""; sysMsg("added member " + shortId(sub)); }
-    catch (e) { sysMsg("add member failed: " + e.message); }
+  $("search-btn").onclick = function () {
+    var q = $("search-q").value.trim();
+    if (q) runSearch(q); else if (state.channel) openChannel(state.channel);
   };
-  $("chat-form").addEventListener("submit", function (e) {
-    e.preventDefault();
-    var text = $("input").value.trim();
-    if (!text) return;
-    $("input").value = "";
-    sendMessage(text);
-  });
-  $("input").addEventListener("keydown", function (e) {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("chat-form").requestSubmit(); }
-    else { sendTypingPing(); }
-  });
+  $("search-q").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); $("search-btn").click(); } });
+  $("attach-btn").onclick = function () { if (state.channel) $("file-input").click(); };
+  $("file-input").addEventListener("change", function () { var f = this.files && this.files[0]; if (f) uploadAndPost(f); this.value = ""; });
+  $("chat-form").addEventListener("submit", function (e) { e.preventDefault(); var text = $("input").value.trim(); if (!text) return; $("input").value = ""; sendMessage(text); });
+  $("input").addEventListener("keydown", function (e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("chat-form").requestSubmit(); } else { sendTypingPing(); } });
+  $("thread-input").addEventListener("keydown", function (e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("thread-send").click(); } });
 
-  // restore prior session
   try {
     var b = localStorage.getItem("cyberos_chat_base"); if (b) $("cfg-base").value = b;
     var t = localStorage.getItem("cyberos_chat_token"); if (t) $("cfg-token").value = t;
   } catch (e) {}
-  // arriving from the dashboard with a stored token: connect automatically
+  // Single-origin production default: if served from a real host and the base is still the localhost
+  // default, point it at this origin (Caddy proxies /v1/chat on the same origin as the console).
+  (function originDefault() {
+    var h = location.hostname;
+    if (h && h !== "localhost" && h !== "127.0.0.1" && ($("cfg-base").value || "").indexOf("127.0.0.1") !== -1) {
+      $("cfg-base").value = location.origin;
+    }
+  })();
   if ($("cfg-token").value.trim()) { $("cfg-connect").click(); }
 
   checkHealth();

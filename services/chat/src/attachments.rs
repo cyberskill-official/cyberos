@@ -158,3 +158,55 @@ pub async fn download(
         .body(Body::from(data))
         .map_err(crate::internal)
 }
+
+#[derive(Debug, Serialize)]
+pub struct AttachmentMeta {
+    pub id: Uuid,
+    pub filename: String,
+    pub content_type: String,
+    pub size_bytes: i64,
+}
+
+/// GET /v1/chat/attachments/{id}/meta - filename + content type (member-only), so a client can render a
+/// message's linked attachment without downloading the bytes.
+pub async fn meta(
+    State(st): State<AppState>,
+    Path(att): Path<Uuid>,
+    headers: HeaderMap,
+) -> Result<Json<AttachmentMeta>, (StatusCode, String)> {
+    let claims = auth::authenticate(&st, &headers)?;
+    let tenant = claims
+        .tenant_uuid()
+        .map_err(|e| (StatusCode::UNAUTHORIZED, e.to_string()))?;
+    let subject = claims
+        .subject_id()
+        .map_err(|e| (StatusCode::UNAUTHORIZED, e.to_string()))?;
+    let mut tx = db::tenant_tx(&st.pool, &tenant)
+        .await
+        .map_err(crate::internal)?;
+    let row: Option<(Uuid, String, String, i64)> = sqlx::query_as(
+        "SELECT channel_id, filename, content_type, size_bytes FROM chat_attachments WHERE id = $1",
+    )
+    .bind(att)
+    .fetch_optional(&mut *tx)
+    .await
+    .map_err(crate::internal)?;
+    let (channel, filename, content_type, size_bytes) = match row {
+        Some(r) => r,
+        None => return Err((StatusCode::NOT_FOUND, "attachment not found".to_string())),
+    };
+    if db::role_in_channel(&mut tx, channel, subject)
+        .await
+        .map_err(crate::internal)?
+        .is_none()
+    {
+        return Err((StatusCode::FORBIDDEN, "not a channel member".to_string()));
+    }
+    let _ = tx.commit().await;
+    Ok(Json(AttachmentMeta {
+        id: att,
+        filename,
+        content_type,
+        size_bytes,
+    }))
+}

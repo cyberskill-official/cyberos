@@ -47,6 +47,10 @@ pub struct CreateIdpConfigBody {
     pub auto_provision: Option<bool>,
     #[serde(default)]
     pub default_roles: Option<Vec<String>>,
+    /// P0 - when non-empty, the callback only admits logins whose verified email
+    /// domain is in this list (e.g. ["cyberskill.world"]). Empty = no restriction.
+    #[serde(default)]
+    pub allowed_domains: Option<Vec<String>>,
 }
 
 pub async fn create_idp_config(
@@ -62,6 +66,16 @@ pub async fn create_idp_config(
     let default_roles = body
         .default_roles
         .unwrap_or_else(|| vec!["tenant-member".into()]);
+    // Normalise allowed domains to bare lowercase hostnames ("@CyberSkill.world"
+    // and "cyberskill.world" both become "cyberskill.world") so the callback can
+    // compare them directly against the email's domain part.
+    let allowed_domains = body
+        .allowed_domains
+        .unwrap_or_default()
+        .into_iter()
+        .map(|d| d.trim().trim_start_matches('@').to_ascii_lowercase())
+        .filter(|d| !d.is_empty())
+        .collect::<Vec<String>>();
 
     let mut tx = state.pg.begin().await.map_err(internal)?;
     sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
@@ -73,8 +87,8 @@ pub async fn create_idp_config(
     let row: (Uuid,) = sqlx::query_as(
         "INSERT INTO oidc_idp_configs
               (tenant_id, name, discovery_url, client_id, client_secret,
-               redirect_uri, scopes, auto_provision, default_roles)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+               redirect_uri, scopes, auto_provision, default_roles, allowed_domains)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
          ON CONFLICT (tenant_id, name) DO UPDATE
             SET discovery_url = EXCLUDED.discovery_url,
                 client_id     = EXCLUDED.client_id,
@@ -83,6 +97,7 @@ pub async fn create_idp_config(
                 scopes        = EXCLUDED.scopes,
                 auto_provision = EXCLUDED.auto_provision,
                 default_roles = EXCLUDED.default_roles,
+                allowed_domains = EXCLUDED.allowed_domains,
                 updated_at    = NOW()
        RETURNING id",
     )
@@ -95,6 +110,7 @@ pub async fn create_idp_config(
     .bind(&scopes)
     .bind(auto)
     .bind(&default_roles)
+    .bind(&allowed_domains)
     .fetch_one(&mut *tx)
     .await
     .map_err(internal)?;
@@ -106,6 +122,7 @@ pub async fn create_idp_config(
             "id": row.0,
             "tenant_id": tenant_id,
             "name": body.name,
+            "allowed_domains": allowed_domains,
         })),
     ))
 }
@@ -117,6 +134,10 @@ pub struct InitiateQuery {
     /// Where the auth service redirects after success. Must be allow-listed
     /// against the tenant's portal config (slice 2; today accepts any HTTPS).
     pub redirect: Option<String>,
+    /// P0 console hand-back - after the callback mints a CyberOS token, the
+    /// browser is 302'd here with the token in the URL fragment so a single-page
+    /// app can capture it. Allow-listed (AUTH_OIDC_RETURN_ALLOW; localhost in dev).
+    pub return_to: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -222,6 +243,7 @@ pub async fn initiate(
             code_verifier,
             issued_at_secs: now_secs(),
             op_resume: None,
+            return_to: q.return_to.clone(),
         },
     );
 
@@ -329,6 +351,7 @@ pub(crate) async fn begin_idp_flow(
             code_verifier,
             issued_at_secs: now_secs(),
             op_resume,
+            return_to: None,
         },
     );
 
@@ -456,6 +479,27 @@ pub async fn callback(
         .and_then(|v| v.as_str())
         .map(String::from);
 
+    // P0 Workspace-domain gate (FR-AUTH-104). When the IdP restricts domains, a
+    // verified email is mandatory and its domain must be on the allow-list. This
+    // is what keeps Google sign-in scoped to @cyberskill.world: a personal Gmail
+    // is rejected here before any subject is touched.
+    {
+        // Google returns email_verified as a JSON bool; some IdPs use the string
+        // "true". Accept both, default to not-verified.
+        let verified = id_claims
+            .get("email_verified")
+            .map(|v| v.as_bool().unwrap_or(v.as_str() == Some("true")))
+            .unwrap_or(false);
+        if let Err(reason) =
+            email_domain_admitted(idp_email.as_deref(), verified, &idp.allowed_domains)
+        {
+            return Err((
+                StatusCode::FORBIDDEN,
+                Json(json!({ "error": reason, "allowed_domains": idp.allowed_domains })),
+            ));
+        }
+    }
+
     // Look up or JIT-create the subject.
     let subject_id = resolve_subject(&state, &idp, &idp_sub, idp_email.as_deref()).await?;
 
@@ -548,6 +592,36 @@ pub async fn callback(
         return Ok(resp);
     }
 
+    // P0 console hand-back. The browser reached this callback via a top-level
+    // redirect from Google, so it cannot read a JSON body. When initiate carried
+    // a return_to, 302 back to it with the token in the URL *fragment* - never the
+    // query string, so the token is not logged server-side or leaked in a Referer
+    // header - and let the single-page app capture it. The return_to is
+    // allow-listed to stop an open redirect from handing the token to an
+    // attacker-chosen origin.
+    if let Some(return_to) = pending.return_to.as_deref() {
+        if !return_to_allowed(return_to) {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                Json(json!({
+                    "error": "return_to_not_allowed",
+                    "detail": "return_to is not on the allow-list (set AUTH_OIDC_RETURN_ALLOW)"
+                })),
+            ));
+        }
+        let challenge = matches!(outcome, Some(crate::travel::TravelOutcome::Challenge { .. }));
+        let sep = if return_to.contains('#') { '&' } else { '#' };
+        let frag = format!(
+            "{sep}access_token={at}&refresh_token={rt}&token_type={tt}&expires_in={ei}{ch}",
+            at = urlencode(&tokens.access_token),
+            rt = urlencode(&tokens.refresh_token),
+            tt = urlencode(&tokens.token_type),
+            ei = tokens.expires_in,
+            ch = if challenge { "&needs_mfa_challenge=1" } else { "" },
+        );
+        return Ok(Redirect::to(&format!("{return_to}{frag}")).into_response());
+    }
+
     match outcome {
         Some(crate::travel::TravelOutcome::Challenge { kind, login_id, .. }) => Ok(Json(json!({
             "access_token": tokens.access_token,
@@ -582,6 +656,7 @@ struct LoadedIdp {
     client_secret: String,
     auto_provision: bool,
     default_roles: Vec<String>,
+    allowed_domains: Vec<String>,
 }
 
 async fn load_idp(state: &AppState, idp_id: Uuid) -> Result<LoadedIdp, (StatusCode, Json<Value>)> {
@@ -590,14 +665,16 @@ async fn load_idp(state: &AppState, idp_id: Uuid) -> Result<LoadedIdp, (StatusCo
         .execute(&mut *tx)
         .await
         .map_err(internal)?;
-    let row: Option<(Uuid, String, String, String, bool, Vec<String>)> = sqlx::query_as(
-        "SELECT tenant_id, discovery_url, client_id, client_secret, auto_provision, default_roles
-             FROM oidc_idp_configs WHERE id = $1",
-    )
-    .bind(idp_id)
-    .fetch_optional(&mut *tx)
-    .await
-    .map_err(internal)?;
+    let row: Option<(Uuid, String, String, String, bool, Vec<String>, Vec<String>)> =
+        sqlx::query_as(
+            "SELECT tenant_id, discovery_url, client_id, client_secret, auto_provision,
+                    default_roles, allowed_domains
+                 FROM oidc_idp_configs WHERE id = $1",
+        )
+        .bind(idp_id)
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(internal)?;
     tx.commit().await.map_err(internal)?;
     let r = row.ok_or_else(|| {
         (
@@ -612,6 +689,7 @@ async fn load_idp(state: &AppState, idp_id: Uuid) -> Result<LoadedIdp, (StatusCo
         client_secret: r.3,
         auto_provision: r.4,
         default_roles: r.5,
+        allowed_domains: r.6,
     })
 }
 
@@ -791,6 +869,50 @@ async fn resolve_subject(
     }
     tx.commit().await.map_err(internal)?;
 
+    // 1.5 Link to an existing subject by verified email (account unification).
+    // If a subject in this tenant already has this email - for example a teammate
+    // who first signed up with a password - attach the Google identity to THAT
+    // subject rather than creating a parallel account. After this, the password
+    // and Google both resolve to the one CyberOS account, which is what an
+    // operator expects when they sign a colleague in with Google for the first
+    // time. (Option<&str> is Copy, so idp_email is still usable below.)
+    if let Some(email) = idp_email {
+        let mut tx = state.pg.begin().await.map_err(internal)?;
+        sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
+            .bind(idp.tenant_id.to_string())
+            .execute(&mut *tx)
+            .await
+            .map_err(internal)?;
+        let by_email: Option<(Uuid,)> = sqlx::query_as(
+            "SELECT id FROM subjects
+              WHERE tenant_id = $1 AND lower(email) = lower($2) AND status = 'active'
+              LIMIT 1",
+        )
+        .bind(idp.tenant_id)
+        .bind(email)
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(internal)?;
+        if let Some((sid,)) = by_email {
+            sqlx::query(
+                "INSERT INTO oidc_subject_link (tenant_id, subject_id, idp_config_id, idp_sub, idp_email)
+                      VALUES ($1, $2, (SELECT id FROM oidc_idp_configs WHERE tenant_id=$1 AND discovery_url=$3 LIMIT 1), $4, $5)
+                 ON CONFLICT DO NOTHING",
+            )
+            .bind(idp.tenant_id)
+            .bind(sid)
+            .bind(&idp.discovery_url)
+            .bind(idp_sub)
+            .bind(email)
+            .execute(&mut *tx)
+            .await
+            .map_err(internal)?;
+            tx.commit().await.map_err(internal)?;
+            return Ok(sid);
+        }
+        tx.commit().await.map_err(internal)?;
+    }
+
     // 2. Auto-provision?
     if !idp.auto_provision {
         return Err((
@@ -943,6 +1065,58 @@ fn now_secs() -> u64 {
         .unwrap_or(0)
 }
 
+/// Allow-list check for the P0 console hand-back `return_to`. In production set
+/// `AUTH_OIDC_RETURN_ALLOW` to a comma-separated list of allowed URL prefixes
+/// (for example "https://os.cyberskill.world/"). When unset, only localhost /
+/// 127.0.0.1 URLs are allowed, so local dev works without opening a redirect in
+/// production. An unmatched return_to is rejected rather than followed.
+/// P0 Workspace-domain gate decision. Given the verified email (if any), whether the IdP marked it
+/// verified, and the IdP's allowed domains, return Ok to admit or Err(reason) to reject. An empty
+/// allow-list admits everyone (no domain restriction). Kept pure so the security decision is unit-tested
+/// without a live Google round-trip.
+fn email_domain_admitted(
+    email: Option<&str>,
+    email_verified: bool,
+    allowed: &[String],
+) -> Result<(), &'static str> {
+    if allowed.is_empty() {
+        return Ok(());
+    }
+    let email = email.ok_or("email_required")?;
+    if !email_verified {
+        return Err("email_not_verified");
+    }
+    let domain = email.rsplit('@').next().unwrap_or("").to_ascii_lowercase();
+    if allowed.iter().any(|d| d.eq_ignore_ascii_case(&domain)) {
+        Ok(())
+    } else {
+        Err("email_domain_not_allowed")
+    }
+}
+
+fn return_to_allowed(url: &str) -> bool {
+    return_to_allowed_with(url, std::env::var("AUTH_OIDC_RETURN_ALLOW").ok().as_deref())
+}
+
+/// Pure core of [`return_to_allowed`], separated so it can be unit-tested without
+/// touching process env. `allow` is the raw AUTH_OIDC_RETURN_ALLOW value (None or
+/// empty -> dev localhost-only).
+fn return_to_allowed_with(url: &str, allow: Option<&str>) -> bool {
+    match allow {
+        Some(list) if !list.trim().is_empty() => list
+            .split(',')
+            .map(|s| s.trim())
+            .filter(|s| !s.is_empty())
+            .any(|prefix| url.starts_with(prefix)),
+        _ => {
+            url.starts_with("http://localhost")
+                || url.starts_with("http://127.0.0.1")
+                || url.starts_with("https://localhost")
+                || url.starts_with("https://127.0.0.1")
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct PendingState {
     pub tenant_id: Uuid,
@@ -953,6 +1127,9 @@ pub struct PendingState {
     /// FR-AUTH-110 broker: when set, the callback mints an AUTH SSO session and
     /// 302s back to this `/v1/auth/op/authorize` URL instead of returning JSON.
     pub op_resume: Option<String>,
+    /// P0 console hand-back: when set (and `op_resume` is None), the callback
+    /// 302s here with the freshly minted token in the URL fragment.
+    pub return_to: Option<String>,
 }
 
 fn internal<E: std::fmt::Display>(e: E) -> (StatusCode, Json<Value>) {
@@ -1008,5 +1185,62 @@ mod tests {
     fn verify_id_token_rejects_malformed_token() {
         let jwks = Jwks { keys: vec![] };
         assert!(verify_id_token("not-a-jwt", &jwks, "iss", "client").is_err());
+    }
+
+    #[test]
+    fn return_to_dev_default_allows_localhost_only() {
+        // No allow-list configured -> only localhost / 127.0.0.1 hand-backs.
+        assert!(return_to_allowed_with("http://localhost:8090/app.html", None));
+        assert!(return_to_allowed_with("http://127.0.0.1:8090/app.html", Some("")));
+        assert!(!return_to_allowed_with(
+            "https://evil.example/steal",
+            None
+        ));
+    }
+
+    #[test]
+    fn return_to_uses_configured_prefixes() {
+        let allow = Some("https://os.cyberskill.world/, https://admin.cyberskill.world/");
+        assert!(return_to_allowed_with(
+            "https://os.cyberskill.world/app.html",
+            allow
+        ));
+        // A configured allow-list does NOT implicitly permit localhost.
+        assert!(!return_to_allowed_with("http://localhost:8090/app.html", allow));
+        // An attacker-chosen origin that merely contains the allowed host is rejected.
+        assert!(!return_to_allowed_with(
+            "https://evil.example/?x=https://os.cyberskill.world/",
+            allow
+        ));
+    }
+
+    #[test]
+    fn domain_gate_empty_allowlist_admits_everyone() {
+        // No restriction configured -> any verified or unverified email is admitted.
+        assert!(email_domain_admitted(Some("anyone@gmail.com"), true, &[]).is_ok());
+        assert!(email_domain_admitted(None, false, &[]).is_ok());
+    }
+
+    #[test]
+    fn domain_gate_restricts_to_workspace() {
+        let allowed = vec!["cyberskill.world".to_string()];
+        // A verified Workspace email is admitted (case-insensitive on the domain).
+        assert!(email_domain_admitted(Some("stephen@cyberskill.world"), true, &allowed).is_ok());
+        assert!(email_domain_admitted(Some("Stephen@CyberSkill.World"), true, &allowed).is_ok());
+        // A personal Gmail is rejected.
+        assert_eq!(
+            email_domain_admitted(Some("someone@gmail.com"), true, &allowed),
+            Err("email_domain_not_allowed")
+        );
+        // A Workspace email that the IdP did not verify is rejected.
+        assert_eq!(
+            email_domain_admitted(Some("stephen@cyberskill.world"), false, &allowed),
+            Err("email_not_verified")
+        );
+        // A restricted IdP with no email claim is rejected.
+        assert_eq!(
+            email_domain_admitted(None, true, &allowed),
+            Err("email_required")
+        );
     }
 }

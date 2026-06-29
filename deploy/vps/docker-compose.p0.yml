@@ -1,0 +1,98 @@
+# CyberOS P0 stack - the smallest deploy that lets a team log in with Google and do daily chat, DMs, and
+# file sharing on one origin. Three services: cyberos-auth, cyberos-chat (native Rust), and Caddy (TLS +
+# single-origin router serving the static console). The database is Supabase (managed Postgres) - auth
+# and chat connect to it over their AUTH_DATABASE_URL / CHAT_DATABASE_URL, so there is no Postgres
+# container here and nothing stateful to back up on the VPS.
+#
+#   cd deploy/vps && cp .env.p0.example .env.p0   # then edit .env.p0 on the host
+#   docker compose --env-file .env.p0 -f docker-compose.p0.yml up -d --build
+#
+# Build context for the Rust services is ../../services so the whole Cargo workspace is in scope. The
+# Google client id/secret are NOT here - they are stored in the IdP config row created via the admin API
+# (runbook Step 4), so secrets never live in this file. The Supabase password lives only in .env.p0
+# (gitignored), inside the two connection strings.
+
+name: ${COMPOSE_PROJECT_NAME:-cyberos-p0}
+
+networks:
+  cyberos:
+    driver: bridge
+
+volumes:
+  caddy-data:
+  caddy-config:
+
+services:
+  auth:
+    build:
+      context: ../../services
+      dockerfile: Dockerfile
+      args:
+        RUST_VERSION: ${CYBEROS_RUST_VERSION:-1.88.0}
+        PACKAGE: cyberos-auth
+        BIN: cyberos-auth
+    image: cyberos-auth:${CYBEROS_IMAGE_TAG:-local}
+    restart: unless-stopped
+    env_file: [.env.p0]
+    environment:
+      AUTH_LISTEN_ADDR: 0.0.0.0:7700
+      DATABASE_URL: ${AUTH_DATABASE_URL}
+      AUTH_JWT_ISSUER: ${CYBEROS_APP_URL}
+      # Allow the OIDC console hand-back to return the token to the product origin (oidc.rs return_to gate).
+      AUTH_OIDC_RETURN_ALLOW: ${CYBEROS_APP_URL}/
+      # AUTH_DEV_CORS intentionally unset - single origin needs no CORS.
+      # DATABASE_URL points at Supabase (set in .env.p0); no local DB dependency to wait on.
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:7700/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks: [cyberos]
+
+  chat:
+    build:
+      context: ../../services
+      dockerfile: Dockerfile
+      args:
+        RUST_VERSION: ${CYBEROS_RUST_VERSION:-1.88.0}
+        PACKAGE: cyberos-chat
+        BIN: cyberos-chat
+    image: cyberos-chat:${CYBEROS_IMAGE_TAG:-local}
+    restart: unless-stopped
+    env_file: [.env.p0]
+    environment:
+      CHAT_LISTEN_ADDR: 0.0.0.0:7720
+      DATABASE_URL: ${CHAT_DATABASE_URL}
+      # Chat verifies CyberOS tokens against auth's JWKS over the internal network (no public round trip).
+      CHAT_AUTH_JWKS_URL: http://auth:7700/.well-known/jwks.json
+      # Optional: point at the memory DB to write the hash-chained audit log; unset = chat logs events.
+      CHAT_AUDIT_DATABASE_URL: ${CHAT_AUDIT_DATABASE_URL:-}
+      # CHAT_DEV_CORS intentionally unset - single origin needs no CORS.
+      # DATABASE_URL points at Supabase (set in .env.p0).
+    depends_on:
+      auth:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:7720/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks: [cyberos]
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      CYBEROS_APP_DOMAIN: ${CYBEROS_APP_DOMAIN}
+    volumes:
+      - ./Caddyfile.p0:/etc/caddy/Caddyfile:ro
+      - ../../apps/console:/srv/console:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - auth
+      - chat
+    networks: [cyberos]

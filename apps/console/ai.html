@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CyberOS AI Ops</title>
+<!--
+  FR-APP-003 - CyberOS AI Ops panel.
+
+  A self-contained operator page that shows a tenant's resolved AI Gateway policy: the primary provider and
+  its alias-to-model routing, the spend cap and warn threshold, residency, ZDR, and the fallback chain. It
+  reads the gateway's own status endpoint (GET /v1/status, keyed by x-tenant-id) and adds no backend. The
+  values are the gateway's loaded config, not fabricated metrics.
+
+  Run: serve this folder and start the gateway with AI_GATEWAY_DEV_CORS=1 and AI_GATEWAY_CONFIG_DIR pointing
+  at config/tenants. In production Caddy serves the page and proxies the gateway under one origin.
+-->
+<style>
+  :root {
+    --cds-umber: #45210E; --cds-ochre: #F4BA17; --cds-umber-700: #5a2e16; --cds-umber-900: #2c1409;
+    --cds-ink: #f6ecdd; --cds-muted: #c9b79f; --cds-ok: #6fbf73; --cds-bad: #e1654f; --cds-radius: 10px;
+    --cds-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --cds-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { font-family: var(--cds-font); background: var(--cds-umber-900); color: var(--cds-ink); display: flex; flex-direction: column; }
+  header { background: var(--cds-umber); border-bottom: 2px solid var(--cds-ochre); padding: 14px 20px; display: flex; align-items: baseline; gap: 14px; }
+  header .wordmark { font-weight: 800; font-size: 20px; letter-spacing: 0.5px; }
+  header .wordmark .cyber { color: var(--cds-ink); }
+  header .wordmark .os { color: var(--cds-ochre); }
+  header .slogan { color: var(--cds-muted); font-size: 13px; font-style: italic; }
+  header .spacer { flex: 1; }
+  header .health { font-size: 12px; color: var(--cds-muted); display: flex; align-items: center; gap: 6px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--cds-muted); display: inline-block; }
+  .dot.ok { background: var(--cds-ok); } .dot.bad { background: var(--cds-bad); }
+
+  .config { background: var(--cds-umber-700); padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; border-bottom: 1px solid var(--cds-umber); }
+  .config label { font-size: 12px; color: var(--cds-muted); display: flex; flex-direction: column; gap: 3px; }
+  .config input { background: var(--cds-umber-900); border: 1px solid var(--cds-umber); color: var(--cds-ink); border-radius: 6px; padding: 6px 8px; font-size: 13px; min-width: 220px; }
+  .config button { background: var(--cds-ochre); color: var(--cds-umber-900); border: none; border-radius: 6px; padding: 8px 16px; font-weight: 700; font-size: 13px; cursor: pointer; }
+
+  main { flex: 1; overflow: auto; padding: 18px 20px; display: flex; flex-direction: column; gap: 16px; }
+  .summary { color: var(--cds-muted); font-size: 13px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .card { background: var(--cds-umber); border: 1px solid var(--cds-umber-700); border-radius: var(--cds-radius); padding: 16px; }
+  .card h3 { margin: 0 0 12px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--cds-muted); }
+  .kv { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--cds-umber-700); font-size: 13px; }
+  .kv:last-child { border-bottom: none; }
+  .kv .k { color: var(--cds-muted); }
+  .kv .v { font-weight: 600; text-align: right; }
+  .kv .v.mono { font-family: var(--cds-mono); font-size: 12px; color: var(--cds-ochre); }
+  .pill { display: inline-block; font-size: 11px; padding: 2px 9px; border-radius: 10px; background: var(--cds-ochre); color: var(--cds-umber-900); font-weight: 700; }
+  .pill.off { background: var(--cds-umber-700); color: var(--cds-muted); }
+  .alias { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--cds-umber-700); font-size: 13px; }
+  .alias:last-child { border-bottom: none; }
+  .alias .a { font-family: var(--cds-mono); color: var(--cds-ink); }
+  .alias .m { font-family: var(--cds-mono); font-size: 12px; color: var(--cds-ochre); text-align: right; word-break: break-all; }
+  .err { color: var(--cds-bad); }
+</style>
+</head>
+<body>
+  <header>
+    <span class="wordmark"><span class="cyber">Cyber</span><span class="os">OS</span></span>
+    <span class="slogan">Turn Your Will Into Real</span>
+    <a href="app.html" style="color:var(--cds-ochre);text-decoration:none;font-size:13px;">&larr; Dashboard</a>
+    <span class="spacer"></span>
+    <span class="health"><span id="health-dot" class="dot"></span><span id="health-text">checking gateway...</span></span>
+  </header>
+
+  <div class="config">
+    <label>AI gateway URL<input id="cfg-gw" value="http://127.0.0.1:8080" spellcheck="false" /></label>
+    <label>Tenant<input id="cfg-tenant" value="org:cyberskill" spellcheck="false" /></label>
+    <button id="cfg-load" type="button">Load policy</button>
+  </div>
+
+  <main>
+    <div class="summary" id="summary">Connect to the gateway to load the tenant's AI policy.</div>
+    <div class="cards" id="cards"></div>
+  </main>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  function gwUrl() { return $("cfg-gw").value.replace(/\/+$/, ""); }
+  function tenant() { return $("cfg-tenant").value.trim(); }
+
+  async function checkHealth() {
+    try { var res = await fetch(gwUrl() + "/healthz"); $("health-dot").className = res.ok ? "dot ok" : "dot bad"; $("health-text").textContent = res.ok ? "gateway reachable" : "gateway error"; }
+    catch (e) { $("health-dot").className = "dot bad"; $("health-text").textContent = "gateway unreachable"; }
+  }
+
+  function kv(k, v, mono) { return '<div class="kv"><span class="k">' + k + '</span><span class="v' + (mono ? ' mono' : '') + '">' + v + '</span></div>'; }
+  function pill(on, label) { return '<span class="pill' + (on ? '' : ' off') + '">' + label + '</span>'; }
+
+  function render(policy) {
+    var p = policy.ai_policy || {};
+    var prov = p.primary_provider || {};
+    var aliases = prov.model_alias_map || {};
+    var cards = $("cards");
+    cards.innerHTML = "";
+
+    // Provider + routing
+    var aliasRows = Object.keys(aliases).map(function (a) {
+      return '<div class="alias"><span class="a">' + a + '</span><span class="m">' + aliases[a] + '</span></div>';
+    }).join("") || '<div class="kv"><span class="k">no aliases configured</span><span class="v"></span></div>';
+    cards.insertAdjacentHTML("beforeend",
+      '<div class="card"><h3>Primary provider & routing</h3>' +
+      kv("Provider", '<span class="pill">' + (prov.kind || "?") + '</span>', false) +
+      '<div style="margin-top:10px">' + aliasRows + '</div></div>');
+
+    // Spend & guardrails
+    var warn = (typeof p.warn_threshold === "number") ? Math.round(p.warn_threshold * 100) + "%" : "-";
+    cards.insertAdjacentHTML("beforeend",
+      '<div class="card"><h3>Spend & guardrails</h3>' +
+      kv("Monthly cap", "$" + (p.monthly_cap_usd != null ? p.monthly_cap_usd : "-")) +
+      kv("Warn at", warn) +
+      kv("Hard stop", pill(!!p.hard_stop, p.hard_stop ? "on" : "off")) +
+      kv("Call timeout", (p.call_timeout_seconds != null ? p.call_timeout_seconds + "s" : "-")) +
+      '</div>');
+
+    // Residency & data
+    cards.insertAdjacentHTML("beforeend",
+      '<div class="card"><h3>Residency & data</h3>' +
+      kv("Residency", '<span class="pill">' + (p.residency || "-") + '</span>') +
+      kv("Zero-retention required", pill(!!p.zdr_required, p.zdr_required ? "required" : "off")) +
+      kv("LangSmith export", pill(!!p.langsmith_export, p.langsmith_export ? "on" : "off")) +
+      '</div>');
+
+    // Fallback chain
+    var fc = p.fallback_chain || [];
+    if (fc.length) {
+      var rows = fc.map(function (f, i) { return kv("Fallback " + (i + 1), '<span class="pill">' + (f.kind || "?") + '</span>'); }).join("");
+      cards.insertAdjacentHTML("beforeend", '<div class="card"><h3>Fallback chain</h3>' + rows + '</div>');
+    }
+    $("summary").textContent = "Resolved AI policy for " + (policy.tenant_id || tenant()) + " (the gateway's loaded config).";
+  }
+
+  async function load() {
+    var tools;
+    try {
+      var res = await fetch(gwUrl() + "/v1/status", { headers: { "x-tenant-id": tenant() } });
+      var text = await res.text();
+      var data = null; try { data = text ? JSON.parse(text) : null; } catch (e) { data = null; }
+      if (!res.ok) throw new Error((data && data.error ? data.error : text) || ("HTTP " + res.status));
+      render(data);
+    } catch (e) { $("summary").innerHTML = '<span class="err">could not load policy: ' + e.message + ' (is the gateway running with AI_GATEWAY_DEV_CORS=1?)</span>'; $("cards").innerHTML = ""; }
+  }
+
+  $("cfg-load").onclick = load;
+  checkHealth();
+  setInterval(checkHealth, 5000);
+  load();
+})();
+</script>
+</body>
+</html>

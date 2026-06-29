@@ -4,6 +4,7 @@
 
 pub mod attachments;
 pub mod audit;
+pub mod auditlog;
 pub mod auth;
 pub mod channels;
 pub mod db;
@@ -44,6 +45,7 @@ pub fn router(state: AppState) -> Router {
             "/v1/chat/channels",
             post(channels::create).get(channels::list),
         )
+        .route("/v1/chat/dms", post(channels::create_dm))
         .route(
             "/v1/chat/channels/:id/messages",
             post(messages::post).get(messages::list),
@@ -66,6 +68,7 @@ pub fn router(state: AppState) -> Router {
             post(attachments::upload),
         )
         .route("/v1/chat/attachments/:att", get(attachments::download))
+        .route("/v1/chat/attachments/:att/meta", get(attachments::meta))
         .route(
             "/v1/chat/channels/:id/presence",
             get(realtime::presence_list),
@@ -73,6 +76,7 @@ pub fn router(state: AppState) -> Router {
         .route("/v1/chat/channels/:id/read", post(read::mark))
         .route("/v1/chat/channels/:id/unread", get(read::unread))
         .route("/v1/chat/devices", post(devices::register))
+        .route("/v1/chat/audit", get(auditlog::list))
         .route("/v1/chat/ws", get(realtime::ws_handler))
         .with_state(state);
 

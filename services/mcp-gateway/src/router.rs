@@ -83,7 +83,7 @@ fn control_plane_disabled_response() -> (StatusCode, Json<Value>) {
 /// Build the Axum router. `POST /mcp` + `GET /mcp/healthz` are the MCP protocol surface;
 /// `/v1/mcp/{register,heartbeat,deregister}` are the FR-MCP-002 control plane.
 pub fn build_router(state: AppState) -> Router {
-    Router::new()
+    let app = Router::new()
         .route("/mcp", post(handle_mcp))
         .route("/mcp/healthz", get(handle_healthz))
         .route(
@@ -117,7 +117,16 @@ pub fn build_router(state: AppState) -> Router {
         )
         .route("/v1/mcp/tasks/:id", get(handle_task_status))
         .route("/v1/mcp/tasks/:id/cancel", post(handle_task_cancel))
-        .with_state(state)
+        .with_state(state);
+
+    // FR-APP-004: opt-in permissive CORS so the local browser console (the MCP Registry panel) can call
+    // /mcp cross-origin in dev. Off by default; in production Caddy fronts the gateway under one origin.
+    // Set MCP_DEV_CORS=1 only for local development.
+    if std::env::var("MCP_DEV_CORS").is_ok() {
+        app.layer(tower_http::cors::CorsLayer::permissive())
+    } else {
+        app
+    }
 }
 
 /// FR-MCP-002 control-plane: a module registers its tool catalogue so `tools/list` and

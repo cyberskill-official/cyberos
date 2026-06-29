@@ -20,6 +20,7 @@ pub struct Message {
     pub parent_id: Option<Uuid>,
     pub edited_at: Option<chrono::DateTime<chrono::Utc>>,
     pub deleted_at: Option<chrono::DateTime<chrono::Utc>>,
+    pub attachment_id: Option<Uuid>,
 }
 
 type MessageRow = (
@@ -32,10 +33,11 @@ type MessageRow = (
     Option<Uuid>,
     Option<chrono::DateTime<chrono::Utc>>,
     Option<chrono::DateTime<chrono::Utc>>,
+    Option<Uuid>,
 );
 
 const COLS: &str =
-    "id, tenant_id, channel_id, sender_subject_id, body, created_at, parent_id, edited_at, deleted_at";
+    "id, tenant_id, channel_id, sender_subject_id, body, created_at, parent_id, edited_at, deleted_at, attachment_id";
 
 fn to_message(r: MessageRow) -> Message {
     Message {
@@ -48,6 +50,7 @@ fn to_message(r: MessageRow) -> Message {
         parent_id: r.6,
         edited_at: r.7,
         deleted_at: r.8,
+        attachment_id: r.9,
     }
 }
 
@@ -56,6 +59,8 @@ pub struct PostMessage {
     pub body: String,
     #[serde(default)]
     pub parent_id: Option<Uuid>,
+    #[serde(default)]
+    pub attachment_id: Option<Uuid>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -98,14 +103,26 @@ pub async fn post(
     let sender = claims
         .subject_id()
         .map_err(|e| (StatusCode::UNAUTHORIZED, e.to_string()))?;
-    if body.body.trim().is_empty() {
-        return Err((StatusCode::BAD_REQUEST, "body is required".to_string()));
+    if body.body.trim().is_empty() && body.attachment_id.is_none() {
+        return Err((StatusCode::BAD_REQUEST, "body or attachment_id is required".to_string()));
     }
 
     let mut tx = db::tenant_tx(&st.pool, &tenant)
         .await
         .map_err(crate::internal)?;
     require_member(&mut tx, channel, sender).await?;
+    if let Some(aid) = body.attachment_id {
+        let a: Option<(Uuid,)> =
+            sqlx::query_as("SELECT id FROM chat_attachments WHERE id = $1 AND channel_id = $2")
+                .bind(aid)
+                .bind(channel)
+                .fetch_optional(&mut *tx)
+                .await
+                .map_err(crate::internal)?;
+        if a.is_none() {
+            return Err((StatusCode::BAD_REQUEST, "attachment not in this channel".to_string()));
+        }
+    }
     if let Some(pid) = body.parent_id {
         let parent: Option<(Uuid,)> = sqlx::query_as(
             "SELECT id FROM chat_messages WHERE id = $1 AND channel_id = $2 AND deleted_at IS NULL",
@@ -120,8 +137,8 @@ pub async fn post(
         }
     }
     let sql = format!(
-        "INSERT INTO chat_messages (tenant_id, channel_id, sender_subject_id, body, parent_id)
-         VALUES ($1, $2, $3, $4, $5) RETURNING {COLS}"
+        "INSERT INTO chat_messages (tenant_id, channel_id, sender_subject_id, body, parent_id, attachment_id)
+         VALUES ($1, $2, $3, $4, $5, $6) RETURNING {COLS}"
     );
     let row: MessageRow = sqlx::query_as(&sql)
         .bind(tenant)
@@ -129,6 +146,7 @@ pub async fn post(
         .bind(sender)
         .bind(&body.body)
         .bind(body.parent_id)
+        .bind(body.attachment_id)
         .fetch_one(&mut *tx)
         .await
         .map_err(crate::internal)?;
@@ -246,6 +264,14 @@ pub async fn edit(
     match row {
         Some(r) => {
             let m = to_message(r);
+            st.hub.publish(
+                channel,
+                crate::realtime::ChatEvent::MessageEdited {
+                    id: m.id,
+                    body: m.body.clone(),
+                    edited_at: m.edited_at,
+                },
+            );
             audit::emit(
                 &st,
                 tenant,
@@ -299,6 +325,8 @@ pub async fn delete(
         .map_err(crate::internal)?;
     tx.commit().await.map_err(crate::internal)?;
 
+    st.hub
+        .publish(channel, crate::realtime::ChatEvent::MessageDeleted { id: msg });
     audit::emit(
         &st,
         tenant,

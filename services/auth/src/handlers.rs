@@ -91,6 +91,10 @@ pub fn router(state: AppState) -> Router {
         )
         .route("/v1/admin/subjects/:id/revoke", post(revoke_subject))
         .route("/v1/admin/subjects/:id/unrevoke", post(unrevoke_subject))
+        // P0 - tenant people directory for the chat people-picker. Authenticated
+        // (verify_jwt runs via this router's route_layer) but NOT admin-gated: any
+        // teammate must resolve colleagues by name to start a DM or build a group.
+        .route("/v1/auth/directory", get(directory))
         // FR-AUTH-101 RBAC endpoints
         .route(
             "/v1/admin/roles",
@@ -1506,6 +1510,50 @@ async fn list_tenants(
         StatusCode::OK,
         Json(json!({"items": items, "next_cursor": next_cursor})),
     ))
+}
+
+/// `GET /v1/auth/directory` - P0 tenant people directory for the chat people-picker.
+/// Any authenticated tenant member lists the active human subjects in their own
+/// tenant (subject_id, handle, display_name, email). Deliberately NOT admin-gated:
+/// starting a DM or building a group needs to resolve teammates by name, and these
+/// fields are the minimum a colleague already sees in chat. Tenant-scoped by the
+/// caller's JWT and RLS; no cross-tenant switch header is honoured here.
+async fn directory(
+    State(state): State<AppState>,
+    Extension(claims): Extension<Claims>,
+) -> Result<(StatusCode, Json<Value>), (StatusCode, Json<Value>)> {
+    let tenant_id = Uuid::parse_str(&claims.tenant_id)
+        .map_err(|_| invalid_input("tenant_id", "claims carry a non-UUID tenant_id"))?;
+    let mut tx = state.pg.begin().await.map_err(db_err)?;
+    sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
+        .bind(tenant_id.to_string())
+        .execute(&mut *tx)
+        .await
+        .map_err(db_err)?;
+    let rows: Vec<(Uuid, String, Option<String>, Option<String>)> = sqlx::query_as(
+        "SELECT id, handle, display_name, email
+            FROM subjects
+           WHERE status = 'active' AND kind = 'human'
+        ORDER BY COALESCE(display_name, handle) ASC
+           LIMIT 1000",
+    )
+    .fetch_all(&mut *tx)
+    .await
+    .map_err(db_err)?;
+    tx.commit().await.map_err(db_err)?;
+
+    let items: Vec<Value> = rows
+        .into_iter()
+        .map(|(id, handle, display_name, email)| {
+            json!({
+                "subject_id": id,
+                "handle": handle,
+                "display_name": display_name,
+                "email": email,
+            })
+        })
+        .collect();
+    Ok((StatusCode::OK, Json(json!({ "items": items }))))
 }
 
 // FR-AUTH-005 §1 #15 + G-015 — OTel span emits `auth_admin_list_total`

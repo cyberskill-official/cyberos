@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CyberOS CUO Workflows</title>
+<!--
+  FR-APP-006 - CyberOS CUO Workflows & GENIE panel.
+
+  A self-contained operator page over the CUO module's read-only status endpoint (GET /v1/cuo/status). It
+  shows the idle-time dream loop's safety envelope (FR-CUO-204) - whether it is enabled, its mode, the idle
+  window, and the allowlist / denylist that bound what it may ever touch - plus a summary of the FR backlog
+  it operates over. The GENIE assistant runs on the AI gateway (the Assistant tile). Adds no backend.
+
+  Run: serve this folder and start the CUO status server with CUO_DEV_CORS=1 (scripts/dev/cuo-up.sh). In
+  production a fronting proxy serves the page and the status under one origin.
+-->
+<style>
+  :root {
+    --cds-umber: #45210E; --cds-ochre: #F4BA17; --cds-umber-700: #5a2e16; --cds-umber-900: #2c1409;
+    --cds-ink: #f6ecdd; --cds-muted: #c9b79f; --cds-ok: #6fbf73; --cds-bad: #e1654f; --cds-radius: 10px;
+    --cds-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --cds-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { font-family: var(--cds-font); background: var(--cds-umber-900); color: var(--cds-ink); display: flex; flex-direction: column; }
+  header { background: var(--cds-umber); border-bottom: 2px solid var(--cds-ochre); padding: 14px 20px; display: flex; align-items: baseline; gap: 14px; }
+  header .wordmark { font-weight: 800; font-size: 20px; letter-spacing: 0.5px; }
+  header .wordmark .cyber { color: var(--cds-ink); } header .wordmark .os { color: var(--cds-ochre); }
+  header .slogan { color: var(--cds-muted); font-size: 13px; font-style: italic; }
+  header .spacer { flex: 1; }
+  header .health { font-size: 12px; color: var(--cds-muted); display: flex; align-items: center; gap: 6px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--cds-muted); display: inline-block; }
+  .dot.ok { background: var(--cds-ok); } .dot.bad { background: var(--cds-bad); }
+
+  .config { background: var(--cds-umber-700); padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; border-bottom: 1px solid var(--cds-umber); }
+  .config label { font-size: 12px; color: var(--cds-muted); display: flex; flex-direction: column; gap: 3px; }
+  .config input { background: var(--cds-umber-900); border: 1px solid var(--cds-umber); color: var(--cds-ink); border-radius: 6px; padding: 6px 8px; font-size: 13px; min-width: 240px; }
+  .config button { background: var(--cds-ochre); color: var(--cds-umber-900); border: none; border-radius: 6px; padding: 8px 16px; font-weight: 700; font-size: 13px; cursor: pointer; }
+
+  main { flex: 1; overflow: auto; padding: 18px 20px; display: flex; flex-direction: column; gap: 16px; }
+  .summary { color: var(--cds-muted); font-size: 13px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; align-items: start; }
+  .card { background: var(--cds-umber); border: 1px solid var(--cds-umber-700); border-radius: var(--cds-radius); padding: 16px; }
+  .card h3 { margin: 0 0 12px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--cds-muted); }
+  .kv { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--cds-umber-700); font-size: 13px; }
+  .kv:last-child { border-bottom: none; }
+  .kv .k { color: var(--cds-muted); } .kv .v { font-weight: 600; }
+  .pill { display: inline-block; font-size: 11px; padding: 2px 9px; border-radius: 10px; background: var(--cds-ochre); color: var(--cds-umber-900); font-weight: 700; }
+  .pill.off { background: var(--cds-umber-700); color: var(--cds-muted); }
+  .pill.warn { background: var(--cds-bad); color: var(--cds-umber-900); }
+  .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .tag { font-family: var(--cds-mono); font-size: 11px; padding: 2px 7px; border-radius: 8px; background: var(--cds-umber-900); color: var(--cds-muted); }
+  .tag.deny { color: var(--cds-bad); }
+  .tag.allow { color: var(--cds-ok); }
+  .sub { font-size: 11px; color: var(--cds-muted); margin: 10px 0 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+  a.link { color: var(--cds-ochre); text-decoration: none; font-weight: 600; }
+  .err { color: var(--cds-bad); }
+</style>
+</head>
+<body>
+  <header>
+    <span class="wordmark"><span class="cyber">Cyber</span><span class="os">OS</span></span>
+    <span class="slogan">Turn Your Will Into Real</span>
+    <a href="app.html" style="color:var(--cds-ochre);text-decoration:none;font-size:13px;">&larr; Dashboard</a>
+    <span class="spacer"></span>
+    <span class="health"><span id="health-dot" class="dot"></span><span id="health-text">checking CUO...</span></span>
+  </header>
+
+  <div class="config">
+    <label>CUO status URL<input id="cfg-url" value="http://127.0.0.1:7740" spellcheck="false" /></label>
+    <button id="cfg-load" type="button">Load</button>
+  </div>
+
+  <main>
+    <div class="summary" id="summary">Connect to the CUO status server to load the dream loop and the backlog.</div>
+    <div class="cards" id="cards"></div>
+  </main>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  function url() { return $("cfg-url").value.replace(/\/+$/, ""); }
+  function pill(on, label, warn) { return '<span class="pill' + (on ? (warn ? ' warn' : '') : ' off') + '">' + label + '</span>'; }
+  function kv(k, v) { return '<div class="kv"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>'; }
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+  async function checkHealth() {
+    try { var res = await fetch(url() + "/healthz"); $("health-dot").className = res.ok ? "dot ok" : "dot bad"; $("health-text").textContent = res.ok ? "CUO reachable" : "CUO error"; }
+    catch (e) { $("health-dot").className = "dot bad"; $("health-text").textContent = "CUO unreachable"; }
+  }
+
+  function render(data) {
+    var env = data.envelope || {};
+    var bk = data.backlog || {};
+    var cards = $("cards");
+    cards.innerHTML = "";
+
+    // Dream loop envelope
+    var deny = (env.denylist || []).map(function (d) { return '<span class="tag deny">' + esc(d) + '</span>'; }).join("");
+    var allow = (env.allowlist || []).map(function (a) { return '<span class="tag allow">' + esc(a) + '</span>'; }).join("");
+    cards.insertAdjacentHTML("beforeend",
+      '<div class="card"><h3>Dream loop (FR-CUO-204)</h3>' +
+      kv("Enabled", pill(!!env.enabled, env.enabled ? "enabled" : "disabled")) +
+      kv("Mode", pill(env.effective_mode === "apply", env.effective_mode || "off", env.effective_mode === "apply")) +
+      kv("Idle window", (env.idle_window_minutes != null ? env.idle_window_minutes + " min" : "-")) +
+      '<div class="sub">May evolve (allowlist)</div><div class="tags">' + (allow || '<span class="tag">none</span>') + '</div>' +
+      '<div class="sub">Never touch (denylist)</div><div class="tags">' + (deny || '<span class="tag">none</span>') + '</div>' +
+      '</div>');
+
+    // Backlog summary
+    var statusRows = Object.keys(bk.by_status || {}).map(function (s) { return kv(s, bk.by_status[s]); }).join("");
+    cards.insertAdjacentHTML("beforeend",
+      '<div class="card"><h3>FR backlog</h3>' +
+      kv("Total FRs", '<span class="pill">' + (bk.total != null ? bk.total : "-") + '</span>') +
+      '<div class="sub">By status</div>' + (statusRows || kv("(none)", "")) +
+      '</div>');
+
+    // By module
+    var modRows = Object.keys(bk.by_module || {}).map(function (m) { return kv(m, bk.by_module[m]); }).join("");
+    if (modRows) {
+      cards.insertAdjacentHTML("beforeend", '<div class="card"><h3>FRs by module</h3>' + modRows + '</div>');
+    }
+
+    // GENIE
+    cards.insertAdjacentHTML("beforeend",
+      '<div class="card"><h3>GENIE assistant</h3>' +
+      '<div style="font-size:13px;line-height:1.5;color:var(--cds-ink)">GENIE runs on the CyberOS AI gateway. ' +
+      'Open the <a class="link" href="index.html">Assistant</a> tile to chat with it through the gateway' +
+      ' (the same routing and policy shown in <a class="link" href="ai.html">AI Ops</a>).</div></div>');
+
+    $("summary").textContent = "The CUO dream loop is " + (env.enabled ? "enabled in " + (env.effective_mode || "off") + " mode" : "disabled") +
+      "; " + (bk.total != null ? bk.total : 0) + " FRs in the backlog it operates over.";
+  }
+
+  async function load() {
+    try {
+      var res = await fetch(url() + "/v1/cuo/status");
+      var text = await res.text();
+      var data = null; try { data = text ? JSON.parse(text) : null; } catch (e) { data = null; }
+      if (!res.ok) throw new Error((data && data.error ? data.error : text) || ("HTTP " + res.status));
+      render(data);
+    } catch (e) { $("summary").innerHTML = '<span class="err">could not load CUO status: ' + e.message + ' (is the CUO status server running with CUO_DEV_CORS=1?)</span>'; $("cards").innerHTML = ""; }
+  }
+
+  $("cfg-load").onclick = load;
+  checkHealth();
+  setInterval(checkHealth, 5000);
+  load();
+})();
+</script>
+</body>
+</html>

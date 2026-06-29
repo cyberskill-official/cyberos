@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CyberOS Memory & Audit</title>
+<!--
+  FR-APP-005 - CyberOS Memory & Audit browser (audit-chain slice).
+
+  A self-contained operator page that lists the signed-in tenant's most recent rows from the hash-chained
+  audit log (l1_audit_log). Every auth and chat action appends one chained row; this surfaces them. It
+  consumes only the existing read endpoint (GET /v1/chat/audit) and adds no backend. Identity is the CyberOS
+  access token (FR-AUTH-110); when opened from the dashboard it auto-connects from the stored token.
+
+  Run: serve this folder and start chat with CHAT_DEV_CORS=1 (the audit read is hosted on the chat service,
+  which holds the audit pool). In production Caddy serves the page and proxies the service under one origin.
+-->
+<style>
+  :root {
+    --cds-umber: #45210E; --cds-ochre: #F4BA17; --cds-umber-700: #5a2e16; --cds-umber-900: #2c1409;
+    --cds-ink: #f6ecdd; --cds-muted: #c9b79f; --cds-ok: #6fbf73; --cds-bad: #e1654f; --cds-radius: 10px;
+    --cds-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --cds-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { font-family: var(--cds-font); background: var(--cds-umber-900); color: var(--cds-ink); display: flex; flex-direction: column; }
+  header { background: var(--cds-umber); border-bottom: 2px solid var(--cds-ochre); padding: 14px 20px; display: flex; align-items: baseline; gap: 14px; }
+  header .wordmark { font-weight: 800; font-size: 20px; letter-spacing: 0.5px; }
+  header .wordmark .cyber { color: var(--cds-ink); }
+  header .wordmark .os { color: var(--cds-ochre); }
+  header .slogan { color: var(--cds-muted); font-size: 13px; font-style: italic; }
+  header .spacer { flex: 1; }
+  header .health { font-size: 12px; color: var(--cds-muted); display: flex; align-items: center; gap: 6px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--cds-muted); display: inline-block; }
+  .dot.ok { background: var(--cds-ok); } .dot.bad { background: var(--cds-bad); }
+
+  .config { background: var(--cds-umber-700); padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; border-bottom: 1px solid var(--cds-umber); }
+  .config label { font-size: 12px; color: var(--cds-muted); display: flex; flex-direction: column; gap: 3px; }
+  .config input { background: var(--cds-umber-900); border: 1px solid var(--cds-umber); color: var(--cds-ink); border-radius: 6px; padding: 6px 8px; font-size: 13px; min-width: 200px; }
+  .config input.token { min-width: 320px; }
+  .config input.small { min-width: 70px; }
+  .config button { background: var(--cds-ochre); color: var(--cds-umber-900); border: none; border-radius: 6px; padding: 8px 16px; font-weight: 700; font-size: 13px; cursor: pointer; }
+  .config .me { font-size: 12px; color: var(--cds-muted); }
+
+  main { flex: 1; overflow: auto; padding: 16px 20px; }
+  .summary { color: var(--cds-muted); font-size: 13px; margin-bottom: 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--cds-umber); vertical-align: top; }
+  th { color: var(--cds-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; position: sticky; top: 0; background: var(--cds-umber-900); }
+  tr:hover td { background: var(--cds-umber); }
+  td.seq { color: var(--cds-muted); font-variant-numeric: tabular-nums; }
+  td.event { font-weight: 600; }
+  td.op { color: var(--cds-muted); }
+  .chain { font-family: var(--cds-mono); font-size: 11px; color: var(--cds-ochre); }
+  .mono { font-family: var(--cds-mono); font-size: 11px; color: var(--cds-muted); }
+  .empty { color: var(--cds-muted); font-style: italic; padding: 20px 0; }
+</style>
+</head>
+<body>
+  <header>
+    <span class="wordmark"><span class="cyber">Cyber</span><span class="os">OS</span></span>
+    <span class="slogan">Turn Your Will Into Real</span>
+    <a href="app.html" style="color:var(--cds-ochre);text-decoration:none;font-size:13px;">&larr; Dashboard</a>
+    <span class="spacer"></span>
+    <span class="health"><span id="health-dot" class="dot"></span><span id="health-text">checking service...</span></span>
+  </header>
+
+  <div class="config">
+    <label>Chat service URL<input id="cfg-base" value="http://127.0.0.1:7720" spellcheck="false" /></label>
+    <label>Access token (JWT)<input id="cfg-token" class="token" placeholder="paste a CyberOS access token" spellcheck="false" /></label>
+    <label>Rows<input id="cfg-limit" class="small" value="100" /></label>
+    <button id="cfg-load" type="button">Load</button>
+    <span class="me" id="cfg-me"></span>
+  </div>
+
+  <main>
+    <div class="summary" id="summary">Connect to load the audit chain.</div>
+    <table id="tbl" style="display:none;">
+      <thead><tr><th>Seq</th><th>Time</th><th>Event</th><th>Op</th><th>Subject</th><th>Chain anchor</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="empty" id="empty" style="display:none;">No audit rows for this tenant yet.</div>
+  </main>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var state = { token: "", me: "" };
+  function baseUrl() { return $("cfg-base").value.replace(/\/+$/, ""); }
+  function shortId(u) { return u ? String(u).slice(0, 8) : "-"; }
+  function fmtTime(s) { try { return new Date(s).toLocaleString(); } catch (e) { return String(s); } }
+  function decodeSub(token) {
+    try { var p = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"); p += "====".slice(p.length % 4 || 4); return JSON.parse(atob(p)).sub || ""; } catch (e) { return ""; }
+  }
+
+  async function tryRefresh() {
+    var rt, ab;
+    try { rt = localStorage.getItem("cyberos_refresh_token"); ab = localStorage.getItem("cyberos_auth_base"); } catch (e) {}
+    if (!rt || !ab) return false;
+    try {
+      var res = await fetch(ab.replace(/\/+$/, "") + "/v1/auth/token", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ grant_type: "refresh_token", refresh_token: rt }) });
+      if (!res.ok) return false;
+      var data = await res.json();
+      if (!data || !data.access_token) return false;
+      state.token = data.access_token;
+      try { localStorage.setItem("cyberos_chat_token", data.access_token); if (data.refresh_token) localStorage.setItem("cyberos_refresh_token", data.refresh_token); } catch (e) {}
+      return true;
+    } catch (e) { return false; }
+  }
+  async function api(path, retried) {
+    var res = await fetch(baseUrl() + path, { headers: { "Authorization": "Bearer " + state.token } });
+    if (res.status === 401 && !retried) { if (await tryRefresh()) return api(path, true); location.href = "app.html"; throw new Error("session expired"); }
+    var text = await res.text();
+    var data = null; try { data = text ? JSON.parse(text) : null; } catch (e) { data = text; }
+    if (!res.ok) throw new Error("[" + res.status + "] " + (data && data.error ? data.error : text));
+    return data;
+  }
+
+  async function checkHealth() {
+    try { var res = await fetch(baseUrl() + "/healthz"); $("health-dot").className = res.ok ? "dot ok" : "dot bad"; $("health-text").textContent = res.ok ? "service reachable" : "service error"; }
+    catch (e) { $("health-dot").className = "dot bad"; $("health-text").textContent = "service unreachable"; }
+  }
+
+  function eventName(r) { return (r.event_type && r.event_type.trim()) ? r.event_type : r.path; }
+
+  async function load() {
+    state.token = $("cfg-token").value.trim();
+    state.me = decodeSub(state.token);
+    $("cfg-me").textContent = state.me ? ("you = " + shortId(state.me)) : "invalid token";
+    try { localStorage.setItem("cyberos_chat_base", baseUrl()); localStorage.setItem("cyberos_chat_token", state.token); } catch (e) {}
+    if (!state.me) return;
+    var limit = parseInt($("cfg-limit").value, 10) || 100;
+    var rows;
+    try { rows = await api("/v1/chat/audit?limit=" + limit); }
+    catch (e) { $("summary").textContent = "could not load audit chain: " + e.message; return; }
+    var tb = $("rows"); tb.innerHTML = "";
+    (rows || []).forEach(function (r) {
+      var tr = document.createElement("tr");
+      tr.innerHTML =
+        '<td class="seq">' + r.seq + '</td>' +
+        '<td class="mono">' + fmtTime(r.ingested_at) + '</td>' +
+        '<td class="event">' + eventName(r) + '</td>' +
+        '<td class="op">' + (r.op || '') + '</td>' +
+        '<td class="mono">' + shortId(r.subject_id) + '</td>' +
+        '<td class="chain">' + (r.chain_anchor_hex ? String(r.chain_anchor_hex).slice(0, 16) : '-') + '</td>';
+      tb.appendChild(tr);
+    });
+    var n = (rows || []).length;
+    $("summary").textContent = n + " most-recent audit-chain row(s) for your tenant (newest first). Each row is hash-chained to the one before it.";
+    $("tbl").style.display = n ? "table" : "none";
+    $("empty").style.display = n ? "none" : "block";
+  }
+
+  $("cfg-load").onclick = load;
+  try {
+    var b = localStorage.getItem("cyberos_chat_base"); if (b) $("cfg-base").value = b;
+    var t = localStorage.getItem("cyberos_chat_token"); if (t) $("cfg-token").value = t;
+  } catch (e) {}
+  if ($("cfg-token").value.trim()) { load(); }
+  checkHealth();
+  setInterval(checkHealth, 5000);
+})();
+</script>
+</body>
+</html>

@@ -1100,6 +1100,7 @@ dependencies = [
  "chrono",
  "cyberos-audit-chain",
  "jsonwebtoken",
+ "reqwest",
  "serde",
  "serde_json",
  "sqlx",

@@ -1,0 +1,74 @@
+# CyberOS P0 stack - PRODUCTION (pre-built images). Same shape as docker-compose.p0.yml, but auth and
+# chat run from images built in CI and pushed to GHCR, so the VPS never compiles Rust. This is what the
+# auto-deploy uses (.github/workflows/deploy.yml -> deploy/vps/deploy.sh). The console + Caddyfile come
+# from the VPS git checkout; the database is Supabase (DATABASE_URL in .env.p0).
+#
+#   docker compose --env-file .env.p0 -f docker-compose.p0.images.yml pull
+#   docker compose --env-file .env.p0 -f docker-compose.p0.images.yml up -d
+#
+# CYBEROS_REGISTRY defaults to the GHCR namespace; CYBEROS_IMAGE_TAG defaults to latest (pin to a commit
+# sha to roll back to a specific build).
+
+name: ${COMPOSE_PROJECT_NAME:-cyberos-p0}
+
+networks:
+  cyberos:
+    driver: bridge
+
+volumes:
+  caddy-data:
+  caddy-config:
+
+services:
+  auth:
+    image: ${CYBEROS_REGISTRY:-ghcr.io/cyberskill-official}/cyberos-auth:${CYBEROS_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file: [.env.p0]
+    environment:
+      AUTH_LISTEN_ADDR: 0.0.0.0:7700
+      DATABASE_URL: ${AUTH_DATABASE_URL}
+      AUTH_JWT_ISSUER: ${CYBEROS_APP_URL}
+      AUTH_OIDC_RETURN_ALLOW: ${CYBEROS_APP_URL}/
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:7700/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks: [cyberos]
+
+  chat:
+    image: ${CYBEROS_REGISTRY:-ghcr.io/cyberskill-official}/cyberos-chat:${CYBEROS_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file: [.env.p0]
+    environment:
+      CHAT_LISTEN_ADDR: 0.0.0.0:7720
+      DATABASE_URL: ${CHAT_DATABASE_URL}
+      CHAT_AUTH_JWKS_URL: http://auth:7700/.well-known/jwks.json
+      CHAT_AUDIT_DATABASE_URL: ${CHAT_AUDIT_DATABASE_URL:-}
+    depends_on:
+      auth:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:7720/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks: [cyberos]
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      CYBEROS_APP_DOMAIN: ${CYBEROS_APP_DOMAIN}
+    volumes:
+      - ./Caddyfile.p0:/etc/caddy/Caddyfile:ro
+      - ../../apps/console:/srv/console:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - auth
+      - chat
+    networks: [cyberos]

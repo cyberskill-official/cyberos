@@ -46,6 +46,11 @@
   .advanced { margin-top: 16px; font-size: 12px; color: var(--cds-muted); }
   .advanced summary { cursor: pointer; }
   .advanced input { width: 100%; background: var(--cds-umber-900); border: 1px solid var(--cds-umber-700); color: var(--cds-ink); border-radius: 6px; padding: 7px; font-size: 12px; margin-top: 6px; }
+  .or { display: flex; align-items: center; gap: 10px; color: var(--cds-muted); font-size: 12px; margin: 16px 0; }
+  .or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--cds-umber-700); }
+  .card button.google { width: 100%; background: #fff; color: #1f1f1f; border: 1px solid #dadce0; border-radius: 8px; padding: 11px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .card button.google:hover { background: #f7f8f8; }
+  .card button.google .g { font-weight: 800; color: #4285F4; font-size: 16px; }
 
   main.dash { flex: 1; padding: 30px 40px; }
   main.dash h2 { margin: 0 0 4px; font-size: 18px; }
@@ -91,6 +96,9 @@
         <button class="primary" id="login-btn" type="submit">Sign in</button>
         <div class="err" id="login-err"></div>
       </form>
+      <div class="or"><span>or</span></div>
+      <button class="google" id="google-btn" type="button"><span class="g">G</span> Sign in with Google</button>
+      <div class="err" id="google-err"></div>
       <details class="advanced">
         <summary>Service endpoints</summary>
         <label>Auth URL<input id="f-auth" value="http://127.0.0.1:7700" spellcheck="false" /></label>
@@ -111,7 +119,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var LS = {
     token: "cyberos_chat_token", chatBase: "cyberos_chat_base", authBase: "cyberos_auth_base",
-    email: "cyberos_user_email"
+    email: "cyberos_user_email", refresh: "cyberos_refresh_token"
   };
 
   function get(k) { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } }
@@ -133,10 +141,10 @@
   var MODULES = [
     { id: "chat", icon: "💬", name: "Chat", desc: "Channels, messages, and live presence on the CyberOS identity.", live: true, href: "chat.html" },
     { id: "assistant", icon: "✨", name: "Assistant", desc: "Talk to your model through the CyberOS AI gateway.", live: true, href: "index.html" },
-    { id: "ai", icon: "🛠", name: "AI Ops", desc: "Providers, routing, usage, and health (FR-APP-003).", live: false },
-    { id: "mcp", icon: "🔌", name: "MCP Registry", desc: "Registered servers and tools (FR-APP-004).", live: false },
-    { id: "memory", icon: "🧾", name: "Memory & Audit", desc: "Browse the memory and the audit chain (FR-APP-005).", live: false },
-    { id: "cuo", icon: "🧠", name: "Workflows & GENIE", desc: "CUO workflows and the GENIE assistant (FR-APP-006).", live: false }
+    { id: "ai", icon: "🛠", name: "AI Ops", desc: "Provider routing, spend caps, residency (FR-APP-003).", live: true, href: "ai.html" },
+    { id: "mcp", icon: "🔌", name: "MCP Registry", desc: "Tools the MCP gateway is serving now (FR-APP-004).", live: true, href: "mcp.html" },
+    { id: "memory", icon: "🧾", name: "Memory & Audit", desc: "Browse the tenant's hash-chained audit log (FR-APP-005).", live: true, href: "audit.html" },
+    { id: "cuo", icon: "🧠", name: "Workflows & GENIE", desc: "Dream-loop envelope and the FR backlog (FR-APP-006).", live: true, href: "cuo.html" }
   ];
 
   function renderDashboard() {
@@ -179,6 +187,7 @@
       throw new Error(data && data.error ? data.error : ("sign-in failed (" + res.status + ")"));
     }
     set(LS.token, data.access_token);
+    set(LS.refresh, data.refresh_token || "");
     set(LS.chatBase, chatBase);
     set(LS.authBase, authBase);
     var claims = decode(data.access_token);
@@ -200,8 +209,78 @@
   });
   $("logout").onclick = function () { del(LS.token); del(LS.email); showLogin(); };
 
-  // auto-skip login if a valid token is already stored
-  if (tokenValid(get(LS.token))) { renderDashboard(); } else { del(LS.token); showLogin(); $("f-password").focus(); }
+  // --- Google (OIDC) sign-in --------------------------------------------------
+  function authBaseVal() { return ($("f-auth").value || "").replace(/\/+$/, "") || get(LS.authBase); }
+  function chatBaseVal() { return ($("f-chat").value || "").replace(/\/+$/, ""); }
+
+  async function googleSignIn() {
+    $("google-err").textContent = "";
+    var tenant = $("f-tenant").value.trim() || "cyberskill";
+    var authBase = authBaseVal();
+    // Remember the chosen service bases so the post-redirect boot reuses them.
+    set(LS.authBase, authBase);
+    set(LS.chatBase, chatBaseVal());
+    var ret = location.origin + location.pathname; // come back to this page
+    try {
+      var res = await fetch(authBase + "/v1/auth/oidc/initiate?tenant_slug=" + encodeURIComponent(tenant) + "&idp=google&return_to=" + encodeURIComponent(ret));
+      var data = await res.json().catch(function () { return null; });
+      if (!res.ok || !data || !data.authorization_url) {
+        throw new Error(data && data.error ? data.error : ("could not start Google sign-in (" + res.status + ")"));
+      }
+      window.location.href = data.authorization_url; // top-level nav to Google
+    } catch (e) { $("google-err").textContent = e.message; }
+  }
+  $("google-btn").onclick = googleSignIn;
+
+  // OIDC hand-back: the auth callback 302'd back here with the token in the URL
+  // fragment. Capture it like a password sign-in, then scrub the URL so the token
+  // is not left in the address bar or browser history.
+  function captureHandback() {
+    if (!location.hash || location.hash.indexOf("access_token") === -1) return false;
+    var p = new URLSearchParams(location.hash.replace(/^#/, ""));
+    var at = p.get("access_token");
+    if (!at) return false;
+    set(LS.token, at);
+    if (p.get("refresh_token")) set(LS.refresh, p.get("refresh_token"));
+    if (!get(LS.authBase)) set(LS.authBase, authBaseVal());
+    if (!get(LS.chatBase)) set(LS.chatBase, chatBaseVal());
+    var claims = decode(at);
+    set(LS.email, (claims && claims.email) || "");
+    try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { location.hash = ""; }
+    return true;
+  }
+
+  // returning visitor: a valid access token skips login; an expired one with a refresh token is
+  // refreshed silently; otherwise sign in.
+  async function refreshAccess() {
+    var rt = get(LS.refresh); var ab = get(LS.authBase) || $("f-auth").value.replace(/\/+$/, "");
+    if (!rt || !ab) return false;
+    try {
+      var res = await fetch(ab + "/v1/auth/token", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ grant_type: "refresh_token", refresh_token: rt }) });
+      if (!res.ok) return false;
+      var data = await res.json();
+      if (!data || !data.access_token) return false;
+      set(LS.token, data.access_token);
+      if (data.refresh_token) set(LS.refresh, data.refresh_token);
+      return true;
+    } catch (e) { return false; }
+  }
+  // Single-origin production: when the page is not served from localhost, the console, auth, and chat
+  // sit behind one Caddy origin, so default the service endpoints to that origin (dev keeps localhost).
+  (function originDefaults() {
+    var h = location.hostname;
+    if (h && h !== "localhost" && h !== "127.0.0.1") {
+      if (($("f-auth").value || "").indexOf("127.0.0.1") !== -1) $("f-auth").value = location.origin;
+      if (($("f-chat").value || "").indexOf("127.0.0.1") !== -1) $("f-chat").value = location.origin;
+    }
+  })();
+
+  (async function boot() {
+    if (captureHandback()) { renderDashboard(); return; }
+    if (tokenValid(get(LS.token))) { renderDashboard(); return; }
+    if (get(LS.refresh) && await refreshAccess()) { renderDashboard(); return; }
+    del(LS.token); showLogin(); $("f-password").focus();
+  })();
 })();
 </script>
 </body>

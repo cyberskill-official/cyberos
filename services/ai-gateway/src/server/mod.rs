@@ -190,6 +190,23 @@ pub struct ApiChatResponse {
     pub finish_reason: String,
 }
 
+/// `GET /v1/status` - FR-APP-003 AI Ops read. Returns the requesting tenant's resolved AI policy: the
+/// primary provider and its alias-to-model map, the monthly spend cap and warn threshold, residency, ZDR,
+/// and the fallback chain. Read-only over the already-loaded policy; makes no provider call.
+async fn status(State(st): State<GatewayState>, headers: HeaderMap) -> Response {
+    let tenant = match header(&headers, "x-tenant-id") {
+        Some(t) => t,
+        None => return err(StatusCode::BAD_REQUEST, "missing x-tenant-id header"),
+    };
+    match st.policy.for_tenant(&tenant).await {
+        Ok(policy) => (StatusCode::OK, Json((*policy).clone())).into_response(),
+        Err(e) => err(
+            StatusCode::NOT_FOUND,
+            &format!("policy unavailable for tenant: {e}"),
+        ),
+    }
+}
+
 /// Build the gateway router: liveness, a metrics stub (RED exports via OTLP, not a scrape), and the chat
 /// endpoint, with the FR-OBS-003 RED middleware wrapping every route.
 pub fn build_router(state: GatewayState) -> Router {
@@ -200,6 +217,7 @@ pub fn build_router(state: GatewayState) -> Router {
             get(|| async { "# cyberos-ai-gateway: RED metrics export via OTLP\n" }),
         )
         .route("/v1/chat", post(chat))
+        .route("/v1/status", get(status))
         // FR-OBS-005: ensure every request carries a trace context (extract or generate) and echo it on
         // the response. FR-OBS-003 (ADR-OBS-003-001): tenant_ctx stamps the request's tenant onto the
         // response; red_mw (outer) reads it for the metric's tenant_id label. Same wiring as auth/memory.

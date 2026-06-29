@@ -1,0 +1,37 @@
+# CyberOS P0 single-origin product surface (console + Google login + chat + DMs + files).
+#
+# Everything the team touches is served from ONE origin (https://${CYBEROS_APP_DOMAIN}), so there is no
+# cross-origin request and the dev CORS flags (AUTH_DEV_CORS / CHAT_DEV_CORS) stay OFF in production:
+#   /            -> the static console (app.html is the login + dashboard)
+#   /v1/auth/*   -> cyberos-auth   (password grant, Google OIDC, the people directory)
+#   /v1/admin/*  -> cyberos-auth   (operator setup: register the Google IdP config, manage subjects)
+#   /.well-known/* -> cyberos-auth (JWKS + OIDC discovery)
+#   /v1/chat/*   -> cyberos-chat   (channels, DMs, messages, attachments, and the /v1/chat/ws upgrade)
+#
+# Caddy auto-provisions TLS for a real domain. The Google OAuth client's authorized redirect URI MUST be
+# exactly https://${CYBEROS_APP_DOMAIN}/v1/auth/oidc/callback (runbook Step 2). reverse_proxy upgrades
+# the chat websocket automatically.
+#
+# This is the P0 product origin only; the per-service subdomain Caddyfile (auth.<domain>, mcp.<domain>,
+# ...) remains for MCP OAuth and the other modules, which P0 does not need.
+
+{$CYBEROS_APP_DOMAIN} {
+	encode gzip
+
+	@authapi path /v1/auth/* /v1/admin/* /.well-known/*
+	handle @authapi {
+		reverse_proxy auth:7700
+	}
+
+	@chatapi path /v1/chat/*
+	handle @chatapi {
+		reverse_proxy chat:7720
+	}
+
+	handle {
+		root * /srv/console
+		@root path /
+		rewrite @root /app.html
+		file_server
+	}
+}
