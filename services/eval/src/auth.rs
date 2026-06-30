@@ -26,6 +26,13 @@ pub const ROLE_FOUNDER: &str = "founder";
 /// roles on the employee's behalf; the employee never self-acknowledges in the quiet operating mode.
 pub const ACK_RECORDER_ROLES: &[&str] = &[ROLE_FOUNDER, "tenant-admin", "chro", "dpo"];
 
+/// Roles permitted to ADMINISTER the FR-EVAL-002 rubric - create / add items / publish (DEC-2601 §1 #10:
+/// "founder + designated rubric admins"). The founder always counts (via `is_founder`); `rubric-admin` is
+/// the AUTH wire form for a delegate the founder designates. This is the authoring grant the FR requires;
+/// it deliberately does not invent an access rule, only names which AUTH roles hold the existing
+/// founder/admin authority over the rubric.
+pub const RUBRIC_ADMIN_ROLES: &[&str] = &[ROLE_FOUNDER, "rubric-admin"];
+
 /// The claims eval needs from the CyberOS access token. Identical shape to `cyberos_chat::auth::Claims`.
 #[derive(Debug, Clone, Deserialize)]
 pub struct Claims {
@@ -79,6 +86,12 @@ impl Caller {
     /// Whether the caller may record a subject acknowledgment (founder / admin / HR - clause 10a).
     pub fn may_record_ack(&self) -> bool {
         self.has_any_role(ACK_RECORDER_ROLES)
+    }
+
+    /// Whether the caller may administer the rubric - author / publish (FR-EVAL-002 §1 #10). Founder or a
+    /// designated rubric admin.
+    pub fn may_administer_rubric(&self) -> bool {
+        self.has_any_role(RUBRIC_ADMIN_ROLES)
     }
 }
 

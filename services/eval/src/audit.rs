@@ -27,6 +27,24 @@ pub mod kind {
     pub const EVALUATION_READ: &str = "eval.evaluation_read";
     /// A subject reading their OWN record (lighter weight), per clause 9.
     pub const SELF_READ: &str = "eval.self_read";
+
+    // FR-EVAL-002 rubric curation events (§1 #11, DEC-2604). Every rubric mutation chains one of these into
+    // the same `l1_audit_log` as the rest of CyberOS, so the rubric's full curation history is tamper-
+    // evident. `eval.rubric_edited` is reserved for the later GENIE/edit slice; this slice emits drafted,
+    // published, and superseded.
+    /// A rubric, version, or item drafted (framework created / version opened / item added), per
+    /// `crate::rubric::authoring` + `crate::rubric::versioning::open_version`.
+    pub const RUBRIC_DRAFTED: &str = "eval.rubric_drafted";
+    /// A draft rubric item edited (reserved for the later edit/GENIE slice).
+    pub const RUBRIC_EDITED: &str = "eval.rubric_edited";
+    /// A draft version approved by a human (reserved; this slice publishes directly from draft).
+    pub const RUBRIC_APPROVED: &str = "eval.rubric_approved";
+    /// A version published by a human - it becomes the operative standard, per
+    /// `crate::rubric::versioning::publish_version` (§1 #8 #11).
+    pub const RUBRIC_PUBLISHED: &str = "eval.rubric_published";
+    /// A previously-published version superseded by a newer one (its effective interval closed), per
+    /// `crate::rubric::versioning::publish_version` (§1 #6 #11).
+    pub const RUBRIC_SUPERSEDED: &str = "eval.rubric_superseded";
 }
 
 /// Append one governance row to `l1_audit_log` via the shared chain, scoped to `tenant`,

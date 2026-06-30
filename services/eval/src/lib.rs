@@ -19,6 +19,7 @@ pub mod auth;
 pub mod db;
 pub mod gate;
 pub mod handlers;
+pub mod rubric;
 
 use std::sync::Arc;
 
@@ -80,6 +81,23 @@ pub fn router(state: AppState) -> Router {
         // Data-subject self surface (clause 10): own record + file a request.
         .route("/v1/eval/me", get(handlers::get_me))
         .route("/v1/eval/me/requests", post(handlers::file_request))
+        // Rubric (FR-EVAL-002): the human-curated, clause-cited evaluation rubric. Authoring (create /
+        // open version / add item / publish) is rubric-admin only; the effective-version read is
+        // founder/manager. Every mutation chains an `eval.rubric_*` audit row. No scoring, no model here.
+        .route("/v1/eval/rubrics", post(handlers::create_rubric))
+        .route(
+            "/v1/eval/rubrics/:id/versions",
+            post(handlers::open_rubric_version),
+        )
+        .route(
+            "/v1/eval/rubrics/:id/versions/:vid/items",
+            post(handlers::add_rubric_item),
+        )
+        .route(
+            "/v1/eval/rubrics/:id/versions/:vid/publish",
+            post(handlers::publish_rubric_version),
+        )
+        .route("/v1/eval/rubrics/:id", get(handlers::get_effective_rubric))
         .with_state(state);
 
     // Opt-in permissive CORS so a local browser (a future EVAL governance-status console) can call the

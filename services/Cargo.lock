@@ -1166,6 +1166,7 @@ dependencies = [
  "cyberos-audit-chain",
  "jsonwebtoken",
  "reqwest",
+ "rust_decimal",
  "serde",
  "serde_json",
  "sqlx",

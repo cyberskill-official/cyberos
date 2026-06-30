@@ -14,12 +14,13 @@
 //! employee signs the clause); there is no path that captures or evaluates a subject with no
 //! acknowledgment row. The in-app notice surface stays off by default.
 
-use axum::extract::State;
+use axum::extract::{Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::Json;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::rubric::{self, model::RubricError};
 use crate::{audit, auth, db, gate, AppState};
 
 /// 403 helper, mirroring the `(StatusCode, String)` error contract used across the handlers.
@@ -871,4 +872,216 @@ pub async fn file_request(
     )
     .await;
     Ok((StatusCode::CREATED, Json(req)))
+}
+
+// ===========================================================================
+// Rubric (FR-EVAL-002) - the human-curated, clause-cited evaluation rubric. Authoring (create / open
+// version / add item / publish) requires the rubric-admin grant (founder + designated rubric admins,
+// §1 #10); reading the effective version requires founder or manager, mirroring GET /v1/eval/notice. Every
+// mutation emits a hash-chained `eval.rubric_*` audit row inside the rubric module functions (§1 #11). No
+// path here scores a person or calls a model - the GENIE draft path is a deferred slice.
+// ===========================================================================
+
+/// Map a `RubricError` to the `(StatusCode, String)` HTTP shape with the §1 / §4 stable error code as the
+/// body. The status codes follow the FR's failure-modes table: uncited / missing-vi / bad-shape / empty ->
+/// 422; effective overlap -> 409; human-approver-required -> 403; not-found -> 404; everything else a 422
+/// authoring error except a DB fault which is a 500.
+fn rubric_err(e: RubricError) -> (StatusCode, String) {
+    let status = match e {
+        RubricError::Db(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        RubricError::RequiresHumanApprover => StatusCode::FORBIDDEN,
+        RubricError::EffectiveOverlap => StatusCode::CONFLICT,
+        RubricError::NotFound | RubricError::NoEffectiveVersion => StatusCode::NOT_FOUND,
+        _ => StatusCode::UNPROCESSABLE_ENTITY,
+    };
+    (status, e.code().to_string())
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CreateRubric {
+    pub name: String,
+}
+
+/// `POST /v1/eval/rubrics` - create a named rubric framework (rubric-admin only). A duplicate name in the
+/// tenant is a 409. Emits `eval.rubric_drafted`.
+pub async fn create_rubric(
+    State(st): State<AppState>,
+    headers: HeaderMap,
+    Json(body): Json<CreateRubric>,
+) -> Result<(StatusCode, Json<rubric::Rubric>), (StatusCode, String)> {
+    let caller = auth::caller(&st, &headers)?;
+    if !caller.may_administer_rubric() {
+        return Err(forbidden("only a rubric admin may create a rubric"));
+    }
+    let name = body.name.trim();
+    if name.is_empty() {
+        return Err((StatusCode::BAD_REQUEST, "name is required".to_string()));
+    }
+    let res = rubric::authoring::create_rubric(
+        &st.pool,
+        st.audit_pool.as_ref(),
+        caller.tenant_id,
+        caller.subject_id,
+        name,
+    )
+    .await;
+    match res {
+        Ok(r) => Ok((StatusCode::CREATED, Json(r))),
+        // A unique-violation on (tenant_id, name) is a 409, distinct from the authoring 422s.
+        Err(RubricError::Db(sqlx::Error::Database(db_err))) if db_err.is_unique_violation() => {
+            Err((
+                StatusCode::CONFLICT,
+                "a rubric with that name already exists".to_string(),
+            ))
+        }
+        Err(e) => Err(rubric_err(e)),
+    }
+}
+
+/// `POST /v1/eval/rubrics/{id}/versions` - open a new draft version of a rubric (rubric-admin only). Emits
+/// `eval.rubric_drafted`.
+pub async fn open_rubric_version(
+    State(st): State<AppState>,
+    headers: HeaderMap,
+    Path(rubric_id): Path<Uuid>,
+) -> Result<(StatusCode, Json<rubric::RubricVersion>), (StatusCode, String)> {
+    let caller = auth::caller(&st, &headers)?;
+    if !caller.may_administer_rubric() {
+        return Err(forbidden("only a rubric admin may open a rubric version"));
+    }
+    let version = rubric::versioning::open_version(
+        &st.pool,
+        st.audit_pool.as_ref(),
+        caller.tenant_id,
+        caller.subject_id,
+        rubric_id,
+    )
+    .await
+    .map_err(rubric_err)?;
+    Ok((StatusCode::CREATED, Json(version)))
+}
+
+/// `POST /v1/eval/rubrics/{id}/versions/{vid}/items` - add a clause-cited item to a draft version
+/// (rubric-admin only). The body is a [`rubric::RubricItemDraft`]; an uncited / missing-vi / bad-shape item
+/// is rejected 422 with the matching code. Emits `eval.rubric_drafted`.
+pub async fn add_rubric_item(
+    State(st): State<AppState>,
+    headers: HeaderMap,
+    Path((_rubric_id, version_id)): Path<(Uuid, Uuid)>,
+    Json(draft): Json<rubric::RubricItemDraft>,
+) -> Result<(StatusCode, Json<rubric::RubricItem>), (StatusCode, String)> {
+    let caller = auth::caller(&st, &headers)?;
+    if !caller.may_administer_rubric() {
+        return Err(forbidden("only a rubric admin may add a rubric item"));
+    }
+    let item = rubric::authoring::add_item(
+        &st.pool,
+        st.audit_pool.as_ref(),
+        caller.tenant_id,
+        caller.subject_id,
+        version_id,
+        &draft,
+    )
+    .await
+    .map_err(rubric_err)?;
+    Ok((StatusCode::CREATED, Json(item)))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct PublishRubricVersion {
+    /// The date the version becomes effective (half-open interval start). Defaults to today if omitted.
+    #[serde(default)]
+    pub effective_from: Option<chrono::NaiveDate>,
+}
+
+/// `POST /v1/eval/rubrics/{id}/versions/{vid}/publish` - the HITL publish transition (rubric-admin only,
+/// human approver). The caller is the human approver; a service-account token is rejected 403
+/// (`rubric_requires_human_approver`). Publish is blocked 422 if the version is empty or has an ungrounded
+/// item, and 409 if its effective_from overlaps a live published version. Emits `eval.rubric_superseded`
+/// (if one was superseded) and `eval.rubric_published`.
+pub async fn publish_rubric_version(
+    State(st): State<AppState>,
+    headers: HeaderMap,
+    Path((_rubric_id, version_id)): Path<(Uuid, Uuid)>,
+    Json(body): Json<PublishRubricVersion>,
+) -> Result<(StatusCode, Json<rubric::RubricVersion>), (StatusCode, String)> {
+    let caller = auth::caller(&st, &headers)?;
+    if !caller.may_administer_rubric() {
+        return Err(forbidden(
+            "only a rubric admin may publish a rubric version",
+        ));
+    }
+    // The caller's verified token IS the human approver (§1 #8). A real service account would carry a
+    // service-account role; the founder / rubric-admin path here is a human by construction. The
+    // `approver_is_human` seam stays explicit so a future service-account caller is refused.
+    let approver_is_human = !caller.has_any_role(&["service-account", "service_account"]);
+    let effective_from = body
+        .effective_from
+        .unwrap_or_else(|| chrono::Utc::now().date_naive());
+    let version = rubric::versioning::publish_version(
+        &st.pool,
+        st.audit_pool.as_ref(),
+        caller.tenant_id,
+        caller.subject_id,
+        approver_is_human,
+        version_id,
+        effective_from,
+    )
+    .await
+    .map_err(rubric_err)?;
+    Ok((StatusCode::CREATED, Json(version)))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct EffectiveQuery {
+    /// The date to resolve the effective version for. Defaults to today.
+    #[serde(default)]
+    pub at: Option<chrono::NaiveDate>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct EffectiveRubric {
+    pub version: rubric::RubricVersion,
+    pub items: Vec<rubric::RubricItem>,
+}
+
+/// `GET /v1/eval/rubrics/{id}?at=<date>` - the published version effective on a date (defaults to today),
+/// with all its items and their citations (§1 #7 #12). Read access requires founder or a manager, mirroring
+/// `get_notice`. 404 if no version is in force on the date.
+pub async fn get_effective_rubric(
+    State(st): State<AppState>,
+    headers: HeaderMap,
+    Path(rubric_id): Path<Uuid>,
+    Query(q): Query<EffectiveQuery>,
+) -> Result<Json<EffectiveRubric>, (StatusCode, String)> {
+    let caller = auth::caller(&st, &headers)?;
+    // Founder or a manager may read the rubric (the standard), mirroring the notice read gate.
+    if !caller.is_founder {
+        let mut tx = db::tenant_tx(&st.pool, &caller.tenant_id)
+            .await
+            .map_err(crate::internal)?;
+        let is_manager: Option<i64> = sqlx::query_scalar(
+            "SELECT 1 FROM access_grant
+              WHERE viewer_subject_id = $1 AND scope = 'manager_of' AND revoked_at IS NULL
+              LIMIT 1",
+        )
+        .bind(caller.subject_id)
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(crate::internal)?;
+        let _ = tx.commit().await;
+        if is_manager.is_none() {
+            return Err(forbidden(
+                "only the founder or a manager may read the rubric",
+            ));
+        }
+    }
+    let at = q.at.unwrap_or_else(|| chrono::Utc::now().date_naive());
+    let version = rubric::versioning::resolve_effective(&st.pool, caller.tenant_id, rubric_id, at)
+        .await
+        .map_err(rubric_err)?;
+    let items = rubric::authoring::list_items(&st.pool, caller.tenant_id, version.id)
+        .await
+        .map_err(rubric_err)?;
+    Ok(Json(EffectiveRubric { version, items }))
 }
