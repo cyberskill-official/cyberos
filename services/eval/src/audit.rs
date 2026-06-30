@@ -9,10 +9,11 @@
 use serde_json::{json, Value};
 use uuid::Uuid;
 
-/// The clause-12 governance event kinds. Slice 1 emitted the gate / access set; slice 2 adds the two
+/// The clause-12 governance event kinds. Slice 1 emitted the gate / access set; slice 2 added the two
 /// governance-mutation kinds its HTTP surface needs - category registration and a filed data-subject
-/// request. The remaining later sub-tasks (sweeper) add `eval.retention_swept`, `eval.subject_erased`,
-/// and the gated-capture skip `eval.capture_gated`.
+/// request. The retention sweeper (this sub-task) adds `eval.retention_swept` (per category sweep) and
+/// `eval.subject_erased` (per subject whose derived rows were erased); the consent gate adds the
+/// gated-capture skip `eval.capture_gated`.
 pub mod kind {
     pub const NOTICE_PUBLISHED: &str = "eval.notice_published";
     pub const ACK_RECORDED: &str = "eval.ack_recorded";
@@ -27,6 +28,17 @@ pub mod kind {
     pub const EVALUATION_READ: &str = "eval.evaluation_read";
     /// A subject reading their OWN record (lighter weight), per clause 9.
     pub const SELF_READ: &str = "eval.self_read";
+    /// One per-category retention sweep that erased >= 1 derived (L2 / brain) row (clause 6, 12). The
+    /// erasure event is itself appended to the L1 chain so the *fact* of erasure is permanent even though
+    /// the *content* is gone. The sweep NEVER touches `l1_audit_log` itself.
+    pub const RETENTION_SWEPT: &str = "eval.retention_swept";
+    /// One per subject whose derived rows were erased by a retention sweep (clause 6, 12). Records that a
+    /// specific person's rebuildable projections were bounded, without ever deleting the immutable L1 record.
+    pub const SUBJECT_ERASED: &str = "eval.subject_erased";
+    /// A capture skipped because the subject is consent-gated (clause 3, 16). Emitted by the gate at the
+    /// real skip site so even the *absence* of captured data is auditable. `reason` is `no_ack` or
+    /// `stale_ack_version`.
+    pub const CAPTURE_GATED: &str = "eval.capture_gated";
 
     // FR-EVAL-002 rubric curation events (§1 #11, DEC-2604). Every rubric mutation chains one of these into
     // the same `l1_audit_log` as the rest of CyberOS, so the rubric's full curation history is tamper-

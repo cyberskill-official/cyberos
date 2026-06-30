@@ -687,6 +687,159 @@ pub async fn set_retention(
 }
 
 // ===========================================================================
+// Governance status (clause 18) - the founder/manager at-a-glance proof the gate is healthy. Read-only,
+// tenant-scoped, founder-or-manager gated (mirrors get_notice).
+// ===========================================================================
+
+#[derive(Debug, Serialize)]
+pub struct CategoryStatus {
+    pub name: String,
+    pub purpose: String,
+    pub lawful_basis: String,
+    /// The retention policy in force for this category, if one is set (clause 6). `None` ⇒ no policy ⇒ the
+    /// sweeper retains the category's data indefinitely (the operator must set a policy to bound it).
+    pub retain_days: Option<i32>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct GovernanceStatus {
+    /// The tenant's current published monitoring-notice version, or `None` if none has been published yet
+    /// (in which case every subject is gated, clause 3 #6).
+    pub current_notice_version: Option<i32>,
+    /// Count of distinct subjects whose latest acknowledgment IS the current notice version (the gate is
+    /// lifted for them).
+    pub acknowledged_current: i64,
+    /// Count of distinct subjects who acknowledged an OLDER version and are now re-gated by a notice bump
+    /// (clause 17 `StaleAckVersion`). Subjects who never acknowledged any version are NOT counted here: the
+    /// eval DB holds no subject roster (that lives in AUTH), and the gate treats a no-ack subject as gated at
+    /// capture time regardless.
+    pub stale_ack_subjects: i64,
+    /// The registered data categories with their declared purpose, lawful basis, and retention (clause 4, 6).
+    pub categories: Vec<CategoryStatus>,
+    /// Count of active (non-revoked) access grants in the tenant (clause 8).
+    pub active_grants: i64,
+    /// Count of open (unresolved) data-subject requests queued for a human (clause 10).
+    pub open_requests: i64,
+}
+
+/// `GET /v1/eval/governance/status` - the operator's at-a-glance governance posture (clause 18): the current
+/// notice version, acknowledged vs stale-ack subject counts, the registered categories with their purpose +
+/// lawful_basis + retention, the active-grant count, and the open-DSR count. Founder or an active manager
+/// (mirrors `get_notice`). Read-only, tenant-scoped via `tenant_tx`; emits no audit row (a read of aggregate
+/// posture, not of any subject's record).
+pub async fn governance_status(
+    State(st): State<AppState>,
+    headers: HeaderMap,
+) -> Result<Json<GovernanceStatus>, (StatusCode, String)> {
+    let caller = auth::caller(&st, &headers)?;
+    let mut tx = db::tenant_tx(&st.pool, &caller.tenant_id)
+        .await
+        .map_err(crate::internal)?;
+    // Founder or an active manager_of grant may read the posture (same gate as get_notice).
+    if !caller.is_founder {
+        let is_manager: Option<i64> = sqlx::query_scalar(
+            "SELECT 1 FROM access_grant
+              WHERE viewer_subject_id = $1 AND scope = 'manager_of' AND revoked_at IS NULL
+              LIMIT 1",
+        )
+        .bind(caller.subject_id)
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(crate::internal)?;
+        if is_manager.is_none() {
+            let _ = tx.commit().await;
+            return Err(forbidden(
+                "only the founder or a manager may read governance status",
+            ));
+        }
+    }
+
+    // The current notice version (None ⇒ nothing published yet ⇒ everyone gated).
+    let current_notice_version: Option<i32> =
+        sqlx::query_scalar("SELECT version FROM monitoring_notice WHERE is_current LIMIT 1")
+            .fetch_optional(&mut *tx)
+            .await
+            .map_err(crate::internal)?;
+
+    // Acknowledged-vs-stale subject counts, computed against the current version. A subject's latest acked
+    // version >= current ⇒ acknowledged; < current ⇒ stale (re-gated, clause 17). Both derive from the
+    // per-subject MAX(notice_version), so a subject is counted once.
+    let (acknowledged_current, stale_ack_subjects): (i64, i64) = match current_notice_version {
+        Some(v) => sqlx::query_as(
+            "SELECT
+                COUNT(*) FILTER (WHERE latest >= $1) AS acknowledged,
+                COUNT(*) FILTER (WHERE latest <  $1) AS stale
+             FROM (
+                SELECT subject_id, MAX(notice_version) AS latest
+                  FROM subject_acknowledgment
+                 GROUP BY subject_id
+             ) per_subject",
+        )
+        .bind(v)
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(crate::internal)?,
+        None => (0, 0), // no current notice ⇒ no one is "acknowledged-current".
+    };
+
+    // Registered categories LEFT JOINed to their retention policy (the policy may be unset ⇒ retain_days
+    // None). Ordered by name for a stable view.
+    let cat_rows: Vec<(String, String, String, Option<i32>)> = sqlx::query_as(
+        "SELECT dc.name, dc.purpose, dc.lawful_basis, rp.retain_days
+           FROM data_category dc
+           LEFT JOIN retention_policy rp ON rp.data_category_id = dc.id
+          ORDER BY dc.name",
+    )
+    .fetch_all(&mut *tx)
+    .await
+    .map_err(crate::internal)?;
+
+    let active_grants: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM access_grant WHERE revoked_at IS NULL")
+            .fetch_one(&mut *tx)
+            .await
+            .map_err(crate::internal)?;
+
+    // Open DSR count. subject_request is the slice-2 table (migration 0002); it may be absent in a partial
+    // deployment, so tolerate a missing-relation error as zero rather than 500-ing the whole status.
+    let open_requests: i64 = match sqlx::query_scalar::<_, i64>(
+        "SELECT COUNT(*) FROM subject_request WHERE status = 'open'",
+    )
+    .fetch_one(&mut *tx)
+    .await
+    {
+        Ok(n) => n,
+        Err(sqlx::Error::Database(_)) => 0,
+        Err(e) => {
+            let _ = tx.commit().await;
+            return Err(crate::internal(e));
+        }
+    };
+    let _ = tx.commit().await;
+
+    let categories = cat_rows
+        .into_iter()
+        .map(
+            |(name, purpose, lawful_basis, retain_days)| CategoryStatus {
+                name,
+                purpose,
+                lawful_basis,
+                retain_days,
+            },
+        )
+        .collect();
+
+    Ok(Json(GovernanceStatus {
+        current_notice_version,
+        acknowledged_current,
+        stale_ack_subjects,
+        categories,
+        active_grants,
+        open_requests,
+    }))
+}
+
+// ===========================================================================
 // Data-subject self surface (clause 10) - GET /me (own record), POST /me/requests (file a request).
 // ===========================================================================
 

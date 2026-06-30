@@ -43,3 +43,9 @@ tower = { workspace = true, features = ["util"] }
 [[bin]]
 name = "cyberos-eval"
 path = "src/main.rs"
+
+# FR-EVAL-001 clause 6: the retention/erasure sweeper, OFF by default - it runs ONLY when an operator
+# explicitly invokes this binary (or a cron shells out to it). The service binary never sweeps.
+[[bin]]
+name = "cyberos-eval-sweep"
+path = "src/bin/sweep.rs"

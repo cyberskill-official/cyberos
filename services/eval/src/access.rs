@@ -13,6 +13,13 @@ use uuid::Uuid;
 
 use crate::db::{self, Pool};
 
+/// The OTel metric name for an evaluation read (clause 16: `eval_evaluation_reads_total{grant_kind}`).
+/// Emitted as a structured `tracing` event (this workspace's metrics path is OTel via the obs pipeline,
+/// matching `cyberos_memory::interaction::emit` and `cyberos_capture::emitter` - NOT the `metrics` facade).
+/// The `grant_kind` label is [`GrantKind::as_str`]; it counts BOTH a self read (`self`) and a cross-subject
+/// read (`founder` / `manager_of`), so the operator sees every authorised look at evaluation data.
+pub const METRIC_EVALUATION_READS: &str = "eval_evaluation_reads_total";
+
 /// The grant kind that authorised a read (for the audit row), or denial.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum GrantKind {
@@ -130,6 +137,7 @@ pub async fn guard_evaluation_read(
 ) -> Result<GrantKind, AccessError> {
     match may_read(pool, tenant_id, viewer_id, target_subject_id).await? {
         Some(GrantKind::Self_) => {
+            emit_read_metric(GrantKind::Self_, tenant_id);
             crate::audit::emit_governance(
                 audit_pool,
                 tenant_id,
@@ -141,6 +149,7 @@ pub async fn guard_evaluation_read(
             Ok(GrantKind::Self_)
         }
         Some(kind) => {
+            emit_read_metric(kind, tenant_id);
             crate::audit::emit_governance(
                 audit_pool,
                 tenant_id,
@@ -160,5 +169,31 @@ pub async fn guard_evaluation_read(
             viewer: viewer_id,
             target: target_subject_id,
         }),
+    }
+}
+
+/// Emit the clause-16 `eval_evaluation_reads_total{grant_kind}` counter as a structured tracing event (the
+/// OTel path). Fires once per authorised read (self or cross-subject); a denied read emits nothing (no read
+/// happened). Kept as a tiny `fn` so both `guard_evaluation_read` arms emit an identical label set.
+fn emit_read_metric(kind: GrantKind, tenant_id: Uuid) {
+    tracing::info!(
+        target: "cyberos_eval::access",
+        metric = METRIC_EVALUATION_READS,
+        grant_kind = kind.as_str(),
+        tenant_id = %tenant_id,
+        "evaluation/self read authorised"
+    );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn grant_kind_labels_are_stable() {
+        // The `grant_kind` label on eval_evaluation_reads_total / the audit payload; pin every arm.
+        assert_eq!(GrantKind::Founder.as_str(), "founder");
+        assert_eq!(GrantKind::ManagerOf.as_str(), "manager_of");
+        assert_eq!(GrantKind::Self_.as_str(), "self");
     }
 }

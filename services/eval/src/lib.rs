@@ -19,6 +19,7 @@ pub mod auth;
 pub mod db;
 pub mod gate;
 pub mod handlers;
+pub mod retention;
 pub mod rubric;
 
 use std::sync::Arc;
@@ -78,6 +79,12 @@ pub fn router(state: AppState) -> Router {
         .route("/v1/eval/access/revoke", post(handlers::revoke_access))
         // Retention (clause 6): set/replace a per-category retention policy (founder).
         .route("/v1/eval/retention", post(handlers::set_retention))
+        // Governance status (clause 18): the founder/manager at-a-glance proof the gate is healthy -
+        // current notice version, ack vs gated counts, registered categories + retention, open DSR count.
+        .route(
+            "/v1/eval/governance/status",
+            get(handlers::governance_status),
+        )
         // Data-subject self surface (clause 10): own record + file a request.
         .route("/v1/eval/me", get(handlers::get_me))
         .route("/v1/eval/me/requests", post(handlers::file_request))

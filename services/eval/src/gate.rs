@@ -14,13 +14,30 @@ use uuid::Uuid;
 
 use crate::db::{self, Pool};
 
-/// Why a subject is gated (mirrors the planned OTel `reason` label, clause 16).
+/// The OTel metric name for a gated capture (clause 16: `eval_capture_gated_total{reason}`). Emitted as a
+/// structured `tracing` event (this workspace's metrics path is OTel via the obs pipeline, matching
+/// `cyberos_memory::interaction::emit` and `cyberos_capture::emitter` - NOT the `metrics` facade). The
+/// `reason` label is [`GateReason::as_str`].
+pub const METRIC_CAPTURE_GATED: &str = "eval_capture_gated_total";
+
+/// Why a subject is gated (mirrors the OTel `reason` label, clause 16).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum GateReason {
     /// No published notice yet, or the subject has never acknowledged any notice.
     NoAck,
     /// The subject acknowledged an older version; the current notice was bumped (clause 17 re-gating).
     StaleAckVersion,
+}
+
+impl GateReason {
+    /// The stable `reason` label for the `eval_capture_gated_total` counter (clause 16: `no_ack |
+    /// stale_ack_version`).
+    pub fn as_str(self) -> &'static str {
+        match self {
+            GateReason::NoAck => "no_ack",
+            GateReason::StaleAckVersion => "stale_ack_version",
+        }
+    }
 }
 
 /// Resolve whether `subject_id` is gated under `tenant_id`. `Ok(None)` ⇒ not gated (capture allowed);
@@ -55,11 +72,52 @@ pub async fn gate_reason(
 
     tx.commit().await?;
 
-    Ok(match latest_ack {
+    let reason = match latest_ack {
         Some(v) if v >= current_version => None, // up to date ⇒ not gated
         Some(_) => Some(GateReason::StaleAckVersion), // acked, but stale (clause 17)
         None => Some(GateReason::NoAck),         // never acked
-    })
+    };
+
+    // clause 16 metric: eval_capture_gated_total{reason}. The gate firing here IS the deny - emit the OTel
+    // counter (structured tracing event) on every gated resolution so a re-gating spike (a notice bump, an
+    // un-onboarded cohort) is visible. Not gated ⇒ no metric (the hot allow-path stays quiet).
+    if let Some(r) = reason {
+        tracing::debug!(
+            target: "cyberos_eval::gate",
+            metric = METRIC_CAPTURE_GATED,
+            reason = r.as_str(),
+            tenant_id = %tenant_id,
+            "capture gated: subject has not acknowledged the current monitoring notice"
+        );
+    }
+
+    Ok(reason)
+}
+
+/// Record a gated-capture SKIP onto the L1 chain (clause 3: capture emitters skip a gated subject and emit
+/// `eval.capture_gated` "so the skip is itself recorded"). The companion to the hot-path predicate: a caller
+/// that finds [`is_capture_allowed`] false for a subject calls this to leave the auditable trace of *what*
+/// would have been captured and *why* it was not. Best-effort (the same contract as `audit::emit`); the
+/// underlying interaction is never blocked by it. `would_capture` names the category/event the gate blocked.
+pub async fn record_capture_gated(
+    audit_pool: Option<&Pool>,
+    tenant_id: Uuid,
+    subject_id: Uuid,
+    reason: GateReason,
+    would_capture: &str,
+) {
+    crate::audit::emit_governance(
+        audit_pool,
+        tenant_id,
+        subject_id,
+        crate::audit::kind::CAPTURE_GATED,
+        serde_json::json!({
+            "subject_id": subject_id,
+            "reason": reason.as_str(),
+            "would_capture": would_capture,
+        }),
+    )
+    .await;
 }
 
 /// The hot-path predicate FR-MEMORY-121/122 + FR-EVAL-003 call before capturing / evaluating: `true` iff
@@ -70,4 +128,16 @@ pub async fn is_capture_allowed(
     subject_id: Uuid,
 ) -> Result<bool, sqlx::Error> {
     Ok(gate_reason(pool, tenant_id, subject_id).await?.is_none())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn gate_reason_labels_match_the_otel_reason_enum() {
+        // clause 16: reason ∈ no_ack | stale_ack_version. The label is what the counter carries; pin it.
+        assert_eq!(GateReason::NoAck.as_str(), "no_ack");
+        assert_eq!(GateReason::StaleAckVersion.as_str(), "stale_ack_version");
+    }
 }
