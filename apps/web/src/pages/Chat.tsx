@@ -11,6 +11,8 @@ import { ThreadPanel } from "../components/ThreadPanel";
 
 interface WsEvent extends Partial<Message> {
   type: string;
+  subject?: string;
+  status?: string;
 }
 
 export function Chat() {
@@ -36,6 +38,11 @@ export function Chat() {
   const [health, setHealth] = useState<"unknown" | "ok" | "bad">("unknown");
   const [picker, setPicker] = useState<PickerMode | null>(null);
 
+  const [presence, setPresence] = useState<Set<string>>(new Set());
+  const [typingSubject, setTypingSubject] = useState("");
+  const [editingId, setEditingId] = useState("");
+  const [editText, setEditText] = useState("");
+
   const [threadRoot, setThreadRoot] = useState<Message | null>(null);
   const [threadReplies, setThreadReplies] = useState<Message[]>([]);
   const threadRootRef = useRef<Message | null>(null);
@@ -49,6 +56,9 @@ export function Chat() {
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  const typingSentAt = useRef(0);
+  const typingTimer = useRef<number | null>(null);
 
   const active = channels.find((c) => c.id === activeId) || null;
 
@@ -104,8 +114,8 @@ export function Chat() {
     };
   }, []);
 
-  // Per-channel: load the main timeline and connect the live websocket. Thread replies (parent_id set) are
-  // routed to the open thread; main messages append to the timeline; edits/deletes patch both lists.
+  // Per-channel: load timeline + presence, connect the live websocket (messages, edits/deletes, presence,
+  // typing). Thread replies route to the open thread.
   useEffect(() => {
     if (!token || !activeId) {
       setMessages([]);
@@ -114,13 +124,30 @@ export function Chat() {
     setThreadRoot(null);
     setThreadReplies([]);
     setSearchOpen(false);
+    setPresence(new Set());
+    setTypingSubject("");
+    setEditingId("");
     let alive = true;
+
     (async () => {
       try {
         const msgs = await apiFetch<Message[]>(token, "GET", `/v1/chat/channels/${activeId}/messages`);
         if (alive) setMessages((msgs || []).filter((m) => !m.parent_id));
       } catch (e) {
         if (alive) setError(e instanceof Error ? e.message : String(e));
+      }
+    })();
+    (async () => {
+      try {
+        const on = await apiFetch<unknown[]>(token, "GET", `/v1/chat/channels/${activeId}/presence`);
+        const ids = (on || [])
+          .map((x) =>
+            typeof x === "string" ? x : ((x as Record<string, string>).subject_id || (x as Record<string, string>).subject || ""),
+          )
+          .filter(Boolean);
+        if (alive) setPresence(new Set(ids));
+      } catch {
+        /* presence is best-effort */
       }
     })();
 
@@ -132,6 +159,7 @@ export function Chat() {
         location.origin.replace(/^http/, "ws") +
         `/v1/chat/ws?channel=${encodeURIComponent(activeId)}&access_token=${encodeURIComponent(token)}`;
       sock = new WebSocket(url);
+      wsRef.current = sock;
       sock.onmessage = (ev) => {
         let data: WsEvent;
         try {
@@ -157,6 +185,18 @@ export function Chat() {
         } else if (data.type === "message_deleted" && data.id) {
           setMessages((prev) => prev.filter((m) => m.id !== data.id));
           setThreadReplies((prev) => prev.filter((m) => m.id !== data.id));
+        } else if (data.type === "presence" && data.subject) {
+          const sub = data.subject;
+          setPresence((prev) => {
+            const next = new Set(prev);
+            if (data.status === "online") next.add(sub);
+            else next.delete(sub);
+            return next;
+          });
+        } else if (data.type === "typing" && data.subject) {
+          setTypingSubject(data.subject);
+          if (typingTimer.current) window.clearTimeout(typingTimer.current);
+          typingTimer.current = window.setTimeout(() => setTypingSubject(""), 2500);
         }
       };
       sock.onclose = () => {
@@ -173,6 +213,7 @@ export function Chat() {
           /* already closed */
         }
       }
+      wsRef.current = null;
     };
   }, [token, activeId]);
 
@@ -180,6 +221,20 @@ export function Chat() {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
+
+  function onDraftChange(v: string) {
+    setDraft(v);
+    const ws = wsRef.current;
+    const now = Date.now();
+    if (ws && ws.readyState === 1 && now - typingSentAt.current > 1500) {
+      typingSentAt.current = now;
+      try {
+        ws.send(JSON.stringify({ type: "typing" }));
+      } catch {
+        /* socket closing */
+      }
+    }
+  }
 
   async function postMessage(body: string, attachmentId?: string) {
     if (!active || !token) return;
@@ -217,6 +272,36 @@ export function Chat() {
         data_base64: b64,
       });
       await postMessage("", att.id);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function saveEdit(m: Message) {
+    const body = editText.trim();
+    if (!body || !token) return;
+    try {
+      const updated = await apiFetch<Message>(
+        token,
+        "PATCH",
+        `/v1/chat/channels/${m.channel_id}/messages/${m.id}`,
+        { body },
+      );
+      setMessages((prev) =>
+        prev.map((x) => (x.id === m.id ? { ...x, body: updated.body ?? body, edited_at: updated.edited_at } : x)),
+      );
+      setEditingId("");
+      setEditText("");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function deleteMessage(m: Message) {
+    if (!token || !window.confirm("Delete this message?")) return;
+    try {
+      await apiFetch(token, "DELETE", `/v1/chat/channels/${m.channel_id}/messages/${m.id}`);
+      setMessages((prev) => prev.filter((x) => x.id !== m.id));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
@@ -343,6 +428,11 @@ export function Chat() {
           <span className="chan-title">
             {active ? (active.kind === "direct" ? "@" : "#") + channelLabel(directory, me, active) : "Chat"}
           </span>
+          {active && active.kind !== "direct" && presence.size > 0 && (
+            <span className="presence" title={[...presence].map((id) => nameFor(directory, me, id)).join(", ")}>
+              ● {presence.size} online
+            </span>
+          )}
           <span className="spacer" />
           {active && (
             <>
@@ -400,21 +490,79 @@ export function Chat() {
             <div className="main-col">
               <div className="messages" ref={scrollRef}>
                 {messages.length === 0 && <div className="empty">No messages yet. Say hello.</div>}
-                {messages.map((m) => (
-                  <div key={m.id} className={"msg" + (m.sender_subject_id === me ? " mine" : "")}>
-                    <div className="meta">
-                      <span className="author">{nameFor(directory, me, m.sender_subject_id)}</span>{" "}
-                      {timeOf(m.created_at)} {m.edited_at ? "(edited)" : ""}
-                      <button className="reply-link" onClick={() => void openThread(m)} type="button">
-                        Reply
-                      </button>
+                {messages.map((m) => {
+                  const mine = m.sender_subject_id === me;
+                  return (
+                    <div key={m.id} className={"msg" + (mine ? " mine" : "")}>
+                      <div className="meta">
+                        <span className="author">{nameFor(directory, me, m.sender_subject_id)}</span>{" "}
+                        {timeOf(m.created_at)} {m.edited_at ? "(edited)" : ""}
+                        <span className="msg-actions">
+                          <button className="reply-link" onClick={() => void openThread(m)} type="button">
+                            Reply
+                          </button>
+                          {mine && !m.attachment_id && (
+                            <button
+                              className="reply-link"
+                              onClick={() => {
+                                setEditingId(m.id);
+                                setEditText(m.body);
+                              }}
+                              type="button"
+                            >
+                              Edit
+                            </button>
+                          )}
+                          {mine && (
+                            <button className="reply-link" onClick={() => void deleteMessage(m)} type="button">
+                              Delete
+                            </button>
+                          )}
+                        </span>
+                      </div>
+                      {editingId === m.id ? (
+                        <div className="edit-row">
+                          <input
+                            value={editText}
+                            onChange={(e) => setEditText(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                void saveEdit(m);
+                              } else if (e.key === "Escape") {
+                                setEditingId("");
+                                setEditText("");
+                              }
+                            }}
+                            autoFocus
+                          />
+                          <button className="btn-pill" onClick={() => void saveEdit(m)} type="button">
+                            Save
+                          </button>
+                          <button
+                            className="btn-ghost"
+                            onClick={() => {
+                              setEditingId("");
+                              setEditText("");
+                            }}
+                            type="button"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="bubble">
+                          {m.attachment_id ? <Attachment token={token!} id={m.attachment_id} /> : m.body}
+                        </div>
+                      )}
                     </div>
-                    <div className="bubble">
-                      {m.attachment_id ? <Attachment token={token!} id={m.attachment_id} /> : m.body}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
+
+              {typingSubject && typingSubject !== me && (
+                <div className="typing">{nameFor(directory, me, typingSubject)} is typing...</div>
+              )}
 
               {error && (
                 <div className="msg">
@@ -428,7 +576,7 @@ export function Chat() {
                 </button>
                 <input
                   value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
+                  onChange={(e) => onDraftChange(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();

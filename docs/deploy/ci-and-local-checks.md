@@ -1,25 +1,44 @@
-# CI is deploy-only; heavy checks run locally
+# Local-first build, auto-deploy on push
 
-The build model, after the 2026-06-30 simplification.
+How CyberOS P0 ships. All the heavy work runs on your Mac, in the pre-push hook, BEFORE the push. GitHub does
+one thing: when a push lands on main, it deploys. It never builds or tests.
 
-GitHub does one thing on a push to main: it runs `deploy` (build the images, push to GHCR, roll the VPS). The heavy checks - format, clippy, and tests - run on your Mac at push time, where the toolchain already is. This keeps GitHub fast and stops a failing test gate from sitting red next to a green deploy.
+## The pre-push hook does the heavy work
 
-## One-time setup (on your Mac)
+One-time:
 
     git config core.hooksPath .githooks
     chmod +x .githooks/pre-push
+    docker login ghcr.io -u <github-username>    # PAT with write:packages, for the image push
 
-After that, `git push` runs `.githooks/pre-push` first: `cargo fmt --all --check`, `cargo clippy --workspace --all-targets -- -D warnings`, and `cargo test --workspace`. If anything fails, the push is aborted and nothing deploys. It only runs when the commits you are pushing touch `services/`, so doc- or console-only pushes stay instant.
+When a push touches `services/`, `.githooks/pre-push` runs, in order, and aborts the push on any failure:
 
-Bypass options when you need them:
+    cargo fmt --all --check
+    cargo clippy --workspace -- -D warnings
+    cargo test --workspace
+    deploy/vps/build-push-images.sh              # build linux/amd64 images, push to GHCR
 
-    SKIP_LOCAL_CHECKS=1 git push      # skip the hook for one push
-    git push --no-verify              # same effect
+So nothing half-built ever reaches GitHub, and the fresh images are in GHCR before the push triggers the
+deploy. A push that touches only the console or `apps/web` skips all of this - those deploy via the VPS
+git-pull and need no image rebuild, so they stay instant.
 
-The Postgres-gated `#[ignore]` integration tests are not in the hook (they need a database). Run them by hand when you touch that code:
+Bypass: `SKIP_LOCAL_CHECKS=1 git push` (skip everything) or `SKIP_IMAGE_BUILD=1 git push` (keep the checks,
+skip the image build). The VPS is x86_64, so images build `linux/amd64`; on an Apple Silicon Mac that runs
+emulated and is slower than native - the trade for keeping the build off GitHub.
 
-    cd services && DATABASE_URL=postgres://... cargo test --workspace -- --ignored
+## GitHub deploys on push
 
-## What changed in GitHub
+`deploy.yml` runs on every push to main that touches `services/`, `apps/console/`, `apps/web/`, or
+`deploy/vps/`. It SSHes to the VPS and runs `deploy.sh`, which git-pulls (console, Caddyfile, compose,
+apps/web/dist) and docker-pulls the images the hook just pushed, then restarts. You can also trigger it by
+hand (Actions -> deploy -> Run workflow).
 
-`deploy.yml` still runs on push. The other workflows that used to run on push - `services` (lint+test), `mcp-sep986-check`, `rls-property-gate`, and `voice-and-consistency` - now run only on pull requests and on demand (`workflow_dispatch`), so they no longer fire on your direct pushes to main. The many pull-request-only gates are unchanged; they never ran on push anyway.
+The other workflows (`services`, `mcp-sep986-check`, `rls-property-gate`, `voice-and-consistency`) run only on
+pull requests and on demand - never on push.
+
+## A normal change, end to end
+
+Edit, commit, push. For a service-code change the hook formats, lints, tests, and builds + pushes images
+locally, then the push triggers the deploy. For a web-only change, rebuild the SPA first
+(`cd apps/web && npm run build`), commit `dist`, then push - the deploy git-pulls the new build, no image
+needed.

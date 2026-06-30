@@ -195,3 +195,12 @@ a { color: var(--ochre); }
 .person .pname { font-size: 14px; }
 .person .psub { font-size: 12px; color: var(--muted); }
 .picker-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+/* ---- presence / typing / message actions / inline edit ---- */
+.presence { color: var(--ok); font-size: 12px; margin-left: 12px; }
+.typing { padding: 2px 18px 6px; color: var(--muted); font-size: 12px; font-style: italic; min-height: 18px; }
+.msg-actions { display: inline-flex; gap: 8px; margin-left: 8px; opacity: 0; transition: opacity 0.1s; }
+.msg:hover .msg-actions { opacity: 1; }
+.edit-row { display: flex; gap: 8px; align-items: center; }
+.edit-row input { flex: 1; background: var(--umber-900); border: 1px solid var(--ochre); color: var(--ink); border-radius: 8px; padding: 8px 12px; font-size: 14px; }
+.edit-row input:focus { outline: none; }
