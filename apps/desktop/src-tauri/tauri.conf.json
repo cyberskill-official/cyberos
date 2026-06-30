@@ -7,15 +7,16 @@
     "frontendDist": "../src"
   },
   "app": {
-    "withGlobalTauri": true,
+    "withGlobalTauri": false,
     "windows": [
       {
         "label": "main",
         "title": "CyberOS",
-        "width": 980,
-        "height": 720,
-        "minWidth": 640,
-        "minHeight": 480
+        "width": 1200,
+        "height": 820,
+        "minWidth": 820,
+        "minHeight": 560,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15"
       }
     ],
     "security": {
