@@ -143,19 +143,91 @@ impl ChatBackend for RouterBackend {
     }
 }
 
+/// The embeddings call seam (mirrors [`ChatBackend`]). Production resolves the tenant's embedding alias to a
+/// provider and calls it once with no failover ([`RouterEmbedBackend`]); tests inject a stub. It returns the
+/// wire response, so the handler stays a thin tenant + validation shell.
+#[async_trait]
+pub trait EmbedBackend: Send + Sync + std::fmt::Debug {
+    async fn embed(
+        &self,
+        req: &ApiEmbedRequest,
+        policy: &TenantPolicy,
+    ) -> Result<ApiEmbedResponse, EmbedFailure>;
+}
+
+/// Why an embeddings call failed, mapped to an HTTP status by the handler.
+#[derive(Debug)]
+pub enum EmbedFailure {
+    /// The tenant's embedding spend cap is exhausted - HTTP 402. The brain marks the row pending and backs
+    /// off (it never calls a provider directly). Local providers are zero-cost, so this only fires for a
+    /// paid cloud embedding provider over its cap.
+    SpendCap,
+    /// Alias resolution failed: unknown alias, a ZDR or residency violation, or no provider carries the
+    /// embedding alias - HTTP 400. The message names the reason.
+    Resolve(String),
+    /// The provider was unreachable, timed out, or returned an error - HTTP 502. The brain treats this as
+    /// "gateway down" and retries on the next tick.
+    Provider(String),
+}
+
+/// The production embeddings backend: resolve the tenant's embedding alias (so the policy decides provider,
+/// in-region model, ZDR, and residency), then call that one provider with no failover (FR-MEMORY-123 /
+/// DEC-2723). A paid cloud provider would add a cost-ledger pre-check here that returns `SpendCap` over the
+/// monthly cap; local providers are zero-cost, so the cyberskill tenant never hits it.
+#[derive(Debug, Default)]
+pub struct RouterEmbedBackend;
+
+#[async_trait]
+impl EmbedBackend for RouterEmbedBackend {
+    async fn embed(
+        &self,
+        req: &ApiEmbedRequest,
+        policy: &TenantPolicy,
+    ) -> Result<ApiEmbedResponse, EmbedFailure> {
+        // The brain requests "bge-m3" (standard embedding). A caller that names an embed alias is honoured;
+        // anything else maps to the standard embedding alias so the tenant policy decides the real model.
+        let alias = match req.model.as_deref() {
+            Some("embed.code") => "embed.code",
+            _ => "embed.standard",
+        };
+        let resolved = crate::alias::resolve(alias, policy)
+            .map_err(|e| EmbedFailure::Resolve(format!("{e:?}")))?;
+
+        let ereq = crate::router::types::EmbedRequest {
+            input: req.input.clone(),
+            model: resolved.model.clone(),
+        };
+        let timeout =
+            std::time::Duration::from_secs(u64::from(policy.ai_policy.call_timeout_seconds));
+        let deadline = std::time::Instant::now() + timeout;
+        let resp = crate::router::call_embed_provider(&ereq, &resolved, deadline)
+            .await
+            .map_err(|e| EmbedFailure::Provider(format!("{e:?}")))?;
+
+        Ok(ApiEmbedResponse {
+            embeddings: resp.embeddings,
+            model: resolved.model.clone(),
+            embed_model_version: resolved.model,
+        })
+    }
+}
+
 /// The shared state behind every request.
 #[derive(Clone, Debug)]
 pub struct GatewayState {
     pub policy: Arc<dyn PolicySource>,
     pub backend: Arc<dyn ChatBackend>,
+    pub embed_backend: Arc<dyn EmbedBackend>,
 }
 
 impl GatewayState {
-    /// The production wiring: the FR-AI-005 policy loader plus the real router backend (FR-AI-105).
+    /// The production wiring: the FR-AI-005 policy loader, the real router chat backend (FR-AI-105), and the
+    /// router embeddings backend (FR-MEMORY-123).
     pub fn production() -> Self {
         Self {
             policy: Arc::new(LoaderPolicySource),
             backend: Arc::new(RouterBackend),
+            embed_backend: Arc::new(RouterEmbedBackend),
         }
     }
 }
@@ -190,6 +262,24 @@ pub struct ApiChatResponse {
     pub finish_reason: String,
 }
 
+/// The `POST /v1/embeddings` request body. The brain (FR-MEMORY-123) sends `{ "input": ["<text>"],
+/// "model": "bge-m3" }`; `model` is optional and treated as a hint mapped to an embedding alias.
+#[derive(Debug, Deserialize)]
+pub struct ApiEmbedRequest {
+    pub input: Vec<String>,
+    #[serde(default)]
+    pub model: Option<String>,
+}
+
+/// The `POST /v1/embeddings` response body, matching the contract the brain's `embed_client` parses:
+/// `{ "embeddings": [[..1024 f32..]], "model": "..", "embed_model_version": ".." }`.
+#[derive(Debug, Serialize)]
+pub struct ApiEmbedResponse {
+    pub embeddings: Vec<Vec<f32>>,
+    pub model: String,
+    pub embed_model_version: String,
+}
+
 /// `GET /v1/status` - FR-APP-003 AI Ops read. Returns the requesting tenant's resolved AI policy: the
 /// primary provider and its alias-to-model map, the monthly spend cap and warn threshold, residency, ZDR,
 /// and the fallback chain. Read-only over the already-loaded policy; makes no provider call.
@@ -207,6 +297,56 @@ async fn status(State(st): State<GatewayState>, headers: HeaderMap) -> Response 
     }
 }
 
+/// `POST /v1/embeddings` - FR-MEMORY-123 / DEC-2723. The one embedding path for the brain: require a tenant,
+/// load its policy, then hand off to the embeddings backend (resolve the embedding alias, call the provider
+/// once, no failover). Maps the backend's typed failure to the brain's contract: 402 spend cap, 400 bad
+/// request or unresolvable alias, 502 provider or gateway down.
+async fn embeddings(
+    State(st): State<GatewayState>,
+    headers: HeaderMap,
+    body: Result<Json<ApiEmbedRequest>, JsonRejection>,
+) -> Response {
+    let tenant = match header(&headers, "x-tenant-id") {
+        Some(t) => t,
+        None => return err(StatusCode::BAD_REQUEST, "missing x-tenant-id header"),
+    };
+    let Json(req) = match body {
+        Ok(j) => j,
+        Err(e) => {
+            return err(
+                StatusCode::BAD_REQUEST,
+                &format!("invalid request body: {e}"),
+            )
+        }
+    };
+    if req.input.iter().all(|s| s.trim().is_empty()) {
+        return err(
+            StatusCode::BAD_REQUEST,
+            "input must contain at least one non-empty string",
+        );
+    }
+
+    let policy = match st.policy.for_tenant(&tenant).await {
+        Ok(p) => p,
+        Err(e) => {
+            return err(
+                StatusCode::NOT_FOUND,
+                &format!("policy unavailable for tenant: {e}"),
+            )
+        }
+    };
+
+    match st.embed_backend.embed(&req, &policy).await {
+        Ok(resp) => (StatusCode::OK, Json(resp)).into_response(),
+        Err(EmbedFailure::SpendCap) => err(
+            StatusCode::PAYMENT_REQUIRED,
+            "embedding spend cap exhausted",
+        ),
+        Err(EmbedFailure::Resolve(msg)) => err(StatusCode::BAD_REQUEST, &msg),
+        Err(EmbedFailure::Provider(msg)) => err(StatusCode::BAD_GATEWAY, &msg),
+    }
+}
+
 /// Build the gateway router: liveness, a metrics stub (RED exports via OTLP, not a scrape), and the chat
 /// endpoint, with the FR-OBS-003 RED middleware wrapping every route.
 pub fn build_router(state: GatewayState) -> Router {
@@ -217,6 +357,7 @@ pub fn build_router(state: GatewayState) -> Router {
             get(|| async { "# cyberos-ai-gateway: RED metrics export via OTLP\n" }),
         )
         .route("/v1/chat", post(chat))
+        .route("/v1/embeddings", post(embeddings))
         .route("/v1/status", get(status))
         // FR-OBS-005: ensure every request carries a trace context (extract or generate) and echo it on
         // the response. FR-OBS-003 (ADR-OBS-003-001): tenant_ctx stamps the request's tenant onto the
@@ -495,10 +636,47 @@ mod tests {
         }
     }
 
+    /// A policy source that returns the fixture policy - used by the embeddings tests, which must get past
+    /// policy load to reach the embeddings backend.
+    #[derive(Debug)]
+    struct FixedPolicy;
+    #[async_trait]
+    impl PolicySource for FixedPolicy {
+        async fn for_tenant(&self, _t: &str) -> Result<Arc<TenantPolicy>, String> {
+            Ok(fixture_policy())
+        }
+    }
+
+    /// A stub embeddings backend: returns a fixed vector, or forces the spend-cap branch, so the route's
+    /// status mapping is testable without a live provider.
+    #[derive(Debug)]
+    enum StubEmbed {
+        Ok,
+        SpendCap,
+    }
+    #[async_trait]
+    impl EmbedBackend for StubEmbed {
+        async fn embed(
+            &self,
+            _req: &ApiEmbedRequest,
+            _policy: &TenantPolicy,
+        ) -> Result<ApiEmbedResponse, EmbedFailure> {
+            match self {
+                StubEmbed::Ok => Ok(ApiEmbedResponse {
+                    embeddings: vec![vec![0.1, 0.2, 0.3]],
+                    model: "bge-m3".into(),
+                    embed_model_version: "bge-m3@stub".into(),
+                }),
+                StubEmbed::SpendCap => Err(EmbedFailure::SpendCap),
+            }
+        }
+    }
+
     fn test_state() -> GatewayState {
         GatewayState {
             policy: Arc::new(UnreachablePolicy),
             backend: Arc::new(EchoBackend),
+            embed_backend: Arc::new(StubEmbed::Ok),
         }
     }
 
@@ -661,5 +839,88 @@ mod tests {
             res.headers().get("traceparent").unwrap().to_str().unwrap(),
             valid
         );
+    }
+
+    #[tokio::test]
+    async fn embeddings_without_tenant_is_400() {
+        let app = build_router(test_state());
+        let body = r#"{"input":["hi"],"model":"bge-m3"}"#;
+        let res = app
+            .oneshot(
+                Request::post("/v1/embeddings")
+                    .header("content-type", "application/json")
+                    .body(Body::from(body))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn embeddings_empty_input_is_400() {
+        let app = build_router(test_state());
+        let body = r#"{"input":[],"model":"bge-m3"}"#;
+        let res = app
+            .oneshot(
+                Request::post("/v1/embeddings")
+                    .header("content-type", "application/json")
+                    .header("x-tenant-id", "org:cyberskill")
+                    .body(Body::from(body))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn embeddings_success_returns_vectors() {
+        let st = GatewayState {
+            policy: Arc::new(FixedPolicy),
+            backend: Arc::new(EchoBackend),
+            embed_backend: Arc::new(StubEmbed::Ok),
+        };
+        let app = build_router(st);
+        let body = r#"{"input":["hi"],"model":"bge-m3"}"#;
+        let res = app
+            .oneshot(
+                Request::post("/v1/embeddings")
+                    .header("content-type", "application/json")
+                    .header("x-tenant-id", "org:cyberskill")
+                    .body(Body::from(body))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::OK);
+        let bytes = axum::body::to_bytes(res.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let v: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(v["embeddings"].as_array().unwrap().len(), 1);
+        assert_eq!(v["embed_model_version"], "bge-m3@stub");
+    }
+
+    #[tokio::test]
+    async fn embeddings_spend_cap_is_402() {
+        let st = GatewayState {
+            policy: Arc::new(FixedPolicy),
+            backend: Arc::new(EchoBackend),
+            embed_backend: Arc::new(StubEmbed::SpendCap),
+        };
+        let app = build_router(st);
+        let body = r#"{"input":["hi"],"model":"bge-m3"}"#;
+        let res = app
+            .oneshot(
+                Request::post("/v1/embeddings")
+                    .header("content-type", "application/json")
+                    .header("x-tenant-id", "org:cyberskill")
+                    .body(Body::from(body))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::PAYMENT_REQUIRED);
     }
 }

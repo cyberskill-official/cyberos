@@ -475,6 +475,47 @@ pub async fn call_provider_streaming(
     Err(RouterError::StreamingNotImplemented)
 }
 
+/// Call the resolved provider for ONE embeddings request. Unlike `call_provider`, embeddings never fail over
+/// to a different provider or model: a fallback would return vectors in a different embedding space, silently
+/// corrupting the index. So this calls exactly the resolved provider once, under a per-call timeout, and
+/// surfaces its error for the caller (the brain) to back off on. `Bge` and `Vertex` have no adapter yet, so
+/// they are refused here rather than panicking inside `make_provider`.
+pub async fn call_embed_provider(
+    req: &EmbedRequest,
+    resolved: &ResolvedModel,
+    deadline: Instant,
+) -> Result<EmbedResponse, RouterError> {
+    if matches!(
+        resolved.provider_kind,
+        ProviderKind::Bge | ProviderKind::Vertex
+    ) {
+        return Err(RouterError::InvalidResponse {
+            reason: format!(
+                "no embeddings provider adapter for {:?} yet",
+                resolved.provider_kind
+            ),
+        });
+    }
+    let provider_timeout =
+        env_duration_secs("AI_GATEWAY_PROVIDER_TIMEOUT_SECS", PROVIDER_DEFAULT_TIMEOUT);
+    let remaining = deadline
+        .saturating_duration_since(Instant::now())
+        .min(provider_timeout);
+    if remaining.is_zero() {
+        return Err(RouterError::DeadlineExceeded);
+    }
+    let provider = failover::make_provider(resolved.provider_kind);
+    match tokio::time::timeout(
+        remaining,
+        provider.call_embed(req, &resolved.model, deadline),
+    )
+    .await
+    {
+        Ok(r) => r,
+        Err(_) => Err(RouterError::DeadlineExceeded),
+    }
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 fn make_record(

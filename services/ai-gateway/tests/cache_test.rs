@@ -48,6 +48,7 @@ fn redis_available() -> bool {
 }
 
 #[tokio::test]
+#[ignore = "integration: needs a live Redis; run with cargo test -- --ignored"]
 async fn cache_hit_returns_response() {
     if !redis_available() {
         return;
@@ -67,6 +68,7 @@ async fn cache_hit_returns_response() {
 }
 
 #[tokio::test]
+#[ignore = "integration: needs a live Redis; run with cargo test -- --ignored"]
 async fn cache_miss_returns_miss() {
     if !redis_available() {
         return;
@@ -81,6 +83,7 @@ async fn cache_miss_returns_miss() {
 }
 
 #[tokio::test]
+#[ignore = "integration: needs a live Redis; run with cargo test -- --ignored"]
 async fn cross_tenant_miss() {
     if !redis_available() {
         return;
@@ -97,6 +100,7 @@ async fn cross_tenant_miss() {
 }
 
 #[tokio::test]
+#[ignore = "integration: needs a live Redis; run with cargo test -- --ignored"]
 async fn persona_version_change_invalidates() {
     if !redis_available() {
         return;
@@ -113,6 +117,7 @@ async fn persona_version_change_invalidates() {
 }
 
 #[tokio::test]
+#[ignore = "integration: needs a live Redis; run with cargo test -- --ignored"]
 async fn chat_long_skipped() {
     cache::redis_backend::init("redis://127.0.0.1:6379");
     let key = k("tenant_a", "long story prompt", "cuo-cpo@0.4.1");
@@ -178,6 +183,7 @@ async fn failed_response_not_cached() {
 }
 
 #[tokio::test]
+#[ignore = "integration: needs a live Redis; run with cargo test -- --ignored"]
 async fn schema_mismatch_treated_as_miss() {
     if !redis_available() {
         return;
@@ -213,6 +219,7 @@ async fn schema_mismatch_treated_as_miss() {
 }
 
 #[tokio::test]
+#[ignore = "integration: needs a live Redis; run with cargo test -- --ignored"]
 async fn redis_keys_are_tenant_isolated() {
     if !redis_available() {
         return;

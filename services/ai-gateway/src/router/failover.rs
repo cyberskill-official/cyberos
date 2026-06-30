@@ -32,7 +32,7 @@ pub fn build_provider_chain(
     chain
 }
 
-fn make_provider(kind: ProviderKind) -> Box<dyn Provider> {
+pub(crate) fn make_provider(kind: ProviderKind) -> Box<dyn Provider> {
     match kind {
         ProviderKind::Bedrock => Box::new(super::bedrock::BedrockProvider),
         ProviderKind::Anthropic => Box::new(super::anthropic::AnthropicProvider),

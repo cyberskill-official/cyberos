@@ -27,7 +27,9 @@ use axum::http::{Request, StatusCode};
 use cyberos_ai_gateway::policy::schema::{
     AiPolicy, Provider, ProviderKind, Residency, TenantPolicy,
 };
-use cyberos_ai_gateway::server::{build_router, GatewayState, PolicySource, RouterBackend};
+use cyberos_ai_gateway::server::{
+    build_router, GatewayState, PolicySource, RouterBackend, RouterEmbedBackend,
+};
 use tower::ServiceExt;
 
 /// Build a tenant policy whose primary provider is a local one, with `chat.smart` mapped to `model`.
@@ -122,6 +124,7 @@ async fn local_provider_live_round_trip() {
     let state = GatewayState {
         policy: Arc::new(FixedPolicy(Arc::new(local_policy(&kind, &model)))),
         backend: Arc::new(RouterBackend),
+        embed_backend: Arc::new(RouterEmbedBackend),
     };
     let app = build_router(state);
 
