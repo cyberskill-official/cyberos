@@ -1,32 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { ChangeEvent } from "react";
 import { useAuth } from "../lib/auth";
 import { apiFetch, decodeJwt } from "../lib/api";
+import type { Channel, Directory, Message, Person } from "../lib/chat";
+import { channelLabel, fileToBase64, nameFor, timeOf } from "../lib/chat";
+import { Attachment } from "../components/Attachment";
+import { PeoplePicker } from "../components/PeoplePicker";
+import type { PickerMode } from "../components/PeoplePicker";
+import { ThreadPanel } from "../components/ThreadPanel";
 
-interface Channel {
-  id: string;
-  name?: string;
-  kind?: string;
-}
-interface Message {
-  id: string;
-  channel_id: string;
-  sender_subject_id: string;
-  body: string;
-  parent_id?: string | null;
-  attachment_id?: string | null;
-  edited_at?: string | null;
-  deleted_at?: string | null;
-  created_at?: string;
-}
-// A live websocket frame: a tagged event with the message fields flattened onto it.
-type WsEvent = Partial<Message> & { type: string; subject?: string; status?: string };
-
-const shortId = (id: string) => (id ? id.slice(0, 8) : "?");
-
-function timeOf(m: Message): string {
-  const t = m.created_at ? Date.parse(m.created_at) : NaN;
-  if (Number.isNaN(t)) return "";
-  return new Date(t).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+interface WsEvent extends Partial<Message> {
+  type: string;
 }
 
 export function Chat() {
@@ -36,20 +20,60 @@ export function Chat() {
     return c && typeof c.sub === "string" ? c.sub : "";
   }, [token]);
 
+  const [dirList, setDirList] = useState<Person[]>([]);
+  const directory = useMemo<Directory>(() => {
+    const d: Directory = {};
+    for (const p of dirList) d[p.subject_id] = p;
+    return d;
+  }, [dirList]);
+
   const [channels, setChannels] = useState<Channel[]>([]);
   const [activeId, setActiveId] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
-  const [health, setHealth] = useState<"unknown" | "ok" | "bad">("unknown");
-  const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
+  const [health, setHealth] = useState<"unknown" | "ok" | "bad">("unknown");
+  const [picker, setPicker] = useState<PickerMode | null>(null);
+
+  const [threadRoot, setThreadRoot] = useState<Message | null>(null);
+  const [threadReplies, setThreadReplies] = useState<Message[]>([]);
+  const threadRootRef = useRef<Message | null>(null);
+  useEffect(() => {
+    threadRootRef.current = threadRoot;
+  }, [threadRoot]);
+
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQ, setSearchQ] = useState("");
+  const [searchResults, setSearchResults] = useState<Message[]>([]);
+
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const fileRef = useRef<HTMLInputElement | null>(null);
 
   const active = channels.find((c) => c.id === activeId) || null;
 
-  // Load the channel list once signed in; open the first channel by default.
+  async function reloadChannels(selectId?: string) {
+    if (!token) return;
+    try {
+      const list = await apiFetch<Channel[]>(token, "GET", "/v1/chat/channels");
+      setChannels(list || []);
+      if (selectId) setActiveId(selectId);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  // Directory (best-effort: names + the people-picker) and the channel list.
   useEffect(() => {
     if (!token) return;
+    (async () => {
+      try {
+        const d = await apiFetch<{ items?: Person[] }>(token, "GET", "/v1/auth/directory");
+        setDirList(d.items || []);
+      } catch {
+        /* directory is best-effort */
+      }
+    })();
     (async () => {
       try {
         const list = await apiFetch<Channel[]>(token, "GET", "/v1/chat/channels");
@@ -61,7 +85,7 @@ export function Chat() {
     })();
   }, [token]);
 
-  // Reachability dot (the /healthz route Caddy proxies to chat).
+  // Reachability dot.
   useEffect(() => {
     let alive = true;
     const ping = async () => {
@@ -80,13 +104,16 @@ export function Chat() {
     };
   }, []);
 
-  // On channel change: load the main timeline and (re)connect the live websocket. Thread replies (those
-  // with a parent_id) are excluded from the main list for this MVP.
+  // Per-channel: load the main timeline and connect the live websocket. Thread replies (parent_id set) are
+  // routed to the open thread; main messages append to the timeline; edits/deletes patch both lists.
   useEffect(() => {
     if (!token || !activeId) {
       setMessages([]);
       return;
     }
+    setThreadRoot(null);
+    setThreadReplies([]);
+    setSearchOpen(false);
     let alive = true;
     (async () => {
       try {
@@ -112,15 +139,24 @@ export function Chat() {
         } catch {
           return;
         }
-        if (data.type === "message" && data.id && !data.parent_id) {
+        if (data.type === "message" && data.id) {
           const msg = data as Message;
-          setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
+          if (msg.parent_id) {
+            const root = threadRootRef.current;
+            if (root && msg.parent_id === root.id) {
+              setThreadReplies((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
+            }
+          } else {
+            setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
+          }
         } else if (data.type === "message_edited" && data.id) {
-          setMessages((prev) =>
-            prev.map((m) => (m.id === data.id ? { ...m, body: data.body ?? m.body, edited_at: data.edited_at } : m)),
-          );
+          const patch = (m: Message): Message =>
+            m.id === data.id ? { ...m, body: data.body ?? m.body, edited_at: data.edited_at } : m;
+          setMessages((prev) => prev.map(patch));
+          setThreadReplies((prev) => prev.map(patch));
         } else if (data.type === "message_deleted" && data.id) {
           setMessages((prev) => prev.filter((m) => m.id !== data.id));
+          setThreadReplies((prev) => prev.filter((m) => m.id !== data.id));
         }
       };
       sock.onclose = () => {
@@ -140,20 +176,26 @@ export function Chat() {
     };
   }, [token, activeId]);
 
-  // Keep the timeline pinned to the newest message.
   useEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
 
+  async function postMessage(body: string, attachmentId?: string) {
+    if (!active || !token) return;
+    const payload: Record<string, unknown> = { body };
+    if (attachmentId) payload.attachment_id = attachmentId;
+    const m = await apiFetch<Message>(token, "POST", `/v1/chat/channels/${active.id}/messages`, payload);
+    setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
+  }
+
   async function send() {
     const text = draft.trim();
-    if (!text || !active || !token) return;
+    if (!text || sending) return;
     setSending(true);
     setError("");
     try {
-      const m = await apiFetch<Message>(token, "POST", `/v1/chat/channels/${active.id}/messages`, { body: text });
-      setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
+      await postMessage(text);
       setDraft("");
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -162,13 +204,100 @@ export function Chat() {
     }
   }
 
-  async function createChannel() {
-    const name = window.prompt("New channel name");
-    if (!name || !name.trim() || !token) return;
+  async function onPickFile(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!file || !active || !token) return;
+    setError("");
     try {
-      const c = await apiFetch<Channel>(token, "POST", "/v1/chat/channels", { name: name.trim() });
-      setChannels((prev) => [...prev, c]);
-      setActiveId(c.id);
+      const b64 = await fileToBase64(file);
+      const att = await apiFetch<{ id: string }>(token, "POST", `/v1/chat/channels/${active.id}/attachments`, {
+        filename: file.name,
+        content_type: file.type || "application/octet-stream",
+        data_base64: b64,
+      });
+      await postMessage("", att.id);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function createDm(subjectId: string) {
+    if (!token) return;
+    try {
+      const c = await apiFetch<Channel>(token, "POST", "/v1/chat/dms", { subject_id: subjectId });
+      await reloadChannels(c.id);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function createGroup(name: string, ids: string[]) {
+    if (!token) return;
+    try {
+      const c = await apiFetch<Channel>(token, "POST", "/v1/chat/channels", { name });
+      for (const id of ids) {
+        try {
+          await apiFetch(token, "POST", `/v1/chat/channels/${c.id}/members`, { subject_id: id, role: "member" });
+        } catch {
+          /* best-effort per member */
+        }
+      }
+      await reloadChannels(c.id);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function addPeople(ids: string[]) {
+    if (!active || !token) return;
+    for (const id of ids) {
+      try {
+        await apiFetch(token, "POST", `/v1/chat/channels/${active.id}/members`, { subject_id: id, role: "member" });
+      } catch {
+        /* best-effort per member */
+      }
+    }
+  }
+
+  async function openThread(m: Message) {
+    setThreadRoot(m);
+    setThreadReplies([]);
+    if (!token) return;
+    try {
+      const r = await apiFetch<Message[]>(
+        token,
+        "GET",
+        `/v1/chat/channels/${m.channel_id}/messages?parent_id=${m.id}`,
+      );
+      setThreadReplies(r || []);
+    } catch {
+      /* leave the panel open with just the root */
+    }
+  }
+
+  async function threadSend(text: string) {
+    if (!threadRoot || !token) return;
+    const m = await apiFetch<Message>(token, "POST", `/v1/chat/channels/${threadRoot.channel_id}/messages`, {
+      body: text,
+      parent_id: threadRoot.id,
+    });
+    setThreadReplies((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
+  }
+
+  async function runSearch() {
+    const q = searchQ.trim();
+    if (!q || !active || !token) {
+      setSearchResults([]);
+      return;
+    }
+    try {
+      const rows = await apiFetch<Message[]>(
+        token,
+        "GET",
+        `/v1/chat/channels/${active.id}/search?q=${encodeURIComponent(q)}`,
+      );
+      setSearchResults(rows || []);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
@@ -176,17 +305,26 @@ export function Chat() {
 
   return (
     <div className="chat">
+      <input ref={fileRef} type="file" style={{ display: "none" }} onChange={onPickFile} />
+
       <aside className="sidebar">
         <div className="side-head">
           <span className="title">Channels</span>
           <span className="add">
-            <button className="btn-mini" title="New channel" onClick={createChannel} type="button">
+            <button className="btn-mini" title="New direct message" onClick={() => setPicker("dm")} type="button">
+              @
+            </button>
+            <button className="btn-mini" title="New group channel" onClick={() => setPicker("group")} type="button">
               +
             </button>
           </span>
         </div>
         <div className="channels">
-          {channels.length === 0 && <div className="empty" style={{ fontSize: 13, padding: 16 }}>No channels yet</div>}
+          {channels.length === 0 && (
+            <div className="empty" style={{ fontSize: 13, padding: 16 }}>
+              No channels yet
+            </div>
+          )}
           {channels.map((c) => (
             <div
               key={c.id}
@@ -194,7 +332,7 @@ export function Chat() {
               onClick={() => setActiveId(c.id)}
             >
               <span className="hash">{c.kind === "direct" ? "@" : "#"}</span>
-              <span className="cname">{c.name || shortId(c.id)}</span>
+              <span className="cname">{channelLabel(directory, me, c)}</span>
             </div>
           ))}
         </div>
@@ -203,53 +341,134 @@ export function Chat() {
       <section className="main">
         <div className="main-head">
           <span className="chan-title">
-            {active ? (active.kind === "direct" ? "@" : "#") + (active.name || shortId(active.id)) : "Chat"}
+            {active ? (active.kind === "direct" ? "@" : "#") + channelLabel(directory, me, active) : "Chat"}
           </span>
           <span className="spacer" />
+          {active && (
+            <>
+              <button className="btn-mini" title="Search this channel" onClick={() => setSearchOpen((s) => !s)} type="button">
+                🔍
+              </button>
+              {active.kind !== "direct" && (
+                <button className="btn-mini" title="Add people" onClick={() => setPicker("add")} type="button">
+                  ＋
+                </button>
+              )}
+            </>
+          )}
           <span className={"dot " + (health === "ok" ? "ok" : health === "bad" ? "bad" : "")} />
           <span className="health">
             {health === "ok" ? "connected" : health === "bad" ? "unreachable" : "..."}
           </span>
         </div>
 
-        {!active ? (
-          <div className="empty">Select or create a channel to start.</div>
-        ) : (
-          <>
-            <div className="messages" ref={scrollRef}>
-              {messages.map((m) => (
-                <div key={m.id} className={"msg" + (m.sender_subject_id === me ? " mine" : "")}>
-                  <div className="meta">
-                    <span className="author">{m.sender_subject_id === me ? "You" : shortId(m.sender_subject_id)}</span>{" "}
-                    {timeOf(m)} {m.edited_at ? "(edited)" : ""}
+        {searchOpen && active && (
+          <div className="search-bar">
+            <input
+              value={searchQ}
+              onChange={(e) => setSearchQ(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  void runSearch();
+                }
+              }}
+              placeholder="Search messages in this channel"
+              autoFocus
+            />
+            <button className="btn-pill" onClick={() => void runSearch()} type="button">
+              Search
+            </button>
+            {searchResults.length > 0 && (
+              <div className="search-results">
+                {searchResults.map((m) => (
+                  <div key={m.id} className="search-row">
+                    <span className="author">{nameFor(directory, me, m.sender_subject_id)}</span>{" "}
+                    <span className="when">{timeOf(m.created_at)}</span>
+                    <div className="snippet">{m.body || "[attachment]"}</div>
                   </div>
-                  <div className="bubble">{m.body}</div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {!active ? (
+          <div className="empty">Select or start a conversation.</div>
+        ) : (
+          <div className="main-row">
+            <div className="main-col">
+              <div className="messages" ref={scrollRef}>
+                {messages.length === 0 && <div className="empty">No messages yet. Say hello.</div>}
+                {messages.map((m) => (
+                  <div key={m.id} className={"msg" + (m.sender_subject_id === me ? " mine" : "")}>
+                    <div className="meta">
+                      <span className="author">{nameFor(directory, me, m.sender_subject_id)}</span>{" "}
+                      {timeOf(m.created_at)} {m.edited_at ? "(edited)" : ""}
+                      <button className="reply-link" onClick={() => void openThread(m)} type="button">
+                        Reply
+                      </button>
+                    </div>
+                    <div className="bubble">
+                      {m.attachment_id ? <Attachment token={token!} id={m.attachment_id} /> : m.body}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {error && (
+                <div className="msg">
+                  <div className="bubble sys">{error}</div>
                 </div>
-              ))}
-              {messages.length === 0 && <div className="empty">No messages yet. Say hello.</div>}
+              )}
+
+              <div className="composer">
+                <button className="btn-mini" title="Attach a file" onClick={() => fileRef.current?.click()} type="button">
+                  📎
+                </button>
+                <input
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      void send();
+                    }
+                  }}
+                  placeholder={"Message " + (active ? channelLabel(directory, me, active) : "")}
+                />
+                <button onClick={() => void send()} disabled={sending || !draft.trim()} type="button">
+                  Send
+                </button>
+              </div>
             </div>
 
-            {error && <div className="msg"><div className="bubble sys">{error}</div></div>}
-
-            <div className="composer">
-              <input
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    void send();
-                  }
-                }}
-                placeholder={"Message " + (active.name ? "#" + active.name : "channel")}
+            {threadRoot && token && (
+              <ThreadPanel
+                token={token}
+                me={me}
+                dir={directory}
+                root={threadRoot}
+                replies={threadReplies}
+                onClose={() => setThreadRoot(null)}
+                onSend={threadSend}
               />
-              <button onClick={() => void send()} disabled={sending || !draft.trim()} type="button">
-                Send
-              </button>
-            </div>
-          </>
+            )}
+          </div>
         )}
       </section>
+
+      {picker && token && (
+        <PeoplePicker
+          mode={picker}
+          people={dirList}
+          me={me}
+          onClose={() => setPicker(null)}
+          onDm={createDm}
+          onGroup={createGroup}
+          onAdd={addPeople}
+        />
+      )}
     </div>
   );
 }

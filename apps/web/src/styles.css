@@ -149,3 +149,49 @@ a { color: var(--ochre); }
 .composer button { background: var(--ochre); color: var(--umber-900); border: none; border-radius: 8px; padding: 0 18px; font-weight: 700; cursor: pointer; }
 .composer button:disabled { opacity: 0.5; cursor: default; }
 .empty { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 14px; }
+
+/* ---- chat: layout with thread panel ---- */
+.side-head .add { margin-left: auto; display: flex; gap: 4px; }
+.main-row { flex: 1; display: flex; min-height: 0; }
+.main-col { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.reply-link { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 11px; margin-left: 8px; padding: 0; text-decoration: underline; }
+.reply-link:hover { color: var(--ochre); }
+
+/* ---- attachments ---- */
+.att-img { max-width: 260px; max-height: 260px; border-radius: 8px; display: block; cursor: pointer; border: 1px solid var(--umber-700); }
+.att-chip { display: inline-block; background: var(--umber-900); border: 1px solid var(--umber-700); border-radius: 8px; padding: 6px 12px; font-size: 13px; color: var(--ink); text-decoration: none; cursor: pointer; }
+.att-chip:hover { border-color: var(--ochre); }
+
+/* ---- thread panel ---- */
+.thread { width: 340px; flex: none; border-left: 1px solid var(--umber-700); display: flex; flex-direction: column; min-height: 0; background: var(--umber-800); }
+.thread-head { padding: 12px 16px; border-bottom: 1px solid var(--umber-700); display: flex; align-items: center; justify-content: space-between; font-weight: 700; font-size: 14px; }
+.thread-body { flex: 1; overflow: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.thread-sep { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--umber-700); padding-bottom: 6px; }
+
+/* ---- search ---- */
+.search-bar { flex: none; border-bottom: 1px solid var(--umber-700); padding: 10px 18px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.search-bar input { flex: 1; min-width: 180px; background: var(--umber-900); border: 1px solid var(--umber-700); color: var(--ink); border-radius: 8px; padding: 8px 12px; font-size: 13px; }
+.search-bar input:focus { outline: none; border-color: var(--ochre); }
+.search-results { flex-basis: 100%; max-height: 200px; overflow: auto; display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.search-row { font-size: 12px; }
+.search-row .author { color: var(--ink); font-weight: 600; }
+.search-row .when { color: var(--muted); }
+.search-row .snippet { color: var(--muted); margin-top: 2px; }
+
+/* ---- buttons ---- */
+.btn-pill { background: var(--ochre); color: var(--umber-900); border: none; border-radius: 8px; padding: 8px 16px; font-weight: 700; font-size: 13px; cursor: pointer; }
+.btn-pill:hover { filter: brightness(1.05); }
+
+/* ---- people picker modal ---- */
+.picker-bg { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55); display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 50; }
+.picker { background: var(--umber); border: 1px solid var(--umber-700); border-radius: var(--radius); width: 420px; max-width: 100%; max-height: 80vh; display: flex; flex-direction: column; padding: 18px; gap: 12px; }
+.picker-head { font-weight: 700; font-size: 16px; }
+.picker-input { background: var(--umber-900); border: 1px solid var(--umber-700); color: var(--ink); border-radius: 8px; padding: 9px 12px; font-size: 14px; }
+.picker-input:focus { outline: none; border-color: var(--ochre); }
+.picker-people { flex: 1; overflow: auto; display: flex; flex-direction: column; gap: 4px; min-height: 120px; }
+.person { display: flex; flex-direction: column; gap: 1px; padding: 8px 10px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; }
+.person:hover { background: var(--umber-700); }
+.person.sel { background: var(--umber-700); border-color: var(--ochre); }
+.person .pname { font-size: 14px; }
+.person .psub { font-size: 12px; color: var(--muted); }
+.picker-actions { display: flex; justify-content: flex-end; gap: 10px; }
