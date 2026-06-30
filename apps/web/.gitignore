@@ -1,0 +1,5 @@
+node_modules
+*.local
+.DS_Store
+# dist is committed: the VPS serves the built SPA from the git checkout (it never builds). See
+# docs/deploy/web-console.md.

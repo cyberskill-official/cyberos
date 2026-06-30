@@ -54,6 +54,17 @@
 		reverse_proxy chat:7720
 	}
 
+	# The Vite + React console (apps/web/dist) served additively at /web/ - opt-in, alongside the legacy
+	# static console at /, so shipping it never disturbs the live team. API calls inside it are origin-
+	# relative so they hit the same services. strip_prefix maps /web/assets/* to dist/assets/*; the
+	# canonical entry URL is https://${CYBEROS_APP_DOMAIN}/web/.
+	@web path /web /web/*
+	handle @web {
+		uri strip_prefix /web
+		root * /srv/web
+		file_server
+	}
+
 	handle {
 		root * /srv/console
 		@root path /
