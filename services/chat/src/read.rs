@@ -73,6 +73,15 @@ pub async fn mark(
     .await
     .map_err(crate::internal)?;
     tx.commit().await.map_err(crate::internal)?;
+    // Broadcast the read receipt so other members' clients can render "Seen" live (read-receipts UI).
+    st.hub.publish(
+        channel,
+        crate::realtime::ChatEvent::Read {
+            subject,
+            last_read_message_id: body.message_id,
+            last_read_at: at,
+        },
+    );
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -130,4 +139,53 @@ pub async fn unread(
     .map_err(crate::internal)?;
     let _ = tx.commit().await;
     Ok(Json(Unread { unread: count.0 }))
+}
+
+#[derive(Debug, Serialize)]
+pub struct Receipt {
+    pub subject_id: Uuid,
+    pub last_read_message_id: Uuid,
+    pub last_read_at: chrono::DateTime<chrono::Utc>,
+}
+
+/// GET /v1/chat/channels/{id}/receipts - every member's last-read marker, for "Seen" indicators on open.
+pub async fn receipts(
+    State(st): State<AppState>,
+    Path(channel): Path<Uuid>,
+    headers: HeaderMap,
+) -> Result<Json<Vec<Receipt>>, (StatusCode, String)> {
+    let claims = auth::authenticate(&st, &headers)?;
+    let tenant = claims
+        .tenant_uuid()
+        .map_err(|e| (StatusCode::UNAUTHORIZED, e.to_string()))?;
+    let subject = claims
+        .subject_id()
+        .map_err(|e| (StatusCode::UNAUTHORIZED, e.to_string()))?;
+    let mut tx = db::tenant_tx(&st.pool, &tenant)
+        .await
+        .map_err(crate::internal)?;
+    if db::role_in_channel(&mut tx, channel, subject)
+        .await
+        .map_err(crate::internal)?
+        .is_none()
+    {
+        return Err((StatusCode::FORBIDDEN, "not a channel member".to_string()));
+    }
+    let rows: Vec<(Uuid, Uuid, chrono::DateTime<chrono::Utc>)> = sqlx::query_as(
+        "SELECT subject_id, last_read_message_id, last_read_at FROM chat_read_markers WHERE channel_id = $1",
+    )
+    .bind(channel)
+    .fetch_all(&mut *tx)
+    .await
+    .map_err(crate::internal)?;
+    let _ = tx.commit().await;
+    Ok(Json(
+        rows.into_iter()
+            .map(|(subject_id, last_read_message_id, last_read_at)| Receipt {
+                subject_id,
+                last_read_message_id,
+                last_read_at,
+            })
+            .collect(),
+    ))
 }

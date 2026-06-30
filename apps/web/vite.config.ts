@@ -21,5 +21,8 @@ export default defineConfig({
       "/v1/chat": { target: "http://127.0.0.1:7720", changeOrigin: true, ws: true },
     },
   },
-  build: { outDir: "dist", emptyOutDir: true },
+  // Build INTO the console folder (apps/console/web) so the existing /srv/console Caddy mount serves it -
+  // no separate volume, and it dodges the repo's global `dist/` .gitignore (apps/web/dist was being ignored,
+  // so it never reached the VPS). emptyOutDir clears apps/console/web on each build.
+  build: { outDir: "../console/web", emptyOutDir: true },
 });

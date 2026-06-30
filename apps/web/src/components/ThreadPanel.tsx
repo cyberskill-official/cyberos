@@ -1,22 +1,22 @@
 import { useEffect, useRef, useState } from "react";
-import type { Directory, Message } from "../lib/chat";
-import { nameFor, timeOf } from "../lib/chat";
+import type { Message } from "../lib/chat";
+import { timeOf } from "../lib/chat";
 import { Attachment } from "./Attachment";
+import { Avatar } from "./Avatar";
+import { Icon } from "./icons";
 
 // Controlled thread panel: the parent owns `replies` (loads them and folds in live websocket replies), so
 // this component just renders the root + replies and posts new ones through `onSend`.
 export function ThreadPanel({
   token,
-  me,
-  dir,
+  nameOf,
   root,
   replies,
   onClose,
   onSend,
 }: {
   token: string;
-  me: string;
-  dir: Directory;
+  nameOf: (id: string) => string;
   root: Message;
   replies: Message[];
   onClose(): void;
@@ -42,39 +42,38 @@ export function ThreadPanel({
     }
   }
 
-  const render = (m: Message) =>
-    m.attachment_id ? <Attachment token={token} id={m.attachment_id} /> : m.body;
+  const bubble = (m: Message) => (
+    <div className="t-msg" key={m.id}>
+      <Avatar id={m.sender_subject_id} name={nameOf(m.sender_subject_id)} size={30} />
+      <div className="t-body">
+        <div className="t-head">
+          <span className="t-name">{nameOf(m.sender_subject_id)}</span>
+          <span className="t-time">{timeOf(m.created_at)}</span>
+        </div>
+        <div className="m-body">{m.attachment_id ? <Attachment token={token} id={m.attachment_id} /> : m.body}</div>
+      </div>
+    </div>
+  );
 
   return (
     <aside className="thread">
       <div className="thread-head">
         <span>Thread</span>
-        <button className="btn-mini" onClick={onClose} type="button" title="Close thread">
-          ×
+        <button className="icon-btn" onClick={onClose} type="button" title="Close thread">
+          <Icon name="close" size={16} />
         </button>
       </div>
       <div className="thread-body">
-        <div className="msg">
-          <div className="meta">
-            <span className="author">{nameFor(dir, me, root.sender_subject_id)}</span> {timeOf(root.created_at)}
-          </div>
-          <div className="bubble">{render(root)}</div>
-        </div>
+        {bubble(root)}
         <div className="thread-sep">
           {replies.length} repl{replies.length === 1 ? "y" : "ies"}
         </div>
-        {replies.map((m) => (
-          <div key={m.id} className={"msg" + (m.sender_subject_id === me ? " mine" : "")}>
-            <div className="meta">
-              <span className="author">{nameFor(dir, me, m.sender_subject_id)}</span> {timeOf(m.created_at)}
-            </div>
-            <div className="bubble">{render(m)}</div>
-          </div>
-        ))}
+        {replies.map(bubble)}
         <div ref={endRef} />
       </div>
-      <div className="composer">
-        <input
+      <div className="composer thread-composer">
+        <textarea
+          rows={1}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
@@ -85,8 +84,8 @@ export function ThreadPanel({
           }}
           placeholder="Reply..."
         />
-        <button onClick={() => void send()} disabled={busy || !draft.trim()} type="button">
-          Reply
+        <button className="comp-send" onClick={() => void send()} disabled={busy || !draft.trim()} title="Reply" type="button">
+          <Icon name="send" />
         </button>
       </div>
     </aside>

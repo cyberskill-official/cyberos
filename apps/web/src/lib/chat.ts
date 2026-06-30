@@ -1,4 +1,4 @@
-// Shared chat types + small pure helpers, kept out of the components so Chat.tsx stays readable.
+// Shared chat types + small pure helpers, kept out of the components so the pages stay readable.
 
 export interface Person {
   subject_id: string;
@@ -22,6 +22,11 @@ export interface Message {
   edited_at?: string | null;
   deleted_at?: string | null;
   created_at?: string;
+}
+export interface ReadMarker {
+  subject_id: string;
+  last_read_message_id: string;
+  last_read_at: string;
 }
 export type Directory = Record<string, Person>;
 
@@ -48,6 +53,47 @@ export function timeOf(iso?: string): string {
   const t = Date.parse(iso);
   if (Number.isNaN(t)) return "";
   return new Date(t).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+const ymd = (d: Date): string => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+
+// A stable per-day key (used to detect day boundaries between messages).
+export function dayKey(iso?: string): string {
+  if (!iso) return "";
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return "";
+  return ymd(new Date(t));
+}
+
+// "Today" / "Yesterday" / "Mon, Jun 30" for the day separators in the timeline.
+export function formatDay(iso?: string): string {
+  if (!iso) return "";
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return "";
+  const d = new Date(t);
+  const today = new Date();
+  const yest = new Date();
+  yest.setDate(today.getDate() - 1);
+  if (ymd(d) === ymd(today)) return "Today";
+  if (ymd(d) === ymd(yest)) return "Yesterday";
+  return d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+}
+
+// One or two initials from a display name (or handle/id), for avatars.
+export function initialsOf(name: string): string {
+  const n = (name || "").trim();
+  if (!n || n === "?") return "?";
+  const parts = n.replace(/^@/, "").split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  const w = parts[0] || "?";
+  return (w.length >= 2 ? w.slice(0, 2) : w).toUpperCase();
+}
+
+// Deterministic avatar color from a stable seed (the subject id), tuned to sit on the dark theme.
+export function avatarColor(seed: string): string {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (Math.imul(h, 31) + seed.charCodeAt(i)) >>> 0;
+  return `hsl(${h % 360}, 52%, 42%)`;
 }
 
 export const isImage = (ct: string): boolean => /^image\//.test(ct);

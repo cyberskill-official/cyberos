@@ -30,6 +30,11 @@ pub enum ChatEvent {
     Typing {
         subject: Uuid,
     },
+    Read {
+        subject: Uuid,
+        last_read_message_id: Uuid,
+        last_read_at: chrono::DateTime<chrono::Utc>,
+    },
     Signal {
         from: Uuid,
         to: Uuid,

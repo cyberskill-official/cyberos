@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "../lib/api";
 import { isImage } from "../lib/chat";
+import { Icon } from "./icons";
 
 interface Meta {
   content_type: string;
@@ -38,16 +39,24 @@ export function Attachment({ token, id }: { token: string; id: string }) {
     };
   }, [token, id]);
 
-  if (failed) return <span className="att-chip">📎 attachment unavailable</span>;
-  if (!meta) return <span className="att-chip">📎 loading...</span>;
-  if (isImage(meta.content_type) && url) {
+  if (failed)
     return (
-      <img className="att-img" src={url} alt={meta.filename} onClick={() => window.open(url, "_blank")} />
+      <span className="att-chip">
+        <Icon name="paperclip" size={14} /> attachment unavailable
+      </span>
     );
+  if (!meta)
+    return (
+      <span className="att-chip">
+        <Icon name="paperclip" size={14} /> loading...
+      </span>
+    );
+  if (isImage(meta.content_type) && url) {
+    return <img className="att-img" src={url} alt={meta.filename} onClick={() => window.open(url, "_blank")} />;
   }
   return (
     <a className="att-chip" href={url || undefined} download={meta.filename}>
-      📎 {meta.filename}
+      <Icon name="paperclip" size={14} /> {meta.filename}
     </a>
   );
 }

@@ -1,11 +1,13 @@
 import { useMemo, useState } from "react";
 import type { Person } from "../lib/chat";
 import { shortId } from "../lib/chat";
+import { Avatar } from "./Avatar";
+import { Icon } from "./icons";
 
-export type PickerMode = "dm" | "group" | "add";
+export type PickerMode = "dm" | "group" | "add" | "call";
 
-// Directory-backed people picker. In "dm" mode a click immediately opens the DM; in "group"/"add" mode the
-// user multi-selects and confirms. The directory is best-effort - an empty list shows a helpful note.
+// Directory-backed people picker. In "dm" and "call" mode a click acts immediately; in "group"/"add" mode
+// the user multi-selects and confirms. The directory is best-effort - an empty list shows a helpful note.
 export function PeoplePicker({
   mode,
   people,
@@ -14,6 +16,7 @@ export function PeoplePicker({
   onDm,
   onGroup,
   onAdd,
+  onCall,
 }: {
   mode: PickerMode;
   people: Person[];
@@ -22,10 +25,12 @@ export function PeoplePicker({
   onDm(subjectId: string): void;
   onGroup(name: string, ids: string[]): void;
   onAdd(ids: string[]): void;
+  onCall(subjectId: string): void;
 }) {
   const [q, setQ] = useState("");
   const [sel, setSel] = useState<Record<string, boolean>>({});
   const [gname, setGname] = useState("");
+  const multi = mode === "group" || mode === "add";
 
   const list = useMemo(() => {
     const f = q.trim().toLowerCase();
@@ -40,6 +45,11 @@ export function PeoplePicker({
     if (mode === "dm") {
       onClose();
       onDm(id);
+      return;
+    }
+    if (mode === "call") {
+      onClose();
+      onCall(id);
       return;
     }
     setSel((s) => ({ ...s, [id]: !s[id] }));
@@ -58,12 +68,24 @@ export function PeoplePicker({
     }
   }
 
-  const title = mode === "dm" ? "New direct message" : mode === "group" ? "New group channel" : "Add people";
+  const title =
+    mode === "dm"
+      ? "New direct message"
+      : mode === "call"
+        ? "Start a call"
+        : mode === "group"
+          ? "New group channel"
+          : "Add people";
 
   return (
     <div className="picker-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="picker">
-        <div className="picker-head">{title}</div>
+        <div className="picker-head">
+          <span>{title}</span>
+          <button className="icon-btn" onClick={onClose} type="button" title="Close">
+            <Icon name="close" size={16} />
+          </button>
+        </div>
         {mode === "group" && (
           <input
             className="picker-input"
@@ -81,26 +103,34 @@ export function PeoplePicker({
         />
         <div className="picker-people">
           {list.length === 0 && (
-            <div className="empty" style={{ padding: 14, fontSize: 13 }}>
+            <div className="side-empty" style={{ padding: 16 }}>
               {people.length ? "No teammates match" : "Directory unavailable"}
             </div>
           )}
-          {list.map((p) => (
-            <div
-              key={p.subject_id}
-              className={"person" + (sel[p.subject_id] ? " sel" : "")}
-              onClick={() => toggle(p.subject_id)}
-            >
-              <span className="pname">{p.display_name || p.handle || shortId(p.subject_id)}</span>
-              <span className="psub">{p.email || p.handle || ""}</span>
-            </div>
-          ))}
+          {list.map((p) => {
+            const label = p.display_name || p.handle || shortId(p.subject_id);
+            const on = !!sel[p.subject_id];
+            return (
+              <div
+                key={p.subject_id}
+                className={"person" + (on ? " sel" : "")}
+                onClick={() => toggle(p.subject_id)}
+              >
+                <Avatar id={p.subject_id} name={label} size={34} />
+                <div className="person-meta">
+                  <span className="pname">{label}</span>
+                  <span className="psub">{p.email || p.handle || ""}</span>
+                </div>
+                {multi && <span className={"pcheck" + (on ? " on" : "")}>{on && <Icon name="check" size={14} />}</span>}
+              </div>
+            );
+          })}
         </div>
         <div className="picker-actions">
           <button className="btn-ghost" onClick={onClose} type="button">
             Cancel
           </button>
-          {mode !== "dm" && (
+          {multi && (
             <button className="btn-pill" onClick={confirm} type="button">
               {mode === "add" ? "Add" : "Create"}
             </button>
