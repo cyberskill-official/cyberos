@@ -46,6 +46,14 @@
 		reverse_proxy eval:7760
 	}
 
+	# The console pages (chat.html, audit.html) poll a bare /healthz for their reachability dot. Route it to
+	# chat so the dot reflects the chat backend; without this the request falls through to the static handler
+	# and 404s, which looks like an outage even when chat is up.
+	@health path /healthz
+	handle @health {
+		reverse_proxy chat:7720
+	}
+
 	handle {
 		root * /srv/console
 		@root path /
