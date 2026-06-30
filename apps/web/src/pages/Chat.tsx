@@ -3,7 +3,7 @@ import type { ChangeEvent } from "react";
 import { useAuth } from "../lib/auth";
 import { apiFetch, decodeJwt } from "../lib/api";
 import type { Channel, Directory, Message, Person, ReadMarker } from "../lib/chat";
-import { channelLabel, dayKey, fileToBase64, formatBytes, formatDay, isImage, nameFor, shortId, timeOf } from "../lib/chat";
+import { applyReaction, channelLabel, dayKey, fileToBase64, formatBytes, formatDay, isImage, nameFor, REACTION_EMOJIS, shortId, timeOf } from "../lib/chat";
 import { Avatar } from "../components/Avatar";
 import { Icon } from "../components/icons";
 import { Attachment } from "../components/Attachment";
@@ -22,6 +22,10 @@ interface WsEvent extends Partial<Message> {
   to?: string;
   data?: unknown;
   last_read_message_id?: string;
+  // reaction_changed
+  message_id?: string;
+  emoji?: string;
+  added?: boolean;
 }
 
 const GROUP_WINDOW_MS = 5 * 60 * 1000;
@@ -93,6 +97,14 @@ export function Chat() {
   const [typingSubject, setTypingSubject] = useState("");
   const [editingId, setEditingId] = useState("");
   const [editText, setEditText] = useState("");
+
+  // Emoji reactions: which message's picker is open (only one at a time). Translations: a per-message cache of
+  // the inline result, and the set of message ids whose translation is in flight. A second translate click
+  // hides the cached result (removes the key).
+  const [reactPickerId, setReactPickerId] = useState("");
+  const [translations, setTranslations] = useState<Record<string, string>>({});
+  const [translating, setTranslating] = useState<Set<string>>(new Set());
+  const [translateError, setTranslateError] = useState<Set<string>>(new Set());
 
   const [threadRoot, setThreadRoot] = useState<Message | null>(null);
   const [threadReplies, setThreadReplies] = useState<Message[]>([]);
@@ -259,6 +271,10 @@ export function Chat() {
     setTypingSubject("");
     setEditingId("");
     setReceipts({});
+    setReactPickerId("");
+    setTranslations({});
+    setTranslating(new Set());
+    setTranslateError(new Set());
     let alive = true;
 
     (async () => {
@@ -332,6 +348,15 @@ export function Chat() {
         } else if (data.type === "message_deleted" && data.id) {
           setMessages((prev) => prev.filter((m) => m.id !== data.id));
           setThreadReplies((prev) => prev.filter((m) => m.id !== data.id));
+        } else if (data.type === "reaction_changed" && data.message_id && data.emoji) {
+          const mid = data.message_id;
+          const emoji = data.emoji;
+          const added = !!data.added;
+          const isMe = !!data.subject && data.subject === me;
+          const patch = (m: Message): Message =>
+            m.id === mid ? { ...m, reactions: applyReaction(m.reactions, emoji, added, isMe) } : m;
+          setMessages((prev) => prev.map(patch));
+          setThreadReplies((prev) => prev.map(patch));
         } else if (data.type === "presence" && data.subject) {
           const sub = data.subject;
           setPresence((prev) => {
@@ -375,6 +400,25 @@ export function Chat() {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
+
+  // Close the emoji reaction picker on any outside click or Escape (it is a small floating popover).
+  useEffect(() => {
+    if (!reactPickerId) return;
+    const onDown = (e: MouseEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && t.closest(".react-wrap")) return;
+      setReactPickerId("");
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setReactPickerId("");
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [reactPickerId]);
 
   // Grow the composer with its content (Enter sends; Shift+Enter is a newline).
   useEffect(() => {
@@ -515,6 +559,64 @@ export function Chat() {
       setMessages((prev) => prev.filter((x) => x.id !== m.id));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  // Add or remove my reaction. Idempotent on the server; the live `reaction_changed` ws event (which the
+  // server echoes to the originator too) is what patches the count, so we do not optimistically apply here to
+  // avoid double-counting. Mirrors how edits rely on the echoed event.
+  async function toggleReaction(m: Message, emoji: string) {
+    if (!token) return;
+    setReactPickerId("");
+    const has = (m.reactions || []).some((r) => r.emoji === emoji && r.mine);
+    const path = `/v1/chat/channels/${m.channel_id}/messages/${m.id}/reactions`;
+    try {
+      if (has) {
+        await apiFetch(token, "DELETE", `${path}/${encodeURIComponent(emoji)}`);
+      } else {
+        await apiFetch(token, "POST", path, { emoji });
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  // Translate a message inline. A second click hides the cached result. The endpoint depends on the ai-gateway,
+  // which is not deployed yet, so a failure shows a small "unavailable" note rather than an error banner.
+  async function translateMessage(m: Message) {
+    if (!token) return;
+    // Toggle off if already shown.
+    if (translations[m.id] !== undefined) {
+      setTranslations((prev) => {
+        const next = { ...prev };
+        delete next[m.id];
+        return next;
+      });
+      return;
+    }
+    const text = (m.body || "").trim();
+    if (!text) return;
+    setTranslateError((prev) => {
+      const next = new Set(prev);
+      next.delete(m.id);
+      return next;
+    });
+    setTranslating((prev) => new Set(prev).add(m.id));
+    try {
+      const r = await apiFetch<{ translated: string }>(token, "POST", "/v1/chat/translate", {
+        text,
+        target_lang: "English",
+      });
+      setTranslations((prev) => ({ ...prev, [m.id]: r.translated }));
+    } catch {
+      // Expected until the gateway is deployed: flag this message so the row can show the unavailable note.
+      setTranslateError((prev) => new Set(prev).add(m.id));
+    } finally {
+      setTranslating((prev) => {
+        const next = new Set(prev);
+        next.delete(m.id);
+        return next;
+      });
     }
   }
 
@@ -930,9 +1032,63 @@ export function Chat() {
                                 {m.attachment_id ? <Attachment token={token!} id={m.attachment_id} /> : m.body}
                               </div>
                             )}
+                            {m.reactions && m.reactions.length > 0 && (
+                              <div className="reactions">
+                                {m.reactions.map((r) => (
+                                  <button
+                                    key={r.emoji}
+                                    className={"reaction" + (r.mine ? " mine" : "")}
+                                    onClick={() => void toggleReaction(m, r.emoji)}
+                                    title={r.mine ? "Remove your reaction" : "React"}
+                                    type="button"
+                                  >
+                                    <span className="re-emoji">{r.emoji}</span>
+                                    <span className="re-count">{r.count}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                            {translating.has(m.id) && <div className="translation muted">Translating...</div>}
+                            {!translating.has(m.id) && translations[m.id] !== undefined && (
+                              <div className="translation">
+                                <span className="tr-label">English</span>
+                                <span className="tr-text">{translations[m.id]}</span>
+                              </div>
+                            )}
+                            {!translating.has(m.id) && translateError.has(m.id) && (
+                              <div className="translation muted">Translation unavailable</div>
+                            )}
                           </div>
                           {editingId !== m.id && (
                             <div className="m-actions">
+                              <div className="react-wrap">
+                                <button
+                                  title="Add reaction"
+                                  onClick={() => setReactPickerId((id) => (id === m.id ? "" : m.id))}
+                                  type="button"
+                                >
+                                  <Icon name="smile" size={15} />
+                                </button>
+                                {reactPickerId === m.id && (
+                                  <div className="emoji-picker">
+                                    {REACTION_EMOJIS.map((e) => (
+                                      <button
+                                        key={e}
+                                        className="emoji-opt"
+                                        onClick={() => void toggleReaction(m, e)}
+                                        type="button"
+                                      >
+                                        {e}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                              {!m.attachment_id && m.body && (
+                                <button title="Translate to English" onClick={() => void translateMessage(m)} type="button">
+                                  <Icon name="translate" size={15} />
+                                </button>
+                              )}
                               <button title="Reply in thread" onClick={() => void openThread(m)} type="button">
                                 <Icon name="thread" size={15} />
                               </button>

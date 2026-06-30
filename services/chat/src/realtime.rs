@@ -48,6 +48,12 @@ pub enum ChatEvent {
     MessageDeleted {
         id: Uuid,
     },
+    ReactionChanged {
+        message_id: Uuid,
+        emoji: String,
+        subject: Uuid,
+        added: bool,
+    },
 }
 
 /// channel_id -> broadcast sender. Senders live for the process; subscribers come and go.

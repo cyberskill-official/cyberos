@@ -21,6 +21,11 @@ pub struct Message {
     pub edited_at: Option<chrono::DateTime<chrono::Utc>>,
     pub deleted_at: Option<chrono::DateTime<chrono::Utc>>,
     pub attachment_id: Option<Uuid>,
+    /// Folded emoji reactions on this message (emoji + count + whether the caller reacted). Empty except on
+    /// the list path, which attaches them in one extra query; post/edit/search return `[]` (the client folds
+    /// live ReactionChanged events on top of the list).
+    #[serde(default)]
+    pub reactions: Vec<crate::reactions::ReactionSummary>,
 }
 
 type MessageRow = (
@@ -51,6 +56,7 @@ fn to_message(r: MessageRow) -> Message {
         edited_at: r.7,
         deleted_at: r.8,
         attachment_id: r.9,
+        reactions: Vec::new(),
     }
 }
 
@@ -258,9 +264,29 @@ pub async fn list(
             .await
     }
     .map_err(crate::internal)?;
+
+    // Fold reactions onto the returned messages in one extra query (least-invasive: post/edit/search are
+    // untouched and still return `reactions: []`). The caller's own reactions are flagged via `subject`.
+    let mut out: Vec<Message> = rows.into_iter().map(to_message).collect();
+    let ids: Vec<Uuid> = out.iter().map(|m| m.id).collect();
+    if !ids.is_empty() {
+        let react_rows: Vec<(Uuid, Uuid, String)> = sqlx::query_as(
+            "SELECT message_id, subject_id, emoji FROM chat_reactions WHERE message_id = ANY($1)",
+        )
+        .bind(&ids)
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(crate::internal)?;
+        let mut by_message = crate::reactions::summarize(&react_rows, subject);
+        for m in &mut out {
+            if let Some(r) = by_message.remove(&m.id) {
+                m.reactions = r;
+            }
+        }
+    }
     let _ = tx.commit().await;
 
-    Ok(Json(rows.into_iter().map(to_message).collect()))
+    Ok(Json(out))
 }
 
 pub async fn edit(

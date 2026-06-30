@@ -13,6 +13,12 @@ export interface Channel {
   kind?: string;
   other_subject_id?: string;
 }
+// A folded reaction on a message: the emoji, how many people used it, and whether I am one of them.
+export interface ReactionSummary {
+  emoji: string;
+  count: number;
+  mine: boolean;
+}
 export interface Message {
   id: string;
   channel_id: string;
@@ -23,6 +29,7 @@ export interface Message {
   edited_at?: string | null;
   deleted_at?: string | null;
   created_at?: string;
+  reactions?: ReactionSummary[];
 }
 export interface ReadMarker {
   subject_id: string;
@@ -32,6 +39,35 @@ export interface ReadMarker {
 export type Directory = Record<string, Person>;
 
 export const shortId = (id: string): string => (id ? id.slice(0, 8) : "?");
+
+// The fixed reaction set the picker offers. Kept small and self-contained (no external emoji library).
+export const REACTION_EMOJIS = ["\u{1F44D}", "❤️", "\u{1F602}", "\u{1F389}", "✅", "\u{1F440}"];
+
+// Fold a reaction change (one subject added/removed one emoji) into a message's reaction list, from the
+// caller's point of view. `isMe` says whether the acting subject is the current user, so `mine` stays correct.
+// Pure and order-stable: a new emoji is appended; an emoji whose count hits zero is dropped.
+export function applyReaction(
+  list: ReactionSummary[] | undefined,
+  emoji: string,
+  added: boolean,
+  isMe: boolean,
+): ReactionSummary[] {
+  const next = (list || []).map((r) => ({ ...r }));
+  const i = next.findIndex((r) => r.emoji === emoji);
+  if (added) {
+    if (i === -1) {
+      next.push({ emoji, count: 1, mine: isMe });
+    } else {
+      next[i].count += 1;
+      if (isMe) next[i].mine = true;
+    }
+  } else if (i !== -1) {
+    next[i].count -= 1;
+    if (isMe) next[i].mine = false;
+    if (next[i].count <= 0) next.splice(i, 1);
+  }
+  return next;
+}
 
 // Display name from the directory: a real name/handle when known, else a short id. "You" for self.
 export function nameFor(dir: Directory, me: string, id: string): string {

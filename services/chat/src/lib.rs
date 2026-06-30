@@ -13,8 +13,10 @@ pub mod devices;
 pub mod members;
 pub mod messages;
 pub mod push;
+pub mod reactions;
 pub mod read;
 pub mod realtime;
+pub mod translate;
 
 use std::sync::Arc;
 
@@ -70,6 +72,15 @@ pub fn router(state: AppState) -> Router {
             axum::routing::delete(members::remove),
         )
         .route("/v1/chat/channels/:id/search", get(messages::search))
+        .route(
+            "/v1/chat/channels/:id/messages/:msg/reactions",
+            post(reactions::add),
+        )
+        .route(
+            "/v1/chat/channels/:id/messages/:msg/reactions/:emoji",
+            axum::routing::delete(reactions::remove),
+        )
+        .route("/v1/chat/translate", post(translate::translate))
         .route(
             "/v1/chat/channels/:id/attachments",
             post(attachments::upload),
