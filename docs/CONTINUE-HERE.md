@@ -1,78 +1,44 @@
-# Continue here - CyberOS state and next steps (handoff 2026-06-25)
+# Continue here - CyberOS state and next steps (handoff 2026-06-30)
 
-A self-contained brief so any coding agent (or a future session) can pick up exactly where this left
-off. Read this top to bottom, then start at "The plan", step 1.
+A self-contained brief so any session can pick up exactly where this left off.
 
 ## Where the project is
 
-P0 platform path is AI -> OBS -> AUTH -> MCP -> CHAT. AI, AUTH, and CHAT are done. OBS is
-feature-complete in the repo (status reconcile + deploy pending). MCP is the one module still mid-build.
-Beyond P0, the 14 Phase-3 business modules are specified but unbuilt.
+CyberOS is LIVE in production at https://os.cyberskill.world for the CyberSkill team. The P0 stack (cyberos-auth, cyberos-chat, cyberos-eval, Caddy) runs on a Vultr VPS against Supabase Postgres, with GHCR images and GitHub auto-deploy on push. Google Workspace sign-in, the dashboard, and team chat are live and in daily use.
 
-The core was brought up and verified locally on 2026-06-25 against a fresh database (services/dev docker
-infra + all migrations). Result: every module test suite GREEN - auth, memory, email, proj,
-obs-compliance-view, obs-router, mcp-gateway, ai-gateway - including the ai-gateway live local-model
-round trip. The only failing test is `auth::create_subject_p95_latency_under_200ms` (p95 ~400ms), which
-is Docker Desktop latency noise on macOS, not a logic bug; run the auth suite with
-`--skip create_subject_p95` and it is fully green.
+The build and deploy loop is the Mac-gate loop: author on the repo, gate on the Mac (`cargo fmt --all`, `cargo clippy -p <crate> -- -D warnings`, `cargo test -p <crate>`) via Desktop Commander, commit, then push - the pre-push hook re-runs the full gate and builds the auth and chat images, and GitHub auto-deploys (git pull, migrate, compose up). See `docs/deploy/web-and-desktop-deploy.md` for the full web + desktop deploy story.
 
-MCP module detail: 001 (spec) and 002 (heartbeat) done. 003 (SEP-986 naming) done through registration
-enforcement; slice 3 left = the CI grep gate (DEC-2362) + 4 naming memory-audit kinds (DEC-2364). 004
-(OAuth 2.1 + PKCE) has slice 1 (pkce, error) and the slice-2 foundation (enums, audience, scope +
-migration renumber to 0013-0015) merged; the OAuth endpoints remain.
+## The 2026-06-30 wave (shipped)
 
-## The plan (in order, as the operator chose: test core local -> finish MCP -> deploy)
+Two tracks, plan-first then build, all gated on the Mac and pushed:
 
-1. Build the MCP 004 OAuth endpoints. This is the keystone - it unblocks FR-MCP-005/006/007/008. The
-   full, clause-by-clause build spec is `docs/feature-requests/mcp/MCP-004-SLICE2-PLAN.md`. Build it
-   from there. Key facts that shape it:
-   - The repo uses runtime-checked `sqlx::query(...)` (no `query!` macro, no `.sqlx` cache), so the code
-     COMPILES WITHOUT a database; only the integration tests need Postgres. Author freely, `cargo
-     check`/`clippy` on the Mac, then run the OAuth tests against local Postgres.
-   - Token signing reuses the FR-AUTH-004 RS256 keys in the shared `auth_signing_keys` table. The
-     pattern to mirror is `services/auth/src/jwt.rs` (load active key, sign RS256 with `jsonwebtoken`,
-     `kid` in header). RS256 only.
-   - The headline security property is the audience check wired into `protocol/tools_call.rs` (use the
-     already-built `oauth::audience::audience_matches`). Do not skip it.
-   - 8 memory audit kinds; 3 new tables (oauth_consents, oauth_revocations, redirect-host policy) as
-     migrations 0016-0018.
-2. Finish MCP 003 slice 3: the CI grep gate + the 4 naming audit kinds (DB/async, bundle with the above
-   Postgres session).
-3. Deploy the core + MCP to the VPS: `docs/deploy/cyberos-core-deploy.md`. Two gaps to close first: the
-   production docker-compose + Caddyfile that consume `deploy/vps/.env.local` are not in the repo, and
-   any in-tree live secrets must be rotated and kept out of git.
+- Chat client (live): DMs finished (presence, recent-activity sort), attachments polished (staging preview, drag/drop, paste, size guard), emoji reactions (live strip + picker), and inline Vietnamese/English translation.
+- BRAIN and EVAL backend (pushed): the consent gate verified already-correct; the ai-gateway `POST /v1/embeddings` route; the EVAL-002 rubric built from the three signed employment documents (migration verified); the memory brain migrations enabled on deploy; and the EVAL-001 governance layer finished (retention sweeper, status endpoint, metrics).
 
-## How to run and verify locally
+What is live vs dormant right now:
 
-`docs/deploy/local-dev-and-testing.md` - Steps 1-3 bring up infra, apply migrations, run the suites;
-Step 6 is the end-to-end smoke (chat path, live model, MCP tool calls). The MCP-only demo is
-`bash scripts/mcp_demo.sh` + `bash scripts/mcp_call.sh <tool> <json>`.
+- Reactions and the rest of chat are fully live.
+- The embeddings route and chat translation ship but return a clean error until the ai-gateway is deployed (it is not in the P0 stack yet).
+- Eval and memory code is in git and the memory migrations applied, but the running eval service stays on its current image until a `BUILD_EVAL=1` push. That is intentional: the evaluation half is disabled by default and waiting on Vietnamese counsel to clear the monitoring-and-evaluation notice (docs/legal/data-monitoring-and-evaluation-notice.md). The three signed employment contracts live in docs/legal/ but are gitignored (kept out of version control).
 
-## Working rules (honor these - they are how this project ships)
+## Next steps (in priority order)
 
-- One change = one branch named `auto/<topic>`. The operator does all git commit/push/merge; an agent
-  never commits, pushes, or merges for them.
-- Gate before merge: `cargo test -p <crate>` and, for mcp-gateway, `cargo clippy -p cyberos-mcp-gateway
-  --all-targets -- -D warnings`. The caf gate (`bash scripts/caf_gate.sh <module>`) runs cargo test
-  only; CI runs clippy with `-D warnings`, which escalates `missing_docs` and `unused_imports` to hard
-  errors - so document every `pub` item and keep imports clean.
-- Cloud-provider API keys are deferred; never author or enter secrets. Local inference is LM Studio
-  (:1234) or Ollama (:11434) through the ai-gateway RouterBackend.
-- Build security-critical code (OAuth) in pure, unit-testable pieces first, then the DB-bound parts -
-  the slice-1/slice-2 split that worked here.
+1. Stand up the ai-gateway and a bge-m3 embedding sidecar in the prod compose. This activates three already-built things at once: the embeddings route, chat translation, and (with capture on) brain ingest.
+2. When counsel clears the notice, turn the evaluation half on: publish the monitoring notice, record acknowledgments, set retention policies, author and publish a rubric version, then deploy the eval service with `BUILD_EVAL=1` and set `CHAT_AUDIT_DATABASE_URL` + `CAPTURE_ENABLED`. Keep it human-in-the-loop and disabled-by-default until every governance precondition holds.
+3. Stand up the memory recall service container (only its migrations are enabled today, not a running service).
+4. Optional polish: split the 947-line apps/web/src/pages/Chat.tsx into components (deferred); the MCP and OBS modules per their build plans if still in scope.
 
 ## Pointers
 
-- MCP build plan: `docs/feature-requests/mcp/MCP-BUILD-PLAN.md` + `MCP-004-SLICE2-PLAN.md`.
-- Roadmap tracker (open in a browser): `docs/roadmap.html`.
-- FR specs: `docs/feature-requests/mcp/FR-MCP-00*.md`.
-- Agent memory (if the next session is another Claude): the space memory dir, files
-  `cyberos-mcp-build-state.md` and `cyberos-capabilities-build.md`.
+- Deploy (web + desktop): `docs/deploy/web-and-desktop-deploy.md`.
+- Roadmap tracker (browser): `docs/roadmap.html`.
+- BRAIN/EVAL plan: `docs/strategy/cyberos-brain-evaluation-plan.md`; FR specs under `docs/feature-requests/`.
+- Local dev + the dev Postgres/Redis: `docs/deploy/local-dev-and-testing.md` (services/dev docker compose).
+- Agent memory (next Claude session): the space memory dir, especially `cyberos-mac-gate-loop.md` (the build loop + wave state), `cyberos-react-console.md`, and `cyberos-brain-evaluation-plan.md`.
 
-## To hand this to another model/agent
+## Working rules
 
-Point it at this file and `MCP-004-SLICE2-PLAN.md`. Its first task is step 1 above - the 004 OAuth
-endpoints. Because the code compiles without a database, the loop is: it authors, you `cargo check` +
-`cargo clippy` on your Mac, fix anything, then `docker compose -f services/dev/docker-compose.yml up -d`
-and run the OAuth integration tests. Keep one branch per slice and have it stop before any git
-commit/push.
+- Gate before pushing: the pre-push hook runs `fmt --all --check`, `clippy --workspace -- -D warnings`, and `test --workspace`. Document every `pub` item; keep imports clean. The flaky ai-gateway Redis integration tests are `#[ignore]`d.
+- Pushing deploys to production, so treat it as a confirm-with-the-operator action.
+- Cloud-provider API keys are deferred; local inference is LM Studio (:1234) or Ollama (:11434) through the ai-gateway RouterBackend. Never author or enter secrets.
+- The evaluation half stays governance-first: disabled by default, human-approved, counsel-gated.
