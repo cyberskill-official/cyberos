@@ -1569,15 +1569,27 @@ async fn me_profile(
         .execute(&mut *tx)
         .await
         .map_err(db_err)?;
-    let row: Option<(Uuid, String, Option<String>, Option<String>, Option<String>, Vec<String>)> =
-        sqlx::query_as("SELECT id, handle, display_name, email, avatar, roles FROM subjects WHERE id = $1")
-            .bind(sub)
-            .fetch_optional(&mut *tx)
-            .await
-            .map_err(db_err)?;
+    let row: Option<(
+        Uuid,
+        String,
+        Option<String>,
+        Option<String>,
+        Option<String>,
+        Vec<String>,
+    )> = sqlx::query_as(
+        "SELECT id, handle, display_name, email, avatar, roles FROM subjects WHERE id = $1",
+    )
+    .bind(sub)
+    .fetch_optional(&mut *tx)
+    .await
+    .map_err(db_err)?;
     tx.commit().await.map_err(db_err)?;
-    let (id, handle, display_name, email, avatar, roles) =
-        row.ok_or_else(|| (StatusCode::NOT_FOUND, Json(json!({ "error": "subject not found" }))))?;
+    let (id, handle, display_name, email, avatar, roles) = row.ok_or_else(|| {
+        (
+            StatusCode::NOT_FOUND,
+            Json(json!({ "error": "subject not found" })),
+        )
+    })?;
     Ok((
         StatusCode::OK,
         Json(json!({
@@ -1635,7 +1647,11 @@ async fn update_me(
             .map_err(db_err)?;
     }
     if let Some(av) = &body.avatar {
-        let av_opt: Option<&str> = if av.is_empty() { None } else { Some(av.as_str()) };
+        let av_opt: Option<&str> = if av.is_empty() {
+            None
+        } else {
+            Some(av.as_str())
+        };
         sqlx::query("UPDATE subjects SET avatar = $1, updated_at = now() WHERE id = $2")
             .bind(av_opt)
             .bind(sub)
@@ -1643,15 +1659,27 @@ async fn update_me(
             .await
             .map_err(db_err)?;
     }
-    let row: Option<(Uuid, String, Option<String>, Option<String>, Option<String>, Vec<String>)> =
-        sqlx::query_as("SELECT id, handle, display_name, email, avatar, roles FROM subjects WHERE id = $1")
-            .bind(sub)
-            .fetch_optional(&mut *tx)
-            .await
-            .map_err(db_err)?;
+    let row: Option<(
+        Uuid,
+        String,
+        Option<String>,
+        Option<String>,
+        Option<String>,
+        Vec<String>,
+    )> = sqlx::query_as(
+        "SELECT id, handle, display_name, email, avatar, roles FROM subjects WHERE id = $1",
+    )
+    .bind(sub)
+    .fetch_optional(&mut *tx)
+    .await
+    .map_err(db_err)?;
     tx.commit().await.map_err(db_err)?;
-    let (id, handle, display_name, email, avatar, roles) =
-        row.ok_or_else(|| (StatusCode::NOT_FOUND, Json(json!({ "error": "subject not found" }))))?;
+    let (id, handle, display_name, email, avatar, roles) = row.ok_or_else(|| {
+        (
+            StatusCode::NOT_FOUND,
+            Json(json!({ "error": "subject not found" })),
+        )
+    })?;
     Ok((
         StatusCode::OK,
         Json(json!({
