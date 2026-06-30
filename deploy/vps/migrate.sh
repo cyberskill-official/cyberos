@@ -57,6 +57,13 @@ for svc in $MIGRATE_SERVICES; do
     [ "$b" = "$svc" ] && is_baseline=true
   done
 
+  # The one-time baseline (record-only) happens ONLY on a service's first-ever run - i.e. when it has no
+  # rows yet in _cyberos_migrations. Once a baselined service has been recorded once, NEW files added later
+  # are APPLIED normally (this is the behaviour the header promises; baselining every un-recorded file would
+  # silently skip every future migration, which is exactly the bug that left subjects.avatar uncreated).
+  svc_recorded=false
+  if grep -q "^$svc/" <<<"$APPLIED"; then svc_recorded=true; fi
+
   # Sorted so 0001 < 0002 < ... applies in order.
   for f in $(ls "$mdir"/*.sql 2>/dev/null | sort); do
     fn="$(basename "$f")"
@@ -64,7 +71,7 @@ for svc in $MIGRATE_SERVICES; do
     if grep -qxF "$key" <<<"$APPLIED"; then
       continue
     fi
-    if $is_baseline; then
+    if $is_baseline && ! $svc_recorded; then
       echo "==> baseline (record-only): $key"
       baseline_count=$((baseline_count + 1))
     else
