@@ -116,7 +116,7 @@ export function PeoplePicker({
                 className={"person" + (on ? " sel" : "")}
                 onClick={() => toggle(p.subject_id)}
               >
-                <Avatar id={p.subject_id} name={label} size={34} />
+                <Avatar id={p.subject_id} name={label} size={34} src={p.avatar || undefined} />
                 <div className="person-meta">
                   <span className="pname">{label}</span>
                   <span className="psub">{p.email || p.handle || ""}</span>

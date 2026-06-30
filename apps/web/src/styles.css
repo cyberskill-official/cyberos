@@ -119,7 +119,10 @@ a { color: var(--ochre); }
 
 /* sidebar */
 .sidebar { width: 270px; flex: none; background: var(--panel); border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
-.ws-head { flex: none; display: flex; align-items: center; gap: 10px; padding: 13px 14px; border-bottom: 1px solid var(--line); }
+.ws-head { flex: none; display: flex; align-items: center; gap: 10px; padding: 13px 14px; border: none; border-bottom: 1px solid var(--line); background: transparent; color: inherit; width: 100%; text-align: left; cursor: pointer; }
+.ws-head:hover { background: var(--panel-2); }
+.ws-edit { margin-left: auto; color: var(--faint); opacity: 0; display: grid; place-items: center; flex: none; }
+.ws-head:hover .ws-edit { opacity: 1; }
 .ws-meta { display: flex; flex-direction: column; min-width: 0; }
 .ws-name { font-weight: 700; font-size: 14px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ws-sub { font-size: 11px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -282,3 +285,8 @@ a { color: var(--ochre); }
 .cc-btn.off { background: #fff; color: #1c0f08; }
 .cc-btn.hang { background: var(--bad); }
 .cc-btn.hang:hover { filter: brightness(1.08); }
+
+/* image avatars + profile editor */
+.avatar-img { width: 100%; height: 100%; border-radius: 30%; object-fit: cover; display: block; }
+.profile-avatar-row { display: flex; align-items: center; gap: 14px; }
+.profile-avatar-actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }

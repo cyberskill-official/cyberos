@@ -12,6 +12,7 @@ import type { PickerMode } from "../components/PeoplePicker";
 import { ThreadPanel } from "../components/ThreadPanel";
 import { CallOverlay } from "../components/CallOverlay";
 import { useCall } from "../lib/call";
+import { ProfileEditor } from "../components/ProfileEditor";
 
 interface WsEvent extends Partial<Message> {
   type: string;
@@ -32,8 +33,14 @@ export function Chat() {
     return c && typeof c.sub === "string" ? c.sub : "";
   }, [token]);
 
-  // A friendly name for self from the email local-part (the directory often omits the signed-in user).
+  // My own editable profile (display name + avatar) from GET /v1/auth/me.
+  const [meProfile, setMeProfile] = useState<{ display_name?: string | null; avatar?: string | null } | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+
+  // A friendly name for self: the saved display name, else the email local-part.
   const selfName = useMemo(() => {
+    const fromProfile = (meProfile?.display_name || "").trim();
+    if (fromProfile) return fromProfile;
     const local = (email || "").split("@")[0];
     const pretty = local
       .split(/[._-]+/)
@@ -41,7 +48,8 @@ export function Chat() {
       .map((w) => w[0].toUpperCase() + w.slice(1))
       .join(" ");
     return pretty || "You";
-  }, [email]);
+  }, [email, meProfile]);
+  const myAvatar = meProfile?.avatar || "";
 
   const [dirList, setDirList] = useState<Person[]>([]);
   const directory = useMemo<Directory>(() => {
@@ -58,6 +66,11 @@ export function Chat() {
       return (p && (p.display_name || p.handle)) || shortId(id);
     };
   }, [directory, me, selfName]);
+
+  // Avatar image for a subject: my own from my profile, others from the directory ("" -> initials).
+  const avatarSrc = useMemo(() => {
+    return (id: string): string => (id && id === me ? myAvatar : directory[id]?.avatar || "");
+  }, [directory, me, myAvatar]);
 
   const [channels, setChannels] = useState<Channel[]>([]);
   const [activeId, setActiveId] = useState("");
@@ -142,6 +155,16 @@ export function Chat() {
     }
   }
 
+  async function reloadDirectory() {
+    if (!token) return;
+    try {
+      const d = await apiFetch<{ items?: Person[] }>(token, "GET", "/v1/auth/directory");
+      setDirList(d.items || []);
+    } catch {
+      /* best-effort */
+    }
+  }
+
   // Directory + channel list on sign-in; then poll unread counts so sidebar badges stay roughly current.
   useEffect(() => {
     if (!token) return;
@@ -151,6 +174,14 @@ export function Chat() {
         setDirList(d.items || []);
       } catch {
         /* directory is best-effort */
+      }
+    })();
+    (async () => {
+      try {
+        const p = await apiFetch<{ display_name?: string | null; avatar?: string | null }>(token, "GET", "/v1/auth/me");
+        setMeProfile(p);
+      } catch {
+        /* profile is best-effort (endpoint may predate this deploy) */
       }
     })();
     (async () => {
@@ -565,7 +596,13 @@ export function Chat() {
         type="button"
       >
         {dm ? (
-          <Avatar id={other || c.id} name={nameOf(other)} size={26} online={presence.has(other) && isActive} />
+          <Avatar
+            id={other || c.id}
+            name={nameOf(other)}
+            size={26}
+            online={presence.has(other) && isActive}
+            src={avatarSrc(other)}
+          />
         ) : (
           <span className="chan-hash">
             <Icon name="hash" size={16} />
@@ -599,13 +636,16 @@ export function Chat() {
       <input ref={fileRef} type="file" style={{ display: "none" }} onChange={onPickFile} />
 
       <aside className="sidebar">
-        <div className="ws-head">
-          <Avatar id={me} name={selfName} size={34} />
+        <button className="ws-head" onClick={() => setProfileOpen(true)} type="button" title="Edit your profile">
+          <Avatar id={me} name={selfName} size={34} src={myAvatar} />
           <div className="ws-meta">
             <span className="ws-name">{selfName}</span>
             <span className="ws-sub">{email}</span>
           </div>
-        </div>
+          <span className="ws-edit">
+            <Icon name="edit" size={14} />
+          </span>
+        </button>
         <div className="side-scroll">
           <div className="side-section">
             <div className="side-label">
@@ -653,6 +693,7 @@ export function Chat() {
                     name={nameOf(active.other_subject_id || "")}
                     size={36}
                     online={presence.has(active.other_subject_id || "")}
+                    src={avatarSrc(active.other_subject_id || "")}
                   />
                 ) : (
                   <span className="head-hash">
@@ -739,7 +780,12 @@ export function Chat() {
                             {grouped ? (
                               <span className="m-time-hover">{timeOf(m.created_at)}</span>
                             ) : (
-                              <Avatar id={m.sender_subject_id} name={nameOf(m.sender_subject_id)} size={36} />
+                              <Avatar
+                                id={m.sender_subject_id}
+                                name={nameOf(m.sender_subject_id)}
+                                size={36}
+                                src={avatarSrc(m.sender_subject_id)}
+                              />
                             )}
                           </div>
                           <div className="m-content">
@@ -855,6 +901,7 @@ export function Chat() {
                 <ThreadPanel
                   token={token}
                   nameOf={nameOf}
+                  avatarOf={avatarSrc}
                   root={threadRoot}
                   replies={threadReplies}
                   onClose={() => setThreadRoot(null)}
@@ -879,7 +926,21 @@ export function Chat() {
         />
       )}
 
-      <CallOverlay call={call} nameOf={nameOf} />
+      <CallOverlay call={call} nameOf={nameOf} avatarOf={avatarSrc} />
+
+      {profileOpen && token && (
+        <ProfileEditor
+          token={token}
+          me={me}
+          initialName={selfName}
+          initialAvatar={myAvatar}
+          onClose={() => setProfileOpen(false)}
+          onSaved={(n, a) => {
+            setMeProfile((p) => ({ ...(p || {}), display_name: n, avatar: a }));
+            void reloadDirectory();
+          }}
+        />
+      )}
     </div>
   );
 }

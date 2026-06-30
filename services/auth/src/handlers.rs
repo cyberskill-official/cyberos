@@ -89,6 +89,8 @@ pub fn router(state: AppState) -> Router {
         // (verify_jwt runs via this router's route_layer) but NOT admin-gated: any
         // teammate must resolve colleagues by name to start a DM or build a group.
         .route("/v1/auth/directory", get(directory))
+        // P0 self-service profile: any authenticated user edits their own display name + avatar.
+        .route("/v1/auth/me", get(me_profile).patch(update_me))
         // FR-AUTH-101 RBAC endpoints
         .route(
             "/v1/admin/roles",
@@ -1524,8 +1526,8 @@ async fn directory(
         .execute(&mut *tx)
         .await
         .map_err(db_err)?;
-    let rows: Vec<(Uuid, String, Option<String>, Option<String>)> = sqlx::query_as(
-        "SELECT id, handle, display_name, email
+    let rows: Vec<(Uuid, String, Option<String>, Option<String>, Option<String>)> = sqlx::query_as(
+        "SELECT id, handle, display_name, email, avatar
             FROM subjects
            WHERE status = 'active' AND kind = 'human'
         ORDER BY COALESCE(display_name, handle) ASC
@@ -1538,16 +1540,140 @@ async fn directory(
 
     let items: Vec<Value> = rows
         .into_iter()
-        .map(|(id, handle, display_name, email)| {
+        .map(|(id, handle, display_name, email, avatar)| {
             json!({
                 "subject_id": id,
                 "handle": handle,
                 "display_name": display_name,
                 "email": email,
+                "avatar": avatar,
             })
         })
         .collect();
     Ok((StatusCode::OK, Json(json!({ "items": items }))))
+}
+
+/// GET /v1/auth/me — the caller's own profile (handle, display name, email, avatar, roles). Authenticated
+/// via the router's verify_jwt layer; reads the caller's own subject row within their tenant.
+async fn me_profile(
+    State(state): State<AppState>,
+    Extension(claims): Extension<Claims>,
+) -> Result<(StatusCode, Json<Value>), (StatusCode, Json<Value>)> {
+    let tenant_id = Uuid::parse_str(&claims.tenant_id)
+        .map_err(|_| invalid_input("tenant_id", "claims carry a non-UUID tenant_id"))?;
+    let sub = Uuid::parse_str(&claims.sub)
+        .map_err(|_| invalid_input("sub", "claims carry a non-UUID subject id"))?;
+    let mut tx = state.pg.begin().await.map_err(db_err)?;
+    sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
+        .bind(tenant_id.to_string())
+        .execute(&mut *tx)
+        .await
+        .map_err(db_err)?;
+    let row: Option<(Uuid, String, Option<String>, Option<String>, Option<String>, Vec<String>)> =
+        sqlx::query_as("SELECT id, handle, display_name, email, avatar, roles FROM subjects WHERE id = $1")
+            .bind(sub)
+            .fetch_optional(&mut *tx)
+            .await
+            .map_err(db_err)?;
+    tx.commit().await.map_err(db_err)?;
+    let (id, handle, display_name, email, avatar, roles) =
+        row.ok_or_else(|| (StatusCode::NOT_FOUND, Json(json!({ "error": "subject not found" }))))?;
+    Ok((
+        StatusCode::OK,
+        Json(json!({
+            "subject_id": id,
+            "handle": handle,
+            "display_name": display_name,
+            "email": email,
+            "avatar": avatar,
+            "roles": roles,
+        })),
+    ))
+}
+
+#[derive(Deserialize)]
+struct UpdateMe {
+    display_name: Option<String>,
+    avatar: Option<String>,
+}
+
+/// PATCH /v1/auth/me — the caller updates their own display name and/or avatar. A present `display_name`
+/// must be 1..=80 chars; a present `avatar` is a `data:image/*` URL (empty string clears it). Only the
+/// fields supplied are changed, and only on the caller's own subject row.
+async fn update_me(
+    State(state): State<AppState>,
+    Extension(claims): Extension<Claims>,
+    Json(body): Json<UpdateMe>,
+) -> Result<(StatusCode, Json<Value>), (StatusCode, Json<Value>)> {
+    let tenant_id = Uuid::parse_str(&claims.tenant_id)
+        .map_err(|_| invalid_input("tenant_id", "claims carry a non-UUID tenant_id"))?;
+    let sub = Uuid::parse_str(&claims.sub)
+        .map_err(|_| invalid_input("sub", "claims carry a non-UUID subject id"))?;
+
+    // Validate before touching the database.
+    if let Some(dn) = &body.display_name {
+        validate_display_name(dn.trim())?;
+    }
+    if let Some(av) = &body.avatar {
+        if !av.is_empty() {
+            validate_avatar(av)?;
+        }
+    }
+
+    let mut tx = state.pg.begin().await.map_err(db_err)?;
+    sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
+        .bind(tenant_id.to_string())
+        .execute(&mut *tx)
+        .await
+        .map_err(db_err)?;
+    if let Some(dn) = &body.display_name {
+        sqlx::query("UPDATE subjects SET display_name = $1, updated_at = now() WHERE id = $2")
+            .bind(dn.trim())
+            .bind(sub)
+            .execute(&mut *tx)
+            .await
+            .map_err(db_err)?;
+    }
+    if let Some(av) = &body.avatar {
+        let av_opt: Option<&str> = if av.is_empty() { None } else { Some(av.as_str()) };
+        sqlx::query("UPDATE subjects SET avatar = $1, updated_at = now() WHERE id = $2")
+            .bind(av_opt)
+            .bind(sub)
+            .execute(&mut *tx)
+            .await
+            .map_err(db_err)?;
+    }
+    let row: Option<(Uuid, String, Option<String>, Option<String>, Option<String>, Vec<String>)> =
+        sqlx::query_as("SELECT id, handle, display_name, email, avatar, roles FROM subjects WHERE id = $1")
+            .bind(sub)
+            .fetch_optional(&mut *tx)
+            .await
+            .map_err(db_err)?;
+    tx.commit().await.map_err(db_err)?;
+    let (id, handle, display_name, email, avatar, roles) =
+        row.ok_or_else(|| (StatusCode::NOT_FOUND, Json(json!({ "error": "subject not found" }))))?;
+    Ok((
+        StatusCode::OK,
+        Json(json!({
+            "subject_id": id,
+            "handle": handle,
+            "display_name": display_name,
+            "email": email,
+            "avatar": avatar,
+            "roles": roles,
+        })),
+    ))
+}
+
+/// A profile avatar must be a small `data:image/*` URL (the client downscales before upload).
+fn validate_avatar(av: &str) -> Result<(), (StatusCode, Json<Value>)> {
+    if !av.starts_with("data:image/") {
+        return Err(invalid_input("avatar", "avatar must be a data:image/* URL"));
+    }
+    if av.len() > 200_000 {
+        return Err(invalid_input("avatar", "avatar exceeds the size limit"));
+    }
+    Ok(())
 }
 
 // FR-AUTH-005 §1 #15 + G-015 — OTel span emits `auth_admin_list_total`

@@ -10,6 +10,7 @@ import { Icon } from "./icons";
 export function ThreadPanel({
   token,
   nameOf,
+  avatarOf,
   root,
   replies,
   onClose,
@@ -17,6 +18,7 @@ export function ThreadPanel({
 }: {
   token: string;
   nameOf: (id: string) => string;
+  avatarOf: (id: string) => string;
   root: Message;
   replies: Message[];
   onClose(): void;
@@ -44,7 +46,7 @@ export function ThreadPanel({
 
   const bubble = (m: Message) => (
     <div className="t-msg" key={m.id}>
-      <Avatar id={m.sender_subject_id} name={nameOf(m.sender_subject_id)} size={30} />
+      <Avatar id={m.sender_subject_id} name={nameOf(m.sender_subject_id)} size={30} src={avatarOf(m.sender_subject_id)} />
       <div className="t-body">
         <div className="t-head">
           <span className="t-name">{nameOf(m.sender_subject_id)}</span>

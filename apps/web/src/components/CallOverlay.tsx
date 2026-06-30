@@ -5,7 +5,15 @@ import { Icon } from "./icons";
 
 // The call surface: an incoming-call ring card, or the in-call stage (remote video/avatar, local PiP,
 // and the control bar). Streams are attached to the <video> elements imperatively via srcObject.
-export function CallOverlay({ call, nameOf }: { call: CallApi; nameOf: (id: string) => string }) {
+export function CallOverlay({
+  call,
+  nameOf,
+  avatarOf,
+}: {
+  call: CallApi;
+  nameOf: (id: string) => string;
+  avatarOf: (id: string) => string;
+}) {
   const { state, localStream, remoteStream } = call;
   const localVideo = useRef<HTMLVideoElement | null>(null);
   const remoteVideo = useRef<HTMLVideoElement | null>(null);
@@ -35,7 +43,7 @@ export function CallOverlay({ call, nameOf }: { call: CallApi; nameOf: (id: stri
     return (
       <div className="call-ring">
         <div className="ring-card">
-          <Avatar id={state.peerId} name={name} size={76} />
+          <Avatar id={state.peerId} name={name} size={76} src={avatarOf(state.peerId)} />
           <div className="ring-name">{name}</div>
           <div className="ring-sub">Incoming {state.video ? "video" : "voice"} call</div>
           <div className="ring-actions">
@@ -62,7 +70,7 @@ export function CallOverlay({ call, nameOf }: { call: CallApi; nameOf: (id: stri
           <video ref={remoteVideo} autoPlay playsInline className="remote-video" />
         ) : (
           <div className="call-avatar">
-            <Avatar id={state.peerId} name={name} size={132} />
+            <Avatar id={state.peerId} name={name} size={132} src={avatarOf(state.peerId)} />
           </div>
         )}
         <div className="call-topbar">

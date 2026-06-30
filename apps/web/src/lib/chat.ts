@@ -5,6 +5,7 @@ export interface Person {
   display_name?: string;
   handle?: string;
   email?: string;
+  avatar?: string | null;
 }
 export interface Channel {
   id: string;
@@ -105,5 +106,34 @@ export function fileToBase64(file: File): Promise<string> {
     r.onload = () => resolve(String(r.result).split(",")[1] || "");
     r.onerror = () => reject(new Error("read failed"));
     r.readAsDataURL(file);
+  });
+}
+
+// Downscale + center-crop an image File to a square avatar, returning a small JPEG data URL.
+export function fileToAvatarDataUrl(file: File, size = 256): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("canvas unavailable"));
+        return;
+      }
+      const s = Math.min(img.width, img.height);
+      const sx = (img.width - s) / 2;
+      const sy = (img.height - s) / 2;
+      ctx.drawImage(img, sx, sy, s, s, 0, 0, size, size);
+      resolve(canvas.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("image load failed"));
+    };
+    img.src = url;
   });
 }
