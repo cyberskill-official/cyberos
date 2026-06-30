@@ -17,7 +17,6 @@ on:
       - '.github/workflows/rls-property-gate.yml'
   # Runs on PRs and on demand only - GitHub CI is deploy-only on push; run locally via the hook.
   workflow_dispatch: {}
-      - 'services/auth/tests/rls_*.rs'
 
 concurrency:
   group: rls-property-gate-${{ github.ref }}
