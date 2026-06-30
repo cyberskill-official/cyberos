@@ -99,6 +99,20 @@ export function avatarColor(seed: string): string {
 
 export const isImage = (ct: string): boolean => /^image\//.test(ct);
 
+// Human-readable byte size, e.g. 820 B / 14.6 KB / 4.7 MB. Kept simple and locale-neutral.
+export function formatBytes(n: number): string {
+  if (!Number.isFinite(n) || n < 0) return "";
+  if (n < 1024) return `${n} B`;
+  const units = ["KB", "MB", "GB", "TB"];
+  let v = n / 1024;
+  let i = 0;
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024;
+    i++;
+  }
+  return `${v < 10 ? v.toFixed(1) : Math.round(v)} ${units[i]}`;
+}
+
 // Read a File as raw base64 (no data: prefix), the shape the attachments endpoint wants.
 export function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {

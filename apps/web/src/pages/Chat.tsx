@@ -3,7 +3,7 @@ import type { ChangeEvent } from "react";
 import { useAuth } from "../lib/auth";
 import { apiFetch, decodeJwt } from "../lib/api";
 import type { Channel, Directory, Message, Person, ReadMarker } from "../lib/chat";
-import { channelLabel, dayKey, fileToBase64, formatDay, nameFor, shortId, timeOf } from "../lib/chat";
+import { channelLabel, dayKey, fileToBase64, formatBytes, formatDay, isImage, nameFor, shortId, timeOf } from "../lib/chat";
 import { Avatar } from "../components/Avatar";
 import { Icon } from "../components/icons";
 import { Attachment } from "../components/Attachment";
@@ -25,6 +25,8 @@ interface WsEvent extends Partial<Message> {
 }
 
 const GROUP_WINDOW_MS = 5 * 60 * 1000;
+// Client-side guard mirroring the server's attachment cap (5 MB). Keep this in sync with the service.
+const MAX_ATTACH_BYTES = 5 * 1024 * 1024;
 
 export function Chat() {
   const { token, email } = useAuth();
@@ -76,6 +78,9 @@ export function Chat() {
   const [activeId, setActiveId] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [unread, setUnread] = useState<Record<string, number>>({});
+  // Recent-activity timestamps keyed by channel id, used to sort the DM list. Pure client state: it is fed by
+  // the unread poll (a channel with unread is treated as recently active) and by inbound `message` ws events.
+  const [lastActivity, setLastActivity] = useState<Record<string, number>>({});
   const [receipts, setReceipts] = useState<Record<string, string>>({});
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
@@ -99,6 +104,14 @@ export function Chat() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQ, setSearchQ] = useState("");
   const [searchResults, setSearchResults] = useState<Message[]>([]);
+
+  // Composer attachment staging: a file is held here (with an image preview URL) until the user presses Send,
+  // at which point it is uploaded and posted. `uploading` shows the in-flight state; `dragOver` highlights
+  // the message pane during a drag.
+  const [staged, setStaged] = useState<File | null>(null);
+  const [stagedPreview, setStagedPreview] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -139,6 +152,15 @@ export function Chat() {
     setUnread((prev) => {
       const next: Record<string, number> = { ...prev };
       for (const [id, n] of entries) next[id] = id === activeId ? 0 : n;
+      return next;
+    });
+    // Treat a channel with unread messages as recently active so the DM list can float it up. This is a
+    // coarse signal (it has no per-message timestamp), but it keeps conversations with new messages near
+    // the top until the live ws event gives a precise bump.
+    const now = Date.now();
+    setLastActivity((prev) => {
+      const next = { ...prev };
+      for (const [id, n] of entries) if (n > 0) next[id] = now;
       return next;
     });
   }
@@ -291,6 +313,9 @@ export function Chat() {
         }
         if (data.type === "message" && data.id) {
           const msg = data as Message;
+          // Bump recent-activity for the message's channel so the DM list re-sorts live.
+          const chanId = msg.channel_id || activeId;
+          if (chanId) setLastActivity((prev) => ({ ...prev, [chanId]: Date.now() }));
           if (msg.parent_id) {
             const root = threadRootRef.current;
             if (root && msg.parent_id === root.id) {
@@ -359,6 +384,22 @@ export function Chat() {
     ta.style.height = Math.min(ta.scrollHeight, 140) + "px";
   }, [draft]);
 
+  // Make (and revoke) an object URL for the staged file when it is an image, so the preview strip can show
+  // a thumbnail without re-reading the file.
+  useEffect(() => {
+    if (staged && isImage(staged.type)) {
+      const u = URL.createObjectURL(staged);
+      setStagedPreview(u);
+      return () => URL.revokeObjectURL(u);
+    }
+    setStagedPreview("");
+  }, [staged]);
+
+  // Drop any staged file when switching channels, so it cannot post to the wrong place.
+  useEffect(() => {
+    setStaged(null);
+  }, [activeId]);
+
   // Auto-mark the active channel read (debounced) when its timeline changes, and clear its badge.
   useEffect(() => {
     if (!token || !activeId || messages.length === 0) return;
@@ -392,13 +433,38 @@ export function Chat() {
     setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
   }
 
+  // Upload a staged file and return its attachment id (reuses the exact attachments endpoint).
+  async function uploadStaged(file: File): Promise<string> {
+    if (!active || !token) throw new Error("no active channel");
+    const b64 = await fileToBase64(file);
+    const att = await apiFetch<{ id: string }>(token, "POST", `/v1/chat/channels/${active.id}/attachments`, {
+      filename: file.name,
+      content_type: file.type || "application/octet-stream",
+      data_base64: b64,
+    });
+    return att.id;
+  }
+
   async function send() {
     const text = draft.trim();
-    if (!text || sending) return;
-    setSending(true);
+    // Send when there is text or a staged file; nothing to do otherwise, or while a send is in flight.
+    if ((!text && !staged) || sending || uploading) return;
     setError("");
+    setSending(true);
     try {
-      await postMessage(text);
+      if (staged) {
+        setUploading(true);
+        let attId: string;
+        try {
+          attId = await uploadStaged(staged);
+        } finally {
+          setUploading(false);
+        }
+        await postMessage(text, attId);
+        setStaged(null);
+      } else {
+        await postMessage(text);
+      }
       setDraft("");
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -407,22 +473,22 @@ export function Chat() {
     }
   }
 
-  async function onPickFile(e: ChangeEvent<HTMLInputElement>) {
+  // Stage a file for the next Send (does not upload yet). Guards the server's 5 MB cap up front so an
+  // oversize file is rejected with a friendly message before any upload.
+  function stageFile(file: File | null | undefined) {
+    if (!file) return;
+    if (file.size > MAX_ATTACH_BYTES) {
+      setError(`"${file.name}" is ${formatBytes(file.size)}, over the ${formatBytes(MAX_ATTACH_BYTES)} limit.`);
+      return;
+    }
+    setError("");
+    setStaged(file);
+  }
+
+  function onPickFile(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files && e.target.files[0];
     e.target.value = "";
-    if (!file || !active || !token) return;
-    setError("");
-    try {
-      const b64 = await fileToBase64(file);
-      const att = await apiFetch<{ id: string }>(token, "POST", `/v1/chat/channels/${active.id}/attachments`, {
-        filename: file.name,
-        content_type: file.type || "application/octet-stream",
-        data_base64: b64,
-      });
-      await postMessage("", att.id);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    }
+    stageFile(file);
   }
 
   async function saveEdit(m: Message) {
@@ -581,7 +647,13 @@ export function Chat() {
   }, [receipts, myLastId, idxOf, me]);
 
   const groups = channels.filter((c) => c.kind !== "direct");
-  const dms = channels.filter((c) => c.kind === "direct");
+  // Direct messages sorted by recent activity (most recent first). Channels with no recorded activity keep
+  // their server order at the bottom (Array.sort is stable). Pure client-side ordering.
+  const dms = useMemo(() => {
+    return channels
+      .filter((c) => c.kind === "direct")
+      .sort((a, b) => (lastActivity[b.id] || 0) - (lastActivity[a.id] || 0));
+  }, [channels, lastActivity]);
 
   const renderRow = (c: Channel) => {
     const u = unread[c.id] || 0;
@@ -596,11 +668,15 @@ export function Chat() {
         type="button"
       >
         {dm ? (
+          // Presence is per-open-socket today: we only learn a subject is online while we hold a socket on a
+          // channel they are in. So this dot reflects presence only while that DM's own socket is held (i.e.
+          // when it has been opened this session). A correct always-on presence needs a per-user socket
+          // independent of the open channel - a known follow-up. We do not fake presence here.
           <Avatar
             id={other || c.id}
             name={nameOf(other)}
             size={26}
-            online={presence.has(other) && isActive}
+            online={presence.has(other)}
             src={avatarSrc(other)}
           />
         ) : (
@@ -760,7 +836,30 @@ export function Chat() {
 
             <div className="main-row">
               <div className="main-col">
-                <div className="messages" ref={scrollRef}>
+                <div
+                  className={"messages" + (dragOver ? " drag-over" : "")}
+                  ref={scrollRef}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    if (!dragOver) setDragOver(true);
+                  }}
+                  onDragLeave={(e) => {
+                    // Only clear when the pointer actually leaves the pane, not when crossing a child.
+                    if (e.currentTarget === e.target) setDragOver(false);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDragOver(false);
+                    stageFile(e.dataTransfer.files && e.dataTransfer.files[0]);
+                  }}
+                  onPaste={(e) => {
+                    const f = e.clipboardData.files && e.clipboardData.files[0];
+                    if (f) {
+                      e.preventDefault();
+                      stageFile(f);
+                    }
+                  }}
+                >
                   {messages.length === 0 && (
                     <div className="empty">
                       <div className="empty-sub">No messages yet. Say hello.</div>
@@ -874,6 +973,31 @@ export function Chat() {
 
                 {(error || call.error) && <div className="banner err">{call.error || error}</div>}
 
+                {staged && (
+                  <div className="composer-attach">
+                    {stagedPreview ? (
+                      <img className="ca-thumb" src={stagedPreview} alt={staged.name} />
+                    ) : (
+                      <span className="ca-icon">
+                        <Icon name="paperclip" size={16} />
+                      </span>
+                    )}
+                    <span className="ca-meta">
+                      <span className="ca-name">{staged.name}</span>
+                      <span className="ca-size">{formatBytes(staged.size)}</span>
+                    </span>
+                    <button
+                      className="ca-x"
+                      title="Remove attachment"
+                      onClick={() => setStaged(null)}
+                      disabled={uploading}
+                      type="button"
+                    >
+                      <Icon name="close" size={14} />
+                    </button>
+                  </div>
+                )}
+
                 <div className="composer">
                   <button className="comp-btn" title="Attach a file" onClick={() => fileRef.current?.click()} type="button">
                     <Icon name="paperclip" />
@@ -889,10 +1013,23 @@ export function Chat() {
                         void send();
                       }
                     }}
-                    placeholder={"Message " + channelLabel(directory, me, active)}
+                    onPaste={(e) => {
+                      const f = e.clipboardData.files && e.clipboardData.files[0];
+                      if (f) {
+                        e.preventDefault();
+                        stageFile(f);
+                      }
+                    }}
+                    placeholder={staged ? "Add a message or just send the file" : "Message " + channelLabel(directory, me, active)}
                   />
-                  <button className="comp-send" onClick={() => void send()} disabled={sending || !draft.trim()} title="Send" type="button">
-                    <Icon name="send" />
+                  <button
+                    className="comp-send"
+                    onClick={() => void send()}
+                    disabled={sending || uploading || (!draft.trim() && !staged)}
+                    title="Send"
+                    type="button"
+                  >
+                    <Icon name={uploading ? "paperclip" : "send"} />
                   </button>
                 </div>
               </div>

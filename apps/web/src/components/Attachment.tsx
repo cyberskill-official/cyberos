@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "../lib/api";
-import { isImage } from "../lib/chat";
+import { formatBytes, isImage } from "../lib/chat";
 import { Icon } from "./icons";
 
 interface Meta {
   content_type: string;
   filename: string;
+  size_bytes?: number;
 }
 
 // Renders a message attachment by id: an inline image for image types, a download chip otherwise. The blob
@@ -54,9 +55,11 @@ export function Attachment({ token, id }: { token: string; id: string }) {
   if (isImage(meta.content_type) && url) {
     return <img className="att-img" src={url} alt={meta.filename} onClick={() => window.open(url, "_blank")} />;
   }
+  const size = typeof meta.size_bytes === "number" ? formatBytes(meta.size_bytes) : "";
   return (
     <a className="att-chip" href={url || undefined} download={meta.filename}>
       <Icon name="paperclip" size={14} /> {meta.filename}
+      {size && <span className="att-size">{size}</span>}
     </a>
   );
 }

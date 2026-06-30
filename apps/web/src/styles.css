@@ -202,6 +202,20 @@ a { color: var(--ochre); }
 .comp-send { background: var(--ochre); color: var(--umber-900); border-color: transparent; }
 .comp-send:disabled { opacity: 0.45; cursor: default; }
 
+/* composer attachment preview (staged, pre-send) */
+.composer-attach { flex: none; margin: 0 14px 8px; display: flex; align-items: center; gap: 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+.composer-attach .ca-thumb { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid var(--line); flex: none; }
+.composer-attach .ca-icon { width: 40px; height: 40px; border-radius: 8px; display: grid; place-items: center; background: var(--panel-2); color: var(--muted); flex: none; }
+.composer-attach .ca-meta { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.composer-attach .ca-name { font-size: 13px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.composer-attach .ca-size { font-size: 11px; color: var(--faint); }
+.composer-attach .ca-x { flex: none; width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; background: transparent; border: none; color: var(--muted); cursor: pointer; }
+.composer-attach .ca-x:hover { background: var(--panel-2); color: var(--ink); }
+.composer-attach .ca-x:disabled { opacity: 0.45; cursor: default; }
+
+/* drag-and-drop highlight on the message pane */
+.messages.drag-over { outline: 2px dashed var(--ochre); outline-offset: -8px; background: var(--ochre-soft); }
+
 /* empty states */
 .empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--muted); font-size: 14px; text-align: center; padding: 24px; }
 .empty-mark { width: 64px; height: 64px; border-radius: 20px; display: grid; place-items: center; background: var(--panel-2); color: var(--ochre); margin-bottom: 4px; }
@@ -212,6 +226,7 @@ a { color: var(--ochre); }
 .att-img { max-width: 300px; max-height: 280px; border-radius: 10px; display: block; cursor: pointer; border: 1px solid var(--line); margin-top: 3px; }
 .att-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 7px 12px; font-size: 13px; color: var(--ink); text-decoration: none; cursor: pointer; margin-top: 3px; }
 .att-chip:hover { border-color: var(--ochre); }
+.att-chip .att-size { color: var(--faint); font-size: 12px; }
 
 /* thread panel */
 .thread { width: 360px; flex: none; border-left: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; background: var(--panel); }
