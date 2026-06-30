@@ -4,7 +4,7 @@
 # Supabase database. Idempotent: a file already recorded is skipped. Run from deploy/vps by deploy.sh,
 # before the stack starts.
 #
-# Scope: only the services in MIGRATE_SERVICES are touched (default: the deployed P0 set "auth chat eval").
+# Scope: only the services in MIGRATE_SERVICES are touched (default: the deployed P0 set "auth chat eval memory").
 # Modules that are not deployed yet (memory, obs, proj, ...) are ignored, so their schema is never applied
 # to the production DB prematurely - add a service here when it actually deploys.
 #
@@ -24,7 +24,7 @@ if [ -z "$DB_URL" ]; then
 fi
 
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-MIGRATE_SERVICES="${MIGRATE_SERVICES:-auth chat eval}"
+MIGRATE_SERVICES="${MIGRATE_SERVICES:-auth chat eval memory}"
 BASELINE_SERVICES="${MIGRATE_BASELINE_SERVICES:-auth chat}"
 PG_IMAGE="${MIGRATE_PG_IMAGE:-postgres:16}"
 
