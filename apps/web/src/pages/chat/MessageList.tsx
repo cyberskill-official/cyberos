@@ -12,6 +12,10 @@ export function MessageList({
   token,
   scrollRef,
   dragOver,
+  highlightId,
+  showJumpLatest,
+  onJumpLatest,
+  onScrollPane,
   editingId,
   editText,
   reactPickerId,
@@ -46,6 +50,10 @@ export function MessageList({
   token: string | null;
   scrollRef: RefObject<HTMLDivElement>;
   dragOver: boolean;
+  highlightId: string;
+  showJumpLatest: boolean;
+  onJumpLatest: () => void;
+  onScrollPane: () => void;
   editingId: string;
   editText: string;
   reactPickerId: string;
@@ -78,6 +86,7 @@ export function MessageList({
     <div
       className={"messages" + (dragOver ? " drag-over" : "")}
       ref={scrollRef}
+      onScroll={onScrollPane}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
@@ -102,6 +111,7 @@ export function MessageList({
           translating={translating}
           translations={translations}
           translateError={translateError}
+          highlighted={m.id === highlightId}
           isMyLast={m.id === myLastId}
           seenBy={seenBy}
           seenLabel={seenLabel}
@@ -121,6 +131,11 @@ export function MessageList({
           onDelete={onDelete}
         />
       ))}
+      {showJumpLatest && (
+        <button className="jump-pill" onClick={onJumpLatest} type="button">
+          Viewing history · Jump to latest
+        </button>
+      )}
     </div>
   );
 }

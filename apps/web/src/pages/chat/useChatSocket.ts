@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { MutableRefObject } from "react";
 import { apiFetch } from "../../lib/api";
 import type { Message, ReadMarker } from "../../lib/chat";
-import { applyReaction } from "../../lib/chat";
+import { applyReaction, sortMessagesAsc } from "../../lib/chat";
 import type { CallApi } from "../../lib/call";
 
 // A websocket event: a message (Message shape) or one of the control frames the server emits.
@@ -50,6 +50,8 @@ export function useChatSocket({
   callRef,
   setError,
   resetChannelUi,
+  jumpRef,
+  onJumped,
 }: {
   token: string | null;
   activeId: string;
@@ -57,6 +59,11 @@ export function useChatSocket({
   callRef: MutableRefObject<CallApi>;
   setError: (msg: string) => void;
   resetChannelUi: () => void;
+  /// A pending jump-to-message (from global search). When set for the channel being opened, the initial
+  /// fetch loads an ?around= window instead of the latest page, then the ref is cleared.
+  jumpRef?: MutableRefObject<{ channelId: string; messageId: string } | null>;
+  /// Called once after a jump window landed, with the target message id (Chat scrolls + flashes it).
+  onJumped?: (messageId: string) => void;
 }): ChatSocket {
   const [messages, setMessages] = useState<Message[]>([]);
   // Recent-activity timestamps keyed by channel id, used to sort the DM list. Pure client state: it is fed by
@@ -83,6 +90,8 @@ export function useChatSocket({
   resetRef.current = resetChannelUi;
   const setErrorRef = useRef(setError);
   setErrorRef.current = setError;
+  const onJumpedRef = useRef(onJumped);
+  onJumpedRef.current = onJumped;
 
   // Per-channel: timeline + presence + receipts, and the live websocket (messages, edits/deletes, presence,
   // typing, read receipts, call signals).
@@ -100,9 +109,18 @@ export function useChatSocket({
     let alive = true;
 
     (async () => {
+      // A pending jump into this channel loads a window around the target instead of the latest page.
+      const jump = jumpRef && jumpRef.current && jumpRef.current.channelId === activeId ? jumpRef.current : null;
+      if (jump && jumpRef) jumpRef.current = null;
       try {
-        const msgs = await apiFetch<Message[]>(token, "GET", `/v1/chat/channels/${activeId}/messages`);
-        if (alive) setMessages((msgs || []).filter((m) => !m.parent_id));
+        const path = jump
+          ? `/v1/chat/channels/${activeId}/messages?around=${encodeURIComponent(jump.messageId)}&limit=80`
+          : `/v1/chat/channels/${activeId}/messages`;
+        const msgs = await apiFetch<Message[]>(token, "GET", path);
+        if (alive) {
+          setMessages(sortMessagesAsc((msgs || []).filter((m) => !m.parent_id)));
+          if (jump) onJumpedRef.current?.(jump.messageId);
+        }
       } catch (e) {
         if (alive) setErrorRef.current(e instanceof Error ? e.message : String(e));
       }

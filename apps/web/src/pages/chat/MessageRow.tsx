@@ -16,6 +16,7 @@ export function MessageRow({
   showDay,
   grouped,
   mine,
+  highlighted,
   token,
   editingId,
   editText,
@@ -45,6 +46,7 @@ export function MessageRow({
   showDay: boolean;
   grouped: boolean;
   mine: boolean;
+  highlighted: boolean;
   token: string | null;
   editingId: string;
   editText: string;
@@ -77,7 +79,10 @@ export function MessageRow({
           <span>{formatDay(m.created_at)}</span>
         </div>
       )}
-      <div className={"m-row" + (grouped ? " grouped" : "") + (mine ? " mine" : "")}>
+      <div
+        id={"m-" + m.id}
+        className={"m-row" + (grouped ? " grouped" : "") + (mine ? " mine" : "") + (highlighted ? " flash" : "")}
+      >
         <div className="m-gutter">
           {grouped ? (
             <span className="m-time-hover">{timeOf(m.created_at)}</span>

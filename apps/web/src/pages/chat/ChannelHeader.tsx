@@ -18,11 +18,13 @@ export function ChannelHeader({
   searchResults,
   nameOf,
   avatarSrc,
+  channelOf,
   onStartCall,
   onToggleSearch,
   onOpenAddPeople,
   onSearchQChange,
   onRunSearch,
+  onPickResult,
 }: {
   active: Channel;
   directory: Directory;
@@ -34,11 +36,15 @@ export function ChannelHeader({
   searchResults: Message[];
   nameOf: (id: string) => string;
   avatarSrc: (id: string) => string;
+  /// The sidebar label of a result's channel ("" when unknown), so results say where they were found.
+  channelOf: (m: Message) => string;
   onStartCall: (video: boolean) => void;
   onToggleSearch: () => void;
   onOpenAddPeople: () => void;
   onSearchQChange: (v: string) => void;
   onRunSearch: () => void;
+  /// Jump to a result's message (switches channel when needed).
+  onPickResult: (m: Message) => void;
 }) {
   return (
     <Fragment>
@@ -71,7 +77,7 @@ export function ChannelHeader({
         </button>
         <button
           className={"icon-btn" + (searchOpen ? " on" : "")}
-          title="Search this channel"
+          title="Search all channels (Ctrl/Cmd+K)"
           onClick={onToggleSearch}
           type="button"
         >
@@ -95,7 +101,7 @@ export function ChannelHeader({
                 void onRunSearch();
               }
             }}
-            placeholder="Search messages in this channel"
+            placeholder="Search all channels"
             autoFocus
           />
           <button className="btn-pill" onClick={() => void onRunSearch()} type="button">
@@ -104,11 +110,12 @@ export function ChannelHeader({
           {searchResults.length > 0 && (
             <div className="search-results">
               {searchResults.map((m) => (
-                <div key={m.id} className="search-row">
+                <button key={m.id} className="search-row" onClick={() => onPickResult(m)} type="button">
+                  {channelOf(m) && <span className="search-chan">{channelOf(m)}</span>}
                   <span className="author">{nameOf(m.sender_subject_id)}</span>{" "}
                   <span className="when">{timeOf(m.created_at)}</span>
                   <div className="snippet">{m.body || "[attachment]"}</div>
-                </div>
+                </button>
               ))}
             </div>
           )}

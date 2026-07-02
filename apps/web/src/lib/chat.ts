@@ -49,6 +49,12 @@ export type Directory = Record<string, Person>;
 
 export const shortId = (id: string): string => (id ? id.slice(0, 8) : "?");
 
+// The server returns message pages newest-first (DESC); the timeline renders oldest-first and appends live
+// messages at the end. Every fetch goes through this so history is never rendered reversed.
+export function sortMessagesAsc(list: Message[]): Message[] {
+  return [...list].sort((a, b) => Date.parse(a.created_at || "") - Date.parse(b.created_at || ""));
+}
+
 // The fixed reaction set the picker offers. Kept small and self-contained (no external emoji library).
 export const REACTION_EMOJIS = ["\u{1F44D}", "❤️", "\u{1F602}", "\u{1F389}", "✅", "\u{1F440}"];
 

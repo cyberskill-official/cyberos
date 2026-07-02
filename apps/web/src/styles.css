@@ -330,10 +330,22 @@ a { color: var(--ochre); }
 .search-bar input { flex: 1; min-width: 180px; background: var(--bg); border: 1px solid var(--line); color: var(--ink); border-radius: 9px; padding: 9px 12px; font-size: 13px; }
 .search-bar input:focus { outline: none; border-color: var(--ochre); }
 .search-results { flex-basis: 100%; max-height: 240px; overflow: auto; display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
-.search-row { font-size: 12px; padding: 8px 10px; border-radius: 8px; background: var(--bg); }
+.search-row { font-size: 12px; padding: 8px 10px; border-radius: 8px; background: var(--bg); border: 1px solid transparent; text-align: left; cursor: pointer; display: block; width: 100%; font-family: inherit; }
+.search-row:hover { border-color: var(--ochre); }
 .search-row .author { color: var(--ink); font-weight: 600; }
 .search-row .when { color: var(--faint); }
-.search-row .snippet { color: var(--muted); margin-top: 2px; }
+.search-row .snippet { color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.search-chan { display: inline-block; margin-right: 8px; padding: 1px 7px; border-radius: 7px; background: var(--ochre-soft); color: var(--ochre); font-size: 11px; font-weight: 700; }
+
+/* jump-to-message flash + the "viewing history" pill */
+.m-row.flash { animation: row-flash 1.8s ease-out; }
+@keyframes row-flash {
+  0% { background: rgba(244, 186, 23, 0.28); }
+  60% { background: rgba(244, 186, 23, 0.16); }
+  100% { background: transparent; }
+}
+.jump-pill { position: sticky; bottom: 8px; left: 50%; transform: translateX(-50%); display: block; margin: 10px auto 0; padding: 7px 16px; border-radius: 999px; border: 1px solid var(--ochre); background: var(--panel); color: var(--ochre); font-size: 12px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4); }
+.jump-pill:hover { background: var(--ochre-soft); }
 
 /* people picker */
 .picker-bg { position: fixed; inset: 0; background: rgba(8, 4, 2, 0.62); display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 60; }

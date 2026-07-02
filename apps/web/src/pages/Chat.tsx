@@ -3,7 +3,7 @@ import type { ChangeEvent } from "react";
 import { useAuth } from "../lib/auth";
 import { apiFetch, apiUploadRaw, decodeJwt, ApiError } from "../lib/api";
 import type { Channel, Directory, Message, Person } from "../lib/chat";
-import { channelLabel, dayKey, fileToBase64, formatBytes, isImage, shortId } from "../lib/chat";
+import { channelLabel, dayKey, fileToBase64, formatBytes, isImage, shortId, sortMessagesAsc } from "../lib/chat";
 import type { MentionCandidate } from "../lib/richtext";
 import { Icon } from "../components/icons";
 import { EmojiPicker } from "../components/EmojiPicker";
@@ -131,6 +131,18 @@ export function Chat() {
   const [searchQ, setSearchQ] = useState("");
   const [searchResults, setSearchResults] = useState<Message[]>([]);
 
+  // Jump-to-message (from global search): the pending cross-channel jump (read by useChatSocket when the
+  // channel opens), the row to flash, and whether the timeline is showing a history window rather than the
+  // latest page (which shows the "jump to latest" pill and pauses auto-scroll-to-bottom).
+  const jumpRef = useRef<{ channelId: string; messageId: string } | null>(null);
+  const [highlightId, setHighlightId] = useState("");
+  const [notLatest, setNotLatest] = useState(false);
+  const suppressScrollRef = useRef(false);
+  const prevLastIdRef = useRef("");
+  // Load-older pagination state (reset per channel).
+  const loadingOlderRef = useRef(false);
+  const hasOlderRef = useRef(true);
+
   // Composer attachment staging: files are held here (with image preview URLs) until the user presses Send,
   // at which point they are uploaded and posted as one multi-attachment message. `uploading` shows the
   // in-flight state; `dragOver` highlights the message pane during a drag.
@@ -195,6 +207,12 @@ export function Chat() {
     callRef: callRef as React.MutableRefObject<ReturnType<typeof useCall>>,
     setError,
     resetChannelUi,
+    jumpRef,
+    onJumped: (messageId) => {
+      suppressScrollRef.current = true;
+      setNotLatest(true);
+      setHighlightId(messageId);
+    },
   });
   const {
     messages,
@@ -385,10 +403,47 @@ export function Chat() {
     };
   }, []);
 
+  // Auto-scroll to the bottom only when the timeline's TAIL changed (a new latest message) and nothing else
+  // owns the scroll (a jump landing or an older page being prepended sets the suppress flag).
   useEffect(() => {
     const el = scrollRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    const last = messages.length ? messages[messages.length - 1].id : "";
+    const tailChanged = last !== prevLastIdRef.current;
+    prevLastIdRef.current = last;
+    if (!el || suppressScrollRef.current || !tailChanged) return;
+    el.scrollTop = el.scrollHeight;
   }, [messages]);
+
+  // A landed jump: scroll the target row into view and clear the flash after a moment.
+  useEffect(() => {
+    if (!highlightId) return;
+    const el = document.getElementById("m-" + highlightId);
+    if (el) el.scrollIntoView({ block: "center" });
+    const t = window.setTimeout(() => {
+      setHighlightId("");
+      suppressScrollRef.current = false;
+    }, 1800);
+    return () => window.clearTimeout(t);
+  }, [highlightId, messages]);
+
+  // Reset pagination when the channel changes.
+  useEffect(() => {
+    hasOlderRef.current = true;
+    loadingOlderRef.current = false;
+    setNotLatest(false);
+  }, [activeId]);
+
+  // Ctrl/Cmd+K opens global search from anywhere in chat.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
 
   // Reflect total unread (across channels, excluding the open one) in the tab title, so a background tab
   // still signals new activity even when the window is not focused.
@@ -733,7 +788,8 @@ export function Chat() {
     if (!token) return;
     try {
       const r = await apiFetch<Message[]>(token, "GET", `/v1/chat/channels/${m.channel_id}/messages?parent_id=${m.id}`);
-      setThreadReplies(r || []);
+      // The server pages newest-first; the panel renders oldest-first.
+      setThreadReplies(sortMessagesAsc(r || []));
     } catch {
       /* leave the panel open with just the root */
     }
@@ -748,21 +804,116 @@ export function Chat() {
     setThreadReplies((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
   }
 
+  // Global search across every channel I belong to (groups + DMs). Falls back to the per-channel endpoint
+  // if the server predates /v1/chat/search (a brief deploy-window case).
   async function runSearch() {
     const q = searchQ.trim();
-    if (!q || !active || !token) {
+    if (!q || !token) {
       setSearchResults([]);
       return;
     }
     try {
+      const rows = await apiFetch<Message[]>(token, "GET", `/v1/chat/search?q=${encodeURIComponent(q)}`);
+      setSearchResults(rows || []);
+    } catch (e) {
+      if (e instanceof ApiError && (e.status === 404 || e.status === 405) && active) {
+        try {
+          const rows = await apiFetch<Message[]>(
+            token,
+            "GET",
+            `/v1/chat/channels/${active.id}/search?q=${encodeURIComponent(q)}`,
+          );
+          setSearchResults(rows || []);
+          return;
+        } catch {
+          /* fall through to the banner */
+        }
+      }
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  // Jump to a search result: open its channel with a window around the message and flash the row. A thread
+  // reply jumps to its parent in the timeline (the reply itself lives in the thread panel).
+  function jumpTo(m: Message) {
+    const target = m.parent_id || m.id;
+    setSearchOpen(false);
+    setSearchResults([]);
+    if (m.channel_id === activeId) {
+      void loadAround(m.channel_id, target);
+    } else {
+      jumpRef.current = { channelId: m.channel_id, messageId: target };
+      selectChannel(m.channel_id);
+    }
+  }
+
+  // Replace the timeline with a window around a message in the CURRENT channel (same-channel jumps; the
+  // cross-channel path goes through jumpRef + the socket hook's initial fetch).
+  async function loadAround(channelId: string, messageId: string) {
+    if (!token) return;
+    try {
       const rows = await apiFetch<Message[]>(
         token,
         "GET",
-        `/v1/chat/channels/${active.id}/search?q=${encodeURIComponent(q)}`,
+        `/v1/chat/channels/${channelId}/messages?around=${encodeURIComponent(messageId)}&limit=80`,
       );
-      setSearchResults(rows || []);
+      suppressScrollRef.current = true;
+      setNotLatest(true);
+      hasOlderRef.current = true;
+      setMessages(sortMessagesAsc((rows || []).filter((x) => !x.parent_id)));
+      setHighlightId(messageId);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  // Back to the live tail of the channel (the "jump to latest" pill).
+  async function reloadLatest() {
+    if (!token || !activeId) return;
+    try {
+      const rows = await apiFetch<Message[]>(token, "GET", `/v1/chat/channels/${activeId}/messages`);
+      setNotLatest(false);
+      hasOlderRef.current = true;
+      suppressScrollRef.current = false;
+      prevLastIdRef.current = ""; // force the tail-changed rule so the next render scrolls down
+      setMessages(sortMessagesAsc((rows || []).filter((x) => !x.parent_id)));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  // Infinite scroll-up: prepend the previous page when the pane nears its top, keeping the viewport stable.
+  async function loadOlder() {
+    if (loadingOlderRef.current || !hasOlderRef.current || !token || !activeId || messages.length === 0) return;
+    loadingOlderRef.current = true;
+    const el = scrollRef.current;
+    const prevH = el ? el.scrollHeight : 0;
+    const prevTop = el ? el.scrollTop : 0;
+    try {
+      const oldest = messages[0];
+      const rows = await apiFetch<Message[]>(
+        token,
+        "GET",
+        `/v1/chat/channels/${activeId}/messages?before=${encodeURIComponent(oldest.created_at || "")}&limit=50`,
+      );
+      const older = sortMessagesAsc((rows || []).filter((x) => !x.parent_id));
+      if (older.length < 50) hasOlderRef.current = false;
+      if (older.length > 0) {
+        suppressScrollRef.current = true;
+        setMessages((prev) => {
+          const seen = new Set(prev.map((x) => x.id));
+          return [...older.filter((x) => !seen.has(x.id)), ...prev];
+        });
+        requestAnimationFrame(() => {
+          const el2 = scrollRef.current;
+          if (el2) el2.scrollTop = el2.scrollHeight - prevH + prevTop;
+          suppressScrollRef.current = false;
+        });
+      }
+    } catch {
+      /* best-effort; scrolling up again retries */
+    } finally {
+      loadingOlderRef.current = false;
     }
   }
 
@@ -878,11 +1029,16 @@ export function Chat() {
               searchResults={searchResults}
               nameOf={nameOf}
               avatarSrc={avatarSrc}
+              channelOf={(m) => {
+                const c = channels.find((x) => x.id === m.channel_id);
+                return c ? channelLabel(directory, me, c) : "";
+              }}
               onStartCall={startCallWith}
               onToggleSearch={() => setSearchOpen((s) => !s)}
               onOpenAddPeople={() => setPicker("add")}
               onSearchQChange={setSearchQ}
               onRunSearch={runSearch}
+              onPickResult={jumpTo}
             />
 
             <div className="main-row">
@@ -894,6 +1050,13 @@ export function Chat() {
                   token={token}
                   scrollRef={scrollRef}
                   dragOver={dragOver}
+                  highlightId={highlightId}
+                  showJumpLatest={notLatest}
+                  onJumpLatest={() => void reloadLatest()}
+                  onScrollPane={() => {
+                    const el = scrollRef.current;
+                    if (el && el.scrollTop < 60) void loadOlder();
+                  }}
                   editingId={editingId}
                   editText={editText}
                   reactPickerId={reactPickerId}
