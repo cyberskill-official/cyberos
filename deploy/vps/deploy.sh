@@ -11,6 +11,10 @@ set -euo pipefail
 REPO_DIR="${CYBEROS_REPO_DIR:-$HOME/cyberos}"
 cd "$REPO_DIR"
 
+# NOTE: this script git-pulls BELOW, so the copy executing right now is always the PREVIOUS commit's -
+# changes to deploy.sh take effect on the FOLLOWING deploy, never the one that ships them. Keep that
+# one-deploy lag in mind when reasoning about deploy behavior (it bit the caddy fix on 2026-07-02).
+
 echo "==> pulling latest main"
 PRE_PULL_REV="$(git rev-parse HEAD)"
 git pull --ff-only origin main

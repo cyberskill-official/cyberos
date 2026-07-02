@@ -19,6 +19,8 @@
 # inode - git pull replaces the inode, so reload/restart re-read STALE content. deploy.sh therefore
 # force-recreates caddy whenever this file changes; editing this comment is enough to trigger that.
 # (Tripwire bump #2: the first recreate attempt was defeated by a wrong-CWD pathspec in deploy.sh.)
+# (Tripwire bump #3: deploy.sh executes at its pre-pull version - the script fix lags one deploy - so this
+#  bump makes the FIXED script, first executing on this deploy, see a changed Caddyfile and recreate.)
 
 {$CYBEROS_APP_DOMAIN} {
 	encode gzip
