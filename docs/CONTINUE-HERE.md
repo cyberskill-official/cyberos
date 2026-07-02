@@ -60,8 +60,16 @@ DONE + LIVE so far:
   create, archived sidebar section + read-only note. FOUND+FIXED: fetched pages rendered newest-first -
   reloaded channels and thread panels showed history REVERSED; all fetches now sort ascending.
 
+- (2d) AI-native cluster (two commits, one deploy): services/chat/src/ai.rs on the translate.rs posture
+  (server-side gateway calls, member-gated, graceful 502, audit counts only) - POST channels/:id/ai/
+  summarize + /ai/actions (chat.smart, bullet markdown, bilingual prompts, 24 KB transcript cap) and
+  /ai/replies (chat.fast, 3 line-parsed suggestions); speaker labels from a sanitized client-supplied
+  name map. Client: header sparkle -> Assistant panel (Catch me up auto-runs, Action items, refresh,
+  unavailable note), composer sparkle -> reply chips that fill the draft (never auto-send). NOTE: these
+  return "AI is unavailable" in prod until the VPS is resized + the llm compose profile enabled (same
+  gate as translation - docs/deploy/ai-gateway-and-embeddings.md); embeddings-only today.
+
 REMAINING (task #182), still in the same sequence:
-- (2d) AI-native: summarize, smart replies, action-item extraction via the already-wired ai-gateway.
 - (3) UI/UX overhaul: tokenize the umber/ochre palette by role + fix AA contrast, real type + spacing scales,
   redesign message rows/composer/empty-states/the hover action bar, in one hand-written styles.css. While
   here, bump the PWA service-worker cache version per build so deploys reach open clients on reload. No i18n
