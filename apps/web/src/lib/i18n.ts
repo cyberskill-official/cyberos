@@ -166,7 +166,6 @@ const C: Record<string, Entry> = {
     en: '"{name}" is {size}, over the {limit} limit.',
     vi: '"{name}" nặng {size}, vượt giới hạn {limit}.',
   },
-  "chat.confirmDelete": { en: "Delete this message?", vi: "Xóa tin nhắn này?" },
   "chat.dismissSuggestions": { en: "Dismiss suggestions", vi: "Ẩn gợi ý" },
   "chat.archivedNote": {
     en: "This channel is archived and read-only.",
@@ -205,6 +204,8 @@ const C: Record<string, Entry> = {
   "message.replyInThread": { en: "Reply in thread", vi: "Trả lời theo luồng" },
   "message.edit": { en: "Edit", vi: "Sửa" },
   "message.delete": { en: "Delete", vi: "Xóa" },
+  "message.deleted": { en: "Message deleted", vi: "Đã xóa tin nhắn" },
+  "message.undo": { en: "Undo", vi: "Hoàn tác" },
 
   // thread panel
   "thread.title": { en: "Thread", vi: "Luồng" },
@@ -260,6 +261,7 @@ const C: Record<string, Entry> = {
   "settings.confirmRemove": { en: "Remove {name} from {channel}?", vi: "Xóa {name} khỏi {channel}?" },
   "settings.confirmLeave": { en: "Leave {channel}?", vi: "Rời {channel}?" },
   "settings.thisChannel": { en: "this channel", vi: "kênh này" },
+  "confirm.title": { en: "Please confirm", vi: "Vui lòng xác nhận" },
 
   // browse channels
   "browse.title": { en: "Browse channels", vi: "Duyệt kênh" },

@@ -171,6 +171,9 @@ export function Chat() {
   // The "New messages" divider: the id of the first unread message for the open channel (anchored once when
   // the channel opens, then held for the session so the line stays put even after the badge auto-clears).
   const [unreadAnchorId, setUnreadAnchorId] = useState("");
+  // A message whose delete is in its undo window: hidden from the timeline immediately but not yet told to the
+  // server, so "Undo" can restore it. The server DELETE only fires when the grace timer elapses.
+  const [pendingDelete, setPendingDelete] = useState<Message | null>(null);
   const suppressScrollRef = useRef(false);
   const prevLastIdRef = useRef("");
   // Load-older pagination state (reset per channel).
@@ -217,6 +220,10 @@ export function Chat() {
   const openUnreadRef = useRef(0);
   const openUnreadForRef = useRef("");
   const anchorDoneRef = useRef("");
+  // Deferred-delete plumbing: the message awaiting its grace window and the timer that commits it. A ref mirror
+  // of the pending message lets the timer/cleanup callbacks read it without going stale.
+  const pendingDeleteRef = useRef<Message | null>(null);
+  const delTimerRef = useRef<number | null>(null);
   // Ask for desktop-notification permission once, lazily, on the first channel selection (a real user
   // gesture, which browsers require). If denied, badges and the tab title still work; we just never notify.
   const askedNotifyRef = useRef(false);
@@ -935,15 +942,50 @@ export function Chat() {
     }
   }
 
-  async function deleteMessage(m: Message) {
-    if (!token || !window.confirm(t("chat.confirmDelete"))) return;
-    try {
-      await apiFetch(token, "DELETE", `/v1/chat/channels/${m.channel_id}/messages/${m.id}`);
-      setMessages((prev) => prev.filter((x) => x.id !== m.id));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+  // Send the deferred DELETE to the server (grace window elapsed, or a new delete / channel-switch needs to
+  // finalize this one). Fire-and-forget: the message is already gone locally and the ws echo is a no-op.
+  const commitDelete = useCallback(() => {
+    if (delTimerRef.current) {
+      window.clearTimeout(delTimerRef.current);
+      delTimerRef.current = null;
     }
+    const m = pendingDeleteRef.current;
+    pendingDeleteRef.current = null;
+    setPendingDelete(null);
+    if (m && token) {
+      void apiFetch(token, "DELETE", `/v1/chat/channels/${m.channel_id}/messages/${m.id}`).catch(() => {});
+    }
+  }, [token]);
+
+  // Delete a message with an undo window: hide it immediately (optimistic), keep it so "Undo" can put it back,
+  // and only tell the server after the grace timer. Only one delete is pending at a time - a second delete
+  // commits the first. Replaces the old window.confirm with a forgiving, one-click flow.
+  function deleteMessage(m: Message) {
+    if (!token) return;
+    commitDelete(); // finalize any prior pending delete before starting a new one
+    setMessages((prev) => prev.filter((x) => x.id !== m.id));
+    pendingDeleteRef.current = m;
+    setPendingDelete(m);
+    delTimerRef.current = window.setTimeout(() => commitDelete(), 6000);
   }
+
+  // Undo a pending delete: cancel the timer and re-insert the message in time order (the server was never told).
+  function undoDelete() {
+    if (delTimerRef.current) {
+      window.clearTimeout(delTimerRef.current);
+      delTimerRef.current = null;
+    }
+    const m = pendingDeleteRef.current;
+    pendingDeleteRef.current = null;
+    setPendingDelete(null);
+    if (m) setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : sortMessagesAsc([...prev, m])));
+  }
+
+  // Commit any pending delete when the channel changes or the view unmounts, so a switch/close never silently
+  // drops the delete (the undo window only lives while you stay put).
+  useEffect(() => {
+    return () => commitDelete();
+  }, [activeId, commitDelete]);
 
   // Add or remove my reaction. Idempotent on the server; the live `reaction_changed` ws event (which the
   // server echoes to the originator too) is what patches the count, so we do not optimistically apply here to
@@ -1523,6 +1565,16 @@ export function Chat() {
             setEmojiFor(null);
           }}
         />
+      )}
+
+      {pendingDelete && (
+        <div className="toast" role="status" aria-live="polite">
+          <span className="toast-msg">{t("message.deleted")}</span>
+          <button className="toast-undo" onClick={undoDelete} type="button">
+            {t("message.undo")}
+          </button>
+          <span className="toast-bar" aria-hidden="true" />
+        </div>
       )}
 
       {picker && token && (

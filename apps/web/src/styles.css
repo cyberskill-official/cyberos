@@ -486,6 +486,21 @@ button:focus-visible, .chan-row:focus-visible { outline: 2px solid var(--accent-
 .archived-note { margin: 0 14px 16px; text-align: center; }
 .btn-ghost.danger { border-color: var(--bad-soft-border); color: var(--bad); }
 .btn-ghost.danger:hover { border-color: var(--bad); color: var(--bad); }
+.btn-pill.danger { background: var(--bad); color: #fff; }
+
+/* in-app confirm dialog (replaces window.confirm): a compact focus-trapped alertdialog, above other modals */
+.confirm-bg { z-index: 70; }
+.confirm-box { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; width: 384px; max-width: calc(100vw - 32px); box-shadow: var(--shadow-2); }
+.confirm-body { color: var(--ink); font-size: 14px; line-height: 1.55; margin-bottom: 18px; }
+.confirm-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+/* undo toast (message delete): a bottom-centered status card with an Undo action and a draining countdown bar */
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 80; display: flex; align-items: center; gap: 14px; background: var(--panel-2); color: var(--ink); border: 1px solid var(--line-strong); border-radius: 11px; padding: 10px 8px 10px 16px; box-shadow: var(--shadow-2); font-size: 13.5px; overflow: hidden; max-width: calc(100vw - 32px); }
+.toast-msg { white-space: nowrap; }
+.toast-undo { background: transparent; border: none; color: var(--accent-text); font-weight: 700; font-size: 13.5px; cursor: pointer; padding: 4px 10px; border-radius: 7px; }
+.toast-undo:hover { background: var(--hover); }
+.toast-bar { position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: var(--ochre); transform-origin: left; animation: toast-countdown 6s linear forwards; }
+@keyframes toast-countdown { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 .browse-row { cursor: default; }
 .browse-row:hover { background: var(--panel-2); }
 .side-section.archived .chan-row { opacity: 0.6; }

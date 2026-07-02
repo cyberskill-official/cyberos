@@ -3,6 +3,7 @@ import { apiFetch } from "../lib/api";
 import type { Channel } from "../lib/chat";
 import { t } from "../lib/i18n";
 import { Avatar } from "./Avatar";
+import { ConfirmDialog } from "./ConfirmDialog";
 import { Icon } from "./icons";
 
 interface Member {
@@ -49,6 +50,8 @@ export function ChannelSettings({
   const [visibility, setVisibility] = useState(channel.visibility || "private");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  // The in-app confirm dialog (replaces window.confirm) for the destructive actions - archive, remove, leave.
+  const [confirm, setConfirm] = useState<{ body: string; label: string; run: () => Promise<void> } | null>(null);
   const archived = !!channel.archived_at;
 
   const myRole = useMemo(
@@ -95,9 +98,14 @@ export function ChannelSettings({
     }
   }
 
-  async function setArchived(a: boolean) {
-    const q = a ? t("settings.confirmArchive") : t("settings.confirmUnarchive");
-    if (!window.confirm(q)) return;
+  function requestArchive(a: boolean) {
+    setConfirm({
+      body: a ? t("settings.confirmArchive") : t("settings.confirmUnarchive"),
+      label: a ? t("settings.archive") : t("settings.unarchive"),
+      run: () => doArchive(a),
+    });
+  }
+  async function doArchive(a: boolean) {
     setBusy(true);
     setErr("");
     try {
@@ -122,13 +130,14 @@ export function ChannelSettings({
     }
   }
 
-  async function removeMember(subject: string) {
-    if (
-      !window.confirm(
-        t("settings.confirmRemove", { name: nameOf(subject), channel: channel.name || t("settings.thisChannel") }),
-      )
-    )
-      return;
+  function requestRemove(subject: string) {
+    setConfirm({
+      body: t("settings.confirmRemove", { name: nameOf(subject), channel: channel.name || t("settings.thisChannel") }),
+      label: t("settings.removeFromChannel"),
+      run: () => doRemove(subject),
+    });
+  }
+  async function doRemove(subject: string) {
     setErr("");
     try {
       await apiFetch(token, "DELETE", `/v1/chat/channels/${channel.id}/members/${subject}`);
@@ -139,8 +148,14 @@ export function ChannelSettings({
     }
   }
 
-  async function leave() {
-    if (!window.confirm(t("settings.confirmLeave", { channel: channel.name || t("settings.thisChannel") }))) return;
+  function requestLeave() {
+    setConfirm({
+      body: t("settings.confirmLeave", { channel: channel.name || t("settings.thisChannel") }),
+      label: t("settings.leaveChannel"),
+      run: doLeave,
+    });
+  }
+  async function doLeave() {
     setErr("");
     try {
       await apiFetch(token, "DELETE", `/v1/chat/channels/${channel.id}/members/${me}`);
@@ -252,7 +267,7 @@ export function ChannelSettings({
                   <button
                     className="icon-btn cs-remove"
                     title={t("settings.removeFromChannel")}
-                    onClick={() => void removeMember(m.subject_id)}
+                    onClick={() => requestRemove(m.subject_id)}
                     type="button"
                   >
                     <Icon name="close" size={14} />
@@ -267,14 +282,14 @@ export function ChannelSettings({
 
         <div className="picker-actions cs-actions">
           {!isOwner && (
-            <button className="btn-ghost danger" onClick={() => void leave()} disabled={busy} type="button">
+            <button className="btn-ghost danger" onClick={requestLeave} disabled={busy} type="button">
               {t("settings.leaveChannel")}
             </button>
           )}
           {isOwner && (
             <button
               className="btn-ghost danger"
-              onClick={() => void setArchived(!archived)}
+              onClick={() => requestArchive(!archived)}
               disabled={busy}
               type="button"
             >
@@ -292,6 +307,20 @@ export function ChannelSettings({
           )}
         </div>
       </div>
+
+      {confirm && (
+        <ConfirmDialog
+          body={confirm.body}
+          confirmLabel={confirm.label}
+          busy={busy}
+          onCancel={() => setConfirm(null)}
+          onConfirm={async () => {
+            const run = confirm.run;
+            await run();
+            setConfirm(null);
+          }}
+        />
+      )}
     </div>
   );
 }
