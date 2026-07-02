@@ -12,6 +12,10 @@ export interface Channel {
   name?: string;
   kind?: string;
   other_subject_id?: string;
+  /// Channel management (find-and-organize cluster): purpose line, private|public, archived marker.
+  topic?: string;
+  visibility?: string;
+  archived_at?: string | null;
 }
 // A folded reaction on a message: the emoji, how many people used it, and whether I am one of them.
 export interface ReactionSummary {

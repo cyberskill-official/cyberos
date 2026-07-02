@@ -14,6 +14,7 @@ export function Sidebar({
   myAvatar,
   directory,
   groups,
+  archived,
   dms,
   activeId,
   unread,
@@ -25,6 +26,7 @@ export function Sidebar({
   onOpenProfile,
   onSelectChannel,
   onOpenPicker,
+  onOpenBrowse,
 }: {
   me: string;
   email: string;
@@ -32,6 +34,7 @@ export function Sidebar({
   myAvatar: string;
   directory: Directory;
   groups: Channel[];
+  archived: Channel[];
   dms: Channel[];
   activeId: string;
   unread: Record<string, number>;
@@ -43,6 +46,7 @@ export function Sidebar({
   onOpenProfile: () => void;
   onSelectChannel: (id: string) => void;
   onOpenPicker: (mode: PickerMode) => void;
+  onOpenBrowse: () => void;
 }) {
   const renderRow = (c: Channel) => {
     const u = unread[c.id] || 0;
@@ -103,6 +107,9 @@ export function Sidebar({
         <div className="side-section">
           <div className="side-label">
             <span>Channels</span>
+            <button className="side-add" title="Browse public channels" onClick={onOpenBrowse} type="button">
+              <Icon name="search" size={13} />
+            </button>
             <button className="side-add" title="New channel" onClick={() => onOpenPicker("group")} type="button">
               <Icon name="plus" size={14} />
             </button>
@@ -110,6 +117,14 @@ export function Sidebar({
           {groups.map(renderRow)}
           {groups.length === 0 && <div className="side-empty">No channels yet</div>}
         </div>
+        {archived.length > 0 && (
+          <div className="side-section archived">
+            <div className="side-label">
+              <span>Archived</span>
+            </div>
+            {archived.map(renderRow)}
+          </div>
+        )}
         <div className="side-section">
           <div className="side-label">
             <span>Direct messages</span>

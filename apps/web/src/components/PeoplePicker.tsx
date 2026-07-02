@@ -23,13 +23,14 @@ export function PeoplePicker({
   me: string;
   onClose(): void;
   onDm(subjectId: string): void;
-  onGroup(name: string, ids: string[]): void;
+  onGroup(name: string, ids: string[], visibility: "private" | "public"): void;
   onAdd(ids: string[]): void;
   onCall(subjectId: string): void;
 }) {
   const [q, setQ] = useState("");
   const [sel, setSel] = useState<Record<string, boolean>>({});
   const [gname, setGname] = useState("");
+  const [gvis, setGvis] = useState<"private" | "public">("private");
   const multi = mode === "group" || mode === "add";
 
   const list = useMemo(() => {
@@ -60,7 +61,7 @@ export function PeoplePicker({
     if (mode === "group") {
       if (!gname.trim() || ids.length === 0) return;
       onClose();
-      onGroup(gname.trim(), ids);
+      onGroup(gname.trim(), ids, gvis);
     } else if (mode === "add") {
       if (ids.length === 0) return;
       onClose();
@@ -87,12 +88,32 @@ export function PeoplePicker({
           </button>
         </div>
         {mode === "group" && (
-          <input
-            className="picker-input"
-            placeholder="Channel name"
-            value={gname}
-            onChange={(e) => setGname(e.target.value)}
-          />
+          <>
+            <input
+              className="picker-input"
+              placeholder="Channel name"
+              value={gname}
+              onChange={(e) => setGname(e.target.value)}
+            />
+            <div className="cs-vis">
+              <button
+                className={"cs-vis-opt" + (gvis === "private" ? " on" : "")}
+                onClick={() => setGvis("private")}
+                type="button"
+              >
+                Private
+                <span className="cs-vis-sub">Members only; joined by invite</span>
+              </button>
+              <button
+                className={"cs-vis-opt" + (gvis === "public" ? " on" : "")}
+                onClick={() => setGvis("public")}
+                type="button"
+              >
+                Public
+                <span className="cs-vis-sub">Anyone on the team can browse + join</span>
+              </button>
+            </div>
+          </>
         )}
         <input
           className="picker-input"

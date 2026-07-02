@@ -22,6 +22,7 @@ export function ChannelHeader({
   onStartCall,
   onToggleSearch,
   onOpenAddPeople,
+  onOpenSettings,
   onSearchQChange,
   onRunSearch,
   onPickResult,
@@ -41,6 +42,7 @@ export function ChannelHeader({
   onStartCall: (video: boolean) => void;
   onToggleSearch: () => void;
   onOpenAddPeople: () => void;
+  onOpenSettings: () => void;
   onSearchQChange: (v: string) => void;
   onRunSearch: () => void;
   /// Jump to a result's message (switches channel when needed).
@@ -86,6 +88,11 @@ export function ChannelHeader({
         {active.kind !== "direct" && (
           <button className="icon-btn" title="Add people" onClick={onOpenAddPeople} type="button">
             <Icon name="users" />
+          </button>
+        )}
+        {active.kind !== "direct" && (
+          <button className="icon-btn" title="Channel settings" onClick={onOpenSettings} type="button">
+            <Icon name="gear" />
           </button>
         )}
       </div>

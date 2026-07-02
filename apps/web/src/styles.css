@@ -364,6 +364,30 @@ a { color: var(--ochre); }
 .pcheck.on { background: var(--ochre); border-color: var(--ochre); }
 .picker-actions { display: flex; justify-content: flex-end; gap: 10px; }
 
+/* channel settings modal + browse rows (find-and-organize cluster) */
+.picker.settings { width: 520px; }
+.cs-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--faint); font-weight: 700; margin-bottom: -6px; }
+.cs-roster-label { margin-bottom: 0; }
+.cs-vis { display: flex; gap: 8px; }
+.cs-vis-opt { flex: 1; display: flex; flex-direction: column; gap: 2px; align-items: flex-start; text-align: left; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; color: var(--ink); font-size: 13px; font-weight: 700; cursor: pointer; }
+.cs-vis-opt .cs-vis-sub { font-size: 11px; color: var(--faint); font-weight: 400; }
+.cs-vis-opt.on { border-color: var(--ochre); background: var(--ochre-soft); }
+.cs-vis-opt:disabled { opacity: 0.6; cursor: default; }
+.cs-roster { max-height: 220px; min-height: 60px; }
+.cs-member { cursor: default; }
+.cs-member:hover { background: transparent; }
+.cs-role { background: var(--bg); border: 1px solid var(--line); color: var(--ink); border-radius: 7px; padding: 4px 6px; font-size: 12px; }
+.cs-role-tag { font-size: 12px; color: var(--faint); }
+.cs-remove { width: 26px; height: 26px; }
+.cs-actions { align-items: center; }
+.cs-archived-note, .archived-note { background: var(--ochre-soft); border: 1px solid var(--ochre); color: var(--ochre); border-radius: 9px; padding: 8px 12px; font-size: 13px; }
+.archived-note { margin: 0 14px 16px; text-align: center; }
+.btn-ghost.danger { border-color: rgba(225, 101, 79, 0.5); color: var(--bad); }
+.btn-ghost.danger:hover { border-color: var(--bad); color: var(--bad); }
+.browse-row { cursor: default; }
+.browse-row:hover { background: var(--panel-2); }
+.side-section.archived .chan-row { opacity: 0.6; }
+
 /* incoming-call ring */
 .call-ring { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; background: rgba(8, 4, 2, 0.7); }
 .ring-card { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 28px 34px; display: flex; flex-direction: column; align-items: center; gap: 6px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5); animation: ring-pop 0.18s ease-out; }

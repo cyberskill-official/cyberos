@@ -11,6 +11,8 @@ import type { AnchorRect } from "../components/EmojiPicker";
 import { PeoplePicker } from "../components/PeoplePicker";
 import type { PickerMode } from "../components/PeoplePicker";
 import { ThreadPanel } from "../components/ThreadPanel";
+import { ChannelSettings } from "../components/ChannelSettings";
+import { BrowseChannels } from "../components/BrowseChannels";
 import { Lightbox } from "../components/Lightbox";
 import { CallOverlay } from "../components/CallOverlay";
 import { useCall } from "../lib/call";
@@ -110,6 +112,9 @@ export function Chat() {
   const [health, setHealth] = useState<"unknown" | "ok" | "bad">("unknown");
   const [picker, setPicker] = useState<PickerMode | null>(null);
   const [pendingVideo, setPendingVideo] = useState(false);
+  // Channel-management modals (find-and-organize cluster).
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [browseOpen, setBrowseOpen] = useState(false);
 
   const [editingId, setEditingId] = useState("");
   const [editText, setEditText] = useState("");
@@ -743,10 +748,10 @@ export function Chat() {
     }
   }
 
-  async function createGroup(name: string, ids: string[]) {
+  async function createGroup(name: string, ids: string[], visibility: "private" | "public" = "private") {
     if (!token) return;
     try {
-      const c = await apiFetch<Channel>(token, "POST", "/v1/chat/channels", { name });
+      const c = await apiFetch<Channel>(token, "POST", "/v1/chat/channels", { name, visibility });
       for (const id of ids) {
         try {
           await apiFetch(token, "POST", `/v1/chat/channels/${c.id}/members`, { subject_id: id, role: "member" });
@@ -957,7 +962,8 @@ export function Chat() {
     return readers;
   }, [receipts, myLastId, idxOf, me]);
 
-  const groups = channels.filter((c) => c.kind !== "direct");
+  const groups = channels.filter((c) => c.kind !== "direct" && !c.archived_at);
+  const archivedGroups = channels.filter((c) => c.kind !== "direct" && !!c.archived_at);
   // Direct messages sorted by recent activity (most recent first). Channels with no recorded activity keep
   // their server order at the bottom (Array.sort is stable). Pure client-side ordering.
   const dms = useMemo(() => {
@@ -971,9 +977,12 @@ export function Chat() {
       ? presence.has(active.other_subject_id || "")
         ? "Active now"
         : "Direct message"
-      : presence.size > 0
-        ? `${presence.size} online`
-        : "Channel"
+      : [
+          active.archived_at ? "Archived" : presence.size > 0 ? `${presence.size} online` : "Channel",
+          (active.topic || "").trim(),
+        ]
+          .filter(Boolean)
+          .join(" · ")
     : "";
 
   const seenLabel =
@@ -994,6 +1003,7 @@ export function Chat() {
         myAvatar={myAvatar}
         directory={directory}
         groups={groups}
+        archived={archivedGroups}
         dms={dms}
         activeId={activeId}
         unread={unread}
@@ -1005,6 +1015,7 @@ export function Chat() {
         onOpenProfile={() => setProfileOpen(true)}
         onSelectChannel={selectChannel}
         onOpenPicker={setPicker}
+        onOpenBrowse={() => setBrowseOpen(true)}
       />
 
       <section className="main">
@@ -1036,6 +1047,7 @@ export function Chat() {
               onStartCall={startCallWith}
               onToggleSearch={() => setSearchOpen((s) => !s)}
               onOpenAddPeople={() => setPicker("add")}
+              onOpenSettings={() => setSettingsOpen(true)}
               onSearchQChange={setSearchQ}
               onRunSearch={runSearch}
               onPickResult={jumpTo}
@@ -1116,6 +1128,9 @@ export function Chat() {
 
                 {(error || call.error) && <div className="banner err">{call.error || error}</div>}
 
+                {active.archived_at ? (
+                  <div className="archived-note">This channel is archived and read-only.</div>
+                ) : (
                 <Composer
                   active={active}
                   directory={directory}
@@ -1152,6 +1167,7 @@ export function Chat() {
                     }
                   }}
                 />
+                )}
               </div>
 
               {threadRoot && token && (
@@ -1194,6 +1210,31 @@ export function Chat() {
           onGroup={createGroup}
           onAdd={addPeople}
           onCall={(id) => void call.startCall(id, pendingVideo)}
+        />
+      )}
+
+      {settingsOpen && token && active && active.kind !== "direct" && (
+        <ChannelSettings
+          token={token}
+          channel={active}
+          me={me}
+          nameOf={nameOf}
+          avatarSrc={avatarSrc}
+          onClose={() => setSettingsOpen(false)}
+          onChanged={() => void reloadChannels()}
+          onLeft={() => {
+            setActiveId("");
+            void reloadChannels();
+          }}
+        />
+      )}
+
+      {browseOpen && token && (
+        <BrowseChannels
+          token={token}
+          onClose={() => setBrowseOpen(false)}
+          onJoined={(id) => void reloadChannels(id)}
+          onOpen={(id) => selectChannel(id)}
         />
       )}
 
