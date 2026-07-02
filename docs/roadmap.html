@@ -69,7 +69,7 @@
   <header>
     <h1>CyberOS roadmap</h1>
     <span class="sub">Turn Your Will Into Real</span>
-    <span class="updated">P0 readiness view &middot; updated 2026-06-28</span>
+    <span class="updated">P0 readiness view &middot; updated 2026-07-02</span>
   </header>
 
   <p class="note">
@@ -135,7 +135,7 @@
         <td><span class="pill g-done">yes</span></td>
         <td><span class="pill g-done">green</span></td>
         <td><span class="pill g-done">yes</span></td>
-        <td class="rem">Feature-complete (router, compliance view, proxy, RED + OTLP). Only an FR status reconcile remains (frontmatter lags code).</td>
+        <td class="rem">Feature-complete (router, compliance view, proxy, RED + OTLP). obs-router hardened 2026-07-02: a suggested runbook is shown only when its URL is exactly in the KB allowlist (<code>OBS_RUNBOOK_ALLOWLIST</code>, fail-closed) so CUO triage can't surface a fabricated link - the obs-router deploy precondition. Only an FR status reconcile remains (frontmatter lags code).</td>
       </tr>
       <tr>
         <td class="mod">AUTH</td>
@@ -215,6 +215,10 @@
     docs/reviews/MODULE-REVIEW-2026-07-02.md); the remaining-work list is docs/feature-requests/BACKLOG.md
     (regenerated); superseded Mattermost/console-era FRs live in docs/feature-requests/_archive/.
     Corpus: 113 done, 20 superseded, 13 implementing, 5 ready_to_implement, 1 blocked, 141 draft.
+    <br />P2 HARDENING 2026-07-02: chat review pass (i18n slogan localized + drawer a11y), OBS-007 runbook-URL
+    allowlist (obs-router deploy precondition), and light-theme WCAG AA contrast - shipped (ledger
+    docs/auto-work/2026-07-02-p2-hardening.md). Still open in P2: the semver-major dependency upgrades and AI
+    activation (VPS resize + <code>COMPOSE_PROFILES=llm</code>).
   </footer>
 </div>
 </body>
