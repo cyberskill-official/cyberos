@@ -62,6 +62,15 @@ const C: Record<string, Entry> = {
   "common.join": { en: "Join", vi: "Tham gia" },
   "common.you": { en: "You", vi: "Bạn" },
 
+  // quick switcher (Cmd/Ctrl+K)
+  "switch.title": { en: "Jump to", vi: "Chuyển nhanh" },
+  "switch.placeholder": {
+    en: "Jump to a channel, DM, or person...",
+    vi: "Chuyển đến kênh, tin nhắn, hoặc người...",
+  },
+  "switch.noMatch": { en: "No matches", vi: "Không có kết quả" },
+  "switch.dmHint": { en: "Message", vi: "Nhắn tin" },
+
   // topbar
   "top.allModules": { en: "All modules", vi: "Tất cả mô-đun" },
   "top.backToChat": { en: "Back to chat", vi: "Quay lại chat" },

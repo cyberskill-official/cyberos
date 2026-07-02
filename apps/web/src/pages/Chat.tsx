@@ -15,6 +15,7 @@ import { ThreadPanel } from "../components/ThreadPanel";
 import { AiPanel } from "../components/AiPanel";
 import { ChannelSettings } from "../components/ChannelSettings";
 import { BrowseChannels } from "../components/BrowseChannels";
+import { QuickSwitcher } from "../components/QuickSwitcher";
 import { Lightbox } from "../components/Lightbox";
 import { CallOverlay } from "../components/CallOverlay";
 import { useCall } from "../lib/call";
@@ -157,6 +158,7 @@ export function Chat() {
   const [translateError, setTranslateError] = useState<Set<string>>(new Set());
 
   const [searchOpen, setSearchOpen] = useState(false);
+  const [switcherOpen, setSwitcherOpen] = useState(false);
   const [searchQ, setSearchQ] = useState("");
   const [searchResults, setSearchResults] = useState<Message[]>([]);
 
@@ -542,12 +544,12 @@ export function Chat() {
     return () => window.removeEventListener("keydown", onKey);
   }, [sideOpen]);
 
-  // Ctrl/Cmd+K opens global search from anywhere in chat.
+  // Ctrl/Cmd+K opens the quick switcher (jump to any channel, DM, or person). Search lives on the header.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
         e.preventDefault();
-        setSearchOpen(true);
+        setSwitcherOpen((s) => !s);
       }
     };
     document.addEventListener("keydown", onKey);
@@ -1489,6 +1491,18 @@ export function Chat() {
           onClose={() => setBrowseOpen(false)}
           onJoined={(id) => void reloadChannels(id)}
           onOpen={(id) => selectChannel(id)}
+        />
+      )}
+
+      {switcherOpen && (
+        <QuickSwitcher
+          channels={channels}
+          directory={directory}
+          me={me}
+          people={dirList}
+          onClose={() => setSwitcherOpen(false)}
+          onSelectChannel={(id) => selectChannel(id)}
+          onStartDm={(subjectId) => void createDm(subjectId)}
         />
       )}
 

@@ -444,6 +444,13 @@ button:focus-visible, .chan-row:focus-visible { outline: 2px solid var(--accent-
 .picker-input:focus { outline: none; border-color: var(--accent-border); }
 .picker-people { flex: 1; overflow: auto; display: flex; flex-direction: column; gap: 2px; min-height: 140px; }
 .person { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; cursor: pointer; }
+.picker.switcher { width: 540px; padding: 12px; gap: 8px; }
+.switcher-list { max-height: 44vh; min-height: 0; }
+.switch-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: none; background: transparent; border-radius: 8px; cursor: pointer; text-align: left; color: var(--ink); }
+.switch-row.active { background: var(--ochre-soft); }
+.switch-label { flex: 1; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.switch-hint { font-size: 11px; color: var(--faint); }
+.switcher .chan-hash { display: grid; place-items: center; width: 24px; height: 24px; color: var(--faint); flex: none; }
 .person:hover { background: var(--panel-2); }
 .person.sel { background: var(--ochre-soft); }
 .person-meta { display: flex; flex-direction: column; min-width: 0; flex: 1; }
