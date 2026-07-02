@@ -198,6 +198,12 @@ export function MessageRow({
               ))}
             </div>
           )}
+          {!!m.reply_count && m.reply_count > 0 && (
+            <button className="reply-chip" onClick={() => void onOpenThread(m)} type="button">
+              <Icon name="thread" size={13} />
+              <span>{t(m.reply_count === 1 ? "message.replyOne" : "message.replyMany", { n: m.reply_count })}</span>
+            </button>
+          )}
           {translating.has(m.id) && <div className="translation muted">{t("message.translating")}</div>}
           {!translating.has(m.id) && translations[m.id] !== undefined && (
             <div className="translation">

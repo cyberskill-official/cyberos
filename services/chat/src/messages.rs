@@ -31,6 +31,10 @@ pub struct Message {
     /// attachment for clients on the older cached shell.
     #[serde(default)]
     pub attachments: Vec<crate::attachments::AttachmentMeta>,
+    /// Number of (non-deleted) thread replies to this message. Folded in on the list path only, so the client
+    /// can show a "N replies" chip on the parent without opening the thread; other paths return 0.
+    #[serde(default)]
+    pub reply_count: i64,
 }
 
 type MessageRow = (
@@ -63,6 +67,7 @@ fn to_message(r: MessageRow) -> Message {
         attachment_id: r.9,
         reactions: Vec::new(),
         attachments: Vec::new(),
+        reply_count: 0,
     }
 }
 
@@ -462,6 +467,23 @@ pub async fn list(
         for m in &mut out {
             if let Some(a) = atts.remove(&m.id) {
                 m.attachments = a;
+            }
+        }
+        // Reply counts fold in the same way: how many non-deleted replies each returned message has, so the
+        // parent can show a "N replies" chip. One grouped query for the whole page.
+        let reply_rows: Vec<(Uuid, i64)> = sqlx::query_as(
+            "SELECT parent_id, count(*) FROM chat_messages
+             WHERE parent_id = ANY($1) AND deleted_at IS NULL
+             GROUP BY parent_id",
+        )
+        .bind(&ids)
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(crate::internal)?;
+        let mut counts: std::collections::HashMap<Uuid, i64> = reply_rows.into_iter().collect();
+        for m in &mut out {
+            if let Some(c) = counts.remove(&m.id) {
+                m.reply_count = c;
             }
         }
     }

@@ -202,6 +202,8 @@ const C: Record<string, Entry> = {
   "message.translationLabel": { en: "English", vi: "Tiếng Anh" },
   "message.translateUnavailable": { en: "Translation unavailable", vi: "Tính năng dịch hiện chưa dùng được" },
   "message.replyInThread": { en: "Reply in thread", vi: "Trả lời theo luồng" },
+  "message.replyOne": { en: "{n} reply", vi: "{n} phản hồi" },
+  "message.replyMany": { en: "{n} replies", vi: "{n} phản hồi" },
   "message.edit": { en: "Edit", vi: "Sửa" },
   "message.delete": { en: "Delete", vi: "Xóa" },
   "message.deleted": { en: "Message deleted", vi: "Đã xóa tin nhắn" },

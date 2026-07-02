@@ -303,6 +303,11 @@ button:focus-visible, .chan-row:focus-visible { outline: 2px solid var(--accent-
 .reaction.mine { background: var(--ochre-soft); border-color: var(--accent-border); color: var(--ink); }
 .reaction .re-emoji { font-size: 14px; }
 .reaction .re-count { font-weight: 600; }
+
+/* thread reply-count chip on a parent message: a compact accent affordance that opens the thread */
+.reply-chip { display: inline-flex; align-items: center; gap: 6px; margin-top: 5px; background: transparent; border: 1px solid var(--line); border-radius: 13px; padding: 3px 11px 3px 9px; font-size: 12.5px; font-weight: 600; color: var(--accent-text); cursor: pointer; line-height: 1.4; }
+.reply-chip:hover { border-color: var(--accent-border); background: var(--ochre-soft); }
+.reply-chip svg { color: var(--accent-text); }
 .react-wrap { position: relative; display: flex; }
 .emoji-picker { position: absolute; bottom: calc(100% + 6px); right: 0; display: flex; gap: 2px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 4px; box-shadow: var(--shadow-1); z-index: 5; }
 .emoji-opt { width: 30px; height: 30px; border-radius: 7px; display: grid; place-items: center; background: transparent; border: none; font-size: 17px; cursor: pointer; }

@@ -183,8 +183,13 @@ export function useChatSocket({
           const chanId = msg.channel_id || activeId;
           if (chanId) setLastActivity((prev) => ({ ...prev, [chanId]: Date.now() }));
           if (msg.parent_id) {
+            const pid = msg.parent_id;
+            // Bump the parent's reply-count chip live, whether or not its thread is currently open.
+            setMessages((prev) =>
+              prev.map((m) => (m.id === pid ? { ...m, reply_count: (m.reply_count || 0) + 1 } : m)),
+            );
             const root = threadRootRef.current;
-            if (root && msg.parent_id === root.id) {
+            if (root && pid === root.id) {
               setThreadReplies((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
             }
           } else {

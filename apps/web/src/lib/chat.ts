@@ -45,6 +45,9 @@ export interface Message {
   created_at?: string;
   reactions?: ReactionSummary[];
   attachments?: AttachmentMeta[];
+  // Number of thread replies to this message (folded in by the list endpoint); drives the "N replies" chip on
+  // the parent. Bumped live when a reply arrives on the channel socket.
+  reply_count?: number;
   // Client-only optimistic-send state (never sent by the server): a temporary local message shown instantly
   // while its POST is in flight. `clientId` is the temp id; `pending` while sending; `failed` on error.
   pending?: boolean;
