@@ -58,7 +58,40 @@ async fn main() -> anyhow::Result<()> {
     // audit_pool is cloned so chat's existing audit::emit path keeps using it unchanged.
     let capturer = cyberos_capture::maybe_capturer(audit_pool.clone());
 
-    let authenticator = build_authenticator().await?;
+    let mut authenticator = build_authenticator().await?;
+    // Opt-in audience check: only enforced when CHAT_TOKEN_AUD is set to the auth service's exact audience, so
+    // enabling it can never lock everyone out by surprise (a wrong/blank value simply leaves the check off).
+    if let Some(aud) = std::env::var("CHAT_TOKEN_AUD")
+        .ok()
+        .filter(|v| !v.trim().is_empty())
+    {
+        authenticator.require_audience(aud);
+        tracing::info!("chat token audience validation enabled");
+    }
+    let authenticator = Arc::new(authenticator);
+    // Refresh the JWKS on an interval so a rotated auth signing key is picked up without a chat restart. Only
+    // runs when the key set came from a URL; the interval is CHAT_JWKS_REFRESH_SECS (default 300s).
+    if authenticator.has_jwks_url() {
+        let refresher = authenticator.clone();
+        let secs = std::env::var("CHAT_JWKS_REFRESH_SECS")
+            .ok()
+            .and_then(|v| v.trim().parse::<u64>().ok())
+            .filter(|n| *n > 0)
+            .unwrap_or(300);
+        tokio::spawn(async move {
+            let mut tick = tokio::time::interval(std::time::Duration::from_secs(secs));
+            tick.tick().await; // consume the immediate first tick; the boot fetch already loaded the keys
+            loop {
+                tick.tick().await;
+                match refresher.refresh().await {
+                    Ok(()) => tracing::debug!(target: "cyberos_chat::auth", "jwks refreshed"),
+                    Err(e) => {
+                        tracing::warn!(target: "cyberos_chat::auth", error = %e, "jwks refresh failed")
+                    }
+                }
+            }
+        });
+    }
 
     // Attachment byte store + limits (richer-messages cluster). Default = db backend at the historical 5 MB
     // cap; production sets CHAT_ATTACHMENT_STORE=fs + a volume for large files off Postgres.
@@ -74,7 +107,7 @@ async fn main() -> anyhow::Result<()> {
         pool,
         audit_pool,
         capturer,
-        authenticator: Arc::new(authenticator),
+        authenticator,
         hub: Hub::default(),
         presence: Presence::default(),
         notifier: Notifier::default(),
@@ -103,7 +136,11 @@ async fn build_authenticator() -> anyhow::Result<Authenticator> {
             .text()
             .await
             .map_err(|e| anyhow::anyhow!("read JWKS body from {url}: {e}"))?;
-        return Authenticator::from_jwks(&json).map_err(|e| anyhow::anyhow!(e.to_string()));
+        let mut auth =
+            Authenticator::from_jwks(&json).map_err(|e| anyhow::anyhow!(e.to_string()))?;
+        // Remember the URL so the background refresher can pick up a rotated signing key without a restart.
+        auth.set_jwks_url(url);
+        return Ok(auth);
     }
     if let Some(json) = env_set("CHAT_AUTH_JWKS_JSON") {
         return Authenticator::from_jwks(&json).map_err(|e| anyhow::anyhow!(e.to_string()));

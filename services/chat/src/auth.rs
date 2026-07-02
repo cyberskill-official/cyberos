@@ -2,6 +2,7 @@
 //! caller identity. Mirrors `obs-compliance-view::auth`. The HS256 path is for tests and local dev only.
 
 use std::collections::HashMap;
+use std::sync::RwLock;
 
 use axum::http::{header::AUTHORIZATION, HeaderMap, StatusCode};
 use jsonwebtoken::jwk::JwkSet;
@@ -17,6 +18,10 @@ pub struct Claims {
     #[serde(default)]
     pub roles: Vec<String>,
     pub exp: i64,
+    /// Present only to enforce audience when required (a string or array). jsonwebtoken checks a WRONG aud but
+    /// not a MISSING one, so we reject a token that carries no aud at all when `require_aud` is on.
+    #[serde(default)]
+    pub aud: Option<serde_json::Value>,
 }
 
 impl Claims {
@@ -35,11 +40,35 @@ pub enum AuthError {
     AuthFailed(String),
 }
 
-/// Verifies tokens against the auth JWKS (RS256), or an HS256 secret in tests.
+/// Parse a JWKS document into a kid -> key map. Skips keys without a kid; errors on a malformed set or when
+/// no usable key is found.
+fn parse_jwks(jwks_json: &str) -> Result<HashMap<String, DecodingKey>, AuthError> {
+    let set: JwkSet = serde_json::from_str(jwks_json)
+        .map_err(|e| AuthError::AuthFailed(format!("malformed jwks: {e}")))?;
+    let mut by_kid = HashMap::new();
+    for jwk in &set.keys {
+        if let Some(kid) = jwk.common.key_id.clone() {
+            let key = DecodingKey::from_jwk(jwk)
+                .map_err(|e| AuthError::AuthFailed(format!("bad jwk {kid}: {e}")))?;
+            by_kid.insert(kid, key);
+        }
+    }
+    if by_kid.is_empty() {
+        return Err(AuthError::AuthFailed("jwks has no usable keys".into()));
+    }
+    Ok(by_kid)
+}
+
+/// Verifies tokens against the auth JWKS (RS256), or an HS256 secret in tests. The key set lives behind an
+/// RwLock so a background refresher can swap in rotated keys without a restart; `verify` stays synchronous.
 pub struct Authenticator {
-    by_kid: HashMap<String, DecodingKey>,
+    by_kid: RwLock<HashMap<String, DecodingKey>>,
     fallback: Option<DecodingKey>,
     validation: Validation,
+    /// When set, `refresh()` re-fetches the JWKS from here (the source the boot fetch used).
+    jwks_url: Option<String>,
+    /// True once an audience is required; a token with no `aud` claim is then rejected (see Claims::aud).
+    require_aud: bool,
 }
 
 impl Authenticator {
@@ -48,53 +77,94 @@ impl Authenticator {
         let mut validation = Validation::new(Algorithm::HS256);
         validation.validate_aud = false;
         Self {
-            by_kid: HashMap::new(),
+            by_kid: RwLock::new(HashMap::new()),
             fallback: Some(DecodingKey::from_secret(secret)),
             validation,
+            jwks_url: None,
+            require_aud: false,
         }
     }
 
     /// RS256 verifier built from the auth service JWKS (FR-AUTH-004).
     pub fn from_jwks(jwks_json: &str) -> Result<Self, AuthError> {
-        let set: JwkSet = serde_json::from_str(jwks_json)
-            .map_err(|e| AuthError::AuthFailed(format!("malformed jwks: {e}")))?;
-        let mut by_kid = HashMap::new();
-        for jwk in &set.keys {
-            if let Some(kid) = jwk.common.key_id.clone() {
-                let key = DecodingKey::from_jwk(jwk)
-                    .map_err(|e| AuthError::AuthFailed(format!("bad jwk {kid}: {e}")))?;
-                by_kid.insert(kid, key);
-            }
-        }
-        if by_kid.is_empty() {
-            return Err(AuthError::AuthFailed("jwks has no usable keys".into()));
-        }
+        let by_kid = parse_jwks(jwks_json)?;
         let mut validation = Validation::new(Algorithm::RS256);
         validation.validate_aud = false;
         Ok(Self {
-            by_kid,
+            by_kid: RwLock::new(by_kid),
             fallback: None,
             validation,
+            jwks_url: None,
+            require_aud: false,
         })
+    }
+
+    /// Remember where the JWKS came from so `refresh()` can re-fetch it (a key rotation then heals in place).
+    pub fn set_jwks_url(&mut self, url: String) {
+        self.jwks_url = Some(url);
+    }
+
+    pub fn has_jwks_url(&self) -> bool {
+        self.jwks_url.is_some()
+    }
+
+    /// Require the token's `aud` claim to match `aud`. Opt-in (the auth service's exact audience must be known)
+    /// so turning it on can never lock everyone out by surprise.
+    pub fn require_audience(&mut self, aud: String) {
+        self.validation.set_audience(&[aud]);
+        self.validation.validate_aud = true;
+        self.require_aud = true;
+    }
+
+    /// Re-fetch the JWKS and swap the key set in. No-op without a `jwks_url`. Called on an interval so a rotated
+    /// signing key is picked up within the refresh window instead of breaking chat until a restart.
+    pub async fn refresh(&self) -> Result<(), AuthError> {
+        let Some(url) = &self.jwks_url else {
+            return Ok(());
+        };
+        let json = reqwest::get(url)
+            .await
+            .map_err(|e| AuthError::AuthFailed(format!("fetch jwks: {e}")))?
+            .text()
+            .await
+            .map_err(|e| AuthError::AuthFailed(format!("read jwks: {e}")))?;
+        let fresh = parse_jwks(&json)?;
+        *self
+            .by_kid
+            .write()
+            .map_err(|_| AuthError::AuthFailed("authenticator key lock poisoned".into()))? = fresh;
+        Ok(())
     }
 
     /// Verify a bearer token and return its claims.
     pub fn verify(&self, token: &str) -> Result<Claims, AuthError> {
-        let key = if self.by_kid.is_empty() {
-            self.fallback
+        let keys = self
+            .by_kid
+            .read()
+            .map_err(|_| AuthError::AuthFailed("authenticator key lock poisoned".into()))?;
+        let data = if keys.is_empty() {
+            // HS256 test / local-dev path.
+            let key = self
+                .fallback
                 .as_ref()
-                .ok_or_else(|| AuthError::AuthFailed("no verification key".into()))?
+                .ok_or_else(|| AuthError::AuthFailed("no verification key".into()))?;
+            decode::<Claims>(token, key, &self.validation)
+                .map_err(|e| AuthError::AuthFailed(e.to_string()))?
         } else {
             let header = decode_header(token).map_err(|e| AuthError::AuthFailed(e.to_string()))?;
             let kid = header
                 .kid
                 .ok_or_else(|| AuthError::AuthFailed("token has no kid".into()))?;
-            self.by_kid
+            let key = keys
                 .get(&kid)
-                .ok_or_else(|| AuthError::AuthFailed(format!("unknown kid {kid}")))?
+                .ok_or_else(|| AuthError::AuthFailed(format!("unknown kid {kid}")))?;
+            decode::<Claims>(token, key, &self.validation)
+                .map_err(|e| AuthError::AuthFailed(e.to_string()))?
         };
-        let data = decode::<Claims>(token, key, &self.validation)
-            .map_err(|e| AuthError::AuthFailed(e.to_string()))?;
+        // jsonwebtoken rejects a wrong aud but not a missing one; reject the missing case ourselves.
+        if self.require_aud && data.claims.aud.is_none() {
+            return Err(AuthError::AuthFailed("token missing required aud".into()));
+        }
         Ok(data.claims)
     }
 }
@@ -176,5 +246,47 @@ mod tests {
     fn garbage_token_is_refused() {
         let a = Authenticator::from_hs256_secret(SECRET);
         assert!(a.verify("not.a.jwt").is_err());
+    }
+
+    #[test]
+    fn audience_is_enforced_only_when_required() {
+        #[derive(serde::Serialize)]
+        struct C {
+            sub: String,
+            tenant_id: String,
+            roles: Vec<String>,
+            exp: i64,
+            aud: String,
+        }
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as i64;
+        let mk = |aud: &str| {
+            let c = C {
+                sub: "cf0f35f7-7770-4598-a656-50493e635351".into(),
+                tenant_id: "00000000-0000-0000-0000-000000000000".into(),
+                roles: vec![],
+                exp: now + 3600,
+                aud: aud.into(),
+            };
+            encode(&Header::default(), &c, &EncodingKey::from_secret(SECRET)).unwrap()
+        };
+        // No audience required: a token with any aud (or none) verifies.
+        let open = Authenticator::from_hs256_secret(SECRET);
+        assert!(open.verify(&mk("anything")).is_ok());
+
+        // Audience required: only the matching aud verifies; a wrong one and a token without aud are refused.
+        let mut strict = Authenticator::from_hs256_secret(SECRET);
+        strict.require_audience("cyberos-chat".into());
+        assert!(strict.verify(&mk("cyberos-chat")).is_ok());
+        assert!(strict.verify(&mk("someone-else")).is_err());
+        assert!(strict
+            .verify(&token(
+                "cf0f35f7-7770-4598-a656-50493e635351",
+                "00000000-0000-0000-0000-000000000000",
+                3600
+            ))
+            .is_err());
     }
 }
