@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { Message } from "../lib/chat";
 import { timeOf } from "../lib/chat";
+import type { MentionCandidate } from "../lib/richtext";
+import { RichText } from "../lib/richtext-view";
 import { Attachment } from "./Attachment";
 import { Avatar } from "./Avatar";
 import { Icon } from "./icons";
@@ -11,6 +13,7 @@ export function ThreadPanel({
   token,
   nameOf,
   avatarOf,
+  mentionNames,
   root,
   replies,
   onClose,
@@ -19,6 +22,7 @@ export function ThreadPanel({
   token: string;
   nameOf: (id: string) => string;
   avatarOf: (id: string) => string;
+  mentionNames?: MentionCandidate[];
   root: Message;
   replies: Message[];
   onClose(): void;
@@ -52,7 +56,10 @@ export function ThreadPanel({
           <span className="t-name">{nameOf(m.sender_subject_id)}</span>
           <span className="t-time">{timeOf(m.created_at)}</span>
         </div>
-        <div className="m-body">{m.attachment_id ? <Attachment token={token} id={m.attachment_id} /> : m.body}</div>
+        <div className="m-body">
+          {m.body && <RichText text={m.body} mentions={mentionNames} />}
+          {m.attachment_id && <Attachment token={token} id={m.attachment_id} />}
+        </div>
       </div>
     </div>
   );

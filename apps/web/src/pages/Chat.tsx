@@ -4,6 +4,7 @@ import { useAuth } from "../lib/auth";
 import { apiFetch, decodeJwt } from "../lib/api";
 import type { Channel, Directory, Message, Person } from "../lib/chat";
 import { channelLabel, dayKey, fileToBase64, formatBytes, isImage, shortId } from "../lib/chat";
+import type { MentionCandidate } from "../lib/richtext";
 import { Icon } from "../components/icons";
 import { PeoplePicker } from "../components/PeoplePicker";
 import type { PickerMode } from "../components/PeoplePicker";
@@ -67,6 +68,28 @@ export function Chat() {
   const avatarSrc = useMemo(() => {
     return (id: string): string => (id && id === me ? myAvatar : directory[id]?.avatar || "");
   }, [directory, me, myAvatar]);
+
+  // Every name a person can be @-mentioned as in a rendered body (display name, handle, email local-part),
+  // flagged when the name is mine so "mentions me" gets the stronger tint. Deduped (me wins), longest first
+  // so "Anna Vu" is tried before "Anna". Feeds the RichText mention highlighter.
+  const mentionNames = useMemo<MentionCandidate[]>(() => {
+    const seen = new Map<string, MentionCandidate>();
+    const add = (name: string | null | undefined, isMe: boolean) => {
+      const n = (name || "").trim();
+      if (!n) return;
+      const k = n.toLowerCase();
+      const prev = seen.get(k);
+      if (!prev || (isMe && !prev.me)) seen.set(k, { name: n, me: isMe });
+    };
+    for (const p of dirList) {
+      const isMe = p.subject_id === me;
+      add(p.display_name, isMe);
+      add(p.handle, isMe);
+      add((p.email || "").split("@")[0], isMe);
+    }
+    add(selfName, true);
+    return [...seen.values()].sort((a, b) => b.name.length - a.name.length);
+  }, [dirList, me, selfName]);
 
   const [channels, setChannels] = useState<Channel[]>([]);
   const [activeId, setActiveId] = useState("");
@@ -807,6 +830,7 @@ export function Chat() {
                   myLastId={myLastId}
                   seenBy={seenBy}
                   seenLabel={seenLabel}
+                  mentionNames={mentionNames}
                   nameOf={nameOf}
                   avatarSrc={avatarSrc}
                   onDragOver={(e) => {
@@ -895,6 +919,7 @@ export function Chat() {
                   token={token}
                   nameOf={nameOf}
                   avatarOf={avatarSrc}
+                  mentionNames={mentionNames}
                   root={threadRoot}
                   replies={threadReplies}
                   onClose={() => setThreadRoot(null)}

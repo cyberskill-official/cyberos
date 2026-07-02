@@ -1,5 +1,6 @@
 import type { RefObject } from "react";
 import type { Message } from "../../lib/chat";
+import type { MentionCandidate } from "../../lib/richtext";
 import { MessageRow } from "./MessageRow";
 
 // The scrolling message pane: drag / drop / paste to stage a file, the empty-state note, and the grouped rows.
@@ -20,6 +21,7 @@ export function MessageList({
   myLastId,
   seenBy,
   seenLabel,
+  mentionNames,
   nameOf,
   avatarSrc,
   onDragOver,
@@ -51,6 +53,7 @@ export function MessageList({
   myLastId: string;
   seenBy: string[];
   seenLabel: string;
+  mentionNames: MentionCandidate[];
   nameOf: (id: string) => string;
   avatarSrc: (id: string) => string;
   onDragOver: (e: React.DragEvent<HTMLDivElement>) => void;
@@ -98,6 +101,7 @@ export function MessageList({
           isMyLast={m.id === myLastId}
           seenBy={seenBy}
           seenLabel={seenLabel}
+          mentionNames={mentionNames}
           nameOf={nameOf}
           avatarSrc={avatarSrc}
           onEditTextChange={onEditTextChange}

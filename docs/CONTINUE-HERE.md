@@ -24,18 +24,33 @@ What is live vs dormant right now:
 ## Next steps (in priority order)
 
 CURRENT FOCUS (2026-07-02): the chat module - make it full-featured, then overhaul the UI/UX. Full audit at
-docs/feature-requests/chat/CHAT-AUDIT-2026-07-02.md. Operator chose the sequence: (1) split the ~1240-line
-apps/web/src/pages/Chat.tsx into components first (task #159); (2) then build ALL four feature clusters -
-get-notified (per-user notification socket, @-mentions, unread/mention badges, desktop/web push), richer
-messages (markdown + code + links, full emoji picker, attachment object-storage + larger cap + multi-file),
-find-and-organize (global search + jump-to-message, channel management: topics, public/private, browse+join,
-roles), and AI-native (summarize, smart replies, action-item extraction via the already-wired ai-gateway);
-(3) then the UI/UX overhaul - tokenize the umber/ochre palette by role and fix AA contrast, add real type and
-spacing scales, redesign message rows/composer/empty-states/the hover action bar, staying in one hand-written
-apps/web/src/styles.css. The biggest single unlock is the per-user notification socket (today the ws is
-per-channel only, so presence/ringing/notifications only work for the open channel). No i18n exists yet on a
-bilingual team. Each slice: gate on the Mac, commit, push; chat changes rebuild the chat image and apply any
-new chat migration on deploy.
+docs/feature-requests/chat/CHAT-AUDIT-2026-07-02.md. Operator chose the sequence: (1) split Chat.tsx into
+components; (2) build ALL four feature clusters; (3) then the UI/UX overhaul.
+
+DONE + LIVE so far:
+- (1) Chat.tsx split into components (task #159, commit 020184a).
+- (2a) get-notified cluster (commit 11575fd, deployed to os.cyberskill.world): the per-user notification
+  socket (services/chat/src/notify.rs Notifier + NotifyEvent + fanout + GET /v1/chat/notify), a one-query
+  GET /v1/chat/unread summary (unread + unread-mentions per channel), and @-mentions (migration 0009
+  chat_mentions, PostMessage.mentions validated to members, mention flag on the notify event). Client:
+  useNotifySocket for live unread badges, desktop notifications when the tab is hidden (permission asked on
+  first channel select), a "(N) CyberOS Chat" tab title, a Composer @-mention autocomplete, and a distinct
+  Sidebar mention badge. This closed the audit's top gap (the ws was per-channel only).
+
+REMAINING (task #182), still in the same sequence:
+- (2b) richer messages: markdown + code + links rendering (incl. the in-body @-mention highlight deferred in
+  2a), a full emoji picker, attachment object-storage + larger cap + multi-file.
+- (2c) find-and-organize: global cross-channel search + jump-to-message; channel management (topics,
+  public/private, browse+join, roles).
+- (2d) AI-native: summarize, smart replies, action-item extraction via the already-wired ai-gateway.
+- (3) UI/UX overhaul: tokenize the umber/ochre palette by role + fix AA contrast, real type + spacing scales,
+  redesign message rows/composer/empty-states/the hover action bar, in one hand-written styles.css. While
+  here, bump the PWA service-worker cache version per build so deploys reach open clients on reload. No i18n
+  exists yet on a bilingual team.
+
+Each slice: gate on the Mac (fmt + clippy + tests; web tsc + vite; verify any new migration on a throwaway
+DB), commit, push (deploys). Pushing rebuilds the auth + chat + ai-gateway images and applies new chat
+migrations on deploy - treat the push as a confirm-with-the-operator action.
 
 Deploy and infra follow-ups (still valid, lower priority than the chat focus):
 

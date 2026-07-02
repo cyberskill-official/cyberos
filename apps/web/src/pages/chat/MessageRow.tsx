@@ -1,6 +1,8 @@
 import { Fragment } from "react";
 import type { Message } from "../../lib/chat";
 import { formatDay, REACTION_EMOJIS, timeOf } from "../../lib/chat";
+import type { MentionCandidate } from "../../lib/richtext";
+import { RichText } from "../../lib/richtext-view";
 import { Avatar } from "../../components/Avatar";
 import { Icon } from "../../components/icons";
 import { Attachment } from "../../components/Attachment";
@@ -24,6 +26,7 @@ export function MessageRow({
   isMyLast,
   seenBy,
   seenLabel,
+  mentionNames,
   nameOf,
   avatarSrc,
   onEditTextChange,
@@ -50,6 +53,7 @@ export function MessageRow({
   isMyLast: boolean;
   seenBy: string[];
   seenLabel: string;
+  mentionNames: MentionCandidate[];
   nameOf: (id: string) => string;
   avatarSrc: (id: string) => string;
   onEditTextChange: (v: string) => void;
@@ -114,7 +118,9 @@ export function MessageRow({
             </div>
           ) : (
             <div className="m-body">
-              {m.attachment_id ? <Attachment token={token!} id={m.attachment_id} /> : m.body}
+              {/* Body and attachment both render: a file sent with a caption shows the caption too. */}
+              {m.body && <RichText text={m.body} mentions={mentionNames} />}
+              {m.attachment_id && <Attachment token={token!} id={m.attachment_id} />}
             </div>
           )}
           {m.reactions && m.reactions.length > 0 && (
@@ -169,7 +175,7 @@ export function MessageRow({
                 </div>
               )}
             </div>
-            {!m.attachment_id && m.body && (
+            {m.body && (
               <button title="Translate to English" onClick={() => void onTranslate(m)} type="button">
                 <Icon name="translate" size={15} />
               </button>
