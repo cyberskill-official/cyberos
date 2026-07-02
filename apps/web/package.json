@@ -6,7 +6,7 @@
   "description": "CyberOS operator console - Vite + React + TS SPA (login, dashboard, chat) served same-origin behind Caddy.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && node scripts/stamp-sw.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
