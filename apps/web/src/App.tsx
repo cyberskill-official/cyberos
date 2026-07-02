@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "./lib/auth";
+import { useTheme } from "./lib/theme";
+import { Icon } from "./components/icons";
 import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
 import { Chat } from "./pages/Chat";
@@ -8,6 +10,7 @@ type View = "dashboard" | "chat";
 
 export function App() {
   const { ready, signedIn, email, logout } = useAuth();
+  const [theme, toggleTheme] = useTheme();
   // Team default: land straight in chat. "All modules" reveals the operator dashboard.
   const [view, setView] = useState<View>("chat");
 
@@ -43,6 +46,14 @@ export function App() {
           </button>
         )}
         <span className="spacer" />
+        <button
+          className="icon-btn"
+          title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+          onClick={toggleTheme}
+          type="button"
+        >
+          <Icon name={theme === "dark" ? "sun" : "moon"} size={17} />
+        </button>
         <span className="who">{email}</span>
         <button className="btn-ghost" onClick={logout}>
           Sign out

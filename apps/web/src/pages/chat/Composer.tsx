@@ -245,6 +245,7 @@ export function Composer({
           <Icon name={uploading ? "paperclip" : "send"} />
         </button>
       </div>
+      <div className="comp-hint">Enter to send · Shift+Enter for a new line</div>
     </>
   );
 }
