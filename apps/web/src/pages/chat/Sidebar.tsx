@@ -55,6 +55,28 @@ export function Sidebar({
   onOpenPicker: (mode: PickerMode) => void;
   onOpenBrowse: () => void;
 }) {
+  // Arrow-key roving across every channel row (both sections), so keyboard users move the focus ring up/down
+  // the list without tabbing through each add-button. Enter/Space already select (the rows are buttons).
+  const onRowKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    const k = e.key;
+    if (k !== "ArrowDown" && k !== "ArrowUp" && k !== "Home" && k !== "End") return;
+    const scope = e.currentTarget.closest(".side-scroll");
+    if (!scope) return;
+    const rows = Array.from(scope.querySelectorAll<HTMLButtonElement>(".chan-row"));
+    const i = rows.indexOf(e.currentTarget);
+    if (i === -1) return;
+    e.preventDefault();
+    const next =
+      k === "ArrowDown"
+        ? Math.min(rows.length - 1, i + 1)
+        : k === "ArrowUp"
+          ? Math.max(0, i - 1)
+          : k === "Home"
+            ? 0
+            : rows.length - 1;
+    rows[next]?.focus();
+  };
+
   const renderRow = (c: Channel) => {
     const u = unread[c.id] || 0;
     const mAt = mentions[c.id] || 0;
@@ -67,6 +89,13 @@ export function Sidebar({
     const quiet = mode !== "all";
     const showMention = mAt > 0 && mode !== "none";
     const showUnread = u > 0 && !quiet;
+    // A spoken label that carries the state a sighted user reads from the badge/dim: "general, 3 unread, muted".
+    const label = channelLabel(directory, me, c);
+    const extras: string[] = [];
+    if (showMention) extras.push(t("a11y.mentions", { n: mAt }));
+    else if (showUnread) extras.push(t("a11y.unread", { n: u }));
+    if (mode === "none") extras.push(t("a11y.muted"));
+    const ariaLabel = extras.length ? `${label}, ${extras.join(", ")}` : label;
     return (
       <button
         key={c.id}
@@ -77,6 +106,9 @@ export function Sidebar({
           (mode === "none" ? " muted" : "")
         }
         onClick={() => onSelectChannel(c.id)}
+        onKeyDown={onRowKeyDown}
+        aria-current={isActive ? "true" : undefined}
+        aria-label={ariaLabel}
         type="button"
       >
         {dm ? (
@@ -124,7 +156,7 @@ export function Sidebar({
           <Icon name="edit" size={14} />
         </span>
       </button>
-      <div className="side-scroll">
+      <div className="side-scroll" role="navigation" aria-label={t("a11y.channelsNav")}>
         <div className="side-section">
           <div className="side-label">
             <span>{t("sidebar.channels")}</span>

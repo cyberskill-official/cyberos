@@ -268,6 +268,11 @@ const C: Record<string, Entry> = {
   "settings.confirmLeave": { en: "Leave {channel}?", vi: "Rời {channel}?" },
   "settings.thisChannel": { en: "this channel", vi: "kênh này" },
   "confirm.title": { en: "Please confirm", vi: "Vui lòng xác nhận" },
+  "a11y.channelsNav": { en: "Channels and direct messages", vi: "Kênh và tin nhắn trực tiếp" },
+  "a11y.unread": { en: "{n} unread", vi: "{n} chưa đọc" },
+  "a11y.mentions": { en: "{n} mentions", vi: "{n} lượt nhắc" },
+  "a11y.muted": { en: "muted", vi: "đã tắt tiếng" },
+  "a11y.attachment": { en: "sent an attachment", vi: "đã gửi tệp đính kèm" },
 
   // browse channels
   "browse.title": { en: "Browse channels", vi: "Duyệt kênh" },

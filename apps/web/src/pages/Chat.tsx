@@ -174,6 +174,10 @@ export function Chat() {
   // A message whose delete is in its undo window: hidden from the timeline immediately but not yet told to the
   // server, so "Undo" can restore it. The server DELETE only fires when the grace timer elapses.
   const [pendingDelete, setPendingDelete] = useState<Message | null>(null);
+  // A polite screen-reader announcement of the latest inbound message (name + preview), so SR users hear new
+  // chatter without watching the pane. Never announces my own sends or history-window loads.
+  const [liveAnnounce, setLiveAnnounce] = useState("");
+  const lastAnnouncedRef = useRef("");
   const suppressScrollRef = useRef(false);
   const prevLastIdRef = useRef("");
   // Load-older pagination state (reset per channel).
@@ -700,6 +704,19 @@ export function Chat() {
     }, 1400);
     return () => window.clearTimeout(tmr);
   }, [unreadAnchorId]);
+
+  // Announce the newest inbound message to screen readers (politely). Fires once per new tail, only for
+  // messages from others while viewing the live tail, so SR users are not read their own sends or history.
+  useEffect(() => {
+    if (notLatest || messages.length === 0) return;
+    const last = messages[messages.length - 1];
+    if (!last.id || last.id === lastAnnouncedRef.current) return;
+    lastAnnouncedRef.current = last.id;
+    if (last.sender_subject_id === me || last.pending || last.failed) return;
+    const raw = (last.body || "").replace(/\s+/g, " ").trim();
+    const preview = raw ? (raw.length > 120 ? raw.slice(0, 120) : raw) : t("a11y.attachment");
+    setLiveAnnounce(`${nameOf(last.sender_subject_id)}: ${preview}`);
+  }, [messages, notLatest, me, nameOf]);
 
   function onDraftChange(v: string) {
     setDraft(v);
@@ -1578,6 +1595,10 @@ export function Chat() {
           <span className="toast-bar" aria-hidden="true" />
         </div>
       )}
+
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {liveAnnounce}
+      </div>
 
       {picker && token && (
         <PeoplePicker
