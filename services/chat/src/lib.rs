@@ -2,6 +2,7 @@
 //! A first-party Rust service on the CyberOS identity (FR-AUTH-110), Postgres with per-tenant RLS, and
 //! the memory audit chain - replacing the Mattermost dependency.
 
+pub mod ai;
 pub mod attachments;
 pub mod audit;
 pub mod auditlog;
@@ -97,6 +98,9 @@ pub fn router(state: AppState) -> Router {
             axum::routing::delete(reactions::remove),
         )
         .route("/v1/chat/translate", post(translate::translate))
+        .route("/v1/chat/channels/:id/ai/summarize", post(ai::summarize))
+        .route("/v1/chat/channels/:id/ai/actions", post(ai::actions))
+        .route("/v1/chat/channels/:id/ai/replies", post(ai::replies))
         .route(
             "/v1/chat/channels/:id/attachments",
             post(attachments::upload),

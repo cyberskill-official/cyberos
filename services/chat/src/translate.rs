@@ -32,9 +32,9 @@ pub struct GwMessage {
 }
 
 #[derive(Debug, Serialize)]
-struct GwChatRequest {
-    alias: String,
-    messages: Vec<GwMessage>,
+pub(crate) struct GwChatRequest {
+    pub(crate) alias: String,
+    pub(crate) messages: Vec<GwMessage>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -96,22 +96,13 @@ pub async fn translate(
         ));
     }
 
-    // The gateway is optional infrastructure: when AI_GATEWAY_URL is unset/blank, translation is simply
-    // unavailable (a clean 502), never a crash. An empty value (compose default) is treated as unset.
-    let base = std::env::var("AI_GATEWAY_URL")
-        .ok()
-        .filter(|u| !u.trim().is_empty())
-        .ok_or((
-            StatusCode::BAD_GATEWAY,
-            "translation is unavailable (ai-gateway not configured)".to_string(),
-        ))?;
-    let root = base.trim_end_matches('/');
-    let url = format!("{root}/v1/chat");
+    let url = gateway_url("translation is unavailable (ai-gateway not configured)")?;
     let req = GwChatRequest {
         alias: "chat.fast".to_string(),
         messages: build_messages(&text, &target),
     };
-    let translated = call_gateway(&url, &tenant, &req).await?;
+    let translated =
+        call_gateway(&url, &tenant, &req, "translation is unavailable right now").await?;
 
     audit::emit(
         &st,
@@ -124,19 +115,26 @@ pub async fn translate(
     Ok(Json(TranslateResponse { translated }))
 }
 
+/// Resolve the gateway base URL. The gateway is optional infrastructure: unset/blank means the AI feature is
+/// simply unavailable (the caller returns a clean 502), never a crash.
+pub(crate) fn gateway_url(unavailable_msg: &str) -> Result<String, (StatusCode, String)> {
+    let base = std::env::var("AI_GATEWAY_URL")
+        .ok()
+        .filter(|u| !u.trim().is_empty())
+        .ok_or((StatusCode::BAD_GATEWAY, unavailable_msg.to_string()))?;
+    Ok(format!("{}/v1/chat", base.trim_end_matches('/')))
+}
+
 /// Do the gateway round-trip, mapping every failure (transport, non-2xx, malformed body, empty content) to a
-/// clean 502 so the handler never panics and the chat path is never blocked.
-async fn call_gateway(
+/// clean 502 so the handler never panics and the chat path is never blocked. Shared by translate and the
+/// AI-native actions (ai.rs).
+pub(crate) async fn call_gateway(
     url: &str,
     tenant: &Uuid,
     req: &GwChatRequest,
+    unavailable_msg: &str,
 ) -> Result<String, (StatusCode, String)> {
-    let unavailable = || {
-        (
-            StatusCode::BAD_GATEWAY,
-            "translation is unavailable right now".to_string(),
-        )
-    };
+    let unavailable = || (StatusCode::BAD_GATEWAY, unavailable_msg.to_string());
     let client = reqwest::Client::new();
     let resp = client
         .post(url)
