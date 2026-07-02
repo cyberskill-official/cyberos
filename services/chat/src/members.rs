@@ -239,6 +239,11 @@ pub async fn remove(
         return Err((StatusCode::NOT_FOUND, "member not found".to_string()));
     }
 
+    // Sever the removed subject's live socket(s) at once - WS authorization is otherwise only checked at
+    // upgrade, so without this a removed member keeps receiving channel events until they happen to disconnect.
+    st.hub
+        .publish(channel, crate::realtime::ChatEvent::Kicked { subject });
+
     audit::emit(
         &st,
         tenant,

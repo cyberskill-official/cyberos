@@ -57,6 +57,18 @@ impl Notifier {
     pub fn publish(&self, subject: Uuid, event: NotifyEvent) {
         let _ = self.sender(subject).send(event);
     }
+
+    /// Drop a subject's sender once no tab is subscribed, so the map does not grow unbounded over the process
+    /// lifetime. Same safety as `Hub::reap`: `sender` re-creates under the same lock; a fresh sender misses
+    /// nothing because there were no receivers.
+    pub fn reap(&self, subject: Uuid) {
+        let mut g = self.inner.lock().expect("notifier mutex poisoned");
+        if let Some(s) = g.get(&subject) {
+            if s.receiver_count() == 0 {
+                g.remove(&subject);
+            }
+        }
+    }
 }
 
 /// A one-line preview of a message body for a notification: collapse runs of whitespace to single spaces, cap
@@ -165,10 +177,15 @@ pub async fn notify_ws(
         .subject_id()
         .map_err(|e| (StatusCode::UNAUTHORIZED, e.to_string()))?;
     let rx = st.notifier.sender(subject).subscribe();
-    Ok(ws.on_upgrade(move |socket| notify_loop(socket, rx)))
+    Ok(ws.on_upgrade(move |socket| notify_loop(socket, rx, st, subject)))
 }
 
-async fn notify_loop(mut socket: WebSocket, mut rx: broadcast::Receiver<NotifyEvent>) {
+async fn notify_loop(
+    mut socket: WebSocket,
+    mut rx: broadcast::Receiver<NotifyEvent>,
+    st: AppState,
+    subject: Uuid,
+) {
     loop {
         tokio::select! {
             event = rx.recv() => {
@@ -193,6 +210,9 @@ async fn notify_loop(mut socket: WebSocket, mut rx: broadcast::Receiver<NotifyEv
             }
         }
     }
+    // This tab is gone; drop the receiver before reaping so the count reflects the remaining tabs.
+    drop(rx);
+    st.notifier.reap(subject);
 }
 
 #[cfg(test)]

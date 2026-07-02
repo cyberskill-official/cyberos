@@ -57,6 +57,11 @@ pub enum ChatEvent {
         /// delta-mutate) and stay correct across event replays / reconnects.
         count: i64,
     },
+    /// A subject was removed from the channel: their own live socket(s) close on receipt. Not forwarded to
+    /// anyone else (authorization is otherwise only checked at upgrade, so this severs a removed member fast).
+    Kicked {
+        subject: Uuid,
+    },
 }
 
 /// channel_id -> broadcast sender. Senders live for the process; subscribers come and go.
@@ -76,6 +81,18 @@ impl Hub {
 
     pub fn publish(&self, channel: Uuid, event: ChatEvent) {
         let _ = self.sender(channel).send(event);
+    }
+
+    /// Drop a channel's broadcast sender once it has no receivers, so the map does not grow without bound over
+    /// the process lifetime. Safe against a concurrent subscribe: `sender` re-creates the entry under the same
+    /// lock, and a fresh sender loses nothing because there were no receivers to miss events.
+    pub fn reap(&self, channel: Uuid) {
+        let mut guard = self.inner.lock().expect("hub mutex poisoned");
+        if let Some(s) = guard.get(&channel) {
+            if s.receiver_count() == 0 {
+                guard.remove(&channel);
+            }
+        }
     }
 }
 
@@ -195,6 +212,13 @@ async fn ws_loop(
                         // A signal is private to its addressed subject; presence and typing are not
                         // echoed back to their own originator.
                         match &ev {
+                            // A removed member's own socket closes; everyone else never sees the frame.
+                            ChatEvent::Kicked { subject } => {
+                                if *subject == me {
+                                    break;
+                                }
+                                continue;
+                            }
                             ChatEvent::Signal { to, .. } if *to != me => continue,
                             ChatEvent::Presence { subject, .. } | ChatEvent::Typing { subject }
                                 if *subject == me =>
@@ -238,6 +262,9 @@ async fn ws_loop(
             });
         }
     }
+    // This receiver is gone; drop it before reaping so the count reflects only the remaining connections.
+    drop(rx);
+    st.hub.reap(channel);
 }
 
 #[derive(Debug, Deserialize)]

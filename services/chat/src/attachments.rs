@@ -202,6 +202,43 @@ pub async fn upload_raw(
     Ok((StatusCode::CREATED, Json(att)))
 }
 
+/// Only a known-safe media type is echoed back on download; anything else (notably text/html and
+/// image/svg+xml, which can carry script) is served as opaque bytes. Paired with `nosniff` and an attachment
+/// content-disposition, this stops a spoofed content-type from being rendered/executed in the browser.
+fn safe_content_type(ct: &str) -> String {
+    let base = ct
+        .split(';')
+        .next()
+        .unwrap_or("")
+        .trim()
+        .to_ascii_lowercase();
+    const SAFE: &[&str] = &[
+        "image/png",
+        "image/jpeg",
+        "image/gif",
+        "image/webp",
+        "image/bmp",
+        "image/avif",
+        "video/mp4",
+        "video/webm",
+        "video/ogg",
+        "video/quicktime",
+        "audio/mpeg",
+        "audio/ogg",
+        "audio/wav",
+        "audio/webm",
+        "audio/mp4",
+        "audio/aac",
+        "application/pdf",
+        "text/plain",
+    ];
+    if SAFE.contains(&base.as_str()) {
+        base
+    } else {
+        "application/octet-stream".to_string()
+    }
+}
+
 pub async fn download(
     State(st): State<AppState>,
     Path(att): Path<Uuid>,
@@ -271,7 +308,8 @@ pub async fn download(
     let safe = filename.replace(['"', '\r', '\n'], "");
     Response::builder()
         .status(StatusCode::OK)
-        .header("content-type", content_type)
+        .header("content-type", safe_content_type(&content_type))
+        .header("x-content-type-options", "nosniff")
         .header(
             "content-disposition",
             format!("attachment; filename=\"{safe}\""),
@@ -379,10 +417,26 @@ pub async fn purge_for_message(
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     message: Uuid,
 ) -> Result<Vec<String>, sqlx::Error> {
+    // Only purge attachments this message is the SOLE live reference to. If the same attachment is linked by
+    // another message that is not soft-deleted (via the link table or the legacy attachment_id column),
+    // keep its bytes - deleting one message must never destroy another message's attachment.
     let ids: Vec<(Uuid,)> = sqlx::query_as(
-        "SELECT attachment_id FROM chat_message_attachments WHERE message_id = $1
-         UNION
-         SELECT attachment_id FROM chat_messages WHERE id = $1 AND attachment_id IS NOT NULL",
+        "WITH linked AS (
+             SELECT attachment_id FROM chat_message_attachments WHERE message_id = $1
+             UNION
+             SELECT attachment_id FROM chat_messages WHERE id = $1 AND attachment_id IS NOT NULL
+         )
+         SELECT l.attachment_id FROM linked l
+         WHERE NOT EXISTS (
+             SELECT 1 FROM chat_message_attachments oma
+             JOIN chat_messages om ON om.id = oma.message_id
+             WHERE oma.attachment_id = l.attachment_id AND oma.message_id <> $1
+               AND om.deleted_at IS NULL
+         )
+         AND NOT EXISTS (
+             SELECT 1 FROM chat_messages om2
+             WHERE om2.attachment_id = l.attachment_id AND om2.id <> $1 AND om2.deleted_at IS NULL
+         )",
     )
     .bind(message)
     .fetch_all(&mut **tx)

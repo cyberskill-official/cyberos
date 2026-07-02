@@ -21,18 +21,23 @@ pub async fn notify(st: AppState, channel: Uuid, tenant: Uuid, sender: Uuid, mes
             Ok(m) => m,
             Err(_) => return,
         };
+    // The push targets: members who are neither the sender nor currently connected. One device query for the
+    // whole set (was N+1: one query per offline member).
+    let targets: Vec<Uuid> = members
+        .into_iter()
+        .map(|(m,)| m)
+        .filter(|m| *m != sender && !online.contains(m))
+        .collect();
     let mut intents = 0u32;
-    for (member,) in members {
-        if member == sender || online.contains(&member) {
-            continue;
-        }
-        let devices: Vec<(String, String)> =
-            sqlx::query_as("SELECT platform, token FROM chat_devices WHERE subject_id = $1")
-                .bind(member)
-                .fetch_all(&mut *tx)
-                .await
-                .unwrap_or_default();
-        for (platform, token) in devices {
+    if !targets.is_empty() {
+        let devices: Vec<(Uuid, String, String)> = sqlx::query_as(
+            "SELECT subject_id, platform, token FROM chat_devices WHERE subject_id = ANY($1)",
+        )
+        .bind(&targets)
+        .fetch_all(&mut *tx)
+        .await
+        .unwrap_or_default();
+        for (member, platform, token) in devices {
             intents += 1;
             tracing::info!(
                 target: "cyberos_chat::push",

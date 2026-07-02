@@ -64,6 +64,11 @@ fn valid_visibility(v: &str) -> bool {
     matches!(v, "private" | "public")
 }
 
+/// Length caps for a channel's name and topic (chars, post-trim), so a member cannot store an oversized value
+/// that then bloats every list and sidebar. Enforced on both create and update.
+const MAX_NAME_CHARS: usize = 200;
+const MAX_TOPIC_CHARS: usize = 500;
+
 #[derive(Debug, Deserialize)]
 pub struct CreateChannel {
     pub name: String,
@@ -91,6 +96,9 @@ pub async fn create(
     if name.is_empty() {
         return Err((StatusCode::BAD_REQUEST, "name is required".to_string()));
     }
+    if name.chars().count() > MAX_NAME_CHARS {
+        return Err((StatusCode::BAD_REQUEST, "name is too long".to_string()));
+    }
     let visibility = body.visibility.unwrap_or_else(|| "private".to_string());
     if !valid_visibility(&visibility) {
         return Err((
@@ -99,6 +107,9 @@ pub async fn create(
         ));
     }
     let topic = body.topic.trim().to_string();
+    if topic.chars().count() > MAX_TOPIC_CHARS {
+        return Err((StatusCode::BAD_REQUEST, "topic is too long".to_string()));
+    }
 
     let mut tx = db::tenant_tx(&st.pool, &tenant)
         .await
@@ -369,6 +380,9 @@ pub async fn update(
             if n.is_empty() {
                 return Err((StatusCode::BAD_REQUEST, "name cannot be empty".to_string()));
             }
+            if n.chars().count() > MAX_NAME_CHARS {
+                return Err((StatusCode::BAD_REQUEST, "name is too long".to_string()));
+            }
             Some(n)
         }
         None => None,
@@ -382,6 +396,11 @@ pub async fn update(
         }
     }
     let topic = body.topic.as_ref().map(|t| t.trim().to_string());
+    if let Some(t) = &topic {
+        if t.chars().count() > MAX_TOPIC_CHARS {
+            return Err((StatusCode::BAD_REQUEST, "topic is too long".to_string()));
+        }
+    }
     if name.is_none() && topic.is_none() && body.visibility.is_none() && body.archived.is_none() {
         return Err((StatusCode::BAD_REQUEST, "nothing to change".to_string()));
     }
