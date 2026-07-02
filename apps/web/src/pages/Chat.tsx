@@ -307,6 +307,7 @@ export function Chat() {
   const {
     messages,
     setMessages,
+    loading,
     threadRoot,
     setThreadRoot,
     threadReplies,
@@ -1391,6 +1392,7 @@ export function Chat() {
                 <MessageList
                   rows={rows}
                   messages={messages}
+                  loading={loading}
                   me={me}
                   token={token}
                   scrollRef={scrollRef}

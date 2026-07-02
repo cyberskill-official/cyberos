@@ -24,6 +24,9 @@ export interface WsEvent extends Partial<Message> {
 export interface ChatSocket {
   messages: Message[];
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+  /// True while the open channel's first page is being fetched, so the pane can show skeletons instead of the
+  /// empty-state note.
+  loading: boolean;
   threadRoot: Message | null;
   setThreadRoot: React.Dispatch<React.SetStateAction<Message | null>>;
   threadReplies: Message[];
@@ -67,6 +70,7 @@ export function useChatSocket({
   onJumped?: (messageId: string) => void;
 }): ChatSocket {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(false);
   // Recent-activity timestamps keyed by channel id, used to sort the DM list. Pure client state: it is fed by
   // the unread poll (a channel with unread is treated as recently active) and by inbound `message` ws events.
   const [lastActivity, setLastActivity] = useState<Record<string, number>>({});
@@ -99,6 +103,7 @@ export function useChatSocket({
   useEffect(() => {
     if (!token || !activeId) {
       setMessages([]);
+      setLoading(false);
       return;
     }
     setThreadRoot(null);
@@ -107,6 +112,8 @@ export function useChatSocket({
     setPresence(new Set());
     setTypingSubject("");
     setReceipts({});
+    setMessages([]); // clear the previous channel's timeline so the loading skeletons show on every open
+    setLoading(true);
     let alive = true;
 
     (async () => {
@@ -124,6 +131,8 @@ export function useChatSocket({
         }
       } catch (e) {
         if (alive) setErrorRef.current(e instanceof Error ? e.message : String(e));
+      } finally {
+        if (alive) setLoading(false);
       }
     })();
     (async () => {
@@ -241,6 +250,7 @@ export function useChatSocket({
   return {
     messages,
     setMessages,
+    loading,
     threadRoot,
     setThreadRoot,
     threadReplies,

@@ -288,9 +288,11 @@ button:focus-visible, .chan-row:focus-visible { outline: 2px solid var(--accent-
 }
 .m-actions button { width: 30px; height: 30px; border-radius: 7px; display: grid; place-items: center; background: transparent; border: none; color: var(--muted); cursor: pointer; }
 .m-actions button:hover { background: var(--panel-2); color: var(--ink); }
-.edit-row { display: flex; gap: 8px; align-items: center; margin-top: 2px; }
-.edit-row input { flex: 1; background: var(--panel); border: 1px solid var(--accent-border); color: var(--ink); border-radius: 8px; padding: 8px 12px; font-size: 14px; }
-.edit-row input:focus { outline: none; }
+.edit-row { display: flex; flex-direction: column; gap: 8px; margin-top: 2px; align-items: stretch; }
+.edit-input { width: 100%; box-sizing: border-box; background: var(--panel); border: 1px solid var(--accent-border); color: var(--ink); border-radius: 8px; padding: 8px 12px; font-size: 14px; font-family: inherit; line-height: 1.5; resize: none; overflow-y: auto; }
+.edit-input:focus { outline: none; }
+.edit-actions { display: flex; align-items: center; gap: 8px; }
+.edit-hint { color: var(--faint); font-size: 11px; margin-left: auto; }
 .seen-row { display: flex; align-items: center; gap: 4px; justify-content: flex-end; padding: 2px 20px 6px; color: var(--faint); font-size: 11px; }
 .seen-row svg { color: var(--accent-text); }
 
@@ -388,6 +390,17 @@ button:focus-visible, .chan-row:focus-visible { outline: 2px solid var(--accent-
 .empty-mark { width: 72px; height: 72px; border-radius: 22px; display: grid; place-items: center; background: var(--ochre-soft); color: var(--accent-text); margin-bottom: 4px; }
 .empty-title { font-size: 18px; font-weight: 700; color: var(--ink); }
 .empty-sub { color: var(--muted); font-size: 13px; }
+
+/* loading skeletons: shown while a channel's first page is fetching, so the pane never flashes "No messages
+   yet" before real content arrives. The shimmer is neutralized by the global prefers-reduced-motion guard. */
+.skeletons { padding: 8px 6px; }
+.sk-row { display: flex; gap: 12px; padding: 8px 16px; }
+.sk-avatar { width: 36px; height: 36px; border-radius: 30%; flex: none; }
+.sk-lines { flex: 1; display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
+.sk-name { width: 116px; height: 11px; border-radius: 6px; }
+.sk-body { height: 13px; border-radius: 6px; max-width: 540px; }
+.sk-avatar, .sk-name, .sk-body { background: linear-gradient(90deg, var(--panel-2) 25%, var(--line) 50%, var(--panel-2) 75%); background-size: 200% 100%; animation: sk-shimmer 1.4s linear infinite; }
+@keyframes sk-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
 /* attachments */
 .att-img { max-width: 300px; max-height: 280px; border-radius: 10px; display: block; cursor: pointer; border: 1px solid var(--line); margin-top: 3px; }

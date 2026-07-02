@@ -7,9 +7,13 @@ import { MessageRow } from "./MessageRow";
 
 // The scrolling message pane: drag / drop / paste to stage a file, the empty-state note, and the grouped rows.
 // The parent owns the scroll ref, the computed `rows`, and every handler; this is the container plus the map.
+// Placeholder bubble widths (%) for the loading skeleton - a mix so it reads as "content is coming".
+const SKELETON_WIDTHS = [62, 44, 78, 35, 68, 52, 40];
+
 export function MessageList({
   rows,
   messages,
+  loading,
   me,
   token,
   scrollRef,
@@ -49,6 +53,7 @@ export function MessageList({
 }: {
   rows: { m: Message; showDay: boolean; grouped: boolean; unread: boolean }[];
   messages: Message[];
+  loading: boolean;
   me: string;
   token: string | null;
   scrollRef: RefObject<HTMLDivElement>;
@@ -96,11 +101,23 @@ export function MessageList({
       onDrop={onDrop}
       onPaste={onPaste}
     >
-      {messages.length === 0 && (
+      {loading && messages.length === 0 ? (
+        <div className="skeletons" aria-hidden="true">
+          {SKELETON_WIDTHS.map((w, i) => (
+            <div className="sk-row" key={i}>
+              <div className="sk-avatar" />
+              <div className="sk-lines">
+                <div className="sk-name" />
+                <div className="sk-body" style={{ width: `${w}%` }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : messages.length === 0 ? (
         <div className="empty">
           <div className="empty-sub">{t("chat.noMessages")}</div>
         </div>
-      )}
+      ) : null}
       {rows.map(({ m, showDay, grouped, unread }) => (
         <Fragment key={m.id}>
           {unread && (

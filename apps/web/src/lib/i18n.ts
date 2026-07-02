@@ -206,6 +206,10 @@ const C: Record<string, Entry> = {
   "message.delete": { en: "Delete", vi: "Xóa" },
   "message.deleted": { en: "Message deleted", vi: "Đã xóa tin nhắn" },
   "message.undo": { en: "Undo", vi: "Hoàn tác" },
+  "message.editHint": {
+    en: "Enter to save · Shift+Enter for a new line · Esc to cancel",
+    vi: "Enter để lưu · Shift+Enter để xuống dòng · Esc để hủy",
+  },
 
   // thread panel
   "thread.title": { en: "Thread", vi: "Luồng" },

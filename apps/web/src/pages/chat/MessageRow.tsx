@@ -115,25 +115,48 @@ export function MessageRow({
           )}
           {editingId === m.id ? (
             <div className="edit-row">
-              <input
+              <textarea
+                className="edit-input"
                 value={editText}
+                rows={1}
+                ref={(el) => {
+                  if (!el) return;
+                  // Grow to fit the content (multi-line edits no longer collapse), capped so it never runs away.
+                  el.style.height = "auto";
+                  el.style.height = Math.min(el.scrollHeight, 220) + "px";
+                  // Put the caret at the end on first mount (once), so editing continues where the text ends.
+                  if (!el.dataset.caretSet) {
+                    el.dataset.caretSet = "1";
+                    const len = el.value.length;
+                    try {
+                      el.setSelectionRange(len, len);
+                    } catch {
+                      /* ignore */
+                    }
+                  }
+                }}
                 onChange={(e) => onEditTextChange(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") {
+                  // Enter saves; Shift+Enter inserts a newline; Escape cancels.
+                  if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     void onSaveEdit(m);
                   } else if (e.key === "Escape") {
+                    e.preventDefault();
                     onCancelEdit();
                   }
                 }}
                 autoFocus
               />
-              <button className="btn-pill" onClick={() => void onSaveEdit(m)} type="button">
-                {t("common.save")}
-              </button>
-              <button className="btn-ghost" onClick={onCancelEdit} type="button">
-                {t("common.cancel")}
-              </button>
+              <div className="edit-actions">
+                <button className="btn-pill" onClick={() => void onSaveEdit(m)} type="button">
+                  {t("common.save")}
+                </button>
+                <button className="btn-ghost" onClick={onCancelEdit} type="button">
+                  {t("common.cancel")}
+                </button>
+                <span className="edit-hint">{t("message.editHint")}</span>
+              </div>
             </div>
           ) : (
             <div className="m-body">
