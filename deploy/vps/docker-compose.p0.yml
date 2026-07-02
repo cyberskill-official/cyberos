@@ -147,8 +147,11 @@ services:
       AI_GATEWAY_CONFIG_DIR: /etc/cyberos/tenants
       # local_openai adapter -> the bge-m3 sidecar (embed.standard in the tenant policy).
       OPENAI_COMPAT_ENDPOINT: http://embed:7900
-      # ollama adapter -> the llm-profile container (chat.smart / chat.fast). Down = clean per-call 502.
-      OLLAMA_ENDPOINT: http://ollama:11434
+      # ollama adapter -> the chat LLM (chat.smart / chat.fast). Down = clean per-call 502. Defaults to the
+      # in-compose ollama (profile "llm"); OVERRIDE to a remote box by setting OLLAMA_ENDPOINT in .env.p0 to
+      # its private URL, e.g. OLLAMA_ENDPOINT=http://10.x.x.x:11434 over a Vultr VPC. See
+      # docs/deploy/remote-llm-vultr.md. Keep the provider kind=ollama so the ZDR/residency/cost gates hold.
+      OLLAMA_ENDPOINT: ${OLLAMA_ENDPOINT:-http://ollama:11434}
     volumes:
       - ./ai/tenants:/etc/cyberos/tenants:ro
     healthcheck:
