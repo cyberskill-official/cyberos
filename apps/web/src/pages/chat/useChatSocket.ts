@@ -56,6 +56,7 @@ export function useChatSocket({
   resetChannelUi,
   jumpRef,
   onJumped,
+  pausedRef,
 }: {
   token: string | null;
   activeId: string;
@@ -68,6 +69,9 @@ export function useChatSocket({
   jumpRef?: MutableRefObject<{ channelId: string; messageId: string } | null>;
   /// Called once after a jump window landed, with the target message id (Chat scrolls + flashes it).
   onJumped?: (messageId: string) => void;
+  /// True while the timeline is showing a history window (not the live tail); the reconnect refetch is skipped
+  /// then so it does not inject the latest page into a jump/search view.
+  pausedRef?: MutableRefObject<boolean>;
 }): ChatSocket {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
@@ -163,6 +167,21 @@ export function useChatSocket({
 
     let stopped = false;
     let sock: WebSocket | null = null;
+    let firstOpen = true;
+    // On every RECONNECT (not the first open), re-fetch the live tail and merge it in, so messages, edits, and
+    // reaction changes that landed during the drop are recovered instead of lost until the user switches away.
+    const refetchTail = async () => {
+      if (!token) return;
+      try {
+        const msgs = await apiFetch<Message[]>(token, "GET", `/v1/chat/channels/${activeId}/messages`);
+        if (!alive) return;
+        const fresh = sortMessagesAsc((msgs || []).filter((m) => !m.parent_id));
+        const freshIds = new Set(fresh.map((m) => m.id));
+        setMessages((prev) => sortMessagesAsc([...prev.filter((m) => !freshIds.has(m.id)), ...fresh]));
+      } catch {
+        /* best-effort; the next reconnect retries */
+      }
+    };
     const connect = () => {
       if (stopped) return;
       const url =
@@ -170,6 +189,13 @@ export function useChatSocket({
         `/v1/chat/ws?channel=${encodeURIComponent(activeId)}&access_token=${encodeURIComponent(token)}`;
       sock = new WebSocket(url);
       wsRef.current = sock;
+      sock.onopen = () => {
+        const wasFirst = firstOpen;
+        firstOpen = false;
+        // The first open is already covered by the channel effect's initial fetch; only reconnects backfill,
+        // and never while a history/jump window is showing (pausedRef).
+        if (!wasFirst && !pausedRef?.current) void refetchTail();
+      };
       sock.onmessage = (ev) => {
         let data: WsEvent;
         try {

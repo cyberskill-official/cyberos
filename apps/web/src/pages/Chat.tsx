@@ -183,6 +183,11 @@ export function Chat() {
   const [sheetFor, setSheetFor] = useState<Message | null>(null);
   const suppressScrollRef = useRef(false);
   const prevLastIdRef = useRef("");
+  // Mirror of notLatest for the socket hook's reconnect refetch, which must skip while a history window shows.
+  const notLatestRef = useRef(false);
+  useEffect(() => {
+    notLatestRef.current = notLatest;
+  }, [notLatest]);
   // Load-older pagination state (reset per channel).
   const loadingOlderRef = useRef(false);
   const hasOlderRef = useRef(true);
@@ -310,6 +315,7 @@ export function Chat() {
       setNotLatest(true);
       setHighlightId(messageId);
     },
+    pausedRef: notLatestRef,
   });
   const {
     messages,
