@@ -50,9 +50,17 @@ DONE + LIVE so far:
   tiled attachment groups with server-folded metadata, image lightbox, config-driven caps, editable
   captions on attachment messages). Reaction emoji cap now 64 bytes for toned ZWJ sequences.
 
+- (2c) find-and-organize cluster (three commits, one deploy): GET /v1/chat/search (tenant-wide over the
+  caller's channels incl. DMs, trigram-backed) + list ?around= jump windows; migration 0011 (topic,
+  visibility private|public - existing rows private, archived_at) with PATCH channel, browse + self-join,
+  self-leave, PATCH member role, post-blocked-on-archived. Client: header search + Ctrl/Cmd+K is now
+  global with clickable results (channel chip) -> jump-to-message (around window, scroll + flash, sticky
+  "Jump to latest" pill), scroll-up load-older pagination (audit #11), ChannelSettings modal
+  (rename/topic/visibility/roster with roles/leave/archive), BrowseChannels modal, visibility choice on
+  create, archived sidebar section + read-only note. FOUND+FIXED: fetched pages rendered newest-first -
+  reloaded channels and thread panels showed history REVERSED; all fetches now sort ascending.
+
 REMAINING (task #182), still in the same sequence:
-- (2c) find-and-organize: global cross-channel search + jump-to-message; channel management (topics,
-  public/private, browse+join, roles).
 - (2d) AI-native: summarize, smart replies, action-item extraction via the already-wired ai-gateway.
 - (3) UI/UX overhaul: tokenize the umber/ochre palette by role + fix AA contrast, real type + spacing scales,
   redesign message rows/composer/empty-states/the hover action bar, in one hand-written styles.css. While
