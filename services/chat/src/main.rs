@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use cyberos_chat::{
     auth::Authenticator,
+    notify::Notifier,
     realtime::{Hub, Presence},
     router, AppState,
 };
@@ -66,6 +67,7 @@ async fn main() -> anyhow::Result<()> {
         authenticator: Arc::new(authenticator),
         hub: Hub::default(),
         presence: Presence::default(),
+        notifier: Notifier::default(),
     };
 
     let addr = std::env::var("CHAT_LISTEN_ADDR").unwrap_or_else(|_| "0.0.0.0:7720".to_string());

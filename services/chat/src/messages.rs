@@ -67,6 +67,10 @@ pub struct PostMessage {
     pub parent_id: Option<Uuid>,
     #[serde(default)]
     pub attachment_id: Option<Uuid>,
+    /// Subjects this message @-mentions. Validated against channel membership (and never the sender); invalid
+    /// or non-member ids are dropped.
+    #[serde(default)]
+    pub mentions: Vec<Uuid>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -173,6 +177,39 @@ pub async fn post(
         .fetch_one(&mut *tx)
         .await
         .map_err(crate::internal)?;
+
+    // Resolve @-mentions to real channel members (never the sender), record one row per mentioned member in
+    // the same transaction, and keep the validated list to hand to the notify fan-out. Unknown or non-member
+    // ids are silently dropped.
+    let mention_ids: Vec<Uuid> = if body.mentions.is_empty() {
+        Vec::new()
+    } else {
+        let valid: Vec<(Uuid,)> = sqlx::query_as(
+            "SELECT subject_id FROM chat_channel_members
+             WHERE channel_id = $1 AND subject_id = ANY($2) AND subject_id <> $3",
+        )
+        .bind(channel)
+        .bind(&body.mentions)
+        .bind(sender)
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(crate::internal)?;
+        let ids: Vec<Uuid> = valid.into_iter().map(|(s,)| s).collect();
+        for mid in &ids {
+            sqlx::query(
+                "INSERT INTO chat_mentions (message_id, channel_id, tenant_id, subject_id)
+                 VALUES ($1, $2, $3, $4) ON CONFLICT (message_id, subject_id) DO NOTHING",
+            )
+            .bind(row.0)
+            .bind(channel)
+            .bind(tenant)
+            .bind(mid)
+            .execute(&mut *tx)
+            .await
+            .map_err(crate::internal)?;
+        }
+        ids
+    };
     tx.commit().await.map_err(crate::internal)?;
 
     let message = to_message(row);
@@ -186,6 +223,17 @@ pub async fn post(
         tenant,
         sender,
         message.id,
+    ));
+    // Fan the message out to every member's per-user notification socket (all but the sender), so a client
+    // sees unread/activity for a channel it is not currently viewing. Off the response path; best-effort.
+    // `mention_ids` is empty until the mentions cluster resolves @-mentions.
+    tokio::spawn(crate::notify::fanout(
+        st.clone(),
+        channel,
+        tenant,
+        message.clone(),
+        channel_kind.clone(),
+        mention_ids,
     ));
     audit::emit(
         &st,

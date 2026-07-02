@@ -142,6 +142,67 @@ pub async fn unread(
 }
 
 #[derive(Debug, Serialize)]
+pub struct ChannelUnread {
+    pub channel_id: Uuid,
+    pub unread: i64,
+    /// Unread @-mentions of the caller in this channel (a subset of `unread`), for a distinct mention badge.
+    pub mentions: i64,
+}
+
+/// GET /v1/chat/unread - the caller's unread count (and unread-mention count) for every channel they belong
+/// to, in one query (replacing the client's per-channel N calls). Unread = live messages from other senders
+/// created after the caller's last-read marker, or all such messages when there is no marker yet; unread
+/// mentions are those same messages that @-mention the caller. Tenant-scoped by the RLS GUC.
+pub async fn unread_summary(
+    State(st): State<AppState>,
+    headers: HeaderMap,
+) -> Result<Json<Vec<ChannelUnread>>, (StatusCode, String)> {
+    let claims = auth::authenticate(&st, &headers)?;
+    let tenant = claims
+        .tenant_uuid()
+        .map_err(|e| (StatusCode::UNAUTHORIZED, e.to_string()))?;
+    let subject = claims
+        .subject_id()
+        .map_err(|e| (StatusCode::UNAUTHORIZED, e.to_string()))?;
+
+    let mut tx = db::tenant_tx(&st.pool, &tenant)
+        .await
+        .map_err(crate::internal)?;
+    let rows: Vec<(Uuid, i64, i64)> = sqlx::query_as(
+        "SELECT m.channel_id,
+                count(msg.id) FILTER (
+                    WHERE msg.deleted_at IS NULL
+                      AND msg.sender_subject_id <> $1
+                      AND (rm.last_read_at IS NULL OR msg.created_at > rm.last_read_at)
+                ) AS unread,
+                count(men.message_id) FILTER (
+                    WHERE msg.deleted_at IS NULL
+                      AND (rm.last_read_at IS NULL OR msg.created_at > rm.last_read_at)
+                ) AS mentions
+           FROM chat_channel_members m
+           LEFT JOIN chat_read_markers rm ON rm.channel_id = m.channel_id AND rm.subject_id = $1
+           LEFT JOIN chat_messages msg ON msg.channel_id = m.channel_id
+           LEFT JOIN chat_mentions men ON men.message_id = msg.id AND men.subject_id = $1
+          WHERE m.subject_id = $1
+          GROUP BY m.channel_id",
+    )
+    .bind(subject)
+    .fetch_all(&mut *tx)
+    .await
+    .map_err(crate::internal)?;
+    let _ = tx.commit().await;
+    Ok(Json(
+        rows.into_iter()
+            .map(|(channel_id, unread, mentions)| ChannelUnread {
+                channel_id,
+                unread,
+                mentions,
+            })
+            .collect(),
+    ))
+}
+
+#[derive(Debug, Serialize)]
 pub struct Receipt {
     pub subject_id: Uuid,
     pub last_read_message_id: Uuid,

@@ -17,6 +17,7 @@ export function Sidebar({
   dms,
   activeId,
   unread,
+  mentions,
   presence,
   health,
   nameOf,
@@ -34,6 +35,7 @@ export function Sidebar({
   dms: Channel[];
   activeId: string;
   unread: Record<string, number>;
+  mentions: Record<string, number>;
   presence: Set<string>;
   health: "unknown" | "ok" | "bad";
   nameOf: (id: string) => string;
@@ -44,6 +46,7 @@ export function Sidebar({
 }) {
   const renderRow = (c: Channel) => {
     const u = unread[c.id] || 0;
+    const mAt = mentions[c.id] || 0;
     const isActive = c.id === activeId;
     const dm = c.kind === "direct";
     const other = c.other_subject_id || "";
@@ -72,7 +75,14 @@ export function Sidebar({
           </span>
         )}
         <span className="chan-name">{channelLabel(directory, me, c)}</span>
-        {u > 0 && !isActive && <span className="chan-badge">{u > 99 ? "99+" : u}</span>}
+        {!isActive &&
+          (mAt > 0 ? (
+            <span className="chan-badge mention" title={mAt > 1 ? `${mAt} mentions` : "1 mention"}>
+              @{mAt > 99 ? "99+" : mAt}
+            </span>
+          ) : (
+            u > 0 && <span className="chan-badge">{u > 99 ? "99+" : u}</span>
+          ))}
       </button>
     );
   };

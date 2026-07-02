@@ -12,6 +12,7 @@ pub mod db;
 pub mod devices;
 pub mod members;
 pub mod messages;
+pub mod notify;
 pub mod push;
 pub mod reactions;
 pub mod read;
@@ -40,6 +41,10 @@ pub struct AppState {
     pub authenticator: Arc<auth::Authenticator>,
     pub hub: realtime::Hub,
     pub presence: realtime::Presence,
+    /// Per-user notification fan-out: one broadcast per subject carrying cross-channel `NotifyEvent`s, so a
+    /// client learns about activity in channels it is not currently viewing (unread badges, tab count,
+    /// desktop notifications). See notify.rs.
+    pub notifier: notify::Notifier,
 }
 
 /// Map any error to a 500 carrying its text.
@@ -93,10 +98,12 @@ pub fn router(state: AppState) -> Router {
         )
         .route("/v1/chat/channels/:id/read", post(read::mark))
         .route("/v1/chat/channels/:id/unread", get(read::unread))
+        .route("/v1/chat/unread", get(read::unread_summary))
         .route("/v1/chat/channels/:id/receipts", get(read::receipts))
         .route("/v1/chat/devices", post(devices::register))
         .route("/v1/chat/audit", get(auditlog::list))
         .route("/v1/chat/ws", get(realtime::ws_handler))
+        .route("/v1/chat/notify", get(notify::notify_ws))
         .with_state(state);
 
     // FR-APP-007: opt-in permissive CORS so a local browser (the CDS chat web client) can call the

@@ -12,6 +12,7 @@ import { CallOverlay } from "../components/CallOverlay";
 import { useCall } from "../lib/call";
 import { ProfileEditor } from "../components/ProfileEditor";
 import { useChatSocket } from "./chat/useChatSocket";
+import { useNotifySocket } from "./chat/useNotifySocket";
 import { Sidebar } from "./chat/Sidebar";
 import { ChannelHeader } from "./chat/ChannelHeader";
 import { MessageList } from "./chat/MessageList";
@@ -70,7 +71,13 @@ export function Chat() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [activeId, setActiveId] = useState("");
   const [unread, setUnread] = useState<Record<string, number>>({});
+  // Unread @-mentions per channel (a subset of unread), for the distinct mention badge. Seeded from the
+  // summary and bumped live by the notify socket.
+  const [mentions, setMentions] = useState<Record<string, number>>({});
   const [draft, setDraft] = useState("");
+  // Mentions picked from the composer autocomplete this compose cycle ({id, name}). At send we keep only
+  // those whose "@name" still appears in the draft, so deleting the text also drops the mention.
+  const [pickedMentions, setPickedMentions] = useState<{ id: string; name: string }[]>([]);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [health, setHealth] = useState<"unknown" | "ok" | "bad">("unknown");
@@ -105,6 +112,25 @@ export function Chat() {
   const taRef = useRef<HTMLTextAreaElement | null>(null);
 
   const active = channels.find((c) => c.id === activeId) || null;
+
+  // The latest active channel id, readable from callbacks (the unread poll, the notify handler) that are
+  // captured once and would otherwise close over a stale value.
+  const activeIdRef = useRef(activeId);
+  useEffect(() => {
+    activeIdRef.current = activeId;
+  }, [activeId]);
+  // Ask for desktop-notification permission once, lazily, on the first channel selection (a real user
+  // gesture, which browsers require). If denied, badges and the tab title still work; we just never notify.
+  const askedNotifyRef = useRef(false);
+  function selectChannel(id: string) {
+    if (!askedNotifyRef.current) {
+      askedNotifyRef.current = true;
+      if (typeof Notification !== "undefined" && Notification.permission === "default") {
+        void Notification.requestPermission().catch(() => {});
+      }
+    }
+    setActiveId(id);
+  }
 
   // Reset the per-channel UI bits Chat owns when the active channel changes (timeline/presence/receipts reset
   // lives in useChatSocket). Kept as a stable callback so the socket effect deps stay [token, activeId].
@@ -159,32 +185,70 @@ export function Chat() {
   const call = useCall(sendSignal);
   callRef.current = call;
 
-  async function refreshUnread(list: Channel[]) {
-    if (!token) return;
-    const entries = await Promise.all(
-      list.map(async (c) => {
+  // The per-user notification socket: live cross-channel activity, independent of the open channel. Bump the
+  // unread badge + recent-activity for any channel that is not the open one, and (only when the tab is hidden
+  // and permission was granted) raise a desktop notification. The open channel is served by its own socket,
+  // which also auto-marks it read, so we skip it here.
+  useNotifySocket({
+    token,
+    onNotify: (e) => {
+      const chan = e.channel_id;
+      if (!chan) return;
+      const when = Date.parse(e.created_at || "") || Date.now();
+      setLastActivity((prev) => ({ ...prev, [chan]: when }));
+      if (chan === activeIdRef.current) return;
+      setUnread((prev) => ({ ...prev, [chan]: (prev[chan] || 0) + 1 }));
+      if (e.mention) setMentions((prev) => ({ ...prev, [chan]: (prev[chan] || 0) + 1 }));
+      if (
+        typeof document !== "undefined" &&
+        document.hidden &&
+        typeof Notification !== "undefined" &&
+        Notification.permission === "granted"
+      ) {
+        const ch = channels.find((c) => c.id === chan);
+        const who = nameOf(e.sender || "");
+        const title = ch && ch.kind !== "direct" ? `${who} in ${channelLabel(directory, me, ch)}` : who;
+        const body = e.mention ? `mentioned you: ${e.preview || ""}` : e.preview || "New message";
         try {
-          const u = await apiFetch<{ unread: number }>(token, "GET", `/v1/chat/channels/${c.id}/unread`);
-          return [c.id, u.unread] as const;
+          new Notification(title, { body });
         } catch {
-          return [c.id, 0] as const;
+          /* Notification construction can throw on some platforms; ignore */
         }
-      }),
-    );
-    setUnread((prev) => {
-      const next: Record<string, number> = { ...prev };
-      for (const [id, n] of entries) next[id] = id === activeId ? 0 : n;
-      return next;
-    });
-    // Treat a channel with unread messages as recently active so the DM list can float it up. This is a
-    // coarse signal (it has no per-message timestamp), but it keeps conversations with new messages near
-    // the top until the live ws event gives a precise bump.
-    const now = Date.now();
-    setLastActivity((prev) => {
-      const next = { ...prev };
-      for (const [id, n] of entries) if (n > 0) next[id] = now;
-      return next;
-    });
+      }
+    },
+  });
+
+  // Seed and reconcile unread badges for every channel in one request (GET /v1/chat/unread). The live notify
+  // socket keeps counts current between polls; this corrects any drift (a missed event, another device).
+  async function refreshUnread() {
+    if (!token) return;
+    try {
+      const rows = await apiFetch<{ channel_id: string; unread: number; mentions: number }[]>(
+        token,
+        "GET",
+        "/v1/chat/unread",
+      );
+      setUnread((prev) => {
+        const next: Record<string, number> = { ...prev };
+        for (const r of rows || []) next[r.channel_id] = r.channel_id === activeIdRef.current ? 0 : r.unread;
+        return next;
+      });
+      setMentions((prev) => {
+        const next: Record<string, number> = { ...prev };
+        for (const r of rows || []) next[r.channel_id] = r.channel_id === activeIdRef.current ? 0 : r.mentions || 0;
+        return next;
+      });
+      // A channel with unread messages is treated as recently active so the DM list floats it up; do not
+      // clobber a precise timestamp a live ws event already set.
+      const now = Date.now();
+      setLastActivity((prev) => {
+        const next = { ...prev };
+        for (const r of rows || []) if (r.unread > 0 && !next[r.channel_id]) next[r.channel_id] = now;
+        return next;
+      });
+    } catch {
+      /* summary endpoint may predate this deploy - the live socket still keeps counts current */
+    }
   }
 
   async function reloadChannels(selectId?: string) {
@@ -193,7 +257,7 @@ export function Chat() {
       const list = await apiFetch<Channel[]>(token, "GET", "/v1/chat/channels");
       setChannels(list || []);
       if (selectId) setActiveId(selectId);
-      void refreshUnread(list || []);
+      void refreshUnread();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
@@ -233,17 +297,15 @@ export function Chat() {
         const list = await apiFetch<Channel[]>(token, "GET", "/v1/chat/channels");
         setChannels(list || []);
         setActiveId((cur) => cur || (list && list.length ? list[0].id : ""));
-        void refreshUnread(list || []);
+        void refreshUnread();
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
       }
     })();
+    // A slow reconciler; the notify socket makes counts feel live, so this only corrects drift.
     const iv = window.setInterval(() => {
-      setChannels((cur) => {
-        void refreshUnread(cur);
-        return cur;
-      });
-    }, 15000);
+      void refreshUnread();
+    }, 30000);
     return () => window.clearInterval(iv);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
@@ -271,6 +333,17 @@ export function Chat() {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
+
+  // Reflect total unread (across channels, excluding the open one) in the tab title, so a background tab
+  // still signals new activity even when the window is not focused.
+  useEffect(() => {
+    const total = Object.entries(unread).reduce((n, [id, c]) => n + (id === activeId ? 0 : c || 0), 0);
+    const base = "CyberOS Chat";
+    document.title = total > 0 ? `(${total}) ${base}` : base;
+    return () => {
+      document.title = base;
+    };
+  }, [unread, activeId]);
 
   // Close the emoji reaction picker on any outside click or Escape (it is a small floating popover).
   useEffect(() => {
@@ -310,9 +383,10 @@ export function Chat() {
     setStagedPreview("");
   }, [staged]);
 
-  // Drop any staged file when switching channels, so it cannot post to the wrong place.
+  // Drop any staged file and pending mentions when switching channels, so neither posts to the wrong place.
   useEffect(() => {
     setStaged(null);
+    setPickedMentions([]);
   }, [activeId]);
 
   // Auto-mark the active channel read (debounced) when its timeline changes, and clear its badge.
@@ -322,6 +396,7 @@ export function Chat() {
     const tid = window.setTimeout(() => {
       void apiFetch(token, "POST", `/v1/chat/channels/${activeId}/read`, { message_id: last.id }).catch(() => {});
       setUnread((u) => ({ ...u, [activeId]: 0 }));
+      setMentions((mn) => ({ ...mn, [activeId]: 0 }));
     }, 500);
     return () => window.clearTimeout(tid);
   }, [token, activeId, messages]);
@@ -340,12 +415,26 @@ export function Chat() {
     }
   }
 
-  async function postMessage(body: string, attachmentId?: string) {
+  async function postMessage(body: string, attachmentId?: string, mentionIds?: string[]) {
     if (!active || !token) return;
     const payload: Record<string, unknown> = { body };
     if (attachmentId) payload.attachment_id = attachmentId;
+    if (mentionIds && mentionIds.length) payload.mentions = mentionIds;
     const m = await apiFetch<Message>(token, "POST", `/v1/chat/channels/${active.id}/messages`, payload);
     setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
+  }
+
+  // Keep only the picked mentions whose "@name" still appears in the outgoing text as a whole token (bounded
+  // by start/space before and space/end after), so a name that is a prefix of another (An vs Anna) never
+  // mis-resolves. Deduped ids.
+  function resolveMentions(text: string): string[] {
+    const ids = new Set<string>();
+    for (const pm of pickedMentions) {
+      if (!pm.name) continue;
+      const esc = pm.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      if (new RegExp("(^|\\s)@" + esc + "(\\s|$)").test(text)) ids.add(pm.id);
+    }
+    return [...ids];
   }
 
   // Upload a staged file and return its attachment id (reuses the exact attachments endpoint).
@@ -364,6 +453,7 @@ export function Chat() {
     const text = draft.trim();
     // Send when there is text or a staged file; nothing to do otherwise, or while a send is in flight.
     if ((!text && !staged) || sending || uploading) return;
+    const mentionIds = resolveMentions(draft);
     setError("");
     setSending(true);
     try {
@@ -375,12 +465,13 @@ export function Chat() {
         } finally {
           setUploading(false);
         }
-        await postMessage(text, attId);
+        await postMessage(text, attId, mentionIds);
         setStaged(null);
       } else {
-        await postMessage(text);
+        await postMessage(text, undefined, mentionIds);
       }
       setDraft("");
+      setPickedMentions([]);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -659,12 +750,13 @@ export function Chat() {
         dms={dms}
         activeId={activeId}
         unread={unread}
+        mentions={mentions}
         presence={presence}
         health={health}
         nameOf={nameOf}
         avatarSrc={avatarSrc}
         onOpenProfile={() => setProfileOpen(true)}
-        onSelectChannel={setActiveId}
+        onSelectChannel={selectChannel}
         onOpenPicker={setPicker}
       />
 
@@ -764,6 +856,7 @@ export function Chat() {
                   active={active}
                   directory={directory}
                   me={me}
+                  people={dirList}
                   draft={draft}
                   staged={staged}
                   stagedPreview={stagedPreview}
@@ -772,6 +865,19 @@ export function Chat() {
                   taRef={taRef}
                   onDraftChange={onDraftChange}
                   onSend={send}
+                  onMentionPicked={(p) =>
+                    setPickedMentions((prev) =>
+                      prev.some((x) => x.id === p.subject_id)
+                        ? prev
+                        : [
+                            ...prev,
+                            {
+                              id: p.subject_id,
+                              name: p.display_name || p.handle || (p.email || "").split("@")[0] || "",
+                            },
+                          ],
+                    )
+                  }
                   onClearStaged={() => setStaged(null)}
                   onOpenFilePicker={() => fileRef.current?.click()}
                   onPaste={(e) => {
