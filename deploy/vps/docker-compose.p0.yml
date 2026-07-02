@@ -21,6 +21,8 @@ networks:
 volumes:
   caddy-data:
   caddy-config:
+  # Chat attachment payloads (CHAT_ATTACHMENT_STORE=fs) - survives redeploys; include in VPS backups.
+  chat-attachments:
   # Hugging Face cache for the embed sidecar - bge-m3 (~2.3 GB) downloads once and survives redeploys.
   embed-hf-cache:
   # Ollama model store (llm profile only).
@@ -78,8 +80,15 @@ services:
       # Chat translate + future AI features call the gateway over the internal network. Unset = clean 502
       # from /v1/chat/translate; the gateway being down degrades the same way, never breaking chat itself.
       AI_GATEWAY_URL: http://ai-gateway:8080
+      # Attachment bytes live on the VPS volume (richer-messages cluster), not in Supabase - larger cap, no
+      # blob weight in Postgres. Metadata stays in chat_attachments; pre-existing 'db' rows keep serving.
+      CHAT_ATTACHMENT_STORE: fs
+      CHAT_ATTACHMENT_FS_DIR: /data/chat-attachments
+      CHAT_ATTACHMENT_MAX_BYTES: "52428800" # 50 MB per file
       # CHAT_DEV_CORS intentionally unset - single origin needs no CORS.
       # DATABASE_URL points at Supabase (set in .env.p0).
+    volumes:
+      - chat-attachments:/data/chat-attachments
     depends_on:
       auth:
         condition: service_healthy

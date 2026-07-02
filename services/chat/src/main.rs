@@ -60,6 +60,16 @@ async fn main() -> anyhow::Result<()> {
 
     let authenticator = build_authenticator().await?;
 
+    // Attachment byte store + limits (richer-messages cluster). Default = db backend at the historical 5 MB
+    // cap; production sets CHAT_ATTACHMENT_STORE=fs + a volume for large files off Postgres.
+    let attachments = cyberos_chat::storage::AttachmentConfig::from_env()?;
+    tracing::info!(
+        store = attachments.store.kind(),
+        max_bytes = attachments.max_bytes,
+        max_files = attachments.max_files,
+        "attachment storage configured"
+    );
+
     let state = AppState {
         pool,
         audit_pool,
@@ -68,6 +78,7 @@ async fn main() -> anyhow::Result<()> {
         hub: Hub::default(),
         presence: Presence::default(),
         notifier: Notifier::default(),
+        attachments,
     };
 
     let addr = std::env::var("CHAT_LISTEN_ADDR").unwrap_or_else(|_| "0.0.0.0:7720".to_string());

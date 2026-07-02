@@ -26,6 +26,11 @@ pub struct Message {
     /// live ReactionChanged events on top of the list).
     #[serde(default)]
     pub reactions: Vec<crate::reactions::ReactionSummary>,
+    /// Attachment metadata for this message (multi-file, ordered), folded in on the list and post paths so
+    /// the client renders files without a per-attachment meta round-trip. `attachment_id` stays as the first
+    /// attachment for clients on the older cached shell.
+    #[serde(default)]
+    pub attachments: Vec<crate::attachments::AttachmentMeta>,
 }
 
 type MessageRow = (
@@ -57,6 +62,7 @@ fn to_message(r: MessageRow) -> Message {
         deleted_at: r.8,
         attachment_id: r.9,
         reactions: Vec::new(),
+        attachments: Vec::new(),
     }
 }
 
@@ -65,8 +71,13 @@ pub struct PostMessage {
     pub body: String,
     #[serde(default)]
     pub parent_id: Option<Uuid>,
+    /// Legacy single attachment (older clients). Merged into `attachment_ids` at the front.
     #[serde(default)]
     pub attachment_id: Option<Uuid>,
+    /// Ordered attachments for this message (richer-messages cluster). Each must be an upload into this
+    /// channel; capped at the configured max_files.
+    #[serde(default)]
+    pub attachment_ids: Vec<Uuid>,
     /// Subjects this message @-mentions. Validated against channel membership (and never the sender); invalid
     /// or non-member ids are dropped.
     #[serde(default)]
@@ -113,10 +124,26 @@ pub async fn post(
     let sender = claims
         .subject_id()
         .map_err(|e| (StatusCode::UNAUTHORIZED, e.to_string()))?;
-    if body.body.trim().is_empty() && body.attachment_id.is_none() {
+    // Merge the legacy single attachment with the multi-file list (legacy first), ordered and deduped.
+    let mut attachment_ids: Vec<Uuid> = Vec::new();
+    for aid in body.attachment_id.iter().chain(body.attachment_ids.iter()) {
+        if !attachment_ids.contains(aid) {
+            attachment_ids.push(*aid);
+        }
+    }
+    if body.body.trim().is_empty() && attachment_ids.is_empty() {
         return Err((
             StatusCode::BAD_REQUEST,
-            "body or attachment_id is required".to_string(),
+            "body or attachments are required".to_string(),
+        ));
+    }
+    if attachment_ids.len() > st.attachments.max_files {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            format!(
+                "at most {} attachments per message",
+                st.attachments.max_files
+            ),
         ));
     }
 
@@ -124,15 +151,17 @@ pub async fn post(
         .await
         .map_err(crate::internal)?;
     require_member(&mut tx, channel, sender).await?;
-    if let Some(aid) = body.attachment_id {
-        let a: Option<(Uuid,)> =
-            sqlx::query_as("SELECT id FROM chat_attachments WHERE id = $1 AND channel_id = $2")
-                .bind(aid)
-                .bind(channel)
-                .fetch_optional(&mut *tx)
-                .await
-                .map_err(crate::internal)?;
-        if a.is_none() {
+    if !attachment_ids.is_empty() {
+        // Every referenced attachment must be an upload into this channel (RLS already scopes the tenant).
+        let found: Vec<(Uuid,)> = sqlx::query_as(
+            "SELECT id FROM chat_attachments WHERE id = ANY($1) AND channel_id = $2",
+        )
+        .bind(&attachment_ids)
+        .bind(channel)
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(crate::internal)?;
+        if found.len() != attachment_ids.len() {
             return Err((
                 StatusCode::BAD_REQUEST,
                 "attachment not in this channel".to_string(),
@@ -173,10 +202,26 @@ pub async fn post(
         .bind(sender)
         .bind(&body.body)
         .bind(body.parent_id)
-        .bind(body.attachment_id)
+        // The legacy column carries the FIRST attachment so older cached clients still render something.
+        .bind(attachment_ids.first())
         .fetch_one(&mut *tx)
         .await
         .map_err(crate::internal)?;
+
+    // Link every attachment to the message, in order.
+    for (ord, aid) in attachment_ids.iter().enumerate() {
+        sqlx::query(
+            "INSERT INTO chat_message_attachments (message_id, attachment_id, tenant_id, ord)
+             VALUES ($1, $2, $3, $4) ON CONFLICT (message_id, attachment_id) DO NOTHING",
+        )
+        .bind(row.0)
+        .bind(aid)
+        .bind(tenant)
+        .bind(ord as i16)
+        .execute(&mut *tx)
+        .await
+        .map_err(crate::internal)?;
+    }
 
     // Resolve @-mentions to real channel members (never the sender), record one row per mentioned member in
     // the same transaction, and keep the validated list to hand to the notify fan-out. Unknown or non-member
@@ -210,9 +255,17 @@ pub async fn post(
         }
         ids
     };
+    // Fold this message's attachment metadata into the response (same shape the list path returns), so the
+    // sender renders files immediately without meta round-trips.
+    let attachment_metas = crate::attachments::metas_for_messages(&mut tx, &[row.0])
+        .await
+        .map_err(crate::internal)?
+        .remove(&row.0)
+        .unwrap_or_default();
     tx.commit().await.map_err(crate::internal)?;
 
-    let message = to_message(row);
+    let mut message = to_message(row);
+    message.attachments = attachment_metas;
     st.hub.publish(
         channel,
         crate::realtime::ChatEvent::Message(message.clone()),
@@ -247,7 +300,7 @@ pub async fn post(
     // capturer is None unless CAPTURE_ENABLED is on, so this is a no-op by default; the body never leaves
     // chat's DB (content_ref is a pointer to the chat_messages row).
     if let Some(cap) = st.capturer.clone() {
-        let has_attachment = message.attachment_id.is_some();
+        let has_attachment = !message.attachments.is_empty();
         let (mid, kind) = (message.id, channel_kind);
         tokio::spawn(async move {
             crate::capture::emit_message_created(
@@ -329,6 +382,15 @@ pub async fn list(
         for m in &mut out {
             if let Some(r) = by_message.remove(&m.id) {
                 m.reactions = r;
+            }
+        }
+        // Attachment metadata folds in the same way (one query for the page).
+        let mut atts = crate::attachments::metas_for_messages(&mut tx, &ids)
+            .await
+            .map_err(crate::internal)?;
+        for m in &mut out {
+            if let Some(a) = atts.remove(&m.id) {
+                m.attachments = a;
             }
         }
     }
@@ -468,7 +530,15 @@ pub async fn delete(
         .execute(&mut *tx)
         .await
         .map_err(crate::internal)?;
+    // Deleting a message also hard-purges its attachments (metadata rows here; closes the audit gap where
+    // the bytes outlived the message). Fs payloads are unlinked after the commit, so a rollback loses nothing.
+    let purged_keys = crate::attachments::purge_for_message(&mut tx, msg)
+        .await
+        .map_err(crate::internal)?;
     tx.commit().await.map_err(crate::internal)?;
+    for key in &purged_keys {
+        st.attachments.store.delete(key).await;
+    }
 
     st.hub.publish(
         channel,

@@ -107,7 +107,10 @@ pub async fn fanout(
         };
     let _ = tx.commit().await;
 
-    let text = preview(&message.body, message.attachment_id.is_some());
+    let text = preview(
+        &message.body,
+        message.attachment_id.is_some() || !message.attachments.is_empty(),
+    );
     for (member,) in members {
         if member == message.sender_subject_id {
             continue;

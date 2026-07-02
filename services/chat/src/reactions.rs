@@ -25,9 +25,10 @@ pub struct ReactionSummary {
     pub mine: bool,
 }
 
-/// A reaction's longest sensible length: an emoji is a few code points. Reject anything larger so the column
-/// (and the picker contract) can't be abused as a free-text store.
-const MAX_EMOJI_BYTES: usize = 32;
+/// A reaction's longest sensible length: an emoji is a few code points, but a fully-toned ZWJ sequence (two
+/// people, two skin tones - now reachable from the full picker) runs past 32 bytes, so allow 64. Still far
+/// too small to abuse as a free-text store.
+const MAX_EMOJI_BYTES: usize = 64;
 
 fn clean_emoji(raw: &str) -> Result<String, (StatusCode, String)> {
     let e = raw.trim().to_string();

@@ -17,6 +17,7 @@ pub mod push;
 pub mod reactions;
 pub mod read;
 pub mod realtime;
+pub mod storage;
 pub mod translate;
 
 use std::sync::Arc;
@@ -45,6 +46,8 @@ pub struct AppState {
     /// client learns about activity in channels it is not currently viewing (unread badges, tab count,
     /// desktop notifications). See notify.rs.
     pub notifier: notify::Notifier,
+    /// Attachment byte-store backend + limits (richer-messages cluster). See storage.rs.
+    pub attachments: storage::AttachmentConfig,
 }
 
 /// Map any error to a 500 carrying its text.
@@ -90,8 +93,13 @@ pub fn router(state: AppState) -> Router {
             "/v1/chat/channels/:id/attachments",
             post(attachments::upload),
         )
+        .route(
+            "/v1/chat/channels/:id/uploads",
+            post(attachments::upload_raw),
+        )
         .route("/v1/chat/attachments/:att", get(attachments::download))
         .route("/v1/chat/attachments/:att/meta", get(attachments::meta))
+        .route("/v1/chat/config", get(client_config))
         .route(
             "/v1/chat/channels/:id/presence",
             get(realtime::presence_list),
@@ -104,6 +112,12 @@ pub fn router(state: AppState) -> Router {
         .route("/v1/chat/audit", get(auditlog::list))
         .route("/v1/chat/ws", get(realtime::ws_handler))
         .route("/v1/chat/notify", get(notify::notify_ws))
+        // Axum's default body limit is 2 MB, which silently capped the base64 upload route below the
+        // advertised attachment limit. Size the limit from the configured cap: raw uploads need max_bytes,
+        // the base64 JSON route needs ~4/3 of it, plus slack for headers/JSON framing.
+        .layer(axum::extract::DefaultBodyLimit::max(
+            state.attachments.max_bytes + state.attachments.max_bytes / 2 + 1024 * 1024,
+        ))
         .with_state(state);
 
     // FR-APP-007: opt-in permissive CORS so a local browser (the CDS chat web client) can call the
@@ -113,6 +127,19 @@ pub fn router(state: AppState) -> Router {
         app = app.layer(tower_http::cors::CorsLayer::permissive());
     }
     app
+}
+
+/// GET /v1/chat/config - the limits a client needs to mirror server-side validation (attachment cap and
+/// per-message file count), authenticated like every other route.
+async fn client_config(
+    State(st): State<AppState>,
+    headers: axum::http::HeaderMap,
+) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
+    let _ = auth::authenticate(&st, &headers)?;
+    Ok(Json(serde_json::json!({
+        "attachment_max_bytes": st.attachments.max_bytes,
+        "attachment_max_files": st.attachments.max_files,
+    })))
 }
 
 async fn health(
