@@ -69,11 +69,19 @@ DONE + LIVE so far:
   return "AI is unavailable" in prod until the VPS is resized + the llm compose profile enabled (same
   gate as translation - docs/deploy/ai-gateway-and-embeddings.md); embeddings-only today.
 
-REMAINING (task #182), still in the same sequence:
-- (3) UI/UX overhaul: tokenize the umber/ochre palette by role + fix AA contrast, real type + spacing scales,
-  redesign message rows/composer/empty-states/the hover action bar, in one hand-written styles.css. While
-  here, bump the PWA service-worker cache version per build so deploys reach open clients on reload. No i18n
-  exists yet on a bilingual team.
+- (3) UI/UX overhaul (two commits, one deploy): styles.css rebuilt on role-based tokens (surface steps,
+  hairline tiers, AA-checked text tiers, accent split into fill vs text/border roles, semantic colors,
+  themed shadows/overlay/scrollbars) with DUAL THEMES keyed by <html data-theme> - dark = sharpened
+  CyberSkill umber, light = warm paper (Stephen's choice); pre-paint theme script in index.html, lib/
+  theme.ts + topbar sun/moon toggle (stored choice, else live OS preference); call stage + lightbox stay
+  dark by design. Polish: 15px body type on a 1.55 rhythm, visible row hover, raised 30px action bar,
+  unread left accent bars, bigger empty-state marks, elevated composer + Enter-to-send hint,
+  :focus-visible rings. PWA SW cache now stamps a per-build version (scripts/stamp-sw.mjs in npm run
+  build) + deletes old caches on activate.
+
+REMAINING (task #182): i18n on a bilingual team (audit #9) is the biggest chat gap left; also notification
+preferences/mute, drafts/pins, group DMs, TURN + group calls, moderation console, responsive/mobile layout
+(audit #13-19), and the 11 dependabot vulns (4 high).
 
 Each slice: gate on the Mac (fmt + clippy + tests; web tsc + vite; verify any new migration on a throwaway
 DB), commit, push (deploys). Pushing rebuilds the auth + chat + ai-gateway images and applies new chat
