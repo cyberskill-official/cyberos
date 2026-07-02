@@ -77,45 +77,80 @@ pub async fn add(
         None => return Err((StatusCode::FORBIDDEN, "not a channel member".to_string())),
     }
 
-    let row: MemberRow = sqlx::query_as(
+    // A DM (direct channel) has a fixed two-person membership; adding a third would break the invariant
+    // create_dm and channels::update protect, and the client still renders it as one-to-one.
+    let kind: Option<String> = sqlx::query_scalar("SELECT kind FROM chat_channels WHERE id = $1")
+        .bind(channel)
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(crate::internal)?;
+    if kind.as_deref() == Some("direct") {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "cannot add members to a direct message".to_string(),
+        ));
+    }
+
+    // `add` is additive only: it never changes an existing member's role (ON CONFLICT DO NOTHING). That
+    // closes the hole where an admin could demote the owner via an upsert - role changes go solely through
+    // set_role (owner-only). Re-adding an existing member returns their current row unchanged (idempotent).
+    let inserted: Option<MemberRow> = sqlx::query_as(
         "INSERT INTO chat_channel_members (channel_id, tenant_id, subject_id, role)
          VALUES ($1, $2, $3, $4)
-         ON CONFLICT (channel_id, subject_id) DO UPDATE SET role = EXCLUDED.role
+         ON CONFLICT (channel_id, subject_id) DO NOTHING
          RETURNING channel_id, subject_id, role, joined_at",
     )
     .bind(channel)
     .bind(tenant)
     .bind(body.subject_id)
     .bind(&body.role)
-    .fetch_one(&mut *tx)
+    .fetch_optional(&mut *tx)
     .await
     .map_err(crate::internal)?;
+    let (row, status) = match inserted {
+        Some(r) => (r, StatusCode::CREATED),
+        None => {
+            let existing: MemberRow = sqlx::query_as(
+                "SELECT channel_id, subject_id, role, joined_at FROM chat_channel_members
+                  WHERE channel_id = $1 AND subject_id = $2",
+            )
+            .bind(channel)
+            .bind(body.subject_id)
+            .fetch_one(&mut *tx)
+            .await
+            .map_err(crate::internal)?;
+            (existing, StatusCode::OK)
+        }
+    };
     tx.commit().await.map_err(crate::internal)?;
 
-    audit::emit(
-        &st,
-        tenant,
-        caller,
-        "chat.member_added",
-        serde_json::json!({"channel_id": channel, "subject_id": body.subject_id, "role": body.role}),
-    )
-    .await;
-    // FR-MEMORY-122 §1 #4, #7 — chat.channel_joined for the ADDED subject (the person whose membership
-    // changed; the consent gate applies to them). Off the response path; no-op unless capture on.
-    if let Some(cap) = st.capturer.clone() {
-        let joined_subject = body.subject_id;
-        tokio::spawn(async move {
-            crate::capture::emit_channel_membership(
-                Some(&cap),
-                tenant,
-                joined_subject,
-                channel,
-                true,
-            )
-            .await;
-        });
+    // Audit + capture only on an actual add (a re-add is a no-op and should not emit a join event).
+    if status == StatusCode::CREATED {
+        audit::emit(
+            &st,
+            tenant,
+            caller,
+            "chat.member_added",
+            serde_json::json!({"channel_id": channel, "subject_id": body.subject_id, "role": body.role}),
+        )
+        .await;
+        // FR-MEMORY-122 §1 #4, #7 — chat.channel_joined for the ADDED subject (the person whose membership
+        // changed; the consent gate applies to them). Off the response path; no-op unless capture on.
+        if let Some(cap) = st.capturer.clone() {
+            let joined_subject = body.subject_id;
+            tokio::spawn(async move {
+                crate::capture::emit_channel_membership(
+                    Some(&cap),
+                    tenant,
+                    joined_subject,
+                    channel,
+                    true,
+                )
+                .await;
+            });
+        }
     }
-    Ok((StatusCode::CREATED, Json(to_member(row))))
+    Ok((status, Json(to_member(row))))
 }
 
 pub async fn list(

@@ -191,6 +191,20 @@ pub async fn create_dm(
         .await
         .map_err(crate::internal)?;
 
+    // Serialize concurrent find-or-create for the same unordered pair so a double-click or two
+    // simultaneous "message X" requests cannot both miss the existing-DM check and create two threads.
+    // Transaction-scoped advisory lock keyed on (tenant, sorted pair); auto-released on commit/rollback.
+    sqlx::query(
+        "SELECT pg_advisory_xact_lock(hashtextextended(\
+         $1::text || ':' || least($2::text, $3::text) || ':' || greatest($2::text, $3::text), 0))",
+    )
+    .bind(tenant)
+    .bind(caller)
+    .bind(other)
+    .execute(&mut *tx)
+    .await
+    .map_err(crate::internal)?;
+
     // Existing DM between exactly these two? (A direct channel whose member set is {caller, other}.)
     let existing: Option<(Uuid, Uuid, String, Uuid, chrono::DateTime<chrono::Utc>)> =
         sqlx::query_as(
