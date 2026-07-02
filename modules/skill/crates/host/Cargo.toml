@@ -19,8 +19,8 @@ tracing.workspace = true
 walkdir.workspace = true
 # Wasmtime + WASI — Phase 5. Optional behind the `wasm` feature so the
 # workspace continues to build cleanly without `wasm32-wasi` installed.
-wasmtime = { version = "27", default-features = false, features = ["runtime", "component-model", "cranelift", "cache"], optional = true }
-wasmtime-wasi = { version = "27", optional = true }
+wasmtime = { version = "36", default-features = false, features = ["runtime", "component-model", "cranelift", "cache"], optional = true }
+wasmtime-wasi = { version = "36", optional = true }
 
 [features]
 default = []
