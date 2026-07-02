@@ -23,6 +23,22 @@ What is live vs dormant right now:
 
 ## Next steps (in priority order)
 
+CURRENT FOCUS (2026-07-02): the chat module - make it full-featured, then overhaul the UI/UX. Full audit at
+docs/feature-requests/chat/CHAT-AUDIT-2026-07-02.md. Operator chose the sequence: (1) split the ~1240-line
+apps/web/src/pages/Chat.tsx into components first (task #159); (2) then build ALL four feature clusters -
+get-notified (per-user notification socket, @-mentions, unread/mention badges, desktop/web push), richer
+messages (markdown + code + links, full emoji picker, attachment object-storage + larger cap + multi-file),
+find-and-organize (global search + jump-to-message, channel management: topics, public/private, browse+join,
+roles), and AI-native (summarize, smart replies, action-item extraction via the already-wired ai-gateway);
+(3) then the UI/UX overhaul - tokenize the umber/ochre palette by role and fix AA contrast, add real type and
+spacing scales, redesign message rows/composer/empty-states/the hover action bar, staying in one hand-written
+apps/web/src/styles.css. The biggest single unlock is the per-user notification socket (today the ws is
+per-channel only, so presence/ringing/notifications only work for the open channel). No i18n exists yet on a
+bilingual team. Each slice: gate on the Mac, commit, push; chat changes rebuild the chat image and apply any
+new chat migration on deploy.
+
+Deploy and infra follow-ups (still valid, lower priority than the chat focus):
+
 1. DONE (2026-07-02): the ai-gateway + bge-m3 embed sidecar are in the prod compose as a best-effort AI
    group - embeddings live, gateway internal-only, chat wired via `AI_GATEWAY_URL`. Chat translation stays
    gracefully dormant until the VPS is resized to 8 GB and the `llm` compose profile is enabled (ollama +
