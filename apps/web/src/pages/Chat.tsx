@@ -168,6 +168,9 @@ export function Chat() {
   const jumpRef = useRef<{ channelId: string; messageId: string } | null>(null);
   const [highlightId, setHighlightId] = useState("");
   const [notLatest, setNotLatest] = useState(false);
+  // The "New messages" divider: the id of the first unread message for the open channel (anchored once when
+  // the channel opens, then held for the session so the line stays put even after the badge auto-clears).
+  const [unreadAnchorId, setUnreadAnchorId] = useState("");
   const suppressScrollRef = useRef(false);
   const prevLastIdRef = useRef("");
   // Load-older pagination state (reset per channel).
@@ -208,6 +211,12 @@ export function Chat() {
   // In-flight reaction toggles keyed by `${messageId}|${emoji}`, so a rapid double-click cannot fire two
   // conflicting add/remove requests; the reaction_changed echo reconciles the absolute count.
   const reactingRef = useRef<Set<string>>(new Set());
+  // "New messages" divider bookkeeping: the unread-count snapshot taken at open (and which channel it was for),
+  // plus the channel already anchored this open - so the divider is placed exactly once per channel open and
+  // never re-derived from a count the auto-read has since zeroed.
+  const openUnreadRef = useRef(0);
+  const openUnreadForRef = useRef("");
+  const anchorDoneRef = useRef("");
   // Ask for desktop-notification permission once, lazily, on the first channel selection (a real user
   // gesture, which browsers require). If denied, badges and the tab title still work; we just never notify.
   const askedNotifyRef = useRef(false);
@@ -218,6 +227,10 @@ export function Chat() {
         void Notification.requestPermission().catch(() => {});
       }
     }
+    // Snapshot the unread count for this channel BEFORE the auto-read effect zeroes it, so the divider can be
+    // placed by count when my read marker is not in the loaded page.
+    openUnreadRef.current = unread[id] || 0;
+    openUnreadForRef.current = id;
     setSideOpen(false); // narrow viewports: picking a channel closes the drawer
     setActiveId(id);
   }
@@ -260,6 +273,9 @@ export function Chat() {
     setTranslations({});
     setTranslating(new Set());
     setTranslateError(new Set());
+    // Clear the previous channel's "New messages" line and allow the next open to re-anchor exactly once.
+    setUnreadAnchorId("");
+    anchorDoneRef.current = "";
   }, []);
 
   // The chat websocket + the per-channel timeline / presence / receipts / recent-activity state it owns.
@@ -623,6 +639,59 @@ export function Chat() {
     }, 500);
     return () => window.clearTimeout(tid);
   }, [token, activeId, messages, notLatest]);
+
+  // Anchor the "New messages" divider once, when a channel's first page has loaded: the message right after my
+  // last-read marker, or - when that marker predates the loaded page - the Nth-from-last by the unread snapshot.
+  // Runs before the auto-read effect moves the marker, and only against THIS channel's page (never the stale
+  // outgoing one), so the line lands in the right place and stays put for the session.
+  useEffect(() => {
+    if (!activeId || !me || anchorDoneRef.current === activeId) return;
+    if (notLatest) {
+      anchorDoneRef.current = activeId; // history window (a jump/search landing): no divider
+      return;
+    }
+    if (messages.length === 0) return; // wait for the first page
+    const tail = messages[messages.length - 1];
+    if (tail.channel_id && tail.channel_id !== activeId) return; // still showing the previous channel's page
+    anchorDoneRef.current = activeId;
+    const n = openUnreadForRef.current === activeId ? openUnreadRef.current : 0;
+    const marker = receipts[me];
+    let anchor = "";
+    if (marker) {
+      const p = messages.findIndex((m) => m.id === marker);
+      if (p >= 0) {
+        if (p < messages.length - 1) anchor = messages[p + 1].id; // first message past what I have read
+      } else if (n > 0) {
+        anchor = messages[0].id; // my marker is older than the loaded page - everything here is new
+      }
+    } else if (n > 0) {
+      anchor = messages[Math.max(0, messages.length - n)].id; // no marker loaded: place by the unread count
+    }
+    // Never anchor on my own message (I have obviously seen what I sent) - step forward to the next one.
+    if (anchor) {
+      let ai = messages.findIndex((m) => m.id === anchor);
+      while (ai >= 0 && ai < messages.length && messages[ai].sender_subject_id === me) ai++;
+      anchor = ai >= 0 && ai < messages.length ? messages[ai].id : "";
+    }
+    if (anchor) setUnreadAnchorId(anchor);
+  }, [activeId, me, messages, receipts, notLatest]);
+
+  // Land the viewport at the first unread message when a channel opens with unread (the "New messages" line),
+  // not the bottom - zero steps to see what is new. Suppress the concurrent tail auto-scroll for a moment so it
+  // does not yank the view back down. Fires once per anchor (the line persists for the session).
+  useEffect(() => {
+    if (!unreadAnchorId) return;
+    const el = document.getElementById("unread-divider");
+    if (!el) return;
+    suppressScrollRef.current = true;
+    el.scrollIntoView({ block: "start" });
+    const pane = scrollRef.current;
+    if (pane) pane.scrollTop = Math.max(0, pane.scrollTop - 56); // a little breathing room above the line
+    const tmr = window.setTimeout(() => {
+      suppressScrollRef.current = false;
+    }, 1400);
+    return () => window.clearTimeout(tmr);
+  }, [unreadAnchorId]);
 
   function onDraftChange(v: string) {
     setDraft(v);
@@ -1125,20 +1194,22 @@ export function Chat() {
 
   // Group consecutive same-sender messages and mark day boundaries.
   const rows = useMemo(() => {
-    const out: { m: Message; showDay: boolean; grouped: boolean }[] = [];
+    const out: { m: Message; showDay: boolean; grouped: boolean; unread: boolean }[] = [];
     let prev: Message | null = null;
     for (const m of messages) {
       const showDay = !prev || dayKey(m.created_at) !== dayKey(prev.created_at);
+      const unread = m.id === unreadAnchorId;
       const grouped =
         !!prev &&
         !showDay &&
+        !unread && // the first unread message breaks grouping so it reads clearly under the "New messages" line
         prev.sender_subject_id === m.sender_subject_id &&
         Date.parse(m.created_at || "") - Date.parse(prev.created_at || "") < GROUP_WINDOW_MS;
-      out.push({ m, showDay, grouped });
+      out.push({ m, showDay, grouped, unread });
       prev = m;
     }
     return out;
-  }, [messages]);
+  }, [messages, unreadAnchorId]);
 
   // Read receipts: which others have read up to (or past) my most recent message.
   const idxOf = useMemo(() => {

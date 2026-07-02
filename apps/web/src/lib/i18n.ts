@@ -145,6 +145,7 @@ const C: Record<string, Entry> = {
   },
   "chat.noMessages": { en: "No messages yet. Say hello.", vi: "Chưa có tin nhắn nào. Gửi lời chào nhé." },
   "chat.jumpLatest": { en: "Viewing history · Jump to latest", vi: "Đang xem lịch sử · Về tin mới nhất" },
+  "chat.newMessages": { en: "New messages", vi: "Tin nhắn mới" },
   "chat.typing": { en: "{name} is typing...", vi: "{name} đang nhập..." },
   "chat.seen": { en: "Seen", vi: "Đã xem" },
   "chat.seenBy": { en: "Seen by {names}", vi: "{names} đã xem" },

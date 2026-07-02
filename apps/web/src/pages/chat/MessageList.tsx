@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import type { RefObject } from "react";
 import type { Message } from "../../lib/chat";
 import { t } from "../../lib/i18n";
@@ -46,7 +47,7 @@ export function MessageList({
   onDelete,
   onRetry,
 }: {
-  rows: { m: Message; showDay: boolean; grouped: boolean }[];
+  rows: { m: Message; showDay: boolean; grouped: boolean; unread: boolean }[];
   messages: Message[];
   me: string;
   token: string | null;
@@ -100,9 +101,14 @@ export function MessageList({
           <div className="empty-sub">{t("chat.noMessages")}</div>
         </div>
       )}
-      {rows.map(({ m, showDay, grouped }) => (
-        <MessageRow
-          key={m.id}
+      {rows.map(({ m, showDay, grouped, unread }) => (
+        <Fragment key={m.id}>
+          {unread && (
+            <div className="unread-sep" id="unread-divider">
+              <span>{t("chat.newMessages")}</span>
+            </div>
+          )}
+          <MessageRow
           m={m}
           showDay={showDay}
           grouped={grouped}
@@ -133,7 +139,8 @@ export function MessageList({
           onStartEdit={onStartEdit}
           onDelete={onDelete}
           onRetry={onRetry}
-        />
+          />
+        </Fragment>
       ))}
       {showJumpLatest && (
         <button className="jump-pill" onClick={onJumpLatest} type="button">
