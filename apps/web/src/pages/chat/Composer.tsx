@@ -27,6 +27,7 @@ export function Composer({
   onSend,
   onClearStaged,
   onOpenFilePicker,
+  onOpenEmoji,
   onPaste,
   onMentionPicked,
 }: {
@@ -44,6 +45,7 @@ export function Composer({
   onSend: () => void;
   onClearStaged: () => void;
   onOpenFilePicker: () => void;
+  onOpenEmoji: (rect: { top: number; left: number; bottom: number; right: number }) => void;
   onPaste: (e: React.ClipboardEvent<HTMLTextAreaElement>) => void;
   onMentionPicked: (p: Person) => void;
 }) {
@@ -131,6 +133,17 @@ export function Composer({
       <div className="composer">
         <button className="comp-btn" title="Attach a file" onClick={onOpenFilePicker} type="button">
           <Icon name="paperclip" />
+        </button>
+        <button
+          className="comp-btn"
+          title="Emoji"
+          onClick={(e) => {
+            const r = e.currentTarget.getBoundingClientRect();
+            onOpenEmoji({ top: r.top, left: r.left, bottom: r.bottom, right: r.right });
+          }}
+          type="button"
+        >
+          <Icon name="smile" />
         </button>
         <div className="comp-field">
           {mentionOpen && candidates.length > 0 && (

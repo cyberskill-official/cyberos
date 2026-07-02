@@ -34,6 +34,7 @@ export function MessageRow({
   onCancelEdit,
   onToggleReaction,
   onSetReactPicker,
+  onOpenFullEmoji,
   onTranslate,
   onOpenThread,
   onStartEdit,
@@ -61,6 +62,7 @@ export function MessageRow({
   onCancelEdit: () => void;
   onToggleReaction: (m: Message, emoji: string) => void;
   onSetReactPicker: (updater: (id: string) => string) => void;
+  onOpenFullEmoji: (m: Message, rect: { top: number; left: number; bottom: number; right: number }) => void;
   onTranslate: (m: Message) => void;
   onOpenThread: (m: Message) => void;
   onStartEdit: (m: Message) => void;
@@ -172,6 +174,17 @@ export function MessageRow({
                       {e}
                     </button>
                   ))}
+                  <button
+                    className="emoji-opt more"
+                    title="All emoji"
+                    onClick={(e) => {
+                      const r = e.currentTarget.getBoundingClientRect();
+                      onOpenFullEmoji(m, { top: r.top, left: r.left, bottom: r.bottom, right: r.right });
+                    }}
+                    type="button"
+                  >
+                    +
+                  </button>
                 </div>
               )}
             </div>

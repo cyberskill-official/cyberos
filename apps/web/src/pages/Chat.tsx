@@ -6,6 +6,8 @@ import type { Channel, Directory, Message, Person } from "../lib/chat";
 import { channelLabel, dayKey, fileToBase64, formatBytes, isImage, shortId } from "../lib/chat";
 import type { MentionCandidate } from "../lib/richtext";
 import { Icon } from "../components/icons";
+import { EmojiPicker } from "../components/EmojiPicker";
+import type { AnchorRect } from "../components/EmojiPicker";
 import { PeoplePicker } from "../components/PeoplePicker";
 import type { PickerMode } from "../components/PeoplePicker";
 import { ThreadPanel } from "../components/ThreadPanel";
@@ -114,6 +116,11 @@ export function Chat() {
   // the inline result, and the set of message ids whose translation is in flight. A second translate click
   // hides the cached result (removes the key).
   const [reactPickerId, setReactPickerId] = useState("");
+  // The one full emoji picker instance: opened either from a message's reaction bar ("+") or from the
+  // composer's emoji button; anchored to the trigger's rect and rendered fixed at the page root.
+  const [emojiFor, setEmojiFor] = useState<
+    { kind: "reaction"; m: Message; rect: AnchorRect } | { kind: "composer"; rect: AnchorRect } | null
+  >(null);
   const [translations, setTranslations] = useState<Record<string, string>>({});
   const [translating, setTranslating] = useState<Set<string>>(new Set());
   const [translateError, setTranslateError] = useState<Set<string>>(new Set());
@@ -161,6 +168,7 @@ export function Chat() {
     setSearchOpen(false);
     setEditingId("");
     setReactPickerId("");
+    setEmojiFor(null);
     setTranslations({});
     setTranslating(new Set());
     setTranslateError(new Set());
@@ -500,6 +508,22 @@ export function Chat() {
     } finally {
       setSending(false);
     }
+  }
+
+  // Insert an emoji into the draft at the caret (from the composer's emoji button) and restore focus.
+  function insertEmoji(emoji: string) {
+    const ta = taRef.current;
+    const pos = ta ? (ta.selectionStart ?? draft.length) : draft.length;
+    const next = draft.slice(0, pos) + emoji + draft.slice(pos);
+    setDraft(next);
+    requestAnimationFrame(() => {
+      const t = taRef.current;
+      if (t) {
+        t.focus();
+        const p = pos + emoji.length;
+        t.setSelectionRange(p, p);
+      }
+    });
   }
 
   // Stage a file for the next Send (does not upload yet). Guards the server's 5 MB cap up front so an
@@ -861,6 +885,10 @@ export function Chat() {
                   }}
                   onToggleReaction={toggleReaction}
                   onSetReactPicker={(updater) => setReactPickerId(updater)}
+                  onOpenFullEmoji={(m, rect) => {
+                    setReactPickerId("");
+                    setEmojiFor({ kind: "reaction", m, rect });
+                  }}
                   onTranslate={translateMessage}
                   onOpenThread={openThread}
                   onStartEdit={(m) => {
@@ -904,6 +932,7 @@ export function Chat() {
                   }
                   onClearStaged={() => setStaged(null)}
                   onOpenFilePicker={() => fileRef.current?.click()}
+                  onOpenEmoji={(rect) => setEmojiFor({ kind: "composer", rect })}
                   onPaste={(e) => {
                     const f = e.clipboardData.files && e.clipboardData.files[0];
                     if (f) {
@@ -930,6 +959,18 @@ export function Chat() {
           </>
         )}
       </section>
+
+      {emojiFor && (
+        <EmojiPicker
+          anchor={emojiFor.rect}
+          onClose={() => setEmojiFor(null)}
+          onPick={(em) => {
+            if (emojiFor.kind === "reaction") void toggleReaction(emojiFor.m, em);
+            else insertEmoji(em);
+            setEmojiFor(null);
+          }}
+        />
+      )}
 
       {picker && token && (
         <PeoplePicker

@@ -214,6 +214,27 @@ a { color: var(--ochre); }
 .emoji-picker { position: absolute; bottom: calc(100% + 6px); right: 0; display: flex; gap: 2px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 4px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4); z-index: 5; }
 .emoji-opt { width: 30px; height: 30px; border-radius: 7px; display: grid; place-items: center; background: transparent; border: none; font-size: 17px; cursor: pointer; }
 .emoji-opt:hover { background: var(--panel-2); }
+.emoji-opt.more { color: var(--muted); font-size: 18px; font-weight: 700; border: 1px dashed var(--line); }
+.emoji-opt.more:hover { color: var(--ochre); border-color: var(--ochre); }
+
+/* full emoji picker (EmojiPicker.tsx) - fixed, anchored to its trigger, clamped to the viewport */
+.emoji-full { position: fixed; z-index: 70; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5); padding: 10px; gap: 8px; }
+.ef-head { display: flex; align-items: center; gap: 8px; }
+.ef-search { flex: 1; min-width: 0; background: var(--bg); border: 1px solid var(--line); color: var(--ink); border-radius: 9px; padding: 8px 10px; font-size: 13px; }
+.ef-search:focus { outline: none; border-color: var(--ochre); }
+.ef-tones { display: flex; gap: 1px; flex: none; }
+.ef-tone { width: 22px; height: 26px; padding: 0; display: grid; place-items: center; background: transparent; border: none; border-bottom: 2px solid transparent; font-size: 14px; cursor: pointer; }
+.ef-tone.on { border-bottom-color: var(--ochre); }
+.ef-tabs { display: flex; gap: 2px; flex: none; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+.ef-tab { flex: 1; height: 28px; display: grid; place-items: center; background: transparent; border: none; border-radius: 7px; font-size: 15px; cursor: pointer; opacity: 0.6; }
+.ef-tab:hover { background: var(--panel-2); opacity: 1; }
+.ef-tab.on { background: var(--ochre-soft); opacity: 1; }
+.ef-body { flex: 1; overflow-y: auto; min-height: 0; }
+.ef-sec { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--faint); font-weight: 700; margin: 6px 2px 4px; }
+.ef-grid { display: grid; grid-template-columns: repeat(8, 1fr); }
+.ef-cell { height: 34px; display: grid; place-items: center; background: transparent; border: none; border-radius: 7px; font-size: 20px; cursor: pointer; padding: 0; }
+.ef-cell:hover { background: var(--panel-2); }
+.ef-note { color: var(--faint); font-size: 13px; padding: 14px 6px; text-align: center; }
 
 /* inline translation block under a message */
 .translation { margin-top: 4px; display: flex; flex-direction: column; gap: 1px; background: var(--panel-2); border-left: 2px solid var(--ochre); border-radius: 0 8px 8px 0; padding: 6px 10px; font-size: 13px; }

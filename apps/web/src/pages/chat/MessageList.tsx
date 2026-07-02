@@ -33,6 +33,7 @@ export function MessageList({
   onCancelEdit,
   onToggleReaction,
   onSetReactPicker,
+  onOpenFullEmoji,
   onTranslate,
   onOpenThread,
   onStartEdit,
@@ -65,6 +66,7 @@ export function MessageList({
   onCancelEdit: () => void;
   onToggleReaction: (m: Message, emoji: string) => void;
   onSetReactPicker: (updater: (id: string) => string) => void;
+  onOpenFullEmoji: (m: Message, rect: { top: number; left: number; bottom: number; right: number }) => void;
   onTranslate: (m: Message) => void;
   onOpenThread: (m: Message) => void;
   onStartEdit: (m: Message) => void;
@@ -109,6 +111,7 @@ export function MessageList({
           onCancelEdit={onCancelEdit}
           onToggleReaction={onToggleReaction}
           onSetReactPicker={onSetReactPicker}
+          onOpenFullEmoji={onOpenFullEmoji}
           onTranslate={onTranslate}
           onOpenThread={onOpenThread}
           onStartEdit={onStartEdit}
