@@ -42,7 +42,7 @@ export function Login() {
           <span className="cyber">Cyber</span>
           <span className="os">OS</span>
         </span>
-        <span className="slogan">Turn Your Will Into Real</span>
+        <span className="slogan">{t("brand.slogan")}</span>
       </header>
       <div className="center">
         <div className="card">

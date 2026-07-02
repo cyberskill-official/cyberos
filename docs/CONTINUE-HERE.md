@@ -100,6 +100,20 @@ TURN/group calls + moderation console; P2 hardening = OBS-007 runbook-URL fix (p
 obs-router), semver-major dependency upgrades, review pass on the parallel-session chat commits, AI
 activation on VPS resize (llm profile), theme eyeball pass.
 
+## P2 hardening progress (2026-07-02, branch auto/p2-hardening, gated, NOT pushed)
+
+Three P2 items done and gated on branch `auto/p2-hardening` (review + merge/push is the operator's call -
+push deploys). Ledger: docs/auto-work/2026-07-02-p2-hardening.md. (1) Review pass on the parallel-session
+chat commits: i18n catalog verified complete + localized the brand slogan (added `brand.slogan`, VN
+brand-exact), and drawer a11y (Escape-to-close, backdrop aria-hidden, closed off-screen drawer now leaves
+the tab order). (2) OBS-007 runbook-URL fix: obs-router now allowlists suggested runbook URLs against the
+KB index (exact match, fail-closed) so a fabricated URL can never reach CHAT - DEPLOY NOTE: set
+`OBS_RUNBOOK_ALLOWLIST` to the real KB runbook URLs when obs-router goes live. (3) Theme contrast: darkened
+two light-theme text tokens (`--faint`, `--accent-text`) that dipped under AA on the raised surface; both
+themes now pass AA. STILL OPEN in P2: the semver-major dependency upgrades (found already half-applied +
+uncommitted in the tree - vite 5->8, @vitejs/plugin-react 4->6, wasmtime 27->36 - left untouched), AI
+activation on VPS resize, and further chat features (FR-CHAT-102..106, TURN/group calls, moderation).
+
 Each slice: gate on the Mac (fmt + clippy + tests; web tsc + vite; verify any new migration on a throwaway
 DB), commit, push (deploys). Pushing rebuilds the auth + chat + ai-gateway images and applies new chat
 migrations on deploy - treat the push as a confirm-with-the-operator action.

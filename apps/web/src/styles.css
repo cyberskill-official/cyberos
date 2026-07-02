@@ -54,9 +54,9 @@
   --on-accent: #241204;
   --ink: #2a190c;
   --muted: #61492e;
-  --faint: #7d6244;
+  --faint: #755d3d;
   --ochre: #f4ba17;
-  --accent-text: #8e5d00;
+  --accent-text: #835400;
   --accent-border: #c99508;
   --ochre-soft: rgba(186, 128, 8, 0.14);
   --hover: rgba(42, 25, 12, 0.05);
@@ -526,9 +526,11 @@ button:focus-visible, .chan-row:focus-visible { outline: 2px solid var(--accent-
   .slogan, .who { display: none; }
   .sidebar {
     position: fixed; left: 0; top: 0; bottom: 0; z-index: 56; width: min(300px, 86vw);
-    transform: translateX(-105%); transition: transform 0.18s ease-out; box-shadow: var(--shadow-2);
+    transform: translateX(-105%); box-shadow: var(--shadow-2);
+    /* Hide the closed drawer from the tab order + screen readers once it has slid off-screen. */
+    visibility: hidden; transition: transform 0.18s ease-out, visibility 0s linear 0.18s;
   }
-  .sidebar.open { transform: none; }
+  .sidebar.open { transform: none; visibility: visible; transition: transform 0.18s ease-out; }
   .side-backdrop { display: block; position: fixed; inset: 0; z-index: 55; background: var(--overlay); }
   .thread { position: fixed; right: 0; top: 0; bottom: 0; z-index: 50; width: min(360px, 92vw); box-shadow: var(--shadow-2); }
   .picker { width: 100%; }

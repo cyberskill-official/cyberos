@@ -45,6 +45,9 @@ type Entry = { en: string; vi: string };
 // The catalog. Grouped by surface; keep keys stable once shipped (they are the contract between components
 // and translations). {var} placeholders are substituted by t().
 const C: Record<string, Entry> = {
+  // brand
+  "brand.slogan": { en: "Turn Your Will Into Real", vi: "Hiện Thực Hoá Ý Chí" },
+
   // shared
   "common.cancel": { en: "Cancel", vi: "Hủy" },
   "common.save": { en: "Save", vi: "Lưu" },

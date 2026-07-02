@@ -529,6 +529,16 @@ export function Chat() {
     }
   }, []);
 
+  // Escape closes the narrow-viewport sidebar drawer (the backdrop closes it on tap; this covers keyboard).
+  useEffect(() => {
+    if (!sideOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSideOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [sideOpen]);
+
   // Ctrl/Cmd+K opens global search from anywhere in chat.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -1151,7 +1161,7 @@ export function Chat() {
         onOpenBrowse={() => setBrowseOpen(true)}
       />
 
-      {sideOpen && <div className="side-backdrop" onClick={() => setSideOpen(false)} />}
+      {sideOpen && <div className="side-backdrop" aria-hidden="true" onClick={() => setSideOpen(false)} />}
 
       <section className="main">
         {!active ? (
