@@ -263,6 +263,23 @@ button:focus-visible, .chan-row:focus-visible { outline: 2px solid var(--accent-
 /* hover action bar: raised, anchored, slightly larger targets */
 .m-actions { position: absolute; top: -16px; right: 16px; display: flex; gap: 2px; background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 3px; opacity: 0; transform: translateY(2px); transition: opacity 0.1s, transform 0.1s; box-shadow: var(--shadow-1); }
 .m-row:hover .m-actions { opacity: 1; transform: translateY(0); }
+/* Keyboard users reveal the action bar by focusing into the row; touch devices show it always (no hover). */
+.m-row:focus-within .m-actions { opacity: 1; transform: translateY(0); }
+@media (hover: none) { .m-row .m-actions { opacity: 1; transform: translateY(0); } }
+.m-actions .quick-react { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: none; border-radius: 7px; background: transparent; cursor: pointer; font-size: 15px; line-height: 1; transition: transform 0.1s ease, background 0.1s ease; }
+.m-actions .quick-react:hover { background: var(--hover); transform: scale(1.18); }
+
+/* Respect the OS reduce-motion setting: neutralize animations, transitions, and smooth scroll. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 .m-actions button { width: 30px; height: 30px; border-radius: 7px; display: grid; place-items: center; background: transparent; border: none; color: var(--muted); cursor: pointer; }
 .m-actions button:hover { background: var(--panel-2); color: var(--ink); }
 .edit-row { display: flex; gap: 8px; align-items: center; margin-top: 2px; }

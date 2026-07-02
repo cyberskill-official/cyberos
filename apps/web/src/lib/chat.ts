@@ -69,6 +69,9 @@ export function sortMessagesAsc(list: Message[]): Message[] {
 // The fixed reaction set the picker offers. Kept small and self-contained (no external emoji library).
 export const REACTION_EMOJIS = ["\u{1F44D}", "❤️", "\u{1F602}", "\u{1F389}", "✅", "\u{1F440}"];
 
+// The one-click reactions shown inline on hover (the rest live behind the "+" full picker).
+export const QUICK_REACTIONS = REACTION_EMOJIS.slice(0, 3);
+
 // Fold a reaction change (one subject added/removed one emoji) into a message's reaction list, from the
 // caller's point of view. `isMe` says whether the acting subject is the current user, so `mine` stays correct.
 // Pure and order-stable: a new emoji is appended; an emoji whose count hits zero is dropped.

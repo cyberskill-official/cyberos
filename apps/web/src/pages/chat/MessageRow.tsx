@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import type { Message } from "../../lib/chat";
-import { formatDay, REACTION_EMOJIS, timeOf } from "../../lib/chat";
+import { formatDay, QUICK_REACTIONS, REACTION_EMOJIS, timeOf } from "../../lib/chat";
 import { t } from "../../lib/i18n";
 import type { MentionCandidate } from "../../lib/richtext";
 import { RichText } from "../../lib/richtext-view";
@@ -188,6 +188,17 @@ export function MessageRow({
         </div>
         {editingId !== m.id && !m.pending && !m.failed && (
           <div className="m-actions">
+            {QUICK_REACTIONS.map((e) => (
+              <button
+                key={e}
+                className="quick-react"
+                title={t("message.react")}
+                onClick={() => void onToggleReaction(m, e)}
+                type="button"
+              >
+                {e}
+              </button>
+            ))}
             <div className="react-wrap">
               <button
                 title={t("message.addReaction")}
