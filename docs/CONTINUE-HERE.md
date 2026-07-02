@@ -37,9 +37,20 @@ DONE + LIVE so far:
   first channel select), a "(N) CyberOS Chat" tab title, a Composer @-mention autocomplete, and a distinct
   Sidebar mention badge. This closed the audit's top gap (the ws was per-channel only).
 
+- (2b) richer-messages cluster (four commits, one deploy): rich rendering (apps/web/src/lib/richtext.ts
+  hand-written parser -> React nodes, XSS-safe by construction; code blocks/inline code/bold/italic/strike/
+  links/autolink/quotes/lists + the in-body @-mention highlight deferred from 2a; contract pinned by
+  apps/web/scripts/richtext-smoke.ts, run with plain `node`); the full emoji picker
+  (components/EmojiPicker.tsx over unicode-emoji-json as a lazy chunk - search, categories, persisted skin
+  tone, recents; opened from the reaction strip "+" and a composer emoji button); attachment storage
+  (services/chat/src/storage.rs db|fs seam - prod compose mounts a chat-attachments volume, fs store, 50 MB
+  cap; migration 0010 chat_message_attachments; raw-body POST /v1/chat/channels/:id/uploads; GET
+  /v1/chat/config caps; message delete now purges attachment rows + fs bytes; found+fixed: axum's default
+  2 MB body limit had silently capped the "5 MB" base64 route); and the multi-file client (staged File[],
+  tiled attachment groups with server-folded metadata, image lightbox, config-driven caps, editable
+  captions on attachment messages). Reaction emoji cap now 64 bytes for toned ZWJ sequences.
+
 REMAINING (task #182), still in the same sequence:
-- (2b) richer messages: markdown + code + links rendering (incl. the in-body @-mention highlight deferred in
-  2a), a full emoji picker, attachment object-storage + larger cap + multi-file.
 - (2c) find-and-organize: global cross-channel search + jump-to-message; channel management (topics,
   public/private, browse+join, roles).
 - (2d) AI-native: summarize, smart replies, action-item extraction via the already-wired ai-gateway.
