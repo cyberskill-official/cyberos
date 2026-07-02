@@ -1398,6 +1398,10 @@ export function Chat() {
               onOpenSettings={() => setSettingsOpen(true)}
               onToggleAi={() => setAiOpen((v) => !v)}
               aiOpen={aiOpen}
+              notifyMuted={(notifyPrefs[active.id] || "all") === "none"}
+              onToggleMute={() =>
+                void setNotifyPref(active.id, (notifyPrefs[active.id] || "all") === "none" ? "all" : "none")
+              }
               onOpenSidebar={() => setSideOpen(true)}
               onSearchQChange={setSearchQ}
               onRunSearch={runSearch}

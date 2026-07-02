@@ -26,6 +26,8 @@ export function ChannelHeader({
   onOpenSettings,
   onToggleAi,
   aiOpen,
+  notifyMuted,
+  onToggleMute,
   onOpenSidebar,
   onSearchQChange,
   onRunSearch,
@@ -49,6 +51,9 @@ export function ChannelHeader({
   onOpenSettings: () => void;
   onToggleAi: () => void;
   aiOpen: boolean;
+  /// Whether the open channel is muted ("none" notify mode); the bell toggles it in one step.
+  notifyMuted: boolean;
+  onToggleMute: () => void;
   onOpenSidebar: () => void;
   onSearchQChange: (v: string) => void;
   onRunSearch: () => void;
@@ -102,6 +107,15 @@ export function ChannelHeader({
           type="button"
         >
           <Icon name="search" />
+        </button>
+        <button
+          className={"icon-btn" + (notifyMuted ? " on" : "")}
+          title={notifyMuted ? t("header.unmute") : t("header.mute")}
+          aria-pressed={notifyMuted}
+          onClick={onToggleMute}
+          type="button"
+        >
+          <Icon name={notifyMuted ? "bellOff" : "bell"} />
         </button>
         {active.kind !== "direct" && (
           <button className="icon-btn" title={t("header.addPeople")} onClick={onOpenAddPeople} type="button">
