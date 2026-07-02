@@ -658,3 +658,7 @@ All resolved. Deferred:
 ---
 
 *End of FR-PROJ-001. Status: draft (10/10 target).*
+
+## As built (2026-07-02)
+
+Handlers shipped as services/proj/src/handlers.rs (single module), not handlers/{issues,cycles,engagements}.rs.

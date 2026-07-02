@@ -554,3 +554,7 @@ All resolved. Deferred:
 ---
 
 *End of FR-SKILL-102. Status: draft (10/10 target).*
+
+## As built (2026-07-02)
+
+skill-registry was consolidated into services/skill-broker (src/oci.rs).

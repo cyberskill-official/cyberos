@@ -85,3 +85,10 @@ Unchanged (separate remaining slice):
 At this gate only FR-MCP-004 is a candidate for done. 003 and 005..008 stay implementing until the DB
 slice lands their deferred clauses. The deferred items per FR are recorded in the space memory
 (cyberos-mcp-build-state) and in each FR body, so the eventual done-flip is unambiguous.
+
+## 2026-07-02 - FR-MCP-004 flipped to done (operator decision)
+
+Per the module review (docs/reviews/MODULE-REVIEW-2026-07-02.md), the operator accepted the ledgered
+deferral of the per-tenant redirect-host allowlist (clause #11) as a follow-up, so FR-MCP-004 flips to
+done on its green gate. The allowlist remains a named follow-up here and in the FR body; 003 and 005..008
+stay implementing until the DB slice lands, exactly as decided at the 2026-06-28 gate.

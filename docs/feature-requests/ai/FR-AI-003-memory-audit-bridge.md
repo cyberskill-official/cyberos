@@ -4,7 +4,7 @@ id: FR-AI-003
 title: "memory audit-row bridge — canonical Writer for AI Gateway"
 module: AI
 priority: MUST
-status: ready_to_implement
+status: done
 accepted_at: 2026-05-15
 accepted_by: Stephen Cheng
 verify: T

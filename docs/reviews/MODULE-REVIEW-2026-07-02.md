@@ -34,16 +34,17 @@ rew, ten, time.
 
 ## 2. Findings
 
-### A. Live production issues (found by probing, need action)
+### A. Live production issues (found by probing; corrected after reading deploy.sh)
 
-1. EVAL CONTAINER DOWN: /status/eval returns 502. The eval service is intentionally on an old image and
-   counsel-gated, but 502 means the container is not even answering healthz - it is stopped or
-   crash-looping on the VPS. Needs a look at `docker ps` / logs; either fix its boot or remove it from
-   the compose until the counsel gate clears, so the status page is honest.
-2. STALE CADDY CONFIG IN PROD: /status/ai returns 404 although Caddyfile.p0 defines it (line 50). The
-   deploy pulls git but never reloads Caddy when Caddyfile.p0 changes, so Caddy runs a config from an
-   older deploy. Fix: deploy.sh should `docker compose exec caddy caddy reload --config ...` (or restart
-   caddy) when the Caddyfile changed. Until then any Caddy routing change silently does not ship.
+1. EVAL 502 = INTENTIONAL (finding downgraded): deploy.sh stops eval unless DEPLOY_EVAL=1 (the small
+   Supabase pooler tier cannot spare its connections next to auth + chat), and status.html already treats
+   it as "Not deployed until first healthy". No action beyond documenting this in the review; eval
+   redeploys with DEPLOY_EVAL=1 + BUILD_EVAL=1 when the pooler is raised and counsel clears.
+2. STALE CADDY CONFIG IN PROD (real, root cause found): /status/ai returns 404 although Caddyfile.p0
+   defines it. deploy.sh DID reload Caddy on every deploy but swallowed the reload's errors
+   (`2>/dev/null || true`), so a silently failing reload left an old config live indefinitely. FIXED in
+   this pass: the reload now surfaces its error and falls back to a caddy container restart, so the next
+   deploy self-heals /status/ai and any future Caddyfile change lands verifiably.
 
 ### B. Status integrity - the roadmap's "Done" is wrong in BOTH directions
 
@@ -53,8 +54,9 @@ False dones (marked done, deliverable does not exist in the current architecture
   Mattermost-era specs. The Mattermost fork was retired (FR-CHAT-101 supersedes wholesale); none of these
   exist in the native chat. They must flip to `superseded` (or their intents re-homed as new native-chat
   FRs - Slack/Zalo import, mobile push, and DSAR are still WANTED features, just unbuilt).
-- FR-MEMORY-104 (tauri app): no apps/tauri in this repo. Either points at the separate desktop wrapper
-  repo or is a false done - needs an owner decision.
+- FR-MEMORY-104 (tauri app): CORRECTED - the app exists at services/memory/desktop (Svelte + Tauri 2);
+  the sweep looked for apps/tauri. Verified done; carries two of the dependabot vite alerts (dev-server
+  class, same ledger as apps/web).
 
 Stale statuses (built + live, still marked draft/implementing):
 - FR-CHAT-101 "implementing" -> the native chat is the flagship live module; flip to done.

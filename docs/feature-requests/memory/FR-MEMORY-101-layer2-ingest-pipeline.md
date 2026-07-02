@@ -531,3 +531,7 @@ All resolved. Deferred:
 ---
 
 *End of FR-MEMORY-101. Status: done (implemented 2026-05-23).*
+
+## As built (2026-07-02)
+
+Apache AGE was removed; the layer-2 graph is the relational l2_edge table + pgvector. Any AGE/CREATE GRAPH references above are historical.

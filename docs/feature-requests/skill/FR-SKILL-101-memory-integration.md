@@ -460,3 +460,7 @@ All resolved. Deferred:
 ---
 
 *End of FR-SKILL-101. Status: draft (10/10 target).*
+
+## As built (2026-07-02)
+
+skill-host was consolidated into services/skill-broker (no separate crate).

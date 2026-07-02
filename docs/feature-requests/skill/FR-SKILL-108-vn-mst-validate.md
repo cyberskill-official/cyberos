@@ -321,7 +321,6 @@ pub fn parse_response(xml: &str, mst: &str) -> Result<crate::ValidationOutcome, 
     Ok(crate::ValidationOutcome {
         mst:           mst.into(),
         valid:         true,
-        status:        doc.status,
         status_text:   doc.status_text,
         business_name: Some(doc.tax_name),
         address:       Some(doc.address),

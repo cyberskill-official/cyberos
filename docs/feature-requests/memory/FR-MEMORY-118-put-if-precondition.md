@@ -556,3 +556,7 @@ All resolved. Deferred:
 ---
 
 *End of FR-MEMORY-118.*
+
+## As built (2026-07-02)
+
+Put-if-precondition logic shipped inside modules/memory.

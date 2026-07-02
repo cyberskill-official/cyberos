@@ -653,7 +653,6 @@ classifier_version: 3.0.0-a4
 ISSUE
 id:              ISS-009
 rule_id:         FM-113
-status:          needs_human
 severity:        error
 category:        trigger_tests_fixture
 location:        acceptance/TRIGGER_TESTS.md
@@ -672,7 +671,6 @@ updated_at:      "2026-05-19T14:00:00Z"
 ISSUE
 id:              ISS-010
 rule_id:         FM-113
-status:          needs_human
 severity:        error
 category:        paraphrase_duplicate
 location:        acceptance/TRIGGER_TESTS.md

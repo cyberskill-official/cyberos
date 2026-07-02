@@ -889,7 +889,6 @@ $ cyberos-ten provision --slug acme-corp --display-name "ACME" --root-admin-emai
 ✓ Tenant already exists (idempotent match)
   tenant_id:        01HG7V8B0K8M4Z8Z8M8M8M8M8M
   slug:             acme-corp
-  status:           active
 $ echo $?
 1
 ```

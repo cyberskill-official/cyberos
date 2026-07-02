@@ -244,7 +244,6 @@ impl From<DescriptionViolation> for FrontmatterError {
 ISSUE
 id:              ISS-NNN
 rule_id:         FM-112
-status:          needs_human
 severity:        error|warning
 category:        description_format
 location:        frontmatter "description:" field
@@ -484,7 +483,6 @@ Flattened length: ~478 chars. Triggers detected: 3 positive (`"draft an FR"`, `"
 ISSUE
 id:              ISS-007
 rule_id:         FM-112
-status:          needs_human
 severity:        error
 category:        description_format
 location:        frontmatter "description:" field

@@ -593,3 +593,7 @@ All resolved. Deferred:
 ---
 
 *End of FR-MEMORY-104. Status: done (implemented 2026-05-23).*
+
+## As built (2026-07-02)
+
+The desktop app lives at services/memory/desktop (Svelte + Tauri 2) exactly as the paths above say; noted here because a 2026-07-02 sweep initially looked for apps/tauri.

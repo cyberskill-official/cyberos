@@ -621,7 +621,6 @@ async fn ac17_reason_redacted() {
     let (pool, claims) = test_setup_with_engagement().await;
     let issue = create_test_issue(&pool, &claims, IssueStatus::Triage).await;
     patch_issue(issue.id, PatchIssueRequest {
-        status: Some(IssueStatus::Todo),
         reason: Some("Email alice@cyberskill.world about this".into()),
         ..Default::default()
     }, None, &claims.claims, &pool, "req").await.unwrap();
@@ -730,7 +729,6 @@ async fn ac31_per_decision_override_beats_engagement() {
     let engagement = env.create_engagement_with_acl_default(vec!["@legal".into()]).await;
     let issue = env.create_issue_in_engagement(engagement.id, IssueStatus::Triage).await;
     patch_issue(issue.id, PatchIssueRequest {
-        status: Some(IssueStatus::Todo),
         acl_override: Some(vec!["@stephen".into()]),
         ..Default::default()
     }, None, &env.claims.claims, &env.pool, "req").await.unwrap();

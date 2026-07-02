@@ -422,3 +422,7 @@ All resolved. Deferred:
 ---
 
 *End of FR-PROJ-014.*
+
+## As built (2026-07-02)
+
+Client code lives under apps/web/src (there is no web/proj-client/).

@@ -5,11 +5,12 @@ and gate. Estimates are focused build-time on the existing Mac-gate loop.
 
 ## P0 - production truth (do first, ~half a day)
 
-1. Eval container 502: inspect on the VPS (docker ps / logs eval). If it cannot boot on the old image,
-   remove eval from the active compose (keep the service block commented + the counsel-gate note) so the
-   status page is honest. Deliverable: /status/eval either 200 or intentionally absent. [30-60m]
-2. Caddy reload on deploy: deploy.sh reloads Caddy when Caddyfile.p0 changes (hash compare -> `caddy
-   reload`). Deliverable: /status/ai returns 200/502 (routed), not 404; runbook note. [45m]
+1. Eval 502: DOWNGRADED after reading deploy.sh - eval is already intentionally stopped (DEPLOY_EVAL
+   gate; Supabase pooler headroom) and status.html handles it as "not deployed". Action reduced to
+   documenting the gate in the review. [done in review]
+2. Caddy reload on deploy: root cause found - the existing reload swallowed its errors, so a failing
+   reload left stale config live (/status/ai 404). FIXED: reload surfaces errors + falls back to a caddy
+   restart; next deploy self-heals. Deliverable: /status/ai routed after the next push. [done]
 3. Attachment volume backups: nightly tar of chat-attachments to a dated file (VPS cron) + a documented
    restore path; note Supabase PITR coverage for the DBs in the same doc. Deliverable:
    docs/deploy/backups.md + cron in deploy/vps/. [1-2h]

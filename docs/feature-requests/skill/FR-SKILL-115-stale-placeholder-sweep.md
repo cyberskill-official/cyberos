@@ -347,7 +347,6 @@ Rationale: Body references stages b, d, e — multi-stage skill; choose "cross".
 ISSUE
 id:              ISS-014
 rule_id:         SKB-030
-status:          needs_human
 severity:        error
 category:        placeholder_in_frontmatter
 location:        frontmatter root.metadata.stage

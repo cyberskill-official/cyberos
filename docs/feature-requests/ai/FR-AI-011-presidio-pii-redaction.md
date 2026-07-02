@@ -691,7 +691,6 @@ pub async fn redact(prompt: &str, policy: &TenantPolicy) -> Result<RedactionResu
 
     let body: PresidioResponse = resp.json().await
         .map_err(|e| RedactError::SidecarError {
-            status: 200,
             message: format!("response_parse_error: {}", e.without_url()),
         })?;
 

@@ -279,7 +279,6 @@ pub async fn save_draft(
     );
     let frontmatter = format!(r#"---
 kind: cycle_review
-status: draft
 sync_class: shareable
 cycle_id: {}
 engagement_id: {}

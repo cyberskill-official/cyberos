@@ -563,3 +563,7 @@ All resolved. Deferred:
 ---
 
 *End of FR-MEMORY-108. Status: done (implemented 2026-05-23).*
+
+## As built (2026-07-02)
+
+Shipped as services/memory/src/search.rs (single module), not the search/{vector,graph,...} tree; AGE-era graph search is the relational l2_edge path.

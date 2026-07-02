@@ -74,8 +74,13 @@ else
 fi
 
 # Caddy serves the console + config from the git checkout. Static console files are served live, but a
-# changed Caddyfile needs a reload to take effect; ignore the error if caddy is mid-restart.
-"${COMPOSE[@]}" exec -T caddy caddy reload --config /etc/caddy/Caddyfile 2>/dev/null || true
+# changed Caddyfile needs a reload to take effect. The reload used to swallow its own errors, which let a
+# stale config survive deploys unnoticed (found 2026-07-02: /status/ai 404 in prod while present in git) -
+# so now a failed reload falls back to a container restart (seconds of downtime, guaranteed-fresh config).
+if ! "${COMPOSE[@]}" exec -T caddy caddy reload --config /etc/caddy/Caddyfile; then
+  echo "==> caddy reload failed; restarting caddy to force the fresh config"
+  "${COMPOSE[@]}" restart caddy || echo "==> caddy restart failed too - check caddy logs"
+fi
 
 echo "==> pruning dangling images"
 docker image prune -f >/dev/null || true

@@ -605,3 +605,7 @@ All resolved. Deferred:
 ---
 
 *End of FR-MEMORY-102. Status: done (implemented 2026-05-23).*
+
+## As built (2026-07-02)
+
+Apache AGE was removed; rebuild targets the relational l2_edge + pgvector layer.

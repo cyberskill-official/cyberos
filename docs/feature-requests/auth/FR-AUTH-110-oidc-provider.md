@@ -3,7 +3,7 @@ id: FR-AUTH-110
 title: "AUTH OIDC Provider - first-party authorization server (OIDC Core + RFC 8414 discovery, authorize with SSO-session / upstream-IdP brokering, token + id_token, userinfo, first-party RP client registry, PKCE S256, JWKS reuse, revoke-gated authorize)"
 module: AUTH
 priority: MUST
-status: draft
+status: done
 verify: T
 phase: P4
 milestone: P4 · slice 1

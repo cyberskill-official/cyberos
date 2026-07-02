@@ -564,3 +564,7 @@ All resolved. Deferred:
 ---
 
 *End of FR-MEMORY-103. Status: done (implemented 2026-05-23).*
+
+## As built (2026-07-02)
+
+Shipped in python (modules/memory), not the Rust service path named above.

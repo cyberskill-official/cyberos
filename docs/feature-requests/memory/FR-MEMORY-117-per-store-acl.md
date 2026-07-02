@@ -596,3 +596,7 @@ All resolved. Deferred:
 ---
 
 *End of FR-MEMORY-117.*
+
+## As built (2026-07-02)
+
+ACL logic spans services/memory + modules/memory as consolidated.

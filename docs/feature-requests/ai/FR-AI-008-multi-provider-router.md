@@ -236,7 +236,6 @@ pub enum RouterError {
     AuthError { provider: ProviderKind, status: u16 },
     TerminalProviderError {
         provider: ProviderKind,
-        status: u16,
         message: String,
         /// Populated from the `Retry-After` response header on 429 responses (RFC 9110 §10.2.3).
         /// None for non-429 errors and for 429s without a parsable header. The router reads this
@@ -809,7 +808,6 @@ pub async fn call_provider(
                         model: model.clone(),
                         attempt_num,
                         fallback_position: chain_idx as u8,
-                        status: AttemptStatus::TimeoutBeforeFirstToken,
                         elapsed_ms,
                         http_status: None,
                     });
@@ -929,7 +927,6 @@ fn record(
     model: &str,
     attempt_num: u8,
     chain_idx: usize,
-    status: AttemptStatus,
     elapsed_ms: u32,
     http_status: Option<u16>,
 ) -> AttemptRecord {

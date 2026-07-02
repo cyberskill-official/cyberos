@@ -498,7 +498,6 @@ untrusted_inputs:
 ISSUE
 id:              ISS-011
 rule_id:         FM-116
-status:          fixed
 severity:        error
 category:        wrap_in_marker_form
 location:        frontmatter line 97
@@ -525,7 +524,6 @@ updated_at:      "2026-05-19T15:00:01Z"
 ISSUE
 id:              ISS-012
 rule_id:         FM-115
-status:          needs_human
 severity:        error
 category:        xml_bracket_in_frontmatter
 location:        frontmatter line 5 — description field

@@ -4,7 +4,7 @@ id: FR-CUO-204
 title: "Idle-time autonomous evolution - the dream loop under the AWH gate"
 author: "@stephen"
 department: engineering
-status: draft
+status: done
 priority: p2
 created_at: "2026-06-22T10:30:00+07:00"
 ai_authorship: assisted

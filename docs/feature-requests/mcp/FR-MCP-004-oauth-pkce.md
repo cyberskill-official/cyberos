@@ -3,7 +3,7 @@ id: FR-MCP-004
 title: "OAuth 2.1 PKCE authorization-code flow with audience-bound tokens for MCP servers"
 module: MCP
 priority: MUST
-status: implementing
+status: done
 accepted_at: 2026-05-16
 accepted_by: Stephen Cheng
 verify: T

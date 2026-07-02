@@ -3,7 +3,7 @@ id: FR-CHAT-101
 title: "CyberOS-native chat - slice 1 (skeleton: channels, messages, live delivery, CyberOS-token auth)"
 module: CHAT
 priority: MUST
-status: implementing
+status: done
 verify: T
 phase: P4
 milestone: P4 - native chat slice 1

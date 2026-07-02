@@ -685,3 +685,7 @@ All resolved. Deferred:
 ---
 
 *End of FR-MEMORY-109.*
+
+## As built (2026-07-02)
+
+Shipped as modules/memory/cyberos/claude_code_hook.py (no separate services/memory-claude-hook crate).

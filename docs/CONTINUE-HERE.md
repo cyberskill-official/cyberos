@@ -79,9 +79,26 @@ DONE + LIVE so far:
   :focus-visible rings. PWA SW cache now stamps a per-build version (scripts/stamp-sw.mjs in npm run
   build) + deletes old caches on activate.
 
-REMAINING (task #182): i18n on a bilingual team (audit #9) is the biggest chat gap left; also notification
-preferences/mute, drafts/pins, group DMs, TURN + group calls, moderation console, responsive/mobile layout
-(audit #13-19), and the 11 dependabot vulns (4 high).
+SHIPPED SINCE (parallel session, deployed): chat i18n VN/EN, per-channel notification prefs + mute
+(migration 0012), drafts, mobile drawer (commits ab2989d, 3b82968).
+
+MODULE REVIEW + GROOMING (2026-07-02, this session): every done FR verified against the live system -
+full report at docs/reviews/MODULE-REVIEW-2026-07-02.md, plan at IMPROVEMENT-PLAN-2026-07-02.md (P0+P1
+executed). Highlights: fresh full gate green (1,173 tests); deploy.sh Caddy reload hardened (a silently
+failing reload had kept /status/ai on a stale config); attachment-volume backups added
+(deploy/vps/backup-attachments.sh + docs/deploy/backups.md - CRON MUST BE INSTALLED ON THE VPS ONCE);
+eval 502 confirmed intentional (DEPLOY_EVAL gate); dependabot triaged (all remaining fixes are semver-
+major: vite 8, wasmtime, protobuf, otel, tauri-glib - ledgered as P2); statuses corrected both ways
+(CHAT-101/AUTH-110/AI-003/AI-005/CUO-204/MCP-004 -> done; Mattermost-era CHAT-001..013 + console-era
+APP-001..007 -> superseded + archived; EVAL-001 -> blocked on counsel); still-wanted intents re-homed as
+FR-CHAT-102..106 (slack/zalo import, mobile push, DSAR, @lumi); as-built notes on drifted memory/skill/
+proj FRs; .audit companions quarantined to _audits/; orphan crates deleted (chat-legacy-mattermost,
+eval_writetest); BACKLOG.md regenerated (the only remaining-work list; remaining-build-plan.md retired).
+
+REMAINING (groomed backlog: docs/feature-requests/BACKLOG.md): chat next-ups are FR-CHAT-102..106 +
+TURN/group calls + moderation console; P2 hardening = OBS-007 runbook-URL fix (precondition for
+obs-router), semver-major dependency upgrades, review pass on the parallel-session chat commits, AI
+activation on VPS resize (llm profile), theme eyeball pass.
 
 Each slice: gate on the Mac (fmt + clippy + tests; web tsc + vite; verify any new migration on a throwaway
 DB), commit, push (deploys). Pushing rebuilds the auth + chat + ai-gateway images and applies new chat

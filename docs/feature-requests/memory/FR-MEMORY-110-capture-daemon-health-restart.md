@@ -715,3 +715,7 @@ All resolved. Deferred:
 ---
 
 *End of FR-MEMORY-110.*
+
+## As built (2026-07-02)
+
+Shipped inside modules/memory (serve.py healthz/sweeper), not a services/memory-capture crate.

@@ -507,7 +507,6 @@ next_review_due: 2027-05-19T00:00:00+07:00
 ISSUE
 id:              ISS-013
 rule_id:         FM-114
-status:          needs_human
 severity:        error
 category:        baseline_missing
 location:        BASELINE.md (file does not exist)
