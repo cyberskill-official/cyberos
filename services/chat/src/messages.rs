@@ -114,6 +114,12 @@ async fn require_member(
     }
 }
 
+/// Max message body size (post + edit). Generous for chat; bounds DB weight, every list, and AI cost.
+const MAX_MESSAGE_BODY_BYTES: usize = 16 * 1024;
+
+/// Minimum search-term length. The trigram GIN index needs 3 chars; shorter terms would full-scan.
+const MIN_SEARCH_CHARS: usize = 3;
+
 pub async fn post(
     State(st): State<AppState>,
     Path(channel): Path<Uuid>,
@@ -139,6 +145,9 @@ pub async fn post(
             StatusCode::BAD_REQUEST,
             "body or attachments are required".to_string(),
         ));
+    }
+    if body.body.len() > MAX_MESSAGE_BODY_BYTES {
+        return Err((StatusCode::BAD_REQUEST, "message is too long".to_string()));
     }
     if attachment_ids.len() > st.attachments.max_files {
         return Err((
@@ -477,6 +486,9 @@ pub async fn edit(
     if body.body.trim().is_empty() {
         return Err((StatusCode::BAD_REQUEST, "body is required".to_string()));
     }
+    if body.body.len() > MAX_MESSAGE_BODY_BYTES {
+        return Err((StatusCode::BAD_REQUEST, "message is too long".to_string()));
+    }
 
     let mut tx = db::tenant_tx(&st.pool, &tenant)
         .await
@@ -657,6 +669,12 @@ pub async fn search(
     if term.is_empty() {
         return Err((StatusCode::BAD_REQUEST, "q is required".to_string()));
     }
+    if term.chars().count() < MIN_SEARCH_CHARS {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "search term must be at least 3 characters".to_string(),
+        ));
+    }
     let limit = q.limit.unwrap_or(50).clamp(1, 200);
 
     let mut tx = db::tenant_tx(&st.pool, &tenant)
@@ -700,6 +718,12 @@ pub async fn search_all(
     let term = q.q.trim().to_string();
     if term.is_empty() {
         return Err((StatusCode::BAD_REQUEST, "q is required".to_string()));
+    }
+    if term.chars().count() < MIN_SEARCH_CHARS {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "search term must be at least 3 characters".to_string(),
+        ));
     }
     let limit = q.limit.unwrap_or(50).clamp(1, 200);
 

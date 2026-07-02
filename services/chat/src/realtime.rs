@@ -53,6 +53,9 @@ pub enum ChatEvent {
         emoji: String,
         subject: Uuid,
         added: bool,
+        /// Absolute count of this emoji on this message AFTER the change, so clients replace (not
+        /// delta-mutate) and stay correct across event replays / reconnects.
+        count: i64,
     },
 }
 

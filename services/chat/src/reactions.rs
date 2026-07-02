@@ -96,6 +96,14 @@ pub async fn add(
     .execute(&mut *tx)
     .await
     .map_err(crate::internal)?;
+    let count: i64 = sqlx::query_scalar(
+        "SELECT count(*) FROM chat_reactions WHERE message_id = $1 AND emoji = $2",
+    )
+    .bind(msg)
+    .bind(&emoji)
+    .fetch_one(&mut *tx)
+    .await
+    .map_err(crate::internal)?;
     tx.commit().await.map_err(crate::internal)?;
 
     st.hub.publish(
@@ -105,6 +113,7 @@ pub async fn add(
             emoji: emoji.clone(),
             subject,
             added: true,
+            count,
         },
     );
     audit::emit(
@@ -155,10 +164,18 @@ pub async fn remove(
     .execute(&mut *tx)
     .await
     .map_err(crate::internal)?;
-    tx.commit().await.map_err(crate::internal)?;
     if res.rows_affected() == 0 {
         return Err((StatusCode::NOT_FOUND, "reaction not found".to_string()));
     }
+    let count: i64 = sqlx::query_scalar(
+        "SELECT count(*) FROM chat_reactions WHERE message_id = $1 AND emoji = $2",
+    )
+    .bind(msg)
+    .bind(&emoji)
+    .fetch_one(&mut *tx)
+    .await
+    .map_err(crate::internal)?;
+    tx.commit().await.map_err(crate::internal)?;
 
     st.hub.publish(
         channel,
@@ -167,6 +184,7 @@ pub async fn remove(
             emoji: emoji.clone(),
             subject,
             added: false,
+            count,
         },
     );
     audit::emit(
