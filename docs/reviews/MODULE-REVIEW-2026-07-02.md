@@ -40,11 +40,14 @@ rew, ten, time.
    Supabase pooler tier cannot spare its connections next to auth + chat), and status.html already treats
    it as "Not deployed until first healthy". No action beyond documenting this in the review; eval
    redeploys with DEPLOY_EVAL=1 + BUILD_EVAL=1 when the pooler is raised and counsel clears.
-2. STALE CADDY CONFIG IN PROD (real, root cause found): /status/ai returns 404 although Caddyfile.p0
-   defines it. deploy.sh DID reload Caddy on every deploy but swallowed the reload's errors
-   (`2>/dev/null || true`), so a silently failing reload left an old config live indefinitely. FIXED in
-   this pass: the reload now surfaces its error and falls back to a caddy container restart, so the next
-   deploy self-heals /status/ai and any future Caddyfile change lands verifiably.
+2. STALE CADDY CONFIG IN PROD (real; root cause = the Docker file-bind inode gotcha): /status/ai returned
+   404 although Caddyfile.p0 defines it. The Caddyfile is a FILE bind into the caddy container, and file
+   binds follow the inode - `git pull` replaces the file with a new inode, so the running container kept
+   reading the OLD content forever; reload and even restart re-read the stale inode. (First hypothesis -
+   swallowed reload errors - was disproved live: a successful deploy with reload+restart still served the
+   old config.) FIXED: deploy.sh force-recreates the caddy container whenever Caddyfile.p0 changed in the
+   pulled range (re-resolving the bind), and keeps the reload for same-inode edits; Caddyfile.p0 carries a
+   comment so any future editor knows. Verified live after deploy: /status/ai routes.
 
 ### B. Status integrity - the roadmap's "Done" is wrong in BOTH directions
 

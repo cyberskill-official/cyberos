@@ -14,6 +14,10 @@
 #
 # This is the P0 product origin only; the per-service subdomain Caddyfile (auth.<domain>, mcp.<domain>,
 # ...) remains for MCP OAuth and the other modules, which P0 does not need.
+#
+# Deploy note (2026-07-02): this file is a FILE bind into the caddy container, and file binds follow the
+# inode - git pull replaces the inode, so reload/restart re-read STALE content. deploy.sh therefore
+# force-recreates caddy whenever this file changes; editing this comment is enough to trigger that.
 
 {$CYBEROS_APP_DOMAIN} {
 	encode gzip

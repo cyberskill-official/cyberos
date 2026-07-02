@@ -12,6 +12,7 @@ REPO_DIR="${CYBEROS_REPO_DIR:-$HOME/cyberos}"
 cd "$REPO_DIR"
 
 echo "==> pulling latest main"
+PRE_PULL_REV="$(git rev-parse HEAD)"
 git pull --ff-only origin main
 
 cd deploy/vps
@@ -73,13 +74,18 @@ else
   "${COMPOSE[@]}" stop eval 2>/dev/null || true
 fi
 
-# Caddy serves the console + config from the git checkout. Static console files are served live, but a
-# changed Caddyfile needs a reload to take effect. The reload used to swallow its own errors, which let a
-# stale config survive deploys unnoticed (found 2026-07-02: /status/ai 404 in prod while present in git) -
-# so now a failed reload falls back to a container restart (seconds of downtime, guaranteed-fresh config).
-if ! "${COMPOSE[@]}" exec -T caddy caddy reload --config /etc/caddy/Caddyfile; then
-  echo "==> caddy reload failed; restarting caddy to force the fresh config"
-  "${COMPOSE[@]}" restart caddy || echo "==> caddy restart failed too - check caddy logs"
+# Caddy serves the console + config from the git checkout. Static console files are served live through a
+# DIRECTORY bind, but the Caddyfile is a FILE bind - and a file bind follows the inode. `git pull` replaces
+# the file (new inode), so the running container keeps seeing the OLD content forever: reload and even
+# restart re-read the stale inode (found 2026-07-02 - /status/ai 404 in prod while present in git, months
+# of Caddyfile changes never shipped). The only correct fix for a changed Caddyfile is to RECREATE the
+# container so the bind re-resolves; reload still covers same-inode edits and is otherwise a cheap no-op.
+if ! git diff --quiet "$PRE_PULL_REV" HEAD -- deploy/vps/Caddyfile.p0; then
+  echo "==> Caddyfile.p0 changed; recreating caddy so the file bind re-resolves (seconds of downtime)"
+  "${COMPOSE[@]}" up -d --force-recreate caddy || echo "==> caddy recreate failed - check caddy logs"
+else
+  "${COMPOSE[@]}" exec -T caddy caddy reload --config /etc/caddy/Caddyfile \
+    || echo "==> caddy reload failed (config unchanged this deploy, so continuing)"
 fi
 
 echo "==> pruning dangling images"
