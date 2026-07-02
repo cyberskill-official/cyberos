@@ -11,6 +11,7 @@ import type { AnchorRect } from "../components/EmojiPicker";
 import { PeoplePicker } from "../components/PeoplePicker";
 import type { PickerMode } from "../components/PeoplePicker";
 import { ThreadPanel } from "../components/ThreadPanel";
+import { AiPanel } from "../components/AiPanel";
 import { ChannelSettings } from "../components/ChannelSettings";
 import { BrowseChannels } from "../components/BrowseChannels";
 import { Lightbox } from "../components/Lightbox";
@@ -97,6 +98,18 @@ export function Chat() {
     return [...seen.values()].sort((a, b) => b.name.length - a.name.length);
   }, [dirList, me, selfName]);
 
+  // subject -> display name, sent with AI requests so the server-side prompt can label transcript speakers
+  // (chat's own DB has no names; the directory lives here).
+  const aiNames = useMemo<Record<string, string>>(() => {
+    const m: Record<string, string> = {};
+    for (const p of dirList) {
+      const n = p.display_name || p.handle || (p.email || "").split("@")[0] || "";
+      if (n) m[p.subject_id] = n;
+    }
+    if (me) m[me] = selfName;
+    return m;
+  }, [dirList, me, selfName]);
+
   const [channels, setChannels] = useState<Channel[]>([]);
   const [activeId, setActiveId] = useState("");
   const [unread, setUnread] = useState<Record<string, number>>({});
@@ -115,6 +128,10 @@ export function Chat() {
   // Channel-management modals (find-and-organize cluster).
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [browseOpen, setBrowseOpen] = useState(false);
+  // AI cluster: the assistant side panel and composer reply suggestions.
+  const [aiOpen, setAiOpen] = useState(false);
+  const [replySuggestions, setReplySuggestions] = useState<string[]>([]);
+  const [suggesting, setSuggesting] = useState(false);
 
   const [editingId, setEditingId] = useState("");
   const [editText, setEditText] = useState("");
@@ -431,11 +448,13 @@ export function Chat() {
     return () => window.clearTimeout(t);
   }, [highlightId, messages]);
 
-  // Reset pagination when the channel changes.
+  // Reset pagination + AI suggestions when the channel changes.
   useEffect(() => {
     hasOlderRef.current = true;
     loadingOlderRef.current = false;
     setNotLatest(false);
+    setReplySuggestions([]);
+    setAiOpen(false);
   }, [activeId]);
 
   // Ctrl/Cmd+K opens global search from anywhere in chat.
@@ -603,6 +622,31 @@ export function Chat() {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setSending(false);
+    }
+  }
+
+  // Fetch up to three short reply suggestions for the current conversation (composer sparkle). A 502 means
+  // the ai-gateway is not serving - show the note in the error banner's quieter cousin: just no chips.
+  async function suggestReplies() {
+    if (!active || !token || suggesting) return;
+    setSuggesting(true);
+    setReplySuggestions([]);
+    try {
+      const r = await apiFetch<{ suggestions: string[] }>(
+        token,
+        "POST",
+        `/v1/chat/channels/${active.id}/ai/replies`,
+        { names: aiNames },
+      );
+      setReplySuggestions((r.suggestions || []).slice(0, 3));
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 502) {
+        setError("AI suggestions are unavailable right now (the AI gateway is not serving).");
+      } else {
+        setError(e instanceof Error ? e.message : String(e));
+      }
+    } finally {
+      setSuggesting(false);
     }
   }
 
@@ -1048,6 +1092,8 @@ export function Chat() {
               onToggleSearch={() => setSearchOpen((s) => !s)}
               onOpenAddPeople={() => setPicker("add")}
               onOpenSettings={() => setSettingsOpen(true)}
+              onToggleAi={() => setAiOpen((v) => !v)}
+              aiOpen={aiOpen}
               onSearchQChange={setSearchQ}
               onRunSearch={runSearch}
               onPickResult={jumpTo}
@@ -1128,6 +1174,33 @@ export function Chat() {
 
                 {(error || call.error) && <div className="banner err">{call.error || error}</div>}
 
+                {replySuggestions.length > 0 && (
+                  <div className="reply-chips">
+                    {replySuggestions.map((s, i) => (
+                      <button
+                        key={`${i}.${s}`}
+                        className="reply-chip"
+                        onClick={() => {
+                          setDraft(s);
+                          setReplySuggestions([]);
+                          taRef.current?.focus();
+                        }}
+                        type="button"
+                      >
+                        {s}
+                      </button>
+                    ))}
+                    <button
+                      className="reply-chip dismiss"
+                      onClick={() => setReplySuggestions([])}
+                      title="Dismiss suggestions"
+                      type="button"
+                    >
+                      <Icon name="close" size={12} />
+                    </button>
+                  </div>
+                )}
+
                 {active.archived_at ? (
                   <div className="archived-note">This channel is archived and read-only.</div>
                 ) : (
@@ -1160,6 +1233,8 @@ export function Chat() {
                   onClearStaged={(idx) => setStaged((prev) => prev.filter((_, i) => i !== idx))}
                   onOpenFilePicker={() => fileRef.current?.click()}
                   onOpenEmoji={(rect) => setEmojiFor({ kind: "composer", rect })}
+                  onSuggestReplies={() => void suggestReplies()}
+                  suggesting={suggesting}
                   onPaste={(e) => {
                     if (e.clipboardData.files && e.clipboardData.files.length > 0) {
                       e.preventDefault();
@@ -1169,6 +1244,10 @@ export function Chat() {
                 />
                 )}
               </div>
+
+              {aiOpen && token && (
+                <AiPanel token={token} channel={active} names={aiNames} onClose={() => setAiOpen(false)} />
+              )}
 
               {threadRoot && token && (
                 <ThreadPanel

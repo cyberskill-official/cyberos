@@ -388,6 +388,25 @@ a { color: var(--ochre); }
 .browse-row:hover { background: var(--panel-2); }
 .side-section.archived .chan-row { opacity: 0.6; }
 
+/* AI assistant panel + reply suggestion chips (AI cluster) */
+.ai-panel .ai-title { display: inline-flex; align-items: center; gap: 7px; }
+.ai-panel .ai-title svg { color: var(--ochre); }
+.ai-tabs { display: flex; gap: 6px; padding: 10px 12px 0; }
+.ai-tab { flex: 1; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--muted); font-size: 12px; font-weight: 700; cursor: pointer; }
+.ai-tab:hover { color: var(--ink); border-color: var(--ochre); }
+.ai-tab.on { background: var(--ochre-soft); border-color: var(--ochre); color: var(--ochre); }
+.ai-body { display: flex; flex-direction: column; gap: 8px; }
+.ai-text { font-size: 13px; }
+.ai-note { color: var(--faint); font-size: 13px; font-style: italic; padding: 10px 2px; }
+.ai-meta { color: var(--faint); font-size: 11px; border-top: 1px solid var(--line); padding-top: 8px; }
+.ai-foot { flex: none; padding: 10px 12px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; }
+.reply-chips { flex: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 0 14px 8px; align-items: center; }
+.reply-chip { border: 1px solid var(--ochre); background: var(--ochre-soft); color: var(--ink); border-radius: 999px; padding: 6px 13px; font-size: 12.5px; cursor: pointer; }
+.reply-chip:hover { background: var(--ochre); color: var(--umber-900); }
+.reply-chip.dismiss { border-color: var(--line); background: transparent; color: var(--faint); width: 26px; height: 26px; padding: 0; display: grid; place-items: center; }
+.reply-chip.dismiss:hover { color: var(--ink); background: var(--panel-2); }
+.comp-btn.busy { opacity: 0.55; }
+
 /* incoming-call ring */
 .call-ring { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; background: rgba(8, 4, 2, 0.7); }
 .ring-card { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 28px 34px; display: flex; flex-direction: column; align-items: center; gap: 6px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5); animation: ring-pop 0.18s ease-out; }

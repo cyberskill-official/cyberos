@@ -28,6 +28,8 @@ export function Composer({
   onClearStaged,
   onOpenFilePicker,
   onOpenEmoji,
+  onSuggestReplies,
+  suggesting,
   onPaste,
   onMentionPicked,
 }: {
@@ -46,6 +48,8 @@ export function Composer({
   onClearStaged: (idx: number) => void;
   onOpenFilePicker: () => void;
   onOpenEmoji: (rect: { top: number; left: number; bottom: number; right: number }) => void;
+  onSuggestReplies: () => void;
+  suggesting: boolean;
   onPaste: (e: React.ClipboardEvent<HTMLTextAreaElement>) => void;
   onMentionPicked: (p: Person) => void;
 }) {
@@ -148,6 +152,15 @@ export function Composer({
           type="button"
         >
           <Icon name="smile" />
+        </button>
+        <button
+          className={"comp-btn" + (suggesting ? " busy" : "")}
+          title="Suggest replies (AI)"
+          onClick={onSuggestReplies}
+          disabled={suggesting}
+          type="button"
+        >
+          <Icon name="sparkle" />
         </button>
         <div className="comp-field">
           {mentionOpen && candidates.length > 0 && (

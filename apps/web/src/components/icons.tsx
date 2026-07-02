@@ -29,6 +29,12 @@ const PATHS: Record<string, ReactNode> = {
       <line x1="5" y1="12" x2="19" y2="12" />
     </>
   ),
+  sparkle: (
+    <>
+      <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z" />
+      <path d="M19 15l.8 2.2 2.2.8-2.2.8L19 21l-.8-2.2-2.2-.8 2.2-.8L19 15z" />
+    </>
+  ),
   gear: (
     <>
       <circle cx="12" cy="12" r="3" />

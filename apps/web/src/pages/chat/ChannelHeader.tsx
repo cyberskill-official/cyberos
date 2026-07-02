@@ -23,6 +23,8 @@ export function ChannelHeader({
   onToggleSearch,
   onOpenAddPeople,
   onOpenSettings,
+  onToggleAi,
+  aiOpen,
   onSearchQChange,
   onRunSearch,
   onPickResult,
@@ -43,6 +45,8 @@ export function ChannelHeader({
   onToggleSearch: () => void;
   onOpenAddPeople: () => void;
   onOpenSettings: () => void;
+  onToggleAi: () => void;
+  aiOpen: boolean;
   onSearchQChange: (v: string) => void;
   onRunSearch: () => void;
   /// Jump to a result's message (switches channel when needed).
@@ -71,6 +75,14 @@ export function ChannelHeader({
           </div>
         </div>
         <span className="spacer" />
+        <button
+          className={"icon-btn" + (aiOpen ? " on" : "")}
+          title="AI assistant: catch me up, action items"
+          onClick={onToggleAi}
+          type="button"
+        >
+          <Icon name="sparkle" />
+        </button>
         <button className="icon-btn" title="Voice call" onClick={() => onStartCall(false)} type="button">
           <Icon name="phone" />
         </button>
