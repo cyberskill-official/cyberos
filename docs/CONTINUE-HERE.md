@@ -100,7 +100,7 @@ TURN/group calls + moderation console; P2 hardening = OBS-007 runbook-URL fix (p
 obs-router), semver-major dependency upgrades, review pass on the parallel-session chat commits, AI
 activation on VPS resize (llm profile), theme eyeball pass.
 
-## P2 hardening progress (2026-07-02, branch auto/p2-hardening, gated, NOT pushed)
+## P2 hardening progress (2026-07-02, merged to main + deployed live)
 
 Three P2 items done and gated on branch `auto/p2-hardening` (review + merge/push is the operator's call -
 push deploys). Ledger: docs/auto-work/2026-07-02-p2-hardening.md. (1) Review pass on the parallel-session
@@ -110,9 +110,20 @@ the tab order). (2) OBS-007 runbook-URL fix: obs-router now allowlists suggested
 KB index (exact match, fail-closed) so a fabricated URL can never reach CHAT - DEPLOY NOTE: set
 `OBS_RUNBOOK_ALLOWLIST` to the real KB runbook URLs when obs-router goes live. (3) Theme contrast: darkened
 two light-theme text tokens (`--faint`, `--accent-text`) that dipped under AA on the raised surface; both
-themes now pass AA. STILL OPEN in P2: the semver-major dependency upgrades (found already half-applied +
-uncommitted in the tree - vite 5->8, @vitejs/plugin-react 4->6, wasmtime 27->36 - left untouched), AI
-activation on VPS resize, and further chat features (FR-CHAT-102..106, TURN/group calls, moderation).
+themes now pass AA. All three merged to main and deployed 2026-07-02 (bundle live at os.cyberskill.world/web).
+
+## P2 dependency upgrades (2026-07-03, branch auto/p2-deps, gated, NOT pushed)
+
+The last P2 hardening item - the 11 Dependabot alerts / semver-major dep upgrades - is done on branch
+`auto/p2-deps` (4 commits off main; ledger docs/auto-work/2026-07-03-p2-deps.md). Nine alerts fixed in code
+(auto-close on push): apps/web vite ^5->^8 + plugin-react ^4->^6 (vite HIGH + esbuild); modules/skill
+wasmtime 27->36.12 (wasmtime-wasi HIGH; the optional `wasm` feature still needs a WasiView->WasiCtxView
+migration before it compiles, but is cfg-gated off and unshipped); ai-gateway dropped prometheus's
+`protobuf` feature to remove protobuf 2.28; services/memory/desktop vite ^5->^6.4.3 + plugin-svelte ^4->^5.
+Two accepted with rationale + Dependabot-dismissed: opentelemetry_sdk (the Baggage path is unreachable -
+only TraceContext propagation is used) and glib (unreachable - tauri 2.x pins gtk-rs 0.18). STILL OPEN in
+P2: only AI activation on VPS resize (operator infra: resize to 8 GB + `COMPOSE_PROFILES=llm`). Further chat
+features (FR-CHAT-102..106, TURN/group calls, moderation) remain as the feature backlog.
 
 Each slice: gate on the Mac (fmt + clippy + tests; web tsc + vite; verify any new migration on a throwaway
 DB), commit, push (deploys). Pushing rebuilds the auth + chat + ai-gateway images and applies new chat
