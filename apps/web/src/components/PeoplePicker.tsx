@@ -61,7 +61,8 @@ export function PeoplePicker({
   function confirm() {
     const ids = Object.keys(sel).filter((k) => sel[k]);
     if (mode === "group") {
-      if (!gname.trim() || ids.length === 0) return;
+      // A channel can be created with just its owner - members are invited later. Only a name is required.
+      if (!gname.trim()) return;
       onClose();
       onGroup(gname.trim(), ids, gvis);
     } else if (mode === "add") {

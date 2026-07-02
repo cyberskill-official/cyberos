@@ -50,6 +50,7 @@ export function MessageList({
   onStartEdit,
   onDelete,
   onRetry,
+  onLongPress,
 }: {
   rows: { m: Message; showDay: boolean; grouped: boolean; unread: boolean }[];
   messages: Message[];
@@ -90,6 +91,7 @@ export function MessageList({
   onStartEdit: (m: Message) => void;
   onDelete: (m: Message) => void;
   onRetry?: (m: Message) => void;
+  onLongPress?: (m: Message) => void;
 }) {
   return (
     <div
@@ -101,6 +103,7 @@ export function MessageList({
       onDrop={onDrop}
       onPaste={onPaste}
     >
+      {dragOver && <div className="drop-hint">{t("chat.dropToShare")}</div>}
       {loading && messages.length === 0 ? (
         <div className="skeletons" aria-hidden="true">
           {SKELETON_WIDTHS.map((w, i) => (
@@ -156,6 +159,7 @@ export function MessageList({
           onStartEdit={onStartEdit}
           onDelete={onDelete}
           onRetry={onRetry}
+          onLongPress={onLongPress}
           />
         </Fragment>
       ))}

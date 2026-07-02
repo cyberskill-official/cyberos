@@ -1,9 +1,32 @@
-import { Fragment } from "react";
+import { Fragment, useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import type { Channel, Directory, Message } from "../../lib/chat";
 import { channelLabel, timeOf } from "../../lib/chat";
 import { t } from "../../lib/i18n";
 import { Avatar } from "../../components/Avatar";
 import { Icon } from "../../components/icons";
+
+// Wrap each case-insensitive occurrence of the query in <mark> so search hits stand out in the snippet.
+function highlight(text: string, q: string): ReactNode {
+  const query = q.trim();
+  if (!query) return text;
+  const lower = text.toLowerCase();
+  const ql = query.toLowerCase();
+  const out: ReactNode[] = [];
+  let i = 0;
+  let k = 0;
+  while (i < text.length) {
+    const idx = lower.indexOf(ql, i);
+    if (idx === -1) {
+      out.push(text.slice(i));
+      break;
+    }
+    if (idx > i) out.push(text.slice(i, idx));
+    out.push(<mark key={k++}>{text.slice(idx, idx + query.length)}</mark>);
+    i = idx + query.length;
+  }
+  return out;
+}
 
 // The conversation header: identity (avatar/hash + title + subtitle) and the call / video / search / add-people
 // actions, plus the collapsible channel search bar (a sibling of the header row, exactly as before). All state
@@ -60,6 +83,12 @@ export function ChannelHeader({
   /// Jump to a result's message (switches channel when needed).
   onPickResult: (m: Message) => void;
 }) {
+  // Keyboard navigation of the results list: -1 means the input has focus and nothing is highlighted.
+  const [selIdx, setSelIdx] = useState(-1);
+  useEffect(() => {
+    setSelIdx(-1);
+  }, [searchResults]);
+
   return (
     <Fragment>
       <div className="main-head">
@@ -137,10 +166,21 @@ export function ChannelHeader({
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
-                void onRunSearch();
+                if (selIdx >= 0 && searchResults[selIdx]) onPickResult(searchResults[selIdx]);
+                else void onRunSearch();
+              } else if (e.key === "ArrowDown") {
+                e.preventDefault();
+                setSelIdx((i) => (searchResults.length ? Math.min(searchResults.length - 1, i + 1) : -1));
+              } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                setSelIdx((i) => Math.max(-1, i - 1));
+              } else if (e.key === "Escape") {
+                e.preventDefault();
+                onToggleSearch();
               }
             }}
             placeholder={t("header.searchPlaceholder")}
+            aria-label={t("header.searchPlaceholder")}
             autoFocus
           />
           <button className="btn-pill" onClick={() => void onRunSearch()} type="button">
@@ -148,12 +188,21 @@ export function ChannelHeader({
           </button>
           {searchResults.length > 0 && (
             <div className="search-results">
-              {searchResults.map((m) => (
-                <button key={m.id} className="search-row" onClick={() => onPickResult(m)} type="button">
+              <div className="search-count">{t("header.searchCount", { n: searchResults.length })}</div>
+              {searchResults.map((m, i) => (
+                <button
+                  key={m.id}
+                  className={"search-row" + (i === selIdx ? " active" : "")}
+                  onMouseEnter={() => setSelIdx(i)}
+                  onClick={() => onPickResult(m)}
+                  type="button"
+                >
                   {channelOf(m) && <span className="search-chan">{channelOf(m)}</span>}
                   <span className="author">{nameOf(m.sender_subject_id)}</span>{" "}
                   <span className="when">{timeOf(m.created_at)}</span>
-                  <div className="snippet">{m.body || t("header.attachmentSnippet")}</div>
+                  <div className="snippet">
+                    {m.body ? highlight(m.body, searchQ) : t("header.attachmentSnippet")}
+                  </div>
                 </button>
               ))}
             </div>

@@ -301,7 +301,8 @@ button:focus-visible, .chan-row:focus-visible { outline: 2px solid var(--accent-
 
 /* emoji reactions strip + picker */
 .reactions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
-.reaction { display: inline-flex; align-items: center; gap: 5px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 2px 9px; font-size: 12.5px; color: var(--muted); cursor: pointer; line-height: 1.6; }
+.reaction { display: inline-flex; align-items: center; gap: 5px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 2px 9px; font-size: 12.5px; color: var(--muted); cursor: pointer; line-height: 1.6; animation: reaction-pop 0.18s ease; }
+@keyframes reaction-pop { from { transform: scale(0.82); } to { transform: scale(1); } }
 .reaction:hover { border-color: var(--accent-border); }
 .reaction.mine { background: var(--ochre-soft); border-color: var(--accent-border); color: var(--ink); }
 .reaction .re-emoji { font-size: 14px; }
@@ -344,7 +345,15 @@ button:focus-visible, .chan-row:focus-visible { outline: 2px solid var(--accent-
 .translation .tr-text { color: var(--ink); line-height: 1.55; white-space: pre-wrap; word-break: break-word; }
 
 /* typing + banners + composer */
-.typing { flex: none; height: 20px; padding: 0 20px; color: var(--muted); font-size: 12px; font-style: italic; }
+.typing { flex: none; height: 20px; padding: 0 20px; color: var(--muted); font-size: 12px; font-style: italic; display: flex; align-items: center; gap: 6px; }
+.typing-dots { display: inline-flex; gap: 3px; }
+.typing-dots i { width: 4px; height: 4px; border-radius: 50%; background: var(--faint); display: block; animation: typing-bounce 1.2s ease-in-out infinite; }
+.typing-dots i:nth-child(2) { animation-delay: 0.15s; }
+.typing-dots i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes typing-bounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.5; } 30% { transform: translateY(-3px); opacity: 1; } }
+
+/* "Drop to share" cue while dragging a file over the message pane */
+.drop-hint { position: sticky; top: 8px; z-index: 3; width: max-content; margin: 0 auto 8px; padding: 6px 14px; border-radius: 999px; background: var(--ochre); color: var(--on-accent); font-size: 12px; font-weight: 700; box-shadow: var(--shadow-1); pointer-events: none; }
 .banner { margin: 0 14px 6px; padding: 8px 12px; border-radius: 8px; font-size: 13px; }
 .banner.err { background: var(--bad-soft-bg); border: 1px solid var(--bad-soft-border); color: var(--bad-text); }
 .composer { flex: none; padding: 10px 14px 6px; display: flex; gap: 8px; align-items: flex-end; }
@@ -446,11 +455,14 @@ button:focus-visible, .chan-row:focus-visible { outline: 2px solid var(--accent-
 .search-bar input { flex: 1; min-width: 180px; background: var(--bg); border: 1px solid var(--line); color: var(--ink); border-radius: 9px; padding: 9px 12px; font-size: 13px; }
 .search-bar input:focus { outline: none; border-color: var(--accent-border); }
 .search-results { flex-basis: 100%; max-height: 240px; overflow: auto; display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.search-count { flex-basis: 100%; color: var(--faint); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 2px 4px; }
 .search-row { font-size: 12px; padding: 8px 10px; border-radius: 8px; background: var(--bg); border: 1px solid transparent; text-align: left; cursor: pointer; display: block; width: 100%; font-family: inherit; color: inherit; }
-.search-row:hover { border-color: var(--accent-border); }
+.search-row:hover, .search-row.active { border-color: var(--accent-border); }
+.search-row.active { background: var(--panel-2); }
 .search-row .author { color: var(--ink); font-weight: 600; }
 .search-row .when { color: var(--faint); }
 .search-row .snippet { color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.search-row .snippet mark { background: var(--ochre-soft); color: var(--accent-text); border-radius: 3px; padding: 0 1px; }
 .search-chan { display: inline-block; margin-right: 8px; padding: 1px 7px; border-radius: 7px; background: var(--ochre-soft); color: var(--accent-text); font-size: 11px; font-weight: 700; }
 
 /* jump-to-message flash + the "viewing history" pill */
@@ -522,6 +534,20 @@ button:focus-visible, .chan-row:focus-visible { outline: 2px solid var(--accent-
 .toast-undo:hover { background: var(--hover); }
 .toast-bar { position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: var(--ochre); transform-origin: left; animation: toast-countdown 6s linear forwards; }
 @keyframes toast-countdown { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+/* message action sheet (long-press on touch / right-click): a bottom sheet with quick reactions + actions */
+.sheet-bg { position: fixed; inset: 0; background: var(--overlay); z-index: 90; display: flex; align-items: flex-end; justify-content: center; }
+.sheet { width: 100%; max-width: 440px; background: var(--panel); border: 1px solid var(--line); border-bottom: none; border-radius: 16px 16px 0 0; padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px)); box-shadow: var(--shadow-2); display: flex; flex-direction: column; gap: 3px; animation: sheet-up 0.18s ease; }
+@keyframes sheet-up { from { transform: translateY(14px); opacity: 0.5; } to { transform: translateY(0); opacity: 1; } }
+.sheet-react { display: flex; gap: 6px; padding: 4px 4px 10px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+.sheet-emoji { flex: 1; height: 46px; border: 1px solid transparent; background: var(--panel-2); border-radius: 11px; font-size: 22px; cursor: pointer; line-height: 1; }
+.sheet-emoji:hover { background: var(--hover); border-color: var(--accent-border); }
+.sheet-item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 14px; border: none; background: transparent; color: var(--ink); font-size: 15px; text-align: left; cursor: pointer; border-radius: 10px; font-family: inherit; }
+.sheet-item:hover { background: var(--hover); }
+.sheet-item svg { color: var(--muted); flex: none; }
+.sheet-item.danger { color: var(--bad-text); }
+.sheet-item.danger svg { color: var(--bad); }
+.sheet-item.cancel { justify-content: center; color: var(--muted); font-weight: 600; margin-top: 4px; }
 .browse-row { cursor: default; }
 .browse-row:hover { background: var(--panel-2); }
 .side-section.archived .chan-row { opacity: 0.6; }

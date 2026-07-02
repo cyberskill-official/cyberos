@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, useRef } from "react";
 import type { Message } from "../../lib/chat";
 import { formatDay, QUICK_REACTIONS, REACTION_EMOJIS, timeOf } from "../../lib/chat";
 import { t } from "../../lib/i18n";
@@ -43,6 +43,7 @@ export function MessageRow({
   onStartEdit,
   onDelete,
   onRetry,
+  onLongPress,
 }: {
   m: Message;
   showDay: boolean;
@@ -74,7 +75,19 @@ export function MessageRow({
   onStartEdit: (m: Message) => void;
   onDelete: (m: Message) => void;
   onRetry?: (m: Message) => void;
+  /// Long-press (touch) or right-click opens the mobile action sheet for this message.
+  onLongPress?: (m: Message) => void;
 }) {
+  // Long-press detection for touch: a ~500ms hold with little movement opens the action sheet.
+  const lpTimer = useRef<number | null>(null);
+  const lpStart = useRef<{ x: number; y: number } | null>(null);
+  const clearLp = () => {
+    if (lpTimer.current) {
+      window.clearTimeout(lpTimer.current);
+      lpTimer.current = null;
+    }
+  };
+  const canSheet = !!onLongPress && editingId !== m.id && !m.pending && !m.failed;
   return (
     <Fragment>
       {showDay && (
@@ -91,6 +104,39 @@ export function MessageRow({
           (highlighted ? " flash" : "") +
           (m.pending ? " pending" : "") +
           (m.failed ? " failed" : "")
+        }
+        onTouchStart={
+          canSheet
+            ? (e) => {
+                const tch = e.touches[0];
+                lpStart.current = { x: tch.clientX, y: tch.clientY };
+                clearLp();
+                lpTimer.current = window.setTimeout(() => {
+                  lpTimer.current = null;
+                  onLongPress?.(m);
+                }, 500);
+              }
+            : undefined
+        }
+        onTouchMove={
+          canSheet
+            ? (e) => {
+                const s = lpStart.current;
+                if (!s) return;
+                const tch = e.touches[0];
+                if (Math.abs(tch.clientX - s.x) > 10 || Math.abs(tch.clientY - s.y) > 10) clearLp();
+              }
+            : undefined
+        }
+        onTouchEnd={canSheet ? clearLp : undefined}
+        onTouchCancel={canSheet ? clearLp : undefined}
+        onContextMenu={
+          canSheet
+            ? (e) => {
+                e.preventDefault();
+                onLongPress?.(m);
+              }
+            : undefined
         }
       >
         <div className="m-gutter">

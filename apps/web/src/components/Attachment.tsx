@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "../lib/api";
 import type { AttachmentMeta } from "../lib/chat";
 import { formatBytes, isImage } from "../lib/chat";
@@ -24,6 +24,10 @@ export function Attachment({
   const [meta, setMeta] = useState<AttachmentMeta | null>(givenMeta || null);
   const [url, setUrl] = useState("");
   const [failed, setFailed] = useState(false);
+  // The bearer changes on the hourly refresh; read it via a ref so a refresh does NOT re-run the fetch (which
+  // would swap the object URL out from under an open lightbox). The blob only needs re-fetching when `id` changes.
+  const tokenRef = useRef(token);
+  tokenRef.current = token;
 
   useEffect(() => {
     let alive = true;
@@ -32,12 +36,12 @@ export function Attachment({
       try {
         let m = givenMeta || null;
         if (!m) {
-          m = await apiFetch<AttachmentMeta>(token, "GET", `/v1/chat/attachments/${id}/meta`);
+          m = await apiFetch<AttachmentMeta>(tokenRef.current, "GET", `/v1/chat/attachments/${id}/meta`);
         }
         if (!alive) return;
         setMeta(m);
         const res = await fetch(`/v1/chat/attachments/${id}`, {
-          headers: { Authorization: "Bearer " + token },
+          headers: { Authorization: "Bearer " + tokenRef.current },
         });
         if (!res.ok) throw new Error("attachment " + res.status);
         objectUrl = URL.createObjectURL(await res.blob());
@@ -50,9 +54,9 @@ export function Attachment({
       alive = false;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-    // givenMeta is stable per message render; id identifies the fetch.
+    // givenMeta is stable per message render; id identifies the fetch. Token is read via ref (see above).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, id]);
+  }, [id]);
 
   if (failed)
     return (

@@ -265,12 +265,12 @@ export function ChannelSettings({
                   >
                     {ROLES.map((r) => (
                       <option key={r} value={r}>
-                        {r}
+                        {t("role." + r)}
                       </option>
                     ))}
                   </select>
                 ) : (
-                  <span className="cs-role-tag">{m.role}</span>
+                  <span className="cs-role-tag">{t("role." + m.role)}</span>
                 )}
                 {isOwner && !self && (
                   <button

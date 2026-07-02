@@ -12,6 +12,7 @@ import type { AnchorRect } from "../components/EmojiPicker";
 import { PeoplePicker } from "../components/PeoplePicker";
 import type { PickerMode } from "../components/PeoplePicker";
 import { ThreadPanel } from "../components/ThreadPanel";
+import { MessageActionSheet } from "../components/MessageActionSheet";
 import { AiPanel } from "../components/AiPanel";
 import { ChannelSettings } from "../components/ChannelSettings";
 import { BrowseChannels } from "../components/BrowseChannels";
@@ -178,6 +179,8 @@ export function Chat() {
   // chatter without watching the pane. Never announces my own sends or history-window loads.
   const [liveAnnounce, setLiveAnnounce] = useState("");
   const lastAnnouncedRef = useRef("");
+  // The message whose action sheet is open (opened by long-press on touch or right-click).
+  const [sheetFor, setSheetFor] = useState<Message | null>(null);
   const suppressScrollRef = useRef(false);
   const prevLastIdRef = useRef("");
   // Load-older pagination state (reset per channel).
@@ -1118,6 +1121,7 @@ export function Chat() {
   }
 
   async function openThread(m: Message) {
+    setAiOpen(false); // the thread and AI panels share the right rail - only one at a time
     setThreadRoot(m);
     setThreadReplies([]);
     if (!token) return;
@@ -1172,8 +1176,8 @@ export function Chat() {
   // reply jumps to its parent in the timeline (the reply itself lives in the thread panel).
   function jumpTo(m: Message) {
     const target = m.parent_id || m.id;
-    setSearchOpen(false);
-    setSearchResults([]);
+    // Keep the results panel open so you can walk through several hits; a cross-channel jump closes it via
+    // resetChannelUi when the new channel opens.
     if (m.channel_id === activeId) {
       void loadAround(m.channel_id, target);
     } else {
@@ -1396,7 +1400,10 @@ export function Chat() {
               onToggleSearch={() => setSearchOpen((s) => !s)}
               onOpenAddPeople={() => setPicker("add")}
               onOpenSettings={() => setSettingsOpen(true)}
-              onToggleAi={() => setAiOpen((v) => !v)}
+              onToggleAi={() => {
+                setThreadRoot(null); // right rail is shared - opening AI closes any open thread
+                setAiOpen((v) => !v);
+              }}
               aiOpen={aiOpen}
               notifyMuted={(notifyPrefs[active.id] || "all") === "none"}
               onToggleMute={() =>
@@ -1477,13 +1484,27 @@ export function Chat() {
                   }}
                   onDelete={deleteMessage}
                   onRetry={retrySend}
+                  onLongPress={(m) => setSheetFor(m)}
                 />
 
-                <div className="typing">
-                  {typingSubject && typingSubject !== me ? t("chat.typing", { name: nameOf(typingSubject) }) : ""}
+                <div className="typing" aria-live="polite">
+                  {typingSubject && typingSubject !== me && (
+                    <>
+                      <span>{t("chat.typing", { name: nameOf(typingSubject) })}</span>
+                      <span className="typing-dots" aria-hidden="true">
+                        <i />
+                        <i />
+                        <i />
+                      </span>
+                    </>
+                  )}
                 </div>
 
-                {(error || call.error) && <div className="banner err">{call.error || error}</div>}
+                {(error || call.error) && (
+                  <div className="banner err" role="alert" aria-live="assertive">
+                    {call.error || error}
+                  </div>
+                )}
 
                 {replySuggestions.length > 0 && (
                   <div className="reply-chips">
@@ -1603,6 +1624,22 @@ export function Chat() {
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {liveAnnounce}
       </div>
+
+      {sheetFor && (
+        <MessageActionSheet
+          m={sheetFor}
+          me={me}
+          onReact={(emoji) => void toggleReaction(sheetFor, emoji)}
+          onReply={() => void openThread(sheetFor)}
+          onTranslate={() => void translateMessage(sheetFor)}
+          onEdit={() => {
+            setEditingId(sheetFor.id);
+            setEditText(sheetFor.body);
+          }}
+          onDelete={() => deleteMessage(sheetFor)}
+          onClose={() => setSheetFor(null)}
+        />
+      )}
 
       {picker && token && (
         <PeoplePicker
