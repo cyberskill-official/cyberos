@@ -42,6 +42,7 @@ export function MessageRow({
   onOpenThread,
   onStartEdit,
   onDelete,
+  onRetry,
 }: {
   m: Message;
   showDay: boolean;
@@ -72,6 +73,7 @@ export function MessageRow({
   onOpenThread: (m: Message) => void;
   onStartEdit: (m: Message) => void;
   onDelete: (m: Message) => void;
+  onRetry?: (m: Message) => void;
 }) {
   return (
     <Fragment>
@@ -82,7 +84,14 @@ export function MessageRow({
       )}
       <div
         id={"m-" + m.id}
-        className={"m-row" + (grouped ? " grouped" : "") + (mine ? " mine" : "") + (highlighted ? " flash" : "")}
+        className={
+          "m-row" +
+          (grouped ? " grouped" : "") +
+          (mine ? " mine" : "") +
+          (highlighted ? " flash" : "") +
+          (m.pending ? " pending" : "") +
+          (m.failed ? " failed" : "")
+        }
       >
         <div className="m-gutter">
           {grouped ? (
@@ -141,6 +150,15 @@ export function MessageRow({
               ) : null}
             </div>
           )}
+          {m.pending && <div className="m-status">{t("message.sending")}</div>}
+          {m.failed && (
+            <div className="m-status failed">
+              <span>{t("message.failed")}</span>
+              <button className="linkish" onClick={() => onRetry?.(m)} type="button">
+                {t("message.retry")}
+              </button>
+            </div>
+          )}
           {m.reactions && m.reactions.length > 0 && (
             <div className="reactions">
               {m.reactions.map((r) => (
@@ -168,7 +186,7 @@ export function MessageRow({
             <div className="translation muted">{t("message.translateUnavailable")}</div>
           )}
         </div>
-        {editingId !== m.id && (
+        {editingId !== m.id && !m.pending && !m.failed && (
           <div className="m-actions">
             <div className="react-wrap">
               <button

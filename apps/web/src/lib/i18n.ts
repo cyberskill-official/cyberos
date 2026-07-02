@@ -181,6 +181,9 @@ const C: Record<string, Entry> = {
 
   // message row
   "message.edited": { en: "edited", vi: "đã sửa" },
+  "message.sending": { en: "Sending...", vi: "Đang gửi..." },
+  "message.failed": { en: "Not sent", vi: "Chưa gửi được" },
+  "message.retry": { en: "Retry", vi: "Thử lại" },
   "message.addReaction": { en: "Add reaction", vi: "Thêm cảm xúc" },
   "message.removeReaction": { en: "Remove your reaction", vi: "Gỡ cảm xúc của bạn" },
   "message.react": { en: "React", vi: "Bày tỏ cảm xúc" },

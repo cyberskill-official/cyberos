@@ -239,6 +239,10 @@ button:focus-visible, .chan-row:focus-visible { outline: 2px solid var(--accent-
 .m-row.mine .m-name { color: var(--accent-text); }
 .m-time { font-size: 12px; color: var(--faint); }
 .m-edited { font-size: 11px; color: var(--faint); font-style: italic; }
+.m-row.pending { opacity: 0.6; }
+.m-status { font-size: 12px; color: var(--faint); margin-top: 3px; display: flex; align-items: center; gap: 8px; }
+.m-status.failed { color: var(--bad-text); }
+.m-status.failed .linkish { color: var(--accent-text); font-weight: 600; }
 .m-body { font-size: 15px; line-height: 1.55; color: var(--ink); white-space: pre-wrap; word-break: break-word; }
 
 /* rich text inside a message body (richtext.ts grammar; rendered by richtext-view.tsx) */

@@ -45,6 +45,11 @@ export interface Message {
   created_at?: string;
   reactions?: ReactionSummary[];
   attachments?: AttachmentMeta[];
+  // Client-only optimistic-send state (never sent by the server): a temporary local message shown instantly
+  // while its POST is in flight. `clientId` is the temp id; `pending` while sending; `failed` on error.
+  pending?: boolean;
+  failed?: boolean;
+  clientId?: string;
 }
 export interface ReadMarker {
   subject_id: string;

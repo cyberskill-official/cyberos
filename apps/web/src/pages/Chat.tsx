@@ -694,22 +694,24 @@ export function Chat() {
     if ((!text && staged.length === 0) || sending || uploading) return;
     const mentionIds = resolveMentions(draft);
     setError("");
+    // Text-only is optimistic: the message appears instantly and reconciles on the server echo.
+    if (staged.length === 0) {
+      sendTextOptimistic(text, mentionIds);
+      return;
+    }
+    // With attachments: upload first (progress via `uploading`), then post.
     setSending(true);
     try {
-      if (staged.length > 0) {
-        setUploading(true);
-        const ids: string[] = [];
-        try {
-          // Sequential keeps the on-message order equal to the staged order.
-          for (const f of staged) ids.push(await uploadStaged(f));
-        } finally {
-          setUploading(false);
-        }
-        await postMessage(text, ids, mentionIds);
-        setStaged([]);
-      } else {
-        await postMessage(text, undefined, mentionIds);
+      setUploading(true);
+      const ids: string[] = [];
+      try {
+        // Sequential keeps the on-message order equal to the staged order.
+        for (const f of staged) ids.push(await uploadStaged(f));
+      } finally {
+        setUploading(false);
       }
+      await postMessage(text, ids, mentionIds);
+      setStaged([]);
       setDraft("");
       setPickedMentions([]);
     } catch (e) {
@@ -717,6 +719,56 @@ export function Chat() {
     } finally {
       setSending(false);
     }
+  }
+
+  // Optimistic text send: append a temp message immediately (instant feel), clear the composer, then POST and
+  // reconcile - replace the temp with the server row on success, or mark it "Not sent · Retry" on failure. The
+  // live ws echo is deduped by the real id (and the temp is removed on reconcile), so no double appears.
+  function sendTextOptimistic(text: string, mentionIds: string[]) {
+    if (!active || !token) return;
+    const chan = active.id;
+    const clientId = `pending-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const optimistic: Message = {
+      id: clientId,
+      clientId,
+      channel_id: chan,
+      sender_subject_id: me,
+      body: text,
+      created_at: new Date().toISOString(),
+      reactions: [],
+      attachments: [],
+      pending: true,
+    };
+    setMessages((prev) => [...prev, optimistic]);
+    setDraft("");
+    setPickedMentions([]);
+    delete draftsRef.current[chan];
+    try {
+      localStorage.setItem("cyberos.drafts", JSON.stringify(draftsRef.current));
+    } catch {
+      /* best-effort */
+    }
+    const payload: Record<string, unknown> = { body: text };
+    if (mentionIds.length) payload.mentions = mentionIds;
+    void (async () => {
+      try {
+        const real = await apiFetch<Message>(token, "POST", `/v1/chat/channels/${chan}/messages`, payload);
+        setMessages((prev) => {
+          const without = prev.filter((m) => m.id !== clientId);
+          return without.some((m) => m.id === real.id) ? without : [...without, real];
+        });
+      } catch (e) {
+        setMessages((prev) => prev.map((m) => (m.id === clientId ? { ...m, pending: false, failed: true } : m)));
+        setError(e instanceof Error ? e.message : String(e));
+      }
+    })();
+  }
+
+  // Retry a message that failed to send: drop the failed temp and re-send its text.
+  function retrySend(m: Message) {
+    if (!m.failed) return;
+    setMessages((prev) => prev.filter((x) => x.id !== m.id));
+    sendTextOptimistic(m.body, []);
   }
 
   // Fetch up to three short reply suggestions for the current conversation (composer sparkle). A 502 means
@@ -1286,6 +1338,7 @@ export function Chat() {
                     setEditText(m.body);
                   }}
                   onDelete={deleteMessage}
+                  onRetry={retrySend}
                 />
 
                 <div className="typing">

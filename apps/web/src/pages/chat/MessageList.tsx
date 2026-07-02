@@ -44,6 +44,7 @@ export function MessageList({
   onOpenThread,
   onStartEdit,
   onDelete,
+  onRetry,
 }: {
   rows: { m: Message; showDay: boolean; grouped: boolean }[];
   messages: Message[];
@@ -82,6 +83,7 @@ export function MessageList({
   onOpenThread: (m: Message) => void;
   onStartEdit: (m: Message) => void;
   onDelete: (m: Message) => void;
+  onRetry?: (m: Message) => void;
 }) {
   return (
     <div
@@ -130,6 +132,7 @@ export function MessageList({
           onOpenThread={onOpenThread}
           onStartEdit={onStartEdit}
           onDelete={onDelete}
+          onRetry={onRetry}
         />
       ))}
       {showJumpLatest && (
