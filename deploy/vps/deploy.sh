@@ -14,6 +14,10 @@ cd "$REPO_DIR"
 echo "==> pulling latest main"
 PRE_PULL_REV="$(git rev-parse HEAD)"
 git pull --ff-only origin main
+# Decide NOW (before the cd below changes what the pathspec means) whether the Caddyfile changed in the
+# pulled range - a wrong-CWD pathspec here silently disabled the caddy recreate once (2026-07-02).
+CADDY_CHANGED=0
+git diff --quiet "$PRE_PULL_REV" HEAD -- deploy/vps/Caddyfile.p0 || CADDY_CHANGED=1
 
 cd deploy/vps
 COMPOSE=(docker compose --env-file .env.p0 -f docker-compose.p0.images.yml)
@@ -80,7 +84,7 @@ fi
 # restart re-read the stale inode (found 2026-07-02 - /status/ai 404 in prod while present in git, months
 # of Caddyfile changes never shipped). The only correct fix for a changed Caddyfile is to RECREATE the
 # container so the bind re-resolves; reload still covers same-inode edits and is otherwise a cheap no-op.
-if ! git diff --quiet "$PRE_PULL_REV" HEAD -- deploy/vps/Caddyfile.p0; then
+if [ "$CADDY_CHANGED" = "1" ]; then
   echo "==> Caddyfile.p0 changed; recreating caddy so the file bind re-resolves (seconds of downtime)"
   "${COMPOSE[@]}" up -d --force-recreate caddy || echo "==> caddy recreate failed - check caddy logs"
 else
