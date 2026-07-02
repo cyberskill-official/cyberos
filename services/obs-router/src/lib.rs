@@ -18,6 +18,7 @@ pub mod handle;
 pub mod notify;
 pub mod pagerduty;
 pub mod route;
+pub mod runbook;
 pub mod severity;
 pub mod triage;
 
@@ -28,5 +29,6 @@ pub use error::RouterError;
 pub use handle::{route_alert, RouteOutcome};
 pub use notify::{ChatClient, NotifyError, PagerDutyClient};
 pub use route::{clamp_confidence, decide, Route, CONFIDENCE_FLOOR};
+pub use runbook::sanitize_runbook;
 pub use severity::Severity;
 pub use triage::{Triage, TriageClient, TriageError};

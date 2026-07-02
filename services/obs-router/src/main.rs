@@ -183,6 +183,7 @@ async fn handle_alert(
                     &st.pagerduty,
                     st.sink.as_ref(),
                     &alert,
+                    &st.config.runbook_allowlist,
                     &request_id,
                 )
                 .await;

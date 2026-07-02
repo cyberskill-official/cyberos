@@ -487,7 +487,7 @@ All resolved. Deferred:
 | Alertmanager webhook payload schema change | parse fails | Sev-1; Alertmanager retries | Update parser to handle new schema |
 | Multiple alerts in one webhook | iterate per alert | Each routed independently | By design |
 | CHAT channel `#oncall` archived/deleted | post fails | Fallback to PagerDuty | Operator restores channel |
-| Suggested runbook URL invalid | rendered as broken link in CHAT | Operator fixes runbook | Standard fix |
+| Suggested runbook URL fabricated/unverified | not an exact match in OBS_RUNBOOK_ALLOWLIST (the KB index) | Dropped; CHAT shows "Runbook: none" (fail-closed) | Operator adds the runbook to the KB index / allowlist |
 
 ---
 
@@ -501,6 +501,7 @@ All resolved. Deferred:
 - Escalate button gives ops one-click PagerDuty escalation when CHAT triage doesn't capture the severity.
 - Webhook secret prevents alert poisoning. Rotation cadence quarterly.
 - The 10s triage+route p95 budget is the user-experience floor. Above 10s, ops doesn't see alerts in their natural workflow.
+- As built (2026-07-02, P2 hardening): a suggested runbook is surfaced only if its URL is EXACTLY in the KB runbook allowlist (env `OBS_RUNBOOK_ALLOWLIST`, comma- or whitespace-separated). Anything else - including the SKILL.md example URL a local model may echo, or a fabricated slug on the real KB host - is dropped (fail-closed when the allowlist is empty). Enforced in `services/obs-router/src/runbook.rs` (`sanitize_runbook`) at `route_alert`, so both the CHAT post and the `obs.alert_triaged` audit only carry a verified runbook. DEPLOY: set `OBS_RUNBOOK_ALLOWLIST` to the live KB runbook URLs before obs-router serves traffic.
 
 ---
 

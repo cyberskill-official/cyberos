@@ -26,6 +26,7 @@ pub async fn route_alert<T, C, P>(
     pagerduty: &P,
     sink: &dyn AuditSink,
     alert: &Alert,
+    runbook_allowlist: &[String],
     request_id: &str,
 ) -> RouteOutcome
 where
@@ -33,10 +34,15 @@ where
     C: ChatClient,
     P: PagerDutyClient,
 {
-    let triage = triage_client
+    let mut triage = triage_client
         .triage(alert)
         .await
         .unwrap_or_else(|_| Triage::failed());
+    // OBS-007 P2: never surface an unverified or fabricated runbook link. Keep the suggested runbook only
+    // when it is an exactly allowlisted KB runbook URL; otherwise drop it (CHAT shows "Runbook: none").
+    // The alert still routes and pages regardless.
+    triage.suggested_runbook =
+        crate::runbook::sanitize_runbook(triage.suggested_runbook.as_deref(), runbook_allowlist);
     let intended = decide(alert.severity, triage.confidence);
     let outcome = deliver(chat, pagerduty, alert, &triage, intended, request_id).await;
 
@@ -197,7 +203,7 @@ mod tests {
             CountingPd::default(),
             RecordingSink::default(),
         );
-        let out = route_alert(&t, &c, &p, &s, &alert(Severity::Sev2), "req").await;
+        let out = route_alert(&t, &c, &p, &s, &alert(Severity::Sev2), &[], "req").await;
         assert_eq!(
             out,
             RouteOutcome {
@@ -224,7 +230,7 @@ mod tests {
             CountingPd::default(),
             RecordingSink::default(),
         );
-        let out = route_alert(&t, &c, &p, &s, &alert(Severity::Sev1), "req").await;
+        let out = route_alert(&t, &c, &p, &s, &alert(Severity::Sev1), &[], "req").await;
         assert_eq!(out.delivered, Route::Both);
         assert!(out.fully_delivered);
         assert_eq!(c.calls.load(Ordering::SeqCst), 1);
@@ -242,7 +248,7 @@ mod tests {
             CountingPd::default(),
             RecordingSink::default(),
         );
-        let out = route_alert(&t, &c, &p, &s, &alert(Severity::Sev2), "req").await;
+        let out = route_alert(&t, &c, &p, &s, &alert(Severity::Sev2), &[], "req").await;
         assert_eq!(out.delivered, Route::PagerDuty);
         assert_eq!(p.calls.load(Ordering::SeqCst), 1);
     }
@@ -261,7 +267,7 @@ mod tests {
             CountingPd::default(),
             RecordingSink::default(),
         );
-        let out = route_alert(&t, &c, &p, &s, &alert(Severity::Sev2), "req").await;
+        let out = route_alert(&t, &c, &p, &s, &alert(Severity::Sev2), &[], "req").await;
         assert_eq!(out.delivered, Route::PagerDuty); // §1 #11 fallback
         assert_eq!(c.calls.load(Ordering::SeqCst), 1);
         assert_eq!(p.calls.load(Ordering::SeqCst), 1);
@@ -281,9 +287,39 @@ mod tests {
             },
             RecordingSink::default(),
         );
-        let out = route_alert(&t, &c, &p, &s, &alert(Severity::Sev3), "req").await;
+        let out = route_alert(&t, &c, &p, &s, &alert(Severity::Sev3), &[], "req").await;
         assert_eq!(out.delivered, Route::Chat); // §1 #11 last resort
         assert_eq!(p.calls.load(Ordering::SeqCst), 1);
         assert_eq!(c.calls.load(Ordering::SeqCst), 1);
+    }
+
+    #[tokio::test]
+    async fn runbook_is_dropped_unless_allowlisted() {
+        // FixedTriage suggests "kb/r". With an empty allowlist that runbook is unverified, so it is blanked
+        // in the audit (and therefore in the CHAT post) - OBS-007 P2 fail-closed against a fabricated URL.
+        let (t, c, p, s) = (
+            FixedTriage {
+                confidence: 0.9,
+                fail: false,
+            },
+            CountingChat::default(),
+            CountingPd::default(),
+            RecordingSink::default(),
+        );
+        route_alert(&t, &c, &p, &s, &alert(Severity::Sev2), &[], "req").await;
+        assert!(
+            s.latest("obs.alert_triaged").unwrap().payload["suggested_runbook"].is_null(),
+            "a non-allowlisted runbook is dropped (fail-closed)"
+        );
+
+        // The same runbook, now exactly on the allowlist -> preserved.
+        let s2 = RecordingSink::default();
+        let allow = vec!["kb/r".to_string()];
+        route_alert(&t, &c, &p, &s2, &alert(Severity::Sev2), &allow, "req").await;
+        assert_eq!(
+            s2.latest("obs.alert_triaged").unwrap().payload["suggested_runbook"],
+            "kb/r",
+            "an exactly allowlisted runbook is kept"
+        );
     }
 }
