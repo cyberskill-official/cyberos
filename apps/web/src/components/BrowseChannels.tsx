@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { apiFetch } from "../lib/api";
 import { t } from "../lib/i18n";
 import { Icon } from "./icons";
+import { useModalA11y } from "./useModalA11y";
 
 interface BrowseRow {
   id: string;
@@ -70,9 +71,10 @@ export function BrowseChannels({
     }
   }
 
+  const boxRef = useModalA11y(onClose);
   return (
     <div className="picker-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="picker">
+      <div className="picker" ref={boxRef} role="dialog" aria-modal="true" aria-label={t("browse.title")} tabIndex={-1}>
         <div className="picker-head">
           <span>{t("browse.title")}</span>
           <button className="icon-btn" onClick={onClose} type="button" title={t("common.close")}>

@@ -4,6 +4,7 @@ import { shortId } from "../lib/chat";
 import { t } from "../lib/i18n";
 import { Avatar } from "./Avatar";
 import { Icon } from "./icons";
+import { useModalA11y } from "./useModalA11y";
 
 export type PickerMode = "dm" | "group" | "add" | "call";
 
@@ -79,9 +80,10 @@ export function PeoplePicker({
           ? t("picker.newGroup")
           : t("header.addPeople");
 
+  const boxRef = useModalA11y(onClose);
   return (
     <div className="picker-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="picker">
+      <div className="picker" ref={boxRef} role="dialog" aria-modal="true" aria-label={title} tabIndex={-1}>
         <div className="picker-head">
           <span>{title}</span>
           <button className="icon-btn" onClick={onClose} type="button" title={t("common.close")}>

@@ -5,6 +5,7 @@ import { t } from "../lib/i18n";
 import { Avatar } from "./Avatar";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { Icon } from "./icons";
+import { useModalA11y } from "./useModalA11y";
 
 interface Member {
   channel_id: string;
@@ -166,9 +167,17 @@ export function ChannelSettings({
     }
   }
 
+  const boxRef = useModalA11y(onClose);
   return (
     <div className="picker-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="picker settings">
+      <div
+        className="picker settings"
+        ref={boxRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("settings.title")}
+        tabIndex={-1}
+      >
         <div className="picker-head">
           <span>{t("settings.title")}</span>
           <button className="icon-btn" onClick={onClose} type="button" title={t("common.close")}>
