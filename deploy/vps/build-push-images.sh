@@ -30,12 +30,13 @@ docker buildx use cyberos-builder
 
 build_push() {
   local pkg="$1"
+  local bin="${2:-$1}"
   echo "==> building ${pkg} (${PLATFORM}) -> ${REGISTRY}/${pkg}:latest + :${TAG}"
   docker buildx build \
     --platform "${PLATFORM}" \
     --file Dockerfile \
     --build-arg "PACKAGE=${pkg}" \
-    --build-arg "BIN=${pkg}" \
+    --build-arg "BIN=${bin}" \
     --tag "${REGISTRY}/${pkg}:latest" \
     --tag "${REGISTRY}/${pkg}:${TAG}" \
     --push \
@@ -44,6 +45,18 @@ build_push() {
 
 build_push cyberos-auth
 build_push cyberos-chat
+# The gateway package and its server bin have different names (cyberos-ai-gateway / cyberos-gateway).
+build_push cyberos-ai-gateway cyberos-gateway
+
+# The bge-m3 embed sidecar is Python with its own Dockerfile and build context (services/embed-sidecar).
+echo "==> building cyberos-embed-sidecar (${PLATFORM}) -> ${REGISTRY}/cyberos-embed-sidecar:latest + :${TAG}"
+docker buildx build \
+  --platform "${PLATFORM}" \
+  --file embed-sidecar/Dockerfile \
+  --tag "${REGISTRY}/cyberos-embed-sidecar:latest" \
+  --tag "${REGISTRY}/cyberos-embed-sidecar:${TAG}" \
+  --push \
+  embed-sidecar
 
 # eval (BRAIN/EVAL) is still stabilising and is OFF by default in the deploy, so it is not built unless asked.
 if [ "${BUILD_EVAL:-0}" = "1" ]; then

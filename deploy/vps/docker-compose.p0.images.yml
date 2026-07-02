@@ -18,6 +18,10 @@ networks:
 volumes:
   caddy-data:
   caddy-config:
+  # Hugging Face cache for the embed sidecar - bge-m3 (~2.3 GB) downloads once and survives redeploys.
+  embed-hf-cache:
+  # Ollama model store (llm profile only).
+  ollama-models:
 
 services:
   auth:
@@ -49,6 +53,9 @@ services:
       # FR-MEMORY-122 master switch (default OFF). Even with the link set, capture emits interaction-events
       # only when this is true AND the subject has acknowledged the notice. Default-off = no behaviour change.
       CAPTURE_ENABLED: ${CAPTURE_ENABLED:-false}
+      # Chat translate + future AI features call the gateway over the internal network. Unset = clean 502
+      # from /v1/chat/translate; the gateway being down degrades the same way, never breaking chat itself.
+      AI_GATEWAY_URL: http://ai-gateway:8080
     depends_on:
       auth:
         condition: service_healthy
@@ -75,6 +82,70 @@ services:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:7760/healthz"]
       interval: 10s
       timeout: 3s
+      retries: 10
+    networks: [cyberos]
+
+  # AI group (FR-MEMORY-123 / DEC-2723) - best-effort like eval: nothing in the core stack depends on any
+  # of these, so a failed pull or boot never touches auth/chat/caddy. The gateway is INTERNAL ONLY (no
+  # Caddy /v1 route; chat reaches it over the compose network); only its /healthz is probed via /status/ai.
+  ai-gateway:
+    image: ${CYBEROS_REGISTRY:-ghcr.io/cyberskill-official}/cyberos-ai-gateway:${CYBEROS_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    # No env_file: the gateway needs no secrets or DB - least privilege.
+    environment:
+      AI_GATEWAY_BIND: 0.0.0.0:8080
+      AI_GATEWAY_CONFIG_DIR: /etc/cyberos/tenants
+      # local_openai adapter -> the bge-m3 sidecar (embed.standard in the tenant policy).
+      OPENAI_COMPAT_ENDPOINT: http://embed:7900
+      # ollama adapter -> the llm-profile container (chat.smart / chat.fast). Down = clean per-call 502.
+      OLLAMA_ENDPOINT: http://ollama:11434
+    volumes:
+      - ./ai/tenants:/etc/cyberos/tenants:ro
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks: [cyberos]
+
+  # bge-m3 embeddings (FR-AI-019). Weights download once into embed-hf-cache at first boot (warmup thread;
+  # /healthz reports warm: cold|warming|ready|failed). The memory cap keeps a runaway load inside this
+  # container - the kernel OOM-kills embed alone and Docker restarts it, auth/chat untouched. memswap gives
+  # fp32 bge-m3 room to lean on the VPS swapfile on the 4 GB box.
+  embed:
+    image: ${CYBEROS_REGISTRY:-ghcr.io/cyberskill-official}/cyberos-embed-sidecar:${CYBEROS_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      CYBEROS_EMBED_MODE: real
+      CYBEROS_EMBED_WARMUP: "1"
+    volumes:
+      - embed-hf-cache:/data
+    mem_limit: 3g
+    memswap_limit: 6g
+    healthcheck:
+      # python:slim has no curl; ask the interpreter instead.
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:7900/healthz', timeout=2)"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks: [cyberos]
+
+  # Chat LLM for translation/assistant - OFF by default (compose profile "llm"): a 3b model does not fit
+  # next to bge-m3 in 3.3 GiB RAM. Enable after the VPS resize: deploy with DEPLOY_LLM=1 (deploy.sh sets
+  # COMPOSE_PROFILES=llm and runs the idempotent model pull). Runbook: docs/deploy/ai-gateway-and-embeddings.md.
+  ollama:
+    # Not pinned yet on purpose: the llm profile is OFF today, so this pulls nothing. Pin to the exact tag
+    # that the first successful flip-on pulls (docker inspect --format '{{index .RepoDigests 0}}' ...).
+    image: ollama/ollama:latest
+    profiles: [llm]
+    restart: unless-stopped
+    volumes:
+      - ollama-models:/root/.ollama
+    mem_limit: 3500m
+    healthcheck:
+      test: ["CMD", "ollama", "ls"]
+      interval: 15s
+      timeout: 5s
       retries: 10
     networks: [cyberos]
 

@@ -1,0 +1,39 @@
+# CyberOS PRODUCTION tenant policy for org:cyberskill (mounted read-only into the ai-gateway container at
+# /etc/cyberos/tenants — see docker-compose.p0*.yml). This is the prod counterpart of the local-dev policy
+# at services/ai-gateway/config/tenants/org-cyberskill.yaml; the gateway hot-reloads edits (~35s through a
+# Docker bind mount).
+#
+# Providers are LOCAL ONLY (no API keys, inherently zero-retention, zero-cost — they pass the ZDR and
+# cost gates by class, and carry no region so the sg-1 residency pin holds):
+#
+#   chat.smart / chat.fast  -> the ollama container (translation, assistant). The ollama service sits
+#                              behind the compose profile "llm" and is OFF on the 4 GB box; until it runs,
+#                              chat calls fail per-call with a clean 502 and chat translate degrades
+#                              gracefully. Flip-on steps: docs/deploy/ai-gateway-and-embeddings.md.
+#   embed.standard          -> the bge-m3 embed sidecar via the gateway's local_openai adapter
+#                              (OPENAI_COMPAT_ENDPOINT=http://embed:7900). Live from day one.
+
+tenant_id: org:cyberskill
+
+ai_policy:
+  monthly_cap_usd: "150"
+  warn_threshold: 0.80
+  hard_stop: true
+
+  # Ollama model ids must exist in the container (deploy.sh runs an idempotent `ollama pull` when the llm
+  # profile is enabled). qwen2.5:3b-instruct: no think-token preamble to pollute translations, workable
+  # Vietnamese<->English, ~2.5 GB RSS on CPU — sized for the post-resize 8 GB box.
+  primary_provider:
+    kind: ollama
+    model_alias_map:
+      chat.smart: qwen2.5:3b-instruct
+      chat.fast: qwen2.5:3b-instruct
+
+  fallback_chain:
+    - kind: local-openai
+      model_alias_map:
+        embed.standard: bge-m3
+
+  call_timeout_seconds: 120
+  residency: sg-1
+  zdr_required: true

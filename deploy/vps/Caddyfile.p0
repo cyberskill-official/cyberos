@@ -45,6 +45,18 @@
 		rewrite * /healthz
 		reverse_proxy eval:7760
 	}
+	# AI group probes (gateway + bge-m3 sidecar). Health only - the gateway's API stays internal to the
+	# compose network (chat calls it service-to-service; nothing AI is exposed publicly).
+	@statushealthai path /status/ai
+	handle @statushealthai {
+		rewrite * /healthz
+		reverse_proxy ai-gateway:8080
+	}
+	@statushealthembed path /status/embed
+	handle @statushealthembed {
+		rewrite * /healthz
+		reverse_proxy embed:7900
+	}
 
 	# The console pages (chat.html, audit.html) poll a bare /healthz for their reachability dot. Route it to
 	# chat so the dot reflects the chat backend; without this the request falls through to the static handler

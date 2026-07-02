@@ -21,8 +21,20 @@ COMPOSE=(docker compose --env-file .env.p0 -f docker-compose.p0.images.yml)
 # best-effort - still stabilising, nothing depends on it, and it must never block the core stack.
 CORE=(auth chat caddy)
 
+# AI group (gateway + bge-m3 embeddings) - best-effort like eval: chat degrades gracefully when the gateway
+# is absent, so an AI failure must never block the core deploy. The ollama chat LLM sits behind the compose
+# profile "llm": enable it by setting COMPOSE_PROFILES=llm in .env.p0 (after the VPS resize - see
+# docs/deploy/ai-gateway-and-embeddings.md), and every later deploy keeps it automatically.
+AI=(ai-gateway embed)
+LLM_ON=0
+if grep -qE '^COMPOSE_PROFILES=.*llm' .env.p0 2>/dev/null; then
+  LLM_ON=1
+  AI+=(ollama)
+fi
+
 echo "==> pulling new images from GHCR"
 "${COMPOSE[@]}" pull "${CORE[@]}"
+"${COMPOSE[@]}" pull "${AI[@]}" || echo "==> AI images not all available yet; continuing (best-effort group)"
 # eval (BRAIN/EVAL) is OFF by default: it opens its own Supabase pooler connections and the small pooler
 # tier cannot spare them next to auth + chat. Turn it on with DEPLOY_EVAL=1 once the pooler limit is raised.
 if [ "${DEPLOY_EVAL:-0}" = "1" ]; then
@@ -41,6 +53,18 @@ bash ./migrate.sh || echo "==> migrate.sh reported an error; deploying the core 
 
 echo "==> rolling the core stack"
 "${COMPOSE[@]}" up -d --remove-orphans "${CORE[@]}"
+
+echo "==> rolling the AI group (best-effort)"
+"${COMPOSE[@]}" up -d "${AI[@]}" || echo "==> AI group not (fully) started; core stack is unaffected"
+if [ "$LLM_ON" = "1" ]; then
+  # Make sure the chat model behind chat.smart/chat.fast exists in the ollama store. Idempotent: a pull of
+  # a present model is a fast no-op. Model id must match deploy/vps/ai/tenants/org-cyberskill.yaml.
+  OLLAMA_CHAT_MODEL="${OLLAMA_CHAT_MODEL:-qwen2.5:3b-instruct}"
+  echo "==> ensuring ollama model ${OLLAMA_CHAT_MODEL} is present"
+  "${COMPOSE[@]}" exec -T ollama ollama pull "${OLLAMA_CHAT_MODEL}" \
+    || echo "==> ollama model pull failed; translation stays degraded until it succeeds"
+fi
+
 if [ "${DEPLOY_EVAL:-0}" = "1" ]; then
   echo "==> rolling eval (DEPLOY_EVAL=1)"
   "${COMPOSE[@]}" up -d eval || echo "==> eval not started (build/image pending); core stack is up"

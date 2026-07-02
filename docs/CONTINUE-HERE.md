@@ -23,10 +23,14 @@ What is live vs dormant right now:
 
 ## Next steps (in priority order)
 
-1. Stand up the ai-gateway and a bge-m3 embedding sidecar in the prod compose. This activates three already-built things at once: the embeddings route, chat translation, and (with capture on) brain ingest.
-2. When counsel clears the notice, turn the evaluation half on: publish the monitoring notice, record acknowledgments, set retention policies, author and publish a rubric version, then deploy the eval service with `BUILD_EVAL=1` and set `CHAT_AUDIT_DATABASE_URL` + `CAPTURE_ENABLED`. Keep it human-in-the-loop and disabled-by-default until every governance precondition holds.
-3. Stand up the memory recall service container (only its migrations are enabled today, not a running service).
-4. Optional polish: split the 947-line apps/web/src/pages/Chat.tsx into components (deferred); the MCP and OBS modules per their build plans if still in scope.
+1. DONE (2026-07-02): the ai-gateway + bge-m3 embed sidecar are in the prod compose as a best-effort AI
+   group - embeddings live, gateway internal-only, chat wired via `AI_GATEWAY_URL`. Chat translation stays
+   gracefully dormant until the VPS is resized to 8 GB and the `llm` compose profile is enabled (ollama +
+   qwen2.5:3b-instruct) - exact steps in `docs/deploy/ai-gateway-and-embeddings.md`.
+2. Flip translation on: resize the VPS, set `COMPOSE_PROFILES=llm` in `.env.p0`, redeploy (runbook above).
+3. When counsel clears the notice, turn the evaluation half on: publish the monitoring notice, record acknowledgments, set retention policies, author and publish a rubric version, then deploy the eval service with `BUILD_EVAL=1` and set `CHAT_AUDIT_DATABASE_URL` + `CAPTURE_ENABLED`. Keep it human-in-the-loop and disabled-by-default until every governance precondition holds.
+4. Stand up the memory recall service container (only its migrations are enabled today, not a running service; the embedding dependency it needs is now live).
+5. Optional polish: split the 947-line apps/web/src/pages/Chat.tsx into components (deferred); the MCP and OBS modules per their build plans if still in scope.
 
 ## Pointers
 
