@@ -72,20 +72,21 @@ export function applyReaction(
   emoji: string,
   added: boolean,
   isMe: boolean,
+  count: number,
 ): ReactionSummary[] {
   const next = (list || []).map((r) => ({ ...r }));
   const i = next.findIndex((r) => r.emoji === emoji);
-  if (added) {
-    if (i === -1) {
-      next.push({ emoji, count: 1, mine: isMe });
-    } else {
-      next[i].count += 1;
-      if (isMe) next[i].mine = true;
-    }
-  } else if (i !== -1) {
-    next[i].count -= 1;
-    if (isMe) next[i].mine = false;
-    if (next[i].count <= 0) next.splice(i, 1);
+  // The server sends the authoritative absolute count after the change, so we REPLACE rather than add or
+  // subtract - this stays correct even if the same event is replayed (e.g. a buffered frame on reconnect).
+  if (count <= 0) {
+    if (i !== -1) next.splice(i, 1);
+    return next;
+  }
+  if (i === -1) {
+    next.push({ emoji, count, mine: isMe && added });
+  } else {
+    next[i].count = count;
+    if (isMe) next[i].mine = added; // only the acting client's own action flips its own `mine`
   }
   return next;
 }

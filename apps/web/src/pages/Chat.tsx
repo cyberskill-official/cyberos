@@ -203,6 +203,9 @@ export function Chat() {
   useEffect(() => {
     notifyPrefsRef.current = notifyPrefs;
   }, [notifyPrefs]);
+  // In-flight reaction toggles keyed by `${messageId}|${emoji}`, so a rapid double-click cannot fire two
+  // conflicting add/remove requests; the reaction_changed echo reconciles the absolute count.
+  const reactingRef = useRef<Set<string>>(new Set());
   // Ask for desktop-notification permission once, lazily, on the first channel selection (a real user
   // gesture, which browsers require). If denied, badges and the tab title still work; we just never notify.
   const askedNotifyRef = useRef(false);
@@ -605,9 +608,11 @@ export function Chat() {
     setPickedMentions([]);
   }, [activeId]);
 
-  // Auto-mark the active channel read (debounced) when its timeline changes, and clear its badge.
+  // Auto-mark the active channel read (debounced) when its timeline changes, and clear its badge. Skip
+  // while viewing history (notLatest): the last message in a jump/search window is NOT the channel tail,
+  // so marking it read would move the read position backward and wrongly clear the unread badge.
   useEffect(() => {
-    if (!token || !activeId || messages.length === 0) return;
+    if (!token || !activeId || messages.length === 0 || notLatest) return;
     const last = messages[messages.length - 1];
     const tid = window.setTimeout(() => {
       void apiFetch(token, "POST", `/v1/chat/channels/${activeId}/read`, { message_id: last.id }).catch(() => {});
@@ -615,7 +620,7 @@ export function Chat() {
       setMentions((mn) => ({ ...mn, [activeId]: 0 }));
     }, 500);
     return () => window.clearTimeout(tid);
-  }, [token, activeId, messages]);
+  }, [token, activeId, messages, notLatest]);
 
   function onDraftChange(v: string) {
     setDraft(v);
@@ -823,6 +828,9 @@ export function Chat() {
   async function toggleReaction(m: Message, emoji: string) {
     if (!token) return;
     setReactPickerId("");
+    const key = `${m.id}|${emoji}`;
+    if (reactingRef.current.has(key)) return; // a toggle for this (message, emoji) is already in flight
+    reactingRef.current.add(key);
     const has = (m.reactions || []).some((r) => r.emoji === emoji && r.mine);
     const path = `/v1/chat/channels/${m.channel_id}/messages/${m.id}/reactions`;
     try {
@@ -833,6 +841,8 @@ export function Chat() {
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      reactingRef.current.delete(key);
     }
   }
 

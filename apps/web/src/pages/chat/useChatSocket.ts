@@ -18,6 +18,7 @@ export interface WsEvent extends Partial<Message> {
   message_id?: string;
   emoji?: string;
   added?: boolean;
+  count?: number;
 }
 
 export interface ChatSocket {
@@ -193,8 +194,9 @@ export function useChatSocket({
           const emoji = data.emoji;
           const added = !!data.added;
           const isMe = !!data.subject && data.subject === me;
+          const count = typeof data.count === "number" ? data.count : added ? 1 : 0;
           const patch = (m: Message): Message =>
-            m.id === mid ? { ...m, reactions: applyReaction(m.reactions, emoji, added, isMe) } : m;
+            m.id === mid ? { ...m, reactions: applyReaction(m.reactions, emoji, added, isMe, count) } : m;
           setMessages((prev) => prev.map(patch));
           setThreadReplies((prev) => prev.map(patch));
         } else if (data.type === "presence" && data.subject) {
