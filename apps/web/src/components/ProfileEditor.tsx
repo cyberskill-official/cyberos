@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { apiFetch } from "../lib/api";
 import { fileToAvatarDataUrl } from "../lib/chat";
+import { t } from "../lib/i18n";
 import { Avatar } from "./Avatar";
 import { Icon } from "./icons";
 
@@ -36,14 +37,14 @@ export function ProfileEditor({
     try {
       setAvatar(await fileToAvatarDataUrl(f));
     } catch {
-      setErr("Could not read that image.");
+      setErr(t("profile.readError"));
     }
   }
 
   async function save() {
     const n = name.trim();
     if (!n) {
-      setErr("Display name cannot be empty.");
+      setErr(t("profile.nameRequired"));
       return;
     }
     setBusy(true);
@@ -63,8 +64,8 @@ export function ProfileEditor({
     <div className="picker-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="picker" style={{ width: 380 }}>
         <div className="picker-head">
-          <span>Edit profile</span>
-          <button className="icon-btn" onClick={onClose} type="button" title="Close">
+          <span>{t("profile.title")}</span>
+          <button className="icon-btn" onClick={onClose} type="button" title={t("common.close")}>
             <Icon name="close" size={16} />
           </button>
         </div>
@@ -72,27 +73,27 @@ export function ProfileEditor({
           <Avatar id={me} name={name || "?"} size={72} src={avatar} />
           <div className="profile-avatar-actions">
             <button className="btn-ghost" onClick={() => fileRef.current?.click()} type="button">
-              Upload photo
+              {t("profile.uploadPhoto")}
             </button>
             {avatar && (
               <button className="btn-ghost" onClick={() => setAvatar("")} type="button">
-                Remove
+                {t("profile.remove")}
               </button>
             )}
             <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={onPick} />
           </div>
         </div>
         <div className="field">
-          <label>Display name</label>
+          <label>{t("profile.displayName")}</label>
           <input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} autoFocus />
         </div>
         <div className="err">{err}</div>
         <div className="picker-actions">
           <button className="btn-ghost" onClick={onClose} type="button">
-            Cancel
+            {t("common.cancel")}
           </button>
           <button className="btn-pill" onClick={() => void save()} disabled={busy} type="button">
-            {busy ? "Saving..." : "Save"}
+            {busy ? t("profile.saving") : t("common.save")}
           </button>
         </div>
       </div>

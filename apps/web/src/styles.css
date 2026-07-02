@@ -512,3 +512,28 @@ button:focus-visible, .chan-row:focus-visible { outline: 2px solid var(--accent-
 .avatar-img { width: 100%; height: 100%; border-radius: 30%; object-fit: cover; display: block; }
 .profile-avatar-row { display: flex; align-items: center; gap: 14px; }
 .profile-avatar-actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+
+/* muted channels + notify select (remaining-gaps wave) */
+.chan-row.muted { opacity: 0.55; }
+.cs-notify { align-self: flex-start; padding: 7px 10px; }
+.lang-btn { padding: 7px 10px; font-weight: 700; letter-spacing: 0.5px; }
+
+/* responsive: under 900px the sidebar becomes a drawer and the side panels overlay (remaining-gaps wave) */
+.only-narrow { display: none; }
+.side-backdrop { display: none; }
+@media (max-width: 900px) {
+  .only-narrow { display: grid; }
+  .slogan, .who { display: none; }
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0; z-index: 56; width: min(300px, 86vw);
+    transform: translateX(-105%); transition: transform 0.18s ease-out; box-shadow: var(--shadow-2);
+  }
+  .sidebar.open { transform: none; }
+  .side-backdrop { display: block; position: fixed; inset: 0; z-index: 55; background: var(--overlay); }
+  .thread { position: fixed; right: 0; top: 0; bottom: 0; z-index: 50; width: min(360px, 92vw); box-shadow: var(--shadow-2); }
+  .picker { width: 100%; }
+  .picker.settings { width: 100%; }
+  .att-group .att-img { max-width: 46vw; }
+  .empty.big .only-narrow { position: absolute; top: 12px; left: 12px; }
+  .empty.big { position: relative; }
+}

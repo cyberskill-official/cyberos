@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { apiFetch } from "../lib/api";
 import type { AttachmentMeta } from "../lib/chat";
 import { formatBytes, isImage } from "../lib/chat";
+import { t } from "../lib/i18n";
 import { Icon } from "./icons";
 
 // Renders a message attachment: an inline image for image types, a download chip otherwise. New messages
@@ -56,13 +57,13 @@ export function Attachment({
   if (failed)
     return (
       <span className="att-chip">
-        <Icon name="paperclip" size={14} /> attachment unavailable
+        <Icon name="paperclip" size={14} /> {t("attachment.unavailable")}
       </span>
     );
   if (!meta)
     return (
       <span className="att-chip">
-        <Icon name="paperclip" size={14} /> loading...
+        <Icon name="paperclip" size={14} /> {t("attachment.loading")}
       </span>
     );
   if (isImage(meta.content_type) && url) {

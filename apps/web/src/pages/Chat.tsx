@@ -4,6 +4,7 @@ import { useAuth } from "../lib/auth";
 import { apiFetch, apiUploadRaw, decodeJwt, ApiError } from "../lib/api";
 import type { Channel, Directory, Message, Person } from "../lib/chat";
 import { channelLabel, dayKey, fileToBase64, formatBytes, isImage, shortId, sortMessagesAsc } from "../lib/chat";
+import { t } from "../lib/i18n";
 import type { MentionCandidate } from "../lib/richtext";
 import { Icon } from "../components/icons";
 import { EmojiPicker } from "../components/EmojiPicker";
@@ -51,7 +52,7 @@ export function Chat() {
       .filter(Boolean)
       .map((w) => w[0].toUpperCase() + w.slice(1))
       .join(" ");
-    return pretty || "You";
+    return pretty || t("common.you");
   }, [email, meProfile]);
   const myAvatar = meProfile?.avatar || "";
 
@@ -132,6 +133,12 @@ export function Chat() {
   const [aiOpen, setAiOpen] = useState(false);
   const [replySuggestions, setReplySuggestions] = useState<string[]>([]);
   const [suggesting, setSuggesting] = useState(false);
+  // Remaining-gaps wave: per-channel notify modes (channel -> "mentions"|"none"; absent = all), per-channel
+  // drafts persisted across switches/reloads, and the narrow-viewport sidebar drawer.
+  const [notifyPrefs, setNotifyPrefs] = useState<Record<string, string>>({});
+  const draftsRef = useRef<Record<string, string>>({});
+  const prevChanRef = useRef("");
+  const [sideOpen, setSideOpen] = useState(false);
 
   const [editingId, setEditingId] = useState("");
   const [editText, setEditText] = useState("");
@@ -187,11 +194,15 @@ export function Chat() {
   const active = channels.find((c) => c.id === activeId) || null;
 
   // The latest active channel id, readable from callbacks (the unread poll, the notify handler) that are
-  // captured once and would otherwise close over a stale value.
+  // captured once and would otherwise close over a stale value. Same pattern for the notify prefs map.
   const activeIdRef = useRef(activeId);
   useEffect(() => {
     activeIdRef.current = activeId;
   }, [activeId]);
+  const notifyPrefsRef = useRef(notifyPrefs);
+  useEffect(() => {
+    notifyPrefsRef.current = notifyPrefs;
+  }, [notifyPrefs]);
   // Ask for desktop-notification permission once, lazily, on the first channel selection (a real user
   // gesture, which browsers require). If denied, badges and the tab title still work; we just never notify.
   const askedNotifyRef = useRef(false);
@@ -202,7 +213,36 @@ export function Chat() {
         void Notification.requestPermission().catch(() => {});
       }
     }
+    setSideOpen(false); // narrow viewports: picking a channel closes the drawer
     setActiveId(id);
+  }
+
+  // Persist the caller's channel notify overrides map (best-effort; absent row = "all").
+  async function refreshPrefs() {
+    if (!token) return;
+    try {
+      const rows = await apiFetch<{ channel_id: string; notify: string }[]>(token, "GET", "/v1/chat/prefs");
+      const next: Record<string, string> = {};
+      for (const r of rows || []) next[r.channel_id] = r.notify;
+      setNotifyPrefs(next);
+    } catch {
+      /* endpoint may predate this deploy */
+    }
+  }
+
+  async function setNotifyPref(channelId: string, notify: string) {
+    if (!token) return;
+    try {
+      await apiFetch(token, "PUT", `/v1/chat/channels/${channelId}/prefs`, { notify });
+      setNotifyPrefs((prev) => {
+        const next = { ...prev };
+        if (notify === "all") delete next[channelId];
+        else next[channelId] = notify;
+        return next;
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
   }
 
   // Reset the per-channel UI bits Chat owns when the active channel changes (timeline/presence/receipts reset
@@ -277,6 +317,9 @@ export function Chat() {
       const when = Date.parse(e.created_at || "") || Date.now();
       setLastActivity((prev) => ({ ...prev, [chan]: when }));
       if (chan === activeIdRef.current) return;
+      // The server already filters muted / mentions-only delivery; this guard covers a stale pref cache.
+      const mode = notifyPrefsRef.current[chan];
+      if (mode === "none" || (mode === "mentions" && !e.mention)) return;
       setUnread((prev) => ({ ...prev, [chan]: (prev[chan] || 0) + 1 }));
       if (e.mention) setMentions((prev) => ({ ...prev, [chan]: (prev[chan] || 0) + 1 }));
       if (
@@ -287,8 +330,11 @@ export function Chat() {
       ) {
         const ch = channels.find((c) => c.id === chan);
         const who = nameOf(e.sender || "");
-        const title = ch && ch.kind !== "direct" ? `${who} in ${channelLabel(directory, me, ch)}` : who;
-        const body = e.mention ? `mentioned you: ${e.preview || ""}` : e.preview || "New message";
+        const title =
+          ch && ch.kind !== "direct"
+            ? t("chat.notifyTitleIn", { who, channel: channelLabel(directory, me, ch) })
+            : who;
+        const body = e.mention ? t("chat.notifyMention", { preview: e.preview || "" }) : e.preview || t("chat.notifyNew");
         try {
           new Notification(title, { body });
         } catch {
@@ -382,6 +428,7 @@ export function Chat() {
         setError(e instanceof Error ? e.message : String(e));
       }
     })();
+    void refreshPrefs();
     // Attachment limits (best-effort; fallbacks cover an older server during a deploy window).
     (async () => {
       try {
@@ -448,14 +495,39 @@ export function Chat() {
     return () => window.clearTimeout(t);
   }, [highlightId, messages]);
 
-  // Reset pagination + AI suggestions when the channel changes.
+  // Reset pagination + AI suggestions when the channel changes, and swap drafts: the outgoing channel's
+  // draft is saved (localStorage, survives reloads), the incoming channel's draft is restored.
   useEffect(() => {
+    const prev = prevChanRef.current;
+    if (prev) {
+      if (draft.trim()) draftsRef.current[prev] = draft;
+      else delete draftsRef.current[prev];
+      try {
+        localStorage.setItem("cyberos.drafts", JSON.stringify(draftsRef.current));
+      } catch {
+        /* best-effort */
+      }
+    }
+    prevChanRef.current = activeId;
+    setDraft(draftsRef.current[activeId] || "");
     hasOlderRef.current = true;
     loadingOlderRef.current = false;
     setNotLatest(false);
     setReplySuggestions([]);
     setAiOpen(false);
+    // `draft` is intentionally read from the pre-switch render, not a dependency.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeId]);
+
+  // Load persisted drafts once.
+  useEffect(() => {
+    try {
+      const v = JSON.parse(localStorage.getItem("cyberos.drafts") || "{}");
+      if (v && typeof v === "object") draftsRef.current = v as Record<string, string>;
+    } catch {
+      /* corrupted store - start clean */
+    }
+  }, []);
 
   // Ctrl/Cmd+K opens global search from anywhere in chat.
   useEffect(() => {
@@ -556,6 +628,13 @@ export function Chat() {
     if (mentionIds && mentionIds.length) payload.mentions = mentionIds;
     const m = await apiFetch<Message>(token, "POST", `/v1/chat/channels/${active.id}/messages`, payload);
     setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
+    // A sent message clears the channel's persisted draft.
+    delete draftsRef.current[active.id];
+    try {
+      localStorage.setItem("cyberos.drafts", JSON.stringify(draftsRef.current));
+    } catch {
+      /* best-effort */
+    }
   }
 
   // Keep only the picked mentions whose "@name" still appears in the outgoing text as a whole token (bounded
@@ -641,7 +720,7 @@ export function Chat() {
       setReplySuggestions((r.suggestions || []).slice(0, 3));
     } catch (e) {
       if (e instanceof ApiError && e.status === 502) {
-        setError("AI suggestions are unavailable right now (the AI gateway is not serving).");
+        setError(t("chat.aiSuggestUnavailable"));
       } else {
         setError(e instanceof Error ? e.message : String(e));
       }
@@ -676,12 +755,16 @@ export function Chat() {
       const next = [...prev];
       for (const f of incoming) {
         if (next.length >= attachLimits.maxFiles) {
-          errors.push(`At most ${attachLimits.maxFiles} files per message.`);
+          errors.push(t("chat.attachTooMany", { limit: attachLimits.maxFiles }));
           break;
         }
         if (f.size > attachLimits.maxBytes) {
           errors.push(
-            `"${f.name}" is ${formatBytes(f.size)}, over the ${formatBytes(attachLimits.maxBytes)} limit.`,
+            t("chat.attachTooBig", {
+              name: f.name,
+              size: formatBytes(f.size),
+              limit: formatBytes(attachLimits.maxBytes),
+            }),
           );
           continue;
         }
@@ -715,7 +798,7 @@ export function Chat() {
   }
 
   async function deleteMessage(m: Message) {
-    if (!token || !window.confirm("Delete this message?")) return;
+    if (!token || !window.confirm(t("chat.confirmDelete"))) return;
     try {
       await apiFetch(token, "DELETE", `/v1/chat/channels/${m.channel_id}/messages/${m.id}`);
       setMessages((prev) => prev.filter((x) => x.id !== m.id));
@@ -1019,10 +1102,14 @@ export function Chat() {
   const subtitle = active
     ? active.kind === "direct"
       ? presence.has(active.other_subject_id || "")
-        ? "Active now"
-        : "Direct message"
+        ? t("chat.activeNow")
+        : t("chat.directMessage")
       : [
-          active.archived_at ? "Archived" : presence.size > 0 ? `${presence.size} online` : "Channel",
+          active.archived_at
+            ? t("sidebar.archived")
+            : presence.size > 0
+              ? t("chat.onlineCount", { n: presence.size })
+              : t("chat.channel"),
           (active.topic || "").trim(),
         ]
           .filter(Boolean)
@@ -1031,10 +1118,10 @@ export function Chat() {
 
   const seenLabel =
     active && active.kind === "direct"
-      ? "Seen"
+      ? t("chat.seen")
       : seenBy.length <= 3
-        ? "Seen by " + seenBy.map(nameOf).join(", ")
-        : `Seen by ${seenBy.length}`;
+        ? t("chat.seenBy", { names: seenBy.map(nameOf).join(", ") })
+        : t("chat.seenByCount", { n: seenBy.length });
 
   return (
     <div className="chat">
@@ -1052,6 +1139,8 @@ export function Chat() {
         activeId={activeId}
         unread={unread}
         mentions={mentions}
+        notifyPrefs={notifyPrefs}
+        open={sideOpen}
         presence={presence}
         health={health}
         nameOf={nameOf}
@@ -1062,14 +1151,24 @@ export function Chat() {
         onOpenBrowse={() => setBrowseOpen(true)}
       />
 
+      {sideOpen && <div className="side-backdrop" onClick={() => setSideOpen(false)} />}
+
       <section className="main">
         {!active ? (
           <div className="empty big">
+            <button
+              className="icon-btn only-narrow"
+              onClick={() => setSideOpen(true)}
+              type="button"
+              title={t("sidebar.channels")}
+            >
+              <Icon name="menu" size={18} />
+            </button>
             <div className="empty-mark">
               <Icon name="at" size={30} />
             </div>
-            <div className="empty-title">Welcome to CyberOS Chat</div>
-            <div className="empty-sub">Pick a channel or start a direct message to begin.</div>
+            <div className="empty-title">{t("chat.welcomeTitle")}</div>
+            <div className="empty-sub">{t("chat.welcomeSub")}</div>
           </div>
         ) : (
           <>
@@ -1094,6 +1193,7 @@ export function Chat() {
               onOpenSettings={() => setSettingsOpen(true)}
               onToggleAi={() => setAiOpen((v) => !v)}
               aiOpen={aiOpen}
+              onOpenSidebar={() => setSideOpen(true)}
               onSearchQChange={setSearchQ}
               onRunSearch={runSearch}
               onPickResult={jumpTo}
@@ -1169,7 +1269,7 @@ export function Chat() {
                 />
 
                 <div className="typing">
-                  {typingSubject && typingSubject !== me ? `${nameOf(typingSubject)} is typing...` : ""}
+                  {typingSubject && typingSubject !== me ? t("chat.typing", { name: nameOf(typingSubject) }) : ""}
                 </div>
 
                 {(error || call.error) && <div className="banner err">{call.error || error}</div>}
@@ -1193,7 +1293,7 @@ export function Chat() {
                     <button
                       className="reply-chip dismiss"
                       onClick={() => setReplySuggestions([])}
-                      title="Dismiss suggestions"
+                      title={t("chat.dismissSuggestions")}
                       type="button"
                     >
                       <Icon name="close" size={12} />
@@ -1202,7 +1302,7 @@ export function Chat() {
                 )}
 
                 {active.archived_at ? (
-                  <div className="archived-note">This channel is archived and read-only.</div>
+                  <div className="archived-note">{t("chat.archivedNote")}</div>
                 ) : (
                 <Composer
                   active={active}
@@ -1299,6 +1399,8 @@ export function Chat() {
           me={me}
           nameOf={nameOf}
           avatarSrc={avatarSrc}
+          notifyMode={notifyPrefs[active.id] || "all"}
+          onSetNotify={(mode) => void setNotifyPref(active.id, mode)}
           onClose={() => setSettingsOpen(false)}
           onChanged={() => void reloadChannels()}
           onLeft={() => {

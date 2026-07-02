@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import type { Message } from "../../lib/chat";
 import { formatDay, REACTION_EMOJIS, timeOf } from "../../lib/chat";
+import { t } from "../../lib/i18n";
 import type { MentionCandidate } from "../../lib/richtext";
 import { RichText } from "../../lib/richtext-view";
 import { Avatar } from "../../components/Avatar";
@@ -100,7 +101,7 @@ export function MessageRow({
             <div className="m-head">
               <span className="m-name">{nameOf(m.sender_subject_id)}</span>
               <span className="m-time">{timeOf(m.created_at)}</span>
-              {m.edited_at && <span className="m-edited">edited</span>}
+              {m.edited_at && <span className="m-edited">{t("message.edited")}</span>}
             </div>
           )}
           {editingId === m.id ? (
@@ -119,10 +120,10 @@ export function MessageRow({
                 autoFocus
               />
               <button className="btn-pill" onClick={() => void onSaveEdit(m)} type="button">
-                Save
+                {t("common.save")}
               </button>
               <button className="btn-ghost" onClick={onCancelEdit} type="button">
-                Cancel
+                {t("common.cancel")}
               </button>
             </div>
           ) : (
@@ -147,7 +148,7 @@ export function MessageRow({
                   key={r.emoji}
                   className={"reaction" + (r.mine ? " mine" : "")}
                   onClick={() => void onToggleReaction(m, r.emoji)}
-                  title={r.mine ? "Remove your reaction" : "React"}
+                  title={r.mine ? t("message.removeReaction") : t("message.react")}
                   type="button"
                 >
                   <span className="re-emoji">{r.emoji}</span>
@@ -156,22 +157,22 @@ export function MessageRow({
               ))}
             </div>
           )}
-          {translating.has(m.id) && <div className="translation muted">Translating...</div>}
+          {translating.has(m.id) && <div className="translation muted">{t("message.translating")}</div>}
           {!translating.has(m.id) && translations[m.id] !== undefined && (
             <div className="translation">
-              <span className="tr-label">English</span>
+              <span className="tr-label">{t("message.translationLabel")}</span>
               <span className="tr-text">{translations[m.id]}</span>
             </div>
           )}
           {!translating.has(m.id) && translateError.has(m.id) && (
-            <div className="translation muted">Translation unavailable</div>
+            <div className="translation muted">{t("message.translateUnavailable")}</div>
           )}
         </div>
         {editingId !== m.id && (
           <div className="m-actions">
             <div className="react-wrap">
               <button
-                title="Add reaction"
+                title={t("message.addReaction")}
                 onClick={() => onSetReactPicker((id) => (id === m.id ? "" : m.id))}
                 type="button"
               >
@@ -191,7 +192,7 @@ export function MessageRow({
                   ))}
                   <button
                     className="emoji-opt more"
-                    title="All emoji"
+                    title={t("message.allEmoji")}
                     onClick={(e) => {
                       const r = e.currentTarget.getBoundingClientRect();
                       onOpenFullEmoji(m, { top: r.top, left: r.left, bottom: r.bottom, right: r.right });
@@ -204,21 +205,21 @@ export function MessageRow({
               )}
             </div>
             {m.body && (
-              <button title="Translate to English" onClick={() => void onTranslate(m)} type="button">
+              <button title={t("message.translate")} onClick={() => void onTranslate(m)} type="button">
                 <Icon name="translate" size={15} />
               </button>
             )}
-            <button title="Reply in thread" onClick={() => void onOpenThread(m)} type="button">
+            <button title={t("message.replyInThread")} onClick={() => void onOpenThread(m)} type="button">
               <Icon name="thread" size={15} />
             </button>
             {/* Any of my messages with text can be edited - including one that carries attachments. */}
             {mine && m.body && (
-              <button title="Edit" onClick={() => onStartEdit(m)} type="button">
+              <button title={t("message.edit")} onClick={() => onStartEdit(m)} type="button">
                 <Icon name="edit" size={15} />
               </button>
             )}
             {mine && (
-              <button title="Delete" onClick={() => void onDelete(m)} type="button">
+              <button title={t("message.delete")} onClick={() => void onDelete(m)} type="button">
                 <Icon name="trash" size={15} />
               </button>
             )}

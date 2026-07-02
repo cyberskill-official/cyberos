@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "./lib/auth";
 import { useTheme } from "./lib/theme";
+import { currentLang, setLang, t } from "./lib/i18n";
 import { Icon } from "./components/icons";
 import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
@@ -19,7 +20,7 @@ export function App() {
       <div className="app">
         <div className="center">
           <div className="card">
-            <div className="sub">Loading...</div>
+            <div className="sub">{t("common.loading")}</div>
           </div>
         </div>
       </div>
@@ -38,17 +39,25 @@ export function App() {
         <span className="slogan">Turn Your Will Into Real</span>
         {view === "chat" ? (
           <button className="btn-ghost" onClick={() => setView("dashboard")}>
-            All modules
+            {t("top.allModules")}
           </button>
         ) : (
           <button className="btn-ghost" onClick={() => setView("chat")}>
-            Back to chat
+            {t("top.backToChat")}
           </button>
         )}
         <span className="spacer" />
         <button
+          className="btn-ghost lang-btn"
+          title={t("top.language")}
+          onClick={() => setLang(currentLang() === "vi" ? "en" : "vi")}
+          type="button"
+        >
+          {currentLang() === "vi" ? "EN" : "VI"}
+        </button>
+        <button
           className="icon-btn"
-          title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+          title={theme === "dark" ? t("top.themeToLight") : t("top.themeToDark")}
           onClick={toggleTheme}
           type="button"
         >
@@ -56,7 +65,7 @@ export function App() {
         </button>
         <span className="who">{email}</span>
         <button className="btn-ghost" onClick={logout}>
-          Sign out
+          {t("top.signOut")}
         </button>
       </header>
       {view === "dashboard" ? <Dashboard onOpenChat={() => setView("chat")} /> : <Chat />}

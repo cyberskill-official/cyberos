@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { useAuth } from "../lib/auth";
+import { currentLang, setLang, t } from "../lib/i18n";
 
 export function Login() {
   const { loginPassword, googleSignIn } = useAuth();
@@ -45,32 +46,32 @@ export function Login() {
       </header>
       <div className="center">
         <div className="card">
-          <h1>Sign in</h1>
-          <div className="sub">to your CyberOS workspace</div>
+          <h1>{t("login.signIn")}</h1>
+          <div className="sub">{t("login.subtitle")}</div>
 
           <button className="btn-google" onClick={onGoogle} type="button">
-            <span className="g">G</span> Sign in with Google
+            <span className="g">G</span> {t("login.google")}
           </button>
           <div className="err">{gerr}</div>
 
           {!showPw && (
             <button className="linkish" type="button" onClick={() => setShowPw(true)}>
-              Admin sign-in
+              {t("login.adminSignIn")}
             </button>
           )}
 
           {showPw && (
             <form onSubmit={onPassword}>
               <div className="field">
-                <label>Workspace (tenant)</label>
+                <label>{t("login.workspace")}</label>
                 <input value={tenant} onChange={(e) => setTenant(e.target.value)} spellCheck={false} />
               </div>
               <div className="field">
-                <label>Handle</label>
+                <label>{t("login.handle")}</label>
                 <input value={handle} onChange={(e) => setHandle(e.target.value)} spellCheck={false} />
               </div>
               <div className="field">
-                <label>Password</label>
+                <label>{t("login.password")}</label>
                 <input
                   type="password"
                   value={password}
@@ -79,11 +80,15 @@ export function Login() {
                 />
               </div>
               <button className="btn-primary" disabled={busy} type="submit">
-                {busy ? "Signing in..." : "Sign in"}
+                {busy ? t("login.signingIn") : t("login.signIn")}
               </button>
               <div className="err">{err}</div>
             </form>
           )}
+
+          <button className="linkish" type="button" onClick={() => setLang(currentLang() === "vi" ? "en" : "vi")}>
+            {t("top.language")}
+          </button>
         </div>
       </div>
     </div>

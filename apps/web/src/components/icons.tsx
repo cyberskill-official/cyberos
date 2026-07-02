@@ -29,6 +29,13 @@ const PATHS: Record<string, ReactNode> = {
       <line x1="5" y1="12" x2="19" y2="12" />
     </>
   ),
+  menu: (
+    <>
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <line x1="3" y1="12" x2="21" y2="12" />
+      <line x1="3" y1="18" x2="21" y2="18" />
+    </>
+  ),
   sun: (
     <>
       <circle cx="12" cy="12" r="5" />

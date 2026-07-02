@@ -1,5 +1,6 @@
 import type { Channel, Directory } from "../../lib/chat";
 import { channelLabel } from "../../lib/chat";
+import { t } from "../../lib/i18n";
 import { Avatar } from "../../components/Avatar";
 import { Icon } from "../../components/icons";
 import type { PickerMode } from "../../components/PeoplePicker";
@@ -19,6 +20,8 @@ export function Sidebar({
   activeId,
   unread,
   mentions,
+  notifyPrefs,
+  open,
   presence,
   health,
   nameOf,
@@ -39,6 +42,10 @@ export function Sidebar({
   activeId: string;
   unread: Record<string, number>;
   mentions: Record<string, number>;
+  /// channel -> "mentions" | "none" overrides (absent = all): muted rows dim + quiet their unread badge.
+  notifyPrefs: Record<string, string>;
+  /// Narrow-viewport drawer state (ignored on wide screens, where the sidebar is always visible).
+  open: boolean;
   presence: Set<string>;
   health: "unknown" | "ok" | "bad";
   nameOf: (id: string) => string;
@@ -54,10 +61,21 @@ export function Sidebar({
     const isActive = c.id === activeId;
     const dm = c.kind === "direct";
     const other = c.other_subject_id || "";
+    // Muted ("none") and mentions-only channels stay quiet: no unread emphasis or badge; a real @-mention
+    // still surfaces its red badge (except full mute, which shows nothing - matching server delivery).
+    const mode = notifyPrefs[c.id] || "all";
+    const quiet = mode !== "all";
+    const showMention = mAt > 0 && mode !== "none";
+    const showUnread = u > 0 && !quiet;
     return (
       <button
         key={c.id}
-        className={"chan-row" + (isActive ? " active" : "") + (u > 0 && !isActive ? " unread" : "")}
+        className={
+          "chan-row" +
+          (isActive ? " active" : "") +
+          (showUnread && !isActive ? " unread" : "") +
+          (mode === "none" ? " muted" : "")
+        }
         onClick={() => onSelectChannel(c.id)}
         type="button"
       >
@@ -80,20 +98,23 @@ export function Sidebar({
         )}
         <span className="chan-name">{channelLabel(directory, me, c)}</span>
         {!isActive &&
-          (mAt > 0 ? (
-            <span className="chan-badge mention" title={mAt > 1 ? `${mAt} mentions` : "1 mention"}>
+          (showMention ? (
+            <span
+              className="chan-badge mention"
+              title={mAt > 1 ? t("sidebar.mentionCount_other", { n: mAt }) : t("sidebar.mentionCount_one")}
+            >
               @{mAt > 99 ? "99+" : mAt}
             </span>
           ) : (
-            u > 0 && <span className="chan-badge">{u > 99 ? "99+" : u}</span>
+            showUnread && <span className="chan-badge">{u > 99 ? "99+" : u}</span>
           ))}
       </button>
     );
   };
 
   return (
-    <aside className="sidebar">
-      <button className="ws-head" onClick={onOpenProfile} type="button" title="Edit your profile">
+    <aside className={"sidebar" + (open ? " open" : "")}>
+      <button className="ws-head" onClick={onOpenProfile} type="button" title={t("sidebar.editProfile")}>
         <Avatar id={me} name={selfName} size={34} src={myAvatar} />
         <div className="ws-meta">
           <span className="ws-name">{selfName}</span>
@@ -106,39 +127,41 @@ export function Sidebar({
       <div className="side-scroll">
         <div className="side-section">
           <div className="side-label">
-            <span>Channels</span>
-            <button className="side-add" title="Browse public channels" onClick={onOpenBrowse} type="button">
+            <span>{t("sidebar.channels")}</span>
+            <button className="side-add" title={t("sidebar.browseChannels")} onClick={onOpenBrowse} type="button">
               <Icon name="search" size={13} />
             </button>
-            <button className="side-add" title="New channel" onClick={() => onOpenPicker("group")} type="button">
+            <button className="side-add" title={t("sidebar.newChannel")} onClick={() => onOpenPicker("group")} type="button">
               <Icon name="plus" size={14} />
             </button>
           </div>
           {groups.map(renderRow)}
-          {groups.length === 0 && <div className="side-empty">No channels yet</div>}
+          {groups.length === 0 && <div className="side-empty">{t("sidebar.noChannels")}</div>}
         </div>
         {archived.length > 0 && (
           <div className="side-section archived">
             <div className="side-label">
-              <span>Archived</span>
+              <span>{t("sidebar.archived")}</span>
             </div>
             {archived.map(renderRow)}
           </div>
         )}
         <div className="side-section">
           <div className="side-label">
-            <span>Direct messages</span>
-            <button className="side-add" title="New direct message" onClick={() => onOpenPicker("dm")} type="button">
+            <span>{t("sidebar.dms")}</span>
+            <button className="side-add" title={t("sidebar.newDm")} onClick={() => onOpenPicker("dm")} type="button">
               <Icon name="plus" size={14} />
             </button>
           </div>
           {dms.map(renderRow)}
-          {dms.length === 0 && <div className="side-empty">No direct messages</div>}
+          {dms.length === 0 && <div className="side-empty">{t("sidebar.noDms")}</div>}
         </div>
       </div>
       <div className="side-foot">
         <span className={"dot " + (health === "ok" ? "ok" : health === "bad" ? "bad" : "")} />
-        <span>{health === "ok" ? "Connected" : health === "bad" ? "Reconnecting..." : "Connecting..."}</span>
+        <span>
+          {health === "ok" ? t("sidebar.connected") : health === "bad" ? t("sidebar.reconnecting") : t("sidebar.connecting")}
+        </span>
       </div>
     </aside>
   );

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { CallApi } from "../lib/call";
+import { t } from "../lib/i18n";
 import { Avatar } from "./Avatar";
 import { Icon } from "./icons";
 
@@ -45,12 +46,17 @@ export function CallOverlay({
         <div className="ring-card">
           <Avatar id={state.peerId} name={name} size={76} src={avatarOf(state.peerId)} />
           <div className="ring-name">{name}</div>
-          <div className="ring-sub">Incoming {state.video ? "video" : "voice"} call</div>
+          <div className="ring-sub">{state.video ? t("call.incomingVideo") : t("call.incomingVoice")}</div>
           <div className="ring-actions">
-            <button className="ring-btn decline" onClick={call.decline} type="button" aria-label="Decline">
+            <button className="ring-btn decline" onClick={call.decline} type="button" aria-label={t("call.decline")}>
               <Icon name="hangup" size={24} />
             </button>
-            <button className="ring-btn accept" onClick={() => void call.accept()} type="button" aria-label="Accept">
+            <button
+              className="ring-btn accept"
+              onClick={() => void call.accept()}
+              type="button"
+              aria-label={t("call.accept")}
+            >
               <Icon name="phone" size={24} />
             </button>
           </div>
@@ -60,7 +66,7 @@ export function CallOverlay({
   }
 
   const statusText =
-    state.status === "calling" ? "Calling..." : state.status === "connecting" ? "Connecting..." : mmss(elapsed);
+    state.status === "calling" ? t("call.calling") : state.status === "connecting" ? t("call.connecting") : mmss(elapsed);
   const showRemote = state.video && !!remoteStream;
 
   return (
@@ -86,7 +92,7 @@ export function CallOverlay({
           className={"cc-btn" + (state.muted ? " off" : "")}
           onClick={call.toggleMute}
           type="button"
-          aria-label={state.muted ? "Unmute" : "Mute"}
+          aria-label={state.muted ? t("call.unmute") : t("call.mute")}
         >
           <Icon name={state.muted ? "micOff" : "mic"} size={22} />
         </button>
@@ -95,12 +101,12 @@ export function CallOverlay({
             className={"cc-btn" + (state.camOff ? " off" : "")}
             onClick={call.toggleCam}
             type="button"
-            aria-label={state.camOff ? "Turn camera on" : "Turn camera off"}
+            aria-label={state.camOff ? t("call.camOn") : t("call.camOff")}
           >
             <Icon name={state.camOff ? "videoOff" : "video"} size={22} />
           </button>
         )}
-        <button className="cc-btn hang" onClick={call.hangup} type="button" aria-label="Hang up">
+        <button className="cc-btn hang" onClick={call.hangup} type="button" aria-label={t("call.hangup")}>
           <Icon name="hangup" size={22} />
         </button>
       </div>

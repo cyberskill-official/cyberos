@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { RefObject } from "react";
 import type { Channel, Directory, Person } from "../../lib/chat";
 import { channelLabel, formatBytes } from "../../lib/chat";
+import { t } from "../../lib/i18n";
 import { Avatar } from "../../components/Avatar";
 import { Icon } from "../../components/icons";
 
@@ -57,7 +58,7 @@ export function Composer({
   const [mentionQuery, setMentionQuery] = useState("");
   const [mentionIdx, setMentionIdx] = useState(0);
 
-  const personLabel = (p: Person) => p.display_name || p.handle || (p.email || "").split("@")[0] || "user";
+  const personLabel = (p: Person) => p.display_name || p.handle || (p.email || "").split("@")[0] || t("composer.user");
 
   const q = mentionQuery.toLowerCase();
   const candidates = mentionOpen
@@ -126,7 +127,7 @@ export function Composer({
               </span>
               <button
                 className="ca-x"
-                title="Remove attachment"
+                title={t("composer.removeAttachment")}
                 onClick={() => onClearStaged(i)}
                 disabled={uploading}
                 type="button"
@@ -139,12 +140,12 @@ export function Composer({
       )}
 
       <div className="composer">
-        <button className="comp-btn" title="Attach a file" onClick={onOpenFilePicker} type="button">
+        <button className="comp-btn" title={t("composer.attachFile")} onClick={onOpenFilePicker} type="button">
           <Icon name="paperclip" />
         </button>
         <button
           className="comp-btn"
-          title="Emoji"
+          title={t("composer.emoji")}
           onClick={(e) => {
             const r = e.currentTarget.getBoundingClientRect();
             onOpenEmoji({ top: r.top, left: r.left, bottom: r.bottom, right: r.right });
@@ -155,7 +156,7 @@ export function Composer({
         </button>
         <button
           className={"comp-btn" + (suggesting ? " busy" : "")}
-          title="Suggest replies (AI)"
+          title={t("composer.suggestReplies")}
           onClick={onSuggestReplies}
           disabled={suggesting}
           type="button"
@@ -230,8 +231,8 @@ export function Composer({
             onPaste={onPaste}
             placeholder={
               staged.length > 0
-                ? "Add a message or just send the files"
-                : "Message " + channelLabel(directory, me, active)
+                ? t("composer.placeholderFile")
+                : t("composer.placeholder", { name: channelLabel(directory, me, active) })
             }
           />
         </div>
@@ -239,13 +240,13 @@ export function Composer({
           className="comp-send"
           onClick={() => void onSend()}
           disabled={sending || uploading || (!draft.trim() && staged.length === 0)}
-          title="Send"
+          title={t("common.send")}
           type="button"
         >
           <Icon name={uploading ? "paperclip" : "send"} />
         </button>
       </div>
-      <div className="comp-hint">Enter to send · Shift+Enter for a new line</div>
+      <div className="comp-hint">{t("composer.hint")}</div>
     </>
   );
 }

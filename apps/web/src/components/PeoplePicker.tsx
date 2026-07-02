@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { Person } from "../lib/chat";
 import { shortId } from "../lib/chat";
+import { t } from "../lib/i18n";
 import { Avatar } from "./Avatar";
 import { Icon } from "./icons";
 
@@ -71,19 +72,19 @@ export function PeoplePicker({
 
   const title =
     mode === "dm"
-      ? "New direct message"
+      ? t("sidebar.newDm")
       : mode === "call"
-        ? "Start a call"
+        ? t("picker.startCall")
         : mode === "group"
-          ? "New group channel"
-          : "Add people";
+          ? t("picker.newGroup")
+          : t("header.addPeople");
 
   return (
     <div className="picker-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="picker">
         <div className="picker-head">
           <span>{title}</span>
-          <button className="icon-btn" onClick={onClose} type="button" title="Close">
+          <button className="icon-btn" onClick={onClose} type="button" title={t("common.close")}>
             <Icon name="close" size={16} />
           </button>
         </div>
@@ -91,7 +92,7 @@ export function PeoplePicker({
           <>
             <input
               className="picker-input"
-              placeholder="Channel name"
+              placeholder={t("picker.channelName")}
               value={gname}
               onChange={(e) => setGname(e.target.value)}
             />
@@ -101,23 +102,23 @@ export function PeoplePicker({
                 onClick={() => setGvis("private")}
                 type="button"
               >
-                Private
-                <span className="cs-vis-sub">Members only; joined by invite</span>
+                {t("settings.private")}
+                <span className="cs-vis-sub">{t("settings.privateSub")}</span>
               </button>
               <button
                 className={"cs-vis-opt" + (gvis === "public" ? " on" : "")}
                 onClick={() => setGvis("public")}
                 type="button"
               >
-                Public
-                <span className="cs-vis-sub">Anyone on the team can browse + join</span>
+                {t("settings.public")}
+                <span className="cs-vis-sub">{t("settings.publicSub")}</span>
               </button>
             </div>
           </>
         )}
         <input
           className="picker-input"
-          placeholder="Search teammates"
+          placeholder={t("picker.searchTeammates")}
           value={q}
           onChange={(e) => setQ(e.target.value)}
           autoFocus
@@ -125,7 +126,7 @@ export function PeoplePicker({
         <div className="picker-people">
           {list.length === 0 && (
             <div className="side-empty" style={{ padding: 16 }}>
-              {people.length ? "No teammates match" : "Directory unavailable"}
+              {people.length ? t("picker.noMatch") : t("picker.directoryUnavailable")}
             </div>
           )}
           {list.map((p) => {
@@ -149,11 +150,11 @@ export function PeoplePicker({
         </div>
         <div className="picker-actions">
           <button className="btn-ghost" onClick={onClose} type="button">
-            Cancel
+            {t("common.cancel")}
           </button>
           {multi && (
             <button className="btn-pill" onClick={confirm} type="button">
-              {mode === "add" ? "Add" : "Create"}
+              {mode === "add" ? t("common.add") : t("common.create")}
             </button>
           )}
         </div>

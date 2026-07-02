@@ -1,5 +1,7 @@
 // Shared chat types + small pure helpers, kept out of the components so the pages stay readable.
 
+import { currentLang, t } from "./i18n";
+
 export interface Person {
   subject_id: string;
   display_name?: string;
@@ -91,7 +93,7 @@ export function applyReaction(
 // Display name from the directory: a real name/handle when known, else a short id. "You" for self.
 export function nameFor(dir: Directory, me: string, id: string): string {
   if (!id) return "?";
-  if (id === me) return "You";
+  if (id === me) return t("common.you");
   const p = dir[id];
   return (p && (p.display_name || p.handle)) || shortId(id);
 }
@@ -99,16 +101,19 @@ export function nameFor(dir: Directory, me: string, id: string): string {
 // A channel's label: a direct message shows the other person's name; a group shows its name.
 export function channelLabel(dir: Directory, me: string, c: Channel): string {
   if (c.kind === "direct") {
-    return c.other_subject_id ? nameFor(dir, me, c.other_subject_id) : "Direct message";
+    return c.other_subject_id ? nameFor(dir, me, c.other_subject_id) : t("chat.directMessage");
   }
   return c.name || shortId(c.id);
 }
 
 export function timeOf(iso?: string): string {
   if (!iso) return "";
-  const t = Date.parse(iso);
-  if (Number.isNaN(t)) return "";
-  return new Date(t).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const ts = Date.parse(iso);
+  if (Number.isNaN(ts)) return "";
+  return new Date(ts).toLocaleTimeString(currentLang() === "vi" ? "vi-VN" : [], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 const ymd = (d: Date): string => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
@@ -116,23 +121,26 @@ const ymd = (d: Date): string => `${d.getFullYear()}-${d.getMonth()}-${d.getDate
 // A stable per-day key (used to detect day boundaries between messages).
 export function dayKey(iso?: string): string {
   if (!iso) return "";
-  const t = Date.parse(iso);
-  if (Number.isNaN(t)) return "";
-  return ymd(new Date(t));
+  const ts = Date.parse(iso);
+  if (Number.isNaN(ts)) return "";
+  return ymd(new Date(ts));
 }
 
-// "Today" / "Yesterday" / "Mon, Jun 30" for the day separators in the timeline.
+// "Today" / "Yesterday" / "Mon, Jun 30" (or "Hôm nay" / "Hôm qua" / "T2, 30/6") for the day separators.
 export function formatDay(iso?: string): string {
   if (!iso) return "";
-  const t = Date.parse(iso);
-  if (Number.isNaN(t)) return "";
-  const d = new Date(t);
+  const ts = Date.parse(iso);
+  if (Number.isNaN(ts)) return "";
+  const d = new Date(ts);
   const today = new Date();
   const yest = new Date();
   yest.setDate(today.getDate() - 1);
-  if (ymd(d) === ymd(today)) return "Today";
-  if (ymd(d) === ymd(yest)) return "Yesterday";
-  return d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+  const vi = currentLang() === "vi";
+  if (ymd(d) === ymd(today)) return vi ? "Hôm nay" : "Today";
+  if (ymd(d) === ymd(yest)) return vi ? "Hôm qua" : "Yesterday";
+  return vi
+    ? d.toLocaleDateString("vi-VN", { weekday: "short", month: "numeric", day: "numeric" })
+    : d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
 }
 
 // One or two initials from a display name (or handle/id), for avatars.

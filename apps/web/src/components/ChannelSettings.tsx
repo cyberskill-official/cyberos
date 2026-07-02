@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { apiFetch } from "../lib/api";
 import type { Channel } from "../lib/chat";
+import { t } from "../lib/i18n";
 import { Avatar } from "./Avatar";
 import { Icon } from "./icons";
 
@@ -22,6 +23,8 @@ export function ChannelSettings({
   me,
   nameOf,
   avatarSrc,
+  notifyMode,
+  onSetNotify,
   onClose,
   onChanged,
   onLeft,
@@ -31,6 +34,9 @@ export function ChannelSettings({
   me: string;
   nameOf: (id: string) => string;
   avatarSrc: (id: string) => string;
+  /// The caller's own notify mode for this channel ("all" | "mentions" | "none").
+  notifyMode: string;
+  onSetNotify(mode: string): void;
   onClose(): void;
   /// Fired after any successful change so the parent refreshes its channel list.
   onChanged(): void;
@@ -90,9 +96,7 @@ export function ChannelSettings({
   }
 
   async function setArchived(a: boolean) {
-    const q = a
-      ? "Archive this channel? It becomes read-only and drops out of the channel browser."
-      : "Unarchive this channel?";
+    const q = a ? t("settings.confirmArchive") : t("settings.confirmUnarchive");
     if (!window.confirm(q)) return;
     setBusy(true);
     setErr("");
@@ -119,7 +123,12 @@ export function ChannelSettings({
   }
 
   async function removeMember(subject: string) {
-    if (!window.confirm(`Remove ${nameOf(subject)} from ${channel.name || "this channel"}?`)) return;
+    if (
+      !window.confirm(
+        t("settings.confirmRemove", { name: nameOf(subject), channel: channel.name || t("settings.thisChannel") }),
+      )
+    )
+      return;
     setErr("");
     try {
       await apiFetch(token, "DELETE", `/v1/chat/channels/${channel.id}/members/${subject}`);
@@ -131,7 +140,7 @@ export function ChannelSettings({
   }
 
   async function leave() {
-    if (!window.confirm(`Leave ${channel.name || "this channel"}?`)) return;
+    if (!window.confirm(t("settings.confirmLeave", { channel: channel.name || t("settings.thisChannel") }))) return;
     setErr("");
     try {
       await apiFetch(token, "DELETE", `/v1/chat/channels/${channel.id}/members/${me}`);
@@ -146,16 +155,16 @@ export function ChannelSettings({
     <div className="picker-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="picker settings">
         <div className="picker-head">
-          <span>Channel settings</span>
-          <button className="icon-btn" onClick={onClose} type="button" title="Close">
+          <span>{t("settings.title")}</span>
+          <button className="icon-btn" onClick={onClose} type="button" title={t("common.close")}>
             <Icon name="close" size={16} />
           </button>
         </div>
 
-        {archived && <div className="cs-archived-note">This channel is archived (read-only).</div>}
+        {archived && <div className="cs-archived-note">{t("settings.archivedNote")}</div>}
 
         <label className="cs-label" htmlFor="cs-name">
-          Name
+          {t("settings.name")}
         </label>
         <input
           id="cs-name"
@@ -165,17 +174,17 @@ export function ChannelSettings({
           disabled={!isManager || busy}
         />
         <label className="cs-label" htmlFor="cs-topic">
-          Topic
+          {t("settings.topic")}
         </label>
         <input
           id="cs-topic"
           className="picker-input"
-          placeholder="What is this channel for?"
+          placeholder={t("settings.topicPlaceholder")}
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
           disabled={!isManager || busy}
         />
-        <label className="cs-label">Visibility</label>
+        <label className="cs-label">{t("settings.visibility")}</label>
         <div className="cs-vis">
           <button
             className={"cs-vis-opt" + (visibility === "private" ? " on" : "")}
@@ -183,8 +192,8 @@ export function ChannelSettings({
             disabled={!isManager || busy}
             type="button"
           >
-            Private
-            <span className="cs-vis-sub">Members only; joined by invite</span>
+            {t("settings.private")}
+            <span className="cs-vis-sub">{t("settings.privateSub")}</span>
           </button>
           <button
             className={"cs-vis-opt" + (visibility === "public" ? " on" : "")}
@@ -192,12 +201,26 @@ export function ChannelSettings({
             disabled={!isManager || busy}
             type="button"
           >
-            Public
-            <span className="cs-vis-sub">Anyone on the team can browse + join</span>
+            {t("settings.public")}
+            <span className="cs-vis-sub">{t("settings.publicSub")}</span>
           </button>
         </div>
 
-        <div className="cs-label cs-roster-label">Members ({members.length})</div>
+        <label className="cs-label" htmlFor="cs-notify">
+          {t("settings.notify")}
+        </label>
+        <select
+          id="cs-notify"
+          className="cs-role cs-notify"
+          value={notifyMode}
+          onChange={(e) => onSetNotify(e.target.value)}
+        >
+          <option value="all">{t("settings.notifyAll")}</option>
+          <option value="mentions">{t("settings.notifyMentions")}</option>
+          <option value="none">{t("settings.notifyNone")}</option>
+        </select>
+
+        <div className="cs-label cs-roster-label">{t("settings.members", { n: members.length })}</div>
         <div className="picker-people cs-roster">
           {members.map((m) => {
             const self = m.subject_id === me;
@@ -207,7 +230,7 @@ export function ChannelSettings({
                 <div className="person-meta">
                   <span className="pname">
                     {nameOf(m.subject_id)}
-                    {self ? " (you)" : ""}
+                    {self ? t("settings.youSuffix") : ""}
                   </span>
                 </div>
                 {isOwner && !self ? (
@@ -228,7 +251,7 @@ export function ChannelSettings({
                 {isOwner && !self && (
                   <button
                     className="icon-btn cs-remove"
-                    title="Remove from channel"
+                    title={t("settings.removeFromChannel")}
                     onClick={() => void removeMember(m.subject_id)}
                     type="button"
                   >
@@ -245,7 +268,7 @@ export function ChannelSettings({
         <div className="picker-actions cs-actions">
           {!isOwner && (
             <button className="btn-ghost danger" onClick={() => void leave()} disabled={busy} type="button">
-              Leave channel
+              {t("settings.leaveChannel")}
             </button>
           )}
           {isOwner && (
@@ -255,16 +278,16 @@ export function ChannelSettings({
               disabled={busy}
               type="button"
             >
-              {archived ? "Unarchive" : "Archive"}
+              {archived ? t("settings.unarchive") : t("settings.archive")}
             </button>
           )}
           <span className="spacer" />
           <button className="btn-ghost" onClick={onClose} type="button">
-            Cancel
+            {t("common.cancel")}
           </button>
           {isManager && (
             <button className="btn-pill" onClick={() => void saveMeta()} disabled={busy || !dirty} type="button">
-              Save
+              {t("common.save")}
             </button>
           )}
         </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { apiFetch, ApiError } from "../lib/api";
 import type { Channel } from "../lib/chat";
+import { t } from "../lib/i18n";
 import { RichText } from "../lib/richtext-view";
 import { Icon } from "./icons";
 
@@ -42,7 +43,7 @@ export function AiPanel({
       setCount(r.message_count);
     } catch (e) {
       if (e instanceof ApiError && e.status === 502) {
-        setNote("AI is unavailable right now (the AI gateway is not serving). Chat itself is unaffected.");
+        setNote(t("ai.unavailable"));
       } else {
         setNote(e instanceof Error ? e.message : String(e));
       }
@@ -61,9 +62,9 @@ export function AiPanel({
     <aside className="thread ai-panel">
       <div className="thread-head">
         <span className="ai-title">
-          <Icon name="sparkle" size={16} /> Assistant
+          <Icon name="sparkle" size={16} /> {t("ai.title")}
         </span>
-        <button className="icon-btn" onClick={onClose} type="button" title="Close">
+        <button className="icon-btn" onClick={onClose} type="button" title={t("common.close")}>
           <Icon name="close" size={16} />
         </button>
       </div>
@@ -74,7 +75,7 @@ export function AiPanel({
           disabled={busy}
           type="button"
         >
-          Catch me up
+          {t("ai.catchMeUp")}
         </button>
         <button
           className={"ai-tab" + (mode === "actions" ? " on" : "")}
@@ -82,24 +83,24 @@ export function AiPanel({
           disabled={busy}
           type="button"
         >
-          Action items
+          {t("ai.actionItems")}
         </button>
       </div>
       <div className="thread-body ai-body">
-        {busy && <div className="ai-note">Thinking...</div>}
+        {busy && <div className="ai-note">{t("ai.thinking")}</div>}
         {!busy && note && <div className="ai-note">{note}</div>}
         {!busy && !note && text && (
           <>
             <div className="m-body ai-text">
               <RichText text={text} />
             </div>
-            <div className="ai-meta">Based on the last {count} messages · AI-generated, double-check.</div>
+            <div className="ai-meta">{t("ai.meta", { n: count })}</div>
           </>
         )}
       </div>
       <div className="ai-foot">
         <button className="btn-ghost" onClick={() => void run(mode)} disabled={busy} type="button">
-          Refresh
+          {t("common.refresh")}
         </button>
       </div>
     </aside>

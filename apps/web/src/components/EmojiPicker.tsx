@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { t } from "../lib/i18n";
 
 // Full emoji picker (richer-messages cluster): search by name, category tabs, a global skin-tone selector,
 // and a "frequently used" row - backed by the canonical unicode-emoji-json dataset, loaded lazily so the
@@ -186,12 +187,12 @@ export function EmojiPicker({
       <div className="ef-head">
         <input
           className="ef-search"
-          placeholder="Search emoji"
+          placeholder={t("emoji.search")}
           value={q}
           onChange={(e) => setQ(e.target.value)}
           autoFocus
         />
-        <div className="ef-tones" title="Skin tone">
+        <div className="ef-tones" title={t("emoji.skinTone")}>
           {TONES.map((_, i) => (
             <button
               key={i}
@@ -205,8 +206,8 @@ export function EmojiPicker({
         </div>
       </div>
 
-      {!groups && !failed && <div className="ef-note">Loading emoji...</div>}
-      {failed && <div className="ef-note">Emoji data failed to load.</div>}
+      {!groups && !failed && <div className="ef-note">{t("emoji.loading")}</div>}
+      {failed && <div className="ef-note">{t("emoji.loadFailed")}</div>}
 
       {groups && !query && (
         <div className="ef-tabs">
@@ -230,13 +231,13 @@ export function EmojiPicker({
             results.length > 0 ? (
               <div className="ef-grid">{results.map(cell)}</div>
             ) : (
-              <div className="ef-note">No emoji match "{q}"</div>
+              <div className="ef-note">{t("emoji.noMatch", { q })}</div>
             )
           ) : (
             <>
               {recent.length > 0 && (
                 <>
-                  <div className="ef-sec">Frequently used</div>
+                  <div className="ef-sec">{t("emoji.frequent")}</div>
                   <div className="ef-grid">
                     {recent.map((r, i) => (
                       <button

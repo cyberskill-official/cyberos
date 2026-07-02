@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Message } from "../lib/chat";
 import { timeOf } from "../lib/chat";
+import { t } from "../lib/i18n";
 import type { MentionCandidate } from "../lib/richtext";
 import { RichText } from "../lib/richtext-view";
 import { Attachment } from "./Attachment";
@@ -77,15 +78,15 @@ export function ThreadPanel({
   return (
     <aside className="thread">
       <div className="thread-head">
-        <span>Thread</span>
-        <button className="icon-btn" onClick={onClose} type="button" title="Close thread">
+        <span>{t("thread.title")}</span>
+        <button className="icon-btn" onClick={onClose} type="button" title={t("thread.close")}>
           <Icon name="close" size={16} />
         </button>
       </div>
       <div className="thread-body">
         {bubble(root)}
         <div className="thread-sep">
-          {replies.length} repl{replies.length === 1 ? "y" : "ies"}
+          {replies.length === 1 ? t("thread.replyCount_one") : t("thread.replyCount_other", { n: replies.length })}
         </div>
         {replies.map(bubble)}
         <div ref={endRef} />
@@ -101,9 +102,15 @@ export function ThreadPanel({
               void send();
             }
           }}
-          placeholder="Reply..."
+          placeholder={t("thread.replyPlaceholder")}
         />
-        <button className="comp-send" onClick={() => void send()} disabled={busy || !draft.trim()} title="Reply" type="button">
+        <button
+          className="comp-send"
+          onClick={() => void send()}
+          disabled={busy || !draft.trim()}
+          title={t("thread.reply")}
+          type="button"
+        >
           <Icon name="send" />
         </button>
       </div>

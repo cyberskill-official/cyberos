@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { apiFetch } from "../lib/api";
+import { t } from "../lib/i18n";
 import { Icon } from "./icons";
 
 interface BrowseRow {
@@ -73,23 +74,23 @@ export function BrowseChannels({
     <div className="picker-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="picker">
         <div className="picker-head">
-          <span>Browse channels</span>
-          <button className="icon-btn" onClick={onClose} type="button" title="Close">
+          <span>{t("browse.title")}</span>
+          <button className="icon-btn" onClick={onClose} type="button" title={t("common.close")}>
             <Icon name="close" size={16} />
           </button>
         </div>
         <input
           className="picker-input"
-          placeholder="Filter channels"
+          placeholder={t("browse.filter")}
           value={q}
           onChange={(e) => setQ(e.target.value)}
           autoFocus
         />
         <div className="picker-people">
-          {rows === null && <div className="side-empty" style={{ padding: 16 }}>Loading...</div>}
+          {rows === null && <div className="side-empty" style={{ padding: 16 }}>{t("common.loading")}</div>}
           {rows !== null && list.length === 0 && (
             <div className="side-empty" style={{ padding: 16 }}>
-              {rows.length === 0 ? "No public channels yet" : "No channels match"}
+              {rows.length === 0 ? t("browse.noPublic") : t("browse.noMatch")}
             </div>
           )}
           {list.map((r) => (
@@ -100,13 +101,15 @@ export function BrowseChannels({
               <div className="person-meta">
                 <span className="pname">{r.name}</span>
                 <span className="psub">
-                  {r.member_count} member{r.member_count === 1 ? "" : "s"}
+                  {r.member_count === 1
+                    ? t("browse.memberCount_one")
+                    : t("browse.memberCount_other", { n: r.member_count })}
                   {r.topic ? ` · ${r.topic}` : ""}
                 </span>
               </div>
               {r.is_member ? (
                 <button className="btn-ghost" onClick={() => (onClose(), onOpen(r.id))} type="button">
-                  Open
+                  {t("common.open")}
                 </button>
               ) : (
                 <button
@@ -115,7 +118,7 @@ export function BrowseChannels({
                   disabled={joining === r.id}
                   type="button"
                 >
-                  Join
+                  {t("common.join")}
                 </button>
               )}
             </div>

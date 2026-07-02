@@ -1,5 +1,6 @@
 import type { RefObject } from "react";
 import type { Message } from "../../lib/chat";
+import { t } from "../../lib/i18n";
 import type { MentionCandidate } from "../../lib/richtext";
 import { MessageRow } from "./MessageRow";
 
@@ -94,7 +95,7 @@ export function MessageList({
     >
       {messages.length === 0 && (
         <div className="empty">
-          <div className="empty-sub">No messages yet. Say hello.</div>
+          <div className="empty-sub">{t("chat.noMessages")}</div>
         </div>
       )}
       {rows.map(({ m, showDay, grouped }) => (
@@ -133,7 +134,7 @@ export function MessageList({
       ))}
       {showJumpLatest && (
         <button className="jump-pill" onClick={onJumpLatest} type="button">
-          Viewing history · Jump to latest
+          {t("chat.jumpLatest")}
         </button>
       )}
     </div>

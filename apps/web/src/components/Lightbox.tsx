@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { t } from "../lib/i18n";
 import { Icon } from "./icons";
 
 // Minimal image lightbox for attachments: fixed overlay, the image at natural fit, filename + download +
@@ -22,10 +23,10 @@ export function Lightbox({ url, name, onClose }: { url: string; name: string; on
     >
       <div className="lb-top">
         <span className="lb-name">{name}</span>
-        <a className="icon-btn lb-btn" href={url} download={name} title="Download">
+        <a className="icon-btn lb-btn" href={url} download={name} title={t("lightbox.download")}>
           <Icon name="paperclip" size={16} />
         </a>
-        <button className="icon-btn lb-btn" onClick={onClose} type="button" title="Close">
+        <button className="icon-btn lb-btn" onClick={onClose} type="button" title={t("common.close")}>
           <Icon name="close" size={16} />
         </button>
       </div>

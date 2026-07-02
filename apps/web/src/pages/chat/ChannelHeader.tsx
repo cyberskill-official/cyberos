@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import type { Channel, Directory, Message } from "../../lib/chat";
 import { channelLabel, timeOf } from "../../lib/chat";
+import { t } from "../../lib/i18n";
 import { Avatar } from "../../components/Avatar";
 import { Icon } from "../../components/icons";
 
@@ -25,6 +26,7 @@ export function ChannelHeader({
   onOpenSettings,
   onToggleAi,
   aiOpen,
+  onOpenSidebar,
   onSearchQChange,
   onRunSearch,
   onPickResult,
@@ -47,6 +49,7 @@ export function ChannelHeader({
   onOpenSettings: () => void;
   onToggleAi: () => void;
   aiOpen: boolean;
+  onOpenSidebar: () => void;
   onSearchQChange: (v: string) => void;
   onRunSearch: () => void;
   /// Jump to a result's message (switches channel when needed).
@@ -55,6 +58,9 @@ export function ChannelHeader({
   return (
     <Fragment>
       <div className="main-head">
+        <button className="icon-btn only-narrow" title={t("sidebar.channels")} onClick={onOpenSidebar} type="button">
+          <Icon name="menu" size={18} />
+        </button>
         <div className="head-id">
           {active.kind === "direct" ? (
             <Avatar
@@ -77,33 +83,33 @@ export function ChannelHeader({
         <span className="spacer" />
         <button
           className={"icon-btn" + (aiOpen ? " on" : "")}
-          title="AI assistant: catch me up, action items"
+          title={t("header.aiTooltip")}
           onClick={onToggleAi}
           type="button"
         >
           <Icon name="sparkle" />
         </button>
-        <button className="icon-btn" title="Voice call" onClick={() => onStartCall(false)} type="button">
+        <button className="icon-btn" title={t("header.voiceCall")} onClick={() => onStartCall(false)} type="button">
           <Icon name="phone" />
         </button>
-        <button className="icon-btn" title="Video call" onClick={() => onStartCall(true)} type="button">
+        <button className="icon-btn" title={t("header.videoCall")} onClick={() => onStartCall(true)} type="button">
           <Icon name="video" />
         </button>
         <button
           className={"icon-btn" + (searchOpen ? " on" : "")}
-          title="Search all channels (Ctrl/Cmd+K)"
+          title={t("header.searchTooltip")}
           onClick={onToggleSearch}
           type="button"
         >
           <Icon name="search" />
         </button>
         {active.kind !== "direct" && (
-          <button className="icon-btn" title="Add people" onClick={onOpenAddPeople} type="button">
+          <button className="icon-btn" title={t("header.addPeople")} onClick={onOpenAddPeople} type="button">
             <Icon name="users" />
           </button>
         )}
         {active.kind !== "direct" && (
-          <button className="icon-btn" title="Channel settings" onClick={onOpenSettings} type="button">
+          <button className="icon-btn" title={t("settings.title")} onClick={onOpenSettings} type="button">
             <Icon name="gear" />
           </button>
         )}
@@ -120,11 +126,11 @@ export function ChannelHeader({
                 void onRunSearch();
               }
             }}
-            placeholder="Search all channels"
+            placeholder={t("header.searchPlaceholder")}
             autoFocus
           />
           <button className="btn-pill" onClick={() => void onRunSearch()} type="button">
-            Search
+            {t("common.search")}
           </button>
           {searchResults.length > 0 && (
             <div className="search-results">
@@ -133,7 +139,7 @@ export function ChannelHeader({
                   {channelOf(m) && <span className="search-chan">{channelOf(m)}</span>}
                   <span className="author">{nameOf(m.sender_subject_id)}</span>{" "}
                   <span className="when">{timeOf(m.created_at)}</span>
-                  <div className="snippet">{m.body || "[attachment]"}</div>
+                  <div className="snippet">{m.body || t("header.attachmentSnippet")}</div>
                 </button>
               ))}
             </div>
