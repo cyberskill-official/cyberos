@@ -2210,7 +2210,7 @@ def _cmd_skill(args: argparse.Namespace) -> int:
         cmd.append(subcmd)
         cmd.extend(rest)
         # For 'run', pass stdin through
-        proc = subprocess.run(cmd, capture_input=(subcmd != "run"))
+        proc = subprocess.run(cmd, capture_output=(subcmd != "run"))
         if subcmd == "run":
             import sys
             proc = subprocess.run(cmd, stdin=sys.stdin)
