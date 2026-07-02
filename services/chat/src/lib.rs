@@ -14,6 +14,7 @@ pub mod devices;
 pub mod members;
 pub mod messages;
 pub mod notify;
+pub mod prefs;
 pub mod push;
 pub mod reactions;
 pub mod read;
@@ -120,6 +121,11 @@ pub fn router(state: AppState) -> Router {
         .route("/v1/chat/channels/:id/unread", get(read::unread))
         .route("/v1/chat/unread", get(read::unread_summary))
         .route("/v1/chat/channels/:id/receipts", get(read::receipts))
+        .route("/v1/chat/prefs", get(prefs::list))
+        .route(
+            "/v1/chat/channels/:id/prefs",
+            axum::routing::put(prefs::set),
+        )
         .route("/v1/chat/devices", post(devices::register))
         .route("/v1/chat/audit", get(auditlog::list))
         .route("/v1/chat/ws", get(realtime::ws_handler))

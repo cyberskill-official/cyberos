@@ -105,6 +105,11 @@ pub async fn fanout(
             Ok(m) => m,
             Err(_) => return,
         };
+    // Per-member notify overrides (all | mentions | none); a query error fails open to 'all' so a prefs
+    // hiccup can never silence the whole channel.
+    let modes = crate::prefs::modes_for_channel(&mut tx, channel)
+        .await
+        .unwrap_or_default();
     let _ = tx.commit().await;
 
     let text = preview(
@@ -113,6 +118,10 @@ pub async fn fanout(
     );
     for (member,) in members {
         if member == message.sender_subject_id {
+            continue;
+        }
+        let is_mention = mention_ids.contains(&member);
+        if !crate::prefs::should_deliver(modes.get(&member).map(String::as_str), is_mention) {
             continue;
         }
         st.notifier.publish(
