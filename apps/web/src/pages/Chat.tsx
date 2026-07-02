@@ -1,32 +1,21 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { useAuth } from "../lib/auth";
 import { apiFetch, decodeJwt } from "../lib/api";
-import type { Channel, Directory, Message, Person, ReadMarker } from "../lib/chat";
-import { applyReaction, channelLabel, dayKey, fileToBase64, formatBytes, formatDay, isImage, nameFor, REACTION_EMOJIS, shortId, timeOf } from "../lib/chat";
-import { Avatar } from "../components/Avatar";
+import type { Channel, Directory, Message, Person } from "../lib/chat";
+import { channelLabel, dayKey, fileToBase64, formatBytes, isImage, shortId } from "../lib/chat";
 import { Icon } from "../components/icons";
-import { Attachment } from "../components/Attachment";
 import { PeoplePicker } from "../components/PeoplePicker";
 import type { PickerMode } from "../components/PeoplePicker";
 import { ThreadPanel } from "../components/ThreadPanel";
 import { CallOverlay } from "../components/CallOverlay";
 import { useCall } from "../lib/call";
 import { ProfileEditor } from "../components/ProfileEditor";
-
-interface WsEvent extends Partial<Message> {
-  type: string;
-  subject?: string;
-  status?: string;
-  from?: string;
-  to?: string;
-  data?: unknown;
-  last_read_message_id?: string;
-  // reaction_changed
-  message_id?: string;
-  emoji?: string;
-  added?: boolean;
-}
+import { useChatSocket } from "./chat/useChatSocket";
+import { Sidebar } from "./chat/Sidebar";
+import { ChannelHeader } from "./chat/ChannelHeader";
+import { MessageList } from "./chat/MessageList";
+import { Composer } from "./chat/Composer";
 
 const GROUP_WINDOW_MS = 5 * 60 * 1000;
 // Client-side guard mirroring the server's attachment cap (5 MB). Keep this in sync with the service.
@@ -80,12 +69,7 @@ export function Chat() {
 
   const [channels, setChannels] = useState<Channel[]>([]);
   const [activeId, setActiveId] = useState("");
-  const [messages, setMessages] = useState<Message[]>([]);
   const [unread, setUnread] = useState<Record<string, number>>({});
-  // Recent-activity timestamps keyed by channel id, used to sort the DM list. Pure client state: it is fed by
-  // the unread poll (a channel with unread is treated as recently active) and by inbound `message` ws events.
-  const [lastActivity, setLastActivity] = useState<Record<string, number>>({});
-  const [receipts, setReceipts] = useState<Record<string, string>>({});
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
@@ -93,8 +77,6 @@ export function Chat() {
   const [picker, setPicker] = useState<PickerMode | null>(null);
   const [pendingVideo, setPendingVideo] = useState(false);
 
-  const [presence, setPresence] = useState<Set<string>>(new Set());
-  const [typingSubject, setTypingSubject] = useState("");
   const [editingId, setEditingId] = useState("");
   const [editText, setEditText] = useState("");
 
@@ -105,13 +87,6 @@ export function Chat() {
   const [translations, setTranslations] = useState<Record<string, string>>({});
   const [translating, setTranslating] = useState<Set<string>>(new Set());
   const [translateError, setTranslateError] = useState<Set<string>>(new Set());
-
-  const [threadRoot, setThreadRoot] = useState<Message | null>(null);
-  const [threadReplies, setThreadReplies] = useState<Message[]>([]);
-  const threadRootRef = useRef<Message | null>(null);
-  useEffect(() => {
-    threadRootRef.current = threadRoot;
-  }, [threadRoot]);
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQ, setSearchQ] = useState("");
@@ -128,11 +103,47 @@ export function Chat() {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
   const taRef = useRef<HTMLTextAreaElement | null>(null);
-  const wsRef = useRef<WebSocket | null>(null);
-  const typingSentAt = useRef(0);
-  const typingTimer = useRef<number | null>(null);
 
   const active = channels.find((c) => c.id === activeId) || null;
+
+  // Reset the per-channel UI bits Chat owns when the active channel changes (timeline/presence/receipts reset
+  // lives in useChatSocket). Kept as a stable callback so the socket effect deps stay [token, activeId].
+  const resetChannelUi = useCallback(() => {
+    setSearchOpen(false);
+    setEditingId("");
+    setReactPickerId("");
+    setTranslations({});
+    setTranslating(new Set());
+    setTranslateError(new Set());
+  }, []);
+
+  // The chat websocket + the per-channel timeline / presence / receipts / recent-activity state it owns.
+  // `callRef` is wired below (declared after the engine); the hook only reads it inside the ws handler, so the
+  // forward reference is safe.
+  const callRef = useRef<ReturnType<typeof useCall> | null>(null);
+  const socket = useChatSocket({
+    token,
+    activeId,
+    me,
+    // Non-null after mount; the hook dereferences it lazily inside onmessage, never during render.
+    callRef: callRef as React.MutableRefObject<ReturnType<typeof useCall>>,
+    setError,
+    resetChannelUi,
+  });
+  const {
+    messages,
+    setMessages,
+    threadRoot,
+    setThreadRoot,
+    threadReplies,
+    setThreadReplies,
+    presence,
+    typingSubject,
+    receipts,
+    setLastActivity,
+    wsRef,
+    typingSentAt,
+  } = socket;
 
   // Calls: send signaling over the active channel websocket; route inbound signal events into the engine.
   const sendSignal = (to: string, data: unknown) => {
@@ -146,7 +157,6 @@ export function Chat() {
     }
   };
   const call = useCall(sendSignal);
-  const callRef = useRef(call);
   callRef.current = call;
 
   async function refreshUnread(list: Channel[]) {
@@ -256,145 +266,6 @@ export function Chat() {
       window.clearInterval(iv);
     };
   }, []);
-
-  // Per-channel: timeline + presence + receipts, and the live websocket (messages, edits/deletes, presence,
-  // typing, read receipts, call signals).
-  useEffect(() => {
-    if (!token || !activeId) {
-      setMessages([]);
-      return;
-    }
-    setThreadRoot(null);
-    setThreadReplies([]);
-    setSearchOpen(false);
-    setPresence(new Set());
-    setTypingSubject("");
-    setEditingId("");
-    setReceipts({});
-    setReactPickerId("");
-    setTranslations({});
-    setTranslating(new Set());
-    setTranslateError(new Set());
-    let alive = true;
-
-    (async () => {
-      try {
-        const msgs = await apiFetch<Message[]>(token, "GET", `/v1/chat/channels/${activeId}/messages`);
-        if (alive) setMessages((msgs || []).filter((m) => !m.parent_id));
-      } catch (e) {
-        if (alive) setError(e instanceof Error ? e.message : String(e));
-      }
-    })();
-    (async () => {
-      try {
-        const on = await apiFetch<unknown[]>(token, "GET", `/v1/chat/channels/${activeId}/presence`);
-        const ids = (on || [])
-          .map((x) =>
-            typeof x === "string"
-              ? x
-              : ((x as Record<string, string>).subject_id || (x as Record<string, string>).subject || ""),
-          )
-          .filter(Boolean);
-        if (alive) setPresence(new Set(ids));
-      } catch {
-        /* presence is best-effort */
-      }
-    })();
-    (async () => {
-      try {
-        const r = await apiFetch<ReadMarker[]>(token, "GET", `/v1/chat/channels/${activeId}/receipts`);
-        const map: Record<string, string> = {};
-        for (const m of r || []) map[m.subject_id] = m.last_read_message_id;
-        if (alive) setReceipts(map);
-      } catch {
-        /* receipts endpoint may predate this deploy - degrade quietly */
-      }
-    })();
-
-    let stopped = false;
-    let sock: WebSocket | null = null;
-    const connect = () => {
-      if (stopped) return;
-      const url =
-        location.origin.replace(/^http/, "ws") +
-        `/v1/chat/ws?channel=${encodeURIComponent(activeId)}&access_token=${encodeURIComponent(token)}`;
-      sock = new WebSocket(url);
-      wsRef.current = sock;
-      sock.onmessage = (ev) => {
-        let data: WsEvent;
-        try {
-          data = JSON.parse(ev.data as string) as WsEvent;
-        } catch {
-          return;
-        }
-        if (data.type === "message" && data.id) {
-          const msg = data as Message;
-          // Bump recent-activity for the message's channel so the DM list re-sorts live.
-          const chanId = msg.channel_id || activeId;
-          if (chanId) setLastActivity((prev) => ({ ...prev, [chanId]: Date.now() }));
-          if (msg.parent_id) {
-            const root = threadRootRef.current;
-            if (root && msg.parent_id === root.id) {
-              setThreadReplies((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
-            }
-          } else {
-            setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
-          }
-        } else if (data.type === "message_edited" && data.id) {
-          const patch = (m: Message): Message =>
-            m.id === data.id ? { ...m, body: data.body ?? m.body, edited_at: data.edited_at } : m;
-          setMessages((prev) => prev.map(patch));
-          setThreadReplies((prev) => prev.map(patch));
-        } else if (data.type === "message_deleted" && data.id) {
-          setMessages((prev) => prev.filter((m) => m.id !== data.id));
-          setThreadReplies((prev) => prev.filter((m) => m.id !== data.id));
-        } else if (data.type === "reaction_changed" && data.message_id && data.emoji) {
-          const mid = data.message_id;
-          const emoji = data.emoji;
-          const added = !!data.added;
-          const isMe = !!data.subject && data.subject === me;
-          const patch = (m: Message): Message =>
-            m.id === mid ? { ...m, reactions: applyReaction(m.reactions, emoji, added, isMe) } : m;
-          setMessages((prev) => prev.map(patch));
-          setThreadReplies((prev) => prev.map(patch));
-        } else if (data.type === "presence" && data.subject) {
-          const sub = data.subject;
-          setPresence((prev) => {
-            const next = new Set(prev);
-            if (data.status === "online") next.add(sub);
-            else next.delete(sub);
-            return next;
-          });
-        } else if (data.type === "typing" && data.subject) {
-          setTypingSubject(data.subject);
-          if (typingTimer.current) window.clearTimeout(typingTimer.current);
-          typingTimer.current = window.setTimeout(() => setTypingSubject(""), 2500);
-        } else if (data.type === "read" && data.subject && data.last_read_message_id) {
-          const sub = data.subject;
-          const last = data.last_read_message_id;
-          setReceipts((prev) => ({ ...prev, [sub]: last }));
-        } else if (data.type === "signal" && data.from) {
-          callRef.current.handleSignal(data.from, data.data);
-        }
-      };
-      sock.onclose = () => {
-        if (!stopped) window.setTimeout(connect, 1500);
-      };
-    };
-    connect();
-    return () => {
-      stopped = true;
-      if (sock) {
-        try {
-          sock.close();
-        } catch {
-          /* already closed */
-        }
-      }
-      wsRef.current = null;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, activeId]);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -754,43 +625,8 @@ export function Chat() {
   const dms = useMemo(() => {
     return channels
       .filter((c) => c.kind === "direct")
-      .sort((a, b) => (lastActivity[b.id] || 0) - (lastActivity[a.id] || 0));
-  }, [channels, lastActivity]);
-
-  const renderRow = (c: Channel) => {
-    const u = unread[c.id] || 0;
-    const isActive = c.id === activeId;
-    const dm = c.kind === "direct";
-    const other = c.other_subject_id || "";
-    return (
-      <button
-        key={c.id}
-        className={"chan-row" + (isActive ? " active" : "") + (u > 0 && !isActive ? " unread" : "")}
-        onClick={() => setActiveId(c.id)}
-        type="button"
-      >
-        {dm ? (
-          // Presence is per-open-socket today: we only learn a subject is online while we hold a socket on a
-          // channel they are in. So this dot reflects presence only while that DM's own socket is held (i.e.
-          // when it has been opened this session). A correct always-on presence needs a per-user socket
-          // independent of the open channel - a known follow-up. We do not fake presence here.
-          <Avatar
-            id={other || c.id}
-            name={nameOf(other)}
-            size={26}
-            online={presence.has(other)}
-            src={avatarSrc(other)}
-          />
-        ) : (
-          <span className="chan-hash">
-            <Icon name="hash" size={16} />
-          </span>
-        )}
-        <span className="chan-name">{channelLabel(directory, me, c)}</span>
-        {u > 0 && !isActive && <span className="chan-badge">{u > 99 ? "99+" : u}</span>}
-      </button>
-    );
-  };
+      .sort((a, b) => (socket.lastActivity[b.id] || 0) - (socket.lastActivity[a.id] || 0));
+  }, [channels, socket.lastActivity]);
 
   const subtitle = active
     ? active.kind === "direct"
@@ -813,44 +649,24 @@ export function Chat() {
     <div className="chat">
       <input ref={fileRef} type="file" style={{ display: "none" }} onChange={onPickFile} />
 
-      <aside className="sidebar">
-        <button className="ws-head" onClick={() => setProfileOpen(true)} type="button" title="Edit your profile">
-          <Avatar id={me} name={selfName} size={34} src={myAvatar} />
-          <div className="ws-meta">
-            <span className="ws-name">{selfName}</span>
-            <span className="ws-sub">{email}</span>
-          </div>
-          <span className="ws-edit">
-            <Icon name="edit" size={14} />
-          </span>
-        </button>
-        <div className="side-scroll">
-          <div className="side-section">
-            <div className="side-label">
-              <span>Channels</span>
-              <button className="side-add" title="New channel" onClick={() => setPicker("group")} type="button">
-                <Icon name="plus" size={14} />
-              </button>
-            </div>
-            {groups.map(renderRow)}
-            {groups.length === 0 && <div className="side-empty">No channels yet</div>}
-          </div>
-          <div className="side-section">
-            <div className="side-label">
-              <span>Direct messages</span>
-              <button className="side-add" title="New direct message" onClick={() => setPicker("dm")} type="button">
-                <Icon name="plus" size={14} />
-              </button>
-            </div>
-            {dms.map(renderRow)}
-            {dms.length === 0 && <div className="side-empty">No direct messages</div>}
-          </div>
-        </div>
-        <div className="side-foot">
-          <span className={"dot " + (health === "ok" ? "ok" : health === "bad" ? "bad" : "")} />
-          <span>{health === "ok" ? "Connected" : health === "bad" ? "Reconnecting..." : "Connecting..."}</span>
-        </div>
-      </aside>
+      <Sidebar
+        me={me}
+        email={email}
+        selfName={selfName}
+        myAvatar={myAvatar}
+        directory={directory}
+        groups={groups}
+        dms={dms}
+        activeId={activeId}
+        unread={unread}
+        presence={presence}
+        health={health}
+        nameOf={nameOf}
+        avatarSrc={avatarSrc}
+        onOpenProfile={() => setProfileOpen(true)}
+        onSelectChannel={setActiveId}
+        onOpenPicker={setPicker}
+      />
 
       <section className="main">
         {!active ? (
@@ -863,84 +679,44 @@ export function Chat() {
           </div>
         ) : (
           <>
-            <div className="main-head">
-              <div className="head-id">
-                {active.kind === "direct" ? (
-                  <Avatar
-                    id={active.other_subject_id || active.id}
-                    name={nameOf(active.other_subject_id || "")}
-                    size={36}
-                    online={presence.has(active.other_subject_id || "")}
-                    src={avatarSrc(active.other_subject_id || "")}
-                  />
-                ) : (
-                  <span className="head-hash">
-                    <Icon name="hash" size={20} />
-                  </span>
-                )}
-                <div className="head-text">
-                  <span className="chan-title">{channelLabel(directory, me, active)}</span>
-                  <span className="chan-sub">{subtitle}</span>
-                </div>
-              </div>
-              <span className="spacer" />
-              <button className="icon-btn" title="Voice call" onClick={() => startCallWith(false)} type="button">
-                <Icon name="phone" />
-              </button>
-              <button className="icon-btn" title="Video call" onClick={() => startCallWith(true)} type="button">
-                <Icon name="video" />
-              </button>
-              <button
-                className={"icon-btn" + (searchOpen ? " on" : "")}
-                title="Search this channel"
-                onClick={() => setSearchOpen((s) => !s)}
-                type="button"
-              >
-                <Icon name="search" />
-              </button>
-              {active.kind !== "direct" && (
-                <button className="icon-btn" title="Add people" onClick={() => setPicker("add")} type="button">
-                  <Icon name="users" />
-                </button>
-              )}
-            </div>
-
-            {searchOpen && (
-              <div className="search-bar">
-                <input
-                  value={searchQ}
-                  onChange={(e) => setSearchQ(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      void runSearch();
-                    }
-                  }}
-                  placeholder="Search messages in this channel"
-                  autoFocus
-                />
-                <button className="btn-pill" onClick={() => void runSearch()} type="button">
-                  Search
-                </button>
-                {searchResults.length > 0 && (
-                  <div className="search-results">
-                    {searchResults.map((m) => (
-                      <div key={m.id} className="search-row">
-                        <span className="author">{nameOf(m.sender_subject_id)}</span>{" "}
-                        <span className="when">{timeOf(m.created_at)}</span>
-                        <div className="snippet">{m.body || "[attachment]"}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+            <ChannelHeader
+              active={active}
+              directory={directory}
+              me={me}
+              subtitle={subtitle}
+              presence={presence}
+              searchOpen={searchOpen}
+              searchQ={searchQ}
+              searchResults={searchResults}
+              nameOf={nameOf}
+              avatarSrc={avatarSrc}
+              onStartCall={startCallWith}
+              onToggleSearch={() => setSearchOpen((s) => !s)}
+              onOpenAddPeople={() => setPicker("add")}
+              onSearchQChange={setSearchQ}
+              onRunSearch={runSearch}
+            />
 
             <div className="main-row">
               <div className="main-col">
-                <div
-                  className={"messages" + (dragOver ? " drag-over" : "")}
-                  ref={scrollRef}
+                <MessageList
+                  rows={rows}
+                  messages={messages}
+                  me={me}
+                  token={token}
+                  scrollRef={scrollRef}
+                  dragOver={dragOver}
+                  editingId={editingId}
+                  editText={editText}
+                  reactPickerId={reactPickerId}
+                  translating={translating}
+                  translations={translations}
+                  translateError={translateError}
+                  myLastId={myLastId}
+                  seenBy={seenBy}
+                  seenLabel={seenLabel}
+                  nameOf={nameOf}
+                  avatarSrc={avatarSrc}
                   onDragOver={(e) => {
                     e.preventDefault();
                     if (!dragOver) setDragOver(true);
@@ -961,167 +737,22 @@ export function Chat() {
                       stageFile(f);
                     }
                   }}
-                >
-                  {messages.length === 0 && (
-                    <div className="empty">
-                      <div className="empty-sub">No messages yet. Say hello.</div>
-                    </div>
-                  )}
-                  {rows.map(({ m, showDay, grouped }) => {
-                    const mine = m.sender_subject_id === me;
-                    return (
-                      <Fragment key={m.id}>
-                        {showDay && (
-                          <div className="day-sep">
-                            <span>{formatDay(m.created_at)}</span>
-                          </div>
-                        )}
-                        <div className={"m-row" + (grouped ? " grouped" : "") + (mine ? " mine" : "")}>
-                          <div className="m-gutter">
-                            {grouped ? (
-                              <span className="m-time-hover">{timeOf(m.created_at)}</span>
-                            ) : (
-                              <Avatar
-                                id={m.sender_subject_id}
-                                name={nameOf(m.sender_subject_id)}
-                                size={36}
-                                src={avatarSrc(m.sender_subject_id)}
-                              />
-                            )}
-                          </div>
-                          <div className="m-content">
-                            {!grouped && (
-                              <div className="m-head">
-                                <span className="m-name">{nameOf(m.sender_subject_id)}</span>
-                                <span className="m-time">{timeOf(m.created_at)}</span>
-                                {m.edited_at && <span className="m-edited">edited</span>}
-                              </div>
-                            )}
-                            {editingId === m.id ? (
-                              <div className="edit-row">
-                                <input
-                                  value={editText}
-                                  onChange={(e) => setEditText(e.target.value)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                      e.preventDefault();
-                                      void saveEdit(m);
-                                    } else if (e.key === "Escape") {
-                                      setEditingId("");
-                                      setEditText("");
-                                    }
-                                  }}
-                                  autoFocus
-                                />
-                                <button className="btn-pill" onClick={() => void saveEdit(m)} type="button">
-                                  Save
-                                </button>
-                                <button
-                                  className="btn-ghost"
-                                  onClick={() => {
-                                    setEditingId("");
-                                    setEditText("");
-                                  }}
-                                  type="button"
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            ) : (
-                              <div className="m-body">
-                                {m.attachment_id ? <Attachment token={token!} id={m.attachment_id} /> : m.body}
-                              </div>
-                            )}
-                            {m.reactions && m.reactions.length > 0 && (
-                              <div className="reactions">
-                                {m.reactions.map((r) => (
-                                  <button
-                                    key={r.emoji}
-                                    className={"reaction" + (r.mine ? " mine" : "")}
-                                    onClick={() => void toggleReaction(m, r.emoji)}
-                                    title={r.mine ? "Remove your reaction" : "React"}
-                                    type="button"
-                                  >
-                                    <span className="re-emoji">{r.emoji}</span>
-                                    <span className="re-count">{r.count}</span>
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                            {translating.has(m.id) && <div className="translation muted">Translating...</div>}
-                            {!translating.has(m.id) && translations[m.id] !== undefined && (
-                              <div className="translation">
-                                <span className="tr-label">English</span>
-                                <span className="tr-text">{translations[m.id]}</span>
-                              </div>
-                            )}
-                            {!translating.has(m.id) && translateError.has(m.id) && (
-                              <div className="translation muted">Translation unavailable</div>
-                            )}
-                          </div>
-                          {editingId !== m.id && (
-                            <div className="m-actions">
-                              <div className="react-wrap">
-                                <button
-                                  title="Add reaction"
-                                  onClick={() => setReactPickerId((id) => (id === m.id ? "" : m.id))}
-                                  type="button"
-                                >
-                                  <Icon name="smile" size={15} />
-                                </button>
-                                {reactPickerId === m.id && (
-                                  <div className="emoji-picker">
-                                    {REACTION_EMOJIS.map((e) => (
-                                      <button
-                                        key={e}
-                                        className="emoji-opt"
-                                        onClick={() => void toggleReaction(m, e)}
-                                        type="button"
-                                      >
-                                        {e}
-                                      </button>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                              {!m.attachment_id && m.body && (
-                                <button title="Translate to English" onClick={() => void translateMessage(m)} type="button">
-                                  <Icon name="translate" size={15} />
-                                </button>
-                              )}
-                              <button title="Reply in thread" onClick={() => void openThread(m)} type="button">
-                                <Icon name="thread" size={15} />
-                              </button>
-                              {mine && !m.attachment_id && (
-                                <button
-                                  title="Edit"
-                                  onClick={() => {
-                                    setEditingId(m.id);
-                                    setEditText(m.body);
-                                  }}
-                                  type="button"
-                                >
-                                  <Icon name="edit" size={15} />
-                                </button>
-                              )}
-                              {mine && (
-                                <button title="Delete" onClick={() => void deleteMessage(m)} type="button">
-                                  <Icon name="trash" size={15} />
-                                </button>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                        {m.id === myLastId && seenBy.length > 0 && (
-                          <div className="seen-row">
-                            <Icon name="check" size={12} />
-                            <span>{seenLabel}</span>
-                          </div>
-                        )}
-                      </Fragment>
-                    );
-                  })}
-                </div>
+                  onEditTextChange={setEditText}
+                  onSaveEdit={saveEdit}
+                  onCancelEdit={() => {
+                    setEditingId("");
+                    setEditText("");
+                  }}
+                  onToggleReaction={toggleReaction}
+                  onSetReactPicker={(updater) => setReactPickerId(updater)}
+                  onTranslate={translateMessage}
+                  onOpenThread={openThread}
+                  onStartEdit={(m) => {
+                    setEditingId(m.id);
+                    setEditText(m.body);
+                  }}
+                  onDelete={deleteMessage}
+                />
 
                 <div className="typing">
                   {typingSubject && typingSubject !== me ? `${nameOf(typingSubject)} is typing...` : ""}
@@ -1129,65 +760,28 @@ export function Chat() {
 
                 {(error || call.error) && <div className="banner err">{call.error || error}</div>}
 
-                {staged && (
-                  <div className="composer-attach">
-                    {stagedPreview ? (
-                      <img className="ca-thumb" src={stagedPreview} alt={staged.name} />
-                    ) : (
-                      <span className="ca-icon">
-                        <Icon name="paperclip" size={16} />
-                      </span>
-                    )}
-                    <span className="ca-meta">
-                      <span className="ca-name">{staged.name}</span>
-                      <span className="ca-size">{formatBytes(staged.size)}</span>
-                    </span>
-                    <button
-                      className="ca-x"
-                      title="Remove attachment"
-                      onClick={() => setStaged(null)}
-                      disabled={uploading}
-                      type="button"
-                    >
-                      <Icon name="close" size={14} />
-                    </button>
-                  </div>
-                )}
-
-                <div className="composer">
-                  <button className="comp-btn" title="Attach a file" onClick={() => fileRef.current?.click()} type="button">
-                    <Icon name="paperclip" />
-                  </button>
-                  <textarea
-                    ref={taRef}
-                    rows={1}
-                    value={draft}
-                    onChange={(e) => onDraftChange(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        void send();
-                      }
-                    }}
-                    onPaste={(e) => {
-                      const f = e.clipboardData.files && e.clipboardData.files[0];
-                      if (f) {
-                        e.preventDefault();
-                        stageFile(f);
-                      }
-                    }}
-                    placeholder={staged ? "Add a message or just send the file" : "Message " + channelLabel(directory, me, active)}
-                  />
-                  <button
-                    className="comp-send"
-                    onClick={() => void send()}
-                    disabled={sending || uploading || (!draft.trim() && !staged)}
-                    title="Send"
-                    type="button"
-                  >
-                    <Icon name={uploading ? "paperclip" : "send"} />
-                  </button>
-                </div>
+                <Composer
+                  active={active}
+                  directory={directory}
+                  me={me}
+                  draft={draft}
+                  staged={staged}
+                  stagedPreview={stagedPreview}
+                  uploading={uploading}
+                  sending={sending}
+                  taRef={taRef}
+                  onDraftChange={onDraftChange}
+                  onSend={send}
+                  onClearStaged={() => setStaged(null)}
+                  onOpenFilePicker={() => fileRef.current?.click()}
+                  onPaste={(e) => {
+                    const f = e.clipboardData.files && e.clipboardData.files[0];
+                    if (f) {
+                      e.preventDefault();
+                      stageFile(f);
+                    }
+                  }}
+                />
               </div>
 
               {threadRoot && token && (
