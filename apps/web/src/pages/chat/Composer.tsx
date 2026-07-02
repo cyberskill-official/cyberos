@@ -8,8 +8,8 @@ import { Icon } from "../../components/icons";
 // The active @-token immediately before the caret: an "@" at a word boundary followed by up to 30 name chars.
 const MENTION_RE = /(^|\s)@([\p{L}0-9._-]{0,30})$/u;
 
-// The message composer: the staged-file preview strip (shown while a file is queued for the next send), the
-// attach button, the growing textarea (Enter sends, Shift+Enter newline, paste stages a file) with an
+// The message composer: the staged-files preview strip (shown while files are queued for the next send), the
+// attach + emoji buttons, the growing textarea (Enter sends, Shift+Enter newline, paste stages files) with an
 // @-mention autocomplete popover, and the send button. Message + attachment state lives in Chat; picking a
 // mention inserts "@Name " into the draft and reports the person up so Chat can send the resolved id.
 export function Composer({
@@ -19,7 +19,7 @@ export function Composer({
   people,
   draft,
   staged,
-  stagedPreview,
+  stagedPreviews,
   uploading,
   sending,
   taRef,
@@ -36,14 +36,14 @@ export function Composer({
   me: string;
   people: Person[];
   draft: string;
-  staged: File | null;
-  stagedPreview: string;
+  staged: File[];
+  stagedPreviews: string[];
   uploading: boolean;
   sending: boolean;
   taRef: RefObject<HTMLTextAreaElement>;
   onDraftChange: (v: string) => void;
   onSend: () => void;
-  onClearStaged: () => void;
+  onClearStaged: (idx: number) => void;
   onOpenFilePicker: () => void;
   onOpenEmoji: (rect: { top: number; left: number; bottom: number; right: number }) => void;
   onPaste: (e: React.ClipboardEvent<HTMLTextAreaElement>) => void;
@@ -105,28 +105,32 @@ export function Composer({
 
   return (
     <>
-      {staged && (
+      {staged.length > 0 && (
         <div className="composer-attach">
-          {stagedPreview ? (
-            <img className="ca-thumb" src={stagedPreview} alt={staged.name} />
-          ) : (
-            <span className="ca-icon">
-              <Icon name="paperclip" size={16} />
-            </span>
-          )}
-          <span className="ca-meta">
-            <span className="ca-name">{staged.name}</span>
-            <span className="ca-size">{formatBytes(staged.size)}</span>
-          </span>
-          <button
-            className="ca-x"
-            title="Remove attachment"
-            onClick={onClearStaged}
-            disabled={uploading}
-            type="button"
-          >
-            <Icon name="close" size={14} />
-          </button>
+          {staged.map((f, i) => (
+            <div className="ca-item" key={`${f.name}.${i}.${f.size}`}>
+              {stagedPreviews[i] ? (
+                <img className="ca-thumb" src={stagedPreviews[i]} alt={f.name} />
+              ) : (
+                <span className="ca-icon">
+                  <Icon name="paperclip" size={16} />
+                </span>
+              )}
+              <span className="ca-meta">
+                <span className="ca-name">{f.name}</span>
+                <span className="ca-size">{formatBytes(f.size)}</span>
+              </span>
+              <button
+                className="ca-x"
+                title="Remove attachment"
+                onClick={() => onClearStaged(i)}
+                disabled={uploading}
+                type="button"
+              >
+                <Icon name="close" size={14} />
+              </button>
+            </div>
+          ))}
         </div>
       )}
 
@@ -212,14 +216,16 @@ export function Composer({
             }}
             onPaste={onPaste}
             placeholder={
-              staged ? "Add a message or just send the file" : "Message " + channelLabel(directory, me, active)
+              staged.length > 0
+                ? "Add a message or just send the files"
+                : "Message " + channelLabel(directory, me, active)
             }
           />
         </div>
         <button
           className="comp-send"
           onClick={() => void onSend()}
-          disabled={sending || uploading || (!draft.trim() && !staged)}
+          disabled={sending || uploading || (!draft.trim() && staged.length === 0)}
           title="Send"
           type="button"
         >

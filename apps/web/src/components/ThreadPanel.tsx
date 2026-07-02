@@ -14,6 +14,7 @@ export function ThreadPanel({
   nameOf,
   avatarOf,
   mentionNames,
+  onOpenImage,
   root,
   replies,
   onClose,
@@ -23,6 +24,7 @@ export function ThreadPanel({
   nameOf: (id: string) => string;
   avatarOf: (id: string) => string;
   mentionNames?: MentionCandidate[];
+  onOpenImage?: (url: string, name: string) => void;
   root: Message;
   replies: Message[];
   onClose(): void;
@@ -58,7 +60,15 @@ export function ThreadPanel({
         </div>
         <div className="m-body">
           {m.body && <RichText text={m.body} mentions={mentionNames} />}
-          {m.attachment_id && <Attachment token={token} id={m.attachment_id} />}
+          {m.attachments && m.attachments.length > 0 ? (
+            <div className="att-group">
+              {m.attachments.map((a) => (
+                <Attachment key={a.id} token={token} id={a.id} meta={a} onOpenImage={onOpenImage} />
+              ))}
+            </div>
+          ) : m.attachment_id ? (
+            <Attachment token={token} id={m.attachment_id} onOpenImage={onOpenImage} />
+          ) : null}
         </div>
       </div>
     </div>

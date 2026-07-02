@@ -28,6 +28,7 @@ export function MessageList({
   onDragLeave,
   onDrop,
   onPaste,
+  onOpenImage,
   onEditTextChange,
   onSaveEdit,
   onCancelEdit,
@@ -61,6 +62,7 @@ export function MessageList({
   onDragLeave: (e: React.DragEvent<HTMLDivElement>) => void;
   onDrop: (e: React.DragEvent<HTMLDivElement>) => void;
   onPaste: (e: React.ClipboardEvent<HTMLDivElement>) => void;
+  onOpenImage: (url: string, name: string) => void;
   onEditTextChange: (v: string) => void;
   onSaveEdit: (m: Message) => void;
   onCancelEdit: () => void;
@@ -106,6 +108,7 @@ export function MessageList({
           mentionNames={mentionNames}
           nameOf={nameOf}
           avatarSrc={avatarSrc}
+          onOpenImage={onOpenImage}
           onEditTextChange={onEditTextChange}
           onSaveEdit={onSaveEdit}
           onCancelEdit={onCancelEdit}

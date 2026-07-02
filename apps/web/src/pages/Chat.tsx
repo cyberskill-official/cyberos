@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { useAuth } from "../lib/auth";
-import { apiFetch, decodeJwt } from "../lib/api";
+import { apiFetch, apiUploadRaw, decodeJwt, ApiError } from "../lib/api";
 import type { Channel, Directory, Message, Person } from "../lib/chat";
 import { channelLabel, dayKey, fileToBase64, formatBytes, isImage, shortId } from "../lib/chat";
 import type { MentionCandidate } from "../lib/richtext";
@@ -11,6 +11,7 @@ import type { AnchorRect } from "../components/EmojiPicker";
 import { PeoplePicker } from "../components/PeoplePicker";
 import type { PickerMode } from "../components/PeoplePicker";
 import { ThreadPanel } from "../components/ThreadPanel";
+import { Lightbox } from "../components/Lightbox";
 import { CallOverlay } from "../components/CallOverlay";
 import { useCall } from "../lib/call";
 import { ProfileEditor } from "../components/ProfileEditor";
@@ -22,8 +23,9 @@ import { MessageList } from "./chat/MessageList";
 import { Composer } from "./chat/Composer";
 
 const GROUP_WINDOW_MS = 5 * 60 * 1000;
-// Client-side guard mirroring the server's attachment cap (5 MB). Keep this in sync with the service.
-const MAX_ATTACH_BYTES = 5 * 1024 * 1024;
+// Fallback attachment limits, used until GET /v1/chat/config answers (the server is authoritative).
+const FALLBACK_MAX_ATTACH_BYTES = 5 * 1024 * 1024;
+const FALLBACK_MAX_ATTACH_FILES = 10;
 
 export function Chat() {
   const { token, email } = useAuth();
@@ -129,13 +131,20 @@ export function Chat() {
   const [searchQ, setSearchQ] = useState("");
   const [searchResults, setSearchResults] = useState<Message[]>([]);
 
-  // Composer attachment staging: a file is held here (with an image preview URL) until the user presses Send,
-  // at which point it is uploaded and posted. `uploading` shows the in-flight state; `dragOver` highlights
-  // the message pane during a drag.
-  const [staged, setStaged] = useState<File | null>(null);
-  const [stagedPreview, setStagedPreview] = useState("");
+  // Composer attachment staging: files are held here (with image preview URLs) until the user presses Send,
+  // at which point they are uploaded and posted as one multi-attachment message. `uploading` shows the
+  // in-flight state; `dragOver` highlights the message pane during a drag.
+  const [staged, setStaged] = useState<File[]>([]);
+  const [stagedPreviews, setStagedPreviews] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  // Attachment limits from the server (GET /v1/chat/config); fallbacks until it answers.
+  const [attachLimits, setAttachLimits] = useState({
+    maxBytes: FALLBACK_MAX_ATTACH_BYTES,
+    maxFiles: FALLBACK_MAX_ATTACH_FILES,
+  });
+  // The image lightbox (opened from any inline attachment image).
+  const [lightbox, setLightbox] = useState<{ url: string; name: string } | null>(null);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -333,6 +342,22 @@ export function Chat() {
         setError(e instanceof Error ? e.message : String(e));
       }
     })();
+    // Attachment limits (best-effort; fallbacks cover an older server during a deploy window).
+    (async () => {
+      try {
+        const c = await apiFetch<{ attachment_max_bytes?: number; attachment_max_files?: number }>(
+          token,
+          "GET",
+          "/v1/chat/config",
+        );
+        setAttachLimits({
+          maxBytes: c.attachment_max_bytes || FALLBACK_MAX_ATTACH_BYTES,
+          maxFiles: c.attachment_max_files || FALLBACK_MAX_ATTACH_FILES,
+        });
+      } catch {
+        /* keep the fallbacks */
+      }
+    })();
     // A slow reconciler; the notify socket makes counts feel live, so this only corrects drift.
     const iv = window.setInterval(() => {
       void refreshUnread();
@@ -403,20 +428,19 @@ export function Chat() {
     ta.style.height = Math.min(ta.scrollHeight, 140) + "px";
   }, [draft]);
 
-  // Make (and revoke) an object URL for the staged file when it is an image, so the preview strip can show
-  // a thumbnail without re-reading the file.
+  // Make (and revoke) object URLs for staged image files, so the preview strip can show thumbnails without
+  // re-reading the files. Index-aligned with `staged` ("" for non-images).
   useEffect(() => {
-    if (staged && isImage(staged.type)) {
-      const u = URL.createObjectURL(staged);
-      setStagedPreview(u);
-      return () => URL.revokeObjectURL(u);
-    }
-    setStagedPreview("");
+    const urls = staged.map((f) => (isImage(f.type) ? URL.createObjectURL(f) : ""));
+    setStagedPreviews(urls);
+    return () => {
+      for (const u of urls) if (u) URL.revokeObjectURL(u);
+    };
   }, [staged]);
 
-  // Drop any staged file and pending mentions when switching channels, so neither posts to the wrong place.
+  // Drop any staged files and pending mentions when switching channels, so neither posts to the wrong place.
   useEffect(() => {
-    setStaged(null);
+    setStaged([]);
     setPickedMentions([]);
   }, [activeId]);
 
@@ -446,10 +470,10 @@ export function Chat() {
     }
   }
 
-  async function postMessage(body: string, attachmentId?: string, mentionIds?: string[]) {
+  async function postMessage(body: string, attachmentIds?: string[], mentionIds?: string[]) {
     if (!active || !token) return;
     const payload: Record<string, unknown> = { body };
-    if (attachmentId) payload.attachment_id = attachmentId;
+    if (attachmentIds && attachmentIds.length) payload.attachment_ids = attachmentIds;
     if (mentionIds && mentionIds.length) payload.mentions = mentionIds;
     const m = await apiFetch<Message>(token, "POST", `/v1/chat/channels/${active.id}/messages`, payload);
     setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
@@ -468,36 +492,48 @@ export function Chat() {
     return [...ids];
   }
 
-  // Upload a staged file and return its attachment id (reuses the exact attachments endpoint).
+  // Upload one staged file and return its attachment id. Prefers the raw-body route (no base64 inflation);
+  // falls back to the original base64 route if the server predates it (a brief deploy-window case).
   async function uploadStaged(file: File): Promise<string> {
     if (!active || !token) throw new Error("no active channel");
-    const b64 = await fileToBase64(file);
-    const att = await apiFetch<{ id: string }>(token, "POST", `/v1/chat/channels/${active.id}/attachments`, {
-      filename: file.name,
-      content_type: file.type || "application/octet-stream",
-      data_base64: b64,
-    });
-    return att.id;
+    try {
+      const att = await apiUploadRaw<{ id: string }>(
+        token,
+        `/v1/chat/channels/${active.id}/uploads?filename=${encodeURIComponent(file.name)}`,
+        file,
+      );
+      return att.id;
+    } catch (e) {
+      if (!(e instanceof ApiError && (e.status === 404 || e.status === 405))) throw e;
+      const b64 = await fileToBase64(file);
+      const att = await apiFetch<{ id: string }>(token, "POST", `/v1/chat/channels/${active.id}/attachments`, {
+        filename: file.name,
+        content_type: file.type || "application/octet-stream",
+        data_base64: b64,
+      });
+      return att.id;
+    }
   }
 
   async function send() {
     const text = draft.trim();
-    // Send when there is text or a staged file; nothing to do otherwise, or while a send is in flight.
-    if ((!text && !staged) || sending || uploading) return;
+    // Send when there is text or staged files; nothing to do otherwise, or while a send is in flight.
+    if ((!text && staged.length === 0) || sending || uploading) return;
     const mentionIds = resolveMentions(draft);
     setError("");
     setSending(true);
     try {
-      if (staged) {
+      if (staged.length > 0) {
         setUploading(true);
-        let attId: string;
+        const ids: string[] = [];
         try {
-          attId = await uploadStaged(staged);
+          // Sequential keeps the on-message order equal to the staged order.
+          for (const f of staged) ids.push(await uploadStaged(f));
         } finally {
           setUploading(false);
         }
-        await postMessage(text, attId, mentionIds);
-        setStaged(null);
+        await postMessage(text, ids, mentionIds);
+        setStaged([]);
       } else {
         await postMessage(text, undefined, mentionIds);
       }
@@ -526,22 +562,35 @@ export function Chat() {
     });
   }
 
-  // Stage a file for the next Send (does not upload yet). Guards the server's 5 MB cap up front so an
-  // oversize file is rejected with a friendly message before any upload.
-  function stageFile(file: File | null | undefined) {
-    if (!file) return;
-    if (file.size > MAX_ATTACH_BYTES) {
-      setError(`"${file.name}" is ${formatBytes(file.size)}, over the ${formatBytes(MAX_ATTACH_BYTES)} limit.`);
-      return;
-    }
-    setError("");
-    setStaged(file);
+  // Stage files for the next Send (does not upload yet). Guards the server's caps up front so oversize or
+  // too-many files are rejected with a friendly message before any upload.
+  function stageFiles(files: ArrayLike<File> | null | undefined) {
+    if (!files || files.length === 0) return;
+    const incoming = Array.from(files);
+    const errors: string[] = [];
+    setStaged((prev) => {
+      const next = [...prev];
+      for (const f of incoming) {
+        if (next.length >= attachLimits.maxFiles) {
+          errors.push(`At most ${attachLimits.maxFiles} files per message.`);
+          break;
+        }
+        if (f.size > attachLimits.maxBytes) {
+          errors.push(
+            `"${f.name}" is ${formatBytes(f.size)}, over the ${formatBytes(attachLimits.maxBytes)} limit.`,
+          );
+          continue;
+        }
+        next.push(f);
+      }
+      return next;
+    });
+    setError(errors.join(" "));
   }
 
   function onPickFile(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files && e.target.files[0];
+    stageFiles(e.target.files);
     e.target.value = "";
-    stageFile(file);
   }
 
   async function saveEdit(m: Message) {
@@ -785,7 +834,7 @@ export function Chat() {
 
   return (
     <div className="chat">
-      <input ref={fileRef} type="file" style={{ display: "none" }} onChange={onPickFile} />
+      <input ref={fileRef} type="file" multiple style={{ display: "none" }} onChange={onPickFile} />
 
       <Sidebar
         me={me}
@@ -868,15 +917,15 @@ export function Chat() {
                   onDrop={(e) => {
                     e.preventDefault();
                     setDragOver(false);
-                    stageFile(e.dataTransfer.files && e.dataTransfer.files[0]);
+                    stageFiles(e.dataTransfer.files);
                   }}
                   onPaste={(e) => {
-                    const f = e.clipboardData.files && e.clipboardData.files[0];
-                    if (f) {
+                    if (e.clipboardData.files && e.clipboardData.files.length > 0) {
                       e.preventDefault();
-                      stageFile(f);
+                      stageFiles(e.clipboardData.files);
                     }
                   }}
+                  onOpenImage={(url, name) => setLightbox({ url, name })}
                   onEditTextChange={setEditText}
                   onSaveEdit={saveEdit}
                   onCancelEdit={() => {
@@ -911,7 +960,7 @@ export function Chat() {
                   people={dirList}
                   draft={draft}
                   staged={staged}
-                  stagedPreview={stagedPreview}
+                  stagedPreviews={stagedPreviews}
                   uploading={uploading}
                   sending={sending}
                   taRef={taRef}
@@ -930,14 +979,13 @@ export function Chat() {
                           ],
                     )
                   }
-                  onClearStaged={() => setStaged(null)}
+                  onClearStaged={(idx) => setStaged((prev) => prev.filter((_, i) => i !== idx))}
                   onOpenFilePicker={() => fileRef.current?.click()}
                   onOpenEmoji={(rect) => setEmojiFor({ kind: "composer", rect })}
                   onPaste={(e) => {
-                    const f = e.clipboardData.files && e.clipboardData.files[0];
-                    if (f) {
+                    if (e.clipboardData.files && e.clipboardData.files.length > 0) {
                       e.preventDefault();
-                      stageFile(f);
+                      stageFiles(e.clipboardData.files);
                     }
                   }}
                 />
@@ -949,6 +997,7 @@ export function Chat() {
                   nameOf={nameOf}
                   avatarOf={avatarSrc}
                   mentionNames={mentionNames}
+                  onOpenImage={(url, name) => setLightbox({ url, name })}
                   root={threadRoot}
                   replies={threadReplies}
                   onClose={() => setThreadRoot(null)}
@@ -984,6 +1033,8 @@ export function Chat() {
           onCall={(id) => void call.startCall(id, pendingVideo)}
         />
       )}
+
+      {lightbox && <Lightbox url={lightbox.url} name={lightbox.name} onClose={() => setLightbox(null)} />}
 
       <CallOverlay call={call} nameOf={nameOf} avatarOf={avatarSrc} />
 

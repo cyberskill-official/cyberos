@@ -57,3 +57,27 @@ export async function apiFetch<T = unknown>(
   const ct = res.headers.get("content-type") || "";
   return (ct.includes("application/json") ? await res.json() : await res.text()) as T;
 }
+
+// Authenticated raw-body upload: POSTs the file bytes as the request body (no base64 inflation), content
+// type from the file itself. Same error shape as apiFetch so callers can branch on ApiError.status.
+export async function apiUploadRaw<T = unknown>(token: string, path: string, file: File | Blob): Promise<T> {
+  const res = await fetch(path, {
+    method: "POST",
+    headers: {
+      Authorization: "Bearer " + token,
+      "content-type": (file as File).type || "application/octet-stream",
+    },
+    body: file,
+  });
+  if (!res.ok) {
+    let msg = `upload failed (${res.status})`;
+    try {
+      const j = (await res.json()) as { error?: string };
+      if (j && j.error) msg = j.error;
+    } catch {
+      /* non-JSON error body */
+    }
+    throw new ApiError(res.status, msg);
+  }
+  return (await res.json()) as T;
+}

@@ -29,6 +29,7 @@ export function MessageRow({
   mentionNames,
   nameOf,
   avatarSrc,
+  onOpenImage,
   onEditTextChange,
   onSaveEdit,
   onCancelEdit,
@@ -57,6 +58,7 @@ export function MessageRow({
   mentionNames: MentionCandidate[];
   nameOf: (id: string) => string;
   avatarSrc: (id: string) => string;
+  onOpenImage: (url: string, name: string) => void;
   onEditTextChange: (v: string) => void;
   onSaveEdit: (m: Message) => void;
   onCancelEdit: () => void;
@@ -120,9 +122,17 @@ export function MessageRow({
             </div>
           ) : (
             <div className="m-body">
-              {/* Body and attachment both render: a file sent with a caption shows the caption too. */}
+              {/* Body and attachments both render: files sent with a caption show the caption too. */}
               {m.body && <RichText text={m.body} mentions={mentionNames} />}
-              {m.attachment_id && <Attachment token={token!} id={m.attachment_id} />}
+              {m.attachments && m.attachments.length > 0 ? (
+                <div className="att-group">
+                  {m.attachments.map((a) => (
+                    <Attachment key={a.id} token={token!} id={a.id} meta={a} onOpenImage={onOpenImage} />
+                  ))}
+                </div>
+              ) : m.attachment_id ? (
+                <Attachment token={token!} id={m.attachment_id} onOpenImage={onOpenImage} />
+              ) : null}
             </div>
           )}
           {m.reactions && m.reactions.length > 0 && (
@@ -196,7 +206,8 @@ export function MessageRow({
             <button title="Reply in thread" onClick={() => void onOpenThread(m)} type="button">
               <Icon name="thread" size={15} />
             </button>
-            {mine && !m.attachment_id && (
+            {/* Any of my messages with text can be edited - including one that carries attachments. */}
+            {mine && m.body && (
               <button title="Edit" onClick={() => onStartEdit(m)} type="button">
                 <Icon name="edit" size={15} />
               </button>

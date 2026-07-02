@@ -19,6 +19,14 @@ export interface ReactionSummary {
   count: number;
   mine: boolean;
 }
+// Attachment metadata as folded into a message by the server (multi-file), so rendering needs no extra
+// round-trip; the bytes themselves are fetched on demand by id.
+export interface AttachmentMeta {
+  id: string;
+  filename: string;
+  content_type: string;
+  size_bytes: number;
+}
 export interface Message {
   id: string;
   channel_id: string;
@@ -30,6 +38,7 @@ export interface Message {
   deleted_at?: string | null;
   created_at?: string;
   reactions?: ReactionSummary[];
+  attachments?: AttachmentMeta[];
 }
 export interface ReadMarker {
   subject_id: string;
