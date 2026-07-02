@@ -1,5 +1,6 @@
-//! Channel membership: add (owner or admin), list (any member), remove (owner only). Roles are
-//! owner > admin > member; the channel creator is the first owner (FR-CHAT-101 slice 2).
+//! Channel membership: add (owner or admin), list (any member), remove (owner, or yourself - leaving),
+//! and role changes (owner only). Roles are owner > admin > member; the channel creator is the first
+//! owner (FR-CHAT-101 slice 2; leave + roles landed with the find-and-organize cluster).
 
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
@@ -169,18 +170,27 @@ pub async fn remove(
     let mut tx = db::tenant_tx(&st.pool, &tenant)
         .await
         .map_err(crate::internal)?;
-    match db::role_in_channel(&mut tx, channel, caller)
+    let role = match db::role_in_channel(&mut tx, channel, caller)
         .await
         .map_err(crate::internal)?
     {
-        Some(role) if role == "owner" => {}
-        Some(_) => {
+        Some(r) => r,
+        None => return Err((StatusCode::FORBIDDEN, "not a channel member".to_string())),
+    };
+    if subject == caller {
+        // Leaving. An owner cannot walk away and orphan the channel: transfer ownership (or archive) first.
+        if role == "owner" {
             return Err((
                 StatusCode::FORBIDDEN,
-                "only the owner can remove members".to_string(),
-            ))
+                "the owner cannot leave; transfer ownership or archive the channel first"
+                    .to_string(),
+            ));
         }
-        None => return Err((StatusCode::FORBIDDEN, "not a channel member".to_string())),
+    } else if role != "owner" {
+        return Err((
+            StatusCode::FORBIDDEN,
+            "only the owner can remove members".to_string(),
+        ));
     }
     let res =
         sqlx::query("DELETE FROM chat_channel_members WHERE channel_id = $1 AND subject_id = $2")
@@ -211,4 +221,89 @@ pub async fn remove(
         });
     }
     Ok(StatusCode::NO_CONTENT)
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SetRole {
+    pub role: String,
+}
+
+/// PATCH /v1/chat/channels/{id}/members/{subject} - change a member's role (owner only). An owner demoting
+/// THEMSELVES must leave another owner behind, so a channel always has one.
+pub async fn set_role(
+    State(st): State<AppState>,
+    Path((channel, subject)): Path<(Uuid, Uuid)>,
+    headers: HeaderMap,
+    Json(body): Json<SetRole>,
+) -> Result<Json<Member>, (StatusCode, String)> {
+    let claims = auth::authenticate(&st, &headers)?;
+    let tenant = claims
+        .tenant_uuid()
+        .map_err(|e| (StatusCode::UNAUTHORIZED, e.to_string()))?;
+    let caller = claims
+        .subject_id()
+        .map_err(|e| (StatusCode::UNAUTHORIZED, e.to_string()))?;
+    if !matches!(body.role.as_str(), "owner" | "admin" | "member") {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "role must be owner, admin, or member".to_string(),
+        ));
+    }
+
+    let mut tx = db::tenant_tx(&st.pool, &tenant)
+        .await
+        .map_err(crate::internal)?;
+    match db::role_in_channel(&mut tx, channel, caller)
+        .await
+        .map_err(crate::internal)?
+    {
+        Some(role) if role == "owner" => {}
+        Some(_) => {
+            return Err((
+                StatusCode::FORBIDDEN,
+                "only the owner can change roles".to_string(),
+            ))
+        }
+        None => return Err((StatusCode::FORBIDDEN, "not a channel member".to_string())),
+    }
+    if subject == caller && body.role != "owner" {
+        let others: (i64,) = sqlx::query_as(
+            "SELECT count(*) FROM chat_channel_members
+             WHERE channel_id = $1 AND role = 'owner' AND subject_id <> $2",
+        )
+        .bind(channel)
+        .bind(caller)
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(crate::internal)?;
+        if others.0 == 0 {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                "promote another owner before stepping down".to_string(),
+            ));
+        }
+    }
+    let row: Option<MemberRow> = sqlx::query_as(
+        "UPDATE chat_channel_members SET role = $3
+         WHERE channel_id = $1 AND subject_id = $2
+         RETURNING channel_id, subject_id, role, joined_at",
+    )
+    .bind(channel)
+    .bind(subject)
+    .bind(&body.role)
+    .fetch_optional(&mut *tx)
+    .await
+    .map_err(crate::internal)?;
+    tx.commit().await.map_err(crate::internal)?;
+    let row = row.ok_or((StatusCode::NOT_FOUND, "member not found".to_string()))?;
+
+    audit::emit(
+        &st,
+        tenant,
+        caller,
+        "chat.member_role_changed",
+        serde_json::json!({"channel_id": channel, "subject_id": subject, "role": body.role}),
+    )
+    .await;
+    Ok(Json(to_member(row)))
 }

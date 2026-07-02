@@ -63,6 +63,13 @@ pub fn router(state: AppState) -> Router {
             post(channels::create).get(channels::list),
         )
         .route("/v1/chat/dms", post(channels::create_dm))
+        // Static segments win over :id in axum, so /channels/browse never collides with /channels/:id.
+        .route("/v1/chat/channels/browse", get(channels::browse))
+        .route(
+            "/v1/chat/channels/:id",
+            axum::routing::patch(channels::update),
+        )
+        .route("/v1/chat/channels/:id/join", post(channels::join))
         .route(
             "/v1/chat/channels/:id/messages",
             post(messages::post).get(messages::list),
@@ -77,9 +84,10 @@ pub fn router(state: AppState) -> Router {
         )
         .route(
             "/v1/chat/channels/:id/members/:subject",
-            axum::routing::delete(members::remove),
+            axum::routing::delete(members::remove).patch(members::set_role),
         )
         .route("/v1/chat/channels/:id/search", get(messages::search))
+        .route("/v1/chat/search", get(messages::search_all))
         .route(
             "/v1/chat/channels/:id/messages/:msg/reactions",
             post(reactions::add),

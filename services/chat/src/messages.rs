@@ -94,6 +94,9 @@ pub struct ListQuery {
     pub before: Option<chrono::DateTime<chrono::Utc>>,
     pub limit: Option<i64>,
     pub parent_id: Option<Uuid>,
+    /// Jump-to-message: return a window of top-level messages surrounding this id (half the limit on each
+    /// side), instead of the latest page. Used by global search result navigation.
+    pub around: Option<Uuid>,
 }
 
 /// Require current membership; returns the caller's role in the channel.
@@ -186,12 +189,20 @@ pub async fn post(
     }
     // FR-MEMORY-122 §1 #4 — read the channel kind in this same tx (a cheap PK lookup) so the capture
     // emitter can tag channel vs DM. Off-by-default (only matters when capture is on); never fails the send.
-    let channel_kind: String = sqlx::query_scalar("SELECT kind FROM chat_channels WHERE id = $1")
-        .bind(channel)
-        .fetch_optional(&mut *tx)
-        .await
-        .map_err(crate::internal)?
-        .unwrap_or_else(|| "group".to_string());
+    // The same lookup carries archived_at: an archived channel is read-only.
+    let ch: Option<(String, Option<chrono::DateTime<chrono::Utc>>)> =
+        sqlx::query_as("SELECT kind, archived_at FROM chat_channels WHERE id = $1")
+            .bind(channel)
+            .fetch_optional(&mut *tx)
+            .await
+            .map_err(crate::internal)?;
+    let (channel_kind, archived_at) = ch.unwrap_or(("group".to_string(), None));
+    if archived_at.is_some() {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "channel is archived (read-only)".to_string(),
+        ));
+    }
     let sql = format!(
         "INSERT INTO chat_messages (tenant_id, channel_id, sender_subject_id, body, parent_id, attachment_id)
          VALUES ($1, $2, $3, $4, $5, $6) RETURNING {COLS}"
@@ -338,7 +349,58 @@ pub async fn list(
         .await
         .map_err(crate::internal)?;
     require_member(&mut tx, channel, subject).await?;
-    let rows: Vec<MessageRow> = if let Some(pid) = q.parent_id {
+    let rows: Vec<MessageRow> = if let Some(target) = q.around {
+        // Jump window: half the limit at-or-before the target (inclusive), half after, merged ascending
+        // and returned DESC like every other page. 404 when the target is not a live message here.
+        let at: Option<(chrono::DateTime<chrono::Utc>,)> = sqlx::query_as(
+            "SELECT created_at FROM chat_messages
+             WHERE id = $1 AND channel_id = $2 AND deleted_at IS NULL",
+        )
+        .bind(target)
+        .bind(channel)
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(crate::internal)?;
+        let at = match at {
+            Some((t,)) => t,
+            None => {
+                return Err((
+                    StatusCode::NOT_FOUND,
+                    "message not found in this channel".to_string(),
+                ))
+            }
+        };
+        let half = (limit / 2).max(1);
+        let sql_before = format!(
+            "SELECT {COLS} FROM chat_messages
+             WHERE channel_id = $1 AND created_at <= $2 AND deleted_at IS NULL AND parent_id IS NULL
+             ORDER BY created_at DESC LIMIT $3"
+        );
+        let mut before_rows: Vec<MessageRow> = sqlx::query_as(&sql_before)
+            .bind(channel)
+            .bind(at)
+            .bind(half + 1)
+            .fetch_all(&mut *tx)
+            .await
+            .map_err(crate::internal)?;
+        let sql_after = format!(
+            "SELECT {COLS} FROM chat_messages
+             WHERE channel_id = $1 AND created_at > $2 AND deleted_at IS NULL AND parent_id IS NULL
+             ORDER BY created_at ASC LIMIT $3"
+        );
+        let after_rows: Vec<MessageRow> = sqlx::query_as(&sql_after)
+            .bind(channel)
+            .bind(at)
+            .bind(half)
+            .fetch_all(&mut *tx)
+            .await
+            .map_err(crate::internal)?;
+        // after_rows are ASC; the page contract is DESC (newest first): after (reversed) then before.
+        // Wrapped in Ok so this branch types like the two sqlx branches below (their map_err follows).
+        let mut merged: Vec<MessageRow> = after_rows.into_iter().rev().collect();
+        merged.append(&mut before_rows);
+        Ok(merged)
+    } else if let Some(pid) = q.parent_id {
         let sql = format!(
             "SELECT {COLS} FROM chat_messages
              WHERE channel_id = $1 AND created_at < $2 AND deleted_at IS NULL AND parent_id = $3
@@ -614,6 +676,52 @@ pub async fn search(
         .fetch_all(&mut *tx)
         .await
         .map_err(crate::internal)?;
+    let _ = tx.commit().await;
+
+    Ok(Json(rows.into_iter().map(to_message).collect()))
+}
+
+/// GET /v1/chat/search?q= - tenant-wide search over every channel the CALLER belongs to (groups and DMs
+/// alike), same accent- and case-insensitive matching as the per-channel search, newest first. Membership is
+/// enforced in the join, so a message in a channel the caller cannot read never surfaces; RLS scopes the
+/// tenant. The result's channel_id is what the client jumps to (find-and-organize cluster).
+pub async fn search_all(
+    State(st): State<AppState>,
+    headers: HeaderMap,
+    Query(q): Query<SearchQuery>,
+) -> Result<Json<Vec<Message>>, (StatusCode, String)> {
+    let claims = auth::authenticate(&st, &headers)?;
+    let tenant = claims
+        .tenant_uuid()
+        .map_err(|e| (StatusCode::UNAUTHORIZED, e.to_string()))?;
+    let subject = claims
+        .subject_id()
+        .map_err(|e| (StatusCode::UNAUTHORIZED, e.to_string()))?;
+    let term = q.q.trim().to_string();
+    if term.is_empty() {
+        return Err((StatusCode::BAD_REQUEST, "q is required".to_string()));
+    }
+    let limit = q.limit.unwrap_or(50).clamp(1, 200);
+
+    let mut tx = db::tenant_tx(&st.pool, &tenant)
+        .await
+        .map_err(crate::internal)?;
+    let rows: Vec<MessageRow> = sqlx::query_as(
+        "SELECT msg.id, msg.tenant_id, msg.channel_id, msg.sender_subject_id, msg.body,
+                msg.created_at, msg.parent_id, msg.edited_at, msg.deleted_at, msg.attachment_id
+         FROM chat_messages msg
+         JOIN chat_channel_members mem
+           ON mem.channel_id = msg.channel_id AND mem.subject_id = $1
+         WHERE msg.deleted_at IS NULL
+           AND chat_norm(msg.body) LIKE '%' || chat_norm($2) || '%'
+         ORDER BY msg.created_at DESC LIMIT $3",
+    )
+    .bind(subject)
+    .bind(&term)
+    .bind(limit)
+    .fetch_all(&mut *tx)
+    .await
+    .map_err(crate::internal)?;
     let _ = tx.commit().await;
 
     Ok(Json(rows.into_iter().map(to_message).collect()))

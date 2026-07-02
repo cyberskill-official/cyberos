@@ -22,6 +22,14 @@ pub struct Channel {
     pub kind: String,
     /// For a direct channel, the other member's subject_id (the DM partner); None for a group.
     pub other_subject_id: Option<Uuid>,
+    /// Short purpose line shown in the header (groups; empty for DMs).
+    #[serde(default)]
+    pub topic: String,
+    /// 'private' (member-only) or 'public' (browsable + self-joinable). DMs are always private.
+    #[serde(default)]
+    pub visibility: String,
+    /// Set = the channel is archived (read-only, out of the browser); None = live.
+    pub archived_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
 type ChannelRow = (
@@ -32,6 +40,9 @@ type ChannelRow = (
     chrono::DateTime<chrono::Utc>,
     String,
     Option<Uuid>,
+    String,
+    String,
+    Option<chrono::DateTime<chrono::Utc>>,
 );
 
 fn to_channel(r: ChannelRow) -> Channel {
@@ -43,12 +54,25 @@ fn to_channel(r: ChannelRow) -> Channel {
         created_at: r.4,
         kind: r.5,
         other_subject_id: r.6,
+        topic: r.7,
+        visibility: r.8,
+        archived_at: r.9,
     }
+}
+
+fn valid_visibility(v: &str) -> bool {
+    matches!(v, "private" | "public")
 }
 
 #[derive(Debug, Deserialize)]
 pub struct CreateChannel {
     pub name: String,
+    /// Optional purpose line.
+    #[serde(default)]
+    pub topic: String,
+    /// 'private' (default) or 'public'.
+    #[serde(default)]
+    pub visibility: Option<String>,
 }
 
 pub async fn create(
@@ -67,18 +91,28 @@ pub async fn create(
     if name.is_empty() {
         return Err((StatusCode::BAD_REQUEST, "name is required".to_string()));
     }
+    let visibility = body.visibility.unwrap_or_else(|| "private".to_string());
+    if !valid_visibility(&visibility) {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "visibility must be private or public".to_string(),
+        ));
+    }
+    let topic = body.topic.trim().to_string();
 
     let mut tx = db::tenant_tx(&st.pool, &tenant)
         .await
         .map_err(crate::internal)?;
     let row: (Uuid, Uuid, String, Uuid, chrono::DateTime<chrono::Utc>) = sqlx::query_as(
-        "INSERT INTO chat_channels (tenant_id, name, created_by, kind)
-         VALUES ($1, $2, $3, 'group')
+        "INSERT INTO chat_channels (tenant_id, name, created_by, kind, topic, visibility)
+         VALUES ($1, $2, $3, 'group', $4, $5)
          RETURNING id, tenant_id, name, created_by, created_at",
     )
     .bind(tenant)
     .bind(&name)
     .bind(creator)
+    .bind(&topic)
+    .bind(&visibility)
     .fetch_one(&mut *tx)
     .await
     .map_err(crate::internal)?;
@@ -102,6 +136,9 @@ pub async fn create(
         created_at: row.4,
         kind: "group".to_string(),
         other_subject_id: None,
+        topic,
+        visibility,
+        archived_at: None,
     };
     audit::emit(
         &st,
@@ -182,6 +219,9 @@ pub async fn create_dm(
                 created_at,
                 kind: "direct".to_string(),
                 other_subject_id: Some(other),
+                topic: String::new(),
+                visibility: "private".to_string(),
+                archived_at: None,
             }),
         ));
     }
@@ -240,6 +280,9 @@ pub async fn create_dm(
             created_at: row.4,
             kind: "direct".to_string(),
             other_subject_id: Some(other),
+            topic: String::new(),
+            visibility: "private".to_string(),
+            archived_at: None,
         }),
     ))
 }
@@ -265,7 +308,8 @@ pub async fn list(
                      SELECT m2.subject_id FROM chat_channel_members m2
                       WHERE m2.channel_id = c.id AND m2.subject_id <> $1
                       LIMIT 1)
-                ELSE NULL END AS other_subject_id
+                ELSE NULL END AS other_subject_id,
+                c.topic, c.visibility, c.archived_at
          FROM chat_channels c
          JOIN chat_channel_members m ON m.channel_id = c.id
          WHERE m.subject_id = $1
@@ -278,4 +322,273 @@ pub async fn list(
     let _ = tx.commit().await;
 
     Ok(Json(rows.into_iter().map(to_channel).collect()))
+}
+
+/// Fields a manager can change on a group channel. Absent fields are untouched. `archived` flips the
+/// archived state (owner-only); the others need owner or admin. DMs are unmanaged and reject all of it.
+#[derive(Debug, Deserialize)]
+pub struct UpdateChannel {
+    pub name: Option<String>,
+    pub topic: Option<String>,
+    pub visibility: Option<String>,
+    pub archived: Option<bool>,
+}
+
+/// PATCH /v1/chat/channels/{id} - rename, set the topic, flip visibility, or archive/unarchive.
+pub async fn update(
+    State(st): State<AppState>,
+    axum::extract::Path(channel): axum::extract::Path<Uuid>,
+    headers: HeaderMap,
+    Json(body): Json<UpdateChannel>,
+) -> Result<Json<Channel>, (StatusCode, String)> {
+    let claims = auth::authenticate(&st, &headers)?;
+    let tenant = claims
+        .tenant_uuid()
+        .map_err(|e| (StatusCode::UNAUTHORIZED, e.to_string()))?;
+    let caller = claims
+        .subject_id()
+        .map_err(|e| (StatusCode::UNAUTHORIZED, e.to_string()))?;
+
+    let name = match &body.name {
+        Some(n) => {
+            let n = n.trim().to_string();
+            if n.is_empty() {
+                return Err((StatusCode::BAD_REQUEST, "name cannot be empty".to_string()));
+            }
+            Some(n)
+        }
+        None => None,
+    };
+    if let Some(v) = &body.visibility {
+        if !valid_visibility(v) {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                "visibility must be private or public".to_string(),
+            ));
+        }
+    }
+    let topic = body.topic.as_ref().map(|t| t.trim().to_string());
+    if name.is_none() && topic.is_none() && body.visibility.is_none() && body.archived.is_none() {
+        return Err((StatusCode::BAD_REQUEST, "nothing to change".to_string()));
+    }
+
+    let mut tx = db::tenant_tx(&st.pool, &tenant)
+        .await
+        .map_err(crate::internal)?;
+    let role = match db::role_in_channel(&mut tx, channel, caller)
+        .await
+        .map_err(crate::internal)?
+    {
+        Some(r) => r,
+        None => return Err((StatusCode::FORBIDDEN, "not a channel member".to_string())),
+    };
+    if !db::is_manager(&role) {
+        return Err((
+            StatusCode::FORBIDDEN,
+            "only owner or admin can manage a channel".to_string(),
+        ));
+    }
+    if body.archived.is_some() && role != "owner" {
+        return Err((
+            StatusCode::FORBIDDEN,
+            "only the owner can archive or unarchive".to_string(),
+        ));
+    }
+    let kind: Option<(String,)> = sqlx::query_as("SELECT kind FROM chat_channels WHERE id = $1")
+        .bind(channel)
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(crate::internal)?;
+    match kind {
+        None => return Err((StatusCode::NOT_FOUND, "channel not found".to_string())),
+        Some((k,)) if k == "direct" => {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                "direct messages cannot be managed".to_string(),
+            ))
+        }
+        Some(_) => {}
+    }
+
+    let row: Option<ChannelRow> = sqlx::query_as(
+        "UPDATE chat_channels SET
+             name = COALESCE($2, name),
+             topic = COALESCE($3, topic),
+             visibility = COALESCE($4, visibility),
+             archived_at = CASE
+                 WHEN $5::boolean IS NULL THEN archived_at
+                 WHEN $5 THEN COALESCE(archived_at, now())
+                 ELSE NULL
+             END
+         WHERE id = $1
+         RETURNING id, tenant_id, name, created_by, created_at, kind,
+                   NULL::uuid AS other_subject_id, topic, visibility, archived_at",
+    )
+    .bind(channel)
+    .bind(&name)
+    .bind(&topic)
+    .bind(&body.visibility)
+    .bind(body.archived)
+    .fetch_optional(&mut *tx)
+    .await
+    .map_err(crate::internal)?;
+    tx.commit().await.map_err(crate::internal)?;
+    let row = row.ok_or((StatusCode::NOT_FOUND, "channel not found".to_string()))?;
+
+    audit::emit(
+        &st,
+        tenant,
+        caller,
+        "chat.channel_updated",
+        serde_json::json!({
+            "channel_id": channel,
+            "renamed": name.is_some(),
+            "topic_changed": topic.is_some(),
+            "visibility": body.visibility,
+            "archived": body.archived,
+        }),
+    )
+    .await;
+    Ok(Json(to_channel(row)))
+}
+
+/// One row in the tenant's channel browser: a public, non-archived group channel.
+#[derive(Debug, Serialize)]
+pub struct BrowseChannel {
+    pub id: Uuid,
+    pub name: String,
+    pub topic: String,
+    pub member_count: i64,
+    pub is_member: bool,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+}
+
+/// GET /v1/chat/channels/browse - every public, live group channel in the caller's tenant, with a member
+/// count and whether the caller already belongs. RLS scopes the tenant; membership is NOT required (that is
+/// the point of public channels).
+pub async fn browse(
+    State(st): State<AppState>,
+    headers: HeaderMap,
+) -> Result<Json<Vec<BrowseChannel>>, (StatusCode, String)> {
+    let claims = auth::authenticate(&st, &headers)?;
+    let tenant = claims
+        .tenant_uuid()
+        .map_err(|e| (StatusCode::UNAUTHORIZED, e.to_string()))?;
+    let subject = claims
+        .subject_id()
+        .map_err(|e| (StatusCode::UNAUTHORIZED, e.to_string()))?;
+
+    let mut tx = db::tenant_tx(&st.pool, &tenant)
+        .await
+        .map_err(crate::internal)?;
+    let rows: Vec<(
+        Uuid,
+        String,
+        String,
+        i64,
+        bool,
+        chrono::DateTime<chrono::Utc>,
+    )> = sqlx::query_as(
+        "SELECT c.id, c.name, c.topic,
+                    (SELECT count(*) FROM chat_channel_members m WHERE m.channel_id = c.id),
+                    EXISTS(SELECT 1 FROM chat_channel_members m
+                            WHERE m.channel_id = c.id AND m.subject_id = $1),
+                    c.created_at
+             FROM chat_channels c
+             WHERE c.kind = 'group' AND c.visibility = 'public' AND c.archived_at IS NULL
+             ORDER BY lower(c.name)",
+    )
+    .bind(subject)
+    .fetch_all(&mut *tx)
+    .await
+    .map_err(crate::internal)?;
+    let _ = tx.commit().await;
+
+    Ok(Json(
+        rows.into_iter()
+            .map(|r| BrowseChannel {
+                id: r.0,
+                name: r.1,
+                topic: r.2,
+                member_count: r.3,
+                is_member: r.4,
+                created_at: r.5,
+            })
+            .collect(),
+    ))
+}
+
+/// POST /v1/chat/channels/{id}/join - self-join a public, live group channel as a member. Idempotent: a
+/// second join returns the existing membership.
+pub async fn join(
+    State(st): State<AppState>,
+    axum::extract::Path(channel): axum::extract::Path<Uuid>,
+    headers: HeaderMap,
+) -> Result<(StatusCode, Json<crate::members::Member>), (StatusCode, String)> {
+    let claims = auth::authenticate(&st, &headers)?;
+    let tenant = claims
+        .tenant_uuid()
+        .map_err(|e| (StatusCode::UNAUTHORIZED, e.to_string()))?;
+    let caller = claims
+        .subject_id()
+        .map_err(|e| (StatusCode::UNAUTHORIZED, e.to_string()))?;
+
+    let mut tx = db::tenant_tx(&st.pool, &tenant)
+        .await
+        .map_err(crate::internal)?;
+    let ch: Option<(String, String, Option<chrono::DateTime<chrono::Utc>>)> =
+        sqlx::query_as("SELECT kind, visibility, archived_at FROM chat_channels WHERE id = $1")
+            .bind(channel)
+            .fetch_optional(&mut *tx)
+            .await
+            .map_err(crate::internal)?;
+    let (kind, visibility, archived_at) = match ch {
+        Some(c) => c,
+        None => return Err((StatusCode::NOT_FOUND, "channel not found".to_string())),
+    };
+    if kind != "group" || visibility != "public" || archived_at.is_some() {
+        return Err((
+            StatusCode::FORBIDDEN,
+            "channel is not open to join".to_string(),
+        ));
+    }
+    // The no-op DO UPDATE keeps RETURNING populated when the caller is already a member (idempotent join).
+    let row: (Uuid, Uuid, String, chrono::DateTime<chrono::Utc>) = sqlx::query_as(
+        "INSERT INTO chat_channel_members (channel_id, tenant_id, subject_id, role)
+         VALUES ($1, $2, $3, 'member')
+         ON CONFLICT (channel_id, subject_id) DO UPDATE SET role = chat_channel_members.role
+         RETURNING channel_id, subject_id, role, joined_at",
+    )
+    .bind(channel)
+    .bind(tenant)
+    .bind(caller)
+    .fetch_one(&mut *tx)
+    .await
+    .map_err(crate::internal)?;
+    tx.commit().await.map_err(crate::internal)?;
+
+    audit::emit(
+        &st,
+        tenant,
+        caller,
+        "chat.channel_joined",
+        serde_json::json!({"channel_id": channel}),
+    )
+    .await;
+    // FR-MEMORY-122 §1 #4, #7 — chat.channel_joined for the joining subject; no-op unless capture on.
+    if let Some(cap) = st.capturer.clone() {
+        tokio::spawn(async move {
+            crate::capture::emit_channel_membership(Some(&cap), tenant, caller, channel, true)
+                .await;
+        });
+    }
+    Ok((
+        StatusCode::CREATED,
+        Json(crate::members::Member {
+            channel_id: row.0,
+            subject_id: row.1,
+            role: row.2,
+            joined_at: row.3,
+        }),
+    ))
 }
