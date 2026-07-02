@@ -42,6 +42,10 @@ services:
       retries: 10
     networks: [cyberos]
 
+  # SINGLE REPLICA ONLY. The realtime Hub, Notifier, and Presence are in-process (per-container), so a second
+  # chat instance would split-brain: cross-instance messages, typing, and presence would not be delivered. Do
+  # NOT add `deploy.replicas` or scale chat until fan-out moves to Redis (or Postgres LISTEN/NOTIFY) pub/sub
+  # with a shared presence set. See CHAT-DEEP-AUDIT-2026-07-03.md.
   chat:
     image: ${CYBEROS_REGISTRY:-ghcr.io/cyberskill-official}/cyberos-chat:${CYBEROS_IMAGE_TAG:-latest}
     restart: unless-stopped

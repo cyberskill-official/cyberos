@@ -55,6 +55,10 @@ services:
       retries: 10
     networks: [cyberos]
 
+  # SINGLE REPLICA ONLY. The realtime Hub, Notifier, and Presence are in-process (per-container), so running a
+  # second chat instance would split-brain: cross-instance messages, typing, and presence would not be
+  # delivered. Do NOT add `deploy.replicas` or `docker compose up --scale chat=N` until fan-out moves to Redis
+  # (or Postgres LISTEN/NOTIFY) pub/sub with a shared presence set. See CHAT-DEEP-AUDIT-2026-07-03.md.
   chat:
     build:
       context: ../../services

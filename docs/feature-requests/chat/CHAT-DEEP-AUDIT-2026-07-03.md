@@ -129,3 +129,25 @@ Order: (A) finish the verified bug fixes [reaction desync, reconnect backfill+se
 ws teardown on removal, search min-length, body caps, attachment content-type]; (B) reliability [seq cursor
 + /events?since, partial indexes, sender reaping, push batch, confirm single-replica]; (C) UI/UX 1..16 one
 by one. Each UX item ships on its own so you can react and steer.
+
+## Resolution (2026-07-03) - backlog cleared, all live on main
+
+All items above shipped to os.cyberskill.world in gated increments. Bugs/security: reaction desync
+(3da8a5a/57653b5), auto-read-history (57653b5), search min-length + body cap (3da8a5a), members-additive +
+DM guards (4e9feb9), WS teardown on removal via `ChatEvent::Kicked` (0a74790), name/topic caps +
+attachment safe content-type/nosniff + reference-counted purge (0a74790), AI/thread panel exclusivity +
+Attachment token-via-ref + role labels through t() (58f749e). Reliability: Hub+Notifier sender reaping +
+push N+1 collapsed to one ANY($1) query + partial indexes migration 0013 (0a74790); single-replica is
+CONFIRMED and now documented inline in deploy/vps/docker-compose.p0*.yml (the realtime layer is in-process).
+Reconnect correctness: instead of a seq cursor + change-log, the client refetches the live tail and merges
+by id on every reconnect (cee91ae) - this recovers missed messages/edits/reactions completely, so the seq
+cursor is unnecessary for correctness (it would only be an efficiency optimization and is deferred). UI/UX
+1-16 all shipped (optimistic send, Cmd+K switcher, one-click reactions, mobile long-press action sheet,
+focus-trap modals, unread divider, in-app confirm + undo, loading skeletons, edit-as-textarea, reply-count
+chip, keyboard nav + live regions, one-step mute, zero-member create, search UX, reduced-motion, delight).
+
+Explicitly DEFERRED (low value / larger designs, not blocking): multi-replica fan-out on Redis or Postgres
+LISTEN/NOTIFY (only needed to scale chat past one container); a durable per-change event log + seq cursor
+(the reconnect refetch covers correctness); JWKS key-rotation refetch + `aud` validation on the chat token
+(LOW; chat re-verifies via the JWKS URL at boot); swallowed commit errors on read paths (LOW); migrating
+any residual Postgres-BYTEA attachment rows to the fs store (prod already defaults to fs).
