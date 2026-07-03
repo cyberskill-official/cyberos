@@ -98,6 +98,28 @@ services:
       retries: 10
     networks: [cyberos]
 
+  # MEMORY / BRAIN (FR-MEMORY-123) - the recall + ingestion API over l1_audit_log + pgvector. Best-effort and
+  # OFF by default, exactly like eval: it is deploy-gated behind DEPLOY_MEMORY=1 (deploy.sh stops it otherwise)
+  # because it opens its own Supabase pooler connections, and nothing in the core stack depends on it. Reads
+  # MEMORY_DATABASE_URL (Supabase) and embeds via the bge-m3 sidecar at embed:7900. Apply
+  # services/memory/migrations/0001..0008 before it does real work (deploy.sh adds memory to the migration
+  # scope when DEPLOY_MEMORY=1). Capture stays governed by the chat->brain link + the consent gate - running
+  # this service records nothing on its own.
+  memory:
+    image: ${CYBEROS_REGISTRY:-ghcr.io/cyberskill-official}/cyberos-memory:${CYBEROS_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file: [.env.p0]
+    environment:
+      MEMORY_LISTEN_ADDR: 0.0.0.0:7800
+      DATABASE_URL: ${MEMORY_DATABASE_URL:-}
+      MEMORY_EMBED_URL: ${MEMORY_EMBED_URL:-http://embed:7900}
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:7800/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks: [cyberos]
+
   # AI group (FR-MEMORY-123 / DEC-2723) - best-effort like eval: nothing in the core stack depends on any
   # of these, so a failed pull or boot never touches auth/chat/caddy. The gateway is INTERNAL ONLY (no
   # Caddy /v1 route; chat reaches it over the compose network); only its /healthz is probed via /status/ai.

@@ -49,6 +49,13 @@ echo "==> pulling new images from GHCR"
 if [ "${DEPLOY_EVAL:-0}" = "1" ]; then
   "${COMPOSE[@]}" pull eval || echo "==> eval image not available yet; continuing without it"
 fi
+# memory (BRAIN recall) is OFF by default for the same Supabase-pooler reason as eval. Turn on with
+# DEPLOY_MEMORY=1 once the pooler has headroom, AND after applying services/memory/migrations deliberately
+# (reconcile the shared l1_audit_log first - see docs/deploy/brain-capture-activation.md). Running the
+# service records nothing on its own; capture stays gated by the chat->brain link + the consent gate.
+if [ "${DEPLOY_MEMORY:-0}" = "1" ]; then
+  "${COMPOSE[@]}" pull memory || echo "==> memory image not available yet; continuing without it"
+fi
 
 # Apply DB migrations for every service before starting (uniform, per-service tracked, idempotent). The DB
 # URL is read straight out of .env.p0 (not sourced as shell). Best-effort: auth/chat are baselined so their
@@ -80,6 +87,14 @@ if [ "${DEPLOY_EVAL:-0}" = "1" ]; then
 else
   echo "==> eval NOT deployed (DEPLOY_EVAL!=1); stopping any running eval to free DB connections"
   "${COMPOSE[@]}" stop eval 2>/dev/null || true
+fi
+
+if [ "${DEPLOY_MEMORY:-0}" = "1" ]; then
+  echo "==> rolling memory (DEPLOY_MEMORY=1)"
+  "${COMPOSE[@]}" up -d memory || echo "==> memory not started (build/image pending); core stack is up"
+else
+  echo "==> memory NOT deployed (DEPLOY_MEMORY!=1); stopping any running memory to free DB connections"
+  "${COMPOSE[@]}" stop memory 2>/dev/null || true
 fi
 
 # Caddy serves the console + config from the git checkout. Static console files are served live through a

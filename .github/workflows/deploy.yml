@@ -85,7 +85,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build + push (auth, chat, ai-gateway, embed-sidecar)
+      - name: Build + push (auth, chat, ai-gateway, embed-sidecar; eval + memory best-effort)
         working-directory: services
         env:
           REGISTRY: ghcr.io/${{ github.repository_owner }}
@@ -99,6 +99,7 @@ jobs:
               --cache-from "type=gha,scope=${pkg}" --cache-to "type=gha,mode=max,scope=${pkg}" \
               --tag "${REGISTRY}/${pkg}:latest" --tag "${REGISTRY}/${pkg}:${SHORT}" --push .
           }
+          # Core stack images: must succeed.
           build_push cyberos-auth
           build_push cyberos-chat
           build_push cyberos-ai-gateway cyberos-gateway
@@ -106,6 +107,11 @@ jobs:
             --cache-from "type=gha,scope=embed" --cache-to "type=gha,mode=max,scope=embed" \
             --tag "${REGISTRY}/cyberos-embed-sidecar:latest" --tag "${REGISTRY}/cyberos-embed-sidecar:${SHORT}" \
             --push embed-sidecar
+          # BRAIN/EVAL images: best-effort so a break here can never block the core stack (both are deploy-gated
+          # OFF - eval behind DEPLOY_EVAL, memory behind DEPLOY_MEMORY - so a stale image only matters once
+          # someone turns them on). Building them keeps a fresh image waiting for that flip.
+          build_push cyberos-eval || echo "::warning::cyberos-eval image build failed (best-effort, deploy-gated off)"
+          build_push cyberos-memory || echo "::warning::cyberos-memory image build failed (best-effort, deploy-gated off)"
 
   # Roll the VPS. Runs for client-only pushes too (build-images skipped); skipped only if a needed job FAILED.
   deploy:
