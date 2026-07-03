@@ -88,10 +88,20 @@
 		file_server
 	}
 
+	# The React app (/web/) is the product surface for the team. Send the site root - and the retired static
+	# dev chat client (chat.html, the "paste a JWT + Connect" harness) - to it, so nobody lands on the old
+	# console by default. The operator console (module tiles: audit/mcp/ai/cuo) stays reachable at /app.html.
+	@rootredir path /
+	handle @rootredir {
+		redir * /web/ 308
+	}
+	@legacychat path /chat.html
+	handle @legacychat {
+		redir * /web/ 308
+	}
+
 	handle {
 		root * /srv/console
-		@root path /
-		rewrite @root /app.html
 		@roadmap path /roadmap
 		rewrite @roadmap /roadmap.html
 		@status path /status
