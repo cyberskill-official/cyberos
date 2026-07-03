@@ -1,13 +1,15 @@
 name: deploy
 
-# Auto-deploy the P0 stack to the Vultr VPS on every push to main - but GitHub only DEPLOYS, it never builds
-# or tests. All heavy work runs LOCALLY in the pre-push hook (.githooks/pre-push): format, clippy, tests, and
-# the image build + push to GHCR. So by the time a push lands here, the fresh images are already in GHCR and
-# this job just SSHes in and runs deploy.sh (git pull console/Caddyfile/compose, docker pull images, restart).
-# The VPS never compiles.
+# Continuous delivery of the P0 stack to the Vultr VPS, entirely in GitHub Actions (moved off the local
+# pre-push hook 2026-07-03). On every push to main this: (1) gates services (fmt/clippy/test) when they
+# changed, (2) builds + pushes the service images to GHCR, then (3) SSHes to the VPS and runs deploy.sh
+# (git pull console/Caddyfile/compose, docker pull images, roll). A non-services push (apps/web, console,
+# compose) skips the gate + build and just rolls (the bundle ships via the VPS git pull). Safe by
+# construction: if the gate or build fails, the roll is skipped and the site stays on the current images.
 #
-# One-time setup (deploy/vps/auto-deploy.md): GitHub secrets VPS_HOST / VPS_USER / VPS_SSH_KEY, a read-only
-# deploy key on the VPS for `git pull`, and a GHCR login on the VPS for `docker pull`.
+# One-time setup (deploy/vps/auto-deploy.md + RELEASE.md): repo secrets VPS_HOST / VPS_USER / VPS_SSH_KEY,
+# a read-only deploy key on the VPS for `git pull`, and a GHCR login on the VPS for `docker pull`. Image push
+# uses the built-in GITHUB_TOKEN (packages: write).
 
 on:
   push:
@@ -24,9 +26,91 @@ concurrency:
   group: deploy-p0
   cancel-in-progress: false
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
+  # Which parts changed in this push - so a client-only push skips the Rust gate + image build and just rolls.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.filter.outputs.services }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            services:
+              - 'services/**'
+
+  # Rust gate (only when services changed). Blocks the roll on failure.
+  gate:
+    needs: changes
+    if: needs.changes.outputs.services == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.88.0
+          components: rustfmt, clippy
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            services/target
+          key: cargo-services-${{ runner.os }}-${{ hashFiles('services/**/Cargo.lock', 'services/**/Cargo.toml') }}
+          restore-keys: |
+            cargo-services-${{ runner.os }}-
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --workspace -- -D warnings
+      - run: cargo test --workspace
+
+  # Build + push the service images to GHCR (mirrors deploy/vps/build-push-images.sh). GHA layer cache keeps
+  # this fast after the first run.
+  build-images:
+    needs: gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build + push (auth, chat, ai-gateway, embed-sidecar)
+        working-directory: services
+        env:
+          REGISTRY: ghcr.io/${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          SHORT="$(echo "${GITHUB_SHA}" | cut -c1-7)"
+          build_push() {
+            local pkg="$1" bin="${2:-$1}"
+            docker buildx build --platform linux/amd64 --file Dockerfile \
+              --build-arg "PACKAGE=${pkg}" --build-arg "BIN=${bin}" \
+              --cache-from "type=gha,scope=${pkg}" --cache-to "type=gha,mode=max,scope=${pkg}" \
+              --tag "${REGISTRY}/${pkg}:latest" --tag "${REGISTRY}/${pkg}:${SHORT}" --push .
+          }
+          build_push cyberos-auth
+          build_push cyberos-chat
+          build_push cyberos-ai-gateway cyberos-gateway
+          docker buildx build --platform linux/amd64 --file embed-sidecar/Dockerfile \
+            --cache-from "type=gha,scope=embed" --cache-to "type=gha,mode=max,scope=embed" \
+            --tag "${REGISTRY}/cyberos-embed-sidecar:latest" --tag "${REGISTRY}/cyberos-embed-sidecar:${SHORT}" \
+            --push embed-sidecar
+
+  # Roll the VPS. Runs for client-only pushes too (build-images skipped); skipped only if a needed job FAILED.
   deploy:
-    name: roll the VPS
+    needs: [changes, build-images]
+    if: ${{ always() && !failure() && !cancelled() }}
     runs-on: ubuntu-latest
     steps:
       - name: Deploy over SSH

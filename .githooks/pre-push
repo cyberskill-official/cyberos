@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# CyberOS local push gate + local build. GitHub only DEPLOYS (auto, on push); all heavy work runs HERE first.
-# When the push touches services/, this runs format + clippy + tests, then builds + pushes the service images
-# to GHCR - so by the time the push lands and triggers the auto-deploy, fresh images are already waiting. Any
-# failure aborts the push, so nothing half-built reaches GitHub.
+# CyberOS local pre-push gate. A fast local safety net that aborts a bad push BEFORE it reaches GitHub: when
+# the push touches services/, this runs format + clippy + tests. It does NOT build images anymore - the
+# GitHub Actions `deploy` workflow now gates AND builds+pushes the GHCR images on every push to main (see
+# .github/workflows/deploy.yml), so a local Docker build here would just duplicate CI. Any check failure
+# aborts the push.
 #
 #   one-time:   git config core.hooksPath .githooks && chmod +x .githooks/pre-push
-#               docker login ghcr.io -u <github-username>       # PAT with write:packages, for the image push
-#   skip all:   SKIP_LOCAL_CHECKS=1 git push   (or git push --no-verify)
-#   skip build: SKIP_IMAGE_BUILD=1 git push    (keep the checks, skip the image build + push)
+#   skip all:   SKIP_LOCAL_CHECKS=1 git push   (or git push --no-verify)   # CI still gates + builds
+#   opt back into a local image build:  BUILD_IMAGES_LOCALLY=1 git push
 #
 # The Postgres-gated #[ignore] integration tests are not run here (no DB). Run them by hand when you touch
 # that code:  cd services && DATABASE_URL=... cargo test --workspace -- --ignored
@@ -55,19 +55,17 @@ cargo clippy --workspace -- -D warnings
 echo "==> cargo test --workspace (unit tests; DB-gated #[ignore] tests skipped)"
 cargo test --workspace
 
-# Heavy + automatic: build the VPS images (linux/amd64) and push them to GHCR, so the auto-deploy this push
-# triggers pulls fresh images. Skip with SKIP_IMAGE_BUILD=1 (a services change that needs no redeploy, or
-# when you will build separately).
-if [ "${SKIP_IMAGE_BUILD:-}" = "1" ]; then
-  echo "pre-push: SKIP_IMAGE_BUILD=1 - not building images (the auto-deploy will pull whatever is in GHCR)"
-else
+# Image build is CI's job now (deploy.yml build-images) - the hook no longer builds by default, so a normal
+# push is just the fast checks above. Opt in with BUILD_IMAGES_LOCALLY=1 if you ever want to pre-seed GHCR
+# from your machine (needs docker + a `docker login ghcr.io`).
+if [ "${BUILD_IMAGES_LOCALLY:-}" = "1" ]; then
   if ! command -v docker >/dev/null 2>&1; then
-    echo "pre-push: services/ changed but docker is not available; the auto-deploy needs fresh images." >&2
-    echo "  Start Docker + 'docker login ghcr.io', or push with SKIP_IMAGE_BUILD=1 to skip the build." >&2
+    echo "pre-push: BUILD_IMAGES_LOCALLY=1 but docker is not available." >&2
+    echo "  Start Docker + 'docker login ghcr.io', or unset BUILD_IMAGES_LOCALLY (CI will build)." >&2
     exit 1
   fi
   echo "==> building + pushing images to GHCR (deploy/vps/build-push-images.sh)"
   bash "$ROOT/deploy/vps/build-push-images.sh"
 fi
 
-echo "pre-push: all local checks + image build passed - pushing (GitHub will auto-deploy)"
+echo "pre-push: local checks passed - pushing (GitHub Actions will gate, build images, and deploy)"

@@ -1,23 +1,131 @@
-# release.yml — STUB
-#
-# Auto-generated 2026-05-17 from FR build_envelope references.
-# Declared by: FR-MEMORY-104
-#
-# Implementation team: replace this stub with the real workflow YAML
-# per the spec details in the declaring FR(s) above.
-# Many FRs embed the canonical workflow YAML in their §6 skeleton section.
-
 name: release
 
+# Versioned NATIVE release, cut by pushing a tag `vX.Y.Z`. The web app / PWA / desktop shell all load the
+# live /web/, so web content ships continuously via deploy.yml - this workflow only builds the native
+# binaries: signed desktop installers (always) and the mobile apps (once MOBILE_RELEASE is turned on). It
+# publishes a GitHub Release and attaches the desktop installers.
+#
+#   cut a release:  git tag v1.2.0 && git push origin v1.2.0
+#
+# Secrets + accounts this consumes are listed in RELEASE.md (Apple / Windows / Google signing, App Store
+# Connect, the Tauri updater key). Desktop builds run unsigned until the signing secrets are present, so the
+# pipeline works from day one and signing slots in later.
+
 on:
-  pull_request:
-    paths:
-      # TODO: per declaring FR
-      - 'services/**'
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g. v1.2.0)'
+        required: true
+
+permissions:
+  contents: write # create the GitHub Release + upload assets
 
 jobs:
-  placeholder:
+  # Signed native desktop installers (.dmg / .msi / .AppImage) via the official Tauri action. The desktop app
+  # is a thin shell that loads os.cyberskill.world/web, so there is no web build step here.
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+          - os: windows-latest
+          - os: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Linux build deps
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Build + publish desktop installers
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # macOS notarization + signing (optional - unset = unsigned build).
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # Tauri updater signing (optional - set to emit signed update artifacts).
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          projectPath: apps/desktop
+          tagName: ${{ github.event.inputs.tag || github.ref_name }}
+          releaseName: 'CyberOS ${{ github.event.inputs.tag || github.ref_name }}'
+          releaseDraft: true
+          prerelease: false
+
+  # Android app bundle (Capacitor). Gated on the repo variable MOBILE_RELEASE=true, which you set AFTER the
+  # one-time Capacitor init (RELEASE.md) so this never fails before the android/ project exists.
+  android:
+    if: ${{ vars.MOBILE_RELEASE == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - name: TODO — implement per FR(s) FR-MEMORY-104
-        run: echo 'Stub — see FR specs for canonical workflow YAML'
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - name: Build web + sync Capacitor
+        working-directory: apps/web
+        run: |
+          npm ci
+          npm run build
+          npx cap sync android
+      - name: Assemble signed AAB
+        working-directory: apps/web/android
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > release.keystore
+          ./gradlew bundleRelease \
+            -Pandroid.injected.signing.store.file=$PWD/release.keystore \
+            -Pandroid.injected.signing.store.password=$ANDROID_KEYSTORE_PASSWORD \
+            -Pandroid.injected.signing.key.alias=$ANDROID_KEY_ALIAS \
+            -Pandroid.injected.signing.key.password=$ANDROID_KEY_PASSWORD
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cyberos-android-aab
+          path: apps/web/android/app/build/outputs/bundle/release/*.aab
+      # Publishing to Play internal track: add r0adz/upload-google-play or fastlane supply with a service
+      # account JSON secret (see RELEASE.md).
+
+  # iOS build + TestFlight (Capacitor). Same gate; needs a macOS runner + App Store Connect API key.
+  ios:
+    if: ${{ vars.MOBILE_RELEASE == 'true' }}
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24 }
+      - name: Build web + sync Capacitor
+        working-directory: apps/web
+        run: |
+          npm ci
+          npm run build
+          npx cap sync ios
+      # Archive + export + upload to TestFlight with fastlane (Fastfile committed under apps/web/ios) using an
+      # App Store Connect API key. Full steps in RELEASE.md - authored there rather than half-wired here.
+      - name: iOS archive + TestFlight
+        working-directory: apps/web/ios/App
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: echo "Run fastlane beta (see RELEASE.md) - requires the one-time iOS project + signing setup."
