@@ -29,8 +29,9 @@ the only one that actually works.
 
 ## The sequence
 
-1. Governance (Phase 0). Finalize `docs/strategy/monitoring-and-data-notice.md` with counsel: set the lawful
-   basis wording, the retention periods, and the data contact. This is the gate for everything below.
+1. Governance (Phase 0). Finalize the existing bilingual notice `docs/legal/data-monitoring-and-evaluation-notice.md`
+   (co-located with the three signed contracts) with counsel: set the lawful-basis wording, the retention
+   periods, and the data contact. This is the gate for everything below.
 2. Confirm the services are deployed. The activation needs `services/eval` and `services/memory` running in
    the P0 stack, with their migrations applied (eval `0001_governance.sql`; memory `0001..0008`). Recall
    (Phase 2) also needs the embed sidecar, which still needs its Dockerfile - capture (Phase 1) does not, so
