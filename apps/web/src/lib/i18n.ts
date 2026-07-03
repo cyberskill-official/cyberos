@@ -48,6 +48,10 @@ const C: Record<string, Entry> = {
   // brand
   "brand.slogan": { en: "Turn Your Will Into Real", vi: "Hiện Thực Hoá Ý Chí" },
 
+  // update prompt (a new build was deployed)
+  "update.available": { en: "A new version of CyberOS is available.", vi: "Đã có phiên bản CyberOS mới." },
+  "update.reload": { en: "Reload", vi: "Tải lại" },
+
   // shared
   "common.cancel": { en: "Cancel", vi: "Hủy" },
   "common.save": { en: "Save", vi: "Lưu" },

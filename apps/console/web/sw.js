@@ -1,8 +1,8 @@
 // Minimal service worker: enables PWA installability and an offline app shell. API and websocket traffic is
 // never cached; the network-first fetch below means a reload always gets the fresh index + hashed bundles.
-// 20260702202344 is stamped by scripts/stamp-sw.mjs on every `npm run build`, so each deploy gets its own cache
+// 20260703063210 is stamped by scripts/stamp-sw.mjs on every `npm run build`, so each deploy gets its own cache
 // name and activation below deletes every older cache (stale hashed assets no longer accumulate forever).
-const CACHE = "cyberos-shell-20260702202344";
+const CACHE = "cyberos-shell-20260703063210";
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (e) =>
@@ -25,6 +25,7 @@ self.addEventListener("fetch", (event) => {
   }
   if (url.origin !== self.location.origin) return; // only our own origin
   if (url.pathname.startsWith("/v1/") || url.pathname === "/healthz") return; // never the API
+  if (url.pathname.endsWith("/version.json")) return; // update-check probe: always hit the network, never cache
   event.respondWith(
     fetch(req)
       .then((res) => {

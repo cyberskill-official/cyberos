@@ -22,3 +22,10 @@ if (!stamped.includes(`const CACHE = "cyberos-shell-${id}"`)) {
 }
 writeFileSync(out, stamped);
 console.log(`stamp-sw: cache cyberos-shell-${id}`);
+
+// Also publish version.json so the running client can detect a newer deploy (src/lib/useUpdateCheck.ts).
+// The build id is the same one that stamps the SW cache, so every deploy bumps it exactly once.
+const pkg = JSON.parse(readFileSync(resolve(here, "../package.json"), "utf8"));
+const versionOut = resolve(here, "../../console/web/version.json");
+writeFileSync(versionOut, JSON.stringify({ build: id, version: pkg.version }) + "\n");
+console.log(`stamp-sw: version.json build ${id} v${pkg.version}`);

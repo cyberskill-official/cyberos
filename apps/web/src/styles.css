@@ -535,6 +535,12 @@ button:focus-visible, .chan-row:focus-visible { outline: 2px solid var(--accent-
 .toast-bar { position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: var(--ochre); transform-origin: left; animation: toast-countdown 6s linear forwards; }
 @keyframes toast-countdown { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 
+/* update prompt (a new build was deployed): persistent bottom-centered card with a Reload action */
+.update-banner { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 95; display: flex; align-items: center; gap: 14px; background: var(--panel-2); color: var(--ink); border: 1px solid var(--accent-border); border-radius: 11px; padding: 10px 8px 10px 16px; box-shadow: var(--shadow-2); font-size: 13.5px; max-width: calc(100vw - 32px); }
+.update-msg { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.update-reload { background: var(--ochre); border: none; color: var(--on-accent); font-weight: 700; font-size: 13px; cursor: pointer; padding: 6px 14px; border-radius: 8px; }
+.update-reload:hover { filter: brightness(1.05); }
+
 /* message action sheet (long-press on touch / right-click): a bottom sheet with quick reactions + actions */
 .sheet-bg { position: fixed; inset: 0; background: var(--overlay); z-index: 90; display: flex; align-items: flex-end; justify-content: center; }
 .sheet { width: 100%; max-width: 440px; background: var(--panel); border: 1px solid var(--line); border-bottom: none; border-radius: 16px 16px 0 0; padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px)); box-shadow: var(--shadow-2); display: flex; flex-direction: column; gap: 3px; animation: sheet-up 0.18s ease; }

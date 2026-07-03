@@ -25,6 +25,7 @@ self.addEventListener("fetch", (event) => {
   }
   if (url.origin !== self.location.origin) return; // only our own origin
   if (url.pathname.startsWith("/v1/") || url.pathname === "/healthz") return; // never the API
+  if (url.pathname.endsWith("/version.json")) return; // update-check probe: always hit the network, never cache
   event.respondWith(
     fetch(req)
       .then((res) => {

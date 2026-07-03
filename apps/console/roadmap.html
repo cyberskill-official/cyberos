@@ -77,7 +77,7 @@
     <span class="mark">Cyber<span class="os">OS</span></span>
     <span class="slogan">Turn Your Will Into Real</span>
     <span class="spacer"></span>
-    <span class="where">os.cyberskill.world &middot; updated 29 Jun 2026</span>
+    <span class="where">os.cyberskill.world &middot; updated 3 Jul 2026</span>
   </header>
 
   <div class="live-banner">
@@ -96,14 +96,14 @@
       <ul>
         <li>Sign in with Google (Workspace-only)</li>
         <li>Team chat, DMs, file sharing</li>
-        <li>Single-origin deploy on one server</li>
-        <li>Auto-deploy on every push</li>
+        <li>Profiles: display name + avatar</li>
+        <li>Auto-deploy on every push, with an in-app update prompt</li>
       </ul>
     </div>
     <div class="tl next">
       <div class="k">Next - in flight</div>
       <ul>
-        <li>Profiles: display name + avatar</li>
+        <li>Desktop + mobile apps (release pipeline ready)</li>
         <li>Organizational memory (the brain)</li>
         <li>Assistant (GENIE) for the team</li>
         <li>Self-hosted AI model</li>
@@ -113,9 +113,8 @@
       <div class="k">Later - planned</div>
       <ul>
         <li>Projects, email, calendar surfaces</li>
-        <li>Desktop and mobile apps</li>
         <li>Plugin marketplace</li>
-        <li>Public portal + marketing site</li>
+        <li>Public member portal</li>
       </ul>
     </div>
   </div>
@@ -161,8 +160,10 @@
   <h2><span class="num">4</span>How we build</h2>
   <p class="lead">Every capability starts as a written, audited feature request before code. Modules build in
   parallel, each one verified locally, and ship through a single pipeline: a push to main builds the images,
-  pushes them, and rolls the live server with no downtime. The platform runs on a small server in Singapore
-  with a managed database, and scales out by adding modules, not by rewrites.</p>
+  pushes them, and rolls the live server with no downtime - and the running app prompts people to reload when
+  a new build is live. Tagging a release additionally builds the desktop installers and the mobile apps
+  through the same pipeline. The platform runs on a small server in Singapore with a managed database, and
+  scales out by adding modules, not by rewrites.</p>
 
   <footer>
     CyberOS is CyberSkill's internal platform. This page is a living roadmap and will change as modules ship.

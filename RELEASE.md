@@ -23,6 +23,26 @@ Because desktop and the PWA load the live web app, every web deploy updates them
 Capacitor mobile build bundles the web assets, so it updates when you cut a new mobile release (or you can
 point it at the live URL later if you prefer over-the-air web updates).
 
+## Staying up to date (check for update + auto-update)
+
+Because all four surfaces load the same `/web/` bundle, one update mechanism at the web layer covers every
+platform, and there is no per-platform update code to maintain:
+
+- The check: each `npm run build` writes `/web/version.json` with a unique build id (the same id that stamps
+  the service-worker cache). The running app records the id it loaded with, then re-checks `version.json` on
+  an interval and whenever the tab regains focus or the network returns (`apps/web/src/lib/useUpdateCheck.ts`).
+- The prompt: when a newer id is live, a small "A new version is available - Reload" banner appears
+  (`UpdateBanner`). Reload applies it - the service worker is network-first, so the reload pulls the fresh
+  index and hashed bundles and the new worker purges the old caches. This works identically in the browser,
+  the installed PWA, the Tauri desktop window, and the Capacitor mobile shell.
+- Desktop shell binary: the Tauri wrapper rarely changes (it just loads `/web/`), so the banner above already
+  updates what the user sees. To also auto-update the installed binary, `release.yml` emits Tauri updater
+  artifacts once you set the `TAURI_SIGNING_PRIVATE_KEY` secrets; enabling the in-app updater then needs the
+  `tauri-plugin-updater` wired in with your public key and the GitHub releases endpoint. This is an optional
+  enhancement, listed in the checklist.
+- Mobile binary: native app updates ship through the App Store / Play from a tagged release; the web-layer
+  banner still covers the in-app content between store updates.
+
 ## Track 1: continuous delivery (web + services)
 
 Push to `main`. `.github/workflows/deploy.yml` runs the whole thing in GitHub Actions (moved off the local
