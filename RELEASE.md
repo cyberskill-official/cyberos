@@ -148,11 +148,43 @@ Repo variable:
   Capacitor shells are committed and the mobile secrets are in, so tagged releases keep working in the
   meantime (they just build desktop only).
 
-## Cutting a release, end to end
+## Step by step
 
-1. Land the work on `main` (it deploys to the web/service surface automatically).
-2. Bump `version` in `apps/desktop/src-tauri/tauri.conf.json` and `apps/web/package.json` to the new number.
-3. `git commit`, then `git tag vX.Y.Z && git push origin vX.Y.Z`.
-4. Watch the `release` workflow. It creates a draft GitHub Release with the desktop installers (and, once
-   `MOBILE_RELEASE=true`, the Android bundle and a TestFlight upload).
-5. Edit the draft release notes and publish.
+### Part A: first-time setup (do once, in this order)
+
+1. Confirm continuous delivery is on. In GitHub -> Settings -> Secrets and variables -> Actions, check that
+   `VPS_HOST`, `VPS_USER`, and `VPS_SSH_KEY` exist. Push any small change to `main` and confirm the `deploy`
+   workflow goes green. This is already live for os.cyberskill.world, so it is a verification step, not new
+   work.
+2. Desktop signing (optional - skip to ship unsigned installers). Buy an Apple Developer account, export your
+   Developer ID certificate, and add the six `APPLE_*` secrets listed above. Windows signing is a later
+   follow-up (see the checklist).
+3. Mobile (optional - skip until you want store apps). Run the one-time Capacitor init and commit the
+   generated projects:
+
+       cd apps/web
+       npm i -D @capacitor/core @capacitor/cli @capacitor/ios @capacitor/android
+       npx cap add ios
+       npx cap add android
+       git add android ios capacitor.config.ts package.json
+       git commit -m "chore: add Capacitor mobile shells" && git push
+
+   Then add the Android and iOS secrets above and set the repo variable `MOBILE_RELEASE` to `true`.
+4. Do a first release with Part B to confirm the `release` workflow runs end to end.
+
+### Part B: every release (repeat each time)
+
+1. Land the work on `main`. It deploys to the web and service surface automatically - nothing else to do for
+   web, PWA, or desktop content, since they all load the live `/web/`.
+2. Bump the version in two files to the number you are about to tag: `version` in
+   `apps/desktop/src-tauri/tauri.conf.json` and `version` in `apps/web/package.json`.
+3. Commit, tag, and push both:
+
+       git commit -am "release vX.Y.Z"
+       git tag vX.Y.Z
+       git push origin main vX.Y.Z
+
+4. Watch the `release` workflow build the native installers and open a draft GitHub Release with them
+   attached (plus the Android bundle and a TestFlight upload once `MOBILE_RELEASE=true`).
+5. Edit the draft release notes and publish. Hand out the installer links; with mobile on, the iOS build is in
+   TestFlight and the Android `.aab` is the release artifact to upload to Play.
