@@ -24,6 +24,14 @@ tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 # OS keychain (macOS Keychain; Windows Credential Manager / Linux Secret Service on the follow-on targets).
 keyring = "3"
 
+# Desktop-only: in-app auto-update of the installed shell. The plugin is registered and checks on launch
+# (src/lib.rs); it stays a quiet no-op until tauri.conf.json gets a `plugins.updater` block with the signing
+# pubkey + endpoint (RELEASE.md). Mobile updates ship through the stores, so this is scoped off iOS/Android.
+# (The dependency table must use target_os, not the `desktop` cfg - Cargo does not know Tauri's `desktop` cfg
+# at dependency-resolution time; the code gates still use `#[cfg(desktop)]`, which the build script sets.)
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-updater = "2"
+
 [features]
 # Tauri's default custom-protocol for production builds.
 custom-protocol = ["tauri/custom-protocol"]

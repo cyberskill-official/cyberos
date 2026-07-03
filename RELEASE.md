@@ -36,10 +36,11 @@ platform, and there is no per-platform update code to maintain:
   index and hashed bundles and the new worker purges the old caches. This works identically in the browser,
   the installed PWA, the Tauri desktop window, and the Capacitor mobile shell.
 - Desktop shell binary: the Tauri wrapper rarely changes (it just loads `/web/`), so the banner above already
-  updates what the user sees. To also auto-update the installed binary, `release.yml` emits Tauri updater
-  artifacts once you set the `TAURI_SIGNING_PRIVATE_KEY` secrets; enabling the in-app updater then needs the
-  `tauri-plugin-updater` wired in with your public key and the GitHub releases endpoint. This is an optional
-  enhancement, listed in the checklist.
+  updates what the user sees. The `tauri-plugin-updater` is now wired in and checks on launch
+  (`apps/desktop/src-tauri/src/lib.rs`), staying a quiet no-op until it has a config. To switch it on, do the
+  three key-dependent steps in the checklist: generate the signing keypair, add a `plugins.updater` block to
+  `apps/desktop/src-tauri/tauri.conf.json` with your public key and the GitHub releases endpoint, and set
+  `bundle.createUpdaterArtifacts: true`. `release.yml` then emits the signed update artifacts.
 - Mobile binary: native app updates ship through the App Store / Play from a tagged release; the web-layer
   banner still covers the in-app content between store updates.
 
@@ -146,9 +147,11 @@ Desktop signing (Track 2) - optional; unsigned builds work without these:
 - macOS (Apple Developer account, USD 99/year): `APPLE_CERTIFICATE` (base64 of the Developer ID .p12),
   `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY` (e.g. "Developer ID Application: CyberSkill ..."),
   `APPLE_ID`, `APPLE_PASSWORD` (an app-specific password), `APPLE_TEAM_ID`.
-- Tauri auto-updater (optional): generate a keypair with `cargo tauri signer generate`, then set
-  `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. Auto-update also needs the updater
-  plugin wired into the app and an endpoint - it is not enabled yet, so treat this as a later enhancement.
+- Tauri auto-updater (optional): the plugin is already wired and checks on launch; these steps switch it on.
+  (1) `cargo tauri signer generate` - keep the private key and set `TAURI_SIGNING_PRIVATE_KEY` and
+  `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` as secrets. (2) In `apps/desktop/src-tauri/tauri.conf.json` add a
+  `plugins.updater` block with your public key and `"endpoints": ["https://github.com/cyberskill-official/cyberos/releases/latest/download/latest.json"]`,
+  and set `"createUpdaterArtifacts": true` under `bundle`. Then a tagged release publishes the update.
 - Windows: `tauri-action` produces an installer but does not sign it by default. Signing needs a code-signing
   certificate (OV or EV, from a CA, roughly USD 100-400/year) and a `signCommand` in `tauri.conf.json`. Left
   as a follow-up; unsigned Windows installers show a SmartScreen warning until then.

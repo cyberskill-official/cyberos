@@ -68,9 +68,45 @@ async fn call_tool(mcp: String, name: String, arguments: serde_json::Value) -> R
     McpClient::new(mcp).call_tool(&name, arguments).await
 }
 
+/// Desktop-only: on launch, check for a newer signed build and, if one exists, download + install it, then
+/// restart into it. Best-effort by design - if the updater has no `plugins.updater` config yet (no pubkey /
+/// endpoint), or the check fails, or we are offline, it logs and does nothing. The desktop shell just loads
+/// the live /web/, so its content already updates on its own; this keeps the installed binary current too.
+#[cfg(desktop)]
+fn spawn_update_check(app: tauri::AppHandle) {
+    use tauri_plugin_updater::UpdaterExt;
+    tauri::async_runtime::spawn(async move {
+        let updater = match app.updater() {
+            Ok(u) => u,
+            Err(e) => {
+                eprintln!("cyberos updater: not configured, skipping ({e})");
+                return;
+            }
+        };
+        match updater.check().await {
+            Ok(Some(update)) => match update.download_and_install(|_downloaded, _total| {}, || {}).await {
+                Ok(()) => app.restart(),
+                Err(e) => eprintln!("cyberos updater: install failed ({e})"),
+            },
+            Ok(None) => {}
+            Err(e) => eprintln!("cyberos updater: check skipped ({e})"),
+        }
+    });
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default();
+    #[cfg(desktop)]
+    {
+        builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+    }
+    builder
+        .setup(|app| {
+            #[cfg(desktop)]
+            spawn_update_check(app.handle().clone());
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             health, chat, save_token, clear_token, has_token, mcp_health, list_tools, call_tool
         ])
