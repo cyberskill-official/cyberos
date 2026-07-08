@@ -2,7 +2,7 @@
 
 Goal: operationalize `docs/deploy/go-live-guide.md` - the operator sequence that takes CyberOS from "built" to "fully on" - as trackable tasks with acceptance gates and ledger evidence, and gate the full flip on the Wave-1 safety nets. The go-live guide is the source of truth for the steps and the exact commands; these blocks add the tracking, the agent/operator split, and the cross-references to the rest of the backlog.
 
-Read `docs/deploy/go-live-guide.md` and the runbooks it links before starting any task here. Every task in this wave has operator-only steps (accounts, secrets, VPS edits, deploys) that the agent must NOT perform - the agent authors, verifies, and hands over per the hard-stops in `PROMPT.md`.
+Read `docs/deploy/go-live-guide.md` and the runbooks it links before starting any task here. Every task in this wave has operator-only steps (accounts, secrets, VPS edits, deploys) that the agent must NOT perform - the agent authors, verifies, and hands over per the operator-only hard-stops in the `cyberos-improve-implement` skill.
 
 ---
 

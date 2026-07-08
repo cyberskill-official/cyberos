@@ -1,0 +1,62 @@
+# CyberOS improvement-program manifest — the adapter the cyberos-improve-implement / -review skills read.
+# See .claude/skills/cyberos/README.md for the schema. This is the REPO-WIDE deep-audit program; module
+# packs (chat/, memory/) have their own program.yaml and win for their internals (README.md precedence rule).
+# Replaces the old docs/improvement/PROMPT.md.
+
+program: deep-audit
+report: docs/strategy/cyberos-deep-audit-and-auto-evolution-plan-2026-07-06.md
+report_refs: "R# recommendations and Stage 0-5 in the report"
+
+backlog:
+  file: docs/improvement/BACKLOG.md
+  format: markdown-table
+  status_field: status
+  id_prefix: IMP
+
+statuses:                 # this program's words -> canonical lifecycle
+  ready: todo
+  doing: doing
+  review: review
+  done: done
+  blocked: blocked
+
+task_specs: docs/improvement/wave-{wave}-*.md     # the wave files hold the binding task blocks
+
+branch:
+  mode: one-per-task
+  name_pattern: auto/imp-{id}-{slug}              # e.g. auto/imp-004-deploy-obs; small "pairs with" tasks may share
+
+commit_format: "imp: IMP-NNN <title> (R-refs)"
+
+gates:
+  environment: mac-gate
+  commands:
+    - cargo fmt --all --check
+    - cargo clippy -p <crate> -- -D warnings      # touched crates
+    - cargo test -p <crate>                       # touched crates
+    - scripts/caf_gate.sh <module>                # code-audit floor, where a module is involved
+    - scripts/awh_ai_gate.sh <module>             # agent-work-harness eval, where a module is involved
+    - "# web checks for apps/web when touched"
+
+ledger:
+  mode: single-append
+  path: docs/improvement/LEDGER.md
+
+selection: "wave order, then id; a task is eligible when status is todo and every task in depends_on is done (or review if the reviewer waived the wait in the ledger)"
+
+guardrails:
+  protected:
+    # the dream-loop denylist: untouched unless the task spec explicitly names the path, and then the
+    # review packet must call it out in a "sensitive paths" section.
+    - auth
+    - audit chain
+    - RLS
+    - PII
+    - cost ledger
+    - secrets
+    - deploy tooling
+  operator_only:
+    - push to main / deploy
+    - rotate a secret
+    - go-live readiness sign-offs (wave 6)
+  human_only_ids: []

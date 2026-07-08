@@ -212,7 +212,7 @@ Context: the memory-writer bug shipped behind `assert!(processed == 3 || failed 
 Scope:
 - Audit: grep test code for or-patterns inside asserts (`|| .*failed`, `.is_ok() ||`, etc.); fix or delete each hit (the known one first).
 - Add a lightweight lint to `scripts/caf_precommit_check.sh`: flag new or-asserts in `#[test]`/`#[tokio::test]` bodies with an allowlist comment escape (`// allow-or-assert: reason`).
-- One line in the review checklist (PROMPT.md already carries it once this lands).
+- One line in the review checklist (the `cyberos-improve-review` skill carries it).
 
 Acceptance:
 - [ ] Zero unexplained or-asserts in services/ test code; each fix keeps or strengthens the original intent.

@@ -13,16 +13,16 @@ This directory operationalizes `docs/strategy/cyberos-deep-audit-and-auto-evolut
 | `wave-4-hardening.md` | Tasks IMP-031..045: architecture and security hardening, continuous. |
 | `wave-5-platform-and-process.md` | Tasks IMP-046..062: platform operations, data, docs, governance, continuous. |
 | `wave-6-go-live.md` | Tasks IMP-063..067: operationalizes `docs/deploy/go-live-guide.md` (serve a model, sign apps, activate the brain) plus the go-live readiness gate. Mostly operator work with an agent verify/gate share. |
-| `PROMPT.md` | The trigger prompt for an implementation agent, plus the human review protocol. |
+| `program.yaml` | The adapter the `cyberos-improve-implement` / `cyberos-improve-review` skills read (backlog, branch, gate commands, id prefix, ledger, guardrails). Replaces the old `PROMPT.md`. |
 | `LEDGER.md` | Append-only execution ledger; every task run adds an entry. |
 
 ## Module packs in subdirectories
 
-Module-scoped improvement packs may live alongside this repo-wide backlog in subdirectories (currently `chat/` and `memory/`, produced by the module enterprise-plan sessions). They carry their own ID spaces, task files, and trigger prompts; nothing in this file governs them. Precedence rule: for a module's internals, the module pack wins; if an IMP task turns out to duplicate a module-pack task, mark the IMP task `superseded by <pack>/<id>` in the ledger instead of doing the work twice.
+Module-scoped improvement packs may live alongside this repo-wide backlog in subdirectories (currently `chat/` and `memory/`, produced by the module enterprise-plan sessions). They carry their own ID spaces, task files, and `program.yaml` manifests; nothing in this file governs them. Precedence rule: for a module's internals, the module pack wins; if an IMP task turns out to duplicate a module-pack task, mark the IMP task `superseded by <pack>/<id>` in the ledger instead of doing the work twice.
 
 ## Task lifecycle
 
-`todo -> doing -> review -> done` (plus `blocked`). The implementing agent flips `todo -> doing -> review` and updates `BACKLOG.md` in the same commit as the work. Only the human reviewer flips `review -> done`, after the checklist in `PROMPT.md` passes. If a task cannot proceed, set `blocked` with a one-line reason in the ledger and move on.
+`todo -> doing -> review -> done` (plus `blocked`). The implementing agent flips `todo -> doing -> review` and updates `BACKLOG.md` in the same commit as the work. Only the human reviewer flips `review -> done`, after the `cyberos-improve-review` checklist passes. If a task cannot proceed, set `blocked` with a one-line reason in the ledger and move on.
 
 ## Conventions
 
@@ -35,11 +35,16 @@ Module-scoped improvement packs may live alongside this repo-wide backlog in sub
 
 ## How to trigger
 
-Paste the agent prompt from `PROMPT.md` into a fresh session, or simply say:
+Driven by the official CyberOS skills (see `.claude/skills/cyberos/`), which read this program's
+`program.yaml`. In Claude, invoke the `cyberos-improve-implement` skill for this program, or simply say:
 
-> Implement IMP-004 per docs/improvement/PROMPT.md
+> Implement IMP-004 per docs/improvement (cyberos-improve-implement)
 
-With no task ID given, the agent takes the next eligible `todo` in `BACKLOG.md` order (dependencies satisfied, wave order, then ID order).
+or, to let the agent pick:
+
+> Work the improvement backlog per docs/improvement
+
+With no task ID given, the agent takes the next eligible `todo` in `BACKLOG.md` order (dependencies satisfied, wave order, then ID order). For the review pass use `cyberos-improve-review`. Any non-Claude agent (Codex, etc.) can be handed `.claude/skills/cyberos/cyberos-improve-implement/SKILL.md` plus this directory.
 
 ## Safety invariants (non-negotiable)
 

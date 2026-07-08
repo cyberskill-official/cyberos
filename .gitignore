@@ -89,7 +89,13 @@ services/target/
 # own .git histories and would bloat cyberos commits. They live on disk for
 # browsing, but stay out of git. See playground/CONSUMED-FROM-WORKBENCH.md.
 playground
-.claude/
+# Ignore local Claude Code state (settings.local.json, personal/ephemeral skills like gitnexus),
+# but TRACK the official CyberOS shared skills under .claude/skills/cyberos/ so the improvement-program
+# execution protocol travels with the repo and is reusable across projects.
+.claude/*
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/cyberos/
 
 # Signed employment contracts - kept out of version control (cited by clause number in the EVAL rubric)
 docs/legal/*.docx

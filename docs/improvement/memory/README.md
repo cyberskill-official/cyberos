@@ -11,7 +11,7 @@ Execution backlog for `docs/strategy/memory-enterprise-grade-and-auto-evolution-
 | `tasks-phase-1.md` | P1 cards: a brain that understands content (facts, hybrid recall, PII, emitters). |
 | `tasks-phase-2.md` | P2 cards: online-offline sync + compliance (sync protocol, retention, erasure, PDPL). |
 | `tasks-phase-3.md` | P3 cards: the auto-evolution loop (evals, dream loop, feedback, self-healing, surfaces). |
-| `PROMPT.md` | The trigger prompt for an implementation agent, and the human review protocol. |
+| `program.yaml` | The adapter the `cyberos-improve-implement` / `cyberos-improve-review` skills read (branch, gate commands, ledger, guardrails). Replaces the old `PROMPT.md`. |
 
 ## Lifecycle
 
@@ -53,4 +53,4 @@ Coverage: the union of `refs` across all tasks equals R1-R108 plus every finding
 
 ## For the human reviewer
 
-Each card ends with a review checklist: what to inspect beyond the green gate (security posture, data-safety, spend). The review protocol, including the per-phase sign-off gates and the approve/reject mechanics, is the second half of `PROMPT.md`. The short version: review `in_review` tasks commit by commit, run the named probe commands yourself for security-class tasks, set `done` in `backlog.yaml`, and push when a phase closes.
+Each card ends with a review checklist: what to inspect beyond the green gate (security posture, data-safety, spend). The review protocol, including the per-phase sign-off gates and the approve/reject mechanics, is the `cyberos-improve-review` skill (`.claude/skills/cyberos/`). The short version: review `in_review` tasks commit by commit, run the named probe commands yourself for security-class tasks, set `done` in `backlog.yaml`, and push when a phase closes.

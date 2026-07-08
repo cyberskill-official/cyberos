@@ -11,8 +11,16 @@ and adjust the task, not the report.
 - tasks/phase-0.md .. tasks/phase-4.md - the detailed spec for every task (goal, C-refs, files,
   implementation notes, acceptance checks, review notes). Specs are static; do not edit status into them.
 - LEDGER.md - append-only evidence log, one entry per task that reaches review.
-- PROMPT-IMPLEMENT.md - copy-paste prompt that starts an implementation agent session.
-- PROMPT-REVIEW.md - copy-paste prompt (or manual checklist) for the human review pass.
+- program.yaml - the adapter the `cyberos-improve-implement` / `cyberos-improve-review` skills read
+  (branch, gate commands, id prefix, ledger, guardrails). Replaces the old PROMPT-IMPLEMENT.md +
+  PROMPT-REVIEW.md; the shared loop now lives in `.claude/skills/cyberos/`.
+
+## How to run
+
+Driven by the official CyberOS skills. In Claude, invoke `cyberos-improve-implement` for this program
+("work the chat improvement backlog") to advance tasks to `review`, and `cyberos-improve-review` for the
+human sign-off pass. Any non-Claude agent can be handed
+`.claude/skills/cyberos/cyberos-improve-implement/SKILL.md` plus this directory.
 
 ## Status vocabulary (BACKLOG.md Status column)
 
