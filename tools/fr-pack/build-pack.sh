@@ -41,6 +41,15 @@ if [ -f "$repo/scripts/caf_gate.sh" ] && [ -d "$repo/tools/caf" ]; then
   caf_vendored="yes"
 fi
 
+# --- always: the BRAIN memory protocol (Layer-1 rules + schema + invariants) ---
+# init.sh uses these to scaffold a .cyberos-memory store in the target repo so the
+# project gets the memory protocol alongside the FR workflow.
+mkdir -p "$out/memory"
+cp "$repo/AGENTS.md" "$out/memory/AGENTS.md"
+memory_vendored="protocol"
+[ -f "$repo/modules/memory/memory.schema.json" ]    && { cp "$repo/modules/memory/memory.schema.json"    "$out/memory/memory.schema.json";    memory_vendored="protocol+schema"; }
+[ -f "$repo/modules/memory/memory.invariants.yaml" ] && cp "$repo/modules/memory/memory.invariants.yaml" "$out/memory/memory.invariants.yaml"
+
 # --- always: the portable runtime (scripts, templates, channels, docs) ---
 cp "$here/init.sh"            "$out/init.sh"
 cp "$here/bootstrap.sh"       "$out/bootstrap.sh"
@@ -70,6 +79,7 @@ vendored:
   normative_docs: 3        # ship-feature-requests, EXECUTION-DISCIPLINE, STATUS-REFERENCE
   author_audit_skills: $vendored_skills
   caf_tooling: $caf_vendored
+  memory_protocol: $memory_vendored   # AGENTS.md Layer-1 memory protocol (+ schema); init scaffolds the BRAIN
 notes: >
   Doc-driven mode always works. Missing skills/caf degrade to the reduced-profile floor:
   the target repo's own build/lint/test + coverage + code review + the two human gates.

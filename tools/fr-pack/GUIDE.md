@@ -23,7 +23,7 @@ The linear walkthrough, from zero to your first shipped FR in a repo that is not
    bash .fr-pack/init.sh
    ```
 
-   This auto-detects your build/lint/test, writes `.cyberos/fr.gates.env`, scaffolds `docs/feature-requests/`, and copies the workflow machine to `.cyberos/fr-pack/`. (With the Claude plugin, run `/fr-init` instead.)
+   This auto-detects your build/lint/test, writes `.cyberos/fr.gates.env`, scaffolds `docs/feature-requests/`, and copies the workflow machine to `.cyberos/fr-pack/`. (With the Claude plugin, run `/fr-init` instead.) By default it also sets up the BRAIN memory protocol: a local `.cyberos-memory/` store plus the `AGENTS.md` memory rules (skip with `FRPACK_NO_MEMORY=1`).
 
 3. Check the gates. Open `.cyberos/fr.gates.env` and confirm `BUILD_CMD` / `LINT_CMD` / `TEST_CMD` are right for your repo; edit if the autodetect missed anything. If you have a caf baseline or an awh goldenset, set `CAF_ENABLED` / `AWH_ENABLED` to `true` and point them at your files. Then confirm a clean tree is green:
 

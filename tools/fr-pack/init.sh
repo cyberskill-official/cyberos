@@ -96,6 +96,55 @@ if [ ! -f "$bl" ]; then
   sed "s/{{PROJECT}}/$proj/g" "$pack/templates/BACKLOG.md" > "$bl"
 fi
 
+# 4b. set up the BRAIN memory protocol (default on; skip with FRPACK_NO_MEMORY=1) ---
+MEMORY_SET="skipped"; MEM_AGENTS=""; MEM_BRAIN=""
+if [ "${FRPACK_NO_MEMORY:-0}" != "1" ] && [ -d "$pack/memory" ]; then
+  # 4b.1 vendor the protocol + schema into the repo
+  mkdir -p "$root/.cyberos/fr-pack/memory"
+  cp -R "$pack/memory/." "$root/.cyberos/fr-pack/memory/" 2>/dev/null || true
+
+  # 4b.2 make the protocol discoverable at the repo root (never clobber an existing AGENTS.md)
+  if [ ! -f "$root/AGENTS.md" ]; then
+    cp "$pack/memory/AGENTS.md" "$root/AGENTS.md"
+    MEM_AGENTS="created root AGENTS.md (memory protocol)"
+  else
+    MEM_AGENTS="kept your AGENTS.md; protocol copy is at .cyberos/fr-pack/memory/AGENTS.md"
+  fi
+
+  # 4b.3 scaffold the BRAIN store (.cyberos-memory) if absent
+  brain="$root/.cyberos-memory"
+  if [ ! -d "$brain" ]; then
+    for d in audit memories adrs audits impl-plans code-reviews obs-injections index exports meta module member company client project; do
+      mkdir -p "$brain/$d"
+    done
+    : > "$brain/.lock"
+    head -c 8 /dev/zero > "$brain/HEAD"                       # 8-byte LE u64 seq counter = 0
+    fp="$( (head -c 8 /dev/urandom | od -An -tx1 | tr -d ' \n') 2>/dev/null || echo 0000000000000000 )"
+    ns="$(( $(date +%s) * 1000000000 ))"
+    cat > "$brain/manifest.json" <<JSON
+{
+  "actor": "cyberos-fr",
+  "created_at_ns": $ns,
+  "crypto_mode": "chained",
+  "fingerprint": "$fp",
+  "imports": {},
+  "version": 2
+}
+JSON
+    MEM_BRAIN="created .cyberos-memory/ (fresh BRAIN, HEAD=0)"
+  else
+    MEM_BRAIN="kept existing .cyberos-memory/"
+  fi
+
+  # 4b.4 keep the BRAIN out of git (local tenant data, per the protocol)
+  if [ ! -f "$root/.gitignore" ]; then
+    printf '# CyberOS BRAIN - local memory store (tenant data; do not commit)\n.cyberos-memory/\n' > "$root/.gitignore"
+  elif ! grep -qx ".cyberos-memory/" "$root/.gitignore"; then
+    printf '\n# CyberOS BRAIN - local memory store (tenant data; do not commit)\n.cyberos-memory/\n' >> "$root/.gitignore"
+  fi
+  MEMORY_SET="yes"
+fi
+
 # 5. tell the operator what to do next ----------------------------------------
 cat <<EOF
 
@@ -103,6 +152,7 @@ fr-pack init: done.
   machine   -> .cyberos/fr-pack/         (workflow + doctrine + status contract)
   gates     -> .cyberos/fr.gates.env     (detected: build='${BUILD_CMD:-none}' test='${TEST_CMD:-none}')
   backlog   -> docs/feature-requests/BACKLOG.md
+  BRAIN     -> ${MEMORY_SET}${MEM_BRAIN:+ (${MEM_BRAIN})}${MEM_AGENTS:+; ${MEM_AGENTS}}
 
 Next:
   1. Write an FR from the template:
@@ -114,4 +164,9 @@ Next:
         two human-acceptance gates. repo_root is this repo."
   3. Run the machine gates any time:
        bash .cyberos/fr-pack/gates/run-gates.sh
+
+BRAIN memory protocol: .cyberos-memory/ is your local memory store (gitignored, tenant
+data). The rules are in AGENTS.md (or .cyberos/fr-pack/memory/AGENTS.md). An agent working
+in this repo records decisions, audits, and plans into the BRAIN per that protocol.
+Skip memory setup with: FRPACK_NO_MEMORY=1 bash .cyberos/fr-pack/init.sh
 EOF
