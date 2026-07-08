@@ -50,6 +50,7 @@ cp -R "$here/plugin"          "$out/plugin"
 cp -R "$here/ci"              "$out/ci"
 cp "$here/Dockerfile"         "$out/Dockerfile"
 cp "$here/README.md"          "$out/README.md"
+cp "$here/GUIDE.md"           "$out/GUIDE.md"
 chmod +x "$out/init.sh" "$out/bootstrap.sh" "$out/gates/run-gates.sh" 2>/dev/null || true
 
 # make the plugin self-contained: carry the machine docs so the bundled skill works standalone

@@ -2,6 +2,8 @@
 
 This is the portable form of the single `ship-feature-requests` workflow. It runs in any repo, any language, with no CyberOS clone required. It is exposed through many channels so a user can pick whatever fits their setup.
 
+New to it? `GUIDE.md` is the step-by-step walkthrough (zero to your first shipped FR). This README is the channel catalog and reference.
+
 ## What it is
 
 Two layers:
