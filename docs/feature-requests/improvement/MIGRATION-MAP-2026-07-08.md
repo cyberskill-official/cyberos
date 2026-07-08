@@ -210,3 +210,10 @@ table is the only record linking old ids to new. Use it to reconcile the in-flig
 | IMP-065 | FR-IMP-065 | draft | Track B: mobile shells and store release pipeline |
 | IMP-066 | FR-IMP-066 | draft | Track C: brain activation rollout (deploy, notice, ack, capture) |
 | IMP-067 | FR-IMP-067 | draft | Go-live readiness gate (safety nets before fully on) |
+
+## memory (branch additions, reconciled 2026-07-08)
+
+| old | new | status | note |
+|---|---|---|---|
+| MEM-059 | FR-MEMORY-259 | draft | added on auto/memory-enterprise (post-migration); brain_common harness fix |
+| MEM-060 | FR-MEMORY-260 | draft | added on auto/memory-enterprise (post-migration); summarize scope-filter fix |

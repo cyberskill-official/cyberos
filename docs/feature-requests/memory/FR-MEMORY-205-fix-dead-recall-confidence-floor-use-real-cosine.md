@@ -22,3 +22,7 @@ Migrated 2026-07-08 from the memory improvement backlog, folded into the FR syst
 ## Acceptance criteria
 
 - [ ] weak summary match triggers drill; regression test pins the behavior
+
+## Implementation status (reconciled 2026-07-08)
+
+Implemented on branch `auto/memory-enterprise` (commit 33f4ea8, migrated from `MEM-005`). The code exists in `services/memory/`; author this FR's section-1 clauses from the implementation and source report before it moves through the review/test gates.

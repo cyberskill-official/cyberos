@@ -22,3 +22,7 @@ Migrated 2026-07-08 from the memory improvement backlog, folded into the FR syst
 ## Acceptance criteria
 
 - [ ] forged x-tenant-id/x-subject-id cannot cross tenants; tenant+subject come from verified JWT claims; negative test proves it
+
+## Implementation status (reconciled 2026-07-08)
+
+Implemented on branch `auto/memory-enterprise` (commit f05d406, migrated from `MEM-001`). The code exists in `services/memory/`; author this FR's section-1 clauses from the implementation and source report before it moves through the review/test gates.
