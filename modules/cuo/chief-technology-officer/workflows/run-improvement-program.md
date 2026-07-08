@@ -1,12 +1,11 @@
-
 ---
 workflow_id: chief-technology-officer/run-improvement-program
 workflow_version: 2.0.0
-purpose: RETIRED. Improvement programs no longer run as a separate track. Enterprise-hardening work is now a feature-request (`class: improvement`) driven by `chief-technology-officer/ship-feature-requests`. This file is a tombstone that redirects.
+purpose: RETIRED. Improvement programs no longer run as a separate track. Enterprise-hardening work is now a feature-request (the improvement class) driven by `chief-technology-officer/ship-feature-requests`. This file is a tombstone that redirects.
 persona: chief-technology-officer
-cadence: n/a
+cadence: per-task
 status: retired   # CUO-workflow lifecycle: planned | shipped | retired
-pattern: n/a
+pattern: linear
 superseded_by: chief-technology-officer/ship-feature-requests
 ---
 # Run an improvement program (RETIRED)
