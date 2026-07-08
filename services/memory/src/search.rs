@@ -11,13 +11,13 @@
 //! Fusion: standard RRF with `k = 60` (the canonical paper default).
 //! Final list is capped at the caller's `limit` (1..100).
 //!
-//! Tenant scope still comes from the `X-Tenant-Id` header in this slice;
-//! the memory service will move to JWT-Extension scoping when its own
-//! JWT-verify middleware lands (mirrors the AUTH service pattern).
+//! Tenant scope comes from the verified JWT (MEM-001, R73): the `require_auth` middleware stamps the
+//! authenticated [`Caller`] into the request extensions, and `search` reads the caller's tenant from it —
+//! never from an `X-Tenant-Id` header a caller could forge.
 
 use axum::{
-    extract::{Json as JsonInput, State},
-    http::{HeaderMap, StatusCode},
+    extract::{Extension, Json as JsonInput, State},
+    http::StatusCode,
     response::Json,
 };
 use serde::{Deserialize, Serialize};
@@ -25,6 +25,7 @@ use sqlx::Row;
 use std::collections::HashMap;
 use uuid::Uuid;
 
+use crate::brain::Caller;
 use crate::embeddings::{to_pgvector_literal, EmbeddingClient};
 use crate::state::AppState;
 
@@ -67,10 +68,10 @@ pub struct SearchResponse {
 
 pub async fn search(
     State(state): State<AppState>,
-    headers: HeaderMap,
+    Extension(caller): Extension<Caller>,
     JsonInput(req): JsonInput<SearchRequest>,
 ) -> Result<(StatusCode, Json<SearchResponse>), (StatusCode, Json<serde_json::Value>)> {
-    let tenant_id = require_tenant(&headers)?;
+    let tenant_id = caller.tenant_id;
     let limit = req.limit.clamp(1, 100);
     let mode_str = req.mode.as_deref().unwrap_or("hybrid").to_lowercase();
     let mode: &'static str = match mode_str.as_str() {
@@ -260,19 +261,6 @@ fn rrf_fuse(lex: Vec<SearchHit>, vec: Vec<SearchHit>, limit: usize) -> Vec<Searc
     });
     hits.truncate(limit);
     hits
-}
-
-fn require_tenant(headers: &HeaderMap) -> Result<Uuid, (StatusCode, Json<serde_json::Value>)> {
-    headers
-        .get("x-tenant-id")
-        .and_then(|h| h.to_str().ok())
-        .and_then(|s| Uuid::parse_str(s).ok())
-        .ok_or_else(|| {
-            (
-                StatusCode::BAD_REQUEST,
-                Json(serde_json::json!({"error": "X-Tenant-Id header required (UUID)"})),
-            )
-        })
 }
 
 fn internal<E: std::fmt::Display>(e: E) -> (StatusCode, Json<serde_json::Value>) {
