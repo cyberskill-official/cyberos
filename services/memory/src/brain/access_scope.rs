@@ -61,7 +61,11 @@ pub async fn caller_may_see(
 
     // Founder — a non-revoked `founder` grant held by this caller (target unconstrained: a founder may read
     // anyone in the tenant). Clause 7a.
-    let founder: Option<i64> = sqlx::query_scalar(
+    // MEM-060 (F3): `SELECT 1` is INT4 in Postgres; decode as i32, not i64 (an `Option<i64>` here raised
+    // "Rust type i64 is not compatible with SQL type INT4" whenever a grant actually matched — so the
+    // founder/manager access predicate ERRORED for legitimately-granted callers, the security boundary's
+    // allow path. Surfaced once the brain DB suite became runnable (MEM-059).
+    let founder: Option<i32> = sqlx::query_scalar(
         "SELECT 1 FROM access_grant
           WHERE viewer_subject_id = $1 AND scope = 'founder' AND revoked_at IS NULL
           LIMIT 1",
@@ -75,7 +79,7 @@ pub async fn caller_may_see(
     }
 
     // Manager-of — a non-revoked `manager_of` grant for this exact (caller, subject) pair. Clause 7b.
-    let manager: Option<i64> = sqlx::query_scalar(
+    let manager: Option<i32> = sqlx::query_scalar(
         "SELECT 1 FROM access_grant
           WHERE viewer_subject_id = $1 AND target_subject_id = $2
             AND scope = 'manager_of' AND revoked_at IS NULL
@@ -102,7 +106,7 @@ pub async fn deny_reason(
     let mut tx = pool.begin().await?;
     set_access_guc(&mut tx, caller.tenant_id).await?;
     // Is this subject known to the access model at all (any grant where they are the target)?
-    let known: Option<i64> =
+    let known: Option<i32> =
         sqlx::query_scalar("SELECT 1 FROM access_grant WHERE target_subject_id = $1 LIMIT 1")
             .bind(subject_id)
             .fetch_optional(&mut *tx)

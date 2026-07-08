@@ -155,7 +155,8 @@ async fn uncovered_event_count(
     .flatten();
 
     let floor = covered_hi.unwrap_or(-1);
-    let (sql, bind_scope) = scope_event_filter(scope_kind);
+    // scope_id (when bound) is the 3rd parameter here: $1 tenant, $2 floor, $3 scope.
+    let (sql, bind_scope) = scope_event_filter(scope_kind, 3);
     let count: i64 = if bind_scope {
         sqlx::query_scalar(&format!(
             "SELECT COUNT(*) FROM brain_event_embedding
@@ -192,8 +193,9 @@ async fn build_and_supersede(
     subject_id: Option<Uuid>,
     gw: &EmbedClient,
 ) -> Result<Option<i64>, sqlx::Error> {
-    // Gather the scope's events (kinds, audit_row_ids, seq + ts bounds).
-    let (sql, bind_scope) = scope_event_filter(scope_kind);
+    // Gather the scope's events (kinds, audit_row_ids, seq + ts bounds). scope_id (when bound) is the 2nd
+    // parameter here: $1 tenant, $2 scope (there is no source_seq floor in this query).
+    let (sql, bind_scope) = scope_event_filter(scope_kind, 2);
     let q = format!(
         "SELECT source_seq, audit_row_id, kind, ts_ns
            FROM brain_event_embedding
@@ -332,15 +334,22 @@ async fn build_and_supersede(
 }
 
 /// The SQL predicate selecting a scope's events from `brain_event_embedding`, and whether it needs a bound
-/// `scope_id` parameter ($3 for subject/channel; none for time-window which would need a range — for the
-/// time-window scope we approximate by selecting all events, since the per-week digest in this slice is
-/// representative rather than exhaustive; a precise window-bounded variant is a slice-3 refinement).
-fn scope_event_filter(scope_kind: &str) -> (&'static str, bool) {
+/// `scope_id` parameter. `scope_ph` is the 1-based placeholder index the bound `scope_id` will occupy in the
+/// CALLER's query, because the fragment is reused in two queries with different placeholder layouts:
+///   * `uncovered_event_count` — `WHERE tenant_id=$1 AND source_seq>$2 AND <frag>` -> `scope_ph = 3`;
+///   * `build_and_supersede`   — `WHERE tenant_id=$1 AND <frag>`                    -> `scope_ph = 2`.
+///
+/// MEM-060 (F3): this used to hardcode `$3`, so `build_and_supersede` (which has no `$2`) emitted `$1 .. $3`
+/// with only 2 binds -> Postgres "bind message supplies 2 parameters, but prepared statement requires 3", and
+/// rolling summaries never built for subject/channel scopes. Passing the index fixes both call sites.
+///
+/// time_window selects all events (approximate; the per-week digest is representative, not exhaustive — a
+/// precise window-bounded variant is a later refinement) and binds no scope parameter.
+fn scope_event_filter(scope_kind: &str, scope_ph: u8) -> (String, bool) {
     match scope_kind {
-        SCOPE_SUBJECT => ("subject_id::text = $3", true),
-        SCOPE_CHANNEL => ("channel_id::text = $3", true),
-        // time_window: all events (approximate). Bounded precisely in a later slice.
-        _ => ("TRUE", false),
+        SCOPE_SUBJECT => (format!("subject_id::text = ${scope_ph}"), true),
+        SCOPE_CHANNEL => (format!("channel_id::text = ${scope_ph}"), true),
+        _ => ("TRUE".to_string(), false),
     }
 }
 
@@ -402,8 +411,26 @@ mod tests {
 
     #[test]
     fn scope_filter_binds_for_subject_and_channel_not_time() {
-        assert!(scope_event_filter(SCOPE_SUBJECT).1);
-        assert!(scope_event_filter(SCOPE_CHANNEL).1);
-        assert!(!scope_event_filter(SCOPE_TIME_WINDOW).1);
+        assert!(scope_event_filter(SCOPE_SUBJECT, 3).1);
+        assert!(scope_event_filter(SCOPE_CHANNEL, 2).1);
+        assert!(!scope_event_filter(SCOPE_TIME_WINDOW, 3).1);
+    }
+
+    #[test]
+    fn scope_filter_renders_the_requested_placeholder_index() {
+        // MEM-060: the fragment must use the caller-supplied placeholder index, not a hardcoded $3 — that
+        // hardcoding made build_and_supersede (which binds scope at $2) emit $1..$3 with only 2 binds.
+        assert_eq!(
+            scope_event_filter(SCOPE_SUBJECT, 2).0,
+            "subject_id::text = $2"
+        );
+        assert_eq!(
+            scope_event_filter(SCOPE_SUBJECT, 3).0,
+            "subject_id::text = $3"
+        );
+        assert_eq!(
+            scope_event_filter(SCOPE_CHANNEL, 2).0,
+            "channel_id::text = $2"
+        );
     }
 }
