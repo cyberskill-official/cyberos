@@ -11,23 +11,16 @@ See `modules/cuo/chief-technology-officer/workflows/ship-feature-requests.md` se
 
 `class: improvement` in the FR frontmatter is what marks an FR as hardening (the default is `class: product`). The class selects the gate profile (section 1a) and lets grooming and reporting separate hardening from net-new; it does not change the lifecycle or the two human-acceptance gates.
 
-## Migration from the retired docs/improvement backlogs
+## Migration from the old docs/improvement backlogs (done 2026-07-08)
 
-The old separate improvement programs are folding into FRs. Current status:
+The three old improvement programs were folded into FRs on 2026-07-08 and renumbered to fresh ids (no `legacy_id` kept, operator choice). The old `docs/improvement/` tree was deleted.
 
-| Old program | Old ids | New home | Status |
+| Old program | Old ids | New FRs | Count |
 |---|---|---|---|
-| memory enterprise (`docs/improvement/memory`) | `MEM-001..060` | `FR-MEMORY-*` (`class: improvement`) | pending migration; in-flight on `auto/memory-enterprise` (5 tasks in review) — migrate after that branch merges |
-| chat enterprise (`docs/improvement/chat`) | `T-001..066` | `FR-CHAT-*` (`class: improvement`) | pending migration; in-flight on `auto/chat-enterprise` |
-| deep audit (`docs/improvement`) | `IMP-001..062` | `FR-IMP-*` (cross-cutting, here) | pending migration |
+| memory enterprise | `MEM-001..060` | `FR-MEMORY-201..258` (module `memory`) | 58 |
+| chat enterprise | `T-001..066` | `FR-CHAT-201..266` (module `chat`) | 66 |
+| deep audit | `IMP-001..067` | `FR-IMP-001..067` (here, cross-cutting) | 67 |
 
-Until a program migrates, its existing backlog under `docs/improvement/<program>/` remains the source of truth for that in-flight work. Do not double-track a task in both places.
+Every migrated FR carries `class: improvement` and landed as `status: draft` (a stub carrying the old title, refs, deps, and acceptance note; the normative clauses get authored when the FR is picked up). `done` and `superseded` source tasks mapped to `done` and `closed`. Dependencies were remapped to the new ids.
 
-### Open decision (operator)
-
-Two choices gate the physical migration, and both are the operator's:
-
-1. Id scheme. Keep the old ids as a sub-namespace (for example `FR-MEMORY-2xx` carrying `legacy_id: MEM-012`) or renumber cleanly to the next free FR number. Recommendation: keep `legacy_id` on each migrated FR so commit and ledger history stays traceable.
-2. Timing. Migrate each program only after its in-flight branch (`auto/memory-enterprise`, `auto/chat-enterprise`) merges, so live `MEM-*` and `T-*` references in commits and ledgers are not invalidated mid-flight.
-
-Once decided, migration is mechanical: convert each backlog row into an FR spec with `class: improvement` (and `legacy_id`), drop it under the right module (or here for cross-cutting), delete the old `docs/improvement/<program>/`, and regenerate `docs/feature-requests/BACKLOG.md` with the grooming script.
+The old-to-new id map is `MIGRATION-MAP-2026-07-08.md` in this folder. It is the only record linking old ids to new (there is no `legacy_id` on the FRs), so use it to reconcile the in-flight `auto/memory-enterprise` and `auto/chat-enterprise` branches after they merge; their `MEM-*` and `T-*` references no longer resolve to a live backlog. The migration was produced by `scripts/migrate_improvement_to_fr.py`.
