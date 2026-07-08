@@ -1,5 +1,7 @@
 # Improvement backlog
 
+> **Folding into feature-requests (2026-07-08).** Improvement is no longer a separate track. Enterprise-hardening work is now a feature-request (`class: improvement`) run by the single `chief-technology-officer/ship-feature-requests` workflow, with HITL required. The backlogs under `docs/improvement/` stay the in-flight source of truth for work already started here, until each migrates into FR ids; see `docs/feature-requests/improvement/README.md` for the class model and the migration plan. File new hardening work as an FR, not here.
+
 This directory operationalizes `docs/strategy/cyberos-deep-audit-and-auto-evolution-plan-2026-07-06.md` (the audit report, R1-R52 plus the Stage 0-5 auto-evolution program). Every recommendation is broken into an executable task with its own ID, spec, and acceptance gate.
 
 ## Layout

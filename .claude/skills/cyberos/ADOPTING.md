@@ -1,5 +1,7 @@
 # Adopting the improvement-program protocol in another project
 
+> **Note (2026-07-08).** Inside CyberOS this two-skill protocol is retired in favor of the single `ship-feature-requests` workflow (improvement is now an FR with `class: improvement`, and HITL is required). This cross-project guide is kept for other repos that want the lightweight backlog-runner loop as a starting point, but the skills it references are tombstoned in this repo. If you are working inside CyberOS, use `ship-feature-requests`. A cross-project adoption guide for the full FR workflow can be written on request.
+
 This guide takes the two CyberOS skills in this folder (`cyberos-improve-implement`,
 `cyberos-improve-review`) and stands them up in a different repo so that repo can run the same gated,
 one-task-one-commit hardening loop CyberOS uses. It is the cross-project companion to `README.md` (which

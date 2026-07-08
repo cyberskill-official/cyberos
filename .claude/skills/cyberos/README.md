@@ -1,5 +1,7 @@
 # CyberOS official skills — improvement-program execution protocol
 
+> **Retired / superseded (2026-07-08).** CyberOS now runs a single implementation workflow, `chief-technology-officer/ship-feature-requests`. Improvement work is a feature-request (`class: improvement`), not a separate track, and HITL is required at the two human-acceptance gates. The two skills here (`cyberos-improve-implement`, `cyberos-improve-review`) are retired tombstones that redirect to the workflow. The rest of this document is kept for historical context. Start at `modules/cuo/chief-technology-officer/workflows/ship-feature-requests.md` (section 1a) and `docs/feature-requests/improvement/README.md`.
+
 This directory holds the **official, reusable CyberOS protocol** for driving an improvement program (a
 backlog of enterprise-hardening tasks) from spec to `done`. Two skills, one for each half of the loop:
 
