@@ -83,7 +83,9 @@ guardrails:
   plain Markdown and self-contained (it embeds the EXECUTION-DISCIPLINE §2 halt rules and references the full
   `modules/cuo/EXECUTION-DISCIPLINE.md` when present), so it works without Claude-specific machinery.
 - **Other repos / future projects:** copy `.claude/skills/cyberos/` into the new repo and add a `program.yaml`
-  per program. Nothing here hardcodes the cyberos tree except the optional EXECUTION-DISCIPLINE reference.
+  per program. Nothing here hardcodes the cyberos tree except the optional EXECUTION-DISCIPLINE reference. See
+  `ADOPTING.md` in this folder for the full ordered procedure (copy, gitignore carve-out, program dir,
+  manifest, gate environment, trigger, sign-off).
 
 ## Where this sits in the CyberOS workflow surface
 

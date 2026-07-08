@@ -1,3 +1,4 @@
+
 ---
 workflow_id: chief-technology-officer/run-improvement-program
 workflow_version: 1.0.0
@@ -27,7 +28,6 @@ skill_chain:
 builds_on:
   - modules/cuo/EXECUTION-DISCIPLINE.md          # the continuous-run / halt-only-at-§2 discipline both skills enforce
 ---
-
 # Run an improvement program
 
 The official CyberOS protocol for executing an improvement backlog. The two load-bearing artifacts are the
@@ -59,3 +59,27 @@ deep-audit, `IMP-*`), `docs/improvement/memory/` (`MEM-*`), `docs/improvement/ch
   `guardrails.protected` invariant to pass a gate (that is a fork → park + ledger + continue).
 - Only a human moves a task `review -> done`; phase/wave exit bars and operator-only actions (push, filings,
   secrets, deploys) are the operator's.
+
+## Relationship to ship-feature-requests
+
+These two are not the same workflow, and they are deliberately not merged. They are two profiles of one
+execution discipline (`EXECUTION-DISCIPLINE.md`), sharing the same spine: the backlog is the source of truth,
+one task is one commit, a task advances only on a green gate with ledgered evidence, failures route the task
+back, and the agent never pushes, deploys, or merges.
+
+They diverge on weight and intent, which is why each keeps its own entry point:
+
+- `ship-feature-requests` is the FULL profile. It ships net-new PRODUCT features (`docs/feature-requests/`,
+  `FR-*`) through a 30-step author-and-audit chain, a 6-state lifecycle with distinct review and test phases,
+  and the coverage / edge-case / mock / ADR / CAF / AWH gate suite. HITL is optional there; the chain can
+  auto-flip a green FR to `done`.
+- `run-improvement-program` (this one) is the LIGHT profile. It hardens an EXISTING surface from an audit
+  backlog (`docs/improvement/`, `IMP-`/`MEM-`/`T-`) through a 2-skill implement-then-review loop and a 4-state
+  lifecycle, and `done` is human-only.
+
+Merging them would harm both: hardening tasks do not need the FR machine (coverage floors, edge-case
+matrices, mock contracts), and slimming the FR pipeline to this loop would drop the production-quality bars a
+net-new feature needs. Pick by intent (net-new feature vs. hardening an existing one), not by which is
+"lighter". If a future need appears for the improvement track to carry a richer gate suite, extend the
+program's `program.yaml` (`gates`, and optionally a `lifecycle`/`gates_profile`) rather than folding the two
+workflows into one.

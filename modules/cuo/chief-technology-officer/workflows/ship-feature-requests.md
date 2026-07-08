@@ -1,3 +1,4 @@
+
 ---
 workflow_id: chief-technology-officer/ship-feature-requests
 workflow_version: 2.2.0
@@ -85,10 +86,13 @@ circuit_breaker:
     - emit a `fr_routed_back` memory audit row with the last debug_trace + reason `"circuit_breaker_5_consecutive_test_failures"`
     - proceed to the next eligible FR (do NOT halt the outer loop)
 ---
-
 # Ship Feature Requests — `chief-technology-officer/ship-feature-requests`
 
 The canonical CTO workflow for **shipping** each `BACKLOG.md` FR end-to-end through the full lifecycle. Renamed from `implement-backlog-frs` (v1.x) in v2.0.0 because the workflow doesn't just implement — it drives the FR through `implementing → ready_to_review → reviewing → ready_to_test → testing → done` (per `docs/feature-requests/STATUS-REFERENCE.md` §1.1). The old name suggested the workflow stopped at code-write; the new name reflects that it covers the full ship.
+
+### Related workflow
+
+`chief-technology-officer/run-improvement-program` is the sibling track for enterprise-hardening backlogs under `docs/improvement/<program>/` (`IMP-`, `MEM-`, `T-` ids). Both workflows are profiles of one execution discipline (`modules/cuo/EXECUTION-DISCIPLINE.md`): the backlog is the source of truth, one task is one commit, a task advances only on a green gate, failures route the task back, and the agent never pushes, deploys, or merges. They differ in weight. This workflow is the FULL profile for net-new product FRs: a 30-step author and audit chain, a 6-state lifecycle with distinct review and test phases, and the coverage, edge-case, mock, ADR, CAF, and AWH gate suite. `run-improvement-program` is the LIGHT profile for hardening an existing surface: a 2-skill implement-then-review loop, a 4-state lifecycle, and a human-only `done`. They are deliberately not merged: forcing hardening tasks through the FR machine would be overkill, and diluting the FR pipeline down to the lighter loop would drop the production-quality bars that net-new features need.
 
 ## 1. The state engine
 
@@ -172,13 +176,13 @@ After coverage + debugging settle, `feature-request-audit` runs the post-impl pa
 
 The final phase transition. Outcomes derived by steps 27-29 (post-impl audit + the awh out-of-band test-rerun gate + the caf code-audit gate). Both gates must pass: awh proves the tests still pass; caf proves the module's own build/lint/typecheck/test still run and the audit finds no new High/Critical issue. They are complementary - awh catches test regressions, caf catches the class awh cannot see (a build/lint break, a route that 404s, a changed data contract).
 
-| Step 27 audit + step 28 awh gate + step 29 caf gate + circuit breaker status | New status | Mutation |
-|---|---|---|
-| All TRACE-001..005 passing + 0 failed tests + awh gate GREEN (independent rerun, no task regressed vs the sealed baseline) + caf gate CLEAN (target health PASS + no new High/Critical audit finding) | `done` | `workflow_complete` memory row, BACKLOG cell `testing → done` |
-| TRACE-004 fails (test exists per spec but isn't passing) | `ready_to_implement` (rework) | `fr_routed_back` memory row with `reason: "trace-004: <test_name> not in coverage_gate_report"` |
-| awh gate RED (a task regressed vs the sealed baseline, or the FR's cited test is not passing on independent rerun) | `ready_to_implement` (rework) | `fr_routed_back` + `memory.awh_gate_result{outcome: RED}`, `reason: "awh-gate: <task> regressed"` |
-| caf gate RED (target health failed - a RUN_COMMAND broke - or the audit raised a new High/Critical finding) | `ready_to_implement` (rework) | `fr_routed_back` + `memory.caf_gate_result{outcome: RED}`, `reason: "caf-gate: <target-health-fail or finding>"` |
-| Circuit breaker tripped during steps 25-26 | `ready_to_implement` (rework) | `fr_routed_back` memory row with `reason: "circuit_breaker_5_consecutive_test_failures"` |
+| Step 27 audit + step 28 awh gate + step 29 caf gate + circuit breaker status                                                                                                                          | New status                      | Mutation                                                                                                               |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| All TRACE-001..005 passing + 0 failed tests + awh gate GREEN (independent rerun, no task regressed vs the sealed baseline) + caf gate CLEAN (target health PASS + no new High/Critical audit finding) | `done`                        | `workflow_complete` memory row, BACKLOG cell `testing → done`                                                     |
+| TRACE-004 fails (test exists per spec but isn't passing)                                                                                                                                              | `ready_to_implement` (rework) | `fr_routed_back` memory row with `reason: "trace-004: <test_name> not in coverage_gate_report"`                    |
+| awh gate RED (a task regressed vs the sealed baseline, or the FR's cited test is not passing on independent rerun)                                                                                    | `ready_to_implement` (rework) | `fr_routed_back` + `memory.awh_gate_result{outcome: RED}`, `reason: "awh-gate: <task> regressed"`                |
+| caf gate RED (target health failed - a RUN_COMMAND broke - or the audit raised a new High/Critical finding)                                                                                           | `ready_to_implement` (rework) | `fr_routed_back` + `memory.caf_gate_result{outcome: RED}`, `reason: "caf-gate: <target-health-fail or finding>"` |
+| Circuit breaker tripped during steps 25-26                                                                                                                                                            | `ready_to_implement` (rework) | `fr_routed_back` memory row with `reason: "circuit_breaker_5_consecutive_test_failures"`                           |
 
 The workflow commits the diff to the working tree (operator runs `git add . && git commit && git push` to publish).
 
