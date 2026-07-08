@@ -96,14 +96,14 @@ pub async fn recall(
         }
     };
 
-    // 2. Summaries-first.
-    let summary_hits =
+    // 2. Summaries-first. `best_summary` is the REAL top cosine similarity of the closest current summary
+    // (MEM-005, R9, F7) — not a constant — so the confidence floor below can actually fire.
+    let (summary_hits, best_summary) =
         summary_search(pool, tenant_id, q_vec.as_deref(), &q, &visible_scope).await?;
-    let best_summary = summary_hits.first().map(|_| 1.0f32).unwrap_or(0.0);
 
     // 3. Drill into hot events on demand or below the confidence floor (§1 #5). When the query couldn't be
     // embedded, summaries-only full-text is the path (drill needs a vector for hot events).
-    let drill = q.drill || best_summary < cfg.recall_confidence_floor;
+    let drill = should_drill(q.drill, best_summary, cfg.recall_confidence_floor);
     let path_label = if drill && q_vec.is_some() {
         "drill"
     } else {
@@ -159,6 +159,7 @@ pub async fn recall(
             "drill": drill,
             "degraded_backends": degraded.clone(),
             "query_embedded": q_vec.is_some(),
+            "best_summary": best_summary,
             "latency_ms": latency_ms,
         })
     });
@@ -179,7 +180,7 @@ async fn summary_search(
     q_vec: Option<&[f32]>,
     q: &RecallQuery,
     visible_scope: &Option<Vec<Uuid>>,
-) -> Result<Vec<Candidate>, sqlx::Error> {
+) -> Result<(Vec<Candidate>, f32), sqlx::Error> {
     let scope_clause = subject_scope_sql(visible_scope, "subject_id");
     let ts_clause = ts_window_sql(q, "window_end_ns", "window_start_ns");
 
@@ -188,7 +189,8 @@ async fn summary_search(
         let lit = to_pgvector_literal(v);
         let sql = format!(
             "SELECT scope_kind, scope_id, subject_id, digest, covered_seq_lo, covered_seq_hi,
-                    top_contributors, window_end_ns
+                    top_contributors, window_end_ns,
+                    (embedding <=> $2::vector) AS cos_dist
                FROM brain_summary
               WHERE tenant_id = $1 AND superseded_by IS NULL AND embedding IS NOT NULL
                 {scope_clause} {ts_clause}
@@ -222,7 +224,21 @@ async fn summary_search(
     };
     tx.commit().await?;
 
-    Ok(rows
+    // MEM-005 (R9, F7): best summary similarity = the top row's cosine similarity (rows are ordered by
+    // ascending cosine distance, so the first row is the closest). This drives the confidence-floor -> drill
+    // decision in `recall`. Previously `best_summary` was hardcoded to 1.0 for any match, so the floor never
+    // triggered a quality drill. The full-text fallback carries no vector distance, so it reports 0.0 (drill
+    // needs a vector regardless).
+    let best_similarity = if q_vec.is_some() {
+        rows.first()
+            .and_then(|r| r.try_get::<f64, _>("cos_dist").ok())
+            .map(|d| (1.0 - d as f32).clamp(0.0, 1.0))
+            .unwrap_or(0.0)
+    } else {
+        0.0
+    };
+
+    let candidates: Vec<Candidate> = rows
         .into_iter()
         .enumerate()
         .map(|(i, r)| {
@@ -257,7 +273,16 @@ async fn summary_search(
                 top_contributors: top,
             }
         })
-        .collect())
+        .collect();
+    Ok((candidates, best_similarity))
+}
+
+/// Whether to drill into raw hot events (§1 #5): explicitly requested by the caller, OR the best summary
+/// similarity is below the confidence floor. MEM-005 (R9, F7): `best_summary` is now the real top cosine
+/// similarity from [`summary_search`], so a weak summary match actually triggers a drill instead of being
+/// masked by a hardcoded 1.0.
+fn should_drill(explicit: bool, best_summary: f32, floor: f32) -> bool {
+    explicit || best_summary < floor
 }
 
 /// Search raw HOT events (§1 #5 drill). Ranks by cosine distance against the partial hot HNSW (`tier='hot'`).
@@ -517,6 +542,24 @@ fn _touch_now() -> i64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn drill_fires_when_best_summary_below_floor() {
+        // MEM-005 (R9, F7): a weak summary match (similarity below the floor) drills; a strong one does not;
+        // an explicit drill request always drills regardless of similarity.
+        assert!(should_drill(false, 0.10, 0.30), "weak match must drill");
+        assert!(
+            !should_drill(false, 0.90, 0.30),
+            "strong match must not drill"
+        );
+        assert!(
+            should_drill(true, 0.99, 0.30),
+            "explicit drill always drills"
+        );
+        // The old bug hardcoded best_summary = 1.0; assert that value would NOT drill, so the regression is
+        // that best_summary must be a REAL similarity (tested end-to-end in brain_confidence_floor_test).
+        assert!(!should_drill(false, 1.0, 0.30));
+    }
 
     #[test]
     fn rrf_score_rewards_presence_in_both_retrievers() {
