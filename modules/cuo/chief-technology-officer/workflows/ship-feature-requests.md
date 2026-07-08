@@ -94,7 +94,7 @@ The canonical CTO workflow for **shipping** each `BACKLOG.md` FR end-to-end thro
 
 ### One workflow, improvement folds in here
 
-This is the single implementation workflow. There is no separate improvement track any more. Enterprise-hardening and refactoring work (formerly driven by the retired `run-improvement-program` and the `docs/improvement/` backlogs) are feature-requests too: an improvement item is an FR carrying `class: improvement`, and it runs this exact lifecycle with the same mandatory human-acceptance gates. Section 1a covers how improvement FRs are declared, where they live under `docs/feature-requests/`, and how their gate suite is derived. The retired `run-improvement-program.md` and the two `cyberos-improve-*` skills now point here.
+This is the single implementation workflow. There is no separate improvement track any more. Enterprise-hardening and refactoring work (formerly driven by the retired `run-improvement-program` and the `docs/improvement/` backlogs) are feature-requests too: an improvement item is an FR carrying `class: improvement`, and it runs this exact lifecycle with the same mandatory human-acceptance gates. Section 1a covers how improvement FRs are declared, where they live under `docs/feature-requests/`, and how their gate suite is derived. The retired `run-improvement-program.md` points here; the two `cyberos-improve-*` skills that drove the old separate loop have been removed.
 
 ## 1. The state engine
 

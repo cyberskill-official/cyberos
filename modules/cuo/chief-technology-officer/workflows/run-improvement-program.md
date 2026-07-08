@@ -19,4 +19,4 @@ Where to go now:
 - The improvement-class home and the migration of the old `docs/improvement/` backlogs (`MEM-*`, `T-*`, `IMP-*`) into FR ids: `docs/feature-requests/improvement/README.md`.
 - The halt and HITL doctrine: `modules/cuo/EXECUTION-DISCIPLINE.md` §2a.
 
-The two generic skills this workflow used, `cyberos-improve-implement` and `cyberos-improve-review`, are retired the same way (see their SKILL.md tombstones).
+The two generic skills this workflow used, `cyberos-improve-implement` and `cyberos-improve-review`, have been removed.
