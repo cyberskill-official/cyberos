@@ -1,9 +1,16 @@
 # CyberOS go-live guide
 
 The remaining steps to take CyberOS from "built" to "fully on." Everything here is operator work - accounts,
-server settings, and governance - because the engineering is done. There are three independent tracks; you
-can do them in any order, but the order below gives the fastest visible wins first. Each track links the
+server settings, and governance - because the feature engineering is done. There are three independent tracks;
+you can do them in any order, but the order below gives the fastest visible wins first. Each track links the
 detailed runbook; this page is the sequence. Where I can help mid-step, it says so.
+
+> These three tracks are tracked as tasks IMP-063..067 in `docs/improvement/wave-6-go-live.md` (agent/operator
+> split, acceptance gates, ledger evidence). One caveat before flipping everything on for unattended team use:
+> the feature engineering is done, but the production-safety layer from the 2026-07-06 audit is not yet in
+> place - no observability on the P0 box, no external uptime probes, no canary/auto-rollback, no independent
+> backups. Turning on a single feature to try it is fine; running fully on and unattended should wait for the
+> Wave-1 safety nets (IMP-004, IMP-005, IMP-006, IMP-046). IMP-067 is the readiness gate that spells this out.
 
 ## Track A: turn on the AI assistant (fastest visible win)
 
