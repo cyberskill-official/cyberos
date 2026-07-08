@@ -13,9 +13,17 @@ An agent executing a CyberOS workflow SHALL run continuously to completion. It M
 An agent MAY stop ONLY for one of these four conditions. Nothing else is a halt.
 
 1. **Operator-decision fork.** A choice the spec, the codebase, and sensible defaults cannot resolve, AND that materially changes direction or is costly to reverse (ADR-class: a real architectural or product fork). Self-resolvable ambiguity is NOT a fork. Pick the obvious default, record it (an ADR or a one-line note), and continue.
-2. **Manual or operator-only action.** An action the agent must not perform itself: `git push`, deploy or promote, a destructive operation (hard delete, purge, history rewrite, dropping data), entering or rotating a secret or credential, a financial action, or anything policy reserves for the human. The agent prepares and names the action; the operator runs it.
+2. **Manual or operator-only action.** An action the agent must not perform itself: `git push`, deploy or promote, a destructive operation (hard delete, purge, history rewrite, dropping data), entering or rotating a secret or credential, a financial action, **accepting an FR across a human-acceptance gate (see §2a)**, or anything policy reserves for the human. The agent prepares and names the action; the operator runs it.
 3. **Hard blocker past the budget.** A failure the agent cannot self-resolve within the workflow's circuit-breaker budget (for example, 5 consecutive test failures). The agent documents the blocker, routes the unit back cleanly (status to `ready_to_implement` with the reason), and moves to the next eligible unit. It does NOT spin, and it does NOT silently ship a partial result.
 4. **Operator stop signal.** An explicit Ctrl-C or workflow-stop event.
+
+## §2a  Human acceptance is required (HITL)
+
+HITL is required platform-wide, not optional. This section supersedes any earlier text (in this file, in `STATUS-REFERENCE.md`, or in a workflow `.md`) that described human-in-the-loop as optional or the lifecycle as fully auto-flipping.
+
+Two lifecycle transitions are human-acceptance gates and therefore fall under §2 condition 2 (operator-only action): review acceptance (`reviewing -> ready_to_test`) and final acceptance (`testing -> done`). At each of these, the agent MUST drive the unit up to the gate with every machine gate green (coverage, TRACE-004, awh, caf), record the evidence, and then HALT for a recorded human verdict. The agent MUST NOT self-certify either transition, and MUST NOT set an FR to `done` itself.
+
+This does not loosen §1 or §3. Between the gates the agent still runs continuously and self-resolves everything it can verify (compile, lint, tests it broke, a red module gate on its own change); it does not pause for self-resolvable work. The only added stops are the two human-acceptance verdicts. A human recording acceptance is the permission to cross the gate, exactly as a green build is the permission to proceed within a phase.
 
 ## §3  Self-resolve and continue (never a halt)
 

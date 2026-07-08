@@ -20,9 +20,9 @@ An FR carries exactly one status at any point in time. There are **10** valid va
 | 3 | `implementing` | Build is in flight; code is being written, tests partially in place. | `ship-feature-requests` workflow step entry |
 | 4 | `ready_to_review` | Implementer finished writing code + tests; awaiting reviewer pickup. | `ship-feature-requests` |
 | 5 | `reviewing` | Reviewer is reading the diff against §1 clauses + AC matrix. | `ship-feature-requests` |
-| 6 | `ready_to_test` | Reviewer approved; awaiting tester pickup. | `ship-feature-requests` |
+| 6 | `ready_to_test` | A human reviewer recorded approval (HITL, §1.4); awaiting tester pickup. | human review verdict (via `ship-feature-requests`) |
 | 7 | `testing` | Tester is running `coverage-gate-author` + `coverage-gate-audit` (every §1 clause's named test passes in the coverage report). | `ship-feature-requests` |
-| 8 | `done` | Tester certified — all clauses traced to passing tests; FR is shipped. Terminal success. | `ship-feature-requests` |
+| 8 | `done` | Tester certified: all clauses traced to passing tests, AND a human recorded final acceptance (HITL, §1.4). FR is shipped. Terminal success. | human acceptance verdict (via `ship-feature-requests`) |
 
 ### 1.2 Off-ramps (operator-decided, no time pressure)
 
@@ -41,17 +41,22 @@ In the previous enum, these were sticky terminal statuses. They are no longer st
 
 **Future hook — Issue Request artefact (TBD):** when an FR is routed back to `ready_to_implement` from a downstream stage, the system will eventually auto-spawn an Issue Request (a new artefact type, distinct from FR) carrying the failure reason, the failing test name(s), and the reverting commit hash. Until that artefact type lands, the back-route is recorded in the audit chain + BACKLOG comment cell.
 
-### 1.4 HITL — Human-in-the-loop is OPTIONAL
+### 1.4 HITL — Human-in-the-loop is REQUIRED
 
-The `ship-feature-requests` workflow auto-flips status cells along the §1.1 path as each gate passes. **A human operator can override any cell to any other cell at any time** — there is no machine-enforced transition restriction. The default workflow path is the polite suggestion; the BACKLOG cell is the source of truth.
+Human acceptance is mandatory, not optional (see `modules/cuo/EXECUTION-DISCIPLINE.md` §2a, which governs platform-wide). The `ship-feature-requests` workflow drives the machine-verifiable transitions automatically, but two transitions are human-acceptance gates that the agent MUST NOT cross by itself:
 
-Common HITL operations:
+- **Review acceptance** (`reviewing → ready_to_test`): a human reviewer records the approval verdict after reading the diff against the §1 clauses and the edge-case matrix.
+- **Final acceptance** (`testing → done`): a human records the acceptance verdict after every machine gate (coverage, TRACE-004, awh, caf) is green. The agent NEVER self-sets `done`.
+
+The agent brings the FR up to each gate with evidence and halts; the recorded human verdict is what advances the cell. An operator retains the superset power to override any cell to any other cell at any time (park, resurrect, re-audit, or explicitly skip a gate for a trivial FR) — that override authority is unchanged. What changed: the forward path no longer auto-crosses the two acceptance gates on green alone; a human verdict is required there.
+
+Common operator operations:
 - **Re-audit a shipped FR:** flip `done` → `ready_to_review` (or `ready_to_test`) to force `ship-feature-requests` to re-run review + test gates from that point.
-- **Skip review** for a trivial FR: flip `ready_to_review` → `ready_to_test` directly.
+- **Skip review** for a trivial FR: flip `ready_to_review` → `ready_to_test` directly (an explicit, recorded operator override).
 - **Park an in-flight FR:** flip `implementing` → `on_hold`.
 - **Resurrect a closed FR:** flip `closed` → `ready_to_implement`.
 
-Every HITL override emits one `memory.status_overridden` aux audit row capturing `{actor, fr_id, prior_status, new_status, reason}`. The audit chain still tells the full lifecycle story even when the workflow didn't drive it.
+Every human verdict or override emits one `memory.status_overridden` aux audit row capturing `{actor, fr_id, prior_status, new_status, reason}`. The audit chain tells the full lifecycle story, and now also proves a human accepted each FR at the two mandatory gates.
 
 ---
 
@@ -89,6 +94,11 @@ Off-ramps (any → on_hold | closed, operator-decided):
   any state ──────► on_hold     (deferred — not now)
   any state ──────► closed      (rejected / superseded / won't-do)
 
+Human-acceptance gates (REQUIRED - agent must not self-cross, see §1.4):
+
+  reviewing ──────► ready_to_test   human review verdict required
+  testing   ──────► done            human acceptance verdict required
+
 HITL overrides (any → any, operator-decided):
 
   any state ◄────► any state    emits memory.status_overridden aux row
@@ -113,7 +123,7 @@ Now that `status` is a single linear axis, two pieces of metadata that used to b
 ## 4. Cross-references
 
 - `audit_rubric@2.0` — `modules/skill/feature-request-audit/RUBRIC.md` (FM-104 enforces the frontmatter `status:` field against the 10-value enum)
-- `coverage_rubric@1.0` — `modules/skill/coverage-gate-audit/RUBRIC.md` (drives the `testing → done` transition; every §1 clause's named test must pass)
+- `coverage_rubric@1.0` — `modules/skill/coverage-gate-audit/RUBRIC.md` (gates the `testing → done` transition; every §1 clause's named test must pass — the transition itself still requires the mandatory human acceptance verdict, §1.4)
 - `backlog-state-update-author` skill — `modules/skill/backlog-state-update-author/SKILL.md` (writes status cells from workflow outcomes)
 - `ship-feature-requests` workflow — `modules/cuo/chief-technology-officer/workflows/ship-feature-requests.md` (drives `ready_to_implement → done` and back-routes on failure)
 - `feature-request-audit` skill — `modules/skill/feature-request-audit/SKILL.md` (drives `draft → ready_to_implement`)

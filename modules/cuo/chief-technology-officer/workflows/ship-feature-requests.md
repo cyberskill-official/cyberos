@@ -1,11 +1,13 @@
 ---
 workflow_id: chief-technology-officer/ship-feature-requests
-workflow_version: 2.2.0
+workflow_version: 2.3.0
 purpose: Drive each eligible FR in `docs/feature-requests/BACKLOG.md` end-to-end through the full lifecycle — from `ready_to_implement` through `implementing → ready_to_review → reviewing → ready_to_test → testing → done` (per `docs/feature-requests/STATUS-REFERENCE.md` §1.1). Deep-maps the repo, generates the edge-case matrix, implements with 90 % coverage on touched files, injects observability, self-approves architectural deviations via ADRs, runs the multi-vector debugger with a 5-fail circuit breaker, runs the testing gate (`coverage-gate-author`/`-audit`), and physically updates BACKLOG.md status between every phase transition. Failure or blocker at any downstream phase routes the FR back to `ready_to_implement` (STATUS-REFERENCE §1.3) with `routed_back_count += 1`.
 persona: chief-technology-officer
 cadence: per-FR (loops continuously over BACKLOG.md)
 status: shipped   # CUO-workflow lifecycle: planned | shipped | retired (distinct from FR lifecycle in STATUS-REFERENCE.md)
 pattern: linear
+hitl: required    # human-acceptance verdict mandatory at reviewing->ready_to_test and testing->done (STATUS-REFERENCE §1.4, EXECUTION-DISCIPLINE §2a); the agent never self-sets done
+scope: all implementation work - net-new product FRs and improvement/hardening FRs alike; there is no separate improvement track (see section 1a)
 
 inputs:
   - { name: backlog,                source: docs/feature-requests/BACKLOG.md,                                       format: markdown }
@@ -85,10 +87,13 @@ circuit_breaker:
     - emit a `fr_routed_back` memory audit row with the last debug_trace + reason `"circuit_breaker_5_consecutive_test_failures"`
     - proceed to the next eligible FR (do NOT halt the outer loop)
 ---
-
 # Ship Feature Requests — `chief-technology-officer/ship-feature-requests`
 
 The canonical CTO workflow for **shipping** each `BACKLOG.md` FR end-to-end through the full lifecycle. Renamed from `implement-backlog-frs` (v1.x) in v2.0.0 because the workflow doesn't just implement — it drives the FR through `implementing → ready_to_review → reviewing → ready_to_test → testing → done` (per `docs/feature-requests/STATUS-REFERENCE.md` §1.1). The old name suggested the workflow stopped at code-write; the new name reflects that it covers the full ship.
+
+### One workflow, improvement folds in here
+
+This is the single implementation workflow. There is no separate improvement track any more. Enterprise-hardening and refactoring work (formerly driven by the retired `run-improvement-program` and the `docs/improvement/` backlogs) are feature-requests too: an improvement item is an FR carrying `class: improvement`, and it runs this exact lifecycle with the same mandatory human-acceptance gates. Section 1a covers how improvement FRs are declared, where they live under `docs/feature-requests/`, and how their gate suite is derived. The retired `run-improvement-program.md` points here; the two `cyberos-improve-*` skills that drove the old separate loop have been removed.
 
 ## 1. The state engine
 
@@ -98,15 +103,22 @@ The canonical CTO workflow for **shipping** each `BACKLOG.md` FR end-to-end thro
 - **Skipped statuses**: `draft` (not yet audited — handled by the `draft → ready_to_implement` chain, not this workflow), `implementing`, `ready_to_review`, `reviewing`, `ready_to_test`, `testing` (in-flight under another invocation — possibly the previous session of this workflow; pick those up by re-entering at the matching phase), `done` (terminal success — no work to do), `on_hold` / `closed` (operator-decided off-ramps).
 - Pick the first eligible FR. Run all 30 steps end-to-end. Between every phase transition the workflow physically updates the BACKLOG.md status cell via `backlog-state-update-author/-audit`. The mutation is atomic — same write that emits the `workflow_phase_complete` (or `workflow_complete` for the final transition) memory row.
 
-### HITL — human-in-the-loop is OPTIONAL
+### HITL — human-in-the-loop is REQUIRED
 
-The workflow auto-flips status cells along the §1.1 lifecycle as each phase passes. **An operator can override any cell to any other cell at any time** (STATUS-REFERENCE.md §1.4) — there is no machine-enforced transition restriction. Common scenarios:
+Human acceptance is mandatory (STATUS-REFERENCE.md §1.4, EXECUTION-DISCIPLINE.md §2a). The workflow drives the machine-verifiable transitions automatically, but two transitions are human-acceptance gates the agent MUST NOT cross by itself:
 
-- **Re-audit a shipped FR** (replaces the v1.2.0 `mode: re_audit`): operator flips `done → ready_to_review` directly via the BACKLOG editor; on next invocation, this workflow picks up at the `reviewing` phase and re-runs steps 15-30.
-- **Skip review** for a trivial FR: operator flips `ready_to_review → ready_to_test` directly; this workflow picks up at the `testing` phase.
-- **Park an in-flight FR**: operator flips `implementing → on_hold`; this workflow exits the loop on next iteration since `on_hold` is skipped.
+- **Review acceptance** (`reviewing → ready_to_test`, steps 19-20): the agent produces the code-review packet (steps 17-18) with every §1 clause mapped to a named test, then HALTS. A human records the approval verdict, which advances the cell.
+- **Final acceptance** (`testing → done`, steps 30-31): the agent brings every machine gate green (coverage, TRACE-004, awh, caf), then HALTS. A human records the acceptance verdict. The agent NEVER self-sets `done`.
 
-Every HITL override emits one `memory.status_overridden` aux row (written by the BACKLOG editor, not by this workflow) capturing `{actor, fr_id, prior_status, new_status, reason}`. This workflow detects operator overrides on resume by comparing the persisted state vs the previous step's expected outcome.
+Between the gates the agent runs continuously and self-resolves everything it can verify (compile, lint, a test it broke, a red module gate on its own change); it does not pause for self-resolvable work. The only mandatory stops inside an FR are these two verdicts.
+
+An operator keeps the superset power to override any cell to any other cell at any time. Common operations:
+
+- **Re-audit a shipped FR** (replaces the v1.2.0 `mode: re_audit`): flip `done → ready_to_review`; on next invocation this workflow picks up at the `reviewing` phase and re-runs steps 15-30.
+- **Skip review** for a trivial FR: flip `ready_to_review → ready_to_test` directly (an explicit, recorded override).
+- **Park an in-flight FR**: flip `implementing → on_hold`; this workflow skips it on the next iteration.
+
+Every human verdict or override emits one `memory.status_overridden` aux row capturing `{actor, fr_id, prior_status, new_status, reason}`. This workflow detects the persisted state on resume by comparing it against the previous step's expected outcome.
 
 ### Failure / blocker semantics — route back to `ready_to_implement`
 
@@ -117,6 +129,23 @@ Any failure in `implementing` (steps 1-12), `reviewing` (steps 17-18), or `testi
 3. A future **Issue Request** artefact (TBD — see STATUS-REFERENCE §1.3) that will auto-spawn from the rework signal.
 
 There are NO terminal failure statuses any more. The previous `[FAILED: UNRESOLVABLE ERROR]` and `[BLOCKED: ...]` enums are gone — failures are routing decisions, not states. Operator can still send a doomed FR to `closed` manually via HITL.
+
+## 1a. Improvement FRs (the folded-in hardening track)
+
+Enterprise-hardening, refactoring, and audit-remediation work is not a separate track. Each such item is an FR that runs this same lifecycle, with the same mandatory human-acceptance gates. It carries `class: improvement` in its frontmatter (a net-new feature carries `class: product`, the default). The class does not change the lifecycle; it records intent and selects the gate profile.
+
+Where improvement FRs live:
+
+- Module-scoped hardening (touches one module, e.g. memory) is an `FR-<MODULE>-*` entry under `docs/feature-requests/<module>/`, exactly like a product FR for that module.
+- Cross-cutting hardening (spans modules, e.g. a repo-wide audit remediation) lives under `docs/feature-requests/improvement/` with its own README index. That README lists the current programs and tracks the migration of the retired `docs/improvement/` backlogs (`MEM-*`, `T-*`, `IMP-*`) into FR ids.
+
+Gate profile by class:
+
+- The gate suite for any FR is derived from the touched module's `audit-profile.yaml` (the RUN_COMMANDS caf runs as target health) plus the coverage, TRACE, and edge-case gates that apply to every FR.
+- The awh out-of-band rerun (step 28) applies when the touched module has a sealed goldenset at `modules/<module>/.awh/`. An improvement FR that touches a module without a goldenset declares awh N/A in its §1 and relies on coverage + caf + the review gate; it does not fabricate an awh pass. Standing up the goldenset can itself be an improvement FR.
+- No FR, product or improvement, may weaken a protected invariant (auth model, tenant RLS, hash-chained audit, consent-gated capture, gateway-only model calls) to make a gate green. That is an operator-decision fork: park it and record why (EXECUTION-DISCIPLINE §2).
+
+Everything else (selection from BACKLOG.md, one FR with a commit per phase, the two human gates, route-back on failure) is identical to a product FR.
 
 ## 2. Deep context mapping (steps 1-2)
 
@@ -156,7 +185,7 @@ The audit checks coverage: ≥80 % of branches have a log/metric/trace point.
 
 After the implementing artefacts are settled, status flips to `reviewing` (steps 15-16) and `code-review-author` reads the diff against the §1 clauses and the edge-case matrix, flagging gaps and naming the test cases that would prove each clause. The audit confirms every §1 clause has a named test reference and every edge-case-matrix row has either a test or an ADR justification.
 
-On approval, status flips to `ready_to_test` (steps 19-20). On rejection — review uncovers a missing clause or an unaddressed edge case — the FR routes back to `ready_to_implement` (see §1 failure semantics).
+Review acceptance is a mandatory human gate (HITL, see the state engine). The agent presents the review packet with every §1 clause mapped to a named test, then halts; on a recorded human approval verdict, status flips to `ready_to_test` (steps 19-20). On rejection (review uncovers a missing clause or an unaddressed edge case) the FR routes back to `ready_to_implement` (see §1 failure semantics).
 
 > v1.x note — v2.0.0 introduces `code-review-author` and `code-review-audit` as new skills covering the explicit `reviewing` phase. Before v2.0.0 the review work was implicit in the post-impl `feature-request-audit` call; v2.0.0 separates them so the reviewer phase has its own audit row + handoff point. If those skill files don't exist yet in `modules/skill/`, they need to be authored before this workflow can run end-to-end — see the BACKLOG for `FR-SKILL-code-review-author` and `-audit` placeholders.
 
@@ -170,15 +199,17 @@ After coverage + debugging settle, `feature-request-audit` runs the post-impl pa
 
 ## 10. Phase transition: `testing → done` (steps 30-31)
 
-The final phase transition. Outcomes derived by steps 27-29 (post-impl audit + the awh out-of-band test-rerun gate + the caf code-audit gate). Both gates must pass: awh proves the tests still pass; caf proves the module's own build/lint/typecheck/test still run and the audit finds no new High/Critical issue. They are complementary - awh catches test regressions, caf catches the class awh cannot see (a build/lint break, a route that 404s, a changed data contract).
+The final phase transition. Outcomes derived by steps 27-29 (post-impl audit + the awh out-of-band test-rerun gate + the caf code-audit gate). Both gates must pass: awh proves the tests still pass; caf proves the module's own build/lint/typecheck/test still run and the audit finds no new High/Critical issue. They are complementary - awh catches test regressions, caf catches the class awh cannot see (a build/lint break, a route that 404s, a changed data contract). Green gates are necessary but not sufficient: this transition is a human-acceptance gate, so the agent halts once the gates are green and a human records the acceptance verdict that sets `done`. The agent never sets `done` itself (HITL required, STATUS-REFERENCE §1.4).
 
-| Step 27 audit + step 28 awh gate + step 29 caf gate + circuit breaker status | New status | Mutation |
-|---|---|---|
-| All TRACE-001..005 passing + 0 failed tests + awh gate GREEN (independent rerun, no task regressed vs the sealed baseline) + caf gate CLEAN (target health PASS + no new High/Critical audit finding) | `done` | `workflow_complete` memory row, BACKLOG cell `testing → done` |
-| TRACE-004 fails (test exists per spec but isn't passing) | `ready_to_implement` (rework) | `fr_routed_back` memory row with `reason: "trace-004: <test_name> not in coverage_gate_report"` |
-| awh gate RED (a task regressed vs the sealed baseline, or the FR's cited test is not passing on independent rerun) | `ready_to_implement` (rework) | `fr_routed_back` + `memory.awh_gate_result{outcome: RED}`, `reason: "awh-gate: <task> regressed"` |
-| caf gate RED (target health failed - a RUN_COMMAND broke - or the audit raised a new High/Critical finding) | `ready_to_implement` (rework) | `fr_routed_back` + `memory.caf_gate_result{outcome: RED}`, `reason: "caf-gate: <target-health-fail or finding>"` |
-| Circuit breaker tripped during steps 25-26 | `ready_to_implement` (rework) | `fr_routed_back` memory row with `reason: "circuit_breaker_5_consecutive_test_failures"` |
+| Step 27 audit + step 28 awh gate + step 29 caf gate + circuit breaker status                                                                                                                          | New status                      | Mutation                                                                                                               |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| All TRACE-001..005 passing + 0 failed tests + awh gate GREEN (independent rerun, no task regressed vs the sealed baseline) + caf gate CLEAN (target health PASS + no new High/Critical audit finding) + recorded human acceptance verdict | `done`                        | `workflow_complete` memory row (written when the human records acceptance), BACKLOG cell `testing → done`         |
+| TRACE-004 fails (test exists per spec but isn't passing)                                                                                                                                              | `ready_to_implement` (rework) | `fr_routed_back` memory row with `reason: "trace-004: <test_name> not in coverage_gate_report"`                    |
+| awh gate RED (a task regressed vs the sealed baseline, or the FR's cited test is not passing on independent rerun)                                                                                    | `ready_to_implement` (rework) | `fr_routed_back` + `memory.awh_gate_result{outcome: RED}`, `reason: "awh-gate: <task> regressed"`                |
+| caf gate RED (target health failed - a RUN_COMMAND broke - or the audit raised a new High/Critical finding)                                                                                           | `ready_to_implement` (rework) | `fr_routed_back` + `memory.caf_gate_result{outcome: RED}`, `reason: "caf-gate: <target-health-fail or finding>"` |
+| Circuit breaker tripped during steps 25-26                                                                                                                                                            | `ready_to_implement` (rework) | `fr_routed_back` memory row with `reason: "circuit_breaker_5_consecutive_test_failures"`                           |
+
+The top row's `done` is not written by the agent: when the gates are green it halts at the acceptance gate, a human records the acceptance verdict, and that verdict writes `done` (HITL required, STATUS-REFERENCE §1.4).
 
 The workflow commits the diff to the working tree (operator runs `git add . && git commit && git push` to publish).
 
@@ -202,7 +233,7 @@ The workflow MUST drive **all phases of an FR to completion in one continuous se
 **Rules:**
 
 1. Read the full gap list + slice plan BEFORE running any step.
-2. Don't ask between phases — continuation is implied by "drive this FR".
+2. Don't ask between phases for self-resolvable work — continuation is implied by "drive this FR". The two human-acceptance gates (review approval at `reviewing → ready_to_test`, and final acceptance at `testing → done`) are the exception: halt for the recorded human verdict there, since HITL is required.
 3. Commit per phase for git-history hygiene; each phase = own conventional commit + verify gate.
 4. Do NOT pause between FRs either. The outer loop (§11) advances to the next eligible FR on its own; halt between FRs only on an `EXECUTION-DISCIPLINE.md` §2 condition, never just because one FR finished.
 5. If genuinely blocked mid-FR (e.g. needs ADR-class operator decision), DOCUMENT the block in §10.7 of the .audit.md, route back to `ready_to_implement` with `routed_back_count += 1` and `reason: "<blocker>"`. Do NOT silently ship a partial phase and walk away.

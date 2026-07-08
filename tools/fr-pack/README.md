@@ -1,0 +1,98 @@
+# cyberos-fr pack - run ship-feature-requests in any repo
+
+This is the portable form of the single `ship-feature-requests` workflow. It runs in any repo, any language, with no CyberOS clone required. It is exposed through many channels so a user can pick whatever fits their setup.
+
+New to it? `GUIDE.md` is the step-by-step walkthrough (zero to your first shipped FR). This README is the channel catalog and reference.
+
+`init` sets up two things by default: the FR workflow AND the BRAIN memory protocol. It scaffolds a local `.cyberos-memory/` store (gitignored tenant data) and drops the `AGENTS.md` Layer-1 memory rules, so the project gets both the workflow and the memory discipline. Skip the memory half with `FRPACK_NO_MEMORY=1`.
+
+## What it is
+
+Two layers:
+
+- The machine (doc-driven, always works): three normative docs - `ship-feature-requests.md`, `EXECUTION-DISCIPLINE.md`, `STATUS-REFERENCE.md`. An agent (Claude Code, Cowork, Codex) given these drives a feature-request through implement -> review -> test -> done.
+- The gates (repo-local): a runner that shells out to the target repo's own build/lint/test/coverage. Full deterministic gates (caf, awh) vendor in only if the source repo has them; otherwise the reduced-profile floor applies.
+
+Two rules hold on every channel:
+
+- HITL is required. The agent halts at review acceptance (`reviewing -> ready_to_test`) and final acceptance (`testing -> done`) for a recorded human verdict, and never sets `done` itself.
+- Improvement is not separate. Hardening/refactor/audit work is a feature-request with `class: improvement`; same lifecycle.
+
+Profiles: `reduced` = doc-driven + the repo's own build/lint/test + coverage + code review + the two human gates (works anywhere). `full` = reduced plus the vendored caf/awh deterministic gates (when the pack was built from a repo that has them). `manifest.yaml` in a built pack records which you have.
+
+## Build the pack
+
+From a CyberOS checkout:
+
+```bash
+bash tools/fr-pack/build-pack.sh          # assembles dist/fr-pack/ (self-contained)
+```
+
+`dist/fr-pack/` is the portable bundle. Everything below consumes it.
+
+## Channels (pick one)
+
+### 1. Copy the folder (available)
+
+```bash
+cp -R dist/fr-pack /path/to/your/repo/.fr-pack
+cd /path/to/your/repo && bash .fr-pack/init.sh
+```
+
+### 2. Git submodule or subtree (available)
+
+Publish `dist/fr-pack` as its own repo, then in the target:
+
+```bash
+git submodule add <fr-pack-repo-url> .fr-pack
+bash .fr-pack/init.sh
+```
+
+### 3. One-liner curl | sh (available once you host a tarball)
+
+```bash
+tar -czf fr-pack.tar.gz -C dist fr-pack     # publish this to a URL
+FRPACK_URL=<url-to-fr-pack.tar.gz> curl -fsSL <raw-url>/bootstrap.sh | bash
+```
+
+### 4. Claude plugin (available)
+
+`dist/fr-pack/plugin/` is a Claude/Cowork plugin (commands `/ship-fr`, `/fr-init`; a bundled `ship-feature-requests` skill). Add it to a marketplace or load it locally, then run `/fr-init` in a repo and `/ship-fr` to drive the backlog. This is the closest replacement for the old two-skill loop, but it carries the real workflow.
+
+### 5. GitHub Action (available)
+
+`dist/fr-pack/ci/github-action/action.yml` is a composite action that runs the machine gates in CI. Point a workflow at it after `init.sh` has committed `.cyberos/` to the repo. CI runs the machine gates only; final acceptance stays a human verdict.
+
+### 6. Docker image (available, scaffold only)
+
+```bash
+docker build -t cyberos-fr dist/fr-pack
+docker run --rm -v "$PWD":/work cyberos-fr     # inits the mounted repo
+```
+
+The image scaffolds a repo; run the gates on a runner that has your toolchain.
+
+### 7. Makefile / just target (available, two lines)
+
+```make
+fr-init:  ; bash .fr-pack/init.sh
+fr-gates: ; bash .cyberos/fr-pack/gates/run-gates.sh
+```
+
+### Planned channels (say the word and I will build them)
+
+- npx CLI - `npx cyberos-fr init` / `... gates` (Node wrapper around these scripts).
+- MCP server - expose `fr_init`, `fr_gates`, `ship_fr` as MCP tools so any MCP agent triggers it with no files.
+- GitHub template repo - a pre-scaffolded repo you clone or `degit` for a fresh project.
+- Homebrew tap and Nix flake - `brew install cyberos-fr` / `nix run`.
+
+## After install: trigger, gate, sign off
+
+1. Write an FR: `cp .cyberos/fr-pack/templates/FR-TEMPLATE.md docs/feature-requests/FR-001-<slug>.md`, fill section 1, set `status: ready_to_implement`, add the row to `BACKLOG.md`.
+2. Trigger: tell your agent to follow `.cyberos/fr-pack/machine/ship-feature-requests.md` and drive the next eligible FR, HITL required, `repo_root` = this repo. (Or `/ship-fr` with the plugin.)
+3. Gate: `bash .cyberos/fr-pack/gates/run-gates.sh`.
+4. Sign off: you record the review verdict and the final acceptance. The agent never sets `done`.
+
+## Staying in sync
+
+The pack is a build artifact. When the workflow improves in CyberOS, rebuild (`build-pack.sh`) and re-distribute; consumers re-run `init.sh` (it backs up `fr.gates.env` and never clobbers your BACKLOG).
