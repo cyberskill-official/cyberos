@@ -41,16 +41,13 @@ jobs:
           toolchain: 1.88.0
           components: rustfmt, clippy
 
+      # Swatinem/rust-cache caches only the dependency build artifacts (not our workspace crates)
+      # and auto-trims stale entries, so the cache stays ~1-3 GB instead of the 9+ GB a raw
+      # services/target cache grew to - which overflowed the runner disk on restore.
       - name: Cache cargo
-        uses: actions/cache@v4
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            services/target
-          key: cargo-services-${{ runner.os }}-${{ hashFiles('services/**/Cargo.lock', 'services/**/Cargo.toml') }}
-          restore-keys: |
-            cargo-services-${{ runner.os }}-
+          workspaces: services
 
       # fmt is run as a non-blocking style hint until the codebase reaches
       # steady-state. CI flags violations + suggests `cargo fmt --all` locally;
@@ -102,13 +99,9 @@ jobs:
           toolchain: 1.88.0
 
       - name: Cache cargo
-        uses: actions/cache@v4
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            services/target
-          key: cargo-services-${{ runner.os }}-${{ hashFiles('services/**/Cargo.lock', 'services/**/Cargo.toml') }}
+          workspaces: services
 
       # FR-AUTH-106 — install MaxMind GeoLite2 + Anonymous-IP if the CI runner
       # has access to a license key. auth geoip tests skip cleanly when absent.
