@@ -35,7 +35,7 @@ async fn pool() -> PgPool {
 }
 
 async fn apply_lenient(pool: &PgPool, sql: &str) {
-    if let Err(e) = sqlx::query(sql).execute(pool).await {
+    if let Err(e) = sqlx::raw_sql(sql).execute(pool).await {
         let msg = e.to_string();
         if !msg.contains("already exists") {
             panic!("migration failed: {msg}");

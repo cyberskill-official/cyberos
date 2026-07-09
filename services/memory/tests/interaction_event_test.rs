@@ -54,7 +54,7 @@ async fn cleanup(pool: &PgPool, tenant: Uuid) {
 
 /// Apply a migration, swallowing "already exists" so re-runs against a migrated dev DB are a no-op.
 async fn apply_lenient(pool: &PgPool, sql: &str) {
-    if let Err(e) = sqlx::query(sql).execute(pool).await {
+    if let Err(e) = sqlx::raw_sql(sql).execute(pool).await {
         let msg = e.to_string();
         if !msg.contains("already exists") {
             panic!("migration failed: {msg}");
