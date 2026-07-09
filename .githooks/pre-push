@@ -7,10 +7,13 @@
 #
 #   one-time:   git config core.hooksPath .githooks && chmod +x .githooks/pre-push
 #   skip all:   SKIP_LOCAL_CHECKS=1 git push   (or git push --no-verify)   # CI still gates + builds
+#   fast push:  NO_DB_VERIFY=1 git push        # fmt + clippy + unit only; skip the ~5-min DB suite
 #   opt back into a local image build:  BUILD_IMAGES_LOCALLY=1 git push
 #
-# The Postgres-gated #[ignore] integration tests are not run here (no DB). Run them by hand when you touch
-# that code:  cd services && DATABASE_URL=... cargo test --workspace -- --ignored
+# When Docker is running this also runs scripts/local_verify.sh - the SAME Postgres-backed suite CI's
+# integration job runs (boots the dev DB, applies every migration, runs every module suite incl the
+# #[ignore] DB tests) - so a green pre-push means a green CI. It auto-skips when Docker is not up; skip it
+# explicitly with NO_DB_VERIFY=1.
 set -euo pipefail
 
 if [ "${SKIP_LOCAL_CHECKS:-}" = "1" ]; then
@@ -52,8 +55,22 @@ fi
 # binaries are what ship. Run `cargo clippy --workspace --all-targets` by hand to also lint test files.
 echo "==> cargo clippy --workspace -- -D warnings"
 cargo clippy --workspace -- -D warnings
-echo "==> cargo test --workspace (unit tests; DB-gated #[ignore] tests skipped)"
-cargo test --workspace
+# DB-backed integration suite = exactly what CI's integration job runs (scripts/local_verify.sh): boots
+# the dev Postgres + Redis, applies every crate's migrations in order, runs each module suite with
+# --include-ignored --test-threads=1. Needs Docker; auto-falls back to the unit tests when Docker is down
+# or NO_DB_VERIFY=1. This is the check that catches migration/integration reds before GitHub does.
+if [ "${NO_DB_VERIFY:-}" != "1" ] && command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+  echo "==> scripts/local_verify.sh (migrations + module suites incl DB-backed - the CI integration gate)"
+  bash "$ROOT/scripts/local_verify.sh"
+else
+  if [ "${NO_DB_VERIFY:-}" = "1" ]; then
+    echo "==> NO_DB_VERIFY=1 - unit tests only (DB integration suite skipped; CI still runs it)"
+  else
+    echo "==> docker not running - unit tests only (start Docker to run the full CI gate locally)"
+  fi
+  echo "==> cargo test --workspace (unit tests; DB-gated #[ignore] tests skipped)"
+  cargo test --workspace
+fi
 
 # Image build is CI's job now (deploy.yml build-images) - the hook no longer builds by default, so a normal
 # push is just the fast checks above. Opt in with BUILD_IMAGES_LOCALLY=1 if you ever want to pre-seed GHCR
