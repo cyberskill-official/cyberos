@@ -1,15 +1,15 @@
 name: "CyberOS FR gates"
-description: "Run the FR machine-gate floor (build, lint, test, coverage; plus caf/awh if enabled) on a repo that has the FR pack installed."
+description: "Run the CyberOS machine-gate floor (build, lint, test, coverage; plus caf/awh if enabled) on a repo that has the CyberOS payload installed."
 runs:
   using: composite
   steps:
     - name: Run FR machine gates
       shell: bash
       run: |
-        if [ ! -f .cyberos/fr.gates.env ]; then
-          echo "::error::.cyberos/fr.gates.env not found. Run the FR pack init.sh in this repo first." ; exit 2
+        if [ ! -f .cyberos/gates.env ]; then
+          echo "::error::.cyberos/gates.env not found. Run the CyberOS payload init.sh in this repo first." ; exit 2
         fi
-        bash .cyberos/fr-pack/gates/run-gates.sh
+        bash .cyberos/cuo/gates/run-gates.sh
     - name: Note on HITL
       shell: bash
       run: |
@@ -20,4 +20,4 @@ runs:
 #       runs-on: ubuntu-latest
 #       steps:
 #         - uses: actions/checkout@v4
-#         - uses: ./.cyberos/fr-pack/ci/github-action   # or <owner>/<repo>@<ref> if published
+#         - uses: ./.cyberos/ci/github-action   # or <owner>/<repo>@<ref> if published

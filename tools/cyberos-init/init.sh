@@ -1,33 +1,24 @@
 #!/usr/bin/env bash
-# init.sh - drop the FR workflow into the CURRENT project. No CyberOS clone required.
-#
-# Run this from inside a target repo (or pass its path as arg 1). It:
-#   1. auto-detects the repo's build / lint / test / coverage commands,
-#   2. copies the portable machine into <repo>/.cyberos/fr-pack/,
-#   3. writes <repo>/.cyberos/fr.gates.env (the gate commands - edit freely),
-#   4. scaffolds docs/feature-requests/ (BACKLOG.md + _audits/),
-#   5. prints the trigger instructions.
-# Idempotent: it never clobbers an existing BACKLOG.md or fr.gates.env (backs them up).
+# init.sh - vendor the CyberOS machine into the CURRENT project under a gitignored .cyberos/,
+# organised by module (.cyberos/cuo, .cyberos/memory, .cyberos/plugin), scaffold
+# docs/feature-requests/ + the BRAIN, and print next steps. No CyberOS clone required.
+# Idempotent: never clobbers your BACKLOG.md, gates.env, or existing BRAIN.
 set -euo pipefail
 
-pack="$(cd "$(dirname "$0")" && pwd)"                  # the pack dir this script lives in
-target="${1:-$(pwd)}"
-target="$(cd "$target" && pwd)"
+src="$(cd "$(dirname "$0")" && pwd)"                   # the payload dir this script lives in
+target="${1:-$(pwd)}"; target="$(cd "$target" && pwd)"
 root="$(cd "$target" && git rev-parse --show-toplevel 2>/dev/null || echo "$target")"
+CY="$root/.cyberos"
 
-echo "fr-pack init: target repo = $root"
-mkdir -p "$root/.cyberos" "$root/docs/feature-requests/_audits"
+echo "cyberos init: target repo = $root"
+mkdir -p "$CY" "$root/docs/feature-requests/_audits"
 
-# 1. copy the machine in ------------------------------------------------------
-cp -R "$pack/machine"   "$root/.cyberos/fr-pack-machine.tmp" && rm -rf "$root/.cyberos/fr-pack/machine" 2>/dev/null || true
-mkdir -p "$root/.cyberos/fr-pack"
-rm -rf "$root/.cyberos/fr-pack/machine" "$root/.cyberos/fr-pack/gates" "$root/.cyberos/fr-pack/templates" "$root/.cyberos/fr-pack/plugin"
-mv "$root/.cyberos/fr-pack-machine.tmp" "$root/.cyberos/fr-pack/machine"
-cp -R "$pack/gates"     "$root/.cyberos/fr-pack/gates"
-cp -R "$pack/templates" "$root/.cyberos/fr-pack/templates"
-cp -R "$pack/plugin"    "$root/.cyberos/fr-pack/plugin"
-[ -f "$pack/manifest.yaml" ] && cp "$pack/manifest.yaml" "$root/.cyberos/fr-pack/manifest.yaml"
-chmod +x "$root/.cyberos/fr-pack/gates/run-gates.sh" 2>/dev/null || true
+# 1. vendor the machine by module (replace any prior copy) --------------------
+rm -rf "$CY/cuo" "$CY/plugin"
+cp -R "$src/cuo"    "$CY/cuo"
+cp -R "$src/plugin" "$CY/plugin"
+[ -f "$src/manifest.yaml" ] && cp "$src/manifest.yaml" "$CY/manifest.yaml"
+chmod +x "$CY/cuo/gates/run-gates.sh" 2>/dev/null || true
 
 # 2. auto-detect gate commands ------------------------------------------------
 BUILD_CMD=""; LINT_CMD=""; TEST_CMD=""; COVERAGE_CMD=""; ECOSYSTEM="unknown"
@@ -67,11 +58,11 @@ elif [ -f "$root/Makefile" ]; then
   grep -q '^coverage:' "$root/Makefile" && COVERAGE_CMD="make coverage"
 fi
 
-# 3. write the gate env (never clobber; back up) ------------------------------
-env_file="$root/.cyberos/fr.gates.env"
+# 3. write the gate env at .cyberos/gates.env (never clobber; back up) --------
+env_file="$CY/gates.env"
 [ -f "$env_file" ] && cp "$env_file" "$env_file.bak.$(date +%s)"
 cat > "$env_file" <<EOF
-# .cyberos/fr.gates.env - gate commands for the FR workflow (edit freely).
+# .cyberos/gates.env - gate commands for the FR workflow (edit freely).
 # Auto-detected ecosystem: $ECOSYSTEM. Empty command = that gate is skipped.
 # The reduced-profile floor = build + lint + test + coverage. These always run.
 BUILD_CMD="$BUILD_CMD"
@@ -81,7 +72,7 @@ COVERAGE_CMD="$COVERAGE_CMD"
 COVERAGE_MIN="90"
 # Optional full-profile upgrades. Set enabled=true only when the baseline exists.
 CAF_ENABLED="false"
-CAF_CMD="bash .cyberos/fr-pack/gates/caf/caf_gate.sh ."
+CAF_CMD="bash .cyberos/cuo/gates/caf/caf_gate.sh ."
 AWH_ENABLED="false"
 AWH_CMD=""
 # HITL is required: the two human-acceptance gates (review acceptance, final
@@ -93,25 +84,23 @@ EOF
 bl="$root/docs/feature-requests/BACKLOG.md"
 if [ ! -f "$bl" ]; then
   proj="$(basename "$root")"
-  sed "s/{{PROJECT}}/$proj/g" "$pack/templates/BACKLOG.md" > "$bl"
+  sed "s/{{PROJECT}}/$proj/g" "$src/cuo/templates/BACKLOG.md" > "$bl"
 fi
 
-# 4b. set up the BRAIN memory protocol (default on; skip with FRPACK_NO_MEMORY=1) ---
+# 5. memory module + BRAIN (default on; skip with CYBEROS_NO_MEMORY=1) --------
 MEMORY_SET="skipped"; MEM_AGENTS=""; MEM_BRAIN=""
-if [ "${FRPACK_NO_MEMORY:-0}" != "1" ] && [ -d "$pack/memory" ]; then
-  # 4b.1 vendor the protocol + schema into the repo
-  mkdir -p "$root/.cyberos/fr-pack/memory"
-  cp -R "$pack/memory/." "$root/.cyberos/fr-pack/memory/" 2>/dev/null || true
+if [ "${CYBEROS_NO_MEMORY:-0}" != "1" ] && [ -d "$src/memory" ]; then
+  rm -rf "$CY/memory"; cp -R "$src/memory" "$CY/memory"
 
-  # 4b.2 make the protocol discoverable at the repo root (never clobber an existing AGENTS.md)
+  # make the protocol discoverable at the repo root (never clobber an existing AGENTS.md)
   if [ ! -f "$root/AGENTS.md" ]; then
-    cp "$pack/memory/AGENTS.md" "$root/AGENTS.md"
+    cp "$src/memory/AGENTS.md" "$root/AGENTS.md"
     MEM_AGENTS="created root AGENTS.md (memory protocol)"
   else
-    MEM_AGENTS="kept your AGENTS.md; protocol copy is at .cyberos/fr-pack/memory/AGENTS.md"
+    MEM_AGENTS="kept your AGENTS.md; protocol copy at .cyberos/memory/AGENTS.md"
   fi
 
-  # 4b.3 scaffold the BRAIN store (.cyberos-memory) if absent
+  # scaffold the BRAIN store (.cyberos-memory, per protocol section 0.4) if absent
   brain="$root/.cyberos-memory"
   if [ ! -d "$brain" ]; then
     for d in audit memories adrs audits impl-plans code-reviews obs-injections index exports meta module member company client project; do
@@ -123,7 +112,7 @@ if [ "${FRPACK_NO_MEMORY:-0}" != "1" ] && [ -d "$pack/memory" ]; then
     ns="$(( $(date +%s) * 1000000000 ))"
     cat > "$brain/manifest.json" <<JSON
 {
-  "actor": "cyberos-fr",
+  "actor": "cyberos-init",
   "created_at_ns": $ns,
   "crypto_mode": "chained",
   "fingerprint": "$fp",
@@ -135,38 +124,40 @@ JSON
   else
     MEM_BRAIN="kept existing .cyberos-memory/"
   fi
-
-  # 4b.4 keep the BRAIN out of git (local tenant data, per the protocol)
-  if [ ! -f "$root/.gitignore" ]; then
-    printf '# CyberOS BRAIN - local memory store (tenant data; do not commit)\n.cyberos-memory/\n' > "$root/.gitignore"
-  elif ! grep -qx ".cyberos-memory/" "$root/.gitignore"; then
-    printf '\n# CyberOS BRAIN - local memory store (tenant data; do not commit)\n.cyberos-memory/\n' >> "$root/.gitignore"
-  fi
   MEMORY_SET="yes"
 fi
 
-# 5. tell the operator what to do next ----------------------------------------
+# 6. gitignore the vendored machine + the BRAIN (regenerable / tenant data) ---
+gi="$root/.gitignore"
+[ -f "$gi" ] || : > "$gi"
+grep -q "CyberOS vendored machine" "$gi" || printf '\n# CyberOS vendored machine + local BRAIN (regenerable via init; tenant data). Do not commit.\n' >> "$gi"
+grep -qx ".cyberos/" "$gi"        || echo ".cyberos/"        >> "$gi"
+grep -qx ".cyberos-memory/" "$gi" || echo ".cyberos-memory/" >> "$gi"
+
+# 7. tell the operator what to do next ----------------------------------------
 cat <<EOF
 
-fr-pack init: done.
-  machine   -> .cyberos/fr-pack/         (workflow + doctrine + status contract)
-  gates     -> .cyberos/fr.gates.env     (detected: build='${BUILD_CMD:-none}' test='${TEST_CMD:-none}')
+cyberos init: done.
+  cuo       -> .cyberos/cuo/          (workflow + doctrine + status contract + skills + gates)
+  memory    -> .cyberos/memory/       (Layer-1 protocol + schema)
+  gates     -> .cyberos/gates.env     (detected: build='${BUILD_CMD:-none}' test='${TEST_CMD:-none}')
   backlog   -> docs/feature-requests/BACKLOG.md
   BRAIN     -> ${MEMORY_SET}${MEM_BRAIN:+ (${MEM_BRAIN})}${MEM_AGENTS:+; ${MEM_AGENTS}}
+  gitignored: .cyberos/ and .cyberos-memory/ (vendored machine + local state)
 
 Next:
   1. Write an FR from the template:
-       cp .cyberos/fr-pack/templates/FR-TEMPLATE.md docs/feature-requests/FR-001-<slug>.md
+       cp .cyberos/cuo/templates/FR-TEMPLATE.md docs/feature-requests/FR-001-<slug>.md
        # fill in section 1, set status: ready_to_implement, add the row to BACKLOG.md
   2. Trigger the workflow in your agent (Claude Code / Cowork / Codex):
-       "Follow .cyberos/fr-pack/machine/ship-feature-requests.md and drive the next
-        eligible FR in docs/feature-requests/BACKLOG.md. HITL is required: halt at the
-        two human-acceptance gates. repo_root is this repo."
+       "Follow .cyberos/cuo/ship-feature-requests.md and drive the next eligible FR in
+        docs/feature-requests/BACKLOG.md. HITL is required: halt at the two human-acceptance
+        gates. repo_root is this repo."
   3. Run the machine gates any time:
-       bash .cyberos/fr-pack/gates/run-gates.sh
+       bash .cyberos/cuo/gates/run-gates.sh
 
-BRAIN memory protocol: .cyberos-memory/ is your local memory store (gitignored, tenant
-data). The rules are in AGENTS.md (or .cyberos/fr-pack/memory/AGENTS.md). An agent working
-in this repo records decisions, audits, and plans into the BRAIN per that protocol.
-Skip memory setup with: FRPACK_NO_MEMORY=1 bash .cyberos/fr-pack/init.sh
+BRAIN memory protocol: .cyberos-memory/ is your local memory store (gitignored, tenant data).
+The rules are in AGENTS.md (or .cyberos/memory/AGENTS.md). An agent working in this repo
+records decisions, audits, and plans into the BRAIN per that protocol.
+Skip memory setup by re-running init with CYBEROS_NO_MEMORY=1.
 EOF

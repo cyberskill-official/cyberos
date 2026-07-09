@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# run-gates.sh - the machine-gate floor for an FR. Reads .cyberos/fr.gates.env and runs
+# run-gates.sh - the machine-gate floor for an FR. Reads .cyberos/gates.env and runs
 # the target repo's own build / lint / test / coverage, plus optional caf / awh when
 # enabled. GREEN here is necessary but NOT sufficient: the two human-acceptance gates
 # (review acceptance, final acceptance) are always still required and are never run here.
 set -uo pipefail
 
 root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-env_file="$root/.cyberos/fr.gates.env"
+env_file="$root/.cyberos/gates.env"
 if [ ! -f "$env_file" ]; then
-  echo "run-gates: missing $env_file - run .cyberos/fr-pack/init.sh first" >&2
+  echo "run-gates: missing $env_file - run .cyberos/init.sh first" >&2
   exit 2
 fi
 # shellcheck disable=SC1090

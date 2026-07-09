@@ -8,7 +8,7 @@ recorded human verdict, and never sets `done` itself.
 
 Lifecycle: draft -> ready_to_implement -> implementing -> ready_to_review -> reviewing ->
 ready_to_test -> testing -> done. Off-ramps: on_hold, closed. See
-`.cyberos/fr-pack/machine/STATUS-REFERENCE.md`.
+`.cyberos/cuo/STATUS-REFERENCE.md`.
 
 ## ready_to_implement
 

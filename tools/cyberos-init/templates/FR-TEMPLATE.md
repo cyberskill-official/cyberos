@@ -1,7 +1,7 @@
 ---
 id: FR-001-slug
 title: Short imperative title
-status: draft            # draft | ready_to_implement | implementing | ready_to_review | reviewing | ready_to_test | testing | done | on_hold | closed (see machine/STATUS-REFERENCE.md)
+status: draft            # draft | ready_to_implement | implementing | ready_to_review | reviewing | ready_to_test | testing | done | on_hold | closed (see cuo/STATUS-REFERENCE.md)
 class: product           # product = net-new feature | improvement = hardening/refactor/audit-remediation
 priority: SHOULD         # MUST | SHOULD | COULD
 depends_on: []           # ids that must be done first
