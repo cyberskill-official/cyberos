@@ -110,30 +110,11 @@ jobs:
             services/target
           key: cargo-services-${{ runner.os }}-${{ hashFiles('services/**/Cargo.lock', 'services/**/Cargo.toml') }}
 
-      - name: Boot dev stack (Postgres + Apache AGE + Redis)
-        run: |
-          cd dev
-          docker compose up -d
-          # Wait until Postgres reports healthy.
-          for i in {1..30}; do
-            if docker compose ps postgres | grep -q '(healthy)'; then echo "postgres is up"; break; fi
-            sleep 2
-          done
-
-      - name: Install pgvector in Postgres container
-        run: |
-          docker exec -u 0 cyberos-postgres apt-get update
-          docker exec -u 0 cyberos-postgres apt-get install -y postgresql-16-pgvector
-          docker exec -i cyberos-postgres psql -U cyberos -d cyberos -c "CREATE EXTENSION IF NOT EXISTS vector;"
-
-      - name: Install sqlx-cli
-        run: cargo install --locked --version 0.8.0 sqlx-cli --no-default-features --features postgres
-
       # FR-AUTH-106 — install MaxMind GeoLite2 + Anonymous-IP if the CI runner
-      # has access to a license key. Tests in `tests/geoip_test.rs` skip
-      # cleanly when AUTH_GEOIP_DB is absent.
+      # has access to a license key. auth geoip tests skip cleanly when absent.
       - name: Install GeoLite2 DBs (optional — gated on secret)
         if: env.MAXMIND_LICENSE_KEY != ''
+        working-directory: ${{ github.workspace }}
         env:
           MAXMIND_LICENSE_KEY: ${{ secrets.MAXMIND_LICENSE_KEY }}
           GEOIP_DEST: ${{ runner.temp }}/geoip
@@ -142,18 +123,15 @@ jobs:
           echo "AUTH_GEOIP_DB=${{ runner.temp }}/geoip/GeoLite2-City.mmdb" >> "$GITHUB_ENV"
           echo "AUTH_GEOIP_ANONYMOUS_DB=${{ runner.temp }}/geoip/GeoIP2-Anonymous-IP.mmdb" >> "$GITHUB_ENV"
 
-      - name: Apply migrations — auth
-        env:
-          DATABASE_URL: postgres://cyberos:cyberos@localhost:5432/cyberos
-        run: cd auth && sqlx migrate run
-
-      - name: Apply migrations — memory
-        run: cat memory/migrations/*.sql | docker exec -i cyberos-postgres psql -U cyberos -d cyberos
-
-      - name: cargo test (Postgres-required)
-        env:
-          DATABASE_URL: postgres://cyberos:cyberos@localhost:5432/cyberos
-        run: cargo test --workspace --no-fail-fast -- --ignored
+      # Single source of truth for DB-backed verification: the SAME script developers run
+      # locally. It boots Postgres+Redis (dev/docker-compose.yml, pgvector image), applies
+      # every crate's migrations in dependency order (auth -> mcp-gateway -> memory -> ...),
+      # and runs each module suite with --include-ignored --test-threads=1. Running the whole
+      # workspace at once with partial migrations (the old approach) pulled in crates whose
+      # migrations weren't applied and raced the shared DB without --test-threads=1.
+      - name: Local verify (migrations + module suites, incl DB-backed)
+        working-directory: ${{ github.workspace }}
+        run: bash scripts/local_verify.sh
 
       - name: Tear down dev stack
         if: always()
