@@ -84,15 +84,49 @@ async fn main() -> ExitCode {
         }
     });
 
+    // MEM-001 (R73) — pick up a rotated auth signing key without a restart. Runs only when the key set came
+    // from a URL (the production JWKS path); interval is MEMORY_JWKS_REFRESH_SECS (default 300s, floored 30s).
+    if state.authenticator.has_jwks_url() {
+        let refresher = state.authenticator.clone();
+        let secs = std::env::var("MEMORY_JWKS_REFRESH_SECS")
+            .ok()
+            .and_then(|v| v.parse::<u64>().ok())
+            .unwrap_or(300)
+            .max(30);
+        tokio::spawn(async move {
+            let mut tick = time::interval(Duration::from_secs(secs));
+            tick.tick().await; // consume the immediate first tick (the boot fetch already loaded the keys)
+            loop {
+                tick.tick().await;
+                match refresher.refresh().await {
+                    Ok(()) => tracing::debug!(target: "cyberos_memory::auth", "jwks refreshed"),
+                    Err(e) => {
+                        tracing::warn!(target: "cyberos_memory::auth", error = %e, "jwks refresh failed")
+                    }
+                }
+            }
+        });
+    }
+
     // FR-OBS-003 - build the RED instruments off the global meter before serving.
     cyberos_obs_sdk::init("memory", VERSION);
+
+    // MEM-001 (R73) — identity comes from a verified JWT, never from headers. `/v1/memory/*` sits behind the
+    // require_auth middleware (it stamps the Caller into the request extensions); `/healthz` and `/metrics`
+    // stay unauthenticated for liveness + scraping.
+    let protected = Router::new()
+        .route("/v1/memory/search", post(search::search))
+        // FR-MEMORY-123 §1 #7 — access-scoped, provenance-carrying BRAIN recall.
+        .route("/v1/memory/recall", post(brain::handler::recall_handler))
+        .route_layer(axum::middleware::from_fn_with_state(
+            state.clone(),
+            cyberos_memory::auth::require_auth,
+        ));
 
     let app = Router::new()
         .route("/healthz", get(healthz))
         .route("/metrics", get(metrics))
-        .route("/v1/memory/search", post(search::search))
-        // FR-MEMORY-123 §1 #7 — access-scoped, provenance-carrying BRAIN recall.
-        .route("/v1/memory/recall", post(brain::handler::recall_handler))
+        .merge(protected)
         // tenant_ctx (route_layer, inner) stamps the request's tenant onto the response; red_mw (layer,
         // outer) reads it for the metric's tenant_id label (ADR-OBS-003-001).
         .route_layer(axum::middleware::from_fn(tenant_ctx))

@@ -28,6 +28,9 @@ serde.workspace = true
 serde_json.workspace = true
 anyhow.workspace = true
 thiserror.workspace = true
+# MEM-001 (R73): verify the CyberOS access token (FR-AUTH-004 JWKS, RS256) on /v1/memory routes. Workspace
+# pin (9.3, locked 9.3.1) — the same crate + version chat/auth/obs use, so this adds no new resolution.
+jsonwebtoken.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
 # FR-MEMORY-121 needs UUIDv7 for interaction-event ids (time-sortable, dedup-safe). FR-MEMORY-122 backfill

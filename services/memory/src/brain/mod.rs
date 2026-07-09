@@ -50,9 +50,6 @@ pub use embed_client::{EmbedClient, EmbedError};
 /// `VECTOR(1024)` column and the existing `crate::embeddings::DEFAULT_DIM`.
 pub const EMBED_DIM: usize = 1024;
 
-/// The nil-UUID admin tenant string that the RLS policies treat as a bypass (rebuild / backfill paths).
-pub const ADMIN_TENANT: &str = "00000000-0000-0000-0000-000000000000";
-
 /// One interaction-event lifted out of the Layer-1 chain, ready to embed (§1 #2). `body` is the text the
 /// worker embeds; `chain_anchor_hex` is the Layer-1 anchor carried for read-time tamper detection (§1 #10).
 #[derive(Clone, Debug)]
@@ -232,6 +229,10 @@ pub fn now_ns() -> i64 {
 /// the eval module's `tenant_tx`: every brain query runs inside a transaction whose `app.tenant_id` is the
 /// caller's tenant, so RLS confines reads + writes to that tenant. `set_config(..., true)` is transaction-
 /// local (reset on commit/rollback) so a pooled connection never leaks one tenant's GUC into the next.
+///
+/// MEM-002 (R74): the brain-table policies are FAIL-CLOSED (migration 0009) — there is no NULL/unset arm and
+/// no nil-uuid bypass, so a query that forgets this wrapper matches `tenant_id = NULL` and reads ZERO rows
+/// rather than every tenant's. Every brain-table access MUST go through here (or [`tenant_tx`]).
 pub async fn rls_set_tenant(
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     tenant_id: Uuid,

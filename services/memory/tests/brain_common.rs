@@ -20,6 +20,7 @@ use cyberos_memory::interaction::{
     TargetRef,
 };
 use sqlx::PgPool;
+use tokio::sync::OnceCell;
 use uuid::Uuid;
 
 /// One seeded event's coordinates, returned by `append_interaction_event` for assertions.
@@ -49,37 +50,11 @@ impl BrainTestEnv {
             .expect("DATABASE_URL env var");
         let pool = PgPool::connect(&url).await.expect("connect");
 
-        // Memory chain + interaction-event columns.
-        apply_lenient(
-            &pool,
-            include_str!("../migrations/0003_layer1_audit_log.sql"),
-        )
-        .await;
-        apply_lenient(&pool, include_str!("../migrations/0004_l1_event_type.sql")).await;
-        apply_lenient(
-            &pool,
-            include_str!("../migrations/0005_interaction_event.sql"),
-        )
-        .await;
-        // Brain tables (this FR).
-        apply_lenient(
-            &pool,
-            include_str!("../migrations/0006_brain_event_embeddings.sql"),
-        )
-        .await;
-        apply_lenient(
-            &pool,
-            include_str!("../migrations/0007_brain_summaries.sql"),
-        )
-        .await;
-        apply_lenient(
-            &pool,
-            include_str!("../migrations/0008_brain_tier_cursor.sql"),
-        )
-        .await;
-        // FR-EVAL-001 access_grant table (the recall access predicate reads it). Applied leniently so it is
-        // present whether or not the eval migration already ran against this DB.
-        apply_lenient(&pool, ACCESS_GRANT_DDL).await;
+        // Apply the schema ONCE per test process (MEM-059). The migration files create functions via
+        // CREATE OR REPLACE FUNCTION, so parallel test threads each applying them raced on pg_proc
+        // ("duplicate key ... pg_proc_proname_args_nsp_index"); a process-global OnceCell serialises the
+        // apply to exactly one run. Migrations remain idempotent (IF NOT EXISTS / DROP POLICY IF EXISTS).
+        ensure_schema(&pool).await;
 
         Self {
             pool,
@@ -315,11 +290,37 @@ pub fn query(q: &str) -> brain::RecallQuery {
     serde_json::from_value(serde_json::json!({ "q": q })).expect("query")
 }
 
-/// Apply a migration leniently (swallow "already exists" so re-runs against a migrated DB are no-ops). The
-/// brain migrations use IF NOT EXISTS / DROP POLICY IF EXISTS, so re-application is clean; this still guards
-/// the non-idempotent generated-column add in 0004.
+/// Apply the full brain-test schema exactly once per test process (MEM-059). Guarded by a process-global
+/// `OnceCell` so parallel `#[tokio::test]` threads do not race on `CREATE OR REPLACE FUNCTION` (pg_proc). The
+/// migration set includes 0009 (fail-closed RLS, MEM-002) so the DB-backed tests run against the SHIPPED
+/// schema; superuser bypasses RLS, so they still pass (enforcement is proven in tests/brain_rls_test.rs).
+async fn ensure_schema(pool: &PgPool) {
+    static MIGRATED: OnceCell<()> = OnceCell::const_new();
+    MIGRATED
+        .get_or_init(|| async {
+            for sql in [
+                include_str!("../migrations/0003_layer1_audit_log.sql"),
+                include_str!("../migrations/0004_l1_event_type.sql"),
+                include_str!("../migrations/0005_interaction_event.sql"),
+                include_str!("../migrations/0006_brain_event_embeddings.sql"),
+                include_str!("../migrations/0007_brain_summaries.sql"),
+                include_str!("../migrations/0008_brain_tier_cursor.sql"),
+                include_str!("../migrations/0009_rls_fail_closed.sql"),
+                ACCESS_GRANT_DDL,
+            ] {
+                apply_lenient(pool, sql).await;
+            }
+        })
+        .await;
+}
+
+/// Apply a migration leniently (swallow "already exists" so re-runs against a migrated DB are no-ops). Uses
+/// `raw_sql` (simple query protocol) because the migration files are multi-statement — `query` (extended
+/// protocol) rejects them with "cannot insert multiple commands into a prepared statement". The brain
+/// migrations use IF NOT EXISTS / DROP POLICY IF EXISTS, so re-application is clean; this still guards the
+/// non-idempotent generated-column add in 0004.
 async fn apply_lenient(pool: &PgPool, sql: &str) {
-    if let Err(e) = sqlx::query(sql).execute(pool).await {
+    if let Err(e) = sqlx::raw_sql(sql).execute(pool).await {
         let msg = e.to_string();
         if !msg.contains("already exists") {
             panic!("migration failed: {msg}");

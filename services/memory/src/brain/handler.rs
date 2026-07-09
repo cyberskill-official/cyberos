@@ -2,39 +2,29 @@
 //! [`crate::brain::recall::recall`]; the access scope, provenance, chain verify, and summaries-first logic
 //! all live in `recall`. Mounted in `main.rs` next to `search::search`.
 //!
-//! Caller resolution: the memory service scopes tenant by the `x-tenant-id` header in this slice (mirroring
-//! `search.rs`), and reads the caller's own subject from `x-subject-id`. Both move to the FR-AUTH-004 JWT
-//! Extension when the memory service grows its JWT-verify middleware (the same migration `search.rs` notes).
-//! The caller subject is REQUIRED: without it there is no FR-EVAL-001 viewer identity, so recall fails closed
-//! (a missing subject can see nothing) rather than defaulting to a wildcard.
+//! Caller resolution (MEM-001, R73): the caller's tenant AND subject are stamped into the request extensions
+//! by the `crate::auth::require_auth` middleware from the verified FR-AUTH-004 JWT — never from request
+//! headers. The route is mounted only behind that middleware, so the [`Caller`] extension is always present;
+//! reading it here keeps a missing identity a fail-closed impossibility rather than a header the caller can
+//! forge.
 
 use axum::{
-    extract::{Json as JsonInput, State},
-    http::{HeaderMap, StatusCode},
+    extract::{Extension, Json as JsonInput, State},
+    http::StatusCode,
     response::Json,
 };
-use uuid::Uuid;
 
 use super::{recall, Caller, EmbedClient, RecallQuery};
 use crate::state::AppState;
 
-/// `POST /v1/memory/recall`. Resolves the caller, runs the access-scoped recall, and maps errors to status
-/// codes: limit>100 -> 400, all backends down -> 503, DB error -> 500. Empty results are a normal 200 `[]`.
+/// `POST /v1/memory/recall`. Runs the access-scoped recall for the authenticated caller, and maps errors to
+/// status codes: limit>100 -> 400, all backends down -> 503, DB error -> 500. Empty results are a normal
+/// 200 `[]`.
 pub async fn recall_handler(
     State(state): State<AppState>,
-    headers: HeaderMap,
+    Extension(caller): Extension<Caller>,
     JsonInput(q): JsonInput<RecallQuery>,
 ) -> Result<(StatusCode, Json<serde_json::Value>), (StatusCode, Json<serde_json::Value>)> {
-    let tenant_id = require_header_uuid(&headers, "x-tenant-id")
-        .ok_or_else(|| bad("x-tenant-id header required (UUID)"))?;
-    let viewer_subject_id = require_header_uuid(&headers, "x-subject-id").ok_or_else(|| {
-        bad("x-subject-id header required (UUID) — recall needs the caller identity")
-    })?;
-
-    let caller = Caller {
-        tenant_id,
-        viewer_subject_id,
-    };
     let gw = EmbedClient::from_env();
 
     match recall::recall(q, &caller, &state.pg, &gw).await {
@@ -59,18 +49,4 @@ pub async fn recall_handler(
             Json(serde_json::json!({"error": format!("recall failed: {e}")})),
         )),
     }
-}
-
-fn require_header_uuid(headers: &HeaderMap, name: &str) -> Option<Uuid> {
-    headers
-        .get(name)
-        .and_then(|h| h.to_str().ok())
-        .and_then(|s| Uuid::parse_str(s).ok())
-}
-
-fn bad(msg: &str) -> (StatusCode, Json<serde_json::Value>) {
-    (
-        StatusCode::BAD_REQUEST,
-        Json(serde_json::json!({ "error": msg })),
-    )
 }

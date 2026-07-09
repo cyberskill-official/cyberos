@@ -1225,6 +1225,7 @@ dependencies = [
  "cyberos-obs-sdk",
  "cyberos-types",
  "jsonschema",
+ "jsonwebtoken",
  "regex",
  "reqwest",
  "serde",

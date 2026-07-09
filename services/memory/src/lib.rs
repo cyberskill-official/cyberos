@@ -31,6 +31,8 @@
 // citable brain. Ingestion + embedding (via the ai-gateway) + rolling summaries + hot/warm/cold tiering +
 // access-scoped, provenance-carrying recall. A DERIVED, rebuildable lens over l1_audit_log (the chain stays
 // the system of record); it does NOT touch the live auth/chat services.
+// MEM-001 (R73) — verified-JWT identity for /v1/memory routes; identity comes from the token, never headers.
+pub mod auth;
 pub mod brain;
 pub mod embeddings;
 // FR-MEMORY-121 — the interaction-event capture primitive (event shape + emit + content_ref + consent

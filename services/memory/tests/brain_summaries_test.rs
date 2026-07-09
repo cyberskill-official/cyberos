@@ -46,7 +46,12 @@ async fn rolling_summary_covers_event_range() {
         row.0 <= first && row.1 >= last,
         "covered range must span the seeded events"
     );
-    assert_eq!(row.2, 1, "first summary is version 1");
+    // A current summary version exists. NOT pinned to exactly 1: ingest-time auto-summarisation
+    // (touch_windows, throttled by summary_min_new_events=5) also builds a version for a 6-event window, so
+    // the explicit run_summarize_once here supersedes it to version 2. The AC (#4) is the covered range +
+    // exactly one current row (fetch_one above), not a fixed version number. (MEM-060: this used to be
+    // version 1 only because ingest-time summarisation silently errored on the scope-filter placeholder bug.)
+    assert!(row.2 >= 1, "a current summary version exists");
 
     env.cleanup().await;
 }
@@ -98,13 +103,35 @@ async fn new_event_supersedes_prior_summary_version() {
     .fetch_all(env.pool())
     .await
     .unwrap();
-    assert_eq!(
-        current_versions.len(),
-        2,
-        "both versions retained for audit"
+    // AC #5: appending an event into a summarised window writes a NEW version, priors are retained + marked
+    // superseded, and exactly one current version remains. The exact COUNT depends on whether ingest-time
+    // auto-summarisation also fired (throttled by summary_min_new_events), so assert the invariant, not a
+    // fixed number. (MEM-060: the count was 2 only while ingest-time summarisation was silently broken.)
+    assert!(
+        current_versions.len() >= 2,
+        "prior versions retained for audit (a new event wrote a new version)"
     );
-    assert!(current_versions[0].1.is_some(), "v1 is superseded_by v2");
-    assert!(current_versions[1].1.is_none(), "v2 is the current version");
+    let current: Vec<_> = current_versions
+        .iter()
+        .filter(|(_, s)| s.is_none())
+        .collect();
+    assert_eq!(
+        current.len(),
+        1,
+        "exactly one current (non-superseded) version"
+    );
+    let max_v = current_versions.iter().map(|(v, _)| *v).max().unwrap();
+    assert_eq!(
+        current[0].0, max_v,
+        "the current version is the highest version"
+    );
+    assert!(
+        current_versions
+            .iter()
+            .filter(|(v, _)| *v != max_v)
+            .all(|(_, s)| s.is_some()),
+        "every non-current version is superseded"
+    );
 
     env.cleanup().await;
 }
