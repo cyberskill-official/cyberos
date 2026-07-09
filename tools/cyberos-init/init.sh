@@ -104,7 +104,12 @@ fi
 # 5. memory module + BRAIN (default on; skip with CYBEROS_NO_MEMORY=1) --------
 MEMORY_SET="skipped"; MEM_AGENTS=""; MEM_BRAIN=""
 if [ "${CYBEROS_NO_MEMORY:-0}" != "1" ] && [ -d "$src/memory" ]; then
-  rm -rf "$CY/memory"; cp -R "$src/memory" "$CY/memory"
+  # vendor the protocol docs into .cyberos/memory/ WITHOUT touching the live
+  # store at .cyberos/memory/store/ (an update refreshes docs, never the data).
+  mkdir -p "$CY/memory"
+  for f in AGENTS.md memory.schema.json memory.invariants.yaml; do
+    [ -f "$src/memory/$f" ] && cp "$src/memory/$f" "$CY/memory/$f"
+  done
 
   # make the protocol discoverable at the repo root (never clobber an existing AGENTS.md)
   if [ ! -f "$root/AGENTS.md" ]; then
@@ -114,9 +119,13 @@ if [ "${CYBEROS_NO_MEMORY:-0}" != "1" ] && [ -d "$src/memory" ]; then
     MEM_AGENTS="kept your AGENTS.md; protocol copy at .cyberos/memory/AGENTS.md"
   fi
 
-  # scaffold the BRAIN store (.cyberos-memory, per protocol section 0.4) if absent
-  brain="$root/.cyberos-memory"
-  if [ ! -d "$brain" ]; then
+  # scaffold the BRAIN store at .cyberos/memory/store/ (canonical, section 0.4).
+  # honor a pre-existing legacy .cyberos-memory/ store if present (never duplicate).
+  brain="$CY/memory/store"
+  legacy="$root/.cyberos-memory"
+  if [ -d "$legacy" ] && [ ! -d "$brain" ]; then
+    MEM_BRAIN="kept existing legacy .cyberos-memory/ (honored per section 0.4)"
+  elif [ ! -d "$brain" ]; then
     for d in audit memories adrs audits impl-plans code-reviews obs-injections index exports meta module member company client project; do
       mkdir -p "$brain/$d"
     done
@@ -134,9 +143,9 @@ if [ "${CYBEROS_NO_MEMORY:-0}" != "1" ] && [ -d "$src/memory" ]; then
   "version": 2
 }
 JSON
-    MEM_BRAIN="created .cyberos-memory/ (fresh BRAIN, HEAD=0)"
+    MEM_BRAIN="created .cyberos/memory/store/ (fresh BRAIN, HEAD=0)"
   else
-    MEM_BRAIN="kept existing .cyberos-memory/"
+    MEM_BRAIN="kept existing .cyberos/memory/store/"
   fi
   MEMORY_SET="yes"
 fi
@@ -171,8 +180,9 @@ Next:
   3. Run the machine gates any time:
        bash .cyberos/cuo/gates/run-gates.sh
 
-BRAIN memory protocol: .cyberos-memory/ is your local memory store (gitignored, tenant data).
-The rules are in AGENTS.md (or .cyberos/memory/AGENTS.md). An agent working in this repo
-records decisions, audits, and plans into the BRAIN per that protocol.
+BRAIN memory protocol: .cyberos/memory/store/ is your local memory store (gitignored, tenant
+data); a legacy .cyberos-memory/ is still honored if one already exists. The rules are in
+AGENTS.md (or .cyberos/memory/AGENTS.md). An agent working in this repo records decisions,
+audits, and plans into the BRAIN per that protocol.
 Skip memory setup by re-running init with CYBEROS_NO_MEMORY=1.
 EOF

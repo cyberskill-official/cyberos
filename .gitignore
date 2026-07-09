@@ -5,6 +5,9 @@
 # at runtime/lib/brain_writer.py and IS tracked in git, so the protocol's
 # implementation surface ships with the repo even though the BRAIN itself
 # does not. Backup the BRAIN out-of-band (memory-export-<DATE>-<scope>.zip).
+# As of the .cyberos/ unification (§0.4), the BRAIN store lives at
+# .cyberos/memory/store/; a legacy .cyberos-memory/ is still honored if present.
+.cyberos/
 .cyberos-memory
 
 # CUO workflow activity history (step JSON cache, ADRs, audits, impl plans,
