@@ -52,10 +52,11 @@ One command lays the CyberOS machine into your repo under a single gitignored `.
 
    Fill section 1 with numbered normative clauses (each a testable promise), set `status: ready_to_implement`, and set `class: product` (or `class: improvement` for hardening work).
 
-5. List it in the backlog. Add a row under the ready section of `docs/feature-requests/BACKLOG.md`:
+5. List it in the backlog. There is exactly one backlog for all work — product and improvement FRs together, never a separate improvement file. Add a row under the ready section of `docs/feature-requests/BACKLOG.md`, tagging hardening rows `(improvement)`:
 
    ```
    - [ready_to_implement] FR-001-my-first - my first feature
+   - [ready_to_implement] FR-002-rate-limit - login rate limiting (improvement)
    ```
 
 6. Trigger the workflow. Paste this to your agent (or run `/ship-fr` with the plugin):
