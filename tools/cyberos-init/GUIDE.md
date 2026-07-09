@@ -94,6 +94,31 @@ CyberOS carries one version, stamped in `.cyberos/VERSION` when you init and in 
 
 Automatic vs manual: `--check` is the notify half (run it on a schedule to be told); re-running init is the apply half (run it when you choose). There is no silent in-place mutation - an update is always an explicit init run.
 
+## Rolling out to several repos
+
+One payload initialises many repos. From a CyberOS checkout:
+
+```bash
+bash tools/cyberos-init/build.sh                      # dist/cyberos/ (once)
+PAYLOAD="$(pwd)/dist/cyberos"
+
+for repo in ~/Projects/CyberSkill/ssl ~/Projects/CyberSkill/gam ~/Projects/CyberSkill/cyber-click; do
+  bash "$PAYLOAD/init.sh" "$repo"                      # vendors .cyberos/, keeps each repo's own BACKLOG/FRs/BRAIN
+done
+```
+
+Each repo gets its own gitignored `.cyberos/` (autodetected gates for its stack) and its own BRAIN. Nothing is committed by init - review `.cyberos/gates.env` per repo, then commit only the files you intend to (the FRs and backlog, never `.cyberos/`).
+
+To see which repos have fallen behind after you cut a new CyberOS version:
+
+```bash
+for repo in ~/Projects/CyberSkill/*; do
+  [ -d "$repo/.git" ] && bash "$PAYLOAD/init.sh" --check "$repo"
+done
+```
+
+Re-run `init.sh <repo>` (without `--check`) on any that report an update.
+
 ## Troubleshooting
 
 - Gates run the wrong command: edit `.cyberos/gates.env`; `run-gates.sh` reads it directly.
