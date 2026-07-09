@@ -6,11 +6,24 @@
 set -euo pipefail
 
 src="$(cd "$(dirname "$0")" && pwd)"                   # the payload dir this script lives in
+avail_ver="$(tr -d ' \n\r' < "$src/VERSION" 2>/dev/null || echo unknown)"
+
+# --check: report installed vs available CyberOS version for the target, then exit.
+if [ "${1:-}" = "--check" ]; then
+  target="${2:-$(pwd)}"; root="$(cd "$target" && git rev-parse --show-toplevel 2>/dev/null || echo "$target")"
+  inst="$(tr -d ' \n\r' < "$root/.cyberos/VERSION" 2>/dev/null || echo none)"
+  echo "CyberOS: installed=$inst  available=$avail_ver"
+  if [ "$inst" = "none" ]; then echo "  not initialised here - run: bash $0 $root"
+  elif [ "$inst" = "$avail_ver" ]; then echo "  up to date."
+  else echo "  UPDATE available ($inst -> $avail_ver). Update with: bash $0 $root"; fi
+  exit 0
+fi
+
 target="${1:-$(pwd)}"; target="$(cd "$target" && pwd)"
 root="$(cd "$target" && git rev-parse --show-toplevel 2>/dev/null || echo "$target")"
 CY="$root/.cyberos"
 
-echo "cyberos init: target repo = $root"
+echo "cyberos init: target repo = $root (CyberOS $avail_ver)"
 mkdir -p "$CY" "$root/docs/feature-requests/_audits"
 
 # 1. vendor the machine by module (replace any prior copy) --------------------
@@ -18,6 +31,7 @@ rm -rf "$CY/cuo" "$CY/plugin"
 cp -R "$src/cuo"    "$CY/cuo"
 cp -R "$src/plugin" "$CY/plugin"
 [ -f "$src/manifest.yaml" ] && cp "$src/manifest.yaml" "$CY/manifest.yaml"
+[ -f "$src/VERSION" ] && cp "$src/VERSION" "$CY/VERSION"
 chmod +x "$CY/cuo/gates/run-gates.sh" 2>/dev/null || true
 
 # 2. auto-detect gate commands ------------------------------------------------
@@ -144,6 +158,7 @@ cyberos init: done.
   backlog   -> docs/feature-requests/BACKLOG.md
   BRAIN     -> ${MEMORY_SET}${MEM_BRAIN:+ (${MEM_BRAIN})}${MEM_AGENTS:+; ${MEM_AGENTS}}
   gitignored: .cyberos/ and .cyberos-memory/ (vendored machine + local state)
+  version   -> CyberOS $avail_ver (.cyberos/VERSION); check for updates: <payload>/init.sh --check $root
 
 Next:
   1. Write an FR from the template:

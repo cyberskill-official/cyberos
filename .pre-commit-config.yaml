@@ -6,3 +6,9 @@
         language: script
         pass_filenames: false
         stages: [pre-commit]
+      - id: cyberos-payload-build
+        name: rebuild dist/cyberos when a vendored source changes
+        entry: .pre-commit-hooks/cyberos-payload-build.sh
+        language: script
+        pass_filenames: false
+        stages: [pre-commit]
