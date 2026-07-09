@@ -1,5 +1,5 @@
 {
-  "name": "cyberos-fr",
+  "name": "cyberos",
   "description": "Run the CyberOS ship-feature-requests workflow in any repo. Feature-requests (product or improvement class) go implement -> review -> test -> done, with HITL required at the two human-acceptance gates and gates driven by the repo's own build/lint/test.",
   "version": "0.1.0",
   "author": { "name": "CyberSkill" },
