@@ -138,11 +138,16 @@ def _resolve_source(source: Path) -> tuple[Path, Path | None]:
     if source.is_dir():
         if (source / "manifest.json").is_file():
             return source, None
-        # Allow pointing at the project root that contains .cyberos-memory/
-        nested = source / ".cyberos-memory"
-        if (nested / "manifest.json").is_file():
-            return nested, None
-        raise ValueError(f"{source} doesn't look like a .cyberos-memory store")
+        # Allow pointing at the project root that contains the store, in the
+        # unified layout (.cyberos/memory/store) or the legacy one (.cyberos-memory).
+        for rel in (Path(".cyberos") / "memory" / "store", Path(".cyberos-memory")):
+            nested = source / rel
+            if (nested / "manifest.json").is_file():
+                return nested, None
+        raise ValueError(
+            f"{source} doesn't look like a memory store "
+            "(.cyberos/memory/store or legacy .cyberos-memory)"
+        )
     if source.suffix == ".zip" and source.is_file():
         td = Path(tempfile.mkdtemp(prefix="cyberos-import-"))
         with zipfile.ZipFile(source) as z:
