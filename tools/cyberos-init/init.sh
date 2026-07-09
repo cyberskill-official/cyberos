@@ -126,7 +126,10 @@ if [ "${CYBEROS_NO_MEMORY:-0}" != "1" ] && [ -d "$src/memory" ]; then
   if [ -d "$legacy" ] && [ ! -d "$brain" ]; then
     MEM_BRAIN="kept existing legacy .cyberos-memory/ (honored per section 0.4)"
   elif [ ! -d "$brain" ]; then
-    for d in audit memories adrs audits impl-plans code-reviews obs-injections index exports meta module member company client project; do
+    # canonical v2 top-level dirs only (memory.invariants.yaml layout-root-canonical);
+    # CUO artifact kinds (adrs, audits, impl-plans, ...) are NOT top-level - they
+    # nest under their memory kind and are created on demand.
+    for d in memories meta company module member client project persona conflicts exports index audit; do
       mkdir -p "$brain/$d"
     done
     : > "$brain/.lock"
