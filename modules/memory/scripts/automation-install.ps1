@@ -42,8 +42,8 @@ if (-not (Test-Path $Target)) {
     exit 2
 }
 $Target = (Resolve-Path $Target).Path
-if (-not (Test-Path (Join-Path $Target ".cyberos-memory"))) {
-    Write-Error "target has no .cyberos-memory/: $Target"
+if (-not (Test-Path (Join-Path $Target ".cyberos/memory/store"))) {
+    Write-Error "target has no .cyberos/memory/store/: $Target"
     exit 2
 }
 

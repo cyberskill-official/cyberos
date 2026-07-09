@@ -79,7 +79,7 @@ class FsWatcher:
 
         watcher = FsWatcher([
             WatchSpec(root=Path.home() / "Projects/cyberskill"),
-            WatchSpec(root=Path.home() / ".cyberos-memory"),
+            WatchSpec(root=Path.home() / ".cyberos/memory/store"),
         ])
         for event in watcher.poll_loop(interval_secs=2):
             capture_daemon.handle(event)

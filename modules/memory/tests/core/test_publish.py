@@ -25,9 +25,9 @@ def _write_memory(store: Path, rel: str, *, mid: str, kind: str, actor: str,
 
 
 def _empty_store(tmp_path: Path) -> Path:
-    store = tmp_path / ".cyberos-memory"
-    store.mkdir()
-    (store / "audit").mkdir()
+    store = tmp_path / ".cyberos/memory/store"
+    store.mkdir(parents=True, exist_ok=True)
+    (store / "audit").mkdir(parents=True, exist_ok=True)
     (store / "manifest.json").write_text('{}', encoding="utf-8")
     return store
 

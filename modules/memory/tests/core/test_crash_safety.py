@@ -35,7 +35,7 @@ _NOT_LINUX = sys.platform != "linux"
 
 @pytest.fixture()
 def store(tmp_path: Path) -> Path:
-    s = tmp_path / ".cyberos-memory"
+    s = tmp_path / ".cyberos/memory/store"
     (s / "audit").mkdir(parents=True)
     return s
 

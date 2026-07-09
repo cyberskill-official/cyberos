@@ -50,8 +50,8 @@ ICT = timezone(timedelta(hours=7))
 def find_memory(start: Path = None) -> Path | None:
     cur = (start or Path.cwd()).resolve()
     while cur != cur.parent:
-        if (cur / ".cyberos-memory").is_dir():
-            return cur / ".cyberos-memory"
+        if (cur / ".cyberos/memory/store").is_dir():
+            return cur / ".cyberos/memory/store"
         cur = cur.parent
     return None
 
@@ -257,7 +257,7 @@ def main():
         print(f"\n📊 §0.4 refinement candidates this session: {len(candidates)}", file=sys.stderr)
         for c in candidates:
             print(f"  · [{c['severity']}] {c['pattern']}: {c['summary']}", file=sys.stderr)
-        print(f"  Review: ls .cyberos-memory/memories/drift/$(date +%Y-%m-%d)-*", file=sys.stderr)
+        print(f"  Review: ls .cyberos/memory/store/memories/drift/$(date +%Y-%m-%d)-*", file=sys.stderr)
 
 if __name__ == "__main__":
     main()

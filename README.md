@@ -34,7 +34,7 @@ cyberos/
 ```bash
 # Memory module
 cd modules/memory && pip install -e .
-cyberos --store ../../.cyberos-memory doctor    # → READY
+cyberos --store ../../.cyberos/memory/store doctor    # → READY
 
 # CUO module
 cd ../cuo && pip install -e .

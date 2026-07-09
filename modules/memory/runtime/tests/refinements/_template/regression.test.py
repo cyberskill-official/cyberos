@@ -6,10 +6,10 @@ from pathlib import Path
 def find_root():
     cur = Path.cwd().resolve()
     while cur != cur.parent:
-        if (cur / ".cyberos-memory").is_dir():
+        if (cur / ".cyberos/memory/store").is_dir():
             return cur
         cur = cur.parent
-    raise RuntimeError("no .cyberos-memory")
+    raise RuntimeError("no .cyberos/memory/store")
 
 def test_regression():
     """Pre-REF memories still validate after REF lands."""

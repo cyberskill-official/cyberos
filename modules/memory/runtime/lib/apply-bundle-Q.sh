@@ -36,7 +36,7 @@ NEW_SHA="sha256:71a276c74fe5a1fb65dbe24c6073f74d4cc7168b02aef1b577db9e01ccb13688
 ACTOR="subject:stephen-cheng"
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 WRITER="$REPO_ROOT/runtime/lib/memory_writer.py"
-TPL_DIR="$REPO_ROOT/.cyberos-memory/refinements/2026-05-11-bundle-Q"
+TPL_DIR="$REPO_ROOT/.cyberos/memory/store/refinements/2026-05-11-bundle-Q"
 ARCHIVE_PATH="meta/protocol-history/AGENTS-${OLD_SHA/:/-}.md"
 DEC_PATH="memories/decisions/DEC-109-implementation-files-in-source-tree.md"
 REF_PATH="memories/refinements/REF-041-bundle-q-impl-files-and-close-pattern.md"
@@ -53,8 +53,8 @@ if [ ! -f "$WRITER" ]; then
     exit 2
 fi
 
-if [ ! -d ".cyberos-memory" ]; then
-    echo "FATAL: .cyberos-memory/ not found at $REPO_ROOT" >&2
+if [ ! -d ".cyberos/memory/store" ]; then
+    echo "FATAL: .cyberos/memory/store/ not found at $REPO_ROOT" >&2
     exit 2
 fi
 
@@ -172,7 +172,7 @@ mem_id = f'mem_{hex_str[0:8]}-{hex_str[8:12]}-{hex_str[12:16]}-{hex_str[16:20]}-
 
 # ISO-8601 with offset, second precision, in manifest's tz
 import json
-with open('.cyberos-memory/manifest.json') as f:
+with open('.cyberos/memory/store/manifest.json') as f:
     m = json.load(f)
 tz = ZoneInfo(m.get('timezone') or 'UTC')
 iso_ts = datetime.datetime.now(tz).replace(microsecond=0).isoformat()
@@ -226,7 +226,7 @@ if [ "$SA_STATUS" -eq 2 ]; then
     echo "✗ §8.7 self-audit reported CRITICAL findings — halting before session.end."  >&2
     echo "  The protocol-upgrade row landed; writes will remain frozen until"  >&2
     echo "  repaired in MAINTENANCE mode (§8.8). Review the latest report at"  >&2
-    echo "  .cyberos-memory/meta/health/, address findings, then run:"  >&2
+    echo "  .cyberos/memory/store/meta/health/, address findings, then run:"  >&2
     echo "    python3 $WRITER session-end $ACTOR"  >&2
     rm -f "$PRIOR_TMP" "$DEC_RENDERED" "$REF_RENDERED"
     exit 2
@@ -248,5 +248,5 @@ python3 "$WRITER" verify --bit-perfect
 echo
 echo "If 'LINK invariant breaks: 0' above and the manifest pin matches"
 echo "$NEW_SHA, you're done. Commit the bundle as one logical unit:"
-echo "  git add .gitignore AGENTS.md docs/ runtime/ .cyberos-memory/cache/"
+echo "  git add .gitignore AGENTS.md docs/ runtime/ .cyberos/memory/store/cache/"
 echo "  git commit -m 'Bundle Q: §0.6 + §4.7 + §13.1 + §15 amendments'"

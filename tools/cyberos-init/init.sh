@@ -120,12 +120,8 @@ if [ "${CYBEROS_NO_MEMORY:-0}" != "1" ] && [ -d "$src/memory" ]; then
   fi
 
   # scaffold the BRAIN store at .cyberos/memory/store/ (canonical, section 0.4).
-  # honor a pre-existing legacy .cyberos-memory/ store if present (never duplicate).
   brain="$CY/memory/store"
-  legacy="$root/.cyberos-memory"
-  if [ -d "$legacy" ] && [ ! -d "$brain" ]; then
-    MEM_BRAIN="kept existing legacy .cyberos-memory/ (honored per section 0.4)"
-  elif [ ! -d "$brain" ]; then
+  if [ ! -d "$brain" ]; then
     # canonical v2 top-level dirs only (memory.invariants.yaml layout-root-canonical);
     # CUO artifact kinds (adrs, audits, impl-plans, ...) are NOT top-level - they
     # nest under their memory kind and are created on demand.
@@ -156,9 +152,8 @@ fi
 # 6. gitignore the vendored machine + the BRAIN (regenerable / tenant data) ---
 gi="$root/.gitignore"
 [ -f "$gi" ] || : > "$gi"
-grep -q "CyberOS vendored machine" "$gi" || printf '\n# CyberOS vendored machine + local BRAIN (regenerable via init; tenant data). Do not commit.\n' >> "$gi"
+grep -q "CyberOS vendored machine" "$gi" || printf '\n# CyberOS vendored machine + local BRAIN at .cyberos/memory/store (regenerable via init; tenant data). Do not commit.\n' >> "$gi"
 grep -qx ".cyberos/" "$gi"        || echo ".cyberos/"        >> "$gi"
-grep -qx ".cyberos-memory/" "$gi" || echo ".cyberos-memory/" >> "$gi"
 
 # 7. tell the operator what to do next ----------------------------------------
 cat <<EOF
@@ -169,7 +164,7 @@ cyberos init: done.
   gates     -> .cyberos/gates.env     (detected: build='${BUILD_CMD:-none}' test='${TEST_CMD:-none}')
   backlog   -> docs/feature-requests/BACKLOG.md
   BRAIN     -> ${MEMORY_SET}${MEM_BRAIN:+ (${MEM_BRAIN})}${MEM_AGENTS:+; ${MEM_AGENTS}}
-  gitignored: .cyberos/ and .cyberos-memory/ (vendored machine + local state)
+  gitignored: .cyberos/ (vendored machine + BRAIN store at .cyberos/memory/store)
   version   -> CyberOS $avail_ver (.cyberos/VERSION); check for updates: <payload>/init.sh --check $root
 
 Next:
@@ -184,8 +179,7 @@ Next:
        bash .cyberos/cuo/gates/run-gates.sh
 
 BRAIN memory protocol: .cyberos/memory/store/ is your local memory store (gitignored, tenant
-data); a legacy .cyberos-memory/ is still honored if one already exists. The rules are in
-AGENTS.md (or .cyberos/memory/AGENTS.md). An agent working in this repo records decisions,
-audits, and plans into the BRAIN per that protocol.
+data). The rules are in AGENTS.md (or .cyberos/memory/AGENTS.md). An agent working in this
+repo records decisions, audits, and plans into the BRAIN per that protocol.
 Skip memory setup by re-running init with CYBEROS_NO_MEMORY=1.
 EOF

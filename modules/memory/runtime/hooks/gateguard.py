@@ -97,7 +97,7 @@ def _write_signature(cmd: str) -> str:
 def _force_checklist(write_type: str, cmd: str) -> list[str]:
     """Return the list of facts the agent must gather based on write type."""
     common = [
-        "Confirm `.cyberos-memory/` resolves to real Finder path (§0.1 sanity)",
+        "Confirm `.cyberos/memory/store/` resolves to real Finder path (§0.1 sanity)",
         "Read existing memories with same tags to detect duplicates",
         "Verify `manifest.protocol.sha256` matches canonical SHA of loaded AGENTS.md (§0.5)",
     ]
@@ -138,8 +138,8 @@ def _facts_provided(cmd: str, state: dict) -> bool:
 
     Detects by checking if the agent ran any of these between attempts:
       - `cyberos show` / `cyberos search` / `cyberos verify` / `grep memories/`
-      - `cat .cyberos-memory/memories/`
-      - `find .cyberos-memory/`
+      - `cat .cyberos/memory/store/memories/`
+      - `find .cyberos/memory/store/`
 
     We can't actually verify from one PreToolUse hook (it sees one call at a time).
     Instead: state file accumulates investigation-evidence commands. The retry
@@ -153,8 +153,8 @@ def _record_investigation(cmd: str):
     """If this looks like an investigation command (read-only), record against all pending sigs."""
     if any(s in cmd for s in (
         "cyberos show", "cyberos search", "cyberos verify", "cyberos stats",
-        "cat .cyberos-memory", "find .cyberos-memory", "grep -r memories/",
-        "ls .cyberos-memory", "cyberos doc-consistency"
+        "cat .cyberos/memory/store", "find .cyberos/memory/store", "grep -r memories/",
+        "ls .cyberos/memory/store", "cyberos doc-consistency"
     )):
         state = _load_state()
         # Mark all pending denied sigs as having seen this investigation

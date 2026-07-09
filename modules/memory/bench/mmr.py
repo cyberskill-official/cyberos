@@ -40,7 +40,7 @@ def _bench_size(n: int, *, persist: bool, store_root: Path) -> dict:
     leaves = [f"leaf-{i:08x}-{i}".encode() for i in range(n)]
 
     if persist:
-        store = store_root / f"size-{n}" / ".cyberos-memory"
+        store = store_root / f"size-{n}" / ".cyberos/memory/store"
         store.mkdir(parents=True, exist_ok=True)
         (store / "audit" / "mmr").mkdir(parents=True, exist_ok=True)
         mmr = OnDiskMMR(store)

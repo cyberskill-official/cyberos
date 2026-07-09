@@ -247,7 +247,7 @@ def test_watch_mode_atomic_write(skill_root: Path, tmp_path: Path) -> None:
 def test_emits_audit_row(skill_root: Path, tmp_path: Path, monkeypatch) -> None:
     """AC #6: exactly one `harness.report_emitted` audit row per emit_report call."""
     # Set up a real memory root so the emit happens through the Writer.
-    memory_root = tmp_path / ".cyberos-memory"
+    memory_root = tmp_path / ".cyberos/memory/store"
     (memory_root / "audit").mkdir(parents=True)
     (memory_root / "memories").mkdir(parents=True)
     (memory_root / "manifest.json").write_text(json.dumps({

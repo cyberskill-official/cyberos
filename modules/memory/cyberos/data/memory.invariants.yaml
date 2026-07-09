@@ -28,7 +28,7 @@ invariants:
     level: error
     scope: filesystem
     description: |
-      The .cyberos-memory/ root MUST contain exactly the canonical
+      The .cyberos/memory/store/ root MUST contain exactly the canonical
       top-level directories listed in §3 of AGENTS.md and the canonical
       files (manifest.json, optional .lock, optional HEAD).
     check: cyberos.core.invariants.check_layout_root_canonical
@@ -38,7 +38,7 @@ invariants:
     level: error
     scope: filesystem
     description: |
-      The resolved .cyberos-memory/ path MUST NOT match any forbidden
+      The resolved .cyberos/memory/store/ path MUST NOT match any forbidden
       sandbox-fragment listed in §0.1 (e.g. /sessions/, /tmp/, etc.)
       unless CYBEROS_HOST_MOUNT_PREFIX exempts it.
     check: cyberos.core.invariants.check_layout_no_sandbox_path

@@ -28,7 +28,7 @@ from cyberos.core.writer import Writer
 
 
 def _make_store(root: Path, name: str) -> Path:
-    s = root / name / ".cyberos-memory"
+    s = root / name / ".cyberos/memory/store"
     (s / "audit").mkdir(parents=True)
     s.joinpath("manifest.json").write_text("{}", encoding="utf-8")
     return s

@@ -188,7 +188,7 @@ def test_test_gate_skip_when_no_trigger_tests(env: dict) -> None:
 
 def test_audit_rows_emitted(env: dict) -> None:
     """AC #5/#6: applier emits cuo.proposal_applied / cuo.proposal_queued aux rows.
-    In test env without .cyberos-memory the emit is opportunistic and silent —
+    In test env without .cyberos/memory/store the emit is opportunistic and silent —
     the apply must still succeed."""
     proposal = _write_proposal(env, skill_name="test-skill-a", body="Fix typo.")
     result = apply_proposal(proposal, env["skill_root"],

@@ -110,7 +110,7 @@
       <section class="space-y-4">
         <h2 class="text-base font-medium">Quick capture</h2>
         <p class="text-sm text-slate-400">
-          Writes a markdown file under <code class="font-mono text-xs">~/.cyberos-memory/default/captures/</code>
+          Writes a markdown file under <code class="font-mono text-xs">~/.cyberos/memory/store/default/captures/</code>
           with <code class="font-mono text-xs">sync_class: shareable</code>.
         </p>
         <textarea
@@ -184,7 +184,7 @@
       <section class="space-y-4">
         <h2 class="text-base font-medium">Sync state</h2>
         <p class="text-sm text-slate-400">
-          Reads <code class="font-mono text-xs">~/.cyberos-memory/default/sync/last-status.json</code>
+          Reads <code class="font-mono text-xs">~/.cyberos/memory/store/default/sync/last-status.json</code>
           (per <code class="font-mono text-xs">brain_sync.py::LAST_STATUS_REL</code>).
         </p>
         <button

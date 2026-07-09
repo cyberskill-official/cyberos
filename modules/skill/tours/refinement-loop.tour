@@ -6,9 +6,9 @@
     {"file": "docs/CyberOS-AGENTS.README.md", "line": 314, "description": "Part 8 — How to evolve the protocol safely. Cardinal rule: additive only."},
     {"file": "docs/CyberOS-AGENTS.README.md", "line": 324, "description": "§0.4 standing rule — every memory issue MUST trigger a refinement proposal in the same response."},
     {"file": "runtime/hooks/refinement_candidates.py", "line": 1, "description": "Stop-hook auto-detects candidates ≥3 occurrences in 30-day window. Observes only — never auto-acts."},
-    {"file": ".cyberos-memory/meta/templates/REF.md", "line": 1, "description": "REF template — Trigger / Tier / AGENTS.md section / Exact prose / Capability eval / Regression eval / Implements DEC."},
-    {"file": ".cyberos-memory/meta/templates/POSTMORTEM.md", "line": 1, "description": "If a rejected candidate turns out to be real, blameless postmortem captures it."},
-    {"file": ".cyberos-memory/meta/templates/REJECTED.md", "line": 1, "description": "When you reject a candidate, write REJECTED-NNN with why + conditions for reconsideration."},
+    {"file": ".cyberos/memory/store/meta/templates/REF.md", "line": 1, "description": "REF template — Trigger / Tier / AGENTS.md section / Exact prose / Capability eval / Regression eval / Implements DEC."},
+    {"file": ".cyberos/memory/store/meta/templates/POSTMORTEM.md", "line": 1, "description": "If a rejected candidate turns out to be real, blameless postmortem captures it."},
+    {"file": ".cyberos/memory/store/meta/templates/REJECTED.md", "line": 1, "description": "When you reject a candidate, write REJECTED-NNN with why + conditions for reconsideration."},
     {"file": "docs/CyberOS-AGENTS.CHANGELOG.md", "line": 1, "description": "Every adopted refinement lands here. Bundle naming (A-Q so far). Read newest-first to understand current state."}
   ]
 }

@@ -4,10 +4,10 @@
 //!   - `search_memory`    — POSTs to the local Rust memory service (FR-MEMORY-108),
 //!                         which is assumed to be listening on 127.0.0.1:7901.
 //!   - `write_quick_note` — writes a markdown file under
-//!                         `~/.cyberos-memory/{tenant}/captures/` with frontmatter.
+//!                         `~/.cyberos/memory/store/{tenant}/captures/` with frontmatter.
 //!                         Today the tenant resolves to "default"; FR-MEMORY-105+ wires
 //!                         real multi-tenant resolution.
-//!   - `get_sync_state`   — reads `~/.cyberos-memory/{tenant}/sync/last-status.json`
+//!   - `get_sync_state`   — reads `~/.cyberos/memory/store/{tenant}/sync/last-status.json`
 //!                         (matches `modules/memory/cyberos/core/memory_sync.py::LAST_STATUS_REL`).
 
 use std::path::PathBuf;
@@ -152,9 +152,9 @@ pub async fn get_sync_state() -> Result<SyncState, String> {
 // helpers
 // ────────────────────────────────────────────────────────────────────────────
 
-/// `~/.cyberos-memory/{tenant}/`. For the first slice, tenant is hard-coded to
+/// `~/.cyberos/memory/store/{tenant}/`. For the first slice, tenant is hard-coded to
 /// `default`; multi-tenant resolution arrives with FR-MEMORY-105+.
 fn memory_dir() -> PathBuf {
     let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
-    home.join(".cyberos-memory").join("default")
+    home.join(".cyberos/memory/store").join("default")
 }

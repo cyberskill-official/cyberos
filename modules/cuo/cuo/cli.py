@@ -432,7 +432,7 @@ def cmd_execute(
         click.echo("")
         click.echo("# memory emission")
         if not memory_is_available(ctx.obj["skill_root"]):
-            click.echo("  SKIPPED — memory not reachable (memory module not importable OR .cyberos-memory missing)")
+            click.echo("  SKIPPED — memory not reachable (memory module not importable OR .cyberos/memory/store missing)")
         else:
             br = emit_chain_result(result, ctx.obj["skill_root"], actor=actor)
             if br.emitted:
@@ -654,7 +654,7 @@ def cmd_harness(ctx: click.Context) -> None:
     "--memory-root",
     type=click.Path(file_okay=False, path_type=Path),
     default=None,
-    help="Path to .cyberos-memory/ for audit-row emission. "
+    help="Path to .cyberos/memory/store/ for audit-row emission. "
          "If unset, the report is written but no audit row is emitted.",
 )
 @click.option("--watch", is_flag=True, default=False,
@@ -682,7 +682,7 @@ def cmd_harness_report(
         out_path = (cyberos_root / "docs" / "harness"
                     / f"harness-report-{__import__('datetime').date.today().isoformat()}.md")
     if memory_root is None:
-        candidate = cyberos_root / ".cyberos-memory"
+        candidate = cyberos_root / ".cyberos/memory/store"
         if (candidate / "manifest.json").is_file():
             memory_root = candidate
 

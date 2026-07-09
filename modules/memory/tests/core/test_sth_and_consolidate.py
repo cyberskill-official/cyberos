@@ -43,7 +43,7 @@ def keypaths(tmp_path: Path) -> KeyPaths:
 
 @pytest.fixture()
 def store(tmp_path: Path) -> Path:
-    s = tmp_path / ".cyberos-memory"
+    s = tmp_path / ".cyberos/memory/store"
     (s / "audit").mkdir(parents=True)
     (s / "manifest.json").write_text("{}", encoding="utf-8")
     return s

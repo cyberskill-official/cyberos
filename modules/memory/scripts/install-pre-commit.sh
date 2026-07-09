@@ -36,7 +36,7 @@ chmod +x "$REPO_ROOT/memory/scripts/hooks/pre-commit"
 echo "✓ installed: $HOOK → $REPO_ROOT/memory/scripts/hooks/pre-commit"
 echo
 echo "to test:"
-echo "  cd $TARGET && touch .cyberos-memory/memories/decisions/dummy.md && git add ."
+echo "  cd $TARGET && touch .cyberos/memory/store/memories/decisions/dummy.md && git add ."
 echo "  git commit -m 'test'    # should fail validation"
 echo "  git restore --staged .  # undo"
 echo

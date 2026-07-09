@@ -12,7 +12,7 @@ Scripts that other runtime modules depend on. Not directly invocable as CLI subc
 
 ## Why "lib"?
 
-Pre-Batch 26 these scripts lived under the misleadingly-named `outputs/` folder. They are SOURCE CODE that the runtime *calls* — not outputs of the runtime. UNIX convention puts shared library code in `lib/`. Generated state goes elsewhere (now in the memory cache under `.cyberos-memory/cache/`).
+Pre-Batch 26 these scripts lived under the misleadingly-named `outputs/` folder. They are SOURCE CODE that the runtime *calls* — not outputs of the runtime. UNIX convention puts shared library code in `lib/`. Generated state goes elsewhere (now in the memory cache under `.cyberos/memory/store/cache/`).
 
 ## Calling conventions
 

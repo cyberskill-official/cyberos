@@ -66,8 +66,8 @@ fi
 
 if [[ -z "$TARGET" ]]; then TARGET="$(pwd)"; fi
 TARGET="$(cd "$TARGET" && pwd)"
-if [[ ! -d "$TARGET/.cyberos-memory" ]]; then
-    echo "error: $TARGET has no .cyberos-memory/" >&2
+if [[ ! -d "$TARGET/.cyberos/memory/store" ]]; then
+    echo "error: $TARGET has no .cyberos/memory/store/" >&2
     exit 2
 fi
 

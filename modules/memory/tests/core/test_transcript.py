@@ -57,7 +57,7 @@ def _exempt_sandbox_path(monkeypatch, tmp_path):
 
 
 def _init_store(tmp_path: Path, with_section_18: bool = True) -> Path:
-    store = tmp_path / ".cyberos-memory"
+    store = tmp_path / ".cyberos/memory/store"
     (store / "audit").mkdir(parents=True)
     (store / "memories" / "facts").mkdir(parents=True)
     (store / "manifest.json").write_text(json.dumps({

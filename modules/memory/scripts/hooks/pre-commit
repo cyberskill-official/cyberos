@@ -23,7 +23,7 @@ if ! python -c "import cyberos" 2>/dev/null; then
 fi
 
 # Only run if the commit touches anything relevant to the BRAIN.
-STAGED_BRAIN_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E "^(\.cyberos-memory|memory/docs|memory/cyberos/)" || true)
+STAGED_BRAIN_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E "^(\.cyberos/memory/store|memory/docs|memory/cyberos/)" || true)
 if [[ -z "$STAGED_BRAIN_FILES" ]]; then
     exit 0
 fi
@@ -33,7 +33,7 @@ echo "pre-commit: BRAIN-touching files staged — running checks"
 # ---------------------------------------------------------------------- 1. doctor
 
 echo "  → cyberos doctor"
-if ! python -m cyberos --store .cyberos-memory doctor > /tmp/cyberos-precommit-doctor.log 2>&1; then
+if ! python -m cyberos --store .cyberos/memory/store doctor > /tmp/cyberos-precommit-doctor.log 2>&1; then
     echo "pre-commit: cyberos doctor reported errors" >&2
     tail -20 /tmp/cyberos-precommit-doctor.log >&2
     echo "    — bypass with 'git commit --no-verify' if intentional" >&2
@@ -43,12 +43,12 @@ echo "    ✓ all invariants pass"
 
 # ---------------------------------------------------------------------- 2. validate staged memory files
 
-STAGED_MEMORIES=$(echo "$STAGED_BRAIN_FILES" | grep -E "^\.cyberos-memory/memories/" || true)
+STAGED_MEMORIES=$(echo "$STAGED_BRAIN_FILES" | grep -E "^\.cyberos/memory/store/memories/" || true)
 if [[ -n "$STAGED_MEMORIES" ]]; then
     echo "  → cyberos validate (staged memory files)"
-    # strip the .cyberos-memory/ prefix; validate expects store-relative paths
-    REL_PATHS=$(echo "$STAGED_MEMORIES" | sed 's|^\.cyberos-memory/||')
-    if ! python -m cyberos --store .cyberos-memory validate $REL_PATHS > /tmp/cyberos-precommit-validate.log 2>&1; then
+    # strip the .cyberos/memory/store/ prefix; validate expects store-relative paths
+    REL_PATHS=$(echo "$STAGED_MEMORIES" | sed 's|^\.cyberos/memory/store/||')
+    if ! python -m cyberos --store .cyberos/memory/store validate $REL_PATHS > /tmp/cyberos-precommit-validate.log 2>&1; then
         echo "pre-commit: validate failed on staged memory file(s)" >&2
         cat /tmp/cyberos-precommit-validate.log >&2
         exit 1
