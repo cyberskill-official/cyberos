@@ -82,7 +82,7 @@
 +-- docs/sessions/         &lt;-- per-session log archives
 +-- services/               &lt;-- service descriptors
 |
-+-- .cyberos-memory/        &lt;-- memory store (gitignored)
++-- .cyberos/memory/store/        &lt;-- memory store (gitignored)
 +-- .github/                &lt;-- CI workflows
 +-- README.md               &lt;-- THIS FILE
 +-- CHANGELOG.md            &lt;-- repo-level umbrella changelog
@@ -119,7 +119,7 @@
 <pre class="gs-code"><span class="comment"># Memory module -- the memory</span>
 cd modules/memory
 pip install -e .
-cyberos --store ../../.cyberos-memory doctor          <span class="comment"># -> READY 15/15 invariants</span></pre>
+cyberos --store ../../.cyberos/memory/store doctor          <span class="comment"># -> READY 15/15 invariants</span></pre>
 
    <h3>CUO module</h3>
 <pre class="gs-code"><span class="comment"># CUO module -- persona-aware orchestration</span>
@@ -170,8 +170,8 @@ scripts/release.sh --no-commit patch    <span class="comment"># skip git commit 
        <tr><td><code>VERSION</code> (repo root)</td><td>Canonical version -- edited by <code>scripts/release.sh</code></td></tr>
        <tr><td><code>modules/*/pyproject.toml</code></td><td>Package metadata -- auto-updated on release</td></tr>
        <tr><td><code>modules/*/cyberos*/__init__.py</code></td><td><code>__version__</code> -- auto-updated on release</td></tr>
-       <tr><td><code>.cyberos-memory/manifest.json</code></td><td>Per-store <code>cyberos_version</code> -- updated by <code>cyberos self-update</code></td></tr>
-       <tr><td><code>.cyberos-memory/AGENTS.md</code></td><td>Protocol file -- re-copied from source on <code>self-update</code></td></tr>
+       <tr><td><code>.cyberos/memory/store/manifest.json</code></td><td>Per-store <code>cyberos_version</code> -- updated by <code>cyberos self-update</code></td></tr>
+       <tr><td><code>.cyberos/memory/store/AGENTS.md</code></td><td>Protocol file -- re-copied from source on <code>self-update</code></td></tr>
      </tbody>
    </table>
  </section>
@@ -189,10 +189,10 @@ modules/memory/scripts/install.sh /path/to/your/project</pre>
 
    <p>The install script:</p>
    <ul>
-     <li>Creates <code>.cyberos-memory/</code> with full directory skeleton + <code>HEAD</code></li>
+     <li>Creates <code>.cyberos/memory/store/</code> with full directory skeleton + <code>HEAD</code></li>
      <li>Copies <code>AGENTS.md</code> into the store (self-contained)</li>
-     <li>Symlinks <code>AGENTS.md</code> + <code>CLAUDE.md</code> from project root into <code>.cyberos-memory/</code></li>
-     <li>Adds <code>.cyberos-memory/</code> to <code>.gitignore</code></li>
+     <li>Symlinks <code>AGENTS.md</code> + <code>CLAUDE.md</code> from project root into <code>.cyberos/memory/store/</code></li>
+     <li>Adds <code>.cyberos/memory/store/</code> to <code>.gitignore</code></li>
      <li>Runs <code>cyberos doctor</code> to verify</li>
    </ul>
  </section>

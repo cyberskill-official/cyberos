@@ -71,7 +71,7 @@
       "open": false
     },
     "fs": {
-      "scope": ["$HOME/.cyberos-memory/**"]
+      "scope": ["$HOME/.cyberos/memory/store/**"]
     },
     "updater": {
       "active": false,

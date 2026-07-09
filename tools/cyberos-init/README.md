@@ -4,7 +4,7 @@ This is the portable form of the single `ship-feature-requests` workflow. It run
 
 New to it? `GUIDE.md` is the step-by-step walkthrough (zero to your first shipped FR). This README is the channel catalog and reference.
 
-`init` sets up two things by default: the FR workflow AND the BRAIN memory protocol. It scaffolds a local `.cyberos-memory/` store (gitignored tenant data) and drops the `AGENTS.md` Layer-1 memory rules, so the project gets both the workflow and the memory discipline. Skip the memory half with `CYBEROS_NO_MEMORY=1`.
+`init` sets up two things by default: the FR workflow AND the BRAIN memory protocol. It scaffolds a local `.cyberos/memory/store/` store (gitignored tenant data) and drops the `AGENTS.md` Layer-1 memory rules, so the project gets both the workflow and the memory discipline. Skip the memory half with `CYBEROS_NO_MEMORY=1`.
 
 ## What it is
 

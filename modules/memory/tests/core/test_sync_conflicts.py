@@ -65,7 +65,7 @@ def test_classify_non_conflicts(filename):
 
 def _make_store(tmp_path: Path) -> Path:
     """Make a minimal store skeleton with a memories dir."""
-    store = tmp_path / ".cyberos-memory"
+    store = tmp_path / ".cyberos/memory/store"
     (store / "audit").mkdir(parents=True)
     (store / "memories" / "facts").mkdir(parents=True)
     (store / "memories" / "decisions").mkdir(parents=True)

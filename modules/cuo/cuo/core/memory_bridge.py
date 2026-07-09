@@ -5,7 +5,7 @@ audit chain per the memory module protocol (AGENTS.md §6, §11)."
 
 This module is a thin wrapper around `cyberos.core.writer.Writer` from the
 sibling memory module. It opens the writer against the local memory
-(`<cyberos_root>/.cyberos-memory/`) and emits two row classes per workflow
+(`<cyberos_root>/.cyberos/memory/store/`) and emits two row classes per workflow
 execution:
 
   1. One **`view`** row per `StepResult` — records that the supervisor invoked
@@ -103,7 +103,7 @@ def _try_import_memory_writer():
 
 
 def _find_memory_root(skill_root: Path) -> Path | None:
-    """Locate `<cyberos_root>/.cyberos-memory/`.
+    """Locate `<cyberos_root>/.cyberos/memory/store/`.
 
     Under the modules/ layout (post-2026-05-18), skill_root is
     `<cyberos_root>/modules/skill/`, so memory is at `skill_root.parent.parent`.
@@ -115,14 +115,14 @@ def _find_memory_root(skill_root: Path) -> Path | None:
     import os
 
     for candidate in (skill_root.parent.parent, skill_root.parent):
-        memory = candidate / ".cyberos-memory"
+        memory = candidate / ".cyberos/memory/store"
         if memory.is_dir():
             return memory
 
     # Fallback: CYBEROS_ROOT env var
     env_root = os.environ.get("CYBEROS_ROOT")
     if env_root:
-        memory = Path(env_root).resolve() / ".cyberos-memory"
+        memory = Path(env_root).resolve() / ".cyberos/memory/store"
         if memory.is_dir():
             return memory
 
@@ -146,7 +146,7 @@ def emit_chain_result(
         chain_result: the supervisor's ChainResult to record.
         skill_root: path to `skill/` (used to locate the sibling memory root).
         actor: actor name attached to every row. Default "cuo-supervisor".
-        memory_root: optional override for `.cyberos-memory/` location.
+        memory_root: optional override for `.cyberos/memory/store/` location.
             If None, auto-locates via `_find_memory_root(skill_root)`.
 
     Returns:
@@ -286,7 +286,7 @@ def memory_is_available(skill_root: Path) -> bool:
 
     Returns True only when both:
       - cyberos.core.writer is importable
-      - <cyberos_root>/.cyberos-memory/audit/ exists
+      - <cyberos_root>/.cyberos/memory/store/audit/ exists
     """
     if _try_import_memory_writer() is None:
         return False

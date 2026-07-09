@@ -277,11 +277,11 @@ if __name__ == "__main__":
     cur = Path.cwd().resolve()
     memory_root = None
     while cur != cur.parent:
-        if (cur / ".cyberos-memory").is_dir():
+        if (cur / ".cyberos/memory/store").is_dir():
             memory_root = cur; break
         cur = cur.parent
     if not memory_root:
-        sys.exit("no .cyberos-memory/ found")
+        sys.exit("no .cyberos/memory/store/ found")
 
     inputs = {"pitch": args.pitch}
     if args.spec_file:

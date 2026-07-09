@@ -1,5 +1,5 @@
 """
-cyberos.core.export — deterministic zip export of a `.cyberos-memory/` store.
+cyberos.core.export — deterministic zip export of a `.cyberos/memory/store/` store.
 
 Walks the tree in lexicographic order, re-serialises every JSON-encodable
 file canonically via msgspec (sorted keys), and writes a zip with:

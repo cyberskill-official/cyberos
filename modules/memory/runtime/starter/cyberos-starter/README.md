@@ -1,13 +1,13 @@
 # cyberos-starter
 
-Skeleton for bootstrapping a new project with a fresh `.cyberos-memory/` memory. Drop-in template; replace placeholders, run `cyberos onboard`.
+Skeleton for bootstrapping a new project with a fresh `.cyberos/memory/store/` memory. Drop-in template; replace placeholders, run `cyberos onboard`.
 
 ## Layout
 
 ```
 cyberos-starter/
 ├── README.md                      ← this file
-├── .cyberos-memory/
+├── .cyberos/memory/store/
 │   ├── manifest.json              ← per-project pointer; fill in your project_id + name
 │   ├── audit/
 │   │   └── (empty — populated on first session)
@@ -37,7 +37,7 @@ cp -r runtime/starter/cyberos-starter ~/Projects/my-new-thing
 cd ~/Projects/my-new-thing
 
 # 2. Edit manifest.json — set project.id, project.name
-$EDITOR .cyberos-memory/manifest.json
+$EDITOR .cyberos/memory/store/manifest.json
 
 # 3. Symlink CLAUDE.md + AGENTS.md → modules/memory/AGENTS.md (single source of truth)
 ln -s /path/to/cyberos/modules/memory/AGENTS.md AGENTS.md
@@ -53,7 +53,7 @@ cyberos verify
 ## What `cyberos onboard` does
 
 1. Prompts for your subject id (`subject:<slug>`)
-2. Optionally creates `.cyberos-memory/persona/<role>.md`
+2. Optionally creates `.cyberos/memory/store/persona/<role>.md`
 3. Optionally seeds `memories/people/PERSON-001-<subject>.md`
 4. Drops a starter checklist memory at `memories/preferences/PREF-onboarding-checklist-<subject>.md`
 5. Runs `cyberos verify` and reports

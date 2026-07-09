@@ -41,13 +41,13 @@ function Timestamp { (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ
 Set-Location $Project
 "=== weekly $(Timestamp) ===" | Add-Content $Log
 
-if (-not (Test-Path .cyberos-memory)) {
-    "no .cyberos-memory in $Project — skipping" | Add-Content $Log
+if (-not (Test-Path .cyberos/memory/store)) {
+    "no .cyberos/memory/store in $Project — skipping" | Add-Content $Log
     exit 0
 }
 
 "→ cyberos backup → $BackupTarget" | Add-Content $Log
-python -m cyberos --store .cyberos-memory backup --target $BackupTarget --label "weekly-$(Timestamp)" *>> $Log
+python -m cyberos --store .cyberos/memory/store backup --target $BackupTarget --label "weekly-$(Timestamp)" *>> $Log
 if ($LASTEXITCODE -ne 0) {
     "backup: FAIL" | Add-Content $Log
     Notify "cyberos weekly: backup failed" "See $Log"
@@ -56,7 +56,7 @@ if ($LASTEXITCODE -ne 0) {
 
 "" | Add-Content $Log
 "→ cyberos consolidate" | Add-Content $Log
-python -m cyberos --store .cyberos-memory consolidate *>> $Log
+python -m cyberos --store .cyberos/memory/store consolidate *>> $Log
 if ($LASTEXITCODE -ne 0) {
     "consolidate: FAIL" | Add-Content $Log
     Notify "cyberos weekly: consolidate failed" "See $Log"
@@ -69,8 +69,8 @@ $Scratch = New-Item -ItemType Directory -Path (Join-Path $env:TEMP "cyberos-det-
 try {
     $A = Join-Path $Scratch "a.zip"
     $B = Join-Path $Scratch "b.zip"
-    python -m cyberos --store .cyberos-memory export $A *>> $Log
-    python -m cyberos --store .cyberos-memory export $B *>> $Log
+    python -m cyberos --store .cyberos/memory/store export $A *>> $Log
+    python -m cyberos --store .cyberos/memory/store export $B *>> $Log
     $shaA = (Get-FileHash $A -Algorithm SHA256).Hash
     $shaB = (Get-FileHash $B -Algorithm SHA256).Hash
     if ($shaA -eq $shaB) {

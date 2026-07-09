@@ -37,7 +37,7 @@ from pathlib import Path
 def setup_fake_memory() -> Path:
     """Build a minimal memory in a tmp dir."""
     tmp = Path(tempfile.mkdtemp(prefix="cyberos-chaos-"))
-    memory = tmp / ".cyberos-memory"
+    memory = tmp / ".cyberos/memory/store"
     (memory / "audit").mkdir(parents=True)
     (memory / "memories" / "facts").mkdir(parents=True)
     (memory / "manifest.json").write_text(json.dumps({
@@ -56,7 +56,7 @@ def test_tmp_atomicity():
     print("\n  Test 1 — tmp+rename atomicity")
     tmp_memory = setup_fake_memory()
     # Simulate: writer creates .tmp.<file>.part, then dies before rename
-    target = tmp_memory / ".cyberos-memory" / "memories" / "facts" / "FACT-001-test.md"
+    target = tmp_memory / ".cyberos/memory/store" / "memories" / "facts" / "FACT-001-test.md"
     partial = target.with_name(f".tmp.{target.name}.part")
     partial.write_text("---\nmemory_id: mem_x\n---\nbody\n")
     # Simulate a recovery sweep: anything matching .tmp.*.part should be removed
@@ -65,7 +65,7 @@ def test_tmp_atomicity():
         p.unlink()
         cleaned += 1
     # Assert: no audit row mentions partial
-    audit = (tmp_memory / ".cyberos-memory" / "audit" / "2026-05.jsonl").read_text()
+    audit = (tmp_memory / ".cyberos/memory/store" / "audit" / "2026-05.jsonl").read_text()
     has_partial_ref = ".tmp." in audit
     shutil.rmtree(tmp_memory)
     ok = (cleaned == 1) and (not has_partial_ref)
@@ -78,7 +78,7 @@ def test_enospc_simulation():
     print("\n  Test 2 — ENOSPC during write")
     tmp_memory = setup_fake_memory()
     # Monkey-patch open() inside a subprocess that simulates ENOSPC
-    target = tmp_memory / ".cyberos-memory" / "memories" / "facts" / "FACT-002-enospc.md"
+    target = tmp_memory / ".cyberos/memory/store" / "memories" / "facts" / "FACT-002-enospc.md"
     # Try to write a 100MB file (should likely succeed in /tmp but simulate
     # failure by attempting an out-of-range fallocate that gets caught).
     try:
@@ -91,7 +91,7 @@ def test_enospc_simulation():
             handled_cleanly = False
     # Assert: nothing was written; no audit row
     target_exists = target.exists()
-    audit = (tmp_memory / ".cyberos-memory" / "audit" / "2026-05.jsonl").read_text()
+    audit = (tmp_memory / ".cyberos/memory/store" / "audit" / "2026-05.jsonl").read_text()
     audit_clean = audit.strip() == ""
     shutil.rmtree(tmp_memory)
     ok = handled_cleanly and not target_exists and audit_clean
@@ -104,7 +104,7 @@ def test_concurrent_writers():
     print("\n  Test 3 — concurrent writers (lock arbitration)")
     tmp_memory = setup_fake_memory()
     # Lock file
-    lock = tmp_memory / ".cyberos-memory" / ".lock.exclusive"
+    lock = tmp_memory / ".cyberos/memory/store" / ".lock.exclusive"
     lock.touch()
     try:
         import fcntl

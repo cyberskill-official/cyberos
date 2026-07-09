@@ -42,13 +42,13 @@ function Timestamp { (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ
 Set-Location $Project
 "=== nightly $(Timestamp) ===" | Add-Content $Log
 
-if (-not (Test-Path .cyberos-memory)) {
-    "no .cyberos-memory in $Project — skipping" | Add-Content $Log
+if (-not (Test-Path .cyberos/memory/store)) {
+    "no .cyberos/memory/store in $Project — skipping" | Add-Content $Log
     exit 0
 }
 
 "→ cyberos doctor" | Add-Content $Log
-python -m cyberos --store .cyberos-memory doctor *>> $Log
+python -m cyberos --store .cyberos/memory/store doctor *>> $Log
 if ($LASTEXITCODE -ne 0) {
     "doctor: FAIL (exit $LASTEXITCODE)" | Add-Content $Log
     Notify "cyberos nightly: FAIL" "cyberos doctor reported errors. See $Log"
@@ -58,7 +58,7 @@ if ($LASTEXITCODE -ne 0) {
 
 "" | Add-Content $Log
 "→ cyberos consolidate --dry-run" | Add-Content $Log
-python -m cyberos --store .cyberos-memory consolidate --dry-run *>> $Log
+python -m cyberos --store .cyberos/memory/store consolidate --dry-run *>> $Log
 if ($LASTEXITCODE -ne 0) {
     "consolidate dry-run: FAIL" | Add-Content $Log
     Notify "cyberos nightly: consolidate dry-run failed" "See $Log"

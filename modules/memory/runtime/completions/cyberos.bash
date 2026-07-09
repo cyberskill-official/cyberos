@@ -60,8 +60,8 @@ _cyberos_complete() {
             ;;
         council)
             if [[ $COMP_CWORD -eq 2 ]]; then
-                # complete REF-NNN slugs from .cyberos-memory
-                local refs=$(ls .cyberos-memory/memories/refinements/REF-*.md 2>/dev/null | xargs -n1 basename | sed 's/\.md$//' | head -50)
+                # complete REF-NNN slugs from .cyberos/memory/store
+                local refs=$(ls .cyberos/memory/store/memories/refinements/REF-*.md 2>/dev/null | xargs -n1 basename | sed 's/\.md$//' | head -50)
                 COMPREPLY=( $(compgen -W "$refs" -- "$cur") )
                 return 0
             fi

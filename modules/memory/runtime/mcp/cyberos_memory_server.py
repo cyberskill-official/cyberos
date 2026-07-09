@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-cyberos_memory_server.py — read-only MCP server for the .cyberos-memory memory.
+cyberos_memory_server.py — read-only MCP server for the .cyberos/memory/store memory.
 
 Aspect 12.7 of the Layer-1 improvement catalog.
 
@@ -17,7 +17,7 @@ asks for a write, the tool returns a JSON error pointing at
 `memory_writer.py` as the canonical write path.
 
 This server respects:
-  - §0.1 real-filesystem-only (resolves memory via .cyberos-memory walk)
+  - §0.1 real-filesystem-only (resolves memory via .cyberos/memory/store walk)
   - §17 sync_class filtering (default: omit local-only from search hits
     unless the caller explicitly passes include_local_only=true)
   - tombstone filter (default: hide tombstoned; explicit opt-in)
@@ -35,7 +35,7 @@ Wire it into a client (Claude Code example) via .claude/mcp-config.json:
     }
 
 If CYBEROS_MEMORY_ROOT is unset, the server walks up from CWD to find
-the first `.cyberos-memory/` directory (§0.1 convention).
+the first `.cyberos/memory/store/` directory (§0.1 convention).
 
 Run standalone for testing:
     echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0.0"}}}' \
@@ -65,14 +65,14 @@ def resolve_memory_root() -> Path:
     env = os.environ.get("CYBEROS_MEMORY_ROOT")
     if env:
         p = Path(env)
-        if (p / ".cyberos-memory").is_dir():
+        if (p / ".cyberos/memory/store").is_dir():
             return p
     cur = Path.cwd().resolve()
     while cur != cur.parent:
-        if (cur / ".cyberos-memory").is_dir():
+        if (cur / ".cyberos/memory/store").is_dir():
             return cur
         cur = cur.parent
-    raise RuntimeError("no .cyberos-memory/ found; set CYBEROS_MEMORY_ROOT")
+    raise RuntimeError("no .cyberos/memory/store/ found; set CYBEROS_MEMORY_ROOT")
 
 
 def parse_frontmatter(text: str) -> tuple[dict, str]:
@@ -96,7 +96,7 @@ def parse_frontmatter(text: str) -> tuple[dict, str]:
 
 
 def iter_memories(memory_root: Path):
-    memory = memory_root / ".cyberos-memory"
+    memory = memory_root / ".cyberos/memory/store"
     for md in sorted(memory.rglob("*.md")):
         if not md.is_file() or md.name.startswith("."):
             continue
@@ -245,7 +245,7 @@ def tool_memory_stats(args: dict) -> dict:
 TOOLS = {
     "memory_search": {
         "fn": tool_memory_search,
-        "description": "Keyword search across .cyberos-memory/ — matches slug, tags, scope, body. Returns top hits ranked by score. Default filters: tombstoned hidden, sync_class=local-only hidden.",
+        "description": "Keyword search across .cyberos/memory/store/ — matches slug, tags, scope, body. Returns top hits ranked by score. Default filters: tombstoned hidden, sync_class=local-only hidden.",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -280,7 +280,7 @@ TOOLS = {
             "type": "object",
             "properties": {
                 "memory_id": {"type": "string"},
-                "path": {"type": "string", "description": "relative path inside .cyberos-memory/"},
+                "path": {"type": "string", "description": "relative path inside .cyberos/memory/store/"},
             },
         },
     },

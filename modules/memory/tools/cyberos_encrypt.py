@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-cyberos-encrypt — at-rest encryption + Shamir 3-of-5 escrow for `.cyberos-memory/`.
+cyberos-encrypt — at-rest encryption + Shamir 3-of-5 escrow for `.cyberos/memory/store/`.
 
 Implements AGENTS.md §5.6 (post-Stage-5 SHA `sha256:d3ce9764…`):
   - XChaCha20-Poly1305-IETF body envelope (frontmatter stays plaintext)
@@ -591,14 +591,14 @@ def cmd_enable(store: Path, *, passphrase_mode: bool = True) -> int:
     maint_session = _uuid7(dt.datetime.now(dt.timezone(dt.timedelta(hours=7))))
     _audit_append(store, {
         "op": "maintenance.start",
-        "path": ".cyberos-memory/manifest.json",
+        "path": ".cyberos/memory/store/manifest.json",
         "reason": f"cyberos-encrypt enable wizard, session {maint_session}",
     })
     try:
         for i, rec in enumerate(fragment_records, 1):
             _audit_append(store, {
                 "op": "shamir_distribution_confirmed",
-                "path": ".cyberos-memory/manifest.json",
+                "path": ".cyberos/memory/store/manifest.json",
                 "reason": (
                     f"enable wizard: fragment {i}/{SHAMIR_TOTAL} distributed "
                     f"to {rec['label']} (fingerprint {rec['fingerprint'][:30]}...)"
@@ -606,7 +606,7 @@ def cmd_enable(store: Path, *, passphrase_mode: bool = True) -> int:
             })
         _audit_append(store, {
             "op": "encryption_policy_change",
-            "path": ".cyberos-memory/manifest.json",
+            "path": ".cyberos/memory/store/manifest.json",
             "reason": (
                 f"enable: policy.enabled false→true; key_derivation={backend.name}; "
                 f"master fingerprint {fingerprint[:30]}...; "
@@ -616,7 +616,7 @@ def cmd_enable(store: Path, *, passphrase_mode: bool = True) -> int:
     finally:
         _audit_append(store, {
             "op": "maintenance.end",
-            "path": ".cyberos-memory/manifest.json",
+            "path": ".cyberos/memory/store/manifest.json",
             "reason": f"cyberos-encrypt enable complete: session {maint_session}",
         })
 
@@ -773,7 +773,7 @@ def cmd_disable(store: Path) -> int:
     maintenance_session = _uuid7(dt.datetime.now(dt.timezone(dt.timedelta(hours=7))))
     _audit_append(store, {
         "op": "maintenance.start",
-        "path": ".cyberos-memory/",
+        "path": ".cyberos/memory/store/",
         "reason": f"cyberos-encrypt disable session {maintenance_session}",
     })
 
@@ -809,7 +809,7 @@ def cmd_disable(store: Path) -> int:
                 os.replace(tmp, md)
                 _audit_append(store, {
                     "op": "str_replace",
-                    "path": f".cyberos-memory/{rel}",
+                    "path": f".cyberos/memory/store/{rel}",
                     "memory_id": fm["memory_id"],
                     "before_hash": before_hash,
                     "after_hash": after_hash,
@@ -827,13 +827,13 @@ def cmd_disable(store: Path) -> int:
         manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
         _audit_append(store, {
             "op": "encryption_policy_change",
-            "path": ".cyberos-memory/manifest.json",
+            "path": ".cyberos/memory/store/manifest.json",
             "reason": f"disable: decrypted {decrypted} memories, {errors} errors",
         })
     finally:
         _audit_append(store, {
             "op": "maintenance.end",
-            "path": ".cyberos-memory/",
+            "path": ".cyberos/memory/store/",
             "reason": f"cyberos-encrypt disable complete: {decrypted} decrypted, {errors} errors",
         })
 
@@ -868,7 +868,7 @@ def cmd_migrate_batch(store: Path, n: int) -> int:
     maintenance_session = _uuid7(dt.datetime.now(dt.timezone(dt.timedelta(hours=7))))
     _audit_append(store, {
         "op": "maintenance.start",
-        "path": ".cyberos-memory/",
+        "path": ".cyberos/memory/store/",
         "reason": f"cyberos-encrypt migrate-batch {n}, session {maintenance_session}",
     })
     encrypted = errors = 0
@@ -904,7 +904,7 @@ def cmd_migrate_batch(store: Path, n: int) -> int:
                 os.replace(tmp, md)
                 _audit_append(store, {
                     "op": "str_replace",
-                    "path": f".cyberos-memory/{rel}",
+                    "path": f".cyberos/memory/store/{rel}",
                     "memory_id": fm["memory_id"],
                     "before_hash": before_hash,
                     "after_hash": after_hash,
@@ -917,7 +917,7 @@ def cmd_migrate_batch(store: Path, n: int) -> int:
     finally:
         _audit_append(store, {
             "op": "maintenance.end",
-            "path": ".cyberos-memory/",
+            "path": ".cyberos/memory/store/",
             "reason": f"migrate-batch complete: {encrypted} encrypted, {errors} errors, {len(candidates) - encrypted} remaining",
         })
 
@@ -964,7 +964,7 @@ def cmd_rotate_shamir(store: Path) -> int:
         })
         _audit_append(store, {
             "op": "shamir_distribution_confirmed",
-            "path": ".cyberos-memory/manifest.json",
+            "path": ".cyberos/memory/store/manifest.json",
             "reason": f"rotate-shamir: fragment {i}/5 distributed to {label}",
         })
 
@@ -972,7 +972,7 @@ def cmd_rotate_shamir(store: Path) -> int:
     manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
     _audit_append(store, {
         "op": "shamir_rotation",
-        "path": ".cyberos-memory/manifest.json",
+        "path": ".cyberos/memory/store/manifest.json",
         "reason": f"rotated {SHAMIR_TOTAL} Shamir fragments; master key unchanged",
     })
     print(f"✅ rotated. Old fragments are now useless. {SHAMIR_TOTAL} new fragments distributed.")
@@ -1033,7 +1033,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="cyberos-encrypt",
         description="At-rest encryption + Shamir 3-of-5 escrow per AGENTS.md §5.6.")
-    parser.add_argument("path", help="path to .cyberos-memory/ or project root")
+    parser.add_argument("path", help="path to .cyberos/memory/store/ or project root")
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     p_enable = sub.add_parser("enable", help="Run the enable wizard")
@@ -1051,8 +1051,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     store = Path(args.path).resolve()
-    if (store / ".cyberos-memory").is_dir():
-        store = store / ".cyberos-memory"
+    if (store / ".cyberos/memory/store").is_dir():
+        store = store / ".cyberos/memory/store"
     if not store.is_dir():
         print(f"error: {store} not a directory", file=sys.stderr)
         return 3

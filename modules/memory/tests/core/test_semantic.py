@@ -22,9 +22,9 @@ from cyberos.core import semantic
 
 
 def _store(tmp_path) -> Path:
-    s = tmp_path / ".cyberos-memory"
-    s.mkdir()
-    (s / "audit").mkdir()
+    s = tmp_path / ".cyberos/memory/store"
+    s.mkdir(parents=True, exist_ok=True)
+    (s / "audit").mkdir(parents=True, exist_ok=True)
     (s / "manifest.json").write_text('{}', encoding="utf-8")
     return s
 

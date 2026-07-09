@@ -32,7 +32,7 @@ The pre-rebuild surface had 30+ standalone scripts (`cyberos_validate.py`, `cybe
 
 ## Contributing
 
-Anything that mutates a `.cyberos-memory/` store MUST go through the `cyberos/core/writer.py` Writer and emit an audit row. Don't shortcut the chain — the LINK / HASH / MMR invariants are what make the protocol trustworthy.
+Anything that mutates a `.cyberos/memory/store/` store MUST go through the `cyberos/core/writer.py` Writer and emit an audit row. Don't shortcut the chain — the LINK / HASH / MMR invariants are what make the protocol trustworthy.
 
 ## License
 

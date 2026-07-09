@@ -33,10 +33,10 @@ from pathlib import Path
 def find_memory(start: Path = None) -> Path:
     cur = (start or Path.cwd()).resolve()
     while cur != cur.parent:
-        if (cur / ".cyberos-memory").is_dir():
+        if (cur / ".cyberos/memory/store").is_dir():
             return cur
         cur = cur.parent
-    raise SystemExit("no .cyberos-memory/ found")
+    raise SystemExit("no .cyberos/memory/store/ found")
 
 
 def main():

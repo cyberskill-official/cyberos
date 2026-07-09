@@ -21,10 +21,10 @@ from pathlib import Path
 def find_root() -> Path:
     cur = Path.cwd().resolve()
     while cur != cur.parent:
-        if (cur / ".cyberos-memory").is_dir():
+        if (cur / ".cyberos/memory/store").is_dir():
             return cur
         cur = cur.parent
-    raise SystemExit("no .cyberos-memory/ found")
+    raise SystemExit("no .cyberos/memory/store/ found")
 
 def main():
     root = find_root()

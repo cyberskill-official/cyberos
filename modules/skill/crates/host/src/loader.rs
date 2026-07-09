@@ -27,7 +27,7 @@ const EXCLUDED_DIR_NAMES: &[&str] = &[
     "node_modules",   // bun/npm install dir
     ".git",
     ".github",        // GH workflows + issue templates (e.g. under skill/public/)
-    ".cyberos-memory",
+    ".cyberos/memory/store",
     // NOTE: `public` is NOT excluded. The 2026-05-17 rebuild absorbed the
     // legacy public-skills/ tree into skill/public/<vn-name>/. Those 5 VN
     // skill bundles ship a real SKILL.md and SHOULD be discovered by the

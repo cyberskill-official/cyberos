@@ -2,7 +2,7 @@
 """
 Generate the test-vector corpus for cyberos-validate.
 
-Creates ./vectors/<NN-name>/ each containing a `.cyberos-memory/` store +
+Creates ./vectors/<NN-name>/ each containing a `.cyberos/memory/store/` store +
 an `expected.json` declaring the CRITICAL findings the validator should produce.
 
 Run: python3 generate_vectors.py
@@ -127,7 +127,7 @@ def expected(crit: list[str]) -> str:
 def reset() -> None:
     if VECTORS.exists():
         shutil.rmtree(VECTORS)
-    VECTORS.mkdir()
+    VECTORS.mkdir(parents=True, exist_ok=True)
 
 
 # ---------------------------------------------------------------------------
@@ -137,10 +137,10 @@ def reset() -> None:
 def fixture_01_clean_bootstrap() -> None:
     """Pristine store with one bootstrap-shaped genesis row + empty scopes."""
     fix = VECTORS / "01-clean-bootstrap"
-    store = fix / ".cyberos-memory"
+    store = fix / ".cyberos/memory/store"
     write(store / "manifest.json",
           json.dumps(manifest_skeleton(GENESIS_CHAIN), indent=2))
-    write(store / "README.md", "# .cyberos-memory\nDo not edit audit/.\n")
+    write(store / "README.md", "# .cyberos/memory/store\nDo not edit audit/.\n")
     write(store / "audit" / "2026-05.jsonl", "")
     for d in ("company", "module", "member", "client", "project", "persona",
               "memories", "memories/decisions", "memories/facts", "meta"):
@@ -152,20 +152,20 @@ def fixture_01_clean_bootstrap() -> None:
 def fixture_02_chain_break() -> None:
     """Two audit rows, second's prev_chain doesn't match first's chain."""
     fix = VECTORS / "02-chain-break"
-    store = fix / ".cyberos-memory"
+    store = fix / ".cyberos/memory/store"
     write(store / "manifest.json",
           json.dumps(manifest_skeleton("sha256:" + "1" * 64), indent=2))
     rows = [
         {"audit_id": "evt_01HSXYZ00000000000000000A1",
          "ts": "2026-05-01T00:00:00Z",
          "actor_kind": "agent", "actor_id": "test",
-         "op": "create", "path": ".cyberos-memory/test.md",
+         "op": "create", "path": ".cyberos/memory/store/test.md",
          "prev_chain": GENESIS_CHAIN,
          "chain": "sha256:" + "a" * 64},
         {"audit_id": "evt_01HSXYZ00000000000000000A2",
          "ts": "2026-05-01T00:01:00Z",
          "actor_kind": "agent", "actor_id": "test",
-         "op": "create", "path": ".cyberos-memory/test2.md",
+         "op": "create", "path": ".cyberos/memory/store/test2.md",
          # prev_chain SHOULD be sha256:aaa... but is wrong
          "prev_chain": "sha256:" + "f" * 64,
          "chain": "sha256:" + "1" * 64},
@@ -178,7 +178,7 @@ def fixture_02_chain_break() -> None:
 def fixture_03_supersedes_cycle() -> None:
     """A → supersedes → B → supersedes → A."""
     fix = VECTORS / "03-supersedes-cycle"
-    store = fix / ".cyberos-memory"
+    store = fix / ".cyberos/memory/store"
     write(store / "manifest.json",
           json.dumps(manifest_skeleton(GENESIS_CHAIN), indent=2))
     write(store / "audit" / "2026-05.jsonl", "")
@@ -194,7 +194,7 @@ def fixture_03_supersedes_cycle() -> None:
 def fixture_04_dangling_supersedes() -> None:
     """A → supersedes → nonexistent."""
     fix = VECTORS / "04-dangling-supersedes"
-    store = fix / ".cyberos-memory"
+    store = fix / ".cyberos/memory/store"
     write(store / "manifest.json",
           json.dumps(manifest_skeleton(GENESIS_CHAIN), indent=2))
     write(store / "audit" / "2026-05.jsonl", "")
@@ -208,7 +208,7 @@ def fixture_04_dangling_supersedes() -> None:
 def fixture_05_malformed_memory_id() -> None:
     """memory_id is plain UUIDv4, not v7/ULID."""
     fix = VECTORS / "05-malformed-memory-id"
-    store = fix / ".cyberos-memory"
+    store = fix / ".cyberos/memory/store"
     write(store / "manifest.json",
           json.dumps(manifest_skeleton(GENESIS_CHAIN), indent=2))
     write(store / "audit" / "2026-05.jsonl", "")
@@ -221,7 +221,7 @@ def fixture_05_malformed_memory_id() -> None:
 def fixture_06_frontmatter_cap_exceeded() -> None:
     """Frontmatter >4KB hard cap."""
     fix = VECTORS / "06-frontmatter-cap-exceeded"
-    store = fix / ".cyberos-memory"
+    store = fix / ".cyberos/memory/store"
     write(store / "manifest.json",
           json.dumps(manifest_skeleton(GENESIS_CHAIN), indent=2))
     write(store / "audit" / "2026-05.jsonl", "")
@@ -239,7 +239,7 @@ def fixture_07_tombstoned_missing_metadata() -> None:
     (not CRITICAL), so expected_critical_codes is empty.
     """
     fix = VECTORS / "07-tombstoned-missing-metadata"
-    store = fix / ".cyberos-memory"
+    store = fix / ".cyberos/memory/store"
     write(store / "manifest.json",
           json.dumps(manifest_skeleton(GENESIS_CHAIN), indent=2))
     write(store / "audit" / "2026-05.jsonl", "")
@@ -252,7 +252,7 @@ def fixture_07_tombstoned_missing_metadata() -> None:
 def fixture_08_authority_invalid() -> None:
     """authority not in §5.3 hierarchy."""
     fix = VECTORS / "08-authority-invalid"
-    store = fix / ".cyberos-memory"
+    store = fix / ".cyberos/memory/store"
     write(store / "manifest.json",
           json.dumps(manifest_skeleton(GENESIS_CHAIN), indent=2))
     write(store / "audit" / "2026-05.jsonl", "")
@@ -265,7 +265,7 @@ def fixture_08_authority_invalid() -> None:
 def fixture_09_classification_invalid() -> None:
     """classification not in §5.4 set."""
     fix = VECTORS / "09-classification-invalid"
-    store = fix / ".cyberos-memory"
+    store = fix / ".cyberos/memory/store"
     write(store / "manifest.json",
           json.dumps(manifest_skeleton(GENESIS_CHAIN), indent=2))
     write(store / "audit" / "2026-05.jsonl", "")
@@ -278,7 +278,7 @@ def fixture_09_classification_invalid() -> None:
 def fixture_10_temporal_monotonicity() -> None:
     """created_at > last_updated_at."""
     fix = VECTORS / "10-temporal-monotonicity"
-    store = fix / ".cyberos-memory"
+    store = fix / ".cyberos/memory/store"
     write(store / "manifest.json",
           json.dumps(manifest_skeleton(GENESIS_CHAIN), indent=2))
     write(store / "audit" / "2026-05.jsonl", "")
@@ -293,14 +293,14 @@ def fixture_10_temporal_monotonicity() -> None:
 def fixture_11_audit_head_unreachable() -> None:
     """manifest.audit_chain_head doesn't appear in the ledger."""
     fix = VECTORS / "11-audit-head-unreachable"
-    store = fix / ".cyberos-memory"
+    store = fix / ".cyberos/memory/store"
     write(store / "manifest.json",
           json.dumps(manifest_skeleton("sha256:" + "f" * 64), indent=2))
     rows = [
         {"audit_id": "evt_01HSXYZ00000000000000000B1",
          "ts": "2026-05-01T00:00:00Z",
          "actor_kind": "agent", "actor_id": "test",
-         "op": "create", "path": ".cyberos-memory/test.md",
+         "op": "create", "path": ".cyberos/memory/store/test.md",
          "prev_chain": GENESIS_CHAIN,
          "chain": "sha256:" + "a" * 64},
     ]
@@ -312,7 +312,7 @@ def fixture_11_audit_head_unreachable() -> None:
 def fixture_12_audit_row_unparseable() -> None:
     """Mid-ledger non-JSON line (sync-collision simulation)."""
     fix = VECTORS / "12-audit-row-unparseable"
-    store = fix / ".cyberos-memory"
+    store = fix / ".cyberos/memory/store"
     write(store / "manifest.json",
           json.dumps(manifest_skeleton(GENESIS_CHAIN), indent=2))
     rows = [
@@ -320,7 +320,7 @@ def fixture_12_audit_row_unparseable() -> None:
             "audit_id": "evt_01HSXYZ00000000000000000C1",
             "ts": "2026-05-01T00:00:00Z",
             "actor_kind": "agent", "actor_id": "test",
-            "op": "create", "path": ".cyberos-memory/test.md",
+            "op": "create", "path": ".cyberos/memory/store/test.md",
             "prev_chain": GENESIS_CHAIN,
             "chain": "sha256:" + "a" * 64
         }),
@@ -334,7 +334,7 @@ def fixture_12_audit_row_unparseable() -> None:
 def fixture_13_confidence_out_of_range() -> None:
     """provenance.confidence > 1.0."""
     fix = VECTORS / "13-confidence-out-of-range"
-    store = fix / ".cyberos-memory"
+    store = fix / ".cyberos/memory/store"
     write(store / "manifest.json",
           json.dumps(manifest_skeleton(GENESIS_CHAIN), indent=2))
     write(store / "audit" / "2026-05.jsonl", "")
@@ -364,7 +364,7 @@ provenance:
 def fixture_14_unicode_vietnamese() -> None:
     """Vietnamese diacritics in body — should pass cleanly."""
     fix = VECTORS / "14-unicode-vietnamese"
-    store = fix / ".cyberos-memory"
+    store = fix / ".cyberos/memory/store"
     write(store / "manifest.json",
           json.dumps(manifest_skeleton(GENESIS_CHAIN), indent=2))
     write(store / "audit" / "2026-05.jsonl", "")
@@ -377,7 +377,7 @@ def fixture_14_unicode_vietnamese() -> None:
 def fixture_17_encrypted_memory_valid() -> None:
     """encrypted: true with valid §5.6.1 envelope shape — should pass."""
     fix = VECTORS / "17-encrypted-memory-valid"
-    store = fix / ".cyberos-memory"
+    store = fix / ".cyberos/memory/store"
     write(store / "manifest.json",
           json.dumps(manifest_skeleton(GENESIS_CHAIN), indent=2))
     write(store / "audit" / "2026-05.jsonl", "")
@@ -397,7 +397,7 @@ def fixture_17_encrypted_memory_valid() -> None:
 def fixture_18_encrypted_memory_bad_nonce() -> None:
     """encrypted: true with wrong-length nonce — CRITICAL."""
     fix = VECTORS / "18-encrypted-memory-bad-nonce"
-    store = fix / ".cyberos-memory"
+    store = fix / ".cyberos/memory/store"
     write(store / "manifest.json",
           json.dumps(manifest_skeleton(GENESIS_CHAIN), indent=2))
     write(store / "audit" / "2026-05.jsonl", "")
@@ -417,7 +417,7 @@ def fixture_18_encrypted_memory_bad_nonce() -> None:
 def fixture_19_shamir_fingerprint_missing() -> None:
     """encryption_policy.enabled but no master_key_fingerprint — CRITICAL."""
     fix = VECTORS / "19-shamir-fingerprint-missing"
-    store = fix / ".cyberos-memory"
+    store = fix / ".cyberos/memory/store"
     m = manifest_skeleton(GENESIS_CHAIN)
     m["encryption_policy"] = {"enabled": True, "scopes": []}
     m["shamir_fragments"] = {
@@ -434,7 +434,7 @@ def fixture_20_merkle_checkpoint_divergence() -> None:
     """op:consolidation_run row with merkle_root that doesn't match
     the recomputation over preceding rows — CRITICAL."""
     fix = VECTORS / "20-merkle-checkpoint-divergence"
-    store = fix / ".cyberos-memory"
+    store = fix / ".cyberos/memory/store"
     import hashlib
     try:
         import rfc8785
@@ -454,7 +454,7 @@ def fixture_20_merkle_checkpoint_divergence() -> None:
             "ts": f"2026-05-09T00:0{i}:00Z",
             "actor_kind": "agent", "actor_id": "test", "persona": None,
             "op": "create", "scope": "meta",
-            "path": f".cyberos-memory/test{i+1}.md",
+            "path": f".cyberos/memory/store/test{i+1}.md",
             "memory_id": None, "prev_version": None, "new_version": None,
             "supersedes_event_id": None, "classification": None,
             "authority": None, "consent_event_id": None,
@@ -472,7 +472,7 @@ def fixture_20_merkle_checkpoint_divergence() -> None:
         "ts": "2026-05-09T00:10:00Z",
         "actor_kind": "agent", "actor_id": "test", "persona": None,
         "op": "consolidation_run", "scope": "meta",
-        "path": ".cyberos-memory/manifest.json",
+        "path": ".cyberos/memory/store/manifest.json",
         "memory_id": None, "prev_version": None, "new_version": None,
         "supersedes_event_id": None, "classification": None,
         "authority": None, "consent_event_id": None,
@@ -494,7 +494,7 @@ def fixture_20_merkle_checkpoint_divergence() -> None:
 def fixture_21_classification_personnel_no_consent() -> None:
     """personnel-classification memory missing consent.has_consent: true."""
     fix = VECTORS / "21-personnel-no-consent"
-    store = fix / ".cyberos-memory"
+    store = fix / ".cyberos/memory/store"
     write(store / "manifest.json",
           json.dumps(manifest_skeleton(GENESIS_CHAIN), indent=2))
     write(store / "audit" / "2026-05.jsonl", "")
@@ -511,7 +511,7 @@ def fixture_16_stale_checkpoint() -> None:
     """manifest.reconciliation_checkpoint.chain doesn't match the ledger
     row at the referenced audit_id. Stage 1 §8.7 phase 4 amendment."""
     fix = VECTORS / "16-stale-checkpoint"
-    store = fix / ".cyberos-memory"
+    store = fix / ".cyberos/memory/store"
     # Build a minimal valid ledger first
     import hashlib
     try:
@@ -528,7 +528,7 @@ def fixture_16_stale_checkpoint() -> None:
         "ts": "2026-05-09T00:00:00Z",
         "actor_kind": "agent", "actor_id": "test", "persona": None,
         "op": "create", "scope": "meta",
-        "path": ".cyberos-memory/test1.md",
+        "path": ".cyberos/memory/store/test1.md",
         "memory_id": None, "prev_version": None, "new_version": None,
         "supersedes_event_id": None, "classification": None,
         "authority": None, "consent_event_id": None,
@@ -554,7 +554,7 @@ def fixture_16_stale_checkpoint() -> None:
 def fixture_15_duplicate_memory_id() -> None:
     """Two files share the same memory_id."""
     fix = VECTORS / "15-duplicate-memory-id"
-    store = fix / ".cyberos-memory"
+    store = fix / ".cyberos/memory/store"
     write(store / "manifest.json",
           json.dumps(manifest_skeleton(GENESIS_CHAIN), indent=2))
     write(store / "audit" / "2026-05.jsonl", "")

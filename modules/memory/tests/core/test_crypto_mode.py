@@ -11,9 +11,9 @@ from cyberos.core import crypto_mode as cm
 
 
 def _make_store(tmp_path: Path) -> Path:
-    store = tmp_path / ".cyberos-memory"
-    store.mkdir()
-    (store / "audit").mkdir()
+    store = tmp_path / ".cyberos/memory/store"
+    store.mkdir(parents=True, exist_ok=True)
+    (store / "audit").mkdir(parents=True, exist_ok=True)
     (store / "manifest.json").write_text("{}", encoding="utf-8")
     return store
 
@@ -38,8 +38,8 @@ def test_current_mode_default_chained(tmp_path):
 
 
 def test_current_mode_when_no_manifest(tmp_path):
-    store = tmp_path / ".cyberos-memory"
-    store.mkdir()
+    store = tmp_path / ".cyberos/memory/store"
+    store.mkdir(parents=True, exist_ok=True)
     assert cm.current_mode(store) == "chained"
 
 
@@ -85,7 +85,7 @@ def test_upgrade_refuses_when_no_sth(tmp_path):
 
 def test_upgrade_refuses_when_no_manifest(tmp_path):
     store = tmp_path / "empty"
-    store.mkdir()
+    store.mkdir(parents=True, exist_ok=True)
     (store / "audit" / "sth").mkdir(parents=True)
     (store / "audit" / "sth" / "1.json").write_text("{}", encoding="utf-8")
     with pytest.raises(cm.CryptoModeError, match="manifest"):

@@ -159,9 +159,9 @@
 </table>
 <h3 id="background-jobs">Background jobs</h3>
 <pre><code class="language-bash"># Installed by scripts/install.sh --with-automation
-*/30 * * * *  cyberos --store .cyberos-memory doctor --quiet
-0    2 * * *  cyberos --store .cyberos-memory walk --verify-chain --since-ledger-tail
-0    3 * * 0  cyberos --store .cyberos-memory consolidate
+*/30 * * * *  cyberos --store .cyberos/memory/store doctor --quiet
+0    2 * * *  cyberos --store .cyberos/memory/store walk --verify-chain --since-ledger-tail
+0    3 * * 0  cyberos --store .cyberos/memory/store consolidate
 </code></pre>
 <h3 id="export-determinism">Export determinism</h3>
 <ul>

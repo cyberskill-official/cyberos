@@ -41,13 +41,13 @@ ts() { date -u +"%Y-%m-%dT%H:%M:%SZ"; }
     echo "=== nightly $(ts) ==="
     cd "$PROJECT"
 
-    if [[ ! -d .cyberos-memory ]]; then
-        echo "no .cyberos-memory in $PROJECT — skipping"
+    if [[ ! -d .cyberos/memory/store ]]; then
+        echo "no .cyberos/memory/store in $PROJECT — skipping"
         exit 0
     fi
 
     echo "→ cyberos doctor"
-    if python -m cyberos --store .cyberos-memory doctor; then
+    if python -m cyberos --store .cyberos/memory/store doctor; then
         echo "doctor: OK"
     else
         echo "doctor: FAIL"
@@ -58,7 +58,7 @@ ts() { date -u +"%Y-%m-%dT%H:%M:%SZ"; }
 
     echo
     echo "→ cyberos consolidate --dry-run"
-    if python -m cyberos --store .cyberos-memory consolidate --dry-run; then
+    if python -m cyberos --store .cyberos/memory/store consolidate --dry-run; then
         echo "consolidate dry-run: OK"
     else
         echo "consolidate dry-run: FAIL"

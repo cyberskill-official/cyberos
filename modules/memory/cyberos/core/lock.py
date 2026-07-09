@@ -71,7 +71,7 @@ class LockBroken(RuntimeError):
 
 
 class StoreLock:
-    """Coordination primitive for a single ``.cyberos-memory/`` store.
+    """Coordination primitive for a single ``.cyberos/memory/store/`` store.
 
     One instance per process per store. Re-entrant only through the
     ``shared`` context manager: explicit nested ``acquire_exclusive()``

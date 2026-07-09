@@ -38,7 +38,7 @@ if [[ ! -f "$ENTITLEMENTS" ]]; then
   <key>com.apple.security.cs.allow-unsigned-executable-memory</key><true/>
   <key>com.apple.security.network.client</key><true/>
   <key>com.apple.security.files.user-selected.read-write</key><true/>
-  <!-- Required so the supervisor can read ~/.cyberos-memory/ -->
+  <!-- Required so the supervisor can read ~/.cyberos/memory/store/ -->
   <key>com.apple.security.files.bookmarks.app-scope</key><true/>
 </dict>
 </plist>

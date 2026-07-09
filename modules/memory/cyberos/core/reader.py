@@ -67,7 +67,7 @@ class Reader:
     Parameters
     ----------
     store:
-        Path to the ``.cyberos-memory/`` directory root.
+        Path to the ``.cyberos/memory/store/`` directory root.
     """
 
     def __init__(self, store: Path):

@@ -53,7 +53,7 @@ from cyberos.core.writer import Writer
 
 @pytest.fixture()
 def store(tmp_path: Path) -> Path:
-    s = tmp_path / ".cyberos-memory"
+    s = tmp_path / ".cyberos/memory/store"
     (s / "audit").mkdir(parents=True)
     (s / "memories" / "facts").mkdir(parents=True)
     return s

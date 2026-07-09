@@ -79,8 +79,8 @@ if [[ -z "$TARGET" ]]; then
 fi
 TARGET="$(cd "$TARGET" && pwd)"
 
-if [[ ! -d "$TARGET/.cyberos-memory" ]]; then
-    echo "error: $TARGET has no .cyberos-memory/ — run scripts/install.sh first" >&2
+if [[ ! -d "$TARGET/.cyberos/memory/store" ]]; then
+    echo "error: $TARGET has no .cyberos/memory/store/ — run scripts/install.sh first" >&2
     exit 2
 fi
 

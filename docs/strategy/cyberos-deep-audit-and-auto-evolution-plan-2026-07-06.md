@@ -58,7 +58,7 @@ Keep and build on these; several are ahead of industry practice.
 
 - R19. Add cargo-audit + cargo-deny to CI (none exist today anywhere in the repo): fail on critical RUSTSEC advisories, warn otherwise, plus a weekly scheduled run so quiet weeks still get scanned.
 - R20. Anchor the audit chain externally. Periodically sign the chain head (and memory binlog tip) and publish the anchor outside the database (signed git tag, object-store write-once bucket, or public timestamp). Tamper-evidence must survive DB compromise; the planned Merkle checkpointing should be pulled forward.
-- R21. Chain-integrity monitor: a nightly job that walks `l1_audit_log` and the `.cyberos-memory` binlog, verifies hashes end to end, and alerts on divergence. Today corruption would sit silent until a human happened to look.
+- R21. Chain-integrity monitor: a nightly job that walks `l1_audit_log` and the `.cyberos/memory/store` binlog, verifies hashes end to end, and alerts on divergence. Today corruption would sit silent until a human happened to look.
 - R22. Write a secrets inventory (which secret, where it lives, who rotates it, blast radius) plus a rotate-on-leak runbook. The gam updater-key leak showed the failure mode; the fix is a standing process, not a one-off.
 - R23. Make dev CORS unrepresentable in prod: services refuse to boot when any `*_DEV_CORS` is set while `APP_ENV=production`. One compose typo currently stands between the team and a wide-open API.
 - R24. Extend rate limiting beyond login: message post, attachment upload (the 50 MB raw-body route is a cheap DoS surface), search, and the MCP endpoint; keep state behind a seam so multi-instance does not silently break it.

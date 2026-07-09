@@ -18,7 +18,7 @@ Layout::
 
     <target>/
     ├── 2026-05-14T03-00-00Z/    one snapshot
-    │   ├── .cyberos-memory/     full store at that time (hard-linked)
+    │   ├── .cyberos/memory/store/     full store at that time (hard-linked)
     │   └── snapshot.json        metadata (timestamp, predecessor, root hash)
     ├── 2026-05-15T03-00-00Z/
     └── manifest.json            lineage; ``[{snapshot, predecessor, ...}, ...]``
@@ -176,9 +176,9 @@ def backup(
     if manifest["snapshots"]:
         predecessor = manifest["snapshots"][-1]
         report.predecessor = predecessor["name"]
-    pred_root = target / predecessor["name"] / ".cyberos-memory" if predecessor else None
+    pred_root = target / predecessor["name"] / ".cyberos/memory/store" if predecessor else None
 
-    dst_root = snap_dir / ".cyberos-memory"
+    dst_root = snap_dir / ".cyberos/memory/store"
     for src in _walk_store(store):
         rel = src.relative_to(store)
         dst = dst_root / rel
@@ -238,7 +238,7 @@ def verify_snapshot(target: Path, snapshot_name: str) -> tuple[bool, str]:
     )
     if record is None:
         return False, f"snapshot {snapshot_name!r} not in manifest"
-    snap_store = target / snapshot_name / ".cyberos-memory"
+    snap_store = target / snapshot_name / ".cyberos/memory/store"
     if not snap_store.is_dir():
         return False, f"snapshot data missing at {snap_store}"
     actual = _root_hash(snap_store)

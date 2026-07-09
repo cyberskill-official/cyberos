@@ -241,7 +241,7 @@ class Writer:
         Parameters
         ----------
         store:
-            Path to ``.cyberos-memory/`` root.
+            Path to ``.cyberos/memory/store/`` root.
         config:
             Tuning knobs; defaults are production-safe.
         """

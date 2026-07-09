@@ -2,9 +2,9 @@
 #
 # scripts/install.sh — bootstrap a target project for CyberOS memory.
 #
-# Creates `.cyberos-memory/` in the target project with the protocol file
+# Creates `.cyberos/memory/store/` in the target project with the protocol file
 # copied inside (self-contained store). Symlinks AGENTS.md from project
-# root into the store. Adds .cyberos-memory to .gitignore.
+# root into the store. Adds .cyberos/memory/store to .gitignore.
 #
 # The cyberos engine is installed once via `pip install -e .` in the
 # source repo; all projects share it.
@@ -12,7 +12,7 @@
 # Usage:
 #     /path/to/cyberos/modules/memory/scripts/install.sh [TARGET]
 #
-#     # Force overwrite existing .cyberos-memory/:
+#     # Force overwrite existing .cyberos/memory/store/:
 #     install.sh --force
 #
 #     # Skip the agent symlink (if you wire AGENTS.md manually):
@@ -84,13 +84,13 @@ else
 fi
 echo
 
-# ---------------------------------------------------------------------- 2. .cyberos-memory skeleton + protocol file
+# ---------------------------------------------------------------------- 2. .cyberos/memory/store skeleton + protocol file
 
-echo "→ step 2/5: initialise .cyberos-memory/"
-memory="$TARGET/.cyberos-memory"
+echo "→ step 2/5: initialise .cyberos/memory/store/"
+memory="$TARGET/.cyberos/memory/store"
 
 # Build cyberos init command
-init_cmd="python -m cyberos --store .cyberos-memory init"
+init_cmd="python -m cyberos --store .cyberos/memory/store init"
 if [[ "$FORCE" == "1" ]]; then
     init_cmd="$init_cmd --force"
 fi
@@ -152,8 +152,8 @@ if [[ "$NO_AGENT_SYMLINK" == "0" ]]; then
             echo "  ✓ $link_name (copy; on Windows symlinks require dev mode)"
         else
             rm -f "$link_name"
-            ln -s .cyberos-memory/AGENTS.md "$link_name"
-            echo "  ✓ $link_name → .cyberos-memory/AGENTS.md"
+            ln -s .cyberos/memory/store/AGENTS.md "$link_name"
+            echo "  ✓ $link_name → .cyberos/memory/store/AGENTS.md"
         fi
     done
     echo
@@ -166,7 +166,7 @@ fi
 
 echo "→ step 4/5: .gitignore"
 gitignore="$TARGET/.gitignore"
-marker=".cyberos-memory/"
+marker=".cyberos/memory/store/"
 if [[ -f "$gitignore" ]] && grep -qF "$marker" "$gitignore"; then
     echo "  – $marker already in .gitignore; skipping"
 else
@@ -183,7 +183,7 @@ echo
 
 echo "→ step 5/5: verify"
 cd "$TARGET"
-if python -m cyberos --store .cyberos-memory doctor > /tmp/cyberos-install-doctor.log 2>&1; then
+if python -m cyberos --store .cyberos/memory/store doctor > /tmp/cyberos-install-doctor.log 2>&1; then
     tail -3 /tmp/cyberos-install-doctor.log | sed 's/^/  /'
 else
     echo "  ⚠ cyberos doctor failed:"
@@ -214,5 +214,5 @@ echo "  3. the agent will start building $memory/memories/ as you work"
 echo
 echo "verify anytime with:"
 echo "  cd $TARGET"
-echo "  python -m cyberos --store .cyberos-memory state"
-echo "  python -m cyberos --store .cyberos-memory doctor"
+echo "  python -m cyberos --store .cyberos/memory/store state"
+echo "  python -m cyberos --store .cyberos/memory/store doctor"

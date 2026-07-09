@@ -94,7 +94,7 @@ def test_peak_heights_match_popcount() -> None:
 
 def test_on_disk_persistence_round_trip(tmp_path: Path) -> None:
     """Persist after appends, reopen, append more, root matches a fresh run."""
-    store = tmp_path / ".cyberos-memory"
+    store = tmp_path / ".cyberos/memory/store"
     (store / "audit" / "mmr").mkdir(parents=True)
 
     first = OnDiskMMR(store)
@@ -121,7 +121,7 @@ def test_mmr_root_for_binlog_matches_inline_mmr(tmp_path: Path) -> None:
     """The cross-check helper must agree with an in-process MMR over the same records."""
     from cyberos.core.writer import AuditRecord, Writer, WriterConfig, _canonical
 
-    store = tmp_path / ".cyberos-memory"
+    store = tmp_path / ".cyberos/memory/store"
     (store / "audit").mkdir(parents=True)
 
     expected_root_mmr = MMR()
@@ -152,7 +152,7 @@ def test_writer_mmr_matches_cross_check(tmp_path: Path) -> None:
     """When the writer's own MMR is enabled, the doctor's cross-check passes."""
     from cyberos.core.writer import AuditRecord, Writer
 
-    store = tmp_path / ".cyberos-memory"
+    store = tmp_path / ".cyberos/memory/store"
     (store / "audit").mkdir(parents=True)
     with Writer(store) as w:
         for i in range(15):

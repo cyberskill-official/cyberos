@@ -10,8 +10,8 @@ Tauri 2.x desktop client for CyberOS memory. First-slice scaffold for
   - `search_memory(query, limit)` — POSTs to `127.0.0.1:7901/v1/memory/search`
     (the Rust memory service from session 14).
   - `write_quick_note(text, tags)` — writes a `.md` capture under
-    `~/.cyberos-memory/default/captures/`.
-  - `get_sync_state()` — reads `~/.cyberos-memory/default/sync/last-status.json`.
+    `~/.cyberos/memory/store/default/captures/`.
+  - `get_sync_state()` — reads `~/.cyberos/memory/store/default/sync/last-status.json`.
 - A `sync_supervisor` background task that spawns
   `python3 -m cyberos.core.memory_sync_daemon` with a 5-restarts-per-60s circuit
   breaker. ENOENT is handled gracefully (sleep + retry until the daemon ships).

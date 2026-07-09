@@ -540,7 +540,7 @@ LIMIT 5;
 <p><strong>Don't write a 500-line SKILL.md body.</strong> Use progressive disclosure. The body is the system prompt; reference docs go in <code>references/</code>. A 300-line body is the soft cap.</p>
 <p><strong>Don't promote an LLM-inferred fact to <code>confidence: 1.0</code>.</strong> AGENTS.md §5.2 caps LLM-inferred at 0.7. Authority is human-edited &gt; human-confirmed &gt; llm-explicit &gt; llm-implicit; never promote.</p>
 <p><strong>Don't auto-set <code>eu_ai_act_risk_class: minimal</code> without a determining fact.</strong> When in doubt, escalate to <code>cuo-clo</code>. INV-007 in <code>feature-request-author/INVARIANTS.md</code> makes this an enforced invariant.</p>
-<p><strong>Don't write to <code>.cyberos-memory/</code> outside the memory MCP gateway.</strong> Direct file writes bypass the AGENTS.md §4.1 path-traversal guard, the §4.2 content gate, and the §4.4 two-phase atomic write. Always go through <code>memory.write_memory</code>.</p>
+<p><strong>Don't write to <code>.cyberos/memory/store/</code> outside the memory MCP gateway.</strong> Direct file writes bypass the AGENTS.md §4.1 path-traversal guard, the §4.2 content gate, and the §4.4 two-phase atomic write. Always go through <code>memory.write_memory</code>.</p>
 <p><strong>Don't change RUBRIC.md mid-batch.</strong> feature-request-audit's INV-007 is sev-0. The runtime hashes the rubric at batch start and verifies before each FR audit. A change mid-batch aborts with <code>RUBRIC_CHANGED_MID_BATCH</code>.</p>
 <p><strong>Don't set <code>partner_connector: true</code> without a separate DEC.</strong> The validator enforces the trust↔exposability link (Part 5.3) plus a per-skill DEC. Partner exposure has SLA, billing, and tenancy implications that need explicit governance.</p>
 <p><strong>Don't paste full SHA-256 hashes in chat.</strong> First 12 hex chars + ellipsis. Full hashes go in audit rows and machine-readable contexts only.</p>
@@ -1020,7 +1020,7 @@ git rm -r cyberos/docs/skills/cuo/_shared/&lt;skill-id&gt;
 </tr>
 <tr>
 <td><strong>memory</strong></td>
-<td>The <code>.cyberos-memory/</code> directory + the Postgres mirror. Three-layer memory store. PRD Part 5; AGENTS.md §0.3.</td>
+<td>The <code>.cyberos/memory/store/</code> directory + the Postgres mirror. Three-layer memory store. PRD Part 5; AGENTS.md §0.3.</td>
 </tr>
 <tr>
 <td><strong>DEC-NNN</strong></td>
@@ -1130,7 +1130,7 @@ Pitch: &lt;paragraph&gt;
 <p><strong>Verify AGENTS.md is loaded.</strong> If the conversation context doesn't already contain the protocol, read <code>cyberos/docs/CyberOS-AGENTS.md</code> now. Acknowledge <code>Loaded agent memory protocol</code>.</p>
 </li>
 <li>
-<p><strong>Bootstrap memory if needed.</strong> Check for <code>&lt;project repo&gt;/.cyberos-memory/manifest.json</code>. If absent → run <code>python3 &lt;cyberos&gt;/docs/skills/scripts/bootstrap-memory.sh &lt;project-repo&gt;</code> (if exists) OR perform §13.1 manually using the Write tool. If present → check <code>READY</code> state per §13.0.</p>
+<p><strong>Bootstrap memory if needed.</strong> Check for <code>&lt;project repo&gt;/.cyberos/memory/store/manifest.json</code>. If absent → run <code>python3 &lt;cyberos&gt;/docs/skills/scripts/bootstrap-memory.sh &lt;project-repo&gt;</code> (if exists) OR perform §13.1 manually using the Write tool. If present → check <code>READY</code> state per §13.0.</p>
 </li>
 <li>
 <p><strong>Create output dir.</strong> <code>mkdir -p &lt;output_dir&gt;</code>.</p>
@@ -1465,7 +1465,7 @@ Next steps:
   - Create tickets in PROJ MCP if you didn't already (run /cyberos-tickets).
   - Schedule the next chain run for the next feature batch.
 
-📝 .cyberos-memory updated
+📝 .cyberos/memory/store updated
 [§14 compact block]
 </code></pre>
 <hr />
@@ -1475,7 +1475,7 @@ Next steps:
 <li>The artefacts already on disk + the audit ledger + CONTEXT.md are durable.</li>
 <li>Next session: the user runs the trigger phrase again. You:
 <ul>
-<li>Re-read <code>&lt;project repo&gt;/.cyberos-memory/manifest.json</code>.</li>
+<li>Re-read <code>&lt;project repo&gt;/.cyberos/memory/store/manifest.json</code>.</li>
 <li>Walk audit ledger to find the last <code>op:&quot;create&quot;</code> or <code>op:&quot;str_replace&quot;</code> against an artefact path.</li>
 <li>Determine the chain position from that.</li>
 <li>Announce: <em>&quot;Resuming from Phase <X>. Last artefact: <path>. Continuing with skill <name>.&quot;</em></li>
@@ -1662,7 +1662,7 @@ Profile preference: &lt;auto | lean | standard | full&gt;   (default: auto)
 <p>CORE.md is sufficient for the manual chain (full AGENTS.md is only needed for §0.5 protocol-upgrade flows, which won't fire here).</p>
 </li>
 <li>
-<p><strong>Bootstrap the project's memory.</strong> First agent session detects <code>PRISTINE</code> state per §13.0 and silently auto-bootstraps <code>.cyberos-memory/</code> IF the host can write to disk. If it doesn't, paste <em>&quot;bootstrap and continue&quot;</em>. Hosts without filesystem access: run <code>python3 runtime/lib/memory_writer.py session-start &lt;actor&gt;</code> from the project repo root in your terminal and let the agent know the memory is initialised.</p>
+<p><strong>Bootstrap the project's memory.</strong> First agent session detects <code>PRISTINE</code> state per §13.0 and silently auto-bootstraps <code>.cyberos/memory/store/</code> IF the host can write to disk. If it doesn't, paste <em>&quot;bootstrap and continue&quot;</em>. Hosts without filesystem access: run <code>python3 runtime/lib/memory_writer.py session-start &lt;actor&gt;</code> from the project repo root in your terminal and let the agent know the memory is initialised.</p>
 </li>
 <li>
 <p><strong>Initialise CONTEXT.md</strong> (per Plan v1.1 / M2). Create at the new project's repo root:</p>
@@ -1747,7 +1747,7 @@ Profile preference: &lt;auto | lean | standard | full&gt;   (default: auto)
 <h4>Step ⑥ — Update CONTEXT.md (per M2)</h4>
 <p>If the skill resolved any new domain terms during its run, append to the project's <code>CONTEXT.md</code>. The <code>cuo/cpo/requirements-discovery</code> skill will do this automatically; later skills should add terms only when the artefact introduces a new canonical name.</p>
 <h4>Step ⑦ — Append the §14 memory-update block</h4>
-<p>The agent will end its response with a §14.1 compact block. The audit row goes to <code>.cyberos-memory/audit/&lt;YYYY-MM&gt;.jsonl</code>. <strong>Do not edit the audit ledger by hand.</strong> If the agent didn't append, run <code>python3 runtime/lib/memory_writer.py session-end &lt;actor&gt;</code> from the project repo root before closing the tab.</p>
+<p>The agent will end its response with a §14.1 compact block. The audit row goes to <code>.cyberos/memory/store/audit/&lt;YYYY-MM&gt;.jsonl</code>. <strong>Do not edit the audit ledger by hand.</strong> If the agent didn't append, run <code>python3 runtime/lib/memory_writer.py session-end &lt;actor&gt;</code> from the project repo root before closing the tab.</p>
 <hr />
 <h3 id="phase-a-requirements-discovery-start-here">Phase A — Requirements Discovery (start here)</h3>
 <p><strong>Skill</strong>: <code>cuo/cpo/requirements-discovery</code> <strong>Files to load</strong>: <code>SKILL.md</code> (283 lines / 17 KB) + <code>STANDALONE_INTERVIEW.md</code> (156 lines / 7.5 KB) <strong>Input</strong>: free-text pitch / draft requirements / commissioning email <strong>Output</strong>: <code>project_brief@1</code> markdown — the structured intake artefact every downstream skill consumes</p>
@@ -2150,7 +2150,7 @@ project_kind to bypass the signal-count gate when capacity check (Q2) passes.
 <pre><code>./CONTEXT.md                    # the project's shared vocabulary
 ./docs/adr/                     # ADRs land here as the chain runs (sparingly)
 ./.out-of-scope/                # rejected refinement proposals (only if any)
-./.cyberos-memory/              # the memory — keep, this is your replay-able audit ledger
+./.cyberos/memory/store/              # the memory — keep, this is your replay-able audit ledger
 </code></pre>
 <hr />
 <h3 id="how-long-does-this-take-realistically">How long does this take, realistically</h3>
@@ -2244,7 +2244,7 @@ project_kind to bypass the signal-count gate when capacity check (Q2) passes.
 <ol>
 <li><strong>File observations</strong> as <code>memories/refinements/REF-NNN-&lt;slug&gt;.md</code> candidates. The runtime will use these as training data for Phase 2.</li>
 <li><strong>Update <code>cyberos/docs/skills/CHANGELOG.md</code></strong> with anything you learned that the skill set didn't cover (gaps for <code>cuo/chief-technology-officer/code-author</code>, <code>qa-runner</code>, <code>qa-triage</code> — the Execute + QA halves of the workflow not yet designed).</li>
-<li><strong>Read the plan</strong> at <code>.cyberos-memory/project/skills-evolution/cyberos-skills-evolution-plan.md</code> to see where this fits in the multi-phase roadmap.</li>
+<li><strong>Read the plan</strong> at <code>.cyberos/memory/store/project/skills-evolution/cyberos-skills-evolution-plan.md</code> to see where this fits in the multi-phase roadmap.</li>
 </ol>
 <h3 id="history">History</h3>
 <ul>
@@ -2426,7 +2426,7 @@ project_kind to bypass the signal-count gate when capacity check (Q2) passes.
 <p>Established 2026-05-11 during Bundle Q. The pattern:</p>
 <ol>
 <li><strong>Agent in cowork edits non-memory files</strong> (AGENTS.md, CHANGELOG, README, skills runbooks, source code). These are ordinary file mutations — no audit row needed. Cowork's Write/Edit tools work fine.</li>
-<li><strong>Agent stages memory-touching ops</strong> as a deterministic apply script + memory templates under <code>.cyberos-memory/cache/&lt;bundle-name&gt;/</code>. The script:
+<li><strong>Agent stages memory-touching ops</strong> as a deterministic apply script + memory templates under <code>.cyberos/memory/store/cache/&lt;bundle-name&gt;/</code>. The script:
 <ul>
 <li>performs preflight sanity (paths, SHAs, deps);</li>
 <li>calls <code>python3 runtime/lib/memory_writer.py</code> for each op (session-start, write, str-replace, protocol-upgrade, self-audit, session-end);</li>
@@ -2434,17 +2434,17 @@ project_kind to bypass the signal-count gate when capacity check (Q2) passes.
 </ul>
 </li>
 <li><strong>User runs the script from macOS terminal</strong>:<pre><code class="language-bash">cd /Users/&lt;you&gt;/Projects/&lt;repo&gt;
-bash .cyberos-memory/cache/&lt;bundle-name&gt;/apply.sh
+bash .cyberos/memory/store/cache/&lt;bundle-name&gt;/apply.sh
 </code></pre>
 The §0.1 guard passes (path is real-filesystem), the writer runs, the chain advances.</li>
 <li><strong>Agent reviews the resulting chain</strong> in the next cowork session via <code>verify --bit-perfect</code> output the user pastes back.</li>
 </ol>
 <p><strong>When this pattern fits:</strong> any cluster of memory mutations the agent wants to land as one atomic-ish unit — protocol upgrades (§0.5 + §0.6), bulk content refreshes, doctor-style cleanup passes, multi-memory ingestion of an external corpus.</p>
 <p><strong>When it doesn't:</strong> single-memory writes during exploratory work — the cowork → macOS round-trip is overkill. For those, the user can drop into the macOS terminal directly and run the writer themselves (the <code>python3 runtime/lib/memory_writer.py write &lt;actor&gt; &lt;path&gt; &lt;content&gt;</code> form is short).</p>
-<p><strong>Reference apply scripts</strong> in <code>.cyberos-memory/cache/</code>:</p>
+<p><strong>Reference apply scripts</strong> in <code>.cyberos/memory/store/cache/</code>:</p>
 <ul>
 <li><code>runtime/lib/apply-bundle-Q.sh</code> — protocol-upgrade flow (§0.5 + §0.6 follow-on; canonical pattern for future protocol upgrades)</li>
-<li><code>.cyberos-memory/cache/doctor/&lt;date&gt;-cleanup.py</code> — bulk-cleanup pattern (str_replace many memories in one session, with rollback-on-failure)</li>
+<li><code>.cyberos/memory/store/cache/doctor/&lt;date&gt;-cleanup.py</code> — bulk-cleanup pattern (str_replace many memories in one session, with rollback-on-failure)</li>
 </ul>
 <h4>Recommendation</h4>
 <p>Cowork is the smoothest fit for <strong>automated mode</strong> RIGHT NOW. The trigger phrase from <a href="#part-28--chain-orchestrator-agent-side-fully-automated">Part 28 — Chain Orchestrator</a> + the orchestrator runbook give you a single-message kickoff. The agent drives the rest — file reads, interviews, artefact writes, audit loops, memory_writer.py, all of it. You answer ~10-30 HITL questions over ~3 hours of standard-profile work; that's the entire user-facing UX.</p>
@@ -2582,7 +2582,7 @@ python3 runtime/lib/memory_writer.py session-end human:stephen-cheng
 <li>Switch to Claude Code or Cursor for FR-author / spec-to-impl-plan (denser tool-use).</li>
 <li>Drop into Claude.ai web on your phone if you want to draft a quick PRD amendment.</li>
 </ul>
-<p>The only constraint: don't run <strong>two hosts simultaneously</strong> against the same <code>.cyberos-memory/</code> directory. The <code>.lock</code> file in the memory root coordinates write access; concurrent writes from two agents will trigger <code>op:&quot;rejected&quot; reason:&quot;lock-contention&quot;</code> at best, and chain corruption at worst.</p>
+<p>The only constraint: don't run <strong>two hosts simultaneously</strong> against the same <code>.cyberos/memory/store/</code> directory. The <code>.lock</code> file in the memory root coordinates write access; concurrent writes from two agents will trigger <code>op:&quot;rejected&quot; reason:&quot;lock-contention&quot;</code> at best, and chain corruption at worst.</p>
 <hr />
 <h3 id="picking-a-host-a-quick-decision-tree">Picking a host: a quick decision tree</h3>
 <pre><code>Are you working solo or small-team?
@@ -2598,7 +2598,7 @@ python3 runtime/lib/memory_writer.py session-end human:stephen-cheng
 Are you on a borrowed machine / mobile?
 └── Claude.ai web / ChatGPT (degraded; expect manual file shuffling)
 </code></pre>
-<p>For Stephen's next project: <strong>Cowork is the move</strong>. It's what we used to build this whole evolution, it has the best file-tool + bash story for solo work, and the memory sits at <code>~/Projects/CyberSkill/workbench/.cyberos-memory/</code> already wired up.</p>
+<p>For Stephen's next project: <strong>Cowork is the move</strong>. It's what we used to build this whole evolution, it has the best file-tool + bash story for solo work, and the memory sits at <code>~/Projects/CyberSkill/workbench/.cyberos/memory/store/</code> already wired up.</p>
 <h3 id="history">History</h3>
 <ul>
 <li>2026-05-11 — Initial creation. Author: Claude Opus 4-7 in Cowork session 7. Companion to MANUAL_WORKFLOW.md; resolves the &quot;must I use Claude Code?&quot; question (no — fully host-agnostic).</li>
@@ -3034,7 +3034,7 @@ record lives in <code>CHANGELOG.md</code>.</p>
 <li><strong>Implement.</strong> Edit <code>&lt;skill&gt;/RUBRIC.md</code>. Bump the rubric version (<code>&lt;artifact&gt;_rubric@1.0 → @1.1</code>). Bump the audit skill's <code>metadata.version</code> + <code>metadata.cyberos-rubric-version</code>.</li>
 <li><strong>Regression-test.</strong> Add an acceptance fixture under <code>&lt;skill&gt;/acceptance/</code> that triggers the new/changed rule + the expected audit verdict.</li>
 <li><strong>Changelog.</strong> Add a Keep-a-Changelog entry to <code>&lt;skill&gt;/CHANGELOG.md</code>.</li>
-<li><strong>Memory refinement.</strong> Write a row to <code>~/.cyberos-memory/memories/refinements/&lt;skill&gt;-v&lt;new&gt;.md</code> per memory <code>AGENTS.md</code> §11.</li>
+<li><strong>Memory refinement.</strong> Write a row to <code>~/.cyberos/memory/store/memories/refinements/&lt;skill&gt;-v&lt;new&gt;.md</code> per memory <code>AGENTS.md</code> §11.</li>
 <li><strong>Ship.</strong> Tag the new version. The audit report's <code>rubric_version</code> field starts matching the new value on the next invocation.</li>
 </ol>
 <hr />
@@ -3092,7 +3092,7 @@ record lives in <code>CHANGELOG.md</code>.</p>
 <ul>
 <li><strong>Changelog entry</strong> in <code>&lt;skill&gt;/CHANGELOG.md</code>.</li>
 <li><strong>Acceptance test added</strong> in <code>&lt;skill&gt;/acceptance/</code> (a fixture that triggers the new/changed rule).</li>
-<li><strong>Memory refinement entry</strong> in <code>~/.cyberos-memory/memories/refinements/&lt;skill&gt;-v&lt;new&gt;.md</code>.</li>
+<li><strong>Memory refinement entry</strong> in <code>~/.cyberos/memory/store/memories/refinements/&lt;skill&gt;-v&lt;new&gt;.md</code>.</li>
 </ul>
 <p>Audit skills additionally require:</p>
 <ul>
