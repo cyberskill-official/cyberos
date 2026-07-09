@@ -33,10 +33,12 @@ echo "==> ensuring extensions (idempotent)"
 docker exec cyberos-postgres psql -U cyberos -d cyberos -qc \
   'CREATE EXTENSION IF NOT EXISTS vector; CREATE EXTENSION IF NOT EXISTS pgcrypto; CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' >/dev/null
 
-echo "==> applying migrations (idempotent; auth roles first, then memory, eval, chat)"
-# Order matters: auth creates the cyberos_app role + tenants that memory/eval rows reference. Applied
+echo "==> applying migrations (idempotent; same order as scripts/local_verify.sh)"
+# Order matters: auth creates the cyberos_app role + tenants that the other crates' rows reference.
+# Keep this list identical to scripts/local_verify.sh Step 2 - cross-module tests read other crates'
+# tables (auth capture needs eval's monitoring_notice; memory backfill needs chat_channels). Applied
 # leniently (ON_ERROR_STOP=0 + the migrations' own IF NOT EXISTS) so a pre-migrated DB is a clean no-op.
-for crate in auth memory eval chat; do
+for crate in auth mcp-gateway memory eval chat ai-gateway email proj; do
   d="$ROOT/services/$crate/migrations"
   [ -d "$d" ] || continue
   for f in "$d"/*.sql; do

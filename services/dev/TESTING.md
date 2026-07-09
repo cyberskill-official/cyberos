@@ -44,8 +44,17 @@ DATABASE_URL=$DATABASE_URL cargo test -p cyberos-memory -- --ignored --test-thre
 
 `tests/brain_common.rs` and the interaction-event harnesses applied migration files with `sqlx::query(...)`, which uses the prepared-statement protocol and rejects a multi-statement SQL file (`cannot insert multiple commands into a prepared statement`). They now use `sqlx::raw_sql(...)` (the simple protocol), and `brain_common` applies migrations exactly once per process via a `OnceCell`. This is the same fix tracked as MEM-059 on `auto/memory-enterprise`.
 
-## Known reds (fixes live on `auto/memory-enterprise`)
+## Cross-module tables — why eval + chat migrations always apply
 
-With the harness fixed, the ingest and interaction tests pass against a current-branch build: `brain_ingest_test` 3/3, `ingest_test` 4/4, `interaction_event_test` 7/7, `interaction_backfill_test` 3/3, `interaction_event_rls_test` 2/2.
+Some suites read tables owned by OTHER crates: auth's `capture_signin_test` needs eval's `monitoring_notice` (the consent gate), and memory's `interaction_backfill_test` needs chat's `chat_channels`/`chat_messages`. So the migration step applies every crate's migrations (auth -> mcp-gateway -> memory -> eval -> chat -> ai-gateway -> email -> proj) even though the eval and chat crate suites are not in `scripts/local_verify.sh`'s Step 3 set. A fresh database without them fails exactly those suites — which is what CI runs.
 
-The brain-analytics tests still fail: `brain_provenance_test`, `brain_summaries_test`, `brain_tiering_test`, and part of `brain_recall_access_scope_test`. The two representative causes are a column read as `i64` where the SQL type is `INT4`, and `resummarize` binding 2 parameters where the statement needs 3 (the summarize scope-filter placeholder bug, MEM-060). These are service-code fixes already done and gated on `auto/memory-enterprise` (MEM-060 plus the provenance/summary/tiering fixes). Merge that branch for a fully green memory DB suite; this doc and the runner are branch-independent.
+Corollary: a green run against a long-lived local volume can be a FALSE green (the volume may carry tables a fresh CI database lacks). To verify what CI will see, wipe first:
+
+```bash
+docker compose -f services/dev/docker-compose.yml down -v
+bash scripts/local_verify.sh
+```
+
+## Status
+
+With MEM-059/060 merged to main and the occurred-at tiering fix on this branch, the full memory DB suite and `scripts/local_verify.sh` are green from a fresh volume.
