@@ -47,8 +47,9 @@ done
 
 echo "==> cargo test -- --ignored  (single-threaded: parallel DDL races Postgres catalog updates)"
 cd "$ROOT/services"
+# --no-fail-fast is a `cargo test` flag (before --); --ignored/--test-threads are libtest (after --).
 if [ "$#" -gt 0 ]; then
-  exec cargo test "$@" -- --ignored --test-threads=1 --no-fail-fast
+  exec cargo test "$@" --no-fail-fast -- --ignored --test-threads=1
 else
-  exec cargo test --workspace -- --ignored --test-threads=1 --no-fail-fast
+  exec cargo test --workspace --no-fail-fast -- --ignored --test-threads=1
 fi

@@ -46,9 +46,6 @@ DATABASE_URL=$DATABASE_URL cargo test -p cyberos-memory -- --ignored --test-thre
 
 ## Known reds (fixes live on `auto/memory-enterprise`)
 
-With the harness fixed, `brain_ingest_test` passes 3/3. Two provenance tests still fail against a current-branch build:
+With the harness fixed, the ingest and interaction tests pass against a current-branch build: `brain_ingest_test` 3/3, `ingest_test` 4/4, `interaction_event_test` 7/7, `interaction_backfill_test` 3/3, `interaction_event_rls_test` 2/2.
 
-- `brain_provenance_test::provenance_points_back_to_audit_rows` - a column read as `i64` where the SQL type is `INT4`.
-- `brain_provenance_test::worker_never_writes_audit_chain` - `resummarize` binds 2 parameters where the prepared statement needs 3 (the summarize scope-filter placeholder bug, MEM-060).
-
-Both are service-code fixes already done and gated on `auto/memory-enterprise` (MEM-060 and a provenance type fix). Merge that branch for a fully green memory DB suite; this doc and the runner are branch-independent.
+The brain-analytics tests still fail: `brain_provenance_test`, `brain_summaries_test`, `brain_tiering_test`, and part of `brain_recall_access_scope_test`. The two representative causes are a column read as `i64` where the SQL type is `INT4`, and `resummarize` binding 2 parameters where the statement needs 3 (the summarize scope-filter placeholder bug, MEM-060). These are service-code fixes already done and gated on `auto/memory-enterprise` (MEM-060 plus the provenance/summary/tiering fixes). Merge that branch for a fully green memory DB suite; this doc and the runner are branch-independent.
