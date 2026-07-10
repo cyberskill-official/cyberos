@@ -57,7 +57,12 @@ CYBEROS_PACK_URL=<url-to-cyberos.tar.gz> curl -fsSL <raw-url>/bootstrap.sh | bas
 
 ### 4. Claude plugin (available)
 
-`dist/cyberos/plugin/` is a Claude/Cowork plugin (commands `/ship-fr`, `/fr-init`; a bundled `ship-feature-requests` skill). Add it to a marketplace or load it locally, then run `/fr-init` in a repo and `/ship-fr` to drive the backlog. This is the closest replacement for the old two-skill loop, but it carries the real workflow.
+The payload IS a plugin marketplace: `dist/cyberos/.claude-plugin/marketplace.json` catalogs the plugin at `dist/cyberos/plugin/` (its own manifest at `plugin/.claude-plugin/plugin.json`; commands `/ship-fr`, `/fr-init`; a bundled `ship-feature-requests` skill). Install:
+
+- Claude Code: `/plugin marketplace add /path/to/dist/cyberos`, then `/plugin install cyberos@cyberos`.
+- Claude desktop / Cowork: Settings > Plugins > Add > select the `dist/cyberos` folder (the marketplace root - NOT the inner `plugin/` folder; the `.claude-plugin` manifests are hidden dotfolders, so in Finder the plugin folder looks like it only holds `commands/` and `skills/`).
+
+Then run `/fr-init` in a repo and `/ship-fr` to drive the backlog.
 
 ### 5. GitHub Action (available)
 

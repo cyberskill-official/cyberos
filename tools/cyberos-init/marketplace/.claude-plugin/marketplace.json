@@ -1,0 +1,15 @@
+{
+  "name": "cyberos",
+  "owner": { "name": "CyberSkill" },
+  "metadata": {
+    "description": "CyberOS plugin marketplace - the ship-feature-requests workflow for any repo.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "cyberos",
+      "source": "./plugin",
+      "description": "Run the CyberOS ship-feature-requests workflow: /fr-init to vendor the machine, /ship-fr to drive the backlog. HITL required at the two human-acceptance gates."
+    }
+  ]
+}

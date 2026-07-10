@@ -48,7 +48,14 @@ memory_vendored="protocol"
 [ -f "$repo/modules/memory/memory.invariants.yaml" ] && cp "$repo/modules/memory/memory.invariants.yaml" "$out/memory/memory.invariants.yaml"
 
 # --- plugin + runtime + docs ---
+rm -rf "$repo/dist/fr-pack"   # self-heal: purge the pre-rename payload if a stale copy lingers
 cp -R "$here/plugin"    "$out/plugin"
+# Marketplace manifest at the payload ROOT: lets Claude add dist/cyberos as a plugin
+# marketplace (`/plugin marketplace add <path>` or the desktop Plugins > Add picker),
+# then install the `cyberos` plugin from it. plugin/.claude-plugin/plugin.json is the
+# plugin's own manifest; this file is the catalog pointing at it.
+mkdir -p "$out/.claude-plugin"
+cp "$here/marketplace/.claude-plugin/marketplace.json" "$out/.claude-plugin/marketplace.json"
 cp "$here/init.sh"      "$out/init.sh"
 cp "$here/bootstrap.sh" "$out/bootstrap.sh"
 cp -R "$here/ci"        "$out/ci"
