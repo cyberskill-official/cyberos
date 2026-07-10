@@ -1,8 +1,7 @@
 # docs-prerender-gate.yml — the website is GENERATED from the markdown single source of
-# truth (FR-DOCS-002; FR/NFR catalogs + changelogs per FR-DOCS-001). This gate rebuilds
-# the whole site and fails if the committed website/docs drifts from what the sources
-# produce — i.e. someone edited generated HTML by hand, or forgot to rebuild after
-# changing a markdown source. Deterministic build makes the diff check exact.
+# truth (FR-DOCS-002) into gitignored dist/website; nothing generated is committed. This
+# gate proves the whole site still builds from the sources on every docs-touching PR
+# (broken links to assets and unreadable sources fail the build).
 
 name: docs-prerender-gate
 
@@ -13,14 +12,14 @@ on:
       - 'docs/**'
       - 'modules/*/docs/**'
       - 'services/*/docs/**'
-      - 'website/**'
+      - 'tools/docs-site/**'
       - 'CHANGELOG.md'
       - 'modules/*/CHANGELOG.md'
       - 'services/*/CHANGELOG.md'
 
 jobs:
-  docs-fresh:
-    name: generated site matches sources
+  docs-build:
+    name: site builds from sources
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,13 +28,8 @@ jobs:
         with:
           node-version: 24
 
-      - name: Rebuild the site from sources
-        run: bash website/build/build.sh
+      - name: Build the site from the markdown sources
+        run: bash tools/docs-site/build.sh
 
-      - name: Fail on drift (generated != committed)
-        run: |
-          if ! git diff --exit-code --stat -- website/docs; then
-            echo "::error::website/docs is stale or hand-edited. Run 'bash website/build/build.sh' locally and commit the result; never edit generated HTML."
-            exit 1
-          fi
-          echo "docs site is fresh - generated output matches the committed tree."
+      - name: Sanity
+        run: test -f dist/website/index.html && test -f dist/website/reference/fr-catalog.html && echo "site built"

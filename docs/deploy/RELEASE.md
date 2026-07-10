@@ -16,7 +16,7 @@ The consolidated guideline. CyberOS carries ONE platform version (the root `VERS
 
 3. Commit. The pre-commit hooks do the regeneration for you:
    - `cyberos-payload-build` rebuilds `dist/cyberos` whenever a vendored source (or `VERSION`) changes, so the init payload always matches the release.
-   - `docs-site-build` rebuilds the generated website whenever a documentation source changes and stages the output — a commit can never ship stale docs.
+   - `docs-site-build` verifies the site still builds whenever a documentation source changes.
 
 4. Record the release in `CHANGELOG.md` (repo level; per-module history lives in each module's `CHANGELOG.md`, rendered to the site's changelog pages).
 5. Push `main`; wait for `deploy.yml` to go green (images pushed, VPS rolled).
@@ -35,10 +35,10 @@ The consolidated guideline. CyberOS carries ONE platform version (the root `VERS
 The website is generated from the markdown single source of truth (FR-DOCS-002): module docs at `modules/<m>/docs/` or `services/<s>/docs/`, global docs under `docs/`. Three mechanisms keep it fresh, in order of defense:
 
 1. Pre-commit `docs-site-build` (local, automatic).
-2. `docs-prerender-gate` (CI, every PR touching doc sources): rebuilds and fails on any drift between sources and the committed `website/docs`.
-3. Manual: `bash website/build/build.sh` (or `--docs` for the doctrine pages only).
+2. `docs-prerender-gate` (CI, every PR touching doc sources): rebuilds and fails on any a broken docs build.
+3. Manual: `bash tools/docs-site/build.sh` (or `--docs` for the doctrine pages only).
 
-Never edit generated HTML by hand — the gate will reject it.
+Nothing generated is committed: the site renders into gitignored `dist/website`, so there is no generated HTML to edit by hand.
 
 ## GHCR troubleshooting
 

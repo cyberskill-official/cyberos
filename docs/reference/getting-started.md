@@ -44,7 +44,7 @@ All work is a feature request under `docs/feature-requests/` — net-new (`class
 
 - Rust services: `cd services && cargo test`.
 - The full DB-backed verification (what CI runs): `bash scripts/local_verify.sh` — boots the dev Postgres + Redis, applies every crate's migrations, runs each module suite. Wipe first (`docker compose -f services/dev/docker-compose.yml down -v`) to see exactly what CI sees.
-- Docs: edit markdown under `docs/`, `modules/<m>/docs/`, or `services/<s>/docs/`, then `bash website/build/build.sh`. The website is generated output — never edit its HTML by hand.
+- Docs: edit markdown under `docs/`, `modules/<m>/docs/`, or `services/<s>/docs/`, then `bash tools/docs-site/build.sh`. The website renders into gitignored `dist/website` — generated output is never committed or edited.
 
 ## Changelog
 

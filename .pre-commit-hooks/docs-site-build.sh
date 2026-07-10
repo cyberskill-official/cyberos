@@ -1,18 +1,16 @@
 #!/usr/bin/env bash
-# Rebuild the generated website whenever a documentation source is staged, and stage the
-# regenerated output with it — so a commit can never ship stale generated HTML. The CI
-# docs-prerender-gate re-verifies the same property on every PR. Fast no-op when no doc
-# source changed.
+# Verify the docs site still BUILDS whenever a documentation source is staged. The site is
+# generated into gitignored dist/website (nothing generated is committed), so the check is
+# "the build is green", not a drift diff. CI re-runs the same build on every docs PR.
 set -euo pipefail
 
 root="$(git rev-parse --show-toplevel)"
 
 if ! git diff --cached --name-only | grep -Eq \
-  '^(docs/|modules/[^/]+/docs/|services/[^/]+/docs/|website/build/|CHANGELOG\.md|modules/[^/]+/CHANGELOG\.md|services/[^/]+/CHANGELOG\.md|docs/feature-requests/|docs/non-functional-requirements/)'; then
+  '^(docs/|modules/[^/]+/docs/|services/[^/]+/docs/|tools/docs-site/|CHANGELOG\.md|modules/[^/]+/CHANGELOG\.md|services/[^/]+/CHANGELOG\.md|docs/feature-requests/|docs/non-functional-requirements/)'; then
   exit 0
 fi
 
-echo "docs: a documentation source changed - rebuilding the generated site ..."
-bash "$root/website/build/build.sh" >/dev/null
-git add "$root/website/docs"
-echo "docs: website/docs regenerated + staged."
+echo "docs: a documentation source changed - verifying the site builds ..."
+bash "$root/tools/docs-site/build.sh" >/dev/null
+echo "docs: site build green (output at dist/website, gitignored)."
