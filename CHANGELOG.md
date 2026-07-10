@@ -2,6 +2,21 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [1.1.0] - 2026-07-11
+
+Multi-agent distribution for the `cyberos-init` payload, plus three new install channels. Backward compatible: `init.sh` never clobbers an existing operator file, so re-running it on a 1.0.0 repo only adds what is missing.
+
+Added
+- Agent surface in `init.sh`: `AGENTS.md` is the canonical cross-agent spine, with create-if-absent pointer files per agent (`CLAUDE.md`, `GEMINI.md`, `.cursorrules`, `.cursor/rules/*.mdc`, `.grok/GROK.md`, `.github/copilot-instructions.md`, `.agents/rules/`, `.windsurfrules`) and native installs of the `ship-feature-requests` skill into `.claude/skills`, `.grok/skills`, `.commandcode/skills`, `.codex/skills`, `.opencode/skill`. Controls: `CYBEROS_AGENTS`, `CYBEROS_COPY_SKILLS`, `CYBEROS_GLOBAL_SKILLS`, `CYBEROS_NO_MCP`. Covers Claude Code, Codex, Cursor, Gemini, Antigravity, Grok CLI, zcode, Command Code, Hermes, Copilot, Windsurf.
+- MCP server channel (`tools/cyberos-init/mcp/cyberos-mcp.mjs`): zero-dependency Node stdio server exposing `fr_init`, `fr_gates`, `fr_status`, `ship_fr` (HITL-gated; never self-accepts). `init.sh` writes `.mcp.json` / `.cursor/mcp.json` when absent.
+- npx CLI channel: root `package.json` with `cyberos-init`, `cyberos-gates`, `cyberos-mcp` bins.
+- Template channel: `create.sh` scaffolder + `template/` skeleton for a fresh project or a GitHub template repo.
+- Auto-versioning ("auto version, manual release"): `scripts/cyberos-version.mjs` computes the next version from Conventional Commits; `.github/workflows/version.yml` auto-commits the bump to `main` on push (never tags or deploys); `.githooks/commit-msg` is an advisory Conventional-Commit nudge that shows the projected next version. Cutting a release stays a manual `vX.Y.Z` tag. See `docs/deploy/RELEASE.md`.
+
+Changed
+- Root `AGENTS.md` produced by `init.sh` is now a concise workflow spine (was the full memory protocol); the dense Layer-1 protocol lives only at `.cyberos/memory/AGENTS.md`, referenced from the spine.
+- `init.sh` errors clearly when run from an un-built source tree.
+
 ## [1.0.0] - 2026-07-10
 
 The first platform release. One version (`VERSION`) across every surface: services (GHCR images + VPS), the web console and PWA at os.cyberskill.world, the desktop app (Tauri, with the CyberOS Ops tab), the distributable init payload (`dist/cyberos`), the Claude plugin, and the generated docs site.

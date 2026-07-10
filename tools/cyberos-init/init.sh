@@ -6,7 +6,7 @@
 set -euo pipefail
 
 src="$(cd "$(dirname "$0")" && pwd)"                   # the payload dir this script lives in
-avail_ver="$(tr -d ' \n\r' < "$src/VERSION" 2>/dev/null || echo unknown)"
+avail_ver="$( [ -f "$src/VERSION" ] && tr -d ' \n\r' < "$src/VERSION" || echo unknown )"
 
 # --check: report installed vs available CyberOS version for the target, then exit.
 if [ "${1:-}" = "--check" ]; then
@@ -23,16 +23,26 @@ target="${1:-$(pwd)}"; target="$(cd "$target" && pwd)"
 root="$(cd "$target" && git rev-parse --show-toplevel 2>/dev/null || echo "$target")"
 CY="$root/.cyberos"
 
+# guard: init.sh runs from an ASSEMBLED payload (build.sh output), where cuo/ + VERSION are
+# siblings. Running it from the un-built source tree is a common mistake - fail with a clear hint.
+if [ ! -d "$src/cuo" ]; then
+  echo "cyberos init: '$src' is not an assembled payload (no cuo/). Build it first:" >&2
+  echo "  bash tools/cyberos-init/build.sh   # -> dist/cyberos/, then run dist/cyberos/init.sh <repo>" >&2
+  exit 1
+fi
+
 echo "cyberos init: target repo = $root (CyberOS $avail_ver)"
 mkdir -p "$CY" "$root/docs/feature-requests/_audits"
 
 # 1. vendor the machine by module (replace any prior copy) --------------------
-rm -rf "$CY/cuo" "$CY/plugin"
+rm -rf "$CY/cuo" "$CY/plugin" "$CY/mcp"
 cp -R "$src/cuo"    "$CY/cuo"
 cp -R "$src/plugin" "$CY/plugin"
+[ -d "$src/mcp" ] && cp -R "$src/mcp" "$CY/mcp"          # MCP server channel (optional; needs node)
 [ -f "$src/manifest.yaml" ] && cp "$src/manifest.yaml" "$CY/manifest.yaml"
 [ -f "$src/VERSION" ] && cp "$src/VERSION" "$CY/VERSION"
 chmod +x "$CY/cuo/gates/run-gates.sh" 2>/dev/null || true
+[ -f "$CY/mcp/cyberos-mcp.mjs" ] && chmod +x "$CY/mcp/cyberos-mcp.mjs" 2>/dev/null || true
 
 # 2. auto-detect gate commands ------------------------------------------------
 BUILD_CMD=""; LINT_CMD=""; TEST_CMD=""; COVERAGE_CMD=""; ECOSYSTEM="unknown"
@@ -111,13 +121,10 @@ if [ "${CYBEROS_NO_MEMORY:-0}" != "1" ] && [ -d "$src/memory" ]; then
     [ -f "$src/memory/$f" ] && cp "$src/memory/$f" "$CY/memory/$f"
   done
 
-  # make the protocol discoverable at the repo root (never clobber an existing AGENTS.md)
-  if [ ! -f "$root/AGENTS.md" ]; then
-    cp "$src/memory/AGENTS.md" "$root/AGENTS.md"
-    MEM_AGENTS="created root AGENTS.md (memory protocol)"
-  else
-    MEM_AGENTS="kept your AGENTS.md; protocol copy at .cyberos/memory/AGENTS.md"
-  fi
+  # The memory PROTOCOL lives at .cyberos/memory/AGENTS.md. The repo-root AGENTS.md is the
+  # cross-agent SPINE (step 5b) and references this protocol - so we do NOT overwrite root
+  # AGENTS.md with the dense protocol here (that would bury the workflow every agent needs).
+  MEM_AGENTS="memory protocol -> .cyberos/memory/AGENTS.md"
 
   # scaffold the BRAIN store at .cyberos/memory/store/ (canonical, section 0.4).
   brain="$CY/memory/store"
@@ -149,9 +156,20 @@ JSON
   MEMORY_SET="yes"
 fi
 
-# 5b. agent-independent entry (works for ANY agent: Claude, Codex, Gemini, Cursor,
-# Grok, CLI agents...). AGENT-ENTRY.md is the canonical one-page trigger; thin
-# pointer stubs are created ONLY when absent (never clobber operator files).
+# 5b. AGENT SURFACE - make the workflow discoverable to EVERY popular coding agent.
+# AGENTS.md (root) is the canonical cross-agent spine (read natively by Codex, Cursor,
+# Gemini, Antigravity, Grok CLI, zcode, Command Code, Aider, Zed, Copilot, Warp, Jules...).
+# Per-agent pointer files + native skill installs layer on top. Everything is create-if-
+# absent: an existing operator file is NEVER clobbered. Controls:
+#   CYBEROS_AGENTS=all|"claude-code,codex,..."   restrict which agents get files (default all)
+#   CYBEROS_COPY_SKILLS=1                          copy skills instead of symlinking (committable)
+#   CYBEROS_GLOBAL_SKILLS=1                        also install skills into $HOME agent dirs
+#   CYBEROS_NO_MCP=1                               skip the MCP .mcp.json registration
+AGENT_FILES=""; SKILL_DIRS=""; MCP_SET="skipped"
+
+want_agent() { case ",${CYBEROS_AGENTS:-all}," in *,all,*) return 0;; *",$1,"*) return 0;; *) return 1;; esac; }
+
+# canonical one-page entry - the source of truth every pointer file defers to.
 cat > "$CY/AGENT-ENTRY.md" <<'ENTRY'
 # CyberOS agent entry
 
@@ -167,25 +185,133 @@ This repository runs CyberOS. Any coding agent operating here follows these rule
 3. Machine gates: `bash .cyberos/cuo/gates/run-gates.sh` (reads `.cyberos/gates.env`).
    Green is necessary, never sufficient.
 4. Memory: record decisions, audits, and plans into the BRAIN at
-   `.cyberos/memory/store/` per the protocol in `AGENTS.md` (root) or
-   `.cyberos/memory/AGENTS.md`.
-5. Never push, deploy, or delete without an explicit operator instruction.
+   `.cyberos/memory/store/` per the protocol in `.cyberos/memory/AGENTS.md`.
+5. Never push, deploy, merge, or delete without an explicit operator instruction.
 ENTRY
 
-for stub in CLAUDE.md GEMINI.md; do
-  if [ ! -e "$root/$stub" ]; then
-    printf '# %s\n\nThis repo runs CyberOS. Start at `.cyberos/AGENT-ENTRY.md`.\n' "${stub%%.md}" > "$root/$stub"
+# --- the universal AGENTS.md spine (the one file the most agents read natively) ---
+agents_spine() {
+  cat <<'SPINE'
+# AGENTS.md
+
+This repository runs **CyberOS**. Any coding agent working here follows these rules.
+This file is the cross-tool spine; the full one-pager is `.cyberos/AGENT-ENTRY.md`.
+
+1. Work = feature requests. Read `.cyberos/cuo/ship-feature-requests.md` and drive the
+   next eligible FR in `docs/feature-requests/BACKLOG.md` (frontmatter `status` is the
+   record of truth; one backlog for `class: product` and `class: improvement`).
+2. HITL is required. Halt at review acceptance (`reviewing -> ready_to_test`) and final
+   acceptance (`testing -> done`) for a recorded human verdict. Never set `done` yourself.
+   Doctrine: `.cyberos/cuo/EXECUTION-DISCIPLINE.md`; lifecycle: `.cyberos/cuo/STATUS-REFERENCE.md`.
+3. Gates: `bash .cyberos/cuo/gates/run-gates.sh` (reads `.cyberos/gates.env`). Green is
+   necessary, never sufficient.
+4. Memory (BRAIN): record decisions, audits, and plans into `.cyberos/memory/store/`
+   per the protocol in `.cyberos/memory/AGENTS.md`.
+5. Never push, deploy, merge, or delete without an explicit operator instruction.
+SPINE
+}
+SP_MARK="cyberos-agent-spine (managed by cyberos init; edit above/below this marker)"
+if [ ! -f "$root/AGENTS.md" ]; then
+  { agents_spine; printf '\n<!-- %s -->\n' "$SP_MARK"; } > "$root/AGENTS.md"
+  AGENTS_SET="created AGENTS.md (canonical cross-agent spine)"
+elif grep -q "$SP_MARK" "$root/AGENTS.md" 2>/dev/null || grep -q '\.cyberos/AGENT-ENTRY\.md' "$root/AGENTS.md" 2>/dev/null; then
+  AGENTS_SET="kept your AGENTS.md (already CyberOS-aware)"
+else
+  { printf '\n---\n\n'; agents_spine; printf '\n<!-- %s -->\n' "$SP_MARK"; } >> "$root/AGENTS.md"
+  AGENTS_SET="appended a CyberOS section to your AGENTS.md"
+fi
+
+# --- per-agent pointer files (create only when absent; agent prefers its own file) ---
+# pointer <agent-key> <path-rel-to-root> <style: md|plain|mdc>
+pointer() {
+  want_agent "$1" || return 0
+  local rel="$2" style="$3" abs="$root/$2"
+  [ -e "$abs" ] && return 0
+  mkdir -p "$(dirname "$abs")"
+  case "$style" in
+    mdc)
+      { printf -- '---\ndescription: CyberOS feature-request workflow (HITL-gated). Always apply.\nalwaysApply: true\n---\n'
+        printf 'This repo runs CyberOS. Canonical instructions: AGENTS.md (root) and .cyberos/AGENT-ENTRY.md.\n'
+        printf 'Work is feature-requests; HITL is required at the two human-acceptance gates; run gates with `bash .cyberos/cuo/gates/run-gates.sh`. Never push/deploy/merge without an operator instruction.\n'; } > "$abs" ;;
+    plain)
+      { printf 'This repo runs CyberOS. Canonical instructions: AGENTS.md (root) and .cyberos/AGENT-ENTRY.md.\n'
+        printf 'Work is feature-requests; HITL is required at the two human-acceptance gates; gates: bash .cyberos/cuo/gates/run-gates.sh. Never push/deploy/merge without an operator instruction.\n'; } > "$abs" ;;
+    *)
+      { printf '# %s\n\n' "$(basename "$rel" .md)"
+        printf 'This repo runs **CyberOS**. Canonical agent instructions: `AGENTS.md` (root) and `.cyberos/AGENT-ENTRY.md`.\n\n'
+        printf 'Work is feature-requests; HITL is required at the two human-acceptance gates; run gates with `bash .cyberos/cuo/gates/run-gates.sh`. Never push, deploy, or merge without an explicit operator instruction.\n'; } > "$abs" ;;
+  esac
+  AGENT_FILES="$AGENT_FILES $rel"
+}
+pointer claude-code   CLAUDE.md                          md      # Claude Code CLI (Command Code also reads CLAUDE.md)
+pointer gemini        GEMINI.md                          md      # Gemini CLI + Antigravity (GEMINI.md wins on conflict)
+pointer cursor        .cursorrules                       plain   # Cursor (legacy rules file)
+pointer cursor        .cursor/rules/cyberos.mdc          mdc     # Cursor (modern .cursor/rules/*.mdc)
+pointer grok          .grok/GROK.md                      md      # Grok CLI (superagent-ai)
+pointer copilot       .github/copilot-instructions.md    md      # GitHub Copilot
+pointer antigravity   .agents/rules/cyberos.md           md      # Antigravity / zcode workspace rules (.agents/rules/)
+pointer windsurf      .windsurfrules                     plain   # Windsurf
+# Codex, zcode, Command Code, Aider, Zed, Jules, Warp, OpenCode read AGENTS.md -> covered by the spine.
+
+# --- native skill install: drop ship-feature-requests into each skill-aware agent's dir ---
+# so it is invocable natively (/ship-feature-requests, $ship-feature-requests) - not just prose.
+# Default = relative symlink into the self-contained skill at .cyberos/plugin/skills (tracks
+# updates on re-init; regenerable, so gitignored). CYBEROS_COPY_SKILLS=1 copies it instead.
+SKILL_SRC="$CY/plugin/skills/ship-feature-requests"
+relup() { local up="" seg; local IFS=/; for seg in $1; do [ -n "$seg" ] && up="../$up"; done; printf '%s' "$up"; }
+install_skill() {                                  # $1 = agent skills dir (rel to root)
+  want_agent "$2" || return 0
+  [ -d "$SKILL_SRC" ] || return 0
+  local dir="$root/$1" dest="$root/$1/ship-feature-requests"
+  if [ -e "$dest" ] || [ -L "$dest" ]; then         # already there: only refresh OUR own link/copy
+    case "$(readlink "$dest" 2>/dev/null)" in *".cyberos/plugin/skills/ship-feature-requests") : ;; *) return 0;; esac
+    rm -rf "$dest" 2>/dev/null || return 0
   fi
-done
-if [ ! -e "$root/.cursorrules" ]; then
-  printf 'This repo runs CyberOS. Start at .cyberos/AGENT-ENTRY.md.\n' > "$root/.cursorrules"
+  mkdir -p "$dir"
+  if [ "${CYBEROS_COPY_SKILLS:-0}" = "1" ]; then
+    cp -R "$SKILL_SRC" "$dest"
+  else
+    ln -s "$(relup "$1").cyberos/plugin/skills/ship-feature-requests" "$dest" 2>/dev/null || cp -R "$SKILL_SRC" "$dest"
+  fi
+  SKILL_DIRS="$SKILL_DIRS $1"
+}
+install_skill .claude/skills      claude-code    # Claude Code
+install_skill .grok/skills        grok           # Grok CLI
+install_skill .commandcode/skills command-code   # Command Code
+install_skill .codex/skills       codex          # Codex CLI (skills)
+install_skill .opencode/skill     opencode       # OpenCode (singular 'skill')
+# zcode + Hermes load skills from a global home ($HOME); opt in with CYBEROS_GLOBAL_SKILLS=1.
+if [ "${CYBEROS_GLOBAL_SKILLS:-0}" = "1" ]; then
+  for gp in "$HOME/.claude/skills" "$HOME/.grok/skills" "$HOME/.hermes/skills" "$HOME/.commandcode/skills"; do
+    [ -e "$gp/ship-feature-requests" ] || { mkdir -p "$gp" && cp -R "$SKILL_SRC" "$gp/ship-feature-requests" 2>/dev/null && SKILL_DIRS="$SKILL_DIRS ~${gp#"$HOME"}"; }
+  done
+fi
+
+# --- MCP server registration (any MCP-capable agent triggers the workflow tool-natively) ---
+# Writes a project .mcp.json (Claude Code, Cursor via .cursor/mcp.json, Windsurf, etc. read it)
+# only when absent. Needs node at run time. Snippets for Codex/others are in .cyberos/mcp/README.md.
+if [ "${CYBEROS_NO_MCP:-0}" != "1" ] && [ -f "$CY/mcp/cyberos-mcp.mjs" ]; then
+  mcp_json() { printf '{\n  "mcpServers": {\n    "cyberos": { "command": "node", "args": [".cyberos/mcp/cyberos-mcp.mjs"] }\n  }\n}\n'; }
+  wrote=""
+  [ -e "$root/.mcp.json" ]        || { mcp_json > "$root/.mcp.json";        wrote="$wrote .mcp.json"; }
+  if want_agent cursor; then mkdir -p "$root/.cursor"; [ -e "$root/.cursor/mcp.json" ] || { mcp_json > "$root/.cursor/mcp.json"; wrote="$wrote .cursor/mcp.json"; }; fi
+  MCP_SET="server -> .cyberos/mcp/ ; registered:${wrote:- (none new; see .cyberos/mcp/README.md)}"
 fi
 
 # 6. gitignore the vendored machine + the BRAIN (regenerable / tenant data) ---
+# The agent-surface FILES (AGENTS.md, CLAUDE.md, .mcp.json, .grok/GROK.md, ...) stay TRACKED
+# so a teammate's agent picks them up. Only the vendored machine and the symlinked skills
+# (which point INTO the gitignored .cyberos/) are ignored - both regenerate via init.
 gi="$root/.gitignore"
 [ -f "$gi" ] || : > "$gi"
 grep -q "CyberOS vendored machine" "$gi" || printf '\n# CyberOS vendored machine + local BRAIN at .cyberos/memory/store (regenerable via init; tenant data). Do not commit.\n' >> "$gi"
 grep -qx ".cyberos/" "$gi"        || echo ".cyberos/"        >> "$gi"
+if [ "${CYBEROS_COPY_SKILLS:-0}" != "1" ]; then
+  grep -q "CyberOS skill symlinks" "$gi" || printf '\n# CyberOS skill symlinks -> .cyberos/plugin/skills (regenerable via init).\n' >> "$gi"
+  for sp in .claude/skills/ship-feature-requests .grok/skills/ship-feature-requests .commandcode/skills/ship-feature-requests .codex/skills/ship-feature-requests .opencode/skill/ship-feature-requests; do
+    grep -qx "$sp" "$gi" || echo "$sp" >> "$gi"
+  done
+fi
 
 # 7. tell the operator what to do next ----------------------------------------
 cat <<EOF
@@ -195,8 +321,12 @@ cyberos init: done.
   memory    -> .cyberos/memory/       (Layer-1 protocol + schema)
   gates     -> .cyberos/gates.env     (detected: build='${BUILD_CMD:-none}' test='${TEST_CMD:-none}')
   backlog   -> docs/feature-requests/BACKLOG.md
+  agents    -> ${AGENTS_SET}
+              pointer files:${AGENT_FILES:- (none new)}
+              native skills:${SKILL_DIRS:- (none new)}
+              MCP: ${MCP_SET}
   BRAIN     -> ${MEMORY_SET}${MEM_BRAIN:+ (${MEM_BRAIN})}${MEM_AGENTS:+; ${MEM_AGENTS}}
-  gitignored: .cyberos/ (vendored machine + BRAIN store at .cyberos/memory/store)
+  gitignored: .cyberos/ (vendored machine + BRAIN store at .cyberos/memory/store) + skill symlinks
   version   -> CyberOS $avail_ver (.cyberos/VERSION); check for updates: <payload>/init.sh --check $root
 
 Next:
@@ -210,8 +340,14 @@ Next:
   3. Run the machine gates any time:
        bash .cyberos/cuo/gates/run-gates.sh
 
+Every popular agent is wired: AGENTS.md is the cross-agent spine, and Claude Code, Codex,
+Cursor, Gemini, Antigravity, Grok CLI, zcode, Command Code, Copilot & Windsurf each get the
+right pointer file / native skill / MCP registration (all create-if-absent; your files are
+never clobbered). Restrict with CYBEROS_AGENTS=..., copy skills with CYBEROS_COPY_SKILLS=1,
+skip MCP with CYBEROS_NO_MCP=1. MCP server + per-agent registration snippets: .cyberos/mcp/README.md.
+
 BRAIN memory protocol: .cyberos/memory/store/ is your local memory store (gitignored, tenant
-data). The rules are in AGENTS.md (or .cyberos/memory/AGENTS.md). An agent working in this
-repo records decisions, audits, and plans into the BRAIN per that protocol.
-Skip memory setup by re-running init with CYBEROS_NO_MEMORY=1.
+data). The rules are in .cyberos/memory/AGENTS.md (root AGENTS.md is the workflow spine and
+points to it). An agent working here records decisions, audits, and plans into the BRAIN per
+that protocol. Skip memory setup by re-running init with CYBEROS_NO_MEMORY=1.
 EOF

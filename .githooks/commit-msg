@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# CyberOS commit-msg hook (active via core.hooksPath=.githooks, like .githooks/pre-push).
+# Advisory only: nudges Conventional Commits (so the auto-version workflow can classify the
+# change) and prints the projected next version. NEVER blocks unless CYBEROS_STRICT_COMMITS=1.
+#   skip once:  git commit --no-verify ...
+#   enforce:    CYBEROS_STRICT_COMMITS=1 git commit ...
+set -euo pipefail
+
+root="$(git rev-parse --show-toplevel 2>/dev/null || echo .)"
+hook="$root/.pre-commit-hooks/conventional-commit-check.sh"
+[ -f "$hook" ] || exit 0
+exec bash "$hook" "$1"
