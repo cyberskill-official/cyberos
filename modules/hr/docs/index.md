@@ -21,7 +21,7 @@ HR is the **Member lifecycle plane** - the place where a person becomes an actor
 
 ## The bigger picture - three strategic roles
 
-HR is not a payroll bolt-on. It is the Member-id authority for the whole platform. Strip it out and every downstream module gets a slightly different roster, drift accumulates, compliance breaks. The Vietnamese labour-law discipline matters too - Decree 145 / 152 / 13 / PDPL are not "compliance things"; they're the operating constraints under which the entire team works.
+HR is the Member-id authority for the whole platform. Strip it out and every downstream module gets a slightly different roster, drift accumulates, compliance breaks. The Vietnamese labour-law discipline matters too - Decree 145 / 152 / 13 / PDPL are not "compliance things"; they're the operating constraints under which the entire team works.
 
 **Role 1 - Member lifecycle.** One state machine: hire -> transfer -> exit. Pre-hire -> active -> on-leave -> suspended -> terminating -> terminated. Each transition fires events that AUTH (subject provisioning), TIME (timesheet enrolment), REW (pay band lookup), ESOP (grant vesting state), KB (access scope), and 4 other modules consume. Contract type and Vietnamese statutory entitlements are first-class fields. CCCD photo lives in a separate KMS keyspace.
 
@@ -85,7 +85,7 @@ Axis| Question| Answer
 **5W - Why**| Why a separate module?| Because Member-directory drift across modules is the single biggest source of operational pain in growing companies. Centralise the primitive, never the policy.
 **1H - How**| How does it work?| Postgres with column-level KMS on PII columns. GraphQL subgraph publishes Member + Profile to Apollo Router. NATS events for lifecycle transitions: `hr.member.joined`, `hr.leave.requested`, `hr.leave.approved`, `hr.contract.renewed`, `hr.member.terminated`. AUTH RBAC scopes every read; CCCD reads are sev-1 audit rows.
 **2C - Cost**| Cost budget?| P1: ~$25/month (RDS row-scoped to HR schema + one Fargate task). 50-tenant: ~$80/month. Per-member-month cost: ~$0.50 amortised.
-**2C - Constraints**| Constraints?| (a) Decree 145/2020 - max 200 hours/year overtime; system rejects timesheet entries that would push a Member past the cap. (b) Decree 152/2020 - BHXH 8% / BHYT 1.5% / BHTN 1% employee contribution rates (employer 17.5% / 3% / 1%); stored as parameter version. (c) PDPL Art. 14 - DSAR export available within 30 days. (d) Comp data structurally excluded.
+**2C - Constraints**| Constraints?| (a) Decree 145/2020 - 200 hours/year overtime standard (up to 300 with employee consent and MoLISA notification); system rejects timesheet entries that would push a Member past the cap. (b) Decree 152/2020 - BHXH 8% / BHYT 1.5% / BHTN 1% employee contribution rates (employer 17.5% / 3% / 1%); stored as parameter version. (c) PDPL Art. 14 - DSAR export available within 30 days. (d) Comp data structurally excluded.
 **5M - Materials**| Stack?| Rust 1.81, axum 0.7, sqlx, PostgreSQL 16, async-graphql for the subgraph, KMS for column-level encryption, S3 for contract PDFs (with object-lock for retention), NATS JetStream for events.
 **5M - Methods**| Method choices?| Append-only contract table with `effective_to` + `superseded_by` for amendments (anti-retroactive). Leave-balance state machine: `requested -> approved -> consumed` or `requested -> rejected`. Accrual computed lazily at quarter boundaries (not real-time) to keep audit deterministic.
 **5M - Machines**| Deployment?| Fargate task in SG-1 (P1). Multi-AZ Postgres RDS. S3 for contract PDFs with retention lock = 10 years (matches VN SI/PIT statutory minimum).
@@ -355,7 +355,7 @@ Previous FR enumerations were archived 2026-05-14 and are no longer reflected on
 
 ## Non-functional requirements
 
-Security and usability NFRs (§11.2.5) bind on HR. Cross-referenced at [nfr-catalog.html#hr](../../reference/nfr-catalog.html#hr).
+Security and usability NFRs bind on HR. Cross-referenced at [nfr-catalog.html#hr](../../reference/nfr-catalog.html#hr).
 
 NFR ID| Concern| Target| Measurement
 ---|---|---|---
@@ -403,7 +403,7 @@ Regulation / standard| Article / clause| HR feature that satisfies it
 ---|---|---
 Vietnam Labour Code (2019)| Art. 113 - Annual leave| Leave accrual schedule keyed to service years; quarterly accrual job.
 Vietnam Labour Code| Art. 139 - Maternity leave| Leave kind `maternity` with default 6 months + twins +30/child.
-Decree 145/2020/NĐ-CP| Art. 60 - Overtime cap| (FR pending) enforces <= 200h/year overtime per Member; check at TIME submission.
+Decree 145/2020/NĐ-CP| Art. 60 - Overtime cap| (FR pending) enforces the 200 hours/year overtime cap (up to 300 with employee consent and MoLISA notification) per Member; check at TIME submission.
 Decree 152/2020/NĐ-CP| Art. 26 - Sick leave allowance| BHXH sick allowance days tiered by service period.
 Decree 152/2020/NĐ-CP| Art. 5 - SI contribution rates| BHXH 8%/17.5%, BHYT 1.5%/3%, BHTN 1%/1% as versioned parameters; comp owned by REW.
 Decree 13/2023/NĐ-CP| Art. 17 - Personal data processing log| Every Member read / write writes an HR audit row to memory.
@@ -440,7 +440,7 @@ ID| Risk| Likelihood| Impact| Owner| Mitigation
 
 ## KPIs
 
-HR health rolls up into 9 KPIs covering lifecycle throughput, compliance posture, and orchestrator correctness.
+HR KPIs cover lifecycle throughput, compliance posture, and orchestrator correctness.
 
 KPI| Formula| Source| Target
 ---|---|---|---
@@ -592,7 +592,7 @@ $ cyberos-hr dsar-export --member mai@cyberskill.com --output dsar.zip
 [dsar] member: mai@cyberskill.com
 [dsar] profile: 1 row
 [dsar] contracts: 1 (active)
-[dsar] leave: 4 rows (last P0 → P3 horizon)
+[dsar] leave: 4 rows
 [dsar] documents: 3 (offer, NDA, equipment list)
 [dsar] cccd: 1 (sev-1 audit added)
 [dsar] comp: — (REW DSAR separate)

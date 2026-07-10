@@ -212,7 +212,7 @@ Every skill's audit row participates in the `genie.action_log` hash chain. Tampe
 
 A skill invocation has a typical latency budget. **Pre-invocation** (envelope validation + scope check) takes <50ms. **Body execution** is dominated by LLM inference - Haiku-class for routing and judgement is ~500ms per call; Sonnet/Opus for heavier work is 2-10s; deterministic skills with no inference are <100ms. **Invariants check** at each node boundary is ~30ms for 8 invariants (proportional to invariant count x cost-per-check). **Audit row append** is <10ms (Postgres single-row insert with hash compute). **Post-invocation** (envelope validation + chain dispatch) is <20ms.
 
-Expect a typical chat-mode `feature-request-author` PLAN-phase run to take 3-8 seconds end-to-end (dominated by Sonnet/Opus inference reading the PRD and enumerating FRs). A WORKER-phase FR generation is ~5-15s per FR. An `feature-request-audit` run is ~2-5s per FR (mostly mechanical rule checks; only a few rules need LLM judgement).
+Expect a typical chat-mode `feature-request-author` PLAN-phase run to take 3-8 seconds end-to-end (dominated by Sonnet/Opus inference reading the PRD and enumerating FRs). A WORKER-phase FR generation is ~5-15s per FR. A `feature-request-audit` run is ~2-5s per FR (mostly mechanical rule checks; only a few rules need LLM judgement).
 
 ### 16.2 Observability - what to monitor
 
@@ -250,7 +250,7 @@ Patterns that look reasonable but break CyberOS contracts.
 
 **Don't write skills that call other skills directly.** All skill-to-skill handoffs go through the supervisor (which writes the action_log row, applies the scope contract, validates the envelope schemas). Direct calls break audit and chain-of-custody. If you need shared logic, put it in `scripts/` inside the skill folder.
 
-**Don't conflate "skill" with "schema."** A skill _acts_ ; a contract _constrains_. If your "skill" has empty `allowed_mcp_tools: []`, `expects: null`, and `confidence_band: 1.0`, it's a contract wearing a skill costume. Promote it to `cyberos/docs/contracts/` per Part 8.4 + Recipe 7.
+**Don't conflate "skill" with "schema".** A skill _acts_; a contract _constrains_. If your "skill" has empty `allowed_mcp_tools: []`, `expects: null`, and `confidence_band: 1.0`, it's a contract wearing a skill costume. Promote it to `cyberos/docs/contracts/` per Part 8.4 + Recipe 7.
 
 **Don't hard-code paths to other skills or contracts in the body.** Use `depends_on_contracts:` for contract dependencies. Use `next_skill_recommendation` for chain targets. Hard-coded paths break extraction and bundling.
 
@@ -336,7 +336,7 @@ Update every consumer skill: add `depends_on_contracts:` + update body refs. Upd
 
 ### Recipe 8 - Set up acceptance fixtures for a new skill
 
-Create `cuo/<role>/<skill>/acceptance/` and add three files. `golden-input.json` - a known input envelope. `golden-output-<scenario>.md` - the expected artefact (or `golden-envelope-<scenario>.json` for envelope outputs). `README.md` - explains each fixture's scenario. Run `ajv validate -s envelopes/output.json -d golden-envelope-<scenario>.json` to sanity-check the fixture itself. Add 1-3 fixtures covering happy path + 1-2 edge cases. Wire into CI when the test harness lands.
+Create `cuo/<role>/<skill>/acceptance/` and add three files. `golden-input.json` - a known input envelope. `golden-output-<scenario>.md` - the expected artefact (or `golden-envelope-<scenario>.json` for envelope outputs). `README.md` - explains each fixture's scenario. Run `ajv validate -s envelopes/output.json -d golden-envelope-<scenario>.json` to sanity-check the fixture itself. Add 1-3 fixtures covering happy path + 1-2 edge cases. Wire into CI when the test runner lands.
 
 ### Recipe 9 - Write an INVARIANTS.md
 
@@ -576,7 +576,7 @@ Term | Definition
 
 ## Part 26 - What doesn't exist yet
 
-Honest inventory of contracts-only-no-runtime: the `cyberos run` CLI (contract specified by every skill's `expects:` envelope schema; implementation pending), the CUO LangGraph supervisor (topology specified in SRS §6.1.1, code pending), the `genie.action_log` Postgres table + tamper detector (schema in SRS §6.7 + §10.4, migration not authored), the auto-refinement runtime (`INVARIANTS.md` is read; breaches declared; the engine that runs them at LangGraph node boundaries is pending), the acceptance-test harness (folder convention documented; the runner script is not), the drift-signal feedback loop (OBS module's per-skill acceptance-rate metric per DEC-055 needs to wire into a Notify generator that auto-pauses skills), the plug-in installer + transpilers (Part 9 - Phase A done, Phases B-E pending), and the host shim library `cyberos-skill-runtime` (interface specified in §9.2; library pending).
+Honest inventory of contracts-only-no-runtime: the `cyberos run` CLI (contract specified by every skill's `expects:` envelope schema; implementation pending), the CUO LangGraph supervisor (topology specified in SRS §6.1.1, code pending), the `genie.action_log` Postgres table + tamper detector (schema in SRS §6.7 + §10.4, migration not authored), the auto-refinement runtime (`INVARIANTS.md` is read; breaches declared; the engine that runs them at LangGraph node boundaries is pending), the acceptance-test suite (folder convention documented; the runner script is not), the drift-signal feedback loop (OBS module's per-skill acceptance-rate metric per DEC-055 needs to wire into a Notify generator that auto-pauses skills), the plug-in installer + transpilers (Part 9 - Phase A done, Phases B-E pending), and the host shim library `cyberos-skill-runtime` (interface specified in §9.2; library pending).
 
 The registry is the **source-of-truth that all of those will read**. None of them need to exist for the skill folders to be valuable today - the skills _are_ the contracts. When the runtime is built, every behaviour it needs is documented in some `SKILL.md` or `references/*.md` already.
 
@@ -2575,12 +2575,12 @@ Expected: a JSON greeting from the TS hello-world skill, executed inside the Was
 
 Once Phase 5 builds clean and a few skills run end-to-end through the WASM path, begin the 30-day soak:
 
-  1. Run the parity harness against both executors:
+  1. Run the parity runner against both executors:
 
          python skill/tests/parity/run_parity.py
 
 
-  2. Add a `--executor wasm` variant to the parity harness once componentized skills exist.
+  2. Add a `--executor wasm` variant to the parity runner once componentized skills exist.
 
   3. Monitor `~/.cyberos/cache/wasm/` size + AOT cache hit rate.
 
@@ -2654,12 +2654,12 @@ In `skill/crates/cli/src/main.rs`:
 
      * Remove `primary_script()` and the script-path branch of `run_skill()`.
      * `pick_executor()` returns only `Ok("wasm")`; remove `"script"` and `"auto"` branches.
-  4. **Delete the parity harness.**
+  4. **Delete the parity runner.**
 
          git rm -r skill/tests/parity/
 
 
-(Parity has been proven; the harness is no longer load-bearing.)
+(Parity has been proven; the runner is no longer load-bearing.)
 
   5. **Strip script-tier references from skill SKILL.md docs.**
 
@@ -2719,7 +2719,7 @@ _Prepared as a Senior Systems Architect audit for CyberSkill Software Solutions 
   * **Security bottleneck (assumed).** Skills running with ambient host authority (full filesystem, full network) rather than declared capabilities. This is the standard plugin-system failure mode and is what WASI Preview 2's capability model is built to eliminate.
 
 
-If any of these assumptions is wrong, the rest of the audit still applies directionally - the fix set is identical even if only two of the five bottlenecks exist. Where CyberOS already does the right thing (e.g. already speaks SKILL.md, already uses `tokio` + `dashmap`), that section becomes a "no-op, keep" rather than a "rebuild."
+If any of these assumptions is wrong, the rest of the audit still applies directionally - the fix set is identical even if only two of the five bottlenecks exist. Where CyberOS already does the right thing (e.g. already speaks SKILL.md, already uses `tokio` + `dashmap`), that section becomes a "no-op, keep" rather than a "rebuild".
 
 
 ## 2. Benchmark & Research Findings
@@ -3494,7 +3494,7 @@ Phased, with feature flags at every step. Each phase ships independently and is 
 
 **Phase 1 - Dual-format ingest (2-3 weeks).** Add the SKILL.md loader (§5.2) alongside the existing loader behind a `--skills-format=both|legacy|standard` flag. Default stays `legacy`. New skills authored as SKILL.md immediately work. Run the legacy and standard paths side-by-side in CI on the same skill set.
 
-**Phase 2 - Translator + parity tests (2 weeks).** Build a one-shot translator from the legacy format to SKILL.md. Run it across the catalogue, hand-fix the residual, commit the translated skills to a new `skills/` tree. Add a property-test harness that asserts byte-identical agent outputs across both loaders for the entire catalogue.
+**Phase 2 - Translator + parity tests (2 weeks).** Build a one-shot translator from the legacy format to SKILL.md. Run it across the catalogue, hand-fix the residual, commit the translated skills to a new `skills/` tree. Add a property-test suite that asserts byte-identical agent outputs across both loaders for the entire catalogue.
 
 **Phase 3 - Default flip (1 week).** Change the flag default to `standard`. Legacy loader remains compiled in for one release cycle. Announce the deprecation; publish the new directory structure on `agentskills.io` so Claude/Codex/Cursor users can install CyberSkill skills directly.
 
@@ -4090,6 +4090,8 @@ Standards cited in Tier-7 contracts: Amplitude / Mixpanel / Pendo + Reforge + Se
 
 With Session H complete, the catalog is **104 author+audit pairs / 208 bundles / 108 contracts** - and the Enterprise (200+ people) persona-workflow wave is closed (16/47 personas: Now-tier 5 + Series-A 4 + Scale-up new 2 + Enterprise new 5 = 70 workflows live). The next wave is Sessions I+ for the remaining ~31 niche/specialty personas (CMO, CRO-Risk, Chief-Brand, Chief-Transformation, Chief-Digital, Chief-ESG, CSO-Sustainability, CCO-Communications, etc.) and depth additions across already-shipped personas.
 
+Current state (2026-07-11): the figures above are the Session-H snapshot; the live catalog on disk holds 113 author + 111 audit bundles (246 SKILL.md files in total, counting templates and the public VN bundles) and 108 contracts.
+
 
 ## §4 Chain graph
 
@@ -4174,7 +4176,7 @@ Action | Reason
 Wiped `skill/skills/` (47 bundle dirs across `cuo/cpo/`, `cuo/chief-technology-officer/`, `cuo/_shared/`, `cyberskill-vn/`, `shared/`) | User direction: persona-organized layout retired. CUO module already handles persona concerns.
 Preserved `skill/project-cleanup/` (moved from `skill/skills/shared/project-cleanup/`) | Working hygiene utility; user explicitly called out to keep it.
 Preserved `skill/contracts/` (artifact schemas: chain-manifest, feature-request, impl-plan, nats-subjects, prd, project-brief, srs, task) | Schemas remain canonical; new author skills import via `depends_on_contracts:`.
-Preserved `skill/crates/, toolchain/, runners/, tools/, tests/` | Rust host, Bun toolchain, Python parity runners, parity harness - runtime infrastructure unchanged.
+Preserved `skill/crates/, toolchain/, runners/, tools/, tests/` | Rust host, Bun toolchain, Python parity runners, parity checks - runtime infrastructure unchanged.
 Added `skill/MODULE.md` (this file) | Canonical catalog.
 Added `skill/_template/` | Canonical skeleton for new author/audit skills.
 Added `skill/statement-of-work-author/, statement-of-work-audit/, feature-request-author/, feature-request-audit/, product-requirements-document-author/, product-requirements-document-audit/` | Four canonical reference pairs proving the new pattern (stages a, b, cross).
@@ -4805,7 +4807,7 @@ What I'm leaving the operator in a clean state for next session:
   * `tools/fix-mermaid-html/escape-placeholders.py` - wiki mermaid placeholder escape
   * 19 mermaid blocks across 9 wiki pages fixed (Flow 4 + others)
   * `services/shared/cyberos-types/src/lib.rs` - `Default` impls added for `TenantId` + `SubjectId` (unblocks CI clippy)
-  * `ANTHROPIC_GUIDE_DIGEST.md` - comprehensive 470-line findings doc
+  * `ANTHROPIC_GUIDE_DIGEST.md` - 470-line findings doc
 
 
 **Queued for next session(s):**

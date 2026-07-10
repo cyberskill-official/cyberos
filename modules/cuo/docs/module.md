@@ -18,7 +18,7 @@ The CUO (Chief Universal Officer) is the universal persona. All other personas a
 
 §0.1 **Flat persona layout.** Every persona lives at `cuo/<persona-slug>/`. There is no `personas/` subfolder and no functional-group subfolder. Acronym collisions are resolved by suffixing the meaning: `cuo/chief-revenue-officer/` vs `cuo/chief-risk-officer/` vs `cuo/chief-restructuring-officer/`.
 
-§0.2 **Disambiguation is mandatory.** Per C-Suite Reference §2, "every persona spec must include the full disambiguated title plus a one-sentence scope statement to prevent prompt-confusion in AI agents." Folder slugs follow `<acronym>-<meaning>` for the 7 colliding acronyms (CRO, CCO, CDO, CSO, CPO, CAO, CIO, CLO). Unambiguous acronyms use the bare acronym (`cuo/chief-executive-officer/`, `cuo/chief-technology-officer/`, `cuo/chief-financial-officer/`, etc.).
+§0.2 **Disambiguation is mandatory.** Per C-Suite Reference §2, "every persona spec must include the full disambiguated title plus a one-sentence scope statement to prevent prompt-confusion in AI agents." Every persona folder uses its full disambiguated title, so the 8 colliding acronyms (CRO, CCO, CDO, CSO, CPO, CAO, CIO, CLO) are spelled out in full - `cuo/chief-revenue-officer/`, `cuo/chief-risk-officer/`, `cuo/chief-restructuring-officer/` - and the non-colliding acronyms are spelled out the same way (`cuo/chief-executive-officer/`, `cuo/chief-technology-officer/`, `cuo/chief-financial-officer/`, etc.).
 
 §0.3 **Nine-block schema.** Every persona's `README.md` SHALL render the nine-block template from C-Suite Reference §4: (1) Identity & scope, (2) Information inputs, (3) Stakeholder inputs, (4) Resource inputs, (5) Outputs (strategic / operational / communication / team), (6) Cadence, (7) KPIs, (8) Audit criteria, (9) Tools & stack.
 
@@ -49,20 +49,20 @@ The CUO (Chief Universal Officer) is the universal persona. All other personas a
 
 §1.4 When a workflow references a `planned:<skill-name>` that doesn't exist yet, the CUO emits a `MISSING_SKILL_REQUEST` block and halts the chain at that step.
 
-§1.5 Multi-persona collaboration (Phase 3) is supported via workflow `escalates_to:` and `consults:` declarations - a CTO workflow can escalate a security boundary to `cuo/chief-information-security-officer/` mid-chain.
+§1.5 Multi-persona collaboration (Phase 3) is supported via workflow `escalates_to:` and `consults:` declarations - a chief-technology-officer workflow can escalate a security boundary to `cuo/chief-information-security-officer/` mid-chain.
 
 ## §2 Acronym disambiguation (per C-Suite Reference §2)
 
 | Acronym | Possible meanings | Folder slugs |
 |---|---|---|
-| CRO | Chief Revenue / Risk / Restructuring | `cro-revenue` / `cro-risk` / `cro-restructuring` |
-| CCO | Chief Commercial / Compliance / Customer / Communications | `cco-commercial` / `cco-compliance` / `cco-customer` / `cco-communications` |
-| CDO | Chief Data / Digital / Diversity | `cdo-data` / `cdo-digital` / `cdo-diversity` |
-| CSO | Chief Strategy / Security / Sustainability / Sales | `cso-strategy` / `cso-security` / `cso-sustainability` / `cso-sales` |
-| CPO | Chief People / Product / Privacy / Procurement | `cpo-people` / `cpo-product` / `cpo-privacy` / `cpo-procurement` |
-| CAO | Chief Administrative / Accounting | `cao-admin` / `cao-accounting` |
-| CIO | Chief Information / Investment | `cio-information` / `cio-investment` |
-| CLO | Chief Legal / Learning | `clo-legal` / `clo-learning` |
+| CRO | Chief Revenue / Risk / Restructuring | `chief-revenue-officer` / `chief-risk-officer` / `chief-restructuring-officer` |
+| CCO | Chief Commercial / Compliance / Customer / Communications | `chief-commercial-officer` / `chief-compliance-officer` / `chief-customer-officer` / `chief-communications-officer` |
+| CDO | Chief Data / Digital / Diversity | `chief-data-officer` / `chief-digital-officer` / `chief-diversity-officer` |
+| CSO | Chief Strategy / Security / Sustainability / Sales | `chief-strategy-officer` / `chief-security-officer` / `chief-sustainability-officer` / `chief-sales-officer` |
+| CPO | Chief People / Product / Privacy / Procurement | `chief-people-officer` / `chief-product-officer` / `chief-privacy-officer` / `chief-procurement-officer` |
+| CAO | Chief Administrative / Accounting | `chief-administrative-officer` / `chief-accounting-officer` |
+| CIO | Chief Information / Investment | `chief-information-officer` / `chief-investment-officer` |
+| CLO | Chief Legal / Learning | `chief-legal-officer` / `chief-learning-officer` |
 
 Note: CSO-Security and CISO frequently overlap - CSO-Security is the broader physical+info-sec role; CISO is the info-sec specialist. Both folders exist; the boundary is documented in each persona's §1 Identity-and-scope block.
 
@@ -80,56 +80,56 @@ For the full role-by-stage matrix, see C-Suite Reference §3 (rendered there as 
 |---|---|---|---|---|
 | `_template/persona/` | (canonical scaffold) | meta | shipped | n/a |
 | `_template/workflow/` | (canonical scaffold) | meta | shipped | n/a |
-| `ceo` | Chief Executive Officer | §5.1 | **shipped (Session D 2026-05-17)** | 5 |
-| `coo` | Chief Operating Officer | §5.1 | **shipped (Session F 2026-05-17)** | 4 |
-| `cso-strategy` | Chief Strategy Officer | §5.1 | **shipped (Session J 2026-05-18)** | 4 |
-| `cgo` | Chief Growth Officer | §5.1 | **shipped (Session L 2026-05-18)** | 4 |
-| `cao-admin` | Chief Administrative Officer | §5.1 | **shipped (Session M 2026-05-18)** | 4 |
-| `cfo` | Chief Financial Officer | §5.2 | **shipped (Sessions D + G 2026-05-17)** | 6 |
-| `clo-legal` | Chief Legal Officer / General Counsel | §5.2 | **shipped (Session E 2026-05-17)** | 5 |
-| `cro-revenue` | Chief Revenue Officer | §5.2 | **shipped (Session G 2026-05-17)** | 4 |
-| `cao-accounting` | Chief Accounting Officer | §5.2 | **shipped (Session M 2026-05-18)** | 4 |
-| `cto` | Chief Technology Officer | §5.3 | **shipped (canonical reference)** | 5 |
-| `cio-information` | Chief Information Officer | §5.3 | **shipped (Session N 2026-05-18)** | 4 |
-| `ciso` | Chief Information Security Officer | §5.3 | **shipped (Session F 2026-05-17)** | 4 |
-| `cdo-data` | Chief Data Officer | §5.3 | **shipped (Session H 2026-05-18)** | 4 |
-| `caio` | Chief AI Officer | §5.3 | **shipped (Session H 2026-05-18)** | 4 |
-| `cpo-product` | Chief Product Officer | §5.3 | **shipped (Session H 2026-05-18)** | 4 |
+| `chief-executive-officer` | Chief Executive Officer | §5.1 | **shipped (Session D 2026-05-17)** | 7 |
+| `chief-operating-officer` | Chief Operating Officer | §5.1 | **shipped (Session F 2026-05-17)** | 6 |
+| `chief-strategy-officer` | Chief Strategy Officer | §5.1 | **shipped (Session J 2026-05-18)** | 4 |
+| `chief-growth-officer` | Chief Growth Officer | §5.1 | **shipped (Session L 2026-05-18)** | 4 |
+| `chief-administrative-officer` | Chief Administrative Officer | §5.1 | **shipped (Session M 2026-05-18)** | 4 |
+| `chief-financial-officer` | Chief Financial Officer | §5.2 | **shipped (Sessions D + G 2026-05-17)** | 8 |
+| `chief-legal-officer` | Chief Legal Officer / General Counsel | §5.2 | **shipped (Session E 2026-05-17)** | 5 |
+| `chief-revenue-officer` | Chief Revenue Officer | §5.2 | **shipped (Session G 2026-05-17)** | 6 |
+| `chief-accounting-officer` | Chief Accounting Officer | §5.2 | **shipped (Session M 2026-05-18)** | 4 |
+| `chief-technology-officer` | Chief Technology Officer | §5.3 | **shipped (canonical reference)** | 10 |
+| `chief-information-officer` | Chief Information Officer | §5.3 | **shipped (Session N 2026-05-18)** | 4 |
+| `chief-information-security-officer` | Chief Information Security Officer | §5.3 | **shipped (Session F 2026-05-17)** | 6 |
+| `chief-data-officer` | Chief Data Officer | §5.3 | **shipped (Session H 2026-05-18)** | 6 |
+| `chief-ai-officer` | Chief AI Officer | §5.3 | **shipped (Session H 2026-05-18)** | 6 |
+| `chief-product-officer` | Chief Product Officer | §5.3 | **shipped (Session H 2026-05-18)** | 5 |
 | `chief-architect` | Chief Architect / Chief Software Architect | §5.3 | **shipped (Session N 2026-05-18)** | 4 |
-| `cmo` | Chief Marketing Officer | §5.4 | **shipped (Session I 2026-05-18)** | 4 |
-| `cco-commercial` | Chief Commercial Officer | §5.4 | **shipped (Session L 2026-05-18)** | 4 |
-| `cco-customer` | Chief Customer Officer | §5.4 | **shipped (Session H 2026-05-18)** | 4 |
-| `cxo` | Chief Experience Officer | §5.4 | **shipped (Session M 2026-05-18)** | 4 |
-| `cso-sales` | Chief Sales Officer | §5.4 | **shipped (Session F 2026-05-17)** | 4 |
+| `chief-marketing-officer` | Chief Marketing Officer | §5.4 | **shipped (Session I 2026-05-18)** | 6 |
+| `chief-commercial-officer` | Chief Commercial Officer | §5.4 | **shipped (Session L 2026-05-18)** | 4 |
+| `chief-customer-officer` | Chief Customer Officer | §5.4 | **shipped (Session H 2026-05-18)** | 4 |
+| `chief-experience-officer` | Chief Experience Officer | §5.4 | **shipped (Session M 2026-05-18)** | 4 |
+| `chief-sales-officer` | Chief Sales Officer | §5.4 | **shipped (Session F 2026-05-17)** | 6 |
 | `chief-brand-officer` | Chief Brand Officer | §5.4 | **shipped (Session J 2026-05-18)** | 4 |
-| `cco-communications` | Chief Communications Officer | §5.4 | **shipped (Session I 2026-05-18)** | 4 |
-| `chro` | Chief Human Resources Officer / Chief Human Transformation Officer | §5.5 | **shipped (Sessions F + G 2026-05-17)** | 5 |
-| `cpo-people` | Chief People Officer (synonym of CHRO at some firms) | §5.5 | **shipped (Session N 2026-05-18, synonym pointer + 3 variant workflows)** | 4 |
-| `cdo-diversity` | Chief Diversity Officer | §5.5 | **shipped (Session N 2026-05-18)** | 4 |
-| `clo-learning` | Chief Learning Officer | §5.5 | **shipped (Session N 2026-05-18)** | 4 |
+| `chief-communications-officer` | Chief Communications Officer | §5.4 | **shipped (Session I 2026-05-18)** | 4 |
+| `chief-human-resources-officer` | Chief Human Resources Officer / Chief Human Transformation Officer | §5.5 | **shipped (Sessions F + G 2026-05-17)** | 7 |
+| `chief-people-officer` | Chief People Officer (synonym of CHRO at some firms) | §5.5 | **shipped (Session N 2026-05-18, synonym pointer + 3 variant workflows)** | 4 |
+| `chief-diversity-officer` | Chief Diversity Officer | §5.5 | **shipped (Session N 2026-05-18)** | 4 |
+| `chief-learning-officer` | Chief Learning Officer | §5.5 | **shipped (Session N 2026-05-18)** | 4 |
 | `chief-happiness-officer` | Chief Happiness Officer | §5.5 | **shipped (Session M 2026-05-18)** | 4 |
-| `cco-compliance` | Chief Compliance Officer | §5.6 | **shipped (Session J 2026-05-18)** | 4 |
-| `cro-risk` | Chief Risk Officer | §5.6 | **shipped (Session I 2026-05-18)** | 4 |
-| `cpo-privacy` | Chief Privacy Officer | §5.6 | **shipped (Session G 2026-05-17)** | 4 |
+| `chief-compliance-officer` | Chief Compliance Officer | §5.6 | **shipped (Session J 2026-05-18)** | 4 |
+| `chief-risk-officer` | Chief Risk Officer | §5.6 | **shipped (Session I 2026-05-18)** | 4 |
+| `chief-privacy-officer` | Chief Privacy Officer | §5.6 | **shipped (Session G 2026-05-17)** | 6 |
 | `chief-trust-officer` | Chief Trust Officer | §5.6 | **shipped (Session J 2026-05-18)** | 4 |
 | `chief-ethics-officer` | Chief Ethics Officer / Chief AI Ethics Officer | §5.6 | **shipped (Session I 2026-05-18)** | 4 |
-| `cso-sustainability` | Chief Sustainability Officer | §5.7 | **shipped (Session K 2026-05-18)** | 4 |
+| `chief-sustainability-officer` | Chief Sustainability Officer | §5.7 | **shipped (Session K 2026-05-18)** | 4 |
 | `chief-esg-officer` | Chief ESG Officer | §5.7 | **shipped (Session K 2026-05-18)** | 4 |
 | `chief-digital-officer` | Chief Digital Officer | §5.7 | **shipped (Session K 2026-05-18)** | 4 |
 | `chief-transformation-officer` | Chief Transformation Officer | §5.7 | **shipped (Session I 2026-05-18)** | 4 |
 | `chief-innovation-officer` | Chief Innovation Officer | §5.7 | **shipped (Session J 2026-05-18)** | 4 |
 | `chief-knowledge-officer` | Chief Knowledge Officer | §5.7 | **shipped (Session H 2026-05-18)** | 4 |
-| `cpo-procurement` | Chief Procurement Officer | §5.7 | **shipped (Session K 2026-05-18)** | 4 |
-| `cio-investment` | Chief Investment Officer | §5.7 | **shipped (Session L 2026-05-18)** | 4 |
+| `chief-procurement-officer` | Chief Procurement Officer | §5.7 | **shipped (Session K 2026-05-18)** | 4 |
+| `chief-investment-officer` | Chief Investment Officer | §5.7 | **shipped (Session L 2026-05-18)** | 4 |
 | `chief-medical-officer` | Chief Medical Officer | §5.7 | **shipped (Session L 2026-05-18)** | 4 |
-| `cro-restructuring` | Chief Restructuring Officer | §5.7 | **shipped (Session L 2026-05-18)** | 4 |
+| `chief-restructuring-officer` | Chief Restructuring Officer | §5.7 | **shipped (Session L 2026-05-18)** | 4 |
 | `chief-automation-officer` | Chief Automation Officer | §5.7 | **shipped (Session K 2026-05-18)** | 4 |
 | `chief-remote-officer` | Chief Remote Officer (mostly absorbed by CHRO post-2022) | §5.7 | **shipped (Session M 2026-05-18)** | 4 |
 | `chief-metaverse-officer` | Chief Metaverse Officer (**EXTINCT** - cautionary-tale entry per §8) | §5.7 | planned | 0 |
-| `cso-security` | Chief Security Officer (physical+info super-set of CISO) | §5.7 | **shipped (Session N 2026-05-18)** | 4 |
-| `chief-of-staff` | Chief of Staff (operates at C-level despite not strictly being C) | §5.7 | **shipped (Session D 2026-05-17)** | 4 |
+| `chief-security-officer` | Chief Security Officer (physical+info super-set of CISO) | §5.7 | **shipped (Session N 2026-05-18)** | 4 |
+| `chief-of-staff` | Chief of Staff (operates at C-level despite not strictly being C) | §5.7 | **shipped (Session D 2026-05-17)** | 6 |
 
-**Total: 48 persona folders on disk (47 C-Suite Reference §5 entries + Chief-of-Staff).** 47 personas have shipped first-coverage workflows after Session N (2026-05-18); only `chief-metaverse-officer` remains intentionally EXTINCT per C-Suite Reference §8 rule 4 (cautionary tale). Sessions A-N delivered: CUO rebuild + 21 SDP-original skill pairs + 78 net-new skill pairs across Tiers 1-7 = 104 author+audit pairs / 208 bundles / 108 contracts in the SKILL catalog, plus 194 workflows across 47/48 active personas in the CUO catalog (CTO 5 + CEO 5 + CFO 6 + chief-of-staff 4 + clo-legal 5 + chro 5 + 41 personas with 4 workflows each). Sessions I-N were all "no new skills needed" - 124 niche workflows shipped chaining through the stable 104-pair catalog. **First-coverage phase COMPLETE.** Next phase: depth additions to already-shipped personas OR the CUO v3.0.0 Python supervisor build OR another strategic priority - operator decision.
+**Total: 48 persona folders on disk (47 C-Suite Reference §5 entries + Chief-of-Staff).** 47 personas have shipped first-coverage workflows after Session N (2026-05-18); only `chief-metaverse-officer` remains intentionally EXTINCT per C-Suite Reference §8 rule 4 (cautionary tale). Sessions A-N delivered: CUO rebuild + 21 SDP-original skill pairs + 78 net-new skill pairs across Tiers 1-7 = 104 author+audit pairs / 208 bundles / 108 contracts in the SKILL catalog, plus first-coverage workflows across the 47 active personas in the CUO catalog. The catalog now carries 224 workflows in total, with per-persona counts in the table above. Sessions I-N were all "no new skills needed" - 124 niche workflows shipped chaining through the stable 104-pair catalog. **First-coverage phase COMPLETE.** Next phase: depth additions to already-shipped personas OR the CUO v3.0.0 Python supervisor build OR another strategic priority - operator decision.
 
 Per §0.8, when a persona's workflows reference a `planned:<skill-name>`, the skill is enumerated in `cuo/docs/NEEDED_SKILLS.md` and built in the SKILL module before the workflow is callable.
 
@@ -137,14 +137,14 @@ Per §0.8, when a persona's workflows reference a `planned:<skill-name>`, the sk
 
 CyberSkill is at scale-up stage (~50 people). The personas to build first, in order:
 
-- **Now (<=50 people):** `ceo`, `cto`, `chief-of-staff`, `cfo` (fractional), `clo-legal` (external).
-- **Series A / 50-100:** promote `cto` formally; add `coo` (as Head of Delivery); add `cpo-people` / `chro`; add `cso-sales` / `cgo`; add `ciso` (vCISO).
-- **100-200 (scale-up):** full `cfo`; elevate `coo`; full `chro`; `cro-revenue`; `cpo-privacy`.
-- **200+ (enterprise):** full suite plus `cpo-product`, `cdo-data` / `caio`, `cco-customer`, `chief-knowledge-officer` (consulting-firm-specific high-ROI).
+- **Now (<=50 people):** `chief-executive-officer`, `chief-technology-officer`, `chief-of-staff`, `chief-financial-officer` (fractional), `chief-legal-officer` (external).
+- **Series A / 50-100:** promote `chief-technology-officer` formally; add `chief-operating-officer` (as Head of Delivery); add `chief-people-officer` / `chief-human-resources-officer`; add `chief-sales-officer` / `chief-growth-officer`; add `chief-information-security-officer` (vCISO).
+- **100-200 (scale-up):** full `chief-financial-officer`; elevate `chief-operating-officer`; full `chief-human-resources-officer`; `chief-revenue-officer`; `chief-privacy-officer`.
+- **200+ (enterprise):** full suite plus `chief-product-officer`, `chief-data-officer` / `chief-ai-officer`, `chief-customer-officer`, `chief-knowledge-officer` (consulting-firm-specific high-ROI).
 
-**Consulting-firm-specific (per §7):** `chief-knowledge-officer` (IP/asset codification - the moat for consulting), `chief-of-staff` (operating-system owner), `cro-revenue` with services-revenue fluency.
+**Consulting-firm-specific (per §7):** `chief-knowledge-officer` (IP/asset codification - the moat for consulting), `chief-of-staff` (operating-system owner), `chief-revenue-officer` with services-revenue fluency.
 
-**Vietnam context:** `cpo-privacy` required for Decree 13/2023; `ciso` increasingly required; titles carry signaling weight with VN clients.
+**Vietnam context:** `chief-privacy-officer` required for Decree 13/2023; `chief-information-security-officer` increasingly required; titles carry signaling weight with VN clients.
 
 ## §6 Commercial baselines (per C-Suite Reference §8)
 
@@ -195,7 +195,7 @@ audit_hooks:
 
 §7.4 Workflows that reference `planned:<skill-name>` are valid but non-callable until the skill ships. The `MISSING_SKILL_REQUEST` halt-block makes the dependency explicit.
 
-§7.5 Workflows MAY reference workflows from OTHER personas via `delegates_to:` - e.g. a `ceo` workflow can delegate "draft the GTM plan" to `chief-revenue-officer/draft-gtm-plan.md`.
+§7.5 Workflows MAY reference workflows from OTHER personas via `delegates_to:` - e.g. a `chief-executive-officer` workflow can delegate "draft the GTM plan" to `chief-revenue-officer/draft-gtm-plan.md`.
 
 ## §8 Lifecycle
 
@@ -211,7 +211,7 @@ audit_hooks:
 ## §9 Cross-references
 
 - `../../modules/cuo/README.md` (project root) - the source document this catalog implements. §2 acronym matrix, §3 stage matrix, §4 persona template, §5 role profiles, §6 audit framework, §7 CyberSkill-specific, §8 commercial heuristics.
-- `skill/` - the source of truth for the skills that workflows chain. `skill/MODULE.md` §3 lists all 46 currently-shipped bundles.
+- `skill/` - the source of truth for the skills that workflows chain (the SKILL module catalog).
 - `memory/` - the memory. Every CUO routing decision + workflow invocation lands in the audit chain per `memory/docs/AGENTS.md` §6.
 - `cuo/docs/AGENTS.md` - protocol normativity (replaces the legacy CUO AGENTS.md after the v2.0.0 rebuild).
 - `cuo/docs/SPEC.md` - contract summary.

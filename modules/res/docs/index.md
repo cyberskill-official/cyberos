@@ -13,7 +13,7 @@ RES is CyberOS's **resource-planning surface** for a services org. It composes f
 | Status | Planned - P3, design phase |
 | Data sources | 4 modules: HR, PROJ, TIME, LEARN |
 | Default capacity | 40h / week, configurable per Member |
-| OT cap (VN) | 200h / year; 300h with MoLISA registration |
+| OT cap (VN) | 200h/yr standard; up to 300h with consent + MoLISA notification |
 | Over-alloc flag | > 110% (FR pending) |
 | Under-alloc flag | < 60% (FR pending) |
 | Depends on | HR, PROJ, TIME, LEARN + AUTH, memory, OKR (P3), OBS |
@@ -27,7 +27,7 @@ RES is the join module. It owns no primary data - every column on its Gantt come
 
 **Role 2 - Hiring forecast.** Skill-gap -> hire trigger before deliverables drop. LEARN mastery x PROJ pipeline demand x CRM deal probability -> forecasts senior-X gap N weeks out. A hiring memo draft (CUO/CHRO skill) triggers when the gap window < recruiting cycle time. HR receives the memo; CEO approves headcount. Senior shortage is the leading indicator that auditors of resource planning use; RES surfaces it before the deliverables miss.
 
-**Role 3 - Allocation engine.** Rebalance recommendations, VN OT-cap hard-floor. CUO/COO drafts "move Linh from Project A to Project B for 2 weeks"; AM/COO confirms. The solver respects: VN Labour Code Art. 107 OT caps (200/300 h/year), skill mastery (cannot staff a senior task with junior), Engagement priority, and Member preference flags. Recommendations are proposals, never auto-executed; the audit row records why a plan was chosen.
+**Role 3 - Allocation engine.** Rebalance recommendations, VN OT-cap hard-floor. CUO/COO drafts "move Linh from Project A to Project B for 2 weeks"; AM/COO confirms. The solver respects: VN Labour Code Art. 107 OT caps (200h standard, up to 300h with employee consent and MoLISA notification), skill mastery (cannot staff a senior task with junior), Engagement priority, and Member preference flags. Recommendations are proposals, never auto-executed; the audit row records why a plan was chosen.
 
 ### RES integration model
 
@@ -67,7 +67,7 @@ Consultancies live and die on staffing decisions. Over-allocate Linh by 20% and 
 
 - **Capacity is computed, not typed:** Per-Member weekly capacity is read from HR (contract + sabbatical state + public-holiday calendar), not a spreadsheet column anyone can edit.
 - **Allocation is bound to skills:** "Staff this project with someone who can do X" is a query, not a Slack ping. LEARN mastery levels filter the candidate list.
-- **Overtime cap is enforced:** Labor Code 2019 Art. 107 - 200 h / year (300 with MoLISA registration). The engine refuses a plan that would breach the cap; the violation row is auditable.
+- **Overtime cap is enforced:** Labor Code 2019 Art. 107 - 200 hours/year standard, up to 300 with employee consent and MoLISA notification. The engine refuses a plan that would breach the cap; the violation row is auditable.
 
 The bet is that a services org with a clean allocation matrix can answer staffing questions in seconds rather than days - and that the same matrix, augmented with forecast curves from CRM (pipeline win-rate x project size) and OKR (Q3 hiring objective), becomes the substrate of a hiring forecast that is concrete, dated, and signable. RES turns "we should probably hire a senior Rust person at some point" into "we will be capacity-short by 60 h / week starting 2026-08-12 on backend skills; backfilling requires hire by 2026-06-25 given 90-day average ramp."
 
@@ -84,7 +84,7 @@ Axis| Question| Answer
 **5W - Why**| Why a separate module?| Because the same allocation matrix is read by PROJ (project staffing dashboard), CRM (pipeline-vs-capacity), OKR (hiring objective progress), and the COO daily flow. Owning it once lets every consumer trust the same source-of-truth.
 **1H - How**| How does it work?| Materialised view `res.allocation_matrix` indexed by (member_id, week_start). Backfill rule: capacity = HR contract minus PTO minus public holidays minus sabbatical. Forecast = sum(PROJ issue.estimated_hours over the week x probability) per assigned Member. Actual = sum(TIME entry.hours over the week). Over/under flags computed from forecast / capacity.
 **2C - Cost**| Cost budget?| P3: ~$45 / month (Postgres read replica + small Fargate + materialised-view refresh). Per-tenant: ~$8 / month at 50-Member scale.
-**2C - Constraints**| Constraints?| (a) Vietnamese Labor Code 2019 Art. 107 overtime caps - 200 h / year ordinary, 300 h / year with prior MoLISA registration. (b) EU AI Act Art. 22 - staffing recommendations are advisory, never auto-applied. (c) Members can read their own row but not others' compensation context. (d) Forecast probability inputs come from CRM win-rate, not from gut feel.
+**2C - Constraints**| Constraints?| (a) Vietnamese Labor Code 2019 Art. 107 overtime caps - 200 hours/year standard, up to 300 with employee consent and MoLISA notification. (b) EU AI Act Art. 22 - staffing recommendations are advisory, never auto-applied. (c) Members can read their own row but not others' compensation context. (d) Forecast probability inputs come from CRM win-rate, not from gut feel.
 **5M - Materials**| Stack?| Rust 1.81, axum, sqlx, PostgreSQL 16 (materialised views + LISTEN/NOTIFY), DuckDB embedded for ad-hoc analytics, TypeScript + React + visx for Gantt, Yjs CRDT for collaborative Gantt edits, OpenTelemetry.
 **5M - Methods**| Method choices?| Event-driven matrix refresh (PROJ + TIME + HR + LEARN emit NATS events; RES subscribes). Materialised view rebuilds incrementally. Hiring forecast: simple convex optimisation (LP via Gurobi or HiGHS) - minimise hiring cost subject to forecast coverage. Skills gap: bipartite matching scored by mastery x demand.
 **5M - Machines**| Deployment?| Fargate task in SG-1 (P3). Read replica for the materialised-view-heavy read path. DuckDB embedded for the dashboards.
@@ -142,7 +142,7 @@ Component| Path (planned)| Responsibility
 `audit_bridge.rs`| services/res/src/audit_bridge.rs| Write every allocation / conflict / reallocation event to the memory canonical writer.
 `migrations/`| services/res/migrations/| sqlx migrations. RLS by `tenant_id` on every table. Composite indexes on (member_id, week_start) and (project_id, week_start).
 
-**RES-INV-001 - Overtime cap is non-negotiable.** Allocation writes that would breach Vietnamese Labor Code 2019 Art. 107 (200 h / year ordinary; 300 h with prior MoLISA registration) are **rejected at the predicate boundary**, not warned. The COO has no override path - the cap is parameterised per-Member from the HR contract, which records both the country and the MoLISA-registration state. A failing write returns HTTP 422 with `code: "RES-OT-CAP"` and the projected annual OT total at the point of breach. Verification: property-based test in `services/res/tests/overtime_invariant.rs`.
+**RES-INV-001 - Overtime cap is non-negotiable.** Allocation writes that would breach Vietnamese Labor Code 2019 Art. 107 (200 hours/year standard, up to 300 with employee consent and MoLISA notification) are **rejected at the predicate boundary**, not warned. The COO has no override path - the cap is parameterised per-Member from the HR contract, which records both the country and the MoLISA-registration state. A failing write returns HTTP 422 with `code: "RES-OT-CAP"` and the projected annual OT total at the point of breach. Verification: property-based test in `services/res/tests/overtime_invariant.rs`.
 
 ## Data model
 
@@ -435,7 +435,7 @@ RES touches employment data - staffing decisions, overtime computation, hiring f
 
 Regulation / standard| Article / clause| RES feature that satisfies it
 ---|---|---
-Vietnam Labor Code 2019| Art. 107 - overtime caps (200h / yr ordinary; 300h with MoLISA)| `overtime_guard.rs` rejects allocations that would breach the cap; HR Member.molisa_ot_registered drives which cap applies.
+Vietnam Labor Code 2019| Art. 107 - overtime caps (200 hours/year standard, up to 300 with employee consent and MoLISA notification)| `overtime_guard.rs` rejects allocations that would breach the cap; HR Member.molisa_ot_registered drives which cap applies.
 Vietnam Labor Code 2019| Art. 105 - daily / weekly working hours| Capacity model defaults to 40h / week x 8h / day; allocations cannot exceed daily cap.
 Vietnam Labor Code 2019| Art. 111 - weekly rest| Capacity respects weekly rest day; allocations cannot land on rest days.
 Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| Per-Member allocation timeline exportable via `cyberos-res dsar-export`.
@@ -469,7 +469,7 @@ ID| Risk| Likelihood| Impact| Owner| Mitigation
 
 ## KPIs
 
-RES health rolls up into 10 KPIs covering utilisation, conflict rate, forecast accuracy, and OT-cap compliance.
+RES health rolls up into 15 KPIs covering utilisation, conflict rate, forecast accuracy, and OT-cap compliance.
 
 KPI| Formula| Source| Target
 ---|---|---|---

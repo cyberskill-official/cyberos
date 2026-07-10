@@ -24,13 +24,13 @@ CRM is CyberOS's **customer pipeline, account intelligence, and Vietnamese-marke
 
 ## The bigger picture - three strategic roles
 
-CRM is where revenue starts. It is also where the orchestration spine begins: a Deal moves through stages, lands on "won", and the join contract fires - a PROJ Engagement is created with the rate card pre-wired. The naive read is "another Salesforce clone". The real read: CyberOS-native CRM is the upstream half of the same spine PROJ is the downstream half of, and the Vietnamese-specific skills (MST, VietQR, hóa đơn) are first-class - not plugin afterthoughts.
+CRM is where revenue starts. It is also where the orchestration spine begins: a Deal moves through stages, lands on "won", and the join contract fires - a PROJ Engagement is created with the rate card pre-wired. It reads like another Salesforce clone, but CyberOS-native CRM is the upstream half of the same spine PROJ is the downstream half of, and the Vietnamese-specific skills (MST, VietQR, hóa đơn) are first-class, not plugin afterthoughts.
 
 **Role 1 - Sales pipeline (VN-first).** Account, Contact, Deal with VN integrations native. Three primitives + customisable pipelines. Vietnamese specifics are protocol features, not plugins: account type maps to VN legal entities (sole proprietor / LLC / JSC / FDI), MST validated through the `cyberos.vietnam-mst-validate` skill, VietQR for collection, hóa đơn on deal close. Salutation logic (Anh/Chị/Em) baked into contact fields.
 
 **Role 2 - Deal -> Engagement bridge.** The orchestration spine starts here. When the AM clicks "Convert to Engagement" on a won deal, the PROJ §2.5 join contract fires: rate card pre-populated from deal pricing, billable rules wired, the Engagement gets the deal's contract URL + client account_id. TIME entries flow back. INV invoices from Engagement. The full PROJ-TIME-INV-REW chain begins at this click.
 
-**Role 3 - Next-action engine.** CUO ranks moves on every open deal. The CUO `crm.next-action@1` skill consults memory context (prior calls with this account, similar deal trajectories, win-loss memories) and ranks next moves - call, send proposal, schedule demo, request reference. AI lead scoring at signup; win/loss analysis after close becomes a memory entry for future deals to cite. The deal isn't just a record; it's a node in the decision graph.
+**Role 3 - Next-action engine.** CUO ranks moves on every open deal. The CUO `crm.next-action@1` skill consults memory context (prior calls with this account, similar deal trajectories, win-loss memories) and ranks next moves - call, send proposal, schedule demo, request reference. AI lead scoring at signup; win/loss analysis after close becomes a memory entry for future deals to cite. The deal is a node in the decision graph, not just a record.
 
 ### CRM in the orchestration spine
 
@@ -71,7 +71,7 @@ The bet is that the Vietnamese consultancy buyer values "this works with our hó
 
 ## What it does - 5W1H2C5M
 
-A structured decomposition of CRM's scope. Every cell traces back to §19.6.
+A structured decomposition of CRM's scope.
 
 Axis| Question| Answer
 ---|---|---
@@ -384,7 +384,7 @@ ID| Risk| Likelihood| Impact| Owner| Mitigation
 
 ## KPIs
 
-CRM rolls up 10 KPIs covering pipeline health, AI feature efficacy, integration durability, and VN-specific flow correctness.
+CRM KPIs cover pipeline health, AI feature efficacy, integration durability, and VN-specific flow correctness.
 
 KPI| Formula| Source| Target
 ---|---|---|---

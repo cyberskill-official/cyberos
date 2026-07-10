@@ -4,7 +4,7 @@ source: website/docs/modules/time/index.html
 migrated: FR-DOCS-002
 ---
 
-TIME is CyberOS's **time-entry, leave-management, and expense-capture spine**. The basic primitives are simple: a `TimeEntry` records minutes worked against an Engagement / Project / Issue with a billable flag; an `Expense` records VND or USD spent with vendor, VAT, and receipt image; a `LeaveRequest` records absence with a kind and approver flow. What is hard is the integrity model: entries are append-only at the audit layer, every mutation writes a fresh row with a `correction_to` link, the weekly approval flow goes Member -> Account Manager -> CFO/CEO visibility, and Vietnamese labour-law caps (40 h regular / week, 300 h overtime / year) are enforced as hard rules. Expense receipts run through a Vietnamese-hóa-đơn-aware OCR pipeline (MST extraction, line-item parsing, VAT split). Multi-currency at every layer. Feeds INV (weekly billable summary), feeds REW (members' total hours fold into compensation context), feeds OBS (audit replay).
+TIME is CyberOS's **time-entry, leave-management, and expense-capture spine**. The basic primitives are simple: a `TimeEntry` records minutes worked against an Engagement / Project / Issue with a billable flag; an `Expense` records VND or USD spent with vendor, VAT, and receipt image; a `LeaveRequest` records absence with a kind and approver flow. What is hard is the integrity model: entries are append-only at the audit layer, every mutation writes a fresh row with a `correction_to` link, the weekly approval flow goes Member -> Account Manager -> CFO/CEO visibility, and Vietnamese labour-law caps (40 h regular / week; 200 h overtime / year standard, up to 300 h with employee consent and MoLISA notification) are enforced as hard rules. Expense receipts run through a Vietnamese-hóa-đơn-aware OCR pipeline (MST extraction, line-item parsing, VAT split). Multi-currency at every layer. Feeds INV (weekly billable summary), feeds REW (members' total hours fold into compensation context), feeds OBS (audit replay).
 
 ## At a glance
 
@@ -15,7 +15,7 @@ TIME is CyberOS's **time-entry, leave-management, and expense-capture spine**. T
 | Primitives | 3: TimeEntry, Expense, LeaveRequest |
 | Audit | Append-only; `correction_to` for mutation |
 | Billable cascade | 4 steps: override -> class -> role -> fallback |
-| Labour caps | VN Code Art. 107: 40h regular, 300h OT/yr hard |
+| Labour caps | VN Code Art. 107: 40h regular; 200h OT/yr, up to 300h with consent + MoLISA notice |
 | Currency | VND + USD, multi-currency at every layer |
 | Approval | 3 tiers: Member -> AM -> CFO |
 | Receipt OCR | VN hóa đơn: MST + VAT split |
@@ -68,7 +68,7 @@ Three reasons TIME is its own module rather than a feature in PROJ: (1) **audit 
 
 - **Append-only audit:** Every entry write produces a chained memory row. Corrections write a new row with `correction_to`; the original is never edited. Invoice-grade integrity.
 - **Receipt-first expense:** Snap a hóa đơn; the OCR pipeline pulls MST, line items, VAT split, and queues for Member confirm. No form-filling for the 80% case.
-- **VN labour-law caps:** Hard rules enforce 40 h regular / week and 300 h overtime / year (Labour Code 2019 Art. 107). Violations block save and page CHRO.
+- **VN labour-law caps:** Hard rules enforce 40 h regular / week and the overtime ceiling (Labour Code 2019 Art. 107): 200 h / year standard, up to 300 h / year with employee consent and MoLISA notification. Violations block save and page CHRO.
 
 The bet is that the integrity properties travel best when they live next to the timer; the labour-law caps travel best when they sit between the timer and the database; and the expense flow travels best when it shares the integrity model. Putting all three in one module keeps the audit chain coherent and lets INV pull from a single source of truth.
 
@@ -123,7 +123,7 @@ Component| Path (planned)| Responsibility
 `time_entry.rs`| services/time/src/time_entry.rs| TimeEntry CRUD. Generated column for `duration_minutes`. Per-entry billable override defaults from Engagement.
 `expense.rs`| services/time/src/expense.rs| Expense CRUD. Camera-capture -> S3 -> OCR queue. Categorisation via per-tenant chart of accounts.
 `leave_request.rs`| services/time/src/leave_request.rs| LeaveRequest CRUD. Kinds: annual, sick, sabbatical, unpaid, other. Approver flow via Notify.
-`law_caps.rs`| services/time/src/law_caps.rs| Vietnamese Labour Code Art. 105 / 107 enforcement. 40 h regular / week, 300 h overtime / year. Hard-blocks save on violation; pages CHRO.
+`law_caps.rs`| services/time/src/law_caps.rs| Vietnamese Labour Code Art. 105 / 107 enforcement. 40 h regular / week; overtime 200 h / year standard, up to 300 h / year with employee consent and MoLISA notification. Hard-blocks save above the ceiling; pages CHRO.
 `approval.rs`| services/time/src/approval.rs| Weekly approval workflow. Member submit -> AM approve -> CFO visibility. Self-approval rejected (FR pending).
 `fx.rs`| services/time/src/fx.rs| FX rate snapshotter. Pulls Vietcombank rate daily; stores snapshot per entry for invoice-time fidelity.
 `ocr_pipeline.rs`| services/time/src/ocr_pipeline.rs| SQS-driven OCR worker. Calls AWS Textract (P1) or PaddleOCR self-hosted (P2+). Parses Vietnamese hóa đơn format.
@@ -358,7 +358,7 @@ Time records drive payroll and tax exposures; TIME must satisfy Vietnamese labou
 Regulation / standard| Article / clause| TIME feature that satisfies it
 ---|---|---
 Vietnam Labour Code 2019 (Law 45/2019)| Art. 105 - Normal working hours (<= 48 h/week, <= 10 h/day)| `law_caps.rs` enforces 40 h regular / 48 h with OT cap.
-Vietnam Labour Code 2019| Art. 107 - Overtime caps (<= 200 h / 300 h annually with consent)| Hard-block at 300 h annual; CHRO override required.
+Vietnam Labour Code 2019| Art. 107 - Overtime caps (200 h/yr standard; 300 h/yr with employee consent + MoLISA notification)| Hard-block above 300 h annual; 200-300 h band gated on consent + notification; CHRO override required.
 Vietnam Labour Code 2019| Art. 113 - Annual leave entitlement| LEAVE_REQUEST + quota tracking + auto-accrual.
 Vietnam Decree 13/2023| Art. 17 - Personal data processing log| Every time entry -> audit row.
 Vietnam Decree 53/2022| Art. 26 - Data residency| VN-tenant receipt images on hanoi-1 S3.
@@ -393,7 +393,7 @@ ID| Risk| Likelihood| Impact| Owner| Mitigation
 
 ## KPIs
 
-TIME health rolls up into 9 KPIs covering usage, integrity, and OCR quality.
+TIME health rolls up into 14 KPIs covering usage, integrity, and OCR quality.
 
 KPI| Formula| Source| Target
 ---|---|---|---

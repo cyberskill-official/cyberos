@@ -4,16 +4,16 @@ source: website/docs/modules/mcp/index.html
 migrated: FR-DOCS-002
 ---
 
-MCP Gateway is the **tool federation layer** that turns CyberOS's 22 modules into a single, coherent MCP server. Each module publishes a per-module server (named `cyberos.memory`, `cyberos.skill`, `cyberos.crm`, ...) that exposes its verbs as tools (`memory.put_memory`, `skill.invoke_skill`, `crm.update_account`, ...); the gateway aggregates these into a federated surface that Claude / Codex / Cursor / Cline / any 2025-11-25-spec client sees as one server. OAuth 2.1 + PKCE (RFC 7636) gates every tool call; the audience claim pins the call to a specific module; the RBAC predicate from AUTH enforces who can do what; the persona-version stamp captures which agent authored the call. Tool annotations (destructive / readOnly / idempotent / openWorld) drive human-confirm gating. The Tasks primitive handles long-running work; Elicitation reverses control mid-execution to ask the user a question.
+MCP Gateway is the **tool federation layer** that turns CyberOS's 24 modules into a single, coherent MCP server. Each module publishes a per-module server (named `cyberos.memory`, `cyberos.skill`, `cyberos.crm`, ...) that exposes its verbs as tools (`memory.update_memory`, `skill.execute_skill`, `crm.update_account`, ...); the gateway aggregates these into a federated surface that Claude / Codex / Cursor / Cline / any 2025-11-25-spec client sees as one server. OAuth 2.1 + PKCE (RFC 7636) gates every tool call; the audience claim pins the call to a specific module; the RBAC predicate from AUTH enforces who can do what; the persona-version stamp captures which agent authored the call. Tool annotations (destructive / readOnly / idempotent / openWorld) drive human-confirm gating. The Tasks primitive handles long-running work; Elicitation reverses control mid-execution to ask the user a question.
 
-- **Strategic role:** external-agent door - 22 modules -> one MCP server
+- **Strategic role:** external-agent door - 24 modules -> one MCP server
 - **Status:** planned - P0, design phase; P0 slice 3
 - **Spec compliance:** MCP 2025-11-25 - Streamable HTTP, Tasks, Elicitation
 - **External clients (target):** Claude, Cursor, Codex, Cline - all 2025-11-25-compliant clients
 - **Transports:** Streamable HTTP, SSE - RFC 9112 chunked + EventSource
 - **Auth:** OAuth 2.1 PKCE - RFC 7636, audience-bound, PRM
 - **Tools at P0 (est.):** ~80 - memory, Skill, AUTH, AI
-- **Tools at P3 (est.):** ~300+ - 22 modules x ~15 verbs each
+- **Tools at P3 (est.):** ~300+ - 24 modules x ~15 verbs each
 - **Destructive-op gating:** human-confirm - via Elicitation or explicit token
 - **Persona stamp coverage:** 100% - on every audit row
 - **Depends on:** AUTH, memory, OBS, plus AI Gateway (P0 slice 1)
@@ -21,11 +21,11 @@ MCP Gateway is the **tool federation layer** that turns CyberOS's 22 modules int
 
 ## The bigger picture - three strategic roles
 
-MCP Gateway is "the external-agent door." That sentence does a lot of work. Without this module, every external agent (Claude Code on a Member's laptop, Cursor on an engineer's IDE, Codex in CI) would need 22 separate OAuth flows + 22 separate discovery loops + 22 separate audit emissions. The naive design - "one MCP server per module, agents figure it out" - is intractable past 3 modules. MCP Gateway collapses 22 to 1 at the edge while keeping per-module ownership intact behind the federation.
+MCP Gateway is "the external-agent door." That sentence does a lot of work. Without this module, every external agent (Claude Code on a Member's laptop, Cursor on an engineer's IDE, Codex in CI) would need 24 separate OAuth flows + 24 separate discovery loops + 24 separate audit emissions. The naive design - "one MCP server per module, agents figure it out" - is intractable past 3 modules. MCP Gateway collapses 24 to 1 at the edge while keeping per-module ownership intact behind the federation.
 
 ### Role 1 - external-client federation
 
-**22 modules -> one MCP server.** Claude Code, Cursor, Codex, Cline, and any 2025-11-25-spec client hit a single discovery endpoint at `https://mcp.cyberos.com/.well-known/mcp`. The gateway aggregates per-module tool catalogues via SEP-986 naming (`cyberos.memory.put_memory`, `cyberos.proj.create_issue`, etc.) so external agents see one server. Per-module servers stay separate behind the edge; federation only happens at the surface. This means Members can use the AI tools they already trust without learning a new orchestrator.
+**24 modules -> one MCP server.** Claude Code, Cursor, Codex, Cline, and any 2025-11-25-spec client hit a single gateway whose OAuth discovery is served at `https://mcp.cyberos.com/.well-known/oauth-protected-resource` (RFC 9728, which names the authorization server). The gateway aggregates per-module tool catalogues via SEP-986 naming (`cyberos.memory.update_memory`, `cyberos.proj.create_issue`, etc.) so external agents see one server. Per-module servers stay separate behind the edge; federation only happens at the surface. This means Members can use the AI tools they already trust without learning a new orchestrator.
 
 ### Role 2 - capability broker
 
@@ -53,7 +53,7 @@ flowchart TB
     PRSV["cyberos.proj"]
     CRMSV["cyberos.crm"]
     KBSV["cyberos.kb"]
-    N["... 17 more"]
+    N["... 19 more"]
   end
   subgraph dep["Platform deps"]
     AUTH["AUTH<br/>scope_grants check"]
@@ -104,9 +104,9 @@ External clients never reach per-module servers directly. The gateway is the onl
 
 ## Why MCP Gateway exists
 
-Per-module MCP servers create N integration points where every AI agent has to negotiate auth, discover tools, and handle errors. As N grows to 22, the agent's job becomes intractable. The gateway pattern collapses N into 1: agents see a single MCP server with one OAuth flow, one tool catalogue, one discovery endpoint. The 22 modules continue to publish their per-module tools; the gateway federates them. Naming (`cyberos.memory.put_memory`) preserves the module origin so audit + revocation remain per-module.
+Per-module MCP servers create N integration points where every AI agent has to negotiate auth, discover tools, and handle errors. As N grows to 24, the agent's job becomes intractable. The gateway pattern collapses N into 1: agents see a single MCP server with one OAuth flow, one tool catalogue, one discovery endpoint. The 24 modules continue to publish their per-module tools; the gateway federates them. Naming (`cyberos.memory.update_memory`) preserves the module origin so audit + revocation remain per-module.
 
-- **One discovery, all tools.** Agents hit `/.well-known/mcp` once and discover every module's tools. Per-module servers stay separate; federation is at the edge.
+- **One discovery, all tools.** Agents authenticate once via OAuth discovery (`/.well-known/oauth-protected-resource`, then `/.well-known/oauth-authorization-server`) and see every module's tools through a single federated `tools/list`. Per-module servers stay separate; federation is at the edge.
 - **OAuth-protected, RBAC-evaluated.** PKCE-only OAuth 2.1; every tool call audience-bound; every call evaluated by AUTH RBAC; destructive calls human-gated.
 - **Long-running work, first-class.** The Tasks primitive supports operations that exceed the request timeout - the gateway polls the underlying server and reports progress to the caller.
 
@@ -121,20 +121,20 @@ This table is the working summary.
 | **5W - What** | What is MCP Gateway? | A Rust-axum service that implements the MCP 2025-11-25 spec on the edge, federates tool calls to per-module backends, enforces OAuth 2.1 PRM, applies tool annotations, manages Tasks for long-running work, proxies Elicitation prompts, and emits one audit row per call. |
 | **5W - Who** | Who calls it? | External agents (Claude Desktop / Cursor / Cline / Codex) and internal agents (CUO when invoking Skill, scheduled tasks). **Owner:** CTO seat (interim CEO). |
 | **5W - When** | When is it hit? | (a) at agent session start (discovery + auth); (b) on every tool call. P0 expected RPS: ~20/s peak; P3+: ~200/s peak. |
-| **5W - Where** | Where does it run? | Fargate task in SG-1 (P0); multi-region active-active at P3+. TLS terminated at the ALB; mTLS to per-module backends. |
+| **5W - Where** | Where does it run? | Fargate task in SG-1 (P0); multi-region active-active at P3+. TLS terminated at the ALB; HTTP(S) forwarding to per-module backends. |
 | **5W - Why** | Why a gateway? | Because N agent clients x N modules = N^2 OAuth registrations otherwise. Federation collapses to N+1. |
-| **1H - How** | How does it work? | Agent does OAuth 2.1 PKCE -> gateway issues an audience-bound token -> agent calls `tools/list` -> gateway aggregates from federated servers -> agent calls a tool -> gateway validates audience + scope + annotation -> forwards via mTLS gRPC to the module -> streams the response back -> audit row written. |
+| **1H - How** | How does it work? | Agent does OAuth 2.1 PKCE -> gateway issues an audience-bound token -> agent calls `tools/list` -> gateway aggregates from federated servers -> agent calls a tool -> gateway validates audience + scope + annotation -> forwards the call over HTTPS to the module's registered MCP endpoint -> streams the response back -> audit row written. |
 | **2C - Cost** | Cost? | Negligible - Fargate task ~$30/month at P0. The gateway adds ~3 ms per tool call; the audit write is the main cost. |
 | **2C - Constraints** | Constraints? | (a) MCP 2025-11-25 spec compliance. (b) PKCE-only (no implicit grant). (c) Destructive tools MUST require human-confirm. (d) Persona-version MUST be stamped in audit (FR pending). (e) Tool names MUST follow SEP-986 verbNoun.dotted. |
-| **5M - Materials** | Stack? | Rust 1.81, axum 0.7, rmcp (Rust MCP SDK), tonic (gRPC to per-module servers), OAuth via the AUTH service, OpenTelemetry, serde_json for spec serialisation. |
+| **5M - Materials** | Stack? | Rust, axum + jsonrpsee (the MCP JSON-RPC 2.0 surface), reqwest (forwards tools/call to each module's registered MCP endpoint), sqlx + PostgreSQL, jsonwebtoken + argon2 + chacha20poly1305 (OAuth 2.1 tokens + payload sealing), OpenTelemetry, serde_json. |
 | **5M - Methods** | Method choices? | Streamable HTTP transport (chunked transfer). SSE for server-to-client events. Tasks primitive over a polling endpoint. Elicitation as an inline request/response interrupt. Tool registry as a DB-backed catalogue + in-memory cache. |
 | **5M - Machines** | Deployment? | Fargate (2 CPU, 4 GB); behind an ALB with WAF. Per-module backends are also Fargate, addressed by Cloud Map service-discovery. |
 | **5M - Manpower** | Who maintains? | 0.3 FTE CTO + 0.2 FTE CSO at P0. Each module owner extends the tool catalogue for their module. |
 | **5M - Measurement** | How measured? | N(FR pending) (read tool p95 <= 500 ms) + N(FR pending) (write tool p95 <= 1 s). Spec compliance via the MCP conformance test suite. Audit completeness at 100%. |
 
-## External-client federation - 22 modules behind one surface
+## External-client federation - 24 modules behind one surface
 
-An external agent never knows it's talking to 22 modules. From the agent's perspective, `https://mcp.cyberos.com` is one MCP server with ~80 tools at P0 (~300+ at P3). The federation is at the edge - per-module servers (`cyberos.memory`, `cyberos.skill`, etc.) stay separate inside the cluster, but the gateway is the only thing external clients reach. This section locks the federation contract.
+An external agent never knows it's talking to 24 modules. From the agent's perspective, `https://mcp.cyberos.com` is one MCP server with ~80 tools at P0 (~300+ at P3). The federation is at the edge - per-module servers (`cyberos.memory`, `cyberos.skill`, etc.) stay separate inside the cluster, but the gateway is the only thing external clients reach. This section locks the federation contract.
 
 ### SEP-986 naming convention (per-module ownership preserved)
 
@@ -142,14 +142,14 @@ Tool names follow the `cyberos.{module}.{verb}_{noun}` SEP-986 convention. The m
 
 | Pattern | Example | What it does | Owning module |
 |---|---|---|---|
-| `cyberos.{module}.put_*` | `cyberos.memory.put_memory` | Create or replace a resource | memory |
+| `cyberos.{module}.update_*` | `cyberos.memory.update_memory` | Create or replace a resource (idempotent) | memory |
 | `cyberos.{module}.get_*` | `cyberos.memory.get_memory` | Read a resource | memory |
 | `cyberos.{module}.list_*` | `cyberos.proj.list_issues` | List resources (paginated) | PROJ |
 | `cyberos.{module}.create_*` | `cyberos.proj.create_issue` | Create a new entity | PROJ |
 | `cyberos.{module}.update_*` | `cyberos.crm.update_account` | Mutate an existing entity | CRM |
-| `cyberos.{module}.invoke_*` | `cyberos.skill.invoke_skill` | Trigger a skill / action | Skill |
+| `cyberos.{module}.execute_*` | `cyberos.skill.execute_skill` | Trigger a skill / action | Skill |
 | `cyberos.{module}.delete_*` | `cyberos.proj.delete_issue` | Tombstone an entity (destructive) | PROJ |
-| `cyberos.{module}.export_*` | `cyberos.memory.export_dsar` | Export bulk data (destructive sensitivity) | memory |
+| `cyberos.{module}.generate_*` | `cyberos.memory.generate_dsar` | Export bulk data (destructive sensitivity) | memory |
 
 ### Per-module server registration flow
 
@@ -169,7 +169,7 @@ sequenceDiagram
   G->>CL: notification tools/list_changed
   Note over G,CL: subscribed agents re-fetch tools/list
   G-->>M: registered (catalogue_version, registration_token)
-  M->>G: heartbeat every 30s (keep-alive)
+  M->>G: heartbeat every 10s (keep-alive)
   Note over G: missed 3 heartbeats -> module marked unhealthy -> tools removed from federation
 ```
 
@@ -195,11 +195,11 @@ The threat model is precise: an external agent (running in Claude Code on a Memb
 | Annotation | Meaning | Gating behaviour | Example tools |
 |---|---|---|---|
 | `readOnly: true` | No state mutation. Idempotent always. | Auto-invoke if scope permits; no confirm needed | `cyberos.memory.get_memory`, `cyberos.proj.list_issues`, `cyberos.kb.search` |
-| `idempotent: true` | Write that can be safely retried with the same args + idempotency-key | Auto-invoke if scope permits; idempotency-key required | `cyberos.proj.update_issue`, `cyberos.crm.upsert_account` |
+| `idempotent: true` | Write that can be safely retried with the same args + idempotency-key | Auto-invoke if scope permits; idempotency-key required | `cyberos.proj.update_issue`, `cyberos.crm.update_account` |
 | `destructive: true` | Irreversible: purge / delete / send-money / public-post | **Human confirmation required** - explicit confirmation_token in args OR an Elicitation flow | `cyberos.memory.delete_memory{mode: purge}`, `cyberos.proj.delete_engagement`, `cyberos.email.send` |
-| `openWorld: true` | Reaches external systems (third-party APIs, web fetch) | Auto-invoke with an additional rate limit + content filter | `cyberos.web.fetch_url`, `cyberos.zoominfo.enrich_contact` |
-| `longRunning: true` | Returns a task_id; agent polls for completion | Auto-start as Task; agent polls; timeout default 1 h | `cyberos.kb.ingest_corpus`, `cyberos.memory.export_dsar` |
-| `elicits: true` | Server may ask the agent for additional input mid-call | Agent must support Elicitation; falls back to a user prompt | `cyberos.cuo.route_with_clarification`, `cyberos.crm.create_deal_interactive` |
+| `openWorld: true` | Reaches external systems (third-party APIs, web fetch) | Auto-invoke with an additional rate limit + content filter | `cyberos.web.fetch_url`, `cyberos.zoominfo.update_contact` |
+| `longRunning: true` | Returns a task_id; agent polls for completion | Auto-start as Task; agent polls; timeout default 1 h | `cyberos.kb.create_corpus`, `cyberos.memory.generate_dsar` |
+| `elicits: true` | Server may ask the agent for additional input mid-call | Agent must support Elicitation; falls back to a user prompt | `cyberos.cuo.execute_routing`, `cyberos.crm.create_deal_interactive` |
 
 ### Audience-bound OAuth - the broker's auth contract
 
@@ -253,7 +253,8 @@ An agent's effectiveness is bounded by what it can discover. MCP Gateway is the 
 
 | Endpoint | What it returns | Filter / scoping | Cadence |
 |---|---|---|---|
-| `/.well-known/mcp` | Discovery doc, OAuth Protected Resource Metadata (PRM), transport endpoints | public | static (cached 1 h) |
+| `/.well-known/oauth-protected-resource` | Protected Resource Metadata (RFC 9728) - the resource audience + the authorization servers whose tokens this resource accepts | public | static (cached 1 h) |
+| `/.well-known/oauth-authorization-server` | Authorization-server metadata (RFC 8414) - issuer, authorize/token endpoints, S256 PKCE method, supported scopes | public | static (cached 1 h) |
 | `capabilities` | Supported MCP features (Tasks, Elicitation, sampling, etc.) | none | per-session init |
 | `tools/list` | Tools available to the calling token's scope_grants | filtered by JWT scope_grants | per-call + `list_changed` push |
 | `prompts/list` | Prompt templates for common workflows ("Find the right CUO persona", "Draft a cycle review") | filtered by scope | per-call |
@@ -282,16 +283,16 @@ Prompts are MCP-defined templated workflows the agent can use. They reduce hallu
 | Prompt name | Purpose | Bound tools |
 |---|---|---|
 | `cyberos.weekly_brief` | Generate the user's weekly brief from memory + PROJ + CAL | memory.list_recent, proj.list_my_issues, cal.list_events |
-| `cyberos.decision_to_issues` | Convert a decision memory into parent + child issues | memory.get_memory, cuo.invoke_skill (cuo.cpo.decision-to-issues@1), proj.create_issue |
-| `cyberos.draft_cycle_review` | Generate a cycle review from issues + comments + history | proj.get_cycle, proj.list_cycle_issues, ai.chat_complete (with CUO/COO persona) |
-| `cyberos.deal_to_engagement` | Convert a won CRM deal to a PROJ Engagement with rate card | crm.get_deal, proj.create_engagement, memory.put_memory (audit decision) |
-| `cyberos.find_memory_citations` | Given an Issue, suggest memories to cite | proj.get_issue, memory.semantic_search, proj.create_memory_link |
+| `cyberos.decision_to_issues` | Convert a decision memory into parent + child issues | memory.get_memory, cuo.execute_skill (cuo.cpo.decision-to-issues@1), proj.create_issue |
+| `cyberos.draft_cycle_review` | Generate a cycle review from issues + comments + history | proj.get_cycle, proj.list_cycle_issues, ai.execute_chat (with CUO/COO persona) |
+| `cyberos.deal_to_engagement` | Convert a won CRM deal to a PROJ Engagement with rate card | crm.get_deal, proj.create_engagement, memory.update_memory (audit decision) |
+| `cyberos.find_memory_citations` | Given an Issue, suggest memories to cite | proj.get_issue, memory.search_memory, proj.create_memory_link |
 
 Each prompt is a versioned, audit-anchored workflow; the agent receives the prompt and the bound tool names; the gateway audits prompt invocations separately from individual tool calls.
 
 ## Architecture
 
-Three layers: an edge that speaks the MCP spec to agents, a federation router that fans tool calls out to per-module gRPC backends, and an audit + observability bridge. The 22 modules each run a per-module server (e.g. `cyberos.memory`) that registers itself with the gateway at startup.
+Three layers: an edge that speaks the MCP spec to agents, a federation router that forwards tool calls to per-module HTTP backends, and an audit + observability bridge. The 24 modules each run a per-module server (e.g. `cyberos.memory`) that registers itself with the gateway at startup.
 
 ```mermaid
 graph TB
@@ -301,8 +302,8 @@ graph TB
     CUR["Cursor / Cline / Codex"]
     CUO["CUO (internal)"]
   end
-  subgraph GATEWAY ["MCP Gateway (Rust axum + rmcp)"]
-    WK["well_known.rs<br/>/.well-known/mcp<br/>/.well-known/oauth-protected-resource (PRM)"]
+  subgraph GATEWAY ["MCP Gateway (Rust axum + jsonrpsee)"]
+    WK["well_known.rs<br/>/.well-known/oauth-authorization-server<br/>/.well-known/oauth-protected-resource (PRM)"]
     AUTH_E["oauth_edge.rs<br/>OAuth 2.1 PKCE handshake<br/>(delegates to AUTH service)"]
     DISC["discovery.rs<br/>tools/list aggregation"]
     ROUT["federation.rs<br/>tool name -> backend server"]
@@ -312,12 +313,12 @@ graph TB
     ELI["elicitation.rs<br/>mid-execution prompt proxy"]
     AUD["audit.rs<br/>per-call memory write"]
   end
-  subgraph BACKENDS ["Per-module MCP servers (mTLS gRPC)"]
-    BR["cyberos.memory<br/>put_memory / view / search / ..."]
-    SK["cyberos.skill<br/>invoke_skill / list_skills / ..."]
-    AU["cyberos.auth<br/>whoami / check_permission / ..."]
-    AI["cyberos.ai<br/>complete / embed / usage_mtd"]
-    CRM["cyberos.crm<br/>(planned, 16 more modules)"]
+  subgraph BACKENDS ["Per-module MCP servers (HTTP JSON-RPC)"]
+    BR["cyberos.memory<br/>update_memory / get_memory / search_memory / ..."]
+    SK["cyberos.skill<br/>execute_skill / list_skills / ..."]
+    AU["cyberos.auth<br/>get_identity / get_permission / ..."]
+    AI["cyberos.ai<br/>execute_chat / generate_embedding / get_usage"]
+    CRM["cyberos.crm<br/>(planned, 19 more modules)"]
   end
   subgraph SINKS ["Sinks"]
     AUTHSVC["AUTH service<br/>token issuance + RBAC.Check"]
@@ -359,10 +360,10 @@ graph TB
 
 | Component | Path (planned) | Responsibility |
 |---|---|---|
-| `well_known.rs` | services/mcp-gateway/src/well_known.rs | Serves the `/.well-known/mcp` discovery document + `/.well-known/oauth-protected-resource` (PRM, RFC 9728). |
-| `oauth_edge.rs` | services/mcp-gateway/src/oauth_edge.rs | Handles the OAuth 2.1 + PKCE handshake with the agent client. Delegates issuance to the AUTH service over gRPC. |
+| `well_known.rs` | services/mcp-gateway/src/well_known.rs | Serves the `/.well-known/oauth-authorization-server` metadata (RFC 8414) + `/.well-known/oauth-protected-resource` (PRM, RFC 9728). |
+| `oauth_edge.rs` | services/mcp-gateway/src/oauth_edge.rs | Handles the OAuth 2.1 + PKCE handshake with the agent client. The gateway is its own authorization server; the AUTH-service session JWT identifies the calling subject at `/authorize`. |
 | `discovery.rs` | services/mcp-gateway/src/discovery.rs | Aggregates `tools/list` across federated backends. Caches the catalogue with a 60 s TTL; invalidated on backend register. |
-| `federation.rs` | services/mcp-gateway/src/federation.rs | Routes a tool call (`cyberos.memory.put_memory`) to the right backend server via mTLS gRPC. Caches resolved endpoints in-memory. |
+| `federation.rs` | services/mcp-gateway/src/federation.rs | Routes a tool call (`cyberos.memory.update_memory`) to the right backend server via JSON-RPC over HTTP (reqwest). Caches resolved endpoints in-memory. |
 | `annotations.rs` | services/mcp-gateway/src/annotations.rs | Parses tool annotations from the backend manifest. Enforces destructive -> human-confirm; readOnly -> fast-path RBAC; idempotent -> safe-retry; openWorld -> strict scope check. |
 | `gate.rs` | services/mcp-gateway/src/gate.rs | Composite gate - verifies the audience claim, calls AUTH RBAC.Check, validates the idempotency-key, applies the rate-limit token bucket. |
 | `tasks.rs` | services/mcp-gateway/src/tasks.rs | Tasks primitive (FR pending) - long-running tool invocations get a task_id; clients poll for status / result; results streamed via SSE. |
@@ -391,18 +392,18 @@ erDiagram
   SERVER {
     string id PK "cyberos.memory"
     string display_name
-    string endpoint "grpc://memory.internal:8081"
+    string endpoint "https://memory.internal/mcp"
     string version
     string status "active | draining | offline"
     timestamp registered_at
   }
   TOOL_DEFINITION {
-    string name PK "cyberos.memory.put_memory"
+    string name PK "cyberos.memory.update_memory"
     string server_id FK
     string description
     obj input_schema "JSON Schema"
     obj output_schema
-    string scope_required "memory.put"
+    string scope_required "memory.update"
   }
   ANNOTATION {
     string tool_name FK
@@ -462,30 +463,30 @@ erDiagram
 
 ### Tool naming convention (SEP-986)
 
-All tool names follow `cyberos.{module}.{verb}_{noun}`. Verbs match the canonical six (put / view / move / delete) for memory-shaped resources; other modules pick verbs from a shared catalogue.
+All tool names follow `cyberos.{module}.{verb}_{noun}`. The verb comes from a closed set of 15 approved SEP-986 verbs (DEC-2361) - get, list, create, update, delete, send, fetch, sync, validate, generate, execute, search, replay, accept, reject; adding one needs a SEP RFC, and a module that registers a tool whose verb is outside the set is refused at registration.
 
 | Example tool name | Verb class | Annotations |
 |---|---|---|
-| `cyberos.memory.put_memory` | write | destructive=false, idempotent=true, scope=memory.put |
-| `cyberos.memory.view_memory` | read | readOnly=true, idempotent=true, scope=memory.read |
+| `cyberos.memory.update_memory` | write | destructive=false, idempotent=true, scope=memory.update |
+| `cyberos.memory.get_memory` | read | readOnly=true, idempotent=true, scope=memory.read |
 | `cyberos.memory.delete_memory` | delete | destructive=true, requiresConfirm=true, scope=memory.delete |
 | `cyberos.memory.search_memory` | query | readOnly=true, scope=memory.read |
-| `cyberos.skill.invoke_skill` | execute | destructive=true, requiresConfirm=conditional, scope=skill.invoke |
+| `cyberos.skill.execute_skill` | execute | destructive=true, requiresConfirm=conditional, scope=skill.execute |
 | `cyberos.skill.list_skills` | read | readOnly=true, scope=skill.read |
-| `cyberos.auth.check_permission` | query | readOnly=true, scope=auth.read |
-| `cyberos.auth.revoke_session` | destructive | destructive=true, requiresConfirm=true, scope=auth.session_revoke |
-| `cyberos.ai.complete_chat` | execute | destructive=false, openWorld=true, scope=ai.invoke |
+| `cyberos.auth.get_permission` | query | readOnly=true, scope=auth.read |
+| `cyberos.auth.delete_session` | destructive | destructive=true, requiresConfirm=true, scope=auth.session_revoke |
+| `cyberos.ai.execute_chat` | execute | destructive=false, openWorld=true, scope=ai.invoke |
 | `cyberos.crm.create_account` | write | destructive=false, idempotent=false, scope=crm.write |
 
 ## API surface
 
-The gateway speaks MCP 2025-11-25 to agents and gRPC to backends. A small admin REST surface lets operators inspect the registry and replay invocations.
+The gateway speaks MCP 2025-11-25 to agents and forwards `tools/call` to backends as JSON-RPC over HTTP. A small admin REST surface lets operators inspect the registry and replay invocations.
 
 ### MCP surface (canonical)
 
 | Method | MCP primitive | Purpose |
 |---|---|---|
-| GET | `/.well-known/mcp` | MCP server discovery doc per spec 2025-11-25. |
+| GET | `/.well-known/oauth-authorization-server` | RFC 8414 authorization-server metadata - issuer, authorize/token endpoints, S256 PKCE, scopes. |
 | GET | `/.well-known/oauth-protected-resource` | PRM (RFC 9728) - auth-server URL, scopes, audience. |
 | POST | `/mcp` | Single streamable-HTTP endpoint for all MCP JSON-RPC calls. |
 | JSON-RPC | `initialize` | Client capability negotiation. |
@@ -505,49 +506,42 @@ The gateway speaks MCP 2025-11-25 to agents and gRPC to backends. A small admin 
 | JSON-RPC | `notifications/initialized` | Capability acknowledgement. |
 | JSON-RPC | `notifications/progress` | Streaming progress events. |
 
-### Backend gRPC surface (per-module servers)
+### Backend HTTP surface (per-module servers)
 
-```protobuf
-syntax = "proto3";
-package cyberos.mcp.backend.v1;
+There is no separate backend wire protocol: a per-module server is a plain MCP HTTP endpoint. It self-registers its catalogue over the control plane, then the gateway forwards `tools/call` to the registered endpoint as JSON-RPC 2.0 over HTTP (reqwest).
 
-service ModuleMCPServer {
-  // Register at gateway startup. Sends a manifest of all tools.
-  rpc Register(RegisterRequest) returns (RegisterResponse);
-  // Tool invocation forwarded from the gateway. Streamable response.
-  rpc InvokeTool(stream ToolCall) returns (stream ToolResult);
-  // For long-running tools the backend returns a task handle.
-  rpc TaskStatus(TaskRef) returns (TaskState);
-  // A backend may initiate elicitation back through the gateway.
-  rpc Elicit(ElicitationRequest) returns (ElicitationResponse);
-  // Health + drain.
-  rpc Health(Empty) returns (HealthResponse);
-}
+Registration - `POST /v1/mcp/register`:
 
-message RegisterRequest {
-  string server_id = 1;
-  string version = 2;
-  repeated ToolDefinition tools = 3;
-}
-
-message ToolDefinition {
-  string name = 1;          // "cyberos.memory.put_memory"
-  string description = 2;
-  string input_schema = 3;  // JSON Schema
-  string output_schema = 4;
-  string scope_required = 5;
-  map<string, string> annotations = 6;
-}
-
-message ToolCall {
-  string tool_name = 1;
-  string args_json = 2;
-  string idempotency_key = 3;
-  string subject_jwt = 4;
-  string persona_version = 5;
-  string trace_id = 6;
+```json
+{
+  "module": "memory",
+  "endpoint": "https://memory.internal/mcp",
+  "tools": [
+    {
+      "name": "cyberos.memory.update_memory",
+      "description": "Create or replace a memory file",
+      "inputSchema": { "type": "object" },
+      "annotations": { "title": "Update memory", "idempotentHint": true },
+      "requiresScope": ["mcp:tools"]
+    }
+  ]
 }
 ```
+
+The `endpoint` must be an `http://` or `https://` URL; any other scheme is rejected at registration. A module keeps its registration live with `POST /v1/mcp/heartbeat` (`{"module": "memory"}`) and withdraws with `POST /v1/mcp/deregister`. The dev slice gates the control plane behind `MCP_DEV_REGISTRATION=1`; production requires authenticated registration (FR-MCP-004).
+
+Forwarding - the gateway POSTs a JSON-RPC 2.0 `tools/call` to the module's registered `endpoint`:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": { "name": "cyberos.memory.update_memory", "arguments": {} }
+}
+```
+
+The module returns a JSON-RPC result (`{ "result": { "content": [ ... ], "isError": false } }`). A transport failure, non-2xx status, non-JSON body, or JSON-RPC `error` envelope maps to the closed error code `-32004 module_unreachable`.
 
 ### Admin REST surface (operator-only)
 
@@ -574,10 +568,10 @@ sequenceDiagram
   participant BR as cyberos.memory (backend)
   participant SK as cyberos.skill
   participant Cache as Catalogue cache
-  A->>G: GET /.well-known/mcp
-  G-->>A: {auth_url, prm_url, transports, capabilities}
   A->>G: GET /.well-known/oauth-protected-resource
-  G-->>A: {auth_server, scopes, audience "mcp.cyberos.com"}
+  G-->>A: {resource, authorization_servers, bearer_methods}
+  A->>G: GET /.well-known/oauth-authorization-server
+  G-->>A: {issuer, authorize/token endpoints, S256, scopes}
   A->>AS: OAuth 2.1 PKCE auth code flow
   AS-->>A: {access_token aud=mcp.cyberos.com}
   A->>G: POST /mcp {jsonrpc "2.0", method "initialize"}
@@ -593,10 +587,10 @@ sequenceDiagram
     SK-->>G: 8 tools
     G->>Cache: SET catalogue TTL=60s
   end
-  G-->>A: {tools cyberos.memory.put_memory, cyberos.skill.invoke_skill, ...}
+  G-->>A: {tools cyberos.memory.update_memory, cyberos.skill.execute_skill, ...}
 ```
 
-The agent sees one server; under the hood, 22 modules contribute their tools. Caching keeps catalogue assembly < 5 ms p95.
+The agent sees one server; under the hood, 24 modules contribute their tools. Caching keeps catalogue assembly < 5 ms p95.
 
 ### Flow 2 - tool invocation with OAuth + RBAC
 
@@ -610,13 +604,13 @@ sequenceDiagram
   participant BR as cyberos.memory
   participant AUD as audit.rs
   participant B as memory
-  A->>G: POST /mcp tools/call cyberos.memory.put_memory {path, body, idempotency_key}
+  A->>G: POST /mcp tools/call cyberos.memory.update_memory {path, body, idempotency_key}
   G->>GA: verify audience claim (mcp.cyberos.com)
-  G->>GA: load annotations (destructive=false, scope_required=memory.put)
-  GA->>AS: RBAC.Check(subject_jwt, action="memory.put", resource="memories/...")
-  AS-->>GA: {allow true, reason "role.founder + scope.memory.put"}
-  GA->>BR: InvokeTool(args_json, persona_version, trace_id)
-  BR-->>GA: stream {chunks, done {seq, chain, body_hash}}
+  G->>GA: load annotations (destructive=false, scope_required=memory.update)
+  GA->>AS: RBAC.Check(subject_jwt, action="memory.update", resource="memories/...")
+  AS-->>GA: {allow true, reason "role.founder + scope.memory.update"}
+  GA->>BR: POST tools/call {name, arguments}
+  BR-->>GA: {result {content, isError}}
   GA-->>A: {content [text], isError false}
   GA->>AUD: write mcp.invocation
   AUD->>B: append row {tool, agent, subject, persona_version, outcome "ok"}
@@ -635,7 +629,7 @@ sequenceDiagram
   participant ELI as elicitation.rs
   participant U as User UI (CHAT or IDE)
   participant SK as cyberos.skill
-  A->>G: tools/call cyberos.skill.invoke_skill {skill_id "vietnam-vat-invoice"}
+  A->>G: tools/call cyberos.skill.execute_skill {skill_id "vietnam-vat-invoice"}
   G->>ANN: load annotations
   ANN-->>G: destructive=true, requiresConfirm=true
   G->>ELI: needs user confirmation
@@ -664,7 +658,7 @@ sequenceDiagram
   participant G as MCP Gateway
   participant T as tasks.rs
   participant BG as cyberos.kb (backend)
-  A->>G: tools/call cyberos.kb.reindex_corpus
+  A->>G: tools/call cyberos.kb.sync_corpus
   G->>BG: InvokeTool(...)
   BG-->>G: {task_id "tsk_01HZJ...XK", expected_ms 120000}
   G->>T: register task tsk_01HZJ...XK
@@ -693,7 +687,7 @@ sequenceDiagram
   participant SK as cyberos.skill (vietnam-bank-transfer)
   participant ELI as elicitation.rs
   participant U as User UI
-  A->>G: tools/call cyberos.skill.invoke_skill {skill "vietnam-bank-transfer", amount 25000000}
+  A->>G: tools/call cyberos.skill.execute_skill {skill "vietnam-bank-transfer", amount 25000000}
   G->>SK: InvokeTool(...)
   SK->>G: elicitation/request {prompt "Confirm transfer of VND 25,000,000 to ACME - please type CONFIRM"}
   G->>ELI: proxy elicitation (with content-safety filter)
@@ -783,7 +777,7 @@ graph LR
     SK["cyberos.skill"]
     AU["cyberos.auth"]
     AI["cyberos.ai"]
-    OTH["+18 more"]
+    OTH["+20 more"]
   end
   subgraph clients ["MCP clients"]
     CL["Claude Desktop"]
@@ -821,7 +815,7 @@ graph LR
 | EU AI Act | Art. 26 - Deployer obligations | Persona-version stamping (FR pending). |
 | Vietnam PDPL | Art. 14 - DSAR | Per-subject mcp.invocation export. |
 | GDPR | Art. 25 - Privacy by design | Audience-bound tokens; confused-deputy mitigation. |
-| GDPR | Art. 32 - Security of processing | OAuth 2.1 PKCE only; mTLS to backends. |
+| GDPR | Art. 32 - Security of processing | OAuth 2.1 PKCE only; HTTPS to backends. |
 | OWASP Gen AI Top-10 | LLM02: Insecure output handling | Elicitation content-safety filter. |
 | OWASP Gen AI Top-10 | LLM07: Insecure plugin design | Tool annotations + RBAC gate; closed catalogue. |
 | OWASP Gen AI Top-10 | LLM08: Excessive agency | Audience-bound token + persona scope; can't escalate. |
@@ -835,7 +829,7 @@ graph LR
 |---|---|---|---|---|---|
 | `R-MCP-001` | Spec drift - agent client expects newer features than the gateway provides | Medium | Medium | CTO | Quarterly spec sync; CI gates on the conformance suite; capability negotiation surfaces gaps. |
 | `R-MCP-002` | Tool-name squatting - a module registers a tool name belonging to another | Low | High | CTO | Server_id is part of the registry key; cross-module names rejected at register (FR pending). |
-| `R-MCP-003` | Confused-deputy attack - a token from one audience used against another module | Medium | High | CSO | Audience claim mandatory + verified at the backend; mTLS pins to the right service. |
+| `R-MCP-003` | Confused-deputy attack - a token from one audience used against another module | Medium | High | CSO | Audience claim mandatory - the gateway verifies each access token's audience is exactly this resource server; a token minted for another audience is refused and the replay attempt audited. |
 | `R-MCP-004` | Destructive tool annotation bypass via a newly-added tool | Medium | High | CSO | Registration requires CTO + CSO approval; the default annotation is destructive=true. |
 | `R-MCP-005` | Tasks primitive leak - task_id reused across tenants | Low | High | CTO | task_id is UUIDv7 + tenant_id in the lookup; cross-tenant query property-tested. |
 | `R-MCP-006` | Elicitation injection - a backend prompts the user into a harmful action | Medium | High | CSO | Content-safety filter; allow-list of elicitation prompts per tool; CHAT log of all elicitations. |
@@ -973,7 +967,7 @@ $ cyberos-mcp conformance run
 ```
 $ cyberos-mcp servers register \
  --id cyberos.crm \
- --endpoint grpc://crm.internal:8081 \
+ --endpoint https://crm.internal/mcp \
  --version 0.3.0 \
  --manifest crm-tools.json \
  --approval-jira CYB-1234
@@ -987,11 +981,11 @@ $ cyberos-mcp servers register \
 
 ## Phase status & estimates
 
-- **Status:** planned - P0, design phase; P0 slice 2
+- **Status:** planned - P0, design phase; P0 slice 3
 - **Est. LoC (Rust):** ~5,500 - services/mcp-gateway
 - **Planned tests:** 142 conformance + 60 unit - MCP spec suite
 - **P0 tools (est.):** ~80 - memory, Skill, AUTH, AI
-- **P3 tools (est.):** ~300+ - 22 modules x ~15 verbs
+- **P3 tools (est.):** ~300+ - 24 modules x ~15 verbs
 - **CLI commands:** ~18 planned - `cyberos-mcp`
 
 | Capability | Status |

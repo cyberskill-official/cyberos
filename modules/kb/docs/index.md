@@ -21,7 +21,7 @@ KB is CyberOS's **documentation surface and the canonical source for AI-grounded
 
 ## The bigger picture - three strategic roles
 
-The naive read of KB: "it's our wiki." The real read: KB is what makes Genie a useful agent and OBS a useful operations console. Strip KB out and CUO has nothing to cite, OBS's auto-runbook router has nothing to consult, and "ask the docs" becomes "make stuff up." KB is the structured-knowledge half of the memory protocol - long-form versioned, ACL-aware, server-rendered docs - that the audit-chained memory store doesn't replace but complements.
+KB is more than a wiki. It is what makes Genie a useful agent and OBS a useful operations console. Strip KB out and CUO has nothing to cite, OBS's auto-runbook router has nothing to consult, and "ask the docs" becomes "make stuff up." KB is the structured-knowledge half of the memory protocol - long-form versioned, ACL-aware, server-rendered docs - that the audit-chained memory store doesn't replace but complements.
 
 **Role 1 - RAG corpus.** Three-layer retrieval, span-level citations. Markdown source + immutable versions. Triple-layer retrieval: FTS5 (PGroonga for VN) + BGE-M3 semantic embeddings + BGE-rerank-v2-m3 cross-encoder. "Ask this page" answers ground in current + linked docs with span citations. AI Q&A across all of KB respects ACL at retrieval time, not after. Span-level citations make hallucination detectable.
 
@@ -73,7 +73,7 @@ The bet is that the docs surface and the AI retrieval surface are the same surfa
 
 ## What it does - 5W1H2C5M
 
-A structured decomposition of KB's scope. Every cell traces back to §19.7.
+A structured decomposition of KB's scope.
 
 Axis| Question| Answer
 ---|---|---
@@ -370,7 +370,7 @@ RBAC + ACL"] memory["🧠 memory
 Layer 2 + audit"] AI["⚡ AI Gateway  
 Q&A; composer"] EMB["BGE-M3 + reranker  
 (memory-shared)"] MCP["🔌 MCP"] OBS["👁 OBS"] end KB["📚 KB"] subgraph downstream ["KB is depended on by"] CUO["🎯 CUO  
-grounded retrieval"] PORTAL["Portal · P2  
+grounded retrieval"] PORTAL["Portal · P4  
 (client KB views)"] EMAIL["✉️ EMAIL  
 digests"] CHAT["💬 CHAT  
 link previews"] end AUTH --> KB memory --> KB AI --> KB EMB --> KB MCP --> KB OBS --> KB KB --> CUO KB --> PORTAL KB --> EMAIL KB --> CHAT classDef shipped fill:#f5ede6,stroke:#45210e classDef planned fill:#fef6e0,stroke:#9c750a class memory,EMB shipped class KB,AUTH,AI,MCP,OBS,CUO,PORTAL,EMAIL,CHAT planned
@@ -417,7 +417,7 @@ ID| Risk| Likelihood| Impact| Owner| Mitigation
 
 ## KPIs
 
-KB rolls up 9 KPIs covering search quality, Q&A grounding, ingestion latency, and editorial health.
+KB rolls up 14 KPIs covering search quality, Q&A grounding, ingestion latency, and editorial health.
 
 KPI| Formula| Source| Target
 ---|---|---|---

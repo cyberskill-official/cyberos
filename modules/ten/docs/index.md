@@ -91,8 +91,8 @@ The P2 slice is "enough infrastructure to charge for vertical packs without buil
 
 Tier| Seats| AI tokens / month| Storage| API / month| Price (USD/month base)| Vertical pack add-on
 ---|---|---|---|---|---|---
-**Starter**| <= 10| 500k| 20 GB| 500k| $49 / seat| + $99 / pack / month
-**Team**| <= 50| 5M| 200 GB| 5M| $39 / seat| + $79 / pack / month
+**Starter**| <= 10| 500k| 20 GB| 500k| $49 / mo| + $99 / pack / month
+**Team**| <= 50| 3M| 200 GB| 5M| $249 / mo| + $79 / pack / month
 **Enterprise**| Unlimited| Custom (negotiated)| Custom| Custom| Custom| + negotiated
 
 Vertical packs (cyberskill-vn, cyberskill-sg, etc. per SKILL §3.6) are priced as a per-tenant monthly add-on, not per-seat. This is the compounding margin - packs scale with tenant count, not seat count.
@@ -567,7 +567,7 @@ ID| Risk| Likelihood| Impact| Owner| Mitigation
 
 ## KPIs
 
-TEN rolls up into 11 KPIs spanning revenue health, isolation hygiene, signup conversion, and offboarding compliance.
+TEN rolls up into 20 KPIs spanning revenue health, isolation hygiene, signup conversion, and offboarding compliance.
 
 KPI| Formula| Source| Target
 ---|---|---|---
