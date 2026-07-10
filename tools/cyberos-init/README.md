@@ -60,9 +60,13 @@ CYBEROS_PACK_URL=<url-to-cyberos.tar.gz> curl -fsSL <raw-url>/bootstrap.sh | bas
 The payload IS a plugin marketplace: `dist/cyberos/.claude-plugin/marketplace.json` catalogs the plugin at `dist/cyberos/plugin/` (its own manifest at `plugin/.claude-plugin/plugin.json`; commands `/ship-fr`, `/fr-init`; a bundled `ship-feature-requests` skill). Install:
 
 - Claude Code: `/plugin marketplace add /path/to/dist/cyberos`, then `/plugin install cyberos@cyberos`.
-- Claude desktop / Cowork: Settings > Plugins > Add > select the `dist/cyberos` folder (the marketplace root - NOT the inner `plugin/` folder; the `.claude-plugin` manifests are hidden dotfolders, so in Finder the plugin folder looks like it only holds `commands/` and `skills/`).
+- Claude desktop / Cowork: the Add picker wants a FILE - use `dist/cyberos/cyberos.plugin` (the one-file bundle build.sh produces; selecting a folder greys the Open button). The folder route works where marketplaces are supported: add `dist/cyberos` as a marketplace (its root carries `.claude-plugin/marketplace.json`).
 
 Then run `/fr-init` in a repo and `/ship-fr` to drive the backlog.
+
+### 4b. Any other agent (Codex, Gemini, Cursor, Grok, CLI agents) - agent-independent
+
+The core is doc-driven, so NO plugin is required for any agent. `init.sh` writes `.cyberos/AGENT-ENTRY.md` - a one-page canonical trigger any agent can follow - and creates thin pointer stubs when absent (`CLAUDE.md`, `GEMINI.md`, `.cursorrules`; your own `AGENTS.md` is never clobbered). Point any agent that can read files and run shell at `.cyberos/AGENT-ENTRY.md` (or paste its 5 rules as the prompt) and it drives the same workflow with the same gates and the same required human verdicts. The Claude plugin is convenience sugar, not a dependency.
 
 ### 5. GitHub Action (available)
 

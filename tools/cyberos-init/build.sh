@@ -68,6 +68,10 @@ chmod +x "$out/init.sh" "$out/bootstrap.sh" "$out/cuo/gates/run-gates.sh" 2>/dev
 mkdir -p "$out/plugin/skills/ship-feature-requests/cuo"
 cp "$out/cuo/ship-feature-requests.md" "$out/cuo/EXECUTION-DISCIPLINE.md" "$out/cuo/STATUS-REFERENCE.md" "$out/plugin/skills/ship-feature-requests/cuo/"
 
+# One-file plugin bundle for pickers that want a FILE, not a folder (Claude desktop's
+# Add dialog greys "Open" on directories): zip the plugin dir into cyberos.plugin.
+(cd "$out/plugin" && rm -f ../cyberos.plugin && zip -qr ../cyberos.plugin .claude-plugin commands skills)
+
 # --- profile + manifest ---
 profile="reduced"
 [ "$vendored_skills" -gt 0 ] && [ "$caf_vendored" = "yes" ] && profile="full"
