@@ -51,16 +51,23 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # macOS notarization + signing (optional - unset = unsigned build).
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          # Tauri updater signing (optional - set to emit signed update artifacts).
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # macOS notarization + signing is OPT-IN behind the MACOS_SIGN repo variable. Reason: tauri-action
+          # attempts codesign whenever APPLE_CERTIFICATE is a NON-EMPTY string, so a stray or malformed
+          # certificate secret breaks the whole macOS build at the signing step (v1.0.0 first-tag: the .app
+          # compiled and bundled, then died at `security import: failed to import keychain certificate`).
+          # Gating on MACOS_SIGN forces these to empty until you deliberately turn signing on, so the
+          # default is a clean UNSIGNED build that always succeeds. Turn it on: set repo variable
+          # MACOS_SIGN=true AND provide valid APPLE_* secrets (docs/deploy/RELEASE.md activation checklist).
+          APPLE_CERTIFICATE: ${{ vars.MACOS_SIGN == 'true' && secrets.APPLE_CERTIFICATE || '' }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ vars.MACOS_SIGN == 'true' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
+          APPLE_SIGNING_IDENTITY: ${{ vars.MACOS_SIGN == 'true' && secrets.APPLE_SIGNING_IDENTITY || '' }}
+          APPLE_ID: ${{ vars.MACOS_SIGN == 'true' && secrets.APPLE_ID || '' }}
+          APPLE_PASSWORD: ${{ vars.MACOS_SIGN == 'true' && secrets.APPLE_PASSWORD || '' }}
+          APPLE_TEAM_ID: ${{ vars.MACOS_SIGN == 'true' && secrets.APPLE_TEAM_ID || '' }}
+          # Tauri updater signing is OPT-IN behind DESKTOP_UPDATER_SIGN for the same reason (a malformed
+          # key would fail the build). Emit signed update artifacts once you set the variable + the keys.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ vars.DESKTOP_UPDATER_SIGN == 'true' && secrets.TAURI_SIGNING_PRIVATE_KEY || '' }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ vars.DESKTOP_UPDATER_SIGN == 'true' && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD || '' }}
         with:
           projectPath: apps/desktop
           tagName: ${{ github.event.inputs.tag || github.ref_name }}

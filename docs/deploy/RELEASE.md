@@ -56,7 +56,7 @@ Cut a release by pushing a tag:
 
 `.github/workflows/release.yml` then builds the native binaries and publishes a draft GitHub Release with the desktop installers attached:
 
-- desktop: the official `tauri-action` builds an installer on each OS - `.dmg` (macOS, notarized), `.msi`/`.exe` (Windows), `.AppImage` (Linux). It runs unsigned until the signing secrets below are present, so the pipeline works from day one and signing slots in later.
+- desktop: the official `tauri-action` builds an installer on each OS - `.dmg` (macOS), `.msi`/`.exe` (Windows), `.AppImage` (Linux). Signing is OPT-IN: the default build is UNSIGNED and always works. macOS signing turns on only when the repo variable `MACOS_SIGN=true` AND the `APPLE_*` secrets are set (the workflow forces the Apple env empty otherwise, so a stray or malformed certificate secret can never break the build - it did, on the first v1.0.0 tag: `security import: failed to import keychain certificate`). Updater signing is likewise gated on `DESKTOP_UPDATER_SIGN=true`.
 - android: builds the web app, `npx cap sync android`, and assembles a signed `.aab`. Gated on the repo variable `MOBILE_RELEASE=true`.
 - ios: builds the web app, `npx cap sync ios`, and (with fastlane) archives and uploads to TestFlight. Same gate.
 
@@ -96,7 +96,7 @@ Continuous delivery (Track 1) - required now:
 
 Desktop signing (Track 2) - optional; unsigned builds work without these:
 
-- macOS (Apple Developer account, USD 99/year): `APPLE_CERTIFICATE` (base64 of the Developer ID .p12), `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY` (e.g. "Developer ID Application: CyberSkill ..."), `APPLE_ID`, `APPLE_PASSWORD` (an app-specific password), `APPLE_TEAM_ID`.
+- macOS (Apple Developer account, USD 99/year): set the repo variable `MACOS_SIGN=true` AND the secrets `APPLE_CERTIFICATE` (base64 of the Developer ID .p12), `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY` (e.g. "Developer ID Application: CyberSkill ..."), `APPLE_ID`, `APPLE_PASSWORD` (an app-specific password), `APPLE_TEAM_ID`. Until `MACOS_SIGN=true`, the macOS build ships unsigned regardless of what secrets exist (users clear it with right-click -> Open the first time).
 - Tauri auto-updater (optional): the plugin is already wired and checks on launch; these steps switch it on. (1) `cargo tauri signer generate` - keep the private key and set `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` as secrets. (2) In `apps/desktop/src-tauri/tauri.conf.json` add a `plugins.updater` block with your public key and `"endpoints": ["https://github.com/cyberskill-official/cyberos/releases/latest/download/latest.json"]`, and set `"createUpdaterArtifacts": true` under `bundle`. Then a tagged release publishes the update.
 - Windows: `tauri-action` produces an installer but does not sign it by default. Signing needs a code-signing certificate (OV or EV, from a CA, roughly USD 100-400/year) and a `signCommand` in `tauri.conf.json`. Left as a follow-up; unsigned Windows installers show a SmartScreen warning until then.
 
