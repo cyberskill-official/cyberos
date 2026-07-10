@@ -35,6 +35,23 @@ jobs:
           - os: windows-latest
           - os: ubuntu-latest
     runs-on: ${{ matrix.os }}
+    # Signing + notarization creds live at JOB level so BOTH the build attempt and the retry below share
+    # them. macOS signing/notarization is OPT-IN behind the MACOS_SIGN repo variable: tauri-action codesigns
+    # whenever APPLE_CERTIFICATE is a NON-EMPTY string, so a stray or malformed cert would break the whole
+    # macOS build at signing; gating on MACOS_SIGN forces these empty until you deliberately turn signing on
+    # (default = a clean UNSIGNED build that always succeeds). Turn it on: repo variable MACOS_SIGN=true +
+    # valid APPLE_* secrets (docs/deploy/RELEASE.md checklist). Updater signing is OPT-IN behind
+    # DESKTOP_UPDATER_SIGN for the same reason (a malformed key would fail the build).
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      APPLE_CERTIFICATE: ${{ vars.MACOS_SIGN == 'true' && secrets.APPLE_CERTIFICATE || '' }}
+      APPLE_CERTIFICATE_PASSWORD: ${{ vars.MACOS_SIGN == 'true' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
+      APPLE_SIGNING_IDENTITY: ${{ vars.MACOS_SIGN == 'true' && secrets.APPLE_SIGNING_IDENTITY || '' }}
+      APPLE_ID: ${{ vars.MACOS_SIGN == 'true' && secrets.APPLE_ID || '' }}
+      APPLE_PASSWORD: ${{ vars.MACOS_SIGN == 'true' && secrets.APPLE_PASSWORD || '' }}
+      APPLE_TEAM_ID: ${{ vars.MACOS_SIGN == 'true' && secrets.APPLE_TEAM_ID || '' }}
+      TAURI_SIGNING_PRIVATE_KEY: ${{ vars.DESKTOP_UPDATER_SIGN == 'true' && secrets.TAURI_SIGNING_PRIVATE_KEY || '' }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ vars.DESKTOP_UPDATER_SIGN == 'true' && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD || '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -47,27 +64,26 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
+      # Attempt 1. continue-on-error so a TRANSIENT failure - notably Apple notarization returning
+      # NSURLErrorDomain -1009 "The Internet connection appears to be offline" (the notary upload never
+      # reaching appstoreconnect.apple.com) - does not fail the release outright; the retry below re-runs it
+      # once. A non-transient failure still fails the job after the retry, so real breakage is never masked.
       - name: Build + publish desktop installers
+        id: build
+        continue-on-error: true
         uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # macOS notarization + signing is OPT-IN behind the MACOS_SIGN repo variable. Reason: tauri-action
-          # attempts codesign whenever APPLE_CERTIFICATE is a NON-EMPTY string, so a stray or malformed
-          # certificate secret breaks the whole macOS build at the signing step (v1.0.0 first-tag: the .app
-          # compiled and bundled, then died at `security import: failed to import keychain certificate`).
-          # Gating on MACOS_SIGN forces these to empty until you deliberately turn signing on, so the
-          # default is a clean UNSIGNED build that always succeeds. Turn it on: set repo variable
-          # MACOS_SIGN=true AND provide valid APPLE_* secrets (docs/deploy/RELEASE.md activation checklist).
-          APPLE_CERTIFICATE: ${{ vars.MACOS_SIGN == 'true' && secrets.APPLE_CERTIFICATE || '' }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ vars.MACOS_SIGN == 'true' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
-          APPLE_SIGNING_IDENTITY: ${{ vars.MACOS_SIGN == 'true' && secrets.APPLE_SIGNING_IDENTITY || '' }}
-          APPLE_ID: ${{ vars.MACOS_SIGN == 'true' && secrets.APPLE_ID || '' }}
-          APPLE_PASSWORD: ${{ vars.MACOS_SIGN == 'true' && secrets.APPLE_PASSWORD || '' }}
-          APPLE_TEAM_ID: ${{ vars.MACOS_SIGN == 'true' && secrets.APPLE_TEAM_ID || '' }}
-          # Tauri updater signing is OPT-IN behind DESKTOP_UPDATER_SIGN for the same reason (a malformed
-          # key would fail the build). Emit signed update artifacts once you set the variable + the keys.
-          TAURI_SIGNING_PRIVATE_KEY: ${{ vars.DESKTOP_UPDATER_SIGN == 'true' && secrets.TAURI_SIGNING_PRIVATE_KEY || '' }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ vars.DESKTOP_UPDATER_SIGN == 'true' && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD || '' }}
+        with:
+          projectPath: apps/desktop
+          tagName: ${{ github.event.inputs.tag || github.ref_name }}
+          releaseName: 'CyberOS ${{ github.event.inputs.tag || github.ref_name }}'
+          releaseDraft: true
+          prerelease: false
+
+      # Retry once when attempt 1 failed. tauri-action finds the existing draft release by tag and updates
+      # its assets, so re-running is safe. If this attempt also fails, the job fails (no continue-on-error).
+      - name: Retry desktop build once (transient failure, e.g. notary -1009)
+        if: steps.build.outcome == 'failure'
+        uses: tauri-apps/tauri-action@v0
         with:
           projectPath: apps/desktop
           tagName: ${{ github.event.inputs.tag || github.ref_name }}
