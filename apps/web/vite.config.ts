@@ -3,14 +3,14 @@ import react from "@vitejs/plugin-react";
 
 // CyberOS web console.
 //
-// base "/web/" - the build is served additively at https://<origin>/web/ alongside the existing static
-// console (apps/console/app.html), so shipping it never disturbs the live team. API calls are ORIGIN-relative
-// (/v1/auth, /v1/chat), independent of this base, so they resolve to the same Caddy origin in production.
+// base "/" - the app IS the site root (https://os.cyberskill.world/); the legacy /web/ prefix 308-redirects
+// here (Caddyfile.p0). Module views live at /chat, /dashboard, ... (client routes with an SPA fallback in
+// Caddy). API calls are ORIGIN-relative (/v1/auth, /v1/chat), so they resolve to the same Caddy origin.
 //
-// Dev: `npm run dev` serves http://localhost:5173/web/ and proxies the API to the local services
+// Dev: `npm run dev` serves http://localhost:5173/ and proxies the API to the local services
 // (auth :7700, chat :7720), including the chat websocket upgrade.
 export default defineConfig({
-  base: "/web/",
+  base: "/",
   plugins: [react()],
   server: {
     port: 5173,

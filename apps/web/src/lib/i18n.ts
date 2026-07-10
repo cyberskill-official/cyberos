@@ -78,6 +78,12 @@ const C: Record<string, Entry> = {
   // topbar
   "top.allModules": { en: "All modules", vi: "Tất cả mô-đun" },
   "top.backToChat": { en: "Back to chat", vi: "Quay lại chat" },
+  "top.docs": { en: "Docs", vi: "Tài liệu" },
+  "module.stub": {
+    en: "This module's app surface ships here. Its manual and guides are already on the docs site.",
+    vi: "Giao diện của mô-đun này sẽ xuất hiện tại đây. Tài liệu và hướng dẫn đã có trên trang tài liệu.",
+  },
+  "module.manual": { en: "Open the manual", vi: "Mở tài liệu" },
   "top.signOut": { en: "Sign out", vi: "Đăng xuất" },
   "top.themeToLight": { en: "Switch to light theme", vi: "Chuyển sang giao diện sáng" },
   "top.themeToDark": { en: "Switch to dark theme", vi: "Chuyển sang giao diện tối" },

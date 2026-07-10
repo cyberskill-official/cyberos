@@ -1,7 +1,7 @@
 # CyberOS desktop (FR-APP-002)
 
 A Tauri 2 native app that wraps the live CyberOS console. The window loads
-`https://os.cyberskill.world/web/`, so the desktop app IS the web app - the same chat, profile, calls, and
+`https://os.cyberskill.world/`, so the desktop app IS the web app - the same chat, profile, calls, and
 modules in a native window with its own dock icon. Nothing to keep in sync: every web deploy updates the
 desktop app on next launch. The old local-gateway chat/Tools prototype is retired; all app logic now lives
 in the web client (`apps/web`).
@@ -53,7 +53,7 @@ Developer ID; unsigned builds still run after a right-click then Open.
 2. Calls: the first call should prompt for camera + microphone (the Info.plist strings). If it does not
    prompt or fails silently, confirm the app is signed and the entitlements are present.
 3. Everything else (chat, profile, attachments, threads, search) is the web app unchanged, so it behaves
-   exactly as `os.cyberskill.world/web/`.
+   exactly as `os.cyberskill.world/`.
 
 ## Layout
 

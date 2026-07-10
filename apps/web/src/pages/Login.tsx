@@ -38,6 +38,7 @@ export function Login() {
   return (
     <div className="app">
       <header className="topbar">
+        <img className="brandmark" src="/cyberskill-logo.svg" alt="CyberSkill" />
         <span className="wordmark">
           <span className="cyber">Cyber</span>
           <span className="os">OS</span>

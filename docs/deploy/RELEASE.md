@@ -9,20 +9,20 @@ The chat client is a single React app (`apps/web`). Desktop and mobile are thin 
 
 ## The one client, four surfaces
 
-- Web: `apps/web` (React 18 + TypeScript + Vite) built into `apps/console/web`, served by Caddy at `https://os.cyberskill.world/web/`. The site root redirects there.
+- Web: `apps/web` (React 18 + TypeScript + Vite) built into `apps/console/web`, served by Caddy at the site root, `https://os.cyberskill.world/` (the legacy `/web/` prefix 308-redirects home). Each module owns a URL (`/chat`, `/dashboard`, `/<module>`), and the generated docs site is served at `/docs`.
 - PWA: the same web app, installable from the browser (manifest + service worker + icons). No build.
-- Desktop: a Tauri 2 window (`apps/desktop`) that loads the live `/web/`. Same UI, native window + dock icon.
+- Desktop: a Tauri 2 window (`apps/desktop`) that loads the live site root. Same UI, native window + dock icon.
 - Mobile: install the PWA today; ship a store build by wrapping the same `apps/web` bundle in Capacitor.
 
 Because desktop and the PWA load the live web app, every web deploy updates them with nothing to rebuild. The Capacitor mobile build bundles the web assets, so it updates when you cut a new mobile release (or point it at the live URL later for over-the-air web updates).
 
 ## Staying up to date (check for update + auto-update)
 
-Because all four surfaces load the same `/web/` bundle, one update mechanism at the web layer covers every platform:
+Because all four surfaces load the same root bundle, one update mechanism at the web layer covers every platform:
 
-- The check: each `npm run build` writes `/web/version.json` with a unique build id (the same id that stamps the service-worker cache). The running app records the id it loaded with, then re-checks `version.json` on an interval and whenever the tab regains focus or the network returns (`apps/web/src/lib/useUpdateCheck.ts`).
+- The check: each `npm run build` writes `/version.json` with a unique build id (the same id that stamps the service-worker cache). The running app records the id it loaded with, then re-checks `version.json` on an interval and whenever the tab regains focus or the network returns (`apps/web/src/lib/useUpdateCheck.ts`).
 - The prompt: when a newer id is live, a small "A new version is available - Reload" banner appears (`UpdateBanner`). Reload applies it - the service worker is network-first, so the reload pulls the fresh index and hashed bundles and the new worker purges the old caches. This works identically in the browser, the installed PWA, the Tauri desktop window, and the Capacitor mobile shell.
-- Desktop shell binary: the Tauri wrapper rarely changes (it just loads `/web/`), so the banner above already updates what the user sees. The `tauri-plugin-updater` is wired in and checks on launch (`apps/desktop/src-tauri/src/lib.rs`), staying a quiet no-op until it has a config. To switch it on, do the three key-dependent steps in the activation checklist: generate the signing keypair, add a `plugins.updater` block to `apps/desktop/src-tauri/tauri.conf.json` with your public key and the GitHub releases endpoint, and set `bundle.createUpdaterArtifacts: true`. `release.yml` then emits the signed update artifacts.
+- Desktop shell binary: the Tauri wrapper rarely changes (it just loads the site root), so the banner above already updates what the user sees. The `tauri-plugin-updater` is wired in and checks on launch (`apps/desktop/src-tauri/src/lib.rs`), staying a quiet no-op until it has a config. To switch it on, do the three key-dependent steps in the activation checklist: generate the signing keypair, add a `plugins.updater` block to `apps/desktop/src-tauri/tauri.conf.json` with your public key and the GitHub releases endpoint, and set `bundle.createUpdaterArtifacts: true`. `release.yml` then emits the signed update artifacts.
 - Mobile binary: native app updates ship through the App Store / Play from a tagged release; the web-layer banner still covers the in-app content between store updates.
 - Consumer repos (the init payload): compare installed vs available with `bash dist/cyberos/init.sh --check <repo>`, re-run `init.sh <repo>` to apply; the desktop app's CyberOS Ops tab and `tools/cyberos-init/rollout.sh` (fleet-wide) drive the same scripts.
 
@@ -62,7 +62,7 @@ Cut a release by pushing a tag:
 
 ### PWA (installable, works today, no build)
 
-The web app ships a valid manifest (`apps/web/public/manifest.webmanifest`, `display: standalone`, scope `/web/`, 192 + 512 icons) and a service worker (`sw.js`), so it installs as an app with no build:
+The web app ships a valid manifest (`apps/web/public/manifest.webmanifest`, `display: standalone`, scope `/`, 192 + 512 icons) and a service worker (`sw.js`), so it installs as an app with no build:
 
 - Desktop Chrome / Edge: the Install icon in the address bar (or menu -> Install CyberOS).
 - Android Chrome: menu -> Add to Home screen.
@@ -72,7 +72,7 @@ This is the fastest way to put CyberOS on a phone or a dock, before any store li
 
 ### Desktop notes
 
-`apps/desktop` is a Tauri 2 app whose window loads `https://os.cyberskill.world/web/` (`apps/desktop/src/index.html`), so the desktop app IS the web app in a native window. Two settings make the webview behave: a Safari `userAgent` (Google blocks the default embedded-webview UA on OAuth) and camera + microphone usage strings (for WebRTC `getUserMedia`). Full first-build notes are in `apps/desktop/README.md`. `release.yml` builds it in CI, so you do not need a Mac/Windows/Linux box per target.
+`apps/desktop` is a Tauri 2 app whose window loads `https://os.cyberskill.world/` (`apps/desktop/src/index.html`), so the desktop app IS the web app in a native window. Two settings make the webview behave: a Safari `userAgent` (Google blocks the default embedded-webview UA on OAuth) and camera + microphone usage strings (for WebRTC `getUserMedia`). Full first-build notes are in `apps/desktop/README.md`. `release.yml` builds it in CI, so you do not need a Mac/Windows/Linux box per target.
 
 ### Mobile one-time init (before the first mobile release)
 
@@ -120,7 +120,7 @@ Repo variable:
 
 ### Part B: every release (repeat each time)
 
-1. Land the work on `main` through PRs - the gates (services, awh-gate, docs-prerender-gate) must be green. It deploys to the web and service surface automatically; nothing else to do for web, PWA, or desktop content, since they all load the live `/web/`.
+1. Land the work on `main` through PRs - the gates (services, awh-gate, docs-prerender-gate) must be green. It deploys to the web and service surface automatically; nothing else to do for web, PWA, or desktop content, since they all load the live site root.
 2. Bump the platform version and the installer versions to the number you are about to tag:
    - `VERSION` at the repo root (the single platform version; the pre-commit `cyberos-payload-build` hook rebuilds `dist/cyberos` so the init payload always matches).
    - `version` in `apps/desktop/src-tauri/tauri.conf.json` and `version` in `apps/web/package.json` (what the installers report).

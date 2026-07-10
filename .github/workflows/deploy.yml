@@ -20,6 +20,14 @@ on:
       - 'apps/web/**'
       - 'deploy/vps/**'
       - '.github/workflows/deploy.yml'
+      # the docs site ships with the product (job: docs) - rebuild it when its sources change
+      - 'docs/**'
+      - 'modules/*/docs/**'
+      - 'services/*/docs/**'
+      - 'tools/docs-site/**'
+      - 'CHANGELOG.md'
+      - 'modules/*/CHANGELOG.md'
+      - 'services/*/CHANGELOG.md'
   workflow_dispatch: {}
 
 concurrency:
@@ -137,3 +145,31 @@ jobs:
           install -m 600 /dev/stdin "$RUNNER_TEMP/deploy_key" <<< "$VPS_SSH_KEY"
           ssh -o StrictHostKeyChecking=accept-new -i "$RUNNER_TEMP/deploy_key" \
             "$VPS_USER@$VPS_HOST" "bash ~/cyberos/deploy/vps/deploy.sh"
+
+  # Ship the generated docs site (os.cyberskill.world/docs). Built from the markdown single source of
+  # truth in Actions and rsync'd into the existing /srv/console mount on the VPS (apps/console/docs is
+  # gitignored, so the VPS git pull never conflicts with it). Independent of the service roll.
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Build the site from the markdown sources
+        run: bash tools/docs-site/build.sh
+      - name: Ship to the VPS (/srv/console/docs)
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          install -m 600 /dev/stdin "$RUNNER_TEMP/deploy_key" <<< "$VPS_SSH_KEY"
+          tar -czf "$RUNNER_TEMP/website.tgz" -C dist/website .
+          scp -o StrictHostKeyChecking=accept-new -i "$RUNNER_TEMP/deploy_key" \
+            "$RUNNER_TEMP/website.tgz" "$VPS_USER@$VPS_HOST:/tmp/cyberos-website.tgz"
+          ssh -o StrictHostKeyChecking=accept-new -i "$RUNNER_TEMP/deploy_key" "$VPS_USER@$VPS_HOST" \
+            'rm -rf ~/cyberos/apps/console/docs.new && mkdir -p ~/cyberos/apps/console/docs.new \
+             && tar -xzf /tmp/cyberos-website.tgz -C ~/cyberos/apps/console/docs.new \
+             && rm -rf ~/cyberos/apps/console/docs && mv ~/cyberos/apps/console/docs.new ~/cyberos/apps/console/docs \
+             && rm -f /tmp/cyberos-website.tgz'

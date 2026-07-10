@@ -102,3 +102,6 @@ docs/legal/*.docx
 # Vercel (docs hosting) build staging
 .vercel-out/
 .vercel
+
+# generated docs site shipped to the VPS by deploy.yml (job: docs) - never committed
+apps/console/docs/

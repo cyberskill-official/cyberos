@@ -101,6 +101,7 @@ button:focus-visible, .chan-row:focus-visible { outline: 2px solid var(--accent-
   flex: none; display: flex; align-items: center; gap: 14px;
   padding: 10px 20px; background: var(--panel); border-bottom: 1px solid var(--line);
 }
+.brandmark { width: 26px; height: 26px; border-radius: 6px; display: block; }
 .wordmark { font-weight: 800; font-size: 19px; letter-spacing: 0.4px; }
 .wordmark .cyber { color: var(--ink); }
 .wordmark .os { color: var(--accent-text); }

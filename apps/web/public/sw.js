@@ -35,6 +35,6 @@ self.addEventListener("fetch", (event) => {
         }
         return res;
       })
-      .catch(() => caches.match(req).then((r) => r || caches.match("/web/"))),
+      .catch(() => caches.match(req).then((r) => r || caches.match("/"))),
   );
 });
