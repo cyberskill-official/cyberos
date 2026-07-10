@@ -1,23 +1,41 @@
-# docs-prerender-gate.yml — STUB
-#
-# Auto-generated 2026-05-17 from FR build_envelope references.
-# Declared by: FR-DOCS-001
-#
-# Implementation team: replace this stub with the real workflow YAML
-# per the spec details in the declaring FR(s) above.
-# Many FRs embed the canonical workflow YAML in their §6 skeleton section.
+# docs-prerender-gate.yml — the website is GENERATED from the markdown single source of
+# truth (FR-DOCS-002; FR/NFR catalogs + changelogs per FR-DOCS-001). This gate rebuilds
+# the whole site and fails if the committed website/docs drifts from what the sources
+# produce — i.e. someone edited generated HTML by hand, or forgot to rebuild after
+# changing a markdown source. Deterministic build makes the diff check exact.
 
 name: docs-prerender-gate
 
 on:
+  workflow_dispatch: {}
   pull_request:
     paths:
-      # TODO: per declaring FR
-      - 'services/**'
+      - 'docs/**'
+      - 'modules/*/docs/**'
+      - 'services/*/docs/**'
+      - 'website/**'
+      - 'CHANGELOG.md'
+      - 'modules/*/CHANGELOG.md'
+      - 'services/*/CHANGELOG.md'
 
 jobs:
-  placeholder:
+  docs-fresh:
+    name: generated site matches sources
     runs-on: ubuntu-latest
     steps:
-      - name: TODO — implement per FR(s) FR-DOCS-001
-        run: echo 'Stub — see FR specs for canonical workflow YAML'
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Rebuild the site from sources
+        run: bash website/build/build.sh
+
+      - name: Fail on drift (generated != committed)
+        run: |
+          if ! git diff --exit-code --stat -- website/docs; then
+            echo "::error::website/docs is stale or hand-edited. Run 'bash website/build/build.sh' locally and commit the result; never edit generated HTML."
+            exit 1
+          fi
+          echo "docs site is fresh - generated output matches the committed tree."
