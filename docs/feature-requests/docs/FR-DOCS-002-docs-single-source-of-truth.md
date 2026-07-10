@@ -38,4 +38,4 @@ Why markdown over authored HTML: agents and humans author it natively, it diffs 
 
 ## 3. Gate
 
-Machine: build twice + diff (determinism), link/asset check pass, `bash website/build/build.sh` exit 0. Review + final acceptance: HITL per STATUS-REFERENCE §1.4.
+Machine: build twice + diff (determinism), link/asset check pass, `bash tools/docs-site/build.sh` exit 0. Review + final acceptance: HITL per STATUS-REFERENCE §1.4.

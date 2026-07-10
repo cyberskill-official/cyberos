@@ -35,7 +35,7 @@ The consolidated guideline. CyberOS carries ONE platform version (the root `VERS
 The website is generated from the markdown single source of truth (FR-DOCS-002): module docs at `modules/<m>/docs/` or `services/<s>/docs/`, global docs under `docs/`. Three mechanisms keep it fresh, in order of defense:
 
 1. Pre-commit `docs-site-build` (local, automatic).
-2. `docs-prerender-gate` (CI, every PR touching doc sources): rebuilds and fails on any a broken docs build.
+2. `docs-prerender-gate` (CI, every PR touching doc sources): rebuilds the whole site and fails if it does not build clean.
 3. Manual: `bash tools/docs-site/build.sh` (or `--docs` for the doctrine pages only).
 
 Nothing generated is committed: the site renders into gitignored `dist/website`, so there is no generated HTML to edit by hand.
