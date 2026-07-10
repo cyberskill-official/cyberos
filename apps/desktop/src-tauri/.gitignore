@@ -1,6 +1,10 @@
 # Rust build output
 /target
 
-# Tauri generated code + generated icons (regenerate with `cargo tauri icon`)
+# Tauri generated code
 /gen
-/icons
+
+# icons/ IS committed: tauri's generate_context! reads it at compile time, and release.yml
+# builds on clean runners that never run `tauri icon` - ignoring it broke every desktop build
+# (v1.0.0 first-tag lesson). Regenerate from the official logo with:
+#   npx @tauri-apps/cli icon <1024px png rendered from cyberskill-logo.svg>

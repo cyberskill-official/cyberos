@@ -85,9 +85,18 @@ jobs:
       - name: Run awh gate for changed modules
         run: |
           set -euo pipefail
-          git fetch origin "${{ github.base_ref }}" --depth=1 || true
+          # Full fetch of the base ref: a --depth=1 fetch here SHALLOWS origin/<base> and destroys the
+          # merge base ("fatal: origin/main...HEAD: no merge base", exit 128) whenever main has moved -
+          # the checkout above is already fetch-depth: 0, so fetch the base un-shallowed too.
+          git fetch origin "${{ github.base_ref }}" || true
           base="origin/${{ github.base_ref }}"
-          changed=$(git diff --name-only "$base"...HEAD | awk -F/ '/^modules\//{print $2} /^services\//{print $2}' | sort -u)
+          if git merge-base "$base" HEAD >/dev/null 2>&1; then
+            changed=$(git diff --name-only "$base"...HEAD | awk -F/ '/^modules\//{print $2} /^services\//{print $2}' | sort -u)
+          else
+            # Fail SAFE, never crash: without a merge base, gate every module that has a golden set.
+            echo "::warning::no merge base with $base - gating ALL goldenset modules"
+            changed=$(ls -d modules/*/.awh 2>/dev/null | awk -F/ '{print $2}' | sort -u)
+          fi
 
           # Install each changed module's Python test deps so its real pytest suite can import.
           # A module's golden task can run another module's pytest (e.g. skill runs cuo tests),
