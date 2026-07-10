@@ -278,31 +278,26 @@ function endMermaidPan() {
   if (__mermaidPanState) __mermaidPanState.drag = false;
 }
 
-/* ---------- Path helper — figure out where /assets/ lives from current page ----------
-   Pages at root reference `assets/...`; pages in subdirs reference `../assets/...`.
-   We detect that and use it for the shared nav.html fetch. */
+/* ---------- Path helpers — derive the site root from THIS script's own URL ----------
+   Every generated page loads scripts.js via `<up>assets/scripts.js`, where `<up>` is the
+   correct number of `../` for the page's depth (0 for the site root, 2 for a module page
+   like /modules/memory/). So the script's resolved src always ends with `assets/scripts.js`
+   at the true depth. Stripping that suffix yields the assets dir and the site root at ANY
+   depth - deployment-agnostic, and it fixes the previous heuristic that assumed everything
+   was exactly one level deep (which broke the logo, every nav link, and sent the Architecture
+   links to /modules/architecture/*.html 404s on two-level pages). NOTE: type="module" scripts
+   have `document.currentScript === null`, so find the tag by its src. */
 function assetsBase() {
-  // The currently-executing script's src lets us find /assets/
-  const me = document.currentScript || Array.from(document.getElementsByTagName('script'))
-    .find(s => s.src && s.src.endsWith('scripts.js'));
-  if (me && me.src) {
-    return me.src.replace(/scripts\.js(\?.*)?$/, '');
-  }
-  // Fallback: detect from current path
-  const p = location.pathname;
-  if (p.includes('/modules/') || p.includes('/architecture/') || p.includes('/reference/')) {
-    return '../assets/';
-  }
-  return 'assets/';
+  const me = Array.from(document.getElementsByTagName('script'))
+    .find(s => s.src && /\/assets\/scripts\.js(\?.*)?$/.test(s.src));
+  if (me) return me.src.replace(/scripts\.js(\?.*)?$/, '');
+  return 'assets/'; // last resort: same directory
 }
 
 function rootBase() {
-  // The directory where index.html lives, relative to current page.
-  const p = location.pathname;
-  if (p.includes('/modules/') || p.includes('/architecture/') || p.includes('/reference/')) {
-    return '../';
-  }
-  return './';
+  // The assets dir sits directly under the site root, so the root is assetsBase without `assets/`.
+  const base = assetsBase();
+  return /assets\/$/.test(base) ? base.replace(/assets\/$/, '') : './';
 }
 
 /* ---------- Shared nav loader ----------

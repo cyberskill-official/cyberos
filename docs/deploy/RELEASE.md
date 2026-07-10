@@ -57,7 +57,7 @@ Cut a release by pushing a tag:
 `.github/workflows/release.yml` then builds the native binaries and publishes a draft GitHub Release with the desktop installers attached:
 
 - desktop: the official `tauri-action` builds an installer on each OS - `.dmg` (macOS), `.msi`/`.exe` (Windows), `.AppImage` (Linux). Signing is OPT-IN: the default build is UNSIGNED and always works. macOS signing turns on only when the repo variable `MACOS_SIGN=true` AND the `APPLE_*` secrets are set (the workflow forces the Apple env empty otherwise, so a stray or malformed certificate secret can never break the build - it did, on the first v1.0.0 tag: `security import: failed to import keychain certificate`). Updater signing is likewise gated on `DESKTOP_UPDATER_SIGN=true`.
-- android: builds the web app, `npx cap sync android`, and assembles a signed `.aab`. Gated on the repo variable `MOBILE_RELEASE=true`.
+- android: builds the web app, `npx cap sync android`, and assembles a signed `.aab`. Gated on the repo variable `ANDROID_RELEASE=true`.
 - ios: builds the web app, `npx cap sync ios`, and (with fastlane) archives and uploads to TestFlight. Same gate.
 
 ### PWA (installable, works today, no build)
@@ -84,7 +84,7 @@ The android/ and ios/ projects do not exist in the repo yet. Create them once, l
     npx cap add android
     git add android ios capacitor.config.ts package.json && git commit -m "chore: add Capacitor mobile shells"
 
-`capacitor.config.ts` is already committed (appId `os.cyberskill.world`, webDir `../console/web`). After the shells are committed and the signing secrets below are set, flip the repo variable `MOBILE_RELEASE=true` so `release.yml` starts building the mobile apps. Push notifications are the one unfinished backend piece: the chat service registers devices and emits a push intent, but the actual APNS/FCM send is stubbed (`services/chat/src/push.rs`); wire real delivery before relying on mobile push.
+`capacitor.config.ts` is already committed (appId `os.cyberskill.world`, webDir `../console/web`). After the shells are committed and the signing secrets below are set, flip `ANDROID_RELEASE=true` (and `IOS_RELEASE=true` once the iOS project exists) so `release.yml` starts building the mobile apps - the two are gated separately so Android can ship before iOS. Push notifications are the one unfinished backend piece: the chat service registers devices and emits a push intent, but the actual APNS/FCM send is stubbed (`services/chat/src/push.rs`); wire real delivery before relying on mobile push.
 
 ## Activation checklist (secrets and accounts to procure)
 
@@ -100,14 +100,14 @@ Desktop signing (Track 2) - optional; unsigned builds work without these:
 - Tauri auto-updater (optional): the plugin is already wired and checks on launch; these steps switch it on. (1) `cargo tauri signer generate` - keep the private key and set `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` as secrets. (2) In `apps/desktop/src-tauri/tauri.conf.json` add a `plugins.updater` block with your public key and `"endpoints": ["https://github.com/cyberskill-official/cyberos/releases/latest/download/latest.json"]`, and set `"createUpdaterArtifacts": true` under `bundle`. Then a tagged release publishes the update.
 - Windows: `tauri-action` produces an installer but does not sign it by default. Signing needs a code-signing certificate (OV or EV, from a CA, roughly USD 100-400/year) and a `signCommand` in `tauri.conf.json`. Left as a follow-up; unsigned Windows installers show a SmartScreen warning until then.
 
-Mobile signing (Track 2) - needed once you flip `MOBILE_RELEASE=true`:
+Mobile signing (Track 2) - needed once you flip `ANDROID_RELEASE=true` / `IOS_RELEASE=true`:
 
 - Android (Google Play, USD 25 one-time): create an upload keystore (`keytool -genkey -v -keystore release.keystore -alias cyberos -keyalg RSA -keysize 2048 -validity 10000`), then set `ANDROID_KEYSTORE_BASE64` (base64 of that file), `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`.
 - iOS (Apple Developer account, the same USD 99/year): an App Store Connect API key - `APP_STORE_CONNECT_KEY_ID`, `APP_STORE_CONNECT_ISSUER_ID`, `APP_STORE_CONNECT_API_KEY` (the .p8 contents).
 
 Repo variable:
 
-- `MOBILE_RELEASE` = `true` - turns on the android + ios jobs in `release.yml`. Leave it unset until the Capacitor shells are committed and the mobile secrets are in, so tagged releases keep working in the meantime (they just build desktop only).
+- `ANDROID_RELEASE` = `true` - turns on the android job; `IOS_RELEASE` = `true` - turns on the ios job (separate, so Android ships without dragging in the not-yet-existing iOS project). Legacy `MOBILE_RELEASE=true` still enables Android for existing setups. Leave these unset until the Capacitor shells are committed and the mobile secrets are in, so tagged releases keep working in the meantime (they just build desktop only).
 
 ## Step by step
 
@@ -115,7 +115,7 @@ Repo variable:
 
 1. Confirm continuous delivery is on. In GitHub -> Settings -> Secrets and variables -> Actions, check that `VPS_HOST`, `VPS_USER`, and `VPS_SSH_KEY` exist. Push any small change to `main` and confirm the `deploy` workflow goes green. This is already live for os.cyberskill.world, so it is a verification step, not new work.
 2. Desktop signing (optional - skip to ship unsigned installers). Buy an Apple Developer account, export your Developer ID certificate, and add the six `APPLE_*` secrets listed above. Windows signing is a later follow-up (see the checklist).
-3. Mobile (optional - skip until you want store apps). Run the one-time Capacitor init above and commit the generated projects, then add the Android and iOS secrets and set the repo variable `MOBILE_RELEASE` to `true`.
+3. Mobile (optional - skip until you want store apps). Run the one-time Capacitor init above and commit the generated projects, then add the Android and iOS secrets and set `ANDROID_RELEASE=true` (and `IOS_RELEASE=true` once the iOS project exists).
 4. Do a first release with Part B to confirm the `release` workflow runs end to end.
 
 ### Part B: every release (repeat each time)
@@ -131,7 +131,7 @@ Repo variable:
        git tag vX.Y.Z
        git push origin main vX.Y.Z
 
-5. Watch `deploy.yml` go green (images pushed, VPS rolled), then the `release` workflow build the native installers and open a draft GitHub Release with them attached (plus the Android bundle and a TestFlight upload once `MOBILE_RELEASE=true`).
+5. Watch `deploy.yml` go green (images pushed, VPS rolled), then the `release` workflow build the native installers and open a draft GitHub Release with them attached (plus the Android bundle once `ANDROID_RELEASE=true`, and a TestFlight upload once `IOS_RELEASE=true`).
 6. Edit the draft release notes and publish. Hand out the installer links; with mobile on, the iOS build is in TestFlight and the Android `.aab` is the release artifact to upload to Play.
 7. Distribute the payload to consumer repos: each project updates with `init.sh --check` (notify) and re-running `init.sh` (apply) - or from the desktop app's CyberOS Ops tab. Fleet-wide: `tools/cyberos-init/rollout.sh`.
 
@@ -153,7 +153,7 @@ A `403 Forbidden` pushing an image means that GHCR package exists without this r
 
 ## Signing and mobile
 
-Turning on macOS signing, Android releases, and iOS TestFlight is its own step-by-step runbook: `signing-and-mobile-release.md`. Short version: every signing input is a GitHub secret plus an opt-in repo variable (`MACOS_SIGN`, `MOBILE_RELEASE`), nothing private is committed, and you re-tag to produce the signed artifacts.
+Turning on macOS signing, Android releases, and iOS TestFlight is its own step-by-step runbook: `signing-and-mobile-release.md`. Short version: every signing input is a GitHub secret plus an opt-in repo variable (`MACOS_SIGN`, `ANDROID_RELEASE`, `IOS_RELEASE`), nothing private is committed, and you re-tag to produce the signed artifacts.
 
 ## Related runbooks
 

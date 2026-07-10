@@ -79,6 +79,7 @@ const C: Record<string, Entry> = {
   "top.allModules": { en: "All modules", vi: "Tất cả mô-đun" },
   "top.backToChat": { en: "Back to chat", vi: "Quay lại chat" },
   "top.docs": { en: "Docs", vi: "Tài liệu" },
+  "version.current": { en: "CyberOS version", vi: "Phiên bản CyberOS" },
   "module.stub": {
     en: "This module's app surface ships here. Its manual and guides are already on the docs site.",
     vi: "Giao diện của mô-đun này sẽ xuất hiện tại đây. Tài liệu và hướng dẫn đã có trên trang tài liệu.",

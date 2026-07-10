@@ -107,6 +107,11 @@ button:focus-visible, .chan-row:focus-visible { outline: 2px solid var(--accent-
 .wordmark .os { color: var(--accent-text); }
 .slogan { color: var(--faint); font-size: 12px; font-style: italic; }
 .spacer { flex: 1; }
+.version-badge { font-size: 11.5px; font-weight: 600; letter-spacing: 0.3px; color: var(--muted); padding: 3px 8px; border: 1px solid var(--line); border-radius: 999px; background: transparent; white-space: nowrap; }
+.version-badge-update { color: var(--accent-text); border-color: var(--accent-border); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.version-badge-update:hover { background: var(--panel-2); }
+.version-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-text); box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent-text) 25%, transparent); animation: version-pulse 2s ease-in-out infinite; }
+@keyframes version-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
 .who { font-size: 13px; color: var(--muted); }
 
 /* ---- buttons ---- */

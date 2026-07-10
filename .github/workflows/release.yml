@@ -75,10 +75,12 @@ jobs:
           releaseDraft: true
           prerelease: false
 
-  # Android app bundle (Capacitor). Gated on the repo variable MOBILE_RELEASE=true, which you set AFTER the
-  # one-time Capacitor init (docs/deploy/RELEASE.md) so this never fails before the android/ project exists.
+  # Android app bundle (Capacitor). Gated on the repo variable ANDROID_RELEASE=true (the android/ project is
+  # committed and the upload keystore is configured via the ANDROID_* secrets). Legacy MOBILE_RELEASE=true is
+  # still honoured so existing setups keep working. iOS has its OWN gate (IOS_RELEASE) so turning Android on
+  # never triggers the iOS job before its project exists - that would fail at `cap sync ios` for nothing.
   android:
-    if: ${{ vars.MOBILE_RELEASE == 'true' }}
+    if: ${{ vars.ANDROID_RELEASE == 'true' || vars.MOBILE_RELEASE == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -113,9 +115,12 @@ jobs:
       # Publishing to Play internal track: add r0adz/upload-google-play or fastlane supply with a service
       # account JSON secret (see docs/deploy/RELEASE.md).
 
-  # iOS build + TestFlight (Capacitor). Same gate; needs a macOS runner + App Store Connect API key.
+  # iOS build + TestFlight (Capacitor). OWN gate IOS_RELEASE=true - do NOT reuse the Android gate: the ios/
+  # project does not exist until you run `npx cap add ios` (docs/deploy/signing-and-mobile-release.md section
+  # C), and `cap sync ios` below would fail without it. Turn IOS_RELEASE on only after that project + the
+  # fastlane lane land.
   ios:
-    if: ${{ vars.MOBILE_RELEASE == 'true' }}
+    if: ${{ vars.IOS_RELEASE == 'true' }}
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
