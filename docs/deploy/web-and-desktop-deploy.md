@@ -2,7 +2,7 @@
 
 CyberOS ships to two surfaces from a single codebase and a single push:
 
-- Web: the React console at https://os.cyberskill.world/web/ (installable as a PWA).
+- Web: the React console at https://os.cyberskill.world/ (installable as a PWA).
 - Desktop: a Tauri app (apps/desktop) that loads that same live URL in a native window.
 
 The desktop app is a thin native shell over the web app, so for everyday changes there is no separate desktop deploy: every web deploy updates the desktop app on its next launch. You only rebuild the desktop binary when you want to ship a new installable (a new version, a new icon, or a Tauri-config change), not when you change a feature.
@@ -25,13 +25,13 @@ To ship a web change:
 
 1. Build the bundle: `cd apps/web && npm run build` (this is `tsc --noEmit && vite build`; output goes to apps/console/web).
 2. Commit apps/web and apps/console, then push.
-3. Verify after the deploy: fetch https://os.cyberskill.world/web/ and confirm the referenced `index-<hash>.js` changed to the hash your build produced.
+3. Verify after the deploy: fetch https://os.cyberskill.world/ and confirm the referenced `index-<hash>.js` changed to the hash your build produced.
 
 PWA install: the console is installable from the browser (manifest.webmanifest + a service worker + the brand icons). Users install it from the browser's install affordance; no store submission is involved.
 
 ## Desktop
 
-apps/desktop is a Tauri 2 app whose window loads https://os.cyberskill.world/web/. Because it points at the live web app, the desktop app always matches whatever is deployed to the web - you do not redeploy the desktop app to ship a feature. Two settings make the webview behave: a standard Safari `userAgent` in src-tauri/tauri.conf.json (so Google accepts OAuth inside the webview), and camera plus microphone usage strings in src-tauri/Info.plist (for the WebRTC calls).
+apps/desktop is a Tauri 2 app whose window loads https://os.cyberskill.world/. Because it points at the live web app, the desktop app always matches whatever is deployed to the web - you do not redeploy the desktop app to ship a feature. Two settings make the webview behave: a standard Safari `userAgent` in src-tauri/tauri.conf.json (so Google accepts OAuth inside the webview), and camera plus microphone usage strings in src-tauri/Info.plist (for the WebRTC calls).
 
 You rebuild and redistribute the desktop binary only to ship a new installable. Build per target OS (there is no cross-compile):
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "./lib/auth";
 import { useTheme } from "./lib/theme";
 import { currentLang, setLang, t } from "./lib/i18n";
@@ -7,13 +7,53 @@ import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
 import { Chat } from "./pages/Chat";
 
-type View = "dashboard" | "chat";
+type View = "dashboard" | "chat" | "module";
+
+// Every module owns a URL (os.cyberskill.world/chat, /dashboard, /<module>). Caddy serves index.html for
+// any client route (SPA fallback), and this tiny pathname router maps it to a view - no router dependency.
+// Unknown module paths render a stub that links the module's manual on the docs site (/docs/modules/<m>/).
+function parsePath(path: string): { view: View; module?: string } {
+  if (path === "/" || path === "/chat" || path.startsWith("/chat/")) return { view: "chat" };
+  if (path === "/dashboard") return { view: "dashboard" };
+  const seg = path.split("/")[1]?.toLowerCase() ?? "";
+  if (!seg) return { view: "chat" };
+  return { view: "module", module: seg };
+}
+
+function ModuleStub({ module, onBack }: { module: string; onBack: () => void }) {
+  return (
+    <div className="center">
+      <div className="card">
+        <h2 style={{ marginTop: 0 }}>{module}</h2>
+        <div className="sub" style={{ marginBottom: 12 }}>
+          {t("module.stub")}
+        </div>
+        <a className="btn" href={`/docs/modules/${module}/index.html`}>
+          {t("module.manual")}
+        </a>
+        <button className="btn-ghost" onClick={onBack} style={{ marginLeft: 8 }} type="button">
+          {t("top.backToChat")}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export function App() {
   const { ready, signedIn, email, logout } = useAuth();
   const [theme, toggleTheme] = useTheme();
   // Team default: land straight in chat. "All modules" reveals the operator dashboard.
-  const [view, setView] = useState<View>("chat");
+  const [route, setRoute] = useState(() => parsePath(window.location.pathname));
+
+  const nav = (to: string) => {
+    window.history.pushState({}, "", to);
+    setRoute(parsePath(to));
+  };
+  useEffect(() => {
+    const onPop = () => setRoute(parsePath(window.location.pathname));
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
   if (!ready) {
     return (
@@ -29,23 +69,28 @@ export function App() {
 
   if (!signedIn) return <Login />;
 
+  const view = route.view;
   return (
     <div className="app">
       <header className="topbar">
+        <img className="brandmark" src="/cyberskill-logo.svg" alt="CyberSkill" />
         <span className="wordmark">
           <span className="cyber">Cyber</span>
           <span className="os">OS</span>
         </span>
         <span className="slogan">{t("brand.slogan")}</span>
         {view === "chat" ? (
-          <button className="btn-ghost" onClick={() => setView("dashboard")}>
+          <button className="btn-ghost" onClick={() => nav("/dashboard")}>
             {t("top.allModules")}
           </button>
         ) : (
-          <button className="btn-ghost" onClick={() => setView("chat")}>
+          <button className="btn-ghost" onClick={() => nav("/chat")}>
             {t("top.backToChat")}
           </button>
         )}
+        <a className="btn-ghost" href="/docs/">
+          {t("top.docs")}
+        </a>
         <span className="spacer" />
         <button
           className="btn-ghost lang-btn"
@@ -68,7 +113,13 @@ export function App() {
           {t("top.signOut")}
         </button>
       </header>
-      {view === "dashboard" ? <Dashboard onOpenChat={() => setView("chat")} /> : <Chat />}
+      {view === "dashboard" ? (
+        <Dashboard onOpenChat={() => nav("/chat")} />
+      ) : view === "module" ? (
+        <ModuleStub module={route.module ?? ""} onBack={() => nav("/chat")} />
+      ) : (
+        <Chat />
+      )}
     </div>
   );
 }

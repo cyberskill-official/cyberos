@@ -73,39 +73,49 @@
 		reverse_proxy chat:7720
 	}
 
-	# The Vite + React console, built into apps/console/web and served by the existing /srv/console mount
-	# (no separate volume, so no empty-bind-mount pitfall). Additive at /web/, alongside the legacy console
-	# at /. API calls inside it are origin-relative so they hit the same services. Bare /web redirects to
-	# /web/; /web/* is the SPA (strip_prefix maps /web/assets/* to web/assets/*).
-	@webbare path /web
-	handle @webbare {
-		redir * /web/ 308
+	# The generated docs site (module manuals + guides). deploy.yml's docs job builds dist/website in
+	# Actions and ships it to ~/cyberos/apps/console/docs on the VPS - inside the existing /srv/console
+	# mount, so no extra volume. Bare /docs redirects to /docs/; the site is fully relative-linked.
+	@docsbare path /docs
+	handle @docsbare {
+		redir * /docs/ 308
 	}
-	@web path /web/*
-	handle @web {
-		uri strip_prefix /web
-		root * /srv/console/web
+	@docs path /docs/*
+	handle @docs {
+		root * /srv/console
 		file_server
 	}
 
-	# The React app (/web/) is the product surface for the team. Send the site root - and the retired static
-	# dev chat client (chat.html, the "paste a JWT + Connect" harness) - to it, so nobody lands on the old
-	# console by default. The operator console (module tiles: audit/mcp/ai/cuo) stays reachable at /app.html.
-	@rootredir path /
-	handle @rootredir {
-		redir * /web/ 308
+	# Legacy /web/ prefix: the React app now IS the site root, so old links and installed PWAs land home.
+	# (Path-preserving: /web/chat -> /chat.)
+	@webold path /web /web/*
+	handle @webold {
+		uri strip_prefix /web
+		redir * {uri} 308
 	}
 	@legacychat path /chat.html
 	handle @legacychat {
-		redir * /web/ 308
+		redir * / 308
 	}
 
-	handle {
+	# The legacy operator console pages stay reachable by exact path (module tiles at /app.html, plus the
+	# status + roadmap pages) from the /srv/console mount.
+	@legacyconsole path /app.html /audit.html /status /status.html /roadmap /roadmap.html
+	handle @legacyconsole {
 		root * /srv/console
 		@roadmap path /roadmap
 		rewrite @roadmap /roadmap.html
 		@status path /status
 		rewrite @status /status.html
+		file_server
+	}
+
+	# The Vite + React app, built into apps/console/web (the existing /srv/console mount) and served at the
+	# site root. Client routes (/chat, /dashboard, /<module>) fall back to index.html (SPA); hashed assets
+	# and the PWA files resolve as real files first.
+	handle {
+		root * /srv/console/web
+		try_files {path} /index.html
 		file_server
 	}
 }
