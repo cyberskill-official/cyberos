@@ -47,9 +47,19 @@ Local development and the production web build:
     NODE_ENV=development npm ci     # the login shell exports production, which strips devDeps like vite
     npm run build                   # tsc --noEmit && vite build -> apps/console/web + a service-worker stamp
 
+## Versioning: auto-bump, manual release
+
+The platform `VERSION` moves on its own as updates land; cutting a release stays a manual action. The two are separate on purpose - the number always reflects "there is a new update," while you decide when to actually publish native installers.
+
+- Auto-bump: `.github/workflows/version.yml` runs on every push to `main`. It computes the next version from the new Conventional Commits with `scripts/cyberos-version.mjs` (feat -> minor; fix/perf/revert/refactor -> patch; `!` or `BREAKING CHANGE:` -> major; chore/docs/ci/test/build/style do not bump). When a bump is due it commits `chore(release): vX.Y.Z [skip ci]` back to `main` (updating `VERSION` + `CHANGELOG.md`). It never tags, builds installers, or deploys. The baseline is the last commit that touched `VERSION`, so each push only counts what is new since the previous bump.
+- Manual release: when you want a native release, tag the current `VERSION` (Track 2 below). That is the only step that publishes installers.
+- Commit hygiene: `.githooks/commit-msg` (advisory) nudges Conventional Commits and prints the projected next version on each commit. It never blocks; set `CYBEROS_STRICT_COMMITS=1` to enforce, or `git commit --no-verify` to skip. It is active through the existing `core.hooksPath=.githooks`; make it executable once with `chmod +x .githooks/commit-msg`.
+- Preview + overrides: `node scripts/cyberos-version.mjs --check` prints the projected next version and the commits driving it. Force a level with `--level minor`, an exact version with `--set 1.4.0`, or put `Release-As: 1.4.0` in a commit body. You can also run the `version` workflow from the Actions tab (workflow_dispatch) with an explicit level.
+- One-time operator setup: the workflow pushes the bump commit to `main` with the built-in `GITHUB_TOKEN` (it has `contents: write`). If `main` is a protected branch, allow the GitHub Actions app (or `cyberos-bot`) to push, or the bump step will fail. The loop is guarded two ways: the release commit carries `[skip ci]` and the job also skips any `chore(release):` head commit.
+
 ## Track 2: versioned native release (desktop + mobile)
 
-Cut a release by pushing a tag:
+Cut a release by pushing a tag (use the current `VERSION`, which the auto-bump keeps current):
 
     git tag v1.2.0
     git push origin v1.2.0

@@ -1,0 +1,60 @@
+name: version
+
+# Auto version, manual release. On every push to main this computes the next CyberOS version
+# from the new Conventional Commits (feat -> minor, fix/perf/revert/refactor -> patch, ! or
+# BREAKING CHANGE -> major) and, when a bump is due, commits the new VERSION + CHANGELOG back
+# to main as `chore(release): vX.Y.Z [skip ci]`. It NEVER tags, builds installers, or deploys -
+# cutting a release stays a manual action: `git tag vX.Y.Z && git push origin vX.Y.Z` (release.yml).
+#
+# Loop-safe two ways: the release commit carries [skip ci] (GitHub skips the run) and the job
+# also guards on the head commit message. Manual override: put `Release-As: X.Y.Z` in a commit
+# body, or run this workflow via the Actions tab (workflow_dispatch) with an explicit level.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      level:
+        description: 'Force a bump level (leave blank to compute from commits)'
+        required: false
+        type: choice
+        options: ['', patch, minor, major]
+        default: ''
+
+concurrency:
+  group: cyberos-version
+  cancel-in-progress: false
+
+permissions:
+  contents: write # commit the version bump back to main
+
+jobs:
+  bump:
+    # skip our own release commits (belt-and-suspenders with [skip ci] on the commit message)
+    if: ${{ github.event_name == 'workflow_dispatch' || !startsWith(github.event.head_commit.message, 'chore(release):') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history + tags: the baseline is the last commit that touched VERSION
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Compute + apply the next version
+        id: bump
+        run: node scripts/cyberos-version.mjs --apply ${{ github.event.inputs.level && format('--level {0}', github.event.inputs.level) || '' }}
+      - name: Commit the bump back to main
+        if: ${{ steps.bump.outputs.changed == 'true' }}
+        run: |
+          set -euo pipefail
+          git config user.name  "cyberos-bot"
+          git config user.email "bot@cyberskill.world"
+          git add VERSION CHANGELOG.md
+          git commit -m "chore(release): ${{ steps.bump.outputs.version }} [skip ci]"
+          git push origin HEAD:main
+          echo "CyberOS VERSION -> ${{ steps.bump.outputs.version }} (not released; tag v${{ steps.bump.outputs.version }} to cut a release)" >> "$GITHUB_STEP_SUMMARY"
+      - name: No bump needed
+        if: ${{ steps.bump.outputs.changed != 'true' }}
+        run: echo "No feat/fix/breaking commits since the last bump - VERSION unchanged (${{ steps.bump.outputs.version }})." >> "$GITHUB_STEP_SUMMARY"

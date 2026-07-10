@@ -11,6 +11,7 @@ Added
 - MCP server channel (`tools/cyberos-init/mcp/cyberos-mcp.mjs`): zero-dependency Node stdio server exposing `fr_init`, `fr_gates`, `fr_status`, `ship_fr` (HITL-gated; never self-accepts). `init.sh` writes `.mcp.json` / `.cursor/mcp.json` when absent.
 - npx CLI channel: root `package.json` with `cyberos-init`, `cyberos-gates`, `cyberos-mcp` bins.
 - Template channel: `create.sh` scaffolder + `template/` skeleton for a fresh project or a GitHub template repo.
+- Auto-versioning ("auto version, manual release"): `scripts/cyberos-version.mjs` computes the next version from Conventional Commits; `.github/workflows/version.yml` auto-commits the bump to `main` on push (never tags or deploys); `.githooks/commit-msg` is an advisory Conventional-Commit nudge that shows the projected next version. Cutting a release stays a manual `vX.Y.Z` tag. See `docs/deploy/RELEASE.md`.
 
 Changed
 - Root `AGENTS.md` produced by `init.sh` is now a concise workflow spine (was the full memory protocol); the dense Layer-1 protocol lives only at `.cyberos/memory/AGENTS.md`, referenced from the spine.
