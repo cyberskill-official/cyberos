@@ -1,304 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
- <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>PLUGIN — Cross-runtime distribution · Claude Code / Cursor / Cowork / Codex CLI · CyberOS</title>
- <meta name="description" content="PLUGIN module — turns shipped CUO workflows + memory memory + SKILL playbooks into installable .plugin bundles for Claude Code, Cursor, Anthropic Cowork, and OpenAI Codex CLI. Manifest schema + MCP bridge + OAuth-PKCE auth + memory audit emission + multi-runtime adapters + marketplace publish. 8 FRs at 10/10. Strategy Levels 1+3+4+5.">
- <link rel="stylesheet" href="../../assets/tokens.css">
- <link rel="stylesheet" href="../../assets/styles.css">
- <link rel="stylesheet" href="../../assets/tailwind.min.css">
- <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
- <link rel="preconnect" href="https://fonts.googleapis.com">
- <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
- <script type="module" src="../../assets/scripts.js"></script>
- <style>
- .fact-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
- .fact-card { background: #fefce8; border:1px solid #fef08a; padding: 0.875rem 1rem; border-radius: 0.625rem; }
- .fact-card.label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #854d0e; }
- .fact-card.value { font-size: 1.125rem; font-weight: 800; color: var(--text); margin-top:0.25rem; }
- .fact-card.note { font-size: 0.75rem; color: var(--text-soft); margin-top: 0.125rem; }
- .toc-link { display:block; padding:0.375rem 0.625rem; font-size:0.8125rem; color:var(--text-soft); text-decoration:none; border-radius:0.375rem; transition: all 0.12s; }
- .toc-link:hover { background: #fefce8; color: #854d0e; }
- .toc-link.active { background: #fef9c3; color: #854d0e; font-weight: 600; }
- .module-section { scroll-margin-top: 80px; margin-bottom: 2.5rem; }
- .pill { display:inline-flex; gap:0.25rem; padding: 0.125rem 0.5rem; border-radius:9999px; font-size:0.6875rem; font-weight:700; }
- .pill-must { background:#fee2e2; color:#b91c1c; }
- .pill-should { background:#fef3c7; color:#b45309; }
- .pill-shipped { background:#d1fae5; color:#065f46; }
- .pill-planned { background:#e0e7ff; color:#3730a3; }
- table.kt { width:100%; border-collapse: collapse; font-size: 0.8125rem; }
- table.kt thead th { text-align:left; font-weight:700; color:var(--text); padding: 0.5rem 0.625rem; border-bottom: 2px solid var(--border); background: var(--bg-card); }
- table.kt tbody td { padding: 0.5rem 0.625rem; border-bottom: 1px solid var(--border); color: var(--text-soft); vertical-align: top; }
- table.kt tbody tr:nth-child(even) td { background: var(--future-bg); }
- </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PLUGIN — Cross-runtime distribution · Claude Code / Cursor / Cowork / Codex CLI · CyberOS</title>
+<link rel="stylesheet" href="../../assets/tokens.css">
+<link rel="stylesheet" href="../../assets/styles.css">
+<link rel="stylesheet" href="../../assets/tailwind.min.css">
+<script type="module" src="../../assets/scripts.js"></script>
 </head>
-<body data-pagefind-filter="category:Module">
-<span hidden data-pagefind-filter="phase:P1"></span>
-
+<body>
 <div id="shared-nav"></div>
-
-<header class="hero-gradient border-b border-slate-200">
- <div class="container py-10 lg:py-14">
- <nav class="breadcrumbs">
- <a href="../../index.html">Home</a>
- <span class="sep">›</span>
- <a href="../index.html#catalog">Modules</a>
- <span class="sep">›</span>
- <span class="current">PLUGIN — Cross-runtime distribution</span>
- </nav>
- <div class="flex items-center gap-3 mb-4 flex-wrap">
- <span class="text-5xl">📦</span>
- <h1 class="h-display">PLUGIN</h1>
- <span class="phase-chip phase-p1">P1 · Productivity (Distribution)</span>
- <span class="pill pill-planned">Specced 2026-05-19 · 8 FRs at 10/10 · runtime build-out next session</span>
- <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CTO seat (Stephen)</span>
- </div>
- <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
- <strong>The distribution surface.</strong> Turns shipped CyberOS modules into installable plugins for any agentic IDE — Claude Code, Cursor, Anthropic Cowork, OpenAI Codex CLI — without the user needing to know the federation exists.
- </p>
- <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- PLUGIN sits one layer above the <a href="../mcp/index.html">MCP gateway</a>. Where MCP owns the protocol (spec compliance, OAuth handshake, tasks primitive, elicitation), PLUGIN owns <strong>packaging + multi-runtime emission + marketplace publish</strong>. A single canonical manifest at <code>modules/plugin/manifests/&lt;id&gt;@&lt;version&gt;.plugin.json</code> bundles into 4 target-native artefacts (`.plugin`, `.mcp.json`, Customize zip, SKILL.md folder), each signed via Sigstore Rekor and pushed to <code>plugins.cyberskill.world</code> with public-tier mirror to <code>agentskills.io</code>. Strategy alignment: §4 Level 1 (OSS distribution) + Level 3 (marketplace with 70/30 revenue share + vetted-by-CyberSkill JWT badge) + Level 4 (vertical packs ship as <code>cyberos-vn</code> / <code>cyberos-sg</code> / etc. plugins) + Level 5 (enterprise white-label private marketplace origins). The planned runtime lives at <code>cyberos/services/plugin-host/</code>.
- </p>
- <div class="flex flex-wrap gap-3 mt-6">
- <a href="#architecture" class="btn btn-primary">Architecture
- <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
- </a>
- <a href="#frs" class="btn btn-secondary">8 FRs</a>
- <a href="#runtimes" class="btn btn-secondary">Target runtimes</a>
- <a href="../../reference/fr-catalog.html#plugin" class="btn btn-secondary">FR catalog</a>
- <a href="changelog.html" class="btn btn-secondary">Changelog</a>
- 
- </div>
- </div>
-</header>
-
-<div class="container py-10 lg:py-14 grid lg:grid-cols-12 gap-10">
-
-<aside class="lg:col-span-3 order-2 lg:order-1">
- <div class="lg:sticky lg:top-20">
- <div class="bbg-card p-5">
- <div class="h-eyebrow mb-3">On this page</div>
- <ul class="space-y-0.5 text-sm">
- <li><a class="toc-link" href="#elevator">Elevator pitch</a></li>
- <li><a class="toc-link" href="#why">Why a separate module</a></li>
- <li><a class="toc-link" href="#three-layers">3 host-facing layers</a></li>
- <li><a class="toc-link" href="#architecture">Architecture</a></li>
- <li><a class="toc-link" href="#runtimes">Target runtimes</a></li>
- <li><a class="toc-link" href="#auth">Auth + audit</a></li>
- <li><a class="toc-link" href="#marketplace">Marketplace</a></li>
- <li><a class="toc-link" href="#frs">FRs</a></li>
- <li><a class="toc-link" href="#deps">Cross-module deps</a></li>
- <li><a class="toc-link" href="#strategy">Strategy fit</a></li>
- </ul>
- </div>
- </div>
-</aside>
-
-<main class="lg:col-span-9 order-1 lg:order-2">
-
-<section id="elevator" class="module-section">
- <div class="fact-grid">
-  <div class="fact-card"><div class="label">Status</div><div class="value">Specced</div><div class="note">8 FRs at 10/10 · runtime planned</div></div>
-  <div class="fact-card"><div class="label">FRs</div><div class="value">8</div><div class="note">FR-PLUGIN-001..008</div></div>
-  <div class="fact-card"><div class="label">Hours</div><div class="value">~58h</div><div class="note">3 slices · 7-9 eng-days</div></div>
-  <div class="fact-card"><div class="label">Targets</div><div class="value">4 P1</div><div class="note">+ 3 deferred to P2</div></div>
-  <div class="fact-card"><div class="label">Tools</div><div class="value">8 MCP</div><div class="note">CUO 4 · memory 2 · SKILL 2</div></div>
-  <div class="fact-card"><div class="label">Playbooks</div><div class="value">12</div><div class="note">Anthropic Skills compliant</div></div>
- </div>
-</section>
-
-<section id="why" class="module-section">
- <header class="section-head"><h2>Why a separate module — not "just an MCP gateway feature"</h2></header>
- <p class="mb-3">The <a href="../mcp/index.html">MCP gateway</a> owns the <em>protocol</em>. PLUGIN owns the <em>distribution + packaging surface</em>. Keeping them separate matches CyberOS's "agentic-native + open-standard + audit-chained + regionally-localized" positioning without overloading the gateway with marketing-surface mechanics.</p>
- <table class="kt">
-  <thead><tr><th>Concern</th><th>MCP gateway owns</th><th>PLUGIN owns</th></tr></thead>
-  <tbody>
-   <tr><td>Protocol shape</td><td>Spec 2025-11-25, initialize, tools/list, tools/call, Tasks, Elicitation</td><td>Inherits — does not redefine</td></tr>
-   <tr><td>Transport</td><td>stdio + HTTP/Streamable</td><td>Picks the right transport per target runtime</td></tr>
-   <tr><td>Spans multiple runtimes</td><td>One protocol</td><td>4 target adapters (claude-code, cursor, cowork, codex-cli)</td></tr>
-   <tr><td>Auth lifecycle</td><td>Per-call JWT verify</td><td>Install-time OAuth-PKCE handshake + refresh-token rotation</td></tr>
-   <tr><td>Audit emission</td><td>Transport-level</td><td>6 plugin.* audit kinds; durable Postgres outbox</td></tr>
-   <tr><td>Distribution channel</td><td>None</td><td>plugins.cyberskill.world OCI + agentskills.io mirror</td></tr>
-   <tr><td>User-visible version</td><td>Internal</td><td>Surfaces as <code>cyberos@1.4.2</code> in host Customize tabs</td></tr>
-  </tbody>
- </table>
-</section>
-
-<section id="three-layers" class="module-section">
- <header class="section-head"><h2>Three host-facing layers — tools, commands, playbooks</h2></header>
- <p class="mb-3">Plugins expose three distinct surfaces to a host. Each addresses a different consumer; together they make the plugin both <em>capable</em> and <em>usable</em>.</p>
- <table class="kt">
-  <thead><tr><th>Layer</th><th>What it answers</th><th>Consumer</th><th>FR</th></tr></thead>
-  <tbody>
-   <tr><td><strong>Tools</strong></td><td>What the plugin can do</td><td>Host's tool-calling subsystem</td><td>FR-PLUGIN-002</td></tr>
-   <tr><td><strong>Commands</strong></td><td>How the user invokes it explicitly</td><td>Host UI affordances (/cyberos-run, /cyberos-route, etc.)</td><td>FR-PLUGIN-003</td></tr>
-   <tr><td><strong>Playbooks</strong></td><td>When the model should pick which tool</td><td>Host's skill router (description-match fingerprint)</td><td>FR-PLUGIN-004</td></tr>
-  </tbody>
- </table>
-</section>
-
-<section id="architecture" class="module-section">
- <header class="section-head"><h2>Architecture — pack-once, emit-many</h2></header>
- <p class="mb-3">A plugin is described once in canonical form, then a per-runtime adapter emits the target-native bundle. Same canonical manifest → 4 different installables.</p>
- <pre class="bg-slate-50 border border-slate-200 rounded-lg p-4 text-xs overflow-x-auto"><code>modules/plugin/manifests/cyberos@1.0.0.plugin.json   (CANONICAL — JSONSchema 2020-12)
-                            │
-                            ▼
-                  cyberos-plugin pack
-                            │
-              ┌─────────────┼─────────────┬─────────────────┐
-              ▼             ▼             ▼                 ▼
-       claude-code      cursor       cowork            codex-cli
-       (.plugin)     (.mcp.json)   (Customize zip)   (SKILL.md folder)
-              │             │             │                 │
-              └─────────────┴──────┬──────┴─────────────────┘
-                                   │
-                            Sigstore Rekor anchor (per-target)
-                                   │
-                                   ▼
-                       OAuth-PKCE handshake at install
-                          (auth.cyberskill.world)
-                                   │
-                                   ▼
-                     Bridge invoked via stdio/HTTP transport
-                                   │
-                ┌──────────────────┼──────────────────┐
-                ▼                  ▼                  ▼
-          CUO supervisor    memory HTTP REST    SKILL broker
-          (4 tools)         (2 tools)          (2 tools)
-                                   │
-                                   ▼
-                  Every call → memory plugin.invoked row
-                  (audit-then-respond; durable outbox; 24h retry)</code></pre>
-</section>
-
-<section id="runtimes" class="module-section">
- <header class="section-head"><h2>Target runtimes — 4 P1, 3 deferred to P2</h2></header>
- <table class="kt">
-  <thead><tr><th>Runtime</th><th>Bundle format</th><th>Commands?</th><th>Playbooks?</th><th>Bridge bundled?</th><th>Status</th></tr></thead>
-  <tbody>
-   <tr><td><strong>Claude Code</strong></td><td>.plugin (signed zip)</td><td>✓ /cyberos-*</td><td>✓ Skills router</td><td>No — Claude Code manages</td><td>P1</td></tr>
-   <tr><td><strong>Cursor</strong></td><td>.mcp.json (single file)</td><td>—</td><td>—</td><td>✓ multi-arch</td><td>P1</td></tr>
-   <tr><td><strong>Anthropic Cowork</strong></td><td>Customize slot (zip)</td><td>✓</td><td>✓</td><td>✓ HTTP transport</td><td>P1</td></tr>
-   <tr><td><strong>OpenAI Codex CLI</strong></td><td>SKILL.md folder</td><td>(as supplementary skills)</td><td>✓</td><td>✓ env-var binding</td><td>P1</td></tr>
-   <tr><td>Goose (Block)</td><td>TOML manifest</td><td>—</td><td>—</td><td>—</td><td>P2 — successor FR</td></tr>
-   <tr><td>Amp (Sourcegraph)</td><td>Markdown + YAML</td><td>—</td><td>—</td><td>—</td><td>P2 — successor FR</td></tr>
-   <tr><td>Continue.dev</td><td>.continue/config.json</td><td>—</td><td>—</td><td>—</td><td>P2 — successor FR</td></tr>
-  </tbody>
- </table>
-</section>
-
-<section id="auth" class="module-section">
- <header class="section-head"><h2>Auth + audit — every action audit-chained, every token short-lived</h2></header>
- <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-  <div>
-   <h3 class="text-sm font-bold uppercase tracking-wide text-slate-600 mb-2">OAuth-PKCE (FR-PLUGIN-005)</h3>
-   <ul class="text-sm space-y-1 text-slate-700">
-    <li>✓ Audience-bound JWT RS256 (<code>aud: "plugin:&lt;id&gt;"</code>) — blocks cross-plugin token reuse</li>
-    <li>✓ 1-hour access tokens; 24-hour rotating opaque refresh</li>
-    <li>✓ OS-keychain storage (macOS Keychain · Windows Credential Manager · Linux Secret Service)</li>
-    <li>✓ 7 locked scopes: cyberos:{cuo,memory,skill}:{list,read,write,execute,route,invoke}</li>
-    <li>✓ Revocation propagates within 60 seconds via cache TTL</li>
-   </ul>
-  </div>
-  <div>
-   <h3 class="text-sm font-bold uppercase tracking-wide text-slate-600 mb-2">memory audit (FR-PLUGIN-006)</h3>
-   <ul class="text-sm space-y-1 text-slate-700">
-    <li>✓ 6 audit kinds: plugin.installed / updated / uninstalled / invoked / auth_refreshed / scope_denied</li>
-    <li>✓ Audit-then-respond ordering — no lost rows on crash</li>
-    <li>✓ Durable Postgres outbox · 24h exponential backoff retry</li>
-    <li>✓ SHA-256 idempotency key dedups retries server-side</li>
-    <li>✓ Body strictly scrubbed — no tool input / output leak</li>
-   </ul>
-  </div>
- </div>
-</section>
-
-<section id="marketplace" class="module-section">
- <header class="section-head"><h2>Marketplace — three visibility modes</h2></header>
- <table class="kt">
-  <thead><tr><th>Visibility</th><th>Discoverability</th><th>agentskills.io mirror</th><th>Revenue share</th><th>Strategy level</th></tr></thead>
-  <tbody>
-   <tr><td><strong>public</strong></td><td>any user, marketplace search</td><td>✓ default-on</td><td>70/30 author/CyberSkill on paid</td><td>Level 1 + 3</td></tr>
-   <tr><td><strong>private</strong></td><td>publishing tenant only</td><td>— blocked</td><td>n/a</td><td>Level 4 (vertical pack staging)</td></tr>
-   <tr><td><strong>enterprise</strong></td><td>per-enterprise origin (white-label)</td><td>— blocked</td><td>negotiated</td><td>Level 5</td></tr>
-  </tbody>
- </table>
- <p class="mt-3 text-sm text-slate-600"><strong>Vetted-by-CyberSkill badge</strong> — JWT signed by CyberSkill marketplace key (<code>aud: "plugin:&lt;id&gt;:&lt;version&gt;"</code>), client-side verifiable. Persists per <code>(plugin_id, version)</code>. Manual review at first, automated where possible.</p>
-</section>
-
-<section id="frs" class="module-section">
- <header class="section-head"><h2>FRs — 8 at 10/10</h2></header>
- <table class="kt">
-  <thead><tr><th>FR</th><th>Slice</th><th>Hours</th><th>Title</th></tr></thead>
-  <tbody>
-   <tr><td><a href="../../reference/fr-catalog.html#FR-PLUGIN-001">FR-PLUGIN-001</a></td><td>1</td><td>8h</td><td>Plugin manifest schema v1.0.0 + Python reference packer</td></tr>
-   <tr><td><a href="../../reference/fr-catalog.html#FR-PLUGIN-002">FR-PLUGIN-002</a></td><td>1</td><td>10h</td><td>MCP bridge Rust binary — stdio + HTTP · 8 tools · Tasks primitive</td></tr>
-   <tr><td><a href="../../reference/fr-catalog.html#FR-PLUGIN-003">FR-PLUGIN-003</a></td><td>1</td><td>4h</td><td>Canonical slash-commands (/cyberos-run, /cyberos-memory, /cyberos-skill-list, /cyberos-route)</td></tr>
-   <tr><td><a href="../../reference/fr-catalog.html#FR-PLUGIN-004">FR-PLUGIN-004</a></td><td>2</td><td>6h</td><td>12 skill playbooks — when to chain plugin tools (SKB-020..023)</td></tr>
-   <tr><td><a href="../../reference/fr-catalog.html#FR-PLUGIN-005">FR-PLUGIN-005</a></td><td>2</td><td>8h</td><td>OAuth-PKCE auth — audience-bound JWT · OS-keychain · 60s revocation</td></tr>
-   <tr><td><a href="../../reference/fr-catalog.html#FR-PLUGIN-006">FR-PLUGIN-006</a></td><td>2</td><td>6h</td><td>memory audit emission — durable outbox · 24h retry · scrubbed body</td></tr>
-   <tr><td><a href="../../reference/fr-catalog.html#FR-PLUGIN-007">FR-PLUGIN-007</a></td><td>3</td><td>10h</td><td>Multi-runtime adapters — claude-code / cursor / cowork / codex-cli</td></tr>
-   <tr><td><a href="../../reference/fr-catalog.html#FR-PLUGIN-008">FR-PLUGIN-008</a></td><td>3</td><td>6h</td><td>Marketplace publish — OCI · agentskills.io mirror · 70/30 split · vetted JWT badge</td></tr>
-  </tbody>
- </table>
-</section>
-
-<section id="deps" class="module-section">
- <header class="section-head"><h2>Cross-module dependencies</h2></header>
- <table class="kt">
-  <thead><tr><th>This module depends on</th><th>FR</th><th>Status</th></tr></thead>
-  <tbody>
-   <tr><td>MCP protocol spec compliance</td><td>FR-MCP-001</td><td>specced</td></tr>
-   <tr><td>SEP-986 tool naming</td><td>FR-MCP-003</td><td>specced</td></tr>
-   <tr><td>Tool annotation gating</td><td>FR-MCP-006</td><td>specced</td></tr>
-   <tr><td>Tasks primitive</td><td>FR-MCP-007</td><td>specced</td></tr>
-   <tr><td>JWT/JWKS issuance</td><td>FR-AUTH-004</td><td>shipped</td></tr>
-   <tr><td>memory Layer-2 ingest</td><td>FR-MEMORY-101</td><td>shipped</td></tr>
-   <tr><td>CUO supervisor v3.0.0-a4</td><td>(modules/cuo/)</td><td>shipped</td></tr>
-   <tr><td>SKILL FR-SKILL-111..115 (trigger discipline)</td><td>FR-SKILL-111..115</td><td>shipped at spec-level; FR-115 sweep applied</td></tr>
-  </tbody>
- </table>
- <table class="kt mt-3">
-  <thead><tr><th>This module blocks</th><th>FR</th></tr></thead>
-  <tbody>
-   <tr><td>Vertical pack pricing (TEN)</td><td>FR-TEN-005</td></tr>
-   <tr><td>Branded Genie chat (PORTAL)</td><td>FR-PORTAL-005</td></tr>
-   <tr><td>Strategy Level 1 OSS distribution</td><td>(strategy/CYBEROS_STRATEGY.md §4)</td></tr>
-   <tr><td>Strategy Level 3 marketplace</td><td>(strategy/CYBEROS_STRATEGY.md §4)</td></tr>
-   <tr><td>Strategy Level 4 vertical packs (cyberos-vn, etc.)</td><td>(strategy/CYBEROS_STRATEGY.md §4)</td></tr>
-   <tr><td>Strategy Level 5 enterprise white-label</td><td>(strategy/CYBEROS_STRATEGY.md §4)</td></tr>
-  </tbody>
- </table>
-</section>
-
-<section id="strategy" class="module-section">
- <header class="section-head"><h2>Strategy fit — the substrate for every distribution play</h2></header>
- <p class="mb-3">Without PLUGIN, CyberOS is only installable via git clone or direct download — viable for early adopters, fatal for ecosystem distribution. With PLUGIN, the same canonical CyberOS appears as a one-click install across every major agentic IDE.</p>
- <table class="kt">
-  <thead><tr><th>Strategy level</th><th>What unlocks</th><th>This module ships</th></tr></thead>
-  <tbody>
-   <tr><td>Level 1 — OSS distribution</td><td>Developers clone, install, use CyberOS without on-boarding from CyberSkill</td><td>Public visibility · agentskills.io mirror · Apache-2.0 default</td></tr>
-   <tr><td>Level 3 — Marketplace</td><td>Third-party authors publish; 70/30 revenue; vetted badge; CyberSkill earns from ecosystem</td><td>FR-PLUGIN-008 publish CLI + OCI registry</td></tr>
-   <tr><td>Level 4 — Vertical packs</td><td><code>cyberos-vn</code>, <code>cyberos-sg</code>, <code>cyberos-eu</code>, <code>cyberos-us</code> each ship as their own plugin</td><td>Same manifest schema; per-region bundles</td></tr>
-   <tr><td>Level 5 — Ecosystem-as-a-Service</td><td>Enterprise pays CyberSkill to run a private branded marketplace</td><td>Enterprise visibility mode · private origin pattern</td></tr>
-  </tbody>
- </table>
-</section>
-
-<nav class="flex justify-between items-center gap-4 p-5 bg-yellow-50 rounded-xl border border-yellow-200 mt-10">
- <a href="../mcp/index.html" class="text-yellow-900 font-medium hover:underline">← MCP Gateway (protocol layer below this module)</a>
- <a href="../index.html#catalog" class="text-yellow-900 font-medium hover:underline">Module catalog →</a>
-</nav>
-
+<main class="docs-page mx-auto max-w-4xl px-6 py-10">
+<p>Status</p>
+<p>Specced</p>
+<p>8 FRs at 10/10 · runtime planned</p>
+<p>FRs</p>
+<p>8</p>
+<p>FR-PLUGIN-001..008</p>
+<p>Hours</p>
+<p>~58h</p>
+<p>3 slices · 7-9 eng-days</p>
+<p>Targets</p>
+<p>4 P1</p>
+<p>\+ 3 deferred to P2</p>
+<p>Tools</p>
+<p>8 MCP</p>
+<p>CUO 4 · memory 2 · SKILL 2</p>
+<p>Playbooks</p>
+<p>12</p>
+<p>Anthropic Skills compliant</p>
+<h2>Why a separate module — not "just an MCP gateway feature"</h2>
+<p>The <a href="&lt;../mcp/index.html&gt;">MCP gateway</a> owns the <em>protocol</em>. PLUGIN owns the <em>distribution + packaging surface</em>. Keeping them separate matches CyberOS's "agentic-native + open-standard + audit-chained + regionally-localized" positioning without overloading the gateway with marketing-surface mechanics.</p>
+<p>Concern| MCP gateway owns| PLUGIN owns   ---|---|---   Protocol shape| Spec 2025-11-25, initialize, tools/list, tools/call, Tasks, Elicitation| Inherits — does not redefine   Transport| stdio + HTTP/Streamable| Picks the right transport per target runtime   Spans multiple runtimes| One protocol| 4 target adapters (claude-code, cursor, cowork, codex-cli)   Auth lifecycle| Per-call JWT verify| Install-time OAuth-PKCE handshake + refresh-token rotation   Audit emission| Transport-level| 6 plugin.* audit kinds; durable Postgres outbox   Distribution channel| None| plugins.cyberskill.world OCI + agentskills.io mirror   User-visible version| Internal| Surfaces as <code>cyberos@1.4.2</code> in host Customize tabs  </p>
+<h2>Three host-facing layers — tools, commands, playbooks</h2>
+<p>Plugins expose three distinct surfaces to a host. Each addresses a different consumer; together they make the plugin both <em>capable</em> and <em>usable</em>.</p>
+<p>Layer| What it answers| Consumer| FR   ---|---|---|---   <strong>Tools</strong>|  What the plugin can do| Host's tool-calling subsystem| FR-PLUGIN-002   <strong>Commands</strong>|  How the user invokes it explicitly| Host UI affordances (/cyberos-run, /cyberos-route, etc.)| FR-PLUGIN-003   <strong>Playbooks</strong>|  When the model should pick which tool| Host's skill router (description-match fingerprint)| FR-PLUGIN-004  </p>
+<h2>Architecture — pack-once, emit-many</h2>
+<p>A plugin is described once in canonical form, then a per-runtime adapter emits the target-native bundle. Same canonical manifest → 4 different installables.</p>
+<p>    modules/plugin/manifests/cyberos@1.0.0.plugin.json   (CANONICAL — JSONSchema 2020-12)                                 │                                 ▼                       cyberos-plugin pack                                 │                   ┌─────────────┼─────────────┬─────────────────┐                   ▼             ▼             ▼                 ▼            claude-code      cursor       cowork            codex-cli            (.plugin)     (.mcp.json)   (Customize zip)   (SKILL.md folder)                   │             │             │                 │                   └─────────────┴──────┬──────┴─────────────────┘                                        │                                 Sigstore Rekor anchor (per-target)                                        │                                        ▼                            OAuth-PKCE handshake at install                               (auth.cyberskill.world)                                        │                                        ▼                          Bridge invoked via stdio/HTTP transport                                        │                     ┌──────────────────┼──────────────────┐                     ▼                  ▼                  ▼               CUO supervisor    memory HTTP REST    SKILL broker               (4 tools)         (2 tools)          (2 tools)                                        │                                        ▼                       Every call → memory plugin.invoked row                       (audit-then-respond; durable outbox; 24h retry)</p>
+<h2>Target runtimes — 4 P1, 3 deferred to P2</h2>
+<p>Runtime| Bundle format| Commands?| Playbooks?| Bridge bundled?| Status   ---|---|---|---|---|---   <strong>Claude Code</strong>| .plugin (signed zip)| ✓ /cyberos-*| ✓ Skills router| No — Claude Code manages| P1   <strong>Cursor</strong>| .mcp.json (single file)| —| —| ✓ multi-arch| P1   <strong>Anthropic Cowork</strong>|  Customize slot (zip)| ✓| ✓| ✓ HTTP transport| P1   <strong>OpenAI Codex CLI</strong>|  SKILL.md folder| (as supplementary skills)| ✓| ✓ env-var binding| P1   Goose (Block)| TOML manifest| —| —| —| P2 — successor FR   Amp (Sourcegraph)| Markdown + YAML| —| —| —| P2 — successor FR   Continue.dev| .continue/config.json| —| —| —| P2 — successor FR  </p>
+<h2>Auth + audit — every action audit-chained, every token short-lived</h2>
+<h3>OAuth-PKCE (FR-PLUGIN-005)</h3>
+<ul><li>✓ Audience-bound JWT RS256 (<code>aud: "plugin:&lt;id&gt;"</code>) — blocks cross-plugin token reuse</li><li>✓ 1-hour access tokens; 24-hour rotating opaque refresh</li><li>✓ OS-keychain storage (macOS Keychain · Windows Credential Manager · Linux Secret Service)</li><li>✓ 7 locked scopes: cyberos:{cuo,memory,skill}:{list,read,write,execute,route,invoke}</li><li>✓ Revocation propagates within 60 seconds via cache TTL</li></ul>
+<h3>memory audit (FR-PLUGIN-006)</h3>
+<ul><li>✓ 6 audit kinds: plugin.installed / updated / uninstalled / invoked / auth_refreshed / scope_denied</li><li>✓ Audit-then-respond ordering — no lost rows on crash</li><li>✓ Durable Postgres outbox · 24h exponential backoff retry</li><li>✓ SHA-256 idempotency key dedups retries server-side</li><li>✓ Body strictly scrubbed — no tool input / output leak</li></ul>
+<h2>Marketplace — three visibility modes</h2>
+<p>Visibility| Discoverability| agentskills.io mirror| Revenue share| Strategy level   ---|---|---|---|---   <strong>public</strong>|  any user, marketplace search| ✓ default-on| 70/30 author/CyberSkill on paid| Level 1 + 3   <strong>private</strong>|  publishing tenant only| — blocked| n/a| Level 4 (vertical pack staging)   <strong>enterprise</strong>|  per-enterprise origin (white-label)| — blocked| negotiated| Level 5  </p>
+<p><strong>Vetted-by-CyberSkill badge</strong> — JWT signed by CyberSkill marketplace key (<code>aud: "plugin:&lt;id&gt;:&lt;version&gt;"</code>), client-side verifiable. Persists per <code>(plugin_id, version)</code>. Manual review at first, automated where possible.</p>
+<h2>FRs — 8 at 10/10</h2>
+<p>FR| Slice| Hours| Title   ---|---|---|---   <a href="&lt;../../reference/fr-catalog.html#FR-PLUGIN-001&gt;">FR-PLUGIN-001</a>| 1| 8h| Plugin manifest schema v1.0.0 + Python reference packer   <a href="&lt;../../reference/fr-catalog.html#FR-PLUGIN-002&gt;">FR-PLUGIN-002</a>| 1| 10h| MCP bridge Rust binary — stdio + HTTP · 8 tools · Tasks primitive   <a href="&lt;../../reference/fr-catalog.html#FR-PLUGIN-003&gt;">FR-PLUGIN-003</a>| 1| 4h| Canonical slash-commands (/cyberos-run, /cyberos-memory, /cyberos-skill-list, /cyberos-route)   <a href="&lt;../../reference/fr-catalog.html#FR-PLUGIN-004&gt;">FR-PLUGIN-004</a>| 2| 6h| 12 skill playbooks — when to chain plugin tools (SKB-020..023)   <a href="&lt;../../reference/fr-catalog.html#FR-PLUGIN-005&gt;">FR-PLUGIN-005</a>| 2| 8h| OAuth-PKCE auth — audience-bound JWT · OS-keychain · 60s revocation   <a href="&lt;../../reference/fr-catalog.html#FR-PLUGIN-006&gt;">FR-PLUGIN-006</a>| 2| 6h| memory audit emission — durable outbox · 24h retry · scrubbed body   <a href="&lt;../../reference/fr-catalog.html#FR-PLUGIN-007&gt;">FR-PLUGIN-007</a>| 3| 10h| Multi-runtime adapters — claude-code / cursor / cowork / codex-cli   <a href="&lt;../../reference/fr-catalog.html#FR-PLUGIN-008&gt;">FR-PLUGIN-008</a>| 3| 6h| Marketplace publish — OCI · agentskills.io mirror · 70/30 split · vetted JWT badge  </p>
+<h2>Cross-module dependencies</h2>
+<p>This module depends on| FR| Status   ---|---|---   MCP protocol spec compliance| FR-MCP-001| specced   SEP-986 tool naming| FR-MCP-003| specced   Tool annotation gating| FR-MCP-006| specced   Tasks primitive| FR-MCP-007| specced   JWT/JWKS issuance| FR-AUTH-004| shipped   memory Layer-2 ingest| FR-MEMORY-101| shipped   CUO supervisor v3.0.0-a4| (modules/cuo/)| shipped   SKILL FR-SKILL-111..115 (trigger discipline)| FR-SKILL-111..115| shipped at spec-level; FR-115 sweep applied   This module blocks| FR   ---|---   Vertical pack pricing (TEN)| FR-TEN-005   Branded Genie chat (PORTAL)| FR-PORTAL-005   Strategy Level 1 OSS distribution| (strategy/CYBEROS_STRATEGY.md §4)   Strategy Level 3 marketplace| (strategy/CYBEROS_STRATEGY.md §4)   Strategy Level 4 vertical packs (cyberos-vn, etc.)| (strategy/CYBEROS_STRATEGY.md §4)   Strategy Level 5 enterprise white-label| (strategy/CYBEROS_STRATEGY.md §4)  </p>
+<h2>Strategy fit — the substrate for every distribution play</h2>
+<p>Without PLUGIN, CyberOS is only installable via git clone or direct download — viable for early adopters, fatal for ecosystem distribution. With PLUGIN, the same canonical CyberOS appears as a one-click install across every major agentic IDE.</p>
+<p>Strategy level| What unlocks| This module ships   ---|---|---   Level 1 — OSS distribution| Developers clone, install, use CyberOS without on-boarding from CyberSkill| Public visibility · agentskills.io mirror · Apache-2.0 default   Level 3 — Marketplace| Third-party authors publish; 70/30 revenue; vetted badge; CyberSkill earns from ecosystem| FR-PLUGIN-008 publish CLI + OCI registry   Level 4 — Vertical packs| <code>cyberos-vn</code>, <code>cyberos-sg</code>, <code>cyberos-eu</code>, <code>cyberos-us</code> each ship as their own plugin| Same manifest schema; per-region bundles   Level 5 — Ecosystem-as-a-Service| Enterprise pays CyberSkill to run a private branded marketplace| Enterprise visibility mode · private origin pattern   <a href="&lt;../mcp/index.html&gt;">← MCP Gateway (protocol layer below this module)</a> <a href="&lt;../index.html#catalog&gt;">Module catalog →</a></p>
+<hr>
+<p class="text-sm" style="opacity:.6">Generated from <code>docs/modules/plugin/index.md</code> — edit the markdown source, not this file (FR-DOCS-002).</p>
 </main>
-</div>
-
-<footer class="border-t border-slate-200 mt-10 py-8 bg-slate-50">
- <div class="container text-center text-sm text-slate-600">
-  <p>PLUGIN module · CyberOS · 8 FRs at 10/10 specced 2026-05-19 · runtime at <code>services/plugin-host/</code> planned for next implementation session.</p>
-  <p class="mt-2">Source: <a href="https://github.com/cyberskill/cyberos/tree/main/modules/plugin" class="underline">modules/plugin/</a> · <a href="https://github.com/cyberskill/cyberos/tree/main/docs/feature-requests/plugin" class="underline">docs/feature-requests/plugin/</a></p>
- </div>
-</footer>
 </body>
 </html>

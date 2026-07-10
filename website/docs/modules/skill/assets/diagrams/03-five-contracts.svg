@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" font-family="Inter, system-ui, sans-serif">
+  <defs>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+  <rect width="1200" height="700" fill="#F8FAFC"/>
+  <text x="600" y="50" font-size="26" font-weight="700" fill="#0F172A" text-anchor="middle">The 5 inherited contracts</text>
+  <text x="600" y="80" font-size="14" fill="#64748B" text-anchor="middle">Three from v0.1.0 · Two net-new in v0.2.0</text>
+
+  <!-- 5 cards in a row -->
+  <g font-family="Inter, sans-serif">
+    <!-- 1 Audit-hook -->
+    <rect x="40" y="120" width="220" height="500" rx="12" fill="#fff" stroke="#E2E8F0" filter="url(#sh)"/>
+    <rect x="40" y="120" width="220" height="60" rx="12" fill="#1E2A78"/>
+    <rect x="40" y="155" width="220" height="25" fill="#1E2A78"/>
+    <text x="60" y="155" font-size="15" font-weight="700" fill="#fff">1 · Audit-hook</text>
+    <text x="240" y="155" font-size="10" fill="#F59E0B" text-anchor="end">SRS §6.7</text>
+    <text x="60" y="210" font-size="13" font-weight="600" fill="#0F172A">Every output → 1 row</text>
+    <text x="60" y="232" font-size="11" fill="#64748B">in genie.action_log carrying:</text>
+    <g font-family="JetBrains Mono, monospace" font-size="10" fill="#0F172A">
+      <text x="60" y="262">· persona_id</text>
+      <text x="60" y="280">· skill_id</text>
+      <text x="60" y="298">· skill_version</text>
+      <text x="60" y="316">· row_kind</text>
+      <text x="60" y="334">· trace_id</text>
+      <text x="60" y="352">· payload_sha256</text>
+      <text x="60" y="370">· hash_chain_prev</text>
+      <text x="60" y="388">· hash_chain_self</text>
+      <text x="60" y="406">· confidence</text>
+      <text x="60" y="424">· cc_personas[]</text>
+    </g>
+    <text x="60" y="470" font-size="11" font-weight="600" fill="#DC2626">⚠ Tampering</text>
+    <text x="60" y="488" font-size="11" fill="#64748B">breaks the chain.</text>
+    <text x="60" y="510" font-size="11" fill="#64748B">SRS §10.4.6 detects.</text>
+    <text x="150" y="600" font-size="10" fill="#94A3B8" text-anchor="middle" font-style="italic">v0.1.0</text>
+
+    <!-- 2 Chain -->
+    <rect x="280" y="120" width="220" height="500" rx="12" fill="#fff" stroke="#E2E8F0" filter="url(#sh)"/>
+    <rect x="280" y="120" width="220" height="60" rx="12" fill="#1E2A78"/>
+    <rect x="280" y="155" width="220" height="25" fill="#1E2A78"/>
+    <text x="300" y="155" font-size="15" font-weight="700" fill="#fff">2 · Chain</text>
+    <text x="480" y="155" font-size="10" fill="#F59E0B" text-anchor="end">expects ↔ produces</text>
+    <text x="300" y="210" font-size="13" font-weight="600" fill="#0F172A">Envelopes compose</text>
+    <text x="300" y="232" font-size="11" fill="#64748B">A → B legal when</text>
+    <text x="300" y="248" font-size="11" fill="#64748B">A.produces validates</text>
+    <text x="300" y="264" font-size="11" fill="#64748B">against B.expects</text>
+    <text x="300" y="280" font-size="11" fill="#64748B">(subset or identity).</text>
+    <text x="300" y="318" font-size="11" fill="#64748B">Supervisor plans</text>
+    <text x="300" y="334" font-size="11" fill="#64748B">at runtime via</text>
+    <text x="300" y="350" font-size="11" font-family="JetBrains Mono, monospace" fill="#0F172A">classify_act</text>
+    <text x="300" y="366" font-size="11" fill="#64748B">node.</text>
+    <text x="300" y="404" font-size="11" fill="#64748B">State checkpointed:</text>
+    <text x="300" y="420" font-size="11" font-family="JetBrains Mono, monospace" fill="#0F172A">graph_checkpoint</text>
+    <text x="300" y="436" font-size="11" fill="#64748B">SRS §6.1.1.</text>
+    <text x="300" y="478" font-size="11" font-weight="600" fill="#10B981">✓ Crash-safe.</text>
+    <text x="300" y="496" font-size="11" font-weight="600" fill="#10B981">✓ Resumable.</text>
+    <text x="390" y="600" font-size="10" fill="#94A3B8" text-anchor="middle" font-style="italic">v0.1.0</text>
+
+    <!-- 3 Plug-in -->
+    <rect x="520" y="120" width="220" height="500" rx="12" fill="#fff" stroke="#E2E8F0" filter="url(#sh)"/>
+    <rect x="520" y="120" width="220" height="60" rx="12" fill="#1E2A78"/>
+    <rect x="520" y="155" width="220" height="25" fill="#1E2A78"/>
+    <text x="540" y="155" font-size="15" font-weight="700" fill="#fff">3 · Plug-in</text>
+    <text x="720" y="155" font-size="10" fill="#F59E0B" text-anchor="end">AGENTS.md §11</text>
+    <text x="540" y="210" font-size="13" font-weight="600" fill="#0F172A">Folder is portable</text>
+    <text x="540" y="232" font-size="11" fill="#64748B">3 granularities:</text>
+    <g font-family="JetBrains Mono, monospace" font-size="10" fill="#0F172A">
+      <text x="540" y="262">cp -r &lt;skill&gt;/</text>
+      <text x="540" y="280">cp -r &lt;persona&gt;/</text>
+      <text x="540" y="298">cp -r cuo/</text>
+    </g>
+    <text x="540" y="334" font-size="11" fill="#64748B">Export = deterministic</text>
+    <text x="540" y="350" font-size="11" fill="#64748B">zip (sorted entries,</text>
+    <text x="540" y="366" font-size="11" fill="#64748B">fixed mtime, zero</text>
+    <text x="540" y="382" font-size="11" fill="#64748B">uid/gid).</text>
+    <text x="540" y="420" font-size="11" fill="#64748B">Import = unpack +</text>
+    <text x="540" y="436" font-size="11" fill="#64748B">path-traversal guard +</text>
+    <text x="540" y="452" font-size="11" fill="#64748B">one op:"import" row.</text>
+    <text x="540" y="490" font-size="11" font-weight="600" fill="#10B981">✓ Two exports of</text>
+    <text x="540" y="506" font-size="11" font-weight="600" fill="#10B981">  same state →</text>
+    <text x="540" y="522" font-size="11" font-weight="600" fill="#10B981">  byte-identical zip.</text>
+    <text x="630" y="600" font-size="10" fill="#94A3B8" text-anchor="middle" font-style="italic">v0.1.0</text>
+
+    <!-- 4 Self-audit (NEW) -->
+    <rect x="760" y="120" width="220" height="500" rx="12" fill="#fff" stroke="#F59E0B" stroke-width="3" filter="url(#sh)"/>
+    <rect x="760" y="120" width="220" height="60" rx="12" fill="#F59E0B"/>
+    <rect x="760" y="155" width="220" height="25" fill="#F59E0B"/>
+    <text x="780" y="155" font-size="15" font-weight="700" fill="#0F1444">4 · Self-audit  🆕</text>
+    <text x="960" y="155" font-size="10" fill="#0F1444" text-anchor="end">DEC-092</text>
+    <text x="780" y="210" font-size="13" font-weight="600" fill="#0F172A">Runtime invariants</text>
+    <text x="780" y="232" font-size="11" fill="#64748B">INVARIANTS.md declares</text>
+    <text x="780" y="248" font-size="11" fill="#64748B">truths. Engine checks</text>
+    <text x="780" y="264" font-size="11" fill="#64748B">at:</text>
+    <g font-family="JetBrains Mono, monospace" font-size="10" fill="#0F172A">
+      <text x="780" y="290">· on_node_boundary</text>
+      <text x="780" y="308">· on_audit_row_count</text>
+      <text x="780" y="326">· on_completion</text>
+    </g>
+    <text x="780" y="364" font-size="11" fill="#64748B">Breach → emits</text>
+    <text x="780" y="380" font-size="11" font-family="JetBrains Mono, monospace" fill="#B45309" font-weight="600">refinement_proposal</text>
+    <text x="780" y="398" font-size="11" fill="#64748B">+ pauses pipeline.</text>
+    <text x="780" y="436" font-size="11" fill="#64748B">Human reviews diff:</text>
+    <text x="780" y="452" font-size="11" font-weight="600" fill="#10B981">APPROVE</text>
+    <text x="780" y="468" font-size="11" font-weight="600" fill="#F59E0B">REVISE</text>
+    <text x="780" y="484" font-size="11" font-weight="600" fill="#DC2626">REJECT</text>
+    <text x="780" y="522" font-size="11" fill="#64748B">Resumes from</text>
+    <text x="780" y="538" font-size="11" fill="#64748B">checkpoint.</text>
+    <text x="870" y="600" font-size="10" fill="#94A3B8" text-anchor="middle" font-style="italic">v0.2.0</text>
+
+    <!-- 5 Host portability (NEW) -->
+    <rect x="1000" y="120" width="160" height="500" rx="12" fill="#fff" stroke="#F59E0B" stroke-width="3" filter="url(#sh)"/>
+    <rect x="1000" y="120" width="160" height="60" rx="12" fill="#F59E0B"/>
+    <rect x="1000" y="155" width="160" height="25" fill="#F59E0B"/>
+    <text x="1020" y="155" font-size="14" font-weight="700" fill="#0F1444">5 · Host port. 🆕</text>
+    <text x="1140" y="155" font-size="10" fill="#0F1444" text-anchor="end">DEC-091</text>
+    <text x="1020" y="210" font-size="13" font-weight="600" fill="#0F172A">CCSM = source</text>
+    <text x="1020" y="232" font-size="11" fill="#64748B">SKILL.md is</text>
+    <text x="1020" y="248" font-size="11" fill="#64748B">canonical.</text>
+    <text x="1020" y="280" font-size="11" fill="#64748B">Per-host artefacts</text>
+    <text x="1020" y="296" font-size="11" fill="#64748B">are GENERATED:</text>
+    <g font-family="JetBrains Mono, monospace" font-size="10" fill="#0F172A">
+      <text x="1020" y="322">· anthropic</text>
+      <text x="1020" y="340">· mcp-tool</text>
+      <text x="1020" y="358">· claude-plugin</text>
+      <text x="1020" y="376">· antigravity</text>
+      <text x="1020" y="394">· codex</text>
+      <text x="1020" y="412">· cursor</text>
+      <text x="1020" y="430">· connector</text>
+    </g>
+    <text x="1020" y="468" font-size="11" fill="#64748B">Shim library</text>
+    <text x="1020" y="484" font-size="11" fill="#64748B">unifies semantics</text>
+    <text x="1020" y="500" font-size="11" fill="#64748B">across hosts.</text>
+    <text x="1080" y="600" font-size="10" fill="#94A3B8" text-anchor="middle" font-style="italic">v0.2.0</text>
+  </g>
+
+  <text x="600" y="660" font-size="11" fill="#64748B" text-anchor="middle" font-style="italic">+ Versioning &amp; drift (SemVer + auto-pause @ &lt;40% acceptance)  ·  + Trust &amp; safety (cite, defer, untrusted-wrap, scope contract)</text>
+  <text x="600" y="685" font-size="11" fill="#94A3B8" text-anchor="middle">03-five-contracts.svg</text>
+</svg>

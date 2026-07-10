@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 720" font-family="Inter, system-ui, sans-serif">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1E2A78"/><stop offset="100%" stop-color="#0F1444"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F59E0B"/><stop offset="100%" stop-color="#B45309"/>
+    </linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+  <rect width="1000" height="720" fill="#F8FAFC"/>
+  <text x="500" y="50" font-size="26" font-weight="700" fill="#0F172A" text-anchor="middle">Skill folder anatomy</text>
+  <text x="500" y="80" font-size="14" fill="#64748B" text-anchor="middle">A skill is a folder with a SKILL.md. Everything else is optional.</text>
+
+  <rect x="60" y="120" width="900" height="560" rx="14" fill="#fff" stroke="#E2E8F0" filter="url(#sh)"/>
+  <rect x="60" y="120" width="900" height="50" rx="14" fill="url(#g1)"/>
+  <rect x="60" y="150" width="900" height="20" fill="url(#g1)"/>
+  <text x="80" y="153" font-size="16" font-weight="600" fill="#fff" font-family="JetBrains Mono, monospace">📁 cuo/cpo/feature-request-author/</text>
+
+  <g font-family="JetBrains Mono, monospace" font-size="14">
+    <rect x="80" y="190" width="860" height="44" rx="8" fill="#F59E0B" opacity="0.15"/>
+    <text x="100" y="218" fill="#B45309" font-weight="700">📄 SKILL.md</text>
+    <text x="940" y="218" fill="#64748B" font-size="12" text-anchor="end">mandatory · 33-field frontmatter + body</text>
+
+    <rect x="80" y="244" width="860" height="38" rx="8" fill="#fff" stroke="#E2E8F0"/>
+    <text x="100" y="269" fill="#0F172A">📄 INVARIANTS.md</text>
+    <text x="940" y="269" fill="#64748B" font-size="12" text-anchor="end">v0.2.0 · self-audit truths the runtime checks</text>
+
+    <rect x="80" y="290" width="860" height="38" rx="8" fill="#fff" stroke="#E2E8F0"/>
+    <text x="100" y="315" fill="#0F172A">📄 STANDALONE_INTERVIEW.md</text>
+    <text x="940" y="315" fill="#64748B" font-size="12" text-anchor="end">v0.2.0 · chat-mode entry script (Q&amp;A)</text>
+
+    <rect x="80" y="336" width="860" height="38" rx="8" fill="#fff" stroke="#E2E8F0"/>
+    <text x="100" y="361" fill="#0F172A">📄 HUMAN_SUMMARY.md</text>
+    <text x="940" y="361" fill="#64748B" font-size="12" text-anchor="end">v0.2.0 · chat-mode output template</text>
+
+    <rect x="80" y="382" width="860" height="38" rx="8" fill="#fff" stroke="#E2E8F0"/>
+    <text x="100" y="407" fill="#0F172A">📄 CHANGELOG.md</text>
+    <text x="940" y="407" fill="#64748B" font-size="12" text-anchor="end">SemVer · Keep-a-Changelog 1.1.0</text>
+
+    <rect x="80" y="428" width="860" height="38" rx="8" fill="#fff" stroke="#E2E8F0"/>
+    <text x="100" y="453" fill="#0F172A">📁 envelopes/</text>
+    <text x="940" y="453" fill="#64748B" font-size="12" text-anchor="end">expects/produces JSON Schemas</text>
+
+    <rect x="80" y="474" width="860" height="38" rx="8" fill="#fff" stroke="#E2E8F0"/>
+    <text x="100" y="499" fill="#0F172A">📁 references/</text>
+    <text x="940" y="499" fill="#64748B" font-size="12" text-anchor="end">progressive-disclosure docs (rubric, decision trees, …)</text>
+
+    <rect x="80" y="520" width="860" height="38" rx="8" fill="#fff" stroke="#E2E8F0"/>
+    <text x="100" y="545" fill="#0F172A">📁 acceptance/</text>
+    <text x="940" y="545" fill="#64748B" font-size="12" text-anchor="end">golden-input + golden-output regression fixtures</text>
+
+    <rect x="80" y="566" width="860" height="38" rx="8" fill="#fff" stroke="#E2E8F0"/>
+    <text x="100" y="591" fill="#0F172A">📁 scripts/</text>
+    <text x="940" y="591" fill="#64748B" font-size="12" text-anchor="end">optional executables (bash / python helpers)</text>
+  </g>
+
+  <text x="500" y="650" font-size="13" fill="#64748B" font-style="italic" text-anchor="middle">The folder is the unit of versioning, audit, routing, and plug-in distribution.</text>
+  <text x="500" y="672" font-size="11" fill="#94A3B8" text-anchor="middle">cyberos/docs/skills/assets/diagrams/01-skill-folder-anatomy.svg</text>
+</svg>

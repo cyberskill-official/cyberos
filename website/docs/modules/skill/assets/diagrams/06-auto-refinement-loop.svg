@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 760" font-family="Inter, system-ui, sans-serif">
+  <defs>
+    <linearGradient id="prim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1E2A78"/><stop offset="100%" stop-color="#0F1444"/>
+    </linearGradient>
+    <linearGradient id="hum" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#5B21B6"/>
+    </linearGradient>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#0F172A"/>
+    </marker>
+    <marker id="arrh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7C3AED"/>
+    </marker>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+  <rect width="1400" height="760" fill="#F8FAFC"/>
+  <text x="700" y="50" font-size="26" font-weight="700" fill="#0F172A" text-anchor="middle">Auto-refinement — the self-audit loop</text>
+  <text x="700" y="80" font-size="14" fill="#64748B" text-anchor="middle">Skills detect their own drift at runtime, propose fixes, pause for human review, then resume from checkpoint.</text>
+
+  <!-- Step 1: Skill runs -->
+  <rect x="60" y="140" width="240" height="100" rx="10" fill="url(#prim)" filter="url(#sh)"/>
+  <text x="180" y="172" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">1 · Skill runs</text>
+  <text x="180" y="195" font-size="12" fill="#E2E8F0" text-anchor="middle">produces output</text>
+  <text x="180" y="213" font-size="12" fill="#E2E8F0" text-anchor="middle">writes audit row</text>
+  <text x="180" y="231" font-size="11" fill="#F59E0B" text-anchor="middle">(every output, every batch)</text>
+
+  <!-- Step 2: Invariants -->
+  <rect x="340" y="140" width="240" height="100" rx="10" fill="#F59E0B" filter="url(#sh)"/>
+  <text x="460" y="172" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">2 · Invariants check</text>
+  <text x="460" y="195" font-size="12" fill="#fff" text-anchor="middle">INV-001..INV-008</text>
+  <text x="460" y="213" font-size="11" fill="#0F1444" text-anchor="middle">@ node boundary / 25 rows</text>
+  <text x="460" y="229" font-size="11" fill="#0F1444" text-anchor="middle">/ on_completion</text>
+
+  <!-- Step 3: Decision diamond -->
+  <polygon points="660,140 800,140 870,190 800,240 660,240 590,190" fill="#FACC15" filter="url(#sh)"/>
+  <text x="730" y="180" font-size="14" font-weight="700" fill="#0F172A" text-anchor="middle">3 · breach?</text>
+  <text x="730" y="200" font-size="11" fill="#0F172A" text-anchor="middle">any invariant or</text>
+  <text x="730" y="216" font-size="11" fill="#0F172A" text-anchor="middle">anomaly streak</text>
+
+  <!-- Step 4 NO: continue -->
+  <rect x="900" y="145" width="220" height="40" rx="8" fill="#10B981"/>
+  <text x="1010" y="170" font-size="13" font-weight="600" fill="#fff" text-anchor="middle">no → continue</text>
+
+  <!-- Step 4 YES: refinement_proposal -->
+  <rect x="900" y="195" width="220" height="40" rx="8" fill="#DC2626"/>
+  <text x="1010" y="220" font-size="13" font-weight="600" fill="#fff" text-anchor="middle">yes → refinement_proposal</text>
+
+  <!-- Step 5: Human reviews -->
+  <rect x="1160" y="140" width="220" height="100" rx="10" fill="url(#hum)" filter="url(#sh)"/>
+  <text x="1270" y="172" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">4 · Human reviews</text>
+  <text x="1270" y="195" font-size="11" fill="#E2E8F0" text-anchor="middle">supervisor checkpoints</text>
+  <text x="1270" y="211" font-size="11" fill="#E2E8F0" text-anchor="middle">LangGraph state + pauses</text>
+  <text x="1270" y="229" font-size="11" fill="#F59E0B" text-anchor="middle">APPROVE / REVISE / REJECT</text>
+
+  <!-- Connecting arrows top row -->
+  <path d="M 300 190 L 340 190" stroke="#0F172A" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+  <path d="M 580 190 L 590 190" stroke="#0F172A" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+  <path d="M 870 165 L 900 165" stroke="#10B981" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+  <path d="M 870 215 L 900 215" stroke="#DC2626" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+  <path d="M 1120 215 L 1160 195" stroke="#7C3AED" stroke-width="2" fill="none" marker-end="url(#arrh)"/>
+
+  <!-- Step 5: Resume row -->
+  <rect x="60" y="290" width="1320" height="80" rx="10" fill="#fff" stroke="#7C3AED" stroke-width="2" filter="url(#sh)"/>
+  <text x="80" y="318" font-size="14" font-weight="700" fill="#0F172A">5 · Approved diff applied</text>
+  <text x="80" y="340" font-size="12" fill="#64748B">SKILL.md / RUBRIC.md / INVARIANTS.md edited per the proposed_diff. skill_version PATCH bump.</text>
+  <text x="80" y="360" font-size="12" fill="#64748B">CHANGELOG entry with ### Driver. Pipeline resumes from the LangGraph checkpoint at the breach point.</text>
+
+  <!-- arrow loops back to step 1 -->
+  <path d="M 1270 240 L 1270 290" stroke="#7C3AED" stroke-width="2" fill="none" marker-end="url(#arrh)"/>
+  <path d="M 80 330 L 60 330 L 60 240 L 180 240" stroke="#7C3AED" stroke-width="2" fill="none" marker-end="url(#arrh)" opacity="0.5"/>
+
+  <!-- Anomaly signals box -->
+  <rect x="60" y="410" width="1320" height="100" rx="10" fill="#FEF3C7" stroke="#F59E0B"/>
+  <text x="80" y="438" font-size="13" font-weight="700" fill="#B45309">Anomaly signals (early warning, even without invariant breach)</text>
+  <g font-family="JetBrains Mono, monospace" font-size="11" fill="#0F172A">
+    <text x="80" y="462">confidence_low_streak       N of last K outputs had confidence &lt; defer_below</text>
+    <text x="700" y="462">user_correction_streak      N user "no, not that" within K turns</text>
+    <text x="80" y="480">denylist_near_miss_streak   N times the skill almost wrote denylisted content</text>
+    <text x="700" y="480">scope_rejection_streak      gateway rejected N writes for scope violations</text>
+    <text x="80" y="498">citation_missing_streak     feature-request-author: emitted FRs without citations</text>
+    <text x="700" y="498">deterministic_drift         feature-request-audit: same input → different verdicts (sev-0)</text>
+  </g>
+
+  <!-- Auto → manual escalation -->
+  <rect x="60" y="540" width="1320" height="80" rx="10" fill="#fff" stroke="#7C3AED" stroke-width="2" filter="url(#sh)"/>
+  <text x="80" y="568" font-size="14" font-weight="700" fill="#0F172A">↪ Escalation to manual fine-tune (Section 7)</text>
+  <text x="80" y="590" font-size="12" fill="#64748B">When self_audit_refinement_proposal_count_above is exceeded (default 2 proposals on the same theme within one batch),</text>
+  <text x="80" y="608" font-size="12" fill="#64748B">the auto-refinement loop hands off to the human-driven 7-step manual fine-tune flow.</text>
+
+  <!-- Refinement proposal anatomy -->
+  <rect x="60" y="650" width="1320" height="70" rx="10" fill="#1E2A78" filter="url(#sh)"/>
+  <text x="80" y="676" font-size="13" font-weight="700" fill="#fff">refinement_proposal envelope (new output_kind)</text>
+  <g font-family="JetBrains Mono, monospace" font-size="11" fill="#E2E8F0">
+    <text x="80" y="700">{trigger, observation, proposed_amendments[{tier, target_doc, section, diff}], minimum_viable, pipeline_paused, resume_token}</text>
+  </g>
+
+  <text x="700" y="745" font-size="11" fill="#94A3B8" text-anchor="middle">06-auto-refinement-loop.svg</text>
+</svg>

@@ -1,298 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
- <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>Memory — Appendices & Extended Reference — CyberOS</title>
- <meta name="description" content="Universal memory protocol">
- <link rel="stylesheet" href="../../assets/tokens.css">
- <link rel="stylesheet" href="../../assets/styles.css">
- <link rel="stylesheet" href="../../assets/tailwind.min.css">
- <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
- <link rel="preconnect" href="https://fonts.googleapis.com">
- <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
- <script type="module" src="../../assets/scripts.js"></script>
- <style>
- .fact-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
- .fact-card { background: var(--memory-bg); border:1px solid var(--memory-tint); padding: 0.875rem 1rem; border-radius: 0.625rem; }
- .fact-card .label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--memory-dark); }
- .fact-card .value { font-size: 1.125rem; font-weight: 800; color: var(--text); margin-top:0.25rem; }
- .fact-card .note { font-size: 0.75rem; color: var(--text-soft); margin-top: 0.125rem; }
- .toc-link { display:block; padding:0.375rem 0.625rem; font-size:0.8125rem; color:var(--text-soft); text-decoration:none; border-radius:0.375rem; transition: all 0.12s; }
- .toc-link:hover { background: var(--memory-bg); color: var(--memory-dark); }
- .toc-link.active { background: var(--memory-tint); color: var(--memory-dark); font-weight: 600; }
- .module-section { scroll-margin-top: 80px; margin-bottom: 2.5rem; }
- .module-section header.section-head { display:flex; align-items:center; gap:0.75rem; margin-bottom: 0.75rem; }
- .module-section header.section-head h2 { font-size: 1.5rem; font-weight: 800; margin:0; color: var(--text); }
- .section-num { display:inline-flex; align-items:center; justify-content:center; width:1.75rem; height:1.75rem; border-radius:0.5rem; background:var(--memory); color:white; font-weight:800; font-size:0.875rem; }
- table.kt { width:100%; border-collapse: collapse; font-size: 0.8125rem; }
- table.kt thead th { text-align:left; font-weight:700; color:var(--text); padding: 0.5rem 0.625rem; border-bottom: 2px solid var(--border); background: var(--bg-card); }
- table.kt tbody td { padding: 0.5rem 0.625rem; border-bottom: 1px solid var(--border); color: var(--text-soft); vertical-align: top; }
- table.kt tbody tr:nth-child(even) td { background: var(--future-bg); }
- .md-content h1 { font-size: 1.75rem; font-weight: 800; margin: 2rem 0 1rem; color: var(--text); }
- .md-content h2 { font-size: 1.375rem; font-weight: 700; margin: 1.75rem 0 0.75rem; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
- .md-content h3 { font-size: 1.125rem; font-weight: 700; margin: 1.25rem 0 0.5rem; color: var(--text); }
- .md-content h4 { font-size: 1rem; font-weight: 700; margin: 1rem 0 0.5rem; color: var(--text-soft); }
- .md-content p { margin: 0.5rem 0; color: var(--text-soft); line-height: 1.7; }
- .md-content ul, .md-content ol { margin: 0.5rem 0; padding-left: 1.5rem; color: var(--text-soft); }
- .md-content li { margin: 0.25rem 0; line-height: 1.6; }
- .md-content code { background: var(--bg-card); border: 1px solid var(--border); padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.875em; font-family: 'JetBrains Mono', monospace; }
- .md-content pre { background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 1rem 0; }
- .md-content pre code { background: none; border: none; padding: 0; color: inherit; }
- .md-content blockquote { border-left: 4px solid var(--memory); padding: 0.75rem 1rem; margin: 1rem 0; background: var(--memory-bg); border-radius: 0 0.5rem 0.5rem 0; }
- .md-content blockquote p { margin: 0.25rem 0; }
- .md-content table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.875rem; }
- .md-content th { text-align: left; font-weight: 700; padding: 0.5rem 0.75rem; border-bottom: 2px solid var(--border); background: var(--bg-card); }
- .md-content td { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); }
- .md-content tr:nth-child(even) td { background: var(--future-bg); }
- .md-content hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
- .md-content strong { color: var(--text); font-weight: 700; }
- .md-content a { color: var(--memory-dark); text-decoration: underline; }
- .md-content a:hover { color: var(--memory); }
- </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Memory — Appendices & Extended Reference — CyberOS</title>
+<link rel="stylesheet" href="../../assets/tokens.css">
+<link rel="stylesheet" href="../../assets/styles.css">
+<link rel="stylesheet" href="../../assets/tailwind.min.css">
+<script type="module" src="../../assets/scripts.js"></script>
 </head>
-<body data-pagefind-filter="category:Module">
-<span hidden data-pagefind-filter="phase:P0"></span>
-
+<body>
 <div id="shared-nav"></div>
-
-<header class="hero-gradient border-b border-slate-200">
- <div class="container py-10 lg:py-14">
- <nav class="breadcrumbs">
- <a href="../../index.html">Home</a>
- <span class="sep">›</span>
- <a href="../../index.html#catalog">Modules</a>
- <span class="sep">›</span>
- <a href="index.html">Memory</a>
- <span class="sep">›</span>
- <span class="current">Appendices & Extended Reference</span>
- </nav>
- <div class="flex items-center gap-3 mb-4 flex-wrap">
- <span class="text-5xl">🧠</span>
- <h1 class="h-display">Memory — Appendices & Extended Reference</h1>
- </div>
- <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
- Universal memory protocol
- </p>
- <div class="flex flex-wrap gap-3 mt-6">
- <a href="index.html" class="btn btn-primary">← Back to Memory overview</a>
- </div>
- </div>
-</header>
-
-<div class="container py-10 lg:py-14 grid lg:grid-cols-12 gap-10">
-
-<aside class="lg:col-span-3 order-2 lg:order-1">
- <div class="lg:sticky lg:top-20">
- <div class="bbg-card p-5">
- <div class="h-eyebrow mb-3">On this page</div>
- <ul class="space-y-0.5 text-sm">
- <li><a class="toc-link " href="#appendix-a-autosync-design">Appendix A — Autosync design</a></li>
- <li><a class="toc-link indent" href="#detection-patterns">Detection patterns</a></li>
- <li><a class="toc-link indent" href="#background-jobs">Background jobs</a></li>
- <li><a class="toc-link indent" href="#export-determinism">Export determinism</a></li>
- <li><a class="toc-link " href="#appendix-b-evolution">Appendix B — Evolution</a></li>
- <li><a class="toc-link indent" href="#stage-1-plain-markdown-2025-q4">Stage 1 — Plain markdown (2025 Q4)</a></li>
- <li><a class="toc-link indent" href="#stage-2-json-lines-ledger-2026-q1">Stage 2 — JSON Lines ledger (2026 Q1)</a></li>
- <li><a class="toc-link indent" href="#stage-3-binary-framed-binlog-msgspec-2026-q2">Stage 3 — Binary framed binlog + msgspec (2026 Q2)</a></li>
- <li><a class="toc-link indent" href="#stage-4-mmr-signed-tree-heads-2026-q2">Stage 4 — MMR + Signed Tree Heads (2026 Q2)</a></li>
- <li><a class="toc-link indent" href="#stage-5-cross-memory-merge-2026-q2">Stage 5 — Cross-memory merge (2026 Q2)</a></li>
- <li><a class="toc-link indent" href="#stage-6-http-rest-mobile-publish-2026-q2">Stage 6 — HTTP REST + mobile publish (2026 Q2)</a></li>
- <li><a class="toc-link indent" href="#open-questions">Open questions</a></li>
- <li><a class="toc-link " href="#appendix-c-layer-2-source-of-truth">Appendix C — Layer-2 source-of-truth</a></li>
- <li><a class="toc-link indent" href="#reference-memory-pattern">Reference memory pattern</a></li>
- <li><a class="toc-link " href="#appendix-d-proposals">Appendix D — Proposals</a></li>
- <li><a class="toc-link indent" href="#shipped">Shipped</a></li>
- </ul>
- <hr class="my-4 border-slate-200">
- <div class="h-eyebrow mb-2">Source</div>
- <div class="text-xs text-slate-500">modules/memory/APPENDICES.md</div>
- </div>
- </div>
-</aside>
-
-<main class="lg:col-span-9 order-1 lg:order-2">
- <div class="md-content">
- <h1>MEMORY Appendices — Detailed Reference</h1>
-<blockquote>
-<p>Extended design rationale, history, and proposal tracker. For the concise module overview, see <a href="README.md"><code>README.md</code></a>.</p>
-</blockquote>
-<hr />
-<h2 id="appendix-a-autosync-design">Appendix A — Autosync design</h2>
+<main class="docs-page mx-auto max-w-4xl px-6 py-10">
+<h1>MEMORY Appendices — Detailed Reference</h1>
+<blockquote><p>Extended design rationale, history, and proposal tracker. For the concise module overview, see <a href="&lt;README.md&gt;"><code>README.md</code></a>.</p></blockquote>
+<hr>
+<h2>Appendix A — Autosync design</h2>
 <p>The autosync subsystem reconciles three concerns:</p>
-<ol>
-<li><strong>Sync conflict awareness.</strong> iCloud / Dropbox / OneDrive may produce conflict markers. The writer detects these on every operation and surfaces them via <code>cyberos doctor</code>.</li>
-<li><strong>Background maintenance.</strong> Cross-platform scheduler integration (launchd / systemd-user / Task Scheduler) runs nightly walk + weekly consolidate.</li>
-<li><strong>Determinism.</strong> <code>cyberos export</code> produces byte-identical output across runs and platforms.</li>
-</ol>
-<h3 id="detection-patterns">Detection patterns</h3>
-<table>
-<thead>
-<tr>
-<th>OS</th>
-<th>Sync provider</th>
-<th>Conflict marker</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>macOS</td>
-<td>iCloud Drive</td>
-<td><code>.&lt;filename&gt;.icloud</code> or <code>&lt;filename&gt; (&lt;conflict-date&gt;)</code></td>
-</tr>
-<tr>
-<td>macOS / Linux / Windows</td>
-<td>Dropbox</td>
-<td><code>&lt;filename&gt; (Stephen's conflicted copy 2026-05-17).md</code></td>
-</tr>
-<tr>
-<td>macOS / Linux / Windows</td>
-<td>OneDrive</td>
-<td><code>&lt;filename&gt;-DESKTOP-XXXXXXX.md</code></td>
-</tr>
-<tr>
-<td>Windows</td>
-<td>OneDrive</td>
-<td>Locked-file errors on <code>.lock</code> acquisition</td>
-</tr>
-</tbody>
-</table>
-<h3 id="background-jobs">Background jobs</h3>
-<pre><code class="language-bash"># Installed by scripts/install.sh --with-automation
-*/30 * * * *  cyberos --store .cyberos/memory/store doctor --quiet
-0    2 * * *  cyberos --store .cyberos/memory/store walk --verify-chain --since-ledger-tail
-0    3 * * 0  cyberos --store .cyberos/memory/store consolidate
-</code></pre>
-<h3 id="export-determinism">Export determinism</h3>
-<ul>
-<li>Files sorted by path (UTF-8 NFC)</li>
-<li>All <code>mtime</code> = <code>2000-01-01T00:00:00Z</code></li>
-<li>All file modes = <code>0o644</code></li>
-<li>ZIP_DEFLATED level 6</li>
-<li>Excluded: <code>exports/</code>, <code>__pycache__/</code>, <code>.cache/</code>, <code>.lock</code>, <code>HEAD</code>, <code>index/</code></li>
-</ul>
-<hr />
-<h2 id="appendix-b-evolution">Appendix B — Evolution</h2>
-<h3 id="stage-1-plain-markdown-2025-q4">Stage 1 — Plain markdown (2025 Q4)</h3>
+<ol><li><strong>Sync conflict awareness.</strong> iCloud / Dropbox / OneDrive may produce conflict markers. The writer detects these on every operation and surfaces them via <code>cyberos doctor</code>.</li><li><strong>Background maintenance.</strong> Cross-platform scheduler integration (launchd / systemd-user / Task Scheduler) runs nightly walk + weekly consolidate.</li><li><strong>Determinism.</strong> <code>cyberos export</code> produces byte-identical output across runs and platforms.</li></ol>
+<h3>Detection patterns</h3>
+<p>OS | Sync provider | Conflict marker   ---|---|---   macOS | iCloud Drive | <code>.&lt;filename&gt;.icloud</code> or <code>&lt;filename&gt; (&lt;conflict-date&gt;)</code>   macOS / Linux / Windows | Dropbox | <code>&lt;filename&gt; (Stephen's conflicted copy 2026-05-17).md</code>   macOS / Linux / Windows | OneDrive | <code>&lt;filename&gt;-DESKTOP-XXXXXXX.md</code>   Windows | OneDrive | Locked-file errors on <code>.lock</code> acquisition  </p>
+<h3>Background jobs</h3>
+<p>    # Installed by scripts/install.sh --with-automation     <em>/30 </em> <em> </em> <em>  cyberos --store .cyberos/memory/store doctor --quiet     0    2 </em> <em> </em>  cyberos --store .cyberos/memory/store walk --verify-chain --since-ledger-tail     0    3 <em> </em> 0  cyberos --store .cyberos/memory/store consolidate</p>
+<h3>Export determinism</h3>
+<ul><li>Files sorted by path (UTF-8 NFC)</li><li>All <code>mtime</code> = <code>2000-01-01T00:00:00Z</code></li><li>All file modes = <code>0o644</code></li><li>ZIP_DEFLATED level 6</li><li>Excluded: <code>exports/</code>, <code>__pycache__/</code>, <code>.cache/</code>, <code>.lock</code>, <code>HEAD</code>, <code>index/</code></li></ul>
+<hr>
+<h2>Appendix B — Evolution</h2>
+<h3>Stage 1 — Plain markdown (2025 Q4)</h3>
 <p><code>MEMORY/&lt;topic&gt;.md</code> files manually appended. No chain, no schema, no audit.</p>
-<h3 id="stage-2-json-lines-ledger-2026-q1">Stage 2 — JSON Lines ledger (2026 Q1)</h3>
-<p><code>audit/*.jsonl</code> rows + <code>manifest.json</code> + frontmatter schema. Chain via <code>prev</code> field. Worked but JSON canonicalisation was fragile.</p>
-<h3 id="stage-3-binary-framed-binlog-msgspec-2026-q2">Stage 3 — Binary framed binlog + msgspec (2026 Q2)</h3>
+<h3>Stage 2 — JSON Lines ledger (2026 Q1)</h3>
+<p><code>audit/*.jsonl</code> rows + <code>manifest.json</code> \+ frontmatter schema. Chain via <code>prev</code> field. Worked but JSON canonicalisation was fragile.</p>
+<h3>Stage 3 — Binary framed binlog + msgspec (2026 Q2)</h3>
 <p>Current Phase 1 baseline. <code>*.binlog</code> with <code>[u32 length BE][u32 crc32c BE][u64 seq BE][u64 ts_ns BE][payload]</code>. Payload is RFC 8785 JCS canonical JSON. Chain via <code>chain = SHA-256(canonical(record_minus_chain) || prev_chain)</code>.</p>
-<h3 id="stage-4-mmr-signed-tree-heads-2026-q2">Stage 4 — MMR + Signed Tree Heads (2026 Q2)</h3>
+<h3>Stage 4 — MMR + Signed Tree Heads (2026 Q2)</h3>
 <p>Merkle Mountain Range over canonical-JSON leaves. Ed25519-signed tree heads per consolidation. Activation pending.</p>
-<h3 id="stage-5-cross-memory-merge-2026-q2">Stage 5 — Cross-memory merge (2026 Q2)</h3>
+<h3>Stage 5 — Cross-memory merge (2026 Q2)</h3>
 <p><code>cyberos import &lt;source.zip&gt;</code> adds imported memories as fresh local-chain rows with provenance.</p>
-<h3 id="stage-6-http-rest-mobile-publish-2026-q2">Stage 6 — HTTP REST + mobile publish (2026 Q2)</h3>
-<p><code>cyberos serve</code> + <code>cyberos publish --target mobile</code>.</p>
-<h3 id="open-questions">Open questions</h3>
-<ol>
-<li><strong>Q1 — Key custody for STH signing.</strong> OS keychain vs filesystem-encrypted vs hardware token? Currently filesystem-encrypted.</li>
-<li><strong>Q2 — Public anchoring of STH.</strong> Push to a transparency log? Pin to git? Currently local-only.</li>
-<li><strong>Q3 — Recovery if a STH is lost/corrupted.</strong> Re-derive from raw rows (expensive) vs trust the next STH (requires gap acknowledgement).</li>
-</ol>
-<hr />
-<h2 id="appendix-c-layer-2-source-of-truth">Appendix C — Layer-2 source-of-truth</h2>
+<h3>Stage 6 — HTTP REST + mobile publish (2026 Q2)</h3>
+<p><code>cyberos serve</code> \+ <code>cyberos publish --target mobile</code>.</p>
+<h3>Open questions</h3>
+<ol><li><strong>Q1 — Key custody for STH signing.</strong> OS keychain vs filesystem-encrypted vs hardware token? Currently filesystem-encrypted.</li><li><strong>Q2 — Public anchoring of STH.</strong> Push to a transparency log? Pin to git? Currently local-only.</li><li><strong>Q3 — Recovery if a STH is lost/corrupted.</strong> Re-derive from raw rows (expensive) vs trust the next STH (requires gap acknowledgement).</li></ol>
+<hr>
+<h2>Appendix C — Layer-2 source-of-truth</h2>
 <p>The memory is <strong>Layer-1: personal AI-assist scratchpad</strong>. It is NOT the source of truth for billing (accounting), code (git), calendar (Google/Outlook), or tickets (Zendesk/Linear). Its purpose is to persist the agent's understanding of those external sources.</p>
-<h3 id="reference-memory-pattern">Reference memory pattern</h3>
-<pre><code class="language-yaml">---
-name: linear-project-ingest
-description: Pipeline bugs tracked in Linear project INGEST
-type: reference
-external_system: linear
-external_id: INGEST
-last_synced_at: 2026-05-18T10:00:00Z
----
-
-Pipeline bugs are tracked in Linear project &quot;INGEST&quot;. Filter `state:open` for current work.
-Authoritative source. Do NOT re-summarize pipeline state in memory.
-</code></pre>
-<hr />
-<h2 id="appendix-d-proposals">Appendix D — Proposals</h2>
-<h3 id="shipped">Shipped</h3>
-<table>
-<thead>
-<tr>
-<th>ID</th>
-<th>Title</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>P1</td>
-<td>Binary framed binlog with crc32c per-row</td>
-</tr>
-<tr>
-<td>P2</td>
-<td>MMR + Signed Tree Heads (Stage 1–3)</td>
-</tr>
-<tr>
-<td>P3</td>
-<td>Encryption envelope for <code>restricted</code> classification</td>
-</tr>
-<tr>
-<td>P4</td>
-<td>Soft tombstone vs hard purge</td>
-</tr>
-<tr>
-<td>P5</td>
-<td>Conflict-aware writer</td>
-</tr>
-<tr>
-<td>P6</td>
-<td>Cross-memory merge via <code>cyberos import</code></td>
-</tr>
-<tr>
-<td>P7</td>
-<td>Doctor with <code>--repair</code> flag</td>
-</tr>
-<tr>
-<td>P8</td>
-<td>Deterministic export</td>
-</tr>
-<tr>
-<td>P9</td>
-<td>Semantic search</td>
-</tr>
-<tr>
-<td>P10</td>
-<td>HTTP REST API</td>
-</tr>
-<tr>
-<td>P11</td>
-<td>Daily digest</td>
-</tr>
-<tr>
-<td>P12</td>
-<td>Mobile publish</td>
-</tr>
-<tr>
-<td>P13–P18</td>
-<td>iOS app, public anchoring, multi-tenant, differential import, watch, OpenAPI</td>
-</tr>
-<tr>
-<td>P19</td>
-<td>Dreaming — <code>cyberos dream</code> (AGENTS.md §7.7)</td>
-</tr>
-<tr>
-<td>P20</td>
-<td>Per-store ACL via <code>STORE.yaml</code> (AGENTS.md §14.4)</td>
-</tr>
-<tr>
-<td>P21</td>
-<td><code>put_if</code> precondition-hash op (AGENTS.md §3.1)</td>
-</tr>
-<tr>
-<td>P22</td>
-<td>Session transcript ledger (AGENTS.md §18)</td>
-</tr>
-</tbody>
-</table>
+<h3>Reference memory pattern</h3>
+<hr>
+<p>    name: linear-project-ingest     description: Pipeline bugs tracked in Linear project INGEST     type: reference     external_system: linear     external_id: INGEST     last_synced_at: 2026-05-18T10:00:00Z     ---</p>
+<p>    Pipeline bugs are tracked in Linear project "INGEST". Filter <code>state:open</code> for current work.     Authoritative source. Do NOT re-summarize pipeline state in memory.</p>
+<hr>
+<h2>Appendix D — Proposals</h2>
+<h3>Shipped</h3>
+<p>ID | Title   ---|---   P1 | Binary framed binlog with crc32c per-row   P2 | MMR + Signed Tree Heads (Stage 1–3)   P3 | Encryption envelope for <code>restricted</code> classification   P4 | Soft tombstone vs hard purge   P5 | Conflict-aware writer   P6 | Cross-memory merge via <code>cyberos import</code>   P7 | Doctor with <code>--repair</code> flag   P8 | Deterministic export   P9 | Semantic search   P10 | HTTP REST API   P11 | Daily digest   P12 | Mobile publish   P13–P18 | iOS app, public anchoring, multi-tenant, differential import, watch, OpenAPI   P19 | Dreaming — <code>cyberos dream</code> (AGENTS.md §7.7)   P20 | Per-store ACL via <code>STORE.yaml</code> (AGENTS.md §14.4)   P21 | <code>put_if</code> precondition-hash op (AGENTS.md §3.1)   P22 | Session transcript ledger (AGENTS.md §18)  </p>
 <p>Proposals follow §16 self-amendment: <code>propose-now</code> requires <code>APPROVE protocol change P&lt;n&gt; §&lt;section&gt;</code> in the active chat; <code>log-deferred</code> records for future consideration.</p>
-
- </div>
+<hr>
+<p class="text-sm" style="opacity:.6">Generated from <code>modules/memory/docs/appendices.md</code> — edit the markdown source, not this file (FR-DOCS-002).</p>
 </main>
-
-</div>
 </body>
 </html>

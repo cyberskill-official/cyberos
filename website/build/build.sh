@@ -40,3 +40,9 @@ if [[ "$MODE" == "full" || "$MODE" == "--changelog" ]]; then
 fi
 
 echo "✓ build complete"
+
+# ── Doctrine pages from the markdown single source of truth (FR-DOCS-002) ───
+if [[ "$MODE" == "full" || "$MODE" == "--docs" ]]; then
+  echo "→ Docs pages (markdown SSoT)"
+  node website/build/render-docs.mjs
+fi

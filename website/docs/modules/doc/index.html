@@ -1,1283 +1,216 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
- <meta charset="UTF-8">
-
- <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>DOC — Document repository · E-sign workflow · Contract lifecycle · CyberOS</title>
- <meta name="description" content="DOC — three strategic roles: (1) document repository (versioned + ACL'd + 10-year retention), (2) e-sign workflow (eIDAS QTSP for EU; AATL for non-EU; VNeID for VN; partner-routed for the cryptographic act), (3) contract lifecycle (with HR/CRM/ESOP integration; expiry alerts; renewal reminders; signature audit chain)."
- <link rel="stylesheet" href="../../assets/tokens.css">
- <link rel="stylesheet" href="../../assets/styles.css">
- <link rel="stylesheet" href="../../assets/tailwind.min.css">
- <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
- <link rel="preconnect" href="https://fonts.googleapis.com">
- <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
- <script type="module" src="../../assets/scripts.js"></script>
- <style>
- /* DOC module palette — dark brown / sepia */
-:root {
- --doc: #78350f;
- --doc-bg: #fef3c7;
- --doc-tint: #fde68a;
- --doc-dark: #451a03;
- }.fact-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }.fact-card { background: var(--doc-bg); border:1px solid var(--doc-tint); padding: 0.875rem 1rem; border-radius: 0.625rem; }.fact-card.label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--doc-dark); }.fact-card.value { font-size: 1.125rem; font-weight: 800; color: var(--text); margin-top:0.25rem; }.fact-card.note { font-size: 0.75rem; color: var(--text-soft); margin-top: 0.125rem; }.toc-link { display:block; padding:0.375rem 0.625rem; font-size:0.8125rem; color:var(--text-soft); text-decoration:none; border-radius:0.375rem; transition: all 0.12s; }.toc-link:hover { background: var(--doc-bg); color: var(--doc-dark); }.toc-link.active { background: var(--doc-tint); color: var(--doc-dark); font-weight: 600; }.module-section { scroll-margin-top: 80px; margin-bottom: 2.5rem; }.module-section header.section-head { display:flex; align-items:center; gap:0.75rem; margin-bottom: 0.75rem; }.module-section header.section-head h2 { font-size: 1.5rem; font-weight: 800; margin:0; color: var(--text); }.section-num { display:inline-flex; align-items:center; justify-content:center; width:1.75rem; height:1.75rem; border-radius:0.5rem; background:var(--doc-dark); color:white; font-weight:800; font-size:0.875rem; }.pill { display:inline-flex; gap:0.25rem; padding: 0.125rem 0.5rem; border-radius:9999px; font-size:0.6875rem; font-weight:700; }.pill-must { background:#fee2e2; color:#b91c1c; }.pill-should { background:#fef3c7; color:#b45309; }.pill-could { background:#e0f2fe; color:#075985; }.pill-shipped { background:#d1fae5; color:#065f46; }.pill-planned { background:#e0e7ff; color:#3730a3; }.pill-partial { background:#fef3c7; color:#b45309; }
- table.kt { width:100%; border-collapse: collapse; font-size: 0.8125rem; }
- table.kt thead th { text-align:left; font-weight:700; color:var(--text); padding: 0.5rem 0.625rem; border-bottom: 2px solid var(--border); background: var(--bg-card); }
- table.kt tbody td { padding: 0.5rem 0.625rem; border-bottom: 1px solid var(--border); color: var(--text-soft); vertical-align: top; }
- table.kt tbody tr:nth-child(even) td { background: var(--doc-bg); }.raci-cell-r { background:#dcfce7; color:#166534; font-weight:700; }.raci-cell-a { background:#dbeafe; color:#1e40af; font-weight:700; }.raci-cell-c { background:#fef3c7; color:#92400e; font-weight:700; }.raci-cell-i { background:#f1f5f9; color:#475569; font-weight:700; }.module-nav-footer { display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:1.25rem; background:var(--doc-bg); border-radius: 0.75rem; border: 1px solid var(--doc-tint); }.bbg-card.tint-doc { border-top: 4px solid var(--doc); }.invariant-box { background: #fef3c7; border: 2px solid #78350f; border-radius: 0.5rem; padding: 1rem; margin: 1rem 0; }.invariant-box.label { font-size: 0.6875rem; font-weight: 800; text-transform: uppercase; color: #451a03; letter-spacing: 0.06em; }
- </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DOC — Document repository · E-sign workflow · Contract lifecycle · CyberOS</title>
+<link rel="stylesheet" href="../../assets/tokens.css">
+<link rel="stylesheet" href="../../assets/styles.css">
+<link rel="stylesheet" href="../../assets/tailwind.min.css">
+<script type="module" src="../../assets/scripts.js"></script>
 </head>
-<body data-pagefind-filter="category:Module">
-<span hidden data-pagefind-filter="phase:P4"></span>
-
+<body>
 <div id="shared-nav"></div>
-
-<!-- ============================================================ -->
-<!-- HEADER -->
-<!-- ============================================================ -->
-<header class="hero-gradient border-b border-slate-200">
- <div class="container py-10 lg:py-14">
- <nav class="breadcrumbs">
- <a href="../../index.html">Home</a>
- <span class="sep">›</span>
- <a href="../index.html#catalog">Modules</a>
- <span class="sep">›</span>
- <span class="current">DOC</span>
- </nav>
- <div class="flex items-center gap-3 mb-4 flex-wrap">
- <span class="text-5xl">✍️</span>
- <h1 class="h-display">DOC</h1>
- <span class="phase-chip phase-p4">P4 · Long-term</span>
- <span class="pill pill-planned">Planned · P4 long-term</span>
- <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CLO seat + CTO</span>
- </div>
- <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
- Legally-binding electronic signatures — eIDAS QTSP for EU, AATL for non-EU, VNeID + Vietnamese CA chain for Vietnam. Multi-party workflows, immutable archival, signature audit chain for 10 years.
- </p>
- <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- DOC is the document signing surface. It is P4 long-term because legally-binding electronic signatures require integration with regulated trust-service providers and CyberOS will not pretend to be one. The architecture is partner-routed: the DOC service owns the workflow (upload, template, multi-party order, identity verification, archival), and delegates the cryptographic act of signing to an eIDAS-conformant QTSP (e.g. GlobalSign or Cryptomathic in EU, an Adobe-AATL-listed CA for US/non-EU enterprises, and Vietnamese CAs — VnPay, MK Group, Viettel-CA — for VN tenants). For Vietnamese-citizen signers, identity verification goes through VNeID (the national digital identity service per Decision 06/2022/QĐ-TTg). The signing chain is preserved as a per-document hash-chained audit log (certificate hash + timestamp authority + WebAuthn binding + identity-proof event). Signed PDFs are archived to an S3 Object-Lock-Compliance bucket with 10-year retention (eIDAS, US ESIGN), residency-pinned per tenant. DocuSign / Adobe Sign / HelloSign migration support lets customers bring legacy signed-document libraries into CyberOS without re-signing. Risk: notary fraud — high-value signing requires multi-factor identity verification before the request leaves DOC. and lock the FRs.
- </p>
- <div class="flex flex-wrap gap-3 mt-6">
- <a href="#architecture" class="btn btn-primary">Architecture
- <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
- </a>
- <a href="#key-flows" class="btn btn-secondary">Sign flow</a>
- <a href="#cli-usage" class="btn btn-secondary">Planned CLI</a>
- <a href="../../reference/fr-catalog.html#doc" class="btn btn-secondary">FR catalog</a>
- </div>
- </div>
-</header>
-
-<div class="container py-10 lg:py-14 grid lg:grid-cols-12 gap-10">
-
-<!-- ============================================================ -->
-<!-- STICKY TOC -->
-<!-- ============================================================ -->
-<aside class="lg:col-span-3 order-2 lg:order-1">
- <div class="lg:sticky lg:top-20">
- <div class="bbg-card p-5">
- <div class="h-eyebrow mb-3">On this page</div>
- <ul class="space-y-0.5 text-sm">
- <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
- <li><a class="toc-link" href="#bigger-picture">The bigger picture · 3 roles</a></li>
- <li><a class="toc-link" href="#why">Why DOC exists</a></li>
- <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
- <li><a class="toc-link" href="#architecture">Architecture</a></li>
- <li><a class="toc-link" href="#data-model">Data model</a></li>
- <li><a class="toc-link" href="#api-surface">API surface</a></li>
- <li><a class="toc-link" href="#key-flows">Key flows</a></li>
- <li><a class="toc-link" href="#lifecycle">Signing-session lifecycle</a></li>
- <li><a class="toc-link" href="#functional-requirements">FRs</a></li>
- <li><a class="toc-link" href="#non-functional-requirements">NFRs</a></li>
- <li><a class="toc-link" href="#dependencies">Dependencies</a></li>
- <li><a class="toc-link" href="#compliance">Compliance scope</a></li>
- <li><a class="toc-link" href="#risk-entries">Risk entries</a></li>
- <li><a class="toc-link" href="#kpis">KPIs</a></li>
- <li><a class="toc-link" href="#raci">RACI</a></li>
- <li><a class="toc-link" href="#cli-usage">Planned CLI</a></li>
- <li><a class="toc-link" href="#status">Phase status</a></li>
- <li><a class="toc-link" href="#references">References</a></li>
- </ul>
- <hr class="my-4 border-slate-200">
- <div class="h-eyebrow mb-2">Source</div>
- <div class="text-xs text-slate-500 leading-relaxed">
- <code>cyberos/services/doc/</code><br>
- <br>
- 
- </div>
- </div>
- </div>
-</aside>
-
-<main class="lg:col-span-9 order-1 lg:order-2">
-
-<!-- ============================================================ -->
-<!-- HERO -->
-<!-- ============================================================ -->
-<section id="hero" class="module-section">
- <div class="bbg-card tint-doc p-6 mb-6">
- <p class="text-lg text-slate-700 leading-relaxed mb-5">
- DOC is CyberOS's <strong>e-signature workflow + immutable archival</strong> service. The cryptographic signing act is delegated to an eIDAS-conformant QTSP (qualified trust-service provider) per jurisdiction; DOC owns everything else: document upload + SHA-256 integrity hashing, template definition + auto-fill from CRM data, multi-party workflow (signer order, parallel vs sequential), identity verification (WebAuthn for CyberOS-resident users; VNeID for Vietnamese citizens; SMS-OTP fallback), per-document hash-chained audit log, and S3 Object-Lock archival with residency-pinning. Three certificate chains are supported: <strong>eIDAS QTSP</strong> (qualified electronic signature, QES) for the EU; <strong>Adobe AATL</strong> for US/non-EU enterprise; <strong>Vietnamese CA chain</strong> (VnPay, MK Group, Viettel-CA) for VN per Decree 130/2018. Migration paths from DocuSign, Adobe Sign, and HelloSign preserve original audit trails without re-signing. The default retention is 10 years; longer per applicable law (e.g. employment contracts under VN labour law).
- </p>
- <div class="fact-grid">
- <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P4 long-term</div></div>
- <div class="fact-card"><div class="label">Cert chains</div><div class="value">3</div><div class="note">eIDAS · AATL · VN CA</div></div>
- <div class="fact-card"><div class="label">Identity proof</div><div class="value">4 methods</div><div class="note">WebAuthn · VNeID · SMS-OTP · email-link</div></div>
- <div class="fact-card"><div class="label">Retention</div><div class="value">10 years</div><div class="note">eIDAS · ESIGN minimum</div></div>
- <div class="fact-card"><div class="label">Archive</div><div class="value">S3 Object-Lock</div><div class="note">Compliance mode + residency pin</div></div>
- <div class="fact-card"><div class="label">Migration</div><div class="value">3 sources</div><div class="note">DocuSign · Adobe Sign · HelloSign</div></div>
- <div class="fact-card"><div class="label">i18n</div><div class="value">vi + en</div><div class="note">+ regional certs</div></div>
- <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · memory · QTSP partner</div><div class="note">+ CRM · HR · INV consumers</div></div>
- </div>
- </div>
-</section>
-
-<!-- ============================================================ -->
-<!-- §0 — THE BIGGER PICTURE -->
-<!-- ============================================================ -->
-<section id="bigger-picture" class="module-section">
- <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
- <p class="text-slate-700 leading-relaxed mb-4">
- DOC ships P4 because legally-binding e-signatures require regulated trust-service providers — and CyberOS will not pretend to be one. The architecture is partner-routed: DOC owns the workflow (upload, template, multi-party order, archival, lifecycle); QTSP partners (eIDAS/AATL/VN CA) provide the cryptographic signing. This separation makes DOC compliance-clean and provider-portable.
- </p>
- <div class="grid md:grid-cols-3 gap-4 my-6">
- <div class="bbg-card p-5" style="border-top:4px solid var(--doc)">
- <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--doc-dark)">Role 1 · Document repository</div>
- <div class="font-bold text-slate-900 mb-2 text-base">Versioned · ACL'd · 10-year retention</div>
- <p class="text-sm text-slate-600 leading-relaxed">
- Documents stored in S3 Object-Lock-Compliance bucket with residency pinning per tenant. Versioned at every modification; immutable post-archive. ACL aligns with module ownership (HR contracts → HR scope; CRM contracts → CRM scope; ESOP grants → cap-table scope). 10-year retention satisfies eIDAS + ESIGN minimum.
- </p>
- </div>
- <div class="bbg-card p-5" style="border-top:4px solid var(--doc)">
- <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--doc-dark)">Role 2 · E-sign workflow</div>
- <div class="font-bold text-slate-900 mb-2 text-base">Partner-routed cryptography · CyberOS-owned workflow</div>
- <p class="text-sm text-slate-600 leading-relaxed">
- DOC owns the workflow: upload, template assembly, multi-party signing order, identity verification (WebAuthn / VNeID / SMS-OTP / email-link), audit chain. The cryptographic act delegates to eIDAS QTSP (EU), AATL CA (US), or Vietnamese CA (VN). DocuSign / Adobe Sign / HelloSign migration brings legacy signed docs in without re-signing.
- </p>
- </div>
- <div class="bbg-card p-5" style="border-top:4px solid var(--doc)">
- <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--doc-dark)">Role 3 · Contract lifecycle</div>
- <div class="font-bold text-slate-900 mb-2 text-base">HR + CRM + ESOP integration · expiry + renewal</div>
- <p class="text-sm text-slate-600 leading-relaxed">
- Every contract carries lifecycle metadata: type (employment / NDA / MSA / SOW / ESOP grant), parties, effective dates, renewal date, expiry, parent contract. Expiry alerts fire 90 days before; renewal proposals draft via CUO. Cross-module: HR contracts auto-link to Member onboarding; CRM contracts link to Engagement creation in PROJ; ESOP grants archive with cap-table audit trail.
- </p>
- </div>
- </div>
- <h3 class="text-lg font-bold mt-6 mb-3">DOC partner-routed signing flow</h3>
- <div class="bbg-card p-5 mb-5">
- <div class="mermaid">
-flowchart LR
- SOURCE["Source<br>HR · CRM · ESOP · LEGAL"]
- DOC["✍ DOC<br>workflow · template · identity"]
- SIGN_EU["🇪🇺 eIDAS QTSP<br>(EU residency)"]
- SIGN_US["🇺🇸 AATL CA<br>(US residency)"]
- SIGN_VN["🇻🇳 VNeID + VN CA<br>(VN residency)"]
- ARCHIVE["📦 S3 Object-Lock<br>Compliance · 10yr"]
- memory["🧠 memory<br>contract event audit"]
- LIFECYCLE["⏰ Lifecycle<br>expiry · renewal · alerts"]
- SOURCE --> DOC
- DOC -- "EU tenant" --> SIGN_EU
- DOC -- "US tenant" --> SIGN_US
- DOC -- "VN tenant" --> SIGN_VN
- SIGN_EU --> ARCHIVE
- SIGN_US --> ARCHIVE
- SIGN_VN --> ARCHIVE
- ARCHIVE --> LIFECYCLE
- LIFECYCLE --> SOURCE
- DOC --> memory
- classDef hub fill:#fde68a,stroke:#451a03,stroke-width:3px,color:#451a03
- classDef mod fill:#e0e7ff,stroke:#3730a3
- classDef partner fill:#fef2f2,stroke:#b91c1c
- classDef memory fill:#fef6e0,stroke:#9c750a
- class DOC hub
- class SOURCE,ARCHIVE,LIFECYCLE mod
- class SIGN_EU,SIGN_US,SIGN_VN partner
- class memory memory
- </div>
- </div>
- <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
- <div class="bbg-card p-5">
- <table class="kt">
- <thead><tr><th style="width:30%">Operation</th><th>How it happens</th><th>Why this split</th></tr></thead>
- <tbody>
- <tr><td>Document upload</td><td><strong>Manual</strong> Member action</td><td>Intent; auto-upload from other modules also requires authoring trigger.</td></tr>
- <tr><td>Template assembly</td><td><strong>Auto</strong> from template engine</td><td>Templates parameterised; CUO drafts variable fields.</td></tr>
- <tr><td>Identity verification</td><td><strong>Auto</strong> via WebAuthn / VNeID / SMS-OTP / email-link</td><td>Multi-factor enforced per signer; never bypassed.</td></tr>
- <tr><td>Cryptographic signing</td><td><strong>Auto</strong> via QTSP partner API</td><td>The QTSP/CA is the trust anchor; CyberOS never holds the signing key.</td></tr>
- <tr><td>High-value signing (≥ tenant threshold)</td><td><strong>Manual</strong> 2nd-factor + dual approval</td><td>Anti-fraud per Decree 130/2018; signer + counter-signer if applicable.</td></tr>
- <tr><td>Expiry alert</td><td><strong>Auto</strong> 90 / 30 / 7 days before</td><td>Renewal lead time; CUO drafts renewal proposal.</td></tr>
- <tr><td>Renewal proposal</td><td><strong>Auto</strong> draft; <strong>Manual</strong> review + send</td><td>CUO drafts terms; legal/AM reviews.</td></tr>
- <tr><td>Archival</td><td><strong>Auto</strong> at signing complete</td><td>Object-Lock + audit chain row.</td></tr>
- <tr><td>DSAR export</td><td><strong>Auto</strong> bundle per request</td><td>Per-subject signature events; chain-preserved.</td></tr>
- <tr><td>Document deletion (purge)</td><td><strong>Blocked</strong> until retention expires</td><td>10-year retention is statutory; deletion not allowed prior.</td></tr>
- </tbody>
- </table>
- </div>
-</section>
-
-<!-- ============================================================ -->
-<!-- WHY -->
-<!-- ============================================================ -->
-<section id="why" class="module-section">
- <header class="section-head"><span class="section-num">1</span><h2>Why DOC exists</h2></header>
- <p class="text-slate-700 leading-relaxed mb-4">
- Consultancies sign documents all day: MSAs, SOWs, employment contracts, NDAs, change orders, supplier agreements, COIs, retention letters. They send them through DocuSign or Adobe Sign at $30–$50 per seat per month, and the resulting signed PDFs land in someone's email or shared drive — never in the same audit chain as the workflow that produced them, never re-discoverable by the AI surface, never bound to the CRM record. DOC fixes this by making "sign this document" a first-class CyberOS workflow: the template is defined in DOC, the signer field auto-pulls from CRM, the QTSP partner does the actual crypto, and the resulting PDF + cert chain + audit log lands back in DOC, citable from memory, and visible to the AM in CHAT. The cost saving (no per-seat DocuSign) is incidental; the integration is the value.
- </p>
- <div class="grid md:grid-cols-3 gap-4 my-5">
- <div class="bbg-card p-5">
- <div class="text-2xl mb-2">🤝</div>
- <div class="font-bold text-slate-900 mb-1">Partner-routed signing</div>
- <p class="text-sm text-slate-600">DOC owns the workflow; eIDAS QTSP / Adobe AATL / VN CA owns the crypto. CyberOS does not invent trust — it integrates regulated trust.</p>
- </div>
- <div class="bbg-card p-5">
- <div class="text-2xl mb-2">🆔</div>
- <div class="font-bold text-slate-900 mb-1">Identity proof matters</div>
- <p class="text-sm text-slate-600">VNeID for VN citizens, WebAuthn for repeat signers, SMS-OTP for one-time external signers. High-value docs require multi-factor.</p>
- </div>
- <div class="bbg-card p-5">
- <div class="text-2xl mb-2">📦</div>
- <div class="font-bold text-slate-900 mb-1">Archive is immutable</div>
- <p class="text-sm text-slate-600">Signed PDFs land in S3 Object-Lock Compliance mode with 10-year retention. The "did they actually sign?" question is one cosign verification away.</p>
- </div>
- </div>
- <p class="text-slate-700 leading-relaxed">
- The bet is that the dollars saved on DocuSign are nice but the real value is the binding: a signed MSA appears as a CRM activity, an employment contract appears in HR, a SOW appears under PROJ.engagement, an INV-issued purchase order links to the signed-doc record. Future-AI surfaces — "show me every signed agreement with Acme Corp" — become a single GraphQL query, not a Sharepoint hunt.
- </p>
-</section>
-
-<!-- ============================================================ -->
-<!-- WHAT — 5W1H2C5M -->
-<!-- ============================================================ -->
-<section id="what" class="module-section">
- <header class="section-head"><span class="section-num">2</span><h2>What it does — 5W1H2C5M</h2></header>
- <p class="text-slate-700 leading-relaxed mb-5">Structured decomposition. Cells trace to +.</p>
- <div class="bbg-card p-5">
- <table class="kt">
- <thead><tr><th style="width:8%">Axis</th><th style="width:24%">Question</th><th>Answer</th></tr></thead>
- <tbody>
- <tr><td><strong>5W · What</strong></td><td>What is DOC?</td><td>A document-management + e-signature workflow service. Owns: documents, templates, signing sessions, signature records, identity-verification events, audit log, archive. Delegates cryptographic signing to QTSP partners.</td></tr>
- <tr><td><strong>5W · Who</strong></td><td>Who uses it?</td><td><strong>AMs:</strong> initiate MSA / SOW signing. <strong>HR:</strong> contract signing. <strong>Finance:</strong> PO + invoice signing. <strong>Counterparties:</strong> external signers via email link. <strong>CLO:</strong> reviews high-value docs pre-send.</td></tr>
- <tr><td><strong>5W · When</strong></td><td>When does it run?</td><td>On-demand for signing-session create. Continuous for archival jobs and certificate-chain validation. Nightly for retention-policy enforcement (purge after retention expiry per legal).</td></tr>
- <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>P4: SG-1 primary + VN-hanoi-1 partition. S3 Object-Lock bucket per residency. QTSP API calls outbound to partner regions.</td></tr>
- <tr><td><strong>5W · Why</strong></td><td>Why a separate module?</td><td>Because every other module needs to attach signed documents to its primitives (CRM.deal → MSA, HR.employee → contract, INV.invoice → signed PO). Owning the surface once means every consumer reads the same signature audit chain.</td></tr>
- <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Document upload → SHA-256 integrity hash → template overlay (auto-fill from CRM/HR data) → signing session created with ordered signer list → identity verification per signer (WebAuthn/VNeID/SMS) → QTSP signing call → certificate + timestamp returned → PDF stamped + AATL/CAdES-format embedded → archive to S3 Object-Lock.</td></tr>
- <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P4: QTSP partner cost ~$0.50–$2.00 per signature (passes through). Infra ~$80 / month (Fargate + S3 storage + Object-Lock + KMS).</td></tr>
- <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) eIDAS conformity required for QES — partner-only. (b) VN Decree 130/2018 — signature must use VN-licenced CA for legal effect in VN. (c) 10-year minimum retention. (d) PDPL Art. 14 DSAR — export support for signers' own data. (e) GDPR Art. 17 — purge with archival exemption for legal docs.</td></tr>
- <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum · sqlx · PostgreSQL 16 · S3 (Object-Lock Compliance) · KMS · pdfium for PDF manipulation · CAdES + PAdES formats · OpenTelemetry. QTSP partners: GlobalSign (EU), DigiCert (US-AATL), VnPay (VN), MK Group (VN), Viettel-CA (VN).</td></tr>
- <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>PAdES-B-LT (long-term) format for archived PDFs — includes cert chain + revocation info + LTV. Per-document hash-chained audit log mirrors memory chain semantics. Multi-signer workflows are state machines.</td></tr>
- <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate tasks (workflow), separate task for archival jobs. S3 Object-Lock buckets per residency. KMS-wrapped encryption for at-rest documents.</td></tr>
- <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>0.3 FTE at P4; legal counsel reviews QTSP partner contracts annually; security review of cert-chain handling annually.</td></tr>
- <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>N(FR pending) (signature non-repudiation — cosign verifies any archive byte-for-byte), N(FR pending) (zero archive loss over 10 years), KPI signature-time p95 (≤ 5 min including human-confirm).</td></tr>
- </tbody>
- </table>
- </div>
-</section>
-
-<!-- ============================================================ -->
-<!-- ARCHITECTURE -->
-<!-- ============================================================ -->
-<section id="architecture" class="module-section">
- <header class="section-head"><span class="section-num">3</span><h2>Architecture</h2></header>
- <p class="text-slate-700 leading-relaxed mb-4">
- DOC is a Rust service split into three planes: workflow (document, template, session, signer state machine), partner-broker (QTSP routing per jurisdiction), and archive (S3 Object-Lock + LTV PAdES validation). The architecture is partner-routed: signature crypto never happens inside CyberOS; identity verification is normalised across WebAuthn / VNeID / SMS-OTP / email-link.
- </p>
-
- <div class="bbg-card p-5 mb-6">
- <div class="mermaid">
-graph TB
- subgraph UI ["UI surfaces"]
- SPA["Signer SPA<br>(React + pdf.js)"]
- TPL["Template designer"]
- INBOX["Counterparty link"]
- end
-
- subgraph DOC ["DOC service (Rust · axum)"]
- DCRUD["doc.rs<br>document CRUD"]
- TPL_S["template.rs<br>field overlay"]
- SESSION["session.rs<br>signing-session state machine"]
- SIGNER["signer.rs<br>per-signer flow"]
- IDV["idv.rs<br>identity verification dispatcher"]
- BROKER["broker.rs<br>QTSP routing"]
- ARCHIVE["archive.rs<br>PAdES-LT + S3 Object-Lock"]
- MIGRATE["migrate.rs<br>DocuSign / AdobeSign import"]
- PDF["pdf.rs<br>pdfium wrapper"]
- end
-
- subgraph IDV_BACKENDS ["Identity-verification backends"]
- WA["AUTH WebAuthn"]
- VNEID["🇻🇳 VNeID API"]
- SMS["SMS-OTP provider"]
- EMAIL["Email-link"]
- end
-
- subgraph QTSP ["QTSP partners (delegated crypto)"]
- GS["GlobalSign QTSP (EU)"]
- DG["DigiCert AATL (US/non-EU)"]
- VNPAY["VnPay CA (VN)"]
- MKG["MK Group CA (VN)"]
- VTL["Viettel-CA (VN)"]
- end
-
- subgraph STORES ["Stores"]
- PG[("PostgreSQL 16<br>doc.document · template<br>session · signer · signature<br>audit_event")]
- S3[("S3 Object-Lock Compliance<br>10y retention<br>residency-pinned")]
- KMS[("AWS KMS<br>document encryption keys")]
- end
-
- subgraph SINKS ["Audit"]
- memory["🧠 memory<br>doc.* rows"]
- OBS["👁 OBS"]
- end
-
- SPA --> DCRUD
- TPL --> TPL_S
- INBOX --> SIGNER
- DCRUD --> PDF
- DCRUD --> S3
- DCRUD --> KMS
- TPL_S --> PG
- SESSION --> PG
- SESSION --> SIGNER
- SIGNER --> IDV
- IDV --> WA
- IDV --> VNEID
- IDV --> SMS
- IDV --> EMAIL
- SIGNER --> BROKER
- BROKER --> GS
- BROKER --> DG
- BROKER --> VNPAY
- BROKER --> MKG
- BROKER --> VTL
- BROKER --> ARCHIVE
- ARCHIVE --> S3
- ARCHIVE --> memory
- SESSION --> memory
- DOC --> OBS
- MIGRATE --> S3
- MIGRATE --> PG
-
- classDef planned fill:#fde68a,stroke:#78350f
- classDef store fill:#f5f3ff,stroke:#7c3aed
- classDef sink fill:#f5ede6,stroke:#45210e
- classDef partner fill:#fef2f2,stroke:#7f1d1d
- class SPA,TPL,INBOX,DCRUD,TPL_S,SESSION,SIGNER,IDV,BROKER,ARCHIVE,MIGRATE,PDF planned
- class PG,S3,KMS store
- class memory,OBS sink
- class GS,DG,VNPAY,MKG,VTL,WA,VNEID,SMS,EMAIL partner
- </div>
- </div>
-
- <h3 class="text-lg font-bold mt-6 mb-3">Internal components</h3>
- <div class="bbg-card p-5">
- <table class="kt">
- <thead><tr><th>Component</th><th>Path (planned)</th><th>Responsibility</th></tr></thead>
- <tbody>
- <tr><td><code>doc.rs</code></td><td>services/doc/src/doc.rs</td><td>Document CRUD — upload, version, SHA-256 hash, encrypt-at-rest via KMS, store on S3.</td></tr>
- <tr><td><code>template.rs</code></td><td>services/doc/src/template.rs</td><td>Template definition: signer fields, text fields, date fields, conditional fields. Auto-fill rules pulling from CRM/HR/INV.</td></tr>
- <tr><td><code>session.rs</code></td><td>services/doc/src/session.rs</td><td>Signing session: ordered signer list, parallel/sequential mode, deadline, reminder schedule.</td></tr>
- <tr><td><code>signer.rs</code></td><td>services/doc/src/signer.rs</td><td>Per-signer state machine: invited → identity_verified → signed | rejected | expired.</td></tr>
- <tr><td><code>idv.rs</code></td><td>services/doc/src/idv.rs</td><td>Identity-verification dispatcher. Routes based on signer profile + document risk-tier. WebAuthn / VNeID / SMS-OTP / email-link.</td></tr>
- <tr><td><code>vneid.rs</code></td><td>services/doc/src/vneid.rs</td><td>VNeID API client. CCCD (Citizen ID) validation; biometric assertion for high-value docs (Decision 06/2022/QĐ-TTg).</td></tr>
- <tr><td><code>broker.rs</code></td><td>services/doc/src/broker.rs</td><td>QTSP routing. Picks partner per (jurisdiction × document_type × signer_country). Failover between partners on outage.</td></tr>
- <tr><td><code>pades.rs</code></td><td>services/doc/src/pades.rs</td><td>PAdES-B-LT formatter. Embeds cert chain + OCSP revocation info + DSS dictionary for long-term validation.</td></tr>
- <tr><td><code>archive.rs</code></td><td>services/doc/src/archive.rs</td><td>S3 Object-Lock Compliance archival. Residency-pinned bucket. 10-year retention by default; per-tenant override.</td></tr>
- <tr><td><code>audit_chain.rs</code></td><td>services/doc/src/audit_chain.rs</td><td>Per-document hash-chained audit log. Each signature event chains to previous; export bundle for legal discovery.</td></tr>
- <tr><td><code>retention.rs</code></td><td>services/doc/src/retention.rs</td><td>Retention policy enforcement. Nightly job: identifies docs past retention + legal hold lifted; purges with audit row.</td></tr>
- <tr><td><code>migrate.rs</code></td><td>services/doc/src/migrate.rs</td><td>DocuSign / Adobe Sign / HelloSign import. Preserves original audit trail; flags imported docs as "external-trust".</td></tr>
- <tr><td><code>fraud.rs</code></td><td>services/doc/src/fraud.rs</td><td>Notary-fraud detection: velocity check, impossible-travel for signers, device fingerprint, anomaly score.</td></tr>
- <tr><td><code>migrations/</code></td><td>services/doc/migrations/</td><td>sqlx migrations. RLS by tenant_id. Indices on (doc_id), (session_id, signer_id), (status).</td></tr>
- </tbody>
- </table>
- </div>
-
- <div class="invariant-box mt-5">
- <div class="label">DOC-INV-001 · Signed-document integrity is byte-for-byte verifiable</div>
- <p class="text-sm text-slate-700 mt-2 mb-0">Every archived PDF MUST cosign-verify against (a) its SHA-256 stored at archive time, (b) its cert chain stored with the document, and (c) its memory audit-chain leaf. The verification path is implemented in <code>cyberos-doc verify --archive-id …</code> and is exercised quarterly by an automated chaos job that randomly picks 1% of archived docs and verifies them. Failure halts retention purges until investigation completes.</p>
- </div>
-</section>
-
-<!-- ============================================================ -->
-<!-- DATA MODEL -->
-<!-- ============================================================ -->
-<section id="data-model" class="module-section">
- <header class="section-head"><span class="section-num">4</span><h2>Data model</h2></header>
- <p class="text-slate-700 leading-relaxed mb-4">
- Documents, templates, signing sessions, signers, signatures, audit events, archive records. PostgreSQL holds metadata; PDF content (encrypted) lives on S3 Object-Lock.
- </p>
-
- <div class="bbg-card p-5 mb-5">
- <div class="mermaid">
-erDiagram
- TENANT ||--o{ DOCUMENT: "owns"
- TENANT ||--o{ TEMPLATE: "defines"
- DOCUMENT ||--o| TEMPLATE: "instantiated from"
- DOCUMENT ||--o{ SIGNING_SESSION: "has"
- SIGNING_SESSION ||--o{ SIGNER: "lists"
- SIGNER ||--o| SIGNATURE: "produces"
- SIGNATURE ||--o{ AUDIT_EVENT: "logs"
- SIGNING_SESSION ||--o{ AUDIT_EVENT: "logs"
- DOCUMENT ||--o{ AUDIT_EVENT: "logs"
- DOCUMENT ||--o| ARCHIVE: "archived as"
- TEMPLATE ||--o{ TEMPLATE_FIELD: "defines"
-
- TENANT {
- uuid id PK
- string slug
- string default_residency
- int default_retention_years
- }
- DOCUMENT {
- uuid id PK
- uuid tenant_id FK
- string name
- string s3_key "encrypted at rest"
- string sha256_original
- string status "draft | in_signing | executed | expired | revoked"
- uuid template_id FK
- timestamp created_at
- uuid created_by FK
- }
- TEMPLATE {
- uuid id PK
- uuid tenant_id FK
- string name
- string jurisdiction "EU | US | VN | OTHER"
- string s3_key "template PDF"
- timestamp created_at
- }
- TEMPLATE_FIELD {
- uuid id PK
- uuid template_id FK
- string field_type "signature | text | date | checkbox | initial"
- string name
- int page
- int x
- int y
- int width
- int height
- string auto_fill_source "crm.contact.name | hr.member.email | …"
- }
- SIGNING_SESSION {
- uuid id PK
- uuid document_id FK
- string mode "sequential | parallel"
- timestamp deadline
- string status "open | completed | expired | cancelled"
- string memory_chain
- }
- SIGNER {
- uuid id PK
- uuid session_id FK
- int order_index
- string email
- string display_name
- string country "VN | EU | US | …"
- string idv_method "webauthn | vneid | sms_otp | email_link"
- string idv_proof_id "external reference"
- string status "invited | viewed | identity_verified | signed | rejected | expired"
- timestamp invited_at
- timestamp signed_at
- }
- SIGNATURE {
- uuid id PK
- uuid signer_id FK
- string qtsp_partner "globalsign | digicert | vnpay | mkgroup | viettelca"
- bytea cert_chain "X.509 chain DER"
- string timestamp_authority "RFC 3161 TSA"
- bytea signature_blob "CAdES detached or PAdES embedded"
- string sha256_signed_pdf
- timestamp signed_at
- string memory_chain
- }
- AUDIT_EVENT {
- uuid id PK
- uuid document_id FK
- string actor_type "human | agent | system | qtsp"
- uuid actor_id
- string event_type "uploaded | template_applied | session_created | invited | viewed | idv_attempted | idv_passed | signed | rejected | archived | purge_blocked | purged"
- string event_chain_hash
- string prev_chain_hash
- bytea details_json
- timestamp ts
- }
- ARCHIVE {
- uuid id PK
- uuid document_id FK
- string s3_bucket "cyberos-doc-archive-vn-hanoi"
- string s3_key
- string sha256_archived
- string pades_b_lt_format
- date retention_until
- bool legal_hold
- timestamp archived_at
- }
- </div>
- </div>
-
- <h3 class="text-lg font-bold mb-3">Per-document audit chain (mirrors memory semantics)</h3>
- <div class="bbg-card p-5">
-<pre><code class="language-text">/ each audit_event row carries:
-/ prev_chain_hash = previous event's chain hash for this doc
-/ event_chain_hash = SHA-256(canonical(this_event_minus_chain) || prev_chain_hash)
-/
-/ `cyberos-doc verify --doc-id …` walks the chain end-to-end:
-/ - validates SHA-256 of original at upload event
-/ - validates each event's chain hash
-/ - validates QTSP cert chain at signed event
-/ - validates timestamp authority RFC 3161 token
-/ - validates final archive SHA-256 against archive event
-/
-/ Tampering at any point fails verification with a precise diagnosis row.</code></pre>
- </div>
-</section>
-
-<!-- ============================================================ -->
-<!-- API SURFACE -->
-<!-- ============================================================ -->
-<section id="api-surface" class="module-section">
- <header class="section-head"><span class="section-num">5</span><h2>API surface</h2></header>
- <p class="text-slate-700 leading-relaxed mb-4">
- GraphQL subgraph for cross-module reads (CRM.deal → contract list, HR.member → contract history), REST for the signer SPA, MCP tools for natural-language workflow ("send the standard MSA to acme@…").
- </p>
-
- <h3 class="text-lg font-bold mb-3 mt-6">GraphQL subgraph (federated)</h3>
- <div class="bbg-card p-5 mb-5">
-<pre><code class="language-graphql">extend schema
- @link(url: "https://specs.apollo.dev/federation/v2.5", import: ["@key", "@external", "@shareable", "@requiresScopes"])
-
-type Document @key(fields: "id") {
- id: ID!
- name: String!
- status: DocStatus!
- template: Template
- sessions: [SigningSession!]!
- auditEvents: [AuditEvent!]!
- archive: Archive
- createdAt: DateTime!
-}
-
-type Template @key(fields: "id") {
- id: ID!
- name: String!
- jurisdiction: Jurisdiction!
- fields: [TemplateField!]!
-}
-
-type TemplateField {
- fieldType: FieldType!
- name: String!
- autoFillSource: String
-}
-
-type SigningSession @key(fields: "id") {
- id: ID!
- document: Document!
- mode: SessionMode!
- status: SessionStatus!
- deadline: DateTime!
- signers: [Signer!]!
-}
-
-type Signer @key(fields: "id") {
- id: ID!
- orderIndex: Int!
- email: String!
- displayName: String!
- country: String!
- idvMethod: IdvMethod!
- status: SignerStatus!
- signature: Signature
-}
-
-type Signature {
- qtspPartner: QtspPartner!
- timestampAuthority: String!
- signedAt: DateTime!
-}
-
-type AuditEvent {
- eventType: AuditEventType!
- actorType: ActorType!
- ts: DateTime!
- eventChainHash: String!
-}
-
-type Archive {
- s3Bucket: String!
- retentionUntil: Date!
- legalHold: Boolean!
- padesFormat: String!
-}
-
-enum DocStatus { DRAFT IN_SIGNING EXECUTED EXPIRED REVOKED }
-enum SessionMode { SEQUENTIAL PARALLEL }
-enum SessionStatus { OPEN COMPLETED EXPIRED CANCELLED }
-enum SignerStatus { INVITED VIEWED IDENTITY_VERIFIED SIGNED REJECTED EXPIRED }
-enum IdvMethod { WEBAUTHN VNEID SMS_OTP EMAIL_LINK }
-enum QtspPartner { GLOBALSIGN DIGICERT VNPAY MKGROUP VIETTELCA }
-enum Jurisdiction { EU US VN OTHER }
-enum FieldType { SIGNATURE TEXT DATE CHECKBOX INITIAL }
-enum ActorType { HUMAN AGENT SYSTEM QTSP }
-enum AuditEventType { UPLOADED TEMPLATE_APPLIED SESSION_CREATED INVITED VIEWED IDV_ATTEMPTED IDV_PASSED SIGNED REJECTED ARCHIVED PURGE_BLOCKED PURGED }
-
-extend type Deal @key(fields: "id") {
- id: ID! @external
- documents: [Document!]! @requiresScopes(scopes: [["doc.read"]])
-}
-
-extend type Member @key(fields: "id") {
- id: ID! @external
- contracts: [Document!]! @requiresScopes(scopes: [["doc.read"]])
-}
-
-type Query {
- document(id: ID!): Document @requiresScopes(scopes: [["doc.read"]])
- myPendingSignatures: [Signer!]! @requiresScopes(scopes: [["doc.read"]])
- templates(jurisdiction: Jurisdiction): [Template!]! @requiresScopes(scopes: [["doc.read"]])
-}
-
-type Mutation {
- uploadDocument(name: String!, sha256: String!): UploadUrl! @requiresScopes(scopes: [["doc.write"]])
- createSession(input: SessionInput!): SigningSession! @requiresScopes(scopes: [["doc.write"]])
- cancelSession(id: ID!, reason: String!): SigningSession! @requiresScopes(scopes: [["doc.write"]])
- setLegalHold(documentId: ID!, hold: Boolean!): Document!
- @requiresScopes(scopes: [["doc.legal_hold"]])
-}</code></pre>
- </div>
-
- <h3 class="text-lg font-bold mb-3">REST endpoints</h3>
- <div class="bbg-card p-5 mb-5 overflow-x-auto">
- <table class="kt">
- <thead><tr><th>Method</th><th>Path</th><th>Purpose</th></tr></thead>
- <tbody>
- <tr><td>POST</td><td><code>/doc/upload</code></td><td>Multipart upload — returns doc_id + s3_key.</td></tr>
- <tr><td>POST</td><td><code>/doc/{id}/template/{tpl}</code></td><td>Apply template overlay; resolve auto-fill from CRM/HR.</td></tr>
- <tr><td>POST</td><td><code>/doc/{id}/session</code></td><td>Create signing session.</td></tr>
- <tr><td>GET</td><td><code>/doc/sign/{signer_token}</code></td><td>External signer landing page (counterparty).</td></tr>
- <tr><td>POST</td><td><code>/doc/sign/{signer_token}/idv</code></td><td>Identity-verification challenge response.</td></tr>
- <tr><td>POST</td><td><code>/doc/sign/{signer_token}/finalize</code></td><td>Capture signature; trigger QTSP call.</td></tr>
- <tr><td>GET</td><td><code>/doc/{id}/audit-bundle.zip</code></td><td>Legal-discovery bundle: PDF + cert chain + audit log.</td></tr>
- <tr><td>POST</td><td><code>/doc/migrate/docusign</code></td><td>Import legacy DocuSign envelope (preserve original trail).</td></tr>
- <tr><td>POST</td><td><code>/doc/migrate/adobesign</code></td><td>Import legacy Adobe Sign.</td></tr>
- <tr><td>POST</td><td><code>/doc/migrate/hellosign</code></td><td>Import legacy HelloSign.</td></tr>
- <tr><td>GET</td><td><code>/doc/{id}/verify</code></td><td>Cosign verify of archived PDF.</td></tr>
- <tr><td>POST</td><td><code>/doc/{id}/legal-hold</code></td><td>Apply / lift legal hold.</td></tr>
- <tr><td>POST</td><td><code>/doc/admin/retention-sweep</code></td><td>Run nightly retention sweep manually.</td></tr>
- </tbody>
- </table>
- </div>
-
- <h3 class="text-lg font-bold mb-3">MCP tool catalogue</h3>
- <div class="bbg-card p-5 overflow-x-auto">
- <table class="kt">
- <thead><tr><th>Tool name</th><th>Inputs</th><th>Outputs</th><th>Annotations</th></tr></thead>
- <tbody>
- <tr><td><code>cyberos.doc.list</code></td><td>filter, status?</td><td>Document</td><td>readonly · scope=doc.read</td></tr>
- <tr><td><code>cyberos.doc.start_signing</code></td><td>template_id, deal_id, signers</td><td>{session_id, signer_links}</td><td>destructive · scope=doc.write · human-confirm</td></tr>
- <tr><td><code>cyberos.doc.status</code></td><td>session_id</td><td>{session, signers}</td><td>readonly</td></tr>
- <tr><td><code>cyberos.doc.cancel_session</code></td><td>session_id, reason</td><td>{ok}</td><td>destructive · scope=doc.write · human-confirm</td></tr>
- <tr><td><code>cyberos.doc.find_template</code></td><td>name_match, jurisdiction</td><td>Template</td><td>readonly</td></tr>
- <tr><td><code>cyberos.doc.legal_discovery_bundle</code></td><td>doc_id</td><td>{zip_url}</td><td>destructive · scope=doc.legal_export</td></tr>
- <tr><td><code>cyberos.doc.verify_archive</code></td><td>doc_id</td><td>{ok, diagnostics}</td><td>readonly</td></tr>
- <tr><td><code>cyberos.doc.set_legal_hold</code></td><td>doc_id, hold</td><td>{ok}</td><td>destructive · scope=doc.legal_hold · human-confirm</td></tr>
- </tbody>
- </table>
- </div>
-</section>
-
-<!-- ============================================================ -->
-<!-- KEY FLOWS -->
-<!-- ============================================================ -->
-<section id="key-flows" class="module-section">
- <header class="section-head"><span class="section-num">6</span><h2>Key flows</h2></header>
-
- <h3 class="text-lg font-bold mb-3 mt-4">Flow 1 — Document upload + template fill</h3>
- <div class="bbg-card p-5 mb-6">
- <div class="mermaid">
-sequenceDiagram
- autonumber
- participant AM as Account Manager
- participant SPA as DOC SPA
- participant D as doc.rs
- participant T as template.rs
- participant CRM as 🏢 CRM
- participant KMS as AWS KMS
- participant S3 as S3 (residency-pinned)
- participant B as 🧠 memory
-
- AM->>SPA: upload "Acme MSA.pdf" + select template "MSA-EU-v3"
- SPA->>D: POST /doc/upload (multipart, sha256)
- D->>KMS: encrypt at rest (envelope)
- D->>S3: PutObject (encrypted body)
- D->>B: append doc.uploaded row {sha256, by:AM}
- SPA->>T: POST /doc/{id}/template/MSA-EU-v3
- T->>CRM: query Deal.contact for auto-fill (name, email, address)
- CRM-->>T: contact rows
- T->>T: overlay fields onto template canvas; SHA-256 final body
- T->>B: append template.applied row
- T-->>SPA: ready-to-send preview
- </div>
- </div>
-
- <h3 class="text-lg font-bold mb-3">Flow 2 — Multi-party signing (sequential)</h3>
- <div class="bbg-card p-5 mb-6">
- <div class="mermaid">
-sequenceDiagram
- autonumber
- participant AM as Account Manager
- participant S as session.rs
- participant Sa as Signer A (CEO of Acme)
- participant Sb as Signer B (CyberSkill CEO)
- participant I as idv.rs
- participant BK as broker.rs
- participant QTSP as eIDAS QTSP (GlobalSign)
- participant B as 🧠 memory
-
- AM->>S: createSession(mode=sequential, signers=[A, B], deadline=14d)
- S->>B: append session.created row
- S->>Sa: email magic link (signer order_index=1)
- Sa->>I: opens link · IDV via email-link (T2 doc)
- I-->>Sa: identity verified
- Sa->>S: views + signs
- S->>BK: route signature(country=EU, doc_type=MSA)
- BK->>QTSP: sign call (cert chain, RFC 3161 timestamp)
- QTSP-->>BK: CAdES blob + cert chain + TSA token
- BK->>S: signature stored
- S->>B: append signer.signed row {A}
- S->>Sb: email magic link (order=2)
- Sb->>I: WebAuthn (CyberSkill member, AAL3)
- I-->>Sb: identity verified
- Sb->>S: views + signs
- S->>BK: route again
- BK->>QTSP: sign
- QTSP-->>BK: signature blob
- BK->>S: signature stored
- S->>S: all signers complete → session.complete
- S->>B: append session.completed row
- S->>S: trigger archive flow (Flow 5)
- </div>
- <p class="text-xs text-slate-500 mt-3">Sequential mode means signer B's magic link is not emitted until A signs. Parallel mode emits both at once; first-to-sign rule + reminder cadence still apply.</p>
- </div>
-
- <h3 class="text-lg font-bold mb-3">Flow 3 — Identity verification + sign with VNeID</h3>
- <div class="bbg-card p-5 mb-6">
- <div class="mermaid">
-sequenceDiagram
- autonumber
- participant S as Signer (VN citizen)
- participant SPA as DOC SPA
- participant I as idv.rs
- participant V as vneid.rs
- participant VNEID as 🇻🇳 VNeID API
- participant BK as broker.rs
- participant VNCA as VN CA (e.g., VnPay)
- participant B as 🧠 memory
-
- S->>SPA: open signing page
- SPA->>I: getIdvChallenge(country=VN, risk=high)
- I->>V: prepare VNeID challenge (CCCD + biometric)
- V->>VNEID: createIdentityVerification
- VNEID-->>V: deeplink to VNeID app
- V-->>SPA: deeplink + QR
- S->>VNEID: open app, scan, biometric capture
- VNEID-->>V: idv_proof_id, attributes (full_name, CCCD, DOB)
- V->>I: pass idv
- I->>B: append idv.passed row {method:vneid, proof_id}
- I-->>SPA: ready to sign
- S->>SPA: confirm sign
- SPA->>BK: route signature (country=VN)
- BK->>VNCA: sign call (signer attrs from VNeID)
- VNCA-->>BK: CAdES blob + cert chain (VN root)
- BK->>B: append signed row
- </div>
- </div>
-
- <h3 class="text-lg font-bold mb-3">Flow 4 — Long-term archival (PAdES-B-LT + S3 Object-Lock)</h3>
- <div class="bbg-card p-5 mb-6">
- <div class="mermaid">
-sequenceDiagram
- autonumber
- participant S as session.rs (all signed)
- participant P as pades.rs
- participant A as archive.rs
- participant KMS as AWS KMS
- participant S3 as S3 Object-Lock Compliance
- participant TSA as RFC 3161 TSA
- participant B as 🧠 memory
-
- S->>P: assemble PAdES-B-LT
- P->>P: embed cert chain (all signers)
- P->>P: embed OCSP responses (revocation info)
- P->>TSA: outer timestamp (long-term validation)
- TSA-->>P: TSA token
- P->>P: DSS dictionary + LTV
- P->>A: hand off PDF
- A->>KMS: encrypt at rest
- A->>S3: PutObject with Object-Lock retain-until = now + 10y; LegalHold=OFF
- S3-->>A: ETag + VersionId
- A->>B: append archive.completed row {s3_key, retention_until, sha256}
- A->>S: archive ready
- </div>
- <p class="text-xs text-slate-500 mt-3">Object-Lock Compliance mode means even the AWS account root cannot delete the object before retention expiry. Legal hold is a separate flag that can be applied later to extend protection.</p>
- </div>
-
- <h3 class="text-lg font-bold mb-3">Flow 5 — DocuSign migration (preserve original trail)</h3>
- <div class="bbg-card p-5">
- <div class="mermaid">
-sequenceDiagram
- autonumber
- participant CLO as CLO
- participant M as migrate.rs
- participant DS as DocuSign API
- participant A as archive.rs
- participant S3 as S3 Object-Lock
- participant B as 🧠 memory
-
- CLO->>M: cyberos-doc migrate-docusign --since 2020-01-01
- M->>DS: list envelopes (paged)
- loop per envelope
- DS-->>M: envelope_id, signed PDF URL, audit log
- M->>DS: GET signed PDF + cert chain + audit JSON
- DS-->>M: bytes + metadata
- M->>M: validate DocuSign cert chain (AATL trust)
- M->>A: archive original PDF (no re-sign)
- A->>S3: PutObject (Object-Lock)
- M->>B: append migration.imported row {source:docusign, original_envelope_id, trust:external}
- end
- M->>CLO: report N migrated · 0 failures
- </div>
- <p class="text-xs text-slate-500 mt-3">Migration preserves the original DocuSign audit trail in <code>audit_event.details_json</code>. Documents are flagged <code>trust=external</code> so consumers know the signature was produced by another provider.</p>
- </div>
-</section>
-
-<!-- ============================================================ -->
-<!-- LIFECYCLE -->
-<!-- ============================================================ -->
-<section id="lifecycle" class="module-section">
- <header class="section-head"><span class="section-num">7</span><h2>Signing-session lifecycle</h2></header>
- <p class="text-slate-700 leading-relaxed mb-4">
- A session traverses six states; the per-signer state machine sits inside Open. Every transition writes an audit event.
- </p>
- <div class="bbg-card p-5 mb-5">
- <div class="mermaid">
-stateDiagram-v2
- [*] --> Draft: document uploaded + template applied
- Draft --> Open: createSession
- Open --> Completed: all signers signed
- Open --> Expired: deadline passed
- Open --> Cancelled: AM revoked OR signer rejected
- Completed --> Archived: PAdES-LT + S3 Object-Lock
- Archived --> [*]
- Expired --> [*]
- Cancelled --> [*]
-
- state Open {
- [*] --> Invited
- Invited --> Viewed: signer opens link
- Viewed --> IdvAttempted: starts identity verification
- IdvAttempted --> IdvPassed: verified
- IdvAttempted --> IdvFailed: too many retries
- IdvPassed --> Signed: signer captures signature
- IdvPassed --> Rejected: signer declines
- Signed --> [*]
- Rejected --> [*]
- IdvFailed --> [*]
- }
- </div>
- </div>
-
- <h3 class="text-lg font-bold mb-3">Per-state actions</h3>
- <div class="bbg-card p-5">
- <table class="kt">
- <thead><tr><th>State</th><th>Trigger</th><th>Side-effects</th></tr></thead>
- <tbody>
- <tr><td>Draft</td><td>document + template ready</td><td>Audit row <code>template.applied</code>; preview rendered.</td></tr>
- <tr><td>Open</td><td>createSession success</td><td>First signer notified (sequential) or all signers notified (parallel); reminders scheduled.</td></tr>
- <tr><td>Invited</td><td>signer email sent</td><td>Magic-link token issued; expiry = session deadline.</td></tr>
- <tr><td>Viewed</td><td>signer opens link</td><td>Audit row <code>signer.viewed</code> with IP + UA + device fingerprint.</td></tr>
- <tr><td>IdvPassed</td><td>identity verified</td><td>Audit row <code>idv.passed</code> with method + proof_id.</td></tr>
- <tr><td>Signed</td><td>QTSP signature returned</td><td>Audit row <code>signer.signed</code> with cert chain + TSA token.</td></tr>
- <tr><td>Completed</td><td>all signers signed</td><td>Trigger archive flow; downstream consumers (CRM / HR / INV) notified.</td></tr>
- <tr><td>Archived</td><td>PAdES-LT written to S3 Object-Lock</td><td>Audit row <code>archive.completed</code>; retention timer starts.</td></tr>
- <tr><td>Expired</td><td>deadline reached without all signing</td><td>Audit row <code>session.expired</code>; AM notified; document remains in PG (no archive).</td></tr>
- <tr><td>Cancelled</td><td>AM revoke OR signer reject</td><td>Audit row <code>session.cancelled</code> with reason; all signer tokens invalidated.</td></tr>
- </tbody>
- </table>
- </div>
-</section>
-
-<!-- ============================================================ -->
-<!-- FRs (stub — see skill module's feature-request-author workflow) -->
-<!-- ============================================================ -->
-<section id="functional-requirements" class="module-section">
- <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
- <div class="bbg-card p-5">
- <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author" target="_blank" rel="noopener" class="font-semibold" style="color:var(--umber-700)">feature-request-author</a> Agent Skill.</p>
- <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.</p>
- </div>
-</section>
-
-<!-- ============================================================ -->
-<!-- NFRs -->
-<!-- ============================================================ -->
-<section id="non-functional-requirements" class="module-section">
- <header class="section-head"><span class="section-num">9</span><h2>Non-Functional Requirements</h2></header>
- <p class="text-slate-700 leading-relaxed mb-4">DOC NFRs centre on signature non-repudiation and long-term archival durability.</p>
- <div class="bbg-card p-5 overflow-x-auto">
- <table class="kt">
- <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
- <tbody>
- <tr><td><code>N(FR pending)</code></td><td>Signature non-repudiation (cosign verifies archive byte-for-byte)</td><td>100% of archives</td><td>quarterly chaos audit (random 1%)</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>Cross-tenant document leak</td><td>= 0</td><td>RLS verification harness</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>Archive durability (no archive loss over 10 years)</td><td>11x9s (S3 Object-Lock guarantee)</td><td>S3 SLA</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>Audit-chain integrity</td><td>= 0 broken chains</td><td>nightly walker job</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>uploadDocument server-canonical p95</td><td>≤ 3 s (10 MB PDF)</td><td>k6</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>End-to-end sign (after IDV) p95</td><td>≤ 8 s</td><td>RUM</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>QTSP partner round-trip p95</td><td>≤ 5 s (network)</td><td>per-partner SLO</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>DOC availability</td><td>≥ 99.9% (P4)</td><td>SLO monitor</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>QTSP partner failover RTO</td><td>≤ 60 s on partner outage</td><td>chaos test</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>eIDAS QES conformity (annual audit)</td><td>passed</td><td>external auditor</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>VN Decree 130/2018 cert chain validity</td><td>100%</td><td>VN CA SLA</td></tr>
- </tbody>
- </table>
- </div>
-</section>
-
-<!-- ============================================================ -->
-<!-- DEPENDENCIES -->
-<!-- ============================================================ -->
-<section id="dependencies" class="module-section">
- <header class="section-head"><span class="section-num">10</span><h2>Dependencies</h2></header>
- <p class="text-slate-700 leading-relaxed mb-4">
- DOC depends on AUTH (WebAuthn), memory (audit), KMS + S3 (archival), and at least one QTSP partner per jurisdiction. Consumed by CRM (deal contracts), HR (employment contracts), INV (signed POs), and PORTAL (client signing).
- </p>
- <div class="bbg-card p-5">
- <div class="mermaid">
-graph LR
- subgraph upstream ["DOC depends on"]
- AUTH["🔐 AUTH<br>WebAuthn + RBAC"]
- memory["🧠 memory<br>audit chain"]
- OBS["👁 OBS"]
- KMS["🔑 AWS KMS"]
- S3["🗄 S3 Object-Lock"]
- VNEID["🇻🇳 VNeID API"]
- QTSP["🤝 QTSP partners<br>GlobalSign · DigiCert · VnPay · MK · Viettel-CA"]
- TSA["RFC 3161 TSA"]
- CRM["🏢 CRM<br>contact auto-fill"]
- HR_UP["👥 HR<br>member auto-fill"]
- end
- DOC["✍️ DOC"]
- subgraph downstream ["Used by"]
- CRM_D["🏢 CRM<br>deal contracts"]
- HR_D["👥 HR<br>employment contracts"]
- INV_D["💰 INV<br>signed POs"]
- PORTAL["🌐 PORTAL<br>client signing"]
- MEMORY_D["🧠 memory<br>doc citations"]
- end
- AUTH --> DOC
- memory --> DOC
- OBS --> DOC
- KMS --> DOC
- S3 --> DOC
- VNEID --> DOC
- QTSP --> DOC
- TSA --> DOC
- CRM --> DOC
- HR_UP --> DOC
- DOC --> CRM_D
- DOC --> HR_D
- DOC --> INV_D
- DOC --> PORTAL
- DOC --> MEMORY_D
-
- classDef planned fill:#fde68a,stroke:#78350f
- classDef partner fill:#fef2f2,stroke:#7f1d1d
- class AUTH,memory,OBS,KMS,S3,CRM,HR_UP,DOC,CRM_D,HR_D,INV_D,PORTAL,MEMORY_D planned
- class VNEID,QTSP,TSA partner
- </div>
- </div>
-</section>
-
-<!-- ============================================================ -->
-<!-- COMPLIANCE -->
-<!-- ============================================================ -->
-<section id="compliance" class="module-section">
- <header class="section-head"><span class="section-num">11</span><h2>Compliance scope</h2></header>
- <p class="text-slate-700 leading-relaxed mb-4">DOC is the most regulation-heavy module after AUTH. Signature legality across jurisdictions is its entire job.</p>
- <div class="bbg-card p-5 overflow-x-auto">
- <table class="kt">
- <thead><tr><th>Regulation / standard</th><th>Article / clause</th><th>DOC feature that satisfies it</th></tr></thead>
- <tbody>
- <tr><td>eIDAS (EU Reg. 910/2014)</td><td>Art. 25 — Legal effects of e-signatures</td><td>QES via partner QTSP for EU; AdES default for non-QES use cases.</td></tr>
- <tr><td>eIDAS</td><td>Art. 32 — Validation of QES</td><td>PAdES-B-LT embedded cert chain + OCSP + LTV timestamp.</td></tr>
- <tr><td>eIDAS</td><td>Art. 34 — Long-term preservation</td><td>S3 Object-Lock Compliance 10y; LTV outer timestamp.</td></tr>
- <tr><td>EU ESI standards</td><td>ETSI EN 319 142 — PAdES baseline</td><td>PAdES-B-LT format implemented.</td></tr>
- <tr><td>US ESIGN Act (15 U.S.C. §7001)</td><td>Consent + intent + record retention</td><td>Explicit consent UI; intent captured at sign; 10-year retention.</td></tr>
- <tr><td>US UETA</td><td>State e-signature recognition</td><td>AATL cert chain via DigiCert.</td></tr>
- <tr><td>Vietnam Decree 130/2018/NĐ-CP</td><td>E-signature legal recognition</td><td>VN CA chain (VnPay / MK / Viettel-CA); compliant cert profile.</td></tr>
- <tr><td>Vietnam Decision 06/2022/QĐ-TTg</td><td>National digital identity (VNeID)</td><td>VNeID integration via <code>vneid.rs</code> for VN citizens.</td></tr>
- <tr><td>Vietnam Law 91/2025/QH15 (PDPL)</td><td>Art. 14 — DSAR</td><td>DSAR export bundles documents + audit chains.</td></tr>
- <tr><td>GDPR (EU 2016/679)</td><td>Art. 15 — Right of access</td><td>Same surface as PDPL.</td></tr>
- <tr><td>GDPR</td><td>Art. 17 — Right to erasure</td><td>Purge supported with legal-hold + retention-period exemptions; audit fact of erasure remains.</td></tr>
- <tr><td>ISO/IEC 27001:2022</td><td>A.5.34 — Privacy in development</td><td>Documents encrypted at rest via KMS; access RLS-keyed.</td></tr>
- <tr><td>ISO 14533-1 (PAdES)</td><td>Long-term archival profiles</td><td>PAdES-B-LT format.</td></tr>
- <tr><td>SOC 2 Type II</td><td>CC6.1 — Logical access</td><td>RBAC + multi-factor for high-value signing.</td></tr>
- </tbody>
- </table>
- </div>
-</section>
-
-<!-- ============================================================ -->
-<!-- RISK -->
-<!-- ============================================================ -->
-<section id="risk-entries" class="module-section">
- <header class="section-head"><span class="section-num">12</span><h2>Risk entries</h2></header>
- <p class="text-slate-700 leading-relaxed mb-4">DOC-specific risks in the <a href="../../reference/risk-register.html#doc" class="text-blue-700 font-semibold underline">risk register</a>.</p>
- <div class="bbg-card p-5 overflow-x-auto">
- <table class="kt">
- <thead><tr><th>ID</th><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Owner</th><th>Mitigation</th></tr></thead>
- <tbody>
- <tr><td><code>R-DOC-001</code></td><td>Spoofing / Repudiation — forged signature</td><td>Low</td><td>Catastrophic</td><td>CLO</td><td>eIDAS QTSP cert chain; WebAuthn binding; multi-factor for high-value docs; quarterly external audit.</td></tr>
- <tr><td><code>R-DOC-002</code></td><td>Notary-fraud / impersonation via SMS-OTP only</td><td>Medium</td><td>High</td><td>CSO</td><td>SMS-OTP restricted to low-value docs; high-value requires WebAuthn or VNeID biometric.</td></tr>
- <tr><td><code>R-DOC-003</code></td><td>QTSP partner outage during signing campaign</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Multi-partner per jurisdiction; broker.rs failover; 60s RTO chaos-tested.</td></tr>
- <tr><td><code>R-DOC-004</code></td><td>VNeID API breaking change</td><td>Medium</td><td>High</td><td>CTO</td><td>Adapter pattern in vneid.rs; integration tests on every release; VN CA fallback for non-biometric path.</td></tr>
- <tr><td><code>R-DOC-005</code></td><td>S3 Object-Lock misconfiguration allows premature deletion</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>Compliance mode (not Governance); CI test verifies retention-until; account-root cannot override.</td></tr>
- <tr><td><code>R-DOC-006</code></td><td>Legal-hold lift granted to non-CLO</td><td>Low</td><td>High</td><td>CSO</td><td>(FR pending) scope=doc.legal_hold limited to CLO + DPO; quarterly access review.</td></tr>
- <tr><td><code>R-DOC-007</code></td><td>Cert chain expires; PAdES-LT cannot validate decades later</td><td>Medium</td><td>High</td><td>CTO</td><td>PAdES-B-LT includes LTV outer timestamp; periodic re-stamping job at year 9 (1y before retention end).</td></tr>
- <tr><td><code>R-DOC-008</code></td><td>Cross-tenant document leak via shared S3 bucket</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>Per-tenant bucket prefix; IAM scoped per tenant; pre-signed-URL audience-bound.</td></tr>
- <tr><td><code>R-DOC-009</code></td><td>Migration import accepts forged DocuSign trail</td><td>Low</td><td>High</td><td>CLO</td><td>Imports flagged trust=external; cert chain validated against AATL root; CLO approves import batches.</td></tr>
- <tr><td><code>R-DOC-010</code></td><td>GDPR Art. 17 purge collides with retention obligation</td><td>Medium</td><td>Medium</td><td>DPO</td><td>Purge requires CLO sign-off + retention-exempt classification; rejection logged with reason.</td></tr>
- <tr><td><code>R-DOC-011</code></td><td>CRM/HR/ESOP-triggered document creation fires without underlying lifecycle context</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Each cross-module trigger validates source record state at submission; reject document creation if source record incomplete.</td></tr>
- <tr><td><code>R-DOC-012</code></td><td>Renewal proposal CUO-drafted with stale terms (e.g. expired discount)</td><td>Medium</td><td>Low</td><td>CPO</td><td>Renewal proposal carries terms-version stamp; CUO reads from active rate-card / contract templates only; AM final review.</td></tr>
- <tr><td><code>R-DOC-013</code></td><td>Expiry alert latency — 90-day notice misses a contract</td><td>Low</td><td>High</td><td>CTO</td><td>Nightly batch double-checks all active contracts; 90/30/7 day cascade; OBS alarm on any missed cascade step.</td></tr>
- <tr><td><code>R-DOC-014</code></td><td>Multi-jurisdiction contract (VN tenant signs with EU customer) — which cert chain governs?</td><td>Medium</td><td>Medium</td><td>CLO</td><td>Per-contract cert-chain declaration; co-signer cert chains both attached; legal precedence rules per type documented in KB runbook.</td></tr>
- <tr><td><code>R-DOC-015</code></td><td>Migrated DocuSign trail fails LTV after import — provenance breaks at archive</td><td>Medium</td><td>High</td><td>CLO</td><td>Imports flagged trust=external + cert-chain captured at import; LTV re-validation at year 9; failures escalate to CLO.</td></tr>
- </tbody>
- </table>
- </div>
-</section>
-
-<!-- ============================================================ -->
-<!-- KPIs -->
-<!-- ============================================================ -->
-<section id="kpis" class="module-section">
- <header class="section-head"><span class="section-num">13</span><h2>KPIs</h2></header>
- <p class="text-slate-700 leading-relaxed mb-4">DOC health rolls up into 9 KPIs covering signing speed, completion rate, audit integrity, and compliance posture.</p>
- <div class="bbg-card p-5 overflow-x-auto">
- <table class="kt">
- <thead><tr><th>KPI</th><th>Formula</th><th>Source</th><th>Target</th></tr></thead>
- <tbody>
- <tr><td><strong>Session completion rate</strong></td><td><code>completed / opened (per 30d)</code></td><td>doc.signing_session</td><td>≥ 75%</td></tr>
- <tr><td><strong>Time-to-first-signature p95</strong></td><td>histogram</td><td>OBS</td><td>≤ 24 h</td></tr>
- <tr><td><strong>Time-to-completion p95</strong></td><td>histogram</td><td>OBS</td><td>≤ 7 d</td></tr>
- <tr><td><strong>QTSP partner success rate</strong></td><td><code>signed / attempted</code></td><td>broker.rs</td><td>≥ 99.5%</td></tr>
- <tr><td><strong>Identity-verification pass rate</strong></td><td><code>idv.passed / idv.attempted</code></td><td>idv.rs</td><td>≥ 90%</td></tr>
- <tr><td><strong>Archive verification success</strong></td><td>quarterly chaos audit</td><td>chaos job</td><td>= 100%</td></tr>
- <tr><td><strong>Cosign chain validation success</strong></td><td>nightly walker</td><td>OBS</td><td>= 100%</td></tr>
- <tr><td><strong>Fraud-detection alerts / month</strong></td><td>count</td><td>fraud.rs</td><td>tracked</td></tr>
- <tr><td><strong>Migration trust-external flag rate</strong></td><td><code>external / total</code></td><td>doc.document</td><td>declining trend</td></tr>
- <tr><td><strong>Cross-module trigger validation rate</strong></td><td>cross-module-triggered docs with source record validated / total</td><td>OBS</td><td>= 1.0 (hard floor)</td></tr>
- <tr><td><strong>Renewal proposal terms-stamp coverage</strong></td><td>proposals with active terms-version stamped / total</td><td>memory audit</td><td>= 1.0</td></tr>
- <tr><td><strong>Expiry cascade completeness</strong></td><td>contracts hit by all 3 cascade steps (90/30/7) / total expiring</td><td>nightly batch</td><td>= 1.0</td></tr>
- <tr><td><strong>Multi-jurisdiction cert-chain declaration rate</strong></td><td>multi-juris contracts with explicit cert-chain declared / total</td><td>contract metadata</td><td>= 1.0</td></tr>
- <tr><td><strong>LTV re-validation pass rate (year 9)</strong></td><td>migrated trails passing LTV at year 9 / total imports</td><td>quarterly audit</td><td>≥ 0.95 (escalate failures)</td></tr>
- </tbody>
- </table>
- </div>
-</section>
-
-<!-- ============================================================ -->
-<!-- RACI -->
-<!-- ============================================================ -->
-<section id="raci" class="module-section">
- <header class="section-head"><span class="section-num">14</span><h2>RACI matrix</h2></header>
- <p class="text-slate-700 leading-relaxed mb-4">DOC is owned by the CLO seat (legal effect) with CTO for engineering and DPO for data-subject rights.</p>
- <div class="bbg-card p-5 overflow-x-auto">
- <table class="kt">
- <thead><tr><th>Activity</th><th>CEO</th><th>CLO</th><th>CTO</th><th>CSO</th><th>DPO</th><th>CFO</th></tr></thead>
- <tbody>
- <tr><td>Service design + spec</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
- <tr><td>Implementation</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
- <tr><td>QTSP partner selection + contracts</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td></tr>
- <tr><td>Legal-hold application / lift</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td></tr>
- <tr><td>Retention-policy review (10y default)</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
- <tr><td>eIDAS / Decree 130 conformity audit</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
- <tr><td>Notary-fraud incident response</td><td class="raci-cell-c">C</td><td class="raci-cell-r">R</td><td class="raci-cell-r">R</td><td class="raci-cell-a">A</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
- <tr><td>DSAR fulfilment (DOC scope)</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td></tr>
- <tr><td>Migration import (DocuSign / Adobe Sign)</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
- </tbody>
- </table>
- <p class="text-xs text-slate-500 mt-3"><strong>R</strong> Responsible · <strong>A</strong> Accountable · <strong>C</strong> Consulted · <strong>I</strong> Informed.</p>
- </div>
-</section>
-
-<!-- ============================================================ -->
-<!-- CLI USAGE -->
-<!-- ============================================================ -->
-<section id="cli-usage" class="module-section">
- <header class="section-head"><span class="section-num">15</span><h2>Planned CLI surface</h2></header>
- <p class="text-slate-700 leading-relaxed mb-4">Admin CLI <code>cyberos-doc</code>. Every destructive action writes a chained memory audit row.</p>
-
- <h3 class="text-lg font-bold mb-2">1. Upload + apply template</h3>
-<pre><code>$ cyberos-doc upload "Acme MSA.pdf" --template MSA-EU-v3 --deal deal-2026-0912
-
-[uploaded] doc_id=DOC-018824 sha256=… bytes=412_223
-[template] MSA-EU-v3 applied; 4 fields auto-filled from CRM
-[audit] memory seq=21884 chain=…</code></pre>
-
- <h3 class="text-lg font-bold mb-2 mt-5">2. Create a multi-party signing session</h3>
-<pre><code>$ cyberos-doc session create \
- --doc DOC-018824 --mode sequential --deadline 14d \
- --signer "ceo@acme.com:Alice Smith:US:webauthn" \
- --signer "stephen@cyberskill.com:Stephen:VN:webauthn"
-
-[session created] S-009311 order: [1:alice, 2:stephen]
-[invited] alice@acme.com (magic link sent)
-[reminder] scheduled +3d, +7d, +13d</code></pre>
-
- <h3 class="text-lg font-bold mb-2 mt-5">3. Check session status</h3>
-<pre><code>$ cyberos-doc session status S-009311
-
-[status] open
-[signers]
- 1. alice@acme.com [SIGNED · 2026-05-13 09:14 · WebAuthn AAL3 · GlobalSign QTSP]
- 2. stephen@cyberskill.com [VIEWED · 2026-05-13 11:02 · awaiting WebAuthn]
-[deadline] 2026-05-27 (+13d)</code></pre>
-
- <h3 class="text-lg font-bold mb-2 mt-5">4. Verify a signed-document archive</h3>
-<pre><code>$ cyberos-doc verify --doc DOC-018824
-
-[archive] s3:/cyberos-doc-archive-vn-hanoi/2026/05/DOC-018824.pdf
-[sha256] ✓ matches archive event
-[chain] ✓ 7 events, all chain-hashes valid
-[certs] ✓ GlobalSign QTSP root trusted
-[ocsp] ✓ revocation info valid
-[tsa] ✓ RFC 3161 token valid
-[overall] PASS</code></pre>
-
- <h3 class="text-lg font-bold mb-2 mt-5">5. Export legal-discovery bundle</h3>
-<pre><code>$ cyberos-doc bundle --doc DOC-018824 --output discovery.zip
-
-[bundle]
- doc-018824.pdf 412 KB (PAdES-B-LT)
- doc-018824-audit.json 18 KB (7 chained events)
- doc-018824-cert-chain.pem 6 KB (full chain to root)
- doc-018824-tsa-token.tsr 4 KB
- doc-018824-readme.md 2 KB (verification instructions)
-[total] 442 KB
-[written] discovery.zip</code></pre>
-
- <h3 class="text-lg font-bold mb-2 mt-5">6. Migrate DocuSign envelopes</h3>
-<pre><code>$ cyberos-doc migrate docusign --since 2020-01-01 --account "Acme Corp"
-
-[connect] DocuSign OAuth ok
-[scan] 324 envelopes since 2020-01-01
-[import] 324 imported · 0 failures
-[trust] all flagged trust=external
-[audit] memory seq=21899 chain=…</code></pre>
-
- <h3 class="text-lg font-bold mb-2 mt-5">7. Apply legal hold</h3>
-<pre><code>$ cyberos-doc legal-hold --doc DOC-018824 --on --reason "Acme litigation 2026-104"
-
-[hold applied] DOC-018824 protected beyond retention window
-[next purge] blocked — legal_hold=true
-[audit] memory seq=21902 chain=… (CLO co-sign required: stephen@cyberskill.com confirmed)</code></pre>
-
- <h3 class="text-lg font-bold mb-2 mt-5">8. DSAR export for a signer</h3>
-<pre><code>$ cyberos-doc dsar-export --subject alice@acme.com --output dsar.zip
-
-[dsar] signed_documents: 12 (since 2024)
-[dsar] audit_events: 96 rows
-[dsar] cert_chains: 12 PEM files
-[dsar] written: dsar.zip (4.8 MB)</code></pre>
-</section>
-
-<!-- ============================================================ -->
-<!-- STATUS -->
-<!-- ============================================================ -->
-<section id="status" class="module-section">
- <header class="section-head"><span class="section-num">16</span><h2>Phase status &amp; estimates</h2></header>
-
- <div class="grid md:grid-cols-3 gap-4 mb-6">
- <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P4 long-term</div></div>
- <div class="fact-card"><div class="label">Est. LoC (Rust)</div><div class="value">~9,500</div><div class="note">services/doc + PAdES + broker</div></div>
- <div class="fact-card"><div class="label">Est. LoC (TS)</div><div class="value">~3,200</div><div class="note">signer SPA + template designer</div></div>
- <div class="fact-card"><div class="label">Planned tests</div><div class="value">140+</div><div class="note">incl. eIDAS conformity suite</div></div>
- <div class="fact-card"><div class="label">External libs</div><div class="value">~20</div><div class="note">pdfium · cms · oid-registry · CAdES</div></div>
- <div class="fact-card"><div class="label">P4 budget</div><div class="value">~$80/mo + $0.50–$2 / signature</div><div class="note">Fargate + S3 + KMS + QTSP pass-thru</div></div>
- </div>
-
- <div class="bbg-card p-5">
- <table class="kt">
- <thead><tr><th>Capability</th><th>Status</th></tr></thead>
- <tbody>
- <tr><td>Document upload + SHA-256 + KMS encrypt</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
- <tr><td>Template designer + auto-fill from CRM/HR</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
- <tr><td>Multi-party signing (sequential + parallel)</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
- <tr><td>eIDAS QTSP integration (GlobalSign / Cryptomathic)</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
- <tr><td>Adobe AATL chain (DigiCert)</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
- <tr><td>VN CA chain (VnPay / MK Group / Viettel-CA)</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
- <tr><td>VNeID integration for VN citizens</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
- <tr><td>WebAuthn / SMS-OTP / email-link IDV</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
- <tr><td>PAdES-B-LT archival with LTV outer timestamp</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
- <tr><td>S3 Object-Lock Compliance, residency-pinned</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
- <tr><td>DocuSign / Adobe Sign / HelloSign migration</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
- <tr><td>Notary-fraud detection (velocity + device)</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
- <tr><td>Legal-hold + retention sweep</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
- <tr><td>Cosign verification end-to-end</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
- <tr><td>Quarterly external eIDAS audit</td><td><span class="pill pill-planned">planned · P4+</span></td></tr>
- </tbody>
- </table>
- </div>
-</section>
-
-<!-- ============================================================ -->
-<!-- REFERENCES -->
-<!-- ============================================================ -->
-<section id="references" class="module-section">
- <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
- <div class="bbg-card p-5">
- <ul class="space-y-2 text-sm">
- <li><strong>FR catalogue</strong> — DOC — Document signing. FRs 001..005.</li>
- <li><strong>Module spec</strong> — Document management with e-signatures.</li>
- <li><strong>Formal FR mapping</strong> — (FR pending)..006 with verification methods.</li>
- <li><strong>eIDAS Regulation (EU 910/2014)</strong> — qualified e-signatures and trust services.</li>
- <li><strong>ETSI EN 319 142-1</strong> — PAdES baseline profile.</li>
- <li><strong>ETSI TS 119 312</strong> — PAdES long-term validation profiles.</li>
- <li><strong>RFC 3161</strong> — Time-Stamp Protocol (TSP).</li>
- <li><strong>RFC 5126 (CAdES)</strong> — CMS Advanced Electronic Signatures.</li>
- <li><strong>US ESIGN Act (15 U.S.C. §7001)</strong> — Electronic Signatures in Global and National Commerce.</li>
- <li><strong>US UETA</strong> — Uniform Electronic Transactions Act.</li>
- <li><strong>Vietnam Decree 130/2018/NĐ-CP</strong> — Detailed regulations on electronic signatures.</li>
- <li><strong>Vietnam Decision 06/2022/QĐ-TTg</strong> — Project on developing the e-identification + e-authentication system (VNeID).</li>
- <li><strong>Vietnam Law 91/2025/QH15 (PDPL)</strong> — Personal Data Protection Law.</li>
- <li><strong>GDPR (EU 2016/679)</strong> — Art. 15, 17.</li>
- <li><strong>ISO 14533-1</strong> — Long-term signature profile (PAdES).</li>
- <li><strong>Adobe AATL programme</strong> — Approved Trust List for non-EU jurisdictions.</li>
- <li><strong>S3 Object-Lock</strong> — AWS storage WORM compliance.</li>
- <li><strong>Architecture context:</strong> <a href="../../architecture/infrastructure.html#doc" class="text-blue-700 underline">infrastructure.html#doc</a>.</li>
- <li><strong>CRM module</strong> — <a href="../crm/index.html" class="text-blue-700 underline">crm.html</a> · upstream for deal contract auto-fill.</li>
- <li><strong>HR module</strong> — <a href="../hr/index.html" class="text-blue-700 underline">hr.html</a> · upstream for employment-contract auto-fill.</li>
- <li><strong>AUTH module</strong> — <a href="../auth/index.html" class="text-blue-700 underline">auth.html</a> · WebAuthn for elevated-signer IDV.</li>
- <li><strong>Bigger picture (§0 above):</strong> 3 strategic roles + partner-routed signing Mermaid + 10-row auto-vs-human matrix.</li>
- <li><strong>memory auto-sync vision:</strong> <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">MEMORY_AUTOSYNC_DESIGN.md §5</a> — every contract event (sign, expire, renew) becomes a memory audit row.</li>
- <li><strong>Build-readiness audit:</strong> <code>archive/2026-05-14/AUDIT_AND_PLAN.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> — DOC at P4 · early (P4) due to QTSP partner integration timeline.</li>
- <li><strong>FR authoring discipline:</strong> <a href="https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md" target="_blank" rel="noopener" class="text-blue-700 underline" rel="noopener" target="_blank">modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md</a>.</li>
- </ul>
- </div>
-</section>
-
-<!-- ============================================================ -->
-<!-- PREV / NEXT NAV -->
-<!-- ============================================================ -->
-<nav class="module-nav-footer mt-12">
- <a href="../okr/index.html" class="text-blue-700 font-semibold no-underline hover:underline">← OKR</a>
- <a href="../portal/index.html" class="text-blue-700 font-semibold no-underline hover:underline">Next module: PORTAL →</a>
-</nav>
-
+<main class="docs-page mx-auto max-w-4xl px-6 py-10">
+<p>DOC is CyberOS's <strong>e-signature workflow + immutable archival</strong> service. The cryptographic signing act is delegated to an eIDAS-conformant QTSP (qualified trust-service provider) per jurisdiction; DOC owns everything else: document upload + SHA-256 integrity hashing, template definition + auto-fill from CRM data, multi-party workflow (signer order, parallel vs sequential), identity verification (WebAuthn for CyberOS-resident users; VNeID for Vietnamese citizens; SMS-OTP fallback), per-document hash-chained audit log, and S3 Object-Lock archival with residency-pinning. Three certificate chains are supported: <strong>eIDAS QTSP</strong> (qualified electronic signature, QES) for the EU; <strong>Adobe AATL</strong> for US/non-EU enterprise; <strong>Vietnamese CA chain</strong> (VnPay, MK Group, Viettel-CA) for VN per Decree 130/2018. Migration paths from DocuSign, Adobe Sign, and HelloSign preserve original audit trails without re-signing. The default retention is 10 years; longer per applicable law (e.g. employment contracts under VN labour law). </p>
+<p>Status</p>
+<p>Planned</p>
+<p>P4 long-term</p>
+<p>Cert chains</p>
+<p>3</p>
+<p>eIDAS · AATL · VN CA</p>
+<p>Identity proof</p>
+<p>4 methods</p>
+<p>WebAuthn · VNeID · SMS-OTP · email-link</p>
+<p>Retention</p>
+<p>10 years</p>
+<p>eIDAS · ESIGN minimum</p>
+<p>Archive</p>
+<p>S3 Object-Lock</p>
+<p>Compliance mode + residency pin</p>
+<p>Migration</p>
+<p>3 sources</p>
+<p>DocuSign · Adobe Sign · HelloSign</p>
+<p>i18n</p>
+<p>vi + en</p>
+<p>\+ regional certs</p>
+<p>Depends on</p>
+<p>AUTH · memory · QTSP partner</p>
+<p>\+ CRM · HR · INV consumers</p>
+<p>0</p>
+<h2>The bigger picture — three strategic roles</h2>
+<p>DOC ships P4 because legally-binding e-signatures require regulated trust-service providers — and CyberOS will not pretend to be one. The architecture is partner-routed: DOC owns the workflow (upload, template, multi-party order, archival, lifecycle); QTSP partners (eIDAS/AATL/VN CA) provide the cryptographic signing. This separation makes DOC compliance-clean and provider-portable. </p>
+<p>Role 1 · Document repository</p>
+<p>Versioned · ACL'd · 10-year retention</p>
+<p>Documents stored in S3 Object-Lock-Compliance bucket with residency pinning per tenant. Versioned at every modification; immutable post-archive. ACL aligns with module ownership (HR contracts → HR scope; CRM contracts → CRM scope; ESOP grants → cap-table scope). 10-year retention satisfies eIDAS + ESIGN minimum. </p>
+<p>Role 2 · E-sign workflow</p>
+<p>Partner-routed cryptography · CyberOS-owned workflow</p>
+<p>DOC owns the workflow: upload, template assembly, multi-party signing order, identity verification (WebAuthn / VNeID / SMS-OTP / email-link), audit chain. The cryptographic act delegates to eIDAS QTSP (EU), AATL CA (US), or Vietnamese CA (VN). DocuSign / Adobe Sign / HelloSign migration brings legacy signed docs in without re-signing. </p>
+<p>Role 3 · Contract lifecycle</p>
+<p>HR + CRM + ESOP integration · expiry + renewal</p>
+<p>Every contract carries lifecycle metadata: type (employment / NDA / MSA / SOW / ESOP grant), parties, effective dates, renewal date, expiry, parent contract. Expiry alerts fire 90 days before; renewal proposals draft via CUO. Cross-module: HR contracts auto-link to Member onboarding; CRM contracts link to Engagement creation in PROJ; ESOP grants archive with cap-table audit trail. </p>
+<h3>DOC partner-routed signing flow</h3>
+<p>flowchart LR SOURCE["Source   HR · CRM · ESOP · LEGAL"] DOC["✍ DOC   workflow · template · identity"] SIGN_EU["🇪🇺 eIDAS QTSP   (EU residency)"] SIGN_US["🇺🇸 AATL CA   (US residency)"] SIGN_VN["🇻🇳 VNeID + VN CA   (VN residency)"] ARCHIVE["📦 S3 Object-Lock   Compliance · 10yr"] memory["🧠 memory   contract event audit"] LIFECYCLE["⏰ Lifecycle   expiry · renewal · alerts"] SOURCE --&gt; DOC DOC -- "EU tenant" --&gt; SIGN_EU DOC -- "US tenant" --&gt; SIGN_US DOC -- "VN tenant" --&gt; SIGN_VN SIGN_EU --&gt; ARCHIVE SIGN_US --&gt; ARCHIVE SIGN_VN --&gt; ARCHIVE ARCHIVE --&gt; LIFECYCLE LIFECYCLE --&gt; SOURCE DOC --&gt; memory classDef hub fill:#fde68a,stroke:#451a03,stroke-width:3px,color:#451a03 classDef mod fill:#e0e7ff,stroke:#3730a3 classDef partner fill:#fef2f2,stroke:#b91c1c classDef memory fill:#fef6e0,stroke:#9c750a class DOC hub class SOURCE,ARCHIVE,LIFECYCLE mod class SIGN_EU,SIGN_US,SIGN_VN partner class memory memory </p>
+<h3>Auto vs human-in-loop operations matrix</h3>
+<p>Operation| How it happens| Why this split   ---|---|---   Document upload| <strong>Manual</strong> Member action| Intent; auto-upload from other modules also requires authoring trigger.   Template assembly| <strong>Auto</strong> from template engine| Templates parameterised; CUO drafts variable fields.   Identity verification| <strong>Auto</strong> via WebAuthn / VNeID / SMS-OTP / email-link| Multi-factor enforced per signer; never bypassed.   Cryptographic signing| <strong>Auto</strong> via QTSP partner API| The QTSP/CA is the trust anchor; CyberOS never holds the signing key.   High-value signing (≥ tenant threshold)| <strong>Manual</strong> 2nd-factor + dual approval| Anti-fraud per Decree 130/2018; signer + counter-signer if applicable.   Expiry alert| <strong>Auto</strong> 90 / 30 / 7 days before| Renewal lead time; CUO drafts renewal proposal.   Renewal proposal| <strong>Auto</strong> draft; <strong>Manual</strong> review + send| CUO drafts terms; legal/AM reviews.   Archival| <strong>Auto</strong> at signing complete| Object-Lock + audit chain row.   DSAR export| <strong>Auto</strong> bundle per request| Per-subject signature events; chain-preserved.   Document deletion (purge)| <strong>Blocked</strong> until retention expires| 10-year retention is statutory; deletion not allowed prior.  </p>
+<p>1</p>
+<h2>Why DOC exists</h2>
+<p>Consultancies sign documents all day: MSAs, SOWs, employment contracts, NDAs, change orders, supplier agreements, COIs, retention letters. They send them through DocuSign or Adobe Sign at $30–$50 per seat per month, and the resulting signed PDFs land in someone's email or shared drive — never in the same audit chain as the workflow that produced them, never re-discoverable by the AI surface, never bound to the CRM record. DOC fixes this by making "sign this document" a first-class CyberOS workflow: the template is defined in DOC, the signer field auto-pulls from CRM, the QTSP partner does the actual crypto, and the resulting PDF + cert chain + audit log lands back in DOC, citable from memory, and visible to the AM in CHAT. The cost saving (no per-seat DocuSign) is incidental; the integration is the value. </p>
+<p>🤝</p>
+<p>Partner-routed signing</p>
+<p>DOC owns the workflow; eIDAS QTSP / Adobe AATL / VN CA owns the crypto. CyberOS does not invent trust — it integrates regulated trust.</p>
+<p>🆔</p>
+<p>Identity proof matters</p>
+<p>VNeID for VN citizens, WebAuthn for repeat signers, SMS-OTP for one-time external signers. High-value docs require multi-factor.</p>
+<p>📦</p>
+<p>Archive is immutable</p>
+<p>Signed PDFs land in S3 Object-Lock Compliance mode with 10-year retention. The "did they actually sign?" question is one cosign verification away.</p>
+<p>The bet is that the dollars saved on DocuSign are nice but the real value is the binding: a signed MSA appears as a CRM activity, an employment contract appears in HR, a SOW appears under PROJ.engagement, an INV-issued purchase order links to the signed-doc record. Future-AI surfaces — "show me every signed agreement with Acme Corp" — become a single GraphQL query, not a Sharepoint hunt. </p>
+<p>2</p>
+<h2>What it does — 5W1H2C5M</h2>
+<p>Structured decomposition. Cells trace to +.</p>
+<p>Axis| Question| Answer   ---|---|---   <strong>5W · What</strong>|  What is DOC?| A document-management + e-signature workflow service. Owns: documents, templates, signing sessions, signature records, identity-verification events, audit log, archive. Delegates cryptographic signing to QTSP partners.   <strong>5W · Who</strong>|  Who uses it?| <strong>AMs:</strong> initiate MSA / SOW signing. <strong>HR:</strong> contract signing. <strong>Finance:</strong> PO + invoice signing. <strong>Counterparties:</strong> external signers via email link. <strong>CLO:</strong> reviews high-value docs pre-send.   <strong>5W · When</strong>|  When does it run?| On-demand for signing-session create. Continuous for archival jobs and certificate-chain validation. Nightly for retention-policy enforcement (purge after retention expiry per legal).   <strong>5W · Where</strong>|  Where does it run?| P4: SG-1 primary + VN-hanoi-1 partition. S3 Object-Lock bucket per residency. QTSP API calls outbound to partner regions.   <strong>5W · Why</strong>|  Why a separate module?| Because every other module needs to attach signed documents to its primitives (CRM.deal → MSA, HR.employee → contract, INV.invoice → signed PO). Owning the surface once means every consumer reads the same signature audit chain.   <strong>1H · How</strong>|  How does it work?| Document upload → SHA-256 integrity hash → template overlay (auto-fill from CRM/HR data) → signing session created with ordered signer list → identity verification per signer (WebAuthn/VNeID/SMS) → QTSP signing call → certificate + timestamp returned → PDF stamped + AATL/CAdES-format embedded → archive to S3 Object-Lock.   <strong>2C · Cost</strong>|  Cost budget?| P4: QTSP partner cost ~$0.50–$2.00 per signature (passes through). Infra ~$80 / month (Fargate + S3 storage + Object-Lock + KMS).   <strong>2C · Constraints</strong>|  Constraints?| (a) eIDAS conformity required for QES — partner-only. (b) VN Decree 130/2018 — signature must use VN-licenced CA for legal effect in VN. (c) 10-year minimum retention. (d) PDPL Art. 14 DSAR — export support for signers' own data. (e) GDPR Art. 17 — purge with archival exemption for legal docs.   <strong>5M · Materials</strong>|  Stack?| Rust 1.81 · axum · sqlx · PostgreSQL 16 · S3 (Object-Lock Compliance) · KMS · pdfium for PDF manipulation · CAdES + PAdES formats · OpenTelemetry. QTSP partners: GlobalSign (EU), DigiCert (US-AATL), VnPay (VN), MK Group (VN), Viettel-CA (VN).   <strong>5M · Methods</strong>|  Method choices?| PAdES-B-LT (long-term) format for archived PDFs — includes cert chain + revocation info + LTV. Per-document hash-chained audit log mirrors memory chain semantics. Multi-signer workflows are state machines.   <strong>5M · Machines</strong>|  Deployment?| Fargate tasks (workflow), separate task for archival jobs. S3 Object-Lock buckets per residency. KMS-wrapped encryption for at-rest documents.   <strong>5M · Manpower</strong>|  Who maintains?| 0.3 FTE at P4; legal counsel reviews QTSP partner contracts annually; security review of cert-chain handling annually.   <strong>5M · Measurement</strong>|  How measured?| N(FR pending) (signature non-repudiation — cosign verifies any archive byte-for-byte), N(FR pending) (zero archive loss over 10 years), KPI signature-time p95 (≤ 5 min including human-confirm).  </p>
+<p>3</p>
+<h2>Architecture</h2>
+<p>DOC is a Rust service split into three planes: workflow (document, template, session, signer state machine), partner-broker (QTSP routing per jurisdiction), and archive (S3 Object-Lock + LTV PAdES validation). The architecture is partner-routed: signature crypto never happens inside CyberOS; identity verification is normalised across WebAuthn / VNeID / SMS-OTP / email-link. </p>
+<p>graph TB subgraph UI ["UI surfaces"] SPA["Signer SPA   (React + pdf.js)"] TPL["Template designer"] INBOX["Counterparty link"] end subgraph DOC ["DOC service (Rust · axum)"] DCRUD["doc.rs   document CRUD"] TPL_S["template.rs   field overlay"] SESSION["session.rs   signing-session state machine"] SIGNER["signer.rs   per-signer flow"] IDV["idv.rs   identity verification dispatcher"] BROKER["broker.rs   QTSP routing"] ARCHIVE["archive.rs   PAdES-LT + S3 Object-Lock"] MIGRATE["migrate.rs   DocuSign / AdobeSign import"] PDF["pdf.rs   pdfium wrapper"] end subgraph IDV_BACKENDS ["Identity-verification backends"] WA["AUTH WebAuthn"] VNEID["🇻🇳 VNeID API"] SMS["SMS-OTP provider"] EMAIL["Email-link"] end subgraph QTSP ["QTSP partners (delegated crypto)"] GS["GlobalSign QTSP (EU)"] DG["DigiCert AATL (US/non-EU)"] VNPAY["VnPay CA (VN)"] MKG["MK Group CA (VN)"] VTL["Viettel-CA (VN)"] end subgraph STORES ["Stores"] PG[("PostgreSQL 16   doc.document · template   session · signer · signature   audit_event")] S3[("S3 Object-Lock Compliance   10y retention   residency-pinned")] KMS[("AWS KMS   document encryption keys")] end subgraph SINKS ["Audit"] memory["🧠 memory   doc.* rows"] OBS["👁 OBS"] end SPA --&gt; DCRUD TPL --&gt; TPL_S INBOX --&gt; SIGNER DCRUD --&gt; PDF DCRUD --&gt; S3 DCRUD --&gt; KMS TPL_S --&gt; PG SESSION --&gt; PG SESSION --&gt; SIGNER SIGNER --&gt; IDV IDV --&gt; WA IDV --&gt; VNEID IDV --&gt; SMS IDV --&gt; EMAIL SIGNER --&gt; BROKER BROKER --&gt; GS BROKER --&gt; DG BROKER --&gt; VNPAY BROKER --&gt; MKG BROKER --&gt; VTL BROKER --&gt; ARCHIVE ARCHIVE --&gt; S3 ARCHIVE --&gt; memory SESSION --&gt; memory DOC --&gt; OBS MIGRATE --&gt; S3 MIGRATE --&gt; PG classDef planned fill:#fde68a,stroke:#78350f classDef store fill:#f5f3ff,stroke:#7c3aed classDef sink fill:#f5ede6,stroke:#45210e classDef partner fill:#fef2f2,stroke:#7f1d1d class SPA,TPL,INBOX,DCRUD,TPL_S,SESSION,SIGNER,IDV,BROKER,ARCHIVE,MIGRATE,PDF planned class PG,S3,KMS store class memory,OBS sink class GS,DG,VNPAY,MKG,VTL,WA,VNEID,SMS,EMAIL partner </p>
+<h3>Internal components</h3>
+<p>Component| Path (planned)| Responsibility   ---|---|---   <code>doc.rs</code>| services/doc/src/doc.rs| Document CRUD — upload, version, SHA-256 hash, encrypt-at-rest via KMS, store on S3.   <code>template.rs</code>| services/doc/src/template.rs| Template definition: signer fields, text fields, date fields, conditional fields. Auto-fill rules pulling from CRM/HR/INV.   <code>session.rs</code>| services/doc/src/session.rs| Signing session: ordered signer list, parallel/sequential mode, deadline, reminder schedule.   <code>signer.rs</code>| services/doc/src/signer.rs| Per-signer state machine: invited → identity_verified → signed | rejected | expired.   <code>idv.rs</code>| services/doc/src/idv.rs| Identity-verification dispatcher. Routes based on signer profile + document risk-tier. WebAuthn / VNeID / SMS-OTP / email-link.   <code>vneid.rs</code>| services/doc/src/vneid.rs| VNeID API client. CCCD (Citizen ID) validation; biometric assertion for high-value docs (Decision 06/2022/QĐ-TTg).   <code>broker.rs</code>| services/doc/src/broker.rs| QTSP routing. Picks partner per (jurisdiction × document_type × signer_country). Failover between partners on outage.   <code>pades.rs</code>| services/doc/src/pades.rs| PAdES-B-LT formatter. Embeds cert chain + OCSP revocation info + DSS dictionary for long-term validation.   <code>archive.rs</code>| services/doc/src/archive.rs| S3 Object-Lock Compliance archival. Residency-pinned bucket. 10-year retention by default; per-tenant override.   <code>audit_chain.rs</code>| services/doc/src/audit_chain.rs| Per-document hash-chained audit log. Each signature event chains to previous; export bundle for legal discovery.   <code>retention.rs</code>| services/doc/src/retention.rs| Retention policy enforcement. Nightly job: identifies docs past retention + legal hold lifted; purges with audit row.   <code>migrate.rs</code>| services/doc/src/migrate.rs| DocuSign / Adobe Sign / HelloSign import. Preserves original audit trail; flags imported docs as "external-trust".   <code>fraud.rs</code>| services/doc/src/fraud.rs| Notary-fraud detection: velocity check, impossible-travel for signers, device fingerprint, anomaly score.   <code>migrations/</code>| services/doc/migrations/| sqlx migrations. RLS by tenant_id. Indices on (doc_id), (session_id, signer_id), (status).  </p>
+<p>DOC-INV-001 · Signed-document integrity is byte-for-byte verifiable</p>
+<p>Every archived PDF MUST cosign-verify against (a) its SHA-256 stored at archive time, (b) its cert chain stored with the document, and (c) its memory audit-chain leaf. The verification path is implemented in <code>cyberos-doc verify --archive-id …</code> and is exercised quarterly by an automated chaos job that randomly picks 1% of archived docs and verifies them. Failure halts retention purges until investigation completes.</p>
+<p>4</p>
+<h2>Data model</h2>
+<p>Documents, templates, signing sessions, signers, signatures, audit events, archive records. PostgreSQL holds metadata; PDF content (encrypted) lives on S3 Object-Lock. </p>
+<p>erDiagram TENANT ||--o{ DOCUMENT: "owns" TENANT ||--o{ TEMPLATE: "defines" DOCUMENT ||--o| TEMPLATE: "instantiated from" DOCUMENT ||--o{ SIGNING_SESSION: "has" SIGNING_SESSION ||--o{ SIGNER: "lists" SIGNER ||--o| SIGNATURE: "produces" SIGNATURE ||--o{ AUDIT_EVENT: "logs" SIGNING_SESSION ||--o{ AUDIT_EVENT: "logs" DOCUMENT ||--o{ AUDIT_EVENT: "logs" DOCUMENT ||--o| ARCHIVE: "archived as" TEMPLATE ||--o{ TEMPLATE_FIELD: "defines" TENANT { uuid id PK string slug string default_residency int default_retention_years } DOCUMENT { uuid id PK uuid tenant_id FK string name string s3_key "encrypted at rest" string sha256_original string status "draft | in_signing | executed | expired | revoked" uuid template_id FK timestamp created_at uuid created_by FK } TEMPLATE { uuid id PK uuid tenant_id FK string name string jurisdiction "EU | US | VN | OTHER" string s3_key "template PDF" timestamp created_at } TEMPLATE_FIELD { uuid id PK uuid template_id FK string field_type "signature | text | date | checkbox | initial" string name int page int x int y int width int height string auto_fill_source "crm.contact.name | hr.member.email | …" } SIGNING_SESSION { uuid id PK uuid document_id FK string mode "sequential | parallel" timestamp deadline string status "open | completed | expired | cancelled" string memory_chain } SIGNER { uuid id PK uuid session_id FK int order_index string email string display_name string country "VN | EU | US | …" string idv_method "webauthn | vneid | sms_otp | email_link" string idv_proof_id "external reference" string status "invited | viewed | identity_verified | signed | rejected | expired" timestamp invited_at timestamp signed_at } SIGNATURE { uuid id PK uuid signer_id FK string qtsp_partner "globalsign | digicert | vnpay | mkgroup | viettelca" bytea cert_chain "X.509 chain DER" string timestamp_authority "RFC 3161 TSA" bytea signature_blob "CAdES detached or PAdES embedded" string sha256_signed_pdf timestamp signed_at string memory_chain } AUDIT_EVENT { uuid id PK uuid document_id FK string actor_type "human | agent | system | qtsp" uuid actor_id string event_type "uploaded | template_applied | session_created | invited | viewed | idv_attempted | idv_passed | signed | rejected | archived | purge_blocked | purged" string event_chain_hash string prev_chain_hash bytea details_json timestamp ts } ARCHIVE { uuid id PK uuid document_id FK string s3_bucket "cyberos-doc-archive-vn-hanoi" string s3_key string sha256_archived string pades_b_lt_format date retention_until bool legal_hold timestamp archived_at } </p>
+<h3>Per-document audit chain (mirrors memory semantics)</h3>
+<p>    / each audit_event row carries:     / prev_chain_hash = previous event's chain hash for this doc     / event_chain_hash = SHA-256(canonical(this_event_minus_chain) || prev_chain_hash)     /     / <code>cyberos-doc verify --doc-id …</code> walks the chain end-to-end:     / - validates SHA-256 of original at upload event     / - validates each event's chain hash     / - validates QTSP cert chain at signed event     / - validates timestamp authority RFC 3161 token     / - validates final archive SHA-256 against archive event     /     / Tampering at any point fails verification with a precise diagnosis row.</p>
+<p>5</p>
+<h2>API surface</h2>
+<p>GraphQL subgraph for cross-module reads (CRM.deal → contract list, HR.member → contract history), REST for the signer SPA, MCP tools for natural-language workflow ("send the standard MSA to acme@…"). </p>
+<h3>GraphQL subgraph (federated)</h3>
+<p>    extend schema      @link(url: "https://specs.apollo.dev/federation/v2.5", import: ["@key", "@external", "@shareable", "@requiresScopes"])</p>
+<p>    type Document @key(fields: "id") {      id: ID!      name: String!      status: DocStatus!      template: Template      sessions: [SigningSession!]!      auditEvents: [AuditEvent!]!      archive: Archive      createdAt: DateTime!     }</p>
+<p>    type Template @key(fields: "id") {      id: ID!      name: String!      jurisdiction: Jurisdiction!      fields: [TemplateField!]!     }</p>
+<p>    type TemplateField {      fieldType: FieldType!      name: String!      autoFillSource: String     }</p>
+<p>    type SigningSession @key(fields: "id") {      id: ID!      document: Document!      mode: SessionMode!      status: SessionStatus!      deadline: DateTime!      signers: [Signer!]!     }</p>
+<p>    type Signer @key(fields: "id") {      id: ID!      orderIndex: Int!      email: String!      displayName: String!      country: String!      idvMethod: IdvMethod!      status: SignerStatus!      signature: Signature     }</p>
+<p>    type Signature {      qtspPartner: QtspPartner!      timestampAuthority: String!      signedAt: DateTime!     }</p>
+<p>    type AuditEvent {      eventType: AuditEventType!      actorType: ActorType!      ts: DateTime!      eventChainHash: String!     }</p>
+<p>    type Archive {      s3Bucket: String!      retentionUntil: Date!      legalHold: Boolean!      padesFormat: String!     }</p>
+<p>    enum DocStatus { DRAFT IN_SIGNING EXECUTED EXPIRED REVOKED }     enum SessionMode { SEQUENTIAL PARALLEL }     enum SessionStatus { OPEN COMPLETED EXPIRED CANCELLED }     enum SignerStatus { INVITED VIEWED IDENTITY_VERIFIED SIGNED REJECTED EXPIRED }     enum IdvMethod { WEBAUTHN VNEID SMS_OTP EMAIL_LINK }     enum QtspPartner { GLOBALSIGN DIGICERT VNPAY MKGROUP VIETTELCA }     enum Jurisdiction { EU US VN OTHER }     enum FieldType { SIGNATURE TEXT DATE CHECKBOX INITIAL }     enum ActorType { HUMAN AGENT SYSTEM QTSP }     enum AuditEventType { UPLOADED TEMPLATE_APPLIED SESSION_CREATED INVITED VIEWED IDV_ATTEMPTED IDV_PASSED SIGNED REJECTED ARCHIVED PURGE_BLOCKED PURGED }</p>
+<p>    extend type Deal @key(fields: "id") {      id: ID! @external      documents: [Document!]! @requiresScopes(scopes: [["doc.read"]])     }</p>
+<p>    extend type Member @key(fields: "id") {      id: ID! @external      contracts: [Document!]! @requiresScopes(scopes: [["doc.read"]])     }</p>
+<p>    type Query {      document(id: ID!): Document @requiresScopes(scopes: [["doc.read"]])      myPendingSignatures: [Signer!]! @requiresScopes(scopes: [["doc.read"]])      templates(jurisdiction: Jurisdiction): [Template!]! @requiresScopes(scopes: [["doc.read"]])     }</p>
+<p>    type Mutation {      uploadDocument(name: String!, sha256: String!): UploadUrl! @requiresScopes(scopes: [["doc.write"]])      createSession(input: SessionInput!): SigningSession! @requiresScopes(scopes: [["doc.write"]])      cancelSession(id: ID!, reason: String!): SigningSession! @requiresScopes(scopes: [["doc.write"]])      setLegalHold(documentId: ID!, hold: Boolean!): Document!      @requiresScopes(scopes: [["doc.legal_hold"]])     }</p>
+<h3>REST endpoints</h3>
+<p>Method| Path| Purpose   ---|---|---   POST| <code>/doc/upload</code>| Multipart upload — returns doc_id + s3_key.   POST| <code>/doc/{id}/template/{tpl}</code>| Apply template overlay; resolve auto-fill from CRM/HR.   POST| <code>/doc/{id}/session</code>| Create signing session.   GET| <code>/doc/sign/{signer_token}</code>| External signer landing page (counterparty).   POST| <code>/doc/sign/{signer_token}/idv</code>| Identity-verification challenge response.   POST| <code>/doc/sign/{signer_token}/finalize</code>| Capture signature; trigger QTSP call.   GET| <code>/doc/{id}/audit-bundle.zip</code>| Legal-discovery bundle: PDF + cert chain + audit log.   POST| <code>/doc/migrate/docusign</code>| Import legacy DocuSign envelope (preserve original trail).   POST| <code>/doc/migrate/adobesign</code>| Import legacy Adobe Sign.   POST| <code>/doc/migrate/hellosign</code>| Import legacy HelloSign.   GET| <code>/doc/{id}/verify</code>| Cosign verify of archived PDF.   POST| <code>/doc/{id}/legal-hold</code>| Apply / lift legal hold.   POST| <code>/doc/admin/retention-sweep</code>| Run nightly retention sweep manually.  </p>
+<h3>MCP tool catalogue</h3>
+<p>Tool name| Inputs| Outputs| Annotations   ---|---|---|---   <code>cyberos.doc.list</code>| filter, status?| Document| readonly · scope=doc.read   <code>cyberos.doc.start_signing</code>| template_id, deal_id, signers| {session_id, signer_links}| destructive · scope=doc.write · human-confirm   <code>cyberos.doc.status</code>| session_id| {session, signers}| readonly   <code>cyberos.doc.cancel_session</code>| session_id, reason| {ok}| destructive · scope=doc.write · human-confirm   <code>cyberos.doc.find_template</code>| name_match, jurisdiction| Template| readonly   <code>cyberos.doc.legal_discovery_bundle</code>| doc_id| {zip_url}| destructive · scope=doc.legal_export   <code>cyberos.doc.verify_archive</code>| doc_id| {ok, diagnostics}| readonly   <code>cyberos.doc.set_legal_hold</code>| doc_id, hold| {ok}| destructive · scope=doc.legal_hold · human-confirm  </p>
+<p>6</p>
+<h2>Key flows</h2>
+<h3>Flow 1 — Document upload + template fill</h3>
+<p>sequenceDiagram autonumber participant AM as Account Manager participant SPA as DOC SPA participant D as doc.rs participant T as template.rs participant CRM as 🏢 CRM participant KMS as AWS KMS participant S3 as S3 (residency-pinned) participant B as 🧠 memory AM-&gt;&gt;SPA: upload "Acme MSA.pdf" + select template "MSA-EU-v3" SPA-&gt;&gt;D: POST /doc/upload (multipart, sha256) D-&gt;&gt;KMS: encrypt at rest (envelope) D-&gt;&gt;S3: PutObject (encrypted body) D-&gt;&gt;B: append doc.uploaded row {sha256, by:AM} SPA-&gt;&gt;T: POST /doc/{id}/template/MSA-EU-v3 T-&gt;&gt;CRM: query Deal.contact for auto-fill (name, email, address) CRM--&gt;&gt;T: contact rows T-&gt;&gt;T: overlay fields onto template canvas; SHA-256 final body T-&gt;&gt;B: append template.applied row T--&gt;&gt;SPA: ready-to-send preview </p>
+<h3>Flow 2 — Multi-party signing (sequential)</h3>
+<p>sequenceDiagram autonumber participant AM as Account Manager participant S as session.rs participant Sa as Signer A (CEO of Acme) participant Sb as Signer B (CyberSkill CEO) participant I as idv.rs participant BK as broker.rs participant QTSP as eIDAS QTSP (GlobalSign) participant B as 🧠 memory AM-&gt;&gt;S: createSession(mode=sequential, signers=[A, B], deadline=14d) S-&gt;&gt;B: append session.created row S-&gt;&gt;Sa: email magic link (signer order_index=1) Sa-&gt;&gt;I: opens link · IDV via email-link (T2 doc) I--&gt;&gt;Sa: identity verified Sa-&gt;&gt;S: views + signs S-&gt;&gt;BK: route signature(country=EU, doc_type=MSA) BK-&gt;&gt;QTSP: sign call (cert chain, RFC 3161 timestamp) QTSP--&gt;&gt;BK: CAdES blob + cert chain + TSA token BK-&gt;&gt;S: signature stored S-&gt;&gt;B: append signer.signed row {A} S-&gt;&gt;Sb: email magic link (order=2) Sb-&gt;&gt;I: WebAuthn (CyberSkill member, AAL3) I--&gt;&gt;Sb: identity verified Sb-&gt;&gt;S: views + signs S-&gt;&gt;BK: route again BK-&gt;&gt;QTSP: sign QTSP--&gt;&gt;BK: signature blob BK-&gt;&gt;S: signature stored S-&gt;&gt;S: all signers complete → session.complete S-&gt;&gt;B: append session.completed row S-&gt;&gt;S: trigger archive flow (Flow 5) </p>
+<p>Sequential mode means signer B's magic link is not emitted until A signs. Parallel mode emits both at once; first-to-sign rule + reminder cadence still apply.</p>
+<h3>Flow 3 — Identity verification + sign with VNeID</h3>
+<p>sequenceDiagram autonumber participant S as Signer (VN citizen) participant SPA as DOC SPA participant I as idv.rs participant V as vneid.rs participant VNEID as 🇻🇳 VNeID API participant BK as broker.rs participant VNCA as VN CA (e.g., VnPay) participant B as 🧠 memory S-&gt;&gt;SPA: open signing page SPA-&gt;&gt;I: getIdvChallenge(country=VN, risk=high) I-&gt;&gt;V: prepare VNeID challenge (CCCD + biometric) V-&gt;&gt;VNEID: createIdentityVerification VNEID--&gt;&gt;V: deeplink to VNeID app V--&gt;&gt;SPA: deeplink + QR S-&gt;&gt;VNEID: open app, scan, biometric capture VNEID--&gt;&gt;V: idv_proof_id, attributes (full_name, CCCD, DOB) V-&gt;&gt;I: pass idv I-&gt;&gt;B: append idv.passed row {method:vneid, proof_id} I--&gt;&gt;SPA: ready to sign S-&gt;&gt;SPA: confirm sign SPA-&gt;&gt;BK: route signature (country=VN) BK-&gt;&gt;VNCA: sign call (signer attrs from VNeID) VNCA--&gt;&gt;BK: CAdES blob + cert chain (VN root) BK-&gt;&gt;B: append signed row </p>
+<h3>Flow 4 — Long-term archival (PAdES-B-LT + S3 Object-Lock)</h3>
+<p>sequenceDiagram autonumber participant S as session.rs (all signed) participant P as pades.rs participant A as archive.rs participant KMS as AWS KMS participant S3 as S3 Object-Lock Compliance participant TSA as RFC 3161 TSA participant B as 🧠 memory S-&gt;&gt;P: assemble PAdES-B-LT P-&gt;&gt;P: embed cert chain (all signers) P-&gt;&gt;P: embed OCSP responses (revocation info) P-&gt;&gt;TSA: outer timestamp (long-term validation) TSA--&gt;&gt;P: TSA token P-&gt;&gt;P: DSS dictionary + LTV P-&gt;&gt;A: hand off PDF A-&gt;&gt;KMS: encrypt at rest A-&gt;&gt;S3: PutObject with Object-Lock retain-until = now + 10y; LegalHold=OFF S3--&gt;&gt;A: ETag + VersionId A-&gt;&gt;B: append archive.completed row {s3_key, retention_until, sha256} A-&gt;&gt;S: archive ready </p>
+<p>Object-Lock Compliance mode means even the AWS account root cannot delete the object before retention expiry. Legal hold is a separate flag that can be applied later to extend protection.</p>
+<h3>Flow 5 — DocuSign migration (preserve original trail)</h3>
+<p>sequenceDiagram autonumber participant CLO as CLO participant M as migrate.rs participant DS as DocuSign API participant A as archive.rs participant S3 as S3 Object-Lock participant B as 🧠 memory CLO-&gt;&gt;M: cyberos-doc migrate-docusign --since 2020-01-01 M-&gt;&gt;DS: list envelopes (paged) loop per envelope DS--&gt;&gt;M: envelope_id, signed PDF URL, audit log M-&gt;&gt;DS: GET signed PDF + cert chain + audit JSON DS--&gt;&gt;M: bytes + metadata M-&gt;&gt;M: validate DocuSign cert chain (AATL trust) M-&gt;&gt;A: archive original PDF (no re-sign) A-&gt;&gt;S3: PutObject (Object-Lock) M-&gt;&gt;B: append migration.imported row {source:docusign, original_envelope_id, trust:external} end M-&gt;&gt;CLO: report N migrated · 0 failures </p>
+<p>Migration preserves the original DocuSign audit trail in <code>audit_event.details_json</code>. Documents are flagged <code>trust=external</code> so consumers know the signature was produced by another provider.</p>
+<p>7</p>
+<h2>Signing-session lifecycle</h2>
+<p>A session traverses six states; the per-signer state machine sits inside Open. Every transition writes an audit event. </p>
+<p>stateDiagram-v2 [*] --&gt; Draft: document uploaded + template applied Draft --&gt; Open: createSession Open --&gt; Completed: all signers signed Open --&gt; Expired: deadline passed Open --&gt; Cancelled: AM revoked OR signer rejected Completed --&gt; Archived: PAdES-LT + S3 Object-Lock Archived --&gt; [*] Expired --&gt; [*] Cancelled --&gt; [*] state Open { [*] --&gt; Invited Invited --&gt; Viewed: signer opens link Viewed --&gt; IdvAttempted: starts identity verification IdvAttempted --&gt; IdvPassed: verified IdvAttempted --&gt; IdvFailed: too many retries IdvPassed --&gt; Signed: signer captures signature IdvPassed --&gt; Rejected: signer declines Signed --&gt; [*] Rejected --&gt; [*] IdvFailed --&gt; [*] } </p>
+<h3>Per-state actions</h3>
+<p>State| Trigger| Side-effects   ---|---|---   Draft| document + template ready| Audit row <code>template.applied</code>; preview rendered.   Open| createSession success| First signer notified (sequential) or all signers notified (parallel); reminders scheduled.   Invited| signer email sent| Magic-link token issued; expiry = session deadline.   Viewed| signer opens link| Audit row <code>signer.viewed</code> with IP + UA + device fingerprint.   IdvPassed| identity verified| Audit row <code>idv.passed</code> with method + proof_id.   Signed| QTSP signature returned| Audit row <code>signer.signed</code> with cert chain + TSA token.   Completed| all signers signed| Trigger archive flow; downstream consumers (CRM / HR / INV) notified.   Archived| PAdES-LT written to S3 Object-Lock| Audit row <code>archive.completed</code>; retention timer starts.   Expired| deadline reached without all signing| Audit row <code>session.expired</code>; AM notified; document remains in PG (no archive).   Cancelled| AM revoke OR signer reject| Audit row <code>session.cancelled</code> with reason; all signer tokens invalidated.  </p>
+<p>8</p>
+<h2>Functional Requirements</h2>
+<p>The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="&lt;https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author&gt;">feature-request-author</a> Agent Skill.</p>
+<p>Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.</p>
+<p>9</p>
+<h2>Non-Functional Requirements</h2>
+<p>DOC NFRs centre on signature non-repudiation and long-term archival durability.</p>
+<p>NFR ID| Concern| Target| Measurement   ---|---|---|---   <code>N(FR pending)</code>| Signature non-repudiation (cosign verifies archive byte-for-byte)| 100% of archives| quarterly chaos audit (random 1%)   <code>N(FR pending)</code>| Cross-tenant document leak| = 0| RLS verification harness   <code>N(FR pending)</code>| Archive durability (no archive loss over 10 years)| 11x9s (S3 Object-Lock guarantee)| S3 SLA   <code>N(FR pending)</code>| Audit-chain integrity| = 0 broken chains| nightly walker job   <code>N(FR pending)</code>| uploadDocument server-canonical p95| ≤ 3 s (10 MB PDF)| k6   <code>N(FR pending)</code>| End-to-end sign (after IDV) p95| ≤ 8 s| RUM   <code>N(FR pending)</code>| QTSP partner round-trip p95| ≤ 5 s (network)| per-partner SLO   <code>N(FR pending)</code>| DOC availability| ≥ 99.9% (P4)| SLO monitor   <code>N(FR pending)</code>| QTSP partner failover RTO| ≤ 60 s on partner outage| chaos test   <code>N(FR pending)</code>| eIDAS QES conformity (annual audit)| passed| external auditor   <code>N(FR pending)</code>| VN Decree 130/2018 cert chain validity| 100%| VN CA SLA  </p>
+<p>10</p>
+<h2>Dependencies</h2>
+<p>DOC depends on AUTH (WebAuthn), memory (audit), KMS + S3 (archival), and at least one QTSP partner per jurisdiction. Consumed by CRM (deal contracts), HR (employment contracts), INV (signed POs), and PORTAL (client signing). </p>
+<p>graph LR subgraph upstream ["DOC depends on"] AUTH["🔐 AUTH   WebAuthn + RBAC"] memory["🧠 memory   audit chain"] OBS["👁 OBS"] KMS["🔑 AWS KMS"] S3["🗄 S3 Object-Lock"] VNEID["🇻🇳 VNeID API"] QTSP["🤝 QTSP partners   GlobalSign · DigiCert · VnPay · MK · Viettel-CA"] TSA["RFC 3161 TSA"] CRM["🏢 CRM   contact auto-fill"] HR_UP["👥 HR   member auto-fill"] end DOC["✍️ DOC"] subgraph downstream ["Used by"] CRM_D["🏢 CRM   deal contracts"] HR_D["👥 HR   employment contracts"] INV_D["💰 INV   signed POs"] PORTAL["🌐 PORTAL   client signing"] MEMORY_D["🧠 memory   doc citations"] end AUTH --&gt; DOC memory --&gt; DOC OBS --&gt; DOC KMS --&gt; DOC S3 --&gt; DOC VNEID --&gt; DOC QTSP --&gt; DOC TSA --&gt; DOC CRM --&gt; DOC HR_UP --&gt; DOC DOC --&gt; CRM_D DOC --&gt; HR_D DOC --&gt; INV_D DOC --&gt; PORTAL DOC --&gt; MEMORY_D classDef planned fill:#fde68a,stroke:#78350f classDef partner fill:#fef2f2,stroke:#7f1d1d class AUTH,memory,OBS,KMS,S3,CRM,HR_UP,DOC,CRM_D,HR_D,INV_D,PORTAL,MEMORY_D planned class VNEID,QTSP,TSA partner </p>
+<p>11</p>
+<h2>Compliance scope</h2>
+<p>DOC is the most regulation-heavy module after AUTH. Signature legality across jurisdictions is its entire job.</p>
+<p>Regulation / standard| Article / clause| DOC feature that satisfies it   ---|---|---   eIDAS (EU Reg. 910/2014)| Art. 25 — Legal effects of e-signatures| QES via partner QTSP for EU; AdES default for non-QES use cases.   eIDAS| Art. 32 — Validation of QES| PAdES-B-LT embedded cert chain + OCSP + LTV timestamp.   eIDAS| Art. 34 — Long-term preservation| S3 Object-Lock Compliance 10y; LTV outer timestamp.   EU ESI standards| ETSI EN 319 142 — PAdES baseline| PAdES-B-LT format implemented.   US ESIGN Act (15 U.S.C. §7001)| Consent + intent + record retention| Explicit consent UI; intent captured at sign; 10-year retention.   US UETA| State e-signature recognition| AATL cert chain via DigiCert.   Vietnam Decree 130/2018/NĐ-CP| E-signature legal recognition| VN CA chain (VnPay / MK / Viettel-CA); compliant cert profile.   Vietnam Decision 06/2022/QĐ-TTg| National digital identity (VNeID)| VNeID integration via <code>vneid.rs</code> for VN citizens.   Vietnam Law 91/2025/QH15 (PDPL)| Art. 14 — DSAR| DSAR export bundles documents + audit chains.   GDPR (EU 2016/679)| Art. 15 — Right of access| Same surface as PDPL.   GDPR| Art. 17 — Right to erasure| Purge supported with legal-hold + retention-period exemptions; audit fact of erasure remains.   ISO/IEC 27001:2022| A.5.34 — Privacy in development| Documents encrypted at rest via KMS; access RLS-keyed.   ISO 14533-1 (PAdES)| Long-term archival profiles| PAdES-B-LT format.   SOC 2 Type II| CC6.1 — Logical access| RBAC + multi-factor for high-value signing.  </p>
+<p>12</p>
+<h2>Risk entries</h2>
+<p>DOC-specific risks in the <a href="&lt;../../reference/risk-register.html#doc&gt;">risk register</a>.</p>
+<p>ID| Risk| Likelihood| Impact| Owner| Mitigation   ---|---|---|---|---|---   <code>R-DOC-001</code>| Spoofing / Repudiation — forged signature| Low| Catastrophic| CLO| eIDAS QTSP cert chain; WebAuthn binding; multi-factor for high-value docs; quarterly external audit.   <code>R-DOC-002</code>| Notary-fraud / impersonation via SMS-OTP only| Medium| High| CSO| SMS-OTP restricted to low-value docs; high-value requires WebAuthn or VNeID biometric.   <code>R-DOC-003</code>| QTSP partner outage during signing campaign| Medium| Medium| CTO| Multi-partner per jurisdiction; broker.rs failover; 60s RTO chaos-tested.   <code>R-DOC-004</code>| VNeID API breaking change| Medium| High| CTO| Adapter pattern in vneid.rs; integration tests on every release; VN CA fallback for non-biometric path.   <code>R-DOC-005</code>| S3 Object-Lock misconfiguration allows premature deletion| Low| Catastrophic| CSO| Compliance mode (not Governance); CI test verifies retention-until; account-root cannot override.   <code>R-DOC-006</code>| Legal-hold lift granted to non-CLO| Low| High| CSO| (FR pending) scope=doc.legal_hold limited to CLO + DPO; quarterly access review.   <code>R-DOC-007</code>| Cert chain expires; PAdES-LT cannot validate decades later| Medium| High| CTO| PAdES-B-LT includes LTV outer timestamp; periodic re-stamping job at year 9 (1y before retention end).   <code>R-DOC-008</code>| Cross-tenant document leak via shared S3 bucket| Low| Catastrophic| CSO| Per-tenant bucket prefix; IAM scoped per tenant; pre-signed-URL audience-bound.   <code>R-DOC-009</code>| Migration import accepts forged DocuSign trail| Low| High| CLO| Imports flagged trust=external; cert chain validated against AATL root; CLO approves import batches.   <code>R-DOC-010</code>| GDPR Art. 17 purge collides with retention obligation| Medium| Medium| DPO| Purge requires CLO sign-off + retention-exempt classification; rejection logged with reason.   <code>R-DOC-011</code>| CRM/HR/ESOP-triggered document creation fires without underlying lifecycle context| Medium| Medium| CTO| Each cross-module trigger validates source record state at submission; reject document creation if source record incomplete.   <code>R-DOC-012</code>| Renewal proposal CUO-drafted with stale terms (e.g. expired discount)| Medium| Low| CPO| Renewal proposal carries terms-version stamp; CUO reads from active rate-card / contract templates only; AM final review.   <code>R-DOC-013</code>| Expiry alert latency — 90-day notice misses a contract| Low| High| CTO| Nightly batch double-checks all active contracts; 90/30/7 day cascade; OBS alarm on any missed cascade step.   <code>R-DOC-014</code>| Multi-jurisdiction contract (VN tenant signs with EU customer) — which cert chain governs?| Medium| Medium| CLO| Per-contract cert-chain declaration; co-signer cert chains both attached; legal precedence rules per type documented in KB runbook.   <code>R-DOC-015</code>| Migrated DocuSign trail fails LTV after import — provenance breaks at archive| Medium| High| CLO| Imports flagged trust=external + cert-chain captured at import; LTV re-validation at year 9; failures escalate to CLO.  </p>
+<p>13</p>
+<h2>KPIs</h2>
+<p>DOC health rolls up into 9 KPIs covering signing speed, completion rate, audit integrity, and compliance posture.</p>
+<p>KPI| Formula| Source| Target   ---|---|---|---   <strong>Session completion rate</strong>| <code>completed / opened (per 30d)</code>| doc.signing_session| ≥ 75%   <strong>Time-to-first-signature p95</strong>|  histogram| OBS| ≤ 24 h   <strong>Time-to-completion p95</strong>|  histogram| OBS| ≤ 7 d   <strong>QTSP partner success rate</strong>| <code>signed / attempted</code>| broker.rs| ≥ 99.5%   <strong>Identity-verification pass rate</strong>| <code>idv.passed / idv.attempted</code>| idv.rs| ≥ 90%   <strong>Archive verification success</strong>|  quarterly chaos audit| chaos job| = 100%   <strong>Cosign chain validation success</strong>|  nightly walker| OBS| = 100%   <strong>Fraud-detection alerts / month</strong>|  count| fraud.rs| tracked   <strong>Migration trust-external flag rate</strong>| <code>external / total</code>| doc.document| declining trend   <strong>Cross-module trigger validation rate</strong>|  cross-module-triggered docs with source record validated / total| OBS| = 1.0 (hard floor)   <strong>Renewal proposal terms-stamp coverage</strong>|  proposals with active terms-version stamped / total| memory audit| = 1.0   <strong>Expiry cascade completeness</strong>|  contracts hit by all 3 cascade steps (90/30/7) / total expiring| nightly batch| = 1.0   <strong>Multi-jurisdiction cert-chain declaration rate</strong>|  multi-juris contracts with explicit cert-chain declared / total| contract metadata| = 1.0   <strong>LTV re-validation pass rate (year 9)</strong>|  migrated trails passing LTV at year 9 / total imports| quarterly audit| ≥ 0.95 (escalate failures)  </p>
+<p>14</p>
+<h2>RACI matrix</h2>
+<p>DOC is owned by the CLO seat (legal effect) with CTO for engineering and DPO for data-subject rights.</p>
+<p>Activity| CEO| CLO| CTO| CSO| DPO| CFO   ---|---|---|---|---|---|---   Service design + spec| A| R| R| C| C| I   Implementation| I| C| A/R| C| I| I   QTSP partner selection + contracts| C| A/R| R| C| I| C   Legal-hold application / lift| C| A/R| I| C| R| I   Retention-policy review (10y default)| C| A/R| I| I| C| I   eIDAS / Decree 130 conformity audit| C| A/R| C| R| C| I   Notary-fraud incident response| C| R| R| A| C| I   DSAR fulfilment (DOC scope)| I| C| I| I| A/R| I   Migration import (DocuSign / Adobe Sign)| C| A| R| I| I| I  </p>
+<p><strong>R</strong> Responsible · <strong>A</strong> Accountable · <strong>C</strong> Consulted · <strong>I</strong> Informed.</p>
+<p>15</p>
+<h2>Planned CLI surface</h2>
+<p>Admin CLI <code>cyberos-doc</code>. Every destructive action writes a chained memory audit row.</p>
+<h3>1\. Upload + apply template</h3>
+<p>    $ cyberos-doc upload "Acme MSA.pdf" --template MSA-EU-v3 --deal deal-2026-0912</p>
+<p>    [uploaded] doc_id=DOC-018824 sha256=… bytes=412_223     [template] MSA-EU-v3 applied; 4 fields auto-filled from CRM     [audit] memory seq=21884 chain=…</p>
+<h3>2\. Create a multi-party signing session</h3>
+<p>    $ cyberos-doc session create \      --doc DOC-018824 --mode sequential --deadline 14d \      --signer "ceo@acme.com:Alice Smith:US:webauthn" \      --signer "stephen@cyberskill.com:Stephen:VN:webauthn"</p>
+<p>    [session created] S-009311 order: [1:alice, 2:stephen]     [invited] alice@acme.com (magic link sent)     [reminder] scheduled +3d, +7d, +13d</p>
+<h3>3\. Check session status</h3>
+<p>    $ cyberos-doc session status S-009311</p>
+<p>    [status] open     [signers]</p>
+<ol><li>alice@acme.com [SIGNED · 2026-05-13 09:14 · WebAuthn AAL3 · GlobalSign QTSP]</li><li>stephen@cyberskill.com [VIEWED · 2026-05-13 11:02 · awaiting WebAuthn] [deadline] 2026-05-27 (+13d)</li></ol>
+<h3>4\. Verify a signed-document archive</h3>
+<p>    $ cyberos-doc verify --doc DOC-018824</p>
+<p>    [archive] s3:/cyberos-doc-archive-vn-hanoi/2026/05/DOC-018824.pdf     [sha256] ✓ matches archive event     [chain] ✓ 7 events, all chain-hashes valid     [certs] ✓ GlobalSign QTSP root trusted     [ocsp] ✓ revocation info valid     [tsa] ✓ RFC 3161 token valid     [overall] PASS</p>
+<h3>5\. Export legal-discovery bundle</h3>
+<p>    $ cyberos-doc bundle --doc DOC-018824 --output discovery.zip</p>
+<p>    [bundle]      doc-018824.pdf 412 KB (PAdES-B-LT)      doc-018824-audit.json 18 KB (7 chained events)      doc-018824-cert-chain.pem 6 KB (full chain to root)      doc-018824-tsa-token.tsr 4 KB      doc-018824-readme.md 2 KB (verification instructions)     [total] 442 KB     [written] discovery.zip</p>
+<h3>6\. Migrate DocuSign envelopes</h3>
+<p>    $ cyberos-doc migrate docusign --since 2020-01-01 --account "Acme Corp"</p>
+<p>    [connect] DocuSign OAuth ok     [scan] 324 envelopes since 2020-01-01     [import] 324 imported · 0 failures     [trust] all flagged trust=external     [audit] memory seq=21899 chain=…</p>
+<h3>7\. Apply legal hold</h3>
+<p>    $ cyberos-doc legal-hold --doc DOC-018824 --on --reason "Acme litigation 2026-104"</p>
+<p>    [hold applied] DOC-018824 protected beyond retention window     [next purge] blocked — legal_hold=true     [audit] memory seq=21902 chain=… (CLO co-sign required: stephen@cyberskill.com confirmed)</p>
+<h3>8\. DSAR export for a signer</h3>
+<p>    $ cyberos-doc dsar-export --subject alice@acme.com --output dsar.zip</p>
+<p>    [dsar] signed_documents: 12 (since 2024)     [dsar] audit_events: 96 rows     [dsar] cert_chains: 12 PEM files     [dsar] written: dsar.zip (4.8 MB)</p>
+<p>16</p>
+<h2>Phase status &amp; estimates</h2>
+<p>Status</p>
+<p>Planned</p>
+<p>P4 long-term</p>
+<p>Est. LoC (Rust)</p>
+<p>~9,500</p>
+<p>services/doc + PAdES + broker</p>
+<p>Est. LoC (TS)</p>
+<p>~3,200</p>
+<p>signer SPA + template designer</p>
+<p>Planned tests</p>
+<p>140+</p>
+<p>incl. eIDAS conformity suite</p>
+<p>External libs</p>
+<p>~20</p>
+<p>pdfium · cms · oid-registry · CAdES</p>
+<p>P4 budget</p>
+<p>~$80/mo + $0.50–$2 / signature</p>
+<p>Fargate + S3 + KMS + QTSP pass-thru</p>
+<p>Capability| Status   ---|---   Document upload + SHA-256 + KMS encrypt| planned · P4   Template designer + auto-fill from CRM/HR| planned · P4   Multi-party signing (sequential + parallel)| planned · P4   eIDAS QTSP integration (GlobalSign / Cryptomathic)| planned · P4   Adobe AATL chain (DigiCert)| planned · P4   VN CA chain (VnPay / MK Group / Viettel-CA)| planned · P4   VNeID integration for VN citizens| planned · P4   WebAuthn / SMS-OTP / email-link IDV| planned · P4   PAdES-B-LT archival with LTV outer timestamp| planned · P4   S3 Object-Lock Compliance, residency-pinned| planned · P4   DocuSign / Adobe Sign / HelloSign migration| planned · P4   Notary-fraud detection (velocity + device)| planned · P4   Legal-hold + retention sweep| planned · P4   Cosign verification end-to-end| planned · P4   Quarterly external eIDAS audit| planned · P4+  </p>
+<p>17</p>
+<h2>References</h2>
+<ul><li><strong>FR catalogue</strong> — DOC — Document signing. FRs 001..005.</li><li><strong>Module spec</strong> — Document management with e-signatures.</li><li><strong>Formal FR mapping</strong> — (FR pending)..006 with verification methods.</li><li><strong>eIDAS Regulation (EU 910/2014)</strong> — qualified e-signatures and trust services.</li><li><strong>ETSI EN 319 142-1</strong> — PAdES baseline profile.</li><li><strong>ETSI TS 119 312</strong> — PAdES long-term validation profiles.</li><li><strong>RFC 3161</strong> — Time-Stamp Protocol (TSP).</li><li><strong>RFC 5126 (CAdES)</strong> — CMS Advanced Electronic Signatures.</li><li><strong>US ESIGN Act (15 U.S.C. §7001)</strong> — Electronic Signatures in Global and National Commerce.</li><li><strong>US UETA</strong> — Uniform Electronic Transactions Act.</li><li><strong>Vietnam Decree 130/2018/NĐ-CP</strong> — Detailed regulations on electronic signatures.</li><li><strong>Vietnam Decision 06/2022/QĐ-TTg</strong> — Project on developing the e-identification + e-authentication system (VNeID).</li><li><strong>Vietnam Law 91/2025/QH15 (PDPL)</strong> — Personal Data Protection Law.</li><li><strong>GDPR (EU 2016/679)</strong> — Art. 15, 17.</li><li><strong>ISO 14533-1</strong> — Long-term signature profile (PAdES).</li><li><strong>Adobe AATL programme</strong> — Approved Trust List for non-EU jurisdictions.</li><li><strong>S3 Object-Lock</strong> — AWS storage WORM compliance.</li><li><strong>Architecture context:</strong> <a href="&lt;../../architecture/infrastructure.html#doc&gt;">infrastructure.html#doc</a>.</li><li><strong>CRM module</strong> — <a href="&lt;../crm/index.html&gt;">crm.html</a> · upstream for deal contract auto-fill.</li><li><strong>HR module</strong> — <a href="&lt;../hr/index.html&gt;">hr.html</a> · upstream for employment-contract auto-fill.</li><li><strong>AUTH module</strong> — <a href="&lt;../auth/index.html&gt;">auth.html</a> · WebAuthn for elevated-signer IDV.</li><li><strong>Bigger picture (§0 above):</strong> 3 strategic roles + partner-routed signing Mermaid + 10-row auto-vs-human matrix.</li><li><strong>memory auto-sync vision:</strong> <a href="&lt;../../docs/MEMORY_AUTOSYNC_DESIGN.md&gt;">MEMORY_AUTOSYNC_DESIGN.md §5</a> — every contract event (sign, expire, renew) becomes a memory audit row.</li><li><strong>Build-readiness audit:</strong> <code>archive/2026-05-14/AUDIT_AND_PLAN.md</code> (archived; see <code>cyberos/CHANGELOG.md</code>) — DOC at P4 · early (P4) due to QTSP partner integration timeline.</li><li><strong>FR authoring discipline:</strong> <a href="&lt;https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md&gt;">modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md</a>.</li></ul>
+<p><a href="&lt;../okr/index.html&gt;">← OKR</a> <a href="&lt;../portal/index.html&gt;">Next module: PORTAL →</a></p>
+<hr>
+<p class="text-sm" style="opacity:.6">Generated from <code>docs/modules/doc/index.md</code> — edit the markdown source, not this file (FR-DOCS-002).</p>
 </main>
-</div>
-
 </body>
 </html>
