@@ -39,6 +39,10 @@ jobs:
         with:
           fetch-depth: 0 # full history + tags: the baseline is the last commit that touched VERSION
           ref: main
+          # Optional deploy key so the bump can push past the branch ruleset. The default GITHUB_TOKEN
+          # CANNOT bypass a ruleset; a Deploy Key added to the ruleset bypass list can. Unset = fall back to
+          # the token, and the push step below degrades to a warning instead of failing. Setup in RELEASE.md.
+          ssh-key: ${{ secrets.VERSION_BUMP_SSH_KEY }}
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -53,8 +57,20 @@ jobs:
           git config user.email "bot@cyberskill.world"
           git add VERSION CHANGELOG.md
           git commit -m "chore(release): ${{ steps.bump.outputs.version }} [skip ci]"
-          git push origin HEAD:main
-          echo "CyberOS VERSION -> ${{ steps.bump.outputs.version }} (not released; tag v${{ steps.bump.outputs.version }} to cut a release)" >> "$GITHUB_STEP_SUMMARY"
+          # A protected-branch ruleset blocks a direct push from the default token. With a deploy key
+          # configured (secrets.VERSION_BUMP_SSH_KEY, added to the ruleset bypass) the push succeeds;
+          # otherwise degrade to a warning so the workflow does not fail red on every merge to main.
+          if git push origin HEAD:main; then
+            echo "CyberOS VERSION -> ${{ steps.bump.outputs.version }} (not released; tag v${{ steps.bump.outputs.version }} to cut a release)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo "### VERSION bump ${{ steps.bump.outputs.version }} computed but NOT pushed"
+              echo "The push to main was rejected by the branch ruleset. To land auto-bumps, add a Deploy Key to"
+              echo "the AWH gate ruleset bypass and set its private half as the VERSION_BUMP_SSH_KEY secret"
+              echo "(docs/deploy/RELEASE.md). Until then, bump VERSION when you cut a release."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::VERSION bump ${{ steps.bump.outputs.version }} computed but push blocked by the ruleset - not pushed."
+          fi
       - name: No bump needed
         if: ${{ steps.bump.outputs.changed != 'true' }}
         run: echo "No feat/fix/breaking commits since the last bump - VERSION unchanged (${{ steps.bump.outputs.version }})." >> "$GITHUB_STEP_SUMMARY"
