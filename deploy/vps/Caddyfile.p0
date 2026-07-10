@@ -87,11 +87,12 @@
 	}
 
 	# Legacy /web/ prefix: the React app now IS the site root, so old links and installed PWAs land home.
-	# (Path-preserving: /web/chat -> /chat.)
-	@webold path /web /web/*
+	# Path-preserving via the regex capture (/web/chat -> /chat). NOTE: computed in the matcher, NOT with
+	# `uri strip_prefix` + `redir {uri}` - Caddy's directive order runs redir BEFORE uri, which made that
+	# form redirect /web/ to itself in a loop.
+	@webold path_regexp webold ^/web/?(.*)$
 	handle @webold {
-		uri strip_prefix /web
-		redir * {uri} 308
+		redir * /{re.webold.1} 308
 	}
 	@legacychat path /chat.html
 	handle @legacychat {
