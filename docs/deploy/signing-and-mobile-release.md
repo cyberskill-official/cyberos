@@ -41,7 +41,7 @@ The `android/` project is already committed and your upload keystore is generate
    - `ANDROID_KEYSTORE_PASSWORD` - the keystore password you typed into keytool.
    - `ANDROID_KEY_ALIAS` - `cyberos`.
    - `ANDROID_KEY_PASSWORD` - the key password (same as the keystore password, since you pressed RETURN at the "key password" prompt).
-3. Add the repo variable `MOBILE_RELEASE` = `true`. This turns on BOTH the android and ios jobs in `release.yml`.
+3. Add the repo variable `ANDROID_RELEASE` = `true`. This turns on ONLY the android job (iOS has its own `IOS_RELEASE` gate, so Android never drags in the not-yet-existing iOS project).
 4. Re-tag (section D). The android job assembles a signed `.aab` and uploads it as a release artifact.
 5. First upload to Play is manual: Play Console -> your app -> Production (or Internal testing) -> Create release -> upload the `.aab` from the workflow's artifacts. Enroll in Play App Signing when prompted (Google holds the distribution key; your keystore is the upload key). Later automated Play uploads can use a service account JSON (a follow-up).
 
@@ -62,7 +62,7 @@ The `ios/` project does NOT exist yet, and the workflow's iOS step is a stub. Do
    - `APP_STORE_CONNECT_KEY_ID`
    - `APP_STORE_CONNECT_ISSUER_ID`
    - `APP_STORE_CONNECT_API_KEY` - the contents of the downloaded `.p8`.
-4. With `MOBILE_RELEASE=true` already set (section B), the next tag runs the iOS job.
+4. Set the repo variable `IOS_RELEASE` = `true`. The next tag runs the iOS job (independent of the Android gate).
 
 ## D. Re-tag to produce the signed artifacts
 
@@ -79,5 +79,5 @@ Then on GitHub -> Releases, delete the old failed draft and publish the new draf
 ## What v1.0.0 can ship today
 
 - Desktop (macOS + Windows + Linux): yes, right now - unsigned by default, or signed once section A is done.
-- Android `.aab`: yes, once section B's secrets + `MOBILE_RELEASE=true` are set.
+- Android `.aab`: yes, once section B's secrets + `ANDROID_RELEASE=true` are set.
 - iOS TestFlight: not until section C's one-time project + fastlane lane land - defer it to a follow-up FR; it does not hold up the rest.
