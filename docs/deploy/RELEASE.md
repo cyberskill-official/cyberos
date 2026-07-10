@@ -151,6 +151,10 @@ Hosting: a Vercel project connected to this repo builds the site on every push t
 
 A `403 Forbidden` pushing an image means that GHCR package exists without this repo granted write access (packages created by this workflow auto-link via the `org.opencontainers.image.source` label; older ones may not). Fix in GitHub: org -> Packages -> the failing package -> Package settings -> Manage Actions access -> add this repo with the Write role. Alternatively delete the stale package and let the workflow recreate it linked.
 
+## Signing and mobile
+
+Turning on macOS signing, Android releases, and iOS TestFlight is its own step-by-step runbook: `signing-and-mobile-release.md`. Short version: every signing input is a GitHub secret plus an opt-in repo variable (`MACOS_SIGN`, `MOBILE_RELEASE`), nothing private is committed, and you re-tag to produce the signed artifacts.
+
 ## Related runbooks
 
 `go-live-guide.md` (first production bring-up), `cyberos-core-deploy.md` (VPS topology), `ci-and-local-checks.md` (what each gate runs), `local-dev-and-testing.md` (dev stack), `apps/desktop/README.md` (desktop first build), and `tools/cyberos-init/docs/index.md` (running CyberOS in other repos).

@@ -105,3 +105,12 @@ docs/legal/*.docx
 
 # generated docs site shipped to the VPS by deploy.yml (job: docs) - never committed
 apps/console/docs/
+
+# Android signing keystore - PRIVATE KEY, never commit (base64 it into a GitHub secret instead)
+release.keystore
+*.keystore
+*.jks
+*.p8
+*.mobileprovision
+*.cer
+*.certSigningRequest
