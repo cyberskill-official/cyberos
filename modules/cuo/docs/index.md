@@ -1,9 +1,9 @@
 ---
-title: cuo — the CyberOS workflow engine · CyberOS
+title: cuo - the CyberOS workflow engine · CyberOS
 migrated: FR-DOCS-002
 ---
 
-cuo is the workflow engine: it drives every unit of work — a feature request — through one governed lifecycle, with humans holding the two acceptance gates. There is exactly one implementation workflow; improvement and hardening work runs the same machinery as net-new features.
+cuo is the workflow engine: it drives every unit of work - a feature request - through one governed lifecycle, with humans holding the two acceptance gates. There is exactly one implementation workflow; improvement and hardening work runs the same machinery as net-new features.
 
 ## The single workflow
 
@@ -16,7 +16,7 @@ draft -> ready_to_implement -> implementing -> ready_to_review -> reviewing
 
 - FR frontmatter `status` is the record of truth; BACKLOG.md is the index kept in lockstep.
 - One backlog for both classes: `class: improvement` rows carry an `(improvement)` tag, product rows are untagged. There is never a second backlog file.
-- Failures route back to `ready_to_implement` with `routed_back_count += 1` — there are no terminal failure states.
+- Failures route back to `ready_to_implement` with `routed_back_count += 1` - there are no terminal failure states.
 
 ## Human-in-the-loop is required
 
@@ -29,13 +29,13 @@ Between the gates the agent runs continuously and self-resolves everything it ca
 
 ## Gates
 
-Machine gates derive from the touched module's `audit-profile.yaml`: build, lint, tests, coverage on touched files, the caf audit gate, and — where a module has a sealed goldenset (`modules/<m>/.awh/`) — an independent awh rerun against the baseline. Green machine gates are necessary, never sufficient: the two human verdicts still decide.
+Machine gates derive from the touched module's `audit-profile.yaml`: build, lint, tests, coverage on touched files, the caf audit gate, and - where a module has a sealed goldenset (`modules/<m>/.awh/`) - an independent awh rerun against the baseline. Green machine gates are necessary, never sufficient: the two human verdicts still decide.
 
 ## Where things live
 
 - Workflow: `modules/cuo/chief-technology-officer/workflows/ship-feature-requests.md`
 - FRs: `docs/feature-requests/<module>/FR-<MOD>-NNN-slug.md`; cross-cutting hardening under `docs/feature-requests/improvement/`
-- In any CyberOS-initialised repo: `.cyberos/cuo/` carries the same workflow, doctrine, status contract, skills, and gate runner — trigger it with the prompt in `tools/cyberos-init/GUIDE.md` or the `/ship-fr` plugin command.
+- In any CyberOS-initialised repo: `.cyberos/cuo/` carries the same workflow, doctrine, status contract, skills, and gate runner - trigger it with the prompt in `tools/cyberos-init/GUIDE.md` or the `/ship-fr` plugin command.
 
 ## Changelog
 

@@ -38,13 +38,13 @@ The full step-by-step runbook (first FR, gates, human acceptance, multi-repo rol
 
 ## Ship work
 
-All work is a feature request under `docs/feature-requests/` — net-new (`class: product`) and hardening (`class: improvement`) alike, indexed by ONE `BACKLOG.md`. The `ship-feature-requests` workflow drives each FR through the lifecycle with two mandatory human-acceptance gates (review acceptance and final acceptance); an agent never sets `done` itself.
+All work is a feature request under `docs/feature-requests/` - net-new (`class: product`) and hardening (`class: improvement`) alike, indexed by ONE `BACKLOG.md`. The `ship-feature-requests` workflow drives each FR through the lifecycle with two mandatory human-acceptance gates (review acceptance and final acceptance); an agent never sets `done` itself.
 
 ## Develop CyberOS itself
 
 - Rust services: `cd services && cargo test`.
-- The full DB-backed verification (what CI runs): `bash scripts/local_verify.sh` — boots the dev Postgres + Redis, applies every crate's migrations, runs each module suite. Wipe first (`docker compose -f services/dev/docker-compose.yml down -v`) to see exactly what CI sees.
-- Docs: edit markdown under `docs/`, `modules/<m>/docs/`, or `services/<s>/docs/`, then `bash tools/docs-site/build.sh`. The website renders into gitignored `dist/website` — generated output is never committed or edited.
+- The full DB-backed verification (what CI runs): `bash scripts/local_verify.sh` - boots the dev Postgres + Redis, applies every crate's migrations, runs each module suite. Wipe first (`docker compose -f services/dev/docker-compose.yml down -v`) to see exactly what CI sees.
+- Docs: edit markdown under `docs/`, `modules/<m>/docs/`, or `services/<s>/docs/`, then `bash tools/docs-site/build.sh`. The website renders into gitignored `dist/website` - generated output is never committed or edited.
 
 ## Changelog
 

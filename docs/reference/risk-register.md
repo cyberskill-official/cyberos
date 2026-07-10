@@ -1,101 +1,35 @@
 ---
-title: CyberOS — Risk Register
+title: Risk register
 source: website/docs/reference/risk-register.html
 migrated: FR-DOCS-002
 ---
 
-[Home](<../index.html>)› [Reference](<../index.html#navigate>)› Risk Register
+# Risk register
 
-Reference · Risk Synthesised
+The register tracks the top risks reviewed in the Founder weekly sync, across six categories: technical, compliance, operational, strategic, financial, and legal. Each risk carries a likelihood x impact score, an owner, a mitigation, a contingency, and a status. The set is pulled from the "Top 15 risks" and extended with the risks one would expect for a 24-month, 23-module, regulated-market platform build. Severity is re-cast here as impact for heatmap clarity.
 
-# Risk Register
+Numbering: RSK-01 through RSK-15 are the canonical top risks; R-EXT-* additions are inferred from project context and marked with their rationale. Summary counters on the site page track risks tracked, high/catastrophic, open, mitigated, accepted, and the six categories.
 
-The top risks tracked by the Founder weekly sync. Six categories — technical, compliance, operational, strategic, financial, legal — each with a likelihood × impact score, an owner, a mitigation, a contingency, and a status. Pulled from "Top 15 risks" and extended with the risks one would expect for a 24-month, 23-module, regulated-market platform build. Severity is re-cast here as Impact for heatmap clarity. 
+## Likelihood x impact heatmap
 
-Risks tracked
+The generated site renders the register as a likelihood x impact heatmap plus a filterable table (category, likelihood, impact, status, free-text search). Cells are colour-coded by composite score:
 
-High / Catastrophic
+- low: low concern
+- med: monitor
+- high: active mitigation required
+- crit: sprint-blocking, Founder review
 
-Open
+Any high-likelihood / high-impact cell is "sprint-blocking": it auto-creates a Question to the Founder via the Compliance Cockpit.
 
-Mitigated
-
-Accepted
-
-6
-
-Categories
-
-## Likelihood × Impact heatmap
-
-Cells are colour-coded by composite score. Any High-likelihood / High-impact cell is "sprint-blocking" under rules: it auto-creates a Question to the Founder via the Compliance Cockpit. Hover a chip to inspect.
-
-Impact: Low
-
-Impact: Med
-
-Impact: High
-
-Likely · High
-
-Likely · Med
-
-Likely · Low
-
-low = low concern med = monitor high = active mitigation required crit = sprint-blocking, founder review
-
-Category
-
-Likelihood
-
-Impact
-
-Status
-
-Search
-
-of risks match current filters.
-
-Reset filters
-
-ID
-
-Title
-
-Category / Owner
-
-Likelihood
-
-Impact
-
-Score
-
-Status
-
-Description
-    
-Mitigation
-    
-Contingency
-    
-Owner
-    
-Last reviewed
-    
-Reference
-    
-
-No risks match the current filters. Reset to see the full register.
+The risk rows themselves (ID, title, category, owner, likelihood, impact, score, status, description, mitigation, contingency, last reviewed, reference) are rendered client-side by the interactive page on the generated site; the row data did not survive the HTML-to-markdown migration, so it is not reproduced on this page.
 
 ## Operational rules
 
-  * Severity × Likelihood produces a heat-mapped score; any **High–High** lands on the Compliance Cockpit and triggers a Question to the Founder.
-  * Risks are reviewed **weekly** during the Founder weekly sync; status (Open / Mitigated / Realised / Closed) is updated.
-  * A **realised risk** triggers an AAR (After-Action Review); the AAR is captured in memory Layer 2 with the `lesson-learned` tag and is surfaced in future similar contexts via GraphRAG.
-  * New risks added between phases **require Founder approval** ; they are not auto-accepted from CUO's suggestion stream.
+- Severity x likelihood produces a heat-mapped score; any High-High lands on the Compliance Cockpit and triggers a Question to the Founder.
+- Risks are reviewed weekly during the Founder weekly sync; status (Open / Mitigated / Realised / Closed) is updated.
+- A realised risk triggers an AAR (After-Action Review); the AAR is captured in memory Layer 2 with the `lesson-learned` tag and is surfaced in future similar contexts via GraphRAG.
+- New risks added between phases require Founder approval; they are not auto-accepted from CUO's suggestion stream.
 
+## Changelog
 
-
-CyberOS Documentation · Risk Register · with synthesised additions
-
-RSK-01 through RSK-15 are the canonical top risks; R-EXT-* additions are inferred from project context and marked with their rationale.
+History lives in the [changelog](./changelog.html); this page describes only the current state.

@@ -1,9 +1,9 @@
 ---
-title: chat — first-party team messaging · CyberOS
+title: chat - first-party team messaging · CyberOS
 migrated: FR-DOCS-002
 ---
 
-chat is CyberSkill's own messaging service — Rust server, web client, no third-party fork. It signs in through auth (OIDC), stores per-tenant, and feeds the memory brain through consent-gated interaction events.
+chat is CyberSkill's own messaging service - Rust server, web client, no third-party fork. It signs in through auth (OIDC), stores per-tenant, and feeds the memory brain through consent-gated interaction events.
 
 ## Current state
 

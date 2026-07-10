@@ -7,7 +7,7 @@ The consolidated guideline. CyberOS carries ONE platform version (the root `VERS
 
 ## Cutting a release, step by step
 
-1. Land everything on `main` through PRs — the gates (services, awh-gate, docs-prerender-gate) must be green.
+1. Land everything on `main` through PRs - the gates (services, awh-gate, docs-prerender-gate) must be green.
 2. Bump the platform version:
 
    ```
@@ -28,7 +28,7 @@ The consolidated guideline. CyberOS carries ONE platform version (the root `VERS
 
    `release.yml` builds the desktop/mobile artifacts and publishes the GitHub Release.
 
-7. Distribute the payload: projects update with `init.sh --check` (notify) and re-running `init.sh` (apply) — or from the desktop app's CyberOS Ops tab. Fleet-wide: `tools/cyberos-init/rollout.sh`.
+7. Distribute the payload: projects update with `init.sh --check` (notify) and re-running `init.sh` (apply) - or from the desktop app's CyberOS Ops tab. Fleet-wide: `tools/cyberos-init/rollout.sh`.
 
 ## Docs are part of every release
 

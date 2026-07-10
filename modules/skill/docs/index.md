@@ -1,5 +1,5 @@
 ---
-title: skill — verifiable agent capabilities · CyberOS
+title: skill - verifiable agent capabilities · CyberOS
 migrated: FR-DOCS-002
 ---
 
@@ -7,14 +7,14 @@ skill packages what an agent can do into versioned, auditable capabilities. A sk
 
 ## What lives here
 
-- The skill library: author/audit pairs for the FR workflow (context maps, edge-case matrices, implementation plans, code review, coverage gate, observability injection, backlog state updates) — the working parts of `ship-feature-requests`.
+- The skill library: author/audit pairs for the FR workflow (context maps, edge-case matrices, implementation plans, code review, coverage gate, observability injection, backlog state updates) - the working parts of `ship-feature-requests`.
 - Contracts: `modules/skill/contracts/` holds normative references, including the feature-request STATUS-REFERENCE (the 10-state lifecycle and the two required human-acceptance gates).
 - The Rust host (`modules/skill/crates/host`): loads, validates, and executes skill definitions.
 - Golden sets: `modules/skill/.awh/` seals a baseline of the skill suite; the awh gate reruns it out-of-band so a regression can never self-certify.
 
 ## How skills reach other repos
 
-`cyberos-init` vendors the author/audit skills into every initialised project under `.cyberos/cuo/skills/`, and the Claude plugin (payload marketplace) exposes `/ship-fr` and `/fr-init`. The same skill bodies drive the workflow everywhere — there is no repo-specific fork.
+`cyberos-init` vendors the author/audit skills into every initialised project under `.cyberos/cuo/skills/`, and the Claude plugin (payload marketplace) exposes `/ship-fr` and `/fr-init`. The same skill bodies drive the workflow everywhere - there is no repo-specific fork.
 
 ## Changelog
 
