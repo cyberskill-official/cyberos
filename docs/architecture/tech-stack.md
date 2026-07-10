@@ -14,7 +14,7 @@ CyberOS has more than 8 distinct concerns (16 are enumerated below), but they cl
 | Frontend layer | T2, T3 | Host shell (Vite + React 19 + Tauri desktop); module remotes (Webpack 5 + Module Federation) |
 | API + agent surface | T4, T5, T6 | Apollo Router (GraphQL Federation v2.5+); MCP Gateway (Streamable HTTP, 2025-11-25); AI Gateway (LiteLLM router, Bedrock primary) |
 | Backend services | T7 | 22 subgraphs (TypeScript Yoga or Rust async-graphql); 22 MCP servers (per-module, TS SDK or mcp-rs) |
-| Data + search | T8, T9 | PostgreSQL 17 + pgvector HNSW + Apache AGE 1.5 + PGroonga; BGE-M3 embedder + BGE-rerank-v2-m3 (self-hosted) |
+| Data + search | T8, T9 | PostgreSQL 17 + pgvector HNSW + PGroonga; graph as a relational edge table (`l2_edge`), so any managed Postgres works; BGE-M3 embedder + BGE-rerank-v2-m3 (self-hosted) |
 | Infrastructure | T10, T11 | NATS JetStream (event spine); S3 / R2 / MinIO (object storage) |
 | Cryptography + sync | T12, T13, T14 | Yjs / Automerge (CRDTs for realtime); Ed25519 + scrypt key wrap + MMR + STH; msgspec canonical JSON + binlog framing |
 | Compliance + UX | T15, T16 | OPA + Conftest (policy); Trust Center (cert hosting); Be Vietnam Pro + CyberSkill design system |
@@ -164,9 +164,9 @@ Most subgraphs are TypeScript for developer ergonomics. The two performance-crit
 
 ## Tier 8 - Data layer (Postgres + extensions)
 
-Pick: PostgreSQL 17 + pgvector HNSW + Apache AGE 1.5 + PGroonga.
+Pick: PostgreSQL 17 + pgvector HNSW + PGroonga, with graph traversal on a plain relational edge table.
 
-One Postgres database per region, with extensions stacked: pgvector for vector search (HNSW index), Apache AGE for graph traversal (OpenCypher dialect), PGroonga for Vietnamese-tokenised lexical search. Per-module schema isolation; RLS on every tenant-keyed table.
+One Postgres database per region, with extensions stacked: pgvector for vector search (HNSW index) and PGroonga for Vietnamese-tokenised lexical search. Graph traversal runs on a relational adjacency table (`l2_edge`) rather than the Apache AGE extension - so CyberOS runs on any managed Postgres (RDS, Cloud SQL, Supabase, Neon) with no custom-extension requirement. Per-module schema isolation; RLS on every tenant-keyed table.
 
 #### Why Postgres + pgvector vs a separate vector DB?
 
@@ -358,7 +358,7 @@ Internal scale (10 Members): total <= $530/mo against the N(FR pending) budget o
 | T5 MCP Gateway | Custom router + per-module servers | $0 (in-cluster) | $30/mo | MCP spec preserves portability |
 | T6 AI Gateway | LiteLLM + Bedrock primary | $150/mo | $800/mo (+ per-user) | Provider mix via config |
 | T7 Backend | Bun / Tokio; 22 subgraphs | $90/mo k8s | $500/mo k8s | Containers, portable |
-| T8 Data | Postgres 17 + pgvector + AGE + PGroonga | $80/mo | $600/mo (3 regions) | SQL portable |
+| T8 Data | Postgres 17 + pgvector + PGroonga (graph on `l2_edge`) | $80/mo | $600/mo (3 regions) | SQL portable |
 | T9 Embeddings | BGE-M3 + reranker (GPU) | $80/mo | $200/mo (multi-GPU) | Switch to OpenAI text-embed |
 | T10 Event bus | NATS JetStream | $20/mo VM | $100/mo cluster | NATS subjects -> Kafka topics |
 | T11 Object storage | R2 / MinIO | $25/mo | $200/mo | S3-compatible config flip |

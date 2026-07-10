@@ -1062,3 +1062,108 @@ pre {
   .container { padding-left: 0.75rem; padding-right: 0.75rem; }
   .fact-grid { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important; }
 }
+
+/* ============================================================================
+   DOCS PROSE — typography for the markdown-generated pages (FR-DOCS-002).
+   The chrome's `.h-1/.h-2` utilities styled the OLD hand-authored pages; the
+   generated pages emit semantic <h1>/<p>/<ul>/<table>, which previously fell
+   through to browser defaults with no rhythm - the "spacing not good" report.
+   This block gives `.docs-page` a proper reading measure and vertical rhythm.
+   ========================================================================= */
+.docs-page {
+  padding-top: calc(64px + 2.5rem);   /* clear the sticky nav (~64px) + breathing room */
+  padding-bottom: 4rem;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: var(--text);
+}
+.docs-page > :first-child { margin-top: 0; }
+
+.docs-page h1 {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin: 0 0 1.25rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--line, color-mix(in oklab, var(--text) 12%, transparent));
+}
+.docs-page h2 {
+  font-size: 1.6rem;
+  font-weight: 750;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  margin: 2.75rem 0 1rem;
+}
+.docs-page h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.4;
+  margin: 2rem 0 0.75rem;
+}
+.docs-page h4 { font-size: 1.05rem; font-weight: 700; margin: 1.5rem 0 0.5rem; }
+.docs-page p { margin: 0 0 1.15rem; }
+.docs-page ul, .docs-page ol { margin: 0 0 1.15rem; padding-left: 1.5rem; }
+.docs-page li { margin: 0.4rem 0; }
+.docs-page li > ul, .docs-page li > ol { margin: 0.4rem 0 0.2rem; }
+.docs-page a { color: var(--memory-dark, #8a4b1f); text-underline-offset: 2px; }
+.docs-page a:hover { text-decoration: underline; }
+.docs-page strong { font-weight: 700; }
+
+/* inline code + fenced blocks */
+.docs-page :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: color-mix(in oklab, var(--text) 7%, transparent);
+  padding: 0.15em 0.4em;
+  border-radius: 0.35rem;
+  word-break: break-word;
+}
+.docs-page pre {
+  background: var(--neutral-900, #1d1b19);
+  color: var(--neutral-100, #f2efec);
+  padding: 1rem 1.15rem;
+  border-radius: 0.6rem;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  margin: 0 0 1.25rem;
+}
+.docs-page pre code { background: none; padding: 0; font-size: inherit; }
+
+/* tables — the module pages lean on these heavily */
+.docs-page table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 1.5rem;
+  font-size: 0.95rem;
+}
+.docs-page th, .docs-page td {
+  text-align: left;
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--text) 12%, transparent);
+  vertical-align: top;
+}
+.docs-page th {
+  font-weight: 700;
+  border-bottom-width: 2px;
+  white-space: nowrap;
+}
+.docs-page tbody tr:hover { background: color-mix(in oklab, var(--text) 3%, transparent); }
+
+.docs-page blockquote {
+  margin: 0 0 1.25rem;
+  padding: 0.5rem 1rem;
+  border-left: 3px solid var(--ochre-300, #f4ba17);
+  background: color-mix(in oklab, var(--ochre-100, #fef6e0) 40%, transparent);
+  color: var(--text-soft, inherit);
+}
+.docs-page hr {
+  border: 0;
+  border-top: 1px solid color-mix(in oklab, var(--text) 12%, transparent);
+  margin: 2.5rem 0;
+}
+.docs-page img { max-width: 100%; height: auto; }
+
+/* the "Generated from ..." footer line */
+.docs-page > hr + p { font-size: 0.8rem; opacity: 0.55; }

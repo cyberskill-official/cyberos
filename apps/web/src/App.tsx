@@ -6,6 +6,7 @@ import { Icon } from "./components/icons";
 import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
 import { Chat } from "./pages/Chat";
+import { VersionBadge } from "./components/VersionBadge";
 
 type View = "dashboard" | "chat" | "module";
 
@@ -91,6 +92,7 @@ export function App() {
         <a className="btn-ghost" href="/docs/">
           {t("top.docs")}
         </a>
+        <VersionBadge />
         <span className="spacer" />
         <button
           className="btn-ghost lang-btn"
