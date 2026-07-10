@@ -418,16 +418,30 @@ fn into_hit(c: Candidate, chain_verified: bool) -> RecallHit {
     }
 }
 
-/// Reciprocal Rank Fusion of summary + event candidates (§1 #5). Dedups by `audit_row_id` (a summary and an
-/// event citing the same row merge), summing the per-retriever RRF terms. Mirrors `search.rs::rrf_fuse`.
+/// Reciprocal Rank Fusion of summary + event candidates (§1 #5). An event citing a summary's top
+/// contributor row merges INTO that summary, summing the per-retriever RRF terms. Every summary keeps its
+/// own slot: two summaries (e.g. the subject-scope and a window-scope one) routinely share a top contributor
+/// row, so keying summaries by `audit_row_id` made one silently overwrite the other - and when the survivor
+/// was a nil-subject scope hit, access dropped it and recall returned no summary at all (the
+/// brain_summaries_test flake; which one survived depended on embedding rank order).
 fn rrf_fuse(summary: Vec<Candidate>, events: Vec<Candidate>) -> Vec<Candidate> {
     let mut by_key: HashMap<String, Candidate> = HashMap::new();
+    // The event-merge index: a contributor row id -> the (best-ranked) summary slot that cites it.
+    let mut contrib_index: HashMap<String, String> = HashMap::new();
     for s in summary {
-        by_key.insert(dedup_key(&s), s);
+        // summary_rank is the enumeration index from summary_search: present and unique per candidate.
+        let key = format!("summary#{}", s.summary_rank.unwrap_or(usize::MAX));
+        if !s.audit_row_id.is_empty() {
+            contrib_index
+                .entry(s.audit_row_id.clone())
+                .or_insert_with(|| key.clone());
+        }
+        by_key.insert(key, s);
     }
     for e in events {
-        let key = dedup_key(&e);
-        match by_key.get_mut(&key) {
+        let ekey = dedup_key(&e);
+        let target = contrib_index.get(&ekey).cloned().unwrap_or(ekey);
+        match by_key.get_mut(&target) {
             Some(existing) => {
                 existing.event_rank = e.event_rank;
                 if existing.snippet.is_empty() {
@@ -435,7 +449,7 @@ fn rrf_fuse(summary: Vec<Candidate>, events: Vec<Candidate>) -> Vec<Candidate> {
                 }
             }
             None => {
-                by_key.insert(key, e);
+                by_key.insert(target, e);
             }
         }
     }
