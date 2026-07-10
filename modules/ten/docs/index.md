@@ -906,3 +906,7 @@ ISO 27017 cloud-services audit| planned · P4+
 
 
 [← PORTAL](<../portal/index.html>) [All modules →](<../index.html#catalog>)
+
+## Changelog
+
+History lives in the [changelog](./changelog.html); this page describes only the current state.

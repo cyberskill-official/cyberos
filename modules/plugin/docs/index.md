@@ -188,3 +188,7 @@ Level 3 — Marketplace| Third-party authors publish; 70/30 revenue; vetted badg
 Level 4 — Vertical packs| `cyberos-vn`, `cyberos-sg`, `cyberos-eu`, `cyberos-us` each ship as their own plugin| Same manifest schema; per-region bundles  
 Level 5 — Ecosystem-as-a-Service| Enterprise pays CyberSkill to run a private branded marketplace| Enterprise visibility mode · private origin pattern  
 [← MCP Gateway (protocol layer below this module)](<../mcp/index.html>) [Module catalog →](<../index.html#catalog>)
+
+## Changelog
+
+History lives in the [changelog](./changelog.html); this page describes only the current state.

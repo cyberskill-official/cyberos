@@ -730,3 +730,7 @@ Public OKR view per workspace| planned · P3
 
 
 [← RES](<../res/index.html>) [Next module: DOC →](<../doc/index.html>)
+
+## Changelog
+
+History lives in the [changelog](./changelog.html); this page describes only the current state.

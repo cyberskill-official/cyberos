@@ -717,3 +717,7 @@ Open-banking integration (Napas247 real-time)| planned · P3
 
 
 [← LEARN](<../learn/index.html>) [Next module: ESOP (Phantom Stock) →](<../esop/index.html>)
+
+## Changelog
+
+History lives in the [changelog](./changelog.html); this page describes only the current state.

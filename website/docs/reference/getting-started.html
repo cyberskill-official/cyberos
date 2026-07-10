@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CyberOS — Getting Started</title>
+<title>Getting started · CyberOS</title>
 <link rel="stylesheet" href="../assets/tokens.css">
 <link rel="stylesheet" href="../assets/styles.css">
 <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -12,93 +12,25 @@
 <body>
 <div id="shared-nav"></div>
 <main class="docs-page mx-auto max-w-4xl px-6 py-10">
-<p><a href="&lt;../index.html&gt;">Home</a>› <a href="&lt;../index.html#navigate&gt;">Reference</a>› Getting Started</p>
-<p>Reference * Guide</p>
-<h1>Getting Started</h1>
-<p>CyberSkill's AI-native internal operations platform. Three production modules plus a documentation surface and utility folders. This guide covers the repository layout, quick start, versioning, and production deployment for Wave 1. </p>
-<h2>Repository Layout</h2>
-<p>cyberos/ +-- modules/ &lt;\-- all production modules | +-- cuo/ &lt;\-- persona-aware orchestration (47 personas + 194 workflows) | +-- skill/ &lt;\-- agent Skills catalog (104 author+audit pairs) | +-- memory/ &lt;\-- the memory protocol + reference implementation | +-- plugin/ &lt;\-- packaging + distribution to Claude Code / Cursor / Cowork / Codex CLI | +-- docs/ &lt;\-- canonical project docs | +-- README.md | +-- feature-requests/ &lt;\-- FR catalog across 26 domains (~556 FRs) | +-- strategy/ &lt;\-- strategic positioning + ecosystem playbook +-- website/ &lt;\-- multi-page documentation site (Liquid Glass) +-- docs/sessions/ &lt;\-- per-session log archives +-- services/ &lt;\-- service descriptors | +-- .cyberos/memory/store/ &lt;\-- memory store (gitignored) +-- .github/ &lt;\-- CI workflows +-- README.md &lt;\-- THIS FILE +-- CHANGELOG.md &lt;\-- repo-level umbrella changelog +-- AGENTS.md &lt;\-- Layer-1 memory protocol spec (normative) +-- CLAUDE.md &lt;\-- loads AGENTS.md as project instructions</p>
-<h3>modules/ vs services/</h3>
-<p>Folder| What it is| Why it's separate   ---|---|---   <code>modules/</code> | Catalog + protocol spec + reference Python implementation. Each module is <em>the deliverable itself</em>. | Module bundles travel as one folder. Spec + reference impl + CHANGELOG + AGENTS.md all live together so a <code>cp -r modules/&lt;name&gt;/ &lt;other-repo&gt;/</code> keeps the unit intact.   <code>services/</code> | Rust production binaries -- the boxed runtime that consumes the protocols defined in <code>modules/</code>. | Production services need a Cargo workspace for <code>Cargo.lock</code> cohesion + shared crates. Each binary ships as its own Docker image; workspace coupling is build-time only.  </p>
-<h2>Quick Start</h2>
-<h3>Memory module</h3>
-<p>    # Memory module -- the memory     cd modules/memory     pip install -e .     cyberos --store ../../.cyberos/memory/store doctor          # -&gt; READY 15/15 invariants</p>
-<h3>CUO module</h3>
-<p>    # CUO module -- persona-aware orchestration     cd ../cuo     pip install -e .     cyberos-cuo list-personas                              # -&gt; 47 active + 1 extinct     cyberos-cuo route "Architect a new payment system"     # -&gt; chief-technology-officer/architect-new-system     cyberos-cuo execute chief-technology-officer/adr-quick-capture \         --output-dir /tmp/run-1 \         --invoker mock \         --memory-emit \         --actor stephen</p>
-<h3>Skill module</h3>
-<p>    # Skill module -- agentic Skills catalog     cd ../skill     ls -1 | grep -E -- '-author$' | wc -l                  # -&gt; 104 author skills</p>
-<p>Each module's documentation lives on the <a href="&lt;https://cyberos-wiki.cyberskill.world/&gt;">docs site</a> \-- install, audit, fine-tune, and deploy instructions are in the per-module appendices and changelogs. </p>
-<h2>Versioning &amp; Release</h2>
-<p><strong>Single source of truth:</strong> the <code>VERSION</code> file at repo root. All modules share one version.</p>
-<h3>Bump a version</h3>
-<p>    scripts/release.sh minor          # 0.1.0 -&gt; 0.2.0     scripts/release.sh patch          # 0.2.0 -&gt; 0.2.1     scripts/release.sh major          # 0.2.1 -&gt; 1.0.0     scripts/release.sh 2.5.0          # explicit version</p>
-<p>    scripts/release.sh --dry-run minor      # preview only     scripts/release.sh --no-commit patch    # skip git commit + tag</p>
-<p>The script reads <code>VERSION</code>, bumps it, propagates to all <code>pyproject.toml</code> \+ <code>__init__.py</code> files, commits, and tags <code>vX.Y.Z</code>.</p>
-<h3>Version file map</h3>
-<p>File| Role   ---|---   <code>VERSION</code> (repo root)| Canonical version -- edited by <code>scripts/release.sh</code>   <code>modules/*/pyproject.toml</code>| Package metadata -- auto-updated on release   <code>modules/*/cyberos*/__init__.py</code>| <code>__version__</code> \-- auto-updated on release   <code>.cyberos/memory/store/manifest.json</code>| Per-store <code>cyberos_version</code> \-- updated by <code>cyberos self-update</code>   <code>.cyberos/memory/store/AGENTS.md</code>| Protocol file -- re-copied from source on <code>self-update</code>  </p>
-<h2>Install Memory in Another Project</h2>
-<p>    # 1. Install the engine (one-time, per machine)     cd modules/memory &amp;&amp; pip install -e .</p>
-<p>    # 2. Bootstrap a target project     modules/memory/scripts/install.sh /path/to/your/project</p>
-<p>The install script:</p>
-<ul><li>Creates <code>.cyberos/memory/store/</code> with full directory skeleton + <code>HEAD</code></li><li>Copies <code>AGENTS.md</code> into the store (self-contained)</li><li>Symlinks <code>AGENTS.md</code> \+ <code>CLAUDE.md</code> from project root into <code>.cyberos/memory/store/</code></li><li>Adds <code>.cyberos/memory/store/</code> to <code>.gitignore</code></li><li>Runs <code>cyberos doctor</code> to verify</li></ul>
-<h2>Sync After Version Bump</h2>
-<p>    # From the target project directory     cyberos self-update     cyberos self-update --force    # re-copy AGENTS.md even if version matches</p>
-<p>Every <code>cyberos</code> command prints a hint when the store version is stale:   <code>hint: cyberos store version (0.0.1) differs from installed (0.1.0). run </code>cyberos self-update<code> to sync.</code></p>
-<h2>Modules</h2>
-<p>Module| Role| Status| Docs   ---|---|---|---   P0 <code>modules/memory/</code> | Memory -- append-only audit-chained personal memory store | shipped 255 green tests; all 12 audit proposals shipped | <a href="&lt;https://cyberos-wiki.cyberskill.world/modules/memory/&gt;">Docs</a> * <a href="&lt;https://cyberos-wiki.cyberskill.world/modules/memory/appendices.html&gt;">AGENTS</a>   P0 <code>modules/skill/</code> | Agent Skills catalog + Rust host + Bun toolchain | shipped 104 author+audit pairs (208 bundles); 108 contracts | <a href="&lt;https://cyberos-wiki.cyberskill.world/modules/skill/&gt;">Docs</a>   P0 <code>modules/cuo/</code> | Persona-aware orchestration (Chief Universal Officer) | shipped 47 personas + 194 workflows; supervisor Phase 1-3 shipped (21/22 tests pass) | <a href="&lt;https://cyberos-wiki.cyberskill.world/modules/cuo/&gt;">Docs</a>   P0 <code>modules/plugin/</code> | Packaging + distribution -- exposes CUO + memory + SKILL as installable <code>.plugin</code> artefacts for Claude Code / Cursor / Cowork / Codex CLI | scaffold 8 FRs at 10/10; runtime at <code>services/plugin-host/</code> planned | <a href="&lt;https://cyberos-wiki.cyberskill.world/modules/plugin/&gt;">Docs</a>  </p>
-<h3>Repository Status</h3>
-<p>Layer| Status   ---|---   Memory protocol (Layer-1) + reference implementation| Shipped -- 255 tests, 30 CLI commands, P2 Stage 3   SKILL catalog| 104 pairs / 208 bundles / 108 contracts; zero <code>planned:</code> gaps after Session H   CUO catalog| 47 active personas + 194 workflows; zero gaps after Session N   CUO supervisor (Python)| Phase 1 (catalog + router + dry-run), Phase 2 (Invoker + execute_chain), Phase 3 (LLMInvoker + memory emission) -- all shipped 2026-05-18   Docs site (<code>website/</code>)| 32 pages, 226 diagrams, 341 FRs, 100 NFRs   Design system (sibling repo <code>../design-system/</code>)| Liquid Glass v1.1.0 -- L3 enterprise tier  </p>
-<h2>Production Deploy -- Wave 1: MEMORY + AUTH + SKILL</h2>
-<p>The canonical runbook for taking the first three modules to production. Run in order; each phase is gated by the previous phase's smoke test.</p>
-<h3>Prerequisites</h3>
-<p>Component| Version| Why   ---|---|---   PostgreSQL| 16.x| Base store for AUTH (RLS) + memory (Layer-2 ingest + audit chain)   PostgreSQL extensions| <code>pgvector</code> 0.7+, <code>apache_age</code> 1.5+| Embeddings + graph (memory Layer-2)   Redis| 7.x| Rate-limit + session cache (AUTH) + event-bus draft   Rust toolchain| 1.88 stable| Matches <code>services/Cargo.toml</code> <code>rust-version</code>   Python| 3.10+| <code>modules/memory/</code> reference impl + <code>modules/cuo/</code> supervisor + sidecars   sqlx-cli| 0.8| <code>cargo install sqlx-cli --no-default-features --features rustls,postgres</code>   AWS account| \--| Fargate (services) + ECR (images) + RDS (Postgres) + ElastiCache (Redis)   Domain + DNS| \--| <code>cyberos.cyberskill.world</code> (wiki) <em> <code>auth.cyberskill.world</code> </em> <code>memory.cyberskill.world</code>  </p>
-<h3>Bootstrap Order</h3>
-<p>      +-----------+    +--------+    +--------+    +---------+    +--------------+       |  MEMORY   | -&gt; |  AUTH  | -&gt; |  CHAT  | -&gt; | PROJECT | -&gt; |  CUO + SKILL |       | (memory)  |    |        |    |        |    | (PROJ)  |    |              |       +-----------+    +--------+    +--------+    +---------+    +--------------+            wave 1        wave 2        wave 3        wave 4        wave 5</p>
-<h3>MEMORY Deploy</h3>
-<p><strong>What ships:</strong> Layer-1 protocol (file-only memory per <code>AGENTS.md</code>) PLUS Layer-2 Rust service (<code>services/memory/</code>) for ingest + AGE graph + search REST.</p>
-<p>    # 3.1 -- Build the Rust memory service binary     cd services     cargo build --release -p cyberos-memory</p>
-<p>    # 3.2 -- Apply migrations to the production database     export DATABASE_URL="postgres://cyberos_admin:$PG_PASSWORD@prod-postgres.cyberskill.world:5432/cyberos"     sqlx migrate run --source services/memory/migrations</p>
-<p>    # 3.3 -- Seed the AGE graph     psql "$DATABASE_URL" -f services/memory/seed/age_init.sql</p>
-<p>    # 3.4 -- Initialise the local Layer-1 memory (the protocol root)     cd ../modules/memory     pip install -e .     cyberos --store /var/lib/cyberos-memory doctor       # expect: READY 15/15 invariants     cyberos --store /var/lib/cyberos-memory bootstrap    # writes HEAD=00 + audit segment + index</p>
-<p>    # 3.5 -- Boot the memory HTTP server     cd ../../services     ./target/release/cyberos-memory serve \         --listen 0.0.0.0:8081 \         --database-url "$DATABASE_URL" \         --layer-1-store /var/lib/cyberos-memory \         --otel-endpoint http://otel-collector.cyberskill.world:4317</p>
-<p>    # 3.6 -- Smoke tests     curl -fsS http://localhost:8081/healthz                          # -&gt; {"status":"ready"}     curl -fsS http://localhost:8081/v1/audit/chain | jq '.head_seq'  # -&gt; 0 (or current head)     cyberos --store /var/lib/cyberos-memory invariants               # -&gt; 15/15 PASS</p>
-<p>    # 3.7 -- Deploy to Fargate     aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin &lt;ecr-id&gt;.dkr.ecr.ap-southeast-1.amazonaws.com     docker build -t cyberos-memory:$(git rev-parse --short HEAD) services/memory/     docker tag cyberos-memory:$(git rev-parse --short HEAD) &lt;ecr-id&gt;.dkr.ecr.ap-southeast-1.amazonaws.com/cyberos-memory:latest     docker push &lt;ecr-id&gt;.dkr.ecr.ap-southeast-1.amazonaws.com/cyberos-memory:latest     aws ecs update-service --cluster cyberos-prod --service memory --force-new-deployment</p>
-<p><strong>Health endpoints:</strong> <code>/healthz</code> (ready/not-ready), <code>/v1/audit/chain</code> (current head + tip hash), <code>/metrics</code> (Prometheus).</p>
-<p><strong>Rollback:</strong> <code>aws ecs update-service --cluster cyberos-prod --service memory --task-definition cyberos-memory:N-1 --force-new-deployment</code></p>
-<h3>AUTH Deploy</h3>
-<p><strong>What ships:</strong> Rust AUTH service (<code>services/auth/</code>) with RLS, JWT/JWKS issuance, MFA (TOTP/WebAuthn/Passkey), SAML/OIDC SSO, 22-role RBAC catalogue.</p>
-<p>    # 4.1 -- Build     cd services     cargo build --release -p cyberos-auth</p>
-<p>    # 4.2 -- Apply migrations (20 ordered SQL files; idempotent post-2026-05-19 fix)     export DATABASE_URL="postgres://cyberos_admin:$PG_PASSWORD@prod-postgres.cyberskill.world:5432/cyberos"     sqlx migrate run --source services/auth/migrations</p>
-<p>    # 4.3 -- Generate signing keys (one-time per environment)     ./target/release/cyberos-auth keygen \         --algorithm RS256 \         --kid auth-prod-2026-05-1 \         --output /var/lib/cyberos/keys/auth-prod-2026-05-1.jwk</p>
-<p>    # 4.4 -- Bootstrap the root tenant + first admin subject     ./target/release/cyberos-auth bootstrap \         --root-tenant-name "CyberSkill" \         --admin-email stephen@cyberskill.world \         --otp-secret-out /tmp/admin-totp.txt</p>
-<p>    # 4.5 -- Boot AUTH HTTP server     ./target/release/cyberos-auth serve \         --listen 0.0.0.0:8080 \         --database-url "$DATABASE_URL" \         --redis-url "redis://prod-redis.cyberskill.world:6379/0" \         --jwk-path /var/lib/cyberos/keys/auth-prod-2026-05-1.jwk \         --memory-base-url http://memory.cyberskill.world \         --otel-endpoint http://otel-collector.cyberskill.world:4317</p>
-<p>    # 4.6 -- Smoke tests     curl -fsS http://localhost:8080/healthz                                      # -&gt; {"status":"ready"}     curl -fsS http://localhost:8080/.well-known/jwks.json | jq '.keys | length' # -&gt; 1     curl -fsS http://localhost:8080/.well-known/openid-configuration | jq .     # -&gt; discovery doc</p>
-<p>    # 4.7 -- Deploy to Fargate     docker build -t cyberos-auth:$(git rev-parse --short HEAD) services/auth/     docker push &lt;ecr-id&gt;.dkr.ecr.ap-southeast-1.amazonaws.com/cyberos-auth:latest     aws ecs update-service --cluster cyberos-prod --service auth --force-new-deployment</p>
-<p><strong>Health endpoints:</strong> <code>/healthz</code>, <code>/.well-known/jwks.json</code>, <code>/.well-known/openid-configuration</code>, <code>/metrics</code>.</p>
-<p><strong>Rollback:</strong> ECS task-def rollback. Rolling back ACROSS a migration requires <code>sqlx migrate revert</code> against the database FIRST -- migrations are forward-only by default.</p>
-<h3>SKILL Deploy</h3>
-<p><strong>What ships today:</strong> the catalog itself (<code>modules/skill/</code>) -- 104 author+audit pairs + 108 contracts. The Rust skill-broker (<code>services/skill-broker/</code>) is not yet built (FR-SKILL-103). For Wave 1 production, the catalog is consumed by the CUO supervisor which routes user queries to the right skill.</p>
-<p>    # 5.1 -- Validate the catalog     cd modules/skill     ls -1 | grep -E -- '-author$' | wc -l        # -&gt; 104 (expected)     ls -1 | grep -E -- '-audit$' | wc -l         # -&gt; 104 (expected)</p>
-<p>    # 5.2 -- Run the SKB-* validators     cd ../cuo     PYTHONPATH=. python3 -m cuo.trigger_tests --catalog ../skill     PYTHONPATH=. python3 -m cuo.baseline --catalog ../skill     PYTHONPATH=. python3 -m cuo.placeholder_check --catalog ../skill</p>
-<p>    # 5.3 -- Verify chain integrity (every skill's contract dependencies resolve)     PYTHONPATH=. python3 -m cuo.cli validate-chains     # -&gt; 104 chains pass; 0 broken</p>
-<p>    # 5.4 -- Smoke: end-to-end chain     python3 -c "     from cuo.core.router import route     decision = route('Turn this PRD into a backlog of FRs')     print(f'Routes to: {decision.persona_slug}/{decision.workflow_slug}')     print(f'Confidence: {decision.confidence:.2f}')     "</p>
-<p><strong>Health endpoints:</strong> none today (catalog is markdown, not a service). When <code>services/skill-broker/</code> ships: <code>/healthz</code>, <code>/v1/skills</code>, <code>/v1/skills/&lt;id&gt;/validate</code>.</p>
-<p><strong>Rollback:</strong> <code>git revert</code> on the catalog. No DB schema changes to worry about today.</p>
-<h3>End-to-End Smoke</h3>
-<p>After all three modules are deployed independently, prove they talk to each other:</p>
-<p>    # Get an AUTH token     TOKEN=$(curl -fsS -X POST http://auth.cyberskill.world/v1/auth/token \         -d "grant_type=password&amp;username;=stephen@cyberskill.world&amp;password;=$PW&amp;totp;=$(oathtool --totp --base32 $TOTP_SECRET)" | jq -r .access_token)</p>
-<p>    # Write a memory audit row via memory service (AUTH-stamped)     curl -fsS -X POST http://memory.cyberskill.world/v1/audit/append \         -H "Authorization: Bearer $TOKEN" \         -H "Content-Type: application/json" \         -d '{"kind":"put","path":"memories/projects/cyberos/smoke-test.md","body":"hello"}' \         | jq '.audit_id'</p>
-<p>    # Route a query through CUO that touches both AUTH + memory     python3 -m cuo.core.supervisor execute \         --actor "human:stephen-cheng" \         --query "Audit FR-AUTH-003 for completeness" \         --memory-emit \         --output-dir /tmp/e2e-smoke</p>
-<p>    curl -fsS http://memory.cyberskill.world/v1/audit/chain | jq '.head_seq'  # incremented by N</p>
-<p><strong>Pass criteria:</strong> AUTH issues token, memory accepts authenticated audit-append, CUO routes correctly, memory chain head advances.</p>
-<h3>Day-2 Operations</h3>
-<p>Concern| Where it lives   ---|---   Health monitoring| Grafana dashboards <code>cyberos-memory</code> \+ <code>cyberos-auth</code>   Alerting| PagerDuty service <code>cyberos-prod-on-call</code>; routes via Alertmanager per FR-OBS-007   Backup (Postgres)| RDS automated snapshots -- 7-day retention. Cross-region replication to ap-southeast-2   Backup (memory local store)| <code>cyberos export &lt;tenant_id&gt; --target s3://cyberos-backups/&lt;env&gt;/&lt;date&gt;.zip</code> (nightly via Lambda)   Audit ledger integrity| Tamper detector per AGENTS.md; alerts on chain breaks   Cost| AWS Cost Explorer tag <code>Project=cyberos</code> \+ budget alarm at 80% of $535/mo envelope  </p>
-<h2>Documentation</h2>
-<ul><li><strong>Docs site</strong> (single source of truth): <a href="&lt;https://cyberos-wiki.cyberskill.world/&gt;">cyberos-wiki.cyberskill.world</a></li><li><strong>Module docs</strong> : per-module pages with appendices, changelogs, and technical deep-dives</li><li><strong>Feature requests</strong> : <code>docs/feature-requests/</code> (~268 FRs across 26 domains)</li><li><strong>Strategic playbook</strong> : <code>strategy/</code></li></ul>
-<h2>Sibling Projects</h2>
-<p>Sibling| Where| Role   ---|---|---   <strong>design-system</strong>| <code>../design-system/</code>| CyberSkill brand + design doctrine. Liquid Glass v1.1.0   <strong>landing-page</strong>| <code>../landing-page/</code>| <code>cyberskill.world</code> landing page source   <strong>sale-noti</strong>| <code>../sale-noti/</code>| Sales notification subsystem   <strong>tamagochi</strong>| <code>../tamagochi/</code>| Virtual-pet game + PetOS B2B (53 FRs at 10/10)  </p>
-<p>Siblings stay separate because they have their own git history, release cadence, and audit cycles.</p>
-<p><strong>License:</strong> MIT throughout. <strong>Maintainer:</strong> CyberSkill Software Solutions Consultancy and Development JSC (DUNS 673219568), Ho Chi Minh City, Vietnam. Founder: Stephen Cheng (Trinh Thai Anh) * <a href="&lt;mailto:info@cyberskill.world&gt;">info@cyberskill.world</a></p>
+<h1>Getting started with CyberOS</h1>
+<p>CyberOS is CyberSkill's internal working platform: a set of modules (workflow engine, memory, skills, services) that agents and people operate together. Everything ships from this repo and carries one platform version (the root <code>VERSION</code> file); module versions are internal.</p>
+<h2>Run CyberOS in your own project</h2>
+<p>CyberOS vendors itself into any repository under a single gitignored <code>.cyberos/</code> folder, organised by module.</p>
+<ol><li>Build the payload once, from a CyberOS checkout:</li></ol>
+<p>   ``<code>    bash tools/cyberos-init/build.sh        # writes dist/cyberos/    </code>``</p>
+<ol><li>Initialise your repo:</li></ol>
+<p>   ``<code>    bash /path/to/dist/cyberos/init.sh /path/to/your/repo    </code>``</p>
+<p>   This vendors <code>.cyberos/cuo</code> (the FR workflow engine), <code>.cyberos/memory</code> (the BRAIN protocol) and <code>.cyberos/plugin</code>, detects your build/lint/test gates into <code>.cyberos/gates.env</code>, scaffolds <code>docs/feature-requests/BACKLOG.md</code>, creates the local BRAIN store at <code>.cyberos/memory/store/</code>, and stamps <code>.cyberos/VERSION</code>.</p>
+<ol><li>Stay current:</li></ol>
+<p>   ``<code>    bash /path/to/dist/cyberos/init.sh --check /path/to/your/repo   # notify    bash /path/to/dist/cyberos/init.sh /path/to/your/repo           # apply update    </code>``</p>
+<p>Desktop alternative: the CyberOS desktop app has a "CyberOS Ops" tab that runs the same build / check / init operations from the UI.</p>
+<p>The full step-by-step runbook (first FR, gates, human acceptance, multi-repo rollout) is <code>tools/cyberos-init/GUIDE.md</code>.</p>
+<h2>Ship work</h2>
+<p>All work is a feature request under <code>docs/feature-requests/</code> — net-new (<code>class: product</code>) and hardening (<code>class: improvement</code>) alike, indexed by ONE <code>BACKLOG.md</code>. The <code>ship-feature-requests</code> workflow drives each FR through the lifecycle with two mandatory human-acceptance gates (review acceptance and final acceptance); an agent never sets <code>done</code> itself.</p>
+<h2>Develop CyberOS itself</h2>
+<ul><li>Rust services: <code>cd services &amp;&amp; cargo test</code>.</li><li>The full DB-backed verification (what CI runs): <code>bash scripts/local_verify.sh</code> — boots the dev Postgres + Redis, applies every crate's migrations, runs each module suite. Wipe first (<code>docker compose -f services/dev/docker-compose.yml down -v</code>) to see exactly what CI sees.</li><li>Docs: edit markdown under <code>docs/</code>, <code>modules/&lt;m&gt;/docs/</code>, or <code>services/&lt;s&gt;/docs/</code>, then <code>bash website/build/build.sh</code>. The website is generated output — never edit its HTML by hand.</li></ul>
+<h2>Changelog</h2>
+<p>History lives in the <a href="./changelog.html">changelog</a>; this page describes only the current state.</p>
 <hr>
 <p class="text-sm" style="opacity:.6">Generated from <code>docs/reference/getting-started.md</code> — edit the markdown source, not this file (FR-DOCS-002).</p>
 </main>

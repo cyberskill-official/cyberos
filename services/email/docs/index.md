@@ -723,3 +723,7 @@ Multi-region active-active| planned · P3+
 
 
 [← All modules](<../index.html#catalog>) [Next module: PROJ →](<../proj/index.html>)
+
+## Changelog
+
+History lives in the [changelog](./changelog.html); this page describes only the current state.

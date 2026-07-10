@@ -30,7 +30,7 @@ MODULE_HOMES = {
 }
 
 def module_home(mod: str) -> Path:
-    rel = MODULE_HOMES.get(mod, f"docs/modules/{mod}")
+    rel = MODULE_HOMES.get(mod, f"modules/{mod}/docs")  # every module homes its docs in modules/<m>/docs from day one
     return ROOT / rel
 
 def convert(src: Path, dst: Path) -> str:

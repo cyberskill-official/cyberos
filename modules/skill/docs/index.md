@@ -1220,3 +1220,7 @@ Enterprise private marketplace (R5 white-label)| aspirational · P4+24
 
 
 [← Previous: CUO](<../cuo/index.html>) [All modules →](<../index.html#catalog>)
+
+## Changelog
+
+History lives in the [changelog](./changelog.html); this page describes only the current state.

@@ -771,3 +771,7 @@ Skill-bundle reads & writes
 
 
 [← All modules](<../index.html#catalog>) [Next module: REW (Total Rewards) →](<../rew/index.html>)
+
+## Changelog
+
+History lives in the [changelog](./changelog.html); this page describes only the current state.

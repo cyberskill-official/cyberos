@@ -843,3 +843,7 @@ Multi-region active-active| planned · P3+
 
 
 [← Previous: MCP Gateway](<../mcp/index.html>) [Next module: CHAT →](<../chat/index.html>)
+
+## Changelog
+
+History lives in the [changelog](./changelog.html); this page describes only the current state.

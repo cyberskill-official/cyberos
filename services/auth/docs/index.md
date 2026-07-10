@@ -915,3 +915,7 @@ Skill bundles AUTH gates
 Every other CUO persona (42 of 47) consumes AUTH JWTs to read scope-limited memory data per the Scope Contract Grant mechanism. See § RBAC catalogue above.
 
 [← All modules](<../index.html#catalog>) [Next module: AI Gateway →](<../ai/index.html>)
+
+## Changelog
+
+History lives in the [changelog](./changelog.html); this page describes only the current state.

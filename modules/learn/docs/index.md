@@ -724,3 +724,7 @@ External LMS content providers| planned · P4
 
 
 [← REW](<../rew/index.html>) [Next module: INV (Invoicing) →](<../inv/index.html>)
+
+## Changelog
+
+History lives in the [changelog](./changelog.html); this page describes only the current state.

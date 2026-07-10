@@ -734,3 +734,7 @@ Skill-bundle reads & writes
 KB documents marked `canonical` elevate to high-authority memory sources used by Lumi cross-tenant synthesis (when sync_class permits). See memory page §3.4.
 
 [← Previous module: CRM](<../crm/index.html>) [All modules →](<../index.html#catalog>)
+
+## Changelog
+
+History lives in the [changelog](./changelog.html); this page describes only the current state.

@@ -747,3 +747,7 @@ Narrator MCP (read-only · simulation only)| planned · P2
 
 
 [← INV](<../inv/index.html>) [All modules →](<../index.html#catalog>)
+
+## Changelog
+
+History lives in the [changelog](./changelog.html); this page describes only the current state.

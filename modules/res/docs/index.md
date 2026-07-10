@@ -743,3 +743,7 @@ External client visibility (PORTAL surface)| planned · P4+
 
 
 [← ESOP](<../esop/index.html>) [Next module: OKR →](<../okr/index.html>)
+
+## Changelog
+
+History lives in the [changelog](./changelog.html); this page describes only the current state.

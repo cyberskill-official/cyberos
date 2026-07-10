@@ -821,3 +821,7 @@ Multi-region active-active| planned · P3+
 
 
 [← Previous: AI Gateway](<../ai/index.html>) [Next module: Observability →](<../obs/index.html>)
+
+## Changelog
+
+History lives in the [changelog](./changelog.html); this page describes only the current state.

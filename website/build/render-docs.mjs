@@ -13,11 +13,11 @@ import { renderMarkdown, frontmatter } from "./md.mjs";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const SITE = join(ROOT, "website", "docs");
 
-// module -> docs source home (must match website/build/migrate-html-to-md.py).
-const MODULE_HOMES = {
-  memory: "modules/memory/docs",
-  cuo: "modules/cuo/docs",
-  skill: "modules/skill/docs",
+// module -> docs source home. Default rule: EVERY module owns its docs at
+// modules/<m>/docs from day one (pre-code modules included — the folder is the
+// module's home before any code lands). Service-implemented modules whose code
+// lives under services/ carry their docs next to that code instead.
+const SERVICE_HOMES = {
   ai: "services/ai-gateway/docs",
   auth: "services/auth/docs",
   chat: "services/chat/docs",
@@ -27,7 +27,7 @@ const MODULE_HOMES = {
   obs: "services/obs-collector/docs",
 };
 
-const moduleHome = (mod) => join(ROOT, MODULE_HOMES[mod] ?? join("docs", "modules", mod));
+const moduleHome = (mod) => join(ROOT, SERVICE_HOMES[mod] ?? join("modules", mod, "docs"));
 
 function page(title, depth, bodyHtml, sourceRel) {
   const up = "../".repeat(depth);
@@ -124,10 +124,14 @@ for (const name of ["getting-started", "glossary", "risk-register"]) {
   if (existsSync(src)) renderOne(src, join(SITE, "reference", `${name}.html`), 1);
 }
 
-// ── module scopes: union of code-homed modules and docs/modules/* ────────────
-const mods = new Set(Object.keys(MODULE_HOMES));
-const globalMods = join(ROOT, "docs", "modules");
-if (existsSync(globalMods)) for (const m of readdirSync(globalMods).sort()) mods.add(m);
+// ── module scopes: union of service-homed modules and modules/* with a docs/ ─
+const mods = new Set(Object.keys(SERVICE_HOMES));
+const modulesDir = join(ROOT, "modules");
+if (existsSync(modulesDir)) {
+  for (const m of readdirSync(modulesDir).sort()) {
+    if (existsSync(join(modulesDir, m, "docs"))) mods.add(m);
+  }
+}
 for (const mod of [...mods].sort()) {
   renderScope(moduleHome(mod), join(SITE, "modules", mod), 2);
 }

@@ -892,3 +892,7 @@ Multi-region active-active| planned · P3+
 
 
 [← Previous: AUTH](<../auth/index.html>) [Next module: MCP Gateway →](<../mcp/index.html>)
+
+## Changelog
+
+History lives in the [changelog](./changelog.html); this page describes only the current state.
