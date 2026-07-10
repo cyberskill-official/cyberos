@@ -10,7 +10,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 //   npx cap add ios && npx cap add android
 // After that, set the repo variable MOBILE_RELEASE=true to turn on the mobile jobs in release.yml.
 const config: CapacitorConfig = {
-  appId: 'world.cyberskill.cyberos',
+  appId: 'os.cyberskill.world',
   appName: 'CyberOS',
   webDir: '../console/web',
 };

@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "world.cyberskill.cyberos"
+    namespace = "os.cyberskill.world"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "world.cyberskill.cyberos"
+        applicationId "os.cyberskill.world"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

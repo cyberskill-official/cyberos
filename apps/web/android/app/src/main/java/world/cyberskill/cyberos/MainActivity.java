@@ -1,4 +1,4 @@
-package world.cyberskill.cyberos;
+package os.cyberskill.world;
 
 import com.getcapacitor.BridgeActivity;
 
