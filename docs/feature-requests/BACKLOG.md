@@ -126,7 +126,7 @@ Totals: 314 draft, 5 ready_to_implement, 10 implementing, 97 done
 ## docs  (1 ready_to_implement, 1 implementing)
 
 - [ready_to_implement] FR-DOCS-001-server-render-reference-pages - Server-render NFR catalog + Risk Register + FR catalog at build time — Pagefind-indexed + crawler-visible + deterministic + Alpine reactive coexistence
-- [implementing] FR-DOCS-002-docs-single-source-of-truth - Documentation single source of truth - module-owned markdown, generated website
+- [reviewing] FR-DOCS-002-docs-single-source-of-truth - Documentation single source of truth - module-owned markdown, generated website
 
 ## email  (4 draft, 5 done)
 

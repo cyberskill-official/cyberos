@@ -3,7 +3,7 @@ id: FR-DOCS-002
 title: Documentation single source of truth - module-owned markdown, generated website
 module: docs
 class: product
-status: implementing
+status: reviewing
 priority: MUST
 depends_on: []
 routed_back_count: 0
