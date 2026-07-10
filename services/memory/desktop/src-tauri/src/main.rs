@@ -2,10 +2,11 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod commands;
+mod ops;
 mod sync_supervisor;
 mod tray;
 
-use tauri::{Manager, WindowEvent};
+use tauri::WindowEvent;
 use tracing_subscriber::EnvFilter;
 
 fn main() {
@@ -32,6 +33,12 @@ fn main() {
             commands::search_memory,
             commands::write_quick_note,
             commands::get_sync_state,
+            ops::ops_get_settings,
+            ops::ops_set_settings,
+            ops::ops_build,
+            ops::ops_check,
+            ops::ops_init,
+            ops::ops_list_projects,
         ])
         .on_window_event(|window, event| {
             // Minimise-to-tray: intercept the close button on the main window.

@@ -18,7 +18,7 @@ Employees should trigger CyberOS operations from the desktop app instead of the 
 
 ## 1. Normative clauses
 
-1. The app MUST expose an Operations view with: (a) "Build payload" - runs `tools/cyberos-init/build.sh` in the configured CyberOS checkout; (b) a project picker (native folder dialog); (c) "Check" - runs `init.sh --check <project>` and shows installed vs available version and whether an update exists; (d) "Init / Update" - runs `init.sh <project>` and shows the summary.
+1. The app MUST expose an Operations view with: (a) "Build payload" - runs `tools/cyberos-init/build.sh` in the configured CyberOS checkout; (b) a project picker - a scanned list of git repositories under `~/Projects` (showing each repo's installed CyberOS version) plus manual path entry (a native folder dialog is an optional follow-up); (c) "Check" - runs `init.sh --check <project>` and shows installed vs available version and whether an update exists; (d) "Init / Update" - runs `init.sh <project>` and shows the summary.
 2. All operations MUST shell out to the canonical scripts (no reimplementation of init logic in the app). The CyberOS checkout path MUST be configurable in the UI and persisted; it defaults to `~/Projects/CyberSkill/cyberos`.
 3. Command output (stdout+stderr) MUST be shown in the UI, and a non-zero exit MUST surface as a visible failure state - never silently swallowed.
 4. The Tauri commands MUST validate that the configured checkout contains `tools/cyberos-init/build.sh` (and the payload `dist/cyberos/init.sh` for check/init) before running, returning a structured error otherwise.

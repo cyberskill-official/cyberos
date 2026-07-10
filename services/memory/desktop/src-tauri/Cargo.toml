@@ -1,3 +1,8 @@
+# Standalone crate: NOT a member of the services/ cargo workspace (Tauri app with
+# its own dependency tree + build cadence). The empty [workspace] table keeps cargo
+# from trying to attach it to services/Cargo.toml.
+[workspace]
+
 [package]
 name = "cyberos-memory-desktop"
 version = "0.1.0"
@@ -6,11 +11,9 @@ description = "CyberOS memory — Tauri 2.x desktop app (sync supervisor + tray 
 license = "MIT OR Apache-2.0"
 publish = false
 
-# Tauri 2.x convention: a [lib] target for mobile + a [[bin]] entrypoint for desktop.
-[lib]
-name = "cyberos_memory_desktop_lib"
-crate-type = ["staticlib", "cdylib", "rlib"]
-
+# Desktop-only crate: a single [[bin]] entrypoint. (The Tauri 2.x mobile [lib]
+# convention was declared here without a src/lib.rs, which broke `cargo check`;
+# reintroduce a real lib.rs if/when mobile targets land.)
 [[bin]]
 name = "cyberos-memory-desktop"
 path = "src/main.rs"
