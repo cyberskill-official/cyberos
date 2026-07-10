@@ -7,7 +7,7 @@
 use tauri::{
     menu::{Menu, MenuItem},
     tray::TrayIconBuilder,
-    AppHandle, Manager,
+    AppHandle, Emitter, Manager,
 };
 
 pub fn build_tray(app: &AppHandle) -> tauri::Result<()> {

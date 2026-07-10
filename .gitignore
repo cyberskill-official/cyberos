@@ -94,3 +94,11 @@ playground
 
 # Signed employment contracts - kept out of version control (cited by clause number in the EVAL rubric)
 docs/legal/*.docx
+
+# tool caches (never committed)
+.code-review-graph/
+.remember/
+
+# Vercel (docs hosting) build staging
+.vercel-out/
+.vercel

@@ -57,7 +57,16 @@ CYBEROS_PACK_URL=<url-to-cyberos.tar.gz> curl -fsSL <raw-url>/bootstrap.sh | bas
 
 ### 4. Claude plugin (available)
 
-`dist/cyberos/plugin/` is a Claude/Cowork plugin (commands `/ship-fr`, `/fr-init`; a bundled `ship-feature-requests` skill). Add it to a marketplace or load it locally, then run `/fr-init` in a repo and `/ship-fr` to drive the backlog. This is the closest replacement for the old two-skill loop, but it carries the real workflow.
+The payload IS a plugin marketplace: `dist/cyberos/.claude-plugin/marketplace.json` catalogs the plugin at `dist/cyberos/plugin/` (its own manifest at `plugin/.claude-plugin/plugin.json`; the `/init`, `/update`, `/changelog`, `/help` commands and the `ship-feature-requests` skill (typeable as `/ship-feature-requests`, and used automatically when you ask to ship an FR)). Install:
+
+- Claude Code: `/plugin marketplace add /path/to/dist/cyberos`, then `/plugin install cyberos@cyberos`.
+- Claude desktop / Cowork: the Add picker wants a FILE - use `dist/cyberos/cyberos.plugin` (the one-file bundle build.sh produces; selecting a folder greys the Open button). The folder route works where marketplaces are supported: add `dist/cyberos` as a marketplace (its root carries `.claude-plugin/marketplace.json`).
+
+Then run `/init` in a repo and `/ship-feature-requests` (or just ask to ship the next FR) to drive the backlog; `/update` and `/changelog` keep the repo current, `/help` orients a new user.
+
+### 4b. Any other agent (Codex, Gemini, Cursor, Grok, CLI agents) - agent-independent
+
+The core is doc-driven, so NO plugin is required for any agent. `init.sh` writes `.cyberos/AGENT-ENTRY.md` - a one-page canonical trigger any agent can follow - and creates thin pointer stubs when absent (`CLAUDE.md`, `GEMINI.md`, `.cursorrules`; your own `AGENTS.md` is never clobbered). Point any agent that can read files and run shell at `.cyberos/AGENT-ENTRY.md` (or paste its 5 rules as the prompt) and it drives the same workflow with the same gates and the same required human verdicts. The Claude plugin is convenience sugar, not a dependency.
 
 ### 5. GitHub Action (available)
 
@@ -75,8 +84,8 @@ The image scaffolds a repo; run the gates on a runner that has your toolchain.
 ### 7. Makefile / just target (available, two lines)
 
 ```make
-fr-init:  ; bash .cyberos-init/init.sh
-fr-gates: ; bash .cyberos/cuo/gates/run-gates.sh
+cyberos-init:  ; bash /path/to/dist/cyberos/init.sh .
+cyberos-gates: ; bash .cyberos/cuo/gates/run-gates.sh
 ```
 
 ### Planned channels (say the word and I will build them)
@@ -89,7 +98,7 @@ fr-gates: ; bash .cyberos/cuo/gates/run-gates.sh
 ## After install: trigger, gate, sign off
 
 1. Write an FR: `cp .cyberos/cuo/templates/FR-TEMPLATE.md docs/feature-requests/FR-001-<slug>.md`, fill section 1, set `status: ready_to_implement`, add the row to `BACKLOG.md`.
-2. Trigger: tell your agent to follow `.cyberos/cuo/ship-feature-requests.md` and drive the next eligible FR, HITL required, `repo_root` = this repo. (Or `/ship-fr` with the plugin.)
+2. Trigger: tell your agent to follow `.cyberos/cuo/ship-feature-requests.md` and drive the next eligible FR, HITL required, `repo_root` = this repo. (Or `/ship-feature-requests` with the plugin.)
 3. Gate: `bash .cyberos/cuo/gates/run-gates.sh`.
 4. Sign off: you record the review verdict and the final acceptance. The agent never sets `done`.
 

@@ -149,6 +149,38 @@ JSON
   MEMORY_SET="yes"
 fi
 
+# 5b. agent-independent entry (works for ANY agent: Claude, Codex, Gemini, Cursor,
+# Grok, CLI agents...). AGENT-ENTRY.md is the canonical one-page trigger; thin
+# pointer stubs are created ONLY when absent (never clobber operator files).
+cat > "$CY/AGENT-ENTRY.md" <<'ENTRY'
+# CyberOS agent entry
+
+This repository runs CyberOS. Any coding agent operating here follows these rules:
+
+1. Work = feature requests. Read `.cyberos/cuo/ship-feature-requests.md` and drive
+   the next eligible FR in `docs/feature-requests/BACKLOG.md` (one backlog for both
+   `class: product` and `class: improvement`; frontmatter `status` is the truth).
+2. HITL is required: halt at review acceptance (`reviewing -> ready_to_test`) and at
+   final acceptance (`testing -> done`) for a recorded human verdict. Never set
+   `done` yourself. Doctrine: `.cyberos/cuo/EXECUTION-DISCIPLINE.md`; lifecycle:
+   `.cyberos/cuo/STATUS-REFERENCE.md`.
+3. Machine gates: `bash .cyberos/cuo/gates/run-gates.sh` (reads `.cyberos/gates.env`).
+   Green is necessary, never sufficient.
+4. Memory: record decisions, audits, and plans into the BRAIN at
+   `.cyberos/memory/store/` per the protocol in `AGENTS.md` (root) or
+   `.cyberos/memory/AGENTS.md`.
+5. Never push, deploy, or delete without an explicit operator instruction.
+ENTRY
+
+for stub in CLAUDE.md GEMINI.md; do
+  if [ ! -e "$root/$stub" ]; then
+    printf '# %s\n\nThis repo runs CyberOS. Start at `.cyberos/AGENT-ENTRY.md`.\n' "${stub%%.md}" > "$root/$stub"
+  fi
+done
+if [ ! -e "$root/.cursorrules" ]; then
+  printf 'This repo runs CyberOS. Start at .cyberos/AGENT-ENTRY.md.\n' > "$root/.cursorrules"
+fi
+
 # 6. gitignore the vendored machine + the BRAIN (regenerable / tenant data) ---
 gi="$root/.gitignore"
 [ -f "$gi" ] || : > "$gi"

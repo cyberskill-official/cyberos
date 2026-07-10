@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "",
+  "buildCommand": "bash tools/docs-site/build.sh && node tools/docs-site/stage-vercel.mjs",
+  "outputDirectory": ".vercel-out"
+}

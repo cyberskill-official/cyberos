@@ -2,7 +2,23 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
-## [Unreleased] - awh absorption (2026-06-19, branch auto/awh-absorb)
+## [1.0.0] - 2026-07-10
+
+The first platform release. One version (`VERSION`) across every surface: services (GHCR images + VPS), the web console and PWA at os.cyberskill.world, the desktop app (Tauri, with the CyberOS Ops tab), the distributable init payload (`dist/cyberos`), the Claude plugin, and the generated docs site.
+
+Added
+- ship-feature-requests as the single governed workflow (product + improvement classes, one backlog, HITL at the two human-acceptance gates).
+- cyberos-init payload: `init.sh` (idempotent install/update, `--check`), agent-independent entry (`.cyberos/AGENT-ENTRY.md` + pointer stubs), `rollout.sh`, plugin marketplace + one-file `cyberos.plugin` bundle.
+- Claude plugin 1.0.0: `/init`, `/update`, `/changelog`, `/help` commands + the `ship-feature-requests` skill.
+- Desktop CyberOS Ops tab (FR-APP-001): build payload, list projects with installed versions, check, init/update - over the canonical scripts.
+- Documentation single source of truth (FR-DOCS-002): markdown sources (module-owned + global), generated site at `dist/website`, Vercel hosting wiring for cyberos.cyberskill.world/docs, docs-prerender CI gate + pre-commit build check.
+- CI/local parity: `scripts/local_verify.sh` runs the same migrations + per-crate DB suites as the services workflow; pre-push hook runs it when Docker is up.
+
+Changed
+- BRAIN store canonical location: `.cyberos/memory/store/` (legacy `.cyberos-memory/` removed platform-wide).
+- Improvement work folded into `docs/feature-requests/` (`(improvement)` tags); separate improvement trees retired.
+
+## awh absorption (2026-06-19, shipped in 1.0.0)
 
 Platform-wide verification substrate. Agent self-certification at `testing -> done` is replaced at the seam by an out-of-band gate that reruns the real tests against a sealed baseline and blocks on regression.
 
@@ -21,7 +37,7 @@ Changed
 Verified
 - MEMORY green under the awh gate (pilot FR-MEMORY-116, weighted pass@1 = 100%).
 
-## [Unreleased] - CAF (code-audit) absorption (2026-06-20, branch auto/awh-absorb)
+## CAF (code-audit) absorption (2026-06-20, shipped in 1.0.0)
 
 Second verification axis. Where awh reruns the tests, CAF reruns the target's own build/lint/typecheck/test and audits the code, catching the class awh cannot see (a build/lint break, a route that 404s, a changed data contract - e.g. the CCAF V2 regression).
 

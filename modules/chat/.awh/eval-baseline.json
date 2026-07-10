@@ -1,6 +1,6 @@
 {
   "label": "eval",
-  "created": 1781853680.586795,
+  "created": 1783675567.0346692,
   "seeds": [
     0
   ],
@@ -14,7 +14,7 @@
   },
   "tasks": [
     {
-      "task_id": "chat-verify",
+      "task_id": "chat-service-rust",
       "weight": 3.0,
       "n": 1,
       "c": 1,

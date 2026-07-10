@@ -7,7 +7,7 @@ name: deploy
 # compose) skips the gate + build and just rolls (the bundle ships via the VPS git pull). Safe by
 # construction: if the gate or build fails, the roll is skipped and the site stays on the current images.
 #
-# One-time setup (deploy/vps/auto-deploy.md + RELEASE.md): repo secrets VPS_HOST / VPS_USER / VPS_SSH_KEY,
+# One-time setup (deploy/vps/auto-deploy.md + docs/deploy/RELEASE.md): repo secrets VPS_HOST / VPS_USER / VPS_SSH_KEY,
 # a read-only deploy key on the VPS for `git pull`, and a GHCR login on the VPS for `docker pull`. Image push
 # uses the built-in GITHUB_TOKEN (packages: write).
 
@@ -92,18 +92,27 @@ jobs:
         run: |
           set -euo pipefail
           SHORT="$(echo "${GITHUB_SHA}" | cut -c1-7)"
+          # org.opencontainers.image.source links each GHCR package to this repo, so a package
+          # created by this workflow automatically grants the repo write access. A 403 Forbidden
+          # on push means the package ALREADY exists without this repo granted: fix in GitHub UI
+          # (org > Packages > <package> > Package settings > Manage Actions access > add this
+          # repo with Write), or delete the stale package and let this workflow recreate it.
+          SRC_LABEL="org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}"
           build_push() {
             local pkg="$1" bin="${2:-$1}"
             docker buildx build --platform linux/amd64 --file Dockerfile \
               --build-arg "PACKAGE=${pkg}" --build-arg "BIN=${bin}" \
+              --label "${SRC_LABEL}" \
               --cache-from "type=gha,scope=${pkg}" --cache-to "type=gha,mode=max,scope=${pkg}" \
-              --tag "${REGISTRY}/${pkg}:latest" --tag "${REGISTRY}/${pkg}:${SHORT}" --push .
+              --tag "${REGISTRY}/${pkg}:latest" --tag "${REGISTRY}/${pkg}:${SHORT}" --push . \
+              || { echo "::error::push failed for ${pkg} - if 403 Forbidden, grant this repo Write on the GHCR package (see comment above)"; return 1; }
           }
           # Core stack images: must succeed.
           build_push cyberos-auth
           build_push cyberos-chat
           build_push cyberos-ai-gateway cyberos-gateway
           docker buildx build --platform linux/amd64 --file embed-sidecar/Dockerfile \
+            --label "${SRC_LABEL}" \
             --cache-from "type=gha,scope=embed" --cache-to "type=gha,mode=max,scope=embed" \
             --tag "${REGISTRY}/cyberos-embed-sidecar:latest" --tag "${REGISTRY}/cyberos-embed-sidecar:${SHORT}" \
             --push embed-sidecar

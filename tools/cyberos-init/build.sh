@@ -48,18 +48,29 @@ memory_vendored="protocol"
 [ -f "$repo/modules/memory/memory.invariants.yaml" ] && cp "$repo/modules/memory/memory.invariants.yaml" "$out/memory/memory.invariants.yaml"
 
 # --- plugin + runtime + docs ---
+rm -rf "$repo/dist/fr-pack"   # self-heal: purge the pre-rename payload if a stale copy lingers
 cp -R "$here/plugin"    "$out/plugin"
+# Marketplace manifest at the payload ROOT: lets Claude add dist/cyberos as a plugin
+# marketplace (`/plugin marketplace add <path>` or the desktop Plugins > Add picker),
+# then install the `cyberos` plugin from it. plugin/.claude-plugin/plugin.json is the
+# plugin's own manifest; this file is the catalog pointing at it.
+mkdir -p "$out/.claude-plugin"
+cp "$here/marketplace/.claude-plugin/marketplace.json" "$out/.claude-plugin/marketplace.json"
 cp "$here/init.sh"      "$out/init.sh"
 cp "$here/bootstrap.sh" "$out/bootstrap.sh"
 cp -R "$here/ci"        "$out/ci"
 cp "$here/Dockerfile"   "$out/Dockerfile"
 cp "$here/README.md"    "$out/README.md"
-cp "$here/GUIDE.md"     "$out/GUIDE.md"
+cp "$here/docs/index.md" "$out/GUIDE.md"   # the guide source lives in docs/ (site-rendered); ships as GUIDE.md
 chmod +x "$out/init.sh" "$out/bootstrap.sh" "$out/cuo/gates/run-gates.sh" 2>/dev/null || true
 
 # make the plugin self-contained: carry the cuo docs so the bundled skill works standalone
 mkdir -p "$out/plugin/skills/ship-feature-requests/cuo"
 cp "$out/cuo/ship-feature-requests.md" "$out/cuo/EXECUTION-DISCIPLINE.md" "$out/cuo/STATUS-REFERENCE.md" "$out/plugin/skills/ship-feature-requests/cuo/"
+
+# One-file plugin bundle for pickers that want a FILE, not a folder (Claude desktop's
+# Add dialog greys "Open" on directories): zip the plugin dir into cyberos.plugin.
+(cd "$out/plugin" && rm -f ../cyberos.plugin && zip -qr ../cyberos.plugin .claude-plugin commands skills)
 
 # --- profile + manifest ---
 profile="reduced"

@@ -1,8 +1,10 @@
 {
   "name": "cyberos",
-  "description": "Run the CyberOS ship-feature-requests workflow in any repo. Feature-requests (product or improvement class) go implement -> review -> test -> done, with HITL required at the two human-acceptance gates and gates driven by the repo's own build/lint/test.",
-  "version": "0.1.0",
+  "description": "CyberOS in any repo: /init installs the self-hosting machine (gate autodetect, FR backlog, agent entry), the ship-feature-requests skill drives each feature request through implement -> review -> test -> done with the human holding the two acceptance gates, and /update, /changelog, /help keep it current and discoverable. Agents never push, merge, deploy, or self-accept.",
+  "version": "1.0.0",
   "author": { "name": "CyberSkill" },
+  "homepage": "https://cyberos.cyberskill.world/docs",
+  "keywords": ["cyberos", "feature-requests", "workflow", "hitl", "gates"],
   "commands": "./commands",
   "skills": "./skills"
 }

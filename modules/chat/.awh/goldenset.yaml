@@ -1,21 +1,23 @@
-# CHAT module golden set (awh). Per-module gate for roadmap wave 5.
+# CHAT module golden set (awh). Rebaselined 2026-07-10: the original tasks gated the
+# retired license-gated fork (make chat-verify / PINNED_COMMIT); CHAT is now the
+# first-party Rust service at services/chat (crate cyberos-chat), so the tasks gate
+# that crate the same way the other Rust modules do.
 #
 #   awh eval modules/chat/.awh/goldenset.yaml --base-dir . --seeds 1 --out modules/chat/.awh/eval-baseline.json
 #   awh eval modules/chat/.awh/goldenset.yaml --base-dir . --seeds 1 --baseline modules/chat/.awh/eval-baseline.json --max-regression 0.0
 #
-# CHAT is the license-gated service (services/chat), built separately from the workspace.
-# chat-verify runs the structural invariant suite (PINNED_COMMIT, patches, workflows,
-# FR-CHAT-001 layout, FR-CHAT-002 authbridge). All green on main.
+# DB-required tests are #[ignore]-by-default in the crate, so these commands are green
+# without Postgres (the full DB suites run in scripts/local_verify.sh and services CI).
 tasks:
-  - id: chat-verify
-    description: CHAT structural invariant suite (services/chat make chat-verify) - green on main
-    cmd: "cd services && make chat-verify"
+  - id: chat-service-rust
+    description: CHAT Rust service (services/chat, crate cyberos-chat) unit suite - green on main
+    cmd: "cd services && cargo test -p cyberos-chat"
     weight: 3.0
-    timeout_sec: 900
+    timeout_sec: 1200
 
-  # Held-out acceptance: the authbridge structural tests (FR-CHAT-002). Sealed read-only.
+  # Held-out acceptance: the auth-bridge tests (token validation against AUTH). Sealed read-only.
   - id: acceptance-chat-authbridge
-    description: held-out CHAT authbridge (FR-CHAT-002) test
-    cmd: "cd services/chat && make chat-authbridge-test"
+    description: held-out CHAT auth bridge (src/auth.rs token validation) tests
+    cmd: "cd services && cargo test -p cyberos-chat auth::"
     weight: 5.0
     timeout_sec: 600

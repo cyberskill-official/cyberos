@@ -1,23 +1,35 @@
-# docs-prerender-gate.yml — STUB
-#
-# Auto-generated 2026-05-17 from FR build_envelope references.
-# Declared by: FR-DOCS-001
-#
-# Implementation team: replace this stub with the real workflow YAML
-# per the spec details in the declaring FR(s) above.
-# Many FRs embed the canonical workflow YAML in their §6 skeleton section.
+# docs-prerender-gate.yml — the website is GENERATED from the markdown single source of
+# truth (FR-DOCS-002) into gitignored dist/website; nothing generated is committed. This
+# gate proves the whole site still builds from the sources on every docs-touching PR
+# (broken links to assets and unreadable sources fail the build).
 
 name: docs-prerender-gate
 
 on:
+  workflow_dispatch: {}
   pull_request:
     paths:
-      # TODO: per declaring FR
-      - 'services/**'
+      - 'docs/**'
+      - 'modules/*/docs/**'
+      - 'services/*/docs/**'
+      - 'tools/docs-site/**'
+      - 'CHANGELOG.md'
+      - 'modules/*/CHANGELOG.md'
+      - 'services/*/CHANGELOG.md'
 
 jobs:
-  placeholder:
+  docs-build:
+    name: site builds from sources
     runs-on: ubuntu-latest
     steps:
-      - name: TODO — implement per FR(s) FR-DOCS-001
-        run: echo 'Stub — see FR specs for canonical workflow YAML'
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Build the site from the markdown sources
+        run: bash tools/docs-site/build.sh
+
+      - name: Sanity
+        run: test -f dist/website/index.html && test -f dist/website/reference/fr-catalog.html && echo "site built"
