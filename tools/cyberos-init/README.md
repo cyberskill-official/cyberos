@@ -57,12 +57,12 @@ CYBEROS_PACK_URL=<url-to-cyberos.tar.gz> curl -fsSL <raw-url>/bootstrap.sh | bas
 
 ### 4. Claude plugin (available)
 
-The payload IS a plugin marketplace: `dist/cyberos/.claude-plugin/marketplace.json` catalogs the plugin at `dist/cyberos/plugin/` (its own manifest at `plugin/.claude-plugin/plugin.json`; the `/fr-init` command and the `ship-feature-requests` skill (typeable as `/ship-feature-requests`, and used automatically when you ask to ship an FR)). Install:
+The payload IS a plugin marketplace: `dist/cyberos/.claude-plugin/marketplace.json` catalogs the plugin at `dist/cyberos/plugin/` (its own manifest at `plugin/.claude-plugin/plugin.json`; the `/init`, `/update`, `/changelog`, `/help` commands and the `ship-feature-requests` skill (typeable as `/ship-feature-requests`, and used automatically when you ask to ship an FR)). Install:
 
 - Claude Code: `/plugin marketplace add /path/to/dist/cyberos`, then `/plugin install cyberos@cyberos`.
 - Claude desktop / Cowork: the Add picker wants a FILE - use `dist/cyberos/cyberos.plugin` (the one-file bundle build.sh produces; selecting a folder greys the Open button). The folder route works where marketplaces are supported: add `dist/cyberos` as a marketplace (its root carries `.claude-plugin/marketplace.json`).
 
-Then run `/fr-init` in a repo and `/ship-feature-requests` (or just ask to ship the next FR) to drive the backlog.
+Then run `/init` in a repo and `/ship-feature-requests` (or just ask to ship the next FR) to drive the backlog; `/update` and `/changelog` keep the repo current, `/help` orients a new user.
 
 ### 4b. Any other agent (Codex, Gemini, Cursor, Grok, CLI agents) - agent-independent
 
@@ -84,8 +84,8 @@ The image scaffolds a repo; run the gates on a runner that has your toolchain.
 ### 7. Makefile / just target (available, two lines)
 
 ```make
-fr-init:  ; bash .cyberos-init/init.sh
-fr-gates: ; bash .cyberos/cuo/gates/run-gates.sh
+cyberos-init:  ; bash /path/to/dist/cyberos/init.sh .
+cyberos-gates: ; bash .cyberos/cuo/gates/run-gates.sh
 ```
 
 ### Planned channels (say the word and I will build them)

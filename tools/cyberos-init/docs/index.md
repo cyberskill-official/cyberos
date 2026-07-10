@@ -17,7 +17,7 @@ One action lays the CyberOS machine into your repo under a single gitignored `.c
 
 - `.cyberos/cuo/` - the workflow engine: `ship-feature-requests.md` + `EXECUTION-DISCIPLINE.md` + `STATUS-REFERENCE.md`, the author/audit skills, `gates/`, and `templates/`.
 - `.cyberos/memory/` - the Layer-1 memory protocol (`AGENTS.md`) + schema + invariants.
-- `.cyberos/plugin/` - the Claude/Cowork plugin (`/fr-init` + the `ship-feature-requests` skill).
+- `.cyberos/plugin/` - the Claude/Cowork plugin (`/init`, `/update`, `/changelog`, `/help` + the `ship-feature-requests` skill).
 - `.cyberos/AGENT-ENTRY.md` - the agent-independent entry point (plus `CLAUDE.md` / `GEMINI.md` / `.cursorrules` pointer stubs where absent).
 - `.cyberos/gates.env`, `.cyberos/manifest.yaml`, `.cyberos/VERSION` - your gate commands, the build manifest, and the single CyberOS version stamp.
 - `.cyberos/memory/store/` - your local BRAIN store (tenant data).
@@ -46,7 +46,7 @@ One action lays the CyberOS machine into your repo under a single gitignored `.c
    bash /path/to/dist/cyberos/init.sh /path/to/your/repo
    ```
 
-   This auto-detects your build/lint/test, writes `.cyberos/gates.env`, scaffolds `docs/feature-requests/`, vendors the machine by module into `.cyberos/`, and stamps `.cyberos/VERSION`. By default it also sets up the BRAIN: a local `.cyberos/memory/store/` store plus the `AGENTS.md` memory rules (skip with `CYBEROS_NO_MEMORY=1`). It never clobbers an existing `AGENTS.md`, `BACKLOG.md`, `gates.env`, or BRAIN. (With the Claude plugin, run `/fr-init` instead.)
+   This auto-detects your build/lint/test, writes `.cyberos/gates.env`, scaffolds `docs/feature-requests/`, vendors the machine by module into `.cyberos/`, and stamps `.cyberos/VERSION`. By default it also sets up the BRAIN: a local `.cyberos/memory/store/` store plus the `AGENTS.md` memory rules (skip with `CYBEROS_NO_MEMORY=1`). It never clobbers an existing `AGENTS.md`, `BACKLOG.md`, `gates.env`, or BRAIN. (With the Claude plugin, run `/init` instead.)
 
 3. Check the gates. Open `.cyberos/gates.env` and confirm `BUILD_CMD` / `LINT_CMD` / `TEST_CMD` are right for your repo; edit if autodetect missed anything. If you have a caf baseline or an awh goldenset, set `CAF_ENABLED` / `AWH_ENABLED` to `true` and point them at your files. Then confirm a clean tree is green:
 

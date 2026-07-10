@@ -2,14 +2,14 @@
   "name": "cyberos",
   "owner": { "name": "CyberSkill" },
   "metadata": {
-    "description": "CyberOS plugin marketplace - the ship-feature-requests workflow for any repo.",
-    "version": "0.1.0"
+    "description": "CyberOS plugin marketplace - the governed feature-request workflow for any repo.",
+    "version": "1.0.0"
   },
   "plugins": [
     {
       "name": "cyberos",
       "source": "./plugin",
-      "description": "Run the CyberOS ship-feature-requests workflow: /fr-init to vendor the machine, the ship-feature-requests skill to drive the backlog. HITL required at the two human-acceptance gates."
+      "description": "CyberOS in any repo: /init installs the machine, the ship-feature-requests skill drives the backlog, /update and /changelog keep it current. HITL required at the two human-acceptance gates; agents never push or self-accept."
     }
   ]
 }
