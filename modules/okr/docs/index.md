@@ -439,7 +439,7 @@ ID| Risk| Likelihood| Impact| Owner| Mitigation
 
 ## KPIs
 
-OKR health rolls up into 9 KPIs covering cascade coverage, check-in participation, end-cycle scoring, and digest engagement.
+OKR health rolls up into 14 KPIs covering cascade coverage, check-in participation, end-cycle scoring, and digest engagement.
 
 KPI| Formula| Source| Target
 ---|---|---|---

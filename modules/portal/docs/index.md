@@ -434,7 +434,7 @@ ID| Risk| Likelihood| Impact| Owner| Mitigation
 
 ## KPIs
 
-PORTAL health rolls up into 10 KPIs covering activation, isolation, AI usage, and DSAR fulfilment.
+PORTAL health rolls up into 15 KPIs covering activation, isolation, AI usage, and DSAR fulfilment.
 
 KPI| Formula| Source| Target
 ---|---|---|---
@@ -622,7 +622,7 @@ Isolation property fuzz in CI| planned - P4
 - **TEN module** - [ten.html](../ten/index.html) - the SaaS-tenant layer above PORTAL.
 - **Bigger picture (above):** 3 strategic roles + multi-tenant-within-multi-tenant diagram + 10-row auto-vs-human matrix.
 - **memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - PORTAL retrievals strictly filtered to sync_class=client-visible.
-- **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - PORTAL at P3-start (P2+).
+- **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - PORTAL at P3-start (current status P4 long-term).
 - **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
 
 ## Changelog

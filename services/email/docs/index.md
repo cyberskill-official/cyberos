@@ -612,13 +612,13 @@ sequenceDiagram
 sequenceDiagram
   autonumber
   participant U as Migrating Member
-  participant CLI as cyberos-email
+  participant CLI as cyberos-email-cli
   participant G as Gmail IMAP
   participant Q as CaMeL quarantined LLM
   participant T as Thread merger
   participant S3 as S3
   participant B as memory audit
-  U->>CLI: cyberos-email import gmail --user stephen@...
+  U->>CLI: cyberos-email-cli import gmail --user stephen@...
   CLI->>G: AUTHENTICATE XOAUTH2
   G-->>CLI: SELECT [Gmail]/All Mail (12,481 messages)
   loop per message
@@ -749,7 +749,7 @@ Email is a magnet for regulators. EMAIL must satisfy PDPL, GDPR, RFC compliance,
 
 | Regulation / standard | Article / clause | EMAIL feature that satisfies it |
 |---|---|---|
-| Vietnam PDPL (Law 91/2025) | Art. 14 - DSAR | `cyberos-email dsar-export` bundles every message a subject sent / received. |
+| Vietnam PDPL (Law 91/2025) | Art. 14 - DSAR | `cyberos-email-cli dsar-export` bundles every message a subject sent / received. |
 | Vietnam Decree 13/2023 | Art. 17 - Personal data processing log | Every inbound / outbound writes a memory audit row. |
 | Vietnam Decree 53/2022 | Art. 26 - Data localisation | The per-tenant `vn_residency` flag routes bodies + attachments to hanoi-1 S3. |
 | GDPR (EU 2016/679) | Art. 15 - Right of access | DSAR export. |
@@ -831,12 +831,12 @@ EMAIL is owned by the CCO seat. Today (CCO vacant), the CEO is interim accountab
 
 ## Planned CLI surface
 
-A single admin CLI `cyberos-email` for tenant operators. Destructive commands always write a chained audit row before exit.
+A single admin CLI `cyberos-email-cli` for tenant operators. Destructive commands always write a chained audit row before exit.
 
 ### 1. Create a shared inbox
 
 ```
-$ cyberos-email shared-inbox create \
+$ cyberos-email-cli shared-inbox create \
  --tenant cyberskill \
  --address support@cyberskill.world \
  --display "CyberSkill Support" \
@@ -851,7 +851,7 @@ $ cyberos-email shared-inbox create \
 ### 2. Rotate the per-tenant DKIM key
 
 ```
-$ cyberos-email dkim rotate --tenant cyberskill --reason "quarterly-scheduled"
+$ cyberos-email-cli dkim rotate --tenant cyberskill --reason "quarterly-scheduled"
 
 [rotate] new selector: cyberos-2026-q2
 [kms] old selector cyberos-2026-q1 retained for verification (30 d)
@@ -862,7 +862,7 @@ $ cyberos-email dkim rotate --tenant cyberskill --reason "quarterly-scheduled"
 ### 3. Import from Gmail
 
 ```
-$ cyberos-email import gmail \
+$ cyberos-email-cli import gmail \
  --user stephen@cyberskill.world \
  --since 2024-01-01 \
  --rate-limit 1000/min
@@ -877,7 +877,7 @@ $ cyberos-email import gmail \
 ### 4. View a DMARC aggregate report
 
 ```
-$ cyberos-email dmarc report --tenant cyberskill --since 7d
+$ cyberos-email-cli dmarc report --tenant cyberskill --since 7d
 
 domain policy sent pass fail pct
 cyberskill.world reject 8,213 8,201 12 99.85%
@@ -890,7 +890,7 @@ cyberskill.world reject 8,213 8,201 12 99.85%
 ### 5. Run a CaMeL red-team replay
 
 ```
-$ cyberos-email redteam replay --corpus echoleak-v3 --output report.json
+$ cyberos-email-cli redteam replay --corpus echoleak-v3 --output report.json
 
 [replay] corpus: echoleak-v3 (412 messages)
 [replay] running quarantined extraction ...
@@ -902,7 +902,7 @@ $ cyberos-email redteam replay --corpus echoleak-v3 --output report.json
 ### 6. Export a DSAR bundle
 
 ```
-$ cyberos-email dsar-export --subject stephen@cyberskill.world --output stephen.zip
+$ cyberos-email-cli dsar-export --subject stephen@cyberskill.world --output stephen.zip
 
 [dsar] subject: stephen@cyberskill.world
 [dsar] threads: 1,247
@@ -916,7 +916,7 @@ $ cyberos-email dsar-export --subject stephen@cyberskill.world --output stephen.
 ### 7. Install a ManageSieve rule
 
 ```
-$ cyberos-email sieve install --mailbox stephen@cyberskill.world --file my.sieve
+$ cyberos-email-cli sieve install --mailbox stephen@cyberskill.world --file my.sieve
 
 require ["fileinto", "imap4flags"];
 if address:is "from" "noreply@github.com" {
@@ -936,7 +936,7 @@ if address:is "from" "noreply@github.com" {
 - **Est. LoC:** ~9,000 - Rust adapter + TS SPA + sqlx
 - **Planned tests:** 90+ - including the CaMeL red-team replay
 - **External libs:** ~15 - Stalwart, mail-auth, PGroonga
-- **CLI subcommands:** ~20 planned - `cyberos-email`
+- **CLI subcommands:** ~20 planned - `cyberos-email-cli`
 - **P1 budget:** ~$110/mo - Fargate + RDS + S3 + Redis
 
 | Capability | Status |

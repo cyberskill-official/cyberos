@@ -380,7 +380,7 @@ DOC NFRs centre on signature non-repudiation and long-term archival durability.
 NFR ID| Concern| Target| Measurement
 ---|---|---|---
 (NFR pending)| Signature non-repudiation (cosign verifies archive byte-for-byte)| 100% of archives| quarterly chaos audit (random 1%)
-(NFR pending)| Cross-tenant document leak| = 0| RLS verification harness
+(NFR pending)| Cross-tenant document leak| = 0| RLS verification suite
 (NFR pending)| Archive durability (no archive loss over 10 years)| 11x9s (S3 Object-Lock guarantee)| S3 SLA
 (NFR pending)| Audit-chain integrity| = 0 broken chains| nightly walker job
 (NFR pending)| uploadDocument server-canonical p95| <= 3 s (10 MB PDF)| k6
@@ -456,7 +456,7 @@ ID| Risk| Likelihood| Impact| Owner| Mitigation
 
 ## KPIs
 
-DOC health rolls up into 9 KPIs covering signing speed, completion rate, audit integrity, and compliance posture.
+DOC KPIs cover signing speed, completion rate, audit integrity, and compliance posture.
 
 KPI| Formula| Source| Target
 ---|---|---|---

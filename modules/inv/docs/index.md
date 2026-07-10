@@ -21,7 +21,7 @@ INV is the **AR plane**. Invoices begin life as a draft auto-populated from TIME
 
 ## The bigger picture - three strategic roles
 
-INV closes the PROJ-TIME-INV chain. The Engagement carries the rate card; TIME logs hours against it; INV invoices the rollup. For Vietnamese tenants, INV is also the regulator-facing surface - hóa đơn emission is not optional, and the GDT format is unforgiving about Mẫu / line items / MST validation. The naive read is "send invoices in Stripe." The real read: INV is the audit-grade pivot between billable activity and recognised revenue, with VN regulatory compliance baked in.
+INV closes the PROJ-TIME-INV chain. The Engagement carries the rate card; TIME logs hours against it; INV invoices the rollup. For Vietnamese tenants, INV is also the regulator-facing surface - hóa đơn emission is not optional, and the GDT format is unforgiving about Mẫu / line items / MST validation. It reads like "send invoices in Stripe", but INV is the audit-grade pivot between billable activity and recognised revenue, with VN regulatory compliance baked in.
 
 **Role 1 - Billable rollup -> invoice.** Consume TIME per-cycle rollup; preserve rate-card snapshots. At cycle close (or monthly for retainers), TIME emits the per-Member per-role per-Engagement billable rollup. INV consumes it, builds invoice line items using the rate-card snapshot stored on each TimeEntry (never retroactive), totals per currency, calculates VAT for VN line items, and creates a draft invoice. AM reviews the draft; client gets the bill.
 
@@ -340,7 +340,7 @@ Previous FR enumerations were archived 2026-05-14 and are no longer reflected on
 
 ## Non-functional requirements
 
-Performance and reliability NFRs (§11.2.4) bind on INV - especially payment reconciliation correctness.
+Performance and reliability NFRs bind on INV - especially payment reconciliation correctness.
 
 NFR ID| Concern| Target| Measurement
 ---|---|---|---
@@ -415,7 +415,7 @@ ID| Risk| Likelihood| Impact| Owner| Mitigation
 
 ## KPIs
 
-INV health rolls up into 9 KPIs across AR efficiency, reconciliation accuracy, and compliance.
+INV KPIs cover AR efficiency, reconciliation accuracy, and compliance.
 
 KPI| Formula| Source| Target
 ---|---|---|---

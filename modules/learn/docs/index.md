@@ -82,7 +82,7 @@ Axis| Question| Answer
 **5W - Why**| Why a separate module?| Because promotion + skills is the most subjective decision in any company, and the only defence against bias is evidence and process. LEARN is the evidence layer.
 **1H - How**| How does it work?| Skill catalogue as Rust + sqlx-backed closed enum per discipline. Mastery claim = row with evidence FK (PROJ contribution id / KB post id / certificate id / endorsement id). VP = pure function of inputs; deterministic. Council workflow is a state-machine per case; per-judge rows stored in LEARN-private table with RLS that excludes HR's read role.
 **2C - Cost**| Cost budget?| P1: ~$20/month. 50-tenant: ~$70/month.
-**2C - Constraints**| Constraints?| (a) Per-judge scores never exported (FR pending). (b) Promotion gate criteria immutable per parameter version ((FR pending) anti-retroactive). (c) EU AI Act Annex III §4 high-risk; P2 conformity pack. (d) Vietnamese bằng cấp / chứng chỉ fields supported.
+**2C - Constraints**| Constraints?| (a) Per-judge scores never exported (FR pending). (b) Promotion gate criteria immutable per parameter version (anti-retroactive, FR pending). (c) EU AI Act Annex III §4 high-risk; P2 conformity pack. (d) Vietnamese bằng cấp / chứng chỉ fields supported.
 **5M - Materials**| Stack?| Rust 1.81, axum, sqlx, PostgreSQL 16, async-graphql, NATS for VP-recompute triggers, S3 for certificate PDFs with QR-provenance.
 **5M - Methods**| Method choices?| Closed-enum skill catalogue (no free-text skills). Multi-judge aggregation = median of N scores (resilient to one extreme). Anti-retroactive parameter versioning identical to REW pattern.
 **5M - Machines**| Deployment?| Fargate task in SG-1. Multi-AZ Postgres RDS. S3 for cert PDFs.
@@ -359,7 +359,7 @@ Previous FR enumerations were archived 2026-05-14 and are no longer reflected on
 
 ## Non-functional requirements
 
-Usability / explainability and security NFRs (§11.2.3) bind on LEARN. Cross-referenced at [nfr-catalog.html#learn](../../reference/nfr-catalog.html#learn).
+Usability / explainability and security NFRs bind on LEARN. Cross-referenced at [nfr-catalog.html#learn](../../reference/nfr-catalog.html#learn).
 
 NFR ID| Concern| Target| Measurement
 ---|---|---|---
@@ -435,7 +435,7 @@ ID| Risk| Likelihood| Impact| Owner| Mitigation
 
 ## KPIs
 
-LEARN health rolls up into 9 KPIs across throughput, integrity, and fairness.
+LEARN health rolls up into 14 KPIs across throughput, integrity, and fairness.
 
 KPI| Formula| Source| Target
 ---|---|---|---

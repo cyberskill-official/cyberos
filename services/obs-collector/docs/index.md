@@ -7,7 +7,7 @@ migrated: FR-DOCS-002
 OBS is the **shared telemetry plane**: logs, metrics, traces, and AI-trace observability for every CyberOS module. Operationally, OpenTelemetry SDKs in every service ship to a single OTel collector that fans out - logs to Loki, metrics to Prometheus, traces to Tempo. Grafana renders dashboards (per-module SLO, per-tenant cost, per-region health). LangSmith captures full LLM call traces independently from the operational pipeline so AI debugging doesn't require correlating across three tools. Alert Manager fans critical alerts to PagerDuty, mid alerts to `#cyberos-alerts`, low signals into the CUO morning digest. The audit chain - owned by memory - is exposed via a separate read-only OBS surface for regulators (PDPL Art. 14, EU AI Act Art. 12). Tenant scoping is enforced at the query proxy so a member of tenant A cannot see tenant B's logs.
 
 - **Strategic role:** observability spine - 3 pillars + AI traces + audit
-- **Status:** planned - P0, design phase; P0 slice 1
+- **Status:** planned - P0; slice 1 in build
 - **Stack:** LGTM + LangSmith - Loki, Grafana, Tempo, Prometheus
 - **Trace exporter:** OTel SDK - in every service binary
 - **Correlation key:** trace_id x tenant_id - propagated via W3C TraceContext
@@ -17,11 +17,11 @@ OBS is the **shared telemetry plane**: logs, metrics, traces, and AI-trace obser
 - **Auto-runbook coverage:** >= 60% by P1 - alerts -> CUO triage skill
 - **Compliance surfaces:** EU AI Act, PDPL, SOC 2 - read-only regulator views
 - **Depends on:** memory, plus AUTH (P0 slice 2) and AI Gateway (P0 slice 1)
-- **Used by:** all 22 modules - every service emits OTel
+- **Used by:** all 24 modules - every service emits OTel
 
 ## The bigger picture - three strategic roles
 
-OBS is one of the two earliest P0 modules to ship (P0 slice 1, alongside AI Gateway), because _any_ debugging requires it. The naive read is "it's the Grafana installation." The real read is: this is the protocol-level guarantee that any incident - operational, AI-decision, or compliance - has exactly one investigation surface; not three competing dashboards from three vendors.
+OBS is one of the two earliest P0 modules to ship (P0 slice 1, alongside AI Gateway), because _any_ debugging requires it. More than a Grafana install, it is the protocol-level guarantee that any incident - operational, AI-decision, or compliance - has exactly one investigation surface instead of three competing dashboards from three vendors.
 
 ### Role 1 - three-pillars unified pane
 
@@ -39,7 +39,7 @@ OBS is one of the two earliest P0 modules to ship (P0 slice 1, alongside AI Gate
 
 ```mermaid
 flowchart TB
-  subgraph emitters["Emitters (all 22 modules)"]
+  subgraph emitters["Emitters (all 24 modules)"]
     CUO["CUO"]
     memory["memory"]
     SKILL["Skill"]
@@ -47,7 +47,7 @@ flowchart TB
     AUTH["AUTH"]
     MCP["MCP"]
     PROJ["PROJ"]
-    N["... 15 more"]
+    N["... 17 more"]
   end
   COLLECT["OTel Collector<br/>(W3C TraceContext)"]
   OBS["OBS<br/>LGTM + LangSmith"]
@@ -296,7 +296,7 @@ graph TB
     SVC2["AI Gateway"]
     SVC3["MCP Gateway"]
     SVC4["CHAT"]
-    SVCN["... 18 more modules"]
+    SVCN["... 20 more modules"]
   end
   subgraph COLLECTOR ["OTel Collector (Fargate, per-region)"]
     REC["receivers<br/>OTLP grpc/http"]
@@ -364,19 +364,19 @@ graph TB
 
 | Component | Where | Responsibility |
 |---|---|---|
-| `OTel Collector` | services/obs/collector/ | Receives OTLP from every service. Applies PII redaction, tenant tagging, tail-based sampling. Fans out to Loki/Tempo/Prometheus. |
-| `redactor processor` | collector/processors/redactor.go | Presidio-equivalent PII scrubber in Go. Recall >= 99.5%. Same rule set as the AI Gateway redactor. |
-| `tenant_tag processor` | collector/processors/tenant_tag.go | Inspects span attributes for tenant_id (from JWT context); adds it as a standard label. Source of truth: the `tenant.id` attribute. |
-| `sampler` | collector/processors/sampler.go | Tail-based - keeps 100% of error traces, samples 10% of successful ones. |
+| `cyberos-obs-collector` | services/obs-collector | Rust supervisor around the upstream `otelcol-contrib` binary (bin `cyberos-obs`). Validates the OTLP -> resource -> attributes/pii_scrub -> batch -> Loki/Prometheus/Tempo pipeline shape, manages the bearer-token file, and exposes `obs_collector_*` self-metrics. FR-OBS-001. |
+| `attributes/pii_scrub` processor | otelcol pipeline (logs + traces) | PII scrubber the collector requires on the logs and traces pipelines; redaction recall target >= 99.5%. Same rule set as the AI Gateway redactor. |
+| `resource` / `attributes` processors | otelcol pipeline | Set the `tenant.id` label from incoming resource attributes so every signal is tenant-scoped. Source of truth: the `tenant.id` attribute. |
+| tail sampling | otelcol pipeline (planned) | Keep 100% of error + slow traces, sample a fraction of the rest. Slice 1 runs a batch processor; the tail sampler is a later addition. |
 | `Loki` | backend | Log storage. S3-backed. Compressed gzip. 7d hot / 90d warm. |
 | `Tempo` | backend | Trace storage. S3-backed. 7d hot / 30d warm. |
 | `Prometheus` | backend | Metrics. Local 15d. Mimir for 1y at P1+. |
-| `tenant_query_proxy.rs` | services/obs/query-proxy/ | Rust axum service. Every query (from Grafana or the API) is intercepted; tenant_id from JWT injected as a label filter; cross-tenant queries rejected with 403. |
+| `cyberos-obs-proxy` | services/obs-proxy | Rust axum proxy between Grafana and the backends. AST-injects a `tenant_id` filter into every LogQL / PromQL / TraceQL query so no tenant can read another's telemetry; cross-tenant queries are rejected with 403. Slice 1 ships the LogQL injector. FR-OBS-002. |
 | `Grafana` | frontend | 11.x. Per-module SLO dashboards + per-tenant cost dashboards + read-only audit-log view (datasource: memory). |
-| `Alert Manager` | backend | Routes alerts by severity. PagerDuty + CHAT + CUO digest integrations. |
-| `SLO engine` | services/obs/slo/ | Sloth-based. SLO definitions in YAML committed to the repo. Burn-rate alerts generated automatically. |
-| `cost_pipeline.py` | services/obs/cost/ | Daily cost roll-up from AWS Cost Explorer + AI Gateway DuckDB + storage metrics. Per-tenant breakdown. |
-| `audit_view.rs` | services/obs/audit/ | Read-only audit-log API; consumes the memory binlog; exposes a Grafana datasource so compliance can query in the same UI as operations. |
+| `cyberos-obs-router` | services/obs-router | Rust service that parses Alertmanager webhooks and routes each alert through CUO's `obs.triage-alert` skill to CHAT or PagerDuty. Severity parsing, confidence-based routing, the P0/P1-always-page rule, deduplication, and ack handling. FR-OBS-007. |
+| `SLO engine` | services/obs-slo (planned) | Sloth-based. SLO definitions in YAML committed to the repo. Burn-rate alerts generated automatically. |
+| `cost pipeline` | services/obs-cost (planned) | Daily cost roll-up from AWS Cost Explorer + AI Gateway usage + storage metrics. Per-tenant breakdown. |
+| `cyberos-obs-compliance-view` | services/obs-compliance-view | Read-only per-regulator views over the memory audit chain. Per-view audit-kind scoping, time-window validation, PII scan, and an Ed25519-signed manifest with chain proof the auditor verifies independently. Exposed as a Grafana datasource so compliance queries in the same UI as operations. FR-OBS-008. |
 | `LangSmith client` | integrated in AI Gateway | Sends prompt/completion/tool-call traces directly to LangSmith. Zero-retention contract in place. |
 
 ## Data model
@@ -808,7 +808,7 @@ graph LR
     CHAT["CHAT"]
     BR2["memory"]
     SK["Skill"]
-    OTH["...all 22"]
+    OTH["...all 24"]
   end
   subgraph consumers ["Consumers"]
     OPS["On-call ops"]
@@ -1030,7 +1030,7 @@ slo:
 
 ## Phase status & estimates
 
-- **Status:** planned - P0, design phase; P0 slice 1
+- **Status:** planned - P0; slice 1 in build
 - **Est. LoC:** ~3,000 - Rust query proxy + Go collector configs
 - **SLOs at P0:** ~11 - platform + per-module
 - **P0 budget:** ~$130/mo - LGTM hosting + LangSmith starter

@@ -7,7 +7,7 @@ migrated: FR-DOCS-002
 PROJ is CyberOS's **project tracker, sprint engine, and Engagement billing surface** in one. The data model is Issue -> Cycle -> Project plus Engagement (the contract). Status is a closed enum (`backlog / todo / in-progress / in-review / done / cancelled`) with a configurable per-project workflow on top. Priority is the standard `urgent / high / medium / low / none`. Mutations are optimistic locally, server-canonical eventually; Yjs CRDTs let two Members edit the same description offline and merge without conflict. Every issue can link to memory entries - a memory becomes a citation, a decision-log row becomes a sub-task. AI features are first-class: CUO drafts the cycle review at end-of-cycle; the blocker-detector watches comments for "blocked by"; estimate calibration tracks estimated vs actual hours per Member per task class.
 
 - **Strategic role:** orchestration spine - CRM -> PROJ -> TIME -> INV -> KB -> memory
-- **Status:** planned - P1, design phase; P1 mid in the build order
+- **Status:** planned - P1; slice 1 in build, P1 mid in the sequence
 - **Primitives:** 4 - Issue, Cycle, Project, Engagement
 - **Cross-module joins:** 7 - CRM, TIME, INV, KB, REW, memory, OKR
 - **Sync:** optimistic - WebSocket + server-canonical
@@ -22,7 +22,7 @@ PROJ is CyberOS's **project tracker, sprint engine, and Engagement billing surfa
 
 ## The bigger picture - three strategic roles
 
-PROJ is not "a project tracker." It is the **orchestration spine of CyberOS** - the module where every other module's data joins around a unit of work. Reading this page as "yet another Linear clone" misses the point. Three distinct roles land in one Postgres schema, and the design treats them as equal-weight requirements, not nice-to-have add-ons.
+PROJ is the **orchestration spine of CyberOS** - the module where every other module's data joins around a unit of work. Reading this page as "yet another Linear clone" misses the point: three distinct roles land in one Postgres schema, and the design treats them as equal-weight requirements.
 
 ### Role 1 - orchestration spine
 
@@ -399,14 +399,16 @@ graph TB
 
 ### Internal components
 
+The `cyberos-proj` crate is building FR-PROJ-001 slice 1 - Issue / Cycle / Engagement with RLS, the status FSM, and memory-audit emission. The table lists the module's planned file layout; rows marked (FR pending) are not yet built.
+
 | Component | Path (planned) | Responsibility |
 |---|---|---|
 | `sync.rs` | services/proj/src/sync.rs | Sync-engine - optimistic apply, conflict detection, server-canonical broadcast. |
 | `crdt.rs` | services/proj/src/crdt.rs | Yjs document server via ywasm. Long-form fields (description, comment body) are Yjs; the rest is LWW with a vector clock. |
-| `workflow.rs` | services/proj/src/workflow.rs | Per-project workflow overlay on the closed status enum. |
-| `ai_blocker.rs` | services/proj/src/ai_blocker.rs | Blocker detection from the comment stream. "blocked by", "waiting on", and dwell-time heuristics -> CUO Notify. |
-| `ai_review.rs` | services/proj/src/ai_review.rs | End-of-cycle review draft generator. Pulls from issue changelog + comments; CUO-stamped persona; the AM edits before sending. |
-| `ai_calibration.rs` | services/proj/src/ai_calibration.rs | Estimate vs actual hours per Member per task class. Surfaces calibration drift to the Member's dashboard. |
+| `status_fsm.rs` | services/proj/src/status_fsm.rs | Closed status enum plus the per-project workflow overlay; validates every transition. |
+| `blockers.rs` | services/proj/src/blockers.rs | Blocker detection from the comment stream. "blocked by", "waiting on", and dwell-time heuristics -> CUO Notify. |
+| `cycle_review.rs` | services/proj/src/cycle_review.rs | End-of-cycle review draft generator. Pulls from issue changelog + comments; CUO-stamped persona; the AM edits before sending. |
+| `estimate.rs` | services/proj/src/estimate.rs | Estimate vs actual hours per Member per task class. Surfaces calibration drift to the Member's dashboard. |
 | `memory_ingest.rs` | services/proj/src/memory_ingest.rs | Layer 3 ingestion of issues + comments (FR pending). Body content gates per ACL. |
 | `acl.rs` | services/proj/src/acl.rs | Per-task / per-engagement ACL. Private engagements not visible to non-engaged Members (FR pending). |
 | `autoroll.rs` | services/proj/src/autoroll.rs | End-of-cycle auto-roll. Incomplete issues move to the next cycle if team config permits (FR pending). |
@@ -1103,7 +1105,7 @@ $ cyberos-proj sync replay --tenant cyberskill --since 1h --filter "issue.update
 
 ## Phase status & estimates
 
-- **Status:** planned - P1, design phase
+- **Status:** planned - P1; slice 1 in build
 - **Est. LoC:** ~11,000 - Rust + TS + Yjs
 - **Planned tests:** 140+ - including CRDT property-tests
 - **External libs:** ~14 - axum, sqlx, ywasm, NATS
@@ -1138,7 +1140,7 @@ $ cyberos-proj sync replay --tenant cyberskill --since 1h --filter "issue.update
 - **Memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5 (capture surfaces)](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - PROJ mutations are one of the four canonical capture inputs to the local memory.
 - **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md) - PROJ FRs re-authored one-by-one via the `feature-request-author` Agent Skill; "(FR pending)" markers are intentional placeholders.
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - PROJ placed at P1 mid in the P1 sequence (after the CHAT decommission gate clears at P0 exit).
-- **Research review:** `archive/2026-05-14/RESEARCH_REVIEW.md` (archived; see `cyberos/CHANGELOG.md`) - the reviewer flagged the consultancy-Engagement primitive as the highest-leverage differentiator vs Linear/Jira; the orchestration-spine framing addresses §6 "what makes this not a feature?".
+- **Research review:** `archive/2026-05-14/RESEARCH_REVIEW.md` (archived; see `cyberos/CHANGELOG.md`) - the reviewer flagged the consultancy-Engagement primitive as the highest-impact differentiator vs Linear/Jira; the orchestration-spine framing addresses §6 "what makes this not a feature?".
 - **Cross-module page links:** [memory.html](../memory/index.html), [skill.html](../skill/index.html), [auth.html](../auth/index.html), [chat.html](../chat/index.html), [time.html](../time/index.html), [inv.html](../inv/index.html), [crm.html](../crm/index.html), [kb.html](../kb/index.html), [rew.html](../rew/index.html), [okr.html](../okr/index.html), [portal.html](../portal/index.html)
 - **Linear sync-engine:** Tuomas Artman, "Scaling the Linear Sync Engine" (2023 talk) - informs the optimistic / rebase pattern.
 - **Yjs CRDT framework:** `github.com/yjs/yjs`; ywasm Rust binding.
@@ -1150,7 +1152,7 @@ $ cyberos-proj sync replay --tenant cyberskill --since 1h --filter "issue.update
 
 ## Personas & skill bundles that touch PROJ
 
-PROJ is the work-tracking surface most CUO personas read from and write to. The catalog has 47 personas / 221 workflows / 104 author+audit skill pairs as of 2026-05-18; the ones below are PROJ-affined in particular.
+PROJ is the work-tracking surface most CUO personas read from and write to. The catalog spans 47 personas with 220+ workflows and their paired author/audit skill bundles; the ones below are PROJ-affined in particular.
 
 **Persona affinities (8 of 47):**
 

@@ -8,7 +8,7 @@ REW is the **compensation computation and ledger plane** - the place where Total
 
 **Invariant - P1 protection.** The system MUST NOT propose a reduction to P1 base salary in cash as the output of any evaluation. Performance review outcomes can withhold P3 (Performance) and adjust P2 (Allowance) tiers, but P1 in cash terms is contractually protected. **Violation = sev-0.** Hard system property; enforced as a constraint check on every `compensation_change` row.
 
-**Invariant - anti-retroactive parameter versioning.** Published parameter versions are immutable. A recompute of any old payslip - say, January 2024 - against the parameters effective at 2024-01-31 23:59:59 UTC must produce a byte-identical PDF. Parameter rows have `effective_to + superseded_by`; never UPDATE. **Violation = sev-0.** Verified by a CI replay job that recomputes the last P0 -> P4 horizon of payslips at every parameter change.
+**Invariant - anti-retroactive parameter versioning.** Published parameter versions are immutable. A recompute of any old payslip - say, January 2024 - against the parameters effective at 2024-01-31 23:59:59 UTC must produce a byte-identical PDF. Parameter rows have `effective_to + superseded_by`; never UPDATE. **Violation = sev-0.** Verified by a CI replay job that recomputes the full retained payslip history at every parameter change.
 
 ## At a glance
 
@@ -88,7 +88,7 @@ Axis| Question| Answer
 **2C - Cost**| Cost budget?| P1: ~$30/month (RDS schema + Fargate task + S3 with object-lock). 50-tenant: ~$100/month. Per-payslip cost: ~$0.01 amortised (LaTeX rendering dominates).
 **2C - Constraints**| Constraints?| (a) P1 invariant - sev-0 if violated. (b) Anti-retroactive - sev-0 if violated. (c) memory exclusion (DEC-036) - CI gate. (d) Vietnamese SI/PIT line-items per Decree 152/2020 + Circular 111/2013. (e) 10-year retention. (f) EU AI Act high-risk - conformity pack at P2.
 **5M - Materials**| Stack?| Rust 1.81, axum 0.7, sqlx, PostgreSQL 16, LaTeX (tectonic) for deterministic PDF, ring for SHA-256, serde for canonical-JSON input snapshots, AWS KMS for per-payslip encryption, S3 with object-lock for archival.
-**5M - Methods**| Method choices?| Append-only with supersession (no UPDATE). Pure-function compute kernel with property tests for determinism. Tectonic for deterministic LaTeX. Co-sign predicate at AUTH gateway. CI replay job that recomputes the last P0 -> P4 horizon on every parameter change.
+**5M - Methods**| Method choices?| Append-only with supersession (no UPDATE). Pure-function compute kernel with property tests for determinism. Tectonic for deterministic LaTeX. Co-sign predicate at AUTH gateway. CI replay job that recomputes the full retained payslip history on every parameter change.
 **5M - Machines**| Deployment?| Fargate task in SG-1 (P1). Multi-AZ Postgres RDS. S3 retention lock = 10 years. SG HoldCo branch: SGD payroll mode (P2 stretch).
 **5M - Manpower**| Who maintains?| HR/Ops Lead (R for operations) + CEO (A for sign-off) + CFO (R for commit co-sign) + CHRO (R for co-sign, P3+ seat).
 **5M - Measurement**| How measured?| (FR pending)..010. KPIs: close-cycle completion days, recompute-determinism CI pass rate, memory-leak incident count, P1-cut-attempt blocked count.
@@ -140,7 +140,7 @@ Component| Path (planned)| Responsibility
 `cosign_guard.rs`| services/rew/src/cosign_guard.rs| Predicate check at commit boundary: requires both `rew.commit_co_sign:cfo` and `rew.commit_co_sign:chro` within a 5-minute window. Single-signer commits rejected.
 `narrator.rs`| services/rew/src/narrator.rs| Read-only MCP surface for the CUO/CFO-skill: explains a payslip in prose. Never proposes changes. Never writes.
 `anomaly_surface.rs`| services/rew/src/anomaly_surface.rs| Surfaces deltas vs prior month - flags +/-20% swings for HR review during close. Narrative-only output.
-`replay_check.rs`| services/rew/src/replay_check.rs| CI replay job. On every parameter change, recomputes the last P0 -> P4 horizon of payslips; asserts byte-identical SHA-256.
+`replay_check.rs`| services/rew/src/replay_check.rs| CI replay job. On every parameter change, recomputes the full retained payslip history; asserts byte-identical SHA-256.
 `p1_guard.rs`| services/rew/src/p1_guard.rs| P1-protection invariant enforcer. Rejects any `compensation_change` row that would result in a smaller P1 cash value than the prior period.
 `si_pit.rs`| services/rew/src/si_pit.rs| Vietnamese SI (BHXH + BHYT + BHTN) and PIT line-item computation per Decree 152/2020 + Circular 111/2013. Versioned along with other parameters.
 `sg_branch.rs`| services/rew/src/sg_branch.rs| SGD payroll branch for Singapore HoldCo. Activated only when tenant's `data_residency = "sg-1"` and member's `jurisdiction = "SG"`. (P2 stretch.)
@@ -265,7 +265,7 @@ sequenceDiagram autonumber participant CEO as CEO participant CFO as CFO partici
 If replay drifts, parameters are rejected. end
 ```
 
-This is the anti-retroactive invariant in action: _publishing_ a new parameter version is only allowed if recomputing the last P0 -> P4 horizon against the historical effective parameters still yields byte-identical PDFs. If the kernel itself changed in a way that breaks determinism, the change is rejected.
+This is the anti-retroactive invariant in action: _publishing_ a new parameter version is only allowed if recomputing the full retained payslip history against the historical effective parameters still yields byte-identical PDFs. If the kernel itself changed in a way that breaks determinism, the change is rejected.
 
 ### Flow 3 - Promotion -> compensation change (P1-guard in action)
 
@@ -390,7 +390,7 @@ ID| Risk| Likelihood| Impact| Owner| Mitigation
 ---|---|---|---|---|---
 `R-REW-001`| Comp number leaks into memory audit row| Low| Catastrophic| CSO| memory_bridge.rs emit JSON inspected by CI gate against numeric blocklist; integration test asserts opaque ref pattern only.
 `R-REW-002`| P1 cut proposed by buggy evaluation| Low| Catastrophic (legal)| CEO| p1_guard at app layer + DB CHECK constraint; property test attempts P1 cut and asserts rejection.
-`R-REW-003`| Retroactive parameter change breaks old payslip recomputation| Medium| High| CTO| replay_check.rs CI on every parameter change; rejects publish if any of the last P0 -> P4 horizon drifts.
+`R-REW-003`| Retroactive parameter change breaks old payslip recomputation| Medium| High| CTO| replay_check.rs CI on every parameter change; rejects publish if any retained payslip drifts.
 `R-REW-004`| Single-signer commit slips through| Low| High| CFO| cosign_guard with 5-min window; both signatures required; integration test asserts blockage.
 `R-REW-005`| Deterministic PDF render breaks (font/timestamp drift)| Medium| High| CTO| Tectonic with pinned font versions; PDF metadata stripped to {producer:none, creation_date:fixed}; CI byte-identical assertion.
 `R-REW-006`| Cross-tenant comp leakage via manager scope| Low| Catastrophic| CSO| Manager role has NO `rew.payslip_read` scope; can only see HR data; DSAR queries reject if subject != self.
@@ -406,7 +406,7 @@ ID| Risk| Likelihood| Impact| Owner| Mitigation
 
 ## KPIs
 
-REW health rolls up into 10 KPIs across throughput, integrity, and compliance.
+REW health rolls up into 15 KPIs across throughput, integrity, and compliance.
 
 KPI| Formula| Source| Target
 ---|---|---|---
@@ -512,9 +512,9 @@ $ cyberos-rew parameters publish \
  --cosign-ceo --cosign-cfo --cosign-chro
 
 [3-way cosign] ceo ✓ cfo ✓ chro ✓
-[replay-check] replaying last P0 → P4 horizon against historical params…
+[replay-check] replaying full retained history against historical params…
 [replay-check] apr-2024 ✓ may-2024 ✓ … mar-2026 ✓
-[replay-check] all P0 → P4 horizon: SHA-256 byte-identical ✓
+[replay-check] all retained payslips: SHA-256 byte-identical ✓
 [publish] p1-base-schedule v2026.05 published
 [supersede] prior version v2026.04 effective_to = now
 [audit] memory seq=15045 (opaque "rew.params.published:2026.05")
