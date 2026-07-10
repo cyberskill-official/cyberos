@@ -65,7 +65,7 @@ def test_invariant_duplicate_fails(tmp_path: Path) -> None:
 
 def test_invariant_nesting_fails(tmp_path: Path) -> None:
     child = tmp_path / "sub"
-    child.mkdir()
+    child.mkdir(parents=True, exist_ok=True)
     errs = check_invariants([_wf(str(tmp_path)), _wf(str(child))])
     assert any("nested inside" in str(e) for e in errs)
 

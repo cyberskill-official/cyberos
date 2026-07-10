@@ -1,6 +1,6 @@
 # `runtime/mcp/` — MCP server for the memory
 
-Read-only Model Context Protocol server that exposes the `.cyberos-memory/` memory to Claude (and other MCP clients) over stdio.
+Read-only Model Context Protocol server that exposes the `.cyberos/memory/store/` memory to Claude (and other MCP clients) over stdio.
 
 ## What it does
 

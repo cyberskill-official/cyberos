@@ -453,6 +453,8 @@ def _find_memory_schema(store: Path) -> Path | None:
     """
     candidates = [
         store / "memory.schema.json",
+        # unified layout: vendored docs sit at .cyberos/memory/ = store's parent
+        store.parent / "memory.schema.json",
         store.parent / "memory" / "docs" / "memory.schema.json",
         store.parent / "docs" / "memory" / "memory.schema.json",
     ]

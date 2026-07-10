@@ -5,11 +5,12 @@
 # at runtime/lib/brain_writer.py and IS tracked in git, so the protocol's
 # implementation surface ships with the repo even though the BRAIN itself
 # does not. Backup the BRAIN out-of-band (memory-export-<DATE>-<scope>.zip).
-.cyberos-memory
+# As of the .cyberos/ unification (§0.4), the BRAIN store lives at .cyberos/memory/store/.
+.cyberos/
 
 # CUO workflow activity history (step JSON cache, ADRs, audits, impl plans,
-# code reviews, obs injections) — lives in .cyberos-memory/ subdirectories,
-# not in docs/. Covered by the .cyberos-memory gitignore above.
+# code reviews, obs injections) — lives in .cyberos/memory/store/ subdirectories,
+# not in docs/. Covered by the .cyberos/memory/store gitignore above.
 
 # Aspect 13.5 audit (2026-05-12) — transient build/cache, editor junk, local analytics
 .DS_Store
@@ -26,10 +27,10 @@ __pycache__/
 .ruff_cache/
 
 # Generated state now lives inside the BRAIN (Batch 27 reorg, 2026-05-12).
-# The BRAIN itself (.cyberos-memory) is already gitignored above, which covers
-# .cyberos-memory/cache/*, .cyberos-memory/staging/*, and .cyberos-memory/refinements/*.
+# The BRAIN itself (.cyberos/memory/store) is already gitignored above, which covers
+# .cyberos/memory/store/cache/*, .cyberos/memory/store/staging/*, and .cyberos/memory/store/refinements/*.
 # No separate var/ folder anymore — generated artefacts are regenerable to
-# .cyberos-memory/cache/<tool>/ on demand. Single source of state truth = BRAIN.
+# .cyberos/memory/store/cache/<tool>/ on demand. Single source of state truth = BRAIN.
 
 # Editor / OS junk
 *.swp

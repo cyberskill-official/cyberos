@@ -61,7 +61,7 @@ def _hash(b: bytes) -> str:
 
 def _init_store(tmp_path: Path, with_section_3_1: bool = True) -> Path:
     """Bootstrap a store with manifest + optional §3.1 put_if anchor in AGENTS.md."""
-    store = tmp_path / ".cyberos-memory"
+    store = tmp_path / ".cyberos/memory/store"
     (store / "audit").mkdir(parents=True)
     (store / "memories" / "facts").mkdir(parents=True)
     (store / "manifest.json").write_text(json.dumps({

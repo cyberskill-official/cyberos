@@ -54,7 +54,7 @@ def test_delete_yields_deleted(tmp_path: Path) -> None:
 
 
 def test_exclude_globs_filter_out_git(tmp_path: Path) -> None:
-    (tmp_path / ".git").mkdir()
+    (tmp_path / ".git").mkdir(parents=True, exist_ok=True)
     (tmp_path / ".git" / "HEAD").write_text("ref: x")
     (tmp_path / "real.md").write_text("hi")
     w = FsWatcher([WatchSpec(root=tmp_path)])

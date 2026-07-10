@@ -37,37 +37,37 @@ from pathlib import Path
 def _store(args: argparse.Namespace) -> Path:
     """Resolve the memory root.
 
-    Resolution order:
+    Resolution order (§0.4):
 
     1. If ``--store`` was explicitly provided (or the env var
        ``CYBEROS_STORE`` is set), use that.
-    2. Otherwise auto-discover by walking up from CWD looking for a
-       ``.cyberos-memory/`` directory. This lets you run ``cyberos doctor``
-       from any subdir of the project — `memory/`, `memory/cyberos/`,
-       repo root — and the CLI finds the memory automatically.
-    3. Fall back to ``./.cyberos-memory`` (the historical default) if
-       neither of the above pans out.
+    2. Otherwise auto-discover by walking up from CWD for a
+       ``.cyberos/memory/store/`` directory. This lets you run
+       ``cyberos doctor`` from any subdir of the project — `memory/`,
+       `memory/cyberos/`, repo root — and the CLI finds the memory.
+    3. Fall back to ``./.cyberos/memory/store`` (the canonical default;
+       a fresh store is created there) if neither of the above pans out.
     """
     import os
 
     # 1. explicit --store or env var
     explicit = args.store
-    if explicit and explicit != ".cyberos-memory":
+    if explicit and explicit != ".cyberos/memory/store":
         return Path(explicit).resolve()
     env_store = os.environ.get("CYBEROS_STORE")
     if env_store:
         return Path(env_store).resolve()
 
-    # 2. walk up from CWD looking for .cyberos-memory/
+    # 2. walk up from CWD for .cyberos/memory/store (§0.4)
     cwd = Path.cwd().resolve()
     for parent in (cwd, *cwd.parents):
-        candidate = parent / ".cyberos-memory"
+        candidate = parent / ".cyberos" / "memory" / "store"
         if candidate.is_dir():
             return candidate
 
-    # 3. fallback — old default (will likely fail downstream, but with
-    #    a meaningful "not a directory" error from the invariant walker)
-    return Path(explicit or ".cyberos-memory").resolve()
+    # 3. fallback — the canonical default (a fresh store is created here,
+    #    otherwise the invariant walker surfaces a meaningful error).
+    return (cwd / ".cyberos" / "memory" / "store").resolve()
 
 
 def _actor(args: argparse.Namespace) -> str:
@@ -1672,7 +1672,7 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
 def _cmd_init(args: argparse.Namespace) -> int:
     """Initialize a new BRAIN store and optionally auto-index + auto-digest.
 
-    Creates the ``.cyberos-memory/`` directory structure with manifest.json,
+    Creates the ``.cyberos/memory/store/`` directory structure with manifest.json,
     HEAD, audit/, memories/<kind>/, meta/, and exports/. With ``--auto-index``,
     builds the FTS5 index from existing memory files (bypassing binlog).
     With ``--auto-digest``, ingests project knowledge (README.md, docs/, etc.)
@@ -1910,8 +1910,12 @@ def _auto_digest(store: Path, actor: str, limit: int = 0) -> None:
     import hashlib
     import time
 
-    # Find project root (parent of .cyberos-memory/)
-    project_root = store.parent
+    # Find project root: the store sits at <root>/.cyberos/memory/store
+    # (unified) or <root>/.cyberos/memory/store (legacy). Strip the known suffix.
+    if store.parts[-3:] == (".cyberos", "memory", "store"):
+        project_root = store.parents[2]
+    else:
+        project_root = store.parent
     if not project_root.exists():
         print("  Cannot find project root, skipping digest")
         return
@@ -1934,7 +1938,8 @@ def _auto_digest(store: Path, actor: str, limit: int = 0) -> None:
         "node_modules/",  # dependencies
         ".git/",  # git internals
         "__pycache__/",  # python cache
-        ".cyberos-memory/",  # memory store
+        ".cyberos/",  # unified module tree (store lives here)
+        ".cyberos/memory/store/",  # legacy memory store
     ]
     for target in digest_targets:
         rel = str(target.relative_to(project_root))
@@ -2063,7 +2068,7 @@ def _cmd_self_update(args: argparse.Namespace) -> int:
     1. Locate the source repo (modules/memory/) from the installed package.
     2. Compare installed version with source ``__init__.py`` version.
     3. If newer, ``pip install -e .`` to update.
-    4. Re-copy ``AGENTS.md`` into the current ``.cyberos-memory/`` store.
+    4. Re-copy ``AGENTS.md`` into the current ``.cyberos/memory/store/`` store.
     5. Record the current version in ``manifest.json``.
     """
     import importlib
@@ -2295,19 +2300,20 @@ def _cmd_skill(args: argparse.Namespace) -> int:
 
 def _auto_init_if_needed() -> None:
     """Check if memory store exists; auto-init if not."""
-    store_name = ".cyberos-memory"
-    # Walk up from CWD looking for existing store
+    # §0.4: the store is .cyberos/memory/store at the project root.
+    store_rel = Path(".cyberos") / "memory" / "store"
+    # Walk up from CWD looking for an existing store
     probe = Path.cwd()
     while True:
-        if (probe / store_name).is_dir():
+        if (probe / store_rel).is_dir():
             return  # already initialized
         parent = probe.parent
         if parent == probe:
             break
         probe = parent
-    # Not found — auto-init in CWD
+    # Not found — auto-init a fresh store at the canonical path in CWD
     sys.stderr.write("cyberos: memory store not found — running auto-init...\n")
-    store_root = Path.cwd() / store_name
+    store_root = Path.cwd() / store_rel
     store_root.mkdir(parents=True, exist_ok=True)
     # Create directory structure
     for subdir in [
@@ -2342,9 +2348,10 @@ def _auto_init_if_needed() -> None:
                 src = src_repo / "cyberos" / "data" / fname
             if src.is_file():
                 shutil.copy2(src, Path.cwd() / fname)
-    # Add .cyberos-memory to .gitignore if not already present
+    # Add the memory store to .gitignore if not already present.
+    # ".cyberos/" covers the unified store (.cyberos/memory/store).
     gitignore = Path.cwd() / ".gitignore"
-    markers = [".cyberos-memory"]
+    markers = [".cyberos/"]
     try:
         existing = gitignore.read_text(encoding="utf-8") if gitignore.is_file() else ""
     except (OSError, UnicodeDecodeError):
@@ -2517,10 +2524,10 @@ def _cmd_workflow(args: argparse.Namespace) -> int:
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="cyberos", description="CyberOS Layer-1 CLI")
     p.add_argument(
-        "--store", default=".cyberos-memory",
+        "--store", default=".cyberos/memory/store",
         help=(
             "store root. If not given, auto-discovers by walking up from "
-            "CWD looking for .cyberos-memory/. Env var CYBEROS_STORE also works."
+            "CWD looking for .cyberos/memory/store/. Env var CYBEROS_STORE also works."
         ),
     )
     p.add_argument("--actor", default=None, help="principal identifier for audit rows")
@@ -2625,7 +2632,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("import",
                         help="import memories from another memory (PROPOSAL.md P6)")
     sp.add_argument("source",
-                    help="path to another .cyberos-memory/ or a cyberos export zip")
+                    help="path to another .cyberos/memory/store/ or a cyberos export zip")
     sp.add_argument("--filter", action="append", default=None,
                     help="key=value predicate (kind=, sync_class=, actor=, classification=); repeatable")
     sp.add_argument("--on-conflict", choices=["skip", "overwrite", "branch"],

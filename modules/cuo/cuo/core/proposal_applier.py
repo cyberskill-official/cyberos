@@ -308,11 +308,11 @@ def _append_changelog(
 def _emit_audit_row(skill_root: Path, op: str, *, extra: dict) -> None:
     """Best-effort memory audit row write (mirrors refinement_proposal._emit_audit_row).
 
-    Walks up from skill_root to find .cyberos-memory; if absent, no-op.
+    Walks up from skill_root to find .cyberos/memory/store; if absent, no-op.
     """
     cur = skill_root.resolve()
     for _ in range(8):
-        candidate = cur / ".cyberos-memory"
+        candidate = cur / ".cyberos/memory/store"
         if (candidate / "manifest.json").is_file():
             try:
                 from cyberos.core.writer import Writer, AuditRecord

@@ -14,13 +14,13 @@ from cyberos.core.writer import Writer
 
 def _build_test_store(tmp_path) -> "Path":
     from pathlib import Path
-    store = tmp_path / ".cyberos-memory"
-    store.mkdir()
-    (store / "audit").mkdir()
+    store = tmp_path / ".cyberos/memory/store"
+    store.mkdir(parents=True, exist_ok=True)
+    (store / "audit").mkdir(parents=True, exist_ok=True)
     (store / "memories" / "decisions").mkdir(parents=True)
     (store / "memories" / "drift").mkdir(parents=True)
     (store / "memories" / "facts").mkdir(parents=True)
-    (store / "meta").mkdir()
+    (store / "meta").mkdir(parents=True, exist_ok=True)
     return store
 
 

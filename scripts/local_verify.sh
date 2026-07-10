@@ -29,13 +29,17 @@ $DC exec -T postgres psql -U cyberos -d cyberos -tAc \
   "SELECT extname FROM pg_extension ORDER BY 1;" || { echo "postgres not reachable"; exit 1; }
 
 echo
-echo "== Step 2: apply migrations (auth -> mcp-gateway -> memory -> ai-gateway -> email -> proj) =="
+echo "== Step 2: apply migrations (auth -> mcp-gateway -> memory -> eval -> chat -> ai-gateway -> email -> proj) =="
 # mcp-gateway right after auth: its 0013-0017 reference auth's tenants/subjects/cyberos_app/signing keys.
+# eval + chat migrations are REQUIRED even though their crate suites are not in Step 3: cross-module
+# tests read their tables (auth capture_signin_test needs eval's monitoring_notice consent gate;
+# memory interaction_backfill_test needs chat_channels/chat_messages). A fresh volume without them
+# fails exactly those suites - which is what CI runs, so they must be here.
 # Re-runnable: this loop is raw psql with no applied-migration ledger (unlike `sqlx migrate run` in
 # prod), so on a second pass against an already-migrated volume every CREATE errors "already exists".
 # That is not a failure - the schema is present. So: rc==0 -> ok; rc!=0 but stderr is only
 # "already exists" -> skip (already applied); any other error -> a real FAIL.
-for crate in auth mcp-gateway memory ai-gateway email proj; do
+for crate in auth mcp-gateway memory eval chat ai-gateway email proj; do
   for f in $(ls "$crate"/migrations/*.sql 2>/dev/null | sort); do
     err=$($DC exec -T postgres psql -U cyberos -d cyberos -v ON_ERROR_STOP=1 -q -f - < "$f" 2>&1 1>/dev/null)
     rc=$?

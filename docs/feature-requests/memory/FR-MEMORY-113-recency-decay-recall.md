@@ -282,7 +282,7 @@ def score_hits(
 ### Manifest fragment
 
 ```json
-// .cyberos-memory/manifest.json (excerpt)
+// .cyberos/memory/store/manifest.json (excerpt)
 {
   "store_version": "2.0.0",
   "recall_weights": {
@@ -569,7 +569,7 @@ API contracts above are the skeleton. Implementation order:
 ### Manifest
 
 ```json
-// .cyberos-memory/manifest.json (excerpt)
+// .cyberos/memory/store/manifest.json (excerpt)
 {
   "recall_weights": {
     "relevance":     0.4,

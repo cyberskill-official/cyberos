@@ -40,28 +40,28 @@ ts() { date -u +"%Y-%m-%dT%H:%M:%SZ"; }
     echo "=== weekly $(ts) ==="
     cd "$PROJECT"
 
-    if [[ ! -d .cyberos-memory ]]; then
-        echo "no .cyberos-memory in $PROJECT — skipping"
+    if [[ ! -d .cyberos/memory/store ]]; then
+        echo "no .cyberos/memory/store in $PROJECT — skipping"
         exit 0
     fi
 
     echo "→ cyberos backup → $BACKUP_TARGET"
     mkdir -p "$BACKUP_TARGET"
-    python -m cyberos --store .cyberos-memory backup \
+    python -m cyberos --store .cyberos/memory/store backup \
         --target "$BACKUP_TARGET" --label "weekly-$(ts)" \
         || { echo "backup FAIL"; notify "cyberos weekly: backup failed" "See $LOG"; exit 1; }
 
     echo
     echo "→ cyberos consolidate"
-    python -m cyberos --store .cyberos-memory consolidate \
+    python -m cyberos --store .cyberos/memory/store consolidate \
         || { echo "consolidate FAIL"; notify "cyberos weekly: consolidate failed" "See $LOG"; exit 1; }
 
     echo
     echo "→ determinism guard (two exports → byte-identical?)"
     SCRATCH="$(mktemp -d)"
     trap 'rm -rf "$SCRATCH"' EXIT
-    python -m cyberos --store .cyberos-memory export "$SCRATCH/a.zip" > "$SCRATCH/a.sha"
-    python -m cyberos --store .cyberos-memory export "$SCRATCH/b.zip" > "$SCRATCH/b.sha"
+    python -m cyberos --store .cyberos/memory/store export "$SCRATCH/a.zip" > "$SCRATCH/a.sha"
+    python -m cyberos --store .cyberos/memory/store export "$SCRATCH/b.zip" > "$SCRATCH/b.sha"
     if cmp -s "$SCRATCH/a.sha" "$SCRATCH/b.sha"; then
         echo "determinism: OK ($(cat "$SCRATCH/a.sha"))"
     else

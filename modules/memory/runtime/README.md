@@ -2,7 +2,7 @@
 
 This folder has two roles:
 
-1. **`runtime/tools/`** — eight Python CLIs you run today against any `.cyberos-memory/` (validator, doctor, search index, export, encryption, canonical SHA helper, AGENTS.md generator, benchmark). These are the operational layer of the local-optimization roadmap. See `runtime/tools/README.md` for the per-tool reference.
+1. **`runtime/tools/`** — eight Python CLIs you run today against any `.cyberos/memory/store/` (validator, doctor, search index, export, encryption, canonical SHA helper, AGENTS.md generator, benchmark). These are the operational layer of the local-optimization roadmap. See `runtime/tools/README.md` for the per-tool reference.
 
 2. **The future memory-service runtime** — engineering hand-off plan for when CyberOS's runtime modules ship (transpilers, host shims, LangGraph supervisor, NATS event bus, GraphQL Federation gateway, et al). The four sections below — Plan, Interfaces, Build Order, originally separate files — describe that future state. They were consolidated into this README on 2026-05-10 to reduce file sprawl.
 
@@ -293,7 +293,7 @@ If you have one engineer, work through phases in this order. Skip to the paralle
 **Why next:** every skill reads memory; the supervisor classifies routes by reading persona memories.
 
 **Build:**
-1. Filesystem-local backend (`.cyberos-memory/` directly per AGENTS.md). Default for self-hosted.
+1. Filesystem-local backend (`.cyberos/memory/store/` directly per AGENTS.md). Default for self-hosted.
 2. Postgres-backed backend for cloud (mirror filesystem layout in DB tables; same schema).
 3. `runtime.memory.search` + `runtime.memory.write_memory` + `runtime.memory.read`.
 4. Scope-contract enforcement: callers' `allowed_memory_scopes.read` constrains the result set; `allowed_memory_scopes.write` constrains writes; `read_excluded` patterns filter results.

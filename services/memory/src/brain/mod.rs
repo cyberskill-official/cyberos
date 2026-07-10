@@ -64,7 +64,8 @@ pub struct BrainEvent {
     pub channel_id: Option<Uuid>,
     /// The interaction kind from the FR-MEMORY-121 payload (`payload.event_type`, e.g. `chat.message_created`).
     pub kind: String,
-    /// Occurred-at ns (the Layer-1 row's `ts_ns`).
+    /// Occurred-at ns — the interaction's own `occurred_at_ns` from the Layer-1 payload (NOT the
+    /// audit write time), so age-based tiering + recency reflect when the interaction happened.
     pub ts_ns: i64,
     /// The text embedded for semantic recall (the Layer-1 row `body`).
     pub body: String,

@@ -28,7 +28,7 @@ def hook(event: dict, memory_root: Path) -> dict:
 
 ## Configuring hooks
 
-Hooks are wired in `.cyberos-memory/manifest.json`:
+Hooks are wired in `.cyberos/memory/store/manifest.json`:
 
 ```json
 {

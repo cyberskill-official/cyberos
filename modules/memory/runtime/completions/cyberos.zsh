@@ -81,7 +81,7 @@ _cyberos() {
                 council)
                     if (( CURRENT == 3 )); then
                         local -a refs
-                        refs=(${(@f)"$(ls .cyberos-memory/memories/refinements/REF-*.md 2>/dev/null | xargs -n1 basename | sed 's/\.md$//')"})
+                        refs=(${(@f)"$(ls .cyberos/memory/store/memories/refinements/REF-*.md 2>/dev/null | xargs -n1 basename | sed 's/\.md$//')"})
                         _describe 'REF' refs
                     fi
                     ;;

@@ -87,7 +87,10 @@ pub async fn read_after(
         SELECT seq,
                subject_id,
                COALESCE(iev_event_type, 'memory.interaction_event') AS kind,
-               ts_ns,
+               -- Age-based tiering (and recency) key off the interaction's OWN occurred-at from the
+               -- payload, NOT the audit write time (the row-level ts_ns is when the aux row was
+               -- appended = ingest/replay time). Fall back to ts_ns if the payload lacks the field.
+               COALESCE(cyberos_iev_payload_field(body, 'occurred_at_ns')::bigint, ts_ns) AS ts_ns,
                COALESCE(body, '') AS body,
                chain_anchor_hex,
                (body::jsonb -> 'payload' -> 'target_ref' ->> 'kind') AS target_kind,

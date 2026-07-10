@@ -23,4 +23,4 @@ allowed_mcp_tools:
 
 Normalize an input body, classify the target memory kind, and emit a writer
 envelope for the canonical memory writer. Never bypass the writer or mutate
-`.cyberos-memory` directly.
+`.cyberos/memory/store` directly.

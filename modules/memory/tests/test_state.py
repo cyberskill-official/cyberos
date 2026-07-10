@@ -48,7 +48,7 @@ def _cyberos_state(store: Path) -> tuple[int, str, str]:
 
 def _bootstrap_store(tmp_path: Path) -> Path:
     """Make a minimal store that the doctor's full invariant set passes on."""
-    store = tmp_path / ".cyberos-memory"
+    store = tmp_path / ".cyberos/memory/store"
     (store / "audit").mkdir(parents=True)
     store.joinpath("manifest.json").write_text("{}", encoding="utf-8")
     return store

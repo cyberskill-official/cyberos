@@ -111,7 +111,7 @@ The full payload shapes live in `schema.json` (one schema per `<event_name>`). N
 
 - **Camel-case or hyphen in subject tokens.** Subjects are dot-separated lowercase. `cuo.frCreate.fr_written` and `cuo.feature-request-author.fr_written` are both rejected.
 - **Verb-first event names.** Use past-tense `<noun>_<verb_past>` not `<verb>_<noun>`. Good: `fr_written`. Bad: `write_fr`.
-- **Subjects with PII or secrets in payload.** Same denylist as `.cyberos-memory/` (AGENTS.md §9.3): no salaries, government IDs, bank, secrets, raw API keys. Use a pointer to the secret store instead.
+- **Subjects with PII or secrets in payload.** Same denylist as `.cyberos/memory/store/` (AGENTS.md §9.3): no salaries, government IDs, bank, secrets, raw API keys. Use a pointer to the secret store instead.
 - **Cross-tenant subscriptions.** A skill MUST only subscribe to subjects emitted by skills in its own tenant (matched on the `tenant.id` from `manifest.json`). The supervisor enforces at the bus level.
 
 ## Citations

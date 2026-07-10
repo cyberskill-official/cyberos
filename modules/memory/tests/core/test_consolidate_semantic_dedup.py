@@ -41,7 +41,7 @@ def _exempt_sandbox_path(monkeypatch, tmp_path):
 @pytest.fixture()
 def store_with_dupes(tmp_path: Path) -> Path:
     """A store seeded with manifest + 2 near-duplicate facts + §7.7 anchor."""
-    store = tmp_path / ".cyberos-memory"
+    store = tmp_path / ".cyberos/memory/store"
     (store / "audit").mkdir(parents=True)
     (store / "memories" / "facts").mkdir(parents=True)
 
@@ -171,7 +171,7 @@ def test_threshold_changes_proposal_count(store_with_dupes: Path) -> None:
 def test_walk_failure_aborts_semantic_dedup(tmp_path: Path) -> None:
     """AC #9 — if Walk fails, SemanticDedup does not run."""
     # Store missing manifest.json → Walk will fail
-    store = tmp_path / ".cyberos-memory"
+    store = tmp_path / ".cyberos/memory/store"
     (store / "audit").mkdir(parents=True)
     (store / "memories" / "facts").mkdir(parents=True)
     # NOTE: no manifest.json on purpose

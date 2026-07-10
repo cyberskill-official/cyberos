@@ -21,7 +21,7 @@ source_pages:
 source_decisions:
   - DEC-190 (Tauri 2.x over Electron; smaller bundle, native performance, Rust-native)
   - DEC-191 (signed releases on Cloudflare R2; no third-party signing service)
-  - DEC-192 (Full Disk Access required on macOS for ~/.cyberos-memory/ access)
+  - DEC-192 (Full Disk Access required on macOS for ~/.cyberos/memory/store/ access)
   - DEC-193 (auto-update via Tauri updater; signed manifests; rollback on signature failure)
 
 language: rust 1.81 + svelte 5 + tailwind
@@ -111,10 +111,10 @@ A Tauri 2.x desktop app **MUST** bundle the memory sync daemon + a minimal UI fo
     - Total memory count + storage used.
     - Cloud memory connection state (online/offline).
 6. **MUST** support local search via FR-MEMORY-108 API. Search box on dashboard; results pane with memory previews; click → open memory file.
-7. **MUST** request macOS Full Disk Access at first run (one-time; persisted by macOS). Without FDA, the app cannot read `~/.cyberos-memory/` (System Integrity Protection blocks). The prompt directs user to System Settings > Privacy & Security > Full Disk Access > [Memory.app toggle].
+7. **MUST** request macOS Full Disk Access at first run (one-time; persisted by macOS). Without FDA, the app cannot read `~/.cyberos/memory/store/` (System Integrity Protection blocks). The prompt directs user to System Settings > Privacy & Security > Full Disk Access > [Memory.app toggle].
 8. **MUST** sandbox per OS:
     - macOS: hardened runtime + entitlements (no JIT, no debug, FDA only).
-    - Windows: AppContainer with capabilities (file system access for `%USERPROFILE%/.cyberos-memory/`, network for Cloud memory).
+    - Windows: AppContainer with capabilities (file system access for `%USERPROFILE%/.cyberos/memory/store/`, network for Cloud memory).
     - Linux: AppArmor profile (where supported).
 9. **MUST** support quick-capture: tray-accessible textbox; user types → app writes a `quick_note` memory row with auto-tag (date, source: tray, originator_device).
 10. **MUST** sign update manifests with the release-signing Ed25519 key (separate from memory signing key). Public key embedded in app binary at compile time; rotation requires app rebuild + re-release.
@@ -137,7 +137,7 @@ A Tauri 2.x desktop app **MUST** bundle the memory sync daemon + a minimal UI fo
 
 **Why auto-update via Tauri (DEC-193)?** Manual updates miss security patches. Tauri's updater + signed manifests = secure, automatic. Rollback on signature failure prevents the "compromised update server pushes malicious binary" attack.
 
-**Why Full Disk Access prompt (DEC-192)?** macOS SIP blocks app access to `~/.cyberos-memory/` by default. FDA is one-time per user; persists. The prompt is annoying once, then invisible. Without FDA, the app can't read its own data — broken UX.
+**Why Full Disk Access prompt (DEC-192)?** macOS SIP blocks app access to `~/.cyberos/memory/store/` by default. FDA is one-time per user; persists. The prompt is annoying once, then invisible. Without FDA, the app can't read its own data — broken UX.
 
 **Why hardened sandbox per OS (§1 #8)?** Compromised app shouldn't be able to read other apps' data, install kernel extensions, etc. Hardened runtime + entitlements (macOS) + AppContainer (Windows) limits blast radius. Trade-off: more development friction; worth it for security posture.
 
@@ -424,7 +424,7 @@ test('quick_capture writes a row via Tauri command', async () => {
 memory --headless &
 sleep 5
 ps aux | grep memory   # should be running
-ls ~/.cyberos-memory/audit/  # should have latest binlog
+ls ~/.cyberos/memory/store/audit/  # should have latest binlog
 ```
 
 ```bash
@@ -552,7 +552,7 @@ All resolved. Deferred:
 
 | Failure | Detection | Outcome | Recovery |
 |---|---|---|---|
-| Full Disk Access not granted | Memory can't read ~/.cyberos-memory/ | App shows banner asking user to grant | User clicks System Settings |
+| Full Disk Access not granted | Memory can't read ~/.cyberos/memory/store/ | App shows banner asking user to grant | User clicks System Settings |
 | Updater fails | network error | Sev-2 metric; manual update via "Check for Updates" | Operator action |
 | Update signature invalid | ed25519 verify fails | Rollback applied; sev-2 alarm | Operator investigates manifest source |
 | WebView2 missing (Windows) | Tauri prompts user to install | One-time install | User action |

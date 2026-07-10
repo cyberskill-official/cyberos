@@ -53,7 +53,7 @@
  The universal personal-and-shared memory protocol. Offline-first. Captures everything — files <em>and</em> discussions. Portable by folder copy. Two-way sync with Lumi's memory.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- memory is no longer just CyberOS's memory module — it's an open protocol that turns any human's laptop into an append-only, audit-chained, offline-first long-term memory store. <strong>Personal memory</strong> watches whichever folders you opt in (and captures Cowork / Claude Code / discussion surfaces); the store is portable — copy <code>~/.cyberos-memory/</code> between laptops, desktops, phones, and your memory moves with you. <strong>Lumi's memory</strong> (also called CUO's memory or CyberSkill's memory) is the cloud-hosted org-tenant counterpart; two-way sync flows shareable memories up and team-shared memories down. Over time, N personal memories feed one Lumi's memory and <strong>multi-memory auto-evolve</strong> emerges — pattern recognition, dedup, synthesised wisdom that exceeds any single contributor. This is the moat. Layer 1 (the audit-chained filesystem ledger) ships today — 233/235 tests pass (2 pre-existing invariant-check bugs, non-blocking), Ed25519-signed tree heads, MMR inclusion proofs, byte-identical exports. Stages 1–5 of the universal protocol are designed in <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">MEMORY_AUTOSYNC_DESIGN.md</a> and land between now and P3.
+ memory is no longer just CyberOS's memory module — it's an open protocol that turns any human's laptop into an append-only, audit-chained, offline-first long-term memory store. <strong>Personal memory</strong> watches whichever folders you opt in (and captures Cowork / Claude Code / discussion surfaces); the store is portable — copy <code>~/.cyberos/memory/store/</code> between laptops, desktops, phones, and your memory moves with you. <strong>Lumi's memory</strong> (also called CUO's memory or CyberSkill's memory) is the cloud-hosted org-tenant counterpart; two-way sync flows shareable memories up and team-shared memories down. Over time, N personal memories feed one Lumi's memory and <strong>multi-memory auto-evolve</strong> emerges — pattern recognition, dedup, synthesised wisdom that exceeds any single contributor. This is the moat. Layer 1 (the audit-chained filesystem ledger) ships today — 233/235 tests pass (2 pre-existing invariant-check bugs, non-blocking), Ed25519-signed tree heads, MMR inclusion proofs, byte-identical exports. Stages 1–5 of the universal protocol are designed in <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">MEMORY_AUTOSYNC_DESIGN.md</a> and land between now and P3.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#architecture" class="btn btn-primary">Architecture
@@ -148,7 +148,7 @@
  <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--umber-700)">Layer 1 · Personal</div>
  <div class="text-2xl mb-2">🧠</div>
  <div class="font-bold text-slate-900 mb-1">Personal memory</div>
- <p class="text-sm text-slate-600 mb-3">One per human. Lives at <code>~/.cyberos-memory/</code>. Watches whichever folders you opt in (any folder — not just <code>cyberos/</code>). Captures files, decisions, discussions. <strong>Portable</strong>: copy the folder = move your memory.</p>
+ <p class="text-sm text-slate-600 mb-3">One per human. Lives at <code>~/.cyberos/memory/store/</code>. Watches whichever folders you opt in (any folder — not just <code>cyberos/</code>). Captures files, decisions, discussions. <strong>Portable</strong>: copy the folder = move your memory.</p>
  <p class="text-xs" style="color:var(--text-mute)">Offline-first · cryptographically chained · open protocol</p>
  </div>
  <div class="bbg-card p-5" style="border-top:3px solid var(--ochre-500)">
@@ -208,7 +208,7 @@
  <div class="bbg-card p-5" style="border-top:3px solid var(--umber-500)">
  <div class="text-2xl mb-2">🔒</div>
  <div class="font-bold text-slate-900 mb-1">Sovereign by design</div>
- <p class="text-sm text-slate-600">No vendor lock-in. <code>~/.cyberos-memory/</code> is a complete, portable snapshot of one human's memory — copy the folder, take it anywhere, no DB rebuild.</p>
+ <p class="text-sm text-slate-600">No vendor lock-in. <code>~/.cyberos/memory/store/</code> is a complete, portable snapshot of one human's memory — copy the folder, take it anywhere, no DB rebuild.</p>
  </div>
  <div class="bbg-card p-5" style="border-top:3px solid var(--umber-500)">
  <div class="text-2xl mb-2">⛓</div>
@@ -244,10 +244,10 @@
  <table class="kt">
  <thead><tr><th style="width:8%">Axis</th><th style="width:24%">Question</th><th>Answer</th></tr></thead>
  <tbody>
- <tr><td><strong>5W · What</strong></td><td>What is memory?</td><td>An open, normative <em>protocol</em> for append-only audit-chained personal-and-shared memory. Two concrete instances: <strong>Personal memory</strong> (one per human, lives at <code>~/.cyberos-memory/</code>, captures activity across watched folders + discussion surfaces) and <strong>Lumi's memory</strong> (cloud-hosted per-org tenant, 2-way sync target). Every mutation is one of three canonical ops — <code>put</code>, <code>move</code>, <code>delete</code>. Closed schema, BCP-14 normative.</td></tr>
+ <tr><td><strong>5W · What</strong></td><td>What is memory?</td><td>An open, normative <em>protocol</em> for append-only audit-chained personal-and-shared memory. Two concrete instances: <strong>Personal memory</strong> (one per human, lives at <code>~/.cyberos/memory/store/</code>, captures activity across watched folders + discussion surfaces) and <strong>Lumi's memory</strong> (cloud-hosted per-org tenant, 2-way sync target). Every mutation is one of three canonical ops — <code>put</code>, <code>move</code>, <code>delete</code>. Closed schema, BCP-14 normative.</td></tr>
  <tr><td><strong>5W · Who</strong></td><td>Who reads/writes?</td><td><strong>Personal memory writers:</strong> the human owner (CLI), the capture daemon (filesystem watcher · Cowork hook · Claude Code hook · MCP feeds), CUO routing decisions on the user's behalf, every module's subgraph that the user authored. <strong>Lumi's memory writers:</strong> sync orchestrator pushing on each user's behalf; synthesis sub-skill nightly. <strong>Readers:</strong> any agent (Claude, Codex, Cursor) the user has authorized, Lumi/CUO during conversation, downstream automation. <strong>Owner:</strong> the human for Personal memory; the org (CDO seat at P1+) for Lumi's memory.</td></tr>
  <tr><td><strong>5W · When</strong></td><td>When does write happen?</td><td><strong>Personal:</strong> on every captured activity — file event from any watched folder, end-of-Cowork-turn lock, Claude Code tool call, manual <code>cyberos memory capture</code>. Group-commit window 5 ms; consolidation at &gt;5 MB or &gt;5,000 rows. <strong>Sync to Lumi's:</strong> default 5-min window for shareable+ memories; mode configurable (realtime / frequent / normal / infrequent / manual). <strong>Synthesis on Lumi's:</strong> nightly, walks prior 24 h, emits cluster + dedup + wisdom artefacts.</td></tr>
- <tr><td><strong>5W · Where</strong></td><td>Where does it live?</td><td><strong>Personal memory:</strong> resolved at <code>$HOME/.cyberos-memory/</code> by default (override via <code>$CYBEROS_MEMORY_HOME</code>). <strong>Portable</strong> — copy the folder between machines (laptop, desktop, USB, iCloud Drive, Dropbox) to move your memory. Symlinks resolved; sandbox paths rejected (<code>layout-no-sandbox-path</code> invariant). <strong>Lumi's memory:</strong> a CyberOS multi-tenant deployment (Postgres + RLS + S3/R2) provisioned at tenant create-time via the TEN module. Per-tenant subject <code>org:&lt;slug&gt;</code>.</td></tr>
+ <tr><td><strong>5W · Where</strong></td><td>Where does it live?</td><td><strong>Personal memory:</strong> resolved at <code>$HOME/.cyberos/memory/store/</code> by default (override via <code>$CYBEROS_MEMORY_HOME</code>). <strong>Portable</strong> — copy the folder between machines (laptop, desktop, USB, iCloud Drive, Dropbox) to move your memory. Symlinks resolved; sandbox paths rejected (<code>layout-no-sandbox-path</code> invariant). <strong>Lumi's memory:</strong> a CyberOS multi-tenant deployment (Postgres + RLS + S3/R2) provisioned at tenant create-time via the TEN module. Per-tenant subject <code>org:&lt;slug&gt;</code>.</td></tr>
  <tr><td><strong>5W · Why</strong></td><td>Why this design?</td><td>Three failure modes memory solves simultaneously: (1) <strong>vendor lock-in</strong> — your memory walks with you on any laptop; (2) <strong>state without replay</strong> — every byte is replayable from the ledger; (3) <strong>no team-level wisdom</strong> — Lumi's memory aggregates across N personal memories to produce synthesised org-level memory that no single contributor could write alone. The append-only + MMR + Ed25519 STH + sync-class taxonomy is the smallest primitive set that delivers all three plus cryptographic provenance.</td></tr>
  <tr><td><strong>1H · How</strong></td><td>How does it work end-to-end?</td><td>Capture surface emits → canonical op (<code>put</code>/<code>move</code>/<code>delete</code>) → two-phase atomic write → group-commit audit frame → MMR leaf → derived SQLite index → HEAD seqlock advance. Sync orchestrator tails the local chain, filters by <code>sync_class</code>, pushes shareable+ to Lumi's memory over JWT-authenticated HTTP. Pulls inbound via the same envelope; each pulled record becomes a fresh local <code>put</code> per AGENTS.md §14.2 — never a chain-mutation. See <a href="#key-flows">Key flows</a> for sequence diagrams of capture, sync, and synthesis.</td></tr>
  <tr><td><strong>2C · Cost</strong></td><td>Cost?</td><td><strong>Personal memory per-write:</strong> ~120 µs hot path (group-committed), ~3 ms cold. <strong>Read:</strong> ~6 µs (mmap seqlock). <strong>Storage overhead:</strong> ~28% vs raw body. <strong>STH signing:</strong> ~0.4 ms Ed25519. <strong>Sync push:</strong> ~50 ms p95 over LAN, ~150 ms p95 over WAN per memory; batched. <strong>Lumi's memory infra:</strong> ~$2/seat/month per-tenant baseline (RDS micro tier + S3 + signed-URL CDN) at P2 launch scale. <strong>Synthesis sub-skill:</strong> nightly LLM-cost ≈ $0.05/user/day at BGE-M3 embeddings + Haiku synthesis.</td></tr>
@@ -292,7 +292,7 @@ graph TB
  STH["sth.py<br>Ed25519 tree heads"]
  end
 
- subgraph LAYER1 ["Layer 1 · Filesystem ledger (.cyberos-memory/)"]
+ subgraph LAYER1 ["Layer 1 · Filesystem ledger (.cyberos/memory/store/)"]
  FILES["memories/{kind}/{hex}/{slug}.md"]
  META["sidecar.meta.json"]
  BINLOG["audit/*.binlog"]
@@ -458,7 +458,7 @@ graph TB
  MMR_P["MMR + Ed25519 STH"]
  INV["15 doctor invariants"]
  end
- subgraph PB_STORE ["~/.cyberos-memory/ (Stage 1 — ready)"]
+ subgraph PB_STORE ["~/.cyberos/memory/store/ (Stage 1 — ready)"]
  MANI["manifest.json<br>watched_folders[]"]
  MEMS["memories/{kind}/{hex}/{slug}.md"]
  AUD["audit/current.binlog"]
@@ -497,9 +497,9 @@ graph TB
  <div class="mermaid">
 graph TB
  subgraph PEOPLE ["Personal memories (N humans per org)"]
- PB1["Stephen's<br>~/.cyberos-memory/"]
- PB2["Teammate A's<br>~/.cyberos-memory/"]
- PB3["Teammate B's<br>~/.cyberos-memory/"]
+ PB1["Stephen's<br>~/.cyberos/memory/store/"]
+ PB2["Teammate A's<br>~/.cyberos/memory/store/"]
+ PB3["Teammate B's<br>~/.cyberos/memory/store/"]
  end
  subgraph SYNC ["Sync transport (Stage 4)"]
  PUSH["push pipeline<br>shareable+ → Lumi"]
@@ -753,7 +753,7 @@ erDiagram
 
  <h3 class="text-lg font-bold mb-3">Filesystem layout</h3>
  <div class="bbg-card p-5">
- <pre class="text-xs"><code>.cyberos-memory/
+ <pre class="text-xs"><code>.cyberos/memory/store/
 ├── manifest.json # store metadata (§6)
 ├── HEAD # 8-byte LE u64 seq counter; atomic rename
 ├──.lock # leased coordination record (§4.2)
@@ -913,7 +913,7 @@ enum DeleteMode { TOMBSTONE PURGE }</code></pre>
  <table class="kt">
  <thead><tr><th>Subcommand</th><th>Purpose</th><th>Stage</th><th>Example</th></tr></thead>
  <tbody>
- <tr><td><code>cyberos memory init</code></td><td>Create <code>$HOME/.cyberos-memory/</code>; explicit opt-in privacy floor (watches nothing yet)</td><td>1</td><td><code>cyberos memory init</code></td></tr>
+ <tr><td><code>cyberos memory init</code></td><td>Create <code>$HOME/.cyberos/memory/store/</code>; explicit opt-in privacy floor (watches nothing yet)</td><td>1</td><td><code>cyberos memory init</code></td></tr>
  <tr><td><code>cyberos memory watch &lt;path&gt;</code></td><td>Add folder to capture daemon's watch list. Per-folder <code>--default-sync-class</code> + <code>--default-classification</code></td><td>1</td><td><code>cyberos memory watch ~/Projects/cyberos --default-sync-class shareable</code></td></tr>
  <tr><td><code>cyberos memory unwatch &lt;path&gt;</code></td><td>Remove folder from watch list. Captured memories remain; new activity in that folder stops landing on the chain</td><td>1</td><td><code>cyberos memory unwatch ~/Documents/Personal</code></td></tr>
  <tr><td><code>cyberos memory status</code></td><td>Full Personal-memory digest: watched-folder list, last sync time, pending-PII count, audit-row count, doctor invariant summary</td><td>1</td><td><code>cyberos memory status [--json]</code></td></tr>
@@ -1233,7 +1233,7 @@ graph LR
  <tr><td>Vietnam PDPL (Law 91/2025)</td><td>Art. 14 — DSAR</td><td><code>cyberos search</code> + <code>cyberos export</code> produce a complete data-subject extract in &lt; 1 min.</td></tr>
  <tr><td>Vietnam PDPL</td><td>Art. 16 — Erasure</td><td><code>cyberos delete --mode purge</code> with reason gate; audit fact remains.</td></tr>
  <tr><td>Vietnam Decree 13/2023</td><td>Art. 17 — Personal data processing log</td><td>Audit chain is the processing log; every op recorded with actor.</td></tr>
- <tr><td>Vietnam Decree 53/2022</td><td>Art. 26 — Cybersecurity data localisation</td><td>Local-first by design; <code>.cyberos-memory/</code> stays on Vietnamese soil unless explicitly exported.</td></tr>
+ <tr><td>Vietnam Decree 53/2022</td><td>Art. 26 — Cybersecurity data localisation</td><td>Local-first by design; <code>.cyberos/memory/store/</code> stays on Vietnamese soil unless explicitly exported.</td></tr>
  <tr><td>GDPR (EU 2016/679)</td><td>Art. 17 — Right to erasure</td><td>Purge mode (§3.6) with reason gate; chain row records the redaction.</td></tr>
  <tr><td>GDPR</td><td>Art. 30 — Records of processing</td><td>Audit chain is the records-of-processing artefact.</td></tr>
  <tr><td>EU AI Act (Reg. 2024/1689)</td><td>Art. 12 — Logging</td><td>Every routing decision (via CUO) is recorded in memory; replayable.</td></tr>
@@ -1276,7 +1276,7 @@ graph LR
  <tr><td><code>R-memory-009</code></td><td><strong>Lumi's memory tenant compromise</strong> — credential theft or tenant-isolation bypass exposes shared org memories across tenants</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>Stage 3+: Postgres RLS by <code>tenant_id</code> on every table · per-tenant S3 prefix · per-user JWT scoped to tenant · weekly chaos-test of cross-tenant leak surface (read another tenant's row returns 403) · AUTH module's RBAC predicate gates every cross-module call.</td></tr>
  <tr><td><code>R-memory-010</code></td><td><strong>Sync conflict storm</strong> — N personal memories producing high-volume concurrent shareable writes overwhelm Lumi's chain extension or produce cascading import-failures</td><td>Medium</td><td>High</td><td>CTO</td><td>Stage 4: per-tenant push-rate limit (default 100 ops/min/user) · server-side idempotency via content-hash dedup · client-side retry with exponential backoff + jitter · sync orchestrator surfaces stuck-state via <code>sync-orchestrator-not-stuck</code> doctor invariant · synthesis pass dampens duplicate decisions.</td></tr>
  <tr><td><code>R-memory-011</code></td><td><strong>Synthesis sub-skill hallucination</strong> — Stage 5 wisdom artefact emits a false "synthesised decision" that does not actually appear in any source memory</td><td>Medium</td><td>High</td><td>CDO</td><td>Every synthesis claim hash-anchored to the underlying memory rows (citation-mandatory) · synthesis output is itself a memory and follows the protocol (replayable) · weekly user-flag "useful / not useful / wrong" → if "wrong" rate &gt; 5% in any tenant, synthesis pauses for review · LLM caller stamped with persona-version per AGENTS.md §11.</td></tr>
- <tr><td><code>R-memory-012</code></td><td><strong>Capture daemon crash recovery</strong> — daemon dies mid-capture and resumes producing duplicate or out-of-order memories</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Content-addressed puts are idempotent per AGENTS.md §3.4 (duplicate emits become no-ops at writer). Daemon checkpoint state in <code>~/.cyberos-memory/capture-daemon.state.json</code>. <code>capture-daemon-not-stuck</code> doctor invariant warns if no emit in &gt; 24 h on watched folder. launchd / systemd-user auto-restart on crash.</td></tr>
+ <tr><td><code>R-memory-012</code></td><td><strong>Capture daemon crash recovery</strong> — daemon dies mid-capture and resumes producing duplicate or out-of-order memories</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Content-addressed puts are idempotent per AGENTS.md §3.4 (duplicate emits become no-ops at writer). Daemon checkpoint state in <code>~/.cyberos/memory/store/capture-daemon.state.json</code>. <code>capture-daemon-not-stuck</code> doctor invariant warns if no emit in &gt; 24 h on watched folder. launchd / systemd-user auto-restart on crash.</td></tr>
  <tr><td><code>R-memory-013</code></td><td><strong>iCloud / Dropbox sibling explosion</strong> — when Personal memory store is itself synced by a cloud-FS provider, "filename (Mac).md" / "filename (iPhone).md" siblings multiply and the audit chain partitions</td><td>Medium</td><td>High</td><td>CDO</td><td>Existing <code>layout-no-sync-conflict-siblings</code> invariant detects siblings · operator-driven resolver at <code>cyberos conflicts resolve</code> · Stage 4 documentation explicitly recommends Lumi's memory sync over iCloud/Dropbox folder-sync as the cross-machine path (less brittle).</td></tr>
  <tr><td><code>R-memory-014</code></td><td><strong>PII leak via auto-capture</strong> — capture daemon emits a memory containing PII before the user can mark it private; PII reaches Lumi's memory unintended</td><td>Medium</td><td>High</td><td>DPO</td><td>Stage 2 Presidio at capture write time — every PII-flagged memory is <em>held back from sync</em> until user confirms via prompt UX (Cowork-inline / desktop-notif / <code>memory pending</code>). Default <code>sync_class</code> remains <code>private</code> unless folder override. Right-to-forget propagates: a purge on Personal memory issues <code>purge_propagate</code> to Lumi.</td></tr>
  </tbody>
@@ -1359,7 +1359,7 @@ graph LR
 
  <h3 class="text-lg font-bold mb-2">1. Append a memory</h3>
 <pre><code>$ echo "Decided to flip Singapore HoldCo if ARR &ge; \$1.5M at P3 exit." | \
- cyberos --store./.cyberos-memory --actor stephen put memories/decisions/holdco-flip.md -
+ cyberos --store./.cyberos/memory/store --actor stephen put memories/decisions/holdco-flip.md -
 
 {
  "seq": 14823,
@@ -1369,9 +1369,9 @@ graph LR
 }</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">2. Verify the entire chain</h3>
-<pre><code>$ cyberos --store./.cyberos-memory doctor
+<pre><code>$ cyberos --store./.cyberos/memory/store doctor
 
-[memory doctor v2.0.0] store=./.cyberos-memory rows=14823
+[memory doctor v2.0.0] store=./.cyberos/memory/store rows=14823
 
 invariant status detail
 ─────────────────────────────────────────────────────
@@ -1394,7 +1394,7 @@ exports-excluded OK no chain leak through exports
 state: READY (15/15 invariants pass)</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">3. Produce an MMR inclusion proof</h3>
-<pre><code>$ cyberos --store./.cyberos-memory prove --seq 14823 > proof.json
+<pre><code>$ cyberos --store./.cyberos/memory/store prove --seq 14823 > proof.json
 
 $ cat proof.json
 {
@@ -1414,7 +1414,7 @@ $ cyberos verify-proof proof.json
 {"valid": true, "root": "f7e8...d9c0", "verified_at": "2026-05-14T07:21:08Z"}</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">4. Deterministic export</h3>
-<pre><code>$ cyberos --store./.cyberos-memory export memory-2026-05-14.zip
+<pre><code>$ cyberos --store./.cyberos/memory/store export memory-2026-05-14.zip
 
 [export] paths=2451 bytes=14.2MB zip_bytes=4.1MB level=6
 [export] excluded: exports/ __pycache__/.cache/.lock HEAD
@@ -1423,7 +1423,7 @@ $ cyberos verify-proof proof.json
 [export] sha256: a4f9...8c2d (run twice on different machines → same hash)</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">5. GDPR purge (Art. 17)</h3>
-<pre><code>$ cyberos --store./.cyberos-memory delete \
+<pre><code>$ cyberos --store./.cyberos/memory/store delete \
  memories/people/clients/acme-contact.md \
  --mode purge \
  --reason "DSAR-2026-014 erasure request, signed off by DPO"
@@ -1439,7 +1439,7 @@ $ cyberos verify-proof proof.json
 }</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">6. Cross-memory import (P6 — teammate merge)</h3>
-<pre><code>$ cyberos --store./.cyberos-memory import../teammate-memory.zip --filter sync_class=shareable
+<pre><code>$ cyberos --store./.cyberos/memory/store import../teammate-memory.zip --filter sync_class=shareable
 
 [import] source_fingerprint: 2a4d8f...1b3c
 [import] session.start written seq=14832
@@ -1488,7 +1488,7 @@ python -m bench.frontmatter --compare --files 2000   # msgspec vs PyYAML
 python -m bench.append --producers 1 --records 50000  # group-commit throughput
 python -m bench.append --producers 8 --records 50000
 python -m bench.cold_cli                              # cold CLI start
-python -m bench.determinism --store ../.cyberos-memory</code></pre>
+python -m bench.determinism --store ../.cyberos/memory/store</code></pre>
 
  <div class="overflow-x-auto mt-4">
  <table class="kt">

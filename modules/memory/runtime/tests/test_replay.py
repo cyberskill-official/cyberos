@@ -22,10 +22,10 @@ from pathlib import Path
 def find_memory(start: Path = None) -> Path:
     cur = (start or Path.cwd()).resolve()
     while cur != cur.parent:
-        if (cur / ".cyberos-memory").is_dir():
-            return cur / ".cyberos-memory"
+        if (cur / ".cyberos/memory/store").is_dir():
+            return cur / ".cyberos/memory/store"
         cur = cur.parent
-    raise SystemExit("no .cyberos-memory/ found")
+    raise SystemExit("no .cyberos/memory/store/ found")
 
 def canonical_row_bytes(row: dict) -> bytes:
     """RFC 8785 JCS canonical JSON of a row minus chain + prev_chain."""

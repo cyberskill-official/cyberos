@@ -348,7 +348,7 @@ async def score(content: str, invoker: ImportanceInvoker, cache: Optional[Import
 ### Manifest
 
 ```json
-// .cyberos-memory/manifest.json (excerpt)
+// .cyberos/memory/store/manifest.json (excerpt)
 {
   "importance": {
     "invoker":  "anthropic",

@@ -590,7 +590,7 @@
 
   <!-- BRAIN integration band -->
   <rect x="120" y="4360" width="2160" height="120" rx="14" fill="#fff" stroke="#1E2A78" stroke-width="2" filter="url(#cardShadow)"/>
-  <text x="140" y="4395" font-size="18" font-weight="700" fill="#0F172A">📚 .cyberos-memory/ — the BRAIN that records what every skill did</text>
+  <text x="140" y="4395" font-size="18" font-weight="700" fill="#0F172A">📚 .cyberos/memory/store/ — the BRAIN that records what every skill did</text>
   <text x="140" y="4423" font-size="13" fill="#64748B">The AGENTS.md protocol governs the BRAIN. Every skill output produces an action_log row (the runtime ledger) AND, for memory-relevant outputs, a memory file under memories/ (the BRAIN ledger).</text>
   <text x="140" y="4445" font-size="13" fill="#64748B">Hash-chained. Append-mostly. Tombstoned soft-delete. Two audit streams that compose: skill activity and BRAIN evolution chain forward together as one trace_id.</text>
   <text x="140" y="4470" font-size="11" fill="#94A3B8" font-style="italic">Refinement records (memories/refinements/REF-NNN-...) are how skills + BRAIN learn together over time per AGENTS.md §0.4.</text>

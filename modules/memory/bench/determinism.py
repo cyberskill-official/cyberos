@@ -7,7 +7,7 @@ this on every PR; any regression fails the build.
 
 Usage::
 
-    python -m bench.determinism --store .cyberos-memory/
+    python -m bench.determinism --store .cyberos/memory/store/
 
 Exit codes:
   0 — bytes match

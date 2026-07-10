@@ -25,7 +25,7 @@ Invariants protected:
   5. Deterministic export; byte-identical zips across runs and platforms.
   6. Canonical ops: view, put, move, delete. Historical names are
      read-only legacy data.
-  7. `.cyberos-memory/` remains a self-contained, zippable artefact.
+  7. `.cyberos/memory/store/` remains a self-contained, zippable artefact.
 """
 
 __version__ = "0.1.0"

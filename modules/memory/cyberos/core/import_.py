@@ -27,7 +27,7 @@ Design (per PROPOSAL.md P6):
 
 Source store ingestion accepts:
 
-* a directory (``--source /path/to/other/.cyberos-memory``), or
+* a directory (``--source /path/to/other/.cyberos/memory/store``), or
 * a deterministic-export zip (``--source other.zip``); auto-extracted.
 """
 
@@ -138,11 +138,13 @@ def _resolve_source(source: Path) -> tuple[Path, Path | None]:
     if source.is_dir():
         if (source / "manifest.json").is_file():
             return source, None
-        # Allow pointing at the project root that contains .cyberos-memory/
-        nested = source / ".cyberos-memory"
+        # Allow pointing at the project root that contains the store.
+        nested = source / ".cyberos" / "memory" / "store"
         if (nested / "manifest.json").is_file():
             return nested, None
-        raise ValueError(f"{source} doesn't look like a .cyberos-memory store")
+        raise ValueError(
+            f"{source} doesn't look like a memory store (.cyberos/memory/store)"
+        )
     if source.suffix == ".zip" and source.is_file():
         td = Path(tempfile.mkdtemp(prefix="cyberos-import-"))
         with zipfile.ZipFile(source) as z:

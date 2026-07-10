@@ -159,13 +159,13 @@ def run(
         print(f"error: BACKLOG.md not found at {backlog_path}", file=sys.stderr)
         sys.exit(2)
 
-    audit_dir = cuo_path.parent.parent / ".cyberos-memory" / "audit"
+    audit_dir = cuo_path.parent.parent / ".cyberos/memory/store" / "audit"
 
     if output_dir is None:
         # Backlog lives at docs/feature-requests/BACKLOG.md — walk up 3 levels
-        # to reach the project root for .cyberos-memory/ placement.
+        # to reach the project root for .cyberos/memory/store/ placement.
         project_root = backlog_path.parent.parent.parent
-        output_dir = project_root / ".cyberos-memory" / "cuo-steps"
+        output_dir = project_root / ".cyberos/memory/store" / "cuo-steps"
     output_dir.mkdir(parents=True, exist_ok=True)
     halt_reason_path = output_dir / "DRAIN_HALT.md"
 

@@ -25,9 +25,9 @@ from cyberos.core import serve as serve_mod
 
 
 def _empty_store(tmp_path: Path) -> Path:
-    s = tmp_path / ".cyberos-memory"
-    s.mkdir()
-    (s / "audit").mkdir()
+    s = tmp_path / ".cyberos/memory/store"
+    s.mkdir(parents=True, exist_ok=True)
+    (s / "audit").mkdir(parents=True, exist_ok=True)
     (s / "manifest.json").write_text('{}', encoding="utf-8")
     return s
 

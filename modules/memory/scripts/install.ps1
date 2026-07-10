@@ -74,10 +74,10 @@ if ((-not (Test-Path $cyberos_dst)) -or $Force) {
 }
 Write-Host ""
 
-# ---------------------------------------------------------------------- 4. .cyberos-memory skeleton
+# ---------------------------------------------------------------------- 4. .cyberos/memory/store skeleton
 
-Write-Host "→ step 4/6: initialise .cyberos-memory"
-$Brain = Join-Path $Target ".cyberos-memory"
+Write-Host "→ step 4/6: initialise .cyberos/memory/store"
+$Brain = Join-Path $Target ".cyberos/memory/store"
 if ((Test-Path $Brain) -and -not $Force) {
     Write-Host "  – $Brain exists; use -Force to re-init"
 } else {
@@ -119,7 +119,7 @@ Write-Host ""
 # ---------------------------------------------------------------------- 6. verify
 
 Write-Host "→ step 6/6: verify"
-& python -m cyberos --store .cyberos-memory doctor
+& python -m cyberos --store .cyberos/memory/store doctor
 Write-Host ""
 
 # ---------------------------------------------------------------------- extras
@@ -149,5 +149,5 @@ Write-Host "next steps:"
 Write-Host "  1. open the project in your agent (Claude / Cursor / Cowork)"
 Write-Host "  2. AGENTS.md is loaded automatically"
 Write-Host "  3. verify anytime:"
-Write-Host "       python -m cyberos --store .cyberos-memory state"
-Write-Host "       python -m cyberos --store .cyberos-memory doctor"
+Write-Host "       python -m cyberos --store .cyberos/memory/store state"
+Write-Host "       python -m cyberos --store .cyberos/memory/store doctor"

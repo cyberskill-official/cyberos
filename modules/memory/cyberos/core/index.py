@@ -2,7 +2,7 @@
 cyberos.core.index — the derived SQLite index. WAL mode; concurrent reads.
 
 The hot SQLite file lives OUTSIDE the store (in the OS cache dir) to avoid
-iCloud / Dropbox / OneDrive sync conflicts with the ``.cyberos-memory/``
+iCloud / Dropbox / OneDrive sync conflicts with the ``.cyberos/memory/store/``
 directory the user actually wants synced. That pre-existing decision from
 the legacy writer is preserved here; what changes is:
 

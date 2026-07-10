@@ -1,6 +1,6 @@
 ---
 workflow_id: chief-technology-officer/ship-feature-requests
-workflow_version: 2.3.0
+workflow_version: 2.3.1
 purpose: Drive each eligible FR in `docs/feature-requests/BACKLOG.md` end-to-end through the full lifecycle — from `ready_to_implement` through `implementing → ready_to_review → reviewing → ready_to_test → testing → done` (per `docs/feature-requests/STATUS-REFERENCE.md` §1.1). Deep-maps the repo, generates the edge-case matrix, implements with 90 % coverage on touched files, injects observability, self-approves architectural deviations via ADRs, runs the multi-vector debugger with a 5-fail circuit breaker, runs the testing gate (`coverage-gate-author`/`-audit`), and physically updates BACKLOG.md status between every phase transition. Failure or blocker at any downstream phase routes the FR back to `ready_to_implement` (STATUS-REFERENCE §1.3) with `routed_back_count += 1`.
 persona: chief-technology-officer
 cadence: per-FR (loops continuously over BACKLOG.md)
@@ -97,11 +97,19 @@ This is the single implementation workflow. There is no separate improvement tra
 
 ## 1. The state engine
 
-`docs/feature-requests/BACKLOG.md` is the **absolute** source of truth for FR state. The state engine reads BACKLOG.md before each iteration:
+Each FR's frontmatter `status` is the record of truth; `docs/feature-requests/BACKLOG.md` is the index the state engine reads and keeps in lockstep with it (on any mismatch, repair the backlog toward frontmatter). The state engine reads BACKLOG.md before each iteration:
 
 - **Eligible FR** = first row whose status is `ready_to_implement` AND whose declared `depends_on` rows are all in `done` status.
 - **Skipped statuses**: `draft` (not yet audited — handled by the `draft → ready_to_implement` chain, not this workflow), `implementing`, `ready_to_review`, `reviewing`, `ready_to_test`, `testing` (in-flight under another invocation — possibly the previous session of this workflow; pick those up by re-entering at the matching phase), `done` (terminal success — no work to do), `on_hold` / `closed` (operator-decided off-ramps).
 - Pick the first eligible FR. Run all 30 steps end-to-end. Between every phase transition the workflow physically updates the BACKLOG.md status cell via `backlog-state-update-author/-audit`. The mutation is atomic — same write that emits the `workflow_phase_complete` (or `workflow_complete` for the final transition) memory row.
+
+### Backlog layout — one file, both classes
+
+There is exactly ONE backlog: `docs/feature-requests/BACKLOG.md` indexes every FR, `class: product` and `class: improvement` alike. Never create a second backlog file for improvement work.
+
+- Row format: `- [status] FR-ID-slug - title`, with an `(improvement)` suffix tag on `class: improvement` rows; product rows are untagged. Example: `- [ready_to_implement] FR-007-rate-limit - login rate limiting (improvement)`.
+- Grouping: small repos group rows into lifecycle-status sections (`ready_to_implement` / in flight / done / on_hold-closed — the init template); large monorepos may group by module with the status tag on each row. Both are conforming: frontmatter is the record of truth and every row carries its status either way.
+- FR files all live under `docs/feature-requests/`: flat (`FR-001-slug.md`) for small repos, module subfolders (`<module>/FR-<MOD>-NNN-slug.md`) for monorepos. `improvement/` is a normal subfolder there for cross-cutting hardening FRs — not a separate top-level home.
 
 ### HITL — human-in-the-loop is REQUIRED
 
@@ -137,7 +145,8 @@ Enterprise-hardening, refactoring, and audit-remediation work is not a separate 
 Where improvement FRs live:
 
 - Module-scoped hardening (touches one module, e.g. memory) is an `FR-<MODULE>-*` entry under `docs/feature-requests/<module>/`, exactly like a product FR for that module.
-- Cross-cutting hardening (spans modules, e.g. a repo-wide audit remediation) lives under `docs/feature-requests/improvement/` with its own README index. That README lists the current programs and tracks the migration of the retired `docs/improvement/` backlogs (`MEM-*`, `T-*`, `IMP-*`) into FR ids.
+- Cross-cutting hardening (spans modules, e.g. a repo-wide audit remediation) lives under `docs/feature-requests/improvement/` with its own README index — a normal subfolder of `docs/feature-requests/`, never a separate top-level tree. (In repos migrated from an old `docs/improvement/` backlog, that README also carries the migration record.)
+- Backlog: improvement FRs are indexed in the SAME `docs/feature-requests/BACKLOG.md` as product FRs, tagged `(improvement)` on the row (see "Backlog layout" in section 1). There is no separate improvement backlog.
 
 Gate profile by class:
 

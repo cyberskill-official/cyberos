@@ -54,6 +54,6 @@ Inspection: `compute_workflow_metrics` is a single `for r in rows` loop with O(1
 
 ## §6 — Notes
 
-This NFR exists primarily as future-proofing. At today's chain sizes (710 rows in Stephen's live `.cyberos-memory/`), all workflow signal evaluation completes in < 50ms. The linearity discipline ensures the harness scales naturally as the chain grows over months/years without requiring re-architecture.
+This NFR exists primarily as future-proofing. At today's chain sizes (710 rows in Stephen's live `.cyberos/memory/store/`), all workflow signal evaluation completes in < 50ms. The linearity discipline ensures the harness scales naturally as the chain grows over months/years without requiring re-architecture.
 
 Like NFR-CUO-200, this is satisfied by the current implementation; it's a guardrail against future contributors introducing quadratic patterns under the assumption that "small chains are fast enough" — they are, until they aren't.

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 benchmark — measure cyberos-validate + cyberos-export performance against any
-`.cyberos-memory/` store. Tracks the Stage 1 / Stage 2 / Stage 4 success metrics.
+`.cyberos/memory/store/` store. Tracks the Stage 1 / Stage 2 / Stage 4 success metrics.
 
 Usage:
     python3 benchmark.py <store-path> [--runs 5]
@@ -105,8 +105,8 @@ def main() -> int:
     args = parser.parse_args()
 
     store = Path(args.path).resolve()
-    if (store / ".cyberos-memory").is_dir():
-        store = store / ".cyberos-memory"
+    if (store / ".cyberos/memory/store").is_dir():
+        store = store / ".cyberos/memory/store"
     if not store.is_dir():
         print(f"error: {store} not a directory", file=sys.stderr)
         return 3

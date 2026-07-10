@@ -97,16 +97,16 @@ def find_validator(memory_root: Path) -> Path:
 def find_memory_root() -> Path:
     cur = HERE
     for _ in range(6):
-        if (cur / ".cyberos-memory").is_dir():
+        if (cur / ".cyberos/memory/store").is_dir():
             return cur
         cur = cur.parent
     return Path.cwd()
 
 
 def make_fake_memory(seed_memory: str, target_rel: str) -> Path:
-    """Make a temp dir containing minimal `.cyberos-memory/` + one memory."""
+    """Make a temp dir containing minimal `.cyberos/memory/store/` + one memory."""
     tmp = Path(tempfile.mkdtemp(prefix="cyberos-mutation-"))
-    memory = tmp / ".cyberos-memory"
+    memory = tmp / ".cyberos/memory/store"
     (memory / "audit").mkdir(parents=True, exist_ok=True)
     target = memory / target_rel
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -128,7 +128,7 @@ def run_validator(memory_root: Path, target_path: Path) -> dict:
     """Run validator against the temp memory, return parsed JSON findings."""
     tool = target_path
     out = subprocess.run(
-        ["python3", str(tool), "--format", "json", str(memory_root / ".cyberos-memory")],
+        ["python3", str(tool), "--format", "json", str(memory_root / ".cyberos/memory/store")],
         capture_output=True, text=True, timeout=20,
     )
     try:

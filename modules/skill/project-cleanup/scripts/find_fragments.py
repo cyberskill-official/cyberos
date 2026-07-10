@@ -21,7 +21,7 @@ DEFAULT_LEFTOVER_PATTERNS = [
 ]
 DEFAULT_EXCLUDE_PATHS = [
     ".git/", "node_modules/", "target/", "dist/", "build/",
-    ".venv/", "__pycache__/", ".cyberos-memory/",
+    ".venv/", "__pycache__/", ".cyberos/memory/store/",
 ]
 
 

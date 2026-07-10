@@ -210,7 +210,7 @@ pip install anthropic                 # if you haven't
 <ul>
 <li>All invokers available; defaults to <code>mock</code> if <code>cyberos-skill</code> binary missing</li>
 <li>memory emission is opt-in (<code>--memory-emit</code>)</li>
-<li>Uses the project's <code>.cyberos-memory/</code> next to <code>modules/</code></li>
+<li>Uses the project's <code>.cyberos/memory/store/</code> next to <code>modules/</code></li>
 </ul>
 <h3 id="8-2-container">8.2 Container</h3>
 <pre><code class="language-dockerfile">FROM python:3.11-slim
@@ -218,7 +218,7 @@ WORKDIR /app
 COPY modules/cuo /app/cuo
 COPY modules/skill /app/skill
 COPY modules/memory /app/memory
-COPY .cyberos-memory /app/.cyberos-memory
+COPY .cyberos/memory/store /app/.cyberos/memory/store
 RUN pip install -e /app/cuo /app/memory &amp;&amp; \
     pip install anthropic msgspec
 ENV ANTHROPIC_API_KEY=__set_at_runtime__
@@ -226,14 +226,14 @@ ENTRYPOINT [&quot;cyberos-cuo&quot;]
 </code></pre>
 <ul>
 <li><code>cyberos-cuo execute &lt;persona&gt;/&lt;workflow&gt; --invoker llm --memory-emit</code> runs end-to-end</li>
-<li>Mount <code>.cyberos-memory/</code> from a persistent volume so audit chain survives container restarts</li>
+<li>Mount <code>.cyberos/memory/store/</code> from a persistent volume so audit chain survives container restarts</li>
 <li>The supervisor walks up from <code>modules/skill/&lt;skill&gt;/</code> looking for <code>modules/memory/</code> (sibling) → that's how <code>memory_bridge</code> discovers the writer</li>
 </ul>
 <h3 id="8-3-production-planned-phase-5">8.3 Production (planned, Phase 5)</h3>
 <ul>
 <li>The Rust SKILL host (<code>modules/skill/crates/host/</code>) becomes the actual execution surface; <code>SubprocessInvoker</code> shells out to its <code>cyberos-skill</code> binary</li>
 <li>memory emission becomes always-on (not opt-in)</li>
-<li>Multi-tenant: separate <code>.cyberos-memory/</code> per organisation</li>
+<li>Multi-tenant: separate <code>.cyberos/memory/store/</code> per organisation</li>
 <li>Workflows are HTTP-callable via a thin FastAPI wrapper around <code>execute_chain</code></li>
 </ul>
 <h3 id="key-operational-invariants-all-deployments">Key operational invariants (all deployments)</h3>
@@ -476,7 +476,7 @@ class MemoryEmitResult:
 <ul>
 <li>Rust SKILL host becomes the actual execution surface</li>
 <li>memory emission always-on</li>
-<li>Multi-tenant <code>.cyberos-memory/</code> per organisation</li>
+<li>Multi-tenant <code>.cyberos/memory/store/</code> per organisation</li>
 <li>HTTP-callable via FastAPI wrapper</li>
 </ul>
 <hr />

@@ -31,7 +31,7 @@ import time
 from pathlib import Path
 
 # Sandbox path: this benchmark creates a one-off store under /tmp, never
-# inside the real .cyberos-memory/. Cleaned up on exit unless --keep.
+# inside the real .cyberos/memory/store/. Cleaned up on exit unless --keep.
 
 
 def _producer(writer, n: int, actor: str, start_idx: int) -> None:
@@ -52,7 +52,7 @@ def run(producers: int, records: int, window_ms: int, batch: int, keep: bool) ->
     from cyberos.core.walker import verify_segments
 
     workdir = Path(tempfile.mkdtemp(prefix="cyberos-bench-"))
-    store = workdir / ".cyberos-memory"
+    store = workdir / ".cyberos/memory/store"
     (store / "audit").mkdir(parents=True, exist_ok=True)
     try:
         cfg = WriterConfig(coalesce_window_ms=window_ms, coalesce_max_batch=batch)
