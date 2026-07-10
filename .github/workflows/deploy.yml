@@ -7,7 +7,7 @@ name: deploy
 # compose) skips the gate + build and just rolls (the bundle ships via the VPS git pull). Safe by
 # construction: if the gate or build fails, the roll is skipped and the site stays on the current images.
 #
-# One-time setup (deploy/vps/auto-deploy.md + RELEASE.md): repo secrets VPS_HOST / VPS_USER / VPS_SSH_KEY,
+# One-time setup (deploy/vps/auto-deploy.md + docs/deploy/RELEASE.md): repo secrets VPS_HOST / VPS_USER / VPS_SSH_KEY,
 # a read-only deploy key on the VPS for `git pull`, and a GHCR login on the VPS for `docker pull`. Image push
 # uses the built-in GITHUB_TOKEN (packages: write).
 

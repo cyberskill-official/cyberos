@@ -57,12 +57,12 @@ CYBEROS_PACK_URL=<url-to-cyberos.tar.gz> curl -fsSL <raw-url>/bootstrap.sh | bas
 
 ### 4. Claude plugin (available)
 
-The payload IS a plugin marketplace: `dist/cyberos/.claude-plugin/marketplace.json` catalogs the plugin at `dist/cyberos/plugin/` (its own manifest at `plugin/.claude-plugin/plugin.json`; commands `/ship-fr`, `/fr-init`; a bundled `ship-feature-requests` skill). Install:
+The payload IS a plugin marketplace: `dist/cyberos/.claude-plugin/marketplace.json` catalogs the plugin at `dist/cyberos/plugin/` (its own manifest at `plugin/.claude-plugin/plugin.json`; the `/fr-init` command and the `ship-feature-requests` skill (typeable as `/ship-feature-requests`, and used automatically when you ask to ship an FR)). Install:
 
 - Claude Code: `/plugin marketplace add /path/to/dist/cyberos`, then `/plugin install cyberos@cyberos`.
 - Claude desktop / Cowork: the Add picker wants a FILE - use `dist/cyberos/cyberos.plugin` (the one-file bundle build.sh produces; selecting a folder greys the Open button). The folder route works where marketplaces are supported: add `dist/cyberos` as a marketplace (its root carries `.claude-plugin/marketplace.json`).
 
-Then run `/fr-init` in a repo and `/ship-fr` to drive the backlog.
+Then run `/fr-init` in a repo and `/ship-feature-requests` (or just ask to ship the next FR) to drive the backlog.
 
 ### 4b. Any other agent (Codex, Gemini, Cursor, Grok, CLI agents) - agent-independent
 
@@ -98,7 +98,7 @@ fr-gates: ; bash .cyberos/cuo/gates/run-gates.sh
 ## After install: trigger, gate, sign off
 
 1. Write an FR: `cp .cyberos/cuo/templates/FR-TEMPLATE.md docs/feature-requests/FR-001-<slug>.md`, fill section 1, set `status: ready_to_implement`, add the row to `BACKLOG.md`.
-2. Trigger: tell your agent to follow `.cyberos/cuo/ship-feature-requests.md` and drive the next eligible FR, HITL required, `repo_root` = this repo. (Or `/ship-fr` with the plugin.)
+2. Trigger: tell your agent to follow `.cyberos/cuo/ship-feature-requests.md` and drive the next eligible FR, HITL required, `repo_root` = this repo. (Or `/ship-feature-requests` with the plugin.)
 3. Gate: `bash .cyberos/cuo/gates/run-gates.sh`.
 4. Sign off: you record the review verdict and the final acceptance. The agent never sets `done`.
 

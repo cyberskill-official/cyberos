@@ -411,7 +411,7 @@ after go-live; P3 = later bet. Effort: S under a day, M days, L a week+ (one eng
 - C95 [P1/S] Tray icon with unread badge, close-to-tray, launch-minimized option.
 - C96 [P1/S] Deep links (cyberos://channel/..., cyberos://message/...) via the deep-link plugin +
   single-instance plugin so links from email/browser land in the running app.
-- C97 [P1/S] Finish the updater path already scaffolded in RELEASE.md: signing keys generated and stored
+- C97 [P1/S] Finish the updater path already scaffolded in docs/deploy/RELEASE.md: signing keys generated and stored
   offline, stable + beta channels, update-available UX reusing UpdateBanner.
 - C98 [P2/S] window-state persistence, global shortcut for the quick switcher, autostart opt-in
   (autostart plugin), macOS dock badge parity.
@@ -425,7 +425,7 @@ after go-live; P3 = later bet. Effort: S under a day, M days, L a week+ (one eng
 
 - C102 [P0/M] Initialize the platforms for real: cap add ios/android from apps/web (config exists),
   commit the native projects, wire the existing release.yml lanes, produce the first internal builds.
-  Blocked only on the signing accounts/keys listed in RELEASE.md - flag to Stephen early.
+  Blocked only on the signing accounts/keys listed in docs/deploy/RELEASE.md - flag to Stephen early.
 - C103 [P0/S] chat-core storage adapter on @capacitor-community/sqlite; verify OPFS-wasm fallback is
   never used inside the native webview.
 - C104 [P0/M] Push: @capacitor/push-notifications registering FCM/APNs tokens into the existing

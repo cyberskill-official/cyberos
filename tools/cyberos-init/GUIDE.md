@@ -8,7 +8,7 @@ One command lays the CyberOS machine into your repo under a single gitignored `.
 
 - `.cyberos/cuo/` - the workflow engine: `ship-feature-requests.md` + `EXECUTION-DISCIPLINE.md` + `STATUS-REFERENCE.md`, the author/audit skills, `gates/`, and `templates/`.
 - `.cyberos/memory/` - the Layer-1 memory protocol (`AGENTS.md`) + schema + invariants.
-- `.cyberos/plugin/` - the Claude/Cowork plugin (`/ship-fr`, `/fr-init`).
+- `.cyberos/plugin/` - the Claude/Cowork plugin (`/fr-init` + the `ship-feature-requests` skill).
 - `.cyberos/gates.env`, `.cyberos/manifest.yaml`, `.cyberos/VERSION` - your gate commands, the build manifest, and the single CyberOS version stamp.
 - `.cyberos/memory/store/` - your local BRAIN store (tenant data).
 
@@ -59,7 +59,7 @@ One command lays the CyberOS machine into your repo under a single gitignored `.
    - [ready_to_implement] FR-002-rate-limit - login rate limiting (improvement)
    ```
 
-6. Trigger the workflow. Paste this to your agent (or run `/ship-fr` with the plugin):
+6. Trigger the workflow. Paste this to your agent (or run `/ship-feature-requests` with the plugin):
 
    > Follow `.cyberos/cuo/ship-feature-requests.md`. Drive the next eligible FR in `docs/feature-requests/BACKLOG.md`. repo_root is this repo. HITL is required: halt at review acceptance and at final acceptance for my verdict, and never set `done` yourself.
 
@@ -126,3 +126,7 @@ Re-run `init.sh <repo>` (without `--check`) on any that report an update.
 - The agent tried to set `done` itself: that breaks HITL. Point it back at the HITL section of `.cyberos/cuo/ship-feature-requests.md` and the two acceptance gates.
 - reduced vs full profile: check `.cyberos/manifest.yaml`. Reduced still gates on your own build/lint/test plus coverage plus the two human gates; full adds the vendored caf/awh deterministic gates.
 - `--check` says `installed=none`: the repo was never inited (or `.cyberos/VERSION` predates this feature); run init once to stamp it.
+
+## See also
+
+The employee day-one walkthrough lives on the docs site: cuo module -> Guides -> "Ship your first feature request" (source: `modules/cuo/docs/guides/ship-your-first-fr.md`).

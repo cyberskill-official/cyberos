@@ -9,7 +9,7 @@
     {
       "name": "cyberos",
       "source": "./plugin",
-      "description": "Run the CyberOS ship-feature-requests workflow: /fr-init to vendor the machine, /ship-fr to drive the backlog. HITL required at the two human-acceptance gates."
+      "description": "Run the CyberOS ship-feature-requests workflow: /fr-init to vendor the machine, the ship-feature-requests skill to drive the backlog. HITL required at the two human-acceptance gates."
     }
   ]
 }

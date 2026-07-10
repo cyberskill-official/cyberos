@@ -7,7 +7,7 @@ name: release
 #
 #   cut a release:  git tag v1.2.0 && git push origin v1.2.0
 #
-# Secrets + accounts this consumes are listed in RELEASE.md (Apple / Windows / Google signing, App Store
+# Secrets + accounts this consumes are listed in docs/deploy/RELEASE.md (Apple / Windows / Google signing, App Store
 # Connect, the Tauri updater key). Desktop builds run unsigned until the signing secrets are present, so the
 # pipeline works from day one and signing slots in later.
 
@@ -69,7 +69,7 @@ jobs:
           prerelease: false
 
   # Android app bundle (Capacitor). Gated on the repo variable MOBILE_RELEASE=true, which you set AFTER the
-  # one-time Capacitor init (RELEASE.md) so this never fails before the android/ project exists.
+  # one-time Capacitor init (docs/deploy/RELEASE.md) so this never fails before the android/ project exists.
   android:
     if: ${{ vars.MOBILE_RELEASE == 'true' }}
     runs-on: ubuntu-latest
@@ -104,7 +104,7 @@ jobs:
           name: cyberos-android-aab
           path: apps/web/android/app/build/outputs/bundle/release/*.aab
       # Publishing to Play internal track: add r0adz/upload-google-play or fastlane supply with a service
-      # account JSON secret (see RELEASE.md).
+      # account JSON secret (see docs/deploy/RELEASE.md).
 
   # iOS build + TestFlight (Capacitor). Same gate; needs a macOS runner + App Store Connect API key.
   ios:
@@ -121,11 +121,11 @@ jobs:
           npm run build
           npx cap sync ios
       # Archive + export + upload to TestFlight with fastlane (Fastfile committed under apps/web/ios) using an
-      # App Store Connect API key. Full steps in RELEASE.md - authored there rather than half-wired here.
+      # App Store Connect API key. Full steps in docs/deploy/RELEASE.md - authored there rather than half-wired here.
       - name: iOS archive + TestFlight
         working-directory: apps/web/ios/App
         env:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
-        run: echo "Run fastlane beta (see RELEASE.md) - requires the one-time iOS project + signing setup."
+        run: echo "Run fastlane beta (see docs/deploy/RELEASE.md) - requires the one-time iOS project + signing setup."

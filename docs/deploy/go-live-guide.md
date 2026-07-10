@@ -5,7 +5,7 @@ server settings, and governance - because the feature engineering is done. There
 you can do them in any order, but the order below gives the fastest visible wins first. Each track links the
 detailed runbook; this page is the sequence. Where I can help mid-step, it says so.
 
-> These three tracks are tracked as tasks IMP-063..067 in `docs/improvement/wave-6-go-live.md` (agent/operator
+> These three tracks are tracked as FR-IMP-063..067 in `docs/feature-requests/improvement/` (agent/operator
 > split, acceptance gates, ledger evidence). One caveat before flipping everything on for unattended team use:
 > the feature engineering is done, but the production-safety layer from the 2026-07-06 audit is not yet in
 > place - no observability on the P0 box, no external uptime probes, no canary/auto-rollback, no independent
