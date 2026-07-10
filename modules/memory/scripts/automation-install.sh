@@ -4,8 +4,8 @@
 # cyberos nightly + weekly automation jobs.
 #
 # After running this, two jobs run on the host:
-#   * world.cyberskill.cyberos.nightly  — daily 01:09 local
-#   * world.cyberskill.cyberos.weekly   — Sundays 02:07 local
+#   * os.cyberskill.world.nightly  — daily 01:09 local
+#   * os.cyberskill.world.weekly   — Sundays 02:07 local
 #
 # Logs land at ~/Library/Logs/cyberos/{nightly,weekly}.log .
 #
@@ -51,8 +51,8 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-NIGHTLY_LABEL="world.cyberskill.cyberos.nightly"
-WEEKLY_LABEL="world.cyberskill.cyberos.weekly"
+NIGHTLY_LABEL="os.cyberskill.world.nightly"
+WEEKLY_LABEL="os.cyberskill.world.weekly"
 AGENTS_DIR="$HOME/Library/LaunchAgents"
 NIGHTLY_PLIST="$AGENTS_DIR/$NIGHTLY_LABEL.plist"
 WEEKLY_PLIST="$AGENTS_DIR/$WEEKLY_LABEL.plist"

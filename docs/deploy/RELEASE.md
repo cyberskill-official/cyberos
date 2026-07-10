@@ -84,7 +84,7 @@ The android/ and ios/ projects do not exist in the repo yet. Create them once, l
     npx cap add android
     git add android ios capacitor.config.ts package.json && git commit -m "chore: add Capacitor mobile shells"
 
-`capacitor.config.ts` is already committed (appId `world.cyberskill.cyberos`, webDir `../console/web`). After the shells are committed and the signing secrets below are set, flip the repo variable `MOBILE_RELEASE=true` so `release.yml` starts building the mobile apps. Push notifications are the one unfinished backend piece: the chat service registers devices and emits a push intent, but the actual APNS/FCM send is stubbed (`services/chat/src/push.rs`); wire real delivery before relying on mobile push.
+`capacitor.config.ts` is already committed (appId `os.cyberskill.world`, webDir `../console/web`). After the shells are committed and the signing secrets below are set, flip the repo variable `MOBILE_RELEASE=true` so `release.yml` starts building the mobile apps. Push notifications are the one unfinished backend piece: the chat service registers devices and emits a push intent, but the actual APNS/FCM send is stubbed (`services/chat/src/push.rs`); wire real delivery before relying on mobile push.
 
 ## Activation checklist (secrets and accounts to procure)
 
