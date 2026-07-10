@@ -98,3 +98,7 @@ docs/legal/*.docx
 # tool caches (never committed)
 .code-review-graph/
 .remember/
+
+# Vercel (docs hosting) build staging
+.vercel-out/
+.vercel

@@ -61,7 +61,7 @@ cp "$here/bootstrap.sh" "$out/bootstrap.sh"
 cp -R "$here/ci"        "$out/ci"
 cp "$here/Dockerfile"   "$out/Dockerfile"
 cp "$here/README.md"    "$out/README.md"
-cp "$here/GUIDE.md"     "$out/GUIDE.md"
+cp "$here/docs/index.md" "$out/GUIDE.md"   # the guide source lives in docs/ (site-rendered); ships as GUIDE.md
 chmod +x "$out/init.sh" "$out/bootstrap.sh" "$out/cuo/gates/run-gates.sh" 2>/dev/null || true
 
 # make the plugin self-contained: carry the cuo docs so the bundled skill works standalone

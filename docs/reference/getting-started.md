@@ -34,7 +34,7 @@ CyberOS vendors itself into any repository under a single gitignored `.cyberos/`
 
 Desktop alternative: the CyberOS desktop app has a "CyberOS Ops" tab that runs the same build / check / init operations from the UI.
 
-The full step-by-step runbook (first FR, gates, human acceptance, multi-repo rollout) is `tools/cyberos-init/GUIDE.md`.
+The full step-by-step runbook (first FR, gates, human acceptance, multi-repo rollout) is `tools/cyberos-init/docs/index.md`.
 
 ## Ship work
 

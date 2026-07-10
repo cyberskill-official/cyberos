@@ -20,6 +20,11 @@ cd "$REPO_ROOT"
 # ── Site skeleton: the WHOLE site is generated into gitignored dist/website ──
 # (FR-DOCS-002: nothing generated is committed). Chrome = the shared css/js/nav
 # + the home page, maintained at tools/docs-site/{chrome,index.html}.
+# A full build starts from a CLEAN tree: without this, pages whose source was
+# removed or relocated would linger from earlier builds, breaking determinism
+# (same input must yield byte-identical output, orphans included). Partial modes
+# (--fr/--nfr/--changelog/--docs) refresh in place by design.
+[[ "$MODE" == "full" ]] && rm -rf dist/website
 mkdir -p dist/website/reference dist/website/modules dist/website/architecture
 cp -R "$SCRIPT_DIR/chrome/." dist/website/assets/
 cp "$SCRIPT_DIR/index.html" dist/website/index.html

@@ -94,4 +94,4 @@ Once you have accepted, the change is yours to land the normal way: commit (if t
 | Your FRs + backlog index | `docs/feature-requests/` |
 | Gate wiring for this repo | `.cyberos/gates.env` |
 | Agent entry point (any agent) | `.cyberos/AGENT-ENTRY.md` |
-| Operator guide (deeper than this page) | `tools/cyberos-init/GUIDE.md` in the CyberOS repo |
+| Operator guide (deeper than this page) | `tools/cyberos-init/docs/index.md` in the CyberOS repo |

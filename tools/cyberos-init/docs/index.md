@@ -1,14 +1,24 @@
-# Step by step: run CyberOS on another project
+---
+title: Install, update and operate CyberOS in any repo · CyberOS
+---
 
-The linear walkthrough, from zero to your first shipped FR in a repo that is not CyberOS, plus how to keep it up to date. For the full list of install channels and their trade-offs, see `README.md`; this file is the "just do it in order" runbook.
+The linear walkthrough, from zero to your first shipped FR in a repo that is not CyberOS, plus how to keep it up to date. This page is the single source: it ships inside the payload as `GUIDE.md` and renders on the docs site. For the full list of install channels and their trade-offs, see the payload `README.md`.
+
+Every operation below has two equal paths:
+
+- Desktop app (no terminal): the CyberOS app's "CyberOS Ops" tab has buttons for Build payload, Check update, and Init/Update per project - see the [desktop ops guide](./guides/desktop-ops.html). This is the path for employees.
+- CLI (scriptable): the `init.sh` commands shown inline. This is the path for CI, rollout scripts, and anyone who prefers a shell.
+
+Both paths run the same canonical scripts, so the result is identical.
 
 ## What init installs
 
-One command lays the CyberOS machine into your repo under a single gitignored `.cyberos/`, organised by module (this mirrors how CyberOS ships internally, so what you run here is what we run):
+One action lays the CyberOS machine into your repo under a single gitignored `.cyberos/`, organised by module (this mirrors how CyberOS ships internally, so what you run here is what we run):
 
 - `.cyberos/cuo/` - the workflow engine: `ship-feature-requests.md` + `EXECUTION-DISCIPLINE.md` + `STATUS-REFERENCE.md`, the author/audit skills, `gates/`, and `templates/`.
 - `.cyberos/memory/` - the Layer-1 memory protocol (`AGENTS.md`) + schema + invariants.
 - `.cyberos/plugin/` - the Claude/Cowork plugin (`/fr-init` + the `ship-feature-requests` skill).
+- `.cyberos/AGENT-ENTRY.md` - the agent-independent entry point (plus `CLAUDE.md` / `GEMINI.md` / `.cursorrules` pointer stubs where absent).
 - `.cyberos/gates.env`, `.cyberos/manifest.yaml`, `.cyberos/VERSION` - your gate commands, the build manifest, and the single CyberOS version stamp.
 - `.cyberos/memory/store/` - your local BRAIN store (tenant data).
 
@@ -16,13 +26,13 @@ One command lays the CyberOS machine into your repo under a single gitignored `.
 
 ## Prerequisites
 
-- An agent with shell and file access to the target repo (Claude Code, Cowork, or Codex).
-- The CyberOS payload: build it from a CyberOS checkout with `bash tools/cyberos-init/build.sh` (produces `dist/cyberos/`), or obtain it through any channel in `README.md`.
+- An agent with shell and file access to the target repo (Claude Code, Cowork, Codex, Gemini, Cursor, or any shell-capable agent - they all enter through `.cyberos/AGENT-ENTRY.md`).
+- The CyberOS payload: build it with the desktop app (Ops tab -> Build payload) or from a CyberOS checkout with `bash tools/cyberos-init/build.sh` (produces `dist/cyberos/`), or obtain it through any channel in the payload `README.md`.
 - git, and your project's normal build/test toolchain.
 
 ## Steps
 
-1. Get the payload (once). From a CyberOS checkout:
+1. Get the payload (once). Desktop app: Ops tab -> Build payload. CLI, from a CyberOS checkout:
 
    ```bash
    bash tools/cyberos-init/build.sh        # writes dist/cyberos/
@@ -30,7 +40,7 @@ One command lays the CyberOS machine into your repo under a single gitignored `.
 
    Keep `dist/cyberos/` wherever is convenient - it does not need to live inside the target repo. (Contributors: a pre-commit hook rebuilds `dist/cyberos/` automatically whenever a vendored source changes, so it always reflects the current machine.)
 
-2. Initialise the target repo by pointing init at it:
+2. Initialise the target repo. Desktop app: Ops tab -> pick the project from the list (or paste its path) -> Init. CLI:
 
    ```bash
    bash /path/to/dist/cyberos/init.sh /path/to/your/repo
@@ -52,7 +62,7 @@ One command lays the CyberOS machine into your repo under a single gitignored `.
 
    Fill section 1 with numbered normative clauses (each a testable promise), set `status: ready_to_implement`, and set `class: product` (or `class: improvement` for hardening work).
 
-5. List it in the backlog. There is exactly one backlog for all work — product and improvement FRs together, never a separate improvement file. Add a row under the ready section of `docs/feature-requests/BACKLOG.md`, tagging hardening rows `(improvement)`:
+5. List it in the backlog. There is exactly one backlog for all work - product and improvement FRs together, never a separate improvement file. Add a row under the ready section of `docs/feature-requests/BACKLOG.md`, tagging hardening rows `(improvement)`:
 
    ```
    - [ready_to_implement] FR-001-my-first - my first feature
@@ -77,27 +87,27 @@ One command lays the CyberOS machine into your repo under a single gitignored `.
 
 CyberOS carries one version, stamped in `.cyberos/VERSION` when you init and in the payload's `VERSION`. To keep a project current:
 
-- Check for updates (manual, safe, read-only). Point a fresh payload at the repo with `--check`:
+- Check for updates (safe, read-only). Desktop app: Ops tab -> select the project -> Check (the project list also shows each repo's installed version at a glance). CLI:
 
   ```bash
   bash /path/to/dist/cyberos/init.sh --check /path/to/your/repo
   ```
 
-  It prints `installed=<x> available=<y>` and tells you whether an update exists. Wire this into CI or a periodic job to get notified automatically when a project falls behind.
+  It prints `installed=<x> available=<y>` and tells you whether an update exists. Wire the CLI form into CI or a periodic job to get notified automatically when a project falls behind.
 
-- Apply an update. Re-run init with the newer payload:
+- Apply an update. Desktop app: Init on the same project (init IS the update - it is idempotent). CLI:
 
   ```bash
   bash /path/to/dist/cyberos/init.sh /path/to/your/repo
   ```
 
-  init is idempotent: it re-vendors `.cyberos/cuo`, `.cyberos/memory`, and `.cyberos/plugin`, refreshes the manifest and `VERSION`, backs up `gates.env` before rewriting it, and never touches your `BACKLOG.md`, your FRs, your `AGENTS.md`, or your BRAIN. So an update swaps the machine, not your work.
+  init re-vendors `.cyberos/cuo`, `.cyberos/memory`, and `.cyberos/plugin`, refreshes the manifest and `VERSION`, backs up `gates.env` before rewriting it, and never touches your `BACKLOG.md`, your FRs, your `AGENTS.md`, or your BRAIN. So an update swaps the machine, not your work.
 
 Automatic vs manual: `--check` is the notify half (run it on a schedule to be told); re-running init is the apply half (run it when you choose). There is no silent in-place mutation - an update is always an explicit init run.
 
 ## Rolling out to several repos
 
-One payload initialises many repos. From a CyberOS checkout:
+One payload initialises many repos. Desktop app: run Init per project from the list. CLI, from a CyberOS checkout:
 
 ```bash
 bash tools/cyberos-init/build.sh                      # dist/cyberos/ (once)
@@ -107,6 +117,8 @@ for repo in ~/Projects/CyberSkill/ssl ~/Projects/CyberSkill/gam ~/Projects/Cyber
   bash "$PAYLOAD/init.sh" "$repo"                      # vendors .cyberos/, keeps each repo's own BACKLOG/FRs/BRAIN
 done
 ```
+
+Fleet-wide with guard rails: `bash tools/cyberos-init/rollout.sh` (skips dirty repos, prints a per-repo summary).
 
 Each repo gets its own gitignored `.cyberos/` (autodetected gates for its stack) and its own BRAIN. Nothing is committed by init - review `.cyberos/gates.env` per repo, then commit only the files you intend to (the FRs and backlog, never `.cyberos/`).
 
@@ -118,7 +130,7 @@ for repo in ~/Projects/CyberSkill/*; do
 done
 ```
 
-Re-run `init.sh <repo>` (without `--check`) on any that report an update.
+Re-run `init.sh <repo>` (without `--check`) on any that report an update - or press Init in the Ops tab.
 
 ## Troubleshooting
 
@@ -127,6 +139,7 @@ Re-run `init.sh <repo>` (without `--check`) on any that report an update.
 - reduced vs full profile: check `.cyberos/manifest.yaml`. Reduced still gates on your own build/lint/test plus coverage plus the two human gates; full adds the vendored caf/awh deterministic gates.
 - `--check` says `installed=none`: the repo was never inited (or `.cyberos/VERSION` predates this feature); run init once to stamp it.
 
-## See also
+## Guides
 
-The employee day-one walkthrough lives on the docs site: cuo module -> Guides -> "Ship your first feature request" (source: `modules/cuo/docs/guides/ship-your-first-fr.md`).
+- [Operate CyberOS from the desktop app](./guides/desktop-ops.html) - the UI path for employees: build, check, init/update, settings, troubleshooting.
+- Ship your first feature request (cuo module -> Guides) - the day-one workflow walkthrough (source: `modules/cuo/docs/guides/ship-your-first-fr.md`).

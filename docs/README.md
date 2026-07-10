@@ -9,11 +9,19 @@ All user-facing documentation is served by the generated [docs site](https://cyb
 | `feature-requests/` | The FR corpus: 489 FR specs across 29 domains (spec + `_audits/` companions). `BACKLOG.md` is the index of remaining active work; FR frontmatter `status` is the record of truth. Improvement-class FRs live in the same tree (`improvement/` + `(improvement)` tags in the backlog). |
 | `non-functional-requirements/` | NFR specs with audit companions. |
 | `architecture/` | Current-state architecture pages (tech stack, infrastructure, compliance, milestones, strategy, verification gate). |
+| `adrs/` | Architecture decision records. |
 | `deploy/` | Runbooks: `RELEASE.md` (the release process), go-live, VPS topology, CI/local checks, auth SSO. |
 | `reference/` | Getting started, glossary and risk-register sources. |
+| `absorptions/` | The gate-aligned intake path for absorbing external projects (`INTAKE.md` + `incoming/`). |
+| `auto-work/` | Ledgers of unattended agent sessions (dated evidence records). |
+| `ci/` | CI hardening notes and follow-ups. |
+| `knowledge/` | Knowledge sources (e.g. `VN_GLOSSARY.md`, the glossary's source data). |
+| `legal/` | Employment document templates (VN labor contract, NDNCA and IP, total rewards appendix). |
+| `verification/` | Verification ledgers and gate design notes. |
 | `strategy/` | Long-form strategy and audit reports (dated; historical by nature). |
-| `reviews/` | Findings files awaiting operator rulings. |
-| `assets/` | Images/files referenced by global pages. |
+| `reviews/` | Findings files awaiting operator rulings, and dated triage records (e.g. the pre-go-live known-issues log). |
+
+Per-scope images/files live in an `assets/` folder next to the pages that use them (created on first need).
 
 ## How the site is built
 

@@ -35,7 +35,7 @@ Machine gates derive from the touched module's `audit-profile.yaml`: build, lint
 
 - Workflow: `modules/cuo/chief-technology-officer/workflows/ship-feature-requests.md`
 - FRs: `docs/feature-requests/<module>/FR-<MOD>-NNN-slug.md`; cross-cutting hardening under `docs/feature-requests/improvement/`
-- In any CyberOS-initialised repo: `.cyberos/cuo/` carries the same workflow, doctrine, status contract, skills, and gate runner - trigger it with the prompt in `tools/cyberos-init/GUIDE.md` or the `/ship-feature-requests` plugin skill.
+- In any CyberOS-initialised repo: `.cyberos/cuo/` carries the same workflow, doctrine, status contract, skills, and gate runner - trigger it with the prompt in `tools/cyberos-init/docs/index.md` or the `/ship-feature-requests` plugin skill.
 
 ## Guides
 

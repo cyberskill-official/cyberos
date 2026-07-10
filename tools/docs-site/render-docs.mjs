@@ -136,6 +136,18 @@ for (const mod of [...mods].sort()) {
   renderScope(moduleHome(mod), join(SITE, "modules", mod), 2);
 }
 
+// ── tools scopes: tools/* with a deliberate docs home (docs/index.md) ────────
+// The index.md requirement keeps vendored third-party trees (e.g. tools/caf/docs
+// governance files) off the site: only tools that author a docs home render.
+const toolsDir = join(ROOT, "tools");
+if (existsSync(toolsDir)) {
+  for (const t of readdirSync(toolsDir).sort()) {
+    if (existsSync(join(toolsDir, t, "docs", "index.md"))) {
+      renderScope(join(toolsDir, t, "docs"), join(SITE, "tools", t), 2);
+    }
+  }
+}
+
 if (failures > 0) {
   console.error(`render-docs: ${failures} failure(s)`);
   process.exit(1);

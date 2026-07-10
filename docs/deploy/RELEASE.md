@@ -145,10 +145,12 @@ The website is generated from the markdown single source of truth (FR-DOCS-002):
 
 Nothing generated is committed: the site renders into gitignored `dist/website`, so there is no generated HTML to edit by hand.
 
+Hosting: a Vercel project connected to this repo builds the site on every push to `main` via `vercel.json` (`bash tools/docs-site/build.sh` + `tools/docs-site/stage-vercel.mjs`, output `.vercel-out`) and serves it at `cyberos.cyberskill.world/docs` (the domain root redirects to `/docs/`). The old hand-authored wiki deployment is retired.
+
 ## GHCR troubleshooting
 
 A `403 Forbidden` pushing an image means that GHCR package exists without this repo granted write access (packages created by this workflow auto-link via the `org.opencontainers.image.source` label; older ones may not). Fix in GitHub: org -> Packages -> the failing package -> Package settings -> Manage Actions access -> add this repo with the Write role. Alternatively delete the stale package and let the workflow recreate it linked.
 
 ## Related runbooks
 
-`go-live-guide.md` (first production bring-up), `cyberos-core-deploy.md` (VPS topology), `ci-and-local-checks.md` (what each gate runs), `local-dev-and-testing.md` (dev stack), `apps/desktop/README.md` (desktop first build), and `tools/cyberos-init/GUIDE.md` (running CyberOS in other repos).
+`go-live-guide.md` (first production bring-up), `cyberos-core-deploy.md` (VPS topology), `ci-and-local-checks.md` (what each gate runs), `local-dev-and-testing.md` (dev stack), `apps/desktop/README.md` (desktop first build), and `tools/cyberos-init/docs/index.md` (running CyberOS in other repos).
