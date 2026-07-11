@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "cyberos",
   "displayName": "CyberOS",
-  "description": "Turn an idea, PRD, or spec into audited feature requests, then ship them under a governed workflow. /new-fr drafts FRs and audits them into the backlog; /ship-feature-requests drives each one through implement -> review -> test -> done, with the human holding the two acceptance gates. /init installs the machine into any repo; /update, /changelog and /help keep it current. Agents never push, merge, deploy, or self-accept.",
+  "description": "Turn an idea, PRD, or spec into audited feature requests, then ship them under a governed workflow. /create-feature-requests drafts FRs and audits them into the backlog; /ship-feature-requests drives each one through implement -> review -> test -> done, with the human holding the two acceptance gates. /init installs the machine into any repo; /update, /changelog and /help keep it current. Agents never push, merge, deploy, or self-accept.",
   "version": "0.0.0",
   "author": { "name": "CyberSkill" },
   "homepage": "https://cyberos.cyberskill.world/docs",

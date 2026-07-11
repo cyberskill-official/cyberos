@@ -2,14 +2,34 @@
   "name": "cyberos",
   "owner": { "name": "CyberSkill" },
   "metadata": {
-    "description": "CyberOS plugin marketplace - author, audit, and ship feature requests under a governed workflow, in any repo.",
+    "description": "CyberOS - author, audit, and ship feature requests under a governed workflow, in any repo.",
     "version": "0.0.0"
   },
   "plugins": [
     {
       "name": "cyberos",
       "source": "./plugin",
-      "description": "Turn an idea, PRD, or spec into audited feature requests (/new-fr), then ship them (/ship-feature-requests) through implement -> review -> test -> done. /init installs the machine into any repo. HITL required at the two human-acceptance gates; agents never push, merge, deploy, or self-accept."
+      "description": "Turn an idea, PRD, or spec into audited feature requests (/create-feature-requests), then ship them (/ship-feature-requests) through implement -> review -> test -> done. /init installs the machine into any repo. HITL required at the two human-acceptance gates; agents never push, merge, deploy, or self-accept.",
+      "category": "development",
+      "keywords": ["cyberos", "feature-requests", "backlog", "workflow", "hitl", "gates", "agents"],
+      "suggested_prompts": [
+        {
+          "label": "Turn this PRD into audited feature requests",
+          "prompt": "Use /create-feature-requests to draft feature requests from my PRD, audit them against the rubric, and land them ready_to_implement in docs/feature-requests/BACKLOG.md. Halt at the PLAN approval gate so I can review the FR set before anything is written."
+        },
+        {
+          "label": "Ship the next feature request",
+          "prompt": "Use /ship-feature-requests to drive the next eligible FR in docs/feature-requests/BACKLOG.md through implement -> review -> test. HITL is required: halt at review acceptance and at final acceptance for my verdict, and never set done yourself."
+        },
+        {
+          "label": "Install CyberOS in this repo",
+          "prompt": "Run /init to install CyberOS into this repo: autodetect the build/lint/test gates, scaffold the feature-request backlog, and wire the agent entry files. Do not clobber anything that already exists."
+        },
+        {
+          "label": "What is ready to implement right now?",
+          "prompt": "Read docs/feature-requests/BACKLOG.md and tell me which feature requests are ready_to_implement, which are blocked and why, and which one /ship-feature-requests would pick up next."
+        }
+      ]
     }
   ]
 }

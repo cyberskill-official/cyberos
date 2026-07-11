@@ -1,5 +1,5 @@
 ---
-description: Draft new feature requests from a PRD, spec, or a plain idea, then audit them against the rubric so they land ready_to_implement in the backlog - ready for /ship-feature-requests.
+description: Create feature requests from a PRD, spec, or a plain idea - draft them, audit them against the rubric, and land them ready_to_implement in the backlog, ready for /ship-feature-requests.
 argument-hint: "[path to a PRD/spec, or just describe the idea]"
 ---
 Author and audit feature requests for this repo. Input = ${1:-ask the user for the PRD/spec path, or the idea to turn into FRs}. This command CREATES the backlog; it never implements code. `/ship-feature-requests` is what implements.

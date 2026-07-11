@@ -78,15 +78,20 @@ cyver="$(tr -d ' \n\r' < "$repo/VERSION" 2>/dev/null || echo 0.0.0)"
 mkdir -p "$out/plugin/skills/ship-feature-requests/cuo"
 cp "$out/cuo/ship-feature-requests.md" "$out/cuo/EXECUTION-DISCIPLINE.md" "$out/cuo/STATUS-REFERENCE.md" "$out/plugin/skills/ship-feature-requests/cuo/"
 
-# bundle the FR AUTHORING skills into the plugin so /new-fr works standalone: feature-request-author
-# drafts the FRs, feature-request-audit drives draft -> ready_to_implement, which is what
-# /ship-feature-requests then consumes. Without these the plugin can only ship, never author.
+# Bundle EVERY vendored skill into the plugin so it is genuinely self-contained.
+# Why all of them: ship-feature-requests CHAINS ~18 author/audit skills (repo-context-map,
+# edge-case-matrix, implementation-plan, observability-injection, code-review, coverage-gate, ...).
+# Those only existed under .cyberos/cuo/skills/ after /init, so the plugin's bundled workflow could
+# not reach its own children standalone - the plugin shipped the conductor without the orchestra.
+# feature-request-{author,audit} additionally back /create-feature-requests. ~860K total; the zip
+# stays well under a megabyte, so there is no reason to ship a partial set.
 plugin_skills=0
-for s in feature-request-author feature-request-audit; do
-  if [ -d "$out/cuo/skills/$s" ]; then
-    cp -R "$out/cuo/skills/$s" "$out/plugin/skills/$s"
-    plugin_skills=$((plugin_skills + 1))
-  fi
+for d in "$out"/cuo/skills/*/; do
+  [ -d "$d" ] || continue
+  s="$(basename "$d")"
+  [ -e "$out/plugin/skills/$s" ] && continue     # never clobber a skill the plugin ships itself
+  cp -R "$d" "$out/plugin/skills/$s"
+  plugin_skills=$((plugin_skills + 1))
 done
 
 # stamp BOTH manifests with the platform VERSION so the plugin never drifts from CyberOS again.
