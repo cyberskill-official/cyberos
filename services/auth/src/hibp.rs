@@ -11,11 +11,52 @@
 //! is the documented PDPL Art. 25 + GDPR Art. 25 data-minimisation alignment.
 
 use sha1::{Digest, Sha1};
+use std::sync::OnceLock;
 use std::time::Duration;
 use thiserror::Error;
 
 const HIBP_RANGE_URL: &str = "https://api.pwnedpasswords.com/range/";
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(2);
+
+/// The ONE HTTP client, built once and reused for every breach check.
+///
+/// This used to be a `reqwest::Client::builder()...build()` INSIDE `fetch_range` — a fresh client per call.
+/// A `Client` owns the connection pool, so constructing one per request throws the pool away every time and
+/// pays a full DNS resolution, TCP handshake and TLS handshake on **every password set in production**. That
+/// is two extra round-trips to Cloudflare on every signup, every password change, and every admin-created
+/// subject, forever. Reqwest's own docs say to build one and reuse it; we were doing the opposite.
+///
+/// It surfaced through a latency test that could not meet its budget, which is a good argument for keeping
+/// latency tests even when they are annoying.
+fn client() -> &'static reqwest::Client {
+    static CLIENT: OnceLock<reqwest::Client> = OnceLock::new();
+    CLIENT.get_or_init(|| {
+        reqwest::Client::builder()
+            .timeout(REQUEST_TIMEOUT)
+            .user_agent("cyberos-auth/0.1 (+https://cyberos.cyberskill.world)")
+            .build()
+            // A Client fails to build only on a broken TLS backend, which is a boot-time
+            // environment fault, not a runtime condition worth threading a Result through.
+            .expect("build HIBP http client")
+    })
+}
+
+/// The HIBP range endpoint base URL, overridable via `CYBEROS_HIBP_BASE_URL`.
+///
+/// Two legitimate uses: HIBP publishes a self-hostable mirror of the pwned-passwords corpus, and our own
+/// latency tests need to measure OUR code rather than the round-trip time to Cloudflare from wherever the
+/// developer happens to be sitting.
+///
+/// This is a base URL, not a kill switch — there is deliberately no way to switch the breach check OFF. An
+/// operator who can set this env var already controls the process, so it grants no new authority; a
+/// `HIBP_DISABLED=1` flag, by contrast, would be a single typo away from silently accepting `password123`
+/// in production, and does not exist for that reason.
+///
+/// Read per call rather than cached: it costs nanoseconds next to a network round-trip, and a cached value
+/// would make the setting order-dependent inside a test binary.
+fn base_url() -> String {
+    std::env::var("CYBEROS_HIBP_BASE_URL").unwrap_or_else(|_| HIBP_RANGE_URL.to_string())
+}
 
 #[derive(Debug, Error)]
 pub enum HibpError {
@@ -52,13 +93,8 @@ pub async fn fetch_range(prefix: &str) -> Result<String, HibpError> {
     if prefix.len() != 5 || !prefix.chars().all(|c| c.is_ascii_hexdigit()) {
         return Err(HibpError::Network(format!("bad prefix: {prefix:?}")));
     }
-    let url = format!("{HIBP_RANGE_URL}{prefix}");
-    let client = reqwest::Client::builder()
-        .timeout(REQUEST_TIMEOUT)
-        .user_agent("cyberos-auth/0.1 (+https://cyberos.cyberskill.world)")
-        .build()
-        .map_err(|e| HibpError::Network(e.to_string()))?;
-    let resp = client
+    let url = format!("{}{prefix}", base_url());
+    let resp = client()
         .get(&url)
         .header("Add-Padding", "true") // HIBP recommendation: prevents traffic-pattern fingerprinting
         .send()

@@ -500,8 +500,35 @@ pub async fn callback(
         }
     }
 
+    // FR-AUTH-111 — the person's name, from the ID token we already verified. Read here, where the claims
+    // are, so `resolve_subject` is handed a name rather than reaching back for one.
+    //
+    // Deserialising from the already-verified `id_claims` adds no trust boundary: signature, issuer,
+    // audience and expiry were all checked above. Unknown claims — `picture` among them — are dropped on the
+    // floor, which is the intent (§1 #9): persisting the avatar would widen the published Data Safety
+    // declaration, and that is a policy change with paperwork, not an implementation detail.
+    let profile: crate::display_name::Profile =
+        serde_json::from_value(id_claims.clone()).unwrap_or_default();
+    let (rung, display_name) = crate::display_name::resolve(&profile, idp_email.as_deref());
+    // The RUNG, never the name (§1 #8). Knowing which rung fired is most of the diagnostic value; putting
+    // the name itself in the log stream is a privacy incident and contradicts the policy we publish.
+    tracing::debug!(target: "cyberos_auth::oidc", rung, "resolved display_name");
+
     // Look up or JIT-create the subject.
-    let subject_id = resolve_subject(&state, &idp, &idp_sub, idp_email.as_deref()).await?;
+    let subject_id =
+        resolve_subject(&state, &idp, &idp_sub, idp_email.as_deref(), &display_name).await?;
+
+    // §1 #4 + #5 — repair a name that was never really set; never touch one that was.
+    //
+    // This runs on EVERY path out of resolve_subject, and it has to. The existing-link fast path returns
+    // before any INSERT, so a `CASE` in the JIT upsert would never fire for the people who are actually
+    // damaged — every colleague already signed in through Google. A failure to heal must not fail the login:
+    // the person gets in with the name they have, and heals on their next sign-in.
+    if let Err(e) =
+        crate::display_name::heal(&state.pg, idp.tenant_id, subject_id, &display_name).await
+    {
+        tracing::warn!(target: "cyberos_auth::oidc", error = %e, "display_name heal failed; login proceeds");
+    }
 
     // Mint a CyberOS JWT for the verified subject.
     let svc = crate::jwt::JwtService::new(state.pg.clone(), state.jwt_issuer.clone());
@@ -844,6 +871,9 @@ async fn resolve_subject(
     idp: &LoadedIdp,
     idp_sub: &str,
     idp_email: Option<&str>,
+    // FR-AUTH-111 — already resolved from the ID token by the caller (`display_name::resolve`). Passed in
+    // rather than derived here, so there is one chain and one place it can be got wrong.
+    display_name: &str,
 ) -> Result<Uuid, (StatusCode, Json<Value>)> {
     // 1. Existing link?
     let mut tx = state.pg.begin().await.map_err(internal)?;
@@ -953,6 +983,22 @@ async fn resolve_subject(
     // one knows it), and the IdP stays the only way in.
     let sso_password_hash = bcrypt::hash(random_b64(32), bcrypt::DEFAULT_COST)
         .map_err(|e| internal(format!("bcrypt hash failed: {e}")))?;
+    // FR-AUTH-111 — the display name comes from the ID token's name claims, resolved by the caller.
+    //
+    // This bind used to be `idp_email.unwrap_or("")`. THAT was the bug: every human provisioned through
+    // Google SSO wore their email address as their display name, in every channel, above every message,
+    // forever — and the privacy policy we publish says we take the name from their Google account. We do
+    // receive it; we were throwing it away.
+    //
+    // The `display_name` column is left alone on the ON CONFLICT path on purpose. Repairing an existing row
+    // is `display_name::heal`'s job, applied by the caller to whichever subject resolved: putting the rule
+    // here would miss the existing-link fast path, which is the path every already-provisioned person takes.
+    // One rule, one place.
+    let jit_display_name = if display_name.trim().is_empty() {
+        handle.as_str() // final rung: no name claims and no email. The handle beats rendering as nothing.
+    } else {
+        display_name
+    };
     let row: (Uuid,) = sqlx::query_as(
         "INSERT INTO subjects (tenant_id, handle, display_name, email, kind, status, password_hash, roles)
               VALUES ($1, $2, $3, $4, 'human', 'active', $5, $6)
@@ -963,7 +1009,7 @@ async fn resolve_subject(
     )
     .bind(idp.tenant_id)
     .bind(&handle)
-    .bind(idp_email.unwrap_or(""))
+    .bind(jit_display_name)
     .bind(idp_email)
     .bind(&sso_password_hash)
     .bind(&idp.default_roles)
