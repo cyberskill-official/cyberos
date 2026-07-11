@@ -49,6 +49,7 @@
 pub mod capture;
 pub mod cursor;
 pub mod deny_list;
+pub mod display_name;
 pub mod geoip;
 pub mod handlers;
 pub mod hibp;

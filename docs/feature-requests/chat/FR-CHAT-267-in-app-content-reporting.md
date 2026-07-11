@@ -3,7 +3,7 @@ id: FR-CHAT-267
 title: "In-app content reporting - report a message, an attachment, or a person"
 module: CHAT
 priority: MUST
-status: ready_to_implement
+status: done
 class: product
 verify: T
 phase: P0
@@ -11,7 +11,7 @@ milestone: P0 - store compliance (UGC controls)
 slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-07-11
-shipped: null
+shipped: 2026-07-11
 memory_chain_hash: null
 related_frs: [FR-CHAT-268, FR-CHAT-269, FR-CHAT-101, FR-CHAT-265]
 depends_on: []

@@ -79,13 +79,13 @@ The AUTH service **MUST** expose `POST /v1/admin/subjects` for creating new auth
 7. **MUST** emit exactly one `auth.subject_created` memory audit row per new subject. The row carries `subject_id`, `tenant_id`, `email_hash16` (SHA-256[..16] of email — privacy-preserving identifier), `roles`, `created_by_subject_id`, `request_id`. The row MUST NOT contain plaintext password, password hash, OR the full email — `email_hash16` is the privacy-safe identifier.
 8. **MUST** return `{ "id": <uuid>, "tenant_id": <uuid>, "email": <string>, "roles": [...], "suspended": false, "created_at": <ISO8601> }` — NEVER the password hash, NEVER the plaintext password.
 9. **MUST** return `409 CONFLICT` with `{"error":"email_taken","tenant_id":<uuid>,"email":"<email>"}` if the (tenant_id, email) pair already exists. UNIQUE constraint on `(tenant_id, email)` enforces at DB layer.
-10. **MUST** complete in ≤ 200ms p95 (bcrypt cost 12 ≈ 150ms; remaining 50ms for DB + validation + audit). If bcrypt latency degrades the budget, switch to cost 10 ONLY via FR amendment.
+10. **MUST** complete, **excluding the password-hashing cost**, in ≤ 200ms p95. The budget covers validation, the HIBP breach check, the DB write, the audit row, RLS and JWT verification — everything the endpoint does *besides* hashing. bcrypt at cost 12 is a deliberate spend on top, and it **MUST NOT** be reduced to fit a latency budget. *(Amended 2026-07-11 — see §12.)*
 11. **MUST** require HTTPS transport (refuse with `400 BAD_REQUEST` `{"error":"https_required"}` if `X-Forwarded-Proto: https` not present in non-test environments). Plaintext password over HTTP is a categorical no.
 12. **MUST** atomically apply `subjects` insert + idempotency record + audit row in a SINGLE Postgres transaction (mirrors FR-AUTH-001 §1 #12).
 13. **MUST** emit OTel span `auth.create_subject` with attributes `tenant_id`, `email_hash16`, `roles_count`, `outcome` (created | idempotent_replay | conflict | forbidden | invalid_input | weak_password). Span MUST NOT carry email or password.
 14. **SHOULD** emit OTel metrics:
     - `auth_subject_create_total{outcome, tenant_id}` (counter).
-    - `auth_subject_create_latency_ms` (histogram; SLO p95 < 200ms).
+    - `auth_subject_create_latency_ms` (histogram; SLO p95 < 200ms **net of hashing**, per §1 #10 as amended).
     - `auth_subject_count{tenant_id}` (gauge).
 
 ---
@@ -238,7 +238,7 @@ pub fn hash_password(password: &str) -> Result<String, SubjectError> {
 13. **Response NEVER contains password or password_hash** — JSON output assertion.
 14. **memory audit row emitted** with `email_hash16` (NOT plaintext email) and NO password fields.
 15. **Idempotent replay returns same subject id** with same key + body.
-16. **Latency p95 < 200ms** including bcrypt hash.
+16. **Latency p95 < 200ms EXCLUDING the bcrypt hash** (§1 #10 as amended, §12 A1). The test calibrates the hash cost on the host and subtracts it, and serves the HIBP breach check from a local stub — so the assertion measures our code, not the CPU's hashing speed or the distance to Cloudflare.
 17. **Cross-tenant blocked at RLS layer** — even if API check is bypassed, `subjects.tenant_id != current_setting('app.tenant_id')::uuid` filters out.
 
 ---
@@ -537,7 +537,7 @@ All resolved. Deferred:
 
 ## §11 — Notes
 
-- Bcrypt cost 12 ≈ 150ms hash time. The 200ms p95 budget (§1 #10) leaves ~50ms for DB + validation + audit. Cost 14 would blow the budget; cost 10 would weaken security below NIST floor.
+- ~~Bcrypt cost 12 ≈ 150ms hash time. The 200ms p95 budget (§1 #10) leaves ~50ms for DB + validation + audit. Cost 14 would blow the budget; cost 10 would weaken security below NIST floor.~~ **Superseded by §12 A1.** The 150ms figure was wrong: bcrypt cost 12 measures **209ms** on a server-class core, so the old budget left *negative* room for the DB, validation and audit. The budget now excludes hashing entirely, and the cost factor is fixed at 12 — OWASP's floor is 10 and the recommendation is to go higher, so it may not be lowered to buy latency.
 - Top-10K breach list embedded at compile time keeps the check offline + constant-time. The list is refreshed quarterly via a build-time script pulling from HaveIBeenPwned's vetted lists.
 - `Zeroizing<String>` (zeroize crate) ensures plaintext passwords are overwritten in heap memory on Drop. Combined with custom Debug impl that prints `<REDACTED>`, the password never appears in logs, panic backtraces, or core dumps.
 - The `email_hash16` audit field is the privacy-vs-debuggability balance. 16 hex chars (8 bytes) of SHA-256 disambiguates 1-in-10⁹ subjects (collision-safe at our scale) without exposing the address. Forensic needs (e.g., "what was the email of subject_id=X") query the subjects table directly under appropriate authorisation.
@@ -548,4 +548,56 @@ All resolved. Deferred:
 
 ---
 
-*End of FR-AUTH-002. Status: draft (10/10 target).*
+## §12 — Amendments
+
+### A1 — 2026-07-11 — the p95 SLO was arithmetically impossible (§1 #10, §5, §11)
+
+**Approved by:** Stephen Cheng (CTO), 2026-07-11.
+**Found by:** FR-AUTH-111's gate run, where `create_subject_p95_latency_under_200ms` failed persistently on a
+change that does not touch this endpoint.
+
+**What was wrong.** §1 #10 required p95 ≤ 200ms *including* the bcrypt hash, on the stated basis that "bcrypt
+cost 12 ≈ 150ms; remaining 50ms for DB + validation + audit". That figure was wrong. Measured on a
+server-class core:
+
+| bcrypt cost | time per hash |
+|---|---|
+| 10 | 52 ms |
+| 11 | 104 ms |
+| **12 (ours)** | **209 ms** |
+| 13 | 421 ms |
+
+Cost 12 alone exceeds the entire 200ms budget. The remaining budget for the DB write, the breach check, the
+audit row and validation was **negative**. No implementation could have satisfied this SLO; the test was not
+detecting slow code, it was reporting that the arithmetic did not close. It had been failing locally and
+passing in CI only because CI silently applied a 500ms threshold — so the gate was green on the machine that
+gates merges and red on every developer's machine, which is the worst of both worlds.
+
+**Second defect, found on the way.** The test timed a live HTTPS call to `api.pwnedpasswords.com` on each of
+its 100 iterations. A build gate whose verdict depends on the round-trip time from the developer's chair to
+Cloudflare is not a gate. Worse, the code behind it built a **new `reqwest::Client` per call** — discarding
+the connection pool and paying a fresh DNS + TCP + TLS handshake on *every password set in production*. Fixed
+in `hibp.rs`; the client is now built once and reused. That is a real latency win for every signup and
+password change, and it existed only because a latency test nobody could satisfy was being tolerated.
+
+**What we did NOT do: lower the cost factor.** The original §1 #10 offered "switch to cost 10 ONLY via FR
+amendment" as the escape hatch. This amendment explicitly closes that hatch. [OWASP's Password Storage Cheat
+Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html) sets bcrypt's
+minimum work factor at 10 and says it should be "as large as verification server performance will allow";
+OWASP now treats bcrypt itself as the legacy choice and recommends Argon2 for new systems, with 2026
+commentary pointing at work factors of 13-14. Dropping 12 → 10 would walk backwards to OWASP's floor to
+satisfy a budget that was miscalculated in the first place. **The SLO was wrong, not the hashing.**
+
+**The amended rule.** §1 #10 now budgets 200ms p95 for everything the endpoint does *besides* hashing.
+`create_subject_p95_overhead_under_200ms_above_hashing` enforces it by (a) serving HIBP from a local stub, so
+the number contains no internet, and (b) **calibrating bcrypt on the host at run time** and subtracting it,
+so the verdict is identical on a laptop, a CI runner and a prod cell. The hash cost is a feature we are
+choosing to pay for, not a regression to be detected.
+
+**Open question deliberately left open.** Whether to migrate from bcrypt to Argon2id, per OWASP's current
+recommendation for new systems. That is a security decision with a migration path attached (rehash-on-login),
+and it is not this amendment's business. Logged in §9.
+
+---
+
+*End of FR-AUTH-002. Status: draft (10/10 target). Amended A1 (2026-07-11).*

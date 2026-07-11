@@ -7,6 +7,7 @@ import { RichText } from "../../lib/richtext-view";
 import { Avatar } from "../../components/Avatar";
 import { Icon } from "../../components/icons";
 import { Attachment } from "../../components/Attachment";
+import { BlockedMessage } from "../../components/BlockedMessage";
 
 // One timeline entry: an optional day separator, the message row (gutter avatar/time, header, body or inline
 // editor, reactions strip, inline translation), the hover action bar (react / translate / thread / edit /
@@ -44,6 +45,7 @@ export function MessageRow({
   onDelete,
   onRetry,
   onLongPress,
+  onReport,
 }: {
   m: Message;
   showDay: boolean;
@@ -77,6 +79,9 @@ export function MessageRow({
   onRetry?: (m: Message) => void;
   /// Long-press (touch) or right-click opens the mobile action sheet for this message.
   onLongPress?: (m: Message) => void;
+  /// FR-CHAT-267 — open the report dialog for this message. Optional so a surface that has no reporting
+  /// path (the thread panel's preview row) can omit it rather than pass a no-op.
+  onReport?: (m: Message) => void;
 }) {
   // Long-press detection for touch: a ~500ms hold with little movement opens the action sheet.
   const lpTimer = useRef<number | null>(null);
@@ -204,6 +209,13 @@ export function MessageRow({
                 <span className="edit-hint">{t("message.editHint")}</span>
               </div>
             </div>
+          ) : m.blocked_sender ? (
+            /* FR-CHAT-268 §1 #5 — the sender is blocked and this is a group channel. The server already
+               withheld the body, the attachments and the reactions; there is nothing here to leak. The row
+               keeps its id and its position so the conversation around it still reads. */
+            <div className="m-body">
+              <BlockedMessage name={nameOf(m.sender_subject_id)} />
+            </div>
           ) : (
             <div className="m-body">
               {/* Body and attachments both render: files sent with a caption show the caption too. */}
@@ -261,7 +273,10 @@ export function MessageRow({
             <div className="translation muted">{t("message.translateUnavailable")}</div>
           )}
         </div>
-        {editingId !== m.id && !m.pending && !m.failed && (
+        {/* No action bar on a collapsed row: there is no content to react to, translate, thread or
+            report — the server never sent it. Reporting a blocked person still works from the member
+            list, which is where you have the person rather than the message. */}
+        {editingId !== m.id && !m.pending && !m.failed && !m.blocked_sender && (
           <div className="m-actions">
             {QUICK_REACTIONS.map((e) => (
               <button
@@ -325,6 +340,15 @@ export function MessageRow({
             {mine && (
               <button title={t("message.delete")} onClick={() => void onDelete(m)} type="button">
                 <Icon name="trash" size={15} />
+              </button>
+            )}
+            {/* FR-CHAT-267 §1 #10 — the message entry point. Shown only on other people's messages: the
+                server would accept a report of your own message, but offering it is noise, and the one thing
+                you actually want for your own message (delete) is already right there. Reporting a PERSON
+                lives in the member list, which is the other entry point. */}
+            {!mine && onReport && (
+              <button title={t("report.action")} onClick={() => onReport(m)} type="button">
+                <Icon name="flag" size={15} />
               </button>
             )}
           </div>

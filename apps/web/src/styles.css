@@ -647,3 +647,103 @@ button:focus-visible, .chan-row:focus-visible { outline: 2px solid var(--accent-
   .empty.big .only-narrow { position: absolute; top: 12px; left: 12px; }
   .empty.big { position: relative; }
 }
+
+/* FR-CHAT-267 — report dialog. Reuses .picker-bg / .picker (the shared modal shell) and .confirm-actions
+   (the shared button row), so it inherits the app's existing focus ring, backdrop and motion. Only the
+   report-specific interior is new. */
+.report-box { max-width: 24rem; padding: 1rem 1.1rem 0.9rem; }
+.report-head { margin-bottom: 0.6rem; }
+.report-title { font-size: 1rem; font-weight: 600; margin: 0 0 0.15rem; }
+.report-sub { font-size: 0.82rem; margin: 0; }
+
+.report-reasons { border: 0; margin: 0 0 0.7rem; padding: 0; }
+.report-reasons legend { font-size: 0.8rem; font-weight: 600; padding: 0 0 0.35rem; }
+.report-reason {
+  align-items: center;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  display: flex;
+  font-size: 0.86rem;
+  gap: 0.5rem;
+  padding: 0.28rem 0.35rem;
+}
+.report-reason:hover { background: var(--hover, rgba(127, 127, 127, 0.12)); }
+/* The radio keeps its native focus ring: a custom control here would have to re-earn the keyboard
+   behaviour the browser already gives us for free, and §1 #11 is not negotiable. */
+.report-reason input { margin: 0; }
+
+.report-detail { display: block; margin-bottom: 0.55rem; }
+.report-detail span { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.3rem; }
+.report-detail textarea {
+  border-radius: 0.45rem;
+  font: inherit;
+  font-size: 0.86rem;
+  padding: 0.45rem 0.55rem;
+  resize: vertical;
+  width: 100%;
+}
+
+.report-privacy { font-size: 0.78rem; line-height: 1.35; margin: 0 0 0.6rem; }
+.report-error { color: var(--danger, #d64545); font-size: 0.82rem; margin: 0 0 0.5rem; }
+
+/* FR-CHAT-268 — the collapsed row shown where a blocked person posted in a group channel. Deliberately
+   quiet: it should read as a seam in the conversation, not as an accusation. */
+.blocked-msg {
+  align-items: baseline;
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.86rem;
+  font-style: italic;
+  padding: 0.15rem 0;
+}
+.blocked-msg-text { font-style: italic; }
+
+/* FR-CHAT-269 — the moderation queue. Two panes: the list, and the selected report. */
+.moderation { display: flex; flex-direction: column; height: 100%; padding: 1rem 1.25rem; }
+.mod-head { align-items: center; display: flex; justify-content: space-between; margin-bottom: 0.75rem; }
+.mod-head-right { align-items: center; display: flex; gap: 0.75rem; }
+.mod-title { font-size: 1.15rem; margin: 0; }
+.mod-body { display: grid; gap: 1rem; grid-template-columns: minmax(14rem, 22rem) 1fr; min-height: 0; }
+.mod-queue { display: flex; flex-direction: column; gap: 0.3rem; overflow-y: auto; }
+.mod-detail { overflow-y: auto; padding-right: 0.5rem; }
+.mod-h2 { font-size: 0.9rem; margin: 0.9rem 0 0.35rem; }
+.mod-meta { display: flex; flex-wrap: wrap; font-size: 0.82rem; gap: 0.75rem; }
+
+/* The snapshot and the reviewer's note are attacker-controlled strings (§1 #20). They render as TEXT —
+   React escapes them. No markdown renderer, no dangerouslySetInnerHTML, deliberately. */
+.mod-snapshot,
+.mod-detail-text {
+  border-left: 3px solid var(--border, #3a3a3a);
+  margin: 0;
+  padding: 0.4rem 0.7rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.mod-detail-text { font-size: 0.86rem; font-style: italic; }
+.mod-original { font-size: 0.82rem; margin: 0.35rem 0 0; }
+.mod-original.gone { color: var(--danger, #d64545); font-weight: 600; }
+.mod-context { list-style: none; margin: 0; padding: 0; }
+.mod-context li { display: flex; font-size: 0.86rem; gap: 0.5rem; padding: 0.2rem 0; }
+.mod-ctx-who { flex: 0 0 auto; font-weight: 600; opacity: 0.75; }
+.mod-ctx-body { word-break: break-word; }
+.mod-note { display: block; margin: 0.9rem 0 0.5rem; }
+.mod-note span { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem; }
+.mod-note textarea { border-radius: 0.45rem; font: inherit; font-size: 0.86rem; padding: 0.4rem 0.55rem; resize: vertical; width: 100%; }
+
+.report-card {
+  align-items: center; background: none; border: 1px solid transparent; border-radius: 0.5rem;
+  cursor: pointer; display: flex; gap: 0.6rem; padding: 0.5rem 0.6rem; text-align: left; width: 100%;
+}
+.report-card:hover { background: var(--hover, rgba(127,127,127,0.12)); }
+.report-card.on { background: var(--hover, rgba(127,127,127,0.18)); border-color: var(--border, #3a3a3a); }
+.report-card-main { display: flex; flex-direction: column; flex: 1 1 auto; gap: 0.1rem; min-width: 0; }
+.report-card-reasons { font-size: 0.88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.report-card-meta { font-size: 0.78rem; }
+.report-card-count { border-radius: 999px; font-size: 0.75rem; font-weight: 600; padding: 0.05rem 0.4rem; background: var(--hover, rgba(127,127,127,0.2)); }
+
+/* Severity is the primary sort key (§1 #5): a self_harm report must never be visually lost in spam. */
+.sev-dot { border-radius: 50%; flex: 0 0 auto; height: 0.5rem; width: 0.5rem; }
+.sev-critical { background: #e5484d; }
+.sev-high { background: #f76b15; }
+.sev-medium { background: #f5d90a; }
+.sev-low { background: #8b8b8b; }

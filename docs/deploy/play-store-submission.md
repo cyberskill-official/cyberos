@@ -108,6 +108,36 @@ Data is not shared with any third party for Play's purposes: Google (identity), 
 Supabase (database) are service providers processing on our behalf, which Play explicitly excludes
 from "sharing".
 
+### The AI feature, and why it is still not "sharing"
+
+This needs its own paragraph, because it is the one place the app hands message text to a party that is
+**not** our service provider, and getting it wrong is an under-declaration.
+
+CyberOS ships AI features (channel summary, action extraction, reply suggestions) in the same
+`apps/web` bundle that Capacitor wraps as the Android app, so they are in scope for this declaration.
+Today an employee supplies **their own API key** for an external model provider. That means the provider
+is *the user's*, not ours - so the **service-provider exemption does not apply to it**. Do not rely on it.
+
+What does apply is Play's **user-initiated transfer** exemption: data sent to a third party because of a
+specific action the user took, where the user reasonably expects the data to be sent. Every AI call in
+CyberOS is exactly that:
+
+- `AiPanel` is mounted only when the user opens it (`aiOpen &&` in `pages/Chat.tsx`); it is not rendered,
+  and sends nothing, until then.
+- `suggestReplies()` is bound to the composer's sparkle button (`onSuggestReplies`).
+- There is **no** background, on-open, or scheduled AI call anywhere in the client.
+
+So: **shared = No** is correct, and the published privacy policy already discloses the transfer ("the text
+you send to it is passed to the model provider that serves that feature").
+
+**This is a live constraint on the codebase, not a one-off answer.** The exemption holds *only* while every
+AI call is user-initiated. The moment anything auto-summarises a channel on open, pre-fetches suggestions in
+the background, or runs AI on a schedule, message text leaves the device without a user action - and
+"Other in-app messages" must be re-declared with `shared = Yes`, which changes the store listing. If you add
+a background AI path, change this form in the same PR.
+
+(A future self-hosted model removes the question entirely: nothing leaves our infrastructure.)
+
 ### Government apps / Financial features / Health
 
 **No** to all three.

@@ -21,6 +21,8 @@ import { Lightbox } from "../components/Lightbox";
 import { CallOverlay } from "../components/CallOverlay";
 import { useCall } from "../lib/call";
 import { ProfileEditor } from "../components/ProfileEditor";
+import { ReportDialog } from "../components/ReportDialog";
+import type { ReportTarget } from "../components/ReportDialog";
 import { useChatSocket } from "./chat/useChatSocket";
 import { useNotifySocket } from "./chat/useNotifySocket";
 import { Sidebar } from "./chat/Sidebar";
@@ -35,6 +37,18 @@ const FALLBACK_MAX_ATTACH_FILES = 10;
 
 export function Chat() {
   const { token, email } = useAuth();
+  // FR-CHAT-267. `reportTarget` is the open dialog's subject; `reportSent` drives the confirmation
+  // toast. Nothing about the report itself is held: there is no reporter-visible report state (§1 #14).
+  const [reportTarget, setReportTarget] = useState<ReportTarget | null>(null);
+  const [reportSent, setReportSent] = useState(false);
+  // The confirmation is non-blocking and self-clearing: there is nothing to undo (a report is not a
+  // destructive act on the reporter's side) and nothing to act on, so unlike the delete toast it carries no
+  // button and just fades.
+  useEffect(() => {
+    if (!reportSent) return;
+    const id = window.setTimeout(() => setReportSent(false), 4000);
+    return () => window.clearTimeout(id);
+  }, [reportSent]);
   const me = useMemo(() => {
     const c = token ? decodeJwt(token) : null;
     return c && typeof c.sub === "string" ? c.sub : "";
@@ -1491,6 +1505,7 @@ export function Chat() {
                   onDelete={deleteMessage}
                   onRetry={retrySend}
                   onLongPress={(m) => setSheetFor(m)}
+                  onReport={(m) => setReportTarget({ kind: "message", id: m.id })}
                 />
 
                 <div className="typing" aria-live="polite">
@@ -1615,6 +1630,23 @@ export function Chat() {
             setEmojiFor(null);
           }}
         />
+      )}
+
+      {reportTarget && token && (
+        <ReportDialog
+          token={token}
+          target={reportTarget}
+          onClose={() => setReportTarget(null)}
+          onSent={() => setReportSent(true)}
+        />
+      )}
+
+      {/* §1 #14 — a non-blocking confirmation and nothing more. No id, no status, no history. */}
+      {reportSent && (
+        <div className="toast" role="status" aria-live="polite">
+          <span className="toast-msg">{t("report.sent")}</span>
+          <span className="toast-bar" aria-hidden="true" />
+        </div>
       )}
 
       {pendingDelete && (

@@ -42,6 +42,10 @@ pub enum ChatEvent {
     },
     MessageEdited {
         id: Uuid,
+        /// FR-CHAT-268 — who wrote it. Added because without it this frame was a hole in the block: a
+        /// blocked person edits a message and their new text lands on the blocker's socket, since the
+        /// subscriber had no way to tell whose edit it was. Additive on the wire; older clients ignore it.
+        sender: Uuid,
         body: String,
         edited_at: Option<chrono::DateTime<chrono::Utc>>,
     },
@@ -186,6 +190,17 @@ async fn ws_loop(
     channel: Uuid,
     me: Uuid,
 ) {
+    // FR-CHAT-268 — the channel's kind decides DROP (direct) vs COLLAPSE (group) for a blocked sender's
+    // frame. Resolved once at connect: it cannot change for the life of a channel.
+    let is_dm = {
+        let k: Result<Option<(String,)>, _> =
+            sqlx::query_as("SELECT kind FROM chat_channels WHERE id = $1")
+                .bind(channel)
+                .fetch_optional(&st.pool)
+                .await;
+        matches!(k, Ok(Some((ref kind,))) if kind == "direct")
+    };
+
     if st.presence.join(channel, me) {
         st.hub.publish(
             channel,
@@ -208,7 +223,50 @@ async fn ws_loop(
         tokio::select! {
             event = rx.recv() => {
                 match event {
-                    Ok(ev) => {
+                    Ok(mut ev) => {
+                        // ───── FR-CHAT-268 enforcement point 2 of 4: the realtime socket (§1 #4) ─────
+                        // The check CANNOT live at the publish site: the per-channel broadcast is
+                        // one-to-many and the sender has no idea who has blocked them. It lives HERE, at
+                        // each subscriber, where `me` is known. Served off the in-process cache, so a frame
+                        // costs no query — and the cache is invalidated synchronously by block/unblock, so
+                        // an already-open tab stops receiving the moment the block lands (§10 row 5).
+                        let blocked = crate::blocks::blocked_by(&st, tenant, me).await;
+                        if !blocked.is_empty() {
+                            match &mut ev {
+                                ChatEvent::Message(m) if blocked.contains(&m.sender_subject_id) => {
+                                    if is_dm {
+                                        continue; // §1 #6 — no frame at all
+                                    }
+                                    // §1 #5 — collapse in place; the row keeps its id and position.
+                                    m.body = String::new();
+                                    m.attachments.clear();
+                                    m.reactions.clear();
+                                    m.blocked_sender = true;
+                                }
+                                // An edit by a blocked sender would otherwise push their new text straight
+                                // onto the blocker's socket.
+                                ChatEvent::MessageEdited { sender, .. }
+                                    if blocked.contains(sender) =>
+                                {
+                                    continue
+                                }
+                                // §1 #9 — a blocked person's reaction is not shown to the blocker.
+                                ChatEvent::ReactionChanged { subject, .. }
+                                    if blocked.contains(subject) =>
+                                {
+                                    continue
+                                }
+                                // Presence and typing from a blocked person are noise, not content, but they
+                                // still announce the person. Suppress them too.
+                                ChatEvent::Presence { subject, .. } | ChatEvent::Typing { subject }
+                                    if blocked.contains(subject) =>
+                                {
+                                    continue
+                                }
+                                _ => {}
+                            }
+                        }
+
                         // A signal is private to its addressed subject; presence and typing are not
                         // echoed back to their own originator.
                         match &ev {

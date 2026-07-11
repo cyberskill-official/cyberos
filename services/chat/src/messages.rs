@@ -35,9 +35,19 @@ pub struct Message {
     /// can show a "N replies" chip on the parent without opening the thread; other paths return 0.
     #[serde(default)]
     pub reply_count: i64,
+    /// FR-CHAT-268 §1 #5 — the caller has blocked this message's sender, and this is a GROUP channel: the row
+    /// survives (its id and its position in the conversation), the content does not. Never true in a DM,
+    /// because a blocked sender's DM messages are not returned at all (§1 #6).
+    ///
+    /// `skip_serializing_if` keeps the field ABSENT from the wire for every normal reader, so the shape for
+    /// the 99.99% case is unchanged and no existing client parser has to learn a new field. A client that
+    /// does not know about blocking sees what it always saw — an empty body — and renders an empty row
+    /// rather than crashing.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub blocked_sender: bool,
 }
 
-type MessageRow = (
+pub(crate) type MessageRow = (
     Uuid,
     Uuid,
     Uuid,
@@ -50,10 +60,10 @@ type MessageRow = (
     Option<Uuid>,
 );
 
-const COLS: &str =
+pub(crate) const COLS: &str =
     "id, tenant_id, channel_id, sender_subject_id, body, created_at, parent_id, edited_at, deleted_at, attachment_id";
 
-fn to_message(r: MessageRow) -> Message {
+pub(crate) fn to_message(r: MessageRow) -> Message {
     Message {
         id: r.0,
         tenant_id: r.1,
@@ -68,6 +78,7 @@ fn to_message(r: MessageRow) -> Message {
         reactions: Vec::new(),
         attachments: Vec::new(),
         reply_count: 0,
+        blocked_sender: false,
     }
 }
 
@@ -357,7 +368,22 @@ pub async fn list(
         .subject_id()
         .map_err(|e| (StatusCode::UNAUTHORIZED, e.to_string()))?;
     let limit = q.limit.unwrap_or(50).clamp(1, 200);
-    let before = q.before.unwrap_or_else(chrono::Utc::now);
+    // The paging cursor, or None for "the newest page".
+    //
+    // Deliberately NOT `q.before.unwrap_or_else(chrono::Utc::now)`. That defaulted the cursor to the APP
+    // server's wall clock and compared it against `created_at`, which POSTGRES generates with ITS clock
+    // (`DEFAULT now()`). The two clocks are not the same clock. If the database runs even milliseconds
+    // ahead — trivially true on a Docker Desktop VM, and possible on any separately-NTP'd host — then
+    // `created_at < before` is false for the most recently written rows and they silently vanish from the
+    // first page. A message you just sent is missing until you refresh.
+    //
+    // The SQL below now says `created_at < COALESCE($2, now())`, so when there is no cursor Postgres
+    // supplies its own `now()` and the comparison is against the clock that wrote the row. Skew becomes
+    // impossible by construction rather than merely unlikely.
+    //
+    // Found by FR-CHAT-268's `unblock_restores_in_place`, which writes a message and lists it with no
+    // intervening round-trip. It is a pre-existing bug in `list`, not a blocking bug.
+    let before: Option<chrono::DateTime<chrono::Utc>> = q.before;
 
     let mut tx = db::tenant_tx(&st.pool, &tenant)
         .await
@@ -417,7 +443,8 @@ pub async fn list(
     } else if let Some(pid) = q.parent_id {
         let sql = format!(
             "SELECT {COLS} FROM chat_messages
-             WHERE channel_id = $1 AND created_at < $2 AND deleted_at IS NULL AND parent_id = $3
+             WHERE channel_id = $1 AND created_at < COALESCE($2::timestamptz, now())
+               AND deleted_at IS NULL AND parent_id = $3
              ORDER BY created_at DESC LIMIT $4"
         );
         sqlx::query_as(&sql)
@@ -430,7 +457,8 @@ pub async fn list(
     } else {
         let sql = format!(
             "SELECT {COLS} FROM chat_messages
-             WHERE channel_id = $1 AND created_at < $2 AND deleted_at IS NULL AND parent_id IS NULL
+             WHERE channel_id = $1 AND created_at < COALESCE($2::timestamptz, now())
+               AND deleted_at IS NULL AND parent_id IS NULL
              ORDER BY created_at DESC LIMIT $3"
         );
         sqlx::query_as(&sql)
@@ -442,18 +470,48 @@ pub async fn list(
     }
     .map_err(crate::internal)?;
 
+    // ───────────────────────── FR-CHAT-268 enforcement point 1 of 4: the message list (§1 #4) ────────
+    // The blocked-set is read ONCE per request (memoised in AppState) and threaded through — never queried
+    // per message. This is the hot path; an N+1 here would be the most expensive thing in the service.
+    let blocked = crate::blocks::blocked_by(&st, tenant, subject).await;
+    let is_dm = {
+        let k: Option<(String,)> = sqlx::query_as("SELECT kind FROM chat_channels WHERE id = $1")
+            .bind(channel)
+            .fetch_optional(&mut *tx)
+            .await
+            .map_err(crate::internal)?;
+        k.map(|r| r.0).unwrap_or_else(|| "group".to_string()) == "direct"
+    };
+
     // Fold reactions onto the returned messages in one extra query (least-invasive: post/edit/search are
     // untouched and still return `reactions: []`). The caller's own reactions are flagged via `subject`.
     let mut out: Vec<Message> = rows.into_iter().map(to_message).collect();
+
+    // §1 #6 — in a DM, a blocked sender's messages are not returned AT ALL: not collapsed, not flagged, not
+    // present. In a group channel a collapsed row is context (it explains a gap in a conversation you are
+    // still part of); in a DM there is no conversation left to contextualise, and a column of placeholders
+    // is not information — it is a drip-feed of the harassment you asked to stop.
+    //
+    // Dropped BEFORE `ids` is taken, so the reaction / attachment / reply-count folds below never even see
+    // these rows.
+    if is_dm && !blocked.is_empty() {
+        out.retain(|m| !blocked.contains(&m.sender_subject_id));
+    }
+
     let ids: Vec<Uuid> = out.iter().map(|m| m.id).collect();
     if !ids.is_empty() {
-        let react_rows: Vec<(Uuid, Uuid, String)> = sqlx::query_as(
+        let mut react_rows: Vec<(Uuid, Uuid, String)> = sqlx::query_as(
             "SELECT message_id, subject_id, emoji FROM chat_reactions WHERE message_id = ANY($1)",
         )
         .bind(&ids)
         .fetch_all(&mut *tx)
         .await
         .map_err(crate::internal)?;
+        // §1 #9 / AC 10 — a blocked person's reaction is not counted for the blocker. Filtered on the RAW
+        // rows, by reactor id, before the fold: `ReactionSummary` keeps only an emoji + a count, so once
+        // summarize() has run the reactor is gone and there is nothing left to filter on. Getting this wrong
+        // leaks the blocked person's existence through an off-by-one count.
+        react_rows.retain(|(_, reactor, _)| !blocked.contains(reactor));
         let mut by_message = crate::reactions::summarize(&react_rows, subject);
         for m in &mut out {
             if let Some(r) = by_message.remove(&m.id) {
@@ -487,6 +545,23 @@ pub async fn list(
             }
         }
     }
+
+    // §1 #5 — the group-channel collapse. Runs LAST, after every fold above, because the reaction and
+    // attachment folds would otherwise re-populate exactly what we are clearing. The row keeps its id and
+    // its position; the content goes. Removing the row outright would silently rewrite the channel's history
+    // for one participant — replies to a vanished message become nonsense — and leave the blocker more
+    // confused than protected.
+    if !is_dm && !blocked.is_empty() {
+        for m in out.iter_mut() {
+            if blocked.contains(&m.sender_subject_id) {
+                m.body = String::new();
+                m.attachments.clear();
+                m.reactions.clear();
+                m.blocked_sender = true;
+            }
+        }
+    }
+
     let _ = tx.commit().await;
 
     Ok(Json(out))
@@ -544,6 +619,7 @@ pub async fn edit(
                 channel,
                 crate::realtime::ChatEvent::MessageEdited {
                     id: m.id,
+                    sender: m.sender_subject_id,
                     body: m.body.clone(),
                     edited_at: m.edited_at,
                 },

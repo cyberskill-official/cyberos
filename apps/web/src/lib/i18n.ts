@@ -44,7 +44,7 @@ type Entry = { en: string; vi: string };
 
 // The catalog. Grouped by surface; keep keys stable once shipped (they are the contract between components
 // and translations). {var} placeholders are substituted by t().
-const C: Record<string, Entry> = {
+const C = {
   // brand
   "brand.slogan": { en: "Turn Your Will Into Real", vi: "Hiện Thực Hoá Ý Chí" },
 
@@ -285,6 +285,107 @@ const C: Record<string, Entry> = {
   "role.owner": { en: "Owner", vi: "Chủ kênh" },
   "role.admin": { en: "Admin", vi: "Quản trị" },
   "role.member": { en: "Member", vi: "Thành viên" },
+  // report (FR-CHAT-267). Every string the report dialog renders ships in both locales: a Vietnamese-speaking
+  // employee reporting harassment in English is a failure of the product, not of the employee (§1 #12).
+  "report.title": { en: "Report", vi: "Báo cáo" },
+  "report.subtitleMessage": {
+    en: "Report this message to your workspace administrator.",
+    vi: "Báo cáo tin nhắn này tới quản trị viên không gian làm việc.",
+  },
+  "report.subtitleAttachment": {
+    en: "Report this file to your workspace administrator.",
+    vi: "Báo cáo tệp này tới quản trị viên không gian làm việc.",
+  },
+  "report.subtitleSubject": {
+    en: "Report this person to your workspace administrator.",
+    vi: "Báo cáo người này tới quản trị viên không gian làm việc.",
+  },
+  "report.reasonLegend": { en: "Why are you reporting this?", vi: "Vì sao bạn báo cáo?" },
+  "report.reason.harassment": { en: "Harassment or bullying", vi: "Quấy rối hoặc bắt nạt" },
+  "report.reason.hate": { en: "Hate speech", vi: "Ngôn từ thù ghét" },
+  "report.reason.sexual": { en: "Sexual content", vi: "Nội dung tình dục" },
+  "report.reason.violence": { en: "Violence or threats", vi: "Bạo lực hoặc đe dọa" },
+  "report.reason.self_harm": { en: "Self-harm or suicide", vi: "Tự làm hại bản thân hoặc tự tử" },
+  "report.reason.illegal": { en: "Illegal activity", vi: "Hoạt động bất hợp pháp" },
+  "report.reason.spam": { en: "Spam", vi: "Spam" },
+  "report.reason.other": { en: "Something else", vi: "Lý do khác" },
+  "report.detailLabel": { en: "Anything else? (optional)", vi: "Bạn muốn nói thêm? (không bắt buộc)" },
+  "report.detailPlaceholder": {
+    en: "Add context that would help an administrator.",
+    vi: "Thêm bối cảnh giúp quản trị viên hiểu rõ hơn.",
+  },
+  "report.submit": { en: "Send report", vi: "Gửi báo cáo" },
+  "report.submitting": { en: "Sending…", vi: "Đang gửi…" },
+  "report.sent": { en: "Report sent. Thank you.", vi: "Đã gửi báo cáo. Cảm ơn bạn." },
+  "report.failed": { en: "Could not send the report. Try again.", vi: "Không gửi được báo cáo. Vui lòng thử lại." },
+  // The reporter is told, plainly, that the reported person is not notified (§1 #5). People do not report
+  // harassment if they think the person will find out.
+  "report.privacyNote": {
+    en: "Your report is private. The person you report is not told who reported them.",
+    vi: "Báo cáo của bạn được giữ kín. Người bị báo cáo không biết ai đã báo cáo họ.",
+  },
+  "report.action": { en: "Report", vi: "Báo cáo" },
+  "report.reportPerson": { en: "Report this person", vi: "Báo cáo người này" },
+
+  // moderation (FR-CHAT-269)
+  "mod.title": { en: "Moderation", vi: "Kiểm duyệt" },
+  "mod.empty": { en: "Nothing to review.", vi: "Không có gì cần xem xét." },
+  "mod.reportCount": { en: "{n} report(s)", vi: "{n} báo cáo" },
+  "mod.reportedBy": { en: "Reported by {name}", vi: "Được báo cáo bởi {name}" },
+  "mod.evidence": { en: "What was reported", vi: "Nội dung bị báo cáo" },
+  // §1 #7 — the difference between these two sentences IS evidence.
+  "mod.originalPresent": { en: "The original is still posted.", vi: "Nội dung gốc vẫn còn." },
+  "mod.originalGone": {
+    en: "The sender has since removed the original.",
+    vi: "Người gửi đã xóa nội dung gốc sau đó.",
+  },
+  "mod.context": { en: "Context", vi: "Bối cảnh" },
+  "mod.noContext": { en: "No surrounding context.", vi: "Không có bối cảnh xung quanh." },
+  // Say WHY, plainly. A silent empty panel invites someone to "fix" it by fetching the DM thread — the one
+  // thing this FR exists to prevent (§1 #9).
+  "mod.noContextDm": {
+    en: "Only the reported message is shown. Direct messages are not disclosed, and a private channel you are not in is not shown.",
+    vi: "Chỉ hiển thị tin nhắn bị báo cáo. Tin nhắn riêng không được tiết lộ, và kênh riêng tư bạn không tham gia sẽ không hiện ra.",
+  },
+  "mod.note": { en: "Note (optional)", vi: "Ghi chú (không bắt buộc)" },
+  "mod.notePlaceholder": { en: "Why you decided this.", vi: "Lý do bạn quyết định như vậy." },
+  "mod.dismiss": { en: "Dismiss", vi: "Bỏ qua" },
+  "mod.deleteMessage": { en: "Delete message", vi: "Xóa tin nhắn" },
+  // §1 #14 — the label says CHANNEL, because that is what it does. A button that read "Remove member" and
+  // removed someone from the organisation would be a very expensive ambiguity.
+  "mod.removeMember": { en: "Remove from channel", vi: "Xóa khỏi kênh" },
+  "mod.resolved": { en: "Resolved.", vi: "Đã xử lý." },
+  "mod.failed": { en: "Something went wrong. Try again.", vi: "Đã có lỗi. Vui lòng thử lại." },
+  "mod.contentPolicy": { en: "Content policy", vi: "Chính sách nội dung" },
+  "mod.severity": { en: "Severity", vi: "Mức độ" },
+  "top.moderation": { en: "Moderation", vi: "Kiểm duyệt" },
+
+  // blocking (FR-CHAT-268)
+  "blocked.hidden": {
+    en: "Message from {name}, who you blocked.",
+    vi: "Tin nhắn từ {name}, người bạn đã chặn.",
+  },
+  "blocked.revealed": {
+    en: "{name} posted here. The content was not delivered to you.",
+    vi: "{name} đã đăng ở đây. Nội dung không được gửi tới bạn.",
+  },
+  "blocked.showAnyway": { en: "Show anyway", vi: "Vẫn hiện" },
+  "blocked.block": { en: "Block", vi: "Chặn" },
+  "blocked.unblock": { en: "Unblock", vi: "Bỏ chặn" },
+  "blocked.blockPerson": { en: "Block this person", vi: "Chặn người này" },
+  "blocked.unblockPerson": { en: "Unblock this person", vi: "Bỏ chặn người này" },
+  // The confirm copy states plainly what a block does AND what it does not do. "They are not told" is the
+  // sentence that decides whether someone actually uses the feature (§2).
+  "blocked.confirmBlock": {
+    en: "Block {name}? You will stop seeing their messages, and they will not be told. You can undo this at any time.",
+    vi: "Chặn {name}? Bạn sẽ không thấy tin nhắn của họ nữa, và họ không được thông báo. Bạn có thể bỏ chặn bất cứ lúc nào.",
+  },
+  "blocked.confirmUnblock": {
+    en: "Unblock {name}? Their messages, including any sent while blocked, will become visible again.",
+    vi: "Bỏ chặn {name}? Tin nhắn của họ, kể cả tin đã gửi trong lúc bị chặn, sẽ hiện lại.",
+  },
+  "blocked.failed": { en: "Could not update the block. Try again.", vi: "Không cập nhật được. Vui lòng thử lại." },
+
   "confirm.title": { en: "Please confirm", vi: "Vui lòng xác nhận" },
   "sheet.title": { en: "Message actions", vi: "Tùy chọn tin nhắn" },
   "a11y.channelsNav": { en: "Channels and direct messages", vi: "Kênh và tin nhắn trực tiếp" },
@@ -345,11 +446,24 @@ const C: Record<string, Entry> = {
   "emoji.loadFailed": { en: "Emoji data failed to load.", vi: "Không tải được dữ liệu emoji." },
   "emoji.noMatch": { en: 'No emoji match "{q}"', vi: 'Không có emoji nào khớp "{q}"' },
   "emoji.frequent": { en: "Frequently used", vi: "Hay dùng" },
-};
+} satisfies Record<string, Entry>;
 
 /// Translate a key, substituting {var} placeholders. Unknown keys render as the key itself (visible, safe).
+// Every key the catalog actually defines. Exported so a surface can prove, at COMPILE time, that each string
+// it renders exists — see REPORT_DIALOG_KEYS in components/ReportDialog.tsx, which is declared
+// `satisfies readonly CatalogKey[]`. Because an Entry is `{ en; vi }`, a key that type-checks necessarily
+// carries BOTH locales: FR-CHAT-267 §1 #12 is then enforced by `tsc --noEmit`, not by a convention someone
+// has to remember. A missing key is a build failure, not a string that silently renders as its own name.
+export type CatalogKey = keyof typeof C;
+
 export function t(key: string, vars?: Record<string, string | number>): string {
-  const e = C[key];
+  // `t` stays permissive on purpose: it takes any string and renders an unknown key as itself, so a missed
+  // entry shows up in the UI rather than crashing. The cast is what lets that coexist with C's INFERRED
+  // literal keys — and those literal keys are the whole point, because they are what makes CatalogKey a real
+  // compile-time check. Re-annotating C as `Record<string, Entry>` would restore the index signature and
+  // silently destroy that check (it renders CatalogKey = string, and nothing fails). Verified by removing a
+  // key and watching tsc go red; do not "simplify" this back.
+  const e = (C as Record<string, Entry>)[key];
   let s = e ? e[LANG] : key;
   if (vars) {
     for (const [k, v] of Object.entries(vars)) s = s.split(`{${k}}`).join(String(v));

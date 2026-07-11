@@ -190,6 +190,45 @@ pub async fn acs(
         .or_else(|| extract_saml_attribute(&xml, "Email"))
         .or_else(|| extract_saml_attribute(&xml, "mail"));
 
+    // FR-AUTH-111 §1 #6 — SAML carried the identical defect (it bound the email into display_name too), so
+    // it is fixed in the same change with the same chain. Fixing one door and not the other guarantees the
+    // bug is rediscovered through the other.
+    //
+    // SAML has no single agreed spelling for these, so map the common ones onto the OIDC claim shape and let
+    // ONE resolver decide. The IdP-specific spellings live here; the policy lives in display_name.rs.
+    // `http://schemas.xmlsoap.org/...` are the AD FS / Entra names; the bare ones are what most others emit.
+    let saml_profile = crate::display_name::Profile {
+        name: extract_saml_attribute(&xml, "displayName")
+            .or_else(|| extract_saml_attribute(&xml, "display_name"))
+            .or_else(|| extract_saml_attribute(&xml, "cn"))
+            .or_else(|| {
+                extract_saml_attribute(
+                    &xml,
+                    "http://schemas.microsoft.com/identity/claims/displayname",
+                )
+            }),
+        given_name: extract_saml_attribute(&xml, "givenName").or_else(|| {
+            extract_saml_attribute(
+                &xml,
+                "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname",
+            )
+        }),
+        family_name: extract_saml_attribute(&xml, "sn")
+            .or_else(|| extract_saml_attribute(&xml, "surname"))
+            .or_else(|| {
+                extract_saml_attribute(
+                    &xml,
+                    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname",
+                )
+            }),
+        preferred_username: extract_saml_attribute(&xml, "uid")
+            .or_else(|| extract_saml_attribute(&xml, "preferred_username")),
+    };
+    let (name_rung, saml_display_name) =
+        crate::display_name::resolve(&saml_profile, email_attr.as_deref());
+    // The rung, never the name (§1 #8).
+    tracing::debug!(target: "cyberos_auth::saml", rung = name_rung, "resolved display_name");
+
     // Look up the AuthnRequest we issued.
     let mut tx = state.pg.begin().await.map_err(internal)?;
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
@@ -315,8 +354,18 @@ pub async fn acs(
         email_attr.as_deref(),
         auto_provision,
         &default_roles,
+        &saml_display_name,
     )
     .await?;
+
+    // FR-AUTH-111 §1 #4 + #5 — same repair as OIDC, on every path, for the same reason: the existing-link
+    // fast path returns before any INSERT, so a rule living in the upsert would never reach an already
+    // provisioned person. A failed heal must not fail the login.
+    if let Err(e) =
+        crate::display_name::heal(&state.pg, tenant_id, subject_id, &saml_display_name).await
+    {
+        tracing::warn!(target: "cyberos_auth::saml", error = %e, "display_name heal failed; login proceeds");
+    }
 
     // Audit success.
     let _ = sqlx::query(
@@ -569,6 +618,9 @@ fn html_escape(s: &str) -> String {
     xml_escape(s).replace('\'', "&#39;")
 }
 
+// FR-AUTH-111: `display_name` is resolved by the caller from the assertion's name attributes, via the one
+// shared chain in display_name.rs. Passed in rather than derived here, so OIDC and SAML cannot drift.
+#[allow(clippy::too_many_arguments)]
 async fn resolve_subject(
     state: &AppState,
     tenant_id: Uuid,
@@ -577,6 +629,7 @@ async fn resolve_subject(
     email: Option<&str>,
     auto_provision: bool,
     default_roles: &[String],
+    display_name: &str,
 ) -> Result<Uuid, (StatusCode, Json<Value>)> {
     // Existing link?
     let mut tx = state.pg.begin().await.map_err(internal)?;
@@ -630,6 +683,13 @@ async fn resolve_subject(
         .execute(&mut *tx)
         .await
         .map_err(internal)?;
+    // FR-AUTH-111 — was `email.unwrap_or("")`. Same bug as OIDC, same fix, one resolver (§1 #6). The
+    // ON CONFLICT path deliberately does not touch display_name; `display_name::heal` owns that rule.
+    let jit_display_name = if display_name.trim().is_empty() {
+        handle.as_str()
+    } else {
+        display_name
+    };
     let row: (Uuid,) = sqlx::query_as(
         "INSERT INTO subjects (tenant_id, handle, display_name, email, kind, status, roles)
               VALUES ($1, $2, $3, $4, 'human', 'active', $5)
@@ -640,7 +700,7 @@ async fn resolve_subject(
     )
     .bind(tenant_id)
     .bind(&handle)
-    .bind(email.unwrap_or(""))
+    .bind(jit_display_name)
     .bind(email)
     .bind(default_roles)
     .fetch_one(&mut *tx)

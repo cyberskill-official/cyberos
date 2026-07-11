@@ -7,18 +7,21 @@ pub mod attachments;
 pub mod audit;
 pub mod auditlog;
 pub mod auth;
+pub mod blocks;
 pub mod capture;
 pub mod channels;
 pub mod db;
 pub mod devices;
 pub mod members;
 pub mod messages;
+pub mod moderation;
 pub mod notify;
 pub mod prefs;
 pub mod push;
 pub mod reactions;
 pub mod read;
 pub mod realtime;
+pub mod reports;
 pub mod storage;
 pub mod translate;
 
@@ -50,6 +53,9 @@ pub struct AppState {
     pub notifier: notify::Notifier,
     /// Attachment byte-store backend + limits (richer-messages cluster). See storage.rs.
     pub attachments: storage::AttachmentConfig,
+    /// FR-CHAT-268 — memoised blocker -> blocked-set, invalidated on every block/unblock. Read by all
+    /// four enforcement points; the realtime one needs it per-frame, so it must not hit the DB.
+    pub blocks: blocks::BlockCache,
 }
 
 /// Map any error to a 500 carrying its text.
@@ -99,6 +105,23 @@ pub fn router(state: AppState) -> Router {
             axum::routing::delete(reactions::remove),
         )
         .route("/v1/chat/translate", post(translate::translate))
+        // FR-CHAT-267. Deliberately tenant-wide, not nested under a channel: a report can target a person
+        // with whom the reporter shares no channel (§1 #3 - the DM harassment path).
+        .route("/v1/chat/reports", post(reports::create))
+        // FR-CHAT-268. Tenant-wide like reports: you can block someone you share no channel with.
+        .route("/v1/chat/blocks", post(blocks::block).get(blocks::list))
+        .route(
+            "/v1/chat/blocks/:subject_id",
+            axum::routing::delete(blocks::unblock),
+        )
+        // FR-CHAT-269 — the moderation queue. Every one of these is gated on a WORKSPACE role
+        // (auth::require_moderator, fail-closed); a channel role grants nothing here.
+        .route("/v1/chat/admin/reports", get(moderation::queue))
+        .route("/v1/chat/admin/reports/:id", get(moderation::detail))
+        .route(
+            "/v1/chat/admin/reports/:id/resolve",
+            post(moderation::resolve),
+        )
         .route("/v1/chat/channels/:id/ai/summarize", post(ai::summarize))
         .route("/v1/chat/channels/:id/ai/actions", post(ai::actions))
         .route("/v1/chat/channels/:id/ai/replies", post(ai::replies))
