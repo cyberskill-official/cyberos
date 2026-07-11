@@ -2,6 +2,14 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [1.7.0] - 2026-07-11
+
+Added
+- UGC controls — reporting, blocking, moderation queue
+
+Fixed
+- take the SSO display name from the ID token, not the email
+
 ## [1.6.0] - 2026-07-11
 
 Added
