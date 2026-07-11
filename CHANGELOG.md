@@ -2,6 +2,15 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [1.3.0] - 2026-07-11
+
+Added
+- rename to /create-feature-requests + bundle every chained skill + suggested_prompts
+- version parity with CyberOS + /new-fr authoring command
+
+Fixed
+- keep bundled skill descriptions under the 1024-char host limit
+
 ## [1.2.0] - 2026-07-11
 
 Added
