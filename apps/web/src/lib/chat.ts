@@ -48,6 +48,12 @@ export interface Message {
   // Number of thread replies to this message (folded in by the list endpoint); drives the "N replies" chip on
   // the parent. Bumped live when a reply arrives on the channel socket.
   reply_count?: number;
+  // FR-CHAT-268 §1 #5 — the server has withheld this message's content because the reader blocked its sender.
+  // Only ever set in a GROUP channel: in a DM a blocked sender's messages are not returned at all, so this is
+  // never true there. The server sends an empty `body`, no attachments and no reactions alongside it; the
+  // client renders a collapsed row with a "show anyway" affordance. Absent (undefined) for every normal
+  // message, so this costs nothing on the 99.99% path.
+  blocked_sender?: boolean;
   // Client-only optimistic-send state (never sent by the server): a temporary local message shown instantly
   // while its POST is in flight. `clientId` is the temp id; `pending` while sending; `failed` on error.
   pending?: boolean;

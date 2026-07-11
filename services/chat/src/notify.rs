@@ -122,6 +122,25 @@ pub async fn fanout(
     let modes = crate::prefs::modes_for_channel(&mut tx, channel)
         .await
         .unwrap_or_default();
+
+    // ───────── FR-CHAT-268 enforcement point 3 of 4: notification + push fan-out (§1 #4, #9) ─────────
+    // THIS is the point that was silently broken before FR-CHAT-268. The fan-out selects channel members and
+    // pushes to their devices; it did not know blocks existed. So a blocked person's message would still have
+    // arrived on the blocker's lock screen, carrying their name and the first 80 characters of their text —
+    // the single most intrusive surface in the product, and the one a block most obviously has to cover.
+    // A mention makes it worse, not better: an @mention from a blocked person must raise nothing at all.
+    //
+    // The reverse query ("of these recipients, which have blocked this sender") rather than a per-recipient
+    // lookup: the fan-out already knows exactly who it is about to notify, so this is one indexed hit on
+    // chat_blocks_blocked_idx.
+    let candidates: Vec<Uuid> = members
+        .iter()
+        .map(|(m,)| *m)
+        .filter(|m| *m != message.sender_subject_id)
+        .collect();
+    let blockers =
+        crate::blocks::blockers_of(&mut tx, message.sender_subject_id, &candidates).await;
+
     let _ = tx.commit().await;
 
     let text = preview(
@@ -130,6 +149,12 @@ pub async fn fanout(
     );
     for (member,) in members {
         if member == message.sender_subject_id {
+            continue;
+        }
+        // §1 #4 / AC 9 — zero notifications and zero pushes for anyone who has blocked the sender. Checked
+        // BEFORE the mention branch on purpose: a mention is the one case that would otherwise punch through
+        // a `mentions`-only notify preference.
+        if blockers.contains(&member) {
             continue;
         }
         let is_mention = mention_ids.contains(&member);

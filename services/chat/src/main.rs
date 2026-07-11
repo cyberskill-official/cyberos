@@ -112,7 +112,29 @@ async fn main() -> anyhow::Result<()> {
         presence: Presence::default(),
         notifier: Notifier::default(),
         attachments,
+        // FR-CHAT-268 — starts cold; each blocker's set is loaded on first use and invalidated
+        // on every block/unblock.
+        blocks: cyberos_chat::blocks::BlockCache::default(),
     };
+
+    // FR-CHAT-269 §1 #17 — purge resolved reports (snapshot included) once past their 90-day window.
+    //
+    // A job, not a DB trigger: a trigger would delete rows out from under an administrator mid-read. Hourly
+    // is ample for a 90-day window, and the first sweep runs at boot so a long-stopped instance catches up.
+    // Best-effort: a failed sweep logs and the next tick retries. It must never take the service down —
+    // being late to delete is recoverable, refusing to serve chat is not.
+    {
+        let pool = state.pool.clone();
+        tokio::spawn(async move {
+            let mut tick = tokio::time::interval(std::time::Duration::from_secs(3600));
+            loop {
+                tick.tick().await;
+                if let Err(e) = cyberos_chat::moderation::purge_resolved_reports(&pool).await {
+                    tracing::warn!(target: "cyberos_chat::moderation", error = %e, "report purge failed; retrying next tick");
+                }
+            }
+        });
+    }
 
     let addr = std::env::var("CHAT_LISTEN_ADDR").unwrap_or_else(|_| "0.0.0.0:7720".to_string());
     let listener = tokio::net::TcpListener::bind(&addr).await?;

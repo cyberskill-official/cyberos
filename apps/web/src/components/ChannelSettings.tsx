@@ -3,6 +3,7 @@ import { apiFetch } from "../lib/api";
 import type { Channel } from "../lib/chat";
 import { t } from "../lib/i18n";
 import { Avatar } from "./Avatar";
+import { ReportDialog } from "./ReportDialog";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { Icon } from "./icons";
 import { useModalA11y } from "./useModalA11y";
@@ -51,6 +52,42 @@ export function ChannelSettings({
   const [visibility, setVisibility] = useState(channel.visibility || "private");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  // FR-CHAT-267 §1 #10 — the SECOND entry point: report a person, from the member list. Same dialog as the
+  // message action bar. Reporting a person needs no shared channel on the server (§1 #3, the DM path), but
+  // the member list is where you have a person in front of you, so it is where the affordance belongs.
+  // FR-CHAT-268 — the caller's OWN block list, and only ever their own. There is no surface anywhere that
+  // lets the blocked person discover the block (§1 #2).
+  const [blocked, setBlocked] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (!token) return;
+    void (async () => {
+      try {
+        const rows = await apiFetch<{ subject_id: string }[]>(token, "GET", "/v1/chat/blocks");
+        setBlocked(new Set(rows.map((r) => r.subject_id)));
+      } catch {
+        /* a failed block-list read must not break the settings dialog */
+      }
+    })();
+  }, [token]);
+
+  async function toggleBlock(subject: string, on: boolean) {
+    try {
+      if (on) await apiFetch(token, "POST", "/v1/chat/blocks", { subject_id: subject });
+      else await apiFetch(token, "DELETE", `/v1/chat/blocks/${subject}`);
+      setBlocked((prev) => {
+        const next = new Set(prev);
+        if (on) next.add(subject);
+        else next.delete(subject);
+        return next;
+      });
+    } catch {
+      setErr(t("blocked.failed"));
+    }
+  }
+
+  const [reportSubject, setReportSubject] = useState("");
+  const [reportDone, setReportDone] = useState(false);
+
   // The in-app confirm dialog (replaces window.confirm) for the destructive actions - archive, remove, leave.
   const [confirm, setConfirm] = useState<{ body: string; label: string; run: () => Promise<void> } | null>(null);
   const archived = !!channel.archived_at;
@@ -272,6 +309,38 @@ export function ChannelSettings({
                 ) : (
                   <span className="cs-role-tag">{t("role." + m.role)}</span>
                 )}
+                {/* FR-CHAT-268 §1 #15 — Block / Unblock, confirmed. Not an owner power: blocking changes what
+                    YOU see, and every member holds it over every other member. */}
+                {!self && (
+                  <button
+                    className="icon-btn"
+                    title={blocked.has(m.subject_id) ? t("blocked.unblockPerson") : t("blocked.blockPerson")}
+                    onClick={() => {
+                      const on = !blocked.has(m.subject_id);
+                      setConfirm({
+                        body: t(on ? "blocked.confirmBlock" : "blocked.confirmUnblock", {
+                          name: nameOf(m.subject_id),
+                        }),
+                        label: t(on ? "blocked.block" : "blocked.unblock"),
+                        run: () => toggleBlock(m.subject_id, on),
+                      });
+                    }}
+                    type="button"
+                  >
+                    <Icon name={blocked.has(m.subject_id) ? "bell" : "bellOff"} size={14} />
+                  </button>
+                )}
+                {/* Anyone may report anyone but themselves — reporting is not an owner power (§1 #10). */}
+                {!self && (
+                  <button
+                    className="icon-btn"
+                    title={t("report.reportPerson")}
+                    onClick={() => setReportSubject(m.subject_id)}
+                    type="button"
+                  >
+                    <Icon name="flag" size={14} />
+                  </button>
+                )}
                 {isOwner && !self && (
                   <button
                     className="icon-btn cs-remove"
@@ -287,7 +356,17 @@ export function ChannelSettings({
           })}
         </div>
 
+        {reportDone && <div className="banner">{t("report.sent")}</div>}
         {err && <div className="banner err">{err}</div>}
+
+        {reportSubject && (
+          <ReportDialog
+            token={token}
+            target={{ kind: "subject", id: reportSubject }}
+            onClose={() => setReportSubject("")}
+            onSent={() => setReportDone(true)}
+          />
+        )}
 
         <div className="picker-actions cs-actions">
           {!isOwner && (

@@ -6,9 +6,11 @@ import { Icon } from "./components/icons";
 import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
 import { Chat } from "./pages/Chat";
+import { Moderation } from "./pages/Moderation";
+import { isModerator } from "./lib/roles";
 import { VersionBadge } from "./components/VersionBadge";
 
-type View = "dashboard" | "chat" | "module";
+type View = "dashboard" | "chat" | "moderation" | "module";
 
 // Every module owns a URL (os.cyberskill.world/chat, /dashboard, /<module>). Caddy serves index.html for
 // any client route (SPA fallback), and this tiny pathname router maps it to a view - no router dependency.
@@ -16,6 +18,9 @@ type View = "dashboard" | "chat" | "module";
 function parsePath(path: string): { view: View; module?: string } {
   if (path === "/" || path === "/chat" || path.startsWith("/chat/")) return { view: "chat" };
   if (path === "/dashboard") return { view: "dashboard" };
+  // FR-CHAT-269. The route exists for everyone; the PAGE renders null and the SERVER 403s for a
+  // non-admin, so a guessed URL leaks nothing.
+  if (path === "/moderation") return { view: "moderation" };
   const seg = path.split("/")[1]?.toLowerCase() ?? "";
   if (!seg) return { view: "chat" };
   return { view: "module", module: seg };
@@ -41,7 +46,7 @@ function ModuleStub({ module, onBack }: { module: string; onBack: () => void }) 
 }
 
 export function App() {
-  const { ready, signedIn, email, logout } = useAuth();
+  const { ready, signedIn, email, logout, token } = useAuth();
   const [theme, toggleTheme] = useTheme();
   // Team default: land straight in chat. "All modules" reveals the operator dashboard.
   const [route, setRoute] = useState(() => parsePath(window.location.pathname));
@@ -89,6 +94,13 @@ export function App() {
             {t("top.backToChat")}
           </button>
         )}
+        {/* FR-CHAT-269 §1 #18 — absent, not disabled. A visible-but-403 route teaches everyone in the
+            workspace that a moderation surface exists and that they are not trusted with it. */}
+        {isModerator(token) && view !== "moderation" && (
+          <button className="btn-ghost" onClick={() => nav("/moderation")}>
+            {t("top.moderation")}
+          </button>
+        )}
         <a className="btn-ghost" href="/docs/">
           {t("top.docs")}
         </a>
@@ -117,6 +129,8 @@ export function App() {
       </header>
       {view === "dashboard" ? (
         <Dashboard onOpenChat={() => nav("/chat")} />
+      ) : view === "moderation" ? (
+        <Moderation onBack={() => nav("/chat")} />
       ) : view === "module" ? (
         <ModuleStub module={route.module ?? ""} onBack={() => nav("/chat")} />
       ) : (

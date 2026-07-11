@@ -290,3 +290,75 @@ mod tests {
             .is_err());
     }
 }
+
+/// FR-CHAT-269 §1 #2 — the moderation role gate.
+///
+/// Workspace-level roles only. A CHANNEL role (`owner`, `admin`, `member` in `chat_channel_members`) grants
+/// nothing here, deliberately: a channel owner is not a workspace moderator, and a report raised in a
+/// channel they own may well be *about* them (§1 #3).
+pub const MODERATOR_ROLES: [&str; 2] = ["tenant-admin", "root-admin"];
+
+/// Fail CLOSED. An absent or empty `roles` claim is not "unknown, therefore allow" — it is "unknown,
+/// therefore no".
+///
+/// This matters more than it looks. FR-AUTH-101 permits a grace window in which a token may carry no roles
+/// claim at all. Chat has never read `roles` before, so it has no legacy tokens to be gentle with — and an
+/// else-allow branch here would make every pre-FR-AUTH-101 token in circulation a moderator. There is no
+/// else-allow branch. `Claims::roles` is `#[serde(default)]`-shaped as a `Vec`, so a missing claim
+/// deserialises to an empty vec, which matches nothing and is refused.
+pub fn require_moderator(claims: &Claims) -> Result<(), (StatusCode, String)> {
+    if claims
+        .roles
+        .iter()
+        .any(|r| MODERATOR_ROLES.contains(&r.as_str()))
+    {
+        return Ok(());
+    }
+    Err((
+        StatusCode::FORBIDDEN,
+        "moderation requires tenant-admin".to_string(),
+    ))
+}
+
+#[cfg(test)]
+mod moderator_gate_tests {
+    use super::*;
+
+    fn claims(roles: &[&str]) -> Claims {
+        Claims {
+            sub: uuid::Uuid::nil().to_string(),
+            tenant_id: uuid::Uuid::nil().to_string(),
+            roles: roles.iter().map(|s| s.to_string()).collect(),
+            exp: 0,
+            aud: None,
+        }
+    }
+
+    #[test]
+    fn moderator_roles_are_admitted() {
+        assert!(require_moderator(&claims(&["tenant-admin"])).is_ok());
+        assert!(require_moderator(&claims(&["root-admin"])).is_ok());
+        // Extra unrelated roles alongside do not break the match.
+        assert!(require_moderator(&claims(&["tenant-member", "tenant-admin"])).is_ok());
+    }
+
+    #[test]
+    fn the_gate_fails_closed() {
+        // AC 1 — the whole point. NONE of these may pass.
+        for roles in [
+            vec![],                 // no roles at all (a pre-FR-AUTH-101 token)
+            vec!["tenant-member"],  // an ordinary member
+            vec!["owner"],          // AC 2 — a CHANNEL role is not a workspace role
+            vec!["admin"],          // ...nor is the channel-level "admin"
+            vec!["tenant-admin-x"], // no prefix/substring matching
+            vec!["TENANT-ADMIN"],   // exact, case-sensitive
+        ] {
+            let c = claims(&roles);
+            assert_eq!(
+                require_moderator(&c).unwrap_err().0,
+                StatusCode::FORBIDDEN,
+                "roles {roles:?} must NOT grant moderation"
+            );
+        }
+    }
+}

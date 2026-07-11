@@ -346,7 +346,27 @@ pub async fn list(
     .map_err(crate::internal)?;
     let _ = tx.commit().await;
 
-    Ok(Json(rows.into_iter().map(to_channel).collect()))
+    let mut out: Vec<Channel> = rows.into_iter().map(to_channel).collect();
+
+    // ───────── FR-CHAT-268 enforcement point 4 of 4: the DM list (§1 #4, #6) ─────────
+    // A DM with a blocked person leaves the blocker's list entirely while the block stands. Not emptied, not
+    // greyed — gone. (The channel row and every message in it survive untouched in the DB: the block filters
+    // READS only, which is what lets §1 #11 restore everything in place on unblock.)
+    //
+    // Only DMs: a block never removes a GROUP channel from the list, because a group channel is not "a
+    // conversation with that person" and other members are still in it. §1 #10 — blocking changes what YOU
+    // see; it does not remove anyone from anything.
+    let blocked = crate::blocks::blocked_by(&st, tenant, subject).await;
+    if !blocked.is_empty() {
+        out.retain(|c| {
+            c.kind != "direct"
+                || !c
+                    .other_subject_id
+                    .is_some_and(|partner| blocked.contains(&partner))
+        });
+    }
+
+    Ok(Json(out))
 }
 
 /// Fields a manager can change on a group channel. Absent fields are untouched. `archived` flips the

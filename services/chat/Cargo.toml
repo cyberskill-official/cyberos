@@ -34,6 +34,12 @@ cyberos-capture = { path = "../shared/cyberos-capture" }
 base64 = "0.22"
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 
+[dev-dependencies]
+# FR-CHAT-267: the reports integration tests drive the real router in-process with
+# `tower::ServiceExt::oneshot`, the same way services/auth/tests/admin_subject_create_test.rs does.
+# `tower` is not needed by the chat binary itself, only by the tests.
+tower.workspace = true
+
 [[bin]]
 name = "cyberos-chat"
 path = "src/main.rs"
