@@ -35,25 +35,37 @@ jobs:
           - os: windows-latest
           - os: ubuntu-latest
     runs-on: ${{ matrix.os }}
-    # Signing + notarization creds live at JOB level so BOTH the build attempt and the retry below share
-    # them. macOS signing/notarization is OPT-IN behind the MACOS_SIGN repo variable: tauri-action codesigns
-    # whenever APPLE_CERTIFICATE is a NON-EMPTY string, so a stray or malformed cert would break the whole
-    # macOS build at signing; gating on MACOS_SIGN forces these empty until you deliberately turn signing on
-    # (default = a clean UNSIGNED build that always succeeds). Turn it on: repo variable MACOS_SIGN=true +
-    # valid APPLE_* secrets (docs/deploy/RELEASE.md checklist). Updater signing is OPT-IN behind
-    # DESKTOP_UPDATER_SIGN for the same reason (a malformed key would fail the build).
+    # Signing creds live at JOB level so the build attempt and the retry share them. macOS CODE SIGNING is
+    # opt-in behind MACOS_SIGN: tauri-action codesigns whenever APPLE_CERTIFICATE is a NON-EMPTY string, so a
+    # stray or malformed cert would break the whole macOS build at signing; gating forces these empty until
+    # you deliberately turn signing on (default = a clean UNSIGNED build that always succeeds). Updater
+    # signing is opt-in behind DESKTOP_UPDATER_SIGN for the same reason.
+    #
+    # NOTARIZATION IS DELIBERATELY NOT IN THIS ENV. tauri notarizes *inside* `tauri build` whenever APPLE_ID +
+    # APPLE_PASSWORD + APPLE_TEAM_ID are present, and then blocks polling Apple for a verdict. On v1.0.0 that
+    # poll ran 54 minutes and died with NSURLErrorDomain -1009 ("no network route") - twice - burning a full
+    # 60-minute build each time while Apple simply sat on the submission (both stayed "In Progress" for
+    # hours). So the build now SIGNS ONLY, and notarize+staple runs as a separate, bounded, non-fatal step
+    # below. A stalled Apple notary queue can no longer cost a release.
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       APPLE_CERTIFICATE: ${{ vars.MACOS_SIGN == 'true' && secrets.APPLE_CERTIFICATE || '' }}
       APPLE_CERTIFICATE_PASSWORD: ${{ vars.MACOS_SIGN == 'true' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
       APPLE_SIGNING_IDENTITY: ${{ vars.MACOS_SIGN == 'true' && secrets.APPLE_SIGNING_IDENTITY || '' }}
-      APPLE_ID: ${{ vars.MACOS_SIGN == 'true' && secrets.APPLE_ID || '' }}
-      APPLE_PASSWORD: ${{ vars.MACOS_SIGN == 'true' && secrets.APPLE_PASSWORD || '' }}
-      APPLE_TEAM_ID: ${{ vars.MACOS_SIGN == 'true' && secrets.APPLE_TEAM_ID || '' }}
       TAURI_SIGNING_PRIVATE_KEY: ${{ vars.DESKTOP_UPDATER_SIGN == 'true' && secrets.TAURI_SIGNING_PRIVATE_KEY || '' }}
       TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ vars.DESKTOP_UPDATER_SIGN == 'true' && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD || '' }}
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # The installers carry their OWN version fields and had drifted from the platform VERSION
+      # (tauri.conf.json still said 1.0.0 while VERSION said 1.2.0). Stamp them so a tag can never ship a
+      # mislabelled binary.
+      - name: Stamp VERSION into the installers
+        run: node scripts/stamp-release-version.mjs --apply
 
       - name: Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -64,16 +76,17 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
-      # Attempt 1. continue-on-error so a TRANSIENT failure - notably Apple notarization returning
-      # NSURLErrorDomain -1009 "The Internet connection appears to be offline" (the notary upload never
-      # reaching appstoreconnect.apple.com) - does not fail the release outright; the retry below re-runs it
-      # once. A non-transient failure still fails the job after the retry, so real breakage is never masked.
+      # Attempt 1. Signs, does NOT notarize (see the job note). continue-on-error so one transient failure
+      # does not sink the release; the retry below re-runs it once, and non-transient breakage still fails
+      # the job afterwards. `args` adds createUpdaterArtifacts ONLY when the updater key exists, because
+      # tauri errors out if asked to emit updater artifacts with no signing key.
       - name: Build + publish desktop installers
         id: build
         continue-on-error: true
         uses: tauri-apps/tauri-action@v0
         with:
           projectPath: apps/desktop
+          args: ${{ vars.DESKTOP_UPDATER_SIGN == 'true' && '--config src-tauri/tauri.updater.conf.json' || '' }}
           tagName: ${{ github.event.inputs.tag || github.ref_name }}
           releaseName: 'CyberOS ${{ github.event.inputs.tag || github.ref_name }}'
           releaseDraft: true
@@ -81,15 +94,43 @@ jobs:
 
       # Retry once when attempt 1 failed. tauri-action finds the existing draft release by tag and updates
       # its assets, so re-running is safe. If this attempt also fails, the job fails (no continue-on-error).
-      - name: Retry desktop build once (transient failure, e.g. notary -1009)
+      - name: Retry desktop build once (transient failure)
         if: steps.build.outcome == 'failure'
         uses: tauri-apps/tauri-action@v0
         with:
           projectPath: apps/desktop
+          args: ${{ vars.DESKTOP_UPDATER_SIGN == 'true' && '--config src-tauri/tauri.updater.conf.json' || '' }}
           tagName: ${{ github.event.inputs.tag || github.ref_name }}
           releaseName: 'CyberOS ${{ github.event.inputs.tag || github.ref_name }}'
           releaseDraft: true
           prerelease: false
+
+      # Notarize + staple OUT OF BAND. The signed .dmg is already attached to the draft release, so this step
+      # is bounded (--timeout) and non-fatal (continue-on-error): if Apple's queue stalls we ship signed and
+      # staple later rather than losing a 60-minute build. On success the stapled .dmg replaces the asset
+      # (--clobber). Gated on MACOS_NOTARIZE so you can ship signed-only at will.
+      - name: Notarize + staple the macOS build
+        if: ${{ matrix.os == 'macos-latest' && vars.MACOS_SIGN == 'true' && vars.MACOS_NOTARIZE == 'true' }}
+        continue-on-error: true
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+          NOTARY_TIMEOUT: ${{ vars.MACOS_NOTARY_TIMEOUT || '20m' }}
+        run: |
+          set -euo pipefail
+          DMG="$(find apps/desktop/src-tauri/target/release/bundle/dmg -name '*.dmg' | head -1)"
+          if [ -z "$DMG" ]; then echo "::warning::no .dmg found - nothing to notarize"; exit 0; fi
+          echo "submitting $DMG to the Apple notary service (bounded wait: $NOTARY_TIMEOUT)"
+          xcrun notarytool submit "$DMG" \
+            --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" --team-id "$APPLE_TEAM_ID" \
+            --wait --timeout "$NOTARY_TIMEOUT"
+          xcrun stapler staple "$DMG"
+          xcrun stapler validate "$DMG"
+          gh release upload "$TAG" "$DMG" --clobber --repo "$GITHUB_REPOSITORY"
+          echo "macOS: notarized + stapled + re-uploaded $(basename "$DMG")" >> "$GITHUB_STEP_SUMMARY"
 
   # Android app bundle (Capacitor). Gated on the repo variable ANDROID_RELEASE=true (the android/ project is
   # committed and the upload keystore is configured via the ANDROID_* secrets). Legacy MOBILE_RELEASE=true is
@@ -104,6 +145,11 @@ jobs:
         with: { node-version: 24 }
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 21 }
+      # versionName + versionCode were hardcoded ("1.0" / 1). Play REJECTS any upload whose versionCode it
+      # has already seen, so publishing could never work twice. The stamper derives both from the platform
+      # VERSION (1.2.0 -> versionName 1.2.0, versionCode 10200), strictly increasing on every bump.
+      - name: Stamp VERSION into the Android app
+        run: node scripts/stamp-release-version.mjs --apply
       - name: Build web + sync Capacitor
         working-directory: apps/web
         run: |
@@ -128,8 +174,21 @@ jobs:
         with:
           name: cyberos-android-aab
           path: apps/web/android/app/build/outputs/bundle/release/*.aab
-      # Publishing to Play internal track: add r0adz/upload-google-play or fastlane supply with a service
-      # account JSON secret (see docs/deploy/RELEASE.md).
+
+      # Publish the .aab to the Play INTERNAL track. Opt-in behind PLAY_PUBLISH=true so the job keeps
+      # building (and attaching) the bundle until Play is wired - the previous behaviour was build-only.
+      # Needs a Play service account with "Release to testing tracks" permission; its JSON goes in
+      # PLAY_SERVICE_ACCOUNT_JSON (docs/deploy/RELEASE.md). Internal track is the safe default: it does not
+      # go to users until you promote it in the Play Console.
+      - name: Publish to Google Play (internal track)
+        if: ${{ vars.PLAY_PUBLISH == 'true' }}
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: os.cyberskill.world
+          releaseFiles: apps/web/android/app/build/outputs/bundle/release/*.aab
+          track: internal
+          status: completed
 
   # iOS build + TestFlight (Capacitor). OWN gate IOS_RELEASE=true - do NOT reuse the Android gate: the ios/
   # project does not exist until you run `npx cap add ios` (docs/deploy/signing-and-mobile-release.md section
