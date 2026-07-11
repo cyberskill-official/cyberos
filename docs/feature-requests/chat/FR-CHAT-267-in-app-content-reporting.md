@@ -3,7 +3,7 @@ id: FR-CHAT-267
 title: "In-app content reporting - report a message, an attachment, or a person"
 module: CHAT
 priority: MUST
-status: draft
+status: ready_to_implement
 class: product
 verify: T
 phase: P0

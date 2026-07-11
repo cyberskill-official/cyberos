@@ -3,7 +3,7 @@ id: FR-AUTH-111
 title: "SSO JIT provisioning must take the person's name from the ID token, not their email address"
 module: AUTH
 priority: SHOULD
-status: draft
+status: ready_to_implement
 class: product
 verify: T
 phase: P0

@@ -3,7 +3,7 @@ id: FR-CHAT-268
 title: "User blocking - stop seeing a person's content, and stop receiving their messages"
 module: CHAT
 priority: MUST
-status: draft
+status: ready_to_implement
 class: product
 verify: T
 phase: P0
