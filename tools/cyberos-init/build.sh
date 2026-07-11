@@ -94,6 +94,37 @@ for d in "$out"/cuo/skills/*/; do
   plugin_skills=$((plugin_skills + 1))
 done
 
+# Fail-closed guard: the plugin host REJECTS any bundled skill whose frontmatter `description`
+# exceeds 1024 chars ("Plugin validation failed: field 'description' in SKILL.md must be at most
+# 1024 characters"). The vendored .cyberos/cuo/skills copies have no such limit, so this guards only
+# what we bundle. We FAIL rather than silently truncate: a truncated description loses its trailing
+# "Do NOT use ..." routing clause, which quietly degrades skill selection.
+if command -v python3 >/dev/null 2>&1; then
+  python3 - "$out/plugin/skills" <<'PYCAP' || { echo "cyberos-init: shorten the description(s) above in modules/skill/<name>/SKILL.md, then rebuild." >&2; exit 1; }
+import os, re, sys
+root, LIMIT, bad = sys.argv[1], 1024, []
+for name in sorted(os.listdir(root)):
+    f = os.path.join(root, name, "SKILL.md")
+    if not os.path.isfile(f):
+        continue
+    m = re.match(r"^---\n(.*?)\n---\n", open(f).read(), re.S)
+    if not m:
+        continue
+    fm = m.group(1)
+    b = re.search(r"^description:\s*(?:>-|>|\|)?\s*\n((?:[ \t]+.*\n?)+)", fm, re.M)
+    if b:
+        desc = " ".join(l.strip() for l in b.group(1).splitlines()).strip()
+    else:
+        s = re.search(r"^description:\s*(.+)$", fm, re.M)
+        desc = s.group(1).strip() if s else ""
+    if len(desc) > LIMIT:
+        bad.append((len(desc), name))
+for n, name in sorted(bad, reverse=True):
+    print(f"cyberos-init: ERROR skill '{name}' description is {n} chars (plugin limit {LIMIT})", file=sys.stderr)
+sys.exit(1 if bad else 0)
+PYCAP
+fi
+
 # stamp BOTH manifests with the platform VERSION so the plugin never drifts from CyberOS again.
 # Sources carry "0.0.0" as the placeholder; this is the single point that sets the real number.
 for m in "$out/plugin/.claude-plugin/plugin.json" "$out/.claude-plugin/marketplace.json"; do
