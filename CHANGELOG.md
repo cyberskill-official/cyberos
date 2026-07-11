@@ -2,6 +2,11 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [1.6.0] - 2026-07-11
+
+Added
+- Play store screenshots, captured from the real app
+
 ## [1.5.0] - 2026-07-11
 
 Added
