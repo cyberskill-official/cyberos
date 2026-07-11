@@ -2,6 +2,15 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [1.2.0] - 2026-07-11
+
+Added
+- auto-version from Conventional Commits + advisory commit-msg hook
+
+Fixed
+- tolerate a ruleset-protected main in the auto-bump
+- retry the desktop build once on transient failure (Apple notary -1009)
+
 ## [1.1.0] - 2026-07-11
 
 Multi-agent distribution for the `cyberos-init` payload, plus three new install channels. Backward compatible: `init.sh` never clobbers an existing operator file, so re-running it on a 1.0.0 repo only adds what is missing.
