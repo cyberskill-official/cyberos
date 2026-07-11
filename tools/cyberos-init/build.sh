@@ -25,7 +25,7 @@ cp "$repo/modules/skill/contracts/feature-request/STATUS-REFERENCE.md"          
 cp "$here/gates/run-gates.sh"                                                        "$out/cuo/gates/run-gates.sh"
 cp -R "$here/templates/." "$out/cuo/templates/"
 
-skills="repo-context-map-author repo-context-map-audit architecture-decision-record-author architecture-decision-record-audit edge-case-matrix-author edge-case-matrix-audit mock-contract-test-author mock-contract-test-audit implementation-plan-author implementation-plan-audit observability-injection-author observability-injection-audit backlog-state-update-author backlog-state-update-audit code-review-author code-review-audit coverage-gate-author coverage-gate-audit feature-request-audit"
+skills="repo-context-map-author repo-context-map-audit architecture-decision-record-author architecture-decision-record-audit edge-case-matrix-author edge-case-matrix-audit mock-contract-test-author mock-contract-test-audit implementation-plan-author implementation-plan-audit observability-injection-author observability-injection-audit backlog-state-update-author backlog-state-update-audit code-review-author code-review-audit coverage-gate-author coverage-gate-audit feature-request-author feature-request-audit"
 vendored_skills=0
 for s in $skills; do
   if [ -d "$repo/modules/skill/$s" ]; then
@@ -69,9 +69,32 @@ cp "$here/docs/index.md" "$out/GUIDE.md"   # the guide source lives in docs/ (si
 chmod +x "$out/init.sh" "$out/bootstrap.sh" "$out/create.sh" "$out/cuo/gates/run-gates.sh" 2>/dev/null || true
 chmod +x "$out/mcp/cyberos-mcp.mjs" "$out"/cli/bin/*.mjs 2>/dev/null || true
 
+# The single platform VERSION. Computed HERE (not later) because the plugin manifests must be
+# stamped with it BEFORE the one-file bundle is zipped - a stale version sealed inside
+# cyberos.plugin is exactly the drift this fixes (installed plugin said 1.0.0 forever).
+cyver="$(tr -d ' \n\r' < "$repo/VERSION" 2>/dev/null || echo 0.0.0)"
+
 # make the plugin self-contained: carry the cuo docs so the bundled skill works standalone
 mkdir -p "$out/plugin/skills/ship-feature-requests/cuo"
 cp "$out/cuo/ship-feature-requests.md" "$out/cuo/EXECUTION-DISCIPLINE.md" "$out/cuo/STATUS-REFERENCE.md" "$out/plugin/skills/ship-feature-requests/cuo/"
+
+# bundle the FR AUTHORING skills into the plugin so /new-fr works standalone: feature-request-author
+# drafts the FRs, feature-request-audit drives draft -> ready_to_implement, which is what
+# /ship-feature-requests then consumes. Without these the plugin can only ship, never author.
+plugin_skills=0
+for s in feature-request-author feature-request-audit; do
+  if [ -d "$out/cuo/skills/$s" ]; then
+    cp -R "$out/cuo/skills/$s" "$out/plugin/skills/$s"
+    plugin_skills=$((plugin_skills + 1))
+  fi
+done
+
+# stamp BOTH manifests with the platform VERSION so the plugin never drifts from CyberOS again.
+# Sources carry "0.0.0" as the placeholder; this is the single point that sets the real number.
+for m in "$out/plugin/.claude-plugin/plugin.json" "$out/.claude-plugin/marketplace.json"; do
+  [ -f "$m" ] || continue
+  sed "s/\"version\": \"0.0.0\"/\"version\": \"$cyver\"/" "$m" > "$m.tmp" && mv "$m.tmp" "$m"
+done
 
 # One-file plugin bundle for pickers that want a FILE, not a folder (Claude desktop's
 # Add dialog greys "Open" on directories): zip the plugin dir into cyberos.plugin.
@@ -81,7 +104,7 @@ cp "$out/cuo/ship-feature-requests.md" "$out/cuo/EXECUTION-DISCIPLINE.md" "$out/
 profile="reduced"
 [ "$vendored_skills" -gt 0 ] && [ "$caf_vendored" = "yes" ] && profile="full"
 ver="$(cd "$repo" && git rev-parse --short HEAD 2>/dev/null || echo unknown)"
-cyver="$(tr -d ' \n\r' < "$repo/VERSION" 2>/dev/null || echo 0.0.0)"
+# $cyver was computed above (before the plugin manifests were stamped + zipped).
 echo "$cyver" > "$out/VERSION"     # plain file so `init --check`/update can compare fast
 
 # root package.json makes the payload npx/npm-installable: `npx cyberos-init [dir]`,

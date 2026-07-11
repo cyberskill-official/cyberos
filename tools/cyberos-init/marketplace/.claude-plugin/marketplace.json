@@ -2,14 +2,14 @@
   "name": "cyberos",
   "owner": { "name": "CyberSkill" },
   "metadata": {
-    "description": "CyberOS plugin marketplace - the governed feature-request workflow for any repo.",
-    "version": "1.0.0"
+    "description": "CyberOS plugin marketplace - author, audit, and ship feature requests under a governed workflow, in any repo.",
+    "version": "0.0.0"
   },
   "plugins": [
     {
       "name": "cyberos",
       "source": "./plugin",
-      "description": "CyberOS in any repo: /init installs the machine, the ship-feature-requests skill drives the backlog, /update and /changelog keep it current. HITL required at the two human-acceptance gates; agents never push or self-accept."
+      "description": "Turn an idea, PRD, or spec into audited feature requests (/new-fr), then ship them (/ship-feature-requests) through implement -> review -> test -> done. /init installs the machine into any repo. HITL required at the two human-acceptance gates; agents never push, merge, deploy, or self-accept."
     }
   ]
 }
