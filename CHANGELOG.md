@@ -2,6 +2,11 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [1.5.0] - 2026-07-11
+
+Added
+- UGC compliance FRs - reporting, blocking, moderation queue + the SSO display-name defect
+
 ## [1.4.0] - 2026-07-11
 
 Added
