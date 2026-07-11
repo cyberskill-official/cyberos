@@ -63,22 +63,40 @@ jobs:
         working-directory: services
     steps:
       - uses: actions/checkout@v4
+
+      # This gate died on `ld: final link failed: No space left on device` the first time the workspace
+      # grew by four test binaries (FR-CHAT-267/268/269 + FR-AUTH-111). It was not a code failure: the
+      # tests never ran. The PR gate in services.yml had ALREADY been hardened against exactly this, and
+      # this job never got the same treatment — so a change could pass every check on the PR and then take
+      # the deploy down after merge, leaving main ahead of production with nothing red to look at. The two
+      # gates now do the same thing.
+      #
+      # Reclaims ~25 GB of preinstalled Android/dotnet/Haskell tooling we never use.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost || true
+          sudo docker image prune -af || true
+          df -h /
+
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: 1.88.0
           components: rustfmt, clippy
-      - uses: actions/cache@v4
+
+      # Swatinem/rust-cache instead of a raw actions/cache over services/target: it caches only the
+      # dependency artifacts and auto-trims stale entries, keeping the cache at ~1-3 GB rather than the
+      # 9+ GB a raw target/ cache grows into. Restoring that raw cache was itself part of what filled the
+      # disk. Mirrors services.yml.
+      - uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            services/target
-          key: cargo-services-${{ runner.os }}-${{ hashFiles('services/**/Cargo.lock', 'services/**/Cargo.toml') }}
-          restore-keys: |
-            cargo-services-${{ runner.os }}-
+          workspaces: services
+
       - run: cargo fmt --all -- --check
       - run: cargo clippy --workspace -- -D warnings
       - run: cargo test --workspace
+      - name: Disk left after the gate
+        if: always()
+        run: df -h /
 
   # Build + push the service images to GHCR (mirrors deploy/vps/build-push-images.sh). GHA layer cache keeps
   # this fast after the first run.
