@@ -28,7 +28,17 @@ on:
       - 'CHANGELOG.md'
       - 'modules/*/CHANGELOG.md'
       - 'services/*/CHANGELOG.md'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      force_services:
+        description: >-
+          Run the Rust gate and REBUILD the service images even though this run touches no services/** files.
+          Needed whenever code is already on main but was never built - e.g. the gate failed, the fix was a
+          CI-only change, and so nothing under services/** has changed since. Without this, that code can
+          never be built or deployed: the paths filter skips the build forever, the VPS keeps pulling the
+          stale image from GHCR, and the deploy job reports success while shipping nothing.
+        type: boolean
+        default: false
 
 concurrency:
   group: deploy-p0
@@ -43,7 +53,10 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      services: ${{ steps.filter.outputs.services }}
+      # `|| inputs.force_services` is the manual override. On workflow_dispatch the paths filter compares HEAD
+      # against the default branch and finds nothing, so it would otherwise ALWAYS skip the gate and the image
+      # build - which makes a manual re-deploy of already-merged code impossible.
+      services: ${{ steps.filter.outputs.services == 'true' || inputs.force_services == true }}
     steps:
       - uses: actions/checkout@v4
       - id: filter
@@ -154,6 +167,22 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() }}
     runs-on: ubuntu-latest
     steps:
+      # A green deploy that shipped nothing is worse than a red one, and we shipped exactly that: PR #37's
+      # gate died on disk exhaustion, so build-images never ran; a later CI-only commit touched no
+      # services/** files, so the paths filter skipped the build AGAIN — and this job rolled the VPS anyway
+      # and reported success. The VPS never compiles; it pulls prebuilt images from GHCR. So it re-pulled the
+      # PRE-MERGE image, restarted it, and went green — while `git pull` + migrate.sh applied the NEW
+      # migrations. Production ended up running new schema against old code, with a green tick on the run.
+      #
+      # If services changed and the images were not built, that is a failed deploy. Say so.
+      - name: Refuse to roll a services change whose images were never built
+        if: ${{ needs.changes.outputs.services == 'true' && needs.build-images.result != 'success' }}
+        run: |
+          echo "::error::services/** changed but build-images did not succeed (result: ${{ needs.build-images.result }})."
+          echo "The VPS only pulls prebuilt images from GHCR, so rolling now would restart the OLD image and report success."
+          echo "Re-run with workflow_dispatch + force_services=true once the gate is green."
+          exit 1
+
       - name: Deploy over SSH
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
