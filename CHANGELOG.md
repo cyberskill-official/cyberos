@@ -2,6 +2,11 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [1.4.0] - 2026-07-11
+
+Added
+- decouple notarization, stamp VERSION into installers, publish to Play, enable the updater
+
 ## [1.3.0] - 2026-07-11
 
 Added
