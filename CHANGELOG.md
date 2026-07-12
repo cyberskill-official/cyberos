@@ -2,6 +2,23 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [1.0.0] - 2026-07-12
+
+The first stable release of CyberOS - the deliberate 1.0.0 call. The 0.x line hardened the platform's
+governed development machinery end to end; 1.0.0 commits to it.
+
+Added
+- The 1.0 commitment: engineering-spec@1 and the 10-state FR lifecycle are stable contracts; the
+  /create-feature-requests and /ship-feature-requests workflows are hardened for multi-repo production
+  use (resumable ship manifests, deterministic queue selection, gate autodetect across 9 stacks,
+  per-repo config, audited backlog writes, chain/pair/anchor/version gates in CI).
+- Visual deliverables: every FR renders to its own CDS-styled page; one status hub (deck + roadmap /
+  backlog / changelog) regenerates on every change with zero manual triggers.
+
+Changed
+- Version bumps now carry the whole codebase (installers, store projects, manifests) and fire the
+  release + docs pipelines natively - no [skip ci], no manual dispatch (FR-IMP-071/072).
+
 ## [0.4.0] - 2026-07-12
 
 Added

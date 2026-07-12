@@ -1,0 +1,6 @@
+---
+description: CyberOS feature-request workflow (HITL-gated). Always apply.
+alwaysApply: true
+---
+This repo runs CyberOS. Canonical instructions: AGENTS.md (root) and .cyberos/AGENT-ENTRY.md.
+Work is feature-requests; HITL is required at the two human-acceptance gates; run gates with `bash .cyberos/cuo/gates/run-gates.sh`. Never push/deploy/merge without an operator instruction.

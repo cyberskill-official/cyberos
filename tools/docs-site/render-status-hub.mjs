@@ -64,7 +64,9 @@ for (const mod of readdirSync(FR_ROOT, { withFileTypes: true }).sort((a,b)=>a.na
 }
 frs.sort((a, b) => a.id.localeCompare(b.id));
 
-const clText = readFileSync(join(ROOT, 'CHANGELOG.md'), 'utf-8');
+const LENIENT = process.env.CYBEROS_HUB_LENIENT === '1';
+const clText = existsSync(join(ROOT, 'CHANGELOG.md')) ? readFileSync(join(ROOT, 'CHANGELOG.md'), 'utf-8')
+  : (LENIENT ? '' : (() => { throw new Error('status-hub: CHANGELOG.md missing'); })());
 const releases = []; const clRe = /^## \[?(\d+\.\d+\.\d+)\]?(?:\s*-\s*(.*))?$/gm;
 let m; const marks = [];
 while ((m = clRe.exec(clText)) !== null) marks.push({ version: m[1], date: (m[2]||'').trim(), at: m.index, end: clRe.lastIndex });
@@ -73,9 +75,10 @@ marks.forEach((mk, i) => {
   releases.push({ version: mk.version, date: mk.date,
                   lines: body.split('\n').map(s => s.trim()).filter(s => s && !s.startsWith('## ')) });
 });
-if (releases.length === 0) { console.error('status-hub: ERROR zero version sections parsed from CHANGELOG.md'); process.exit(1); }
+if (releases.length === 0 && !LENIENT) { console.error('status-hub: ERROR zero version sections parsed from CHANGELOG.md'); process.exit(1); }
+if (releases.length === 0 && LENIENT) console.error('status-hub: WARN no CHANGELOG version sections (lenient mode - timeline empty)');
 
-const VERSION = readFileSync(join(ROOT, 'VERSION'), 'utf-8').trim();
+const VERSION = existsSync(join(ROOT, 'VERSION')) ? readFileSync(join(ROOT, 'VERSION'), 'utf-8').trim() : (LENIENT ? 'unversioned' : (() => { throw new Error('status-hub: VERSION missing'); })());
 const COMMIT = gitCommit(ROOT);
 const modules = [...new Set(frs.map(f => f.module))].sort();
 const byStatus = Object.fromEntries(STATUSES.map(s => [s, frs.filter(f => f.status === s)]));
@@ -197,8 +200,12 @@ const changelogTab = `<div class="phases">` + releases.map((r, i) => `
 </article>`).join('\n') + `</div>`;
 
 // ---- assemble through status-hub@1 ------------------------------------------------------
-const SHELL = readFileSync(join(ROOT, 'modules', 'templates', 'html', 'status-hub.html'), 'utf-8');
-const TOKENS = readFileSync(join(ROOT, 'modules', 'templates', 'cds', 'tokens.css'), 'utf-8');
+const TPL_DIR = process.env.CYBEROS_TEMPLATES
+  || (existsSync(join(ROOT, 'modules', 'templates', 'html', 'status-hub.html')) ? join(ROOT, 'modules', 'templates', 'html') : join(__dirname, 'templates'));
+const TOK_DIR = process.env.CYBEROS_TEMPLATES
+  || (existsSync(join(ROOT, 'modules', 'templates', 'cds', 'tokens.css')) ? join(ROOT, 'modules', 'templates', 'cds') : join(__dirname, 'templates'));
+const SHELL = readFileSync(join(TPL_DIR, 'status-hub.html'), 'utf-8');
+const TOKENS = readFileSync(join(TOK_DIR, 'tokens.css'), 'utf-8');
 const extra = `
 .code { font-family:var(--cs-font-family-mono); }
 .code a, .hub-note a, .chip-link { color:var(--cs-color-text-accent); text-decoration:none; }

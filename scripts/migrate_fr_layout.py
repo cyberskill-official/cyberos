@@ -12,7 +12,21 @@ live references to the old flat paths (.workflow/ and _audits/ untouched).
 import os, re, sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+import subprocess
+def _default_root():
+    try:
+        return Path(subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True,
+                                   text=True, check=True).stdout.strip())
+    except Exception:
+        return Path.cwd()
+# portable (FR 1.0.0 kit): --root <dir> targets any repo; default = git toplevel of cwd, falling
+# back to this script's repo when invoked in-tree.
+if "--root" in sys.argv:
+    ROOT = Path(sys.argv[sys.argv.index("--root") + 1]).resolve()
+elif (Path(__file__).resolve().parent.parent / "docs" / "feature-requests").is_dir() and _default_root() == Path(__file__).resolve().parent.parent:
+    ROOT = Path(__file__).resolve().parent.parent
+else:
+    ROOT = _default_root()
 FR = ROOT / "docs" / "feature-requests"
 
 def migrate():

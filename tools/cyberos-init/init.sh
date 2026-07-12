@@ -65,6 +65,9 @@ cp -R "$src/plugin" "$CY/plugin"
 [ -d "$src/mcp" ] && cp -R "$src/mcp" "$CY/mcp"          # MCP server channel (optional; needs node)
 [ -f "$src/manifest.yaml" ] && cp "$src/manifest.yaml" "$CY/manifest.yaml"
 [ -f "$src/VERSION" ] && cp "$src/VERSION" "$CY/VERSION"
+# portable FR migration kit (FR 1.0.0): rides into .cyberos so any repo can adopt folder-per-FR + the status page
+[ -f "$src/migrate-frs.sh" ] && cp "$src/migrate-frs.sh" "$CY/migrate-frs.sh" && chmod +x "$CY/migrate-frs.sh"
+[ -d "$src/docs-tools" ] && rm -rf "$CY/docs-tools" && cp -R "$src/docs-tools" "$CY/docs-tools"
 chmod +x "$CY/cuo/gates/run-gates.sh" 2>/dev/null || true
 [ -f "$CY/mcp/cyberos-mcp.mjs" ] && chmod +x "$CY/mcp/cyberos-mcp.mjs" 2>/dev/null || true
 
@@ -298,6 +301,11 @@ if [ ! -f "$root/AGENTS.md" ]; then
   AGENTS_SET="created AGENTS.md (canonical cross-agent spine)"
 elif grep -q "$SP_MARK" "$root/AGENTS.md" 2>/dev/null || grep -q '\.cyberos/AGENT-ENTRY\.md' "$root/AGENTS.md" 2>/dev/null; then
   AGENTS_SET="kept your AGENTS.md (already CyberOS-aware)"
+elif [ -L "$root/AGENTS.md" ]; then
+  # Symlinked spine (e.g. CyberOS itself links AGENTS.md -> the memory-protocol source): appending
+  # would write THROUGH the link into whatever it points at. The spine lives in
+  # .cyberos/AGENT-ENTRY.md regardless; leave the operator's link untouched.
+  AGENTS_SET="kept your AGENTS.md symlink untouched (spine at .cyberos/AGENT-ENTRY.md)"
 else
   { printf '\n---\n\n'; agents_spine; printf '\n<!-- %s -->\n' "$SP_MARK"; } >> "$root/AGENTS.md"
   AGENTS_SET="appended a CyberOS section to your AGENTS.md"

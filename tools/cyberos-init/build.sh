@@ -121,6 +121,18 @@ mkdir -p "$out/.claude-plugin"
 cp "$here/marketplace/.claude-plugin/marketplace.json" "$out/.claude-plugin/marketplace.json"
 cp "$here/init.sh"      "$out/init.sh"
 cp "$here/check-latest.sh"      "$out/check-latest.sh"
+# FR 1.0.0 portable migration kit (migrate-frs.sh + docs-tools) - target repos adopt folder-per-FR
+# + the CDS status page without cloning the monorepo.
+# (kit sources may be absent in trimmed/reduced fixture builds - vendor what exists, skip the rest)
+if [ -f "$here/migrate-frs.sh" ] && [ -f "$here/../../scripts/migrate_fr_layout.py" ]; then
+  cp "$here/migrate-frs.sh" "$out/migrate-frs.sh"
+  mkdir -p "$out/docs-tools/templates"
+  cp "$here/../../scripts/migrate_fr_layout.py" "$out/docs-tools/"
+  [ -f "$here/../../scripts/repair_fr_yaml.py" ] && cp "$here/../../scripts/repair_fr_yaml.py" "$out/docs-tools/"
+  [ -f "$here/../docs-site/render-status-hub.mjs" ] && cp "$here/../docs-site/render-status-hub.mjs" "$out/docs-tools/"
+  [ -f "$here/../../modules/templates/html/status-hub.html" ] && cp "$here/../../modules/templates/html/status-hub.html" "$out/docs-tools/templates/"
+  [ -f "$here/../../modules/templates/cds/tokens.css" ] && cp "$here/../../modules/templates/cds/tokens.css" "$out/docs-tools/templates/"
+fi
 cp "$here/bootstrap.sh" "$out/bootstrap.sh"
 cp "$here/create.sh"    "$out/create.sh"        # template / fresh-project scaffolder channel
 cp -R "$here/ci"        "$out/ci"
