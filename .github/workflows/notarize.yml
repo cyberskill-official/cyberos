@@ -1,0 +1,109 @@
+name: notarize-macos
+
+# Notarize + staple a macOS .dmg that is ALREADY published on a GitHub release, and replace the asset in
+# place. This is the "staple later" half of the release job's bargain that never existed.
+#
+# release.yml notarizes inline, but bounded (--timeout, default 20m) and `continue-on-error: true`, on the
+# reasoning that if Apple's notary queue stalls we would rather ship a signed .dmg than lose a 60-minute
+# build and staple it afterwards. That is a sound trade - except there was no lever to do the afterwards.
+# When v1.7.0's notarization hit the timeout (exit 124) the release job went GREEN and published a signed
+# but un-notarized .dmg. Signed is not enough: Gatekeeper refuses a downloaded app that is not notarized,
+# so every Mac that downloads it gets "cannot be opened because Apple cannot check it for malicious
+# software" - a broken install with a green tick next to it.
+#
+# This workflow closes that loop. It is deliberately NOT continue-on-error: it is an explicit, retryable
+# action, so if it fails you want to know, not to be told everything is fine again.
+#
+# Usage:  Actions > notarize-macos > Run workflow > tag = v1.7.0
+# Needs:  APPLE_ID, APPLE_PASSWORD (app-specific password), APPLE_TEAM_ID - all already configured.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag whose .dmg should be notarized + stapled (e.g. v1.7.0)'
+        required: true
+        type: string
+      timeout:
+        description: 'How long to wait on the Apple notary queue. Generous by default - nothing is blocked on this run.'
+        required: false
+        default: '45m'
+        type: string
+
+permissions:
+  contents: write # replace the release asset
+
+jobs:
+  notarize:
+    runs-on: macos-latest
+    steps:
+      - name: Check the Apple credentials are present
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          missing=""
+          [ -n "$APPLE_ID" ]       || missing="$missing APPLE_ID"
+          [ -n "$APPLE_PASSWORD" ] || missing="$missing APPLE_PASSWORD"
+          [ -n "$APPLE_TEAM_ID" ]  || missing="$missing APPLE_TEAM_ID"
+          if [ -n "$missing" ]; then
+            echo "::error::missing required secret(s):$missing - cannot notarize."
+            exit 1
+          fi
+
+      - name: Download the .dmg from the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern '*.dmg' --dir dist --clobber
+          ls -la dist
+          count="$(find dist -name '*.dmg' | wc -l | tr -d ' ')"
+          if [ "$count" -eq 0 ]; then
+            echo "::error::no .dmg asset on release $TAG - nothing to notarize."
+            exit 1
+          fi
+
+      # Notarize every .dmg on the release (there is one today; a universal + per-arch split would give two).
+      # No continue-on-error: a failure here must be loud.
+      - name: Notarize + staple
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          NOTARY_TIMEOUT: ${{ inputs.timeout }}
+        run: |
+          set -euo pipefail
+          find dist -name '*.dmg' -print0 | while IFS= read -r -d '' DMG; do
+            echo "::group::notarizing $(basename "$DMG")"
+            xcrun notarytool submit "$DMG" \
+              --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" --team-id "$APPLE_TEAM_ID" \
+              --wait --timeout "$NOTARY_TIMEOUT"
+            xcrun stapler staple "$DMG"
+            xcrun stapler validate "$DMG"
+            echo "::endgroup::"
+          done
+
+      # The point of the exercise: prove Gatekeeper now ACCEPTS the disk image. Without this the workflow
+      # could still go green on a .dmg that a real Mac refuses to open - the same class of lie we are fixing.
+      - name: Verify Gatekeeper accepts it
+        run: |
+          set -euo pipefail
+          find dist -name '*.dmg' -print0 | while IFS= read -r -d '' DMG; do
+            echo "checking $(basename "$DMG")"
+            spctl --assess --type open --context context:primary-signature -vv "$DMG"
+          done
+
+      - name: Replace the release asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          find dist -name '*.dmg' -print0 | while IFS= read -r -d '' DMG; do
+            gh release upload "$TAG" "$DMG" --clobber --repo "$GITHUB_REPOSITORY"
+            echo "notarized + stapled + re-uploaded $(basename "$DMG") on $TAG" >> "$GITHUB_STEP_SUMMARY"
+          done
