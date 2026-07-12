@@ -3,7 +3,7 @@ id: FR-SKILL-117
 title: "Author the architectural-spike-author/-audit pair - the missing ADR input artefact (architectural-spike@1)"
 module: SKILL
 priority: MUST
-status: implementing
+status: reviewing
 class: product
 verify: T
 phase: Wave B - finish the children

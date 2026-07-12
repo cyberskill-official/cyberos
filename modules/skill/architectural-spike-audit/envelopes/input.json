@@ -1,0 +1,8 @@
+{
+  "envelope": "architectural-spike-audit.input@1",
+  "type": "object",
+  "required": ["spike_path"],
+  "properties": {
+    "spike_path": { "type": "string", "description": "path of the architectural-spike@1 to audit" }
+  }
+}

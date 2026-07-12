@@ -1,0 +1,13 @@
+{
+  "envelope": "architectural-spike-audit.output@1",
+  "type": "object",
+  "required": ["verdict", "score", "findings"],
+  "properties": {
+    "verdict":  { "type": "string", "enum": ["pass", "fail", "needs_human"] },
+    "score":    { "type": "integer", "minimum": 0, "maximum": 10 },
+    "findings": { "type": "array", "items": { "type": "object",
+                  "required": ["rule", "location", "finding"],
+                  "properties": { "rule": {"type": "string"}, "location": {"type": "string"},
+                                   "finding": {"type": "string"}, "resolves_by": {"type": "string"} } } }
+  }
+}
