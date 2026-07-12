@@ -3,14 +3,14 @@ id: FR-APP-006
 title: "Package manager distribution — Homebrew Cask (macOS) and winget (Windows) manifests, external-repo PR submission"
 module: app
 priority: SHOULD
-status: testing
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 1
 slice: 4
 owner: Stephen Cheng
 created: 2026-07-12
-shipped: null
+shipped: 2026-07-13
 memory_chain_hash: null
 related_frs: [FR-APP-001, FR-APP-003, FR-APP-004, FR-APP-005]
 depends_on: []

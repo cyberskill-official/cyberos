@@ -3,14 +3,14 @@ id: FR-APP-004
 title: "Microsoft Store distribution — MSIX packaging over the Tauri Windows bundle, Store-managed signing, Partner Center submission"
 module: app
 priority: SHOULD
-status: testing
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 1
 slice: 2
 owner: Stephen Cheng
 created: 2026-07-12
-shipped: null
+shipped: 2026-07-13
 memory_chain_hash: null
 related_frs: [FR-APP-001, FR-APP-003, FR-APP-005, FR-APP-006]
 depends_on: []

@@ -3,14 +3,14 @@ id: FR-APP-003
 title: "macOS App Store distribution — sandboxed build, entitlements, notarization split, ASC submission"
 module: app
 priority: SHOULD
-status: testing
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 1
 slice: 1
 owner: Stephen Cheng
 created: 2026-07-12
-shipped: null
+shipped: 2026-07-13
 memory_chain_hash: null
 related_frs: [FR-APP-001, FR-APP-004, FR-APP-005, FR-APP-006]
 depends_on: []
