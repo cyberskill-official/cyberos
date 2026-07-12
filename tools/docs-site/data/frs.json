@@ -3653,7 +3653,7 @@
       "title": "Workspace moderation queue - an administrator reviews reports, acts, and is audited",
       "module": "CHAT",
       "priority": "MUST",
-      "status": "ready_to_implement",
+      "status": "reviewing",
       "verify": "T",
       "phase": "P0",
       "milestone": "P0 - store compliance (UGC controls)",

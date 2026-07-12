@@ -98,3 +98,13 @@ why not.
 ---
 
 *End of FR-CHAT-269 audit.*
+
+## Ship record (2026-07-12 - status-drift reconciliation)
+
+- Implementation predates this leg (commit f62b018, parallel session); the ship queue surfaced the
+  drift. Clause-by-clause verification of all 21 §1 clauses PASS (packet:
+  docs/feature-requests/.workflow/FR-CHAT-269/review-packet.md); 3 recorded path deviations matching
+  repo conventions.
+- Test evidence: 23-fn suite; operator confirmed tests green (cargo/CI) - sandbox carries no Rust
+  toolchain, gap named in the packet.
+- HITL: operator verdict 2026-07-12 in-chat "Tests green - approve + done" (both gates).

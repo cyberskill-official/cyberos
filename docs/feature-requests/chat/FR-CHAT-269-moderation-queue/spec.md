@@ -3,7 +3,7 @@ id: FR-CHAT-269
 title: "Workspace moderation queue - an administrator reviews reports, acts, and is audited"
 module: CHAT
 priority: MUST
-status: reviewing
+status: done
 class: product
 verify: T
 phase: P0
@@ -11,7 +11,7 @@ milestone: P0 - store compliance (UGC controls)
 slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-07-11
-shipped: null
+shipped: 2026-07-12
 memory_chain_hash: null
 related_frs: [FR-CHAT-267, FR-CHAT-268, FR-CHAT-265, FR-AUTH-101]
 depends_on: [FR-CHAT-267]
