@@ -66,7 +66,15 @@ platform :ios do
       export_method: "app-store",
       # Let Xcode create/refresh the distribution certificate and provisioning profile using the API key.
       # This is what removes the need for a committed cert or a `match` repo.
-      xcargs: "-allowProvisioningUpdates",
+      # DEVELOPMENT_TEAM has to be passed as a BUILD SETTING, not just in export_options. Capacitor
+      # scaffolds the project with CODE_SIGN_STYLE = Automatic and an EMPTY DEVELOPMENT_TEAM, and
+      # export_options only applies at the export step - by which point the ARCHIVE has already failed with
+      # "Signing for \"App\" requires a development team". Setting it here means the Team ID stays in the
+      # secret instead of being committed into project.pbxproj.
+      #
+      # -allowProvisioningUpdates lets Xcode create/refresh the distribution certificate and provisioning
+      # profile from the App Store Connect key (which is why that key needs the App Manager role).
+      xcargs: "-allowProvisioningUpdates DEVELOPMENT_TEAM=#{ENV.fetch('APPLE_TEAM_ID')}",
       export_options: {
         signingStyle: "automatic",
         teamID: ENV.fetch("APPLE_TEAM_ID"),
