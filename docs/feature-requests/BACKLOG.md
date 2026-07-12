@@ -238,7 +238,7 @@ Totals: 314 draft, 20 ready_to_implement, 9 implementing, 1 reviewing, 99 done, 
 - [draft] FR-IMP-065-track-b-mobile-shells-and-store-release-pipeline - Track B: mobile shells and store release pipeline (improvement)
 - [draft] FR-IMP-066-track-c-brain-activation-rollout-deploy-notice-a - Track C: brain activation rollout (deploy, notice, ack, capture) (improvement)
 - [draft] FR-IMP-067-go-live-readiness-gate-safety-nets-before-fully - Go-live readiness gate (safety nets before fully on) (improvement)
-- [ready_to_implement] FR-IMP-068-payload-version-drift-gate - Payload-version drift gate - CI and git hooks fail when any dist/plugin stamp differs from VERSION (improvement)
+- [implementing] FR-IMP-068-payload-version-drift-gate - Payload-version drift gate - CI and git hooks fail when any dist/plugin stamp differs from VERSION (improvement)
 - [ready_to_implement] FR-IMP-069-publish-payload-on-release - Publish the versioned payload + Claude plugin as GitHub Release assets on every vX.Y.Z tag (improvement)
 - [ready_to_implement] FR-IMP-070-remote-update-awareness - Remote update awareness - /update and init.sh --check compare installed vs latest published release, not the local payload (improvement)
 
