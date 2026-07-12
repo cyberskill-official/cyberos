@@ -412,7 +412,7 @@ cyberos init: done.
 
 Next:
   1. Write an FR from the template:
-       cp .cyberos/cuo/templates/FR-TEMPLATE.md docs/feature-requests/FR-001-<slug>.md
+       mkdir -p docs/feature-requests/<module>/FR-001-<slug> && cp .cyberos/cuo/templates/FR-TEMPLATE.md docs/feature-requests/<module>/FR-001-<slug>/spec.md
        # fill in section 1, set status: ready_to_implement, add the row to BACKLOG.md
   2. Trigger the workflow in your agent (Claude Code / Cowork / Codex):
        "Follow .cyberos/cuo/ship-feature-requests.md and drive the next eligible FR in

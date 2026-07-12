@@ -18,3 +18,12 @@ ISS-001 audit skill hard-cutting .audit.md would break pointed-at legacy files -
 **Score = 10/10.**
 
 *End of FR-SKILL-120 audit.*
+
+## §4 - Ship record (2026-07-12, batch mode)
+
+- Implemented: command doc folder-scaffolding section, author SKILL.md layout + TEMPLATE.md pointer,
+  audit SKILL.md dual resolution + dated transition window, ship workflow audit-path grammar,
+  init.sh next-steps example. t07-t10 asserts riding test_fr_layout.sh (10/10 total).
+- HITL: operator standing batch verdict recorded.
+
+Verdict unchanged: PASS, Score = 10/10.

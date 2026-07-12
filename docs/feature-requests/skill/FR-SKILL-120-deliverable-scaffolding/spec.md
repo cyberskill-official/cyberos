@@ -3,13 +3,13 @@ id: FR-SKILL-120
 title: "Workflow/skill wiring for visual deliverables - FR folder scaffolding + template@1 citations in authoring contracts"
 module: SKILL
 priority: SHOULD
-status: ready_to_implement
+status: done
 class: improvement
 verify: T
 phase: Wave D - visual deliverables
 owner: Stephen Cheng (CTO)
 created: 2026-07-12
-shipped: null
+shipped: 2026-07-12
 memory_chain_hash: null
 related_frs: [FR-DOCS-004, FR-TPL-001, FR-CUO-205]
 depends_on: [FR-DOCS-004]

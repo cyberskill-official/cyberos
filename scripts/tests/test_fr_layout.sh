@@ -44,3 +44,29 @@ t06_anchors_green() {                                                  # AC 6
 t01_no_flat_files; t02_folder_count_matches; t03_idempotent_rerun
 t04_regen_loud_and_reconciled; t05_repairs_minimal; t06_anchors_green
 echo "----"; echo "pass=$PASS fail=$FAIL"; [ "$FAIL" -eq 0 ]
+
+# --- FR-SKILL-120 doc-wiring asserts (t07-t10 -> its AC 1-4) --------------------------
+t07_command_scaffolds_folders() {
+  c="$repo/tools/cyberos-init/plugin/commands/create-feature-requests.md"
+  grep -q "<STEM>/spec.md" "$c" && grep -q "<STEM>/audit.md" "$c" \
+    && ! grep -q 'sibling `.audit.md`' "$c" && ok t07 || fail t07 "command doc grammar"
+}
+t08_contracts_updated() {
+  grep -q "{slug}/spec.md" "$repo/modules/skill/feature-request-author/SKILL.md" \
+    && grep -q "TEMPLATE.md" "$repo/modules/skill/feature-request-author/SKILL.md" \
+    && grep -q "transition window" "$repo/modules/skill/feature-request-audit/SKILL.md" \
+    && ok t08 || fail t08 "author/audit contracts"
+}
+t09_ship_and_init_coherent() {
+  grep -q "<FR>/audit.md" "$repo/modules/cuo/chief-technology-officer/workflows/ship-feature-requests.md" \
+    && grep -q "FR-001-<slug>/spec.md" "$repo/tools/cyberos-init/init.sh" \
+    && ! grep -q "feature-requests/FR-001-<slug>.md" "$repo/tools/cyberos-init/init.sh" \
+    && ok t09 || fail t09 "ship/init grammar"
+}
+t10_asset_discipline_stated() {
+  grep -q "assets/<file>" "$repo/tools/cyberos-init/plugin/commands/create-feature-requests.md" \
+    && grep -q "own-folder assets only" "$repo/modules/skill/feature-request-author/SKILL.md" \
+    && ok t10 || fail t10 "asset rule missing"
+}
+t07_command_scaffolds_folders; t08_contracts_updated; t09_ship_and_init_coherent; t10_asset_discipline_stated
+echo "----"; echo "pass=$PASS fail=$FAIL (with FR-SKILL-120 asserts)"; [ "$FAIL" -eq 0 ]

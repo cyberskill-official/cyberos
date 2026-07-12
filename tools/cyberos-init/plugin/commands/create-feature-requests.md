@@ -14,7 +14,7 @@ Run the two skills in order. Both are bundled with this plugin (`${CLAUDE_PLUGIN
 
 2. Audit - `feature-request-audit`.
    - Audit every FR just drafted against `audit_rubric@2.0` (the FM / SEC / COND / QA / SAFE / TRACE rule families).
-   - A clean audit drives the `draft -> ready_to_implement` transition per `STATUS-REFERENCE.md`. Write the sibling `.audit.md` per FR plus the batch summary.
+   - A clean audit drives the `draft -> ready_to_implement` transition per `STATUS-REFERENCE.md`. Write the audit as `<STEM>/audit.md` beside the spec plus the batch summary.
    - It HALTS on any `needs_human` verdict. Surface those to the user and stop - do not guess the verdict.
 
 3. Backlog. Delegate every row to `backlog-state-update-author` + `backlog-state-update-audit` - one `mutation_kind: insert-row` mutation per landed FR (batching per module section allowed). Never edit `BACKLOG.md` inline: the pair is the single audited write path (same one /ship-feature-requests uses), with regenerator-identical row grammar (`(improvement)` suffix on `class: improvement` rows) and a uniqueness gate. FR frontmatter `status` stays the record of truth; the backlog is the index and must match it.
@@ -22,3 +22,12 @@ Run the two skills in order. Both are bundled with this plugin (`${CLAUDE_PLUGIN
 4. Report. List each FR: id, title, class, final status, and the audit verdict. Then state the next move plainly: the FRs now at `ready_to_implement` are ready, and `/ship-feature-requests` will drive the next eligible one through implement -> review -> test, halting at the two human-acceptance gates.
 
 Never set `done`, never push, merge, or deploy. If the repo has no `.cyberos/` yet, tell the user to run `/init` first.
+
+## FR folder scaffolding (FR-SKILL-120 / FR-DOCS-004)
+
+Every new FR is born as a folder: `docs/feature-requests/<module>/<STEM>/spec.md` (the spec,
+engineering-spec@1 by default per the template resolution chain) with its audit at
+`<STEM>/audit.md`. Media lives in the FR's own `<STEM>/assets/` (created on first asset, never
+empty) and is referenced relatively as `assets/<file>` - never reach into another FR's folder.
+Rendered CDS pages (FR-DOCS-005) and the status hub pick the folder up automatically; the
+presentation contract is `modules/templates/contracts/TEMPLATE.md` (authoring stays markdown).

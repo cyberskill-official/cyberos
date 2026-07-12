@@ -829,3 +829,8 @@ engineering-spec@1 (§12 sub-rule set + TRACE-001..005 + QA + SAFE). A file matc
 NEITHER routes to needs_human naming the conflict. The 10/10 bar and needs_human semantics are
 identical across templates. Profiles: `../feature-request-author/references/TEMPLATE_PROFILES.md`.
 
+## Report path resolution (FR-SKILL-120)
+
+Folder-layout FRs (`<module>/<STEM>/spec.md`): the report is `<STEM>/audit.md`. Legacy flat files
+this skill is explicitly pointed at keep sibling `<stem>.audit.md` resolution for one release
+(transition window opened 2026-07-12; drops with the next MAJOR of this skill).

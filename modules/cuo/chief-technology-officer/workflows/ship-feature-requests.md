@@ -21,10 +21,10 @@ outputs:
   - { name: edge_case_matrix,          format: edge-case-matrix@1 (one per FR),                    recipient: memory audit chain }
   - { name: coverage_report,           format: coverage-gate@1 (one per FR),                       recipient: memory audit chain }
   - { name: debug_trace,               format: debug-trace@1 (one per failed FR attempt),          recipient: memory audit chain }
-  - { name: fr_audit_report,           format: feature-request-audit@2.0 (pre-flight, one per FR), recipient: memory audit chain + <FR>.audit.md §10 }
-  - { name: coverage_gate_report,      format: coverage-gate-audit@1 (one per FR),                 recipient: memory audit chain + <FR>.audit.md §10.4 }
-  - { name: awh_gate_report,           format: awh-eval@1 (one per FR, out-of-band rerun),         recipient: memory audit chain (memory.awh_gate_result) + <FR>.audit.md §10.5 }
-  - { name: caf_gate_report,           format: caf-gate@1 (one per FR, code-audit floor),          recipient: memory audit chain (memory.caf_gate_result) + <FR>.audit.md §10.6 }
+  - { name: fr_audit_report,           format: feature-request-audit@2.0 (pre-flight, one per FR), recipient: memory audit chain + <FR>/audit.md §10 }
+  - { name: coverage_gate_report,      format: coverage-gate-audit@1 (one per FR),                 recipient: memory audit chain + <FR>/audit.md §10.4 }
+  - { name: awh_gate_report,           format: awh-eval@1 (one per FR, out-of-band rerun),         recipient: memory audit chain (memory.awh_gate_result) + <FR>/audit.md §10.5 }
+  - { name: caf_gate_report,           format: caf-gate@1 (one per FR, code-audit floor),          recipient: memory audit chain (memory.caf_gate_result) + <FR>/audit.md §10.6 }
 
 skill_chain:
   # ── Phase: ready_to_implement → implementing (workflow start) ──
@@ -245,7 +245,7 @@ The workflow MUST drive **all phases of an FR to completion in one continuous se
 2. Don't ask between phases for self-resolvable work — continuation is implied by "drive this FR". The two human-acceptance gates (review approval at `reviewing → ready_to_test`, and final acceptance at `testing → done`) are the exception: halt for the recorded human verdict there, since HITL is required.
 3. Commit per phase for git-history hygiene; each phase = own conventional commit + verify gate.
 4. Do NOT pause between FRs either. The outer loop (§11) advances to the next eligible FR on its own; halt between FRs only on an `EXECUTION-DISCIPLINE.md` §2 condition, never just because one FR finished.
-5. If genuinely blocked mid-FR (e.g. needs ADR-class operator decision), DOCUMENT the block in §10.7 of the .audit.md, route back to `ready_to_implement` with `routed_back_count += 1` and `reason: "<blocker>"`. Do NOT silently ship a partial phase and walk away.
+5. If genuinely blocked mid-FR (e.g. needs ADR-class operator decision), DOCUMENT the block in §10.7 of the FR's audit.md, route back to `ready_to_implement` with `routed_back_count += 1` and `reason: "<blocker>"`. Do NOT silently ship a partial phase and walk away.
 
 See `feature-request-audit` skill §9.1 for the full clause + grandfathered exceptions.
 

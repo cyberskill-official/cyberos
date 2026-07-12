@@ -361,7 +361,7 @@ This skill operates under strict anti-fabrication rules per `references/ANTI_FAB
 
 > **Co-located with the auditor that enforces it.** This file lives next to the `feature-request-audit` skill (`modules/skill/feature-request-audit/`) because every rule below is checked by `audit_rubric@2.0`. The discipline doc and the rubric ship together — if you change one, you change the other.
 >
-> Authored FRs live at `cyberos/docs/feature-requests/{module}/FR-{MOD}-{NNN}-{slug}.md` with sibling `*.audit.md`. This file is the operator-side companion to the skill-side `RUBRIC.md`.
+> Authored FRs live at `cyberos/docs/feature-requests/{module}/FR-{MOD}-{NNN}-{slug}/spec.md` with the audit at `{same-folder}/audit.md` and media in `{same-folder}/assets/` (FR-DOCS-004 folder-per-FR; assets/ created on first asset). This file is the operator-side companion to the skill-side `RUBRIC.md`.
 
 **Source of truth.** This file is normative for every Feature Request in `cyberos/docs/feature-requests/`. It supersedes any prior ad-hoc patterns.
 
@@ -389,7 +389,7 @@ Perfect = **highly detailed** AND **perfectly matched to core requirements** AND
 ### The Loop
 
 1. **First-pass author** the FR per the 11-section template (§3 below).
-2. **Author the audit file** at `<spec-stem>.audit.md` — find at least 6 ISS-xxx findings; score the spec honestly.
+2. **Author the audit file** at `<STEM>/audit.md` (legacy flat specs: `<spec-stem>.audit.md`) — find at least 6 ISS-xxx findings; score the spec honestly.
 3. **If `score_post_revision < 10/10`**: revise the FR addressing every finding.
 4. **Re-audit** the revised spec.
 5. **Repeat** steps 3–4 until `score_post_revision: 10/10`.
@@ -863,3 +863,9 @@ authoring rules below apply) or `feature_request@1` (authoring rules in
 invocation override > `.cyberos/config.yaml` `fr_template` > default. The resolved template is echoed
 in the PLAN so the operator approves template + content together.
 
+## Folder layout + presentation (FR-SKILL-120)
+
+Artefact layout: `docs/feature-requests/<module>/<STEM>/spec.md` + `audit.md` + `assets/`
+(on demand; own-folder assets only, referenced as `assets/<file>`). Presentation is rendered
+through `modules/templates/contracts/TEMPLATE.md` (deliverable@1) by the docs-site pipeline -
+informative pointer: authoring remains markdown per FR-DOCS-002.
