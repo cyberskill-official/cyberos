@@ -31,7 +31,7 @@ cp "$repo/modules/skill/contracts/feature-request/STATUS-REFERENCE.md"          
 cp "$here/gates/run-gates.sh"                                                        "$out/cuo/gates/run-gates.sh"
 cp -R "$here/templates/." "$out/cuo/templates/"
 
-skills="repo-context-map-author repo-context-map-audit architecture-decision-record-author architecture-decision-record-audit edge-case-matrix-author edge-case-matrix-audit mock-contract-test-author mock-contract-test-audit implementation-plan-author implementation-plan-audit observability-injection-author observability-injection-audit backlog-state-update-author backlog-state-update-audit code-review-author code-review-audit coverage-gate-author coverage-gate-audit feature-request-author feature-request-audit"
+skills="repo-context-map-author repo-context-map-audit architecture-decision-record-author architecture-decision-record-audit edge-case-matrix-author edge-case-matrix-audit mock-contract-test-author mock-contract-test-audit implementation-plan-author implementation-plan-audit observability-injection-author observability-injection-audit backlog-state-update-author backlog-state-update-audit code-review-author code-review-audit coverage-gate-author coverage-gate-audit feature-request-author feature-request-audit debugging-cycle-author debugging-cycle-audit"  # FR-SKILL-116: ship steps 25-26
 vendored_skills=0
 for s in $skills; do
   if [ -d "$repo/modules/skill/$s" ]; then
@@ -189,6 +189,9 @@ notes: >
   mode always works; missing skills/caf degrade to the reduced-profile floor (the target
   repo's own build/lint/test + coverage + code review + the two human gates).
 EOF
+
+# FR-SKILL-116 §1 #5: a payload that under-covers its own workflow cannot be produced.
+bash "$here/check-chain-coverage.sh" "$out"
 
 echo "cyberos-init: done. profile=$profile skills=$vendored_skills caf=$caf_vendored"
 echo "cyberos-init: payload at $out - init.sh lays it out under a target repo's .cyberos/ (gitignored)"

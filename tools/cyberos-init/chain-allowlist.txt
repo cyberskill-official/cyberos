@@ -1,0 +1,5 @@
+# chain-allowlist.txt - names exempt from check-chain-coverage.sh rules (FR-SKILL-116 §1 #3).
+# One name per line + a # reason saying WHICH rule kind the exemption covers.
+# An entry that nothing references and no payload dir matches triggers a rot warning.
+awh-gate   # MISSING exemption: script-backed chain step (awh eval), no skill dir by design
+caf-gate   # MISSING exemption: script-backed chain step (scripts/caf_gate.sh), no skill dir by design
