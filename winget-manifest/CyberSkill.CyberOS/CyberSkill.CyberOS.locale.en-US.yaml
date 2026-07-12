@@ -1,0 +1,13 @@
+# FR-APP-006: winget default-locale manifest. Field set is the schema's required minimum
+# plus the identity fields; confirm against live winget-pkgs templates pre-submission (spec 9).
+PackageIdentifier: CyberSkill.CyberOS
+PackageVersion: 1.0.0
+PackageLocale: en-US
+Publisher: CyberSkill Software Solutions Consultancy and Development Joint Stock Company
+PublisherUrl: https://cyberskill.world/
+PackageName: CyberOS
+PackageUrl: https://os.cyberskill.world/
+License: Proprietary
+ShortDescription: CyberSkill's desktop client — Turn Your Will Into Real
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0

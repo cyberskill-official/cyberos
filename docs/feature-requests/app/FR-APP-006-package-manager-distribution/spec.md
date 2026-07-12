@@ -3,7 +3,7 @@ id: FR-APP-006
 title: "Package manager distribution — Homebrew Cask (macOS) and winget (Windows) manifests, external-repo PR submission"
 module: app
 priority: SHOULD
-status: ready_to_implement
+status: ready_to_review
 verify: T
 phase: P1
 milestone: P1 · slice 1

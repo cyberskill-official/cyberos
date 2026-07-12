@@ -1,0 +1,109 @@
+name: release-pkgmgr-pr
+
+# FR-APP-006: PREPARATION-ONLY package-manager manifest refresh (Homebrew Cask + winget).
+# On dispatch, each gated job re-derives version + SHA256 from the actual GitHub Release
+# artifact and uploads a staged manifest draft for Stephen's review. NO job here ever
+# opens a PR against the external homebrew-cask or winget-pkgs monorepos - submission
+# stays a manual, per-instance, Stephen-approved action under this FR's own standing
+# guard step below (spec 1 #5/#6: the flags gate preparation, never submission; the
+# shared-monorepo blast radius is why this is stricter than the Flathub gate).
+#
+# Wording note: comments in this file deliberately avoid spelling any submission
+# command as a contiguous string - the guard would (correctly) flag its own workflow.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to derive manifests from (defaults to the current ref)'
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  # Unconditional: the AC #3 structural guard + the anchor for AC #4's two skipped-vs-ran
+  # assertions (one per independently-gated prep job).
+  guard-and-assert-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: No submission command exists in repo tooling (AC #3, both checks)
+        run: |
+          # Patterns split so this guard never matches its own source (same idiom as the
+          # Flathub guard in release-snap.yml). Check (a): the real guarantee - the whole
+          # CI/tooling surface, no repo-name precondition a violation could evade.
+          pat="gh pr ""create|brew bump""-cask-pr|wingetcreate"" submit"
+          if grep -rE "$pat" .github/ tools/ 2>/dev/null; then
+            echo "::error::submission command found under .github/ or tools/ - forbidden by FR-APP-006 AC #3"
+            exit 1
+          fi
+          # Check (b): defense-in-depth with a clearer message when a file names either
+          # external repo AND carries a submission command.
+          for f in $(grep -rl "homebrew-cask\|winget-pkgs" .github/ tools/ 2>/dev/null); do
+            if grep -qE "$pat" "$f"; then
+              echo "::error::submission command found in $f (repo-name-adjacent) - forbidden by FR-APP-006 AC #3"
+              exit 1
+            fi
+          done
+          echo "no submission commands found (structural guarantee holds)"
+      - run: echo "workflow executed; see prepare-cask-manifest / prepare-winget-manifest conclusions for gate states"
+
+  prepare-cask-manifest:
+    if: ${{ vars.PKGMGR_CASK_RELEASE == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Re-derive version + SHA256 from the release .dmg and render the draft (AC #5)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          VER="${TAG#v}"
+          gh release download "$TAG" --repo cyberskill-official/cyberos --pattern "*universal.dmg" --output cyberos.dmg
+          SHA=$(sha256sum cyberos.dmg | cut -d' ' -f1)
+          echo "tag=$TAG version=$VER sha256=$SHA"
+          mkdir -p staged
+          sed -E \
+            -e "s|^  version \".*\"$|  version \"$VER\"|" \
+            -e "s|^  sha256 \".*\".*$|  sha256 \"$SHA\"|" \
+            homebrew-cask-manifest/cyberos.rb > staged/cyberos.rb
+          # AC #5 assert: the staged draft carries the hash computed IN THIS RUN, and no
+          # placeholder survives the render.
+          grep -q "$SHA" staged/cyberos.rb || { echo "::error::rendered cask draft missing this run's computed sha256"; exit 1; }
+          ! grep -q "REPLACE_WITH_SHA256" staged/cyberos.rb || { echo "::error::placeholder survived the cask render"; exit 1; }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cyberos-cask-manifest-draft
+          path: staged/cyberos.rb
+
+  prepare-winget-manifest:
+    if: ${{ vars.PKGMGR_WINGET_RELEASE == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Re-derive version + SHA256 from the release installer and render the draft set (AC #5)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          VER="${TAG#v}"
+          gh release download "$TAG" --repo cyberskill-official/cyberos --pattern "*x64-setup.exe" --output cyberos-setup.exe
+          SHA=$(sha256sum cyberos-setup.exe | cut -d' ' -f1)
+          echo "tag=$TAG version=$VER sha256=$SHA"
+          mkdir -p staged/CyberSkill.CyberOS
+          for f in CyberSkill.CyberOS.yaml CyberSkill.CyberOS.locale.en-US.yaml CyberSkill.CyberOS.installer.yaml; do
+            sed -E \
+              -e "s|^PackageVersion: .*$|PackageVersion: $VER|" \
+              -e "s|download/v[^/]*/CyberOS_[^_]*_x64-setup.exe|download/v$VER/CyberOS_${VER}_x64-setup.exe|" \
+              -e "s|^(    InstallerSha256: ).*$|\1$SHA|" \
+              "winget-manifest/CyberSkill.CyberOS/$f" > "staged/CyberSkill.CyberOS/$f"
+          done
+          grep -q "$SHA" staged/CyberSkill.CyberOS/CyberSkill.CyberOS.installer.yaml || { echo "::error::rendered winget draft missing this run's computed sha256"; exit 1; }
+          ! grep -rq "REPLACE_WITH_SHA256" staged/ || { echo "::error::placeholder survived the winget render"; exit 1; }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cyberos-winget-manifest-draft
+          path: staged/CyberSkill.CyberOS/

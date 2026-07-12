@@ -1,0 +1,8 @@
+# FR-APP-006: winget version manifest (one of the three-file set Microsoft's schema requires).
+# ManifestVersion 1.6.0 is this FR's best-available understanding - spec 9 requires confirming
+# against the live winget-pkgs templates before submission (same hedge as the installer file).
+PackageIdentifier: CyberSkill.CyberOS
+PackageVersion: 1.0.0
+DefaultLocale: en-US
+ManifestType: version
+ManifestVersion: 1.6.0
