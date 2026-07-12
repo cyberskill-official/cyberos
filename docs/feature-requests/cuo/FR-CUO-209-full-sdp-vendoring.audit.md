@@ -52,3 +52,11 @@ All six findings addressed as cited. Dependencies on FR-SKILL-116/117 are declar
   (§1 #5 + audit §11 + t07).
 
 *FR-CUO-209 shipped 2026-07-12. The payload now covers the full 14-stage SDP.*
+
+## §11 - Post-ship amendment log
+
+- 2026-07-12 (FR-CUO-206 in flight): t08 `workflows_diff_clean` tripped on FR-CUO-206's legitimate
+  ship-workflow edit - the AC 8 guard was a point-in-time scope clause implemented as a permanent
+  invariant (same class as the FR-SKILL-116 reduced-profile finding). Amended: §1 #8 + AC 8 note the
+  temporal scope; t08 repurposed to `workflows_vendored_intact` (both docs present in payload,
+  skill_chain + Resume semantics structure intact). Verdict unchanged: PASS, Score = 10/10.

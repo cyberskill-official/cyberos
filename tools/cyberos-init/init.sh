@@ -54,6 +54,8 @@ fi
 
 echo "cyberos init: target repo = $root (CyberOS $avail_ver)"
 mkdir -p "$CY" "$root/docs/feature-requests/_audits"
+mkdir -p "$root/docs/feature-requests/.workflow"
+[ -f "$root/docs/feature-requests/.workflow/.gitignore" ] || printf '%s\n' '*.ship.json' > "$root/docs/feature-requests/.workflow/.gitignore"  # ship-manifest@1 run state stays untracked (FR-CUO-206)
 
 # 1. vendor the machine by module (replace any prior copy) --------------------
 rm -rf "$CY/cuo" "$CY/plugin" "$CY/mcp"

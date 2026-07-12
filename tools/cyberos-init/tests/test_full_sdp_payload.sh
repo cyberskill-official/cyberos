@@ -76,14 +76,17 @@ t07_reduced_floor_intact() {                                          # AC 7
   echo "$out7" | grep -q "profile=reduced" && grep -q "cyberos_version: 9.9.9" "$F/dist/manifest.yaml" \
     && ok t07 || fail t07 "reduced floor broken: $(echo "$out7" | grep done)"
 }
-t08_workflows_diff_clean() {                                          # AC 8
-  git -C "$repo" diff --name-only HEAD -- \
-    modules/cuo/chief-technology-officer/workflows/ship-feature-requests.md \
-    tools/cyberos-init/plugin/commands/create-feature-requests.md | grep -q . \
-    && fail t08 "a workflow doc changed in this FR" || ok t08
+t08_workflows_vendored_intact() {                                     # AC 8 (amended post-ship: durable form)
+  # Original diff-clean form was FR-CUO-209's point-in-time scope guard; git history holds that proof.
+  # Durable invariant: both workflow docs ship in the payload and the chain structure is intact.
+  local ship="$TMP/payload/cuo/ship-feature-requests.md"
+  local create="$TMP/payload/plugin/commands/create-feature-requests.md"
+  [ -f "$ship" ] && [ -f "$create" ] && grep -q "skill_chain:" "$ship" \
+    && grep -q "Resume semantics" "$ship" \
+    && ok t08 || fail t08 "workflow docs missing from payload or chain structure broken"
 }
 
 t01_stage_matrix_ships; t02_set_is_reviewable_data; t03_counts_computed; t04_lifecycle_map_total
-t05_sibling_checks_green; t06_size_budget; t07_reduced_floor_intact; t08_workflows_diff_clean
+t05_sibling_checks_green; t06_size_budget; t07_reduced_floor_intact; t08_workflows_vendored_intact
 echo "----"; echo "pass=$PASS fail=$FAIL"
 [ "$FAIL" -eq 0 ]

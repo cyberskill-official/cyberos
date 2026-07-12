@@ -1,6 +1,6 @@
 ---
 workflow_id: chief-technology-officer/ship-feature-requests
-workflow_version: 2.3.1
+workflow_version: 2.4.0
 purpose: Drive each eligible FR in `docs/feature-requests/BACKLOG.md` end-to-end through the full lifecycle — from `ready_to_implement` through `implementing → ready_to_review → reviewing → ready_to_test → testing → done` (per `docs/feature-requests/STATUS-REFERENCE.md` §1.1). Deep-maps the repo, generates the edge-case matrix, implements with 90 % coverage on touched files, injects observability, self-approves architectural deviations via ADRs, runs the multi-vector debugger with a 5-fail circuit breaker, runs the testing gate (`coverage-gate-author`/`-audit`), and physically updates BACKLOG.md status between every phase transition. Failure or blocker at any downstream phase routes the FR back to `ready_to_implement` (STATUS-REFERENCE §1.3) with `routed_back_count += 1`.
 persona: chief-technology-officer
 cadence: per-FR (loops continuously over BACKLOG.md)
@@ -228,7 +228,7 @@ The CUO supervisor invokes this workflow in a loop:
 
 ```
 while ! stop_signal:
-    next_fr = read_backlog().next_eligible()
+    next_fr = read_backlog().next_eligible()   # deterministic: see 'Queue selection' in Resume semantics below
     if next_fr is None: break        # backlog drained
     invoke_workflow("chief-technology-officer/ship-feature-requests", { repo_root, next_fr })
 ```
@@ -249,12 +249,48 @@ The workflow MUST drive **all phases of an FR to completion in one continuous se
 
 See `feature-request-audit` skill §9.1 for the full clause + grandfathered exceptions.
 
+## Resume semantics (ship-manifest@1) - added by FR-CUO-206
+
+Every run maintains a per-FR run-state manifest at `docs/feature-requests/.workflow/<FR-ID>.ship.json`,
+shaped by `modules/skill/contracts/feature-request/SHIP-MANIFEST.md` (ship-manifest@1). The manifest is a
+CACHE of proven work, never an authority - FR frontmatter and BACKLOG.md remain the only record of truth.
+
+**Write points.** The manifest MUST be rewritten after EVERY completed, failed, or conditionally-skipped
+step - no step's outcome goes unrecorded. Writes are two-phase atomic (`.tmp.<nonce>` then rename),
+mirroring the memory-protocol discipline. Each step entry records `{index, skill, status, artefact_path,
+artefact_sha256, verdict, completed_at}`; `fr_sha256` (hash of the FR spec at run start) and
+`workflow_version` are pinned at manifest creation.
+
+**Resume.** On invocation for an FR whose manifest exists:
+
+1. `workflow_version` mismatch -> needs_human. Never a silent mixed-version run.
+2. `fr_sha256` mismatch (FR spec edited since run start) -> every step is stale; restart at step 1
+   (history and `routed_back_count` are retained).
+3. Otherwise re-hash EVERY recorded `artefact_sha256` against disk. The earliest mismatch marks that
+   step and all later steps stale - redo from there. All intact -> continue at the first non-done step.
+4. Echo the resume line before running: `resume <FR-ID>: steps 1-N verified (K artefacts, hashes OK),
+   continuing at step M/31 (<skill>). routed_back_count=R`.
+
+**Human gates re-ask.** A manifest can never authorize a gate: resuming at a HITL gate step re-requests
+the human approval. A recorded `hitl.requested_at` is when the question was asked - it is NOT the answer,
+and MUST NOT be treated as approval.
+
+**Terminal handling.** When the FR reaches `done` (HITL gate 2 passed), delete the manifest. On route-back
+to `ready_to_implement`, keep it with `routed_back_count += 1` - the next run restarts at step 1 by the
+staleness rule but retains count and history.
+
+**Queue selection (no FR id given).** Among FRs at `ready_to_implement` whose `depends_on` are all `done`:
+order by priority (MUST before SHOULD before COULD), then `created` ascending, then id ascending. Echo the
+selection before step 1: `queue: picked <id> (priority=<p>, created=<d>) over <n> other eligible FRs`.
+Reference implementation: `modules/cuo/cuo/ship_manifest.py` (doc-driven agents apply this section directly).
+
 ## Cross-references
 
 - Execution discipline (continuous run, halt-only conditions): [`../../EXECUTION-DISCIPLINE.md`](../../EXECUTION-DISCIPLINE.md). Added 2026-06-20 (v2.2.0): the agent halts only for an operator-decision fork, a manual/operator-only action, a hard blocker past the budget, or the operator stop signal; it self-resolves everything else and runs continuously across phases and FRs.
 - FR lifecycle: `docs/feature-requests/STATUS-REFERENCE.md` (10-state enum, transitions, HITL semantics).
 - Original prompt source: operator's "Zero-Touch Principal Engineer (Unattended Execution)" — absorbed 2026-05-18.
 - BACKLOG state engine: `docs/feature-requests/BACKLOG.md`.
+- Run-state manifest contract: `modules/skill/contracts/feature-request/SHIP-MANIFEST.md` (ship-manifest@1, FR-CUO-206). Manifests are gitignored session state under `docs/feature-requests/.workflow/`.
 - Companion workflow: `chief-technology-officer/architect-new-system` — produces the FRs this workflow consumes.
 - No-partial-ship rule: `feature-request-audit` skill §9.1.
 - Pre-flight spec audit (separate chain): `feature-request-audit` skill — drives `draft → ready_to_implement`.

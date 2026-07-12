@@ -45,7 +45,7 @@ Normative clauses:
 5. Both checks from the sibling FRs MUST pass over the expanded set: chain coverage (FR-SKILL-116) and pair parity where the pair is at full contract (FR-SKILL-118) - thin-but-shipped upstream pairs are permitted at their current completeness (parity applies per-pair as they are deepened; the checker's scope list says which pairs are held to full parity).
 6. Build output MUST report payload size (bytes of the payload dir and of cyberos.plugin) on every build; the plugin zip MUST stay under 2 MB with the expanded set (current: ~322 KB), asserted in the build.
 7. Reduced-profile behavior MUST be unchanged: a payload built without skill bodies still degrades to the doc-driven floor; `/init` behavior in target repos is unchanged apart from the larger `cuo/skills/` tree.
-8. The two workflow docs MUST NOT change in this FR - upstream/downstream skills vendor as standalone-invocable; wiring them into new workflow steps is future work by separate FR.
+8. The two workflow docs MUST NOT change in this FR - upstream/downstream skills vendor as standalone-invocable; wiring them into new workflow steps is future work by separate FR. (Amended post-ship 2026-07-12: the guard is a point-in-time scope clause proven by this FR's commits in git history; the suite's t08 now asserts the durable form - both workflow docs vendored intact in the payload - so later FRs may legitimately evolve the docs. Surfaced by FR-CUO-206.)
 
 ## §2 - Why this design
 
@@ -79,7 +79,7 @@ Build report line: `cyberos-init: done. profile=full skills=<computed> payload=<
 5. **Sibling checks green over the expanded set** (§1 #5) - chain-coverage exits 0 (with the NFR/gate allowlist entries) and pair-parity exits 0 over its scoped list.
 6. **Size budget** (§1 #6) - the build prints both sizes and fails if the plugin zip exceeds 2 MB; current expanded build passes.
 7. **Reduced floor intact** (§1 #7) - a skill-less fixture build still yields `profile: reduced` and a working doc-driven payload.
-8. **Workflows untouched** (§1 #8) - ship-feature-requests.md and create-feature-requests.md are diff-clean in this FR.
+8. **Workflows untouched** (§1 #8) - ship-feature-requests.md and create-feature-requests.md are diff-clean in this FR's commits (git history); the regression suite asserts the durable form (docs vendored intact in the payload) post-amendment.
 
 ## §5 - Verification
 
