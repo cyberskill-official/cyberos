@@ -164,21 +164,58 @@ function handle(msg) {
 function reply(id, result) { return id === undefined || id === null ? null : { jsonrpc: "2.0", id, result }; }
 function rpcError(id, code, message) { return { jsonrpc: "2.0", id, error: { code, message } }; }
 
-// --- stdio loop (newline-delimited JSON) --------------------------------------
-let buf = "";
-process.stdin.setEncoding("utf8");
-process.stdin.on("data", (chunk) => {
-  buf += chunk;
-  let nl;
-  while ((nl = buf.indexOf("\n")) >= 0) {
-    const line = buf.slice(0, nl).trim();
-    buf = buf.slice(nl + 1);
-    if (!line) continue;
-    let msg;
-    try { msg = JSON.parse(line); } catch { continue; }
-    const res = handle(msg);
-    if (res) process.stdout.write(`${JSON.stringify(res)}\n`);
-  }
-});
-process.stdin.on("end", () => process.exit(0));
-process.stderr.write(`cyberos-mcp ${SERVER.version} ready (stdio)\n`);
+// --- remote connector mode: `--http [port]` (FR-IMP-076) -----------------------
+// MCP streamable-HTTP transport, zero-dep: POST /mcp carries one JSON-RPC message
+// (or a batch array) and gets application/json back; GET /healthz for probes.
+// This is the endpoint agent UIs' "custom connector" dialogs point at (Claude:
+// remote MCP server URL; Grok: MCP server URL). Serve it behind TLS + a reverse
+// proxy in production - transport here, deployment/auth are the operator's
+// (docs/deploy/mcp-connector.md).
+if (process.argv.includes("--http")) {
+  const { createServer } = await import("node:http");
+  const port = Number(process.argv[process.argv.indexOf("--http") + 1]) || 8799;
+  createServer((req, res) => {
+    if (req.method === "GET" && req.url === "/healthz") {
+      res.writeHead(200, { "content-type": "application/json" });
+      return res.end(JSON.stringify({ ok: true, server: SERVER }));
+    }
+    if (req.method !== "POST") {
+      res.writeHead(405, { "content-type": "application/json", allow: "POST" });
+      return res.end(JSON.stringify({ error: "POST JSON-RPC to this endpoint (MCP streamable HTTP)" }));
+    }
+    let body = "";
+    req.on("data", (c) => { body += c; if (body.length > 1_000_000) req.destroy(); });
+    req.on("end", () => {
+      let msg;
+      try { msg = JSON.parse(body); } catch {
+        res.writeHead(400, { "content-type": "application/json" });
+        return res.end(JSON.stringify(rpcError(null, -32700, "parse error")));
+      }
+      const out = Array.isArray(msg) ? msg.map(handle).filter(Boolean) : handle(msg);
+      if (out === null || (Array.isArray(out) && out.length === 0)) {
+        res.writeHead(202); return res.end(); // notification(s): accepted, no body
+      }
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify(out));
+    });
+  }).listen(port, () => process.stderr.write(`cyberos-mcp ${SERVER.version} ready (http :${port}/mcp-style POST, /healthz)\n`));
+} else {
+  // --- stdio loop (newline-delimited JSON) ------------------------------------
+  let buf = "";
+  process.stdin.setEncoding("utf8");
+  process.stdin.on("data", (chunk) => {
+    buf += chunk;
+    let nl;
+    while ((nl = buf.indexOf("\n")) >= 0) {
+      const line = buf.slice(0, nl).trim();
+      buf = buf.slice(nl + 1);
+      if (!line) continue;
+      let msg;
+      try { msg = JSON.parse(line); } catch { continue; }
+      const res = handle(msg);
+      if (res) process.stdout.write(`${JSON.stringify(res)}\n`);
+    }
+  });
+  process.stdin.on("end", () => process.exit(0));
+  process.stderr.write(`cyberos-mcp ${SERVER.version} ready (stdio)\n`);
+}

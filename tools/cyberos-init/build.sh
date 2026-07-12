@@ -135,6 +135,10 @@ if [ -f "$here/migrate-frs.sh" ] && [ -f "$here/../../scripts/migrate_fr_layout.
 fi
 cp "$here/bootstrap.sh" "$out/bootstrap.sh"
 cp "$here/create.sh"    "$out/create.sh"        # template / fresh-project scaffolder channel
+# FR-IMP-076: root CLI trio - init/update/changelog/help all directly runnable as .sh
+cp "$here/update.sh"    "$out/update.sh"
+cp "$here/changelog.sh" "$out/changelog.sh"
+cp "$here/help.sh"      "$out/help.sh"
 cp -R "$here/ci"        "$out/ci"
 cp -R "$here/mcp"       "$out/mcp"              # MCP server channel (node stdio; every MCP agent)
 cp -R "$here/cli"       "$out/cli"              # npx CLI channel (cyberos-init / -gates / -mcp)
@@ -142,7 +146,7 @@ cp -R "$here/template"  "$out/template"         # skeleton for create.sh + GitHu
 cp "$here/Dockerfile"   "$out/Dockerfile"
 cp "$here/README.md"    "$out/README.md"
 cp "$here/docs/index.md" "$out/GUIDE.md"   # the guide source lives in docs/ (site-rendered); ships as GUIDE.md
-chmod +x "$out/init.sh" "$out/bootstrap.sh" "$out/create.sh" "$out/cuo/gates/run-gates.sh" 2>/dev/null || true
+chmod +x "$out/init.sh" "$out/bootstrap.sh" "$out/create.sh" "$out/update.sh" "$out/changelog.sh" "$out/help.sh" "$out/cuo/gates/run-gates.sh" 2>/dev/null || true
 chmod +x "$out/mcp/cyberos-mcp.mjs" "$out"/cli/bin/*.mjs 2>/dev/null || true
 
 # $cyver was validated + computed at the TOP of this script (FR-IMP-068: fail-fast, no 0.0.0 fallback).
@@ -230,7 +234,7 @@ cat > "$out/package.json" <<PKG
     "cyberos-mcp": "cli/bin/cyberos-mcp.mjs"
   },
   "engines": { "node": ">=18" },
-  "files": ["cuo", "memory", "plugin", "mcp", "cli", "ci", "template", "init.sh", "bootstrap.sh", "create.sh", "Dockerfile", "VERSION", "manifest.yaml", "GUIDE.md", "README.md", ".claude-plugin"],
+  "files": ["cuo", "memory", "plugin", "mcp", "cli", "ci", "template", "init.sh", "bootstrap.sh", "create.sh", "update.sh", "changelog.sh", "help.sh", "Dockerfile", "VERSION", "manifest.yaml", "GUIDE.md", "README.md", ".claude-plugin"],
   "keywords": ["cyberos", "feature-requests", "agents", "mcp", "workflow", "hitl", "gates"],
   "license": "MIT"
 }
@@ -260,7 +264,7 @@ profile: $profile          # full = skills + caf vendored; reduced = doc-driven 
 modules:
   cuo:    { workflow: ship-feature-requests, normative_docs: 3, author_audit_skills: $vendored_skills, caf_tooling: $caf_vendored }
   memory: { protocol: $memory_vendored }
-channels: [copy-folder, git-submodule, curl-bootstrap, claude-plugin, mcp-server, npx-cli, template-repo, create-scaffold, github-action, docker, makefile]
+channels: [copy-folder, git-submodule, curl-bootstrap, claude-plugin, mcp-server, mcp-connector, npx-cli, root-cli, template-repo, create-scaffold, github-action, docker, makefile]
 agents:   [claude-code, codex, cursor, gemini, antigravity, grok-cli, zcode, command-code, copilot, windsurf, aider, zed, jules, warp, opencode]
 agent_surface:
   spine: AGENTS.md                       # canonical cross-agent instruction file
