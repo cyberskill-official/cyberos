@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- FR-APP-004: MSIX manifest for the Microsoft Store channel. Identity values are
+     DELIBERATE placeholders (CHANGEME-PENDING-PARTNER-CENTER-RESERVATION) - swapped in by
+     Stephen once the Partner Center app-identity reservation exists. tools/msix-identity-lint.sh
+     hard-fails any MSSTORE_RELEASE=true build while the placeholder remains, so the inert
+     default stays honest. Icon references point at the already-committed Tauri-generated
+     tile set under icons/ (staged into Assets\ by release-msstore.yml); Wide310x150Logo is
+     deliberately absent - that asset does not exist in the confirmed set (spec 11). -->
+<Package
+    xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+    xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+    xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+    IgnorableNamespaces="uap rescap">
+
+  <Identity
+      Name="CHANGEME-PENDING-PARTNER-CENTER-RESERVATION"
+      Publisher="CHANGEME-PENDING-PARTNER-CENTER-RESERVATION"
+      Version="1.0.0.0" />
+
+  <Properties>
+    <DisplayName>CyberOS</DisplayName>
+    <PublisherDisplayName>CyberSkill Software Solutions Consultancy and Development Joint Stock Company</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.22621.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+
+  <Applications>
+    <Application Id="CyberOS" Executable="CyberOS.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+          DisplayName="CyberOS"
+          Description="CyberOS — Turn Your Will Into Real"
+          BackgroundColor="transparent"
+          Square150x150Logo="Assets\Square150x150Logo.png"
+          Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Square310x310Logo="Assets\Square310x310Logo.png" />
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>

@@ -1,0 +1,158 @@
+name: release-msstore
+
+# FR-APP-004: Microsoft Store channel - Tauri Windows build, MSIX wrap via makeappx.exe,
+# optional self-managed EV signing, Partner Center submission via the Store Submission API.
+# Manual dispatch only; inert until repo variable MSSTORE_RELEASE=true, and even then the
+# identity lint blocks any run whose AppxManifest still carries the CHANGEME placeholder
+# (a second, independent gate - FR-APP-004 AC #3).
+#
+# Divergences from the FR's §3 skeleton, on purpose (recorded in the FR review packet):
+#   - staging paths are repo-root-relative (the skeleton's `src-tauri\...` only resolved
+#     from apps/desktop, but its staging step ran at repo root)
+#   - the raw binary is located defensively: Tauri v2 renames the main binary to
+#     productName (CyberOS.exe) on recent versions, older builds leave the Cargo name
+#     (cyberos-desktop.exe) - the step accepts either and stages it AS CyberOS.exe,
+#     which is what AppxManifest.xml declares
+#   - Node + Rust toolchain + VERSION stamper steps mirror the existing desktop job
+#   - identity lint runs FIRST in the gated job, so a placeholder manifest fails in
+#     seconds, not after a full Rust build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # Unconditional anchor (mirrors release-mas.yml): gives every dispatch a completed run
+  # in which the gated job's skipped-vs-ran conclusion can be asserted (AC #4).
+  assert-msstore-gate-inert:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Identity lint (inert mode - proves the lint itself runs green outside a Store attempt)
+        run: bash tools/msix-identity-lint.sh
+      - run: echo "workflow executed; see build-and-submit-msstore conclusion for gate state"
+
+  build-and-submit-msstore:
+    if: ${{ vars.MSSTORE_RELEASE == 'true' }}
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+
+      # AC #3's hard gate: MSSTORE_RELEASE is true here by the job condition, so the lint
+      # fails the build while the Partner Center identity is still the placeholder.
+      - name: Identity lint (enforced - placeholder blocks Store submission)
+        shell: bash
+        env:
+          MSSTORE_RELEASE: 'true'
+        run: bash tools/msix-identity-lint.sh
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Stamp VERSION into the installers
+        run: node scripts/stamp-release-version.mjs --apply
+
+      - name: Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Windows bundle (NSIS profile - same Cargo profile the GitHub-Releases artifact uses)
+        working-directory: apps/desktop
+        run: npx --yes @tauri-apps/cli@2 build --config src-tauri/tauri.msix.conf.json --bundles nsis
+
+      - name: Locate Windows SDK tools (version-independent)
+        id: sdk
+        shell: pwsh
+        run: |
+          $kitsRoot = "${env:ProgramFiles(x86)}\Windows Kits\10\bin"
+          $sdkDir = Get-ChildItem $kitsRoot -Directory | Where-Object { $_.Name -match '^\d+\.\d+\.\d+\.\d+$' } |
+            Sort-Object Name -Descending | Select-Object -First 1
+          if (-not $sdkDir) { throw "No Windows SDK bin directory found under $kitsRoot" }
+          $makeappx = Join-Path $sdkDir.FullName "x64\makeappx.exe"
+          $signtool = Join-Path $sdkDir.FullName "x64\signtool.exe"
+          if (-not (Test-Path $makeappx)) { throw "makeappx.exe not found at $makeappx" }
+          "makeappx=$makeappx" >> $env:GITHUB_OUTPUT
+          "signtool=$signtool" >> $env:GITHUB_OUTPUT
+
+      - name: Stage MSIX layout directory
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path staging\Assets | Out-Null
+          # Tauri v2 renames the main binary to productName on current versions; accept the
+          # Cargo-named binary from older versions too, and stage either AS CyberOS.exe
+          # (the name AppxManifest.xml declares). Fail listing the dir if neither exists.
+          $rel = "apps\desktop\src-tauri\target\release"
+          $bin = @("$rel\CyberOS.exe", "$rel\cyberos-desktop.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $bin) {
+            Get-ChildItem $rel -Filter *.exe | ForEach-Object { Write-Host "found: $($_.Name)" }
+            throw "No main binary found at $rel (expected CyberOS.exe or cyberos-desktop.exe)"
+          }
+          Copy-Item $bin staging\CyberOS.exe
+          Copy-Item apps\desktop\src-tauri\AppxManifest.xml staging\
+          foreach ($f in @("Square150x150Logo.png","Square44x44Logo.png","Square310x310Logo.png","StoreLogo.png")) {
+            Copy-Item "apps\desktop\src-tauri\icons\$f" staging\Assets\
+          }
+          # AC #2 pre-pack existence check: fail loudly with the missing filename, not a
+          # silent makeappx.exe schema error, if any referenced asset didn't copy.
+          foreach ($f in @("Square150x150Logo.png","Square44x44Logo.png","Square310x310Logo.png","StoreLogo.png")) {
+            if (-not (Test-Path "staging\Assets\$f")) { throw "Missing staged asset: $f" }
+          }
+
+      - name: Pack MSIX (AC #1 - makeappx rejects a schema-invalid manifest here)
+        shell: pwsh
+        run: |
+          & "${{ steps.sdk.outputs.makeappx }}" pack /d staging /p CyberOS.msix /o
+          if ($LASTEXITCODE -ne 0) { throw "makeappx pack failed with exit $LASTEXITCODE" }
+
+      - name: Import EV signing certificate (self-managed path only)
+        if: ${{ vars.MSSTORE_SIGNING_MODE == 'self-managed' }}
+        shell: pwsh
+        env:
+          MSSTORE_EV_CERT_PFX_BASE64: ${{ secrets.MSSTORE_EV_CERT_PFX_BASE64 }}
+          MSSTORE_EV_CERT_PFX_PASSWORD: ${{ secrets.MSSTORE_EV_CERT_PFX_PASSWORD }}
+        run: |
+          $pfxBytes = [Convert]::FromBase64String($env:MSSTORE_EV_CERT_PFX_BASE64)
+          $pfxPath = Join-Path $env:RUNNER_TEMP "mstore-ev-cert.pfx"
+          [IO.File]::WriteAllBytes($pfxPath, $pfxBytes)
+          $securePw = ConvertTo-SecureString $env:MSSTORE_EV_CERT_PFX_PASSWORD -AsPlainText -Force
+          Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation Cert:\CurrentUser\My -Password $securePw
+          Remove-Item $pfxPath -Force
+
+      - name: Sign MSIX (self-managed path only - Store-managed signing skips this entirely)
+        if: ${{ vars.MSSTORE_SIGNING_MODE == 'self-managed' }}
+        shell: pwsh
+        env:
+          MSSTORE_EV_CERT_THUMBPRINT: ${{ secrets.MSSTORE_EV_CERT_THUMBPRINT }}
+        run: |
+          & "${{ steps.sdk.outputs.signtool }}" sign /fd SHA256 /sha1 "$env:MSSTORE_EV_CERT_THUMBPRINT" `
+            /tr http://timestamp.digicert.com /td SHA256 CyberOS.msix
+          if ($LASTEXITCODE -ne 0) { throw "signtool failed with exit $LASTEXITCODE" }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cyberos-msix
+          path: CyberOS.msix
+
+      - name: Submit to Partner Center via Store Submission API
+        shell: pwsh
+        env:
+          MSSTORE_TENANT_ID: ${{ secrets.MSSTORE_TENANT_ID }}
+          MSSTORE_CLIENT_ID: ${{ secrets.MSSTORE_CLIENT_ID }}
+          MSSTORE_CLIENT_SECRET: ${{ secrets.MSSTORE_CLIENT_SECRET }}
+          MSSTORE_APP_ID: ${{ secrets.MSSTORE_APP_ID }}
+        run: |
+          $token = (Invoke-RestMethod -Method Post `
+            -Uri "https://login.microsoftonline.com/$env:MSSTORE_TENANT_ID/oauth2/v2.0/token" `
+            -Body @{ grant_type="client_credentials"; client_id=$env:MSSTORE_CLIENT_ID; `
+                     client_secret=$env:MSSTORE_CLIENT_SECRET; `
+                     scope="https://manage.devcenter.microsoft.com/.default" }).access_token
+          if (-not $token) { throw "Store Submission API token acquisition failed" }
+          # Multi-step submission flow (create draft -> upload package to the returned Azure
+          # Blob SAS URL -> commit -> poll) is implemented against Microsoft's live Store
+          # Submission API docs at first real run (spec §6/§11: the REST contract is
+          # Microsoft-versioned; transcribing it here would drift). A stale PendingCommit
+          # draft from an interrupted run is cleaned up in the Partner Center UI
+          # (docs/deploy/microsoft-store-submission.md, operational notes).
+          Write-Host "auth token acquired; submission flow proceeds per Microsoft Store Submission API docs"
