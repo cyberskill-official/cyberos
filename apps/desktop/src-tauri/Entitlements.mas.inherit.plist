@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- FR-APP-003 §1 #3: sandbox-inheritance entitlements for any Tauri-spawned child
+     process. DEFENSIVE-ONLY as of the AC #1 audit: the Rust backend spawns no child
+     processes today (no Command::new, no sidecar/externalBin in tauri.conf.json, no
+     shell plugin; tauri::async_runtime::spawn is an in-process task, not a process).
+     The file exists so a future sidecar cannot ship un-sandboxed by omission - the
+     release-mas.yml packaging step applies it to Contents/MacOS/* helper binaries
+     whenever any appear next to the main executable. -->
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.app-sandbox</key>
+    <true/>
+    <key>com.apple.security.inherit</key>
+    <true/>
+</dict>
+</plist>

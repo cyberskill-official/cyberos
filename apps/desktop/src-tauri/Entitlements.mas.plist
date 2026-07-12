@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- FR-APP-003: Mac App Store entitlements for the sandboxed MAS build target.
+     Minimal-by-audit: every key below is justified by a row in
+     docs/deploy/mac-app-store-submission.md ("Sandbox surface audit") and
+     tools/mas-entitlement-lint.sh fails the build on any key without one.
+     Note: the spec's §3 initial sketch also carried files.user-selected.read-write;
+     the AC #1 source audit found ZERO filesystem access in the Rust backend
+     (no fs plugin, no dialog plugin, no std::fs call), so per AC #2 minimality
+     that entitlement is deliberately absent, not forgotten. -->
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.app-sandbox</key>
+    <true/>
+    <key>com.apple.security.network.client</key>
+    <true/>
+</dict>
+</plist>

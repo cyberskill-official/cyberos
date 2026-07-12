@@ -1,0 +1,150 @@
+name: release-mas
+
+# FR-APP-003: Mac App Store channel - sandboxed Tauri build, 3rd-Party-Mac-Developer signing,
+# .pkg packaging, App Store Connect upload. Manual dispatch only (deliberately NOT coupled to
+# release tags while the channel is stood up) and inert until the repo variable MAS_RELEASE=true
+# AND every hard blocker in docs/deploy/mac-app-store-submission.md is resolved - notably the
+# follow-up FR that excludes tauri-plugin-updater from the MAS target (self-update is both a
+# sandbox violation and an App Store policy violation; see the answer sheet's "Updater finding").
+#
+# Divergences from the FR's §3 skeleton, on purpose (recorded in the FR review packet):
+#   - bundle paths are repo-root-relative and include the universal-apple-darwin target triple
+#   - helper-binary signing SKIPS the main executable (re-signing it with the inherit plist
+#     would clobber the app's real entitlements - the skeleton's `MacOS/*` glob was a bug)
+#   - Node + Rust toolchains and the VERSION stamper mirror the existing desktop job
+#   - the ASC API key is materialized to ./private_keys/AuthKey_<KEYID>.p8 (altool's search
+#     path) and shredded in cleanup; the skeleton exported it as env only, which altool ignores
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # Runs UNCONDITIONALLY (no `if:`) so AC #6 always has a completed run in which the gated
+  # job's conclusion (skipped vs ran) can be asserted via `gh run view`, whatever MAS_RELEASE is.
+  assert-mas-gate-inert:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Entitlement lint (FR-APP-003 AC #2 - runs on every dispatch, gate or no gate)
+        run: bash tools/mas-entitlement-lint.sh
+      - run: echo "workflow executed; see build-and-submit-mas conclusion for gate state"
+
+  build-and-submit-mas:
+    if: ${{ vars.MAS_RELEASE == 'true' }}
+    # Pinned image (not macos-latest): §10 records a known `security set-key-partition-list`
+    # ACL flake class tied to image/Xcode combinations - pinning is the mitigation.
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Same discipline as the desktop job: installers carry their own version fields;
+      # stamp them so the MAS pkg can never ship a number that disagrees with VERSION.
+      - name: Stamp VERSION into the installers
+        run: node scripts/stamp-release-version.mjs --apply
+
+      # Universal binary (arm64 + x86_64), matching the Developer ID channel - Intel Macs
+      # are still half the installed base and the App Store accepts universal bundles.
+      - name: Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Import MAS signing certificates into an ephemeral keychain
+        env:
+          MAS_APP_CERT_P12_BASE64: ${{ secrets.MAS_APP_CERT_P12_BASE64 }}
+          MAS_INSTALLER_CERT_P12_BASE64: ${{ secrets.MAS_INSTALLER_CERT_P12_BASE64 }}
+          MAS_CERT_PASSWORD: ${{ secrets.MAS_CERT_PASSWORD }}
+          MAS_KEYCHAIN_PASSWORD: ${{ secrets.MAS_KEYCHAIN_PASSWORD }}
+        run: |
+          security create-keychain -p "$MAS_KEYCHAIN_PASSWORD" mas-build.keychain
+          security set-keychain-settings -lut 21600 mas-build.keychain
+          security unlock-keychain -p "$MAS_KEYCHAIN_PASSWORD" mas-build.keychain
+          for cert_var in MAS_APP_CERT_P12_BASE64 MAS_INSTALLER_CERT_P12_BASE64; do
+            printf '%s' "${!cert_var}" | base64 --decode > /tmp/"$cert_var".p12
+            security import /tmp/"$cert_var".p12 -k mas-build.keychain -P "$MAS_CERT_PASSWORD" \
+              -T /usr/bin/codesign -T /usr/bin/productbuild
+            rm -f /tmp/"$cert_var".p12
+          done
+          security list-keychains -d user -s mas-build.keychain login.keychain
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$MAS_KEYCHAIN_PASSWORD" mas-build.keychain
+
+      # tauri.mas.conf.json deep-merges over tauri.conf.json: sandbox entitlements,
+      # "3rd Party Mac Developer Application" signing, hardened runtime OFF (App Store
+      # apps sandbox instead - the two are mutually redundant per Apple guidance).
+      # apps/desktop has no package.json; the CLI is fetched pinned to major 2 (the
+      # desktop job's tauri-action does the equivalent internally).
+      - name: Build MAS bundle (sandboxed, universal)
+        working-directory: apps/desktop
+        run: npx --yes @tauri-apps/cli@2 build --config src-tauri/tauri.mas.conf.json --bundles app --target universal-apple-darwin
+
+      # Sandbox inheritance for helper binaries ONLY. No helpers exist today (audit:
+      # no sidecars/child processes) - this loop is the guard that a future sidecar
+      # cannot ship un-sandboxed. The main executable is skipped: it already carries
+      # Entitlements.mas.plist from the tauri build, and re-signing it with the inherit
+      # plist would replace those entitlements. If any helper WAS signed, the outer
+      # bundle is re-sealed afterwards (inside-out signing order per Apple).
+      - name: Apply inherit entitlements to helper binaries (if any)
+        env:
+          MAS_APP_SIGNING_IDENTITY: ${{ secrets.MAS_APP_SIGNING_IDENTITY }}
+        run: |
+          app="apps/desktop/src-tauri/target/universal-apple-darwin/release/bundle/macos/CyberOS.app"
+          resealed=0
+          for f in "$app"/Contents/MacOS/*; do
+            [ "$(basename "$f")" = "CyberOS" ] && continue
+            echo "signing helper with inherit entitlements: $f"
+            codesign --force --entitlements apps/desktop/src-tauri/Entitlements.mas.inherit.plist \
+              --sign "$MAS_APP_SIGNING_IDENTITY" "$f"
+            resealed=1
+          done
+          if [ "$resealed" -eq 1 ]; then
+            echo "re-sealing outer bundle after helper signing"
+            codesign --force --entitlements apps/desktop/src-tauri/Entitlements.mas.plist \
+              --sign "$MAS_APP_SIGNING_IDENTITY" "$app"
+          else
+            echo "no helper binaries present - inherit plist stays defensive-only"
+          fi
+
+      - name: Verify signature + sandbox (FR-APP-003 AC #5)
+        run: |
+          app="apps/desktop/src-tauri/target/universal-apple-darwin/release/bundle/macos/CyberOS.app"
+          codesign --verify --strict --verbose=2 "$app"
+          codesign -d --entitlements - "$app" | grep -q "com.apple.security.app-sandbox" \
+            || { echo "::error::MAS bundle is not sandboxed"; exit 1; }
+
+      - name: Build pkg installer
+        env:
+          MAS_INSTALLER_SIGNING_IDENTITY: ${{ secrets.MAS_INSTALLER_SIGNING_IDENTITY }}
+        run: |
+          productbuild --component apps/desktop/src-tauri/target/universal-apple-darwin/release/bundle/macos/CyberOS.app /Applications \
+            --sign "$MAS_INSTALLER_SIGNING_IDENTITY" \
+            CyberOS.pkg
+          pkgutil --check-signature CyberOS.pkg
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cyberos-mas-pkg
+          path: CyberOS.pkg
+
+      - name: Upload to App Store Connect
+        env:
+          ASC_API_KEY: ${{ secrets.ASC_API_KEY }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          mkdir -p ./private_keys
+          printf '%s' "$ASC_API_KEY" > "./private_keys/AuthKey_${ASC_KEY_ID}.p8"
+          xcrun altool --upload-app -f CyberOS.pkg -t macos \
+            --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+
+      - name: Clean up keychain + API key material
+        if: always()
+        run: |
+          security delete-keychain mas-build.keychain || true
+          rm -rf ./private_keys

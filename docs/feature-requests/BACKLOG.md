@@ -17,7 +17,7 @@ Totals: 335 draft, 8 ready_to_implement, 12 implementing, 1 in review flow, 141 
 ## app  (1 implementing, 4 ready_to_implement)
 
 - [implementing] FR-APP-001-desktop-cyberos-operations - Desktop CyberOS operations - build payload, init/update projects from the UI
-- [ready_to_implement] FR-APP-003-mac-app-store-distribution - macOS App Store distribution — sandboxed build, entitlements, notarization split, ASC submission
+- [ready_to_review] FR-APP-003-mac-app-store-distribution - macOS App Store distribution — sandboxed build, entitlements, notarization split, ASC submission
 - [ready_to_implement] FR-APP-004-microsoft-store-distribution - Microsoft Store distribution — MSIX packaging over the Tauri Windows bundle, Store-managed signing, Partner Center submission
 - [ready_to_implement] FR-APP-005-linux-store-distribution - Linux store distribution — Snap Store (snapcraft, strict confinement) and Flathub (flatpak-builder, external-manifest submission)
 - [ready_to_implement] FR-APP-006-package-manager-distribution - Package manager distribution — Homebrew Cask (macOS) and winget (Windows) manifests, external-repo PR submission
