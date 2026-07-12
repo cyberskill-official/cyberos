@@ -61,6 +61,10 @@ jobs:
       # against the default branch and finds nothing, so it would otherwise ALWAYS skip the gate and the image
       # build - which makes a manual re-deploy of already-merged code impossible.
       services: ${{ steps.filter.outputs.services == 'true' || inputs.force_services == true }}
+      # FR-IMP-081: gates the rebuild-web job below. Deliberately NOT include apps/console/web itself -
+      # that is the generated OUTPUT this job produces, and including it would make the job's own commit
+      # look like a reason to run again.
+      web_src: ${{ steps.filter.outputs.web_src == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - id: filter
@@ -69,6 +73,9 @@ jobs:
           filters: |
             services:
               - 'services/**'
+            web_src:
+              - 'apps/web/**'
+              - 'VERSION'
 
   # Rust gate (only when services changed). Blocks the roll on failure.
   gate:
@@ -165,9 +172,79 @@ jobs:
           build_push cyberos-eval || echo "::warning::cyberos-eval image build failed (best-effort, deploy-gated off)"
           build_push cyberos-memory || echo "::warning::cyberos-memory image build failed (best-effort, deploy-gated off)"
 
+  # FR-IMP-081: rebuild + recommit apps/console/web (the tracked vite output the VPS serves via git pull)
+  # whenever apps/web/** or VERSION actually changed - closing the gap FR-IMP-080 found, where nothing
+  # owned refreshing this dir after a version bump and the live badge silently lagged the platform
+  # VERSION (apps/web/scripts/stamp-sw.mjs's comment documents the exact incident: v1.2.0 served while
+  # the platform shipped 1.7.0).
+  #
+  # Gated on `web_src` (NOT unconditional): stamp-sw.mjs's cache id is a build TIMESTAMP, not a content
+  # hash, so an ungated rebuild would diff - and commit - on every single deploy.yml run, including ones
+  # that never touched the web app. Reuses version.yml's already-proven bot-commit pattern verbatim
+  # (same cyberos-bot identity, same VERSION_BUMP_SSH_KEY deploy-key ruleset bypass, same graceful
+  # degrade-to-warning if the push is blocked) rather than inventing a second one.
+  rebuild-web:
+    needs: changes
+    if: needs.changes.outputs.web_src == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    # This job is additive to the services roll, not a gate on it: apps/web and services/ are independent
+    # deployables. Without this, a real build failure here (a broken `tsc`/`vite` on main, not just a
+    # blocked push) would trip `failure()` and - via `deploy`'s shared `needs:` - block an otherwise-healthy
+    # services roll for a completely unrelated breakage. continue-on-error still shows this job red in the
+    # Actions UI (so a broken web build is never silently swallowed); it only stops that redness from
+    # cascading into the services pipeline's own success/failure signal.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          # Same deploy key as version.yml (docs/deploy/RELEASE.md): the default GITHUB_TOKEN cannot
+          # bypass the branch ruleset, so an unset secret here degrades the push step below to a warning
+          # rather than a hard failure.
+          ssh-key: ${{ secrets.VERSION_BUMP_SSH_KEY }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Rebuild apps/web -> apps/console/web
+        working-directory: apps/web
+        run: |
+          npm ci
+          npm run build
+
+      - name: Commit the refreshed bundle back to main, if it changed
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- apps/console/web; then
+            echo "apps/console/web unchanged after rebuild (the touched path was non-output, e.g. android/ios) - nothing to commit." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git config user.name  "cyberos-bot"
+          git config user.email "bot@cyberskill.world"
+          git add apps/console/web
+          # [skip ci]: unlike version.yml's bump commit (which must stay visible to tag-triggered
+          # workflows per FR-IMP-071), this commit only refreshes a served artifact - it has no reason
+          # to re-trigger deploy.yml a second time for itself.
+          git commit -m "chore(web): rebuild served bundle @ $(cat VERSION) [skip ci]"
+          if git push origin HEAD:main; then
+            echo "apps/console/web rebuilt + pushed @ $(cat VERSION)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::apps/console/web rebuild computed but push blocked by the branch ruleset - not pushed. Rebuild manually: cd apps/web && npm run build"
+            {
+              echo "### apps/console/web rebuild computed but NOT pushed (ruleset)"
+              echo "The push to main was rejected by the branch ruleset. Add a Deploy Key to the AWH gate"
+              echo "ruleset bypass and set its private half as VERSION_BUMP_SSH_KEY (docs/deploy/RELEASE.md),"
+              echo "or rebuild manually: cd apps/web && npm run build && git add apps/console/web && git commit && git push."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
   # Roll the VPS. Runs for client-only pushes too (build-images skipped); skipped only if a needed job FAILED.
   deploy:
-    needs: [changes, build-images]
+    # rebuild-web is included so deploy.sh's VPS-side `git pull` always runs AFTER any bundle-refresh
+    # push has landed on main, not racing ahead of it. A skipped rebuild-web (web_src == false) reports
+    # success for `needs:` purposes, same as build-images already does when services == false.
+    needs: [changes, build-images, rebuild-web]
     if: ${{ always() && !failure() && !cancelled() }}
     runs-on: ubuntu-latest
     steps:
