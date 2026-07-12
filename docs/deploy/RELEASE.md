@@ -151,7 +151,7 @@ Repo variable:
 
 5. Watch `deploy.yml` go green (images pushed, VPS rolled), then the `release` workflow build the native installers and open a draft GitHub Release with them attached (plus the Android bundle once `ANDROID_RELEASE=true`, and a TestFlight upload once `IOS_RELEASE=true`).
 6. Edit the draft release notes and publish. Hand out the installer links; with mobile on, the iOS build is in TestFlight and the Android `.aab` is the release artifact to upload to Play.
-7. Distribute the payload to consumer repos: each project updates with `init.sh --check` (notify) and re-running `init.sh` (apply) - or from the desktop app's CyberOS Ops tab. Fleet-wide: `tools/cyberos-init/rollout.sh`.
+7. Distribute the payload to consumer repos: each project updates with `init.sh --check` (notify) and re-running `init.sh` (apply) - or from the desktop app's CyberOS Ops tab. Fleet-wide: `tools/cyberos-init/rollout.sh`. Every `vX.Y.Z` tag also publishes the payload as GitHub Release assets (`cyberos-payload.tar.gz`, `cyberos.plugin`, versioned twins, `SHA256SUMS` - the `payload` job in release.yml), so consumers can install from `releases/latest/download/` via `bootstrap.sh` or `rollout.sh --from-release` without a local checkout (FR-IMP-069).
 
 ## Docs are part of every release
 
