@@ -3,13 +3,13 @@ id: FR-IMP-080
 title: "Served-bundle version drift — live site announced v0.1.0 after the 1.0.0 release; refreshed bundle + version-sync gate coverage for apps/console/web"
 module: improvement
 priority: MUST
-status: testing
+status: done
 class: improvement
 verify: T
 phase: "Wave 6 - go-live (web channel)"
 owner: Stephen Cheng (CTO)
 created: 2026-07-13
-shipped: null
+shipped: 2026-07-13
 memory_chain_hash: null
 related_frs: [FR-IMP-068, FR-DOCS-007]
 depends_on: []
