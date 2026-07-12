@@ -40,3 +40,17 @@ Only the deploy path was hooked in the first cut; a release tag would not refres
 All six findings addressed as cited. Depends on FR-DOCS-002 (reviewing) as declared - this queues immediately behind it. **Score = 10/10.**
 
 *End of FR-DOCS-003 audit.*
+
+## §4 - Ship record (2026-07-12)
+
+- Implementation: render-roadmap.mjs (stdlib, 3 inputs, 4 blocks, deterministic stamp, inline vanilla
+  filtering, token styling) + build.sh step + render-docs nav hook + release.yml docs job (same VPS
+  target as deploy.yml); commit 3747f4c. Phase artefacts: docs/feature-requests/.workflow/FR-DOCS-003/.
+- Review: human verdict at gate 1 APPROVE + pre-authorize done (Stephen Cheng, in-chat).
+- Testing: test_render_roadmap.sh 8/8 (one per AC), 8/8 repo suites, live build green
+  (486 FRs / 18 releases / VERSION 0.1.0, page in nav). Gate 2 recorded per pre-authorization.
+- Field finding queued: regen_backlog read_fm silently skips 42 yaml-invalid FRs (444 vs 486) -
+  next-batch FR to make the skip loud and repair the files. The roadmap's invalid-status bucket is
+  live as the corpus data-quality monitor (§11).
+
+Verdict unchanged: PASS, Score = 10/10.
