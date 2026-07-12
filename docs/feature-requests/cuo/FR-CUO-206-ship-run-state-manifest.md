@@ -3,7 +3,7 @@ id: FR-CUO-206
 title: "Ship run-state manifest (ship-manifest@1) - resumable 31-step chain + depends_on-aware queue selection"
 module: cuo
 priority: MUST
-status: implementing
+status: reviewing
 class: product
 verify: T
 phase: Wave C - strengthen the workflows
