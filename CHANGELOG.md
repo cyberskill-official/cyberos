@@ -2,6 +2,14 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [0.4.0] - 2026-07-12
+
+Added
+- FR-DOCS-007 status hub v2 - dashboard UI on CDS tokens + zero-touch HTML regeneration
+
+Fixed
+- remove manual CODE_SIGN_IDENTITY overrides - automatic signing + ASC API key owns identity
+
 ## [0.3.0] - 2026-07-12
 
 Added
