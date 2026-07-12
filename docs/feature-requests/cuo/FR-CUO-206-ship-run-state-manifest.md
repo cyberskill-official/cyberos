@@ -3,13 +3,13 @@ id: FR-CUO-206
 title: "Ship run-state manifest (ship-manifest@1) - resumable 31-step chain + depends_on-aware queue selection"
 module: cuo
 priority: MUST
-status: reviewing
+status: done
 class: product
 verify: T
 phase: Wave C - strengthen the workflows
 owner: Stephen Cheng (CTO)
 created: 2026-07-12
-shipped: null
+shipped: 2026-07-12
 memory_chain_hash: null
 related_frs: [FR-CUO-205, FR-CUO-207, FR-SKILL-118]
 depends_on: []

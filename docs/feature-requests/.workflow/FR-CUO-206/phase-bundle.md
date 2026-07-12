@@ -47,3 +47,18 @@ queue + reasoning echo (AC5) PASS; #5 gitignore + init scaffold (AC6, git check-
 (greps in AC2/AC8 + manual) PASS; #8 gate re-ask normative (AC8) PASS. Secret scan: none. Injection:
 no shell interpolation from manifest content. Backwards compat: no existing manifests exist; version
 bump to 2.4.0 makes any stray one needs_human by design.
+
+## coverage gate (testing phase, steps 21-29)
+Suite: modules/cuo/tests/test_ship_manifest.py - 8/8 pass (one per AC). Statement coverage on the
+touched python file (ast-statement basis, import traced): 100.0% (75/75), gate >= 90% PASS.
+tests_failed=0; files_below_90pct=[]; ecm_rows_uncovered=[] (each ECM row names its covering test in
+the matrix above). Full regression: all 5 tools/cyberos-init suites PASS; pre-commit payload rebuild +
+sync OK 1.9.1 across 6 artifacts; git check-ignore confirms *.ship.json untracked.
+Strengthened during gate: validate() error branches (5) + write_atomic failure-cleanup path added to
+the AC1/AC2 tests after the first coverage read showed them unhit (77.3% -> 100%).
+
+## HITL record
+Gate 1 (reviewing -> ready_to_test): APPROVED by Stephen Cheng (CTO), 2026-07-12, in-chat -
+"Approve + pre-authorize done".
+Gate 2 (testing -> done): pre-authorized at gate 1; testing phase stayed green (8/8, 100% coverage,
+5/5 suites) - done recorded per that standing verdict.

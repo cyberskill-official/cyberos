@@ -40,3 +40,17 @@ Manifests of done FRs would accumulate; route-backs would lose history. Resolved
 All six findings addressed as cited. The FR upgrades ship from restartable to resumable without moving any authority off FR frontmatter. **Score = 10/10.**
 
 *End of FR-CUO-206 audit.*
+
+## §10 - Ship record (2026-07-12)
+
+- §10.1 Implementation: contract + helpers + tests + workflow v2.4.0 Resume semantics + scaffolds,
+  commit 46911d8; phase artefacts at docs/feature-requests/.workflow/FR-CUO-206/.
+- §10.2 Review: clause-by-clause pass (packet in phase-bundle); human verdict at gate 1:
+  APPROVE + pre-authorize done (Stephen Cheng, in-chat).
+- §10.3 Testing: 8/8 AC tests, 100.0% statement coverage on modules/cuo/cuo/ship_manifest.py
+  (raised from 77.3% by covering validate error branches + write_atomic failure cleanup),
+  5/5 cyberos-init suites, git check-ignore proof. Gate 2 recorded per pre-authorization.
+- §10.4 Field finding folded back: FR-CUO-209 t08 temporal-scope guard amended to durable
+  workflows_vendored_intact (FR-CUO-209 §1 #8, AC 8, audit §11).
+
+Verdict unchanged: PASS, Score = 10/10.

@@ -66,6 +66,12 @@ class TestShipManifest(unittest.TestCase):
         self.assertTrue(any("fr_sha256" in e for e in sm.validate(bad)))
         bad2 = _manifest(steps=[{"index": 99, "skill": "x", "status": "wat"}])
         self.assertEqual(len(sm.validate(bad2)), 2)  # bad status + bad index
+        # every root error branch fires exactly once
+        wrong = _manifest()
+        wrong.update({"manifest_version": "ship-manifest@0", "fr_sha256": "zz",
+                      "current_step": 0, "routed_back_count": -1})
+        wrong["hitl"] = {"gate": "vibes"}
+        self.assertEqual(len(sm.validate(wrong)), 5)
 
     def test_atomic_write_discipline_documented(self):  # AC 2
         doc = open(WORKFLOW_DOC).read()
@@ -75,6 +81,15 @@ class TestShipManifest(unittest.TestCase):
             p = os.path.join(d, "FR-X.ship.json")
             sm.write_atomic(_manifest(), p)
             self.assertEqual(json.load(open(p))["fr_id"], "FR-TEN-208")
+            self.assertEqual([f for f in os.listdir(d) if ".tmp." in f], [])
+            # failure path: replace blows up -> tmp file is still cleaned
+            real = os.replace
+            os.replace = lambda a, b: (_ for _ in ()).throw(OSError("boom"))
+            try:
+                with self.assertRaises(OSError):
+                    sm.write_atomic(_manifest(), os.path.join(d, "x.ship.json"))
+            finally:
+                os.replace = real
             self.assertEqual([f for f in os.listdir(d) if ".tmp." in f], [])
 
     def test_resume_plan_intact_and_stale(self):  # AC 3
