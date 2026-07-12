@@ -3,7 +3,7 @@ id: FR-EVAL-001
 title: "governance, consent, access-control + retention layer — versioned monitoring notice + per-subject acknowledgment gate + data-category/purpose registry + per-category retention sweeper + manager/self access grants (tenant RLS + audit row per read) + data-subject rights — the Phase-0 gate every BRAIN/EVAL capture and evaluation depends on"
 module: EVAL
 priority: MUST
-status: blocked
+status: on_hold   # was "blocked" (not a valid status per STATUS-REFERENCE §1); deferred pending FR-AUTH-003
 verify: T
 phase: P0
 milestone: BRAIN/EVAL · Phase 0 (governance first)
