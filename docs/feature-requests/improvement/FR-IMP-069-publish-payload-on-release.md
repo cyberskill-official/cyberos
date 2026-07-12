@@ -3,7 +3,7 @@ id: FR-IMP-069
 title: "Publish the versioned payload + Claude plugin as GitHub Release assets on every vX.Y.Z tag"
 module: improvement
 priority: MUST
-status: implementing
+status: reviewing
 class: improvement
 verify: T
 phase: Wave A - version coupling
