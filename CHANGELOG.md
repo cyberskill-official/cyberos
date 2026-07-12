@@ -2,6 +2,23 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [0.1.0] - 2026-07-12
+
+CyberOS has never completed a store release, so the version now says so. The 1.x line was never shipped
+to a public store; carrying a 1.x number implied a stability commitment that had not been earned. Versions
+below run 0.x until the 1.0.0 call is made deliberately.
+
+Changed
+- VERSION rolled back to 0.1.0. The 1.x tags and releases are withdrawn.
+- Store build numbers are decoupled from the semver and now come from a new monotonic `BUILD_NUMBER` file,
+  seeded at 10701. Google Play permanently remembers every `versionCode` it has accepted (10700, from
+  1.7.0) and rejects anything at or below the highest it has seen. The old derived formula
+  (`major*10000 + minor*100 + patch`) would have turned 0.1.0 into versionCode 100 and made every future
+  Android upload unshippable, irreversibly. The stamper now hard-fails on any BUILD_NUMBER <= 10700.
+- `feat!:` / `BREAKING CHANGE:` no longer auto-declares 1.0.0. While the major is 0, a breaking change
+  bumps the minor - which is also what semver means by 0.x. Reaching 1.0.0 requires an explicit
+  `--set 1.0.0` or a `Release-As: 1.0.0` trailer.
+
 ## [1.9.1] - 2026-07-12
 
 Fixed

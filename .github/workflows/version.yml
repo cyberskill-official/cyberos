@@ -62,7 +62,11 @@ jobs:
           set -euo pipefail
           git config user.name  "cyberos-bot"
           git config user.email "bot@cyberskill.world"
-          git add VERSION CHANGELOG.md
+          # BUILD_NUMBER is bumped by the same script and MUST be committed alongside VERSION. It is the
+          # monotonic counter Google Play and App Store Connect order uploads by, and it is deliberately
+          # NOT derived from the semver (see scripts/stamp-release-version.mjs). Left unstaged, it silently
+          # resets on the next checkout and every subsequent store upload is rejected as a duplicate.
+          git add VERSION BUILD_NUMBER CHANGELOG.md
           git commit -m "chore(release): ${{ steps.bump.outputs.version }} [skip ci]"
           # A protected-branch ruleset blocks a direct push from the default token. With a deploy key
           # configured (secrets.VERSION_BUMP_SSH_KEY, added to the ruleset bypass) the push succeeds;

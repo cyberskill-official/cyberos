@@ -11,11 +11,25 @@
 //   apps/desktop/src-tauri/tauri.conf.json   version        -> X.Y.Z
 //   apps/web/package.json                    version        -> X.Y.Z
 //   apps/web/android/app/build.gradle        versionName    -> "X.Y.Z"
-//                                            versionCode    -> major*10000 + minor*100 + patch
+//                                            versionCode    -> BUILD_NUMBER
+//   apps/web/ios/.../project.pbxproj          MARKETING_VERSION       -> X.Y.Z
+//                                             CURRENT_PROJECT_VERSION -> BUILD_NUMBER
 //
-// versionCode is derived (not incremented) so it is deterministic and reproducible from VERSION
-// alone: 1.2.0 -> 10200, 1.2.1 -> 10201, 2.0.0 -> 20000. Strictly increasing for any semver bump
-// while minor/patch stay under 100.
+// THE STORE BUILD NUMBER IS DECOUPLED FROM SEMVER, ON PURPOSE.
+//
+// It used to be derived: major*10000 + minor*100 + patch. That is deterministic and reads nicely, and
+// it is a trap. Google Play remembers every versionCode it has ever seen and refuses anything that is
+// not strictly higher - forever. Play has already accepted 10700 (from 1.7.0). The moment VERSION was
+// rolled back to 0.1.0 for the pre-1.0 run-up, the derived code would have become 100, and EVERY future
+// Android upload would have been rejected with no way back. Apple has the same rule for
+// CFBundleVersion within a version string.
+//
+// So the store build number now comes from a dedicated BUILD_NUMBER file that only ever increments
+// (bumped by scripts/cyberos-version.mjs alongside VERSION). It is seeded at 10701 - one above Play's
+// high-water mark - so the rollback to 0.x is safe. The marketing version (0.1.0) and the build number
+// (10701+) are simply different things: one is what humans read, the other is a monotonic counter the
+// stores use to order uploads. Conflating them cost us an irreversible mistake once; do not re-couple
+// them.
 //
 // Usage:
 //   node scripts/stamp-release-version.mjs            # --check: report drift, exit 0
@@ -31,10 +45,28 @@ const root = (() => {
 })();
 
 const version = readFileSync(join(root, "VERSION"), "utf8").trim();
-const m = version.match(/^(\d+)\.(\d+)\.(\d+)$/);
-if (!m) { console.error(`stamp: VERSION is not semver: "${version}"`); process.exit(2); }
-const [, MAJ, MIN, PAT] = m.map(Number);
-const versionCode = MAJ * 10000 + MIN * 100 + PAT;
+if (!/^\d+\.\d+\.\d+$/.test(version)) {
+  console.error(`stamp: VERSION is not semver: "${version}"`);
+  process.exit(2);
+}
+
+// The monotonic store build number. Never derived from VERSION - see the header.
+const buildNumberPath = join(root, "BUILD_NUMBER");
+if (!existsSync(buildNumberPath)) {
+  console.error("stamp: BUILD_NUMBER missing. It is the monotonic counter Google Play and App Store Connect order uploads by, and it cannot be recomputed from VERSION.");
+  process.exit(2);
+}
+const versionCode = Number(readFileSync(buildNumberPath, "utf8").trim());
+if (!Number.isInteger(versionCode) || versionCode < 1) {
+  console.error(`stamp: BUILD_NUMBER is not a positive integer: "${readFileSync(buildNumberPath, "utf8").trim()}"`);
+  process.exit(2);
+}
+// Play has already accepted 10700. Anything at or below it is unshippable on Android, permanently.
+const PLAY_HIGH_WATER_MARK = 10700;
+if (versionCode <= PLAY_HIGH_WATER_MARK) {
+  console.error(`stamp: BUILD_NUMBER ${versionCode} is <= ${PLAY_HIGH_WATER_MARK}, which Google Play has already consumed. Play refuses any versionCode it has seen. Raise BUILD_NUMBER.`);
+  process.exit(2);
+}
 
 const apply = process.argv.includes("--apply");
 const changes = [];
@@ -71,8 +103,9 @@ function stampGradle(rel) {
 //   CURRENT_PROJECT_VERSION -> the build number (CFBundleVersion)
 // Capacitor scaffolds both as "1.0" / 1 and never touches them again. App Store Connect REJECTS an upload
 // whose build number it has already seen for that version - exactly the failure mode that made Android's
-// hardcoded versionCode unshippable. Derive both from VERSION so a tag can never ship a duplicate or a
-// mislabelled binary. Both keys appear once per build configuration (Debug + Release), so replace ALL.
+// hardcoded versionCode unshippable. MARKETING_VERSION comes from VERSION; CURRENT_PROJECT_VERSION comes
+// from BUILD_NUMBER (see the header for why they are not the same number). Both keys appear once per build
+// configuration (Debug + Release), so replace ALL.
 function stampXcodeProj(rel) {
   const p = join(root, rel);
   if (!existsSync(p)) return;
@@ -94,7 +127,7 @@ stampJson("apps/web/package.json");
 stampGradle("apps/web/android/app/build.gradle");
 stampXcodeProj("apps/web/ios/App/App.xcodeproj/project.pbxproj");
 
-console.log(`VERSION=${version}  androidVersionCode=${versionCode}  iosBuildNumber=${versionCode}`);
+console.log(`VERSION=${version}  BUILD_NUMBER=${versionCode}  (androidVersionCode + iosBuildNumber)`);
 if (!changes.length) {
   console.log("all release artifacts already match VERSION - nothing to stamp.");
   process.exit(0);
