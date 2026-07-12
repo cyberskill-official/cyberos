@@ -2,6 +2,11 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [1.8.4] - 2026-07-12
+
+Fixed
+- build the .xcodeproj with a shared scheme - Capacitor 8 has no .xcworkspace
+
 ## [1.8.3] - 2026-07-12
 
 Fixed
