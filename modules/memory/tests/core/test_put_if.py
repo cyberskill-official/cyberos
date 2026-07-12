@@ -1,7 +1,7 @@
 """Tests for FR-MEMORY-118 — put_if optimistic-concurrency primitive.
 
 Covers acceptance criteria from
-`docs/feature-requests/memory/FR-MEMORY-118-put-if-precondition.md`:
+`docs/feature-requests/memory/FR-MEMORY-118-put-if-precondition/spec.md`:
 
 * AC #1  — precondition match → write succeeds
 * AC #2  — precondition mismatch → rejected

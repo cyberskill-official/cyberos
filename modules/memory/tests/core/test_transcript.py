@@ -1,7 +1,7 @@
 """Tests for FR-MEMORY-119 — session transcript ledger.
 
 Covers acceptance criteria from
-`docs/feature-requests/memory/FR-MEMORY-119-session-transcript-ledger.md`:
+`docs/feature-requests/memory/FR-MEMORY-119-session-transcript-ledger/spec.md`:
 
 * AC #1  — full lifecycle round-trip
 * AC #2  — default classification is confidential

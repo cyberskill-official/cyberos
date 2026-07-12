@@ -6,8 +6,8 @@ The `app` module is CyberOS's own first-party application surfaces: the front-en
 
 | FR | Priority | Title |
 |---|---|---|
-| [FR-APP-001](FR-APP-001-cds-web-console.md) | p3 | APP CDS web console - operator console over CyberOS service APIs |
-| [FR-APP-002](FR-APP-002-desktop-workflow-trigger.md) | p2 | APP desktop workflow trigger - Tauri app to run CyberOS workflows |
+| [FR-APP-001](FR-APP-001-cds-web-console/spec.md) | p3 | APP CDS web console - operator console over CyberOS service APIs |
+| [FR-APP-002](FR-APP-002-desktop-workflow-trigger/spec.md) | p2 | APP desktop workflow trigger - Tauri app to run CyberOS workflows |
 
 ## Cross-module dependencies
 

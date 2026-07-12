@@ -12,14 +12,14 @@ This is **distinct** from the MCP gateway (`docs/feature-requests/mcp/FR-MCP-001
 
 | FR | Priority | Slice | Hours | Title |
 |---|---|---|---:|---|
-| [FR-PLUGIN-001](FR-PLUGIN-001-manifest-schema.md) | MUST | 1 | 8 | Plugin manifest schema v1.0.0 — canonical `plugin.json` validated against `manifest.schema.json`; reference Python packer `cyberos-plugin pack` |
-| [FR-PLUGIN-002](FR-PLUGIN-002-mcp-bridge.md) | MUST | 1 | 10 | CyberOS MCP bridge server — exposes CUO/memory/SKILL tools over MCP 2025-11-25 protocol; one binary, stdio + HTTP transports |
-| [FR-PLUGIN-003](FR-PLUGIN-003-slash-commands.md) | MUST | 1 | 4 | Canonical slash-commands — `/cyberos-run`, `/cyberos-memory`, `/cyberos-skill-list`, `/cyberos-route` markdown definitions |
-| [FR-PLUGIN-004](FR-PLUGIN-004-skill-playbooks.md) | MUST | 2 | 6 | Skill playbooks bundle — Anthropic-Agent-Skills SKILL.md files teaching hosts how to chain plugin tools correctly |
-| [FR-PLUGIN-005](FR-PLUGIN-005-oauth-pkce-auth.md) | MUST | 2 | 8 | Plugin OAuth-PKCE authentication — install-time authorize + refresh-token rotation against `auth.cyberskill.world` |
-| [FR-PLUGIN-006](FR-PLUGIN-006-memory-audit-emission.md) | MUST | 2 | 6 | memory audit emission — every install/update/uninstall/invoke produces a `plugin.*` audit row; idempotent retry queue |
-| [FR-PLUGIN-007](FR-PLUGIN-007-multi-runtime-adapters.md) | MUST | 3 | 10 | Multi-runtime adapters — `cyberos-plugin pack --target {claude-code,cursor,cowork,codex-cli}` emitters; deferred targets in P2 |
-| [FR-PLUGIN-008](FR-PLUGIN-008-marketplace-distribution.md) | SHOULD | 3 | 6 | Marketplace distribution — `cyberos-plugin publish` pushes signed bundle to `plugins.cyberskill.world` + mirrors to `agentskills.io`; revenue-share + vetted-badge |
+| [FR-PLUGIN-001](FR-PLUGIN-001-manifest-schema/spec.md) | MUST | 1 | 8 | Plugin manifest schema v1.0.0 — canonical `plugin.json` validated against `manifest.schema.json`; reference Python packer `cyberos-plugin pack` |
+| [FR-PLUGIN-002](FR-PLUGIN-002-mcp-bridge/spec.md) | MUST | 1 | 10 | CyberOS MCP bridge server — exposes CUO/memory/SKILL tools over MCP 2025-11-25 protocol; one binary, stdio + HTTP transports |
+| [FR-PLUGIN-003](FR-PLUGIN-003-slash-commands/spec.md) | MUST | 1 | 4 | Canonical slash-commands — `/cyberos-run`, `/cyberos-memory`, `/cyberos-skill-list`, `/cyberos-route` markdown definitions |
+| [FR-PLUGIN-004](FR-PLUGIN-004-skill-playbooks/spec.md) | MUST | 2 | 6 | Skill playbooks bundle — Anthropic-Agent-Skills SKILL.md files teaching hosts how to chain plugin tools correctly |
+| [FR-PLUGIN-005](FR-PLUGIN-005-oauth-pkce-auth/spec.md) | MUST | 2 | 8 | Plugin OAuth-PKCE authentication — install-time authorize + refresh-token rotation against `auth.cyberskill.world` |
+| [FR-PLUGIN-006](FR-PLUGIN-006-memory-audit-emission/spec.md) | MUST | 2 | 6 | memory audit emission — every install/update/uninstall/invoke produces a `plugin.*` audit row; idempotent retry queue |
+| [FR-PLUGIN-007](FR-PLUGIN-007-multi-runtime-adapters/spec.md) | MUST | 3 | 10 | Multi-runtime adapters — `cyberos-plugin pack --target {claude-code,cursor,cowork,codex-cli}` emitters; deferred targets in P2 |
+| [FR-PLUGIN-008](FR-PLUGIN-008-marketplace-distribution/spec.md) | SHOULD | 3 | 6 | Marketplace distribution — `cyberos-plugin publish` pushes signed bundle to `plugins.cyberskill.world` + mirrors to `agentskills.io`; revenue-share + vetted-badge |
 
 **Total: 58 hours.** Roughly 7-9 engineering days for one experienced engineer.
 

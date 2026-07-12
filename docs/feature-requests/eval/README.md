@@ -8,10 +8,10 @@ Governing principles (founder decisions, 2026-06-29): wide day-1 capture; access
 
 | FR | Priority | Step | Title |
 |---|---|---|---|
-| [FR-EVAL-001](FR-EVAL-001-governance-consent-access-retention.md) | MUST | 0 governance | Governance, consent, access-control + retention - the Phase-0 gate every capture and evaluation depends on |
-| [FR-EVAL-002](FR-EVAL-002-rubric-from-signed-documents.md) | MUST | 3 rubric | Rubric from the three signed documents - versioned, bilingual VN/EN, each item cites its source clause |
-| [FR-EVAL-003](FR-EVAL-003-evaluation-engine-autoscore-hitl.md) | MUST | 4 engine | Evaluation engine - GENIE evidence-linked auto-scoring + mandatory HITL gate; results audit-chained |
-| [FR-EVAL-004](FR-EVAL-004-manager-employee-views.md) | MUST | 5 views | Manager + employee views - access-restricted console panel; auto-score shown as DRAFT pending human approval |
+| [FR-EVAL-001](FR-EVAL-001-governance-consent-access-retention/spec.md) | MUST | 0 governance | Governance, consent, access-control + retention - the Phase-0 gate every capture and evaluation depends on |
+| [FR-EVAL-002](FR-EVAL-002-rubric-from-signed-documents/spec.md) | MUST | 3 rubric | Rubric from the three signed documents - versioned, bilingual VN/EN, each item cites its source clause |
+| [FR-EVAL-003](FR-EVAL-003-evaluation-engine-autoscore-hitl/spec.md) | MUST | 4 engine | Evaluation engine - GENIE evidence-linked auto-scoring + mandatory HITL gate; results audit-chained |
+| [FR-EVAL-004](FR-EVAL-004-manager-employee-views/spec.md) | MUST | 5 views | Manager + employee views - access-restricted console panel; auto-score shown as DRAFT pending human approval |
 
 ## Cross-module dependencies
 

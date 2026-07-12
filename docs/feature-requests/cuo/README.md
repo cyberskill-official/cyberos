@@ -6,11 +6,11 @@ _Generated 2026-05-17 — 5 FRs, 37 engineering-hours total._
 
 | FR | Priority | Slice | Hours | Title |
 |---|---|---|---:|---|
-| [FR-CUO-101](FR-CUO-101-langgraph-supervisor.md) | MUST | 2 | 12 | CUO Phase 2 — LangGraph supervisor + LiteLLM cascade + confidence-band escalation + persona-aware ro |
-| [FR-CUO-102](FR-CUO-102-langgraph-postgres-checkpointer.md) | MUST | 6 | 5 | CUO Postgres checkpointer for LangGraph state — persists supervisor graph state per run with EU AI A |
-| [FR-CUO-103](FR-CUO-103-trace-replay-rows.md) | MUST | 6 | 4 | CUO Phase 2 trace rows include prompt + model + temperature + seed for deterministic replay |
-| [FR-CUO-104](FR-CUO-104-topological-chain-walk.md) | MUST | 6 | 10 | CUO topological walk of `depends_on` chain — orchestrates multi-step skill invocations with composit |
-| [FR-CUO-105](FR-CUO-105-per-step-rollback.md) | MUST | 6 | 6 | CUO per-step rollback on chain failure — execute compensating actions in reverse order with partial- |
+| [FR-CUO-101](FR-CUO-101-langgraph-supervisor/spec.md) | MUST | 2 | 12 | CUO Phase 2 — LangGraph supervisor + LiteLLM cascade + confidence-band escalation + persona-aware ro |
+| [FR-CUO-102](FR-CUO-102-langgraph-postgres-checkpointer/spec.md) | MUST | 6 | 5 | CUO Postgres checkpointer for LangGraph state — persists supervisor graph state per run with EU AI A |
+| [FR-CUO-103](FR-CUO-103-trace-replay-rows/spec.md) | MUST | 6 | 4 | CUO Phase 2 trace rows include prompt + model + temperature + seed for deterministic replay |
+| [FR-CUO-104](FR-CUO-104-topological-chain-walk/spec.md) | MUST | 6 | 10 | CUO topological walk of `depends_on` chain — orchestrates multi-step skill invocations with composit |
+| [FR-CUO-105](FR-CUO-105-per-step-rollback/spec.md) | MUST | 6 | 6 | CUO per-step rollback on chain failure — execute compensating actions in reverse order with partial- |
 
 ## Cross-module dependencies
 

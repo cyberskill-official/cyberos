@@ -27,6 +27,38 @@ def slug(h):
     h = re.sub(r"[^\w\s§().-]", "", h, flags=re.UNICODE)
     return re.sub(r"\s+", "-", h).strip("-")
 
+def planned_files(src):
+    """new_files/modified_files entries of an FR spec (planned deliverables are valid citations)."""
+    out = set()
+    try:
+        txt = open(src, encoding="utf-8", errors="replace").read()
+        m = re.match(r"\A---\n(.*?)\n---\n", txt, re.S)
+        if m:
+            cur = None
+            for line in m.group(1).split("\n"):
+                if re.match(r"^(new_files|modified_files):", line): cur = True; continue
+                if cur and re.match(r"^\s+-\s+", line): out.add(line.split("-", 1)[1].strip().strip('"'))
+                elif not line.startswith(" "): cur = None
+    except OSError: pass
+    return out
+
+CORPUS_PLANNED = None
+def corpus_planned(repo):
+    global CORPUS_PLANNED
+    if CORPUS_PLANNED is None:
+        CORPUS_PLANNED = set()
+        import glob as g
+        for spec in g.glob(os.path.join(repo, "docs", "feature-requests", "*", "FR-*", "spec.md")):
+            CORPUS_PLANNED |= planned_files(spec)
+    return CORPUS_PLANNED
+
+def fr_status(src):
+    try:
+        head = open(src, encoding="utf-8", errors="replace").read(2000)
+        m = re.search(r"^status:\s*([a-z_]+)", head, re.M)
+        return m.group(1) if m else ""
+    except OSError: return ""
+
 def headings(path):
     hs = set()
     for line in open(path, encoding="utf-8", errors="replace"):
@@ -36,11 +68,13 @@ def headings(path):
     return hs
 
 dead, listed = [], []
-roots = [os.path.join(repo, "modules", "skill"), os.path.join(repo, "modules", "cuo")]
+planned_cache = {}
+roots = [os.path.join(repo, "modules", "skill"), os.path.join(repo, "modules", "cuo"), os.path.join(repo, "docs", "feature-requests")]
 for root in roots:
     for dp, _, files in os.walk(root):
         for f in files:
             if not f.endswith(".md"): continue
+            if "feature-requests" in dp and (os.sep + "." in dp or "_audits" in dp or "_archive" in dp): continue
             src = os.path.join(dp, f)
             rel_src = os.path.relpath(src, repo)
             for ln, line in enumerate(open(src, encoding="utf-8", errors="replace"), 1):
@@ -48,6 +82,11 @@ for root in roots:
                 for t in targets:
                     if t.startswith(("http://", "https://", "mailto:")): continue
                     if "<" in t or "{" in t: continue  # scaffold placeholders by design (FR-SKILL-115)
+                    if re.search(r"YYYY|XX|\bN\.N\b", t): continue  # date/number placeholder patterns
+                    if "feature-requests" in rel_src and f == "spec.md":
+                        base = t.split("#")[0]
+                        if base in planned_cache.setdefault(src, planned_files(src)) or base in corpus_planned(repo):
+                            listed.append(f"planned     {rel_src}:{ln} -> {t}"); continue
                     if any(rel_src == e or rel_src.startswith(e.rstrip("/") + "/") for e in exempt):
                         used.update(e for e in exempt if rel_src == e or rel_src.startswith(e.rstrip("/") + "/"))
                         continue
@@ -69,6 +108,9 @@ for root in roots:
                         if want not in headings(target):
                             status = "dead-anchor"
                     if status.startswith("dead"):
+                        if "feature-requests" in rel_src and f == "spec.md" and fr_status(src) in ("done", "closed", "on_hold"):
+                            print(f"WARN historical spec ref: {rel_src}:{ln} -> {t}", file=sys.stderr)
+                            listed.append(f"hist-stale  {rel_src}:{ln} -> {t}"); continue
                         dead.append(f"DEAD {rel_src}:{ln} -> {t}")
                     listed.append(f"{status:11s} {rel_src}:{ln} -> {t}")
 for e in exempt:

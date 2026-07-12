@@ -1,7 +1,7 @@
 """Tests for FR-MEMORY-113 — recency-decay recall ranking.
 
 Covers acceptance criteria from
-`docs/feature-requests/memory/FR-MEMORY-113-recency-decay-recall.md`:
+`docs/feature-requests/memory/FR-MEMORY-113-recency-decay-recall/spec.md`:
 
 * AC #1 — default weights are (0.4, 0.3, 0.3)
 * AC #2 — sum-to-1.0 constraint

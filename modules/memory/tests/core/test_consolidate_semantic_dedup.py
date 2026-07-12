@@ -1,7 +1,7 @@
 """Tests for FR-MEMORY-116 — semantic-dedup consolidate phase.
 
 Covers acceptance criteria from
-`docs/feature-requests/memory/FR-MEMORY-116-semantic-dedup-consolidate.md`:
+`docs/feature-requests/memory/FR-MEMORY-116-semantic-dedup-consolidate/spec.md`:
 
 * AC #1  — default consolidate unchanged (no SemanticDedup)
 * AC #2  — --semantic-dedup --dry-run produces diff but no apply

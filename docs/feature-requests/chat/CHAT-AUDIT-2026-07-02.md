@@ -76,7 +76,7 @@ Missing:
   - Call ringing only reaches a callee who has that conversation open (`lib/call.ts:6-7`).
   - There is no way to receive a message event, a mention, or a ring for a channel you are not currently viewing.
 - No desktop notifications. There is no `Notification` API use anywhere in `apps/web/src`.
-- No real push. As above, `push.rs` logs intent; there is no APNS/FCM client, no VAPID web-push, and the FR for mobile push is separate (`docs/feature-requests/chat/FR-CHAT-011-mobile-push.md`).
+- No real push. As above, `push.rs` logs intent; there is no APNS/FCM client, no VAPID web-push, and the FR for mobile push is separate (`docs/feature-requests/chat/FR-CHAT-011-mobile-push/spec.md`).
 - No notification preferences (per-channel mute, all/mentions/nothing, keywords, schedules).
 
 ### 5. Channels and org
@@ -138,7 +138,7 @@ Present:
 AI-native openings (present capability, not yet built into chat):
 - The ai-gateway already exposes `/v1/chat` (completion) and `/v1/embeddings` (`services/ai-gateway/src/server/mod.rs:359-360`). Chat only uses `/v1/chat` for translation today (`translate.rs:109`). The same server-side path, with the same tenant header and audit pattern, could power: thread/channel summarize, smart replies, "catch me up," action-item extraction, and semantic search over `/v1/embeddings`. None of these exist yet.
 - Capture already emits `chat.message_created` etc. as interaction-events into the BRAIN audit chain when `CAPTURE_ENABLED` is on (`capture.rs`, wired in `messages.rs:201-216`), which is the substrate an "assistant that reads the channel" would build on. Message bodies are never inlined (pointer refs only, `capture.rs:44-63`), so a summarizer would need to read `chat_messages` directly.
-- The memory notes reference a "Lumi/GENIE" assistant and `FR-CHAT-008-lumi-mention.md`; there is no `@lumi` or bot participant in the current code.
+- The memory notes reference a "Lumi/GENIE" assistant and `FR-CHAT-008-lumi-mention/spec.md`; there is no `@lumi` or bot participant in the current code.
 
 ### 10. i18n and Vietnamese UI
 
@@ -152,7 +152,7 @@ Missing entirely:
 Almost absent:
 - The only moderation primitive is channel-role delete: a manager can delete another member's message (`messages.rs:412-417`), and an owner can remove a member (`members.rs::remove`, though the client never calls it).
 - Every action writes an audit-chain row (`audit.rs::emit`, called across the handlers), and the console has a read-only audit browser (`auditlog.rs`, `GET /v1/chat/audit`). That is observability, not moderation.
-- Missing: workspace/tenant admin console for chat, retention/deletion policies, message export/DSAR (there is an FR `FR-CHAT-012-dsar-export.md` but no code), banned words/content filters, report-a-message, user suspend/deactivate from within chat, channel-level permissions beyond the three roles, guest accounts, legal hold.
+- Missing: workspace/tenant admin console for chat, retention/deletion policies, message export/DSAR (there is an FR `FR-CHAT-012-dsar-export/spec.md` but no code), banned words/content filters, report-a-message, user suspend/deactivate from within chat, channel-level permissions beyond the three roles, guest accounts, legal hold.
 
 ### 12. Mobile, responsive, accessibility
 

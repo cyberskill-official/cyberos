@@ -1,7 +1,7 @@
 """Tests for FR-MEMORY-112 — episodic memory + recall-similar.
 
 Covers acceptance criteria from
-`docs/feature-requests/memory/FR-MEMORY-112-episodic-memory.md`:
+`docs/feature-requests/memory/FR-MEMORY-112-episodic-memory/spec.md`:
 
 * AC #1 – schema accepts `kind: episode` (verified via Frontmatter round-trip)
 * AC #2 – missing required Episode extras rejected by validate_episode_extras

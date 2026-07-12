@@ -1,7 +1,7 @@
 """Tests for FR-MEMORY-120 — `cyberos history <path>`.
 
 Covers acceptance criteria from
-`docs/feature-requests/memory/FR-MEMORY-120-cyberos-history.md`:
+`docs/feature-requests/memory/FR-MEMORY-120-cyberos-history/spec.md`:
 
 * AC #1  — single-write history → 1 entry
 * AC #2  — multi-write history → N entries most-recent-first

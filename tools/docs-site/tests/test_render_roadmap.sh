@@ -9,12 +9,12 @@ ok()   { PASS=$((PASS+1)); echo "  ok   $1"; }
 fail() { FAIL=$((FAIL+1)); echo "  FAIL $1: $2"; }
 
 mkfix() { # fixture: 3 inputs only
-  d="$1"; mkdir -p "$d/docs/feature-requests/aa" "$d/docs/feature-requests/bb" "$d/.git"
+  d="$1"; mkdir -p "$d/docs/feature-requests/aa/FR-AA-001-first" "$d/docs/feature-requests/aa/FR-AA-002-second" "$d/docs/feature-requests/bb/FR-BB-001-third" "$d/.git"
   echo "ref: refs/heads/main" > "$d/.git/HEAD"; mkdir -p "$d/.git/refs/heads"; echo "abcdef1234567890" > "$d/.git/refs/heads/main"
-  printf -- '---\nid: FR-AA-001\ntitle: First\nmodule: aa\npriority: MUST\nstatus: done\nclass: product\n---\nbody\n' > "$d/docs/feature-requests/aa/FR-AA-001-first.md"
-  printf -- '---\nid: FR-AA-002\ntitle: Second\nmodule: aa\npriority: SHOULD\nstatus: draft\nclass: improvement\n---\nbody\n' > "$d/docs/feature-requests/aa/FR-AA-002-second.md"
-  printf -- '---\nid: FR-BB-001\ntitle: Third\nmodule: bb\npriority: MUST\nstatus: implementing\nclass: product\n---\nbody\n' > "$d/docs/feature-requests/bb/FR-BB-001-third.md"
-  printf -- '---\nid: FR-AA-003\ntitle: Audit\n---\n' > "$d/docs/feature-requests/aa/FR-AA-003-x.audit.md"
+  printf -- '---\nid: FR-AA-001\ntitle: First\nmodule: aa\npriority: MUST\nstatus: done\nclass: product\n---\nbody\n' > "$d/docs/feature-requests/aa/FR-AA-001-first/spec.md"
+  printf -- '---\nid: FR-AA-002\ntitle: Second\nmodule: aa\npriority: SHOULD\nstatus: draft\nclass: improvement\n---\nbody\n' > "$d/docs/feature-requests/aa/FR-AA-002-second/spec.md"
+  printf -- '---\nid: FR-BB-001\ntitle: Third\nmodule: bb\npriority: MUST\nstatus: implementing\nclass: product\n---\nbody\n' > "$d/docs/feature-requests/bb/FR-BB-001-third/spec.md"
+  printf -- '---\nid: FR-AA-003\ntitle: Audit\n---\n' > "$d/docs/feature-requests/aa/FR-AA-003-x/audit.md"
   printf '# CL\n\n## [2.0.0] - 2026-07-01\n\n- newest entry\n\n## [1.0.0] - 2026-01-01\n\n- old entry\n' > "$d/CHANGELOG.md"
   echo "2.0.0" > "$d/VERSION"
 }
@@ -51,16 +51,18 @@ t04_wired_build_deploy_release() {                                     # AC 4
 t05_byte_identical_rebuilds() {                                        # AC 5
   node "$R" "$TMP/a" "$TMP/a/out2" >/dev/null 2>&1
   if cmp -s "$TMP/a/out/reference/roadmap.html" "$TMP/a/out2/reference/roadmap.html"; then
-    printf -- '---\nid: FR-BB-002\ntitle: New\nmodule: bb\npriority: MUST\nstatus: draft\nclass: product\n---\n' > "$TMP/a/docs/feature-requests/bb/FR-BB-002-new.md"
+    mkdir -p "$TMP/a/docs/feature-requests/bb/FR-BB-002-new"
+    printf -- '---\nid: FR-BB-002\ntitle: New\nmodule: bb\npriority: MUST\nstatus: draft\nclass: product\n---\n' > "$TMP/a/docs/feature-requests/bb/FR-BB-002-new/spec.md"
     node "$R" "$TMP/a" "$TMP/a/out3" >/dev/null 2>&1
     ! cmp -s "$TMP/a/out/reference/roadmap.html" "$TMP/a/out3/reference/roadmap.html" \
       && ok t05 || fail t05 "output did not change with new FR"
-    rm "$TMP/a/docs/feature-requests/bb/FR-BB-002-new.md"
+    rm "$TMP/a/docs/feature-requests/bb/FR-BB-002-new/spec.md"
   else fail t05 "double build diverged"; fi
 }
 t06_honest_failures() {                                                # AC 6
   mkfix "$TMP/b"
-  printf -- '---\nid: FR-AA-009\nno closing fence\n' > "$TMP/b/docs/feature-requests/aa/FR-AA-009-broken.md"
+  mkdir -p "$TMP/b/docs/feature-requests/aa/FR-AA-009-broken"
+  printf -- '---\nid: FR-AA-009\nno closing fence\n' > "$TMP/b/docs/feature-requests/aa/FR-AA-009-broken/spec.md"
   out="$(node "$R" "$TMP/b" "$TMP/b/out" 2>&1)"; rc=$?
   [ "$rc" -ne 0 ] && grep -q "FR-AA-009" <<<"$out" || { fail t06 "broken fm rc=$rc"; return; }
   mkfix "$TMP/c"; printf '# empty\n' > "$TMP/c/CHANGELOG.md"

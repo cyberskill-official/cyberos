@@ -92,9 +92,13 @@ function walkFR(dir) {
     const p = join(dir, name);
     const st = statSync(p);
     if (st.isDirectory()) {
+      if (/^FR-/.test(name)) {                     // FR-DOCS-004 folder-per-FR
+        const spec = join(p, 'spec.md');
+        try { if (statSync(spec).isFile()) { out.push(spec); continue; } } catch {}
+      }
       out.push(...walkFR(p));
     } else if (/^FR-.*\.md$/.test(name) && !name.endsWith('.audit.md')) {
-      out.push(p);
+      out.push(p);                                  // legacy flat file (none post-migration)
     }
   }
   return out;

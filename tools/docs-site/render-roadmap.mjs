@@ -53,12 +53,13 @@ const invalid = [];
 for (const dirent of readdirSync(FR_ROOT, { withFileTypes: true }).sort((a,b)=>a.name.localeCompare(b.name))) {
   if (!dirent.isDirectory() || dirent.name.startsWith('_') || dirent.name.startsWith('.')) continue;
   const dir = join(FR_ROOT, dirent.name);
-  for (const f of readdirSync(dir).sort()) {
-    if (!f.startsWith('FR-') || !f.endsWith('.md') || f.endsWith('.audit.md')) continue;
-    const p = join(dir, f);
+  for (const f of readdirSync(dir, { withFileTypes: true }).sort((a,b)=>a.name.localeCompare(b.name))) {
+    if (!f.isDirectory() || !f.name.startsWith('FR-')) continue;   // FR-DOCS-004 folder-per-FR
+    const p = join(dir, f.name, 'spec.md');
+    if (!existsSync(p)) continue;
     const meta = frontmatter(readFileSync(p, 'utf-8'), p);
     const fr = {
-      id: meta.id || meta.fr_id || f.replace(/\.md$/, ''),
+      id: meta.id || meta.fr_id || f.name,
       title: meta.title || '(untitled)',
       module: (meta.module || dirent.name).toLowerCase(),
       cls: meta.class || 'product',

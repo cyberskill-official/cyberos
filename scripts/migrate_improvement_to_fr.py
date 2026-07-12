@@ -167,16 +167,18 @@ def read_fm(p):
 
 def regen_backlog():
     mods = {}
-    for f in sorted(FR.glob("*/FR-*.md")):
-        if "_audits" in f.parts or "_archive" in f.parts or f.name.endswith(".audit.md"):
+    unparseable = []
+    for f in sorted(FR.glob("*/FR-*/spec.md")):
+        if "_audits" in f.parts or "_archive" in f.parts:
             continue
         fm = read_fm(f)
         if not fm:
+            unparseable.append(str(f))   # FR-DOCS-004 §1 #4: the skip is LOUD, never silent
             continue
-        mod = f.parent.name
+        mod = f.parent.parent.name
         klass = str(fm.get("class", "product")).strip() or "product"
         mods.setdefault(mod, []).append(
-            (f.stem, str(fm.get("status", "")).strip(), str(fm.get("title", "")), klass)
+            (f.parent.name, str(fm.get("status", "")).strip(), str(fm.get("title", "")), klass)
         )
     totals = {}
     out = ["# CyberOS FR backlog (regenerated 2026-07-09)", "",
@@ -208,6 +210,10 @@ def regen_backlog():
     out.append(f"Totals: {tot}")
     out.append("")
     (FR / "BACKLOG.md").write_text("\n".join(out + body))
+    if unparseable:
+        import sys
+        print(f"read_fm: {len(unparseable)} unparseable frontmatter file(s) EXCLUDED from the backlog:", file=sys.stderr)
+        for u in unparseable: print(f"  {u}", file=sys.stderr)
     print(f"regenerated BACKLOG.md: {sum(len(v) for v in mods.values())} FRs across {len(mods)} modules")
 
 if __name__ == "__main__":

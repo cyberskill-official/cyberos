@@ -1,7 +1,7 @@
 {
   "schema_version": "v1",
   "page": "fr-catalog.html",
-  "fr_count": 506,
+  "fr_count": 511,
   "modules": [
     "AI",
     "AUTH",
@@ -35,8 +35,9 @@
     "cuo",
     "docs",
     "improvement",
-    "memory"
+    "memory",
+    "templates"
   ],
-  "output_bytes": 827539,
+  "output_bytes": 838339,
   "build_marker": "deterministic"
 }

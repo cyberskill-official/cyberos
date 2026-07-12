@@ -6,15 +6,15 @@ _Generated 2026-05-17 — 9 FRs, 52 engineering-hours total._
 
 | FR | Priority | Slice | Hours | Title |
 |---|---|---|---:|---|
-| [FR-HR-001](FR-HR-001-member-schema.md) | MUST | 1 | 6 | HR Member schema — profile + role + level + contract type + leave balance + sabbatical accrual + sta |
-| [FR-HR-002](FR-HR-002-contract-types.md) | MUST | 6 | 4 | HR 5 contract types — indefinite + fixed_term + probation + part_time + contractor with per-type lea |
-| [FR-HR-003](FR-HR-003-cccd-kms.md) | MUST | 6 | 5 | HR CCCD photo KMS — separate keyspace for VN citizen ID photos with sev-1 access audit + ROOT-CHRO-o |
-| [FR-HR-004](FR-HR-004-leave-types.md) | MUST | 6 | 5 | HR 8 leave types — annual/sick/maternity/paternity/sabbatical/unpaid/bereavement/public_holiday with |
-| [FR-HR-005](FR-HR-005-working-hours-si-rates.md) | MUST | 6 | 4 | HR Decree 145/2020 working-hour caps + Decree 152/2020 SI rates — version-pinned policy constants wi |
-| [FR-HR-006](FR-HR-006-leave-accrual-cron.md) | MUST | 6 | 4 | HR annual leave accrual nightly batch — Decree 145 formula (1d/month + 1d/5yr seniority bonus) with  |
-| [FR-HR-007](FR-HR-007-onboarding-saga.md) | MUST | 6 | 10 | HR onboarding saga — orchestrates AUTH + TIME + LEARN + KB + CHAT + REW provisioning on member.activ |
-| [FR-HR-008](FR-HR-008-performance-signals.md) | MUST | 7 | 6 | HR performance signal aggregator — read-only consumer of PROJ + TIME + LEARN signals for periodic pe |
-| [FR-HR-009](FR-HR-009-termination-workflow.md) | MUST | 7 | 8 | HR termination workflow — Good-Leaver / Bad-Leaver branch with CFO+CEO co-sign + ESOP forfeiture + a |
+| [FR-HR-001](FR-HR-001-member-schema/spec.md) | MUST | 1 | 6 | HR Member schema — profile + role + level + contract type + leave balance + sabbatical accrual + sta |
+| [FR-HR-002](FR-HR-002-contract-types/spec.md) | MUST | 6 | 4 | HR 5 contract types — indefinite + fixed_term + probation + part_time + contractor with per-type lea |
+| [FR-HR-003](FR-HR-003-cccd-kms/spec.md) | MUST | 6 | 5 | HR CCCD photo KMS — separate keyspace for VN citizen ID photos with sev-1 access audit + ROOT-CHRO-o |
+| [FR-HR-004](FR-HR-004-leave-types/spec.md) | MUST | 6 | 5 | HR 8 leave types — annual/sick/maternity/paternity/sabbatical/unpaid/bereavement/public_holiday with |
+| [FR-HR-005](FR-HR-005-working-hours-si-rates/spec.md) | MUST | 6 | 4 | HR Decree 145/2020 working-hour caps + Decree 152/2020 SI rates — version-pinned policy constants wi |
+| [FR-HR-006](FR-HR-006-leave-accrual-cron/spec.md) | MUST | 6 | 4 | HR annual leave accrual nightly batch — Decree 145 formula (1d/month + 1d/5yr seniority bonus) with  |
+| [FR-HR-007](FR-HR-007-onboarding-saga/spec.md) | MUST | 6 | 10 | HR onboarding saga — orchestrates AUTH + TIME + LEARN + KB + CHAT + REW provisioning on member.activ |
+| [FR-HR-008](FR-HR-008-performance-signals/spec.md) | MUST | 7 | 6 | HR performance signal aggregator — read-only consumer of PROJ + TIME + LEARN signals for periodic pe |
+| [FR-HR-009](FR-HR-009-termination-workflow/spec.md) | MUST | 7 | 8 | HR termination workflow — Good-Leaver / Bad-Leaver branch with CFO+CEO co-sign + ESOP forfeiture + a |
 
 ## Cross-module dependencies
 

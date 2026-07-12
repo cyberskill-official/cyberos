@@ -1,7 +1,7 @@
 """Tests for FR-MEMORY-117 — per-store ACL via STORE.yaml.
 
 Covers acceptance criteria from
-`docs/feature-requests/memory/FR-MEMORY-117-per-store-acl.md`:
+`docs/feature-requests/memory/FR-MEMORY-117-per-store-acl/spec.md`:
 
 * AC #1  — permissive default when no STORE.yaml
 * AC #2  — wildcard actor `*` matches

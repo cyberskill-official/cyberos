@@ -194,7 +194,7 @@ ${byModule[m].map(renderCard).join('\n')}
 <body>
   <div class="container">
     <h1>FR Catalog</h1>
-    <p class="subtitle">Complete inventory of CyberOS Feature Requests — server-rendered at build time per <a href="../../docs/feature-requests/docs/FR-DOCS-001-server-render-reference-pages.md" class="fr-link">FR-DOCS-001</a>.</p>
+    <p class="subtitle">Complete inventory of CyberOS Feature Requests — server-rendered at build time per <a href="../../docs/feature-requests/docs/FR-DOCS-001-server-render-reference-pages/spec.md" class="fr-link">FR-DOCS-001</a>.</p>
 
     <div class="stats">
       <div class="stat"><span class="stat-num">${data.count}</span><span class="stat-label">total FRs</span></div>

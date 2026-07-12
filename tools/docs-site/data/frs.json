@@ -1,7 +1,7 @@
 {
   "schema_version": "v1",
   "generated_at_marker": "deterministic",
-  "count": 506,
+  "count": 511,
   "frs": [
     {
       "id": "FR-AI-105",
@@ -27,7 +27,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/ai/FR-AI-105-local-model-providers.md"
+      "path": "docs/feature-requests/ai/FR-AI-105-local-model-providers/spec.md"
     },
     {
       "id": "FR-AI-001",
@@ -59,7 +59,7 @@
         "FR-AI-004",
         "FR-AI-005"
       ],
-      "path": "docs/feature-requests/ai/FR-AI-001-cost-ledger-precheck.md"
+      "path": "docs/feature-requests/ai/FR-AI-001-cost-ledger-precheck/spec.md"
     },
     {
       "id": "FR-AI-002",
@@ -90,7 +90,7 @@
         "FR-AI-003",
         "FR-AI-004"
       ],
-      "path": "docs/feature-requests/ai/FR-AI-002-cost-ledger-postcall-reconcile.md"
+      "path": "docs/feature-requests/ai/FR-AI-002-cost-ledger-postcall-reconcile/spec.md"
     },
     {
       "id": "FR-AI-003",
@@ -123,7 +123,7 @@
         "FR-AI-014",
         "FR-OBS-008"
       ],
-      "path": "docs/feature-requests/ai/FR-AI-003-memory-audit-bridge.md"
+      "path": "docs/feature-requests/ai/FR-AI-003-memory-audit-bridge/spec.md"
     },
     {
       "id": "FR-AI-004",
@@ -151,7 +151,7 @@
         "FR-AI-002",
         "FR-AI-003"
       ],
-      "path": "docs/feature-requests/ai/FR-AI-004-cost-hold-expiry-cleanup.md"
+      "path": "docs/feature-requests/ai/FR-AI-004-cost-hold-expiry-cleanup/spec.md"
     },
     {
       "id": "FR-AI-005",
@@ -179,7 +179,7 @@
         "FR-AI-015",
         "FR-AI-016"
       ],
-      "path": "docs/feature-requests/ai/FR-AI-005-tenant-policy-yaml-loader.md"
+      "path": "docs/feature-requests/ai/FR-AI-005-tenant-policy-yaml-loader/spec.md"
     },
     {
       "id": "FR-AI-006",
@@ -214,7 +214,7 @@
         "FR-AI-016",
         "FR-AI-022"
       ],
-      "path": "docs/feature-requests/ai/FR-AI-006-model-alias-resolution.md"
+      "path": "docs/feature-requests/ai/FR-AI-006-model-alias-resolution/spec.md"
     },
     {
       "id": "FR-AI-007",
@@ -244,7 +244,7 @@
         "FR-AI-006",
         "FR-AI-008"
       ],
-      "path": "docs/feature-requests/ai/FR-AI-007-provider-cost-table-loader.md"
+      "path": "docs/feature-requests/ai/FR-AI-007-provider-cost-table-loader/spec.md"
     },
     {
       "id": "FR-AI-008",
@@ -284,7 +284,7 @@
         "FR-AI-015",
         "FR-AI-021"
       ],
-      "path": "docs/feature-requests/ai/FR-AI-008-multi-provider-router.md"
+      "path": "docs/feature-requests/ai/FR-AI-008-multi-provider-router/spec.md"
     },
     {
       "id": "FR-AI-009",
@@ -313,7 +313,7 @@
         "FR-AI-008",
         "FR-AI-021"
       ],
-      "path": "docs/feature-requests/ai/FR-AI-009-circuit-breaker.md"
+      "path": "docs/feature-requests/ai/FR-AI-009-circuit-breaker/spec.md"
     },
     {
       "id": "FR-AI-010",
@@ -342,7 +342,7 @@
         "FR-AI-008",
         "FR-AI-009"
       ],
-      "path": "docs/feature-requests/ai/FR-AI-010-streaming-sse.md"
+      "path": "docs/feature-requests/ai/FR-AI-010-streaming-sse/spec.md"
     },
     {
       "id": "FR-AI-011",
@@ -373,7 +373,7 @@
         "FR-AI-013",
         "FR-AI-021"
       ],
-      "path": "docs/feature-requests/ai/FR-AI-011-presidio-pii-redaction.md"
+      "path": "docs/feature-requests/ai/FR-AI-011-presidio-pii-redaction/spec.md"
     },
     {
       "id": "FR-AI-012",
@@ -403,7 +403,7 @@
         "FR-AI-011",
         "FR-AI-013"
       ],
-      "path": "docs/feature-requests/ai/FR-AI-012-vn-pii-plugin.md"
+      "path": "docs/feature-requests/ai/FR-AI-012-vn-pii-plugin/spec.md"
     },
     {
       "id": "FR-AI-013",
@@ -429,7 +429,7 @@
         "FR-AI-012",
         "FR-AI-022"
       ],
-      "path": "docs/feature-requests/ai/FR-AI-013-vn-pii-recall-gate.md"
+      "path": "docs/feature-requests/ai/FR-AI-013-vn-pii-recall-gate/spec.md"
     },
     {
       "id": "FR-AI-014",
@@ -456,7 +456,7 @@
         "FR-AI-008",
         "FR-AI-022"
       ],
-      "path": "docs/feature-requests/ai/FR-AI-014-persona-version-stamping.md"
+      "path": "docs/feature-requests/ai/FR-AI-014-persona-version-stamping/spec.md"
     },
     {
       "id": "FR-AI-015",
@@ -483,7 +483,7 @@
         "FR-AI-008",
         "FR-AI-016"
       ],
-      "path": "docs/feature-requests/ai/FR-AI-015-zdr-enforcement.md"
+      "path": "docs/feature-requests/ai/FR-AI-015-zdr-enforcement/spec.md"
     },
     {
       "id": "FR-AI-016",
@@ -510,7 +510,7 @@
         "FR-AI-015",
         "FR-AI-022"
       ],
-      "path": "docs/feature-requests/ai/FR-AI-016-residency-pinning.md"
+      "path": "docs/feature-requests/ai/FR-AI-016-residency-pinning/spec.md"
     },
     {
       "id": "FR-AI-017",
@@ -541,7 +541,7 @@
         "FR-AI-014",
         "FR-AI-018"
       ],
-      "path": "docs/feature-requests/ai/FR-AI-017-per-tenant-cache.md"
+      "path": "docs/feature-requests/ai/FR-AI-017-per-tenant-cache/spec.md"
     },
     {
       "id": "FR-AI-018",
@@ -567,7 +567,7 @@
         "FR-AI-016",
         "FR-AI-017"
       ],
-      "path": "docs/feature-requests/ai/FR-AI-018-cache-cross-tenant-leak-test.md"
+      "path": "docs/feature-requests/ai/FR-AI-018-cache-cross-tenant-leak-test/spec.md"
     },
     {
       "id": "FR-AI-019",
@@ -598,7 +598,7 @@
         "FR-AI-016",
         "FR-AI-020"
       ],
-      "path": "docs/feature-requests/ai/FR-AI-019-bge-m3-embeddings.md"
+      "path": "docs/feature-requests/ai/FR-AI-019-bge-m3-embeddings/spec.md"
     },
     {
       "id": "FR-AI-020",
@@ -629,7 +629,7 @@
         "FR-AI-016",
         "FR-AI-019"
       ],
-      "path": "docs/feature-requests/ai/FR-AI-020-bge-rerank.md"
+      "path": "docs/feature-requests/ai/FR-AI-020-bge-rerank/spec.md"
     },
     {
       "id": "FR-AI-021",
@@ -666,7 +666,7 @@
         "FR-AI-015",
         "FR-AI-022"
       ],
-      "path": "docs/feature-requests/ai/FR-AI-021-operator-cli.md"
+      "path": "docs/feature-requests/ai/FR-AI-021-operator-cli/spec.md"
     },
     {
       "id": "FR-AI-022",
@@ -705,7 +705,7 @@
         "FR-OBS-005",
         "FR-OBS-006"
       ],
-      "path": "docs/feature-requests/ai/FR-AI-022-otel-trace-emission.md"
+      "path": "docs/feature-requests/ai/FR-AI-022-otel-trace-emission/spec.md"
     },
     {
       "id": "FR-AI-104",
@@ -731,7 +731,7 @@
         "FR-AUTH-105",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/ai/FR-AI-104-vn-provider-integration.md"
+      "path": "docs/feature-requests/ai/FR-AI-104-vn-provider-integration/spec.md"
     },
     {
       "id": "FR-APP-001",
@@ -778,7 +778,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/app/FR-APP-001-desktop-cyberos-operations.md"
+      "path": "docs/feature-requests/app/FR-APP-001-desktop-cyberos-operations/spec.md"
     },
     {
       "id": "FR-APP-002",
@@ -972,7 +972,7 @@
         "FR-AUTH-005",
         "FR-AUTH-006"
       ],
-      "path": "docs/feature-requests/auth/FR-AUTH-001-tenant-create.md"
+      "path": "docs/feature-requests/auth/FR-AUTH-001-tenant-create/spec.md"
     },
     {
       "id": "FR-AUTH-002",
@@ -1007,7 +1007,7 @@
         "FR-AUTH-006",
         "FR-AUTH-101"
       ],
-      "path": "docs/feature-requests/auth/FR-AUTH-002-subject-create.md"
+      "path": "docs/feature-requests/auth/FR-AUTH-002-subject-create/spec.md"
     },
     {
       "id": "FR-AUTH-003",
@@ -1045,7 +1045,7 @@
         "FR-AUTH-005",
         "FR-AI-018"
       ],
-      "path": "docs/feature-requests/auth/FR-AUTH-003-rls-enforcement.md"
+      "path": "docs/feature-requests/auth/FR-AUTH-003-rls-enforcement/spec.md"
     },
     {
       "id": "FR-AUTH-004",
@@ -1088,7 +1088,7 @@
         "FR-AI-001",
         "FR-AI-006"
       ],
-      "path": "docs/feature-requests/auth/FR-AUTH-004-jwt-jwks.md"
+      "path": "docs/feature-requests/auth/FR-AUTH-004-jwt-jwks/spec.md"
     },
     {
       "id": "FR-AUTH-005",
@@ -1121,7 +1121,7 @@
         "FR-AUTH-004",
         "FR-AUTH-006"
       ],
-      "path": "docs/feature-requests/auth/FR-AUTH-005-admin-rest.md"
+      "path": "docs/feature-requests/auth/FR-AUTH-005-admin-rest/spec.md"
     },
     {
       "id": "FR-AUTH-006",
@@ -1150,7 +1150,7 @@
         "FR-AUTH-004",
         "FR-AUTH-005"
       ],
-      "path": "docs/feature-requests/auth/FR-AUTH-006-bootstrap-cli.md"
+      "path": "docs/feature-requests/auth/FR-AUTH-006-bootstrap-cli/spec.md"
     },
     {
       "id": "FR-AUTH-101",
@@ -1199,7 +1199,7 @@
         "FR-DOC-001",
         "FR-OKR-001"
       ],
-      "path": "docs/feature-requests/auth/FR-AUTH-101-rbac-catalogue.md"
+      "path": "docs/feature-requests/auth/FR-AUTH-101-rbac-catalogue/spec.md"
     },
     {
       "id": "FR-AUTH-102",
@@ -1232,7 +1232,7 @@
         "FR-AUTH-106",
         "FR-OBS-007"
       ],
-      "path": "docs/feature-requests/auth/FR-AUTH-102-totp-webauthn-mfa.md"
+      "path": "docs/feature-requests/auth/FR-AUTH-102-totp-webauthn-mfa/spec.md"
     },
     {
       "id": "FR-AUTH-103",
@@ -1263,7 +1263,7 @@
         "FR-AUTH-104",
         "FR-PORTAL-003"
       ],
-      "path": "docs/feature-requests/auth/FR-AUTH-103-saml-sso.md"
+      "path": "docs/feature-requests/auth/FR-AUTH-103-saml-sso/spec.md"
     },
     {
       "id": "FR-AUTH-104",
@@ -1297,7 +1297,7 @@
         "FR-TEN-101",
         "FR-PORTAL-003"
       ],
-      "path": "docs/feature-requests/auth/FR-AUTH-104-oidc-sso.md"
+      "path": "docs/feature-requests/auth/FR-AUTH-104-oidc-sso/spec.md"
     },
     {
       "id": "FR-AUTH-105",
@@ -1328,7 +1328,7 @@
         "FR-MEMORY-101",
         "FR-OBS-007"
       ],
-      "path": "docs/feature-requests/auth/FR-AUTH-105-passkey-enrolment-login.md"
+      "path": "docs/feature-requests/auth/FR-AUTH-105-passkey-enrolment-login/spec.md"
     },
     {
       "id": "FR-AUTH-106",
@@ -1356,7 +1356,7 @@
         "FR-AUTH-101",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/auth/FR-AUTH-106-impossible-travel.md"
+      "path": "docs/feature-requests/auth/FR-AUTH-106-impossible-travel/spec.md"
     },
     {
       "id": "FR-AUTH-107",
@@ -1383,7 +1383,7 @@
         "FR-AUTH-101",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/auth/FR-AUTH-107-hibp-breach-check.md"
+      "path": "docs/feature-requests/auth/FR-AUTH-107-hibp-breach-check/spec.md"
     },
     {
       "id": "FR-AUTH-108",
@@ -1413,7 +1413,7 @@
         "FR-CUO-101",
         "FR-AUTH-109"
       ],
-      "path": "docs/feature-requests/auth/FR-AUTH-108-lumi-tenant-identity-jwt.md"
+      "path": "docs/feature-requests/auth/FR-AUTH-108-lumi-tenant-identity-jwt/spec.md"
     },
     {
       "id": "FR-AUTH-109",
@@ -1441,7 +1441,7 @@
         "FR-MEMORY-101",
         "FR-OBS-007"
       ],
-      "path": "docs/feature-requests/auth/FR-AUTH-109-stub-to-full-migration.md"
+      "path": "docs/feature-requests/auth/FR-AUTH-109-stub-to-full-migration/spec.md"
     },
     {
       "id": "FR-AUTH-110",
@@ -1475,7 +1475,7 @@
         "FR-PORTAL-003",
         "FR-PORTAL-004"
       ],
-      "path": "docs/feature-requests/auth/FR-AUTH-110-oidc-provider.md"
+      "path": "docs/feature-requests/auth/FR-AUTH-110-oidc-provider/spec.md"
     },
     {
       "id": "FR-AUTH-111",
@@ -1497,7 +1497,7 @@
         "FR-AUTH-110",
         "FR-CHAT-269"
       ],
-      "path": "docs/feature-requests/auth/FR-AUTH-111-sso-display-name-from-id-token.md"
+      "path": "docs/feature-requests/auth/FR-AUTH-111-sso-display-name-from-id-token/spec.md"
     },
     {
       "id": "FR-CHAT-102",
@@ -1516,7 +1516,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-102-slack-import.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-102-slack-import/spec.md"
     },
     {
       "id": "FR-CHAT-103",
@@ -1535,7 +1535,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-103-zalo-import.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-103-zalo-import/spec.md"
     },
     {
       "id": "FR-CHAT-104",
@@ -1554,7 +1554,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-104-mobile-push.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-104-mobile-push/spec.md"
     },
     {
       "id": "FR-CHAT-105",
@@ -1573,7 +1573,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-105-dsar-export.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-105-dsar-export/spec.md"
     },
     {
       "id": "FR-CHAT-106",
@@ -1592,7 +1592,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-106-lumi-mention.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-106-lumi-mention/spec.md"
     },
     {
       "id": "FR-CHAT-201",
@@ -1611,7 +1611,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-201-rate-limiting-subject-ip-layers.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-201-rate-limiting-subject-ip-layers/spec.md"
     },
     {
       "id": "FR-CHAT-202",
@@ -1630,7 +1630,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-202-jwt-hardening-aud-always-iss-pin-jwks-refetch-on.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-202-jwt-hardening-aud-always-iss-pin-jwks-refetch-on/spec.md"
     },
     {
       "id": "FR-CHAT-203",
@@ -1649,7 +1649,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-203-account-wide-socket-kill-on-revoke-60-s.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-203-account-wide-socket-kill-on-revoke-60-s/spec.md"
     },
     {
       "id": "FR-CHAT-204",
@@ -1668,7 +1668,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-204-bytea-attachment-closeout-fs-only-prod.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-204-bytea-attachment-closeout-fs-only-prod/spec.md"
     },
     {
       "id": "FR-CHAT-205",
@@ -1687,7 +1687,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-205-edit-history-revisions-table.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-205-edit-history-revisions-table/spec.md"
     },
     {
       "id": "FR-CHAT-206",
@@ -1706,7 +1706,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-206-ws-heartbeat-idle-reaper.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-206-ws-heartbeat-idle-reaper/spec.md"
     },
     {
       "id": "FR-CHAT-207",
@@ -1725,7 +1725,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-207-external-synthetic-probe-login-send-receive.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-207-external-synthetic-probe-login-send-receive/spec.md"
     },
     {
       "id": "FR-CHAT-208",
@@ -1744,7 +1744,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-208-metrics-baseline-core-alerts-prom-grafana-am.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-208-metrics-baseline-core-alerts-prom-grafana-am/spec.md"
     },
     {
       "id": "FR-CHAT-209",
@@ -1763,7 +1763,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-209-staging-compose-profile-seeded-tenant.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-209-staging-compose-profile-seeded-tenant/spec.md"
     },
     {
       "id": "FR-CHAT-210",
@@ -1782,7 +1782,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-210-go-live-checklist-doc-living.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-210-go-live-checklist-doc-living/spec.md"
     },
     {
       "id": "FR-CHAT-211",
@@ -1801,7 +1801,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-211-chat-events-log-per-tenant-seq-transactional.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-211-chat-events-log-per-tenant-seq-transactional/spec.md"
     },
     {
       "id": "FR-CHAT-212",
@@ -1822,7 +1822,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-212-seq-stamped-ws-frames-client-gap-detection.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-212-seq-stamped-ws-frames-client-gap-detection/spec.md"
     },
     {
       "id": "FR-CHAT-213",
@@ -1843,7 +1843,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-213-post-v1-chat-sync-v1-pos-subscriptions-initial-l.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-213-post-v1-chat-sync-v1-pos-subscriptions-initial-l/spec.md"
     },
     {
       "id": "FR-CHAT-214",
@@ -1862,7 +1862,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-214-idempotent-send-client-msg-id-unique-index-echo.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-214-idempotent-send-client-msg-id-unique-index-echo/spec.md"
     },
     {
       "id": "FR-CHAT-215",
@@ -1881,7 +1881,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-215-chat-core-package-skeleton-web-sqlite-opfs-adapt.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-215-chat-core-package-skeleton-web-sqlite-opfs-adapt/spec.md"
     },
     {
       "id": "FR-CHAT-216",
@@ -1903,7 +1903,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-216-persistent-outbox-fifo-backoff-restart-safe-visi.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-216-persistent-outbox-fifo-backoff-restart-safe-visi/spec.md"
     },
     {
       "id": "FR-CHAT-217",
@@ -1925,7 +1925,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-217-store-driven-rendering-messages-channels-read-st.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-217-store-driven-rendering-messages-channels-read-st/spec.md"
     },
     {
       "id": "FR-CHAT-218",
@@ -1946,7 +1946,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-218-single-account-scoped-multiplexed-socket-subscri.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-218-single-account-scoped-multiplexed-socket-subscri/spec.md"
     },
     {
       "id": "FR-CHAT-219",
@@ -1967,7 +1967,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-219-socket-hardening-resume-hint-backpressure-envelo.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-219-socket-hardening-resume-hint-backpressure-envelo/spec.md"
     },
     {
       "id": "FR-CHAT-220",
@@ -1989,7 +1989,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-220-convergence-outbox-property-suites.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-220-convergence-outbox-property-suites/spec.md"
     },
     {
       "id": "FR-CHAT-221",
@@ -2010,7 +2010,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-221-offline-end-to-end-playwright-suite.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-221-offline-end-to-end-playwright-suite/spec.md"
     },
     {
       "id": "FR-CHAT-222",
@@ -2031,7 +2031,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-222-chat-core-as-ci-citizen-typecheck-unit-property.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-222-chat-core-as-ci-citizen-typecheck-unit-property/spec.md"
     },
     {
       "id": "FR-CHAT-223",
@@ -2052,7 +2052,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-223-push-relay-worker-fcm-v1-apns-collapse-keys-badg.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-223-push-relay-worker-fcm-v1-apns-collapse-keys-badg/spec.md"
     },
     {
       "id": "FR-CHAT-224",
@@ -2073,7 +2073,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-224-web-push-vapid-declarative-payload.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-224-web-push-vapid-declarative-payload/spec.md"
     },
     {
       "id": "FR-CHAT-225",
@@ -2092,7 +2092,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-225-quiet-hours-dnd-schedule-server-side.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-225-quiet-hours-dnd-schedule-server-side/spec.md"
     },
     {
       "id": "FR-CHAT-226",
@@ -2111,7 +2111,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-226-desktop-bundle-spa-into-tauri-csp-web-shell.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-226-desktop-bundle-spa-into-tauri-csp-web-shell/spec.md"
     },
     {
       "id": "FR-CHAT-227",
@@ -2133,7 +2133,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-227-desktop-tauri-plugin-sql-adapter-native-notifica.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-227-desktop-tauri-plugin-sql-adapter-native-notifica/spec.md"
     },
     {
       "id": "FR-CHAT-228",
@@ -2154,7 +2154,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-228-desktop-tray-badge-deep-links-single-instance-wi.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-228-desktop-tray-badge-deep-links-single-instance-wi/spec.md"
     },
     {
       "id": "FR-CHAT-229",
@@ -2175,7 +2175,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-229-desktop-updater-keys-channels-crash-reporting-ci.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-229-desktop-updater-keys-channels-crash-reporting-ci/spec.md"
     },
     {
       "id": "FR-CHAT-230",
@@ -2194,7 +2194,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-230-version-skew-policy-min-supported-client-blockin.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-230-version-skew-policy-min-supported-client-blockin/spec.md"
     },
     {
       "id": "FR-CHAT-231",
@@ -2213,7 +2213,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-231-error-tracking-client-server-glitchtip-sentry.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-231-error-tracking-client-server-glitchtip-sentry/spec.md"
     },
     {
       "id": "FR-CHAT-232",
@@ -2232,7 +2232,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-232-per-tenant-feature-flags-canary-rollout-habit.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-232-per-tenant-feature-flags-canary-rollout-habit/spec.md"
     },
     {
       "id": "FR-CHAT-233",
@@ -2251,7 +2251,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-233-capacitor-init-ios-android-committed-release-lan.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-233-capacitor-init-ios-android-committed-release-lan/spec.md"
     },
     {
       "id": "FR-CHAT-234",
@@ -2274,7 +2274,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-234-mobile-sqlite-adapter-push-plugin-deep-link-tap.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-234-mobile-sqlite-adapter-push-plugin-deep-link-tap/spec.md"
     },
     {
       "id": "FR-CHAT-235",
@@ -2295,7 +2295,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-235-mobile-ux-pass-store-readiness-privacy-forms-del.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-235-mobile-ux-pass-store-readiness-privacy-forms-del/spec.md"
     },
     {
       "id": "FR-CHAT-236",
@@ -2314,7 +2314,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-236-attachments-to-object-storage-presigned.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-236-attachments-to-object-storage-presigned/spec.md"
     },
     {
       "id": "FR-CHAT-237",
@@ -2335,7 +2335,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-237-upload-pipeline-resumable-exif-thumbs-av-scan-or.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-237-upload-pipeline-resumable-exif-thumbs-av-scan-or/spec.md"
     },
     {
       "id": "FR-CHAT-238",
@@ -2354,7 +2354,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-238-fan-out-seam-trait-listen-notify-backend-shared.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-238-fan-out-seam-trait-listen-notify-backend-shared/spec.md"
     },
     {
       "id": "FR-CHAT-239",
@@ -2376,7 +2376,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-239-calls-coturn-turn-ring-via-account-socket-push-w.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-239-calls-coturn-turn-ring-via-account-socket-push-w/spec.md"
     },
     {
       "id": "FR-CHAT-240",
@@ -2397,7 +2397,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-240-pdpl-ops-dsar-export-retention-jobs-legal-hold.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-240-pdpl-ops-dsar-export-retention-jobs-legal-hold/spec.md"
     },
     {
       "id": "FR-CHAT-241",
@@ -2416,7 +2416,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-241-pdpl-governance-data-mapping-dpia-transfer-asses.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-241-pdpl-governance-data-mapping-dpia-transfer-asses/spec.md"
     },
     {
       "id": "FR-CHAT-242",
@@ -2437,7 +2437,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-242-web-unread-from-event-log-kill-polls-chat-tsx-re.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-242-web-unread-from-event-log-kill-polls-chat-tsx-re/spec.md"
     },
     {
       "id": "FR-CHAT-243",
@@ -2458,7 +2458,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-243-web-pwa-completion-a11y-aa-axe-ci-perf-budget-qo.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-243-web-pwa-completion-a11y-aa-axe-ci-perf-budget-qo/spec.md"
     },
     {
       "id": "FR-CHAT-244",
@@ -2480,7 +2480,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-244-sync-v1-1-cold-start-snapshot-lists-windows-offl.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-244-sync-v1-1-cold-start-snapshot-lists-windows-offl/spec.md"
     },
     {
       "id": "FR-CHAT-245",
@@ -2501,7 +2501,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-245-ops-drills-zero-downtime-deploy-off-site-backup.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-245-ops-drills-zero-downtime-deploy-off-site-backup/spec.md"
     },
     {
       "id": "FR-CHAT-246",
@@ -2522,7 +2522,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-246-load-fuzz-migration-gate-chaos-soak-suites.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-246-load-fuzz-migration-gate-chaos-soak-suites/spec.md"
     },
     {
       "id": "FR-CHAT-247",
@@ -2543,7 +2543,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-247-observability-completion-otel-traces-capacity-da.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-247-observability-completion-otel-traces-capacity-da/spec.md"
     },
     {
       "id": "FR-CHAT-248",
@@ -2564,7 +2564,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-248-product-wave-1-pins-saved-for-later-forward-quot.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-248-product-wave-1-pins-saved-for-later-forward-quot/spec.md"
     },
     {
       "id": "FR-CHAT-249",
@@ -2585,7 +2585,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-249-group-dms-scheduled-send-reminders.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-249-group-dms-scheduled-send-reminders/spec.md"
     },
     {
       "id": "FR-CHAT-250",
@@ -2606,7 +2606,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-250-link-previews-ssrf-safe-fetcher-cards.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-250-link-previews-ssrf-safe-fetcher-cards/spec.md"
     },
     {
       "id": "FR-CHAT-251",
@@ -2627,7 +2627,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-251-product-wave-2-slash-commands-custom-emoji-statu.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-251-product-wave-2-slash-commands-custom-emoji-statu/spec.md"
     },
     {
       "id": "FR-CHAT-252",
@@ -2648,7 +2648,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-252-ai-set-catch-me-up-summaries-action-items-stream.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-252-ai-set-catch-me-up-summaries-action-items-stream/spec.md"
     },
     {
       "id": "FR-CHAT-253",
@@ -2667,7 +2667,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-253-api-contracts-error-envelope-openapi-generated-t.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-253-api-contracts-error-envelope-openapi-generated-t/spec.md"
     },
     {
       "id": "FR-CHAT-254",
@@ -2688,7 +2688,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-254-ecosystem-incoming-outgoing-webhooks-bot-account.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-254-ecosystem-incoming-outgoing-webhooks-bot-account/spec.md"
     },
     {
       "id": "FR-CHAT-255",
@@ -2707,7 +2707,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-255-imports-slack-then-zalo-idempotent-checkpointed.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-255-imports-slack-then-zalo-idempotent-checkpointed/spec.md"
     },
     {
       "id": "FR-CHAT-256",
@@ -2729,7 +2729,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-256-scale-wave-redis-nats-backend-load-shed-order-pa.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-256-scale-wave-redis-nats-backend-load-shed-order-pa/spec.md"
     },
     {
       "id": "FR-CHAT-257",
@@ -2748,7 +2748,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-257-security-completion-upload-hardening-device-sess.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-257-security-completion-upload-hardening-device-sess/spec.md"
     },
     {
       "id": "FR-CHAT-258",
@@ -2769,7 +2769,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-258-external-penetration-test-scope-chat-auth-upload.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-258-external-penetration-test-scope-chat-auth-upload/spec.md"
     },
     {
       "id": "FR-CHAT-259",
@@ -2788,7 +2788,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-259-encryption-posture-honest-security-page-attachme.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-259-encryption-posture-honest-security-page-attachme/spec.md"
     },
     {
       "id": "FR-CHAT-260",
@@ -2807,7 +2807,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-260-e2ee-channel-class-on-mls-capture-ai-search-off.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-260-e2ee-channel-class-on-mls-capture-ai-search-off/spec.md"
     },
     {
       "id": "FR-CHAT-261",
@@ -2829,7 +2829,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-261-attachment-offline-cache-policy-sync-conformance.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-261-attachment-offline-cache-policy-sync-conformance/spec.md"
     },
     {
       "id": "FR-CHAT-262",
@@ -2850,7 +2850,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-262-calls-extended-1-1-screen-share-sfu-spike-for-gr.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-262-calls-extended-1-1-screen-share-sfu-spike-for-gr/spec.md"
     },
     {
       "id": "FR-CHAT-263",
@@ -2871,7 +2871,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-263-notification-extras-offline-email-digest-deliver.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-263-notification-extras-offline-email-digest-deliver/spec.md"
     },
     {
       "id": "FR-CHAT-264",
@@ -2892,7 +2892,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-264-share-to-chat-intent-mobile-share-sheet.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-264-share-to-chat-intent-mobile-share-sheet/spec.md"
     },
     {
       "id": "FR-CHAT-265",
@@ -2913,7 +2913,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-265-admin-data-governance-panel-retention-holds-dsar.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-265-admin-data-governance-panel-retention-holds-dsar/spec.md"
     },
     {
       "id": "FR-CHAT-266",
@@ -2932,7 +2932,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/chat/FR-CHAT-266-decision-memos-d1-d6-prepared-for-stephen-one-pa.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-266-decision-memos-d1-d6-prepared-for-stephen-one-pa/spec.md"
     },
     {
       "id": "FR-CHAT-001",
@@ -3323,7 +3323,7 @@
         "FR-AUTH-005",
         "FR-AUTH-101"
       ],
-      "path": "docs/feature-requests/chat/FR-CHAT-101-native-chat-skeleton.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-101-native-chat-skeleton/spec.md"
     },
     {
       "id": "FR-CHAT-267",
@@ -3349,7 +3349,7 @@
         "FR-CHAT-101",
         "FR-CHAT-265"
       ],
-      "path": "docs/feature-requests/chat/FR-CHAT-267-in-app-content-reporting.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-267-in-app-content-reporting/spec.md"
     },
     {
       "id": "FR-CHAT-268",
@@ -3372,7 +3372,7 @@
         "FR-CHAT-269",
         "FR-CHAT-101"
       ],
-      "path": "docs/feature-requests/chat/FR-CHAT-268-user-blocking.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-268-user-blocking/spec.md"
     },
     {
       "id": "FR-CHAT-269",
@@ -3398,7 +3398,7 @@
         "FR-CHAT-265",
         "FR-AUTH-101"
       ],
-      "path": "docs/feature-requests/chat/FR-CHAT-269-moderation-queue.md"
+      "path": "docs/feature-requests/chat/FR-CHAT-269-moderation-queue/spec.md"
     },
     {
       "id": "FR-CRM-001",
@@ -3441,7 +3441,7 @@
         "FR-PROJ-005",
         "FR-HR-001"
       ],
-      "path": "docs/feature-requests/crm/FR-CRM-001-account-contact-deal-schema.md"
+      "path": "docs/feature-requests/crm/FR-CRM-001-account-contact-deal-schema/spec.md"
     },
     {
       "id": "FR-CRM-002",
@@ -3470,7 +3470,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/crm/FR-CRM-002-activity-feed.md"
+      "path": "docs/feature-requests/crm/FR-CRM-002-activity-feed/spec.md"
     },
     {
       "id": "FR-CRM-003",
@@ -3499,7 +3499,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/crm/FR-CRM-003-vn-account-type-mst.md"
+      "path": "docs/feature-requests/crm/FR-CRM-003-vn-account-type-mst/spec.md"
     },
     {
       "id": "FR-CRM-004",
@@ -3530,7 +3530,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/crm/FR-CRM-004-convert-to-engagement.md"
+      "path": "docs/feature-requests/crm/FR-CRM-004-convert-to-engagement/spec.md"
     },
     {
       "id": "FR-CRM-005",
@@ -3558,7 +3558,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/crm/FR-CRM-005-next-action-skill.md"
+      "path": "docs/feature-requests/crm/FR-CRM-005-next-action-skill/spec.md"
     },
     {
       "id": "FR-CRM-006",
@@ -3586,7 +3586,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/crm/FR-CRM-006-ai-lead-scoring.md"
+      "path": "docs/feature-requests/crm/FR-CRM-006-ai-lead-scoring/spec.md"
     },
     {
       "id": "FR-CRM-007",
@@ -3614,7 +3614,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/crm/FR-CRM-007-win-loss-analysis.md"
+      "path": "docs/feature-requests/crm/FR-CRM-007-win-loss-analysis/spec.md"
     },
     {
       "id": "FR-CRM-008",
@@ -3640,7 +3640,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/crm/FR-CRM-008-mst-validate-skill.md"
+      "path": "docs/feature-requests/crm/FR-CRM-008-mst-validate-skill/spec.md"
     },
     {
       "id": "FR-CRM-009",
@@ -3667,7 +3667,7 @@
         "FR-TEN-102",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/crm/FR-CRM-009-vietqr-skill.md"
+      "path": "docs/feature-requests/crm/FR-CRM-009-vietqr-skill/spec.md"
     },
     {
       "id": "FR-CRM-010",
@@ -3697,7 +3697,7 @@
         "FR-SKILL-109",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/crm/FR-CRM-010-hoadon-skill.md"
+      "path": "docs/feature-requests/crm/FR-CRM-010-hoadon-skill/spec.md"
     },
     {
       "id": "FR-CUO-200",
@@ -3725,7 +3725,7 @@
         "FR-CUO-203"
       ],
       "related_frs": [],
-      "path": "docs/feature-requests/cuo/FR-CUO-200-harness-read-only-report.md"
+      "path": "docs/feature-requests/cuo/FR-CUO-200-harness-read-only-report/spec.md"
     },
     {
       "id": "FR-CUO-201",
@@ -3748,7 +3748,7 @@
         "FR-CUO-202"
       ],
       "related_frs": [],
-      "path": "docs/feature-requests/cuo/FR-CUO-201-refinement-proposals-stripe-dedup.md"
+      "path": "docs/feature-requests/cuo/FR-CUO-201-refinement-proposals-stripe-dedup/spec.md"
     },
     {
       "id": "FR-CUO-202",
@@ -3771,7 +3771,7 @@
         "FR-CUO-203"
       ],
       "related_frs": [],
-      "path": "docs/feature-requests/cuo/FR-CUO-202-auto-bump-low-risk.md"
+      "path": "docs/feature-requests/cuo/FR-CUO-202-auto-bump-low-risk/spec.md"
     },
     {
       "id": "FR-CUO-203",
@@ -3794,7 +3794,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/cuo/FR-CUO-203-workflow-level-evolution.md"
+      "path": "docs/feature-requests/cuo/FR-CUO-203-workflow-level-evolution/spec.md"
     },
     {
       "id": "FR-CUO-204",
@@ -3818,7 +3818,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/cuo/FR-CUO-204-idle-autonomous-evolution.md"
+      "path": "docs/feature-requests/cuo/FR-CUO-204-idle-autonomous-evolution/spec.md"
     },
     {
       "id": "FR-CUO-205",
@@ -3841,7 +3841,7 @@
         "FR-CUO-206",
         "FR-CUO-208"
       ],
-      "path": "docs/feature-requests/cuo/FR-CUO-205-single-backlog-write-path.md"
+      "path": "docs/feature-requests/cuo/FR-CUO-205-single-backlog-write-path/spec.md"
     },
     {
       "id": "FR-CUO-206",
@@ -3864,7 +3864,7 @@
         "FR-CUO-207",
         "FR-SKILL-118"
       ],
-      "path": "docs/feature-requests/cuo/FR-CUO-206-ship-run-state-manifest.md"
+      "path": "docs/feature-requests/cuo/FR-CUO-206-ship-run-state-manifest/spec.md"
     },
     {
       "id": "FR-CUO-207",
@@ -3889,7 +3889,7 @@
         "FR-SKILL-118",
         "FR-IMP-070"
       ],
-      "path": "docs/feature-requests/cuo/FR-CUO-207-gate-autodetect-portability.md"
+      "path": "docs/feature-requests/cuo/FR-CUO-207-gate-autodetect-portability/spec.md"
     },
     {
       "id": "FR-CUO-208",
@@ -3913,7 +3913,7 @@
         "FR-CUO-205",
         "FR-CUO-207"
       ],
-      "path": "docs/feature-requests/cuo/FR-CUO-208-fr-template-profile.md"
+      "path": "docs/feature-requests/cuo/FR-CUO-208-fr-template-profile/spec.md"
     },
     {
       "id": "FR-CUO-209",
@@ -3940,7 +3940,7 @@
         "FR-SKILL-118",
         "FR-IMP-068"
       ],
-      "path": "docs/feature-requests/cuo/FR-CUO-209-full-sdp-vendoring.md"
+      "path": "docs/feature-requests/cuo/FR-CUO-209-full-sdp-vendoring/spec.md"
     },
     {
       "id": "FR-CUO-101",
@@ -3976,7 +3976,7 @@
         "FR-CUO-105",
         "FR-SKILL-112"
       ],
-      "path": "docs/feature-requests/cuo/FR-CUO-101-langgraph-supervisor.md"
+      "path": "docs/feature-requests/cuo/FR-CUO-101-langgraph-supervisor/spec.md"
     },
     {
       "id": "FR-CUO-102",
@@ -4003,7 +4003,7 @@
         "FR-CUO-103",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/cuo/FR-CUO-102-langgraph-postgres-checkpointer.md"
+      "path": "docs/feature-requests/cuo/FR-CUO-102-langgraph-postgres-checkpointer/spec.md"
     },
     {
       "id": "FR-CUO-103",
@@ -4029,7 +4029,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/cuo/FR-CUO-103-trace-replay-rows.md"
+      "path": "docs/feature-requests/cuo/FR-CUO-103-trace-replay-rows/spec.md"
     },
     {
       "id": "FR-CUO-104",
@@ -4058,7 +4058,7 @@
         "FR-SKILL-001",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/cuo/FR-CUO-104-topological-chain-walk.md"
+      "path": "docs/feature-requests/cuo/FR-CUO-104-topological-chain-walk/spec.md"
     },
     {
       "id": "FR-CUO-105",
@@ -4083,7 +4083,7 @@
         "FR-SKILL-001",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/cuo/FR-CUO-105-per-step-rollback.md"
+      "path": "docs/feature-requests/cuo/FR-CUO-105-per-step-rollback/spec.md"
     },
     {
       "id": "FR-CUO-106",
@@ -4111,7 +4111,7 @@
         "FR-SKILL-001",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/cuo/FR-CUO-106-supervisor-phase4-special-handlers.md"
+      "path": "docs/feature-requests/cuo/FR-CUO-106-supervisor-phase4-special-handlers/spec.md"
     },
     {
       "id": "FR-DOC-001",
@@ -4145,7 +4145,7 @@
         "FR-DOC-010",
         "FR-DOC-011"
       ],
-      "path": "docs/feature-requests/doc/FR-DOC-001-document-repository.md"
+      "path": "docs/feature-requests/doc/FR-DOC-001-document-repository/spec.md"
     },
     {
       "id": "FR-DOC-002",
@@ -4175,7 +4175,7 @@
         "FR-AUTH-105",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/doc/FR-DOC-002-eidas-qtsp.md"
+      "path": "docs/feature-requests/doc/FR-DOC-002-eidas-qtsp/spec.md"
     },
     {
       "id": "FR-DOC-003",
@@ -4203,7 +4203,7 @@
         "FR-AUTH-105",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/doc/FR-DOC-003-aatl-ca.md"
+      "path": "docs/feature-requests/doc/FR-DOC-003-aatl-ca/spec.md"
     },
     {
       "id": "FR-DOC-004",
@@ -4231,7 +4231,7 @@
         "FR-AUTH-105",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/doc/FR-DOC-004-vn-ca-chain.md"
+      "path": "docs/feature-requests/doc/FR-DOC-004-vn-ca-chain/spec.md"
     },
     {
       "id": "FR-DOC-005",
@@ -4262,7 +4262,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/doc/FR-DOC-005-multi-party-signing.md"
+      "path": "docs/feature-requests/doc/FR-DOC-005-multi-party-signing/spec.md"
     },
     {
       "id": "FR-DOC-006",
@@ -4291,7 +4291,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/doc/FR-DOC-006-identity-verification.md"
+      "path": "docs/feature-requests/doc/FR-DOC-006-identity-verification/spec.md"
     },
     {
       "id": "FR-DOC-007",
@@ -4321,7 +4321,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/doc/FR-DOC-007-lifecycle-metadata.md"
+      "path": "docs/feature-requests/doc/FR-DOC-007-lifecycle-metadata/spec.md"
     },
     {
       "id": "FR-DOC-008",
@@ -4348,7 +4348,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/doc/FR-DOC-008-expiry-alert-cascade.md"
+      "path": "docs/feature-requests/doc/FR-DOC-008-expiry-alert-cascade/spec.md"
     },
     {
       "id": "FR-DOC-009",
@@ -4377,7 +4377,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/doc/FR-DOC-009-renewal-proposal-cuo.md"
+      "path": "docs/feature-requests/doc/FR-DOC-009-renewal-proposal-cuo/spec.md"
     },
     {
       "id": "FR-DOC-010",
@@ -4404,7 +4404,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/doc/FR-DOC-010-third-party-import.md"
+      "path": "docs/feature-requests/doc/FR-DOC-010-third-party-import/spec.md"
     },
     {
       "id": "FR-DOC-011",
@@ -4432,7 +4432,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/doc/FR-DOC-011-padesblt-restamping.md"
+      "path": "docs/feature-requests/doc/FR-DOC-011-padesblt-restamping/spec.md"
     },
     {
       "id": "FR-DOCS-002",
@@ -4451,21 +4451,21 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/docs/FR-DOCS-002-docs-single-source-of-truth.md"
+      "path": "docs/feature-requests/docs/FR-DOCS-002-docs-single-source-of-truth/spec.md"
     },
     {
       "id": "FR-DOCS-003",
       "title": "Release roadmap visualization - a generated roadmap.html rebuilt on every release and deploy from FR frontmatter + CHANGELOG + VERSION",
       "module": "docs",
       "priority": "MUST",
-      "status": "implementing",
+      "status": "done",
       "verify": "T",
       "phase": "Wave C - strengthen the workflows",
       "milestone": "",
       "slice": null,
       "owner": "Stephen Cheng (CTO)",
       "created": "2026-07-12",
-      "shipped": null,
+      "shipped": "2026-07-12",
       "effort_hours": null,
       "depends_on": [
         "FR-DOCS-002"
@@ -4476,7 +4476,85 @@
         "FR-DOCS-002",
         "FR-IMP-069"
       ],
-      "path": "docs/feature-requests/docs/FR-DOCS-003-release-roadmap-visualization.md"
+      "path": "docs/feature-requests/docs/FR-DOCS-003-release-roadmap-visualization/spec.md"
+    },
+    {
+      "id": "FR-DOCS-004",
+      "title": "Folder-per-FR layout - <module>/<STEM>/{spec.md, audit.md, assets/} + loud regen + the 42 yaml-invalid FRs repaired",
+      "module": "docs",
+      "priority": "MUST",
+      "status": "implementing",
+      "verify": "T",
+      "phase": "Wave D - visual deliverables",
+      "milestone": "",
+      "slice": null,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-07-12",
+      "shipped": null,
+      "effort_hours": null,
+      "depends_on": [],
+      "blocks": [
+        "FR-DOCS-005",
+        "FR-SKILL-120"
+      ],
+      "related_frs": [
+        "FR-TPL-001",
+        "FR-DOCS-005",
+        "FR-SKILL-120",
+        "FR-DOCS-003"
+      ],
+      "path": "docs/feature-requests/docs/FR-DOCS-004-folder-per-fr-layout/spec.md"
+    },
+    {
+      "id": "FR-DOCS-005",
+      "title": "Per-FR CDS HTML pages - every spec renders to its own self-contained deliverable page with assets",
+      "module": "docs",
+      "priority": "MUST",
+      "status": "ready_to_implement",
+      "verify": "T",
+      "phase": "Wave D - visual deliverables",
+      "milestone": "",
+      "slice": null,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-07-12",
+      "shipped": null,
+      "effort_hours": null,
+      "depends_on": [
+        "FR-TPL-001",
+        "FR-DOCS-004"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-TPL-001",
+        "FR-DOCS-004",
+        "FR-DOCS-006"
+      ],
+      "path": "docs/feature-requests/docs/FR-DOCS-005-fr-html-pages/spec.md"
+    },
+    {
+      "id": "FR-DOCS-006",
+      "title": "Status hub - one status.html: command deck + Roadmap | Backlog | Changelog tabs (supersedes roadmap.html)",
+      "module": "docs",
+      "priority": "MUST",
+      "status": "ready_to_implement",
+      "verify": "T",
+      "phase": "Wave D - visual deliverables",
+      "milestone": "",
+      "slice": null,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-07-12",
+      "shipped": null,
+      "effort_hours": null,
+      "depends_on": [
+        "FR-TPL-001"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-TPL-001",
+        "FR-DOCS-003",
+        "FR-DOCS-005"
+      ],
+      "path": "docs/feature-requests/docs/FR-DOCS-006-status-hub/spec.md"
     },
     {
       "id": "FR-DOCS-001",
@@ -4495,7 +4573,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/docs/FR-DOCS-001-server-render-reference-pages.md"
+      "path": "docs/feature-requests/docs/FR-DOCS-001-server-render-reference-pages/spec.md"
     },
     {
       "id": "FR-EMAIL-001",
@@ -4527,7 +4605,7 @@
         "FR-EMAIL-009",
         "FR-EMAIL-011"
       ],
-      "path": "docs/feature-requests/email/FR-EMAIL-001-stalwart-deployment.md"
+      "path": "docs/feature-requests/email/FR-EMAIL-001-stalwart-deployment/spec.md"
     },
     {
       "id": "FR-EMAIL-002",
@@ -4557,7 +4635,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/email/FR-EMAIL-002-authbridge-plugin.md"
+      "path": "docs/feature-requests/email/FR-EMAIL-002-authbridge-plugin/spec.md"
     },
     {
       "id": "FR-EMAIL-003",
@@ -4588,7 +4666,7 @@
         "FR-CUO-101",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/email/FR-EMAIL-003-missive-ux.md"
+      "path": "docs/feature-requests/email/FR-EMAIL-003-missive-ux/spec.md"
     },
     {
       "id": "FR-EMAIL-004",
@@ -4618,7 +4696,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/email/FR-EMAIL-004-dkim-arc-bimi.md"
+      "path": "docs/feature-requests/email/FR-EMAIL-004-dkim-arc-bimi/spec.md"
     },
     {
       "id": "FR-EMAIL-005",
@@ -4648,7 +4726,7 @@
         "FR-MCP-006",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/email/FR-EMAIL-005-camel-dual-llm.md"
+      "path": "docs/feature-requests/email/FR-EMAIL-005-camel-dual-llm/spec.md"
     },
     {
       "id": "FR-EMAIL-006",
@@ -4677,7 +4755,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/email/FR-EMAIL-006-tracked-domain-crm-link.md"
+      "path": "docs/feature-requests/email/FR-EMAIL-006-tracked-domain-crm-link/spec.md"
     },
     {
       "id": "FR-EMAIL-007",
@@ -4705,7 +4783,7 @@
         "FR-DOC-001",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/email/FR-EMAIL-007-convert-to-issue.md"
+      "path": "docs/feature-requests/email/FR-EMAIL-007-convert-to-issue/spec.md"
     },
     {
       "id": "FR-EMAIL-008",
@@ -4735,7 +4813,7 @@
         "FR-CUO-101",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/email/FR-EMAIL-008-genie-prefix.md"
+      "path": "docs/feature-requests/email/FR-EMAIL-008-genie-prefix/spec.md"
     },
     {
       "id": "FR-EMAIL-009",
@@ -4767,7 +4845,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/email/FR-EMAIL-009-outbound-1to1-send.md"
+      "path": "docs/feature-requests/email/FR-EMAIL-009-outbound-1to1-send/spec.md"
     },
     {
       "id": "FR-EMAIL-010",
@@ -4794,7 +4872,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/email/FR-EMAIL-010-bulk-send-approval.md"
+      "path": "docs/feature-requests/email/FR-EMAIL-010-bulk-send-approval/spec.md"
     },
     {
       "id": "FR-EMAIL-011",
@@ -4822,7 +4900,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/email/FR-EMAIL-011-dsar-message-export.md"
+      "path": "docs/feature-requests/email/FR-EMAIL-011-dsar-message-export/spec.md"
     },
     {
       "id": "FR-ESOP-001",
@@ -4855,7 +4933,7 @@
         "FR-ESOP-004",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/esop/FR-ESOP-001-sp-grant-schema.md"
+      "path": "docs/feature-requests/esop/FR-ESOP-001-sp-grant-schema/spec.md"
     },
     {
       "id": "FR-ESOP-002",
@@ -4880,7 +4958,7 @@
         "FR-MCP-007",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/esop/FR-ESOP-002-monthly-vesting-batch.md"
+      "path": "docs/feature-requests/esop/FR-ESOP-002-monthly-vesting-batch/spec.md"
     },
     {
       "id": "FR-ESOP-003",
@@ -4908,7 +4986,7 @@
         "FR-AUTH-101",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/esop/FR-ESOP-003-annual-valuation.md"
+      "path": "docs/feature-requests/esop/FR-ESOP-003-annual-valuation/spec.md"
     },
     {
       "id": "FR-ESOP-004",
@@ -4936,7 +5014,7 @@
         "FR-AUTH-101",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/esop/FR-ESOP-004-put-option-exec.md"
+      "path": "docs/feature-requests/esop/FR-ESOP-004-put-option-exec/spec.md"
     },
     {
       "id": "FR-ESOP-005",
@@ -4962,7 +5040,7 @@
         "FR-ESOP-002",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/esop/FR-ESOP-005-gl-bl-branch.md"
+      "path": "docs/feature-requests/esop/FR-ESOP-005-gl-bl-branch/spec.md"
     },
     {
       "id": "FR-ESOP-006",
@@ -4989,7 +5067,7 @@
         "FR-MCP-007",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/esop/FR-ESOP-006-ma-acceleration.md"
+      "path": "docs/feature-requests/esop/FR-ESOP-006-ma-acceleration/spec.md"
     },
     {
       "id": "FR-ESOP-007",
@@ -5016,7 +5094,7 @@
         "FR-AUTH-101",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/esop/FR-ESOP-007-member-dashboard.md"
+      "path": "docs/feature-requests/esop/FR-ESOP-007-member-dashboard/spec.md"
     },
     {
       "id": "FR-EVAL-001",
@@ -5047,7 +5125,7 @@
         "FR-EVAL-003",
         "FR-CUO-204"
       ],
-      "path": "docs/feature-requests/eval/FR-EVAL-001-governance-consent-access-retention.md"
+      "path": "docs/feature-requests/eval/FR-EVAL-001-governance-consent-access-retention/spec.md"
     },
     {
       "id": "FR-EVAL-002",
@@ -5077,7 +5155,7 @@
         "FR-AUTH-003",
         "FR-PROJ-008"
       ],
-      "path": "docs/feature-requests/eval/FR-EVAL-002-rubric-from-signed-documents.md"
+      "path": "docs/feature-requests/eval/FR-EVAL-002-rubric-from-signed-documents/spec.md"
     },
     {
       "id": "FR-EVAL-003",
@@ -5109,7 +5187,7 @@
         "FR-AUTH-003",
         "FR-PROJ-008"
       ],
-      "path": "docs/feature-requests/eval/FR-EVAL-003-evaluation-engine-autoscore-hitl.md"
+      "path": "docs/feature-requests/eval/FR-EVAL-003-evaluation-engine-autoscore-hitl/spec.md"
     },
     {
       "id": "FR-EVAL-004",
@@ -5140,7 +5218,7 @@
         "FR-APP-005",
         "FR-MEMORY-123"
       ],
-      "path": "docs/feature-requests/eval/FR-EVAL-004-manager-employee-views.md"
+      "path": "docs/feature-requests/eval/FR-EVAL-004-manager-employee-views/spec.md"
     },
     {
       "id": "FR-HR-001",
@@ -5178,7 +5256,7 @@
         "FR-REW-001",
         "FR-ESOP-001"
       ],
-      "path": "docs/feature-requests/hr/FR-HR-001-member-schema.md"
+      "path": "docs/feature-requests/hr/FR-HR-001-member-schema/spec.md"
     },
     {
       "id": "FR-HR-002",
@@ -5205,7 +5283,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/hr/FR-HR-002-contract-types.md"
+      "path": "docs/feature-requests/hr/FR-HR-002-contract-types/spec.md"
     },
     {
       "id": "FR-HR-003",
@@ -5230,7 +5308,7 @@
         "FR-AUTH-105",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/hr/FR-HR-003-cccd-kms.md"
+      "path": "docs/feature-requests/hr/FR-HR-003-cccd-kms/spec.md"
     },
     {
       "id": "FR-HR-004",
@@ -5259,7 +5337,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/hr/FR-HR-004-leave-types.md"
+      "path": "docs/feature-requests/hr/FR-HR-004-leave-types/spec.md"
     },
     {
       "id": "FR-HR-005",
@@ -5288,7 +5366,7 @@
         "FR-REW-004",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/hr/FR-HR-005-working-hours-si-rates.md"
+      "path": "docs/feature-requests/hr/FR-HR-005-working-hours-si-rates/spec.md"
     },
     {
       "id": "FR-HR-006",
@@ -5314,7 +5392,7 @@
         "FR-MCP-007",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/hr/FR-HR-006-leave-accrual-cron.md"
+      "path": "docs/feature-requests/hr/FR-HR-006-leave-accrual-cron/spec.md"
     },
     {
       "id": "FR-HR-007",
@@ -5344,7 +5422,7 @@
         "FR-REW-001",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/hr/FR-HR-007-onboarding-saga.md"
+      "path": "docs/feature-requests/hr/FR-HR-007-onboarding-saga/spec.md"
     },
     {
       "id": "FR-HR-008",
@@ -5372,7 +5450,7 @@
         "FR-LEARN-001",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/hr/FR-HR-008-performance-signals.md"
+      "path": "docs/feature-requests/hr/FR-HR-008-performance-signals/spec.md"
     },
     {
       "id": "FR-HR-009",
@@ -5401,7 +5479,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/hr/FR-HR-009-termination-workflow.md"
+      "path": "docs/feature-requests/hr/FR-HR-009-termination-workflow/spec.md"
     },
     {
       "id": "FR-IMP-001",
@@ -5420,7 +5498,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-001-dependency-audit-in-ci-cargo-audit-cargo-deny.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-001-dependency-audit-in-ci-cargo-audit-cargo-deny/spec.md"
     },
     {
       "id": "FR-IMP-002",
@@ -5439,7 +5517,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-002-refuse-dev-cors-in-production-boot.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-002-refuse-dev-cors-in-production-boot/spec.md"
     },
     {
       "id": "FR-IMP-003",
@@ -5458,7 +5536,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-003-secret-scanning-in-ci-and-pre-push.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-003-secret-scanning-in-ci-and-pre-push/spec.md"
     },
     {
       "id": "FR-IMP-004",
@@ -5477,7 +5555,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-004-deploy-observability-stack-to-p0.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-004-deploy-observability-stack-to-p0/spec.md"
     },
     {
       "id": "FR-IMP-005",
@@ -5496,7 +5574,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-005-external-uptime-probes-and-alerting.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-005-external-uptime-probes-and-alerting/spec.md"
     },
     {
       "id": "FR-IMP-006",
@@ -5515,7 +5593,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-006-canary-healthcheck-and-auto-rollback-in-deploy.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-006-canary-healthcheck-and-auto-rollback-in-deploy/spec.md"
     },
     {
       "id": "FR-IMP-007",
@@ -5534,7 +5612,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-007-apps-web-test-spine.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-007-apps-web-test-spine/spec.md"
     },
     {
       "id": "FR-IMP-008",
@@ -5553,7 +5631,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-008-goldensets-as-first-class-gate-inputs.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-008-goldensets-as-first-class-gate-inputs/spec.md"
     },
     {
       "id": "FR-IMP-009",
@@ -5572,7 +5650,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-009-llm-call-ledger-in-ai-gateway.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-009-llm-call-ledger-in-ai-gateway/spec.md"
     },
     {
       "id": "FR-IMP-010",
@@ -5593,7 +5671,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-010-telemetry-to-fr-bridge.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-010-telemetry-to-fr-bridge/spec.md"
     },
     {
       "id": "FR-IMP-011",
@@ -5612,7 +5690,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-011-structured-gate-failure-taxonomy.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-011-structured-gate-failure-taxonomy/spec.md"
     },
     {
       "id": "FR-IMP-012",
@@ -5631,7 +5709,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-012-coverage-measurement-and-ratchet.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-012-coverage-measurement-and-ratchet/spec.md"
     },
     {
       "id": "FR-IMP-013",
@@ -5650,7 +5728,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-013-cross-service-contract-tests.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-013-cross-service-contract-tests/spec.md"
     },
     {
       "id": "FR-IMP-014",
@@ -5669,7 +5747,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-014-external-audit-chain-anchoring.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-014-external-audit-chain-anchoring/spec.md"
     },
     {
       "id": "FR-IMP-015",
@@ -5688,7 +5766,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-015-nightly-chain-integrity-monitor.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-015-nightly-chain-integrity-monitor/spec.md"
     },
     {
       "id": "FR-IMP-016",
@@ -5707,7 +5785,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-016-staging-environment.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-016-staging-environment/spec.md"
     },
     {
       "id": "FR-IMP-017",
@@ -5726,7 +5804,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-017-otlp-tracing-export.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-017-otlp-tracing-export/spec.md"
     },
     {
       "id": "FR-IMP-018",
@@ -5745,7 +5823,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-018-prometheus-metrics-endpoints.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-018-prometheus-metrics-endpoints/spec.md"
     },
     {
       "id": "FR-IMP-019",
@@ -5767,7 +5845,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-019-slo-definitions-and-burn-rate-alerts.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-019-slo-definitions-and-burn-rate-alerts/spec.md"
     },
     {
       "id": "FR-IMP-020",
@@ -5786,7 +5864,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-020-fr-outcome-scoring.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-020-fr-outcome-scoring/spec.md"
     },
     {
       "id": "FR-IMP-021",
@@ -5807,7 +5885,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-021-rubric-evals-for-llm-outputs-anchored-judge.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-021-rubric-evals-for-llm-outputs-anchored-judge/spec.md"
     },
     {
       "id": "FR-IMP-022",
@@ -5826,7 +5904,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-022-ban-defensive-asserts.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-022-ban-defensive-asserts/spec.md"
     },
     {
       "id": "FR-IMP-023",
@@ -5845,7 +5923,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-023-groom-draft-frs-with-value-and-confidence.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-023-groom-draft-frs-with-value-and-confidence/spec.md"
     },
     {
       "id": "FR-IMP-024",
@@ -5866,7 +5944,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-024-dream-proposal-ranking.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-024-dream-proposal-ranking/spec.md"
     },
     {
       "id": "FR-IMP-025",
@@ -5887,7 +5965,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-025-dream-budget-latency-and-drift-gates.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-025-dream-budget-latency-and-drift-gates/spec.md"
     },
     {
       "id": "FR-IMP-026",
@@ -5908,7 +5986,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-026-auto-revert-on-gate-regression.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-026-auto-revert-on-gate-regression/spec.md"
     },
     {
       "id": "FR-IMP-027",
@@ -5933,7 +6011,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-027-enable-auto-mode-for-docs-skills-envelope.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-027-enable-auto-mode-for-docs-skills-envelope/spec.md"
     },
     {
       "id": "FR-IMP-028",
@@ -5954,7 +6032,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-028-ace-style-skill-curation-loop.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-028-ace-style-skill-curation-loop/spec.md"
     },
     {
       "id": "FR-IMP-029",
@@ -5975,7 +6053,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-029-paired-trajectory-skill-audits.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-029-paired-trajectory-skill-audits/spec.md"
     },
     {
       "id": "FR-IMP-030",
@@ -5998,7 +6076,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-030-qlora-fine-tuning-pilot-obs-triage.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-030-qlora-fine-tuning-pilot-obs-triage/spec.md"
     },
     {
       "id": "FR-IMP-031",
@@ -6017,7 +6095,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-031-unified-error-envelope-crate.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-031-unified-error-envelope-crate/spec.md"
     },
     {
       "id": "FR-IMP-032",
@@ -6038,7 +6116,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-032-extract-cyberos-service-kit.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-032-extract-cyberos-service-kit/spec.md"
     },
     {
       "id": "FR-IMP-033",
@@ -6057,7 +6135,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-033-wire-cloud-router-adapters-in-ai-gateway.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-033-wire-cloud-router-adapters-in-ai-gateway/spec.md"
     },
     {
       "id": "FR-IMP-034",
@@ -6076,7 +6154,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-034-chat-realtime-fanout-seam.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-034-chat-realtime-fanout-seam/spec.md"
     },
     {
       "id": "FR-IMP-035",
@@ -6095,7 +6173,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-035-unwrap-expect-burn-down-and-panic-removal.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-035-unwrap-expect-burn-down-and-panic-removal/spec.md"
     },
     {
       "id": "FR-IMP-036",
@@ -6114,7 +6192,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-036-finish-and-property-test-audit-chain-crate.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-036-finish-and-property-test-audit-chain-crate/spec.md"
     },
     {
       "id": "FR-IMP-037",
@@ -6133,7 +6211,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-037-openapi-generation-per-service.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-037-openapi-generation-per-service/spec.md"
     },
     {
       "id": "FR-IMP-038",
@@ -6154,7 +6232,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-038-extend-rls-property-gate-cross-tenant-probe.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-038-extend-rls-property-gate-cross-tenant-probe/spec.md"
     },
     {
       "id": "FR-IMP-039",
@@ -6175,7 +6253,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-039-load-and-soak-test-suite.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-039-load-and-soak-test-suite/spec.md"
     },
     {
       "id": "FR-IMP-040",
@@ -6194,7 +6272,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-040-mutation-testing-pilot-on-shared-crates.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-040-mutation-testing-pilot-on-shared-crates/spec.md"
     },
     {
       "id": "FR-IMP-041",
@@ -6213,7 +6291,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-041-secrets-inventory-and-rotation-runbook.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-041-secrets-inventory-and-rotation-runbook/spec.md"
     },
     {
       "id": "FR-IMP-042",
@@ -6232,7 +6310,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-042-rate-limits-beyond-login.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-042-rate-limits-beyond-login/spec.md"
     },
     {
       "id": "FR-IMP-043",
@@ -6251,7 +6329,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-043-supply-chain-hardening-pin-sbom-sign.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-043-supply-chain-hardening-pin-sbom-sign/spec.md"
     },
     {
       "id": "FR-IMP-044",
@@ -6272,7 +6350,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-044-automated-dependency-updates.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-044-automated-dependency-updates/spec.md"
     },
     {
       "id": "FR-IMP-045",
@@ -6291,7 +6369,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-045-session-and-token-security-validation.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-045-session-and-token-security-validation/spec.md"
     },
     {
       "id": "FR-IMP-046",
@@ -6310,7 +6388,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-046-backup-independence-and-restore-drill.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-046-backup-independence-and-restore-drill/spec.md"
     },
     {
       "id": "FR-IMP-047",
@@ -6329,7 +6407,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-047-rebuild-in-60-minutes-runbook.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-047-rebuild-in-60-minutes-runbook/spec.md"
     },
     {
       "id": "FR-IMP-048",
@@ -6348,7 +6426,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-048-build-caching-with-cargo-chef.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-048-build-caching-with-cargo-chef/spec.md"
     },
     {
       "id": "FR-IMP-049",
@@ -6367,7 +6445,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-049-deploy-events-into-audit-chain.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-049-deploy-events-into-audit-chain/spec.md"
     },
     {
       "id": "FR-IMP-050",
@@ -6386,7 +6464,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-050-client-and-service-error-tracking.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-050-client-and-service-error-tracking/spec.md"
     },
     {
       "id": "FR-IMP-051",
@@ -6405,7 +6483,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-051-least-privilege-db-roles-and-layout-doc.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-051-least-privilege-db-roles-and-layout-doc/spec.md"
     },
     {
       "id": "FR-IMP-052",
@@ -6424,7 +6502,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-052-migration-discipline-ci-check.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-052-migration-discipline-ci-check/spec.md"
     },
     {
       "id": "FR-IMP-053",
@@ -6443,7 +6521,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-053-pgvector-operations-plan.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-053-pgvector-operations-plan/spec.md"
     },
     {
       "id": "FR-IMP-054",
@@ -6462,7 +6540,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-054-generalized-retention-schedule.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-054-generalized-retention-schedule/spec.md"
     },
     {
       "id": "FR-IMP-055",
@@ -6481,7 +6559,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-055-spec-only-module-manifest.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-055-spec-only-module-manifest/spec.md"
     },
     {
       "id": "FR-IMP-056",
@@ -6500,7 +6578,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-056-api-versioning-and-deprecation-policy.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-056-api-versioning-and-deprecation-policy/spec.md"
     },
     {
       "id": "FR-IMP-057",
@@ -6521,7 +6599,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-057-frontend-state-and-fetch-consolidation.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-057-frontend-state-and-fetch-consolidation/spec.md"
     },
     {
       "id": "FR-IMP-058",
@@ -6540,7 +6618,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-058-adr-backfill-for-irreversible-decisions.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-058-adr-backfill-for-irreversible-decisions/spec.md"
     },
     {
       "id": "FR-IMP-059",
@@ -6559,7 +6637,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-059-wiki-link-integrity-gate.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-059-wiki-link-integrity-gate/spec.md"
     },
     {
       "id": "FR-IMP-060",
@@ -6578,7 +6656,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-060-generated-continue-here.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-060-generated-continue-here/spec.md"
     },
     {
       "id": "FR-IMP-061",
@@ -6597,7 +6675,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-061-brain-phase-0-consent-completion.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-061-brain-phase-0-consent-completion/spec.md"
     },
     {
       "id": "FR-IMP-062",
@@ -6618,7 +6696,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-062-quarterly-envelope-review-ritual.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-062-quarterly-envelope-review-ritual/spec.md"
     },
     {
       "id": "FR-IMP-063",
@@ -6637,7 +6715,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-063-track-a-serve-a-chat-model-in-p0-and-verify-ai-e.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-063-track-a-serve-a-chat-model-in-p0-and-verify-ai-e/spec.md"
     },
     {
       "id": "FR-IMP-064",
@@ -6656,7 +6734,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-064-track-b-desktop-signing-auto-update-release-veri.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-064-track-b-desktop-signing-auto-update-release-veri/spec.md"
     },
     {
       "id": "FR-IMP-065",
@@ -6677,7 +6755,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-065-track-b-mobile-shells-and-store-release-pipeline.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-065-track-b-mobile-shells-and-store-release-pipeline/spec.md"
     },
     {
       "id": "FR-IMP-066",
@@ -6698,7 +6776,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-066-track-c-brain-activation-rollout-deploy-notice-a.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-066-track-c-brain-activation-rollout-deploy-notice-a/spec.md"
     },
     {
       "id": "FR-IMP-067",
@@ -6717,7 +6795,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/improvement/FR-IMP-067-go-live-readiness-gate-safety-nets-before-fully.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-067-go-live-readiness-gate-safety-nets-before-fully/spec.md"
     },
     {
       "id": "FR-IMP-068",
@@ -6743,7 +6821,7 @@
         "FR-APP-001",
         "FR-SKILL-116"
       ],
-      "path": "docs/feature-requests/improvement/FR-IMP-068-payload-version-drift-gate.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-068-payload-version-drift-gate/spec.md"
     },
     {
       "id": "FR-IMP-069",
@@ -6772,7 +6850,7 @@
         "FR-SKILL-201",
         "FR-APP-001"
       ],
-      "path": "docs/feature-requests/improvement/FR-IMP-069-publish-payload-on-release.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-069-publish-payload-on-release/spec.md"
     },
     {
       "id": "FR-IMP-070",
@@ -6797,7 +6875,7 @@
         "FR-IMP-069",
         "FR-APP-001"
       ],
-      "path": "docs/feature-requests/improvement/FR-IMP-070-remote-update-awareness.md"
+      "path": "docs/feature-requests/improvement/FR-IMP-070-remote-update-awareness/spec.md"
     },
     {
       "id": "FR-INV-001",
@@ -6832,7 +6910,7 @@
         "FR-MEMORY-111",
         "FR-OBS-007"
       ],
-      "path": "docs/feature-requests/inv/FR-INV-001-invoice-draft-from-time-rollup.md"
+      "path": "docs/feature-requests/inv/FR-INV-001-invoice-draft-from-time-rollup/spec.md"
     },
     {
       "id": "FR-INV-002",
@@ -6860,7 +6938,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/inv/FR-INV-002-multi-currency.md"
+      "path": "docs/feature-requests/inv/FR-INV-002-multi-currency/spec.md"
     },
     {
       "id": "FR-INV-003",
@@ -6892,7 +6970,7 @@
         "FR-TEN-003",
         "FR-OBS-007"
       ],
-      "path": "docs/feature-requests/inv/FR-INV-003-stripe-webhook.md"
+      "path": "docs/feature-requests/inv/FR-INV-003-stripe-webhook/spec.md"
     },
     {
       "id": "FR-INV-004",
@@ -6921,7 +6999,7 @@
         "FR-AUTH-101",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/inv/FR-INV-004-wise-webhook.md"
+      "path": "docs/feature-requests/inv/FR-INV-004-wise-webhook/spec.md"
     },
     {
       "id": "FR-INV-005",
@@ -6956,7 +7034,7 @@
         "FR-REW-009",
         "FR-OBS-007"
       ],
-      "path": "docs/feature-requests/inv/FR-INV-005-vietqr-webhook.md"
+      "path": "docs/feature-requests/inv/FR-INV-005-vietqr-webhook/spec.md"
     },
     {
       "id": "FR-INV-006",
@@ -6986,7 +7064,7 @@
         "FR-INV-005",
         "FR-OBS-007"
       ],
-      "path": "docs/feature-requests/inv/FR-INV-006-cash-application.md"
+      "path": "docs/feature-requests/inv/FR-INV-006-cash-application/spec.md"
     },
     {
       "id": "FR-INV-007",
@@ -7018,7 +7096,7 @@
         "FR-MEMORY-111",
         "FR-SKILL-109"
       ],
-      "path": "docs/feature-requests/inv/FR-INV-007-vn-hoadon-autoemit.md"
+      "path": "docs/feature-requests/inv/FR-INV-007-vn-hoadon-autoemit/spec.md"
     },
     {
       "id": "FR-INV-008",
@@ -7045,7 +7123,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/inv/FR-INV-008-vn-hoadon-cancellation.md"
+      "path": "docs/feature-requests/inv/FR-INV-008-vn-hoadon-cancellation/spec.md"
     },
     {
       "id": "FR-INV-009",
@@ -7075,7 +7153,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/inv/FR-INV-009-ar-aging-report.md"
+      "path": "docs/feature-requests/inv/FR-INV-009-ar-aging-report/spec.md"
     },
     {
       "id": "FR-INV-010",
@@ -7104,7 +7182,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/inv/FR-INV-010-cuo-dunning-draft.md"
+      "path": "docs/feature-requests/inv/FR-INV-010-cuo-dunning-draft/spec.md"
     },
     {
       "id": "FR-INV-011",
@@ -7131,7 +7209,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/inv/FR-INV-011-revenue-recognition.md"
+      "path": "docs/feature-requests/inv/FR-INV-011-revenue-recognition/spec.md"
     },
     {
       "id": "FR-KB-001",
@@ -7165,7 +7243,7 @@
         "FR-KB-008",
         "FR-KB-009"
       ],
-      "path": "docs/feature-requests/kb/FR-KB-001-document-schema.md"
+      "path": "docs/feature-requests/kb/FR-KB-001-document-schema/spec.md"
     },
     {
       "id": "FR-KB-002",
@@ -7191,7 +7269,7 @@
         "FR-AI-019",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/kb/FR-KB-002-server-side-renderer.md"
+      "path": "docs/feature-requests/kb/FR-KB-002-server-side-renderer/spec.md"
     },
     {
       "id": "FR-KB-003",
@@ -7218,7 +7296,7 @@
         "FR-AUTH-101",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/kb/FR-KB-003-permission-tiers.md"
+      "path": "docs/feature-requests/kb/FR-KB-003-permission-tiers/spec.md"
     },
     {
       "id": "FR-KB-004",
@@ -7246,7 +7324,7 @@
         "FR-KB-006",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/kb/FR-KB-004-fts5-pgroonga-lexical.md"
+      "path": "docs/feature-requests/kb/FR-KB-004-fts5-pgroonga-lexical/spec.md"
     },
     {
       "id": "FR-KB-005",
@@ -7275,7 +7353,7 @@
         "FR-KB-006",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/kb/FR-KB-005-bge-m3-semantic.md"
+      "path": "docs/feature-requests/kb/FR-KB-005-bge-m3-semantic/spec.md"
     },
     {
       "id": "FR-KB-006",
@@ -7305,7 +7383,7 @@
         "FR-AI-020",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/kb/FR-KB-006-bge-rerank.md"
+      "path": "docs/feature-requests/kb/FR-KB-006-bge-rerank/spec.md"
     },
     {
       "id": "FR-KB-007",
@@ -7335,7 +7413,7 @@
         "FR-MEMORY-108",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/kb/FR-KB-007-ask-this-page-qa.md"
+      "path": "docs/feature-requests/kb/FR-KB-007-ask-this-page-qa/spec.md"
     },
     {
       "id": "FR-KB-008",
@@ -7362,7 +7440,7 @@
         "FR-OBS-007",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/kb/FR-KB-008-runbook-tags.md"
+      "path": "docs/feature-requests/kb/FR-KB-008-runbook-tags/spec.md"
     },
     {
       "id": "FR-KB-009",
@@ -7388,7 +7466,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/kb/FR-KB-009-translation-of-link.md"
+      "path": "docs/feature-requests/kb/FR-KB-009-translation-of-link/spec.md"
     },
     {
       "id": "FR-LEARN-001",
@@ -7418,7 +7496,7 @@
         "FR-LEARN-004",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/learn/FR-LEARN-001-skill-tree-mastery.md"
+      "path": "docs/feature-requests/learn/FR-LEARN-001-skill-tree-mastery/spec.md"
     },
     {
       "id": "FR-LEARN-002",
@@ -7443,7 +7521,7 @@
         "FR-DOC-001",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/learn/FR-LEARN-002-degrees-certifications.md"
+      "path": "docs/feature-requests/learn/FR-LEARN-002-degrees-certifications/spec.md"
     },
     {
       "id": "FR-LEARN-003",
@@ -7474,7 +7552,7 @@
         "FR-MCP-007",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/learn/FR-LEARN-003-vp-rollup.md"
+      "path": "docs/feature-requests/learn/FR-LEARN-003-vp-rollup/spec.md"
     },
     {
       "id": "FR-LEARN-004",
@@ -7504,7 +7582,7 @@
         "FR-AUTH-101",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/learn/FR-LEARN-004-specialist-council.md"
+      "path": "docs/feature-requests/learn/FR-LEARN-004-specialist-council/spec.md"
     },
     {
       "id": "FR-LEARN-005",
@@ -7530,7 +7608,7 @@
         "FR-AUTH-101",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/learn/FR-LEARN-005-per-judge-isolation.md"
+      "path": "docs/feature-requests/learn/FR-LEARN-005-per-judge-isolation/spec.md"
     },
     {
       "id": "FR-LEARN-006",
@@ -7557,7 +7635,7 @@
         "FR-REW-001",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/learn/FR-LEARN-006-promotion-approval.md"
+      "path": "docs/feature-requests/learn/FR-LEARN-006-promotion-approval/spec.md"
     },
     {
       "id": "FR-LEARN-007",
@@ -7583,7 +7661,7 @@
         "FR-MCP-007",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/learn/FR-LEARN-007-vp-rew-handoff.md"
+      "path": "docs/feature-requests/learn/FR-LEARN-007-vp-rew-handoff/spec.md"
     },
     {
       "id": "FR-MCP-001",
@@ -7623,7 +7701,7 @@
         "FR-MCP-007",
         "FR-MCP-008"
       ],
-      "path": "docs/feature-requests/mcp/FR-MCP-001-spec-compliance.md"
+      "path": "docs/feature-requests/mcp/FR-MCP-001-spec-compliance/spec.md"
     },
     {
       "id": "FR-MCP-002",
@@ -7649,7 +7727,7 @@
         "FR-OBS-007",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/mcp/FR-MCP-002-server-heartbeat-lifecycle.md"
+      "path": "docs/feature-requests/mcp/FR-MCP-002-server-heartbeat-lifecycle/spec.md"
     },
     {
       "id": "FR-MCP-003",
@@ -7674,7 +7752,7 @@
         "FR-MCP-002",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/mcp/FR-MCP-003-sep986-naming-validator.md"
+      "path": "docs/feature-requests/mcp/FR-MCP-003-sep986-naming-validator/spec.md"
     },
     {
       "id": "FR-MCP-004",
@@ -7708,7 +7786,7 @@
         "FR-MCP-007",
         "FR-MCP-008"
       ],
-      "path": "docs/feature-requests/mcp/FR-MCP-004-oauth-pkce.md"
+      "path": "docs/feature-requests/mcp/FR-MCP-004-oauth-pkce/spec.md"
     },
     {
       "id": "FR-MCP-005",
@@ -7739,7 +7817,7 @@
         "FR-MEMORY-101",
         "FR-OBS-005"
       ],
-      "path": "docs/feature-requests/mcp/FR-MCP-005-protected-resource-metadata.md"
+      "path": "docs/feature-requests/mcp/FR-MCP-005-protected-resource-metadata/spec.md"
     },
     {
       "id": "FR-MCP-006",
@@ -7773,7 +7851,7 @@
         "FR-MEMORY-111",
         "FR-OBS-007"
       ],
-      "path": "docs/feature-requests/mcp/FR-MCP-006-tool-annotation-gating.md"
+      "path": "docs/feature-requests/mcp/FR-MCP-006-tool-annotation-gating/spec.md"
     },
     {
       "id": "FR-MCP-007",
@@ -7807,7 +7885,7 @@
         "FR-OBS-005",
         "FR-OBS-007"
       ],
-      "path": "docs/feature-requests/mcp/FR-MCP-007-tasks-primitive.md"
+      "path": "docs/feature-requests/mcp/FR-MCP-007-tasks-primitive/spec.md"
     },
     {
       "id": "FR-MCP-008",
@@ -7840,7 +7918,7 @@
         "FR-OBS-005",
         "FR-OBS-007"
       ],
-      "path": "docs/feature-requests/mcp/FR-MCP-008-elicitation.md"
+      "path": "docs/feature-requests/mcp/FR-MCP-008-elicitation/spec.md"
     },
     {
       "id": "FR-MEMORY-101",
@@ -7876,7 +7954,7 @@
         "FR-AUTH-003",
         "FR-OBS-001"
       ],
-      "path": "docs/feature-requests/memory/FR-MEMORY-101-layer2-ingest-pipeline.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-101-layer2-ingest-pipeline/spec.md"
     },
     {
       "id": "FR-MEMORY-102",
@@ -7903,7 +7981,7 @@
         "FR-MEMORY-110",
         "FR-AI-019"
       ],
-      "path": "docs/feature-requests/memory/FR-MEMORY-102-layer2-rebuild-ci-gate.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-102-layer2-rebuild-ci-gate/spec.md"
     },
     {
       "id": "FR-MEMORY-103",
@@ -7933,7 +8011,7 @@
         "FR-MEMORY-105",
         "FR-MEMORY-106"
       ],
-      "path": "docs/feature-requests/memory/FR-MEMORY-103-multi-device-sync.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-103-multi-device-sync/spec.md"
     },
     {
       "id": "FR-MEMORY-104",
@@ -7958,7 +8036,7 @@
         "FR-MEMORY-105",
         "FR-MEMORY-108"
       ],
-      "path": "docs/feature-requests/memory/FR-MEMORY-104-tauri-app.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-104-tauri-app/spec.md"
     },
     {
       "id": "FR-MEMORY-105",
@@ -7991,7 +8069,7 @@
         "FR-MEMORY-107",
         "FR-MEMORY-110"
       ],
-      "path": "docs/feature-requests/memory/FR-MEMORY-105-doctor-watched-folders-invariants.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-105-doctor-watched-folders-invariants/spec.md"
     },
     {
       "id": "FR-MEMORY-106",
@@ -8017,7 +8095,7 @@
         "FR-MEMORY-107",
         "FR-MEMORY-108"
       ],
-      "path": "docs/feature-requests/memory/FR-MEMORY-106-sync-class-enforcement.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-106-sync-class-enforcement/spec.md"
     },
     {
       "id": "FR-MEMORY-107",
@@ -8054,7 +8132,7 @@
         "FR-MEMORY-110",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/memory/FR-MEMORY-107-fs-watcher.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-107-fs-watcher/spec.md"
     },
     {
       "id": "FR-MEMORY-108",
@@ -8083,7 +8161,7 @@
         "FR-AUTH-003",
         "FR-AUTH-004"
       ],
-      "path": "docs/feature-requests/memory/FR-MEMORY-108-search-api.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-108-search-api/spec.md"
     },
     {
       "id": "FR-MEMORY-109",
@@ -8115,7 +8193,7 @@
         "FR-AI-014",
         "FR-SKILL-101"
       ],
-      "path": "docs/feature-requests/memory/FR-MEMORY-109-claude-code-hook-capture.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-109-claude-code-hook-capture/spec.md"
     },
     {
       "id": "FR-MEMORY-110",
@@ -8145,7 +8223,7 @@
         "FR-OBS-001",
         "FR-OBS-007"
       ],
-      "path": "docs/feature-requests/memory/FR-MEMORY-110-capture-daemon-health-restart.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-110-capture-daemon-health-restart/spec.md"
     },
     {
       "id": "FR-MEMORY-111",
@@ -8176,7 +8254,7 @@
         "FR-AI-013",
         "FR-OBS-007"
       ],
-      "path": "docs/feature-requests/memory/FR-MEMORY-111-pre-ingest-pii-detection.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-111-pre-ingest-pii-detection/spec.md"
     },
     {
       "id": "FR-MEMORY-112",
@@ -8208,7 +8286,7 @@
         "FR-MEMORY-115",
         "FR-MEMORY-120"
       ],
-      "path": "docs/feature-requests/memory/FR-MEMORY-112-episodic-memory.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-112-episodic-memory/spec.md"
     },
     {
       "id": "FR-MEMORY-113",
@@ -8239,7 +8317,7 @@
         "FR-MEMORY-115",
         "FR-MEMORY-120"
       ],
-      "path": "docs/feature-requests/memory/FR-MEMORY-113-recency-decay-recall.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-113-recency-decay-recall/spec.md"
     },
     {
       "id": "FR-MEMORY-114",
@@ -8267,7 +8345,7 @@
         "FR-MEMORY-115",
         "FR-CUO-105"
       ],
-      "path": "docs/feature-requests/memory/FR-MEMORY-114-write-time-importance.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-114-write-time-importance/spec.md"
     },
     {
       "id": "FR-MEMORY-115",
@@ -8300,7 +8378,7 @@
         "FR-MEMORY-120",
         "FR-CUO-105"
       ],
-      "path": "docs/feature-requests/memory/FR-MEMORY-115-cyberos-dream.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-115-cyberos-dream/spec.md"
     },
     {
       "id": "FR-MEMORY-116",
@@ -8324,7 +8402,7 @@
         "FR-MEMORY-115",
         "FR-MEMORY-108"
       ],
-      "path": "docs/feature-requests/memory/FR-MEMORY-116-semantic-dedup-consolidate.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-116-semantic-dedup-consolidate/spec.md"
     },
     {
       "id": "FR-MEMORY-117",
@@ -8350,7 +8428,7 @@
         "FR-MEMORY-112",
         "FR-MEMORY-115"
       ],
-      "path": "docs/feature-requests/memory/FR-MEMORY-117-per-store-acl.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-117-per-store-acl/spec.md"
     },
     {
       "id": "FR-MEMORY-118",
@@ -8375,7 +8453,7 @@
         "FR-MEMORY-115",
         "FR-MEMORY-117"
       ],
-      "path": "docs/feature-requests/memory/FR-MEMORY-118-put-if-precondition.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-118-put-if-precondition/spec.md"
     },
     {
       "id": "FR-MEMORY-119",
@@ -8401,7 +8479,7 @@
         "FR-MEMORY-115",
         "FR-MEMORY-117"
       ],
-      "path": "docs/feature-requests/memory/FR-MEMORY-119-session-transcript-ledger.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-119-session-transcript-ledger/spec.md"
     },
     {
       "id": "FR-MEMORY-120",
@@ -8426,7 +8504,7 @@
         "FR-MEMORY-115",
         "FR-MEMORY-119"
       ],
-      "path": "docs/feature-requests/memory/FR-MEMORY-120-cyberos-history.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-120-cyberos-history/spec.md"
     },
     {
       "id": "FR-MEMORY-201",
@@ -8445,7 +8523,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-201-jwt-auth-on-v1-memory-endpoints-kill-header-trus.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-201-jwt-auth-on-v1-memory-endpoints-kill-header-trus/spec.md"
     },
     {
       "id": "FR-MEMORY-202",
@@ -8464,7 +8542,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-202-fail-closed-rls-on-brain-tables-drop-null-guc-ar.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-202-fail-closed-rls-on-brain-tables-drop-null-guc-ar/spec.md"
     },
     {
       "id": "FR-MEMORY-203",
@@ -8485,7 +8563,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-203-rls-with-force-on-l1-audit-log-l2-memory-l2-enti.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-203-rls-with-force-on-l1-audit-log-l2-memory-l2-enti/spec.md"
     },
     {
       "id": "FR-MEMORY-204",
@@ -8506,7 +8584,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-204-per-principal-and-per-tenant-rate-limits-on-reca.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-204-per-principal-and-per-tenant-rate-limits-on-reca/spec.md"
     },
     {
       "id": "FR-MEMORY-205",
@@ -8525,7 +8603,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-205-fix-dead-recall-confidence-floor-use-real-cosine.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-205-fix-dead-recall-confidence-floor-use-real-cosine/spec.md"
     },
     {
       "id": "FR-MEMORY-206",
@@ -8544,7 +8622,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-206-batched-candidate-pipeline-snippets-filled-one-q.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-206-batched-candidate-pipeline-snippets-filled-one-q/spec.md"
     },
     {
       "id": "FR-MEMORY-207",
@@ -8563,7 +8641,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-207-light-up-ai-gateway-v1-embeddings-route-memory-s.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-207-light-up-ai-gateway-v1-embeddings-route-memory-s/spec.md"
     },
     {
       "id": "FR-MEMORY-208",
@@ -8582,7 +8660,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-208-metrics-correctness-embed-malformed-label-per-le.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-208-metrics-correctness-embed-malformed-label-per-le/spec.md"
     },
     {
       "id": "FR-MEMORY-209",
@@ -8601,7 +8679,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-209-golden-recall-eval-runner-25-seed-cases-wired-in.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-209-golden-recall-eval-runner-25-seed-cases-wired-in/spec.md"
     },
     {
       "id": "FR-MEMORY-210",
@@ -8620,7 +8698,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-210-architecture-adrs-single-memory-plane-rust-in-ta.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-210-architecture-adrs-single-memory-plane-rust-in-ta/spec.md"
     },
     {
       "id": "FR-MEMORY-211",
@@ -8641,7 +8719,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-211-pin-pooled-connection-guc-behavior-standardize-o.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-211-pin-pooled-connection-guc-behavior-standardize-o/spec.md"
     },
     {
       "id": "FR-MEMORY-212",
@@ -8663,7 +8741,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-212-brain-fact-table-memory-kind-taxonomy-episodic-s.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-212-brain-fact-table-memory-kind-taxonomy-episodic-s/spec.md"
     },
     {
       "id": "FR-MEMORY-213",
@@ -8685,7 +8763,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-213-fact-write-pipeline-extract-then-add-update-dele.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-213-fact-write-pipeline-extract-then-add-update-dele/spec.md"
     },
     {
       "id": "FR-MEMORY-214",
@@ -8707,7 +8785,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-214-content-aware-ingestion-dereference-content-ref.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-214-content-aware-ingestion-dereference-content-ref/spec.md"
     },
     {
       "id": "FR-MEMORY-215",
@@ -8728,7 +8806,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-215-pii-sidecar-presidio-vn-recognizers-in-the-cloud.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-215-pii-sidecar-presidio-vn-recognizers-in-the-cloud/spec.md"
     },
     {
       "id": "FR-MEMORY-216",
@@ -8749,7 +8827,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-216-abstractive-summaries-via-gateway-chat-extractiv.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-216-abstractive-summaries-via-gateway-chat-extractiv/spec.md"
     },
     {
       "id": "FR-MEMORY-217",
@@ -8770,7 +8848,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-217-incremental-summarization-queue-off-hot-path-win.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-217-incremental-summarization-queue-off-hot-path-win/spec.md"
     },
     {
       "id": "FR-MEMORY-218",
@@ -8791,7 +8869,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-218-summary-hierarchy-leaf-mid-root-with-subject-pro.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-218-summary-hierarchy-leaf-mid-root-with-subject-pro/spec.md"
     },
     {
       "id": "FR-MEMORY-219",
@@ -8812,7 +8890,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-219-lexical-retriever-leg-in-brain-recall-tsvector-p.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-219-lexical-retriever-leg-in-brain-recall-tsvector-p/spec.md"
     },
     {
       "id": "FR-MEMORY-220",
@@ -8833,7 +8911,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-220-cross-encoder-rerank-stage-bge-via-embed-sidecar.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-220-cross-encoder-rerank-stage-bge-via-embed-sidecar/spec.md"
     },
     {
       "id": "FR-MEMORY-221",
@@ -8854,7 +8932,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-221-park-scoring-mmr-relevance-importance-recency-we.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-221-park-scoring-mmr-relevance-importance-recency-we/spec.md"
     },
     {
       "id": "FR-MEMORY-222",
@@ -8875,7 +8953,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-222-contextual-embedding-situating-prefix-who-where.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-222-contextual-embedding-situating-prefix-who-where/spec.md"
     },
     {
       "id": "FR-MEMORY-223",
@@ -8896,7 +8974,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-223-query-rewriting-relative-time-parsing-en-vn-and.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-223-query-rewriting-relative-time-parsing-en-vn-and/spec.md"
     },
     {
       "id": "FR-MEMORY-224",
@@ -8917,7 +8995,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-224-write-time-importance-scoring-with-anchored-rubr.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-224-write-time-importance-scoring-with-anchored-rubr/spec.md"
     },
     {
       "id": "FR-MEMORY-225",
@@ -8938,7 +9016,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-225-day-1-emitters-chat-auth-proj-obs-real-consent-g.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-225-day-1-emitters-chat-auth-proj-obs-real-consent-g/spec.md"
     },
     {
       "id": "FR-MEMORY-226",
@@ -8959,7 +9037,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-226-embedding-lifecycle-halfvec-content-hash-embedde.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-226-embedding-lifecycle-halfvec-content-hash-embedde/spec.md"
     },
     {
       "id": "FR-MEMORY-227",
@@ -8980,7 +9058,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-227-warm-tier-reachable-on-drill-honor-documented-be.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-227-warm-tier-reachable-on-drill-honor-documented-be/spec.md"
     },
     {
       "id": "FR-MEMORY-228",
@@ -9001,7 +9079,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-228-recall-api-v1-1-keyset-pagination-scores-breakdo.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-228-recall-api-v1-1-keyset-pagination-scores-breakdo/spec.md"
     },
     {
       "id": "FR-MEMORY-229",
@@ -9020,7 +9098,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-229-query-embed-lru-cache-embedclient-in-appstate.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-229-query-embed-lru-cache-embedclient-in-appstate/spec.md"
     },
     {
       "id": "FR-MEMORY-230",
@@ -9041,7 +9119,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-230-bi-temporal-l2-edge-valid-at-invalid-at-expired.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-230-bi-temporal-l2-edge-valid-at-invalid-at-expired/spec.md"
     },
     {
       "id": "FR-MEMORY-231",
@@ -9063,7 +9141,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-231-llm-entity-extraction-resolution-graph-recall-le.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-231-llm-entity-extraction-resolution-graph-recall-le/spec.md"
     },
     {
       "id": "FR-MEMORY-232",
@@ -9085,7 +9163,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-232-sync-server-shape-scoped-seq-stream-down-idempot.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-232-sync-server-shape-scoped-seq-stream-down-idempot/spec.md"
     },
     {
       "id": "FR-MEMORY-233",
@@ -9106,7 +9184,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-233-tauri-sqlite-client-synced-local-tables-combinin.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-233-tauri-sqlite-client-synced-local-tables-combinin/spec.md"
     },
     {
       "id": "FR-MEMORY-234",
@@ -9127,7 +9205,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-234-derived-data-policy-server-recomputes-embeddings.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-234-derived-data-policy-server-recomputes-embeddings/spec.md"
     },
     {
       "id": "FR-MEMORY-235",
@@ -9148,7 +9226,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-235-desktop-at-rest-encryption-sqlcipher-os-keychain.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-235-desktop-at-rest-encryption-sqlcipher-os-keychain/spec.md"
     },
     {
       "id": "FR-MEMORY-236",
@@ -9169,7 +9247,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-236-offline-capture-outbox-hydration-hot-window-snap.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-236-offline-capture-outbox-hydration-hot-window-snap/spec.md"
     },
     {
       "id": "FR-MEMORY-237",
@@ -9190,7 +9268,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-237-device-identity-device-id-on-chain-rows-device-s.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-237-device-identity-device-id-on-chain-rows-device-s/spec.md"
     },
     {
       "id": "FR-MEMORY-238",
@@ -9212,7 +9290,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-238-sync-test-matrix-chaos-suite-offline-x-concurren.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-238-sync-test-matrix-chaos-suite-offline-x-concurren/spec.md"
     },
     {
       "id": "FR-MEMORY-239",
@@ -9233,7 +9311,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-239-retention-policy-engine-reaper-per-kind-ttls-arc.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-239-retention-policy-engine-reaper-per-kind-ttls-arc/spec.md"
     },
     {
       "id": "FR-MEMORY-240",
@@ -9255,7 +9333,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-240-erasure-crypto-shredding-per-subject-deks-lineag.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-240-erasure-crypto-shredding-per-subject-deks-lineag/spec.md"
     },
     {
       "id": "FR-MEMORY-241",
@@ -9276,7 +9354,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-241-pdpl-91-2025-pack-dpia-ctia-draft-consent-mappin.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-241-pdpl-91-2025-pack-dpia-ctia-draft-consent-mappin/spec.md"
     },
     {
       "id": "FR-MEMORY-242",
@@ -9297,7 +9375,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-242-recall-read-audit-rows-who-searched-whom-on-the.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-242-recall-read-audit-rows-who-searched-whom-on-the/spec.md"
     },
     {
       "id": "FR-MEMORY-243",
@@ -9316,7 +9394,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-243-external-chain-anchoring-nightly-chain-integrity.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-243-external-chain-anchoring-nightly-chain-integrity/spec.md"
     },
     {
       "id": "FR-MEMORY-244",
@@ -9337,7 +9415,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-244-rust-denylist-enforcement-at-emit-ingest-admin-b.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-244-rust-denylist-enforcement-at-emit-ingest-admin-b/spec.md"
     },
     {
       "id": "FR-MEMORY-245",
@@ -9358,7 +9436,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-245-calibrated-llm-judge-golden-set-growth-internal.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-245-calibrated-llm-judge-golden-set-growth-internal/spec.md"
     },
     {
       "id": "FR-MEMORY-246",
@@ -9379,7 +9457,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-246-usage-signal-loop-retrieved-used-cited-counters.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-246-usage-signal-loop-retrieved-used-cited-counters/spec.md"
     },
     {
       "id": "FR-MEMORY-247",
@@ -9401,7 +9479,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-247-dream-loop-on-the-brain-four-detectors-proposal.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-247-dream-loop-on-the-brain-four-detectors-proposal/spec.md"
     },
     {
       "id": "FR-MEMORY-248",
@@ -9422,7 +9500,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-248-promotion-dedup-contradiction-jobs-eval-gated-wi.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-248-promotion-dedup-contradiction-jobs-eval-gated-wi/spec.md"
     },
     {
       "id": "FR-MEMORY-249",
@@ -9444,7 +9522,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-249-retrieval-config-a-b-shadow-evaluation-on-sample.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-249-retrieval-config-a-b-shadow-evaluation-on-sample/spec.md"
     },
     {
       "id": "FR-MEMORY-250",
@@ -9465,7 +9543,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-250-gepa-prompt-optimization-for-extraction-summary.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-250-gepa-prompt-optimization-for-extraction-summary/spec.md"
     },
     {
       "id": "FR-MEMORY-251",
@@ -9487,7 +9565,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-251-self-healing-job-registry-drift-sentinels-backpr.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-251-self-healing-job-registry-drift-sentinels-backpr/spec.md"
     },
     {
       "id": "FR-MEMORY-252",
@@ -9508,7 +9586,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-252-telemetry-to-standard-memory-ops-console-tile-we.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-252-telemetry-to-standard-memory-ops-console-tile-we/spec.md"
     },
     {
       "id": "FR-MEMORY-253",
@@ -9529,7 +9607,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-253-poisoning-defenses-source-trust-scores-quarantin.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-253-poisoning-defenses-source-trust-scores-quarantin/spec.md"
     },
     {
       "id": "FR-MEMORY-254",
@@ -9550,7 +9628,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-254-calibrated-abstention-confidence-output-not-in-m.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-254-calibrated-abstention-confidence-output-not-in-m/spec.md"
     },
     {
       "id": "FR-MEMORY-255",
@@ -9571,7 +9649,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-255-mcp-memory-server-anthropic-memory-tool-file-ada.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-255-mcp-memory-server-anthropic-memory-tool-file-ada/spec.md"
     },
     {
       "id": "FR-MEMORY-256",
@@ -9592,7 +9670,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-256-perf-scale-pass-tenant-registry-parallel-ingest.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-256-perf-scale-pass-tenant-registry-parallel-ingest/spec.md"
     },
     {
       "id": "FR-MEMORY-257",
@@ -9613,7 +9691,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-257-module-author-guide-per-module-namespaces-and-sp.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-257-module-author-guide-per-module-namespaces-and-sp/spec.md"
     },
     {
       "id": "FR-MEMORY-258",
@@ -9635,7 +9713,7 @@
       ],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-258-lumi-integration-recall-api-only-access-mandator.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-258-lumi-integration-recall-api-only-access-mandator/spec.md"
     },
     {
       "id": "FR-MEMORY-259",
@@ -9654,7 +9732,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-259-fix-brain-common-test-harness.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-259-fix-brain-common-test-harness/spec.md"
     },
     {
       "id": "FR-MEMORY-260",
@@ -9673,7 +9751,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-260-fix-summarize-scope-filter.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-260-fix-summarize-scope-filter/spec.md"
     },
     {
       "id": "FR-MEMORY-261",
@@ -9692,7 +9770,7 @@
       "depends_on": [],
       "blocks": [],
       "related_frs": [],
-      "path": "docs/feature-requests/memory/FR-MEMORY-261-layout-root-canonical-reconcile.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-261-layout-root-canonical-reconcile/spec.md"
     },
     {
       "id": "FR-MEMORY-121",
@@ -9727,7 +9805,7 @@
         "FR-CHAT-101",
         "FR-OBS-008"
       ],
-      "path": "docs/feature-requests/memory/FR-MEMORY-121-interaction-event-schema.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-121-interaction-event-schema/spec.md"
     },
     {
       "id": "FR-MEMORY-122",
@@ -9762,7 +9840,7 @@
         "FR-OBS-003",
         "FR-APP-005"
       ],
-      "path": "docs/feature-requests/memory/FR-MEMORY-122-capture-emitters-day1.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-122-capture-emitters-day1/spec.md"
     },
     {
       "id": "FR-MEMORY-123",
@@ -9801,7 +9879,7 @@
         "FR-EVAL-001",
         "FR-OBS-001"
       ],
-      "path": "docs/feature-requests/memory/FR-MEMORY-123-ingestion-embedding-summaries-tiering.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-123-ingestion-embedding-summaries-tiering/spec.md"
     },
     {
       "id": "FR-MEMORY-124",
@@ -9825,7 +9903,7 @@
         "FR-MEMORY-118",
         "FR-CUO-101"
       ],
-      "path": "docs/feature-requests/memory/FR-MEMORY-124-awh-gate-result-audit-row.md"
+      "path": "docs/feature-requests/memory/FR-MEMORY-124-awh-gate-result-audit-row/spec.md"
     },
     {
       "id": "FR-OBS-001",
@@ -9861,7 +9939,7 @@
         "FR-OBS-009",
         "FR-AI-022"
       ],
-      "path": "docs/feature-requests/obs/FR-OBS-001-otel-collector.md"
+      "path": "docs/feature-requests/obs/FR-OBS-001-otel-collector/spec.md"
     },
     {
       "id": "FR-OBS-002",
@@ -9894,7 +9972,7 @@
         "FR-AUTH-108",
         "FR-AI-018"
       ],
-      "path": "docs/feature-requests/obs/FR-OBS-002-tenant-aware-grafana.md"
+      "path": "docs/feature-requests/obs/FR-OBS-002-tenant-aware-grafana/spec.md"
     },
     {
       "id": "FR-OBS-003",
@@ -9923,7 +10001,7 @@
         "FR-OBS-007",
         "FR-AI-022"
       ],
-      "path": "docs/feature-requests/obs/FR-OBS-003-red-metrics.md"
+      "path": "docs/feature-requests/obs/FR-OBS-003-red-metrics/spec.md"
     },
     {
       "id": "FR-OBS-004",
@@ -9953,7 +10031,7 @@
         "FR-OBS-001",
         "FR-OBS-005"
       ],
-      "path": "docs/feature-requests/obs/FR-OBS-004-langsmith-ai-traces.md"
+      "path": "docs/feature-requests/obs/FR-OBS-004-langsmith-ai-traces/spec.md"
     },
     {
       "id": "FR-OBS-005",
@@ -9982,7 +10060,7 @@
         "FR-OBS-004",
         "FR-AI-022"
       ],
-      "path": "docs/feature-requests/obs/FR-OBS-005-tracecontext-correlation.md"
+      "path": "docs/feature-requests/obs/FR-OBS-005-tracecontext-correlation/spec.md"
     },
     {
       "id": "FR-OBS-006",
@@ -10008,7 +10086,7 @@
         "FR-AI-022",
         "FR-AI-021"
       ],
-      "path": "docs/feature-requests/obs/FR-OBS-006-tail-sampling.md"
+      "path": "docs/feature-requests/obs/FR-OBS-006-tail-sampling/spec.md"
     },
     {
       "id": "FR-OBS-007",
@@ -10038,7 +10116,7 @@
         "FR-CUO-101",
         "FR-KB-008"
       ],
-      "path": "docs/feature-requests/obs/FR-OBS-007-alertmanager-cuo-runbook-routing.md"
+      "path": "docs/feature-requests/obs/FR-OBS-007-alertmanager-cuo-runbook-routing/spec.md"
     },
     {
       "id": "FR-OBS-008",
@@ -10066,7 +10144,7 @@
         "FR-AI-022",
         "FR-AUTH-004"
       ],
-      "path": "docs/feature-requests/obs/FR-OBS-008-compliance-view-scoping.md"
+      "path": "docs/feature-requests/obs/FR-OBS-008-compliance-view-scoping/spec.md"
     },
     {
       "id": "FR-OBS-009",
@@ -10090,7 +10168,7 @@
         "FR-OBS-008",
         "FR-AUTH-006"
       ],
-      "path": "docs/feature-requests/obs/FR-OBS-009-chain-of-custody-manifest.md"
+      "path": "docs/feature-requests/obs/FR-OBS-009-chain-of-custody-manifest/spec.md"
     },
     {
       "id": "FR-OKR-001",
@@ -10124,7 +10202,7 @@
         "FR-OKR-007",
         "FR-HR-001"
       ],
-      "path": "docs/feature-requests/okr/FR-OKR-001-objective-kr-schema.md"
+      "path": "docs/feature-requests/okr/FR-OKR-001-objective-kr-schema/spec.md"
     },
     {
       "id": "FR-OKR-002",
@@ -10150,7 +10228,7 @@
         "FR-OKR-004",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/okr/FR-OKR-002-kr-types.md"
+      "path": "docs/feature-requests/okr/FR-OKR-002-kr-types/spec.md"
     },
     {
       "id": "FR-OKR-003",
@@ -10181,7 +10259,7 @@
         "FR-LEARN-001",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/okr/FR-OKR-003-progress-source-dsl.md"
+      "path": "docs/feature-requests/okr/FR-OKR-003-progress-source-dsl/spec.md"
     },
     {
       "id": "FR-OKR-004",
@@ -10207,7 +10285,7 @@
         "FR-MCP-007",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/okr/FR-OKR-004-auto-progress-batch.md"
+      "path": "docs/feature-requests/okr/FR-OKR-004-auto-progress-batch/spec.md"
     },
     {
       "id": "FR-OKR-005",
@@ -10234,7 +10312,7 @@
         "FR-OKR-006",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/okr/FR-OKR-005-weekly-check-in.md"
+      "path": "docs/feature-requests/okr/FR-OKR-005-weekly-check-in/spec.md"
     },
     {
       "id": "FR-OKR-006",
@@ -10263,7 +10341,7 @@
         "FR-CHAT-005",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/okr/FR-OKR-006-monday-digest.md"
+      "path": "docs/feature-requests/okr/FR-OKR-006-monday-digest/spec.md"
     },
     {
       "id": "FR-OKR-007",
@@ -10290,7 +10368,7 @@
         "FR-CUO-101",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/okr/FR-OKR-007-quarterly-retro-draft.md"
+      "path": "docs/feature-requests/okr/FR-OKR-007-quarterly-retro-draft/spec.md"
     },
     {
       "id": "FR-PLUGIN-001",
@@ -10327,7 +10405,7 @@
         "FR-MCP-003",
         "FR-SKILL-111"
       ],
-      "path": "docs/feature-requests/plugin/FR-PLUGIN-001-manifest-schema.md"
+      "path": "docs/feature-requests/plugin/FR-PLUGIN-001-manifest-schema/spec.md"
     },
     {
       "id": "FR-PLUGIN-002",
@@ -10361,7 +10439,7 @@
         "FR-MCP-006",
         "FR-MCP-007"
       ],
-      "path": "docs/feature-requests/plugin/FR-PLUGIN-002-mcp-bridge.md"
+      "path": "docs/feature-requests/plugin/FR-PLUGIN-002-mcp-bridge/spec.md"
     },
     {
       "id": "FR-PLUGIN-003",
@@ -10387,7 +10465,7 @@
         "FR-PLUGIN-002",
         "FR-PLUGIN-004"
       ],
-      "path": "docs/feature-requests/plugin/FR-PLUGIN-003-slash-commands.md"
+      "path": "docs/feature-requests/plugin/FR-PLUGIN-003-slash-commands/spec.md"
     },
     {
       "id": "FR-PLUGIN-004",
@@ -10420,7 +10498,7 @@
         "FR-SKILL-114",
         "FR-SKILL-115"
       ],
-      "path": "docs/feature-requests/plugin/FR-PLUGIN-004-skill-playbooks.md"
+      "path": "docs/feature-requests/plugin/FR-PLUGIN-004-skill-playbooks/spec.md"
     },
     {
       "id": "FR-PLUGIN-005",
@@ -10451,7 +10529,7 @@
         "FR-AUTH-004",
         "FR-AUTH-007"
       ],
-      "path": "docs/feature-requests/plugin/FR-PLUGIN-005-oauth-pkce-auth.md"
+      "path": "docs/feature-requests/plugin/FR-PLUGIN-005-oauth-pkce-auth/spec.md"
     },
     {
       "id": "FR-PLUGIN-006",
@@ -10484,7 +10562,7 @@
         "FR-MEMORY-104",
         "FR-OBS-001"
       ],
-      "path": "docs/feature-requests/plugin/FR-PLUGIN-006-memory-audit-emission.md"
+      "path": "docs/feature-requests/plugin/FR-PLUGIN-006-memory-audit-emission/spec.md"
     },
     {
       "id": "FR-PLUGIN-007",
@@ -10517,7 +10595,7 @@
         "FR-PLUGIN-006",
         "FR-PLUGIN-008"
       ],
-      "path": "docs/feature-requests/plugin/FR-PLUGIN-007-multi-runtime-adapters.md"
+      "path": "docs/feature-requests/plugin/FR-PLUGIN-007-multi-runtime-adapters/spec.md"
     },
     {
       "id": "FR-PLUGIN-008",
@@ -10546,7 +10624,7 @@
         "FR-TEN-005",
         "FR-PORTAL-005"
       ],
-      "path": "docs/feature-requests/plugin/FR-PLUGIN-008-marketplace-distribution.md"
+      "path": "docs/feature-requests/plugin/FR-PLUGIN-008-marketplace-distribution/spec.md"
     },
     {
       "id": "FR-PORTAL-001",
@@ -10588,7 +10666,7 @@
         "FR-MEMORY-106",
         "FR-OBS-005"
       ],
-      "path": "docs/feature-requests/portal/FR-PORTAL-001-scoped-views.md"
+      "path": "docs/feature-requests/portal/FR-PORTAL-001-scoped-views/spec.md"
     },
     {
       "id": "FR-PORTAL-002",
@@ -10621,7 +10699,7 @@
         "FR-MEMORY-111",
         "FR-OBS-005"
       ],
-      "path": "docs/feature-requests/portal/FR-PORTAL-002-per-tenant-brand-pack.md"
+      "path": "docs/feature-requests/portal/FR-PORTAL-002-per-tenant-brand-pack/spec.md"
     },
     {
       "id": "FR-PORTAL-003",
@@ -10660,7 +10738,7 @@
         "FR-MEMORY-111",
         "FR-OBS-007"
       ],
-      "path": "docs/feature-requests/portal/FR-PORTAL-003-external-idp-scim-jit.md"
+      "path": "docs/feature-requests/portal/FR-PORTAL-003-external-idp-scim-jit/spec.md"
     },
     {
       "id": "FR-PORTAL-004",
@@ -10693,7 +10771,7 @@
         "FR-MEMORY-111",
         "FR-OBS-007"
       ],
-      "path": "docs/feature-requests/portal/FR-PORTAL-004-scim-deprovision.md"
+      "path": "docs/feature-requests/portal/FR-PORTAL-004-scim-deprovision/spec.md"
     },
     {
       "id": "FR-PORTAL-005",
@@ -10729,7 +10807,7 @@
         "FR-MEMORY-111",
         "FR-OBS-005"
       ],
-      "path": "docs/feature-requests/portal/FR-PORTAL-005-branded-genie-chat.md"
+      "path": "docs/feature-requests/portal/FR-PORTAL-005-branded-genie-chat/spec.md"
     },
     {
       "id": "FR-PORTAL-006",
@@ -10762,7 +10840,7 @@
         "FR-MEMORY-111",
         "FR-OBS-007"
       ],
-      "path": "docs/feature-requests/portal/FR-PORTAL-006-client-initiated-workflows.md"
+      "path": "docs/feature-requests/portal/FR-PORTAL-006-client-initiated-workflows/spec.md"
     },
     {
       "id": "FR-PORTAL-007",
@@ -10792,7 +10870,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/portal/FR-PORTAL-007-pwa-installable.md"
+      "path": "docs/feature-requests/portal/FR-PORTAL-007-pwa-installable/spec.md"
     },
     {
       "id": "FR-PORTAL-008",
@@ -10824,7 +10902,7 @@
         "FR-MEMORY-111",
         "FR-OBS-007"
       ],
-      "path": "docs/feature-requests/portal/FR-PORTAL-008-dsar-self-service.md"
+      "path": "docs/feature-requests/portal/FR-PORTAL-008-dsar-self-service/spec.md"
     },
     {
       "id": "FR-PROJ-001",
@@ -10860,7 +10938,7 @@
         "FR-AUTH-003",
         "FR-AI-003"
       ],
-      "path": "docs/feature-requests/proj/FR-PROJ-001-issue-schema.md"
+      "path": "docs/feature-requests/proj/FR-PROJ-001-issue-schema/spec.md"
     },
     {
       "id": "FR-PROJ-002",
@@ -10895,7 +10973,7 @@
         "FR-MEMORY-106",
         "FR-MEMORY-108"
       ],
-      "path": "docs/feature-requests/proj/FR-PROJ-002-memory-decision-anchoring.md"
+      "path": "docs/feature-requests/proj/FR-PROJ-002-memory-decision-anchoring/spec.md"
     },
     {
       "id": "FR-PROJ-003",
@@ -10925,7 +11003,7 @@
         "FR-AUTH-003",
         "FR-AUTH-004"
       ],
-      "path": "docs/feature-requests/proj/FR-PROJ-003-yjs-crdt-collaboration.md"
+      "path": "docs/feature-requests/proj/FR-PROJ-003-yjs-crdt-collaboration/spec.md"
     },
     {
       "id": "FR-PROJ-004",
@@ -10956,7 +11034,7 @@
         "FR-PROJ-008",
         "FR-MEMORY-101"
       ],
-      "path": "docs/feature-requests/proj/FR-PROJ-004-issue-lifecycle-fsm.md"
+      "path": "docs/feature-requests/proj/FR-PROJ-004-issue-lifecycle-fsm/spec.md"
     },
     {
       "id": "FR-PROJ-005",
@@ -10987,7 +11065,7 @@
         "FR-AUTH-003",
         "FR-MEMORY-101"
       ],
-      "path": "docs/feature-requests/proj/FR-PROJ-005-rate-card-schema.md"
+      "path": "docs/feature-requests/proj/FR-PROJ-005-rate-card-schema/spec.md"
     },
     {
       "id": "FR-PROJ-006",
@@ -11017,7 +11095,7 @@
         "FR-TIME-005",
         "FR-AUTH-003"
       ],
-      "path": "docs/feature-requests/proj/FR-PROJ-006-billable-cascade.md"
+      "path": "docs/feature-requests/proj/FR-PROJ-006-billable-cascade/spec.md"
     },
     {
       "id": "FR-PROJ-007",
@@ -11045,7 +11123,7 @@
         "FR-TIME-005",
         "FR-TEN-203"
       ],
-      "path": "docs/feature-requests/proj/FR-PROJ-007-billing-modes.md"
+      "path": "docs/feature-requests/proj/FR-PROJ-007-billing-modes/spec.md"
     },
     {
       "id": "FR-PROJ-008",
@@ -11073,7 +11151,7 @@
         "FR-PROJ-004",
         "FR-MEMORY-101"
       ],
-      "path": "docs/feature-requests/proj/FR-PROJ-008-memory-audit-row-per-mutation.md"
+      "path": "docs/feature-requests/proj/FR-PROJ-008-memory-audit-row-per-mutation/spec.md"
     },
     {
       "id": "FR-PROJ-009",
@@ -11101,7 +11179,7 @@
         "FR-MEMORY-101",
         "FR-MEMORY-108"
       ],
-      "path": "docs/feature-requests/proj/FR-PROJ-009-memory-link-schema.md"
+      "path": "docs/feature-requests/proj/FR-PROJ-009-memory-link-schema/spec.md"
     },
     {
       "id": "FR-PROJ-010",
@@ -11127,7 +11205,7 @@
         "FR-MEMORY-108",
         "FR-OBS-007"
       ],
-      "path": "docs/feature-requests/proj/FR-PROJ-010-citation-drift-detector.md"
+      "path": "docs/feature-requests/proj/FR-PROJ-010-citation-drift-detector/spec.md"
     },
     {
       "id": "FR-PROJ-011",
@@ -11155,7 +11233,7 @@
         "FR-OBS-007",
         "FR-MEMORY-101"
       ],
-      "path": "docs/feature-requests/proj/FR-PROJ-011-blocker-detector.md"
+      "path": "docs/feature-requests/proj/FR-PROJ-011-blocker-detector/spec.md"
     },
     {
       "id": "FR-PROJ-012",
@@ -11183,7 +11261,7 @@
         "FR-AI-014",
         "FR-CUO-101"
       ],
-      "path": "docs/feature-requests/proj/FR-PROJ-012-cycle-review-draft.md"
+      "path": "docs/feature-requests/proj/FR-PROJ-012-cycle-review-draft/spec.md"
     },
     {
       "id": "FR-PROJ-013",
@@ -11213,7 +11291,7 @@
         "FR-TIME-001",
         "FR-MEMORY-101"
       ],
-      "path": "docs/feature-requests/proj/FR-PROJ-013-estimate-calibration.md"
+      "path": "docs/feature-requests/proj/FR-PROJ-013-estimate-calibration/spec.md"
     },
     {
       "id": "FR-PROJ-014",
@@ -11242,7 +11320,7 @@
         "FR-PROJ-017",
         "FR-PROJ-018"
       ],
-      "path": "docs/feature-requests/proj/FR-PROJ-014-kanban-board.md"
+      "path": "docs/feature-requests/proj/FR-PROJ-014-kanban-board/spec.md"
     },
     {
       "id": "FR-PROJ-015",
@@ -11269,7 +11347,7 @@
         "FR-PROJ-014",
         "FR-PROJ-018"
       ],
-      "path": "docs/feature-requests/proj/FR-PROJ-015-timeline-view.md"
+      "path": "docs/feature-requests/proj/FR-PROJ-015-timeline-view/spec.md"
     },
     {
       "id": "FR-PROJ-016",
@@ -11295,7 +11373,7 @@
         "FR-PROJ-015",
         "FR-PROJ-018"
       ],
-      "path": "docs/feature-requests/proj/FR-PROJ-016-gantt-view.md"
+      "path": "docs/feature-requests/proj/FR-PROJ-016-gantt-view/spec.md"
     },
     {
       "id": "FR-PROJ-017",
@@ -11323,7 +11401,7 @@
         "FR-PROJ-014",
         "FR-PROJ-018"
       ],
-      "path": "docs/feature-requests/proj/FR-PROJ-017-brief-modal.md"
+      "path": "docs/feature-requests/proj/FR-PROJ-017-brief-modal/spec.md"
     },
     {
       "id": "FR-PROJ-018",
@@ -11349,7 +11427,7 @@
         "FR-PROJ-016",
         "FR-PROJ-017"
       ],
-      "path": "docs/feature-requests/proj/FR-PROJ-018-design-tokens-a11y-ci.md"
+      "path": "docs/feature-requests/proj/FR-PROJ-018-design-tokens-a11y-ci/spec.md"
     },
     {
       "id": "FR-RES-001",
@@ -11382,7 +11460,7 @@
         "FR-MCP-007",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/res/FR-RES-001-capacity-demand-matrix.md"
+      "path": "docs/feature-requests/res/FR-RES-001-capacity-demand-matrix/spec.md"
     },
     {
       "id": "FR-RES-002",
@@ -11409,7 +11487,7 @@
         "FR-PROJ-001",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/res/FR-RES-002-allocation-gantt-ui.md"
+      "path": "docs/feature-requests/res/FR-RES-002-allocation-gantt-ui/spec.md"
     },
     {
       "id": "FR-RES-003",
@@ -11436,7 +11514,7 @@
         "FR-EMAIL-009",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/res/FR-RES-003-over-under-flags.md"
+      "path": "docs/feature-requests/res/FR-RES-003-over-under-flags/spec.md"
     },
     {
       "id": "FR-RES-004",
@@ -11464,7 +11542,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/res/FR-RES-004-hiring-memo-cuo.md"
+      "path": "docs/feature-requests/res/FR-RES-004-hiring-memo-cuo/spec.md"
     },
     {
       "id": "FR-RES-005",
@@ -11490,7 +11568,7 @@
         "FR-TIME-007",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/res/FR-RES-005-vn-ot-cap-hard-block.md"
+      "path": "docs/feature-requests/res/FR-RES-005-vn-ot-cap-hard-block/spec.md"
     },
     {
       "id": "FR-REW-001",
@@ -11524,7 +11602,7 @@
         "FR-REW-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/rew/FR-REW-001-3p-income-schema.md"
+      "path": "docs/feature-requests/rew/FR-REW-001-3p-income-schema/spec.md"
     },
     {
       "id": "FR-REW-002",
@@ -11550,7 +11628,7 @@
         "FR-HR-005",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/rew/FR-REW-002-parameter-versioning.md"
+      "path": "docs/feature-requests/rew/FR-REW-002-parameter-versioning/spec.md"
     },
     {
       "id": "FR-REW-003",
@@ -11575,7 +11653,7 @@
         "FR-AUTH-101",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/rew/FR-REW-003-p1-protection-invariant.md"
+      "path": "docs/feature-requests/rew/FR-REW-003-p1-protection-invariant/spec.md"
     },
     {
       "id": "FR-REW-004",
@@ -11601,7 +11679,7 @@
         "FR-REW-005",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/rew/FR-REW-004-statutory-deductions.md"
+      "path": "docs/feature-requests/rew/FR-REW-004-statutory-deductions/spec.md"
     },
     {
       "id": "FR-REW-005",
@@ -11631,7 +11709,7 @@
         "FR-REW-009",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/rew/FR-REW-005-monthly-payroll-compute.md"
+      "path": "docs/feature-requests/rew/FR-REW-005-monthly-payroll-compute/spec.md"
     },
     {
       "id": "FR-REW-006",
@@ -11656,7 +11734,7 @@
         "FR-DOC-001",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/rew/FR-REW-006-payslip-pdf.md"
+      "path": "docs/feature-requests/rew/FR-REW-006-payslip-pdf/spec.md"
     },
     {
       "id": "FR-REW-007",
@@ -11684,7 +11762,7 @@
         "FR-MCP-007",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/rew/FR-REW-007-bp-ledger.md"
+      "path": "docs/feature-requests/rew/FR-REW-007-bp-ledger/spec.md"
     },
     {
       "id": "FR-REW-008",
@@ -11710,7 +11788,7 @@
         "FR-MCP-007",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/rew/FR-REW-008-p3-quarterly-distribution.md"
+      "path": "docs/feature-requests/rew/FR-REW-008-p3-quarterly-distribution/spec.md"
     },
     {
       "id": "FR-REW-009",
@@ -11736,7 +11814,7 @@
         "FR-CRM-009",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/rew/FR-REW-009-vietqr-payroll-batch.md"
+      "path": "docs/feature-requests/rew/FR-REW-009-vietqr-payroll-batch/spec.md"
     },
     {
       "id": "FR-REW-010",
@@ -11761,7 +11839,7 @@
         "FR-MEMORY-111",
         "FR-MEMORY-101"
       ],
-      "path": "docs/feature-requests/rew/FR-REW-010-memory-exclusion-ci-gate.md"
+      "path": "docs/feature-requests/rew/FR-REW-010-memory-exclusion-ci-gate/spec.md"
     },
     {
       "id": "FR-SKILL-101",
@@ -11789,7 +11867,7 @@
         "FR-AI-022",
         "FR-SKILL-102"
       ],
-      "path": "docs/feature-requests/skill/FR-SKILL-101-memory-integration.md"
+      "path": "docs/feature-requests/skill/FR-SKILL-101-memory-integration/spec.md"
     },
     {
       "id": "FR-SKILL-102",
@@ -11814,7 +11892,7 @@
         "FR-AUTH-004",
         "FR-AUTH-003"
       ],
-      "path": "docs/feature-requests/skill/FR-SKILL-102-oci-registry.md"
+      "path": "docs/feature-requests/skill/FR-SKILL-102-oci-registry/spec.md"
     },
     {
       "id": "FR-SKILL-103",
@@ -11855,7 +11933,7 @@
         "FR-MEMORY-106",
         "FR-AUTH-003"
       ],
-      "path": "docs/feature-requests/skill/FR-SKILL-103-frontmatter-extension.md"
+      "path": "docs/feature-requests/skill/FR-SKILL-103-frontmatter-extension/spec.md"
     },
     {
       "id": "FR-SKILL-104",
@@ -11889,7 +11967,7 @@
         "FR-MEMORY-106",
         "FR-AUTH-003"
       ],
-      "path": "docs/feature-requests/skill/FR-SKILL-104-capability-broker.md"
+      "path": "docs/feature-requests/skill/FR-SKILL-104-capability-broker/spec.md"
     },
     {
       "id": "FR-SKILL-105",
@@ -11924,7 +12002,7 @@
         "FR-MEMORY-109",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/skill/FR-SKILL-105-memory-capture-bundle.md"
+      "path": "docs/feature-requests/skill/FR-SKILL-105-memory-capture-bundle/spec.md"
     },
     {
       "id": "FR-SKILL-106",
@@ -11952,7 +12030,7 @@
         "FR-SKILL-105",
         "FR-MEMORY-103"
       ],
-      "path": "docs/feature-requests/skill/FR-SKILL-106-memory-sync-bundle.md"
+      "path": "docs/feature-requests/skill/FR-SKILL-106-memory-sync-bundle/spec.md"
     },
     {
       "id": "FR-SKILL-107",
@@ -11981,7 +12059,7 @@
         "FR-SKILL-106",
         "FR-MEMORY-108"
       ],
-      "path": "docs/feature-requests/skill/FR-SKILL-107-synthesis-author.md"
+      "path": "docs/feature-requests/skill/FR-SKILL-107-synthesis-author/spec.md"
     },
     {
       "id": "FR-SKILL-108",
@@ -12013,7 +12091,7 @@
         "FR-MEMORY-111",
         "FR-AI-016"
       ],
-      "path": "docs/feature-requests/skill/FR-SKILL-108-vn-mst-validate.md"
+      "path": "docs/feature-requests/skill/FR-SKILL-108-vn-mst-validate/spec.md"
     },
     {
       "id": "FR-SKILL-109",
@@ -12044,7 +12122,7 @@
         "FR-SKILL-110",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/skill/FR-SKILL-109-vn-bank-transfer.md"
+      "path": "docs/feature-requests/skill/FR-SKILL-109-vn-bank-transfer/spec.md"
     },
     {
       "id": "FR-SKILL-110",
@@ -12075,7 +12153,7 @@
         "FR-MEMORY-111",
         "FR-AUTH-003"
       ],
-      "path": "docs/feature-requests/skill/FR-SKILL-110-vn-vat-invoice.md"
+      "path": "docs/feature-requests/skill/FR-SKILL-110-vn-vat-invoice/spec.md"
     },
     {
       "id": "FR-SKILL-111",
@@ -12101,7 +12179,7 @@
         "FR-SKILL-112",
         "FR-SKILL-113"
       ],
-      "path": "docs/feature-requests/skill/FR-SKILL-111-trigger-description-enrichment.md"
+      "path": "docs/feature-requests/skill/FR-SKILL-111-trigger-description-enrichment/spec.md"
     },
     {
       "id": "FR-SKILL-112",
@@ -12128,7 +12206,7 @@
         "FR-CUO-103",
         "FR-SKILL-103"
       ],
-      "path": "docs/feature-requests/skill/FR-SKILL-112-trigger-tests-fixtures.md"
+      "path": "docs/feature-requests/skill/FR-SKILL-112-trigger-tests-fixtures/spec.md"
     },
     {
       "id": "FR-SKILL-113",
@@ -12154,7 +12232,7 @@
         "FR-SKILL-112",
         "FR-SKILL-114"
       ],
-      "path": "docs/feature-requests/skill/FR-SKILL-113-frontmatter-xml-free.md"
+      "path": "docs/feature-requests/skill/FR-SKILL-113-frontmatter-xml-free/spec.md"
     },
     {
       "id": "FR-SKILL-114",
@@ -12180,7 +12258,7 @@
         "FR-SKILL-112",
         "FR-SKILL-113"
       ],
-      "path": "docs/feature-requests/skill/FR-SKILL-114-baseline-artefact.md"
+      "path": "docs/feature-requests/skill/FR-SKILL-114-baseline-artefact/spec.md"
     },
     {
       "id": "FR-SKILL-115",
@@ -12206,7 +12284,7 @@
         "FR-SKILL-113",
         "FR-SKILL-114"
       ],
-      "path": "docs/feature-requests/skill/FR-SKILL-115-stale-placeholder-sweep.md"
+      "path": "docs/feature-requests/skill/FR-SKILL-115-stale-placeholder-sweep/spec.md"
     },
     {
       "id": "FR-SKILL-116",
@@ -12232,7 +12310,7 @@
         "FR-CUO-209",
         "FR-IMP-068"
       ],
-      "path": "docs/feature-requests/skill/FR-SKILL-116-vendor-debugging-cycle-chain-coverage.md"
+      "path": "docs/feature-requests/skill/FR-SKILL-116-vendor-debugging-cycle-chain-coverage/spec.md"
     },
     {
       "id": "FR-SKILL-117",
@@ -12257,7 +12335,7 @@
         "FR-SKILL-118",
         "FR-CUO-209"
       ],
-      "path": "docs/feature-requests/skill/FR-SKILL-117-architectural-spike-pair.md"
+      "path": "docs/feature-requests/skill/FR-SKILL-117-architectural-spike-pair/spec.md"
     },
     {
       "id": "FR-SKILL-118",
@@ -12281,7 +12359,7 @@
         "FR-CUO-207",
         "FR-CUO-209"
       ],
-      "path": "docs/feature-requests/skill/FR-SKILL-118-thin-pair-contract-parity.md"
+      "path": "docs/feature-requests/skill/FR-SKILL-118-thin-pair-contract-parity/spec.md"
     },
     {
       "id": "FR-SKILL-119",
@@ -12304,7 +12382,32 @@
         "FR-SKILL-118",
         "FR-DOCS-002"
       ],
-      "path": "docs/feature-requests/skill/FR-SKILL-119-stale-reference-sweep.md"
+      "path": "docs/feature-requests/skill/FR-SKILL-119-stale-reference-sweep/spec.md"
+    },
+    {
+      "id": "FR-SKILL-120",
+      "title": "Workflow/skill wiring for visual deliverables - FR folder scaffolding + template@1 citations in authoring contracts",
+      "module": "SKILL",
+      "priority": "SHOULD",
+      "status": "ready_to_implement",
+      "verify": "T",
+      "phase": "Wave D - visual deliverables",
+      "milestone": "",
+      "slice": null,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-07-12",
+      "shipped": null,
+      "effort_hours": null,
+      "depends_on": [
+        "FR-DOCS-004"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-DOCS-004",
+        "FR-TPL-001",
+        "FR-CUO-205"
+      ],
+      "path": "docs/feature-requests/skill/FR-SKILL-120-deliverable-scaffolding/spec.md"
     },
     {
       "id": "FR-SKILL-201",
@@ -12329,7 +12432,34 @@
         "FR-AUTH-105",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/skill/FR-SKILL-201-oci-registry-deploy.md"
+      "path": "docs/feature-requests/skill/FR-SKILL-201-oci-registry-deploy/spec.md"
+    },
+    {
+      "id": "FR-TPL-001",
+      "title": "templates module - CDS-adapted HTML shells (template@1) every workflow/skill renders deliverables through",
+      "module": "templates",
+      "priority": "MUST",
+      "status": "ready_to_implement",
+      "verify": "T",
+      "phase": "Wave D - visual deliverables",
+      "milestone": "",
+      "slice": null,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-07-12",
+      "shipped": null,
+      "effort_hours": null,
+      "depends_on": [],
+      "blocks": [
+        "FR-DOCS-005",
+        "FR-DOCS-006"
+      ],
+      "related_frs": [
+        "FR-DOCS-004",
+        "FR-DOCS-005",
+        "FR-DOCS-006",
+        "FR-SKILL-120"
+      ],
+      "path": "docs/feature-requests/templates/FR-TPL-001-templates-module-cds/spec.md"
     },
     {
       "id": "FR-TEN-001",
@@ -12365,7 +12495,7 @@
         "FR-TEN-104",
         "FR-TEN-103"
       ],
-      "path": "docs/feature-requests/ten/FR-TEN-001-provisioning-cli.md"
+      "path": "docs/feature-requests/ten/FR-TEN-001-provisioning-cli/spec.md"
     },
     {
       "id": "FR-TEN-002",
@@ -12395,7 +12525,7 @@
         "FR-TEN-004",
         "FR-TEN-005"
       ],
-      "path": "docs/feature-requests/ten/FR-TEN-002-plan-tiers.md"
+      "path": "docs/feature-requests/ten/FR-TEN-002-plan-tiers/spec.md"
     },
     {
       "id": "FR-TEN-003",
@@ -12435,7 +12565,7 @@
         "FR-MEMORY-111",
         "FR-OBS-007"
       ],
-      "path": "docs/feature-requests/ten/FR-TEN-003-stripe-billing.md"
+      "path": "docs/feature-requests/ten/FR-TEN-003-stripe-billing/spec.md"
     },
     {
       "id": "FR-TEN-004",
@@ -12468,7 +12598,7 @@
         "FR-DOC-001",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/ten/FR-TEN-004-four-axis-metering.md"
+      "path": "docs/feature-requests/ten/FR-TEN-004-four-axis-metering/spec.md"
     },
     {
       "id": "FR-TEN-005",
@@ -12501,7 +12631,7 @@
         "FR-MEMORY-111",
         "FR-OBS-007"
       ],
-      "path": "docs/feature-requests/ten/FR-TEN-005-vertical-pack-pricing.md"
+      "path": "docs/feature-requests/ten/FR-TEN-005-vertical-pack-pricing/spec.md"
     },
     {
       "id": "FR-TEN-101",
@@ -12550,7 +12680,7 @@
         "FR-EMAIL-001",
         "FR-OBS-007"
       ],
-      "path": "docs/feature-requests/ten/FR-TEN-101-self-serve-signup.md"
+      "path": "docs/feature-requests/ten/FR-TEN-101-self-serve-signup/spec.md"
     },
     {
       "id": "FR-TEN-102",
@@ -12587,7 +12717,7 @@
         "FR-OBS-007",
         "FR-OBS-008"
       ],
-      "path": "docs/feature-requests/ten/FR-TEN-102-vnd-domestic-rail.md"
+      "path": "docs/feature-requests/ten/FR-TEN-102-vnd-domestic-rail/spec.md"
     },
     {
       "id": "FR-TEN-103",
@@ -12626,7 +12756,7 @@
         "FR-OBS-007",
         "FR-OBS-008"
       ],
-      "path": "docs/feature-requests/ten/FR-TEN-103-four-residency-provisioning.md"
+      "path": "docs/feature-requests/ten/FR-TEN-103-four-residency-provisioning/spec.md"
     },
     {
       "id": "FR-TEN-104",
@@ -12660,7 +12790,7 @@
         "FR-TEN-202",
         "FR-OBS-007"
       ],
-      "path": "docs/feature-requests/ten/FR-TEN-104-offboarding-contract.md"
+      "path": "docs/feature-requests/ten/FR-TEN-104-offboarding-contract/spec.md"
     },
     {
       "id": "FR-TEN-105",
@@ -12693,7 +12823,7 @@
         "FR-OBS-007",
         "FR-OBS-009"
       ],
-      "path": "docs/feature-requests/ten/FR-TEN-105-signed-bundle-export.md"
+      "path": "docs/feature-requests/ten/FR-TEN-105-signed-bundle-export/spec.md"
     },
     {
       "id": "FR-TEN-106",
@@ -12725,7 +12855,7 @@
         "FR-OBS-007",
         "FR-OBS-009"
       ],
-      "path": "docs/feature-requests/ten/FR-TEN-106-permanent-delete-attestation.md"
+      "path": "docs/feature-requests/ten/FR-TEN-106-permanent-delete-attestation/spec.md"
     },
     {
       "id": "FR-TEN-107",
@@ -12753,7 +12883,7 @@
         "FR-AUTH-101",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/ten/FR-TEN-107-tenant-admin-spa.md"
+      "path": "docs/feature-requests/ten/FR-TEN-107-tenant-admin-spa/spec.md"
     },
     {
       "id": "FR-TEN-201",
@@ -12780,7 +12910,7 @@
         "FR-AUTH-101",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/ten/FR-TEN-201-sg-holdco-flip.md"
+      "path": "docs/feature-requests/ten/FR-TEN-201-sg-holdco-flip/spec.md"
     },
     {
       "id": "FR-TEN-202",
@@ -12806,7 +12936,7 @@
         "FR-AUTH-101",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/ten/FR-TEN-202-hostile-termination-override.md"
+      "path": "docs/feature-requests/ten/FR-TEN-202-hostile-termination-override/spec.md"
     },
     {
       "id": "FR-TIME-001",
@@ -12842,7 +12972,7 @@
         "FR-HR-001",
         "FR-HR-008"
       ],
-      "path": "docs/feature-requests/time/FR-TIME-001-time-entry-schema.md"
+      "path": "docs/feature-requests/time/FR-TIME-001-time-entry-schema/spec.md"
     },
     {
       "id": "FR-TIME-002",
@@ -12872,7 +13002,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/time/FR-TIME-002-timer-start-stop.md"
+      "path": "docs/feature-requests/time/FR-TIME-002-timer-start-stop/spec.md"
     },
     {
       "id": "FR-TIME-003",
@@ -12900,7 +13030,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/time/FR-TIME-003-manual-entry-form.md"
+      "path": "docs/feature-requests/time/FR-TIME-003-manual-entry-form/spec.md"
     },
     {
       "id": "FR-TIME-004",
@@ -12927,7 +13057,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/time/FR-TIME-004-auto-detect-proposals.md"
+      "path": "docs/feature-requests/time/FR-TIME-004-auto-detect-proposals/spec.md"
     },
     {
       "id": "FR-TIME-005",
@@ -12956,7 +13086,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/time/FR-TIME-005-billable-flag-cascade.md"
+      "path": "docs/feature-requests/time/FR-TIME-005-billable-flag-cascade/spec.md"
     },
     {
       "id": "FR-TIME-006",
@@ -12986,7 +13116,7 @@
         "FR-MEMORY-111",
         "FR-EMAIL-001"
       ],
-      "path": "docs/feature-requests/time/FR-TIME-006-weekly-approval-flow.md"
+      "path": "docs/feature-requests/time/FR-TIME-006-weekly-approval-flow/spec.md"
     },
     {
       "id": "FR-TIME-007",
@@ -13015,7 +13145,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/time/FR-TIME-007-vn-labour-code-ot-cap.md"
+      "path": "docs/feature-requests/time/FR-TIME-007-vn-labour-code-ot-cap/spec.md"
     },
     {
       "id": "FR-TIME-008",
@@ -13043,7 +13173,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/time/FR-TIME-008-expense-capture-ocr.md"
+      "path": "docs/feature-requests/time/FR-TIME-008-expense-capture-ocr/spec.md"
     },
     {
       "id": "FR-TIME-009",
@@ -13075,7 +13205,7 @@
         "FR-AI-003",
         "FR-MEMORY-111"
       ],
-      "path": "docs/feature-requests/time/FR-TIME-009-per-cycle-rollup.md"
+      "path": "docs/feature-requests/time/FR-TIME-009-per-cycle-rollup/spec.md"
     }
   ]
 }
