@@ -38,8 +38,9 @@ t04_verdict_matrix() {                                               # AC 4
   mkrepo "$TMP/rA" "$pv"
   out="$(CYBEROS_RELEASE_ENDPOINT="$TMP/eq" bash "$TMP/payload/init.sh" --check "$TMP/rA")"
   echo "$out" | grep -q "^verdict=up_to_date$" || { fail "t04A" "$out"; all=0; }
-  mkrepo "$TMP/rB" "1.0.0"                     # B: inst<payload, latest unknown -> repo_stale + next
-  out="$(CYBEROS_OFFLINE=1 bash "$TMP/payload/init.sh" --check "$TMP/rB")"
+  PB="$TMP/payloadB"; rm -rf "$PB"; cp -r "$TMP/payload" "$PB"; echo "2.0.0" > "$PB/VERSION"
+  mkrepo "$TMP/rB" "1.0.0"                     # B: inst<payload (pinned 2.0.0), latest unknown -> repo_stale + next
+  out="$(CYBEROS_OFFLINE=1 bash "$PB/init.sh" --check "$TMP/rB")"
   echo "$out" | grep -q "^verdict=repo_stale$" && echo "$out" | grep -q "^next: bash .*init.sh" || { fail "t04B" "$out"; all=0; }
   echo "9.9.9" > "$TMP/newer"                  # C: payload<latest -> payload_stale + fetch line
   mkrepo "$TMP/rC" "$pv"
