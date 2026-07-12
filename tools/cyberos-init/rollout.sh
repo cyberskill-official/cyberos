@@ -8,7 +8,24 @@
 # Never pushes. Prints one summary line per repo:  <repo>  v<ver> workflow=OK store=yes ...
 set -uo pipefail
 
-PAYLOAD="$(cd "$1" && pwd)"; shift
+# FR-IMP-069: --from-release [vX.Y.Z] downloads + verifies the published payload once, then
+# proceeds unchanged for every listed repo. CYBEROS_PAYLOAD_URL overrides (tests use file://).
+if [ "${1:-}" = "--from-release" ]; then
+  shift
+  tag=""; case "${1:-}" in v[0-9]*) tag="$1"; shift ;; esac
+  base="https://github.com/cyberskill-official/cyberos/releases"
+  if [ -n "$tag" ]; then url="$base/download/$tag/cyberos-payload.tar.gz"; else url="$base/latest/download/cyberos-payload.tar.gz"; fi
+  url="${CYBEROS_PAYLOAD_URL:-$url}"
+  dl="$(mktemp -d)"; trap 'rm -rf "$dl"' EXIT
+  echo "rollout: downloading $url"
+  curl -fsSL "$url" -o "$dl/cyberos-payload.tar.gz"
+  curl -fsSL "$(dirname "$url")/SHA256SUMS" -o "$dl/SHA256SUMS" || { echo "rollout: ERROR: no SHA256SUMS beside the tarball" >&2; exit 1; }
+  (cd "$dl" && grep " cyberos-payload.tar.gz$" SHA256SUMS | sha256sum -c - >/dev/null) || { echo "rollout: ERROR: checksum mismatch" >&2; exit 1; }
+  mkdir -p "$dl/payload" && tar -xzf "$dl/cyberos-payload.tar.gz" -C "$dl/payload"
+  PAYLOAD="$dl/payload"
+else
+  PAYLOAD="$(cd "$1" && pwd)"; shift
+fi
 
 for repo in "$@"; do
   name="$(basename "$repo")"

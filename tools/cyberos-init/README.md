@@ -68,11 +68,24 @@ git submodule add <payload-repo-url> .cyberos-init
 bash .cyberos-init/init.sh
 ```
 
-### 3. One-liner curl | sh (available once you host a tarball)
+### 2b. Update awareness (FR-IMP-070)
+
+`init.sh --check <repo>` reports three values - `installed=`, `payload=`, `latest=` (the newest
+published release, resolved by `check-latest.sh` with a 3s budget; `CYBEROS_OFFLINE=1` skips it) -
+plus one `verdict=` line (`up_to_date` | `repo_stale` | `payload_stale`) and the exact `next:`
+command. Machine-parseable key=value lines; the desktop Ops tab and `/update` consume them.
+
+### 3. One-liner curl | sh (from GitHub Releases - FR-IMP-069)
 
 ```bash
 tar -czf cyberos.tar.gz -C dist cyberos     # publish this to a URL
-CYBEROS_PACK_URL=<url-to-cyberos.tar.gz> curl -fsSL <raw-url>/bootstrap.sh | bash
+curl -fsSL https://raw.githubusercontent.com/cyberskill-official/cyberos/main/tools/cyberos-init/bootstrap.sh | bash
+# fetches https://github.com/cyberskill-official/cyberos/releases/latest/download/cyberos-payload.tar.gz,
+# verifies it against the SHA256SUMS asset, and runs init.sh on the current repo.
+# Pin a version:  CYBEROS_PAYLOAD_URL=.../releases/download/vX.Y.Z/cyberos-payload-X.Y.Z.tar.gz curl -fsSL .../bootstrap.sh | bash
+# Claude desktop/Cowork: download cyberos.plugin from the same release page and pick the file.
+# Claude Code: download + unpack cyberos-payload.tar.gz, then /plugin marketplace add <dir>.
+# Fleet:  bash tools/cyberos-init/rollout.sh --from-release [vX.Y.Z] <repo> [<repo>...]
 ```
 
 ### 4. Claude plugin (available)
@@ -140,7 +153,7 @@ bash dist/cyberos/create.sh ../my-new-project     # git init + skeleton + init.s
 ### Planned channels (say the word and I will build them)
 
 - Homebrew tap and Nix flake - `brew install cyberos` / `nix run`.
-- Published npm package + hosted `bootstrap.sh` URL (so `npx cyberos-init` and the curl one-liner work without a local checkout).
+- Published npm package (`npx cyberos-init`). The curl one-liner + hosted payload shipped via GitHub Releases (FR-IMP-069).
 
 ### Add your own agent
 

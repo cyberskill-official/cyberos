@@ -140,7 +140,7 @@ Repo variable:
 
 1. Land the work on `main` through PRs - the gates (services, awh-gate, docs-prerender-gate) must be green. It deploys to the web and service surface automatically; nothing else to do for web, PWA, or desktop content, since they all load the live site root.
 2. Bump the platform version and the installer versions to the number you are about to tag:
-   - `VERSION` at the repo root (the single platform version; the pre-commit `cyberos-payload-build` hook rebuilds `dist/cyberos` so the init payload always matches).
+   - `VERSION` at the repo root (the single platform version). Enforced, not aspirational (FR-IMP-068): `.githooks/pre-commit` rebuilds `dist/cyberos` and runs `tools/cyberos-init/check-version-sync.sh` on payload-source commits; `payload-gate.yml` re-proves the build on push/PR; the version-bump job proves it inline before pushing a bump.
    - `version` in `apps/desktop/src-tauri/tauri.conf.json` and `version` in `apps/web/package.json` (what the installers report).
 3. Record the release in `CHANGELOG.md` (repo level; per-module history lives in each module's `CHANGELOG.md`, rendered to the site's changelog pages).
 4. Commit, tag, and push both:
@@ -151,7 +151,7 @@ Repo variable:
 
 5. Watch `deploy.yml` go green (images pushed, VPS rolled), then the `release` workflow build the native installers and open a draft GitHub Release with them attached (plus the Android bundle once `ANDROID_RELEASE=true`, and a TestFlight upload once `IOS_RELEASE=true`).
 6. Edit the draft release notes and publish. Hand out the installer links; with mobile on, the iOS build is in TestFlight and the Android `.aab` is the release artifact to upload to Play.
-7. Distribute the payload to consumer repos: each project updates with `init.sh --check` (notify) and re-running `init.sh` (apply) - or from the desktop app's CyberOS Ops tab. Fleet-wide: `tools/cyberos-init/rollout.sh`.
+7. Distribute the payload to consumer repos: each project updates with `init.sh --check` (notify) and re-running `init.sh` (apply) - or from the desktop app's CyberOS Ops tab. Fleet-wide: `tools/cyberos-init/rollout.sh`. Every `vX.Y.Z` tag also publishes the payload as GitHub Release assets (`cyberos-payload.tar.gz`, `cyberos.plugin`, versioned twins, `SHA256SUMS` - the `payload` job in release.yml), so consumers can install from `releases/latest/download/` via `bootstrap.sh` or `rollout.sh --from-release` without a local checkout (FR-IMP-069).
 
 ## Docs are part of every release
 

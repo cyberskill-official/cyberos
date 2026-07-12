@@ -49,6 +49,13 @@ jobs:
       - name: Compute + apply the next version
         id: bump
         run: node scripts/cyberos-version.mjs --apply ${{ github.event.inputs.level && format('--level {0}', github.event.inputs.level) || '' }}
+      # FR-IMP-068 §1 #7: the bump commit below carries [skip ci], so payload-gate.yml never
+      # sees it - prove HERE that a payload built at the new VERSION stamps every artifact 1:1.
+      - name: Prove a payload builds clean at the new version
+        if: ${{ steps.bump.outputs.changed == 'true' }}
+        run: |
+          bash tools/cyberos-init/build.sh "$RUNNER_TEMP/payload"
+          bash tools/cyberos-init/check-version-sync.sh "$RUNNER_TEMP/payload"
       - name: Commit the bump back to main
         if: ${{ steps.bump.outputs.changed == 'true' }}
         run: |

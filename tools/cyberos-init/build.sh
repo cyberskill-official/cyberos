@@ -14,6 +14,12 @@ here="$(cd "$(dirname "$0")" && pwd)"                 # tools/cyberos-init
 repo="$(cd "$here/../.." && pwd)"                      # cyberos repo root
 out="${1:-$repo/dist/cyberos}"
 
+# The single platform VERSION - validated UP FRONT so a missing/invalid VERSION can never
+# stamp a payload, and failure writes (and deletes) nothing (FR-IMP-068 §1 #3).
+[ -f "$repo/VERSION" ] || { echo "cyberos-init: ERROR: $repo/VERSION missing - refusing to build an unstamped payload" >&2; exit 2; }
+cyver="$(tr -d ' \n\r' < "$repo/VERSION")"
+printf '%s' "$cyver" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || { echo "cyberos-init: ERROR: VERSION is not X.Y.Z semver (got '$cyver')" >&2; exit 2; }
+
 echo "cyberos-init: assembling payload into $out"
 rm -rf "$out"
 mkdir -p "$out/cuo/skills" "$out/cuo/gates/caf" "$out/cuo/templates" "$out/memory"
@@ -25,7 +31,7 @@ cp "$repo/modules/skill/contracts/feature-request/STATUS-REFERENCE.md"          
 cp "$here/gates/run-gates.sh"                                                        "$out/cuo/gates/run-gates.sh"
 cp -R "$here/templates/." "$out/cuo/templates/"
 
-skills="repo-context-map-author repo-context-map-audit architecture-decision-record-author architecture-decision-record-audit edge-case-matrix-author edge-case-matrix-audit mock-contract-test-author mock-contract-test-audit implementation-plan-author implementation-plan-audit observability-injection-author observability-injection-audit backlog-state-update-author backlog-state-update-audit code-review-author code-review-audit coverage-gate-author coverage-gate-audit feature-request-author feature-request-audit"
+skills="repo-context-map-author repo-context-map-audit architecture-decision-record-author architecture-decision-record-audit edge-case-matrix-author edge-case-matrix-audit mock-contract-test-author mock-contract-test-audit implementation-plan-author implementation-plan-audit observability-injection-author observability-injection-audit backlog-state-update-author backlog-state-update-audit code-review-author code-review-audit coverage-gate-author coverage-gate-audit feature-request-author feature-request-audit debugging-cycle-author debugging-cycle-audit"  # FR-SKILL-116: ship steps 25-26
 vendored_skills=0
 for s in $skills; do
   if [ -d "$repo/modules/skill/$s" ]; then
@@ -57,6 +63,7 @@ cp -R "$here/plugin"    "$out/plugin"
 mkdir -p "$out/.claude-plugin"
 cp "$here/marketplace/.claude-plugin/marketplace.json" "$out/.claude-plugin/marketplace.json"
 cp "$here/init.sh"      "$out/init.sh"
+cp "$here/check-latest.sh"      "$out/check-latest.sh"
 cp "$here/bootstrap.sh" "$out/bootstrap.sh"
 cp "$here/create.sh"    "$out/create.sh"        # template / fresh-project scaffolder channel
 cp -R "$here/ci"        "$out/ci"
@@ -69,10 +76,7 @@ cp "$here/docs/index.md" "$out/GUIDE.md"   # the guide source lives in docs/ (si
 chmod +x "$out/init.sh" "$out/bootstrap.sh" "$out/create.sh" "$out/cuo/gates/run-gates.sh" 2>/dev/null || true
 chmod +x "$out/mcp/cyberos-mcp.mjs" "$out"/cli/bin/*.mjs 2>/dev/null || true
 
-# The single platform VERSION. Computed HERE (not later) because the plugin manifests must be
-# stamped with it BEFORE the one-file bundle is zipped - a stale version sealed inside
-# cyberos.plugin is exactly the drift this fixes (installed plugin said 1.0.0 forever).
-cyver="$(tr -d ' \n\r' < "$repo/VERSION" 2>/dev/null || echo 0.0.0)"
+# $cyver was validated + computed at the TOP of this script (FR-IMP-068: fail-fast, no 0.0.0 fallback).
 
 # make the plugin self-contained: carry the cuo docs so the bundled skill works standalone
 mkdir -p "$out/plugin/skills/ship-feature-requests/cuo"
@@ -186,6 +190,9 @@ notes: >
   mode always works; missing skills/caf degrade to the reduced-profile floor (the target
   repo's own build/lint/test + coverage + code review + the two human gates).
 EOF
+
+# FR-SKILL-116 §1 #5: a payload that under-covers its own workflow cannot be produced.
+bash "$here/check-chain-coverage.sh" "$out"
 
 echo "cyberos-init: done. profile=$profile skills=$vendored_skills caf=$caf_vendored"
 echo "cyberos-init: payload at $out - init.sh lays it out under a target repo's .cyberos/ (gitignored)"
