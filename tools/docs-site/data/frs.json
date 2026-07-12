@@ -4948,7 +4948,7 @@
       "title": "Server-render NFR catalog + Risk Register + FR catalog at build time — Pagefind-indexed + crawler-visible + deterministic + Alpine reactive coexistence",
       "module": "DOCS",
       "priority": "SHOULD",
-      "status": "ready_to_implement",
+      "status": "closed",
       "verify": "I",
       "phase": "P0",
       "milestone": "P0 · polish slice",
