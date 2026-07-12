@@ -134,3 +134,11 @@ These rules apply to FRs that use the cyberos template (numbered §1 normative c
 - `INVARIANTS.md` (sibling file) — invariant catalog including `deterministic_drift`.
 - `cyberos/skill/contracts/feature-request/CONTRACT.md` — the FR template this rubric audits.
 - `cyberos/skill/contracts/feature-request/template.md` — the FR body skeleton.
+
+## §10  Template detection (FR-CUO-208)
+
+Family applicability is selected per file by detection - `template: feature_request@1` key ->
+FM+SEC+COND+QA+SAFE (+TRACE per §9); `## §1 - Description`..`## §11` grammar -> engineering-spec@1
+(author §12 sub-rules + TRACE+QA+SAFE). Both/neither -> needs_human (`template_ambiguous`).
+Profiles normative in `../feature-request-author/references/TEMPLATE_PROFILES.md`.
+

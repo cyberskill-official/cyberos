@@ -819,3 +819,13 @@ To support seamless workflow execution, resumption, and manual intervention, the
 ---
 
 *End of feature-request-audit skill — version 1.6 — 2026-05-20 (added Rework Mode and in-construction deliverable discipline).*
+
+## Template detection + family selection (FR-CUO-208)
+
+Audit each file by its OWN detected template, never the repo default: frontmatter
+`template: feature_request@1` -> FM + SEC + COND + QA + SAFE (+ TRACE only where grafted §4/§5
+sections are present, per RUBRIC.md §9); `## §1 - Description`..`## §11` grammar ->
+engineering-spec@1 (§12 sub-rule set + TRACE-001..005 + QA + SAFE). A file matching BOTH markers or
+NEITHER routes to needs_human naming the conflict. The 10/10 bar and needs_human semantics are
+identical across templates. Profiles: `../feature-request-author/references/TEMPLATE_PROFILES.md`.
+

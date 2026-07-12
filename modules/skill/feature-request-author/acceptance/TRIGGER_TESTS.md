@@ -14,6 +14,7 @@ classifier_version: 3.0.0-a4
 - "Draft a feature request for the new email-bounce handling"
 - "Expand the spec into FR markdowns"
 - "Generate the FR backlog from these source docs"
+- "Expand this PRD into FRs using the feature_request@1 template"   (template override is still authoring - FR-CUO-208)
 
 ## Negative triggers (MUST NOT route here)
 
@@ -21,6 +22,7 @@ classifier_version: 3.0.0-a4
 - "Has FR-007 changed since the last audit?" → feature-request-audit
 - "Draft a tech spec from this FR" → fr-to-tech-spec
 - "What's our company holiday schedule?" → none
+- "Which FR template does this repo default to?" → none   (config question, nothing to author - FR-CUO-208)
 
 ## Authoring notes
 
@@ -34,3 +36,4 @@ classifier_version: 3.0.0-a4
   that skill goes from scaffold → accepted in P1).
 - Negative trigger 4 is a canonical "no skill" sanity case.
 - Re-author when classifier_version MAJOR-bumps (today v3.0.0-a4).
+- FR-CUO-208 cases (P5/N5, last bullets above): template-profile routing added with TEMPLATE_PROFILES.md.

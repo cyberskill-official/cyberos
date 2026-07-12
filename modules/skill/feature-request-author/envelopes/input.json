@@ -3,7 +3,10 @@
   "$id": "cyberos.skill.feature-request-author.input/v1",
   "title": "feature-request-author input envelope",
   "type": "object",
-  "required": ["source_files", "output_dir"],
+  "required": [
+    "source_files",
+    "output_dir"
+  ],
   "additionalProperties": false,
   "properties": {
     "source_files": {
@@ -11,10 +14,19 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["path", "media_type"],
+        "required": [
+          "path",
+          "media_type"
+        ],
         "properties": {
-          "path": { "type": "string", "description": "Project-relative or absolute path to the source file." },
-          "media_type": { "type": "string", "description": "IANA media type, e.g. text/markdown, application/json." }
+          "path": {
+            "type": "string",
+            "description": "Project-relative or absolute path to the source file."
+          },
+          "media_type": {
+            "type": "string",
+            "description": "IANA media type, e.g. text/markdown, application/json."
+          }
         },
         "additionalProperties": false
       }
@@ -37,7 +49,17 @@
     "caller_persona": {
       "type": "string",
       "default": "cuo-cpo",
-      "enum": ["cuo-cpo", "cuo-cto", "cuo-clo", "cuo-cseco", "cuo-coo", "cuo-ceo", "cuo-cfo", "cuo-chro", "cuo-cdo"]
+      "enum": [
+        "cuo-cpo",
+        "cuo-cto",
+        "cuo-clo",
+        "cuo-cseco",
+        "cuo-coo",
+        "cuo-ceo",
+        "cuo-cfo",
+        "cuo-chro",
+        "cuo-cdo"
+      ]
     },
     "trace_id": {
       "type": "string",
@@ -45,9 +67,21 @@
     },
     "chain_to": {
       "type": "array",
-      "items": { "type": "string" },
-      "default": ["feature-request-audit"],
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "feature-request-audit"
+      ],
       "description": "Downstream skill IDs to invoke on PASS. Empty list disables chaining."
+    },
+    "template": {
+      "type": "string",
+      "enum": [
+        "engineering-spec@1",
+        "feature_request@1"
+      ],
+      "description": "Active FR template profile. Resolution: invocation override > .cyberos/config.yaml fr_template > default engineering-spec@1 (FR-CUO-208; profiles normative in references/TEMPLATE_PROFILES.md)."
     }
   }
 }

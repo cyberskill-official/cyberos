@@ -3,7 +3,7 @@ id: FR-CUO-208
 title: "FR template profile - /create-feature-requests resolves engineering-spec@1 vs feature_request@1 per repo, and the audit rubric follows"
 module: cuo
 priority: SHOULD
-status: ready_to_implement
+status: reviewing
 class: product
 verify: T
 phase: Wave C - strengthen the workflows

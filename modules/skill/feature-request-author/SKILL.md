@@ -854,3 +854,12 @@ To support seamless workflow execution, resumption, and manual intervention, the
 ---
 
 *End of feature-request-audit skill — version 1.6 — 2026-05-20 (added Rework Mode and in-construction deliverable discipline).*
+
+## Template profiles (FR-CUO-208)
+
+The input envelope's `template` field selects the emitted profile: `engineering-spec@1` (default; §12
+authoring rules below apply) or `feature_request@1` (authoring rules in
+`references/TEMPLATE_PROFILES.md`, the normative side-by-side profile doc). Resolution chain:
+invocation override > `.cyberos/config.yaml` `fr_template` > default. The resolved template is echoed
+in the PLAN so the operator approves template + content together.
+
