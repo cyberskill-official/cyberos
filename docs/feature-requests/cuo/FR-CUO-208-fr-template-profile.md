@@ -3,13 +3,13 @@ id: FR-CUO-208
 title: "FR template profile - /create-feature-requests resolves engineering-spec@1 vs feature_request@1 per repo, and the audit rubric follows"
 module: cuo
 priority: SHOULD
-status: reviewing
+status: done
 class: product
 verify: T
 phase: Wave C - strengthen the workflows
 owner: Stephen Cheng (CTO)
 created: 2026-07-12
-shipped: null
+shipped: 2026-07-12
 memory_chain_hash: null
 related_frs: [FR-CUO-205, FR-CUO-207]
 depends_on: [FR-CUO-207]
