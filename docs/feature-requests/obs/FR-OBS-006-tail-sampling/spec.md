@@ -3,14 +3,14 @@ id: FR-OBS-006
 title: "Tail-based sampling at OTel collector — 100% errors/5xx/slow/flagged + 10% normal + decision_wait + flagged-tenants config"
 module: OBS
 priority: SHOULD
-status: reviewing
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 2
 slice: 2
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
-shipped: null
+shipped: 2026-07-12
 memory_chain_hash: null
 related_frs: [FR-OBS-001, FR-OBS-005, FR-AI-022, FR-AI-021]
 depends_on: [FR-OBS-001]
