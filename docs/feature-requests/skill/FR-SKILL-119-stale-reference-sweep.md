@@ -3,13 +3,13 @@ id: FR-SKILL-119
 title: "Stale-reference sweep - repoint dead SDP anchors across modules/skill and refresh obsolete ship-workflow notes, with a doc-anchor checker"
 module: SKILL
 priority: SHOULD
-status: reviewing
+status: done
 class: improvement
 verify: T
 phase: Wave B - finish the children
 owner: Stephen Cheng (CTO)
 created: 2026-07-12
-shipped: null
+shipped: 2026-07-12
 memory_chain_hash: null
 related_frs: [FR-SKILL-115, FR-SKILL-118, FR-DOCS-002]
 depends_on: []
