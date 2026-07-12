@@ -106,12 +106,21 @@ platform :ios do
     # EXPORT re-signs for distribution via the App Store Connect API key below - identity selection is
     # entirely Xcode's job. (History: Capacitor scaffolded "iPhone Developer", a first fix hard-set
     # "Apple Distribution" in pbxproj, and the two halves fought - see release #43.)
+    # ARCHIVE UNSIGNED, SIGN AT EXPORT (v1.0.0 run #48 root cause). With automatic signing, the
+    # archive step wants an iOS App DEVELOPMENT profile, and Apple refuses to mint one for a team
+    # with ZERO registered devices ("Your team has no devices from which to generate a provisioning
+    # profile"). We have no devices and need none: the App Store DISTRIBUTION profile used at export
+    # has no device requirement. So the archive skips codesigning entirely, and the export step
+    # cloud-signs with Apple Distribution via the App Store Connect API key (export_xcargs below).
     xcargs = [
+      "CODE_SIGNING_ALLOWED=NO",
+      "DEVELOPMENT_TEAM=#{Shellwords.escape(team_id)}",
+    ].join(" ")
+    export_xcargs = [
       "-allowProvisioningUpdates",
       "-authenticationKeyPath #{Shellwords.escape(key_path)}",
       "-authenticationKeyID #{Shellwords.escape(key_id)}",
       "-authenticationKeyIssuerID #{Shellwords.escape(issuer_id)}",
-      "DEVELOPMENT_TEAM=#{Shellwords.escape(team_id)}",
     ].join(" ")
 
     # `project:`, NOT `workspace:`. Capacitor 8 uses Swift Package Manager (CapApp-SPM), not CocoaPods, so
@@ -127,6 +136,7 @@ platform :ios do
       configuration: "Release",
       export_method: "app-store",
       xcargs: xcargs,
+      export_xcargs: export_xcargs,
       export_options: {
         signingStyle: "automatic",
         teamID: team_id,
