@@ -3,13 +3,13 @@ id: FR-IMP-075
 title: "MAS updater exclusion — `mas` cargo feature compiles the self-updater out of the Mac App Store build"
 module: improvement
 priority: MUST
-status: reviewing
+status: done
 class: improvement
 verify: T
 phase: "Wave 6 - go-live (Track B: store channels)"
 owner: Stephen Cheng (CTO)
 created: 2026-07-13
-shipped: null
+shipped: 2026-07-13
 memory_chain_hash: null
 related_frs: [FR-APP-003]
 depends_on: []

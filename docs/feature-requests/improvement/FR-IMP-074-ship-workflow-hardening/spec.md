@@ -3,13 +3,13 @@ id: FR-IMP-074
 title: "Ship-workflow hardening — status-page auto-sync, batch/parallel FR shipping with unlock rescan, rules-to-channels distribution sync"
 module: improvement
 priority: MUST
-status: reviewing
+status: done
 class: improvement
 verify: T
 phase: "Wave 6 - go-live (workflow engine)"
 owner: Stephen Cheng (CTO)
 created: 2026-07-13
-shipped: null
+shipped: 2026-07-13
 memory_chain_hash: null
 related_frs: [FR-IMP-068, FR-IMP-072, FR-CUO-206]
 depends_on: []
