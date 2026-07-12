@@ -3,7 +3,7 @@ id: FR-MEMORY-121
 title: "interaction-event schema & contract — the one work-interaction event shape (event_id, subject, module, event_type, target_ref, content_ref) every module emits into l1_audit_log, versioned + RLS + emit API; the single BRAIN capture primitive"
 module: MEMORY
 priority: MUST
-status: implementing
+status: reviewing
 verify: T
 phase: P1
 milestone: P1 · BRAIN capture · slice 1
