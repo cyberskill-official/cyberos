@@ -3,7 +3,7 @@ id: FR-DOCS-001
 title: "Server-render NFR catalog + Risk Register + FR catalog at build time — Pagefind-indexed + crawler-visible + deterministic + Alpine reactive coexistence"
 module: DOCS
 priority: SHOULD
-status: ready_to_implement
+status: closed
 verify: I
 phase: P0
 milestone: P0 · polish slice
@@ -529,3 +529,17 @@ All resolved. Deferred:
 ---
 
 *End of FR-DOCS-001. Status: planned (10/10 target).*
+
+---
+
+**Supersession record (2026-07-12, conflict-scan doctrine: newest wins).** The live intent of this FR
+shipped through the FR-DOCS-002/005/006 pipeline: data extraction to JSON (tools/docs-site/data-extract.mjs
+-> data/frs.json, nfrs), prerendered `<section data-prerendered="true">` catalog cards (render-fr-catalog /
+render-nfr-catalog carry `FR-DOCS-001 §1 #2` citations), deterministic builds, stable per-card anchors,
+and last-build-report.json. The remaining clauses are obsolete by later approved doctrine: #1's
+website/build paths and #8's Cloudflare Pages (replaced by tools/docs-site + VPS deploy), #4/#5 Alpine
+hydration (vanilla JS since the rebuild), #11's committed-HTML drift gate (FORBIDDEN by FR-DOCS-002:
+generated output is never committed), #9 Pagefind and #10 watch mode (never built). Client-side search
+of the docs site is genuinely undelivered and is queued as a fresh-FR candidate for the next intake batch
+rather than resurrecting this spec's mechanics. Status: closed (superseded), not done - several clauses
+as written are permanently false.
