@@ -2,6 +2,13 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [1.9.0] - 2026-07-12
+
+Added
+- backlog-state-update@2 with insert-row - one audited write path to BACKLOG.md (FR-CUO-205)
+- vendor the full 14-stage SDP skill set by default (FR-CUO-209)
+- architectural-spike-author/-audit pair - the missing ADR input (FR-SKILL-117)
+
 ## [1.8.4] - 2026-07-12
 
 Fixed
