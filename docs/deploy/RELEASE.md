@@ -96,13 +96,26 @@ This is the fastest way to put CyberOS on a phone or a dock, before any store li
 
 ### Mobile one-time init (before the first mobile release)
 
-The android/ and ios/ projects do not exist in the repo yet. Create them once, locally:
+The android/ and ios/ projects are committed in the repo (scaffolded once via the steps below). Only repeat these steps if a shell is ever deleted and re-scaffolded:
 
     cd apps/web
     npm i -D @capacitor/core @capacitor/cli @capacitor/ios @capacitor/android
     npx cap add ios
     npx cap add android
     git add android ios capacitor.config.ts package.json && git commit -m "chore: add Capacitor mobile shells"
+
+**App icons after any re-scaffold (FR-IMP-073).** `npx cap add` stamps both native projects with Capacitor's generic template icon - that is exactly how the placeholder-icon defect shipped the first time. After any re-scaffold (and after any rebrand of the desktop icon set), re-copy the brand icons byte-for-byte from the Tauri-generated source before committing:
+
+    # Android: 15 files (3 per density x 5 densities)
+    for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+      cp apps/desktop/src-tauri/icons/android/mipmap-$d/ic_launcher*.png \
+         apps/web/android/app/src/main/res/mipmap-$d/
+    done
+    # iOS: single universal 1024x1024 catalog entry
+    cp apps/desktop/src-tauri/icons/ios/AppIcon-512@2x.png \
+       apps/web/ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png
+
+The release pipeline enforces this: both the `android` and `ios` jobs in `release.yml` hash-compare all 16 files against `apps/desktop/src-tauri/icons/{android,ios}` right after `npx cap sync` and fail loudly on any drift, so a forgotten re-copy cannot reach Play or App Store Connect.
 
 `capacitor.config.ts` is already committed (appId `os.cyberskill.world`, webDir `../console/web`). After the shells are committed and the signing secrets below are set, flip `ANDROID_RELEASE=true` (and `IOS_RELEASE=true` once the iOS project exists) so `release.yml` starts building the mobile apps - the two are gated separately so Android can ship before iOS. Push notifications are the one unfinished backend piece: the chat service registers devices and emits a push intent, but the actual APNS/FCM send is stubbed (`services/chat/src/push.rs`); wire real delivery before relying on mobile push.
 

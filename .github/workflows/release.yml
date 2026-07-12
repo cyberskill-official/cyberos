@@ -235,6 +235,31 @@ jobs:
           npm ci
           npm run build
           npx cap sync android
+      # FR-IMP-073 §6 Option B: the Capacitor Android shell once shipped Capacitor's default
+      # template icon because nothing ever asserted the launcher assets match the brand source
+      # (apps/desktop/src-tauri/icons/android - the Tauri-generated, brand-approved set). This
+      # guard turns the two silent regressions in FR-IMP-073 §10 (a `npx cap add` re-scaffold
+      # resetting the icons; a desktop rebrand that forgets the mobile copies) into a loud,
+      # per-file CI failure. Runs AFTER cap sync so it also catches anything sync rewrites.
+      - name: Assert Android launcher icons match the desktop brand source (FR-IMP-073)
+        run: |
+          fail=0
+          for p in mipmap-mdpi/ic_launcher.png mipmap-mdpi/ic_launcher_foreground.png mipmap-mdpi/ic_launcher_round.png \
+                   mipmap-hdpi/ic_launcher.png mipmap-hdpi/ic_launcher_foreground.png mipmap-hdpi/ic_launcher_round.png \
+                   mipmap-xhdpi/ic_launcher.png mipmap-xhdpi/ic_launcher_foreground.png mipmap-xhdpi/ic_launcher_round.png \
+                   mipmap-xxhdpi/ic_launcher.png mipmap-xxhdpi/ic_launcher_foreground.png mipmap-xxhdpi/ic_launcher_round.png \
+                   mipmap-xxxhdpi/ic_launcher.png mipmap-xxxhdpi/ic_launcher_foreground.png mipmap-xxxhdpi/ic_launcher_round.png; do
+            a="apps/desktop/src-tauri/icons/android/$p"
+            b="apps/web/android/app/src/main/res/$p"
+            [ -f "$a" ] || { echo "::error::icon guard: brand source missing: $a"; fail=1; continue; }
+            [ -f "$b" ] || { echo "::error::icon guard: Capacitor icon missing: $b"; fail=1; continue; }
+            if [ "$(sha256sum "$a" | cut -d' ' -f1)" != "$(sha256sum "$b" | cut -d' ' -f1)" ]; then
+              echo "::error::icon guard DRIFT: $b != $a (re-copy from apps/desktop/src-tauri/icons/android - docs/deploy/RELEASE.md)"
+              fail=1
+            fi
+          done
+          [ "$fail" -eq 0 ] && echo "icon guard: all 15 Android launcher assets match the brand source"
+          exit "$fail"
       - name: Assemble signed AAB
         working-directory: apps/web/android
         env:
@@ -338,6 +363,21 @@ jobs:
           npm ci
           npm run build
           npx cap sync ios
+
+      # FR-IMP-073 §6 Option B (iOS leg): assert the asset-catalog icon matches the brand source
+      # (apps/desktop/src-tauri/icons/ios). Same rationale as the Android guard above; macOS
+      # runners ship shasum, not sha256sum.
+      - name: Assert iOS app icon matches the desktop brand source (FR-IMP-073)
+        run: |
+          a="apps/desktop/src-tauri/icons/ios/AppIcon-512@2x.png"
+          b="apps/web/ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png"
+          [ -f "$a" ] || { echo "::error::icon guard: brand source missing: $a"; exit 1; }
+          [ -f "$b" ] || { echo "::error::icon guard: Capacitor icon missing: $b"; exit 1; }
+          if [ "$(shasum -a 256 "$a" | cut -d' ' -f1)" != "$(shasum -a 256 "$b" | cut -d' ' -f1)" ]; then
+            echo "::error::icon guard DRIFT: $b != $a (re-copy from apps/desktop/src-tauri/icons/ios - docs/deploy/RELEASE.md)"
+            exit 1
+          fi
+          echo "icon guard: iOS AppIcon matches the brand source"
 
       # App Store Connect rejects uploads built with an SDK older than iOS 26 (Xcode 26+) - Apple raises
       # this floor every spring. macos-15 runners still DEFAULT to Xcode 16.4 / iOS 18.5 SDK, which is how
