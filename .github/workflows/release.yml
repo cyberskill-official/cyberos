@@ -221,8 +221,10 @@ jobs:
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 21 }
       # versionName + versionCode were hardcoded ("1.0" / 1). Play REJECTS any upload whose versionCode it
-      # has already seen, so publishing could never work twice. The stamper derives both from the platform
-      # VERSION (1.2.0 -> versionName 1.2.0, versionCode 10200), strictly increasing on every bump.
+      # has already seen, so publishing could never work twice. The stamper writes versionName from the
+      # platform VERSION and versionCode from the separate, monotonic BUILD_NUMBER file. Those are two
+      # different numbers on purpose: VERSION can move in any direction a product decision requires (it was
+      # rolled back to 0.1.0 for the pre-1.0 run-up), while a versionCode can only ever go UP, forever.
       - name: Stamp VERSION into the Android app
         run: node scripts/stamp-release-version.mjs --apply
       - name: Build web + sync Capacitor

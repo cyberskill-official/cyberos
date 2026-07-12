@@ -39,9 +39,24 @@ function parseSemver(v) {
   return { major: +m[1], minor: +m[2], patch: +m[3], pre: m[4] || null };
 }
 function fmt(s) { return `${s.major}.${s.minor}.${s.patch}`; }
+
+// ZERO-MAJOR LOCK. While major == 0, a `major` signal (a `feat!:` subject or a `BREAKING CHANGE:`
+// trailer) bumps the MINOR instead of rolling over to 1.0.0.
+//
+// 1.0.0 is a product decision, not a side effect of one commit message. CyberOS is deliberately back on
+// 0.x for the pre-release run-up, and without this lock a single `!` in a commit subject - the kind of
+// thing that lands in a routine refactor - would silently declare 1.0.0, publish it to every store, and
+// there is no un-shipping a version number. Under semver this is also the correct reading: 0.x means the
+// public API is not yet stable, so a breaking change is exactly what a minor bump is FOR.
+//
+// The escape hatch is explicit and stays explicit: `--set 1.0.0`, or a `Release-As: 1.0.0` trailer. Both
+// bypass this function entirely. When Stephen says it is 1.0.0, it is 1.0.0 - and only then.
 function bump(v, level) {
   const s = parseSemver(v);
-  if (level === "major") return { major: s.major + 1, minor: 0, patch: 0, pre: null };
+  if (level === "major") {
+    if (s.major === 0) return { major: 0, minor: s.minor + 1, patch: 0, pre: null };
+    return { major: s.major + 1, minor: 0, patch: 0, pre: null };
+  }
   if (level === "minor") return { major: s.major, minor: s.minor + 1, patch: 0, pre: null };
   if (level === "patch") return { major: s.major, minor: s.minor, patch: s.patch + 1, pre: null };
   return s; // none
@@ -143,11 +158,26 @@ function applyChangelog(root, next, kept) {
   writeFileSync(p, md);
 }
 
+// The store build number. Monotonic, never derived from VERSION - see scripts/stamp-release-version.mjs
+// for why (short version: Google Play remembers every versionCode forever and refuses to go backwards,
+// so the rollback to 0.x would have permanently bricked Android uploads if the code were computed from
+// the semver). Every version bump takes it up by one; it never resets, never decreases, and does not care
+// what the marketing version says.
+function bumpBuildNumber(root) {
+  const p = join(root, "BUILD_NUMBER");
+  if (!existsSync(p)) throw new Error("BUILD_NUMBER is missing - it cannot be recomputed from VERSION. Restore it from git history rather than guessing a value.");
+  const cur = Number(readFileSync(p, "utf8").trim());
+  if (!Number.isInteger(cur) || cur < 1) throw new Error(`BUILD_NUMBER is not a positive integer: "${readFileSync(p, "utf8").trim()}"`);
+  writeFileSync(p, `${cur + 1}\n`);
+  return cur + 1;
+}
+
 function apply(root, p) {
   if (p.next === p.current && p.level !== "set" && p.level !== "release-as") return false;
   if (p.next === p.current) return false;
   writeFileSync(join(root, "VERSION"), `${p.next}\n`);
   applyChangelog(root, p.next, p.commits);
+  p.buildNumber = bumpBuildNumber(root);
   return true;
 }
 
@@ -158,6 +188,12 @@ function selftest() {
   eq("bump minor", fmt(bump("1.0.0", "minor")), "1.1.0");
   eq("bump patch", fmt(bump("1.2.3", "patch")), "1.2.4");
   eq("bump major", fmt(bump("1.2.3", "major")), "2.0.0");
+  // zero-major lock: a breaking change on 0.x moves the minor, it does NOT declare 1.0.0.
+  eq("0.x major->minor", fmt(bump("0.1.0", "major")), "0.2.0");
+  eq("0.x major->minor (patch reset)", fmt(bump("0.4.7", "major")), "0.5.0");
+  eq("0.x minor", fmt(bump("0.1.0", "minor")), "0.2.0");
+  eq("0.x patch", fmt(bump("0.1.0", "patch")), "0.1.1");
+  eq("1.x major still rolls", fmt(bump("1.9.1", "major")), "2.0.0");
   eq("bump none", fmt(bump("1.2.3", "none")), "1.2.3");
   eq("feat->minor", classify("feat(x): y", "").level, "minor");
   eq("fix->patch", classify("fix: y", "").level, "patch");

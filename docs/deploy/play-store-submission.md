@@ -249,6 +249,19 @@ before you debug anything.
 
 ## versionCode
 
-Derived from `VERSION` by `scripts/stamp-release-version.mjs`: `major*10000 + minor*100 + patch`.
-So 1.2.0 is 10200 and 1.2.1 is 10201. Play rejects any upload with a versionCode it has already
-seen, so **never re-tag a version you have already pushed to Play**. Bump and move on.
+Read from the root `BUILD_NUMBER` file by `scripts/stamp-release-version.mjs`. It is a plain monotonic
+counter, incremented on every version bump, and it is deliberately NOT derived from `VERSION`.
+
+It used to be derived (`major*10000 + minor*100 + patch`, so 1.2.0 became 10200). That formula quietly
+couples a marketing decision to a number that can never go backwards. Play remembers every versionCode it
+has ever accepted - 10700 among them - and refuses anything at or below the highest it has seen, with no
+appeal and no reset. So when `VERSION` was rolled back to 0.1.0 for the pre-1.0 run-up, the derived code
+would have become 100, and every Android upload from then on would have been rejected permanently. The
+stamper now refuses outright to stamp a `BUILD_NUMBER` at or below 10700.
+
+Practical consequences:
+
+- `BUILD_NUMBER` only ever increases. Never hand-edit it downwards, and never "reset" it to match a
+  version. If it is ever lost, recover it from git history rather than guessing.
+- Play still rejects any versionCode it has already seen, so **never re-tag a version you have already
+  pushed to Play**. Bump and move on.
