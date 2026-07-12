@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberos.skill.observability-injection-author.output/v1",
+  "title": "observability-injection-author output envelope",
+  "type": "object",
+  "required": [
+    "artefact_path",
+    "branch_coverage_pct"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "artefact_path": {
+      "type": "string"
+    },
+    "branch_coverage_pct": {
+      "type": "integer"
+    },
+    "redaction_policy": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberos.skill.repo-context-map-author.input/v1",
+  "title": "repo-context-map-author input envelope",
+  "type": "object",
+  "required": [
+    "fr_path",
+    "output_dir"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "fr_path": {
+      "type": "string"
+    },
+    "output_dir": {
+      "type": "string"
+    },
+    "trace_id": {
+      "type": "string"
+    }
+  }
+}

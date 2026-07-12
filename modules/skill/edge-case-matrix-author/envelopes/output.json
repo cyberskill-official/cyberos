@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberos.skill.edge-case-matrix-author.output/v1",
+  "title": "edge-case-matrix-author output envelope",
+  "type": "object",
+  "required": [
+    "artefact_path",
+    "total_rows",
+    "categories_covered"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "artefact_path": {
+      "type": "string"
+    },
+    "total_rows": {
+      "type": "integer"
+    },
+    "categories_covered": {
+      "type": "integer"
+    }
+  }
+}

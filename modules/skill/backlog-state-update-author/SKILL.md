@@ -141,3 +141,7 @@ If the operator's override leaves the BACKLOG in a state that the next workflow 
 ---
 
 *End of backlog-state-update-author SKILL.md.*
+
+## Contract files (FR-SKILL-118)
+
+This pair is at full contract parity: `PIPELINE.md` (chain binding + HALT points), `INVARIANTS.md`, `envelopes/` (I/O schemas), `references/FAILURE_MODES.md`, `acceptance/README.md`. SKILL.md remains the normative prose; the files encode it.

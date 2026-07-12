@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberos.skill.mock-contract-test-author.output/v1",
+  "title": "mock-contract-test-author output envelope",
+  "type": "object",
+  "required": [
+    "artefact_path",
+    "request_response_pairs",
+    "swap_target"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "artefact_path": {
+      "type": "string"
+    },
+    "request_response_pairs": {
+      "type": "integer"
+    },
+    "swap_target": {
+      "type": "string"
+    }
+  }
+}

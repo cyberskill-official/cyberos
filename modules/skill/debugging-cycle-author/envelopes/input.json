@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberos.skill.debugging-cycle-author.input/v1",
+  "title": "debugging-cycle-author input envelope",
+  "type": "object",
+  "required": [
+    "fr_path",
+    "coverage_artefact_path",
+    "output_dir"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "fr_path": {
+      "type": "string"
+    },
+    "coverage_artefact_path": {
+      "type": "string"
+    },
+    "output_dir": {
+      "type": "string"
+    }
+  }
+}

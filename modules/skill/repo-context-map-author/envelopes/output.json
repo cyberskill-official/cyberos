@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberos.skill.repo-context-map-author.output/v1",
+  "title": "repo-context-map-author output envelope",
+  "type": "object",
+  "required": [
+    "artefact_path",
+    "blast_radius_files"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "artefact_path": {
+      "type": "string"
+    },
+    "blast_radius_files": {
+      "type": "integer"
+    },
+    "placement_warning": {
+      "type": "string"
+    }
+  }
+}

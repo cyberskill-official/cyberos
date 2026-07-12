@@ -77,3 +77,7 @@ If any of those fails → trip the workflow's debugging-cycle (step 15).
 ---
 
 *End of coverage-gate-author SKILL.md.*
+
+## Contract files (FR-SKILL-118)
+
+This pair is at full contract parity: `PIPELINE.md` (chain binding + HALT points), `INVARIANTS.md`, `envelopes/` (I/O schemas), `references/FAILURE_MODES.md`, `acceptance/README.md`. SKILL.md remains the normative prose; the files encode it.

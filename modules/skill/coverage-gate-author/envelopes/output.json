@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberos.skill.coverage-gate-author.output/v1",
+  "title": "coverage-gate-author output envelope",
+  "type": "object",
+  "required": [
+    "artefact_path",
+    "tests_failed",
+    "files_below_90pct",
+    "ecm_rows_uncovered"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "artefact_path": {
+      "type": "string"
+    },
+    "tests_failed": {
+      "type": "integer"
+    },
+    "files_below_90pct": {
+      "type": "array"
+    },
+    "ecm_rows_uncovered": {
+      "type": "array"
+    }
+  }
+}

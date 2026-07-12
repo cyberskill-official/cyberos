@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberos.skill.backlog-state-update-author.output/v1",
+  "title": "backlog-state-update-author output envelope",
+  "type": "object",
+  "required": [
+    "artefact_path",
+    "outcome"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "artefact_path": {
+      "type": "string"
+    },
+    "outcome": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberos.skill.edge-case-matrix-author.input/v1",
+  "title": "edge-case-matrix-author input envelope",
+  "type": "object",
+  "required": [
+    "fr_path",
+    "repo_context_map_path",
+    "output_dir"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "fr_path": {
+      "type": "string"
+    },
+    "repo_context_map_path": {
+      "type": "string"
+    },
+    "output_dir": {
+      "type": "string"
+    }
+  }
+}

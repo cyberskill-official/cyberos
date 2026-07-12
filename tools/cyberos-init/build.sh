@@ -250,6 +250,7 @@ EOF
 
 # FR-SKILL-116 §1 #5: a payload that under-covers its own workflow cannot be produced.
 bash "$here/check-chain-coverage.sh" "$out"
+bash "$here/check-pair-parity.sh" "$out/cuo/skills" || exit $?   # FR-SKILL-118: pair contract parity over the vendored set
 
 # FR-CUO-209: report sizes on every build; the plugin zip carries a hard 2 MB budget.
 payload_bytes=$(du -sk "$out" | awk '{print $1*1024}')   # KB granularity, portable (GNU + BSD du)

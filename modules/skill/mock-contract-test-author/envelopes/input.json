@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberos.skill.mock-contract-test-author.input/v1",
+  "title": "mock-contract-test-author input envelope",
+  "type": "object",
+  "required": [
+    "fr_path",
+    "edge_case_matrix_path",
+    "output_dir"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "fr_path": {
+      "type": "string"
+    },
+    "edge_case_matrix_path": {
+      "type": "string"
+    },
+    "output_dir": {
+      "type": "string"
+    }
+  }
+}

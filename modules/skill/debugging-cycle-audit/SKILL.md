@@ -51,3 +51,7 @@ records both outcomes.
 ---
 
 *End of debugging-cycle-audit SKILL.md.*
+
+## Contract files (FR-SKILL-118)
+
+This pair is at full contract parity: `RUBRIC.md` (versioned rules + prose->rule map), `AUDIT_LOOP.md` (canonical-loop binding), `REPORT_FORMAT.md`, `envelopes/` (I/O schemas), `acceptance/README.md`. SKILL.md remains the normative prose; the files encode it.

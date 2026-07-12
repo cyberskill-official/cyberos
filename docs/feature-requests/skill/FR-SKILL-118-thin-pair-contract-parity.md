@@ -3,7 +3,7 @@ id: FR-SKILL-118
 title: "Bring the six thin vendored pairs to full contract parity (RUBRIC, PIPELINE, INVARIANTS, envelopes, references, acceptance)"
 module: SKILL
 priority: MUST
-status: ready_to_implement
+status: implementing
 class: improvement
 verify: T
 phase: Wave B - finish the children

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberos.skill.backlog-state-update-author.input/v1",
+  "title": "backlog-state-update-author input envelope",
+  "type": "object",
+  "required": [
+    "mutation_kind",
+    "fr_id",
+    "backlog_path",
+    "payload"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "mutation_kind": {
+      "type": "string"
+    },
+    "fr_id": {
+      "type": "string"
+    },
+    "backlog_path": {
+      "type": "string"
+    },
+    "payload": {
+      "type": "object"
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberos.skill.repo-context-map-audit.output/v1",
+  "title": "repo-context-map-audit output envelope",
+  "type": "object",
+  "required": [
+    "verdict",
+    "score",
+    "findings"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "fail",
+        "needs_human"
+      ]
+    },
+    "score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "report_path": {
+      "type": "string"
+    }
+  }
+}

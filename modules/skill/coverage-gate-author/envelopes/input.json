@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberos.skill.coverage-gate-author.input/v1",
+  "title": "coverage-gate-author input envelope",
+  "type": "object",
+  "required": [
+    "fr_path",
+    "diff_base"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "fr_path": {
+      "type": "string"
+    },
+    "diff_base": {
+      "type": "string"
+    },
+    "gates_env_path": {
+      "type": "string"
+    }
+  }
+}

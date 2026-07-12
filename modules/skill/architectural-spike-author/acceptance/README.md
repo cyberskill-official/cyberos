@@ -1,0 +1,5 @@
+# `architectural-spike-author` - acceptance
+
+1. `TRIGGER_TESTS.md` here - >= 6 cases per FR-SKILL-117 §1 #6.
+2. Structural: `bash tools/cyberos-init/check-pair-parity.sh modules/skill` reports no PARITY line for this skill.
+3. Contract spot-checks: PIPELINE.md HALT semantics (timebox >1.5x); envelopes validate as JSON Schema.
