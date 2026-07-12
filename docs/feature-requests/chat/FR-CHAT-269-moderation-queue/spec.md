@@ -3,7 +3,7 @@ id: FR-CHAT-269
 title: "Workspace moderation queue - an administrator reviews reports, acts, and is audited"
 module: CHAT
 priority: MUST
-status: ready_to_implement
+status: reviewing
 class: product
 verify: T
 phase: P0
