@@ -54,3 +54,11 @@ All six findings addressed as cited. The FR now kills the bug class (hardcoded s
   2 allowlisted` and the commit hook ran both checks green.
 
 *FR-SKILL-116 shipped 2026-07-12.*
+
+## §11 - Post-ship amendment (2026-07-12, surfaced by FR-CUO-209 t07)
+
+Field finding: the chain-coverage check failed REDUCED-profile builds (zero vendored
+skills = every chain reference "missing"), breaking the documented doc-driven floor.
+Amendment: zero-vendored payloads skip with `chain SKIP: reduced profile` (exit 0);
+partial vendoring still fails - the drift case the check exists for. §1 #5 amended;
+t07_reduced_profile_skips added to the suite.

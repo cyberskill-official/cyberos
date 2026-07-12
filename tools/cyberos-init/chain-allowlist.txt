@@ -3,3 +3,7 @@
 # An entry that nothing references and no payload dir matches triggers a rot warning.
 awh-gate   # MISSING exemption: script-backed chain step (awh eval), no skill dir by design
 caf-gate   # MISSING exemption: script-backed chain step (scripts/caf_gate.sh), no skill dir by design
+nfr-certification-author  # UNPAIRED exemption: the NFR stage ships as four single skills by design (FR-CUO-209)
+nfr-evaluator             # UNPAIRED exemption: NFR single skill (no author/audit split)
+nfr-test-runner           # UNPAIRED exemption: NFR single skill
+nfr-regression-handler    # UNPAIRED exemption: NFR single skill

@@ -68,6 +68,12 @@ git submodule add <payload-repo-url> .cyberos-init
 bash .cyberos-init/init.sh
 ```
 
+### 2a. What the payload covers (FR-CUO-209)
+
+The payload vendors the FULL 14-stage SDP skill catalog (52 skills: 24 author/audit
+pairs + the four NFR singles) - SOW through decommissioning. The two commands automate
+stages 5-10; everything else is standalone-invocable. See the lifecycle map in GUIDE.md.
+
 ### 2b. Update awareness (FR-IMP-070)
 
 `init.sh --check <repo>` reports three values - `installed=`, `payload=`, `latest=` (the newest

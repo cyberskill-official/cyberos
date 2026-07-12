@@ -20,6 +20,14 @@ err() { echo "cyberos-init: ERROR: $*" >&2; exit 2; }
 chain_doc="$payload/cuo/ship-feature-requests.md"
 [ -f "$chain_doc" ] || err "workflow doc unreadable: $chain_doc"
 
+# Reduced profile: a payload built without skill bodies vendors ZERO skills and runs
+# doc-driven (the documented floor - FR-CUO-209 §1 #7). Coverage semantics apply to
+# full-profile payloads; a PARTIALLY vendored payload still fails below (that is drift).
+if [ -z "$(ls -A "$payload/cuo/skills" 2>/dev/null)" ]; then
+  echo "chain SKIP: reduced profile (0 vendored skills, doc-driven floor)"
+  exit 0
+fi
+
 # --- allowlist (comment-stripped, first field per line) ---
 declare -A ALLOW=()
 if [ -f "$allowfile" ]; then

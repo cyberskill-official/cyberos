@@ -40,3 +40,15 @@ A lifecycle map with TBD rows would defeat its purpose. Resolved: AC 4 requires 
 All six findings addressed as cited. Dependencies on FR-SKILL-116/117 are declared on all three FRs; FR-SKILL-118 interplay (per-pair parity scope) is stated without creating a hard dep. **Score = 10/10.**
 
 *End of FR-CUO-209 audit.*
+
+## §10 - Post-implementation gates (2026-07-12, ship run)
+
+- §10.4 coverage: PASS - t01-t08 green on rerun; all five cyberos-init suites green (42 cases).
+  Live: profile=full skills=52 payload=8499200 plugin_zip=1029894 (49% of budget); chain OK.
+- awh/caf: N/A (declared); floor = bash -n + suites + live build with both hook checks.
+- HITL gate 1: APPROVED by Stephen Cheng 2026-07-12. HITL gate 2: ACCEPTED same date via explicit
+  operator pre-authorization; gates stayed green.
+- Field finding folded upstream: reduced-profile chain-check exemption recorded on FR-SKILL-116
+  (§1 #5 + audit §11 + t07).
+
+*FR-CUO-209 shipped 2026-07-12. The payload now covers the full 14-stage SDP.*

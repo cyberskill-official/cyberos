@@ -3,13 +3,13 @@ id: FR-CUO-205
 title: "Single backlog write path - /create-feature-requests delegates BACKLOG.md rows to backlog-state-update@2 (insert-row)"
 module: cuo
 priority: MUST
-status: ready_to_implement
+status: done
 class: improvement
 verify: T
 phase: Wave C - strengthen the workflows
 owner: Stephen Cheng (CTO)
 created: 2026-07-12
-shipped: null
+shipped: 2026-07-12
 memory_chain_hash: null
 related_frs: [FR-SKILL-118, FR-CUO-206, FR-CUO-208]
 depends_on: []

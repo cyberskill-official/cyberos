@@ -31,7 +31,64 @@ cp "$repo/modules/skill/contracts/feature-request/STATUS-REFERENCE.md"          
 cp "$here/gates/run-gates.sh"                                                        "$out/cuo/gates/run-gates.sh"
 cp -R "$here/templates/." "$out/cuo/templates/"
 
-skills="repo-context-map-author repo-context-map-audit architecture-decision-record-author architecture-decision-record-audit edge-case-matrix-author edge-case-matrix-audit mock-contract-test-author mock-contract-test-audit implementation-plan-author implementation-plan-audit observability-injection-author observability-injection-audit backlog-state-update-author backlog-state-update-audit code-review-author code-review-audit coverage-gate-author coverage-gate-audit feature-request-author feature-request-audit debugging-cycle-author debugging-cycle-audit"  # FR-SKILL-116: ship steps 25-26
+# The vendored skill set - one name per line with its SDP stage, in lifecycle order
+# (FR-CUO-209: reviewable data, not a drifting string; FR-SKILL-116's chain-coverage
+# check runs at the end of this build and fails on any under-coverage).
+skills="$(sed 's/#.*//' <<'VENDORED_SKILLS' | xargs
+statement-of-work-author                    # SDP 1  SOW
+statement-of-work-audit                     # SDP 1
+product-requirements-document-author        # SDP 2  PRD
+product-requirements-document-audit         # SDP 2
+software-requirements-specification-author  # SDP 3  SRS
+software-requirements-specification-audit   # SDP 3
+nfr-certification-author                    # SDP 4  NFR (allowlisted unpaired)
+nfr-evaluator                               # SDP 4  NFR
+nfr-test-runner                             # SDP 4  NFR
+nfr-regression-handler                      # SDP 4  NFR
+feature-request-author                      # SDP 5  FR
+feature-request-audit                       # SDP 5
+architectural-spike-author                  # SDP 6  spike (ADR input)
+architectural-spike-audit                   # SDP 6
+architecture-decision-record-author         # SDP 6  ADR
+architecture-decision-record-audit          # SDP 6
+threat-model-author                         # SDP 6  threat model
+threat-model-audit                          # SDP 6
+software-design-document-author             # SDP 7  SDD
+software-design-document-audit              # SDP 7
+repo-context-map-author                     # SDP 8  implementation
+repo-context-map-audit                      # SDP 8
+implementation-plan-author                  # SDP 8
+implementation-plan-audit                   # SDP 8
+edge-case-matrix-author                     # SDP 8
+edge-case-matrix-audit                      # SDP 8
+mock-contract-test-author                   # SDP 8
+mock-contract-test-audit                    # SDP 8
+observability-injection-author              # SDP 8
+observability-injection-audit               # SDP 8
+backlog-state-update-author                 # SDP 8
+backlog-state-update-audit                  # SDP 8
+code-review-author                          # SDP 9  review
+code-review-audit                           # SDP 9
+test-strategy-author                        # SDP 10 test
+test-strategy-audit                         # SDP 10
+coverage-gate-author                        # SDP 10
+coverage-gate-audit                         # SDP 10
+debugging-cycle-author                      # SDP 10 (FR-SKILL-116)
+debugging-cycle-audit                       # SDP 10
+deployment-checklist-author                 # SDP 11 deploy
+deployment-checklist-audit                  # SDP 11
+release-notes-author                        # SDP 12 release
+release-notes-audit                         # SDP 12
+runbook-author                              # SDP 13 runbook
+runbook-audit                               # SDP 13
+retrospective-author                        # SDP 14 retro
+retrospective-audit                         # SDP 14
+postmortem-author                           # SDP 14
+postmortem-audit                            # SDP 14
+decommissioning-author                      # SDP 14
+decommissioning-audit                       # SDP 14
+VENDORED_SKILLS
+)"
 vendored_skills=0
 for s in $skills; do
   if [ -d "$repo/modules/skill/$s" ]; then
@@ -194,5 +251,10 @@ EOF
 # FR-SKILL-116 §1 #5: a payload that under-covers its own workflow cannot be produced.
 bash "$here/check-chain-coverage.sh" "$out"
 
-echo "cyberos-init: done. profile=$profile skills=$vendored_skills caf=$caf_vendored"
+# FR-CUO-209: report sizes on every build; the plugin zip carries a hard 2 MB budget.
+payload_bytes=$(du -sk "$out" | awk '{print $1*1024}')   # KB granularity, portable (GNU + BSD du)
+plugin_bytes=$(wc -c < "$out/cyberos.plugin")
+[ "$plugin_bytes" -le 2097152 ] || { echo "cyberos-init: ERROR: cyberos.plugin ${plugin_bytes}B exceeds the 2 MB budget" >&2; exit 2; }
+
+echo "cyberos-init: done. profile=$profile skills=$vendored_skills caf=$caf_vendored payload=${payload_bytes} plugin_zip=${plugin_bytes}"
 echo "cyberos-init: payload at $out - init.sh lays it out under a target repo's .cyberos/ (gitignored)"

@@ -17,7 +17,7 @@ Run the two skills in order. Both are bundled with this plugin (`${CLAUDE_PLUGIN
    - A clean audit drives the `draft -> ready_to_implement` transition per `STATUS-REFERENCE.md`. Write the sibling `.audit.md` per FR plus the batch summary.
    - It HALTS on any `needs_human` verdict. Surface those to the user and stop - do not guess the verdict.
 
-3. Backlog. Add or update a row per FR in `docs/feature-requests/BACKLOG.md` (one backlog for both classes; `class: improvement` rows carry an `(improvement)` suffix). FR frontmatter `status` is the record of truth; the backlog is the index and must match it.
+3. Backlog. Delegate every row to `backlog-state-update-author` + `backlog-state-update-audit` - one `mutation_kind: insert-row` mutation per landed FR (batching per module section allowed). Never edit `BACKLOG.md` inline: the pair is the single audited write path (same one /ship-feature-requests uses), with regenerator-identical row grammar (`(improvement)` suffix on `class: improvement` rows) and a uniqueness gate. FR frontmatter `status` stays the record of truth; the backlog is the index and must match it.
 
 4. Report. List each FR: id, title, class, final status, and the audit verdict. Then state the next move plainly: the FRs now at `ready_to_implement` are ready, and `/ship-feature-requests` will drive the next eligible one through implement -> review -> test, halting at the two human-acceptance gates.
 
