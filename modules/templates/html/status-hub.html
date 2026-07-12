@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{slot:title}} — CyberOS</title>
+<style>
+/*{{slot:styles:html}}*/
+body { margin:0; background:var(--cs-color-surface-page); color:var(--cs-color-text-primary);
+  font-family:var(--cs-font-family-ui); line-height:var(--cs-font-lineHeight-body); }
+.hub-wrap { max-width:1200px; margin:0 auto; padding:var(--cs-space-6); }
+.hub-deck { display:flex; gap:var(--cs-space-4); flex-wrap:wrap; align-items:stretch;
+  background:var(--cs-color-surface-panel); border:1px solid var(--cs-color-border-default);
+  border-radius:var(--cs-radius-md); padding:var(--cs-space-4); margin-bottom:var(--cs-space-6);
+  border-top:3px solid var(--cs-color-brand-ochre); }
+.deck-stat { min-width:110px; }
+.deck-num { font-size:22px; font-weight:600; color:var(--cs-color-brand-umber); }
+.deck-label { font-size:11px; text-transform:uppercase; letter-spacing:.06em;
+  color:var(--cs-color-text-muted); }
+.hub-tabs { display:flex; gap:var(--cs-space-2); border-bottom:2px solid var(--cs-color-border-default);
+  margin-bottom:var(--cs-space-6); }
+.hub-tab { padding:var(--cs-space-2) var(--cs-space-4); text-decoration:none;
+  color:var(--cs-color-text-accent); border:1px solid var(--cs-color-border-default);
+  border-bottom:none; border-radius:var(--cs-radius-md) var(--cs-radius-md) 0 0;
+  background:var(--cs-color-surface-raised); font-size:14px; }
+.hub-tab[aria-selected="true"] { background:var(--cs-color-brand-umber);
+  color:var(--cs-color-text-inverse); border-color:var(--cs-color-brand-umber); }
+.hub-panel { display:block; }
+.hub-panel[hidden] { display:none; }
+.hub-foot { margin-top:var(--cs-space-16); font-size:12px; color:var(--cs-color-text-muted); }
+</style>
+</head>
+<body>
+<div class="hub-wrap" data-template-id="status-hub@1">
+  <section class="hub-deck">{{slot:deck:html}}</section>
+  <nav class="hub-tabs" role="tablist">
+    <a class="hub-tab" role="tab" href="#roadmap" data-tab="roadmap">Roadmap</a>
+    <a class="hub-tab" role="tab" href="#backlog" data-tab="backlog">Backlog</a>
+    <a class="hub-tab" role="tab" href="#changelog" data-tab="changelog">Changelog</a>
+  </nav>
+  <section class="hub-panel" id="roadmap" role="tabpanel">{{slot:tab_roadmap:html}}</section>
+  <section class="hub-panel" id="backlog" role="tabpanel">{{slot:tab_backlog:html}}</section>
+  <section class="hub-panel" id="changelog" role="tabpanel">{{slot:tab_changelog:html}}</section>
+  <footer class="hub-foot">{{slot:footer}}</footer>
+</div>
+<script>
+(function () {
+  var tabs = document.querySelectorAll('.hub-tab');
+  var panels = { roadmap: document.getElementById('roadmap'),
+                 backlog: document.getElementById('backlog'),
+                 changelog: document.getElementById('changelog') };
+  function show(name) {
+    if (!panels[name]) name = 'roadmap';
+    Object.keys(panels).forEach(function (k) { panels[k].hidden = (k !== name); });
+    tabs.forEach(function (t) { t.setAttribute('aria-selected', t.dataset.tab === name ? 'true' : 'false'); });
+  }
+  window.addEventListener('hashchange', function () { show(location.hash.slice(1)); });
+  show(location.hash.slice(1) || 'roadmap');
+})();
+</script>
+<noscript><style>.hub-panel[hidden]{display:block !important}</style></noscript>
+</body>
+</html>

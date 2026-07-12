@@ -1,0 +1,214 @@
+/*
+ * @cyberskill/react — Liquid Glass material layer (DESIGN.md Part 21).
+ *
+ * The implementation of the Part 21 doctrine: five material types layered over
+ * the immutable Umber + Ochre anchors. Scalars (blur / saturate / opacity / depth
+ * / border colour) come from @cyberskill/tokens (`--cs-glass-*`, `--cs-depth-*`,
+ * `--cs-color-border-default`); this file does the composition, the material
+ * classes, the lens edge, the accessibility fallbacks, and the component bindings.
+ *
+ * LOAD ORDER: tokens.css  →  styles.css  →  glass.css  (→ style-packs.css).
+ * Glass is additive: components keep working if this file is not loaded, and a
+ * style pack (higher specificity via [data-cs-style]) always wins over it.
+ *
+ * Anchors, APCA floors, and token names are UNCHANGED — this is a render layer.
+ */
+
+/* ---- 1. Custom-property contract (composition from token scalars) -------- */
+:root {
+  /* Whisper Glass — ambient page-background overlay, hero washes. */
+  --cs-glass-whisper-bg: color-mix(in oklab, var(--cs-color-surface-page, #fffdf8) var(--cs-glass-whisper-opacity, 60%), transparent);
+  --cs-glass-whisper-border: transparent;
+
+  /* Light Glass — sticky navs, sidebars, segmented controls. */
+  --cs-glass-light-bg: color-mix(in oklab, var(--cs-color-surface-panel, #fff) var(--cs-glass-light-opacity, 70%), transparent);
+  --cs-glass-light-border: color-mix(in oklab, var(--cs-color-border-default, #e7d9c6) 50%, transparent);
+
+  /* Standard Glass — sparse cards over imagery, AI overlays, list containers. */
+  --cs-glass-standard-bg: color-mix(in oklab, var(--cs-color-surface-panel, #fff) var(--cs-glass-standard-opacity, 80%), transparent);
+  --cs-glass-standard-border: color-mix(in oklab, var(--cs-color-border-default, #e7d9c6) 60%, transparent);
+
+  /* Heavy Glass — modals, command palette, popovers, dropdowns, toasts. */
+  --cs-glass-heavy-bg: color-mix(in oklab, var(--cs-color-surface-raised, #fbf4e9) var(--cs-glass-heavy-opacity, 90%), transparent);
+  --cs-glass-heavy-border: color-mix(in oklab, var(--cs-color-border-default, #e7d9c6) 80%, transparent);
+}
+
+/* ---- 2. Material classes ------------------------------------------------- */
+/* Whisper Glass */
+.cs-surface-whisper {
+  background: var(--cs-glass-whisper-bg);
+  -webkit-backdrop-filter: blur(var(--cs-glass-whisper-blur, 8px)) saturate(var(--cs-glass-whisper-saturate, 110%));
+  backdrop-filter: blur(var(--cs-glass-whisper-blur, 8px)) saturate(var(--cs-glass-whisper-saturate, 110%));
+}
+
+/* Light Glass */
+.cs-surface-light {
+  background: var(--cs-glass-light-bg);
+  -webkit-backdrop-filter: blur(var(--cs-glass-light-blur, 12px)) saturate(var(--cs-glass-light-saturate, 130%));
+  backdrop-filter: blur(var(--cs-glass-light-blur, 12px)) saturate(var(--cs-glass-light-saturate, 130%));
+  border: 1px solid var(--cs-glass-light-border);
+}
+
+/* Standard Glass — the default sparse-card surface. */
+.cs-surface-standard,
+.cs-glass-card {
+  background: var(--cs-glass-standard-bg);
+  -webkit-backdrop-filter: blur(var(--cs-glass-standard-blur, 16px)) saturate(var(--cs-glass-standard-saturate, 150%));
+  backdrop-filter: blur(var(--cs-glass-standard-blur, 16px)) saturate(var(--cs-glass-standard-saturate, 150%));
+  border: 1px solid var(--cs-glass-standard-border);
+  box-shadow:
+    0 1px 3px rgba(69, 33, 14, 0.04),
+    0 8px 24px rgba(69, 33, 14, 0.06);
+}
+
+/* Heavy Glass */
+.cs-surface-heavy {
+  background: var(--cs-glass-heavy-bg);
+  -webkit-backdrop-filter: blur(var(--cs-glass-heavy-blur, 24px)) saturate(var(--cs-glass-heavy-saturate, 180%));
+  backdrop-filter: blur(var(--cs-glass-heavy-blur, 24px)) saturate(var(--cs-glass-heavy-saturate, 180%));
+  border: 1px solid var(--cs-glass-heavy-border);
+  box-shadow: 0 20px 60px rgba(69, 33, 14, 0.18);
+}
+
+/* Solid / Matte escape hatch — dense content, tables, charts, legal, print. */
+.cs-surface-solid,
+.cs-surface-matte {
+  background: var(--cs-color-surface-panel, #fff);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border: 1px solid var(--cs-color-border-default, #e7d9c6);
+}
+
+/* ---- 3. Lens edge — refraction at the boundary --------------------------- */
+.cs-surface-standard,
+.cs-surface-heavy,
+.cs-glass-card {
+  position: relative;
+}
+.cs-surface-standard::before,
+.cs-surface-heavy::before,
+.cs-glass-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, #fff 30%, transparent) 0%,
+    transparent 30%,
+    transparent 70%,
+    color-mix(in oklab, var(--cs-color-brand-umber, #45210e) 15%, transparent) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff, #fff) content-box,
+    linear-gradient(#fff, #fff);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff, #fff) content-box,
+    linear-gradient(#fff, #fff);
+  mask-composite: exclude;
+}
+
+/* ---- 4. Depth (z-axis) utilities ----------------------------------------- */
+.cs-depth-bg { z-index: var(--cs-depth-bg, 0); }
+.cs-depth-section { z-index: var(--cs-depth-section, 5); }
+.cs-depth-card { z-index: var(--cs-depth-card, 10); }
+.cs-depth-nav { position: sticky; z-index: var(--cs-depth-nav, 50); }
+.cs-depth-modal { z-index: var(--cs-depth-modal, 100); }
+.cs-depth-toast { z-index: var(--cs-depth-toast, 200); }
+
+/* ---- 5. Component material bindings (§21.9) — OPT-IN ---------------------
+ * Part 21 binds transient/overlay surfaces (modals, popovers, toasts) to Heavy
+ * Glass. We expose that as an OPT-IN modifier rather than a forced global,
+ * because a glass background is only safe when the consuming product has run the
+ * §21.8 contrast check against its actual backdrop. Forcing translucency onto a
+ * text-bearing surface globally can drop APCA below the Lc>=75 floor when a theme
+ * or style pack recolours text but keeps a light surface token — the floor is
+ * immutable, so glass stays opt-in here.
+ *
+ * Usage (product side, after the §21.8 contrast check):
+ *   <section class="cs-dialog cs-surface-heavy"> … </section>
+ *   <div class="cs-ai-disclosure__panel cs-surface-heavy"> … </div>
+ * Dense content (tables, fields, the review gate, legal copy) stays solid. */
+
+/* ---- 6. Dark-mode border tuning ------------------------------------------ */
+/* Surface tokens already swap under [data-theme]; glass bg follows them
+ * automatically via color-mix. Only the hairline border needs a darker value. */
+[data-theme="dark"] {
+  --cs-color-border-default: #4a3a2c;
+}
+@media (prefers-color-scheme: dark) {
+  [data-theme="system"] {
+    --cs-color-border-default: #4a3a2c;
+  }
+}
+
+/* ---- 7. Accessibility + capability fallbacks ----------------------------- */
+/* Honor reduced transparency: collapse glass to a solid surface. */
+@media (prefers-reduced-transparency: reduce) {
+  .cs-surface-whisper,
+  .cs-surface-light,
+  .cs-surface-standard,
+  .cs-surface-heavy,
+  .cs-glass-card,
+  .cs-dialog,
+  .cs-ai-disclosure__panel {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--cs-color-surface-panel, #fff);
+    border: 1px solid var(--cs-color-border-default, #e7d9c6);
+  }
+  .cs-surface-standard::before,
+  .cs-surface-heavy::before,
+  .cs-glass-card::before { display: none; }
+}
+
+/* Forced-colors: hand rendering to the OS. */
+@media (forced-colors: active) {
+  .cs-surface-whisper,
+  .cs-surface-light,
+  .cs-surface-standard,
+  .cs-surface-heavy,
+  .cs-surface-solid,
+  .cs-glass-card,
+  .cs-dialog,
+  .cs-ai-disclosure__panel {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: Canvas;
+    border: 1px solid CanvasText;
+    color: CanvasText;
+  }
+  .cs-surface-standard::before,
+  .cs-surface-heavy::before,
+  .cs-glass-card::before { display: none; }
+}
+
+/* Print: opaque white, no blur, no shadow. */
+@media print {
+  [class*="cs-surface-"],
+  .cs-glass-card,
+  .cs-dialog,
+  .cs-ai-disclosure__panel {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+  }
+}
+
+/* Browsers without backdrop-filter get the solid background path. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .cs-surface-whisper,
+  .cs-surface-light,
+  .cs-surface-standard,
+  .cs-surface-heavy,
+  .cs-glass-card,
+  .cs-dialog,
+  .cs-ai-disclosure__panel {
+    background: var(--cs-color-surface-panel, #fff);
+  }
+}

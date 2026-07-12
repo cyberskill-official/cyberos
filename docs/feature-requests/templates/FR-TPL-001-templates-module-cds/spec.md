@@ -3,13 +3,13 @@ id: FR-TPL-001
 title: "templates module - CDS-adapted HTML shells (template@1) every workflow/skill renders deliverables through"
 module: templates
 priority: MUST
-status: ready_to_implement
+status: done
 class: product
 verify: T
 phase: Wave D - visual deliverables
 owner: Stephen Cheng (CTO)
 created: 2026-07-12
-shipped: null
+shipped: 2026-07-12
 memory_chain_hash: null
 related_frs: [FR-DOCS-004, FR-DOCS-005, FR-DOCS-006, FR-SKILL-120]
 depends_on: []

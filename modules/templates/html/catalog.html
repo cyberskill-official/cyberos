@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{slot:title}} — CyberOS</title>
+<style>
+/*{{slot:styles:html}}*/
+body { margin:0; background:var(--cs-color-surface-page); color:var(--cs-color-text-primary);
+  font-family:var(--cs-font-family-ui); line-height:var(--cs-font-lineHeight-body); }
+.cat-wrap { max-width:1200px; margin:0 auto; padding:var(--cs-space-6); }
+.cat-facets { display:flex; gap:var(--cs-space-3); flex-wrap:wrap; margin-bottom:var(--cs-space-6); }
+.cat-facets select { background:var(--cs-color-surface-panel); color:var(--cs-color-text-primary);
+  border:1px solid var(--cs-color-border-default); border-radius:var(--cs-radius-sm);
+  padding:var(--cs-space-1) var(--cs-space-2); font-family:inherit; }
+.cat-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
+  gap:var(--cs-space-4); }
+.cat-card { background:var(--cs-color-surface-panel); border:1px solid var(--cs-color-border-default);
+  border-radius:var(--cs-radius-md); padding:var(--cs-space-4); }
+.cat-card h3 { margin:0 0 var(--cs-space-2); font-size:15px;
+  line-height:var(--cs-font-lineHeight-heading); }
+.cat-card a { color:var(--cs-color-text-accent); text-decoration:none; }
+</style>
+</head>
+<body>
+<div class="cat-wrap" data-template-id="catalog@1">
+  <h1>{{slot:title}}</h1>
+  <div class="cat-facets">{{slot:facets:html}}</div>
+  <div class="cat-grid">{{slot:cards:html}}</div>
+  <footer>{{slot:footer}}</footer>
+</div>
+</body>
+</html>

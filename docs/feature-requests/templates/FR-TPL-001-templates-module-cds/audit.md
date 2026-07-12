@@ -19,3 +19,12 @@ ISS-002 html-slot injection surface - resolved: contract restricts :html slots t
 **Score = 10/10.**
 
 *End of FR-TPL-001 audit.*
+
+## §4 - Ship record (2026-07-12, batch mode)
+
+- Implemented: modules/templates (MODULE.md, vendored tokens.css 81L + glass.css 214L @ commit
+  7231866d, PROVENANCE with re-vendor procedure, template@1 contract, three shells with
+  data-template-id + --cs-* only styling). test_templates_module.sh 4/4 (AC 1-4).
+- HITL: operator standing batch verdict recorded (in-chat PLAN approval, batch/non-stop).
+
+Verdict unchanged: PASS, Score = 10/10.

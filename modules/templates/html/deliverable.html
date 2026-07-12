@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{slot:title}} — CyberOS</title>
+<style>
+/*{{slot:styles:html}}*/
+body { margin:0; background:var(--cs-color-surface-page); color:var(--cs-color-text-primary);
+  font-family:var(--cs-font-family-ui); line-height:var(--cs-font-lineHeight-body); }
+.dlv-wrap { max-width:900px; margin:0 auto; padding:var(--cs-space-8) var(--cs-space-6); }
+.dlv-head { border-bottom:2px solid var(--cs-color-brand-ochre); padding-bottom:var(--cs-space-4);
+  margin-bottom:var(--cs-space-6); }
+.dlv-kind { font-size:12px; text-transform:uppercase; letter-spacing:.08em;
+  color:var(--cs-color-text-muted); }
+.dlv-head h1 { margin:var(--cs-space-1) 0 var(--cs-space-2); line-height:var(--cs-font-lineHeight-heading); }
+.dlv-badges { display:flex; gap:var(--cs-space-2); flex-wrap:wrap; }
+.badge { display:inline-block; padding:2px var(--cs-space-2); border:1px solid var(--cs-color-border-default);
+  border-radius:var(--cs-radius-full); font-size:12px; color:var(--cs-color-text-accent);
+  background:var(--cs-color-surface-raised); }
+.badge-status { background:var(--cs-color-brand-umber); color:var(--cs-color-text-inverse);
+  border-color:var(--cs-color-brand-umber); }
+.dlv-meta { background:var(--cs-color-surface-panel); border:1px solid var(--cs-color-border-default);
+  border-radius:var(--cs-radius-md); padding:var(--cs-space-4); margin-bottom:var(--cs-space-6);
+  font-size:14px; }
+.dlv-meta a { color:var(--cs-color-text-accent); }
+.dlv-body h2 { border-bottom:1px solid var(--cs-color-border-default); padding-bottom:var(--cs-space-1);
+  line-height:var(--cs-font-lineHeight-heading); margin-top:var(--cs-space-8); }
+.dlv-body code { font-family:var(--cs-font-family-mono); background:var(--cs-color-surface-raised);
+  padding:1px 4px; border-radius:var(--cs-radius-sm); font-size:.9em; }
+.dlv-body pre { background:var(--cs-color-surface-raised); border:1px solid var(--cs-color-border-default);
+  border-radius:var(--cs-radius-md); padding:var(--cs-space-4); overflow-x:auto; }
+.dlv-body pre code { background:none; padding:0; }
+.dlv-body img, .dlv-body video { max-width:100%; border-radius:var(--cs-radius-md);
+  border:1px solid var(--cs-color-border-default); }
+.dlv-body table { border-collapse:collapse; width:100%; }
+.dlv-body th, .dlv-body td { border:1px solid var(--cs-color-border-default);
+  padding:var(--cs-space-1) var(--cs-space-2); text-align:left; font-size:14px; }
+.dlv-body th { background:var(--cs-color-surface-raised); }
+.dlv-body blockquote { border-left:3px solid var(--cs-color-brand-ochre); margin-left:0;
+  padding-left:var(--cs-space-4); color:var(--cs-color-text-muted); }
+.dlv-audit { margin-top:var(--cs-space-12); border-top:2px dashed var(--cs-color-border-default);
+  padding-top:var(--cs-space-6); }
+.dlv-foot { margin-top:var(--cs-space-16); padding-top:var(--cs-space-4);
+  border-top:1px solid var(--cs-color-border-default); font-size:12px;
+  color:var(--cs-color-text-muted); }
+</style>
+</head>
+<body>
+<article class="dlv-wrap" data-template-id="deliverable@1">
+  <header class="dlv-head">
+    <div class="dlv-kind">{{slot:kind}}</div>
+    <h1>{{slot:title}}</h1>
+    <div class="dlv-badges"><span class="badge badge-status">{{slot:status}}</span><span class="badge">{{slot:id}}</span>{{slot:badges:html}}</div>
+  </header>
+  <section class="dlv-meta">{{slot:meta:html}}</section>
+  <main class="dlv-body">{{slot:body:html}}</main>
+  <footer class="dlv-foot">{{slot:footer}}</footer>
+</article>
+</body>
+</html>
