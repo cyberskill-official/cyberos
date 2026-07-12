@@ -20,7 +20,7 @@ Totals: 335 draft, 8 ready_to_implement, 12 implementing, 1 in review flow, 141 
 - [reviewing] FR-APP-003-mac-app-store-distribution - macOS App Store distribution — sandboxed build, entitlements, notarization split, ASC submission <!-- awaiting human review verdict (HITL gate 1) -->
 - [reviewing] FR-APP-004-microsoft-store-distribution - Microsoft Store distribution — MSIX packaging over the Tauri Windows bundle, Store-managed signing, Partner Center submission <!-- awaiting human review verdict (HITL gate 1) -->
 - [reviewing] FR-APP-005-linux-store-distribution - Linux store distribution — Snap Store (snapcraft, strict confinement) and Flathub (flatpak-builder, external-manifest submission) <!-- awaiting human review verdict (HITL gate 1) -->
-- [ready_to_review] FR-APP-006-package-manager-distribution - Package manager distribution — Homebrew Cask (macOS) and winget (Windows) manifests, external-repo PR submission
+- [reviewing] FR-APP-006-package-manager-distribution - Package manager distribution — Homebrew Cask (macOS) and winget (Windows) manifests, external-repo PR submission <!-- awaiting human review verdict (HITL gate 1) -->
 
 ## auth  (17 done)
 
