@@ -3,13 +3,13 @@ id: FR-IMP-068
 title: "Payload-version drift gate - CI and git hooks fail when any dist/plugin stamp differs from VERSION"
 module: improvement
 priority: MUST
-status: reviewing
+status: done
 class: improvement
 verify: T
 phase: Wave A - version coupling
 owner: Stephen Cheng (CTO)
 created: 2026-07-12
-shipped: null
+shipped: 2026-07-12
 memory_chain_hash: null
 related_frs: [FR-IMP-069, FR-IMP-070, FR-APP-001, FR-SKILL-116]
 depends_on: []

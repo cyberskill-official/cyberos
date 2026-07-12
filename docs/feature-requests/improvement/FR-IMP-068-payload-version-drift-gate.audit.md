@@ -40,3 +40,23 @@ First cut hung the local guard on the pre-commit framework; the repo's core.hook
 All six findings addressed in the FR body as cited. Clause set is closed, ACs are individually falsifiable, failure modes name their mitigations. **Score = 10/10.**
 
 *End of FR-IMP-068 audit.*
+
+## §10 - Post-implementation gates (2026-07-12, ship run)
+
+- §10.4 coverage gate: PASS - suite t01-t10 green on fresh testing-phase rerun (tests_failed=0,
+  files_below_90pct=[], ecm_rows_uncovered=[]); full report at
+  docs/feature-requests/.workflow/FR-IMP-068/coverage-gate.md.
+- TRACE-004 closure: PASS - every §1 clause's cited test passed (mapping table in the coverage artefact).
+- §10.5 awh gate: N/A - module `improvement` has no sealed goldenset (declared, not fabricated).
+- §10.6 caf gate: N/A - no modules/improvement/audit-profile.yaml; deterministic floor run instead
+  (bash -n clean on all touched scripts + full suite green).
+- HITL gate 1 (reviewing -> ready_to_test): APPROVED by Stephen Cheng, 2026-07-12 (review packet
+  docs/feature-requests/.workflow/FR-IMP-068/code-review.md).
+- HITL gate 2 (testing -> done): ACCEPTED by Stephen Cheng, 2026-07-12 - recorded up front as an
+  explicit operator pre-authorization ("approve review + pre-authorize done if gates stay green"),
+  gates stayed green; equivalent to memory.status_overridden with reason "operator pre-authorized
+  final acceptance at review gate".
+- Live enforcement proof: .githooks/pre-commit fired during the implementation commits, rebuilt
+  dist/cyberos, and reported `sync OK 1.7.1 across 6 artifacts`.
+
+*FR-IMP-068 shipped 2026-07-12.*
