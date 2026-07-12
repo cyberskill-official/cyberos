@@ -2,6 +2,11 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [1.8.2] - 2026-07-12
+
+Fixed
+- resolver tries the releases/latest redirect before the rate-limited API (live 403 field fix)
+
 ## [1.8.1] - 2026-07-12
 
 Fixed
