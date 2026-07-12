@@ -4921,14 +4921,14 @@
       "title": "Status hub v2 - dashboard UI (module cards, progress bars, chips) + zero-touch HTML regeneration on every FR/backlog/version change",
       "module": "docs",
       "priority": "MUST",
-      "status": "implementing",
+      "status": "done",
       "verify": "T",
       "phase": "Wave D - visual deliverables",
       "milestone": "",
       "slice": null,
       "owner": "Stephen Cheng (CTO)",
       "created": "2026-07-12",
-      "shipped": null,
+      "shipped": "2026-07-12",
       "effort_hours": null,
       "depends_on": [
         "FR-DOCS-006"
