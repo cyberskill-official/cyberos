@@ -106,22 +106,28 @@ platform :ios do
     # EXPORT re-signs for distribution via the App Store Connect API key below - identity selection is
     # entirely Xcode's job. (History: Capacitor scaffolded "iPhone Developer", a first fix hard-set
     # "Apple Distribution" in pbxproj, and the two halves fought - see release #43.)
-    # ARCHIVE UNSIGNED, SIGN AT EXPORT (v1.0.0 run #48 root cause). With automatic signing, the
-    # archive step wants an iOS App DEVELOPMENT profile, and Apple refuses to mint one for a team
-    # with ZERO registered devices ("Your team has no devices from which to generate a provisioning
-    # profile"). We have no devices and need none: the App Store DISTRIBUTION profile used at export
-    # has no device requirement. So the archive skips codesigning entirely, and the export step
-    # cloud-signs with Apple Distribution via the App Store Connect API key (export_xcargs below).
-    xcargs = [
+    # ARCHIVE UNSIGNED, SIGN AT EXPORT - as TWO gym invocations (v1.0.0 tag-run lessons).
+    # Run 1 (v0.x/#48): automatic signing at archive wants an iOS App DEVELOPMENT profile, and a team
+    # with ZERO devices cannot mint one ("Your team has no devices..."). We need no devices: the App
+    # Store DISTRIBUTION profile at export has no device requirement -> archive skips codesigning.
+    # Run 2 (#49): a single build_app leaked the archive's CODE_SIGNING_ALLOWED=NO into the
+    # exportArchive command (gym appends xcargs there too), and export ALSO needs an Admin-role
+    # ASC API key to create the cloud-managed Apple Distribution certificate ("Cloud signing
+    # permission error" = the key's role cannot create distribution certs - Admin only).
+    # So: two calls, each with exactly its own flags. The one-time operator prerequisite stays:
+    # the API key in APP_STORE_CONNECT_* must have the ADMIN role (or an Admin must pre-create the
+    # cloud-managed Apple Distribution certificate once).
+    archive_xcargs = [
       "CODE_SIGNING_ALLOWED=NO",
       "DEVELOPMENT_TEAM=#{Shellwords.escape(team_id)}",
     ].join(" ")
-    export_xcargs = [
+    export_only_xcargs = [
       "-allowProvisioningUpdates",
       "-authenticationKeyPath #{Shellwords.escape(key_path)}",
       "-authenticationKeyID #{Shellwords.escape(key_id)}",
       "-authenticationKeyIssuerID #{Shellwords.escape(issuer_id)}",
     ].join(" ")
+    archive_path = File.expand_path("build/App.xcarchive")
 
     # `project:`, NOT `workspace:`. Capacitor 8 uses Swift Package Manager (CapApp-SPM), not CocoaPods, so
     # it never generates an App.xcworkspace - only App.xcodeproj. The first real CI run died on
@@ -130,19 +136,33 @@ platform :ios do
     # `scheme: "App"` resolves to the SHARED scheme committed at
     # App.xcodeproj/xcshareddata/xcschemes/App.xcscheme. Xcode's auto-created schemes live in xcuserdata/,
     # which is per-user and gitignored, so on a CI runner they simply do not exist.
+    # Phase 1: archive, unsigned. skip_package_ipa stops gym before any export/signing concern.
     build_app(
       project: "App.xcodeproj",
       scheme: "App",
       configuration: "Release",
+      archive_path: archive_path,
+      skip_package_ipa: true,
+      skip_profile_detection: true,
+      xcargs: archive_xcargs,
+      output_directory: "build",
+      clean: true,
+    )
+
+    # Phase 2: export the archive, cloud-signing Apple Distribution via the ASC API key. Only the
+    # auth/provisioning flags exist here - nothing from the unsigned archive can leak in.
+    build_app(
+      project: "App.xcodeproj",
+      scheme: "App",
+      skip_build_archive: true,
+      archive_path: archive_path,
       export_method: "app-store",
-      xcargs: xcargs,
-      export_xcargs: export_xcargs,
+      xcargs: export_only_xcargs,
       export_options: {
         signingStyle: "automatic",
         teamID: team_id,
       },
       output_directory: "build",
-      clean: true,
     )
 
     # skip_waiting_for_build_processing: the upload is the deliverable. Apple's processing can take 30+
