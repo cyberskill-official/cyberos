@@ -4,7 +4,7 @@
 # (bump proof), and the FR-IMP-069 release job. Zero side effects on the payload.
 #
 # usage: check-version-sync.sh [payload-dir]     default: <repo>/dist/cyberos
-# exit 0   in sync   (prints "sync OK <version> across 6 artifacts")
+# exit 0   in sync   (prints "sync OK <version> across 7 artifacts")
 # exit 10  drift     (one "DRIFT <path>: <found> != <expected>" line per drifted artifact)
 # exit 2   unreadable: root VERSION missing/invalid, payload/artifact missing, tool missing
 set -uo pipefail
@@ -66,5 +66,16 @@ if [ -f "$payload/cyberos.plugin" ]; then
 fi
 check "$payload/cyberos.plugin!.claude-plugin/plugin.json" "$s"
 
+# 7. the SERVED web bundle (FR-IMP-080): apps/console/web is the tracked vite output the VPS
+# serves via git pull, and its version.json is what the topbar badge shows. CI rebuilds the web
+# app fresh for the mobile shells but never recommits this dir, so after the 1.0.0 pin the live
+# site kept announcing v0.1.0. A stale bundle is now loud drift; the fix is one command.
+w="$(json_field "$repo/apps/console/web/version.json" ".version")"
+if [ -z "$w" ]; then
+  echo "DRIFT $repo/apps/console/web/version.json: <missing/unreadable> != $expected (rebuild: cd apps/web && npm run build)"; drift=1
+elif [ "$w" != "$expected" ]; then
+  echo "DRIFT $repo/apps/console/web/version.json: $w != $expected (stale served bundle - rebuild: cd apps/web && npm run build)"; drift=1
+fi
+
 [ "$drift" -eq 0 ] || exit 10
-echo "sync OK $expected across 6 artifacts"
+echo "sync OK $expected across 7 artifacts"
