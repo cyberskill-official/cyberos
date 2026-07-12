@@ -241,7 +241,7 @@ Totals: 335 draft, 8 ready_to_implement, 12 implementing, 1 in review flow, 141 
 - [draft] FR-IMP-065-track-b-mobile-shells-and-store-release-pipeline - Track B: mobile shells and store release pipeline (improvement)
 - [draft] FR-IMP-066-track-c-brain-activation-rollout-deploy-notice-a - Track C: brain activation rollout (deploy, notice, ack, capture) (improvement)
 - [draft] FR-IMP-067-go-live-readiness-gate-safety-nets-before-fully - Go-live readiness gate (safety nets before fully on) (improvement)
-- [ready_to_review] FR-IMP-073-fix-capacitor-mobile-app-icon - Fix Capacitor mobile app icon — Android + iOS shells ship Capacitor's default placeholder instead of the CyberSkill brand icon (improvement)
+- [reviewing] FR-IMP-073-fix-capacitor-mobile-app-icon - Fix Capacitor mobile app icon — Android + iOS shells ship Capacitor's default placeholder instead of the CyberSkill brand icon (improvement) <!-- awaiting human review verdict (HITL gate 1) -->
 
 ## inv  (10 draft, 1 ready_to_implement)
 
