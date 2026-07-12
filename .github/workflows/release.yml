@@ -5,7 +5,21 @@ name: release
 # binaries: signed desktop installers (always) and the mobile apps (once MOBILE_RELEASE is turned on). It
 # publishes a GitHub Release and attaches the desktop installers.
 #
-#   cut a release:  git tag v1.2.0 && git push origin v1.2.0
+# HOW TO CUT A RELEASE - and why the obvious way does NOT work:
+#
+#   DO:    gh workflow run release.yml --ref main -f tag=vX.Y.Z      (after pushing the tag)
+#   NOT:   git tag vX.Y.Z && git push origin vX.Y.Z                  ... alone. It will not build anything.
+#
+# The tag trigger below is real, but it cannot fire on the commit you actually want to tag. version.yml
+# commits the new VERSION as `chore(release): X.Y.Z [skip ci]`, and that IS the commit carrying the version
+# you are releasing - so it is the one you would naturally tag. GitHub honours [skip ci] and skips EVERY
+# workflow for that commit, tag pushes included: the tag lands, nothing runs, and it looks like the tag was
+# simply ignored. (Tagging an earlier commit "works", but that commit has the OLD VERSION, so the stamper
+# would mislabel every installer - worse than not building.)
+#
+# The [skip ci] itself is load-bearing (FR-IMP-068 §1 #7: it keeps payload-gate.yml off the bump commit,
+# which version.yml compensates for by proving the payload builds at the new version), so it is not simply
+# removable. Push the tag for provenance, then dispatch this workflow against it.
 #
 # Secrets + accounts this consumes are listed in docs/deploy/RELEASE.md (Apple / Windows / Google signing, App Store
 # Connect, the Tauri updater key). Desktop builds run unsigned until the signing secrets are present, so the

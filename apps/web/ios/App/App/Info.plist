@@ -24,6 +24,20 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- Purpose strings. These are NOT optional and NOT cosmetic: iOS terminates the process the instant an
+	     app touches the mic, camera or photo library without the matching key, and App Review rejects the
+	     build for it. CyberOS reaches all three from the WKWebView:
+	       - mic + camera: lib/call.ts does getUserMedia({ audio: true, video }) for 1:1 WebRTC calls, so the
+	         FIRST call any tester places would have crashed the app.
+	       - photo library: the chat composer's file input (Chat.tsx) opens the system picker for attachments.
+	     Written in the second person and naming the feature, because a vague string is itself a rejection
+	     reason ("we need access to your camera" is not an explanation). -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>CyberOS uses your microphone so you can talk during voice and video calls with your team.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>CyberOS uses your camera so your team can see you during video calls.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>CyberOS needs access to your photos so you can attach them to a message.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
