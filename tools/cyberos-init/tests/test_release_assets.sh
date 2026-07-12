@@ -51,7 +51,7 @@ t04_version_triple_check() {                                         # AC 4
 }
 t05_workflow_shape() {                                               # AC 5
   local W="$repo/.github/workflows/release.yml" all=1
-  for pat in '  payload:' 'test "v\$(cat VERSION)" = "\$GITHUB_REF_NAME"' 'release-assets.sh' 'check-version-sync.sh' 'gh release upload' -- ; do
+  for pat in '  payload:' 'test "v\$(cat VERSION)" = "\$TAG"' 'release-assets.sh' 'check-version-sync.sh' 'gh release upload' -- ; do
     [ "$pat" = "--" ] && break
     grep -q "$pat" "$W" || { fail t05 "missing: $pat"; all=0; }
   done
