@@ -1,0 +1,44 @@
+# FR-APP-005: Flathub manifest for CyberOS - PROVISIONAL until the app-id decision lands.
+#
+# ── PROVISIONAL APP-ID ────────────────────────────────────────────────────────────────
+# `os.cyberskill.world.desktop` is the working candidate (mirrors the Tauri identifier),
+# but Flathub's app-id convention is tied to a domain-ownership verification model that
+# MUST be checked against Flathub's current submission docs before this file, its
+# filename, and the (deliberately not-yet-authored) .desktop entry are finalized
+# (spec §1 #5, §9). Renaming at that point touches only files this FR introduces.
+#
+# ── SUBMISSION MODEL (why there is no CI job for this file) ──────────────────────────
+# Flathub does not accept pre-built artifact uploads: its own build infrastructure
+# clones a submitted manifest and builds the Flatpak itself (spec §1 #2, §2). CyberOS's
+# role is to keep this manifest correct and locally validated (AC #4); opening the
+# actual submission PR against the external Flathub repository is a Stephen-gated,
+# per-instance action - structurally guaranteed by AC #6 (no automation for it exists
+# anywhere under .github/ or tools/).
+app-id: os.cyberskill.world.desktop
+runtime: org.freedesktop.Platform
+runtime-version: '23.08'
+sdk: org.freedesktop.Sdk
+command: cyberos
+
+finish-args:
+  - --share=network      # thin shell loading os.cyberskill.world/web - hard functional requirement
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri         # WebKitGTK hardware-accelerated compositing
+  - --share=ipc
+
+modules:
+  - name: cyberos
+    buildsystem: simple
+    build-commands:
+      # Structural skeleton only: Flathub's own infra runs these from source (spec §2).
+      # The real commands + source-pinning strategy (git tag vs release tarball + checksum)
+      # are confirmed against Flathub's live submission docs at proposal time (spec §6),
+      # after the app-id decision resolves.
+      - install -Dm755 cyberos /app/bin/cyberos
+      - install -Dm644 os.cyberskill.world.desktop.desktop /app/share/applications/os.cyberskill.world.desktop.desktop
+      - install -Dm644 icons/128x128.png /app/share/icons/hicolor/128x128/apps/os.cyberskill.world.desktop.png
+    sources:
+      - type: git
+        url: https://github.com/cyberskill-official/cyberos.git
+        tag: v1.0.0  # pinned per release; Flathub rebuilds only when this manifest is updated

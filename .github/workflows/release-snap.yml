@@ -1,0 +1,133 @@
+name: release-snap
+
+# FR-APP-005: Snap Store channel. Builds the snap from the SAME `tauri build --bundles deb`
+# payload the GitHub-Releases pipeline ships (dump plugin - zero drift between channels),
+# then uploads + releases via snapcore actions behind SNAP_RELEASE=true (off by default).
+#
+# Flathub is deliberately NOT here: it has no artifact-upload model - Flathub's own infra
+# builds from the manifest at flathub-manifest/, and opening the submission PR against the
+# external Flathub repository is a Stephen-gated, per-instance human action (spec §1 #2/#7;
+# AC #6 structurally guarantees no such automation exists under .github/ or tools/).
+#
+# Divergences from the FR's §3 skeleton, on purpose (recorded in the review packet):
+#   - unconditional lint/anchor job added (AC #2/#3/#5/#6 need standing checks + a
+#     completed run to assert the gate's skipped-conclusion against)
+#   - staging extracts to apps/desktop/src-tauri/dist (snapcraft resolves `source: dist/`
+#     from the PROJECT root, not from snap/ - the skeleton extracted to snap/dist, which
+#     the recipe would never have read)
+#   - staging normalizes the binary name (Cargo emits cyberos-desktop; the snap command
+#     is usr/bin/cyberos) and fails loudly listing the extracted tree if no binary found
+#   - Node + Rust toolchain + VERSION stamper steps mirror the existing desktop job
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # Unconditional: standing lints + the anchor for AC #5's skipped-vs-ran assertion.
+  lint-and-assert-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Confinement never regresses from strict (AC #2)
+        run: |
+          grep -q "^confinement: strict$" apps/desktop/src-tauri/snap/snapcraft.yaml
+      - name: Plug list is exactly the six-entry approved set (AC #3)
+        run: |
+          want="desktop
+          desktop-legacy
+          wayland
+          x11
+          network
+          opengl"
+          got="$(awk '/^    plugs:/{f=1;next} f&&/^      - /{sub(/^      - /,"");print;next} f{exit}' \
+            apps/desktop/src-tauri/snap/snapcraft.yaml)"
+          if [ "$got" != "$(printf '%s' "$want" | sed 's/^          //')" ]; then
+            echo "::error::snap plugs drifted from the approved six-entry set (FR-APP-005 §1 #4)"
+            printf 'want:\n%s\ngot:\n%s\n' "$want" "$got"
+            exit 1
+          fi
+          echo "plug list matches the approved set exactly"
+      - name: No Flathub PR automation exists in repo tooling (AC #6)
+        run: |
+          # Pattern split so this guard's own source never matches the contiguous string it
+          # scans for (self-excluding-grep idiom) - an exclusion flag would instead blind the
+          # guard to future additions in this very file.
+          matches=$(grep -rl "flathub/""flathub" .github/ tools/ 2>/dev/null | wc -l)
+          [ "$matches" -eq 0 ] || { echo "::error::Flathub PR automation reference found under .github/ or tools/ - forbidden by FR-APP-005 AC #6"; exit 1; }
+          echo "no Flathub submission automation present (structural guarantee holds)"
+      - run: echo "workflow executed; see build-and-upload-snap conclusion for gate state"
+
+  build-and-upload-snap:
+    if: ${{ vars.SNAP_RELEASE == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: "${{ github.event.inputs.tag || github.ref_name }}" }
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Stamp VERSION into the installers
+        run: node scripts/stamp-release-version.mjs --apply
+
+      - name: Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Linux build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Build .deb payload (source for the snap's dump part)
+        working-directory: apps/desktop
+        run: npx --yes @tauri-apps/cli@2 build --bundles deb
+
+      - name: Stage snap dump source from the .deb payload
+        run: |
+          set -euo pipefail
+          dist="apps/desktop/src-tauri/dist"
+          mkdir -p "$dist"
+          deb=$(ls apps/desktop/src-tauri/target/release/bundle/deb/*.deb | head -1)
+          [ -n "$deb" ] || { echo "::error::no .deb produced by tauri build"; exit 1; }
+          dpkg-deb -x "$deb" "$dist"
+          # Normalize the binary name to what the snap's `command:` declares (usr/bin/cyberos).
+          # Tauri/Cargo may emit usr/bin/cyberos, usr/bin/cyberos-desktop, or usr/bin/CyberOS
+          # depending on version - accept any, fail loudly with the tree listing otherwise
+          # (spec §10 row 3, upgraded from smoke-test-only to a hard CI failure).
+          if [ ! -f "$dist/usr/bin/cyberos" ]; then
+            found=""
+            for cand in cyberos-desktop CyberOS; do
+              [ -f "$dist/usr/bin/$cand" ] && { found="$cand"; break; }
+            done
+            if [ -n "$found" ]; then
+              mv "$dist/usr/bin/$found" "$dist/usr/bin/cyberos"
+              echo "normalized usr/bin/$found -> usr/bin/cyberos"
+            else
+              echo "::error::no main binary found under $dist/usr/bin (expected cyberos, cyberos-desktop, or CyberOS)"
+              find "$dist" -maxdepth 3 -type f | head -40
+              exit 1
+            fi
+          fi
+
+      - uses: snapcore/action-build@v1
+        id: snapcraft
+        with:
+          path: apps/desktop/src-tauri
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cyberos-snap
+          path: ${{ steps.snapcraft.outputs.snap }}
+
+      # Releases straight to `stable` per the spec's starting default; §9 records the
+      # candidate/beta staged-rollout alternative as Stephen's open channel-strategy call.
+      - uses: snapcore/action-publish@v1
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+        with:
+          snap: ${{ steps.snapcraft.outputs.snap }}
+          release: stable

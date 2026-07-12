@@ -1,0 +1,57 @@
+# FR-APP-005: Snap Store recipe for CyberOS - strict confinement, gnome extension (core22),
+# dump-plugin over the SAME .deb payload the GitHub-Releases pipeline ships (no second build
+# config for the same binary; zero drift between channels). Packed + uploaded by
+# .github/workflows/release-snap.yml behind SNAP_RELEASE=true.
+#
+# Lint invariants (enforced by the workflow's unconditional lint job):
+#   - `confinement: strict` must never regress (AC #2)
+#   - the plugs list is EXACTLY the six-entry set below (AC #3); any future addition
+#     needs a documented functional justification in the FR's §9 first (code-review norm)
+name: cyberos
+base: core22
+version: '1.0.0'
+summary: CyberOS — Turn Your Will Into Real
+description: |
+  CyberOS is CyberSkill's desktop shell for the CyberOS platform. This snap
+  packages the Tauri-based desktop client, a thin shell over os.cyberskill.world/web.
+grade: stable
+confinement: strict
+# `architectures:` syntax below (per-entry build-on objects) is Snapcraft's documented form as
+# of core22-era schemas; a simpler `architectures: [amd64, arm64]` list form also exists in
+# some schema versions. WORKER phase MUST confirm the exact accepted form against Snapcraft's
+# current schema for core22 before this file is treated as final - flagged rather than
+# asserted with false confidence (spec §3; authoring did not execute `snapcraft pack`).
+architectures:
+  - build-on: amd64
+  - build-on: arm64
+
+apps:
+  cyberos:
+    command: usr/bin/cyberos
+    extensions: [gnome]
+    plugs:
+      - desktop
+      - desktop-legacy
+      - wayland
+      - x11
+      - network
+      - opengl
+
+parts:
+  cyberos:
+    plugin: dump
+    # Populated by release-snap.yml's staging step from the existing `tauri build --bundles deb`
+    # payload (dpkg-deb -x into <project>/dist). Path is relative to the snapcraft project root
+    # (apps/desktop/src-tauri), NOT to this snap/ directory.
+    source: dist/
+    # WORKER-phase caveat (spec §10): the .deb's internal binary path/name must be confirmed
+    # against a real `tauri build --bundles deb` output (Cargo names the raw binary
+    # cyberos-desktop; Tauri's deb layout decides what lands in usr/bin/). The staging step in
+    # release-snap.yml verifies usr/bin/cyberos exists post-normalization and fails loudly
+    # listing the extracted tree otherwise - turning this from a smoke-test-only catch into a
+    # hard CI failure.
+    organize:
+      usr/bin/cyberos: usr/bin/cyberos
+    stage-packages:
+      - libwebkit2gtk-4.1-0
+      - libayatana-appindicator3-1
