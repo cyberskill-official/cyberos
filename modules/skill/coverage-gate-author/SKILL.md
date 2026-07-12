@@ -81,3 +81,9 @@ If any of those fails → trip the workflow's debugging-cycle (step 15).
 ## Contract files (FR-SKILL-118)
 
 This pair is at full contract parity: `PIPELINE.md` (chain binding + HALT points), `INVARIANTS.md`, `envelopes/` (I/O schemas), `references/FAILURE_MODES.md`, `acceptance/README.md`. SKILL.md remains the normative prose; the files encode it.
+
+## Threshold override (FR-CUO-207)
+
+The per-file coverage floor is `CYBEROS_COVERAGE_THRESHOLD` when set (exported by
+`run-gates.sh` from `.cyberos/config.yaml` `coverage_threshold`), defaulting to 90.
+The audit rubric's COVERAGE_THRESHOLD constant names the same hook.

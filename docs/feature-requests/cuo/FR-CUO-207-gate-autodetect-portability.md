@@ -3,7 +3,7 @@ id: FR-CUO-207
 title: "Portability hardening - init.sh gate autodetect for Go/JVM/.NET/PHP/Ruby + per-repo .cyberos/config.yaml overrides"
 module: cuo
 priority: SHOULD
-status: ready_to_implement
+status: reviewing
 class: product
 verify: T
 phase: Wave C - strengthen the workflows

@@ -1,6 +1,6 @@
 # coverage_gate_rubric@1.0
 
-constants: TOTAL_ROWS_MIN=8 (MUST FRs) | BRANCH_COVERAGE_MIN=80 | COVERAGE_THRESHOLD=90 (config-overridable, FR-CUO-207)
+constants: TOTAL_ROWS_MIN=8 (MUST FRs) | BRANCH_COVERAGE_MIN=80 | COVERAGE_THRESHOLD=90 (config-overridable via .cyberos/config.yaml coverage_threshold -> env CYBEROS_COVERAGE_THRESHOLD, FR-CUO-207)
 families: COV-GATE | COV-STRUCT | COV-TRACE
 verdict: pass requires 10/10; any family failure -> fail; ambiguity -> needs_human
 

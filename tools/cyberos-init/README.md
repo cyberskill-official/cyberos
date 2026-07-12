@@ -175,3 +175,27 @@ Every agent is one data row in `init.sh`. For an instruction pointer file: add `
 ## Staying in sync
 
 The pack is a build artifact. When the workflow improves in CyberOS, rebuild (`build.sh`) and re-distribute; consumers re-run `init.sh` (it backs up `gates.env` and never clobbers your BACKLOG).
+
+## Gate autodetection + per-repo config (FR-CUO-207)
+
+`/init` detects gate commands per stack (union across stacks; first claim per gate wins; a command is
+never invented when its marker file is absent - root-only scanning):
+
+| stack | marker | build | lint | test | coverage |
+|---|---|---|---|---|---|
+| rust | Cargo.toml | cargo build | clippy | cargo test | llvm-cov (when installed) |
+| node | package.json | scripts.build | scripts.lint | scripts.test / pm test | scripts.coverage |
+| python | pyproject/setup | - | ruff (when installed) | pytest | coverage (when installed) |
+| go | go.mod | go build ./... | go vet (golangci-lint when installed) | go test ./... | go test -coverprofile |
+| maven | pom.xml | mvn -q -DskipTests package | - | mvn -q verify | - (config only, jacoco is repo-specific) |
+| gradle | build.gradle(.kts) | ./gradlew or gradle build | - | ./gradlew or gradle test | - |
+| dotnet | *.sln / *.csproj | dotnet build | - | dotnet test | - |
+| php | composer.json | - | composer validate --strict | vendor/bin/phpunit (when present) | - |
+| ruby | Gemfile | - | - | rspec (spec/) or rake test (Rakefile) | - |
+| make | Makefile | make build (per target) | make lint | make test | make coverage |
+
+Overrides live in `.cyberos/config.yaml` (scaffolded once, all-commented, detected values shown as
+comments): `gates.build/lint/test/coverage` (each overrides only its own gate), `coverage_threshold`
+(default 90, exported as CYBEROS_COVERAGE_THRESHOLD), `fr_template`, `profile`. `run-gates.sh` prints
+one provenance line per gate: `gate <name>: <cmd> (source: config|autodetect:<stack>|absent)`.
+A malformed config fails loudly with its line number and runs no gate. Unknown keys warn only.

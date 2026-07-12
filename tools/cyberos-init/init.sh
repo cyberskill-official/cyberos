@@ -67,43 +67,78 @@ cp -R "$src/plugin" "$CY/plugin"
 chmod +x "$CY/cuo/gates/run-gates.sh" 2>/dev/null || true
 [ -f "$CY/mcp/cyberos-mcp.mjs" ] && chmod +x "$CY/mcp/cyberos-mcp.mjs" 2>/dev/null || true
 
-# 2. auto-detect gate commands ------------------------------------------------
-BUILD_CMD=""; LINT_CMD=""; TEST_CMD=""; COVERAGE_CMD=""; ECOSYSTEM="unknown"
+# 2. auto-detect gate commands (FR-CUO-207: union across stacks, first claim per gate wins;
+#    documented order: rust, node, python, go, maven, gradle, dotnet, php, ruby, make.
+#    Never invent a command whose tool marker file is absent. Root-only scanning.)
+BUILD_CMD=""; LINT_CMD=""; TEST_CMD=""; COVERAGE_CMD=""; ECOSYSTEM=""
+SRC_BUILD=""; SRC_LINT=""; SRC_TEST=""; SRC_COVERAGE=""
 has() { command -v "$1" >/dev/null 2>&1; }
 json_has_script() { grep -q "\"$1\"[[:space:]]*:" "$root/package.json" 2>/dev/null; }
+claim() { # claim <stack> <gate> <cmd> - first stack to claim a gate wins (union rule)
+  local stack="$1" g="$2" cmd="$3"
+  case "$g" in
+    build)    [ -z "$BUILD_CMD"    ] && { BUILD_CMD="$cmd";    SRC_BUILD="$stack"; } ;;
+    lint)     [ -z "$LINT_CMD"     ] && { LINT_CMD="$cmd";     SRC_LINT="$stack"; } ;;
+    test)     [ -z "$TEST_CMD"     ] && { TEST_CMD="$cmd";     SRC_TEST="$stack"; } ;;
+    coverage) [ -z "$COVERAGE_CMD" ] && { COVERAGE_CMD="$cmd"; SRC_COVERAGE="$stack"; } ;;
+  esac
+  case ",$ECOSYSTEM," in *",$stack,"*) ;; *) ECOSYSTEM="${ECOSYSTEM:+$ECOSYSTEM,}$stack" ;; esac
+}
 
 if [ -f "$root/Cargo.toml" ]; then
-  ECOSYSTEM="rust"
-  BUILD_CMD="cargo build --workspace"
-  LINT_CMD="cargo clippy --workspace --all-targets -- -D warnings"
-  TEST_CMD="cargo test --workspace"
-  has cargo-llvm-cov && COVERAGE_CMD="cargo llvm-cov --workspace --summary-only"
-elif [ -f "$root/package.json" ]; then
-  ECOSYSTEM="node"
+  claim rust build "cargo build --workspace"
+  claim rust lint  "cargo clippy --workspace --all-targets -- -D warnings"
+  claim rust test  "cargo test --workspace"
+  has cargo-llvm-cov && claim rust coverage "cargo llvm-cov --workspace --summary-only"
+fi
+if [ -f "$root/package.json" ]; then
   pm="npm"; { [ -f "$root/pnpm-lock.yaml" ] && pm="pnpm"; } || { [ -f "$root/yarn.lock" ] && pm="yarn"; }
   run="$pm run"; [ "$pm" = "npm" ] && run="npm run"
-  json_has_script build    && BUILD_CMD="$run build"
-  json_has_script lint     && LINT_CMD="$run lint"
-  if json_has_script test; then TEST_CMD="$run test"; else TEST_CMD="$pm test"; fi
-  json_has_script coverage && COVERAGE_CMD="$run coverage"
-elif [ -f "$root/pyproject.toml" ] || [ -f "$root/setup.py" ] || [ -f "$root/setup.cfg" ]; then
-  ECOSYSTEM="python"
-  has ruff && LINT_CMD="ruff check ."
-  has pytest && TEST_CMD="pytest" || TEST_CMD="python -m pytest"
-  has coverage && COVERAGE_CMD="coverage run -m pytest && coverage report"
-elif [ -f "$root/go.mod" ]; then
-  ECOSYSTEM="go"
-  BUILD_CMD="go build ./..."
-  has golangci-lint && LINT_CMD="golangci-lint run" || LINT_CMD="go vet ./..."
-  TEST_CMD="go test ./..."
-  COVERAGE_CMD="go test -cover ./..."
-elif [ -f "$root/Makefile" ]; then
-  ECOSYSTEM="make"
-  grep -q '^build:'    "$root/Makefile" && BUILD_CMD="make build"
-  grep -q '^lint:'     "$root/Makefile" && LINT_CMD="make lint"
-  grep -q '^test:'     "$root/Makefile" && TEST_CMD="make test"
-  grep -q '^coverage:' "$root/Makefile" && COVERAGE_CMD="make coverage"
+  json_has_script build    && claim node build "$run build"
+  json_has_script lint     && claim node lint "$run lint"
+  if json_has_script test; then claim node test "$run test"; else claim node test "$pm test"; fi
+  json_has_script coverage && claim node coverage "$run coverage"
 fi
+if [ -f "$root/pyproject.toml" ] || [ -f "$root/setup.py" ] || [ -f "$root/setup.cfg" ]; then
+  has ruff && claim python lint "ruff check ."
+  if has pytest; then claim python test "pytest"; else claim python test "python -m pytest"; fi
+  has coverage && claim python coverage "coverage run -m pytest && coverage report"
+fi
+if [ -f "$root/go.mod" ]; then
+  claim go build "go build ./..."
+  if has golangci-lint; then claim go lint "golangci-lint run"; else claim go lint "go vet ./..."; fi
+  claim go test "go test ./..."
+  claim go coverage "go test -coverprofile=coverage.out ./..."
+fi
+if [ -f "$root/pom.xml" ]; then
+  claim maven build "mvn -q -DskipTests package"
+  claim maven test  "mvn -q verify"
+  # coverage deliberately undetected for JVM (jacoco wiring is repo-specific) - use .cyberos/config.yaml
+fi
+if [ -f "$root/build.gradle" ] || [ -f "$root/build.gradle.kts" ]; then
+  gw="gradle"; [ -x "$root/gradlew" ] && gw="./gradlew"
+  claim gradle build "$gw build"
+  claim gradle test  "$gw test"
+fi
+if ls "$root"/*.sln >/dev/null 2>&1 || ls "$root"/*.csproj >/dev/null 2>&1; then
+  claim dotnet build "dotnet build"
+  claim dotnet test  "dotnet test"
+fi
+if [ -f "$root/composer.json" ]; then
+  claim php lint "composer validate --strict"
+  [ -f "$root/vendor/bin/phpunit" ] && claim php test "vendor/bin/phpunit"
+fi
+if [ -f "$root/Gemfile" ]; then
+  if [ -d "$root/spec" ]; then claim ruby test "bundle exec rspec"
+  elif [ -f "$root/Rakefile" ]; then claim ruby test "bundle exec rake test"; fi
+fi
+if [ -f "$root/Makefile" ]; then
+  grep -q '^build:'    "$root/Makefile" && claim make build "make build"
+  grep -q '^lint:'     "$root/Makefile" && claim make lint "make lint"
+  grep -q '^test:'     "$root/Makefile" && claim make test "make test"
+  grep -q '^coverage:' "$root/Makefile" && claim make coverage "make coverage"
+fi
+[ -z "$ECOSYSTEM" ] && ECOSYSTEM="unknown"
 
 # 3. write the gate env at .cyberos/gates.env (never clobber; back up) --------
 env_file="$CY/gates.env"
@@ -117,6 +152,11 @@ LINT_CMD="$LINT_CMD"
 TEST_CMD="$TEST_CMD"
 COVERAGE_CMD="$COVERAGE_CMD"
 COVERAGE_MIN="90"
+# Per-gate autodetect provenance (FR-CUO-207; consumed by run-gates.sh provenance lines).
+SRC_BUILD="$SRC_BUILD"
+SRC_LINT="$SRC_LINT"
+SRC_TEST="$SRC_TEST"
+SRC_COVERAGE="$SRC_COVERAGE"
 # Optional full-profile upgrades. Set enabled=true only when the baseline exists.
 CAF_ENABLED="false"
 CAF_CMD="bash .cyberos/cuo/gates/caf/caf_gate.sh ."
@@ -126,6 +166,24 @@ AWH_CMD=""
 # acceptance) are never automated. The agent halts; a human records each verdict.
 HITL_REQUIRED="true"
 EOF
+
+# 3b. scaffold .cyberos/config.yaml exactly once (FR-CUO-207 §1 #3; never clobber) --
+cfg_file="$root/.cyberos/config.yaml"
+if [ ! -f "$cfg_file" ]; then
+  cat > "$cfg_file" <<EOF
+# .cyberos/config.yaml - per-repo CyberOS overrides (FR-CUO-207). Everything below is
+# commented out = inert; uncomment a line to override ONLY that key. Detected defaults
+# are shown as comments so this file documents what runs today.
+# gates:
+#   build: "$BUILD_CMD"$([ -n "$SRC_BUILD" ] && printf '%s' "        # autodetected: $SRC_BUILD")
+#   lint: "$LINT_CMD"$([ -n "$SRC_LINT" ] && printf '%s' "         # autodetected: $SRC_LINT")
+#   test: "$TEST_CMD"$([ -n "$SRC_TEST" ] && printf '%s' "         # autodetected: $SRC_TEST")
+#   coverage: "$COVERAGE_CMD"$([ -n "$SRC_COVERAGE" ] && printf '%s' "     # autodetected: $SRC_COVERAGE")
+# coverage_threshold: 90
+# fr_template: engineering-spec@1
+# profile: full
+EOF
+fi
 
 # 4. scaffold the backlog -----------------------------------------------------
 bl="$root/docs/feature-requests/BACKLOG.md"
