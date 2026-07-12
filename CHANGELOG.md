@@ -2,6 +2,11 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [0.1.1] - 2026-07-12
+
+Fixed
+- authenticate xcodebuild with the ASC key and sign Release as distribution
+
 ## [0.1.0] - 2026-07-12
 
 CyberOS has never completed a store release, so the version now says so. The 1.x line was never shipped
