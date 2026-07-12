@@ -3,13 +3,13 @@ id: FR-SKILL-118
 title: "Bring the six thin vendored pairs to full contract parity (RUBRIC, PIPELINE, INVARIANTS, envelopes, references, acceptance)"
 module: SKILL
 priority: MUST
-status: reviewing
+status: done
 class: improvement
 verify: T
 phase: Wave B - finish the children
 owner: Stephen Cheng (CTO)
 created: 2026-07-12
-shipped: null
+shipped: 2026-07-12
 memory_chain_hash: null
 related_frs: [FR-SKILL-116, FR-SKILL-117, FR-CUO-207, FR-CUO-209]
 depends_on: []
