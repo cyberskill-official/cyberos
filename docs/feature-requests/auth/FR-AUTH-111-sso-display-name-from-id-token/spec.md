@@ -3,7 +3,7 @@ id: FR-AUTH-111
 title: "SSO JIT provisioning must take the person's name from the ID token, not their email address"
 module: AUTH
 priority: SHOULD
-status: reviewing
+status: done
 class: product
 verify: T
 phase: P0
@@ -11,7 +11,7 @@ milestone: P0 - store compliance (UGC controls)
 slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-07-11
-shipped: null
+shipped: 2026-07-12
 memory_chain_hash: null
 related_frs: [FR-AUTH-110, FR-CHAT-269]
 depends_on: []

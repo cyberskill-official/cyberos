@@ -79,3 +79,11 @@ avatars": the code change is trivial and the paperwork is not.
 ---
 
 *End of FR-AUTH-111 audit.*
+
+## Ship record (2026-07-12 - status-drift reconciliation)
+
+- Implemented at bc7af7b (parallel session); 9/9 clause verification PASS
+  (packet: docs/feature-requests/.workflow/FR-AUTH-111/review-packet.md).
+- Test evidence: 6 unit tests incl. anti-prettify canary + picture-cannot-land proof; operator
+  confirmed tests green (CI/cargo) - sandbox has no Rust toolchain, gap named.
+- HITL: operator verdict 2026-07-12 in-chat "Tests green - approve + done" (both gates).

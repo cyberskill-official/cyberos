@@ -1580,7 +1580,7 @@
       "title": "SSO JIT provisioning must take the person's name from the ID token, not their email address",
       "module": "AUTH",
       "priority": "SHOULD",
-      "status": "ready_to_implement",
+      "status": "reviewing",
       "verify": "T",
       "phase": "P0",
       "milestone": "P0 - store compliance (UGC controls)",
