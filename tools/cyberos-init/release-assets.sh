@@ -22,8 +22,11 @@ tar --version 2>/dev/null | grep -q "GNU tar" || err2 "GNU tar required for dete
 ver="$(tr -d ' \n\r' < "$payload/VERSION")"
 root_ver="$(tr -d ' \n\r' < "$repo/VERSION" 2>/dev/null || echo MISSING)"
 [ "$ver" = "$root_ver" ] || err10 "payload VERSION ($ver) != root VERSION ($root_ver)"
-if [ -n "${GITHUB_REF_NAME:-}" ]; then
-  [ "v$ver" = "$GITHUB_REF_NAME" ] || err10 "tag $GITHUB_REF_NAME != v$ver"
+# Tag agreement: TAG (set by the release workflow for both tag-push AND workflow_dispatch,
+# where GITHUB_REF_NAME is the branch, not the tag) takes precedence over GITHUB_REF_NAME.
+ref="${TAG:-${GITHUB_REF_NAME:-}}"
+if [ -n "$ref" ]; then
+  [ "v$ver" = "$ref" ] || err10 "tag $ref != v$ver"
 fi
 
 mkdir -p "$out"

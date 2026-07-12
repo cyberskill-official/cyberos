@@ -51,3 +51,12 @@ All six findings addressed as cited; dependency direction (068 -> 069 -> 070) is
 - First live proof arrives with the next v* tag (payload job publishes the assets).
 
 *FR-IMP-069 shipped 2026-07-12.*
+
+## §11 - Post-ship amendment (2026-07-12, release #35)
+
+Field finding: on workflow_dispatch (the ONLY practical trigger, since bump commits carry
+[skip ci] and kill tag-push events), release-assets.sh read GITHUB_REF_NAME (= the branch)
+and refused with "tag main != v1.8.0". Fix: the script now honors TAG (set by the job from
+inputs.tag || ref_name) with GITHUB_REF_NAME as fallback; t04 gained dispatch-precedence and
+wrong-TAG sub-cases. §1 #2 amended accordingly. Root cause ([skip ci] on bump commits) is
+queued as a durable-fix FR for the next batch.

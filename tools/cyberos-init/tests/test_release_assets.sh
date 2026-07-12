@@ -41,7 +41,13 @@ t03_sha256sums_roundtrip() {                                         # AC 3
 }
 t04_version_triple_check() {                                         # AC 4
   GITHUB_REF_NAME="v0.0.9" bash "$RA" "$TMP/payload" "$TMP/assets4" >/dev/null 2>&1; rc=$?
-  [ "$rc" -eq 10 ] && [ ! -d "$TMP/assets4" ] && ok t04 || fail t04 "rc=$rc dirExists=$([ -d "$TMP/assets4" ] && echo y)"
+  [ "$rc" -eq 10 ] && [ ! -d "$TMP/assets4" ] || { fail t04 "rc=$rc dirExists=$([ -d "$TMP/assets4" ] && echo y)"; return; }
+  # dispatch case: GITHUB_REF_NAME is the branch; TAG (from inputs) takes precedence and passes
+  TAG="v$ver" GITHUB_REF_NAME="main" bash "$RA" "$TMP/payload" "$TMP/assets4b" >/dev/null 2>&1; rc=$?
+  [ "$rc" -eq 0 ] || { fail "t04b" "TAG precedence failed (rc=$rc) - dispatch regression"; return; }
+  # and a WRONG TAG still refuses even when GITHUB_REF_NAME looks right
+  TAG="v0.0.9" GITHUB_REF_NAME="v$ver" bash "$RA" "$TMP/payload" "$TMP/assets4c" >/dev/null 2>&1; rc=$?
+  [ "$rc" -eq 10 ] && ok t04 || fail "t04c" "wrong TAG not refused (rc=$rc)"
 }
 t05_workflow_shape() {                                               # AC 5
   local W="$repo/.github/workflows/release.yml" all=1
