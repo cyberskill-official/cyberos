@@ -27,5 +27,5 @@ audit_hooks:
 CSO-Security's per-program physical-security charter per ASIS standards + CPP (Certified Protection Professional) practices.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7
+- `../../../../modules/cuo/docs/module.md` §5.7
 - `../../../skill/program-charter-{author,audit}/SKILL.md`

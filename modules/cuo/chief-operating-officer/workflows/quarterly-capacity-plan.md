@@ -69,6 +69,6 @@ cyberos-cuo run cuo/chief-operating-officer/quarterly-capacity-plan \
 | 2 | QA-OVERBOOK-001 | Plan implies >90% util | Escalate to CHRO |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.1 — COO role profile
+- `../../../../modules/cuo/docs/module.md` §5.1 — COO role profile
 - `../../chief-human-resources-officer/workflows/quarterly-workforce-plan.md` — peer feeding hire-trigger data
 - `../../../skill/capacity-plan-{author,audit}/SKILL.md`

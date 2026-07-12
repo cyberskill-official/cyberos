@@ -37,6 +37,6 @@ audit_hooks:
 Chief ESG Officer's annual report per CSRD/ESRS + ISSB IFRS S1/S2 + GRI + SASB + TCFD frameworks. Critical for EU-market companies (CSRD mandatory) + companies seeking ESG investor capital.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7
+- `../../../../modules/cuo/docs/module.md` §5.7
 - `../../chief-sustainability-officer/workflows/annual-emissions-inventory.md` — upstream emissions feeder
 - `../../../skill/sustainability-report-{author,audit}/SKILL.md`

@@ -71,6 +71,6 @@ cyberos-cuo run cuo/chief-customer-officer/quarterly-cab-cycle \
 | 2 | QA-DIVERSITY-001 | Single-segment bias | Operator extends attendees |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.4 — CCO-Customer role profile
+- `../../../../modules/cuo/docs/module.md` §5.4 — CCO-Customer role profile
 - `../../chief-product-officer/workflows/quarterly-roadmap-planning.md` — peer (CAB feedback feeds roadmap)
 - `../../../skill/customer-advisory-board-{author,audit}/SKILL.md`

@@ -32,6 +32,6 @@ audit_hooks:
 CPO-Procurement's per-category sourcing event per CIPS + ISM strategic-sourcing methodology. Triggered per major category re-bid or strategic-supplier rotation.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7
+- `../../../../modules/cuo/docs/module.md` §5.7
 - `./annual-procurement-strategy.md` — upstream parent
 - `../../../skill/program-charter-{author,audit}/SKILL.md`

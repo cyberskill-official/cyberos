@@ -72,6 +72,6 @@ cyberos-cuo run cuo/chief-knowledge-officer/quarterly-knowledge-pipeline \
 | 2 | QA-REUSE-001 | Reuse-metric missing | Operator instruments |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7 — Chief Knowledge Officer role profile
+- `../../../../modules/cuo/docs/module.md` §5.7 — Chief Knowledge Officer role profile
 - `./annual-knowledge-taxonomy.md` — peer (taxonomy refresh)
 - `../../../skill/knowledge-pipeline-{author,audit}/SKILL.md`

@@ -27,6 +27,6 @@ audit_hooks:
 Chief Remote Officer's annual remote-lens review of the operating model per GitLab handbook + Atlassian Distributed-Work Playbook.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7
+- `../../../../modules/cuo/docs/module.md` §5.7
 - `../../chief-operating-officer/workflows/annual-operating-model.md` — upstream peer
 - `../../../skill/operating-model-{author,audit}/SKILL.md`

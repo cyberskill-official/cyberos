@@ -31,6 +31,6 @@ audit_hooks:
 Chief Remote Officer's quarterly effectiveness review per GitLab handbook + Doist Async-First framework + Atlassian Team Health Monitor.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7
+- `../../../../modules/cuo/docs/module.md` §5.7
 - `./annual-remote-policy.md` — upstream parent
 - `../../../skill/remote-policy-{author,audit}/SKILL.md`

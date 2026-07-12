@@ -70,6 +70,6 @@ cyberos-cuo run cuo/chief-brand-officer/annual-brand-strategy \
 | 2 | QA-EQUITY-001 | Equity metric not measurable | Operator quantifies |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.4 — Chief Brand Officer role profile
+- `../../../../modules/cuo/docs/module.md` §5.4 — Chief Brand Officer role profile
 - `../../chief-marketing-officer/workflows/quarterly-brand-strategy.md` — campaign-side peer
 - `../../../skill/brand-strategy-{author,audit}/SKILL.md`

@@ -35,7 +35,7 @@ cp -r _template/persona <persona-slug>
 
 ### 3. Fill in the 9 blocks
 
-Open `cuo/<persona-slug>/README.md`. The scaffold has every block as a header with placeholder bullets. For each block, cross-reference the role's profile in `../../../modules/cuo/README.md` §5.
+Open `cuo/<persona-slug>/README.md`. The scaffold has every block as a header with placeholder bullets. For each block, cross-reference the role's profile in `../../../modules/cuo/docs/module.md` §4 (persona catalog).
 
 The nine blocks (per §4):
 
@@ -106,5 +106,5 @@ For the parent persona's row, bump the workflows count.
 - `../docs/AGENTS.md` — protocol normativity.
 - `../docs/SPEC.md` — contract summary.
 - `../docs/ROUTING.md` — how the runtime orchestrator selects persona → workflow → skill chain.
-- `../../../modules/cuo/README.md` — the source atlas. §4 is the 9-block schema; §5 is the role profiles.
+- `../../../modules/cuo/docs/module.md` — the source atlas (§4 persona catalog / role profiles; the 9-block schema lives in `appendices.md`).
 - `../../skill/MODULE.md` — the source of skill names referenced in `skill_chain:`.

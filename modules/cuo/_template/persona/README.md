@@ -1,6 +1,6 @@
 # `<persona-slug>` — Chief <Disambiguated Title>
 
-> Per `../../../../modules/cuo/README.md` §5.X (the role profile) + §4 (the 9-block schema). Disambiguation rule per §2.
+> Per `../../../../modules/cuo/docs/module.md` §4 (the persona catalog / role profile); 9-block schema per `appendices.md`. Disambiguation rule per module.md §2.
 
 ## §1  Identity & scope
 
@@ -124,9 +124,9 @@ This persona ships the following workflows under `./workflows/`. Each workflow c
 
 ## Cross-references
 
-- `../../../../modules/cuo/README.md` §5.X — the source role profile.
-- `../../../../modules/cuo/README.md` §3 — the stage matrix that determined "stage prevalence" above.
-- `../../../../modules/cuo/README.md` §6 — the audit framework referenced in §8.
+- `../../../../modules/cuo/docs/module.md` §4 — the source role profile (persona catalog).
+- `../../../../modules/cuo/docs/module.md` §3 — the stage matrix that determined "stage prevalence" above.
+- `../../../../modules/cuo/docs/module.md` §6 — the audit framework referenced in §8.
 - `../MODULE.md` — the canonical persona catalog.
 - `../docs/AGENTS.md` — protocol normativity.
 - `../docs/ROUTING.md` — how the CUO routes to this persona.

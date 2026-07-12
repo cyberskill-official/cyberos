@@ -6,7 +6,7 @@ migrated: FR-DOCS-002
 
 # CyberOS CUO module - canonical persona catalog
 
-Version 2.0.0. Status: normative for the CUO module. Companion files: `README.md` (operational quickstart), `docs/AGENTS.md` (protocol normativity), `docs/SPEC.md` (contract summary), `docs/ROUTING.md` (persona -> workflow -> skill-chain selection), `docs/CHANGELOG.md` (shipping record).
+Version 2.0.0. Status: normative for the CUO module. Companion files: `appendices.md` (absorbed reference incl. §13 SDP), `../MODULE.md` (module contract), `../CHANGELOG.md` (shipping record).
 
 The key words MUST, MUST NOT, REQUIRED, SHALL, SHALL NOT, SHOULD, SHOULD NOT, RECOMMENDED, NOT RECOMMENDED, MAY, and OPTIONAL in this document are to be interpreted as described in BCP 14 (RFC 2119, RFC 8174) when, and only when, they appear in all capitals.
 
@@ -32,7 +32,7 @@ The CUO (Chief Universal Officer) is the universal persona. All other personas a
 
 §0.8 **No persona invents new skills inline.** When a workflow needs a skill that doesn't exist in the SKILL module, the workflow file SHALL reference it as `planned:<skill-name>` and the gap SHALL appear in `cuo/docs/NEEDED_SKILLS.md`. New skills are built in the SKILL module (per `skill/_template/HOW_TO_USE.md`), not in the CUO module.
 
-§0.9 **CUO is the universal persona, not a folder.** The CUO sits above all personas as the routing layer. It has no `cuo/cuo/` folder. Its protocol normativity lives in `docs/AGENTS.md`.
+§0.9 **CUO is the universal persona, not a folder.** The CUO sits above all personas as the routing layer. It has no `cuo/cuo/` folder. Its protocol normativity lives in `../../../AGENTS.md`.
 
 ## §1 CUO routing model
 
@@ -210,10 +210,10 @@ audit_hooks:
 
 ## §9 Cross-references
 
-- `../../modules/cuo/README.md` (project root) - the source document this catalog implements. §2 acronym matrix, §3 stage matrix, §4 persona template, §5 role profiles, §6 audit framework, §7 CyberSkill-specific, §8 commercial heuristics.
+- `../../modules/cuo/docs/module.md` (project root) - the source document this catalog implements. §2 acronym matrix, §3 stage matrix, §4 persona template, §5 role profiles, §6 audit framework, §7 CyberSkill-specific, §8 commercial heuristics.
 - `skill/` - the source of truth for the skills that workflows chain (the SKILL module catalog).
-- `memory/` - the memory. Every CUO routing decision + workflow invocation lands in the audit chain per `memory/docs/AGENTS.md` §6.
-- `cuo/docs/AGENTS.md` - protocol normativity (replaces the legacy CUO AGENTS.md after the v2.0.0 rebuild).
+- `memory/` - the memory. Every CUO routing decision + workflow invocation lands in the audit chain per `memory/../../../AGENTS.md` §6.
+- `cuo/../../../AGENTS.md` - protocol normativity (replaces the legacy CUO AGENTS.md after the v2.0.0 rebuild).
 - `cuo/docs/SPEC.md` - contract summary.
 - `cuo/docs/ROUTING.md` - persona -> workflow -> skill-chain selection algorithm.
 - `cuo/docs/NEEDED_SKILLS.md` - punch list of skills that workflows reference but the SKILL module doesn't yet ship.
@@ -240,4 +240,4 @@ The wipe was destructive. Recovery is via git history. No memory entries were to
 
 ## Changelog
 
-History lives in the [changelog](./changelog.html); this page describes only the current state.
+History lives in the [changelog](../CHANGELOG.md); this page describes only the current state.

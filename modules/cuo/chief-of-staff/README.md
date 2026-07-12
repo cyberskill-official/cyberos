@@ -1,6 +1,6 @@
 # `chief-of-staff` — Chief of Staff
 
-> Per `../../../modules/cuo/README.md` §5.7 + §4 (9-block schema).
+> Per `../../../modules/cuo/docs/module.md` §5.7 + §4 (9-block schema).
 
 ## §1  Identity & scope
 - **Full disambiguated title:** Chief of Staff.
@@ -50,5 +50,5 @@ All workflows chain through shipped skills — Tier-1 (`okr-set`, `decision-log`
 ---
 
 ## Cross-references
-- `../../../modules/cuo/README.md` §5.7.
+- `../../../modules/cuo/docs/module.md` §5.7.
 - `../MODULE.md` §4.

@@ -33,6 +33,6 @@ audit_hooks:
 CRO-Restructuring's distress-mode weekly TWCF — high-frequency variant of CFO's `monthly-cash-management`. Standard TWCF runs monthly; distress TWCF runs weekly with same-day actuals reconciliation.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7
+- `../../../../modules/cuo/docs/module.md` §5.7
 - `../../chief-financial-officer/workflows/monthly-cash-management.md` — normal-ops peer
 - `../../../skill/13-week-cash-flow-{author,audit}/SKILL.md`

@@ -28,5 +28,5 @@ audit_hooks:
 Chief-Architect's quarterly cross-SDD review per IEEE 1016 + ISO/IEC 42010 + Software Engineering Institute Architecture Tradeoff Analysis Method (ATAM).
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.3
+- `../../../../modules/cuo/docs/module.md` §5.3
 - `../../../skill/sdd-{author,audit}/SKILL.md`

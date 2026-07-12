@@ -72,6 +72,6 @@ cyberos-cuo run cuo/chief-information-security-officer/annual-security-strategy 
 | 2 | QA-OKR-001 | OKRs not measurable | Operator quantifies |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.3 — CISO role profile
+- `../../../../modules/cuo/docs/module.md` §5.3 — CISO role profile
 - `../../chief-technology-officer/workflows/threat-model-refresh.md` — quarterly peer workflow
 - `../../../skill/security-strategy-{author,audit}/SKILL.md`

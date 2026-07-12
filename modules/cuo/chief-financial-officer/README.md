@@ -1,6 +1,6 @@
 # `cfo` — Chief Financial Officer
 
-> Per `../../../modules/cuo/README.md` §5.2 + §4 (9-block schema).
+> Per `../../../modules/cuo/docs/module.md` §5.2 + §4 (9-block schema).
 
 ## §1  Identity & scope
 - **Full disambiguated title:** Chief Financial Officer.
@@ -59,6 +59,6 @@ All workflows chain through shipped skills — Tier-1 (`monthly-close`, `forecas
 ---
 
 ## Cross-references
-- `../../../modules/cuo/README.md` §5.2 — source role profile.
+- `../../../modules/cuo/docs/module.md` §5.2 — source role profile.
 - `../MODULE.md` §4 — canonical persona catalog.
 - `../docs/AGENTS.md` — protocol normativity.

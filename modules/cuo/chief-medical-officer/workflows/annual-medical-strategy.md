@@ -28,5 +28,5 @@ audit_hooks:
 Chief Medical Officer's annual strategy per Rumelt + pharma medical-affairs framework (Cello Health, ISMPP, MAPS guidance).
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7
+- `../../../../modules/cuo/docs/module.md` §5.7
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

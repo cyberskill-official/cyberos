@@ -71,6 +71,6 @@ cyberos-cuo run cuo/chief-product-officer/quarterly-product-metrics-review \
 | 2 | QA-NORTHSTAR-001 | North-star drop unexplained | Escalate to CEO |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.3 — CPO-Product role profile
+- `../../../../modules/cuo/docs/module.md` §5.3 — CPO-Product role profile
 - `./quarterly-roadmap-planning.md` — downstream consumer
 - `../../../skill/product-metrics-review-{author,audit}/SKILL.md`

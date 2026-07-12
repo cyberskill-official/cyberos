@@ -75,6 +75,6 @@ cyberos-cuo run cuo/chief-marketing-officer/per-campaign-plan \
 | 2 | QA-MEASURE-001 | No measurable target | Operator quantifies |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.4 — CMO role profile
+- `../../../../modules/cuo/docs/module.md` §5.4 — CMO role profile
 - `./quarterly-brand-strategy.md` — upstream feeder
 - `../../../skill/campaign-plan-{author,audit}/SKILL.md`

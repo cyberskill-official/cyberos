@@ -1,6 +1,6 @@
 # `closure_rubric@1.0` — machine-checkable Project Closure rubric
 
-> Sourced from `../../../modules/cuo/README.md` §2(l) Project closure and §6 (consultancy considerations: offboarding pack). Rubric version `1.0` is locked.
+> Sourced from `../../../modules/cuo/docs/module.md` §2(l) Project closure and §6 (consultancy considerations: offboarding pack). Rubric version `1.0` is locked.
 
 ---
 
@@ -102,5 +102,5 @@
 ## Cross-references
 
 - `cyberos/skill/docs/AUDIT_LOOP.md`, `cyberos/skill/docs/RUBRIC_FORMAT.md`
-- `../../../modules/cuo/README.md` §2(l) — Closure source
-- `../../../modules/cuo/README.md` §6 — Offboarding pack source
+- `../../../modules/cuo/docs/module.md` §2(l) — Closure source
+- `../../../modules/cuo/docs/module.md` §6 — Offboarding pack source

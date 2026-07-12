@@ -1,6 +1,6 @@
 # `cdo-data` — Chief Data Officer (Data)
 
-> Per `../../../modules/cuo/README.md` §5.3 + §4 (9-block schema).
+> Per `../../../modules/cuo/docs/module.md` §5.3 + §4 (9-block schema).
 
 ## §1  Identity & scope
 - **Full disambiguated title:** Chief Data Officer (Data).
@@ -49,5 +49,5 @@ All workflows chain through shipped skills — Tier-2 (`data-strategy`, `data-pr
 ---
 
 ## Cross-references
-- `../../../modules/cuo/README.md` §5.3 — source role profile.
+- `../../../modules/cuo/docs/module.md` §5.3 — source role profile.
 - `../MODULE.md` §4.

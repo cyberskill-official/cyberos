@@ -1,6 +1,6 @@
 # `audit_rubric@2.0` — machine-checkable Feature Request rubric
 
-> Sourced from `cyberos/skill/contracts/feature-request/CONTRACT.md` (the FR contract body) and `../../../modules/cuo/README.md` §2(b) Requirements. Rubric version `2.0` is locked; bumping requires a coordinated update of the contract body and this skill's CONTRACT_ECHO. Each rule has a stable `rule_id`. Rule IDs MUST appear verbatim in audit reports so reports are diffable across iterations and operators.
+> Sourced from `cyberos/skill/contracts/feature-request/CONTRACT.md` (the FR contract body) and `../../../modules/cuo/docs/module.md` §2(b) Requirements. Rubric version `2.0` is locked; bumping requires a coordinated update of the contract body and this skill's CONTRACT_ECHO. Each rule has a stable `rule_id`. Rule IDs MUST appear verbatim in audit reports so reports are diffable across iterations and operators.
 
 This rubric is a port of the proven rule set from the legacy `cuo/cpo/feature-request-audit` skill (audit_rubric@2.0, locked since 2026-02). It is preserved here verbatim because it has been battle-tested against 50+ FRs in the cyberos `docs/feature-requests/` catalog. Bumping to 3.0 requires governance sign-off.
 
@@ -22,7 +22,7 @@ This rubric is a port of the proven rule set from the legacy `cuo/cpo/feature-re
 | `FM-101` | `title` | required, string, length 1–72 chars after trimming | error | skeleton |
 | `FM-102` | `author` | required, matches `^@[A-Za-z0-9_.-]{1,38}$` | error | false |
 | `FM-103` | `department` | required, one of: engineering, design, product, sales, operations, hr, client_success | error | false |
-| `FM-104` | `status` | required, one of: `draft`, `ready_to_implement`, `implementing`, `ready_to_review`, `reviewing`, `ready_to_test`, `testing`, `done`, `on_hold`, `closed` (per `docs/feature-requests/STATUS-REFERENCE.md` §1). Freeform tags like `[BLOCKED: ...]` / `[FAILED: ...]` are NO LONGER valid status values — failures route back to `ready_to_implement` (STATUS-REFERENCE §1.3). | error | false |
+| `FM-104` | `status` | required, one of: `draft`, `ready_to_implement`, `implementing`, `ready_to_review`, `reviewing`, `ready_to_test`, `testing`, `done`, `on_hold`, `closed` (per `modules/skill/contracts/feature-request/STATUS-REFERENCE.md` §1). Freeform tags like `[BLOCKED: ...]` / `[FAILED: ...]` are NO LONGER valid status values — failures route back to `ready_to_implement` (STATUS-REFERENCE §1.3). | error | false |
 | `FM-105` | `priority` | required, one of: p0, p1, p2, p3 | error | false |
 | `FM-106` | `created_at` | required, ISO 8601 with timezone | error | true |
 | `FM-107` | `ai_authorship` | required, one of: none, assisted, co_authored, generated_then_reviewed | error | false |

@@ -72,7 +72,7 @@ cyberos-cuo run cuo/chief-privacy-officer/annual-privacy-program \
 | 2 | QA-METRICS-001 | DSR/breach metrics no trend | Operator adds time series |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.6 — CPO-Privacy role profile
+- `../../../../modules/cuo/docs/module.md` §5.6 — CPO-Privacy role profile
 - `../../chief-legal-officer/workflows/quarterly-regulatory-cycle.md` — peer for regulator-specific filings
 - `../../cco-compliance/README.md` — compliance peer
 - `../../../skill/compliance-program-{author,audit}/SKILL.md`

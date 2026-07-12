@@ -80,7 +80,7 @@ cyberos-cuo run cuo/chief-legal-officer/quarterly-regulatory-cycle \
 
 ## Cross-references
 - `../README.md` §5 (Operational) — "regulatory submissions"
-- `../../../../modules/cuo/README.md` §5.2
+- `../../../../modules/cuo/docs/module.md` §5.2
 - `../../cco-compliance/README.md` — peer persona whose compliance-program@1 is the upstream input
 - `../../../skill/regulatory-filing-{author,audit}/SKILL.md`
 - `../../../skill/compliance-program-{author,audit}/SKILL.md`

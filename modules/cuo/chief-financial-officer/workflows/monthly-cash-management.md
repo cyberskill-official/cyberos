@@ -75,6 +75,6 @@ cyberos-cuo run cuo/chief-financial-officer/monthly-cash-management \
 
 ## Cross-references
 - `../README.md` §5 (Operational) — output type "cash mgmt"
-- `../../../../modules/cuo/README.md` §5.2
+- `../../../../modules/cuo/docs/module.md` §5.2
 - `../../chief-restructuring-officer/workflows/weekly-cash-flow.md` — distress-mode peer workflow that takes over when restructuring is declared
 - `../../../skill/13-week-cash-flow-{author,audit}/SKILL.md`

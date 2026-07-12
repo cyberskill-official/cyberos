@@ -31,5 +31,5 @@ audit_hooks:
 CIO-Investment's quarterly LP letter per ILPA Reporting Template + SEC IA Marketing Rule + Mark Yusko / Jim Simons letter conventions.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7
+- `../../../../modules/cuo/docs/module.md` §5.7
 - `../../../skill/lp-letter-{author,audit}/SKILL.md`

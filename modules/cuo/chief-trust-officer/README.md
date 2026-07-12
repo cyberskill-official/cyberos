@@ -1,6 +1,6 @@
 # `chief-trust-officer` — Chief Trust Officer
 
-> Per `../../../modules/cuo/README.md` §5.6 + §4 (9-block schema).
+> Per `../../../modules/cuo/docs/module.md` §5.6 + §4 (9-block schema).
 
 ## §1  Identity & scope
 - **Full disambiguated title:** Chief Trust Officer.
@@ -49,5 +49,5 @@ All workflows chain through shipped skills — Tier-2 (`trust-portal-update`, `t
 ---
 
 ## Cross-references
-- `../../../modules/cuo/README.md` §5.6.
+- `../../../modules/cuo/docs/module.md` §5.6.
 - `../MODULE.md` §4.

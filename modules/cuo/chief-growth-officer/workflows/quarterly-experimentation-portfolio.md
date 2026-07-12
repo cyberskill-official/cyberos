@@ -31,6 +31,6 @@ audit_hooks:
 CGO's quarterly growth-experimentation review per Reforge experimentation + Sean Ellis ICE / RICE prioritization + Lean Analytics.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.1
+- `../../../../modules/cuo/docs/module.md` §5.1
 - `./annual-growth-strategy.md` — upstream parent
 - `../../../skill/program-charter-{author,audit}/SKILL.md`

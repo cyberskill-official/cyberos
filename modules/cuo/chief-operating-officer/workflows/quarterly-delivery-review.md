@@ -73,6 +73,6 @@ cyberos-cuo run cuo/chief-operating-officer/quarterly-delivery-review \
 | 2 | QA-UTIL-001 | Sustained over-utilization | Escalate to CHRO |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.1 — COO role profile
+- `../../../../modules/cuo/docs/module.md` §5.1 — COO role profile
 - `../../chief-executive-officer/workflows/quarterly-board-update.md` — peer workflow that consumes this output
 - `../../../skill/delivery-review-{author,audit}/SKILL.md`

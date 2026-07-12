@@ -72,6 +72,6 @@ cyberos-cuo run cuo/chief-transformation-officer/annual-transformation-roadmap \
 | 2 | QA-CHANGE-001 | No change-impact analysis | Operator extends |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7 — Chief Transformation Officer role profile
+- `../../../../modules/cuo/docs/module.md` §5.7 — Chief Transformation Officer role profile
 - `../../chief-operating-officer/workflows/annual-operating-model.md` — upstream peer
 - `../../../skill/transformation-roadmap-{author,audit}/SKILL.md`

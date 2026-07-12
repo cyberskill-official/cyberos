@@ -31,6 +31,6 @@ audit_hooks:
 CAO-Admin's annual vendor-consolidation initiative per Hackett shared-services + Bain G&A-optimization framework.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.1
+- `../../../../modules/cuo/docs/module.md` §5.1
 - `../../chief-operating-officer/workflows/quarterly-vendor-scorecard.md` — upstream feeder
 - `../../../skill/vendor-scorecard-{author,audit}/SKILL.md`

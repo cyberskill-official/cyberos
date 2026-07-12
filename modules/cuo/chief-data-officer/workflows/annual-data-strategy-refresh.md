@@ -22,7 +22,7 @@ escalates_to: []
 consults: []
 
 audit_hooks:
-  - each step's output is logged to memory audit chain via memory module (per modules/memory/AGENTS.md §6)
+  - each step's output is logged to memory audit chain via memory module (per modules/memory/cyberos/data/AGENTS.md §6)
   - workflow completion emits a single `workflow_complete` row with the full chain summary
   - HITL pauses halt the chain; resumption requires the operator's reply to be parsed and applied
 ---
@@ -56,7 +56,7 @@ cyberos-cuo execute chief-data-officer/annual-data-strategy-refresh \
 
 ## Skill-chain step-by-step
 
-**Step 1 — `data-strategy-author`**: produces the artefact body in the shape declared by `modules/skill/data-strategy-author/CONTRACT.md`. Consumes the `brief` input (workflow-supplied) plus any prior-step hand-off.
+**Step 1 — `data-strategy-author`**: produces the artefact body in the shape declared by `modules/skill/data-strategy-author/SKILL.md`. Consumes the `brief` input (workflow-supplied) plus any prior-step hand-off.
 
 **Step 2 — `data-strategy-audit`**: validates the upstream artefact against the per-skill RUBRIC. Returns `rubric_outcome: {score, pass, fixes}` plus a verdict (pass / needs_human / fail / exhausted).
 
@@ -78,4 +78,4 @@ cyberos-cuo execute chief-data-officer/annual-data-strategy-refresh \
 
 - Skill chain anchors: see `modules/skill/data-strategy-author/` + `modules/skill/data-strategy-audit/`
 - Persona spec: see `modules/cuo/chief-data-officer/README.md` (9-block schema, §8 Audit criteria)
-- memory protocol: see `modules/memory/AGENTS.md` §6 (audit chain semantics)
+- memory protocol: see `modules/memory/cyberos/data/AGENTS.md` §6 (audit chain semantics)

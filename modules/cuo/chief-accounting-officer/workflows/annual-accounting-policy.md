@@ -28,5 +28,5 @@ audit_hooks:
 CAO-Accounting's annual accounting-policy manual per FASB ASC + IFRS + SEC Reg S-X + PCAOB technical-accounting standards.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.2
+- `../../../../modules/cuo/docs/module.md` §5.2
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

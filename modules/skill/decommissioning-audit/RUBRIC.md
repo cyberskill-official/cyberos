@@ -1,6 +1,6 @@
 # `decomm_rubric@1.0` — machine-checkable Decommissioning rubric
 
-> Sourced from `../../../modules/cuo/README.md` §2(m) Decommissioning. Rubric version `1.0` is locked.
+> Sourced from `../../../modules/cuo/docs/module.md` §2(m) Decommissioning. Rubric version `1.0` is locked.
 
 ---
 
@@ -102,7 +102,7 @@
 ## Cross-references
 
 - `cyberos/skill/docs/AUDIT_LOOP.md`, `cyberos/skill/docs/RUBRIC_FORMAT.md`
-- `../../../modules/cuo/README.md` §2(m) — Decommissioning source
+- `../../../modules/cuo/docs/module.md` §2(m) — Decommissioning source
 - GDPR Article 17 — Right to Erasure
 - Vietnam Decree 13/2023 PDPD
 - PCI-DSS Requirement 9.8 — media destruction

@@ -30,6 +30,6 @@ audit_hooks:
 Chief Happiness Officer's quarterly verbatim-deep-dive sister workflow to CHRO's `quarterly-enps-pulse`. CHRO runs the survey; Chief-Happiness does the qualitative deep-dive on verbatim themes.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.5
+- `../../../../modules/cuo/docs/module.md` §5.5
 - `../../chief-human-resources-officer/workflows/quarterly-enps-pulse.md` — upstream peer
 - `../../../skill/enps-program-{author,audit}/SKILL.md`

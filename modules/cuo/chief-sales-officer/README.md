@@ -1,6 +1,6 @@
 # `cso-sales` — Chief Sales Officer (Sales)
 
-> Per `../../../modules/cuo/README.md` §5.4 + §4 (9-block schema).
+> Per `../../../modules/cuo/docs/module.md` §5.4 + §4 (9-block schema).
 
 ## §1  Identity & scope
 - **Full disambiguated title:** Chief Sales Officer (Sales).
@@ -49,5 +49,5 @@ All workflows chain through shipped skills — Tier-1 (`pipeline-report`, `accou
 ---
 
 ## Cross-references
-- `../../../modules/cuo/README.md` §5.4 — source role profile.
+- `../../../modules/cuo/docs/module.md` §5.4 — source role profile.
 - `../MODULE.md` §4.

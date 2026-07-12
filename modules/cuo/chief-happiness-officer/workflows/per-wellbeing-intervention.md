@@ -27,5 +27,5 @@ audit_hooks:
 Chief Happiness Officer's per-intervention charter per Shawn Achor Happiness Advantage + Adam Grant + Mind Share Partners workplace-mental-health framework.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.5
+- `../../../../modules/cuo/docs/module.md` §5.5
 - `../../../skill/program-charter-{author,audit}/SKILL.md`

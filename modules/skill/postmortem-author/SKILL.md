@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: postmortem-author
 description: >-
-  Author a blameless post-mortem (postmortem@1) after an incident, from incident timeline + pager logs + Slack threads + customer impact records. Captures: incident summary, timeline (per-minute resolution), contributing factors (Five-Whys style), what went well / what went wrong / where we got lucky, action items with owner + due date, MTTR vs SLO. Strictly blameless tone. Covers modules/cuo/README.md#software-development-process §2(j) Operations — incidents. Chains naturally into postmortem-audit. Use when user asks to "draft a postmortem" or "create the postmortem". Do NOT use for "audit existing postmortem" (use postmortem-audit instead).
+  Author a blameless post-mortem (postmortem@1) after an incident, from incident timeline + pager logs + Slack threads + customer impact records. Captures: incident summary, timeline (per-minute resolution), contributing factors (Five-Whys style), what went well / what went wrong / where we got lucky, action items with owner + due date, MTTR vs SLO. Strictly blameless tone. Covers modules/cuo/docs/appendices.md (§13 Software Development Process) §2(j) Operations — incidents. Chains naturally into postmortem-audit. Use when user asks to "draft a postmortem" or "create the postmortem". Do NOT use for "audit existing postmortem" (use postmortem-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0

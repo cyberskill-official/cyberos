@@ -1,6 +1,6 @@
 # `rtm_rubric@1.0` — machine-checkable Requirements Traceability Matrix rubric
 
-> Sourced from `../../../modules/cuo/README.md` §3 Traceability matrix + Template §4.4. Rubric version `1.0` is locked.
+> Sourced from `../../../modules/cuo/docs/module.md` §3 Traceability matrix + Template §4.4. Rubric version `1.0` is locked.
 
 ---
 
@@ -93,4 +93,4 @@
 ## Cross-references
 
 - `cyberos/skill/docs/AUDIT_LOOP.md`, `cyberos/skill/docs/RUBRIC_FORMAT.md`
-- `../../../modules/cuo/README.md` §3 + Template §4.4 — RTM source
+- `../../../modules/cuo/docs/module.md` §3 + Template §4.4 — RTM source

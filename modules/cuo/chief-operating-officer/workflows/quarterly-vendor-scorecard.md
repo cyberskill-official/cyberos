@@ -71,6 +71,6 @@ cyberos-cuo run cuo/chief-operating-officer/quarterly-vendor-scorecard \
 | 2 | QA-RISK-001 | Risk score lacks rationale | Operator adds |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.1 — COO role profile
+- `../../../../modules/cuo/docs/module.md` §5.1 — COO role profile
 - `../../cpo-procurement/README.md` — peer persona owning the procurement strategy
 - `../../../skill/vendor-scorecard-{author,audit}/SKILL.md`

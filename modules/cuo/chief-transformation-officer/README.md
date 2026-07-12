@@ -1,6 +1,6 @@
 # `chief-transformation-officer` — Chief Transformation Officer
 
-> Per `../../../modules/cuo/README.md` §5.7 + §4 (9-block schema).
+> Per `../../../modules/cuo/docs/module.md` §5.7 + §4 (9-block schema).
 
 ## §1  Identity & scope
 - **Full disambiguated title:** Chief Transformation Officer.
@@ -48,5 +48,5 @@ All workflows chain through shipped Tier-2 skills (`transformation-roadmap`, `pr
 ---
 
 ## Cross-references
-- `../../../modules/cuo/README.md` §5.7.
+- `../../../modules/cuo/docs/module.md` §5.7.
 - `../MODULE.md` §4.

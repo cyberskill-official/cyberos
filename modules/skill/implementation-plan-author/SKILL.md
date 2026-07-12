@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: implementation-plan-author
 description: >-
-  Translate an FR + SDD (or just an audited FR for lean profile) into an impl_plan@1 markdown — a shadow record of engineering tickets that can drive Linear / Jira / GitHub Projects creation. Conducts a 2-3 question sprint-planning interview (which sprint? who reviews? proj backend?), reads member:* memory scopes for capacity awareness, and emits the impl-plan + optionally the ticket payloads. Refuses if upstream artefact is in non-pass state. Covers modules/cuo/README.md#software-development-process §2(f) Implementation prep. Use when user asks to "draft a implementation plan" or "create the implementation plan". Do NOT use for "audit existing implementation plan" (use implementation-plan-audit instead).
+  Translate an FR + SDD (or just an audited FR for lean profile) into an impl_plan@1 markdown — a shadow record of engineering tickets that can drive Linear / Jira / GitHub Projects creation. Conducts a 2-3 question sprint-planning interview (which sprint? who reviews? proj backend?), reads member:* memory scopes for capacity awareness, and emits the impl-plan + optionally the ticket payloads. Refuses if upstream artefact is in non-pass state. Covers modules/cuo/docs/appendices.md (§13 Software Development Process) §2(f) Implementation prep. Use when user asks to "draft a implementation plan" or "create the implementation plan". Do NOT use for "audit existing implementation plan" (use implementation-plan-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0

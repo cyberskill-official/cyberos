@@ -71,6 +71,6 @@ cyberos-cuo run cuo/chief-marketing-officer/per-press-release \
 | 2 | QA-QUOTE-001 | Unapproved quote | Operator gets approval |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.4 — CMO role profile
+- `../../../../modules/cuo/docs/module.md` §5.4 — CMO role profile
 - `../../chief-communications-officer/workflows/per-press-release.md` — partner persona's same-skill workflow (different angle: CMO owns content; CCO-Communications owns distribution)
 - `../../../skill/press-release-{author,audit}/SKILL.md`

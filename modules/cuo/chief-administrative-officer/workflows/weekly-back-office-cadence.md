@@ -28,6 +28,6 @@ audit_hooks:
 CAO-Admin's weekly back-office operating cadence per First Round + Y Combinator ops-leader playbook.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.1
+- `../../../../modules/cuo/docs/module.md` §5.1
 - `../../chief-of-staff/workflows/weekly-rhythm-of-business.md` — broader peer
 - `../../../skill/rhythm-of-business-{author,audit}/SKILL.md`

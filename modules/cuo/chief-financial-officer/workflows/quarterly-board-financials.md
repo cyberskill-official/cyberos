@@ -70,6 +70,6 @@ cyberos-cuo run cuo/chief-financial-officer/quarterly-board-financials \
 
 ## Cross-references
 - `../README.md` §5 (Communication) — output type "board financials"
-- `../../../../modules/cuo/README.md` §5.2
+- `../../../../modules/cuo/docs/module.md` §5.2
 - `../../chief-executive-officer/workflows/quarterly-board-update.md` — peer workflow that consumes this output
 - `../../../skill/board-deck-{author,audit}/SKILL.md`

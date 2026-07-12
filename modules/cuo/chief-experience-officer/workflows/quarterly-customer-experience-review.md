@@ -33,6 +33,6 @@ audit_hooks:
 CXO's end-to-end CX review per Forrester CX Index + Temkin (Qualtrics XM) framework + KKM Experience Pyramid.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.4 — CXO role profile
+- `../../../../modules/cuo/docs/module.md` §5.4 — CXO role profile
 - `../../chief-customer-officer/workflows/quarterly-customer-health-review.md` — peer (CXO is journey-wide; CCO-Customer is account-tier)
 - `../../../skill/customer-health-review-{author,audit}/SKILL.md`

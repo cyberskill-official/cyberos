@@ -70,6 +70,6 @@ cyberos-cuo run cuo/chief-knowledge-officer/per-asset-knowledge-codification \
 | 2 | QA-APPLICABILITY-001 | Vague scope | Operator tightens |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7 — Chief Knowledge Officer role profile
+- `../../../../modules/cuo/docs/module.md` §5.7 — Chief Knowledge Officer role profile
 - `./quarterly-knowledge-pipeline.md` — parent workflow
 - `../../../skill/knowledge-asset-{author,audit}/SKILL.md`

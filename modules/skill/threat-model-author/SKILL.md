@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: threat-model-author
 description: >-
-  Author a STRIDE-based threat model (threat-model@1) from an SRS plus accepted ADRs. Enumerates trust boundaries, data flows, threats per STRIDE category (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege), mitigations mapped to OWASP Top 10:2025 (A01-A10) and OWASP ASVS controls. Covers modules/cuo/README.md#software-development-process §2(d) Architecture security review. Chains naturally into threat-model-audit. Use when user asks to "draft a threat model" or "create the threat model". Do NOT use for "audit existing threat model" (use threat-model-audit instead).
+  Author a STRIDE-based threat model (threat-model@1) from an SRS plus accepted ADRs. Enumerates trust boundaries, data flows, threats per STRIDE category (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege), mitigations mapped to OWASP Top 10:2025 (A01-A10) and OWASP ASVS controls. Covers modules/cuo/docs/appendices.md (§13 Software Development Process) §2(d) Architecture security review. Chains naturally into threat-model-audit. Use when user asks to "draft a threat model" or "create the threat model". Do NOT use for "audit existing threat model" (use threat-model-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0

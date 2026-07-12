@@ -71,6 +71,6 @@ cyberos-cuo run cuo/chief-trust-officer/annual-trust-strategy \
 | 2 | QA-METRIC-001 | Trust metric not measurable | Operator quantifies |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.6 — Chief Trust Officer role profile
+- `../../../../modules/cuo/docs/module.md` §5.6 — Chief Trust Officer role profile
 - `./quarterly-trust-portal-update.md` — operational peer
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

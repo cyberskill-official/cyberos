@@ -67,6 +67,6 @@ cyberos-cuo run cuo/chief-brand-officer/per-brand-press-release \
 | 2 | QA-TRADEMARK-001 | Rebrand no trademark review | Escalate to CLO-Legal |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.4 — Chief Brand Officer role profile
+- `../../../../modules/cuo/docs/module.md` §5.4 — Chief Brand Officer role profile
 - `../../chief-marketing-officer/workflows/per-press-release.md` — product/promo peer
 - `../../../skill/press-release-{author,audit}/SKILL.md`

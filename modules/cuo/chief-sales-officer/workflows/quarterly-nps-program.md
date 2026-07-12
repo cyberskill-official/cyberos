@@ -69,6 +69,6 @@ cyberos-cuo run cuo/chief-sales-officer/quarterly-nps-program \
 | 2 | QA-ROOT-001 | No root-cause | Operator codes verbatims |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.4 — CSO-Sales role profile
+- `../../../../modules/cuo/docs/module.md` §5.4 — CSO-Sales role profile
 - `../../cco-customer/README.md` — CS peer for detractor intervention
 - `../../../skill/nps-program-{author,audit}/SKILL.md`

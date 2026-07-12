@@ -111,6 +111,6 @@ The CTO is pulled in at:
 - `./architect-new-system.md` — the larger workflow that creates a fresh threat model (step 5-6 of that chain).
 - `./adr-quick-capture.md` — auto-triggers this refresh when COND-001 fires.
 - `../../../skill/threat-model-author/SKILL.md`, `../../../skill/threat-model-audit/RUBRIC.md`.
-- `../../../../modules/cuo/README.md` §2(d) — Architecture security review.
+- `../../../../modules/cuo/docs/module.md` §2(d) — Architecture security review.
 - OWASP Top 10:2025 — A02/A03 elevations drive the refresh cadence.
 - STRIDE (Microsoft), LINDDUN (KU Leuven).

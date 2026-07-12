@@ -28,5 +28,5 @@ audit_hooks:
 CIO-Information's quarterly IT operating review per ITIL 4 + COBIT 2019 service-management metrics.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.3
+- `../../../../modules/cuo/docs/module.md` §5.3
 - `../../../skill/operating-model-{author,audit}/SKILL.md`

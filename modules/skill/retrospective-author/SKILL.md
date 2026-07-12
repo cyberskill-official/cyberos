@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: retrospective-author
 description: >-
-  Author a sprint or project retrospective (retro@1) per modules/cuo/README.md#software-development-process Template §4.8 (Start/Stop/Continue + DORA Review). Captures team mood, DORA metric trends for the iteration, 3 keep-doings / 3 stop-doings, and top 1-2 actions with owners + due dates. Chains naturally into retrospective-audit. Use when user asks to "draft a retrospective" or "create the retrospective". Do NOT use for "audit existing retrospective" (use retrospective-audit instead).
+  Author a sprint or project retrospective (retro@1) per modules/cuo/docs/appendices.md (§13 Software Development Process) Template §4.8 (Start/Stop/Continue + DORA Review). Captures team mood, DORA metric trends for the iteration, 3 keep-doings / 3 stop-doings, and top 1-2 actions with owners + due dates. Chains naturally into retrospective-audit. Use when user asks to "draft a retrospective" or "create the retrospective". Do NOT use for "audit existing retrospective" (use retrospective-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0

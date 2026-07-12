@@ -1,6 +1,6 @@
 # `ceo` — Chief Executive Officer
 
-> Per `../../../modules/cuo/README.md` §5.1 + §4 (9-block schema).
+> Per `../../../modules/cuo/docs/module.md` §5.1 + §4 (9-block schema).
 
 ## §1  Identity & scope
 
@@ -102,7 +102,7 @@ All workflows chain through shipped Tier-1 skills (board-deck-author/audit, obje
 
 ## Cross-references
 
-- `../../../modules/cuo/README.md` §5.1, §3, §6 — source role profile + stage matrix + audit framework.
+- `../../../modules/cuo/docs/module.md` §5.1, §3, §6 — source role profile + stage matrix + audit framework.
 - `../MODULE.md` — canonical persona catalog.
 - `../cto/README.md` — peer persona; closest collaboration partner for technical strategy.
 - `../chief-of-staff/README.md` — operating-rhythm partner; OKR/decision tracker.

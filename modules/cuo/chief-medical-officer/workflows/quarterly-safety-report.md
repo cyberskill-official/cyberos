@@ -33,6 +33,6 @@ audit_hooks:
 Chief Medical Officer's quarterly safety report per ICH E2D PSUR + 21 CFR 314.80 + EMA Module VII Periodic Safety Update Report standards.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7
+- `../../../../modules/cuo/docs/module.md` §5.7
 - `./per-clinical-protocol.md` — upstream feeder
 - `../../../skill/safety-report-{author,audit}/SKILL.md`

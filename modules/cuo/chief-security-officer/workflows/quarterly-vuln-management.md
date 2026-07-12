@@ -28,6 +28,6 @@ audit_hooks:
 CSO-Security's quarterly converged VM report per ASIS ESRM + CIS Controls v8 (physical extension) + NIST SP 800-82 (ICS/OT security).
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7
+- `../../../../modules/cuo/docs/module.md` §5.7
 - `../../chief-information-security-officer/workflows/monthly-vuln-management.md` — info-sec peer (monthly cadence)
 - `../../../skill/vulnerability-mgmt-report-{author,audit}/SKILL.md`

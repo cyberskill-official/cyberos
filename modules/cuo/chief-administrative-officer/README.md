@@ -1,6 +1,6 @@
 # `cao-admin` — Chief Administrative Officer (Administrative)
 
-> Per `../../../modules/cuo/README.md` §5.1 + §4 (9-block schema).
+> Per `../../../modules/cuo/docs/module.md` §5.1 + §4 (9-block schema).
 
 ## §1  Identity & scope
 - **Full disambiguated title:** Chief Administrative Officer (Administrative).
@@ -54,6 +54,6 @@ All workflows chain through shipped Tier-1/Tier-2 skills (`operating-model`, `rh
 ---
 
 ## Cross-references
-- `../../../modules/cuo/README.md` §5.1 — source role profile.
+- `../../../modules/cuo/docs/module.md` §5.1 — source role profile.
 - `../MODULE.md` §4 — canonical persona catalog.
 - `../docs/AGENTS.md` — protocol normativity.

@@ -31,6 +31,6 @@ audit_hooks:
 Chief Happiness Officer's quarterly program per Shawn Achor + Officevibe + TINYpulse + Culture Amp wellbeing standards. Critical for Series-A scale-up where culture is the strongest retention lever.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.5 — Chief Happiness Officer role profile
+- `../../../../modules/cuo/docs/module.md` §5.5 — Chief Happiness Officer role profile
 - `../../chief-human-resources-officer/workflows/quarterly-enps-pulse.md` — upstream feeder
 - `../../../skill/happiness-program-{author,audit}/SKILL.md`

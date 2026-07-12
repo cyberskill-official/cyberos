@@ -69,6 +69,6 @@ cyberos-cuo run cuo/chief-strategy-officer/annual-portfolio-strategy \
 | 2 | QA-DIVESTITURE-001 | Divestiture no exit plan | Operator extends |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.1 — CSO-Strategy role profile
+- `../../../../modules/cuo/docs/module.md` §5.1 — CSO-Strategy role profile
 - `./annual-corporate-strategy.md` — parent strategy
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

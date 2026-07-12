@@ -72,7 +72,7 @@ cyberos-cuo run cuo/chief-revenue-officer/quarterly-revenue-review \
 | 2 | QA-NDR-001 | NDR < 110% no remediation | Escalate to CCO-Customer |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.2 — CRO-Revenue role profile
+- `../../../../modules/cuo/docs/module.md` §5.2 — CRO-Revenue role profile
 - `../../chief-executive-officer/workflows/quarterly-board-update.md` — board-deck consumer
 - `../../cco-customer/README.md` — CS peer for NDR remediation
 - `../../../skill/board-deck-{author,audit}/SKILL.md`

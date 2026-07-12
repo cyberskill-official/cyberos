@@ -71,5 +71,5 @@ cyberos-cuo run cuo/chief-of-staff/special-project-charter \
 
 ## Cross-references
 - `../README.md` §5 (Strategic) — "cross-functional special-projects"
-- `../../../../modules/cuo/README.md` §5.7
+- `../../../../modules/cuo/docs/module.md` §5.7
 - `../../../skill/program-charter-{author,audit}/SKILL.md`

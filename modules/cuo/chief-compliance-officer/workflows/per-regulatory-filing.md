@@ -68,6 +68,6 @@ cyberos-cuo run cuo/chief-compliance-officer/per-regulatory-filing \
 | 2 | QA-EVIDENCE-001 | Evidence missing | Operator gathers |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.6 — CCO-Compliance role profile
+- `../../../../modules/cuo/docs/module.md` §5.6 — CCO-Compliance role profile
 - `../../chief-legal-officer/workflows/quarterly-regulatory-cycle.md` — litigation-driven peer
 - `../../../skill/regulatory-filing-{author,audit}/SKILL.md`

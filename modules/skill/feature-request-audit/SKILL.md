@@ -5,7 +5,7 @@ description: >-
   Spec correctness gate — audit one or more existing feature_request@1
   markdowns against audit_rubric@2.0 (FM/SEC/COND/QA/SAFE/TRACE rule
   families) to drive the `draft → ready_to_implement` lifecycle
-  transition per `docs/feature-requests/STATUS-REFERENCE.md` §1.1. Use
+  transition per `modules/skill/contracts/feature-request/STATUS-REFERENCE.md` §1.1. Use
   when user asks to "audit this FR", "check the rubric on this FR", or
   "tell me which FRs would fail acceptance today". Produces a sibling
   .audit.md per FR plus an AUDIT_BATCH_SUMMARY. Halts on needs_human

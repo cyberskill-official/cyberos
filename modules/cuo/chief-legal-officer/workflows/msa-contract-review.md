@@ -72,5 +72,5 @@ cyberos-cuo run cuo/chief-legal-officer/msa-contract-review \
 
 ## Cross-references
 - `../README.md` §5 (Operational) — "contract review + signing"
-- `../../../../modules/cuo/README.md` §5.2
+- `../../../../modules/cuo/docs/module.md` §5.2
 - `../../../skill/contract-review-{author,audit}/SKILL.md`

@@ -28,5 +28,5 @@ audit_hooks:
 CLO-Learning's annual L&D strategy per ATD State-of-the-Industry + LinkedIn Workplace Learning Report + Brandon Hall research.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.5
+- `../../../../modules/cuo/docs/module.md` §5.5
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

@@ -28,5 +28,5 @@ audit_hooks:
 Chief Happiness Officer's annual strategy per Rumelt + positive-psychology research (Shawn Achor / Martin Seligman PERMA).
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.5
+- `../../../../modules/cuo/docs/module.md` §5.5
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

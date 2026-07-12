@@ -73,7 +73,7 @@ cyberos-cuo run cuo/chief-ai-officer/annual-ai-strategy \
 | 2 | QA-MATURITY-001 | MLOps level overstated | Operator self-corrects |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.3 — CAIO role profile
+- `../../../../modules/cuo/docs/module.md` §5.3 — CAIO role profile
 - `../../chief-data-officer/workflows/annual-data-strategy.md` — peer upstream
 - `../../chief-ethics-officer/README.md` — ethics peer
 - `../../../skill/ai-strategy-{author,audit}/SKILL.md`

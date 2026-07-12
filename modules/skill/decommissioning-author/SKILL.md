@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: decommissioning-author
 description: >-
-  Author a decommissioning / retirement package (decomm@1) for a system being retired. Captures: retirement decision + rationale, data-retention policy, data export plan, data-destruction certificate, DNS retirement plan, license cancellation list, source-archive manifest, customer-comms timeline. Covers modules/cuo/README.md#software-development-process §2(m). Chains naturally into decommissioning-audit. Use when user asks to "draft a decommissioning" or "create the decommissioning". Do NOT use for "audit existing decommissioning" (use decommissioning-audit instead).
+  Author a decommissioning / retirement package (decomm@1) for a system being retired. Captures: retirement decision + rationale, data-retention policy, data export plan, data-destruction certificate, DNS retirement plan, license cancellation list, source-archive manifest, customer-comms timeline. Covers modules/cuo/docs/appendices.md (§13 Software Development Process) §2(m). Chains naturally into decommissioning-audit. Use when user asks to "draft a decommissioning" or "create the decommissioning". Do NOT use for "audit existing decommissioning" (use decommissioning-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0

@@ -1,6 +1,6 @@
 # `chro` — Chief Human Resources Officer / Chief Human Transformation Officer
 
-> Per `../../../modules/cuo/README.md` §5.5 + §4 (9-block schema).
+> Per `../../../modules/cuo/docs/module.md` §5.5 + §4 (9-block schema).
 
 ## §1  Identity & scope
 - **Full disambiguated title:** Chief Human Resources Officer / Chief Human Transformation Officer.
@@ -52,5 +52,5 @@ All workflows chain through shipped Tier-1 skills (`comp-plan`, `workforce-plan`
 ---
 
 ## Cross-references
-- `../../../modules/cuo/README.md` §5.5 — source role profile.
+- `../../../modules/cuo/docs/module.md` §5.5 — source role profile.
 - `../MODULE.md` §4.

@@ -73,5 +73,5 @@ cyberos-cuo run cuo/chief-financial-officer/annual-budget \
 
 ## Cross-references
 - `../README.md` §5 (Strategic) — output type "budget"
-- `../../../../modules/cuo/README.md` §5.2
+- `../../../../modules/cuo/docs/module.md` §5.2
 - `../../../skill/budget-{author,audit}/SKILL.md`

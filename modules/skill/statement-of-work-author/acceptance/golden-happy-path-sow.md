@@ -134,7 +134,7 @@ applies as declared in `./dor-dod.md` (to be authored at M2).
   golden-happy-path-brief §Constraints).
 - **AI-tool usage disclosure:** CyberSkill engineers may use Claude Code,
   Cursor, and GitHub Copilot during Phase 1. AI-generated code is reviewed by
-  a human per modules/cuo/README.md#software-development-process §5; every PR carries an
+  a human per modules/cuo/docs/appendices.md (§13 Software Development Process) §5; every PR carries an
   `ai-assisted: yes/no` label. No Acme proprietary data is fed to AI providers
   without ZDR (zero-data-retention) attestation on file.
 

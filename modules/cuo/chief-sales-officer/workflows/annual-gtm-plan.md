@@ -72,6 +72,6 @@ cyberos-cuo run cuo/chief-sales-officer/annual-gtm-plan \
 | 2 | QA-QUOTA-001 | Quota model lacks attainment basis | Operator anchors to history |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.4 — CSO-Sales / CGO role profile
+- `../../../../modules/cuo/docs/module.md` §5.4 — CSO-Sales / CGO role profile
 - `../../cmo/README.md` — demand-gen peer
 - `../../../skill/gtm-plan-{author,audit}/SKILL.md`

@@ -3,7 +3,7 @@ id: FR-SKILL-119
 title: "Stale-reference sweep - repoint dead SDP anchors across modules/skill and refresh obsolete ship-workflow notes, with a doc-anchor checker"
 module: SKILL
 priority: SHOULD
-status: ready_to_implement
+status: reviewing
 class: improvement
 verify: T
 phase: Wave B - finish the children

@@ -31,6 +31,6 @@ audit_hooks:
 CGO's quarterly monetization review per Profitwell + OpenView pricing-research + Madhavan Ramanujam Monetizing Innovation framework.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.1
+- `../../../../modules/cuo/docs/module.md` §5.1
 - `../../chief-revenue-officer/workflows/quarterly-revenue-review.md` — upstream peer
 - `../../../skill/gtm-plan-{author,audit}/SKILL.md`

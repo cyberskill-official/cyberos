@@ -24,3 +24,5 @@ jobs:
         run: bash tools/cyberos-init/build.sh "$RUNNER_TEMP/payload"
       - name: Check every stamp equals VERSION
         run: bash tools/cyberos-init/check-version-sync.sh "$RUNNER_TEMP/payload"
+      - name: Doc anchors resolve (FR-SKILL-119)
+        run: bash scripts/check_doc_anchors.sh

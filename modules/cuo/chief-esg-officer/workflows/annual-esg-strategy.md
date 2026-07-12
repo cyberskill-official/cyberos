@@ -35,6 +35,6 @@ audit_hooks:
 Chief ESG Officer's annual strategy per GRI Materiality + SASB + ISSB + SBTi targets framework + TCFD scenario analysis.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7
+- `../../../../modules/cuo/docs/module.md` §5.7
 - `./annual-esg-report.md` — execution feeder
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

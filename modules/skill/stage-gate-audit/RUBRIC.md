@@ -1,6 +1,6 @@
 # `stage_gate_rubric@1.0` — machine-checkable stage-gate sign-off rubric
 
-> Sourced from `../../../modules/cuo/README.md` Template §4.3 (Stage-gate sign-off one-page). Rubric version `1.0` is locked.
+> Sourced from `../../../modules/cuo/docs/module.md` Template §4.3 (Stage-gate sign-off one-page). Rubric version `1.0` is locked.
 
 ---
 
@@ -95,4 +95,4 @@
 
 - `cyberos/skill/docs/AUDIT_LOOP.md`, `cyberos/skill/docs/RUBRIC_FORMAT.md`
 - `REPORT_FORMAT.md`, `INVARIANTS.md`
-- `../../../modules/cuo/README.md` Template §4.3 — Stage-gate sign-off source
+- `../../../modules/cuo/docs/module.md` Template §4.3 — Stage-gate sign-off source

@@ -54,7 +54,7 @@ provenance:
 
 ## 6. Team and Roles
 
-RACI per modules/cuo/README.md#software-development-process §2.
+RACI per modules/cuo/docs/appendices.md (§13 Software Development Process) §2.
 
 | Stage | CS | EM | PO | TL | AR | DEV | QA | DO | SEC |
 |---|---|---|---|---|---|---|---|---|---|

@@ -28,5 +28,5 @@ audit_hooks:
 CLO-Learning's per-cohort leadership-development charter per CCL Center for Creative Leadership + Korn Ferry leadership-architect + DDI Development Dimensions International.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.5
+- `../../../../modules/cuo/docs/module.md` §5.5
 - `../../../skill/program-charter-{author,audit}/SKILL.md`

@@ -31,6 +31,6 @@ audit_hooks:
 Chief Automation Officer's annual operating-model-impact assessment per McKinsey 7S applied to automated workforce + Gartner future-of-work.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7
+- `../../../../modules/cuo/docs/module.md` §5.7
 - `../../chief-operating-officer/workflows/annual-operating-model.md` — upstream peer
 - `../../../skill/operating-model-{author,audit}/SKILL.md`

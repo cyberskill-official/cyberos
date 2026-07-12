@@ -28,6 +28,6 @@ audit_hooks:
 CLO-Learning's annual L&D program per ATD competency model + 70-20-10 learning framework + Kirkpatrick four-level evaluation.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.5 — CLO-Learning role profile
+- `../../../../modules/cuo/docs/module.md` §5.5 — CLO-Learning role profile
 - `../../chief-human-resources-officer/workflows/new-hire-onboarding.md` — per-hire peer
 - `../../../skill/onboarding-pack-{author,audit}/SKILL.md`

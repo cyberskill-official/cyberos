@@ -76,6 +76,6 @@ cyberos-cuo run cuo/chief-of-staff/quarterly-okr-cascade \
 
 ## Cross-references
 - `../README.md` §5 (Strategic) — "OKR-cascade governance"
-- `../../../../modules/cuo/README.md` §5.7
+- `../../../../modules/cuo/docs/module.md` §5.7
 - `../../chief-executive-officer/workflows/okr-cascade.md` — peer workflow CEO owns
 - `../../../skill/{okr-set,decision-log}-{author,audit}/SKILL.md`

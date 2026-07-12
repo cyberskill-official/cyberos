@@ -1,7 +1,7 @@
 ---
 workflow_id: chief-technology-officer/ship-feature-requests
 workflow_version: 2.4.0
-purpose: Drive each eligible FR in `docs/feature-requests/BACKLOG.md` end-to-end through the full lifecycle — from `ready_to_implement` through `implementing → ready_to_review → reviewing → ready_to_test → testing → done` (per `docs/feature-requests/STATUS-REFERENCE.md` §1.1). Deep-maps the repo, generates the edge-case matrix, implements with 90 % coverage on touched files, injects observability, self-approves architectural deviations via ADRs, runs the multi-vector debugger with a 5-fail circuit breaker, runs the testing gate (`coverage-gate-author`/`-audit`), and physically updates BACKLOG.md status between every phase transition. Failure or blocker at any downstream phase routes the FR back to `ready_to_implement` (STATUS-REFERENCE §1.3) with `routed_back_count += 1`.
+purpose: Drive each eligible FR in `docs/feature-requests/BACKLOG.md` end-to-end through the full lifecycle — from `ready_to_implement` through `implementing → ready_to_review → reviewing → ready_to_test → testing → done` (per `modules/skill/contracts/feature-request/STATUS-REFERENCE.md` §1.1). Deep-maps the repo, generates the edge-case matrix, implements with 90 % coverage on touched files, injects observability, self-approves architectural deviations via ADRs, runs the multi-vector debugger with a 5-fail circuit breaker, runs the testing gate (`coverage-gate-author`/`-audit`), and physically updates BACKLOG.md status between every phase transition. Failure or blocker at any downstream phase routes the FR back to `ready_to_implement` (STATUS-REFERENCE §1.3) with `routed_back_count += 1`.
 persona: chief-technology-officer
 cadence: per-FR (loops continuously over BACKLOG.md)
 status: shipped   # CUO-workflow lifecycle: planned | shipped | retired (distinct from FR lifecycle in STATUS-REFERENCE.md)
@@ -89,7 +89,7 @@ circuit_breaker:
 ---
 # Ship Feature Requests — `chief-technology-officer/ship-feature-requests`
 
-The canonical CTO workflow for **shipping** each `BACKLOG.md` FR end-to-end through the full lifecycle. Renamed from `implement-backlog-frs` (v1.x) in v2.0.0 because the workflow doesn't just implement — it drives the FR through `implementing → ready_to_review → reviewing → ready_to_test → testing → done` (per `docs/feature-requests/STATUS-REFERENCE.md` §1.1). The old name suggested the workflow stopped at code-write; the new name reflects that it covers the full ship.
+The canonical CTO workflow for **shipping** each `BACKLOG.md` FR end-to-end through the full lifecycle. Renamed from `implement-backlog-frs` (v1.x) in v2.0.0 because the workflow doesn't just implement — it drives the FR through `implementing → ready_to_review → reviewing → ready_to_test → testing → done` (per `modules/skill/contracts/feature-request/STATUS-REFERENCE.md` §1.1). The old name suggested the workflow stopped at code-write; the new name reflects that it covers the full ship.
 
 ### One workflow, improvement folds in here
 
@@ -134,7 +134,7 @@ Any failure in `implementing` (steps 1-12), `reviewing` (steps 17-18), or `testi
 
 1. A `memory.fr_routed_back` aux audit row with the failure context (debug_trace, failing-test-name, or blocker reason).
 2. A comment cell on the BACKLOG row (`<!-- routed back: <reason> -->`).
-3. A future **Issue Request** artefact (TBD — see STATUS-REFERENCE §1.3) that will auto-spawn from the rework signal.
+3. A future **Issue Request** artefact that will auto-spawn from the rework signal - future work, unscheduled (no FR yet; see STATUS-REFERENCE §1.3 for the rework signal it would consume).
 
 There are NO terminal failure statuses any more. The previous `[FAILED: UNRESOLVABLE ERROR]` and `[BLOCKED: ...]` enums are gone — failures are routing decisions, not states. Operator can still send a doomed FR to `closed` manually via HITL.
 
@@ -196,7 +196,7 @@ After the implementing artefacts are settled, status flips to `reviewing` (steps
 
 Review acceptance is a mandatory human gate (HITL, see the state engine). The agent presents the review packet with every §1 clause mapped to a named test, then halts; on a recorded human approval verdict, status flips to `ready_to_test` (steps 19-20). On rejection (review uncovers a missing clause or an unaddressed edge case) the FR routes back to `ready_to_implement` (see §1 failure semantics).
 
-> v1.x note — v2.0.0 introduces `code-review-author` and `code-review-audit` as new skills covering the explicit `reviewing` phase. Before v2.0.0 the review work was implicit in the post-impl `feature-request-audit` call; v2.0.0 separates them so the reviewer phase has its own audit row + handoff point. If those skill files don't exist yet in `modules/skill/`, they need to be authored before this workflow can run end-to-end — see the BACKLOG for `FR-SKILL-code-review-author` and `-audit` placeholders.
+> v2.0.0 introduced `code-review-author` and `code-review-audit` as dedicated skills for the explicit `reviewing` phase (before that, review work was implicit in the post-impl `feature-request-audit` call). Both skills exist at `modules/skill/` and are vendored in the payload (chain-coverage enforces their presence at build time - FR-SKILL-116).
 
 ## 9. Testing phase: coverage gate + post-impl FR audit + awh + caf gates (steps 21-29)
 
@@ -287,7 +287,7 @@ Reference implementation: `modules/cuo/cuo/ship_manifest.py` (doc-driven agents 
 ## Cross-references
 
 - Execution discipline (continuous run, halt-only conditions): [`../../EXECUTION-DISCIPLINE.md`](../../EXECUTION-DISCIPLINE.md). Added 2026-06-20 (v2.2.0): the agent halts only for an operator-decision fork, a manual/operator-only action, a hard blocker past the budget, or the operator stop signal; it self-resolves everything else and runs continuously across phases and FRs.
-- FR lifecycle: `docs/feature-requests/STATUS-REFERENCE.md` (10-state enum, transitions, HITL semantics).
+- FR lifecycle: `modules/skill/contracts/feature-request/STATUS-REFERENCE.md` (10-state enum, transitions, HITL semantics).
 - Original prompt source: operator's "Zero-Touch Principal Engineer (Unattended Execution)" — absorbed 2026-05-18.
 - BACKLOG state engine: `docs/feature-requests/BACKLOG.md`.
 - Run-state manifest contract: `modules/skill/contracts/feature-request/SHIP-MANIFEST.md` (ship-manifest@1, FR-CUO-206). Manifests are gitignored session state under `docs/feature-requests/.workflow/`.

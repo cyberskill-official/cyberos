@@ -69,6 +69,6 @@ cyberos-cuo run cuo/chief-transformation-officer/per-program-change-management \
 | 2 | QA-STAKEHOLDER-001 | Stakeholder missed | Operator extends |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7 — Chief Transformation Officer role profile
+- `../../../../modules/cuo/docs/module.md` §5.7 — Chief Transformation Officer role profile
 - `./per-program-charter.md` — upstream feeder
 - `../../../skill/change-mgmt-plan-{author,audit}/SKILL.md`

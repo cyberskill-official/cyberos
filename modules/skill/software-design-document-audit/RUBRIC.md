@@ -1,6 +1,6 @@
 # `sdd_rubric@1.0` — machine-checkable Software Design Description rubric
 
-> Sourced from `../../../modules/cuo/README.md` §2(e) Detailed design; IEEE 1016-2009 (Recommended Practice for Software Design Descriptions); arc42 §5-§10. Rubric version `1.0` is locked.
+> Sourced from `../../../modules/cuo/docs/module.md` §2(e) Detailed design; IEEE 1016-2009 (Recommended Practice for Software Design Descriptions); arc42 §5-§10. Rubric version `1.0` is locked.
 
 ---
 
@@ -103,4 +103,4 @@
 - `cyberos/skill/docs/AUDIT_LOOP.md`, `cyberos/skill/docs/RUBRIC_FORMAT.md`
 - IEEE 1016-2009 — SDD viewpoints source
 - arc42 §5-§10
-- `../../../modules/cuo/README.md` §2(e) — Detailed design stage source
+- `../../../modules/cuo/docs/module.md` §2(e) — Detailed design stage source

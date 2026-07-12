@@ -69,6 +69,6 @@ cyberos-cuo run cuo/chief-privacy-officer/privacy-impact-assessment \
 | 2 | QA-MITIGATION-001 | Identified risk no mitigation | Operator drafts |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.6 — CPO-Privacy role profile
+- `../../../../modules/cuo/docs/module.md` §5.6 — CPO-Privacy role profile
 - `../../chief-legal-officer/workflows/quarterly-regulatory-cycle.md` — peer for DPIA filing
 - `../../../skill/pia-{author,audit}/SKILL.md`

@@ -71,6 +71,6 @@ cyberos-cuo run cuo/chief-risk-officer/quarterly-board-risk-chapter \
 | 2 | QA-DISCLOSURE-001 | Material risk no disclosure plan | Escalate to CEO + CLO-Legal |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.6 — CRO-Risk role profile
+- `../../../../modules/cuo/docs/module.md` §5.6 — CRO-Risk role profile
 - `../../chief-executive-officer/workflows/quarterly-board-update.md` — board-deck consumer
 - `../../../skill/board-deck-{author,audit}/SKILL.md`

@@ -55,4 +55,4 @@ When a new AI-coding risk is recognised by the industry (e.g. a new failure mode
 - `../docs/FINE_TUNE.md` — master default discipline.
 - DORA Accelerate State of DevOps Report — primary calibration source.
 - OWASP Top 10:2025 — A03 source.
-- `../../../modules/cuo/README.md` §5 — AI integration discipline this rubric encodes.
+- `../../../modules/cuo/docs/module.md` §5 — AI integration discipline this rubric encodes.

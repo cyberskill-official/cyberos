@@ -71,6 +71,6 @@ cyberos-cuo run cuo/chief-innovation-officer/annual-innovation-portfolio \
 | 2 | QA-HORIZON-001 | Horizon imbalance | Operator rebalances or justifies |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7 — Chief Innovation Officer role profile
+- `../../../../modules/cuo/docs/module.md` §5.7 — Chief Innovation Officer role profile
 - `../../chief-product-officer/workflows/annual-product-strategy.md` — H1 peer
 - `../../../skill/innovation-portfolio-{author,audit}/SKILL.md`

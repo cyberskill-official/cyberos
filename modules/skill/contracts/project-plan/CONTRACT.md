@@ -2,7 +2,7 @@
 contract_id: project-plan
 contract_version: v1
 template_literal: project-plan@1
-description: Canonical project-plan@1 — feasibility memo + project plan + RAID log + communication plan emitted by project-plan-author. Validated by project-plan-audit via project_plan_rubric@1.0. Implements modules/cuo/README.md#software-development-process §2(c).
+description: Canonical project-plan@1 — feasibility memo + project plan + RAID log + communication plan emitted by project-plan-author. Validated by project-plan-audit via project_plan_rubric@1.0. Implements modules/cuo/docs/appendices.md (§13 Software Development Process) §2(c).
 contract_kind: artefact_schema
 locked_at: 2026-05-17
 

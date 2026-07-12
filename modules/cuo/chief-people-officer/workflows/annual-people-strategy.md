@@ -28,6 +28,6 @@ audit_hooks:
 CPO-People's annual people strategy — synonym variant of CHRO strategic-refresh. Use when firm's nomenclature is "Chief People Officer".
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.5
+- `../../../../modules/cuo/docs/module.md` §5.5
 - `../../chro/` — canonical implementation
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

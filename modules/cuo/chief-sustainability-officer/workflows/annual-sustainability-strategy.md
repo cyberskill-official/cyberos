@@ -31,6 +31,6 @@ audit_hooks:
 CSO-Sustainability's annual strategy per SBTi + Project Drawdown + Ellen MacArthur Foundation circular-economy framework.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7
+- `../../../../modules/cuo/docs/module.md` §5.7
 - `../../chief-esg-officer/workflows/annual-esg-strategy.md` — peer
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

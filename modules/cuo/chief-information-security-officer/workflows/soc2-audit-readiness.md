@@ -72,7 +72,7 @@ cyberos-cuo run cuo/chief-information-security-officer/soc2-audit-readiness \
 | 2 | QA-GAP-001 | Gap without remediation | Escalate to CCO-Compliance |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.3 — CISO role profile
+- `../../../../modules/cuo/docs/module.md` §5.3 — CISO role profile
 - `../../cco-compliance/README.md` — compliance-program peer
 - `../../../skill/soc2-evidence-{author,audit}/SKILL.md`
 - `../../../skill/compliance-program-{author,audit}/SKILL.md` — upstream year-program

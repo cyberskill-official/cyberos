@@ -32,6 +32,6 @@ audit_hooks:
 Chief Automation Officer's per-process charter per Celonis process-mining + UiPath automation lifecycle + Gartner DigitalOps.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7
+- `../../../../modules/cuo/docs/module.md` §5.7
 - `./annual-automation-roadmap.md` — upstream parent
 - `../../../skill/program-charter-{author,audit}/SKILL.md`

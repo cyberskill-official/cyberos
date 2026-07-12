@@ -32,6 +32,6 @@ audit_hooks:
 CDO-Diversity's annual DEI program per SHRM DEI framework + McKinsey Diversity Matters + EEOC + Catalyst CDO playbook.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.5 — CDO-Diversity role profile
+- `../../../../modules/cuo/docs/module.md` §5.5 — CDO-Diversity role profile
 - `../../chief-human-resources-officer/workflows/quarterly-dei-program-review.md` — CHRO quarterly peer
 - `../../../skill/dei-program-{author,audit}/SKILL.md`

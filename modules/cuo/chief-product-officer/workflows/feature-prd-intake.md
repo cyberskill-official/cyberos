@@ -70,7 +70,7 @@ cyberos-cuo run cuo/chief-product-officer/feature-prd-intake \
 | 2 | QA-OPPORTUNITY-001 | No opportunity-tree linkage | Operator discovers |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.3 — CPO-Product role profile
+- `../../../../modules/cuo/docs/module.md` §5.3 — CPO-Product role profile
 - `../../chief-technology-officer/workflows/architect-new-system.md` — downstream consumer (PRD → SRS → ADR chain)
 - `../../chief-privacy-officer/workflows/privacy-impact-assessment.md` — peer (PIA when personal data touched)
 - `../../../skill/prd-{author,audit}/SKILL.md`

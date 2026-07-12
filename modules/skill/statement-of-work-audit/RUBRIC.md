@@ -1,6 +1,6 @@
 # `sow_rubric@1.0` — machine-checkable audit rubric
 
-> Sourced from `../../../modules/cuo/README.md` §4.9 (the SOW skeleton) and §6 (consultancy considerations: IP, confidentiality, AI-use policy). Rubric version `1.0` is locked; bumping requires a coordinated update of the contract body and this skill's CONTRACT_ECHO. Each rule has a stable `rule_id`. Rule IDs MUST appear verbatim in the audit report so reports are diffable across iterations and operators.
+> Sourced from `../../../modules/cuo/docs/module.md` §4.9 (the SOW skeleton) and §6 (consultancy considerations: IP, confidentiality, AI-use policy). Rubric version `1.0` is locked; bumping requires a coordinated update of the contract body and this skill's CONTRACT_ECHO. Each rule has a stable `rule_id`. Rule IDs MUST appear verbatim in the audit report so reports are diffable across iterations and operators.
 
 ---
 
@@ -128,5 +128,5 @@
 - `cyberos/skill/docs/RUBRIC_FORMAT.md` — the rubric column format every audit skill follows.
 - `REPORT_FORMAT.md` (sibling file) — the on-disk shape of `.audit.md` reports.
 - `INVARIANTS.md` (sibling file) — invariant catalog that includes the `deterministic_drift` check.
-- `../../../modules/cuo/README.md` §4.9 — the SOW skeleton source.
-- `../../../modules/cuo/README.md` §6 — IP, confidentiality, AI-use policy source.
+- `../../../modules/cuo/docs/module.md` §4.9 — the SOW skeleton source.
+- `../../../modules/cuo/docs/module.md` §6 — IP, confidentiality, AI-use policy source.

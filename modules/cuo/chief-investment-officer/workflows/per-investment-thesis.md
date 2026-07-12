@@ -31,5 +31,5 @@ audit_hooks:
 CIO-Investment's per-position thesis workflow per Soros reflexivity + Druckenmiller catalyst-driven + Howard Marks risk-first + Damodaran valuation framework.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7 — CIO-Investment role profile
+- `../../../../modules/cuo/docs/module.md` §5.7 — CIO-Investment role profile
 - `../../../skill/investment-thesis-{author,audit}/SKILL.md`

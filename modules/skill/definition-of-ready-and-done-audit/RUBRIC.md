@@ -1,6 +1,6 @@
 # `dor_dod_rubric@1.0` — machine-checkable Definition of Ready + Definition of Done rubric
 
-> Sourced from `../../../modules/cuo/README.md` Templates §4.1 (DoR — story-level entry criteria) + §4.2 (DoD — story-level exit criteria). Rubric version `1.0` is locked.
+> Sourced from `../../../modules/cuo/docs/module.md` Templates §4.1 (DoR — story-level entry criteria) + §4.2 (DoD — story-level exit criteria). Rubric version `1.0` is locked.
 
 ---
 
@@ -123,4 +123,4 @@ The §2 body MUST enumerate ALL of the following items as bullets or rows. Missi
 
 - `cyberos/skill/docs/AUDIT_LOOP.md`, `cyberos/skill/docs/RUBRIC_FORMAT.md`
 - `REPORT_FORMAT.md`, `INVARIANTS.md`
-- `../../../modules/cuo/README.md` §4.1, §4.2 — DoR/DoD sources
+- `../../../modules/cuo/docs/module.md` §4.1, §4.2 — DoR/DoD sources

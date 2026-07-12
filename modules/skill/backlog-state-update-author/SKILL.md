@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: backlog-state-update-author
 description: >-
-  Write `docs/feature-requests/BACKLOG.md` mutations as backlog-state-update@2: rewrite one status cell atomically (used by `chief-technology-officer/ship-feature-requests` between every phase; the same write emits the `workflow_complete` memory row), or INSERT one new row (`mutation_kind: insert-row` - /create-feature-requests step 3; regenerator-identical grammar, uniqueness-gated). Statuses constrained to the 10-value enum in `docs/feature-requests/STATUS-REFERENCE.md` §1; failures route the FR back to `ready_to_implement` (§1.3) incrementing `routed_back_count`. Use when user asks to "draft a backlog state update" or "create the backlog state update". Do NOT use for "audit existing backlog state update" (use backlog-state-update-audit instead). HITL note - operators can override any cell at any time; this skill writes only the default workflow-driven transition (§1.4).
+  Write `docs/feature-requests/BACKLOG.md` mutations as backlog-state-update@2: rewrite one status cell atomically (used by `chief-technology-officer/ship-feature-requests` between every phase; the same write emits the `workflow_complete` memory row), or INSERT one new row (`mutation_kind: insert-row` - /create-feature-requests step 3; regenerator-identical grammar, uniqueness-gated). Statuses constrained to the 10-value enum in `modules/skill/contracts/feature-request/STATUS-REFERENCE.md` §1; failures route the FR back to `ready_to_implement` (§1.3) incrementing `routed_back_count`. Use when user asks to "draft a backlog state update" or "create the backlog state update". Do NOT use for "audit existing backlog state update" (use backlog-state-update-audit instead). HITL note - operators can override any cell at any time; this skill writes only the default workflow-driven transition (§1.4).
 license: Apache-2.0
 metadata:
   version: 2.1.0
@@ -115,7 +115,7 @@ two in sync when either changes:
 
 ## 3. Quality gates
 
-- `new_status` is one of the 10 enum values listed in `docs/feature-requests/STATUS-REFERENCE.md` §1 — never freeform, never with embedded modifiers like `+ strict-audited`.
+- `new_status` is one of the 10 enum values listed in `modules/skill/contracts/feature-request/STATUS-REFERENCE.md` §1 — never freeform, never with embedded modifiers like `+ strict-audited`.
 - `transition_kind` MUST match the direction of the status change:
   - `forward` — moving down the §1.1 lifecycle (e.g. `implementing → ready_to_review`)
   - `rework` — moving back to `ready_to_implement` from any downstream state; increments `routed_back_count`; `rework_reason` is required

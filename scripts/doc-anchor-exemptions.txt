@@ -1,0 +1,10 @@
+# doc-anchor-exemptions.txt - citing FILES exempt from check_doc_anchors.sh (FR-SKILL-119).
+# One path prefix + reason per line. Same allowlist discipline as chain-allowlist.txt:
+# an exemption must say WHY; entries matching nothing warn at check time.
+modules/skill/docs/appendices.md      # absorbed-history archive: citations record the pre-split repo faithfully
+modules/cuo/docs/appendices.md        # absorbed-history archive: same rule
+modules/skill/project-cleanup/CHANGELOG.md  # changelog = historical record, not a live contract
+modules/skill/runners/README.md       # self-declared legacy framework doc (pre-split layout, kept for parity testing)
+modules/skill/docs/index.md           # cites ./changelog.html - build-generated artifact, exists only in dist payload
+modules/cuo/CHANGELOG.md              # changelog = historical record, not a live contract
+modules/cuo/docs/index.md             # GUIDE source: cites build-generated html that exists only in dist payload

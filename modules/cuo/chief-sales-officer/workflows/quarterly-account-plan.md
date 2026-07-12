@@ -75,6 +75,6 @@ cyberos-cuo run cuo/chief-sales-officer/quarterly-account-plan \
 | 2 | QA-WHITESPACE-001 | No growth thesis | AE drafts |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.4 — CSO-Sales role profile
+- `../../../../modules/cuo/docs/module.md` §5.4 — CSO-Sales role profile
 - `../../cco-customer/README.md` — peer for at-risk handoff
 - `../../../skill/account-plan-{author,audit}/SKILL.md`

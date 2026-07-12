@@ -33,6 +33,6 @@ audit_hooks:
 Chief Remote Officer's annual remote-work policy per GitLab Remote Manifesto + Buffer State-of-Remote + Atlassian Distributed-Work Playbook.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7 — Chief Remote Officer role profile
+- `../../../../modules/cuo/docs/module.md` §5.7 — Chief Remote Officer role profile
 - `../../chief-human-resources-officer/workflows/quarterly-enps-pulse.md` — peer (CHRO often absorbs CRO post-2022)
 - `../../../skill/remote-policy-{author,audit}/SKILL.md`

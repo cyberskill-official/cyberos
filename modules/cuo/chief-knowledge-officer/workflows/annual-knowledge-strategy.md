@@ -72,6 +72,6 @@ cyberos-cuo run cuo/chief-knowledge-officer/annual-knowledge-strategy \
 | 2 | QA-REUSE-001 | No measurable reuse target | Operator quantifies |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7 — Chief Knowledge Officer role profile
+- `../../../../modules/cuo/docs/module.md` §5.7 — Chief Knowledge Officer role profile
 - `./quarterly-knowledge-pipeline.md` — downstream consumer
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

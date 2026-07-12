@@ -28,6 +28,6 @@ audit_hooks:
 CDO-Diversity's quarterly progress review (broader than CHRO's pay-equity-focused peer).
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.5
+- `../../../../modules/cuo/docs/module.md` §5.5
 - `./annual-dei-program.md` — upstream parent
 - `../../../skill/dei-program-{author,audit}/SKILL.md`

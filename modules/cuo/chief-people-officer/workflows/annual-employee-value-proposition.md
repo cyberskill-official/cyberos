@@ -28,6 +28,6 @@ audit_hooks:
 CPO-People's annual EVP per Gartner EVP framework + LinkedIn Employer Brand + Universum Top Employers research.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.5
+- `../../../../modules/cuo/docs/module.md` §5.5
 - `../../chief-brand-officer/workflows/annual-brand-strategy.md` — brand alignment
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

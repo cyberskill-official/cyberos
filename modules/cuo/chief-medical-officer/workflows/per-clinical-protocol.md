@@ -32,5 +32,5 @@ audit_hooks:
 Chief Medical Officer's per-study clinical-protocol workflow per ICH-GCP E6(R3) + ICH E8(R1) + CONSORT 2010 + SPIRIT 2013. Mandatory IRB + regulator review pre-execution.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7 — Chief Medical Officer role profile
+- `../../../../modules/cuo/docs/module.md` §5.7 — Chief Medical Officer role profile
 - `../../../skill/clinical-protocol-{author,audit}/SKILL.md`

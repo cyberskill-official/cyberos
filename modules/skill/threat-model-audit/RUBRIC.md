@@ -1,6 +1,6 @@
 # `threat_model_rubric@1.0` — machine-checkable STRIDE threat-model rubric
 
-> Sourced from `../../../modules/cuo/README.md` §2(d) Architecture security review; OWASP Top 10:2025 (A01-A10); OWASP ASVS; STRIDE methodology. Rubric version `1.0` is locked.
+> Sourced from `../../../modules/cuo/docs/module.md` §2(d) Architecture security review; OWASP Top 10:2025 (A01-A10); OWASP ASVS; STRIDE methodology. Rubric version `1.0` is locked.
 
 ---
 
@@ -129,7 +129,7 @@
 
 - `cyberos/skill/docs/AUDIT_LOOP.md`, `cyberos/skill/docs/RUBRIC_FORMAT.md`
 - `REPORT_FORMAT.md`, `INVARIANTS.md`
-- `../../../modules/cuo/README.md` §2(d) — Architecture security review source
+- `../../../modules/cuo/docs/module.md` §2(d) — Architecture security review source
 - OWASP Top 10:2025
 - OWASP ASVS (Application Security Verification Standard)
 - STRIDE (Microsoft) — threat-modelling framework

@@ -67,7 +67,7 @@ cyberos-cuo run cuo/chief-brand-officer/per-brand-campaign \
 | 2 | QA-PILLAR-001 | Misaligned with brand pillar | Operator realigns or escalates |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.4 — Chief Brand Officer role profile
+- `../../../../modules/cuo/docs/module.md` §5.4 — Chief Brand Officer role profile
 - `./annual-brand-strategy.md` — upstream parent
 - `../../chief-marketing-officer/workflows/per-campaign-plan.md` — product/promo peer
 - `../../../skill/campaign-plan-{author,audit}/SKILL.md`

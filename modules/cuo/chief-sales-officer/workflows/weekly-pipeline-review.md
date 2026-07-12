@@ -69,6 +69,6 @@ cyberos-cuo run cuo/chief-sales-officer/weekly-pipeline-review \
 | 2 | QA-COVERAGE-001 | < 3x coverage | Escalate to CEO |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.4 — CSO-Sales / CGO role profile
+- `../../../../modules/cuo/docs/module.md` §5.4 — CSO-Sales / CGO role profile
 - `../../cco-customer/README.md` — expansion-deal peer
 - `../../../skill/pipeline-report-{author,audit}/SKILL.md`

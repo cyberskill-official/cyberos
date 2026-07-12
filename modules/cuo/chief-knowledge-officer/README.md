@@ -1,6 +1,6 @@
 # `chief-knowledge-officer` — Chief Knowledge Officer
 
-> Per `../../../modules/cuo/README.md` §5.7 + §4 (9-block schema).
+> Per `../../../modules/cuo/docs/module.md` §5.7 + §4 (9-block schema).
 
 ## §1  Identity & scope
 - **Full disambiguated title:** Chief Knowledge Officer.
@@ -51,5 +51,5 @@ All workflows chain through shipped skills — Tier-2 (`knowledge-asset`, `knowl
 ---
 
 ## Cross-references
-- `../../../modules/cuo/README.md` §5.7.
+- `../../../modules/cuo/docs/module.md` §5.7.
 - `../MODULE.md` §4.

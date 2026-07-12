@@ -1,6 +1,6 @@
 # `release_notes_rubric@1.0` — machine-checkable Release Notes rubric
 
-> Sourced from `../../../modules/cuo/README.md` §2(i) release management; Keep-a-Changelog 1.1.0; SemVer 2.0.0. Rubric version `1.0` is locked.
+> Sourced from `../../../modules/cuo/docs/module.md` §2(i) release management; Keep-a-Changelog 1.1.0; SemVer 2.0.0. Rubric version `1.0` is locked.
 
 ---
 
@@ -100,7 +100,7 @@
 ## Cross-references
 
 - `cyberos/skill/docs/AUDIT_LOOP.md`, `cyberos/skill/docs/RUBRIC_FORMAT.md`
-- `../../../modules/cuo/README.md` §2(i) — Release management source
+- `../../../modules/cuo/docs/module.md` §2(i) — Release management source
 - Keep-a-Changelog 1.1.0
 - SemVer 2.0.0
 - NVD / MITRE CVE — security-advisory format

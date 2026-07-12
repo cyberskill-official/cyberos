@@ -67,6 +67,6 @@ cyberos-cuo run cuo/chief-innovation-officer/annual-innovation-strategy \
 | 2 | QA-KERNEL-001 | Rumelt incomplete | Operator extends |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7 — Chief Innovation Officer role profile
+- `../../../../modules/cuo/docs/module.md` §5.7 — Chief Innovation Officer role profile
 - `./annual-innovation-portfolio.md` — downstream consumer
 - `../../../skill/strategy-doc-{author,audit}/SKILL.md`

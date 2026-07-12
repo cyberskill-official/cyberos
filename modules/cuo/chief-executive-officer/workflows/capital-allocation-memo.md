@@ -71,5 +71,5 @@ cyberos-cuo run cuo/chief-executive-officer/capital-allocation-memo \
 
 ## Cross-references
 - `../README.md` §5.1 — output type "capital allocation"
-- `../../../../modules/cuo/README.md` §5.1
+- `../../../../modules/cuo/docs/module.md` §5.1
 - `../../../skill/cap-alloc-memo-{author,audit}/SKILL.md`

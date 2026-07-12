@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: definition-of-ready-and-done-author
 description: >-
-  Author a project-level Definition of Ready + Definition of Done (dor-dod@1) declaration. Covers modules/cuo/README.md#software-development-process Templates §4.1 (DoR — clear user value, acceptance criteria, dependencies, NFRs, security/privacy flags, designs, estimable, demoable) and §4.2 (DoD — merged, tests pass, coverage met, SAST/SCA clean, docs updated, deployed to staging, PO accepted, observability hooked). Project-scope artefact: one per engagement. Chains naturally into definition-of-ready-and-done-audit. Use when user asks to "draft a definition of ready and done" or "create the definition of ready and done". Do NOT use for "audit existing definition of ready and done" (use definition-of-ready-and-done-audit instead).
+  Author a project-level Definition of Ready + Definition of Done (dor-dod@1) declaration. Covers modules/cuo/docs/appendices.md (§13 Software Development Process) Templates §4.1 (DoR — clear user value, acceptance criteria, dependencies, NFRs, security/privacy flags, designs, estimable, demoable) and §4.2 (DoD — merged, tests pass, coverage met, SAST/SCA clean, docs updated, deployed to staging, PO accepted, observability hooked). Project-scope artefact: one per engagement. Chains naturally into definition-of-ready-and-done-audit. Use when user asks to "draft a definition of ready and done" or "create the definition of ready and done". Do NOT use for "audit existing definition of ready and done" (use definition-of-ready-and-done-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0

@@ -28,6 +28,6 @@ audit_hooks:
 CIO-Information's quarterly IT vendor scoring per Gartner Magic Quadrant + ITIL supplier-management.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.3
+- `../../../../modules/cuo/docs/module.md` §5.3
 - `../../chief-operating-officer/workflows/quarterly-vendor-scorecard.md` — broader peer
 - `../../../skill/vendor-scorecard-{author,audit}/SKILL.md`

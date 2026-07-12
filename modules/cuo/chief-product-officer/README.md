@@ -1,6 +1,6 @@
 # `cpo-product` — Chief Product Officer (Product)
 
-> Per `../../../modules/cuo/README.md` §5.3 + §4 (9-block schema).
+> Per `../../../modules/cuo/docs/module.md` §5.3 + §4 (9-block schema).
 
 ## §1  Identity & scope
 - **Full disambiguated title:** Chief Product Officer (Product).
@@ -50,5 +50,5 @@ All workflows chain through shipped skills — Tier-2 (`product-roadmap`, `strat
 ---
 
 ## Cross-references
-- `../../../modules/cuo/README.md` §5.3 — source role profile.
+- `../../../modules/cuo/docs/module.md` §5.3 — source role profile.
 - `../MODULE.md` §4.

@@ -72,6 +72,6 @@ cyberos-cuo run cuo/chief-ethics-officer/annual-ethics-program \
 | 2 | QA-TRAINING-001 | Training plan vague | Operator extends |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.6 — Chief Ethics Officer role profile
+- `../../../../modules/cuo/docs/module.md` §5.6 — Chief Ethics Officer role profile
 - `./per-use-case-ethics-review.md` — operational peer
 - `../../../skill/compliance-program-{author,audit}/SKILL.md`

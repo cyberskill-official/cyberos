@@ -1,6 +1,6 @@
 # `cio-investment` — Chief Investment Officer (Investment)
 
-> Per `../../../modules/cuo/README.md` §5.7 + §4 (9-block schema).
+> Per `../../../modules/cuo/docs/module.md` §5.7 + §4 (9-block schema).
 
 ## §1  Identity & scope
 - **Full disambiguated title:** Chief Investment Officer (Investment).
@@ -49,5 +49,5 @@ All workflows chain through shipped Tier-2/Tier-3 skills (`investment-thesis`, `
 ---
 
 ## Cross-references
-- `../../../modules/cuo/README.md` §5.7.
+- `../../../modules/cuo/docs/module.md` §5.7.
 - `../MODULE.md` §4.

@@ -37,6 +37,6 @@ audit_hooks:
 Chief Automation Officer's annual roadmap per Gartner Hyper-automation framework + UiPath / Automation Anywhere / Blue Prism vendor architecture + EY intelligent-automation maturity model.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7
+- `../../../../modules/cuo/docs/module.md` §5.7
 - `../../chief-ai-officer/workflows/annual-ai-strategy.md` — peer (AI strategy informs automation)
 - `../../../skill/automation-roadmap-{author,audit}/SKILL.md`

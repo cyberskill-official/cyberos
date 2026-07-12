@@ -31,5 +31,5 @@ audit_hooks:
 CXO's per-journey-redesign charter per Forrester customer-journey-mapping + IDEO design-thinking + Nielsen Norman Group UX research.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.4
+- `../../../../modules/cuo/docs/module.md` §5.4
 - `../../../skill/program-charter-{author,audit}/SKILL.md`

@@ -72,5 +72,5 @@ cyberos-cuo run cuo/chief-financial-officer/monthly-close \
 
 ## Cross-references
 - `../README.md` §5 (Operational) — output type "monthly close"
-- `../../../../modules/cuo/README.md` §5.2
+- `../../../../modules/cuo/docs/module.md` §5.2
 - `../../../skill/monthly-close-{author,audit}/SKILL.md`

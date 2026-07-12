@@ -31,6 +31,6 @@ audit_hooks:
 CGO's weekly growth-engine cadence per OpenView PLG playbook + Reforge growth-loop framework. Distinct from CSO-Sales pipeline (sales-led) — CGO owns product-led acquisition + viral loops + expansion.
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.1 — CGO role profile
+- `../../../../modules/cuo/docs/module.md` §5.1 — CGO role profile
 - `../../chief-sales-officer/workflows/weekly-pipeline-review.md` — sales-led peer
 - `../../../skill/rhythm-of-business-{author,audit}/SKILL.md`

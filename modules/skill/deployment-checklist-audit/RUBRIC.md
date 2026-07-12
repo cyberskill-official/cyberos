@@ -1,6 +1,6 @@
 # `deploy_checklist_rubric@1.0` — machine-checkable Deployment Readiness Checklist rubric
 
-> Sourced from `../../../modules/cuo/README.md` §2(i) Deployment and release management + Template §4.7 Deployment Readiness Checklist; DORA four key metrics. Rubric version `1.0` is locked.
+> Sourced from `../../../modules/cuo/docs/module.md` §2(i) Deployment and release management + Template §4.7 Deployment Readiness Checklist; DORA four key metrics. Rubric version `1.0` is locked.
 
 ---
 
@@ -104,6 +104,6 @@ Each item in §3 is a checklist row with `status: ✅ | ⏳ | ❌ | n/a` and `ev
 ## Cross-references
 
 - `cyberos/skill/docs/AUDIT_LOOP.md`, `cyberos/skill/docs/RUBRIC_FORMAT.md`
-- `../../../modules/cuo/README.md` §2(i) + Template §4.7 — Deployment source
+- `../../../modules/cuo/docs/module.md` §2(i) + Template §4.7 — Deployment source
 - DORA four key metrics (deployment frequency / lead time / change failure rate / failed-deployment recovery time)
 - OWASP Top 10:2025 — A08 Software & Data Integrity Failures (drives DEP-012)

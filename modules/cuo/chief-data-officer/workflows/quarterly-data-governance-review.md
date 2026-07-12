@@ -71,6 +71,6 @@ cyberos-cuo run cuo/chief-data-officer/quarterly-data-governance-review \
 | 2 | QA-INCIDENT-001 | Incident trend up | Operator drives RCA |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.3 — CDO-Data role profile
+- `../../../../modules/cuo/docs/module.md` §5.3 — CDO-Data role profile
 - `../../cpo-privacy/README.md` — privacy-governance peer
 - `../../../skill/data-governance-{author,audit}/SKILL.md`

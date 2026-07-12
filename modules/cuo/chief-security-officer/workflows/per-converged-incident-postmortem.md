@@ -31,6 +31,6 @@ audit_hooks:
 CSO-Security's per-incident converged postmortem per ASIS ESRM incident-response + ICS (Incident Command System).
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.7
+- `../../../../modules/cuo/docs/module.md` §5.7
 - `../../chief-technology-officer/workflows/post-incident-review.md` — engineering peer
 - `../../../skill/postmortem-{author,audit}/SKILL.md`

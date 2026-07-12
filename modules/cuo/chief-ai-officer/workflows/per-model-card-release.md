@@ -73,6 +73,6 @@ cyberos-cuo run cuo/chief-ai-officer/per-model-card-release \
 | 2 | QA-LIMITS-001 | Limits section missing | Operator drafts |
 
 ## Cross-references
-- `../../../../modules/cuo/README.md` §5.3 — CAIO role profile
+- `../../../../modules/cuo/docs/module.md` §5.3 — CAIO role profile
 - `./per-model-bias-audit.md` — peer (bias audit feeds model card)
 - `../../../skill/model-card-{author,audit}/SKILL.md`
