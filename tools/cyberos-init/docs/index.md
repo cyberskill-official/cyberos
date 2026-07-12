@@ -143,3 +143,29 @@ Re-run `init.sh <repo>` (without `--check`) on any that report an update - or pr
 
 - [Operate CyberOS from the desktop app](./guides/desktop-ops.html) - the UI path for employees: build, check, init/update, settings, troubleshooting.
 - Ship your first feature request (cuo module -> Guides) - the day-one workflow walkthrough (source: `modules/cuo/docs/guides/ship-your-first-fr.md`).
+
+
+## SDP lifecycle map (stages 1-14)
+
+Every stage of the software development process ships in this payload. "Invoked by"
+says which of the two commands automates the stage; `standalone` pairs are invoked on
+request ("draft a runbook", "author the SRS", ...). Contract level: `full` pairs carry
+RUBRIC/PIPELINE/envelopes/acceptance; `thin` pairs carry SKILL.md + trigger tests until
+FR-SKILL-118-class deepening reaches them.
+
+| stage | skill pair | invoked by | contract |
+|---|---|---|---|
+| 1 SOW | statement-of-work-author/-audit | standalone | thin |
+| 2 PRD | product-requirements-document-author/-audit | standalone | thin |
+| 3 SRS | software-requirements-specification-author/-audit | standalone (feeds /create-feature-requests) | thin |
+| 4 NFR | nfr-certification-author + nfr-evaluator + nfr-test-runner + nfr-regression-handler | standalone | thin |
+| 5 FR | feature-request-author/-audit | /create-feature-requests | full |
+| 6 Architecture | architectural-spike-author/-audit + architecture-decision-record-author/-audit + threat-model-author/-audit | /ship-feature-requests (ADR steps 3-4; spike and threat-model standalone) | full (spike, ADR) / thin (threat-model) |
+| 7 SDD | software-design-document-author/-audit | standalone | thin |
+| 8 Implementation | repo-context-map + implementation-plan + edge-case-matrix + mock-contract-test + observability-injection + backlog-state-update pairs | /ship-feature-requests | full (implementation-plan) / thin (rest) |
+| 9 Review | code-review-author/-audit | /ship-feature-requests | full |
+| 10 Test | coverage-gate + debugging-cycle pairs (+ test-strategy standalone) | /ship-feature-requests | thin |
+| 11 Deploy | deployment-checklist-author/-audit | standalone | thin |
+| 12 Release | release-notes-author/-audit | standalone | thin |
+| 13 Runbook | runbook-author/-audit | standalone | thin |
+| 14 Retro / decommission | retrospective-author/-audit + postmortem-author/-audit + decommissioning-author/-audit | standalone | thin |

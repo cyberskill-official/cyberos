@@ -3,7 +3,7 @@ id: FR-CUO-209
 title: "Vendor the full 14-stage SDP skill set by default - payload and plugin cover SOW through decommissioning, with a lifecycle map in GUIDE.md"
 module: cuo
 priority: MUST
-status: ready_to_implement
+status: reviewing
 class: product
 verify: T
 phase: Wave C - strengthen the workflows

@@ -87,5 +87,13 @@ t06_readonly_check() {                                               # AC 6
 
 t01_pair_vendored; t02_parses_chain_not_list; t03_dropped_pair_fails_build
 t04_allowlist_both_ways; t05_unpaired_detected; t06_readonly_check
+
+t07_reduced_profile_skips() {                                        # FR-SKILL-116 §1 #5 amendment
+  local P="$TMP/t07"; rm -rf "$P"; cp -r "$TMP/payload" "$P"
+  rm -rf "$P"/cuo/skills/* 
+  out="$(bash "$CHECK" "$P" 2>/dev/null)"; rc=$?
+  [ "$rc" -eq 0 ] && echo "$out" | grep -q "chain SKIP: reduced profile" && ok t07 || fail t07 "rc=$rc out=$out"
+}
+t07_reduced_profile_skips
 echo "----"; echo "pass=$PASS fail=$FAIL"
 [ "$FAIL" -eq 0 ]
