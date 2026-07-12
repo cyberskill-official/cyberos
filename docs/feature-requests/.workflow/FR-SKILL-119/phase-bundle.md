@@ -37,3 +37,11 @@ citation substrings, which are the §1 #1 class itself).
 ## coverage gate (steps 21-29)
 test_check_doc_anchors.sh 6/6; 7/7 cyberos-init suites; ship_manifest 8/8; live tree: anchors OK
 341 references, exit 0. tests_failed=0.
+
+## regression note (recorded, refinement queued)
+test_pair_parity t04 ("no SKILL.md lines removed vs HEAD") fired mid-flight on this FR's citation
+swaps - a legitimate §1 #5 mutation class. Green at rest post-commit (worktree == HEAD). Third
+instance of the point-in-time-guard class (after 116's reduced-profile and 209's t08): t04 should
+scope to artefact-section heading ranges, per FR-SKILL-118 §4 AC 4's original wording. Queued as a
+next-batch refinement candidate rather than hot-patched (the guard is correct at rest and errs loud,
+not silent).
