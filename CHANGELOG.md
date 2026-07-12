@@ -2,6 +2,11 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [1.7.2] - 2026-07-12
+
+Fixed
+- build macOS universal so Intel Macs get an installer at all
+
 ## [1.7.1] - 2026-07-12
 
 Fixed
