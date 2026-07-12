@@ -93,4 +93,8 @@ None blocking. Per-FR history sparklines need event data the corpus does not car
 
 Chips show short ids (FR- prefix stripped) for density; full id + title + status live in the tooltip.
 
+**Post-ship amendment (2026-07-12, FR-IMP-071):** §1 #4c's deploy-dispatch workaround is retired -
+with [skip ci] gone from bump commits, deploy.yml's VERSION path filter fires natively on the bump
+push. Surfaces (a) and (b) unchanged.
+
 *End of FR-DOCS-007.*

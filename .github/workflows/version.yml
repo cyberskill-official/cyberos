@@ -3,10 +3,12 @@ name: version
 # Auto version, manual release. On every push to main this computes the next CyberOS version
 # from the new Conventional Commits (feat -> minor, fix/perf/revert/refactor -> patch, ! or
 # BREAKING CHANGE -> major) and, when a bump is due, commits the new VERSION + CHANGELOG back
-# to main as `chore(release): vX.Y.Z [skip ci]`. It NEVER tags, builds installers, or deploys -
+# to main as `chore(release): vX.Y.Z` (no [skip ci] - FR-IMP-071: the bump commit MUST be visible
+# to push-triggered workflows so tag pushes fire release.yml natively and deploy.yml refreshes the
+# docs at the new VERSION). It NEVER tags, builds installers, or deploys -
 # cutting a release stays a manual action: `git tag vX.Y.Z && git push origin vX.Y.Z` (release.yml).
 #
-# Loop-safe two ways: the release commit carries [skip ci] (GitHub skips the run) and the job
+# Loop-safe via the job guard below (bump commits start with 'chore(release):', which this
 # also guards on the head commit message. Manual override: put `Release-As: X.Y.Z` in a commit
 # body, or run this workflow via the Actions tab (workflow_dispatch) with an explicit level.
 
@@ -27,12 +29,11 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  actions: write
   contents: write # commit the version bump back to main
 
 jobs:
   bump:
-    # skip our own release commits (belt-and-suspenders with [skip ci] on the commit message)
+    # skip our own release commits (the ONLY loop guard since FR-IMP-071 dropped [skip ci])
     if: ${{ github.event_name == 'workflow_dispatch' || !startsWith(github.event.head_commit.message, 'chore(release):') }}
     runs-on: ubuntu-latest
     steps:
@@ -50,8 +51,8 @@ jobs:
       - name: Compute + apply the next version
         id: bump
         run: node scripts/cyberos-version.mjs --apply ${{ github.event.inputs.level && format('--level {0}', github.event.inputs.level) || '' }}
-      # FR-IMP-068 §1 #7: the bump commit below carries [skip ci], so payload-gate.yml never
-      # sees it - prove HERE that a payload built at the new VERSION stamps every artifact 1:1.
+      # FR-IMP-068 §1 #7 (amended by FR-IMP-071): payload-gate.yml now ALSO sees the bump commit
+      # (no [skip ci]); this inline proof stays as belt-and-suspenders at zero marginal cost.
       - name: Prove a payload builds clean at the new version
         if: ${{ steps.bump.outputs.changed == 'true' }}
         run: |
@@ -68,17 +69,12 @@ jobs:
           # NOT derived from the semver (see scripts/stamp-release-version.mjs). Left unstaged, it silently
           # resets on the next checkout and every subsequent store upload is rejected as a duplicate.
           git add VERSION BUILD_NUMBER CHANGELOG.md
-          git commit -m "chore(release): ${{ steps.bump.outputs.version }} [skip ci]"
+          git commit -m "chore(release): ${{ steps.bump.outputs.version }}"
           # A protected-branch ruleset blocks a direct push from the default token. With a deploy key
           # configured (secrets.VERSION_BUMP_SSH_KEY, added to the ruleset bypass) the push succeeds;
           # otherwise degrade to a warning so the workflow does not fail red on every merge to main.
           if git push origin HEAD:main; then
             echo "CyberOS VERSION -> ${{ steps.bump.outputs.version }} (not released; tag v${{ steps.bump.outputs.version }} to cut a release)" >> "$GITHUB_STEP_SUMMARY"
-            # FR-DOCS-007: the bump commit carries [skip ci], so push-triggered workflows never see
-            # it - dispatch the deploy workflow explicitly so the docs site (status hub deck) is
-            # regenerated at the NEW version with no manual trigger. Failure degrades to a warning.
-            GH_TOKEN=${{ github.token }} gh workflow run deploy.yml --ref main \
-              || echo "::warning::docs redeploy dispatch failed - site shows the previous VERSION until the next deploy"
           else
             {
               echo "### VERSION bump ${{ steps.bump.outputs.version }} computed but NOT pushed"
