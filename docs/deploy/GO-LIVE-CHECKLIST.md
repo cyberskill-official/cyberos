@@ -5,10 +5,10 @@ Living document (2026-07-13). Everything code-side is committed and machine-veri
 ## 0. One push unblocks everything
 
 ```
-git push                                   # 25 local commits; Release-As: 1.0.0 pin holds the version
+git push                                   # pending local commits; Release-As: 1.0.0 pin holds the version
 git tag -f v1.0.0 && git push -f origin v1.0.0    # re-cut the release at the icon-fixed commit
 ```
-**[Stephen-only]** The re-tag re-runs release.yml: desktop rebuild, android, and the iOS lane that failed - the 90717 icon defect is fixed in-repo (icon flattened, guard now asserts alpha-free).
+**[Stephen-only]** The re-tag re-runs release.yml. Both mobile blockers are fixed in-repo: the 90717 icon defect (icon flattened, guard asserts alpha-free - proven: iOS lane went green and build 10706 is in TestFlight) and the Play versionCode collision (FR-IMP-078: release builds now stamp `max(BUILD_NUMBER, minutes-since-epoch)`, so re-tags always upload a strictly higher number to both stores).
 
 ## 1. Web + desktop (GitHub Releases) — already live
 
@@ -18,7 +18,7 @@ Nothing manual. The v1.0.0 re-tag refreshes installers; deploy.yml keeps the sit
 
 | # | Step | How | Who |
 |---|---|---|---|
-| 1 | Re-run the iOS lane | The §0 re-tag does it; expect TestFlight processing email in ~15 min | Stephen (push) |
+| 1 | ~~Re-run the iOS lane~~ DONE - build 10706 uploaded, TestFlight processing | Any later re-tag uploads a fresh (higher) build number automatically | - |
 | 2 | EU DSA trader declaration | App Store Connect → Business → Digital Services Act compliance → declare trader status (blocks EU distribution until done) | **[Stephen-only]** |
 | 3 | Add the 14 testers | ASC → Users and Access → add; then TestFlight → Internal Testing group → add testers | **[agent-assistable]** (Chrome, with your approval per invite) |
 | 4 | Submit for review | ASC → CyberOS → select the processed build → answer export compliance (exempt - HTTPS only) → Submit | **[agent-assistable]** up to the Submit click, which is yours |
@@ -28,7 +28,7 @@ Nothing manual. The v1.0.0 re-tag refreshes installers; deploy.yml keeps the sit
 | # | Step | How | Who |
 |---|---|---|---|
 | 1 | Confirm the android lane is green on the re-tag; `.aab` appears as a run artifact | Actions tab | either |
-| 2 | `PLAY_PUBLISH=true` repo variable (internal track auto-publish) or manual upload of the `.aab` to Play Console → Internal testing | Settings → Actions → Variables | **[Stephen-only]** (repo settings) |
+| 2 | ~~`PLAY_PUBLISH=true` + service account~~ DONE - proven live: the publish step reached Play (versionCode 10706 was accepted on the first run; the re-tag collision is fixed by FR-IMP-078) | nothing | - |
 | 3 | Add tester emails to the internal track list | Play Console → Testing → Internal testing → Testers | **[agent-assistable]** |
 | 4 | Promote internal → production when ready | Play Console → Promote release | **[Stephen-only]** |
 
@@ -80,8 +80,8 @@ Nothing manual. The v1.0.0 re-tag refreshes installers; deploy.yml keeps the sit
 
 ## Current blockers snapshot
 
-- iOS: fixed in-repo (this commit); needs §0 re-tag only.
-- Android: needs §3.2 variable or manual upload.
+- iOS: build 10706 in TestFlight processing. Remaining: DSA declaration (§2.2), testers (§2.3), submit (§2.4).
+- Android: publishing pipeline proven live; versionCode collision fixed in-repo (FR-IMP-078) - needs §0 re-tag, then testers (§3.3).
 - MAS: §4.1 compile check + Apple account items.
 - MS Store: §5.1 reservation.
 - Snap: §6.1 registration.

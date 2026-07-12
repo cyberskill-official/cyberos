@@ -224,11 +224,16 @@ jobs:
         with: { distribution: temurin, java-version: 21 }
       # versionName + versionCode were hardcoded ("1.0" / 1). Play REJECTS any upload whose versionCode it
       # has already seen, so publishing could never work twice. The stamper writes versionName from the
-      # platform VERSION and versionCode from the separate, monotonic BUILD_NUMBER file. Those are two
-      # different numbers on purpose: VERSION can move in any direction a product decision requires (it was
-      # rolled back to 0.1.0 for the pre-1.0 run-up), while a versionCode can only ever go UP, forever.
+      # platform VERSION and versionCode from the monotonic BUILD_NUMBER floor. Those are two different
+      # numbers on purpose: VERSION can move in any direction a product decision requires (it was rolled
+      # back to 0.1.0 for the pre-1.0 run-up), while a versionCode can only ever go UP, forever.
+      # BUILD_NUMBER alone was not enough (FR-IMP-078): it only moves when version.yml bumps VERSION, so
+      # while Release-As pinned 1.0.0 a re-tag rebuilt the SAME versionCode and Play refused the second
+      # upload (observed: 10706). --store-monotonic lifts the effective code to
+      # max(BUILD_NUMBER, minutes-since-epoch), so every run ships strictly higher, however often the
+      # same version is re-tagged.
       - name: Stamp VERSION into the Android app
-        run: node scripts/stamp-release-version.mjs --apply
+        run: node scripts/stamp-release-version.mjs --apply --store-monotonic
       - name: Build web + sync Capacitor
         working-directory: apps/web
         run: |
@@ -351,11 +356,13 @@ jobs:
             exit 1
           fi
 
-      # Same stamper as Android + desktop: derives MARKETING_VERSION and CURRENT_PROJECT_VERSION from the
-      # root VERSION. Capacitor scaffolds these as "1.0" / 1 and never touches them again - and App Store
-      # Connect rejects a build number it has already seen, so without this iOS is a one-shot upload.
+      # Same stamper as Android: MARKETING_VERSION from the root VERSION, CURRENT_PROJECT_VERSION from
+      # the monotonic build-number floor. --store-monotonic (FR-IMP-078) matters here exactly as on
+      # Android: ASC consumed build 10706 for 1.0.0 on the first green upload, so a re-tag re-offering
+      # the committed BUILD_NUMBER would be rejected. minutes-since-epoch keeps every upload strictly
+      # higher.
       - name: Stamp VERSION into the iOS project
-        run: node scripts/stamp-release-version.mjs --apply
+        run: node scripts/stamp-release-version.mjs --apply --store-monotonic
 
       - name: Build web + sync Capacitor
         working-directory: apps/web

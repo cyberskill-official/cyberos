@@ -56,17 +56,32 @@ if (!existsSync(buildNumberPath)) {
   console.error("stamp: BUILD_NUMBER missing. It is the monotonic counter Google Play and App Store Connect order uploads by, and it cannot be recomputed from VERSION.");
   process.exit(2);
 }
-const versionCode = Number(readFileSync(buildNumberPath, "utf8").trim());
-if (!Number.isInteger(versionCode) || versionCode < 1) {
+const buildNumberFile = Number(readFileSync(buildNumberPath, "utf8").trim());
+if (!Number.isInteger(buildNumberFile) || buildNumberFile < 1) {
   console.error(`stamp: BUILD_NUMBER is not a positive integer: "${readFileSync(buildNumberPath, "utf8").trim()}"`);
   process.exit(2);
 }
 // Play has already accepted 10700. Anything at or below it is unshippable on Android, permanently.
 const PLAY_HIGH_WATER_MARK = 10700;
-if (versionCode <= PLAY_HIGH_WATER_MARK) {
-  console.error(`stamp: BUILD_NUMBER ${versionCode} is <= ${PLAY_HIGH_WATER_MARK}, which Google Play has already consumed. Play refuses any versionCode it has seen. Raise BUILD_NUMBER.`);
+if (buildNumberFile <= PLAY_HIGH_WATER_MARK) {
+  console.error(`stamp: BUILD_NUMBER ${buildNumberFile} is <= ${PLAY_HIGH_WATER_MARK}, which Google Play has already consumed. Play refuses any versionCode it has seen. Raise BUILD_NUMBER.`);
   process.exit(2);
 }
+
+// --store-monotonic (FR-IMP-078, release CI only): lift the EFFECTIVE build number to
+// max(BUILD_NUMBER, minutes-since-epoch). BUILD_NUMBER only moves when version.yml bumps
+// VERSION - so while `Release-As` pins the version (as the whole 1.0.0 run-up does), every
+// re-tag rebuilt the SAME committed number, and both stores refuse a build number they have
+// already consumed. Observed live on v1.0.0: Play rejected the second upload of versionCode
+// 10706, and ASC holds CFBundleVersion 10706 for iOS 1.0.0, so the next re-tag would have
+// failed the iOS lane identically. Wall-clock minutes are strictly increasing across CI runs,
+// immune to same-commit re-tags, and sit far under Play's 2100000000 cap (~29.7M in 2026).
+// Only release.yml's android/iOS stamp steps pass the flag; plain --check/--apply keep the
+// committed BUILD_NUMBER baseline, so repo state stays deterministic.
+const storeMonotonic = process.argv.includes("--store-monotonic");
+const versionCode = storeMonotonic
+  ? Math.max(buildNumberFile, Math.floor(Date.now() / 60000))
+  : buildNumberFile;
 
 const apply = process.argv.includes("--apply");
 const changes = [];
