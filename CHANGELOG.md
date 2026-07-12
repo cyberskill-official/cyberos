@@ -2,6 +2,16 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [0.3.0] - 2026-07-12
+
+Added
+- FR-SKILL-120 authoring wiring - Wave D complete (visual deliverables shipped end-to-end)
+- FR-DOCS-006 status hub - deck + Roadmap|Backlog|Changelog tabs, roadmap superseded (6/6 + 7/7 AC)
+- FR-DOCS-005 per-FR CDS pages - 491 self-contained deliverable pages, media support, catalog links (6/6 AC)
+- FR-TPL-001 templates module - CDS shells (template@1), vendored tokens+glass, 4/4 AC
+- FR-DOCS-004 folder-per-FR layout - 491 FRs migrated, corpus 100% strict-yaml, loud regen
+- Wave D batch - visual deliverables (5 FRs audited, ready_to_implement)
+
 ## [0.2.0] - 2026-07-12
 
 Added
