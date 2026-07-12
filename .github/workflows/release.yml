@@ -102,6 +102,7 @@ jobs:
       TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ vars.DESKTOP_UPDATER_SIGN == 'true' && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD || '' }}
     steps:
       - uses: actions/checkout@v4
+        with: { ref: "${{ github.event.inputs.tag || github.ref_name }}" }
 
       - uses: actions/setup-node@v4
         with:
@@ -216,6 +217,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with: { ref: "${{ github.event.inputs.tag || github.ref_name }}" }
       - uses: actions/setup-node@v4
         with: { node-version: 24 }
       - uses: actions/setup-java@v4
@@ -293,6 +295,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+        with: { ref: "${{ github.event.inputs.tag || github.ref_name }}" }
       - uses: actions/setup-node@v4
         with: { node-version: 24 }
 
@@ -335,6 +338,19 @@ jobs:
           npm ci
           npm run build
           npx cap sync ios
+
+      # App Store Connect rejects uploads built with an SDK older than iOS 26 (Xcode 26+) - Apple raises
+      # this floor every spring. macos-15 runners still DEFAULT to Xcode 16.4 / iOS 18.5 SDK, which is how
+      # the v1.0.0 run died at the very last step (altool 409 "SDK version issue") AFTER a clean archive,
+      # export and cloud signing. Pick the newest stable Xcode on the image instead of the default, and
+      # never hardcode a version - the image rotates them. DEVELOPER_DIR steers xcodebuild AND altool.
+      - name: Select the newest stable Xcode on the runner
+        run: |
+          XCODE="$(ls -d /Applications/Xcode_*.app | grep -vi beta | sort -V | tail -n 1)"
+          [ -n "$XCODE" ] || { echo "::error::no Xcode found under /Applications"; exit 1; }
+          echo "DEVELOPER_DIR=$XCODE/Contents/Developer" >> "$GITHUB_ENV"
+          echo "selected: $XCODE"
+          DEVELOPER_DIR="$XCODE/Contents/Developer" xcodebuild -version
 
       - name: iOS archive + TestFlight
         working-directory: apps/web/ios/App
