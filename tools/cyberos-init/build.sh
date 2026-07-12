@@ -14,6 +14,12 @@ here="$(cd "$(dirname "$0")" && pwd)"                 # tools/cyberos-init
 repo="$(cd "$here/../.." && pwd)"                      # cyberos repo root
 out="${1:-$repo/dist/cyberos}"
 
+# The single platform VERSION - validated UP FRONT so a missing/invalid VERSION can never
+# stamp a payload, and failure writes (and deletes) nothing (FR-IMP-068 §1 #3).
+[ -f "$repo/VERSION" ] || { echo "cyberos-init: ERROR: $repo/VERSION missing - refusing to build an unstamped payload" >&2; exit 2; }
+cyver="$(tr -d ' \n\r' < "$repo/VERSION")"
+printf '%s' "$cyver" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || { echo "cyberos-init: ERROR: VERSION is not X.Y.Z semver (got '$cyver')" >&2; exit 2; }
+
 echo "cyberos-init: assembling payload into $out"
 rm -rf "$out"
 mkdir -p "$out/cuo/skills" "$out/cuo/gates/caf" "$out/cuo/templates" "$out/memory"
@@ -69,10 +75,7 @@ cp "$here/docs/index.md" "$out/GUIDE.md"   # the guide source lives in docs/ (si
 chmod +x "$out/init.sh" "$out/bootstrap.sh" "$out/create.sh" "$out/cuo/gates/run-gates.sh" 2>/dev/null || true
 chmod +x "$out/mcp/cyberos-mcp.mjs" "$out"/cli/bin/*.mjs 2>/dev/null || true
 
-# The single platform VERSION. Computed HERE (not later) because the plugin manifests must be
-# stamped with it BEFORE the one-file bundle is zipped - a stale version sealed inside
-# cyberos.plugin is exactly the drift this fixes (installed plugin said 1.0.0 forever).
-cyver="$(tr -d ' \n\r' < "$repo/VERSION" 2>/dev/null || echo 0.0.0)"
+# $cyver was validated + computed at the TOP of this script (FR-IMP-068: fail-fast, no 0.0.0 fallback).
 
 # make the plugin self-contained: carry the cuo docs so the bundled skill works standalone
 mkdir -p "$out/plugin/skills/ship-feature-requests/cuo"

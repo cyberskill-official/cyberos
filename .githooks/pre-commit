@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# CyberOS pre-commit hook (active via core.hooksPath=.githooks, like commit-msg/pre-push).
+# FR-IMP-068 §1 #4: when a payload source is staged, rebuild dist/cyberos and verify every
+# stamp equals VERSION. Rebuild or check failure aborts the commit; non-matching commits no-op.
+# The trigger regex mirrors .pre-commit-hooks/cyberos-payload-build.sh (cross-commented there).
+set -euo pipefail
+
+root="$(git rev-parse --show-toplevel)"
+trigger='^(modules/cuo/|modules/skill/|modules/memory/memory\.(schema\.json|invariants\.yaml)|AGENTS\.md|tools/cyberos-init/|tools/caf/|scripts/caf_gate\.sh|VERSION)'
+
+if git diff --cached --name-only | grep -Eq "$trigger"; then
+  bash "$root/.pre-commit-hooks/cyberos-payload-build.sh"
+  bash "$root/tools/cyberos-init/check-version-sync.sh" "$root/dist/cyberos"
+fi

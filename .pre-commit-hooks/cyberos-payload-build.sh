@@ -4,6 +4,10 @@
 # artifact - nothing is committed. It keeps tools/cyberos-init/init.sh vendoring
 # current bits during implement/development, per the "auto-build on module
 # update" rule. Fast no-op when nothing relevant changed.
+#
+# Wired into git via .githooks/pre-commit (core.hooksPath=.githooks), which also runs
+# tools/cyberos-init/check-version-sync.sh after the rebuild (FR-IMP-068). The trigger
+# regex below is mirrored there - keep both in sync when adding a payload source.
 set -euo pipefail
 
 root="$(git rev-parse --show-toplevel)"
