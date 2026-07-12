@@ -2,6 +2,11 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [1.8.3] - 2026-07-12
+
+Fixed
+- add the mic/camera/photos purpose strings before the first TestFlight build
+
 ## [1.8.2] - 2026-07-12
 
 Fixed
