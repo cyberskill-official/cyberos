@@ -3,7 +3,7 @@ id: FR-SKILL-116
 title: "Vendor the debugging-cycle pair + chain-coverage check so no ship-referenced skill can be missing from the payload"
 module: SKILL
 priority: MUST
-status: implementing
+status: reviewing
 class: improvement
 verify: T
 phase: Wave B - finish the children
