@@ -3,13 +3,13 @@ id: FR-SKILL-116
 title: "Vendor the debugging-cycle pair + chain-coverage check so no ship-referenced skill can be missing from the payload"
 module: SKILL
 priority: MUST
-status: reviewing
+status: done
 class: improvement
 verify: T
 phase: Wave B - finish the children
 owner: Stephen Cheng (CTO)
 created: 2026-07-12
-shipped: null
+shipped: 2026-07-12
 memory_chain_hash: null
 related_frs: [FR-SKILL-117, FR-SKILL-118, FR-CUO-209, FR-IMP-068]
 depends_on: []

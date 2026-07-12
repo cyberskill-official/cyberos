@@ -40,3 +40,17 @@ Clause #5 (build fails on violation) had no test. Resolved: AC 3 / t03 run a pat
 All six findings addressed as cited. The FR now kills the bug class (hardcoded set drifting from the chain) rather than the single instance. **Score = 10/10.**
 
 *End of FR-SKILL-116 audit.*
+
+## §10 - Post-implementation gates (2026-07-12, ship run)
+
+- §10.4 coverage gate: PASS - t01-t06 green on fresh testing-phase rerun; FR-IMP-068 suite green as
+  regression. Report: docs/feature-requests/.workflow/FR-SKILL-116/coverage-and-review.md.
+- TRACE-004 closure: PASS - every §1 clause's cited test passed (table in the bundled artefact).
+- §10.5 awh gate: N/A (no sealed goldenset for this tooling path - declared). §10.6 caf gate: N/A
+  (no audit-profile); floor = bash -n clean + both suites green.
+- HITL gate 1: APPROVED by Stephen Cheng 2026-07-12. HITL gate 2: ACCEPTED same date via explicit
+  operator pre-authorization at the review gate; gates stayed green.
+- Live proof: payload now vendors 22 skills; build prints `chain OK: 24 referenced, 22 vendored,
+  2 allowlisted` and the commit hook ran both checks green.
+
+*FR-SKILL-116 shipped 2026-07-12.*
