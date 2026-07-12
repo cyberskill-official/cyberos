@@ -2,6 +2,11 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [1.9.1] - 2026-07-12
+
+Fixed
+- pass DEVELOPMENT_TEAM as a build setting, not just in export_options
+
 ## [1.9.0] - 2026-07-12
 
 Added
