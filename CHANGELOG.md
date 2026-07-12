@@ -2,6 +2,14 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [1.8.0] - 2026-07-12
+
+Added
+- remote update awareness - check-latest.sh + three-value --check verdicts (FR-IMP-070)
+- publish payload + plugin as GitHub Release assets (FR-IMP-069)
+- chain-coverage check + vendor debugging-cycle pair (FR-SKILL-116)
+- payload-version drift gate - comparator, CI gate, githooks wiring, fail-fast build (FR-IMP-068)
+
 ## [1.7.2] - 2026-07-12
 
 Fixed
