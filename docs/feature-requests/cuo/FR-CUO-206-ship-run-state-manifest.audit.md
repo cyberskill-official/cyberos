@@ -44,7 +44,7 @@ All six findings addressed as cited. The FR upgrades ship from restartable to re
 ## §10 - Ship record (2026-07-12)
 
 - §10.1 Implementation: contract + helpers + tests + workflow v2.4.0 Resume semantics + scaffolds,
-  commit 46911d8; phase artefacts at docs/feature-requests/.workflow/FR-CUO-206/.
+  commit f06ff65 (rebased onto PR #44 version-reset mid-flight; original hash 46911d8 superseded); phase artefacts at docs/feature-requests/.workflow/FR-CUO-206/.
 - §10.2 Review: clause-by-clause pass (packet in phase-bundle); human verdict at gate 1:
   APPROVE + pre-authorize done (Stephen Cheng, in-chat).
 - §10.3 Testing: 8/8 AC tests, 100.0% statement coverage on modules/cuo/cuo/ship_manifest.py
