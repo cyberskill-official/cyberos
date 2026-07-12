@@ -56,5 +56,6 @@ echo "✓ build complete"
 # ── Doctrine pages from the markdown single source of truth (FR-DOCS-002) ───
 if [[ "$MODE" == "full" || "$MODE" == "--docs" ]]; then
   echo "→ Docs pages (markdown SSoT)"
+  node tools/docs-site/render-roadmap.mjs   # FR-DOCS-003: roadmap page (before nav generation)
   node tools/docs-site/render-docs.mjs
 fi

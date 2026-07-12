@@ -3,7 +3,7 @@ id: FR-DOCS-003
 title: "Release roadmap visualization - a generated roadmap.html rebuilt on every release and deploy from FR frontmatter + CHANGELOG + VERSION"
 module: docs
 priority: MUST
-status: ready_to_implement
+status: reviewing
 class: product
 verify: T
 phase: Wave C - strengthen the workflows
