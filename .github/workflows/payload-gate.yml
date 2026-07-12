@@ -26,3 +26,5 @@ jobs:
         run: bash tools/cyberos-init/check-version-sync.sh "$RUNNER_TEMP/payload"
       - name: Doc anchors resolve (FR-SKILL-119)
         run: bash scripts/check_doc_anchors.sh
+      - name: Version stamps consistent repo-wide (FR-IMP-072)
+        run: node scripts/stamp-release-version.mjs --check --exit-code

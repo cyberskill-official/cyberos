@@ -71,6 +71,16 @@ if (versionCode <= PLAY_HIGH_WATER_MARK) {
 const apply = process.argv.includes("--apply");
 const changes = [];
 
+function stampCargo(rel) {
+  const p = join(root, rel);
+  if (!existsSync(p)) return;
+  let text = readFileSync(p, "utf8");
+  const before = text.match(/^version = "([^"]+)"/m)?.[1];
+  if (before === version) return;
+  changes.push(`${rel}: version ${before} -> ${version}`);
+  if (apply) writeFileSync(p, text.replace(/^version = "[^"]+"/m, `version = "${version}"`));
+}
+
 function stampJson(rel, field = "version") {
   const p = join(root, rel);
   if (!existsSync(p)) return;
@@ -123,6 +133,12 @@ function stampXcodeProj(rel) {
 }
 
 stampJson("apps/desktop/src-tauri/tauri.conf.json");
+// FR 1.0.0-consistency leg: the tauri CARGO package version feeds about-dialogs and crate metadata -
+// stamp it too so the desktop app never self-reports a stale number.
+stampCargo("apps/desktop/src-tauri/Cargo.toml");
+// mcp/package.json is stamped into the PAYLOAD copy by build.sh; stamping the repo source keeps the
+// whole codebase consistent (build.sh's stamp becomes a no-op).
+stampJson("mcp/package.json");
 stampJson("apps/web/package.json");
 stampGradle("apps/web/android/app/build.gradle");
 stampXcodeProj("apps/web/ios/App/App.xcodeproj/project.pbxproj");

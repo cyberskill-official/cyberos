@@ -30,3 +30,12 @@ if git diff --cached --name-only | grep -Eq "$docs_trigger"; then
     echo "cyberos: WARN node not found - skipped docs-site regeneration" >&2
   fi
 fi
+
+# FR-IMP-072: a staged VERSION change must carry the whole codebase with it.
+if git diff --cached --name-only | grep -qx "VERSION"; then
+  if ! node "$root/scripts/stamp-release-version.mjs" --check --exit-code >/dev/null 2>&1; then
+    echo "cyberos: VERSION is staged but release artifacts drift - run:" >&2
+    echo "  node scripts/stamp-release-version.mjs --apply && git add -u" >&2
+    exit 1
+  fi
+fi
