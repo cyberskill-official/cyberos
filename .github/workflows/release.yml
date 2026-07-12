@@ -364,20 +364,23 @@ jobs:
           npm run build
           npx cap sync ios
 
-      # FR-IMP-073 §6 Option B (iOS leg): assert the asset-catalog icon matches the brand source
-      # (apps/desktop/src-tauri/icons/ios). Same rationale as the Android guard above; macOS
-      # runners ship shasum, not sha256sum.
-      - name: Assert iOS app icon matches the desktop brand source (FR-IMP-073)
+      # FR-IMP-073 §6 Option B (iOS leg), amended by FR-IMP-077: the iOS marketing icon is a
+      # DERIVED asset - the Tauri brand source carries an alpha channel (fine for desktop),
+      # but App Store Connect hard-rejects any alpha on the 1024x1024 icon (error 90717,
+      # observed on the v1.0.0 run). The repo copy is the source flattened onto the brand
+      # background (#fff, the adaptive-icon background). So the guard asserts the SUBMISSION
+      # invariants instead of byte-identity: file present, 1024x1024, and NO alpha channel.
+      - name: Assert iOS app icon is present, 1024x1024, and alpha-free (FR-IMP-073/077)
         run: |
-          a="apps/desktop/src-tauri/icons/ios/AppIcon-512@2x.png"
           b="apps/web/ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png"
-          [ -f "$a" ] || { echo "::error::icon guard: brand source missing: $a"; exit 1; }
-          [ -f "$b" ] || { echo "::error::icon guard: Capacitor icon missing: $b"; exit 1; }
-          if [ "$(shasum -a 256 "$a" | cut -d' ' -f1)" != "$(shasum -a 256 "$b" | cut -d' ' -f1)" ]; then
-            echo "::error::icon guard DRIFT: $b != $a (re-copy from apps/desktop/src-tauri/icons/ios - docs/deploy/RELEASE.md)"
+          [ -f "$b" ] || { echo "::error::icon guard: Capacitor iOS icon missing: $b"; exit 1; }
+          dims="$(sips -g pixelWidth -g pixelHeight "$b" | awk '/pixel/{print $2}' | paste -sd x -)"
+          [ "$dims" = "1024x1024" ] || { echo "::error::icon guard: iOS icon is $dims, expected 1024x1024"; exit 1; }
+          if ! sips -g hasAlpha "$b" | grep -q "hasAlpha: no"; then
+            echo "::error::icon guard: iOS icon has an alpha channel - ASC rejects it (90717). Re-derive per docs/deploy/RELEASE.md (flatten onto #fff)."
             exit 1
           fi
-          echo "icon guard: iOS AppIcon matches the brand source"
+          echo "icon guard: iOS AppIcon present, 1024x1024, alpha-free"
 
       # App Store Connect rejects uploads built with an SDK older than iOS 26 (Xcode 26+) - Apple raises
       # this floor every spring. macos-15 runners still DEFAULT to Xcode 16.4 / iOS 18.5 SDK, which is how

@@ -111,11 +111,18 @@ The android/ and ios/ projects are committed in the repo (scaffolded once via th
       cp apps/desktop/src-tauri/icons/android/mipmap-$d/ic_launcher*.png \
          apps/web/android/app/src/main/res/mipmap-$d/
     done
-    # iOS: single universal 1024x1024 catalog entry
+    # iOS: single universal 1024x1024 catalog entry - COPY THEN FLATTEN (FR-IMP-077).
+    # The Tauri source has an alpha channel; App Store Connect rejects any alpha on the
+    # 1024x1024 icon (error 90717). Flatten onto the brand background (#fff) after copying:
     cp apps/desktop/src-tauri/icons/ios/AppIcon-512@2x.png \
        apps/web/ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png
+    python3 -c "
+    from PIL import Image
+    p = 'apps/web/ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png'
+    im = Image.open(p).convert('RGBA'); bg = Image.new('RGB', im.size, (255,255,255))
+    bg.paste(im, mask=im.getchannel('A')); bg.save(p, 'PNG')"
 
-The release pipeline enforces this: both the `android` and `ios` jobs in `release.yml` hash-compare all 16 files against `apps/desktop/src-tauri/icons/{android,ios}` right after `npx cap sync` and fail loudly on any drift, so a forgotten re-copy cannot reach Play or App Store Connect.
+The release pipeline enforces this: the `android` job hash-compares all 15 mipmap files against `apps/desktop/src-tauri/icons/android`, and the `ios` job asserts the marketing icon is present, 1024x1024, and alpha-free (byte-identity deliberately NOT required there - the iOS copy is the source flattened onto #fff, FR-IMP-077). Both run right after `npx cap sync` and fail loudly, so a bad icon cannot reach Play or App Store Connect.
 
 `capacitor.config.ts` is already committed (appId `os.cyberskill.world`, webDir `../console/web`). After the shells are committed and the signing secrets below are set, flip `ANDROID_RELEASE=true` (and `IOS_RELEASE=true` once the iOS project exists) so `release.yml` starts building the mobile apps - the two are gated separately so Android can ship before iOS. Push notifications are the one unfinished backend piece: the chat service registers devices and emits a push intent, but the actual APNS/FCM send is stubbed (`services/chat/src/push.rs`); wire real delivery before relying on mobile push.
 
