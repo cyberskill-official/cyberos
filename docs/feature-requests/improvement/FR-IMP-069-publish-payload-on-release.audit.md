@@ -40,3 +40,14 @@ bootstrap/rollout ACs had no offline test strategy (TRACE-002 risk). Resolved: f
 All six findings addressed as cited; dependency direction (068 -> 069 -> 070) is acyclic and stated on both sides. **Score = 10/10.**
 
 *End of FR-IMP-069 audit.*
+
+## §10 - Post-implementation gates (2026-07-12, ship run)
+
+- §10.4 coverage gate: PASS - t01-t09 green on fresh rerun; FR-IMP-068 (10/10) and FR-SKILL-116
+  (6/6) suites green as regression. Report: .workflow/FR-IMP-069/coverage-and-review.md.
+- TRACE-004 closure: PASS. awh/caf: N/A (declared); floor = bash -n + 25 green cases.
+- HITL gate 1: APPROVED by Stephen Cheng 2026-07-12. HITL gate 2: ACCEPTED same date via explicit
+  operator pre-authorization at the review gate; gates stayed green.
+- First live proof arrives with the next v* tag (payload job publishes the assets).
+
+*FR-IMP-069 shipped 2026-07-12.*
