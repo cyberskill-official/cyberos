@@ -24,7 +24,7 @@ t04_regen_loud_and_reconciled() {                                      # AC 3+4
   err="$(python3 "$repo/scripts/migrate_improvement_to_fr.py" --backlog 2>&1 >/dev/null)"
   if grep -q "unparseable" <<<"$err"; then fail t04 "regen still skipping: $err"; return; fi
   bl="$(python3 "$repo/scripts/migrate_improvement_to_fr.py" --backlog 2>/dev/null | grep -o '[0-9]* FRs' | grep -o '[0-9]*')"
-  rm="$(node "$repo/tools/docs-site/render-roadmap.mjs" "$repo" "$(mktemp -d)" 2>/dev/null | sed -n 's/^roadmap: \([0-9]*\) FRs.*/\1/p')"
+  rm="$(node "$repo/tools/docs-site/render-status-hub.mjs" "$repo" "$(mktemp -d)" 2>/dev/null | sed -n 's/^status-hub: \([0-9]*\) FRs.*/\1/p')"
   [ "$bl" = "$rm" ] && ok t04 || fail t04 "backlog=$bl roadmap=$rm"
 }
 t05_repairs_minimal() {                                                # AC 5

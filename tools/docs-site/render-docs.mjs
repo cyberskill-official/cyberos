@@ -185,7 +185,7 @@ function generateNav() {
     ["reference/fr-catalog.html", "FR catalog"],
     ["reference/nfr-catalog.html", "NFR catalog"],
     ["reference/changelog.html", "Changelog"],
-    ["reference/roadmap.html", "Roadmap"],
+    ["reference/status.html", "Status"],
     ["reference/glossary.html", "Glossary"],
     ["reference/risk-register.html", "Risk register"],
   ];

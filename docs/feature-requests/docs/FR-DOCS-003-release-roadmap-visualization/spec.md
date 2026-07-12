@@ -121,4 +121,8 @@ None blocking. A per-release "which FRs shipped in vX.Y.Z" join (matching FR ids
 
 Keep the summary stdout line (§8) stable - it doubles as the deploy log's roadmap health line. The invalid-status bucket doubles as a live data-quality monitor for the whole FR corpus; keep it.
 
+**Post-ship amendment (2026-07-12, FR-DOCS-006):** superseded by the status hub - render-roadmap.mjs
+retired; its parsers, assertions, and greppable summary conventions live on in render-status-hub.mjs;
+roadmap.html remains as a permanent redirect stub to status.html#roadmap (bookmarks preserved).
+
 *End of FR-DOCS-003.*

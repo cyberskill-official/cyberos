@@ -54,3 +54,6 @@ All six findings addressed as cited. Depends on FR-DOCS-002 (reviewing) as decla
   live as the corpus data-quality monitor (§11).
 
 Verdict unchanged: PASS, Score = 10/10.
+
+- 2026-07-12 (FR-DOCS-006): superseded by the status hub per its §1 #4; builder retired, redirect
+  stub + repointed suite keep every consumer working. Verdict unchanged: PASS, Score = 10/10.

@@ -19,3 +19,13 @@ ISS-002 deck computed separately from tabs could disagree - resolved: one corpus
 **Score = 10/10.**
 
 *End of FR-DOCS-006 audit.*
+
+## §4 - Ship record (2026-07-12, batch mode)
+
+- Implemented: render-status-hub.mjs (one corpus object -> deck + 3 hash-routed tabs through
+  status-hub@1; backlog tab with 4 facets; FR-page links feature-detected; roadmap.html permanent
+  redirect stub; nav Roadmap -> Status; render-roadmap.mjs retired with FR-DOCS-003 post-ship
+  amendment + repointed legacy suite 7/7). test_render_status_hub.sh 6/6; full site build green.
+- HITL: operator standing batch verdict recorded.
+
+Verdict unchanged: PASS, Score = 10/10.
