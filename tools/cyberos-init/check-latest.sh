@@ -8,8 +8,20 @@
 set -uo pipefail
 
 DEFAULT_ENDPOINT="https://api.github.com/repos/cyberskill-official/cyberos/releases/latest"
+REDIRECT_URL="https://github.com/cyberskill-official/cyberos/releases/latest"
 
 if [ "${CYBEROS_OFFLINE:-0}" = "1" ]; then echo "latest=unknown source=offline"; exit 0; fi
+
+# Default path: the releases/latest REDIRECT first - its Location header names the tag and,
+# unlike api.github.com, it is not subject to the 60/h unauthenticated API rate limit (observed
+# live 2026-07-12: API 403 rate-limited while the release was published). API stays the fallback.
+if [ -z "${CYBEROS_RELEASE_ENDPOINT:-}" ]; then
+  loc="$(curl -sI --max-time 3 "$REDIRECT_URL" 2>/dev/null | tr -d '\r' | awk 'tolower($1)=="location:"{print $2}' | head -1)"
+  tag="${loc##*/tag/}"
+  if [ "$loc" != "$tag" ] && printf '%s' "${tag#v}" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+    echo "latest=${tag#v} source=$REDIRECT_URL"; exit 0
+  fi
+fi
 ep="${CYBEROS_RELEASE_ENDPOINT:-$DEFAULT_ENDPOINT}"
 
 raw=""

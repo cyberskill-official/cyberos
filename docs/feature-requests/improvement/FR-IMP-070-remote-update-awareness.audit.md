@@ -52,3 +52,11 @@ All six findings addressed as cited. Offline behavior, verdict totality, and bot
   --check format replaced by the machine-parseable three-value contract.
 
 *FR-IMP-070 shipped 2026-07-12. Wave A (version coupling) complete: FR-IMP-068 + 069 + 070 all done.*
+
+## §11 - Post-ship amendment (2026-07-12, first live release)
+
+Field finding: with v1.8.1 published, the resolver still returned unknown - the unauthenticated
+GitHub API was 403 rate-limited for the operator's IP (the §10 #1 failure mode, observed live,
+degraded exactly as designed). Hardening: the resolver now tries the releases/latest page
+REDIRECT first (Location header names the tag; not subject to API rate limits) with the API as
+fallback. §1 #1 amended; t01-t08 unaffected (endpoint-override paths unchanged), suite green.
