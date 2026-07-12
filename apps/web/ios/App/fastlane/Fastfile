@@ -51,8 +51,16 @@ platform :ios do
     # deciding one number is how they drift. Read them back only to put them in the log.
     UI.message("archiving #{APP_IDENTIFIER} from the Capacitor project")
 
+    # `project:`, NOT `workspace:`. Capacitor 8 uses Swift Package Manager (CapApp-SPM), not CocoaPods, so
+    # it never generates an App.xcworkspace - only App.xcodeproj. The first real CI run died on
+    # "Workspace file not found at path .../App.xcworkspace" after a clean checkout, npm ci and cap sync,
+    # because the CocoaPods-era layout was assumed. There is nothing to point a workspace at.
+    #
+    # `scheme: "App"` resolves to the SHARED scheme committed at
+    # App.xcodeproj/xcshareddata/xcschemes/App.xcscheme. Xcode's auto-created schemes live in xcuserdata/,
+    # which is per-user and gitignored, so on a CI runner they simply do not exist.
     build_app(
-      workspace: "App.xcworkspace",
+      project: "App.xcodeproj",
       scheme: "App",
       configuration: "Release",
       export_method: "app-store",
