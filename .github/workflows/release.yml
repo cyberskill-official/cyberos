@@ -35,6 +35,12 @@ jobs:
           - os: windows-latest
           - os: ubuntu-latest
     runs-on: ${{ matrix.os }}
+    # macOS ships a UNIVERSAL binary (arm64 + x86_64 in one bundle). GitHub's `macos-latest` is Apple Silicon
+    # now - the v1.7.0 runner image was macos-26-arm64 - so an unqualified `tauri build` emitted ONLY
+    # CyberOS_1.7.0_aarch64.dmg, and every Intel Mac had no installer at all. Silently: the job was green and
+    # a .dmg was sitting right there on the release, it just could not run on half the Macs in the world.
+    # `--target universal-apple-darwin` fixes it, and needs BOTH rustc targets (see the toolchain step).
+    #
     # Signing creds live at JOB level so the build attempt and the retry share them. macOS CODE SIGNING is
     # opt-in behind MACOS_SIGN: tauri-action codesigns whenever APPLE_CERTIFICATE is a NON-EMPTY string, so a
     # stray or malformed cert would break the whole macOS build at signing; gating forces these empty until
@@ -67,8 +73,12 @@ jobs:
       - name: Stamp VERSION into the installers
         run: node scripts/stamp-release-version.mjs --apply
 
+      # Both macOS arches, so `--target universal-apple-darwin` has something to lipo together. On the arm64
+      # runner x86_64-apple-darwin is NOT installed by default, and the universal build fails without it.
       - name: Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - name: Linux build deps
         if: matrix.os == 'ubuntu-latest'
@@ -86,7 +96,7 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         with:
           projectPath: apps/desktop
-          args: ${{ vars.DESKTOP_UPDATER_SIGN == 'true' && '--config src-tauri/tauri.updater.conf.json' || '' }}
+          args: ${{ matrix.os == 'macos-latest' && '--target universal-apple-darwin' || '' }} ${{ vars.DESKTOP_UPDATER_SIGN == 'true' && '--config src-tauri/tauri.updater.conf.json' || '' }}
           tagName: ${{ github.event.inputs.tag || github.ref_name }}
           releaseName: 'CyberOS ${{ github.event.inputs.tag || github.ref_name }}'
           releaseDraft: true
@@ -99,7 +109,7 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         with:
           projectPath: apps/desktop
-          args: ${{ vars.DESKTOP_UPDATER_SIGN == 'true' && '--config src-tauri/tauri.updater.conf.json' || '' }}
+          args: ${{ matrix.os == 'macos-latest' && '--target universal-apple-darwin' || '' }} ${{ vars.DESKTOP_UPDATER_SIGN == 'true' && '--config src-tauri/tauri.updater.conf.json' || '' }}
           tagName: ${{ github.event.inputs.tag || github.ref_name }}
           releaseName: 'CyberOS ${{ github.event.inputs.tag || github.ref_name }}'
           releaseDraft: true
@@ -122,8 +132,12 @@ jobs:
           NOTARY_TIMEOUT: ${{ vars.MACOS_NOTARY_TIMEOUT || '20m' }}
         run: |
           set -euo pipefail
-          DMG="$(find apps/desktop/src-tauri/target/release/bundle/dmg -name '*.dmg' | head -1)"
-          if [ -z "$DMG" ]; then echo "::warning::no .dmg found - nothing to notarize"; exit 0; fi
+          # Search the whole target tree, not target/release/bundle/dmg: a --target build puts its output
+          # under target/<triple>/release/bundle/dmg, so the old hardcoded path would find nothing the moment
+          # macOS went universal - and this step exits 0 on "nothing found", so it would have gone GREEN
+          # while notarizing nothing at all. Do not narrow this path again.
+          DMG="$(find apps/desktop/src-tauri/target -name '*.dmg' | head -1)"
+          if [ -z "$DMG" ]; then echo "::error::no .dmg found under apps/desktop/src-tauri/target - the macOS build produced no disk image"; exit 1; fi
           echo "submitting $DMG to the Apple notary service (bounded wait: $NOTARY_TIMEOUT)"
           xcrun notarytool submit "$DMG" \
             --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" --team-id "$APPLE_TEAM_ID" \
