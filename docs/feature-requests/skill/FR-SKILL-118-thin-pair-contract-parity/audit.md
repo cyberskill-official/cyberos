@@ -55,3 +55,5 @@ All six findings addressed as cited. Sequencing note (land before FR-CUO-205's @
   manifest-tracked ship run (FR-CUO-206 dogfood) - manifest created, stepped, finalized-deleted at done.
 
 Verdict unchanged: PASS, Score = 10/10.
+
+- 2026-07-12: t04 amended to at-rest semantics (warn+defer on dirty worktree) after three mid-flight false-fires. Verdict unchanged: PASS, Score = 10/10.

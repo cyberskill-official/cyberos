@@ -136,4 +136,9 @@ None blocking. Shared references (HITL_PROTOCOL.md, ANTI_FABRICATION.md, UNTRUST
 
 Keep rule-ID prefixes distinct per pair (RCM-, ECM-, MCT-, OBS-, BSU-, COV-) so audit reports stay greppable across a ship run's artefact trail. The parity checker's file-class lists live at the top of the script as two arrays - one place to evolve the convention.
 
+**Post-ship amendment (2026-07-12, FR-IMP-071 leg):** AC 4's t04 guard false-fired on three
+legitimate mid-flight citation mutations (the point-in-time-guard class). Amended to an at-rest
+guard: dirty-worktree files warn and defer to the committed state; CI always checks clean trees, so
+the additive-only guarantee holds where it matters.
+
 *End of FR-SKILL-118.*

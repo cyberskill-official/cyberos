@@ -13,7 +13,8 @@ avail_ver="$( [ -f "$src/VERSION" ] && tr -d ' \n\r' < "$src/VERSION" || echo un
 # verdict line and the exact next command. Read-only; CYBEROS_OFFLINE=1 skips the remote hop.
 if [ "${1:-}" = "--check" ]; then
   target="${2:-$(pwd)}"; root="$(cd "$target" && git rev-parse --show-toplevel 2>/dev/null || echo "$target")"
-  inst="$(tr -d ' \n\r' < "$root/.cyberos/VERSION" 2>/dev/null || echo none)"
+  # FR-IMP-071 leg: test-then-read - a failed `<` redirect prints to stderr BEFORE 2>/dev/null applies.
+  if [ -f "$root/.cyberos/VERSION" ]; then inst="$(tr -d ' \n\r' < "$root/.cyberos/VERSION")"; else inst="none"; fi
   latest_line="latest=unknown source=offline"
   if [ "${CYBEROS_OFFLINE:-0}" != "1" ] && [ -f "$src/check-latest.sh" ]; then
     latest_line="$(bash "$src/check-latest.sh")"
