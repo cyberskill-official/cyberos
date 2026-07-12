@@ -3,7 +3,7 @@ id: FR-IMP-080
 title: "Served-bundle version drift — live site announced v0.1.0 after the 1.0.0 release; refreshed bundle + version-sync gate coverage for apps/console/web"
 module: improvement
 priority: MUST
-status: reviewing
+status: testing
 class: improvement
 verify: T
 phase: "Wave 6 - go-live (web channel)"
@@ -48,6 +48,7 @@ The badge pipeline itself was already correct (VersionBadge -> /version.json -> 
 - Positive gate: `sync OK 1.0.0 across 7 artifacts`. PASS
 - Negative gate: version.json temporarily set to 0.9.9 -> `DRIFT ... 0.9.9 != 1.0.0 (stale served bundle - rebuild: cd apps/web && npm run build)`, exit 10; file restored. PASS
 - Sandbox note: the build needed `@rolldown/binding-linux-arm64-gnu` added to node_modules (mac-installed tree, linux sandbox) - `--no-save`, lock/manifest untouched.
+- Testing pass 2026-07-13 (post gate-1 "approve all"): positive gate re-run green (`sync OK 1.0.0 across 7 artifacts`); negative gate re-run green (version.json set to 0.9.9 -> `DRIFT ... 0.9.9 != 1.0.0 (stale served bundle - rebuild: cd apps/web && npm run build)`, exit 10, file restored, `git status --short` on the file clean after restore).
 
 ## §9
 - Structural follow-up: a CI leg that rebuilds apps/web on `apps/web/**`/VERSION changes and ships it like the docs job (ship.sh pattern), retiring the tracked-output model. Decide together with the deploy.sh caddy-bind implications; not blocking 1.0.0.
