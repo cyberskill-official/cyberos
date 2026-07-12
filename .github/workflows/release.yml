@@ -110,6 +110,7 @@ jobs:
       # staple later rather than losing a 60-minute build. On success the stapled .dmg replaces the asset
       # (--clobber). Gated on MACOS_NOTARIZE so you can ship signed-only at will.
       - name: Notarize + staple the macOS build
+        id: notarize
         if: ${{ matrix.os == 'macos-latest' && vars.MACOS_SIGN == 'true' && vars.MACOS_NOTARIZE == 'true' }}
         continue-on-error: true
         env:
@@ -131,6 +132,26 @@ jobs:
           xcrun stapler validate "$DMG"
           gh release upload "$TAG" "$DMG" --clobber --repo "$GITHUB_REPOSITORY"
           echo "macOS: notarized + stapled + re-uploaded $(basename "$DMG")" >> "$GITHUB_STEP_SUMMARY"
+
+      # continue-on-error above means a notarization timeout leaves the JOB green. That is intentional (do
+      # not lose a 60-minute build to Apple's queue) but it must not be SILENT: v1.7.0 timed out at exit 124
+      # and published a signed-but-un-notarized .dmg under a green tick, and Gatekeeper blocks exactly that.
+      # Say so, loudly, and name the lever that fixes it.
+      - name: Say so when notarization did not finish
+        if: ${{ matrix.os == 'macos-latest' && steps.notarize.outcome == 'failure' }}
+        run: |
+          echo "::warning::macOS notarization did NOT complete - the published .dmg is signed but NOT notarized, and Gatekeeper will refuse it on download."
+          {
+            echo "### :warning: macOS .dmg is NOT notarized"
+            echo ""
+            echo "The build is signed and attached to the release, but notarization did not finish (Apple's"
+            echo "notary queue, most likely). Gatekeeper refuses a downloaded app that is not notarized, so"
+            echo "this asset will fail to open on a real Mac."
+            echo ""
+            echo "Fix it without rebuilding: **Actions > notarize-macos > Run workflow**, tag \`${TAG}\`."
+          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
 
   # Android app bundle (Capacitor). Gated on the repo variable ANDROID_RELEASE=true (the android/ project is
   # committed and the upload keystore is configured via the ANDROID_* secrets). Legacy MOBILE_RELEASE=true is
@@ -190,10 +211,27 @@ jobs:
           track: internal
           status: completed
 
-  # iOS build + TestFlight (Capacitor). OWN gate IOS_RELEASE=true - do NOT reuse the Android gate: the ios/
-  # project does not exist until you run `npx cap add ios` (docs/deploy/signing-and-mobile-release.md section
-  # C), and `cap sync ios` below would fail without it. Turn IOS_RELEASE on only after that project + the
-  # fastlane lane land.
+  # iOS build + TestFlight (Capacitor). OWN gate IOS_RELEASE=true - do NOT reuse the Android gate.
+  #
+  # This job used to end in `run: echo "Run fastlane beta ..."`. With IOS_RELEASE=true it therefore archived
+  # nothing, uploaded nothing, and reported SUCCESS - a green iOS release that shipped no iOS. The lane now
+  # exists (apps/web/ios/App/fastlane/Fastfile) and this job runs it for real.
+  #
+  # ONE-TIME SETUP, and iOS cannot ship until it is done (the preflight step below fails loudly, by design,
+  # rather than letting the job go green again):
+  #   1. App Store Connect > Users and Access > Integrations > App Store Connect API > generate a team key
+  #      with the App Manager role (App Manager, not Developer: Xcode needs it to create the distribution
+  #      certificate and provisioning profile on the fly via -allowProvisioningUpdates).
+  #   2. Add three repo secrets:
+  #        APP_STORE_CONNECT_KEY_ID     the key's Key ID
+  #        APP_STORE_CONNECT_ISSUER_ID  the Issuer ID shown above the key list
+  #        APP_STORE_CONNECT_API_KEY    the downloaded .p8, base64-encoded:  base64 -i AuthKey_XXXX.p8
+  #   3. Register the App ID os.cyberskill.world and create the app record in App Store Connect (an upload
+  #      to an app that does not exist fails at the very last step).
+  # APPLE_TEAM_ID already exists (macOS notarization uses it) and is reused here.
+  #
+  # NOT an Apple ID + app-specific password: that flow trips 2FA in CI and cannot upload unattended. The
+  # existing APPLE_ID/APPLE_PASSWORD pair is for notarytool, and is not interchangeable with this.
   ios:
     if: ${{ vars.IOS_RELEASE == 'true' }}
     runs-on: macos-latest
@@ -201,18 +239,52 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 24 }
+
+      # Refuse to be a green job that ships nothing. If the credentials are absent, say exactly what is
+      # missing and stop - do not archive for 20 minutes first, and do not pretend to have succeeded.
+      - name: Preflight - App Store Connect credentials
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          missing=""
+          [ -n "$APP_STORE_CONNECT_KEY_ID" ]    || missing="$missing APP_STORE_CONNECT_KEY_ID"
+          [ -n "$APP_STORE_CONNECT_ISSUER_ID" ] || missing="$missing APP_STORE_CONNECT_ISSUER_ID"
+          [ -n "$APP_STORE_CONNECT_API_KEY" ]   || missing="$missing APP_STORE_CONNECT_API_KEY"
+          [ -n "$APPLE_TEAM_ID" ]               || missing="$missing APPLE_TEAM_ID"
+          if [ -n "$missing" ]; then
+            echo "::error::IOS_RELEASE is on but iOS cannot ship: missing secret(s):$missing"
+            {
+              echo "### :x: iOS cannot ship - missing credentials"
+              echo ""
+              echo "Missing:\`$missing\`"
+              echo ""
+              echo "See the one-time setup in the \`ios\` job comment in .github/workflows/release.yml."
+              echo "Until these exist, turn **IOS_RELEASE off** so the release stops claiming an iOS build."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+      # Same stamper as Android + desktop: derives MARKETING_VERSION and CURRENT_PROJECT_VERSION from the
+      # root VERSION. Capacitor scaffolds these as "1.0" / 1 and never touches them again - and App Store
+      # Connect rejects a build number it has already seen, so without this iOS is a one-shot upload.
+      - name: Stamp VERSION into the iOS project
+        run: node scripts/stamp-release-version.mjs --apply
+
       - name: Build web + sync Capacitor
         working-directory: apps/web
         run: |
           npm ci
           npm run build
           npx cap sync ios
-      # Archive + export + upload to TestFlight with fastlane (Fastfile committed under apps/web/ios) using an
-      # App Store Connect API key. Full steps in docs/deploy/RELEASE.md - authored there rather than half-wired here.
+
       - name: iOS archive + TestFlight
         working-directory: apps/web/ios/App
         env:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
-        run: echo "Run fastlane beta (see docs/deploy/RELEASE.md) - requires the one-time iOS project + signing setup."
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: fastlane beta

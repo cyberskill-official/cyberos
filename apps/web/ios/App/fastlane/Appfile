@@ -1,0 +1,8 @@
+# Capacitor scaffolds the Xcode project with the appId from apps/web/capacitor.config.ts. Keep these two in
+# lockstep - a mismatch here fails at upload, after the 20-minute archive, with a message that blames the
+# provisioning profile rather than this file.
+app_identifier("os.cyberskill.world")
+
+# The team is supplied by CI from the APPLE_TEAM_ID secret (already configured for macOS notarization), so
+# the Team ID is not committed. Locally, export APPLE_TEAM_ID before running a lane.
+team_id(ENV["APPLE_TEAM_ID"])

@@ -66,11 +66,35 @@ function stampGradle(rel) {
   writeFileSync(p, raw);
 }
 
+// iOS carries the same two numbers as Android under different names, in the Xcode project:
+//   MARKETING_VERSION       -> the user-visible "1.7.0" (CFBundleShortVersionString)
+//   CURRENT_PROJECT_VERSION -> the build number (CFBundleVersion)
+// Capacitor scaffolds both as "1.0" / 1 and never touches them again. App Store Connect REJECTS an upload
+// whose build number it has already seen for that version - exactly the failure mode that made Android's
+// hardcoded versionCode unshippable. Derive both from VERSION so a tag can never ship a duplicate or a
+// mislabelled binary. Both keys appear once per build configuration (Debug + Release), so replace ALL.
+function stampXcodeProj(rel) {
+  const p = join(root, rel);
+  if (!existsSync(p)) return;
+  let raw = readFileSync(p, "utf8");
+  const curName = (raw.match(/MARKETING_VERSION = ([^;]*);/) || [])[1];
+  const curCode = (raw.match(/CURRENT_PROJECT_VERSION = ([^;]*);/) || [])[1];
+  if (curName === version && String(curCode) === String(versionCode)) return;
+  changes.push(
+    `${rel}: MARKETING_VERSION ${curName} -> ${version}, CURRENT_PROJECT_VERSION ${curCode} -> ${versionCode}`,
+  );
+  if (!apply) return;
+  raw = raw.replaceAll(/MARKETING_VERSION = [^;]*;/g, `MARKETING_VERSION = ${version};`);
+  raw = raw.replaceAll(/CURRENT_PROJECT_VERSION = [^;]*;/g, `CURRENT_PROJECT_VERSION = ${versionCode};`);
+  writeFileSync(p, raw);
+}
+
 stampJson("apps/desktop/src-tauri/tauri.conf.json");
 stampJson("apps/web/package.json");
 stampGradle("apps/web/android/app/build.gradle");
+stampXcodeProj("apps/web/ios/App/App.xcodeproj/project.pbxproj");
 
-console.log(`VERSION=${version}  androidVersionCode=${versionCode}`);
+console.log(`VERSION=${version}  androidVersionCode=${versionCode}  iosBuildNumber=${versionCode}`);
 if (!changes.length) {
   console.log("all release artifacts already match VERSION - nothing to stamp.");
   process.exit(0);

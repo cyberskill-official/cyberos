@@ -25,7 +25,18 @@ console.log(`stamp-sw: cache cyberos-shell-${id}`);
 
 // Also publish version.json so the running client can detect a newer deploy (src/lib/useUpdateCheck.ts).
 // The build id is the same one that stamps the SW cache, so every deploy bumps it exactly once.
-const pkg = JSON.parse(readFileSync(resolve(here, "../package.json"), "utf8"));
+//
+// The version comes from the root VERSION - the single platform source of truth - NOT from
+// apps/web/package.json. package.json is only reconciled with VERSION by scripts/stamp-release-version.mjs,
+// which runs inside release CI on a tag and never commits its edits back. The web bundle, however, is built
+// by hand and committed (apps/console/web), so it never sees that stamp: the badge on os.cyberskill.world
+// sat at 1.2.0 while the platform shipped 1.7.0. Reading VERSION directly makes the deployed version honest
+// regardless of whether the release stamper ever ran.
+const version = readFileSync(resolve(here, "../../../VERSION"), "utf8").trim();
+if (!/^\d+\.\d+\.\d+$/.test(version)) {
+  console.error(`stamp-sw: VERSION is not semver: "${version}"`);
+  process.exit(1);
+}
 const versionOut = resolve(here, "../../console/web/version.json");
-writeFileSync(versionOut, JSON.stringify({ build: id, version: pkg.version }) + "\n");
-console.log(`stamp-sw: version.json build ${id} v${pkg.version}`);
+writeFileSync(versionOut, JSON.stringify({ build: id, version }) + "\n");
+console.log(`stamp-sw: version.json build ${id} v${version}`);
