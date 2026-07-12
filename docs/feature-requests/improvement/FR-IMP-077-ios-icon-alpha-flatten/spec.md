@@ -3,13 +3,13 @@ id: FR-IMP-077
 title: "iOS icon alpha flatten — ASC 90717 hotfix: 1024x1024 marketing icon must carry no alpha channel"
 module: improvement
 priority: MUST
-status: testing
+status: done
 class: improvement
 verify: T
 phase: "Wave 6 - go-live (Track B: mobile shells)"
 owner: Stephen Cheng (CTO)
 created: 2026-07-13
-shipped: null
+shipped: 2026-07-13
 memory_chain_hash: null
 related_frs: [FR-IMP-073]
 depends_on: []

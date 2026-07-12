@@ -3,13 +3,13 @@ id: FR-IMP-078
 title: "Store build-number monotonicity — release-time floor decouples re-tags from BUILD_NUMBER bumps (Play versionCode 10706 collision)"
 module: improvement
 priority: MUST
-status: testing
+status: done
 class: improvement
 verify: T
 phase: "Wave 6 - go-live (Track B: mobile shells)"
 owner: Stephen Cheng (CTO)
 created: 2026-07-13
-shipped: null
+shipped: 2026-07-13
 memory_chain_hash: null
 related_frs: [FR-IMP-073, FR-IMP-077]
 depends_on: []

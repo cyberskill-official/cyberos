@@ -3,13 +3,13 @@ id: FR-IMP-079
 title: "Docs-ship race — shared staging dir between deploy.yml and release.yml docs jobs; fixed by a single ship script with per-run staging + flock'd swap"
 module: improvement
 priority: MUST
-status: testing
+status: done
 class: improvement
 verify: T
 phase: "Wave 6 - go-live (docs channel)"
 owner: Stephen Cheng (CTO)
 created: 2026-07-13
-shipped: null
+shipped: 2026-07-13
 memory_chain_hash: null
 related_frs: [FR-IMP-074, FR-DOCS-003]
 depends_on: []

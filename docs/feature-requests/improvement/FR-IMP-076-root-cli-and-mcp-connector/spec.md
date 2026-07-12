@@ -3,13 +3,13 @@ id: FR-IMP-076
 title: "Distribution expansion — root CLI .sh commands (init/update/changelog/help) + remote MCP connector transport for agent UIs"
 module: improvement
 priority: MUST
-status: testing
+status: done
 class: improvement
 verify: T
 phase: "Wave 6 - go-live (distribution channels)"
 owner: Stephen Cheng (CTO)
 created: 2026-07-13
-shipped: null
+shipped: 2026-07-13
 memory_chain_hash: null
 related_frs: [FR-IMP-074, FR-CUO-206]
 depends_on: []
