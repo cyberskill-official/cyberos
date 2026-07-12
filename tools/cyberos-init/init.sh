@@ -8,14 +8,35 @@ set -euo pipefail
 src="$(cd "$(dirname "$0")" && pwd)"                   # the payload dir this script lives in
 avail_ver="$( [ -f "$src/VERSION" ] && tr -d ' \n\r' < "$src/VERSION" || echo unknown )"
 
-# --check: report installed vs available CyberOS version for the target, then exit.
+# --check: three-value report (FR-IMP-070) - installed (.cyberos/VERSION), payload (this
+# payload's VERSION), latest (published release via check-latest.sh) - plus exactly one
+# verdict line and the exact next command. Read-only; CYBEROS_OFFLINE=1 skips the remote hop.
 if [ "${1:-}" = "--check" ]; then
   target="${2:-$(pwd)}"; root="$(cd "$target" && git rev-parse --show-toplevel 2>/dev/null || echo "$target")"
   inst="$(tr -d ' \n\r' < "$root/.cyberos/VERSION" 2>/dev/null || echo none)"
-  echo "CyberOS: installed=$inst  available=$avail_ver"
-  if [ "$inst" = "none" ]; then echo "  not initialised here - run: bash $0 $root"
-  elif [ "$inst" = "$avail_ver" ]; then echo "  up to date."
-  else echo "  UPDATE available ($inst -> $avail_ver). Update with: bash $0 $root"; fi
+  latest_line="latest=unknown source=offline"
+  if [ "${CYBEROS_OFFLINE:-0}" != "1" ] && [ -f "$src/check-latest.sh" ]; then
+    latest_line="$(bash "$src/check-latest.sh")"
+  fi
+  latest="${latest_line#latest=}"; latest="${latest%% *}"
+  echo "installed=$inst"
+  echo "payload=$avail_ver"
+  echo "$latest_line"
+  is_ver() { printf '%s' "$1" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; }
+  ver_lt() { [ "$1" = "$2" ] && return 1; [ "$(printf '%s\n%s\n' "$1" "$2" | sort -t. -k1,1n -k2,2n -k3,3n | head -1)" = "$1" ]; }
+  if is_ver "$latest" && is_ver "$avail_ver" && ver_lt "$avail_ver" "$latest"; then
+    echo "verdict=payload_stale"
+    echo "next: curl -fsSL https://github.com/cyberskill-official/cyberos/releases/latest/download/cyberos-payload.tar.gz -o /tmp/cyberos-payload.tar.gz   # or rebuild: bash tools/cyberos-init/build.sh in a current checkout, then re-run init"
+  elif [ "$inst" = "none" ]; then
+    echo "verdict=repo_stale"
+    echo "next: bash $0 $root   # not initialised here"
+  elif { is_ver "$latest" && is_ver "$inst" && ver_lt "$inst" "$latest"; } || { is_ver "$inst" && is_ver "$avail_ver" && ver_lt "$inst" "$avail_ver"; }; then
+    echo "verdict=repo_stale"
+    echo "next: bash $0 $root"
+  else
+    echo "verdict=up_to_date"
+    case "$latest_line" in latest=unknown*) echo "  note: remote check skipped or unavailable - answer only as fresh as the local payload" ;; esac
+  fi
   exit 0
 fi
 

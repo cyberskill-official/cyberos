@@ -63,6 +63,7 @@ cp -R "$here/plugin"    "$out/plugin"
 mkdir -p "$out/.claude-plugin"
 cp "$here/marketplace/.claude-plugin/marketplace.json" "$out/.claude-plugin/marketplace.json"
 cp "$here/init.sh"      "$out/init.sh"
+cp "$here/check-latest.sh"      "$out/check-latest.sh"
 cp "$here/bootstrap.sh" "$out/bootstrap.sh"
 cp "$here/create.sh"    "$out/create.sh"        # template / fresh-project scaffolder channel
 cp -R "$here/ci"        "$out/ci"

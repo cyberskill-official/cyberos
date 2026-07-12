@@ -68,6 +68,13 @@ git submodule add <payload-repo-url> .cyberos-init
 bash .cyberos-init/init.sh
 ```
 
+### 2b. Update awareness (FR-IMP-070)
+
+`init.sh --check <repo>` reports three values - `installed=`, `payload=`, `latest=` (the newest
+published release, resolved by `check-latest.sh` with a 3s budget; `CYBEROS_OFFLINE=1` skips it) -
+plus one `verdict=` line (`up_to_date` | `repo_stale` | `payload_stale`) and the exact `next:`
+command. Machine-parseable key=value lines; the desktop Ops tab and `/update` consume them.
+
 ### 3. One-liner curl | sh (from GitHub Releases - FR-IMP-069)
 
 ```bash

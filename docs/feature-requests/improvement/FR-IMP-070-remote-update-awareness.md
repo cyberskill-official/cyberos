@@ -3,7 +3,7 @@ id: FR-IMP-070
 title: "Remote update awareness - /update and init.sh --check compare installed vs latest published release, not the local payload"
 module: improvement
 priority: MUST
-status: ready_to_implement
+status: implementing
 class: improvement
 verify: T
 phase: Wave A - version coupling
@@ -27,6 +27,7 @@ new_files:
   - tools/cyberos-init/check-latest.sh
   - tools/cyberos-init/tests/test_check_latest.sh
 modified_files:
+  - tools/cyberos-init/build.sh   # deviation, recorded in review packet: vendor check-latest.sh beside init.sh
   - tools/cyberos-init/init.sh
   - tools/cyberos-init/plugin/commands/update.md
   - tools/cyberos-init/plugin/commands/changelog.md
