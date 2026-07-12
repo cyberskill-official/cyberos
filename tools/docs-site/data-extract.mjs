@@ -113,7 +113,10 @@ for (const file of files) {
     console.warn(`skip (no frontmatter): ${relative(REPO_ROOT, file)}`);
     continue;
   }
+  const relParts = file.split('/').slice(-3);   // <module>/<STEM>/spec.md (FR-DOCS-005 links)
   records.push({
+    dir_module:   relParts[0],
+    stem:         relParts[1],
     id:           fm.id,
     title:        fm.title || '',
     module:       fm.module || '',

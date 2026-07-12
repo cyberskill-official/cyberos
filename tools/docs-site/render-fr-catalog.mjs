@@ -43,7 +43,7 @@ function renderCard(fr) {
                data-phase="${esc(fr.phase)}">
         <header class="fr-card-header">
           <a href="#${esc(fr.id)}" class="fr-anchor">#</a>
-          <h3 class="fr-id">${esc(fr.id)}</h3>
+          <h3 class="fr-id">${fr.stem ? `<a class="fr-page-link" href="../frs/${esc(fr.dir_module)}/${esc(fr.stem)}/index.html">${esc(fr.id)}</a>` : esc(fr.id)}</h3>
           <p class="fr-title">${esc(fr.title)}</p>
         </header>
         <div class="fr-badges">
@@ -159,6 +159,7 @@ ${byModule[m].map(renderCard).join('\n')}
     .fr-anchor { color: var(--muted); text-decoration: none; font-weight: 700; }
     .fr-anchor:hover { color: var(--accent); }
     .fr-id { margin: 0; font-size: 14px; font-weight: 700; color: var(--accent-2); font-family: ui-monospace, SF Mono, Menlo, monospace; }
+    .fr-page-link { color: var(--accent); text-decoration: none; }
     .fr-title { margin: 0; font-size: 14px; color: var(--text); flex: 1; }
     .fr-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
     .badge {

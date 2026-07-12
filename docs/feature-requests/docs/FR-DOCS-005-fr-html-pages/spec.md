@@ -3,13 +3,13 @@ id: FR-DOCS-005
 title: "Per-FR CDS HTML pages - every spec renders to its own self-contained deliverable page with assets"
 module: docs
 priority: MUST
-status: ready_to_implement
+status: done
 class: product
 verify: T
 phase: Wave D - visual deliverables
 owner: Stephen Cheng (CTO)
 created: 2026-07-12
-shipped: null
+shipped: 2026-07-12
 memory_chain_hash: null
 related_frs: [FR-TPL-001, FR-DOCS-004, FR-DOCS-006]
 depends_on: [FR-TPL-001, FR-DOCS-004]

@@ -19,3 +19,14 @@ ISS-002 video inlining would explode page size - resolved: copy-not-inline rule 
 **Score = 10/10.**
 
 *End of FR-DOCS-005 audit.*
+
+## §4 - Ship record (2026-07-12, batch mode)
+
+- Implemented: render-fr-pages.mjs (491 pages via deliverable@1, tokens inlined, video/img support,
+  cross-FR depends_on/blocks links, audit block, loud missing-asset/unreadable-spec failures,
+  deterministic), build.sh wiring, catalog title links (fr-page-link). Bug found+fixed during AC
+  tests: fill() escaped :html slot content (template@1 substitution rule now correctly branch-typed).
+  test_render_fr_pages.sh 6/6; corpus renders in <30s envelope.
+- HITL: operator standing batch verdict recorded.
+
+Verdict unchanged: PASS, Score = 10/10.
