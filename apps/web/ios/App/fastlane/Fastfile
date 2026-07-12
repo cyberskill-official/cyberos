@@ -11,9 +11,14 @@
 # flow trips 2FA in CI and cannot upload to TestFlight unattended. The key is passed as three secrets -
 # see the `ios` job in release.yml for the exact names and how to mint them.
 #
-# Signing is Xcode automatic signing driven by that same API key (`-allowProvisioningUpdates`), so no
-# certificate or provisioning profile is committed, and no `match` repo is needed. The key must have the
-# App Manager role for Xcode to be allowed to create the distribution certificate and profile.
+# Signing is Xcode automatic signing driven by that same API key, so no certificate or provisioning
+# profile is committed, and no `match` repo is needed. The key must have the App Manager role for Xcode to
+# be allowed to create the distribution certificate and profile.
+
+require "base64"
+require "tmpdir"
+require "fileutils"
+require "shellwords"
 
 default_platform(:ios)
 
@@ -22,39 +27,93 @@ APP_IDENTIFIER = "os.cyberskill.world".freeze
 platform :ios do
   # Fail early and in plain language. Without this, a missing secret surfaces 20 minutes later as an
   # inscrutable codesign error, which is how an afternoon disappears.
-  def api_key!
+  def require_env!
     missing = %w[APP_STORE_CONNECT_KEY_ID APP_STORE_CONNECT_ISSUER_ID APP_STORE_CONNECT_API_KEY APPLE_TEAM_ID]
               .reject { |k| ENV[k].to_s.strip != "" }
-    unless missing.empty?
-      UI.user_error!(
-        "missing required environment: #{missing.join(', ')}.\n" \
-        "These are GitHub secrets on this repo. See the `ios` job in .github/workflows/release.yml for how " \
-        "to mint the App Store Connect API key. iOS cannot be built or uploaded without them."
-      )
-    end
+    return if missing.empty?
 
-    app_store_connect_api_key(
-      key_id: ENV.fetch("APP_STORE_CONNECT_KEY_ID"),
-      issuer_id: ENV.fetch("APP_STORE_CONNECT_ISSUER_ID"),
-      key_content: ENV.fetch("APP_STORE_CONNECT_API_KEY"), # the .p8, base64-encoded
-      is_key_content_base64: true,
-      in_house: false,
+    UI.user_error!(
+      "missing required environment: #{missing.join(', ')}.\n" \
+      "These are GitHub secrets on this repo. See the `ios` job in .github/workflows/release.yml for how " \
+      "to mint the App Store Connect API key. iOS cannot be built or uploaded without them."
     )
+  end
+
+  # Write the .p8 to a real file on disk and return its ABSOLUTE path.
+  #
+  # This exists because of a specific, non-obvious gap: `app_store_connect_api_key` authenticates
+  # fastlane's OWN API calls (the TestFlight upload). It does NOT authenticate `xcodebuild`. They are
+  # separate processes, and xcodebuild never sees fastlane's token. `build_app` has no `api_key` parameter
+  # either - check the docs before "fixing" this by adding one.
+  #
+  # So with only -allowProvisioningUpdates set, xcodebuild had no credentials at all. It fell back to
+  # looking for a signed-in Xcode account, found none on a CI runner, and failed with:
+  #
+  #     error: No Accounts: Add a new account in Accounts settings.
+  #     error: No profiles for 'os.cyberskill.world' were found
+  #
+  # The fix is to hand xcodebuild the key directly via -authenticationKeyPath / -authenticationKeyID /
+  # -authenticationKeyIssuerID (Xcode 13+). The path MUST be absolute; a relative one is ignored.
+  def write_api_key_file!
+    dir = File.join(Dir.tmpdir, "cyberos-asc")
+    FileUtils.mkdir_p(dir)
+    path = File.join(dir, "AuthKey_#{ENV.fetch('APP_STORE_CONNECT_KEY_ID')}.p8")
+    File.write(path, Base64.decode64(ENV.fetch("APP_STORE_CONNECT_API_KEY")))
+    File.chmod(0o600, path)
+    if File.size(path).zero?
+      UI.user_error!("the decoded App Store Connect key is empty - is APP_STORE_CONNECT_API_KEY the base64 of the .p8?")
+    end
+    path
   end
 
   desc "Archive the app and upload the build to TestFlight"
   lane :beta do
-    key = api_key!
+    require_env!
+
+    team_id   = ENV.fetch("APPLE_TEAM_ID")
+    key_id    = ENV.fetch("APP_STORE_CONNECT_KEY_ID")
+    issuer_id = ENV.fetch("APP_STORE_CONNECT_ISSUER_ID")
+    key_path  = write_api_key_file!
+
+    # Authenticates fastlane itself - used by upload_to_testflight at the end of this lane.
+    key = app_store_connect_api_key(
+      key_id: key_id,
+      issuer_id: issuer_id,
+      key_content: ENV.fetch("APP_STORE_CONNECT_API_KEY"), # the .p8, base64-encoded
+      is_key_content_base64: true,
+      in_house: false,
+    )
 
     # The version + build number are stamped into the Xcode project by scripts/stamp-release-version.mjs
-    # from the root VERSION, BEFORE this lane runs (see the `ios` job). Do not set them here - two places
-    # deciding one number is how they drift. Read them back only to put them in the log.
+    # from the root VERSION and BUILD_NUMBER, BEFORE this lane runs (see the `ios` job). Do not set them
+    # here - two places deciding one number is how they drift.
     UI.message("archiving #{APP_IDENTIFIER} from the Capacitor project")
+
+    # Every argument below is load-bearing, and each one was paid for with a failed CI run:
+    #
+    #   -allowProvisioningUpdates  lets Xcode create/refresh the distribution certificate and provisioning
+    #                              profile instead of requiring a committed one or a `match` repo.
+    #   -authenticationKey*        the credentials that let it actually do that (see write_api_key_file!).
+    #   DEVELOPMENT_TEAM           must be a BUILD SETTING, not just export_options. Capacitor scaffolds
+    #                              the project with CODE_SIGN_STYLE = Automatic and an EMPTY team, and
+    #                              export_options only applies at EXPORT - by which point the ARCHIVE has
+    #                              already failed with 'Signing for "App" requires a development team'.
+    #                              Passing it here keeps the Team ID in a secret, out of project.pbxproj.
+    #
+    # CODE_SIGN_IDENTITY is deliberately NOT set here: it now lives in project.pbxproj, where the Release
+    # config says "Apple Distribution" (Capacitor scaffolds it as "iPhone Developer", which is why Xcode
+    # went hunting for a *development* profile and could not find one).
+    xcargs = [
+      "-allowProvisioningUpdates",
+      "-authenticationKeyPath #{Shellwords.escape(key_path)}",
+      "-authenticationKeyID #{Shellwords.escape(key_id)}",
+      "-authenticationKeyIssuerID #{Shellwords.escape(issuer_id)}",
+      "DEVELOPMENT_TEAM=#{Shellwords.escape(team_id)}",
+    ].join(" ")
 
     # `project:`, NOT `workspace:`. Capacitor 8 uses Swift Package Manager (CapApp-SPM), not CocoaPods, so
     # it never generates an App.xcworkspace - only App.xcodeproj. The first real CI run died on
-    # "Workspace file not found at path .../App.xcworkspace" after a clean checkout, npm ci and cap sync,
-    # because the CocoaPods-era layout was assumed. There is nothing to point a workspace at.
+    # "Workspace file not found at path .../App.xcworkspace". There is nothing to point a workspace at.
     #
     # `scheme: "App"` resolves to the SHARED scheme committed at
     # App.xcodeproj/xcshareddata/xcschemes/App.xcscheme. Xcode's auto-created schemes live in xcuserdata/,
@@ -64,20 +123,10 @@ platform :ios do
       scheme: "App",
       configuration: "Release",
       export_method: "app-store",
-      # Let Xcode create/refresh the distribution certificate and provisioning profile using the API key.
-      # This is what removes the need for a committed cert or a `match` repo.
-      # DEVELOPMENT_TEAM has to be passed as a BUILD SETTING, not just in export_options. Capacitor
-      # scaffolds the project with CODE_SIGN_STYLE = Automatic and an EMPTY DEVELOPMENT_TEAM, and
-      # export_options only applies at the export step - by which point the ARCHIVE has already failed with
-      # "Signing for \"App\" requires a development team". Setting it here means the Team ID stays in the
-      # secret instead of being committed into project.pbxproj.
-      #
-      # -allowProvisioningUpdates lets Xcode create/refresh the distribution certificate and provisioning
-      # profile from the App Store Connect key (which is why that key needs the App Manager role).
-      xcargs: "-allowProvisioningUpdates DEVELOPMENT_TEAM=#{ENV.fetch('APPLE_TEAM_ID')}",
+      xcargs: xcargs,
       export_options: {
         signingStyle: "automatic",
-        teamID: ENV.fetch("APPLE_TEAM_ID"),
+        teamID: team_id,
       },
       output_directory: "build",
       clean: true,
