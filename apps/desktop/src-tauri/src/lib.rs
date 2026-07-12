@@ -72,7 +72,11 @@ async fn call_tool(mcp: String, name: String, arguments: serde_json::Value) -> R
 /// restart into it. Best-effort by design - if the updater has no `plugins.updater` config yet (no pubkey /
 /// endpoint), or the check fails, or we are offline, it logs and does nothing. The desktop shell just loads
 /// the live /web/, so its content already updates on its own; this keeps the installed binary current too.
-#[cfg(desktop)]
+///
+/// FR-IMP-075: compiled OUT of the Mac App Store target (`--features mas`) - a sandboxed MAS
+/// bundle must not self-update (App Sandbox violation + App Store policy). Default builds keep
+/// the updater exactly as before.
+#[cfg(all(desktop, not(feature = "mas")))]
 fn spawn_update_check(app: tauri::AppHandle) {
     use tauri_plugin_updater::UpdaterExt;
     tauri::async_runtime::spawn(async move {
@@ -97,13 +101,13 @@ fn spawn_update_check(app: tauri::AppHandle) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let mut builder = tauri::Builder::default();
-    #[cfg(desktop)]
+    #[cfg(all(desktop, not(feature = "mas")))]
     {
         builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
     }
     builder
         .setup(|app| {
-            #[cfg(desktop)]
+            #[cfg(all(desktop, not(feature = "mas")))]
             spawn_update_check(app.handle().clone());
             Ok(())
         })

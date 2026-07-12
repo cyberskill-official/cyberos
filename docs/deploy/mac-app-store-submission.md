@@ -37,7 +37,7 @@ That compile-time exclusion is a small Rust change and is **out of scope for FR-
 
 | # | Blocker | Owner | Status |
 |---|---|---|---|
-| 1 | Follow-up FR: `mas` cargo feature excluding tauri-plugin-updater from the MAS build | engineering (draft next) | open |
+| 1 | `mas` cargo feature excluding the self-updater from the MAS build | engineering | **resolved by FR-IMP-075** (registration + launch check cfg-gated out; release-mas.yml builds `--features mas`). Verify on first real toolchain run: `cargo check && cargo check --features mas`. Residual, non-blocking: the target-scoped dependency still compiles in as dead code — optional-dep shrink is a later follow-up only if App Review ever flags it |
 | 2 | Apple Developer Program enrollment active | Stephen | pending-human |
 | 3 | macOS platform added to the CyberOS App Store Connect app record (bundle-id decision: reuse `os.cyberskill.world.desktop` or mint a MAS-specific id — ASC account decision) | Stephen | pending-human |
 | 4 | `3rd Party Mac Developer Application` + `3rd Party Mac Developer Installer` certs issued; secrets `MAS_APP_CERT_P12_BASE64`, `MAS_INSTALLER_CERT_P12_BASE64`, `MAS_CERT_PASSWORD`, `MAS_KEYCHAIN_PASSWORD`, `MAS_APP_SIGNING_IDENTITY`, `MAS_INSTALLER_SIGNING_IDENTITY` set | Stephen | pending-human |

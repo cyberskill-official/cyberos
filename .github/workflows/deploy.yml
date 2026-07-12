@@ -30,6 +30,8 @@ on:
       - 'modules/templates/**'        # FR-DOCS-007: CDS shells/tokens feed every generated page
       - 'modules/*/CHANGELOG.md'
       - 'services/*/CHANGELOG.md'
+      - 'modules/cuo/**'              # FR-IMP-074: workflow-rule changes refresh the published site
+      - 'modules/skill/**'            # FR-IMP-074: skill-contract changes likewise (deploy leg of the rules-to-channels hook chain)
   workflow_dispatch:
     inputs:
       force_services:

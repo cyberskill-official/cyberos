@@ -1,6 +1,6 @@
 ---
 workflow_id: chief-technology-officer/ship-feature-requests
-workflow_version: 2.4.0
+workflow_version: 2.5.0
 purpose: Drive each eligible FR in `docs/feature-requests/BACKLOG.md` end-to-end through the full lifecycle — from `ready_to_implement` through `implementing → ready_to_review → reviewing → ready_to_test → testing → done` (per `modules/skill/contracts/feature-request/STATUS-REFERENCE.md` §1.1). Deep-maps the repo, generates the edge-case matrix, implements with 90 % coverage on touched files, injects observability, self-approves architectural deviations via ADRs, runs the multi-vector debugger with a 5-fail circuit breaker, runs the testing gate (`coverage-gate-author`/`-audit`), and physically updates BACKLOG.md status between every phase transition. Failure or blocker at any downstream phase routes the FR back to `ready_to_implement` (STATUS-REFERENCE §1.3) with `routed_back_count += 1`.
 persona: chief-technology-officer
 cadence: per-FR (loops continuously over BACKLOG.md)
@@ -235,6 +235,16 @@ while ! stop_signal:
 
 The supervisor handles persistence (state survives across sessions because the truth is in BACKLOG.md + the memory chain), parallelism (multiple FRs may run in parallel when their dependency cones don't overlap), and observability (the per-phase `workflow_phase_complete` + the final `workflow_complete` rows are enough to reconstruct the run).
 
+## 11a. Batch selection and parallel shipping (v2.5.0, FR-IMP-074)
+
+One-FR-at-a-time is no longer the only sanctioned mode. The default is now BATCH shipping of parallel-safe FRs:
+
+- **Batch selection.** The eligible set is every `ready_to_implement` FR whose `depends_on` rows are all `done`. A batch is a maximal subset of that set whose members are pairwise independent: no `depends_on`/`blocks` edge between any two members, AND no overlap between their declared cones (frontmatter `new_files` + `modified_files` + `service`). FRs whose cones overlap stay serial relative to each other, in Queue-selection priority order.
+- **Batched execution.** Phases MAY run batch-wide (map the repo once, implement all members, review all members, test all members) and commits MAY batch per phase across members. What stays strictly per-FR: the artefact set (context map, matrix, plan, review packet, coverage gate), the ship-manifest, the BACKLOG/frontmatter status cells, and the recorded HITL verdicts.
+- **HITL is unchanged by batching.** Both human-acceptance gates apply to every member individually. A single human reply MAY record verdicts for many members at once (one utterance, N recorded per-FR verdicts — e.g. "approve all" / "accept all"); batching reduces round-trips, never guarantees.
+- **Unlock rescan.** Whenever any FR reaches `done`, re-scan the backlog for FRs whose `depends_on` just became fully satisfied; append the newly-eligible, cone-independent ones to the running batch queue and continue (EXECUTION-DISCIPLINE §1 — no pause to ask). Cone-overlapping unlocks queue serially behind the member they overlap with.
+- **Status-page sync rule (group A).** Every backlog-state-update write rides with a regenerated `docs/status/` page in the same commit — enforced mechanically by the pre-commit hook (`migrate-frs.sh --page` + auto-stage on any `docs/feature-requests/**`, `CHANGELOG.md`, or `VERSION` change). A status cell that moves without the page moving is a bug.
+
 ## 12. No partial-ship-and-pause within an FR
 
 The workflow MUST drive **all phases of an FR to completion in one continuous session** (or route back to `ready_to_implement` cleanly). It runs continuously under the halt-only doctrine in [`../../EXECUTION-DISCIPLINE.md`](../../EXECUTION-DISCIPLINE.md): the agent stops ONLY for an operator-decision fork, a manual/operator-only action (push, deploy, destructive op, secret), a hard blocker past the circuit-breaker budget, or the operator stop signal. Everything else — compile/lint/clippy, a test or module gate the agent's own change broke, the order of slices or FRs — the agent self-resolves and continues.
@@ -297,5 +307,15 @@ Reference implementation: `modules/cuo/cuo/ship_manifest.py` (doc-driven agents 
 - Test coverage audit: `coverage-gate-audit` skill — drives `testing → done`.
 - Out-of-band gate (step 28): `awh eval` against `modules/<module>/.awh/goldenset.yaml` seals `testing → done`. An FR cannot reach `done` unless awh independently re-runs its §1 cited tests + module suite GREEN against the sealed, read-only baseline. See the awh absorption design.
 - Code-audit gate (step 29): `bash scripts/caf_gate.sh <module>` (absorbed from CyberSkill/code-audit-framework, vendored at `tools/caf/`). Deterministic floor - target health (`tools/caf/core/evals/verify-target.sh` runs the module's own RUN_COMMANDS from `modules/<module>/audit-profile.yaml`) plus, when present, `code-audit-validate` against the sealed audit at `modules/<module>/.caf/`. CLEAN is required alongside the awh gate. See `docs/verification/caf-absorption-design.md`.
+
+## Distribution sync — rules to channels (v2.5.0, FR-IMP-074 group C)
+
+The rules this document (and every `modules/skill/` contract) defines are DISTRIBUTED: they ship inside the cyberos-init payload to standalone/self-hosted `.cyberos/` installs, the Claude plugin, the MCP server, and the npx CLI. Rule changes MUST reach every channel through this auto-hook chain, never by hand-copying:
+
+- **Build hook (local):** `.githooks/pre-commit` rebuilds `dist/cyberos` and runs `check-version-sync.sh` whenever `modules/cuo/**`, `modules/skill/**`, or `tools/cyberos-init/**` is staged — a rule edit cannot be committed without a fresh, stamp-verified payload build.
+- **Push hook (CI):** `payload-gate.yml` re-proves the same invariant on every push/PR touching those paths.
+- **Release hook:** `release.yml`'s payload job builds and uploads the stamped payload as release assets on every tag — the pull source for `cyberos update` / `init.sh --check` / plugin + MCP consumers.
+- **Deploy hook:** `deploy.yml`'s docs job also triggers on `modules/cuo/**` and `modules/skill/**`, so the published site reflects rule changes without waiting for a release.
+- **Drift signal:** the payload's `manifest.yaml` carries `rules_sha` — a deterministic content fingerprint over the distributed rule trees (`cuo/ plugin/ mcp/ cli/ memory/`). Channels compare it to detect rule drift even when VERSION is unchanged; `check-version-sync.sh` fails any payload missing it. Client-side comparison in `cyberos update`/plugin/MCP is the designated follow-up (FR-IMP-074 §9).
 
 *End of `chief-technology-officer/ship-feature-requests.md` workflow.*

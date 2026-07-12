@@ -51,6 +51,13 @@ check "$payload/mcp/package.json" "$(json_field "$payload/mcp/package.json" ".ve
 m=""; [ -f "$payload/manifest.yaml" ] && m="$(grep -E '^cyberos_version:' "$payload/manifest.yaml" | awk '{print $2}')"
 check "$payload/manifest.yaml" "$m"
 
+# 5b. manifest.yaml rules_sha - FR-IMP-074: the rule-drift fingerprint must exist and be a
+# 64-hex sha256. Not compared against VERSION (it changes independently); presence + shape only.
+rs=""; [ -f "$payload/manifest.yaml" ] && rs="$(grep -E '^rules_sha:' "$payload/manifest.yaml" | awk '{print $2}')"
+if ! printf '%s' "$rs" | grep -Eq '^[0-9a-f]{64}$'; then
+  echo "DRIFT $payload/manifest.yaml!rules_sha: '${rs:-<missing>}' is not a 64-hex sha256 (FR-IMP-074)"; drift=1
+fi
+
 # 6. plugin.json sealed inside cyberos.plugin (read in-stream, no extraction to disk)
 s=""
 if [ -f "$payload/cyberos.plugin" ]; then

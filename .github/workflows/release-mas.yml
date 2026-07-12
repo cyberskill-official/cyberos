@@ -80,9 +80,13 @@ jobs:
       # apps sandbox instead - the two are mutually redundant per Apple guidance).
       # apps/desktop has no package.json; the CLI is fetched pinned to major 2 (the
       # desktop job's tauri-action does the equivalent internally).
-      - name: Build MAS bundle (sandboxed, universal)
+      # FR-IMP-075: --features mas compiles the self-updater OUT (registration + launch check
+      # cfg-gated in src/lib.rs) - the one engineering blocker on this channel. If the pinned
+      # CLI major ever renames its cargo-features passthrough, this fails loudly at build,
+      # which is the wanted behavior: a MAS bundle must never ship WITH the updater.
+      - name: Build MAS bundle (sandboxed, universal, updater compiled out)
         working-directory: apps/desktop
-        run: npx --yes @tauri-apps/cli@2 build --config src-tauri/tauri.mas.conf.json --bundles app --target universal-apple-darwin
+        run: npx --yes @tauri-apps/cli@2 build --config src-tauri/tauri.mas.conf.json --bundles app --target universal-apple-darwin --features mas
 
       # Sandbox inheritance for helper binaries ONLY. No helpers exist today (audit:
       # no sidecars/child processes) - this loop is the guard that a future sidecar
