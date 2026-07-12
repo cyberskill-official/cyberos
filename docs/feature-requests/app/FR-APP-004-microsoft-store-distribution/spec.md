@@ -3,7 +3,7 @@ id: FR-APP-004
 title: "Microsoft Store distribution — MSIX packaging over the Tauri Windows bundle, Store-managed signing, Partner Center submission"
 module: app
 priority: SHOULD
-status: ready_to_test
+status: testing
 verify: T
 phase: P1
 milestone: P1 · slice 1
