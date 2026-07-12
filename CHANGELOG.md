@@ -2,6 +2,19 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [0.2.0] - 2026-07-12
+
+Added
+- FR-DOCS-003 release roadmap visualization - generated page on every deploy + release
+- FR-SKILL-119 stale-reference sweep - 388 files repointed + doc-anchor checker in CI
+- FR-CUO-208 template profiles - resolution chain, per-file detection, TEMPLATE_PROFILES.md
+- FR-CUO-207 gate autodetect for Go/JVM/.NET/PHP/Ruby + .cyberos/config.yaml per-key overrides
+- FR-SKILL-118 thin-pair contract parity - 86 files across 8 pairs + parity gate
+- FR-CUO-206 ship run-state manifest (ship-manifest@1) - resumable chain + deterministic queue
+
+Fixed
+- pin t04B payload version - suite independent of repo VERSION (post-0.1.0-rollback); FR-SKILL-118 -> reviewing
+
 ## [0.1.1] - 2026-07-12
 
 Fixed
