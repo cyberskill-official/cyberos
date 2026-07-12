@@ -3,14 +3,14 @@ id: FR-MEMORY-121
 title: "interaction-event schema & contract — the one work-interaction event shape (event_id, subject, module, event_type, target_ref, content_ref) every module emits into l1_audit_log, versioned + RLS + emit API; the single BRAIN capture primitive"
 module: MEMORY
 priority: MUST
-status: reviewing
+status: done
 verify: T
 phase: P1
 milestone: P1 · BRAIN capture · slice 1
 slice: 1
 owner: Stephen Cheng (CDO)
 created: 2026-06-29
-shipped: null
+shipped: 2026-07-12
 memory_chain_hash: null
 related_frs: [FR-MEMORY-101, FR-MEMORY-108, FR-MEMORY-122, FR-MEMORY-123, FR-EVAL-001, FR-AUTH-002, FR-AUTH-004, FR-CHAT-101, FR-OBS-008]
 depends_on: [FR-MEMORY-101, FR-EVAL-001]
