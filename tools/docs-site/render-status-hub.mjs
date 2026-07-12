@@ -80,31 +80,84 @@ const COMMIT = gitCommit(ROOT);
 const modules = [...new Set(frs.map(f => f.module))].sort();
 const byStatus = Object.fromEntries(STATUSES.map(s => [s, frs.filter(f => f.status === s)]));
 
-// ---- fragments ------------------------------------------------------------------------
+// ---- fragments (v2 UI - FR-DOCS-007; reference: operator-supplied roadmap.html) ----------
 const pageFor = f => {
   const rel = join('frs', f.dirModule, f.stem, 'index.html');
   return existsSync(join(OUT, rel)) ? `../${rel}` : null;
 };
-const idCell = f => { const h = pageFor(f); return h ? `<a href="${h}">${esc(f.id)}</a>` : esc(f.id); };
+const ACTIVE = ['ready_to_implement','implementing','ready_to_review','reviewing','ready_to_test','testing'];
+const chipClass = st => st === 'done' || st === 'closed' ? 'done' : ACTIVE.includes(st) ? 'active' : st === 'on_hold' ? 'hold' : 'todo';
+const chip = f => {
+  const h = pageFor(f);
+  const short = esc(f.id.replace(/^FR-/, ''));
+  const body = `<span class="chip ${chipClass(f.status)}" data-status="${esc(f.status)}" title="${esc(f.id)} — ${esc(f.title)} [${esc(f.status)}]">${short}</span>`;
+  return h ? `<a class="chip-link" href="${h}">${body}</a>` : body;
+};
 
-const deck = [
-  ['VERSION', esc(VERSION)], ['commit', esc(COMMIT)], ['FRs', frs.length], ['modules', modules.length],
-  ['latest release', releases.length ? `v${esc(releases[0].version)}${releases[0].date ? ' · ' + esc(releases[0].date) : ''}` : '-'],
-  ...STATUSES.filter(s => byStatus[s].length).map(s => [s.replace(/_/g, ' '), byStatus[s].length]),
-].map(([l, v]) => `<div class="deck-stat"><div class="deck-num">${v}</div><div class="deck-label">${l}</div></div>`).join('\n');
+// deck: segmented overall bar + count chips
+const doneN = frs.filter(f => f.status === 'done' || f.status === 'closed').length;
+const activeN = frs.filter(f => ACTIVE.includes(f.status)).length;
+const holdN = byStatus['on_hold'].length;
+const todoN = frs.length - doneN - activeN - holdN;
+const pct = n => frs.length ? (100 * n / frs.length).toFixed(1) : 0;
+const deck = `
+<h2>Overall progress (${frs.length} feature requests · ${modules.length} modules)</h2>
+<div class="bar">
+  <i class="seg-done" style="width:${pct(doneN)}%" title="done ${doneN}"></i>
+  <i class="seg-active" style="width:${pct(activeN)}%" title="in flight ${activeN}"></i>
+  <i class="seg-hold" style="width:${pct(holdN)}%" title="on hold ${holdN}"></i>
+</div>
+<div class="counts">
+  <span><b>${doneN}</b> done <span class="muted">(${pct(doneN)}%)</span></span>
+  <span><b>${activeN}</b> in flight</span>
+  <span><b>${todoN}</b> draft</span>
+  <span><b>${holdN}</b> on hold</span>
+  <span><b>${releases.length}</b> releases</span>
+  <span class="muted">latest ${releases.length ? 'v' + esc(releases[0].version) + (releases[0].date ? ' · ' + esc(releases[0].date) : '') : '-'}</span>
+</div>`;
 
-const frRow = f => `<div class="fr-row" data-module="${esc(f.module)}" data-class="${esc(f.cls)}" data-status="${esc(f.status)}"><span class="code">${idCell(f)}</span> ${esc(f.title)} <span class="hub-badge">${esc(f.module)}</span>${f.cls === 'improvement' ? ' <span class="hub-badge imp">improvement</span>' : ''}</div>`;
-const column = (s, rows) => `<section class="board-col" data-status-col="${esc(s)}"><h3>${esc(s)} <span class="count">${rows.length}</span></h3>\n${rows.map(frRow).join('\n')}</section>`;
+// callout: what is moving right now (generated, never hand-written)
+const moving = frs.filter(f => ['implementing','reviewing','ready_to_review','ready_to_test','testing'].includes(f.status));
+const nowHtml = moving.length ? `
+<section class="callout">
+  <h3>Now shipping (${moving.length})</h3>
+  <div class="frs">${moving.slice(0, 40).map(chip).join(' ')}${moving.length > 40 ? ` <span class="muted">+${moving.length - 40} more</span>` : ''}</div>
+</section>` : '';
+
+const legendHtml = `
+<div class="legend">
+  <span><i class="dot seg-done"></i> done / closed</span>
+  <span><i class="dot seg-active"></i> in flight (ready_to_implement → testing)</span>
+  <span><i class="dot" style="background:var(--cs-color-border-default)"></i> draft</span>
+  <span><i class="dot seg-hold"></i> on hold</span>
+  <span class="muted">chips link to each FR's page · hover for title + status</span>
+</div>`;
+
+// roadmap tab: one card per module (minibar + chips), then the rollup table
+const moduleCards = modules.map(mod => {
+  const rows = frs.filter(f => f.module === mod);
+  const d = rows.filter(f => f.status === 'done' || f.status === 'closed').length;
+  const a = rows.filter(f => ACTIVE.includes(f.status)).length;
+  const h = rows.filter(f => f.status === 'on_hold').length;
+  const p = n => rows.length ? (100 * n / rows.length).toFixed(1) : 0;
+  const activeCls = a ? ' active' : '';
+  return `<section class="epic${activeCls}" data-module="${esc(mod)}">
+  <span class="pct">${p(d)}% done</span>
+  <h3><span class="id">${esc(mod)}</span> <span class="muted">· ${rows.length} FRs</span></h3>
+  <div class="minibar"><i class="seg-done" style="width:${p(d)}%"></i><i class="seg-active" style="width:${p(a)}%"></i><i class="seg-hold" style="width:${p(h)}%"></i></div>
+  <div class="frs">${rows.map(chip).join(' ')}</div>
+</section>`;
+}).join('\n');
 const rollup = modules.map(mod => {
   const rows = frs.filter(f => f.module === mod);
   return `<tr><td class="code">${esc(mod)}</td><td>${rows.length}</td>${STATUSES.map(s => `<td>${rows.filter(r => r.status === s).length || ''}</td>`).join('')}</tr>`;
 }).join('\n');
 const roadmapTab = `
-<div class="board">
-${STATUSES.map(s => column(s, byStatus[s])).join('\n')}
-${invalid.length ? column('invalid', invalid) : ''}
+<div class="grid">
+${moduleCards}
+${invalid.length ? `<section class="epic"><h3><span class="id">invalid status</span></h3><div class="frs">${invalid.map(chip).join(' ')}</div><p class="hub-note">These FRs carry a status outside the 10-value enum - the corpus data-quality monitor.</p></section>` : ''}
 </div>
-<h2>Module rollups</h2>
+<h2 class="section-h">Module rollups</h2>
 <table><thead><tr><th>module</th><th>total</th>${STATUSES.map(s => `<th>${esc(s)}</th>`).join('')}</tr></thead><tbody>
 ${rollup}
 </tbody></table>`;
@@ -120,7 +173,7 @@ const backlogTab = `
   <select id="bk-status"><option value="">all statuses</option>${STATUSES.map(opt).join('')}</select>
 </div>
 <table id="bk-table"><thead><tr><th>id</th><th>title</th><th>module</th><th>class</th><th>priority</th><th>status</th></tr></thead><tbody>
-${frs.map(f => `<tr data-module="${esc(f.module)}" data-class="${esc(f.cls)}" data-priority="${esc(f.priority)}" data-status="${esc(f.status)}"><td class="code">${idCell(f)}</td><td>${esc(f.title)}</td><td>${esc(f.module)}</td><td>${esc(f.cls)}</td><td>${esc(f.priority)}</td><td>${esc(f.status)}</td></tr>`).join('\n')}
+${frs.map(f => `<tr data-module="${esc(f.module)}" data-class="${esc(f.cls)}" data-priority="${esc(f.priority)}" data-status="${esc(f.status)}"><td class="code">${pageFor(f) ? `<a href="${pageFor(f)}">${esc(f.id)}</a>` : esc(f.id)}</td><td>${esc(f.title)}</td><td>${esc(f.module)}</td><td>${esc(f.cls)}</td><td>${esc(f.priority)}</td><td><span class="chip ${chipClass(f.status)}" data-status="${esc(f.status)}">${esc(f.status)}</span></td></tr>`).join('\n')}
 </tbody></table>
 <script>
 (function () {
@@ -135,39 +188,58 @@ ${frs.map(f => `<tr data-module="${esc(f.module)}" data-class="${esc(f.cls)}" da
 })();
 </script>`;
 
-const changelogTab = releases.map(r => `<article class="release"><h3>v${esc(r.version)}${r.date ? ` <span class="muted">${esc(r.date)}</span>` : ''}</h3><ul>${r.lines.map(l => `<li>${esc(l)}</li>`).join('')}</ul></article>`).join('\n');
+// changelog tab: tick-circle release list (newest = "now")
+const changelogTab = `<div class="phases">` + releases.map((r, i) => `
+<article class="phase ${i === 0 ? 'now' : 'done'}">
+  <span class="tick">${i === 0 ? '★' : '✓'}</span>
+  <div><b>v${esc(r.version)}${r.date ? ` <span class="muted">· ${esc(r.date)}</span>` : ''}</b>
+  <span>${r.lines.map(l => esc(l)).join('<br>')}</span></div>
+</article>`).join('\n') + `</div>`;
 
 // ---- assemble through status-hub@1 ------------------------------------------------------
 const SHELL = readFileSync(join(ROOT, 'modules', 'templates', 'html', 'status-hub.html'), 'utf-8');
 const TOKENS = readFileSync(join(ROOT, 'modules', 'templates', 'cds', 'tokens.css'), 'utf-8');
 const extra = `
 .code { font-family:var(--cs-font-family-mono); }
-.code a, .hub-note a { color:var(--cs-color-text-accent); }
-.hub-badge { display:inline-block; padding:0 var(--cs-space-2); border:1px solid var(--cs-color-border-default); border-radius:var(--cs-radius-full); font-size:11px; color:var(--cs-color-text-muted); }
-.hub-badge.imp { color:var(--cs-color-semantic-success); }
+.code a, .hub-note a, .chip-link { color:var(--cs-color-text-accent); text-decoration:none; }
 .hub-note { color:var(--cs-color-text-muted); font-size:13px; }
-.board { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:var(--cs-space-3); }
-.board-col { background:var(--cs-color-surface-panel); border:1px solid var(--cs-color-border-default); border-radius:var(--cs-radius-md); padding:var(--cs-space-3); }
-.board-col h3 { margin:0 0 var(--cs-space-2); font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--cs-color-text-muted); }
-.board-col .count { color:var(--cs-color-brand-umber); font-weight:600; }
-.fr-row { padding:3px 0; border-bottom:1px solid var(--cs-color-border-default); font-size:13px; }
-.fr-row:last-child { border-bottom:0; }
-.release { background:var(--cs-color-surface-panel); border:1px solid var(--cs-color-border-default); border-radius:var(--cs-radius-md); padding:var(--cs-space-3) var(--cs-space-4); margin-bottom:var(--cs-space-3); }
+.section-h { font-size:14px; text-transform:uppercase; letter-spacing:.08em; color:var(--cs-color-text-muted); margin:var(--cs-space-8) 0 var(--cs-space-3); }
+.grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:var(--cs-space-4); }
+.epic { background:var(--cs-color-surface-panel); border:1px solid var(--cs-color-border-default); border-radius:12px; padding:var(--cs-space-4) var(--cs-space-4); }
+.epic.active { border-color:var(--cs-color-brand-ochre); }
+.epic h3 { margin:0; font-size:15px; line-height:var(--cs-font-lineHeight-heading); }
+.epic .id { color:var(--cs-color-brand-umber); font-weight:700; }
+.epic .pct { float:right; font-size:13px; color:var(--cs-color-text-muted); }
+.minibar { height:6px; border-radius:var(--cs-radius-full); background:var(--cs-color-surface-raised); overflow:hidden; display:flex; margin:var(--cs-space-2) 0 var(--cs-space-3); }
+.minibar i { display:block; height:100%; }
+.frs { display:flex; flex-wrap:wrap; gap:5px; }
+.chip { font-size:11.5px; font-weight:600; padding:3px 7px; border-radius:5px; background:var(--cs-color-border-default); color:var(--cs-color-text-accent); display:inline-block; }
+.chip.done { background:var(--cs-color-semantic-success); color:var(--cs-color-text-inverse); }
+.chip.active { background:var(--cs-color-brand-ochre); color:var(--cs-color-brand-umber); }
+.chip.hold { background:var(--cs-color-text-muted); color:var(--cs-color-text-inverse); }
 .muted { color:var(--cs-color-text-muted); font-weight:normal; font-size:13px; }
 table { border-collapse:collapse; width:100%; font-size:13px; }
 th, td { border:1px solid var(--cs-color-border-default); padding:var(--cs-space-1) var(--cs-space-2); text-align:left; }
 th { background:var(--cs-color-surface-raised); }
 .bk-facets { display:flex; gap:var(--cs-space-2); margin:var(--cs-space-3) 0; flex-wrap:wrap; }
 .bk-facets select { background:var(--cs-color-surface-panel); color:var(--cs-color-text-primary); border:1px solid var(--cs-color-border-default); border-radius:var(--cs-radius-sm); padding:var(--cs-space-1) var(--cs-space-2); font-family:inherit; }
+.phases { display:grid; gap:var(--cs-space-2); }
+.phase { background:var(--cs-color-surface-panel); border:1px solid var(--cs-color-border-default); border-radius:10px; padding:var(--cs-space-3) var(--cs-space-4); display:flex; gap:var(--cs-space-3); align-items:flex-start; }
+.phase .tick { width:22px; height:22px; border-radius:50%; flex:none; margin-top:2px; display:grid; place-items:center; font-size:12px; font-weight:700; color:var(--cs-color-text-inverse); background:var(--cs-color-semantic-success); }
+.phase.now .tick { background:var(--cs-color-brand-ochre); color:var(--cs-color-brand-umber); }
+.phase b { display:block; font-size:14px; }
+.phase span { font-size:13px; color:var(--cs-color-text-muted); }
 [hidden] { display:none !important; }`;
 
 let page = SHELL.replace('/*{{slot:styles:html}}*/', TOKENS + extra);
 for (const [k, v] of Object.entries({
-  'deck:html': deck, 'tab_roadmap:html': roadmapTab, 'tab_backlog:html': backlogTab,
-  'tab_changelog:html': changelogTab,
+  'meta:html': `VERSION <span class="code">${esc(VERSION)}</span> · built from <span class="code">${esc(COMMIT)}</span> · ${frs.length} FRs · ${releases.length} releases`,
+  'deck:html': deck, 'now:html': nowHtml, 'legend:html': legendHtml,
+  'tab_roadmap:html': roadmapTab, 'tab_backlog:html': backlogTab, 'tab_changelog:html': changelogTab,
 })) page = page.split(`{{slot:${k}}}`).join(v);
-page = page.split('{{slot:title}}').join('Status');
-page = page.split('{{slot:footer}}').join(esc(`Generated from FR frontmatter + CHANGELOG.md + VERSION at ${VERSION} (${COMMIT}) - FR-DOCS-006.`));
+page = page.split('{{slot:title}}').join('CyberOS status');
+page = page.split('{{slot:subtitle}}').join('Where the platform is and what is coming — generated from FR frontmatter, CHANGELOG, and VERSION');
+page = page.split('{{slot:footer}}').join(esc(`Generated at ${VERSION} (${COMMIT}) — FR-DOCS-006/007. Markdown is the record of truth.`));
 page = page.replace(/\{\{slot:[a-z_]+(:html)?\}\}/g, '');
 
 mkdirSync(join(OUT, 'reference'), { recursive: true });

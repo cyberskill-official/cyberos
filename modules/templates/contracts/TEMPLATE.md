@@ -30,7 +30,7 @@ Fonts fetch - `--cs-font-family-ui` falls back through the system stack by desig
 | id | file | required slots |
 |---|---|---|
 | deliverable@1 | html/deliverable.html | title, kind, id, status, meta:html, body:html, footer |
-| status-hub@1 | html/status-hub.html | title, deck:html, tab_roadmap:html, tab_backlog:html, tab_changelog:html, footer |
+| status-hub@1 | html/status-hub.html | title, subtitle, meta:html, deck:html, now:html, legend:html, tab_roadmap:html, tab_backlog:html, tab_changelog:html, footer |
 | catalog@1 | html/catalog.html | title, facets:html, cards:html, footer |
 
 Consumers inline `cds/tokens.css` (and `cds/glass.css` when using .cs-surface-*) ahead of the

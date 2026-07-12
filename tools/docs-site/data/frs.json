@@ -1,7 +1,7 @@
 {
   "schema_version": "v1",
   "generated_at_marker": "deterministic",
-  "count": 511,
+  "count": 512,
   "frs": [
     {
       "dir_module": "ai",
@@ -4913,6 +4913,33 @@
         "FR-DOCS-005"
       ],
       "path": "docs/feature-requests/docs/FR-DOCS-006-status-hub/spec.md"
+    },
+    {
+      "dir_module": "docs",
+      "stem": "FR-DOCS-007-status-hub-v2",
+      "id": "FR-DOCS-007",
+      "title": "Status hub v2 - dashboard UI (module cards, progress bars, chips) + zero-touch HTML regeneration on every FR/backlog/version change",
+      "module": "docs",
+      "priority": "MUST",
+      "status": "implementing",
+      "verify": "T",
+      "phase": "Wave D - visual deliverables",
+      "milestone": "",
+      "slice": null,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-07-12",
+      "shipped": null,
+      "effort_hours": null,
+      "depends_on": [
+        "FR-DOCS-006"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-DOCS-006",
+        "FR-TPL-001",
+        "FR-IMP-068"
+      ],
+      "path": "docs/feature-requests/docs/FR-DOCS-007-status-hub-v2/spec.md"
     },
     {
       "dir_module": "docs",
@@ -13361,14 +13388,14 @@
       "title": "Workflow/skill wiring for visual deliverables - FR folder scaffolding + template@1 citations in authoring contracts",
       "module": "SKILL",
       "priority": "SHOULD",
-      "status": "implementing",
+      "status": "done",
       "verify": "T",
       "phase": "Wave D - visual deliverables",
       "milestone": "",
       "slice": null,
       "owner": "Stephen Cheng (CTO)",
       "created": "2026-07-12",
-      "shipped": null,
+      "shipped": "2026-07-12",
       "effort_hours": null,
       "depends_on": [
         "FR-DOCS-004"

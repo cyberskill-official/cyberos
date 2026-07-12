@@ -27,6 +27,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
+  actions: write
   contents: write # commit the version bump back to main
 
 jobs:
@@ -73,6 +74,11 @@ jobs:
           # otherwise degrade to a warning so the workflow does not fail red on every merge to main.
           if git push origin HEAD:main; then
             echo "CyberOS VERSION -> ${{ steps.bump.outputs.version }} (not released; tag v${{ steps.bump.outputs.version }} to cut a release)" >> "$GITHUB_STEP_SUMMARY"
+            # FR-DOCS-007: the bump commit carries [skip ci], so push-triggered workflows never see
+            # it - dispatch the deploy workflow explicitly so the docs site (status hub deck) is
+            # regenerated at the NEW version with no manual trigger. Failure degrades to a warning.
+            GH_TOKEN=${{ github.token }} gh workflow run deploy.yml --ref main \
+              || echo "::warning::docs redeploy dispatch failed - site shows the previous VERSION until the next deploy"
           else
             {
               echo "### VERSION bump ${{ steps.bump.outputs.version }} computed but NOT pushed"

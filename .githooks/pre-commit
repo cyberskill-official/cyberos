@@ -12,3 +12,21 @@ if git diff --cached --name-only | grep -Eq "$trigger"; then
   bash "$root/.pre-commit-hooks/cyberos-payload-build.sh"
   bash "$root/tools/cyberos-init/check-version-sync.sh" "$root/dist/cyberos"
 fi
+
+# FR-DOCS-007: any staged change to FR specs, backlog inputs, templates, or the site tooling
+# regenerates dist/website locally (gitignored) - the HTML deliverables can never lag the
+# markdown truth on the machine that authored the change. Published freshness rides deploy.yml
+# (same paths) + version.yml's post-bump dispatch + release.yml's docs job.
+docs_trigger='^(docs/feature-requests/|docs/|modules/templates/|modules/[a-z-]+/docs/|tools/docs-site/|CHANGELOG\.md$|VERSION$)'
+if git diff --cached --name-only | grep -Eq "$docs_trigger"; then
+  if command -v node >/dev/null 2>&1; then
+    echo "cyberos: docs sources changed - regenerating dist/website ..."
+    if bash "$root/tools/docs-site/build.sh" >/dev/null 2>&1; then
+      echo "cyberos: dist/website refreshed (gitignored, not committed)."
+    else
+      echo "cyberos: WARN docs-site build failed - fix before pushing (run: bash tools/docs-site/build.sh)" >&2
+    fi
+  else
+    echo "cyberos: WARN node not found - skipped docs-site regeneration" >&2
+  fi
+fi

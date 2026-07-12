@@ -23,10 +23,10 @@ t01_deck_true() {                                                      # AC 1
   mkfix "$TMP/a"
   node "$R" "$TMP/a" "$TMP/a/out" >/dev/null 2>&1
   h="$TMP/a/out/reference/status.html"
-  grep -q '<div class="deck-num">2</div><div class="deck-label">FRs</div>' "$h" \
+  grep -q 'Overall progress (2 feature requests' "$h" \
     && grep -q 'v2.0.0' "$h" && grep -q '2026-07-01' "$h" \
-    && grep -q '<div class="deck-num">1</div><div class="deck-label">done</div>' "$h" \
-    && ok t01 || fail t01 "deck numbers wrong"
+    && grep -q '<span><b>1</b> done' "$h" && grep -q 'seg-done" style="width:50.0%"' "$h" \
+    && ok t01 || fail t01 "overall bar/counts wrong"
 }
 t02_tabs_routing_degrade() {                                           # AC 2
   h="$TMP/a/out/reference/status.html"
@@ -55,7 +55,7 @@ t06_fr_links() {                                                       # AC 6
   mkdir -p "$TMP/d/out/frs/aa/FR-AA-001-first"
   touch "$TMP/d/out/frs/aa/FR-AA-001-first/index.html"
   node "$R" "$TMP/d" "$TMP/d/out" >/dev/null 2>&1
-  grep -q 'href="../frs/aa/FR-AA-001-first/index.html"' "$TMP/d/out/reference/status.html" \
+  grep -q 'class="chip-link" href="../frs/aa/FR-AA-001-first/index.html"' "$TMP/d/out/reference/status.html" \
     && ok t06 || fail t06 "FR page links absent"
 }
 

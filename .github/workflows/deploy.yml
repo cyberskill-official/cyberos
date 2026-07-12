@@ -26,6 +26,8 @@ on:
       - 'services/*/docs/**'
       - 'tools/docs-site/**'
       - 'CHANGELOG.md'
+      - 'VERSION'                     # FR-DOCS-007: hub deck shows VERSION - redeploy on bump
+      - 'modules/templates/**'        # FR-DOCS-007: CDS shells/tokens feed every generated page
       - 'modules/*/CHANGELOG.md'
       - 'services/*/CHANGELOG.md'
   workflow_dispatch:
