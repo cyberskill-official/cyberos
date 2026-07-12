@@ -3,7 +3,7 @@ id: FR-IMP-068
 title: "Payload-version drift gate - CI and git hooks fail when any dist/plugin stamp differs from VERSION"
 module: improvement
 priority: MUST
-status: implementing
+status: reviewing
 class: improvement
 verify: T
 phase: Wave A - version coupling
