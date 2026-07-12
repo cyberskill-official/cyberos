@@ -2,6 +2,11 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
+## [1.7.1] - 2026-07-12
+
+Fixed
+- stop the pipeline reporting success for things it never shipped
+
 ## [1.7.0] - 2026-07-11
 
 Added
