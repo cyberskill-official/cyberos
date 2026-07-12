@@ -3,7 +3,7 @@ id: FR-IMP-076
 title: "Distribution expansion — root CLI .sh commands (init/update/changelog/help) + remote MCP connector transport for agent UIs"
 module: improvement
 priority: MUST
-status: reviewing
+status: testing
 class: improvement
 verify: T
 phase: "Wave 6 - go-live (distribution channels)"
@@ -60,6 +60,10 @@ update.sh wraps init.sh instead of duplicating logic (single source of truth for
 3. `--http`: `/healthz` 200 JSON; POST tools/list returns the 4 workflow tools; notification → 202; GET → 405. ✅ (curl-verified)
 4. stdio unchanged (default branch untouched semantics). ✅ (code path conditional on --http only)
 5. Runbook exists with hookup + security checklist. ✅
+
+## §5b — Testing pass (2026-07-13, post gate-1 "approve all")
+- Payload rebuilt to /tmp: help.sh 17-line surface exit 0; changelog.sh prints 1.0.0 + rules_sha + pointers; endpoint healthz 200 / tools-list 4 / notification 202 / GET 405. PASS
+- DEFECT CAUGHT + FIXED IN-PHASE: `update.sh --check` passed the flag through twice (`exec init.sh --check "$@"` without shifting), so init.sh read the second `--check` as its TARGET ("cd: --: invalid option"; root detection broken, installed=none from an installed repo). The no-arg default path had masked it at implementation time. Fix: case/shift in update.sh. Re-run, all arg shapes green - live report: installed=1.0.0 payload=1.0.0 latest=1.0.0 (GitHub releases reachable) verdict=up_to_date.
 
 ## §9 — Open questions
 - Grok legacy-SSE transport if streamable HTTP is rejected at hookup (recorded, not assumed).

@@ -3,7 +3,7 @@ id: FR-IMP-078
 title: "Store build-number monotonicity — release-time floor decouples re-tags from BUILD_NUMBER bumps (Play versionCode 10706 collision)"
 module: improvement
 priority: MUST
-status: reviewing
+status: testing
 class: improvement
 verify: T
 phase: "Wave 6 - go-live (Track B: mobile shells)"
@@ -47,6 +47,7 @@ risk_if_skipped: "Every re-tag of a pinned version re-offers a consumed build nu
 - `node --check` PASS; plain `--check` run: "all release artifacts already match VERSION" (baseline untouched). PASS
 - `--apply --store-monotonic`: stamped versionCode/CURRENT_PROJECT_VERSION 10706 -> 29731417 (> 10706, < 2.1e9), both pbxproj occurrences; files then restored to committed baseline. PASS
 - release.yml YAML parses; both stamp steps carry the flag (`grep -c 'store-monotonic' .github/workflows/release.yml` == 2 run-lines + comments). PASS
+- Testing pass 2026-07-13 (post gate-1 "approve all"): full battery re-run green; fresh floor stamped 29731447 (> the earlier test's 29731417 - the clock floor visibly advances between runs), baseline restored.
 
 ## §9
 - Two jobs in one run stamp slightly different numbers (independent clocks). Cosmetic only - Play and ASC never compare; recorded, not fixed.

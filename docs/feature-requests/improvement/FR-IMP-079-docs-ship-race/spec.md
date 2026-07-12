@@ -3,7 +3,7 @@ id: FR-IMP-079
 title: "Docs-ship race — shared staging dir between deploy.yml and release.yml docs jobs; fixed by a single ship script with per-run staging + flock'd swap"
 module: improvement
 priority: MUST
-status: reviewing
+status: testing
 class: improvement
 verify: T
 phase: "Wave 6 - go-live (docs channel)"
@@ -47,6 +47,7 @@ risk_if_skipped: "Stephen's standard release sequence (git push, then the tag pu
 - Two-racer simulation (exact remote command shape, tiny payloads, shared console dir): both exit 0, final `docs` = last swap's content, no cannot-stat. PASS (pre-fix design loses one racer by construction - observed live in #127)
 - Sweep semantics: pre-seeded stale `docs.new` (3h) swept; fresh foreign `docs.new.other.0` survived. PASS
 - `flock` present in util-linux (verified in the ubuntu sandbox; the VPS is ubuntu - if ever absent, the step fails loud at "command not found", not silently).
+- Testing pass 2026-07-13 (post gate-1 "approve all"): two-racer simulation re-run green (both exit 0, last swap wins, sweep semantics intact); ship.sh bash -n + both workflows YAML re-verified.
 
 ## §9
 - The docs-absent window during the swap (sub-second, now serialized) is accepted, as it was pre-fix. A symlink-flip scheme (docs -> release dir, atomic `ln -sfn`) would remove it entirely; adopt only if a monitoring blip ever attributes to it.

@@ -3,7 +3,7 @@ id: FR-IMP-077
 title: "iOS icon alpha flatten — ASC 90717 hotfix: 1024x1024 marketing icon must carry no alpha channel"
 module: improvement
 priority: MUST
-status: reviewing
+status: testing
 class: improvement
 verify: T
 phase: "Wave 6 - go-live (Track B: mobile shells)"
@@ -45,6 +45,7 @@ risk_if_skipped: "Every iOS TestFlight upload fails at ASC validation (90717) af
 - PIL pre: RGBA extrema 254-255 → post: RGB (1024,1024). PASS
 - Guard YAML parses; sips invocations are macos-runner native. PASS (parse; sips executes on the runner)
 - Android guard untouched (15-file hash loop intact). PASS
+- Testing pass 2026-07-13 (post gate-1 "approve all"): PIL RGB/1024x1024 re-verified, both guards re-verified, release.yml parses. PASS. Store-side proof already live: the re-tag's iOS lane went green and build 10706 reached TestFlight.
 ## §9
 - Why did FR-IMP-073's checks miss this? Hash-equality proved copy fidelity, AC #3's visual check cannot see a 254-255 alpha channel - exactly §10 row 3's predicted blind spot. This FR converts the blind spot into a standing machine check.
 ## §10
