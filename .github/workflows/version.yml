@@ -71,10 +71,13 @@ jobs:
           # FR-IMP-072: the bump commit carries the WHOLE codebase to the new version - installers,
           # store projects, package manifests - so no file anywhere ever disagrees with VERSION.
           node scripts/stamp-release-version.mjs --apply
+          # NOTE: the MCP server package lives at tools/cyberos-init/mcp/ (not root mcp/ - a
+          # nonexistent pathspec here is fatal and killed run #36). Keep this list in lockstep
+          # with the stampJson/stampCargo/stampGradle/stampXcodeProj calls in the stamper script.
           git add VERSION BUILD_NUMBER CHANGELOG.md \
             apps/desktop/src-tauri/tauri.conf.json apps/desktop/src-tauri/Cargo.toml \
             apps/web/package.json apps/web/android/app/build.gradle \
-            apps/web/ios/App/App.xcodeproj/project.pbxproj mcp/package.json
+            apps/web/ios/App/App.xcodeproj/project.pbxproj tools/cyberos-init/mcp/package.json
           git commit -m "chore(release): ${{ steps.bump.outputs.version }}"
           # A protected-branch ruleset blocks a direct push from the default token. With a deploy key
           # configured (secrets.VERSION_BUMP_SSH_KEY, added to the ruleset bypass) the push succeeds;
