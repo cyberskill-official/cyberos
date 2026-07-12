@@ -1,7 +1,7 @@
 {
   "schema_version": "v1",
   "generated_at_marker": "deterministic",
-  "count": 489,
+  "count": 506,
   "frs": [
     {
       "id": "FR-AI-105",
@@ -1476,6 +1476,28 @@
         "FR-PORTAL-004"
       ],
       "path": "docs/feature-requests/auth/FR-AUTH-110-oidc-provider.md"
+    },
+    {
+      "id": "FR-AUTH-111",
+      "title": "SSO JIT provisioning must take the person's name from the ID token, not their email address",
+      "module": "AUTH",
+      "priority": "SHOULD",
+      "status": "ready_to_implement",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 - store compliance (UGC controls)",
+      "slice": 1,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-07-11",
+      "shipped": null,
+      "effort_hours": 6,
+      "depends_on": [],
+      "blocks": [],
+      "related_frs": [
+        "FR-AUTH-110",
+        "FR-CHAT-269"
+      ],
+      "path": "docs/feature-requests/auth/FR-AUTH-111-sso-display-name-from-id-token.md"
     },
     {
       "id": "FR-CHAT-102",
@@ -3304,6 +3326,81 @@
       "path": "docs/feature-requests/chat/FR-CHAT-101-native-chat-skeleton.md"
     },
     {
+      "id": "FR-CHAT-267",
+      "title": "In-app content reporting - report a message, an attachment, or a person",
+      "module": "CHAT",
+      "priority": "MUST",
+      "status": "done",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 - store compliance (UGC controls)",
+      "slice": 1,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-07-11",
+      "shipped": "2026-07-11",
+      "effort_hours": 16,
+      "depends_on": [],
+      "blocks": [
+        "FR-CHAT-269"
+      ],
+      "related_frs": [
+        "FR-CHAT-268",
+        "FR-CHAT-269",
+        "FR-CHAT-101",
+        "FR-CHAT-265"
+      ],
+      "path": "docs/feature-requests/chat/FR-CHAT-267-in-app-content-reporting.md"
+    },
+    {
+      "id": "FR-CHAT-268",
+      "title": "User blocking - stop seeing a person's content, and stop receiving their messages",
+      "module": "CHAT",
+      "priority": "MUST",
+      "status": "done",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 - store compliance (UGC controls)",
+      "slice": 1,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-07-11",
+      "shipped": "2026-07-11",
+      "effort_hours": 20,
+      "depends_on": [],
+      "blocks": [],
+      "related_frs": [
+        "FR-CHAT-267",
+        "FR-CHAT-269",
+        "FR-CHAT-101"
+      ],
+      "path": "docs/feature-requests/chat/FR-CHAT-268-user-blocking.md"
+    },
+    {
+      "id": "FR-CHAT-269",
+      "title": "Workspace moderation queue - an administrator reviews reports, acts, and is audited",
+      "module": "CHAT",
+      "priority": "MUST",
+      "status": "ready_to_implement",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 - store compliance (UGC controls)",
+      "slice": 1,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-07-11",
+      "shipped": null,
+      "effort_hours": 24,
+      "depends_on": [
+        "FR-CHAT-267"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-CHAT-267",
+        "FR-CHAT-268",
+        "FR-CHAT-265",
+        "FR-AUTH-101"
+      ],
+      "path": "docs/feature-requests/chat/FR-CHAT-269-moderation-queue.md"
+    },
+    {
       "id": "FR-CRM-001",
       "title": "CRM Account/Contact/Deal Postgres schema — closed entity primitives + custom pipelines + closed stage-template enum + RLS + deal status FSM",
       "module": "CRM",
@@ -3722,6 +3819,128 @@
       "blocks": [],
       "related_frs": [],
       "path": "docs/feature-requests/cuo/FR-CUO-204-idle-autonomous-evolution.md"
+    },
+    {
+      "id": "FR-CUO-205",
+      "title": "Single backlog write path - /create-feature-requests delegates BACKLOG.md rows to backlog-state-update@2 (insert-row)",
+      "module": "cuo",
+      "priority": "MUST",
+      "status": "done",
+      "verify": "T",
+      "phase": "Wave C - strengthen the workflows",
+      "milestone": "",
+      "slice": null,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-07-12",
+      "shipped": "2026-07-12",
+      "effort_hours": null,
+      "depends_on": [],
+      "blocks": [],
+      "related_frs": [
+        "FR-SKILL-118",
+        "FR-CUO-206",
+        "FR-CUO-208"
+      ],
+      "path": "docs/feature-requests/cuo/FR-CUO-205-single-backlog-write-path.md"
+    },
+    {
+      "id": "FR-CUO-206",
+      "title": "Ship run-state manifest (ship-manifest@1) - resumable 31-step chain + depends_on-aware queue selection",
+      "module": "cuo",
+      "priority": "MUST",
+      "status": "done",
+      "verify": "T",
+      "phase": "Wave C - strengthen the workflows",
+      "milestone": "",
+      "slice": null,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-07-12",
+      "shipped": "2026-07-12",
+      "effort_hours": null,
+      "depends_on": [],
+      "blocks": [],
+      "related_frs": [
+        "FR-CUO-205",
+        "FR-CUO-207",
+        "FR-SKILL-118"
+      ],
+      "path": "docs/feature-requests/cuo/FR-CUO-206-ship-run-state-manifest.md"
+    },
+    {
+      "id": "FR-CUO-207",
+      "title": "Portability hardening - init.sh gate autodetect for Go/JVM/.NET/PHP/Ruby + per-repo .cyberos/config.yaml overrides",
+      "module": "cuo",
+      "priority": "SHOULD",
+      "status": "done",
+      "verify": "T",
+      "phase": "Wave C - strengthen the workflows",
+      "milestone": "",
+      "slice": null,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-07-12",
+      "shipped": "2026-07-12",
+      "effort_hours": null,
+      "depends_on": [],
+      "blocks": [
+        "FR-CUO-208"
+      ],
+      "related_frs": [
+        "FR-CUO-208",
+        "FR-SKILL-118",
+        "FR-IMP-070"
+      ],
+      "path": "docs/feature-requests/cuo/FR-CUO-207-gate-autodetect-portability.md"
+    },
+    {
+      "id": "FR-CUO-208",
+      "title": "FR template profile - /create-feature-requests resolves engineering-spec@1 vs feature_request@1 per repo, and the audit rubric follows",
+      "module": "cuo",
+      "priority": "SHOULD",
+      "status": "done",
+      "verify": "T",
+      "phase": "Wave C - strengthen the workflows",
+      "milestone": "",
+      "slice": null,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-07-12",
+      "shipped": "2026-07-12",
+      "effort_hours": null,
+      "depends_on": [
+        "FR-CUO-207"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-CUO-205",
+        "FR-CUO-207"
+      ],
+      "path": "docs/feature-requests/cuo/FR-CUO-208-fr-template-profile.md"
+    },
+    {
+      "id": "FR-CUO-209",
+      "title": "Vendor the full 14-stage SDP skill set by default - payload and plugin cover SOW through decommissioning, with a lifecycle map in GUIDE.md",
+      "module": "cuo",
+      "priority": "MUST",
+      "status": "done",
+      "verify": "T",
+      "phase": "Wave C - strengthen the workflows",
+      "milestone": "",
+      "slice": null,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-07-12",
+      "shipped": "2026-07-12",
+      "effort_hours": null,
+      "depends_on": [
+        "FR-SKILL-116",
+        "FR-SKILL-117"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-SKILL-116",
+        "FR-SKILL-117",
+        "FR-SKILL-118",
+        "FR-IMP-068"
+      ],
+      "path": "docs/feature-requests/cuo/FR-CUO-209-full-sdp-vendoring.md"
     },
     {
       "id": "FR-CUO-101",
@@ -4220,7 +4439,7 @@
       "title": "Documentation single source of truth - module-owned markdown, generated website",
       "module": "docs",
       "priority": "MUST",
-      "status": "implementing",
+      "status": "reviewing",
       "verify": "",
       "phase": "",
       "milestone": "",
@@ -4233,6 +4452,31 @@
       "blocks": [],
       "related_frs": [],
       "path": "docs/feature-requests/docs/FR-DOCS-002-docs-single-source-of-truth.md"
+    },
+    {
+      "id": "FR-DOCS-003",
+      "title": "Release roadmap visualization - a generated roadmap.html rebuilt on every release and deploy from FR frontmatter + CHANGELOG + VERSION",
+      "module": "docs",
+      "priority": "MUST",
+      "status": "ready_to_implement",
+      "verify": "T",
+      "phase": "Wave C - strengthen the workflows",
+      "milestone": "",
+      "slice": null,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-07-12",
+      "shipped": null,
+      "effort_hours": null,
+      "depends_on": [
+        "FR-DOCS-002"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-DOCS-001",
+        "FR-DOCS-002",
+        "FR-IMP-069"
+      ],
+      "path": "docs/feature-requests/docs/FR-DOCS-003-release-roadmap-visualization.md"
     },
     {
       "id": "FR-DOCS-001",
@@ -4779,7 +5023,7 @@
       "title": "governance, consent, access-control + retention layer — versioned monitoring notice + per-subject acknowledgment gate + data-category/purpose registry + per-category retention sweeper + manager/self access grants (tenant RLS + audit row per read) + data-subject rights — the Phase-0 gate every BRAIN/EVAL capture and evaluation depends on",
       "module": "EVAL",
       "priority": "MUST",
-      "status": "blocked",
+      "status": "on_hold",
       "verify": "T",
       "phase": "P0",
       "milestone": "BRAIN/EVAL · Phase 0 (governance first)",
@@ -6474,6 +6718,86 @@
       "blocks": [],
       "related_frs": [],
       "path": "docs/feature-requests/improvement/FR-IMP-067-go-live-readiness-gate-safety-nets-before-fully.md"
+    },
+    {
+      "id": "FR-IMP-068",
+      "title": "Payload-version drift gate - CI and git hooks fail when any dist/plugin stamp differs from VERSION",
+      "module": "improvement",
+      "priority": "MUST",
+      "status": "done",
+      "verify": "T",
+      "phase": "Wave A - version coupling",
+      "milestone": "",
+      "slice": null,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-07-12",
+      "shipped": "2026-07-12",
+      "effort_hours": null,
+      "depends_on": [],
+      "blocks": [
+        "FR-IMP-069"
+      ],
+      "related_frs": [
+        "FR-IMP-069",
+        "FR-IMP-070",
+        "FR-APP-001",
+        "FR-SKILL-116"
+      ],
+      "path": "docs/feature-requests/improvement/FR-IMP-068-payload-version-drift-gate.md"
+    },
+    {
+      "id": "FR-IMP-069",
+      "title": "Publish the versioned payload + Claude plugin as GitHub Release assets on every vX.Y.Z tag",
+      "module": "improvement",
+      "priority": "MUST",
+      "status": "done",
+      "verify": "T",
+      "phase": "Wave A - version coupling",
+      "milestone": "",
+      "slice": null,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-07-12",
+      "shipped": "2026-07-12",
+      "effort_hours": null,
+      "depends_on": [
+        "FR-IMP-068"
+      ],
+      "blocks": [
+        "FR-IMP-070"
+      ],
+      "related_frs": [
+        "FR-IMP-068",
+        "FR-IMP-070",
+        "FR-PLUGIN-008",
+        "FR-SKILL-201",
+        "FR-APP-001"
+      ],
+      "path": "docs/feature-requests/improvement/FR-IMP-069-publish-payload-on-release.md"
+    },
+    {
+      "id": "FR-IMP-070",
+      "title": "Remote update awareness - /update and init.sh --check compare installed vs latest published release, not the local payload",
+      "module": "improvement",
+      "priority": "MUST",
+      "status": "done",
+      "verify": "T",
+      "phase": "Wave A - version coupling",
+      "milestone": "",
+      "slice": null,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-07-12",
+      "shipped": "2026-07-12",
+      "effort_hours": null,
+      "depends_on": [
+        "FR-IMP-069"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-IMP-068",
+        "FR-IMP-069",
+        "FR-APP-001"
+      ],
+      "path": "docs/feature-requests/improvement/FR-IMP-070-remote-update-awareness.md"
     },
     {
       "id": "FR-INV-001",
@@ -11883,6 +12207,104 @@
         "FR-SKILL-114"
       ],
       "path": "docs/feature-requests/skill/FR-SKILL-115-stale-placeholder-sweep.md"
+    },
+    {
+      "id": "FR-SKILL-116",
+      "title": "Vendor the debugging-cycle pair + chain-coverage check so no ship-referenced skill can be missing from the payload",
+      "module": "SKILL",
+      "priority": "MUST",
+      "status": "done",
+      "verify": "T",
+      "phase": "Wave B - finish the children",
+      "milestone": "",
+      "slice": null,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-07-12",
+      "shipped": "2026-07-12",
+      "effort_hours": null,
+      "depends_on": [],
+      "blocks": [
+        "FR-CUO-209"
+      ],
+      "related_frs": [
+        "FR-SKILL-117",
+        "FR-SKILL-118",
+        "FR-CUO-209",
+        "FR-IMP-068"
+      ],
+      "path": "docs/feature-requests/skill/FR-SKILL-116-vendor-debugging-cycle-chain-coverage.md"
+    },
+    {
+      "id": "FR-SKILL-117",
+      "title": "Author the architectural-spike-author/-audit pair - the missing ADR input artefact (architectural-spike@1)",
+      "module": "SKILL",
+      "priority": "MUST",
+      "status": "done",
+      "verify": "T",
+      "phase": "Wave B - finish the children",
+      "milestone": "",
+      "slice": null,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-07-12",
+      "shipped": "2026-07-12",
+      "effort_hours": null,
+      "depends_on": [],
+      "blocks": [
+        "FR-CUO-209"
+      ],
+      "related_frs": [
+        "FR-SKILL-116",
+        "FR-SKILL-118",
+        "FR-CUO-209"
+      ],
+      "path": "docs/feature-requests/skill/FR-SKILL-117-architectural-spike-pair.md"
+    },
+    {
+      "id": "FR-SKILL-118",
+      "title": "Bring the six thin vendored pairs to full contract parity (RUBRIC, PIPELINE, INVARIANTS, envelopes, references, acceptance)",
+      "module": "SKILL",
+      "priority": "MUST",
+      "status": "done",
+      "verify": "T",
+      "phase": "Wave B - finish the children",
+      "milestone": "",
+      "slice": null,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-07-12",
+      "shipped": "2026-07-12",
+      "effort_hours": null,
+      "depends_on": [],
+      "blocks": [],
+      "related_frs": [
+        "FR-SKILL-116",
+        "FR-SKILL-117",
+        "FR-CUO-207",
+        "FR-CUO-209"
+      ],
+      "path": "docs/feature-requests/skill/FR-SKILL-118-thin-pair-contract-parity.md"
+    },
+    {
+      "id": "FR-SKILL-119",
+      "title": "Stale-reference sweep - repoint dead SDP anchors across modules/skill and refresh obsolete ship-workflow notes, with a doc-anchor checker",
+      "module": "SKILL",
+      "priority": "SHOULD",
+      "status": "done",
+      "verify": "T",
+      "phase": "Wave B - finish the children",
+      "milestone": "",
+      "slice": null,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-07-12",
+      "shipped": "2026-07-12",
+      "effort_hours": null,
+      "depends_on": [],
+      "blocks": [],
+      "related_frs": [
+        "FR-SKILL-115",
+        "FR-SKILL-118",
+        "FR-DOCS-002"
+      ],
+      "path": "docs/feature-requests/skill/FR-SKILL-119-stale-reference-sweep.md"
     },
     {
       "id": "FR-SKILL-201",

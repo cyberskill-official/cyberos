@@ -3,10 +3,11 @@ id: FR-DOCS-002
 title: Documentation single source of truth - module-owned markdown, generated website
 module: docs
 class: product
-status: reviewing
+status: done
 priority: MUST
 depends_on: []
 routed_back_count: 0
+shipped: 2026-07-12
 awh: N/A
 ---
 
@@ -39,3 +40,12 @@ Why markdown over authored HTML: agents and humans author it natively, it diffs 
 ## 3. Gate
 
 Machine: build twice + diff (determinism), link/asset check pass, `bash tools/docs-site/build.sh` exit 0. Review + final acceptance: HITL per STATUS-REFERENCE §1.4.
+
+## Ship record (2026-07-12)
+
+- Parked at reviewing from its own wave; gate cleared today. Fresh verification: render-docs.mjs +
+  dependency-free md.mjs + relocated builders present; website/docs fully migrated (deleted);
+  build green, 69 pages, byte-identical double-build (determinism), dist/ gitignored.
+- Review + final acceptance: APPROVE + pre-authorize done (Stephen Cheng, in-chat, 2026-07-12).
+
+*End of FR-DOCS-002.*
