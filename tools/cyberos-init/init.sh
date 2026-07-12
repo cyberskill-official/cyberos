@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 # init.sh - vendor the CyberOS machine into the CURRENT project under a gitignored .cyberos/,
 # organised by module (.cyberos/cuo, .cyberos/memory, .cyberos/plugin), scaffold
-# docs/feature-requests/ + the BRAIN, and print next steps. No CyberOS clone required.
-# Idempotent: never clobbers your BACKLOG.md, gates.env, or existing BRAIN.
+# docs/feature-requests/ + CHANGELOG.md + the BRAIN, auto-run the FR migration (folder-per-FR
+# + status page; skip with CYBEROS_NO_MIGRATE=1), and print next steps. No CyberOS clone required.
+# Idempotent: never clobbers your BACKLOG.md, CHANGELOG.md, gates.env, or existing BRAIN;
+# .gitignore is managed through ONE marked block (everything outside it is never touched).
+# A payload copied INSIDE the target repo (channel 1: .cyberos-init/) removes itself on
+# success - keep it with CYBEROS_KEEP_PAYLOAD=1; submodules are never removed.
 set -euo pipefail
 
 src="$(cd "$(dirname "$0")" && pwd)"                   # the payload dir this script lives in
@@ -190,10 +194,57 @@ EOF
 fi
 
 # 4. scaffold the backlog -----------------------------------------------------
-bl="$root/docs/feature-requests/BACKLOG.md"
+# A pre-existing docs/BACKLOG.md is ADOPTED into the canonical home first (content preserved);
+# only a repo with neither gets the template.
+bl="$root/docs/feature-requests/BACKLOG.md"; BACKLOG_SET="docs/feature-requests/BACKLOG.md"
+if [ ! -f "$bl" ] && [ -f "$root/docs/BACKLOG.md" ]; then
+  mv "$root/docs/BACKLOG.md" "$bl"
+  BACKLOG_SET="adopted docs/BACKLOG.md -> docs/feature-requests/BACKLOG.md"
+fi
 if [ ! -f "$bl" ]; then
   proj="$(basename "$root")"
   sed "s/{{PROJECT}}/$proj/g" "$src/cuo/templates/BACKLOG.md" > "$bl"
+fi
+
+# 4b. scaffold CHANGELOG.md exactly once (never clobber) -----------------------
+# The status page's Changelog tab reads root CHANGELOG.md `## [X.Y.Z] - date` sections.
+# A pre-existing docs/CHANGELOG.md is ADOPTED to the root first (content preserved);
+# only a repo with neither gets the Keep-a-Changelog seed with release 0.1.0.
+cl="$root/CHANGELOG.md"; CHANGELOG_SET="kept your CHANGELOG.md"
+if [ ! -f "$cl" ] && [ -f "$root/docs/CHANGELOG.md" ]; then
+  mv "$root/docs/CHANGELOG.md" "$cl"
+  CHANGELOG_SET="adopted docs/CHANGELOG.md -> CHANGELOG.md (root; status page input)"
+fi
+if [ ! -f "$cl" ]; then
+  cat > "$cl" <<EOF
+# Changelog
+
+All notable changes to this project live here - one \`## [X.Y.Z] - YYYY-MM-DD\` section per
+release (Keep-a-Changelog style; the CyberOS status page's Changelog tab reads these sections).
+
+## [0.1.0] - $(date +%Y-%m-%d)
+
+- CyberOS initialised: FR workflow vendored to .cyberos/, backlog at docs/feature-requests/BACKLOG.md, status page at .cyberos/status.html.
+EOF
+  CHANGELOG_SET="created CHANGELOG.md (seeds the status page's Changelog tab)"
+fi
+
+# 4c. FR migration + status page (auto; skip with CYBEROS_NO_MIGRATE=1) --------
+# Brings pre-existing FRs to the folder-per-FR rule (root-level flat FRs included) and
+# (re)generates the status page (roadmap | backlog | changelog) at .cyberos/status.html.
+# Idempotent and verified: migrate-frs.sh ends with a machine-readable verify line and
+# WARNs for anything it could not place. A failure here never aborts init.
+MIGRATE_SET="skipped (CYBEROS_NO_MIGRATE=1)"
+if [ "${CYBEROS_NO_MIGRATE:-0}" != "1" ]; then
+  if [ -f "$CY/migrate-frs.sh" ]; then
+    if mig_out="$(bash "$CY/migrate-frs.sh" "$root" 2>&1)"; then MIGRATE_SET="ok"; else MIGRATE_SET="FAILED (non-fatal; re-run: bash .cyberos/migrate-frs.sh)"; fi
+    printf '%s\n' "$mig_out" | sed 's/^/  | /'
+    mig_layout="$(printf '%s\n' "$mig_out" | grep '^fr-layout: ' | tail -1 || true)"
+    mig_verify="$(printf '%s\n' "$mig_out" | grep '^migrate-frs verify: ' | tail -1 || true)"
+    MIGRATE_SET="$MIGRATE_SET${mig_layout:+; ${mig_layout#fr-layout: }}${mig_verify:+; ${mig_verify#migrate-frs }}"
+  else
+    MIGRATE_SET="unavailable (payload built without the migration kit)"
+  fi
 fi
 
 # 5. memory module + BRAIN (default on; skip with CYBEROS_NO_MEMORY=1) --------
@@ -296,16 +347,18 @@ This file is the cross-tool spine; the full one-pager is `.cyberos/AGENT-ENTRY.m
 SPINE
 }
 SP_MARK="cyberos-agent-spine (managed by cyberos init; edit above/below this marker)"
-if [ ! -f "$root/AGENTS.md" ]; then
+if [ -L "$root/AGENTS.md" ]; then
+  # Symlinked spine (e.g. CyberOS itself links AGENTS.md -> the memory-protocol source): creating
+  # or appending would write THROUGH the link into whatever it points at - and a DANGLING link
+  # (target checkout absent on this machine) would crash the write outright. The spine lives in
+  # .cyberos/AGENT-ENTRY.md regardless; leave the operator's link untouched. Checked FIRST because
+  # `-f` follows links, so a dangling symlink would otherwise fall into the create branch.
+  AGENTS_SET="kept your AGENTS.md symlink untouched (spine at .cyberos/AGENT-ENTRY.md)"
+elif [ ! -f "$root/AGENTS.md" ]; then
   { agents_spine; printf '\n<!-- %s -->\n' "$SP_MARK"; } > "$root/AGENTS.md"
   AGENTS_SET="created AGENTS.md (canonical cross-agent spine)"
 elif grep -q "$SP_MARK" "$root/AGENTS.md" 2>/dev/null || grep -q '\.cyberos/AGENT-ENTRY\.md' "$root/AGENTS.md" 2>/dev/null; then
   AGENTS_SET="kept your AGENTS.md (already CyberOS-aware)"
-elif [ -L "$root/AGENTS.md" ]; then
-  # Symlinked spine (e.g. CyberOS itself links AGENTS.md -> the memory-protocol source): appending
-  # would write THROUGH the link into whatever it points at. The spine lives in
-  # .cyberos/AGENT-ENTRY.md regardless; leave the operator's link untouched.
-  AGENTS_SET="kept your AGENTS.md symlink untouched (spine at .cyberos/AGENT-ENTRY.md)"
 else
   { printf '\n---\n\n'; agents_spine; printf '\n<!-- %s -->\n' "$SP_MARK"; } >> "$root/AGENTS.md"
   AGENTS_SET="appended a CyberOS section to your AGENTS.md"
@@ -388,19 +441,102 @@ if [ "${CYBEROS_NO_MCP:-0}" != "1" ] && [ -f "$CY/mcp/cyberos-mcp.mjs" ]; then
   MCP_SET="server -> .cyberos/mcp/ ; registered:${wrote:- (none new; see .cyberos/mcp/README.md)}"
 fi
 
-# 6. gitignore the vendored machine + the BRAIN (regenerable / tenant data) ---
-# The agent-surface FILES (AGENTS.md, CLAUDE.md, .mcp.json, .grok/GROK.md, ...) stay TRACKED
-# so a teammate's agent picks them up. Only the vendored machine and the symlinked skills
-# (which point INTO the gitignored .cyberos/) are ignored - both regenerate via init.
+# 6. gitignore - ONE managed block, regenerated in place on every init ---------
+# Policy (what init writes, tracked vs ignored):
+#   TRACKED  - the agent surface (AGENTS.md, CLAUDE.md, GEMINI.md, .cursorrules, .cursor/rules/,
+#              .grok/GROK.md, .github/copilot-instructions.md, .agents/rules/, .windsurfrules,
+#              .mcp.json, .cursor/mcp.json), docs/feature-requests/** (BACKLOG + specs/audits),
+#              CHANGELOG.md, docs/status.html (the generated status page - the repo's published
+#              Roadmap/Backlog/Changelog view), and skill COPIES (CYBEROS_COPY_SKILLS=1).
+#   IGNORED  - .cyberos/ (vendored machine + BRAIN store + render intermediates: regenerable /
+#              tenant data) and the skill SYMLINKS (they point INTO the ignored .cyberos/).
+# Mechanics: everything lives between the two markers below; re-init REPLACES the block content
+# (never appends duplicates), anything outside the markers is never touched, and the scattered
+# entries older inits appended (pre-block) are lifted into the block on first contact.
 gi="$root/.gitignore"
 [ -f "$gi" ] || : > "$gi"
-grep -q "CyberOS vendored machine" "$gi" || printf '\n# CyberOS vendored machine + local BRAIN at .cyberos/memory/store (regenerable via init; tenant data). Do not commit.\n' >> "$gi"
-grep -qx ".cyberos/" "$gi"        || echo ".cyberos/"        >> "$gi"
-if [ "${CYBEROS_COPY_SKILLS:-0}" != "1" ]; then
-  grep -q "CyberOS skill symlinks" "$gi" || printf '\n# CyberOS skill symlinks -> .cyberos/plugin/skills (regenerable via init).\n' >> "$gi"
-  for sp in .claude/skills/ship-feature-requests .grok/skills/ship-feature-requests .commandcode/skills/ship-feature-requests .codex/skills/ship-feature-requests .opencode/skill/ship-feature-requests; do
-    grep -qx "$sp" "$gi" || echo "$sp" >> "$gi"
-  done
+GI_BEGIN="# >>> cyberos (managed block - regenerated by cyberos init; edit outside the markers) >>>"
+GI_END="# <<< cyberos <<<"
+gi_block() {
+  printf '%s\n' "$GI_BEGIN"
+  printf '%s\n' "# vendored machine + local BRAIN store + render intermediates (regenerable via init; tenant data)"
+  printf '%s\n' ".cyberos/"
+  if [ "${CYBEROS_COPY_SKILLS:-0}" != "1" ]; then
+    printf '%s\n' "# skill symlinks -> .cyberos/plugin/skills (regenerable via init)"
+    for sp in .claude/skills/ship-feature-requests .grok/skills/ship-feature-requests .commandcode/skills/ship-feature-requests .codex/skills/ship-feature-requests .opencode/skill/ship-feature-requests; do
+      printf '%s\n' "$sp"
+    done
+  fi
+  printf '%s\n' "$GI_END"
+}
+# strip any prior managed block + the exact legacy lines pre-block inits appended, then trim
+# the trailing blank run and append the fresh block (one blank line of separation).
+awk -v b="$GI_BEGIN" -v e="$GI_END" '
+  $0==b {inblk=1; next} $0==e {inblk=0; next} inblk {next}
+  $0=="# CyberOS vendored machine + local BRAIN at .cyberos/memory/store (regenerable via init; tenant data). Do not commit." {next}
+  $0=="# CyberOS skill symlinks -> .cyberos/plugin/skills (regenerable via init)." {next}
+  $0==".cyberos/" {next}
+  $0==".claude/skills/ship-feature-requests" {next}
+  $0==".grok/skills/ship-feature-requests" {next}
+  $0==".commandcode/skills/ship-feature-requests" {next}
+  $0==".codex/skills/ship-feature-requests" {next}
+  $0==".opencode/skill/ship-feature-requests" {next}
+  {lines[++n]=$0}
+  END { while (n>0 && lines[n] ~ /^[[:space:]]*$/) n--; for (i=1;i<=n;i++) print lines[i] }
+' "$gi" > "$gi.cyberos.tmp"
+{ cat "$gi.cyberos.tmp"; [ -s "$gi.cyberos.tmp" ] && printf '\n'; gi_block; } > "$gi"
+rm -f "$gi.cyberos.tmp"
+
+# 6b. status auto-sync hook (managed; CYBEROS_NO_HOOK=1 skips) -----------------
+# docs/status/ must stay synced with the markdown it renders (FR frontmatter, CHANGELOG.md,
+# VERSION). Two touchpoints keep it live: run-gates.sh regenerates after every gates run, and
+# this pre-commit hook regenerates when an input is staged. The hook never blocks a commit.
+# An existing foreign pre-commit is never touched - the operator gets the one-liner instead.
+HOOK_SET="skipped (CYBEROS_NO_HOOK=1)"
+if [ "${CYBEROS_NO_HOOK:-0}" != "1" ]; then
+  if [ ! -d "$root/.git" ]; then
+    HOOK_SET="skipped (not a git checkout)"
+  else
+    hk="$root/.git/hooks/pre-commit"
+    mkdir -p "$root/.git/hooks"
+    if [ ! -f "$hk" ] || head -3 "$hk" 2>/dev/null | grep -q "cyberos-status-hook"; then
+      # absent, or a hook WE own outright (marker in the header): (re)write the standalone form
+      cat > "$hk" <<'HOOK'
+#!/usr/bin/env sh
+# cyberos-status-hook v1 (managed by cyberos init) - regenerate docs/status/ when its inputs
+# change (docs/feature-requests/**, CHANGELOG.md, VERSION). Never blocks a commit; delete this
+# file (or re-init with CYBEROS_NO_HOOK=1) to disable.
+if git diff --cached --name-only | grep -qE '^(docs/feature-requests/|CHANGELOG\.md$|VERSION$)'; then
+  if [ -f .cyberos/migrate-frs.sh ]; then
+    bash .cyberos/migrate-frs.sh --page >/dev/null 2>&1 || exit 0
+    git add docs/status 2>/dev/null || true
+  fi
+fi
+exit 0
+HOOK
+      HOOK_SET="pre-commit hook installed (regenerates docs/status/ when FRs/CHANGELOG/VERSION are committed)"
+    elif grep -q "cyberos-status-hook" "$hk" 2>/dev/null; then
+      HOOK_SET="kept your pre-commit hook (cyberos status-sync block already appended)"
+    else
+      # a FOREIGN hook exists: append a marked block that preserves the foreign exit code -
+      # the same append-once-with-marker pattern AGENTS.md uses. Never reordered, never removed.
+      cat >> "$hk" <<'HOOK'
+
+# >>> cyberos-status-hook v1 (appended by cyberos init; edits above survive re-init) >>>
+_cyberos_rc=$?
+if git diff --cached --name-only | grep -qE '^(docs/feature-requests/|CHANGELOG\.md$|VERSION$)'; then
+  if [ -f .cyberos/migrate-frs.sh ]; then
+    bash .cyberos/migrate-frs.sh --page >/dev/null 2>&1 || true
+    git add docs/status 2>/dev/null || true
+  fi
+fi
+exit $_cyberos_rc
+# <<< cyberos-status-hook <<<
+HOOK
+      HOOK_SET="appended the status-sync block to your existing pre-commit hook (its exit code is preserved)"
+    fi
+    chmod +x "$hk"
+  fi
 fi
 
 # 7. tell the operator what to do next ----------------------------------------
@@ -410,13 +546,20 @@ cyberos init: done.
   cuo       -> .cyberos/cuo/          (workflow + doctrine + status contract + skills + gates)
   memory    -> .cyberos/memory/       (Layer-1 protocol + schema)
   gates     -> .cyberos/gates.env     (detected: build='${BUILD_CMD:-none}' test='${TEST_CMD:-none}')
-  backlog   -> docs/feature-requests/BACKLOG.md
+  backlog   -> ${BACKLOG_SET}
+  changelog -> ${CHANGELOG_SET}
+  migrate   -> ${MIGRATE_SET}
+  status    -> docs/status/           (index.html + assets/; Roadmap | Backlog | Changelog for THIS
+                                       repo - replaces the old standalone docs; tracked)
+  auto-sync -> ${HOOK_SET}; run-gates.sh also regenerates the page after every gates run
   agents    -> ${AGENTS_SET}
               pointer files:${AGENT_FILES:- (none new)}
               native skills:${SKILL_DIRS:- (none new)}
               MCP: ${MCP_SET}
   BRAIN     -> ${MEMORY_SET}${MEM_BRAIN:+ (${MEM_BRAIN})}${MEM_AGENTS:+; ${MEM_AGENTS}}
-  gitignored: .cyberos/ (vendored machine + BRAIN store at .cyberos/memory/store) + skill symlinks
+  gitignored: one managed block in .gitignore covers .cyberos/ (vendored machine + BRAIN store)
+              + the skill symlinks; agent files, docs/feature-requests/**, CHANGELOG.md and
+              docs/status.html stay TRACKED (commit them). Everything outside the block is yours.
   version   -> CyberOS $avail_ver (.cyberos/VERSION); check for updates: <payload>/init.sh --check $root
 
 Next:
@@ -441,3 +584,36 @@ data). The rules are in .cyberos/memory/AGENTS.md (root AGENTS.md is the workflo
 points to it). An agent working here records decisions, audits, and plans into the BRAIN per
 that protocol. Skip memory setup by re-running init with CYBEROS_NO_MEMORY=1.
 EOF
+
+# 8. payload self-cleanup ------------------------------------------------------
+# A payload COPIED INSIDE the target repo at the canonical channel-1 location
+# (cp -R dist/cyberos <repo>/.cyberos-init) is redundant once init succeeds: everything the
+# repo needs onward lives under .cyberos/ (machine, gates, migration kit, MCP server).
+# Remove it so it is never committed by accident. ONLY <root>/.cyberos-init is ever removed -
+# never payloads outside the repo (dev checkouts / dist), never other in-repo paths, never a
+# git submodule/checkout (channel 2 - carries a .git entry), and never with CYBEROS_KEEP_PAYLOAD=1.
+if [ "$src" = "$root/.cyberos-init" ]; then
+  if [ "${CYBEROS_KEEP_PAYLOAD:-0}" = "1" ]; then
+    echo "payload: kept .cyberos-init/ (CYBEROS_KEEP_PAYLOAD=1 - remember it is untracked; .cyberos/ is what the repo runs on)"
+  elif [ -e "$src/.git" ] || { [ -f "$root/.gitmodules" ] && grep -q "path = .cyberos-init" "$root/.gitmodules"; }; then
+    echo "payload: kept .cyberos-init/ (git submodule/checkout - never auto-removed)"
+  else
+    # two attempts with a settle pause (network/virtual mounts defer the final rmdir);
+    # never abort init over cleanup
+    rm -rf "$src" 2>/dev/null || true
+    if [ -e "$src" ]; then sleep 1; rm -rf "$src" 2>/dev/null || true; fi
+    if [ ! -e "$src" ]; then
+      echo "payload: removed .cyberos-init/ (self-cleanup - everything now lives in .cyberos/; keep it next time with CYBEROS_KEEP_PAYLOAD=1)"
+    elif [ -d "$src" ] && [ -z "$(ls -A "$src" 2>/dev/null)" ]; then
+      # network/virtual mounts defer the last unlink while this script's own file handle is open
+      echo "payload: emptied .cyberos-init/; the folder handle is held by this run (network-mount quirk) - finish with: rmdir .cyberos-init"
+    else
+      echo "payload: WARN could not fully remove .cyberos-init/ - delete it manually; everything the repo needs now lives in .cyberos/"
+    fi
+  fi
+else
+  case "$src/" in
+    "$root"/*) if [ "$src" != "$root" ]; then echo "payload: kept ${src#"$root"/}/ (non-canonical in-repo location - only <repo>/.cyberos-init self-cleans; it is redundant after init and safe to delete)"; fi ;;
+    *) : ;;   # payload lives outside the target repo - not ours to touch
+  esac
+fi

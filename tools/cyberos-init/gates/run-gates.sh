@@ -78,3 +78,11 @@ fi
 echo "GATES: GREEN (machine gates only)."
 echo "HITL still required: a human records the review verdict and the final acceptance."
 echo "The agent must NOT set the FR to done itself."
+
+# keep docs/status/ synced with the markdown it renders (FR frontmatter, CHANGELOG, VERSION).
+# Best-effort: a render problem never turns a green gates run red.
+if [ -f "$root/.cyberos/migrate-frs.sh" ] && command -v node >/dev/null 2>&1; then
+  if bash "$root/.cyberos/migrate-frs.sh" --page "$root" >/dev/null 2>&1; then
+    echo "status: docs/status/ regenerated (synced with FR frontmatter + CHANGELOG)"
+  fi
+fi

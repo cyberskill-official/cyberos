@@ -6,6 +6,29 @@ New to it? `GUIDE.md` is the step-by-step walkthrough (zero to your first shippe
 
 `init` sets up two things by default: the FR workflow AND the BRAIN memory protocol. It scaffolds a local `.cyberos/memory/store/` store (gitignored tenant data) and drops the `AGENTS.md` Layer-1 memory rules, so the project gets both the workflow and the memory discipline. Skip the memory half with `CYBEROS_NO_MEMORY=1`.
 
+`init` also runs the FR migration automatically (skip with `CYBEROS_NO_MIGRATE=1`): pre-existing FRs move to the folder-per-FR layout (root-level flat FRs included - module comes from frontmatter `module:`, else the FR id segment), a `CHANGELOG.md` is seeded once if the repo has none, and the status page (Roadmap | Backlog | Changelog tabs) is (re)generated at `docs/status/` - a folder holding `index.html` plus `assets/` (stylesheet + favicon), titled after the target repo (never "CyberOS" for someone else's project). That one page REPLACES the old standalone documents: a pre-existing `docs/BACKLOG.md` is adopted into `docs/feature-requests/BACKLOG.md` and a `docs/CHANGELOG.md` into the root `CHANGELOG.md` (content preserved, each only when the canonical home is empty), then any remaining `docs/ROADMAP.md` / `docs/BACKLOG.md` / `docs/CHANGELOG.md` is REMOVED - the page is those documents now, and git history keeps the old text. The migration ends with a machine-readable verify line (`migrate-frs verify: fr_specs=N flat_fr_files_remaining=0 fr_folders_missing_spec=0 status_page=present`) and WARNs for anything it could not place.
+
+The page stays synced with the markdown it renders - markdown remains the record of truth, the page only renders it. Two auto-sync touchpoints: a managed `pre-commit` hook (installed only when no foreign hook exists; never blocks a commit; `CYBEROS_NO_HOOK=1` skips) regenerates `docs/status/` whenever `docs/feature-requests/**`, `CHANGELOG.md`, or `VERSION` is staged, and `run-gates.sh` regenerates it after every gates run. Manual refresh any time: `bash .cyberos/migrate-frs.sh --page`.
+
+## What init writes: tracked vs gitignored
+
+One managed block in `.gitignore` (between `# >>> cyberos ... >>>` and `# <<< cyberos <<<` markers) carries every ignore rule init needs. Re-running init regenerates the block in place - it never appends duplicates and never touches anything outside the markers, so your own rules survive. Legacy entries appended by older inits are lifted into the block on first contact.
+
+| Artifact                                                                                            | Fate        | Why                                                          |
+| --------------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------ |
+| `.cyberos/` (machine, gates.env, config.yaml, BRAIN store, render intermediates, migration kit)    | gitignored  | regenerable via init; BRAIN is local tenant data              |
+| `docs/status/` (index.html + assets/ - the generated Roadmap / Backlog / Changelog page)           | tracked     | the repo's published status view; replaces standalone docs    |
+| `.git/hooks/pre-commit` (cyberos-status-hook, when no foreign hook exists)                          | local       | auto-regenerates docs/status/ when its inputs are committed   |
+| skill symlinks (`.claude/skills/ship-feature-requests`, ...)                                        | gitignored  | they point INTO the ignored `.cyberos/`                     |
+| skill copies (`CYBEROS_COPY_SKILLS=1`)                                                              | tracked     | self-contained; commit them                                   |
+| `AGENTS.md` + pointer files (`CLAUDE.md`, `GEMINI.md`, `.cursorrules`, `.grok/GROK.md`, ...) | tracked     | teammates' agents need them                                   |
+| `.mcp.json`, `.cursor/mcp.json`                                                                   | tracked     | project MCP registration for the whole team                   |
+| `docs/feature-requests/**` (BACKLOG.md, specs, audits)                                              | tracked     | the work record itself                                        |
+| `docs/feature-requests/.workflow/*.ship.json`                                                        | gitignored  | run state (nested .gitignore, FR-CUO-206)                     |
+| `CHANGELOG.md`                                                                                      | tracked     | release history; feeds the status page's Changelog tab        |
+
+Existing files are never clobbered: `BACKLOG.md`, `CHANGELOG.md`, `config.yaml`, pointer files, and `.mcp.json` are create-if-absent; `AGENTS.md` gets a marked append at most once; `gates.env` is regenerated with a timestamped backup; the vendored machine (`.cyberos/cuo|plugin|mcp`) is replaced wholesale on every init (that is the update path).
+
 ## What it is
 
 Two layers:
@@ -24,19 +47,19 @@ Profiles: `reduced` = doc-driven + the repo's own build/lint/test + coverage + c
 
 `AGENTS.md` (repo root) is the canonical, cross-tool spine - the one file the most agents read natively. `init.sh` writes it, then layers each agent's own preferred file / native skill / MCP registration on top. Everything is create-if-absent: your existing files are never clobbered. One `init.sh` run wires them all.
 
-| Agent | Reads (instruction file) | Native skill dir | MCP |
-| --- | --- | --- | --- |
-| Claude Code | `CLAUDE.md` (+ `AGENTS.md`) | `.claude/skills/` | `.mcp.json` (auto) |
-| Codex | `AGENTS.md` | `.codex/skills/` | `~/.codex/config.toml` |
-| Cursor | `AGENTS.md`, `.cursor/rules/*.mdc`, `.cursorrules` | - | `.cursor/mcp.json` (auto) |
-| Gemini CLI | `GEMINI.md` (+ `AGENTS.md`) | - | yes |
-| Antigravity | `AGENTS.md` + `GEMINI.md`, `.agents/rules/` | - | yes |
-| Grok CLI | `AGENTS.md`, `.grok/GROK.md` | `.grok/skills/` | yes |
-| zcode | `AGENTS.md` | global (`CYBEROS_GLOBAL_SKILLS=1`) | yes |
-| Command Code | `AGENTS.md` (+ `CLAUDE.md`) | `.commandcode/skills/` | `/mcp` |
-| Hermes | `AGENTS.md` | global (`CYBEROS_GLOBAL_SKILLS=1`) | gateway |
-| Copilot | `.github/copilot-instructions.md` (+ `AGENTS.md`) | - | - |
-| Windsurf | `.windsurfrules` (+ `AGENTS.md`) | - | yes |
+| Agent        | Reads (instruction file)                                 | Native skill dir                     | MCP                         |
+| ------------ | -------------------------------------------------------- | ------------------------------------ | --------------------------- |
+| Claude Code  | `CLAUDE.md` (+ `AGENTS.md`)                          | `.claude/skills/`                  | `.mcp.json` (auto)        |
+| Codex        | `AGENTS.md`                                            | `.codex/skills/`                   | `~/.codex/config.toml`    |
+| Cursor       | `AGENTS.md`, `.cursor/rules/*.mdc`, `.cursorrules` | -                                    | `.cursor/mcp.json` (auto) |
+| Gemini CLI   | `GEMINI.md` (+ `AGENTS.md`)                          | -                                    | yes                         |
+| Antigravity  | `AGENTS.md` + `GEMINI.md`, `.agents/rules/`        | -                                    | yes                         |
+| Grok CLI     | `AGENTS.md`, `.grok/GROK.md`                         | `.grok/skills/`                    | yes                         |
+| zcode        | `AGENTS.md`                                            | global (`CYBEROS_GLOBAL_SKILLS=1`) | yes                         |
+| Command Code | `AGENTS.md` (+ `CLAUDE.md`)                          | `.commandcode/skills/`             | `/mcp`                    |
+| Hermes       | `AGENTS.md`                                            | global (`CYBEROS_GLOBAL_SKILLS=1`) | gateway                     |
+| Copilot      | `.github/copilot-instructions.md` (+ `AGENTS.md`)    | -                                    | -                           |
+| Windsurf     | `.windsurfrules` (+ `AGENTS.md`)                     | -                                    | yes                         |
 
 Controls: `CYBEROS_AGENTS=claude-code,codex,...` restricts the set; `CYBEROS_COPY_SKILLS=1` copies skills instead of symlinking (committable, self-contained); `CYBEROS_GLOBAL_SKILLS=1` also installs into `$HOME` agent dirs; `CYBEROS_NO_MCP=1` skips `.mcp.json`. Adding an agent is a one-line `pointer`/`install_skill` entry in `init.sh` - see "Add your own agent" below.
 
@@ -58,6 +81,8 @@ bash tools/cyberos-init/build.sh          # assembles dist/cyberos/ (self-contai
 cp -R dist/cyberos /path/to/your/repo/.cyberos-init
 cd /path/to/your/repo && bash .cyberos-init/init.sh
 ```
+
+The copied `.cyberos-init/` removes itself after a successful init - everything the repo needs onward lives under `.cyberos/` (machine, gates, migration kit, MCP server), so the payload copy is redundant and must not end up committed. Keep it with `CYBEROS_KEEP_PAYLOAD=1`. Only the canonical `<repo>/.cyberos-init` self-cleans: payloads outside the repo, other in-repo paths, and git submodules (channel 2) are never removed.
 
 ### 2. Git submodule or subtree (available)
 
@@ -181,18 +206,18 @@ The pack is a build artifact. When the workflow improves in CyberOS, rebuild (`b
 `/init` detects gate commands per stack (union across stacks; first claim per gate wins; a command is
 never invented when its marker file is absent - root-only scanning):
 
-| stack | marker | build | lint | test | coverage |
-|---|---|---|---|---|---|
-| rust | Cargo.toml | cargo build | clippy | cargo test | llvm-cov (when installed) |
-| node | package.json | scripts.build | scripts.lint | scripts.test / pm test | scripts.coverage |
-| python | pyproject/setup | - | ruff (when installed) | pytest | coverage (when installed) |
-| go | go.mod | go build ./... | go vet (golangci-lint when installed) | go test ./... | go test -coverprofile |
-| maven | pom.xml | mvn -q -DskipTests package | - | mvn -q verify | - (config only, jacoco is repo-specific) |
-| gradle | build.gradle(.kts) | ./gradlew or gradle build | - | ./gradlew or gradle test | - |
-| dotnet | *.sln / *.csproj | dotnet build | - | dotnet test | - |
-| php | composer.json | - | composer validate --strict | vendor/bin/phpunit (when present) | - |
-| ruby | Gemfile | - | - | rspec (spec/) or rake test (Rakefile) | - |
-| make | Makefile | make build (per target) | make lint | make test | make coverage |
+| stack  | marker             | build                      | lint                                  | test                                  | coverage                                 |
+| ------ | ------------------ | -------------------------- | ------------------------------------- | ------------------------------------- | ---------------------------------------- |
+| rust   | Cargo.toml         | cargo build                | clippy                                | cargo test                            | llvm-cov (when installed)                |
+| node   | package.json       | scripts.build              | scripts.lint                          | scripts.test / pm test                | scripts.coverage                         |
+| python | pyproject/setup    | -                          | ruff (when installed)                 | pytest                                | coverage (when installed)                |
+| go     | go.mod             | go build ./...             | go vet (golangci-lint when installed) | go test ./...                         | go test -coverprofile                    |
+| maven  | pom.xml            | mvn -q -DskipTests package | -                                     | mvn -q verify                         | - (config only, jacoco is repo-specific) |
+| gradle | build.gradle(.kts) | ./gradlew or gradle build  | -                                     | ./gradlew or gradle test              | -                                        |
+| dotnet | *.sln / *.csproj   | dotnet build               | -                                     | dotnet test                           | -                                        |
+| php    | composer.json      | -                          | composer validate --strict            | vendor/bin/phpunit (when present)     | -                                        |
+| ruby   | Gemfile            | -                          | -                                     | rspec (spec/) or rake test (Rakefile) | -                                        |
+| make   | Makefile           | make build (per target)    | make lint                             | make test                             | make coverage                            |
 
 Overrides live in `.cyberos/config.yaml` (scaffolded once, all-commented, detected values shown as
 comments): `gates.build/lint/test/coverage` (each overrides only its own gate), `coverage_threshold`

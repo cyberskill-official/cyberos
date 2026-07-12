@@ -6,12 +6,19 @@
 // Also emits the roadmap.html redirect stub (bookmarks stay alive).
 // Usage: node render-status-hub.mjs [repoRoot] [outDir]
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from 'node:fs';
-import { join, resolve, dirname } from 'node:path';
+import { join, resolve, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(process.argv[2] || resolve(__dirname, '..', '..'));
 const OUT = resolve(process.argv[3] || join(ROOT, 'dist', 'website'));
+// The page belongs to the repo it renders - title it after the project, never "CyberOS"
+// (except CyberOS itself). Override with CYBEROS_PROJECT.
+let NAME = process.env.CYBEROS_PROJECT || basename(ROOT);
+if (NAME.toLowerCase() === 'cyberos') NAME = 'CyberOS';
+// CYBEROS_PAGE_ASSETS=1: emit reference/assets/{status.css,favicon.svg} and link them from the
+// page instead of inlining styles - the deployed form is a folder (index.html + assets/).
+const ASSETS = process.env.CYBEROS_PAGE_ASSETS === '1';
 const STATUSES = ['draft','ready_to_implement','implementing','ready_to_review','reviewing',
                   'ready_to_test','testing','done','on_hold','closed'];
 const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -47,6 +54,7 @@ function frontmatter(text, file) {
 
 // ---- one corpus object drives deck + every tab (FR-DOCS-006 §10 #2) ------------------
 const FR_ROOT = join(ROOT, 'docs', 'feature-requests');
+const LENIENT = process.env.CYBEROS_HUB_LENIENT === '1';
 const frs = []; const invalid = [];
 for (const mod of readdirSync(FR_ROOT, { withFileTypes: true }).sort((a,b)=>a.name.localeCompare(b.name))) {
   if (!mod.isDirectory() || mod.name.startsWith('_') || mod.name.startsWith('.')) continue;
@@ -54,7 +62,13 @@ for (const mod of readdirSync(FR_ROOT, { withFileTypes: true }).sort((a,b)=>a.na
     if (!d.isDirectory() || !d.name.startsWith('FR-')) continue;
     const p = join(FR_ROOT, mod.name, d.name, 'spec.md');
     if (!existsSync(p)) continue;
-    const meta = frontmatter(readFileSync(p, 'utf-8'), p);
+    let meta;
+    try { meta = frontmatter(readFileSync(p, 'utf-8'), p); }
+    catch (e) {
+      if (!LENIENT) throw e;                       // strict mode keeps the honest-failure contract
+      console.error(`status-hub: WARN ${e.message} (lenient - spec skipped; add frontmatter to include it)`);
+      continue;
+    }
     const fr = { id: meta.id || meta.fr_id || d.name, stem: d.name, title: meta.title || '(untitled)',
                  module: (meta.module || mod.name).toLowerCase(), dirModule: mod.name,
                  cls: meta.class || 'product', priority: meta.priority || '', status: meta.status || '(none)' };
@@ -64,10 +78,12 @@ for (const mod of readdirSync(FR_ROOT, { withFileTypes: true }).sort((a,b)=>a.na
 }
 frs.sort((a, b) => a.id.localeCompare(b.id));
 
-const LENIENT = process.env.CYBEROS_HUB_LENIENT === '1';
 const clText = existsSync(join(ROOT, 'CHANGELOG.md')) ? readFileSync(join(ROOT, 'CHANGELOG.md'), 'utf-8')
   : (LENIENT ? '' : (() => { throw new Error('status-hub: CHANGELOG.md missing'); })());
-const releases = []; const clRe = /^## \[?(\d+\.\d+\.\d+)\]?(?:\s*-\s*(.*))?$/gm;
+// accepted section shapes: "## [X.Y.Z] - date", "## [X.Y.Z] — date" (en/em dash),
+// "## vX.Y.Z (date)", "## X.Y.Z", and date-sectioned logs "## [YYYY-MM-DD]" -
+// real-world changelogs vary on all three axes.
+const releases = []; const clRe = /^## \[?v?(\d+\.\d+\.\d+|\d{4}-\d{2}-\d{2})\]?(?:\s*[-–—(]\s*(.*?)\)?\s*)?$/gm;
 let m; const marks = [];
 while ((m = clRe.exec(clText)) !== null) marks.push({ version: m[1], date: (m[2]||'').trim(), at: m.index, end: clRe.lastIndex });
 marks.forEach((mk, i) => {
@@ -81,6 +97,7 @@ if (releases.length === 0 && LENIENT) console.error('status-hub: WARN no CHANGEL
 const VERSION = existsSync(join(ROOT, 'VERSION')) ? readFileSync(join(ROOT, 'VERSION'), 'utf-8').trim() : (LENIENT ? 'unversioned' : (() => { throw new Error('status-hub: VERSION missing'); })());
 const COMMIT = gitCommit(ROOT);
 const modules = [...new Set(frs.map(f => f.module))].sort();
+const vlabel = v => /^\d{4}-\d{2}-\d{2}$/.test(v) ? esc(v) : 'v' + esc(v);   // date sections carry no 'v'
 const byStatus = Object.fromEntries(STATUSES.map(s => [s, frs.filter(f => f.status === s)]));
 
 // ---- fragments (v2 UI - FR-DOCS-007; reference: operator-supplied roadmap.html) ----------
@@ -116,7 +133,7 @@ const deck = `
   <span><b>${todoN}</b> draft</span>
   <span><b>${holdN}</b> on hold</span>
   <span><b>${releases.length}</b> releases</span>
-  <span class="muted">latest ${releases.length ? 'v' + esc(releases[0].version) + (releases[0].date ? ' · ' + esc(releases[0].date) : '') : '-'}</span>
+  <span class="muted">latest ${releases.length ? vlabel(releases[0].version) + (releases[0].date ? ' · ' + esc(releases[0].date) : '') : '-'}</span>
 </div>`;
 
 // callout: what is moving right now (generated, never hand-written)
@@ -195,7 +212,7 @@ ${frs.map(f => `<tr data-module="${esc(f.module)}" data-class="${esc(f.cls)}" da
 const changelogTab = `<div class="phases">` + releases.map((r, i) => `
 <article class="phase ${i === 0 ? 'now' : 'done'}">
   <span class="tick">${i === 0 ? '★' : '✓'}</span>
-  <div><b>v${esc(r.version)}${r.date ? ` <span class="muted">· ${esc(r.date)}</span>` : ''}</b>
+  <div><b>${vlabel(r.version)}${r.date ? ` <span class="muted">· ${esc(r.date)}</span>` : ''}</b>
   <span>${r.lines.map(l => esc(l)).join('<br>')}</span></div>
 </article>`).join('\n') + `</div>`;
 
@@ -238,18 +255,34 @@ th { background:var(--cs-color-surface-raised); }
 .phase span { font-size:13px; color:var(--cs-color-text-muted); }
 [hidden] { display:none !important; }`;
 
-let page = SHELL.replace('/*{{slot:styles:html}}*/', TOKENS + extra);
+let page = SHELL.replace('/*{{slot:styles:html}}*/', ASSETS ? '@import url("assets/status.css");' : TOKENS + extra);
 for (const [k, v] of Object.entries({
   'meta:html': `VERSION <span class="code">${esc(VERSION)}</span> · built from <span class="code">${esc(COMMIT)}</span> · ${frs.length} FRs · ${releases.length} releases`,
   'deck:html': deck, 'now:html': nowHtml, 'legend:html': legendHtml,
   'tab_roadmap:html': roadmapTab, 'tab_backlog:html': backlogTab, 'tab_changelog:html': changelogTab,
 })) page = page.split(`{{slot:${k}}}`).join(v);
-page = page.split('{{slot:title}}').join('CyberOS status');
-page = page.split('{{slot:subtitle}}').join('Where the platform is and what is coming — generated from FR frontmatter, CHANGELOG, and VERSION');
-page = page.split('{{slot:footer}}').join(esc(`Generated at ${VERSION} (${COMMIT}) — FR-DOCS-006/007. Markdown is the record of truth.`));
+page = page.split('{{slot:title}}').join(`${esc(NAME)} status`);
+page = page.split('{{slot:subtitle}}').join(`Where ${esc(NAME)} is and what is coming — generated from FR frontmatter, CHANGELOG, and VERSION`);
+page = page.split('{{slot:footer}}').join(esc(`${NAME} — generated at ${VERSION} (${COMMIT}). Markdown is the record of truth; this page only renders it.`));
 page = page.replace(/\{\{slot:[a-z_]+(:html)?\}\}/g, '');
 
 mkdirSync(join(OUT, 'reference'), { recursive: true });
+if (ASSETS) {
+  page = page.replace('</head>', '<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">\n</head>');
+  const adir = join(OUT, 'reference', 'assets');
+  mkdirSync(adir, { recursive: true });
+  writeFileSync(join(adir, 'status.css'), TOKENS + extra);
+  const tok = n => (TOKENS.match(new RegExp(`--cs-color-${n}:\\s*([^;]+);`)) || [])[1]?.trim();
+  const umber = tok('brand-umber') || '#4a3222', ochre = tok('brand-ochre') || '#e0a458';
+  const initial = esc((NAME[0] || 'C').toUpperCase());
+  writeFileSync(join(adir, 'favicon.svg'),
+`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<rect width="64" height="64" rx="14" fill="${umber}"/>
+<rect y="50" width="64" height="14" fill="${ochre}"/>
+<text x="32" y="42" font-family="Georgia, 'Times New Roman', serif" font-size="34" font-weight="700" fill="#ffffff" text-anchor="middle">${initial}</text>
+</svg>
+`);
+}
 writeFileSync(join(OUT, 'reference', 'status.html'), page);
 writeFileSync(join(OUT, 'reference', 'roadmap.html'), `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=status.html#roadmap">

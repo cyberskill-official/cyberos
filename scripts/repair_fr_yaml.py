@@ -24,14 +24,28 @@ def quote_line(line):
         indent = line[:len(line) - len(line.lstrip())]
         rest = line.strip()[2:]
         return f'{indent}- "{rest.replace(chr(92), chr(92)*2).replace(chr(34), chr(92)+chr(34))}"'
+    # broken double-quoted LIST item (e.g. - "Bypass for "system" admin") - re-escape the inner
+    # text and re-wrap; only reached when strict YAML already failed at/near this line.
+    if line.strip().startswith('- "') and line.strip().endswith('"') and len(line.strip()) > 4:
+        indent = line[:len(line) - len(line.lstrip())]
+        inner = line.strip()[3:-1]
+        return f'{indent}- "{inner.replace(chr(92), chr(92)*2).replace(chr(34), chr(92)+chr(34))}"'
     m = re.match(r"^(\s*[A-Za-z_][A-Za-z0-9_]*):\s+(.*[^\s].*)$", line)
     if m and not m.group(2).startswith(('"', "'", "[", "{", "|", ">")):
         v = m.group(2).replace("\\", "\\\\").replace('"', '\\"')
         return f'{m.group(1)}: "{v}"'
+    # broken double-quoted scalar (e.g. title: ""Verify us" block: ...") - the author quoted the
+    # value but left inner quotes unescaped. Re-escape the inner text and re-wrap; only reached
+    # when strict YAML already failed on this line, so a valid quoted scalar is never touched.
+    if m and m.group(2).startswith('"') and m.group(2).endswith('"') and len(m.group(2)) > 1:
+        inner = m.group(2)[1:-1]
+        v = inner.replace("\\", "\\\\").replace('"', '\\"')
+        return f'{m.group(1)}: "{v}"'
     return None
 
 repaired, failed = [], []
-targets = list(FR.glob("*/FR-*.md")) + list(FR.glob("*/FR-*/spec.md")) + list(FR.glob("*/FR-*/audit.md"))
+targets = (list(FR.glob("FR-*.md"))                                     # root-level flat (pre-migration)
+           + list(FR.glob("*/FR-*.md")) + list(FR.glob("*/FR-*/spec.md")) + list(FR.glob("*/FR-*/audit.md")))
 for f in sorted(targets):
     if "_audits" in f.parts or f.name.endswith(".audit.md") and False: pass
     text = f.read_text()
