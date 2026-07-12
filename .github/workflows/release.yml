@@ -30,10 +30,15 @@ jobs:
   payload:
     runs-on: ubuntu-latest
     permissions: { contents: write }
+    env:
+      # Dispatch-aware like the installer jobs: bump commits carry [skip ci], so tag pushes on
+      # them never fire push triggers - releases are cut via workflow_dispatch with the tag input.
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
     steps:
       - uses: actions/checkout@v4
+        with: { ref: "${{ github.event.inputs.tag || github.ref_name }}" }
       - name: Tag must equal v$(cat VERSION)
-        run: test "v$(cat VERSION)" = "$GITHUB_REF_NAME"
+        run: test "v$(cat VERSION)" = "$TAG"
       - name: Build the payload
         run: bash tools/cyberos-init/build.sh "$RUNNER_TEMP/payload"
       - name: Verify every stamp equals VERSION (FR-IMP-068)
@@ -43,8 +48,8 @@ jobs:
       - name: Upload to the release (create-or-upload, idempotent)
         env: { GH_TOKEN: "${{ github.token }}" }
         run: |
-          gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME" --notes "CyberOS $GITHUB_REF_NAME" 2>/dev/null || true
-          gh release upload "$GITHUB_REF_NAME" "$RUNNER_TEMP"/assets/* --clobber
+          gh release create "$TAG" --verify-tag --title "$TAG" --notes "CyberOS $TAG" 2>/dev/null || true
+          gh release upload "$TAG" "$RUNNER_TEMP"/assets/* --clobber
   # Signed native desktop installers (.dmg / .msi / .AppImage) via the official Tauri action. The desktop app
   # is a thin shell that loads os.cyberskill.world/web, so there is no web build step here.
   desktop:
