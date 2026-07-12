@@ -40,3 +40,13 @@ First cut omitted the audit-side AUDIT_LOOP.md/REPORT_FORMAT.md from new_files, 
 All six findings addressed as cited. The pair lands vendorable (FR-CUO-209) and parity-clean (FR-SKILL-118) by construction. **Score = 10/10.**
 
 *End of FR-SKILL-117 audit.*
+
+## §10 - Post-implementation gates (2026-07-12, ship run)
+
+- §10.4 verification: PASS - 12/12 executable preamble assertions green on rerun; trigger suites
+  9 + 8 cases; ADR wiring grep green. Report: .workflow/FR-SKILL-117/coverage-and-review.md.
+- awh/caf: N/A (contract work; declared). Floor: fresh build + chain-coverage + sync checks green.
+- HITL gate 1: APPROVED by Stephen Cheng 2026-07-12. HITL gate 2: ACCEPTED same date via explicit
+  operator pre-authorization at the review gate; gates stayed green.
+
+*FR-SKILL-117 shipped 2026-07-12. FR-CUO-209 unblocked.*

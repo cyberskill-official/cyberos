@@ -3,13 +3,13 @@ id: FR-SKILL-117
 title: "Author the architectural-spike-author/-audit pair - the missing ADR input artefact (architectural-spike@1)"
 module: SKILL
 priority: MUST
-status: reviewing
+status: done
 class: product
 verify: T
 phase: Wave B - finish the children
 owner: Stephen Cheng (CTO)
 created: 2026-07-12
-shipped: null
+shipped: 2026-07-12
 memory_chain_hash: null
 related_frs: [FR-SKILL-116, FR-SKILL-118, FR-CUO-209]
 depends_on: []
