@@ -3,7 +3,7 @@ id: FR-CUO-205
 title: "Single backlog write path - /create-feature-requests delegates BACKLOG.md rows to backlog-state-update@2 (insert-row)"
 module: cuo
 priority: MUST
-status: ready_to_implement
+status: reviewing
 class: improvement
 verify: T
 phase: Wave C - strengthen the workflows
