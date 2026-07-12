@@ -40,3 +40,15 @@ Fleet debugging dies on "which command even ran?". Resolved: §1 #4 one provenan
 All six findings addressed as cited. Blocks FR-CUO-208 as declared; threshold hook matches FR-SKILL-118's rubric constant. **Score = 10/10.**
 
 *End of FR-CUO-207 audit.*
+
+## §4 - Ship record (2026-07-12)
+
+- Implementation: union claim() detectors (9 stacks + make fallback), per-gate provenance, scaffold-once
+  config.yaml, dependency-free yaml-subset reader, threshold flow to the coverage-gate contract, loud
+  malformed-fail; commit d29532b. Phase artefacts: docs/feature-requests/.workflow/FR-CUO-207/.
+- Review: human verdict at gate 1 APPROVE + pre-authorize done (Stephen Cheng, in-chat).
+- Testing: test_gate_autodetect.sh 8/8 (one per AC), 7/7 cyberos-init suites. Gate 2 recorded per
+  pre-authorization. Manifest-tracked run (second production use of ship-manifest@1) - hitl.requested_at
+  recorded at gate, approval taken in-chat per §1 #8 of FR-CUO-206 (requested_at is never approval).
+
+Verdict unchanged: PASS, Score = 10/10.

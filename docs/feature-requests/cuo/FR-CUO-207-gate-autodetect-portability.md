@@ -3,13 +3,13 @@ id: FR-CUO-207
 title: "Portability hardening - init.sh gate autodetect for Go/JVM/.NET/PHP/Ruby + per-repo .cyberos/config.yaml overrides"
 module: cuo
 priority: SHOULD
-status: reviewing
+status: done
 class: product
 verify: T
 phase: Wave C - strengthen the workflows
 owner: Stephen Cheng (CTO)
 created: 2026-07-12
-shipped: null
+shipped: 2026-07-12
 memory_chain_hash: null
 related_frs: [FR-CUO-208, FR-SKILL-118, FR-IMP-070]
 depends_on: []
