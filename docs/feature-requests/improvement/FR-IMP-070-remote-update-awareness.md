@@ -3,13 +3,13 @@ id: FR-IMP-070
 title: "Remote update awareness - /update and init.sh --check compare installed vs latest published release, not the local payload"
 module: improvement
 priority: MUST
-status: reviewing
+status: done
 class: improvement
 verify: T
 phase: Wave A - version coupling
 owner: Stephen Cheng (CTO)
 created: 2026-07-12
-shipped: null
+shipped: 2026-07-12
 memory_chain_hash: null
 related_frs: [FR-IMP-068, FR-IMP-069, FR-APP-001]
 depends_on: [FR-IMP-069]

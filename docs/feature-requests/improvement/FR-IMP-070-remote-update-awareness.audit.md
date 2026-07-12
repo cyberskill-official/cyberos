@@ -40,3 +40,15 @@ FR-APP-001 parses this output; free-form prose would break it. Resolved: §3 fix
 All six findings addressed as cited. Offline behavior, verdict totality, and both command-doc contracts are now falsifiable. **Score = 10/10.**
 
 *End of FR-IMP-070 audit.*
+
+## §10 - Post-implementation gates (2026-07-12, ship run)
+
+- §10.4 coverage gate: PASS - t01-t08 green on fresh rerun; all three prior suites green
+  (33 cases total). Report: .workflow/FR-IMP-070/artefacts-bundle.md.
+- TRACE-004 closure: PASS. awh/caf: N/A (declared); floor = bash -n + suites.
+- HITL gate 1: APPROVED by Stephen Cheng 2026-07-12. HITL gate 2: ACCEPTED same date via explicit
+  operator pre-authorization at the review gate; gates stayed green.
+- Deviations recorded: build.sh vendors check-latest.sh (frontmatter updated); legacy one-line
+  --check format replaced by the machine-parseable three-value contract.
+
+*FR-IMP-070 shipped 2026-07-12. Wave A (version coupling) complete: FR-IMP-068 + 069 + 070 all done.*
