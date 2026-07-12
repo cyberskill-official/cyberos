@@ -3,7 +3,7 @@ id: FR-IMP-070
 title: "Remote update awareness - /update and init.sh --check compare installed vs latest published release, not the local payload"
 module: improvement
 priority: MUST
-status: implementing
+status: reviewing
 class: improvement
 verify: T
 phase: Wave A - version coupling
