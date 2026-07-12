@@ -3,7 +3,7 @@ id: FR-APP-005
 title: "Linux store distribution — Snap Store (snapcraft, strict confinement) and Flathub (flatpak-builder, external-manifest submission)"
 module: app
 priority: SHOULD
-status: reviewing
+status: ready_to_test
 verify: T
 phase: P1
 milestone: P1 · slice 1

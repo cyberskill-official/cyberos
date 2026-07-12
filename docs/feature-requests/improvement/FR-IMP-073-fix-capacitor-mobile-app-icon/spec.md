@@ -3,7 +3,7 @@ id: FR-IMP-073
 title: "Fix Capacitor mobile app icon — Android + iOS shells ship Capacitor's default placeholder instead of the CyberSkill brand icon"
 module: improvement
 priority: MUST
-status: reviewing
+status: ready_to_test
 class: improvement
 verify: T
 phase: "Wave 6 - go-live (Track B: mobile shells)"

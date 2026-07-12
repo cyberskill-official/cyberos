@@ -3,7 +3,7 @@ id: FR-APP-003
 title: "macOS App Store distribution — sandboxed build, entitlements, notarization split, ASC submission"
 module: app
 priority: SHOULD
-status: reviewing
+status: ready_to_test
 verify: T
 phase: P1
 milestone: P1 · slice 1

@@ -17,10 +17,10 @@ Totals: 335 draft, 4 ready_to_implement, 12 implementing, 5 reviewing, 141 done,
 ## app  (1 implementing, 4 reviewing)
 
 - [implementing] FR-APP-001-desktop-cyberos-operations - Desktop CyberOS operations - build payload, init/update projects from the UI
-- [reviewing] FR-APP-003-mac-app-store-distribution - macOS App Store distribution — sandboxed build, entitlements, notarization split, ASC submission <!-- awaiting human review verdict (HITL gate 1) -->
-- [reviewing] FR-APP-004-microsoft-store-distribution - Microsoft Store distribution — MSIX packaging over the Tauri Windows bundle, Store-managed signing, Partner Center submission <!-- awaiting human review verdict (HITL gate 1) -->
-- [reviewing] FR-APP-005-linux-store-distribution - Linux store distribution — Snap Store (snapcraft, strict confinement) and Flathub (flatpak-builder, external-manifest submission) <!-- awaiting human review verdict (HITL gate 1) -->
-- [reviewing] FR-APP-006-package-manager-distribution - Package manager distribution — Homebrew Cask (macOS) and winget (Windows) manifests, external-repo PR submission <!-- awaiting human review verdict (HITL gate 1) -->
+- [ready_to_test] FR-APP-003-mac-app-store-distribution - macOS App Store distribution — sandboxed build, entitlements, notarization split, ASC submission <!-- review approved: Stephen, 2026-07-13 ("approve all") -->
+- [ready_to_test] FR-APP-004-microsoft-store-distribution - Microsoft Store distribution — MSIX packaging over the Tauri Windows bundle, Store-managed signing, Partner Center submission <!-- review approved: Stephen, 2026-07-13 ("approve all") -->
+- [ready_to_test] FR-APP-005-linux-store-distribution - Linux store distribution — Snap Store (snapcraft, strict confinement) and Flathub (flatpak-builder, external-manifest submission) <!-- review approved: Stephen, 2026-07-13 ("approve all") -->
+- [ready_to_test] FR-APP-006-package-manager-distribution - Package manager distribution — Homebrew Cask (macOS) and winget (Windows) manifests, external-repo PR submission <!-- review approved: Stephen, 2026-07-13 ("approve all") -->
 
 ## auth  (17 done)
 
@@ -241,7 +241,7 @@ Totals: 335 draft, 4 ready_to_implement, 12 implementing, 5 reviewing, 141 done,
 - [draft] FR-IMP-065-track-b-mobile-shells-and-store-release-pipeline - Track B: mobile shells and store release pipeline (improvement)
 - [draft] FR-IMP-066-track-c-brain-activation-rollout-deploy-notice-a - Track C: brain activation rollout (deploy, notice, ack, capture) (improvement)
 - [draft] FR-IMP-067-go-live-readiness-gate-safety-nets-before-fully - Go-live readiness gate (safety nets before fully on) (improvement)
-- [reviewing] FR-IMP-073-fix-capacitor-mobile-app-icon - Fix Capacitor mobile app icon — Android + iOS shells ship Capacitor's default placeholder instead of the CyberSkill brand icon (improvement) <!-- awaiting human review verdict (HITL gate 1) -->
+- [ready_to_test] FR-IMP-073-fix-capacitor-mobile-app-icon - Fix Capacitor mobile app icon — Android + iOS shells ship Capacitor's default placeholder instead of the CyberSkill brand icon (improvement) <!-- review approved: Stephen, 2026-07-13 ("approve all") -->
 
 ## inv  (10 draft, 1 ready_to_implement)
 
