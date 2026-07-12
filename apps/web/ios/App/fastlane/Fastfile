@@ -100,9 +100,12 @@ platform :ios do
     #                              already failed with 'Signing for "App" requires a development team'.
     #                              Passing it here keeps the Team ID in a secret, out of project.pbxproj.
     #
-    # CODE_SIGN_IDENTITY is deliberately NOT set here: it now lives in project.pbxproj, where the Release
-    # config says "Apple Distribution" (Capacitor scaffolds it as "iPhone Developer", which is why Xcode
-    # went hunting for a *development* profile and could not find one).
+    # CODE_SIGN_IDENTITY is set NOWHERE - not here, not in project.pbxproj (operator decision 2026-07-12
+    # after the archive step refused the automatic-style + manual-"Apple Distribution" contradiction).
+    # With CODE_SIGN_STYLE = Automatic, xcodebuild archives with a development identity and the app-store
+    # EXPORT re-signs for distribution via the App Store Connect API key below - identity selection is
+    # entirely Xcode's job. (History: Capacitor scaffolded "iPhone Developer", a first fix hard-set
+    # "Apple Distribution" in pbxproj, and the two halves fought - see release #43.)
     xcargs = [
       "-allowProvisioningUpdates",
       "-authenticationKeyPath #{Shellwords.escape(key_path)}",
