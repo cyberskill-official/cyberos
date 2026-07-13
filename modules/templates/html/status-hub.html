@@ -3,90 +3,68 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{slot:title}} — CyberOS</title>
-<style>
-/*{{slot:styles:html}}*/
-* { box-sizing: border-box; }
-body { margin:0; background:var(--cs-color-surface-page); color:var(--cs-color-text-primary);
-  font-family:var(--cs-font-family-ui); font-size:15px; line-height:var(--cs-font-lineHeight-body); }
-.hub-header { background:var(--cs-color-brand-umber); color:var(--cs-color-text-inverse);
-  padding:var(--cs-space-6) var(--cs-space-8) var(--cs-space-5);
-  border-bottom:3px solid var(--cs-color-brand-ochre); }
-.hub-header h1 { margin:0 0 var(--cs-space-1); font-size:26px; letter-spacing:.2px;
-  line-height:var(--cs-font-lineHeight-heading); }
-.hub-sub { color:var(--cs-color-surface-raised); font-size:14px; opacity:.92; }
-.hub-meta { margin-top:var(--cs-space-2); font-size:12.5px; color:var(--cs-color-surface-raised); opacity:.75; }
-.hub-meta .code { font-family:var(--cs-font-family-mono); }
-main.hub-wrap { max-width:1180px; margin:0 auto; padding:var(--cs-space-6) var(--cs-space-6) var(--cs-space-16); }
-.card { background:var(--cs-color-surface-panel); border:1px solid var(--cs-color-border-default);
-  border-radius:12px; padding:var(--cs-space-4) var(--cs-space-5); margin-bottom:var(--cs-space-5); }
-.card h2 { margin:0 0 var(--cs-space-3); font-size:14px; text-transform:uppercase;
-  letter-spacing:.08em; color:var(--cs-color-text-muted); }
-.bar { height:12px; border-radius:var(--cs-radius-full); background:var(--cs-color-surface-raised);
-  overflow:hidden; display:flex; }
-.bar i { display:block; height:100%; }
-.seg-done { background:var(--cs-color-semantic-success); }
-.seg-active { background:var(--cs-color-brand-ochre); }
-.seg-hold { background:var(--cs-color-text-muted); }
-.counts { display:flex; gap:var(--cs-space-5); flex-wrap:wrap; margin-top:var(--cs-space-3); font-size:13.5px; }
-.counts b { font-size:17px; }
-.counts .muted { color:var(--cs-color-text-muted); }
-.callout { background:var(--cs-color-surface-raised); border:1px solid var(--cs-color-brand-ochre);
-  border-left:4px solid var(--cs-color-brand-ochre); border-radius:10px;
-  padding:var(--cs-space-4) var(--cs-space-5); margin-bottom:var(--cs-space-5); }
-.callout h3 { margin:0 0 var(--cs-space-2); font-size:14px; }
-.legend { display:flex; gap:var(--cs-space-4); flex-wrap:wrap; margin:0 0 var(--cs-space-4);
-  font-size:13px; color:var(--cs-color-text-muted); }
-.legend span { display:inline-flex; align-items:center; gap:6px; }
-.dot { width:11px; height:11px; border-radius:3px; display:inline-block; }
-.hub-tabs { display:flex; gap:var(--cs-space-2); border-bottom:2px solid var(--cs-color-border-default);
-  margin-bottom:var(--cs-space-5); }
-.hub-tab { padding:var(--cs-space-2) var(--cs-space-5); text-decoration:none;
-  color:var(--cs-color-text-accent); border:1px solid var(--cs-color-border-default);
-  border-bottom:none; border-radius:var(--cs-radius-md) var(--cs-radius-md) 0 0;
-  background:var(--cs-color-surface-raised); font-size:14px; font-weight:600; }
-.hub-tab[aria-selected="true"] { background:var(--cs-color-brand-umber);
-  color:var(--cs-color-text-inverse); border-color:var(--cs-color-brand-umber); }
-.hub-panel[hidden] { display:none; }
-.hub-foot { margin-top:var(--cs-space-12); text-align:center; font-size:12px;
-  color:var(--cs-color-text-muted); }
-</style>
+<meta name="color-scheme" content="light dark">
+<title>{{slot:title}}</title>
+{{slot:styles:html}}
+{{slot:head:html}}
 </head>
-<body data-template-id="status-hub@1">
-<header class="hub-header">
-  <h1>{{slot:title}}</h1>
-  <div class="hub-sub">{{slot:subtitle}}</div>
-  <div class="hub-meta">{{slot:meta:html}}</div>
+<body data-template-id="status-hub@2">
+<a class="skip" href="#lens">Skip to content</a>
+
+<header class="hd">
+  <div class="wrap hd-in">
+    <div class="hd-id">
+      <span class="hd-mark" aria-hidden="true">{{slot:initial}}</span>
+      <div>
+        <h1>{{slot:title}}</h1>
+        <p class="hd-sub">{{slot:subtitle}}</p>
+      </div>
+    </div>
+    <div class="hd-side">
+      <p class="hd-meta">{{slot:meta:html}}</p>
+      <button id="theme" class="btn ghost" type="button" title="Toggle light / dark" aria-label="Toggle light / dark">◐</button>
+    </div>
+  </div>
 </header>
-<main class="hub-wrap">
-  <section class="card">{{slot:deck:html}}</section>
+
+<main class="wrap">
+  <section class="deck" aria-label="Project pulse">{{slot:deck:html}}</section>
+
   {{slot:now:html}}
-  {{slot:legend:html}}
-  <nav class="hub-tabs" role="tablist">
-    <a class="hub-tab" role="tab" href="#roadmap" data-tab="roadmap">Roadmap</a>
-    <a class="hub-tab" role="tab" href="#backlog" data-tab="backlog">Backlog</a>
-    <a class="hub-tab" role="tab" href="#changelog" data-tab="changelog">Changelog</a>
+
+  <nav class="bar" id="bar" aria-label="Search, filters and views">
+    <div class="bar-top">
+      <label class="srch">
+        <span class="ic" aria-hidden="true">⌕</span>
+        <input id="q" type="search" placeholder="{{slot:search_placeholder}}" autocomplete="off" spellcheck="false">
+      </label>
+      <div class="lenses" role="tablist" aria-label="View">
+        <button class="ln" role="tab" type="button" data-lens="board" aria-selected="true">▦ Board</button>
+        <button class="ln" role="tab" type="button" data-lens="table" aria-selected="false">☰ Table</button>
+        <button class="ln" role="tab" type="button" data-lens="timeline" aria-selected="false">◷ Releases</button>
+      </div>
+    </div>
+    <div class="bar-bot">
+      {{slot:facets:html}}
+      <button id="clear" class="btn ghost sm" type="button">Clear</button>
+      <output id="count" class="cnt" for="q"></output>
+    </div>
+    <div class="chipbar" id="active-filters" hidden></div>
   </nav>
-  <section class="hub-panel" id="roadmap" role="tabpanel">{{slot:tab_roadmap:html}}</section>
-  <section class="hub-panel" id="backlog" role="tabpanel">{{slot:tab_backlog:html}}</section>
-  <section class="hub-panel" id="changelog" role="tabpanel">{{slot:tab_changelog:html}}</section>
-  <footer class="hub-foot">{{slot:footer}}</footer>
+
+  <div id="lens" class="lens" role="region" aria-live="polite" aria-label="Feature requests"></div>
+
+  <noscript>
+    <div class="nojs">{{slot:nojs:html}}</div>
+  </noscript>
+
+  <footer class="ft">{{slot:footer}}</footer>
 </main>
-<script>
-(function () {
-  var tabs = document.querySelectorAll('.hub-tab');
-  var panels = { roadmap: document.getElementById('roadmap'),
-                 backlog: document.getElementById('backlog'),
-                 changelog: document.getElementById('changelog') };
-  function show(name) {
-    if (!panels[name]) name = 'roadmap';
-    Object.keys(panels).forEach(function (k) { panels[k].hidden = (k !== name); });
-    tabs.forEach(function (t) { t.setAttribute('aria-selected', t.dataset.tab === name ? 'true' : 'false'); });
-  }
-  window.addEventListener('hashchange', function () { show(location.hash.slice(1)); });
-  show(location.hash.slice(1) || 'roadmap');
-})();
-</script>
-<noscript><style>.hub-panel[hidden]{display:block !important}</style></noscript>
+
+<div id="scrim" class="scrim" hidden></div>
+<aside id="drawer" class="drawer" hidden role="dialog" aria-modal="true" aria-labelledby="dw-title"></aside>
+
+<script type="application/json" id="cs-data">{{slot:data:json}}</script>
+{{slot:script:html}}
 </body>
 </html>

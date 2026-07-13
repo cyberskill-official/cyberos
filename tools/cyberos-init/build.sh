@@ -129,8 +129,14 @@ if [ -f "$here/migrate-frs.sh" ] && [ -f "$here/../../scripts/migrate_fr_layout.
   mkdir -p "$out/docs-tools/templates"
   cp "$here/../../scripts/migrate_fr_layout.py" "$out/docs-tools/"
   [ -f "$here/../../scripts/repair_fr_yaml.py" ] && cp "$here/../../scripts/repair_fr_yaml.py" "$out/docs-tools/"
+  # the status page renders through: render-status-hub.mjs -> md.mjs (spec bodies) +
+  # templates/{status-hub.html, status-app.js, status.css, tokens.css}. All five ship, or the
+  # page cannot be rendered in a target repo (the renderer fails loudly rather than half-render).
   [ -f "$here/../docs-site/render-status-hub.mjs" ] && cp "$here/../docs-site/render-status-hub.mjs" "$out/docs-tools/"
+  [ -f "$here/../docs-site/md.mjs" ] && cp "$here/../docs-site/md.mjs" "$out/docs-tools/"
   [ -f "$here/../../modules/templates/html/status-hub.html" ] && cp "$here/../../modules/templates/html/status-hub.html" "$out/docs-tools/templates/"
+  [ -f "$here/../../modules/templates/html/status-app.js" ] && cp "$here/../../modules/templates/html/status-app.js" "$out/docs-tools/templates/"
+  [ -f "$here/../../modules/templates/cds/status.css" ] && cp "$here/../../modules/templates/cds/status.css" "$out/docs-tools/templates/"
   [ -f "$here/../../modules/templates/cds/tokens.css" ] && cp "$here/../../modules/templates/cds/tokens.css" "$out/docs-tools/templates/"
 fi
 cp "$here/bootstrap.sh" "$out/bootstrap.sh"

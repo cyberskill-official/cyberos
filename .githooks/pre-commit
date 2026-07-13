@@ -8,7 +8,16 @@ set -euo pipefail
 root="$(git rev-parse --show-toplevel)"
 trigger='^(modules/cuo/|modules/skill/|modules/memory/memory\.(schema\.json|invariants\.yaml)|AGENTS\.md|tools/cyberos-init/|tools/caf/|scripts/caf_gate\.sh|VERSION)'
 
-if git diff --cached --name-only | grep -Eq "$trigger"; then
+# The staged list is read ONCE, into a variable, and every trigger below tests it with a
+# herestring. NEVER `git diff --cached --name-only | grep -Eq ...`: under `set -o pipefail`,
+# grep -q exits on the first match, git takes SIGPIPE, and the pipeline reports 141 - so the
+# block is SKIPPED precisely when an EARLY staged path matches. That silently disabled the
+# docs + status auto-sync (it only ever ran when the match happened to be near the end of the
+# list, which is why it looked like it worked).
+staged="$(git diff --cached --name-only)"
+matches() { grep -Eq "$1" <<<"$staged"; }
+
+if matches "$trigger"; then
   bash "$root/.pre-commit-hooks/cyberos-payload-build.sh"
   bash "$root/tools/cyberos-init/check-version-sync.sh" "$root/dist/cyberos"
 fi
@@ -18,7 +27,7 @@ fi
 # markdown truth on the machine that authored the change. Published freshness rides deploy.yml
 # (same paths) + version.yml's post-bump dispatch + release.yml's docs job.
 docs_trigger='^(docs/feature-requests/|docs/|modules/templates/|modules/[a-z-]+/docs/|tools/docs-site/|CHANGELOG\.md$|VERSION$)'
-if git diff --cached --name-only | grep -Eq "$docs_trigger"; then
+if matches "$docs_trigger"; then
   if command -v node >/dev/null 2>&1; then
     echo "cyberos: docs sources changed - regenerating dist/website ..."
     if bash "$root/tools/docs-site/build.sh" >/dev/null 2>&1; then
@@ -36,7 +45,7 @@ fi
 # Best-effort-loud: a render failure warns (with the fix command) but never blocks the commit -
 # a docs-render bug must not dead-lock all FR work (mirrors run-gates.sh's posture).
 status_trigger='^(docs/feature-requests/|CHANGELOG\.md$|VERSION$)'
-if git diff --cached --name-only | grep -Eq "$status_trigger"; then
+if matches "$status_trigger"; then
   migrate="$root/.cyberos/migrate-frs.sh"
   [ -f "$migrate" ] || migrate="$root/tools/cyberos-init/migrate-frs.sh"   # self-hosting repo fallback
   if [ -f "$migrate" ] && command -v node >/dev/null 2>&1; then
@@ -50,7 +59,7 @@ if git diff --cached --name-only | grep -Eq "$status_trigger"; then
 fi
 
 # FR-IMP-072: a staged VERSION change must carry the whole codebase with it.
-if git diff --cached --name-only | grep -qx "VERSION"; then
+if grep -qx "VERSION" <<<"$staged"; then
   if ! node "$root/scripts/stamp-release-version.mjs" --check --exit-code >/dev/null 2>&1; then
     echo "cyberos: VERSION is staged but release artifacts drift - run:" >&2
     echo "  node scripts/stamp-release-version.mjs --apply && git add -u" >&2

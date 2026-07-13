@@ -18,6 +18,16 @@ Added
 Changed
 - Version bumps now carry the whole codebase (installers, store projects, manifests) and fire the
   release + docs pipelines natively - no [skip ci], no manual dispatch (FR-IMP-071/072).
+- The status page is ONE page (status-hub@2): Roadmap, Backlog and Changelog stopped being three
+  tabs and became three lenses - board, table, releases - over one filtered FR corpus, with a drawer
+  carrying each FR's full spec (lazy per-FR chunks), relationship graph and metadata. The changelog
+  now leads with FR chips (cited ids + shipped-date matches) instead of prose, and names what no
+  release accounts for. Extends FR-DOCS-006 / FR-DOCS-007 and the auto-sync of FR-IMP-074.
+- init/migration hardened by a 22-repo fleet roll: dangling AGENTS.md symlinks are replaced rather
+  than kept, the init summary no longer claims a status page that migration never rendered, and FR
+  relations resolve against the real corpus (ids are not always FR-shaped). New
+  tools/cyberos-init/{rollout-fleet,audit-fleet}.sh roll and PROVE a fleet - the audit re-renders
+  each repo's page and byte-compares it, so a stale page can never pass as current.
 
 ## [0.4.0] - 2026-07-12
 

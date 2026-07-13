@@ -220,18 +220,20 @@ if [ ! -f "$cl" ]; then
 # Changelog
 
 All notable changes to this project live here - one \`## [X.Y.Z] - YYYY-MM-DD\` section per
-release (Keep-a-Changelog style; the CyberOS status page's Changelog tab reads these sections).
+release (Keep-a-Changelog style; the CyberOS status page's releases lens reads these sections,
+and every FR id you name in an entry becomes a chip that opens that FR).
 
 ## [0.1.0] - $(date +%Y-%m-%d)
 
-- CyberOS initialised: FR workflow vendored to .cyberos/, backlog at docs/feature-requests/BACKLOG.md, status page at .cyberos/status.html.
+- CyberOS initialised: FR workflow vendored to .cyberos/, backlog at docs/feature-requests/BACKLOG.md, status page at docs/status/.
 EOF
-  CHANGELOG_SET="created CHANGELOG.md (seeds the status page's Changelog tab)"
+  CHANGELOG_SET="created CHANGELOG.md (seeds the status page's releases lens)"
 fi
 
 # 4c. FR migration + status page (auto; skip with CYBEROS_NO_MIGRATE=1) --------
 # Brings pre-existing FRs to the folder-per-FR rule (root-level flat FRs included) and
-# (re)generates the status page (roadmap | backlog | changelog) at .cyberos/status.html.
+# (re)generates the status page at docs/status/ - ONE page, three lenses (board | table |
+# releases) over the FR corpus, with a drawer carrying each FR's full spec.
 # Idempotent and verified: migrate-frs.sh ends with a machine-readable verify line and
 # WARNs for anything it could not place. A failure here never aborts init.
 MIGRATE_SET="skipped (CYBEROS_NO_MIGRATE=1)"
@@ -245,6 +247,15 @@ if [ "${CYBEROS_NO_MIGRATE:-0}" != "1" ]; then
   else
     MIGRATE_SET="unavailable (payload built without the migration kit)"
   fi
+fi
+
+# The summary must never claim a page that was not rendered (migration is what renders it).
+if [ -f "$root/docs/status/index.html" ]; then
+  STATUS_SET="docs/status/ (index.html + assets/ + data/; ONE page, three lenses - board | table |
+                                       releases - over THIS repo's FRs, with a drawer carrying each
+                                       full spec. Replaces the old standalone docs; tracked)"
+else
+  STATUS_SET="none (no FRs to render - the page appears the moment this repo has its first FR)"
 fi
 
 # 5. memory module + BRAIN (default on; skip with CYBEROS_NO_MEMORY=1) --------
@@ -347,7 +358,13 @@ This file is the cross-tool spine; the full one-pager is `.cyberos/AGENT-ENTRY.m
 SPINE
 }
 SP_MARK="cyberos-agent-spine (managed by cyberos init; edit above/below this marker)"
-if [ -L "$root/AGENTS.md" ]; then
+if [ -L "$root/AGENTS.md" ] && [ ! -e "$root/AGENTS.md" ]; then
+  # DANGLING symlink (a spine that pointed at a file its target repo no longer has). Leaving it
+  # is worse than having nothing: every agent that reads AGENTS.md natively gets ENOENT. Replace.
+  rm -f "$root/AGENTS.md"
+  { agents_spine; printf '\n<!-- %s -->\n' "$SP_MARK"; } > "$root/AGENTS.md"
+  AGENTS_SET="replaced a DANGLING AGENTS.md symlink with the spine (it pointed at a file that no longer exists)"
+elif [ -L "$root/AGENTS.md" ]; then
   # Symlinked spine (e.g. CyberOS itself links AGENTS.md -> the memory-protocol source): creating
   # or appending would write THROUGH the link into whatever it points at - and a DANGLING link
   # (target checkout absent on this machine) would crash the write outright. The spine lives in
@@ -549,8 +566,7 @@ cyberos init: done.
   backlog   -> ${BACKLOG_SET}
   changelog -> ${CHANGELOG_SET}
   migrate   -> ${MIGRATE_SET}
-  status    -> docs/status/           (index.html + assets/; Roadmap | Backlog | Changelog for THIS
-                                       repo - replaces the old standalone docs; tracked)
+  status    -> ${STATUS_SET}
   auto-sync -> ${HOOK_SET}; run-gates.sh also regenerates the page after every gates run
   agents    -> ${AGENTS_SET}
               pointer files:${AGENT_FILES:- (none new)}
@@ -559,7 +575,7 @@ cyberos init: done.
   BRAIN     -> ${MEMORY_SET}${MEM_BRAIN:+ (${MEM_BRAIN})}${MEM_AGENTS:+; ${MEM_AGENTS}}
   gitignored: one managed block in .gitignore covers .cyberos/ (vendored machine + BRAIN store)
               + the skill symlinks; agent files, docs/feature-requests/**, CHANGELOG.md and
-              docs/status.html stay TRACKED (commit them). Everything outside the block is yours.
+              docs/status/ stay TRACKED (commit them). Everything outside the block is yours.
   version   -> CyberOS $avail_ver (.cyberos/VERSION); check for updates: <payload>/init.sh --check $root
 
 Next:

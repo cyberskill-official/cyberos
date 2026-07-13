@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# test_render_roadmap.sh - FR-DOCS-003 suite, repointed at the status hub per FR-DOCS-006 §1 #4.
-# Assertions preserved: board counts, timeline order, determinism, honest failures, token-clean,
-# plus the supersession contract (redirect stub). The roadmap CONTENT now lives in #roadmap of status.html.
+# test_render_roadmap.sh - FR-DOCS-003 suite, repointed at the status hub per FR-DOCS-006 §1 #4
+# and re-anchored on the single-page hub of FR-IMP-074. Assertions preserved: board counts,
+# release order, determinism, honest failures, token-clean, plus the supersession contract.
+# The roadmap CONTENT is the board lens now; #roadmap still lands there.
 set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"; repo="$(cd "$here/../../.." && pwd)"
 R="$repo/tools/docs-site/render-status-hub.mjs"
@@ -11,10 +12,13 @@ ok()   { PASS=$((PASS+1)); echo "  ok   $1"; }
 fail() { FAIL=$((FAIL+1)); echo "  FAIL $1: $2"; }
 
 mkfix() {
-  d="$1"; mkdir -p "$d/docs/feature-requests/aa/FR-AA-001-first" "$d/docs/feature-requests/aa/FR-AA-002-second" "$d/docs/feature-requests/bb/FR-BB-001-third" "$d/.git" "$d/modules/templates/html" "$d/modules/templates/cds"
-  cp "$repo/modules/templates/html/status-hub.html" "$d/modules/templates/html/"
-  cp "$repo/modules/templates/cds/tokens.css" "$d/modules/templates/cds/"
-  echo "ref: refs/heads/main" > "$d/.git/HEAD"; mkdir -p "$d/.git/refs/heads"; echo "abcdef1234567890" > "$d/.git/refs/heads/main"
+  d="$1"
+  mkdir -p "$d/docs/feature-requests/aa/FR-AA-001-first" "$d/docs/feature-requests/aa/FR-AA-002-second" \
+           "$d/docs/feature-requests/bb/FR-BB-001-third" "$d/.git/refs/heads" \
+           "$d/modules/templates/html" "$d/modules/templates/cds"
+  cp "$repo/modules/templates/html/status-hub.html" "$repo/modules/templates/html/status-app.js" "$d/modules/templates/html/"
+  cp "$repo/modules/templates/cds/tokens.css" "$repo/modules/templates/cds/status.css" "$d/modules/templates/cds/"
+  echo "ref: refs/heads/main" > "$d/.git/HEAD"; echo "abcdef1234567890" > "$d/.git/refs/heads/main"
   printf -- '---\nid: FR-AA-001\ntitle: First\nmodule: aa\npriority: MUST\nstatus: done\nclass: product\n---\nbody\n' > "$d/docs/feature-requests/aa/FR-AA-001-first/spec.md"
   printf -- '---\nid: FR-AA-002\ntitle: Second\nmodule: aa\npriority: SHOULD\nstatus: draft\nclass: improvement\n---\nbody\n' > "$d/docs/feature-requests/aa/FR-AA-002-second/spec.md"
   printf -- '---\nid: FR-BB-001\ntitle: Third\nmodule: bb\npriority: MUST\nstatus: implementing\nclass: product\n---\nbody\n' > "$d/docs/feature-requests/bb/FR-BB-001-third/spec.md"
@@ -27,13 +31,16 @@ t01_builds_from_three_inputs() {
   node "$R" "$TMP/a" "$TMP/a/out" >/dev/null 2>&1 && [ -f "$TMP/a/out/reference/status.html" ] \
     && ok t01 || fail t01 "hub build failed"
 }
-t02_board_counts_and_timeline() {
+t02_board_counts_and_release_order() {
   h="$TMP/a/out/reference/status.html"
-  grep -q 'VERSION' "$h" && grep -q "abcdef123456" "$h" \
-    && [ "$(grep -o 'data-status="done"' "$h" | wc -l | tr -d ' ')" -ge 2 ] \
-    && grep -q "v2.0.0" "$h" && grep -q "v1.0.0" "$h" \
-    && awk '/v2.0.0/{f2=NR} /v1.0.0/{f1=NR} END{exit !(f2<f1)}' "$h" \
-    && ok t02 || fail t02 "board/timeline"
+  grep -q 'VERSION' "$h" && grep -q 'abcdef123456' "$h" \
+    && grep -q '"s":"done"' "$h" && grep -q '"s":"implementing"' "$h" \
+    && grep -Eq 'data-bucket="done"[^>]*><b>1</b>' "$h" && grep -Eq 'data-bucket="active"[^>]*><b>1</b>' "$h" \
+    && grep -q '"vl":"v2.0.0"' "$h" && grep -q '"vl":"v1.0.0"' "$h" \
+    && node -e 'const fs=require("fs");const h=fs.readFileSync(process.argv[1],"utf8");
+        const d=JSON.parse(h.match(/id="cs-data">([\s\S]*?)<\/script>/)[1].replace(/\\u003c/g,"<"));
+        process.exit(d.releases[0].v==="2.0.0"&&d.releases[1].v==="1.0.0"?0:1);' "$h" \
+    && ok t02 || fail t02 "board counts / release order"
 }
 t03_supersession_stub() {
   s="$TMP/a/out/reference/roadmap.html"
@@ -64,10 +71,11 @@ t06_honest_failures() {
 }
 t07_token_clean() {
   h="$TMP/a/out/reference/status.html"
-  hexes="$(sed '/:root {/,/^}/d' "$h" | grep -oE '#[0-9a-fA-F]{3,6}\b' | grep -vE '#(roadmap|backlog|changelog)' | wc -l | tr -d ' ')"
+  hexes="$(sed -e '/:root {/,/^}/d' -e '/^\[data-theme="dark"\] {/,/^}/d' "$h" \
+    | grep -oE '#[0-9a-fA-F]{3,6}\b' | wc -l | tr -d ' ')"
   [ "$hexes" -eq 0 ] && grep -q -- "--cs-color-brand-umber" "$h" && ok t07 || fail t07 "$hexes hex outside tokens"
 }
 
-t01_builds_from_three_inputs; t02_board_counts_and_timeline; t03_supersession_stub
+t01_builds_from_three_inputs; t02_board_counts_and_release_order; t03_supersession_stub
 t04_wired; t05_deterministic; t06_honest_failures; t07_token_clean
 echo "----"; echo "pass=$PASS fail=$FAIL"; [ "$FAIL" -eq 0 ]

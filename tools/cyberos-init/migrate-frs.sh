@@ -5,10 +5,12 @@
 #   1. frontmatter repaired to strict YAML (minimal quoting, semantics untouched)
 #   2. folder-per-FR layout: <module>/<STEM>/{spec.md, audit.md, assets/-on-demand}
 #      (root-level flat FRs relocate into a module folder: frontmatter `module:` > id segment > misc)
-#   3. the CDS status page (Roadmap | Backlog | Changelog tabs) at docs/status/ - a folder:
-#      index.html + assets/ (status.css, favicon). Titled after THIS repo. Then REMOVE any
-#      remaining docs/ROADMAP.md, docs/BACKLOG.md, docs/CHANGELOG.md - the page replaces them
-#      outright (previous content stays in git history; inputs were adopted in step 0).
+#   3. the CDS status page at docs/status/ - ONE page, three lenses (board | table | releases)
+#      over one FR corpus, with a drawer carrying each FR's full spec. A folder: index.html +
+#      assets/ (status.css, status.js, favicon) + data/fr/<ID>.js (lazy spec chunks). Titled
+#      after THIS repo. Then REMOVE any remaining docs/ROADMAP.md, docs/BACKLOG.md,
+#      docs/CHANGELOG.md - the page replaces them outright (previous content stays in git
+#      history; inputs were adopted in step 0).
 #   4. verify: machine-readable coverage line + WARNs for anything the migration could not place
 # `--page` runs step 3 only - the fast path the pre-commit hook and run-gates.sh use to keep
 # the page synced with the markdown it renders (FR frontmatter, CHANGELOG.md, VERSION).
@@ -20,6 +22,8 @@ here="$(cd "$(dirname "$0")" && pwd)"
 PAGE_ONLY=0
 if [ "${1:-}" = "--page" ]; then PAGE_ONLY=1; shift; fi
 root="${1:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
+# absolutise: the page is titled after basename "$root", and basename "." is "."
+root="$(cd "$root" 2>/dev/null && pwd)" || { echo "migrate-frs: no such root: ${1:-.}"; exit 2; }
 
 [ -d "$root/docs/feature-requests" ] || { echo "migrate-frs: no docs/feature-requests under $root - run init.sh first"; exit 2; }
 command -v python3 >/dev/null || { echo "migrate-frs: python3 required"; exit 2; }
@@ -43,17 +47,30 @@ python3 "$here/docs-tools/migrate_fr_layout.py" --root "$root"
 fi
 
 echo "== 3/4 status page (docs/status/) =="
+# The page is ONE page with three lenses (board | table | releases) over one FR corpus,
+# plus a detail drawer that lazy-loads each FR's full spec from data/fr/<ID>.js.
+# Tracked shape: docs/status/{index.html, assets/{status.css,status.js,favicon.svg}, data/fr/*.js}.
+# CYBEROS_FR_BASE points the drawer at the markdown itself: docs/status/ -> docs/feature-requests/.
+# Set CYBEROS_STATUS_SPECS=0 to skip the spec chunks (page keeps working; the drawer links out).
 page_done=0
 if command -v node >/dev/null 2>&1; then
-  mkdir -p "$root/.cyberos/status-site" "$root/docs/status/assets"
+  mkdir -p "$root/.cyberos/status-site" "$root/docs/status"
   CYBEROS_HUB_LENIENT=1 CYBEROS_PAGE_ASSETS=1 CYBEROS_PROJECT="$(basename "$root")" \
+    CYBEROS_FR_BASE="../feature-requests/" \
+    CYBEROS_STATUS_SPECS="${CYBEROS_STATUS_SPECS:-1}" \
     CYBEROS_TEMPLATES="$here/docs-tools/templates" \
     node "$here/docs-tools/render-status-hub.mjs" "$root" "$root/.cyberos/status-site"
+  # rebuild the published folder from scratch: renamed/removed FRs must not leave stale chunks
+  rm -rf "$root/docs/status/assets" "$root/docs/status/data"
+  mkdir -p "$root/docs/status/assets"
   cp "$root/.cyberos/status-site/reference/status.html" "$root/docs/status/index.html"
   cp -R "$root/.cyberos/status-site/reference/assets/." "$root/docs/status/assets/"
+  if [ -d "$root/.cyberos/status-site/reference/data" ]; then
+    cp -R "$root/.cyberos/status-site/reference/data" "$root/docs/status/data"
+  fi
   rm -f "$root/.cyberos/status.html" "$root/docs/status.html"   # pre-folder locations
   page_done=1
-  echo "migrate-frs: open $root/docs/status/index.html (tracked folder: index.html + assets/)"
+  echo "migrate-frs: open $root/docs/status/index.html (tracked folder: index.html + assets/ + data/)"
 else
   echo "migrate-frs: WARN node not found - skipped the status page"
 fi
