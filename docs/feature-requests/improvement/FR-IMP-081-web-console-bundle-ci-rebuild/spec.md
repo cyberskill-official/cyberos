@@ -3,13 +3,13 @@ id: FR-IMP-081
 title: "CI leg rebuilds + recommits apps/console/web on real source changes - structural follow-up to FR-IMP-080's served-bundle version-drift fix"
 module: improvement
 priority: SHOULD
-status: testing
+status: done
 class: improvement
 verify: T
 phase: "Wave 6 - go-live (web channel)"
 owner: Stephen Cheng (CTO)
 created: 2026-07-13
-shipped: null
+shipped: 2026-07-13
 memory_chain_hash: null
 related_frs: [FR-IMP-080, FR-IMP-071, FR-IMP-068, FR-IMP-079]
 depends_on: [FR-IMP-080]
@@ -69,6 +69,9 @@ Stephen approved gate 1 (human review) in chat. Re-ran the machine-checkable ver
 - `python3 -c "import yaml; yaml.safe_load(...)"` re-parse: clean. Re-asserted programmatically: `rebuild-web.continue-on-error == true`, `rebuild-web.needs == "changes"`, `deploy.needs == [changes, build-images, rebuild-web]`, `changes.outputs.web_src` present. All PASS.
 - No code changes were made between the reviewing-gate verdict and this testing pass, so the scratch-repo dry-run results recorded above (no-diff short-circuit, diff-branch commit-and-push, push-failure degrade-to-warning) still stand as-is; not re-run since nothing they exercise changed.
 - Same "not exercised" gap as review time still applies and is still unclosed from this sandbox: no real push through the live deploy key, no real `npm ci && npm run build` inside this job's actual checkout. This FR proceeds to the human acceptance gate with that gap disclosed, not silently.
+
+### Acceptance (2026-07-13)
+Stephen approved gate 2 (human acceptance) in chat: "i approve". FR-IMP-081 lands as `done`, `shipped: 2026-07-13`. The two sandbox-inherent gaps flagged above (live-deploy-key push, real build inside the actual CI checkout) remain unexercised — they close naturally on the first real `deploy.yml` run this job is present for, not before.
 
 ## §9
 - If `apps/console/web`'s serving model is ever revisited (Option B above), this job becomes dead weight to remove, not a blocker: nothing about it constrains that future migration, and the paths-filter/`needs:` wiring this FR adds is straightforward to delete in the same change that gitignores the directory.
