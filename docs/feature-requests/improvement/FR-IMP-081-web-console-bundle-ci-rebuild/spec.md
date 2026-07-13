@@ -3,7 +3,7 @@ id: FR-IMP-081
 title: "CI leg rebuilds + recommits apps/console/web on real source changes - structural follow-up to FR-IMP-080's served-bundle version-drift fix"
 module: improvement
 priority: SHOULD
-status: reviewing
+status: testing
 class: improvement
 verify: T
 phase: "Wave 6 - go-live (web channel)"
@@ -62,6 +62,13 @@ Sequencing note: because `version.yml`'s bump commit and this job's own trigger 
   - Diff branch: staged + committed as `cyberos-bot <bot@cyberskill.world>` with message `chore(web): rebuild served bundle @ 1.0.0 [skip ci]` (exact format); `git status --short` clean immediately after. PASS
   - Push-failure branch: `git push origin HEAD:main` against a remote-less scratch repo fails as expected, and the `if/else` correctly falls through to the `::warning::` + `GITHUB_STEP_SUMMARY` degrade path under `set -euo pipefail` without killing the script - confirming this mirrors `version.yml`'s existing graceful-degrade behavior rather than failing the job red. PASS
 - Not exercised (cannot be, from this sandbox): an actual push through the real `VERSION_BUMP_SSH_KEY` deploy key against the live branch ruleset, and a real `npm ci && npm run build` run inside this specific job's checkout. Both use commands already proven elsewhere in this repo's own CI (this exact rebuild command is what FR-IMP-080 §1 ran and verified green this same day; the deploy-key push pattern is what `version.yml` already runs on every bump). Flagging this gap explicitly for the human review gate rather than claiming an end-to-end run that did not happen.
+
+### Testing pass (2026-07-13, post gate-1 "go")
+Stephen approved gate 1 (human review) in chat. Re-ran the machine-checkable verification set unchanged since review, to confirm nothing drifted between review and test:
+- `actionlint v1.7.12` against `.github/workflows/deploy.yml`: exit 0, zero findings (unchanged from the review-time run). PASS
+- `python3 -c "import yaml; yaml.safe_load(...)"` re-parse: clean. Re-asserted programmatically: `rebuild-web.continue-on-error == true`, `rebuild-web.needs == "changes"`, `deploy.needs == [changes, build-images, rebuild-web]`, `changes.outputs.web_src` present. All PASS.
+- No code changes were made between the reviewing-gate verdict and this testing pass, so the scratch-repo dry-run results recorded above (no-diff short-circuit, diff-branch commit-and-push, push-failure degrade-to-warning) still stand as-is; not re-run since nothing they exercise changed.
+- Same "not exercised" gap as review time still applies and is still unclosed from this sandbox: no real push through the live deploy key, no real `npm ci && npm run build` inside this job's actual checkout. This FR proceeds to the human acceptance gate with that gap disclosed, not silently.
 
 ## §9
 - If `apps/console/web`'s serving model is ever revisited (Option B above), this job becomes dead weight to remove, not a blocker: nothing about it constrains that future migration, and the paths-filter/`needs:` wiring this FR adds is straightforward to delete in the same change that gitignores the directory.
