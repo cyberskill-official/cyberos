@@ -108,7 +108,7 @@ _cyberos_fr_migrate() {
           -not -path '*/_*' -not -path '*/.*' 2>/dev/null | wc -l | tr -d ' ')"
   deep_n="$(find "$root/docs/feature-requests" -mindepth 3 -type f -name 'FR-*.md' \
           -not -path '*/_*' -not -path '*/.*' 2>/dev/null | wc -l | tr -d ' ')"
-  echo "migrate-frs verify: fr_specs=$specs_n flat_fr_files_remaining=$flat_n fr_folders_missing_spec=$nospec_n deep_fr_files=$deep_n status_page=$page"
+  echo "cyberos-migrate verify: fr_specs=$specs_n flat_fr_files_remaining=$flat_n fr_folders_missing_spec=$nospec_n deep_fr_files=$deep_n status_page=$page"
   if [ "${deep_n:-0}" -gt 0 ] 2>/dev/null; then
     echo "cyberos migrate: note $deep_n FR-named .md below module depth (left untouched)"
   fi

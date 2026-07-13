@@ -62,8 +62,23 @@ function run(cmd, args, cwd) {
   return { code, out };
 }
 
+/** Soft CyberOS update-check whenever any MCP tool touches a repo's .cyberos. */
+function softUpdateCheck(repo) {
+  const uc = join(repo, ".cyberos", "lib", "update-check.sh");
+  if (!existsSync(uc)) return;
+  try {
+    spawnSync("bash", ["-c", `source '${uc.replace(/'/g, "'\\''")}'; _cyberos_update_check || true`], {
+      cwd: repo,
+      encoding: "utf8",
+      timeout: 15_000,
+      env: { ...process.env },
+    });
+  } catch { /* soft */ }
+}
+
 function toolFrInit(a = {}) {
   const repo = repoRoot(a.repo);
+  softUpdateCheck(repo);
   const init = findInit(repo);
   if (!init) {
     return err(
@@ -78,6 +93,7 @@ function toolFrInit(a = {}) {
 
 function toolFrGates(a = {}) {
   const repo = repoRoot(a.repo);
+  softUpdateCheck(repo);
   const gates = join(repo, ".cyberos", "cuo", "gates", "run-gates.sh");
   if (!isFile(gates)) return err(`No gates at ${gates}. Run fr_init first.`);
   const { code, out } = run("bash", [gates], repo);
@@ -86,6 +102,7 @@ function toolFrGates(a = {}) {
 
 function toolFrStatus(a = {}) {
   const repo = repoRoot(a.repo);
+  softUpdateCheck(repo);
   const ver = readIf(join(repo, ".cyberos", "VERSION")).trim() || "not installed";
   const bl = readIf(join(repo, "docs", "feature-requests", "BACKLOG.md"));
   if (!bl) return text(`CyberOS ${ver} @ ${repo}\nNo docs/feature-requests/BACKLOG.md yet - run fr_init, then add FRs.`);
@@ -99,6 +116,7 @@ function toolFrStatus(a = {}) {
 
 function toolShipFr(a = {}) {
   const repo = repoRoot(a.repo);
+  softUpdateCheck(repo);
   const bl = readIf(join(repo, "docs", "feature-requests", "BACKLOG.md"));
   let next = a.fr_id ? `FR ${a.fr_id}` : "the next eligible FR";
   if (!a.fr_id && bl) {

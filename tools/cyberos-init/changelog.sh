@@ -3,6 +3,11 @@
 # Mirrors the plugin's /cyberos:changelog. Reads the manifest beside this script.
 set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
+if [ -f "$here/lib/update-check.sh" ]; then
+  # shellcheck source=/dev/null
+  source "$here/lib/update-check.sh"
+  _cyberos_update_check || true
+fi
 m="$here/manifest.yaml"
 [ -f "$m" ] || { echo "cyberos: no manifest.yaml beside this script (run from a payload or installed .cyberos/)" >&2; exit 2; }
 ver="$(grep -E '^cyberos_version:' "$m" | awk '{print $2}')"

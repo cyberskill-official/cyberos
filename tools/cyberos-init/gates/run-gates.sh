@@ -14,12 +14,16 @@ fi
 # shellcheck disable=SC1090
 . "$env_file"
 
+# CyberOS update check on every gates run (soft; set CYBEROS_UPDATE_CHECK=strict to fail)
+if [ -f "$root/.cyberos/lib/update-check.sh" ]; then
+  # shellcheck source=/dev/null
+  source "$root/.cyberos/lib/update-check.sh"
+  _cyberos_update_check || true
+fi
+
 # --- .cyberos/config.yaml layer (FR-CUO-207) ---------------------------------
-# Dependency-free YAML subset: top-level `key: value` + one nesting level under
-# `gates:`. Comments/blank lines ignored. Anything else = malformed -> fail loudly
-# citing the line, run NO gate (never half-apply).
 cfg_file="$root/.cyberos/config.yaml"
-cfg_get() { # cfg_get <top> [child] -> value (empty if unset/commented)
+cfg_get() {
   [ -f "$cfg_file" ] || return 0
   awk -v top="$1" -v child="${2:-}" '
     /^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
@@ -27,7 +31,7 @@ cfg_get() { # cfg_get <top> [child] -> value (empty if unset/commented)
       if (child == "" && cur == top) { line=$0; sub(/^[a-z_]+:[[:space:]]*/,"",line); print line; exit } next }
     /^  [a-z_]+:/ { if (child != "" && cur == top) { k=$1; sub(/:$/,"",k)
       if (k == child) { line=$0; sub(/^  [a-z_]+:[[:space:]]*/,"",line); print line; exit } } }
-  ' "$cfg_file" | sed -e 's/[[:space:]]*#.*$//' -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'\$//"
+  ' "$cfg_file" | sed -e 's/[[:space:]]*#.*$//' -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//"
 }
 if [ -f "$cfg_file" ]; then
   bad="$(grep -nEv '^[[:space:]]*#|^[[:space:]]*$|^[a-z_]+:([[:space:]].*)?$|^  [a-z_]+:[[:space:]].*$' "$cfg_file" | head -1)"
@@ -36,11 +40,6 @@ if [ -f "$cfg_file" ]; then
     echo "run-gates: no gate was run (config must parse fully or not exist)" >&2
     exit 2
   fi
-  for k in gates coverage_threshold fr_template profile; do :; done
-  # warn on unknown top-level keys (never fail)
-  grep -E '^[a-z_]+:' "$cfg_file" | sed 's/:.*//' | while read -r k; do
-    case "$k" in gates|coverage_threshold|fr_template|profile) ;; *) echo "run-gates: WARN unknown config key: $k" >&2 ;; esac
-  done
 fi
 
 CFG_BUILD="$(cfg_get gates build)"; CFG_LINT="$(cfg_get gates lint)"
@@ -49,7 +48,7 @@ thr="$(cfg_get coverage_threshold)"
 export CYBEROS_COVERAGE_THRESHOLD="${thr:-${COVERAGE_MIN:-90}}"
 
 fail=0
-gate() { # gate <name> <autodetected-cmd> <config-cmd> <autodetect-stack>
+gate() {
   desc="$1"; auto="$2"; cfg="$3"; stack="$4"
   if [ -n "$cfg" ]; then cmd="$cfg"; src="config"
   elif [ -n "$auto" ]; then cmd="$auto"; src="autodetect:${stack:-env}"
@@ -79,13 +78,9 @@ echo "GATES: GREEN (machine gates only)."
 echo "HITL still required: a human records the review verdict and the final acceptance."
 echo "The agent must NOT set the FR to done itself."
 
-# keep docs/status/ synced with the markdown it renders (FR frontmatter, CHANGELOG, VERSION).
-# Best-effort: a render problem never turns a green gates run red.
-# Prefer combined init --page; fall back to migrate-frs shim
-if command -v node >/dev/null 2>&1; then
-  if [ -f "$root/.cyberos/init.sh" ] && bash "$root/.cyberos/init.sh" --page "$root" >/dev/null 2>&1; then
+# Status page via init --page only
+if command -v node >/dev/null 2>&1 && [ -f "$root/.cyberos/init.sh" ]; then
+  if bash "$root/.cyberos/init.sh" --page "$root" >/dev/null 2>&1; then
     echo "status: docs/status/ regenerated via init --page"
-  elif [ -f "$root/.cyberos/migrate-frs.sh" ] && bash "$root/.cyberos/migrate-frs.sh" --page "$root" >/dev/null 2>&1; then
-    echo "status: docs/status/ regenerated via migrate-frs --page"
   fi
 fi

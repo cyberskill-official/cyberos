@@ -20,9 +20,9 @@ Nothing manual. `deploy.yml` ships both on every push to `main`; FR-IMP-081 (tes
 
 | # | Step | Who | How |
 |---|---|---|---|
-| 1 | EU DSA trader declaration | Stephen | App Store Connect → Business → Digital Services Act compliance → declare trader status (blocks EU distribution until done) |
+| 1 | EU DSA trader declaration | Done | Verified live in ASC → App Information: "This developer has identified itself as a trader for this app." Already complete — this row was stale, it is not a pending blocker |
 | 2 | Add TestFlight testers | Done | Added 10 testers to the ASC "CyberOS External Testers" group. Build 10706 isn't assigned to that group yet — say the word if you want that done too |
-| 3 | Submit for review | Agent task up to the Submit click, then Stephen | ASC → CyberOS → select the processed build → answer export compliance (exempt — HTTPS only) → I prep everything through the final Submit button; Stephen clicks Submit himself per the irreversible-action rule |
+| 3 | Submit for review | Agent task up to the Submit click, then Stephen | App Privacy: configured and Published for all 7 data types (Name, Email, Emails/Text Messages, Photos/Videos, Other User Content, User ID, Device ID — all App Functionality only, linked, not tracking). Export compliance: confirmed on build 29732976 — "App Uses Non-Exempt Encryption: No" (exempt, HTTPS only), already answered correctly, no action needed. Build 29732976 (1.0.0) is already attached to the 1.0 version. Remaining gaps before Stephen can click Add for Review: (a) App Review Information → Sign-In Information username/password are empty — needs a real Apple-ID demo account provisioned into a demo workspace, same pattern as `play-review@cyberskill.world` for Play; I will not fabricate credentials. (b) Screenshots/App Previews are still 0 of 10 / 0 of 3 — need real device captures, not fabricated. Once both are supplied, I can finish prepping the version page; Stephen still clicks Add for Review himself |
 
 ## 3. Android / Google Play
 
@@ -87,7 +87,7 @@ Nothing manual. `deploy.yml` ships both on every push to `main`; FR-IMP-081 (tes
 
 ## Current blockers snapshot
 
-- iOS: build 10706 in TestFlight processing; 10 testers added to the ASC group (build not yet assigned to it — say the word). Remaining: DSA declaration (§2.1, Stephen), submit (§2.3, agent-prepped / Stephen-clicked).
+- iOS: build 29732976 (1.0.0) processed/validated and attached to the 1.0 version; 10 testers added to the ASC group (build not yet assigned to it — say the word). DSA declaration (§2.1) already done, checklist corrected. App Privacy configured + published; export compliance confirmed exempt on the build. Remaining before submit (§2.3): Stephen needs to supply real App Review sign-in credentials (demo account) and real device screenshots/previews — then Stephen clicks Add for Review.
 - Android: §0 done — v1.0.0 re-tagged, `android` job published live on run #59; testers done (§3.2, 10 added). Remaining: promote internal → production when ready (§3.3, Stephen).
 - MAS: §4.1 compile check + Apple account items (all Stephen).
 - MS Store: §5.1 reservation (Stephen, blocks the rest of §5); listing copy (§5.4) already drafted in `docs/deploy/microsoft-store-listing-copy.md`.

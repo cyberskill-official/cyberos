@@ -59,6 +59,10 @@ if [ "${1:-}" = "--page" ] || [ "${1:-}" = "--migrate" ]; then
     exit 2
   fi
   # shellcheck source=/dev/null
+  if [ -f "$kit/lib/update-check.sh" ]; then
+    source "$kit/lib/update-check.sh"
+    _cyberos_update_check || true
+  fi
   source "$src/lib/fr-migrate.sh" 2>/dev/null || source "$kit/lib/fr-migrate.sh"
   if [ "$mode" = "--page" ]; then PAGE_ONLY=1; else PAGE_ONLY=0; fi
   _cyberos_fr_migrate "$root" "$kit"
@@ -90,15 +94,25 @@ cp -R "$src/plugin" "$CY/plugin"
 [ -f "$src/manifest.yaml" ] && cp "$src/manifest.yaml" "$CY/manifest.yaml"
 [ -f "$src/VERSION" ] && cp "$src/VERSION" "$CY/VERSION"
 [ -f "$src/init.sh" ] && cp "$src/init.sh" "$CY/init.sh" && chmod +x "$CY/init.sh"
-# portable FR migration kit (FR 1.0.0): rides into .cyberos so any repo can adopt folder-per-FR + the status page
-[ -f "$src/migrate-frs.sh" ] && cp "$src/migrate-frs.sh" "$CY/migrate-frs.sh" && chmod +x "$CY/migrate-frs.sh"
+[ -f "$src/update.sh" ] && cp "$src/update.sh" "$CY/update.sh" && chmod +x "$CY/update.sh"
+[ -f "$src/changelog.sh" ] && cp "$src/changelog.sh" "$CY/changelog.sh" && chmod +x "$CY/changelog.sh"
+[ -f "$src/help.sh" ] && cp "$src/help.sh" "$CY/help.sh" && chmod +x "$CY/help.sh"
+[ -f "$src/check-latest.sh" ] && cp "$src/check-latest.sh" "$CY/check-latest.sh" && chmod +x "$CY/check-latest.sh"
+# FR migrate kit: lib/fr-migrate.sh + docs-tools only (no migrate-frs.sh)
 [ -d "$src/lib" ] && rm -rf "$CY/lib" && cp -R "$src/lib" "$CY/lib"
 [ -d "$src/docs-tools" ] && rm -rf "$CY/docs-tools" && cp -R "$src/docs-tools" "$CY/docs-tools"
-# drop orphaned intermediate render trees from older inits
+# drop orphans from older inits
 rm -rf "$CY/status-site" 2>/dev/null || true
-rm -f "$CY/status.html" "$root/docs/status.html" 2>/dev/null || true
+rm -f "$CY/status.html" "$root/docs/status.html" "$CY/migrate-frs.sh" 2>/dev/null || true
+rm -f "$CY"/gates.env.bak.* 2>/dev/null || true
 chmod +x "$CY/cuo/gates/run-gates.sh" 2>/dev/null || true
 [ -f "$CY/mcp/cyberos-mcp.mjs" ] && chmod +x "$CY/mcp/cyberos-mcp.mjs" 2>/dev/null || true
+# update check on every full init (soft)
+if [ -f "$CY/lib/update-check.sh" ]; then
+  # shellcheck source=/dev/null
+  source "$CY/lib/update-check.sh"
+  CYBEROS_UPDATE_CHECK="${CYBEROS_UPDATE_CHECK:-always}" _cyberos_update_check || true
+fi
 
 # 2. auto-detect gate commands (FR-CUO-207: union across stacks, first claim per gate wins;
 #    documented order: rust, node, python, go, maven, gradle, dotnet, php, ruby, make.
@@ -259,26 +273,20 @@ fi
 # Brings pre-existing FRs to the folder-per-FR rule (root-level flat FRs included) and
 # (re)generates the status page at docs/status/ - ONE page, three lenses (board | table |
 # releases) over the FR corpus, with a drawer carrying each FR's full spec.
-# Idempotent and verified: migrate-frs.sh ends with a machine-readable verify line and
+# Idempotent and verified: cyberos-migrate ends with a machine-readable verify line and
 # WARNs for anything it could not place. A failure here never aborts init.
 MIGRATE_SET="skipped (CYBEROS_NO_MIGRATE=1)"
 if [ "${CYBEROS_NO_MIGRATE:-0}" != "1" ]; then
-  # Combined path: init owns migrate (lib/fr-migrate.sh); shim migrate-frs.sh still works
   if [ -f "$src/lib/fr-migrate.sh" ] || [ -f "$CY/lib/fr-migrate.sh" ]; then
     # shellcheck source=/dev/null
     if [ -f "$src/lib/fr-migrate.sh" ]; then source "$src/lib/fr-migrate.sh"; kit="$src"
     else source "$CY/lib/fr-migrate.sh"; kit="$CY"; fi
     if mig_out="$(PAGE_ONLY=0 _cyberos_fr_migrate "$root" "$kit" 2>&1)"; then MIGRATE_SET="ok"; else MIGRATE_SET="FAILED (non-fatal; re-run: bash $0 --migrate $root)"; fi
     printf '%s\n' "$mig_out" | sed 's/^/  | /'
-    mig_verify="$(printf '%s\n' "$mig_out" | grep '^migrate-frs verify: ' | tail -1 || true)"
-    MIGRATE_SET="$MIGRATE_SET${mig_verify:+; ${mig_verify#migrate-frs }}"
-  elif [ -f "$CY/migrate-frs.sh" ]; then
-    if mig_out="$(bash "$CY/migrate-frs.sh" "$root" 2>&1)"; then MIGRATE_SET="ok"; else MIGRATE_SET="FAILED (non-fatal)"; fi
-    printf '%s\n' "$mig_out" | sed 's/^/  | /'
-    mig_verify="$(printf '%s\n' "$mig_out" | grep '^migrate-frs verify: ' | tail -1 || true)"
-    MIGRATE_SET="$MIGRATE_SET${mig_verify:+; ${mig_verify#migrate-frs }}"
+    mig_verify="$(printf '%s\n' "$mig_out" | grep '^cyberos-migrate verify: ' | tail -1 || true)"
+    MIGRATE_SET="$MIGRATE_SET${mig_verify:+; ${mig_verify#cyberos-migrate }}"
   else
-    MIGRATE_SET="unavailable (payload built without the migration kit)"
+    MIGRATE_SET="unavailable (payload built without lib/fr-migrate.sh)"
   fi
 fi
 
@@ -561,8 +569,8 @@ set -euo pipefail
 # Read staged list ONCE — never `git diff | grep -q` under pipefail (SIGPIPE skip bug).
 staged="$(git diff --cached --name-only || true)"
 if grep -Eq '^(docs/feature-requests/|CHANGELOG\.md$|VERSION$)' <<<"$staged"; then
-  if [ ! -f .cyberos/lib/fr-migrate.sh ] && [ ! -f .cyberos/migrate-frs.sh ] && [ ! -f .cyberos/init.sh ]; then
-    echo "cyberos: ERROR migrate kit missing under .cyberos/ (run cyberos init)" >&2
+  if [ ! -f .cyberos/init.sh ] || [ ! -f .cyberos/lib/fr-migrate.sh ]; then
+    echo "cyberos: ERROR .cyberos/init.sh + lib/fr-migrate.sh required (run cyberos init)" >&2
     exit 1
   fi
   if ! command -v node >/dev/null 2>&1; then
@@ -570,44 +578,33 @@ if grep -Eq '^(docs/feature-requests/|CHANGELOG\.md$|VERSION$)' <<<"$staged"; th
     exit 1
   fi
   echo "cyberos: regenerating docs/status/ …"
-  if [ -f .cyberos/init.sh ]; then
-    bash .cyberos/init.sh --page . || {
-      echo "cyberos: ERROR status regen failed — run: bash .cyberos/init.sh --page ." >&2
-      exit 1
-    }
-  else
-    bash .cyberos/migrate-frs.sh --page . || {
-      echo "cyberos: ERROR status regen failed — run: bash .cyberos/migrate-frs.sh --page ." >&2
-      exit 1
-    }
-  fi
+  bash .cyberos/init.sh --page . || {
+    echo "cyberos: ERROR status regen failed — run: bash .cyberos/init.sh --page ." >&2
+    exit 1
+  }
   git add docs/status 2>/dev/null || true
   echo "cyberos: docs/status staged"
 fi
 exit 0
 HOOK
       HOOK_SET="pre-commit hook v2 installed (blocks if docs/status regen fails; auto-stages status page)"
-    elif grep -q "cyberos-status-hook v2" "$hk" 2>/dev/null || grep -q "cyberos-status-hook v2" "$hk" 2>/dev/null; then
+    elif grep -q "cyberos-status-hook v2" "$hk" 2>/dev/null; then
       HOOK_SET="kept your pre-commit hook (cyberos status-sync v2 already present)"
     elif grep -q "cyberos-status-hook" "$hk" 2>/dev/null; then
-      # Upgrade v1 append block → v2 if we own only the marker (leave foreign body)
-      if grep -q "cyberos-status-hook v2" "$hk" 2>/dev/null; then
-        HOOK_SET="kept your pre-commit hook (cyberos status-sync v2 already appended)"
-      else
-        # Replace v1 marker block with v2 blocking form (best-effort)
-        if grep -q ">>> cyberos-status-hook v1" "$hk" 2>/dev/null; then
-          # strip old append block then re-append v2
-          tmp="$hk.cyberos.tmp"
-          sed '/# >>> cyberos-status-hook v1/,/# <<< cyberos-status-hook <<</d' "$hk" > "$tmp" && mv "$tmp" "$hk"
-        fi
+      # Upgrade v1 append block → v2
+      if grep -q ">>> cyberos-status-hook v1" "$hk" 2>/dev/null; then
+        tmp="$hk.cyberos.tmp"
+        sed '/# >>> cyberos-status-hook v1/,/# <<< cyberos-status-hook <<</d' "$hk" > "$tmp" && mv "$tmp" "$hk"
+      fi
+      if ! grep -q "cyberos-status-hook v2" "$hk" 2>/dev/null; then
         cat >> "$hk" <<'HOOK'
 
 # >>> cyberos-status-hook v2 (appended by cyberos init; edits above survive re-init) >>>
 _cyberos_rc=$?
 staged="$(git diff --cached --name-only || true)"
 if grep -Eq '^(docs/feature-requests/|CHANGELOG\.md$|VERSION$)' <<<"$staged"; then
-  if [ -f .cyberos/migrate-frs.sh ] && command -v node >/dev/null 2>&1; then
-    if bash .cyberos/init.sh --page . 2>/dev/null || bash .cyberos/migrate-frs.sh --page .; then
+  if [ -f .cyberos/init.sh ] && command -v node >/dev/null 2>&1; then
+    if bash .cyberos/init.sh --page .; then
       git add docs/status 2>/dev/null || true
       echo "cyberos: docs/status regenerated + staged"
     else
@@ -620,6 +617,8 @@ exit $_cyberos_rc
 # <<< cyberos-status-hook <<<
 HOOK
         HOOK_SET="upgraded appended status-sync block to v2 (blocking regen)"
+      else
+        HOOK_SET="kept your pre-commit hook (cyberos status-sync v2 already appended)"
       fi
     else
       # a FOREIGN hook exists: append a marked block that preserves the foreign exit code
@@ -629,8 +628,8 @@ HOOK
 _cyberos_rc=$?
 staged="$(git diff --cached --name-only || true)"
 if grep -Eq '^(docs/feature-requests/|CHANGELOG\.md$|VERSION$)' <<<"$staged"; then
-  if [ -f .cyberos/migrate-frs.sh ] && command -v node >/dev/null 2>&1; then
-    if bash .cyberos/init.sh --page . 2>/dev/null || bash .cyberos/migrate-frs.sh --page .; then
+  if [ -f .cyberos/init.sh ] && command -v node >/dev/null 2>&1; then
+    if bash .cyberos/init.sh --page .; then
       git add docs/status 2>/dev/null || true
       echo "cyberos: docs/status regenerated + staged"
     else
@@ -643,6 +642,25 @@ exit $_cyberos_rc
 # <<< cyberos-status-hook <<<
 HOOK
       HOOK_SET="appended status-sync v2 to your existing pre-commit hook"
+    fi
+    # Scrub retired migrate-frs references from any pre-commit (foreign or ours)
+    if [ -f "$hk" ] && grep -q 'migrate-frs' "$hk" 2>/dev/null; then
+      tmp="$hk.cyberos.tmp"
+      # Prefer init.sh --page for status regen
+      sed -e 's|\.cyberos/migrate-frs\.sh|.cyberos/init.sh|g' \
+          -e 's|migrate-frs\.sh --page|init.sh --page|g' \
+          -e 's|migrate-frs --page|init --page|g' \
+          -e 's|bash "\$migrate" --page|bash "$migrate" --page|g' \
+          "$hk" > "$tmp" && mv "$tmp" "$hk"
+      # If body still calls migrate-frs as a path variable, force init.sh path assignment
+      if grep -q 'migrate-frs' "$hk" 2>/dev/null; then
+        sed -e 's|migrate-frs\.sh|init.sh|g' -e 's|migrate-frs|init.sh --page|g' "$hk" > "$tmp" && mv "$tmp" "$hk"
+      fi
+      # Drop dead fallback lines that only exist for the shim
+      if grep -q 'migrate-frs' "$hk" 2>/dev/null; then
+        grep -v 'migrate-frs' "$hk" > "$tmp" && mv "$tmp" "$hk"
+      fi
+      HOOK_SET="${HOOK_SET}; scrubbed migrate-frs from pre-commit"
     fi
     chmod +x "$hk"
   fi

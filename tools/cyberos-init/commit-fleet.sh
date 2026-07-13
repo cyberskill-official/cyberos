@@ -9,7 +9,7 @@ set -uo pipefail
 MSG="${1:?usage: commit-fleet.sh <msg-file> <root> [...]}"; shift
 [ -f "$MSG" ] || { echo "commit-fleet: no such message file: $MSG"; exit 2; }
 
-# exactly what cyberos init + migrate-frs write as tracked content
+# exactly what cyberos init (vendor + migrate + page) writes as tracked content
 OWNED=(docs/status docs/feature-requests AGENTS.md CLAUDE.md GEMINI.md .cursorrules
        .windsurfrules .gitignore CHANGELOG.md .mcp.json .agents)
 ALLOW='^(docs/status/|docs/feature-requests/|AGENTS\.md$|CLAUDE\.md$|GEMINI\.md$|\.cursorrules$|\.windsurfrules$|\.gitignore$|CHANGELOG\.md$|\.mcp\.json$|\.agents/)'
