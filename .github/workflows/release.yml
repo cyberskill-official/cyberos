@@ -296,7 +296,7 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: os.cyberskill.world
           releaseFiles: apps/web/android/app/build/outputs/bundle/release/*.aab
-          track: internal
+          tracks: internal
           status: completed
 
   # iOS build + TestFlight (Capacitor). OWN gate IOS_RELEASE=true - do NOT reuse the Android gate.
