@@ -29,6 +29,11 @@ set -euo pipefail
 
 keydir="${RUNNER_TEMP:-$(mktemp -d)}"
 install -m 600 /dev/stdin "$keydir/deploy_key" <<< "$VPS_SSH_KEY"
+ssh-keygen -y -f "$keydir/deploy_key" >/dev/null 2>&1 || {
+  echo "ship-docs: VPS_SSH_KEY does not parse as a valid private key - check for corrupted" >&2
+  echo "ship-docs: line endings (CRLF vs LF) or stripped newlines from how the secret was set" >&2
+  exit 1
+}
 
 echo "site: $(du -sh dist/website | cut -f1), $(find dist/website -type f | wc -l) files"
 stage="docs.new.${GITHUB_RUN_ID:-local$$}.${GITHUB_RUN_ATTEMPT:-0}"
