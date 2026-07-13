@@ -81,8 +81,11 @@ echo "The agent must NOT set the FR to done itself."
 
 # keep docs/status/ synced with the markdown it renders (FR frontmatter, CHANGELOG, VERSION).
 # Best-effort: a render problem never turns a green gates run red.
-if [ -f "$root/.cyberos/migrate-frs.sh" ] && command -v node >/dev/null 2>&1; then
-  if bash "$root/.cyberos/migrate-frs.sh" --page "$root" >/dev/null 2>&1; then
-    echo "status: docs/status/ regenerated (synced with FR frontmatter + CHANGELOG)"
+# Prefer combined init --page; fall back to migrate-frs shim
+if command -v node >/dev/null 2>&1; then
+  if [ -f "$root/.cyberos/init.sh" ] && bash "$root/.cyberos/init.sh" --page "$root" >/dev/null 2>&1; then
+    echo "status: docs/status/ regenerated via init --page"
+  elif [ -f "$root/.cyberos/migrate-frs.sh" ] && bash "$root/.cyberos/migrate-frs.sh" --page "$root" >/dev/null 2>&1; then
+    echo "status: docs/status/ regenerated via migrate-frs --page"
   fi
 fi

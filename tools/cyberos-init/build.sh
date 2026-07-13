@@ -126,6 +126,9 @@ cp "$here/check-latest.sh"      "$out/check-latest.sh"
 # (kit sources may be absent in trimmed/reduced fixture builds - vendor what exists, skip the rest)
 if [ -f "$here/migrate-frs.sh" ] && [ -f "$here/../../scripts/migrate_fr_layout.py" ]; then
   cp "$here/migrate-frs.sh" "$out/migrate-frs.sh"
+  # Combined migrate logic (init.sh --page / --migrate sources this)
+  mkdir -p "$out/lib"
+  [ -f "$here/lib/fr-migrate.sh" ] && cp "$here/lib/fr-migrate.sh" "$out/lib/fr-migrate.sh"
   mkdir -p "$out/docs-tools/templates"
   cp "$here/../../scripts/migrate_fr_layout.py" "$out/docs-tools/"
   [ -f "$here/../../scripts/repair_fr_yaml.py" ] && cp "$here/../../scripts/repair_fr_yaml.py" "$out/docs-tools/"

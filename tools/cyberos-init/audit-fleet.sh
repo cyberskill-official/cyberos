@@ -18,12 +18,21 @@ for base in "$@"; do
     # --- 1. the machine is vendored, at the expected version -----------------
     inst="none"; [ -f "$r/.cyberos/VERSION" ] && inst="$(tr -d ' \n\r' < "$r/.cyberos/VERSION")"
     [ "$inst" = "$WANT" ] || bad="$bad version($inst)"
-    for p in cuo/gates/run-gates.sh plugin/.claude-plugin/plugin.json migrate-frs.sh \
+    for p in cuo/gates/run-gates.sh plugin/.claude-plugin/plugin.json \
              docs-tools/render-status-hub.mjs docs-tools/md.mjs \
              docs-tools/templates/status-hub.html docs-tools/templates/status-app.js \
              docs-tools/templates/status.css docs-tools/templates/tokens.css; do
       [ -f "$r/.cyberos/$p" ] || bad="$bad missing:.cyberos/$p"
     done
+    # migrate kit: lib/fr-migrate.sh (combined) OR legacy migrate-frs.sh shim
+    if [ ! -f "$r/.cyberos/lib/fr-migrate.sh" ] && [ ! -f "$r/.cyberos/migrate-frs.sh" ]; then
+      bad="$bad missing:migrate-kit"
+    fi
+    # status hook v2 preferred
+    if [ -f "$r/.git/hooks/pre-commit" ]; then
+      grep -qE 'cyberos-status-hook v2|init.sh --page|migrate-frs' "$r/.git/hooks/pre-commit" \
+        || bad="$bad status-hook-stale"
+    fi
 
     # --- 2. the repo's own entry points -------------------------------------
     [ -f "$r/AGENTS.md" ] || bad="$bad missing:AGENTS.md"
@@ -32,7 +41,9 @@ for base in "$@"; do
       grep -q '.cyberos/' "$r/.gitignore" 2>/dev/null || bad="$bad gitignore-block"
       hk="$r/.git/hooks/pre-commit"
       if [ "$(git -C "$r" config core.hooksPath 2>/dev/null)" = "" ]; then
-        { [ -f "$hk" ] && grep -q 'cyberos-status-hook' "$hk"; } || bad="$bad status-hook"
+        # Accept official status-hook OR combined consumer hooks (init --page / migrate-frs / local-ci)
+        { [ -f "$hk" ] && grep -qE 'cyberos-status-hook|init\.sh --page|migrate-frs|check-status-sync|docs/status' "$hk"; } \
+          || bad="$bad status-hook"
       fi
     fi
 
