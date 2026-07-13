@@ -288,7 +288,10 @@ const bound = [...new Set(releases.flatMap(r => [...r.cited, ...r.dated]))].sort
 const VERSION = existsSync(join(ROOT, 'VERSION'))
   ? readFileSync(join(ROOT, 'VERSION'), 'utf-8').trim()
   : (LENIENT ? 'unversioned' : die('VERSION missing'));
-const COMMIT = gitCommit(ROOT);
+// CYBEROS_COMMIT pins the provenance stamp. A page staged by the pre-commit hook necessarily
+// carries the PARENT commit's sha (the new one does not exist yet), so a later re-render would
+// differ from it by the stamp alone. Pinning lets a freshness check compare CONTENT.
+const COMMIT = process.env.CYBEROS_COMMIT || gitCommit(ROOT);
 
 const count = b => frs.filter(f => bucketOf(f.s) === b).length;
 const doneN = count('done'), activeN = count('active'), holdN = count('hold'), todoN = count('todo');

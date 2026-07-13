@@ -76,8 +76,14 @@ for base in "$@"; do
         # honest proof that the committed page IS what today's CyberOS produces.
         if command -v node >/dev/null 2>&1 && [ -f "$r/.cyberos/docs-tools/render-status-hub.mjs" ]; then
           t="$(mktemp -d)"
+          # Pin the provenance stamp to the one the page already carries: a page staged by the
+          # pre-commit hook holds the PARENT commit's sha (the commit being made does not exist
+          # yet), so comparing stamps would flag every freshly-committed page as stale. We are
+          # proving the CONTENT is current, not re-deriving the sha.
+          pinned="$(grep -o '"commit":"[^"]*"' "$page" | head -1 | cut -d'"' -f4)"
           if CYBEROS_HUB_LENIENT=1 CYBEROS_PAGE_ASSETS=1 \
              CYBEROS_PROJECT="$(basename "$r")" CYBEROS_FR_BASE="../feature-requests/" \
+             CYBEROS_COMMIT="${pinned:-unknown}" \
              CYBEROS_TEMPLATES="$r/.cyberos/docs-tools/templates" \
              node "$r/.cyberos/docs-tools/render-status-hub.mjs" "$r" "$t" >/dev/null 2>"$t/err"; then
             cmp -s "$t/reference/status.html" "$page" || bad="$bad page-stale(differs from a fresh render)"
