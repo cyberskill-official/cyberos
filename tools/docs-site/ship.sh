@@ -32,7 +32,7 @@ install -m 600 /dev/stdin "$keydir/deploy_key" <<< "$VPS_SSH_KEY"
 
 echo "site: $(du -sh dist/website | cut -f1), $(find dist/website -type f | wc -l) files"
 stage="docs.new.${GITHUB_RUN_ID:-local$$}.${GITHUB_RUN_ATTEMPT:-0}"
-tar -czf - -C dist/website . | ssh -o StrictHostKeyChecking=accept-new -i "$keydir/deploy_key" "$VPS_USER@$VPS_HOST" \
+tar -czf - -C dist/website . | ssh -4 -o StrictHostKeyChecking=accept-new -i "$keydir/deploy_key" "$VPS_USER@$VPS_HOST" \
   "set -e; mkdir -p ~/cyberos/apps/console && cd ~/cyberos/apps/console \
    && mkdir '$stage' && tar -xzf - -C '$stage' \
    && flock .docs-ship.lock -c 'rm -rf docs && mv \"$stage\" docs && find . -maxdepth 1 -name \"docs.new*\" -mmin +120 -exec rm -rf {} +'"
