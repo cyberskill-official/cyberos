@@ -506,9 +506,9 @@ rm -f "$gi.cyberos.tmp"
 
 # 6b. status auto-sync hook (managed; CYBEROS_NO_HOOK=1 skips) -----------------
 # docs/status/ must stay synced with the markdown it renders (FR frontmatter, CHANGELOG.md,
-# VERSION). Two touchpoints keep it live: run-gates.sh regenerates after every gates run, and
-# this pre-commit hook regenerates when an input is staged. The hook never blocks a commit.
-# An existing foreign pre-commit is never touched - the operator gets the one-liner instead.
+# VERSION). Touchpoints: run-gates.sh after gates, and this pre-commit when inputs are staged.
+# v2: blocking on regen failure + pipefail-safe staged list (never `git diff | grep -q`).
+# An existing foreign pre-commit is never replaced - we append a marked block once.
 HOOK_SET="skipped (CYBEROS_NO_HOOK=1)"
 if [ "${CYBEROS_NO_HOOK:-0}" != "1" ]; then
   if [ ! -d "$root/.git" ]; then
@@ -516,41 +516,93 @@ if [ "${CYBEROS_NO_HOOK:-0}" != "1" ]; then
   else
     hk="$root/.git/hooks/pre-commit"
     mkdir -p "$root/.git/hooks"
-    if [ ! -f "$hk" ] || head -3 "$hk" 2>/dev/null | grep -q "cyberos-status-hook"; then
+    if [ ! -f "$hk" ] || head -5 "$hk" 2>/dev/null | grep -q "cyberos-status-hook"; then
       # absent, or a hook WE own outright (marker in the header): (re)write the standalone form
       cat > "$hk" <<'HOOK'
-#!/usr/bin/env sh
-# cyberos-status-hook v1 (managed by cyberos init) - regenerate docs/status/ when its inputs
-# change (docs/feature-requests/**, CHANGELOG.md, VERSION). Never blocks a commit; delete this
-# file (or re-init with CYBEROS_NO_HOOK=1) to disable.
-if git diff --cached --name-only | grep -qE '^(docs/feature-requests/|CHANGELOG\.md$|VERSION$)'; then
-  if [ -f .cyberos/migrate-frs.sh ]; then
-    bash .cyberos/migrate-frs.sh --page >/dev/null 2>&1 || exit 0
-    git add docs/status 2>/dev/null || true
+#!/usr/bin/env bash
+# cyberos-status-hook v2 (managed by cyberos init)
+# Regenerates docs/status/ when FR sources change and STAGES it in the same commit.
+# Blocks the commit if regeneration fails (so status never lags GitHub).
+# Disable: delete this file, or re-init with CYBEROS_NO_HOOK=1.
+set -euo pipefail
+# Read staged list ONCE — never `git diff | grep -q` under pipefail (SIGPIPE skip bug).
+staged="$(git diff --cached --name-only || true)"
+if grep -Eq '^(docs/feature-requests/|CHANGELOG\.md$|VERSION$)' <<<"$staged"; then
+  if [ ! -f .cyberos/migrate-frs.sh ]; then
+    echo "cyberos: ERROR .cyberos/migrate-frs.sh missing (run cyberos init)" >&2
+    exit 1
   fi
+  if ! command -v node >/dev/null 2>&1; then
+    echo "cyberos: ERROR node required to regenerate docs/status" >&2
+    exit 1
+  fi
+  echo "cyberos: regenerating docs/status/ …"
+  bash .cyberos/migrate-frs.sh --page . || {
+    echo "cyberos: ERROR status regen failed — run: bash .cyberos/migrate-frs.sh --page ." >&2
+    exit 1
+  }
+  git add docs/status 2>/dev/null || true
+  echo "cyberos: docs/status staged"
 fi
 exit 0
 HOOK
-      HOOK_SET="pre-commit hook installed (regenerates docs/status/ when FRs/CHANGELOG/VERSION are committed)"
+      HOOK_SET="pre-commit hook v2 installed (blocks if docs/status regen fails; auto-stages status page)"
+    elif grep -q "cyberos-status-hook v2" "$hk" 2>/dev/null || grep -q "cyberos-status-hook v2" "$hk" 2>/dev/null; then
+      HOOK_SET="kept your pre-commit hook (cyberos status-sync v2 already present)"
     elif grep -q "cyberos-status-hook" "$hk" 2>/dev/null; then
-      HOOK_SET="kept your pre-commit hook (cyberos status-sync block already appended)"
-    else
-      # a FOREIGN hook exists: append a marked block that preserves the foreign exit code -
-      # the same append-once-with-marker pattern AGENTS.md uses. Never reordered, never removed.
-      cat >> "$hk" <<'HOOK'
+      # Upgrade v1 append block → v2 if we own only the marker (leave foreign body)
+      if grep -q "cyberos-status-hook v2" "$hk" 2>/dev/null; then
+        HOOK_SET="kept your pre-commit hook (cyberos status-sync v2 already appended)"
+      else
+        # Replace v1 marker block with v2 blocking form (best-effort)
+        if grep -q ">>> cyberos-status-hook v1" "$hk" 2>/dev/null; then
+          # strip old append block then re-append v2
+          tmp="$hk.cyberos.tmp"
+          sed '/# >>> cyberos-status-hook v1/,/# <<< cyberos-status-hook <<</d' "$hk" > "$tmp" && mv "$tmp" "$hk"
+        fi
+        cat >> "$hk" <<'HOOK'
 
-# >>> cyberos-status-hook v1 (appended by cyberos init; edits above survive re-init) >>>
+# >>> cyberos-status-hook v2 (appended by cyberos init; edits above survive re-init) >>>
 _cyberos_rc=$?
-if git diff --cached --name-only | grep -qE '^(docs/feature-requests/|CHANGELOG\.md$|VERSION$)'; then
-  if [ -f .cyberos/migrate-frs.sh ]; then
-    bash .cyberos/migrate-frs.sh --page >/dev/null 2>&1 || true
-    git add docs/status 2>/dev/null || true
+staged="$(git diff --cached --name-only || true)"
+if grep -Eq '^(docs/feature-requests/|CHANGELOG\.md$|VERSION$)' <<<"$staged"; then
+  if [ -f .cyberos/migrate-frs.sh ] && command -v node >/dev/null 2>&1; then
+    if bash .cyberos/migrate-frs.sh --page .; then
+      git add docs/status 2>/dev/null || true
+      echo "cyberos: docs/status regenerated + staged"
+    else
+      echo "cyberos: ERROR docs/status regen failed" >&2
+      exit 1
+    fi
   fi
 fi
 exit $_cyberos_rc
 # <<< cyberos-status-hook <<<
 HOOK
-      HOOK_SET="appended the status-sync block to your existing pre-commit hook (its exit code is preserved)"
+        HOOK_SET="upgraded appended status-sync block to v2 (blocking regen)"
+      fi
+    else
+      # a FOREIGN hook exists: append a marked block that preserves the foreign exit code
+      cat >> "$hk" <<'HOOK'
+
+# >>> cyberos-status-hook v2 (appended by cyberos init; edits above survive re-init) >>>
+_cyberos_rc=$?
+staged="$(git diff --cached --name-only || true)"
+if grep -Eq '^(docs/feature-requests/|CHANGELOG\.md$|VERSION$)' <<<"$staged"; then
+  if [ -f .cyberos/migrate-frs.sh ] && command -v node >/dev/null 2>&1; then
+    if bash .cyberos/migrate-frs.sh --page .; then
+      git add docs/status 2>/dev/null || true
+      echo "cyberos: docs/status regenerated + staged"
+    else
+      echo "cyberos: ERROR docs/status regen failed" >&2
+      exit 1
+    fi
+  fi
+fi
+exit $_cyberos_rc
+# <<< cyberos-status-hook <<<
+HOOK
+      HOOK_SET="appended status-sync v2 to your existing pre-commit hook"
     fi
     chmod +x "$hk"
   fi
