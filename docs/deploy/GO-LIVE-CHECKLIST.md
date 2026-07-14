@@ -1,14 +1,16 @@
 # CyberOS 1.0.0 go-live checklist
 
-Living document (2026-07-13). Everything code-side is committed and machine-verified. This is the full list of remaining steps to ship every channel, with a **Who** column on every row: **Agent task** means Claude can drive it now on request (drafting, running CLI commands, filling forms, clicking through up to any irreversible Submit); **Stephen** means it needs a password, a credential, a real device/toolchain, a payment, or an explicit go/no-go call only Stephen can make.
+Living document (2026-07-14). Everything code-side is committed and machine-verified. This is the full list of remaining steps to ship every channel, with a **Who** column on every row: **Agent task** means Claude can drive it now on request (drafting, running CLI commands, filling forms, clicking through up to any irreversible Submit); **Stephen** means it needs a password, a credential, a real device/toolchain, a payment, or an explicit go/no-go call only Stephen can make.
 
 ## 0. One push unblocks everything — Done
 
 | # | Step | Who | How |
 |---|---|---|---|
-| 1 | Push pending local commits + re-cut the release | Done | Pushed and re-tagged `v1.0.0` → commit `2493164`. |
+| 1 | Push pending local commits + re-cut the release | Done | Pushed and re-tagged `v1.0.0` → commit `2493164` (release run #59), then re-tagged again → commit `ba22529` (release run #66, 2026-07-14). |
 
-The re-tag re-ran release.yml (run #59) and every job went green: `payload`, `android` (AAB built, published to the Play internal track), `ios` (TestFlight upload), `docs`, and the full `desktop` matrix (macOS/Windows/Ubuntu). Both mobile blockers held clean on re-run: the 90717 icon defect (icon flattened, guard asserts alpha-free) and the Play versionCode collision (FR-IMP-078: release builds stamp `max(BUILD_NUMBER, minutes-since-epoch)`).
+**Latest re-tag (run #66, commit `ba22529`, 7m 0s):** every job went green — `payload` (11s), `android` (2m 21s, published to the Play internal track), `ios` (3m 21s, new TestFlight build), `docs` (13s), and the full `desktop` matrix (macOS/Windows/Ubuntu, all 3 green; macOS job notarized + stapled + re-uploaded `CyberOS_1.0.0_universal.dmg`). This produced iOS build 29733164 and a fresh Android release (see §2 and §3 below for what I did with each on the store side).
+
+The earlier re-tag (run #59) re-ran release.yml the same way and confirmed both mobile blockers held clean: the 90717 icon defect (icon flattened, guard asserts alpha-free) and the Play versionCode collision (FR-IMP-078: release builds stamp `max(BUILD_NUMBER, minutes-since-epoch)`).
 
 Note: an earlier manual run (#58, same tag) failed mid-`android` with "This edit has expired, please create a new Edit." — traced to a Play Edits-API collision (tester-list edits open in Play Console at the same time as that run's publish step). Not a code defect; run #59 confirms it. Also found and fixed in passing, unrelated to the failure: `r0adkll/upload-google-play`'s `track:` input is deprecated in favor of `tracks:` — renamed in local commit `461cc87` (not yet pushed; cosmetic, no rush).
 
@@ -22,13 +24,13 @@ Nothing manual. `deploy.yml` ships both on every push to `main`; FR-IMP-081 (tes
 |---|---|---|---|
 | 1 | EU DSA trader declaration | Done | Verified live in ASC → App Information: "This developer has identified itself as a trader for this app." Already complete — this row was stale, it is not a pending blocker |
 | 2 | Add TestFlight testers | Done | Added 10 testers to the ASC "CyberOS External Testers" group. Build 10706 isn't assigned to that group yet — say the word if you want that done too |
-| 3 | Submit for review | Agent task up to the Submit click, then Stephen | App Privacy: configured and Published for all 7 data types (Name, Email, Emails/Text Messages, Photos/Videos, Other User Content, User ID, Device ID — all App Functionality only, linked, not tracking). Export compliance: confirmed on build 29732976 — "App Uses Non-Exempt Encryption: No" (exempt, HTTPS only), already answered correctly, no action needed. Build 29732976 (1.0.0) is already attached to the 1.0 version. Remaining gaps before Stephen can click Add for Review: (a) App Review Information → Sign-In Information username/password are empty — needs a real Apple-ID demo account provisioned into a demo workspace, same pattern as `play-review@cyberskill.world` for Play; I will not fabricate credentials. (b) Screenshots/App Previews are still 0 of 10 / 0 of 3 — need real device captures, not fabricated. Once both are supplied, I can finish prepping the version page; Stephen still clicks Add for Review himself |
+| 3 | Submit for review | Agent task up to the Submit click, then Stephen | App Privacy: configured and Published for all 7 data types (Name, Email, Emails/Text Messages, Photos/Videos, Other User Content, User ID, Device ID — all App Functionality only, linked, not tracking). Export compliance: re-confirmed on the fresh build 29733164 (run #66) by answering the "App Encryption Documentation" modal with "None of the algorithms mentioned above" — same exempt/HTTPS-only profile as the prior build, no code change needed, just re-answering per-build as ASC requires. Build 29733164 (1.0.0, from the latest re-tag) is now attached to the 1.0 version — I removed the stale build 29732976 and swapped in the newest one so the version being submitted matches Stephen's latest tag exactly, then Saved (confirmed via ASC UI). Remaining gaps before Stephen can click Add for Review: (a) App Review Information → Sign-In Information username/password are still empty — needs a real Apple-ID demo account provisioned into a demo workspace, same pattern as `play-review@cyberskill.world` for Play; I will not fabricate credentials. (b) Screenshots/App Previews are still 0 of 10 / 0 of 3 — need real device captures, not fabricated. Once both are supplied, I can finish prepping the version page; Stephen still clicks Add for Review himself |
 
 ## 3. Android / Google Play
 
 | # | Step | Who | How |
 |---|---|---|---|
-| 1 | Confirm publishing pipeline is green | Done | Verified live end-to-end — run #59's `android` job actually published to the internal track (not just a dry build); versionCode collision fixed in-repo (FR-IMP-078) |
+| 1 | Confirm publishing pipeline is green | Done | Verified live end-to-end — run #59's `android` job actually published to the internal track (not just a dry build); versionCode collision fixed in-repo (FR-IMP-078). Re-confirmed after the fresh re-tag: run #66's `android` job also published — Play Console → Internal testing shows release 1.0.0, "Available to internal testers", released today (Jul 14) with 1 version code |
 | 2 | Add internal/closed testers | Done | Added 10 testers to Play Console's "CyberOS Testers" list; synced the pre-existing "Test" list to the same 10 for consistency |
 | 3 | Promote internal → production when ready | Stephen | Play Console → Promote release (go/no-go call) |
 
@@ -87,8 +89,8 @@ Nothing manual. `deploy.yml` ships both on every push to `main`; FR-IMP-081 (tes
 
 ## Current blockers snapshot
 
-- iOS: build 29732976 (1.0.0) processed/validated and attached to the 1.0 version; 10 testers added to the ASC group (build not yet assigned to it — say the word). DSA declaration (§2.1) already done, checklist corrected. App Privacy configured + published; export compliance confirmed exempt on the build. Remaining before submit (§2.3): Stephen needs to supply real App Review sign-in credentials (demo account) and real device screenshots/previews — then Stephen clicks Add for Review.
-- Android: §0 done — v1.0.0 re-tagged, `android` job published live on run #59; testers done (§3.2, 10 added). Remaining: promote internal → production when ready (§3.3, Stephen).
+- iOS: fresh re-tag (run #66) produced build 29733164; export compliance answered exempt/HTTPS-only on it, and it's now the build attached to the 1.0 version (swapped in for the now-superseded 29732976, Saved). 10 testers added to the ASC group (build not yet assigned to it — say the word). DSA declaration (§2.1) already done, checklist corrected. App Privacy configured + published. Remaining before submit (§2.3): Stephen needs to supply real App Review sign-in credentials (demo account) and real device screenshots/previews — then Stephen clicks Add for Review.
+- Android: §0 done — v1.0.0 re-tagged twice (runs #59 and #66), `android` job published live both times; latest Internal testing release (today, Jul 14) confirmed live in Play Console. Testers done (§3.2, 10 added). Remaining: promote internal → production when ready (§3.3, Stephen).
 - MAS: §4.1 compile check + Apple account items (all Stephen).
 - MS Store: §5.1 reservation (Stephen, blocks the rest of §5); listing copy (§5.4) already drafted in `docs/deploy/microsoft-store-listing-copy.md`.
 - Snap: §6.1 registration (Stephen).
