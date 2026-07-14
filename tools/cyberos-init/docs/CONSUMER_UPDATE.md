@@ -1,46 +1,58 @@
-# Consumer updates (CyberOS 1.0)
+# Consumer install / update (CyberOS 1.0)
 
-## Entry points (all trigger update-check)
+## Command model
 
-Any use of a vendored `.cyberos/` entrypoint runs a soft update-check first
-(`lib/update-check.sh`).
+| Command | When | Role |
+|---------|------|------|
+| `bash install.sh [repo]` | Once (or re-vendor) | Install machine into `.cyberos/` |
+| `bash uninstall.sh [repo]` | On demand | Remove machine (keeps FRs; BRAIN kept by default) |
+| `bash update.sh` | Manual anytime | Check installed / payload / latest |
+| `bash update.sh --apply` | Manual when stale | Re-run install from payload |
+| `bash status.sh` | Manual only | Version + rules_sha report |
+| Soft check | **Auto** on any `.cyberos` use | `lib/update-check.sh` (throttled 12h) |
 
-| Command | When |
-|---------|------|
-| `bash .cyberos/init.sh <repo>` | Full vendor + migrate |
-| `bash .cyberos/init.sh --page <repo>` | Status page only |
-| `bash .cyberos/init.sh --migrate <repo>` | FR layout + page |
-| `bash .cyberos/init.sh --check <repo>` | Freshness report (read-only) |
-| `bash .cyberos/update.sh` / `--apply` | Check / re-init |
-| `bash .cyberos/changelog.sh` | Installed version + fingerprint |
-| `bash .cyberos/help.sh` | CLI surface |
-| `bash .cyberos/cuo/gates/run-gates.sh` | Every gates run |
-| MCP `fr_init` / `fr_gates` / `fr_status` / `ship_fr` | Any MCP tool on the repo |
-| pre-commit status hook | Via `init.sh --page` |
+There is **no** user-facing `install --page` or `install --check`.
+Status page regen is internal: `lib/status-page.sh` (pre-commit + run-gates).
+
+## Soft update triggers (automatic)
+
+- `cuo/gates/run-gates.sh`
+- `lib/status-page.sh` (hooks)
+- `help.sh`, `status.sh`, `update.sh`
+- MCP `fr_install` / `fr_gates` / `fr_status` / `ship_fr`
+- Full `install.sh` (always)
 
 ```bash
 CYBEROS_UPDATE_CHECK=soft    # default: warn, throttle 12h
 CYBEROS_UPDATE_CHECK=always  # every invocation
 CYBEROS_UPDATE_CHECK=strict  # exit 1 if stale
 CYBEROS_UPDATE_CHECK=0       # off
-CYBEROS_PAYLOAD=/path/to/dist/cyberos  # compare against local payload
-CYBEROS_OFFLINE=1             # skip network latest
+CYBEROS_PAYLOAD=/path/to/dist/cyberos
+CYBEROS_OFFLINE=1
 ```
 
 ## Apply latest
 
 ```bash
-# from release
 curl -fsSL https://github.com/cyberskill-official/cyberos/releases/latest/download/cyberos-payload.tar.gz \
   | tar -xz -C /tmp
-bash /tmp/cyberos/init.sh /path/to/repo
+bash /tmp/cyberos/install.sh /path/to/repo
 
-# from monorepo build
-bash ~/Projects/CyberSkill/cyberos/dist/cyberos/init.sh /path/to/repo
+# or from monorepo
+bash ~/Projects/CyberSkill/cyberos/dist/cyberos/install.sh /path/to/repo
 
-# or from installed payload
+# or from installed tree when payload is current
 bash .cyberos/update.sh --apply
 ```
+
+## Agent surface
+
+| File | Role |
+|------|------|
+| Root `AGENTS.md` | Thin pointer → `.cyberos/AGENT-ENTRY.md` (same idea as `CLAUDE.md` / `GEMINI.md`) |
+| `.cyberos/AGENT-ENTRY.md` | Full agent one-pager |
+| `.cyberos/memory/AGENTS.md` | Layer-1 memory protocol (dense; not at repo root) |
+| `CLAUDE.md` / `GEMINI.md` / … | Per-agent pointers |
 
 ## Versions
 
@@ -48,8 +60,3 @@ bash .cyberos/update.sh --apply
 |------|---------|
 | `.cyberos/VERSION` | **Platform** (CyberOS) |
 | `package.json` version | **Product** (independent) |
-
-## No migrate-frs.sh
-
-There is no `migrate-frs.sh` shim (pre-1.0.0; never released as stable).
-Use `init.sh --page` / `--migrate` only. Re-init removes any leftover shim.

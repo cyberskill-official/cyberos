@@ -29,12 +29,12 @@ for base in "$@"; do
     # init treats a migration failure as non-fatal (a docs-render bug must not brick init), so
     # its EXIT CODE cannot be the whole verdict: scan the output too, or a renderer that crashed
     # in every repo reads as a clean fleet roll.
-    out="$(CYBEROS_NO_MIGRATE="$mig" CYBEROS_OFFLINE=1 bash "$payload/init.sh" "$r" 2>&1)"; rc=$?
+    out="$(CYBEROS_NO_MIGRATE="$mig" CYBEROS_OFFLINE=1 bash "$payload/install.sh" "$r" 2>&1)"; rc=$?
     printf '%s\n' "$out" | sed 's/^/  /'
     if [ "$rc" -ne 0 ]; then
-      echo "  RESULT: INIT FAILED (rc=$rc)"; FAILED=$((FAILED + 1))
+      echo "  RESULT: INSTALL FAILED (rc=$rc)"; FAILED=$((FAILED + 1))
     elif printf '%s' "$out" | grep -qE 'FAILED|SyntaxError|ERROR|Cannot find|not found'; then
-      echo "  RESULT: INIT ok BUT a step reported failure - see the log above"; FAILED=$((FAILED + 1))
+      echo "  RESULT: INSTALL ok BUT a step reported failure - see the log above"; FAILED=$((FAILED + 1))
     else
       echo "  RESULT: ok"
     fi

@@ -5,7 +5,7 @@
 //
 // Transport: newline-delimited JSON-RPC 2.0 over stdin/stdout (the MCP stdio transport).
 // Tools:
-//   fr_init   {repo?}           - vendor the CyberOS machine into a repo (needs the payload)
+//   fr_install   {repo?}           - vendor the CyberOS machine into a repo (needs the payload)
 //   fr_gates  {repo?}           - run the machine gates (repo's own build/lint/test + coverage)
 //   fr_status {repo?}           - summarize the FR backlog + installed version
 //   ship_fr   {repo?, fr_id?}   - return the canonical, HITL-gated trigger for the next FR
@@ -42,13 +42,13 @@ function repoRoot(start) {
     dir = up;
   }
 }
-// find init.sh: explicit CYBEROS_PAYLOAD, then next to this server (payload-hosted), then
+// find install.sh: explicit CYBEROS_PAYLOAD, then next to this server (payload-hosted), then
 // a copied installer inside the target repo. Vendored servers may not have it - that's fine.
-function findInit(repo) {
+function findInstall(repo) {
   const cands = [
-    process.env.CYBEROS_PAYLOAD && join(process.env.CYBEROS_PAYLOAD, "init.sh"),
-    join(HERE, "..", "init.sh"),
-    join(repo, ".cyberos-init", "init.sh"),
+    process.env.CYBEROS_PAYLOAD && join(process.env.CYBEROS_PAYLOAD, "install.sh"),
+    join(HERE, "..", "install.sh"),
+    join(repo, ".cyberos-init", "install.sh"),
   ].filter(Boolean);
   return cands.find((p) => existsSync(p)) || null;
 }
@@ -76,26 +76,26 @@ function softUpdateCheck(repo) {
   } catch { /* soft */ }
 }
 
-function toolFrInit(a = {}) {
+function toolFrInstall(a = {}) {
   const repo = repoRoot(a.repo);
   softUpdateCheck(repo);
-  const init = findInit(repo);
+  const init = findInstall(repo);
   if (!init) {
     return err(
-      `No init.sh reachable. Run the MCP server from the payload (dist/cyberos/mcp/) or set ` +
+      `No install.sh reachable. Run the MCP server from the payload (dist/cyberos/mcp/) or set ` +
       `CYBEROS_PAYLOAD to the payload dir. Post-install, use fr_gates / fr_status / ship_fr - ` +
       `they need only ${repo}/.cyberos/.`,
     );
   }
   const { code, out } = run("bash", [init, repo], dirname(init));
-  return text(`fr_init on ${repo} (exit ${code})\n\n${out}`, code !== 0);
+  return text(`fr_install on ${repo} (exit ${code})\n\n${out}`, code !== 0);
 }
 
 function toolFrGates(a = {}) {
   const repo = repoRoot(a.repo);
   softUpdateCheck(repo);
   const gates = join(repo, ".cyberos", "cuo", "gates", "run-gates.sh");
-  if (!isFile(gates)) return err(`No gates at ${gates}. Run fr_init first.`);
+  if (!isFile(gates)) return err(`No gates at ${gates}. Run fr_install first.`);
   const { code, out } = run("bash", [gates], repo);
   return text(`gates on ${repo} (exit ${code} - green is necessary, never sufficient)\n\n${out}`, code !== 0);
 }
@@ -105,7 +105,7 @@ function toolFrStatus(a = {}) {
   softUpdateCheck(repo);
   const ver = readIf(join(repo, ".cyberos", "VERSION")).trim() || "not installed";
   const bl = readIf(join(repo, "docs", "feature-requests", "BACKLOG.md"));
-  if (!bl) return text(`CyberOS ${ver} @ ${repo}\nNo docs/feature-requests/BACKLOG.md yet - run fr_init, then add FRs.`);
+  if (!bl) return text(`CyberOS ${ver} @ ${repo}\nNo docs/feature-requests/BACKLOG.md yet - run fr_install, then add FRs.`);
   const rows = bl.split("\n").filter((l) => /^\s*-\s*\[/.test(l));
   const counts = {};
   for (const l of rows) { const m = l.match(/\[([a-z_]+)\]/); if (m) counts[m[1]] = (counts[m[1]] || 0) + 1; }
@@ -141,7 +141,7 @@ function readIf(p) { try { return readFileSync(p, "utf8"); } catch { return ""; 
 // --- MCP tool registry ---------------------------------------------------------
 const repoArg = { repo: { type: "string", description: "Absolute path to the target repo (default: cwd, walked up to the repo root)." } };
 const TOOLS = [
-  { name: "fr_init",   description: "Vendor the CyberOS machine into a repo (gate autodetect, FR backlog, agent surface, BRAIN). Needs the payload reachable.", inputSchema: { type: "object", properties: { ...repoArg } }, run: toolFrInit },
+  { name: "fr_install",   description: "Install the CyberOS machine into a repo (gate autodetect, FR backlog, agent surface, BRAIN). Needs the payload reachable.", inputSchema: { type: "object", properties: { ...repoArg } }, run: toolFrInstall },
   { name: "fr_gates",  description: "Run the CyberOS machine gates (the repo's own build/lint/test + coverage, plus caf/awh if present). Green is necessary, never sufficient.", inputSchema: { type: "object", properties: { ...repoArg } }, run: toolFrGates },
   { name: "fr_status", description: "Summarize the feature-request backlog (counts by status, next eligible FR) and the installed CyberOS version.", inputSchema: { type: "object", properties: { ...repoArg } }, run: toolFrStatus },
   { name: "ship_fr",   description: "Return the canonical, HITL-gated trigger to drive the next (or a named) feature-request. Does NOT auto-run or self-accept.", inputSchema: { type: "object", properties: { ...repoArg, fr_id: { type: "string", description: "Optional FR id, e.g. FR-012-slug. Omit to take the next ready_to_implement row." } } }, run: toolShipFr },

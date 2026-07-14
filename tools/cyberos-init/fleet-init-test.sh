@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # fleet-init-test.sh — init + audit every repo under CyberSkill + Personal (23 targets).
-# Loop: init → audit → print FAIL; optional --fix-once re-init fails only.
+# Loop: init → audit → print FAIL; optional --fix-once re-install fails only.
 # Usage:
 #   bash tools/cyberos-init/fleet-init-test.sh [payload-dir]
 # Env:
-#   FLEET_MAX_ROUNDS=3   re-init/audit rounds on failures
+#   FLEET_MAX_ROUNDS=3   re-install/audit rounds on failures
 set -uo pipefail
 
 payload="${1:-$(cd "$(dirname "$0")/../../dist/cyberos" && pwd)}"
@@ -51,13 +51,13 @@ for r in "${repos[@]}"; do
     continue
   fi
   # Skip pure non-git empty? still try init
-  printf '\n=== INIT %s ===\n' "$name"
-  if out="$(CYBEROS_OFFLINE=1 bash "$payload/init.sh" "$r" 2>&1)"; then
+  printf '\n=== INSTALL %s ===\n' "$name"
+  if out="$(CYBEROS_OFFLINE=1 bash "$payload/install.sh" "$r" 2>&1)"; then
     printf '%s\n' "$out" | sed 's/^/  | /' | tail -30
-    echo "  INIT: ok" | tee -a "$logdir/ok.txt"
+    echo "  INSTALL: ok" | tee -a "$logdir/ok.txt"
   else
     printf '%s\n' "$out" | sed 's/^/  | /' | tee "$logdir/$(echo "$name" | tr / _).init.log" | tail -40
-    echo "  INIT: FAILED" | tee -a "$logdir/fail.txt"
+    echo "  INSTALL: FAILED" | tee -a "$logdir/fail.txt"
     fail_list+=("$r")
   fi
 done
@@ -98,23 +98,23 @@ round=1
 while [ "$round" -lt "$rounds" ] && [ "${#unique_fails[@]}" -gt 0 ]; do
   round=$((round + 1))
   echo
-  echo "=== RE-INIT fails round $round (${#unique_fails[@]} repos) ==="
+  echo "=== RE-INSTALL fails round $round (${#unique_fails[@]} repos) ==="
   next=()
   for r in "${unique_fails[@]}"; do
     name="$(basename "$(dirname "$r")")/$(basename "$r")"
-    echo "--- re-init $name ---"
-    if CYBEROS_OFFLINE=1 bash "$payload/init.sh" "$r" >"$logdir/reinit-$(echo "$name" | tr / _).log" 2>&1; then
+    echo "--- re-install $name ---"
+    if CYBEROS_OFFLINE=1 bash "$payload/install.sh" "$r" >"$logdir/reinit-$(echo "$name" | tr / _).log" 2>&1; then
       parent="$(dirname "$r")"
       child="$(basename "$r")"
       line="$(bash "$audit" "$want" "$parent" 2>&1 | grep "/$child" || true)"
       if echo "$line" | grep -q '^PASS'; then
-        echo "PASS  $name (after re-init)"
+        echo "PASS  $name (after re-install)"
       else
         echo "FAIL  $name still: $line"
         next+=("$r")
       fi
     else
-      echo "FAIL  $name re-init still failing"
+      echo "FAIL  $name re-install still failing"
       next+=("$r")
     fi
   done

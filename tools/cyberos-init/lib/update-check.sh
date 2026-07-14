@@ -70,8 +70,8 @@ _cyberos_update_check() {
 
   if [ "$verdict" != "up_to_date" ]; then
     echo "cyberos: UPDATE AVAILABLE — installed=$inst latest=${latest:-?} payload=${payload_ver:-?} ($verdict)" >&2
-    echo "cyberos: next: bash \${CYBEROS_PAYLOAD:-/path/to/dist/cyberos}/init.sh $root" >&2
-    echo "cyberos:   or: curl -fsSL https://github.com/cyberskill-official/cyberos/releases/latest/download/cyberos-payload.tar.gz | tar -xz -C /tmp && bash /tmp/cyberos/init.sh $root" >&2
+    echo "cyberos: next: bash .cyberos/update.sh --apply   # or: bash \${CYBEROS_PAYLOAD:-/path/to/dist/cyberos}/install.sh $root" >&2
+    echo "cyberos:   or: curl -fsSL https://github.com/cyberskill-official/cyberos/releases/latest/download/cyberos-payload.tar.gz | tar -xz -C /tmp && bash /tmp/cyberos/install.sh $root" >&2
     if [ "$mode" = "strict" ]; then
       return 1
     fi

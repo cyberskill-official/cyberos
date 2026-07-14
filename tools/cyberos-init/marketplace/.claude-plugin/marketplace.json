@@ -9,7 +9,7 @@
     {
       "name": "cyberos",
       "source": "./plugin",
-      "description": "Turn an idea, PRD, or spec into audited feature requests (/create-feature-requests), then ship them (/ship-feature-requests) through implement -> review -> test -> done. /init installs the machine into any repo. HITL required at the two human-acceptance gates; agents never push, merge, deploy, or self-accept.",
+      "description": "Turn an idea, PRD, or spec into audited feature requests (/create-feature-requests), then ship them (/ship-feature-requests) through implement -> review -> test -> done. /install installs the machine into any repo. HITL required at the two human-acceptance gates; agents never push, merge, deploy, or self-accept.",
       "category": "development",
       "keywords": ["cyberos", "feature-requests", "backlog", "workflow", "hitl", "gates", "agents"],
       "suggested_prompts": [
@@ -23,7 +23,7 @@
         },
         {
           "label": "Install CyberOS in this repo",
-          "prompt": "Run /init to install CyberOS into this repo: autodetect the build/lint/test gates, scaffold the feature-request backlog, and wire the agent entry files. Do not clobber anything that already exists."
+          "prompt": "Run /install to install CyberOS into this repo: autodetect the build/lint/test gates, scaffold the feature-request backlog, and wire the agent entry files. Do not clobber anything that already exists."
         },
         {
           "label": "What is ready to implement right now?",

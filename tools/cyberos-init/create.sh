@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # create.sh <new-project-dir> - scaffold a fresh CyberOS project from the template skeleton,
-# then run init.sh (agent surface, gates autodetect, backlog, BRAIN). git-inits if needed.
+# then run install.sh (agent surface, gates autodetect, backlog, BRAIN). git-inits if needed.
 # Also the content of the "GitHub template repo" channel: host template/ as a repo and click
-# "Use this template", then run init.sh once. Never clobbers files already present in the target.
+# "Use this template", then run install.sh once. Never clobbers files already present in the target.
 set -euo pipefail
 
 src="$(cd "$(dirname "$0")" && pwd)"
@@ -25,5 +25,5 @@ if [ -f "$dst/README.md" ] && grep -q '{{PROJECT}}' "$dst/README.md" 2>/dev/null
   sed "s/{{PROJECT}}/$proj/g" "$dst/README.md" > "$dst/README.md.tmp" && mv "$dst/README.md.tmp" "$dst/README.md"
 fi
 
-bash "$src/init.sh" "$dst"
+bash "$src/install.sh" "$dst"
 echo "cyberos create: new project ready at $dst"

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # build.sh - assemble the vendorable CyberOS payload into dist/cyberos/.
-# init.sh lays this out under a target repo's gitignored .cyberos/, by module:
+# install.sh lays this out under a target repo's gitignored .cyberos/, by module:
 #   .cyberos/cuo/     - the FR workflow engine (ship-feature-requests + doctrine + status
 #                       contract + author/audit skills + gates + templates)
 #   .cyberos/memory/  - the memory module (Layer-1 protocol + schema + invariants)
@@ -119,12 +119,14 @@ cp -R "$here/plugin"    "$out/plugin"
 # plugin's own manifest; this file is the catalog pointing at it.
 mkdir -p "$out/.claude-plugin"
 cp "$here/marketplace/.claude-plugin/marketplace.json" "$out/.claude-plugin/marketplace.json"
-cp "$here/init.sh"      "$out/init.sh"
+cp "$here/install.sh"   "$out/install.sh"
+cp "$here/uninstall.sh" "$out/uninstall.sh"
 cp "$here/check-latest.sh"      "$out/check-latest.sh"
-# Portable lib + docs-tools (init --page/--migrate, update-check). No migrate-frs.sh shim.
+# Portable lib + docs-tools (status-page hooks, update soft-check). No migrate-frs / init.sh.
 mkdir -p "$out/lib"
 [ -f "$here/lib/fr-migrate.sh" ] && cp "$here/lib/fr-migrate.sh" "$out/lib/fr-migrate.sh"
 [ -f "$here/lib/update-check.sh" ] && cp "$here/lib/update-check.sh" "$out/lib/update-check.sh"
+[ -f "$here/lib/status-page.sh" ] && cp "$here/lib/status-page.sh" "$out/lib/status-page.sh"
 # (docs-tools sources may be absent in trimmed fixture builds — vendor what exists)
 if [ -f "$here/../../scripts/migrate_fr_layout.py" ]; then
   mkdir -p "$out/docs-tools/templates"
@@ -138,13 +140,13 @@ if [ -f "$here/../../scripts/migrate_fr_layout.py" ]; then
   [ -f "$here/../../modules/templates/cds/status.css" ] && cp "$here/../../modules/templates/cds/status.css" "$out/docs-tools/templates/"
   [ -f "$here/../../modules/templates/cds/tokens.css" ] && cp "$here/../../modules/templates/cds/tokens.css" "$out/docs-tools/templates/"
 fi
-# Never ship the retired migrate-frs.sh shim (pre-1.0.0; not released)
-rm -f "$out/migrate-frs.sh"
+# Never ship retired names (pre-1.0.0)
+rm -f "$out/migrate-frs.sh" "$out/init.sh" "$out/changelog.sh"
 cp "$here/bootstrap.sh" "$out/bootstrap.sh"
 cp "$here/create.sh"    "$out/create.sh"        # template / fresh-project scaffolder channel
-# FR-IMP-076: root CLI trio - init/update/changelog/help all directly runnable as .sh
+# 1.0.0 CLI: install | uninstall | update | status | help
 cp "$here/update.sh"    "$out/update.sh"
-cp "$here/changelog.sh" "$out/changelog.sh"
+cp "$here/status.sh"    "$out/status.sh"
 cp "$here/help.sh"      "$out/help.sh"
 cp -R "$here/ci"        "$out/ci"
 cp -R "$here/mcp"       "$out/mcp"              # MCP server channel (node stdio; every MCP agent)
@@ -153,8 +155,9 @@ cp -R "$here/template"  "$out/template"         # skeleton for create.sh + GitHu
 cp "$here/Dockerfile"   "$out/Dockerfile"
 cp "$here/README.md"    "$out/README.md"
 cp "$here/docs/index.md" "$out/GUIDE.md"   # the guide source lives in docs/ (site-rendered); ships as GUIDE.md
-chmod +x "$out/init.sh" "$out/bootstrap.sh" "$out/create.sh" "$out/update.sh" "$out/changelog.sh" "$out/help.sh" "$out/cuo/gates/run-gates.sh" 2>/dev/null || true
-chmod +x "$out/mcp/cyberos-mcp.mjs" "$out"/cli/bin/*.mjs 2>/dev/null || true
+chmod +x "$out/install.sh" "$out/uninstall.sh" "$out/bootstrap.sh" "$out/create.sh" \
+  "$out/update.sh" "$out/status.sh" "$out/help.sh" "$out/cuo/gates/run-gates.sh" 2>/dev/null || true
+chmod +x "$out/lib/"*.sh "$out/mcp/cyberos-mcp.mjs" "$out"/cli/bin/*.mjs 2>/dev/null || true
 
 # $cyver was validated + computed at the TOP of this script (FR-IMP-068: fail-fast, no 0.0.0 fallback).
 
@@ -241,7 +244,7 @@ cat > "$out/package.json" <<PKG
     "cyberos-mcp": "cli/bin/cyberos-mcp.mjs"
   },
   "engines": { "node": ">=18" },
-  "files": ["cuo", "memory", "plugin", "mcp", "cli", "ci", "template", "init.sh", "bootstrap.sh", "create.sh", "update.sh", "changelog.sh", "help.sh", "Dockerfile", "VERSION", "manifest.yaml", "GUIDE.md", "README.md", ".claude-plugin"],
+  "files": ["cuo", "memory", "plugin", "mcp", "cli", "ci", "template", "lib", "install.sh", "uninstall.sh", "update.sh", "status.sh", "help.sh", "bootstrap.sh", "create.sh", "Dockerfile", "VERSION", "manifest.yaml", "GUIDE.md", "README.md", ".claude-plugin"],
   "keywords": ["cyberos", "feature-requests", "agents", "mcp", "workflow", "hitl", "gates"],
   "license": "MIT"
 }
@@ -279,7 +282,7 @@ agent_surface:
   native_skill_dirs: [.claude/skills, .grok/skills, .commandcode/skills, .codex/skills, .opencode/skill]
   mcp: { server: mcp/cyberos-mcp.mjs, tools: [fr_init, fr_gates, fr_status, ship_fr] }
 notes: >
-  init.sh lays this out under a target repo's gitignored .cyberos/, by module. Doc-driven
+  install.sh lays this out under a target repo's gitignored .cyberos/, by module. Doc-driven
   mode always works; missing skills/caf degrade to the reduced-profile floor (the target
   repo's own build/lint/test + coverage + code review + the two human gates).
 EOF
@@ -294,4 +297,4 @@ plugin_bytes=$(wc -c < "$out/cyberos.plugin")
 [ "$plugin_bytes" -le 2097152 ] || { echo "cyberos-init: ERROR: cyberos.plugin ${plugin_bytes}B exceeds the 2 MB budget" >&2; exit 2; }
 
 echo "cyberos-init: done. profile=$profile skills=$vendored_skills caf=$caf_vendored payload=${payload_bytes} plugin_zip=${plugin_bytes}"
-echo "cyberos-init: payload at $out - init.sh lays it out under a target repo's .cyberos/ (gitignored)"
+echo "cyberos-init: payload at $out - install.sh lays it out under a target repo's .cyberos/ (gitignored)"

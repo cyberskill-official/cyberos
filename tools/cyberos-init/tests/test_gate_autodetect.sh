@@ -11,7 +11,7 @@ echo "building scratch payload..."
 bash "$repo/tools/cyberos-init/build.sh" "$TMP/payload" >/dev/null 2>&1 || { echo FATAL build; exit 1; }
 
 initrepo() { # initrepo <dir> ; markers already placed by caller
-  ( cd "$1" && git init -q . 2>/dev/null; bash "$TMP/payload/init.sh" "$1" >/dev/null 2>&1 )
+  ( cd "$1" && git init -q . 2>/dev/null; bash "$TMP/payload/install.sh" "$1" >/dev/null 2>&1 )
 }
 genv() { grep "^$2=" "$1/.cyberos/gates.env" | head -1 | cut -d= -f2- | tr -d '"'; }
 
@@ -62,7 +62,7 @@ t05_scaffold_once() {                                                  # AC 5
   grep -q "autodetected: go" "$d/.cyberos/config.yaml.orig" 2>/dev/null || cp "$d/.cyberos/config.yaml" "$d/.cyberos/config.yaml.orig"
   echo "# operator edit" >> "$d/.cyberos/config.yaml"
   before="$(sha256sum "$d/.cyberos/config.yaml" | cut -d' ' -f1)"
-  bash "$TMP/payload/init.sh" "$d" >/dev/null 2>&1
+  bash "$TMP/payload/install.sh" "$d" >/dev/null 2>&1
   after="$(sha256sum "$d/.cyberos/config.yaml" | cut -d' ' -f1)"
   [ "$before" = "$after" ] && ok t05 || fail t05 "config clobbered on re-init"
 }

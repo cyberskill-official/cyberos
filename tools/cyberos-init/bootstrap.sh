@@ -25,8 +25,8 @@ curl -fsSL "$sums_url" -o "$tmp/SHA256SUMS" \
 
 mkdir -p "$tmp/payload"
 tar -xzf "$tmp/cyberos-payload.tar.gz" -C "$tmp/payload"
-if [ ! -f "$tmp/payload/init.sh" ]; then   # legacy tarballs carried one top-level dir
+if [ ! -f "$tmp/payload/install.sh" ]; then   # tarballs may carry one top-level dir
   sub="$(find "$tmp/payload" -mindepth 1 -maxdepth 1 -type d | head -1)"
-  [ -n "$sub" ] && [ -f "$sub/init.sh" ] && mv "$sub"/* "$tmp/payload/" || { echo "cyberos bootstrap: ERROR: no init.sh in the payload" >&2; exit 1; }
+  [ -n "$sub" ] && [ -f "$sub/install.sh" ] && mv "$sub"/* "$tmp/payload/" || { echo "cyberos bootstrap: ERROR: no install.sh in the payload" >&2; exit 1; }
 fi
-bash "$tmp/payload/init.sh" "$target"
+bash "$tmp/payload/install.sh" "$target"

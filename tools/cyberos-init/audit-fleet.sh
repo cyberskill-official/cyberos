@@ -18,8 +18,8 @@ for base in "$@"; do
 
     # --- core modules (must exist after init) ---
     for p in \
-      init.sh update.sh changelog.sh help.sh VERSION manifest.yaml \
-      lib/fr-migrate.sh lib/update-check.sh \
+      install.sh uninstall.sh update.sh status.sh help.sh VERSION manifest.yaml \
+      lib/fr-migrate.sh lib/update-check.sh lib/status-page.sh \
       cuo/gates/run-gates.sh \
       cuo/ship-feature-requests.md \
       cuo/EXECUTION-DISCIPLINE.md \
@@ -48,6 +48,8 @@ for base in "$@"; do
 
     # orphan / legacy must NOT remain
     [ ! -f "$cy/migrate-frs.sh" ] || bad="$bad orphan:migrate-frs.sh"
+    [ ! -f "$cy/init.sh" ] || bad="$bad orphan:init.sh"
+    [ ! -f "$cy/changelog.sh" ] || bad="$bad orphan:changelog.sh"
     [ ! -f "$cy/status.html" ] || bad="$bad orphan:status.html"
     [ ! -d "$cy/status-site" ] || bad="$bad orphan:status-site"
 
@@ -67,7 +69,7 @@ for base in "$@"; do
       || [ -f "$cy/cuo/skills/ship-feature-requests/SKILL.md" ] \
       || bad="$bad missing:ship-feature-requests-skill"
     # plugin commands
-    for cmd in init update help changelog create-feature-requests; do
+    for cmd in install update help status create-feature-requests; do
       [ -f "$cy/plugin/commands/${cmd}.md" ] || bad="$bad missing:plugin/commands/${cmd}.md"
     done
 
@@ -88,6 +90,18 @@ for base in "$@"; do
 
     # --- repo entry points ---
     [ -f "$r/AGENTS.md" ] || bad="$bad missing:AGENTS.md"
+    # --- AGENTS.md must be thin pointer (not Layer-1 protocol dump) ---
+    if [ -f "$r/AGENTS.md" ]; then
+      if grep -q 'Layer-1 Memory Protocol' "$r/AGENTS.md" 2>/dev/null; then
+        if [ ! -f "$r/modules/memory/memory.schema.json" ]; then
+          bad="$bad agents-protocol-dump"
+        fi
+      else
+        grep -q '\.cyberos/AGENT-ENTRY' "$r/AGENTS.md" 2>/dev/null \
+          || bad="$bad agents-no-entry-pointer"
+      fi
+    fi
+
     [ -d "$r/docs/feature-requests" ] || bad="$bad missing:docs/feature-requests"
     if [ -d "$r/.git" ]; then
       grep -q '.cyberos/' "$r/.gitignore" 2>/dev/null || bad="$bad gitignore-block"
@@ -96,8 +110,8 @@ for base in "$@"; do
         { [ -f "$hk" ] && grep -qE 'cyberos-status-hook|init\.sh --page|check-status-sync|docs/status' "$hk"; } \
           || bad="$bad status-hook"
         # hook must not reference retired migrate-frs
-        if [ -f "$hk" ] && grep -q 'migrate-frs' "$hk" 2>/dev/null; then
-          bad="$bad hook-still-migrate-frs"
+        if [ -f "$hk" ] && grep -qE 'migrate-frs|init\.sh --page' "$hk" 2>/dev/null; then
+          bad="$bad hook-legacy-status-path"
         fi
       fi
     fi
@@ -151,12 +165,12 @@ for base in "$@"; do
 
     # --- functional smokes (must work) ---
     if [ -f "$cy/init.sh" ]; then
-      if ! bash "$cy/init.sh" --check "$r" >/dev/null 2>&1; then
-        bad="$bad init-check-fails"
+      if ! bash "$cy/update.sh" "$r" >/dev/null 2>&1; then
+        bad="$bad update-check-fails"
       fi
-      if [ -f "$cy/lib/fr-migrate.sh" ] && command -v node >/dev/null 2>&1; then
-        if ! bash "$cy/init.sh" --page "$r" >/dev/null 2>&1; then
-          bad="$bad init-page-fails"
+      if [ -f "$cy/lib/status-page.sh" ] && command -v node >/dev/null 2>&1; then
+        if ! bash "$cy/lib/status-page.sh" "$r" >/dev/null 2>&1; then
+          bad="$bad status-page-fails"
         fi
       fi
     fi
@@ -167,7 +181,7 @@ for base in "$@"; do
       fi
     fi
     # run-gates / update / help must parse
-    for scr in "$cy/cuo/gates/run-gates.sh" "$cy/update.sh" "$cy/help.sh" "$cy/changelog.sh" "$cy/init.sh"; do
+    for scr in "$cy/cuo/gates/run-gates.sh" "$cy/update.sh" "$cy/help.sh" "$cy/status.sh" "$cy/install.sh" "$cy/uninstall.sh"; do
       [ -f "$scr" ] || continue
       if ! bash -n "$scr" 2>/dev/null; then
         bad="$bad syntax:$(basename "$scr")"

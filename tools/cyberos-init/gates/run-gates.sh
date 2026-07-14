@@ -8,13 +8,13 @@ set -uo pipefail
 root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 env_file="$root/.cyberos/gates.env"
 if [ ! -f "$env_file" ]; then
-  echo "run-gates: missing $env_file - run .cyberos/init.sh first" >&2
+  echo "run-gates: missing $env_file - run bash .cyberos/install.sh first" >&2
   exit 2
 fi
 # shellcheck disable=SC1090
 . "$env_file"
 
-# CyberOS update check on every gates run (soft; set CYBEROS_UPDATE_CHECK=strict to fail)
+# Soft update check on every gates run (anything under .cyberos triggers this)
 if [ -f "$root/.cyberos/lib/update-check.sh" ]; then
   # shellcheck source=/dev/null
   source "$root/.cyberos/lib/update-check.sh"
@@ -78,9 +78,9 @@ echo "GATES: GREEN (machine gates only)."
 echo "HITL still required: a human records the review verdict and the final acceptance."
 echo "The agent must NOT set the FR to done itself."
 
-# Status page via init --page only
-if command -v node >/dev/null 2>&1 && [ -f "$root/.cyberos/init.sh" ]; then
-  if bash "$root/.cyberos/init.sh" --page "$root" >/dev/null 2>&1; then
-    echo "status: docs/status/ regenerated via init --page"
+# Status page via internal lib (not a user-facing command)
+if command -v node >/dev/null 2>&1 && [ -f "$root/.cyberos/lib/status-page.sh" ]; then
+  if bash "$root/.cyberos/lib/status-page.sh" "$root" >/dev/null 2>&1; then
+    echo "status: docs/status/ regenerated"
   fi
 fi

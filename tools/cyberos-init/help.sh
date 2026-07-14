@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# help.sh - root CLI entry (FR-IMP-076): what this payload/.cyberos install can do, directly
-# from the shell - no agent, plugin, or MCP required. Mirrors the plugin's /cyberos:help.
+# help.sh — root CLI surface. Soft update-check runs on every use of .cyberos.
 here="$(cd "$(dirname "$0")" && pwd)"
 if [ -f "$here/lib/update-check.sh" ]; then
   # shellcheck source=/dev/null
@@ -8,24 +7,30 @@ if [ -f "$here/lib/update-check.sh" ]; then
   _cyberos_update_check || true
 fi
 cat <<'TXT'
-CyberOS - root CLI (run from the payload dir or an installed .cyberos/)
+CyberOS — root CLI (payload dir or installed .cyberos/)
 
-  bash init.sh              vendor/refresh CyberOS into the current repo (idempotent)
-  bash init.sh --check      three-value version report: installed / payload / latest
-  bash init.sh --page       regenerate docs/status/ only
-  bash init.sh --migrate    FR folder layout + status page
-  bash update.sh            check for updates (wraps init.sh --check)
-  bash update.sh --apply    apply the update (re-runs init.sh from this payload)
-  bash changelog.sh         installed version, rules_sha fingerprint, changelog pointer
-  bash help.sh              this text
+Once (lifecycle):
+  bash install.sh [repo]     install / re-vendor CyberOS into a repo
+  bash uninstall.sh [repo]   remove the vendored machine (keeps FRs + BRAIN by default)
 
-  bash cuo/gates/run-gates.sh          machine-gate floor (build/lint/test/coverage per gates.env)
-  node mcp/cyberos-mcp.mjs             MCP server, stdio (Claude Code, any MCP agent)
-  node mcp/cyberos-mcp.mjs --http 8799 MCP server, remote-connector mode (agent UIs' custom
-                                       connector dialogs; serve behind TLS - docs/deploy/mcp-connector.md)
-  cli/bin/*.mjs                        npx channel (cyberos-init / cyberos-gates / cyberos-mcp)
+Ongoing (auto soft-check on any .cyberos use; also manual):
+  bash update.sh             check installed vs payload vs latest
+  bash update.sh --apply     apply update (re-runs install from this payload)
 
-Any of the above also runs a soft CyberOS update-check (see lib/update-check.sh).
-Workflow surface (any MCP agent): fr_init, fr_gates, fr_status, ship_fr.
-Docs: GUIDE.md (this payload), manifest.yaml (version + rules_sha + channels).
+Manual report only:
+  bash status.sh             installed version + rules_sha + doc pointers
+  bash help.sh               this text
+
+Machine gates (auto update-check):
+  bash cuo/gates/run-gates.sh
+
+Channels:
+  node mcp/cyberos-mcp.mjs             MCP stdio
+  node mcp/cyberos-mcp.mjs --http 8799 MCP HTTP connector
+  cli/bin/*.mjs                        npx channel
+
+Status page (docs/status/) regenerates automatically via pre-commit + run-gates.
+There is no separate --page / --check user command.
+
+Docs: GUIDE.md, manifest.yaml. Site: https://cyberos.cyberskill.world/docs
 TXT

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # rollout.sh - adopt the unified feature-requests structure + CyberOS machine across many repos.
 # For each target repo: migrate any legacy layout (docs/improvement -> docs/feature-requests/improvement,
-# .cyberos-memory -> .cyberos/memory/store), run init.sh, smoke-check the vendored machine, and commit ONLY
+# .cyberos-memory -> .cyberos/memory/store), run install.sh, smoke-check the vendored machine, and commit ONLY
 # the artifacts this run created/changed (never a file that was already dirty before the run).
 #
 # Usage: bash rollout.sh <payload-dir> <repo> [<repo>...]
@@ -52,7 +52,7 @@ for repo in "$@"; do
   fi
 
   # 3. vendor the machine (idempotent; never clobbers BACKLOG/FRs/AGENTS/BRAIN)
-  if ! bash "$PAYLOAD/init.sh" "$repo" >/dev/null 2>&1; then echo "  INIT FAILED"; continue; fi
+  if ! bash "$PAYLOAD/install.sh" "$repo" >/dev/null 2>&1; then echo "  INSTALL FAILED"; continue; fi
 
   # 3b. drop a stale legacy gitignore line (the store lives inside .cyberos/ now)
   if [ -f .gitignore ] && grep -qE '^\.cyberos-memory/?$' .gitignore; then
