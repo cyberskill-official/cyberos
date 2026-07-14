@@ -711,7 +711,48 @@ The general lesson, and the reason this keeps happening: a rename codemod is a
 side of the rename the tree is on. Rules that assume "before" must be disarmed
 once the tree is "after", and that includes the file moves, not just the text.
 
-### 13.10 CI guard against re-entry
+### 13.10 `git mv` does not rename the callers (pass-3 incident)
+
+`bash tools/cyberos-init/build.sh` reported `WARN docs-site build failed`. Cause:
+
+```
+tools/docs-site/build.sh:36    node tools/docs-site/render-fr-catalog.mjs
+tools/docs-site/build.sh:59    node tools/docs-site/render-fr-pages.mjs
+```
+
+Pass 1 `git mv`'d those renderers to `render-task-catalog.mjs` and
+`render-task-pages.mjs`. It did not touch the lines that **invoke them by name**,
+because no content rule matched `render-fr-pages` — it contains neither
+`feature-request` nor an `FR-<MOD>-<NNN>` id.
+
+The same hole applies to every moved script: `migrate_fr_layout`, `repair_fr_yaml`,
+`rebaseline_fr_status`, `awh_goldenset_from_fr`, `fr-migrate`. And four files were
+never renamed at all: `migrate_improvement_to_fr.py`, `test_fr_layout.sh`,
+`test_render_fr_pages.sh`, `ship-your-first-fr.md`.
+
+99 substitutions across 37 files, all of them callers.
+
+**Invariant, now enforced by `unreferenced_renames()`:** every entry in
+`PATH_RENAMES` MUST have a matching content rule for its basename. A move without
+one is a landmine that only detonates when something tries to run the file.
+
+### 13.11 Not our bug: `check-chain-coverage.sh`
+
+```
+tools/cyberos-init/check-chain-coverage.sh: line 32: declare: -A: invalid option
+tools/cyberos-init/check-chain-coverage.sh: line 34: awh: unbound variable
+```
+
+`declare -A` (associative array) needs bash 4. macOS ships bash 3.2. Introduced in
+commit `53db4e30f`, long before this rename — `git log -S 'declare -A ALLOW'`
+confirms it. The script has therefore never run successfully on a stock Mac, and
+the chain-coverage gate has been silently passing by not executing.
+
+Fix separately: `#!/usr/bin/env bash` finds Homebrew bash if it is first on PATH,
+so either require bash >= 4 explicitly and fail loudly, or rewrite the allowlist
+without associative arrays.
+
+### 13.12 CI guard against re-entry
 
 After the wave, add a hook that fails on any new `feature[-_ ]request` or
 `FR-[A-Z]+-\d+` in tracked files outside the deny-list. Without it, the 5,000+

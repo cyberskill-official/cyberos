@@ -134,6 +134,27 @@ RULES: list[tuple[str, str, str]] = [
     # ── Pass 5: frontmatter fields carrying FR IDs. ──────────────────────────
     ("field:related-frs",            r"\brelated_frs\b",               "related_tasks"),
 
+    # ── Pass 5a: FILENAME references.
+    #
+    # PASS-3 ADDITIONS. `git mv` renames a file; it does NOT rename the places
+    # that CALL it by name. Pass 1 moved render-fr-pages.mjs -> render-task-pages.mjs
+    # while tools/docs-site/build.sh went on invoking `node render-fr-pages.mjs`,
+    # which is what broke the docs-site build. Same for every other moved script.
+    #
+    # Rule of thumb for any future rename: for each entry in PATH_RENAMES there
+    # MUST be a matching content rule for its basename, or the move is a landmine.
+    ("file:render-fr-catalog",       r"render-fr-catalog",             "render-task-catalog"),
+    ("file:render-fr-pages",         r"render-fr-pages",               "render-task-pages"),
+    ("file:test-render-fr-pages",    r"test_render_fr_pages",          "test_render_task_pages"),
+    ("file:migrate-improvement",     r"migrate_improvement_to_fr",     "migrate_improvement_to_task"),
+    ("file:migrate-fr-layout",       r"migrate_fr_layout",             "migrate_task_layout"),
+    ("file:test-fr-layout",          r"test_fr_layout",                "test_task_layout"),
+    ("file:repair-fr-yaml",          r"repair_fr_yaml",                "repair_task_yaml"),
+    ("file:rebaseline-fr-status",    r"rebaseline_fr_status",          "rebaseline_task_status"),
+    ("file:awh-goldenset-from-fr",   r"awh_goldenset_from_fr",         "awh_goldenset_from_task"),
+    ("file:fr-migrate-sh",           r"\bfr-migrate\b",                "task-migrate"),
+    ("file:ship-your-first-fr",      r"ship-your-first-fr\b",          "ship-your-first-task"),
+
     # ── Pass 5b: code identifiers. D5 = task_id, module-scoped.
     #     Safe at the rename site: `fr_id` appears only in modules/cuo,
     #     modules/skill, scripts/ and tools/ — never in services/mcp-gateway
@@ -207,7 +228,23 @@ PATH_RENAMES = [
     ("tools/cyberos-init/lib/fr-migrate.sh",     "tools/cyberos-init/lib/task-migrate.sh"),
     ("tools/docs-site/render-fr-catalog.mjs",    "tools/docs-site/render-task-catalog.mjs"),
     ("tools/docs-site/render-fr-pages.mjs",      "tools/docs-site/render-task-pages.mjs"),
+    # PASS-3: files pass 1 forgot entirely.
+    ("scripts/migrate_improvement_to_fr.py",     "scripts/migrate_improvement_to_task.py"),
+    ("scripts/tests/test_fr_layout.sh",          "scripts/tests/test_task_layout.sh"),
+    ("tools/docs-site/tests/test_render_fr_pages.sh",
+     "tools/docs-site/tests/test_render_task_pages.sh"),
+    ("modules/cuo/docs/guides/ship-your-first-fr.md",
+     "modules/cuo/docs/guides/ship-your-first-task.md"),
 ]
+
+# INVARIANT: every PATH_RENAMES entry needs a content rule for its basename,
+# or callers keep invoking a filename that no longer exists. Checked by --verify.
+def unreferenced_renames() -> list[str]:
+    stems = {Path(src).stem.replace(".", "") for src, _ in PATH_RENAMES}
+    covered = " ".join(pat for _n, pat, _r in RULES)
+    return sorted(s for s in stems
+                  if ("fr" in s.lower().split("_") or "-fr-" in s or "_fr_" in s)
+                  and s not in covered)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # IDEMPOTENCY GUARD.
