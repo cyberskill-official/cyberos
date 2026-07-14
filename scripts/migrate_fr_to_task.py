@@ -253,6 +253,36 @@ def tracked_files(root: Path) -> list[str]:
     return [p for p in out.stdout.split("\0") if p]
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Tracked SYMLINKS. git ls-files lists them like ordinary paths, so a naive
+# read_text() either explodes (IsADirectoryError, when the link points at a
+# directory) or — far worse — writes THROUGH the link into a target that is
+# itself tracked and already rewritten.
+#
+# This repo has six:
+#   AGENTS.md                                 -> modules/memory/cyberos/data/AGENTS.md
+#   CLAUDE.md                                 -> modules/memory/cyberos/data/AGENTS.md
+#   .codex/skills/ship-feature-requests       -> ../../.cyberos/plugin/skills/ship-feature-requests
+#   .commandcode/skills/ship-feature-requests -> (same)
+#   .grok/skills/ship-feature-requests        -> (same)
+#   .opencode/skill/ship-feature-requests     -> (same)
+#
+# AGENTS.md and CLAUDE.md point at the SAME file. Planning three edits that all
+# write to one target is how you corrupt the memory protocol: the third read
+# would see the already-rewritten body and fire the one-shot `task@1 ->
+# subtask@1` rule on it. The two-phase apply (plan everything, then write)
+# happens to prevent this, but do not rely on that — skip links outright. Their
+# targets are tracked separately and get rewritten on their own.
+# ─────────────────────────────────────────────────────────────────────────────
+SYMLINK_RENAMES = (
+    (".codex/skills",       "ship-feature-requests", "ship-tasks"),
+    (".commandcode/skills", "ship-feature-requests", "ship-tasks"),
+    (".grok/skills",        "ship-feature-requests", "ship-tasks"),
+    (".opencode/skill",     "ship-feature-requests", "ship-tasks"),
+    (".claude/skills",      "ship-feature-requests", "ship-tasks"),   # gitignored, fix anyway
+)
+
+
 def in_scope(rel: str) -> bool:
     if any(rel.startswith(p) for p in DENY_PREFIXES):
         return False
@@ -261,6 +291,40 @@ def in_scope(rel: str) -> bool:
     if any(rel.endswith(s) for s in SKIP_SUFFIXES):
         return False
     return True
+
+
+def fix_symlinks(root: Path) -> None:
+    """Retarget the agent-tool skill symlinks: ship-feature-requests -> ship-tasks.
+
+    These are how Claude Code, Codex, Grok, opencode and commandcode discover the
+    workflow. Four of the five are TRACKED. Leave them and every agent keeps
+    resolving a skill name that no longer exists the moment build.sh regenerates
+    the payload.
+    """
+    print("\n--- agent skill symlinks ---")
+    for d, old, new in SYMLINK_RENAMES:
+        old_p = root / d / old
+        new_p = root / d / new
+        if not old_p.is_symlink():
+            print(f"skip (absent)  {d}/{old}")
+            continue
+        target = __import__("os").readlink(old_p)
+        new_target = target.replace(old, new)
+        tracked = subprocess.run(
+            ["git", "ls-files", "--error-unmatch", f"{d}/{old}"],
+            cwd=root, capture_output=True, text=True,
+        ).returncode == 0
+        if tracked:
+            subprocess.run(["git", "rm", "-q", "--cached", f"{d}/{old}"], cwd=root, check=True)
+        old_p.unlink()
+        new_p.symlink_to(new_target)
+        if tracked:
+            subprocess.run(["git", "add", f"{d}/{new}"], cwd=root, check=True)
+        print(f"retargeted     {d}/{new} -> {new_target}"
+              f"{'  (tracked)' if tracked else '  (gitignored)'}")
+    print("\n  Also update the managed block in .gitignore (it names the OLD paths),")
+    print("  and rebuild the payload so the symlink targets actually exist:")
+    print("      bash tools/cyberos-init/build.sh")
 
 
 def report_sealed(root: Path) -> None:
@@ -366,11 +430,19 @@ def main() -> int:
     plan: list[tuple[Path, str]] = []   # (path, new_content) — nothing is written yet
 
     # ── Phase 1: plan every edit in memory. Write nothing. ──────────────────
+    skipped_links = 0
     for rel in files:
         path = root / rel
+        # Never read or write through a symlink. See SYMLINK_RENAMES above:
+        # AGENTS.md and CLAUDE.md both point at modules/memory/cyberos/data/AGENTS.md,
+        # and four skill links point at directories. Their targets are tracked
+        # separately and get rewritten on their own.
+        if path.is_symlink():
+            skipped_links += 1
+            continue
         try:
             src = path.read_text(encoding="utf-8")
-        except (UnicodeDecodeError, FileNotFoundError):
+        except (UnicodeDecodeError, FileNotFoundError, IsADirectoryError):
             continue
 
         new, hits = rewrite(src)
@@ -413,6 +485,7 @@ def main() -> int:
     mode = "APPLY" if args.apply else ("VERIFY" if args.verify else "DRY RUN")
     print(f"=== migrate_fr_to_task — {mode} ===")
     print(f"in-scope tracked files : {len(files)}")
+    print(f"symlinks skipped       : {skipped_links}  (targets rewritten separately)")
     print(f"files with edits       : {changed_files}")
     print(f"total substitutions    : {sum(total.values())}\n")
 
@@ -468,6 +541,8 @@ def main() -> int:
                 )
                 moved += 1
         print(f"renamed {moved} spec directories")
+
+        fix_symlinks(root)
 
         print("\n--- next, by hand ---")
         print("  1. the 13 agent-config files (.cursorrules, .windsurfrules, .grok/GROK.md,")

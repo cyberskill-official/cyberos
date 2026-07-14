@@ -639,7 +639,47 @@ snake_case identifier. Pass 1 left ~90 sites behind:
 Prose misses: hyphenated Title Case (`Feature-Request`) and sentence case
 (`Feature request`) were not covered by the Title Case rule.
 
-### 13.8 CI guard against re-entry
+### 13.8 Tracked symlinks (crashed the pass-2 run)
+
+`git ls-files` lists symlinks like ordinary paths. This repo has six tracked ones:
+
+```
+AGENTS.md                                 -> modules/memory/cyberos/data/AGENTS.md
+CLAUDE.md                                 -> modules/memory/cyberos/data/AGENTS.md
+.codex/skills/ship-feature-requests       -> ../../.cyberos/plugin/skills/ship-feature-requests
+.commandcode/skills/ship-feature-requests -> (same)
+.grok/skills/ship-feature-requests        -> (same)
+.opencode/skill/ship-feature-requests     -> (same)
+```
+
+Two failure modes, one loud and one silent:
+
+- **Loud.** Four of them point at a *directory*, so `read_text()` raised
+  `IsADirectoryError` and killed the pass-2 run outright.
+- **Silent, and much worse.** `AGENTS.md` and `CLAUDE.md` point at the **same**
+  file — the memory protocol. The codemod planned three edits that all write
+  through to one target. Under the old write-as-you-read loop, the second read
+  would have seen the already-rewritten body and fired the one-shot
+  `task@1 -> subtask@1` rule on it, quietly corrupting §3.1 of the protocol.
+  The two-phase apply (plan everything, then write), added for crash safety,
+  prevented it by accident.
+
+The codemod now skips symlinks outright. Their targets are tracked separately and
+get rewritten on their own.
+
+The four skill symlinks are also how Claude Code, Codex, Grok, opencode and
+commandcode *discover the workflow*. `fix_symlinks()` retargets all five (the
+`.claude` one is gitignored but equally broken) to `ship-tasks`. They will dangle
+until the payload is rebuilt:
+
+```bash
+bash tools/cyberos-init/build.sh
+```
+
+The managed block in `.gitignore` still names the old paths. Fix it, and teach
+`cyberos install` to delete stale links by name (risk R3).
+
+### 13.9 CI guard against re-entry
 
 After the wave, add a hook that fails on any new `feature[-_ ]request` or
 `FR-[A-Z]+-\d+` in tracked files outside the deny-list. Without it, the 5,000+
