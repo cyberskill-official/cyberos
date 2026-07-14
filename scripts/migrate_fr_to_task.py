@@ -49,6 +49,32 @@ DENY_PREFIXES = (
     "scripts/migrate_fr_to_task.py",   # this file
 )
 
+# ─────────────────────────────────────────────────────────────────────────────
+# SEALED held-out acceptance tests. chmod 444 via `awh lock modules/memory/tests`
+# (tools/awh/harness/stage0_verification/readonly.py), explicitly so that "the
+# authoring agent cannot edit the bar it is graded against". There is no `awh
+# unlock` verb — the seal is one-way by design, and breaking it must be a
+# deliberate human act, not a line buried in a 2,499-file codemod.
+#
+# The codemod therefore refuses to touch them. It REPORTS them instead, so the
+# edits are made by a human, reviewed, and recorded. `--verify` will flag the FR
+# ids left inside them as residue; that is correct and intentional.
+#
+# Two of the three are docstring-only and cosmetic. The third is not:
+#   modules/memory/tests/test_claude_code_hook.py:82
+#       assert fm["source"] == "fr-memory-109"
+#   modules/memory/cyberos/core/claude_code_hook.py:90
+#       "source": "fr-memory-109",
+# That is a coupled emitter/assertion pair on a value PERSISTED into memory-file
+# frontmatter. Rewriting both keeps the test green — which is exactly the pattern
+# the seal exists to catch. Decide it consciously. See --sealed.
+# ─────────────────────────────────────────────────────────────────────────────
+SEALED_PATHS = (
+    "modules/memory/tests/test_claude_code_hook.py",
+    "modules/memory/tests/test_memory_sync.py",
+    "modules/memory/tests/test_sync_class.py",
+)
+
 # Binary / non-text extensions we never rewrite.
 SKIP_SUFFIXES = (
     ".png", ".jpg", ".jpeg", ".svg", ".ico", ".woff", ".woff2", ".ttf",
@@ -177,9 +203,48 @@ def tracked_files(root: Path) -> list[str]:
 def in_scope(rel: str) -> bool:
     if any(rel.startswith(p) for p in DENY_PREFIXES):
         return False
+    if rel in SEALED_PATHS:
+        return False
     if any(rel.endswith(s) for s in SKIP_SUFFIXES):
         return False
     return True
+
+
+def report_sealed(root: Path) -> None:
+    """Show, but never write, the edits the codemod would make to sealed tests."""
+    print("\n--- SEALED held-out tests (codemod refuses to write; do these by hand) ---")
+    for rel in SEALED_PATHS:
+        p = root / rel
+        if not p.exists():
+            print(f"  absent: {rel}")
+            continue
+        src = p.read_text(encoding="utf-8")
+        new, hits = rewrite(src)
+        if not hits:
+            print(f"  clean:  {rel}")
+            continue
+        print(f"\n  {rel}   ({sum(hits.values())} edits)")
+        for i, (a, b) in enumerate(zip(src.splitlines(), new.splitlines()), 1):
+            if a != b:
+                kind = "DATA" if not a.lstrip().startswith(('"""', "#", "'''")) else "docstring"
+                print(f"    L{i} [{kind}]")
+                print(f"      - {a.strip()[:96]}")
+                print(f"      + {b.strip()[:96]}")
+    print("""
+  To apply, as a deliberate human act:
+      chmod u+w modules/memory/tests/test_claude_code_hook.py \\
+                modules/memory/tests/test_memory_sync.py \\
+                modules/memory/tests/test_sync_class.py
+      # edit the lines above by hand, then re-seal:
+      python -m awh lock modules/memory/tests
+      git commit -m "test(memory): unseal held-out tests for fr->task rename, re-sealed"
+
+  Before you touch test_claude_code_hook.py L82, decide the DATA question:
+  claude_code_hook.py:90 writes `"source": "fr-memory-109"` into memory-file
+  frontmatter. The BRAIN has 0 files carrying it today, so rewriting is free NOW.
+  If the hook had ever run, you would have persisted data on one vocabulary and
+  new code on another, with the BRAIN deny-listed from this codemod. Either
+  rewrite both and note it, or leave `source` as a frozen provenance tag.""")
 
 
 def rewrite(text: str) -> tuple[str, Counter]:
@@ -199,6 +264,8 @@ def main() -> int:
     ap.add_argument("--residue", action="store_true", help="report sites the rules cannot reach")
     ap.add_argument("--emit-brain-ops", action="store_true",
                     help="emit NDJSON move/put ops for the BRAIN store (do not sed it)")
+    ap.add_argument("--sealed", action="store_true",
+                    help="show the edits the codemod refuses to make to sealed held-out tests")
     args = ap.parse_args()
 
     root = repo_root()
@@ -206,6 +273,10 @@ def main() -> int:
 
     if args.emit_brain_ops:
         return emit_brain_ops(root)
+
+    if args.sealed:
+        report_sealed(root)
+        return 0
 
     # ── Guard 1: refuse to apply to a dirty tree. ───────────────────────────
     # `git checkout -- .` must be a valid, complete undo. If the tree already

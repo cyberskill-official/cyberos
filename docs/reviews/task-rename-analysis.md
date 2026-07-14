@@ -551,7 +551,57 @@ not undo:
 
 Keep both. A half-renamed repo of this size is not recoverable by inspection.
 
-### 13.5 CI guard against re-entry
+### 13.5 Sealed held-out tests (found by the pre-flight guard, 2026-07-14)
+
+The pre-flight writability check refused the apply and named three files:
+
+```
+modules/memory/tests/test_claude_code_hook.py
+modules/memory/tests/test_memory_sync.py
+modules/memory/tests/test_sync_class.py
+```
+
+They are not accidentally read-only. `modules/memory/.awh/goldenset.yaml` line 27:
+
+> Held-out acceptance for the pilot FR. Sealed read-only via `awh lock modules/memory/tests`
+> so the authoring agent cannot edit the bar it is graded against.
+
+`tools/awh/harness/stage0_verification/readonly.py` chmods them 444. There is no
+`awh unlock` verb: the seal is one-way by design. Breaking it must be a deliberate
+human act, never a line buried in a 2,496-file codemod.
+
+The three files are now on the codemod's deny-list. `--sealed` reports the edits
+it refuses to make.
+
+Two are docstring-only. The third is not:
+
+| file | line | content |
+|---|---|---|
+| `modules/memory/cyberos/core/claude_code_hook.py` | 90 | `"source": "fr-memory-109",` (emitter) |
+| `modules/memory/tests/test_claude_code_hook.py` | 82 | `assert fm["source"] == "fr-memory-109"` (sealed assertion) |
+
+`source` is written into the frontmatter of every memory file the Claude Code hook
+creates. It is **data**, not a code reference. It is also the only hardcoded
+`fr-*` provenance value anywhere in the source tree.
+
+The emitter is in scope; the test is sealed. So after `--apply`, the emitter says
+`task-memory-109` and the sealed test still asserts `fr-memory-109`, and
+**the sealed test goes red.** That is the seal working exactly as designed: it
+catches a rename that changed observable behaviour, and forces a human to look.
+
+Decide it consciously, in either direction:
+
+- **Freeze `source`.** Treat it like an on-chain FR ID: a provenance tag naming the FR that introduced the hook. Revert the one line in `claude_code_hook.py`, add it to the codemod's exclusions, leave the seal intact, no unsealing needed. [recommended — it is history, and history is already frozen everywhere else in this plan]
+- **Rewrite both.** `chmod u+w` the three files, hand-edit the four lines, `python -m awh lock modules/memory/tests` to re-seal, commit separately with the reason in the message.
+
+Free either way today only because the BRAIN has **zero** memory files carrying
+`fr-memory-109` — the hook has never written one. Had it run even once, you would
+have persisted data on one vocabulary and new code on another, with the BRAIN
+deny-listed from this codemod and no migration between them. Check
+`grep -rl 'fr-memory-109' .cyberos/memory/store` before deciding, in case that
+changed.
+
+### 13.6 CI guard against re-entry
 
 After the wave, add a hook that fails on any new `feature[-_ ]request` or
 `FR-[A-Z]+-\d+` in tracked files outside the deny-list. Without it, the 5,000+
