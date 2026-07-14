@@ -2,7 +2,7 @@
 
 This is the repo-level changelog for CyberOS. For module-specific changelogs, see the per-module pages on the documentation site.
 
-## [1.0.0] - 2026-07-12
+## [1.0.0] - 2026-07-14
 
 The first stable release of CyberOS - the deliberate 1.0.0 call. The 0.x line hardened the platform's
 governed development machinery end to end; 1.0.0 commits to it.
@@ -12,22 +12,31 @@ Added
   /create-feature-requests and /ship-feature-requests workflows are hardened for multi-repo production
   use (resumable ship manifests, deterministic queue selection, gate autodetect across 9 stacks,
   per-repo config, audited backlog writes, chain/pair/anchor/version gates in CI).
-- Visual deliverables: every FR renders to its own CDS-styled page; one status hub (deck + roadmap /
-  backlog / changelog) regenerates on every change with zero manual triggers.
+- Visual deliverables: every FR renders to its own CDS-styled page; one status hub (status-hub@2)
+  with three lenses (board / table / releases) regenerates from FR frontmatter + CHANGELOG + VERSION.
+- Consumer CLI (final surface): `install` | `uninstall` | `version` | `status` | `help`, with matching
+  Claude plugin slash commands `/install` `/uninstall` `/version` `/status` `/help`.
+- Soft update-check on any `.cyberos` use; manual check is `version` (if stale and the user confirms,
+  re-vendor via `install` only - no separate apply path).
+- `status` opens `docs/status/index.html` in the default browser.
+- Root `AGENTS.md` is a thin pointer to `.cyberos/AGENT-ENTRY.md` (same idea as `CLAUDE.md` /
+  `GEMINI.md`); the Layer-1 memory protocol lives only at `.cyberos/memory/AGENTS.md`.
+- GitHub release notes document each asset (payload vs plugin vs desktop installers vs signatures).
 
 Changed
 - Version bumps now carry the whole codebase (installers, store projects, manifests) and fire the
   release + docs pipelines natively - no [skip ci], no manual dispatch (FR-IMP-071/072).
 - The status page is ONE page (status-hub@2): Roadmap, Backlog and Changelog stopped being three
   tabs and became three lenses - board, table, releases - over one filtered FR corpus, with a drawer
-  carrying each FR's full spec (lazy per-FR chunks), relationship graph and metadata. The changelog
-  now leads with FR chips (cited ids + shipped-date matches) instead of prose, and names what no
-  release accounts for. Extends FR-DOCS-006 / FR-DOCS-007 and the auto-sync of FR-IMP-074.
-- init/migration hardened by a 22-repo fleet roll: dangling AGENTS.md symlinks are replaced rather
-  than kept, the init summary no longer claims a status page that migration never rendered, and FR
-  relations resolve against the real corpus (ids are not always FR-shaped). New
-  tools/cyberos-init/{rollout-fleet,audit-fleet}.sh roll and PROVE a fleet - the audit re-renders
-  each repo's page and byte-compares it, so a stale page can never pass as current.
+  carrying each FR's full spec (lazy per-FR chunks), relationship graph and metadata. The releases
+  lens is generated from this CHANGELOG (FR chips for cited ids + shipped-date matches). Extends
+  FR-DOCS-006 / FR-DOCS-007 and the auto-sync of FR-IMP-074.
+- Renamed consumer entrypoints for 1.0.0: init → install, changelog → status (open page), update →
+  version (check-only). No user-facing `install --page` / `--check`; page regen is internal
+  (`lib/status-page.sh` for hooks and run-gates).
+- Install/migration hardened by a 23-repo fleet roll: protocol dumps and protocol-symlinks at root
+  AGENTS.md are replaced with the thin pointer; status-page freshness is proven by re-render +
+  byte-compare. tools/cyberos-init/{fleet-init-test,audit-fleet}.sh roll and PROVE the fleet.
 
 ## [0.4.0] - 2026-07-12
 

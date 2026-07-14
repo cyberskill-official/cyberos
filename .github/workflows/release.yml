@@ -59,10 +59,22 @@ jobs:
         run: bash tools/cyberos-init/check-version-sync.sh "$RUNNER_TEMP/payload"
       - name: Produce deterministic release assets
         run: bash tools/cyberos-init/release-assets.sh "$RUNNER_TEMP/payload" "$RUNNER_TEMP/assets"
+      - name: Render release notes (asset guide + CHANGELOG section)
+        run: |
+          ver="${TAG#v}"
+          bash tools/cyberos-init/render-release-notes.sh "$ver" "$RUNNER_TEMP/RELEASE_NOTES.md"
+          # Keep a short title; body is the human guide (filenames alone confuse users).
+          echo "CyberOS v${ver}" > "$RUNNER_TEMP/RELEASE_TITLE.txt"
       - name: Upload to the release (create-or-upload, idempotent)
         env: { GH_TOKEN: "${{ github.token }}" }
         run: |
-          gh release create "$TAG" --verify-tag --title "$TAG" --notes "CyberOS $TAG" 2>/dev/null || true
+          TITLE="$(cat "$RUNNER_TEMP/RELEASE_TITLE.txt")"
+          NOTES="$RUNNER_TEMP/RELEASE_NOTES.md"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --title "$TITLE" --notes-file "$NOTES"
+          else
+            gh release create "$TAG" --verify-tag --title "$TITLE" --notes-file "$NOTES"
+          fi
           gh release upload "$TAG" "$RUNNER_TEMP"/assets/* --clobber
   # Signed native desktop installers (.dmg / .msi / .AppImage) via the official Tauri action. The desktop app
   # is a thin shell that loads os.cyberskill.world/web, so there is no web build step here.
