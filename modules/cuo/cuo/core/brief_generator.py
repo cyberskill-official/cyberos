@@ -276,7 +276,7 @@ class BriefGenerator:
             parts.append(f"- **{k}:** {v}")
         parts.append("")
 
-        # Feature request
+        # Task
         parts.append("## 2. Task")
         parts.append("")
         fr_preview = fr_body[:3000] if len(fr_body) > 3000 else fr_body

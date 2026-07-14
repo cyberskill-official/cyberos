@@ -78,8 +78,8 @@
     <text x="700" y="462">user_correction_streak      N user "no, not that" within K turns</text>
     <text x="80" y="480">denylist_near_miss_streak   N times the skill almost wrote denylisted content</text>
     <text x="700" y="480">scope_rejection_streak      gateway rejected N writes for scope violations</text>
-    <text x="80" y="498">citation_missing_streak     feature-request-author: emitted FRs without citations</text>
-    <text x="700" y="498">deterministic_drift         feature-request-audit: same input → different verdicts (sev-0)</text>
+    <text x="80" y="498">citation_missing_streak     task-author: emitted FRs without citations</text>
+    <text x="700" y="498">deterministic_drift         task-audit: same input → different verdicts (sev-0)</text>
   </g>
 
   <!-- Auto → manual escalation -->

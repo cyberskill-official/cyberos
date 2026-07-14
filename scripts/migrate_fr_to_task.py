@@ -228,6 +228,16 @@ ONE_SHOT_RULES = frozenset({
     "free-word:contract-path",      # contracts/task -> contracts/subtask
 })
 
+# The PATH rename is one-shot for the same reason, and guarding only the content
+# rules is not enough. Learned the hard way on the pass-2 run: `contracts/task ->
+# contracts/subtask` re-fired and swallowed the NEW task contract into
+# contracts/subtask/task/, taking STATUS-REFERENCE.md with it and breaking
+# build.sh. An "is the source absent?" check does NOT catch this — the source very
+# much exists, it is just a different thing now.
+ONE_SHOT_PATH_RENAMES = frozenset({
+    ("modules/skill/contracts/task", "modules/skill/contracts/subtask"),
+})
+
 
 def word_already_freed(root: Path) -> bool:
     """True once pass 1 has demoted the old task@1 contract to subtask@1."""
@@ -314,12 +324,18 @@ def fix_symlinks(root: Path) -> None:
             ["git", "ls-files", "--error-unmatch", f"{d}/{old}"],
             cwd=root, capture_output=True, text=True,
         ).returncode == 0
+        if new_p.is_symlink() or new_p.exists():
+            print(f"skip (done)    {d}/{new} already exists")
+            continue
         if tracked:
             subprocess.run(["git", "rm", "-q", "--cached", f"{d}/{old}"], cwd=root, check=True)
         old_p.unlink()
         new_p.symlink_to(new_target)
         if tracked:
-            subprocess.run(["git", "add", f"{d}/{new}"], cwd=root, check=True)
+            # -f is REQUIRED: these agent dirs are gitignored, and the old links
+            # were force-added. Without -f, git refuses and the run dies here,
+            # halfway through the symlink set.
+            subprocess.run(["git", "add", "-f", f"{d}/{new}"], cwd=root, check=True)
         print(f"retargeted     {d}/{new} -> {new_target}"
               f"{'  (tracked)' if tracked else '  (gitignored)'}")
     print("\n  Also update the managed block in .gitignore (it names the OLD paths),")
@@ -383,9 +399,15 @@ def main() -> int:
                     help="emit NDJSON move/put ops for the BRAIN store (do not sed it)")
     ap.add_argument("--sealed", action="store_true",
                     help="show the edits the codemod refuses to make to sealed held-out tests")
+    ap.add_argument("--fix-symlinks", action="store_true",
+                    help="retarget the agent skill symlinks only (no dirty-tree guard)")
     args = ap.parse_args()
 
     root = repo_root()
+
+    if args.fix_symlinks:
+        fix_symlinks(root)
+        return 0
 
     # ── Idempotency guard: disarm the one-shot rules once pass 1 has run. ───
     global COMPILED
@@ -514,9 +536,17 @@ def main() -> int:
     if args.apply:
         print("\n--- path renames (git mv) ---")
         for src, dst in PATH_RENAMES:
+            if freed and (src, dst) in ONE_SHOT_PATH_RENAMES:
+                print(f"skip (ONE-SHOT, already ran)  {src} -> {dst}")
+                continue
             s, d = root / src, root / dst
             if not s.exists():
                 print(f"skip (absent)  {src}")
+                continue
+            if d.exists():
+                # git mv into an existing directory NESTS instead of failing.
+                # That is how contracts/task ended up inside contracts/subtask/task/.
+                print(f"REFUSING       {src} -> {dst}  (destination exists; would nest)")
                 continue
             d.parent.mkdir(parents=True, exist_ok=True)
             subprocess.run(["git", "mv", src, dst], cwd=root, check=True)

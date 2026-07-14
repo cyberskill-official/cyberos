@@ -78,7 +78,7 @@ evidence_artefact_ids:
   obs_injection: "<artefact id | null>"
   coverage_report: "<artefact id | null>"
   debug_trace: "<artefact id | null>"
-  feature_request_audit: "<artefact id | null>"   # populated on draft → ready_to_implement
+  task_audit: "<artefact id | null>"   # populated on draft → ready_to_implement
   coverage_gate_audit: "<artefact id | null>"     # populated on testing → done
 rework_reason: "<one-sentence reason | null>"      # required when transition_kind == "rework"
 mutation_kind: status-cell-only | insert-row   # closed enum (@2); one cell OR one new row per mutation
@@ -122,7 +122,7 @@ two in sync when either changes:
   - `off_ramp` — moving to `on_hold` or `closed` from any state
 - `line_number` resolves to a real BACKLOG row whose `task_id` matches.
 - `old_line` matches the current contents of that line byte-for-byte (optimistic concurrency check; if the file shifted underneath us, refuse and re-enter the queue).
-- `evidence_artefact_ids` references real memory audit rows from the same workflow run (cross-reference check). Which fields are required depends on the transition — e.g. `coverage_gate_audit` is required for the `testing → done` transition; `feature_request_audit` is required for `draft → ready_to_implement`.
+- `evidence_artefact_ids` references real memory audit rows from the same workflow run (cross-reference check). Which fields are required depends on the transition — e.g. `coverage_gate_audit` is required for the `testing → done` transition; `task_audit` is required for `draft → ready_to_implement`.
 - `mutation_kind` ∈ {status-cell-only, insert-row} (closed enum). This skill never moves rows, reorders the queue, or deletes FRs.
 - insert-row only: `expected_absent` verified against the pre-image (no row for `task_id` exists); post-image carries exactly one; row grammar + placement per §2b; `insert.status` equals the FR file's frontmatter status at write time.
 - Back-compat: a `backlog-state-update@1` artefact (no `mutation_kind`, or `status-cell-only`) stays valid for one release window; the audit accepts both versions during the transition.

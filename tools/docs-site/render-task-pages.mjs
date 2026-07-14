@@ -76,7 +76,7 @@ for (const { module, stem, spec } of folders) {
   const metaHtml = `<strong>module</strong> ${esc(meta.module ?? module)} · <strong>class</strong> ${esc(meta.class ?? 'product')} · <strong>priority</strong> ${esc(meta.priority ?? '')} · <strong>created</strong> ${esc(meta.created ?? '')} · <strong>shipped</strong> ${esc(meta.shipped ?? 'null')}<br><strong>depends on</strong> ${dep} · <strong>blocks</strong> ${blk}`;
 
   const page = fill(SHELL, {
-    title: meta.title ?? stem, kind: 'Feature request — engineering-spec@1',
+    title: meta.title ?? stem, kind: 'Task — engineering-spec@1',
     id: meta.id ?? stem, status: meta.status ?? '(none)',
     'badges:html': '', 'meta:html': metaHtml, 'body:html': html + auditHtml,
     footer: `Generated from docs/tasks/${module}/${stem}/spec.md — markdown is the source of truth (TASK-DOCS-002/005).`,

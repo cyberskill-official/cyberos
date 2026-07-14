@@ -1,4 +1,4 @@
-# Feature request to task: rename impact analysis
+# Task to task: rename impact analysis
 
 Status: draft for decision. Not an ADR yet.
 Author: analysis pass, 2026-07-14.
@@ -612,7 +612,7 @@ free-word:contract-path      contracts/task  -> contracts/subtask
 ```
 
 They exist to free the word `task` by demoting the old contract. After pass 1,
-`task@1` means the **new** thing (the former `feature_request@1`). Re-running them
+`task@1` means the **new** thing (the former `task@1`). Re-running them
 would demote *that* to `subtask@1` across 216 sites and collapse both contracts
 into one — silently, with a green exit code.
 
@@ -625,19 +625,19 @@ unrecoverable by inspection.
 
 ### 13.7 Pass-2 residue: the `_` word-boundary class
 
-`_` is a word character, so `\bfeature_request\b` never matched inside a longer
+`_` is a word character, so `\btask\b` never matched inside a longer
 snake_case identifier. Pass 1 left ~90 sites behind:
 
 | site | why it matters |
 |---|---|
-| `modules/skill/backlog-state-update-author/SKILL.md:81` — `feature_request_audit:` | **Contract-level.** An envelope FIELD name that the BSU rubric requires for the `draft -> ready_to_implement` transition. Not cosmetic. |
-| `modules/cuo/cuo/core/applier.py:75,453` — `_apply_feature_request_audit` | dispatch key was renamed to `task-audit`, the function it points at was not |
-| `services/skill-broker/tests/integration.rs` — `feature_request_author_validates()` | cosmetic; the paths and assertions inside were renamed correctly, so the tests still pass |
-| 4 SVG architecture diagrams | `.svg` was wrongly in `SKIP_SUFFIXES`. SVG is text; the diagrams still rendered `cuo/cpo/feature-request-author`. Now in scope. |
-| `tools/docs-site/render-task-pages.mjs:79` — `'Feature request — engineering-spec@1'` | the user-visible kind label on every rendered docs page |
+| `modules/skill/backlog-state-update-author/SKILL.md:81` — `task_audit:` | **Contract-level.** An envelope FIELD name that the BSU rubric requires for the `draft -> ready_to_implement` transition. Not cosmetic. |
+| `modules/cuo/cuo/core/applier.py:75,453` — `_apply_task_audit` | dispatch key was renamed to `task-audit`, the function it points at was not |
+| `services/skill-broker/tests/integration.rs` — `task_author_validates()` | cosmetic; the paths and assertions inside were renamed correctly, so the tests still pass |
+| 4 SVG architecture diagrams | `.svg` was wrongly in `SKIP_SUFFIXES`. SVG is text; the diagrams still rendered `cuo/cpo/task-author`. Now in scope. |
+| `tools/docs-site/render-task-pages.mjs:79` — `'Task — engineering-spec@1'` | the user-visible kind label on every rendered docs page |
 
-Prose misses: hyphenated Title Case (`Feature-Request`) and sentence case
-(`Feature request`) were not covered by the Title Case rule.
+Prose misses: hyphenated Title Case (`Task`) and sentence case
+(`Task`) were not covered by the Title Case rule.
 
 ### 13.8 Tracked symlinks (crashed the pass-2 run)
 
@@ -646,10 +646,10 @@ Prose misses: hyphenated Title Case (`Feature-Request`) and sentence case
 ```
 AGENTS.md                                 -> modules/memory/cyberos/data/AGENTS.md
 CLAUDE.md                                 -> modules/memory/cyberos/data/AGENTS.md
-.codex/skills/ship-feature-requests       -> ../../.cyberos/plugin/skills/ship-feature-requests
-.commandcode/skills/ship-feature-requests -> (same)
-.grok/skills/ship-feature-requests        -> (same)
-.opencode/skill/ship-feature-requests     -> (same)
+.codex/skills/ship-tasks       -> ../../.cyberos/plugin/skills/ship-tasks
+.commandcode/skills/ship-tasks -> (same)
+.grok/skills/ship-tasks        -> (same)
+.opencode/skill/ship-tasks     -> (same)
 ```
 
 Two failure modes, one loud and one silent:
@@ -679,7 +679,39 @@ bash tools/cyberos-init/build.sh
 The managed block in `.gitignore` still names the old paths. Fix it, and teach
 `cyberos install` to delete stale links by name (risk R3).
 
-### 13.9 CI guard against re-entry
+### 13.9 The idempotency guard was incomplete (pass-2 incident)
+
+§13.6 guarded the one-shot *content* rules. It did not guard the one-shot *path
+rename*. On the pass-2 run, `contracts/task -> contracts/subtask` re-fired.
+
+`git mv` into an existing directory **nests instead of failing**, so the NEW task
+contract (formerly `feature-request`) was swallowed whole:
+
+```
+modules/skill/contracts/subtask/task/{CONTRACT,STATUS-REFERENCE,SHIP-MANIFEST,template,CHANGELOG}.md
+```
+
+`build.sh` then died on `cp modules/skill/contracts/task/STATUS-REFERENCE.md: No
+such file or directory`, which is the only reason anyone noticed. Nothing was
+lost — the moves were staged as renames — but the failure was quiet in exactly
+the way a rename failure must never be.
+
+Three fixes, all in the codemod:
+
+1. `ONE_SHOT_PATH_RENAMES` — the contract-dir move is skipped once `freed`.
+   An "is the source absent?" check does **not** catch this: the source exists,
+   it is simply a different thing now.
+2. A path rename whose destination already exists is REFUSED, not nested.
+3. `git add -f` on the agent skill symlinks. Those dirs are gitignored and the
+   old links were force-added, so a plain `git add` dies mid-set — which is what
+   left `.codex` retargeted and the other four untouched.
+
+The general lesson, and the reason this keeps happening: a rename codemod is a
+**state machine**, not a substitution. Every rule has a precondition about which
+side of the rename the tree is on. Rules that assume "before" must be disarmed
+once the tree is "after", and that includes the file moves, not just the text.
+
+### 13.10 CI guard against re-entry
 
 After the wave, add a hook that fails on any new `feature[-_ ]request` or
 `FR-[A-Z]+-\d+` in tracked files outside the deny-list. Without it, the 5,000+

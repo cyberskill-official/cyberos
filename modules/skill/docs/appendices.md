@@ -1445,7 +1445,7 @@ The SRS-audit's RUBRIC focuses on:
   * Failure modes documented
 
 
-### Phase F - Feature-Request Authoring
+### Phase F - Task Authoring
 
 **Skill**: `cuo/cpo/task-author` **Files to load**: `SKILL.md` (364 lines / 20 KB) - largest in the chain; budget read-time accordingly **Input**: audited `product-requirements-document@1` (+ audited `software-requirements-specification@1` if full profile) **Output**: a folder of `task@1` markdown files - one per feature, each <=2 weeks of work
 
@@ -1471,7 +1471,7 @@ The SRS-audit's RUBRIC focuses on:
   * FR scopes don't overlap (each piece of work belongs to exactly one FR)
 
 
-### Phase G - Feature-Request Audit
+### Phase G - Task Audit
 
 **Skill**: `cuo/cpo/task-audit` **Files to load**: `SKILL.md` (316 lines / 16 KB) + `RUBRIC.md` + `AUDIT_LOOP.md` **Input**: folder of FR markdowns **Output**: `<FR>.audit.md` per FR + `AUDIT_BATCH_SUMMARY.md` aggregate
 

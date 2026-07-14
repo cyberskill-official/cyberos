@@ -23,7 +23,7 @@ fn skill_dir(skill_name: &str) -> PathBuf {
 }
 
 #[test]
-fn feature_request_author_validates() {
+fn task_author_validates() {
     let path = skill_dir("task-author");
     if !path.exists() {
         eprintln!("skip: {path:?} not found");
@@ -37,7 +37,7 @@ fn feature_request_author_validates() {
 }
 
 #[test]
-fn feature_request_audit_validates() {
+fn task_audit_validates() {
     let path = skill_dir("task-audit");
     if !path.exists() {
         eprintln!("skip: {path:?} not found");
@@ -154,7 +154,7 @@ fn missing_frontmatter_rejected() {
 }
 
 #[test]
-fn transpile_feature_request_author_to_anthropic_form() {
+fn transpile_task_author_to_anthropic_form() {
     let path = skill_dir("task-author");
     if !path.exists() {
         eprintln!("skip: {path:?} not found");

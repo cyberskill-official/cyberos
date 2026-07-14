@@ -72,7 +72,7 @@ def apply_step_side_effect(
     dispatcher = {
         "backlog-state-update-author": _apply_backlog_state_update,
         "coverage-gate-author": _apply_coverage_gate,
-        "task-audit": _apply_feature_request_audit,
+        "task-audit": _apply_task_audit,
         "architecture-decision-record-author": _apply_architecture_decision_record,
         "implementation-plan-author": _apply_implementation_plan,
         "code-review-author": _apply_code_review,
@@ -450,7 +450,7 @@ def _find_test_root(start: Any) -> Path | None:
 # ---------------------------------------------------------------------------
 
 
-def _apply_feature_request_audit(step_result, hand_off: dict, run_span_id: str) -> None:
+def _apply_task_audit(step_result, hand_off: dict, run_span_id: str) -> None:
     """Write a sibling .audit.md for the audited FR from the LLM's JSON output.
 
     The LLM produces structured audit output. We extract findings and write a
