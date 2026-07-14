@@ -1,4 +1,4 @@
-"""FR-MEMORY-103 — Multi-device sync daemon.
+"""TASK-MEMORY-103 — Multi-device sync daemon.
 
 Bidirectional sync between a Personal memory (this device) and Lumi (the
 cloud-hosted org memory). The personal-memory client:
@@ -10,7 +10,7 @@ cloud-hosted org memory). The personal-memory client:
     verifies each row's chain anchor, and imports them into the local
     Layer 1 store via the existing :mod:`cyberos.core.writer`.
 
-Auth: every Lumi request carries a JWT minted by FR-AUTH-108
+Auth: every Lumi request carries a JWT minted by TASK-AUTH-108
 (``POST /v1/auth/lumi/issue``). The daemon's environment variables:
 
   * ``MEMORY_SYNC_LUMI_URL`` — base URL of the Lumi service, e.g.
@@ -27,7 +27,7 @@ Reliability:
   * **Pull** uses the per-tenant cursor pattern (mirrors L2 ingest); the
     cursor lives at ``<store>/sync/pull-cursor.json``.
   * Every push + pull cycle emits a heartbeat-style status row at
-    ``<store>/sync/last-status.json`` so the supervisor (FR-MEMORY-110)
+    ``<store>/sync/last-status.json`` so the supervisor (TASK-MEMORY-110)
     and the doctor invariants can see how the daemon is doing without
     needing a heavy logging stack.
 
@@ -66,7 +66,7 @@ LAST_STATUS_REL = "sync/last-status.json"
 
 
 # ---------------------------------------------------------------------------
-# Retry policy mirrors FR-MEMORY-110's restart policy.
+# Retry policy mirrors TASK-MEMORY-110's restart policy.
 # ---------------------------------------------------------------------------
 
 @dataclass

@@ -15,12 +15,12 @@ allowed_memory_scopes:
   read:
     - project:*
   write:
-    - project:fr/{fr_id}/backlog-state-update.audit
+    - project:fr/{task_id}/backlog-state-update.audit
     - project:workflow/{run_id}/complete
 
 audit:
   row_kind: backlog_state_update_audited
-  required_fields: [fr_id, score, issues_open, issues_resolved, workflow_complete_emitted]
+  required_fields: [task_id, score, issues_open, issues_resolved, workflow_complete_emitted]
 
 inputs:
   - { name: backlog_mutation, format: backlog-state-update@2 (or @1, transition window), required: true }
@@ -44,19 +44,19 @@ Common rules (every mutation):
 
 status-cell-only rules:
 
-| BSU-002 | `line_number` resolves to a real BACKLOG row whose fr_id matches | error |
+| BSU-002 | `line_number` resolves to a real BACKLOG row whose task_id matches | error |
 | BSU-003 | `old_line` matches the current file contents byte-for-byte (optimistic concurrency) | error |
 
-insert-row rules (FR-CUO-205):
+insert-row rules (TASK-CUO-205):
 
-| BSU-INS-001 | No row for `fr_id` in the pre-image; exactly one in the post-image | error |
+| BSU-INS-001 | No row for `task_id` in the pre-image; exactly one in the post-image | error |
 | BSU-INS-002 | Row grammar exact: `- [<status>] <FR-ID-slug> - <title>` + ` (improvement)` suffix iff class: improvement | error |
 | BSU-INS-003 | Placed in the correct `## <module>` section (created per regenerator conventions when absent), sort order kept | error |
 | BSU-INS-004 | No other line of the file changed, except that section's header counts when present | error |
 | BSU-INS-005 | `insert.status` equals the FR file's frontmatter status at write time | error |
 
 Transition window: a @1 artefact (no mutation_kind) audits as status-cell-only with a
-transition note, not a failure; the window closes one release after FR-CUO-205 ships.
+transition note, not a failure; the window closes one release after TASK-CUO-205 ships.
 
 ## 2. Pass criterion
 
@@ -68,6 +68,6 @@ detect "FR drained from queue, move on".
 
 *End of backlog-state-update-audit SKILL.md.*
 
-## Contract files (FR-SKILL-118)
+## Contract files (TASK-SKILL-118)
 
 This pair is at full contract parity: `RUBRIC.md` (versioned rules + prose->rule map), `AUDIT_LOOP.md` (canonical-loop binding), `REPORT_FORMAT.md`, `envelopes/` (I/O schemas), `acceptance/README.md`. SKILL.md remains the normative prose; the files encode it.

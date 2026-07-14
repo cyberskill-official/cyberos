@@ -1,11 +1,11 @@
-//! FR-AUTH-110 §1 #3 + #9 + #26 + DEC-2489 - the AUTH SSO browser session.
+//! TASK-AUTH-110 §1 #3 + #9 + #26 + DEC-2489 - the AUTH SSO browser session.
 //!
 //! The server-side truth behind the `__Host-cyberos_sso` cookie. The cookie
 //! carries the row id; this table decides validity, so the session is revocable.
 //! [`create`] starts one (absolute 24h), [`lookup_active`] is the silent-SSO read
 //! (not revoked, within the 8h sliding window and 24h absolute), [`touch`]
 //! extends the sliding window, and [`revoke_for_subject`] is the §1 #26 cascade
-//! the FR-AUTH-005 revoke calls so silent SSO stops too, not only new logins.
+//! the TASK-AUTH-005 revoke calls so silent SSO stops too, not only new logins.
 //!
 //! Runtime-checked `sqlx::query(...)`; compiles without a live database.
 

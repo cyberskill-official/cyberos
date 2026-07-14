@@ -22,17 +22,17 @@ def mock_project(tmp_path: Path):
     Structure:
         project/
         ├── docs/
-        │   └── feature-requests/
+        │   └── tasks/
         │       └── auth/
-        │           └── FR-TEST-001-test-feature.md
+        │           └── TASK-TEST-001-test-feature.md
         └── outputs/
             └── step03_architecture-decision-record-author.json
     """
     project = tmp_path / "my-project"
-    fr_dir = project / "docs" / "feature-requests" / "auth"
+    fr_dir = project / "docs" / "tasks" / "auth"
     fr_dir.mkdir(parents=True)
-    fr_file = fr_dir / "FR-TEST-001-test-feature.md"
-    fr_file.write_text("# FR-TEST-001\n\nA test feature request.\n")
+    fr_file = fr_dir / "TASK-TEST-001-test-feature.md"
+    fr_file.write_text("# TASK-TEST-001\n\nA test task.\n")
 
     output_dir = project / "outputs"
     output_dir.mkdir()
@@ -53,7 +53,7 @@ class TestFindFrFile:
     def test_finds_fr_from_output_dir(self, mock_project):
         """When output_dir is inside the project, walk-up finds the FR."""
         result = _find_fr_file(
-            "FR-TEST-001",
+            "TASK-TEST-001",
             repo_root=None,
             output_dir=mock_project["output_dir"],
         )
@@ -63,17 +63,17 @@ class TestFindFrFile:
     def test_finds_fr_from_nested_output_dir(self, tmp_path):
         """Even deeply nested output dirs should walk up to find docs/."""
         project = tmp_path / "deep-project"
-        fr_dir = project / "docs" / "feature-requests" / "auth"
+        fr_dir = project / "docs" / "tasks" / "auth"
         fr_dir.mkdir(parents=True)
-        fr_file = fr_dir / "FR-DEEP-001-deep-feature.md"
-        fr_file.write_text("# FR-DEEP-001\n")
+        fr_file = fr_dir / "TASK-DEEP-001-deep-feature.md"
+        fr_file.write_text("# TASK-DEEP-001\n")
 
         # Output dir is 3 levels deep under project
         deep_output = project / "runs" / "2026-05-23" / "attempt-1"
         deep_output.mkdir(parents=True)
         (deep_output / "step01.json").write_text("{}")
 
-        result = _find_fr_file("FR-DEEP-001", output_dir=deep_output)
+        result = _find_fr_file("TASK-DEEP-001", output_dir=deep_output)
         assert result is not None
         assert result == fr_file
 
@@ -81,11 +81,11 @@ class TestFindFrFile:
         """When output_dir has no docs/ ancestor, falls back to repo_root."""
         # Create a separate cyberos-like root with its own docs/
         other_root = mock_project["project"].parent / "cyberos"
-        (other_root / "docs" / "feature-requests").mkdir(parents=True)
+        (other_root / "docs" / "tasks").mkdir(parents=True)
 
         # The FR is in mock_project, not in other_root
         result = _find_fr_file(
-            "FR-TEST-001",
+            "TASK-TEST-001",
             repo_root=other_root,
             output_dir=mock_project["output_dir"],
         )
@@ -96,7 +96,7 @@ class TestFindFrFile:
     def test_returns_none_when_fr_not_found(self, tmp_path):
         """Returns None when the FR doesn't exist in any search root."""
         empty_project = tmp_path / "empty"
-        (empty_project / "docs" / "feature-requests").mkdir(parents=True)
+        (empty_project / "docs" / "tasks").mkdir(parents=True)
         output_dir = empty_project / "outputs"
         output_dir.mkdir()
 
@@ -130,15 +130,15 @@ class TestResolveArtifactPath:
         """When the FR file is found, artifact goes next to it."""
         result = _resolve_artifact_path(
             output={},
-            fr_id="FR-TEST-001",
+            task_id="TASK-TEST-001",
             hand_off={},
             filename_prefix="impl-plan",
-            default_dir="docs/feature-requests",
+            default_dir="docs/tasks",
             output_dir=mock_project["output_dir"],
         )
         assert result is not None
         assert result.parent == mock_project["fr_file"].parent
-        assert result.name == "impl-plan-FR-TEST-001.md"
+        assert result.name == "impl-plan-TASK-TEST-001.md"
 
     def test_fallback_to_default_dir(self, tmp_path):
         """When FR is not found, falls back to <repo_root>/<default_dir>/."""
@@ -149,12 +149,12 @@ class TestResolveArtifactPath:
 
         result = _resolve_artifact_path(
             output={},
-            fr_id="FR-MISSING-999",
+            task_id="TASK-MISSING-999",
             hand_off={},
             filename_prefix="code-review",
-            default_dir="docs/feature-requests",
+            default_dir="docs/tasks",
             output_dir=output_dir,
         )
         assert result is not None
-        assert result.parent == project / "docs" / "feature-requests"
+        assert result.parent == project / "docs" / "tasks"
         assert "code-review" in result.name

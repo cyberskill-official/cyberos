@@ -21,7 +21,7 @@ if [ -f "$root/.cyberos/lib/update-check.sh" ]; then
   _cyberos_update_check || true
 fi
 
-# --- .cyberos/config.yaml layer (FR-CUO-207) ---------------------------------
+# --- .cyberos/config.yaml layer (TASK-CUO-207) ---------------------------------
 cfg_file="$root/.cyberos/config.yaml"
 cfg_get() {
   [ -f "$cfg_file" ] || return 0

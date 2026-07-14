@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
 repository.workspace = true
-description = "CyberOS SKILL bundle frontmatter validator + broker (FR-SKILL-103 + FR-SKILL-111 + FR-SKILL-113)"
+description = "CyberOS SKILL bundle frontmatter validator + broker (TASK-SKILL-103 + TASK-SKILL-111 + TASK-SKILL-113)"
 
 [dependencies]
 # Versions floored to latest-stable as of 2026 Q2.

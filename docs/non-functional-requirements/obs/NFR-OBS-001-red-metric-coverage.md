@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of services emit RED metrics; CI fails if a service lacks the cyberos-obs-sdk middleware"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-OBS-003, FR-OBS-001]
+related_tasks: [TASK-OBS-003, TASK-OBS-001]
 ---
 
 ## §1 — Statement (BCP-14 normative)

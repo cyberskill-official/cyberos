@@ -6,7 +6,7 @@
 
         # TRIGGER_TESTS for architectural-spike-author
 
-        > Pair verification (FR-SKILL-117 §5, executable line by line):
+        > Pair verification (TASK-SKILL-117 §5, executable line by line):
         >   grep -q "SPIKE-<FR-ID>-<n>" ../SKILL.md                  # artefact id grammar declared
         >   grep -q "1.5x" ../SKILL.md && grep -q "1.5x" ../PIPELINE.md   # timebox HALT normative (AC 3)
         >   grep -q "checkable" ../SKILL.md                          # evidence rule present (AC 4)

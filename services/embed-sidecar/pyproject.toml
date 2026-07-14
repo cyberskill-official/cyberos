@@ -1,7 +1,7 @@
 [project]
 name = "cyberos-embed-sidecar"
 version = "0.1.0"
-description = "FR-AI-019 — bge-m3 embedding HTTP sidecar for CyberOS memory search"
+description = "TASK-AI-019 — bge-m3 embedding HTTP sidecar for CyberOS memory search"
 authors = [{ name = "CyberSkill", email = "eng@cyberskill.world" }]
 license = "Apache-2.0"
 requires-python = ">=3.10"

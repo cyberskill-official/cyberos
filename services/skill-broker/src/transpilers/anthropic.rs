@@ -12,7 +12,7 @@
 //!    depends_on_contracts, expects/produces, escalation, etc.).
 //!    These fields don't affect Anthropic-side routing; CyberOS preserves
 //!    them at source so the same skill remains governable at home.
-//! 3. **Rejects** any frontmatter containing XML brackets (FR-SKILL-113
+//! 3. **Rejects** any frontmatter containing XML brackets (TASK-SKILL-113
 //!    invariant — pre-transpile guard, since Anthropic's loader rejects
 //!    them too).
 //! 4. Preserves the Markdown body verbatim — the body is the prompt that
@@ -23,7 +23,7 @@
 //! ```yaml
 //! ---
 //! name: <kebab-case>
-//! description: <80-1024 chars; WHAT + WHEN + KEY VALUE per FR-SKILL-111>
+//! description: <80-1024 chars; WHAT + WHEN + KEY VALUE per TASK-SKILL-111>
 //! license: <license string from CyberOS source>
 //! allowed-tools: <space-separated string from CyberOS allowed_mcp_tools>
 //! metadata:

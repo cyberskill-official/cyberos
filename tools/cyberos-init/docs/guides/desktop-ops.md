@@ -28,7 +28,7 @@ Select the project and press "Check". This runs the read-only version comparison
 
 ## Init or update a project
 
-Press "Init" on the selected project. First time, this installs CyberOS into the repo (a gitignored `.cyberos/`, a `docs/feature-requests/` scaffold, gate autodetection, the BRAIN, the agent entry files). On an already-initialised project the same button applies the update: init is idempotent and never touches your backlog, FRs, `AGENTS.md`, or BRAIN - it swaps the machine, not your work.
+Press "Init" on the selected project. First time, this installs CyberOS into the repo (a gitignored `.cyberos/`, a `docs/tasks/` scaffold, gate autodetection, the BRAIN, the agent entry files). On an already-initialised project the same button applies the update: init is idempotent and never touches your backlog, FRs, `AGENTS.md`, or BRAIN - it swaps the machine, not your work.
 
 Two guard rails are built in: the app refuses to init a path that is not a git repository, and it refuses to init the CyberOS checkout itself.
 

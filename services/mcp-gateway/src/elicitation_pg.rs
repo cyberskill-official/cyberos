@@ -1,4 +1,4 @@
-//! FR-MCP-008 elicitation persistence: the DB-slice store-of-record behind [`crate::elicitation`].
+//! TASK-MCP-008 elicitation persistence: the DB-slice store-of-record behind [`crate::elicitation`].
 //!
 //! When the gateway has a database (and an authenticated caller, so a `tenant_id`/`subject` exist), the
 //! router drives these functions instead of the in-memory [`ElicitationStore`](crate::elicitation::ElicitationStore);
@@ -27,7 +27,7 @@ use crate::kms::Kms;
 /// table's CHECK allows; the timeout sweeper that acts on `expires_at` is a deferred job.
 pub const DEFAULT_TIMEOUT_SECS: i64 = 300;
 
-/// Insert a pending `confirmation` elicitation for a destructive `tools/call` (the FR-MCP-006 hold) and
+/// Insert a pending `confirmation` elicitation for a destructive `tools/call` (the TASK-MCP-006 hold) and
 /// return its server-generated id. The prompt is free-form; `choices` is empty for confirmations.
 pub async fn create_confirmation(
     pool: &PgPool,
@@ -57,7 +57,7 @@ pub async fn create_confirmation(
     .await
 }
 
-/// The FR-MCP-006 gate verdict for a confirmation id: `Some(true)` approved, `Some(false)` declined,
+/// The TASK-MCP-006 gate verdict for a confirmation id: `Some(true)` approved, `Some(false)` declined,
 /// `None` when there is no responded confirmation for that id owned by this caller (unknown, pending,
 /// non-confirmation, or another caller's row). Scoped to `caller_subject_id` (DEC-1159) so one caller
 /// cannot consult another's verdict. Reads the denormalized `confirmed` column, so the hot path never
@@ -81,7 +81,7 @@ pub async fn confirmation_state(
     Ok(row.flatten())
 }
 
-/// The spec-facing request views of a caller's own pending elicitations (the FR-MCP-008 poll), oldest
+/// The spec-facing request views of a caller's own pending elicitations (the TASK-MCP-008 poll), oldest
 /// first. Caller-scoped, so one caller never sees another's prompts (DEC-1159).
 pub async fn pending(pool: &PgPool, caller_subject_id: Uuid) -> Result<Vec<Value>, sqlx::Error> {
     let rows = sqlx::query_as::<_, (Uuid, String, String, String, String)>(

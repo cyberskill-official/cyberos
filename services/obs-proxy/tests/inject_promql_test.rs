@@ -1,4 +1,4 @@
-//! FR-OBS-002 §5 - PromQL injection acceptance tests (integration, against the public crate API).
+//! TASK-OBS-002 §5 - PromQL injection acceptance tests (integration, against the public crate API).
 
 use cyberos_obs_proxy::inject::promql;
 use cyberos_obs_proxy::ProxyError;

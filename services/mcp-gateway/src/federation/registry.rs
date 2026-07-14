@@ -1,6 +1,6 @@
-//! FR-MCP-001 §1 #18 + #19 — In-memory federated tool catalog.
+//! TASK-MCP-001 §1 #18 + #19 — In-memory federated tool catalog.
 //!
-//! Modules register via `POST /v1/mcp/register` (handler lands with FR-MCP-002). The
+//! Modules register via `POST /v1/mcp/register` (handler lands with TASK-MCP-002). The
 //! gateway snapshots the catalog at every `tools/list` call. Read-mostly; writes go via
 //! the registration handler.
 
@@ -46,7 +46,7 @@ impl ToolEntry {
     }
 }
 
-/// Per-module server record backing the FR-MCP-002 heartbeat lifecycle. One per registered
+/// Per-module server record backing the TASK-MCP-002 heartbeat lifecycle. One per registered
 /// module; its tools share its health. (The module's endpoint lives on each `ToolEntry`.)
 #[derive(Debug, Clone)]
 struct ServerRecord {
@@ -57,11 +57,11 @@ struct ServerRecord {
 }
 
 /// In-memory registry. Thread-safe via `RwLock` for the slice-1 scale (50 tenants × <500
-/// tools). FR-MCP-002 will swap this for an `ArcSwap` or DashMap as call volume grows.
+/// tools). TASK-MCP-002 will swap this for an `ArcSwap` or DashMap as call volume grows.
 #[derive(Debug, Default)]
 pub struct ToolRegistry {
     inner: RwLock<HashMap<String, ToolEntry>>,
-    /// module name -> server health record (FR-MCP-002).
+    /// module name -> server health record (TASK-MCP-002).
     servers: RwLock<HashMap<String, ServerRecord>>,
 }
 
@@ -100,7 +100,7 @@ impl ToolRegistry {
                 )
                 .is_some()
         };
-        // FR-MCP-002: registering (or re-registering) a tool is the owning module's first
+        // TASK-MCP-002: registering (or re-registering) a tool is the owning module's first
         // heartbeat and clears any prior deregistration.
         {
             let mut servers = self.servers.write().expect("poisoned");
@@ -115,7 +115,7 @@ impl ToolRegistry {
         replaced
     }
 
-    /// Record a heartbeat for a module (FR-MCP-002). Returns `false` if the module is not
+    /// Record a heartbeat for a module (TASK-MCP-002). Returns `false` if the module is not
     /// known (it must register before heartbeating). Clears any prior deregistration.
     pub fn record_heartbeat(&self, module: &str, now: SystemTime) -> bool {
         let mut servers = self.servers.write().expect("poisoned");
@@ -129,7 +129,7 @@ impl ToolRegistry {
         }
     }
 
-    /// Mark a module deregistered (FR-MCP-002). Returns `false` if the module is unknown.
+    /// Mark a module deregistered (TASK-MCP-002). Returns `false` if the module is unknown.
     /// Its tools stay in the catalog but are withdrawn from listing/dispatch until it
     /// registers again.
     pub fn mark_deregistered(&self, module: &str) -> bool {
@@ -169,7 +169,7 @@ impl ToolRegistry {
 
     /// Descriptors for tools whose owning module is currently available (healthy or
     /// degraded) as of `now`, sorted by name. Tools on unhealthy/deregistered modules are
-    /// withdrawn (FR-MCP-002 skill_unavailable propagation). A tool whose module has no
+    /// withdrawn (TASK-MCP-002 skill_unavailable propagation). A tool whose module has no
     /// record is treated as available (defensive; registration always creates a record).
     pub fn available_descriptors_sorted(&self, now: SystemTime) -> Vec<ToolDescriptor> {
         let snap = self.inner.read().expect("poisoned");
@@ -224,7 +224,7 @@ impl ToolRegistry {
     }
 
     /// The sorted, distinct union of scopes the named module's tools require, or `None` if no tool of
-    /// that module is registered. Backs the FR-MCP-005 per-module Protected Resource Metadata: a
+    /// that module is registered. Backs the TASK-MCP-005 per-module Protected Resource Metadata: a
     /// `Some(vec)` (possibly empty) means the module exists and advertises that `scopes_supported`; a
     /// `None` means the module is unknown and the PRM endpoint returns 404.
     pub fn module_scopes(&self, module: &str) -> Option<Vec<String>> {
@@ -288,7 +288,7 @@ mod tests {
         );
     }
 
-    // ---- FR-MCP-002 heartbeat / health lifecycle -------------------------------------
+    // ---- TASK-MCP-002 heartbeat / health lifecycle -------------------------------------
 
     fn reg(r: &ToolRegistry, name: &str, module: &str) {
         r.register(

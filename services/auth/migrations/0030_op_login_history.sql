@@ -1,4 +1,4 @@
--- FR-AUTH-110 §1 #4 + DEC-2495 - append-only OIDC-provider login history.
+-- TASK-AUTH-110 §1 #4 + DEC-2495 - append-only OIDC-provider login history.
 --
 -- Forensic record of authorize/token issuance and denials. Append-only at the SQL
 -- grant: cyberos_app may SELECT + INSERT but UPDATE/DELETE are revoked, so "who

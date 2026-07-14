@@ -285,7 +285,7 @@ const C = {
   "role.owner": { en: "Owner", vi: "Chủ kênh" },
   "role.admin": { en: "Admin", vi: "Quản trị" },
   "role.member": { en: "Member", vi: "Thành viên" },
-  // report (FR-CHAT-267). Every string the report dialog renders ships in both locales: a Vietnamese-speaking
+  // report (TASK-CHAT-267). Every string the report dialog renders ships in both locales: a Vietnamese-speaking
   // employee reporting harassment in English is a failure of the product, not of the employee (§1 #12).
   "report.title": { en: "Report", vi: "Báo cáo" },
   "report.subtitleMessage": {
@@ -327,7 +327,7 @@ const C = {
   "report.action": { en: "Report", vi: "Báo cáo" },
   "report.reportPerson": { en: "Report this person", vi: "Báo cáo người này" },
 
-  // moderation (FR-CHAT-269)
+  // moderation (TASK-CHAT-269)
   "mod.title": { en: "Moderation", vi: "Kiểm duyệt" },
   "mod.empty": { en: "Nothing to review.", vi: "Không có gì cần xem xét." },
   "mod.reportCount": { en: "{n} report(s)", vi: "{n} báo cáo" },
@@ -360,7 +360,7 @@ const C = {
   "mod.severity": { en: "Severity", vi: "Mức độ" },
   "top.moderation": { en: "Moderation", vi: "Kiểm duyệt" },
 
-  // blocking (FR-CHAT-268)
+  // blocking (TASK-CHAT-268)
   "blocked.hidden": {
     en: "Message from {name}, who you blocked.",
     vi: "Tin nhắn từ {name}, người bạn đã chặn.",
@@ -452,7 +452,7 @@ const C = {
 // Every key the catalog actually defines. Exported so a surface can prove, at COMPILE time, that each string
 // it renders exists — see REPORT_DIALOG_KEYS in components/ReportDialog.tsx, which is declared
 // `satisfies readonly CatalogKey[]`. Because an Entry is `{ en; vi }`, a key that type-checks necessarily
-// carries BOTH locales: FR-CHAT-267 §1 #12 is then enforced by `tsc --noEmit`, not by a convention someone
+// carries BOTH locales: TASK-CHAT-267 §1 #12 is then enforced by `tsc --noEmit`, not by a convention someone
 // has to remember. A missing key is a build failure, not a string that silently renders as its own name.
 export type CatalogKey = keyof typeof C;
 

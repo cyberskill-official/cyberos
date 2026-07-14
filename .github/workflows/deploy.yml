@@ -26,12 +26,12 @@ on:
       - 'services/*/docs/**'
       - 'tools/docs-site/**'
       - 'CHANGELOG.md'
-      - 'VERSION'                     # FR-DOCS-007: hub deck shows VERSION - redeploy on bump
-      - 'modules/templates/**'        # FR-DOCS-007: CDS shells/tokens feed every generated page
+      - 'VERSION'                     # TASK-DOCS-007: hub deck shows VERSION - redeploy on bump
+      - 'modules/templates/**'        # TASK-DOCS-007: CDS shells/tokens feed every generated page
       - 'modules/*/CHANGELOG.md'
       - 'services/*/CHANGELOG.md'
-      - 'modules/cuo/**'              # FR-IMP-074: workflow-rule changes refresh the published site
-      - 'modules/skill/**'            # FR-IMP-074: skill-contract changes likewise (deploy leg of the rules-to-channels hook chain)
+      - 'modules/cuo/**'              # TASK-IMP-074: workflow-rule changes refresh the published site
+      - 'modules/skill/**'            # TASK-IMP-074: skill-contract changes likewise (deploy leg of the rules-to-channels hook chain)
   workflow_dispatch:
     inputs:
       force_services:
@@ -61,7 +61,7 @@ jobs:
       # against the default branch and finds nothing, so it would otherwise ALWAYS skip the gate and the image
       # build - which makes a manual re-deploy of already-merged code impossible.
       services: ${{ steps.filter.outputs.services == 'true' || inputs.force_services == true }}
-      # FR-IMP-081: gates the rebuild-web job below. Deliberately NOT include apps/console/web itself -
+      # TASK-IMP-081: gates the rebuild-web job below. Deliberately NOT include apps/console/web itself -
       # that is the generated OUTPUT this job produces, and including it would make the job's own commit
       # look like a reason to run again.
       web_src: ${{ steps.filter.outputs.web_src == 'true' }}
@@ -89,7 +89,7 @@ jobs:
       - uses: actions/checkout@v4
 
       # This gate died on `ld: final link failed: No space left on device` the first time the workspace
-      # grew by four test binaries (FR-CHAT-267/268/269 + FR-AUTH-111). It was not a code failure: the
+      # grew by four test binaries (TASK-CHAT-267/268/269 + TASK-AUTH-111). It was not a code failure: the
       # tests never ran. The PR gate in services.yml had ALREADY been hardened against exactly this, and
       # this job never got the same treatment — so a change could pass every check on the PR and then take
       # the deploy down after merge, leaving main ahead of production with nothing red to look at. The two
@@ -172,8 +172,8 @@ jobs:
           build_push cyberos-eval || echo "::warning::cyberos-eval image build failed (best-effort, deploy-gated off)"
           build_push cyberos-memory || echo "::warning::cyberos-memory image build failed (best-effort, deploy-gated off)"
 
-  # FR-IMP-081: rebuild + recommit apps/console/web (the tracked vite output the VPS serves via git pull)
-  # whenever apps/web/** or VERSION actually changed - closing the gap FR-IMP-080 found, where nothing
+  # TASK-IMP-081: rebuild + recommit apps/console/web (the tracked vite output the VPS serves via git pull)
+  # whenever apps/web/** or VERSION actually changed - closing the gap TASK-IMP-080 found, where nothing
   # owned refreshing this dir after a version bump and the live badge silently lagged the platform
   # VERSION (apps/web/scripts/stamp-sw.mjs's comment documents the exact incident: v1.2.0 served while
   # the platform shipped 1.7.0).
@@ -224,7 +224,7 @@ jobs:
           git config user.email "bot@cyberskill.world"
           git add apps/console/web
           # [skip ci]: unlike version.yml's bump commit (which must stay visible to tag-triggered
-          # workflows per FR-IMP-071), this commit only refreshes a served artifact - it has no reason
+          # workflows per TASK-IMP-071), this commit only refreshes a served artifact - it has no reason
           # to re-trigger deploy.yml a second time for itself.
           git commit -m "chore(web): rebuild served bundle @ $(cat VERSION) [skip ci]"
           if git push origin HEAD:main; then
@@ -286,7 +286,7 @@ jobs:
           node-version: 24
       - name: Build the site from the markdown sources
         run: bash tools/docs-site/build.sh
-      # FR-IMP-079: shared shipper - this job and release.yml's docs job used to inline the same
+      # TASK-IMP-079: shared shipper - this job and release.yml's docs job used to inline the same
       # snippet with a SHARED docs.new staging dir; a branch push + tag push seconds apart ran both
       # concurrently and the loser died at mv (deploy run #127). ship.sh stages per-run and swaps
       # under a remote flock, so concurrent shippers are safe.

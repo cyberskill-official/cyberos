@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of account-bank changes emit a signed audit row + trigger CFO notification"
 owner: CFO
 created: 2026-05-18
-related_frs: [FR-CRM-009]
+related_tasks: [TASK-CRM-009]
 ---
 
 ## §1 — Statement (BCP-14 normative)

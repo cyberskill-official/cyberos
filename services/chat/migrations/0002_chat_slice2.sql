@@ -1,4 +1,4 @@
--- FR-CHAT-101 slice 2: thread replies (parent_id), edits (edited_at), and soft-deletes (deleted_at).
+-- TASK-CHAT-101 slice 2: thread replies (parent_id), edits (edited_at), and soft-deletes (deleted_at).
 
 ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS parent_id UUID NULL
     REFERENCES chat_messages(id) ON DELETE CASCADE;

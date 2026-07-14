@@ -12,10 +12,10 @@ import json
 import re
 from pathlib import Path
 
-FR_ROOT = Path("docs/feature-requests")
+FR_ROOT = Path("docs/tasks")
 ROADMAP = ["memory", "skill", "cuo", "auth", "chat", "proj"]
 # modules whose service crate is known red on main (do not gate green).
-# Empty now that ai is gated green (FR-AI-001..022 shipped 2026-06-19).
+# Empty now that ai is gated green (TASK-AI-001..022 shipped 2026-06-19).
 KNOWN_RED: set[str] = set()
 
 

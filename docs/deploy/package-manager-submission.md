@@ -1,4 +1,4 @@
-# Package manager submission — Homebrew Cask + winget answer sheet (FR-APP-006)
+# Package manager submission — Homebrew Cask + winget answer sheet (TASK-APP-006)
 
 Package managers, not stores: both targets are community-maintained manifest monorepos (`homebrew/homebrew-cask`, `microsoft/winget-pkgs`) pointing at CyberOS's own GitHub-Releases artifacts (produced by the always-on `desktop` job — no dependency on the MAS/MSIX channels). **Submission is never automated**: `release-pkgmgr-pr.yml` only *prepares* re-derived manifest drafts behind `PKGMGR_CASK_RELEASE` / `PKGMGR_WINGET_RELEASE`; every PR against either external monorepo — first submission and every version bump — needs Stephen's fresh per-instance approval (stricter than the Flathub gate on purpose: shared-monorepo blast radius, spec §2). The workflow's standing guard fails CI if any submission command ever appears under `.github/` or `tools/`.
 

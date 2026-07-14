@@ -1,4 +1,4 @@
-# CyberOS remote MCP connector (FR-IMP-076)
+# CyberOS remote MCP connector (TASK-IMP-076)
 
 The CyberOS MCP server (`mcp/cyberos-mcp.mjs` in every payload / installed `.cyberos/`) now runs in two transports:
 

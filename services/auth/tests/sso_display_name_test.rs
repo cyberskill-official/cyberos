@@ -1,4 +1,4 @@
-//! FR-AUTH-111 — SSO display names: the self-heal, the no-clobber guarantee, and the visibility view.
+//! TASK-AUTH-111 — SSO display names: the self-heal, the no-clobber guarantee, and the visibility view.
 //!
 //!   cd services/dev && docker compose up -d
 //!   DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos \
@@ -75,7 +75,7 @@ async fn seed_tenant(pool: &PgPool) -> Uuid {
         .expect("root guc");
     sqlx::query(
         "INSERT INTO tenants (id, slug, display_name, country, plan_tier, status, residency)
-              VALUES ($1, $2, 'FR-AUTH-111 Tenant', 'VN', 'starter', 'active', 'vn-1')",
+              VALUES ($1, $2, 'TASK-AUTH-111 Tenant', 'VN', 'starter', 'active', 'vn-1')",
     )
     .bind(id)
     .bind(format!("fr111-{}", id.simple()))

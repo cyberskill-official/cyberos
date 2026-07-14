@@ -1,9 +1,9 @@
-//! FR-AI-016 — Geographic residency matching.
+//! TASK-AI-016 — Geographic residency matching.
 //!
 //! Enforces tenant residency at alias-resolution time. The `region_table.rs` mapping
 //! is the single source of truth for residency → acceptable-region sets.
 //!
-//! See FR-AI-016 for normative behaviour and acceptance criteria.
+//! See TASK-AI-016 for normative behaviour and acceptance criteria.
 
 use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
@@ -38,7 +38,7 @@ static REGIONS_BY_RESIDENCY: LazyLock<HashMap<Residency, HashSet<&'static str>>>
             s.insert("us-west-2"); // Oregon
             s
         });
-        m.insert(Residency::Vn1, HashSet::new()); // §1 #6: empty until FR-AI-104
+        m.insert(Residency::Vn1, HashSet::new()); // §1 #6: empty until TASK-AI-104
         m
     });
 
@@ -46,7 +46,7 @@ static REGIONS_BY_RESIDENCY: LazyLock<HashMap<Residency, HashSet<&'static str>>>
 static AZ_STRIP_RE: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^(?P<region>[a-z]{2}-[a-z]+-\d+)[a-z]?$").unwrap());
 
-// ─── Metrics (FR-AI-016 §1 #13) ──────────────────────────────────────────────
+// ─── Metrics (TASK-AI-016 §1 #13) ──────────────────────────────────────────────
 
 static RESIDENCY_MISMATCHES: Lazy<CounterVec> = Lazy::new(|| {
     register_counter_vec!(

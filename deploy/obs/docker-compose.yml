@@ -1,4 +1,4 @@
-# CyberOS observability stack - the FR-OBS-002 tenant-aware proxy in front of the LGTM backends.
+# CyberOS observability stack - the TASK-OBS-002 tenant-aware proxy in front of the LGTM backends.
 #
 #   Grafana --> obs-proxy --> { Prometheus | Loki | Tempo }
 #

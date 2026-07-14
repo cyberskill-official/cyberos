@@ -1,4 +1,4 @@
-//! FR-AI-016 §5 — Property tests for residency matching.
+//! TASK-AI-016 §5 — Property tests for residency matching.
 //!
 //! AC #8: no cross-residency leak — proptest 1000 trials over (any_residency, any_region).
 

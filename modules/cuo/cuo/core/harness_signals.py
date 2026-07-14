@@ -1,4 +1,4 @@
-"""harness_signals — per-signal evaluation functions for FR-CUO-200.
+"""harness_signals — per-signal evaluation functions for TASK-CUO-200.
 
 Every SKILL.md declares a `self_audit.anomaly_signals` block + a
 `human_fine_tune.signals_to_initiate` list. This module evaluates each
@@ -30,7 +30,7 @@ Signal taxonomy (per SKILL.md frontmatter schema):
   - drift_signal_count_above    — total count of "drift" signals (across all
                                   types) exceeds N
 
-Added 2026-05-19 for FR-CUO-200.
+Added 2026-05-19 for TASK-CUO-200.
 """
 
 from __future__ import annotations

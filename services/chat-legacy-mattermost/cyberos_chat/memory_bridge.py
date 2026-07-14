@@ -1,4 +1,4 @@
-"""FR-CHAT-005 — logical replication to memory Layer-3 ingest."""
+"""TASK-CHAT-005 — logical replication to memory Layer-3 ingest."""
 
 from __future__ import annotations
 

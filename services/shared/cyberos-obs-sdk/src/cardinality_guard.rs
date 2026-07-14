@@ -1,4 +1,4 @@
-//! FR-OBS-003 §1 #9 - the cardinality guard. It refuses to register a metric series whose label set
+//! TASK-OBS-003 §1 #9 - the cardinality guard. It refuses to register a metric series whose label set
 //! would push a `service:metric` past `MAX_CARDINALITY_PER_METRIC` unique label combinations - the most
 //! common observability failure mode (one Prometheus series per label combo; an unbounded label like
 //! `user_id` balloons storage and slows every query). A refusal is counted on

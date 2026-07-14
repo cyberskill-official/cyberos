@@ -1,4 +1,4 @@
-//! FR-AI-022 §1 #6 — Approved attribute keys. PII-safe by construction.
+//! TASK-AI-022 §1 #6 — Approved attribute keys. PII-safe by construction.
 //!
 //! New keys MUST be added here with a `// PII-safe because: ...` comment.
 //! String-literal attribute keys at call sites are forbidden.

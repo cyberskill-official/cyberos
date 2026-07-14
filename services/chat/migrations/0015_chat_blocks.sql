@@ -1,6 +1,6 @@
--- FR-CHAT-268: user blocking. One row per (blocker, blocked) pair.
+-- TASK-CHAT-268: user blocking. One row per (blocker, blocked) pair.
 --
--- Numbering: the FR text specifies 0014, but 0014 is taken by FR-CHAT-267's chat_reports. Renumbered to
+-- Numbering: the FR text specifies 0014, but 0014 is taken by TASK-CHAT-267's chat_reports. Renumbered to
 -- 0015; no other change to the shape.
 --
 -- Directional: A blocking B says nothing about whether B blocks A. Private: only the blocker ever reads

@@ -1,7 +1,7 @@
-//! FR-AUTH-001 — Tenant create integration tests.
+//! TASK-AUTH-001 — Tenant create integration tests.
 //!
 //! Each test corresponds to one or more edge-case-matrix rows in
-//! `docs/feature-requests/auth/FR-AUTH-001-tenant-create.audit.md §10.5`.
+//! `docs/tasks/auth/TASK-AUTH-001-tenant-create.audit.md §10.5`.
 //! The matrix is the source of truth; if a row lands here without a
 //! corresponding ECM-NNN tag, the audit will fail.
 //!
@@ -50,7 +50,7 @@ async fn build_app() -> axum::Router {
         sticky_suppress: cyberos_auth::travel_policy::StickySuppress::new(),
         rate_limit: std::sync::Arc::new(cyberos_auth::rate_limit::RateLimiter::new()),
         deny_list: cyberos_auth::deny_list::DenyList::new(),
-        // FR-MEMORY-122: capture is off in tests unless a test installs a Capturer; None = no-op emitters.
+        // TASK-MEMORY-122: capture is off in tests unless a test installs a Capturer; None = no-op emitters.
         capturer: None,
     })
 }
@@ -87,7 +87,7 @@ async fn root_admin_token(pool: &PgPool) -> String {
         .issue(
             TenantId::ROOT,
             SubjectId(uuid::Uuid::new_v4()),
-            "", // FR-AUTH-004 §1 #2 — root-admin test token, no email needed
+            "", // TASK-AUTH-004 §1 #2 — root-admin test token, no email needed
             "human",
             vec!["admin".into()],
             vec!["root-admin".into()],
@@ -107,7 +107,7 @@ async fn non_root_admin_token(pool: &PgPool) -> String {
         .issue(
             TenantId(uuid::Uuid::new_v4()),
             SubjectId(uuid::Uuid::new_v4()),
-            "", // FR-AUTH-004 §1 #2 — test token, no email needed
+            "", // TASK-AUTH-004 §1 #2 — test token, no email needed
             "human",
             vec!["admin".into()],
             vec!["tenant-admin".into()],

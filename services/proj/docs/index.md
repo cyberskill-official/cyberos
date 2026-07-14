@@ -1,7 +1,7 @@
 ---
 title: PROJ - Orchestration spine, memory-anchored decisions, Engagement billing
 source: website/docs/modules/proj/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 PROJ is CyberOS's **project tracker, sprint engine, and Engagement billing surface** in one. The data model is Issue -> Cycle -> Project plus Engagement (the contract). Status is a closed enum (`backlog / todo / in-progress / in-review / done / cancelled`) with a configurable per-project workflow on top. Priority is the standard `urgent / high / medium / low / none`. Mutations are optimistic locally, server-canonical eventually; Yjs CRDTs let two Members edit the same description offline and merge without conflict. Every issue can link to memory entries - a memory becomes a citation, a decision-log row becomes a sub-task. AI features are first-class: CUO drafts the cycle review at end-of-cycle; the blocker-detector watches comments for "blocked by"; estimate calibration tracks estimated vs actual hours per Member per task class.
@@ -399,7 +399,7 @@ graph TB
 
 ### Internal components
 
-The `cyberos-proj` crate is building FR-PROJ-001 slice 1 - Issue / Cycle / Engagement with RLS, the status FSM, and memory-audit emission. The table lists the module's planned file layout; rows marked (FR pending) are not yet built.
+The `cyberos-proj` crate is building TASK-PROJ-001 slice 1 - Issue / Cycle / Engagement with RLS, the status FSM, and memory-audit emission. The table lists the module's planned file layout; rows marked (FR pending) are not yet built.
 
 | Component | Path (planned) | Responsibility |
 |---|---|---|
@@ -861,7 +861,7 @@ stateDiagram-v2
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS FR catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
 Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
 
@@ -1138,7 +1138,7 @@ $ cyberos-proj sync replay --tenant cyberskill --since 1h --filter "issue.update
 - **Memory-anchored decisions:** the "Memory-anchored decisions" section above - citation relations + decision-to-issues sequence + dual-write audit chain.
 - **Liquid-Glass UI exemplar:** the "Liquid-Glass UI surfaces" section above - 4 canonical surfaces + tokens.proj.css overlay + accessibility commitments.
 - **Memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5 (capture surfaces)](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - PROJ mutations are one of the four canonical capture inputs to the local memory.
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md) - PROJ FRs re-authored one-by-one via the `feature-request-author` Agent Skill; "(FR pending)" markers are intentional placeholders.
+- **FR authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md) - PROJ FRs re-authored one-by-one via the `task-author` Agent Skill; "(FR pending)" markers are intentional placeholders.
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - PROJ placed at P1 mid in the P1 sequence (after the CHAT decommission gate clears at P0 exit).
 - **Research review:** `archive/2026-05-14/RESEARCH_REVIEW.md` (archived; see `cyberos/CHANGELOG.md`) - the reviewer flagged the consultancy-Engagement primitive as the highest-impact differentiator vs Linear/Jira; the orchestration-spine framing addresses §6 "what makes this not a feature?".
 - **Cross-module page links:** [memory.html](../memory/index.html), [skill.html](../skill/index.html), [auth.html](../auth/index.html), [chat.html](../chat/index.html), [time.html](../time/index.html), [inv.html](../inv/index.html), [crm.html](../crm/index.html), [kb.html](../kb/index.html), [rew.html](../rew/index.html), [okr.html](../okr/index.html), [portal.html](../portal/index.html)
@@ -1167,7 +1167,7 @@ PROJ is the work-tracking surface most CUO personas read from and write to. The 
 
 **Skill-bundle reads & writes:**
 
-- [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) + audit - drafts an FR Markdown that becomes a PROJ Issue on commit
+- [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) + audit - drafts an FR Markdown that becomes a PROJ Issue on commit
 - [implementation-plan-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/implementation-plan-author) + audit - explodes an FR into a child-issue tree
 - [project-plan-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/project-plan-author) + audit - per-program project plan written to PROJ Cycles
 - [stage-gate-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/stage-gate-author) + audit - per-cycle exit-gate adjudication

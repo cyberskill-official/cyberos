@@ -9,7 +9,7 @@ phase: P0
 slo: "Recall ≥ 99% on the VN-PII test corpus; refreshed quarterly"
 owner: CSO
 created: 2026-05-18
-related_frs: [FR-AI-012, FR-AI-013, FR-AI-011]
+related_tasks: [TASK-AI-012, TASK-AI-013, TASK-AI-011]
 ---
 
 ## §1 — Statement (BCP-14 normative)
@@ -46,7 +46,7 @@ Asserted in CI; report archived to `docs/audits/vn-pii-recall/YYYY-Q*.json`.
 ## §4 — Verification
 
 - CI gate (T) — `make test-vn-pii-recall` runs the harness; PR blocked on overall_recall < 0.99 or any per-category recall < 0.95.
-- Quarterly review (A) — CSO reviews the diff between Q-1 and Q corpus; signs off in `docs/feature-requests/ai/FR-AI-012-vn-pii-plugin.audit.md`.
+- Quarterly review (A) — CSO reviews the diff between Q-1 and Q corpus; signs off in `docs/tasks/ai/TASK-AI-012-vn-pii-plugin.audit.md`.
 
 ## §5 — Failure handling
 

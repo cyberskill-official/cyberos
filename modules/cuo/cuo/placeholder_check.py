@@ -1,4 +1,4 @@
-"""Placeholder-syntax detector for FR-SKILL-115 / SKB-030.
+"""Placeholder-syntax detector for TASK-SKILL-115 / SKB-030.
 
 Identifies stale `<placeholder>` tokens in SKILL.md frontmatter values.
 
@@ -12,7 +12,7 @@ Used by:
   `python -m cuo.placeholder_check --catalog modules/skill/`
 - CI gate: integrates with the existing CUO pytest suite
 
-Per FR-SKILL-115 §3.
+Per TASK-SKILL-115 §3.
 """
 
 from __future__ import annotations

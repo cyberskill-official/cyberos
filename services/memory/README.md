@@ -1,8 +1,8 @@
 # cyberos-memory — memory module runtime
 
-Implements the **Layer-2 ingest pipeline**, rebuild/reconcile gate, and search/graph projection on top of the personal-memory Layer-1 chain. Spec source: [`docs/feature-requests/memory/FR-MEMORY-101…111`](../../docs/feature-requests/memory/).
+Implements the **Layer-2 ingest pipeline**, rebuild/reconcile gate, and search/graph projection on top of the personal-memory Layer-1 chain. Spec source: [`docs/tasks/memory/TASK-MEMORY-101…111`](../../docs/tasks/memory/).
 
-Wave 1 is now shipped across the Rust Layer-2 service, the Tauri desktop scaffold, and the pre-existing Python Layer-1 CLI. The Rust service reads Layer 1 only, ingests append-only audit rows into `l2_memory`/`l2_entity` (with graph edges in the relational `l2_edge` table), exposes `/v1/memory/search`, and ships `cyberos-memory-admin rebuild|reconcile` for the FR-MEMORY-102 gate.
+Wave 1 is now shipped across the Rust Layer-2 service, the Tauri desktop scaffold, and the pre-existing Python Layer-1 CLI. The Rust service reads Layer 1 only, ingests append-only audit rows into `l2_memory`/`l2_entity` (with graph edges in the relational `l2_edge` table), exposes `/v1/memory/search`, and ships `cyberos-memory-admin rebuild|reconcile` for the TASK-MEMORY-102 gate.
 
 ## Quick start
 
@@ -36,12 +36,12 @@ memory/
 │   ├── main.rs                     # axum binary entry point
 │   ├── lib.rs                      # public crate surface
 │   ├── embeddings.rs               # optional bge-m3 sidecar client
-│   ├── rebuild.rs                  # FR-MEMORY-102 full rebuild + spot-check
-│   ├── search.rs                   # FR-MEMORY-108 hybrid search endpoint
+│   ├── rebuild.rs                  # TASK-MEMORY-102 full rebuild + spot-check
+│   ├── search.rs                   # TASK-MEMORY-108 hybrid search endpoint
 │   ├── state.rs                    # AppState — PgPool + singletons
 │   └── layer2/
 │       ├── mod.rs
-│       ├── ingest.rs               # FR-MEMORY-101 batch orchestrator
+│       ├── ingest.rs               # TASK-MEMORY-101 batch orchestrator
 │       ├── binlog_tail.rs          # Layer-1 audit-log tailer + append helper
 │       ├── chain_anchor.rs         # SHA-256 verifier (working + tested)
 │       ├── entity_extract.rs       # @handle / #slug / [[link]] puller
@@ -50,7 +50,7 @@ memory/
 ├── tests/
     ├── chain_anchor_test.rs        # pure-Rust hashing tests
     └── ingest_test.rs              # ingest idempotency + tenant isolation
-└── desktop/                        # FR-MEMORY-104 Tauri 2.x scaffold
+└── desktop/                        # TASK-MEMORY-104 Tauri 2.x scaffold
 ```
 
 ## What ships
@@ -68,9 +68,9 @@ memory/
 | `pgvector` upsert + embedding | ✓ shipped | degrades gracefully when embedding sidecar is unavailable |
 | `l2_edge` graph edges | relational | entity->entity edges in Postgres; traversed via recursive CTEs (Phase-3 link extraction) |
 | `/v1/memory/search` endpoint | ✓ shipped | lexical + vector recall with RRF-style fusion |
-| `cyberos-memory-admin rebuild|reconcile` | ✓ shipped | FR-MEMORY-102 rebuild gate + sample spot-check |
-| Multi-device sync + sync_class gate | ✓ shipped | Python Layer-1 CLI and sync helpers cover FR-MEMORY-103/106 |
-| Capture daemon, hooks, PII guard | ✓ shipped | Python Layer-1 capture/watch/hook/PII surfaces cover FR-MEMORY-107/109/110/111 |
+| `cyberos-memory-admin rebuild|reconcile` | ✓ shipped | TASK-MEMORY-102 rebuild gate + sample spot-check |
+| Multi-device sync + sync_class gate | ✓ shipped | Python Layer-1 CLI and sync helpers cover TASK-MEMORY-103/106 |
+| Capture daemon, hooks, PII guard | ✓ shipped | Python Layer-1 capture/watch/hook/PII surfaces cover TASK-MEMORY-107/109/110/111 |
 | Tauri desktop app | ✓ shipped | `desktop/` Tauri 2.x scaffold with dashboard/search/quick capture |
 
 ## Pre-existing memory module

@@ -6,7 +6,7 @@ This file is copied verbatim into every skill bundle. Customize only if the skil
 
 ---
 
-## §0  Two layers — declaration vs runtime wrap (FR-SKILL-113 registry v0.2.5)
+## §0  Two layers — declaration vs runtime wrap (TASK-SKILL-113 registry v0.2.5)
 
 This discipline lives in **two layers**:
 

@@ -1,6 +1,6 @@
 """
 cyberos.core.transcript — session transcript ledger
-(FR-MEMORY-119, AGENTS.md §18).
+(TASK-MEMORY-119, AGENTS.md §18).
 
 The transcript ledger is an OPT-IN turn-level audit trail for agent-user
 conversations. Operators opt in per conversation via the lifecycle CLI;
@@ -20,7 +20,7 @@ Storage:
 Audit chain:
 
 * `session.start` / `session.end` / `session.purged` are summary rows on
-  the main audit chain so FR-MEMORY-115 dream / FR-MEMORY-120 history can
+  the main audit chain so TASK-MEMORY-115 dream / TASK-MEMORY-120 history can
   discover sessions without reading the binlog.
 * Memory writes during an active session carry `extra.session_id` per
   AGENTS.md §18.7 — wired via a small writer-side hook.
@@ -61,7 +61,7 @@ class TranscriptError(RuntimeError):
 
 
 class ProtocolAmendmentMissing(RuntimeError):
-    """Raised when AGENTS.md §18 is not yet anchored (FR-MEMORY-119 §1 #12)."""
+    """Raised when AGENTS.md §18 is not yet anchored (TASK-MEMORY-119 §1 #12)."""
 
 
 def _has_section_18(store: Path) -> bool:
@@ -213,7 +213,7 @@ def _encrypt_content(content: str, store: Path) -> dict:
     """Minimal §5.4 envelope wrapper.
 
     Slice-3 ships a placeholder envelope (the cipher/key handling lives in
-    `cyberos.core.crypto_mode` and FR-MEMORY-117's encryption pipeline; for
+    `cyberos.core.crypto_mode` and TASK-MEMORY-117's encryption pipeline; for
     transcripts the body is stored encrypted-at-the-payload level so the
     meta-frame remains plaintext per §18.4). When `cryptography` package
     is unavailable, this falls back to a marker that the operator can
@@ -283,7 +283,7 @@ def start(
     retention_days: int = 30,
     actor: str = "agent",
 ) -> Session:
-    """Open a new session (FR-MEMORY-119 §1 #1)."""
+    """Open a new session (TASK-MEMORY-119 §1 #1)."""
     if not _has_section_18(writer.store):
         raise ProtocolAmendmentMissing(
             "AGENTS.md §18 not anchored. Approve via:\n"
@@ -353,7 +353,7 @@ def append(
     content: str,
     redactions_applied: Optional[bool] = None,
 ) -> int:
-    """Append one turn to an active session (FR-MEMORY-119 §1 #1).
+    """Append one turn to an active session (TASK-MEMORY-119 §1 #1).
 
     Returns the assigned turn_seq (starts at 0).
     """
@@ -410,7 +410,7 @@ def end(
     reason: Optional[str] = None,
     seal_binlog: bool = True,
 ) -> Session:
-    """End an active session (FR-MEMORY-119 §1 #1).
+    """End an active session (TASK-MEMORY-119 §1 #1).
 
     On `seal_binlog=True`, compresses the .binlog with zstd → .binlog.zst
     and removes the original. Slice-3 default; operators can keep the raw

@@ -9,7 +9,7 @@ phase: P0
 slo: "0 critical/serious axe-core violations per page; 100% page coverage in CI"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-PROJ-018]
+related_tasks: [TASK-PROJ-018]
 ---
 
 ## §1 — Statement (BCP-14 normative)

@@ -1,7 +1,7 @@
 {
   "name": "cyberos-mcp",
   "version": "1.0.0",
-  "description": "Zero-dependency stdio MCP server exposing the CyberOS ship-feature-requests workflow (fr_init, fr_gates, fr_status, ship_fr) to any MCP-capable agent.",
+  "description": "Zero-dependency stdio MCP server exposing the CyberOS ship-tasks workflow (fr_init, fr_gates, fr_status, ship_fr) to any MCP-capable agent.",
   "type": "module",
   "bin": { "cyberos-mcp": "./cyberos-mcp.mjs" },
   "engines": { "node": ">=18" },

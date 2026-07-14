@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://cyberos.cyberskill.world/contracts/interaction-event/v1",
   "title": "CyberOS interaction-event",
-  "description": "FR-MEMORY-121: the one work-interaction event every CyberOS module emits as an aux row on the hash-chained l1_audit_log (row kind 'memory.interaction_event'). This is the payload object — the audit row wraps it as {\"event_type\":\"memory.interaction_event\",\"payload\":<this>}. Platform work-interactions ONLY; content is referenced via content_ref (pointer/hash), never inlined. Subject capture is gated upstream on the FR-EVAL-001 monitoring-notice acknowledgment (the emit-time consent gate). Frozen at schema_version 1; downstream emitters (FR-MEMORY-122 and later) pin this file, not each other.",
+  "description": "TASK-MEMORY-121: the one work-interaction event every CyberOS module emits as an aux row on the hash-chained l1_audit_log (row kind 'memory.interaction_event'). This is the payload object — the audit row wraps it as {\"event_type\":\"memory.interaction_event\",\"payload\":<this>}. Platform work-interactions ONLY; content is referenced via content_ref (pointer/hash), never inlined. Subject capture is gated upstream on the TASK-EVAL-001 monitoring-notice acknowledgment (the emit-time consent gate). Frozen at schema_version 1; downstream emitters (TASK-MEMORY-122 and later) pin this file, not each other.",
   "x-evolution": "additive-only: new optional fields and new '<module>.<verb>' event_type values are allowed without a version bump; removing or retyping a field, or changing the 'required' set, requires schema_version 2 + a migration note (see §1 #15).",
   "x-row-kind": "memory.interaction_event",
   "x-aux-audit-kinds": [
@@ -31,7 +31,7 @@
   ],
   "properties": {
     "schema_version": {
-      "description": "Frozen contract version. const 1 for FR-MEMORY-121; downstream emitters pin it.",
+      "description": "Frozen contract version. const 1 for TASK-MEMORY-121; downstream emitters pin it.",
       "const": 1
     },
     "event_id": {
@@ -45,7 +45,7 @@
       "format": "uuid"
     },
     "subject_id": {
-      "description": "The person who acted (FR-AUTH-002 subject). null ONLY for genuine system actors (a scheduled job), NEVER to anonymise a real person's action.",
+      "description": "The person who acted (TASK-AUTH-002 subject). null ONLY for genuine system actors (a scheduled job), NEVER to anonymise a real person's action.",
       "type": ["string", "null"],
       "format": "uuid"
     },
@@ -121,12 +121,12 @@
       ]
     },
     "session_id": {
-      "description": "The AUTH session (FR-AUTH-004 jti-derived) the action happened in. null when the interaction has no session.",
+      "description": "The AUTH session (TASK-AUTH-004 jti-derived) the action happened in. null when the interaction has no session.",
       "type": ["string", "null"],
       "format": "uuid"
     },
     "trace_id": {
-      "description": "The W3C traceparent trace-id (FR-OBS-003) so the interaction correlates with its request span. null when absent.",
+      "description": "The W3C traceparent trace-id (TASK-OBS-003) so the interaction correlates with its request span. null when absent.",
       "type": ["string", "null"]
     },
     "source_channel": {

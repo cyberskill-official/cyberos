@@ -15,11 +15,11 @@ allowed_memory_scopes:
   read:
     - project:*
   write:
-    - project:fr/{fr_id}/observability-injection.audit
+    - project:fr/{task_id}/observability-injection.audit
 
 audit:
   row_kind: observability_injection_audited
-  required_fields: [fr_id, score, issues_open, issues_resolved]
+  required_fields: [task_id, score, issues_open, issues_resolved]
 
 inputs:
   - { name: obs_injection, format: observability-injection@1, required: true }
@@ -49,6 +49,6 @@ this audit passes.
 
 *End of observability-injection-audit SKILL.md.*
 
-## Contract files (FR-SKILL-118)
+## Contract files (TASK-SKILL-118)
 
 This pair is at full contract parity: `RUBRIC.md` (versioned rules + prose->rule map), `AUDIT_LOOP.md` (canonical-loop binding), `REPORT_FORMAT.md`, `envelopes/` (I/O schemas), `acceptance/README.md`. SKILL.md remains the normative prose; the files encode it.

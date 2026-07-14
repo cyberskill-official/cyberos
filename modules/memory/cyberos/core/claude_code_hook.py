@@ -1,4 +1,4 @@
-"""FR-MEMORY-109 — Claude Code hook capture.
+"""TASK-MEMORY-109 — Claude Code hook capture.
 
 Claude Code's hook system fires JSON events on stdin at named lifecycle
 points: ``PreToolUse``, ``PostToolUse``, ``SubagentStop``, ``SessionEnd``,
@@ -87,7 +87,7 @@ class HookCapture:
             "ts_ns": self.ts_ns,
             "sync_class": "private",
             "pii_policy": "redact",
-            "source": "fr-memory-109",
+            "source": "task-memory-109",
         }
         if self.tool is not None:
             fm["tool"] = self.tool

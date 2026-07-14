@@ -1,7 +1,7 @@
 ---
 title: Tech stack
 source: website/docs/architecture/tech-stack.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 ## Eight tiers, one supergraph

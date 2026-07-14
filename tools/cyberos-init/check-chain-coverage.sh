@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # check-chain-coverage.sh - prove the payload carries every skill its own workflow docs reference,
-# and that vendored author/audit skills ship as complete pairs. FR-SKILL-116.
+# and that vendored author/audit skills ship as complete pairs. TASK-SKILL-116.
 # Read-only over the payload; run by build.sh as its final step and reusable by CI/release jobs.
 #
 # usage: check-chain-coverage.sh [payload-dir]     default: <repo>/dist/cyberos
@@ -17,11 +17,11 @@ allowfile="${CYBEROS_CHAIN_ALLOWLIST:-$here/chain-allowlist.txt}"
 
 err() { echo "cyberos-init: ERROR: $*" >&2; exit 2; }
 [ -d "$payload" ] || err "payload dir missing: $payload"
-chain_doc="$payload/cuo/ship-feature-requests.md"
+chain_doc="$payload/cuo/ship-tasks.md"
 [ -f "$chain_doc" ] || err "workflow doc unreadable: $chain_doc"
 
 # Reduced profile: a payload built without skill bodies vendors ZERO skills and runs
-# doc-driven (the documented floor - FR-CUO-209 §1 #7). Coverage semantics apply to
+# doc-driven (the documented floor - TASK-CUO-209 §1 #7). Coverage semantics apply to
 # full-profile payloads; a PARTIALLY vendored payload still fails below (that is drift).
 if [ -z "$(ls -A "$payload/cuo/skills" 2>/dev/null)" ]; then
   echo "chain SKIP: reduced profile (0 vendored skills, doc-driven floor)"
@@ -37,7 +37,7 @@ fi
 
 # --- extraction: chain doc `skill:` keys + command-doc backticked *-author/-audit tokens ---
 declare -A REF_DOC=()
-while read -r s; do [ -n "$s" ] && REF_DOC["$s"]="cuo/ship-feature-requests.md"; done \
+while read -r s; do [ -n "$s" ] && REF_DOC["$s"]="cuo/ship-tasks.md"; done \
   < <(grep -Eo 'skill: *[a-z0-9-]+' "$chain_doc" | awk '{print $2}' | sort -u)
 for cmd in "$payload"/plugin/commands/*.md; do
   [ -f "$cmd" ] || continue

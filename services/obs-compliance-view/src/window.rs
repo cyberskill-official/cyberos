@@ -1,4 +1,4 @@
-//! Time-range validation for a compliance view (FR-OBS-008 §1 #6). Windows are validated on epoch
+//! Time-range validation for a compliance view (TASK-OBS-008 §1 #6). Windows are validated on epoch
 //! seconds - the HTTP layer parses the ISO-8601 `since` / `until` params - and a window over 365 days is
 //! rejected so an auditor paginates rather than asking the service to render a year-plus in one shot.
 

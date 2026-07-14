@@ -1,4 +1,4 @@
--- FR-EMAIL-005 — CaMeL variable store + immutable audit.
+-- TASK-EMAIL-005 — CaMeL variable store + immutable audit.
 
 BEGIN;
 

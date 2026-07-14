@@ -9,7 +9,7 @@ phase: P1
 slo: "100% of Gantt critical-path computations match a reference CPM implementation"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-PROJ-016]
+related_tasks: [TASK-PROJ-016]
 ---
 
 ## §1 — Statement (BCP-14 normative)

@@ -1,5 +1,5 @@
 """
-cyberos.core.dream — out-of-band batch reflection pipeline (FR-MEMORY-115).
+cyberos.core.dream — out-of-band batch reflection pipeline (TASK-MEMORY-115).
 
 Imports:
 

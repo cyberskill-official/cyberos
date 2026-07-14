@@ -1,4 +1,4 @@
--- FR-AUTH-101 §1 #10 — SQL function `auth.has_role(role_name)` that consults
+-- TASK-AUTH-101 §1 #10 — SQL function `auth.has_role(role_name)` that consults
 -- the per-session GUC `app.roles` (comma-separated kebab-case role names,
 -- set by the JWT-verification middleware on every connection acquisition).
 --
@@ -30,7 +30,7 @@ END;
 $$;
 
 COMMENT ON FUNCTION auth.has_role(TEXT) IS
-    'FR-AUTH-101 §1 #10 — true if the kebab-case role_name appears in the
+    'TASK-AUTH-101 §1 #10 — true if the kebab-case role_name appears in the
      per-session app.roles GUC. Returns false for any session that didn''t
      set the GUC (legacy connections, direct DB access, etc.) — fail-closed.';
 
@@ -44,7 +44,7 @@ AS $$
 $$;
 
 COMMENT ON FUNCTION auth.rbac_version() IS
-    'FR-AUTH-101 §1 #8 — returns the live RBAC catalogue version for
+    'TASK-AUTH-101 §1 #8 — returns the live RBAC catalogue version for
      verifier-side replay-resistance checks.';
 
 GRANT USAGE ON SCHEMA auth TO cyberos_app, cyberos_ro;

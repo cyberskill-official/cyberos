@@ -1,6 +1,6 @@
 //! SKILL.md parser — extract + deserialize the YAML frontmatter block.
 //!
-//! Per FR-SKILL-103 §3:
+//! Per TASK-SKILL-103 §3:
 //! - File MUST begin with `---` on line 1.
 //! - Closing `---` MUST exist on its own line.
 //! - YAML between fences MUST parse cleanly.
@@ -19,7 +19,7 @@ use super::{description_validator, marker_validator};
 ///
 /// The trailing `>` / `|` (with optional `-` or `+` chomp modifier) is YAML
 /// syntax announcing a folded/literal block scalar that follows. It is NOT
-/// an XML bracket and MUST be exempt from the FR-SKILL-113 / SKB-040 check.
+/// an XML bracket and MUST be exempt from the TASK-SKILL-113 / SKB-040 check.
 static BLOCK_SCALAR_HEADER: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^\s*[^:#\s][^:#]*:\s*[|>][-+]?\s*(#.*)?$").unwrap());
 
@@ -46,7 +46,7 @@ pub enum FrontmatterError {
     #[error("XML bracket detected in frontmatter value at line {line}: {content}")]
     XmlBracketInFrontmatter { line: usize, content: String },
 
-    #[error("deprecated XML-form field detected (FR-SKILL-113 — run tools/migrate-wrap-in/migrate.sh --apply): {field}")]
+    #[error("deprecated XML-form field detected (TASK-SKILL-113 — run tools/migrate-wrap-in/migrate.sh --apply): {field}")]
     DeprecatedXmlField { field: String },
 }
 
@@ -77,7 +77,7 @@ pub fn load_and_validate(bundle: &Path) -> Result<(SkillFrontmatter, String), Fr
     };
 
     // 2. Defensive scan — reject deprecated `wrap_in: <untrusted_content/>` form.
-    //    FR-SKILL-113 §1 #10 mandates fail-fast on legacy form.
+    //    TASK-SKILL-113 §1 #10 mandates fail-fast on legacy form.
     for (lineno, line) in yaml.lines().enumerate() {
         if line.trim_start().starts_with("wrap_in:") && line.contains('<') {
             return Err(FrontmatterError::DeprecatedXmlField {

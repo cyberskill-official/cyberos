@@ -1,8 +1,8 @@
-//! FR-MEMORY-121 §1 #8, #12 (DEC-2702) — the consent gate HOOK.
+//! TASK-MEMORY-121 §1 #8, #12 (DEC-2702) — the consent gate HOOK.
 //!
-//! Capture for any *subject* is hard-gated on that subject's acknowledgment of the FR-EVAL-001 monitoring
-//! notice. This FR DEFINES the gate as a trait and ships a default-deny stub; FR-MEMORY-122 wires the real
-//! implementation that consults FR-EVAL-001's acknowledgment ledger (`monitoring_notice` /
+//! Capture for any *subject* is hard-gated on that subject's acknowledgment of the TASK-EVAL-001 monitoring
+//! notice. This FR DEFINES the gate as a trait and ships a default-deny stub; TASK-MEMORY-122 wires the real
+//! implementation that consults TASK-EVAL-001's acknowledgment ledger (`monitoring_notice` /
 //! `subject_acknowledgment`, owned by `services/eval`). This crate deliberately does NOT depend on
 //! `services/eval`: the gate is injected as a `&dyn ConsentGate`, so the wiring is a later, additive change
 //! and memory stays independent of eval.
@@ -20,7 +20,7 @@ use std::time::{Duration, Instant};
 use uuid::Uuid;
 
 /// The capture consent gate. `is_capture_allowed` answers "may I capture interactions for this subject in
-/// this tenant right now?". Implementations read the FR-EVAL-001 acknowledgment ledger; this crate ships
+/// this tenant right now?". Implementations read the TASK-EVAL-001 acknowledgment ledger; this crate ships
 /// only the default-deny stub. Async because the real impl performs a (cached) DB read.
 ///
 /// Errors propagate as `sqlx::Error` so a gate-DB failure is distinguishable from a clean deny — `emit`
@@ -35,8 +35,8 @@ pub trait ConsentGate: Send + Sync {
     ) -> Result<bool, sqlx::Error>;
 }
 
-/// Default-deny stub (DEC-2702): denies every subject. This is the gate in force until FR-MEMORY-122 wires
-/// the real FR-EVAL-001-backed gate. Capturing nothing is the correct, safe behaviour before consent is
+/// Default-deny stub (DEC-2702): denies every subject. This is the gate in force until TASK-MEMORY-122 wires
+/// the real TASK-EVAL-001-backed gate. Capturing nothing is the correct, safe behaviour before consent is
 /// established — never the reverse.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct DenyAll;
@@ -48,7 +48,7 @@ impl ConsentGate for DenyAll {
     }
 }
 
-/// Test/seed-only gate that allows every subject. NOT for production — it bypasses the FR-EVAL-001 notice.
+/// Test/seed-only gate that allows every subject. NOT for production — it bypasses the TASK-EVAL-001 notice.
 /// Lives here (behind no feature flag, but named so misuse is obvious) so the emit happy-path test and
 /// future local-demo seeding have an allow-gate without reaching into eval.
 #[derive(Clone, Copy, Debug, Default)]
@@ -65,7 +65,7 @@ impl ConsentGate for AllowAll {
 /// generates a stream of interactions; without this, the gate would issue a ledger query per event. The
 /// verdict for `(tenant, subject)` is cached for `ttl` (default 60 s), so a burst from one person issues
 /// at most one ledger read per window. A revocation (or a fresh acknowledgment) takes effect within the
-/// TTL — the window is the documented bound. FR-MEMORY-122 wraps its real gate in this.
+/// TTL — the window is the documented bound. TASK-MEMORY-122 wraps its real gate in this.
 pub struct CachingGate<G: ConsentGate> {
     inner: G,
     ttl: Duration,

@@ -1,5 +1,5 @@
 {
-  "_comment": "FR-CHAT-001 — baseline Mattermost config baked into the CyberOS image. The auth bridge (FR-CHAT-002) and Fargate-specific settings (FR-CHAT-003) override at deploy time via env variables.",
+  "_comment": "TASK-CHAT-001 — baseline Mattermost config baked into the CyberOS image. The auth bridge (TASK-CHAT-002) and Fargate-specific settings (TASK-CHAT-003) override at deploy time via env variables.",
   "ServiceSettings": {
     "SiteURL": "",
     "ListenAddress": ":8065",
@@ -11,7 +11,7 @@
   "FileSettings": {
     "DriverName": "amazons3",
     "AmazonS3SSE": true,
-    "_comment": "Per-tenant S3 bucket overrides via env at deploy time (FR-CHAT-003)."
+    "_comment": "Per-tenant S3 bucket overrides via env at deploy time (TASK-CHAT-003)."
   },
   "SqlSettings": {
     "DriverName": "postgres",
@@ -24,7 +24,7 @@
   "TeamSettings": {
     "EnableTeamCreation": true,
     "EnableUserCreation": false,
-    "_comment": "User creation is disabled — FR-CHAT-002 AUTH bridge is the only enrollment path."
+    "_comment": "User creation is disabled — TASK-CHAT-002 AUTH bridge is the only enrollment path."
   },
   "LogSettings": {
     "EnableConsole": true,

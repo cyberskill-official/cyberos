@@ -1,4 +1,4 @@
-//! FR-EMAIL-001 §3.6 — inbound webhook adapter.
+//! TASK-EMAIL-001 §3.6 — inbound webhook adapter.
 //!
 //! Receives a Stalwart inbound event (post-classification: DKIM/SPF/DMARC
 //! flags + spam score already computed). Persists metadata + body, emits

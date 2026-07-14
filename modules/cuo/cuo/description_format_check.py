@@ -1,6 +1,6 @@
 """Description-format validator — Python mirror of the Rust description_validator.
 
-Per FR-SKILL-111 SKB-020..023:
+Per TASK-SKILL-111 SKB-020..023:
 - Length 80-1024 chars (flattened single-line equivalent).
 - No unescaped < or > characters.
 - ≥1 verb stem from the canonical list.

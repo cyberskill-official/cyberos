@@ -1064,7 +1064,7 @@ pre {
 }
 
 /* ============================================================================
-   DOCS PROSE — typography for the markdown-generated pages (FR-DOCS-002).
+   DOCS PROSE — typography for the markdown-generated pages (TASK-DOCS-002).
    The chrome's `.h-1/.h-2` utilities styled the OLD hand-authored pages; the
    generated pages emit semantic <h1>/<p>/<ul>/<table>, which previously fell
    through to browser defaults with no rhythm - the "spacing not good" report.

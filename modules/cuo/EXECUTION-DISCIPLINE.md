@@ -44,9 +44,9 @@ An agent MAY emit a progress note at a milestone. Emitting a note MUST NOT block
 
 ## §5  Relationship to the lifecycle
 
-This doctrine sharpens, and is consistent with, `chief-technology-officer/ship-feature-requests.md` §12 (no partial-ship-and-pause within an FR) and its outer loop §11 (`while ! stop_signal`). §12's "pause between FRs" is NOT a mandatory stop: the outer loop advances to the next eligible FR on its own, and the agent halts between FRs only when a §2 condition applies. The same rule governs the `architect-new-system` workflow and any net-new project build (including projects CyberOS drives through an external executor such as Codex).
+This doctrine sharpens, and is consistent with, `chief-technology-officer/ship-tasks.md` §12 (no partial-ship-and-pause within an FR) and its outer loop §11 (`while ! stop_signal`). §12's "pause between FRs" is NOT a mandatory stop: the outer loop advances to the next eligible FR on its own, and the agent halts between FRs only when a §2 condition applies. The same rule governs the `architect-new-system` workflow and any net-new project build (including projects CyberOS drives through an external executor such as Codex).
 
-## Run-state manifests (FR-CUO-206)
+## Run-state manifests (TASK-CUO-206)
 
-Interrupted ship runs resume from `docs/feature-requests/.workflow/<FR-ID>.ship.json` (ship-manifest@1) instead of restarting the 31-step chain - see 'Resume semantics' in `chief-technology-officer/workflows/ship-feature-requests.md`. The manifest is a cache: artefacts are re-hashed on resume and HITL gates always re-ask. A session ending mid-FR is therefore recoverable state, not lost work - but it is never a licence to skip a gate.
+Interrupted ship runs resume from `docs/tasks/.workflow/<FR-ID>.ship.json` (ship-manifest@1) instead of restarting the 31-step chain - see 'Resume semantics' in `chief-technology-officer/workflows/ship-tasks.md`. The manifest is a cache: artefacts are re-hashed on resume and HITL gates always re-ask. A session ending mid-FR is therefore recoverable state, not lost work - but it is never a licence to skip a gate.
 

@@ -40,12 +40,12 @@ def main():
     ap.add_argument("--project-root", required=True)
     args = ap.parse_args()
 
-    fr_root = os.path.join(args.project_root, "docs/feature-requests")
+    fr_root = os.path.join(args.project_root, "docs/tasks")
     if not os.path.isdir(fr_root):
-        print(f"ERROR: no docs/feature-requests/ at {fr_root}")
+        print(f"ERROR: no docs/tasks/ at {fr_root}")
         return
 
-    frs = {}
+    tasks = {}
     for path in sorted(glob.glob(f"{fr_root}/**/FR-*.md", recursive=True)):
         if path.endswith(".audit.md"):
             continue
@@ -55,18 +55,18 @@ def main():
 
     # Kahn topo sort
     in_degree = {fr: 0 for fr in frs}
-    for fr_id, fr in frs.items():
+    for task_id, fr in frs.items():
         for dep in fr.get("depends_on", []):
-            if dep in frs:
-                in_degree[fr_id] += 1
+            if dep in tasks:
+                in_degree[task_id] += 1
     queue = deque([f for f in frs if in_degree[f] == 0])
     layers, current = [], list(queue)
     while current:
         layers.append(sorted(current))
         next_layer = []
-        for fr_id in current:
+        for task_id in current:
             for dep_fr_id, dep_fr in frs.items():
-                if fr_id in dep_fr.get("depends_on", []):
+                if task_id in dep_fr.get("depends_on", []):
                     in_degree[dep_fr_id] -= 1
                     if in_degree[dep_fr_id] == 0:
                         next_layer.append(dep_fr_id)
@@ -74,26 +74,26 @@ def main():
 
     from datetime import date
     out = [f"# FR implementation order — topological build sequence", ""]
-    out.append(f"_Generated {date.today().isoformat()} — {len(frs)} FRs in {len(layers)} dependency layers._")
+    out.append(f"_Generated {date.today().isoformat()} — {len(tasks)} FRs in {len(layers)} dependency layers._")
     out.extend(["", "Each **layer** can be built in parallel (no cross-dependencies inside a layer). Layers MUST be built in order.", ""])
     for i, layer in enumerate(layers):
         out.append(f"## Layer {i} ({len(layer)} FRs — buildable in parallel)\n")
-        for fr_id in layer:
-            fr = frs[fr_id]
+        for task_id in layer:
+            fr = frs[task_id]
             title = fr.get("title", "").strip('"').strip("'")[:80]
             effort = fr.get("effort_hours", "?")
             priority = fr.get("priority", "?")
             slice_v = fr.get("slice", "?")
-            out.append(f"- **{fr_id}** [{priority}, {effort}h, slice {slice_v}] — {title}")
+            out.append(f"- **{task_id}** [{priority}, {effort}h, slice {slice_v}] — {title}")
         out.append("")
     with open(f"{fr_root}/IMPLEMENTATION_ORDER.md", "w") as f:
         f.write("\n".join(out))
-    print(f"Wrote IMPLEMENTATION_ORDER.md: {len(layers)} layers, {len(frs)} FRs")
+    print(f"Wrote IMPLEMENTATION_ORDER.md: {len(layers)} layers, {len(tasks)} FRs")
 
     # Sprint plan
     by_module = defaultdict(lambda: defaultdict(lambda: {"hours": 0, "count": 0, "frs": []}))
     total_hours = 0
-    for fr_id, fr in frs.items():
+    for task_id, fr in frs.items():
         module = fr.get("module", "?")
         slice_v = fr.get("slice", "?")
         try:
@@ -102,13 +102,13 @@ def main():
             hours = 0
         by_module[module][slice_v]["hours"] += hours
         by_module[module][slice_v]["count"] += 1
-        by_module[module][slice_v]["frs"].append(fr_id)
+        by_module[module][slice_v]["frs"].append(task_id)
         total_hours += hours
 
     out = [f"# Sprint plan — effort rollup by module & slice", ""]
-    out.append(f"_Generated {date.today().isoformat()} — {len(frs)} FRs, {total_hours:.0f} total engineering-hours._")
+    out.append(f"_Generated {date.today().isoformat()} — {len(tasks)} FRs, {total_hours:.0f} total engineering-hours._")
     out.extend(["", "## Headline numbers", ""])
-    out.append(f"- **Total scope:** {len(frs)} FRs, {total_hours:.0f}h ({total_hours/8:.0f} engineer-days @ 8h/d, or {total_hours/160:.1f} engineer-months @ 160h/m).")
+    out.append(f"- **Total scope:** {len(tasks)} FRs, {total_hours:.0f}h ({total_hours/8:.0f} engineer-days @ 8h/d, or {total_hours/160:.1f} engineer-months @ 160h/m).")
     out.append(f"- **At 3 engineers (480h/sprint @ 2-week sprints):** {total_hours/480:.1f} sprints (~{total_hours/480 * 2:.1f} weeks).")
     out.append(f"- **At 5 engineers (800h/sprint):** {total_hours/800:.1f} sprints (~{total_hours/800 * 2:.1f} weeks).")
     out.extend(["", "## By module", ""])
@@ -131,7 +131,7 @@ def main():
         out.append("")
     with open(f"{fr_root}/SPRINT_PLAN.md", "w") as f:
         f.write("\n".join(out))
-    print(f"Wrote SPRINT_PLAN.md: {len(frs)} FRs / {total_hours:.0f}h across {len(by_module)} modules")
+    print(f"Wrote SPRINT_PLAN.md: {len(tasks)} FRs / {total_hours:.0f}h across {len(by_module)} modules")
 
 
 if __name__ == "__main__":

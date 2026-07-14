@@ -1,6 +1,6 @@
 # Docs refinement pass - findings for operator resolution (2026-07-10)
 
-The FR-DOCS-002 dedicated refinement pass (30 pages, three parallel editors under a
+The TASK-DOCS-002 dedicated refinement pass (30 pages, three parallel editors under a
 strict no-invention rule) cleaned every migrated page to current-state prose. Real
 content contradictions were deliberately LEFT AS WRITTEN and recorded here - each
 needs an operator ruling, then a one-line doc fix.

@@ -1,4 +1,4 @@
-"""Tests for FR-CUO-204 dream_runner - the safety-enforcing operator layer.
+"""Tests for TASK-CUO-204 dream_runner - the safety-enforcing operator layer.
 
 These prove the enablement locks deterministically with injected fakes: off does nothing; propose runs the
 gates but applies nothing and never even calls the real applier; auto-apply happens ONLY with mode=auto +

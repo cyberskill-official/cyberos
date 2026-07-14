@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # install.sh — one-time (or re-vendor) install of CyberOS into a project under gitignored .cyberos/.
 # Organised by module (.cyberos/cuo, .cyberos/memory, .cyberos/plugin), scaffolds
-# docs/feature-requests/ + CHANGELOG.md + the BRAIN, runs FR migration + status page
+# docs/tasks/ + CHANGELOG.md + the BRAIN, runs FR migration + status page
 # (skip with CYBEROS_NO_MIGRATE=1). Idempotent; never clobbers BACKLOG/CHANGELOG/BRAIN.
 # Day-to-day: soft update checks run on any .cyberos use; manual check: version.sh.
 # Remove: uninstall.sh. Open status page: status.sh.
@@ -27,9 +27,9 @@ if [ ! -d "$src/cuo" ]; then
 fi
 
 echo "cyberos install: target repo = $root (CyberOS $avail_ver)"
-mkdir -p "$CY" "$root/docs/feature-requests/_audits"
-mkdir -p "$root/docs/feature-requests/.workflow"
-[ -f "$root/docs/feature-requests/.workflow/.gitignore" ] || printf '%s\n' '*.ship.json' > "$root/docs/feature-requests/.workflow/.gitignore"  # ship-manifest@1 run state stays untracked (FR-CUO-206)
+mkdir -p "$CY" "$root/docs/tasks/_audits"
+mkdir -p "$root/docs/tasks/.workflow"
+[ -f "$root/docs/tasks/.workflow/.gitignore" ] || printf '%s\n' '*.ship.json' > "$root/docs/tasks/.workflow/.gitignore"  # ship-manifest@1 run state stays untracked (TASK-CUO-206)
 
 # 1. vendor the machine by module (replace any prior copy) --------------------
 rm -rf "$CY/cuo" "$CY/plugin" "$CY/mcp"
@@ -61,7 +61,7 @@ if [ -f "$CY/lib/update-check.sh" ]; then
   CYBEROS_UPDATE_CHECK="${CYBEROS_UPDATE_CHECK:-always}" _cyberos_update_check || true
 fi
 
-# 2. auto-detect gate commands (FR-CUO-207: union across stacks, first claim per gate wins;
+# 2. auto-detect gate commands (TASK-CUO-207: union across stacks, first claim per gate wins;
 #    documented order: rust, node, python, go, maven, gradle, dotnet, php, ruby, make.
 #    Never invent a command whose tool marker file is absent. Root-only scanning.)
 BUILD_CMD=""; LINT_CMD=""; TEST_CMD=""; COVERAGE_CMD=""; ECOSYSTEM=""
@@ -146,7 +146,7 @@ LINT_CMD="$LINT_CMD"
 TEST_CMD="$TEST_CMD"
 COVERAGE_CMD="$COVERAGE_CMD"
 COVERAGE_MIN="90"
-# Per-gate autodetect provenance (FR-CUO-207; consumed by run-gates.sh provenance lines).
+# Per-gate autodetect provenance (TASK-CUO-207; consumed by run-gates.sh provenance lines).
 SRC_BUILD="$SRC_BUILD"
 SRC_LINT="$SRC_LINT"
 SRC_TEST="$SRC_TEST"
@@ -161,11 +161,11 @@ AWH_CMD=""
 HITL_REQUIRED="true"
 EOF
 
-# 3b. scaffold .cyberos/config.yaml exactly once (FR-CUO-207 §1 #3; never clobber) --
+# 3b. scaffold .cyberos/config.yaml exactly once (TASK-CUO-207 §1 #3; never clobber) --
 cfg_file="$root/.cyberos/config.yaml"
 if [ ! -f "$cfg_file" ]; then
   cat > "$cfg_file" <<EOF
-# .cyberos/config.yaml - per-repo CyberOS overrides (FR-CUO-207). Everything below is
+# .cyberos/config.yaml - per-repo CyberOS overrides (TASK-CUO-207). Everything below is
 # commented out = inert; uncomment a line to override ONLY that key. Detected defaults
 # are shown as comments so this file documents what runs today.
 # gates:
@@ -182,10 +182,10 @@ fi
 # 4. scaffold the backlog -----------------------------------------------------
 # A pre-existing docs/BACKLOG.md is ADOPTED into the canonical home first (content preserved);
 # only a repo with neither gets the template.
-bl="$root/docs/feature-requests/BACKLOG.md"; BACKLOG_SET="docs/feature-requests/BACKLOG.md"
+bl="$root/docs/tasks/BACKLOG.md"; BACKLOG_SET="docs/tasks/BACKLOG.md"
 if [ ! -f "$bl" ] && [ -f "$root/docs/BACKLOG.md" ]; then
   mv "$root/docs/BACKLOG.md" "$bl"
-  BACKLOG_SET="adopted docs/BACKLOG.md -> docs/feature-requests/BACKLOG.md"
+  BACKLOG_SET="adopted docs/BACKLOG.md -> docs/tasks/BACKLOG.md"
 fi
 if [ ! -f "$bl" ]; then
   proj="$(basename "$root")"
@@ -211,7 +211,7 @@ and every FR id you name in an entry becomes a chip that opens that FR).
 
 ## [0.1.0] - $(date +%Y-%m-%d)
 
-- CyberOS initialised: FR workflow vendored to .cyberos/, backlog at docs/feature-requests/BACKLOG.md, status page at docs/status/.
+- CyberOS initialised: FR workflow vendored to .cyberos/, backlog at docs/tasks/BACKLOG.md, status page at docs/status/.
 EOF
   CHANGELOG_SET="created CHANGELOG.md (seeds the status page's releases lens)"
 fi
@@ -310,8 +310,8 @@ cat > "$CY/AGENT-ENTRY.md" <<'ENTRY'
 
 This repository runs CyberOS. Any coding agent operating here follows these rules:
 
-1. Work = feature requests. Read `.cyberos/cuo/ship-feature-requests.md` and drive
-   the next eligible FR in `docs/feature-requests/BACKLOG.md` (one backlog for both
+1. Work = tasks. Read `.cyberos/cuo/ship-tasks.md` and drive
+   the next eligible FR in `docs/tasks/BACKLOG.md` (one backlog for both
    `class: product` and `class: improvement`; frontmatter `status` is the truth).
 2. HITL is required: halt at review acceptance (`reviewing -> ready_to_test`) and at
    final acceptance (`testing -> done`) for a recorded human verdict. Never set
@@ -334,7 +334,7 @@ agents_spine() {
 
 This repository runs **CyberOS**. Canonical agent instructions: `.cyberos/AGENT-ENTRY.md`.
 
-Work is feature-requests; HITL is required at the two human-acceptance gates; run gates with `bash .cyberos/cuo/gates/run-gates.sh`. Never push, deploy, or merge without an explicit operator instruction.
+Work is tasks; HITL is required at the two human-acceptance gates; run gates with `bash .cyberos/cuo/gates/run-gates.sh`. Never push, deploy, or merge without an explicit operator instruction.
 
 Memory (BRAIN): protocol at `.cyberos/memory/AGENTS.md`; store at `.cyberos/memory/store/`.
 SPINE
@@ -393,16 +393,16 @@ pointer() {
   mkdir -p "$(dirname "$abs")"
   case "$style" in
     mdc)
-      { printf -- '---\ndescription: CyberOS feature-request workflow (HITL-gated). Always apply.\nalwaysApply: true\n---\n'
+      { printf -- '---\ndescription: CyberOS task workflow (HITL-gated). Always apply.\nalwaysApply: true\n---\n'
         printf 'This repo runs CyberOS. Canonical instructions: AGENTS.md (root) and .cyberos/AGENT-ENTRY.md.\n'
-        printf 'Work is feature-requests; HITL is required at the two human-acceptance gates; run gates with `bash .cyberos/cuo/gates/run-gates.sh`. Never push/deploy/merge without an operator instruction.\n'; } > "$abs" ;;
+        printf 'Work is tasks; HITL is required at the two human-acceptance gates; run gates with `bash .cyberos/cuo/gates/run-gates.sh`. Never push/deploy/merge without an operator instruction.\n'; } > "$abs" ;;
     plain)
       { printf 'This repo runs CyberOS. Canonical instructions: AGENTS.md (root) and .cyberos/AGENT-ENTRY.md.\n'
-        printf 'Work is feature-requests; HITL is required at the two human-acceptance gates; gates: bash .cyberos/cuo/gates/run-gates.sh. Never push/deploy/merge without an operator instruction.\n'; } > "$abs" ;;
+        printf 'Work is tasks; HITL is required at the two human-acceptance gates; gates: bash .cyberos/cuo/gates/run-gates.sh. Never push/deploy/merge without an operator instruction.\n'; } > "$abs" ;;
     *)
       { printf '# %s\n\n' "$(basename "$rel" .md)"
         printf 'This repo runs **CyberOS**. Canonical agent instructions: `AGENTS.md` (root) and `.cyberos/AGENT-ENTRY.md`.\n\n'
-        printf 'Work is feature-requests; HITL is required at the two human-acceptance gates; run gates with `bash .cyberos/cuo/gates/run-gates.sh`. Never push, deploy, or merge without an explicit operator instruction.\n'; } > "$abs" ;;
+        printf 'Work is tasks; HITL is required at the two human-acceptance gates; run gates with `bash .cyberos/cuo/gates/run-gates.sh`. Never push, deploy, or merge without an explicit operator instruction.\n'; } > "$abs" ;;
   esac
   AGENT_FILES="$AGENT_FILES $rel"
 }
@@ -416,25 +416,25 @@ pointer antigravity   .agents/rules/cyberos.md           md      # Antigravity /
 pointer windsurf      .windsurfrules                     plain   # Windsurf
 # Codex, zcode, Command Code, Aider, Zed, Jules, Warp, OpenCode read AGENTS.md -> covered by the spine.
 
-# --- native skill install: drop ship-feature-requests into each skill-aware agent's dir ---
-# so it is invocable natively (/ship-feature-requests, $ship-feature-requests) - not just prose.
+# --- native skill install: drop ship-tasks into each skill-aware agent's dir ---
+# so it is invocable natively (/ship-tasks, $ship-tasks) - not just prose.
 # Default = relative symlink into the self-contained skill at .cyberos/plugin/skills (tracks
 # updates on re-init; regenerable, so gitignored). CYBEROS_COPY_SKILLS=1 copies it instead.
-SKILL_SRC="$CY/plugin/skills/ship-feature-requests"
+SKILL_SRC="$CY/plugin/skills/ship-tasks"
 relup() { local up="" seg; local IFS=/; for seg in $1; do [ -n "$seg" ] && up="../$up"; done; printf '%s' "$up"; }
 install_skill() {                                  # $1 = agent skills dir (rel to root)
   want_agent "$2" || return 0
   [ -d "$SKILL_SRC" ] || return 0
-  local dir="$root/$1" dest="$root/$1/ship-feature-requests"
+  local dir="$root/$1" dest="$root/$1/ship-tasks"
   if [ -e "$dest" ] || [ -L "$dest" ]; then         # already there: only refresh OUR own link/copy
-    case "$(readlink "$dest" 2>/dev/null)" in *".cyberos/plugin/skills/ship-feature-requests") : ;; *) return 0;; esac
+    case "$(readlink "$dest" 2>/dev/null)" in *".cyberos/plugin/skills/ship-tasks") : ;; *) return 0;; esac
     rm -rf "$dest" 2>/dev/null || return 0
   fi
   mkdir -p "$dir"
   if [ "${CYBEROS_COPY_SKILLS:-0}" = "1" ]; then
     cp -R "$SKILL_SRC" "$dest"
   else
-    ln -s "$(relup "$1").cyberos/plugin/skills/ship-feature-requests" "$dest" 2>/dev/null || cp -R "$SKILL_SRC" "$dest"
+    ln -s "$(relup "$1").cyberos/plugin/skills/ship-tasks" "$dest" 2>/dev/null || cp -R "$SKILL_SRC" "$dest"
   fi
   SKILL_DIRS="$SKILL_DIRS $1"
 }
@@ -446,7 +446,7 @@ install_skill .opencode/skill     opencode       # OpenCode (singular 'skill')
 # zcode + Hermes load skills from a global home ($HOME); opt in with CYBEROS_GLOBAL_SKILLS=1.
 if [ "${CYBEROS_GLOBAL_SKILLS:-0}" = "1" ]; then
   for gp in "$HOME/.claude/skills" "$HOME/.grok/skills" "$HOME/.hermes/skills" "$HOME/.commandcode/skills"; do
-    [ -e "$gp/ship-feature-requests" ] || { mkdir -p "$gp" && cp -R "$SKILL_SRC" "$gp/ship-feature-requests" 2>/dev/null && SKILL_DIRS="$SKILL_DIRS ~${gp#"$HOME"}"; }
+    [ -e "$gp/ship-tasks" ] || { mkdir -p "$gp" && cp -R "$SKILL_SRC" "$gp/ship-tasks" 2>/dev/null && SKILL_DIRS="$SKILL_DIRS ~${gp#"$HOME"}"; }
   done
 fi
 
@@ -465,7 +465,7 @@ fi
 # Policy (what init writes, tracked vs ignored):
 #   TRACKED  - the agent surface (AGENTS.md, CLAUDE.md, GEMINI.md, .cursorrules, .cursor/rules/,
 #              .grok/GROK.md, .github/copilot-instructions.md, .agents/rules/, .windsurfrules,
-#              .mcp.json, .cursor/mcp.json), docs/feature-requests/** (BACKLOG + specs/audits),
+#              .mcp.json, .cursor/mcp.json), docs/tasks/** (BACKLOG + specs/audits),
 #              CHANGELOG.md, docs/status.html (the generated status page - the repo's published
 #              Roadmap/Backlog/Changelog view), and skill COPIES (CYBEROS_COPY_SKILLS=1).
 #   IGNORED  - .cyberos/ (vendored machine + BRAIN store + render intermediates: regenerable /
@@ -483,7 +483,7 @@ gi_block() {
   printf '%s\n' ".cyberos/"
   if [ "${CYBEROS_COPY_SKILLS:-0}" != "1" ]; then
     printf '%s\n' "# skill symlinks -> .cyberos/plugin/skills (regenerable via init)"
-    for sp in .claude/skills/ship-feature-requests .grok/skills/ship-feature-requests .commandcode/skills/ship-feature-requests .codex/skills/ship-feature-requests .opencode/skill/ship-feature-requests; do
+    for sp in .claude/skills/ship-tasks .grok/skills/ship-tasks .commandcode/skills/ship-tasks .codex/skills/ship-tasks .opencode/skill/ship-tasks; do
       printf '%s\n' "$sp"
     done
   fi
@@ -496,11 +496,11 @@ awk -v b="$GI_BEGIN" -v e="$GI_END" '
   $0=="# CyberOS vendored machine + local BRAIN at .cyberos/memory/store (regenerable via init; tenant data). Do not commit." {next}
   $0=="# CyberOS skill symlinks -> .cyberos/plugin/skills (regenerable via init)." {next}
   $0==".cyberos/" {next}
-  $0==".claude/skills/ship-feature-requests" {next}
-  $0==".grok/skills/ship-feature-requests" {next}
-  $0==".commandcode/skills/ship-feature-requests" {next}
-  $0==".codex/skills/ship-feature-requests" {next}
-  $0==".opencode/skill/ship-feature-requests" {next}
+  $0==".claude/skills/ship-tasks" {next}
+  $0==".grok/skills/ship-tasks" {next}
+  $0==".commandcode/skills/ship-tasks" {next}
+  $0==".codex/skills/ship-tasks" {next}
+  $0==".opencode/skill/ship-tasks" {next}
   {lines[++n]=$0}
   END { while (n>0 && lines[n] ~ /^[[:space:]]*$/) n--; for (i=1;i<=n;i++) print lines[i] }
 ' "$gi" > "$gi.cyberos.tmp"
@@ -530,7 +530,7 @@ if [ "${CYBEROS_NO_HOOK:-0}" != "1" ]; then
 set -euo pipefail
 # Read staged list ONCE — never `git diff | grep -q` under pipefail (SIGPIPE skip bug).
 staged="$(git diff --cached --name-only || true)"
-if grep -Eq '^(docs/feature-requests/|CHANGELOG\.md$|VERSION$)' <<<"$staged"; then
+if grep -Eq '^(docs/tasks/|CHANGELOG\.md$|VERSION$)' <<<"$staged"; then
   if [ ! -f .cyberos/lib/status-page.sh ] || [ ! -f .cyberos/lib/fr-migrate.sh ]; then
     echo "cyberos: ERROR .cyberos/lib/status-page.sh required (run cyberos install)" >&2
     exit 1
@@ -564,7 +564,7 @@ HOOK
 # >>> cyberos-status-hook v2 (appended by cyberos init; edits above survive re-init) >>>
 _cyberos_rc=$?
 staged="$(git diff --cached --name-only || true)"
-if grep -Eq '^(docs/feature-requests/|CHANGELOG\.md$|VERSION$)' <<<"$staged"; then
+if grep -Eq '^(docs/tasks/|CHANGELOG\.md$|VERSION$)' <<<"$staged"; then
   if [ -f .cyberos/lib/status-page.sh ] && command -v node >/dev/null 2>&1; then
     if bash .cyberos/lib/status-page.sh .; then
       git add docs/status 2>/dev/null || true
@@ -589,7 +589,7 @@ HOOK
 # >>> cyberos-status-hook v2 (appended by cyberos init; edits above survive re-init) >>>
 _cyberos_rc=$?
 staged="$(git diff --cached --name-only || true)"
-if grep -Eq '^(docs/feature-requests/|CHANGELOG\.md$|VERSION$)' <<<"$staged"; then
+if grep -Eq '^(docs/tasks/|CHANGELOG\.md$|VERSION$)' <<<"$staged"; then
   if [ -f .cyberos/lib/status-page.sh ] && command -v node >/dev/null 2>&1; then
     if bash .cyberos/lib/status-page.sh .; then
       git add docs/status 2>/dev/null || true
@@ -605,7 +605,7 @@ exit $_cyberos_rc
 HOOK
       HOOK_SET="appended status-sync v2 to your existing pre-commit hook"
     fi
-    # Scrub retired entrypoints (migrate-frs, init.sh --page) → lib/status-page.sh
+    # Scrub retired entrypoints (migrate-tasks, init.sh --page) → lib/status-page.sh
     if [ -f "$hk" ] && grep -qE 'migrate-frs|init\.sh --page' "$hk" 2>/dev/null; then
       tmp="$hk.cyberos.tmp"
       sed -e 's|\.cyberos/migrate-frs\.sh|.cyberos/lib/status-page.sh|g' \
@@ -642,17 +642,17 @@ cyberos install: done.
               MCP: ${MCP_SET}
   BRAIN     -> ${MEMORY_SET}${MEM_BRAIN:+ (${MEM_BRAIN})}${MEM_AGENTS:+; ${MEM_AGENTS}}
   gitignored: one managed block in .gitignore covers .cyberos/ (vendored machine + BRAIN store)
-              + the skill symlinks; agent files, docs/feature-requests/**, CHANGELOG.md and
+              + the skill symlinks; agent files, docs/tasks/**, CHANGELOG.md and
               docs/status/ stay TRACKED (commit them). Everything outside the block is yours.
   version   -> CyberOS $avail_ver (.cyberos/VERSION); check: bash .cyberos/version.sh  (auto soft-check on any .cyberos use)
 
 Next:
   1. Write an FR from the template:
-       mkdir -p docs/feature-requests/<module>/FR-001-<slug> && cp .cyberos/cuo/templates/FR-TEMPLATE.md docs/feature-requests/<module>/FR-001-<slug>/spec.md
+       mkdir -p docs/tasks/<module>/FR-001-<slug> && cp .cyberos/cuo/templates/FR-TEMPLATE.md docs/tasks/<module>/FR-001-<slug>/spec.md
        # fill in section 1, set status: ready_to_implement, add the row to BACKLOG.md
   2. Trigger the workflow in your agent (Claude Code / Cowork / Codex):
-       "Follow .cyberos/cuo/ship-feature-requests.md and drive the next eligible FR in
-        docs/feature-requests/BACKLOG.md. HITL is required: halt at the two human-acceptance
+       "Follow .cyberos/cuo/ship-tasks.md and drive the next eligible FR in
+        docs/tasks/BACKLOG.md. HITL is required: halt at the two human-acceptance
         gates. repo_root is this repo."
   3. Run the machine gates any time:
        bash .cyberos/cuo/gates/run-gates.sh

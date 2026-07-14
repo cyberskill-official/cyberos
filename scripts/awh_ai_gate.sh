@@ -51,4 +51,4 @@ python3 scripts/awh_promote.py --apply
 echo
 echo "Done. Rebuild docs and review:"
 echo "    ( cd website && bash build/build.sh )"
-echo "    git --no-optional-locks diff -- docs/feature-requests"
+echo "    git --no-optional-locks diff -- docs/tasks"

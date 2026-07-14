@@ -1,4 +1,4 @@
-//! FR-AUTH-102 — MFA repository (database CRUD).
+//! TASK-AUTH-102 — MFA repository (database CRUD).
 //!
 //! All DB access for the MFA subsystem goes through this module.
 //! Every query sets `app.current_tenant_id` for RLS enforcement.

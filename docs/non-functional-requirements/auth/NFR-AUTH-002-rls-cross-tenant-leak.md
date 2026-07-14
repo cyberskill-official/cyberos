@@ -9,7 +9,7 @@ phase: P0
 slo: "Property test: 0 cross-tenant rows returned across 1000 random tenant_id pairings on every RLS-protected table"
 owner: CSO
 created: 2026-05-18
-related_frs: [FR-AUTH-003, FR-AUTH-001]
+related_tasks: [TASK-AUTH-003, TASK-AUTH-001]
 ---
 
 ## §1 — Statement (BCP-14 normative)

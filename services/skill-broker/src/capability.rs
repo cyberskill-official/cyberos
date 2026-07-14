@@ -1,4 +1,4 @@
-//! FR-SKILL-101/103/104 — capability broker and skill audit rows.
+//! TASK-SKILL-101/103/104 — capability broker and skill audit rows.
 
 use crate::frontmatter::SkillFrontmatter;
 use serde::{Deserialize, Serialize};

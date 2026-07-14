@@ -1,4 +1,4 @@
-//! FR-AUTH-005 — cursor pagination + signature integration tests.
+//! TASK-AUTH-005 — cursor pagination + signature integration tests.
 //!
 //! Covers ECM-001/002 from §10.7. The exhaustive unit-level signing tests
 //! live in `services/auth/src/cursor.rs` `#[cfg(test)] mod tests`; these

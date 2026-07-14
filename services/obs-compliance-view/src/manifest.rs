@@ -1,4 +1,4 @@
-//! Chain-of-custody manifest for a compliance export (FR-OBS-009 §1 #1). The manifest pins what was
+//! Chain-of-custody manifest for a compliance export (TASK-OBS-009 §1 #1). The manifest pins what was
 //! exported (regulation, window, row count, the chain head at export time) and a SHA-256 of the rows,
 //! and is then Ed25519-signed (manifest_signing.rs). An auditor verifies it offline with the
 //! `verify_manifest` binary. Canonical, sorted-key JSON makes the signed bytes deterministic (§1 #8).

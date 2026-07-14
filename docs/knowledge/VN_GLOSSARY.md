@@ -1,7 +1,7 @@
 # Vietnamese ↔ English Glossary
 
 **Created:** 2026-05-16
-**Scope:** FR-* specs under `docs/feature-requests/`
+**Scope:** FR-* specs under `docs/tasks/`
 **Policy:** Spec bodies use English-only terminology. Vietnamese names appear here when the underlying concept is VN-regulatory (no clean English equivalent). FRs reference glossary entries via `VN-GLO:<key>`.
 
 ---

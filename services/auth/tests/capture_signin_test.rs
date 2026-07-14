@@ -1,4 +1,4 @@
-//! FR-MEMORY-122 §5 — AUTH capture integration tests.
+//! TASK-MEMORY-122 §5 — AUTH capture integration tests.
 //!
 //! Proves the AUTH capture path end-to-end against a live Postgres that has BOTH the memory `l1_audit_log`
 //! table (the destination) and the eval governance tables (`monitoring_notice` + `subject_acknowledgment`,

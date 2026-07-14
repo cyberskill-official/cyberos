@@ -1,4 +1,4 @@
-//! FR-EMAIL-001 §4 #9 + §4 #10 — residency-pinning invariants.
+//! TASK-EMAIL-001 §4 #9 + §4 #10 — residency-pinning invariants.
 //!
 //! These are pure-Rust tests that don't need a live Postgres — the
 //! residency::binding_for_residency function is the policy lookup; the
@@ -48,7 +48,7 @@ fn unknown_residency_rejected() {
 
 #[test]
 fn cross_residency_write_is_fail_closed() {
-    // FR-EMAIL-001 §1 #12 — VN tenant body must NOT land in eu-1 bucket.
+    // TASK-EMAIL-001 §1 #12 — VN tenant body must NOT land in eu-1 bucket.
     let tid = Uuid::new_v4();
     let vn = binding_for_residency("vn-1").unwrap();
     let err = assert_residency_match(tid, &vn, "cyberos-email-eu-1-bodies").unwrap_err();

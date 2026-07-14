@@ -1,4 +1,4 @@
-//! Alertmanager v2 webhook parsing (FR-OBS-007 §1 #1). A webhook may carry many alerts; each is
+//! Alertmanager v2 webhook parsing (TASK-OBS-007 §1 #1). A webhook may carry many alerts; each is
 //! normalised to an `Alert` carrying exactly the fields routing and the audit row need: name, severity,
 //! status, fingerprint, trace_id, summary (§10 - "multiple alerts in one webhook -> iterate per alert").
 //! Unknown JSON fields are ignored so a schema addition does not break parsing.

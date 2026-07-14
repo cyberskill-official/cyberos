@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# check-pair-parity.sh <skills-dir> - FR-SKILL-118 §1 #6.
+# check-pair-parity.sh <skills-dir> - TASK-SKILL-118 §1 #6.
 # Verifies every author/audit pair carries its file classes. The two arrays below
-# ARE the policy (FR-SKILL-118 §10 #3): change them only by amending that FR.
+# ARE the policy (TASK-SKILL-118 §10 #3): change them only by amending that FR.
 set -uo pipefail
 dir="${1:-}"
 [ -d "$dir" ] || { echo "cyberos-init: ERROR: unreadable skills dir: $dir" >&2; exit 2; }
@@ -9,8 +9,8 @@ dir="${1:-}"
 AUTHOR_CLASSES=(PIPELINE.md INVARIANTS.md envelopes/input.json envelopes/output.json references/FAILURE_MODES.md acceptance/README.md)
 AUDIT_CLASSES=(RUBRIC.md AUDIT_LOOP.md REPORT_FORMAT.md envelopes/input.json envelopes/output.json acceptance/README.md)
 
-# Scope list: pairs held to full parity (FR-CUO-209 AC 5 wording - grows as pairs are deepened).
-SCOPE=(feature-request implementation-plan architecture-decision-record debugging-cycle architectural-spike
+# Scope list: pairs held to full parity (TASK-CUO-209 AC 5 wording - grows as pairs are deepened).
+SCOPE=(task implementation-plan architecture-decision-record debugging-cycle architectural-spike
        repo-context-map edge-case-matrix mock-contract-test observability-injection backlog-state-update coverage-gate)
 
 rc=0

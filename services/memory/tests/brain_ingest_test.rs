@@ -1,4 +1,4 @@
-//! FR-MEMORY-123 §5 / AC #1, #3 — brain ingest: event ingested -> embedding visible; idempotent UPSERT;
+//! TASK-MEMORY-123 §5 / AC #1, #3 — brain ingest: event ingested -> embedding visible; idempotent UPSERT;
 //! cursor resume. Requires Postgres + pgvector; `#[ignore]` by default (boot services/dev/docker-compose.yml,
 //! `CREATE EXTENSION vector`, then `cargo test -p cyberos-memory --test brain_ingest_test -- --ignored`).
 
@@ -10,7 +10,7 @@ use common::BrainTestEnv;
 #[tokio::test]
 #[ignore = "requires Postgres + pgvector — boot services/dev/docker-compose.yml first"]
 async fn event_ingested_then_embedding_visible() {
-    // AC #1: append a FR-MEMORY-121 event; after ingest a brain_event_embedding row exists with the event's
+    // AC #1: append a TASK-MEMORY-121 event; after ingest a brain_event_embedding row exists with the event's
     // audit_row_id and tier='hot'.
     let env = BrainTestEnv::new().await;
     let ev = env

@@ -1,5 +1,5 @@
-//! Caller identity (FR-EVAL-001 slice 2). Verifies the CyberOS access token (FR-AUTH-110 provider,
-//! FR-AUTH-004 JWKS, RS256) and extracts the caller. Mirrors `cyberos_chat::auth` exactly - the same
+//! Caller identity (TASK-EVAL-001 slice 2). Verifies the CyberOS access token (TASK-AUTH-110 provider,
+//! TASK-AUTH-004 JWKS, RS256) and extracts the caller. Mirrors `cyberos_chat::auth` exactly - the same
 //! JwkSet parse, the same per-kid `DecodingKey` cache held for the process lifetime, the same bearer
 //! extraction - so the two services verify CyberOS tokens identically. The HS256 path is for tests and
 //! local dev only.
@@ -26,7 +26,7 @@ pub const ROLE_FOUNDER: &str = "founder";
 /// roles on the employee's behalf; the employee never self-acknowledges in the quiet operating mode.
 pub const ACK_RECORDER_ROLES: &[&str] = &[ROLE_FOUNDER, "tenant-admin", "chro", "dpo"];
 
-/// Roles permitted to ADMINISTER the FR-EVAL-002 rubric - create / add items / publish (DEC-2601 §1 #10:
+/// Roles permitted to ADMINISTER the TASK-EVAL-002 rubric - create / add items / publish (DEC-2601 §1 #10:
 /// "founder + designated rubric admins"). The founder always counts (via `is_founder`); `rubric-admin` is
 /// the AUTH wire form for a delegate the founder designates. This is the authoring grant the FR requires;
 /// it deliberately does not invent an access rule, only names which AUTH roles hold the existing
@@ -55,7 +55,7 @@ impl Claims {
 
 /// The verified caller identity threaded through every handler (clause 7, 12). `subject_id` and
 /// `tenant_id` are parsed from the token's `sub` / `tenant_id`; `is_founder` and the convenience
-/// role checks are derived from the `roles` claim (FR-AUTH-101 `founder`).
+/// role checks are derived from the `roles` claim (TASK-AUTH-101 `founder`).
 #[derive(Debug, Clone)]
 pub struct Caller {
     pub subject_id: Uuid,
@@ -88,7 +88,7 @@ impl Caller {
         self.has_any_role(ACK_RECORDER_ROLES)
     }
 
-    /// Whether the caller may administer the rubric - author / publish (FR-EVAL-002 §1 #10). Founder or a
+    /// Whether the caller may administer the rubric - author / publish (TASK-EVAL-002 §1 #10). Founder or a
     /// designated rubric admin.
     pub fn may_administer_rubric(&self) -> bool {
         self.has_any_role(RUBRIC_ADMIN_ROLES)
@@ -121,7 +121,7 @@ impl Authenticator {
         }
     }
 
-    /// RS256 verifier built from the auth service JWKS (FR-AUTH-004). The parsed per-kid keys are the
+    /// RS256 verifier built from the auth service JWKS (TASK-AUTH-004). The parsed per-kid keys are the
     /// cache: they live for the process lifetime, so token verification never re-fetches.
     pub fn from_jwks(jwks_json: &str) -> Result<Self, AuthError> {
         let set: JwkSet = serde_json::from_str(jwks_json)

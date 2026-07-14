@@ -1,4 +1,4 @@
--- FR-MCP-007 Migration 0017: mcp_tasks + closed enums
+-- TASK-MCP-007 Migration 0017: mcp_tasks + closed enums
 -- DEC-1101 (task_status), DEC-1114 (task_progress_unit), DEC-1104 (UUID handle), DEC-1112 (result cap),
 -- DEC-1121 (idempotency), DEC-1125 (PII scrub).
 --

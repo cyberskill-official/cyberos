@@ -1,7 +1,7 @@
 # obs-correlation-gate.yml — STUB
 #
 # Auto-generated 2026-05-17 from FR build_envelope references.
-# Declared by: FR-OBS-005
+# Declared by: TASK-OBS-005
 #
 # Implementation team: replace this stub with the real workflow YAML
 # per the spec details in the declaring FR(s) above.
@@ -19,5 +19,5 @@ jobs:
   placeholder:
     runs-on: ubuntu-latest
     steps:
-      - name: TODO — implement per FR(s) FR-OBS-005
+      - name: TODO — implement per FR(s) TASK-OBS-005
         run: echo 'Stub — see FR specs for canonical workflow YAML'

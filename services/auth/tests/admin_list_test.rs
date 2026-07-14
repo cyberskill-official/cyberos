@@ -1,4 +1,4 @@
-//! FR-AUTH-005 — list_tenants + list_subjects integration tests.
+//! TASK-AUTH-005 — list_tenants + list_subjects integration tests.
 //!
 //! Covers ECM-001/002/003/004/005/006/007/013/015 from §10.7.
 //! Postgres-gated via `#[ignore]`; CI runs `cargo test -- --ignored`.
@@ -40,7 +40,7 @@ async fn build_app() -> axum::Router {
         sticky_suppress: cyberos_auth::travel_policy::StickySuppress::new(),
         rate_limit: std::sync::Arc::new(cyberos_auth::rate_limit::RateLimiter::new()),
         deny_list: cyberos_auth::deny_list::DenyList::new(),
-        // FR-MEMORY-122: capture is off in tests unless a test installs a Capturer; None = no-op emitters.
+        // TASK-MEMORY-122: capture is off in tests unless a test installs a Capturer; None = no-op emitters.
         capturer: None,
     })
 }

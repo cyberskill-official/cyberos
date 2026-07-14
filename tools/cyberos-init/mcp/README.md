@@ -1,6 +1,6 @@
 # cyberos-mcp - the MCP channel
 
-A zero-dependency Node stdio MCP server that exposes the CyberOS `ship-feature-requests`
+A zero-dependency Node stdio MCP server that exposes the CyberOS `ship-tasks`
 workflow as tools, so any MCP-capable agent triggers it with no files. Requires `node >= 18`.
 
 Tools:
@@ -8,7 +8,7 @@ Tools:
 - `fr_init {repo?}` - vendor the CyberOS machine into a repo (needs the payload reachable; set `CYBEROS_PAYLOAD` if the server was vendored away from `init.sh`).
 - `fr_gates {repo?}` - run the machine gates (the repo's own build/lint/test + coverage, plus caf/awh if present).
 - `fr_status {repo?}` - summarize the FR backlog (counts by status, next eligible FR) and installed version.
-- `ship_fr {repo?, fr_id?}` - return the canonical, HITL-gated trigger for the next (or a named) FR. It never drives or accepts an FR itself - the human still holds the two acceptance gates.
+- `ship_fr {repo?, task_id?}` - return the canonical, HITL-gated trigger for the next (or a named) FR. It never drives or accepts an FR itself - the human still holds the two acceptance gates.
 
 `repo` defaults to the current working directory, walked up to the repo root. After `init.sh`
 runs, the server is vendored at `.cyberos/mcp/cyberos-mcp.mjs`; `fr_gates` / `fr_status` /

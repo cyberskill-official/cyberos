@@ -7,12 +7,12 @@
 //! plane; this Rust crate provides:
 //!
 //! - **Config validation** — `config::validate()` parses `otel-collector-config.yaml`
-//!   and asserts the pipeline shape required by FR-OBS-001 §3 (otlp→resource→
+//!   and asserts the pipeline shape required by TASK-OBS-001 §3 (otlp→resource→
 //!   attributes/pii_scrub→batch→loki/prometheusremotewrite/otlp/tempo).
 //! - **Token-file management** — `auth::TokenFile` reads + reloads the bearer-token
-//!   file the otelcol bearertokenauth extension consumes (FR-OBS-001 §1 #2).
+//!   file the otelcol bearertokenauth extension consumes (TASK-OBS-001 §1 #2).
 //! - **Self-metric types** — `metrics::SelfMetrics` defines the `obs_collector_*`
-//!   metric family that the collector emits on `:8888` (FR-OBS-001 §1 #14).
+//!   metric family that the collector emits on `:8888` (TASK-OBS-001 §1 #14).
 //!
 //! The actual binary is `otelcol-contrib`, supervised by the
 //! `cyberos-obs` Cargo bin in this crate (with health-check polling, log forwarding,
@@ -29,5 +29,5 @@ pub mod metrics;
 pub const SERVICE_BANNER: &str = concat!(
     "cyberos-obs-collector v",
     env!("CARGO_PKG_VERSION"),
-    " — observability supervisor (FR-OBS-001..009)"
+    " — observability supervisor (TASK-OBS-001..009)"
 );

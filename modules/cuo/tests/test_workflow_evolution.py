@@ -1,4 +1,4 @@
-"""Test suite for FR-CUO-203 — workflow-level evolution."""
+"""Test suite for TASK-CUO-203 — workflow-level evolution."""
 
 from __future__ import annotations
 
@@ -135,7 +135,7 @@ def test_workflow_stripe_format() -> None:
 
 
 # ----------------------------------------------------------------------------
-# AC #7 — Repeat stripe halts (via FR-CUO-201)
+# AC #7 — Repeat stripe halts (via TASK-CUO-201)
 # ----------------------------------------------------------------------------
 
 
@@ -162,10 +162,10 @@ def test_report_cites_fr_ids(tmp_path: Path) -> None:
     """AC #10: the proposal evidence table references specific FR ids."""
     evidence = [
         _row("workflow_complete", workflow_id="cto/ship",
-             outcome="ROUTED_BACK", fr_id="FR-MEMORY-101",
+             outcome="ROUTED_BACK", task_id="TASK-MEMORY-101",
              rework_reason="reason-A", row_id="r1"),
         _row("workflow_complete", workflow_id="cto/ship",
-             outcome="ROUTED_BACK", fr_id="FR-MEMORY-102",
+             outcome="ROUTED_BACK", task_id="TASK-MEMORY-102",
              rework_reason="reason-B", row_id="r2"),
     ]
     result = emit_workflow_proposal(
@@ -173,8 +173,8 @@ def test_report_cites_fr_ids(tmp_path: Path) -> None:
     )
     assert isinstance(result, Emitted)
     body = result.proposal_path.read_text(encoding="utf-8")
-    assert "FR-MEMORY-101" in body
-    assert "FR-MEMORY-102" in body
+    assert "TASK-MEMORY-101" in body
+    assert "TASK-MEMORY-102" in body
 
 
 # ----------------------------------------------------------------------------
@@ -186,7 +186,7 @@ def test_workflow_and_skill_stripes_disjoint() -> None:
     """§2: workflow stripes contain `/`; skill stripes don't → no collision."""
     from cuo.core.stripe import compute_stripe
     wf_stripe = compute_workflow_stripe("cto/ship", "routed_back_rate_above", [])
-    skill_stripe = str(compute_stripe("feature-request-audit",
+    skill_stripe = str(compute_stripe("task-audit",
                                        "needs_human_rate_above", []))
     assert "/" in wf_stripe
     assert "/" not in skill_stripe

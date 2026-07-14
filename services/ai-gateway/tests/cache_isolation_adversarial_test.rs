@@ -1,4 +1,4 @@
-//! FR-AI-018 §1 #7 — Adversarial tenant string tests.
+//! TASK-AI-018 §1 #7 — Adversarial tenant string tests.
 
 mod support;
 use support::proptest_strategies::adversarial_tenant_strings;

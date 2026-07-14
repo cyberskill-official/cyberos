@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of IDV methods (VNeID, eIDAS, AATL, email-link) reachable from each tenant region"
 owner: CLO-Legal
 created: 2026-05-18
-related_frs: [FR-DOC-006]
+related_tasks: [TASK-DOC-006]
 ---
 
 ## §1 — Statement (BCP-14 normative)

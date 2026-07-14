@@ -1,4 +1,4 @@
-//! FR-MCP-004 §1.6 + DEC-820 + RFC 6749 §5.2.
+//! TASK-MCP-004 §1.6 + DEC-820 + RFC 6749 §5.2.
 //!
 //! Closed 6-value OAuth error code; all token-endpoint error responses carry
 //! `Cache-Control: no-store` and `Pragma: no-cache` per RFC 6749 §5.2.
@@ -48,7 +48,7 @@ pub struct OAuthError {
     pub status: StatusCode,
     /// The RFC 6749 error code.
     pub code: OAuthErrorCode,
-    /// Optional description. MUST be routed through the FR-MEMORY-111 PII scrubber before construction.
+    /// Optional description. MUST be routed through the TASK-MEMORY-111 PII scrubber before construction.
     pub description: Option<String>,
 }
 

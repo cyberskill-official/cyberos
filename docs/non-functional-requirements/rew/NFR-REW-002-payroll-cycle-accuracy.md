@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of monthly runs within ±1 VND of a manual sample of 5 members per period"
 owner: CFO
 created: 2026-05-18
-related_frs: [FR-REW-005, FR-REW-009]
+related_tasks: [TASK-REW-005, TASK-REW-009]
 ---
 
 ## §1 — Statement (BCP-14 normative)

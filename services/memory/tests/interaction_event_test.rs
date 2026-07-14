@@ -1,4 +1,4 @@
-//! FR-MEMORY-121 — emit integration tests (§4 AC 5, 6, 8, 9, 10, 13, 19).
+//! TASK-MEMORY-121 — emit integration tests (§4 AC 5, 6, 8, 9, 10, 13, 19).
 //!
 //! Mirrors the memory integration-test convention (tests/ingest_test.rs): these require a live Postgres
 //! with the memory migrations applied, so they are `#[ignore]` by default and gate on `DATABASE_URL`. CI
@@ -9,8 +9,8 @@
 //! Unlike ingest_test (which assumes migrations are pre-applied), these also apply migrations 0003-0005
 //! idempotently, because 0005 is new and may not yet be in a given dev DB. Each test seeds into a fresh
 //! random tenant and deletes its rows at the end. The emit path is exercised through the public API
-//! (`cyberos_memory::interaction::emit`) with an in-test allow/deny gate — the real FR-EVAL-001-backed
-//! gate is wired by FR-MEMORY-122, out of scope here.
+//! (`cyberos_memory::interaction::emit`) with an in-test allow/deny gate — the real TASK-EVAL-001-backed
+//! gate is wired by TASK-MEMORY-122, out of scope here.
 
 use cyberos_memory::interaction::{
     emit, AllowAll, ContentRef, DenyAll, EmitOutcome, EventClass, InteractionEvent, Module,
@@ -207,7 +207,7 @@ async fn acknowledged_subject_records() {
         "chat.message_created",
         EventClass::Content,
     );
-    // AllowAll stands in for an acknowledged subject (the real ack lives in FR-EVAL-001 / FR-MEMORY-122).
+    // AllowAll stands in for an acknowledged subject (the real ack lives in TASK-EVAL-001 / TASK-MEMORY-122).
     assert!(matches!(
         emit(&pool, &ev, &AllowAll).await.unwrap(),
         EmitOutcome::Recorded { .. }

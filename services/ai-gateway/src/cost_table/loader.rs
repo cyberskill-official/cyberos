@@ -1,9 +1,9 @@
-//! FR-AI-007 — Cost-table loader with hot-reload.
+//! TASK-AI-007 — Cost-table loader with hot-reload.
 //!
 //! Loads `config/cost_rates.yaml` at startup, validates all entries, caches
 //! them lock-free via `ArcSwap`, and hot-reloads on file change via `notify`.
 //!
-//! See FR-AI-007 §1 for normative behaviour, §4 for acceptance criteria.
+//! See TASK-AI-007 §1 for normative behaviour, §4 for acceptance criteria.
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -99,7 +99,7 @@ pub fn lookup(provider: &ProviderKind, model: &str) -> Option<CostRate> {
 
 /// Returns the UNIX timestamp of the last successful load (or `None` if never loaded).
 ///
-/// Used by FR-AI-021 operator CLI.
+/// Used by TASK-AI-021 operator CLI.
 pub fn loaded_at() -> Option<DateTime<Utc>> {
     LOADED_AT.get().and_then(|s| **s.load())
 }
@@ -197,7 +197,7 @@ fn validate_and_flatten(
                     model.len()
                 ));
             }
-            // FR-AI-007 §1 #12: is_embedding ⇒ output_per_1k_usd == 0.0
+            // TASK-AI-007 §1 #12: is_embedding ⇒ output_per_1k_usd == 0.0
             if rate.is_embedding && rate.output_per_1k_usd > Decimal::ZERO {
                 model_errors.push(format!(
                     "is_embedding: true requires output_per_1k_usd == 0.0, got {}",
@@ -226,7 +226,7 @@ fn validate_and_flatten(
         }
     }
 
-    // FR-AI-007 §4 #16: deterministic failure order
+    // TASK-AI-007 §4 #16: deterministic failure order
     failures.sort_by(|a, b| {
         a.path
             .cmp(&b.path)

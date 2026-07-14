@@ -1,4 +1,4 @@
-//! FR-AI-017 §5 — TTL jitter tests.
+//! TASK-AI-017 §5 — TTL jitter tests.
 
 use cyberos_ai_gateway::cache::ttl::{jittered_ttl, ttl_for_alias};
 use rand::SeedableRng;

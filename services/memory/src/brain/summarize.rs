@@ -1,4 +1,4 @@
-//! FR-MEMORY-123 §1 #4 / DEC-2724 — rolling per-subject / per-channel / per-time-window summaries.
+//! TASK-MEMORY-123 §1 #4 / DEC-2724 — rolling per-subject / per-channel / per-time-window summaries.
 //!
 //! A summary compacts the events in its window into a short digest plus its own embedding (via the SAME
 //! ai-gateway path as event embeddings, DEC-2723), recording the inclusive `covered_seq_range` it compacted
@@ -355,7 +355,7 @@ fn scope_event_filter(scope_kind: &str, scope_ph: u8) -> (String, bool) {
 
 /// Build a compact, leak-safe digest of a window: scope label, event count, and the distinct interaction
 /// kinds with their frequencies. It surfaces interaction VERBS (e.g. `chat.message_created x12`), never raw
-/// bodies — the same privacy discipline FR-MEMORY-121's `content_ref` enforces.
+/// bodies — the same privacy discipline TASK-MEMORY-121's `content_ref` enforces.
 fn build_digest(scope_kind: &str, scope_id: &str, kinds: &[String], total: usize) -> String {
     use std::collections::BTreeMap;
     let mut freq: BTreeMap<&str, usize> = BTreeMap::new();

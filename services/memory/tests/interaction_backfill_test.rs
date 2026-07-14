@@ -1,4 +1,4 @@
-//! FR-MEMORY-122 §5 — backfill integration tests.
+//! TASK-MEMORY-122 §5 — backfill integration tests.
 //!
 //! Proves the replay of recent chat history into `chat.message_created` interaction-events is idempotent,
 //! keeps the original timestamp, and obeys the consent gate. Requires a Postgres that has the chat tables
@@ -6,7 +6,7 @@
 //! `cyberos_app` role. Postgres-gated via `#[ignore]`:
 //!   DATABASE_URL=... cargo test -p cyberos-memory --test interaction_backfill_test -- --ignored
 //!
-//! The gate is exercised with the FR-MEMORY-121 `AllowAll` / `DenyAll` stubs (not the real SQL gate, which
+//! The gate is exercised with the TASK-MEMORY-121 `AllowAll` / `DenyAll` stubs (not the real SQL gate, which
 //! lives in cyberos-capture and would couple this test to that crate): `AllowAll` proves the idempotency +
 //! original-time path; `DenyAll` proves consent skipping. The real SQL gate is covered by the auth + chat
 //! capture tests.

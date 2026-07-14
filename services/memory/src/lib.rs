@@ -1,7 +1,7 @@
 //! `cyberos-memory` — Layer-2 ingest pipeline + search/graph projection.
 //!
-//! Implements FR-MEMORY-101 (Layer-2 ingest), FR-MEMORY-102 (rebuild CI gate),
-//! FR-MEMORY-108 (search API). Per DEC-070, Layer 1 (the append-only chain
+//! Implements TASK-MEMORY-101 (Layer-2 ingest), TASK-MEMORY-102 (rebuild CI gate),
+//! TASK-MEMORY-108 (search API). Per DEC-070, Layer 1 (the append-only chain
 //! in the personal memory) is the source of truth — this service maintains
 //! a read scale-out projection in Postgres + pgvector (relational graph edges in l2_edge).
 
@@ -27,7 +27,7 @@
 #![allow(clippy::double_ended_iterator_last)]
 #![allow(dead_code)]
 
-// FR-MEMORY-123 — the BRAIN: the captured FR-MEMORY-121 interaction-event log becomes a fast, persistent,
+// TASK-MEMORY-123 — the BRAIN: the captured TASK-MEMORY-121 interaction-event log becomes a fast, persistent,
 // citable brain. Ingestion + embedding (via the ai-gateway) + rolling summaries + hot/warm/cold tiering +
 // access-scoped, provenance-carrying recall. A DERIVED, rebuildable lens over l1_audit_log (the chain stays
 // the system of record); it does NOT touch the live auth/chat services.
@@ -35,7 +35,7 @@
 pub mod auth;
 pub mod brain;
 pub mod embeddings;
-// FR-MEMORY-121 — the interaction-event capture primitive (event shape + emit + content_ref + consent
+// TASK-MEMORY-121 — the interaction-event capture primitive (event shape + emit + content_ref + consent
 // gate). Aux rows on the existing l1_audit_log chain; no second store.
 pub mod interaction;
 pub mod layer2;

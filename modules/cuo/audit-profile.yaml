@@ -9,5 +9,5 @@ config:
   SEVERITY_FLOOR: High
   PROTECTED_AREAS: modules/cuo/.awh/, modules/cuo/.caf/, modules/cuo/chief-technology-officer/workflows/
   RUN_COMMANDS: python -m pytest -q
-  DOMAIN_NOTES: This module owns ship-feature-requests itself (the gate host). RUN_COMMANDS mirrors the awh suite (known green); add `ruff check .` once confirmed lint-clean.
+  DOMAIN_NOTES: This module owns ship-tasks itself (the gate host). RUN_COMMANDS mirrors the awh suite (known green); add `ruff check .` once confirmed lint-clean.
   BENCHMARK_MODE: none

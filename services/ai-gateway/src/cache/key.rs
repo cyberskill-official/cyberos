@@ -1,4 +1,4 @@
-//! FR-AI-017 §3 — Cache key derivation with SHA-256 and per-tenant prefix.
+//! TASK-AI-017 §3 — Cache key derivation with SHA-256 and per-tenant prefix.
 
 use sha2::{Digest, Sha256};
 
@@ -9,7 +9,7 @@ use sha2::{Digest, Sha256};
 /// single-separator join (the previous `\x1f` scheme) is forgeable: any field may itself
 /// contain the separator byte, so `derive("a", "b\x1fc", m, p)` and `derive("a\x1fb", "c", m, p)`
 /// hashed the same stream while belonging to different tenants - a cross-tenant collision
-/// (FR-AI-018 §1 #3-5). Length-prefix framing removes that: lengths are unambiguous, so no byte
+/// (TASK-AI-018 §1 #3-5). Length-prefix framing removes that: lengths are unambiguous, so no byte
 /// inside any field can forge a collision.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct CacheKey {
@@ -100,7 +100,7 @@ mod tests {
 
     #[test]
     fn separator_injection_cannot_forge_cross_tenant_collision() {
-        // FR-AI-018 regression: the old single-`\x1f` join let a separator byte inside a field
+        // TASK-AI-018 regression: the old single-`\x1f` join let a separator byte inside a field
         // move the boundary, so a different tenant produced the same hash. Length-prefix framing
         // must keep these distinct even though the naive joined streams were identical.
         let victim = CacheKey::derive("a", "b\u{1f}c", "chat.smart", "p");

@@ -9,12 +9,12 @@ phase: P0
 slo: "Idempotency keys retained 24h; cleanup sweeper runs hourly removing expired keys"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-AUTH-001]
+related_tasks: [TASK-AUTH-001]
 ---
 
 ## §1 — Statement (BCP-14 normative)
 
-1. Idempotency-Key handling on admin POST endpoints (per FR-AUTH-001 §1 #6) **MUST** retain seen keys for exactly 24 hours from first-seen-at timestamp.
+1. Idempotency-Key handling on admin POST endpoints (per TASK-AUTH-001 §1 #6) **MUST** retain seen keys for exactly 24 hours from first-seen-at timestamp.
 2. A replay of the same key within 24h **MUST** return the prior response body verbatim with the same HTTP status; no new resource is created.
 3. A replay after 24h **MUST** be treated as a fresh request (could create a duplicate; caller's responsibility to use a fresh key past 24h).
 4. The cleanup sweeper **MUST** run at least hourly (cron `0 * * * *`) and delete rows where `first_seen_at < now() - interval '24 hours'`.

@@ -1,6 +1,6 @@
--- FR-CHAT-269 §1 #17: retention on resolved reports.
+-- TASK-CHAT-269 §1 #17: retention on resolved reports.
 --
--- Numbering: the FR text specifies 0015, but 0015 is taken by FR-CHAT-268's chat_blocks. Renumbered to
+-- Numbering: the FR text specifies 0015, but 0015 is taken by TASK-CHAT-268's chat_blocks. Renumbered to
 -- 0016; no other change to the shape.
 --
 -- The snapshot exists because we could not trust the sender not to destroy the evidence. Once the report is

@@ -1,4 +1,4 @@
-//! Audit rows for routed and acked alerts (FR-OBS-007 §1 #6, #10). Pure builders plus a sink trait: the
+//! Audit rows for routed and acked alerts (TASK-OBS-007 §1 #6, #10). Pure builders plus a sink trait: the
 //! production sink writes to the memory chain (best-effort - §10, "audit emit fails -> route still
 //! completes"); the recording sink is for tests.
 

@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
 repository.workspace = true
-description = "CyberOS tenant-aware Grafana proxy - AST-injects tenant_id into PromQL/LogQL/TraceQL (FR-OBS-002)"
+description = "CyberOS tenant-aware Grafana proxy - AST-injects tenant_id into PromQL/LogQL/TraceQL (TASK-OBS-002)"
 
 [lib]
 name = "cyberos_obs_proxy"

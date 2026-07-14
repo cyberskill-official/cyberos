@@ -76,8 +76,13 @@ SEALED_PATHS = (
 )
 
 # Binary / non-text extensions we never rewrite.
+# NOTE: .svg is deliberately NOT here. SVG is text, and four architecture diagrams
+# (modules/skill/docs/assets/diagrams/, modules/skill/assets/) have skill names
+# baked into <text> nodes. Excluding them in pass 1 left the diagrams rendering
+# `cuo/cpo/feature-request-author` after the rename. New names are shorter, so no
+# label overflow.
 SKIP_SUFFIXES = (
-    ".png", ".jpg", ".jpeg", ".svg", ".ico", ".woff", ".woff2", ".ttf",
+    ".png", ".jpg", ".jpeg", ".ico", ".woff", ".woff2", ".ttf",
     ".zip", ".gz", ".zst", ".binlog", ".sqlite", ".lock", ".pdf",
 )
 
@@ -143,11 +148,33 @@ RULES: list[tuple[str, str, str]] = [
     ("ident:frs-var",                r"\bfrs\b(?=\s*[:=\)\],])",       "tasks"),
 
     # ── Pass 6: remaining identifiers, then prose. ───────────────────────────
-    ("ident:feature-request-snake",  r"\bfeature_request\b",           "task"),
-    ("ident:feature-request-kebab",  r"\bfeature-request\b",           "task"),
+    #
+    # PASS-2 ADDITIONS. The first run left ~90 sites behind because `_` is a word
+    # character, so `\bfeature_request\b` never matched INSIDE a longer snake_case
+    # identifier:
+    #     _apply_feature_request_audit      (cuo/core/applier.py — function name)
+    #     feature_request_audit:            (backlog-state-update envelope FIELD —
+    #                                        required by the BSU rubric for the
+    #                                        draft -> ready_to_implement transition)
+    #     feature_request_author_validates  (skill-broker test fn names)
+    # Handle the compounds explicitly, longest first, then drop the boundary.
+    ("ident:apply-fr-audit-fn",      r"_apply_feature_request_audit",  "_apply_task_audit"),
+    ("ident:fr-audit-field",         r"feature_request_audit",         "task_audit"),
+    ("ident:fr-author-field",        r"feature_request_author",        "task_author"),
+    ("ident:feature-request-snake",  r"feature_request",               "task"),
+
     ("ident:feature-requests-kebab", r"\bfeature-requests\b",          "tasks"),
+    ("ident:feature-request-kebab",  r"\bfeature-request\b",           "task"),
+
+    # Prose. The first run missed hyphenated Title Case ("Phase F - Feature-Request
+    # Authoring") and sentence case ("Feature request — engineering-spec@1", the
+    # user-visible kind label on every rendered docs page).
+    ("prose:Feature-Requests-hyph",  r"\bFeature-Requests\b",          "Tasks"),
+    ("prose:Feature-Request-hyph",   r"\bFeature-Request\b",           "Task"),
     ("prose:Feature-Requests",       r"\bFeature Requests\b",          "Tasks"),
+    ("prose:Feature-requests-sent",  r"\bFeature requests\b",          "Tasks"),
     ("prose:Feature-Request",        r"\bFeature Request\b",           "Task"),
+    ("prose:Feature-request-sent",   r"\bFeature request\b",           "Task"),
     ("prose:feature-requests",       r"\bfeature requests\b",          "tasks"),
     ("prose:feature-request",        r"\bfeature request\b",           "task"),
 ]
@@ -182,7 +209,33 @@ PATH_RENAMES = [
     ("tools/docs-site/render-fr-pages.mjs",      "tools/docs-site/render-task-pages.mjs"),
 ]
 
-COMPILED = [(name, re.compile(pat, re.MULTILINE), rep) for name, pat, rep in RULES]
+# ─────────────────────────────────────────────────────────────────────────────
+# IDEMPOTENCY GUARD.
+#
+# Three rules are ONE-SHOT. They free the word `task` by demoting the old
+# task@1 contract to subtask@1. Once pass 1 has run, `task@1` means the NEW
+# thing (the former feature_request@1). Re-running them would demote THAT to
+# subtask@1 and collapse both contracts into one — silently, across 216 sites.
+#
+# Every other rule is idempotent: its left-hand side no longer exists after the
+# first run, so a second pass is a no-op.
+#
+# The guard keys off the on-disk marker that pass 1 leaves behind.
+# ─────────────────────────────────────────────────────────────────────────────
+ONE_SHOT_RULES = frozenset({
+    "free-word:contract-literal",   # task@1 -> subtask@1
+    "free-word:contract-id",        # contract_id: task -> subtask
+    "free-word:contract-path",      # contracts/task -> contracts/subtask
+})
+
+
+def word_already_freed(root: Path) -> bool:
+    """True once pass 1 has demoted the old task@1 contract to subtask@1."""
+    return (root / "modules" / "skill" / "contracts" / "subtask").is_dir()
+
+
+COMPILED_ALL = [(name, re.compile(pat, re.MULTILINE), rep) for name, pat, rep in RULES]
+COMPILED = COMPILED_ALL   # rebound in main() once the repo root is known
 
 
 def repo_root() -> Path:
@@ -269,6 +322,19 @@ def main() -> int:
     args = ap.parse_args()
 
     root = repo_root()
+
+    # ── Idempotency guard: disarm the one-shot rules once pass 1 has run. ───
+    global COMPILED
+    freed = word_already_freed(root)
+    if freed:
+        COMPILED = [t for t in COMPILED_ALL if t[0] not in ONE_SHOT_RULES]
+        print("note: contracts/subtask/ exists -> pass 1 already ran.")
+        print("      one-shot rules DISARMED (they would demote the new task@1 "
+              "to subtask@1):")
+        for r in sorted(ONE_SHOT_RULES):
+            print(f"        {r}")
+        print()
+
     files = [f for f in tracked_files(root) if in_scope(f)]
 
     if args.emit_brain_ops:

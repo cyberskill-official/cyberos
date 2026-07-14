@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Optional: bring up the AI gateway that backs the dashboard's Assistant and AI Ops tiles (FR-APP-001 /
-# FR-APP-003). Dev only. Stop with dev-down.sh. Serves /v1/chat, /v1/status, /healthz on :8080.
+# Optional: bring up the AI gateway that backs the dashboard's Assistant and AI Ops tiles (TASK-APP-001 /
+# TASK-APP-003). Dev only. Stop with dev-down.sh. Serves /v1/chat, /v1/status, /healthz on :8080.
 # /v1/status reads the tenant policy from the config dir; /v1/chat needs a local model (LM Studio / Ollama)
 # to actually answer, but AI Ops works with no model running.
 set -euo pipefail

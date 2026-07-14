@@ -1,18 +1,18 @@
-//! `cyberos-capture` (FR-MEMORY-122) — the shared mechanism that turns a module's domain event into an
-//! FR-MEMORY-121 interaction-event and records it on the BRAIN's hash-chained audit log, consent-gated and
+//! `cyberos-capture` (TASK-MEMORY-122) — the shared mechanism that turns a module's domain event into an
+//! TASK-MEMORY-121 interaction-event and records it on the BRAIN's hash-chained audit log, consent-gated and
 //! best-effort. AUTH and CHAT depend on this today; PROJ/EMAIL/APP/MCP add their own `capture.rs` against
 //! the same contract as they come online (DEC-2714).
 //!
 //! What this crate is:
 //!   * [`Capturer`] — holds the brain audit pool + the consent gate; `capture(ev)` writes a built event via
-//!     FR-MEMORY-121 `emit()`. The ONE write path; nothing constructs an audit row by hand.
-//!   * [`gate::SqlConsentGate`] — the REAL consent gate (DEC-2712): a SQL read of FR-EVAL-001's
-//!     `monitoring_notice` + `subject_acknowledgment` tables. Wrapped in FR-MEMORY-121's `CachingGate` by
+//!     TASK-MEMORY-121 `emit()`. The ONE write path; nothing constructs an audit row by hand.
+//!   * [`gate::SqlConsentGate`] — the REAL consent gate (DEC-2712): a SQL read of TASK-EVAL-001's
+//!     `monitoring_notice` + `subject_acknowledgment` tables. Wrapped in TASK-MEMORY-121's `CachingGate` by
 //!     [`gate::build_default`]. Deliberately queries the eval TABLES, not the eval binary, so AUTH/CHAT
 //!     never link eval (§1 #16).
 //!   * [`CaptureEmitter`] — the per-module convention (each module owns a thin `capture.rs`).
 //!
-//! ## The default-OFF safety flag (FR-MEMORY-122 hard rule)
+//! ## The default-OFF safety flag (TASK-MEMORY-122 hard rule)
 //!
 //! Every emitter is gated behind the process env flag `CAPTURE_ENABLED`. [`capture_enabled`] is the single
 //! reader: capture is ON only when it is set to a truthy value (`1`/`true`/`yes`/`on`, case-insensitive).
@@ -34,7 +34,7 @@ pub mod gate;
 pub use emitter::{outcome_label, CaptureEmitter, Capturer};
 pub use gate::{build_default as build_default_gate, SqlConsentGate};
 
-// Re-export the FR-MEMORY-121 event surface emitters need, so a module's `capture.rs` imports from
+// Re-export the TASK-MEMORY-121 event surface emitters need, so a module's `capture.rs` imports from
 // `cyberos_capture` alone and never has to also reach into `cyberos_memory::interaction` for the builder.
 pub use cyberos_memory::interaction::{
     ContentRef, EmitError, EmitOutcome, EventClass, InteractionEvent, Module, SourceChannel,
@@ -43,7 +43,7 @@ pub use cyberos_memory::interaction::{
 
 use sqlx::PgPool;
 
-/// The default-OFF capture flag (FR-MEMORY-122). Reads the `CAPTURE_ENABLED` env var; returns `true` ONLY
+/// The default-OFF capture flag (TASK-MEMORY-122). Reads the `CAPTURE_ENABLED` env var; returns `true` ONLY
 /// for an explicit truthy value (`1`, `true`, `yes`, `on`, any case). Absent / empty / anything else =>
 /// `false`. This is the single source of truth for "is capture on in this process?" so AUTH and CHAT agree.
 pub fn capture_enabled() -> bool {

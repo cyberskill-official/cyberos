@@ -1,4 +1,4 @@
-//! FR-MEMORY-123 §5 / AC #7, #8 — hot/warm/cold tiering is idempotent; cold raw is retrievable on demand.
+//! TASK-MEMORY-123 §5 / AC #7, #8 — hot/warm/cold tiering is idempotent; cold raw is retrievable on demand.
 //! Requires Postgres + pgvector; `#[ignore]`.
 
 #[path = "brain_common.rs"]

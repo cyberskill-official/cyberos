@@ -1,4 +1,4 @@
-//! FR-AI-001 — Cost-ledger type definitions.
+//! TASK-AI-001 — Cost-ledger type definitions.
 
 use rust_decimal::Decimal;
 use uuid::Uuid;
@@ -83,8 +83,8 @@ pub struct ChatCompleteRequest {
     pub idempotency_key: String,
 }
 
-/// HOLD_TTL_SECONDS — 60s per FR-AI-001 §1 #5.
+/// HOLD_TTL_SECONDS — 60s per TASK-AI-001 §1 #5.
 pub const HOLD_TTL_SECONDS: u32 = 60;
 
-/// Maximum idempotency key length per FR-AI-001 §1 #10.
+/// Maximum idempotency key length per TASK-AI-001 §1 #10.
 pub const IDEMPOTENCY_KEY_MAX_LEN: usize = 64;

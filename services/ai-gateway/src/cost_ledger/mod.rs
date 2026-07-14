@@ -1,10 +1,10 @@
-//! FR-AI-001 — Cost-ledger pre-call check.
+//! TASK-AI-001 — Cost-ledger pre-call check.
 //!
 //! Synchronous pre-call budget gate. Every AI provider call routes through
 //! `precheck()` first. On `Allow`, a hold is created; on `Refuse`, the caller
 //! gets a 402/403/503 with structured error.
 //!
-//! See FR-AI-001 for normative behaviour and acceptance criteria.
+//! See TASK-AI-001 for normative behaviour and acceptance criteria.
 
 pub mod types;
 
@@ -24,7 +24,7 @@ use crate::cost_table;
 use crate::memory_writer;
 use crate::policy::TenantPolicy;
 
-// ─── Metrics (FR-AI-001 §1 #14) ──────────────────────────────────────────────
+// ─── Metrics (TASK-AI-001 §1 #14) ──────────────────────────────────────────────
 
 static PRECHECK_CALLS: Lazy<CounterVec> = Lazy::new(|| {
     register_counter_vec!(
@@ -64,14 +64,14 @@ static BUDGET_WARNS: Lazy<CounterVec> = Lazy::new(|| {
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
-/// FR-AI-001 — Pre-call cost gate.
+/// TASK-AI-001 — Pre-call cost gate.
 ///
 /// Runs synchronously before any LLM-provider call. On success, returns
 /// `PrecheckOutcome::Allow` with a hold_id. On budget/Persona/Provider failure,
 /// returns `PrecheckOutcome::Refuse`.
 ///
 /// The cap-check and hold-creation execute inside a single Postgres transaction
-/// with `FOR UPDATE` row locking to prevent concurrent cap-races (FR-AI-001 §1 #12).
+/// with `FOR UPDATE` row locking to prevent concurrent cap-races (TASK-AI-001 §1 #12).
 pub async fn precheck(
     req: &ChatCompleteRequest,
     pool: &PgPool,
@@ -101,7 +101,7 @@ pub async fn precheck(
         }
     }
 
-    // 1. Resolve provider + model from alias via FR-AI-006
+    // 1. Resolve provider + model from alias via TASK-AI-006
     let resolved = match alias::resolve(&req.model_alias, policy) {
         Ok(resolved) => resolved,
         Err(alias::AliasError::ResolvedModelMissingCostEntry { .. }) => {
@@ -120,7 +120,7 @@ pub async fn precheck(
         }
     };
 
-    // 2. Estimate cost from cost table (FR-AI-007)
+    // 2. Estimate cost from cost table (TASK-AI-007)
     let cost_rate = match cost_table::lookup(&resolved.provider_kind, &resolved.model) {
         Some(cost_rate) => cost_rate,
         None => {

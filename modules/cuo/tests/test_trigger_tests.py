@@ -1,4 +1,4 @@
-"""Tests for cuo.trigger_tests — FR-SKILL-112 trigger-test runner."""
+"""Tests for cuo.trigger_tests — TASK-SKILL-112 trigger-test runner."""
 
 from __future__ import annotations
 

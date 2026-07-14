@@ -1,4 +1,4 @@
-//! FR-OBS-006 §1 #3 / FR-AI-021 - `cyberos-ai flag-tenant` subcommand. Flags (or unflags) a tenant for
+//! TASK-OBS-006 §1 #3 / TASK-AI-021 - `cyberos-ai flag-tenant` subcommand. Flags (or unflags) a tenant for
 //! 100% trace sampling by editing the collector's `flagged_tenants.yaml`; the collector hot-reloads on
 //! the change (no restart). The file path is `OBS_FLAGGED_TENANTS_FILE`, defaulting to the in-repo
 //! config. Requires the Mutate role and `--confirm`.

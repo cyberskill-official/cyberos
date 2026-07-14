@@ -1,4 +1,4 @@
-//! Shared error rendering for the FR-MCP-004 OAuth endpoints.
+//! Shared error rendering for the TASK-MCP-004 OAuth endpoints.
 //!
 //! Endpoint logic returns `Result<T, EndpointError>`. Client errors are the RFC 6749 §5.2 shapes from
 //! [`OAuthError`]; database/key/encoding failures collapse to a generic 500 that leaks no internal
@@ -55,7 +55,7 @@ impl IntoResponse for EndpointError {
                 StatusCode::SERVICE_UNAVAILABLE,
                 Json(json!({
                     "error": "oauth_not_configured",
-                    "detail": "set MCP_DATABASE_URL to enable the FR-MCP-004 OAuth endpoints"
+                    "detail": "set MCP_DATABASE_URL to enable the TASK-MCP-004 OAuth endpoints"
                 })),
             )
                 .into_response(),

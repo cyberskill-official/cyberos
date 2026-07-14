@@ -4,7 +4,7 @@
 //!
 //! This first slice covers the chat-trigger path (the proven gateway `/v1/chat`) plus keychain-backed
 //! token storage and a health check. The workflow/skill picker driven by the mcp-gateway `tools/list`
-//! surface is the next iteration (see FR-APP-002 clause 5); the structure here is ready for it.
+//! surface is the next iteration (see TASK-APP-002 clause 5); the structure here is ready for it.
 
 mod gateway_client;
 mod keychain;
@@ -61,7 +61,7 @@ async fn list_tools(mcp: String) -> Result<Vec<ToolInfo>, String> {
 }
 
 /// Trigger a tool by name (tools/call). The gateway forwards the call to the owning module's
-/// registered MCP endpoint (FR-MCP-002) and returns its result, or module_unreachable if that
+/// registered MCP endpoint (TASK-MCP-002) and returns its result, or module_unreachable if that
 /// endpoint is down.
 #[tauri::command]
 async fn call_tool(mcp: String, name: String, arguments: serde_json::Value) -> Result<serde_json::Value, String> {
@@ -73,7 +73,7 @@ async fn call_tool(mcp: String, name: String, arguments: serde_json::Value) -> R
 /// endpoint), or the check fails, or we are offline, it logs and does nothing. The desktop shell just loads
 /// the live /web/, so its content already updates on its own; this keeps the installed binary current too.
 ///
-/// FR-IMP-075: compiled OUT of the Mac App Store target (`--features mas`) - a sandboxed MAS
+/// TASK-IMP-075: compiled OUT of the Mac App Store target (`--features mas`) - a sandboxed MAS
 /// bundle must not self-update (App Sandbox violation + App Store policy). Default builds keep
 /// the updater exactly as before.
 #[cfg(all(desktop, not(feature = "mas")))]

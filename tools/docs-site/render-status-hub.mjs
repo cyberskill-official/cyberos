@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// tools/docs-site/render-status-hub.mjs - FR-DOCS-006 / FR-DOCS-007 / FR-IMP-074.
+// tools/docs-site/render-status-hub.mjs - TASK-DOCS-006 / TASK-DOCS-007 / TASK-IMP-074.
 // ONE page answers "where is the project". Roadmap, Backlog and Changelog stopped being
 // three tabs: they are three lenses (board / table / releases) over one filtered corpus,
 // with an FR detail drawer that carries the full spec.
@@ -118,10 +118,10 @@ function summarize(body) {
 }
 
 // ---- corpus: one object drives the deck, every lens, and the drawer -------------------
-const FR_ROOT = join(ROOT, 'docs', 'feature-requests');
-if (!existsSync(FR_ROOT)) die(`no docs/feature-requests under ${ROOT}`);
+const FR_ROOT = join(ROOT, 'docs', 'tasks');
+if (!existsSync(FR_ROOT)) die(`no docs/tasks under ${ROOT}`);
 
-const frs = [];
+const tasks = [];
 const invalid = [];
 const specs = new Map();               // id -> rendered spec HTML (chunked out below)
 const safeId = id => /^[A-Za-z0-9._-]+$/.test(id);
@@ -140,7 +140,7 @@ for (const mod of readdirSync(FR_ROOT, { withFileTypes: true }).sort((a, b) => a
       continue;
     }
     const m = parsed.meta;
-    const id = str(m.id) || str(m.fr_id) || d.name;
+    const id = str(m.id) || str(m.task_id) || d.name;
     const fr = {
       i: id, k: d.name, dm: mod.name,
       t: str(m.title) || '(untitled)',
@@ -150,11 +150,11 @@ for (const mod of readdirSync(FR_ROOT, { withFileTypes: true }).sort((a, b) => a
       ph: str(m.phase), ms: str(m.milestone), sl: str(m.slice),
       o: str(m.owner), cr: str(m.created), sh: str(m.shipped),
       e: str(m.effort_hours), v: str(m.verify), r: str(m.risk_if_skipped),
-      st: list(m.sub_tasks),
+      st: list(m.subtasks),
       // relations are resolved AFTER the corpus is known: a repo's ids are not always
       // FR-shaped (strategem carries COV-001, API-READY...), so an id-regex alone would
       // silently drop those edges. Keep the raw values; resolve against the real corpus below.
-      _d: list(m.depends_on), _b: list(m.blocks), _rl: list(m.related_frs),
+      _d: list(m.depends_on), _b: list(m.blocks), _rl: list(m.related_tasks),
       d: [], b: [], rl: [],
       sm: summarize(parsed.body),
       pg: null, sp: 0,
@@ -173,10 +173,10 @@ for (const mod of readdirSync(FR_ROOT, { withFileTypes: true }).sort((a, b) => a
   }
 }
 frs.sort((a, b) => a.i.localeCompare(b.i));
-if (!frs.length && !LENIENT) die('zero FR specs found under docs/feature-requests');
+if (!frs.length && !LENIENT) die('zero FR specs found under docs/tasks');
 
 // per-FR pages (rendered by render-fr-pages.mjs) sit next to the hub in the website build
-for (const f of frs) {
+for (const f of tasks) {
   const rel = join('frs', f.dm, f.k, 'index.html');
   if (existsSync(join(OUT, rel))) f.pg = `../${rel}`;
 }
@@ -190,7 +190,7 @@ const resolveRefs = raw => [...new Set(raw.flatMap(v => {   // NOT `resolve` - n
   if (byId.has(t)) return [t];   // an id of this corpus, whatever shape it has
   return ids(t);                 // else: FR-shaped tokens inside the value (forward refs included)
 }))];
-for (const f of frs) {
+for (const f of tasks) {
   f.d = resolveRefs(f._d); f.b = resolveRefs(f._b); f.rl = resolveRefs(f._rl);
   delete f._d; delete f._b; delete f._rl;
 }
@@ -257,7 +257,7 @@ const releases = marks.map((mk, i) => {
   flushItem();
   flushPara();
   const cited = [...new Set(ids(raw))].sort();
-  // "FR-IMP-071/072" - the slash run is a real habit in this changelog; expand it
+  // "TASK-IMP-071/072" - the slash run is a real habit in this changelog; expand it
   for (const run of raw.match(/\bFR-[A-Z][A-Z0-9]*-\d+(?:\/\d+)+/g) || []) {
     const [head, ...rest] = run.split('/');
     const prefix = head.replace(/\d+$/, '');
@@ -276,7 +276,7 @@ if (!releases.length) {
 const citedAll = new Set(releases.flatMap(r => r.cited));
 const firstByDate = new Map();
 releases.forEach((r, i) => { if (r.d && !firstByDate.has(r.d)) firstByDate.set(r.d, i); });
-for (const f of frs) {
+for (const f of tasks) {
   if (!f.sh || citedAll.has(f.i) || !firstByDate.has(f.sh)) continue;
   releases[firstByDate.get(f.sh)].dated.push(f.i);
 }
@@ -305,7 +305,7 @@ const kpi = (b, n, label) =>
   `<span><i class="dot seg-${b}"></i>${label}</span></button>`;
 const deck = `
 <div class="panel">
-  <h2>Overall progress · ${frs.length} feature requests · ${modules.length} modules</h2>
+  <h2>Overall progress · ${frs.length} tasks · ${modules.length} modules</h2>
   <div class="kpis">
     ${kpi('done', doneN, 'done')}
     ${kpi('active', activeN, 'in flight')}
@@ -387,14 +387,14 @@ const data = {
   // where spec.md lives *relative to this page* - empty when the markdown is not shipped
   // next to the output (the website build links the rendered FR page instead).
   frBase: process.env.CYBEROS_FR_BASE || '',
-  frs, releases, bound,
+  tasks, releases, bound,
 };
 // empty scalars carry no information and cost ~25% of the payload - drop them.
 // (d / b / rl / st stay: the client reads .length on them.)
 const KEEP = new Set(['i', 'k', 'dm', 't', 'm', 's', 'd', 'b', 'rl', 'st']);
 const compact = f => Object.fromEntries(Object.entries(f)
   .filter(([k, v]) => KEEP.has(k) || (Array.isArray(v) ? v.length : v !== '' && v !== null && v !== 0)));
-const dataJson = JSON.stringify({ ...data, frs: frs.map(compact) }).replace(/</g, '\\u003c');
+const dataJson = JSON.stringify({ ...data, tasks: frs.map(compact) }).replace(/</g, '\\u003c');
 
 // ---- templates ------------------------------------------------------------------------
 const tpl = (sub, name) => {
@@ -469,7 +469,7 @@ if (ASSETS) {
 writeFileSync(join(REF, 'roadmap.html'), `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=status.html#roadmap">
 <title>Roadmap moved</title></head>
-<body><p>The roadmap is a lens of the <a href="status.html#roadmap">status hub</a> now (FR-DOCS-006).</p></body></html>
+<body><p>The roadmap is a lens of the <a href="status.html#roadmap">status hub</a> now (TASK-DOCS-006).</p></body></html>
 `);
 
 const summary = STATUSES.filter(s => frs.some(f => f.s === s))

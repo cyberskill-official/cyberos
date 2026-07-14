@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of published manifests pass schema validation; 0 unknown-field tolerance"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-SKILL-103, FR-SKILL-101]
+related_tasks: [TASK-SKILL-103, TASK-SKILL-101]
 ---
 
 ## §1 — Statement (BCP-14 normative)
@@ -17,7 +17,7 @@ related_frs: [FR-SKILL-103, FR-SKILL-101]
 1. Every SKILL bundle published to the OCI registry **MUST** carry a top-level `SKILL.md` whose YAML frontmatter parses cleanly and contains the closed set of required keys: `name`, `version`, `description`, `inputs`, `outputs`, `capabilities`, `audit`.
 2. `version` **MUST** be valid SemVer 2.0.0; any author bump that lowers `version` against the registry's latest **MUST** be rejected at publish time.
 3. Manifest schema validation **MUST** reject **unknown top-level fields** (strict mode) — typos silently shipping would mask broken capability requests or audit toggles.
-4. The `capabilities` array **MUST** be a subset of the broker's published capability catalog (FR-SKILL-104); unknown capability strings cause the publish to fail with `E_CAPABILITY_UNKNOWN`.
+4. The `capabilities` array **MUST** be a subset of the broker's published capability catalog (TASK-SKILL-104); unknown capability strings cause the publish to fail with `E_CAPABILITY_UNKNOWN`.
 5. Validation **MUST** run both at `cyberos-skill publish` time (client-side gate) **and** at registry-side ingress (server gate). The two gates **MUST** share the same schema artifact (`modules/skill/schema/manifest.schema.json`).
 
 ## §2 — Why this constraint

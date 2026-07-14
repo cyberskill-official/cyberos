@@ -1,4 +1,4 @@
-//! FR-AI-021 §1 #8 — JSON schema validation for versioned CLI output.
+//! TASK-AI-021 §1 #8 — JSON schema validation for versioned CLI output.
 
 use serde::Serialize;
 

@@ -1,4 +1,4 @@
-//! FR-AI-009 §5 — Integration tests for the circuit breaker.
+//! TASK-AI-009 §5 — Integration tests for the circuit breaker.
 // The shared MockClock guard is held across await on purpose: it serializes the concurrent-test
 // cases against one global clock, so the lint does not apply here.
 #![allow(clippy::await_holding_lock)]

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Ship the ready_to_test FRs to done THROUGH the awh gate (ship-feature-requests step 28).
+# Ship the ready_to_test FRs to done THROUGH the awh gate (ship-tasks step 28).
 #
-#   bash scripts/awh_ship.sh FR-MEMORY-116   # ship one FR (dry-run preview, then execute)
+#   bash scripts/awh_ship.sh TASK-MEMORY-116   # ship one FR (dry-run preview, then execute)
 #   bash scripts/awh_ship.sh --drain         # drain every remaining ready_to_test FR
 #
 # It runs THIS BRANCH's cuo source directly (no install), so it always has the current flags
@@ -13,7 +13,7 @@ set -uo pipefail
 REPO="$(git rev-parse --show-toplevel)" || exit 1
 cd "$REPO" || exit 1
 
-WF="chief-technology-officer/ship-feature-requests"
+WF="chief-technology-officer/ship-tasks"
 OUT="${CUO_OUT:-/tmp/cuo-ship}"; mkdir -p "$OUT"
 
 # Interpreter that has cuo's deps: prefer the one behind the installed console script, else python3.

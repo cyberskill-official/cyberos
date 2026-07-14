@@ -1,4 +1,4 @@
-//! SEP-986 naming convention validator (FR-MCP-003).
+//! SEP-986 naming convention validator (TASK-MCP-003).
 //!
 //! Enforces the `cyberos.{module}.{verb}_{noun}` skill ID pattern. Slice 1 shipped the pure
 //! validator here: the closed [`Sep986Verb`] enum, the pre-compiled regex, and the module registry.

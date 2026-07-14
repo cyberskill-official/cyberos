@@ -1,4 +1,4 @@
-//! Governance-mutation audit (FR-EVAL-001 clause 12). Reuse the canonical L1 chain emit so EVAL rows
+//! Governance-mutation audit (TASK-EVAL-001 clause 12). Reuse the canonical L1 chain emit so EVAL rows
 //! verify under memory's reconcile, exactly like chat, obs-router, and auth do
 //! (services/shared/cyberos-audit-chain::emit_genesis). We do NOT hand-roll the chain here.
 //!
@@ -40,7 +40,7 @@ pub mod kind {
     /// `stale_ack_version`.
     pub const CAPTURE_GATED: &str = "eval.capture_gated";
 
-    // FR-EVAL-002 rubric curation events (§1 #11, DEC-2604). Every rubric mutation chains one of these into
+    // TASK-EVAL-002 rubric curation events (§1 #11, DEC-2604). Every rubric mutation chains one of these into
     // the same `l1_audit_log` as the rest of CyberOS, so the rubric's full curation history is tamper-
     // evident. `eval.rubric_edited` is reserved for the later GENIE/edit slice; this slice emits drafted,
     // published, and superseded.

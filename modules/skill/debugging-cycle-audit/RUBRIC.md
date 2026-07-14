@@ -1,12 +1,12 @@
 # debugging_cycle_rubric@1.0
 
-constants: TOTAL_ROWS_MIN=8 (MUST FRs) | BRANCH_COVERAGE_MIN=80 | COVERAGE_THRESHOLD=90 (config-overridable, FR-CUO-207)
+constants: TOTAL_ROWS_MIN=8 (MUST FRs) | BRANCH_COVERAGE_MIN=80 | COVERAGE_THRESHOLD=90 (config-overridable, TASK-CUO-207)
 families: DBG-GATE | DBG-STRUCT | DBG-TRACE
 verdict: pass requires 10/10; any family failure -> fail; ambiguity -> needs_human
 
-## Rules (prose -> rule mapping, FR-SKILL-118 AC 2)
+## Rules (prose -> rule mapping, TASK-SKILL-118 AC 2)
 
-Every rule cites the prose gate it encodes. A rule without a prose source is itself a review finding (FR-SKILL-118 §10 #1).
+Every rule cites the prose gate it encodes. A rule without a prose source is itself a review finding (TASK-SKILL-118 §10 #1).
 
 | rule_id | gate | prose source |
 |---|---|---|
@@ -23,4 +23,4 @@ Only 10/10 passes. `needs_human` on structural ambiguity (unparseable artefact, 
 
 ## Changelog
 
-- debugging_cycle_rubric@1.0: initial file-form of the gates already normative in SKILL.md prose (FR-SKILL-118; no bar raised, no bar lowered).
+- debugging_cycle_rubric@1.0: initial file-form of the gates already normative in SKILL.md prose (TASK-SKILL-118; no bar raised, no bar lowered).

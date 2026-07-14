@@ -1,6 +1,6 @@
 # `backlog-state-update-author` - invariants
 
-Lifted from SKILL.md's normative prose (FR-SKILL-118 AC 2 discipline: no invariant without a prose source).
+Lifted from SKILL.md's normative prose (TASK-SKILL-118 AC 2 discipline: no invariant without a prose source).
 
 1. FR frontmatter is the record of truth; BACKLOG.md is the index - the mutation never inverts that.
 2. Exactly one tracked mutation per artefact; whole-file rewrites are the regenerator's job, never this skill's.

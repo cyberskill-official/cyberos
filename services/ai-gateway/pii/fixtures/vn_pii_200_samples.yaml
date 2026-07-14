@@ -1,6 +1,6 @@
-# FR-AI-012 — 200-sample VN PII test fixture.
+# TASK-AI-012 — 200-sample VN PII test fixture.
 # Curated from anonymised CyberSkill customer data + synthetic edge cases.
-# Used by FR-AI-013 recall-floor CI gate.
+# Used by TASK-AI-013 recall-floor CI gate.
 
 samples:
   # ── VN_CCCD (30 samples) ──────────────────────────────────────────────────

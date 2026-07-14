@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# FR-CHAT-001 §1 #4 — license-drift watcher.
+# TASK-CHAT-001 §1 #4 — license-drift watcher.
 #
 # Queries the upstream mattermost-server repository for commits since the
 # pinned SHA + filters for any commit that touches a LICENSE file or the

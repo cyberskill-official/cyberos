@@ -115,7 +115,7 @@
     else keys.sort(function (a, b) {
       return bag[b].length - bag[a].length || String(a).localeCompare(String(b));
     });
-    if (!keys.length) return '<p class="empty">No feature request matches these filters.</p>';
+    if (!keys.length) return '<p class="empty">No task matches these filters.</p>';
     return '<div class="grid">' + keys.map(function (k) {
       var rs = bag[k];
       var d = rs.filter(function (f) { return bucket(f.s) === "done"; }).length;
@@ -144,7 +144,7 @@
       else { x = x == null ? "" : x; y = y == null ? "" : y; }
       return (x > y ? 1 : x < y ? -1 : 0) * dir || String(a.i).localeCompare(String(b.i));
     });
-    if (!sorted.length) return '<p class="empty">No feature request matches these filters.</p>';
+    if (!sorted.length) return '<p class="empty">No task matches these filters.</p>';
     var head = COLS.map(function (c) {
       var s = S.sort === c.k ? (S.dir > 0 ? "ascending" : "descending") : "none";
       return '<th data-sort="' + c.k + '" aria-sort="' + s + '" scope="col">' + c.h + "</th>";
@@ -270,7 +270,7 @@
     if (f.pg) srcs.push('<a href="' + esc(f.pg) + '">Rendered FR page</a>');
     if (specHref(f)) srcs.push('<a href="' + esc(specHref(f)) + '"><code>spec.md</code> — the record of truth</a>');
     if (!srcs.length) srcs.push('<span class="muted">Markdown is the record of truth: <code>' +
-      esc("docs/feature-requests/" + f.dm + "/" + f.k + "/spec.md") + "</code></span>");
+      esc("docs/tasks/" + f.dm + "/" + f.k + "/spec.md") + "</code></span>");
     return '<div class="rel-links">' +
       blk("Depends on", f.d, "Nothing blocks this FR.") +
       blk("Blocks", f.b, "This FR blocks nothing.") +
@@ -346,7 +346,7 @@
   function paint() {
     var rows = view();
     countEl.textContent = rows.length === FRS.length
-      ? FRS.length + " feature requests"
+      ? FRS.length + " tasks"
       : "showing " + rows.length + " of " + FRS.length;
     lensEl.innerHTML = S.lens === "table" ? table(rows)
       : S.lens === "timeline" ? timeline(rows) : board(rows);

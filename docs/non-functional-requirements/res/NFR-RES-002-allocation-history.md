@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of allocation mutations produce an audit row with before/after delta"
 owner: COO
 created: 2026-05-18
-related_frs: [FR-RES-002]
+related_tasks: [TASK-RES-002]
 ---
 
 ## §1 — Statement (BCP-14 normative)

@@ -1,4 +1,4 @@
-//! FR-AI-008 §5 — Property tests for the router (jitter bounds).
+//! TASK-AI-008 §5 — Property tests for the router (jitter bounds).
 
 use cyberos_ai_gateway::router::jitter::jitter_ms;
 use proptest::prelude::*;

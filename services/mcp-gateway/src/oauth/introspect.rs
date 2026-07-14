@@ -1,6 +1,6 @@
-//! FR-MCP-004 token introspection (RFC 7662), POST /introspect.
+//! TASK-MCP-004 token introspection (RFC 7662), POST /introspect.
 //!
-//! Verifies an access token against the FR-AUTH-004 JWKS, checks the revocation list, and returns the
+//! Verifies an access token against the TASK-AUTH-004 JWKS, checks the revocation list, and returns the
 //! RFC 7662 §2.2 shape. An invalid, expired, audience-wrong, or revoked token returns
 //! `{"active": false}` - never an error (§2.2).
 //!

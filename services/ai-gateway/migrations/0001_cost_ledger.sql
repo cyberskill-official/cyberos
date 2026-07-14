@@ -1,4 +1,4 @@
--- FR-AI-001: cost-ledger tables for pre-call budget gating.
+-- TASK-AI-001: cost-ledger tables for pre-call budget gating.
 -- Replaces the placeholder migration.
 
 CREATE TABLE cost_ledger (

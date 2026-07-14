@@ -1,7 +1,7 @@
-"""FR-AI-011/012 — Presidio sidecar for PII redaction.
+"""TASK-AI-011/012 — Presidio sidecar for PII redaction.
 
 FastAPI service wrapping Microsoft Presidio Analyzer + Anonymizer.
-Binds to 127.0.0.1:5050 ONLY — never 0.0.0.0 (FR-AI-011 §1 #15).
+Binds to 127.0.0.1:5050 ONLY — never 0.0.0.0 (TASK-AI-011 §1 #15).
 
 Usage:
     python presidio_sidecar.py
@@ -46,7 +46,7 @@ app = FastAPI(title="Presidio PII Redaction Sidecar", version="0.1.0")
 
 
 # ISS-003 fix: FastAPI's default 422 handler echoes the request body in the
-# response, which can leak prompt fragments (FR-AI-011 §1 #12).
+# response, which can leak prompt fragments (TASK-AI-011 §1 #12).
 @app.exception_handler(RequestValidationError)
 async def custom_validation_handler(request, exc):
     return JSONResponse(
@@ -103,7 +103,7 @@ def _get_anonymizer():
     return _anonymizer
 
 
-# ── VN recognizer registration (FR-AI-012) ───────────────────────────────────
+# ── VN recognizer registration (TASK-AI-012) ───────────────────────────────────
 
 # Idempotency guard against double-registration.
 _VN_REGISTERED = False
@@ -235,7 +235,7 @@ async def health():
 
 @app.get("/recognizers/version")
 async def recognizer_versions():
-    """§1 #14: version endpoint for FR-AI-013 recall-gate."""
+    """§1 #14: version endpoint for TASK-AI-013 recall-gate."""
     from recognizers import VN_RECOGNIZERS
 
     return {

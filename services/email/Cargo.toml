@@ -4,7 +4,7 @@ version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "EMAIL module — Stalwart adapter + per-tenant DKIM + residency-pinned S3+KMS body storage + memory audit emission (FR-EMAIL-001 slice 1)"
+description = "EMAIL module — Stalwart adapter + per-tenant DKIM + residency-pinned S3+KMS body storage + memory audit emission (TASK-EMAIL-001 slice 1)"
 
 [lib]
 name = "cyberos_email"

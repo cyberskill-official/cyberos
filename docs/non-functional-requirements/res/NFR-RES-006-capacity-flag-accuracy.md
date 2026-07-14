@@ -9,7 +9,7 @@ phase: P1
 slo: "Flag agreement with COO confirmation ≥ 95% over a 4-week sample"
 owner: COO
 created: 2026-05-18
-related_frs: [FR-RES-003]
+related_tasks: [TASK-RES-003]
 ---
 
 ## §1 — Statement (BCP-14 normative)

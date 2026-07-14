@@ -1,4 +1,4 @@
-//! FR-PROJ-001 §1 #3 — Issue status finite-state machine.
+//! TASK-PROJ-001 §1 #3 — Issue status finite-state machine.
 //!
 //! Legal transitions:
 //!   triage  → todo

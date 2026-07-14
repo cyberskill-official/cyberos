@@ -10,13 +10,13 @@ Living document (2026-07-14). Everything code-side is committed and machine-veri
 
 **Latest re-tag (run #66, commit `ba22529`, 7m 0s):** every job went green — `payload` (11s), `android` (2m 21s, published to the Play internal track), `ios` (3m 21s, new TestFlight build), `docs` (13s), and the full `desktop` matrix (macOS/Windows/Ubuntu, all 3 green; macOS job notarized + stapled + re-uploaded `CyberOS_1.0.0_universal.dmg`). This produced iOS build 29733164 and a fresh Android release (see §2 and §3 below for what I did with each on the store side).
 
-The earlier re-tag (run #59) re-ran release.yml the same way and confirmed both mobile blockers held clean: the 90717 icon defect (icon flattened, guard asserts alpha-free) and the Play versionCode collision (FR-IMP-078: release builds stamp `max(BUILD_NUMBER, minutes-since-epoch)`).
+The earlier re-tag (run #59) re-ran release.yml the same way and confirmed both mobile blockers held clean: the 90717 icon defect (icon flattened, guard asserts alpha-free) and the Play versionCode collision (TASK-IMP-078: release builds stamp `max(BUILD_NUMBER, minutes-since-epoch)`).
 
 Note: an earlier manual run (#58, same tag) failed mid-`android` with "This edit has expired, please create a new Edit." — traced to a Play Edits-API collision (tester-list edits open in Play Console at the same time as that run's publish step). Not a code defect; run #59 confirms it. Also found and fixed in passing, unrelated to the failure: `r0adkll/upload-google-play`'s `track:` input is deprecated in favor of `tracks:` — renamed in local commit `461cc87` (not yet pushed; cosmetic, no rush).
 
 ## 1. Web + desktop
 
-Nothing manual. `deploy.yml` ships both on every push to `main`; FR-IMP-081 (testing, gate 2 pending) closes the last drift gap by rebuilding `apps/console/web` in CI on real source changes.
+Nothing manual. `deploy.yml` ships both on every push to `main`; TASK-IMP-081 (testing, gate 2 pending) closes the last drift gap by rebuilding `apps/console/web` in CI on real source changes.
 
 ## 2. iOS App Store
 
@@ -30,7 +30,7 @@ Nothing manual. `deploy.yml` ships both on every push to `main`; FR-IMP-081 (tes
 
 | # | Step | Who | How |
 |---|---|---|---|
-| 1 | Confirm publishing pipeline is green | Done | Verified live end-to-end — run #59's `android` job actually published to the internal track (not just a dry build); versionCode collision fixed in-repo (FR-IMP-078). Re-confirmed after the fresh re-tag: run #66's `android` job also published — Play Console → Internal testing shows release 1.0.0, "Available to internal testers", released today (Jul 14) with 1 version code |
+| 1 | Confirm publishing pipeline is green | Done | Verified live end-to-end — run #59's `android` job actually published to the internal track (not just a dry build); versionCode collision fixed in-repo (TASK-IMP-078). Re-confirmed after the fresh re-tag: run #66's `android` job also published — Play Console → Internal testing shows release 1.0.0, "Available to internal testers", released today (Jul 14) with 1 version code |
 | 2 | Add internal/closed testers | Done | Added 10 testers to Play Console's "CyberOS Testers" list; synced the pre-existing "Test" list to the same 10 for consistency |
 | 3 | Promote internal → production when ready | Stephen | Play Console → Promote release (go/no-go call) |
 

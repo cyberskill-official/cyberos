@@ -9,7 +9,7 @@ phase: P1
 slo: "AI traces queryable for 90 days; filter by persona_version returns results in < 5s"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-OBS-004, FR-AI-014]
+related_tasks: [TASK-OBS-004, TASK-AI-014]
 ---
 
 ## §1 — Statement (BCP-14 normative)

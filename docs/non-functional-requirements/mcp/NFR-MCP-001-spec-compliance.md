@@ -9,7 +9,7 @@ phase: P0
 slo: "100% pass on official MCP conformance suite for spec version 2025-11-25"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-MCP-001, FR-MCP-002]
+related_tasks: [TASK-MCP-001, TASK-MCP-002]
 ---
 
 ## §1 — Statement (BCP-14 normative)

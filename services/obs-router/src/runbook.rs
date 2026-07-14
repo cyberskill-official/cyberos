@@ -1,4 +1,4 @@
-//! Runbook-URL allowlisting (FR-OBS-007 P2 hardening). The CUO `obs.triage-alert` skill is told to cite
+//! Runbook-URL allowlisting (TASK-OBS-007 P2 hardening). The CUO `obs.triage-alert` skill is told to cite
 //! only a runbook it actually matched in the corpus and never to invent a URL - but a local model can
 //! still echo the example URL from the skill doc (`https://kb/.../rollback-gateway`) or otherwise fabricate
 //! one. So CHAT never shows a made-up link, the router keeps a suggested runbook only when its URL is

@@ -1,7 +1,7 @@
 ---
 title: ESOP - Phantom Stock vesting, Good/Bad Leaver branch, Singapore HoldCo flip
 source: website/docs/modules/esop/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 ESOP is the **synthetic equity plane** - a tracked-on-books economic interest in the company that vests over time, can be valued, and can be cashed out under defined windows. No share certificates are ever issued; no Vietnamese securities-regulation filing applies (Decree 38/2020 corporate governance treatment instead, as deferred compensation). The core entities are **Grants** (each tied to a Member, type, schedule), **VestingEvents** (the monthly vest after the phased cliff), **Valuations** (annual, signed by CFO + Board), **PutOptionExercises** (Year-3+ cash-out windows), and **PoolBalance** (the pool replenishment from % of annual profit, with GL/BL branches for top-performers vs broad distribution).
@@ -330,7 +330,7 @@ The branch decision is human-only - no system path selects GL vs BL automaticall
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS FR catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
 Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
 
@@ -644,7 +644,7 @@ Narrator MCP (read-only, simulation only)| planned - P2
 - **Cross-module page links:** [hr.html](../hr/index.html), [rew.html](../rew/index.html), [memory.html](../memory/index.html), [auth.html](../auth/index.html), [doc.html](../doc/index.html)
 - **memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5](../../docs/MEMORY_AUTOSYNC_DESIGN.md) + DEC-036 - ESOP value structurally excluded from memory.
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - ESOP at P2-exit (P2).
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- **FR authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 - **Singapore Companies Act (Cap. 50)** - S 67 share issuance, applicable post-HoldCo-flip.
 - **Singapore ACRA filings** - Form 24 (share allotment), Form 45 (allotment return).
 - **VAS 17 - Income Taxes** - deferred-comp liability accrual.

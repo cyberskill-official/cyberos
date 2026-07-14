@@ -9,7 +9,7 @@ phase: P0
 slo: "p95 < 2s for server heartbeat; 99.5% monthly availability per server"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-MCP-002]
+related_tasks: [TASK-MCP-002]
 ---
 
 ## §1 — Statement (BCP-14 normative)

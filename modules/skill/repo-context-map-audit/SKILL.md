@@ -15,11 +15,11 @@ allowed_memory_scopes:
   read:
     - project:*
   write:
-    - project:fr/{fr_id}/repo-context-map.audit
+    - project:fr/{task_id}/repo-context-map.audit
 
 audit:
   row_kind: repo_context_map_audited
-  required_fields: [fr_id, score, issues_open, issues_resolved]
+  required_fields: [task_id, score, issues_open, issues_resolved]
 
 inputs:
   - { name: context_map, format: repo-context-map@1, required: true }
@@ -51,6 +51,6 @@ audit passes.
 
 *End of repo-context-map-audit SKILL.md.*
 
-## Contract files (FR-SKILL-118)
+## Contract files (TASK-SKILL-118)
 
 This pair is at full contract parity: `RUBRIC.md` (versioned rules + prose->rule map), `AUDIT_LOOP.md` (canonical-loop binding), `REPORT_FORMAT.md`, `envelopes/` (I/O schemas), `acceptance/README.md`. SKILL.md remains the normative prose; the files encode it.

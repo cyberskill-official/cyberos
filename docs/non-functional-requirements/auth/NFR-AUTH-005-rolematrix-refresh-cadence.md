@@ -9,7 +9,7 @@ phase: P0
 slo: "RoleMatrix refresher runs every AUTH_RBAC_REFRESH_SECS (default 60s); 3 consecutive failures triggers alert"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-AUTH-101]
+related_tasks: [TASK-AUTH-101]
 ---
 
 ## §1 — Statement (BCP-14 normative)
@@ -17,7 +17,7 @@ related_frs: [FR-AUTH-101]
 1. The `services/auth/src/rbac/refresher.rs` background task **MUST** call `RoleMatrix::load_from_db()` every `AUTH_RBAC_REFRESH_SECS` seconds (default 60s, floor 5s).
 2. A successful refresh **MUST** atomically swap the snapshot via the shared `Arc<RwLock<RoleMatrix>>`. Failed refreshes **MUST NOT** clear the prior snapshot — the previous matrix keeps serving.
 3. Three consecutive refresh failures **MUST** trigger a sev-2 alert. The on-call investigates whether the DB is unreachable, the matrix schema has drifted, or the AUTH pod has degraded.
-4. Revocations (role removed from a subject) **MUST** be honored within `AUTH_RBAC_REFRESH_SECS` seconds (60s default). The 60s window is the DEC-126 documented design assertion; time-critical revocations use the future per-tenant CRL-flush endpoint (FR-AUTH-111 placeholder).
+4. Revocations (role removed from a subject) **MUST** be honored within `AUTH_RBAC_REFRESH_SECS` seconds (60s default). The 60s window is the DEC-126 documented design assertion; time-critical revocations use the future per-tenant CRL-flush endpoint (TASK-AUTH-111 placeholder).
 5. Every refresh attempt **MUST** emit a structured log row `auth.rbac.refresh` with `{result, prev_version, next_version, duration_ms, error_class}`.
 
 ## §2 — Why this constraint

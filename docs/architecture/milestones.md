@@ -1,7 +1,7 @@
 ---
 title: Milestones
 source: website/docs/architecture/milestones.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 ## The horizontal timeline
@@ -108,7 +108,7 @@ Every plan that adds modules monotonically becomes a death march. CyberOS must h
 
 1. Did P0 exit ship clean? All 5 P0 modules (AI Gateway, OBS, AUTH stub, MCP Gateway, CHAT) at `status: shipped`; Trust Center live; SOC 2 readiness signal positive; 0 cross-tenant leak incidents in P0. Amber = 1 module slipped to P1; Red = 2+ modules slipped, or any incident.
 2. Is CHAT decommission >= 0.95? A 14-day rolling decommission signal: how much of CyberSkill's internal chatter is in CHAT vs Slack/Zalo. Amber = 0.85-0.94; Red = below 0.85.
-3. Is the AI Gateway cost-of-everything gate fully operational? FR-AI-001..005 shipped and audited; 0 budget breaches; cache hit rate >= 30%. Amber = 1 of the 5 FRs deferred; Red = 2+ deferred, or any budget breach.
+3. Is the AI Gateway cost-of-everything gate fully operational? TASK-AI-001..005 shipped and audited; 0 budget breaches; cache hit rate >= 30%. Amber = 1 of the 5 FRs deferred; Red = 2+ deferred, or any budget breach.
 4. Is the headcount ramp on track? 10 -> 12 hires by P1 start. Amber = 1 hire late by <= 30 days; Red = 1+ hire late by more than 30 days, or any hire pulled.
 
 ### Descope rules (if any Red)

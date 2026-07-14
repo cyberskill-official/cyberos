@@ -20,4 +20,4 @@ Artefact: `mock-contract-test@1`. This document binds the skill into the ship ch
 
 - Dependency turns out to exist and be reachable -> HALT: the FR's has_external_dependency flag is wrong; operator corrects the FR.
 
-*Added by FR-SKILL-118 (contract parity). Phases and step prose: SKILL.md is normative.*
+*Added by TASK-SKILL-118 (contract parity). Phases and step prose: SKILL.md is normative.*

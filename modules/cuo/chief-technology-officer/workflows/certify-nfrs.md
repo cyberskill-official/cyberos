@@ -13,7 +13,7 @@ inputs:
 
 outputs:
   - { name: nfr_certification_report, format: nfr-certification-report@1, recipient: cuo/cto + deploy owner }
-  - { name: regression_frs,           format: feature-request@1,          recipient: backlog }
+  - { name: regression_frs,           format: task@1,          recipient: backlog }
 
 skill_chain:
   - { step: 1, skill: nfr-test-runner,          inputs_from: { target_environment: target_environment, nfr_catalog: nfr_catalog, telemetry_window: telemetry_window }, outputs_to: test_results }
@@ -36,7 +36,7 @@ audit_hooks:
 
 # NFR Certification Review — `chief-technology-officer/certify-nfrs`
 
-The CTO's gate for Non-Functional Requirements. While Functional Requirements are tested individually within the `ship-feature-requests` pipeline, systemic NFRs (load testing, prolonged security scanning, uptime monitoring) require systemic evaluation. This workflow runs against an entire environment to certify that the `docs/non-functional-requirements` catalog is upheld.
+The CTO's gate for Non-Functional Requirements. While Functional Requirements are tested individually within the `ship-tasks` pipeline, systemic NFRs (load testing, prolonged security scanning, uptime monitoring) require systemic evaluation. This workflow runs against an entire environment to certify that the `docs/non-functional-requirements` catalog is upheld.
 
 ## When to invoke
 

@@ -5,7 +5,7 @@
 # local fs (~35s on NFS / Docker bind-mounts).
 #
 # This file is NOT loaded by the gateway — the `EXAMPLE.` prefix is filtered
-# out by `is_loadable_filename()` (FR-AI-005 §3). It exists as the
+# out by `is_loadable_filename()` (TASK-AI-005 §3). It exists as the
 # documented schema reference.
 
 tenant_id: org:cyberskill
@@ -20,7 +20,7 @@ ai_policy:
   # If true, precheck refuses calls at cap; if false, allows over-spend (audit only).
   hard_stop: true
 
-  # Primary provider for routing (FR-AI-006/008 consumes this).
+  # Primary provider for routing (TASK-AI-006/008 consumes this).
   primary_provider:
     kind: bedrock
     region: ap-southeast-1
@@ -38,11 +38,11 @@ ai_policy:
   # Per-call timeout (precheck + provider + reconcile combined). Seconds. Range [1, 600].
   call_timeout_seconds: 60
 
-  # Residency pin — FR-AI-016 enforces this at provider selection time.
+  # Residency pin — TASK-AI-016 enforces this at provider selection time.
   # Values: sg-1 (Singapore) · eu-1 (Frankfurt) · us-1 (us-east-1) · vn-1 (Vietnam).
   residency: sg-1
 
-  # Require ZDR (Zero Data Retention) — FR-AI-015 refuses non-ZDR providers when true.
+  # Require ZDR (Zero Data Retention) — TASK-AI-015 refuses non-ZDR providers when true.
   zdr_required: true
 
   # Emergency override (CFO-signed) to allow over-cap calls.

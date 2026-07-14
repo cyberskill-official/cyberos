@@ -1,6 +1,6 @@
 """
 cyberos.core.importance — write-time importance scoring orchestrator
-(FR-MEMORY-114).
+(TASK-MEMORY-114).
 
 The orchestrator pattern:
 
@@ -10,7 +10,7 @@ The orchestrator pattern:
    instantly. Miss → invoke + populate the cache (on success only;
    fallbacks are NOT cached so subsequent calls get a chance to retry
    if the API recovered).
-3. Caller emits a ``memory.importance_scored`` aux audit row (FR-MEMORY-114
+3. Caller emits a ``memory.importance_scored`` aux audit row (TASK-MEMORY-114
    §1 #8) — separate from this module to keep the orchestrator
    write-free.
 """
@@ -39,7 +39,7 @@ def _default_from_env() -> str:
 def select_invoker(name: Optional[str] = None) -> ImportanceInvoker:
     """Resolve and instantiate the active ImportanceInvoker.
 
-    Priority chain (per FR-MEMORY-114 §1 #3, #4):
+    Priority chain (per TASK-MEMORY-114 §1 #3, #4):
 
     1. ``CYBEROS_DISABLE_LLM=1`` env → ALWAYS MockInvoker (escape hatch).
     2. Explicit ``name`` argument (typically from a CLI flag).
@@ -128,7 +128,7 @@ async def score(
     Cache-hit path is synchronous (no invoker call); cache-miss path
     awaits the invoker. The ``aux_emitter``, if provided, is called as
     ``aux_emitter(kind: str, payload: dict)`` (positional) with the
-    FR-MEMORY-114 §1 #8 payload
+    TASK-MEMORY-114 §1 #8 payload
     shape — typically wired to the Writer's audit-row emit so the
     importance scoring leaves an audit trail.
 

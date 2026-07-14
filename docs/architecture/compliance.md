@@ -1,7 +1,7 @@
 ---
 title: Compliance
 source: website/docs/architecture/compliance.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 ## Three rings, one platform

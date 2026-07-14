@@ -1,14 +1,14 @@
-"""backlog_reader — parse docs/feature-requests/BACKLOG.md into structured FR rows.
+"""backlog_reader — parse docs/tasks/BACKLOG.md into structured FR rows.
 
 The BACKLOG table has shape:
     | FR-ID | Title | Pri | Status | Depends on | Effort |
 
 This module exposes:
-    parse_backlog(path)        → list[FrRow]
+    parse_backlog(path)        → list[TaskRow]
     next_eligible(rows, module, current_status="ready_to_implement")
-                                → FrRow | None — first FR matching filter
+                                → TaskRow | None — first FR matching filter
                                   whose dep cone is all `done`.
-    routed_back_count(fr_id, audit_dir)
+    routed_back_count(task_id, audit_dir)
                                 → int — how many times this FR has been
                                   rework-routed in the current memory chain.
 
@@ -26,8 +26,8 @@ from typing import Optional
 
 # FR IDs look like FR-<MODULE>-<NNN> — module slug is alphanumeric (no hyphens)
 # Note: FR-IDs may be wrapped in ** markdown bold markers.
-_FR_ROW_RE = re.compile(
-    r"^\|\s*\*{0,2}(?P<fr_id>FR-[A-Z]+-\d+)\*{0,2}\s*\|"
+_TASK_ROW_RE = re.compile(
+    r"^\|\s*\*{0,2}(?P<task_id>FR-[A-Z]+-\d+)\*{0,2}\s*\|"
     r"\s*(?P<title>[^|]+?)\s*\|"
     r"\s*(?P<priority>[^|]*?)\s*\|"
     r"\s*(?P<status>[^|]+?)\s*\|"
@@ -35,12 +35,12 @@ _FR_ROW_RE = re.compile(
     r"\s*(?P<effort>[^|]*?)\s*\|",
     re.MULTILINE,
 )
-_FR_ID_RE = re.compile(r"FR-[A-Z]+-\d+")
+_TASK_ID_RE = re.compile(r"FR-[A-Z]+-\d+")
 
 
 @dataclass
-class FrRow:
-    fr_id: str
+class TaskRow:
+    task_id: str
     title: str
     priority: str
     status: str
@@ -51,36 +51,36 @@ class FrRow:
     @property
     def module(self) -> str:
         """Module slug extracted from FR-<MODULE>-NNN."""
-        m = re.match(r"FR-([A-Z]+)-\d+", self.fr_id)
+        m = re.match(r"FR-([A-Z]+)-\d+", self.task_id)
         return m.group(1).lower() if m else ""
 
     def __repr__(self) -> str:
-        return f"FrRow({self.fr_id} [{self.status}] {self.priority} deps={self.deps})"
+        return f"TaskRow({self.task_id} [{self.status}] {self.priority} deps={self.deps})"
 
 
-def parse_backlog(backlog_path: Path) -> list[FrRow]:
-    """Read BACKLOG.md and return every FR row as a structured FrRow.
+def parse_backlog(backlog_path: Path) -> list[TaskRow]:
+    """Read BACKLOG.md and return every FR row as a structured TaskRow.
 
     Skips header rows (where col 1 is literally "FR-ID" or column count < 6).
     Captures the 1-indexed line_number so callers can correlate back to file
     positions (e.g. for the backlog-state-update-author applier).
     """
     text = backlog_path.read_text(encoding="utf-8")
-    rows: list[FrRow] = []
+    rows: list[TaskRow] = []
     for line_idx, line in enumerate(text.splitlines(), start=1):
-        m = _FR_ROW_RE.match(line)
+        m = _TASK_ROW_RE.match(line)
         if m is None:
             continue
         gd = m.groupdict()
-        # Skip the header row template ("| FR-ID | Title | ...") — fr_id wouldn't
+        # Skip the header row template ("| FR-ID | Title | ...") — task_id wouldn't
         # actually start with FR- though, so we additionally check.
-        if not gd["fr_id"].startswith("FR-"):
+        if not gd["task_id"].startswith("FR-"):
             continue
         # Parse dependency cell — extract every FR-X-NNN occurrence.
         deps_raw = gd["deps"] or ""
-        deps = _FR_ID_RE.findall(deps_raw)
-        rows.append(FrRow(
-            fr_id=gd["fr_id"].strip(),
+        deps = _TASK_ID_RE.findall(deps_raw)
+        rows.append(TaskRow(
+            task_id=gd["task_id"].strip(),
             title=gd["title"].strip(),
             priority=gd["priority"].strip(),
             status=gd["status"].strip(),
@@ -92,12 +92,12 @@ def parse_backlog(backlog_path: Path) -> list[FrRow]:
 
 
 def next_eligible(
-    rows: list[FrRow],
+    rows: list[TaskRow],
     module: Optional[str] = None,
     current_status: str | list[str] | tuple[str, ...] | None = None,
     rework: bool = False,
     skip_fr_ids: set[str] | None = None,
-) -> Optional[FrRow]:
+) -> Optional[TaskRow]:
     """Return the first FR in the matching status list whose deps are all `done`.
 
     If `current_status` is None, defaults to all active statuses:
@@ -114,11 +114,11 @@ def next_eligible(
     else:
         statuses = tuple(current_status)
 
-    done_ids = {r.fr_id for r in rows if r.status == "done"}
+    done_ids = {r.task_id for r in rows if r.status == "done"}
     for row in rows:
         if row.status not in statuses:
             continue
-        if skip_fr_ids and row.fr_id in skip_fr_ids:
+        if skip_fr_ids and row.task_id in skip_fr_ids:
             continue
         if module and row.module != module.lower():
             continue
@@ -128,11 +128,11 @@ def next_eligible(
 
 
 def list_eligible(
-    rows: list[FrRow],
+    rows: list[TaskRow],
     module: Optional[str] = None,
     current_status: str | list[str] | tuple[str, ...] | None = None,
     rework: bool = False,
-) -> list[FrRow]:
+) -> list[TaskRow]:
     """List ALL eligible FRs (same filter as next_eligible) for visibility."""
     if current_status is None:
         statuses = ["ready_to_implement", "implementing", "ready_to_review", "reviewing", "ready_to_test", "testing"]
@@ -144,7 +144,7 @@ def list_eligible(
     else:
         statuses = tuple(current_status)
 
-    done_ids = {r.fr_id for r in rows if r.status == "done"}
+    done_ids = {r.task_id for r in rows if r.status == "done"}
     out = []
     for row in rows:
         if row.status not in statuses:
@@ -156,11 +156,11 @@ def list_eligible(
     return out
 
 
-def routed_back_count(fr_id: str, audit_dir: Path) -> int:
-    """Count how many times `fr_id` has been rework-routed in the audit chain.
+def routed_back_count(task_id: str, audit_dir: Path) -> int:
+    """Count how many times `task_id` has been rework-routed in the audit chain.
 
     Walks the latest binlog segments looking for memory.fr_routed_back rows
-    whose payload.fr_id matches. Returns 0 if no such rows or audit_dir missing.
+    whose payload.task_id matches. Returns 0 if no such rows or audit_dir missing.
 
     For Phase 5 this is an approximation — production should scan all segments;
     here we just walk current.binlog + any *.binlog files in audit_dir.
@@ -171,14 +171,14 @@ def routed_back_count(fr_id: str, audit_dir: Path) -> int:
     # The binlog is binary; the simplest parse is to look for the FR ID and
     # event kind as raw bytes. The kind string `memory.fr_routed_back` will
     # appear verbatim near each instance.
-    target = f'"fr_id":"{fr_id}"'.encode("utf-8")
+    target = f'"task_id":"{task_id}"'.encode("utf-8")
     kind = b'memory.fr_routed_back'
     for binlog in audit_dir.glob("*.binlog"):
         try:
             data = binlog.read_bytes()
         except OSError:
             continue
-        # Look for co-occurring kind + fr_id in proximity (within 256 bytes).
+        # Look for co-occurring kind + task_id in proximity (within 256 bytes).
         idx = 0
         while True:
             k = data.find(kind, idx)

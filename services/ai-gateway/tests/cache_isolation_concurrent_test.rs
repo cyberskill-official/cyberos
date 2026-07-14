@@ -1,4 +1,4 @@
-//! FR-AI-018 §1 #8 — Concurrent-load test for cache isolation.
+//! TASK-AI-018 §1 #8 — Concurrent-load test for cache isolation.
 
 mod support;
 use support::redis_isolation_helper::{redis_available, RedisTestNamespace};

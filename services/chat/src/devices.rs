@@ -1,4 +1,4 @@
-//! Device registration (FR-CHAT-101 slice 4): a subject registers a push token; the actual APNS/FCM send is
+//! Device registration (TASK-CHAT-101 slice 4): a subject registers a push token; the actual APNS/FCM send is
 //! a deploy-time integration (see push.rs). Tokens are per-subject and upserted on conflict.
 
 use axum::extract::State;

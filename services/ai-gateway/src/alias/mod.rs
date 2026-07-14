@@ -1,10 +1,10 @@
-//! FR-AI-006 — Model-alias resolution.
+//! TASK-AI-006 — Model-alias resolution.
 //!
 //! Maps closed-set logical aliases (`chat.smart`, `chat.fast`, etc.) to concrete
 //! `(provider, model)` tuples via tenant policy. Supports per-tenant overrides,
 //! fallback chain, cost-table validation, ZDR checks, and residency enforcement.
 //!
-//! See FR-AI-006 for normative behaviour and acceptance criteria.
+//! See TASK-AI-006 for normative behaviour and acceptance criteria.
 
 pub mod types;
 
@@ -149,13 +149,13 @@ fn check_and_build_with_model(
 ) -> Result<ResolvedModel, AliasError> {
     let kind = provider.kind();
     let region = provider.region();
-    // FR-AI-105: local providers (Ollama, LM Studio) run on the operator's own host, so they are
+    // TASK-AI-105: local providers (Ollama, LM Studio) run on the operator's own host, so they are
     // zero-cost (clause 7) and inherently zero-retention (clause 5). They are exempt from the cost-table
     // and ZDR gates that the cloud providers must pass. Residency still applies via the region check
     // below (local providers carry region None, so they pass unless the tenant requires a regional one).
     let is_local = matches!(kind, ProviderKind::Ollama | ProviderKind::LocalOpenai);
 
-    // Cost-table check (FR-AI-007) - skipped for local providers (zero cost).
+    // Cost-table check (TASK-AI-007) - skipped for local providers (zero cost).
     if !is_local && cost_table::lookup(&kind, model).is_none() {
         ALIAS_FAILURES
             .with_label_values(&[alias, "cost_missing"])
@@ -166,7 +166,7 @@ fn check_and_build_with_model(
         });
     }
 
-    // ZDR check (FR-AI-015) - local providers are inherently ZDR.
+    // ZDR check (TASK-AI-015) - local providers are inherently ZDR.
     if !is_local && policy.ai_policy.zdr_required && !zdr::is_zdr(&kind, model) {
         ALIAS_FAILURES.with_label_values(&[alias, "zdr"]).inc();
         return Err(AliasError::ZdrViolation {
@@ -176,7 +176,7 @@ fn check_and_build_with_model(
         });
     }
 
-    // Residency check (FR-AI-016) — runs AFTER ZDR check (§1 #10)
+    // Residency check (TASK-AI-016) — runs AFTER ZDR check (§1 #10)
     if let Some(region_str) = &region {
         let region = residency::Region::from_provider_string(region_str);
         match region {

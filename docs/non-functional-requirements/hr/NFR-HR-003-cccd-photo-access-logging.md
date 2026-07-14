@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of CCCD-photo reads carry a logged access reason; 0 bypassed reads"
 owner: CPO-Privacy
 created: 2026-05-18
-related_frs: [FR-HR-003]
+related_tasks: [TASK-HR-003]
 ---
 
 ## §1 — Statement (BCP-14 normative)

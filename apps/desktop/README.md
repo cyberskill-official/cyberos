@@ -1,4 +1,4 @@
-# CyberOS desktop (FR-APP-002)
+# CyberOS desktop (TASK-APP-002)
 
 A Tauri 2 native app that wraps the live CyberOS console. The window loads
 `https://os.cyberskill.world/`, so the desktop app IS the web app - the same chat, profile, calls, and

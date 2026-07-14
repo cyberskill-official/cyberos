@@ -1,4 +1,4 @@
-//! Verifies the CyberOS access token (FR-AUTH-110 provider, FR-AUTH-004 JWKS, RS256) and extracts the
+//! Verifies the CyberOS access token (TASK-AUTH-110 provider, TASK-AUTH-004 JWKS, RS256) and extracts the
 //! caller identity. Mirrors `obs-compliance-view::auth`. The HS256 path is for tests and local dev only.
 
 use std::collections::HashMap;
@@ -85,7 +85,7 @@ impl Authenticator {
         }
     }
 
-    /// RS256 verifier built from the auth service JWKS (FR-AUTH-004).
+    /// RS256 verifier built from the auth service JWKS (TASK-AUTH-004).
     pub fn from_jwks(jwks_json: &str) -> Result<Self, AuthError> {
         let by_kid = parse_jwks(jwks_json)?;
         let mut validation = Validation::new(Algorithm::RS256);
@@ -291,7 +291,7 @@ mod tests {
     }
 }
 
-/// FR-CHAT-269 §1 #2 — the moderation role gate.
+/// TASK-CHAT-269 §1 #2 — the moderation role gate.
 ///
 /// Workspace-level roles only. A CHANNEL role (`owner`, `admin`, `member` in `chat_channel_members`) grants
 /// nothing here, deliberately: a channel owner is not a workspace moderator, and a report raised in a
@@ -301,9 +301,9 @@ pub const MODERATOR_ROLES: [&str; 2] = ["tenant-admin", "root-admin"];
 /// Fail CLOSED. An absent or empty `roles` claim is not "unknown, therefore allow" — it is "unknown,
 /// therefore no".
 ///
-/// This matters more than it looks. FR-AUTH-101 permits a grace window in which a token may carry no roles
+/// This matters more than it looks. TASK-AUTH-101 permits a grace window in which a token may carry no roles
 /// claim at all. Chat has never read `roles` before, so it has no legacy tokens to be gentle with — and an
-/// else-allow branch here would make every pre-FR-AUTH-101 token in circulation a moderator. There is no
+/// else-allow branch here would make every pre-TASK-AUTH-101 token in circulation a moderator. There is no
 /// else-allow branch. `Claims::roles` is `#[serde(default)]`-shaped as a `Vec`, so a missing claim
 /// deserialises to an empty vec, which matches nothing and is refused.
 pub fn require_moderator(claims: &Claims) -> Result<(), (StatusCode, String)> {
@@ -346,7 +346,7 @@ mod moderator_gate_tests {
     fn the_gate_fails_closed() {
         // AC 1 — the whole point. NONE of these may pass.
         for roles in [
-            vec![],                 // no roles at all (a pre-FR-AUTH-101 token)
+            vec![],                 // no roles at all (a pre-TASK-AUTH-101 token)
             vec!["tenant-member"],  // an ordinary member
             vec!["owner"],          // AC 2 — a CHANNEL role is not a workspace role
             vec!["admin"],          // ...nor is the channel-level "admin"

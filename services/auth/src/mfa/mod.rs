@@ -1,4 +1,4 @@
-//! FR-AUTH-102 — Multi-Factor Authentication module.
+//! TASK-AUTH-102 — Multi-Factor Authentication module.
 //!
 //! Sub-modules:
 //!   * `totp`      — RFC 6238 TOTP generation + verification

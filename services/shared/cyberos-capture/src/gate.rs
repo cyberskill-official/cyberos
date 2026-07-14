@@ -1,14 +1,14 @@
-//! FR-MEMORY-122 §1 #6 — the REAL consent gate.
+//! TASK-MEMORY-122 §1 #6 — the REAL consent gate.
 //!
-//! FR-MEMORY-121 defined the [`ConsentGate`] trait and shipped a default-deny stub (`DenyAll`); this is
-//! where FR-MEMORY-122 wires the production gate that consults FR-EVAL-001's acknowledgment ledger. A
+//! TASK-MEMORY-121 defined the [`ConsentGate`] trait and shipped a default-deny stub (`DenyAll`); this is
+//! where TASK-MEMORY-122 wires the production gate that consults TASK-EVAL-001's acknowledgment ledger. A
 //! subject is capturable iff they have acknowledged the tenant's CURRENT published monitoring notice
 //! version (DEC-2712). No acknowledgment row -> not capturable; an acknowledgment of an older version
-//! (after the notice is re-published) -> not capturable until they re-acknowledge (FR-EVAL-001 clause 17).
+//! (after the notice is re-published) -> not capturable until they re-acknowledge (TASK-EVAL-001 clause 17).
 //!
 //! ## Why this lives here and not in `services/eval`
 //!
-//! The FR is explicit (DEC-2714 + §1 #16, and the FR-MEMORY-121 consent_gate doc): AUTH and CHAT must NOT
+//! The FR is explicit (DEC-2714 + §1 #16, and the TASK-MEMORY-121 consent_gate doc): AUTH and CHAT must NOT
 //! depend on the whole eval binary just to ask "may I capture this subject?". So this gate queries the two
 //! governance TABLES directly — `monitoring_notice` and `subject_acknowledgment` (owned by
 //! `services/eval/migrations/0001_governance.sql`) — over whatever Postgres pool the caller passes. It is
@@ -19,14 +19,14 @@
 //! ## RLS
 //!
 //! `monitoring_notice` and `subject_acknowledgment` are per-tenant RLS tables keyed on the AUTH GUC
-//! `app.current_tenant_id` (FR-AUTH-003). So the read runs inside a transaction that first sets that GUC,
+//! `app.current_tenant_id` (TASK-AUTH-003). So the read runs inside a transaction that first sets that GUC,
 //! exactly like chat's `db::tenant_tx` and eval's gate — otherwise the RLS predicate hides every row and
 //! the gate would wrongly deny an acknowledged subject. The nil-tenant bypass the policy allows is not
 //! used here; capture always carries a real tenant.
 //!
 //! ## Caching
 //!
-//! This is the *inner* gate. FR-MEMORY-121's [`CachingGate`] decorator wraps it so a signed-in person's
+//! This is the *inner* gate. TASK-MEMORY-121's [`CachingGate`] decorator wraps it so a signed-in person's
 //! burst of interactions issues at most one ledger read per `(tenant, subject)` per TTL window (default
 //! 60 s). [`build_default`] returns the wrapped, ready-to-use gate the modules install.
 
@@ -35,7 +35,7 @@ use cyberos_memory::interaction::{CachingGate, ConsentGate};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-/// The production consent gate: a SQL read of the FR-EVAL-001 governance ledger. Holds the pool it queries
+/// The production consent gate: a SQL read of the TASK-EVAL-001 governance ledger. Holds the pool it queries
 /// (the brain/governance Postgres — the same deployment that holds `l1_audit_log`, `monitoring_notice`,
 /// and `subject_acknowledgment`).
 #[derive(Clone)]
@@ -94,7 +94,7 @@ impl ConsentGate for SqlConsentGate {
 }
 
 /// Build the production gate the modules install: the SQL ledger read [`SqlConsentGate`] wrapped in the
-/// FR-MEMORY-121 [`CachingGate`] (default 60 s TTL). A revocation or a fresh acknowledgment takes effect
+/// TASK-MEMORY-121 [`CachingGate`] (default 60 s TTL). A revocation or a fresh acknowledgment takes effect
 /// within that TTL — the documented bound. This is what `Capturer::new` is handed.
 pub fn build_default(pool: PgPool) -> CachingGate<SqlConsentGate> {
     CachingGate::new(SqlConsentGate::new(pool))

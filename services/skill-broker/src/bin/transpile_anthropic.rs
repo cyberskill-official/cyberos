@@ -1,6 +1,6 @@
 //! `cyberos-skill-transpile-anthropic` — emit Anthropic-flat SKILL.md from CCSM.
 //!
-//! Per FR-SKILL-103 §3 + Anthropic guide Reference B. The output is the
+//! Per TASK-SKILL-103 §3 + Anthropic guide Reference B. The output is the
 //! authoritative deliverable for shipping a CyberOS skill to Claude.ai /
 //! Claude Code / the Anthropic Agent Skills API.
 

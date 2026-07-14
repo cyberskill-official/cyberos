@@ -1,4 +1,4 @@
-"""Trigger-test runner for FR-SKILL-112.
+"""Trigger-test runner for TASK-SKILL-112.
 
 Loads `<skill-folder>/acceptance/TRIGGER_TESTS.md` fixtures and asserts the
 CUO supervisor's classifier routes positive triggers to the named skill and
@@ -9,7 +9,7 @@ not at the skill level. To bridge to SKILL.md-level trigger tests, we read the
 routed workflow's `skill_chain` and check whether the expected skill is the
 first invoked skill (the "entry skill" of that workflow).
 
-Per FR-SKILL-112 §1 #7. Used by CI gates + skill-bundle auditors.
+Per TASK-SKILL-112 §1 #7. Used by CI gates + skill-bundle auditors.
 """
 
 from __future__ import annotations
@@ -178,7 +178,7 @@ def check_paraphrase_distinct(phrases: list[str]) -> list[tuple[str, str, int]]:
 # ─── Confidence relationship validator ──────────────────────────────────────────
 
 def validate_confidence_relationship(min_confidence: float, defer_below: float) -> bool:
-    """FR-SKILL-112 §1 #15: fixture min_confidence MUST be ≥ skill's defer_below."""
+    """TASK-SKILL-112 §1 #15: fixture min_confidence MUST be ≥ skill's defer_below."""
     return min_confidence >= defer_below
 
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test_check_version_sync.sh - FR-IMP-068 §5 verification suite (t01-t10 -> AC 1-10).
+# test_check_version_sync.sh - TASK-IMP-068 §5 verification suite (t01-t10 -> AC 1-10).
 # Standalone bash, no framework. Run: bash tools/cyberos-init/tests/test_check_version_sync.sh
 set -uo pipefail
 

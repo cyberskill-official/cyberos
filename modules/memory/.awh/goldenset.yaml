@@ -26,8 +26,8 @@ tasks:
 
   # Held-out acceptance for the pilot FR. Sealed read-only via `awh lock modules/memory/tests`
   # so the authoring agent cannot edit the bar it is graded against.
-  - id: acceptance-fr-memory-116
-    description: pilot FR-MEMORY-116 (semantic-dedup consolidate) cited test, held-out
+  - id: acceptance-task-memory-116
+    description: pilot TASK-MEMORY-116 (semantic-dedup consolidate) cited test, held-out
     cmd: "cd modules/memory && python -m pytest tests/core/test_consolidate_semantic_dedup.py -q"
     weight: 5.0
     timeout_sec: 300

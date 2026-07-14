@@ -6,7 +6,7 @@ classifier_version: 3.0.0-a4
 
 # TRIGGER_TESTS for product-requirements-document-author
 
-> Verifies the supervisor classifier routes PRD-authoring requests correctly. Per FR-SKILL-112.
+> Verifies the supervisor classifier routes PRD-authoring requests correctly. Per TASK-SKILL-112.
 
 ## Positive triggers (MUST route here)
 
@@ -19,7 +19,7 @@ classifier_version: 3.0.0-a4
 
 - "Audit this existing PRD" → product-requirements-document-audit
 - "Check the PRD against acceptance criteria" → product-requirements-document-audit
-- "Turn this PRD into a backlog of FRs" → feature-request-author
+- "Turn this PRD into a backlog of FRs" → task-author
 - "Draft an SRS from this PRD" → software-requirements-specification-author
 - "What's our Q4 hiring plan?" → none
 
@@ -33,7 +33,7 @@ classifier_version: 3.0.0-a4
   These ARE the auditor's positive triggers — verb cues ("audit",
   "check") MUST route to the auditor.
 - Negative 3 catches the downstream-chain confusion: PRD → FR backlog is
-  a separate skill (feature-request-author), not this one.
+  a separate skill (task-author), not this one.
 - Negative 4 catches the upstream-chain confusion: PRD → SRS is also a
   separate skill (software-requirements-specification-author).
 - Negative 5 is canonical "no skill" sanity.

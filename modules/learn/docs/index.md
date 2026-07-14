@@ -1,7 +1,7 @@
 ---
 title: LEARN - Skills catalogue, VP roll-up, Hội đồng Chuyên môn workflow
 source: website/docs/modules/learn/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 LEARN is the **capability ledger** - what each Member can do, how good they are at it, and how that grows into a promotion or sabbatical eligibility milestone. The skill tree is a closed catalogue per discipline (engineering, design, ops, biz, finance); each skill carries a 1-5 mastery scale; each mastery level requires evidence (a project artifact, a KB authorship, an external certification, or a peer endorsement). Voting Power (VP) rolls up from concrete contributions (PROJ, TIME, KB) into a single number per Member that REW uses to weight the annual bonus pool distribution. The Hội đồng Chuyên môn (Specialist Council) is the peer-review workflow that adjudicates promotion cases - 3 to 5 peers per case, multi-judge scoring, outcome-only summary lands at HR.
@@ -353,7 +353,7 @@ Criteria are versioned. Changing them does not retroactively re-judge open cases
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS FR catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
 Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
 
@@ -621,7 +621,7 @@ External LMS content providers| planned - P4
 - **Cross-module page links:** [hr.html](../hr/index.html), [rew.html](../rew/index.html), [proj.html](../proj/index.html), [time.html](../time/index.html), [kb.html](../kb/index.html), [memory.html](../memory/index.html)
 - **memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - LEARN deliberations sync_class=private; never ingested.
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - LEARN at P2-start (P1).
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- **FR authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 - **FR catalogue** - LEARN module FRs ((FR pending) through (FR pending)).
 - **Architecture spec** - LEARN architecture posture, council workflow design.
 - **NFR catalogue** - Usability NFRs (explainability of automated decisions).

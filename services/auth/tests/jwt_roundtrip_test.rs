@@ -1,4 +1,4 @@
-//! FR-AUTH-004 — JWT issuance + verification round-trip.
+//! TASK-AUTH-004 — JWT issuance + verification round-trip.
 //!
 //! Requires a live Postgres (boots services/dev/docker-compose.yml).
 //! Run with `cargo test -p cyberos-auth -- --ignored`.
@@ -53,7 +53,7 @@ async fn issue_then_verify_round_trips_with_correct_claims() {
     assert_eq!(claims.tenant_id, tenant.to_string());
     assert_eq!(claims.sub, subject.to_string());
     assert_eq!(claims.kind, "human");
-    assert_eq!(claims.email, "alice@test.cyberos"); // FR-AUTH-004 §1 #2 G-013
+    assert_eq!(claims.email, "alice@test.cyberos"); // TASK-AUTH-004 §1 #2 G-013
     assert_eq!(claims.scope_grants, scopes);
     assert_eq!(claims.iss, "https://auth.test.cyberos");
     assert_eq!(claims.traceparent.as_deref(), Some("00-traceparent-x-01"));

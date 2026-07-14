@@ -1,4 +1,4 @@
-//! FR-AI-018 §3 — Proptest strategies for cache isolation property tests.
+//! TASK-AI-018 §3 — Proptest strategies for cache isolation property tests.
 #![allow(dead_code)] // shared strategy helpers; not every test binary uses all of them
 
 use proptest::prelude::*;

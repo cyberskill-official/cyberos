@@ -1,6 +1,6 @@
 ---
 title: auth - identity and tenancy · CyberOS
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 auth owns who you are and which tenant you act in. Every service trusts auth's JWTs and Postgres row-level security; nothing else hands out identity.

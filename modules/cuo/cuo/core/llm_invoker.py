@@ -190,17 +190,17 @@ class LLMInvoker(Invoker):
                 f"Only include files that need to be created or changed. Use `\"action\": \"modify\"` "
                 f"with `\"content\"` for full replacement or `\"diff\"` for unified-diff patches.\n"
             )
-        elif "feature-request-audit" in skill_name:
+        elif "task-audit" in skill_name:
             base += (
                 f"\n# Additional output\n\n"
                 f"Include an `audit_body` string field containing the full markdown audit report "
-                f"(frontmatter will be added by the applier). Include `fr_id` and `verdict` fields.\n"
+                f"(frontmatter will be added by the applier). Include `task_id` and `verdict` fields.\n"
             )
         elif "code-review" in skill_name:
             base += (
                 f"\n# Additional output\n\n"
                 f"Include a `code_review_body` string field with the full markdown review. "
-                f"Include `fr_id` and `verdict` fields.\n"
+                f"Include `task_id` and `verdict` fields.\n"
             )
         elif "architecture-decision-record" in skill_name:
             base += (
@@ -212,7 +212,7 @@ class LLMInvoker(Invoker):
         elif "observability-injection" in skill_name:
             base += (
                 f"\n# Additional output\n\n"
-                f"Include `fr_id`, `language`, `subscriber`, `log_points` (array), "
+                f"Include `task_id`, `language`, `subscriber`, `log_points` (array), "
                 f"`trace_spans` (array), `error_counters` (array), and `branch_coverage` (object).\n"
             )
 

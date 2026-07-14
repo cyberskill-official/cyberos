@@ -35,7 +35,7 @@ pub struct Message {
     /// can show a "N replies" chip on the parent without opening the thread; other paths return 0.
     #[serde(default)]
     pub reply_count: i64,
-    /// FR-CHAT-268 §1 #5 — the caller has blocked this message's sender, and this is a GROUP channel: the row
+    /// TASK-CHAT-268 §1 #5 — the caller has blocked this message's sender, and this is a GROUP channel: the row
     /// survives (its id and its position in the conversation), the content does not. Never true in a DM,
     /// because a blocked sender's DM messages are not returned at all (§1 #6).
     ///
@@ -212,7 +212,7 @@ pub async fn post(
             ));
         }
     }
-    // FR-MEMORY-122 §1 #4 — read the channel kind in this same tx (a cheap PK lookup) so the capture
+    // TASK-MEMORY-122 §1 #4 — read the channel kind in this same tx (a cheap PK lookup) so the capture
     // emitter can tag channel vs DM. Off-by-default (only matters when capture is on); never fails the send.
     // The same lookup carries archived_at: an archived channel is read-only.
     let ch: Option<(String, Option<chrono::DateTime<chrono::Utc>>)> =
@@ -332,7 +332,7 @@ pub async fn post(
         serde_json::json!({"channel_id": channel, "message_id": message.id, "parent_id": message.parent_id}),
     )
     .await;
-    // FR-MEMORY-122 §1 #4, #7 — emit chat.message_created off the response path (spawned, best-effort). The
+    // TASK-MEMORY-122 §1 #4, #7 — emit chat.message_created off the response path (spawned, best-effort). The
     // capturer is None unless CAPTURE_ENABLED is on, so this is a no-op by default; the body never leaves
     // chat's DB (content_ref is a pointer to the chat_messages row).
     if let Some(cap) = st.capturer.clone() {
@@ -381,7 +381,7 @@ pub async fn list(
     // supplies its own `now()` and the comparison is against the clock that wrote the row. Skew becomes
     // impossible by construction rather than merely unlikely.
     //
-    // Found by FR-CHAT-268's `unblock_restores_in_place`, which writes a message and lists it with no
+    // Found by TASK-CHAT-268's `unblock_restores_in_place`, which writes a message and lists it with no
     // intervening round-trip. It is a pre-existing bug in `list`, not a blocking bug.
     let before: Option<chrono::DateTime<chrono::Utc>> = q.before;
 
@@ -470,7 +470,7 @@ pub async fn list(
     }
     .map_err(crate::internal)?;
 
-    // ───────────────────────── FR-CHAT-268 enforcement point 1 of 4: the message list (§1 #4) ────────
+    // ───────────────────────── TASK-CHAT-268 enforcement point 1 of 4: the message list (§1 #4) ────────
     // The blocked-set is read ONCE per request (memoised in AppState) and threaded through — never queried
     // per message. This is the hot path; an N+1 here would be the most expensive thing in the service.
     let blocked = crate::blocks::blocked_by(&st, tenant, subject).await;
@@ -632,7 +632,7 @@ pub async fn edit(
                 serde_json::json!({"channel_id": channel, "message_id": m.id}),
             )
             .await;
-            // FR-MEMORY-122 §1 #4, #7 — chat.message_edited off the response path; no-op unless capture on.
+            // TASK-MEMORY-122 §1 #4, #7 — chat.message_edited off the response path; no-op unless capture on.
             if let Some(cap) = st.capturer.clone() {
                 let mid = m.id;
                 tokio::spawn(async move {
@@ -724,7 +724,7 @@ pub async fn delete(
         serde_json::json!({"channel_id": channel, "message_id": msg}),
     )
     .await;
-    // FR-MEMORY-122 §1 #4, #7 — chat.message_deleted (content_ref:none) off the response path; the actor is
+    // TASK-MEMORY-122 §1 #4, #7 — chat.message_deleted (content_ref:none) off the response path; the actor is
     // the caller (sender or a manager). No-op unless capture on.
     if let Some(cap) = st.capturer.clone() {
         tokio::spawn(async move {
@@ -749,7 +749,7 @@ pub struct SearchQuery {
 }
 
 /// Accent- and case-insensitive substring search over a channel's live messages (Vietnamese-friendly via
-/// chat_norm = lower(unaccent(..)), backed by a GIN trigram index). FR-CHAT-101 slice 3.
+/// chat_norm = lower(unaccent(..)), backed by a GIN trigram index). TASK-CHAT-101 slice 3.
 pub async fn search(
     State(st): State<AppState>,
     Path(channel): Path<Uuid>,

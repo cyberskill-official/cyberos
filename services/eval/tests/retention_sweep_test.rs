@@ -1,4 +1,4 @@
-//! FR-EVAL-001 clause 6 - retention/erasure sweeper integration tests, plus the clause-18 governance-status
+//! TASK-EVAL-001 clause 6 - retention/erasure sweeper integration tests, plus the clause-18 governance-status
 //! shape.
 //!
 //! Mirrors `governance_gate_test.rs`: requires a live Postgres with the eval migration applied, so the tests

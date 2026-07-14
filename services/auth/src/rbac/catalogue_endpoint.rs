@@ -1,6 +1,6 @@
 //! `GET /v1/admin/roles` — serve the closed catalogue + live version.
 //!
-//! Per FR-AUTH-101 §1 #7. Reads from the in-memory `RoleMatrix` only;
+//! Per TASK-AUTH-101 §1 #7. Reads from the in-memory `RoleMatrix` only;
 //! never hits the DB. The handler is mounted on the admin sub-router so
 //! `verify_jwt` runs first.
 

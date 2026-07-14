@@ -1,4 +1,4 @@
-# FR-APP-005: Snap Store recipe for CyberOS - strict confinement, gnome extension (core22),
+# TASK-APP-005: Snap Store recipe for CyberOS - strict confinement, gnome extension (core22),
 # dump-plugin over the SAME .deb payload the GitHub-Releases pipeline ships (no second build
 # config for the same binary; zero drift between channels). Packed + uploaded by
 # .github/workflows/release-snap.yml behind SNAP_RELEASE=true.

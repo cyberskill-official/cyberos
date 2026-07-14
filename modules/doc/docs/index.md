@@ -1,7 +1,7 @@
 ---
 title: DOC - Document repository, e-sign workflow, contract lifecycle
 source: website/docs/modules/doc/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 DOC is CyberOS's **e-signature workflow + immutable archival** service. The cryptographic signing act is delegated to an eIDAS-conformant QTSP (qualified trust-service provider) per jurisdiction; DOC owns everything else: document upload + SHA-256 integrity hashing, template definition + auto-fill from CRM data, multi-party workflow (signer order, parallel vs sequential), identity verification (WebAuthn for CyberOS-resident users; VNeID for Vietnamese citizens; SMS-OTP fallback), per-document hash-chained audit log, and S3 Object-Lock archival with residency-pinning. Three certificate chains are supported: **eIDAS QTSP** (qualified electronic signature, QES) for the EU; **Adobe AATL** for US/non-EU enterprise; **Vietnamese CA chain** (VnPay, MK Group, Viettel-CA) for VN per Decree 130/2018. Migration paths from DocuSign, Adobe Sign, and HelloSign preserve original audit trails without re-signing. The default retention is 10 years; longer per applicable law (e.g. employment contracts under VN labour law).
@@ -369,7 +369,7 @@ Cancelled| AM revoke OR signer reject| Audit row `session.cancelled` with reason
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS FR catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
 Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
 
@@ -649,7 +649,7 @@ Quarterly external eIDAS audit| planned - P4+
 - **Bigger picture (above):** 3 strategic roles + partner-routed signing diagram + 10-row auto-vs-human matrix.
 - **memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - every contract event (sign, expire, renew) becomes a memory audit row.
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - DOC at P4-early (P4) due to QTSP partner integration timeline.
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- **FR authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 
 ## Changelog
 

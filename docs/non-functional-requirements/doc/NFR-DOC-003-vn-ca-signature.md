@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of VN-jurisdiction signatures chain to a NEAC-recognised CA"
 owner: CLO-Legal
 created: 2026-05-18
-related_frs: [FR-DOC-004]
+related_tasks: [TASK-DOC-004]
 ---
 
 ## §1 — Statement (BCP-14 normative)

@@ -1,9 +1,9 @@
-//! FR-AI-004 — Cost-hold expiry cleanup job.
+//! TASK-AI-004 — Cost-hold expiry cleanup job.
 //!
 //! Scans `cost_ledger_hold` for rows whose `state = 'held' AND expires_at < NOW()`
 //! and transitions each to `state = 'expired'` with a chained memory audit row.
 //!
-//! See FR-AI-004 for normative behaviour and acceptance criteria.
+//! See TASK-AI-004 for normative behaviour and acceptance criteria.
 
 use once_cell::sync::Lazy;
 use prometheus::{
@@ -19,7 +19,7 @@ use crate::memory_writer;
 
 const BATCH_SIZE: i64 = 500;
 
-// ─── Metrics (FR-AI-004 §4 #10, #12) ─────────────────────────────────────────
+// ─── Metrics (TASK-AI-004 §4 #10, #12) ─────────────────────────────────────────
 
 static HOLDS_PROCESSED: Lazy<CounterVec> = Lazy::new(|| {
     register_counter_vec!(
@@ -106,7 +106,7 @@ struct HoldRow {
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
-/// FR-AI-004 — Run one expiry tick.
+/// TASK-AI-004 — Run one expiry tick.
 ///
 /// Scans for expired holds, processes each in its own transaction, emits
 /// `ai.hold_expired` memory audit rows, and returns a summary report.

@@ -1,4 +1,4 @@
-//! FR-MEMORY-123 §1 #10,#11,#26 — provenance + read-time chain-anchor verification.
+//! TASK-MEMORY-123 §1 #10,#11,#26 — provenance + read-time chain-anchor verification.
 //!
 //! Every recall hit points back to the exact `l1_audit_log` row(s) it derived from (DEC-2726), and before a
 //! hit is returned its `chain_anchor` is re-verified against the LIVE Layer-1 row (§1 #10): recompute

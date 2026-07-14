@@ -168,7 +168,7 @@ for (const file of files) {
     priority:    fm.priority || '',
     owner:       fm.owner || '',
     created:     fm.created || '',
-    related_frs: Array.isArray(fm.related_frs) ? fm.related_frs : [],
+    related_tasks: Array.isArray(fm.related_tasks) ? fm.related_tasks : [],
     path:        relative(REPO_ROOT, file),
   });
 }

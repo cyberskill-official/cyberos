@@ -1,7 +1,7 @@
 # CyberOS memory — desktop app
 
 Tauri 2.x desktop client for CyberOS memory. First-slice scaffold for
-[FR-MEMORY-104](../../../docs/feature-requests/memory/FR-MEMORY-104-tauri-app.md).
+[TASK-MEMORY-104](../../../docs/tasks/memory/TASK-MEMORY-104-tauri-app.md).
 
 ## What's wired (first slice)
 

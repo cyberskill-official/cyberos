@@ -1,10 +1,10 @@
-//! FR-AI-015 — Zero Data Retention attestation table + enforcement.
+//! TASK-AI-015 — Zero Data Retention attestation table + enforcement.
 //!
 //! Maintains an authoritative ZDR attestation table loaded from
 //! `config/zdr_attestations.yaml`. Exposes `is_zdr()` for gate checks
 //! and `attestation_for()` for audit-trail access.
 //!
-//! See FR-AI-015 for normative behaviour and acceptance criteria.
+//! See TASK-AI-015 for normative behaviour and acceptance criteria.
 
 use std::collections::HashMap;
 use std::path::Path;
@@ -23,17 +23,17 @@ use crate::policy::ProviderKind;
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-/// Soft-stale threshold: 90 days per FR-AI-015 §1 #9.
+/// Soft-stale threshold: 90 days per TASK-AI-015 §1 #9.
 pub const SOFT_STALE_DAYS: i64 = 90;
 
-/// Hard-stale threshold: 365 days per FR-AI-015 §1 #9.
+/// Hard-stale threshold: 365 days per TASK-AI-015 §1 #9.
 pub const HARD_STALE_DAYS: i64 = 365;
 
-/// Approved attestor domains per FR-AI-015 §1 #11.
+/// Approved attestor domains per TASK-AI-015 §1 #11.
 const APPROVED_AUDITOR_DOMAINS: &[&str] =
     &["cyberos.world", "kpmg.com.vn", "ey.com", "deloitte.com"];
 
-// ─── Metrics (FR-AI-015 §4 #14) ──────────────────────────────────────────────
+// ─── Metrics (TASK-AI-015 §4 #14) ──────────────────────────────────────────────
 
 static ZDR_LOOKUPS: Lazy<CounterVec> = Lazy::new(|| {
     register_counter_vec!(
@@ -130,7 +130,7 @@ static TABLE: OnceCell<ArcSwap<AttestationTable>> = OnceCell::new();
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
-/// FR-AI-015 §1 #2 — Check if a (provider, model) pair is ZDR-attested.
+/// TASK-AI-015 §1 #2 — Check if a (provider, model) pair is ZDR-attested.
 ///
 /// Returns `false` for missing entries (fail-closed, §1 #3).
 /// Hard-stale entries (>365 days) are forced to `false` (§1 #9).
@@ -180,13 +180,13 @@ pub fn is_zdr(provider: &ProviderKind, model: &str) -> bool {
     }
 }
 
-/// FR-AI-015 §1 #2 — Get the full attestation for a (provider, model) pair.
+/// TASK-AI-015 §1 #2 — Get the full attestation for a (provider, model) pair.
 pub fn attestation_for(provider: &ProviderKind, model: &str) -> Option<ZdrAttestation> {
     let table = TABLE.get()?.load();
     table.get(&(*provider, model.to_string())).cloned()
 }
 
-/// FR-AI-015 §1 #1 — Load the ZDR attestation table from YAML.
+/// TASK-AI-015 §1 #1 — Load the ZDR attestation table from YAML.
 pub fn init_zdr_table(config_path: &Path) -> Result<(), ZdrInitError> {
     let yaml = std::fs::read_to_string(config_path)?;
     let parsed = parse_attestations(&yaml)?;

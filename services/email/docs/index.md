@@ -1,7 +1,7 @@
 ---
 title: EMAIL - Capture surface, Genie draft, thread-to-issue bridge
 source: website/docs/modules/email/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 EMAIL is CyberOS's **mail server, shared inbox, and AI-native composition surface** in a single bundled module. The protocol stack is Stalwart (Rust, single binary) speaking JMAP / IMAP / SMTP / ManageSieve to the world. On top sits a Missive-style UX where a team can manage `support@cyberskill.world` together - assignment, internal comments, snooze, tagging. Every inbound body passes through a CaMeL quarantined LLM before any privileged CUO context can see it; the privileged side operates on the sanitised extraction (sender, recipient, subject, gist, action requests, entities), never on raw HTML. Outbound mail is DKIM-signed with per-tenant keys, ARC-stamped on forward, and tagged with BIMI for inbox-list branding. Threading is JMAP-native; search is PGroonga (Vietnamese-aware bigram); calendar is iCal. DSAR export bundles every message a subject participated in.
@@ -676,7 +676,7 @@ stateDiagram-v2
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS FR catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
 Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
 
@@ -979,7 +979,7 @@ if address:is "from" "noreply@github.com" {
 - **Cross-module page links:** [crm.html](../crm/index.html), [proj.html](../proj/index.html), [cuo.html](../cuo/index.html), [memory.html](../memory/index.html), [kb.html](../kb/index.html), [ai.html](../ai/index.html), [obs.html](../obs/index.html)
 - **Memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - sanitised CaMeL extractions feed memory; raw bodies never.
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - EMAIL at P1 mid (P1).
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- **FR authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 - **Decree 13/2023/NĐ-CP (Vietnam)** - personal data processing protection.
 - **Law 91/2025/QH15 (Vietnam PDPL)** - Personal Data Protection Law.
 - **BIMI v1** - Brand Indicators for Message Identification.

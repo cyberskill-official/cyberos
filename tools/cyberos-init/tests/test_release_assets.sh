@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test_release_assets.sh - FR-IMP-069 §5 suite (t01-t09 -> AC 1-9). file:// fixtures, no network.
+# test_release_assets.sh - TASK-IMP-069 §5 suite (t01-t09 -> AC 1-9). file:// fixtures, no network.
 set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 repo="$(cd "$here/../../.." && pwd)"

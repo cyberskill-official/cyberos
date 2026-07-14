@@ -9,12 +9,12 @@ phase: P0
 slo: "Re-running export with same parameters produces byte-identical bundle hash"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-TEN-105]
+related_tasks: [TASK-TEN-105]
 ---
 
 ## §1 — Statement (BCP-14 normative)
 
-1. The signed-bundle export (`FR-TEN-105`) **MUST** be deterministic — re-running with the same `{tenant_id, export_at}` produces byte-identical output (same SHA-256).
+1. The signed-bundle export (`TASK-TEN-105`) **MUST** be deterministic — re-running with the same `{tenant_id, export_at}` produces byte-identical output (same SHA-256).
 2. Determinism requires: sorted iteration order, canonical JSON formatting, no embedded wall-clock timestamps in the payload (only the declared `export_at` timestamp).
 3. The bundle hash **MUST** be signed (PAdES) and the signature **MUST** be verifiable for ≥ 10 years (PAdES-LT).
 4. The bundle **MUST** include a manifest of all included objects + their individual hashes for verification.

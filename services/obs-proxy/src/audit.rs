@@ -1,4 +1,4 @@
-//! Audit rows for proxied queries (FR-OBS-002 §1 #9, §8).
+//! Audit rows for proxied queries (TASK-OBS-002 §1 #9, §8).
 //!
 //! Decoupled and best-effort by design: a query must still succeed if the sink can't write (FR §10),
 //! and the proxy is stateless, so it does not write Postgres directly the way auth's memory_bridge

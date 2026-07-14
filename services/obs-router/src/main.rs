@@ -1,4 +1,4 @@
-//! obs-router binary - the axum HTTP shell (FR-OBS-007). `POST /alert` receives Alertmanager webhooks,
+//! obs-router binary - the axum HTTP shell (TASK-OBS-007). `POST /alert` receives Alertmanager webhooks,
 //! authenticates the shared secret (§1 #13), dedups by fingerprint (§1 #12), and routes each firing
 //! alert through CUO triage to CHAT or PagerDuty (`route_alert`). The clients are env-configured and
 //! degrade safely when a target is unset. The audit sink writes obs.alert_triaged / _acked to the memory
@@ -44,7 +44,7 @@ impl AuditSink for LogSink {
     }
 }
 
-/// Appends each audit row to the memory chain as a genesis row (FR-OBS-007 §1 #6). The write runs off
+/// Appends each audit row to the memory chain as a genesis row (TASK-OBS-007 §1 #6). The write runs off
 /// the request path via `tokio::spawn` and is best-effort: a failure logs and is dropped, because the
 /// alert route already completed (§10, "audit emit fails -> route still completes"). Infra alerts have no
 /// tenant or subject, so the row is scoped to the root tenant (nil UUID), like auth's tenant-unknown path.

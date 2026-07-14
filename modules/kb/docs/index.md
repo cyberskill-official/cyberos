@@ -1,7 +1,7 @@
 ---
 title: KB - RAG corpus, memory companion, auto-runbook source
 source: website/docs/modules/kb/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 KB is CyberOS's **documentation surface and the canonical source for AI-grounded retrieval**. The data model is simple: a `Document` has a slug, a markdown body, YAML frontmatter, a category, a permission tier, and a chain of `Version`s. Every save produces a new immutable version with a chained audit row in memory. The renderer produces sanitised HTML (server-side) for human reading and a clean plaintext stream for memory ingestion. Search is a three-layer stack: FTS5 / PGroonga (Vietnamese bigram tokenisation) for lexical, BGE-M3 embeddings (memory Layer 2) for semantic, and BGE-rerank-v2-m3 cross-encoder for re-ranking. "Ask this page" produces an answer grounded only in the current doc + explicitly linked docs, with span-level citations. Permissions: public, org-only, role-restricted (with share-link tokens for time-bound external access). Dual-language: a doc has a `language` field and an optional `translation_of` link to its counterpart.
@@ -335,7 +335,7 @@ Category| Retention| Notes
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS FR catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
 Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
 
@@ -585,7 +585,7 @@ Translation auto-draft via AI| planned - P2+
 - **OBS auto-runbook contract:** [OBS §2.6](../obs/index.html#auto-runbook) - KB is the runbook catalogue source for the triage router.
 - **memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §6](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - KB docs promoted to canonical become high-authority source for Lumi cross-tenant synthesis (sync_class permitting).
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - KB at P1-mid (P1, alongside PROJ).
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- **FR authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 - **BAAI BGE-M3** - multilingual embedding model (used for semantic layer).
 - **BAAI BGE-rerank-v2-m3** - cross-encoder reranker.
 - **PGroonga** - Postgres full-text search with Vietnamese bigram tokenisation.

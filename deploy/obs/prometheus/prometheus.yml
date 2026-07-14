@@ -1,5 +1,5 @@
 # Minimal Prometheus config for the local obs stack. Scrapes only itself; real scrape targets and the
-# OTLP write path arrive with the collector wiring (FR-OBS-001).
+# OTLP write path arrive with the collector wiring (TASK-OBS-001).
 global:
   scrape_interval: 15s
   evaluation_interval: 15s

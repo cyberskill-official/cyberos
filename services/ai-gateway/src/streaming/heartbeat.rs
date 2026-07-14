@@ -1,4 +1,4 @@
-//! FR-AI-010 §1 #9 — Heartbeat task.
+//! TASK-AI-010 §1 #9 — Heartbeat task.
 //!
 //! Emits `event: heartbeat` every 15 seconds during a steady stream to keep
 //! proxies (CDNs, corporate firewalls) from timing out idle connections.

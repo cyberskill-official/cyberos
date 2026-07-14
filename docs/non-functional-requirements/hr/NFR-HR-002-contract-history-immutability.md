@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of contract changes create new versioned row; 0 in-place edits"
 owner: CHRO
 created: 2026-05-18
-related_frs: [FR-HR-002]
+related_tasks: [TASK-HR-002]
 ---
 
 ## §1 — Statement (BCP-14 normative)

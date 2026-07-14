@@ -9,7 +9,7 @@ phase: P1
 slo: "100% of elicitation prompts pass injection-safety lint; clients can always decline"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-MCP-008]
+related_tasks: [TASK-MCP-008]
 ---
 
 ## §1 — Statement (BCP-14 normative)

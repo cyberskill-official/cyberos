@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of CaMeL pipeline runs maintain LLM separation; 0 untrusted-content-with-tools events"
 owner: CISO
 created: 2026-05-18
-related_frs: [FR-EMAIL-005]
+related_tasks: [TASK-EMAIL-005]
 ---
 
 ## §1 — Statement (BCP-14 normative)

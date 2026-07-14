@@ -1,7 +1,7 @@
 ---
 title: PORTAL - Client-facing surface, scoped read-only views, external IdP
 source: website/docs/modules/portal/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 PORTAL is CyberOS's **white-labelled client-facing surface**. A tenant's customers log in at `clients.<tenant>.cyberos.world` or at their own CNAME (e.g. `portal.acmecorp.com`) and see a portal that looks like the agency's brand: logo, colours, typography, sub-brand accents per (FR pending). The data plane is a permission-narrowed lens on the underlying agency data: PROJ projects scoped to `this client`, INV invoices scoped to `this client`, DOC signed-docs scoped to `this client`, CHAT threads scoped to `this client`. Cross-tenant isolation in the shared infrastructure is enforced at three layers: Postgres RLS, Apollo Router scope checks, and per-bucket S3 prefix ACLs. Authentication is via SSO from the client's IdP (SAML 2.0 or OIDC); ClientMembers are mapped to internal Subject rows via JIT provisioning at first login. A branded client AI assistant - a CUO variant - has the client's project history pre-loaded and answers grounded questions with citations. Client-initiated workflows (new project request, billing inquiry, support ticket) materialise as CHAT threads on the agency side, automatically routed to the right AM. Vietnamese + English UI; multi-currency rendering for international clients.
@@ -354,7 +354,7 @@ Closed| Day 30 of grace| Data wiped per retention policy; audit row retained; CN
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS FR catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
 Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
 
@@ -623,7 +623,7 @@ Isolation property fuzz in CI| planned - P4
 - **Bigger picture (above):** 3 strategic roles + multi-tenant-within-multi-tenant diagram + 10-row auto-vs-human matrix.
 - **memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - PORTAL retrievals strictly filtered to sync_class=client-visible.
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - PORTAL at P3-start (current status P4 long-term).
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- **FR authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 
 ## Changelog
 

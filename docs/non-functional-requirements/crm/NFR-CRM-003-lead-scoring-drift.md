@@ -9,12 +9,12 @@ phase: P1
 slo: "Quarterly: score AUC vs actual won/lost outcomes ≥ 0.70; score drift trigger ≤ 5pp"
 owner: CSO-Sales
 created: 2026-05-18
-related_frs: [FR-CRM-006]
+related_tasks: [TASK-CRM-006]
 ---
 
 ## §1 — Statement (BCP-14 normative)
 
-1. The lead-scoring model (`FR-CRM-006`) **MUST** be re-evaluated quarterly against actual won/lost outcomes; AUC ≥ 0.70 to remain in production.
+1. The lead-scoring model (`TASK-CRM-006`) **MUST** be re-evaluated quarterly against actual won/lost outcomes; AUC ≥ 0.70 to remain in production.
 2. Score drift > 5pp between quarters triggers model retraining.
 3. Model versions **MUST** be tagged; production deals carry the score-model-version that generated their score.
 4. Outcome events (won/lost) **MUST** feed back into the training set; the model is not static.

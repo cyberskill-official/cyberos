@@ -1,6 +1,6 @@
 """PersonaPairHandler — interleaved chains with shared artefact ownership.
 
-Per FR-CUO-106 §1.7 + DEC-2386. Affects 4 pairs:
+Per TASK-CUO-106 §1.7 + DEC-2386. Affects 4 pairs:
     - cro-revenue ↔ cco-customer            (shared: churn-cohort-analysis)
     - cmo ↔ cco-communications              (shared: campaign-plan)
     - cro-risk ↔ cto                        (shared: incident-report)

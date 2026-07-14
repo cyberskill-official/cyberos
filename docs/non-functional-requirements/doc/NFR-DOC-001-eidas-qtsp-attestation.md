@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of EU-jurisdiction signatures carry a valid QES attestation from a recognised QTSP"
 owner: CLO-Legal
 created: 2026-05-18
-related_frs: [FR-DOC-002]
+related_tasks: [TASK-DOC-002]
 ---
 
 ## §1 — Statement (BCP-14 normative)

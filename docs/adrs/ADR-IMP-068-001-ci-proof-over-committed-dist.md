@@ -1,7 +1,7 @@
 ---
 artefact: architecture-decision-record@1
 adr_id: ADR-IMP-068-001
-fr_id: FR-IMP-068
+task_id: TASK-IMP-068
 status: accepted
 created: 2026-07-12
 verdict: pass (architecture-decision-record-audit)
@@ -17,7 +17,7 @@ VERSION auto-bumps in CI; the payload build is manual and local; dist/ is gitign
 3. Rebuild in CI + compare stamps + wire the local hook into .githooks + prove the bump inline in version.yml - CHOSEN.
 
 ## Decision
-Option 3. One read-only comparator (check-version-sync.sh) shared by CI gate, git hook, the version-bump job, and later the release publisher (FR-IMP-069).
+Option 3. One read-only comparator (check-version-sync.sh) shared by CI gate, git hook, the version-bump job, and later the release publisher (TASK-IMP-069).
 
 ## Consequences
 - dist/ stays gitignored; the repo never carries stale generated stamps.

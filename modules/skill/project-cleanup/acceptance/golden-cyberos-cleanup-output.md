@@ -1,7 +1,7 @@
 # project-cleanup — golden expected output (cyberos flavor)
 
 This is the expected structural shape of the cleanup report for a cyberos
-repo with 4 stale fragments in `docs/feature-requests/ai/`.
+repo with 4 stale fragments in `docs/tasks/ai/`.
 
 The skill is NOT byte-deterministic (timestamps + sha varies per run).
 Acceptance check is **structural**: the run MUST produce a report that
@@ -11,16 +11,16 @@ matches the categories + counts below.
 
 ```
 Project: /path/to/cyberos
-Scope detected: cyberos (feature-request-audit skill present)
+Scope detected: cyberos (task-audit skill present)
 Started: <ISO-8601>
 
 Phase 1 — Inventory
   Files scanned: <N>
   Fragments detected: 4
-    - docs/feature-requests/ai/SLICE_1_AUDIT_SUMMARY.md (132 lines)
-    - docs/feature-requests/ai/SLICE_2_AUDIT_SUMMARY.md (74 lines)
-    - docs/feature-requests/ai/SLICE_3_AUDIT_SUMMARY.md (17 lines)
-    - docs/feature-requests/ai/AI_GATEWAY_COMPLETE_SUMMARY.md (45 lines)
+    - docs/tasks/ai/SLICE_1_AUDIT_SUMMARY.md (132 lines)
+    - docs/tasks/ai/SLICE_2_AUDIT_SUMMARY.md (74 lines)
+    - docs/tasks/ai/SLICE_3_AUDIT_SUMMARY.md (17 lines)
+    - docs/tasks/ai/AI_GATEWAY_COMPLETE_SUMMARY.md (45 lines)
   Suspicious leftovers: 4 (all _SUMMARY.md)
   Orphan audits: 0
   Broken links: 0

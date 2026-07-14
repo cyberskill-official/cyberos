@@ -1,4 +1,4 @@
-//! FR-PROJ-001 — sqlx repository layer.
+//! TASK-PROJ-001 — sqlx repository layer.
 
 use crate::errors::{IssueError, IssueResult};
 use crate::types::*;
@@ -20,7 +20,7 @@ pub async fn set_tenant(
 }
 
 /// §1 #10 — assignee MUST be a subject in the same tenant. We check via
-/// the `subjects` table from FR-AUTH-002 / FR-AUTH-003. Since `subjects`
+/// the `subjects` table from TASK-AUTH-002 / TASK-AUTH-003. Since `subjects`
 /// is RLS-scoped, querying with the current_tenant_id GUC set means a
 /// cross-tenant subject returns 0 rows.
 ///

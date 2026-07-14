@@ -1,9 +1,9 @@
-"""BASELINE.md validator for FR-SKILL-114.
+"""BASELINE.md validator for TASK-SKILL-114.
 
 Validates the design-time performance baseline artefact at v0.x → v1.0 promotion.
 Used by CI gates + skill-bundle auditors.
 
-Per FR-SKILL-114 §1.
+Per TASK-SKILL-114 §1.
 """
 
 from __future__ import annotations

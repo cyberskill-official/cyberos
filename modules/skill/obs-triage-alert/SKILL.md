@@ -2,7 +2,7 @@
 # Identity
 name: obs.triage-alert
 description: >-
-  CUO runtime skill invoked by obs-router (FR-OBS-007) once per Alertmanager alert. It reads the alert,
+  CUO runtime skill invoked by obs-router (TASK-OBS-007) once per Alertmanager alert. It reads the alert,
   consults the affected service's RED metrics, recent deploys, and the runbook corpus, and returns a
   triage verdict: a calibrated confidence, a short summary, the suspected cause, and a suggested runbook
   when one clearly matches. obs-router routes on that confidence - at or above 0.70 it posts the summary
@@ -53,7 +53,7 @@ obs-router invokes the skill with one alert:
 1. Read the alert: the name, the labels, and the summary annotation. Identify the affected service and
    what the alert actually measures.
 2. Pull the recent signal for that service: its RED metrics (the `cyberos_requests_total`,
-   `cyberos_errors_total`, `cyberos_duration_ms` series from FR-OBS-003), the error-rate and latency
+   `cyberos_errors_total`, `cyberos_duration_ms` series from TASK-OBS-003), the error-rate and latency
    trend over the last 30 minutes, and any deploy in the last hour.
 3. Search the runbook corpus (`runbooks-corpus/`) for a runbook whose triggers match this alert. A match
    needs the runbook's alert name or symptom to line up with the alert, not just a keyword overlap.

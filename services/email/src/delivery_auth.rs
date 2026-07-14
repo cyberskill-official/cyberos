@@ -1,4 +1,4 @@
-//! FR-EMAIL-004 — DKIM/ARC/BIMI deliverability primitives.
+//! TASK-EMAIL-004 — DKIM/ARC/BIMI deliverability primitives.
 //!
 //! The Stalwart container still performs the wire-level SMTP handoff. This
 //! module owns the deterministic CyberOS side of the contract: closed outcome

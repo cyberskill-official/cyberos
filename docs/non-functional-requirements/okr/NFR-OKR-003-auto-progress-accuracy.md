@@ -9,12 +9,12 @@ phase: P0
 slo: "100% of auto-progress computations within ±2% of independent per-KR computation"
 owner: CEO
 created: 2026-05-18
-related_frs: [FR-OKR-004]
+related_tasks: [TASK-OKR-004]
 ---
 
 ## §1 — Statement (BCP-14 normative)
 
-1. The nightly auto-progress batch (`FR-OKR-004`) **MUST** produce per-KR progress values within ±2% of an independent re-computation.
+1. The nightly auto-progress batch (`TASK-OKR-004`) **MUST** produce per-KR progress values within ±2% of an independent re-computation.
 2. The batch **MUST** be idempotent — rerunning produces the same values (modulo source-data changes).
 3. Per-KR computation errors **MUST** be isolated — one KR's data issue does not break the entire batch.
 4. Progress changes vs prior day **MUST** be visible in the digest with delta highlighted.

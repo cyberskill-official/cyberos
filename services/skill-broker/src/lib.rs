@@ -1,9 +1,9 @@
 //! `cyberos-skill-broker` — SKILL.md frontmatter validator + broker.
 //!
 //! Implements the Rust runtime side of:
-//! - FR-SKILL-103 — frontmatter schema + parser + validators
-//! - FR-SKILL-111 — description trigger enrichment (SKB-020..023)
-//! - FR-SKILL-113 — XML-free frontmatter (SKB-040..042)
+//! - TASK-SKILL-103 — frontmatter schema + parser + validators
+//! - TASK-SKILL-111 — description trigger enrichment (SKB-020..023)
+//! - TASK-SKILL-113 — XML-free frontmatter (SKB-040..042)
 //!
 //! See `cyberos/modules/skill/SKILL_BUNDLE_RUBRIC.md` for the rule corpus.
 //!

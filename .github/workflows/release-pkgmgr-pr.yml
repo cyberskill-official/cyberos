@@ -1,6 +1,6 @@
 name: release-pkgmgr-pr
 
-# FR-APP-006: PREPARATION-ONLY package-manager manifest refresh (Homebrew Cask + winget).
+# TASK-APP-006: PREPARATION-ONLY package-manager manifest refresh (Homebrew Cask + winget).
 # On dispatch, each gated job re-derives version + SHA256 from the actual GitHub Release
 # artifact and uploads a staged manifest draft for Stephen's review. NO job here ever
 # opens a PR against the external homebrew-cask or winget-pkgs monorepos - submission
@@ -35,14 +35,14 @@ jobs:
           # CI/tooling surface, no repo-name precondition a violation could evade.
           pat="gh pr ""create|brew bump""-cask-pr|wingetcreate"" submit"
           if grep -rE "$pat" .github/ tools/ 2>/dev/null; then
-            echo "::error::submission command found under .github/ or tools/ - forbidden by FR-APP-006 AC #3"
+            echo "::error::submission command found under .github/ or tools/ - forbidden by TASK-APP-006 AC #3"
             exit 1
           fi
           # Check (b): defense-in-depth with a clearer message when a file names either
           # external repo AND carries a submission command.
           for f in $(grep -rl "homebrew-cask\|winget-pkgs" .github/ tools/ 2>/dev/null); do
             if grep -qE "$pat" "$f"; then
-              echo "::error::submission command found in $f (repo-name-adjacent) - forbidden by FR-APP-006 AC #3"
+              echo "::error::submission command found in $f (repo-name-adjacent) - forbidden by TASK-APP-006 AC #3"
               exit 1
             fi
           done

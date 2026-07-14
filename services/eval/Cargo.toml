@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
 repository.workspace = true
-description = "CyberOS EVAL governance core (FR-EVAL-001 slice 1) - versioned monitoring notice + per-subject acknowledgment gate + data-category/purpose registry + founder/manager-of/self access check + per-category retention, all on the CyberOS identity, Postgres per-tenant RLS, and the memory audit chain. The Phase-0 gate every BRAIN/EVAL capture and evaluation depends on."
+description = "CyberOS EVAL governance core (TASK-EVAL-001 slice 1) - versioned monitoring notice + per-subject acknowledgment gate + data-category/purpose registry + founder/manager-of/self access check + per-category retention, all on the CyberOS identity, Postgres per-tenant RLS, and the memory audit chain. The Phase-0 gate every BRAIN/EVAL capture and evaluation depends on."
 
 [lib]
 name = "cyberos_eval"
@@ -25,7 +25,7 @@ tracing-subscriber.workspace = true
 tower-http.workspace = true
 uuid.workspace = true
 chrono.workspace = true
-# FR-EVAL-002 rubric: the rubric_item weight / genie_confidence columns are Postgres NUMERIC, decoded via
+# TASK-EVAL-002 rubric: the rubric_item weight / genie_confidence columns are Postgres NUMERIC, decoded via
 # sqlx's rust_decimal feature (enabled workspace-wide). The crate is pinned to match services/ai-gateway.
 rust_decimal = { version = "1.36", features = ["serde-with-str"] }
 # Slice 2 (governance HTTP surface + caller identity): verify the CyberOS RS256
@@ -44,7 +44,7 @@ tower = { workspace = true, features = ["util"] }
 name = "cyberos-eval"
 path = "src/main.rs"
 
-# FR-EVAL-001 clause 6: the retention/erasure sweeper, OFF by default - it runs ONLY when an operator
+# TASK-EVAL-001 clause 6: the retention/erasure sweeper, OFF by default - it runs ONLY when an operator
 # explicitly invokes this binary (or a cron shells out to it). The service binary never sweeps.
 [[bin]]
 name = "cyberos-eval-sweep"

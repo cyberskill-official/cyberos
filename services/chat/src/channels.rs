@@ -159,7 +159,7 @@ pub async fn create(
         serde_json::json!({"channel_id": channel.id, "name": channel.name}),
     )
     .await;
-    // FR-MEMORY-122 §1 #4, #7 — chat.channel_created off the response path; no-op unless capture on. The
+    // TASK-MEMORY-122 §1 #4, #7 — chat.channel_created off the response path; no-op unless capture on. The
     // creator is seated as owner, so this one event covers the create (no separate channel_joined).
     if let Some(cap) = st.capturer.clone() {
         let cid = channel.id;
@@ -287,7 +287,7 @@ pub async fn create_dm(
         serde_json::json!({"channel_id": row.0, "other_subject_id": other}),
     )
     .await;
-    // FR-MEMORY-122 §1 #4, #7 — chat.dm_opened off the response path, emitted ONLY when a new DM is created
+    // TASK-MEMORY-122 §1 #4, #7 — chat.dm_opened off the response path, emitted ONLY when a new DM is created
     // (the find-or-create return above does not re-emit). No-op unless capture on.
     if let Some(cap) = st.capturer.clone() {
         let cid = row.0;
@@ -348,7 +348,7 @@ pub async fn list(
 
     let mut out: Vec<Channel> = rows.into_iter().map(to_channel).collect();
 
-    // ───────── FR-CHAT-268 enforcement point 4 of 4: the DM list (§1 #4, #6) ─────────
+    // ───────── TASK-CHAT-268 enforcement point 4 of 4: the DM list (§1 #4, #6) ─────────
     // A DM with a blocked person leaves the blocker's list entirely while the block stands. Not emptied, not
     // greyed — gone. (The channel row and every message in it survive untouched in the DB: the block filters
     // READS only, which is what lets §1 #11 restore everything in place on unblock.)
@@ -628,7 +628,7 @@ pub async fn join(
         serde_json::json!({"channel_id": channel}),
     )
     .await;
-    // FR-MEMORY-122 §1 #4, #7 — chat.channel_joined for the joining subject; no-op unless capture on.
+    // TASK-MEMORY-122 §1 #4, #7 — chat.channel_joined for the joining subject; no-op unless capture on.
     if let Some(cap) = st.capturer.clone() {
         tokio::spawn(async move {
             crate::capture::emit_channel_membership(Some(&cap), tenant, caller, channel, true)

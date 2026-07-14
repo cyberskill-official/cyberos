@@ -9,12 +9,12 @@ phase: P1
 slo: "p95 < 2s from check-in submit to visible in the OKR dashboard"
 owner: CEO
 created: 2026-05-18
-related_frs: [FR-OKR-005]
+related_tasks: [TASK-OKR-005]
 ---
 
 ## §1 — Statement (BCP-14 normative)
 
-1. Manual KR check-ins (`FR-OKR-005`) **MUST** persist + appear in the OKR dashboard within 2s p95.
+1. Manual KR check-ins (`TASK-OKR-005`) **MUST** persist + appear in the OKR dashboard within 2s p95.
 2. Each check-in **MUST** capture: progress value, narrative (≥ 20 words encouraged but not required), confidence (1-5), submitted_at, submitter.
 3. Check-ins **MUST** create an immutable history; corrections take the form of a new check-in.
 4. Auto-reminders **MUST** fire weekly for KRs without check-in in 7+ days.

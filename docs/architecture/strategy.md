@@ -1,7 +1,7 @@
 ---
 title: Strategy
 source: website/docs/architecture/strategy.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 ## Where CyberOS sits today

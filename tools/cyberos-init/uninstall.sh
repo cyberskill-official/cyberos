@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # uninstall.sh — remove the vendored CyberOS machine from a repo (once / on demand).
-# Keeps operator work: docs/feature-requests/, docs/status/, CHANGELOG.md, agent files.
+# Keeps operator work: docs/tasks/, docs/status/, CHANGELOG.md, agent files.
 # BRAIN store kept by default (CYBEROS_UNINSTALL_KEEP_BRAIN=0 to drop it).
 #
 #   bash .cyberos/uninstall.sh [repo]
@@ -71,5 +71,5 @@ fi
 
 # 6. skill symlinks into .cyberos (dangling) — leave dirs; operator cleans
 echo "cyberos uninstall: done."
-echo "  kept: docs/feature-requests/, docs/status/, CHANGELOG.md, AGENTS.md / pointer files"
+echo "  kept: docs/tasks/, docs/status/, CHANGELOG.md, AGENTS.md / pointer files"
 echo "  re-install: bash <payload>/install.sh $root"

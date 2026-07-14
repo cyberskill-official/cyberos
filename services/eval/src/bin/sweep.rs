@@ -1,4 +1,4 @@
-//! `cyberos-eval-sweep` - the FR-EVAL-001 clause-6 retention/erasure sweeper entry point.
+//! `cyberos-eval-sweep` - the TASK-EVAL-001 clause-6 retention/erasure sweeper entry point.
 //!
 //! DISABLED BY DEFAULT. This is a SEPARATE binary from the eval service (`cyberos-eval`); the service never
 //! sweeps. Nothing erases until an operator (or a cron that shells out to this binary) runs it explicitly

@@ -1,4 +1,4 @@
--- FR-AUTH-111 — SSO display names.
+-- TASK-AUTH-111 — SSO display names.
 --
 -- There is deliberately NO BACKFILL of display_name here (§1 #7), and that is the whole point of this file.
 --
@@ -26,6 +26,6 @@ CREATE OR REPLACE VIEW subjects_display_name_unset AS
        AND (display_name IS NULL OR display_name = '' OR display_name = email);
 
 COMMENT ON VIEW subjects_display_name_unset IS
-    'FR-AUTH-111: humans still wearing their email address as a display name. Drains to zero as people sign in.';
+    'TASK-AUTH-111: humans still wearing their email address as a display name. Drains to zero as people sign in.';
 
 GRANT SELECT ON subjects_display_name_unset TO cyberos_ro;

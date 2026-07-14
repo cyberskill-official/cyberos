@@ -2,20 +2,20 @@
 //!
 //! ## Module map
 //!
-//! - [`policy`] — FR-AI-005: per-tenant YAML policy loader (cap · warn · override · residency).
-//! - [`memory_writer`] — FR-AI-003: subprocess bridge to the canonical memory Writer.
-//! - [`cost_table`] — FR-AI-007: YAML-backed, hot-reloadable provider cost rates.
-//! - [`cost_ledger`] — FR-AI-001/002/004: pre-call check · post-call reconcile · expiry cleanup.
-//! - [`cli`] — FR-AI-021: `cyberos-ai` operator CLI (usage · models · policy · failover · invoice · breaker · expiry · memory).
+//! - [`policy`] — TASK-AI-005: per-tenant YAML policy loader (cap · warn · override · residency).
+//! - [`memory_writer`] — TASK-AI-003: subprocess bridge to the canonical memory Writer.
+//! - [`cost_table`] — TASK-AI-007: YAML-backed, hot-reloadable provider cost rates.
+//! - [`cost_ledger`] — TASK-AI-001/002/004: pre-call check · post-call reconcile · expiry cleanup.
+//! - [`cli`] — TASK-AI-021: `cyberos-ai` operator CLI (usage · models · policy · failover · invoice · breaker · expiry · memory).
 //!
 //! ## P0 slice 1 (shipped here)
 //!
-//! - **FR-AI-005**: tenant policy loader (fully implemented, all 10 ACs tested).
-//! - **FR-AI-003**: memory-writer subprocess bridge (core happy path + path-traversal guard;
+//! - **TASK-AI-005**: tenant policy loader (fully implemented, all 10 ACs tested).
+//! - **TASK-AI-003**: memory-writer subprocess bridge (core happy path + path-traversal guard;
 //!   chain-verification + concurrent serialisation tested).
 //!
-//! Subsequent slices land FR-AI-001/002/004 (cost ledger) and FR-AI-006..022 (router · PII ·
-//! residency · cache · operator CLI) per the build order locked in `docs/feature-requests/BACKLOG.md`.
+//! Subsequent slices land TASK-AI-001/002/004 (cost ledger) and TASK-AI-006..022 (router · PII ·
+//! residency · cache · operator CLI) per the build order locked in `docs/tasks/BACKLOG.md`.
 
 #![deny(missing_debug_implementations)]
 // `missing_docs` is deferred — see services/auth/src/lib.rs for the rationale.
@@ -64,5 +64,5 @@ pub mod zdr;
 pub const SERVICE_BANNER: &str = concat!(
     "cyberos-ai-gateway v",
     env!("CARGO_PKG_VERSION"),
-    " — cost-of-everything gate (FR-AI-001..022)"
+    " — cost-of-everything gate (TASK-AI-001..022)"
 );

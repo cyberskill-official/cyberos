@@ -68,7 +68,7 @@ if (buildNumberFile <= PLAY_HIGH_WATER_MARK) {
   process.exit(2);
 }
 
-// --store-monotonic (FR-IMP-078, release CI only): lift the EFFECTIVE build number to
+// --store-monotonic (TASK-IMP-078, release CI only): lift the EFFECTIVE build number to
 // max(BUILD_NUMBER, minutes-since-epoch). BUILD_NUMBER only moves when version.yml bumps
 // VERSION - so while `Release-As` pins the version (as the whole 1.0.0 run-up does), every
 // re-tag rebuilt the SAME committed number, and both stores refuse a build number they have

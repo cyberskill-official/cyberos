@@ -9,5 +9,5 @@ config:
   SEVERITY_FLOOR: High
   PROTECTED_AREAS: modules/mcp/.awh/, modules/mcp/.caf/, services/mcp-gateway/src/protocol/
   RUN_COMMANDS: cd ../../services && cargo test -p cyberos-mcp-gateway && cargo clippy -p cyberos-mcp-gateway --all-targets -- -D warnings
-  DOMAIN_NOTES: The closed error-code map (DEC-272) and the tools/call permission gate are protocol invariants. RUN_COMMANDS mirrors the awh suite plus clippy -D warnings (confirmed clippy-clean across FR-MCP-001..008; the crate is #![warn(missing_docs)] + #![deny(missing_debug_implementations)], so clippy -D escalates both - keep it in the floor).
+  DOMAIN_NOTES: The closed error-code map (DEC-272) and the tools/call permission gate are protocol invariants. RUN_COMMANDS mirrors the awh suite plus clippy -D warnings (confirmed clippy-clean across TASK-MCP-001..008; the crate is #![warn(missing_docs)] + #![deny(missing_debug_implementations)], so clippy -D escalates both - keep it in the floor).
   BENCHMARK_MODE: none

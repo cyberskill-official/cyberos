@@ -1,9 +1,9 @@
-//! FR-MEMORY-123 §1 #7 — the `POST /v1/memory/recall` axum handler. A thin HTTP shell over
+//! TASK-MEMORY-123 §1 #7 — the `POST /v1/memory/recall` axum handler. A thin HTTP shell over
 //! [`crate::brain::recall::recall`]; the access scope, provenance, chain verify, and summaries-first logic
 //! all live in `recall`. Mounted in `main.rs` next to `search::search`.
 //!
 //! Caller resolution (MEM-001, R73): the caller's tenant AND subject are stamped into the request extensions
-//! by the `crate::auth::require_auth` middleware from the verified FR-AUTH-004 JWT — never from request
+//! by the `crate::auth::require_auth` middleware from the verified TASK-AUTH-004 JWT — never from request
 //! headers. The route is mounted only behind that middleware, so the [`Caller`] extension is always present;
 //! reading it here keeps a missing identity a fail-closed impossibility rather than a header the caller can
 //! forge.

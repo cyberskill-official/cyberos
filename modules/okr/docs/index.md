@@ -1,7 +1,7 @@
 ---
 title: OKR - Strategy cascade, KR auto-progress engine, face-saving retros
 source: website/docs/modules/okr/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 OKR is the **quarterly strategy operating loop**. Cycles, Objectives, Key Results, and Confidence Check-ins are first-class data primitives; alignments tie Member OKRs up through Team OKRs to a Company OKR; progress sources are queries that auto-update KRs from elsewhere in CyberOS, so the dashboard is read-canonical rather than self-reported. The CUO digest on Monday morning summarises confidence drops and surfaces blockers in CHAT. End-of-quarter retros are framed as "what would change our minds next quarter?" prompts; every retro entry is itself a memory entry under `module/okr/` for future cycle reference. Vietnamese cultural adaptation: failed KRs are described as "learning achieved" / "đã học được"; the term "miss" does not appear in any UI string. EU AI Act Art. 14 - OKR-driven employment decisions (promotion, performance review) always have an explicit human approval gate.
@@ -355,7 +355,7 @@ Cancelled| terminal| Cycle invalidated. Audit chain preserved with reason.
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS FR catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
 Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
 
@@ -636,7 +636,7 @@ Public OKR view per workspace| planned - P3
 - **Bigger picture (above):** 3 strategic roles + auto-progress data-flow diagram + 8-row auto-vs-human matrix.
 - **memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - quarterly retros are citable memory entries for next-cycle planning.
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - OKR at P3-exit (P3, after the spine modules ship).
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- **FR authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 
 ## Changelog
 

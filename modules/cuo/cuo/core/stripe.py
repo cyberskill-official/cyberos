@@ -1,4 +1,4 @@
-"""stripe — categorical key for refinement proposals (FR-CUO-201).
+"""stripe — categorical key for refinement proposals (TASK-CUO-201).
 
 Format: `<skill_slug>:<signal_id>:<8 hex pattern_hash>`
 

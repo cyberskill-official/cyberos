@@ -1,4 +1,4 @@
-//! Per-category retention / erasure sweeper (FR-EVAL-001 clause 6, 16). The bounded-recall half of the
+//! Per-category retention / erasure sweeper (TASK-EVAL-001 clause 6, 16). The bounded-recall half of the
 //! governance gate: for each `(tenant, category)` retention policy the operator configured, erase the
 //! Layer-2 / derived BRAIN projections older than `retain_days`. Nothing is retained without a policy; a
 //! tenant with no policy sweeps nothing; the sweep is idempotent (a second run with no fresh past-retention
@@ -7,9 +7,9 @@
 //! WHAT IT ERASES, AND WHAT IT NEVER TOUCHES (clause 6, 11; §2). The sweeper deletes ONLY from the
 //! rebuildable derived layer, never from the hash chain:
 //!
-//! - `l2_memory` - the Layer-2 projection (FR-BRAIN-101), matched by category via `frontmatter->>'eval_category'`.
-//! - `brain_event_embedding` - the per-interaction embedding lens (FR-MEMORY-123), matched by its `kind` column.
-//! - `brain_summary` - the rolling-summary lens (FR-MEMORY-123), matched by its scope `kind` (see [`SWEEP_TARGETS`]).
+//! - `l2_memory` - the Layer-2 projection (TASK-BRAIN-101), matched by category via `frontmatter->>'eval_category'`.
+//! - `brain_event_embedding` - the per-interaction embedding lens (TASK-MEMORY-123), matched by its `kind` column.
+//! - `brain_summary` - the rolling-summary lens (TASK-MEMORY-123), matched by its scope `kind` (see [`SWEEP_TARGETS`]).
 //!
 //! It NEVER issues a DELETE or UPDATE against `l1_audit_log`: that hash-chained table is the append-only
 //! system of record and stays immutable, so you bound what is recallable without breaking what is provable.
@@ -34,7 +34,7 @@
 //! is erased ONLY when it positively matches the policy's category AND is past `retain_days`. An untagged
 //! row (no `eval_category` frontmatter / a `kind` that does not equal the category) is NOT swept - it is
 //! retained, the documented fail-safe (never over-delete). Backfilling the category tag at ingest
-//! (FR-MEMORY-122) is what brings such rows under a policy; until then the sweeper simply cannot see them,
+//! (TASK-MEMORY-122) is what brings such rows under a policy; until then the sweeper simply cannot see them,
 //! which is the safe direction.
 
 use uuid::Uuid;
@@ -63,14 +63,14 @@ struct SweepTarget {
 /// The derived projections the sweeper erases, in deletion order. Order is not load-bearing (each runs in
 /// its own statement); embeddings + summaries (the BRAIN lens) first, then the generic L2 projection.
 const SWEEP_TARGETS: &[SweepTarget] = &[
-    // FR-MEMORY-123 per-event embedding lens. Category tag = the interaction `kind` column.
+    // TASK-MEMORY-123 per-event embedding lens. Category tag = the interaction `kind` column.
     SweepTarget {
         table: "brain_event_embedding",
         category_match: "kind = $2",
         age_column: "created_at",
         subject_column: Some("subject_id"),
     },
-    // FR-MEMORY-123 rolling-summary lens. Only subject-scoped summaries carry a comparable `kind`; match the
+    // TASK-MEMORY-123 rolling-summary lens. Only subject-scoped summaries carry a comparable `kind`; match the
     // scope_kind so a category that names a subject scope is swept, and attribute to its `subject_id`.
     SweepTarget {
         table: "brain_summary",
@@ -78,8 +78,8 @@ const SWEEP_TARGETS: &[SweepTarget] = &[
         age_column: "created_at",
         subject_column: Some("subject_id"),
     },
-    // FR-BRAIN-101 Layer-2 memory projection. Category tag = the `eval_category` frontmatter the
-    // FR-MEMORY-122 emitters write (§3 sketch). No per-subject column on this table.
+    // TASK-BRAIN-101 Layer-2 memory projection. Category tag = the `eval_category` frontmatter the
+    // TASK-MEMORY-122 emitters write (§3 sketch). No per-subject column on this table.
     SweepTarget {
         table: "l2_memory",
         category_match: "frontmatter->>'eval_category' = $2",

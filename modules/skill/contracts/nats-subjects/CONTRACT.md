@@ -52,11 +52,11 @@ Subjects use **dot-separated lowercase tokens** in the form:
 <top_level_persona>.<skill_id_with_underscores>.<event_name>
 ```
 
-- **`<top_level_persona>`** — the **outer** lowercase persona namespace (`cuo`, future `cao`, `cmo`, etc. — whatever sits at the registry root). Sub-personas (`cpo`, `cto`, `clo`, …) are NOT included in the subject name; they're implicit in the `skill_id`. Rationale: subjects exist at the routing layer (the supervisor consumes them), and the supervisor routes at the top-level persona granularity. Including the sub-persona makes the subject more verbose without adding routing power. The persona's specific sub-namespace IS preserved in the `skill_id` field of the payload (e.g. `"skill_id": "cuo/cpo/feature-request-author"`).
-- **`<skill_id_with_underscores>`** — the skill folder name with hyphens replaced by underscores (`feature-request-author` → `fr_author`).
+- **`<top_level_persona>`** — the **outer** lowercase persona namespace (`cuo`, future `cao`, `cmo`, etc. — whatever sits at the registry root). Sub-personas (`cpo`, `cto`, `clo`, …) are NOT included in the subject name; they're implicit in the `skill_id`. Rationale: subjects exist at the routing layer (the supervisor consumes them), and the supervisor routes at the top-level persona granularity. Including the sub-persona makes the subject more verbose without adding routing power. The persona's specific sub-namespace IS preserved in the `skill_id` field of the payload (e.g. `"skill_id": "cuo/cpo/task-author"`).
+- **`<skill_id_with_underscores>`** — the skill folder name with hyphens replaced by underscores (`task-author` → `fr_author`).
 - **`<event_name>`** — past-tense lowercase phrase describing what happened. Examples: `fr_written`, `audit_complete`, `hitl_pause`, `refinement_proposed`.
 
-This naming matches the pre-existing skill-body convention used by `cuo/cpo/feature-request-author` since v0.1.0 (e.g. `cuo.fr_author.fr_written`). The contract documents the existing convention; it does not redefine it.
+This naming matches the pre-existing skill-body convention used by `cuo/cpo/task-author` since v0.1.0 (e.g. `cuo.fr_author.fr_written`). The contract documents the existing convention; it does not redefine it.
 
 ### Reserved tokens
 
@@ -70,12 +70,12 @@ The following token positions are reserved and may not be used as `<event_name>`
 
 | Subject | Publisher | Payload shape ref | QoS | Durability |
 | --- | --- | --- | --- | --- |
-| `cuo.fr_author.fr_written` | `cuo/cpo/feature-request-author` | `schema.json#/payloads/fr_written` | at-least-once | `WorkQueue` retain ≥7d |
-| `cuo.fr_author.batch_complete` | `cuo/cpo/feature-request-author` | `schema.json#/payloads/batch_complete` | at-least-once | `WorkQueue` retain ≥7d |
-| `cuo.fr_author.hitl_pause` | `cuo/cpo/feature-request-author` | `schema.json#/payloads/hitl_pause` | at-least-once | `Memory` retain ≥30d |
-| `cuo.fr_audit.audit_written` | `cuo/cpo/feature-request-audit` | `schema.json#/payloads/audit_written` | at-least-once | `WorkQueue` retain ≥7d |
-| `cuo.fr_audit.audit_batch_complete` | `cuo/cpo/feature-request-audit` | `schema.json#/payloads/audit_batch_complete` | at-least-once | `WorkQueue` retain ≥7d |
-| `cuo.fr_audit.hitl_pause` | `cuo/cpo/feature-request-audit` | `schema.json#/payloads/hitl_pause` | at-least-once | `Memory` retain ≥30d |
+| `cuo.fr_author.fr_written` | `cuo/cpo/task-author` | `schema.json#/payloads/fr_written` | at-least-once | `WorkQueue` retain ≥7d |
+| `cuo.fr_author.batch_complete` | `cuo/cpo/task-author` | `schema.json#/payloads/batch_complete` | at-least-once | `WorkQueue` retain ≥7d |
+| `cuo.fr_author.hitl_pause` | `cuo/cpo/task-author` | `schema.json#/payloads/hitl_pause` | at-least-once | `Memory` retain ≥30d |
+| `cuo.fr_audit.audit_written` | `cuo/cpo/task-audit` | `schema.json#/payloads/audit_written` | at-least-once | `WorkQueue` retain ≥7d |
+| `cuo.fr_audit.audit_batch_complete` | `cuo/cpo/task-audit` | `schema.json#/payloads/audit_batch_complete` | at-least-once | `WorkQueue` retain ≥7d |
+| `cuo.fr_audit.hitl_pause` | `cuo/cpo/task-audit` | `schema.json#/payloads/hitl_pause` | at-least-once | `Memory` retain ≥30d |
 | `cuo.refinement_proposed` | any skill | `schema.json#/payloads/refinement_proposed` | at-least-once | `Memory` retain ≥90d |
 | `cuo.supervisor.session_start` | the supervisor | `schema.json#/payloads/session_lifecycle` | at-most-once | ephemeral |
 | `cuo.supervisor.session_end` | the supervisor | `schema.json#/payloads/session_lifecycle` | at-most-once | ephemeral |
@@ -109,7 +109,7 @@ The full payload shapes live in `schema.json` (one schema per `<event_name>`). N
 
 ## Forbidden patterns
 
-- **Camel-case or hyphen in subject tokens.** Subjects are dot-separated lowercase. `cuo.frCreate.fr_written` and `cuo.feature-request-author.fr_written` are both rejected.
+- **Camel-case or hyphen in subject tokens.** Subjects are dot-separated lowercase. `cuo.frCreate.fr_written` and `cuo.task-author.fr_written` are both rejected.
 - **Verb-first event names.** Use past-tense `<noun>_<verb_past>` not `<verb>_<noun>`. Good: `fr_written`. Bad: `write_fr`.
 - **Subjects with PII or secrets in payload.** Same denylist as `.cyberos/memory/store/` (AGENTS.md §9.3): no salaries, government IDs, bank, secrets, raw API keys. Use a pointer to the secret store instead.
 - **Cross-tenant subscriptions.** A skill MUST only subscribe to subjects emitted by skills in its own tenant (matched on the `tenant.id` from `manifest.json`). The supervisor enforces at the bus level.
@@ -120,4 +120,4 @@ The full payload shapes live in `schema.json` (one schema per `<event_name>`). N
 - **DEC-090** — registry v0.2.0; introduces `cyberos/docs/contracts/`.
 - **DEC-091** — `depends_on_contracts:` declaration mechanism.
 - **DEC-092** — `cuo.refinement_proposed` subject is the wire form of the auto-refinement loop's surface to the supervisor.
-- **feature-request-author** + **feature-request-audit** v0.2.2 — first concrete consumers of this contract.
+- **task-author** + **task-audit** v0.2.2 — first concrete consumers of this contract.

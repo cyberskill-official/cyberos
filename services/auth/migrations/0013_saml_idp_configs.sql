@@ -1,4 +1,4 @@
--- FR-AUTH-103 — SAML 2.0 SSO per-tenant identity-provider config.
+-- TASK-AUTH-103 — SAML 2.0 SSO per-tenant identity-provider config.
 --
 -- Three tables mirror the OIDC layout (migration 0011) but with SAML-specific
 -- fields: IdP metadata XML / signing certificate / NameID format / attribute

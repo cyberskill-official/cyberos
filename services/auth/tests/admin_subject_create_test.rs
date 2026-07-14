@@ -1,8 +1,8 @@
-//! FR-AUTH-002 — Subject create integration tests (slice-3, G-014 + G-007).
+//! TASK-AUTH-002 — Subject create integration tests (slice-3, G-014 + G-007).
 //!
 //! Mirrors the pattern from `admin_tenant_create_test.rs`. Each test corresponds
 //! to one or more edge-case-matrix rows in
-//! `docs/feature-requests/auth/FR-AUTH-002-subject-create.audit.md`.
+//! `docs/tasks/auth/TASK-AUTH-002-subject-create.audit.md`.
 //!
 //! Requires Postgres; gated by `#[ignore]`. CI integration job runs
 //! `cargo test -- --ignored` against the docker-compose stack.
@@ -49,7 +49,7 @@ async fn build_app() -> axum::Router {
         sticky_suppress: cyberos_auth::travel_policy::StickySuppress::new(),
         rate_limit: std::sync::Arc::new(cyberos_auth::rate_limit::RateLimiter::new()),
         deny_list: cyberos_auth::deny_list::DenyList::new(),
-        // FR-MEMORY-122: capture is off in tests unless a test installs a Capturer; None = no-op emitters.
+        // TASK-MEMORY-122: capture is off in tests unless a test installs a Capturer; None = no-op emitters.
         capturer: None,
     })
 }
@@ -83,7 +83,7 @@ async fn bootstrap_test_key(pool: &PgPool) {
 /// tenant they're authenticated for.
 async fn tenant_admin_token(pool: &PgPool) -> (String, uuid::Uuid) {
     let tenant_uuid = uuid::Uuid::new_v4();
-    // Seed the tenant directly (the FR-AUTH-001 endpoint requires
+    // Seed the tenant directly (the TASK-AUTH-001 endpoint requires
     // root-admin-in-tenant-0; for this test we go around it).
     let _ = sqlx::query(
         "INSERT INTO tenants (id, slug, display_name, country, plan_tier, status, residency)
@@ -100,7 +100,7 @@ async fn tenant_admin_token(pool: &PgPool) -> (String, uuid::Uuid) {
         .issue(
             TenantId(tenant_uuid),
             SubjectId(uuid::Uuid::new_v4()),
-            "", // FR-AUTH-004 §1 #2 — test token, no email needed
+            "", // TASK-AUTH-004 §1 #2 — test token, no email needed
             "human",
             vec!["admin".into()],
             vec!["tenant-admin".into()],
@@ -502,7 +502,7 @@ async fn create_subject_without_tenant_admin_role_returns_403() {
         .issue(
             TenantId(tenant_uuid),
             SubjectId(uuid::Uuid::new_v4()),
-            "", // FR-AUTH-004 §1 #2 — test token, no email needed
+            "", // TASK-AUTH-004 §1 #2 — test token, no email needed
             "human",
             vec!["admin".into()],
             vec!["tenant-member".into()],

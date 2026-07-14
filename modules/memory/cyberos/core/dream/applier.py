@@ -1,6 +1,6 @@
 """
 cyberos.core.dream.applier — replay DreamDiff proposals into the chain
-(FR-MEMORY-115 §1 #4, §1 #10..#14).
+(TASK-MEMORY-115 §1 #4, §1 #10..#14).
 
 The applier is the operator-gated half of dreaming. It refuses to run
 unless:
@@ -37,11 +37,11 @@ from cyberos.core.dream.proposals import DreamDiff, DreamProposal
 
 class PreconditionFailed(RuntimeError):
     """Raised when an on-disk body hash doesn't match the proposal's
-    recorded precondition (FR-MEMORY-115 §1 #10)."""
+    recorded precondition (TASK-MEMORY-115 §1 #10)."""
 
 
 class ProtocolAmendmentMissing(RuntimeError):
-    """Raised when AGENTS.md §7.7 is not yet anchored (FR-MEMORY-115 §1 #11)."""
+    """Raised when AGENTS.md §7.7 is not yet anchored (TASK-MEMORY-115 §1 #11)."""
 
 
 def _has_section_7_7(store: Path) -> bool:
@@ -116,7 +116,7 @@ def apply(
         if proposal_ids is None or p.proposal_id in proposal_ids
     ]
 
-    # ── Strict-idempotency pass — skip proposals already applied (FR-MEMORY-115 §1 #10) ──
+    # ── Strict-idempotency pass — skip proposals already applied (TASK-MEMORY-115 §1 #10) ──
     # Walk the audit chain once; collect (dream_id, proposal_id) pairs already
     # present as dream.proposal_applied rows. Any proposal in that set is a
     # no-op on this apply call.

@@ -1,4 +1,4 @@
-//! FR-AI-022 §5 — W3C TraceContext propagation tests.
+//! TASK-AI-022 §5 — W3C TraceContext propagation tests.
 
 use cyberos_ai_gateway::otel::propagation;
 use opentelemetry::trace::{SpanContext, SpanId, TraceContextExt, TraceFlags, TraceId, TraceState};

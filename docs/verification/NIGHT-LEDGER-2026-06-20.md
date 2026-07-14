@@ -16,12 +16,12 @@ gate-readiness (real, structurally verified) and grounded, executable plans.
 1. obs is gate-ready. `modules/obs/.awh/goldenset.yaml` (cargo test -p cyberos-obs-collector + the
    held-out `cyberos_obs` integration test) and `modules/obs/audit-profile.yaml`.
 2. mcp is gate-ready. `modules/mcp/.awh/goldenset.yaml` (cargo test -p cyberos-mcp-gateway + the
-   held-out protocol::errors filter) and `modules/mcp/audit-profile.yaml`. FR-MCP-001 already shipped
+   held-out protocol::errors filter) and `modules/mcp/audit-profile.yaml`. TASK-MCP-001 already shipped
    with protocol tests.
-3. Remaining-modules build plan: `docs/feature-requests/remaining-build-plan.md` - the 261-FR backlog
+3. Remaining-modules build plan: `docs/tasks/remaining-build-plan.md` - the 261-FR backlog
    sorted into three buckets (verify-existing; buildable-now; spec-blocked draft) against the locked
    13-layer order.
-4. obs FR-by-FR plan: `docs/feature-requests/obs/OBS-BUILD-PLAN.md` - the obs dependency DAG, per-FR
+4. obs FR-by-FR plan: `docs/tasks/obs/OBS-BUILD-PLAN.md` - the obs dependency DAG, per-FR
    crate/files/test-plan/invariant, the cross-module deps (AUTH-004, AI-022), and how to keep the gate
    in step as obs-proxy / obs-router / obs-compliance-view crates land.
 
@@ -43,8 +43,8 @@ gate-readiness (real, structurally verified) and grounded, executable plans.
    design. NOTE: the first obs capture sealed a broken baseline because the original acceptance task
    pointed at a non-existent `--test cyberos_obs` target; the goldenset now targets
    `validate_rejects_missing_pii_scrub` - recapture obs after this fix.
-2. Build obs FR-by-FR via `ship-feature-requests`, following OBS-BUILD-PLAN.md. obs is the locked next
-   module; FR-OBS-001 scaffold is in, eight FRs remain.
+2. Build obs FR-by-FR via `ship-tasks`, following OBS-BUILD-PLAN.md. obs is the locked next
+   module; TASK-OBS-001 scaffold is in, eight FRs remain.
 3. For the ~14 draft modules (crm, hr, inv, kb, time, okr, plugin, ...), run the
    `draft -> ready_to_implement` spec audit first - the workflow cannot pick them up while they are
    draft. plugin is closest (authored at 10/10, crate exists).
@@ -56,4 +56,4 @@ Not built - and not buildable to `done` from here, because that needs the compil
 is true now: obs and mcp are gate-ready and obs is fully planned to code; the whole remaining surface
 has an executable, dependency-ordered plan; and the path for each module (audit if draft, gate it,
 ship it through the chain) is written down. The next real implementation step is a toolchain session
-running OBS-BUILD-PLAN.md through `ship-feature-requests`.
+running OBS-BUILD-PLAN.md through `ship-tasks`.

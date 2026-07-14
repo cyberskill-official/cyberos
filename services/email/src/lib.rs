@@ -9,7 +9,7 @@
 //!   * Look up per-tenant residency before writing the body to the
 //!     residency-pinned S3 bucket.
 //!   * Manage per-tenant DKIM keys + rotation history.
-//!   * Emit 5 `email.*` memory audit row kinds (FR-EMAIL-001 §1 #13).
+//!   * Emit 5 `email.*` memory audit row kinds (TASK-EMAIL-001 §1 #13).
 //!   * Expose REST health + per-message-status + cursored list handlers.
 //!
 //! The Stalwart server itself runs as a separate container (see
@@ -21,8 +21,8 @@
 //!   - Types module — `EmailMessage`, `EmailThread`, `BounceEvent`,
 //!     `DkimKey`, `MessageStatus`, `MessageDirection`, `BounceKind`.
 //!   - Stalwart inbound adapter (mock-mode for slice 1; the real Stalwart
-//!     webhook plumbing arrives in FR-EMAIL-002 alongside the JWT bridge).
-//!   - Residency resolver (FR-AI-016 contract; lookup against
+//!     webhook plumbing arrives in TASK-EMAIL-002 alongside the JWT bridge).
+//!   - Residency resolver (TASK-AI-016 contract; lookup against
 //!     `tenant_residency`).
 //!   - DKIM keystore generation + rotation.
 //!   - Append-only writers for message_metadata + bounce_log.
@@ -31,22 +31,22 @@
 //!   - `cyberos-email-cli provision` slice-1 user-provisioning entry.
 //!
 //!   - DKIM/ARC/BIMI deliverability helpers and DNS setup records
-//!     (FR-EMAIL-004).
-//!   - CaMeL dual-LLM quarantine data-flow gate (FR-EMAIL-005).
-//!   - Outbound 1:1 compose/confirm/queue state machine (FR-EMAIL-009).
-//!   - DSAR subject-scoped JSONL export primitives (FR-EMAIL-011).
+//!     (TASK-EMAIL-004).
+//!   - CaMeL dual-LLM quarantine data-flow gate (TASK-EMAIL-005).
+//!   - Outbound 1:1 compose/confirm/queue state machine (TASK-EMAIL-009).
+//!   - DSAR subject-scoped JSONL export primitives (TASK-EMAIL-011).
 //!
 //! Remaining integrations intentionally sit at module boundaries:
-//!   - Real JMAP/IMAP/SMTP JWT bridge inside Stalwart (FR-EMAIL-002).
-//!   - Shared-inbox UX (FR-EMAIL-003).
-//!   - Convert-to-issue (FR-EMAIL-007).
-//!   - Bulk-send approval (FR-EMAIL-010).
+//!   - Real JMAP/IMAP/SMTP JWT bridge inside Stalwart (TASK-EMAIL-002).
+//!   - Shared-inbox UX (TASK-EMAIL-003).
+//!   - Convert-to-issue (TASK-EMAIL-007).
+//!   - Bulk-send approval (TASK-EMAIL-010).
 //!
 //! ### RLS pattern
 //!
-//! All tables follow FR-AUTH-003 §10.6 — the GUC `app.current_tenant_id`
+//! All tables follow TASK-AUTH-003 §10.6 — the GUC `app.current_tenant_id`
 //! drives the tenant-isolation policy; the nil-UUID escape is root-tenant
-//! only. The FR-EMAIL-001 spec uses `auth.tenant_id` in §1 #10; this is a
+//! only. The TASK-EMAIL-001 spec uses `auth.tenant_id` in §1 #10; this is a
 //! documented spec divergence in the audit dossier §10.6.
 
 // Style-class clippy + hygiene lints deferred to the FR-EMAIL-NNN-clippy-

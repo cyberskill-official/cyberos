@@ -9,7 +9,7 @@ phase: P1
 slo: "100% of payslips use the correct VN tax tables; non-VN residents flagged as out-of-scope"
 owner: CFO
 created: 2026-05-18
-related_frs: [FR-REW-004, FR-REW-006]
+related_tasks: [TASK-REW-004, TASK-REW-006]
 ---
 
 ## §1 — Statement (BCP-14 normative)
@@ -17,7 +17,7 @@ related_frs: [FR-REW-004, FR-REW-006]
 1. The REW compute path **MUST** apply VN PIT + SI tables only to members with `residency = VN`; non-VN residents are flagged out-of-scope and excluded from the standard compute.
 2. The payslip PDF **MUST** be generated in Vietnamese with VND amounts; bilingual (VN+EN) PDF is optional but bilingual amounts MUST still be VND.
 3. Currency formatting **MUST** follow Vietnamese conventions: `1.234.567 ₫` (dot thousands, no decimals).
-4. The parameter version (`FR-REW-002`) **MUST** record which tax tables were applied; cross-version drift is detectable.
+4. The parameter version (`TASK-REW-002`) **MUST** record which tax tables were applied; cross-version drift is detectable.
 5. Out-of-scope members **MUST** still appear in the period's roster with `excluded_reason = non-vn-residency` for completeness.
 
 ## §2 — Why this constraint

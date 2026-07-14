@@ -1,4 +1,4 @@
-//! Defence-in-depth PII scan (FR-OBS-008 §1 #12). The audit chain already stores placeholders, not raw
+//! Defence-in-depth PII scan (TASK-OBS-008 §1 #12). The audit chain already stores placeholders, not raw
 //! PII (`email_hash16`, `<VN_CCCD_1>`), so a compliance response should never contain raw PII. Before a
 //! view is served, its rendered body is scanned; any match is a sev-1 and a 500 rather than a leak. This
 //! is the pure detector - the HTTP layer decides what to do with a non-empty result.

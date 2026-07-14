@@ -1,8 +1,8 @@
--- FR-PROJ-001 §3 — engagements table.
+-- TASK-PROJ-001 §3 — engagements table.
 --
 -- Engagements scope ALL project work. Every issue belongs to an engagement
 -- (DEC-213 — no orphan issues). client_id is a forward-reference to the
--- CRM clients table; that FK is added in slice 2 once FR-CRM-001 ships.
+-- CRM clients table; that FK is added in slice 2 once TASK-CRM-001 ships.
 
 BEGIN;
 

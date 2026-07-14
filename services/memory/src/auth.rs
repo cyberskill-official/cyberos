@@ -2,8 +2,8 @@
 //!
 //! Before this module, `/v1/memory/recall` and `/v1/memory/search` derived the caller's tenant and subject
 //! from the `x-tenant-id` / `x-subject-id` request headers, so any network caller could claim founder-grade
-//! visibility in any tenant. Identity now comes ONLY from a verified CyberOS access token (FR-AUTH-110
-//! provider, FR-AUTH-004 JWKS, RS256); the HS256 path is for tests and local dev.
+//! visibility in any tenant. Identity now comes ONLY from a verified CyberOS access token (TASK-AUTH-110
+//! provider, TASK-AUTH-004 JWKS, RS256); the HS256 path is for tests and local dev.
 //!
 //! This mirrors `services/chat/src/auth.rs` deliberately (same `Authenticator`, same `Claims`, same JWKS
 //! refresh discipline) so there is ONE verification behaviour across the platform and memory cannot drift
@@ -45,7 +45,7 @@ pub struct Claims {
 }
 
 impl Claims {
-    /// The caller's subject id (their `viewer_subject_id` in FR-EVAL-001's `access_grant`).
+    /// The caller's subject id (their `viewer_subject_id` in TASK-EVAL-001's `access_grant`).
     pub fn subject_id(&self) -> Result<Uuid, AuthError> {
         Uuid::parse_str(&self.sub).map_err(|_| AuthError::AuthFailed("sub is not a uuid".into()))
     }
@@ -109,7 +109,7 @@ impl Authenticator {
         }
     }
 
-    /// RS256 verifier built from the auth service JWKS (FR-AUTH-004).
+    /// RS256 verifier built from the auth service JWKS (TASK-AUTH-004).
     pub fn from_jwks(jwks_json: &str) -> Result<Self, AuthError> {
         let by_kid = parse_jwks(jwks_json)?;
         let mut validation = Validation::new(Algorithm::RS256);

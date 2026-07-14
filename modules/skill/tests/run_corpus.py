@@ -9,9 +9,9 @@ invokes the skill runner per fixture, scores the result against the
 fixture's expectations.
 
 Usage:
-    python3 runtime/tests/skills/run_corpus.py fr-with-tasks
-    python3 runtime/tests/skills/run_corpus.py fr-with-tasks --max-iterations 2 --no-llm
-    cyberos skill-test fr-with-tasks   # umbrella alias
+    python3 runtime/tests/skills/run_corpus.py task-with-subtasks
+    python3 runtime/tests/skills/run_corpus.py task-with-subtasks --max-iterations 2 --no-llm
+    cyberos skill-test task-with-subtasks   # umbrella alias
 
 Scoring: each fixture passes if:
   - skill_runner returns status == PASS
@@ -41,7 +41,7 @@ def find_memory(start: Path = None) -> Path:
 
 def main():
     p = argparse.ArgumentParser(description="run a skill's test corpus (Tier α.5)")
-    p.add_argument("skill_id", help="e.g. fr-with-tasks")
+    p.add_argument("skill_id", help="e.g. task-with-subtasks")
     p.add_argument("--max-iterations", type=int, default=2)
     p.add_argument("--no-llm", action="store_true",
                    help="skip LLM call; only exercise harness + fixture loading")

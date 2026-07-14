@@ -1,5 +1,5 @@
-//! FR-EVAL-001 slice 2 - the governance HTTP surface. Each handler verifies the caller (RS256 token ->
-//! [`crate::auth::Caller`]), opens a tenant-scoped transaction (the FR-AUTH-003 RLS GUC), does the access
+//! TASK-EVAL-001 slice 2 - the governance HTTP surface. Each handler verifies the caller (RS256 token ->
+//! [`crate::auth::Caller`]), opens a tenant-scoped transaction (the TASK-AUTH-003 RLS GUC), does the access
 //! / role check, performs the mutation or read, and emits the clause-12 audit row. JSON in, JSON out, the
 //! `(StatusCode, String)` error shape - all mirroring `cyberos_chat`'s handlers.
 //!
@@ -1028,7 +1028,7 @@ pub async fn file_request(
 }
 
 // ===========================================================================
-// Rubric (FR-EVAL-002) - the human-curated, clause-cited evaluation rubric. Authoring (create / open
+// Rubric (TASK-EVAL-002) - the human-curated, clause-cited evaluation rubric. Authoring (create / open
 // version / add item / publish) requires the rubric-admin grant (founder + designated rubric admins,
 // §1 #10); reading the effective version requires founder or manager, mirroring GET /v1/eval/notice. Every
 // mutation emits a hash-chained `eval.rubric_*` audit row inside the rubric module functions (§1 #11). No

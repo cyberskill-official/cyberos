@@ -79,7 +79,7 @@ export function MessageRow({
   onRetry?: (m: Message) => void;
   /// Long-press (touch) or right-click opens the mobile action sheet for this message.
   onLongPress?: (m: Message) => void;
-  /// FR-CHAT-267 — open the report dialog for this message. Optional so a surface that has no reporting
+  /// TASK-CHAT-267 — open the report dialog for this message. Optional so a surface that has no reporting
   /// path (the thread panel's preview row) can omit it rather than pass a no-op.
   onReport?: (m: Message) => void;
 }) {
@@ -210,7 +210,7 @@ export function MessageRow({
               </div>
             </div>
           ) : m.blocked_sender ? (
-            /* FR-CHAT-268 §1 #5 — the sender is blocked and this is a group channel. The server already
+            /* TASK-CHAT-268 §1 #5 — the sender is blocked and this is a group channel. The server already
                withheld the body, the attachments and the reactions; there is nothing here to leak. The row
                keeps its id and its position so the conversation around it still reads. */
             <div className="m-body">
@@ -342,7 +342,7 @@ export function MessageRow({
                 <Icon name="trash" size={15} />
               </button>
             )}
-            {/* FR-CHAT-267 §1 #10 — the message entry point. Shown only on other people's messages: the
+            {/* TASK-CHAT-267 §1 #10 — the message entry point. Shown only on other people's messages: the
                 server would accept a report of your own message, but offering it is noise, and the one thing
                 you actually want for your own message (delete) is already right there. Reporting a PERSON
                 lives in the member list, which is the other entry point. */}

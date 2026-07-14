@@ -1,4 +1,4 @@
-//! FR-AUTH-106 slice-3 — admin REST for travel-policy mutation.
+//! TASK-AUTH-106 slice-3 — admin REST for travel-policy mutation.
 //!
 //! Routes (all gated by `verify_jwt` middleware + role check inside each
 //! handler — `security_admin` required to mutate, `tenant_admin` enough to

@@ -9,7 +9,7 @@ phase: P0
 slo: "Reconciled token count within 0.5% of provider-reported usage, averaged over 1000 calls"
 owner: CFO
 created: 2026-05-18
-related_frs: [FR-AI-007, FR-AI-008]
+related_tasks: [TASK-AI-007, TASK-AI-008]
 ---
 
 ## §1 — Statement (BCP-14 normative)

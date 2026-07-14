@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>CyberOS CUO Workflows</title>
 <!--
-  FR-APP-006 - CyberOS CUO Workflows & GENIE panel.
+  TASK-APP-006 - CyberOS CUO Workflows & GENIE panel.
 
   A self-contained operator page over the CUO module's read-only status endpoint (GET /v1/cuo/status). It
-  shows the idle-time dream loop's safety envelope (FR-CUO-204) - whether it is enabled, its mode, the idle
+  shows the idle-time dream loop's safety envelope (TASK-CUO-204) - whether it is enabled, its mode, the idle
   window, and the allowlist / denylist that bound what it may ever touch - plus a summary of the FR backlog
   it operates over. The GENIE assistant runs on the AI gateway (the Assistant tile). Adds no backend.
 
@@ -102,7 +102,7 @@
     var deny = (env.denylist || []).map(function (d) { return '<span class="tag deny">' + esc(d) + '</span>'; }).join("");
     var allow = (env.allowlist || []).map(function (a) { return '<span class="tag allow">' + esc(a) + '</span>'; }).join("");
     cards.insertAdjacentHTML("beforeend",
-      '<div class="card"><h3>Dream loop (FR-CUO-204)</h3>' +
+      '<div class="card"><h3>Dream loop (TASK-CUO-204)</h3>' +
       kv("Enabled", pill(!!env.enabled, env.enabled ? "enabled" : "disabled")) +
       kv("Mode", pill(env.effective_mode === "apply", env.effective_mode || "off", env.effective_mode === "apply")) +
       kv("Idle window", (env.idle_window_minutes != null ? env.idle_window_minutes + " min" : "-")) +

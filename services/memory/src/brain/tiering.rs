@@ -1,4 +1,4 @@
-//! FR-MEMORY-123 §1 #6 / DEC-2725 — age-based hot -> warm -> cold tiering of `brain_event_embedding`.
+//! TASK-MEMORY-123 §1 #6 / DEC-2725 — age-based hot -> warm -> cold tiering of `brain_event_embedding`.
 //!
 //! Recency dominates relevance for evaluation, and indexing everything `hot` forever is the cost-and-latency
 //! trap. The tier column bounds the partial hot HNSW index (and therefore every query's cost) to the hot

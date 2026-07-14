@@ -1,4 +1,4 @@
-//! User blocking (FR-CHAT-268). "A no longer wishes to receive B's content."
+//! User blocking (TASK-CHAT-268). "A no longer wishes to receive B's content."
 //!
 //! The one thing to understand before changing anything here: **B is never told.** Not by a status code, not
 //! by an error string, not by a missing read receipt. B posts, the message is persisted, B sees it in their

@@ -2,7 +2,7 @@
 # caf_gate.sh - the CyberOS code-audit gate (absorbed from CyberSkill/code-audit-framework).
 #
 # The code-audit analog of scripts/awh_ai_gate.sh. Runs a module's deterministic CAF floor and
-# fails closed, so ship-feature-requests step 28.5 (and the pre-commit hook) can require it
+# fails closed, so ship-tasks step 28.5 (and the pre-commit hook) can require it
 # ALONGSIDE the awh test-rerun gate before an FR flips testing -> done.
 #
 # Two deterministic checks (no LLM, no API key):

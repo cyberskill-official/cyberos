@@ -1,4 +1,4 @@
-"""FR-MEMORY-111 — Pre-ingest PII detection gate.
+"""TASK-MEMORY-111 — Pre-ingest PII detection gate.
 
 EVERY memory row that's about to be written to Layer 1 passes through this
 gate first. The gate runs two detectors:
@@ -7,7 +7,7 @@ gate first. The gate runs two detectors:
    passport numbers, IBAN. Slice-1 ships a regex-based subset; slice-2 wires
    the real `presidio-analyzer` (heavier dep).
 
-2. **VN-PII** — Vietnamese-specific identifiers per the FR-AI-013 corpus:
+2. **VN-PII** — Vietnamese-specific identifiers per the TASK-AI-013 corpus:
    CCCD (12-digit citizen ID), MST (10/13-digit tax ID), phone numbers in
    E.164 ``+84`` form.
 

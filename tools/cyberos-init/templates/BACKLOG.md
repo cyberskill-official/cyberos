@@ -6,11 +6,11 @@ hardening/refactor/audit-remediation (`class: improvement`) live here together â
 improvement is not a separate track and never gets a second backlog file. Tag
 improvement rows with `(improvement)`; untagged rows are product.
 
-FR files live under `docs/feature-requests/`: flat (`FR-001-slug.md`) for small
+FR files live under `docs/tasks/`: flat (`FR-001-slug.md`) for small
 repos, or grouped in subfolders by module for larger ones. `improvement/` is a
 normal subfolder there for cross-cutting hardening FRs.
 
-The `ship-feature-requests` workflow reads this file, picks the first eligible FR
+The `ship-tasks` workflow reads this file, picks the first eligible FR
 (`ready_to_implement` with all `depends_on` done), and drives it through the
 lifecycle. HITL is required: the agent halts at review acceptance and final
 acceptance for a recorded human verdict, and never sets `done` itself.

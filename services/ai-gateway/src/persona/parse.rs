@@ -1,4 +1,4 @@
-//! FR-AI-014 — Persona Markdown parser (YAML frontmatter + body extraction).
+//! TASK-AI-014 — Persona Markdown parser (YAML frontmatter + body extraction).
 
 use super::hash;
 use super::types::{LlmHints, Persona, PersonaHandle, PersonaId, PersonaInitError};

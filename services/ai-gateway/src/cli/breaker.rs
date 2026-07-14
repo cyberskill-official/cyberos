@@ -1,4 +1,4 @@
-//! FR-AI-021 — `cyberos-ai breaker` subcommand.
+//! TASK-AI-021 — `cyberos-ai breaker` subcommand.
 
 use sha2::{Digest, Sha256};
 

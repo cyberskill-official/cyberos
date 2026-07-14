@@ -1,4 +1,4 @@
-//! FR-AUTH-104 — OpenID Connect Authorization Code + PKCE SSO flow.
+//! TASK-AUTH-104 — OpenID Connect Authorization Code + PKCE SSO flow.
 //!
 //! Per-tenant IdP config in `oidc_idp_configs`. Three endpoints:
 //!   * `GET /v1/auth/oidc/initiate?tenant_slug=...&idp=...&redirect=...`
@@ -256,7 +256,7 @@ pub async fn initiate(
     ))
 }
 
-/// FR-AUTH-110 broker - begin an upstream-IdP (Google) auth-code flow for a
+/// TASK-AUTH-110 broker - begin an upstream-IdP (Google) auth-code flow for a
 /// tenant **by id**, carrying an `op_resume` URL the callback returns to after
 /// it mints the AUTH SSO session. Returns the provider authorization URL the
 /// browser should be redirected to. Deliberately kept separate from `initiate`
@@ -442,7 +442,7 @@ pub async fn callback(
         )
     })?;
 
-    // Verify the ID token (FR-AUTH-104, RFC 7517): fetch the IdP JWKS and check
+    // Verify the ID token (TASK-AUTH-104, RFC 7517): fetch the IdP JWKS and check
     // the RS256 signature, the issuer, the audience (our client_id), and expiry
     // before trusting any claim. The JWKS is fetched fresh per login so a key
     // rotation at the IdP is picked up without a stale cache.
@@ -479,7 +479,7 @@ pub async fn callback(
         .and_then(|v| v.as_str())
         .map(String::from);
 
-    // P0 Workspace-domain gate (FR-AUTH-104). When the IdP restricts domains, a
+    // P0 Workspace-domain gate (TASK-AUTH-104). When the IdP restricts domains, a
     // verified email is mandatory and its domain must be on the allow-list. This
     // is what keeps Google sign-in scoped to @cyberskill.world: a personal Gmail
     // is rejected here before any subject is touched.
@@ -500,7 +500,7 @@ pub async fn callback(
         }
     }
 
-    // FR-AUTH-111 — the person's name, from the ID token we already verified. Read here, where the claims
+    // TASK-AUTH-111 — the person's name, from the ID token we already verified. Read here, where the claims
     // are, so `resolve_subject` is handed a name rather than reaching back for one.
     //
     // Deserialising from the already-verified `id_claims` adds no trust boundary: signature, issuer,
@@ -539,7 +539,7 @@ pub async fn callback(
         .issue(
             cyberos_types::TenantId(idp.tenant_id),
             cyberos_types::SubjectId(subject_id),
-            idp_email.as_deref().unwrap_or(""), // FR-AUTH-004 §1 #2 — OIDC userinfo carries the email
+            idp_email.as_deref().unwrap_or(""), // TASK-AUTH-004 §1 #2 — OIDC userinfo carries the email
             "human",
             vec![],
             assigned_roles,
@@ -569,7 +569,7 @@ pub async fn callback(
     .execute(&state.pg)
     .await;
 
-    // FR-AUTH-106 slice-3 — apply policy-aware impossible-travel detection
+    // TASK-AUTH-106 slice-3 — apply policy-aware impossible-travel detection
     // to the OIDC flow. Block → 403; Challenge → token + needs_mfa_challenge
     // flag; Clear → normal token.
     let deps = crate::travel::AssessDeps {
@@ -596,7 +596,7 @@ pub async fn callback(
         ));
     }
 
-    // FR-AUTH-110 broker resume: a no-cookie /v1/auth/op/authorize sent the user
+    // TASK-AUTH-110 broker resume: a no-cookie /v1/auth/op/authorize sent the user
     // here via Google. Mint an AUTH SSO session, set the __Host-cyberos_sso
     // cookie, and 302 back to the original /authorize, which now succeeds via
     // silent SSO. The non-broker path (op_resume = None) is unchanged below.
@@ -871,7 +871,7 @@ async fn resolve_subject(
     idp: &LoadedIdp,
     idp_sub: &str,
     idp_email: Option<&str>,
-    // FR-AUTH-111 — already resolved from the ID token by the caller (`display_name::resolve`). Passed in
+    // TASK-AUTH-111 — already resolved from the ID token by the caller (`display_name::resolve`). Passed in
     // rather than derived here, so there is one chain and one place it can be got wrong.
     display_name: &str,
 ) -> Result<Uuid, (StatusCode, Json<Value>)> {
@@ -983,7 +983,7 @@ async fn resolve_subject(
     // one knows it), and the IdP stays the only way in.
     let sso_password_hash = bcrypt::hash(random_b64(32), bcrypt::DEFAULT_COST)
         .map_err(|e| internal(format!("bcrypt hash failed: {e}")))?;
-    // FR-AUTH-111 — the display name comes from the ID token's name claims, resolved by the caller.
+    // TASK-AUTH-111 — the display name comes from the ID token's name claims, resolved by the caller.
     //
     // This bind used to be `idp_email.unwrap_or("")`. THAT was the bug: every human provisioned through
     // Google SSO wore their email address as their display name, in every channel, above every message,
@@ -1033,14 +1033,14 @@ async fn resolve_subject(
     tx.commit().await.map_err(internal)?;
 
     // Grant the IdP's default roles in the RBAC table so the minted token carries
-    // them (FR-AUTH-101). Provision-time only - we do NOT re-grant on later logins,
+    // them (TASK-AUTH-101). Provision-time only - we do NOT re-grant on later logins,
     // so an admin can still remove a role without it reappearing.
     grant_default_roles(state, idp.tenant_id, subject_id, &idp.default_roles).await;
     Ok(subject_id)
 }
 
 /// Best-effort: grant a freshly provisioned subject the IdP's default roles in the
-/// RBAC `subject_roles` table (FR-AUTH-101), so the minted token carries them. Runs
+/// RBAC `subject_roles` table (TASK-AUTH-101), so the minted token carries them. Runs
 /// in its own transaction after the subject is committed - a misconfigured role name
 /// (which violates the `roles(name)` FK) rolls back only this grant and never aborts
 /// the login. `granted_by` is the nil UUID, marking a system/IdP grant.
@@ -1185,7 +1185,7 @@ pub struct PendingState {
     pub redirect_uri: String,
     pub code_verifier: String,
     pub issued_at_secs: u64,
-    /// FR-AUTH-110 broker: when set, the callback mints an AUTH SSO session and
+    /// TASK-AUTH-110 broker: when set, the callback mints an AUTH SSO session and
     /// 302s back to this `/v1/auth/op/authorize` URL instead of returning JSON.
     pub op_resume: Option<String>,
     /// P0 console hand-back: when set (and `op_resume` is None), the callback

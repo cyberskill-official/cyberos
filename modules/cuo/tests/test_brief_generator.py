@@ -58,11 +58,11 @@ def cto_persona(cuo_root):
 
 @pytest.fixture(scope="module")
 def ship_wf(cto_persona, skill_root):
-    """Get the ship-feature-requests workflow."""
+    """Get the ship-tasks workflow."""
     workflows = discover_workflows(cto_persona)
-    wf = next((w for w in workflows if w.slug == "ship-feature-requests"), None)
+    wf = next((w for w in workflows if w.slug == "ship-tasks"), None)
     if wf is None:
-        pytest.skip("ship-feature-requests workflow not found")
+        pytest.skip("ship-tasks workflow not found")
     return wf
 
 
@@ -139,14 +139,14 @@ class TestBriefGenerator:
             workflow=ship_wf,
             skill_root=skill_root,
             output_dir=output_dir,
-            fr_id="FR-OBS-002",
+            task_id="TASK-OBS-002",
         )
         brief = generator.generate()
 
         # Verify key sections exist
-        assert "# Execution Brief — FR-OBS-002" in brief
+        assert "# Execution Brief — TASK-OBS-002" in brief
         assert "## 1. Project Context" in brief
-        assert "## 2. Feature Request" in brief
+        assert "## 2. Task" in brief
         assert "## 5. Execution Plan" in brief
         assert "## 6. Completion" in brief
 
@@ -161,7 +161,7 @@ class TestBriefGenerator:
             workflow=ship_wf,
             skill_root=skill_root,
             output_dir=output_dir,
-            fr_id="FR-OBS-002",
+            task_id="TASK-OBS-002",
         )
         brief = generator.generate()
 
@@ -180,7 +180,7 @@ class TestBriefGenerator:
             workflow=ship_wf,
             skill_root=skill_root,
             output_dir=output_dir,
-            fr_id="FR-OBS-002",
+            task_id="TASK-OBS-002",
         )
         brief = generator.generate()
 
@@ -199,7 +199,7 @@ class TestBriefGenerator:
             workflow=ship_wf,
             skill_root=skill_root,
             output_dir=output_dir,
-            fr_id="FR-OBS-002",
+            task_id="TASK-OBS-002",
         )
         brief = generator.generate()
 
@@ -218,7 +218,7 @@ class TestBriefGenerator:
             workflow=ship_wf,
             skill_root=skill_root,
             output_dir=output_dir,
-            fr_id="FR-NONEXISTENT-999",
+            task_id="FR-NONEXISTENT-999",
         )
         brief = generator.generate()
 
@@ -243,7 +243,7 @@ class TestBriefChain:
             workflow_slug="nonexistent-workflow",
             skill_root=skill_root,
             output_dir=output_dir,
-            fr_id="FR-TEST-001",
+            task_id="TASK-TEST-001",
         )
         assert "ERROR" in result
         assert "not found" in result
@@ -258,13 +258,13 @@ class TestBriefChain:
 
         result = brief_chain(
             persona=cto_persona,
-            workflow_slug="ship-feature-requests",
+            workflow_slug="ship-tasks",
             skill_root=skill_root,
             output_dir=output_dir,
-            fr_id=None,
+            task_id=None,
         )
         assert "ERROR" in result
-        assert "fr_id" in result
+        assert "task_id" in result
 
 
 class TestProjectRootResolution:
@@ -338,7 +338,7 @@ class TestReadSkillFrontmatter:
         fm = _read_skill_frontmatter("repo-context-map-author", skill_root)
         audit = fm.get("audit", {})
         fields = audit.get("required_fields", [])
-        assert "fr_id" in fields
+        assert "task_id" in fields
 
 
 class TestBriefOutputFormat:
@@ -355,7 +355,7 @@ class TestBriefOutputFormat:
             workflow=ship_wf,
             skill_root=skill_root,
             output_dir=output_dir,
-            fr_id="FR-OBS-002",
+            task_id="TASK-OBS-002",
         )
         brief = generator.generate()
 
@@ -373,7 +373,7 @@ class TestBriefOutputFormat:
             workflow=ship_wf,
             skill_root=skill_root,
             output_dir=output_dir,
-            fr_id="FR-OBS-002",
+            task_id="TASK-OBS-002",
         )
         brief = generator.generate()
 
@@ -391,7 +391,7 @@ class TestBriefOutputFormat:
             workflow=ship_wf,
             skill_root=skill_root,
             output_dir=output_dir,
-            fr_id="FR-OBS-002",
+            task_id="TASK-OBS-002",
         )
         brief = generator.generate()
 

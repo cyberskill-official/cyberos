@@ -1,4 +1,4 @@
-"""FR-AI-012 §5 — Negative fixture tests for VN PII recognizers.
+"""TASK-AI-012 §5 — Negative fixture tests for VN PII recognizers.
 
 Ensures recognizers do NOT false-positive on plain Vietnamese text,
 dates, VND amounts, and bare names without NĐD labels.

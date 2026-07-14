@@ -1,4 +1,4 @@
-//! FR-MCP-005 Protected Resource Metadata (RFC 9728) document builders.
+//! TASK-MCP-005 Protected Resource Metadata (RFC 9728) document builders.
 //!
 //! `GET /.well-known/oauth-protected-resource` advertises which authorization server issues the tokens
 //! this MCP resource server accepts, plus the bearer method and signing algorithms, so a federated MCP
@@ -28,7 +28,7 @@ pub fn protected_resource_metadata(resource: &str, authorization_servers: &[Stri
 }
 
 /// Build a per-module PRM: the aggregate document plus the module's `scopes_supported` (the union of
-/// its tools' required scopes from the FR-MCP-002 registry). An empty `scopes` slice is valid - it
+/// its tools' required scopes from the TASK-MCP-002 registry). An empty `scopes` slice is valid - it
 /// means the module exposes tools that require no scope - and is distinct from a 404, which means the
 /// module is not registered (§11.9).
 pub fn protected_resource_metadata_for_module(

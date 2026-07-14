@@ -1,6 +1,6 @@
 # CyberOS EMAIL — Stalwart adapter + per-tenant DKIM + residency-pinned bodies
 
-**Status:** FR-EMAIL-001 + FR-EMAIL-004/005/009/011 shipped as service slices — Stalwart container config, per-tenant DKIM keystore, residency-pinned S3+KMS body storage, delivery-auth hardening, CaMeL quarantine gate, outbound confirm-before-send queue, DSAR export jobs, HTTP routes, and memory audit row builders.
+**Status:** TASK-EMAIL-001 + TASK-EMAIL-004/005/009/011 shipped as service slices — Stalwart container config, per-tenant DKIM keystore, residency-pinned S3+KMS body storage, delivery-auth hardening, CaMeL quarantine gate, outbound confirm-before-send queue, DSAR export jobs, HTTP routes, and memory audit row builders.
 **Mail server:** [Stalwart Mail Server](https://stalw.art) v0.10.x (AGPL-3.0; container pinned in `docker/stalwart.toml`).
 **Protocols:** JMAP + IMAP + SMTP + POP3 + ManageSieve + MTA-STS + DANE + DKIM + ARC + BIMI.
 
@@ -68,11 +68,11 @@
 
 | Concern | FR | Notes |
 |---|---|---|
-| JMAP / IMAP / SMTP JWT bridge | FR-EMAIL-002 | Stalwart's auth delegates to AUTH JWT validator |
-| Shared-inbox UX (assignment, comments, snooze) | FR-EMAIL-003 | TypeScript SPA + backend handlers |
-| Tracked-domain auto-log to CRM | FR-EMAIL-006 | CRM activity-feed integration |
-| Convert thread → PROJ issue | FR-EMAIL-007 | One-click issue derivation |
-| Bulk send approval | FR-EMAIL-010 | CFO/marketing dual-token |
+| JMAP / IMAP / SMTP JWT bridge | TASK-EMAIL-002 | Stalwart's auth delegates to AUTH JWT validator |
+| Shared-inbox UX (assignment, comments, snooze) | TASK-EMAIL-003 | TypeScript SPA + backend handlers |
+| Tracked-domain auto-log to CRM | TASK-EMAIL-006 | CRM activity-feed integration |
+| Convert thread → PROJ issue | TASK-EMAIL-007 | One-click issue derivation |
+| Bulk send approval | TASK-EMAIL-010 | CFO/marketing dual-token |
 
 ---
 
@@ -117,7 +117,7 @@ DATABASE_URL=postgres://... cyberos-email-cli resolve-residency \
 
 ## §6 — memory audit row kinds emitted
 
-FR-EMAIL-001 defines the core message row kinds; FR-EMAIL-004/005/009/011 add service-specific helper rows:
+TASK-EMAIL-001 defines the core message row kinds; TASK-EMAIL-004/005/009/011 add service-specific helper rows:
 
 | Kind | Trigger | PII handling |
 |---|---|---|
@@ -139,9 +139,9 @@ only the 16-char hash prefix per §1 #14.
 
 ## §7 — Spec divergences
 
-See `docs/feature-requests/email/FR-EMAIL-001-stalwart-deployment.audit.md`
+See `docs/tasks/email/TASK-EMAIL-001-stalwart-deployment.audit.md`
 §10.6 for the GUC-name divergence (`app.current_tenant_id` from
-FR-AUTH-003 §10.6 vs. the spec's `auth.tenant_id`).
+TASK-AUTH-003 §10.6 vs. the spec's `auth.tenant_id`).
 
 ---
 
@@ -169,11 +169,11 @@ services/email/
 │   ├── lib.rs                      crate root
 │   ├── types.rs                    EmailMessage, EmailThread, BounceEvent, DkimKey, enums
 │   ├── errors.rs                   EmailError + structured codes
-│   ├── residency.rs                FR-AI-016 resolver + fail-closed assert
-│   ├── delivery_auth.rs            FR-EMAIL-004 DKIM/ARC/BIMI hardening helpers
-│   ├── camel.rs                    FR-EMAIL-005 CaMeL quarantine gate
-│   ├── outbound.rs                 FR-EMAIL-009 outbound confirm/send queue
-│   ├── dsar.rs                     FR-EMAIL-011 DSAR export helpers
+│   ├── residency.rs                TASK-AI-016 resolver + fail-closed assert
+│   ├── delivery_auth.rs            TASK-EMAIL-004 DKIM/ARC/BIMI hardening helpers
+│   ├── camel.rs                    TASK-EMAIL-005 CaMeL quarantine gate
+│   ├── outbound.rs                 TASK-EMAIL-009 outbound confirm/send queue
+│   ├── dsar.rs                     TASK-EMAIL-011 DSAR export helpers
 │   ├── dkim/
 │   │   ├── mod.rs
 │   │   └── keystore.rs             provision + rotate + KmsEncryptor trait + MockKmsEncryptor
@@ -199,8 +199,8 @@ services/email/
 │       ├── server.rs               cyberos-email HTTP server
 │       └── cli.rs                  cyberos-email-cli operator entry
 └── tests/
-    ├── residency_pin_test.rs       FR-EMAIL-001 §4 #9 + #10
-    ├── audit_row_test.rs           FR-EMAIL-001 §4 #5 + #13 + #25
-    ├── inbound_quarantine_test.rs  FR-EMAIL-001 §4 #13
+    ├── residency_pin_test.rs       TASK-EMAIL-001 §4 #9 + #10
+    ├── audit_row_test.rs           TASK-EMAIL-001 §4 #5 + #13 + #25
+    ├── inbound_quarantine_test.rs  TASK-EMAIL-001 §4 #13
     └── subject_normalisation_test.rs
 ```

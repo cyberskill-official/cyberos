@@ -1,12 +1,12 @@
--- FR-EVAL-001 slice 1: EVAL Phase-0 governance core.
+-- TASK-EVAL-001 slice 1: EVAL Phase-0 governance core.
 --
--- The governance gate that makes wide, day-1 capture (FR-MEMORY-121/122) and downstream
--- evaluation (FR-EVAL-003) lawful, access-bounded, time-bounded, and tamper-evident BEFORE any
+-- The governance gate that makes wide, day-1 capture (TASK-MEMORY-121/122) and downstream
+-- evaluation (TASK-EVAL-003) lawful, access-bounded, time-bounded, and tamper-evident BEFORE any
 -- interaction event is captured or any evaluation is produced. Tables here are the disclosed
 -- monitoring notice + per-subject acknowledgment ledger + data-category/purpose registry +
 -- founder/manager-of/self access grants + per-category retention policy.
 --
--- Reuses AUTH's per-tenant RLS GUC (app.current_tenant_id, FR-AUTH-003) and the L1 audit chain
+-- Reuses AUTH's per-tenant RLS GUC (app.current_tenant_id, TASK-AUTH-003) and the L1 audit chain
 -- (services/shared/cyberos-audit-chain). L1 (l1_audit_log) is the append-only source of truth and is
 -- NEVER mutated here; this module governs the queryable L2 projections.
 --
@@ -105,7 +105,7 @@ CREATE INDEX IF NOT EXISTS access_grant_lookup_idx
 CREATE INDEX IF NOT EXISTS access_grant_target_idx
     ON access_grant (tenant_id, target_subject_id);
 
--- Per-category retention policy (clause 6). The slice-1 store; the sweeper job (FR-EVAL-001 later
+-- Per-category retention policy (clause 6). The slice-1 store; the sweeper job (TASK-EVAL-001 later
 -- sub-task) deletes/redacts L2 projections older than retain_days. Nothing is retained without a policy.
 CREATE TABLE IF NOT EXISTS retention_policy (
     id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS retention_policy (
 CREATE INDEX IF NOT EXISTS retention_policy_tenant_idx
     ON retention_policy (tenant_id);
 
--- 14. Row-level security: every governance row is scoped to its tenant via the FR-AUTH-003 GUC
+-- 14. Row-level security: every governance row is scoped to its tenant via the TASK-AUTH-003 GUC
 --     app.current_tenant_id (set per transaction). The nil tenant bypasses for admin paths. Mirrors
 --     services/chat/migrations/0001_chat_core.sql and services/auth/migrations/0021_sessions.sql.
 DO $$

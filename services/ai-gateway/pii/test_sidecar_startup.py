@@ -1,4 +1,4 @@
-"""FR-AI-012 §5 — Sidecar startup test.
+"""TASK-AI-012 §5 — Sidecar startup test.
 
 AC #15: sidecar refuses to start if any recognizer registration fails.
 """

@@ -1,4 +1,4 @@
-"""FR-CHAT-012 — subject export with memory audit hashes."""
+"""TASK-CHAT-012 — subject export with memory audit hashes."""
 
 from __future__ import annotations
 

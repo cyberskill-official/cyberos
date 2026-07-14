@@ -9,5 +9,5 @@ Key changes:
 - NEW §0 "The bigger picture" — 3-card layout + spine Mermaid (PROJ → Member → TIME → Billable cascade → AM → CFO + INV/REW/memory) + 9-row auto-vs-human matrix
 - Risks +5 (R-TIME-011..015): billable cascade snapshot divergence (High) · auto-detect wrong Issue · VN Labour Code 2026 amendment · cycle-rollup runs before all submissions · multi-currency drift
 - KPIs +6: cascade snapshot integrity (= 1.0 hard floor) · auto-detect acceptance · PROJ-TIME issue match rate · cycle-rollup completeness · VN Labour Code version coverage (= 1.0)
-- References expanded: §0 + 6 cross-module links + PROJ §2.6 billable cascade link + MEMORY_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + feature-request-audit skill
+- References expanded: §0 + 6 cross-module links + PROJ §2.6 billable cascade link + MEMORY_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + task-audit skill
 

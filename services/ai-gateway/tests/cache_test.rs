@@ -1,4 +1,4 @@
-//! FR-AI-017 §5 — Cache hit/miss/cross-tenant/skip tests.
+//! TASK-AI-017 §5 — Cache hit/miss/cross-tenant/skip tests.
 //!
 //! Requires a running Redis at 127.0.0.1:6379.
 //! Run with: docker run -d --name test-redis -p 6379:6379 redis:7

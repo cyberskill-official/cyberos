@@ -1,4 +1,4 @@
-//! FR-EVAL-001 slice 2 - governance HTTP endpoint integration tests.
+//! TASK-EVAL-001 slice 2 - governance HTTP endpoint integration tests.
 //!
 //! Mirrors the auth HTTP test harness (`services/auth/tests/admin_subject_create_test.rs`): build the
 //! real `AppState` + `router`, mint a CyberOS token (HS256 here, the test/local verifier), drive the

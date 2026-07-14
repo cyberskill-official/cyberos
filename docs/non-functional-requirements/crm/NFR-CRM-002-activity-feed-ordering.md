@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of activity-feed reads return events in strict committed-at order; no out-of-order"
 owner: CSO-Sales
 created: 2026-05-18
-related_frs: [FR-CRM-002]
+related_tasks: [TASK-CRM-002]
 ---
 
 ## §1 — Statement (BCP-14 normative)

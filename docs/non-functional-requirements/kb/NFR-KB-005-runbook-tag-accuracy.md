@@ -9,7 +9,7 @@ phase: P1
 slo: "100% of tagged runbooks surface in top-3 for canonical incident-keyword queries"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-KB-008]
+related_tasks: [TASK-KB-008]
 ---
 
 ## §1 — Statement (BCP-14 normative)

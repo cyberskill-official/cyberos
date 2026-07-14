@@ -1,7 +1,7 @@
 ---
 title: RES - Capacity-vs-forecast, hiring forecast, allocation engine
 source: website/docs/modules/res/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 RES is CyberOS's **resource-planning surface** for a services org. It composes four data streams - HR's Member roster + contracts, PROJ's project timelines + estimates, TIME's actual hours logged, LEARN's per-Member skill mastery - into one read-canonical view: an Allocation matrix indexed by (Member, week). On top of that matrix sits four AI-assisted lenses: capacity-vs-forecast (where are we over- or under-booked?), allocation Gantt (drag-drop reshuffle with conflict feedback), hiring forecast (when do we need to add headcount of which level / skill?), and skills-gap heatmap (which skills are demanded vs supplied for the next 6 months?). The CSO/COO-skill emits Notify cards into Genie when an allocation crosses 110% (over-allocation) or drops below 60% (under-allocation for > 2 weeks). Vietnamese Labor Code 2019 Art. 107 overtime caps are enforced at the allocation-write boundary - a plan that would breach the cap is refused, not warned.
@@ -388,7 +388,7 @@ Rejected| OT-cap breach OR skill-mismatch (severity=block)| memory `allocation.r
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS FR catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
 Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
 
@@ -649,7 +649,7 @@ External client visibility (PORTAL surface)| planned - P4+
 - **Bigger picture (above):** 3 strategic roles + integration-model diagram + 10-row auto-vs-human matrix.
 - **memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - RES allocation decisions become memory audit rows; capacity-vs-forecast is integrator, not source.
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - RES at P3-mid (P3, after the upstream modules ship).
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- **FR authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 
 ## Changelog
 

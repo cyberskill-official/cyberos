@@ -1,4 +1,4 @@
-//! FR-AUTH-102 — MFA challenge state machine.
+//! TASK-AUTH-102 — MFA challenge state machine.
 //!
 //! Challenge FSM: `pending → consumed | expired | failed`
 //!

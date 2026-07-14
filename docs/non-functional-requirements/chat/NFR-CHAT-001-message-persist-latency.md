@@ -9,7 +9,7 @@ phase: P0
 slo: "p95 < 100ms, p99 < 250ms from CHAT POST /api/v4/posts to DB commit ack"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-CHAT-001, FR-CHAT-003]
+related_tasks: [TASK-CHAT-001, TASK-CHAT-003]
 ---
 
 ## §1 — Statement (BCP-14 normative)

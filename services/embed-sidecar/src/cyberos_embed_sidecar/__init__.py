@@ -1,4 +1,4 @@
-"""FR-AI-019 — bge-m3 embedding HTTP sidecar.
+"""TASK-AI-019 — bge-m3 embedding HTTP sidecar.
 
 Two backends:
   * ``"real"`` — sentence-transformers bge-m3 model loaded into memory at

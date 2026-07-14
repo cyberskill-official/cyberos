@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""FR-AI-013 §1 #13 — Quarterly fixture regeneration scaffold.
+"""TASK-AI-013 §1 #13 — Quarterly fixture regeneration scaffold.
 
 This is a placeholder script. The actual regeneration process:
 1. Review new province codes from gov.vn

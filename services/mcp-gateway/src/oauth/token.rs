@@ -1,4 +1,4 @@
-//! FR-MCP-004 token endpoint logic (POST /token): `authorization_code` and `refresh_token` grants.
+//! TASK-MCP-004 token endpoint logic (POST /token): `authorization_code` and `refresh_token` grants.
 //!
 //! authorization_code: consume the one-time code, verify PKCE, mint an access JWT + a rotating opaque
 //! refresh token. refresh_token: rotate (mark the presented token used, issue a child); reuse of a

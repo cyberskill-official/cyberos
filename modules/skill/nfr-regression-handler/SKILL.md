@@ -1,7 +1,7 @@
 ---
 name: nfr-regression-handler
 description: >-
-  Draft bug-fix feature requests for degraded or failed non-functional
+  Draft bug-fix tasks for degraded or failed non-functional
   requirements. Use when user asks to "turn NFR failures into backlog work",
   "handle SLO regressions", or "prepare remediation FRs". Outputs ready-to-review
   regression FR drafts with reproduction evidence and owner routing.

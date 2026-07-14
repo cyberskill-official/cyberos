@@ -1,4 +1,4 @@
-//! The request lifecycle (FR-OBS-002 §3), independent of the HTTP framework.
+//! The request lifecycle (TASK-OBS-002 §3), independent of the HTTP framework.
 //!
 //! `handle` authenticates, detects the backend, finds the `query` parameter, refuses a user-supplied
 //! tenant (sev-1 audit), passes a root-admin query through unfiltered, otherwise injects the tenant

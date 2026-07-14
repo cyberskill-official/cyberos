@@ -12,9 +12,9 @@ has_frs() {   # a repo "has FRs" when a spec.md exists, or a flat FR-*.md still 
   # NB: -print -quit, never `find | grep -q` - under `set -o pipefail` grep's early exit
   # SIGPIPEs find and the pipeline reports 141, so a LARGE corpus reads as "no FRs".
   local r="$1"
-  [ -d "$r/docs/feature-requests" ] || return 1
-  [ -n "$(find "$r/docs/feature-requests" -name 'spec.md' -not -path '*/_*' -print -quit 2>/dev/null)" ] && return 0
-  [ -n "$(find "$r/docs/feature-requests" -name 'FR-*.md' -not -name '*.audit.md' -not -path '*/_*' -print -quit 2>/dev/null)" ] && return 0
+  [ -d "$r/docs/tasks" ] || return 1
+  [ -n "$(find "$r/docs/tasks" -name 'spec.md' -not -path '*/_*' -print -quit 2>/dev/null)" ] && return 0
+  [ -n "$(find "$r/docs/tasks" -name 'FR-*.md' -not -name '*.audit.md' -not -path '*/_*' -print -quit 2>/dev/null)" ] && return 0
   return 1
 }
 

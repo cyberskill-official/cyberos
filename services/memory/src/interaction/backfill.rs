@@ -1,11 +1,11 @@
-//! FR-MEMORY-122 §1 #9-#11 — bounded, idempotent, consent-gated backfill of recent chat history into
+//! TASK-MEMORY-122 §1 #9-#11 — bounded, idempotent, consent-gated backfill of recent chat history into
 //! `chat.message_created` interaction-events.
 //!
 //! Two reasons drive this: chat has live production history from before the chat->brain link was on, and a
 //! person who acknowledges the monitoring notice later deserves their acknowledged-window activity captured.
 //! This replays a bounded window (default 30 days) of `chat_messages` into interaction-events:
 //!   * **Idempotent (§1 #10):** the `event_id` is a UUIDv5 derived from the source `chat_messages.id`, so
-//!     replaying the same message always yields the same `event_id`. FR-MEMORY-121's `event_id` unique
+//!     replaying the same message always yields the same `event_id`. TASK-MEMORY-121's `event_id` unique
 //!     index makes a second insert a no-op, so a re-run records nothing new.
 //!   * **Original timestamp (§1 #10):** `occurred_at_ns` is the message's own `created_at`, NOT replay
 //!     time, so the backfilled event sits at the correct point in the person's timeline.
@@ -177,7 +177,7 @@ fn event_for(tenant: Uuid, m: &ChatMessageRow) -> InteractionEvent {
 /// `window_days` bounds the lookback; `apply = false` is a dry-run that only counts (§1 #9).
 ///
 /// Idempotent: a second `apply = true` run over the same window yields zero new `recorded` (the
-/// deterministic `event_id` collides on FR-MEMORY-121's unique index — the duplicate insert is swallowed as
+/// deterministic `event_id` collides on TASK-MEMORY-121's unique index — the duplicate insert is swallowed as
 /// an emit error per row, which here is counted, not fatal, so the report stays honest). Consent-gated: a
 /// message by an unacknowledged author is counted in `skipped_consent`, never written.
 pub async fn backfill_chat(

@@ -1,4 +1,4 @@
-//! FR-AI-002 §5 — Integration tests for post-call cost reconciliation.
+//! TASK-AI-002 §5 — Integration tests for post-call cost reconciliation.
 //!
 //! Requires a running Postgres instance. Set DATABASE_URL env var.
 //! Tests are ignored when DATABASE_URL is not set.

@@ -1,7 +1,7 @@
-//! FR-AUTH-101 — closed 22-role RBAC catalogue + permission matrix + assignment REST.
+//! TASK-AUTH-101 — closed 22-role RBAC catalogue + permission matrix + assignment REST.
 //!
 //! Per DEC-121 + DEC-122, the catalogue is **closed**: adding a 23rd role requires
-//! an ADR. Per DEC-123 the 5 stub roles from FR-AUTH-002 (root-admin / tenant-admin /
+//! an ADR. Per DEC-123 the 5 stub roles from TASK-AUTH-002 (root-admin / tenant-admin /
 //! tenant-member / service-account / agent-persona) are a strict prefix; their
 //! permission sets are additive only.
 //!

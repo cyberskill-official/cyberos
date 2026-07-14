@@ -1,7 +1,7 @@
-"""ship-manifest@1 helpers (FR-CUO-206).
+"""ship-manifest@1 helpers (TASK-CUO-206).
 
 Pure functions over the contract in
-modules/skill/contracts/feature-request/SHIP-MANIFEST.md. The manifest is a CACHE:
+modules/skill/contracts/task/SHIP-MANIFEST.md. The manifest is a CACHE:
 resume re-hashes artefacts, human gates always re-ask, deletion is always safe.
 """
 from __future__ import annotations
@@ -16,7 +16,7 @@ STEP_STATUSES = {"pending", "done", "failed", "skipped-conditional"}
 HITL_GATES = {None, "review_approval", "final_acceptance"}
 GATE_STEPS = {19, 20, 30, 31}  # reviewing->ready_to_test and testing->done transitions
 _REQUIRED_ROOT = [
-    "manifest_version", "fr_id", "fr_sha256", "workflow_version", "started_at",
+    "manifest_version", "task_id", "fr_sha256", "workflow_version", "started_at",
     "updated_at", "current_step", "routed_back_count", "steps", "hitl",
 ]
 _PRIORITY_RANK = {"MUST": 0, "SHOULD": 1, "COULD": 2}
@@ -97,10 +97,10 @@ def resume_plan(m: dict, workflow_version: str, fr_sha256: str, hash_of) -> dict
             "gate_pending": gate, "reason": reason}
 
 
-def select_next(frs: list) -> dict:
+def select_next(tasks: list) -> dict:
     """Deterministic queue selection per SHIP-MANIFEST.md.
 
-    frs: [{id, status, priority, created, depends_on: [...]}]. Returns
+    tasks: [{id, status, priority, created, depends_on: [...]}]. Returns
     {"picked": id|None, "reason": str}.
     """
     done = {f["id"] for f in frs if f["status"] == "done"}

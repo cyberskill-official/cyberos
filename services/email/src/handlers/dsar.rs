@@ -1,4 +1,4 @@
-//! HTTP-facing orchestration for FR-EMAIL-011.
+//! HTTP-facing orchestration for TASK-EMAIL-011.
 
 use crate::dsar::{
     aggregate_jsonl, complete_export_job, enqueue_export_job, get_export_job,

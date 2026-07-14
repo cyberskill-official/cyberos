@@ -71,7 +71,7 @@ class WorkflowEntry:
     consults: list[dict] = field(default_factory=list)
     audit_hooks: list[str] = field(default_factory=list)
     workflow_file: Path = field(default_factory=Path)
-    # Phase 4 (FR-CUO-106): preserve the full raw frontmatter dict so the
+    # Phase 4 (TASK-CUO-106): preserve the full raw frontmatter dict so the
     # handler dispatcher can read pattern-specific fields (pattern, sla_minutes,
     # instance_descriptor, output_recipients, gates, peer_persona, etc.)
     frontmatter: dict = field(default_factory=dict)

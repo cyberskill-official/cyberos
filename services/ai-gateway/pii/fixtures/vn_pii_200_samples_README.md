@@ -3,7 +3,7 @@
 ## Overview
 
 This fixture contains 200 samples (170 positive + 30 negative) for testing the
-VN PII recognizers (FR-AI-012) and the recall-floor CI gate (FR-AI-013).
+VN PII recognizers (TASK-AI-012) and the recall-floor CI gate (TASK-AI-013).
 
 ## Sample Distribution
 

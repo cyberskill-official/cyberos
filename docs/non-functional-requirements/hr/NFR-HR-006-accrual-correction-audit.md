@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of accrual corrections carry approver signature + structured reason"
 owner: CHRO
 created: 2026-05-18
-related_frs: [FR-HR-006]
+related_tasks: [TASK-HR-006]
 ---
 
 ## §1 — Statement (BCP-14 normative)

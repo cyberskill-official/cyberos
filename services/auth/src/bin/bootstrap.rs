@@ -1,4 +1,4 @@
-//! `cyberos-auth bootstrap` — FR-AUTH-006.
+//! `cyberos-auth bootstrap` — TASK-AUTH-006.
 //!
 //! Idempotently seeds the AUTH database with the artifacts every other
 //! service depends on:
@@ -8,7 +8,7 @@
 //!      bcrypt-hashed password come from env vars or interactive prompts.
 //!   3. **Initial RSA-2048 signing key** — handled by `AppState::ensure_signing_key`,
 //!      but we run it explicitly here to surface clean error messages.
-//!   4. **`root-admin` role grant** on the new subject (only after FR-AUTH-101 RBAC
+//!   4. **`root-admin` role grant** on the new subject (only after TASK-AUTH-101 RBAC
 //!      migrations have been applied — gracefully no-ops otherwise).
 //!
 //! Usage:
@@ -67,7 +67,7 @@ async fn main() -> ExitCode {
 
     match run(&pool, &args).await {
         Ok(summary) => {
-            // FR-AUTH-006 §1 #13 — print summary on success. Note: email
+            // TASK-AUTH-006 §1 #13 — print summary on success. Note: email
             // intentionally omitted — operator knows what they typed, and
             // echoing email risks landing in logs.
             println!("✓ bootstrap complete");
@@ -82,7 +82,7 @@ async fn main() -> ExitCode {
             );
             ExitCode::Ok
         }
-        // FR-AUTH-006 §1 #7 — distinguish "already done, no action needed"
+        // TASK-AUTH-006 §1 #7 — distinguish "already done, no action needed"
         // from generic failure so CI scripts can detect rerun-after-success.
         // Maps to the shared enum's `PreconditionFailed` (code 6) — the
         // "no root-admin already exists" precondition is what's violated.
@@ -168,7 +168,7 @@ async fn run(pool: &PgPool, args: &Args) -> Result<BootstrapSummary, BootstrapEr
     }
     println!("✓ root tenant present");
 
-    // 2. FR-AUTH-006 §1 #7 — Idempotency gate: if a root-admin already exists
+    // 2. TASK-AUTH-006 §1 #7 — Idempotency gate: if a root-admin already exists
     // for the root tenant, exit AlreadyInitialised (code 6) so CI scripts can
     // distinguish "rerun, no-op" from "bad input". Previous impl silently
     // ON CONFLICT-DO-UPDATE-ed the row, which lost the rerun-detection signal.
@@ -184,7 +184,7 @@ async fn run(pool: &PgPool, args: &Args) -> Result<BootstrapSummary, BootstrapEr
     }
 
     // 3. Single tx wraps root-admin INSERT + memory audit row INSERT
-    //    (FR-AUTH-006 §1 #4). Both commit or both rollback.
+    //    (TASK-AUTH-006 §1 #4). Both commit or both rollback.
     let mut tx = pool.begin().await?;
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
         .execute(&mut *tx)
@@ -212,7 +212,7 @@ async fn run(pool: &PgPool, args: &Args) -> Result<BootstrapSummary, BootstrapEr
         .map_err(BootstrapError::Other)?;
     println!("✓ active RSA-2048 signing key present: {signing_key_kid}");
 
-    // 5. FR-AUTH-006 §1 #4 — Emit auth.bootstrap_completed memory audit row
+    // 5. TASK-AUTH-006 §1 #4 — Emit auth.bootstrap_completed memory audit row
     //    INSIDE the same tx. Failure → return Err → tx auto-rolls back the
     //    root-admin + signing key INSERTs together.
     let env_tier =
@@ -237,7 +237,7 @@ async fn run(pool: &PgPool, args: &Args) -> Result<BootstrapSummary, BootstrapEr
     // 4. Best-effort: if the RBAC migrations have been applied, grant
     //    `root-admin` on the subject_roles table too. If they haven't,
     //    print a hint and move on (the legacy `subjects.roles` array column
-    //    set above is enough for FR-AUTH-002/004/005).
+    //    set above is enough for TASK-AUTH-002/004/005).
     let rbac_present: bool = sqlx::query_scalar(
         "SELECT EXISTS(SELECT FROM information_schema.tables WHERE table_name = 'subject_roles')",
     )
@@ -262,7 +262,7 @@ async fn run(pool: &PgPool, args: &Args) -> Result<BootstrapSummary, BootstrapEr
         tx.commit().await?;
         println!("✓ subject_roles entry for root-admin");
     } else {
-        println!("• subject_roles table absent — apply migration 0007 to enable FR-AUTH-101 RBAC");
+        println!("• subject_roles table absent — apply migration 0007 to enable TASK-AUTH-101 RBAC");
     }
 
     Ok(BootstrapSummary {
@@ -274,7 +274,7 @@ async fn run(pool: &PgPool, args: &Args) -> Result<BootstrapSummary, BootstrapEr
 }
 
 /// Tx-scoped signing-key ensure. Returns the kid (newly minted or existing).
-/// Per FR-AUTH-006 §1 #4 + #12, this runs inside the bootstrap transaction
+/// Per TASK-AUTH-006 §1 #4 + #12, this runs inside the bootstrap transaction
 /// so signing-key generation failure rolls back the root-admin INSERT.
 async fn ensure_signing_key_in_tx(
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,

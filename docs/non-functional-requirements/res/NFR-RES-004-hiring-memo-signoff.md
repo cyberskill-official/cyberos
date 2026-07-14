@@ -9,12 +9,12 @@ phase: P1
 slo: "100% of hiring memos carry both signatures before role goes to recruiting"
 owner: CHRO
 created: 2026-05-18
-related_frs: [FR-RES-004]
+related_tasks: [TASK-RES-004]
 ---
 
 ## §1 — Statement (BCP-14 normative)
 
-1. The hiring-memo CUO workflow (`FR-RES-004`) **MUST** produce a memo signed by both the hiring manager + CHRO before the role is published to recruiting channels.
+1. The hiring-memo CUO workflow (`TASK-RES-004`) **MUST** produce a memo signed by both the hiring manager + CHRO before the role is published to recruiting channels.
 2. Memo content includes: role description, comp band, justification, target team, capacity-gap-source reference.
 3. The capacity-gap reference **MUST** point to a specific over-alloc flag or strategic-plan line item — no "we just feel like hiring."
 4. Single-signer attempts **MUST** be rejected.

@@ -1,4 +1,4 @@
-//! FR-PROJ-011 — blocker detector from comment streams.
+//! TASK-PROJ-011 — blocker detector from comment streams.
 
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};

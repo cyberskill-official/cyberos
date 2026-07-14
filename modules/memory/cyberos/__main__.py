@@ -89,7 +89,7 @@ def _cmd_view(args: argparse.Namespace) -> int:
 def _cmd_put(args: argparse.Namespace) -> int:
     """Canonical v2 op — create or replace a memory file.
 
-    Per FR-MEMORY-114 §1 #1 / #2, the ``--score-importance`` flag opts in
+    Per TASK-MEMORY-114 §1 #1 / #2, the ``--score-importance`` flag opts in
     to write-time LLM scoring; ``--importance <float>`` is the explicit
     operator override (wins over scoring). With neither flag the default
     `put` path is unchanged.
@@ -99,7 +99,7 @@ def _cmd_put(args: argparse.Namespace) -> int:
 
     body = Path(args.body_file).read_bytes()
 
-    # Resolve importance per FR-MEMORY-114 §1 #1 / #2 priority chain:
+    # Resolve importance per TASK-MEMORY-114 §1 #1 / #2 priority chain:
     #   1. --importance <float>  → operator-pinned, no LLM call
     #   2. --score-importance     → invoke LLM (with cache); record outcome
     #   3. neither                → no importance metadata written
@@ -785,8 +785,8 @@ def _cmd_state(args: argparse.Namespace) -> int:
 def _cmd_consolidate(args: argparse.Namespace) -> int:
     """Run Walk → Compact → Sign → Publish [→ SemanticDedup] (AGENTS.md v2 §7).
 
-    Per FR-MEMORY-116, ``--semantic-dedup`` adds a fifth phase that reuses
-    FR-MEMORY-115's duplicates detector. ``--semantic-dedup-apply``
+    Per TASK-MEMORY-116, ``--semantic-dedup`` adds a fifth phase that reuses
+    TASK-MEMORY-115's duplicates detector. ``--semantic-dedup-apply``
     promotes the dry-run dedup pass into actual writes.
     """
     from cyberos.core.consolidate import format_report, run  # noqa: WPS433
@@ -1113,12 +1113,12 @@ def _cmd_resolve_conflict(args: argparse.Namespace) -> int:
 
 
 def _cmd_episode_log(args: argparse.Namespace) -> int:
-    """Append an Episode to the memory (FR-MEMORY-112 §1 #8).
+    """Append an Episode to the memory (TASK-MEMORY-112 §1 #8).
 
     Constructs an ``Episode`` from CLI flags, routes through
     ``cyberos.core.episode.log`` → ``cyberos.core.ops.put``. Emits one
-    ``op="put"`` audit row whose ``extra.kind="episode"`` so FR-MEMORY-115
-    dream + FR-MEMORY-120 history can project the rich shape without
+    ``op="put"`` audit row whose ``extra.kind="episode"`` so TASK-MEMORY-115
+    dream + TASK-MEMORY-120 history can project the rich shape without
     re-parsing bodies.
     """
     from cyberos.core.episode import Episode, log as episode_log
@@ -1151,10 +1151,10 @@ def _cmd_episode_log(args: argparse.Namespace) -> int:
 
 
 def _cmd_recall_similar(args: argparse.Namespace) -> int:
-    """Find episodes similar to ``task`` (FR-MEMORY-112 §1 #9).
+    """Find episodes similar to ``task`` (TASK-MEMORY-112 §1 #9).
 
     Filters semantic / FTS5 hits to ``kind="episode"``, ranks by combined
-    score per FR-MEMORY-113. Returns JSON to stdout for scripting, or a
+    score per TASK-MEMORY-113. Returns JSON to stdout for scripting, or a
     human table by default.
     """
     from cyberos.core.episode import recall_similar
@@ -1192,7 +1192,7 @@ def _cmd_recall_similar(args: argparse.Namespace) -> int:
 
 
 def _cmd_dream(args: argparse.Namespace) -> int:
-    """Run one dream pass (FR-MEMORY-115 §1 #1, §1 #8).
+    """Run one dream pass (TASK-MEMORY-115 §1 #1, §1 #8).
 
     Always produces a ``dreams/<ts>/diff.json`` artefact. The diff is
     advisory until ``cyberos dream apply <id>`` is invoked.
@@ -1247,7 +1247,7 @@ def _cmd_dream(args: argparse.Namespace) -> int:
 
 def _cmd_dream_apply(args: argparse.Namespace) -> int:
     """Apply selected proposals from a previous dream run
-    (FR-MEMORY-115 §1 #4, §1 #11, §1 #14)."""
+    (TASK-MEMORY-115 §1 #4, §1 #11, §1 #14)."""
     import json
     from pathlib import Path
     from cyberos.core.dream.proposals import DreamDiff
@@ -1308,7 +1308,7 @@ def _cmd_dream_apply(args: argparse.Namespace) -> int:
 
 def _cmd_history(args: argparse.Namespace) -> int:
     """`cyberos history <path>` — per-path version + attribution view
-    (FR-MEMORY-120). Pure read-only projection over the audit chain.
+    (TASK-MEMORY-120). Pure read-only projection over the audit chain.
     """
     from datetime import datetime, timedelta, timezone
     from cyberos.core.history import walk, render_human
@@ -1353,7 +1353,7 @@ def _cmd_history(args: argparse.Namespace) -> int:
 
 
 def _cmd_transcript(args: argparse.Namespace) -> int:
-    """`cyberos transcript {start|append|end|read|list|purge-expired}` per FR-MEMORY-119.
+    """`cyberos transcript {start|append|end|read|list|purge-expired}` per TASK-MEMORY-119.
 
     Namespaced under ``transcript`` (not ``session``) because the existing
     P11 ``cyberos session`` subcommand covers multi-agent coordination —
@@ -1508,7 +1508,7 @@ def _cmd_transcript(args: argparse.Namespace) -> int:
 def _cmd_put_if(args: argparse.Namespace) -> int:
     """`cyberos put-if <path> <body_file> --precondition <hex|none>`.
 
-    Per FR-MEMORY-118 §1 #8. Atomic content-conditional write.
+    Per TASK-MEMORY-118 §1 #8. Atomic content-conditional write.
     """
     from cyberos.core.ops import put_if
     from cyberos.core.writer import Writer
@@ -1570,7 +1570,7 @@ def _cmd_put_if(args: argparse.Namespace) -> int:
 
 
 def _cmd_acl(args: argparse.Namespace) -> int:
-    """`cyberos acl {show|validate|explain}` — FR-MEMORY-117 §1 #12."""
+    """`cyberos acl {show|validate|explain}` — TASK-MEMORY-117 §1 #12."""
     import json
     from cyberos.core.store_acl import StoreAcl, check_write, explain
 
@@ -2563,11 +2563,11 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("path")
     sp.add_argument("body_file")
     sp.add_argument("--kind", default=None)
-    # FR-MEMORY-114 write-time importance scoring (opt-in)
+    # TASK-MEMORY-114 write-time importance scoring (opt-in)
     sp.add_argument(
         "--score-importance", action="store_true",
         dest="score_importance",
-        help="invoke configured LLM to rate importance ∈ [0, 1] (FR-MEMORY-114; opt-in)",
+        help="invoke configured LLM to rate importance ∈ [0, 1] (TASK-MEMORY-114; opt-in)",
     )
     sp.add_argument(
         "--importance", type=float, default=None,
@@ -2701,7 +2701,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser(
         "consolidate",
         help="run the 4-phase Walk → Compact → Sign → Publish consolidation "
-             "(optionally followed by SemanticDedup per FR-MEMORY-116)",
+             "(optionally followed by SemanticDedup per TASK-MEMORY-116)",
     )
     sp.add_argument("--dry-run", action="store_true",
                     help="Walk only; do not compact/sign/publish")
@@ -2709,10 +2709,10 @@ def build_parser() -> argparse.ArgumentParser:
                     help="emit JSON instead of human-readable")
     sp.add_argument("--compact-horizon-days", type=int, default=90,
                     help="archive sealed segments older than this (default 90)")
-    # FR-MEMORY-116 SemanticDedup phase
+    # TASK-MEMORY-116 SemanticDedup phase
     sp.add_argument(
         "--semantic-dedup", action="store_true", dest="semantic_dedup",
-        help="add the SemanticDedup phase after Publish (FR-MEMORY-116; opt-in)",
+        help="add the SemanticDedup phase after Publish (TASK-MEMORY-116; opt-in)",
     )
     sp.add_argument(
         "--semantic-dedup-apply", action="store_true",
@@ -2836,11 +2836,11 @@ def build_parser() -> argparse.ArgumentParser:
                     help="memory file paths relative to the store root")
     sp.set_defaults(fn=_cmd_validate)
 
-    # --- FR-MEMORY-120 cyberos history ---
+    # --- TASK-MEMORY-120 cyberos history ---
     sp = sub.add_parser(
         "history",
         help="per-path version + attribution from the audit chain "
-             "(FR-MEMORY-120; read-only)",
+             "(TASK-MEMORY-120; read-only)",
     )
     sp.add_argument("path", help="memory path under <memory-root>/")
     sp.add_argument("--limit", type=int, default=10,
@@ -2859,10 +2859,10 @@ def build_parser() -> argparse.ArgumentParser:
                     help="emit JSON instead of human view")
     sp.set_defaults(fn=_cmd_history)
 
-    # --- FR-MEMORY-119 session transcript ledger ---
+    # --- TASK-MEMORY-119 session transcript ledger ---
     sp = sub.add_parser(
         "transcript",
-        help="session transcript ledger (FR-MEMORY-119) — "
+        help="session transcript ledger (TASK-MEMORY-119) — "
              "start / append / end / read / list / purge-expired",
     )
     sp.add_argument(
@@ -2883,7 +2883,7 @@ def build_parser() -> argparse.ArgumentParser:
                     help="(append) turn content")
     sp.add_argument("--redactions-applied", type=lambda s: s.lower() == "true",
                     default=None, dest="redactions_applied",
-                    help="(append) record that FR-MEMORY-111 PII redaction ran")
+                    help="(append) record that TASK-MEMORY-111 PII redaction ran")
     sp.add_argument("--reason", default=None,
                     help="(end) free-form reason")
     sp.add_argument("--no-seal", action="store_true",
@@ -2898,11 +2898,11 @@ def build_parser() -> argparse.ArgumentParser:
                     help="emit JSON output")
     sp.set_defaults(fn=_cmd_transcript)
 
-    # --- FR-MEMORY-118 put_if (optimistic-concurrency) ---
+    # --- TASK-MEMORY-118 put_if (optimistic-concurrency) ---
     sp = sub.add_parser(
         "put-if",
         help="content-conditional put: writes only when current body matches "
-             "the supplied SHA-256 (FR-MEMORY-118)",
+             "the supplied SHA-256 (TASK-MEMORY-118)",
     )
     sp.add_argument("path", help="target memory path")
     sp.add_argument("body_file", help="path to file containing new body bytes")
@@ -2921,10 +2921,10 @@ def build_parser() -> argparse.ArgumentParser:
                     help="emit JSON result")
     sp.set_defaults(fn=_cmd_put_if)
 
-    # --- FR-MEMORY-117 per-store ACL ---
+    # --- TASK-MEMORY-117 per-store ACL ---
     sp = sub.add_parser(
         "acl",
-        help="manage per-store ACL (FR-MEMORY-117) — show / validate / explain",
+        help="manage per-store ACL (TASK-MEMORY-117) — show / validate / explain",
     )
     sp.add_argument("acl_action", choices=["show", "validate", "explain"],
                     help="show: list STORE.yaml content; validate: check shapes; "
@@ -2935,10 +2935,10 @@ def build_parser() -> argparse.ArgumentParser:
                     help="(for explain) JSON output")
     sp.set_defaults(fn=_cmd_acl)
 
-    # --- FR-MEMORY-115 dreaming ---
+    # --- TASK-MEMORY-115 dreaming ---
     sp = sub.add_parser(
         "dream",
-        help="run one out-of-band batch reflection pass (FR-MEMORY-115)",
+        help="run one out-of-band batch reflection pass (TASK-MEMORY-115)",
     )
     sp.add_argument("--since", default="24h",
                     help="time window: 24h | 7d | 30d | ISO timestamp (default 24h)")
@@ -2974,10 +2974,10 @@ def build_parser() -> argparse.ArgumentParser:
                     help="emit JSON summary")
     sp.set_defaults(fn=_cmd_dream_apply)
 
-    # --- FR-MEMORY-112 episodic memory ---
+    # --- TASK-MEMORY-112 episodic memory ---
     sp = sub.add_parser(
         "episode",
-        help="episodic memory (FR-MEMORY-112) — `cyberos episode log ...`",
+        help="episodic memory (TASK-MEMORY-112) — `cyberos episode log ...`",
     )
     ep_sub = sp.add_subparsers(dest="episode_cmd", required=True)
     ep_log = ep_sub.add_parser("log", help="append an Episode to the memory")
@@ -3005,7 +3005,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     sp = sub.add_parser(
         "recall-similar",
-        help="find episodes similar to a task (FR-MEMORY-112 §1 #9)",
+        help="find episodes similar to a task (TASK-MEMORY-112 §1 #9)",
     )
     sp.add_argument("task", help="task description to find similar episodes for")
     sp.add_argument("--k", type=int, default=3,

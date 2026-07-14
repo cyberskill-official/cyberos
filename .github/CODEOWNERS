@@ -4,7 +4,7 @@
 # branch-protection rules requiring "review from code owners", a PR
 # touching a pinned path cannot merge without that team's approval.
 #
-# Legal-team gating (FR-CHAT-001 §1 #5 — README §2):
+# Legal-team gating (TASK-CHAT-001 §1 #5 — README §2):
 #   - services/chat/PINNED_COMMIT          immutable license-posture anchor
 #   - services/chat/patches/**             cherry-picks from upstream
 #   - services/chat/CHANGELOG.cyberos.md   reviewed alongside patches

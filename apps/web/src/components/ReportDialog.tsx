@@ -4,7 +4,7 @@ import { t, currentLang } from "../lib/i18n";
 import type { CatalogKey } from "../lib/i18n";
 import { useModalA11y } from "./useModalA11y";
 
-// FR-CHAT-267 — the one report dialog, opened from two places: a message's action bar (report the message,
+// TASK-CHAT-267 — the one report dialog, opened from two places: a message's action bar (report the message,
 // or its attachment) and the member list (report a person). Both entry points render THIS component (§1 #10).
 //
 // Three deliberate behaviours:
@@ -174,7 +174,7 @@ export function ReportDialog({
 
         <p className="report-privacy muted">
           {t("report.privacyNote")}{" "}
-          {/* FR-CHAT-269 §1 #19 — the report dialog carries the same content-policy link Settings does.
+          {/* TASK-CHAT-269 §1 #19 — the report dialog carries the same content-policy link Settings does.
               Google Play requires the policy to exist AND to be reachable; a policy nobody can find is not
               a policy. Right here is where someone actually wants to know what the rules are. */}
           <a

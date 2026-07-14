@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# msix-identity-lint.sh - FR-APP-004 AC #3: the AppxManifest placeholder is a second,
+# msix-identity-lint.sh - TASK-APP-004 AC #3: the AppxManifest placeholder is a second,
 # independent gate behind MSSTORE_RELEASE. While MSSTORE_RELEASE is unset/false this
 # lint always passes (local verification and ordinary CI must not fail on scaffolding);
 # with MSSTORE_RELEASE=true it hard-fails while the Partner Center identity is still

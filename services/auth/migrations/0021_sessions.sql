@@ -1,7 +1,7 @@
--- FR-AUTH-005 §1 #10 + #13 + G-010/G-013 — active-jti tracking table.
+-- TASK-AUTH-005 §1 #10 + #13 + G-010/G-013 — active-jti tracking table.
 --
--- Every successful JWT issue (FR-AUTH-004) inserts a row. The revoke path
--- (FR-AUTH-005 §1 #3 + G-003) enumerates this table per subject to know
+-- Every successful JWT issue (TASK-AUTH-004) inserts a row. The revoke path
+-- (TASK-AUTH-005 §1 #3 + G-003) enumerates this table per subject to know
 -- which jtis to push into the in-memory deny-list (G-011) for instant
 -- revocation. The expires_at field matches the JWT's `exp` claim; rows can
 -- be reaped by a sweeper job after `now() > expires_at` since no valid
@@ -35,7 +35,7 @@ CREATE INDEX IF NOT EXISTS sessions_subject_id_idx
 CREATE INDEX IF NOT EXISTS sessions_tenant_expires_idx
     ON sessions (tenant_id, expires_at);
 
--- FR-AUTH-005 §1 #13 + G-013 — sessions is tenant-scoped → RLS coverage
+-- TASK-AUTH-005 §1 #13 + G-013 — sessions is tenant-scoped → RLS coverage
 -- via the same global-GUC pattern as 0005 and 0019.
 ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sessions FORCE ROW LEVEL SECURITY;

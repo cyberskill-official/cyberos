@@ -1,7 +1,7 @@
-"""FR-AI-012 §5 — Recall-floor test.
+"""TASK-AI-012 §5 — Recall-floor test.
 
 AC #13: per-type AND aggregate recall floors at ≥ 99%.
-Used by FR-AI-013 recall-floor CI gate.
+Used by TASK-AI-013 recall-floor CI gate.
 """
 
 from collections import defaultdict

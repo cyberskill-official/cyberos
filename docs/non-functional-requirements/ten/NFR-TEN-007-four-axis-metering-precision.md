@@ -9,7 +9,7 @@ phase: P0
 slo: "Metered amounts accurate within ±0.1% vs ground-truth reconciliation"
 owner: CFO
 created: 2026-05-18
-related_frs: [FR-TEN-004]
+related_tasks: [TASK-TEN-004]
 ---
 
 ## §1 — Statement (BCP-14 normative)

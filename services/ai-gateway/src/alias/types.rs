@@ -1,4 +1,4 @@
-//! FR-AI-006 §3 — Alias resolution types.
+//! TASK-AI-006 §3 — Alias resolution types.
 
 use crate::policy::{ProviderKind, Residency};
 
@@ -57,7 +57,7 @@ pub enum AliasError {
     NoProviderHasAlias { alias: String, providers_tried: u8 },
 }
 
-/// Latency class for timeout budgeting. FR-AI-006 §3.
+/// Latency class for timeout budgeting. TASK-AI-006 §3.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LatencyClass {
     /// Typically <2s p95 (haiku, gpt-4o-mini, embeds, rerank).

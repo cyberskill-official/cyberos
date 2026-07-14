@@ -1,4 +1,4 @@
-# Linux store submission — Snap Store + Flathub answer sheet (FR-APP-005)
+# Linux store submission — Snap Store + Flathub answer sheet (TASK-APP-005)
 
 Two architecturally distinct channels (spec §1 #2): **Snap Store** is CI-automatable (`release-snap.yml`, gated on `SNAP_RELEASE=true`, uploads a CI-built `.snap`); **Flathub** accepts no artifact upload — its own infra builds from the manifest at `flathub-manifest/os.cyberskill.world.desktop.yml`, and the submission PR against the external `flathub/flathub` repository is a Stephen-approved, per-instance action (never automated; structurally enforced by AC #6's standing grep in the workflow's lint job — which passes precisely because that repo reference lives only here in docs/, outside the scanned directories).
 

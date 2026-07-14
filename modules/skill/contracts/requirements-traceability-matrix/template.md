@@ -7,7 +7,7 @@ generated_at: 2026-MM-DDTHH:MM:SS+07:00
 source_set:
   - { path: ./srs.md,         hash: sha256:<hash> }
   - { path: ./prd.md,         hash: sha256:<hash> }
-  - { path: ./feature-requests/, hash: sha256:<hash-of-dir-canon> }
+  - { path: ./tasks/, hash: sha256:<hash-of-dir-canon> }
 provenance: { source_path: <canonical concat path>, source_hash: sha256:<combined-hash> }
 # release: 2026-Q3.1    # optional — ties matrix to a release tag
 ---

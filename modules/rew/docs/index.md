@@ -1,7 +1,7 @@
 ---
 title: REW - Compensation engine, payroll bridge, bonus orchestrator
 source: website/docs/modules/rew/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 REW is the **compensation computation and ledger plane** - the place where Total Rewards parameters become payslips, and where every payslip is reproducible byte-for-byte from the parameters that were effective at its period_end. The cash side is split into P1 (Base), P2 (Allowance), and P3 (Performance overflow from the BP fund). The non-cash side - BP (Bonus Points), an inflation-indexed unit of account - runs as an append-only ledger. The hard rule across the board: **append-only, no mutations**. Amendments are supersession rows; corrections are reversal rows. The 10-year statutory retention is enforced at the storage layer (S3 object-lock) so even a malicious admin cannot back-date a payslip.
@@ -316,7 +316,7 @@ D+5 (VN)| BHXH remittance schedule (P3 stretch).| HR/Ops
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS FR catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
 Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
 
@@ -586,7 +586,7 @@ Member-dispute -> CEO adjudication flow| planned - P2
 - **Cross-module page links:** [hr.html](../hr/index.html), [time.html](../time/index.html), [esop.html](../esop/index.html), [proj.html](../proj/index.html), [memory.html](../memory/index.html), [auth.html](../auth/index.html)
 - **memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5](../../docs/MEMORY_AUTOSYNC_DESIGN.md) + DEC-036 - comp data structurally excluded from memory; Lumi cross-tenant synthesis cannot read REW.
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - REW at P1-exit (P1, after HR).
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- **FR authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 - **REW module FRs** - ((FR pending) through (FR pending)).
 - **REW architecture posture** - Bet 5 framing.
 - **Strategy Bet 5** - "The Total Rewards Appendix is a moat too" (DEC-036 memory exclusion).

@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of tenant-create sagas reach terminal state (committed | rolled-back); 0 stuck-in-progress"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-TEN-001, FR-TEN-101]
+related_tasks: [TASK-TEN-001, TASK-TEN-101]
 ---
 
 ## §1 — Statement (BCP-14 normative)

@@ -1,4 +1,4 @@
-//! FR-AI-017 §3 — Redis backend for per-tenant cache.
+//! TASK-AI-017 §3 — Redis backend for per-tenant cache.
 
 use std::sync::OnceLock;
 use std::time::Duration;
@@ -21,7 +21,7 @@ pub fn init(url: &str) {
 /// `ConnectionManager` multiplexes concurrent commands over a single auto-reconnecting socket and
 /// is cheap to clone (Arc-backed), so thousands of concurrent operations share one connection
 /// instead of each opening its own. Building a fresh `ConnectionManager` per call created a
-/// connection-per-operation storm that exhausted Redis and timed out under load (FR-AI-018 §1 #8).
+/// connection-per-operation storm that exhausted Redis and timed out under load (TASK-AI-018 §1 #8).
 ///
 /// It is guarded by a `Mutex<Option<..>>` rather than a `OnceCell` so a dead connection can be
 /// rebuilt. A `ConnectionManager`'s background driver is bound to the Tokio runtime that created

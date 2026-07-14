@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://cyberskill.world/schemas/skill/v0.2.6/skill.schema.json",
   "title": "CyberOS SKILL.md frontmatter",
-  "description": "Minimum-viable schema covering FR-SKILL-103 + FR-SKILL-111 + FR-SKILL-113 + FR-SKILL-115. Used by editor LSPs + CI gates + non-CyberOS validators. The Rust broker's `frontmatter::load_and_validate()` is the runtime source of truth; this schema mirrors the structural shape but cannot express the verb-stem + paraphrase-distinct + trigger-count rules.",
+  "description": "Minimum-viable schema covering TASK-SKILL-103 + TASK-SKILL-111 + TASK-SKILL-113 + TASK-SKILL-115. Used by editor LSPs + CI gates + non-CyberOS validators. The Rust broker's `frontmatter::load_and_validate()` is the runtime source of truth; this schema mirrors the structural shape but cannot express the verb-stem + paraphrase-distinct + trigger-count rules.",
   "type": "object",
   "additionalProperties": true,
   "required": ["name", "description"],
@@ -16,7 +16,7 @@
     },
     "description": {
       "type": "string",
-      "description": "WHAT + WHEN (with ≥2 quoted trigger phrases) + KEY VALUE. Flattened length must be 80-1024 chars. No XML-tag patterns (`<foo>`). Per FR-SKILL-111 SKB-020..023. The verb-stem + ≥2-quoted-trigger checks are enforced by the Rust validator, not by this schema.",
+      "description": "WHAT + WHEN (with ≥2 quoted trigger phrases) + KEY VALUE. Flattened length must be 80-1024 chars. No XML-tag patterns (`<foo>`). Per TASK-SKILL-111 SKB-020..023. The verb-stem + ≥2-quoted-trigger checks are enforced by the Rust validator, not by this schema.",
       "minLength": 80,
       "maxLength": 1024,
       "not": {
@@ -53,12 +53,12 @@
     },
     "untrusted_inputs": {
       "type": "object",
-      "description": "FR-SKILL-113 / SKB-040..042: declares the untrusted-content marker name + scan policy. Per registry v0.2.5+.",
+      "description": "TASK-SKILL-113 / SKB-040..042: declares the untrusted-content marker name + scan policy. Per registry v0.2.5+.",
       "required": ["wrap_in_marker"],
       "properties": {
         "wrap_in_marker": {
           "type": "string",
-          "description": "v1 marker namespace per FR-SKILL-113 §1 #2. String-form only (no XML brackets). Future markers (FR-SKILL-117): untrusted_content_strict, untrusted_pii_redacted.",
+          "description": "v1 marker namespace per TASK-SKILL-113 §1 #2. String-form only (no XML brackets). Future markers (TASK-SKILL-117): untrusted_content_strict, untrusted_pii_redacted.",
           "pattern": "^[a-z][a-z0-9_]*$",
           "enum": ["untrusted_content"]
         },
@@ -94,7 +94,7 @@
     },
     "owner_role": {
       "type": "string",
-      "description": "Role enum from cuo/MODULE.md §20.1. Used by manual-fine-tune commit-access matrix per FR-SKILL-103 §1 #16."
+      "description": "Role enum from cuo/MODULE.md §20.1. Used by manual-fine-tune commit-access matrix per TASK-SKILL-103 §1 #16."
     },
     "escalation": {
       "type": "object",
@@ -108,7 +108,7 @@
     },
     "invocation_modes": {
       "type": "array",
-      "description": "Modes per FR-SKILL-091 (dual-mode + persona_routing_only).",
+      "description": "Modes per TASK-SKILL-091 (dual-mode + persona_routing_only).",
       "items": {
         "type": "string",
         "enum": ["standalone", "chained", "persona_routing_only"]
@@ -138,7 +138,7 @@
     },
     "depends_on_contracts": {
       "type": "array",
-      "description": "FR-SKILL-103 §1 #14 contract dependencies — pinned by version + pin_path.",
+      "description": "TASK-SKILL-103 §1 #14 contract dependencies — pinned by version + pin_path.",
       "items": {
         "type": "object",
         "required": ["id", "version", "purpose", "pin_path"],
@@ -152,7 +152,7 @@
     },
     "exposable_as": {
       "type": "object",
-      "description": "Per FR-SKILL-103 §1 #15 — surfaces this skill ships through.",
+      "description": "Per TASK-SKILL-103 §1 #15 — surfaces this skill ships through.",
       "properties": {
         "internal": {"type": "boolean"},
         "agent_plugin": {"type": "boolean"},
@@ -181,12 +181,12 @@
     },
     "self_audit": {
       "type": "object",
-      "description": "Per FR-SKILL-092 — invariants checked at runtime + anomaly signals.",
+      "description": "Per TASK-SKILL-092 — invariants checked at runtime + anomaly signals.",
       "additionalProperties": true
     },
     "human_fine_tune": {
       "type": "object",
-      "description": "Per FR-SKILL-093 — manual fine-tune commit-access matrix + signals_to_initiate.",
+      "description": "Per TASK-SKILL-093 — manual fine-tune commit-access matrix + signals_to_initiate.",
       "additionalProperties": true
     },
     "determinism": {

@@ -52,31 +52,31 @@ rew, ten, time.
 ### B. Status integrity - the roadmap's "Done" is wrong in BOTH directions
 
 False dones (marked done, deliverable does not exist in the current architecture):
-- FR-CHAT-003..012 (10 FRs): Fargate deployment, PGroonga VN search, memory bridge, Slack import, Zalo
+- TASK-CHAT-003..012 (10 FRs): Fargate deployment, PGroonga VN search, memory bridge, Slack import, Zalo
   import, Lumi mention, retro capture, Signal decommission, mobile push, DSAR export - ALL are
-  Mattermost-era specs. The Mattermost fork was retired (FR-CHAT-101 supersedes wholesale); none of these
+  Mattermost-era specs. The Mattermost fork was retired (TASK-CHAT-101 supersedes wholesale); none of these
   exist in the native chat. They must flip to `superseded` (or their intents re-homed as new native-chat
   FRs - Slack/Zalo import, mobile push, and DSAR are still WANTED features, just unbuilt).
-- FR-MEMORY-104 (tauri app): CORRECTED - the app exists at services/memory/desktop (Svelte + Tauri 2);
+- TASK-MEMORY-104 (tauri app): CORRECTED - the app exists at services/memory/desktop (Svelte + Tauri 2);
   the sweep looked for apps/tauri. Verified done; carries two of the dependabot vite alerts (dev-server
   class, same ledger as apps/web).
 
 Stale statuses (built + live, still marked draft/implementing):
-- FR-CHAT-101 "implementing" -> the native chat is the flagship live module; flip to done.
-- FR-CHAT-013 "implementing" -> obsolete (Mattermost OIDC config for a retired fork); close superseded.
-- FR-AUTH-110 marked draft -> the OIDC provider is LIVE IN PRODUCTION; flip to done.
-- FR-CUO-204 marked draft -> dream-loop envelope built; flip (ready_to_implement/done per gate).
-- FR-AI-003, FR-AI-005 "ready_to_implement" -> memory-writer bridge + policy loader shipped; flip to done.
-- FR-APP-001..007 draft/implementing -> the six console tiles WERE built (static console) and then
+- TASK-CHAT-101 "implementing" -> the native chat is the flagship live module; flip to done.
+- TASK-CHAT-013 "implementing" -> obsolete (Mattermost OIDC config for a retired fork); close superseded.
+- TASK-AUTH-110 marked draft -> the OIDC provider is LIVE IN PRODUCTION; flip to done.
+- TASK-CUO-204 marked draft -> dream-loop envelope built; flip (ready_to_implement/done per gate).
+- TASK-AI-003, TASK-AI-005 "ready_to_implement" -> memory-writer bridge + policy loader shipped; flip to done.
+- TASK-APP-001..007 draft/implementing -> the six console tiles WERE built (static console) and then
   superseded by the React SPA (apps/web). Close as superseded-by-react-console with a pointer, or re-home
   as "React console parity" FRs.
-- FR-EVAL-001 "implementing" -> code built + gated; blocked on counsel, and the prod container is down.
+- TASK-EVAL-001 "implementing" -> code built + gated; blocked on counsel, and the prod container is down.
   Status should be `built_blocked_on_legal` (or equivalent) + a note.
-- FR-MCP-004: MCP-STATUS-FLIP.md says "flip on green" if the redirect-host allowlist deferral is
+- TASK-MCP-004: MCP-STATUS-FLIP.md says "flip on green" if the redirect-host allowlist deferral is
   accepted; decision pending - either flip with the deferral ledgered or keep implementing.
 
 Metadata corruption:
-- FR-SKILL-111..115 carry TWO status lines each (done + needs_human/fixed); FR-PROJ-012 has done + draft.
+- TASK-SKILL-111..115 carry TWO status lines each (done + needs_human/fixed); TASK-PROJ-012 has done + draft.
   These explain the odd one-off statuses in the corpus (needs_human x7, completed/delivered/fixed/ready).
   One canonical `status:` per file, values from a fixed vocabulary.
 
@@ -102,7 +102,7 @@ per FR (not a rewrite).
 5. In-process fan-out (chat Hub/Notifier) pins chat to one container - already ledgered in code comments;
    fine at team scale, listed here so scaling work has a name.
 6. Deferred MCP DB-slice items (worker pool, NATS, sweepers, rate limits, PRM drift table) are honestly
-   ledgered in MCP-STATUS-FLIP.md - keep them there; do not let FR-MCP-005..008 flip until landed.
+   ledgered in MCP-STATUS-FLIP.md - keep them there; do not let TASK-MCP-005..008 flip until landed.
 7. Parallel-session commits ab2989d/3b82968 (i18n, prefs, drafts, drawer) passed the gate and are live,
    but have had no second-pair-of-eyes review - a quick review pass is cheap insurance.
 8. AI features (translate/summarize/replies) stay dormant until the VPS resize + llm profile - users see
@@ -110,8 +110,8 @@ per FR (not a rewrite).
 
 ### E. Documentation staleness
 
-- docs/feature-requests/BACKLOG.md: written 2026-05-19, pre-APP/EVAL/chat-native era.
-- docs/feature-requests/remaining-build-plan.md: 2026-06-24, mislabels mcp, omits app/eval waves.
+- docs/tasks/BACKLOG.md: written 2026-05-19, pre-APP/EVAL/chat-native era.
+- docs/tasks/remaining-build-plan.md: 2026-06-24, mislabels mcp, omits app/eval waves.
 - docs/CONTINUE-HERE.md: current through the chat waves (kept updated), but does not reflect this review.
 - docs/roadmap.html: renders FR frontmatter -> inherits every status error above; fixing statuses fixes
   the roadmap.
@@ -122,7 +122,7 @@ per FR (not a rewrite).
   or delete (license-watcher rationale died with the fork).
 - services/eval_writetest/: throwaway crate outside the workspace - delete.
 - services/business-suite/: outside the workspace members - confirm intent (scaffold?) or remove.
-- 287 `.audit.md` companions: half the files in docs/feature-requests; they were one-time review
-  artifacts. Move to docs/feature-requests/_audits/ (or delete) so the backlog reads clean.
-- Superseded Mattermost-era chat FRs + closed FR-CHAT-002 + app-era FRs: move to docs/feature-requests/
+- 287 `.audit.md` companions: half the files in docs/tasks; they were one-time review
+  artifacts. Move to docs/tasks/_audits/ (or delete) so the backlog reads clean.
+- Superseded Mattermost-era chat FRs + closed TASK-CHAT-002 + app-era FRs: move to docs/tasks/
   _archive/ per the grooming rule (backlog = only not-yet-implemented + new).

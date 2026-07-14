@@ -1,5 +1,5 @@
-//! FR-MCP-001 §1 #25 + §1 #26 — Axum router mounting `POST /mcp` + `GET /mcp/healthz`,
-//! plus the FR-MCP-002 control plane (`/v1/mcp/register`, `/heartbeat`, `/deregister`).
+//! TASK-MCP-001 §1 #25 + §1 #26 — Axum router mounting `POST /mcp` + `GET /mcp/healthz`,
+//! plus the TASK-MCP-002 control plane (`/v1/mcp/register`, `/heartbeat`, `/deregister`).
 
 use std::sync::Arc;
 use std::time::SystemTime;
@@ -33,23 +33,23 @@ use crate::MCP_PROTOCOL_VERSION;
 pub struct AppState {
     /// Federated tool registry.
     pub registry: Arc<ToolRegistry>,
-    /// Postgres pool for the FR-MCP-004 OAuth endpoints. `None` when `MCP_DATABASE_URL` is unset: the
+    /// Postgres pool for the TASK-MCP-004 OAuth endpoints. `None` when `MCP_DATABASE_URL` is unset: the
     /// OAuth endpoints then report unconfigured and the rest of the gateway runs unaffected, so the
     /// dev demo needs no database.
     pub oauth_pool: Option<sqlx::PgPool>,
-    /// FR-MCP-008 in-memory elicitation store. The no-database fallback (dev/demo); when `oauth_pool`
+    /// TASK-MCP-008 in-memory elicitation store. The no-database fallback (dev/demo); when `oauth_pool`
     /// and an authenticated caller are present the router uses the [`crate::elicitation_pg`]
     /// store-of-record against `mcp_elicitations` instead.
     pub elicitations: Arc<crate::elicitation::ElicitationStore>,
-    /// FR-MCP-007 in-memory task store for long-running tool calls (the persistent table + worker pool
+    /// TASK-MCP-007 in-memory task store for long-running tool calls (the persistent table + worker pool
     /// land in the DB slice).
     pub tasks: Arc<crate::tasks::TaskStore>,
-    /// FR-MCP-007/008 payload sealer for the DB store-of-record (`None` when `MCP_KMS_KEY` is unset, the
+    /// TASK-MCP-007/008 payload sealer for the DB store-of-record (`None` when `MCP_KMS_KEY` is unset, the
     /// no-database path). The destructive-tool confirmation flow seals caller responses with this.
     pub kms: Option<Arc<dyn crate::kms::Kms>>,
 }
 
-/// FR-MCP-001 §1 #25 healthz payload.
+/// TASK-MCP-001 §1 #25 healthz payload.
 #[derive(Debug, Serialize)]
 pub struct HealthZ {
     /// Always `"ok"` while we're up.
@@ -60,13 +60,13 @@ pub struct HealthZ {
     pub registered_modules: usize,
     /// Total tools registered.
     pub registered_tools: usize,
-    /// Per-module server health (FR-MCP-002).
+    /// Per-module server health (TASK-MCP-002).
     pub servers: Vec<serde_json::Value>,
-    /// Whether the FR-MCP-004 OAuth endpoints are configured (a database is connected).
+    /// Whether the TASK-MCP-004 OAuth endpoints are configured (a database is connected).
     pub oauth_configured: bool,
 }
 
-/// Whether the FR-MCP-002 control-plane routes (register/heartbeat/deregister) are enabled.
+/// Whether the TASK-MCP-002 control-plane routes (register/heartbeat/deregister) are enabled.
 /// Off unless `MCP_DEV_REGISTRATION=1`, because they mutate what the gateway dispatches to.
 fn control_plane_enabled() -> bool {
     std::env::var("MCP_DEV_REGISTRATION").as_deref() == Ok("1")
@@ -77,13 +77,13 @@ fn control_plane_disabled_response() -> (StatusCode, Json<Value>) {
         StatusCode::FORBIDDEN,
         Json(json!({
             "error": "registration_disabled",
-            "detail": "set MCP_DEV_REGISTRATION=1 to enable the dev control plane; production requires authenticated registration (FR-MCP-004)"
+            "detail": "set MCP_DEV_REGISTRATION=1 to enable the dev control plane; production requires authenticated registration (TASK-MCP-004)"
         })),
     )
 }
 
 /// Build the Axum router. `POST /mcp` + `GET /mcp/healthz` are the MCP protocol surface;
-/// `/v1/mcp/{register,heartbeat,deregister}` are the FR-MCP-002 control plane.
+/// `/v1/mcp/{register,heartbeat,deregister}` are the TASK-MCP-002 control plane.
 pub fn build_router(state: AppState) -> Router {
     let app = Router::new()
         .route("/mcp", post(handle_mcp))
@@ -121,7 +121,7 @@ pub fn build_router(state: AppState) -> Router {
         .route("/v1/mcp/tasks/:id/cancel", post(handle_task_cancel))
         .with_state(state);
 
-    // FR-APP-004: opt-in permissive CORS so the local browser console (the MCP Registry panel) can call
+    // TASK-APP-004: opt-in permissive CORS so the local browser console (the MCP Registry panel) can call
     // /mcp cross-origin in dev. Off by default; in production Caddy fronts the gateway under one origin.
     // Set MCP_DEV_CORS=1 only for local development.
     if std::env::var("MCP_DEV_CORS").is_ok() {
@@ -131,12 +131,12 @@ pub fn build_router(state: AppState) -> Router {
     }
 }
 
-/// FR-MCP-002 control-plane: a module registers its tool catalogue so `tools/list` and
+/// TASK-MCP-002 control-plane: a module registers its tool catalogue so `tools/list` and
 /// `tools/call` can see it.
 ///
 /// Trust boundary: registration changes what the gateway will forward `tools/call` to, so
 /// it is privileged. This dev slice gates the route behind `MCP_DEV_REGISTRATION=1` (off by
-/// default). Production must replace this with authenticated registration (FR-MCP-004) plus
+/// default). Production must replace this with authenticated registration (TASK-MCP-004) plus
 /// an endpoint allowlist before exposing it, and the heartbeat/health lifecycle
 /// (DEC-2350/2351) is the next slice on top of this one.
 async fn handle_register(
@@ -159,7 +159,7 @@ async fn handle_register(
 
     if let Err(e) = validate_registration(&req) {
         let detail = e.message();
-        // FR-MCP-003 DEC-2364: a non-conforming tool ID was rejected at registration (best-effort audit).
+        // TASK-MCP-003 DEC-2364: a non-conforming tool ID was rejected at registration (best-effort audit).
         if let Some(pool) = state.oauth_pool.as_ref() {
             crate::oauth::audit::skill_name_rejected(pool, &req.module, detail.as_ref()).await;
         }
@@ -170,7 +170,7 @@ async fn handle_register(
     }
 
     let n = apply_registration(&state.registry, &req);
-    // FR-MCP-003 DEC-2364: the module's tool IDs validated (best-effort audit).
+    // TASK-MCP-003 DEC-2364: the module's tool IDs validated (best-effort audit).
     if let Some(pool) = state.oauth_pool.as_ref() {
         crate::oauth::audit::skill_name_validated(pool, &req.module, n).await;
     }
@@ -202,7 +202,7 @@ async fn handle_healthz(State(state): State<AppState>) -> (StatusCode, Json<Heal
     )
 }
 
-/// FR-MCP-004 clause #20 - RFC 8414 authorization-server metadata at
+/// TASK-MCP-004 clause #20 - RFC 8414 authorization-server metadata at
 /// `/.well-known/oauth-authorization-server`. Read-only; the issuer, JWKS URI, and supported scopes
 /// come from env (`MCP_ISSUER_URL`, `MCP_JWKS_URI`, `MCP_OAUTH_SCOPES`) with dev defaults. Scopes
 /// default to `mcp:tools` - the scope every current tool requires; refine to compute the union from
@@ -221,7 +221,7 @@ async fn handle_oauth_metadata() -> (StatusCode, Json<Value>) {
     (StatusCode::OK, Json(doc))
 }
 
-/// FR-MCP-005 gateway-aggregate Protected Resource Metadata (RFC 9728). Public and unauthenticated per
+/// TASK-MCP-005 gateway-aggregate Protected Resource Metadata (RFC 9728). Public and unauthenticated per
 /// DEC-896; cacheable via ETag. `get(...)` also serves HEAD (axum strips the body).
 async fn handle_prm_aggregate(headers: HeaderMap) -> axum::response::Response {
     let doc = crate::oauth::prm::protected_resource_metadata(
@@ -231,8 +231,8 @@ async fn handle_prm_aggregate(headers: HeaderMap) -> axum::response::Response {
     prm_http_response(&doc, if_none_match(&headers))
 }
 
-/// FR-MCP-005 per-module Protected Resource Metadata. The path segment is `cyberos.<module>` (DEC-897);
-/// `scopes_supported` is the union of the module's tools' required scopes from the FR-MCP-002 registry.
+/// TASK-MCP-005 per-module Protected Resource Metadata. The path segment is `cyberos.<module>` (DEC-897);
+/// `scopes_supported` is the union of the module's tools' required scopes from the TASK-MCP-002 registry.
 /// An unknown module returns 404 and emits a best-effort `mcp.prm_unknown_module_requested` audit row.
 async fn handle_prm_module(
     State(state): State<AppState>,
@@ -321,17 +321,17 @@ fn oauth_resource() -> String {
     std::env::var("MCP_RESOURCE_URL").unwrap_or_else(|_| oauth_issuer())
 }
 
-/// The FR-AUTH-004 issuer whose session JWTs `/authorize` and confidential `/register` accept (env
+/// The TASK-AUTH-004 issuer whose session JWTs `/authorize` and confidential `/register` accept (env
 /// `MCP_AUTH_ISSUER`, dev default). Distinct from `oauth_issuer()`, which issues the gateway's own
 /// access tokens.
 fn oauth_auth_issuer() -> String {
     std::env::var("MCP_AUTH_ISSUER").unwrap_or_else(|_| "http://localhost:8081".to_string())
 }
 
-/// FR-MCP-005 `authorization_servers`: the issuer URLs whose access tokens this MCP resource accepts.
+/// TASK-MCP-005 `authorization_servers`: the issuer URLs whose access tokens this MCP resource accepts.
 /// The gateway is its own authorization server (it mints the tokens `enforce_oauth` verifies), so this
 /// defaults to `[oauth_issuer()]`. `MCP_AUTHORIZATION_SERVERS` (comma- or whitespace-separated)
-/// overrides it for a future multi-issuer residency map (FR-AUTH-004).
+/// overrides it for a future multi-issuer residency map (TASK-AUTH-004).
 fn oauth_authorization_servers() -> Vec<String> {
     std::env::var("MCP_AUTHORIZATION_SERVERS")
         .ok()
@@ -345,7 +345,7 @@ fn oauth_authorization_servers() -> Vec<String> {
         .unwrap_or_else(|| vec![oauth_issuer().trim_end_matches('/').to_string()])
 }
 
-/// The `WWW-Authenticate` challenge for a 401 from the MCP surface (FR-MCP-005 §1 #19, RFC 9728 §5.1):
+/// The `WWW-Authenticate` challenge for a 401 from the MCP surface (TASK-MCP-005 §1 #19, RFC 9728 §5.1):
 /// `Bearer` with the `resource_metadata` parameter pointing at this gateway's Protected Resource
 /// Metadata, so a client that is refused can discover where to authenticate.
 fn www_authenticate_challenge() -> String {
@@ -369,7 +369,7 @@ async fn oauth_auth_session(
     crate::oauth::authsession::verify_auth_session(pool, token, &oauth_auth_issuer()).await
 }
 
-/// Whether the MCP surface requires a valid audience-bound OAuth token (FR-MCP-004 clause #23). Off
+/// Whether the MCP surface requires a valid audience-bound OAuth token (TASK-MCP-004 clause #23). Off
 /// unless `MCP_REQUIRE_AUTH=1`, so the dev demo works with no token and production sets it on - the
 /// same gating shape as `MCP_DEV_REGISTRATION`.
 fn require_auth() -> bool {
@@ -384,7 +384,7 @@ async fn enforce_oauth(
     state: &AppState,
     headers: &HeaderMap,
 ) -> Result<crate::oauth::jwt::McpAccessClaims, axum::response::Response> {
-    // Every 401 carries the FR-MCP-005 `WWW-Authenticate: Bearer ... resource_metadata=...` challenge
+    // Every 401 carries the TASK-MCP-005 `WWW-Authenticate: Bearer ... resource_metadata=...` challenge
     // so a refused client can discover the Protected Resource Metadata and re-authenticate.
     let unauth = |reason: &str| -> axum::response::Response {
         let mut resp = (
@@ -451,7 +451,7 @@ fn use_db_store(state: &AppState) -> bool {
     require_auth() && state.oauth_pool.is_some()
 }
 
-/// FR-MCP-004 RFC 7591 dynamic client registration. JSON body; 503 when no database is configured.
+/// TASK-MCP-004 RFC 7591 dynamic client registration. JSON body; 503 when no database is configured.
 /// Public clients register openly; confidential clients require a tenant-admin auth JWT in
 /// `Authorization` (verified into the `caller` session). The body-consuming `Json` extractor stays
 /// last per axum's extractor ordering.
@@ -468,7 +468,7 @@ async fn handle_oauth_register(
     Ok(Json(crate::oauth::dcr::register(pool, req, caller).await?))
 }
 
-/// FR-MCP-004 token endpoint. Form-encoded body (RFC 6749 §6).
+/// TASK-MCP-004 token endpoint. Form-encoded body (RFC 6749 §6).
 async fn handle_oauth_token(
     State(state): State<AppState>,
     Form(req): Form<crate::oauth::token::TokenRequest>,
@@ -482,7 +482,7 @@ async fn handle_oauth_token(
     ))
 }
 
-/// FR-MCP-004 token revocation (RFC 7009). Always 200.
+/// TASK-MCP-004 token revocation (RFC 7009). Always 200.
 async fn handle_oauth_revoke(
     State(state): State<AppState>,
     Form(req): Form<crate::oauth::revoke::RevokeRequest>,
@@ -495,7 +495,7 @@ async fn handle_oauth_revoke(
     Ok(StatusCode::OK)
 }
 
-/// FR-MCP-004 token introspection (RFC 7662).
+/// TASK-MCP-004 token introspection (RFC 7662).
 async fn handle_oauth_introspect(
     State(state): State<AppState>,
     Form(req): Form<crate::oauth::introspect::IntrospectRequest>,
@@ -509,7 +509,7 @@ async fn handle_oauth_introspect(
     ))
 }
 
-/// FR-MCP-004 authorize endpoint. The calling subject's identity comes from an auth-service bearer
+/// TASK-MCP-004 authorize endpoint. The calling subject's identity comes from an auth-service bearer
 /// JWT (`Authorization: Bearer <auth_jwt>`); on success it 302-redirects to the client's redirect_uri
 /// carrying a one-time code.
 async fn handle_oauth_authorize(
@@ -537,7 +537,7 @@ async fn handle_oauth_authorize(
     Ok(Redirect::to(&url))
 }
 
-/// FR-MCP-002 control-plane: a module heartbeats to stay healthy. Body: `{"module": "..."}`.
+/// TASK-MCP-002 control-plane: a module heartbeats to stay healthy. Body: `{"module": "..."}`.
 async fn handle_heartbeat(
     State(state): State<AppState>,
     body: axum::body::Bytes,
@@ -569,7 +569,7 @@ async fn handle_heartbeat(
     }
 }
 
-/// FR-MCP-002 control-plane: a module deregisters (its tools are withdrawn until it
+/// TASK-MCP-002 control-plane: a module deregisters (its tools are withdrawn until it
 /// registers again). Body: `{"module": "..."}`.
 async fn handle_deregister(
     State(state): State<AppState>,
@@ -625,7 +625,7 @@ fn respond_outcome_http(outcome: &crate::elicitation::RespondOutcome) -> (Status
     }
 }
 
-/// FR-MCP-008 caller poll: the pending elicitations awaiting a response. When the store-of-record is
+/// TASK-MCP-008 caller poll: the pending elicitations awaiting a response. When the store-of-record is
 /// active the caller is authenticated and sees only their own pending elicitations (DEC-1159); in dev the
 /// in-memory store is returned unscoped.
 async fn handle_elicitation_poll(
@@ -668,7 +668,7 @@ async fn handle_elicitation_poll(
     )
 }
 
-/// FR-MCP-008 caller response. Validates against the elicitation's fixed type schema, transitions it,
+/// TASK-MCP-008 caller response. Validates against the elicitation's fixed type schema, transitions it,
 /// and audits best-effort. 200 recorded, 422 on validation failure (with `validation_errors`), 404
 /// unknown, 409 no longer pending, 400 on a malformed id.
 async fn handle_elicitation_respond(
@@ -733,7 +733,7 @@ async fn handle_elicitation_respond(
     respond_outcome_http(&outcome)
 }
 
-/// FR-MCP-008 caller cancellation of a pending elicitation. Caller-scoped on the store-of-record path.
+/// TASK-MCP-008 caller cancellation of a pending elicitation. Caller-scoped on the store-of-record path.
 async fn handle_elicitation_cancel(
     State(state): State<AppState>,
     headers: HeaderMap,
@@ -788,7 +788,7 @@ async fn handle_elicitation_cancel(
     }
 }
 
-/// FR-MCP-007 task status poll. 200 with the task's status view, or 404 for an unknown handle (or a
+/// TASK-MCP-007 task status poll. 200 with the task's status view, or 404 for an unknown handle (or a
 /// malformed id). Caller-scoped on the store-of-record path; the result payload is opened through the KMS.
 async fn handle_task_status(
     State(state): State<AppState>,
@@ -840,7 +840,7 @@ async fn handle_task_status(
     }
 }
 
-/// FR-MCP-007 task cancellation. 200 cancelled, 404 unknown, 409 already terminal, 400 malformed id.
+/// TASK-MCP-007 task cancellation. 200 cancelled, 404 unknown, 409 already terminal, 400 malformed id.
 /// Caller-scoped on the store-of-record path.
 async fn handle_task_cancel(
     State(state): State<AppState>,
@@ -924,9 +924,9 @@ async fn handle_mcp(
     headers: HeaderMap,
     body: axum::body::Bytes,
 ) -> axum::response::Response {
-    // FR-MCP-004 clauses #23/#24: when enabled, the MCP surface requires a valid audience-bound,
+    // TASK-MCP-004 clauses #23/#24: when enabled, the MCP surface requires a valid audience-bound,
     // unrevoked access token. Off in dev (no token) so the demo keeps working. A 401 here carries the
-    // FR-MCP-005 `WWW-Authenticate` resource-metadata challenge. The verified claims carry the caller's
+    // TASK-MCP-005 `WWW-Authenticate` resource-metadata challenge. The verified claims carry the caller's
     // tenant + subject, which the destructive-tool gate writes into the persisted confirmation row.
     let caller = if require_auth() {
         match enforce_oauth(&state, &headers).await {
@@ -1027,8 +1027,8 @@ async fn dispatch_one(
             Response::success(id, serde_json::to_value(r).expect("serialise"))
         }
         "tools/call" => {
-            // Slice-1: caller scopes come from JWT verification (FR-MCP-004) once wired;
-            // for now we accept a permissive default and rely on FR-MCP-002+004 to
+            // Slice-1: caller scopes come from JWT verification (TASK-MCP-004) once wired;
+            // for now we accept a permissive default and rely on TASK-MCP-002+004 to
             // tighten. The `_caller_scopes` is the integration point.
             let params: ToolsCallParams = match req.params {
                 Some(p) => match serde_json::from_value(p) {
@@ -1049,7 +1049,7 @@ async fn dispatch_one(
             };
             let caller_scopes = vec!["mcp:tools".to_string()];
 
-            // FR-MCP-006: a destructive tool is held for an elicited confirmation (FR-MCP-008) before
+            // TASK-MCP-006: a destructive tool is held for an elicited confirmation (TASK-MCP-008) before
             // forwarding. Resolve the entry first for its annotations; lookup/scope errors are the same
             // ones `call_dispatch` would raise. Non-destructive tools fall straight through.
             let entry = match call_prepare(&state.registry, &params, &caller_scopes) {
@@ -1057,7 +1057,7 @@ async fn dispatch_one(
                 Err(e) => return Response::error(id, e),
             };
             if entry.annotations.destructive_hint {
-                // FR-MCP-008 store-of-record: persist the confirmation to `mcp_elicitations` when a
+                // TASK-MCP-008 store-of-record: persist the confirmation to `mcp_elicitations` when a
                 // database + authenticated caller are present (so it survives a restart and is
                 // caller-scoped); otherwise the in-memory store (dev/demo). `pg` is `Copy` (a `&PgPool`
                 // plus two UUIDs), so it is consulted for both the verdict read and the create.
@@ -1249,7 +1249,7 @@ mod tests {
         assert_eq!(tools.as_array().unwrap().len(), 3);
     }
 
-    // ---- FR-MCP-005 Protected Resource Metadata ------------------------------------------
+    // ---- TASK-MCP-005 Protected Resource Metadata ------------------------------------------
 
     #[test]
     fn www_authenticate_challenge_points_at_the_prm() {
@@ -1348,7 +1348,7 @@ mod tests {
         assert_eq!(unknown.status(), StatusCode::NOT_FOUND);
     }
 
-    // ---- FR-MCP-008 elicitation HTTP surface ---------------------------------------------
+    // ---- TASK-MCP-008 elicitation HTTP surface ---------------------------------------------
 
     #[tokio::test]
     async fn elicitation_poll_respond_validate_and_404() {
@@ -1420,7 +1420,7 @@ mod tests {
         assert_eq!(invalid.status(), StatusCode::UNPROCESSABLE_ENTITY);
     }
 
-    // ---- FR-MCP-006 destructive-tool gating ----------------------------------------------
+    // ---- TASK-MCP-006 destructive-tool gating ----------------------------------------------
 
     fn register_gated_tool(
         state: &AppState,
@@ -1549,7 +1549,7 @@ mod tests {
         );
     }
 
-    // ---- FR-MCP-007 tasks HTTP surface ---------------------------------------------------
+    // ---- TASK-MCP-007 tasks HTTP surface ---------------------------------------------------
 
     #[tokio::test]
     async fn task_status_and_cancel_over_http() {

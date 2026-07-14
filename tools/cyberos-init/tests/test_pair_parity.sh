@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test_pair_parity.sh - FR-SKILL-118 §5 suite (t01-t06 -> AC 1-6).
+# test_pair_parity.sh - TASK-SKILL-118 §5 suite (t01-t06 -> AC 1-6).
 set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"; repo="$(cd "$here/../../.." && pwd)"
 CHECK="$repo/tools/cyberos-init/check-pair-parity.sh"
@@ -36,14 +36,14 @@ t03_constants_block() {                                                # AC 3
   for n in $SIX; do
     head -5 "$SKILLS/$n-audit/RUBRIC.md" | grep -q "^constants: TOTAL_ROWS_MIN=8" || bad="$bad $n"
   done
-  grep -q "FR-CUO-207" "$SKILLS/coverage-gate-audit/RUBRIC.md" || bad="$bad cov-override-hook"
+  grep -q "TASK-CUO-207" "$SKILLS/coverage-gate-audit/RUBRIC.md" || bad="$bad cov-override-hook"
   [ -z "$bad" ] && ok t03 || fail t03 "constants header missing:$bad"
 }
 t04_artefact_sections_stable() {                                       # AC 4 (amended: at-rest guard)
   # additive-only guarantee AT REST: no SKILL.md in the seven pairs lost a line vs HEAD.
   # A DIRTY worktree on these files warns and skips instead of failing - legitimate mid-flight
-  # mutations (e.g. FR-SKILL-119's citation swaps) false-fired this three times; the guard's
-  # authority is the committed state, which CI always checks clean. (FR-SKILL-118 AC 4, amended.)
+  # mutations (e.g. TASK-SKILL-119's citation swaps) false-fired this three times; the guard's
+  # authority is the committed state, which CI always checks clean. (TASK-SKILL-118 AC 4, amended.)
   local bad="" dirty=""
   for n in $SIX debugging-cycle; do
     for side in author audit; do

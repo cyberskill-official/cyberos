@@ -1,6 +1,6 @@
 name: release-snap
 
-# FR-APP-005: Snap Store channel. Builds the snap from the SAME `tauri build --bundles deb`
+# TASK-APP-005: Snap Store channel. Builds the snap from the SAME `tauri build --bundles deb`
 # payload the GitHub-Releases pipeline ships (dump plugin - zero drift between channels),
 # then uploads + releases via snapcore actions behind SNAP_RELEASE=true (off by default).
 #
@@ -45,7 +45,7 @@ jobs:
           got="$(awk '/^    plugs:/{f=1;next} f&&/^      - /{sub(/^      - /,"");print;next} f{exit}' \
             apps/desktop/src-tauri/snap/snapcraft.yaml)"
           if [ "$got" != "$(printf '%s' "$want" | sed 's/^          //')" ]; then
-            echo "::error::snap plugs drifted from the approved six-entry set (FR-APP-005 §1 #4)"
+            echo "::error::snap plugs drifted from the approved six-entry set (TASK-APP-005 §1 #4)"
             printf 'want:\n%s\ngot:\n%s\n' "$want" "$got"
             exit 1
           fi
@@ -56,7 +56,7 @@ jobs:
           # scans for (self-excluding-grep idiom) - an exclusion flag would instead blind the
           # guard to future additions in this very file.
           matches=$(grep -rl "flathub/""flathub" .github/ tools/ 2>/dev/null | wc -l)
-          [ "$matches" -eq 0 ] || { echo "::error::Flathub PR automation reference found under .github/ or tools/ - forbidden by FR-APP-005 AC #6"; exit 1; }
+          [ "$matches" -eq 0 ] || { echo "::error::Flathub PR automation reference found under .github/ or tools/ - forbidden by TASK-APP-005 AC #6"; exit 1; }
           echo "no Flathub submission automation present (structural guarantee holds)"
       - run: echo "workflow executed; see build-and-upload-snap conclusion for gate state"
 

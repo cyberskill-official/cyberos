@@ -9,7 +9,7 @@
 
 ### Verification
 
-- Re-ran on cyberos repo (post-link-fixes pass): `broken_links: 0` (was 4 — all four were false positives from FR-CHAT-009 code blocks).
+- Re-ran on cyberos repo (post-link-fixes pass): `broken_links: 0` (was 4 — all four were false positives from TASK-CHAT-009 code blocks).
 
 ## v1.0.0 — 2026-05-17 (initial release)
 

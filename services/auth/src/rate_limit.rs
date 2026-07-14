@@ -1,4 +1,4 @@
-//! FR-AUTH-004 §1 #5 — slice-1 audit-fix G-001.
+//! TASK-AUTH-004 §1 #5 — slice-1 audit-fix G-001.
 //!
 //! Dual rate-limit for `POST /v1/auth/token`:
 //!   * **Per-IP**     — 10 attempts per minute per source IP.
@@ -13,8 +13,8 @@
 //! Spec §1 #5 mentions Redis counters. The deployed implementation uses an
 //! in-memory store (`Mutex<HashMap<key, BucketState>>`) — adequate for
 //! single-instance dev/prod and current scale. Multi-instance prod will
-//! sync via Redis when FR-OBS-002 ships. Documented in
-//! `FR-AUTH-004-jwt-jwks.audit.md §10.6 #2` as an operator-decision item.
+//! sync via Redis when TASK-OBS-002 ships. Documented in
+//! `TASK-AUTH-004-jwt-jwks.audit.md §10.6 #2` as an operator-decision item.
 //!
 //! ## Algorithm — fixed-window counter
 //!
@@ -27,7 +27,7 @@
 //!
 //! Fixed-window is simpler than token-bucket and good enough for the
 //! credential-stuffing threat model — a sliding-window or token-bucket
-//! refinement is FR-OBS-002's problem.
+//! refinement is TASK-OBS-002's problem.
 
 use std::collections::HashMap;
 use std::sync::Mutex;

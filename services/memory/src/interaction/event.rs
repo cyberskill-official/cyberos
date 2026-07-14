@@ -1,4 +1,4 @@
-//! FR-MEMORY-121 §1 #2/#16 — the one work-interaction event shape every CyberOS module emits, plus the
+//! TASK-MEMORY-121 §1 #2/#16 — the one work-interaction event shape every CyberOS module emits, plus the
 //! closed enums, the canonical audit-row body builder, and a misuse-resistant typed builder.
 //!
 //! The event is serialised as the `payload` of an aux row on `l1_audit_log` (row kind
@@ -15,14 +15,14 @@ use uuid::Uuid;
 pub const SCHEMA_VERSION: u16 = 1;
 
 /// The `l1_audit_log` row kind for an interaction-event (DEC-2704). The row-level `event_type` column
-/// (FR-OBS-008) equals this constant; the interaction's own verb lives in `payload.event_type`.
+/// (TASK-OBS-008) equals this constant; the interaction's own verb lives in `payload.event_type`.
 pub const AUDIT_ROW_KIND: &str = "memory.interaction_event";
 
 /// `attributes` serialised must be <= 2 KiB (§1 #10) — the anti-leak cap that stops a module smuggling
 /// raw content through the bag.
 pub const MAX_ATTRIBUTES_BYTES: usize = 2 * 1024;
 
-/// The whole audit-row body must be <= 16 KiB (§1 #10) — keeps the chain + the FR-MEMORY-101 ingest cheap.
+/// The whole audit-row body must be <= 16 KiB (§1 #10) — keeps the chain + the TASK-MEMORY-101 ingest cheap.
 pub const MAX_BODY_BYTES: usize = 16 * 1024;
 
 /// The emitting module. Closed set (§1 #2, #18); an unknown value cannot be constructed and is rejected
@@ -127,7 +127,7 @@ pub enum TargetRef {
 
 pub use super::content_ref::ContentRef;
 
-/// The one work-interaction event every module emits. `schema_version` is frozen at 1 for FR-MEMORY-121.
+/// The one work-interaction event every module emits. `schema_version` is frozen at 1 for TASK-MEMORY-121.
 ///
 /// Field order here IS the canonical body field order (§1 #11) — do not reorder without a contract review.
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -217,7 +217,7 @@ impl InteractionEvent {
 
 /// Build the canonical audit-row body for an interaction-event (§1 #5, #11):
 /// `{"event_type":"memory.interaction_event","payload":<event>}`, serialised deterministically. The
-/// row-level `event_type` is the row kind (so FR-OBS-008's generated column + the FR-APP-005 viewer keep
+/// row-level `event_type` is the row kind (so TASK-OBS-008's generated column + the TASK-APP-005 viewer keep
 /// working); the interaction's own verb is `payload.event_type`. Serialisation cannot realistically fail
 /// (the event is plain data), but on the impossible error we fall back to a minimal well-formed body so a
 /// caller never panics on the capture path.

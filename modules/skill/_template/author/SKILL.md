@@ -15,7 +15,7 @@ metadata:
   version: 1.0.0
   module: skill
   stage: <SDP §2 stage letter or "cross">
-  cyberos-template: feature_request@1   # replace with this skill's artefact template id
+  cyberos-template: task@1   # replace with this skill's artefact template id
   cyberos-rubric-target: <artefact>_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
@@ -95,7 +95,7 @@ confidence_band:
   defer_below: 0.5
   cite_sources: required
 
-# ── Untrusted-content discipline (FR-SKILL-113 registry v0.2.5) ──────
+# ── Untrusted-content discipline (TASK-SKILL-113 registry v0.2.5) ──────
 untrusted_inputs:
   wrap_in_marker: "untrusted_content"
   injection_scan: required

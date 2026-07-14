@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Phase 4 (cyberos) — Regenerate per-module README index files.
 
-For each docs/feature-requests/<module>/ folder, write a fresh README.md with:
+For each docs/tasks/<module>/ folder, write a fresh README.md with:
 - FR table (id, priority, slice, hours, title)
 - Cross-module dep summary (depends on / depended on by)
 
@@ -41,12 +41,12 @@ def main():
     ap.add_argument("--project-root", required=True)
     args = ap.parse_args()
 
-    fr_root = os.path.join(args.project_root, "docs/feature-requests")
+    fr_root = os.path.join(args.project_root, "docs/tasks")
     if not os.path.isdir(fr_root):
-        print(f"ERROR: no docs/feature-requests/ at {fr_root}")
+        print(f"ERROR: no docs/tasks/ at {fr_root}")
         return
 
-    frs = {}
+    tasks = {}
     for path in sorted(glob.glob(f"{fr_root}/**/FR-*.md", recursive=True)):
         if path.endswith(".audit.md"):
             continue
@@ -67,7 +67,7 @@ def main():
 
         out = []
         from datetime import date
-        out.append(f"# {module_name} module — feature request index")
+        out.append(f"# {module_name} module — task index")
         out.append("")
         out.append(f"_Generated {date.today().isoformat()} — {len(fr_list_sorted)} FRs, {total_hours:.0f} engineering-hours total._")
         out.append("")
@@ -76,13 +76,13 @@ def main():
         out.append("| FR | Priority | Slice | Hours | Title |")
         out.append("|---|---|---|---:|---|")
         for fr in fr_list_sorted:
-            fr_id = fr["id"]
+            task_id = fr["id"]
             priority = fr.get("priority", "?")
             slice_v = fr.get("slice", "?")
             hours = fr.get("effort_hours", "?")
             title = fr.get("title", "").strip('"').strip("'")
             path = os.path.basename(fr["_path"])
-            out.append(f"| [{fr_id}]({path}) | {priority} | {slice_v} | {hours} | {title[:100]} |")
+            out.append(f"| [{task_id}]({path}) | {priority} | {slice_v} | {hours} | {title[:100]} |")
         out.append("")
         out.append("## Cross-module dependencies")
         out.append("")
@@ -94,8 +94,8 @@ def main():
                 if dep in frs and dep not in own_ids:
                     dep_module = os.path.basename(os.path.dirname(frs[dep]["_path"])).upper()
                     deps_in[dep_module].append((fr["id"], dep))
-        for fr_id, fr in frs.items():
-            if fr_id in own_ids:
+        for task_id, fr in frs.items():
+            if task_id in own_ids:
                 continue
             for dep in fr.get("depends_on", []):
                 if dep in own_ids:

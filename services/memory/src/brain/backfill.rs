@@ -1,4 +1,4 @@
-//! FR-MEMORY-123 §1 #14 — backfill + rebuild: the derived lens is reproducible from the Layer-1 chain.
+//! TASK-MEMORY-123 §1 #14 — backfill + rebuild: the derived lens is reproducible from the Layer-1 chain.
 //!
 //! DEC-2721 makes `l1_audit_log` the system of record and the embedding + summary tables a DERIVED lens. This
 //! module is the proof + the recovery path:

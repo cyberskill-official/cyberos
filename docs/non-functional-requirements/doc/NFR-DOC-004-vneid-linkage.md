@@ -9,13 +9,13 @@ phase: P1
 slo: "100% of VNeID-verified signers carry the VNeID identifier in the signature attestation"
 owner: CLO-Legal
 created: 2026-05-18
-related_frs: [FR-DOC-006]
+related_tasks: [TASK-DOC-006]
 ---
 
 ## §1 — Statement (BCP-14 normative)
 
 1. When a signer's identity is verified via VNeID (Vietnamese national digital ID), the resulting signature **MUST** carry the VNeID identifier in the attestation block.
-2. The VNeID identifier **MUST** be encrypted at rest (per FR-HR-003 KMS practice); plain-text storage forbidden.
+2. The VNeID identifier **MUST** be encrypted at rest (per TASK-HR-003 KMS practice); plain-text storage forbidden.
 3. The signature row **MUST** also include `idv_method=vneid`, `idv_session_id`, `idv_completed_at` for audit.
 4. VNeID API outages **MUST NOT** silently downgrade to non-IDV signatures — the sign is blocked until VNeID is reachable or the signer chooses an alternate IDV method.
 5. VNeID identifiers **MUST NOT** be displayed in UI to any user other than CLO-Legal + the signer themselves.

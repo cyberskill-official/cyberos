@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>CyberOS Chat</title>
 <!--
-  FR-APP-007 - CyberOS chat web client.
+  TASK-APP-007 - CyberOS chat web client.
 
-  A self-contained operator chat surface for the first-party cyberos-chat service (FR-CHAT-101). It
+  A self-contained operator chat surface for the first-party cyberos-chat service (TASK-CHAT-101). It
   consumes only the EXISTING chat HTTP + websocket surface and adds no backend:
     - REST : channels, messages (post/list/edit/delete), members, presence, read/unread, search, attachments
     - WS   : /v1/chat/ws?channel=<id>&access_token=<token> for live message/presence/typing events
-  Identity is the CyberOS access token (FR-AUTH-110). When opened from the dashboard (app.html) it
+  Identity is the CyberOS access token (TASK-AUTH-110). When opened from the dashboard (app.html) it
   auto-connects from the stored token; the chat service verifies that token against the auth JWKS.
 
   Run: serve this folder and start cyberos-chat with CHAT_DEV_CORS=1 so the browser may call it

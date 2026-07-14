@@ -1,4 +1,4 @@
-//! FR-MCP-004 authorization endpoint (GET /authorize -> 302): issues a one-time, 30-second PKCE-bound
+//! TASK-MCP-004 authorization endpoint (GET /authorize -> 302): issues a one-time, 30-second PKCE-bound
 //! authorization code (clauses #2, #10, #13, #14, #28, #29).
 //!
 //! Subject identity comes from an auth-service bearer JWT (the non-interactive realization of "existing

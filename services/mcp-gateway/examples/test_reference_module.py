@@ -1,4 +1,4 @@
-"""Smoke tests for the reference module MCP server (FR-MCP-002 example).
+"""Smoke tests for the reference module MCP server (TASK-MCP-002 example).
 
 These exercise the exact JSON-RPC surface the gateway forwards to: a `tools/call` POST
 to `/mcp` must return a `{"result": {"content": [...], "isError": false}}` envelope, which

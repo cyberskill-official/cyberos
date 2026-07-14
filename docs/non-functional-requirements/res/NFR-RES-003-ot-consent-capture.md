@@ -9,12 +9,12 @@ phase: P0
 slo: "100% of VN overtime hours carry recorded worker consent + supervisor signoff"
 owner: CHRO
 created: 2026-05-18
-related_frs: [FR-RES-005]
+related_tasks: [TASK-RES-005]
 ---
 
 ## §1 — Statement (BCP-14 normative)
 
-1. VN-resident workers' overtime **MUST NOT** be allocated without explicit, recorded consent of the worker, per the VN labour code OT cap (`FR-RES-005`).
+1. VN-resident workers' overtime **MUST NOT** be allocated without explicit, recorded consent of the worker, per the VN labour code OT cap (`TASK-RES-005`).
 2. The consent record carries `{worker_id, period, requested_hours, consented_at, supervisor_id, supervisor_signed_at, justification}`.
 3. Hard-cap enforcement: cumulative monthly OT > legal cap (VN: 40h/month, 200h/year, varies by industry) **MUST** be blocked at allocation time.
 4. Consent **MUST** be electronic-signed; verbal/informal consent is insufficient.

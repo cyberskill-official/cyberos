@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test_check_doc_anchors.sh - FR-SKILL-119 §5 suite.
+# test_check_doc_anchors.sh - TASK-SKILL-119 §5 suite.
 set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"; repo="$(cd "$here/../.." && pwd)"
 CHECK="$repo/scripts/check_doc_anchors.sh"

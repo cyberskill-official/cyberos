@@ -86,7 +86,7 @@ confidence_band:
   defer_below: 0.5
   cite_sources: required
 
-# ── Untrusted-content discipline (FR-SKILL-113 registry v0.2.5) ──────
+# ── Untrusted-content discipline (TASK-SKILL-113 registry v0.2.5) ──────
 untrusted_inputs:
   wrap_in_marker: "untrusted_content"
   injection_scan: required

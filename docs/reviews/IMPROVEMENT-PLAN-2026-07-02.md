@@ -20,12 +20,12 @@ and gate. Estimates are focused build-time on the existing Mac-gate loop.
 ## P1 - status integrity + grooming (the approval covers doing this immediately after P0, ~a day)
 
 5. FR status corrections (both directions), one commit:
-   - flip to done: FR-CHAT-101, FR-AUTH-110, FR-AI-003, FR-AI-005 (+ FR-CUO-204 per its gate);
-   - close superseded (move to _archive/): FR-CHAT-001..013 (native chat replaced the fork; keep as
-     history), FR-APP-001..007 (superseded by the React console; add pointer);
-   - FR-EVAL-001 -> built_blocked_on_legal (or agreed equivalent) + prod-container note;
-   - FR-MCP-004: decide flip-with-ledgered-deferral vs keep implementing (operator call, one line);
-   - fix double-status frontmatter (FR-SKILL-111..115, FR-PROJ-012) to one canonical value;
+   - flip to done: TASK-CHAT-101, TASK-AUTH-110, TASK-AI-003, TASK-AI-005 (+ TASK-CUO-204 per its gate);
+   - close superseded (move to _archive/): TASK-CHAT-001..013 (native chat replaced the fork; keep as
+     history), TASK-APP-001..007 (superseded by the React console; add pointer);
+   - TASK-EVAL-001 -> built_blocked_on_legal (or agreed equivalent) + prod-container note;
+   - TASK-MCP-004: decide flip-with-ledgered-deferral vs keep implementing (operator call, one line);
+   - fix double-status frontmatter (TASK-SKILL-111..115, TASK-PROJ-012) to one canonical value;
    - normalize odd statuses (needs_human/completed/delivered/fixed/ready) into the fixed vocabulary:
      draft | ready_to_implement | implementing | done | superseded | blocked.
 6. Re-home still-wanted intents from the superseded pile as NEW native-chat FRs (unbuilt, draft):
@@ -34,7 +34,7 @@ and gate. Estimates are focused build-time on the existing Mac-gate loop.
    3-5 line "As built (2026-07-02)" block per affected FR - no spec rewrites. [~15 FRs]
 8. Orphan cleanup: delete services/eval_writetest; archive or delete services/chat-legacy-mattermost
    (operator call - it is the retired fork); confirm or remove services/business-suite; move all
-   *.audit.md to docs/feature-requests/_audits/.
+   *.audit.md to docs/tasks/_audits/.
 9. Regenerate BACKLOG.md from the corrected frontmatter (script or by hand) so the backlog lists ONLY
    not-yet-implemented + new FRs, grouped by module, with the deployed/built/draft distinction; retire
    remaining-build-plan.md into it. Update CONTINUE-HERE.md + let roadmap.html re-render from the fixed

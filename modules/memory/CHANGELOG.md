@@ -1,16 +1,16 @@
 # Changelog — MEMORY
 
-## 2026-05-18 — FR-MEMORY-104 Tauri 2.x desktop scaffold
+## 2026-05-18 — TASK-MEMORY-104 Tauri 2.x desktop scaffold
 
-New `services/memory/desktop/` (19 files). Backend: Tauri 2 + plugin-shell + plugin-fs; `commands.rs` for search/quick-capture/sync-state; `sync_supervisor.rs` supervises the Python memory-sync daemon with 5-restarts-per-60s circuit breaker. Frontend: Svelte 5 runes + Vite + Tailwind 3 — `App.svelte` with Dashboard / Search / Sync tabs. **NOT in `services/Cargo.toml` workspace** — own Cargo.lock. Signing scripts for macOS and Windows. FR-MEMORY-104 status bumped `accepted → building`.
+New `services/memory/desktop/` (19 files). Backend: Tauri 2 + plugin-shell + plugin-fs; `commands.rs` for search/quick-capture/sync-state; `sync_supervisor.rs` supervises the Python memory-sync daemon with 5-restarts-per-60s circuit breaker. Frontend: Svelte 5 runes + Vite + Tailwind 3 — `App.svelte` with Dashboard / Search / Sync tabs. **NOT in `services/Cargo.toml` workspace** — own Cargo.lock. Signing scripts for macOS and Windows. TASK-MEMORY-104 status bumped `accepted → building`.
 
 ---
 
-## 2026-05-19 — MEMORY Wave 2026-Q3 CLOSED — FR-MEMORY-120 `cyberos history` shipped (final FR)
+## 2026-05-19 — MEMORY Wave 2026-Q3 CLOSED — TASK-MEMORY-120 `cyberos history` shipped (final FR)
 
 Final FR of the MEMORY Improvement Wave 2026 Q3. No protocol amendment needed (pure read-only projection).
 
-### FR-MEMORY-120 implementation
+### TASK-MEMORY-120 implementation
 
 New `modules/memory/cyberos/core/history.py` (~265 LOC):
 - `HistoryEntry` dataclass; `walk(store, target_path, *, follow_moves, since, limit, show_body)` two-pass projection (path-set expansion via move-row sweep, then filter + project). Most-recent-first by default.
@@ -28,7 +28,7 @@ CLI: new `cyberos history <path>` with `--limit`, `--chronological`, `--no-follo
 - ✅ Tombstone delete row appears with `extra.mode: "tombstone"`
 - ✅ JSON output with all 9 HistoryEntry fields
 - ✅ Never-existed path → `No history for 'memories/facts/never.md'.`
-- ✅ **Read-only invariant: HEAD before=3, after=3 exact match** (per FR-MEMORY-120 §1 #1)
+- ✅ **Read-only invariant: HEAD before=3, after=3 exact match** (per TASK-MEMORY-120 §1 #1)
 - ✅ `cyberos verify` chain intact (3 records)
 
 ### Test coverage
@@ -39,15 +39,15 @@ New: `modules/memory/tests/core/test_history.py` (302 lines, 18 test functions).
 
 | FR | Spec | Impl | Tests | Amendment |
 |---|---|---|---|---|
-| FR-MEMORY-112 | episodic memory | ✅ | 351L | — |
-| FR-MEMORY-113 | recency-decay recall | ✅ | 266L | — |
-| FR-MEMORY-114 | write-time importance | ✅ | 263L | — |
-| FR-MEMORY-115 | `cyberos dream` | ✅ | 329L | P19 §7.7 ✅ |
-| FR-MEMORY-116 | semantic-dedup consolidate | ✅ | 257L | — |
-| FR-MEMORY-117 | per-store ACL | ✅ | 359L | P20 §14.4 ✅ |
-| FR-MEMORY-118 | `put_if` precondition-hash | ✅ | 349L | P21 §3.1 ✅ |
-| FR-MEMORY-119 | session transcript ledger | ✅ | 308L | P22 §18 ✅ |
-| FR-MEMORY-120 | `cyberos history` | ✅ | 302L | — |
+| TASK-MEMORY-112 | episodic memory | ✅ | 351L | — |
+| TASK-MEMORY-113 | recency-decay recall | ✅ | 266L | — |
+| TASK-MEMORY-114 | write-time importance | ✅ | 263L | — |
+| TASK-MEMORY-115 | `cyberos dream` | ✅ | 329L | P19 §7.7 ✅ |
+| TASK-MEMORY-116 | semantic-dedup consolidate | ✅ | 257L | — |
+| TASK-MEMORY-117 | per-store ACL | ✅ | 359L | P20 §14.4 ✅ |
+| TASK-MEMORY-118 | `put_if` precondition-hash | ✅ | 349L | P21 §3.1 ✅ |
+| TASK-MEMORY-119 | session transcript ledger | ✅ | 308L | P22 §18 ✅ |
+| TASK-MEMORY-120 | `cyberos history` | ✅ | 302L | — |
 
 **All 9 FRs shipped end-to-end. All 4 protocol amendments APPROVED + merged into AGENTS.md. 2,784 lines of tests covering 110+ acceptance criteria. `cyberos verify` reports chain integrity across every test fixture.**
 
@@ -55,7 +55,7 @@ The MEMORY module now matches Anthropic's Memory+Dreaming primitive (per the sou
 
 ---
 
-## 2026-05-19 — Wave 3 cont. — AGENTS.md §18 (P22 APPROVED) + FR-MEMORY-119 transcript ledger
+## 2026-05-19 — Wave 3 cont. — AGENTS.md §18 (P22 APPROVED) + TASK-MEMORY-119 transcript ledger
 
 ### Protocol amendment §18 (P22 APPROVED)
 
@@ -65,7 +65,7 @@ Operator's fourth terse `APPROVE` of the session. New section §18 Session trans
 
 Tracker entry in [`modules/memory/README.md`](modules/memory/README.md) Appendix D flipped P22 from "awaiting APPROVE" to **APPROVED 2026-05-19**.
 
-### FR-MEMORY-119 implementation
+### TASK-MEMORY-119 implementation
 
 New module: `modules/memory/cyberos/core/transcript.py` (~630 LOC):
 
@@ -114,14 +114,14 @@ Modified:
 
 ### Wave 3 status
 
-- ✅ **P20 §14.4** APPROVED + FR-MEMORY-117 shipped
-- ✅ **P21 §3.1** APPROVED + FR-MEMORY-118 shipped
-- ✅ **P22 §18** APPROVED + FR-MEMORY-119 shipped
-- ⏳ **FR-MEMORY-120** (`cyberos history`) — no amendment gate; ships when operator says go
+- ✅ **P20 §14.4** APPROVED + TASK-MEMORY-117 shipped
+- ✅ **P21 §3.1** APPROVED + TASK-MEMORY-118 shipped
+- ✅ **P22 §18** APPROVED + TASK-MEMORY-119 shipped
+- ⏳ **TASK-MEMORY-120** (`cyberos history`) — no amendment gate; ships when operator says go
 
 ---
 
-## 2026-05-19 — Wave 3 cont. — AGENTS.md §3.1 extension (P21 APPROVED) + FR-MEMORY-118 put_if
+## 2026-05-19 — Wave 3 cont. — AGENTS.md §3.1 extension (P21 APPROVED) + TASK-MEMORY-118 put_if
 
 ### Protocol amendment §3.1 (P21 APPROVED)
 
@@ -129,16 +129,16 @@ Operator's third terse `APPROVE` of the session. §3.1's canonical-op table exte
 
 - **§3.1.5** — `memory.precondition_failed` aux row schema (`{actor, path, expected, actual, attempt_at}`). HEAD doesn't advance for the rejected put; advances by +1 for the aux row only.
 - **§3.1.6** — success row is INDISTINGUISHABLE from a regular `put` (`op="put"`, not `"put_if"`). Downstream consumers (walker / doctor / dream / history) require no special-case logic.
-- **§3.1.7** — ACL check (FR-MEMORY-117) runs BEFORE the precondition check. Policy refusal returns `acl_denied`, not `precondition_failed` — different operator action needed.
+- **§3.1.7** — ACL check (TASK-MEMORY-117) runs BEFORE the precondition check. Policy refusal returns `acl_denied`, not `precondition_failed` — different operator action needed.
 
 Tracker entry in [`modules/memory/README.md`](modules/memory/README.md) Appendix D flipped P21 from "awaiting APPROVE" to **APPROVED 2026-05-19**.
 
-### FR-MEMORY-118 implementation
+### TASK-MEMORY-118 implementation
 
 New op in `modules/memory/cyberos/core/ops.py`:
 
 - `PutIfResult` frozen dataclass (5 fields: `outcome`, `reason`, `expected`, `actual`, `committed_seq`).
-- `put_if(writer, rel_path, body, *, actor, precondition_body_hash, kind, extra)` — content-conditional write. Order of checks: path traversal + size cap → shape validation (64-char lowercase hex OR `None` only) → `_has_section_3_1_put_if()` anchor check → ACL gate (FR-MEMORY-117, runs BEFORE precondition per §3.1.7) → precondition check (3 rejection paths) → write. Success emits a plain `put` row (per §3.1.6) so downstream consumers need no special-case.
+- `put_if(writer, rel_path, body, *, actor, precondition_body_hash, kind, extra)` — content-conditional write. Order of checks: path traversal + size cap → shape validation (64-char lowercase hex OR `None` only) → `_has_section_3_1_put_if()` anchor check → ACL gate (TASK-MEMORY-117, runs BEFORE precondition per §3.1.7) → precondition check (3 rejection paths) → write. Success emits a plain `put` row (per §3.1.6) so downstream consumers need no special-case.
 
 CLI: new `cyberos put-if <path> <body_file> --precondition <hex|none>` subcommand with `--precondition-from-file` + `--json` variants.
 
@@ -167,14 +167,14 @@ Modified: `modules/memory/AGENTS.md` §3.1; `modules/memory/cyberos/core/ops.py`
 
 ### Wave 3 status
 
-- ✅ **P20 §14.4** APPROVED + FR-MEMORY-117 shipped
-- ✅ **P21 §3.1** APPROVED + FR-MEMORY-118 shipped
+- ✅ **P20 §14.4** APPROVED + TASK-MEMORY-117 shipped
+- ✅ **P21 §3.1** APPROVED + TASK-MEMORY-118 shipped
 - ⏳ **P22 §18** (session transcript ledger) — awaiting `APPROVE protocol change P22 §18`
-- ⏳ **FR-MEMORY-120** (`cyberos history`) — no amendment gate
+- ⏳ **TASK-MEMORY-120** (`cyberos history`) — no amendment gate
 
 ---
 
-## 2026-05-19 — Wave 3 start — AGENTS.md §14.4 (P20 APPROVED) + FR-MEMORY-117 per-store ACL
+## 2026-05-19 — Wave 3 start — AGENTS.md §14.4 (P20 APPROVED) + TASK-MEMORY-117 per-store ACL
 
 ### Protocol amendment §14.4 (P20 APPROVED)
 
@@ -182,7 +182,7 @@ Operator approved with a terse `APPROVE` (interpreted as the next-in-queue per t
 
 Tracker entry in [`modules/memory/README.md`](modules/memory/README.md) Appendix D flipped P20 from "awaiting APPROVE" to **APPROVED 2026-05-19**.
 
-### FR-MEMORY-117 implementation
+### TASK-MEMORY-117 implementation
 
 New: `modules/memory/cyberos/core/store_acl.py` (~280 LOC):
 - `StoreAcl` dataclass + `from_yaml(path)` parser with full validation (closed-enum modes, required `store_id`, list-shape `acl`, glob-actor strings).
@@ -201,7 +201,7 @@ Hooks into `modules/memory/cyberos/core/ops.py`:
 - `delete()` gates before the audit-row submit.
 
 Hooks into `modules/memory/memory.schema.json`:
-- New `StoreAclMode`, `StoreAclEntry`, `StoreAcl` definitions matching FR-MEMORY-117 §3 schema fragment.
+- New `StoreAclMode`, `StoreAclEntry`, `StoreAcl` definitions matching TASK-MEMORY-117 §3 schema fragment.
 
 CLI: new `cyberos acl {show|validate|explain}` subcommand:
 - `acl show` — pretty-prints every STORE.yaml in the store.
@@ -221,7 +221,7 @@ CLI: new `cyberos acl {show|validate|explain}` subcommand:
 
 New: `modules/memory/tests/core/test_store_acl.py` (359 lines, 19 test functions) covering: StoreAcl parse + validation, find_governing_store_yaml walk, check_write across enforcement/warn-only/permissive paths, glob-actor matching, first-match-wins, explicit-deny override, default_mode fallback, built-in actor literals, put/move/delete ACL enforcement via canonical ops, `move` two-sided check, memory.acl_denied aux-row payload shape, explain() output.
 
-### Combined test surface (Waves 1 + 2 + FR-MEMORY-117)
+### Combined test surface (Waves 1 + 2 + TASK-MEMORY-117)
 
 6 test files at `modules/memory/tests/core/`: `test_episode.py` (351) + `test_ranking_and_decay.py` (266) + `test_importance.py` (263) + `test_dream.py` (329) + `test_consolidate_semantic_dedup.py` (257) + `test_store_acl.py` (359) = **1,825 lines, ~84 test functions across 65+ acceptance criteria**.
 
@@ -240,14 +240,14 @@ Modified:
 
 ### Wave 3 status
 
-- ✅ **P20 §14.4** APPROVED + FR-MEMORY-117 implemented
+- ✅ **P20 §14.4** APPROVED + TASK-MEMORY-117 implemented
 - ⏳ **P21 §3.1** (put_if precondition-hash) awaiting `APPROVE protocol change P21 §3.1`
 - ⏳ **P22 §18** (session transcript ledger) awaiting `APPROVE protocol change P22 §18`
-- ⏳ **FR-MEMORY-120** (`cyberos history`) — no amendment gate; ships next session
+- ⏳ **TASK-MEMORY-120** (`cyberos history`) — no amendment gate; ships next session
 
 ---
 
-## 2026-05-19 — Dependency-version bumps + AGENTS.md §7.7 (P19 APPROVED) + Wave 2 implementation (FR-MEMORY-115 + 116)
+## 2026-05-19 — Dependency-version bumps + AGENTS.md §7.7 (P19 APPROVED) + Wave 2 implementation (TASK-MEMORY-115 + 116)
 
 ### Dependency version audit + bumps (repo-wide)
 
@@ -271,7 +271,7 @@ Operator approved Wave 2 protocol amendment. New section added to [`modules/memo
 
 Tracker entry in [`modules/memory/README.md`](modules/memory/README.md) Appendix D flipped P19 from "awaiting APPROVE" to **APPROVED 2026-05-19**.
 
-### FR-MEMORY-115 — `cyberos dream` out-of-band reflection
+### TASK-MEMORY-115 — `cyberos dream` out-of-band reflection
 
 New: `modules/memory/cyberos/core/dream/{__init__,proposals,_audit_iter,detectors,runner,applier}.py`. Four async detectors (`duplicates` / `stale` / `patterns` / `verify`) matching AGENTS.md §7.7.7 closed enum. Runner uses Crockford-base32 ULID `dream_id`, snapshot-isolated against `head_seq` at start, persists `DreamDiff` to `dreams/<YYYYMMDDTHHMMSSZ>/diff.json`. Applier: 3-pass (strict-idempotency via chain-walk → body-hash precondition → write with `extra.dream_id`/`extra.proposal_id` per §7.7.2). AGENTS.md §7.7 anchor checked before any writes (`ProtocolAmendmentMissing` on missing).
 
@@ -281,9 +281,9 @@ CLI: `cyberos dream` + `cyberos dream-apply <id>` subcommands.
 
 **Side effect**: `cyberos.core.ops.delete()` gained optional `extra: dict | None` kwarg (additive, back-compat).
 
-### FR-MEMORY-116 — Semantic-dedup consolidate phase
+### TASK-MEMORY-116 — Semantic-dedup consolidate phase
 
-Thin wrapper: 5th phase appended to `cyberos.core.consolidate.run()` → `Walk → Compact → Sign → Publish → SemanticDedup`. Delegates to FR-MEMORY-115's `duplicates` detector + applier verbatim (asserted by `test_consolidate_imports_dream_detector` via `inspect.getsource`). On apply, emits a marker `dream.complete` row with `extra.invocation = "consolidate"` so FR-MEMORY-120 history can distinguish dedup-from-consolidate from dedup-from-explicit-`dream`.
+Thin wrapper: 5th phase appended to `cyberos.core.consolidate.run()` → `Walk → Compact → Sign → Publish → SemanticDedup`. Delegates to TASK-MEMORY-115's `duplicates` detector + applier verbatim (asserted by `test_consolidate_imports_dream_detector` via `inspect.getsource`). On apply, emits a marker `dream.complete` row with `extra.invocation = "consolidate"` so TASK-MEMORY-120 history can distinguish dedup-from-consolidate from dedup-from-explicit-`dream`.
 
 CLI: extends `cyberos consolidate` with `--semantic-dedup`, `--semantic-dedup-apply`, `--semantic-dedup-threshold`, `--semantic-dedup-scope`. Default behavior unchanged. `ConsolidationReport` gains 5 new fields.
 
@@ -296,7 +296,7 @@ CLI: extends `cyberos consolidate` with `--semantic-dedup`, `--semantic-dedup-ap
 ### Deferred to subsequent sessions
 
 - pytest run against full suite — sandbox is Python 3.10 (module requires 3.11+); test files are ready for `pytest tests/core/ -v` in operator env.
-- Wave 3 (FR-MEMORY-117 ACL · 118 put_if · 119 sessions · 120 history) — gated on independent `APPROVE protocol change P20 / P21 / P22` chat-turns when operator ready.
+- Wave 3 (TASK-MEMORY-117 ACL · 118 put_if · 119 sessions · 120 history) — gated on independent `APPROVE protocol change P20 / P21 / P22` chat-turns when operator ready.
 
 ---
 
@@ -320,7 +320,7 @@ Changes by section:
 - **§13 KPIs** — added 8 new universal-protocol KPIs: capture rate per user, sync success rate, sync conflict rate, synthesis useful-rate, Lumi's memory seq counter, PII held-back rate, capture daemon health, cross-machine portability.
 - **§14 RACI** — added 9 new rows covering Stages 1–5 + Personal-memory portability + PII detection + cross-tenant isolation testing + synthesis output review. Stage-3+ adds Cloud-DBA + Sync-SRE roles under CTO.
 - **§16 Phase status** — added 5 new rows for Stages 1–5 with appropriate "design-locked / designed" pills.
-- **§17 References** — replaced PRD/SRS section refs (stripped) with MEMORY_AUTOSYNC_DESIGN.md, PROPOSAL.md (Proposal P13), feature-request-audit skill, AUDIT_AND_PLAN_2026_05_14.md, RESEARCH_REVIEW_2026_05_14.md cross-links. Annotates the 4 new doctor invariants and 5 new schema entities.
+- **§17 References** — replaced PRD/SRS section refs (stripped) with MEMORY_AUTOSYNC_DESIGN.md, PROPOSAL.md (Proposal P13), task-audit skill, AUDIT_AND_PLAN_2026_05_14.md, RESEARCH_REVIEW_2026_05_14.md cross-links. Annotates the 4 new doctor invariants and 5 new schema entities.
 
 Result: memory page now reflects the expanded universal-protocol vision while preserving every gold-quality detail of the shipped Stage-0 Layer 1. 5 references to MEMORY_AUTOSYNC_DESIGN.md cross-link the design source-of-truth. 20 mentions of the 8 new `memory *` subcommands give a cold reader the full CLI map.
 
@@ -328,7 +328,7 @@ Result: memory page now reflects the expanded universal-protocol vision while pr
 
 ## 2026-05-14 — Research review ingested + memory auto-sync design v1.0 locked
 
-- Saved `docs/RESEARCH_REVIEW_2026_05_14.md` (315 lines, ~53 KB) — the pre-launch audit from Claude Chat's Research Mode. Aggregate 6.5/10; lowest substantive scores on Spec Quality (5) and GTM (5). 10 follow-up tasks created (#31–#40) covering: P0→P1 descope gate, AI Gateway → AUTH reorder, PDPL citation fixes, server-render NFR + Risk catalogs, first 50 FRs via feature-request-author, 7 missing risks, TEN-billing P2 slice, UX defects, memory Layer 2 source-of-truth one-pager, memory decision memory.
+- Saved `docs/RESEARCH_REVIEW_2026_05_14.md` (315 lines, ~53 KB) — the pre-launch audit from Claude Chat's Research Mode. Aggregate 6.5/10; lowest substantive scores on Spec Quality (5) and GTM (5). 10 follow-up tasks created (#31–#40) covering: P0→P1 descope gate, AI Gateway → AUTH reorder, PDPL citation fixes, server-render NFR + Risk catalogs, first 50 FRs via task-author, 7 missing risks, TEN-billing P2 slice, UX defects, memory Layer 2 source-of-truth one-pager, memory decision memory.
 - **Wrote `docs/MEMORY_AUTOSYNC_DESIGN.md`** (~700 lines, design v1.0.0) — universal Personal memory + Lumi's memory architecture. Per Stephen's clarified vision: (1) Personal memory works on any folder, not just cyberos; (2) captures everything including discussions, not just file deliverables; (3) portable by folder copy across user's machines; (4) 2-way sync with Cloud memory aka Lumi's memory (also CUO's memory, CyberSkill's memory — same store, different names for different audiences); (5) multi-memory power + auto-evolve memory at scale.
   - 16 sections: vision, naming, three-layer architecture, Personal memory spec, Capture daemon spec, Lumi's memory spec, Sync orchestrator, Multi-memory auto-evolve, Dependency map, Privacy + governance, AGENTS.md Proposal P13 additions, CyberOS strategic implications, naming/branding decisions, 4-week sprint plan, 5 open questions, where-to-read-next.
   - Stage gating: **Stage 1 (Personal memory universal) + Stage 2 (capture daemon) are buildable today** — no external dep. Stages 3+ ride the P0+P2 critical path (AUTH + AI Gateway + TEN).

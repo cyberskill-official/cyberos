@@ -1,6 +1,6 @@
 ---
 title: ai - the model gateway · CyberOS
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 ai is the platform's single door to language models. No module calls a provider directly: every inference request goes through the gateway, which routes, meters, and audits it.

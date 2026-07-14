@@ -21,7 +21,7 @@ For the broader CyberOS protocol context, see the module [`README.md`](../README
 By registry v0.2.6 (the moment this folder is authored), CyberOS has:
 
 - 7 skills scaffolded across cpo + cto personas, all carrying full v0.2.0 frontmatter.
-- 5 contracts (`feature-request@1`, `nats-subjects@1`, `project-brief@1`, `product-requirements-document@1`, `software-requirements-specification@1`).
+- 5 contracts (`task@1`, `nats-subjects@1`, `project-brief@1`, `product-requirements-document@1`, `software-requirements-specification@1`).
 - A complete chain from "human idea + memory" through to "engineering tech-specs", documented end-to-end at the contract level.
 - Zero executable code.
 
@@ -205,7 +205,7 @@ Backends declared per-tenant in `manifest.json` under `mcp_backends:`. Auto-rout
 
 ```python
 SkillInvocation = {
-    "skill_id": str,                    # "cuo/cpo/feature-request-author"
+    "skill_id": str,                    # "cuo/cpo/task-author"
     "skill_version": str,               # "0.2.2"
     "trace_id": str,                    # uuid
     "caller_persona": str,              # "cuo-cpo" or "cuo" if direct

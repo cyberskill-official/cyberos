@@ -79,7 +79,7 @@ The mcp-gateway runs locally in two modes:
   of 32 bytes - generate with `openssl rand -base64 32`). Elicitations and tasks then persist to
   `mcp_elicitations` / `mcp_tasks` (migrations 0016/0017, applied in Step 2), payloads are sealed at rest,
   and a held confirmation survives a restart. This path is caller-scoped, so it needs a real OAuth access
-  token: run the FR-MCP-004 flow (register a client, authorize, exchange for a token) and send it as
+  token: run the TASK-MCP-004 flow (register a client, authorize, exchange for a token) and send it as
   `Authorization: Bearer <token>`. Without `MCP_KMS_KEY` the gateway refuses to start in this mode, by
   design - a held confirmation would otherwise be un-respondable.
 
@@ -114,7 +114,7 @@ pure and need no database: `cargo test -p cyberos-obs-sdk` and so on.
 - `auth::create_subject_p95_latency_under_200ms` asserts a p95 under 200 ms. Docker Desktop on macOS is
   slower than CI, so it can trip locally. Not a logic failure - relax or skip that threshold for local
   runs (`--skip create_subject_p95`).
-- `ai-gateway::cost_hold_expiry::*` spawn the FR-AI-003 Writer (`python3 -m cyberos.writer put`), so the
+- `ai-gateway::cost_hold_expiry::*` spawn the TASK-AI-003 Writer (`python3 -m cyberos.writer put`), so the
   memory package must be importable when you run the ai-gateway suite. Either `pip install -e
   modules/memory` once, or set `PYTHONPATH=$PWD/../modules/memory` (from `services/`) before `cargo test`.
   Without it the audit emit fails, the expiry rolls back, and the two `tick_skips_*` tests fail. This was
@@ -139,7 +139,7 @@ curl -fsS http://127.0.0.1:8080/healthz
 curl -fsS -X POST http://127.0.0.1:8080/v1/chat \
   -H 'content-type: application/json' -H 'x-tenant-id: org:cyberskill' \
   -d '{"alias":"chat.smart","messages":[{"role":"user","content":"hello"}]}'
-# the response carries a `traceparent` header (FR-OBS-005); the logs are JSON with trace_id per line.
+# the response carries a `traceparent` header (TASK-OBS-005); the logs are JSON with trace_id per line.
 ```
 
 AUTH and MEMORY bind `AUTH_LISTEN_ADDR` / `MEMORY_LISTEN_ADDR` and read the env surface listed in
@@ -175,7 +175,7 @@ curl -fsS -X POST http://127.0.0.1:8080/v1/chat -H 'content-type: application/js
 
 Tier 2 - real inference through the stack (the demo). Start LM Studio (or Ollama) with a model loaded,
 then point the gateway at it. The tenant config `ai-gateway/config/tenants/org-cyberskill.yaml` maps
-`chat.smart` to the local model - edit the model id there if yours differs. The audit path (FR-AI-003)
+`chat.smart` to the local model - edit the model id there if yours differs. The audit path (TASK-AI-003)
 shells out to the memory Writer, so make the memory package importable first.
 
 Timeout budget for slow local models: the router caps each call at the smallest of the tenant
@@ -207,7 +207,7 @@ bash scripts/mcp_call.sh cyberos.obs.execute_triage \
 ```
 
 The triage tool name is `cyberos.obs.execute_triage` (the SEP-986 form); a non-conforming registration
-is now rejected at the gateway, so this is also a live check of FR-MCP-003 enforcement.
+is now rejected at the gateway, so this is also a live check of TASK-MCP-003 enforcement.
 
 Tier 4 - the desktop app (optional, Tauri build on your Mac). Build and run `apps/desktop` per its
 README; it drives the running gateway's chat-trigger path and, next iteration, the `tools/list` picker.

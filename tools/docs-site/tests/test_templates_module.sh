@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test_templates_module.sh - FR-TPL-001 §5 suite (t01-t04 -> AC 1-4).
+# test_templates_module.sh - TASK-TPL-001 §5 suite (t01-t04 -> AC 1-4).
 set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"; repo="$(cd "$here/../../.." && pwd)"
 T="$repo/modules/templates"

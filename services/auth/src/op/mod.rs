@@ -1,6 +1,6 @@
-//! FR-AUTH-110: AUTH as a first-party OIDC provider (authorization server).
+//! TASK-AUTH-110: AUTH as a first-party OIDC provider (authorization server).
 //!
-//! The inverse of [`crate::oidc`] (FR-AUTH-104, where AUTH is Google's client):
+//! The inverse of [`crate::oidc`] (TASK-AUTH-104, where AUTH is Google's client):
 //! here AUTH is the provider that first-party apps (CHAT/Mattermost, PORTAL)
 //! federate to, so the whole platform shares one CyberOS identity, one role set,
 //! and one central revoke.
@@ -11,7 +11,7 @@
 //! - [`pkce`]     - PKCE S256 verification (RFC 7636).
 //! - [`redirect`] - exact redirect_uri matching (DEC-2491; no wildcard / substring).
 //! - [`id_token`] - the OIDC id_token claim builder + RS256 signer, reusing the
-//!   FR-AUTH-004 `auth_signing_keys` path (one JWKS for the platform, DEC-2481).
+//!   TASK-AUTH-004 `auth_signing_keys` path (one JWKS for the platform, DEC-2481).
 //!
 //! Slice 1b-data (this slice) - the database-access + audit layer, backed by
 //! migrations 0027-0030 (runtime-checked `sqlx::query(...)`, so it compiles
@@ -21,7 +21,7 @@
 //! - [`sso_session`] - create / lookup-active / touch / revoke-for-subject (the §1 #26 cascade).
 //!
 //! Slice 1b-endpoints (next) - authorize (SSO-cookie silent SSO or upstream-Google
-//! broker via FR-AUTH-104, revoke-gated), token (code -> id_token + access_token),
+//! broker via TASK-AUTH-104, revoke-gated), token (code -> id_token + access_token),
 //! userinfo, the first-party RP-client registry CRUD, and the route wiring in
 //! `handlers`. They compose the slice-1a + slice-1b-data pieces above.
 //!

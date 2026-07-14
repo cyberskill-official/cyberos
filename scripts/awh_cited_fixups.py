@@ -99,7 +99,7 @@ def run(status_filter: str, as_json: bool, apply: bool) -> int:
 
     if apply:
         print(f"applied: {repl_count} cited-path corrections across {files_changed} FR spec(s).")
-        print("review with: git --no-optional-locks diff -- docs/feature-requests")
+        print("review with: git --no-optional-locks diff -- docs/tasks")
         return 0
     if as_json:
         print(json.dumps(rows, indent=2))

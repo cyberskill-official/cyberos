@@ -9,7 +9,7 @@ phase: P0
 slo: "Hybrid Vietnamese search (lexical + diacritic-folded + vector) recall@10 ≥ 0.90 on VN test corpus"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-CHAT-004]
+related_tasks: [TASK-CHAT-004]
 ---
 
 ## §1 — Statement (BCP-14 normative)

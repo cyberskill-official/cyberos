@@ -1,4 +1,4 @@
-# FR-APP-006: winget installer manifest. InstallerSha256 is an UNAMBIGUOUS placeholder,
+# TASK-APP-006: winget installer manifest. InstallerSha256 is an UNAMBIGUOUS placeholder,
 # re-derived from the actual GitHub Release artifact by release-pkgmgr-pr.yml (AC #5).
 PackageIdentifier: CyberSkill.CyberOS
 PackageVersion: 1.0.0
@@ -15,5 +15,5 @@ ManifestVersion: 1.6.0   # NOTE: schema version + InstallerSwitches nesting are 
                          # best-available understanding, not independently re-verified against
                          # Microsoft's live current schema during authoring - spec 9 requires
                          # confirming both against winget-pkgs' current templates before this
-                         # file is treated as final (same discipline as FR-APP-005's
+                         # file is treated as final (same discipline as TASK-APP-005's
                          # snapcraft architectures hedge).

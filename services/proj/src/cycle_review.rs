@@ -1,4 +1,4 @@
-//! FR-PROJ-012 — deterministic cycle-review draft inputs for CUO/COO.
+//! TASK-PROJ-012 — deterministic cycle-review draft inputs for CUO/COO.
 
 use crate::types::{Issue, IssueStatus};
 use serde::{Deserialize, Serialize};

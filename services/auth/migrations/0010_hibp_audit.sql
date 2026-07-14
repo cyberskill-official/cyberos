@@ -1,4 +1,4 @@
--- FR-AUTH-107 — Have I Been Pwned breach-check audit table.
+-- TASK-AUTH-107 — Have I Been Pwned breach-check audit table.
 --
 -- Every password set/rotate hits the k-anonymity HIBP API. If the password's
 -- SHA-1 prefix returns a hit in the result set, we REFUSE the set with

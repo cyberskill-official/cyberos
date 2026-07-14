@@ -1,4 +1,4 @@
-//! FR-AUTH-105 — Passkey / WebAuthn Level 3 discoverable-credential flow.
+//! TASK-AUTH-105 — Passkey / WebAuthn Level 3 discoverable-credential flow.
 //!
 //! Four endpoints under the admin router (caller must be authenticated):
 //!   * `POST /v1/auth/passkey/enrol/begin`   — webauthn-rs `start_passkey_registration`
@@ -343,7 +343,7 @@ pub async fn login_finish(
         .issue(
             cyberos_types::TenantId(tenant_id),
             cyberos_types::SubjectId(subject_id),
-            "", // FR-AUTH-004 §1 #2 — passkey login doesn't carry plaintext email
+            "", // TASK-AUTH-004 §1 #2 — passkey login doesn't carry plaintext email
             "human",
             vec![],
             roles,
@@ -359,7 +359,7 @@ pub async fn login_finish(
             )
         })?;
 
-    // FR-AUTH-106 slice-3 — apply policy-aware impossible-travel detection.
+    // TASK-AUTH-106 slice-3 — apply policy-aware impossible-travel detection.
     // Passkey is intrinsically MFA-strength, but the policy still applies:
     // a `block` action will refuse the login, and a `challenge` outcome
     // here triggers a second-factor (TOTP) requirement on top of the passkey.

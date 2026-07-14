@@ -9,7 +9,7 @@ phase: P1
 slo: "deterministic-flag skills produce byte-identical outputs over 100 reruns with fixed seed"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-SKILL-103, FR-SKILL-105]
+related_tasks: [TASK-SKILL-103, TASK-SKILL-105]
 ---
 
 ## §1 — Statement (BCP-14 normative)

@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of VietQR batches verifiable: |sum(batch.amounts) - sum(payslip.nets)| = 0"
 owner: CFO
 created: 2026-05-18
-related_frs: [FR-REW-009]
+related_tasks: [TASK-REW-009]
 ---
 
 ## §1 — Statement (BCP-14 normative)

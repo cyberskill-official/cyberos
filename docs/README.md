@@ -1,12 +1,12 @@
 # `docs/` - global documentation sources
 
-The home of every artifact that is genuinely global (FR-DOCS-002): specs, architecture, deploy runbooks, strategy, and reference sources. Module-owned documentation does NOT live here - each module keeps its own pages at `modules/<m>/docs/` (or `services/<s>/docs/` for service-implemented modules).
+The home of every artifact that is genuinely global (TASK-DOCS-002): specs, architecture, deploy runbooks, strategy, and reference sources. Module-owned documentation does NOT live here - each module keeps its own pages at `modules/<m>/docs/` (or `services/<s>/docs/` for service-implemented modules).
 
 All user-facing documentation is served by the generated [docs site](https://cyberos-wiki.cyberskill.world/); everything under this folder is a markdown source for that build, never hand-authored HTML.
 
 | Folder | Purpose |
 |---|---|
-| `feature-requests/` | The FR corpus: 489 FR specs across 29 domains (spec + `_audits/` companions). `BACKLOG.md` is the index of remaining active work; FR frontmatter `status` is the record of truth. Improvement-class FRs live in the same tree (`improvement/` + `(improvement)` tags in the backlog). |
+| `tasks/` | The FR corpus: 489 FR specs across 29 domains (spec + `_audits/` companions). `BACKLOG.md` is the index of remaining active work; FR frontmatter `status` is the record of truth. Improvement-class FRs live in the same tree (`improvement/` + `(improvement)` tags in the backlog). |
 | `non-functional-requirements/` | NFR specs with audit companions. |
 | `architecture/` | Current-state architecture pages (tech stack, infrastructure, compliance, milestones, strategy, verification gate). |
 | `adrs/` | Architecture decision records. |
@@ -35,7 +35,7 @@ Freshness is enforced twice: the `docs-site-build` pre-commit hook verifies the 
 
 ## Why FR/NFR specs stay as raw markdown
 
-They are workflow deliverables, not prose documentation: the `feature-request-author` skill generates them, `feature-request-audit` scores them, the ship-feature-requests workflow drives their `status`, and the site build reads their frontmatter to render the catalog pages.
+They are workflow deliverables, not prose documentation: the `task-author` skill generates them, `task-audit` scores them, the ship-tasks workflow drives their `status`, and the site build reads their frontmatter to render the catalog pages.
 
 ## How the layers relate
 
@@ -52,7 +52,7 @@ SDP ── normative ──▶ FRs ── authority ──▶ Skill catalog ─�
 
 - SDP - defines the stages every deliverable flows through (see [CUO appendices](https://cyberos-wiki.cyberskill.world/modules/cuo/appendices.html)).
 - C-Suite Reference - defines the personas + the schema each persona spec must render (same appendices).
-- FRs (`feature-requests/`) capture every concrete change request, tagged by phase + module.
+- FRs (`tasks/`) capture every concrete change request, tagged by phase + module.
 - Skill catalog (`modules/skill/`) ships the author+audit pairs that materialise SDP stages into agentic Skills.
 - CUO workflows (`modules/cuo/`) chain Skills into persona-owned deliverables.
 - memory (`modules/memory/`) records every chain decision in an append-only audit chain.

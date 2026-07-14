@@ -1,6 +1,6 @@
 """TimeCriticalHandler — bypass scheduler queueing; log SLA-breach event if exceeded.
 
-Per FR-CUO-106 §1.3 + DEC-2382. Affects 3 workflows:
+Per TASK-CUO-106 §1.3 + DEC-2382. Affects 3 workflows:
     - chief-privacy-officer/breach-response-cycle              (sla_minutes: 240 = 4h)
     - chief-communications-officer/per-crisis-response         (sla_minutes: 120 = 2h)
     - chief-trust-officer/per-trust-incident-update  (sla_minutes: 240)

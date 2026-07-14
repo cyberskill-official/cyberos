@@ -1,4 +1,4 @@
-//! FR-AUTH-109 — stub→full migration state + grace-window enforcer.
+//! TASK-AUTH-109 — stub→full migration state + grace-window enforcer.
 //!
 //! Two surfaces:
 //!   * `MigrationState::load_from_db` — read the singleton row at boot +

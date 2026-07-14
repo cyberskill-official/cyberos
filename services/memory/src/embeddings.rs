@@ -1,7 +1,7 @@
-//! FR-AI-019 — bge-m3 embeddings client.
+//! TASK-AI-019 — bge-m3 embeddings client.
 //!
 //! The actual ONNX/sentence-transformers model lives in a sidecar process
-//! (per FR-AI-019 §3 — keeps the Rust binary lean and lets ops scale GPU
+//! (per TASK-AI-019 §3 — keeps the Rust binary lean and lets ops scale GPU
 //! capacity independently of the memory service). This module is the HTTP
 //! client that talks to it.
 //!
@@ -14,7 +14,7 @@
 //! On error (sidecar down, timeout, malformed response), `embed_batch`
 //! returns an error and the ingest pipeline records the row WITHOUT an
 //! embedding. The 60-second background re-embedder will retry. This means
-//! FR-AI-019 is **fail-open** at ingest time — a flaky sidecar doesn't
+//! TASK-AI-019 is **fail-open** at ingest time — a flaky sidecar doesn't
 //! halt ingest; it just degrades search quality temporarily.
 
 use serde::{Deserialize, Serialize};

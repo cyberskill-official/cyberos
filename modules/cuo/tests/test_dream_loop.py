@@ -1,4 +1,4 @@
-"""Tests for FR-CUO-204 dream_loop - the idle-gated orchestrator.
+"""Tests for TASK-CUO-204 dream_loop - the idle-gated orchestrator.
 
 These prove the safety properties deterministically with injected fakes: disabled by default, only runs
 when idle, a denylisted target never reaches the applier, only low-risk in-envelope green changes apply,

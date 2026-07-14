@@ -1,4 +1,4 @@
-//! FR-EMAIL-001 §1 #19 — health + per-message status + list endpoints.
+//! TASK-EMAIL-001 §1 #19 — health + per-message status + list endpoints.
 
 use crate::errors::EmailResult;
 use crate::types::EmailMessage;
@@ -40,7 +40,7 @@ pub async fn healthz(db: &PgPool) -> EmailResult<HealthResponse> {
         .unwrap_or(0);
 
     Ok(HealthResponse {
-        stalwart_status: "external", // wired at slice 2 via FR-EMAIL-002
+        stalwart_status: "external", // wired at slice 2 via TASK-EMAIL-002
         last_message_received_at: last_received,
         last_message_sent_at: last_sent,
         postgres_status: if postgres_ok { "ok" } else { "degraded" },

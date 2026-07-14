@@ -1,4 +1,4 @@
-//! Proxy error and backend enums (FR-OBS-002 §3).
+//! Proxy error and backend enums (TASK-OBS-002 §3).
 //!
 //! Slice 1 carries the variants the LogQL injector needs. The proxy router slice adds a
 //! `Backend(#[from] reqwest::Error)` variant for backend-forward failures.

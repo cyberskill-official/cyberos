@@ -2,7 +2,7 @@
 //!
 //! Slice-1 surface:
 //! - `validate-config <path>` — parse + validate the collector YAML against
-//!   FR-OBS-001 §3 (CI gate).
+//!   TASK-OBS-001 §3 (CI gate).
 //! - `validate-tokens <path>` — parse + validate the bearer-token file.
 //!
 //! The actual otelcol process supervision (spawn, health-check polling on
@@ -29,7 +29,7 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Cmd {
-    /// Validate an `otel-collector-config.yaml` against the FR-OBS-001 §3 contract.
+    /// Validate an `otel-collector-config.yaml` against the TASK-OBS-001 §3 contract.
     ValidateConfig {
         /// Path to the collector config.
         path: PathBuf,

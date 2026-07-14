@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: debugging-cycle-author
 description: >-
-  Run a multi-vector debugging pass when the coverage-gate trips (tests_failed > 0 OR files_below_90pct non-empty OR ecm_rows_uncovered non-empty). For each failed iteration: (1) classify the failure vector — state / network / memory / logic / flake; (2) state the targeted hypothesis + exact file:line change; (3) re-run the test suite; (4) emit one `debug-trace@1` attempt-row per cycle. Trips the workflow circuit breaker after 5 consecutive failures. Used by chief-technology-officer/ship-feature-requests as step 15, conditional on `coverage_report.tests_failed > 0`. Use when user asks to "draft a debugging cycle" or "create the debugging cycle". Do NOT use for "audit existing debugging cycle" (use debugging-cycle-audit instead).
+  Run a multi-vector debugging pass when the coverage-gate trips (tests_failed > 0 OR files_below_90pct non-empty OR ecm_rows_uncovered non-empty). For each failed iteration: (1) classify the failure vector — state / network / memory / logic / flake; (2) state the targeted hypothesis + exact file:line change; (3) re-run the test suite; (4) emit one `debug-trace@1` attempt-row per cycle. Trips the workflow circuit breaker after 5 consecutive failures. Used by chief-technology-officer/ship-tasks as step 15, conditional on `coverage_report.tests_failed > 0`. Use when user asks to "draft a debugging cycle" or "create the debugging cycle". Do NOT use for "audit existing debugging cycle" (use debugging-cycle-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -17,21 +17,21 @@ allowed_memory_scopes:
     - project:*
     - module:*
   write:
-    - project:fr/{fr_id}/debug-trace
+    - project:fr/{task_id}/debug-trace
 audit:
   row_kind: debug_cycle_authored
-  required_fields: [fr_id, attempts, failure_vectors_seen, consecutive_failures, circuit_breaker_tripped]
+  required_fields: [task_id, attempts, failure_vectors_seen, consecutive_failures, circuit_breaker_tripped]
 
 # ── Inputs / outputs ─────────────────────────────────────────────────
 inputs:
-  - { name: fr,               format: feature-request@1, required: true }
+  - { name: fr,               format: task@1, required: true }
   - { name: coverage_report,  format: coverage-gate@1,   required: true }
 outputs:
   - { name: debug_trace, format: debug-trace@1 }
 
 # ── Triggers / blockers ──────────────────────────────────────────────
 triggers:
-  - workflow `chief-technology-officer/ship-feature-requests` step 15 when coverage_report.tests_failed > 0
+  - workflow `chief-technology-officer/ship-tasks` step 15 when coverage_report.tests_failed > 0
 blockers:
   - "test framework itself is broken (no test process can start) — diagnose tooling before this skill runs"
   - "circuit breaker already tripped on this FR this session — escalate, do not retry"
@@ -50,7 +50,7 @@ circuit breaker.
 
 ```yaml
 # debug-trace@1
-fr_id: FR-<MODULE>-<NNN>
+task_id: FR-<MODULE>-<NNN>
 generated_at: <ISO-8601>
 trigger: "tests_failed > 0 | files_below_90pct | ecm_rows_uncovered"
 budget_max_attempts: 5
@@ -97,6 +97,6 @@ on_trip_actions:
 
 *End of debugging-cycle-author SKILL.md.*
 
-## Contract files (FR-SKILL-118)
+## Contract files (TASK-SKILL-118)
 
 This pair is at full contract parity: `PIPELINE.md` (chain binding + HALT points), `INVARIANTS.md`, `envelopes/` (I/O schemas), `references/FAILURE_MODES.md`, `acceptance/README.md`. SKILL.md remains the normative prose; the files encode it.

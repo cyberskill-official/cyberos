@@ -1,6 +1,6 @@
 //! Auth-side bridge to the memory Layer-1 audit log.
 //!
-//! Per FR-AUTH-001 §1 #6: every successful tenant create MUST emit an
+//! Per TASK-AUTH-001 §1 #6: every successful tenant create MUST emit an
 //! `auth.tenant_created` audit row WITHIN the same Postgres transaction as
 //! the tenants INSERT. Transaction rollback rolls back both — partial state
 //! (tenant exists but no audit row) is forbidden by construction.
@@ -22,7 +22,7 @@
 //!
 //! ### Why no cross-service HTTP
 //!
-//! The earlier impl-plan (FR-AUTH-001 §10.5 step09-impl-plan G-005) flagged
+//! The earlier impl-plan (TASK-AUTH-001 §10.5 step09-impl-plan G-005) flagged
 //! a `DEC-memory-BRIDGE-001` decision: subprocess vs HTTP for the cross-service
 //! audit-row emission. We pick a **third path**: direct same-DB insert,
 //! avoiding both. The decision is justified because (a) auth and memory share
@@ -53,7 +53,7 @@ pub struct TenantCreatedPayload<'a> {
 
 impl<'a> TenantCreatedPayload<'a> {
     /// Serialize to canonical JSON. Field order matches the spec example in
-    /// FR-AUTH-001 §8 so downstream tests can compare byte-for-byte.
+    /// TASK-AUTH-001 §8 so downstream tests can compare byte-for-byte.
     pub fn to_body_string(&self) -> String {
         let body = json!({
             "event_type": "auth.tenant_created",
@@ -121,7 +121,7 @@ pub async fn emit_tenant_created(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FR-AUTH-006 §1 #4 — auth.bootstrap_completed audit row
+// TASK-AUTH-006 §1 #4 — auth.bootstrap_completed audit row
 // ─────────────────────────────────────────────────────────────────────────────
 
 /// Payload for the `auth.bootstrap_completed` audit row emitted by
@@ -185,7 +185,7 @@ pub async fn emit_bootstrap_completed(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FR-AUTH-002 §1 #7 — auth.subject_created audit row
+// TASK-AUTH-002 §1 #7 — auth.subject_created audit row
 // ─────────────────────────────────────────────────────────────────────────────
 
 /// Payload for `auth.subject_created`. Per §1 #7, the row MUST NOT carry
@@ -230,7 +230,7 @@ pub fn email_hash16(email: &str) -> String {
     bytes.iter().take(8).map(|b| format!("{b:02x}")).collect()
 }
 
-/// FR-AUTH-005 §1 #6 + G-006 — `auth.subject_revoked` audit row payload.
+/// TASK-AUTH-005 §1 #6 + G-006 — `auth.subject_revoked` audit row payload.
 ///
 /// Emitted inside the revoke handler's tx so the suspended-status update,
 /// the memory row, and the deny-list pushes are all atomic (any failure
@@ -241,7 +241,7 @@ pub struct SubjectRevokedPayload<'a> {
     pub tenant_id: Uuid,
     pub revoked_by_subject_id: Uuid,
     /// Optional free-form caller-supplied reason. Closed taxonomy comes in
-    /// FR-AUTH-111 (compromised/terminated/policy-violation/operator-error).
+    /// TASK-AUTH-111 (compromised/terminated/policy-violation/operator-error).
     pub reason: Option<&'a str>,
     pub revoked_jti_count: usize,
     pub idempotency_key: Option<&'a str>,
@@ -264,7 +264,7 @@ impl<'a> SubjectRevokedPayload<'a> {
     }
 }
 
-/// FR-AUTH-005 §1 #6 + G-006 — `auth.subject_unrevoked` audit row payload.
+/// TASK-AUTH-005 §1 #6 + G-006 — `auth.subject_unrevoked` audit row payload.
 ///
 /// Note the deliberate asymmetry with `SubjectRevokedPayload`: there is no
 /// `unrevoked_jti_count` because per §1 #12 unrevoke MUST NOT clear the
@@ -452,7 +452,7 @@ mod tests {
         assert!(body.contains("\"request_id\":null"));
     }
 
-    // ─── FR-AUTH-006 §1 #4 — bootstrap_completed payload ────────────────
+    // ─── TASK-AUTH-006 §1 #4 — bootstrap_completed payload ────────────────
 
     #[test]
     fn email_hash16_is_first_16_hex_chars_of_sha256() {
@@ -501,7 +501,7 @@ mod tests {
         assert!(body.contains("\"bootstrapped_by\":\"stephencheng\""));
     }
 
-    // ─── FR-AUTH-004 §1 #6 — token_issued / token_failed payloads ──────────
+    // ─── TASK-AUTH-004 §1 #6 — token_issued / token_failed payloads ──────────
 
     #[test]
     fn token_issued_payload_canonical_json() {
@@ -557,14 +557,14 @@ mod tests {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FR-AUTH-004 §1 #6 — auth.token_issued + auth.token_failed audit rows
+// TASK-AUTH-004 §1 #6 — auth.token_issued + auth.token_failed audit rows
 // ─────────────────────────────────────────────────────────────────────────────
 
 /// Privacy-safe per-day IP fingerprint. SHA-256("YYYY-MM-DD|<ip>") first 16
 /// hex chars. Salted with the current UTC date so the same IP correlates
 /// within a day (useful for incident response) but NOT across days
 /// (preventing long-term IP tracking). Matches the construction described
-/// in FR-AUTH-004 §1 #6 + §2 rationale.
+/// in TASK-AUTH-004 §1 #6 + §2 rationale.
 pub fn source_ip_hash16(source_ip: &str) -> String {
     let date = chrono::Utc::now().format("%Y-%m-%d").to_string();
     let mut h = Sha256::new();
@@ -637,7 +637,7 @@ impl<'a> TokenFailedPayload<'a> {
 /// `emit_tenant_created` / `emit_subject_created`, this is NOT in the
 /// caller's transaction — token issuance shouldn't fail because the audit
 /// log is unreachable. Failures log a `tracing::warn!` but are silently
-/// swallowed; the FR-OBS-001 alarm catches a sustained spike in dropped
+/// swallowed; the TASK-OBS-001 alarm catches a sustained spike in dropped
 /// audit rows.
 ///
 /// Path: `auth/token/<tenant_id>/<jti>/issued`. The jti uniquely keys the

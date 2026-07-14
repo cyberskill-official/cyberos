@@ -1,4 +1,4 @@
-//! FR-AI-001 §5 — Integration tests for cost-ledger precheck.
+//! TASK-AI-001 §5 — Integration tests for cost-ledger precheck.
 //!
 //! Requires a running Postgres instance. Set DATABASE_URL env var.
 //! Tests are ignored when DATABASE_URL is not set.

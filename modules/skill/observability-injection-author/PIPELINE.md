@@ -20,4 +20,4 @@ Artefact: `observability-injection@1`. This document binds the skill into the sh
 
 - PII in scope but no redaction policy derivable from repo conventions -> HALT for operator policy decision.
 
-*Added by FR-SKILL-118 (contract parity). Phases and step prose: SKILL.md is normative.*
+*Added by TASK-SKILL-118 (contract parity). Phases and step prose: SKILL.md is normative.*

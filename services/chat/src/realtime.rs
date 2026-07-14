@@ -1,4 +1,4 @@
-//! Real-time layer (FR-CHAT-101 slices 1, 4, 5): one broadcast channel per chat channel carrying a typed
+//! Real-time layer (TASK-CHAT-101 slices 1, 4, 5): one broadcast channel per chat channel carrying a typed
 //! event stream (message, presence, typing, signal), plus the websocket handler. Presence is tracked from
 //! the live connections. Signal events (WebRTC offer/answer/ICE for voice/video, slice 5) are relayed only
 //! to the addressed subject - the media itself and mobile clients are out of scope for the server.
@@ -42,7 +42,7 @@ pub enum ChatEvent {
     },
     MessageEdited {
         id: Uuid,
-        /// FR-CHAT-268 — who wrote it. Added because without it this frame was a hole in the block: a
+        /// TASK-CHAT-268 — who wrote it. Added because without it this frame was a hole in the block: a
         /// blocked person edits a message and their new text lands on the blocker's socket, since the
         /// subscriber had no way to tell whose edit it was. Additive on the wire; older clients ignore it.
         sender: Uuid,
@@ -190,7 +190,7 @@ async fn ws_loop(
     channel: Uuid,
     me: Uuid,
 ) {
-    // FR-CHAT-268 — the channel's kind decides DROP (direct) vs COLLAPSE (group) for a blocked sender's
+    // TASK-CHAT-268 — the channel's kind decides DROP (direct) vs COLLAPSE (group) for a blocked sender's
     // frame. Resolved once at connect: it cannot change for the life of a channel.
     let is_dm = {
         let k: Result<Option<(String,)>, _> =
@@ -209,7 +209,7 @@ async fn ws_loop(
                 status: "online",
             },
         );
-        // FR-MEMORY-122 §1 #8 — presence_changed{online} ONLY on the 0->1 edge (presence.join returned
+        // TASK-MEMORY-122 §1 #8 — presence_changed{online} ONLY on the 0->1 edge (presence.join returned
         // true). A second tab does NOT re-emit. Spawned + best-effort; no-op unless capture on. trace_id is
         // null for a websocket edge (§1 #14 — never fabricated).
         if let Some(cap) = st.capturer.clone() {
@@ -224,7 +224,7 @@ async fn ws_loop(
             event = rx.recv() => {
                 match event {
                     Ok(mut ev) => {
-                        // ───── FR-CHAT-268 enforcement point 2 of 4: the realtime socket (§1 #4) ─────
+                        // ───── TASK-CHAT-268 enforcement point 2 of 4: the realtime socket (§1 #4) ─────
                         // The check CANNOT live at the publish site: the per-channel broadcast is
                         // one-to-many and the sender has no idea who has blocked them. It lives HERE, at
                         // each subscriber, where `me` is known. Served off the in-process cache, so a frame
@@ -311,7 +311,7 @@ async fn ws_loop(
                 status: "offline",
             },
         );
-        // FR-MEMORY-122 §1 #8 — presence_changed{offline} ONLY on the 1->0 edge (the last connection
+        // TASK-MEMORY-122 §1 #8 — presence_changed{offline} ONLY on the 1->0 edge (the last connection
         // closed). Closing one of several tabs does NOT emit. Spawned + best-effort; no-op unless capture on.
         if let Some(cap) = st.capturer.clone() {
             tokio::spawn(async move {

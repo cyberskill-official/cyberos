@@ -2,12 +2,12 @@
 
 - Status: Accepted
 - Date: 2026-06-20
-- Context FR: FR-OBS-003 (per-service RED metrics)
-- Decision owner: CTO (self-approved architectural deviation, per ship-feature-requests §2 step 3-4)
+- Context FR: TASK-OBS-003 (per-service RED metrics)
+- Decision owner: CTO (self-approved architectural deviation, per ship-tasks §2 step 3-4)
 
 ## Context
 
-FR-OBS-003 §1 #5 and #11 prescribe a `#[red_instrument(service, route)]` proc-macro applied to every axum handler, plus a CI `instrument_completeness_test` that AST-walks each service's handler files and fails if any axum-handler-shaped function lacks the macro. The intent is full RED coverage with no handler left uninstrumented.
+TASK-OBS-003 §1 #5 and #11 prescribe a `#[red_instrument(service, route)]` proc-macro applied to every axum handler, plus a CI `instrument_completeness_test` that AST-walks each service's handler files and fails if any axum-handler-shaped function lacks the macro. The intent is full RED coverage with no handler left uninstrumented.
 
 Mapping the real services changed the picture:
 
@@ -25,9 +25,9 @@ Instrument RED with a single axum middleware layer per service, provided by `cyb
 
 - One touch point per service instead of one per handler; the middleware cannot miss a route, which removes the need for the AST-walk completeness lint (#11) - route coverage is structural, guaranteed by the router rather than checked after the fact.
 - Lower blast radius on three production services: no rewrite of handler signatures.
-- The metric contract is unchanged: the same `cyberos_requests_total` / `cyberos_errors_total` / `cyberos_duration_ms` names, the same labels (`service`, `route`, `tenant_id`, `status_class`, `error_class`), the same buckets, the same cardinality guard. FR-OBS-002 tenant filtering still gets its `tenant_id` label.
+- The metric contract is unchanged: the same `cyberos_requests_total` / `cyberos_errors_total` / `cyberos_duration_ms` names, the same labels (`service`, `route`, `tenant_id`, `status_class`, `error_class`), the same buckets, the same cardinality guard. TASK-OBS-002 tenant filtering still gets its `tenant_id` label.
 - Trade-off: a route label is the matched template (e.g. `/v1/auth/token`), which is exactly what bounded cardinality wants; non-HTTP code paths (background jobs) still call `record_request` by hand, as the FR already allows.
 - Wired now: `auth`, `memory`, and `ai-gateway`. The ai-gateway's HTTP listener (the `server` module) now exists, so it carries the same one-line layer + `init` + `TenantCtx` as the other two. Deferred until its surface exists: `chat` (a pinned image, instrumented where its source lives).
-- Export path: `obs_sdk::init` installs an OTLP gRPC meter provider as the global meter when `OBS_OTLP_ENDPOINT` (or `OTEL_EXPORTER_OTLP_ENDPOINT`) is set, so the RED instruments export to the FR-OBS-001 collector; unset, the instruments record to a no-op meter and a dev/local run stays quiet. The remaining piece is operational: set that endpoint in the core deploy and validate end to end against the live obs stack (`deploy/obs/`).
+- Export path: `obs_sdk::init` installs an OTLP gRPC meter provider as the global meter when `OBS_OTLP_ENDPOINT` (or `OTEL_EXPORTER_OTLP_ENDPOINT`) is set, so the RED instruments export to the TASK-OBS-001 collector; unset, the instruments record to a no-op meter and a dev/local run stays quiet. The remaining piece is operational: set that endpoint in the core deploy and validate end to end against the live obs stack (`deploy/obs/`).
 
-This supersedes the literal mechanism in FR-OBS-003 §1 #5 and #11 while satisfying their intent (complete, consistent RED coverage). The FR text is annotated to point here.
+This supersedes the literal mechanism in TASK-OBS-003 §1 #5 and #11 while satisfying their intent (complete, consistent RED coverage). The FR text is annotated to point here.

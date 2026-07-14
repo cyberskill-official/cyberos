@@ -1,7 +1,7 @@
 ---
 title: MCP Gateway - External-client federation, capability broker, tool-discovery surface
 source: website/docs/modules/mcp/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 MCP Gateway is the **tool federation layer** that turns CyberOS's 24 modules into a single, coherent MCP server. Each module publishes a per-module server (named `cyberos.memory`, `cyberos.skill`, `cyberos.crm`, ...) that exposes its verbs as tools (`memory.update_memory`, `skill.execute_skill`, `crm.update_account`, ...); the gateway aggregates these into a federated surface that Claude / Codex / Cursor / Cline / any 2025-11-25-spec client sees as one server. OAuth 2.1 + PKCE (RFC 7636) gates every tool call; the audience claim pins the call to a specific module; the RBAC predicate from AUTH enforces who can do what; the persona-version stamp captures which agent authored the call. Tool annotations (destructive / readOnly / idempotent / openWorld) drive human-confirm gating. The Tasks primitive handles long-running work; Elicitation reverses control mid-execution to ask the user a question.
@@ -528,7 +528,7 @@ Registration - `POST /v1/mcp/register`:
 }
 ```
 
-The `endpoint` must be an `http://` or `https://` URL; any other scheme is rejected at registration. A module keeps its registration live with `POST /v1/mcp/heartbeat` (`{"module": "memory"}`) and withdraws with `POST /v1/mcp/deregister`. The dev slice gates the control plane behind `MCP_DEV_REGISTRATION=1`; production requires authenticated registration (FR-MCP-004).
+The `endpoint` must be an `http://` or `https://` URL; any other scheme is rejected at registration. A module keeps its registration live with `POST /v1/mcp/heartbeat` (`{"module": "memory"}`) and withdraws with `POST /v1/mcp/deregister`. The dev slice gates the control plane behind `MCP_DEV_REGISTRATION=1`; production requires authenticated registration (TASK-MCP-004).
 
 Forwarding - the gateway POSTs a JSON-RPC 2.0 `tools/call` to the module's registered `endpoint`:
 
@@ -736,7 +736,7 @@ stateDiagram-v2
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS FR catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
 Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
 
@@ -1016,7 +1016,7 @@ $ cyberos-mcp servers register \
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - MCP Gateway placed at P0 slice 3 in the P0 sequence (after AI Gateway + AUTH stub).
 - **Research review:** `archive/2026-05-14/RESEARCH_REVIEW.md` (archived; see `cyberos/CHANGELOG.md`) - MCP Gateway rated "Strong" (9/10); the reviewer flagged the elicitation-fatigue risk (R-MCP-013) and the older-protocol sunset as the two operational concerns.
 - **Memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - MCP tool invocations are one of four canonical capture surfaces for the local memory (every tool call -> audit row); §6 - Lumi exposes cross-tenant MCP federation at P3+ for org-tenant agents.
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md) - MCP Gateway FRs land via the `feature-request-author` Agent Skill.
+- **FR authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md) - MCP Gateway FRs land via the `task-author` Agent Skill.
 - **MCP Specification 2025-11-25** - `modelcontextprotocol.io/specification/2025-11-25`.
 - **SEP-986** - verbNoun.dotted tool naming convention.
 - **RFC 6749 / draft-ietf-oauth-v2-1** - OAuth 2.1.

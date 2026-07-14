@@ -1,6 +1,6 @@
 """
 cyberos.core.dream.proposals — DreamProposal + DreamDiff types
-(FR-MEMORY-115 §3).
+(TASK-MEMORY-115 §3).
 
 Pure data classes + ID generators. No I/O.
 
@@ -41,7 +41,7 @@ def generate_proposal_id() -> str:
     """``P`` + 8 random Crockford base32 chars.
 
     Format: ``^P[0-9A-Z]{8}$`` (uppercase base32; 40 bits of entropy).
-    Per FR-MEMORY-115 §1 #1 (indirectly) + DreamProposal schema.
+    Per TASK-MEMORY-115 §1 #1 (indirectly) + DreamProposal schema.
     """
     return "P" + "".join(_CROCKFORD[secrets.randbelow(32)] for _ in range(8))
 

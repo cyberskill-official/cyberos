@@ -1,4 +1,4 @@
-//! JWT verification for the proxy (FR-OBS-002 §1 #1).
+//! JWT verification for the proxy (TASK-OBS-002 §1 #1).
 //!
 //! Tokens come from the auth service (auth/src/jwt.rs): RS256, verified against the JWKS published at
 //! `/.well-known/jwks.json`, with a per-key `kid` in the token header. `tenant_id` is a string claim

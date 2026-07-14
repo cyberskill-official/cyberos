@@ -16,32 +16,32 @@ pub struct AppState {
     pub pg: PgPool,
     /// Issuer URL — included as the `iss` claim in every JWT.
     pub jwt_issuer: String,
-    /// In-memory RBAC matrix (FR-AUTH-101 §1 #9, #21). Loaded at boot;
+    /// In-memory RBAC matrix (TASK-AUTH-101 §1 #9, #21). Loaded at boot;
     /// 60s refresher swaps via `Arc<RwLock>`.
     pub role_matrix: Arc<RwLock<RoleMatrix>>,
-    /// FR-AUTH-104 OIDC PKCE pending-state map (state_token → verifier).
+    /// TASK-AUTH-104 OIDC PKCE pending-state map (state_token → verifier).
     /// 10-minute TTL enforced at callback time; sweeper deferred to slice 2.
     pub oidc_pending: Arc<RwLock<HashMap<String, PendingState>>>,
-    /// FR-AUTH-106 slice-2 — GeoIP resolver. Either MaxMindResolver (when
+    /// TASK-AUTH-106 slice-2 — GeoIP resolver. Either MaxMindResolver (when
     /// `AUTH_GEOIP_DB` is set + readable) or NullResolver (degradation matches
     /// slice-1). The resolver is consulted on every `record_login_and_assess`
     /// call; it must be cheap to invoke and Send + Sync (the MaxMind reader is).
     pub geoip: Arc<dyn GeoIpResolver>,
-    /// FR-AUTH-106 slice-3 — per-tenant policy cache (60s TTL).
+    /// TASK-AUTH-106 slice-3 — per-tenant policy cache (60s TTL).
     pub travel_policy: PolicyCache,
-    /// FR-AUTH-106 slice-3 — sticky-challenge suppression LRU. Shared across
+    /// TASK-AUTH-106 slice-3 — sticky-challenge suppression LRU. Shared across
     /// all login flows so a passed MFA from one flow suppresses re-challenge
     /// in another flow (within the configured window).
     pub sticky_suppress: Arc<StickySuppress>,
-    /// FR-AUTH-004 §1 #5 — dual rate-limiter for `POST /v1/auth/token`
+    /// TASK-AUTH-004 §1 #5 — dual rate-limiter for `POST /v1/auth/token`
     /// (per-IP 10/min + per-account 5/min). In-memory; multi-instance prod
-    /// will swap to Redis when FR-OBS-002 ships.
+    /// will swap to Redis when TASK-OBS-002 ships.
     pub rate_limit: Arc<RateLimiter>,
-    /// FR-AUTH-005 §1 #3 + #11 + G-011 — JWT jti deny-list consulted by
+    /// TASK-AUTH-005 §1 #3 + #11 + G-011 — JWT jti deny-list consulted by
     /// `verify_jwt`. Populated by revoke handler with the subject's active
-    /// jtis. In-memory per DEC-DENY-LIST-001 slice-1 (Redis lift is FR-AUTH-110).
+    /// jtis. In-memory per DEC-DENY-LIST-001 slice-1 (Redis lift is TASK-AUTH-110).
     pub deny_list: crate::deny_list::DenyList,
-    /// FR-MEMORY-122 §1 #3 — the BRAIN capture mechanism. `Some` ONLY when
+    /// TASK-MEMORY-122 §1 #3 — the BRAIN capture mechanism. `Some` ONLY when
     /// `CAPTURE_ENABLED` is set to a truthy value (default off). When `None`,
     /// every AUTH emitter (`capture::emit_signed_in` / `emit_sign_in_failed`)
     /// is a complete no-op, so capture costs nothing and sign-in is unchanged.
@@ -99,7 +99,7 @@ impl AppState {
         };
         let role_matrix = Arc::new(RwLock::new(role_matrix));
 
-        // FR-AUTH-106 slice-2 — load GeoIP resolver. Honours AUTH_GEOIP_DB
+        // TASK-AUTH-106 slice-2 — load GeoIP resolver. Honours AUTH_GEOIP_DB
         // and AUTH_GEOIP_REQUIRED. Failure to read the DB is sticky when
         // _REQUIRED=1; otherwise the service falls back to NullResolver and
         // logs once at startup so ops sees the kind-2/3 detectors are inactive.
@@ -111,7 +111,7 @@ impl AppState {
             }
         };
 
-        // FR-MEMORY-122 §1 #3 — build the capturer over AUTH's own pool (the shared brain audit DB). This
+        // TASK-MEMORY-122 §1 #3 — build the capturer over AUTH's own pool (the shared brain audit DB). This
         // is `None` unless CAPTURE_ENABLED is truthy (default off), so capture is dormant by default and
         // deploying it during the team load-test changes nothing.
         let capturer = cyberos_capture::maybe_capturer(Some(pg.clone()));

@@ -9,7 +9,7 @@ phase: P0
 slo: "Rotation operation completes with at least one active key on JWKS at all times; old key marked retired but honored for verify for 7 days"
 owner: CSO
 created: 2026-05-18
-related_frs: [FR-AUTH-004]
+related_tasks: [TASK-AUTH-004]
 ---
 
 ## §1 — Statement (BCP-14 normative)
@@ -17,7 +17,7 @@ related_frs: [FR-AUTH-004]
 1. The AUTH signing-key rotation procedure **MUST** ensure at least one key with `status=active` is present in JWKS at every moment during rotation — there is **never** a window where JWKS is empty or has no active key.
 2. The rotation procedure **MUST** mark the previous key `status=retired` (not deleted); retired keys remain in JWKS and are honored for verify (NFR-AUTH-003) for exactly 7 days post-rotation.
 3. After the 7-day window, the retired key **MUST** be hard-deleted from JWKS and from the database. The deletion **MUST** be audited as `auth.signing_key.deleted` in memory.
-4. The rotation **MUST** be scriptable via `cyberos-auth rotate-signing-key` (the bootstrap CLI surface from FR-AUTH-006).
+4. The rotation **MUST** be scriptable via `cyberos-auth rotate-signing-key` (the bootstrap CLI surface from TASK-AUTH-006).
 5. Two simultaneous rotations within 7 days **MUST NOT** be permitted — the CLI rejects with "previous rotation still in 7-day grace window."
 
 ## §2 — Why this constraint

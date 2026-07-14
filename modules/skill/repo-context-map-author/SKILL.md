@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: repo-context-map-author
 description: >-
-  Deep-scan the repo before any code is generated for a given FR, and emit a `repo-context-map@1` capturing: (a) existing patterns the new code must follow (DI containers, error type, state-management style, logging convention), (b) database schemas + type interfaces in the FR's declared module, (c) files outside the FR's immediate domain that the implementation would touch, (d) the FR's blast-radius estimate (file count + module count + cross-module edges), and (e) a flag if the FR appears to belong in a different module than its catalogue placement. Used by chief-technology-officer/ship-feature-requests as step 1. Use when user asks to "draft a repo context map" or "create the repo context map". Do NOT use for "audit existing repo context map" (use repo-context-map-audit instead).
+  Deep-scan the repo before any code is generated for a given FR, and emit a `repo-context-map@1` capturing: (a) existing patterns the new code must follow (DI containers, error type, state-management style, logging convention), (b) database schemas + type interfaces in the FR's declared module, (c) files outside the FR's immediate domain that the implementation would touch, (d) the FR's blast-radius estimate (file count + module count + cross-module edges), and (e) a flag if the FR appears to belong in a different module than its catalogue placement. Used by chief-technology-officer/ship-tasks as step 1. Use when user asks to "draft a repo context map" or "create the repo context map". Do NOT use for "audit existing repo context map" (use repo-context-map-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -17,14 +17,14 @@ allowed_memory_scopes:
     - project:*
     - module:*
   write:
-    - project:fr/{fr_id}/repo-context-map
+    - project:fr/{task_id}/repo-context-map
 audit:
   row_kind: repo_context_map_authored
-  required_fields: [fr_id, files_in_immediate_domain, files_outside_immediate_domain, modules_touched, blast_radius_score, existing_patterns_count]
+  required_fields: [task_id, files_in_immediate_domain, files_outside_immediate_domain, modules_touched, blast_radius_score, existing_patterns_count]
 
 # ── Inputs / outputs ─────────────────────────────────────────────────
 inputs:
-  - { name: fr,        format: feature-request@1, required: true }
+  - { name: fr,        format: task@1, required: true }
   - { name: repo_root, format: absolute path,     required: true }
 outputs:
   - { name: context_map, format: repo-context-map@1 }
@@ -32,7 +32,7 @@ outputs:
 # ── Triggers / blockers ──────────────────────────────────────────────
 triggers:
   - any FR moving from `accepted` → `building`
-  - workflow `chief-technology-officer/ship-feature-requests` step 1
+  - workflow `chief-technology-officer/ship-tasks` step 1
 blockers:
   - "repo has uncommitted divergent state — must be resolved first"
   - "FR's declared module does not exist on disk — escalate to chief-product-officer"
@@ -52,7 +52,7 @@ radius exceeds the in-module threshold.
 
 ```yaml
 # repo-context-map@1
-fr_id: FR-<MODULE>-<NNN>
+task_id: FR-<MODULE>-<NNN>
 generated_at: <ISO-8601>
 fr_module: <module name from FR frontmatter>
 repo_root: <absolute path>
@@ -105,6 +105,6 @@ when `files_outside_immediate_domain.length > 3`, then `edge-case-matrix-author`
 
 *End of repo-context-map-author SKILL.md.*
 
-## Contract files (FR-SKILL-118)
+## Contract files (TASK-SKILL-118)
 
 This pair is at full contract parity: `PIPELINE.md` (chain binding + HALT points), `INVARIANTS.md`, `envelopes/` (I/O schemas), `references/FAILURE_MODES.md`, `acceptance/README.md`. SKILL.md remains the normative prose; the files encode it.

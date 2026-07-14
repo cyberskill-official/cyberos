@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of PromQL, LogQL, TraceQL queries through the proxy carry an injected tenant_id filter (verified per-query-language test suite)"
 owner: CSO
 created: 2026-05-18
-related_frs: [FR-OBS-008, FR-OBS-002]
+related_tasks: [TASK-OBS-008, TASK-OBS-002]
 ---
 
 ## §1 — Statement (BCP-14 normative)

@@ -1,4 +1,4 @@
-//! Read-only memory-audit query for the compliance views (FR-OBS-008 §1 #4). Queries `l1_audit_log` by
+//! Read-only memory-audit query for the compliance views (TASK-OBS-008 §1 #4). Queries `l1_audit_log` by
 //! tenant + the view's audit kinds (the generated `event_type` column from migration 0004) + the time
 //! window, ordered by seq. Read-only - never mutates (DEC-177). Filters by `tenant_id` explicitly and
 //! also sets the per-transaction RLS GUC as defence-in-depth.

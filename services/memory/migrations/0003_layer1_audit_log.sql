@@ -1,7 +1,7 @@
--- FR-BRAIN-101 — Layer-1 audit-log mirror.
+-- TASK-BRAIN-101 — Layer-1 audit-log mirror.
 --
 -- The Personal-BRAIN client (modules/memory/) writes its append-only chain
--- to `~/.cyberos/memory/store/audit/*.ndjson`. The brain-sync daemon (FR-BRAIN-103)
+-- to `~/.cyberos/memory/store/audit/*.ndjson`. The brain-sync daemon (TASK-BRAIN-103)
 -- pushes those rows into Cloud BRAIN, which writes them here. Layer-2
 -- ingest then tails this table.
 --

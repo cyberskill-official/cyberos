@@ -1,4 +1,4 @@
-# FR-OBS-006 - tail-based sampling for the traces pipeline.
+# TASK-OBS-006 - tail-based sampling for the traces pipeline.
 #
 # This is the source-of-truth tail_sampling processor block. It is merged into
 # `otel-collector-config.yaml` under `processors:` and added to the `traces` pipeline

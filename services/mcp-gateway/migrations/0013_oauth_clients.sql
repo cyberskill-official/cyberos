@@ -1,4 +1,4 @@
--- FR-MCP-004 Migration 0013: oauth_clients + closed enums
+-- TASK-MCP-004 Migration 0013: oauth_clients + closed enums
 -- DEC-803, DEC-807, DEC-808, DEC-820
 
 -- Least-privilege roles the OAuth grants below (and in 0014/0015) target. Created here, in the first
@@ -43,7 +43,7 @@ CREATE TABLE oauth_clients (
 
 CREATE INDEX oauth_clients_tenant ON oauth_clients (tenant_id) WHERE revoked_at IS NULL;
 
--- Append-only grant structure (FR-MCP-004 §1.28 + §3.1)
+-- Append-only grant structure (TASK-MCP-004 §1.28 + §3.1)
 REVOKE UPDATE, DELETE ON oauth_clients FROM cyberos_app;
 GRANT INSERT, SELECT, UPDATE(revoked_at) ON oauth_clients TO oauth_writer;
 GRANT SELECT ON oauth_clients TO oauth_reader;

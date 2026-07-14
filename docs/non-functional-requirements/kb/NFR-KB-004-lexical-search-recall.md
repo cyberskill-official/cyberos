@@ -9,7 +9,7 @@ phase: P0
 slo: "Recall ≥ 99% for known-keyword queries; p95 latency < 200ms"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-KB-004]
+related_tasks: [TASK-KB-004]
 ---
 
 ## §1 — Statement (BCP-14 normative)

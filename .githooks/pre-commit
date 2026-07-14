@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # CyberOS pre-commit hook (active via core.hooksPath=.githooks, like commit-msg/pre-push).
-# FR-IMP-068 §1 #4: when a payload source is staged, rebuild dist/cyberos and verify every
+# TASK-IMP-068 §1 #4: when a payload source is staged, rebuild dist/cyberos and verify every
 # stamp equals VERSION. Rebuild or check failure aborts the commit; non-matching commits no-op.
 # The trigger regex mirrors .pre-commit-hooks/cyberos-payload-build.sh (cross-commented there).
 set -euo pipefail
@@ -22,11 +22,11 @@ if matches "$trigger"; then
   bash "$root/tools/cyberos-init/check-version-sync.sh" "$root/dist/cyberos"
 fi
 
-# FR-DOCS-007: any staged change to FR specs, backlog inputs, templates, or the site tooling
+# TASK-DOCS-007: any staged change to FR specs, backlog inputs, templates, or the site tooling
 # regenerates dist/website locally (gitignored) - the HTML deliverables can never lag the
 # markdown truth on the machine that authored the change. Published freshness rides deploy.yml
 # (same paths) + version.yml's post-bump dispatch + release.yml's docs job.
-docs_trigger='^(docs/feature-requests/|docs/|modules/templates/|modules/[a-z-]+/docs/|tools/docs-site/|CHANGELOG\.md$|VERSION$)'
+docs_trigger='^(docs/tasks/|docs/|modules/templates/|modules/[a-z-]+/docs/|tools/docs-site/|CHANGELOG\.md$|VERSION$)'
 if matches "$docs_trigger"; then
   if command -v node >/dev/null 2>&1; then
     echo "cyberos: docs sources changed - regenerating dist/website ..."
@@ -40,11 +40,11 @@ if matches "$docs_trigger"; then
   fi
 fi
 
-# FR-IMP-074 group A: any staged FR/CHANGELOG/VERSION change regenerates docs/status/ and
+# TASK-IMP-074 group A: any staged FR/CHANGELOG/VERSION change regenerates docs/status/ and
 # stages it IN THE SAME COMMIT, so the status page can never lag the frontmatter it renders.
 # Best-effort-loud: a render failure warns (with the fix command) but never blocks the commit -
 # a docs-render bug must not dead-lock all FR work (mirrors run-gates.sh's posture).
-status_trigger='^(docs/feature-requests/|CHANGELOG\.md$|VERSION$)'
+status_trigger='^(docs/tasks/|CHANGELOG\.md$|VERSION$)'
 if matches "$status_trigger"; then
   migrate="$root/.cyberos/migrate-frs.sh"
   [ -f "$migrate" ] || migrate="$root/tools/cyberos-init/migrate-frs.sh"   # self-hosting repo fallback
@@ -58,7 +58,7 @@ if matches "$status_trigger"; then
   fi
 fi
 
-# FR-IMP-072: a staged VERSION change must carry the whole codebase with it.
+# TASK-IMP-072: a staged VERSION change must carry the whole codebase with it.
 if grep -qx "VERSION" <<<"$staged"; then
   if ! node "$root/scripts/stamp-release-version.mjs" --check --exit-code >/dev/null 2>&1; then
     echo "cyberos: VERSION is staged but release artifacts drift - run:" >&2

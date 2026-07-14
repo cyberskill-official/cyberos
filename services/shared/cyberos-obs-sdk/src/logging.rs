@@ -1,4 +1,4 @@
-//! Log enrichment: trace_id, span_id, and tenant_id on every log line (FR-OBS-005 §1 #2).
+//! Log enrichment: trace_id, span_id, and tenant_id on every log line (TASK-OBS-005 §1 #2).
 //!
 //! The correlation primitive is "show me everything that happened during this call" -
 //! `loki: {trace_id="abc"}`. For that to work, every structured log line emitted while handling a request
@@ -18,7 +18,7 @@
 //! `tracecontext`; this module only carries the resolved ids into the log context.
 
 /// The canonical per-request span. Instrument the request future with it so every event logged while the
-/// request is handled carries `trace_id`, `span_id`, and `tenant_id` (FR-OBS-005 §1 #2, #6).
+/// request is handled carries `trace_id`, `span_id`, and `tenant_id` (TASK-OBS-005 §1 #2, #6).
 pub fn request_span(trace_id: &str, span_id: &str, tenant_id: &str) -> tracing::Span {
     tracing::info_span!(
         "request",

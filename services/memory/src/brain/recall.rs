@@ -1,4 +1,4 @@
-//! FR-MEMORY-123 §1 #5,#7,#8,#9,#10,#18 — `POST /v1/memory/recall`: summaries-first, access-scoped,
+//! TASK-MEMORY-123 §1 #5,#7,#8,#9,#10,#18 — `POST /v1/memory/recall`: summaries-first, access-scoped,
 //! provenance-carrying semantic recall.
 //!
 //! The flow (the FR's §3 recall sketch, made real):
@@ -8,7 +8,7 @@
 //!   3. drill into raw HOT events when `drill=true` or the best summary score is below the confidence floor,
 //!      fusing the two result sets via RRF (§1 #5);
 //!   4. for each candidate, read-time-verify its `chain_anchor` against Layer 1 (drop + sev-1 on mismatch,
-//!      §1 #10) THEN apply the FR-EVAL-001 per-subject access predicate (EXCLUDE, not derank; deny-by-default,
+//!      §1 #10) THEN apply the TASK-EVAL-001 per-subject access predicate (EXCLUDE, not derank; deny-by-default,
 //!      §1 #8) — a closest neighbour the caller may not see never appears;
 //!   5. return the surviving hits up to `limit`, each carrying a provenance pointer back to its Layer-1
 //!      row(s) (§1 #9).
@@ -135,7 +135,7 @@ pub async fn recall(
             continue;
         }
 
-        // §1 #8 — FR-EVAL-001 per-subject access predicate, applied as an EXCLUDE with deny-by-default. A
+        // §1 #8 — TASK-EVAL-001 per-subject access predicate, applied as an EXCLUDE with deny-by-default. A
         // semantically-closest neighbour the caller may not see is dropped here, not deranked.
         if !access_scope::caller_may_see(pool, caller, c.subject_id).await? {
             let reason = access_scope::deny_reason(pool, caller, c.subject_id).await?;
@@ -173,7 +173,7 @@ pub async fn recall(
 
 /// Search current summaries (§1 #5). With a query vector, ranks by cosine distance against the partial
 /// summary HNSW (current versions only). Without one (gateway down), falls back to full-text over the digest
-/// (FR-MEMORY-108 lexical path) so recall still answers (§1 #18). Applies the optional visible subject scope.
+/// (TASK-MEMORY-108 lexical path) so recall still answers (§1 #18). Applies the optional visible subject scope.
 async fn summary_search(
     pool: &PgPool,
     tenant_id: Uuid,

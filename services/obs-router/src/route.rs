@@ -1,4 +1,4 @@
-//! The (severity, confidence) routing decision (FR-OBS-007 §1 #3), as a pure function separate from the
+//! The (severity, confidence) routing decision (TASK-OBS-007 §1 #3), as a pure function separate from the
 //! HTTP I/O. This is the correctness core: sev-1 always pages both channels; otherwise CUO's confidence
 //! decides CHAT (at or above the floor) vs PagerDuty (below it). A CUO timeout or error is passed as
 //! confidence 0 (§1 #9), so it falls through to PagerDuty - never a silent drop (§1 #11).

@@ -1,7 +1,7 @@
-//! FR-EVAL-002 - the evaluation rubric built from the three signed employment documents.
+//! TASK-EVAL-002 - the evaluation rubric built from the three signed employment documents.
 //!
 //! Turns the Labor Contract, the NDA/non-compete/IP agreement, and the Total Rewards & Career Path Appendix
-//! into a structured, versioned, clause-cited framework FR-EVAL-003 can evaluate evidence against - with a
+//! into a structured, versioned, clause-cited framework TASK-EVAL-003 can evaluate evidence against - with a
 //! human approving every item before it is effective (DEC-2600..2604). This module is the human-curated
 //! authoring + versioning path; the schema is `migrations/0003_rubric.sql`.
 //!
@@ -16,7 +16,7 @@
 //! - [`draft_genie`] - the deferred GENIE proposer (TODO; no model call in this slice).
 //!
 //! Governance-first (DEC-2601): the HTTP surface in `crate::handlers` access-gates every rubric mutation by
-//! the FR-EVAL-001 grant (founder + designated rubric admins) before calling into here.
+//! the TASK-EVAL-001 grant (founder + designated rubric admins) before calling into here.
 
 pub mod authoring;
 pub mod draft_genie;

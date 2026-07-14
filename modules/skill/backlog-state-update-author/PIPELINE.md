@@ -7,7 +7,7 @@ Artefact: `backlog-state-update@2`. This document binds the skill into the ship 
 
 | Upstream skill | Trigger | Hand-off |
 |---|---|---|
-| any ship phase completion / create-feature-requests step 3 | Default chain | mutation payload |
+| any ship phase completion / create-tasks step 3 | Default chain | mutation payload |
 
 ## Downstream
 
@@ -20,4 +20,4 @@ Artefact: `backlog-state-update@2`. This document binds the skill into the ship 
 - Pre-image drifted (old_line no longer byte-matches) -> reject + re-read; repeated drift -> HALT (concurrent writer suspected).
 - Nonstandard section headers in BACKLOG.md -> needs_human, never a guessed placement.
 
-*Added by FR-SKILL-118 (contract parity). Phases and step prose: SKILL.md is normative.*
+*Added by TASK-SKILL-118 (contract parity). Phases and step prose: SKILL.md is normative.*

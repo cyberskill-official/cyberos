@@ -74,8 +74,8 @@ jobs:
 
   # ---------------------------------------------------------------------------
   # Integration gate — boots Postgres + Apache AGE + Redis via docker-compose
-  # and runs the `--ignored` tests (FR-AUTH-003 RLS isolation + FR-AUTH-004
-  # JWT roundtrip + FR-MEMORY-101 chain-anchor against real DB).
+  # and runs the `--ignored` tests (TASK-AUTH-003 RLS isolation + TASK-AUTH-004
+  # JWT roundtrip + TASK-MEMORY-101 chain-anchor against real DB).
   # ---------------------------------------------------------------------------
   integration:
     name: integration (Postgres + Redis)
@@ -103,7 +103,7 @@ jobs:
         with:
           workspaces: services
 
-      # FR-AUTH-106 — install MaxMind GeoLite2 + Anonymous-IP if the CI runner
+      # TASK-AUTH-106 — install MaxMind GeoLite2 + Anonymous-IP if the CI runner
       # has access to a license key. auth geoip tests skip cleanly when absent.
       - name: Install GeoLite2 DBs (optional — gated on secret)
         if: env.MAXMIND_LICENSE_KEY != ''

@@ -20,7 +20,7 @@ class ScoreResult:
     ----------
     score
         Float in ``[0.0, 1.0]``. On fallback paths this is always 0.5
-        (the neutral midpoint, per FR-MEMORY-114 §1 #9).
+        (the neutral midpoint, per TASK-MEMORY-114 §1 #9).
     latency_ms
         Wall-clock duration of the invocation (or 0 on cache hits).
     model

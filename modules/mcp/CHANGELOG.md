@@ -1,6 +1,6 @@
 # Changelog — MCP
 
-## 2026-05-19 — P0 implementation wave — MCP Gateway slice-1 scaffold shipped (FR-MCP-001)
+## 2026-05-19 — P0 implementation wave — MCP Gateway slice-1 scaffold shipped (TASK-MCP-001)
 
 See [AI changelog](../ai/changelog.html) for AI Gateway and [OBS changelog](../obs/changelog.html) for OBS collector portions of this wave.
 
@@ -8,8 +8,8 @@ See [AI changelog](../ai/changelog.html) for AI Gateway and [OBS changelog](../o
 
 **`services/mcp-gateway/`** — Rust workspace member, slice-1 of P0.4 MCP Gateway:
 
-- **FR-MCP-001 — MCP 2025-11-25 spec compliance — scaffold shipped (10/10), status flipped `planned → building`.** JSON-RPC 2.0 parser; closed JSON-RPC error code map per DEC-272; `initialize` handshake returning `protocolVersion` + `Capabilities` + `ServerInfo`; `tools/list` with base64 cursor pagination; `tools/call` with permission gate; `ToolAnnotations` per DEC-264; `ToolRegistry` in-memory cache; Axum router mounting `POST /mcp` + `GET /mcp/healthz`. `MCP_PROTOCOL_VERSION` pinned at `"2025-11-25"` per DEC-260.
-- **Remaining for `shipped` status:** JWT verification per FR-AUTH-004 + audience-bound token check + per-(tenant, tool) rate-limit + memory audit row pair + Streamable HTTP SSE transport + OTel span emission.
+- **TASK-MCP-001 — MCP 2025-11-25 spec compliance — scaffold shipped (10/10), status flipped `planned → building`.** JSON-RPC 2.0 parser; closed JSON-RPC error code map per DEC-272; `initialize` handshake returning `protocolVersion` + `Capabilities` + `ServerInfo`; `tools/list` with base64 cursor pagination; `tools/call` with permission gate; `ToolAnnotations` per DEC-264; `ToolRegistry` in-memory cache; Axum router mounting `POST /mcp` + `GET /mcp/healthz`. `MCP_PROTOCOL_VERSION` pinned at `"2025-11-25"` per DEC-260.
+- **Remaining for `shipped` status:** JWT verification per TASK-AUTH-004 + audience-bound token check + per-(tenant, tool) rate-limit + memory audit row pair + Streamable HTTP SSE transport + OTel span emission.
 
 ---
 
@@ -28,7 +28,7 @@ Changes by section:
 - **NEW §2.7 "Tool-discovery surface"** — 6 discovery endpoints (well-known/mcp, capabilities, tools/list, prompts/list, resources/list, resources/templates/list); 8-field Tasks primitive schema with memory_chain anchor; 5 pre-canned prompt templates (weekly_brief, decision_to_issues, draft_cycle_review, deal_to_engagement, find_memory_citations).
 - **§12 Risks** — added 10 new (R-MCP-011..020): external agent token theft (Critical) · prompt injection in tool description · elicitation fatigue (High likelihood) · federation lag · task storm · resource leak via list_changed · heartbeat false-positive · DCR abuse · older-protocol-version security gap · SEP-986 naming collision.
 - **§13 KPIs** — added 10 new: persona-stamp coverage (hard floor = 1.0) · elicitation acceptance rate · tasks completion rate · cross-tenant token-replay attempts · older-protocol session rate (→ 0 by P3 · exit) · list_changed push latency · destructive-op confirm fatigue · external-client tools coverage · SEP-986 compliance.
-- **§17 References** — replaced stale PRD/SRS refs with 4 in-page sections + 8 cross-module links + AUDIT_AND_PLAN §3.3 (P0 · slice 3 placement) + RESEARCH_REVIEW §5 (9/10) + MEMORY_AUTOSYNC_DESIGN.md §5+§6 + feature-request-audit skill + DPoP RFC 9449 + EU AI Act + PDPL citations.
+- **§17 References** — replaced stale PRD/SRS refs with 4 in-page sections + 8 cross-module links + AUDIT_AND_PLAN §3.3 (P0 · slice 3 placement) + RESEARCH_REVIEW §5 (9/10) + MEMORY_AUTOSYNC_DESIGN.md §5+§6 + task-audit skill + DPoP RFC 9449 + EU AI Act + PDPL citations.
 
 The MCP Gateway page now reads as the complete answer to: (1) why 22 modules need one external door (federation Mermaid + N²→N+1 math), (2) how the broker prevents a compromised external agent from escaping scope (audience-bound JWT + tool-annotation gating + destructive-op Elicitation), (3) how external agents discover what CyberOS can do (6 discovery endpoints + 5 pre-canned prompts + Tasks primitive for long-running work), (4) what fails if MCP Gateway is missing (every external agent re-implements its own auth + tool catalogue + audit).
 

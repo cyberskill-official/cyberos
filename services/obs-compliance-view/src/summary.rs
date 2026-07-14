@@ -1,4 +1,4 @@
-//! Per-view summary block (FR-OBS-008 §1 #9): the counts an auditor reads before the row detail. Pure -
+//! Per-view summary block (TASK-OBS-008 §1 #9): the counts an auditor reads before the row detail. Pure -
 //! computed from the fetched rows, no I/O - so it is unit-tested directly.
 
 use std::collections::BTreeMap;

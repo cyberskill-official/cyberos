@@ -1,4 +1,4 @@
-//! FR-AI-007 §5 — Integration tests for the cost-table loader.
+//! TASK-AI-007 §5 — Integration tests for the cost-table loader.
 
 use std::path::PathBuf;
 use std::time::Instant;

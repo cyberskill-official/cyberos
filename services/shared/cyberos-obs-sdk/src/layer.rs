@@ -1,4 +1,4 @@
-//! FR-OBS-003 - the axum RED middleware (ADR-OBS-003-001). One `.layer(...)` per service router
+//! TASK-OBS-003 - the axum RED middleware (ADR-OBS-003-001). One `.layer(...)` per service router
 //! instruments every route: it reads the matched route template, times the request, reads the request's
 //! tenant from a `TenantCtx`, and calls `red::record_request` on the way out. This is the per-service
 //! instrumentation point that replaces the spec's per-handler proc-macro - one touch point, and it

@@ -1,7 +1,7 @@
-//! Workspace moderation queue (FR-CHAT-269). An administrator reviews the reports FR-CHAT-267 files, acts,
+//! Workspace moderation queue (TASK-CHAT-269). An administrator reviews the reports TASK-CHAT-267 files, acts,
 //! and is audited.
 //!
-//! FR-CHAT-267 gives every member a Report button. Without this module that button files into a table nobody
+//! TASK-CHAT-267 gives every member a Report button. Without this module that button files into a table nobody
 //! can read — which is worse than no button at all, because it tells someone being harassed that something
 //! will happen, and nothing does.
 //!
@@ -20,7 +20,7 @@
 //!
 //! * **The role gate fails closed (§1 #2).** See `auth::require_moderator`. Channel roles grant nothing.
 //!
-//! Blocks (FR-CHAT-268) are deliberately NOT applied here (§1 #10): an administrator who has blocked someone
+//! Blocks (TASK-CHAT-268) are deliberately NOT applied here (§1 #10): an administrator who has blocked someone
 //! must still be able to adjudicate a report about them. There is no call to `blocks::blocked_by` in this
 //! file, and there must not be one.
 
@@ -605,7 +605,7 @@ pub async fn resolve(
     //
     // IS NOT DISTINCT FROM, not `=`: two of the three target columns are NULL on any given row, and `=`
     // yields NULL against NULL — the sibling update would silently match nothing. Same trap as the partial
-    // unique index in FR-CHAT-267, wearing a different hat.
+    // unique index in TASK-CHAT-267, wearing a different hat.
     let siblings: Vec<Uuid> = sqlx::query_scalar(
         "UPDATE chat_reports
             SET status = $2,
@@ -652,7 +652,7 @@ pub async fn resolve(
                 .await
                 .map_err(crate::internal)?;
             // The report's snapshot is untouched — it is the evidence, and this is precisely the moment it
-            // earns its keep (FR-CHAT-267 §1 #4).
+            // earns its keep (TASK-CHAT-267 §1 #4).
         }
         Action::RemoveMember => {
             // §1 #14 — from the CHANNEL the report came from. NOT from the workspace. Firing someone is not
@@ -688,7 +688,7 @@ pub async fn resolve(
     }
 
     // §1 #15 — the DECISION row. Exactly one, and it carries no content: not the snapshot, not the note
-    // (§1 #16). Same reasoning as FR-CHAT-267 §1 #8 — the audit chain is hash-chained and replicated, which
+    // (§1 #16). Same reasoning as TASK-CHAT-267 §1 #8 — the audit chain is hash-chained and replicated, which
     // is the wrong place for a copy of content someone asked us to remove.
     audit::emit(
         &st,

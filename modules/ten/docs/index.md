@@ -1,7 +1,7 @@
 ---
 title: TEN - Tenant lifecycle, billing, isolation control plane
 source: website/docs/modules/ten/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 TEN is CyberOS's **tenant lifecycle + billing + isolation control plane**. It is the module without which CyberOS cannot exist as a paying-customer SaaS. The architecture is conventional: a Rust service for tenant CRUD + plan management + usage metering; Stripe for international card billing + invoicing; Vietnamese PSP integration (VnPay, Momo, ZaloPay) for VND domestic transactions; a tenant-admin SPA for seat management, audit-log review, residency / retention overrides; a signed-bundle exporter for portability + GDPR Art. 20. What is distinctive is the isolation invariant: TEN owns the per-tenant resource manifest (Postgres schema layout, NATS subject namespace, S3 bucket prefix, AI-gateway token quotas) and the verification harness that proves cross-tenant zero-leakage on every release. ARR / NDR / churn metrics roll up to a CFO dashboard. The 90-day offboarding grace is mandatory - even a hostile termination has 30 days of read-only access for export plus 60 days of dead-letter recoverability before irreversible wipe.
@@ -482,7 +482,7 @@ Closed| Day 91| Per-tenant rows wiped across modules; S3 prefix wiped; NATS ACL 
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS FR catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
 Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
 
@@ -780,7 +780,7 @@ ISO 27017 cloud-services audit| planned - P4+
 - **EU AI Act** - Art. 26 deployer obligations (tenant-level).
 - **Stripe Billing API** - subscription + invoice + webhook docs.
 - **VnPay / Momo / ZaloPay merchant docs** - Vietnamese PSP integration (P4).
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- **FR authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 - **Architecture context:** [infrastructure.html#ten](../../architecture/infrastructure.html#ten).
 
 ## Changelog

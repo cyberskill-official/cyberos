@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
 repository.workspace = true
-description = "CyberOS observability collector — OTLP receiver + Loki/Prometheus/Tempo exporters (P0 module · FR-OBS-001..009)"
+description = "CyberOS observability collector — OTLP receiver + Loki/Prometheus/Tempo exporters (P0 module · TASK-OBS-001..009)"
 
 [lib]
 name = "cyberos_obs_collector"
@@ -34,7 +34,7 @@ clap.workspace = true
 
 # OTel surface (slice-1 scaffold; the heavy lifting is the otelcol binary itself
 # which we operate via Helm / docker-compose; this crate hosts the supervisor +
-# tenant-isolation extension hook for FR-OBS-002).
+# tenant-isolation extension hook for TASK-OBS-002).
 prost = "0.13"
 serde_yaml = "0.9"
 

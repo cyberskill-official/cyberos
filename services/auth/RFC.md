@@ -15,7 +15,7 @@
 | Language | **Rust** | Spec is unambiguous (axum + sqlx); aligns with skill module's existing Rust workspace |
 | Web framework | axum 0.7 | Per spec; lowest-friction Tokio-native HTTP |
 | DB | PostgreSQL 16 + Redis 7 | Per spec; RLS by `tenant_id`, Redis caches the hot-path RBAC view |
-| JWT scheme | RS256, 15 min access + 30 d rotating refresh | Per spec FR-AUTH-003 / FR-AUTH-004 |
+| JWT scheme | RS256, 15 min access + 30 d rotating refresh | Per spec TASK-AUTH-003 / TASK-AUTH-004 |
 | MFA | WebAuthn (mandatory at T2+) + TOTP (member tier) | webauthn-rs + totp-rs |
 | Signing-key custody | AWS KMS wrap; JWKS published | KMS rotation; isolate signer from verifier |
 | RBAC model | Closed catalogue, 22 roles per PRD §8.6.1 | No ABAC at P0; ship narrow, expand later |

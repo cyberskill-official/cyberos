@@ -75,8 +75,8 @@ Every `project_brief@1` body MUST contain these H2 sections in this order:
 
 | Profile | Default for | Skills that run | Skills SKIPPED |
 | --- | --- | --- | --- |
-| `lean` | `internal_tooling`, `research_spike`, projects under ~2 engineer-weeks | product-requirements-document-author → feature-request-author → feature-request-audit → spec-to-impl-plan | product-requirements-document-audit, software-requirements-specification-author, software-requirements-specification-audit, fr-to-tech-spec |
-| `standard` (default) | `software_product`, `software_consulting_engagement`, projects 2-12 engineer-weeks | product-requirements-document-author → product-requirements-document-audit → feature-request-author → feature-request-audit → fr-to-tech-spec → spec-to-impl-plan | software-requirements-specification-author, software-requirements-specification-audit |
+| `lean` | `internal_tooling`, `research_spike`, projects under ~2 engineer-weeks | product-requirements-document-author → task-author → task-audit → spec-to-impl-plan | product-requirements-document-audit, software-requirements-specification-author, software-requirements-specification-audit, fr-to-tech-spec |
+| `standard` (default) | `software_product`, `software_consulting_engagement`, projects 2-12 engineer-weeks | product-requirements-document-author → product-requirements-document-audit → task-author → task-audit → fr-to-tech-spec → spec-to-impl-plan | software-requirements-specification-author, software-requirements-specification-audit |
 | `full` | `confidentiality: regulated`, `eu_ai_act_risk_class: high`, multi-year projects | every skill in the chain | (none — all run) |
 
 `requirements-discovery` defaults the `chain_profile` from the project_kind + EU AI Act risk class + confidentiality + budget combination. The user can override during the discovery interview ("I want lean for this small experiment" → set `chain_profile: lean`). The `cuo/cpo/chain-selector` skill (v0.2.8+) is invoked by the supervisor at brief-completion time to validate the choice and emit the chain plan.
@@ -92,7 +92,7 @@ Every `project_brief@1` body MUST contain these H2 sections in this order:
 
 ## How `requirements-discovery` produces this contract
 
-The discovery skill conducts a 15-20 question interview (per its `STANDALONE_INTERVIEW.md`), folds in a project-triage assessment (gating questions about strategic fit, capacity, runway, customer signal strength), reads memory scopes for prior art, then synthesises the answers into this artefact. Iteration via amendment-batch protocol (mirroring feature-request-author's): the user reviews v1, batches amendments, and the skill applies them in v2. `discovery_iteration` increments; the same `project_brief@1.md` file is rewritten in place.
+The discovery skill conducts a 15-20 question interview (per its `STANDALONE_INTERVIEW.md`), folds in a project-triage assessment (gating questions about strategic fit, capacity, runway, customer signal strength), reads memory scopes for prior art, then synthesises the answers into this artefact. Iteration via amendment-batch protocol (mirroring task-author's): the user reviews v1, batches amendments, and the skill applies them in v2. `discovery_iteration` increments; the same `project_brief@1.md` file is rewritten in place.
 
 ## How `product-requirements-document-author` consumes this contract
 

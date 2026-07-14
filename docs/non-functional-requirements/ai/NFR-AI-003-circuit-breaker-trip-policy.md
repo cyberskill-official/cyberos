@@ -9,7 +9,7 @@ phase: P0
 slo: "Open within 30s of 3rd error; first recovery probe at exactly 60s post-open"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-AI-009, FR-AI-008]
+related_tasks: [TASK-AI-009, TASK-AI-008]
 ---
 
 ## §1 — Statement (BCP-14 normative)

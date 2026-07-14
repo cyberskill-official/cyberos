@@ -1,4 +1,4 @@
-# Microsoft Store submission — answer sheet (FR-APP-004)
+# Microsoft Store submission — answer sheet (TASK-APP-004)
 
 Companion to `docs/deploy/RELEASE.md` (GitHub Releases NSIS channel, unchanged) and the per-store sheets (`play-store-submission.md`, `mac-app-store-submission.md`). The Store channel wraps the same Tauri Windows build in an MSIX (`makeappx.exe` over a staged layout + `AppxManifest.xml`) and submits via the Store Submission API — all behind `MSSTORE_RELEASE=true` (off today) plus the identity-placeholder lint (`tools/msix-identity-lint.sh`), which blocks any Store run until the Partner Center identity is real.
 

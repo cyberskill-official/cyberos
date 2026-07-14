@@ -9,7 +9,7 @@ phase: P1
 slo: "100% of `translation_of:` docs reference an existing source; sync lag ≤ 24h after source change"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-KB-009]
+related_tasks: [TASK-KB-009]
 ---
 
 ## §1 — Statement (BCP-14 normative)

@@ -6,7 +6,7 @@
 
         # TRIGGER_TESTS for backlog-state-update-audit
 
-        > Authored via heuristic backfill per FR-SKILL-115 lazy-backfill discipline.
+        > Authored via heuristic backfill per TASK-SKILL-115 lazy-backfill discipline.
         > Refine these triggers during the next natural fine-tune cycle with real
         > OBS-observed phrasings.
 

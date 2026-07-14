@@ -1,8 +1,8 @@
 //! Integration tests — validate against real CyberOS SKILL.md exemplars.
 //!
 //! These tests run against the 13 SKB-* compliant skills shipped in
-//! 2026-05-19 (3 exemplars from FR-SKILL-111+112+113 + 10 G-cohort
-//! backfills from FR-SKILL-115 session). If any of these fails, FR-111/113
+//! 2026-05-19 (3 exemplars from TASK-SKILL-111+112+113 + 10 G-cohort
+//! backfills from TASK-SKILL-115 session). If any of these fails, FR-111/113
 //! invariants have regressed.
 
 use std::path::PathBuf;
@@ -24,21 +24,21 @@ fn skill_dir(skill_name: &str) -> PathBuf {
 
 #[test]
 fn feature_request_author_validates() {
-    let path = skill_dir("feature-request-author");
+    let path = skill_dir("task-author");
     if !path.exists() {
         eprintln!("skip: {path:?} not found");
         return;
     }
     let (fm, _) =
         frontmatter::load_and_validate(&path).unwrap_or_else(|e| panic!("validate failed: {e}"));
-    assert_eq!(fm.name, "feature-request-author");
+    assert_eq!(fm.name, "task-author");
     assert!(!fm.description.is_empty());
     assert!(fm.untrusted_inputs.is_some());
 }
 
 #[test]
 fn feature_request_audit_validates() {
-    let path = skill_dir("feature-request-audit");
+    let path = skill_dir("task-audit");
     if !path.exists() {
         eprintln!("skip: {path:?} not found");
         return;
@@ -155,7 +155,7 @@ fn missing_frontmatter_rejected() {
 
 #[test]
 fn transpile_feature_request_author_to_anthropic_form() {
-    let path = skill_dir("feature-request-author");
+    let path = skill_dir("task-author");
     if !path.exists() {
         eprintln!("skip: {path:?} not found");
         return;
@@ -163,11 +163,11 @@ fn transpile_feature_request_author_to_anthropic_form() {
     let result = cyberos_skill_broker::transpile_anthropic(&path);
     assert!(result.is_ok(), "transpile failed: {:?}", result.err());
     let skill = result.unwrap();
-    assert_eq!(skill.name, "feature-request-author");
+    assert_eq!(skill.name, "task-author");
     let md = skill.to_skill_md();
     // Required shape per Anthropic Reference B
     assert!(md.starts_with("---\n"));
-    assert!(md.contains("name: feature-request-author"));
+    assert!(md.contains("name: task-author"));
     assert!(md.contains("description:"));
     // CyberOS governance fields MUST be dropped from the frontmatter.
     // (The body may legitimately reference these field names as prose.)
@@ -187,8 +187,8 @@ fn transpile_feature_request_author_to_anthropic_form() {
 #[test]
 fn transpile_all_three_exemplars_succeed() {
     for skill in &[
-        "feature-request-author",
-        "feature-request-audit",
+        "task-author",
+        "task-audit",
         "product-requirements-document-author",
     ] {
         let path = skill_dir(skill);

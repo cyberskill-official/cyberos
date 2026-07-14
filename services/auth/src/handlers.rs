@@ -2,14 +2,14 @@
 //!
 //! Routes:
 //!   * `/healthz`                       GET   — liveness + Postgres check
-//!   * `/v1/admin/tenants`              POST  — FR-AUTH-001
-//!   * `/v1/admin/tenants`              GET   — FR-AUTH-005 (list, root only)
-//!   * `/v1/admin/subjects`             POST  — FR-AUTH-002
-//!   * `/v1/admin/subjects`             GET   — FR-AUTH-005 (list, tenant-scoped via RLS)
-//!   * `/v1/admin/subjects/{id}/revoke`   POST — FR-AUTH-005
-//!   * `/v1/admin/subjects/{id}/unrevoke` POST — FR-AUTH-005
-//!   * `/v1/auth/token`                 POST  — FR-AUTH-004 (password-grant JWT)
-//!   * `/.well-known/jwks.json`         GET   — FR-AUTH-004 (public JWKS)
+//!   * `/v1/admin/tenants`              POST  — TASK-AUTH-001
+//!   * `/v1/admin/tenants`              GET   — TASK-AUTH-005 (list, root only)
+//!   * `/v1/admin/subjects`             POST  — TASK-AUTH-002
+//!   * `/v1/admin/subjects`             GET   — TASK-AUTH-005 (list, tenant-scoped via RLS)
+//!   * `/v1/admin/subjects/{id}/revoke`   POST — TASK-AUTH-005
+//!   * `/v1/admin/subjects/{id}/unrevoke` POST — TASK-AUTH-005
+//!   * `/v1/auth/token`                 POST  — TASK-AUTH-004 (password-grant JWT)
+//!   * `/.well-known/jwks.json`         GET   — TASK-AUTH-004 (public JWKS)
 
 use axum::{
     extract::{Path, Query, State},
@@ -40,7 +40,7 @@ pub fn router(state: AppState) -> Router {
         .route("/healthz", get(healthz))
         .route("/v1/auth/token", post(issue_token))
         .route("/.well-known/jwks.json", get(jwks))
-        // FR-AUTH-110 OIDC provider — public discovery + userinfo
+        // TASK-AUTH-110 OIDC provider — public discovery + userinfo
         .route(
             "/.well-known/openid-configuration",
             get(crate::op::handlers::discovery),
@@ -48,10 +48,10 @@ pub fn router(state: AppState) -> Router {
         .route("/v1/auth/op/userinfo", get(crate::op::handlers::userinfo))
         .route("/v1/auth/op/authorize", get(crate::op::handlers::authorize))
         .route("/v1/auth/op/token", post(crate::op::handlers::token))
-        // FR-AUTH-104 OIDC SSO — public flow (no JWT required to initiate)
+        // TASK-AUTH-104 OIDC SSO — public flow (no JWT required to initiate)
         .route("/v1/auth/oidc/initiate", get(crate::oidc::initiate))
         .route("/v1/auth/oidc/callback", get(crate::oidc::callback))
-        // FR-AUTH-105 Passkey — login is public (the whole point is no-password auth)
+        // TASK-AUTH-105 Passkey — login is public (the whole point is no-password auth)
         .route(
             "/v1/auth/passkey/login/begin",
             post(crate::passkey::login_begin),
@@ -60,7 +60,7 @@ pub fn router(state: AppState) -> Router {
             "/v1/auth/passkey/login/finish",
             post(crate::passkey::login_finish),
         )
-        // FR-AUTH-103 SAML — initiate + ACS + SP metadata are PUBLIC
+        // TASK-AUTH-103 SAML — initiate + ACS + SP metadata are PUBLIC
         .route("/v1/auth/saml/initiate", get(crate::saml::initiate))
         .route("/v1/auth/saml/acs", post(crate::saml::acs))
         .route(
@@ -70,7 +70,7 @@ pub fn router(state: AppState) -> Router {
 
     let admin = Router::new()
         .route("/v1/admin/tenants", post(create_tenant).get(list_tenants))
-        // FR-AUTH-110 OIDC provider — first-party RP-client registry (tenant-admin)
+        // TASK-AUTH-110 OIDC provider — first-party RP-client registry (tenant-admin)
         .route(
             "/v1/admin/op/rp-clients",
             post(crate::op::handlers::create_rp_client).get(crate::op::handlers::list_rp_clients),
@@ -91,7 +91,7 @@ pub fn router(state: AppState) -> Router {
         .route("/v1/auth/directory", get(directory))
         // P0 self-service profile: any authenticated user edits their own display name + avatar.
         .route("/v1/auth/me", get(me_profile).patch(update_me))
-        // FR-AUTH-101 RBAC endpoints
+        // TASK-AUTH-101 RBAC endpoints
         .route(
             "/v1/admin/roles",
             get(crate::rbac::catalogue_endpoint::list_roles_with_etag_check),
@@ -104,7 +104,7 @@ pub fn router(state: AppState) -> Router {
             "/v1/admin/subjects/:id/roles/:role",
             axum::routing::delete(crate::rbac::assignment::revoke_role),
         )
-        // FR-AUTH-102 MFA — TOTP enrolment + verify (auth'd; the password
+        // TASK-AUTH-102 MFA — TOTP enrolment + verify (auth'd; the password
         // grant is what eventually CALLS verify, but enrolment requires an
         // authenticated session).
         .route(
@@ -116,7 +116,7 @@ pub fn router(state: AppState) -> Router {
             post(crate::mfa::totp_enrol_finish),
         )
         .route("/v1/auth/mfa/verify", post(crate::mfa::totp_verify))
-        // FR-AUTH-102 — additional MFA endpoints (list, revoke, recovery)
+        // TASK-AUTH-102 — additional MFA endpoints (list, revoke, recovery)
         .route("/v1/auth/mfa/factors", get(crate::mfa::list_factors))
         .route(
             "/v1/auth/mfa/factors/:factor_id",
@@ -130,12 +130,12 @@ pub fn router(state: AppState) -> Router {
             "/v1/auth/mfa/recovery/verify",
             post(crate::mfa::verify_recovery_code),
         )
-        // FR-AUTH-104 OIDC admin — create/update IdP config (JWT-gated)
+        // TASK-AUTH-104 OIDC admin — create/update IdP config (JWT-gated)
         .route(
             "/v1/admin/oidc/idp-configs",
             post(crate::oidc::create_idp_config),
         )
-        // FR-AUTH-105 Passkey enrol — requires authenticated session
+        // TASK-AUTH-105 Passkey enrol — requires authenticated session
         .route(
             "/v1/auth/passkey/enrol/begin",
             post(crate::passkey::enrol_begin),
@@ -144,12 +144,12 @@ pub fn router(state: AppState) -> Router {
             "/v1/auth/passkey/enrol/finish",
             post(crate::passkey::enrol_finish),
         )
-        // FR-AUTH-103 SAML admin — create/update IdP config (JWT-gated)
+        // TASK-AUTH-103 SAML admin — create/update IdP config (JWT-gated)
         .route(
             "/v1/admin/saml/idp-configs",
             post(crate::saml::create_idp_config),
         )
-        // FR-AUTH-109 stub→full migration enforcer (root-admin only)
+        // TASK-AUTH-109 stub→full migration enforcer (root-admin only)
         .route(
             "/v1/admin/auth/migration/preview",
             get(crate::migration_state::preview),
@@ -158,11 +158,11 @@ pub fn router(state: AppState) -> Router {
             "/v1/admin/auth/migration/extend-grace",
             post(crate::migration_state::extend_grace),
         )
-        // FR-AUTH-108 Lumi tenant-identity JWT — admin-gated issue/revoke
+        // TASK-AUTH-108 Lumi tenant-identity JWT — admin-gated issue/revoke
         .route("/v1/auth/lumi/issue", post(crate::lumi::issue))
         .route("/v1/auth/lumi/verify", get(crate::lumi::verify))
         .route("/v1/admin/lumi/revoke/:jti", post(crate::lumi::revoke))
-        // FR-AUTH-106 slice-3 — per-tenant travel-policy mutation
+        // TASK-AUTH-106 slice-3 — per-tenant travel-policy mutation
         .route(
             "/v1/admin/tenants/:tenant_id/travel-policy",
             axum::routing::put(crate::travel_admin::put_policy)
@@ -181,7 +181,7 @@ pub fn router(state: AppState) -> Router {
             crate::middleware::verify_jwt,
         ));
 
-    // FR-OBS-003 - RED metrics for every route (ADR-OBS-003-001). Outermost layer so it sees the
+    // TASK-OBS-003 - RED metrics for every route (ADR-OBS-003-001). Outermost layer so it sees the
     // matched route and wraps verify_jwt; verify_jwt sets TenantCtx on the response for the tenant label.
     let app = public
         .merge(admin)
@@ -191,7 +191,7 @@ pub fn router(state: AppState) -> Router {
         ))
         .with_state(state);
 
-    // FR-APP-001 shell - opt-in permissive CORS so a local browser (the CyberOS sign-in page) can call
+    // TASK-APP-001 shell - opt-in permissive CORS so a local browser (the CyberOS sign-in page) can call
     // the token endpoint cross-origin in dev. Off by default; production serves the page and auth under
     // one Caddy origin, so this stays off. Set AUTH_DEV_CORS=1 only for local development.
     if std::env::var("AUTH_DEV_CORS").is_ok() {
@@ -218,11 +218,11 @@ async fn healthz(State(state): State<AppState>) -> (StatusCode, Json<Value>) {
     )
 }
 
-/// FR-AUTH-001 — Tenant create. Idempotent on `Idempotency-Key` header.
-// FR-AUTH-001 §1 #13 — emit OTel span `auth.create_tenant` around the whole
+/// TASK-AUTH-001 — Tenant create. Idempotent on `Idempotency-Key` header.
+// TASK-AUTH-001 §1 #13 — emit OTel span `auth.create_tenant` around the whole
 // handler. `outcome` is recorded dynamically (created | idempotent_replay |
 // conflict | forbidden | invalid_input | error) at each return. The trace
-// context propagates W3C TraceContext per FR-AI-022 — the verify_jwt
+// context propagates W3C TraceContext per TASK-AI-022 — the verify_jwt
 // middleware already extracts traceparent from the JWT into the request.
 #[tracing::instrument(
     name = "auth.create_tenant",
@@ -242,8 +242,8 @@ async fn create_tenant(
     use tracing::Span;
     let span = Span::current();
 
-    // FR-AUTH-001 §1 #1 — Handler-level authz: caller MUST be in tenant 0
-    // AND hold the `root-admin` role. The `verify_jwt` middleware (FR-AUTH-004)
+    // TASK-AUTH-001 §1 #1 — Handler-level authz: caller MUST be in tenant 0
+    // AND hold the `root-admin` role. The `verify_jwt` middleware (TASK-AUTH-004)
     // has already validated the signature + populated `claims`; this check
     // is the defence-in-depth role guard at the handler layer. The 403 body
     // is explicit about WHAT permission would have succeeded so operators
@@ -253,9 +253,9 @@ async fn create_tenant(
         return Err(e);
     }
 
-    // FR-AUTH-001 §1 #14 — Defence-in-depth: reject reserved slug "root"
+    // TASK-AUTH-001 §1 #14 — Defence-in-depth: reject reserved slug "root"
     // before any DB work. Tenant 0 (the root tenant) is bootstrapped by
-    // FR-AUTH-006 CLI; this endpoint MUST NOT create a second tenant
+    // TASK-AUTH-006 CLI; this endpoint MUST NOT create a second tenant
     // with slug "root" (would shadow the canonical root in operator
     // mental models even though id is unique). The DB UNIQUE constraint
     // also catches this, but the early-return saves a transaction round
@@ -268,7 +268,7 @@ async fn create_tenant(
         ));
     }
 
-    // FR-AUTH-001 §1 #2 + #11 — Per-field validation runs at API layer +
+    // TASK-AUTH-001 §1 #2 + #11 — Per-field validation runs at API layer +
     // DB CHECK constraint (defence in depth). The 400 body identifies
     // exactly which input failed and why so the client can render
     // actionable error UI without inspecting logs.
@@ -282,7 +282,7 @@ async fn create_tenant(
     }
 
     // Only the root tenant can create new tenants. The auth middleware
-    // (FR-AUTH-004) will validate the JWT and set `app.current_tenant_id`.
+    // (TASK-AUTH-004) will validate the JWT and set `app.current_tenant_id`.
     // Until then, this handler runs in the root context.
     let mut tx = state.pg.begin().await.map_err(db_err)?;
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
@@ -300,7 +300,7 @@ async fn create_tenant(
                 Json(json!({
                     "error": "missing_header",
                     "field": "Idempotency-Key",
-                    "reason": "header required on admin POSTs for idempotent retries (per FR-AUTH-001 §1 #5)"
+                    "reason": "header required on admin POSTs for idempotent retries (per TASK-AUTH-001 §1 #5)"
                 })),
             ));
         }
@@ -343,7 +343,7 @@ async fn create_tenant(
 
     let row: Tenant = match insert_result {
         Err(sqlx::Error::Database(db)) if db.is_unique_violation() => {
-            // FR-AUTH-001 §1 #4 — Structured 409 body so the client can
+            // TASK-AUTH-001 §1 #4 — Structured 409 body so the client can
             // present the conflict without parsing free-form error strings.
             span.record("outcome", "conflict");
             return Err((
@@ -378,7 +378,7 @@ async fn create_tenant(
         },
     };
 
-    // FR-AUTH-001 §1 #6 + §1 #12 — Emit `auth.tenant_created` memory audit row
+    // TASK-AUTH-001 §1 #6 + §1 #12 — Emit `auth.tenant_created` memory audit row
     // INSIDE the same transaction. If this write fails (or any later step
     // before commit), the entire tx rolls back — both the tenant row and
     // the audit row are discarded together. The partial state of "tenant
@@ -426,7 +426,7 @@ async fn create_tenant(
     Ok((StatusCode::CREATED, Json(row)))
 }
 
-/// FR-AUTH-002 — Subject create. Bcrypt-hashes the password before insert.
+/// TASK-AUTH-002 — Subject create. Bcrypt-hashes the password before insert.
 /// `tenant_id` is taken from the verified JWT claims — the route is gated by
 /// `verify_jwt` middleware so `Extension<Claims>` is always present.
 ///
@@ -461,7 +461,7 @@ async fn create_subject(
     let tenant_id = Uuid::parse_str(&claims.tenant_id).map_err(|_| {
         // Malformed tenant_id claim → 403 (not 500) so the failure mode
         // doesn't leak parser internals (same defence-in-depth as
-        // FR-AUTH-001's require_root_admin_in_tenant_0).
+        // TASK-AUTH-001's require_root_admin_in_tenant_0).
         span.record("outcome", "forbidden");
         (
             StatusCode::FORBIDDEN,
@@ -513,7 +513,7 @@ async fn create_subject(
     }
 
     // G-003 — Role allow-list (§1 #5). Closed allow-list for slice 1:
-    // `{"tenant-admin", "tenant-member"}`. Expanded by FR-AUTH-101 to 22 roles.
+    // `{"tenant-admin", "tenant-member"}`. Expanded by TASK-AUTH-101 to 22 roles.
     if let Err(e) = validate_roles(&req.roles) {
         span.record("outcome", "invalid_input");
         return Err(e);
@@ -529,7 +529,7 @@ async fn create_subject(
                 Json(json!({
                     "error": "missing_header",
                     "field": "Idempotency-Key",
-                    "reason": "header required on admin POSTs for idempotent retries (per FR-AUTH-002 §1 #6)"
+                    "reason": "header required on admin POSTs for idempotent retries (per TASK-AUTH-002 §1 #6)"
                 })),
             ));
         }
@@ -553,7 +553,7 @@ async fn create_subject(
         ));
     }
 
-    // FR-AUTH-002 §1 #3 + §1 #4 (slice-2) — validate password complexity
+    // TASK-AUTH-002 §1 #3 + §1 #4 (slice-2) — validate password complexity
     // BEFORE the network round-trip to HIBP. Catches weak passwords cheaply
     // (the HIBP call costs 50-200ms; complexity validation is microseconds).
     // The password is wrapped in `Zeroizing<String>` so the plaintext bytes
@@ -573,7 +573,7 @@ async fn create_subject(
         }
     }
 
-    // FR-AUTH-107 — HIBP breach check on every password set. Runs OUTSIDE
+    // TASK-AUTH-107 — HIBP breach check on every password set. Runs OUTSIDE
     // the tx because the HIBP API call is a network round-trip — keeping
     // it inside would tie up a Postgres connection during 50-200ms of
     // latency. The HIBP AUDIT ROW (separate concern) lands INSIDE the tx
@@ -757,7 +757,7 @@ async fn create_subject(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FR-AUTH-002 §1 #2 + #5 validators
+// TASK-AUTH-002 §1 #2 + #5 validators
 // ─────────────────────────────────────────────────────────────────────────────
 
 /// Validate email against the spec's loose regex `^[^@\s]+@[^@\s]+\.[^@\s]+$`.
@@ -796,7 +796,7 @@ fn validate_email(email: &str) -> Result<(), (StatusCode, Json<Value>)> {
     Ok(())
 }
 
-/// FR-AUTH-002 §1 #11 — HTTPS-required check (G-008 slice-3).
+/// TASK-AUTH-002 §1 #11 — HTTPS-required check (G-008 slice-3).
 ///
 /// Returns 400 with `{error:"https_required"}` if the request was not
 /// proxied over TLS. Detection: the reverse proxy MUST set
@@ -829,7 +829,7 @@ fn require_https(headers: &HeaderMap) -> Result<(), (StatusCode, Json<Value>)> {
     }
 }
 
-/// FR-AUTH-002 §1 #5 role allow-list — closed set for slice 1. FR-AUTH-101
+/// TASK-AUTH-002 §1 #5 role allow-list — closed set for slice 1. TASK-AUTH-101
 /// expands to 22 roles; this list is the strict subset that callers can
 /// assign via the subject-create endpoint. Unknown roles → 400 with the
 /// full allow-list for client-side display.
@@ -858,7 +858,7 @@ fn internal_err<E: std::fmt::Display>(e: E) -> (StatusCode, Json<Value>) {
     )
 }
 
-/// FR-AUTH-003 §1 #8 — slice-1 audit-fix G-003.
+/// TASK-AUTH-003 §1 #8 — slice-1 audit-fix G-003.
 ///
 /// `db_err` is the sqlx-specific equivalent of `internal_err`. It first runs
 /// `rls::map_pg_error` to detect Postgres `42501 insufficient_privilege`
@@ -877,7 +877,7 @@ fn db_err(e: sqlx::Error) -> (StatusCode, Json<Value>) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FR-AUTH-001 §1 #11 — structured 400 error helpers
+// TASK-AUTH-001 §1 #11 — structured 400 error helpers
 // ─────────────────────────────────────────────────────────────────────────────
 //
 // All API-layer validation errors share a single body shape:
@@ -887,7 +887,7 @@ fn db_err(e: sqlx::Error) -> (StatusCode, Json<Value>) {
 // failures; other 400-class errors (e.g. missing required header) use
 // "missing_header" / etc. but keep the same {error, field, reason} triple.
 
-/// FR-AUTH-001 §1 #1 + §1 #10 — assert caller is root-admin in tenant 0.
+/// TASK-AUTH-001 §1 #1 + §1 #10 — assert caller is root-admin in tenant 0.
 ///
 /// Two conjunctive conditions:
 ///   1. `claims.tenant_id` parses as the nil-UUID (the canonical "tenant 0").
@@ -898,7 +898,7 @@ fn db_err(e: sqlx::Error) -> (StatusCode, Json<Value>) {
 /// WHAT permission would have granted access (per §1 #10) so operators can
 /// fix the role assignment without inspecting logs or source.
 ///
-/// The `verify_jwt` middleware (FR-AUTH-004) has already validated the JWT
+/// The `verify_jwt` middleware (TASK-AUTH-004) has already validated the JWT
 /// signature + issuer + expiry; this is a defence-in-depth role guard at
 /// the handler layer. Even if the middleware were bypassed (e.g. by a
 /// route-mounting mistake), this check still fires.
@@ -928,7 +928,7 @@ fn require_root_admin_in_tenant_0(claims: &Claims) -> Result<(), (StatusCode, Js
     Ok(())
 }
 
-/// FR-AUTH-005 §1 #2 + G-002 — resolve the effective tenant_id for a
+/// TASK-AUTH-005 §1 #2 + G-002 — resolve the effective tenant_id for a
 /// tenant-scoped admin LIST endpoint, honouring the `X-Switch-Tenant` header.
 ///
 /// Semantics:
@@ -980,7 +980,7 @@ fn invalid_input(field: &str, reason: impl Into<String>) -> (StatusCode, Json<Va
     )
 }
 
-/// Validate tenant `slug` per FR-AUTH-001 §1 #2:
+/// Validate tenant `slug` per TASK-AUTH-001 §1 #2:
 ///   * 1..=40 chars
 ///   * first char `[a-z]`
 ///   * remaining chars `[a-z0-9-]`
@@ -1020,7 +1020,7 @@ fn validate_slug(slug: &str) -> Result<(), (StatusCode, Json<Value>)> {
     Ok(())
 }
 
-/// Validate tenant `display_name` per FR-AUTH-001 §1 #2:
+/// Validate tenant `display_name` per TASK-AUTH-001 §1 #2:
 ///   * 1..=80 chars
 ///   * no null bytes
 fn validate_display_name(name: &str) -> Result<(), (StatusCode, Json<Value>)> {
@@ -1127,7 +1127,7 @@ mod validate_tests {
         assert_eq!(body["reason"], "reason msg");
     }
 
-    // ─── G-003 — root-admin-in-tenant-0 authz (FR-AUTH-001 §1 #1) ────────
+    // ─── G-003 — root-admin-in-tenant-0 authz (TASK-AUTH-001 §1 #1) ────────
 
     fn build_claims(tenant_id: &str, roles: Vec<&str>) -> Claims {
         Claims {
@@ -1191,7 +1191,7 @@ mod validate_tests {
         assert_eq!(body["error"], "forbidden");
     }
 
-    // ─── FR-AUTH-005 G-002 — X-Switch-Tenant header resolution ───────────
+    // ─── TASK-AUTH-005 G-002 — X-Switch-Tenant header resolution ───────────
 
     fn headers_with(name: &str, value: &str) -> HeaderMap {
         let mut h = HeaderMap::new();
@@ -1244,7 +1244,7 @@ mod validate_tests {
         assert_eq!(body["field"], "X-Switch-Tenant");
     }
 
-    // ─── FR-AUTH-005 G-014 — ?include_suspended default ──────────────────
+    // ─── TASK-AUTH-005 G-014 — ?include_suspended default ──────────────────
 
     #[test]
     fn list_query_omitted_include_suspended_defaults_to_false() {
@@ -1265,7 +1265,7 @@ mod validate_tests {
         assert_eq!(q.limit, Some(25));
     }
 
-    // ─── FR-AUTH-002 G-001 — email validation ────────────────────────────
+    // ─── TASK-AUTH-002 G-001 — email validation ────────────────────────────
 
     #[test]
     fn valid_email_with_one_at_and_dotted_domain_passes() {
@@ -1303,7 +1303,7 @@ mod validate_tests {
         assert_eq!(s, StatusCode::BAD_REQUEST);
     }
 
-    // ─── FR-AUTH-002 G-003 — role allow-list ─────────────────────────────
+    // ─── TASK-AUTH-002 G-003 — role allow-list ─────────────────────────────
 
     #[test]
     fn empty_roles_list_passes() {
@@ -1329,7 +1329,7 @@ mod validate_tests {
         assert!(allowed.iter().any(|v| v == "tenant-member"));
     }
 
-    // ─── FR-AUTH-002 G-008 — HTTPS gate ──────────────────────────────────
+    // ─── TASK-AUTH-002 G-008 — HTTPS gate ──────────────────────────────────
 
     fn mk_headers(pairs: &[(&str, &str)]) -> HeaderMap {
         let mut h = HeaderMap::new();
@@ -1401,7 +1401,7 @@ mod validate_tests {
 }
 
 // ---------------------------------------------------------------------------
-// FR-AUTH-005 — list + revoke + unrevoke
+// TASK-AUTH-005 — list + revoke + unrevoke
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Deserialize)]
@@ -1410,7 +1410,7 @@ pub struct ListQuery {
     pub cursor: Option<String>,
     /// Page size; capped at 100.
     pub limit: Option<i64>,
-    /// FR-AUTH-005 §1 #14 + G-014 — when `true`, return suspended / revoked
+    /// TASK-AUTH-005 §1 #14 + G-014 — when `true`, return suspended / revoked
     /// subjects too. Default `false` (hide suspended — the common-case
     /// operator UX) so the typical "who do I currently manage" question
     /// returns active subjects only. Explicit opt-in for revoke-management
@@ -1419,7 +1419,7 @@ pub struct ListQuery {
     pub include_suspended: bool,
 }
 
-// FR-AUTH-005 §1 #15 + G-015 — OTel span emits `auth_admin_list_total`
+// TASK-AUTH-005 §1 #15 + G-015 — OTel span emits `auth_admin_list_total`
 // + outcome dynamically. Counter aggregation happens at the collector.
 #[tracing::instrument(
     name = "auth.admin_list",
@@ -1437,12 +1437,12 @@ async fn list_tenants(
     Query(q): Query<ListQuery>,
 ) -> Result<(StatusCode, Json<Value>), (StatusCode, Json<Value>)> {
     let span = tracing::Span::current();
-    // FR-AUTH-005 §1 #1 + G-001 — Handler-level authz: caller MUST be in tenant 0
-    // AND hold the `root-admin` role. The `verify_jwt` middleware (FR-AUTH-004)
+    // TASK-AUTH-005 §1 #1 + G-001 — Handler-level authz: caller MUST be in tenant 0
+    // AND hold the `root-admin` role. The `verify_jwt` middleware (TASK-AUTH-004)
     // has already validated the signature + populated `claims`; this check is
     // the defence-in-depth role guard at the handler layer. Tenant-admin and
     // every other role gets 403 with an explicit `needed` hint so operators
-    // know WHICH role would have granted access (per FR-AUTH-001's pattern).
+    // know WHICH role would have granted access (per TASK-AUTH-001's pattern).
     if let Err(e) = require_root_admin_in_tenant_0(&claims) {
         span.record("outcome", "forbidden");
         return Err(e);
@@ -1457,7 +1457,7 @@ async fn list_tenants(
         .map_err(db_err)?;
 
     let limit = q.limit.unwrap_or(50).clamp(1, 100);
-    // FR-AUTH-005 §1 #5 + #9 + G-005/G-009 — HMAC-signed cursors. The table
+    // TASK-AUTH-005 §1 #5 + #9 + G-005/G-009 — HMAC-signed cursors. The table
     // tag binds the cursor to /v1/admin/tenants so a subjects cursor (even
     // valid one) won't redeem here. Tampered cursors → structured 400.
     let cursor_uuid = match q.cursor.as_deref() {
@@ -1704,7 +1704,7 @@ fn validate_avatar(av: &str) -> Result<(), (StatusCode, Json<Value>)> {
     Ok(())
 }
 
-// FR-AUTH-005 §1 #15 + G-015 — OTel span emits `auth_admin_list_total`
+// TASK-AUTH-005 §1 #15 + G-015 — OTel span emits `auth_admin_list_total`
 // with endpoint=subjects + outcome.
 #[tracing::instrument(
     name = "auth.admin_list",
@@ -1725,7 +1725,7 @@ async fn list_subjects(
     Query(q): Query<ListQuery>,
 ) -> Result<(StatusCode, Json<Value>), (StatusCode, Json<Value>)> {
     let span = tracing::Span::current();
-    // FR-AUTH-005 §1 #2 + G-002 — X-Switch-Tenant header:
+    // TASK-AUTH-005 §1 #2 + G-002 — X-Switch-Tenant header:
     //   * default → caller's JWT tenant_id (tenant-admin lists own tenant).
     //   * header present + caller IS root-admin in tenant 0 → use header's
     //     tenant_id (root-admin's cross-tenant operator UX).
@@ -1749,7 +1749,7 @@ async fn list_subjects(
         .map_err(db_err)?;
 
     let limit = q.limit.unwrap_or(50).clamp(1, 100);
-    // FR-AUTH-005 §1 #5 + #9 + G-005/G-009 — table tag binds cursor to
+    // TASK-AUTH-005 §1 #5 + #9 + G-005/G-009 — table tag binds cursor to
     // /v1/admin/subjects (tenant cursors won't redeem). Tampered → 400.
     let cursor_uuid = match q.cursor.as_deref() {
         Some(c) => Some(
@@ -1759,7 +1759,7 @@ async fn list_subjects(
         None => None,
     };
 
-    // FR-AUTH-005 §1 #14 + G-014 — default hides suspended/revoked subjects
+    // TASK-AUTH-005 §1 #14 + G-014 — default hides suspended/revoked subjects
     // (the common-case "who do I currently manage" question). Explicit
     // `?include_suspended=true` opts in for revoke-management workflows.
     // The filter is expressed as a parameterised predicate so the optimiser
@@ -1809,12 +1809,12 @@ async fn list_subjects(
 #[derive(Debug, Deserialize, Default)]
 pub struct RevokeBody {
     /// Optional free-form reason ("compromised", "terminated", …). Closed
-    /// taxonomy lands in FR-AUTH-111.
+    /// taxonomy lands in TASK-AUTH-111.
     #[serde(default)]
     pub reason: Option<String>,
 }
 
-/// FR-AUTH-005 §1 #3 + #6 + #8 + G-003/G-006/G-008 — Revoke handler.
+/// TASK-AUTH-005 §1 #3 + #6 + #8 + G-003/G-006/G-008 — Revoke handler.
 ///
 /// 1. Idempotency-Key required (G-008).
 /// 2. `subjects.status = 'revoked'` (FR §1 #3).
@@ -1823,7 +1823,7 @@ pub struct RevokeBody {
 ///    (G-003 + G-011 + G-017 wiring).
 /// 4. Emit `auth.subject_revoked` memory row INSIDE the tx so partial
 ///    state ("subject revoked but no audit row" or vice versa) is impossible.
-// FR-AUTH-005 §1 #15 + G-015 — OTel span emits `auth_admin_revoke_total`
+// TASK-AUTH-005 §1 #15 + G-015 — OTel span emits `auth_admin_revoke_total`
 // counter + `auth_admin_revoke_jti_count` histogram via tracing fields.
 #[tracing::instrument(
     name = "auth.admin_revoke",
@@ -1853,7 +1853,7 @@ async fn revoke_subject(
     .await
 }
 
-/// FR-AUTH-005 §1 #4 + #6 + #8 + #12 + G-004/G-006/G-008/G-012 — Unrevoke handler.
+/// TASK-AUTH-005 §1 #4 + #6 + #8 + #12 + G-004/G-006/G-008/G-012 — Unrevoke handler.
 ///
 /// 1. Idempotency-Key required (G-008).
 /// 2. `subjects.status = 'active'` (FR §1 #4).
@@ -1895,7 +1895,7 @@ async fn revoke_or_unrevoke(
         "POST /v1/admin/subjects/:id/unrevoke"
     };
 
-    // FR-AUTH-005 §1 #8 + G-008 — Idempotency-Key required.
+    // TASK-AUTH-005 §1 #8 + G-008 — Idempotency-Key required.
     let idem_key = match headers.get("idempotency-key").and_then(|h| h.to_str().ok()) {
         Some(k) => k,
         None => {
@@ -1904,7 +1904,7 @@ async fn revoke_or_unrevoke(
                 Json(json!({
                     "error": "missing_header",
                     "field": "Idempotency-Key",
-                    "reason": "header required on admin POSTs for idempotent retries (per FR-AUTH-005 §1 #8)"
+                    "reason": "header required on admin POSTs for idempotent retries (per TASK-AUTH-005 §1 #8)"
                 })),
             ));
         }
@@ -2003,7 +2003,7 @@ async fn revoke_or_unrevoke(
     .await
     .map_err(db_err)?;
 
-    // FR-AUTH-005 §1 #15 + G-015 — span fields for the metric collector.
+    // TASK-AUTH-005 §1 #15 + G-015 — span fields for the metric collector.
     let span = tracing::Span::current();
     span.record("outcome", if is_revoke { "revoked" } else { "unrevoked" });
     if is_revoke {
@@ -2014,7 +2014,7 @@ async fn revoke_or_unrevoke(
 }
 
 // ---------------------------------------------------------------------------
-// FR-AUTH-004 — JWT issuance + JWKS
+// TASK-AUTH-004 — JWT issuance + JWKS
 // ---------------------------------------------------------------------------
 
 /// Body for `POST /v1/auth/token`. `grant_type` selects the variant —
@@ -2089,7 +2089,7 @@ async fn password_grant(
         )
     })?;
 
-    // FR-AUTH-004 §1 #5 — slice-1 audit-fix G-001: dual rate-limit BEFORE
+    // TASK-AUTH-004 §1 #5 — slice-1 audit-fix G-001: dual rate-limit BEFORE
     // any DB work. Both checks share the same window; either tripping returns
     // 429 + structured retry_after_seconds body. Per-IP catches single-IP
     // brute force; per-account catches distributed credential stuffing.
@@ -2108,7 +2108,7 @@ async fn password_grant(
         ));
     }
 
-    // FR-AUTH-004 §1 #9 — constant-time email/handle lookup. We ALWAYS run a
+    // TASK-AUTH-004 §1 #9 — constant-time email/handle lookup. We ALWAYS run a
     // dummy bcrypt::verify on subject-not-found so the response time matches
     // the wrong-password path; without this, an attacker enumerates valid
     // (tenant_slug, handle) pairs via timing.
@@ -2117,7 +2117,7 @@ async fn password_grant(
     // at cost 12. Hash is stable so its verify-time matches the real path.
     const DUMMY_BCRYPT_HASH: &str = "$2b$12$abcdefghijklmnopqrstuOXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 
-    // Request-id surfaces via the traceparent header for now. When FR-OBS-001
+    // Request-id surfaces via the traceparent header for now. When TASK-OBS-001
     // adds a dedicated x-request-id header, swap this for the value pulled
     // from there.
     let source_ip_str = caller_ip.to_string();
@@ -2170,7 +2170,7 @@ async fn password_grant(
                 },
             )
             .await;
-            // FR-MEMORY-122 §1 #3 — auth.sign_in_failed with subject=None (the email did not resolve, so
+            // TASK-MEMORY-122 §1 #3 — auth.sign_in_failed with subject=None (the email did not resolve, so
             // there is no person to attribute; mirrors emit_token_failed's nil subject). Best-effort no-op
             // unless CAPTURE_ENABLED is on.
             crate::capture::emit_sign_in_failed(
@@ -2202,7 +2202,7 @@ async fn password_grant(
             },
         )
         .await;
-        // FR-MEMORY-122 §1 #3 — the subject is known (just suspended), so attribute the failure to them.
+        // TASK-MEMORY-122 §1 #3 — the subject is known (just suspended), so attribute the failure to them.
         // Best-effort no-op unless CAPTURE_ENABLED is on; still consent-gated (a known subject must have
         // acknowledged for a row to land).
         crate::capture::emit_sign_in_failed(
@@ -2243,7 +2243,7 @@ async fn password_grant(
             },
         )
         .await;
-        // FR-MEMORY-122 §1 #3 — wrong password for a known subject; attribute to them. Best-effort no-op
+        // TASK-MEMORY-122 §1 #3 — wrong password for a known subject; attribute to them. Best-effort no-op
         // unless CAPTURE_ENABLED is on; consent-gated for the known subject.
         crate::capture::emit_sign_in_failed(
             state.capturer.as_ref(),
@@ -2262,22 +2262,22 @@ async fn password_grant(
     }
 
     let svc = JwtService::new(state.pg.clone(), state.jwt_issuer.clone());
-    // FR-AUTH-004 §1 #13 — derive scope_grants from roles via scope_map
+    // TASK-AUTH-004 §1 #13 — derive scope_grants from roles via scope_map
     // (was: 1:1 role-mirroring via effective_scopes). Caller's request can
     // narrow but not widen via `scope_map::intersect`.
     let assigned_roles_for_scope = load_subject_roles(&state, tenant_id, sub_id, &roles).await;
     let granted = crate::scope_map::intersect(&req.scope, &assigned_roles_for_scope);
 
-    // FR-AUTH-101 §1 #8 — embed the subject's full role membership + the
+    // TASK-AUTH-101 §1 #8 — embed the subject's full role membership + the
     // live catalogue version. Falls back to the legacy `subjects.roles`
     // array column if `subject_roles` table doesn't exist (pre-101 schema).
     let assigned_roles = assigned_roles_for_scope;
     let rbac_v = state.role_matrix.read().await.version();
 
     let email_for_claim = subject_email.clone().unwrap_or_default();
-    // FR-AUTH-004 §1 #12 — slice-1 audit-fix G-007: `agent_persona` defaults
+    // TASK-AUTH-004 §1 #12 — slice-1 audit-fix G-007: `agent_persona` defaults
     // to "cuo-cpo@0.4.1" per spec. Override via subjects.default_persona
-    // lands in FR-AUTH-005; for now the default carries through.
+    // lands in TASK-AUTH-005; for now the default carries through.
     let agent_persona = Some("cuo-cpo@0.4.1".to_string());
 
     let tokens = svc
@@ -2300,7 +2300,7 @@ async fn password_grant(
             )
         })?;
 
-    // FR-AUTH-004 §1 #6 — slice-1 audit-fix G-002: emit `auth.token_issued`
+    // TASK-AUTH-004 §1 #6 — slice-1 audit-fix G-002: emit `auth.token_issued`
     // memory audit row. Best-effort; tracing::warn on failure but never
     // block token issuance for an audit miss.
     let verified = svc.verify(&tokens.access_token).await.ok();
@@ -2324,7 +2324,7 @@ async fn password_grant(
     )
     .await;
 
-    // FR-MEMORY-122 §1 #3 — emit the auth.signed_in interaction-event alongside the audit token row, over
+    // TASK-MEMORY-122 §1 #3 — emit the auth.signed_in interaction-event alongside the audit token row, over
     // the SAME pool (state.capturer wraps state.pg). Best-effort + a complete no-op unless CAPTURE_ENABLED
     // is on (state.capturer is None by default), so this never gates or delays token issuance.
     crate::capture::emit_signed_in(
@@ -2339,7 +2339,7 @@ async fn password_grant(
     )
     .await;
 
-    // FR-AUTH-005 §1 #10 + G-010/G-017 — record the active jti in `sessions`
+    // TASK-AUTH-005 §1 #10 + G-010/G-017 — record the active jti in `sessions`
     // so the revoke handler can enumerate them. Best-effort: a sessions
     // insert failure is logged but doesn't refuse the token (the audit row
     // is already emitted; failing here would leave the user with a token
@@ -2373,7 +2373,7 @@ async fn password_grant(
         }
     }
 
-    // FR-AUTH-106 — record login + assess. Slice-3 wraps the detector chain
+    // TASK-AUTH-106 — record login + assess. Slice-3 wraps the detector chain
     // with per-tenant policy + CIDR allowlist + anonymous-IP + sticky-
     // suppression. `assess_login` returns one of Clear / Challenge / Block.
     let deps = crate::travel::AssessDeps {
@@ -2435,7 +2435,7 @@ pub async fn load_subject_roles_pub(
     load_subject_roles(state, tenant_id, subject_id, legacy_roles).await
 }
 
-/// FR-AUTH-106 — extract caller IP from request headers (prefers `X-Forwarded-For`
+/// TASK-AUTH-106 — extract caller IP from request headers (prefers `X-Forwarded-For`
 /// first hop, falls back to a synthesised 0.0.0.0 if no header — slice 1 only;
 /// production reverse-proxy is configured to always send this).
 pub fn caller_ip(headers: &HeaderMap) -> std::net::IpAddr {
@@ -2454,7 +2454,7 @@ pub fn caller_ip(headers: &HeaderMap) -> std::net::IpAddr {
     std::net::IpAddr::V4(std::net::Ipv4Addr::new(0, 0, 0, 0))
 }
 
-/// Pull the subject's role list. Prefers `subject_roles` (FR-AUTH-101);
+/// Pull the subject's role list. Prefers `subject_roles` (TASK-AUTH-101);
 /// falls back to the legacy `subjects.roles` array column.
 async fn load_subject_roles(
     state: &AppState,
@@ -2480,16 +2480,16 @@ async fn load_subject_roles(
 
     match res {
         Ok(rows) if !rows.is_empty() => rows.into_iter().map(|(r,)| r).collect(),
-        // No FR-AUTH-101 rows yet — fall back to the legacy text[] column.
+        // No TASK-AUTH-101 rows yet — fall back to the legacy text[] column.
         _ => legacy_roles.to_vec(),
     }
 }
 
-/// FR-AUTH-004 — `grant_type=refresh_token` exchange.
+/// TASK-AUTH-004 — `grant_type=refresh_token` exchange.
 ///
 /// Validates the presented refresh JWT (must carry aud=`refresh`), confirms
 /// the subject is still `active`, then mints a fresh access+refresh pair.
-/// Note: refresh-token revocation is FR-AUTH-005's responsibility; here we
+/// Note: refresh-token revocation is TASK-AUTH-005's responsibility; here we
 /// only check the subject's `status` field, which is the operator's
 /// disable-now lever.
 async fn refresh_grant(
@@ -2566,14 +2566,14 @@ async fn refresh_grant(
             .filter(|s| prior.iter().any(|p| s == p))
             .collect()
     };
-    // FR-AUTH-004 §1 #13 — also re-restrict by current subject roles in case
+    // TASK-AUTH-004 §1 #13 — also re-restrict by current subject roles in case
     // roles changed; scope_map ensures we never widen beyond what the
     // current role membership allows.
     let fresh_roles = load_subject_roles(state, tenant_id, sub_id, &roles).await;
     let granted = crate::scope_map::intersect(&granted, &fresh_roles);
     let live_rbac_v = state.role_matrix.read().await.version();
 
-    // FR-AUTH-004 §1 #12 — agent_persona carries through from the prior
+    // TASK-AUTH-004 §1 #12 — agent_persona carries through from the prior
     // token; if the prior token didn't have one, default to "cuo-cpo@0.4.1".
     let agent_persona = claims
         .agent_persona
@@ -2600,10 +2600,10 @@ async fn refresh_grant(
             )
         })?;
 
-    // FR-AUTH-005 §1 #10 + G-010/G-017 — record the refreshed access-token
+    // TASK-AUTH-005 §1 #10 + G-010/G-017 — record the refreshed access-token
     // jti in sessions. Refresh tokens are tracked here too because the
     // revoke handler will deny-list every active jti for the subject;
-    // refresh-tokens are JWTs with their own jti per FR-AUTH-004.
+    // refresh-tokens are JWTs with their own jti per TASK-AUTH-004.
     let verified = svc.verify(&tokens.access_token).await.ok();
     let new_jti = verified.as_ref().map(|c| c.jti.clone());
     let new_exp = verified.as_ref().map(|c| c.exp).unwrap_or(0);
@@ -2631,7 +2631,7 @@ async fn refresh_grant(
 }
 
 /// **Deprecated** — superseded by `crate::scope_map::intersect` per
-/// FR-AUTH-004 §1 #13. Retained `#[allow(dead_code)]` so an external
+/// TASK-AUTH-004 §1 #13. Retained `#[allow(dead_code)]` so an external
 /// caller from the pre-scope_map era won't break before its callsite is
 /// migrated; will be removed once all callers move over.
 #[allow(dead_code)]
@@ -2670,7 +2670,7 @@ async fn jwks(State(state): State<AppState>) -> (StatusCode, Json<Value>) {
 // Helpers
 // ---------------------------------------------------------------------------
 
-// FR-AUTH-005 G-005/G-009 (2026-05-19): the unsigned base64 cursor helpers
+// TASK-AUTH-005 G-005/G-009 (2026-05-19): the unsigned base64 cursor helpers
 // that previously lived here moved to `crate::cursor` as HMAC-signed
 // variants per spec §1 #5 + #9. Tampered cursors now surface as 400
 // `invalid_cursor` instead of silently resetting to page 1.

@@ -1,11 +1,11 @@
 apiVersion: 1
 
-# CyberOS observability datasources (FR-OBS-002).
+# CyberOS observability datasources (TASK-OBS-002).
 #
 # Every datasource points at obs-proxy, never at a backend directly, so Grafana can only reach Loki /
 # Prometheus / Tempo through the tenant-isolation proxy. The proxy AST-injects the caller's tenant_id
 # into each query, so a tenant cannot read another tenant's telemetry. The tenant JWT (RS256, signed by
-# the auth service / FR-AUTH-004) travels as the Authorization header.
+# the auth service / TASK-AUTH-004) travels as the Authorization header.
 #
 # The URL is the proxy root for all three: Grafana appends the backend's own path (/api/v1/... for
 # Prometheus, /loki/api/v1/... for Loki, /api/search + /api/traces for Tempo), which is exactly what the

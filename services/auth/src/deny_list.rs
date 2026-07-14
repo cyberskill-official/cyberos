@@ -1,15 +1,15 @@
-//! FR-AUTH-005 §1 #3 + #11 + G-011 — in-memory JWT jti deny-list.
+//! TASK-AUTH-005 §1 #3 + #11 + G-011 — in-memory JWT jti deny-list.
 //!
 //! ### Architectural decision
 //!
-//! Per **DEC-DENY-LIST-001** (FR-AUTH-005 audit §10.5), slice-1 uses an
+//! Per **DEC-DENY-LIST-001** (TASK-AUTH-005 audit §10.5), slice-1 uses an
 //! in-process `HashMap<jti, expires_at>` guarded by `RwLock`. The spec's
 //! §1 #11 "30-second propagation via Redis pub/sub" requirement is
 //! **trivially satisfied** for the single-instance deploy that is wave-1-2's
 //! topology because the deny-list lives in the same process as the
 //! `verify_jwt` middleware — there's no propagation step at all.
 //!
-//! The Redis-backed variant lifts to **FR-AUTH-110** once AUTH scales
+//! The Redis-backed variant lifts to **TASK-AUTH-110** once AUTH scales
 //! horizontally (post-wave-2). The public surface here (`deny()`,
 //! `is_denied()`, `gc()`) is intentionally trait-shaped so the Redis
 //! implementation can drop in behind the same interface.
@@ -25,7 +25,7 @@
 //!
 //! ### Why no `Drop` on revoke
 //!
-//! Per FR-AUTH-005 §1 #12 + G-012, the deny-list **MUST NOT** clear on
+//! Per TASK-AUTH-005 §1 #12 + G-012, the deny-list **MUST NOT** clear on
 //! unrevoke — the security default is "explicit re-auth required". So the
 //! only removal path is natural expiry via GC. There is no `un_deny()`.
 
@@ -87,7 +87,7 @@ impl DenyList {
     }
 
     /// Current entry count (post-GC) — useful for OTel
-    /// `auth_admin_deny_list_size{service}` gauge (FR-AUTH-005 §1 #15).
+    /// `auth_admin_deny_list_size{service}` gauge (TASK-AUTH-005 §1 #15).
     pub fn len(&self) -> usize {
         self.gc();
         self.inner.read().len()

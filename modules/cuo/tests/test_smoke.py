@@ -395,7 +395,7 @@ def test_chain_handoff_propagates_outputs(cuo_root: Path, skill_root: Path, tmp_
 
 
 # =============================================================================
-# Phase 4 — special-case workflow handlers (FR-CUO-106)
+# Phase 4 — special-case workflow handlers (TASK-CUO-106)
 # =============================================================================
 
 

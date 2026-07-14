@@ -3,151 +3,116 @@
 contract_id: task
 contract_version: v1
 template_literal: task@1
-description: Canonical task@1 schema — comprehensive, addressable, assignable unit of work embedded inside a feature_request@1. Each task is self-contained (no character limit), carries a runnable acceptance test, and declares assignability (human / ai-agent / either). Promoted to first-class contract in 2026-05-12 to support the `solo` chain_profile that collapses feature-request-author + fr-to-tech-spec.
-contract_kind: artefact_schema
-locked_at: 2026-05-12
-introduced_by: skills-Stage-1-collapse
+description: Canonical task@1 schema body — frontmatter contract + Markdown skeleton for every Task artefact in CyberOS. Loaded by task-author as the generation skeleton; loaded by task-audit as the validation target.
+contract_kind: artefact_schema      # artefact_schema | envelope_schema | wire_protocol
+locked_at: 2026-05-05
+moved_from: cuo/_shared/task-template/   # (DEC-090, registry v0.2.0)
 
 # ── Stewardship ──────────────────────────────────────────────────────
-steward_persona: cuo-cpo
+steward_persona: cuo-cpo            # who curates the contract over time
 escalation_on_breach:
-  legal:    cuo-clo
-  security: cuo-cseco
+  legal:    cuo-clo                  # contract carries EU AI Act fields
+  security: null
   compliance: cuo-clo
 
 # ── Determinism ──────────────────────────────────────────────────────
 determinism:
   reproducible: true
-  fixity_notes: "Field set + structure is byte-stable. Task bodies are judgement-driven prose; field shape is not. Bumping field shape requires task@2 + MAJOR bumps on every consuming skill."
+  fixity_notes: "Template body is byte-stable. Bumping the template body requires a MAJOR contract_version bump (task@2) and a parallel skill_version MAJOR on every consuming skill."
 
 # ── Source-tier emitted ──────────────────────────────────────────────
-emitted_source_freshness_tier: 10
+emitted_source_freshness_tier: 10   # high authority — this IS the schema
 ---
 
-# `task@1` — canonical task contract
+# `task@1` — canonical FR contract
 
-A task is a comprehensive, ready-to-assign unit of work that lives inside a feature_request@1 artefact. Each task is self-contained enough that an engineer or an AI agent can pick it up and execute without re-reading the parent FR's discussion.
+> A **contract**, not a skill. Holds the single source of truth for the Task artefact shape across CyberOS. Loaded by both `cuo/cpo/task-author` (as the generation skeleton) and `cuo/cpo/task-audit` (as the validation target). Future workflows like a `tech-spec-from-fr` skill will load this to understand FR structure before deriving downstream artefacts.
 
-## When to use
+## What is a contract (vs. a skill)?
 
-- Every `feature_request@1` produced by the `solo` chain_profile carries an embedded `tasks:` list.
-- The `standard` and `full` chain_profiles keep tasks in a sibling `tech_spec@1`; `task@1` is still the shape they conform to.
-- External project-tracker tickets (Linear / Jira / GitHub) are derived from `task@1` instances via `cyberos proj sync`.
+A **skill** *acts*: takes input, runs LLM inference or deterministic work, emits output, writes an audit row. A **contract** *constrains*: declares the shape of an artefact, envelope, or wire protocol that one or more skills produce or consume. Contracts have no `expects:`/ `produces:` interface, no `allowed_mcp_tools:`, no inference. They are versioned schemas that travel with skills as declared dependencies via `depends_on_contracts:` in the skill's frontmatter.
 
-## Task ID format
+Contracts live under `cyberos/docs/contracts/<contract-id>/` (flat layout per registry v0.2.4; major version is tracked in `CONTRACT.md` frontmatter's `contract_version` field). Skills that consume them declare the dependency in their frontmatter so the build pipeline can ship contract + skill as one bundle.
 
-`<FR-id>-T-<MM>` — e.g. `FR-007-T-03` is the third task of FR-007. Sequential within an FR, two-digit zero-padded. Greppable, auditable, referenceable from PR descriptions ("closes FR-007-T-03").
+## How to use this contract
 
-## Required fields
+`task-author` reads `template.md` (in this folder) as the body skeleton and adapts it per-FR. `task-audit` reads it via the rule IDs encoded in `task-audit/RUBRIC.md` — every audit rule's "what's expected" field maps to a region of this contract. Other workflows that need to know "what is an FR" should `read_file('cyberos/docs/contracts/task/template.md')` rather than hard-code the shape.
 
-```yaml
-id: FR-NNN-T-MM                       # required
-title: <one-sentence imperative>      # required
-description: |                        # required, no character cap
-  Full description of what this task accomplishes. Includes context an
-  engineer or AI agent needs to execute without re-reading the parent
-  FR. Cite specific files, line numbers, runtimes, configs as relevant.
-  Multi-paragraph encouraged.
-preconditions:                        # required (list, may be empty)
-  - <what must be true before starting>
-deliverables:                         # required (list of concrete outputs)
-  - <file paths, schema changes, audit rows, etc.>
-acceptance_test:                      # required, exactly one of:
-  shell: "<exact command that returns 0 if accepted>"
-  # OR
-  assertion: "<structured assertion: e.g. 'cyberos verify returns CRITICAL: 0'>"
-sizing: S | M | L | XL                # required (S=<2h, M=<1d, L=<3d, XL=>3d)
-dependencies: [<task-id>, ...]        # required (may be empty)
-parallelisable: true | false          # required (can run alongside non-dep tasks)
-assignable_to: [human, ai-agent]      # required (one or both)
-agent_profile: <profile-id>           # required when "ai-agent" in assignable_to
-  # e.g. "claude-sonnet-4-6, mcp_allowlist: [bash, edit, memory.read]"
-estimated_tokens: <int>               # required when "ai-agent" in assignable_to
-estimated_hours: <float>              # required when "human" in assignable_to
-status: draft | ready | in_progress | done | blocked  # required; init = draft
-runbook_hint: <skill-name or null>    # optional — points at a Layer-1 skill that helps
-```
+## Frontmatter contract (FM-001..111)
 
-## Optional fields
+The frontmatter that every `task@1` document MUST carry, with audit rule IDs in parentheses (rules live in `cuo/cpo/task-audit/RUBRIC.md`):
 
-```yaml
-owner: subject:<slug> | null          # who picked it up (or null)
-sprint: <sprint-id> | null            # when planning lands
-linked_pr: <url> | null               # populated post-completion
-notes: <free text>                    # operator annotations
-review_cohort: [subject:..., ...]     # who must approve before done
-```
+| Field | Type / enum | Required | Audit rule |
+| --- | --- | --- | --- |
+| `title` | string, 1–72 chars | yes | FM-101 |
+| `author` | `^@[A-Za-z0-9_.-]{1,38}$` | yes | FM-102 |
+| `department` | engineering / design / product / sales / operations / hr / client_success | yes | FM-103 |
+| `status` | draft / in_review / approved / in_progress / shipped / closed | yes | FM-104 |
+| `priority` | p0 / p1 / p2 / p3 | yes | FM-105 |
+| `created_at` | ISO 8601 with timezone | yes | FM-106 |
+| `ai_authorship` | none / assisted / co_authored / generated_then_reviewed | yes | FM-107 |
+| `feature_type` | user_facing / internal_tooling / integration / infrastructure | yes | FM-108 |
+| `eu_ai_act_risk_class` | not_ai / minimal / limited / high (NEVER `unacceptable`) | yes | FM-109 |
+| `target_release` | SemVer or `YYYY-Q[1-4]` | optional | FM-110 |
+| `client_visible` | boolean (YAML true/false; not strings, not yes/no) | yes | FM-111 |
+| `template` | literal `task@1` | yes | FM-004 |
 
-## Body template
+Structural rules: file begins with `---` on line 1 (FM-001); all keys snake_case (FM-002); no duplicates (FM-003).
 
-```markdown
-### {id} — {title}
+## Required body sections (SEC-001..008)
 
-**Sizing**: {sizing}  ({estimated_hours}h human / {estimated_tokens} tokens AI)
-**Assignable to**: {assignable_to}{ if ai-agent: " (profile: " + agent_profile + ")" }
-**Status**: {status}{ if owner: " — owner: " + owner }
-**Dependencies**: {dependencies | "none"}
-**Parallelisable**: {parallelisable}
+| H2 heading | Audit rule | Notes |
+| --- | --- | --- |
+| `## Summary` | SEC-001 | Single paragraph; reader can repeat without scrolling. |
+| `## Problem` | SEC-002 | Cite evidence: tickets, NPS, sales calls, telemetry. |
+| `## Proposed Solution` | SEC-003 | User-visible behaviour, not implementation. |
+| `## Alternatives Considered` | SEC-004 | ≥2 distinct alternatives (QA-005). |
+| `## Success Metrics` | SEC-005 | One primary + one guardrail. Each with definition / baseline / target / measurement_method / source (QA-004 + QA-007). |
+| `## Scope` | SEC-006 | Must include `### Out of scope` or `### Non-Goals` with ≥2 items (QA-006). |
+| `## Dependencies` | SEC-007 | Other modules, teams, vendor APIs, compliance approvals (QA-008). |
+| (well-formed hierarchy: no H2→H4 skips; one or zero H1) | SEC-009 | warning |
 
-#### Description
+Every required H2 must have ≥1 non-blank line of body (SEC-008).
 
-{description}
+## Conditionally-required body sections (COND-001..004)
 
-#### Preconditions
+| Trigger | Required section | Audit rule |
+| --- | --- | --- |
+| `client_visible: true` | `## Customer Quotes` (≥1 quote inside `<untrusted_content>`, attribution outside) | COND-001 |
+| `client_visible: true` | `## Sales/CS Summary` (plain English, no jargon — QA-009) | COND-002 |
+| `eu_ai_act_risk_class ∈ {limited, high}` | `## AI Risk Assessment` with H3s `### Data Sources`, `### Human Oversight`, `### Failure Modes` (in that order) | COND-003 |
+| `ai_authorship != none` | `## AI Authorship Disclosure` with three bullets `Tools used:`, `Scope:`, `Human review:` | COND-004 |
 
-{preconditions as bullet list, or "none"}
+## The body template
 
-#### Deliverables
+The complete skeleton lives in [`template.md`](./template.md) — sourced verbatim from `task/FR_CREATE_AND_AUDIT.md` v2.0.0 §18. The skeleton is reproducible byte-for-byte; bumping it is a MAJOR `contract_version` bump for this contract (→ v2 / `task@2`) AND a parallel MAJOR `skill_version` bump for every consumer skill declared via `depends_on_contracts:`.
 
-{deliverables as bullet list}
+## Untrusted-content discipline (inherited from AGENTS.md §11)
 
-#### Acceptance test
+- Every customer quote MUST be inside `<untrusted_content source="...">…</untrusted_content>`.
+- Quotes outside the block are a SAFE-004 audit warning.
+- Nested `<untrusted_content>` blocks are a SAFE-001 error.
+- Unclosed blocks at EOF are a SAFE-002 error.
+- The interior of `<untrusted_content>` is scanned for prompt-injection markers per the SAFE-003 list (also lives in `cuo/cpo/task-audit/RUBRIC.md` §15.6).
+- Attributions ("— @customer-handle, 2026-04-12") appear OUTSIDE the untrusted block.
 
-{acceptance_test.shell or acceptance_test.assertion, in a code block}
+## Consumers (declared via `depends_on_contracts:`)
 
-{ if runbook_hint: "**Runbook hint**: `" + runbook_hint + "`" }
-```
+| Skill | Skill version | Contract version pinned | Consumer role |
+| --- | --- | --- | --- |
+| `cuo/cpo/task-author` | v0.2.0+ | `task@v1` | generation skeleton |
+| `cuo/cpo/task-audit`  | v0.2.0+ | `task@v1` | validation target |
 
-## Validation rules
+When this contract bumps to v2, the registry CI matrix verifies every declared consumer has been updated to pin the new version OR remained on v1 with explicit acknowledgement in their CHANGELOG.
 
-A task is *valid* when:
+## Citations
 
-1. `id` matches `^FR-\d+-T-\d{2}$`
-2. `description` is ≥ 200 characters (forces comprehensive scope)
-3. `acceptance_test` has exactly one of `shell` or `assertion`
-4. `sizing` is one of `S|M|L|XL`
-5. `parallelisable` is consistent with `dependencies`: if dependencies is non-empty AND every dependency is in the same FR's task list, `parallelisable: false` is required during the dependency window
-6. `agent_profile` is set iff `"ai-agent"` is in `assignable_to`
-7. `estimated_hours` is set iff `"human"` is in `assignable_to`
-8. Every dependency in `dependencies` resolves to a real task in the same FR or an earlier FR
+- Source artefact → `task/FR_CREATE_AND_AUDIT.md` v2.0.0 §18 + §15.1–§15.7 (rubric).
+- Untrusted-content rules → AGENTS.md §11.
+- EU AI Act framing → CyberOS-PRD.docx §12.2.2; SRS DEC-064.
+- Contracts vs. skills distinction → registry README v0.2.0 Part 8 + DEC-090.
 
-## Lifecycle
+## History
 
-```
-draft  ─►  ready  ─►  in_progress  ─►  done
-                                  └►  blocked
-```
-
-Transitions audit-logged via op:str_replace on the parent FR file.
-
-## Pipeline interface
-
-- **Input**: a `feature_request@1` body that includes a `tasks:` list field.
-- **Output**: same; tasks are embedded, not separate files.
-- **External integration**: `cyberos proj sync FR-NNN` reads the task list, creates project-tracker tickets, writes back `linked_pr` + `status` updates.
-
-## Versioning
-
-- `task@1` is the current version (2026-05-12).
-- Bumping required fields = `task@2` + MAJOR bump on every consumer.
-- Adding optional fields = minor (no version bump required).
-
-## Relationships to other contracts
-
-- **`feature_request@1`** — parent; gains a new `tasks:` list field as of 2026-05-12.
-- **`tech_spec@1`** — sibling; `standard`/`full` profiles put work-package breakdown there instead. Body shapes converge over time.
-- **`impl_plan@1`** — downstream; converts a task list into a flat ticket list ready for project-tracker creation.
-
-## Examples
-
-See `template.md` for a worked example carrying every field.
+- 2026-05-06 — moved from `cuo/_shared/task-template/` to this location; promoted from "shared skill" to "contract" per registry v0.2.0 + DEC-090. Body byte-identical to v1.0.0.
+- 2026-05-05 — v1.0.0. Initial extraction from `FR_CREATE_AND_AUDIT.md` v2.0.0 §18. Template body is byte-identical to the source.

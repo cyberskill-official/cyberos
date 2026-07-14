@@ -1,4 +1,4 @@
-//! FR-MCP-004 OAuth persistence: clients, authorization codes, refresh families, the access-token
+//! TASK-MCP-004 OAuth persistence: clients, authorization codes, refresh families, the access-token
 //! revocation list, and consent records.
 //!
 //! Every query is runtime-checked `sqlx::query`/`query_as` (no compile-time database), so this module

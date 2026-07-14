@@ -1,8 +1,8 @@
-//! FR-AI-005 §3 — `TenantPolicy` schema and validators.
+//! TASK-AI-005 §3 — `TenantPolicy` schema and validators.
 //!
 //! Closed schema; the `schemars` derives generate the JSONSchema mirror that lives at
 //! `config/tenants/SCHEMA.json` (CI gate: regenerated schema MUST byte-match committed
-//! schema). See FR-AI-005 §1 #1.
+//! schema). See TASK-AI-005 §1 #1.
 
 use std::collections::HashMap;
 
@@ -20,8 +20,8 @@ pub struct TenantPolicy {
     pub ai_policy: AiPolicy,
 }
 
-/// AI Gateway policy knobs. Consumed by FR-AI-001 (cost ledger), FR-AI-006/008 (router),
-/// FR-AI-015 (ZDR), FR-AI-016 (residency).
+/// AI Gateway policy knobs. Consumed by TASK-AI-001 (cost ledger), TASK-AI-006/008 (router),
+/// TASK-AI-015 (ZDR), TASK-AI-016 (residency).
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct AiPolicy {
@@ -40,7 +40,7 @@ pub struct AiPolicy {
     #[serde(default = "default_hard_stop")]
     pub hard_stop: bool,
 
-    /// Primary provider for routing (FR-AI-006/008 consumes this).
+    /// Primary provider for routing (TASK-AI-006/008 consumes this).
     pub primary_provider: Provider,
 
     /// Fallback chain (in order); empty = no fallback.
@@ -52,10 +52,10 @@ pub struct AiPolicy {
     #[schemars(range(min = 1, max = 600))]
     pub call_timeout_seconds: u32,
 
-    /// Residency pin — provider selection respects this (FR-AI-016).
+    /// Residency pin — provider selection respects this (TASK-AI-016).
     pub residency: Residency,
 
-    /// Require ZDR (Zero Data Retention) — refuse non-ZDR providers (FR-AI-015).
+    /// Require ZDR (Zero Data Retention) — refuse non-ZDR providers (TASK-AI-015).
     #[serde(default)]
     pub zdr_required: bool,
 
@@ -69,28 +69,28 @@ pub struct AiPolicy {
     pub allowed_personas: Option<Vec<String>>,
 
     /// Per-alias overrides — beats primary + fallback chain.
-    /// FR-AI-006 §1 #2.
+    /// TASK-AI-006 §1 #2.
     #[serde(default)]
     pub alias_overrides: Option<HashMap<String, OverrideTarget>>,
 
     /// If true, providers without regional pinning (e.g. Anthropic native)
-    /// fail residency checks. Default false. FR-AI-006 §1 #7.
+    /// fail residency checks. Default false. TASK-AI-006 §1 #7.
     #[serde(default)]
     pub residency_requires_regional_provider: Option<bool>,
 
-    /// Extra PII entity types to redact beyond the EN baseline (FR-AI-011 §1 #10).
+    /// Extra PII entity types to redact beyond the EN baseline (TASK-AI-011 §1 #10).
     /// Values are Presidio entity-type names (e.g. "VN_CCCD", "VN_MST").
     #[serde(default)]
     pub pii_redaction_extra: Option<Vec<String>>,
 
-    /// FR-OBS-004 §1 #3 - opt in to exporting (redacted) AI traces to self-hosted LangSmith. Default
+    /// TASK-OBS-004 §1 #3 - opt in to exporting (redacted) AI traces to self-hosted LangSmith. Default
     /// false; enabled per tenant via `cyberos-ai policy set <tenant> --langsmith-export=true`. Even
     /// redacted prompts carry tenant-business semantics, so export is off until the tenant consents.
     #[serde(default)]
     pub langsmith_export: bool,
 }
 
-/// Override target for a specific alias. FR-AI-006 §3.
+/// Override target for a specific alias. TASK-AI-006 §3.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct OverrideTarget {
@@ -98,7 +98,7 @@ pub struct OverrideTarget {
     pub provider: Provider,
 }
 
-/// Provider tag union. FR-AI-005 §3.
+/// Provider tag union. TASK-AI-005 §3.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "kind", rename_all = "kebab-case")]
 pub enum Provider {
@@ -132,13 +132,13 @@ pub enum Provider {
     },
     /// Ollama provider — local / self-hosted models, no API key. Endpoint comes from the
     /// `OLLAMA_ENDPOINT` env var (default `http://localhost:11434`), not the policy file, since one
-    /// Ollama serves a whole deployment. FR-AI-008.
+    /// Ollama serves a whole deployment. TASK-AI-008.
     Ollama {
         /// Map of model alias → Ollama model id (e.g. `chat.smart` → `llama3.1:8b`).
         model_alias_map: HashMap<String, String>,
     },
     /// LM Studio / OpenAI-compatible local provider, no API key. Endpoint comes from
-    /// `LMSTUDIO_ENDPOINT` (default `http://localhost:1234`), not the policy file. FR-AI-105.
+    /// `LMSTUDIO_ENDPOINT` (default `http://localhost:1234`), not the policy file. TASK-AI-105.
     LocalOpenai {
         /// Map of model alias to local model id (e.g. `chat.smart` to `qwen2.5-7b-instruct`).
         model_alias_map: HashMap<String, String>,
@@ -199,7 +199,7 @@ impl Provider {
 /// Provider kind — simplified enum for cost-table lookups and metric labels.
 ///
 /// This is a subset of [`Provider`] that carries no configuration (region, aliases).
-/// Used by FR-AI-007 (cost table) and FR-AI-006 (alias resolution) where only the
+/// Used by TASK-AI-007 (cost table) and TASK-AI-006 (alias resolution) where only the
 /// provider identity matters, not its full config.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "lowercase")]
@@ -212,11 +212,11 @@ pub enum ProviderKind {
     Openai,
     /// Google Vertex AI.
     Vertex,
-    /// Self-hosted BGE (FR-AI-019).
+    /// Self-hosted BGE (TASK-AI-019).
     Bge,
-    /// Ollama — local / self-hosted models (FR-AI-008).
+    /// Ollama — local / self-hosted models (TASK-AI-008).
     Ollama,
-    /// LM Studio / OpenAI-compatible local provider (FR-AI-105).
+    /// LM Studio / OpenAI-compatible local provider (TASK-AI-105).
     #[serde(rename = "local_openai")]
     LocalOpenai,
 }
@@ -239,9 +239,9 @@ impl ProviderKind {
     }
 }
 
-/// Residency pin. Slice 1 records the value; FR-AI-016 enforces it at routing time.
+/// Residency pin. Slice 1 records the value; TASK-AI-016 enforces it at routing time.
 ///
-/// Wire form is hyphenated (`sg-1`, `eu-1`, `us-1`, `vn-1`) per FR-AI-005 §3 + the
+/// Wire form is hyphenated (`sg-1`, `eu-1`, `us-1`, `vn-1`) per TASK-AI-005 §3 + the
 /// EXAMPLE.tenant.yaml reference. `rename_all = "kebab-case"` would emit `sg1` (no
 /// hyphen — serde treats `Sg1` as one word + digit) so each variant carries an
 /// explicit `rename`.

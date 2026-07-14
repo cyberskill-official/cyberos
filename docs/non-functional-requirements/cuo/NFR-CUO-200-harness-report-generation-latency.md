@@ -9,7 +9,7 @@ phase: P0
 slo: "p95 < 5s; p99 < 15s end-to-end `cyberos-cuo harness report --since 30d` on a chain of up to 10⁶ rows + 250 skills"
 owner: CTO
 created: 2026-05-19
-related_frs: [FR-CUO-200]
+related_tasks: [TASK-CUO-200]
 ---
 
 ## §1 — Statement (BCP-14 normative)
@@ -41,7 +41,7 @@ Inspection: `cuo.core.harness.compute_report` is single-pass over `all_rows`; th
 
 ## §5 — Failure handling
 
-**Detection:** p95 monitoring via the OTel span `event: workflow.complete` (FR-OBS-001 wiring) on the `cyberos-cuo harness report` invocation.
+**Detection:** p95 monitoring via the OTel span `event: workflow.complete` (TASK-OBS-001 wiring) on the `cyberos-cuo harness report` invocation.
 
 **Alert:** p95 > 5s for two consecutive daily runs → sev-3 alert ("harness latency degraded") in `docs/runbooks/cuo-harness-slo-breach.md`.
 

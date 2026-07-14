@@ -1,9 +1,9 @@
-//! FR-MEMORY-121 §1 #14 / §4 AC 16 — tenant isolation for interaction-events.
+//! TASK-MEMORY-121 §1 #14 / §4 AC 16 — tenant isolation for interaction-events.
 //!
 //! Interaction-events ARE `l1_audit_log` rows, so they inherit that table's tenant scoping — there is no
 //! second table and therefore no second policy to drift. On `l1_audit_log` (migration 0003) isolation is
 //! enforced on the read path: every memory reader (`binlog_tail::poll`, `rebuild::reconcile`, the
-//! FR-APP-005 viewer) filters `WHERE tenant_id = $1`, and the interaction-event partial indexes
+//! TASK-APP-005 viewer) filters `WHERE tenant_id = $1`, and the interaction-event partial indexes
 //! (migration 0005) are likewise tenant-leading. This test proves tenant A's interaction rows never
 //! surface in a tenant-B-scoped read.
 //!

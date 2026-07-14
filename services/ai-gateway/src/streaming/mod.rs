@@ -1,9 +1,9 @@
-//! FR-AI-010 — Streaming SSE end-to-end (token-by-token to client).
+//! TASK-AI-010 — Streaming SSE end-to-end (token-by-token to client).
 //!
 //! Provides `handle_streaming_chat` which returns an SSE stream for chat completions.
 //! The actual provider work runs in a spawned task; the HTTP handler returns immediately.
 //!
-//! See FR-AI-010 for normative behaviour and acceptance criteria.
+//! See TASK-AI-010 for normative behaviour and acceptance criteria.
 
 pub mod heartbeat;
 pub mod sse;
@@ -324,7 +324,7 @@ impl Drop for ReconcileGuard {
             tracing::error!(
                 hold_id = ?self.hold_id,
                 severity = "sev-2",
-                "reconcile_guard_drop_outside_runtime; FR-AI-001 cleanup job will sweep within 60s"
+                "reconcile_guard_drop_outside_runtime; TASK-AI-001 cleanup job will sweep within 60s"
             );
         }
     }
@@ -342,7 +342,7 @@ fn provider_supports_streaming(kind: ProviderKind) -> bool {
         // streaming path yet (call_chat_streaming uses the default stub), so report false until it does.
         ProviderKind::Ollama => false,
         // LM Studio / OpenAI-compatible local servers support SSE, but the adapter has not wired
-        // streaming yet (FR-AI-105 scopes it out), so report false until it does.
+        // streaming yet (TASK-AI-105 scopes it out), so report false until it does.
         ProviderKind::LocalOpenai => false,
     }
 }
@@ -353,7 +353,7 @@ fn provider_supports_streaming(kind: ProviderKind) -> bool {
 ///
 /// Returns an SSE stream. The actual provider work runs in a spawned task.
 /// The stream yields `event: token`, `event: heartbeat`, `event: usage`,
-/// `event: done`, or `event: error` in the canonical order specified in FR-AI-010 §1.
+/// `event: done`, or `event: error` in the canonical order specified in TASK-AI-010 §1.
 pub async fn handle_streaming_chat(
     req: router::ChatCompleteRequest,
     pool: sqlx::PgPool,
@@ -690,7 +690,7 @@ async fn run_provider_stream(
 
 /// Convert a `ProviderStreamResponse` into a stream of `ProviderStreamEvent`.
 ///
-/// Currently `ProviderStreamResponse` is an empty struct (stub from FR-AI-008).
+/// Currently `ProviderStreamResponse` is an empty struct (stub from TASK-AI-008).
 /// When real provider impls land, this will extract the mpsc receiver from the
 /// response. For now, returns an empty stream.
 fn provider_stream_from_response(

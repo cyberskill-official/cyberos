@@ -1,5 +1,5 @@
 # docs-prerender-gate.yml — the website is GENERATED from the markdown single source of
-# truth (FR-DOCS-002) into gitignored dist/website; nothing generated is committed. This
+# truth (TASK-DOCS-002) into gitignored dist/website; nothing generated is committed. This
 # gate proves the whole site still builds from the sources on every docs-touching PR
 # (broken links to assets and unreadable sources fail the build).
 

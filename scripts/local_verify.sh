@@ -63,7 +63,7 @@ for crate in cyberos-memory cyberos-email cyberos-proj \
   echo "---- $crate ----"
   cargo test -p "$crate" -- --include-ignored --test-threads=1 || fails=$((fails + 1))
 done
-# ai-gateway: needs the memory Python package importable for the FR-AI-003 cost-hold expiry tests.
+# ai-gateway: needs the memory Python package importable for the TASK-AI-003 cost-hold expiry tests.
 echo "---- cyberos-ai-gateway ----"
 PYTHONPATH="$ROOT/modules/memory" cargo test -p cyberos-ai-gateway -- --include-ignored --test-threads=1 \
   || fails=$((fails + 1))

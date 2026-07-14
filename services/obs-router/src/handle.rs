@@ -1,4 +1,4 @@
-//! The alert-routing orchestration (FR-OBS-007). Ties triage -> decide -> deliver with the §1 #11
+//! The alert-routing orchestration (TASK-OBS-007). Ties triage -> decide -> deliver with the §1 #11
 //! fallback chain (CHAT fails -> PagerDuty; PagerDuty fails -> last-resort CHAT), then audits. Generic
 //! over the client traits, so the whole flow is testable without a network.
 

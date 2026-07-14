@@ -1,10 +1,10 @@
-//! FR-AI-002 — Post-call cost reconciliation.
+//! TASK-AI-002 — Post-call cost reconciliation.
 //!
-//! Settles holds created by `cost_ledger::precheck()` (FR-AI-001). On success,
+//! Settles holds created by `cost_ledger::precheck()` (TASK-AI-001). On success,
 //! records actual spend; on provider error, refunds the hold; on cancel with
 //! partial stream, charges only what was delivered.
 //!
-//! See FR-AI-002 for normative behaviour and acceptance criteria.
+//! See TASK-AI-002 for normative behaviour and acceptance criteria.
 
 use once_cell::sync::Lazy;
 use prometheus::{register_counter_vec, register_histogram, CounterVec, Histogram};
@@ -15,7 +15,7 @@ use uuid::Uuid;
 use crate::cost_table;
 use crate::memory_writer;
 
-// ─── Metrics (FR-AI-002 §4 #14) ──────────────────────────────────────────────
+// ─── Metrics (TASK-AI-002 §4 #14) ──────────────────────────────────────────────
 
 static RECONCILE_CALLS: Lazy<CounterVec> = Lazy::new(|| {
     register_counter_vec!(
@@ -187,7 +187,7 @@ struct HoldRow {
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
-/// FR-AI-002 — Post-call cost reconciliation.
+/// TASK-AI-002 — Post-call cost reconciliation.
 ///
 /// Runs synchronously after every LLM-provider call. Given the `hold_id` from
 /// `precheck()` and the actual `CallOutcome`, settles the hold:

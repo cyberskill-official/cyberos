@@ -1,6 +1,6 @@
 """
 cyberos.core.history — read-only per-path history projection
-(FR-MEMORY-120, AGENTS.md §13).
+(TASK-MEMORY-120, AGENTS.md §13).
 
 Pure projection over the existing audit chain. Emits zero new rows. The
 core function ``walk(store, target_path, ...)`` iterates the chain in
@@ -19,10 +19,10 @@ What makes a row "touch" a path:
   tracked-paths set so subsequent older rows under that prior name are
   also included.
 * Any other audit-row kind whose ``path`` field equals ``target_path`` —
-  this catches ``memory.importance_scored`` (FR-MEMORY-114),
-  ``dream.proposal_applied`` (FR-MEMORY-115), ``memory.acl_denied``
-  (FR-MEMORY-117), ``memory.precondition_failed`` (FR-MEMORY-118),
-  ``episode.logged`` (FR-MEMORY-112).
+  this catches ``memory.importance_scored`` (TASK-MEMORY-114),
+  ``dream.proposal_applied`` (TASK-MEMORY-115), ``memory.acl_denied``
+  (TASK-MEMORY-117), ``memory.precondition_failed`` (TASK-MEMORY-118),
+  ``episode.logged`` (TASK-MEMORY-112).
 
 The CLI surfaces a human-readable view; the function returns structured
 ``HistoryEntry`` records that the REST endpoint and other consumers can
@@ -220,7 +220,7 @@ def _row_touches_paths(row: dict, paths: set[str]) -> bool:
 
 
 # ────────────────────────────────────────────────────────────────────
-# annotation rendering (FR-MEMORY-120 §1 #4)
+# annotation rendering (TASK-MEMORY-120 §1 #4)
 # ────────────────────────────────────────────────────────────────────
 
 

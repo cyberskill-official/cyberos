@@ -1,7 +1,7 @@
 ---
 title: INV - Billable rollup invoicing, hóa đơn emission, dunning automation
 source: website/docs/modules/inv/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 INV is the **AR plane**. Invoices begin life as a draft auto-populated from TIME entries against an engagement's billable rules; a human reviews + sends; the customer pays through one of four payment rails (Stripe, Wise, domestic VND PSP, manual bank transfer); the receipt matches back to the invoice (cash application); the GL takes the revenue. The Vietnamese-context specifics - Decree 123 e-invoice schema, Circular 78 GDT format, Mẫu 01/GTGT, MST validation, VietQR collection - are wrapped in three reusable CyberSkill skills (`vietnam-vat-invoice`, `vietnam-mst-validate`, `vietnam-bank-transfer`) so the same primitives serve INV here and any external SaaS that adopts the cyberskill-vn collection.
@@ -334,7 +334,7 @@ Bucket| Days past due| Default action
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS FR catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
 Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
 
@@ -613,7 +613,7 @@ Open-banking integration (Napas247 real-time)| planned - P3
 - **TIME rollup contract:** [TIME §0](../time/index.html#bigger-picture) - per-cycle billable rollup that INV consumes.
 - **memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - invoice sent + paid events become memory audit rows; revenue recognition traceable to chain hash.
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - INV at P2-start (P2, after TIME).
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- **FR authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 - **Decree 123/2020/NĐ-CP** - Vietnamese e-invoice mandate.
 - **Circular 78/2021/TT-BTC** - GDT XML schema for e-invoices.
 - **Decree 119/2018/NĐ-CP** - E-invoice retention (10 years).

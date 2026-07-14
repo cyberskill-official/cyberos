@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """awh_promote.py — faithful, zero-LLM promotion of ready_to_test FRs to done.
 
-The ship-feature-requests workflow gates testing->done at step 28 (awh-gate): it reruns
+The ship-tasks workflow gates testing->done at step 28 (awh-gate): it reruns
 the FR's MODULE goldenset (the real build+test suite vs the sealed baseline) out of band,
 and step 29 flips testing->done only if that rerun is GREEN. This script applies exactly
 that bar, minus the LLM doc-authoring steps (1-27), which regenerate artifacts that are not
@@ -19,7 +19,7 @@ specific FR needs those, run it through the full workflow with a real --invoker 
   python3 scripts/awh_promote.py --apply    # flip status ready_to_test->done + write a ledger
 
 Run on your Mac from the repo root. Needs the toolchain the suites use (cargo/pytest/make)
-and pyyaml for awh. Never commits - review `git diff -- docs/feature-requests` and commit yourself.
+and pyyaml for awh. Never commits - review `git diff -- docs/tasks` and commit yourself.
 """
 import json
 import os
@@ -35,7 +35,7 @@ REPO = Path(subprocess.check_output(["git", "rev-parse", "--show-toplevel"], tex
 # goldenset.yaml (e.g. ai) includes it with no edit here. A goldenset without a captured
 # baseline still counts as gated but reruns RED (run_gate returns "no goldenset/baseline").
 GATED = sorted(p.parent.parent.name for p in (REPO / "modules").glob("*/.awh/goldenset.yaml"))
-FR_DIR = REPO / "docs" / "feature-requests"
+FR_DIR = REPO / "docs" / "tasks"
 LEDGER = REPO / ".awh" / "promotion-log.jsonl"
 # Hardened for quoted/trailing values, same shape as scripts/rebaseline_fr_status.py.
 STATUS_RE = re.compile(r'^(status:\s*["\'`]?)(ready_to_test)(["\'`]?.*)$', re.M)
@@ -109,16 +109,16 @@ def main() -> int:
     decisions = []  # (action, module, fr, reason)
     all_mods = sorted({p.parent.name for p in FR_DIR.glob("*/*.md")})
     for mod in all_mods:
-        frs = ready_frs(mod)
-        if not frs:
+        tasks = ready_frs(mod)
+        if not tasks:
             continue
         if mod in GATED and gate.get(mod) == "GREEN":
-            for f in frs:
+            for f in tasks:
                 ok = promote(f, apply)
                 decisions.append(("PROMOTE" if ok else "ERROR", mod, f.name, "module gate GREEN"))
         else:
             reason = "module gate RED" if mod in GATED else "module not gated (red-deferred)"
-            for f in frs:
+            for f in tasks:
                 decisions.append(("HOLD", mod, f.name, reason))
 
     print(f"\n{'ACTION':8} {'MODULE':7} FR  -- reason")
@@ -136,7 +136,7 @@ def main() -> int:
                 L.write(json.dumps({"ts": time.time(), "action": act, "module": mod,
                                     "fr": fr, "reason": reason}) + "\n")
         print(f"ledger appended: {LEDGER}")
-        print("review:  git --no-optional-locks diff -- docs/feature-requests   then rebuild docs + commit.")
+        print("review:  git --no-optional-locks diff -- docs/tasks   then rebuild docs + commit.")
     else:
         print("dry-run: no files changed. Re-run with --apply to flip status + write the ledger.")
     return 0

@@ -1,4 +1,4 @@
-# FR-AI-013 — Makefile for VN PII recall gate and related targets.
+# TASK-AI-013 — Makefile for VN PII recall gate and related targets.
 
 .PHONY: pii-recall-test pii-fixture-validate pii-precision-report pii-all
 
@@ -11,7 +11,7 @@ pii-fixture-validate:
 	python scripts/validate_corpus_format.py
 
 pii-precision-report:
-	@echo "Precision reporting not yet implemented (FR-AI-022)."
+	@echo "Precision reporting not yet implemented (TASK-AI-022)."
 	@echo "Run: pytest test_vn_recognizers.py -v for current status."
 
 pii-no-false-positives:

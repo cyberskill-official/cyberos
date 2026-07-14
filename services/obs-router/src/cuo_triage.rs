@@ -1,4 +1,4 @@
-//! HTTP client for the CUO `obs.triage-alert` skill (FR-OBS-007 §1 #2). It POSTs `{skill, alert}` to the
+//! HTTP client for the CUO `obs.triage-alert` skill (TASK-OBS-007 §1 #2). It POSTs `{skill, alert}` to the
 //! configured CUO invocation URL and parses a `TriageResult`, enforcing the 5s budget (§1 #9) inside the
 //! client - a timeout or any error surfaces as `TriageError`, which the orchestration treats as
 //! confidence 0 (PagerDuty). An unset URL fails immediately, so the router degrades to paging.

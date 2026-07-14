@@ -9,7 +9,7 @@ phase: P0
 slo: "0 lost checkpoints after process crash; recovery resumes from last fsync'd checkpoint"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-CUO-102]
+related_tasks: [TASK-CUO-102]
 ---
 
 ## §1 — Statement (BCP-14 normative)

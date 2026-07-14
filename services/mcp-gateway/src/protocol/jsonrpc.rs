@@ -75,7 +75,7 @@ impl Response {
 /// `super::errors` for the closed map.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RpcError {
-    /// Closed integer code (FR-MCP-001 §1 #8 / DEC-272).
+    /// Closed integer code (TASK-MCP-001 §1 #8 / DEC-272).
     pub code: i32,
     /// Short human-readable message.
     pub message: String,

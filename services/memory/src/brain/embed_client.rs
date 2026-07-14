@@ -1,7 +1,7 @@
-//! FR-MEMORY-123 §1 #2,#13 / DEC-2723 — the ONLY embedding path: the ai-gateway embeddings endpoint.
+//! TASK-MEMORY-123 §1 #2,#13 / DEC-2723 — the ONLY embedding path: the ai-gateway embeddings endpoint.
 //!
 //! The brain worker NEVER calls a model provider directly. It POSTs to the ai-gateway, which owns model
-//! routing, the residency pin, the ZDR flag, and the tenant spend cap (FR-AI-022). The gateway charges the
+//! routing, the residency pin, the ZDR flag, and the tenant spend cap (TASK-AI-022). The gateway charges the
 //! embedding against the tenant cap and returns `402` when exhausted — at which point the worker marks the
 //! row `pending_embed_retry` and backs off (it has NO code path that falls back to a provider, by design).
 //!
@@ -18,7 +18,7 @@
 //! the row pending. A `402` is terminal for this pass (the cap will not clear by retrying in-loop), so it
 //! short-circuits the backoff immediately.
 //!
-//! NOTE (honest dependency edge): the ai-gateway's `/v1/embeddings` HTTP route is the FR-AI-019 + FR-AI-022
+//! NOTE (honest dependency edge): the ai-gateway's `/v1/embeddings` HTTP route is the TASK-AI-019 + TASK-AI-022
 //! contract this FR depends on. At the time of writing the gateway exposes `/v1/chat` and the embeddings
 //! route is a documented-but-unwired contract (router `EmbedRequest`/`EmbedResponse` types exist). This
 //! client targets the contract exactly so it works the moment the gateway lights the route up; it is
@@ -29,7 +29,7 @@ use uuid::Uuid;
 
 use super::EMBED_DIM;
 
-/// The embeddings model alias the brain requests (FR-AI-019 bge-m3). The gateway maps the alias to the
+/// The embeddings model alias the brain requests (TASK-AI-019 bge-m3). The gateway maps the alias to the
 /// in-region model per the tenant policy and echoes the resolved `embed_model_version`.
 pub const BRAIN_EMBED_MODEL: &str = "bge-m3";
 
@@ -78,7 +78,7 @@ struct GatewayEmbedResponse {
 
 /// The embeddings client. Targets the ai-gateway; the tenant policy (region, ZDR, alias, spend cap) is
 /// resolved gateway-side from the `x-tenant-id` header — this client carries no policy of its own (so it can
-/// never drift from FR-AI-022).
+/// never drift from TASK-AI-022).
 #[derive(Clone, Debug)]
 pub struct EmbedClient {
     gateway_url: String,

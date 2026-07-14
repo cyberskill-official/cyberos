@@ -8,7 +8,7 @@ next_review_due: <ISO 8601 — default +12 months from baseline_measured_at>
 
 # BASELINE for <artefact>-author
 
-> **Purpose:** design-time performance baseline at v0.x → v1.0 promotion. Per FR-SKILL-114. The artefact justifies the promotion + anchors future drift detection. Required when `skill_version >= 1.0.0`; advisory before then.
+> **Purpose:** design-time performance baseline at v0.x → v1.0 promotion. Per TASK-SKILL-114. The artefact justifies the promotion + anchors future drift detection. Required when `skill_version >= 1.0.0`; advisory before then.
 
 ## Workflow under test
 

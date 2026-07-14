@@ -1,4 +1,4 @@
-"""FR-AI-012 — Vietnamese PII recognizers for Presidio."""
+"""TASK-AI-012 — Vietnamese PII recognizers for Presidio."""
 
 from .vn_cccd import VnCccdRecognizer
 from .vn_mst import VnMstRecognizer

@@ -1,4 +1,4 @@
--- FR-AUTH-102 — MFA factors (TOTP first slice; WebAuthn rows added in slice 2).
+-- TASK-AUTH-102 — MFA factors (TOTP first slice; WebAuthn rows added in slice 2).
 --
 -- Closed factor enum per AUTHORING_DISCIPLINE §3.4 (no ABAC slide). Factor
 -- secrets are stored encrypted at rest in production (KMS-wrapped). For

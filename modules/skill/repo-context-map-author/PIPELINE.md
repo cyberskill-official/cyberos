@@ -20,4 +20,4 @@ Artefact: `repo-context-map@1`. This document binds the skill into the ship chai
 
 - Module-placement warning non-null and not resolvable from FR text -> HALT for operator (escalate, never guess).
 
-*Added by FR-SKILL-118 (contract parity). Phases and step prose: SKILL.md is normative.*
+*Added by TASK-SKILL-118 (contract parity). Phases and step prose: SKILL.md is normative.*

@@ -1,4 +1,4 @@
-//! FR-OBS-002 §4 #13 / §5 - the cross-tenant invariant as a property test (mirrors FR-AI-018).
+//! TASK-OBS-002 §4 #13 / §5 - the cross-tenant invariant as a property test (mirrors TASK-AI-018).
 //!
 //! Pure / injection-level: a non-root tenant's forwarded query always carries ONLY that tenant's
 //! `tenant_id` filter and never another tenant's, and any query that tries to supply its own

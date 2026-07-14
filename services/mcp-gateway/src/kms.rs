@@ -1,4 +1,4 @@
-//! Envelope encryption for payloads at rest (the DB-slice store-of-record, FR-MCP-007/008 DEC-1125/1157).
+//! Envelope encryption for payloads at rest (the DB-slice store-of-record, TASK-MCP-007/008 DEC-1125/1157).
 //!
 //! The `mcp_elicitations` / `mcp_tasks` tables store caller payloads as `*_kms_blob BYTEA` - never
 //! plaintext. This module is the gateway's KMS seam: a [`Kms`] trait with `seal` / `open`, and one

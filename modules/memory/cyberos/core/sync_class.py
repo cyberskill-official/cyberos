@@ -1,4 +1,4 @@
-"""FR-MEMORY-106 — sync_class enforcement.
+"""TASK-MEMORY-106 — sync_class enforcement.
 
 The sync_class frontmatter field controls whether a memory crosses the
 personal-memory ↔ Lumi sync boundary:
@@ -29,7 +29,7 @@ from typing import Iterable, Mapping, MutableMapping
 SYNC_CLASS_DEFAULT: str = "private"
 
 # Closed enum — additions require an ADR + matching update to the
-# personal-memory sync daemon (FR-MEMORY-103) and the Cloud-memory admit policy.
+# personal-memory sync daemon (TASK-MEMORY-103) and the Cloud-memory admit policy.
 SYNC_CLASS_ENUM: frozenset[str] = frozenset({"private", "shareable", "team"})
 
 
@@ -68,7 +68,7 @@ def filter_shareable(
 ) -> list[Mapping[str, object]]:
     """Drop every row whose sync_class is not ``shareable`` (or ``team`` for P3+).
 
-    Used by the memory-sync daemon (FR-MEMORY-103) to enforce DEC-070's
+    Used by the memory-sync daemon (TASK-MEMORY-103) to enforce DEC-070's
     "Layer 1 is the source of truth; what crosses the device boundary is
     operator-chosen" invariant.
     """

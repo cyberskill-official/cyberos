@@ -1,4 +1,4 @@
-//! Access control on evaluation / monitoring data (FR-EVAL-001 clause 7, 8, 9). Within one tenant every
+//! Access control on evaluation / monitoring data (TASK-EVAL-001 clause 7, 8, 9). Within one tenant every
 //! employee shares a tenant_id, so RLS alone would let any colleague read any colleague's file. This is
 //! the *intra-tenant* boundary RLS does not provide: a read resolves true iff the viewer is the founder,
 //! is a designated manager of the target, is the target themselves, or holds an explicit active grant -

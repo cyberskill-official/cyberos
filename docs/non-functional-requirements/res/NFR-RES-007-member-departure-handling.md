@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of terminated members removed from active allocations within 24h of termination effective date"
 owner: COO
 created: 2026-05-18
-related_frs: [FR-RES-002]
+related_tasks: [TASK-RES-002]
 ---
 
 ## §1 — Statement (BCP-14 normative)

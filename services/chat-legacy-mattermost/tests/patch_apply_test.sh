@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# FR-CHAT-001 §4 #10 — patches/ apply in lexicographic order.
+# TASK-CHAT-001 §4 #10 — patches/ apply in lexicographic order.
 #
 # This test asserts a structural invariant: every file in services/chat/patches/
 # ending in .patch is a valid git-format-patch (it has at minimum the

@@ -1,7 +1,7 @@
 ---
 title: HR - Member lifecycle, onboarding orchestrator, performance signal aggregator
 source: website/docs/modules/hr/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 HR is the **Member lifecycle plane** - the place where a person becomes an actor in the system and the place where they exit cleanly. The data shape is conventional (profile, contract, leave, document) but the discipline is Vietnamese-labour-law-first: every contract honours Decree 145/2020 working-hour caps, every leave type is tagged with its statutory basis (annual, sick, maternity, paternity, sabbatical, unpaid, bereavement), and every CCCD photo lives in a separate KMS keyspace with sev-1 access logging. The onboarding checklist is the multi-module orchestrator: HR fires events to AUTH (account create), CRM (Member record), TIME (timesheet enrolment), CHAT (default workspaces), REW (initial pay band lookup - read-only, REW owns the number), and ESOP (founding-grant if applicable).
@@ -349,7 +349,7 @@ Vietnamese Labour Code Art. 113 + Decree 152/2020 Art. 26. CyberSkill-specific s
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS FR catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
 Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
 
@@ -644,7 +644,7 @@ Multi-tenant data-residency (vn-hanoi-1)| planned - P3
 - **Cross-module page links:** [auth.html](../auth/index.html), [rew.html](../rew/index.html), [esop.html](../esop/index.html), [learn.html](../learn/index.html), [time.html](../time/index.html), [proj.html](../proj/index.html), [memory.html](../memory/index.html)
 - **memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - HR lifecycle events become memory audit rows; CCCD photo never enters memory.
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - HR at P1-mid (P1, alongside PROJ).
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- **FR authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 - **Decree 53/2022/NĐ-CP** - Cybersecurity Law implementation; data localisation.
 - **Law 91/2025/QH15 (PDPL)** - Personal Data Protection Law; Art. 7 sensitive data, Art. 14 DSAR.
 - **Decree 38/2020/NĐ-CP** - Foreign labour management.

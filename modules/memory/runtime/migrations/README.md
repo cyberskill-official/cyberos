@@ -43,7 +43,7 @@ cyberos migrate up --dry-run
 ## When a migration is needed
 
 - AGENTS protocol bumps MAJOR (e.g. v1 → v2) — schema-level break.
-- A contract bumps MAJOR (e.g. `task@1` → `task@2`).
+- A contract bumps MAJOR (e.g. `subtask@1` → `task@2`).
 - A `cyberos doctor` rule changes its source-of-truth pattern.
 
 When a migration is NOT needed: any change that's backward-compatible — adding optional fields, new memory types, new validators that grandfather existing records.

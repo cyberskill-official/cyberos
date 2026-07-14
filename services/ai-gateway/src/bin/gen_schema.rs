@@ -1,4 +1,4 @@
-//! `gen-schema` — emit the `TenantPolicy` JSONSchema for CI gate (FR-AI-005 §5).
+//! `gen-schema` — emit the `TenantPolicy` JSONSchema for CI gate (TASK-AI-005 §5).
 //!
 //! Run via:
 //! ```bash

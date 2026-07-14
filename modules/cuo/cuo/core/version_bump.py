@@ -1,6 +1,6 @@
 """version_bump — rewrite metadata.version in a SKILL.md or workflow YAML.
 
-FR-CUO-202 §1 #2.
+TASK-CUO-202 §1 #2.
 
 Semver bumps: patch | minor | major. Accepts a current version string like
 "1.0.0" or "2.3.4-rc1" and returns the bumped form. The SKILL.md / workflow

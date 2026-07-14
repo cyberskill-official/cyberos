@@ -1,9 +1,9 @@
-// render-docs.mjs — FR-DOCS-002: generate the doctrine pages of the website from the
+// render-docs.mjs — TASK-DOCS-002: generate the doctrine pages of the website from the
 // markdown single source of truth. Module-owned docs live next to the code
 // (modules/<m>/docs, services/<s>/docs); pre-code modules and global artifacts live
 // under docs/. Output paths mirror the existing site structure, so nav links keep
 // working. Deterministic: same input ⇒ byte-identical output. Fails non-zero on a
-// missing referenced asset or unreadable source (FR-DOCS-002 §1 #7).
+// missing referenced asset or unreadable source (TASK-DOCS-002 §1 #7).
 
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, copyFileSync, statSync } from "node:fs";
 import { join, dirname, relative } from "node:path";
@@ -47,7 +47,7 @@ function page(title, depth, bodyHtml, sourceRel) {
 <main class="docs-page mx-auto max-w-4xl px-6 py-10">
 ${bodyHtml}
 <hr>
-<p class="text-sm" style="opacity:.6">Generated from <code>${sourceRel}</code> — edit the markdown source, not this file (FR-DOCS-002).</p>
+<p class="text-sm" style="opacity:.6">Generated from <code>${sourceRel}</code> — edit the markdown source, not this file (TASK-DOCS-002).</p>
 </main>
 </body>
 </html>

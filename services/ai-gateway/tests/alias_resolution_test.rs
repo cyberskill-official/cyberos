@@ -1,4 +1,4 @@
-//! FR-AI-006 §5 — Integration tests for alias resolution.
+//! TASK-AI-006 §5 — Integration tests for alias resolution.
 
 use std::collections::HashMap;
 

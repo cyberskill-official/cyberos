@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of workflows dispatch to exactly one handler; 0 fallback-to-default in production"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-CUO-106, FR-CUO-104]
+related_tasks: [TASK-CUO-106, TASK-CUO-104]
 ---
 
 ## §1 — Statement (BCP-14 normative)

@@ -8,5 +8,5 @@ Key changes:
 - NEW §0 — 3-card layout + auto-progress data-flow Mermaid + 8-row auto-vs-human matrix
 - Risks +5 (R-OKR-010..014): progress source schema drift · face-saving framing weaponised · CUO digest hallucination · OKR-weight skews REW · retro cross-tenant leak
 - KPIs +5: progress source schema drift · face-saving pattern detection · digest hallucination rate (≤ 0.01) · OKR-share-of-VP correctness (= 1.0) · retro sync_class default compliance (= 1.0)
-- References expanded: §0 + MEMORY_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + feature-request-audit skill
+- References expanded: §0 + MEMORY_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + task-audit skill
 

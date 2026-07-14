@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // tools/docs-site/data-extract.mjs
-// FR-DOCS-001 §1 #1 — extract data from FR markdown frontmatter to JSON
-// Walks docs/feature-requests/**/FR-*.md (excluding .audit.md), parses YAML
+// TASK-DOCS-001 §1 #1 — extract data from FR markdown frontmatter to JSON
+// Walks docs/tasks/**/FR-*.md (excluding .audit.md), parses YAML
 // frontmatter, emits tools/docs-site/data/frs.json sorted deterministically by FR id.
 
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, statSync } from 'node:fs';
@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..', '..');
-const FR_DIR    = join(REPO_ROOT, 'docs', 'feature-requests');
+const FR_DIR    = join(REPO_ROOT, 'docs', 'tasks');
 const OUT_DIR   = join(__dirname, 'data');
 const OUT_FILE  = join(OUT_DIR, 'frs.json');
 
@@ -92,7 +92,7 @@ function walkFR(dir) {
     const p = join(dir, name);
     const st = statSync(p);
     if (st.isDirectory()) {
-      if (/^FR-/.test(name)) {                     // FR-DOCS-004 folder-per-FR
+      if (/^FR-/.test(name)) {                     // TASK-DOCS-004 folder-per-FR
         const spec = join(p, 'spec.md');
         try { if (statSync(spec).isFile()) { out.push(spec); continue; } } catch {}
       }
@@ -113,7 +113,7 @@ for (const file of files) {
     console.warn(`skip (no frontmatter): ${relative(REPO_ROOT, file)}`);
     continue;
   }
-  const relParts = file.split('/').slice(-3);   // <module>/<STEM>/spec.md (FR-DOCS-005 links)
+  const relParts = file.split('/').slice(-3);   // <module>/<STEM>/spec.md (TASK-DOCS-005 links)
   records.push({
     dir_module:   relParts[0],
     stem:         relParts[1],
@@ -132,12 +132,12 @@ for (const file of files) {
     effort_hours: fm.effort_hours ?? null,
     depends_on:   Array.isArray(fm.depends_on)  ? fm.depends_on  : [],
     blocks:       Array.isArray(fm.blocks)      ? fm.blocks      : [],
-    related_frs:  Array.isArray(fm.related_frs) ? fm.related_frs : [],
+    related_tasks:  Array.isArray(fm.related_tasks) ? fm.related_tasks : [],
     path:         relative(REPO_ROOT, file),
   });
 }
 
-// Deterministic sort by FR id (FR-AI-001 < FR-AI-002 < FR-AUTH-001 ...).
+// Deterministic sort by FR id (TASK-AI-001 < TASK-AI-002 < TASK-AUTH-001 ...).
 // Use module then numeric id for stable ordering even if id strings differ.
 records.sort((a, b) => {
   if (a.module !== b.module) return a.module.localeCompare(b.module);
@@ -147,9 +147,9 @@ records.sort((a, b) => {
 mkdirSync(OUT_DIR, { recursive: true });
 const payload = {
   schema_version: 'v1',
-  generated_at_marker: 'deterministic',  // FR-DOCS-001 §1 #3 — no Date.now()
+  generated_at_marker: 'deterministic',  // TASK-DOCS-001 §1 #3 — no Date.now()
   count: records.length,
-  frs: records,
+  tasks: records,
 };
 writeFileSync(OUT_FILE, JSON.stringify(payload, null, 2) + '\n', 'utf8');
 console.log(`✓ wrote ${records.length} FRs → ${relative(REPO_ROOT, OUT_FILE)}`);

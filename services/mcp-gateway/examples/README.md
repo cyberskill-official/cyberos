@@ -3,7 +3,7 @@
 ## reference_module.py - the smallest module that federates into the gateway
 
 `reference_module.py` is a stdlib-only Python MCP server that shows the two things any
-CyberOS module does to join the gateway (FR-MCP-002):
+CyberOS module does to join the gateway (TASK-MCP-002):
 
 1. serves JSON-RPC 2.0 over `POST /mcp` - the `initialize`, `tools/list`, and `tools/call`
    methods the gateway forwards;
@@ -60,7 +60,7 @@ curl -sS -X POST http://127.0.0.1:8090/mcp \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 ```
 
-### Health and heartbeats (FR-MCP-002)
+### Health and heartbeats (TASK-MCP-002)
 
 Once registered, the module heartbeats the gateway every 10s. The gateway tracks each
 module's health and stops offering a module's tools when it goes silent:
@@ -89,10 +89,10 @@ These check the `tools/call` envelope shape the gateway expects, with no gateway
 
 - The registration route is gated behind `MCP_DEV_REGISTRATION=1` on the gateway because
   registration decides where the gateway forwards calls - a trust boundary. Production
-  replaces the dev gate with authenticated registration (FR-MCP-004) plus an endpoint
+  replaces the dev gate with authenticated registration (TASK-MCP-004) plus an endpoint
   allowlist.
 - `--public-host` lets you register a different host:port than you bind locally (useful when
   the gateway reaches the module across a container boundary). It defaults to `--listen`.
 - The heartbeat/health lifecycle (a module that goes silent getting marked unhealthy, with
-  `skill_unavailable` propagated to `tools/list`) is the next FR-MCP-002 slice; this module
+  `skill_unavailable` propagated to `tools/list`) is the next TASK-MCP-002 slice; this module
   registers once and stays listed until the gateway restarts.

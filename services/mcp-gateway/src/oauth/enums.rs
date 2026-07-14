@@ -1,4 +1,4 @@
-//! FR-MCP-004 closed OAuth enums (DEC-807, DEC-808, clauses #5, #4, #16, #17).
+//! TASK-MCP-004 closed OAuth enums (DEC-807, DEC-808, clauses #5, #4, #16, #17).
 //!
 //! These mirror the Postgres `CREATE TYPE ... AS ENUM` declarations in the OAuth migrations. Each is
 //! a closed set with a cardinality test that fails if a variant is added without updating the
@@ -9,7 +9,7 @@
 use std::fmt;
 
 /// The two grant types this slice supports (DEC-807, clause #5). `client_credentials` is deferred to
-/// FR-MCP-007; implicit and resource-owner-password are prohibited by OAuth 2.1.
+/// TASK-MCP-007; implicit and resource-owner-password are prohibited by OAuth 2.1.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GrantType {
     /// `authorization_code`

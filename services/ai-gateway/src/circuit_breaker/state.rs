@@ -1,4 +1,4 @@
-//! FR-AI-009 §3 — Breaker state types.
+//! TASK-AI-009 §3 — Breaker state types.
 
 use crate::policy::ProviderKind;
 

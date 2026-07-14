@@ -6,7 +6,7 @@ is the local-dev loop, not the VPS go-live (that is `docs/deploy/cyberos-core-de
 
 ## How CyberOS "does work" (read these two first)
 
-- `modules/cuo/chief-technology-officer/workflows/ship-feature-requests.md` - the ~30-step author/audit
+- `modules/cuo/chief-technology-officer/workflows/ship-tasks.md` - the ~30-step author/audit
   chain that drives one FR from `ready_to_implement` to `done`. The last gates are step 28 `awh-gate`
   (rerun the tests) and step 28.5 `caf-gate` (rerun the target's own build/lint/test + audit). The
   `testing -> done` flip requires `awh GREEN AND caf CLEAN`.
@@ -102,7 +102,7 @@ bash scripts/caf_gate.sh <m>                                                 # m
 ```
 
 GREEN + CLEAN means that module passes both gates exactly as it would inside a real
-`ship-feature-requests` run. RED or a dirty gate is the signal to fix that module before moving on.
+`ship-tasks` run. RED or a dirty gate is the signal to fix that module before moving on.
 
 | Module | Run locally | awh golden set | caf profile | Infra |
 |---|---|---|---|---|
@@ -117,7 +117,7 @@ GREEN + CLEAN means that module passes both gates exactly as it would inside a r
 
 Once AUTH, MEMORY, SKILL, PROJ, CHAT, and CUO each pass GREEN + CLEAN locally, the platform is verified
 end to end against both gates, and you can move to implementing the remaining modules (obs is the
-unblocked next one). Each new module then ships through the same `ship-feature-requests` chain, so the
+unblocked next one). Each new module then ships through the same `ship-tasks` chain, so the
 gates apply to it automatically.
 
 ## Notes and the small gaps to confirm

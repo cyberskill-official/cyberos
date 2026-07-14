@@ -1,4 +1,4 @@
-//! FR-PROJ-003 — deterministic CRDT/LWW collaboration helpers.
+//! TASK-PROJ-003 — deterministic CRDT/LWW collaboration helpers.
 //!
 //! This is the server-side model around Yjs updates: binary Yjs payloads are
 //! stored and merged by `(client_id, clock)`, while scalar metadata uses an

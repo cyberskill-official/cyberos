@@ -10,9 +10,9 @@ MSG="${1:?usage: commit-fleet.sh <msg-file> <root> [...]}"; shift
 [ -f "$MSG" ] || { echo "commit-fleet: no such message file: $MSG"; exit 2; }
 
 # exactly what cyberos init (vendor + migrate + page) writes as tracked content
-OWNED=(docs/status docs/feature-requests AGENTS.md CLAUDE.md GEMINI.md .cursorrules
+OWNED=(docs/status docs/tasks AGENTS.md CLAUDE.md GEMINI.md .cursorrules
        .windsurfrules .gitignore CHANGELOG.md .mcp.json .agents)
-ALLOW='^(docs/status/|docs/feature-requests/|AGENTS\.md$|CLAUDE\.md$|GEMINI\.md$|\.cursorrules$|\.windsurfrules$|\.gitignore$|CHANGELOG\.md$|\.mcp\.json$|\.agents/)'
+ALLOW='^(docs/status/|docs/tasks/|AGENTS\.md$|CLAUDE\.md$|GEMINI\.md$|\.cursorrules$|\.windsurfrules$|\.gitignore$|CHANGELOG\.md$|\.mcp\.json$|\.agents/)'
 
 SKIP=0; DONE=0; PUSHED=0; FAILED=0
 

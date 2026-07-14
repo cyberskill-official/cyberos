@@ -1,4 +1,4 @@
-//! FR-AUTH-102 — Recovery codes (single-use, bcrypt-hashed).
+//! TASK-AUTH-102 — Recovery codes (single-use, bcrypt-hashed).
 //!
 //! Each subject gets exactly one *batch* of 10 codes at a time. Regeneration
 //! invalidates ALL prior codes (new `batch_id`). Each code is consumed

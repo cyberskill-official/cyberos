@@ -1,4 +1,4 @@
--- FR-AUTH-002 — Subject (user / agent / system principal) schema.
+-- TASK-AUTH-002 — Subject (user / agent / system principal) schema.
 --
 -- Every subject belongs to exactly one tenant. RLS (migration 0005) restricts
 -- reads to subjects within the caller's tenant. Service-role subjects (kind

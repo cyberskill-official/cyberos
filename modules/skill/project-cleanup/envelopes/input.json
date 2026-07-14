@@ -12,7 +12,7 @@
       "type": "string",
       "enum": ["auto", "cyberos", "generic"],
       "default": "auto",
-      "description": "Project flavor. 'auto' detects by file signatures (presence of feature-request-audit skill or the legacy feature-request-audit skill → cyberos; else generic). 'cyberos' or 'generic' force the flavor."
+      "description": "Project flavor. 'auto' detects by file signatures (presence of task-audit skill or the legacy task-audit skill → cyberos; else generic). 'cyberos' or 'generic' force the flavor."
     },
     "dry_run": {
       "type": "boolean",

@@ -1,4 +1,4 @@
-//! FR-MCP-004 audience binding (DEC-802, RFC 8707, clauses #7 and #23).
+//! TASK-MCP-004 audience binding (DEC-802, RFC 8707, clauses #7 and #23).
 //!
 //! Every access token carries `aud` = the canonical URL of the MCP resource server it was issued
 //! for. Each resource server asserts, at `tools/call`, that its own canonical URL is the token's
@@ -12,7 +12,7 @@
 /// Build the `aud` claim for a token minted for `resource` (the resource server's canonical URL).
 ///
 /// RFC 8707 models the audience as the resource identifier; we emit a single-element array so the
-/// claim shape stays a `Vec<String>` (matching the FR-AUTH-004 `Claims.aud` type) while carrying
+/// claim shape stays a `Vec<String>` (matching the TASK-AUTH-004 `Claims.aud` type) while carrying
 /// exactly one resource.
 pub fn bind_audience(resource: &str) -> Vec<String> {
     vec![resource.to_string()]

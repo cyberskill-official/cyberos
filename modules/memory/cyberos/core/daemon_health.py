@@ -1,6 +1,6 @@
-"""FR-MEMORY-110 — Capture-daemon health + auto-restart supervisor.
+"""TASK-MEMORY-110 — Capture-daemon health + auto-restart supervisor.
 
-The capture daemon (FR-MEMORY-110 production target) runs as a background
+The capture daemon (TASK-MEMORY-110 production target) runs as a background
 process that watches the file system + writes memory rows. It MUST survive:
 
 * Crashes (segfault on a malformed file, OOM, etc.) → exponential-backoff

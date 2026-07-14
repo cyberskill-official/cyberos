@@ -1,4 +1,4 @@
-# FR-APP-006: Homebrew Cask manifest for CyberOS (draft - lives in-repo; the eventual
+# TASK-APP-006: Homebrew Cask manifest for CyberOS (draft - lives in-repo; the eventual
 # listing is a Stephen-gated PR to the external homebrew-cask monorepo, never automated:
 # spec 1 #5/#6, structurally enforced by release-pkgmgr-pr.yml's standing guard).
 #

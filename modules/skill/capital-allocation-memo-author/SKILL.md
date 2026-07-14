@@ -8,7 +8,7 @@ metadata:
   version: 1.0.0
   module: skill
   stage: cross
-  cyberos-template: feature_request@1   # replace with this skill's artefact template id
+  cyberos-template: task@1   # replace with this skill's artefact template id
   cyberos-rubric-target: cap-alloc-memo_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────

@@ -1,11 +1,11 @@
-# AUTH OIDC provider - local round-trip proof (FR-AUTH-110)
+# AUTH OIDC provider - local round-trip proof (TASK-AUTH-110)
 
 Prove the unified-path provider end to end on your Mac: register a relying party (Mattermost stands in
 as `cyberos-chat`), seed a sign-in session, then watch `/authorize` hand back a code and `/token` turn it
 into a real id_token plus access_token, and `/userinfo` read the identity back. This is the owner-run
 live test, the same way the Google sign-in in `auth-google-sso-runbook.md` is owner-run.
 
-The provider is the inverse of FR-AUTH-104: there AUTH is Google's client; here AUTH is the provider that
+The provider is the inverse of TASK-AUTH-104: there AUTH is Google's client; here AUTH is the provider that
 first-party apps federate to. Endpoints: `/.well-known/openid-configuration`, `/v1/auth/op/authorize`,
 `/v1/auth/op/token`, `/v1/auth/op/userinfo`, and the admin registry `/v1/admin/op/rp-clients`.
 
@@ -156,7 +156,7 @@ curl -s -X POST "http://localhost:7700/v1/admin/subjects/$SUBJECT_ID/revoke" \
 
 Green here means the unified-path provider works end to end against a real database: an RP federates to
 one CyberOS identity, PKCE and the single-use code and the revoke gate all hold, and the id_token is
-signed by the same FR-AUTH-004 key the JWKS publishes.
+signed by the same TASK-AUTH-004 key the JWKS publishes.
 
 Deferred, to close after this live run:
 

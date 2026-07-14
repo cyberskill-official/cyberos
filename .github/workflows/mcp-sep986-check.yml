@@ -1,6 +1,6 @@
 name: mcp-sep986-check
 
-# FR-MCP-003 slice 3 / DEC-2362 - the SEP-986 skill-ID naming gate as CI. Runs the source-side grep
+# TASK-MCP-003 slice 3 / DEC-2362 - the SEP-986 skill-ID naming gate as CI. Runs the source-side grep
 # tripwire (scripts/check_sep986_naming.sh) so a non-conforming `cyberos.<module>.<tool>` ID in a real
 # registry module is caught in review, complementing the runtime validator in
 # services/mcp-gateway/src/naming. Pure bash; no toolchain, services, or database.

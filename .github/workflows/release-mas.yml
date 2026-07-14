@@ -1,6 +1,6 @@
 name: release-mas
 
-# FR-APP-003: Mac App Store channel - sandboxed Tauri build, 3rd-Party-Mac-Developer signing,
+# TASK-APP-003: Mac App Store channel - sandboxed Tauri build, 3rd-Party-Mac-Developer signing,
 # .pkg packaging, App Store Connect upload. Manual dispatch only (deliberately NOT coupled to
 # release tags while the channel is stood up) and inert until the repo variable MAS_RELEASE=true
 # AND every hard blocker in docs/deploy/mac-app-store-submission.md is resolved - notably the
@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Entitlement lint (FR-APP-003 AC #2 - runs on every dispatch, gate or no gate)
+      - name: Entitlement lint (TASK-APP-003 AC #2 - runs on every dispatch, gate or no gate)
         run: bash tools/mas-entitlement-lint.sh
       - run: echo "workflow executed; see build-and-submit-mas conclusion for gate state"
 
@@ -80,7 +80,7 @@ jobs:
       # apps sandbox instead - the two are mutually redundant per Apple guidance).
       # apps/desktop has no package.json; the CLI is fetched pinned to major 2 (the
       # desktop job's tauri-action does the equivalent internally).
-      # FR-IMP-075: --features mas compiles the self-updater OUT (registration + launch check
+      # TASK-IMP-075: --features mas compiles the self-updater OUT (registration + launch check
       # cfg-gated in src/lib.rs) - the one engineering blocker on this channel. If the pinned
       # CLI major ever renames its cargo-features passthrough, this fails loudly at build,
       # which is the wanted behavior: a MAS bundle must never ship WITH the updater.
@@ -115,7 +115,7 @@ jobs:
             echo "no helper binaries present - inherit plist stays defensive-only"
           fi
 
-      - name: Verify signature + sandbox (FR-APP-003 AC #5)
+      - name: Verify signature + sandbox (TASK-APP-003 AC #5)
         run: |
           app="apps/desktop/src-tauri/target/universal-apple-darwin/release/bundle/macos/CyberOS.app"
           codesign --verify --strict --verbose=2 "$app"

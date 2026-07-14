@@ -1,4 +1,4 @@
-//! FR-AI-008 - Ollama provider (local / self-hosted models, no API key).
+//! TASK-AI-008 - Ollama provider (local / self-hosted models, no API key).
 //!
 //! Ollama serves models over an HTTP API on a local endpoint (default `http://localhost:11434`). Unlike
 //! the cloud providers it needs no API key, which makes it the natural local-dev and self-hosted backend
@@ -257,7 +257,7 @@ mod tests {
     #[tokio::test]
     async fn call_chat_fails_closed_on_unreachable_server() {
         // Nothing listens on 127.0.0.1:1, so the call must surface an Err - never a fabricated
-        // completion (FR-AI-105 clause 4, fail-closed). Deterministic: no server required.
+        // completion (TASK-AI-105 clause 4, fail-closed). Deterministic: no server required.
         let p = OllamaProvider::new("http://127.0.0.1:1");
         let deadline = std::time::Instant::now() + std::time::Duration::from_millis(500);
         assert!(p.call_chat(&req(), "llama3.1:8b", deadline).await.is_err());

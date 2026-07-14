@@ -1,10 +1,10 @@
-"""proposal_applier — FR-CUO-202 classifier + auto-apply + queue-on-major.
+"""proposal_applier — TASK-CUO-202 classifier + auto-apply + queue-on-major.
 
 Reads a refinement_proposal@1 file, classifies its `## Suggested change` into
 one of 7 buckets, decides bump level + auto-or-queue per the target skill's
 `human_fine_tune.review_required` flags, and applies (or queues).
 
-Buckets (§2 of FR-CUO-202):
+Buckets (§2 of TASK-CUO-202):
   cosmetic               → patch, auto
   wording_polish         → patch, auto
   threshold_tune         → minor, auto (unless on_minor_bump: true)
@@ -37,7 +37,7 @@ Bucket = Literal[
 ]
 
 
-# Default bucket → bump_level mapping (§2 of FR-CUO-202)
+# Default bucket → bump_level mapping (§2 of TASK-CUO-202)
 BUCKET_BUMP: dict[Bucket, BumpLevel] = {
     "cosmetic": "patch",
     "wording_polish": "patch",
@@ -274,7 +274,7 @@ def _run_test_gate(skill_root: Path, skill_name: str) -> tuple[bool, list[str]]:
     """Run the skill's acceptance/TRIGGER_TESTS.md fixtures. Returns (ok, notes).
 
     Minimal v1: if the file exists, we count it as the gate "present" — actual
-    test-execution wiring is future work (FR-CUO-202 §1 #8 declares the gate
+    test-execution wiring is future work (TASK-CUO-202 §1 #8 declares the gate
     runs; the v1 implementation runs `python3 -m pytest tests/` against the
     cuo module, which is a coarse proxy until per-skill fixtures are integrated).
     """
@@ -299,7 +299,7 @@ def _append_changelog(
     entry = (
         f"\n### {today} — [SKILL] {skill_name} v{old} → v{new}\n\n"
         f"Auto-applied refinement proposal from `{proposal_path.name}` "
-        f"(FR-CUO-202).\n"
+        f"(TASK-CUO-202).\n"
     )
     with changelog.open("a", encoding="utf-8") as f:
         f.write(entry)

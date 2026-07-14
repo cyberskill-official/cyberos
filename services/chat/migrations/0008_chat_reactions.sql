@@ -1,4 +1,4 @@
--- FR-CHAT-101: emoji reactions - a per-(message, subject, emoji) row, scoped to its tenant. A reaction is
+-- TASK-CHAT-101: emoji reactions - a per-(message, subject, emoji) row, scoped to its tenant. A reaction is
 -- deleted with its message (ON DELETE CASCADE), and a subject can react with a given emoji at most once
 -- (UNIQUE), so add is idempotent and remove is exact. Mirrors the chat_messages cascade + RLS style.
 

@@ -1,4 +1,4 @@
-"""FR-CUO-206 acceptance tests - ship-manifest@1 (one test per AC)."""
+"""TASK-CUO-206 acceptance tests - ship-manifest@1 (one test per AC)."""
 import hashlib
 import json
 import os
@@ -12,16 +12,16 @@ sys.path.insert(0, os.path.join(ROOT, "modules", "cuo"))
 from cuo import ship_manifest as sm  # noqa: E402
 
 WORKFLOW_DOC = os.path.join(ROOT, "modules", "cuo", "chief-technology-officer",
-                            "workflows", "ship-feature-requests.md")
+                            "workflows", "ship-tasks.md")
 CONTRACT_DOC = os.path.join(ROOT, "modules", "skill", "contracts",
-                            "feature-request", "SHIP-MANIFEST.md")
-FR_DOC = os.path.join(ROOT, "docs", "feature-requests", "cuo",
-                      "FR-CUO-206-ship-run-state-manifest.md")
+                            "task", "SHIP-MANIFEST.md")
+FR_DOC = os.path.join(ROOT, "docs", "tasks", "cuo",
+                      "TASK-CUO-206-ship-run-state-manifest.md")
 
 
 def _manifest(steps=None, wf="2.4.0", frsha="a" * 64):
     return {
-        "manifest_version": "ship-manifest@1", "fr_id": "FR-TEN-208",
+        "manifest_version": "ship-manifest@1", "task_id": "TASK-TEN-208",
         "fr_sha256": frsha, "workflow_version": wf,
         "started_at": "2026-07-12T10:00:00+07:00",
         "updated_at": "2026-07-12T11:42:10+07:00",
@@ -55,7 +55,7 @@ class TestShipManifest(unittest.TestCase):
 
     def test_schema_fields_and_example_validate(self):  # AC 1
         contract = open(CONTRACT_DOC).read()
-        for field in ("manifest_version", "fr_id", "fr_sha256", "workflow_version",
+        for field in ("manifest_version", "task_id", "fr_sha256", "workflow_version",
                       "started_at", "updated_at", "current_step", "routed_back_count",
                       "steps", "hitl", "artefact_sha256", "skipped-conditional",
                       "review_approval", "final_acceptance"):
@@ -80,7 +80,7 @@ class TestShipManifest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             p = os.path.join(d, "FR-X.ship.json")
             sm.write_atomic(_manifest(), p)
-            self.assertEqual(json.load(open(p))["fr_id"], "FR-TEN-208")
+            self.assertEqual(json.load(open(p))["task_id"], "TASK-TEN-208")
             self.assertEqual([f for f in os.listdir(d) if ".tmp." in f], [])
             # failure path: replace blows up -> tmp file is still cleaned
             real = os.replace
@@ -113,7 +113,7 @@ class TestShipManifest(unittest.TestCase):
                          ("resume", 1, 1))
 
     def test_queue_selection_total_order(self):  # AC 5
-        frs = [
+        tasks = [
             {"id": "FR-A-002", "status": "ready_to_implement", "priority": "SHOULD",
              "created": "2026-07-01", "depends_on": []},
             {"id": "FR-A-003", "status": "ready_to_implement", "priority": "MUST",
@@ -127,22 +127,22 @@ class TestShipManifest(unittest.TestCase):
             {"id": "FR-A-005", "status": "draft", "priority": "MUST",
              "created": "2026-06-01", "depends_on": []},
         ]
-        r1 = sm.select_next(frs)
+        r1 = sm.select_next(tasks)
         self.assertEqual(r1["picked"], "FR-A-004")
         self.assertEqual(r1["reason"],
                          "queue: picked FR-A-004 (priority=MUST, created=2026-07-02) "
                          "over 2 other eligible FRs")
-        self.assertEqual(sm.select_next(list(reversed(frs))), r1)  # deterministic
+        self.assertEqual(sm.select_next(list(reversed(tasks))), r1)  # deterministic
         self.assertIsNone(sm.select_next([f for f in frs if f["status"] == "draft"])["picked"])
 
     def test_gitignore_scaffold(self):  # AC 6
-        gi = os.path.join(ROOT, "docs", "feature-requests", ".workflow", ".gitignore")
+        gi = os.path.join(ROOT, "docs", "tasks", ".workflow", ".gitignore")
         self.assertEqual(open(gi).read().strip(), "*.ship.json")
         init_sh = open(os.path.join(ROOT, "tools", "cyberos-init", "init.sh")).read()
         self.assertIn(".workflow/.gitignore", init_sh)
         self.assertIn("*.ship.json", init_sh)
         out = subprocess.run(["git", "check-ignore",
-                              "docs/feature-requests/.workflow/FR-X.ship.json"],
+                              "docs/tasks/.workflow/FR-X.ship.json"],
                              cwd=ROOT, capture_output=True)
         self.assertEqual(out.returncode, 0, "manifest path is not gitignored")
 

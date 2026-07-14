@@ -1,4 +1,4 @@
-# FR-EMAIL-001 §3.1 — local-dev compose for the EMAIL service.
+# TASK-EMAIL-001 §3.1 — local-dev compose for the EMAIL service.
 #
 #   docker compose -f services/email/docker/compose.yml up
 

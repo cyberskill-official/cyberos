@@ -1,8 +1,8 @@
-//! FR-MCP-004 scope handling (DEC-813, clause #30, RFC 6749 §3.3).
+//! TASK-MCP-004 scope handling (DEC-813, clause #30, RFC 6749 §3.3).
 //!
 //! Scopes are a space-separated, case-sensitive list. Each token must be RFC 6749 §3.3 syntax
 //! (visible ASCII, no whitespace, no `"` or `\`). The set of grantable scopes is closed - it comes
-//! from the MCP server's `tools/list` registry (FR-MCP-001) - so a request for an unregistered scope
+//! from the MCP server's `tools/list` registry (TASK-MCP-001) - so a request for an unregistered scope
 //! is `400 invalid_scope`, never silently granted.
 
 /// One RFC 6749 §3.3 scope-token: `1*( %x21 / %x23-5B / %x5D-7E )`. That is, one or more visible

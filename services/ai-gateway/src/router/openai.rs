@@ -1,4 +1,4 @@
-//! FR-AI-008 — OpenAI API provider implementation.
+//! TASK-AI-008 — OpenAI API provider implementation.
 
 use std::time::Instant;
 

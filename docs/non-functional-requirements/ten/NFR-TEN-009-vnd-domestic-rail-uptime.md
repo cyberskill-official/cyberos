@@ -9,7 +9,7 @@ phase: P0
 slo: "99.5% monthly availability for VND-billing initiation + settlement"
 owner: CFO
 created: 2026-05-18
-related_frs: [FR-TEN-102]
+related_tasks: [TASK-TEN-102]
 ---
 
 ## §1 — Statement (BCP-14 normative)

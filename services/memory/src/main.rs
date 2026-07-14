@@ -1,7 +1,7 @@
 //! cyberos-memory — main binary entry point.
 //!
 //! Wires three concerns together:
-//!   * **HTTP** — axum app with `/healthz` (+ `/v1/memory/search` once FR-MEMORY-108 lands).
+//!   * **HTTP** — axum app with `/healthz` (+ `/v1/memory/search` once TASK-MEMORY-108 lands).
 //!   * **Ingest daemon** — background tokio task per tenant calling
 //!     `layer2::ingest::run_batch` on `default_poll_interval()`. Tenants
 //!     come from the `MEMORY_TENANTS` env var (comma-separated UUIDs) or
@@ -64,7 +64,7 @@ async fn main() -> ExitCode {
         }
     });
 
-    // FR-MEMORY-123 — spawn the BRAIN daemon alongside the Layer-2 loop: consume FR-MEMORY-121 events ->
+    // TASK-MEMORY-123 — spawn the BRAIN daemon alongside the Layer-2 loop: consume TASK-MEMORY-121 events ->
     // embed via the ai-gateway -> rolling summaries -> hot/warm/cold tiering, per tenant. Shares the same
     // shutdown signal; on SIGTERM the in-flight ingest tx commits and the cursor + tier watermark are saved
     // (§1 #19). Disabled with BRAIN_INGEST_ENABLED=0 (keeps the recall API + migrations available without the
@@ -108,7 +108,7 @@ async fn main() -> ExitCode {
         });
     }
 
-    // FR-OBS-003 - build the RED instruments off the global meter before serving.
+    // TASK-OBS-003 - build the RED instruments off the global meter before serving.
     cyberos_obs_sdk::init("memory", VERSION);
 
     // MEM-001 (R73) — identity comes from a verified JWT, never from headers. `/v1/memory/*` sits behind the
@@ -116,7 +116,7 @@ async fn main() -> ExitCode {
     // stay unauthenticated for liveness + scraping.
     let protected = Router::new()
         .route("/v1/memory/search", post(search::search))
-        // FR-MEMORY-123 §1 #7 — access-scoped, provenance-carrying BRAIN recall.
+        // TASK-MEMORY-123 §1 #7 — access-scoped, provenance-carrying BRAIN recall.
         .route("/v1/memory/recall", post(brain::handler::recall_handler))
         .route_layer(axum::middleware::from_fn_with_state(
             state.clone(),
@@ -232,7 +232,7 @@ async fn run_ingest_daemon(
     Ok(())
 }
 
-/// FR-MEMORY-123 — the BRAIN daemon. Per tick, for each tenant: run an ingest pass (consume new events ->
+/// TASK-MEMORY-123 — the BRAIN daemon. Per tick, for each tenant: run an ingest pass (consume new events ->
 /// embed -> UPSERT), retry any rows left pending by an earlier gateway/cap failure, and — on a slower
 /// cadence — run the summarise + tiering passes. Loops until `shutdown` fires; on shutdown it stops between
 /// passes so an in-flight ingest transaction always commits (§1 #19).
@@ -374,7 +374,7 @@ async fn healthz(State(state): State<AppState>) -> (StatusCode, Json<Value>) {
 
 /// Cheap text-format metrics endpoint for Prometheus scraping. Returns a
 /// minimal Prometheus exposition: ingest cursor lag per tenant + row counts.
-/// RED metrics (FR-OBS-003) are emitted separately via the obs-sdk middleware over OTLP; this endpoint
+/// RED metrics (TASK-OBS-003) are emitted separately via the obs-sdk middleware over OTLP; this endpoint
 /// keeps the memory-specific ingest-cursor gauges.
 async fn metrics(State(state): State<AppState>) -> Result<String, (StatusCode, String)> {
     let rows: Vec<(uuid::Uuid, i64, i64)> =
@@ -403,7 +403,7 @@ async fn metrics(State(state): State<AppState>) -> Result<String, (StatusCode, S
     Ok(out)
 }
 
-/// FR-OBS-003 - hand the request's tenant (the `x-tenant-id` header memory scopes by) to the RED
+/// TASK-OBS-003 - hand the request's tenant (the `x-tenant-id` header memory scopes by) to the RED
 /// middleware via the response extensions, so the metric's tenant_id label is real rather than
 /// "unknown". Runs as a route_layer (inner of the RED layer); the tenant header is absent on
 /// `/healthz` and `/metrics`, which is fine - those are not tenant-scoped.

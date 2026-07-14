@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 import pytest
 
-from cuo.core.backlog_reader import FrRow, parse_backlog, next_eligible, list_eligible
+from cuo.core.backlog_reader import TaskRow, parse_backlog, next_eligible, list_eligible
 from cuo.core.catalog import discover_personas
 from tests.conftest import FakeInvoker
 from cuo.core.supervisor import execute_chain
@@ -14,14 +14,14 @@ from cuo.core.supervisor import execute_chain
 
 @pytest.fixture
 def mock_backlog_file(tmp_path: Path) -> Path:
-    backlog_content = """# Feature Request Backlog
+    backlog_content = """# Task Backlog
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| FR-CUO-101 | Implement backlog reader | High | done | | 3 |
-| FR-CUO-102 | Add rework mode | Medium | ready_to_implement | FR-CUO-101 | 5 |
-| FR-CUO-103 | Legacy status update | Low | ready_to_review | FR-CUO-101 | 2 |
-| FR-CUO-104 | Re-done testing | Low | done | FR-CUO-101 | 2 |
+| TASK-CUO-101 | Implement backlog reader | High | done | | 3 |
+| TASK-CUO-102 | Add rework mode | Medium | ready_to_implement | TASK-CUO-101 | 5 |
+| TASK-CUO-103 | Legacy status update | Low | ready_to_review | TASK-CUO-101 | 2 |
+| TASK-CUO-104 | Re-done testing | Low | done | TASK-CUO-101 | 2 |
 """
     file_path = tmp_path / "BACKLOG.md"
     file_path.write_text(backlog_content, encoding="utf-8")
@@ -31,38 +31,38 @@ def mock_backlog_file(tmp_path: Path) -> Path:
 def test_parse_backlog_rows(mock_backlog_file: Path) -> None:
     rows = parse_backlog(mock_backlog_file)
     assert len(rows) == 4
-    assert rows[0].fr_id == "FR-CUO-101"
+    assert rows[0].task_id == "TASK-CUO-101"
     assert rows[0].status == "done"
-    assert rows[1].fr_id == "FR-CUO-102"
+    assert rows[1].task_id == "TASK-CUO-102"
     assert rows[1].status == "ready_to_implement"
-    assert rows[1].deps == ["FR-CUO-101"]
+    assert rows[1].deps == ["TASK-CUO-101"]
 
 
 def test_next_eligible_no_rework(mock_backlog_file: Path) -> None:
     rows = parse_backlog(mock_backlog_file)
-    # FR-CUO-101 is done, so FR-CUO-102 is eligible
+    # TASK-CUO-101 is done, so TASK-CUO-102 is eligible
     eligible = next_eligible(rows, rework=False)
     assert eligible is not None
-    assert eligible.fr_id == "FR-CUO-102"
+    assert eligible.task_id == "TASK-CUO-102"
 
 
 def test_next_eligible_with_rework(mock_backlog_file: Path) -> None:
     rows = parse_backlog(mock_backlog_file)
-    # With rework, "done" FRs (FR-CUO-101, FR-CUO-104) are eligible.
-    # The first matching row in BACKLOG is FR-CUO-101.
+    # With rework, "done" FRs (TASK-CUO-101, TASK-CUO-104) are eligible.
+    # The first matching row in BACKLOG is TASK-CUO-101.
     eligible = next_eligible(rows, rework=True)
     assert eligible is not None
-    assert eligible.fr_id == "FR-CUO-101"
+    assert eligible.task_id == "TASK-CUO-101"
 
 
 def test_list_eligible_with_rework(mock_backlog_file: Path) -> None:
     rows = parse_backlog(mock_backlog_file)
     eligible_list = list_eligible(rows, rework=True)
-    eligible_ids = {r.fr_id for r in eligible_list}
-    assert "FR-CUO-101" in eligible_ids
-    assert "FR-CUO-102" in eligible_ids
-    assert "FR-CUO-103" in eligible_ids
-    assert "FR-CUO-104" in eligible_ids
+    eligible_ids = {r.task_id for r in eligible_list}
+    assert "TASK-CUO-101" in eligible_ids
+    assert "TASK-CUO-102" in eligible_ids
+    assert "TASK-CUO-103" in eligible_ids
+    assert "TASK-CUO-104" in eligible_ids
 
 
 def test_execute_chain_start_step_from_status(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -83,8 +83,8 @@ def test_execute_chain_start_step_from_status(monkeypatch: pytest.MonkeyPatch, t
         cuo.core.backlog_reader,
         "parse_backlog",
         lambda path: [
-            FrRow(
-                fr_id="FR-CUO-102",
+            TaskRow(
+                task_id="TASK-CUO-102",
                 title="Add rework mode",
                 priority="Medium",
                 status="ready_to_review",
@@ -103,7 +103,7 @@ def test_execute_chain_start_step_from_status(monkeypatch: pytest.MonkeyPatch, t
         workflow_slug="adr-quick-capture",
         skill_root=skill_root,
         output_dir=tmp_path / "out",
-        inputs={"fr_id": "FR-CUO-102"},
+        inputs={"task_id": "TASK-CUO-102"},
         invoker=FakeInvoker(),
     )
     assert result.outcome == "COMPLETED"

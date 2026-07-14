@@ -1,10 +1,10 @@
-# Ship your first feature request
+# Ship your first task
 
-The day-one guide for anyone at CyberSkill. It takes you from "I have a repo and an idea" to a shipped, human-accepted change, using the ship-feature-requests workflow. No prior CyberOS knowledge assumed.
+The day-one guide for anyone at CyberSkill. It takes you from "I have a repo and an idea" to a shipped, human-accepted change, using the ship-tasks workflow. No prior CyberOS knowledge assumed.
 
 ## What you are about to do
 
-CyberOS turns work into feature requests (FRs): small markdown files that state what to build and how to prove it works. An AI agent drives each FR through implement -> review -> test -> done, and you (the human) accept it at two gates. You never review raw diffs blind; you review a finished, self-tested change with evidence.
+CyberOS turns work into tasks (FRs): small markdown files that state what to build and how to prove it works. An AI agent drives each FR through implement -> review -> test -> done, and you (the human) accept it at two gates. You never review raw diffs blind; you review a finished, self-tested change with evidence.
 
 Two roles in every step below:
 
@@ -19,16 +19,16 @@ Option B - terminal:
 
     bash /path/to/cyberos/dist/cyberos/init.sh /path/to/your-repo
 
-Either way, the result is the same: a gitignored `.cyberos/` folder (the workflow engine, the memory protocol, the plugin), a `docs/feature-requests/` folder with a `BACKLOG.md`, and agent entry files (`.cyberos/AGENT-ENTRY.md` plus `CLAUDE.md` / `GEMINI.md` / `.cursorrules` stubs where absent). Nothing about your code changes.
+Either way, the result is the same: a gitignored `.cyberos/` folder (the workflow engine, the memory protocol, the plugin), a `docs/tasks/` folder with a `BACKLOG.md`, and agent entry files (`.cyberos/AGENT-ENTRY.md` plus `CLAUDE.md` / `GEMINI.md` / `.cursorrules` stubs where absent). Nothing about your code changes.
 
 Optional but recommended: install the Claude plugin so the workflow is one slash-command away. In Claude: Settings -> Plugins -> Add, and pick the file `dist/cyberos/cyberos.plugin`.
 
 ## Step 2: write the FR (5 minutes)
 
-Create one file: `docs/feature-requests/<module>/FR-<MODULE>-<NNN>-<slug>.md`. Copy the template from `.cyberos/cuo/templates/` or start from this skeleton:
+Create one file: `docs/tasks/<module>/FR-<MODULE>-<NNN>-<slug>.md`. Copy the template from `.cyberos/cuo/templates/` or start from this skeleton:
 
     ---
-    id: FR-SHOP-001
+    id: TASK-SHOP-001
     title: Add a login rate limit
     module: shop
     class: product          # product = new capability; improvement = hardening/refactor/fix
@@ -38,7 +38,7 @@ Create one file: `docs/feature-requests/<module>/FR-<MODULE>-<NNN>-<slug>.md`. C
     routed_back_count: 0
     ---
 
-    # FR-SHOP-001 - Add a login rate limit
+    # TASK-SHOP-001 - Add a login rate limit
 
     ## Context
     Why this matters, in 2-4 sentences.
@@ -51,16 +51,16 @@ Create one file: `docs/feature-requests/<module>/FR-<MODULE>-<NNN>-<slug>.md`. C
     - [ ] 6th attempt within a minute returns 429.
     - [ ] Tests cover the limit and the reset.
 
-Then add one line to `docs/feature-requests/BACKLOG.md` in the module's section (improvement-class rows get an `(improvement)` tag). The FR file's `status:` field is the record of truth; the backlog is just the index.
+Then add one line to `docs/tasks/BACKLOG.md` in the module's section (improvement-class rows get an `(improvement)` tag). The FR file's `status:` field is the record of truth; the backlog is just the index.
 
 Rule of thumb for scope: an FR should be shippable in one sitting. If yours has more than roughly five clauses, split it.
 
 ## Step 3: trigger the agent
 
-With the plugin: type `/ship-feature-requests` in your repo's session. Without it, paste this to any agent:
+With the plugin: type `/ship-tasks` in your repo's session. Without it, paste this to any agent:
 
     Follow .cyberos/AGENT-ENTRY.md and drive the next eligible FR in
-    docs/feature-requests/BACKLOG.md. HITL required. repo_root = this repo.
+    docs/tasks/BACKLOG.md. HITL required. repo_root = this repo.
 
 The agent implements the clauses, runs your repo's own gates (`bash .cyberos/cuo/gates/run-gates.sh` - build, lint, test, whatever `init` autodetected into `.cyberos/gates.env`), reviews its own work, and moves the FR's status forward as it goes.
 
@@ -88,10 +88,10 @@ Once you have accepted, the change is yours to land the normal way: commit (if t
 
 | Thing | Path |
 |---|---|
-| Workflow doctrine (full rules) | `.cyberos/cuo/ship-feature-requests.md` |
+| Workflow doctrine (full rules) | `.cyberos/cuo/ship-tasks.md` |
 | Execution discipline (how agents behave) | `.cyberos/cuo/EXECUTION-DISCIPLINE.md` |
 | Status contract (the 10 states) | `.cyberos/cuo/STATUS-REFERENCE.md` |
-| Your FRs + backlog index | `docs/feature-requests/` |
+| Your FRs + backlog index | `docs/tasks/` |
 | Gate wiring for this repo | `.cyberos/gates.env` |
 | Agent entry point (any agent) | `.cyberos/AGENT-ENTRY.md` |
 | Operator guide (deeper than this page) | `tools/cyberos-init/docs/index.md` in the CyberOS repo |

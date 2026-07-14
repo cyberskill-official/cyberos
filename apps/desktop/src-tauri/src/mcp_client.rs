@@ -1,8 +1,8 @@
-//! HTTP client for the CyberOS mcp-gateway (FR-MCP-001). JSON-RPC 2.0 over `POST /mcp`; the gateway is
+//! HTTP client for the CyberOS mcp-gateway (TASK-MCP-001). JSON-RPC 2.0 over `POST /mcp`; the gateway is
 //! stateless per request, so `tools/list` works without an `initialize` handshake. The backend owns these
 //! calls, so the webview never hits CORS.
 //!
-//! `tools/call` currently returns the closed error `-32004 module_unreachable` until FR-MCP-002 wires
+//! `tools/call` currently returns the closed error `-32004 module_unreachable` until TASK-MCP-002 wires
 //! federated dispatch; the picker surfaces that as-is so the operator can see the tool exists and is
 //! permitted, even before its module is reachable.
 

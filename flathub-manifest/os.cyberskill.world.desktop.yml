@@ -1,4 +1,4 @@
-# FR-APP-005: Flathub manifest for CyberOS - PROVISIONAL until the app-id decision lands.
+# TASK-APP-005: Flathub manifest for CyberOS - PROVISIONAL until the app-id decision lands.
 #
 # ── PROVISIONAL APP-ID ────────────────────────────────────────────────────────────────
 # `os.cyberskill.world.desktop` is the working candidate (mirrors the Tauri identifier),

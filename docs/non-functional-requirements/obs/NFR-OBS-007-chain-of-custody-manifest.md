@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of fired alerts carry the four-field custody manifest; CI verifies on every release"
 owner: CSO
 created: 2026-05-18
-related_frs: [FR-OBS-009, FR-OBS-007]
+related_tasks: [TASK-OBS-009, TASK-OBS-007]
 ---
 
 ## §1 — Statement (BCP-14 normative)

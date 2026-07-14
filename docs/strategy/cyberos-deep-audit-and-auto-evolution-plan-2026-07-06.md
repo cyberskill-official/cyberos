@@ -7,11 +7,11 @@ Purpose: a full-repo investigation of CyberOS with concrete recommendations to s
 The numbers, verified 2026-07-06 on `main`:
 
 - 100,037 lines of Rust across 465 files in `services/`, 18 workspace crates (13 services + 5 shared crates). P0 stack (auth, chat, eval, Caddy) is live at https://os.cyberskill.world; 8 images in `deploy/vps/docker-compose.p0.yml`.
-- 613 markdown files under `docs/feature-requests/`; by frontmatter grep: 141 draft, 113 done, 13 implementing, 5 ready_to_implement, 1 blocked, 20 superseded.
+- 613 markdown files under `docs/tasks/`; by frontmatter grep: 141 draft, 113 done, 13 implementing, 5 ready_to_implement, 1 blocked, 20 superseded.
 - 17 GitHub Actions workflows, including domain-specific gates (awh-gate, rls-property-gate, cache-isolation-gate, obs-correlation-gate, vn-pii-recall, zdr-staleness-check).
 - 49 migration files across services mention ROW LEVEL SECURITY; auth alone carries 32 migrations.
 - `modules/`: 26 directories, but roughly 88% are spec-only. Real code: memory (~28k LOC Python, 42 test files), cuo (~16k LOC, 20 tests), skill (small stub).
-- The dream loop (FR-CUO-204) is armed: `modules/cuo/config/dream.yaml` has `enabled: true`, `mode: propose`, a 30-minute idle window, hard caps (5 changes per window, 600 s wall clock), an allowlist limited to SKILL.md/workflow/threshold files, a denylist covering auth, audit, RLS, PII, cost ledger, secrets, deploy and tooling paths, plus a `CYBEROS_DREAM_KILL` env kill switch. Auto-apply requires mode `auto` AND a runtime `--allow-auto-apply` flag: triple-locked.
+- The dream loop (TASK-CUO-204) is armed: `modules/cuo/config/dream.yaml` has `enabled: true`, `mode: propose`, a 30-minute idle window, hard caps (5 changes per window, 600 s wall clock), an allowlist limited to SKILL.md/workflow/threshold files, a denylist covering auth, audit, RLS, PII, cost ledger, secrets, deploy and tooling paths, plus a `CYBEROS_DREAM_KILL` env kill switch. Auto-apply requires mode `auto` AND a runtime `--allow-auto-apply` flag: triple-locked.
 - `.awh/` evidence logs exist and are small but real: 7 evolution-log entries, 136 promotion-log entries.
 - `apps/web` (Vite + React + TS) is ~5.5k LOC with `strict: true` TS and zero test tooling (no vitest, no Playwright, no test script in package.json).
 
@@ -22,7 +22,7 @@ Read together: the platform is production-real, unusually well documented for it
 Keep and build on these; several are ahead of industry practice.
 
 - FR discipline. Uniform frontmatter (id, status, priority, depends_on, effort, ai_authorship, eu_ai_act_risk_class) makes the backlog machine-plannable; `backlog_reader.py` already computes dependency cones, and `scripts/rebaseline_fr_status.py` keeps BACKLOG.md honest.
-- The awh gate. `scripts/caf_gate.sh` + `scripts/awh_ai_gate.sh` give a deterministic testing-to-done gate with sealed per-FR audits under `docs/feature-requests/_audits/`, and outcomes append to immutable JSONL logs in `.awh/`.
+- The awh gate. `scripts/caf_gate.sh` + `scripts/awh_ai_gate.sh` give a deterministic testing-to-done gate with sealed per-FR audits under `docs/tasks/_audits/`, and outcomes append to immutable JSONL logs in `.awh/`.
 - The memory protocol. `AGENTS.md` is a normative, RFC-2119 spec for a hash-chained, lock-disciplined, ACL-guarded store, with dreaming semantics (snapshot, precondition on body hash, audit rows) already specified. Decision ledger entries (DEC-xxxx) persist rationale across sessions.
 - A fenced self-modification loop. The dream loop's enablement ladder, envelope, caps and kill switch match current published safety practice for self-evolving agents better than most research prototypes do.
 - Security groundwork. NIST-aligned password policy, bcrypt, OIDC with JWKS (rotation refetch shipped), non-root slim containers, wide RLS coverage, per-IP and per-account login rate limits, nightly attachment backups, tracked env files limited to `*.example`.
@@ -126,7 +126,7 @@ Ship R29, R30, R36, R37-R41. Then two bridges:
 
 ### Stage 2 - widen the envelope carefully (after Stages 0-1 have run ~4 weeks)
 
-- Proposal ranking: order dream proposals by value/confidence/risk (R49 metadata + the FR-CUO-202 risk classifier). High-impact low-risk first; `eu_ai_act_risk_class: high` never auto-applies.
+- Proposal ranking: order dream proposals by value/confidence/risk (R49 metadata + the TASK-CUO-202 risk classifier). High-impact low-risk first; `eu_ai_act_risk_class: high` never auto-applies.
 - New gates on auto-apply, beyond the existing three: an LLM spend budget per window (from the R41 ledger), a latency check against SLO baselines (a prompt change that doubles inference time currently passes), and an envelope-drift validator that replays the loop's historical actions against dream.yaml and alerts on any mismatch.
 - Auto-revert: if the first gate run after an auto-applied change regresses, revert without waiting for morning review; keep `cuo.dream_reverted` rows as the learning record.
 - Then flip `mode: auto` for the existing docs/skills/thresholds allowlist only. Code auto-apply comes later and in this order: tests first (the loop may add tests freely), then leaf crates, never the denylist (auth, audit, RLS, PII, cost, deploy), which is already correct.
@@ -136,7 +136,7 @@ Ship R29, R30, R36, R37-R41. Then two bridges:
 
 The published lesson from skill-library agents is blunt: the library is the performance (Voyager's ablation lost 15x task speed without it). CyberOS already has the substrate: 104 skills as SKILL.md files, workflows per persona, and AGENTS.md as the operating context.
 
-- Run an ACE-style loop over that substrate: a Reflector mines session transcripts (AGENTS.md §18 ledger), gate logs and DEC entries for lessons; a Curator merges compact delta entries into the relevant SKILL.md or AGENTS.md section, with dedup and aging. The memory dream detectors (FR-MEMORY-115) already sketch the curation half; connect them.
+- Run an ACE-style loop over that substrate: a Reflector mines session transcripts (AGENTS.md §18 ledger), gate logs and DEC entries for lessons; a Curator merges compact delta entries into the relevant SKILL.md or AGENTS.md section, with dedup and aging. The memory dream detectors (TASK-MEMORY-115) already sketch the curation half; connect them.
 - Paired-trajectory auditing before accepting a skill edit: run old and new skill on the same goldenset tasks and require non-regression; this is the cheap, ground-truth-free check from recent skill-evolution work and maps directly onto the awh gate.
 - Grow the corpus automatically: every fixed production incident and every mined gate failure becomes a goldenset case and, where general, a skill delta. The obs-triage smoke already caught a perfect example (the local model fabricating a runbook URL from the SKILL.md sample): that failure should exist forever as a regression case.
 

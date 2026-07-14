@@ -9,7 +9,7 @@ phase: P0
 slo: "ZDR attestation last-verified-at age ≤ 7 days per active provider"
 owner: CSO
 created: 2026-05-18
-related_frs: [FR-AI-015, FR-AI-016]
+related_tasks: [TASK-AI-015, TASK-AI-016]
 ---
 
 ## §1 — Statement (BCP-14 normative)

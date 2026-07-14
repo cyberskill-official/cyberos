@@ -1,4 +1,4 @@
--- FR-CHAT-267: in-app content reporting. One row per report.
+-- TASK-CHAT-267: in-app content reporting. One row per report.
 --
 -- Numbering: the FR text specifies 0013, but 0013_chat_hot_indexes.sql already exists. Renumbered to 0014;
 -- no other change to the shape.
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS chat_reports (
     snapshot_sender_id     UUID NULL,
     snapshot_taken_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    -- Written only by FR-CHAT-269 (the moderation queue). This FR creates the columns and never
+    -- Written only by TASK-CHAT-269 (the moderation queue). This FR creates the columns and never
     -- transitions them.
     status                 TEXT NOT NULL DEFAULT 'open',
     resolution             TEXT NULL,
@@ -72,7 +72,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS chat_reports_open_uniq
                      COALESCE(target_subject_id,    '00000000-0000-0000-0000-000000000000'::uuid))
     WHERE status = 'open';
 
--- The moderation queue's read path (FR-CHAT-269).
+-- The moderation queue's read path (TASK-CHAT-269).
 CREATE INDEX IF NOT EXISTS chat_reports_queue_idx
     ON chat_reports (tenant_id, status, created_at DESC);
 -- The rate-limit count (§1 #7) - one index scan over at most 20 rows.

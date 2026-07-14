@@ -75,7 +75,7 @@ Read-only operations MAY skip steps 3–4 if they accept stale-up-to-last- HEAD 
 
 §3.1.6  `put_if` on success emits the SAME audit row shape as `put` (`op="put"`, content_sha256 over the redacted body, `extra.kind` + caller-supplied extras). Downstream consumers (walker, doctor, `cyberos dream`, `cyberos history`) MUST NOT special-case `put_if`-origin `put` rows; that's the load-bearing simplification.
 
-§3.1.7  `put_if` honours the FR-MEMORY-117 store ACL gate IN ADDITION to the precondition check. ACL is checked FIRST — if denied, the operation returns `outcome="rejected", reason="acl_denied"` (no `memory.precondition_failed` row, just the ordinary `memory.acl_denied` row from §14.4).
+§3.1.7  `put_if` honours the TASK-MEMORY-117 store ACL gate IN ADDITION to the precondition check. ACL is checked FIRST — if denied, the operation returns `outcome="rejected", reason="acl_denied"` (no `memory.precondition_failed` row, just the ordinary `memory.acl_denied` row from §14.4).
 
 §3.2  The canonical ops are `put`, `move`, `delete`, `put_if`, and (implicit) `view`. Historical binlog rows from earlier protocol generations may carry op names not in this set (e.g. `create`, `str_replace`, `insert`, `rename`); those rows remain readable as legacy data but MUST NOT be emitted by new writers. `view` is implicit on read and MAY emit an audit row but does not change state.
 
@@ -148,7 +148,7 @@ Read-only operations MAY skip steps 3–4 if they accept stale-up-to-last- HEAD 
 
 ## §7.7  Dreaming (added by P19 — approved 2026-05-19 per §0.2)
 
-§7.7.1  Dreaming is the out-of-band batch reflection process specified in [`FR-MEMORY-115`](docs/feature-requests/memory/FR-MEMORY-115-cyberos-dream/spec.md). The dream-runner and dream-applier are distinct identities; they MUST NOT execute in-band with any agent session that mutates memory. Sessions and dream runs may overlap; the runner takes a snapshot of HEAD at start and operates against that snapshot.
+§7.7.1  Dreaming is the out-of-band batch reflection process specified in [`TASK-MEMORY-115`](docs/tasks/memory/TASK-MEMORY-115-cyberos-dream/spec.md). The dream-runner and dream-applier are distinct identities; they MUST NOT execute in-band with any agent session that mutates memory. Sessions and dream runs may overlap; the runner takes a snapshot of HEAD at start and operates against that snapshot.
 
 §7.7.2  Every audit row emitted by the dream-applier MUST carry both `extra.dream_id` (ULID matching the active `dream.start` row) and `extra.proposal_id` (matching the source `DreamProposal.proposal_id`). Walker invariant `dream-applied-row-has-provenance` enforces this.
 
@@ -160,7 +160,7 @@ Read-only operations MAY skip steps 3–4 if they accept stale-up-to-last- HEAD 
 
 §7.7.6  Dream operates only on a snapshot of the BRAIN at run start (HEAD seq captured in the `dream.start` row's payload). Concurrent writes from other processes proceed normally and are integrated on the next dream run.
 
-§7.7.7  The four built-in detector kinds are closed: `duplicates` (cosine ≥ threshold → `merge` proposal), `stale` (memory contradicted by later audit rows → `stale` proposal), `patterns` (recurring task/outcome combos across `episode.logged` rows → `new` proposal), `verify` (memory used + observed-still-true in recent sessions → `verify` proposal annotating `meta.last_verified_at`). Additional detectors land via slice-4+ `entry_points` plug-ins (FR-MEMORY-115 §1 #18).
+§7.7.7  The four built-in detector kinds are closed: `duplicates` (cosine ≥ threshold → `merge` proposal), `stale` (memory contradicted by later audit rows → `stale` proposal), `patterns` (recurring task/outcome combos across `episode.logged` rows → `new` proposal), `verify` (memory used + observed-still-true in recent sessions → `verify` proposal annotating `meta.last_verified_at`). Additional detectors land via slice-4+ `entry_points` plug-ins (TASK-MEMORY-115 §1 #18).
 
 ---
 
@@ -231,7 +231,7 @@ At the end of any session that touched the BRAIN (i.e. wrote to `<memory-root>/`
 
 §14.3  Imports SHOULD respect `meta.sync_class`: only memories with `sync_class == "shareable"` (or, transitionally, the v1 values `publishable | shared | client-visible`) SHOULD be imported by default. Importers MAY override with explicit filter flags; doing so is the importer's responsibility, not the protocol's.
 
-§14.4  **Store-level ACL.** (Added by P20 — approved 2026-05-19 per §0.2; implementation in [`FR-MEMORY-117`](docs/feature-requests/memory/FR-MEMORY-117-per-store-acl/spec.md).)
+§14.4  **Store-level ACL.** (Added by P20 — approved 2026-05-19 per §0.2; implementation in [`TASK-MEMORY-117`](docs/tasks/memory/TASK-MEMORY-117-per-store-acl/spec.md).)
 
 §14.4.1  Each subtree of `<memory-root>/` MAY declare a `STORE.yaml` file at its root. The file's shape is normative in `memory.schema.json#/definitions/StoreAcl`. Subtrees without a `STORE.yaml` inherit the default permissive policy (`{actor: "*", mode: "read-write"}`) — back-compat with stores predating this section.
 
@@ -284,7 +284,7 @@ The v1 four-tier `sync_class` (`local-only / publishable / shared / client-visib
 
 ## §18  Session transcript ledger (added by P22 — approved 2026-05-19 per §0.2)
 
-§18.1  Sessions are an OPTIONAL turn-level audit trail for agent-user conversations. Operators opt in per conversation via the lifecycle CLI; cyberos invocations without a session never produce transcript rows. Implementation lives in [`FR-MEMORY-119`](docs/feature-requests/memory/FR-MEMORY-119-session-transcript-ledger/spec.md). Note: the FR's spec'd CLI verb `cyberos session` collides with the existing P11 multi-agent coordination subcommand; the implementation namespaces the transcript ledger under `cyberos transcript {start,append,end,read,list,purge-expired}` instead.
+§18.1  Sessions are an OPTIONAL turn-level audit trail for agent-user conversations. Operators opt in per conversation via the lifecycle CLI; cyberos invocations without a session never produce transcript rows. Implementation lives in [`TASK-MEMORY-119`](docs/tasks/memory/TASK-MEMORY-119-session-transcript-ledger/spec.md). Note: the FR's spec'd CLI verb `cyberos session` collides with the existing P11 multi-agent coordination subcommand; the implementation namespaces the transcript ledger under `cyberos transcript {start,append,end,read,list,purge-expired}` instead.
 
 §18.2  Session bodies live at `<memory-root>/sessions/<YYYY-MM-DD>/<id>.binlog.zst` — date-partitioned at the session's START date (sessions spanning midnight stay in the start-date directory). The framed binlog format mirrors §6.2; turn frames carry msgspec canonical-JSON payloads.
 

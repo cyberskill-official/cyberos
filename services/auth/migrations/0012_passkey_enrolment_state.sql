@@ -1,4 +1,4 @@
--- FR-AUTH-105 — WebAuthn/Passkey enrolment + login transient state.
+-- TASK-AUTH-105 — WebAuthn/Passkey enrolment + login transient state.
 --
 -- The webauthn-rs crate hands us a `PasskeyRegistration` / `PasskeyAuthentication`
 -- object at the begin step that the finish step must consume. We persist it

@@ -1,9 +1,9 @@
-//! FR-AUTH-102 — WebAuthn MFA factor enrolment + verification.
+//! TASK-AUTH-102 — WebAuthn MFA factor enrolment + verification.
 //!
 //! Delegates to the shared `webauthn-rs` instance already initialised by
 //! `passkey.rs`. This module only deals with MFA *second-factor* WebAuthn
 //! (roaming authenticators like YubiKeys), NOT discoverable-credential
-//! passkey login (that's FR-AUTH-105 in `passkey.rs`).
+//! passkey login (that's TASK-AUTH-105 in `passkey.rs`).
 //!
 //! Endpoints:
 //!   * `POST /v1/auth/mfa/factors/webauthn/enrol/begin`

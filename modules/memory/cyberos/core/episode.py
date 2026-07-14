@@ -1,5 +1,5 @@
 """
-cyberos.core.episode — episodic memory (FR-MEMORY-112).
+cyberos.core.episode — episodic memory (TASK-MEMORY-112).
 
 Episodes are the agent's records of completed tasks. They are structurally
 distinct from the other memory kinds (`decision`, `fact`, `person`, …) which
@@ -10,10 +10,10 @@ Episodes live at ``memories/episodes/<hex>/<hex>/<slug>.md`` (date- and
 content-hash-sharded) and share the standard frontmatter shape: the
 `Frontmatter.extra` dict carries the Episode-specific fields. This keeps
 the closed top-level schema intact while letting downstream callers
-(``recall-similar``, FR-MEMORY-115 dream, FR-MEMORY-120 history) project
+(``recall-similar``, TASK-MEMORY-115 dream, TASK-MEMORY-120 history) project
 the rich shape.
 
-Per FR-MEMORY-112 §1:
+Per TASK-MEMORY-112 §1:
 
 * Per-kind validator enforces the closed `outcome` enum + `quality_score`
   range + `duration_ms` non-negativity.
@@ -24,8 +24,8 @@ Per FR-MEMORY-112 §1:
 * Recall-similar reads ``kind=="episode"`` rows from the FTS5 index (or
   semantic vector index when ``--semantic`` is available) and ranks by
   combined score ``relevance · w_r + quality · w_i + recency · w_t``.
-  Ranking is delegated to ``cyberos.core.ranking.score_hits()`` (FR-MEMORY-113)
-  when that module is available; FR-MEMORY-112 ships with the placeholder
+  Ranking is delegated to ``cyberos.core.ranking.score_hits()`` (TASK-MEMORY-113)
+  when that module is available; TASK-MEMORY-112 ships with the placeholder
   ``recency=1.0`` per §1 #9.
 """
 
@@ -90,7 +90,7 @@ class Episode:
     def searchable_document(self) -> str:
         """Body bytes for FTS5 + semantic embeddings.
 
-        Per FR-MEMORY-112 §1 #7, the deterministic format is::
+        Per TASK-MEMORY-112 §1 #7, the deterministic format is::
 
             Task: <task>
             Approach: <approach>
@@ -222,7 +222,7 @@ def log(
         actor=actor,
         kind="episode",
         extra={
-            # surface the closed-enum outcome on the AuditRecord so FR-MEMORY-115
+            # surface the closed-enum outcome on the AuditRecord so TASK-MEMORY-115
             # dream's patterns detector can scan rows without re-parsing bodies
             "episode_outcome": episode.outcome,
             "episode_duration_ms": episode.duration_ms,
@@ -252,8 +252,8 @@ def recall_similar(
           "reason": None | "no_episodes_in_store" | "no_episodes_above_min_relevance",
         }
 
-    The ranking weights default to Park-et-al 0.4/0.3/0.3 per FR-MEMORY-113;
-    when the ranking module is not yet wired (FR-MEMORY-112 standalone),
+    The ranking weights default to Park-et-al 0.4/0.3/0.3 per TASK-MEMORY-113;
+    when the ranking module is not yet wired (TASK-MEMORY-112 standalone),
     `recency` is the placeholder constant 1.0 and the combined score
     degrades gracefully.
     """
@@ -265,8 +265,8 @@ def recall_similar(
         except Exception:
             backend = "fts5"
 
-    # Try the ranking-aware combined score first (FR-MEMORY-113); fall back
-    # to FR-MEMORY-112 placeholder if ranking module unavailable.
+    # Try the ranking-aware combined score first (TASK-MEMORY-113); fall back
+    # to TASK-MEMORY-112 placeholder if ranking module unavailable.
     try:
         from cyberos.core.ranking import RecallWeights, score_hits
         from cyberos.core.decay import Exponential
@@ -282,7 +282,7 @@ def recall_similar(
     if not hits:
         # Distinguish "store has 0 episodes" from "store has episodes but
         # none match the query". The former is `no_episodes_in_store`; the
-        # latter is `no_episodes_above_min_relevance` (per FR-MEMORY-112 §1 #16).
+        # latter is `no_episodes_above_min_relevance` (per TASK-MEMORY-112 §1 #16).
         episodes_dir = store / "memories" / "episodes"
         any_episodes = episodes_dir.is_dir() and any(episodes_dir.rglob("*.md"))
         reason = (
@@ -348,7 +348,7 @@ def _list_episodes(store: Path, *, query: str, backend: str, k: int) -> list[dic
       overlap.
     """
     # Strategy: scan disk + heuristic. This is the slice-3 implementation;
-    # subsequent FRs (FR-MEMORY-115 dream pipeline) will hook into the FTS5
+    # subsequent FRs (TASK-MEMORY-115 dream pipeline) will hook into the FTS5
     # and semantic indices directly for better latency at scale.
     episodes_dir = store / "memories" / "episodes"
     if not episodes_dir.is_dir():
@@ -391,7 +391,7 @@ def _list_episodes(store: Path, *, query: str, backend: str, k: int) -> list[dic
                 "outcome": extras.get("outcome", ""),
                 "quality_score": extras.get("quality_score"),
                 "relevance": round(float(relevance), 4),
-                "last_seen_at": None,  # FR-MEMORY-120 wires this from audit chain
+                "last_seen_at": None,  # TASK-MEMORY-120 wires this from audit chain
             })
         except Exception:
             continue

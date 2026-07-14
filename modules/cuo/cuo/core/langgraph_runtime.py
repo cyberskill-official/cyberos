@@ -1,4 +1,4 @@
-"""FR-CUO-101..105 — production supervisor primitives.
+"""TASK-CUO-101..105 — production supervisor primitives.
 
 The real deployment can swap the graph engine underneath this adapter. The
 contract here is intentionally dependency-light and testable: confidence-band

@@ -1,4 +1,4 @@
-//! FR-AUTH-103 slice-2 — XML-Signature verification for SAML Responses.
+//! TASK-AUTH-103 slice-2 — XML-Signature verification for SAML Responses.
 //!
 //! Implements a focused subset of XML-DSig sufficient for the dominant
 //! real-world case: an IdP-signed `<samlp:Response>` (or signed
@@ -29,7 +29,7 @@
 //!
 //! Not implemented here:
 //!   * Certificate-chain validation against a trust store — we trust the
-//!     `signing_cert_pem` configured by the tenant admin per FR-AUTH-103 §1.
+//!     `signing_cert_pem` configured by the tenant admin per TASK-AUTH-103 §1.
 //!   * KeyInfo extraction — we ignore embedded `<ds:KeyInfo>`/`<ds:X509Data>`
 //!     and always use the configured PEM. This prevents a malicious IdP from
 //!     substituting its own cert.

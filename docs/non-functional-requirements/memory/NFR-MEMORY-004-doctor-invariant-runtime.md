@@ -9,7 +9,7 @@ phase: P0
 slo: "cyberos-memory doctor full invariant pass completes < 30s on a 100k-row test store"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-MEMORY-105, FR-MEMORY-102]
+related_tasks: [TASK-MEMORY-105, TASK-MEMORY-102]
 ---
 
 ## §1 — Statement (BCP-14 normative)

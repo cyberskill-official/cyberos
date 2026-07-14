@@ -1,4 +1,4 @@
-//! FR-AI-009 §5 — Latency benchmark for `is_open` on the closed-state hot path.
+//! TASK-AI-009 §5 — Latency benchmark for `is_open` on the closed-state hot path.
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use cyberos_ai_gateway::circuit_breaker::{self, clock::SystemClock, CallOutcome};

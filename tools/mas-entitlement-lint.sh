@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# mas-entitlement-lint.sh - FR-APP-003 AC #2: entitlements are minimal-by-audit.
+# mas-entitlement-lint.sh - TASK-APP-003 AC #2: entitlements are minimal-by-audit.
 #
 # Fails (exit 1) if Entitlements.mas.plist declares any entitlement key that has no
 # justifying row in the "Sandbox surface audit" table of the submission answer sheet

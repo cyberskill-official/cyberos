@@ -1,13 +1,13 @@
--- FR-MEMORY-121 — interaction-event indexing on l1_audit_log.
+-- TASK-MEMORY-121 — interaction-event indexing on l1_audit_log.
 --
 -- NO NEW TABLE (DEC-2703): interaction-events are aux rows on the existing hash-chained l1_audit_log,
 -- written through cyberos-audit-chain exactly like auth.token_issued and the obs rows. A second store
 -- would fork the system of record, double the RLS surface, and break memory's single-reconcile invariant.
--- This migration adds ONLY generated columns + partial indexes so the BRAIN ingestion (FR-MEMORY-123)
--- and the console viewer (FR-APP-005) can scan interaction-events by subject / module / event_type
+-- This migration adds ONLY generated columns + partial indexes so the BRAIN ingestion (TASK-MEMORY-123)
+-- and the console viewer (TASK-APP-005) can scan interaction-events by subject / module / event_type
 -- without parsing JSON per row.
 --
--- The audit-row `event_type` column (FR-OBS-008, migration 0004) already equals 'memory.interaction_event'
+-- The audit-row `event_type` column (TASK-OBS-008, migration 0004) already equals 'memory.interaction_event'
 -- for these rows. The interaction's OWN module / verb / class live inside the JSON payload
 -- (body.payload.*); these generated columns reach INTO the payload and surface them as typed, indexable
 -- columns. They follow migration 0004's error-swallowing IMMUTABLE extractor pattern, because non-JSON

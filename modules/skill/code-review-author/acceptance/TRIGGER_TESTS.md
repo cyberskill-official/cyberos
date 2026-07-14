@@ -10,7 +10,7 @@ classifier_version: 3.0.0-a4
 
 - "Review this PR diff"
 - "Draft a code review for the auth changes"
-- "Audit the implementation against FR-AUTH-003"
+- "Audit the implementation against TASK-AUTH-003"
 - "Write a code-review write-up for PR-1247"
 
 ## Negative triggers (MUST NOT route here)

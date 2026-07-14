@@ -18,14 +18,14 @@ allowed_memory_scopes:
     - module:*
     - memories:decisions
   write:
-    - project:fr/{fr_id}/architectural-spike
+    - project:fr/{task_id}/architectural-spike
 audit:
   row_kind: architectural_spike_authored
-  required_fields: [fr_id, spike_id, question, options_probed, recommendation, confidence, timebox_hours, actual_hours, halted]
+  required_fields: [task_id, spike_id, question, options_probed, recommendation, confidence, timebox_hours, actual_hours, halted]
 
 # ── Inputs / outputs ─────────────────────────────────────────────────
 inputs:
-  - { name: fr,               format: feature-request@1,  required: true }
+  - { name: fr,               format: task@1,  required: true }
   - { name: repo_context_map, format: repo-context-map@1, required: true }
   - { name: question,         format: string,             required: true }
   - { name: timebox_hours,    format: integer,            required: true }
@@ -56,7 +56,7 @@ Frontmatter (all fields required unless marked):
 | field | type | rule |
 |---|---|---|
 | spike_id | string | `SPIKE-<FR-ID>-<n>`, n = 1-based per FR |
-| fr_id | string | the FR under investigation |
+| task_id | string | the FR under investigation |
 | question | string | the SINGLE decision under investigation |
 | timebox_hours | integer | recorded BEFORE probing starts |
 | actual_hours | number | recorded at close |

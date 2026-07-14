@@ -1,9 +1,9 @@
 """
 cyberos.core.invokers.anthropic_invoker — calls the real Anthropic API.
 
-Uses the verbatim Ramakrushna prompt (per FR-MEMORY-114 §1 #11). Falls
+Uses the verbatim Ramakrushna prompt (per TASK-MEMORY-114 §1 #11). Falls
 back to ``score=0.5, outcome="fallback"`` on any error — timeout,
-rate-limit, parse failure, transport error — preserving FR-MEMORY-114's
+rate-limit, parse failure, transport error — preserving TASK-MEMORY-114's
 "the write proceeds with neutral score" guarantee.
 
 Constructor raises (rather than fallbacking) when the prerequisites are

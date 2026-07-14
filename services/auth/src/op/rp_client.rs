@@ -1,4 +1,4 @@
-//! FR-AUTH-110 §1 #1 + #15 - the first-party OIDC relying-party (RP) registry.
+//! TASK-AUTH-110 §1 #1 + #15 - the first-party OIDC relying-party (RP) registry.
 //!
 //! Admin-registered confidential clients (CHAT/Mattermost, PORTAL). The
 //! client_secret is generated here, returned to the admin exactly once, and

@@ -1,9 +1,9 @@
-//! FR-AI-011 — Presidio EN-base PII redaction in-flight.
+//! TASK-AI-011 — Presidio EN-base PII redaction in-flight.
 //!
 //! Redacts PII from every prompt before dispatching to any LLM provider.
 //! Uses a localhost-only Presidio sidecar for analysis + anonymization.
 //!
-//! See FR-AI-011 for normative behaviour and acceptance criteria.
+//! See TASK-AI-011 for normative behaviour and acceptance criteria.
 
 pub mod types;
 

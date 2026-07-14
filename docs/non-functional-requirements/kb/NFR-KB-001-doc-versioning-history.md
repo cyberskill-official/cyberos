@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of document saves produce a version row; history immutable; retention ≥ 1 year"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-KB-001, FR-KB-002]
+related_tasks: [TASK-KB-001, TASK-KB-002]
 ---
 
 ## §1 — Statement (BCP-14 normative)

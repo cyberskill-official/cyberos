@@ -9,7 +9,7 @@ phase: P0
 slo: "0 author skills exist without a sibling audit skill; CI gates publish"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-SKILL-107]
+related_tasks: [TASK-SKILL-107]
 ---
 
 ## §1 — Statement (BCP-14 normative)

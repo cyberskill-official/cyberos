@@ -35,7 +35,7 @@ tauri-plugin-updater = "2"
 [features]
 # Tauri's default custom-protocol for production builds.
 custom-protocol = ["tauri/custom-protocol"]
-# FR-IMP-075: Mac App Store target. Compiles the self-updater OUT (registration + launch check
+# TASK-IMP-075: Mac App Store target. Compiles the self-updater OUT (registration + launch check
 # are cfg-gated on not(feature = "mas") in src/lib.rs) - self-update is both an App Sandbox
 # violation and an App Store policy rejection. Default builds are unchanged: no feature, no diff.
 mas = []

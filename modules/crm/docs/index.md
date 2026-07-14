@@ -1,7 +1,7 @@
 ---
 title: CRM - Sales-pipeline spine, deal-to-engagement bridge, Vietnamese-market-first
 source: website/docs/modules/crm/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 CRM is CyberOS's **customer pipeline, account intelligence, and Vietnamese-market commercial layer**. The data model is Salesforce-flavoured (Account -> Contact -> Deal) but the integrations bake in Vietnamese specifics: `vietnam-mst-validate` verifies a tax code against the General Department of Taxation registry; `vietnam-bank-transfer` generates a Napas247 / VietQR code so a deal can request collection with one tap; `vietnam-vat-invoice` emits the hóa đơn directly on deal close. Pipelines are workspace-configurable (sales / partner / inbound / outbound shapes) with custom transition rules. Activities - calls, emails, meetings, notes - appear automatically: EMAIL auto-logs inbound/outbound for tracked domains, CHAT logs meeting notes, Calendar logs meeting attendance. CUO/CRO-skill produces lead scoring, next-best-action, and confidence-banded forecasts.
@@ -310,7 +310,7 @@ Code| vi| en| Default probability| Category
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS FR catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
 Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
 
@@ -560,7 +560,7 @@ Client-visible PORTAL view| planned - P2+
 - **Vertical-pack pattern:** [SKILL §3.6](../skill/index.html) - cyberskill-vn ships first; sg/id/th/eu/us follow.
 - **memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - CRM closed deals become memory win/loss memories.
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - CRM at P1-start (P1, after PROJ).
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- **FR authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 - **Vietnam Decree 123/2020/NĐ-CP** - Electronic invoice issuance and storage.
 - **Vietnam Circular 78/2021/TT-BTC** - Hóa đơn format.
 - **Vietnam PDPL (Law 91/2025/QH15)** - Art. 7 erasure, Art. 14 DSAR, Art. 20 security.

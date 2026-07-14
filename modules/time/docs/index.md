@@ -1,7 +1,7 @@
 ---
 title: TIME - Billable-hours engine, PROJ-to-INV bridge, labour-law guardrails
 source: website/docs/modules/time/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 TIME is CyberOS's **time-entry, leave-management, and expense-capture spine**. The basic primitives are simple: a `TimeEntry` records minutes worked against an Engagement / Project / Issue with a billable flag; an `Expense` records VND or USD spent with vendor, VAT, and receipt image; a `LeaveRequest` records absence with a kind and approver flow. What is hard is the integrity model: entries are append-only at the audit layer, every mutation writes a fresh row with a `correction_to` link, the weekly approval flow goes Member -> Account Manager -> CFO/CEO visibility, and Vietnamese labour-law caps (40 h regular / week; 200 h overtime / year standard, up to 300 h with employee consent and MoLISA notification) are enforced as hard rules. Expense receipts run through a Vietnamese-hóa-đơn-aware OCR pipeline (MST extraction, line-item parsing, VAT split). Multi-currency at every layer. Feeds INV (weekly billable summary), feeds REW (members' total hours fold into compensation context), feeds OBS (audit replay).
@@ -317,7 +317,7 @@ Status| Trigger| memory row
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS FR catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
 Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
 
@@ -555,7 +555,7 @@ Native mobile (offline-first capture)| planned - P3+
 - **Billable cascade rules:** [PROJ §2.6](../proj/index.html#engagement-economics) - 4-step cascade definition.
 - **memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - TimeEntry rows are memory audit events.
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - TIME at P1-exit (P1, after PROJ + CRM).
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- **FR authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 - **Vietnam Labour Code (Law 45/2019/QH14)** - Art. 105 (working hours), Art. 107 (overtime), Art. 113 (annual leave).
 - **Vietnam Decree 13/2023/NĐ-CP** - Personal data processing.
 - **Vietnam Decree 53/2022/NĐ-CP** - Data residency.

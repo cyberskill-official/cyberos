@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
 repository.workspace = true
-description = "CyberOS obs-router - Alertmanager -> CUO triage -> CHAT/PagerDuty routing (FR-OBS-007)"
+description = "CyberOS obs-router - Alertmanager -> CUO triage -> CHAT/PagerDuty routing (TASK-OBS-007)"
 
 [lib]
 name = "cyberos_obs_router"
@@ -23,7 +23,7 @@ thiserror.workspace = true
 tokio.workspace = true
 axum.workspace = true
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
-# Optional memory-chain audit sink (FR-OBS-007 §1 #6): when DATABASE_URL is set the router appends
+# Optional memory-chain audit sink (TASK-OBS-007 §1 #6): when DATABASE_URL is set the router appends
 # obs.alert_triaged / obs.alert_acked rows to l1_audit_log; unset, it keeps the log sink.
 sqlx.workspace = true
 uuid.workspace = true

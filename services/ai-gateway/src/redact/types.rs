@@ -1,8 +1,8 @@
-//! FR-AI-011 §3 — PII redaction types.
+//! TASK-AI-011 §3 — PII redaction types.
 
 use std::collections::HashMap;
 
-/// PII entity types. Closed enum; EN baseline + VN extensions (FR-AI-012).
+/// PII entity types. Closed enum; EN baseline + VN extensions (TASK-AI-012).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum PiiType {
     CreditCard,
@@ -15,7 +15,7 @@ pub enum PiiType {
     IbanCode,
     UsBankNumber,
     MedicalLicense,
-    // Slice-3 extensions for FR-AI-012 (declared here for ABI stability)
+    // Slice-3 extensions for TASK-AI-012 (declared here for ABI stability)
     VnCccd,
     VnMst,
     VnPhone,

@@ -1,10 +1,10 @@
-# FR-AI-015 — Zero Data Retention attestation table.
+# TASK-AI-015 — Zero Data Retention attestation table.
 #
 # Each (provider, model) pair MUST be explicitly enumerated.
 # Entries missing is_zdr / verified_at / source_url / attested_by FAIL init.
 # ZDR claims without source = audit failure.
 #
-# See FR-AI-015 for normative schema and acceptance criteria.
+# See TASK-AI-015 for normative schema and acceptance criteria.
 
 version: 1
 last_updated: 2026-05-21
@@ -36,7 +36,7 @@ attestations:
       verified_at: 2026-05-21
       source_url: "https://www.anthropic.com/legal/zero-data-retention"
       attested_by: "stephen@cyberos.world"
-      notes: "ZDR available on Enterprise plan only; runtime tenant-tier check is FR-AI-022 follow-up"
+      notes: "ZDR available on Enterprise plan only; runtime tenant-tier check is TASK-AI-022 follow-up"
 
   openai:
     "gpt-4o":

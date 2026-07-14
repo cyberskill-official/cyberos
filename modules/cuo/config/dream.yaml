@@ -1,7 +1,7 @@
-# FR-CUO-204 - idle-time "dream loop" configuration.
+# TASK-CUO-204 - idle-time "dream loop" configuration.
 #
 # The loop can self-modify CyberOS, so it runs under three independent gates (the AWH test gate, the
-# FR-CUO-202 low-risk classifier, and the path envelope below) plus the `mode` ladder here. Even fully
+# TASK-CUO-202 low-risk classifier, and the path envelope below) plus the `mode` ladder here. Even fully
 # enabled, it touches NOTHING outside the allowlist, and never anything on the denylist.
 #
 # Enablement ladder (`mode`), each step strictly more capable than the last:

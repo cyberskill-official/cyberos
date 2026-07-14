@@ -1,4 +1,4 @@
-//! Emoji reactions (FR-CHAT-101): add (member-only, idempotent) and remove (the caller's own) a reaction on
+//! Emoji reactions (TASK-CHAT-101): add (member-only, idempotent) and remove (the caller's own) a reaction on
 //! a message. Each mutation fans out a `ReactionChanged` event on the channel hub so other members' clients
 //! patch live, and emits an additive `chat.message_reacted` audit row. Reactions are returned folded into the
 //! message list (see `messages::list`), so the row render can show an emoji-and-count strip without a second

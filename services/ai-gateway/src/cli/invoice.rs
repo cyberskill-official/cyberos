@@ -1,4 +1,4 @@
-//! FR-AI-021 — `cyberos-ai invoice` subcommand.
+//! TASK-AI-021 — `cyberos-ai invoice` subcommand.
 
 use super::auth::OperatorClaims;
 use super::output::{self, InvoiceRow};

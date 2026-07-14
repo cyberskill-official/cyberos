@@ -2,7 +2,7 @@
 # caf_precommit_check.sh - structural fail-closed check for the caf-gate (no toolchain, sandbox-safe).
 #
 # Every module with an awh goldenset (i.e. a gated module) MUST also declare a CAF audit-profile.yaml,
-# so ship-feature-requests step 28.5 has a target-health command to run. This hook proves the gate is
+# so ship-tasks step 28.5 has a target-health command to run. This hook proves the gate is
 # DECLARED for every gated module; it does NOT run builds or tests (that is scripts/caf_gate.sh on a
 # build machine). Wire into .git/hooks/pre-commit (or a pre-commit config) next to the awh check.
 #

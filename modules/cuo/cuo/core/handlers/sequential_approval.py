@@ -1,6 +1,6 @@
 """SequentialApprovalHandler — chain A halts for approver B; resumes on approval.
 
-Per FR-CUO-106 §1.6 + DEC-2385. Affects 1 pair today:
+Per TASK-CUO-106 §1.6 + DEC-2385. Affects 1 pair today:
     - chief-ethics-officer/per-model-card-ethics-sign-off
         gates chief-ai-officer/per-model-card-release
 

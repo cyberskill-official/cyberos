@@ -1,4 +1,4 @@
-//! The proxy decision logic (FR-OBS-002 §3) as a pure function, separate from the HTTP I/O.
+//! The proxy decision logic (TASK-OBS-002 §3) as a pure function, separate from the HTTP I/O.
 //!
 //! `decide` is the security core: given verified claims, the user's query, and the target backend, it
 //! returns the query to forward plus the audit outcome - or an error the router maps to a status. The

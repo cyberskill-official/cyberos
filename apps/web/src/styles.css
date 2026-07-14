@@ -648,7 +648,7 @@ button:focus-visible, .chan-row:focus-visible { outline: 2px solid var(--accent-
   .empty.big { position: relative; }
 }
 
-/* FR-CHAT-267 — report dialog. Reuses .picker-bg / .picker (the shared modal shell) and .confirm-actions
+/* TASK-CHAT-267 — report dialog. Reuses .picker-bg / .picker (the shared modal shell) and .confirm-actions
    (the shared button row), so it inherits the app's existing focus ring, backdrop and motion. Only the
    report-specific interior is new. */
 .report-box { max-width: 24rem; padding: 1rem 1.1rem 0.9rem; }
@@ -686,7 +686,7 @@ button:focus-visible, .chan-row:focus-visible { outline: 2px solid var(--accent-
 .report-privacy { font-size: 0.78rem; line-height: 1.35; margin: 0 0 0.6rem; }
 .report-error { color: var(--danger, #d64545); font-size: 0.82rem; margin: 0 0 0.5rem; }
 
-/* FR-CHAT-268 — the collapsed row shown where a blocked person posted in a group channel. Deliberately
+/* TASK-CHAT-268 — the collapsed row shown where a blocked person posted in a group channel. Deliberately
    quiet: it should read as a seam in the conversation, not as an accusation. */
 .blocked-msg {
   align-items: baseline;
@@ -698,7 +698,7 @@ button:focus-visible, .chan-row:focus-visible { outline: 2px solid var(--accent-
 }
 .blocked-msg-text { font-style: italic; }
 
-/* FR-CHAT-269 — the moderation queue. Two panes: the list, and the selected report. */
+/* TASK-CHAT-269 — the moderation queue. Two panes: the list, and the selected report. */
 .moderation { display: flex; flex-direction: column; height: 100%; padding: 1rem 1.25rem; }
 .mod-head { align-items: center; display: flex; justify-content: space-between; margin-bottom: 0.75rem; }
 .mod-head-right { align-items: center; display: flex; gap: 0.75rem; }

@@ -1,8 +1,8 @@
-//! FR-AI-016 §5 — Integration tests for residency enforcement in alias resolution.
+//! TASK-AI-016 §5 — Integration tests for residency enforcement in alias resolution.
 //!
 //! Tests the wiring between alias::resolve and residency::matches.
 //!
-//! NOTE: The alias::resolve pipeline checks cost-table BEFORE residency (FR-AI-007 → FR-AI-016).
+//! NOTE: The alias::resolve pipeline checks cost-table BEFORE residency (TASK-AI-007 → TASK-AI-016).
 //! Integration tests that use model IDs not in the cost table will fail with
 //! `ResolvedModelMissingCostEntry` before reaching the residency check. This is correct
 //! behaviour — the cost gate is a prerequisite. Tests here verify the overall pipeline

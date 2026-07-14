@@ -9,7 +9,7 @@ phase: P0
 slo: "100% of sequential-signing workflows complete in declared signer order; 0 out-of-order signatures"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-DOC-005]
+related_tasks: [TASK-DOC-005]
 ---
 
 ## §1 — Statement (BCP-14 normative)

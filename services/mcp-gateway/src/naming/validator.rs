@@ -1,4 +1,4 @@
-//! Core SEP-986 validation logic (FR-MCP-003).
+//! Core SEP-986 validation logic (TASK-MCP-003).
 //!
 //! Single public entry point: [`validate_sync`], plus the closed [`Sep986Verb`] enum and the typed
 //! [`NamingError`]. The async audit-emitting wrapper and the registration hook land in a follow-on

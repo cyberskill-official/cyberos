@@ -1,6 +1,6 @@
-//! FR-MEMORY-122 §1 #3 — AUTH's capture surface (the per-module `capture.rs`, DEC-2714).
+//! TASK-MEMORY-122 §1 #3 — AUTH's capture surface (the per-module `capture.rs`, DEC-2714).
 //!
-//! Thin typed helpers that translate AUTH's domain events into FR-MEMORY-121 interaction-events and record
+//! Thin typed helpers that translate AUTH's domain events into TASK-MEMORY-121 interaction-events and record
 //! them through the shared [`cyberos_capture::Capturer`]. They sit next to the existing
 //! `memory_bridge::emit_token_issued` / `emit_token_failed` calls in `handlers.rs` and reuse the SAME audit
 //! pool (auth + memory share a Postgres deployment, so AUTH's `state.pg` IS the brain audit DB — no new
@@ -11,7 +11,7 @@
 //!     and so `AppState.capturer` is `None` — the helper returns immediately and does nothing. Deploying
 //!     this during a live team test changes nothing about sign-in.
 //!   * When a capturer is present, the helper builds the event and calls `capture_metered`, which routes
-//!     through FR-MEMORY-121 `emit()` (consent-gated: a subject who has not acknowledged the notice yields
+//!     through TASK-MEMORY-121 `emit()` (consent-gated: a subject who has not acknowledged the notice yields
 //!     a `Skipped` outcome and zero rows) and swallows any error. A capture failure NEVER fails or delays
 //!     token issuance — the call sites already treat their audit writes this way.
 //!

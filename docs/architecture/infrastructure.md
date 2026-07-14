@@ -1,7 +1,7 @@
 ---
 title: Infrastructure
 source: website/docs/architecture/infrastructure.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 ## The six-pillar plane

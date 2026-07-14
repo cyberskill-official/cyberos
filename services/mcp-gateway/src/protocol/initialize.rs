@@ -1,4 +1,4 @@
-//! FR-MCP-001 §1 #5 — `initialize` handshake.
+//! TASK-MCP-001 §1 #5 — `initialize` handshake.
 
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -53,7 +53,7 @@ pub fn build_response(params: &InitializeParams) -> Result<InitializeResult, Rpc
         capabilities: Capabilities::default(),
         server_info: ServerInfo::default_for_gateway(),
         instructions:
-            "Federation of CyberOS modules. All calls audit-chained via memory. OAuth 2.1 PKCE auth via FR-MCP-004."
+            "Federation of CyberOS modules. All calls audit-chained via memory. OAuth 2.1 PKCE auth via TASK-MCP-004."
                 .to_string(),
     })
 }

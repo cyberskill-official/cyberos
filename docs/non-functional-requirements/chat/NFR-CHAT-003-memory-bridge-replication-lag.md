@@ -9,7 +9,7 @@ phase: P0
 slo: "p95 < 2s, p99 < 5s from chat message persist to memory bridge put committed"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-CHAT-005, FR-MEMORY-101]
+related_tasks: [TASK-CHAT-005, TASK-MEMORY-101]
 ---
 
 ## §1 — Statement (BCP-14 normative)

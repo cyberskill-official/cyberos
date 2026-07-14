@@ -6,7 +6,7 @@ classifier_version: 3.0.0-a4
 
 # TRIGGER_TESTS for <artefact>-audit
 
-> **Purpose:** assert routing for auditor skills. Per FR-SKILL-112.
+> **Purpose:** assert routing for auditor skills. Per TASK-SKILL-112.
 
 ## Positive triggers (MUST route here)
 

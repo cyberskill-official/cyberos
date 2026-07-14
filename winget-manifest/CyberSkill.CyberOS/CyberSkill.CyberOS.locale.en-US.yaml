@@ -1,4 +1,4 @@
-# FR-APP-006: winget default-locale manifest. Field set is the schema's required minimum
+# TASK-APP-006: winget default-locale manifest. Field set is the schema's required minimum
 # plus the identity fields; confirm against live winget-pkgs templates pre-submission (spec 9).
 PackageIdentifier: CyberSkill.CyberOS
 PackageVersion: 1.0.0

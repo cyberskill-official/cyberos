@@ -1,4 +1,4 @@
-//! FR-EMAIL-001 §4 #13 + §4 #19 — quarantine threshold + body size guard.
+//! TASK-EMAIL-001 §4 #13 + §4 #19 — quarantine threshold + body size guard.
 
 use cyberos_email::stalwart_adapter::inbound::{sha256_hex, MemoryBlobStore};
 // `BlobStore` trait must be in scope for `bs.put(...)` to resolve — the

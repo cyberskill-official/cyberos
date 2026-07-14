@@ -1,4 +1,4 @@
-//! obs-router boot config from env (FR-OBS-007). Every external dependency is optional so the service
+//! obs-router boot config from env (TASK-OBS-007). Every external dependency is optional so the service
 //! starts and degrades safely: an unset CUO URL means triage errors -> confidence 0 -> PagerDuty; an
 //! unset CHAT or PagerDuty target means that leg fails and the §1 #11 fallback chain takes over.
 

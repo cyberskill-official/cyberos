@@ -1,4 +1,4 @@
-"""FR-CHAT-010 — Slack/Zalo decommission signal."""
+"""TASK-CHAT-010 — Slack/Zalo decommission signal."""
 
 from __future__ import annotations
 

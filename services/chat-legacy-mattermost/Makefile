@@ -1,4 +1,4 @@
-# FR-CHAT-001 — Makefile for the CHAT service (Mattermost fork).
+# TASK-CHAT-001 — Makefile for the CHAT service (Mattermost fork).
 #
 # Targets:
 #   chat-build           Build the Docker image at the pinned commit + patch series.
@@ -55,4 +55,4 @@ chat-verify:
 	@bash tests/patch_apply_test.sh
 	@bash tests/workflows_present_test.sh
 	@bash plugins/cyberos-authbridge/tests/authbridge_shape_test.sh
-	@echo "✓ All FR-CHAT-001 layout invariants pass"
+	@echo "✓ All TASK-CHAT-001 layout invariants pass"

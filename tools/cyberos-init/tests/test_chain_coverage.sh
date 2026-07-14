@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test_chain_coverage.sh - FR-SKILL-116 §5 suite (t01-t06 -> AC 1-6).
+# test_chain_coverage.sh - TASK-SKILL-116 §5 suite (t01-t06 -> AC 1-6).
 set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 repo="$(cd "$here/../../.." && pwd)"
@@ -23,13 +23,13 @@ t01_pair_vendored() {                                                # AC 1
 
 t02_parses_chain_not_list() {                                        # AC 2
   local P="$TMP/t02"; rm -rf "$P"; cp -r "$TMP/payload" "$P"
-  printf '  - { step: 99, skill: nonexistent-author, inputs_from: x, outputs_to: y }\n' >> "$P/cuo/ship-feature-requests.md"
+  printf '  - { step: 99, skill: nonexistent-author, inputs_from: x, outputs_to: y }\n' >> "$P/cuo/ship-tasks.md"
   out="$(bash "$CHECK" "$P" 2>&1)" && rc=0 || rc=$?
-  [ "$rc" -eq 10 ] && echo "$out" | grep -q 'MISSING nonexistent-author (referenced by cuo/ship-feature-requests.md)' \
+  [ "$rc" -eq 10 ] && echo "$out" | grep -q 'MISSING nonexistent-author (referenced by cuo/ship-tasks.md)' \
     && ok t02 || fail t02 "rc=$rc out=$out"
   # edge row 2: zero references -> exit 2, never a vacuous pass
   P="$TMP/t02b"; rm -rf "$P"; cp -r "$TMP/payload" "$P"
-  sed -i 's/skill:/skil_:/g' "$P/cuo/ship-feature-requests.md"
+  sed -i 's/skill:/skil_:/g' "$P/cuo/ship-tasks.md"
   find "$P/plugin/commands" -name '*.md' -delete
   bash "$CHECK" "$P" >/dev/null 2>&1; rc=$?
   [ "$rc" -eq 2 ] || fail "t02b" "rc=$rc, want 2 on zero extraction"
@@ -81,14 +81,14 @@ t06_readonly_check() {                                               # AC 6
   [ "$before" = "$after" ] && ok t06 || fail t06 "payload mutated by the check"
   # edge rows 1/4: missing payload / missing doc -> exit 2
   bash "$CHECK" "$TMP/nonexistent" >/dev/null 2>&1; [ $? -eq 2 ] || fail "t06b" "missing payload not exit 2"
-  rm "$P/cuo/ship-feature-requests.md"
+  rm "$P/cuo/ship-tasks.md"
   bash "$CHECK" "$P" >/dev/null 2>&1; [ $? -eq 2 ] || fail "t06c" "missing doc not exit 2"
 }
 
 t01_pair_vendored; t02_parses_chain_not_list; t03_dropped_pair_fails_build
 t04_allowlist_both_ways; t05_unpaired_detected; t06_readonly_check
 
-t07_reduced_profile_skips() {                                        # FR-SKILL-116 §1 #5 amendment
+t07_reduced_profile_skips() {                                        # TASK-SKILL-116 §1 #5 amendment
   local P="$TMP/t07"; rm -rf "$P"; cp -r "$TMP/payload" "$P"
   rm -rf "$P"/cuo/skills/* 
   out="$(bash "$CHECK" "$P" 2>/dev/null)"; rc=$?

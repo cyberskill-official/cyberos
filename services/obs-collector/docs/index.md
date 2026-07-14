@@ -1,7 +1,7 @@
 ---
 title: OBS - Observability spine, auto-runbook router, compliance evidence surface
 source: website/docs/modules/obs/index.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 OBS is the **shared telemetry plane**: logs, metrics, traces, and AI-trace observability for every CyberOS module. Operationally, OpenTelemetry SDKs in every service ship to a single OTel collector that fans out - logs to Loki, metrics to Prometheus, traces to Tempo. Grafana renders dashboards (per-module SLO, per-tenant cost, per-region health). LangSmith captures full LLM call traces independently from the operational pipeline so AI debugging doesn't require correlating across three tools. Alert Manager fans critical alerts to PagerDuty, mid alerts to `#cyberos-alerts`, low signals into the CUO morning digest. The audit chain - owned by memory - is exposed via a separate read-only OBS surface for regulators (PDPL Art. 14, EU AI Act Art. 12). Tenant scoping is enforced at the query proxy so a member of tenant A cannot see tenant B's logs.
@@ -364,19 +364,19 @@ graph TB
 
 | Component | Where | Responsibility |
 |---|---|---|
-| `cyberos-obs-collector` | services/obs-collector | Rust supervisor around the upstream `otelcol-contrib` binary (bin `cyberos-obs`). Validates the OTLP -> resource -> attributes/pii_scrub -> batch -> Loki/Prometheus/Tempo pipeline shape, manages the bearer-token file, and exposes `obs_collector_*` self-metrics. FR-OBS-001. |
+| `cyberos-obs-collector` | services/obs-collector | Rust supervisor around the upstream `otelcol-contrib` binary (bin `cyberos-obs`). Validates the OTLP -> resource -> attributes/pii_scrub -> batch -> Loki/Prometheus/Tempo pipeline shape, manages the bearer-token file, and exposes `obs_collector_*` self-metrics. TASK-OBS-001. |
 | `attributes/pii_scrub` processor | otelcol pipeline (logs + traces) | PII scrubber the collector requires on the logs and traces pipelines; redaction recall target >= 99.5%. Same rule set as the AI Gateway redactor. |
 | `resource` / `attributes` processors | otelcol pipeline | Set the `tenant.id` label from incoming resource attributes so every signal is tenant-scoped. Source of truth: the `tenant.id` attribute. |
 | tail sampling | otelcol pipeline (planned) | Keep 100% of error + slow traces, sample a fraction of the rest. Slice 1 runs a batch processor; the tail sampler is a later addition. |
 | `Loki` | backend | Log storage. S3-backed. Compressed gzip. 7d hot / 90d warm. |
 | `Tempo` | backend | Trace storage. S3-backed. 7d hot / 30d warm. |
 | `Prometheus` | backend | Metrics. Local 15d. Mimir for 1y at P1+. |
-| `cyberos-obs-proxy` | services/obs-proxy | Rust axum proxy between Grafana and the backends. AST-injects a `tenant_id` filter into every LogQL / PromQL / TraceQL query so no tenant can read another's telemetry; cross-tenant queries are rejected with 403. Slice 1 ships the LogQL injector. FR-OBS-002. |
+| `cyberos-obs-proxy` | services/obs-proxy | Rust axum proxy between Grafana and the backends. AST-injects a `tenant_id` filter into every LogQL / PromQL / TraceQL query so no tenant can read another's telemetry; cross-tenant queries are rejected with 403. Slice 1 ships the LogQL injector. TASK-OBS-002. |
 | `Grafana` | frontend | 11.x. Per-module SLO dashboards + per-tenant cost dashboards + read-only audit-log view (datasource: memory). |
-| `cyberos-obs-router` | services/obs-router | Rust service that parses Alertmanager webhooks and routes each alert through CUO's `obs.triage-alert` skill to CHAT or PagerDuty. Severity parsing, confidence-based routing, the P0/P1-always-page rule, deduplication, and ack handling. FR-OBS-007. |
+| `cyberos-obs-router` | services/obs-router | Rust service that parses Alertmanager webhooks and routes each alert through CUO's `obs.triage-alert` skill to CHAT or PagerDuty. Severity parsing, confidence-based routing, the P0/P1-always-page rule, deduplication, and ack handling. TASK-OBS-007. |
 | `SLO engine` | services/obs-slo (planned) | Sloth-based. SLO definitions in YAML committed to the repo. Burn-rate alerts generated automatically. |
 | `cost pipeline` | services/obs-cost (planned) | Daily cost roll-up from AWS Cost Explorer + AI Gateway usage + storage metrics. Per-tenant breakdown. |
-| `cyberos-obs-compliance-view` | services/obs-compliance-view | Read-only per-regulator views over the memory audit chain. Per-view audit-kind scoping, time-window validation, PII scan, and an Ed25519-signed manifest with chain proof the auditor verifies independently. Exposed as a Grafana datasource so compliance queries in the same UI as operations. FR-OBS-008. |
+| `cyberos-obs-compliance-view` | services/obs-compliance-view | Read-only per-regulator views over the memory audit chain. Per-view audit-kind scoping, time-window validation, PII scan, and an Ed25519-signed manifest with chain proof the auditor verifies independently. Exposed as a Grafana datasource so compliance queries in the same UI as operations. TASK-OBS-008. |
 | `LangSmith client` | integrated in AI Gateway | Sends prompt/completion/tool-call traces directly to LangSmith. Zero-retention contract in place. |
 
 ## Data model
@@ -766,7 +766,7 @@ stateDiagram-v2
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [feature-request-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author) Agent Skill.
+The CyberOS FR catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
 Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
 
@@ -1063,7 +1063,7 @@ slo:
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - OBS placed at P0 slice 1 alongside AI Gateway as the two earliest P0 modules.
 - **Research review:** `archive/2026-05-14/RESEARCH_REVIEW.md` (archived; see `cyberos/CHANGELOG.md`) - OBS rated "Strong" (9/10); the auto-runbook-router framing flagged as the most differentiated operational play.
 - **Memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §8](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - OBS reads from memory's audit chain for compliance exports; it never writes back (memory is upstream).
-- **FR authoring discipline:** [modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- **FR authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 - **EU AI Act** (Reg. 2024/1689) - Art. 12 logging, Art. 13 transparency, Art. 14 human oversight, Art. 26 deployer obligations.
 - **ISO/IEC 27001:2022** - A.8.15 logging, A.8.16 monitoring activities.
 - **ISO/IEC 42001 (AIMS)** - § 9.1 performance evaluation.

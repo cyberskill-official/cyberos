@@ -1,6 +1,6 @@
 """Dispatch — read workflow `pattern:` frontmatter, return matching Handler subclass.
 
-Per FR-CUO-106 §1.2 + DEC-2387:
+Per TASK-CUO-106 §1.2 + DEC-2387:
     - Read workflow.frontmatter.pattern (default 'linear')
     - Return matching Handler subclass instance
     - linear pattern → LinearHandler (= existing execute_chain)
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from cuo.core.handlers.base import Handler
 
 
-# Closed enum per FR-CUO-106 DEC-2381 (cardinality 6)
+# Closed enum per TASK-CUO-106 DEC-2381 (cardinality 6)
 KNOWN_PATTERNS = frozenset({
     "linear",
     "time_critical",

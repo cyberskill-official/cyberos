@@ -1,4 +1,4 @@
-//! RS256 key generation for FR-AUTH-004.
+//! RS256 key generation for TASK-AUTH-004.
 //!
 //! Called by `cyberos-auth bootstrap` (and during AppState boot if no
 //! active key exists). Generates a 2048-bit RSA keypair and returns the

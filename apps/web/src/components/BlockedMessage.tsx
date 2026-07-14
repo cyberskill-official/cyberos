@@ -3,9 +3,9 @@ import { t } from "../lib/i18n";
 import type { CatalogKey } from "../lib/i18n";
 
 /** Every string the blocking surfaces render, checked against the catalog at COMPILE time — the same trick
- *  FR-CHAT-267 uses for the report dialog. `satisfies readonly CatalogKey[]` makes `tsc --noEmit` fail if any
+ *  TASK-CHAT-267 uses for the report dialog. `satisfies readonly CatalogKey[]` makes `tsc --noEmit` fail if any
  *  of these is missing, and because a catalog entry is `{ en; vi }`, a key that type-checks necessarily
- *  carries both locales. FR-CHAT-268 §1 #15 ("every string must ship in en and vi") is therefore a build
+ *  carries both locales. TASK-CHAT-268 §1 #15 ("every string must ship in en and vi") is therefore a build
  *  failure when broken, not a string that quietly renders as its own name. */
 export const BLOCK_KEYS = [
   "blocked.hidden",
@@ -20,7 +20,7 @@ export const BLOCK_KEYS = [
   "blocked.failed",
 ] as const satisfies readonly CatalogKey[];
 
-// FR-CHAT-268 §1 #5 — the collapsed placeholder shown in a GROUP channel where a blocked person has posted.
+// TASK-CHAT-268 §1 #5 — the collapsed placeholder shown in a GROUP channel where a blocked person has posted.
 //
 // Why a placeholder and not a hole: removing the message outright would silently rewrite the channel's
 // history for one participant. Replies to a vanished message become nonsense, thread counts stop matching,

@@ -1,4 +1,4 @@
-//! File attachments. Slice 3 (FR-CHAT-101) began with base64 JSON uploads into a bytea column; the
+//! File attachments. Slice 3 (TASK-CHAT-101) began with base64 JSON uploads into a bytea column; the
 //! richer-messages cluster adds a raw-bytes upload route, a pluggable byte store (db | fs volume - see
 //! storage.rs), a client-visible limits endpoint, and multi-attachment messages (metadata folding +
 //! purge-on-delete helpers used by messages.rs). The original base64 route and single `attachment_id`

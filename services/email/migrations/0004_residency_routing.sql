@@ -1,11 +1,11 @@
--- FR-EMAIL-001 §3.5 — per-tenant residency → (S3 bucket, KMS key,
+-- TASK-EMAIL-001 §3.5 — per-tenant residency → (S3 bucket, KMS key,
 -- Postgres schema namespace) routing table.
 --
 -- The Stalwart inbound handler looks up the recipient's tenant residency
 -- before writing the body to S3. Cross-residency writes are fail-closed
 -- per §1 #12 (the handler asserts residency match BEFORE the S3 PUT).
 --
--- This is a lightweight slice-1 table; FR-AI-016 ships the broader
+-- This is a lightweight slice-1 table; TASK-AI-016 ships the broader
 -- residency-policy framework which this resolver delegates to in slice 2.
 
 BEGIN;
@@ -40,7 +40,7 @@ BEGIN
         -- The application role can INSERT (provisioning) + SELECT (lookup)
         -- but cannot UPDATE residency once set (residency changes are an
         -- operator-action via the BYPASSRLS `cyberos_ops` role per
-        -- FR-AUTH-003 §1 #5).
+        -- TASK-AUTH-003 §1 #5).
         EXECUTE 'REVOKE UPDATE, DELETE ON tenant_residency FROM cyberos_app';
     END IF;
 END $$;

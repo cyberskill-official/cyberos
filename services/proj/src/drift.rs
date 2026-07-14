@@ -1,4 +1,4 @@
-//! FR-PROJ-010 — citation drift detection for MEMORY_LINKs.
+//! TASK-PROJ-010 — citation drift detection for MEMORY_LINKs.
 
 use crate::memory_link::{MemoryLink, MemoryLinkType};
 use serde::{Deserialize, Serialize};

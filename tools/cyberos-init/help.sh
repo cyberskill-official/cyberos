@@ -26,7 +26,7 @@ Channels:
   cli/bin/*.mjs
 
 Plugin slash commands (Claude Code): /install /uninstall /version /status /help
-  plus /ship-feature-requests and /create-feature-requests
+  plus /ship-tasks and /create-tasks
 
 Docs: GUIDE.md · https://cyberos.cyberskill.world/docs
 TXT

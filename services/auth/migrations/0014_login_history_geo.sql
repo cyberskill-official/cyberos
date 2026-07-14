@@ -1,4 +1,4 @@
--- FR-AUTH-106 — login geo / IP history + impossible-travel audit.
+-- TASK-AUTH-106 — login geo / IP history + impossible-travel audit.
 --
 -- Every successful login (password / OIDC / SAML / Passkey) inserts a row here.
 -- The next login checks the previous row's IP + ts; if the network distance +

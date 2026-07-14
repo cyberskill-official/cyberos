@@ -1,15 +1,15 @@
-//! FR-AI-020 — Rerank type definitions.
+//! TASK-AI-020 — Rerank type definitions.
 
 use serde::{Deserialize, Serialize};
 
-/// Maximum candidates per rerank request (FR-AI-020 §1 #6).
+/// Maximum candidates per rerank request (TASK-AI-020 §1 #6).
 pub const MAX_CANDIDATES: usize = 100;
 
-/// Maximum total tokens per rerank request (FR-AI-020 §1 #7).
+/// Maximum total tokens per rerank request (TASK-AI-020 §1 #7).
 /// = 8192 × 100 (cross-encoder per-pair limit × max pairs practical).
 pub const MAX_TOTAL_TOKENS: u32 = 819_200;
 
-/// Rerank request shape (FR-AI-020 §3).
+/// Rerank request shape (TASK-AI-020 §3).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RerankRequest {
     /// The query text.
@@ -27,7 +27,7 @@ fn default_normalize() -> bool {
     true
 }
 
-/// Rerank response shape (FR-AI-020 §3).
+/// Rerank response shape (TASK-AI-020 §3).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RerankResponse {
     /// (original_index, score) pairs sorted descending by score.
@@ -67,7 +67,7 @@ impl RerankResponse {
     }
 }
 
-/// Error taxonomy for rerank operations (FR-AI-020 §3).
+/// Error taxonomy for rerank operations (TASK-AI-020 §3).
 #[derive(Debug, thiserror::Error)]
 pub enum RerankError {
     #[error("too many candidates: max={max} actual={actual}")]
@@ -89,7 +89,7 @@ pub enum RerankError {
     BreakerOpen { url: String },
 }
 
-/// Cost for a rerank call. Self-hosted = $0 marginal (FR-AI-020 §1 #4).
+/// Cost for a rerank call. Self-hosted = $0 marginal (TASK-AI-020 §1 #4).
 pub fn cost_for_rerank(_candidates: usize, _total_tokens: u32) -> f64 {
     0.0
 }

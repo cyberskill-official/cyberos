@@ -1,7 +1,7 @@
-"""Tests for FR-MEMORY-118 — put_if optimistic-concurrency primitive.
+"""Tests for TASK-MEMORY-118 — put_if optimistic-concurrency primitive.
 
 Covers acceptance criteria from
-`docs/feature-requests/memory/FR-MEMORY-118-put-if-precondition/spec.md`:
+`docs/tasks/memory/TASK-MEMORY-118-put-if-precondition/spec.md`:
 
 * AC #1  — precondition match → write succeeds
 * AC #2  — precondition mismatch → rejected
@@ -199,7 +199,7 @@ def test_hash_precondition_absent_rejects(tmp_path: Path) -> None:
     assert res.actual == "<absent>"
 
 
-# ---- success-row shape (FR-MEMORY-118 §1 #6 / AGENTS.md §3.1.6) ----------
+# ---- success-row shape (TASK-MEMORY-118 §1 #6 / AGENTS.md §3.1.6) ----------
 
 
 def test_success_row_has_op_put_not_put_if(tmp_path: Path) -> None:
@@ -241,7 +241,7 @@ def test_precondition_failed_aux_row_shape(tmp_path: Path) -> None:
     assert payload["expected"] == "0" * 64
 
 
-# ---- ACL ordering (FR-MEMORY-117 ↔ FR-MEMORY-118) --------------------------
+# ---- ACL ordering (TASK-MEMORY-117 ↔ TASK-MEMORY-118) --------------------------
 
 
 def test_acl_check_runs_before_precondition(tmp_path: Path) -> None:

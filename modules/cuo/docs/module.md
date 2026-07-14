@@ -1,7 +1,7 @@
 ---
 title: CUO - Module
 source: website/docs/modules/cuo/module.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 # CyberOS CUO module - canonical persona catalog

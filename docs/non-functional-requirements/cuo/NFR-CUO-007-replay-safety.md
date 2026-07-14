@@ -9,7 +9,7 @@ phase: P1
 slo: "100% of replayed chains match original step count + skill chain + outcome"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-CUO-103, FR-CUO-105]
+related_tasks: [TASK-CUO-103, TASK-CUO-105]
 ---
 
 ## §1 — Statement (BCP-14 normative)
@@ -18,7 +18,7 @@ related_frs: [FR-CUO-103, FR-CUO-105]
 2. Replay **MUST** read from the original chain's persisted state (Phase-2 step output JSON files + Phase-3 memory rows) — it does NOT re-execute external side effects.
 3. If the underlying workflow has been updated (newer `version:`) the replay **MUST** use the version recorded in the original audit row, NOT the latest.
 4. If the recorded workflow version is no longer present in the catalog, replay **MUST** refuse with `E_REPLAY_VERSION_GONE` rather than substitute a current version.
-5. Per-step rollback (FR-CUO-105) **MUST** preserve replay safety — rolled-back steps remain visible to replay as `outcome=rolled_back`.
+5. Per-step rollback (TASK-CUO-105) **MUST** preserve replay safety — rolled-back steps remain visible to replay as `outcome=rolled_back`.
 
 ## §2 — Why this constraint
 

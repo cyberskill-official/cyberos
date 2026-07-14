@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test_gate_autodetect.sh - FR-CUO-207 §5 suite (t01-t08 -> AC 1-8).
+# test_gate_autodetect.sh - TASK-CUO-207 §5 suite (t01-t08 -> AC 1-8).
 set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"; repo="$(cd "$here/../../.." && pwd)"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT

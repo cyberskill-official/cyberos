@@ -1,4 +1,4 @@
-# doc-anchor-exemptions.txt - citing FILES exempt from check_doc_anchors.sh (FR-SKILL-119).
+# doc-anchor-exemptions.txt - citing FILES exempt from check_doc_anchors.sh (TASK-SKILL-119).
 # One path prefix + reason per line. Same allowlist discipline as chain-allowlist.txt:
 # an exemption must say WHY; entries matching nothing warn at check time.
 modules/skill/docs/appendices.md      # absorbed-history archive: citations record the pre-split repo faithfully
@@ -8,33 +8,33 @@ modules/skill/runners/README.md       # self-declared legacy framework doc (pre-
 modules/skill/docs/index.md           # cites ./changelog.html - build-generated artifact, exists only in dist payload
 modules/cuo/CHANGELOG.md              # changelog = historical record, not a live contract
 modules/cuo/docs/index.md             # GUIDE source: cites build-generated html that exists only in dist payload
-docs/feature-requests/chat/README.md   # hand-written index of the RETIRED pre-101 chat generation; superseded by BACKLOG.md + status hub
-docs/feature-requests/app/README.md    # stale hand-written index; superseded by BACKLOG.md + status hub
-docs/feature-requests/plugin/README.md # stale hand-written index; superseded by BACKLOG.md + status hub
-docs/feature-requests/chat/CHAT-AUDIT-2026-07-02.md      # dated audit report = historical record
-docs/feature-requests/chat/CHAT-DEEP-AUDIT-2026-07-03.md # dated audit report = historical record
-docs/feature-requests/ai/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
-docs/feature-requests/auth/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
-docs/feature-requests/crm/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
-docs/feature-requests/cuo/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
-docs/feature-requests/doc/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
-docs/feature-requests/docs/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
-docs/feature-requests/email/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
-docs/feature-requests/esop/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
-docs/feature-requests/eval/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
-docs/feature-requests/hr/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
-docs/feature-requests/improvement/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
-docs/feature-requests/inv/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
-docs/feature-requests/kb/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
-docs/feature-requests/learn/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
-docs/feature-requests/mcp/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
-docs/feature-requests/memory/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
-docs/feature-requests/obs/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
-docs/feature-requests/okr/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
-docs/feature-requests/portal/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
-docs/feature-requests/proj/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
-docs/feature-requests/res/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
-docs/feature-requests/rew/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
-docs/feature-requests/skill/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
-docs/feature-requests/ten/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
-docs/feature-requests/time/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
+docs/tasks/chat/README.md   # hand-written index of the RETIRED pre-101 chat generation; superseded by BACKLOG.md + status hub
+docs/tasks/app/README.md    # stale hand-written index; superseded by BACKLOG.md + status hub
+docs/tasks/plugin/README.md # stale hand-written index; superseded by BACKLOG.md + status hub
+docs/tasks/chat/CHAT-AUDIT-2026-07-02.md      # dated audit report = historical record
+docs/tasks/chat/CHAT-DEEP-AUDIT-2026-07-03.md # dated audit report = historical record
+docs/tasks/ai/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
+docs/tasks/auth/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
+docs/tasks/crm/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
+docs/tasks/cuo/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
+docs/tasks/doc/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
+docs/tasks/docs/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
+docs/tasks/email/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
+docs/tasks/esop/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
+docs/tasks/eval/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
+docs/tasks/hr/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
+docs/tasks/improvement/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
+docs/tasks/inv/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
+docs/tasks/kb/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
+docs/tasks/learn/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
+docs/tasks/mcp/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
+docs/tasks/memory/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
+docs/tasks/obs/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
+docs/tasks/okr/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
+docs/tasks/portal/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
+docs/tasks/proj/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
+docs/tasks/res/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
+docs/tasks/rew/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
+docs/tasks/skill/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
+docs/tasks/ten/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)
+docs/tasks/time/README.md   # hand-written module index; superseded by BACKLOG.md + status hub (retired rows preserved as history)

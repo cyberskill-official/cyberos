@@ -1,4 +1,4 @@
-//! FR-EVAL-002 - rubric versioning + HITL publish integration tests (§1 #6 #7 #8 #13, §4 #7..#10 #16).
+//! TASK-EVAL-002 - rubric versioning + HITL publish integration tests (§1 #6 #7 #8 #13, §4 #7..#10 #16).
 //!
 //! Drives the rubric module functions directly (like `governance_gate_test.rs`) and the HTTP publish path,
 //! against a live Postgres with the eval migrations applied. `#[ignore]` by default, gates on

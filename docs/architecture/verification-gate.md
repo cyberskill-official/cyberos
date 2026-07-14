@@ -1,7 +1,7 @@
 ---
 title: Verification gate (awh)
 source: website/docs/architecture/verification-gate.html
-migrated: FR-DOCS-002
+migrated: TASK-DOCS-002
 ---
 
 ## The principle
@@ -12,7 +12,7 @@ An agent that writes the code, writes the tests, and grades its own work has no 
 
 The gate attaches at four seams without refactoring the platform:
 
-1. **The CUO workflow.** `ship-feature-requests` runs step 28 `awh-gate` and step 29 `caf-gate` between the post-implementation audit (step 27) and the `testing -> done` flip (step 30). The flip is conditional on `awh_gate_report.outcome == GREEN AND caf_gate_report.outcome == CLEAN`; either RED routes the FR back to `ready_to_implement` per STATUS-REFERENCE section 1.3.
+1. **The CUO workflow.** `ship-tasks` runs step 28 `awh-gate` and step 29 `caf-gate` between the post-implementation audit (step 27) and the `testing -> done` flip (step 30). The flip is conditional on `awh_gate_report.outcome == GREEN AND caf_gate_report.outcome == CLEAN`; either RED routes the FR back to `ready_to_implement` per STATUS-REFERENCE section 1.3.
 2. **Pre-commit.** `.pre-commit-hooks/awh-gate.sh` reruns the changed module's gate. A golden set with no committed baseline fails closed (an ungated eval always exits 0, so it must never be used as a gate).
 3. **CI.** `.github/workflows/awh-gate.yml` runs the gate for every changed module on a pull request, and is marked required in branch protection so it is the merge gate to `main`.
 4. **The merge gate.** Because CI is required, `main` stays green by construction.
@@ -29,7 +29,7 @@ tasks:
     cmd: "cd modules/memory && python -m pytest -q"
     weight: 3.0
     timeout_sec: 900
-  - id: acceptance-fr-memory-116    # held-out, sealed read-only via awh lock
+  - id: acceptance-task-memory-116    # held-out, sealed read-only via awh lock
     cmd: "cd modules/memory && python -m pytest tests/core/test_consolidate_semantic_dedup.py -q"
     weight: 5.0
     timeout_sec: 300

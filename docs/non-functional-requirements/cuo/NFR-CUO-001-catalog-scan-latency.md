@@ -9,7 +9,7 @@ phase: P0
 slo: "p95 < 3s for full cuo/ + skill/ filesystem catalog scan + validation"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-CUO-101, FR-CUO-104]
+related_tasks: [TASK-CUO-101, TASK-CUO-104]
 ---
 
 ## §1 — Statement (BCP-14 normative)

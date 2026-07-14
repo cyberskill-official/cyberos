@@ -1,4 +1,4 @@
-//! `POST /v1/admin/subjects/{id}/roles` + `DELETE /…/{role}` (FR-AUTH-101 §1 #5-#6).
+//! `POST /v1/admin/subjects/{id}/roles` + `DELETE /…/{role}` (TASK-AUTH-101 §1 #5-#6).
 //!
 //! Auth: caller MUST hold `Resource::RoleAssignment + Action::Admin` (typically
 //! `tenant-admin` or `root-admin`). The verify_jwt middleware ensures `Claims`
@@ -79,7 +79,7 @@ pub async fn assign_role(
 
     // 4. WebAuthn-required gate (DEC-128) — `founder` requires a registered
     //    WebAuthn factor. Query mfa_factors directly so this works the moment
-    //    FR-AUTH-105 WebAuthn enrolment lands (no code change needed here).
+    //    TASK-AUTH-105 WebAuthn enrolment lands (no code change needed here).
     if role.requires_webauthn() {
         let has_webauthn = subject_has_active_factor(&state.pg, subject_id, "webauthn")
             .await
@@ -90,7 +90,7 @@ pub async fn assign_role(
                 Json(json!({
                     "error": "webauthn_required",
                     "role": role.as_str(),
-                    "detail": "founder role assignment requires a registered WebAuthn factor (FR-AUTH-105)",
+                    "detail": "founder role assignment requires a registered WebAuthn factor (TASK-AUTH-105)",
                 })),
             )
                 .into_response();
@@ -209,11 +209,11 @@ pub async fn revoke_role(
 }
 
 /// Parse the caller's effective Role membership from the JWT.
-/// FR-AUTH-101 §1 #8 — `Claims.roles` is the canonical source; the prior
+/// TASK-AUTH-101 §1 #8 — `Claims.roles` is the canonical source; the prior
 /// `scope_grants` fallback handles tokens issued before this FR shipped
 /// (the 30-day grace window per DEC-125).
 fn parse_caller_roles(claims: &Claims) -> Vec<Role> {
-    // Prefer the canonical `roles` claim if present (FR-AUTH-101 era).
+    // Prefer the canonical `roles` claim if present (TASK-AUTH-101 era).
     if !claims.roles.is_empty() {
         return claims
             .roles

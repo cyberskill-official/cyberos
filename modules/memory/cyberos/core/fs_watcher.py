@@ -1,8 +1,8 @@
-"""FR-MEMORY-107 — Filesystem watcher for the personal-memory capture daemon.
+"""TASK-MEMORY-107 — Filesystem watcher for the personal-memory capture daemon.
 
 Watches every opted-in folder (per AGENTS.md §11 watched-folder list) and
 emits :class:`FsEvent` rows when files are created, modified, moved, or
-deleted. The capture daemon (FR-MEMORY-110) subscribes to this stream and
+deleted. The capture daemon (TASK-MEMORY-110) subscribes to this stream and
 decides which events should produce memory ``put`` / ``move`` / ``delete``
 ops.
 
@@ -25,7 +25,7 @@ Design choices (DEC-091 / DEC-092 from the FR spec):
 
 This module ships the data types + scaffold loop; the polling implementation
 is intentionally minimal — the production watcher will live alongside the
-capture daemon in :mod:`cyberos.core.capture_daemon` (FR-MEMORY-110).
+capture daemon in :mod:`cyberos.core.capture_daemon` (TASK-MEMORY-110).
 """
 
 from __future__ import annotations

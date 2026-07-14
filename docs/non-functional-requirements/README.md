@@ -20,7 +20,7 @@ docs/non-functional-requirements/
 └── …                                            # one folder per module
 ```
 
-Folder naming mirrors `docs/feature-requests/` exactly — same `<module>/`
+Folder naming mirrors `docs/tasks/` exactly — same `<module>/`
 slugs, same `<ID>-<slug>.md` file shape. The renderer enumerates this tree
 and projects each frontmatter row into the catalog's `NFR_DATA` array.
 
@@ -51,7 +51,7 @@ phase: P0..P4
 slo: "<measurable target>"
 owner: <CTO | CSO | CFO | …>
 created: 2026-05-18
-related_frs: [FR-…, FR-…]
+related_tasks: [FR-…, FR-…]
 ```
 
 ## Authoring discipline

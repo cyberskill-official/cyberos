@@ -9,7 +9,7 @@ phase: P0
 slo: "Password hashing uses bcrypt cost ≥ 12; production override via AUTH_BCRYPT_COST env"
 owner: CSO
 created: 2026-05-18
-related_frs: [FR-AUTH-002]
+related_tasks: [TASK-AUTH-002]
 ---
 
 ## §1 — Statement (BCP-14 normative)

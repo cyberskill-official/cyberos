@@ -9,7 +9,7 @@ phase: P0
 slo: "Property test: 0 cross-tenant cursor influence under 1000 random advance sequences"
 owner: CSO
 created: 2026-05-18
-related_frs: [FR-MEMORY-101, FR-MEMORY-103]
+related_tasks: [TASK-MEMORY-101, TASK-MEMORY-103]
 ---
 
 ## §1 — Statement (BCP-14 normative)

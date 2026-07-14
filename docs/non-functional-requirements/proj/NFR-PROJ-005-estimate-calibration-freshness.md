@@ -9,12 +9,12 @@ phase: P1
 slo: "Calibration freshness ≤ 7 days; 100% of teams refreshed within their cadence"
 owner: CTO
 created: 2026-05-18
-related_frs: [FR-PROJ-013]
+related_tasks: [TASK-PROJ-013]
 ---
 
 ## §1 — Statement (BCP-14 normative)
 
-1. Per-team estimate calibration (`FR-PROJ-013`) **MUST** refresh weekly using closed issues from the prior cycle window.
+1. Per-team estimate calibration (`TASK-PROJ-013`) **MUST** refresh weekly using closed issues from the prior cycle window.
 2. Calibration outputs **MUST** include the `(estimate, actual, ratio)` triple per closed issue plus the team's rolling calibration coefficient.
 3. Teams with fewer than 5 closed issues in the window **MUST** show a "low-data" indicator instead of an unreliable coefficient.
 4. Calibration data **MUST** be visible in the cycle review draft + issue brief modal.

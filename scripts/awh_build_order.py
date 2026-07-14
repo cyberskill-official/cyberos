@@ -16,7 +16,7 @@ import re
 import sys
 from pathlib import Path
 
-FR_ROOT = Path("docs/feature-requests")
+FR_ROOT = Path("docs/tasks")
 ROADMAP = ["MEMORY", "SKILL", "CUO", "AUTH", "CHAT", "PROJ"]
 
 

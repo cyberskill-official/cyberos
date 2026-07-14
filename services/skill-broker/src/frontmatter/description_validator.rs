@@ -1,4 +1,4 @@
-//! Description-format validator per FR-SKILL-111 §3 (SKB-020..023).
+//! Description-format validator per TASK-SKILL-111 §3 (SKB-020..023).
 //!
 //! Enforces: 80-1024 chars · no XML brackets · ≥1 verb stem · ≥2 quoted
 //! trigger phrases (paraphrase-distinct check is operator-attested, not
@@ -85,7 +85,7 @@ mod tests {
 
     #[test]
     fn valid_description() {
-        let d = r#"Generate a feature_request@1 markdown from PRDs. Use when user asks to "draft an FR" or "turn this PRD into a backlog". Outputs versioned FR-NNN-slug.md files with anti-fabrication discipline."#;
+        let d = r#"Generate a task@1 markdown from PRDs. Use when user asks to "draft an FR" or "turn this PRD into a backlog". Outputs versioned FR-NNN-slug.md files with anti-fabrication discipline."#;
         assert!(validate(d).is_ok());
     }
 

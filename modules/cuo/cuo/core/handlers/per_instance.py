@@ -1,6 +1,6 @@
 """PerInstanceHandler — iterate chain once per instance_descriptor entry; fan-in summary.
 
-Per FR-CUO-106 §1.4 + DEC-2383. Affects 1 workflow today:
+Per TASK-CUO-106 §1.4 + DEC-2383. Affects 1 workflow today:
     - chief-sales-officer/quarterly-account-plan (10–20 top-tier accounts per quarter)
 
 The handler reads `workflow.frontmatter.instance_descriptor` (a list of dicts).

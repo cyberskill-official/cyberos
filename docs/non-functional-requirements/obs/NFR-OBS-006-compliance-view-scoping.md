@@ -9,7 +9,7 @@ phase: P0
 slo: "Tenant A user views ONLY tenant A data in Grafana; zero cross-tenant leakage under property test"
 owner: CSO
 created: 2026-05-18
-related_frs: [FR-OBS-002, FR-OBS-008]
+related_tasks: [TASK-OBS-002, TASK-OBS-008]
 ---
 
 ## §1 — Statement (BCP-14 normative)

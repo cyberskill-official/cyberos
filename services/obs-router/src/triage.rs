@@ -1,4 +1,4 @@
-//! The CUO `obs.triage-alert` client (FR-OBS-007 §1 #2). The router calls CUO with the alert; CUO
+//! The CUO `obs.triage-alert` client (TASK-OBS-007 §1 #2). The router calls CUO with the alert; CUO
 //! returns a confidence plus summary, suggested runbook, and suspected cause. A timeout (5s budget,
 //! §1 #9) or error is absorbed by the orchestration as `Triage::failed` (confidence 0), which routes to
 //! PagerDuty - never a silent drop.

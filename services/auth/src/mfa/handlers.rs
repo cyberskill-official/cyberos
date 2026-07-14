@@ -1,4 +1,4 @@
-//! FR-AUTH-102 — MFA HTTP handlers.
+//! TASK-AUTH-102 — MFA HTTP handlers.
 //!
 //! Endpoints:
 //!   * `POST /v1/auth/mfa/factors/totp/enrol`          — start TOTP enrolment

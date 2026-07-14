@@ -1,4 +1,4 @@
-//! The four compliance views (FR-OBS-008 §1 #1, #11). Each view selects a fixed set of audit row kinds
+//! The four compliance views (TASK-OBS-008 §1 #1, #11). Each view selects a fixed set of audit row kinds
 //! from the memory chain - that mapping is the auditable contract, so it is a pure table and is tested.
 
 /// A compliance view, one per regulation (slice-3 scope, DEC-175).

@@ -6,7 +6,7 @@ covers the local bring-up; the production notes are at the end.
 
 ## What is built, and what changed this session
 
-The OIDC authorization-code + PKCE flow already exists in `services/auth/src/oidc.rs` (FR-AUTH-104):
+The OIDC authorization-code + PKCE flow already exists in `services/auth/src/oidc.rs` (TASK-AUTH-104):
 `initiate` builds the provider redirect with PKCE and a state token, `callback` exchanges the code for
 tokens, provisions the subject, and mints a CyberOS session. Two fixes landed this session to make Google
 sign-in real and safe:
@@ -115,12 +115,12 @@ curl -fsS -X POST http://localhost:7700/v1/admin/subjects/<SUBJECT_ID>/revoke \
   -d '{}'
 ```
 
-The revoke endpoint needs an admin token and an idempotency key (FR-AUTH-005); check the exact header name
+The revoke endpoint needs an admin token and an idempotency key (TASK-AUTH-005); check the exact header name
 in `services/auth/src/handlers.rs` if it rejects the request. Find the subject id from the sign-in
 response or by listing subjects.
 
 Today this is a manual step at offboarding. The fully automatic version - Google removal instantly killing
-the live session with no manual call - is SCIM deprovisioning (FR-PORTAL-004), which is specified but not
+the live session with no manual call - is SCIM deprovisioning (TASK-PORTAL-004), which is specified but not
 built. A short session lifetime narrows the manual window in the meantime.
 
 ## Compile and test (your Mac)

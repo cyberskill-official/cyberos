@@ -1,4 +1,4 @@
-//! FR-AI-018 §1 #3–5 — Property tests for cross-tenant cache isolation.
+//! TASK-AI-018 §1 #3–5 — Property tests for cross-tenant cache isolation.
 //!
 //! Requires a running Redis at 127.0.0.1:6379.
 //! Run with: docker run -d --name test-redis -p 6379:6379 redis:7

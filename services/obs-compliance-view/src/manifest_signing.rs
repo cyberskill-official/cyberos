@@ -1,4 +1,4 @@
-//! Ed25519 signing and offline verification of a chain-of-custody manifest (FR-OBS-009 §1 #2, #7). The
+//! Ed25519 signing and offline verification of a chain-of-custody manifest (TASK-OBS-009 §1 #2, #7). The
 //! signature (base64) covers the manifest's canonical signable bytes; an auditor verifies it offline
 //! with the published public key plus the exported rows - no CyberOS access needed (DEC-183).
 

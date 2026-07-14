@@ -1,7 +1,7 @@
-//! FR-MCP-002 — module self-registration (control-plane).
+//! TASK-MCP-002 — module self-registration (control-plane).
 //!
 //! A module's MCP server POSTs its tool catalogue here at startup so `tools/list` and
-//! `tools/call` can see it. This is the registration half of FR-MCP-002; the
+//! `tools/call` can see it. This is the registration half of TASK-MCP-002; the
 //! heartbeat/health lifecycle (DEC-2350 register-at-startup + 10s heartbeat, 3 misses /
 //! 30s -> unhealthy; DEC-2351 the closed `server_health_status` enum) is a separate slice
 //! that builds on this one.
@@ -10,7 +10,7 @@
 //! it is a privileged control-plane operation, not part of the public MCP protocol surface.
 //! This slice gates the HTTP route behind the `MCP_DEV_REGISTRATION` env flag (off by
 //! default; see `router::handle_register`). Production must additionally authenticate the
-//! caller (FR-MCP-004) and allowlist registrable endpoints before exposing this route -
+//! caller (TASK-MCP-004) and allowlist registrable endpoints before exposing this route -
 //! an attacker who can register could otherwise point a tool at an endpoint of their
 //! choosing and have the gateway forward calls to it.
 
@@ -21,7 +21,7 @@ use crate::annotations::ToolAnnotations;
 use crate::federation::registry::ToolRegistry;
 use crate::naming::validate_sync;
 
-/// Modules exempt from SEP-986 naming enforcement at registration (FR-MCP-003 DEC-2362).
+/// Modules exempt from SEP-986 naming enforcement at registration (TASK-MCP-003 DEC-2362).
 ///
 /// Only the dev/reference fixture (`services/mcp-gateway/examples/reference_module.py`, which
 /// self-registers `cyberos.demo.echo` / `cyberos.demo.now`) is exempt: it is a copy-paste example
@@ -74,7 +74,7 @@ pub enum RegisterError {
     NoTools,
     /// The tool at this index had an empty `name`.
     EmptyToolName(usize),
-    /// The tool at this index has a name that violates SEP-986 (FR-MCP-003 DEC-2362). The detail is
+    /// The tool at this index has a name that violates SEP-986 (TASK-MCP-003 DEC-2362). The detail is
     /// the specific `NamingError` explanation: malformed pattern, unknown module, or invalid verb.
     NonConformingToolName {
         /// Index of the offending tool in `tools`.
@@ -105,7 +105,7 @@ impl RegisterError {
 /// Validate a registration request before mutating the registry. Pure (no I/O).
 ///
 /// Beyond the structural checks, every tool name is validated against SEP-986
-/// (FR-MCP-003 DEC-2362): a real module that registers a non-conforming tool ID is rejected here,
+/// (TASK-MCP-003 DEC-2362): a real module that registers a non-conforming tool ID is rejected here,
 /// before the tool can become callable. The dev/reference fixture (`NAMING_EXEMPT_MODULES`) is the
 /// only exception.
 pub fn validate(req: &RegisterRequest) -> Result<(), RegisterError> {
@@ -278,7 +278,7 @@ mod tests {
         assert_eq!(req.tools[0].requires_scope, vec!["mcp:tools".to_string()]);
     }
 
-    // ---- SEP-986 naming enforcement (FR-MCP-003 DEC-2362) ----
+    // ---- SEP-986 naming enforcement (TASK-MCP-003 DEC-2362) ----
 
     #[test]
     fn validate_accepts_the_renamed_obs_triage_tool() {

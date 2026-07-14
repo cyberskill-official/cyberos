@@ -4,7 +4,7 @@ version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "memory module — Layer-2 ingest pipeline + search API (FR-MEMORY-101..111)"
+description = "memory module — Layer-2 ingest pipeline + search API (TASK-MEMORY-101..111)"
 
 [[bin]]
 name = "cyberos-memory"
@@ -28,12 +28,12 @@ serde.workspace = true
 serde_json.workspace = true
 anyhow.workspace = true
 thiserror.workspace = true
-# MEM-001 (R73): verify the CyberOS access token (FR-AUTH-004 JWKS, RS256) on /v1/memory routes. Workspace
+# MEM-001 (R73): verify the CyberOS access token (TASK-AUTH-004 JWKS, RS256) on /v1/memory routes. Workspace
 # pin (9.3, locked 9.3.1) — the same crate + version chat/auth/obs use, so this adds no new resolution.
 jsonwebtoken.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
-# FR-MEMORY-121 needs UUIDv7 for interaction-event ids (time-sortable, dedup-safe). FR-MEMORY-122 backfill
+# TASK-MEMORY-121 needs UUIDv7 for interaction-event ids (time-sortable, dedup-safe). TASK-MEMORY-122 backfill
 # additionally needs UUIDv5 to derive a DETERMINISTIC event_id from a source chat message id (so replaying
 # the same message always yields the same event_id and a re-run is a no-op, §1 #10). Both features are
 # additive over the workspace `uuid` (which already enables v4 + serde) and are pinned here.
@@ -45,7 +45,7 @@ async-trait = "0.1.83"
 regex = "1.11"
 reqwest = { version = "0.12.9", features = ["rustls-tls", "json"], default-features = false }
 
-# FR-MEMORY-121 §1 #5: interaction-events ride the shared hash-chained audit writer (op-aware genesis),
+# TASK-MEMORY-121 §1 #5: interaction-events ride the shared hash-chained audit writer (op-aware genesis),
 # byte-identical to the rest of the memory chain. Same crate auth / chat / eval / obs use.
 cyberos-audit-chain = { path = "../shared/cyberos-audit-chain" }
 
@@ -55,7 +55,7 @@ cyberos-obs-sdk.workspace = true
 
 [dev-dependencies]
 tokio-test.workspace = true
-# FR-MEMORY-121 §5: the contract test validates every emitted interaction-event body against the published
+# TASK-MEMORY-121 §5: the contract test validates every emitted interaction-event body against the published
 # JSON Schema (contracts/interaction-event.schema.json). Test-only; not linked into the service binary.
 # Pinned to 0.18 to match services/ai-gateway (already in services/Cargo.lock) so this dev-dep adds no new
 # major version and `cargo test --locked` resolves without a lockfile bump. The `draft202012` feature is

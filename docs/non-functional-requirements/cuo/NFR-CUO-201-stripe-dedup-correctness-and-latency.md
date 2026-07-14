@@ -9,7 +9,7 @@ phase: P0
 slo: "stripe collision rate ≤ 2⁻³² (8-hex SHA-256 truncation birthday bound); open/ glob check p95 < 10ms over ≤ 1000 open proposals"
 owner: CTO
 created: 2026-05-19
-related_frs: [FR-CUO-201]
+related_tasks: [TASK-CUO-201]
 ---
 
 ## §1 — Statement (BCP-14 normative)
@@ -22,7 +22,7 @@ related_frs: [FR-CUO-201]
 
 ## §2 — Why this constraint
 
-Stripe-dedup is the load-bearing rule of the FR-CUO-201 architecture: first-occurrence emits, second occurrence halts. If `compute_stripe` were non-deterministic (e.g. hashed a timestamp or used Python `hash()`), the dedup would silently fail and Stephen would get N proposals for the same root cause. The 32-bit collision space is small but adequate: at 1000 simultaneously-open proposals, the birthday-bound collision probability is C(1000, 2) × 2⁻³² ≈ 1.16 × 10⁻⁴. If real-world usage approaches 10⁴ open proposals, this NFR's threshold needs revisiting; for the foreseeable use case (Stephen + small team), 8 hex chars is generous.
+Stripe-dedup is the load-bearing rule of the TASK-CUO-201 architecture: first-occurrence emits, second occurrence halts. If `compute_stripe` were non-deterministic (e.g. hashed a timestamp or used Python `hash()`), the dedup would silently fail and Stephen would get N proposals for the same root cause. The 32-bit collision space is small but adequate: at 1000 simultaneously-open proposals, the birthday-bound collision probability is C(1000, 2) × 2⁻³² ≈ 1.16 × 10⁻⁴. If real-world usage approaches 10⁴ open proposals, this NFR's threshold needs revisiting; for the foreseeable use case (Stephen + small team), 8 hex chars is generous.
 
 The < 10ms p95 budget keeps the emitter latency negligible relative to the LLM proposal-authoring step (which dominates at 500ms-5s per proposal).
 
@@ -38,7 +38,7 @@ Collision probability: out of scope for runtime verification — confirmed by th
 
 ## §4 — Verification
 
-Tests already passing (FR-CUO-201): `test_stripe_determinism`, `test_stripe_hash_width`, `test_repeat_stripe_halts_no_new_file`, `test_applied_proposal_reopens_stripe`, `test_workflow_and_skill_stripes_disjoint` (in FR-CUO-203's test file).
+Tests already passing (TASK-CUO-201): `test_stripe_determinism`, `test_stripe_hash_width`, `test_repeat_stripe_halts_no_new_file`, `test_applied_proposal_reopens_stripe`, `test_workflow_and_skill_stripes_disjoint` (in TASK-CUO-203's test file).
 
 Inspection: `cuo.core.stripe._project()` uses `sorted({...})` projections — order-independent, hashable, JSON-serialisable. `json.dumps(..., sort_keys=True)` makes the canon string deterministic. `hashlib.sha256(...).hexdigest()[:8]` truncates to 8 chars deterministically.
 
@@ -50,7 +50,7 @@ Inspection: `cuo.core.stripe._project()` uses `sorted({...})` projections — or
 
 **On-call action:** (a) diff the two proposals to find the divergence; (b) consolidate manually (move one to `applied/`, leave the other in `open/`); (c) file a follow-up FR if the divergence reveals a `_project()` bug.
 
-**Escalation:** if collision rate is observed > 10⁻⁴ in practice (vs the theoretical 10⁻⁴ at 1000 proposals), widen `pattern_hash` to 12 chars (96 bits of entropy → collision bound 2⁻⁹⁶). This is a minor bump under FR-CUO-202's classifier (cosmetic field width change).
+**Escalation:** if collision rate is observed > 10⁻⁴ in practice (vs the theoretical 10⁻⁴ at 1000 proposals), widen `pattern_hash` to 12 chars (96 bits of entropy → collision bound 2⁻⁹⁶). This is a minor bump under TASK-CUO-202's classifier (cosmetic field width change).
 
 ## §6 — Notes
 

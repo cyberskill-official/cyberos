@@ -1,4 +1,4 @@
-//! FR-CHAT-268 — user blocking, integration tests.
+//! TASK-CHAT-268 — user blocking, integration tests.
 //!
 //! Same harness shape as tests/reports.rs: the REAL router in-process via `tower::ServiceExt::oneshot`,
 //! against a live Postgres with the chat migrations applied (through 0015_chat_blocks.sql), HS256 tokens so
@@ -24,7 +24,7 @@
 //!   AC 9  (zero notification, zero push, not even for a mention) — needs to observe the notifier fan-out.
 //!         This is the point the FR calls out as previously broken, so it is the one most worth an eyeball:
 //!         the enforcement is `blockers_of` in notify::fanout.
-//!   AC 12 (moderation queue ignores blocks) — belongs to FR-CHAT-269, which does not exist yet.
+//!   AC 12 (moderation queue ignores blocks) — belongs to TASK-CHAT-269, which does not exist yet.
 
 use axum::body::{to_bytes, Body};
 use axum::http::{Request, StatusCode};
@@ -35,7 +35,7 @@ use std::sync::Arc;
 use tower::ServiceExt;
 use uuid::Uuid;
 
-const HS256_SECRET: &[u8] = b"cyberos-chat-test-secret-fr-chat-268";
+const HS256_SECRET: &[u8] = b"cyberos-chat-test-secret-task-chat-268";
 
 /// Connects, then drops to `cyberos_app` — the runtime app's database identity.
 ///

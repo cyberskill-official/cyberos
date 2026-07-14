@@ -6,7 +6,7 @@ This directory ships the reusable scaffold every new author/audit skill pair cop
 
 ### 1. Pick a name
 
-Skill names use `kebab-case`, lowercase, `[a-z0-9-]+`. Follow `<artifact>-author` / `<artifact>-audit` for the author/audit pair convention. Examples already in the catalog: `statement-of-work-author`, `statement-of-work-audit`, `feature-request-author`, `feature-request-audit`, `product-requirements-document-author`, `product-requirements-document-audit`.
+Skill names use `kebab-case`, lowercase, `[a-z0-9-]+`. Follow `<artifact>-author` / `<artifact>-audit` for the author/audit pair convention. Examples already in the catalog: `statement-of-work-author`, `statement-of-work-audit`, `task-author`, `task-audit`, `product-requirements-document-author`, `product-requirements-document-audit`.
 
 ### 2. Copy the scaffold
 
@@ -36,9 +36,9 @@ Edit `skill/<artifact>-audit/`:
 
 - `SKILL.md` — replace placeholders. The `description` SHOULD declare the rubric version it implements.
 - `INVARIANTS.md` — include the `deterministic_drift` check by default.
-- `RUBRIC.md` — the artifact-specific audit rules. Follow `../feature-request-audit/RUBRIC.md`. Use stable `rule_id` strings.
+- `RUBRIC.md` — the artifact-specific audit rules. Follow `../task-audit/RUBRIC.md`. Use stable `rule_id` strings.
 - `REPORT_FORMAT.md` — the on-disk shape of `<artifact>.audit.md` reports.
-- `AUDIT_LOOP.md` — usually a one-liner pointing at the canonical `skill/../feature-request-audit/AUDIT_LOOP.md`.
+- `AUDIT_LOOP.md` — usually a one-liner pointing at the canonical `skill/../task-audit/AUDIT_LOOP.md`.
 - `PIPELINE.md`, `HUMAN_SUMMARY.md`, references (same as author), `envelopes/`, `acceptance/`, `CHANGELOG.md`.
 
 ### 5. Audit your work
@@ -76,7 +76,7 @@ If your skill chains naturally to a downstream skill, set `expects.optional_fiel
 |---|---|
 | `SKILL.md` | Frontmatter + body. Declares the rubric version it implements. |
 | `INVARIANTS.md` | Self-audit invariants (includes `deterministic_drift` by default). |
-| `AUDIT_LOOP.md` | Pointer to the canonical `skill/../feature-request-audit/AUDIT_LOOP.md`. |
+| `AUDIT_LOOP.md` | Pointer to the canonical `skill/../task-audit/AUDIT_LOOP.md`. |
 | `RUBRIC.md` | Per-artifact audit rules (FM/SEC/COND/QA/SAFE/STALE families). |
 | `REPORT_FORMAT.md` | `.audit.md` frontmatter + per-issue block format. |
 | `PIPELINE.md` | How the skill chains in (from author or directly) and what it emits downstream. |
@@ -98,6 +98,6 @@ If your skill chains naturally to a downstream skill, set `expects.optional_fiel
 ## Cross-references
 
 - `MODULE.md` — the canonical catalog this template feeds into.
-- `../feature-request-audit/AUDIT_LOOP.md` — the algorithm every audit skill implements.
-- `../feature-request-audit/RUBRIC.md` — the rubric format every audit skill follows.
+- `../task-audit/AUDIT_LOOP.md` — the algorithm every audit skill implements.
+- `../task-audit/RUBRIC.md` — the rubric format every audit skill follows.
 - `../docs/appendices.md` — the Anthropic Agent Skills contract every skill bundle satisfies.

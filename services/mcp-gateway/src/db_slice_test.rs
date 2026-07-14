@@ -1,4 +1,4 @@
-//! DB-slice store-of-record integration tests (FR-MCP-007/008), gated behind `#[ignore]`.
+//! DB-slice store-of-record integration tests (TASK-MCP-007/008), gated behind `#[ignore]`.
 //!
 //! These exercise `elicitation_pg` and `tasks_pg` against a live Postgres - the path the in-memory
 //! unit tests cannot cover: persistence, KMS sealing at rest, caller-scoping (DEC-1159), idempotency,

@@ -1,4 +1,4 @@
-"""Tests for the obs triage MCP module (FR-OBS-007 x FR-MCP-002 federation surface).
+"""Tests for the obs triage MCP module (TASK-OBS-007 x TASK-MCP-002 federation surface).
 
 These exercise the tool body and JSON-RPC dispatch with a fake invoker, so no LLM, no network, and
 no live gateway are needed. They pin: the `tools/list` descriptor the gateway registers, the verdict

@@ -1,7 +1,7 @@
-"""Tests for FR-MEMORY-116 — semantic-dedup consolidate phase.
+"""Tests for TASK-MEMORY-116 — semantic-dedup consolidate phase.
 
 Covers acceptance criteria from
-`docs/feature-requests/memory/FR-MEMORY-116-semantic-dedup-consolidate/spec.md`:
+`docs/tasks/memory/TASK-MEMORY-116-semantic-dedup-consolidate/spec.md`:
 
 * AC #1  — default consolidate unchanged (no SemanticDedup)
 * AC #2  — --semantic-dedup --dry-run produces diff but no apply
@@ -10,7 +10,7 @@ Covers acceptance criteria from
 * AC #7  — --threshold override changes proposal count
 * AC #9  — phase ordering: walk failure aborts SemanticDedup
 * AC #11 — re-apply idempotent (no new dream.proposal_applied rows)
-* AC #13 — reuses FR-MEMORY-115 duplicates detector (asserted via import)
+* AC #13 — reuses TASK-MEMORY-115 duplicates detector (asserted via import)
 * AC #14 — diff matches what `cyberos dream` would produce
 """
 
@@ -223,7 +223,7 @@ def test_reapply_is_idempotent(store_with_dupes: Path) -> None:
 
 
 def test_consolidate_imports_dream_detector() -> None:
-    """AC #13 — the SemanticDedup phase reuses FR-MEMORY-115's detector
+    """AC #13 — the SemanticDedup phase reuses TASK-MEMORY-115's detector
     rather than forking the cosine logic.
 
     Asserts the import path the phase uses; if someone forks the

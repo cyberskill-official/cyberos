@@ -1,4 +1,4 @@
-//! FR-OBS-007 §1 #3 - the full (severity, confidence) routing table, as a held-out integration test,
+//! TASK-OBS-007 §1 #3 - the full (severity, confidence) routing table, as a held-out integration test,
 //! plus the §1 #11 no-silent-drop invariant over a grid of inputs.
 
 use cyberos_obs_router::{decide, Route, Severity, CONFIDENCE_FLOOR};

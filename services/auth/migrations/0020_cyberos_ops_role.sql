@@ -1,4 +1,4 @@
--- FR-AUTH-003 §1 #5 — slice-1 audit-fix G-002
+-- TASK-AUTH-003 §1 #5 — slice-1 audit-fix G-002
 --
 -- Create the `cyberos_ops` BYPASSRLS role for legitimate cross-tenant
 -- operations (compliance reports, regulator audits, ops investigations)
@@ -9,7 +9,7 @@
 -- The Rust helper does this best-effort (failure to audit does NOT block
 -- the bypass query) but emits a tracing::warn so the missed-audit case
 -- is observable. Sev-2 alarm fires on `auth.rls_bypass_used` counter
--- increment beyond baseline (FR-OBS-001 wires the alarm).
+-- increment beyond baseline (TASK-OBS-001 wires the alarm).
 --
 -- ROLE LIFECYCLE
 -- --------------
@@ -36,7 +36,7 @@ BEGIN
                  BYPASSRLS
                  PASSWORD 'rotate-via-vault-immediately';
         COMMENT ON ROLE cyberos_ops IS
-            'FR-AUTH-003 §1 #5 — BYPASSRLS role for legitimate cross-tenant ops. '
+            'TASK-AUTH-003 §1 #5 — BYPASSRLS role for legitimate cross-tenant ops. '
             'Password rotated by Vault on bootstrap. Usage MUST be preceded by '
             'INSERT INTO auth_rls_bypass_audit via rls::emit_cyberos_ops_audit_row().';
     END IF;
@@ -56,7 +56,7 @@ $do$;
 -- INSERT is granted; UPDATE/DELETE are revoked.
 --
 -- Retention: 7 years (compliance requirement — surfaced in
--- docs/feature-requests/auth/FR-AUTH-003-rls-enforcement.audit.md §10.5).
+-- docs/tasks/auth/TASK-AUTH-003-rls-enforcement.audit.md §10.5).
 CREATE TABLE IF NOT EXISTS auth_rls_bypass_audit (
     audit_id        BIGSERIAL PRIMARY KEY,
     operator_id     TEXT NOT NULL,        -- email_hash16 of the operator (NOT raw email)
@@ -75,8 +75,8 @@ CREATE INDEX IF NOT EXISTS auth_rls_bypass_audit_operator_idx
     ON auth_rls_bypass_audit (operator_id, used_at DESC);
 
 COMMENT ON TABLE auth_rls_bypass_audit IS
-    'FR-AUTH-003 §1 #5 — every BYPASSRLS query the application emits writes one row here. '
-    'Append-only; UPDATE/DELETE revoked. 7-year retention per FR-AUTH-003 §10.5.';
+    'TASK-AUTH-003 §1 #5 — every BYPASSRLS query the application emits writes one row here. '
+    'Append-only; UPDATE/DELETE revoked. 7-year retention per TASK-AUTH-003 §10.5.';
 
 -- Grants:
 --   * cyberos_app and cyberos_ops can INSERT (write audit rows from app code)

@@ -1,5 +1,5 @@
-"""Tests for FR-MEMORY-105 (watched-folder invariants) +
-FR-MEMORY-110 (daemon heartbeat) + FR-MEMORY-111 (pre-ingest PII gate)."""
+"""Tests for TASK-MEMORY-105 (watched-folder invariants) +
+TASK-MEMORY-110 (daemon heartbeat) + TASK-MEMORY-111 (pre-ingest PII gate)."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 # ---------------------------------------------------------------------------
-# FR-MEMORY-105 — watched-folder invariants
+# TASK-MEMORY-105 — watched-folder invariants
 # ---------------------------------------------------------------------------
 
 from cyberos.core.watched_folders import (
@@ -96,7 +96,7 @@ def test_doctor_check_returns_errors(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# FR-MEMORY-110 — daemon heartbeat / supervisor
+# TASK-MEMORY-110 — daemon heartbeat / supervisor
 # ---------------------------------------------------------------------------
 
 from cyberos.core.daemon_health import (
@@ -182,7 +182,7 @@ def test_daemon_status_healthy(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# FR-MEMORY-111 — pre-ingest PII gate
+# TASK-MEMORY-111 — pre-ingest PII gate
 # ---------------------------------------------------------------------------
 
 from cyberos.core.pre_ingest_pii import (

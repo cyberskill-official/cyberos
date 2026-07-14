@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""FR-MEMORY-122 §5 — chat capture smoke (live service, brain link ON).
+"""TASK-MEMORY-122 §5 — chat capture smoke (live service, brain link ON).
 
 Drives the running cyberos-chat service and asserts that, with CAPTURE_ENABLED=true and the chat->brain
 audit link set, the right interaction-events appear in l1_audit_log for an acknowledged subject — pointing

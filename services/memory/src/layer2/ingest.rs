@@ -1,4 +1,4 @@
-//! Layer-2 ingest orchestrator (FR-MEMORY-101).
+//! Layer-2 ingest orchestrator (TASK-MEMORY-101).
 //!
 //! `run_batch` is the heart of the pipeline:
 //!   1. Load the tenant's cursor (current `last_seq`).
@@ -67,7 +67,7 @@ pub async fn run_batch(
     let mut last_anchor_hex: Option<String> = cursor.last_chain_anchor_hex.clone();
 
     // Per-tenant gate: ALL rows in this batch must be for the requested tenant.
-    // FR-MEMORY-101 §1 #8 (tenant isolation invariant); the SELECT already filters,
+    // TASK-MEMORY-101 §1 #8 (tenant isolation invariant); the SELECT already filters,
     // but we re-check defensively per AUTHORING_DISCIPLINE §8.5a.
     for r in &rows {
         if cyberos_types::TenantId(r.tenant_id) != tenant {
