@@ -45,7 +45,7 @@ Profiles: `reduced` = doc-driven + the repo's own build/lint/test + coverage + c
 
 ## Agent support
 
-`AGENTS.md` (repo root) is the canonical, cross-tool spine - the one file the most agents read natively. `init.sh` writes it, then layers each agent's own preferred file / native skill / MCP registration on top. Everything is create-if-absent: your existing files are never clobbered. One `init.sh` run wires them all.
+`AGENTS.md` (repo root) is the canonical, cross-tool spine - the one file the most agents read natively. `install.sh` writes it, then layers each agent's own preferred file / native skill / MCP registration on top. Everything is create-if-absent: your existing files are never clobbered. One `install.sh` run wires them all.
 
 | Agent        | Reads (instruction file)                                 | Native skill dir                     | MCP                         |
 | ------------ | -------------------------------------------------------- | ------------------------------------ | --------------------------- |
@@ -61,7 +61,7 @@ Profiles: `reduced` = doc-driven + the repo's own build/lint/test + coverage + c
 | Copilot      | `.github/copilot-instructions.md` (+ `AGENTS.md`)    | -                                    | -                           |
 | Windsurf     | `.windsurfrules` (+ `AGENTS.md`)                     | -                                    | yes                         |
 
-Controls: `CYBEROS_AGENTS=claude-code,codex,...` restricts the set; `CYBEROS_COPY_SKILLS=1` copies skills instead of symlinking (committable, self-contained); `CYBEROS_GLOBAL_SKILLS=1` also installs into `$HOME` agent dirs; `CYBEROS_NO_MCP=1` skips `.mcp.json`. Adding an agent is a one-line `pointer`/`install_skill` entry in `init.sh` - see "Add your own agent" below.
+Controls: `CYBEROS_AGENTS=claude-code,codex,...` restricts the set; `CYBEROS_COPY_SKILLS=1` copies skills instead of symlinking (committable, self-contained); `CYBEROS_GLOBAL_SKILLS=1` also installs into `$HOME` agent dirs; `CYBEROS_NO_MCP=1` skips `.mcp.json`. Adding an agent is a one-line `pointer`/`install_skill` entry in `install.sh` - see "Add your own agent" below.
 
 ## Build the pack
 
@@ -79,7 +79,7 @@ bash tools/cyberos-init/build.sh          # assembles dist/cyberos/ (self-contai
 
 ```bash
 cp -R dist/cyberos /path/to/your/repo/.cyberos-init
-cd /path/to/your/repo && bash .cyberos-init/init.sh
+cd /path/to/your/repo && bash .cyberos-init/install.sh
 ```
 
 The copied `.cyberos-init/` removes itself after a successful init - everything the repo needs onward lives under `.cyberos/` (machine, gates, migration kit, MCP server), so the payload copy is redundant and must not end up committed. Keep it with `CYBEROS_KEEP_PAYLOAD=1`. Only the canonical `<repo>/.cyberos-init` self-cleans: payloads outside the repo, other in-repo paths, and git submodules (channel 2) are never removed.
@@ -90,7 +90,7 @@ Publish `dist/cyberos` as its own repo, then in the target:
 
 ```bash
 git submodule add <payload-repo-url> .cyberos-init
-bash .cyberos-init/init.sh
+bash .cyberos-init/install.sh
 ```
 
 ### 2a. What the payload covers (FR-CUO-209)
@@ -101,10 +101,10 @@ stages 5-10; everything else is standalone-invocable. See the lifecycle map in G
 
 ### 2b. Update awareness (FR-IMP-070)
 
-`init.sh --check <repo>` reports three values - `installed=`, `payload=`, `latest=` (the newest
+`install.sh --check <repo>` reports three values - `installed=`, `payload=`, `latest=` (the newest
 published release, resolved by `check-latest.sh` with a 3s budget; `CYBEROS_OFFLINE=1` skips it) -
 plus one `verdict=` line (`up_to_date` | `repo_stale` | `payload_stale`) and the exact `next:`
-command. Machine-parseable key=value lines; the desktop Ops tab and `/update` consume them.
+command. Machine-parseable key=value lines; the desktop Ops tab and `/version` consume them.
 
 ### 3. One-liner curl | sh (from GitHub Releases - FR-IMP-069)
 
@@ -112,7 +112,7 @@ command. Machine-parseable key=value lines; the desktop Ops tab and `/update` co
 tar -czf cyberos.tar.gz -C dist cyberos     # publish this to a URL
 curl -fsSL https://raw.githubusercontent.com/cyberskill-official/cyberos/main/tools/cyberos-init/bootstrap.sh | bash
 # fetches https://github.com/cyberskill-official/cyberos/releases/latest/download/cyberos-payload.tar.gz,
-# verifies it against the SHA256SUMS asset, and runs init.sh on the current repo.
+# verifies it against the SHA256SUMS asset, and runs install.sh on the current repo.
 # Pin a version:  CYBEROS_PAYLOAD_URL=.../releases/download/vX.Y.Z/cyberos-payload-X.Y.Z.tar.gz curl -fsSL .../bootstrap.sh | bash
 # Claude desktop/Cowork: download cyberos.plugin from the same release page and pick the file.
 # Claude Code: download + unpack cyberos-payload.tar.gz, then /plugin marketplace add <dir>.
@@ -121,20 +121,20 @@ curl -fsSL https://raw.githubusercontent.com/cyberskill-official/cyberos/main/to
 
 ### 4. Claude plugin (available)
 
-The payload IS a plugin marketplace: `dist/cyberos/.claude-plugin/marketplace.json` catalogs the plugin at `dist/cyberos/plugin/` (its own manifest at `plugin/.claude-plugin/plugin.json`; the `/init`, `/update`, `/changelog`, `/help` commands and the `ship-feature-requests` skill (typeable as `/ship-feature-requests`, and used automatically when you ask to ship an FR)). Install:
+The payload IS a plugin marketplace: `dist/cyberos/.claude-plugin/marketplace.json` catalogs the plugin at `dist/cyberos/plugin/` (its own manifest at `plugin/.claude-plugin/plugin.json`; the `/install`, `/version`, `/status`, `/help` commands and the `ship-feature-requests` skill (typeable as `/ship-feature-requests`, and used automatically when you ask to ship an FR)). Install:
 
 - Claude Code: `/plugin marketplace add /path/to/dist/cyberos`, then `/plugin install cyberos@cyberos`.
 - Claude desktop / Cowork: the Add picker wants a FILE - use `dist/cyberos/cyberos.plugin` (the one-file bundle build.sh produces; selecting a folder greys the Open button). The folder route works where marketplaces are supported: add `dist/cyberos` as a marketplace (its root carries `.claude-plugin/marketplace.json`).
 
-Then run `/init` in a repo and `/ship-feature-requests` (or just ask to ship the next FR) to drive the backlog; `/update` and `/changelog` keep the repo current, `/help` orients a new user.
+Then run `/install` in a repo and `/ship-feature-requests` (or just ask to ship the next FR) to drive the backlog; `/version` and `/status` keep the repo current, `/help` orients a new user.
 
 ### 4b. Every other agent (Codex, Cursor, Gemini, Antigravity, Grok, zcode, Command Code, Copilot, Windsurf) - agent-independent
 
-The core is doc-driven, so no plugin is required for any agent. `init.sh` writes the canonical `AGENTS.md` spine plus each agent's preferred pointer file (all create-if-absent), and installs the `ship-feature-requests` skill natively into every skill-aware agent's folder (`.claude/skills`, `.grok/skills`, `.commandcode/skills`, `.codex/skills`, `.opencode/skill`) so it is invocable as `/ship-feature-requests` or `$ship-feature-requests`, not just prose. It also drops `.cyberos/AGENT-ENTRY.md`, the one-page canonical trigger. See the Agent support matrix above. Point any file-and-shell agent at `AGENTS.md` (or `.cyberos/AGENT-ENTRY.md`) and it drives the same workflow, the same gates, the same required human verdicts. The Claude plugin is convenience sugar, not a dependency.
+The core is doc-driven, so no plugin is required for any agent. `install.sh` writes the canonical `AGENTS.md` spine plus each agent's preferred pointer file (all create-if-absent), and installs the `ship-feature-requests` skill natively into every skill-aware agent's folder (`.claude/skills`, `.grok/skills`, `.commandcode/skills`, `.codex/skills`, `.opencode/skill`) so it is invocable as `/ship-feature-requests` or `$ship-feature-requests`, not just prose. It also drops `.cyberos/AGENT-ENTRY.md`, the one-page canonical trigger. See the Agent support matrix above. Point any file-and-shell agent at `AGENTS.md` (or `.cyberos/AGENT-ENTRY.md`) and it drives the same workflow, the same gates, the same required human verdicts. The Claude plugin is convenience sugar, not a dependency.
 
 ### 5. GitHub Action (available)
 
-`dist/cyberos/ci/github-action/action.yml` is a composite action that runs the machine gates in CI. Point a workflow at it after `init.sh` has committed `.cyberos/` to the repo. CI runs the machine gates only; final acceptance stays a human verdict.
+`dist/cyberos/ci/github-action/action.yml` is a composite action that runs the machine gates in CI. Point a workflow at it after `install.sh` has committed `.cyberos/` to the repo. CI runs the machine gates only; final acceptance stays a human verdict.
 
 ### 6. Docker image (available, scaffold only)
 
@@ -148,13 +148,13 @@ The image scaffolds a repo; run the gates on a runner that has your toolchain.
 ### 7. Makefile / just target (available, two lines)
 
 ```make
-cyberos-init:  ; bash /path/to/dist/cyberos/init.sh .
+cyberos-init:  ; bash /path/to/dist/cyberos/install.sh .
 cyberos-gates: ; bash .cyberos/cuo/gates/run-gates.sh
 ```
 
 ### 8. MCP server (available) - any MCP agent, zero files
 
-`dist/cyberos/mcp/cyberos-mcp.mjs` is a zero-dependency Node stdio MCP server exposing `fr_init`, `fr_gates`, `fr_status`, and `ship_fr`. Any MCP-capable agent (Codex, zcode, Antigravity, Cursor, Claude Code, Command Code) triggers the workflow tool-natively. `init.sh` vendors it to `.cyberos/mcp/` and writes `.mcp.json` (and `.cursor/mcp.json`) when absent. Registration snippets for every agent: `mcp/README.md`. `ship_fr` hands the agent the HITL-gated trigger - it never self-accepts. Quick check:
+`dist/cyberos/mcp/cyberos-mcp.mjs` is a zero-dependency Node stdio MCP server exposing `fr_init`, `fr_gates`, `fr_status`, and `ship_fr`. Any MCP-capable agent (Codex, zcode, Antigravity, Cursor, Claude Code, Command Code) triggers the workflow tool-natively. `install.sh` vendors it to `.cyberos/mcp/` and writes `.mcp.json` (and `.cursor/mcp.json`) when absent. Registration snippets for every agent: `mcp/README.md`. `ship_fr` hands the agent the HITL-gated trigger - it never self-accepts. Quick check:
 
 ```bash
 printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' \
@@ -176,10 +176,10 @@ Run `npx .` from `dist/cyberos`, `npm i -g ./dist/cyberos`, or `npx github:<owne
 ### 10. Template repo / `create.sh` (available) - fresh projects
 
 ```bash
-bash dist/cyberos/create.sh ../my-new-project     # git init + skeleton + init.sh
+bash dist/cyberos/create.sh ../my-new-project     # git init + skeleton + install.sh
 ```
 
-`create.sh` seeds `template/` (never clobbering) then runs `init.sh`. Host `template/` as a GitHub template repo ("Use this template") or `degit` it, then run `init.sh` once.
+`create.sh` seeds `template/` (never clobbering) then runs `install.sh`. Host `template/` as a GitHub template repo ("Use this template") or `degit` it, then run `install.sh` once.
 
 ### Planned channels (say the word and I will build them)
 
@@ -188,7 +188,7 @@ bash dist/cyberos/create.sh ../my-new-project     # git init + skeleton + init.s
 
 ### Add your own agent
 
-Every agent is one data row in `init.sh`. For an instruction pointer file: add `pointer <key> <path> <md|plain|mdc>`. For a native skill install: add `install_skill <skills-dir> <key>`. Both are create-if-absent and honor `CYBEROS_AGENTS`. Because `AGENTS.md` is the spine, most new agents already work with no change at all.
+Every agent is one data row in `install.sh`. For an instruction pointer file: add `pointer <key> <path> <md|plain|mdc>`. For a native skill install: add `install_skill <skills-dir> <key>`. Both are create-if-absent and honor `CYBEROS_AGENTS`. Because `AGENTS.md` is the spine, most new agents already work with no change at all.
 
 ## After install: trigger, gate, sign off
 
@@ -199,11 +199,11 @@ Every agent is one data row in `init.sh`. For an instruction pointer file: add `
 
 ## Staying in sync
 
-The pack is a build artifact. When the workflow improves in CyberOS, rebuild (`build.sh`) and re-distribute; consumers re-run `init.sh` (it backs up `gates.env` and never clobbers your BACKLOG).
+The pack is a build artifact. When the workflow improves in CyberOS, rebuild (`build.sh`) and re-distribute; consumers re-run `install.sh` (it backs up `gates.env` and never clobbers your BACKLOG).
 
 ## Gate autodetection + per-repo config (FR-CUO-207)
 
-`/init` detects gate commands per stack (union across stacks; first claim per gate wins; a command is
+`/install` detects gate commands per stack (union across stacks; first claim per gate wins; a command is
 never invented when its marker file is absent - root-only scanning):
 
 | stack  | marker             | build                      | lint                                  | test                                  | coverage                                 |

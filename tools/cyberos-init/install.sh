@@ -3,8 +3,8 @@
 # Organised by module (.cyberos/cuo, .cyberos/memory, .cyberos/plugin), scaffolds
 # docs/feature-requests/ + CHANGELOG.md + the BRAIN, runs FR migration + status page
 # (skip with CYBEROS_NO_MIGRATE=1). Idempotent; never clobbers BACKLOG/CHANGELOG/BRAIN.
-# Day-to-day: soft update checks run automatically on any .cyberos use; manual: update.sh.
-# Remove with: uninstall.sh. Status report: status.sh.
+# Day-to-day: soft update checks run on any .cyberos use; manual check: version.sh.
+# Remove: uninstall.sh. Open status page: status.sh.
 set -euo pipefail
 
 src="$(cd "$(dirname "$0")" && pwd)"                   # the payload dir this script lives in
@@ -40,7 +40,7 @@ cp -R "$src/plugin" "$CY/plugin"
 [ -f "$src/VERSION" ] && cp "$src/VERSION" "$CY/VERSION"
 [ -f "$src/install.sh" ] && cp "$src/install.sh" "$CY/install.sh" && chmod +x "$CY/install.sh"
 [ -f "$src/uninstall.sh" ] && cp "$src/uninstall.sh" "$CY/uninstall.sh" && chmod +x "$CY/uninstall.sh"
-[ -f "$src/update.sh" ] && cp "$src/update.sh" "$CY/update.sh" && chmod +x "$CY/update.sh"
+[ -f "$src/version.sh" ] && cp "$src/version.sh" "$CY/version.sh" && chmod +x "$CY/version.sh"
 [ -f "$src/status.sh" ] && cp "$src/status.sh" "$CY/status.sh" && chmod +x "$CY/status.sh"
 [ -f "$src/help.sh" ] && cp "$src/help.sh" "$CY/help.sh" && chmod +x "$CY/help.sh"
 [ -f "$src/check-latest.sh" ] && cp "$src/check-latest.sh" "$CY/check-latest.sh" && chmod +x "$CY/check-latest.sh"
@@ -50,7 +50,7 @@ cp -R "$src/plugin" "$CY/plugin"
 # drop orphans from older installs (init.sh, changelog.sh, migrate-frs.sh, status.html, …)
 rm -rf "$CY/status-site" 2>/dev/null || true
 rm -f "$CY/status.html" "$root/docs/status.html" "$CY/migrate-frs.sh" 2>/dev/null || true
-rm -f "$CY/init.sh" "$CY/changelog.sh" 2>/dev/null || true
+rm -f "$CY/init.sh" "$CY/changelog.sh" "$CY/update.sh" 2>/dev/null || true
 rm -f "$CY"/gates.env.bak.* 2>/dev/null || true
 chmod +x "$CY/cuo/gates/run-gates.sh" 2>/dev/null || true
 [ -f "$CY/mcp/cyberos-mcp.mjs" ] && chmod +x "$CY/mcp/cyberos-mcp.mjs" 2>/dev/null || true
@@ -644,7 +644,7 @@ cyberos install: done.
   gitignored: one managed block in .gitignore covers .cyberos/ (vendored machine + BRAIN store)
               + the skill symlinks; agent files, docs/feature-requests/**, CHANGELOG.md and
               docs/status/ stay TRACKED (commit them). Everything outside the block is yours.
-  version   -> CyberOS $avail_ver (.cyberos/VERSION); updates: bash .cyberos/update.sh  (auto soft-check on any .cyberos use)
+  version   -> CyberOS $avail_ver (.cyberos/VERSION); check: bash .cyberos/version.sh  (auto soft-check on any .cyberos use)
 
 Next:
   1. Write an FR from the template:

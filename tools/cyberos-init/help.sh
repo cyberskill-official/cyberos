@@ -9,28 +9,24 @@ fi
 cat <<'TXT'
 CyberOS — root CLI (payload dir or installed .cyberos/)
 
-Once (lifecycle):
   bash install.sh [repo]     install / re-vendor CyberOS into a repo
   bash uninstall.sh [repo]   remove the vendored machine (keeps FRs + BRAIN by default)
-
-Ongoing (auto soft-check on any .cyberos use; also manual):
-  bash update.sh             check installed vs payload vs latest
-  bash update.sh --apply     apply update (re-runs install from this payload)
-
-Manual report only:
-  bash status.sh             installed version + rules_sha + doc pointers
+  bash version.sh [repo]     check for a newer CyberOS; if stale, ask to run install
+  bash status.sh [repo]      open docs/status/index.html in your default browser
   bash help.sh               this text
 
-Machine gates (auto update-check):
+Soft update-check runs automatically whenever anything under .cyberos is used
+(gates, status-page hooks, MCP, help, version, status). Day-to-day: install once, then forget.
+
+Machine gates:
   bash cuo/gates/run-gates.sh
 
 Channels:
-  node mcp/cyberos-mcp.mjs             MCP stdio
-  node mcp/cyberos-mcp.mjs --http 8799 MCP HTTP connector
-  cli/bin/*.mjs                        npx channel
+  node mcp/cyberos-mcp.mjs
+  cli/bin/*.mjs
 
-Status page (docs/status/) regenerates automatically via pre-commit + run-gates.
-There is no separate --page / --check user command.
+Plugin slash commands (Claude Code): /install /uninstall /version /status /help
+  plus /ship-feature-requests and /create-feature-requests
 
-Docs: GUIDE.md, manifest.yaml. Site: https://cyberos.cyberskill.world/docs
+Docs: GUIDE.md · https://cyberos.cyberskill.world/docs
 TXT

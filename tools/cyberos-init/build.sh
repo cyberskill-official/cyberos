@@ -141,11 +141,11 @@ if [ -f "$here/../../scripts/migrate_fr_layout.py" ]; then
   [ -f "$here/../../modules/templates/cds/tokens.css" ] && cp "$here/../../modules/templates/cds/tokens.css" "$out/docs-tools/templates/"
 fi
 # Never ship retired names (pre-1.0.0)
-rm -f "$out/migrate-frs.sh" "$out/init.sh" "$out/changelog.sh"
+rm -f "$out/migrate-frs.sh" "$out/init.sh" "$out/changelog.sh" "$out/update.sh"
 cp "$here/bootstrap.sh" "$out/bootstrap.sh"
 cp "$here/create.sh"    "$out/create.sh"        # template / fresh-project scaffolder channel
-# 1.0.0 CLI: install | uninstall | update | status | help
-cp "$here/update.sh"    "$out/update.sh"
+# 1.0.0 CLI: install | uninstall | version | status | help
+cp "$here/version.sh"   "$out/version.sh"
 cp "$here/status.sh"    "$out/status.sh"
 cp "$here/help.sh"      "$out/help.sh"
 cp -R "$here/ci"        "$out/ci"
@@ -156,7 +156,7 @@ cp "$here/Dockerfile"   "$out/Dockerfile"
 cp "$here/README.md"    "$out/README.md"
 cp "$here/docs/index.md" "$out/GUIDE.md"   # the guide source lives in docs/ (site-rendered); ships as GUIDE.md
 chmod +x "$out/install.sh" "$out/uninstall.sh" "$out/bootstrap.sh" "$out/create.sh" \
-  "$out/update.sh" "$out/status.sh" "$out/help.sh" "$out/cuo/gates/run-gates.sh" 2>/dev/null || true
+  "$out/version.sh" "$out/status.sh" "$out/help.sh" "$out/cuo/gates/run-gates.sh" 2>/dev/null || true
 chmod +x "$out/lib/"*.sh "$out/mcp/cyberos-mcp.mjs" "$out"/cli/bin/*.mjs 2>/dev/null || true
 
 # $cyver was validated + computed at the TOP of this script (FR-IMP-068: fail-fast, no 0.0.0 fallback).
@@ -228,7 +228,7 @@ profile="reduced"
 [ "$vendored_skills" -gt 0 ] && [ "$caf_vendored" = "yes" ] && profile="full"
 ver="$(cd "$repo" && git rev-parse --short HEAD 2>/dev/null || echo unknown)"
 # $cyver was computed above (before the plugin manifests were stamped + zipped).
-echo "$cyver" > "$out/VERSION"     # plain file so `init --check`/update can compare fast
+echo "$cyver" > "$out/VERSION"     # plain file so version.sh can compare fast
 
 # root package.json makes the payload npx/npm-installable: `npx cyberos-init [dir]`,
 # `npx cyberos-gates`, `npx cyberos-mcp` (bins live in cli/bin, resolve sibling scripts).
@@ -244,7 +244,7 @@ cat > "$out/package.json" <<PKG
     "cyberos-mcp": "cli/bin/cyberos-mcp.mjs"
   },
   "engines": { "node": ">=18" },
-  "files": ["cuo", "memory", "plugin", "mcp", "cli", "ci", "template", "lib", "install.sh", "uninstall.sh", "update.sh", "status.sh", "help.sh", "bootstrap.sh", "create.sh", "Dockerfile", "VERSION", "manifest.yaml", "GUIDE.md", "README.md", ".claude-plugin"],
+  "files": ["cuo", "memory", "plugin", "mcp", "cli", "ci", "template", "lib", "install.sh", "uninstall.sh", "version.sh", "status.sh", "help.sh", "bootstrap.sh", "create.sh", "Dockerfile", "VERSION", "manifest.yaml", "GUIDE.md", "README.md", ".claude-plugin"],
   "keywords": ["cyberos", "feature-requests", "agents", "mcp", "workflow", "hitl", "gates"],
   "license": "MIT"
 }

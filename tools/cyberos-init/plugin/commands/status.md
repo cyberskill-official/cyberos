@@ -1,13 +1,11 @@
 ---
-description: Show the installed CyberOS version, rules fingerprint, and changelog pointers. Manual only — not auto-run.
+description: Open the repo's CyberOS status page (docs/status/index.html) in the default browser. That is all this command does.
 argument-hint: "[repo path, default: current repo]"
 ---
-Report CyberOS install status for repo_root = ${1:-the current repo}:
+Open the status page for repo_root = ${1:-the current repo}.
 
-1. Run `bash .cyberos/status.sh` when present, else read `.cyberos/VERSION` + `.cyberos/manifest.yaml` (version, rules_sha, built_at).
+1. Run `bash .cyberos/status.sh` (or `bash <payload>/status.sh <repo_root>`). That opens `docs/status/index.html` in the default browser.
 
-2. If a payload is reachable, note whether `update` would report stale.
+2. If the page is missing, report that install may not have produced FRs yet, or suggest re-running install / waiting for the first FR.
 
-3. Point at the published changelog: https://github.com/cyberskill-official/cyberos/blob/main/CHANGELOG.md
-
-Keep it short and factual. This is a manual report only (not part of the soft auto-check path).
+3. Do not print long version reports here — that is `/version`. Do not re-vendor — that is `/install`.

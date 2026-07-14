@@ -1,62 +1,56 @@
 # Consumer install / update (CyberOS 1.0)
 
-## Command model
+## Commands (final)
 
-| Command | When | Role |
-|---------|------|------|
-| `bash install.sh [repo]` | Once (or re-vendor) | Install machine into `.cyberos/` |
-| `bash uninstall.sh [repo]` | On demand | Remove machine (keeps FRs; BRAIN kept by default) |
-| `bash update.sh` | Manual anytime | Check installed / payload / latest |
-| `bash update.sh --apply` | Manual when stale | Re-run install from payload |
-| `bash status.sh` | Manual only | Version + rules_sha report |
-| Soft check | **Auto** on any `.cyberos` use | `lib/update-check.sh` (throttled 12h) |
+| Shell | Slash | Role |
+|-------|-------|------|
+| `bash install.sh [repo]` | `/install` | Install or re-vendor the machine |
+| `bash uninstall.sh [repo]` | `/uninstall` | Remove the machine (keeps FRs; BRAIN kept by default) |
+| `bash version.sh [repo]` | `/version` | Check for a newer CyberOS; if stale, ask → `install` |
+| `bash status.sh [repo]` | `/status` | Open `docs/status/index.html` in the default browser |
+| `bash help.sh` | `/help` | CLI surface |
 
-There is **no** user-facing `install --page` or `install --check`.
-Status page regen is internal: `lib/status-page.sh` (pre-commit + run-gates).
+**Day-to-day:** install once, then forget. Soft update-check runs on any `.cyberos` use.
+**Re-vendor path:** only `install` (version never has a second apply path).
 
 ## Soft update triggers (automatic)
 
-- `cuo/gates/run-gates.sh`
-- `lib/status-page.sh` (hooks)
-- `help.sh`, `status.sh`, `update.sh`
-- MCP `fr_install` / `fr_gates` / `fr_status` / `ship_fr`
-- Full `install.sh` (always)
+`run-gates`, status-page hooks, `help`, `version`, `status`, MCP tools, full `install`.
 
 ```bash
-CYBEROS_UPDATE_CHECK=soft    # default: warn, throttle 12h
-CYBEROS_UPDATE_CHECK=always  # every invocation
-CYBEROS_UPDATE_CHECK=strict  # exit 1 if stale
-CYBEROS_UPDATE_CHECK=0       # off
+CYBEROS_UPDATE_CHECK=soft|always|strict|0
 CYBEROS_PAYLOAD=/path/to/dist/cyberos
 CYBEROS_OFFLINE=1
+CYBEROS_NONINTERACTIVE=1   # version.sh: report only, no y/N prompt
 ```
 
-## Apply latest
+## Fresh install / update
 
 ```bash
+# from release
 curl -fsSL https://github.com/cyberskill-official/cyberos/releases/latest/download/cyberos-payload.tar.gz \
   | tar -xz -C /tmp
 bash /tmp/cyberos/install.sh /path/to/repo
 
-# or from monorepo
+# from monorepo
 bash ~/Projects/CyberSkill/cyberos/dist/cyberos/install.sh /path/to/repo
 
-# or from installed tree when payload is current
-bash .cyberos/update.sh --apply
+# later: check then accept install
+bash .cyberos/version.sh
 ```
 
 ## Agent surface
 
 | File | Role |
 |------|------|
-| Root `AGENTS.md` | Thin pointer → `.cyberos/AGENT-ENTRY.md` (same idea as `CLAUDE.md` / `GEMINI.md`) |
+| Root `AGENTS.md` | Thin pointer → `.cyberos/AGENT-ENTRY.md` |
 | `.cyberos/AGENT-ENTRY.md` | Full agent one-pager |
-| `.cyberos/memory/AGENTS.md` | Layer-1 memory protocol (dense; not at repo root) |
+| `.cyberos/memory/AGENTS.md` | Layer-1 memory protocol |
 | `CLAUDE.md` / `GEMINI.md` / … | Per-agent pointers |
 
 ## Versions
 
 | File | Meaning |
 |------|---------|
-| `.cyberos/VERSION` | **Platform** (CyberOS) |
-| `package.json` version | **Product** (independent) |
+| `.cyberos/VERSION` | Platform (CyberOS) |
+| Product `package.json` / `VERSION` | Your product (independent) |

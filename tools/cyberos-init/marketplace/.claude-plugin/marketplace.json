@@ -9,7 +9,7 @@
     {
       "name": "cyberos",
       "source": "./plugin",
-      "description": "Turn an idea, PRD, or spec into audited feature requests (/create-feature-requests), then ship them (/ship-feature-requests) through implement -> review -> test -> done. /install installs the machine into any repo. HITL required at the two human-acceptance gates; agents never push, merge, deploy, or self-accept.",
+      "description": "Turn an idea, PRD, or spec into audited feature requests (/create-feature-requests), then ship them (/ship-feature-requests) through implement -> review -> test -> done. /install installs the machine into any repo; /version checks for updates. HITL required at the two human-acceptance gates; agents never push, merge, deploy, or self-accept.",
       "category": "development",
       "keywords": ["cyberos", "feature-requests", "backlog", "workflow", "hitl", "gates", "agents"],
       "suggested_prompts": [

@@ -18,7 +18,7 @@ for base in "$@"; do
 
     # --- core modules (must exist after init) ---
     for p in \
-      install.sh uninstall.sh update.sh status.sh help.sh VERSION manifest.yaml \
+      install.sh uninstall.sh version.sh status.sh help.sh VERSION manifest.yaml \
       lib/fr-migrate.sh lib/update-check.sh lib/status-page.sh \
       cuo/gates/run-gates.sh \
       cuo/ship-feature-requests.md \
@@ -50,6 +50,7 @@ for base in "$@"; do
     [ ! -f "$cy/migrate-frs.sh" ] || bad="$bad orphan:migrate-frs.sh"
     [ ! -f "$cy/init.sh" ] || bad="$bad orphan:init.sh"
     [ ! -f "$cy/changelog.sh" ] || bad="$bad orphan:changelog.sh"
+    [ ! -f "$cy/update.sh" ] || bad="$bad orphan:update.sh"
     [ ! -f "$cy/status.html" ] || bad="$bad orphan:status.html"
     [ ! -d "$cy/status-site" ] || bad="$bad orphan:status-site"
 
@@ -69,7 +70,7 @@ for base in "$@"; do
       || [ -f "$cy/cuo/skills/ship-feature-requests/SKILL.md" ] \
       || bad="$bad missing:ship-feature-requests-skill"
     # plugin commands
-    for cmd in install update help status create-feature-requests; do
+    for cmd in install uninstall version status help create-feature-requests; do
       [ -f "$cy/plugin/commands/${cmd}.md" ] || bad="$bad missing:plugin/commands/${cmd}.md"
     done
 
@@ -165,8 +166,8 @@ for base in "$@"; do
 
     # --- functional smokes (must work) ---
     if [ -f "$cy/init.sh" ]; then
-      if ! bash "$cy/update.sh" "$r" >/dev/null 2>&1; then
-        bad="$bad update-check-fails"
+      if ! CYBEROS_NONINTERACTIVE=1 bash "$cy/version.sh" "$r" >/dev/null 2>&1; then
+        bad="$bad version-check-fails"
       fi
       if [ -f "$cy/lib/status-page.sh" ] && command -v node >/dev/null 2>&1; then
         if ! bash "$cy/lib/status-page.sh" "$r" >/dev/null 2>&1; then
@@ -181,7 +182,7 @@ for base in "$@"; do
       fi
     fi
     # run-gates / update / help must parse
-    for scr in "$cy/cuo/gates/run-gates.sh" "$cy/update.sh" "$cy/help.sh" "$cy/status.sh" "$cy/install.sh" "$cy/uninstall.sh"; do
+    for scr in "$cy/cuo/gates/run-gates.sh" "$cy/version.sh" "$cy/help.sh" "$cy/status.sh" "$cy/install.sh" "$cy/uninstall.sh"; do
       [ -f "$scr" ] || continue
       if ! bash -n "$scr" 2>/dev/null; then
         bad="$bad syntax:$(basename "$scr")"

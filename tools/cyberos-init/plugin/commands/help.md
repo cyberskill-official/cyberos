@@ -1,27 +1,23 @@
 ---
-description: What the CyberOS plugin does and how to use it — commands, FR lifecycle, human gates, where things live.
+description: What CyberOS does — commands, FR lifecycle, human gates, where things live.
 ---
-Orient the user in the CyberOS plugin. Present, concisely and in this order:
+Orient the user. Present concisely:
 
-1. What this is: CyberOS turns work into feature requests (FRs) driven through one governed lifecycle — implement → review → test → done — with the human holding the two acceptance gates.
+1. CyberOS turns work into feature requests through implement → review → test → done, with the human holding two acceptance gates.
 
-2. The commands:
-   - `/install [repo]` — install CyberOS into a repo once (idempotent re-vendor).
-   - `/update` — manual update check; apply on request (`update.sh --apply`). Soft checks already run on any `.cyberos` use.
-   - `/status` — manual version / rules_sha report.
-   - `/ship-feature-requests` — drive the next eligible FR, halting at the two human gates.
-   - `/help` — this overview.
-   - Uninstall (shell): `bash .cyberos/uninstall.sh`.
+2. Commands (slash + shell):
+   - `/install` — install or re-vendor (once / when updating)
+   - `/uninstall` — remove the machine
+   - `/version` — check for a newer CyberOS; on yes → install
+   - `/status` — open `docs/status/index.html` in the browser
+   - `/help` — this overview
+   - `/ship-feature-requests` — drive the next FR (HITL)
+   - `/create-feature-requests` — draft FRs into the backlog
 
-3. The two human gates (non-negotiable): reviewing → ready_to_test and testing → done are set by the human only. Never set `done`, push, merge, or deploy without an operator instruction.
+3. Soft update-check runs automatically on any `.cyberos` use. Day-to-day: install once, then forget.
 
-4. Where things live after install:
-   - Doctrine: `.cyberos/cuo/`
-   - Gates: `bash .cyberos/cuo/gates/run-gates.sh` (`.cyberos/gates.env`)
-   - Agent entry: root `AGENTS.md` → `.cyberos/AGENT-ENTRY.md` (same pattern as `CLAUDE.md` / `GEMINI.md`)
-   - Memory protocol: `.cyberos/memory/AGENTS.md`; store: `.cyberos/memory/store/`
-   - FRs: `docs/feature-requests/`
+4. Layout after install: `.cyberos/cuo/`, `.cyberos/AGENT-ENTRY.md`, `.cyberos/memory/`, `docs/feature-requests/`, `docs/status/`.
 
 5. Docs: https://cyberos.cyberskill.world/docs
 
-If the current repo has no `.cyberos/`, suggest `/install`.
+If no `.cyberos/`, suggest `/install`.
