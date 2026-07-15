@@ -890,6 +890,41 @@ def main() -> int:
                 for f in sorted(residue_files[rname])[:10]:
                     print(f"{'':34}   {f}")
 
+        # ── FILENAME residue ────────────────────────────────────────────────────
+        # Everything above reads file CONTENTS. Nothing read the NAMES until
+        # 2026-07-15, and that whole dimension was invisible to a check reporting
+        # "none". What it hid:
+        #
+        #   306  docs/tasks/_{audits,archive}/**/FR-*.md   each contradicting its own
+        #        frontmatter (`task_id: TASK-AI-001` inside `FR-AI-001-*.audit.md`)
+        #     1  tools/cyberos-init/templates/FR-TEMPLATE.md — while install.sh's
+        #        onboarding block told every new user to `cp ... TASK-TEMPLATE.md`.
+        #        The first command a new user runs, failing on No such file.
+        #     1  11-feature-request-author-...-sequence.svg — the reference in
+        #        appendices.md was rewritten to 11-task-author-..., the file was not.
+        #        Broke `docs-site build` on every commit ("MISSING ASSET").
+        #
+        # Same shape as the vocabulary gate renaming its own caller: a codemod
+        # rewrites text, so it moves references and leaves targets. `git mv` is a
+        # different operation from `re.sub`, and only PATH_RENAMES did it — for the
+        # directories someone remembered to list.
+        #
+        # `(?<!N)` keeps NFR- (non-functional requirements): ~470 legitimate files.
+        name_pat = re.compile(r"(?<!N)FR-|feature[-_]request|(?<![A-Za-z0-9])fr[-_]")
+        bad_names = [f for f in files
+                     if name_pat.search(Path(f).name)
+                     and not any(x in f for x in RESIDUE_EXEMPT)]
+        print(f"\n--- filename residue ---")
+        if not bad_names:
+            print("none")
+        else:
+            print(f"{'old vocabulary in FILENAME':32} {len(bad_names):7}  files")
+            for f in sorted(bad_names)[:10]:
+                print(f"{'':34}   {f}")
+            if len(bad_names) > 10:
+                print(f"{'':34}   ... +{len(bad_names) - 10} more")
+            residue["filename"] = len(bad_names)
+
     if args.apply:
         print("\n--- path renames (git mv) ---")
         for src, dst in PATH_RENAMES:

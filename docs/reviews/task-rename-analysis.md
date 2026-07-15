@@ -688,3 +688,42 @@ slug, only the id.
 Both were invisible to the rule-echo `--verify` (§14.6). Neither is a rename bug. Both are
 debt the rename surfaced — the same shape as the dead ship pipeline, the unpassable audit
 gate, and `check-chain-coverage.sh` never running on bash 3.2.
+
+### 14.9 `--verify` never read a filename (2026-07-15)
+
+Every residue pattern reads file **contents**. Nothing read the **names**. That whole
+dimension was invisible to a check reporting `none`, and it hid 308 files:
+
+| count | what | consequence |
+|---|---|---|
+| 306 | `docs/tasks/_{audits,archive}/**/FR-*.md` | each contradicted its own frontmatter — `task_id: TASK-AI-001` inside `FR-AI-001-*.audit.md` |
+| 1 | `tools/cyberos-init/templates/FR-TEMPLATE.md` | `install.sh:651` told every new user to `cp ... TASK-TEMPLATE.md`. **The first command in the onboarding block, failing on No such file.** |
+| 1 | `11-feature-request-author-...-chain-sequence.svg` | the reference in `appendices.md` was rewritten to `11-task-author-...`; the file was not. Broke `docs-site build` on every commit — the "WARN docs-site build failed" nobody had diagnosed. |
+
+**A codemod rewrites text, so it moves references and leaves targets.** `git mv` is a
+different operation from `re.sub`, and only `PATH_RENAMES` performed it — for the
+directories someone remembered to list. Same shape as §14.7: the vocabulary gate renamed
+its own caller and left the file.
+
+Note what t09 did NOT catch: it asserts `install.sh` contains `TASK-001-<slug>/spec.md`,
+which it does — so t09 passed while the command it validates was broken. The assert checked
+the sentence, not whether the file it names exists.
+
+`--verify` now checks filenames as a first-class dimension, `(?<!N)` sparing ~470 `NFR-`
+ids. Verified it can fail before trusting it says pass.
+
+### 14.10 Three macOS bugs in a row (2026-07-15)
+
+`timeout` (GNU coreutils, absent on stock macOS) made `run_all.sh` report pass=0 fail=6 on
+the dev Mac and 6/6 on Linux. `sed -i EXPR file` (GNU-only; BSD reads the next arg as a
+backup suffix) meant `test_render_task_pages.sh` t04's fixture edit silently never ran —
+the assert was right, the setup was broken. Both are the same bug as `check-chain-coverage.sh`
+being a no-op under bash 3.2's missing `declare -A`, which was already written down.
+
+**A gate that cannot execute on the platform it gates reports nothing and blocks
+everything.** The audit that was supposed to catch this used a malformed regex and reported
+clean — the §14.6 failure one level up: a check trusted without testing that it *could* fail.
+
+`scripts/dev/*.sh` already use BSD `sed -i ''`. The repo knew it ran on macOS; the test
+files were simply never executed to find out. Still open: `tools/cyberos-init/tests/` (8
+files, not globbed) contains two more bash-4 `declare -A` users.
