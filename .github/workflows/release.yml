@@ -76,6 +76,118 @@ jobs:
             gh release create "$TAG" --verify-tag --title "$TITLE" --notes-file "$NOTES"
           fi
           gh release upload "$TAG" "$RUNNER_TEMP"/assets/* --clobber
+
+  # The three channels tools/install/tests/test_channels.sh defers here, because each needs a
+  # daemon, a runner, or the network that a dev box cannot be assumed to have. That test's
+  # CI_ONLY list and this job are two halves of one contract: a channel absent from BOTH is a
+  # hard failure there, so a channel cannot be quietly dropped by deleting it from one side.
+  #
+  # This exists because these channels were declared and dead. The Dockerfile's ENTRYPOINT ran
+  # /opt/cyberos/init.sh -- a file the payload has never contained -- so `docker run` failed on
+  # the first instruction, for every user, for the life of the channel. Nothing built the image.
+  channels:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: "${{ github.event.inputs.tag || github.ref_name }}" }
+
+      - name: Build the payload the channels deliver
+        run: bash tools/install/build.sh "$RUNNER_TEMP/payload"
+
+      # Local-provable channels, re-run here so a release cannot be cut from a tree that
+      # never ran the pre-commit suite.
+      - name: Channel gate (local-provable channels)
+        run: bash tools/install/tests/test_channels.sh
+
+      # docker: BUILD it and RUN it. A build alone would not have caught the init.sh
+      # ENTRYPOINT -- that image built fine and died on `docker run`.
+      - name: docker channel — build
+        run: docker build -f tools/install/Dockerfile -t cyberos:ci "$RUNNER_TEMP/payload"
+      - name: docker channel — run against a real repo, then assert it installed
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/dockerwork"; mkdir -p "$work"; git -C "$work" init -q
+          docker run --rm -v "$work:/work" cyberos:ci
+          # Exit 0 is not the claim. The claim is that the machine is on disk.
+          test -d "$work/.cyberos"            || { echo "docker: no .cyberos/ produced"; exit 1; }
+          test -f "$work/.cyberos/manifest.yaml" || { echo "docker: no manifest"; exit 1; }
+          got="$(grep -E '^rules_sha:' "$work/.cyberos/manifest.yaml" | awk '{print $2}')"
+          want="$(grep -E '^rules_sha:' "$RUNNER_TEMP/payload/manifest.yaml" | awk '{print $2}')"
+          test "$got" = "$want" || { echo "docker: rules_sha drift got=$got want=$want"; exit 1; }
+          echo "docker channel: installed, rules_sha matches the payload"
+
+      # github-action: the action the channel advertises must parse and point at a real entry
+      # point. rollout.sh's plugin probe read NO forever because it grepped a file that had
+      # been renamed -- a probe nobody ever watched fail.
+      - name: github-action channel — action.yml resolves and runs a real entry point
+        run: |
+          set -euo pipefail
+          act="tools/install/ci/github-action/action.yml"
+          test -f "$act" || { echo "github-action: declared as a channel but $act is missing"; exit 1; }
+          python3 -c 'import sys,yaml; yaml.safe_load(open(sys.argv[1]))' "$act"
+          # Parsing is not the claim. Every script the action invokes must exist IN THE PAYLOAD
+          # -- this is the channel that would otherwise rot exactly like the docker ENTRYPOINT.
+          #
+          # The action runs `.cyberos/...` paths: that is the payload after install.sh lays it
+          # down, so each one resolves against the built payload root, not this checkout. An
+          # earlier draft of this step scanned for `tools/install/...` instead, matched nothing,
+          # and printed "every invoked script exists" having checked ZERO scripts. The `-eq 0`
+          # guard below exists so that a pass always means something was actually verified.
+          scripts="$(grep -oE '\.cyberos/[A-Za-z0-9_./-]+\.sh' "$act" | sed 's#^\.cyberos/##' | sort -u)"
+          n=0; miss=0
+          for s in $scripts; do
+            n=$((n+1))
+            if [ ! -f "$RUNNER_TEMP/payload/$s" ]; then
+              echo "github-action: action.yml invokes .cyberos/$s, which the payload does not ship"; miss=1
+            else
+              echo "  ok: .cyberos/$s"
+            fi
+          done
+          if [ "$n" -eq 0 ]; then
+            echo "github-action: this check matched no scripts — it would pass vacuously. Fix the check."; exit 1
+          fi
+          test "$miss" -eq 0
+          echo "github-action channel: $act parses; all $n invoked script(s) exist in the payload"
+
+  # npx-cli. The channel was declared in the manifest while the npm package did not exist --
+  # `npx cyberos` 404'd for anyone who followed the docs. Guarded on the secret so a fork, or
+  # this repo before NPM_TOKEN is set, skips cleanly instead of failing the release.
+  npm:
+    needs: payload
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: "${{ github.event.inputs.tag || github.ref_name }}" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "20", registry-url: "https://registry.npmjs.org" }
+      - name: Build the payload (build.sh generates the npm package.json)
+        run: bash tools/install/build.sh "$RUNNER_TEMP/payload"
+      - name: Publish cyberos to npm
+        if: ${{ env.NPM_TOKEN != '' }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/payload"
+          test -f package.json || { echo "build.sh produced no package.json"; exit 1; }
+          name="$(node -p "require('./package.json').name")"
+          test "$name" = "cyberos" || { echo "package name is '$name', want 'cyberos'"; exit 1; }
+          # Re-running a release must not fail on an already-published version.
+          if npm view "cyberos@${TAG#v}" version >/dev/null 2>&1; then
+            echo "cyberos@${TAG#v} already published — nothing to do"
+          else
+            npm publish --access public --provenance
+          fi
+      - name: Skipped (no NPM_TOKEN)
+        if: ${{ env.NPM_TOKEN == '' }}
+        env: { NPM_TOKEN: "${{ secrets.NPM_TOKEN }}" }
+        run: echo "NPM_TOKEN is not set — skipping the npx-cli channel publish."
+
   # Signed native desktop installers (.dmg / .msi / .AppImage) via the official Tauri action. The desktop app
   # is a thin shell that loads os.cyberskill.world/web, so there is no web build step here.
   desktop:
