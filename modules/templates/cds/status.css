@@ -159,7 +159,7 @@ button.kpi { cursor: pointer; }
 .fchip button:hover { color: var(--cs-color-semantic-danger); }
 
 /* ---- task chips and pills -------------------------------------------------- */
-.frs { display: flex; flex-wrap: wrap; gap: 5px; }
+.task-chips { display: flex; flex-wrap: wrap; gap: 5px; }
 .chip { font-family: var(--cs-font-family-mono); font-size: 11px; font-weight: 600;
   padding: 3px 7px; border-radius: 6px; cursor: pointer; display: inline-block;
   background: var(--cs-color-surface-raised); color: var(--cs-color-text-accent);
@@ -234,7 +234,7 @@ td.t { max-width: 520px; }
 .rel-sec li { margin: 3px 0; }
 .rel details { margin-top: var(--cs-space-3); }
 .rel summary { cursor: pointer; font-size: 12.5px; color: var(--cs-color-text-muted); }
-.rel .frs { margin-top: var(--cs-space-2); }
+.rel .task-chips { margin-top: var(--cs-space-2); }
 .relnote { font-size: 12.5px; color: var(--cs-color-text-muted); margin: var(--cs-space-2) 0 0; }
 
 /* ---- drawer -------------------------------------------------------------- */

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# rollout-fleet.sh - re-init every repo under the given roots from THIS payload, and migrate
+# rollout-fleet.sh - re-install every repo under the given roots from THIS payload, and migrate
 # only the repos that actually carry tasks (or already publish a status page - those must not be
 # left holding a stale one). Prints one line per repo; never aborts the fleet on one failure.
 # Usage: bash tools/install/rollout-fleet.sh <payload-dir> <root-dir> [<root-dir> ...]
@@ -8,7 +8,7 @@ payload="${1:?usage: rollout-fleet.sh <payload> <root> [...]}"; shift
 [ -d "$payload/cuo" ] || { echo "rollout-fleet: $payload is not an assembled payload"; exit 2; }
 FAILED=0
 
-has_frs() {   # a repo "has tasks" when a spec.md exists, or a flat TASK-*.md still sits in the tree
+has_tasks() {   # a repo "has tasks" when a spec.md exists, or a flat TASK-*.md still sits in the tree
   # NB: -print -quit, never `find | grep -q` - under `set -o pipefail` grep's early exit
   # SIGPIPEs find and the pipeline reports 141, so a LARGE corpus reads as "no tasks".
   local r="$1"
@@ -22,11 +22,11 @@ for base in "$@"; do
   for r in "$base"/*; do
     [ -d "$r" ] || continue
     name="$(basename "$base")/$(basename "$r")"
-    if has_frs "$r"; then why="has tasks"; mig=0
+    if has_tasks "$r"; then why="has tasks"; mig=0
     elif [ -d "$r/docs/status" ]; then why="no tasks, but publishes a status page"; mig=0
     else why="no tasks"; mig=1; fi
     printf '\n=== %s (%s) ===\n' "$name" "$why"
-    # init treats a migration failure as non-fatal (a docs-render bug must not brick init), so
+    # install treats a migration failure as non-fatal (a docs-render bug must not brick install), so
     # its EXIT CODE cannot be the whole verdict: scan the output too, or a renderer that crashed
     # in every repo reads as a clean fleet roll.
     out="$(CYBEROS_NO_MIGRATE="$mig" CYBEROS_OFFLINE=1 bash "$payload/install.sh" "$r" 2>&1)"; rc=$?

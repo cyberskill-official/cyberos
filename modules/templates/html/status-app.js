@@ -11,12 +11,11 @@
   if (!el) return;
   var D = JSON.parse(el.textContent);
   // Data key renamed by the fr->task wave: data-extract.mjs now emits `tasks:`.
-  // NOTE: the `frs` CSS CLASS below (class="frs") is deliberately NOT renamed —
   // status.css already has a `.tasks` rule meaning something else, so renaming
   // the class would collide. Data key: renamed. CSS class: frozen.
-  var FRS = D.tasks;
+  var TASKS = D.tasks;
   var BY = {};
-  FRS.forEach(function (f) { BY[f.i] = f; });
+  TASKS.forEach(function (f) { BY[f.i] = f; });
 
   var ACTIVE = { ready_to_implement: 1, implementing: 1, ready_to_review: 1,
                  reviewing: 1, ready_to_test: 1, testing: 1 };
@@ -81,7 +80,7 @@
     }
     return true;
   }
-  function view() { return FRS.filter(matches); }
+  function view() { return TASKS.filter(matches); }
 
   /* ---- helpers ---------------------------------------------------------- */
   function esc(s) {
@@ -132,7 +131,7 @@
         '<div class="card-h"><h3><span class="k">' + esc(k) + '</span> ' +
         '<span class="muted">· ' + rs.length + " tasks</span></h3>" +
         '<span class="pct">' + pct(d, rs.length) + "% done</span></div>" +
-        segs(rs) + '<div class="frs">' +
+        segs(rs) + '<div class="task-chips">' +
         rs.map(function (f) { return chip(f); }).join("") + "</div></section>";
     }).join("") + "</div>";
   }
@@ -191,7 +190,7 @@
         (moving.length - shipped) + " in flight (<code>ready_to_implement</code> → <code>testing</code>)" +
         (shipped ? ", " + shipped + " already <code>done</code> but not cut into a release" : "") +
         ".</p>" +
-        '<div class="frs">' + moving.map(function (f) { return chip(f); }).join("") +
+        '<div class="task-chips">' + moving.map(function (f) { return chip(f); }).join("") +
         "</div></div></article>");
     }
     D.releases.forEach(function (r, i) {
@@ -208,7 +207,7 @@
         '<div class="rel-h"><b>' + esc(r.vl) + "</b>" +
         (r.d ? '<span class="muted">' + esc(r.d) + "</span>" : "") +
         '<span class="muted">' + (cited.length + dated.length) + " tasks</span></div>" +
-        (chips ? '<div class="frs">' + chips + "</div>"
+        (chips ? '<div class="task-chips">' + chips + "</div>"
                : '<p class="relnote">No task id cited in this entry.</p>') +
         (dated.length ? '<p class="relnote">Dashed chips were bound by <code>shipped:</code> date, ' +
           "not cited in the entry text.</p>" : "") +
@@ -271,7 +270,7 @@
   function links(f) {
     function blk(title, ids, none) {
       return "<div><h3>" + esc(title) + " (" + ids.length + ")</h3>" +
-        (ids.length ? '<div class="frs">' + ids.map(function (id) { return chipId(id); }).join("") + "</div>"
+        (ids.length ? '<div class="task-chips">' + ids.map(function (id) { return chipId(id); }).join("") + "</div>"
                     : '<p class="muted">' + esc(none) + "</p>") + "</div>";
     }
     var srcs = [];
@@ -353,9 +352,9 @@
 
   function paint() {
     var rows = view();
-    countEl.textContent = rows.length === FRS.length
-      ? FRS.length + " tasks"
-      : "showing " + rows.length + " of " + FRS.length;
+    countEl.textContent = rows.length === TASKS.length
+      ? TASKS.length + " tasks"
+      : "showing " + rows.length + " of " + TASKS.length;
     lensEl.innerHTML = S.lens === "table" ? table(rows)
       : S.lens === "timeline" ? timeline(rows) : board(rows);
 

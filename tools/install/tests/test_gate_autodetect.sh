@@ -64,7 +64,7 @@ t05_scaffold_once() {                                                  # AC 5
   before="$(sha256sum "$d/.cyberos/config.yaml" | cut -d' ' -f1)"
   bash "$TMP/payload/install.sh" "$d" >/dev/null 2>&1
   after="$(sha256sum "$d/.cyberos/config.yaml" | cut -d' ' -f1)"
-  [ "$before" = "$after" ] && ok t05 || fail t05 "config clobbered on re-init"
+  [ "$before" = "$after" ] && ok t05 || fail t05 "config clobbered on re-install"
 }
 t06_threshold_env() {                                                  # AC 6
   d="$TMP/go"

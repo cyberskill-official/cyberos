@@ -187,7 +187,7 @@ cp "$out/cuo/ship-tasks.md" "$out/cuo/EXECUTION-DISCIPLINE.md" "$out/cuo/STATUS-
 # Bundle EVERY vendored skill into the plugin so it is genuinely self-contained.
 # Why all of them: ship-tasks CHAINS ~18 author/audit skills (repo-context-map,
 # edge-case-matrix, implementation-plan, observability-injection, code-review, coverage-gate, ...).
-# Those only existed under .cyberos/cuo/skills/ after /init, so the plugin's bundled workflow could
+# Those only existed under .cyberos/cuo/skills/ after /install, so the plugin's bundled workflow could
 # not reach its own children standalone - the plugin shipped the conductor without the orchestra.
 # Task-{author,audit} additionally back /create-tasks. ~860K total; the zip
 # stays well under a megabyte, so there is no reason to ship a partial set.

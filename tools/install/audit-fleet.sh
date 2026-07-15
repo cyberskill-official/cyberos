@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# audit-fleet.sh — deep audit: every .cyberos module/channel after init must be present and usable.
+# audit-fleet.sh — deep audit: every .cyberos module/channel after install must be present and usable.
 # Usage: bash tools/install/audit-fleet.sh <expected-version> <root-dir> [...]
 #
 # env: CYBEROS_EXPECT_RULES_SHA  rules_sha every install must match. Defaults to the repo's own
@@ -37,7 +37,7 @@ for base in "$@"; do
       [ "$inst_sha" = "$WANT_SHA" ] || bad="$bad rules_sha(${inst_sha:-none})"
     fi
 
-    # --- core modules (must exist after init) ---
+    # --- core modules (must exist after install) ---
     for p in \
       install.sh uninstall.sh version.sh status.sh help.sh VERSION manifest.yaml \
       lib/task-migrate.sh lib/update-check.sh lib/status-page.sh \

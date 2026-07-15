@@ -29,7 +29,7 @@
     "core/test_writer_basic.py",
     "test_claude_code_hook.py",
     "test_fs_watcher.py",
-    "test_memory_small_frs.py",
+    "test_memory_small_tasks.py",
     "test_memory_sync.py",
     "test_schema_drift.py",
     "test_state.py",

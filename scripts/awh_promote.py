@@ -106,7 +106,7 @@ def main() -> int:
         gate[m] = verdict
         print(f"  [gate] {m:7} -> {verdict}" + (f"  weighted={w:.3f}" if w is not None else ""))
 
-    decisions = []  # (action, module, fr, reason)
+    decisions = []  # (action, module, task, reason)
     all_mods = sorted({p.parent.name for p in TASK_DIR.glob("*/*.md")})
     for mod in all_mods:
         tasks = ready_frs(mod)
@@ -122,8 +122,8 @@ def main() -> int:
                 decisions.append(("HOLD", mod, f.name, reason))
 
     print(f"\n{'ACTION':8} {'MODULE':7} task  -- reason")
-    for act, mod, fr, reason in decisions:
-        print(f"{act:8} {mod:7} {fr}  -- {reason}")
+    for act, mod, task, reason in decisions:
+        print(f"{act:8} {mod:7} {task}  -- {reason}")
     promoted = sum(1 for d in decisions if d[0] == "PROMOTE")
     held = sum(1 for d in decisions if d[0] == "HOLD")
     err = sum(1 for d in decisions if d[0] == "ERROR")
@@ -132,9 +132,9 @@ def main() -> int:
     if apply:
         LEDGER.parent.mkdir(parents=True, exist_ok=True)
         with LEDGER.open("a") as L:
-            for act, mod, fr, reason in decisions:
+            for act, mod, task, reason in decisions:
                 L.write(json.dumps({"ts": time.time(), "action": act, "module": mod,
-                                    "task": fr, "reason": reason}) + "\n")
+                                    "task": task, "reason": reason}) + "\n")
         print(f"ledger appended: {LEDGER}")
         print("review:  git --no-optional-locks diff -- docs/tasks   then rebuild docs + commit.")
     else:

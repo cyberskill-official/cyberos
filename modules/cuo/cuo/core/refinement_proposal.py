@@ -212,7 +212,7 @@ def _row_summary(row: dict) -> str:
     if "outcome" in extra:
         bits.append(f"outcome={extra['outcome']}")
     if "task_id" in extra:
-        bits.append(f"fr={extra['task_id']}")
+        bits.append(f"task={extra['task_id']}")
     if "rework_reason" in extra:
         bits.append(f"reason={extra['rework_reason'][:40]}")
     return ", ".join(bits) or "*(no metadata)*"

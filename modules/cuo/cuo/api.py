@@ -120,7 +120,7 @@ def run(
     output_dir: Path | None = None,
     module: str | None = None,
     backlog_path: Path | None = None,
-    max_frs: int = 0,
+    max_tasks: int = 0,
     invoker: str = "auto",
     memory_emit: bool = True,
     actor: str = "cuo-drain",
@@ -196,17 +196,17 @@ def run(
     # Brief mode: generate execution brief(s) instead of executing.
     if invoker == "brief":
         from cuo.core.supervisor import brief_chain
-        frs_run = 0
+        tasks_run = 0
         processed_task_ids: set[str] = set()
         while True:
-            if max_frs and frs_run >= max_frs:
+            if max_tasks and tasks_run >= max_tasks:
                 break
             rows = parse_backlog(backlog_path)
             eligible = next_eligible(rows, module=module, rework=rework,
                                       skip_task_ids=processed_task_ids)
             if eligible is None:
                 break
-            frs_run += 1
+            tasks_run += 1
             processed_task_ids.add(eligible.task_id)
             brief = brief_chain(
                 persona=persona,
@@ -220,31 +220,31 @@ def run(
             )
             if brief_output:
                 brief_output.parent.mkdir(parents=True, exist_ok=True)
-                if max_frs != 1 and frs_run > 1:
+                if max_tasks != 1 and tasks_run > 1:
                     # Multiple tasks: append with separator
                     with open(brief_output, "a", encoding="utf-8") as f:
-                        f.write(f"\n\n---\n\n## [{frs_run}] {eligible.task_id}\n\n")
+                        f.write(f"\n\n---\n\n## [{tasks_run}] {eligible.task_id}\n\n")
                         f.write(brief)
                 else:
                     brief_output.write_text(brief, encoding="utf-8")
-            elif max_frs == 1:
+            elif max_tasks == 1:
                 print(brief)
             else:
-                print(f"## [{frs_run}] {eligible.task_id}")
+                print(f"## [{tasks_run}] {eligible.task_id}")
                 print(brief)
                 print("")
         if brief_output:
             print(f"# brief written to {brief_output}")
-        print(f"# brief summary: {frs_run} brief(s) generated")
+        print(f"# brief summary: {tasks_run} brief(s) generated")
         sys.exit(0)
 
-    frs_run = 0
+    tasks_run = 0
     completed = 0
     routed_back = 0
     processed_task_ids: set[str] = set()
     while True:
-        if max_frs and frs_run >= max_frs:
-            print(f"# drain halted: --max-tasks={max_frs} reached")
+        if max_tasks and tasks_run >= max_tasks:
+            print(f"# drain halted: --max-tasks={max_tasks} reached")
             break
         rows = parse_backlog(backlog_path)
         eligible = next_eligible(rows, module=module, rework=rework,
@@ -255,7 +255,7 @@ def run(
             break
 
         task_output_dir = output_dir
-        print(f"## [{frs_run + 1}] {eligible.task_id} — {eligible.title[:60]}")
+        print(f"## [{tasks_run + 1}] {eligible.task_id} — {eligible.title[:60]}")
 
         result = execute_chain(
             persona=persona,
@@ -270,7 +270,7 @@ def run(
             stop_on_failure=True,
             backlog_path=backlog_path,
         )
-        frs_run += 1
+        tasks_run += 1
         processed_task_ids.add(eligible.task_id)
         print(f"   outcome: {result.outcome}  ({len(result.step_results)} steps, "
               f"{result.total_duration_ms} ms)")
@@ -320,6 +320,6 @@ def run(
             sys.exit(2)
 
     print("")
-    print(f"# drain summary: {frs_run} tasks run, {completed} completed, "
+    print(f"# drain summary: {tasks_run} tasks run, {completed} completed, "
           f"{routed_back} routed back")
-    sys.exit(0 if frs_run > 0 else 0)
+    sys.exit(0 if tasks_run > 0 else 0)

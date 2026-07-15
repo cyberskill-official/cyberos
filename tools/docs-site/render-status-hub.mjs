@@ -145,7 +145,7 @@ for (const mod of readdirSync(TASK_ROOT, { withFileTypes: true }).sort((a, b) =>
     }
     const m = parsed.meta;
     const id = str(m.id) || str(m.task_id) || d.name;
-    const fr = {
+    const task = {
       i: id, k: d.name, dm: mod.name,
       t: str(m.title) || '(untitled)',
       m: (str(m.module) || mod.name).toLowerCase(),
@@ -172,17 +172,17 @@ for (const mod of readdirSync(TASK_ROOT, { withFileTypes: true }).sort((a, b) =>
       sm: summarize(parsed.body),
       pg: null, sp: 0,
     };
-    if (fr.sh === 'null') fr.sh = '';
-    if (!STATUSES.includes(fr.s)) {
-      invalid.push(fr);
-      console.error(`status-hub: WARN invalid status '${fr.s}' on ${fr.i}`);
+    if (task.sh === 'null') task.sh = '';
+    if (!STATUSES.includes(task.s)) {
+      invalid.push(task);
+      console.error(`status-hub: WARN invalid status '${task.s}' on ${task.i}`);
     }
-    if (SPECS && safeId(fr.i) && parsed.body.trim()) {
-      if (specs.has(fr.i)) console.error(`status-hub: WARN duplicate task id ${fr.i} - the later spec wins`);
-      specs.set(fr.i, renderMarkdown(parsed.body));
-      fr.sp = 1;
+    if (SPECS && safeId(task.i) && parsed.body.trim()) {
+      if (specs.has(task.i)) console.error(`status-hub: WARN duplicate task id ${task.i} - the later spec wins`);
+      specs.set(task.i, renderMarkdown(parsed.body));
+      task.sp = 1;
     }
-    tasks.push(fr);
+    tasks.push(task);
   }
 }
 tasks.sort((a, b) => a.i.localeCompare(b.i));

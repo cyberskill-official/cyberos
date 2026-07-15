@@ -4,7 +4,7 @@ argument-hint: "[path to a PRD/spec, or just describe the idea]"
 ---
 Author and audit tasks for this repo. Input = ${1:-ask the user for the PRD/spec path, or the idea to turn into tasks}. This command CREATES the backlog; it never implements code. `/ship-tasks` is what implements.
 
-Run the two skills in order. Both are bundled with this plugin (`${CLAUDE_PLUGIN_ROOT}/skills/`) and also vendored at `.cyberos/cuo/skills/` once `/init` has run.
+Run the two skills in order. Both are bundled with this plugin (`${CLAUDE_PLUGIN_ROOT}/skills/`) and also vendored at `.cyberos/cuo/skills/` once `/install` has run.
 
 1. Author - `task-author`.
    - If given a PRD / spec / SRS document, expand it into task markdowns using the RESOLVED template: explicit operator override for this invocation, else `.cyberos/config.yaml` `task_template`, else default `engineering-spec@1`. Echo the resolved template (value + source) in the PLAN so the operator approves template + content together (profiles: TEMPLATE_PROFILES.md, TASK-CUO-208).
@@ -21,7 +21,7 @@ Run the two skills in order. Both are bundled with this plugin (`${CLAUDE_PLUGIN
 
 4. Report. List each task: id, title, class, final status, and the audit verdict. Then state the next move plainly: the tasks now at `ready_to_implement` are ready, and `/ship-tasks` will drive the next eligible one through implement -> review -> test, halting at the two human-acceptance gates.
 
-Never set `done`, never push, merge, or deploy. If the repo has no `.cyberos/` yet, tell the user to run `/init` first.
+Never set `done`, never push, merge, or deploy. If the repo has no `.cyberos/` yet, tell the user to run `/install` first.
 
 ## Task folder scaffolding (TASK-SKILL-120 / TASK-DOCS-004)
 

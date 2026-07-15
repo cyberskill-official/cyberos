@@ -57,13 +57,13 @@ def main():
         tasks[fm["id"]] = fm
 
     by_folder = defaultdict(list)
-    for fr in tasks.values():
-        by_folder[os.path.dirname(fr["_path"])].append(fr)
+    for task in tasks.values():
+        by_folder[os.path.dirname(task["_path"])].append(task)
 
     for folder, task_list in sorted(by_folder.items()):
         module_name = os.path.basename(folder).upper()
         task_list_sorted = sorted(task_list, key=lambda x: x["id"])
-        total_hours = sum(float(fr.get("effort_hours", 0) or 0) for fr in task_list_sorted)
+        total_hours = sum(float(task.get("effort_hours", 0) or 0) for task in task_list_sorted)
 
         out = []
         from datetime import date
@@ -75,32 +75,32 @@ def main():
         out.append("")
         out.append("| Task | Priority | Slice | Hours | Title |")
         out.append("|---|---|---|---:|---|")
-        for fr in task_list_sorted:
-            task_id = fr["id"]
-            priority = fr.get("priority", "?")
-            slice_v = fr.get("slice", "?")
-            hours = fr.get("effort_hours", "?")
-            title = fr.get("title", "").strip('"').strip("'")
-            path = os.path.basename(fr["_path"])
+        for task in task_list_sorted:
+            task_id = task["id"]
+            priority = task.get("priority", "?")
+            slice_v = task.get("slice", "?")
+            hours = task.get("effort_hours", "?")
+            title = task.get("title", "").strip('"').strip("'")
+            path = os.path.basename(task["_path"])
             out.append(f"| [{task_id}]({path}) | {priority} | {slice_v} | {hours} | {title[:100]} |")
         out.append("")
         out.append("## Cross-module dependencies")
         out.append("")
-        own_ids = set(fr["id"] for fr in task_list_sorted)
+        own_ids = set(task["id"] for task in task_list_sorted)
         deps_in = defaultdict(list)
         deps_out = defaultdict(list)
-        for fr in task_list_sorted:
-            for dep in fr.get("depends_on", []):
+        for task in task_list_sorted:
+            for dep in task.get("depends_on", []):
                 if dep in tasks and dep not in own_ids:
                     dep_module = os.path.basename(os.path.dirname(tasks[dep]["_path"])).upper()
-                    deps_in[dep_module].append((fr["id"], dep))
-        for task_id, fr in tasks.items():
+                    deps_in[dep_module].append((task["id"], dep))
+        for task_id, task in tasks.items():
             if task_id in own_ids:
                 continue
-            for dep in fr.get("depends_on", []):
+            for dep in task.get("depends_on", []):
                 if dep in own_ids:
-                    task_module = os.path.basename(os.path.dirname(fr["_path"])).upper()
-                    deps_out[task_module].append((fr["id"], dep))
+                    task_module = os.path.basename(os.path.dirname(task["_path"])).upper()
+                    deps_out[task_module].append((task["id"], dep))
         if deps_in:
             out.append("**This module depends on:**\n")
             for mod, edges in sorted(deps_in.items()):

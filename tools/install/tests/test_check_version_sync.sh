@@ -18,7 +18,7 @@ bash "$BUILD" "$TMP/payload" >/dev/null 2>&1 || { echo "FATAL: scratch build fai
 
 t01_fresh_build_syncs() {                                             # AC 1
   # Count NOT pinned. This asserted "across 6 artifacts" and went red at dd9070e33
-  # (FR-IMP-080), which added a 7th stamped artifact and updated the comparator's own
+  # (TASK-IMP-080), which added a 7th stamped artifact and updated the comparator's own
   # header comment to "across 7 artifacts" — but not this assert. Nobody noticed: this
   # file is in no gate.
   #
@@ -161,6 +161,11 @@ t08_hook_blocks_on_failure() {                                        # AC 8
 }
 
 t09_release_md_updated() {                                            # AC 9
+  # The needle below names a STALE CLAIM that must stay absent -- `! grep -q`. It is not
+  # our vocabulary, so the init->install rename must NOT touch it: renaming the needle
+  # would leave the real stale wording free to return with nothing watching. Same rule as
+  # audit-fleet's `[ ! -f "$cy/init.sh" ]` and the no-legacy-fr-vocabulary gate filename:
+  # a check that forbids a string has to spell that string.
   local R="$repo/docs/deploy/RELEASE.md"
   grep -q 'payload-gate.yml' "$R" && grep -q '.githooks/pre-commit' "$R" \
     && ! grep -q 'hook rebuilds `dist/cyberos` so the init payload always matches' "$R" \

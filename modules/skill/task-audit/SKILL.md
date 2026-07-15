@@ -202,12 +202,12 @@ phase:                           AUDIT
 
 ```json
 {
-  "artefact_paths": ["./frs/TASK-001-foo.md", "./frs/TASK-002-bar.md"],
+  "artefact_paths": ["./tasks/TASK-001-foo.md", "./tasks/TASK-002-bar.md"],
   "caller_persona": "cuo-cpo",
   "trace_id": "<uuid>",
   "upstream_context": {
     "from_skill": "task-author",
-    "manifest_path": "./frs/manifest.json"
+    "manifest_path": "./tasks/manifest.json"
   }
 }
 ```
@@ -225,8 +225,8 @@ phase:                           AUDIT
   "overall_status_counts": {"pass": 1, "needs_human": 1, "fail": 0},
   "exit_code": 1,
   "per_artefact": [
-    {"artefact_path": "./frs/TASK-001-foo.md", "audit_path": "./frs/TASK-001-foo.audit.md", "status": "pass", "iterations": 1, "audited_file_sha256": "<hex>"},
-    {"artefact_path": "./frs/TASK-002-bar.md", "audit_path": "./frs/TASK-002-bar.audit.md", "status": "needs_human", "iterations": 3, "audited_file_sha256": "<hex>"}
+    {"artefact_path": "./tasks/TASK-001-foo.md", "audit_path": "./tasks/TASK-001-foo.audit.md", "status": "pass", "iterations": 1, "audited_file_sha256": "<hex>"},
+    {"artefact_path": "./tasks/TASK-002-bar.md", "audit_path": "./tasks/TASK-002-bar.audit.md", "status": "needs_human", "iterations": 3, "audited_file_sha256": "<hex>"}
   ],
   "hitl_required": true,
   "requires_regen": false,

@@ -54,9 +54,9 @@ def main():
             tasks[fm["id"]] = fm
 
     # Kahn topo sort
-    in_degree = {fr: 0 for fr in tasks}
-    for task_id, fr in tasks.items():
-        for dep in fr.get("depends_on", []):
+    in_degree = {task: 0 for task in tasks}
+    for task_id, task in tasks.items():
+        for dep in task.get("depends_on", []):
             if dep in tasks:
                 in_degree[task_id] += 1
     queue = deque([f for f in tasks if in_degree[f] == 0])
@@ -79,11 +79,11 @@ def main():
     for i, layer in enumerate(layers):
         out.append(f"## Layer {i} ({len(layer)} tasks — buildable in parallel)\n")
         for task_id in layer:
-            fr = tasks[task_id]
-            title = fr.get("title", "").strip('"').strip("'")[:80]
-            effort = fr.get("effort_hours", "?")
-            priority = fr.get("priority", "?")
-            slice_v = fr.get("slice", "?")
+            task = tasks[task_id]
+            title = task.get("title", "").strip('"').strip("'")[:80]
+            effort = task.get("effort_hours", "?")
+            priority = task.get("priority", "?")
+            slice_v = task.get("slice", "?")
             out.append(f"- **{task_id}** [{priority}, {effort}h, slice {slice_v}] — {title}")
         out.append("")
     with open(f"{task_root}/IMPLEMENTATION_ORDER.md", "w") as f:
@@ -93,11 +93,11 @@ def main():
     # Sprint plan
     by_module = defaultdict(lambda: defaultdict(lambda: {"hours": 0, "count": 0, "tasks": []}))
     total_hours = 0
-    for task_id, fr in tasks.items():
-        module = fr.get("module", "?")
-        slice_v = fr.get("slice", "?")
+    for task_id, task in tasks.items():
+        module = task.get("module", "?")
+        slice_v = task.get("slice", "?")
         try:
-            hours = float(fr.get("effort_hours", "0"))
+            hours = float(task.get("effort_hours", "0"))
         except (TypeError, ValueError):
             hours = 0
         by_module[module][slice_v]["hours"] += hours

@@ -79,15 +79,15 @@ function softUpdateCheck(repo) {
 function toolInstall(a = {}) {
   const repo = repoRoot(a.repo);
   softUpdateCheck(repo);
-  const init = findInstall(repo);
-  if (!init) {
+  const install = findInstall(repo);
+  if (!install) {
     return err(
       `No install.sh reachable. Run the MCP server from the payload (dist/cyberos/mcp/) or set ` +
       `CYBEROS_PAYLOAD to the payload dir. Post-install, use task_gates / task_status / ship_task - ` +
       `they need only ${repo}/.cyberos/.`,
     );
   }
-  const { code, out } = run("bash", [init, repo], dirname(init));
+  const { code, out } = run("bash", [install, repo], dirname(install));
   return text(`task_install on ${repo} (exit ${code})\n\n${out}`, code !== 0);
 }
 

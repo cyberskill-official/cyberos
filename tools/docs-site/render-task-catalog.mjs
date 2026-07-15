@@ -34,44 +34,44 @@ const list = arr =>
       }).join(', ')
     : '<em class="muted">none</em>';
 
-function renderCard(fr) {
+function renderCard(task) {
   return `      <article class="task-card"
-               id="${esc(fr.id)}"
-               data-module="${esc(fr.module)}"
-               data-priority="${esc(fr.priority)}"
-               data-status="${esc(fr.status)}"
-               data-phase="${esc(fr.phase)}">
+               id="${esc(task.id)}"
+               data-module="${esc(task.module)}"
+               data-priority="${esc(task.priority)}"
+               data-status="${esc(task.status)}"
+               data-phase="${esc(task.phase)}">
         <header class="task-card-header">
-          <a href="#${esc(fr.id)}" class="task-anchor">#</a>
-          <h3 class="task-id">${fr.stem ? `<a class="task-page-link" href="../tasks/${esc(fr.dir_module)}/${esc(fr.stem)}/index.html">${esc(fr.id)}</a>` : esc(fr.id)}</h3>
-          <p class="task-title">${esc(fr.title)}</p>
+          <a href="#${esc(task.id)}" class="task-anchor">#</a>
+          <h3 class="task-id">${task.stem ? `<a class="task-page-link" href="../tasks/${esc(task.dir_module)}/${esc(task.stem)}/index.html">${esc(task.id)}</a>` : esc(task.id)}</h3>
+          <p class="task-title">${esc(task.title)}</p>
         </header>
         <div class="task-badges">
-          ${badge('module',   fr.module,   'module')}
-          ${badge('priority', fr.priority, 'priority-' + fr.priority.toLowerCase())}
-          ${badge('status',   fr.status,   'status-' + fr.status)}
-          ${badge('verify',   fr.verify,   'verify')}
-          ${badge('phase',    fr.phase,    'phase')}
-          ${badge('slice',    fr.slice,    'slice')}
-          ${badge('effort',   (fr.effort_hours ? fr.effort_hours + 'h' : ''), 'effort')}
+          ${badge('module',   task.module,   'module')}
+          ${badge('priority', task.priority, 'priority-' + task.priority.toLowerCase())}
+          ${badge('status',   task.status,   'status-' + task.status)}
+          ${badge('verify',   task.verify,   'verify')}
+          ${badge('phase',    task.phase,    'phase')}
+          ${badge('slice',    task.slice,    'slice')}
+          ${badge('effort',   (task.effort_hours ? task.effort_hours + 'h' : ''), 'effort')}
         </div>
         <dl class="task-meta">
-          <dt>Owner</dt>      <dd>${esc(fr.owner) || '<em class="muted">unassigned</em>'}</dd>
-          <dt>Milestone</dt>  <dd>${esc(fr.milestone) || '<em class="muted">—</em>'}</dd>
-          <dt>Created</dt>    <dd>${esc(fr.created) || '<em class="muted">—</em>'}</dd>
-          <dt>Shipped</dt>    <dd>${fr.shipped ? esc(fr.shipped) : '<em class="muted">not yet</em>'}</dd>
-          <dt>Depends on</dt> <dd>${list(fr.depends_on)}</dd>
-          <dt>Blocks</dt>     <dd>${list(fr.blocks)}</dd>
+          <dt>Owner</dt>      <dd>${esc(task.owner) || '<em class="muted">unassigned</em>'}</dd>
+          <dt>Milestone</dt>  <dd>${esc(task.milestone) || '<em class="muted">—</em>'}</dd>
+          <dt>Created</dt>    <dd>${esc(task.created) || '<em class="muted">—</em>'}</dd>
+          <dt>Shipped</dt>    <dd>${task.shipped ? esc(task.shipped) : '<em class="muted">not yet</em>'}</dd>
+          <dt>Depends on</dt> <dd>${list(task.depends_on)}</dd>
+          <dt>Blocks</dt>     <dd>${list(task.blocks)}</dd>
         </dl>
-        <p class="task-source"><a href="../../${esc(fr.path)}">Open spec ↗</a></p>
+        <p class="task-source"><a href="../../${esc(task.path)}">Open spec ↗</a></p>
       </article>`;
 }
 
 function renderPage(data) {
   // Group by module for navigation
   const byModule = {};
-  for (const fr of data.tasks) {
-    (byModule[fr.module] = byModule[fr.module] || []).push(fr);
+  for (const task of data.tasks) {
+    (byModule[task.module] = byModule[task.module] || []).push(task);
   }
   const modules = Object.keys(byModule).sort();
 

@@ -13,13 +13,13 @@ inputs:
 
 outputs:
   - { name: nfr_certification_report, format: nfr-certification-report@1, recipient: cuo/cto + deploy owner }
-  - { name: regression_frs,           format: task@1,          recipient: backlog }
+  - { name: regression_tasks,           format: task@1,          recipient: backlog }
 
 skill_chain:
   - { step: 1, skill: nfr-test-runner,          inputs_from: { target_environment: target_environment, nfr_catalog: nfr_catalog, telemetry_window: telemetry_window }, outputs_to: test_results }
   - { step: 2, skill: nfr-evaluator,            inputs_from: { test_results: test_results, nfr_catalog: nfr_catalog }, outputs_to: evaluation_verdicts }
   - { step: 3, skill: nfr-certification-author, inputs_from: evaluation_verdicts, outputs_to: nfr_certification_report }
-  - { step: 4, skill: nfr-regression-handler,   inputs_from: evaluation_verdicts, outputs_to: regression_frs }
+  - { step: 4, skill: nfr-regression-handler,   inputs_from: evaluation_verdicts, outputs_to: regression_tasks }
 
 escalates_to:
   - { persona: cuo/chief-information-security-officer, when: "evaluation_verdicts contains a failed security or privacy NFR" }
@@ -83,7 +83,7 @@ cyberos-cuo run cuo/chief-technology-officer/certify-nfrs \
 ### Step 4: `nfr-regression-handler`
 - **What it does:** For any NFR that receives a `fail` or `degraded` verdict, automatically drafts a bug-fix task (incorporating the failure logs and reproduction steps) and prepares to insert it into the backlog with a `ready_to_implement` status.
 - **Inputs:** `evaluation_verdicts`.
-- **Outputs:** `regression_frs`.
+- **Outputs:** `regression_tasks`.
 - **Pause point:** HITL on inserting the regression tasks into the backlog versus simply alerting a human to triage manually.
 
 ## Failure modes — per step

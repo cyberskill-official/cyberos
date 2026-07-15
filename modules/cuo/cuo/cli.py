@@ -285,7 +285,7 @@ def cmd_execute(
         k, v = raw.split("=", 1)
         parsed_inputs[k.strip()] = v.strip()
 
-    # --fr-id is a typed shorthand for --input task_id=<value>.
+    # --task-id is a typed shorthand for --input task_id=<value>.
     if task_id is not None:
         parsed_inputs["task_id"] = task_id
     # --auto-claim flag flows into the workflow's input bundle so phase
@@ -603,7 +603,7 @@ def cmd_drain(
     output_dir: Path,
     module_filter: str | None,
     backlog_path: Path | None,
-    max_frs: int,
+    max_tasks: int,
     invoker: str,
     memory_emit: bool,
     actor: str,
@@ -618,7 +618,7 @@ def cmd_drain(
         output_dir=output_dir,
         module=module_filter,
         backlog_path=backlog_path,
-        max_frs=max_frs,
+        max_tasks=max_tasks,
         invoker=invoker,
         memory_emit=memory_emit,
         actor=actor,

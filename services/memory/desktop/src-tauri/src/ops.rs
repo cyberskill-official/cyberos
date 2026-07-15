@@ -171,7 +171,7 @@ pub async fn ops_check(checkout: String, project: String) -> Result<OpResult, St
 /// Install or re-vendor a project: `bash dist/cyberos/install.sh <project>`. Idempotent by design.
 /// Was init.sh; install is the only re-vendor path (there is deliberately no second one).
 #[tauri::command]
-pub async fn ops_init(checkout: String, project: String) -> Result<OpResult, String> {
+pub async fn ops_install(checkout: String, project: String) -> Result<OpResult, String> {
     let root = require_checkout(&checkout)?;
     let script = require_payload_script(&root, "install.sh")?;
     let p = require_project(&root, &project)?;

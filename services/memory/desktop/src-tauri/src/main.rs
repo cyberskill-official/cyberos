@@ -37,7 +37,7 @@ fn main() {
             ops::ops_set_settings,
             ops::ops_build,
             ops::ops_check,
-            ops::ops_init,
+            ops::ops_install,
             ops::ops_list_projects,
         ])
         .on_window_event(|window, event| {

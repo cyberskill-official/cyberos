@@ -39,7 +39,7 @@ for repo in "$@"; do
   had_backlog=0; [ -f docs/tasks/BACKLOG.md ] && had_backlog=1
   moved=0; brain_migrated=0; appended=0
 
-  # 1. legacy BRAIN store -> unified location (init scaffolds only .cyberos/memory/store now)
+  # 1. legacy BRAIN store -> unified location (install scaffolds only .cyberos/memory/store now)
   if [ -d .cyberos-memory ] && [ ! -d .cyberos/memory/store ]; then
     mkdir -p .cyberos/memory && mv .cyberos-memory .cyberos/memory/store && brain_migrated=1
   fi

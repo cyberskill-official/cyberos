@@ -65,8 +65,6 @@ produces:
   human_summary_ref: ./HUMAN_SUMMARY.md
 
 # ── Contract dependencies ────────────────────────────────────────────
-# `id: fr` was a rename leftover the codemod could not see: a bare `fr`, not an
-# `FR-` id or a `feature-request` string, so no rule matched it.
 depends_on_contracts:
   - id:        task
     version:   v1
@@ -206,8 +204,8 @@ phase:                           <PLAN | WORKER | RESUME>   (computed per §3 be
 ```json
 {
   "source_files": [{"path": "./EXAMPLE-INPUT.md", "media_type": "text/markdown"}],
-  "output_dir": "./frs/",
-  "manifest_path": "./frs/manifest.json",
+  "output_dir": "./tasks/",
+  "manifest_path": "./tasks/manifest.json",
   "batch_size": 3,
   "caller_persona": "cuo-cpo",
   "trace_id": "<uuid for genie.action_log correlation>"
@@ -220,11 +218,11 @@ phase:                           <PLAN | WORKER | RESUME>   (computed per §3 be
 {
   "skill_id": "task-author",
   "skill_version": "1.0.0",
-  "manifest_path": "./frs/manifest.json",
+  "manifest_path": "./tasks/manifest.json",
   "batch_run_id": "<uuid>",
   "batch_outcome": "BATCH_COMPLETE | BATCH_COMPLETE_WITH_AMENDMENTS | HALTED_HITL | EXHAUSTED",
   "artefacts_written": [
-    {"id": "TASK-001", "path": "./frs/TASK-001-foo.md", "artefact_hash": "<sha256>", "status": "PASS|HITL_PAUSE|EXHAUSTED"}
+    {"id": "TASK-001", "path": "./tasks/TASK-001-foo.md", "artefact_hash": "<sha256>", "status": "PASS|HITL_PAUSE|EXHAUSTED"}
   ],
   "amendments_pending": ["AMD-NNN", "..."],
   "hitl_pending": false,
@@ -375,8 +373,8 @@ Skill:   task-author
 Input:
   source_files:   [./EXAMPLE-INPUT.md]
   batch_size:     3
-  output_dir:     ./frs/
-  manifest_path:  ./frs/manifest.json
+  output_dir:     ./tasks/
+  manifest_path:  ./tasks/manifest.json
   caller_persona: cuo-cpo
   trace_id:       <uuid>
 

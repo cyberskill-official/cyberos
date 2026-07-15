@@ -26,11 +26,11 @@ The project list shows every git repository under `~/Projects` (one and two leve
 
 Select the project and press "Check". This runs the read-only version comparison (`version.sh`) and prints `installed=<x> available=<y>` plus whether an update exists. Nothing is modified.
 
-## Init or update a project
+## Install or update a project
 
-Press "Init" on the selected project. First time, this installs CyberOS into the repo (a gitignored `.cyberos/`, a `docs/tasks/` scaffold, gate autodetection, the BRAIN, the agent entry files). On an already-initialised project the same button applies the update: init is idempotent and never touches your backlog, tasks, `AGENTS.md`, or BRAIN - it swaps the machine, not your work.
+Press "Install" on the selected project. First time, this installs CyberOS into the repo (a gitignored `.cyberos/`, a `docs/tasks/` scaffold, gate autodetection, the BRAIN, the agent entry files). On an already-initialised project the same button applies the update: init is idempotent and never touches your backlog, tasks, `AGENTS.md`, or BRAIN - it swaps the machine, not your work.
 
-Two guard rails are built in: the app refuses to init a path that is not a git repository, and it refuses to init the CyberOS checkout itself.
+Two guard rails are built in: the app refuses to install into a path that is not a git repository, and it refuses to init the CyberOS checkout itself.
 
 ## Read the result
 
@@ -38,7 +38,7 @@ Every action streams its full stdout and stderr into the output panel, verbatim.
 
 ## Troubleshooting
 
-- "payload not built yet": press "Build payload" first - Init and Check need `dist/cyberos/install.sh` to exist.
+- "payload not built yet": press "Build payload" first - Install and Check need `dist/cyberos/install.sh` to exist.
 - "not a CyberOS checkout": fix the Settings path; it must point at a CyberOS working copy.
 - "not a git repository": the project path is wrong, or the folder is not a repo yet (`git init` it first).
 - A project is missing from the list: it is deeper than two levels under `~/Projects` - paste its absolute path instead.

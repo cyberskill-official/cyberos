@@ -50,37 +50,37 @@ def main():
         print(json.dumps({"error": "no docs/tasks/ — not a cyberos repo"}), file=sys.stderr)
         sys.exit(2)
 
-    all_frs = {}
+    all_tasks = {}
     for path in sorted(glob.glob(f"{task_root}/**/TASK-*.md", recursive=True)):
         if path.endswith(".audit.md"):
             continue
         fm = parse_fm(path)
         if not fm or "id" not in fm:
             continue
-        all_frs[fm["id"]] = {
+        all_tasks[fm["id"]] = {
             "path": path,
             "depends_on": fm.get("depends_on", []),
             "blocks": fm.get("blocks", []),
         }
 
     errors = []
-    for task_id, info in all_frs.items():
+    for task_id, info in all_tasks.items():
         for dep in info["depends_on"]:
-            if dep not in all_frs:
+            if dep not in all_tasks:
                 errors.append(f"{task_id} depends_on missing task {dep}")
                 continue
-            if task_id not in all_frs[dep]["blocks"]:
+            if task_id not in all_tasks[dep]["blocks"]:
                 errors.append(f"RECIP: {dep}.blocks must include {task_id}")
         for blk in info["blocks"]:
-            if blk not in all_frs:
+            if blk not in all_tasks:
                 errors.append(f"{task_id} blocks missing task {blk}")
                 continue
-            if task_id not in all_frs[blk]["depends_on"]:
+            if task_id not in all_tasks[blk]["depends_on"]:
                 errors.append(f"RECIP: {blk}.depends_on must include {task_id}")
 
     missing_audits = []
     not_perfect = []
-    for task_id, info in all_frs.items():
+    for task_id, info in all_tasks.items():
         audit = info["path"].replace(".md", ".audit.md")
         if not os.path.exists(audit):
             missing_audits.append(task_id)
@@ -91,7 +91,7 @@ def main():
             not_perfect.append(task_id)
 
     result = {
-        "total_frs": len(all_frs),
+        "total_tasks": len(all_tasks),
         "reciprocity_errors": len(errors),
         "errors_sample": errors[:30],
         "missing_audits": len(missing_audits),
@@ -103,7 +103,7 @@ def main():
     if args.json:
         print(json.dumps(result, indent=2))
     else:
-        print(f"Total tasks: {result['total_frs']}")
+        print(f"Total tasks: {result['total_tasks']}")
         print(f"Reciprocity errors: {result['reciprocity_errors']}")
         for e in result["errors_sample"]:
             print(f"  - {e}")

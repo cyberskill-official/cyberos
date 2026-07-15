@@ -44,7 +44,7 @@ _cyberos_update_check() {
   local inst payload_ver latest_line latest verdict
   inst="$(tr -d ' \n\r' < "$cy/VERSION")"
   payload_ver="$inst"
-  # Prefer check beside payload init (vendored) or sibling check-latest
+  # Prefer check beside payload install (vendored) or sibling check-latest
   if [ -f "$cy/check-latest.sh" ] && [ "${CYBEROS_OFFLINE:-0}" != "1" ]; then
     latest_line="$(bash "$cy/check-latest.sh" 2>/dev/null || echo "latest=unknown source=offline")"
   elif [ -f "$cy/../check-latest.sh" ] && [ "${CYBEROS_OFFLINE:-0}" != "1" ]; then

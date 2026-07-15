@@ -1,4 +1,4 @@
-"""Tests for FR-MEMORY-109 Claude Code hook capture."""
+"""Tests for TASK-MEMORY-109 Claude Code hook capture."""
 
 from __future__ import annotations
 

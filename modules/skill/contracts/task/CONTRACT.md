@@ -26,7 +26,7 @@ emitted_source_freshness_tier: 10   # high authority — this IS the schema
 
 # `task@1` — canonical task contract
 
-> A **contract**, not a skill. Holds the single source of truth for the Task artefact shape across CyberOS. Loaded by both `cuo/cpo/task-author` (as the generation skeleton) and `cuo/cpo/task-audit` (as the validation target). Future workflows like a `tech-spec-from-fr` skill will load this to understand task structure before deriving downstream artefacts.
+> A **contract**, not a skill. Holds the single source of truth for the Task artefact shape across CyberOS. Loaded by both `cuo/cpo/task-author` (as the generation skeleton) and `cuo/cpo/task-audit` (as the validation target). Future workflows like a `tech-spec-from-task` skill will load this to understand task structure before deriving downstream artefacts.
 
 ## What is a contract (vs. a skill)?
 

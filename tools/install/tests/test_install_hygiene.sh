@@ -21,7 +21,7 @@ mkrepo() { mkdir -p "$1"; (cd "$1" && git init -q . 2>/dev/null || true); }
 
 t01_gitignore_managed_block() {
   local d="$TMP/gi"; mkrepo "$d"
-  # operator rules + the exact legacy lines a pre-block init used to append
+  # operator rules + the exact legacy lines a pre-block install used to append
   cat > "$d/.gitignore" <<'GI'
 node_modules/
 *.log
@@ -54,7 +54,7 @@ t02_changelog_once() {
   echo "OPERATOR-EDIT" >> "$d/CHANGELOG.md"
   bash "$TMP/payload/install.sh" "$d" >/dev/null 2>&1
   grep -q "OPERATOR-EDIT" "$d/CHANGELOG.md" && [ "$(grep -c '^# Changelog' "$d/CHANGELOG.md")" = 1 ] \
-    && ok t02 || fail t02 "clobbered or duplicated on re-init"
+    && ok t02 || fail t02 "clobbered or duplicated on re-install"
 }
 
 t03_root_task_migration() {
@@ -120,7 +120,7 @@ t05_supersede_old_docs() {
     [ ! -f "$d/docs/ROADMAP.md" ] && [ ! -f "$d/docs/BACKLOG.md" ] && [ ! -f "$d/docs/CHANGELOG.md" ] \
       || { fail t05-removed "old docs/ROADMAP|BACKLOG|CHANGELOG still present"; all=0; }
     grep -q "v0.2.0" "$d/docs/status/index.html" || { fail t05-page "adopted changelog not on the page"; all=0; }
-    # idempotent: re-init keeps them removed and keeps the adopted content
+    # idempotent: re-install keeps them removed and keeps the adopted content
     bash "$TMP/payload/install.sh" "$d" >/dev/null 2>&1
     [ ! -f "$d/docs/ROADMAP.md" ] || { fail t05-idem "removed doc resurrected on re-init"; all=0; }
     grep -q "TASK-A-001 pending row" "$d/docs/tasks/BACKLOG.md" || { fail t05-idem-bl "adopted backlog lost on re-init"; all=0; }
@@ -149,5 +149,5 @@ t04_payload_self_cleanup
 t05_supersede_old_docs
 t06_hook_append_foreign
 
-echo "init-hygiene: $PASS passed, $FAIL failed"
+echo "install-hygiene: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

@@ -126,7 +126,7 @@ def emit_task(task_id: str) -> int:
 
 def audit(as_json: bool) -> int:
     per_mod: dict[str, dict[str, int]] = {}
-    unresolved_frs: list[dict] = []
+    unresolved_tasks: list[dict] = []
     for path in task_files():
         text = path.read_text(encoding="utf-8")
         module = task_module(text, path)
@@ -150,9 +150,9 @@ def audit(as_json: bool) -> int:
                 d["unresolved"] += 1
                 miss.append(c)
         if miss:
-            unresolved_frs.append({"task": fid, "module": module, "unresolved": miss})
+            unresolved_tasks.append({"task": fid, "module": module, "unresolved": miss})
     if as_json:
-        print(json.dumps({"per_module": per_mod, "unresolved_frs": unresolved_frs}, indent=2))
+        print(json.dumps({"per_module": per_mod, "unresolved_tasks": unresolved_tasks}, indent=2))
         return 0
     print("cited-test drift audit (per module):")
     print(f"  {'module':10s} {'tasks':>4} {'w/cites':>7} {'cites':>6} {'exact':>6} {'mapped':>6} {'unresolved':>10}")
@@ -164,26 +164,26 @@ def audit(as_json: bool) -> int:
         for k in tot:
             tot[k] += d.get(k, 0)
     print(f"  {'TOTAL':10s} {tot['tasks']:>4} {'':>7} {tot['cites']:>6} {tot['resolved']-tot['mapped']:>6} {tot['mapped']:>6} {tot['unresolved']:>10}")
-    print(f"\nFRs with at least one unresolved cited test: {len(unresolved_frs)}")
-    for u in unresolved_frs[:20]:
+    print(f"\nTasks with at least one unresolved cited test: {len(unresolved_tasks)}")
+    for u in unresolved_tasks[:20]:
         print(f"  {u['task']:18s} {u['unresolved']}")
-    if len(unresolved_frs) > 20:
-        print(f"  ... {len(unresolved_frs) - 20} more")
+    if len(unresolved_tasks) > 20:
+        print(f"  ... {len(unresolved_tasks) - 20} more")
     return 0
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("fr", nargs="?", help="task id, e.g. TASK-MEMORY-116")
+    ap.add_argument("task", nargs="?", help="task id, e.g. TASK-MEMORY-116")
     ap.add_argument("--audit", action="store_true", help="scan all tasks for cited-test drift")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
     if args.audit:
         return audit(args.json)
-    if not args.fr:
+    if not args.task:
         ap.print_help()
         return 2
-    return emit_task(args.fr)
+    return emit_task(args.task)
 
 
 if __name__ == "__main__":

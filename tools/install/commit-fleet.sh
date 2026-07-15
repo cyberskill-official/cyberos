@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # commit-fleet.sh - commit ONLY the CyberOS-owned paths in every repo under the given roots, and
 # push to main. A repo's own uncommitted work is never staged: the allowlist below is exactly what
-# init + migration write as TRACKED files, and the run ABORTS a repo if anything outside it got
+# install + migration write as TRACKED files, and the run ABORTS a repo if anything outside it got
 # staged. Repos with no remote are committed and reported as unpushable; repos on a branch other
 # than main are committed but never pushed (this script does not decide someone's branching).
 # Usage: bash tools/install/commit-fleet.sh <msg-file> <root-dir> [<root-dir> ...]
@@ -9,7 +9,7 @@ set -uo pipefail
 MSG="${1:?usage: commit-fleet.sh <msg-file> <root> [...]}"; shift
 [ -f "$MSG" ] || { echo "commit-fleet: no such message file: $MSG"; exit 2; }
 
-# exactly what cyberos init (vendor + migrate + page) writes as tracked content
+# exactly what cyberos install (vendor + migrate + page) writes as tracked content
 OWNED=(docs/status docs/tasks AGENTS.md CLAUDE.md GEMINI.md .cursorrules
        .windsurfrules .gitignore CHANGELOG.md .mcp.json .agents)
 ALLOW='^(docs/status/|docs/tasks/|AGENTS\.md$|CLAUDE\.md$|GEMINI\.md$|\.cursorrules$|\.windsurfrules$|\.gitignore$|CHANGELOG\.md$|\.mcp\.json$|\.agents/)'

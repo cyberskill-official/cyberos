@@ -1,4 +1,4 @@
-"""Tests for FR-MEMORY-103 multi-device sync daemon (pure-function pieces)."""
+"""Tests for TASK-MEMORY-103 multi-device sync daemon (pure-function pieces)."""
 
 from __future__ import annotations
 

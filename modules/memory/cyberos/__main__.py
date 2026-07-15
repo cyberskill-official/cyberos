@@ -2441,7 +2441,7 @@ def _cmd_workflow(args: argparse.Namespace) -> int:
     output_dir = None
     module = None
     backlog_path = None
-    max_frs = 0
+    max_tasks = 0
     invoker = "auto"
     no_memory_emit = "--no-memory-emit" in wf_args
     actor = "cuo-drain"
@@ -2472,7 +2472,7 @@ def _cmd_workflow(args: argparse.Namespace) -> int:
             backlog_path = Path(arg.split("=", 1)[1])
         elif arg == "--max-tasks" and i + 1 < len(wf_args):
             i += 1
-            max_frs = int(wf_args[i])
+            max_tasks = int(wf_args[i])
         elif arg == "--invoker" and i + 1 < len(wf_args):
             i += 1
             invoker = wf_args[i]
@@ -2508,7 +2508,7 @@ def _cmd_workflow(args: argparse.Namespace) -> int:
         output_dir=output_dir,
         module=module,
         backlog_path=backlog_path,
-        max_frs=max_frs,
+        max_tasks=max_tasks,
         invoker=invoker,
         memory_emit=not no_memory_emit,
         actor=actor,

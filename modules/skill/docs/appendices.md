@@ -533,7 +533,7 @@ A skill is registry-valid when ALL of:
 
 **Q. "How does versioning interact with chained skills?"** A. Each skill's `skill_version` is independent. A chain of `task-author v0.2.0 -> task-audit v0.2.0` works because their envelope schemas are compatible. If `task-audit` MAJOR-bumps to v1.0.0 with breaking schema changes, `task-author` stays at v0.2.0 unless its own contract changes. The CI matrix verifies envelope compatibility on every PR.
 
-**Q. "Can a single skill produce multiple artefacts in one invocation?"** A. Yes. Task-author writes 3 tasks in one batch, producing 3 `artefact_write` rows. The output envelope's `frs_written` array carries all 3. Multi-artefact skills are common; they're not multiple invocations.
+**Q. "Can a single skill produce multiple artefacts in one invocation?"** A. Yes. Task-author writes 3 tasks in one batch, producing 3 `artefact_write` rows. The output envelope's `artefacts_written` array carries all 3. Multi-artefact skills are common; they're not multiple invocations.
 
 ### 25.2 Glossary
 
@@ -969,7 +969,7 @@ After Phase I, emit a final summary in chat:
     - srs-<slug>.md              (Phase E)        <- if full
     - srs-<slug>.audit.md        (Phase E)        <- if full
     - tasks/TASK-001-<slug>.md, ...   (Phase F)
-    - fr/task-NNN-<slug>.audit.md  (Phase G)
+    - tasks/task-NNN-<slug>.audit.md  (Phase G)
     - tech-spec-<slug>.md        (Phase H)        <- if standard/full
     - impl-plan.md               (Phase I)        <- hand to engineering
 
@@ -1597,7 +1597,7 @@ Per project, the deliverables you keep:
     ├── prd-<feature>.audit.md      # Phase D (standard/full)
     ├── srs-<feature>.md            # Phase E (full only)
     ├── srs-<feature>.audit.md      # Phase E
-    ├── fr/
+    ├── tasks/
     │   ├── TASK-001-<slug>.md        # Phase F
     │   ├── TASK-001-<slug>.audit.md  # Phase G
     │   └── ...
@@ -1870,7 +1870,7 @@ For when you can't run a CLI - e.g., you're on a borrowed machine, on mobile, or
 #### What still works
 
   * The interview shape - questions in chat, answers in chat.
-  * Markdown generation - the agent produces `project-brief.md` / `prd-*.md` / `fr-*.md` / `impl-plan.md` content as chat output.
+  * Markdown generation - the agent produces `project-brief.md` / `prd-*.md` / `task-*.md` / `impl-plan.md` content as chat output.
   * Audit-loop reasoning - the rubric runs in the agent's head; you read the verdict.
 
 
@@ -3589,7 +3589,7 @@ If your project has its own house style/rubric document, drop its path in too: `
       tasks unless you hit a real decision (e.g. spec contradicts itself; pick
       the path and continue otherwise).
     - Every task file change -> atomic commit with message
-      `feat(fr): draft task-{{MODULE}}-NNN <title> (10/10)`.
+      `feat(task): draft task-{{MODULE}}-NNN <title> (10/10)`.
     - Push is left to the human. Never run `git push` automatically.
     - If the source doc is ambiguous on a specific normative choice and you
       cannot decide unilaterally, STOP and report the ambiguity. Do not draft

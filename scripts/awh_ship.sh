@@ -5,7 +5,7 @@
 #   bash scripts/awh_ship.sh --drain         # drain every remaining ready_to_test task
 #
 # It runs THIS BRANCH's cuo source directly (no install), so it always has the current flags
-# (--fr-id, and the now-required --output-dir). That sidesteps the `pip install -e modules/cuo`
+# (--task-id, and the now-required --output-dir). That sidesteps the `pip install -e modules/cuo`
 # failure entirely: cuo only needs click + pyyaml, which the interpreter already behind your
 # installed cyberos-cuo command has. We just force the branch's cuo/ package ahead of it with
 # PYTHONPATH. Runs on your Mac (needs an LLM invoker for --invoker llm).

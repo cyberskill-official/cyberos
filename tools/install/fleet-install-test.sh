@@ -50,7 +50,7 @@ for r in "${repos[@]}"; do
     echo "SKIP  $name (missing dir)"
     continue
   fi
-  # Skip pure non-git empty? still try init
+  # Skip pure non-git empty? still try install
   printf '\n=== INSTALL %s ===\n' "$name"
   if out="$(CYBEROS_OFFLINE=1 bash "$payload/install.sh" "$r" 2>&1)"; then
     printf '%s\n' "$out" | sed 's/^/  | /' | tail -30

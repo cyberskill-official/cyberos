@@ -10,7 +10,7 @@ New to it? `GUIDE.md` is the step-by-step walkthrough (zero to your first shippe
 
 The page stays synced with the markdown it renders - markdown remains the record of truth, the page only renders it. Two auto-sync touchpoints: a managed `pre-commit` hook (installed only when no foreign hook exists; never blocks a commit; `CYBEROS_NO_HOOK=1` skips) regenerates `docs/status/` whenever `docs/tasks/**`, `CHANGELOG.md`, or `VERSION` is staged, and `run-gates.sh` regenerates it after every gates run. Manual refresh any time: `bash .cyberos/lib/status-page.sh`.
 
-## What init writes: tracked vs gitignored
+## What install writes: tracked vs gitignored
 
 One managed block in `.gitignore` (between `# >>> cyberos ... >>>` and `# <<< cyberos <<<` markers) carries every ignore rule init needs. Re-running init regenerates the block in place - it never appends duplicates and never touches anything outside the markers, so your own rules survive. Legacy entries appended by older inits are lifted into the block on first contact.
 
@@ -82,7 +82,7 @@ cp -R dist/cyberos /path/to/your/repo/.cyberos-install
 cd /path/to/your/repo && bash .cyberos-install/install.sh
 ```
 
-The copied `.cyberos-install/` removes itself after a successful init - everything the repo needs onward lives under `.cyberos/` (machine, gates, migration kit, MCP server), so the payload copy is redundant and must not end up committed. Keep it with `CYBEROS_KEEP_PAYLOAD=1`. Only the canonical `<repo>/.cyberos-install` self-cleans: payloads outside the repo, other in-repo paths, and git submodules (channel 2) are never removed.
+The copied `.cyberos-install/` removes itself after a successful install - everything the repo needs onward lives under `.cyberos/` (machine, gates, migration kit, MCP server), so the payload copy is redundant and must not end up committed. Keep it with `CYBEROS_KEEP_PAYLOAD=1`. Only the canonical `<repo>/.cyberos-install` self-cleans: payloads outside the repo, other in-repo paths, and git submodules (channel 2) are never removed.
 
 ### 2. Git submodule or subtree (available)
 

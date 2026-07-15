@@ -112,20 +112,20 @@
     }
   }
 
-  async function opsRun(kind: "build" | "check" | "init") {
+  async function opsRun(kind: "build" | "check" | "install") {
     opsError = null;
     opsOutput = "";
     opsOk = null;
     opsBusy = kind;
     try {
       await invoke("ops_set_settings", { settings: { checkout: opsCheckout } });
-      const cmd = kind === "build" ? "ops_build" : kind === "check" ? "ops_check" : "ops_init";
+      const cmd = kind === "build" ? "ops_build" : kind === "check" ? "ops_check" : "ops_install";
       const args: Record<string, string> = { checkout: opsCheckout };
       if (kind !== "build") args.project = opsProject;
       const res = await invoke<OpResult>(cmd, args);
       opsOutput = res.output;
       opsOk = res.ok;
-      if (kind === "init" && res.ok) await opsRefreshProjects();
+      if (kind === "install" && res.ok) await opsRefreshProjects();
     } catch (e) {
       opsError = String(e);
       opsOk = false;
@@ -280,7 +280,7 @@
             <option value="">— choose a project —</option>
             {#each opsProjects as p}
               <option value={p.path}>
-                {p.name} {p.installed_version ? `(CyberOS ${p.installed_version})` : "(not initialised)"} — {p.path}
+                {p.name} {p.installed_version ? `(CyberOS ${p.installed_version})` : "(not installed)"} — {p.path}
               </option>
             {/each}
           </select>
@@ -302,9 +302,9 @@
           <button
             class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2 rounded disabled:opacity-40"
             disabled={opsBusy !== null || !opsProject.trim()}
-            onclick={() => opsRun("init")}
+            onclick={() => opsRun("install")}
           >
-            {opsBusy === "init" ? "Running…" : "Init / Update"}
+            {opsBusy === "install" ? "Running…" : "Install / Update"}
           </button>
         </div>
 

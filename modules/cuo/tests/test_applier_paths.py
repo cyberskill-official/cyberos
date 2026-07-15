@@ -48,7 +48,7 @@ def mock_project(tmp_path: Path):
 
 
 class TestFindTaskFile:
-    """_find_fr_file should discover task files via output_dir walk-up."""
+    """_find_task_file should discover task files via output_dir walk-up."""
 
     def test_finds_task_from_output_dir(self, mock_project):
         """When output_dir is inside the project, walk-up finds the task."""
