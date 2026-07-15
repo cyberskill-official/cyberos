@@ -1,6 +1,6 @@
 ---
 workflow_id: chief-technology-officer/ship-tasks
-workflow_version: 2.5.0
+workflow_version: 2.6.0
 purpose: Drive each eligible task in `docs/tasks/BACKLOG.md` end-to-end through the full lifecycle — from `ready_to_implement` through `implementing → ready_to_review → reviewing → ready_to_test → testing → done` (per `modules/skill/contracts/task/STATUS-REFERENCE.md` §1.1). Deep-maps the repo, generates the edge-case matrix, implements with 90 % coverage on touched files, injects observability, self-approves architectural deviations via ADRs, runs the multi-vector debugger with a 5-fail circuit breaker, runs the testing gate (`coverage-gate-author`/`-audit`), and physically updates BACKLOG.md status between every phase transition. Failure or blocker at any downstream phase routes the task back to `ready_to_implement` (STATUS-REFERENCE §1.3) with `routed_back_count += 1`.
 persona: chief-technology-officer
 cadence: per-task (loops continuously over BACKLOG.md)
@@ -244,6 +244,18 @@ One-task-at-a-time is no longer the only sanctioned mode. The default is now BAT
 - **HITL is unchanged by batching.** Both human-acceptance gates apply to every member individually. A single human reply MAY record verdicts for many members at once (one utterance, N recorded per-task verdicts — e.g. "approve all" / "accept all"); batching reduces round-trips, never guarantees.
 - **Unlock rescan.** Whenever any task reaches `done`, re-scan the backlog for tasks whose `depends_on` just became fully satisfied; append the newly-eligible, cone-independent ones to the running batch queue and continue (EXECUTION-DISCIPLINE §1 — no pause to ask). Cone-overlapping unlocks queue serially behind the member they overlap with.
 - **Status-page sync rule (group A).** Every backlog-state-update write rides with a regenerated `docs/status/` page in the same commit — enforced mechanically by the pre-commit hook (`init.sh --page` + auto-stage on any `docs/tasks/**`, `CHANGELOG.md`, or `VERSION` change). A status cell that moves without the page moving is a bug.
+- **Swarm execution (v2.6.0).** A batch SHOULD be shipped by a swarm — one sub-agent per member, dispatched in a single parallel round — not by looping the members serially in one agent. Cone-independence is exactly the property that makes this safe: members touch disjoint files, so their edits cannot race. Serialising a batch that was selected for parallelism throws away the only reason to have batched it.
+  - Dispatch every member of the round in ONE message with N parallel calls. N sequential dispatches is a serial loop with extra steps.
+  - Each sub-agent owns its member end-to-end and returns the artefact set. The parent owns what stays per-batch: the branch, the commits, the HITL round-trips, the BACKLOG writes.
+  - Cap the round at the point where reviewing N diffs stops being possible. Sub-agents are cheap; a human reading 12 unrelated diffs at one gate is not. When the batch exceeds a reviewable round, ship it as consecutive rounds on the same branch.
+  - A sub-agent that hits a §2 halt returns it; the parent collects halts and surfaces them together rather than stopping the whole round on the first one.
+- **One branch per BATCH, not per task (v2.6.0).** The batch is the unit of review and the unit of merge, so it is the unit of branching. Name it `batch/<n>-<short-theme>` (e.g. `batch/3-auth-hardening`). Every member commits to that branch, per phase, with its own conventional commit — per-task commits stay, per-task branches go. Rationale: N branches for N tasks that were selected *because they are independent* produces N PRs that touch disjoint files and merge in any order — pure ceremony. Cone-overlapping tasks were never in the batch to begin with.
+  - The next batch branches from the previous batch's merge, not from its tip, unless the operator says otherwise. Unlock rescan means batch N+1's eligibility usually depends on batch N being `done`.
+  - A task routed back to `ready_to_implement` mid-batch leaves the batch; it re-enters selection later and MUST NOT hold its batch's branch open.
+- **Mixed agent-human and human-only work: the guideline lives IN the task (v2.6.0, operator request).** When a task needs the operator to do something the agent must not (§2) or genuinely cannot, write the step-by-step guideline INTO that task's `spec.md` under `## Operator steps` — never into a new file. Never create `SETUP.md`, `RUNBOOK-<task>.md`, `INSTRUCTIONS.md`, or any sibling artefact for it.
+  - Reason: a separate file is a second place the reader must find, and it rots the moment the task moves. The operator opens the task; the steps are there. Anything else asks them to hold two documents in their head and guess which is current.
+  - Shape: numbered, copy-pasteable, one command or one click per step, with the expected output stated. If a step is GUI-only and the agent has OS/browser control, the agent does it (`EXECUTION-DISCIPLINE.md` §2b) and the guideline records what was driven — it does not ask the operator to repeat it.
+  - The task halts at that gate only if the steps are genuinely operator-only under §2. "The agent wrote a guideline" is not itself a halt.
 
 ## 12. No partial-ship-and-pause within a task
 
@@ -317,5 +329,42 @@ The rules this document (and every `modules/skill/` contract) defines are DISTRI
 - **Release hook:** `release.yml`'s payload job builds and uploads the stamped payload as release assets on every tag — the pull source for `cyberos update` / `init.sh --check` / plugin + MCP consumers.
 - **Deploy hook:** `deploy.yml`'s docs job also triggers on `modules/cuo/**` and `modules/skill/**`, so the published site reflects rule changes without waiting for a release.
 - **Drift signal:** the payload's `manifest.yaml` carries `rules_sha` — a deterministic content fingerprint over the distributed rule trees (`cuo/ plugin/ mcp/ cli/ memory/`). Channels compare it to detect rule drift even when VERSION is unchanged; `check-version-sync.sh` fails any payload missing it. Client-side comparison in `cyberos update`/plugin/MCP is the designated follow-up (TASK-IMP-074 §9).
+
+### Pre-push / pre-install re-verification (v2.6.0, operator request)
+
+Before `git push`, and before installing the payload onto ANY other repo, re-prove the chain
+end-to-end. The hooks above fire on *staged paths*; they do not prove the built artefact is
+the one a consumer will actually receive.
+
+Run, in order, and read the output rather than the exit code alone:
+
+1. `bash tools/cyberos-init/build.sh` — the payload a consumer pulls, rebuilt from source.
+2. `bash tools/cyberos-init/check-version-sync.sh dist/cyberos` — VERSION identical across every stamped artefact.
+3. `bash tools/cyberos-init/check-chain-coverage.sh dist/cyberos` — every vendored skill reachable from the chain.
+4. `bash scripts/tests/run_all.sh` — every suite, including the payload suites under `tools/cyberos-init/tests/`.
+5. **Install into a scratch repo and look at the result**, not at the script that produces it:
+   ```
+   rm -rf /tmp/verify && mkdir -p /tmp/verify && cd /tmp/verify && git init -q .
+   bash <repo>/dist/cyberos/install.sh .
+   find .cyberos -name 'feature.md'     # non-empty, or task-author HALTs on first task
+   ```
+
+**Why the last one is not optional.** On 2026-07-15 `build.sh` shipped no per-type templates
+while `task-author` dispatched on them; reading `build.sh` did not reveal it, and `find` on a
+real install did — in one command. Every channel (`.cyberos/` install, Claude plugin, MCP
+server, npx CLI) receives the payload, not the repo. A rule that is correct in `modules/` and
+absent from `dist/` is correct nowhere that matters.
+
+The vendored copy under a target's `.cyberos/` is what actually executes. `build.sh` refreshes
+`dist/`; only `install.sh` lays `dist/` into `.cyberos/`. Skipping the install step means the
+target keeps running the OLD rules while `dist/` looks current — the exact failure that made a
+fixed renderer produce stale output for a full session.
+
+### Closing report (v2.6.0, operator request)
+
+End every ship run — batch or single — with a short suggestion of next steps or possible
+improvements. Not a recap of what was done; the operator watched that. What is now unblocked,
+what the run exposed that is worth doing next, and what you would do if it were your call.
+Say when the honest answer is "nothing — merge it".
 
 *End of `chief-technology-officer/ship-tasks.md` workflow.*

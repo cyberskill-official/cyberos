@@ -13,9 +13,41 @@ An agent executing a CyberOS workflow SHALL run continuously to completion. It M
 An agent MAY stop ONLY for one of these four conditions. Nothing else is a halt.
 
 1. **Operator-decision fork.** A choice the spec, the codebase, and sensible defaults cannot resolve, AND that materially changes direction or is costly to reverse (ADR-class: a real architectural or product fork). Self-resolvable ambiguity is NOT a fork. Pick the obvious default, record it (an ADR or a one-line note), and continue.
-2. **Manual or operator-only action.** An action the agent must not perform itself: `git push`, deploy or promote, a destructive operation (hard delete, purge, history rewrite, dropping data), entering or rotating a secret or credential, a financial action, **accepting a task across a human-acceptance gate (see §2a)**, or anything policy reserves for the human. The agent prepares and names the action; the operator runs it.
+2. **Operator-only action — by POLICY, never by capability.** An action policy reserves for the human: `git push`, deploy or promote, a destructive operation (hard delete, purge, history rewrite, dropping data), entering or rotating a secret or credential, a financial action, **accepting a task across a human-acceptance gate (see §2a)**. The agent prepares and names the action; the operator runs it.
+
+   **This list is closed, and it is about permission — not about reach.** "The agent cannot do it from a shell" was never a reason to be on it. Where the agent has OS or browser control (see §2b), an action being *outside the terminal* is NOT a halt: it drives the GUI itself and continues. Halting for a task it is merely inconvenient to reach is a §4 forbidden pause wearing a §2 costume.
 3. **Hard blocker past the budget.** A failure the agent cannot self-resolve within the workflow's circuit-breaker budget (for example, 5 consecutive test failures). The agent documents the blocker, routes the unit back cleanly (status to `ready_to_implement` with the reason), and moves to the next eligible unit. It does NOT spin, and it does NOT silently ship a partial result.
 4. **Operator stop signal.** An explicit Ctrl-C or workflow-stop event.
+
+## §2b  OS and browser control — reach is not permission (operator request, 2026-07-15)
+
+Where the executing agent has OS or browser control, it SHALL use it rather than halt. Added
+at the operator's explicit request: *"agents can control OS/browser if necessary, instead of
+stop and tell user do."*
+
+**Use it for** anything the agent could do in a shell if only the thing had a shell: clicking
+through a GUI installer or a settings pane, reading a dashboard the CLI does not expose,
+driving a local admin UI, opening a rendered page to check it actually rendered, filling a
+local form, restarting a local app. Reach for a dedicated API or CLI first when one exists —
+GUI driving is the fallback, not the default, because it is slower and more brittle. But an
+action being GUI-only is NOT a reason to stop.
+
+**Do NOT use it to route around §2.** The halt list is policy, and a policy halt is not a
+capability problem to be solved with a mouse:
+
+- `git push` stays operator-only. Clicking "Sync" in a git GUI is the same push. So is
+  merging a PR in a browser.
+- Deploys, promotes, destructive ops, secrets, financial actions: same. A browser makes them
+  *easier to do*, not *permitted*.
+- Both HITL gates (§2a) stay human. Clicking "approve" in a UI on the human's behalf is
+  forging the verdict the gate exists to collect — the single worst thing this section could
+  be misread to license.
+
+The test: **would this still be operator-only if the agent had hands?** If yes, it is §2 and
+you halt. If the only obstacle was reach, it is §3 and you continue.
+
+Report what you drove (§4). Screenshots or a step list of what was clicked belong in the
+run's evidence, so a human can audit an action they did not watch.
 
 ## §2a  Human acceptance is required (HITL)
 
@@ -34,7 +66,11 @@ The following are the agent's own responsibility. It fixes them and proceeds; it
 - a module gate (awh or caf) that goes RED on the agent's own change;
 - a choice between equivalent implementations;
 - the order of slices within a task, or of tasks within the backlog;
-- routine re-verification.
+- routine re-verification;
+- **an action that is GUI-only rather than operator-only** (§2b) — drive it and continue;
+- **a check the agent can run on the real target** rather than infer. Verifying on a proxy
+  and reporting the proxy's answer is not verification. If the claim is about the operator's
+  machine, the installed payload, or the rendered page, go look at that thing.
 
 Verification, not confirmation, earns the right to proceed. When the build, the tests, and the module gates pass, that IS the permission.
 
