@@ -205,9 +205,32 @@ done
 # what we bundle. We FAIL rather than silently truncate: a truncated description loses its trailing
 # "Do NOT use ..." routing clause, which quietly degrades skill selection.
 if command -v python3 >/dev/null 2>&1; then
-  python3 - "$out/plugin/skills" <<'PYCAP' || { echo "cyberos-init: shorten the description(s) above in modules/skill/<name>/SKILL.md, then rebuild." >&2; exit 1; }
+  python3 - "$out/plugin/skills" <<'PYCAP' || { echo "cyberos-init: fix the skill error(s) above (structure: rename the dir or its frontmatter name; length: shorten the description in modules/skill/<name>/SKILL.md), then rebuild." >&2; exit 1; }
 import os, re, sys
 root, LIMIT, bad = sys.argv[1], 1024, []
+# A bundled skill dir with no SKILL.md does not load, and a dir whose name != frontmatter
+# `name:` loads under the wrong id. Both are silent: the description scan below used to
+# `continue` past a missing SKILL.md, so the rename leaving plugin/skills/ship-feature-requests/
+# beside an empty plugin/skills/ship-tasks/ shipped a dead flagship skill through a green build.
+# Structure is checked FIRST and is fatal — a skill that cannot load has no description to lint.
+broken = []
+for name in sorted(os.listdir(root)):
+    d = os.path.join(root, name)
+    if not os.path.isdir(d):
+        continue
+    f = os.path.join(d, "SKILL.md")
+    if not os.path.isfile(f):
+        broken.append(f"skill '{name}' has no SKILL.md (dir will not load as a skill)")
+        continue
+    m0 = re.match(r"^---\n(.*?)\n---\n", open(f).read(), re.S)
+    got = re.search(r"^name:\s*(.+)$", m0.group(1), re.M) if m0 else None
+    got = got.group(1).strip() if got else ""
+    if got != name:
+        broken.append(f"skill '{name}' frontmatter name is '{got or '<missing>'}' (must equal the directory name)")
+for msg in broken:
+    print(f"cyberos-init: ERROR {msg}", file=sys.stderr)
+if broken:
+    sys.exit(1)
 for name in sorted(os.listdir(root)):
     f = os.path.join(root, name, "SKILL.md")
     if not os.path.isfile(f):

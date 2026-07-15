@@ -12,7 +12,19 @@ fail() { FAIL=$((FAIL+1)); echo "  FAIL $1: $2"; }
 echo "building scratch payload..."
 bash "$repo/tools/cyberos-init/build.sh" "$TMP/payload" >/dev/null 2>&1 || { echo FATAL build; exit 1; }
 pv="$(cat "$TMP/payload/VERSION")"
-mkrepo() { local r="$1" v="$2"; rm -rf "$r"; mkdir -p "$r/.cyberos"; (cd "$r" && git init -q); [ "$v" != none ] && echo "$v" > "$r/.cyberos/VERSION"; true; }
+# A real install always carries manifest.yaml (install.sh copies the payload's; check-version-sync
+# fails any payload lacking one), so the fixture ships one too — otherwise it models a state no
+# valid payload can produce, and the rules_sha compare (t09) would confound the version matrix.
+# Default sha = the payload's own, i.e. "freshly installed from this payload".
+mkrepo() {
+  local r="$1" v="$2"; rm -rf "$r"; mkdir -p "$r/.cyberos"; (cd "$r" && git init -q)
+  [ "$v" = none ] && return 0
+  echo "$v" > "$r/.cyberos/VERSION"
+  { echo "vendor: cyberos"; echo "cyberos_version: $v"
+    echo "rules_sha: $(grep -E '^rules_sha:' "$TMP/payload/manifest.yaml" | head -1 | awk '{print $2}')"
+  } > "$r/.cyberos/manifest.yaml"
+  true
+}
 chk() { CYBEROS_RELEASE_ENDPOINT="${2:-}" ${3:+CYBEROS_OFFLINE=1} CYBEROS_NONINTERACTIVE=1 bash "$TMP/payload/version.sh" "$1"; }
 
 t01_bare_version_endpoint() {                                        # AC 1
@@ -66,7 +78,8 @@ t06_offline_env() {                                                  # AC 6
 }
 t07_version_doc_contract() {                                         # AC 7
   local D="$repo/tools/cyberos-init/plugin/commands/version.md" all=1
-  for pat in 'installed=' 'payload=' 'latest=' 'verdict=repo_stale' 'verdict=payload_stale' 'NEVER claim "up to date" from the local-payload comparison alone'; do
+  for pat in 'installed=' 'payload=' 'latest=' 'verdict=repo_stale' 'verdict=payload_stale' 'NEVER claim "up to date" from the local-payload comparison alone' \
+             'installed_rules_sha=' 'payload_rules_sha=' 'verdict=rules_drift' 'NEVER report a `rules_drift` repo as up to date'; do
     grep -q "$pat" "$D" || { fail t07 "missing: $pat"; all=0; }
   done
   [ "$all" -eq 1 ] && ok t07
@@ -77,7 +90,60 @@ t08_version_release_pointer() {                                      # AC 8
     && ok t08 || fail t08 "release / check-latest pointer missing from version.md"
 }
 
+# TASK-IMP-074 §10 — client-side rules_sha comparison. VERSION is equal in EVERY case below;
+# the version compare is blind here by construction, so any verdict change is rules_sha's doing.
+# This is the regression that let 23/24 repos run the pre-rename ruleset reporting up_to_date.
+mkrepo_m() {                       # mkrepo + an installed manifest carrying $3 as rules_sha
+  local r="$1" v="$2" sha="${3:-}"
+  mkrepo "$r" "$v"
+  { echo "vendor: cyberos"; echo "cyberos_version: $v"
+    [ -n "$sha" ] && echo "rules_sha: $sha"
+  } > "$r/.cyberos/manifest.yaml"
+  true
+}
+t09_rules_sha_drift() {                                              # AC 10 (was follow-up)
+  local all=1 real
+  real="$(grep -E '^rules_sha:' "$TMP/payload/manifest.yaml" | head -1 | awk '{print $2}')"
+  [ -n "$real" ] || { fail t09 "payload manifest has no rules_sha to compare"; return; }
+
+  # A: same VERSION, different rules -> rules_drift (the blocker case)
+  mkrepo_m "$TMP/r9A" "$pv" "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+  out="$(CYBEROS_OFFLINE=1 CYBEROS_NONINTERACTIVE=1 bash "$TMP/payload/version.sh" "$TMP/r9A")"
+  echo "$out" | grep -q "^verdict=rules_drift$" && echo "$out" | grep -qE "^next: bash .*install\.sh" \
+    || { fail "t09A" "drift not caught: $out"; all=0; }
+
+  # B: same VERSION, installed manifest predates the field entirely (Hackathon/quote-mind)
+  mkrepo_m "$TMP/r9B" "$pv" ""
+  out="$(CYBEROS_OFFLINE=1 CYBEROS_NONINTERACTIVE=1 bash "$TMP/payload/version.sh" "$TMP/r9B")"
+  echo "$out" | grep -q "^verdict=rules_drift$" && echo "$out" | grep -q "^installed_rules_sha=none$" \
+    || { fail "t09B" "missing-sha not caught: $out"; all=0; }
+
+  # C: NEGATIVE CONTROL — matching sha must stay quiet, or A/B prove nothing.
+  mkrepo_m "$TMP/r9C" "$pv" "$real"
+  out="$(CYBEROS_OFFLINE=1 CYBEROS_NONINTERACTIVE=1 bash "$TMP/payload/version.sh" "$TMP/r9C")"
+  echo "$out" | grep -q "^verdict=up_to_date$" || { fail "t09C" "false positive on match: $out"; all=0; }
+
+  # D: the soft library warns on drift and stays silent on match (same signal, hook path)
+  out="$(cd "$TMP/r9A" && CYBEROS_PAYLOAD="$TMP/payload" CYBEROS_UPDATE_CHECK=always CYBEROS_OFFLINE=1 \
+        bash "$TMP/payload/lib/update-check.sh" 2>&1)"
+  echo "$out" | grep -q "RULE DRIFT" || { fail "t09D" "update-check silent on drift: $out"; all=0; }
+  out="$(cd "$TMP/r9C" && CYBEROS_PAYLOAD="$TMP/payload" CYBEROS_UPDATE_CHECK=always CYBEROS_OFFLINE=1 \
+        bash "$TMP/payload/lib/update-check.sh" 2>&1)"
+  [ -z "$out" ] || { fail "t09D" "update-check noisy on match: $out"; all=0; }
+
+  # E: strict mode is the CI gate — drift must be non-zero exit, match must be zero.
+  (cd "$TMP/r9A" && CYBEROS_PAYLOAD="$TMP/payload" CYBEROS_UPDATE_CHECK=strict CYBEROS_OFFLINE=1 \
+      bash "$TMP/payload/lib/update-check.sh" >/dev/null 2>&1) \
+    && { fail "t09E" "strict exited 0 on drift"; all=0; }
+  (cd "$TMP/r9C" && CYBEROS_PAYLOAD="$TMP/payload" CYBEROS_UPDATE_CHECK=strict CYBEROS_OFFLINE=1 \
+      bash "$TMP/payload/lib/update-check.sh" >/dev/null 2>&1) \
+    || { fail "t09E" "strict exited non-zero on match"; all=0; }
+
+  [ "$all" -eq 1 ] && ok t09
+}
+
 t01_bare_version_endpoint; t02_github_json_endpoint; t03_unreachable_degrades; t04_verdict_matrix
 t05_numeric_semver; t06_offline_env; t07_version_doc_contract; t08_version_release_pointer
+t09_rules_sha_drift
 echo "----"; echo "pass=$PASS fail=$FAIL"
 [ "$FAIL" -eq 0 ]

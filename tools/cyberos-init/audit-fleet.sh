@@ -1,9 +1,22 @@
 #!/usr/bin/env bash
 # audit-fleet.sh — deep audit: every .cyberos module/channel after init must be present and usable.
 # Usage: bash tools/cyberos-init/audit-fleet.sh <expected-version> <root-dir> [...]
+#
+# env: CYBEROS_EXPECT_RULES_SHA  rules_sha every install must match. Defaults to the repo's own
+#                                dist/ payload manifest. VERSION alone cannot see rule content —
+#                                a rules-only change keeps the version and every filename identical,
+#                                so without this the audit reports drifted repos green.
 set -uo pipefail
 WANT="${1:?usage: audit-fleet.sh <expected-version> <root> [...]}"; shift
 FAILED=0
+
+_rs() { [ -f "${1:-}" ] || return 1; grep -E '^rules_sha:' "$1" 2>/dev/null | head -1 | awk '{print $2}' | tr -d ' \n\r'; }
+WANT_SHA="${CYBEROS_EXPECT_RULES_SHA:-}"
+if [ -z "$WANT_SHA" ]; then
+  _self="$(cd "$(dirname "$0")/../.." 2>/dev/null && pwd || true)"
+  [ -n "$_self" ] && WANT_SHA="$(_rs "$_self/dist/cyberos/manifest.yaml" || true)"
+fi
+[ -n "$WANT_SHA" ] || echo "audit-fleet: WARNING — no expected rules_sha resolved; rule-drift check DISABLED" >&2
 
 for base in "$@"; do
   for r in "$base"/*; do
@@ -15,6 +28,14 @@ for base in "$@"; do
     # --- version ---
     inst="none"; [ -f "$cy/VERSION" ] && inst="$(tr -d ' \n\r' < "$cy/VERSION")"
     [ "$inst" = "$WANT" ] || bad="$bad version($inst)"
+
+    # --- rule content (TASK-IMP-074 §10) ---
+    # The version above is a promise; this is the evidence. Both were 1.0.0 across the fleet
+    # while 23/24 repos ran the pre-rename ruleset.
+    if [ -n "$WANT_SHA" ]; then
+      inst_sha="$(_rs "$cy/manifest.yaml" || true)"
+      [ "$inst_sha" = "$WANT_SHA" ] || bad="$bad rules_sha(${inst_sha:-none})"
+    fi
 
     # --- core modules (must exist after init) ---
     for p in \
@@ -168,14 +189,18 @@ for base in "$@"; do
     fi
 
     # --- functional smokes (must work) ---
-    if [ -f "$cy/init.sh" ]; then
-      if ! CYBEROS_NONINTERACTIVE=1 bash "$cy/version.sh" "$r" >/dev/null 2>&1; then
+    # These were gated on `[ -f "$cy/init.sh" ]` and so had never run once: the payload ships no
+    # init.sh, and the orphan check above asserts .cyberos/init.sh must NOT exist — so the gate
+    # was false on every correct install and true only on a broken one. Gate each smoke on the
+    # script it actually invokes.
+    if [ -f "$cy/version.sh" ]; then
+      if ! CYBEROS_NONINTERACTIVE=1 CYBEROS_OFFLINE=1 bash "$cy/version.sh" "$r" >/dev/null 2>&1; then
         bad="$bad version-check-fails"
       fi
-      if [ -f "$cy/lib/status-page.sh" ] && command -v node >/dev/null 2>&1; then
-        if ! bash "$cy/lib/status-page.sh" "$r" >/dev/null 2>&1; then
-          bad="$bad status-page-fails"
-        fi
+    fi
+    if [ -f "$cy/lib/status-page.sh" ] && command -v node >/dev/null 2>&1; then
+      if ! bash "$cy/lib/status-page.sh" "$r" >/dev/null 2>&1; then
+        bad="$bad status-page-fails"
       fi
     fi
     # update-check must be sourceable

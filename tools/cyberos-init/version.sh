@@ -54,9 +54,24 @@ if [ "${CYBEROS_OFFLINE:-0}" != "1" ]; then
 fi
 latest="${latest_line#latest=}"; latest="${latest%% *}"
 
+# rules_sha — the rule-content fingerprint (TASK-IMP-074 §10). Reported alongside the versions
+# because two payloads can share a VERSION and still ship different rules.
+_rs() {
+  [ -f "${1:-}" ] || return 1
+  local v; v="$(grep -E '^rules_sha:' "$1" 2>/dev/null | head -1 | awk '{print $2}' | tr -d ' \n\r')"
+  printf '%s' "$v"; [ -n "$v" ]
+}
+inst_sha="$(_rs "$root/.cyberos/manifest.yaml" || true)"
+pay_sha="$(_rs "$here/manifest.yaml" || true)"
+if [ -z "$pay_sha" ] && [ -n "${CYBEROS_PAYLOAD:-}" ]; then
+  pay_sha="$(_rs "${CYBEROS_PAYLOAD}/manifest.yaml" || true)"
+fi
+
 echo "installed=$inst"
 echo "payload=$payload_ver"
 echo "$latest_line"
+echo "installed_rules_sha=${inst_sha:-none}"
+echo "payload_rules_sha=${pay_sha:-none}"
 
 is_ver() { printf '%s' "$1" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; }
 ver_lt() { [ "$1" = "$2" ] && return 1; [ "$(printf '%s\n%s\n' "$1" "$2" | sort -t. -k1,1n -k2,2n -k3,3n | head -1)" = "$1" ]; }
@@ -69,6 +84,10 @@ elif [ "$inst" = "none" ]; then
 elif { is_ver "$latest" && is_ver "$inst" && ver_lt "$inst" "$latest"; } \
   || { is_ver "$inst" && is_ver "$payload_ver" && ver_lt "$inst" "$payload_ver"; }; then
   verdict="repo_stale"
+elif [ -n "$pay_sha" ] && [ "$inst_sha" != "$pay_sha" ]; then
+  # Same VERSION, different rules — invisible to the version compare above. This is the
+  # case that let 23/24 repos keep running the pre-rename ruleset while reporting healthy.
+  verdict="rules_drift"
 fi
 
 echo "verdict=$verdict"
@@ -81,6 +100,10 @@ case "$verdict" in
     echo "next: bash ${CYBEROS_PAYLOAD:-$here}/install.sh $root"
     ;;
   repo_stale)
+    echo "next: bash ${CYBEROS_PAYLOAD:-$here}/install.sh $root"
+    ;;
+  rules_drift)
+    echo "  same version ($inst), different rules — vendored copy does not match this payload"
     echo "next: bash ${CYBEROS_PAYLOAD:-$here}/install.sh $root"
     ;;
   up_to_date)
