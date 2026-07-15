@@ -73,6 +73,17 @@ fi
 # frozen in migrate_fr_to_task.py:FROZEN_LITERALS.
 bash "$root/.pre-commit-hooks/no-legacy-fr-vocabulary.sh"
 
+# Shell test suites (glob-discovered, ~10s). Until 2026-07-15 NOTHING ran these — not this
+# hook, not local_verify.sh, not any of the 24 CI workflows — and three of the six had been
+# red for months without reporting it. Gated here rather than by name so a new test file
+# under scripts/tests/ or tools/docs-site/tests/ is covered the moment it exists.
+if grep -qE '^(scripts/|tools/docs-site/|modules/templates/|modules/skill/|modules/cuo/|tools/cyberos-init/)' <<<"$staged"; then
+  bash "$root/scripts/tests/run_all.sh" || {
+    echo "cyberos: shell test suites failed - fix before committing (run: bash scripts/tests/run_all.sh)" >&2
+    exit 1
+  }
+fi
+
 # TASK-IMP-072: a staged VERSION change must carry the whole codebase with it.
 if grep -qx "VERSION" <<<"$staged"; then
   if ! node "$root/scripts/stamp-release-version.mjs" --check --exit-code >/dev/null 2>&1; then

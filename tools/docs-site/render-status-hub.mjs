@@ -91,7 +91,11 @@ function frontmatter(text, file) {
 }
 const str = v => (Array.isArray(v) ? '' : String(v ?? '')).trim();
 const list = v => Array.isArray(v) ? v : (str(v) && str(v) !== 'null' ? [str(v)] : []);
-const TASKID = /\bFR-[A-Z][A-Z0-9]*-\d+\b/g;
+// Matches TASK-*, not FR-*. The constant was renamed FRID -> TASKID in the 2026-07-15
+// rename; this body was not, so it matched an id shape that no longer exists anywhere.
+// Result: `cited` came back [] for every release and the changelog -> task binding was
+// dead on the live status page. A renamed name over an unrenamed body reads as correct.
+const TASKID = /\bTASK-[A-Z][A-Z0-9]*-\d+\b/g;
 const ids = s => (String(s ?? '').match(TASKID) || []);
 
 // A one-paragraph summary: the first prose paragraph of the body (the §1 lead, in practice).
@@ -145,7 +149,16 @@ for (const mod of readdirSync(TASK_ROOT, { withFileTypes: true }).sort((a, b) =>
       i: id, k: d.name, dm: mod.name,
       t: str(m.title) || '(untitled)',
       m: (str(m.module) || mod.name).toLowerCase(),
-      c: str(m.class) || (mod.name === 'improvement' ? 'improvement' : 'product'),
+      // `type` is the schema field since the 2026-07-14 migration; `class` was folded
+      // into it. Read type first, keep class as a transition fallback, and only then
+      // fall back to the module-name guess.
+      //
+      // This read was `m.class` alone. The migration moved 509 specs to `type:` and left
+      // zero carrying `class:`, so every task silently fell through to the guess below —
+      // module `improvement` -> "improvement", everything else -> "product". The whole
+      // feature/bug/chore distinction was invisible on the status page, and the class
+      // facet was really a module facet wearing its name.
+      c: str(m.type) || str(m.class) || (mod.name === 'improvement' ? 'improvement' : 'product'),
       p: str(m.priority), s: str(m.status) || '(none)',
       ph: str(m.phase), ms: str(m.milestone), sl: str(m.slice),
       o: str(m.owner), cr: str(m.created), sh: str(m.shipped),
@@ -258,7 +271,7 @@ const releases = marks.map((mk, i) => {
   flushPara();
   const cited = [...new Set(ids(raw))].sort();
   // "TASK-IMP-071/072" - the slash run is a real habit in this changelog; expand it
-  for (const run of raw.match(/\bFR-[A-Z][A-Z0-9]*-\d+(?:\/\d+)+/g) || []) {
+  for (const run of raw.match(/\bTASK-[A-Z][A-Z0-9]*-\d+(?:\/\d+)+/g) || []) {
     const [head, ...rest] = run.split('/');
     const prefix = head.replace(/\d+$/, '');
     for (const n of rest) if (!cited.includes(prefix + n)) cited.push(prefix + n);

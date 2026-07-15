@@ -143,7 +143,10 @@ for base in "$@"; do
         [ -f "$r/docs/status/assets/status.js" ]  || bad="$bad missing:status.js"
         inpage="$(grep -o '"i":"' "$page" 2>/dev/null | wc -l | tr -d ' ')"
         [ "$inpage" -eq "$specs" ] || bad="$bad corpus-drift(page=$inpage disk=$specs)"
-        chunks="$(find "$r/docs/status/data/fr" -name '*.js' 2>/dev/null | wc -l | tr -d ' ')"
+        # data/fr -> data/task in the 2026-07-15 rename. `find` on a missing dir with
+        # stderr dropped yields 0, so this silently counted 0 chunks against 509 specs
+        # and flagged every healthy repo `no-spec-chunks`.
+        chunks="$(find "$r/docs/status/data/task" -name '*.js' 2>/dev/null | wc -l | tr -d ' ')"
         [ "$specs" -eq 0 ] || [ "$chunks" -gt 0 ] || bad="$bad no-spec-chunks"
 
         # freshness re-render

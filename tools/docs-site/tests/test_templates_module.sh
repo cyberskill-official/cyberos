@@ -15,12 +15,17 @@ t01_vendored_pinned() {                                                # AC 1
     && ok t01 || fail t01 "vendoring/provenance/CDN check"
 }
 t02_contract_complete() {                                              # AC 2
+  # Version-agnostic `@[0-9]+` on purpose. This asserted `status-hub@1` and went red at
+  # ac33beb54, which shipped status-hub@2 — the shell bumped, the assert did not follow,
+  # and nothing noticed because no gate runs this file. t02 checks that each shell
+  # DECLARES its template id per the contract; the version is not what it is testing, so
+  # pinning it only guarantees the next bump breaks the test again.
   c="$T/contracts/TEMPLATE.md"
   grep -q "{{slot:<name>}}" "$c" && grep -q "{{slot:<name>:html}}" "$c" \
     && grep -q "data-template-id" "$c" && grep -q "&amp;" "$c" && grep -q "file://" "$c" \
-    && grep -q 'data-template-id="deliverable@1"' "$T/html/deliverable.html" \
-    && grep -q 'data-template-id="status-hub@1"' "$T/html/status-hub.html" \
-    && grep -q 'data-template-id="catalog@1"' "$T/html/catalog.html" \
+    && grep -qE 'data-template-id="deliverable@[0-9]+"' "$T/html/deliverable.html" \
+    && grep -qE 'data-template-id="status-hub@[0-9]+"' "$T/html/status-hub.html" \
+    && grep -qE 'data-template-id="catalog@[0-9]+"' "$T/html/catalog.html" \
     && ok t02 || fail t02 "contract or template ids incomplete"
 }
 t03_shells_selfcontained() {                                           # AC 3
@@ -31,6 +36,11 @@ import re, sys
 shell, tokens = open(sys.argv[1]).read(), open(sys.argv[2]).read()
 out = shell.replace("/*{{slot:styles:html}}*/", tokens)
 out = re.sub(r"\{\{slot:[a-z_]+:html\}\}", "<p>fixture</p>", out)
+# :json is a real slot type — render-status-hub.mjs clears /\{\{slot:[a-z_]+(:html|:json)?\}\}/
+# and status-hub.html carries {{slot:data:json}}. This substitution knew only :html and
+# bare slots, so the surviving literal tripped the "no unfilled slots" assert. Third stale
+# reader of one contract: renderer supports :json, contract omits it, test rejects it.
+out = re.sub(r"\{\{slot:[a-z_]+:json\}\}", '{"fixture":true}', out)
 out = re.sub(r"\{\{slot:[a-z_]+\}\}", "fixture", out)
 assert "{{slot:" not in out
 # only relative refs: no external URLs outside comments

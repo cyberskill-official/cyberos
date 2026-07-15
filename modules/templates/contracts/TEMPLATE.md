@@ -10,6 +10,12 @@ string substitution - no template engine.
 |---|---|
 | `{{slot:<name>}}` | text slot - substitute with HTML-ESCAPED text |
 | `{{slot:<name>:html}}` | html slot - substitute with pre-rendered, builder-owned HTML |
+| `{{slot:<name>:json}}` | json slot - substitute with a builder-serialised JSON literal |
+
+`:json` shipped with status-hub@2 (`{{slot:data:json}}`) and is cleared by the renderer's
+own `/\{\{slot:[a-z_]+(:html|:json)?\}\}/`, but was never written down here. Documented
+2026-07-15. Same injection boundary as `:html`: builder-generated only, never raw input —
+a JSON literal lands inside a `<script>` and closes it just as readily.
 
 Escape set for text slots (exactly these, in this order): `&` -> `&amp;`, `<` -> `&lt;`,
 `>` -> `&gt;`, `"` -> `&quot;`.

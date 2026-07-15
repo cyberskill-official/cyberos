@@ -18,7 +18,7 @@ mkfix() {
   cp "$repo/modules/templates/html/status-hub.html" "$repo/modules/templates/html/status-app.js" "$d/modules/templates/html/"
   cp "$repo/modules/templates/cds/tokens.css" "$repo/modules/templates/cds/status.css" "$d/modules/templates/cds/"
   echo "ref: refs/heads/main" > "$d/.git/HEAD"; echo "abcdef1234567890" > "$d/.git/refs/heads/main"
-  printf -- '---\nid: TASK-AA-001\ntitle: First\nmodule: aa\npriority: MUST\nstatus: done\nclass: product\nphase: P0\nowner: Ada\neffort_hours: 3\nshipped: 2026-07-01\ndepends_on: []\nblocks: [TASK-BB-001]\nsub_tasks:\n  - "wire it"\n  - "prove it"\n---\n## §1 — Description\n\nFirst task body paragraph.\n\n## §4 — Acceptance criteria\n\n- one\n' > "$d/docs/tasks/aa/TASK-AA-001-first/spec.md"
+  printf -- '---\nid: TASK-AA-001\ntitle: First\nmodule: aa\npriority: MUST\nstatus: done\nclass: product\nphase: P0\nowner: Ada\neffort_hours: 3\nshipped: 2026-07-01\ndepends_on: []\nblocks: [TASK-BB-001]\nsubtasks:\n  - "wire it"\n  - "prove it"\n---\n## §1 — Description\n\nFirst task body paragraph.\n\n## §4 — Acceptance criteria\n\n- one\n' > "$d/docs/tasks/aa/TASK-AA-001-first/spec.md"
   printf -- '---\nid: TASK-BB-001\ntitle: Third\nmodule: bb\npriority: SHOULD\nstatus: draft\nclass: improvement\nphase: P1\ndepends_on: [TASK-AA-001]\n---\n## §1 — Description\n\nThird task body paragraph.\n' > "$d/docs/tasks/bb/TASK-BB-001-third/spec.md"
   printf '# CL\n\n## [2.0.0] - 2026-07-01\n\nAdded\n- TASK-AA-001 first thing landed\n' > "$d/CHANGELOG.md"
   echo "2.0.0" > "$d/VERSION"
@@ -57,7 +57,7 @@ t04_supersession() {                                                   # AC 4 - 
 t05_deterministic() {                                                  # AC 5 - same input, same bytes
   node "$R" "$TMP/a" "$TMP/a/out2" >/dev/null 2>&1
   cmp -s "$TMP/a/out/reference/status.html" "$TMP/a/out2/reference/status.html" \
-    && cmp -s "$TMP/a/out/reference/data/fr/TASK-AA-001.js" "$TMP/a/out2/reference/data/fr/TASK-AA-001.js" \
+    && cmp -s "$TMP/a/out/reference/data/task/TASK-AA-001.js" "$TMP/a/out2/reference/data/task/TASK-AA-001.js" \
     && ok t05 || fail t05 "nondeterministic"
 }
 t06_task_page_links() {                                                  # AC 6 - the drawer links the task page
@@ -75,7 +75,7 @@ t07_changelog_binds_frs() {                                            # the cha
     && ok t07 || fail t07 "release -> task binding missing"
 }
 t08_spec_chunks() {                                                    # full spec, lazily
-  c="$TMP/a/out/reference/data/fr/TASK-AA-001.js"
+  c="$TMP/a/out/reference/data/task/TASK-AA-001.js"
   [ -f "$c" ] && grep -q 'window.CS_SPEC\["TASK-AA-001"\]' "$c" \
     && grep -q 'First task body paragraph' "$c" \
     && grep -q '"sp":1' "$TMP/a/out/reference/status.html" || { fail t08 "chunk missing"; return; }

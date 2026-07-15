@@ -49,6 +49,8 @@ DENY_PREFIXES = (
     ".ruff_cache/",
     ".git/",
     "node_modules/",
+    "apps/console/web/assets/",  # Vite build output (hashed names). Tracked, but generated —
+                                # minified bundles hit `fr` as a random identifier fragment.
     "scripts/migrate_fr_to_task.py",   # this file
     # The analysis doc EXISTS to quote the old vocabulary. Pass 1 rewrote it into
     # nonsense ("Task to task: rename impact analysis", "if FR becomes 'task', a
@@ -416,12 +418,41 @@ PROSE_FIXUPS: list[tuple[str, str]] = [
 # These patterns know nothing about the rules. They ask the only question that
 # matters: is the retired vocabulary still here?
 # ─────────────────────────────────────────────────────────────────────────────
+# Rule-INDEPENDENT. These answer "is the retired vocabulary still here?", never "did my
+# rules fire?" — see §14.6. Three gaps found on 2026-07-15, each of which let a live bug
+# through a --verify that reported `none`:
+#
+#   1. `FR-id-prefix` was `\bFR-[A-Z0-9]`. Source text `/\bFR-[A-Z]...` (a JS regex
+#      literal) has the letter `b` immediately before `FR` — the tail of the escape
+#      `\b`. `b` is a word char, so `\b` asserts no boundary and the pattern MISSED.
+#      A word-boundary check defeated by the letter inside `\b`. It also required
+#      [A-Z0-9] after the dash, which `FR-[A-Z]` (literal bracket) fails.
+#      -> Now a bare literal. Any `FR-` at all is residue.
+#      Cost of the miss: render-status-hub.mjs kept `const TASKID = /\bFR-.../`,
+#      `cited` came back [] for every release, and the changelog -> task binding was
+#      dead on the live status page.
+#
+#   2. Bare lowercase `fr` as a path segment or word (`docs/status/data/fr/`) matched
+#      nothing: `bare-FR-abbrev` is uppercase-only, `fr-kebab` needs a trailing dash,
+#      `fr_-identifier` needs an underscore. Cost: audit-fleet.sh counted 0 chunks
+#      against 509 specs and flagged every healthy repo `no-spec-chunks`.
+#
+#   3. `-fr` as a token TAIL (`data-fr="..."`) matched nothing for the same reason —
+#      every rule keys on `fr-` or `fr_`, never `-fr`.
+#
+# The shape of all three: a pattern written to describe the rules, not the vocabulary.
 RESIDUE_PATTERNS = [
     ("bare-FR-abbrev",   re.compile(r"(?<![A-Za-z0-9_-])FRs?(?![A-Za-z0-9_-])")),
-    ("FR-id-prefix",     re.compile(r"\bFR-[A-Z0-9]")),
+    # `(?<!N)` because NFR- (non-functional requirement) legitimately contains FR- and is
+    # NOT part of this rename — 498 live ids under docs/non-functional-requirements/.
+    # Not \b: the JS source `/\bFR-.../` has the letter `b` before FR, which kills the
+    # boundary (that is exactly what hid the dead TASKID regex).
+    ("FR-id-prefix",     re.compile(r"(?<!N)FR-")),
     ("feature-request",  re.compile(r"(?i)feature[-_ ]request")),
     ("fr_-identifier",   re.compile(r"(?<![A-Za-z0-9])fr_|_fr(?![A-Za-z0-9_])|(?<![A-Za-z0-9])FR_")),
     ("fr-kebab",         re.compile(r"(?<![A-Za-z0-9_])fr-(?=[a-z])")),
+    ("fr-bare-token",    re.compile(r"(?<![A-Za-z0-9_-])fr(?![A-Za-z0-9_-])")),
+    ("fr-token-tail",    re.compile(r"[-/]fr(?![A-Za-z0-9_])")),
 ]
 
 # Literals that MUST survive the rename, on any line, comment or not. Each is a
