@@ -134,7 +134,7 @@ def main() -> int:
         with LEDGER.open("a") as L:
             for act, mod, fr, reason in decisions:
                 L.write(json.dumps({"ts": time.time(), "action": act, "module": mod,
-                                    "fr": fr, "reason": reason}) + "\n")
+                                    "task": fr, "reason": reason}) + "\n")
         print(f"ledger appended: {LEDGER}")
         print("review:  git --no-optional-locks diff -- docs/tasks   then rebuild docs + commit.")
     else:

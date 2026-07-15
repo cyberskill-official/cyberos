@@ -3,7 +3,7 @@
 #
 # Usage:
 #   tools/docs-site/build.sh          # full build (task + NFR catalogs + changelog)
-#   tools/docs-site/build.sh --fr     # task catalog only
+#   tools/docs-site/build.sh --tasks  # task catalog only
 #   tools/docs-site/build.sh --nfr    # NFR catalog only
 #   tools/docs-site/build.sh --changelog  # changelog only
 #
@@ -23,14 +23,14 @@ cd "$REPO_ROOT"
 # A full build starts from a CLEAN tree: without this, pages whose source was
 # removed or relocated would linger from earlier builds, breaking determinism
 # (same input must yield byte-identical output, orphans included). Partial modes
-# (--fr/--nfr/--changelog/--docs) refresh in place by design.
+# (--tasks/--nfr/--changelog/--docs) refresh in place by design.
 [[ "$MODE" == "full" ]] && rm -rf dist/website
 mkdir -p dist/website/reference dist/website/modules dist/website/architecture
 cp -R "$SCRIPT_DIR/chrome/." dist/website/assets/
 cp "$SCRIPT_DIR/index.html" dist/website/index.html
 
 # ── task catalog ──────────────────────────────────────────────────────────────
-if [[ "$MODE" == "full" || "$MODE" == "--fr" ]]; then
+if [[ "$MODE" == "full" || "$MODE" == "--tasks" ]]; then
   echo "→ task catalog"
   node tools/docs-site/data-extract.mjs
   node tools/docs-site/render-task-catalog.mjs

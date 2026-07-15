@@ -968,7 +968,7 @@ After Phase I, emit a final summary in chat:
     - prd-<slug>.audit.md        (Phase D)        <- if standard/full
     - srs-<slug>.md              (Phase E)        <- if full
     - srs-<slug>.audit.md        (Phase E)        <- if full
-    - fr/TASK-001-<slug>.md, ...   (Phase F)
+    - tasks/TASK-001-<slug>.md, ...   (Phase F)
     - fr/task-NNN-<slug>.audit.md  (Phase G)
     - tech-spec-<slug>.md        (Phase H)        <- if standard/full
     - impl-plan.md               (Phase I)        <- hand to engineering

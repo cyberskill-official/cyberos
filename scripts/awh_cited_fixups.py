@@ -91,7 +91,7 @@ def run(status_filter: str, as_json: bool, apply: bool) -> int:
             if apply and s and c != s:
                 new_text = new_text.replace(c, s)
         if unresolved:
-            rows.append({"fr": fid, "module": module, "status": st, "unresolved": unresolved})
+            rows.append({"task": fid, "module": module, "status": st, "unresolved": unresolved})
         if apply and new_text != text:
             path.write_text(new_text, encoding="utf-8")
             files_changed += 1
@@ -111,7 +111,7 @@ def run(status_filter: str, as_json: bool, apply: bool) -> int:
           f"| no match: {n_unres - n_sugg}")
     print()
     for r in rows:
-        print(f"{r['fr']} [{r['module']}, {r['status']}]")
+        print(f"{r['task']} [{r['module']}, {r['status']}]")
         for u in r["unresolved"]:
             arrow = f"-> {u['suggest']}" if u["suggest"] else "-> (no confident match; may be unwritten)"
             print(f"    {u['cited']}  {arrow}")

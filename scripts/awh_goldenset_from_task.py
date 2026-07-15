@@ -150,7 +150,7 @@ def audit(as_json: bool) -> int:
                 d["unresolved"] += 1
                 miss.append(c)
         if miss:
-            unresolved_frs.append({"fr": fid, "module": module, "unresolved": miss})
+            unresolved_frs.append({"task": fid, "module": module, "unresolved": miss})
     if as_json:
         print(json.dumps({"per_module": per_mod, "unresolved_frs": unresolved_frs}, indent=2))
         return 0
@@ -166,7 +166,7 @@ def audit(as_json: bool) -> int:
     print(f"  {'TOTAL':10s} {tot['tasks']:>4} {'':>7} {tot['cites']:>6} {tot['resolved']-tot['mapped']:>6} {tot['mapped']:>6} {tot['unresolved']:>10}")
     print(f"\nFRs with at least one unresolved cited test: {len(unresolved_frs)}")
     for u in unresolved_frs[:20]:
-        print(f"  {u['fr']:18s} {u['unresolved']}")
+        print(f"  {u['task']:18s} {u['unresolved']}")
     if len(unresolved_frs) > 20:
         print(f"  ... {len(unresolved_frs) - 20} more")
     return 0

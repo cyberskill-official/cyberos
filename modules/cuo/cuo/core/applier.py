@@ -218,9 +218,9 @@ def _apply_backlog_state_update(step_result, hand_off: dict, run_span_id: str) -
     if transition_kind == "rework":
         rework_reason = output.get("rework_reason", "(unspecified)")
         _SPANS.warning(
-            "fr.routed_back",
+            "task.routed_back",
             extra={
-                "event": "fr.routed_back", "span_id": run_span_id,
+                "event": "task.routed_back", "span_id": run_span_id,
                 "task_id": task_id, "rework_reason": rework_reason,
             },
         )

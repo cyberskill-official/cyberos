@@ -1,6 +1,6 @@
-# `fr` audit-report format
+# `task` audit-report format
 
-Every `task-audit` invocation writes a sibling `fr.audit.md` per audited artefact. The report format below is normative.
+Every `task-audit` invocation writes a sibling `<task>.audit.md` per audited artefact. The report format below is normative.
 
 ## Frontmatter
 

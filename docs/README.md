@@ -29,7 +29,7 @@ Per-scope images/files live in an `assets/` folder next to the pages that use th
 
     bash tools/docs-site/build.sh          # full site
     bash tools/docs-site/build.sh --docs   # doctrine pages only
-    bash tools/docs-site/build.sh --fr     # task catalog only
+    bash tools/docs-site/build.sh --tasks     # task catalog only
 
 Freshness is enforced twice: the `docs-site-build` pre-commit hook verifies the build is green whenever a doc source is staged, and the `docs-prerender-gate` CI workflow rebuilds the site on every docs-touching PR.
 
