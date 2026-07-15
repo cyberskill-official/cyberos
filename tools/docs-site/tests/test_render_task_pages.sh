@@ -60,7 +60,15 @@ t04_wired_deterministic_honest() {                                     # AC 4
   node "$TMP/a/tools/docs-site/render-task-pages.mjs" "$TMP/a" "$TMP/a/out2" >/dev/null 2>&1
   cmp -s "$TMP/a/out/tasks/aa/TASK-AA-001-first/index.html" "$TMP/a/out2/tasks/aa/TASK-AA-001-first/index.html" || { fail t04 "nondeterministic"; return; }
   mkfix "$TMP/b"
-  sed -i 's|assets/pic.png|assets/GONE.png|' "$TMP/b/docs/tasks/aa/TASK-AA-001-first/spec.md"
+  # `sed -i EXPR file` is GNU-only. BSD/macOS sed reads the next arg as the BACKUP SUFFIX,
+  # so on a Mac this consumed the s|...| expression as a suffix, treated the filename as the
+  # script, errored, and left the spec UNCHANGED — pic.png still resolved, the renderer
+  # returned 0, and t04 failed "missing asset not fatal: rc=0". The assert was right; the
+  # setup never ran. `-i.bak` is accepted by both, so it is the portable in-place edit.
+  # (scripts/dev/*.sh already use the BSD `sed -i ''` form — this repo runs on macOS.)
+  spec="$TMP/b/docs/tasks/aa/TASK-AA-001-first/spec.md"
+  sed -i.bak 's|assets/pic.png|assets/GONE.png|' "$spec" && rm -f "$spec.bak"
+  grep -q 'GONE.png' "$spec" || { fail t04 "fixture edit failed — sed did not apply"; return; }
   out="$(node "$TMP/b/tools/docs-site/render-task-pages.mjs" "$TMP/b" "$TMP/b/out" 2>&1)"; rc=$?
   [ "$rc" -ne 0 ] && grep -q "GONE.png" <<<"$out" && ok t04 || fail t04 "missing asset not fatal: rc=$rc"
 }

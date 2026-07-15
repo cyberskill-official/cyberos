@@ -22,6 +22,19 @@ set -uo pipefail
 root="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$root"
 
+# `timeout` is GNU coreutils and is NOT on stock macOS — the dev machine this hook runs on.
+# The first cut hard-coded `timeout 300`, which exits 127 (command not found) for EVERY
+# suite: pass=0 fail=6 on macOS, pass=6 fail=0 on the Linux CI box. A uniform failure
+# across unrelated suites is the tell that the runner broke, not the tests.
+#
+# Exactly what made check-chain-coverage.sh a no-op on macOS (bash 3.2 has no `declare -A`)
+# — a gate that cannot run on the platform it gates reports nothing and blocks everything.
+# Degrade to no timeout rather than fail: a hung test is a worse problem than a slow one,
+# but a gate that cannot execute is the worst of the three.
+if command -v timeout >/dev/null 2>&1; then TO="timeout 300"
+elif command -v gtimeout >/dev/null 2>&1; then TO="gtimeout 300"
+else TO=""; fi
+
 # Sub-suites invoked BY another test still run standalone here; double-running is cheap and
 # an orphan is not. Add a path here only if a file genuinely cannot run on its own.
 SKIP=""
@@ -31,7 +44,7 @@ for t in scripts/tests/test_*.sh tools/docs-site/tests/test_*.sh; do
   [ -e "$t" ] || continue
   b="$(basename "$t")"
   case " $SKIP " in *" $b "*) echo "  skip $b"; continue ;; esac
-  if timeout 300 bash "$t" >/tmp/run_all.$$.log 2>&1; then
+  if $TO bash "$t" >/tmp/run_all.$$.log 2>&1; then
     pass=$((pass+1)); printf '  \033[32mok\033[0m   %s\n' "$b"
   else
     fail=$((fail+1)); failed="$failed $b"

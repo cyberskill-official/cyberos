@@ -66,6 +66,19 @@ _cyberos_task_migrate() {
       cp "$root/.cyberos/status-site/reference/status.html" "$root/docs/status/index.html"
       cp -R "$root/.cyberos/status-site/reference/assets/." "$root/docs/status/assets/" 2>/dev/null || true
       if [ -d "$root/.cyberos/status-site/reference/data" ]; then
+        # `cp -R src dst` CREATES dst when absent but copies INTO dst when present. The
+        # `rm -rf` above normally guarantees absence — but it is unchecked, and when it
+        # silently fails (permissions, file busy, read-only mount) this nests instead of
+        # replacing: docs/status/data/data/task/*.js, 509 files, no error, exit 0. Same
+        # semantics that made `git mv` swallow the task contract during the rename; the
+        # rule there was "refuse, do not nest", and it applies verbatim to cp.
+        #
+        # The assets line above already uses the safe `src/.` -> `dst/` contents form. This
+        # one did not. Refuse loudly rather than produce a plausible-looking wrong tree.
+        if [ -e "$root/docs/status/data" ]; then
+          echo "cyberos migrate: ERROR docs/status/data survived rm -rf — refusing to copy (cp -R would nest it into data/data/). Remove it by hand and re-run." >&2
+          return 1
+        fi
         cp -R "$root/.cyberos/status-site/reference/data" "$root/docs/status/data"
       fi
       page_done=1
