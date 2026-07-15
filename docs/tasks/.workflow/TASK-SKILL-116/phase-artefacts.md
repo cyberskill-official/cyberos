@@ -7,8 +7,8 @@ verdicts: all pass (respective audit skills)
 # Phase artefacts - TASK-SKILL-116
 
 ## Repo context map
-Patterns: bash set -uo pipefail + exit 0/10/2 contract + `cyberos-install:` prefix (pinned_in: check-version-sync.sh, TASK-IMP-068); vendored set = single $skills string at build.sh:28; chain doc = modules/cuo/.../ship-tasks.md skill_chain (`skill: <name>` entries); command docs name skills as backticked tokens.
-files_outside_immediate_domain: 0 (all under tools/cyberos-install/) -> no ADR (steps 3-4 skip).
+Patterns: bash set -uo pipefail + exit 0/10/2 contract + `cyberos:` prefix (pinned_in: check-version-sync.sh, TASK-IMP-068); vendored set = single $skills string at build.sh:28; chain doc = modules/cuo/.../ship-tasks.md skill_chain (`skill: <name>` entries); command docs name skills as backticked tokens.
+files_outside_immediate_domain: 0 (all under tools/install/) -> no ADR (steps 3-4 skip).
 has_external_dependency: false -> steps 7-8 skip.
 module_placement_warning: null.
 
@@ -32,4 +32,4 @@ module_placement_warning: null.
 4. tests t01-t06. (§5)
 
 ## Observability
-Success line `chain OK: N referenced, M vendored, K allowlisted`; every failure branch prints MISSING/UNPAIRED lines (stdout) or `cyberos-install: ERROR:` (stderr, exit 2); allowlist rot warns on stderr. No silent branch. PII: none.
+Success line `chain OK: N referenced, M vendored, K allowlisted`; every failure branch prints MISSING/UNPAIRED lines (stdout) or `cyberos: ERROR:` (stderr, exit 2); allowlist rot warns on stderr. No silent branch. PII: none.

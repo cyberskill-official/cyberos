@@ -22,21 +22,21 @@ related_tasks: [TASK-SKILL-118, TASK-CUO-206, TASK-CUO-208]
 depends_on: []
 blocks: []
 source_pages:
-  - tools/cyberos-install/plugin/commands/create-tasks.md
+  - tools/install/plugin/commands/create-tasks.md
   - modules/skill/backlog-state-update-author/SKILL.md
   - modules/skill/backlog-state-update-audit/SKILL.md
 source_decisions:
   - "2026-07-12 investigation: /ship-tasks writes BACKLOG.md exclusively through backlog-state-update-author/-audit (optimistic concurrency on old_line, audited mutations), while /create-tasks step 3 edits the same file inline with no skill, no audit, no concurrency gate. One file, two disciplines."
   - "Sequencing: land TASK-SKILL-118 first so the @2 contract change edits a full pair, not a thin one."
 language: markdown + JSON (skill contracts + command doc)
-service: modules/skill/ + tools/cyberos-install/plugin/
+service: modules/skill/ + tools/install/plugin/
 new_files:
   - modules/skill/backlog-state-update-author/acceptance/INSERT_ROW_CASES.md
 modified_files:
   - modules/skill/backlog-state-update-author/SKILL.md
   - modules/skill/backlog-state-update-audit/SKILL.md
   - modules/skill/backlog-state-update-audit/RUBRIC.md
-  - tools/cyberos-install/plugin/commands/create-tasks.md
+  - tools/install/plugin/commands/create-tasks.md
 ---
 
 # TASK-CUO-205: Single backlog write path

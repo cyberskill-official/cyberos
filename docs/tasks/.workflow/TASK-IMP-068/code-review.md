@@ -8,11 +8,11 @@ verdict: pass (code-review-audit) - awaiting human review acceptance
 # Code review packet - TASK-IMP-068
 
 ## Diff summary (9 files)
-new: tools/cyberos-install/check-version-sync.sh (comparator, 6 readers, exit 0/10/2)
-new: tools/cyberos-install/tests/test_check_version_sync.sh (t01-t10)
+new: tools/install/check-version-sync.sh (comparator, 6 readers, exit 0/10/2)
+new: tools/install/tests/test_check_version_sync.sh (t01-t10)
 new: .github/workflows/payload-gate.yml (push+PR, 4 path filters, build-into-temp + check, timeout 5m)
 new: .githooks/pre-commit (trigger match -> engine rebuild -> check; abort on failure)
-mod: tools/cyberos-install/build.sh (VERSION validated at TOP, before rm -rf; 0.0.0 fallback removed)
+mod: tools/install/build.sh (VERSION validated at TOP, before rm -rf; 0.0.0 fallback removed)
 mod: .github/workflows/version.yml (inline build+check proof between apply and push)
 mod: .pre-commit-hooks/cyberos-payload-build.sh (cross-reference comment; behavior unchanged)
 mod: docs/deploy/RELEASE.md (enforcement wording replaces the aspirational claim)

@@ -12,7 +12,7 @@
 # rubric and the templates were authored in the same change and never checked against
 # each other. `bug.md` was correct only because it happened to be written afterwards.
 #
-# tools/cyberos-install/templates/TASK-TEMPLATE.md — the one install.sh hands to every new
+# tools/install/templates/TASK-TEMPLATE.md — the one install.sh hands to every new
 # repo — was worse: `class: product` and `priority: SHOULD`, a schema retired on
 # 2026-07-14. That is the FIRST artifact a new project touches.
 #
@@ -85,7 +85,7 @@ t05_every_fm108_type_has_a_template() {
 t06_init_template_current() {
   # The template install.sh hands to every new repo (23 of them) must not teach a schema
   # the audit gate rejects.
-  local f="$repo/tools/cyberos-install/templates/TASK-TEMPLATE.md"
+  local f="$repo/tools/install/templates/TASK-TEMPLATE.md"
   [ -f "$f" ] || { fail t06 "missing — install.sh:651 tells every new user to cp it"; return; }
   local why=""
   grep -qE '^type:' "$f" || why="$why no-type(FM-108)"

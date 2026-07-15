@@ -24,7 +24,7 @@ cyberos/
 ├── services/         <- Rust production binaries (auth, chat, memory, ai-gateway, ...), each owning its docs/
 ├── apps/             <- the one client (web) + thin desktop/console wrappers
 ├── docs/             <- global docs sources: task/NFR specs, architecture, deploy runbooks
-├── tools/            <- cyberos-install (the distributable payload) + docs-site (website generator)
+├── tools/            <- install (the distributable payload) + docs-site (website generator)
 ├── scripts/          <- gates, local_verify.sh (CI-equivalent), release.sh
 ├── deploy/           <- VPS compose + Caddyfile
 ├── dist/             <- build outputs (payload, website); gitignored, never committed
@@ -33,7 +33,7 @@ cyberos/
 └── VERSION           <- the single platform version
 ```
 
-The website is generated (`bash tools/docs-site/build.sh` -> `dist/website`); there is no hand-authored HTML in the repo. Consumer repos install CyberOS from the payload (`bash tools/cyberos-install/build.sh`, then `dist/cyberos/install.sh <repo>`) - see the day-one guide on the docs site (cuo module -> Guides).
+The website is generated (`bash tools/docs-site/build.sh` -> `dist/website`); there is no hand-authored HTML in the repo. Consumer repos install CyberOS from the payload (`bash tools/install/build.sh`, then `dist/cyberos/install.sh <repo>`) - see the day-one guide on the docs site (cuo module -> Guides).
 
 ## Quick start
 

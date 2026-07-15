@@ -13,7 +13,7 @@ template: engineering-spec@1
 
 ## §1 - Verdict summary
 
-Audited for expansion safety: 20 -> ~52 vendored skills with the two workflows explicitly frozen. The decisive controls are the reviewable set-as-data block, the computed counts, the size budget, and the sibling checkers running over the expanded set. The NFR-four pairing question was resolved upstream in TASK-SKILL-116's allowlist semantics. Traceability closes over t01-t08 in tools/cyberos-install/tests/test_full_sdp_payload.sh.
+Audited for expansion safety: 20 -> ~52 vendored skills with the two workflows explicitly frozen. The decisive controls are the reviewable set-as-data block, the computed counts, the size budget, and the sibling checkers running over the expanded set. The NFR-four pairing question was resolved upstream in TASK-SKILL-116's allowlist semantics. Traceability closes over t01-t08 in tools/install/tests/test_full_sdp_payload.sh.
 
 ## §2 - Findings (all resolved)
 

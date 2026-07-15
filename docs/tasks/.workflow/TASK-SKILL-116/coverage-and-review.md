@@ -50,7 +50,7 @@ None. (§8 example output confirmed byte-shape: MISSING lines exactly as specced
 
 ## Module gates
 awh: N/A (no modules/SKILL goldenset for this tooling path - declared). caf: N/A (no audit-profile
-for tools/cyberos-install); floor = bash -n clean + both suites green.
+for tools/install); floor = bash -n clean + both suites green.
 
 ## Verdict requested
 Review acceptance (HITL gate 1): approve to advance reviewing -> ready_to_test, or reject with findings.

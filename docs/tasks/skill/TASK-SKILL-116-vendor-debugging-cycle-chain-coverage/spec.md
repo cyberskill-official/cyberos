@@ -23,18 +23,18 @@ depends_on: []
 blocks: [TASK-CUO-209]
 source_pages:
   - modules/cuo/chief-technology-officer/workflows/ship-tasks.md
-  - tools/cyberos-install/build.sh
+  - tools/install/build.sh
 source_decisions:
   - "2026-07-12 investigation: ship steps 25-26 invoke debugging-cycle-author/-audit, which exist at modules/skill/debugging-cycle-* but are absent from the hardcoded 20-skill vendored set at build.sh:28. The test-failure branch ships with no skill behind it in BOTH profiles."
   - "The fix must be structural, not a one-line patch: the vendored set must be provably derived-from or checked-against the workflow's skill_chain so the class of bug dies."
 language: bash
-service: tools/cyberos-install/
+service: tools/install/
 new_files:
-  - tools/cyberos-install/check-chain-coverage.sh
-  - tools/cyberos-install/chain-allowlist.txt
-  - tools/cyberos-install/tests/test_chain_coverage.sh
+  - tools/install/check-chain-coverage.sh
+  - tools/install/chain-allowlist.txt
+  - tools/install/tests/test_chain_coverage.sh
 modified_files:
-  - tools/cyberos-install/build.sh
+  - tools/install/build.sh
 ---
 
 # TASK-SKILL-116: Vendor debugging-cycle + chain-coverage check
@@ -46,8 +46,8 @@ The ship workflow's 31-step `skill_chain` is the contract for what the payload m
 Normative clauses:
 
 1. The vendored skill set in `build.sh` MUST include `debugging-cycle-author` and `debugging-cycle-audit`, copied into both `cuo/skills/` and `plugin/skills/` like the existing pairs.
-2. A script `tools/cyberos-install/check-chain-coverage.sh <payload-dir>` MUST extract every skill referenced by the vendored workflow docs and verify each has a directory containing a `SKILL.md` in BOTH `<payload>/cuo/skills/` and `<payload>/plugin/skills/`. Extraction is defined per doc kind: `skill: <name>` entries in `<payload>/cuo/ship-tasks.md`'s skill_chain, and backtick-quoted tokens matching `[a-z0-9]+(-[a-z0-9]+)*-(author|audit)` in `<payload>/plugin/commands/*.md` (deterministic token grammar, not prose guessing). Any miss MUST exit 10 listing `MISSING <skill> (referenced by <doc>)` per line.
-3. Exemptions MUST be declared in `tools/cyberos-install/chain-allowlist.txt` (one name + one `# reason` per line; initial entries: `awh-gate`, `caf-gate`). An allowlist entry exempts its name from BOTH rule kinds - MISSING (script-backed steps with no skill dir) and UNPAIRED (intentionally single skills, e.g. the four NFR skills once TASK-CUO-209 vendors them) - the reason string says which. An allowlisted name that nothing references and no payload dir matches MUST warn (stderr) so the allowlist cannot rot silently.
+2. A script `tools/install/check-chain-coverage.sh <payload-dir>` MUST extract every skill referenced by the vendored workflow docs and verify each has a directory containing a `SKILL.md` in BOTH `<payload>/cuo/skills/` and `<payload>/plugin/skills/`. Extraction is defined per doc kind: `skill: <name>` entries in `<payload>/cuo/ship-tasks.md`'s skill_chain, and backtick-quoted tokens matching `[a-z0-9]+(-[a-z0-9]+)*-(author|audit)` in `<payload>/plugin/commands/*.md` (deterministic token grammar, not prose guessing). Any miss MUST exit 10 listing `MISSING <skill> (referenced by <doc>)` per line.
+3. Exemptions MUST be declared in `tools/install/chain-allowlist.txt` (one name + one `# reason` per line; initial entries: `awh-gate`, `caf-gate`). An allowlist entry exempts its name from BOTH rule kinds - MISSING (script-backed steps with no skill dir) and UNPAIRED (intentionally single skills, e.g. the four NFR skills once TASK-CUO-209 vendors them) - the reason string says which. An allowlisted name that nothing references and no payload dir matches MUST warn (stderr) so the allowlist cannot rot silently.
 4. The check MUST also enforce pair completeness: for every vendored `<name>-author` there MUST be a vendored `<name>-audit` and vice versa; non-allowlisted violations exit 10 as `UNPAIRED <skill>`.
 5. `build.sh` MUST run `check-chain-coverage.sh` against its own output as its final step and propagate a failure - a payload that under-covers its own workflow can no longer be produced. A reduced-profile payload (zero vendored skills - the documented doc-driven floor) is exempt: the check prints `chain SKIP: reduced profile` and exits 0; partial vendoring still fails. (Amended post-ship 2026-07-12: TASK-CUO-209 t07 surfaced that the check as first shipped broke the reduced floor.)
 6. The check MUST be pure read-only over the payload dir (no repo access needed), so TASK-IMP-068's CI gate and TASK-IMP-069's release job get it for free via the build.
@@ -64,7 +64,7 @@ Normative clauses:
 ## §5 - Verification
 
 ```bash
-# tools/cyberos-install/tests/test_chain_coverage.sh
+# tools/install/tests/test_chain_coverage.sh
 # Builds one scratch payload, then mutates copies of it per case.
 
 t01_pair_vendored()              # AC 1
@@ -99,7 +99,7 @@ None upstream. Blocks TASK-CUO-209 (the expanded vendored set lands behind this 
 ## §8 - Example payloads
 
 ```
-$ bash tools/cyberos-install/check-chain-coverage.sh dist/cyberos
+$ bash tools/install/check-chain-coverage.sh dist/cyberos
 MISSING debugging-cycle-author (referenced by cuo/ship-tasks.md)
 MISSING debugging-cycle-audit (referenced by cuo/ship-tasks.md)
 $ echo $?

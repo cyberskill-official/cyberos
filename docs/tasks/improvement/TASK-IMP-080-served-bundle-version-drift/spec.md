@@ -28,12 +28,12 @@ source_pages:
 source_decisions:
   - "2026-07-13 Stephen: 'all CI green but live site (os.cyberskill.world) still show v0.1.0?'"
 language: bash (one gate check), generated assets (vite rebuild)
-service: apps/console + tools/cyberos-install
+service: apps/console + tools/install
 new_files: []
 modified_files:
   - apps/console/web/version.json
   - apps/console/web/sw.js
-  - tools/cyberos-install/check-version-sync.sh
+  - tools/install/check-version-sync.sh
 effort_hours: 1
 subtasks:
   - "Rebuild apps/web (tsc + vite + stamp-sw) -> apps/console/web at 1.0.0, fresh sw cache id - DONE (js hashes unchanged: badge reads version.json at runtime)"

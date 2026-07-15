@@ -10,9 +10,9 @@ name: payload-gate
 on:
   push:
     branches: [main]
-    paths: ['tools/cyberos-install/**', 'modules/skill/**', 'modules/cuo/**', 'VERSION']
+    paths: ['tools/install/**', 'modules/skill/**', 'modules/cuo/**', 'VERSION']
   pull_request:
-    paths: ['tools/cyberos-install/**', 'modules/skill/**', 'modules/cuo/**', 'VERSION']
+    paths: ['tools/install/**', 'modules/skill/**', 'modules/cuo/**', 'VERSION']
 
 jobs:
   build-and-check:
@@ -21,9 +21,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build the payload into a temp dir
-        run: bash tools/cyberos-install/build.sh "$RUNNER_TEMP/payload"
+        run: bash tools/install/build.sh "$RUNNER_TEMP/payload"
       - name: Check every stamp equals VERSION
-        run: bash tools/cyberos-install/check-version-sync.sh "$RUNNER_TEMP/payload"
+        run: bash tools/install/check-version-sync.sh "$RUNNER_TEMP/payload"
       - name: Doc anchors resolve (TASK-SKILL-119)
         run: bash scripts/check_doc_anchors.sh
       - name: Version stamps consistent repo-wide (TASK-IMP-072)

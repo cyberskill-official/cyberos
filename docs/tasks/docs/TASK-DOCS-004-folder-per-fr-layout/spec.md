@@ -37,7 +37,7 @@ modified_files:
   - scripts/migrate_improvement_to_task.py
   - tools/docs-site/render-roadmap.mjs
   - scripts/check_doc_anchors.sh
-  - tools/cyberos-install/plugin/commands/create-tasks.md
+  - tools/install/plugin/commands/create-tasks.md
 ---
 
 # TASK-DOCS-004: Folder-per-task layout

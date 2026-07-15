@@ -13,7 +13,7 @@ template: engineering-spec@1
 
 ## §1 - Verdict summary
 
-Audited for extraction determinism (the checker must parse, not guess), allowlist semantics, and forward-compatibility with TASK-CUO-209's expanded set. Two contract holes closed (prose-fuzzy extraction; allowlist covering only one rule kind). Traceability closes over t01-t06 in tools/cyberos-install/tests/test_chain_coverage.sh.
+Audited for extraction determinism (the checker must parse, not guess), allowlist semantics, and forward-compatibility with TASK-CUO-209's expanded set. Two contract holes closed (prose-fuzzy extraction; allowlist covering only one rule kind). Traceability closes over t01-t06 in tools/install/tests/test_chain_coverage.sh.
 
 ## §2 - Findings (all resolved)
 

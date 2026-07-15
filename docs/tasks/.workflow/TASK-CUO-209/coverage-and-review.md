@@ -11,7 +11,7 @@ verdicts: all pass - human verdict pending at HITL gate 1
 # Ship artefact bundle - TASK-CUO-209
 
 ## Context map / plan (condensed - single-tool task)
-Domain: tools/cyberos-install only (build.sh set block, sizes; GUIDE source docs/index.md; README;
+Domain: tools/install only (build.sh set block, sizes; GUIDE source docs/index.md; README;
 allowlist; test). files_outside_immediate_domain: 0 -> no ADR. Edge rows folded into the suite:
 52-skill matrix (t01), data-not-string regression trap (t02), computed counts full vs reduced
 (t03 + t07), 14-row map totality + invoker enum (t04), sibling checks (t05), 2 MB budget (t06),

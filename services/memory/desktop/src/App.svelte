@@ -244,7 +244,7 @@
         <h2 class="text-base font-medium">CyberOS operations</h2>
         <p class="text-sm text-slate-400">
           Build the distributable payload, then check or init/update any project. Every button
-          runs the canonical <code class="font-mono text-xs">tools/cyberos-install</code> scripts (TASK-APP-001).
+          runs the canonical <code class="font-mono text-xs">tools/install</code> scripts (TASK-APP-001).
         </p>
 
         <label class="block text-sm text-slate-400">

@@ -546,11 +546,14 @@ user what to type.
 ## Rule
 
 ```
-tools/cyberos-init/          ->  tools/cyberos-install/
-cli/bin/cyberos-init.mjs     ->  cli/bin/cyberos-install.mjs
-npm name: cyberos-init       ->  cyberos-install
-npx cyberos-init             ->  npx cyberos-install
-log prefix "cyberos-init:"   ->  "cyberos-install:"
+tools/cyberos-init/          ->  tools/install/
+cli/bin/cyberos-init.mjs     ->  cli/bin/cli.mjs        (ONE dispatcher; was 3 bins)
+cli/bin/cyberos-gates.mjs    ->  retired  ->  npx cyberos gates
+cli/bin/cyberos-mcp.mjs      ->  retired  ->  npx cyberos mcp
+npm name: cyberos-init       ->  cyberos
+npx cyberos-init [dir]       ->  npx cyberos install [dir]
+log prefix "cyberos-init:"   ->  "cyberos:"
+BRAIN manifest actor         ->  "cyberos"   (it was tracking the verb)
 
 init.sh <repo>               ->  install.sh <repo>
 init.sh --check <repo>       ->  version.sh <repo>
@@ -559,6 +562,25 @@ init.sh --page               ->  lib/status-page.sh
 
 Mapped by shape, not blanket: `--check` and `--page` are separate commands now, so a
 flat `init.sh -> install.sh` would have minted two more broken pointers.
+
+## The naming rule this settles
+
+`cyberos` is the trigger keyword; everything after it is a command. Two corollaries:
+
+1. **Never name a thing after one of its own verbs.** `cyberos-init` had to change when
+   `init` became `install`, and `cyberos-install` would have had to change again at the
+   next verb. `cyberos-install --help` reads as nonsense because `install` is already a
+   command. So: one bin (`cyberos`) whose command set mirrors `help.sh` and the plugin's
+   slash commands 1:1, and the three channels cannot drift apart.
+2. **The repo is already `cyberos`, so children do not repeat it.** Hence `tools/install/`,
+   not `tools/cyberos-install/` and not `tools/cyberos/`.
+
+`cyberos` survives only where it IS the keyword or an identity: the npm name, the `cyberos`
+bin, the `python -m cyberos` package, the Homebrew cask, the Java namespace — and inside a
+FOREIGN repo (`.cyberos/`, and the `.cyberos-install/` bootstrap staging dir), where the
+prefix says whose directory it is. Those are not redundant children.
+
+A bare `npx cyberos` prints help and changes nothing; installing is always explicit.
 
 ## Why now
 
@@ -572,7 +594,7 @@ Renaming it after is a breaking change for every consumer.
 430 sites across 124 files; 45 of those files are archived task specs, `.workflow`
 evidence, review docs, and the changelog. Unlike an `FR-` id, these are **path**
 references — a path that no longer resolves is simply broken, so tracking the move
-is the accurate act rather than a falsification. Read any `tools/cyberos-install/...`
+is the accurate act rather than a falsification. Read any `tools/install/...`
 path in an artefact dated before 2026-07-16 as `tools/cyberos-init/...`.
 
 ## What the gate learned

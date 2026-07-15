@@ -75,7 +75,7 @@ PATTERN='\bFR-[A-Z0-9]|feature[-_ ]request|(^|[^A-Za-z0-9_-])FRs?([^A-Za-z0-9_-]
 QUOTE_SHAPES='^[0-9]+:[[:space:]]*(>|#|//|\*)|NOTE:|WAS:|HISTORY:|previously|retired|legacy'
 
 # PATHS, not just contents. This gate read every staged file's BODY and never once looked at
-# its NAME — so `tools/cyberos-install/plugin/skills/ship-feature-requests/SKILL.md` passed clean:
+# its NAME — so `tools/install/plugin/skills/ship-feature-requests/SKILL.md` passed clean:
 # the codemod had rewritten the contents (name: ship-tasks) but never git mv'd the directory.
 # The build then shipped that dir beside an empty plugin/skills/ship-tasks/, and the flagship
 # skill could not load in any channel. Contents-not-filenames is the same blind spot this
@@ -94,7 +94,7 @@ while IFS= read -r f; do
 done <<< "$staged"
 if [ "$path_hits" -gt 0 ]; then
   echo >&2
-  echo "  git mv <old-path> <new-path>   # then rebuild: bash tools/cyberos-install/build.sh dist/cyberos" >&2
+  echo "  git mv <old-path> <new-path>   # then rebuild: bash tools/install/build.sh dist/cyberos" >&2
   echo >&2
   exit 1
 fi

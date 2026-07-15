@@ -22,23 +22,23 @@ related_tasks: [TASK-IMP-068, TASK-IMP-069, TASK-APP-001]
 depends_on: [TASK-IMP-069]
 blocks: []
 source_pages:
-  - tools/cyberos-install/init.sh
-  - tools/cyberos-install/plugin/commands/update.md
-  - tools/cyberos-install/plugin/commands/changelog.md
+  - tools/install/init.sh
+  - tools/install/plugin/commands/update.md
+  - tools/install/plugin/commands/changelog.md
 source_decisions:
   - "2026-07-12 investigation: with a stale local payload, init.sh --check reports installed=1.2.0 available=1.2.0 and /update says up to date while VERSION is 1.7.0. The available number must come from the published channel, not the laptop."
   - "No auto-update: the check only reports; applying an update stays an explicit operator action."
 language: bash + markdown (command docs)
-service: tools/cyberos-install/
+service: tools/install/
 new_files:
-  - tools/cyberos-install/check-latest.sh
-  - tools/cyberos-install/tests/test_check_latest.sh
+  - tools/install/check-latest.sh
+  - tools/install/tests/test_check_latest.sh
 modified_files:
-  - tools/cyberos-install/build.sh   # deviation, recorded in review packet: vendor check-latest.sh beside init.sh
-  - tools/cyberos-install/init.sh
-  - tools/cyberos-install/plugin/commands/update.md
-  - tools/cyberos-install/plugin/commands/changelog.md
-  - tools/cyberos-install/README.md
+  - tools/install/build.sh   # deviation, recorded in review packet: vendor check-latest.sh beside init.sh
+  - tools/install/init.sh
+  - tools/install/plugin/commands/update.md
+  - tools/install/plugin/commands/changelog.md
+  - tools/install/README.md
 ---
 
 # TASK-IMP-070: Remote update awareness
@@ -49,7 +49,7 @@ modified_files:
 
 Normative clauses:
 
-1. A script `tools/cyberos-install/check-latest.sh` MUST resolve the latest published version and print exactly one line `latest=<X.Y.Z|unknown> source=<url|offline>`. Resolution order: `$CYBEROS_RELEASE_ENDPOINT` when set (an https URL or a local file path returning either a bare `X.Y.Z` or GitHub's `/releases/latest` JSON, from which `tag_name` minus the `v` is taken), else the repo's public `releases/latest` page redirect (Location header names the tag; immune to API rate limits), with the `releases/latest` API URL as fallback (amended post-ship 2026-07-12 after a live 403 rate-limit). Total network budget MUST be <= 3 seconds (curl `--max-time 3`); any failure MUST yield `latest=unknown source=offline` with exit 0 - the script never breaks a caller.
+1. A script `tools/install/check-latest.sh` MUST resolve the latest published version and print exactly one line `latest=<X.Y.Z|unknown> source=<url|offline>`. Resolution order: `$CYBEROS_RELEASE_ENDPOINT` when set (an https URL or a local file path returning either a bare `X.Y.Z` or GitHub's `/releases/latest` JSON, from which `tag_name` minus the `v` is taken), else the repo's public `releases/latest` page redirect (Location header names the tag; immune to API rate limits), with the `releases/latest` API URL as fallback (amended post-ship 2026-07-12 after a live 403 rate-limit). Total network budget MUST be <= 3 seconds (curl `--max-time 3`); any failure MUST yield `latest=unknown source=offline` with exit 0 - the script never breaks a caller.
 2. `init.sh --check <repo>` MUST report three values - `installed` (`<repo>/.cyberos/VERSION`), `payload` (the local payload's VERSION), `latest` (via check-latest.sh, skipped when `CYBEROS_OFFLINE=1`) - followed by exactly one verdict line: `verdict=up_to_date` (installed == latest, or latest unknown and installed == payload), `verdict=repo_stale` (installed < payload or installed < latest), or `verdict=payload_stale` (payload < latest). `installed >= latest` MUST count as up to date - the check never advises a downgrade. Each non-clean verdict MUST print the exact next command (`bash <payload>/init.sh <repo>` for repo_stale; the TASK-IMP-069 download one-liner or `build.sh` for payload_stale).
 3. Version comparison MUST be numeric semver (major, minor, patch), not string comparison.
 4. `plugin/commands/update.md` MUST direct the agent to run the extended `--check` and act on the verdict: on `payload_stale`, fetch the latest release payload (or rebuild from a current checkout) BEFORE re-running init, and never report "up to date" from the local-payload comparison alone. On `latest=unknown` it MUST say the remote check was skipped and the answer is only as fresh as the local payload.
@@ -92,7 +92,7 @@ init.sh --check <repo>   (extended output, order fixed)
 ## §5 - Verification
 
 ```bash
-# tools/cyberos-install/tests/test_check_latest.sh
+# tools/install/tests/test_check_latest.sh
 # Fixtures under $TMP: bare-version file, tag_name JSON file, unreachable path,
 # plus a scratch repo + scratch payload for the --check verdict matrix.
 

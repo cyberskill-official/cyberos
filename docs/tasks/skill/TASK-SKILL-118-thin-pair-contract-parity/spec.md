@@ -44,8 +44,8 @@ new_files:
   - modules/skill/observability-injection-author/PIPELINE.md
   - modules/skill/backlog-state-update-author/PIPELINE.md
   - modules/skill/coverage-gate-author/PIPELINE.md
-  - tools/cyberos-install/check-pair-parity.sh
-  - tools/cyberos-install/tests/test_pair_parity.sh
+  - tools/install/check-pair-parity.sh
+  - tools/install/tests/test_pair_parity.sh
 modified_files:
   - modules/skill/repo-context-map-author/SKILL.md
   - modules/skill/edge-case-matrix-author/SKILL.md
@@ -68,7 +68,7 @@ Normative clauses:
 3. The rubrics MUST encode exactly the gates already normative in each pair's SKILL.md prose, with rule IDs: edge-case-matrix (>= 1 row per category; SECURITY rows point at real test paths; DEGRADATION rows carry detection + recovery; total_rows >= 8 for MUST tasks), observability-injection (>= 1 log point per state transition, >= 1 span per external IO, >= 1 counter per error branch, branch_coverage >= 80%, redaction policy when PII in scope), coverage-gate (tests_failed == 0; files_below_90pct empty; ecm_rows_uncovered empty; raw terminal present + non-truncated; §1-clause test closure), backlog-state-update (status in the 10-value enum; line_number resolves; old_line byte-match; evidence rows resolve; mutation_kind == status-cell-only), mock-contract-test (>= 1 request/response pair; error_modes cover every SECURITY/DEGRADATION matrix row; swap_target is a real symbol; sunset criterion observable; contract tests pass against the mock), repo-context-map (three baseline patterns present; pinned_in references resolve; schemas present when task declares migrations; module-placement warning null or escalated).
 4. Numeric gates MUST be expressed as named constants at the top of each RUBRIC.md, with the coverage threshold noted as overridable by `.cyberos/config.yaml` `coverage_threshold` once TASK-CUO-207 lands (default 90 preserved).
 5. Artefact schemas MUST stay at @1 - additive documentation only; no change to any emitted artefact shape, so already-shipped tasks' artefacts remain valid.
-6. A script `tools/cyberos-install/check-pair-parity.sh <skills-dir>` MUST verify, for every author/audit pair present: authors carry the #1 file classes, audits carry the #2 file classes; missing files exit 10 as `PARITY <skill>: missing <file>`. `build.sh` MUST run it over the vendored set after the chain-coverage check (TASK-SKILL-116 ordering).
+6. A script `tools/install/check-pair-parity.sh <skills-dir>` MUST verify, for every author/audit pair present: authors carry the #1 file classes, audits carry the #2 file classes; missing files exit 10 as `PARITY <skill>: missing <file>`. `build.sh` MUST run it over the vendored set after the chain-coverage check (TASK-SKILL-116 ordering).
 7. Each rewritten SKILL.md MUST keep its existing trigger description contract (TASK-SKILL-111/112/113 conventions) - descriptions, trigger tests, and frontmatter shape unchanged except for pointers to the new files.
 
 ## §2 - Why this design
@@ -100,7 +100,7 @@ verdict: pass requires 10/10; any family failure -> fail; ambiguity -> needs_hum
 ## §5 - Verification
 
 ```bash
-# tools/cyberos-install/tests/test_pair_parity.sh
+# tools/install/tests/test_pair_parity.sh
 t01_all_pairs_parity_clean()     # AC 1
 t02_prose_gate_rule_ids()        # AC 2  (grep each rubric for its constants + rule-ID table)
 t03_constants_block()            # AC 3
@@ -120,7 +120,7 @@ None upstream. TASK-CUO-207 later flips COVERAGE_THRESHOLD to config-driven (the
 ## §8 - Example payloads
 
 ```
-$ bash tools/cyberos-install/check-pair-parity.sh modules/skill
+$ bash tools/install/check-pair-parity.sh modules/skill
 PARITY coverage-gate-audit: missing RUBRIC.md
 PARITY coverage-gate-audit: missing REPORT_FORMAT.md
 $ echo $?

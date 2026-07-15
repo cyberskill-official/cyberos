@@ -183,11 +183,11 @@ echo
 
 echo "→ step 5/5: verify"
 cd "$TARGET"
-if python -m cyberos --store .cyberos/memory/store doctor > /tmp/cyberos-install-doctor.log 2>&1; then
-    tail -3 /tmp/cyberos-install-doctor.log | sed 's/^/  /'
+if python -m cyberos --store .cyberos/memory/store doctor > /tmp/cyberos-doctor.log 2>&1; then
+    tail -3 /tmp/cyberos-doctor.log | sed 's/^/  /'
 else
     echo "  ⚠ cyberos doctor failed:"
-    sed 's/^/    /' /tmp/cyberos-install-doctor.log
+    sed 's/^/    /' /tmp/cyberos-doctor.log
 fi
 echo
 

@@ -88,7 +88,7 @@ Acceptance-driven (skills are contracts, not code):
 
 - `modules/skill/architectural-spike-author/acceptance/TRIGGER_TESTS.md` - AC 2 cases (>= 6).
 - `modules/skill/architectural-spike-audit/acceptance/TRIGGER_TESTS.md` - AC 4 fixture + expected SPK-EVID finding; plus a 10/10 clean fixture.
-- Structural check for AC 1, 3, 5, 6, 7: `bash tools/cyberos-install/check-chain-coverage.sh` pair rule (from TASK-SKILL-116) plus `grep` assertions listed inline in the two TRIGGER_TESTS.md preambles (each acceptance file opens with its own "how to verify this pair" block, executable line by line).
+- Structural check for AC 1, 3, 5, 6, 7: `bash tools/install/check-chain-coverage.sh` pair rule (from TASK-SKILL-116) plus `grep` assertions listed inline in the two TRIGGER_TESTS.md preambles (each acceptance file opens with its own "how to verify this pair" block, executable line by line).
 
 ## §6 - Implementation skeleton
 

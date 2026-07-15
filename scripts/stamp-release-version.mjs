@@ -151,12 +151,12 @@ stampJson("apps/desktop/src-tauri/tauri.conf.json");
 // task 1.0.0-consistency leg: the tauri CARGO package version feeds about-dialogs and crate metadata -
 // stamp it too so the desktop app never self-reports a stale number.
 stampCargo("apps/desktop/src-tauri/Cargo.toml");
-// The MCP server source lives at tools/cyberos-install/mcp/ (build.sh copies $here/mcp into the
+// The MCP server source lives at tools/install/mcp/ (build.sh copies $here/mcp into the
 // payload). Its package.json is stamped into the PAYLOAD copy by build.sh; stamping the repo
 // source keeps the whole codebase consistent (build.sh's stamp becomes a no-op). NOTE: the path
 // was originally written as root-level "mcp/package.json", which never existed - the existsSync
 // guard hid it here, but version.yml's matching `git add` failed fatally on the first real bump.
-stampJson("tools/cyberos-install/mcp/package.json");
+stampJson("tools/install/mcp/package.json");
 stampJson("apps/web/package.json");
 stampGradle("apps/web/android/app/build.gradle");
 stampXcodeProj("apps/web/ios/App/App.xcodeproj/project.pbxproj");

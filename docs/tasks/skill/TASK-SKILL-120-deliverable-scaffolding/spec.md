@@ -22,19 +22,19 @@ related_tasks: [TASK-DOCS-004, TASK-TPL-001, TASK-CUO-205]
 depends_on: [TASK-DOCS-004]
 blocks: []
 source_pages:
-  - tools/cyberos-install/plugin/commands/create-tasks.md
+  - tools/install/plugin/commands/create-tasks.md
   - modules/skill/task-author/SKILL.md
 source_decisions:
   - "2026-07-12 operator decision: workflows/skills use the templates module to create new deliverables; new tasks are born as folders with assets/."
 language: markdown (contracts + command docs)
-service: modules/skill/ + tools/cyberos-install/plugin/
+service: modules/skill/ + tools/install/plugin/
 new_files: []
 modified_files:
-  - tools/cyberos-install/plugin/commands/create-tasks.md
+  - tools/install/plugin/commands/create-tasks.md
   - modules/skill/task-author/SKILL.md
   - modules/skill/task-audit/SKILL.md
   - modules/cuo/chief-technology-officer/workflows/ship-tasks.md
-  - tools/cyberos-install/init.sh
+  - tools/install/init.sh
 ---
 
 # TASK-SKILL-120: Deliverable scaffolding wiring

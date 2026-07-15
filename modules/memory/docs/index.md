@@ -20,7 +20,7 @@ The normative protocol is `AGENTS.md` (vendored to every initialised repo). Key 
 
 ## Day-to-day
 
-- A fresh store is scaffolded by `cyberos-install` in every project (skip with `CYBEROS_NO_MEMORY=1`).
+- A fresh store is scaffolded by `npx cyberos install` in every project (skip with `CYBEROS_NO_MEMORY=1`).
 - The desktop app captures quick notes into the store and supervises sync.
 - Agents working in a repo record decisions, audits, and plans into the BRAIN per the protocol.
 

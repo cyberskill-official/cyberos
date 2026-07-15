@@ -36,7 +36,7 @@ Changed
   (`lib/status-page.sh` for hooks and run-gates).
 - Install/migration hardened by a 23-repo fleet roll: protocol dumps and protocol-symlinks at root
   AGENTS.md are replaced with the thin pointer; status-page freshness is proven by re-render +
-  byte-compare. tools/cyberos-install/{fleet-init-test,audit-fleet}.sh roll and PROVE the fleet.
+  byte-compare. tools/install/{fleet-init-test,audit-fleet}.sh roll and PROVE the fleet.
 
 ## [0.4.0] - 2026-07-12
 
@@ -188,7 +188,7 @@ Multi-agent distribution for the `cyberos-install` payload, plus three new insta
 
 Added
 - Agent surface in `init.sh`: `AGENTS.md` is the canonical cross-agent spine, with create-if-absent pointer files per agent (`CLAUDE.md`, `GEMINI.md`, `.cursorrules`, `.cursor/rules/*.mdc`, `.grok/GROK.md`, `.github/copilot-instructions.md`, `.agents/rules/`, `.windsurfrules`) and native installs of the `ship-tasks` skill into `.claude/skills`, `.grok/skills`, `.commandcode/skills`, `.codex/skills`, `.opencode/skill`. Controls: `CYBEROS_AGENTS`, `CYBEROS_COPY_SKILLS`, `CYBEROS_GLOBAL_SKILLS`, `CYBEROS_NO_MCP`. Covers Claude Code, Codex, Cursor, Gemini, Antigravity, Grok CLI, zcode, Command Code, Hermes, Copilot, Windsurf.
-- MCP server channel (`tools/cyberos-install/mcp/cyberos-mcp.mjs`): zero-dependency Node stdio server exposing `task_init`, `task_gates`, `task_status`, `ship_task` (HITL-gated; never self-accepts). `init.sh` writes `.mcp.json` / `.cursor/mcp.json` when absent.
+- MCP server channel (`tools/install/mcp/cyberos-mcp.mjs`): zero-dependency Node stdio server exposing `task_init`, `task_gates`, `task_status`, `ship_task` (HITL-gated; never self-accepts). `init.sh` writes `.mcp.json` / `.cursor/mcp.json` when absent.
 - npx CLI channel: root `package.json` with `cyberos-install`, `cyberos-gates`, `cyberos-mcp` bins.
 - Template channel: `create.sh` scaffolder + `template/` skeleton for a fresh project or a GitHub template repo.
 - Auto-versioning ("auto version, manual release"): `scripts/cyberos-version.mjs` computes the next version from Conventional Commits; `.github/workflows/version.yml` auto-commits the bump to `main` on push (never tags or deploys); `.githooks/commit-msg` is an advisory Conventional-Commit nudge that shows the projected next version. Cutting a release stays a manual `vX.Y.Z` tag. See `docs/deploy/RELEASE.md`.

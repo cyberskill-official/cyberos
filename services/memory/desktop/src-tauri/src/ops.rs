@@ -1,7 +1,7 @@
 //! TASK-APP-001 — CyberOS operations from the desktop UI: build the distributable payload,
 //! list candidate projects, check installed-vs-available, and init/update a project.
 //!
-//! Doctrine (§1 #2): every operation shells out to the canonical `tools/cyberos-install`
+//! Doctrine (§1 #2): every operation shells out to the canonical `tools/install`
 //! scripts — the UI never reimplements init logic, so UI and CLI cannot diverge.
 //! Blocking process calls run on the blocking pool (`spawn_blocking`), never on the
 //! async runtime threads. Output (stdout+stderr) is returned verbatim to the UI and a
@@ -71,9 +71,9 @@ pub async fn ops_set_settings(settings: OpsSettings) -> Result<(), String> {
 
 fn require_checkout(checkout: &str) -> Result<PathBuf, String> {
     let root = PathBuf::from(checkout);
-    if !root.join("tools/cyberos-install/build.sh").is_file() {
+    if !root.join("tools/install/build.sh").is_file() {
         return Err(format!(
-            "not a CyberOS checkout (missing tools/cyberos-install/build.sh): {checkout}"
+            "not a CyberOS checkout (missing tools/install/build.sh): {checkout}"
         ));
     }
     Ok(root)
@@ -126,11 +126,11 @@ async fn run_bash(script: PathBuf, args: Vec<String>, cwd: PathBuf) -> Result<Op
 
 // ── commands (§1 #1) ────────────────────────────────────────────────────────
 
-/// Build the distributable payload: `bash tools/cyberos-install/build.sh` in the checkout.
+/// Build the distributable payload: `bash tools/install/build.sh` in the checkout.
 #[tauri::command]
 pub async fn ops_build(checkout: String) -> Result<OpResult, String> {
     let root = require_checkout(&checkout)?;
-    let script = root.join("tools/cyberos-install/build.sh");
+    let script = root.join("tools/install/build.sh");
     run_bash(script, vec![], root).await
 }
 

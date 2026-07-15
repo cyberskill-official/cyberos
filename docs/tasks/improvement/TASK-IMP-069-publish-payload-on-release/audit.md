@@ -13,7 +13,7 @@ template: engineering-spec@1
 
 ## §1 - Verdict summary
 
-Audited for spec correctness and for scope honesty against the two adjacent distribution tasks (TASK-PLUGIN-008, TASK-SKILL-201). Draft under-specified asset naming for `latest/download`, raced release creation, and assumed GNU tar everywhere. All resolved; traceability closes over t01-t09 in tools/cyberos-install/tests/test_release_assets.sh.
+Audited for spec correctness and for scope honesty against the two adjacent distribution tasks (TASK-PLUGIN-008, TASK-SKILL-201). Draft under-specified asset naming for `latest/download`, raced release creation, and assumed GNU tar everywhere. All resolved; traceability closes over t01-t09 in tools/install/tests/test_release_assets.sh.
 
 ## §2 - Findings (all resolved)
 

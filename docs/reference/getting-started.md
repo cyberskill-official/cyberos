@@ -14,7 +14,7 @@ CyberOS vendors itself into any repository under a single gitignored `.cyberos/`
 1. Build the payload once, from a CyberOS checkout:
 
    ```
-   bash tools/cyberos-install/build.sh        # writes dist/cyberos/
+   bash tools/install/build.sh        # writes dist/cyberos/
    ```
 
 2. Initialise your repo:
@@ -34,7 +34,7 @@ CyberOS vendors itself into any repository under a single gitignored `.cyberos/`
 
 Desktop alternative: the CyberOS desktop app has a "CyberOS Ops" tab that runs the same build / check / init operations from the UI.
 
-The full step-by-step runbook (first task, gates, human acceptance, multi-repo rollout) is `tools/cyberos-install/docs/index.md`.
+The full step-by-step runbook (first task, gates, human acceptance, multi-repo rollout) is `tools/install/docs/index.md`.
 
 ## Ship work
 

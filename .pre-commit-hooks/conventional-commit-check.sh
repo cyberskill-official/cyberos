@@ -18,7 +18,7 @@ if printf '%s' "$subject" | grep -Eq "$conv" \
   : # good
 else
   echo "cyberos commit-msg: '$subject'" >&2
-  echo "  not a Conventional Commit. Use e.g. 'feat(cyberos-install): ...' / 'fix(memory): ...'." >&2
+  echo "  not a Conventional Commit. Use e.g. 'feat(install): ...' / 'fix(memory): ...'." >&2
   echo "  Types: feat(minor) fix|perf|refactor|revert(patch) '!' or 'BREAKING CHANGE:'(major); chore/docs/ci/test/build/style don't bump." >&2
   if [ "${CYBEROS_STRICT_COMMITS:-0}" = "1" ]; then echo "  CYBEROS_STRICT_COMMITS=1 -> rejecting." >&2; exit 1; fi
   echo "  (advisory - committing anyway; set CYBEROS_STRICT_COMMITS=1 to enforce.)" >&2

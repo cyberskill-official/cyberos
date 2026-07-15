@@ -13,7 +13,7 @@ template: engineering-spec@1
 
 ## §1 - Verdict summary
 
-Audited with special attention to scope integrity (six pairs, additive-only) and to the honesty of an abbreviated new_files list against a 72-file real matrix. The decisive property - rubrics ENCODE existing prose gates rather than inventing policy - is enforced by the prose->rule mapping requirement. Traceability closes over t01-t06 in tools/cyberos-install/tests/test_pair_parity.sh.
+Audited with special attention to scope integrity (six pairs, additive-only) and to the honesty of an abbreviated new_files list against a 72-file real matrix. The decisive property - rubrics ENCODE existing prose gates rather than inventing policy - is enforced by the prose->rule mapping requirement. Traceability closes over t01-t06 in tools/install/tests/test_pair_parity.sh.
 
 ## §2 - Findings (all resolved)
 

@@ -10,7 +10,7 @@ verdict: pass (coverage-gate-audit)
 ---
 # Coverage gate - TASK-IMP-068
 
-## Raw terminal output (bash tools/cyberos-install/tests/test_check_version_sync.sh)
+## Raw terminal output (bash tools/install/tests/test_check_version_sync.sh)
 ```
 building scratch payload...
   ok   t01

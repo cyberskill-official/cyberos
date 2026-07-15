@@ -4,7 +4,7 @@ source: website/docs/modules/plugin/index.html
 migrated: TASK-DOCS-002
 ---
 
-plugin is the CyberOS plugin for Claude Code and Cowork - name `cyberos`, version 1.0.0, authored by CyberSkill. It packages the task workflow as host commands and a bundled skill, so a user can install CyberOS into a repo and drive its backlog without leaving the agent. `tools/cyberos-install/build.sh` assembles it into `dist/cyberos/`, a plugin marketplace whose root carries `.claude-plugin/marketplace.json` and catalogs the plugin at `plugin/` (its own manifest at `plugin/.claude-plugin/plugin.json`). The same build emits `dist/cyberos/cyberos.plugin`, a one-file bundle for hosts whose Add picker wants a file rather than a folder.
+plugin is the CyberOS plugin for Claude Code and Cowork - name `cyberos`, version 1.0.0, authored by CyberSkill. It packages the task workflow as host commands and a bundled skill, so a user can install CyberOS into a repo and drive its backlog without leaving the agent. `tools/install/build.sh` assembles it into `dist/cyberos/`, a plugin marketplace whose root carries `.claude-plugin/marketplace.json` and catalogs the plugin at `plugin/` (its own manifest at `plugin/.claude-plugin/plugin.json`). The same build emits `dist/cyberos/cyberos.plugin`, a one-file bundle for hosts whose Add picker wants a file rather than a folder.
 
 ## Install
 
@@ -27,11 +27,11 @@ The workflow halts at two human-acceptance gates: review acceptance (`reviewing 
 
 ## Doc-driven and agent-independent
 
-The Claude plugin is convenience, not a dependency. The core is doc-driven: `/init` writes the canonical `AGENTS.md` spine, `.cyberos/AGENT-ENTRY.md`, and per-agent pointer files (all create-if-absent), and installs the `ship-tasks` skill natively into every skill-aware agent's folder (`.claude/skills`, `.grok/skills`, `.commandcode/skills`, `.codex/skills`, `.opencode/skill`). Point any file-and-shell agent - Codex, Cursor, Gemini, Grok, and the rest - at `AGENTS.md` or `.cyberos/AGENT-ENTRY.md` and it drives the same workflow, the same gates, the same required human verdicts. The per-agent instruction files, native skill directories, and MCP registration are catalogued in the agent-support matrix in `tools/cyberos-install/README.md`.
+The Claude plugin is convenience, not a dependency. The core is doc-driven: `/init` writes the canonical `AGENTS.md` spine, `.cyberos/AGENT-ENTRY.md`, and per-agent pointer files (all create-if-absent), and installs the `ship-tasks` skill natively into every skill-aware agent's folder (`.claude/skills`, `.grok/skills`, `.commandcode/skills`, `.codex/skills`, `.opencode/skill`). Point any file-and-shell agent - Codex, Cursor, Gemini, Grok, and the rest - at `AGENTS.md` or `.cyberos/AGENT-ENTRY.md` and it drives the same workflow, the same gates, the same required human verdicts. The per-agent instruction files, native skill directories, and MCP registration are catalogued in the agent-support matrix in `tools/install/README.md`.
 
 ## One channel of many
 
-`dist/cyberos/` is delivered through several channels, of which the Claude plugin is one. The others include copying the folder, a git submodule or subtree, a `curl | sh` bootstrap, a GitHub Action that runs the machine gates in CI, a Docker image, a Makefile or just target, a Node stdio MCP server (tools `task_init`, `task_gates`, `task_status`, `ship_task`) for any MCP agent, an npx CLI (`cyberos-install`, `cyberos-gates`, `cyberos-mcp`), and a template-repo scaffolder (`create.sh`). The full catalog, with the trade-offs of each, is in `tools/cyberos-install/README.md`; the install-and-operate walkthrough is in `tools/cyberos-install/docs/index.md`.
+`dist/cyberos/` is delivered through several channels, of which the Claude plugin is one. The others include copying the folder, a git submodule or subtree, a `curl | sh` bootstrap, a GitHub Action that runs the machine gates in CI, a Docker image, a Makefile or just target, a Node stdio MCP server (tools `task_init`, `task_gates`, `task_status`, `ship_task`) for any MCP agent, an npx CLI (`npx cyberos <command>`), and a template-repo scaffolder (`create.sh`). The full catalog, with the trade-offs of each, is in `tools/install/README.md`; the install-and-operate walkthrough is in `tools/install/docs/index.md`.
 
 ## Changelog
 

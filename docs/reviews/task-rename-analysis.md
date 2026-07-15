@@ -150,8 +150,8 @@ The reader returns zero rows against the live backlog. `backlog-state-update-aut
 |---|---|---|---|
 | R1 | Classifier precision collapse | `modules/cuo/cuo/trigger_tests.py` + per-skill `acceptance/TRIGGER_TESTS.md` assert the CUO supervisor routes phrasings to skills. `description_format_check.py` and `services/skill-broker/src/frontmatter/description_validator.rs` enforce 80-1024 chars, >=2 quoted trigger phrases, >=1 verb stem, no XML-tag shapes. A `task-author` skill whose description quotes "create a task" will fire on generic agent prose. | Never write bare "task" in a skill description. Always "CyberOS task" or "backlog task". Re-author all TRIGGER_TESTS.md. Add negative triggers for the host Task tool. Re-baseline `.awh/eval-baseline.json` and expect the `--max-regression 0.0` gate to block until it is regenerated. |
 | R2 | Public URL break | `tools/docs-site/render-fr-pages.mjs` emits `/frs/<module>/<stem>/index.html` and cross-links `../../${module}/${stem}/index.html`. `docs/status/` has 507 per-FR data files. Deployed via `vercel.json`. | Emit both `/frs/` and `/tasks/` for one release, with 301s from `/frs/`. Keep the FR-ID-keyed data filenames stable (see §7.2). |
-| R3 | Stale symlinks in every installed repo | `.gitignore` managed block lists `.claude/skills/ship-feature-requests`, and the same under `.grok`, `.codex`, `.opencode`, `.commandcode`. Five agent-tool dirs, all symlinked to `.cyberos/plugin/skills`. | `cyberos install` must remove the five old symlinks by name before creating new ones, and rewrite the managed gitignore block. Add a test in `tools/cyberos-install/tests/`. |
-| R4 | Vendored payload drift | `tools/cyberos-install/build.sh` hardcodes `ship-feature-requests.md`, `contracts/feature-request/STATUS-REFERENCE.md`, and a skill allowlist naming `feature-request-author` / `feature-request-audit`. `.pre-commit-hooks/cyberos-payload-build.sh` has a trigger regex that the comment says is mirrored in `check-version-sync.sh`. `.cyberos/` is fully gitignored (0 tracked files) and regenerated. | Update build.sh, both trigger regexes, and `tools/cyberos-install/lib/fr-migrate.sh` in the same commit. Add a check that fails if the two regexes diverge. |
+| R3 | Stale symlinks in every installed repo | `.gitignore` managed block lists `.claude/skills/ship-feature-requests`, and the same under `.grok`, `.codex`, `.opencode`, `.commandcode`. Five agent-tool dirs, all symlinked to `.cyberos/plugin/skills`. | `cyberos install` must remove the five old symlinks by name before creating new ones, and rewrite the managed gitignore block. Add a test in `tools/install/tests/`. |
+| R4 | Vendored payload drift | `tools/install/build.sh` hardcodes `ship-feature-requests.md`, `contracts/feature-request/STATUS-REFERENCE.md`, and a skill allowlist naming `feature-request-author` / `feature-request-audit`. `.pre-commit-hooks/cyberos-payload-build.sh` has a trigger regex that the comment says is mirrored in `check-version-sync.sh`. `.cyberos/` is fully gitignored (0 tracked files) and regenerated. | Update build.sh, both trigger regexes, and `tools/install/lib/fr-migrate.sh` in the same commit. Add a check that fails if the two regexes diverge. |
 | R5 | CAF fixture corruption | 63 golden fixtures at `tools/caf/core/evals/fixtures/*/docs/BACKLOG.md`, using CAF's own unrelated BACKLOG + Task-table shape. | Hard-exclude `tools/caf/**` from every codemod pass. Add it to the codemod's deny-list and assert zero diff under `tools/caf/` in CI. |
 | R6 | Audit-chain path dangling | Memory protocol §3.3 / §6.5: rows are immutable, append-only, no reordering, no deletion. On-chain rows cite `docs/feature-requests/...`. | Emit one `memory.path_rename_epoch` aux row recording `{old_prefix, new_prefix, at_seq}`, and teach the walker to resolve pre-epoch paths through it. Do not rewrite rows. |
 | R7 | Evidence falsification | `docs/feature-requests/_archive/`, `_audits/`, `.workflow/*/`, and `CHANGELOG.md` are records of what happened, not live spec. | Never codemod them. Freeze in place or `git mv` the directory without touching file contents. See D3 in §8. |
@@ -511,7 +511,7 @@ disk explains why.
 7. Add `type: feature | bug` + `templates/{feature,bug}.md` + `rubrics/bug.md` + the `REGRESSION-*` gate family (§7.3, §7.4)
 8. Add `cannot_reproduce` + `duplicate` statuses (§7.5)
 9. Re-author every `acceptance/TRIGGER_TESTS.md`; regenerate `.awh/eval-baseline.json` (the `--max-regression 0.0` gate blocks until you do)
-10. `tools/cyberos-install/build.sh`: update the hardcoded skill allowlist and the two mirrored trigger regexes
+10. `tools/install/build.sh`: update the hardcoded skill allowlist and the two mirrored trigger regexes
 11. `cyberos install`: delete the 5 stale agent symlinks by name, rewrite the managed `.gitignore` block
 12. `--emit-brain-ops | python3 -m cyberos.writer apply` (§10)
 13. `python3 scripts/migrate_fr_to_task.py --verify` must exit 0
@@ -624,7 +624,7 @@ was caught by a guard added in response to the previous failure.
 | 6 | docs-site build failed | **`git mv` renames a file; it does not rename the lines that call it by name.** `build.sh` kept invoking `render-fr-pages.mjs` after it moved. Same for 5 other scripts; 4 more were never renamed at all. 99 call sites. | Invariant: every `PATH_RENAMES` entry MUST have a content rule for its basename. Checked by `unreferenced_renames()`. |
 | 7 | This document rewrote itself into nonsense ("Task to task: rename impact analysis") | A document whose subject IS the rename must be excluded from the rename. | `docs/reviews/task-rename-analysis.md` deny-listed. |
 
-Not our bug, found along the way: `tools/cyberos-install/check-chain-coverage.sh`
+Not our bug, found along the way: `tools/install/check-chain-coverage.sh`
 uses `declare -A` (bash 4 associative array). macOS ships bash 3.2. Introduced in
 `53db4e30f`, long before this rename. The chain-coverage gate has therefore never
 executed on a stock Mac — it has been passing by not running.
@@ -672,7 +672,7 @@ path resolve?** That check found this, and found §14.8 for free.
 ### 14.8 Two findings the resolve-check turned up
 
 **`test_task_layout.sh` t09 — red since `bb0f2392e`.** Asserted against
-`tools/cyberos-install/init.sh`, which `bb0f2392e` ("1.0.0 CLI surface") deleted, moving the
+`tools/install/init.sh`, which `bb0f2392e` ("1.0.0 CLI surface") deleted, moving the
 scaffold grammar to `install.sh:651`. The assert did not follow. `grep` on a missing file
 returns 1 and short-circuits the `&&` chain into `fail`. It went unnoticed because this
 file is wired into **no gate**: not `.githooks/pre-commit`, not `local_verify.sh`, not CI.
@@ -697,7 +697,7 @@ dimension was invisible to a check reporting `none`, and it hid 308 files:
 | count | what | consequence |
 |---|---|---|
 | 306 | `docs/tasks/_{audits,archive}/**/FR-*.md` | each contradicted its own frontmatter — `task_id: TASK-AI-001` inside `FR-AI-001-*.audit.md` |
-| 1 | `tools/cyberos-install/templates/FR-TEMPLATE.md` | `install.sh:651` told every new user to `cp ... TASK-TEMPLATE.md`. **The first command in the onboarding block, failing on No such file.** |
+| 1 | `tools/install/templates/FR-TEMPLATE.md` | `install.sh:651` told every new user to `cp ... TASK-TEMPLATE.md`. **The first command in the onboarding block, failing on No such file.** |
 | 1 | `11-feature-request-author-...-chain-sequence.svg` | the reference in `appendices.md` was rewritten to `11-task-author-...`; the file was not. Broke `docs-site build` on every commit — the "WARN docs-site build failed" nobody had diagnosed. |
 
 **A codemod rewrites text, so it moves references and leaves targets.** `git mv` is a
@@ -779,7 +779,7 @@ is bash in sh-mode. Now POSIX `case`, verified with `dash -n`.
 
 ### 14.12 Un-orphaning the last test directory
 
-`tools/cyberos-install/tests/` — 8 files, in no gate. Three were red on Linux before macOS
+`tools/install/tests/` — 8 files, in no gate. Three were red on Linux before macOS
 was even considered, each a stale assert against a doc or tool that moved:
 
 - `test_check_version_sync.sh` t01 pinned "across 6 artifacts"; `dd9070e33` added a 7th and

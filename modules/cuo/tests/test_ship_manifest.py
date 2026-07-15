@@ -138,12 +138,12 @@ class TestShipManifest(unittest.TestCase):
     def test_gitignore_scaffold(self):  # AC 6
         gi = os.path.join(ROOT, "docs", "tasks", ".workflow", ".gitignore")
         self.assertEqual(open(gi).read().strip(), "*.ship.json")
-        # PRE-EXISTING failure, unrelated to the fr->task rename: init.sh was
-        # deleted in bb0f2392e ("1.0.0 CLI surface") and replaced by install.sh.
-        # The test kept opening the dead path and has been red ever since.
-        init_sh = open(os.path.join(ROOT, "tools", "cyberos-install", "install.sh")).read()
-        self.assertIn(".workflow/.gitignore", init_sh)
-        self.assertIn("*.ship.json", init_sh)
+        # The path is assembled from fragments, so a codemod that rewrites the literal
+        # "tools/cyberos-install" cannot see it — this line survived the dir rename and
+        # went red. Same blind spot as the rest of this epoch, one layer down.
+        install_sh = open(os.path.join(ROOT, "tools", "install", "install.sh")).read()
+        self.assertIn(".workflow/.gitignore", install_sh)
+        self.assertIn("*.ship.json", install_sh)
         out = subprocess.run(["git", "check-ignore",
                               "docs/tasks/.workflow/TASK-X.ship.json"],
                              cwd=ROOT, capture_output=True)

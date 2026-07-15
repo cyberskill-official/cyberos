@@ -47,7 +47,7 @@ echo "----"; echo "pass=$PASS fail=$FAIL"; [ "$FAIL" -eq 0 ]
 
 # --- TASK-SKILL-120 doc-wiring asserts (t07-t10 -> its AC 1-4) --------------------------
 t07_command_scaffolds_folders() {
-  c="$repo/tools/cyberos-install/plugin/commands/create-tasks.md"
+  c="$repo/tools/install/plugin/commands/create-tasks.md"
   grep -q "<STEM>/spec.md" "$c" && grep -q "<STEM>/audit.md" "$c" \
     && ! grep -q 'sibling `.audit.md`' "$c" && ok t07 || fail t07 "command doc grammar"
 }
@@ -60,13 +60,13 @@ t08_contracts_updated() {
 t09_ship_and_init_coherent() {
   # Asserts the scaffolder documents folder-per-task, not the flat FR-era layout.
   #
-  # Was `tools/cyberos-install/init.sh` until bb0f2392e ("1.0.0 CLI surface") deleted
+  # Was `tools/install/init.sh` until bb0f2392e ("1.0.0 CLI surface") deleted
   # init.sh and moved the scaffold grammar into install.sh. The assert did not
   # follow, so t09 has been red ever since — `grep` on a missing file returns 1 and
   # short-circuits the && chain into fail. It went unnoticed because this file is
   # wired into NO gate: not .githooks/pre-commit, not local_verify.sh, not CI. A
   # test nobody runs cannot report anything.
-  scaffold="$repo/tools/cyberos-install/install.sh"
+  scaffold="$repo/tools/install/install.sh"
   [ -e "$scaffold" ] || { fail t09 "scaffold source missing: $scaffold"; return; }
   grep -q "<task>/audit.md" "$repo/modules/cuo/chief-technology-officer/workflows/ship-tasks.md" \
     && grep -q "TASK-001-<slug>/spec.md" "$scaffold" \
@@ -74,7 +74,7 @@ t09_ship_and_init_coherent() {
     && ok t09 || fail t09 "ship/install scaffold grammar"
 }
 t10_asset_discipline_stated() {
-  grep -q "assets/<file>" "$repo/tools/cyberos-install/plugin/commands/create-tasks.md" \
+  grep -q "assets/<file>" "$repo/tools/install/plugin/commands/create-tasks.md" \
     && grep -q "own-folder assets only" "$repo/modules/skill/task-author/SKILL.md" \
     && ok t10 || fail t10 "asset rule missing"
 }

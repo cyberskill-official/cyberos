@@ -9,7 +9,7 @@ verdict: pass (architecture-decision-record-audit)
 # ADR-IMP-068-001: Prove payload-version sync by rebuilding in CI, not by committing dist/
 
 ## Context
-VERSION auto-bumps in CI; the payload build is manual and local; dist/ is gitignored. The installed plugin drifted to 1.2.0 while VERSION reached 1.7.0. Five files outside tools/cyberos-install are touched, tripping the ADR condition.
+VERSION auto-bumps in CI; the payload build is manual and local; dist/ is gitignored. The installed plugin drifted to 1.2.0 while VERSION reached 1.7.0. Five files outside tools/install are touched, tripping the ADR condition.
 
 ## Options considered
 1. Commit a stamped dist/ to the repo and diff it in CI - rejected: noisy diffs on every source touch, merge conflicts in generated files, and the operator explicitly ruled dist stays gitignored (2026-07-12 plan approval).

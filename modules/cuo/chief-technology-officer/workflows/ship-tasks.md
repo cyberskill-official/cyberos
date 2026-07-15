@@ -322,9 +322,9 @@ Reference implementation: `modules/cuo/cuo/ship_manifest.py` (doc-driven agents 
 
 ## Distribution sync — rules to channels (v2.5.0, TASK-IMP-074 group C)
 
-The rules this document (and every `modules/skill/` contract) defines are DISTRIBUTED: they ship inside the cyberos-install payload to standalone/self-hosted `.cyberos/` installs, the Claude plugin, the MCP server, and the npx CLI. Rule changes MUST reach every channel through this auto-hook chain, never by hand-copying:
+The rules this document (and every `modules/skill/` contract) defines are DISTRIBUTED: they ship inside the cyberos payload to standalone/self-hosted `.cyberos/` installs, the Claude plugin, the MCP server, and the npx CLI. Rule changes MUST reach every channel through this auto-hook chain, never by hand-copying:
 
-- **Build hook (local):** `.githooks/pre-commit` rebuilds `dist/cyberos` and runs `check-version-sync.sh` whenever `modules/cuo/**`, `modules/skill/**`, or `tools/cyberos-install/**` is staged — a rule edit cannot be committed without a fresh, stamp-verified payload build.
+- **Build hook (local):** `.githooks/pre-commit` rebuilds `dist/cyberos` and runs `check-version-sync.sh` whenever `modules/cuo/**`, `modules/skill/**`, or `tools/install/**` is staged — a rule edit cannot be committed without a fresh, stamp-verified payload build.
 - **Push hook (CI):** `payload-gate.yml` re-proves the same invariant on every push/PR touching those paths.
 - **Release hook:** `release.yml`'s payload job builds and uploads the stamped payload as release assets on every tag — the pull source for `cyberos update` / `version.sh` / plugin + MCP consumers.
 - **Deploy hook:** `deploy.yml`'s docs job also triggers on `modules/cuo/**` and `modules/skill/**`, so the published site reflects rule changes without waiting for a release.
@@ -338,10 +338,10 @@ the one a consumer will actually receive.
 
 Run, in order, and read the output rather than the exit code alone:
 
-1. `bash tools/cyberos-install/build.sh` — the payload a consumer pulls, rebuilt from source.
-2. `bash tools/cyberos-install/check-version-sync.sh dist/cyberos` — VERSION identical across every stamped artefact.
-3. `bash tools/cyberos-install/check-chain-coverage.sh dist/cyberos` — every vendored skill reachable from the chain.
-4. `bash scripts/tests/run_all.sh` — every suite, including the payload suites under `tools/cyberos-install/tests/`.
+1. `bash tools/install/build.sh` — the payload a consumer pulls, rebuilt from source.
+2. `bash tools/install/check-version-sync.sh dist/cyberos` — VERSION identical across every stamped artefact.
+3. `bash tools/install/check-chain-coverage.sh dist/cyberos` — every vendored skill reachable from the chain.
+4. `bash scripts/tests/run_all.sh` — every suite, including the payload suites under `tools/install/tests/`.
 5. **Install into a scratch repo and look at the result**, not at the script that produces it:
    ```
    rm -rf /tmp/verify && mkdir -p /tmp/verify && cd /tmp/verify && git init -q .
