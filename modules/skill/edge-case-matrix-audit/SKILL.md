@@ -15,7 +15,7 @@ allowed_memory_scopes:
   read:
     - project:*
   write:
-    - project:fr/{task_id}/edge-case-matrix.audit
+    - project:task/{task_id}/edge-case-matrix.audit
 
 audit:
   row_kind: edge_case_matrix_audited

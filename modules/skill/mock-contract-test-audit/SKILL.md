@@ -15,7 +15,7 @@ allowed_memory_scopes:
   read:
     - project:*
   write:
-    - project:fr/{task_id}/mock-contract-test.audit
+    - project:task/{task_id}/mock-contract-test.audit
 
 audit:
   row_kind: mock_contract_test_audited

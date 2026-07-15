@@ -1,17 +1,37 @@
 ---
+id: TASK-<MODULE>-<NNN>
 title: ""
+template: task@1  # managed by @cyberskill/templates — do not edit
+type: feature | improvement | chore   # FM-108. Pick ONE and delete the others.
+                                      # improvement.md and chore.md are pointers here,
+                                      # so this skeleton serves all three — set `type`
+                                      # to the one you were routed for.
+module: <module>
 author: "@your-handle"
 department: product
 status: draft
-priority: p2
-created_at: "2026-04-28"
-ai_authorship: none
-feature_type: user_facing
-eu_ai_act_risk_class: not_ai
+priority: p0 | p1 | p2 | p3           # NOT MoSCoW. MUST/SHOULD/COULD was retired 2026-07-14.
+created_at: <ISO 8601 with timezone>
+ai_authorship: none | assisted | co_authored | generated_then_reviewed
+eu_ai_act_risk_class: not_ai | minimal | limited | high
 target_release: ""
-client_visible: false
-template: task@1  # managed by @cyberskill/templates — do not edit
+client_visible: true | false
+depends_on: []
 ---
+
+<!-- This skeleton carried the PRE-migration schema until 2026-07-15: `feature_type:
+     user_facing` (retired by FM-108 — three overlapping axes collapsed to one), no
+     `type:` at all, no `id:`, no `module:`. A task authored from it failed FM-108 —
+     `type` required, error severity — the moment it was written.
+
+     It survived because nothing executes a template. It is prompt text an LLM renders,
+     so no test imports it and no gate parses it. The rubric and this file were written
+     in the same change and never checked against each other; `bug.md` is correct only
+     because it was authored fresh afterwards.
+
+     `scripts/tests/test_template_schema.sh` now checks every template in this directory
+     against RUBRIC.md's FM family, so the two cannot drift apart again silently. -->
+
 
 # Task
 

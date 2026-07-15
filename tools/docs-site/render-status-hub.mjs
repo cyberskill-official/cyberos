@@ -235,7 +235,7 @@ const inlineHtml = md => renderMarkdown(md).replace(/^<p>([\s\S]*)<\/p>\s*$/, '$
 // linkify task ids inside already-rendered HTML without touching tags
 const linkify = html => html.split(/(<[^>]+>)/).map(part => part.startsWith('<') ? part
   : part.replace(TASKID, id => byId.has(id)
-    ? `<button class="chip ${bucketOf(byId.get(id).s)}" data-fr="${esc(id)}">${esc(id)}</button>`
+    ? `<button class="chip ${bucketOf(byId.get(id).s)}" data-task="${esc(id)}">${esc(id)}</button>`
     : id)).join('');
 
 const marks = [];
@@ -356,7 +356,7 @@ const nowHtml = moving.length ? `
 <section class="now">
   <h2>Now shipping (${moving.length})</h2>
   <div class="tasks">${moving.map(f =>
-    `<button class="chip active" data-fr="${esc(f.i)}" title="${esc(`${f.i} — ${f.t} [${f.s}]`)}">${esc(f.i.replace(/^TASK-/, ''))}</button>`
+    `<button class="chip active" data-task="${esc(f.i)}" title="${esc(`${f.i} — ${f.t} [${f.s}]`)}">${esc(f.i.replace(/^TASK-/, ''))}</button>`
   ).join('')}</div>
 </section>` : '';
 

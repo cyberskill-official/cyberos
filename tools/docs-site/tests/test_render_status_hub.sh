@@ -70,7 +70,7 @@ t06_task_page_links() {                                                  # AC 6 
 t07_changelog_binds_frs() {                                            # the changelog references tasks, not prose
   h="$TMP/a/out/reference/status.html"
   grep -q '"cited":\["TASK-AA-001"\]' "$h" \
-    && grep -q 'data-fr=\\"TASK-AA-001\\"' "$h" \
+    && grep -q 'data-task=\\"TASK-AA-001\\"' "$h" \
     && grep -q '"bound":\["TASK-AA-001"\]' "$h" \
     && ok t07 || fail t07 "release -> task binding missing"
 }

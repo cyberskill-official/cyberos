@@ -15,7 +15,7 @@ allowed_memory_scopes:
   read:
     - project:*
   write:
-    - project:fr/{task_id}/coverage-gate.audit
+    - project:task/{task_id}/coverage-gate.audit
 
 audit:
   row_kind: coverage_gate_audited

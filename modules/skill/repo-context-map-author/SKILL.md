@@ -17,14 +17,14 @@ allowed_memory_scopes:
     - project:*
     - module:*
   write:
-    - project:fr/{task_id}/repo-context-map
+    - project:task/{task_id}/repo-context-map
 audit:
   row_kind: repo_context_map_authored
   required_fields: [task_id, files_in_immediate_domain, files_outside_immediate_domain, modules_touched, blast_radius_score, existing_patterns_count]
 
 # ── Inputs / outputs ─────────────────────────────────────────────────
 inputs:
-  - { name: fr,        format: task@1, required: true }
+  - { name: task,        format: task@1, required: true }
   - { name: repo_root, format: absolute path,     required: true }
 outputs:
   - { name: context_map, format: repo-context-map@1 }

@@ -15,7 +15,7 @@ allowed_memory_scopes:
   read:
     - project:*
   write:
-    - project:fr/{task_id}/observability-injection.audit
+    - project:task/{task_id}/observability-injection.audit
 
 audit:
   row_kind: observability_injection_audited

@@ -17,14 +17,14 @@ allowed_memory_scopes:
     - project:*
     - module:*
   write:
-    - project:fr/{task_id}/observability-injection
+    - project:task/{task_id}/observability-injection
 audit:
   row_kind: observability_injection_authored
   required_fields: [task_id, log_points, trace_spans, error_counters, branch_coverage_pct]
 
 # ── Inputs / outputs ─────────────────────────────────────────────────
 inputs:
-  - { name: fr,        format: task@1,       required: true }
+  - { name: task,        format: task@1,       required: true }
   - { name: impl_plan, format: implementation-plan@1,   required: true }
 outputs:
   - { name: obs_injection, format: observability-injection@1 }

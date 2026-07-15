@@ -18,14 +18,14 @@ allowed_memory_scopes:
     - module:*
     - memories:decisions
   write:
-    - project:fr/{task_id}/architectural-spike
+    - project:task/{task_id}/architectural-spike
 audit:
   row_kind: architectural_spike_authored
   required_fields: [task_id, spike_id, question, options_probed, recommendation, confidence, timebox_hours, actual_hours, halted]
 
 # ── Inputs / outputs ─────────────────────────────────────────────────
 inputs:
-  - { name: fr,               format: task@1,  required: true }
+  - { name: task,               format: task@1,  required: true }
   - { name: repo_context_map, format: repo-context-map@1, required: true }
   - { name: question,         format: string,             required: true }
   - { name: timebox_hours,    format: integer,            required: true }

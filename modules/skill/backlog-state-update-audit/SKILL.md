@@ -15,7 +15,7 @@ allowed_memory_scopes:
   read:
     - project:*
   write:
-    - project:fr/{task_id}/backlog-state-update.audit
+    - project:task/{task_id}/backlog-state-update.audit
     - project:workflow/{run_id}/complete
 
 audit:

@@ -17,7 +17,7 @@ allowed_memory_scopes:
     - project:*
     - module:*
   write:
-    - project:fr/{task_id}/architectural-spike-audit
+    - project:task/{task_id}/architectural-spike-audit
 audit:
   row_kind: architectural_spike_audited
   required_fields: [spike_id, task_id, verdict, score, findings]

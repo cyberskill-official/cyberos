@@ -17,14 +17,14 @@ allowed_memory_scopes:
     - project:*
     - module:*
   write:
-    - project:fr/{task_id}/debug-trace
+    - project:task/{task_id}/debug-trace
 audit:
   row_kind: debug_cycle_authored
   required_fields: [task_id, attempts, failure_vectors_seen, consecutive_failures, circuit_breaker_tripped]
 
 # ── Inputs / outputs ─────────────────────────────────────────────────
 inputs:
-  - { name: fr,               format: task@1, required: true }
+  - { name: task,               format: task@1, required: true }
   - { name: coverage_report,  format: coverage-gate@1,   required: true }
 outputs:
   - { name: debug_trace, format: debug-trace@1 }

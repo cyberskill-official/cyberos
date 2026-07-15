@@ -15,7 +15,7 @@ allowed_memory_scopes:
   read:
     - project:*
   write:
-    - project:fr/{task_id}/repo-context-map.audit
+    - project:task/{task_id}/repo-context-map.audit
 
 audit:
   row_kind: repo_context_map_audited

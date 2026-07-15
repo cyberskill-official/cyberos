@@ -15,7 +15,7 @@ allowed_memory_scopes:
   read:
     - project:*
   write:
-    - project:fr/{task_id}/debug-trace.audit
+    - project:task/{task_id}/debug-trace.audit
 
 audit:
   row_kind: debug_cycle_audited

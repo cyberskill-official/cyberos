@@ -35,7 +35,7 @@
   var FFIELD = { m: "m", s: "s", p: "p", c: "c", ph: "ph" };
   var FLABEL = { m: "module", s: "status", p: "priority", c: "class", ph: "phase", b: "group" };
 
-  var S = { lens: "board", q: "", f: {}, group: "m", sort: "i", dir: 1, fr: null };
+  var S = { lens: "board", q: "", f: {}, group: "m", sort: "i", dir: 1, task: null };
 
   /* ---- hash state ------------------------------------------------------- */
   function readHash() {
@@ -44,7 +44,7 @@
     var parts = h.split("?");
     var path = parts[0];
     var qs = parts[1] || "";
-    if (path.indexOf("fr/") === 0) S.fr = path.slice(3);
+    if (path.indexOf("task/") === 0) S.task = path.slice(5);
     else if (LENSES[path]) S.lens = path;
     else if (LEGACY[path]) S.lens = LEGACY[path];
     qs.split("&").forEach(function (kv) {
@@ -62,7 +62,7 @@
     if (S.q) q.push("q=" + encodeURIComponent(S.q));
     FKEYS.forEach(function (k) { if (S.f[k]) q.push(k + "=" + encodeURIComponent(S.f[k])); });
     if (S.lens === "board" && S.group !== "m") q.push("g=" + S.group);
-    var h = "#" + (S.fr ? "fr/" + S.fr : S.lens) + (q.length ? "?" + q.join("&") : "");
+    var h = "#" + (S.task ? "task/" + S.task : S.lens) + (q.length ? "?" + q.join("&") : "");
     if (h === location.hash) return;
     if (replace && history.replaceState) history.replaceState(null, "", h);
     else if (history.pushState) history.pushState(null, "", h);
@@ -92,7 +92,7 @@
   function chip(f, ghost) {
     if (!f) return "";
     return '<button class="chip ' + bucket(f.s) + (ghost ? " ghost" : "") +
-      '" data-fr="' + esc(f.i) + '" title="' + esc(f.i + " — " + f.t + " [" + f.s + "]") +
+      '" data-task="' + esc(f.i) + '" title="' + esc(f.i + " — " + f.t + " [" + f.s + "]") +
       '">' + esc(f.i.replace(/^TASK-/, "")) + "</button>";
   }
   function chipId(id, ghost) {
@@ -158,7 +158,7 @@
       return '<th data-sort="' + c.k + '" aria-sort="' + s + '" scope="col">' + c.h + "</th>";
     }).join("");
     var body = sorted.map(function (f) {
-      return '<tr data-fr="' + esc(f.i) + '" tabindex="0">' +
+      return '<tr data-task="' + esc(f.i) + '" tabindex="0">' +
         '<td class="code">' + esc(f.i) + "</td>" +
         '<td class="t">' + esc(f.t) + "</td>" +
         "<td>" + esc(f.m) + "</td><td>" + esc(f.c || "") + "</td>" +
@@ -324,8 +324,8 @@
   function openFR(id, push) {
     var f = BY[id];
     if (!f) return;
-    if (!S.fr) lastFocus = document.activeElement;
-    S.fr = id;
+    if (!S.task) lastFocus = document.activeElement;
+    S.task = id;
     drawer.innerHTML = drawerHtml(f);
     drawer.hidden = false;
     scrim.hidden = false;
@@ -335,8 +335,8 @@
     if (push !== false) writeHash();
   }
   function closeFR() {
-    if (!S.fr) return;
-    S.fr = null;
+    if (!S.task) return;
+    S.task = null;
     dwTab = "overview";
     drawer.hidden = true;
     scrim.hidden = true;
@@ -399,12 +399,12 @@
     if (t === scrim || t.closest(".dw-x")) { closeFR(); return; }
 
     var dt = t.closest("[data-dwtab]");
-    if (dt && S.fr) {
+    if (dt && S.task) {
       dwTab = dt.dataset.dwtab;
       Array.prototype.forEach.call(drawer.querySelectorAll(".dw-tab"), function (b) {
         b.setAttribute("aria-selected", String(b.dataset.dwtab === dwTab));
       });
-      paintDrawer(BY[S.fr]);
+      paintDrawer(BY[S.task]);
       return;
     }
 
@@ -416,7 +416,7 @@
       return;
     }
 
-    var fr = t.closest("[data-fr]");
+    var task = t.closest("[data-task]");
     if (fr) { openFR(fr.dataset.fr); return; }
 
     var ln = t.closest(".ln");
@@ -449,7 +449,7 @@
   });
 
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && S.fr) { closeFR(); return; }
+    if (e.key === "Escape" && S.task) { closeFR(); return; }
     if (e.key === "/" && document.activeElement.tagName !== "INPUT") {
       e.preventDefault();
       document.getElementById("q").focus();
@@ -483,11 +483,11 @@
   });
 
   window.addEventListener("hashchange", function () {
-    var was = S.fr;
-    S.fr = null; S.q = ""; S.f = {};
+    var was = S.task;
+    S.task = null; S.q = ""; S.f = {};
     readHash();
     syncControls();
-    if (S.fr) { openFR(S.fr, false); return; }
+    if (S.task) { openFR(S.task, false); return; }
     if (was) closeFR();
     paint();
   });
@@ -501,5 +501,5 @@
   readHash();
   syncControls();
   paint();
-  if (S.fr) openFR(S.fr, false);
+  if (S.task) openFR(S.task, false);
 })();

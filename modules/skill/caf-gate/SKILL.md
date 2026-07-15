@@ -27,13 +27,13 @@ allowed_memory_scopes:
     - project:*
     - module:*
   write:
-    - project:fr/{task_id}/caf-gate
+    - project:task/{task_id}/caf-gate
 audit:
   row_kind: caf_gate_result
   required_fields: [task_id, module, outcome, target_health, findings_high, harness_version]
 
 inputs:
-  - { name: fr,            format: task@1, required: true }
+  - { name: task,            format: task@1, required: true }
   - { name: module,        format: string,            required: true }
   - { name: audit_profile, format: path,              required: true }
 outputs:

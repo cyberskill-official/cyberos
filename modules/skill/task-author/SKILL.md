@@ -272,11 +272,24 @@ Pick the next artefact by topological order (`depends_on` resolved → leftmost 
 
   A `bug` that turns out to need net-new behaviour is **re-typed, not renumbered** — the id is stable, `type` is a field. Record the retype and its reason in the audit row; the rubric that applies changes with it.
 
-- **W2 GENERATE** — dispatch on `type` (FM-108) to load the body skeleton. **Never hardcode a template path** — a new `type` must cost one file, not a code change:
+- **W2 GENERATE** — dispatch on `type` (FM-108) to load the body skeleton. **Never hardcode a template path** — a new `type` must cost one file, not a code change.
+
+  Resolve in this order, first hit wins — the two paths are the same templates in the two
+  places this skill runs:
 
   ```
-  cyberos/skill/contracts/task/templates/{type}.md
+  modules/skill/contracts/task/templates/{type}.md   # inside the cyberos repo
+  .cyberos/cuo/templates/{type}.md                   # inside an INSTALLED repo (vendored)
   ```
+
+  Only the first path was documented until 2026-07-15, and the installed tree has no
+  `skill/` or `contracts/` root — so on every installed repo this resolved to nothing and
+  W2 HALTed on the first task authored. The payload did not carry the templates at all
+  (`build.sh` shipped `contracts/task/STATUS-REFERENCE.md` and nothing else from that
+  directory). Both are fixed; `test_template_schema.sh` t07 gates the payload side.
+
+  The vendored copy flattens into `cuo/templates/`, matching `STATUS-REFERENCE.md` — which
+  also lives under `contracts/task/` in the repo and installs to `.cyberos/cuo/`.
 
   | `type` | template | extra rule family |
   |---|---|---|

@@ -31,6 +31,24 @@ cp "$repo/modules/skill/contracts/task/STATUS-REFERENCE.md"              "$out/c
 cp "$here/gates/run-gates.sh"                                                        "$out/cuo/gates/run-gates.sh"
 cp -R "$here/templates/." "$out/cuo/templates/"
 
+# Per-type body templates. task-author dispatches on templates/{type}.md and HALTs when
+# one is missing (task-author/SKILL.md §4 W2) — deliberately, so a missing template is
+# loud rather than silently resolved to `feature`.
+#
+# These were NOT shipped until 2026-07-15. The type discriminator added them under
+# modules/skill/contracts/task/templates/ and wired the skill to dispatch on them, but
+# never added them to the payload — so every installed repo vendored a task-author that
+# HALTed at W2 on its first task. Verified on a clean install: `find .cyberos -name
+# feature.md` returned nothing.
+#
+# They flatten into cuo/templates/ next to TASK-TEMPLATE.md, matching how
+# STATUS-REFERENCE.md (also from contracts/task/) flattens into cuo/ above — the
+# installed tree has no skill/ or contracts/ root. No name collision: this dir holds
+# BACKLOG.md + TASK-TEMPLATE.md.
+#
+# Gated by scripts/tests/test_template_schema.sh t07.
+cp "$repo/modules/skill/contracts/task/templates/"*.md "$out/cuo/templates/"
+
 # The vendored skill set - one name per line with its SDP stage, in lifecycle order
 # (TASK-CUO-209: reviewable data, not a drifting string; TASK-SKILL-116's chain-coverage
 # check runs at the end of this build and fails on any under-coverage).

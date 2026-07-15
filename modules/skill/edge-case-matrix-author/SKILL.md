@@ -17,14 +17,14 @@ allowed_memory_scopes:
     - project:*
     - module:*
   write:
-    - project:fr/{task_id}/edge-case-matrix
+    - project:task/{task_id}/edge-case-matrix
 audit:
   row_kind: edge_case_matrix_authored
   required_fields: [task_id, total_rows, categories_covered, security_class_count, planned_test_paths]
 
 # ── Inputs / outputs ─────────────────────────────────────────────────
 inputs:
-  - { name: fr,           format: task@1,            required: true }
+  - { name: task,           format: task@1,            required: true }
   - { name: context_map,  format: repo-context-map@1,           required: false }
 outputs:
   - { name: matrix,       format: edge-case-matrix@1 }

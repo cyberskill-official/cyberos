@@ -16,13 +16,13 @@ allowed_memory_scopes:
     - project:*
     - module:*
   write:
-    - project:fr/{task_id}/coverage-gate
+    - project:task/{task_id}/coverage-gate
 audit:
   row_kind: coverage_gate_authored
   required_fields: [task_id, files_touched, files_below_90pct, total_tests_run, tests_failed, ecm_rows_uncovered]
 
 inputs:
-  - { name: fr,                 format: task@1,            required: true }
+  - { name: task,                 format: task@1,            required: true }
   - { name: edge_case_matrix,   format: edge-case-matrix@1,           required: true }
 outputs:
   - { name: report, format: coverage-gate@1 }

@@ -16,7 +16,7 @@ allowed_memory_scopes:
   read:
     - project:*
   write:
-    - project:fr/{task_id}/backlog-state-update
+    - project:task/{task_id}/backlog-state-update
     - project:backlog/{task_id}
 audit:
   row_kind: backlog_state_update_authored
@@ -24,7 +24,7 @@ audit:
 
 # ── Inputs / outputs ─────────────────────────────────────────────────
 inputs:
-  - { name: fr,      format: task@1,                 required: true }
+  - { name: task,      format: task@1,                 required: true }
   - { name: outcome, format: workflow-step-outcome-bundle@1,    required: true }
 outputs:
   - { name: backlog_mutation, format: backlog-state-update@2 }
