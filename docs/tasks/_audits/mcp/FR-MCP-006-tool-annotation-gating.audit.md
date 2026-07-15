@@ -19,7 +19,7 @@ The spec lands MCP tool-annotation gating at the gateway entry per MCP 2025-11-2
 
 ### ISS-001 — Fail-open vs fail-closed on audit-row insert failure
 
-§10 row "Audit log row insert fails post-decision" said "decision proceeds (FAIL-OPEN on audit)". This is a deliberate choice but the rationale needed to be explicit. Resolved: §10 row now spells out the choice — FAIL-OPEN preferred because alternative (FAIL-CLOSED) denies all tool calls during Postgres incident, which is worse blast radius than missing one audit row. Sev-2 alert ensures the missed audit is forensically traceable via OBS even if memory chain row is absent. task-audit skill §8.2d-style absence-claim applies — CI lint enforces the audit emit path.
+§10 row "Audit log row insert fails post-decision" said "decision proceeds (FAIL-OPEN on audit)". This is a deliberate choice but the rationale needed to be explicit. Resolved: §10 row now spells out the choice — FAIL-OPEN preferred because alternative (FAIL-CLOSED) denies all tool calls during Postgres incident, which is worse blast radius than missing one audit row. Sev-2 alert ensures the missed audit is forensically traceable via OBS even if memory chain row is absent. Task-audit skill §8.2d-style absence-claim applies — CI lint enforces the audit emit path.
 
 ### ISS-002 — Bypass-scope provenance + revocation
 
@@ -29,9 +29,9 @@ The spec lands MCP tool-annotation gating at the gateway entry per MCP 2025-11-2
 
 A delete-by-id call is idempotent (delete twice = same outcome) AND destructive. §1 #20 says "idempotent hint surfaces in audit but doesn't relax gating" — good — but the resolver in §6.1 didn't explicitly handle this case. Resolved: §11.6 + §11.18 affirm idempotent is INFORMATIONAL per spec; resolver in §6.1 only branches on destructive + read_only + open_world. AC #20 specifically tests this case.
 
-### ISS-004 — Cross-FR contract with TASK-MCP-007 Tasks primitive
+### ISS-004 — Cross-task contract with TASK-MCP-007 Tasks primitive
 
-§1 #22 says destructive long-running tasks confirm at start; status polls don't re-confirm. But TASK-MCP-007 hasn't shipped yet. If TASK-MCP-007 ships with a different gating model, this FR's claim is broken. Resolved: §22 wording marks this as a cross-FR contract obligation — when TASK-MCP-007 ships, its spec must reference this FR's §1 #22 + comply. Added §22 as a cross-FR primitive callable by TASK-MCP-007.
+§1 #22 says destructive long-running tasks confirm at start; status polls don't re-confirm. But TASK-MCP-007 hasn't shipped yet. If TASK-MCP-007 ships with a different gating model, this task's claim is broken. Resolved: §22 wording marks this as a cross-task contract obligation — when TASK-MCP-007 ships, its spec must reference this task's §1 #22 + comply. Added §22 as a cross-task primitive callable by TASK-MCP-007.
 
 ### ISS-005 — Policy YAML reload race
 
@@ -43,9 +43,9 @@ A delete-by-id call is idempotent (delete twice = same outcome) AND destructive.
 
 ## §3 — Resolution
 
-All 6 mechanical concerns addressed. Fail-open audit semantic justified; bypass-scope hardening clear; idempotent hint semantics explicit; cross-FR contract with TASK-MCP-007 declared; policy reload race-free via Arc-swap; platform-default fallback explicit.
+All 6 mechanical concerns addressed. Fail-open audit semantic justified; bypass-scope hardening clear; idempotent hint semantics explicit; cross-task contract with TASK-MCP-007 declared; policy reload race-free via Arc-swap; platform-default fallback explicit.
 
-The 1,070-line length is justified by 3 migrations + 4 endpoints + 5 memory kinds + 6 enum values + 20 ACs + drift detection sub-system. Density matches peer FRs.
+The 1,070-line length is justified by 3 migrations + 4 endpoints + 5 memory kinds + 6 enum values + 20 ACs + drift detection sub-system. Density matches peer tasks.
 
 **Score = 10/10.**
 

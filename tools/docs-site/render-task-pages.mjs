@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// tools/docs-site/render-fr-pages.mjs - TASK-DOCS-005.
+// tools/docs-site/render-task-pages.mjs - TASK-DOCS-005.
 // Renders every docs/tasks/<module>/<STEM>/spec.md (+ audit.md, + assets/) into a
 // self-contained CDS page via modules/templates/html/deliverable.html (template@1).
 // Node stdlib only. Deterministic. Fails loud on unreadable spec or missing referenced asset.
-// Usage: node render-fr-pages.mjs [repoRoot] [outDir]
+// Usage: node render-task-pages.mjs [repoRoot] [outDir]
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync, statSync, copyFileSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -12,7 +12,7 @@ import { renderMarkdown, frontmatter } from './md.mjs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(process.argv[2] || resolve(__dirname, '..', '..'));
 const OUT = resolve(process.argv[3] || join(ROOT, 'dist', 'website'));
-const FR_ROOT = join(ROOT, 'docs', 'tasks');
+const TASK_ROOT = join(ROOT, 'docs', 'tasks');
 const SHELL = readFileSync(join(ROOT, 'modules', 'templates', 'html', 'deliverable.html'), 'utf-8');
 const TOKENS = readFileSync(join(ROOT, 'modules', 'templates', 'cds', 'tokens.css'), 'utf-8');
 
@@ -30,17 +30,17 @@ function listArr(fmText, key) {
   return m ? m[1].split(',').map(s => s.trim().replace(/^["']|["']$/g, '')).filter(Boolean) : [];
 }
 
-// index all FR folders (for cross-links)
-const index = new Map(); // FR-ID -> {module, stem}
+// index all task folders (for cross-links)
+const index = new Map(); // TASK-ID -> {module, stem}
 const folders = [];
-for (const mod of readdirSync(FR_ROOT, { withFileTypes: true }).sort((a,b)=>a.name.localeCompare(b.name))) {
+for (const mod of readdirSync(TASK_ROOT, { withFileTypes: true }).sort((a,b)=>a.name.localeCompare(b.name))) {
   if (!mod.isDirectory() || mod.name.startsWith('_') || mod.name.startsWith('.')) continue;
-  for (const d of readdirSync(join(FR_ROOT, mod.name), { withFileTypes: true }).sort((a,b)=>a.name.localeCompare(b.name))) {
-    if (!d.isDirectory() || !d.name.startsWith('FR-')) continue;
-    const spec = join(FR_ROOT, mod.name, d.name, 'spec.md');
+  for (const d of readdirSync(join(TASK_ROOT, mod.name), { withFileTypes: true }).sort((a,b)=>a.name.localeCompare(b.name))) {
+    if (!d.isDirectory() || !d.name.startsWith('TASK-')) continue;
+    const spec = join(TASK_ROOT, mod.name, d.name, 'spec.md');
     if (!existsSync(spec)) continue;
     folders.push({ module: mod.name, stem: d.name, spec });
-    const id = (d.name.match(/^(FR-[A-Z0-9]+-\d+)/) || [null, d.name])[1];
+    const id = (d.name.match(/^(TASK-[A-Z0-9]+-\d+)/) || [null, d.name])[1];
     index.set(id, { module: mod.name, stem: d.name });
   }
 }
@@ -82,7 +82,7 @@ for (const { module, stem, spec } of folders) {
     footer: `Generated from docs/tasks/${module}/${stem}/spec.md — markdown is the source of truth (TASK-DOCS-002/005).`,
   });
 
-  const outDir = join(OUT, 'frs', module, stem);
+  const outDir = join(OUT, 'tasks', module, stem);
   mkdirSync(outDir, { recursive: true });
   writeFileSync(join(outDir, 'index.html'), page);
   pages++;

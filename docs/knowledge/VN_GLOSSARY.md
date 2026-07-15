@@ -1,8 +1,8 @@
 # Vietnamese ↔ English Glossary
 
 **Created:** 2026-05-16
-**Scope:** FR-* specs under `docs/tasks/`
-**Policy:** Spec bodies use English-only terminology. Vietnamese names appear here when the underlying concept is VN-regulatory (no clean English equivalent). FRs reference glossary entries via `VN-GLO:<key>`.
+**Scope:** task-* specs under `docs/tasks/`
+**Policy:** Spec bodies use English-only terminology. Vietnamese names appear here when the underlying concept is VN-regulatory (no clean English equivalent). tasks reference glossary entries via `VN-GLO:<key>`.
 
 ---
 
@@ -86,9 +86,9 @@
 
 ---
 
-## Usage in FRs
+## Usage in tasks
 
-When an FR needs to reference a VN-specific concept, it MUST:
+When a task needs to reference a VN-specific concept, it MUST:
 
 1. Use the **English equivalent** in spec body prose.
 2. On first use, include a parenthetical `(VN-GLO:<key>)` citing this glossary.
@@ -100,7 +100,7 @@ When an FR needs to reference a VN-specific concept, it MUST:
 **Example (incorrect — inline VN term):**
 > The handler MUST validate the MST (mã số thuế) format ...
 
-The only exception is the FR title + frontmatter `title:` field, which MAY use the VN term if it's commonly used by stakeholders (e.g. `"Hóa đơn auto-emit"`). The first body paragraph MUST then re-introduce the term with the glossary reference.
+The only exception is the task title + frontmatter `title:` field, which MAY use the VN term if it's commonly used by stakeholders (e.g. `"Hóa đơn auto-emit"`). The first body paragraph MUST then re-introduce the term with the glossary reference.
 
 ---
 

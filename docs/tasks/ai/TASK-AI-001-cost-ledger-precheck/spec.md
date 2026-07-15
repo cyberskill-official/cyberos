@@ -2,8 +2,16 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future fr-catalog renderer) ─────
 id: TASK-AI-001
 title: "AI Gateway cost-ledger pre-call check"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AI
-priority: MUST
+priority: p0
 status: done
 accepted_at: 2026-05-15
 accepted_by: Stephen Cheng
@@ -89,11 +97,11 @@ This is the cost-of-everything gate per the AI Gateway page §0 Role 1 and §2.5
 
 **The naive design** would compute cost post-hoc — let the provider charge, then check budget. That works until the first tenant blows past their cap mid-month and discovers it on the invoice. The trust loss is permanent.
 
-**The two-phase design** (precheck + post-reconcile, this FR + TASK-AI-002) borrows from database transaction theory: estimate the cost first, hold it, then reconcile. Holds expire after 60s if the post-check never arrives — defensive. The pre-call cost overhead is ~5ms of Postgres I/O.
+**The two-phase design** (precheck + post-reconcile, this task + TASK-AI-002) borrows from database transaction theory: estimate the cost first, hold it, then reconcile. Holds expire after 60s if the post-check never arrives — defensive. The pre-call cost overhead is ~5ms of Postgres I/O.
 
 **The hard-stop default at 1.0×** (not 1.1× or "soft warn") is deliberate. Soft caps in finance always become hard losses when the tenant disputes the overage. The override path exists (`policy.emergency_override: true`) but requires CFO sign-off recorded in memory — *not* an automatic fallback.
 
-**Why this is TASK-AI-001 specifically** (not TASK-AUTH-001): per research review §2.4, AI Gateway ships at P0 · slice 1 *before* AUTH. The X-Tenant header (HMAC-signed by a deployment secret) substitutes for JWT auth in slice 1; once AUTH ships at P0 · slice 2, the tenant_id source switches to the AUTH JWT claim per AI Gateway page §2.5. This FR therefore uses the X-Tenant header path; TASK-AI-006 (slice 2) replaces it with JWT extraction.
+**Why this is TASK-AI-001 specifically** (not TASK-AUTH-001): per research review §2.4, AI Gateway ships at P0 · slice 1 *before* AUTH. The X-Tenant header (HMAC-signed by a deployment secret) substitutes for JWT auth in slice 1; once AUTH ships at P0 · slice 2, the tenant_id source switches to the AUTH JWT claim per AI Gateway page §2.5. This task therefore uses the X-Tenant header path; TASK-AI-006 (slice 2) replaces it with JWT extraction.
 
 ---
 
@@ -169,7 +177,7 @@ CREATE INDEX cost_ledger_period_idx ON cost_ledger (tenant_id, period);
 CREATE INDEX cost_ledger_hold_expiry_idx ON cost_ledger_hold (expires_at) WHERE state = 'held';
 ```
 
-### Tenant policy YAML shape (TASK-AI-005 builds the loader; this FR consumes it)
+### Tenant policy YAML shape (TASK-AI-005 builds the loader; this task consumes it)
 
 ```yaml
 # config/tenants/<tenant_id>.yaml (slice-1 location; moves to TEN module at P2)
@@ -192,7 +200,7 @@ ai_policy:
 3. **Exact-cap edge** — Tenant with `spent_usd: 95`, estimated cost $5.00, MUST return `Allow` (boundary inclusive: spent + estimated == cap is permitted; only strictly-over refused).
 4. **Idempotent retry** — Calling `precheck` with the same `idempotency_key` twice MUST return the existing hold (same `hold_id`), MUST NOT insert a second row.
 5. **Audit row emitted** — Every `Allow` MUST be preceded by a memory audit row at `memories/decisions/ai-invocations/<ts_ns>_<tenant>_<idempotency_key>.md` with kind `ai.precheck`, `extra.tenant_id`, `extra.estimated_usd`, `extra.resolved_provider`. If memory Writer fails, the function MUST return `Err(MemoryWriterFailed)` and MUST NOT return `Allow`.
-6. **Hold TTL** — A `cost_ledger_hold` row with `expires_at < NOW()` and `state='held'` MUST be transitioned to `state='expired'` by the cleanup job within 60s of expiry (cleanup job is TASK-AI-004; this FR only writes the row correctly).
+6. **Hold TTL** — A `cost_ledger_hold` row with `expires_at < NOW()` and `state='held'` MUST be transitioned to `state='expired'` by the cleanup job within 60s of expiry (cleanup job is TASK-AI-004; this task only writes the row correctly).
 7. **Provider cost-table missing** — If `policy.primary_provider` resolves to a model alias with no entry in the cost-table fixture, `precheck()` MUST return `Refuse { reason: ProviderUnavailable }`; MUST emit a `Provider-Unavailable` warn-level log to OBS.
 8. **Latency budget** — On a warm Postgres pool, `precheck()` MUST complete within 50ms p95 over a 1000-call integration test. Measured via `tokio::time::Instant`.
 
@@ -348,11 +356,11 @@ fn validate_idempotency_key(key: &str) -> Result<(), String> {
 
 ## §7 — Dependencies
 
-**Code dependencies (must exist before this FR can build):**
+**Code dependencies (must exist before this task can build):**
 - memory module — shipped. The `cyberos.core.writer.Writer` subprocess CLI MUST be available at `cyberos memory put`. Used in step §6 of the skeleton.
-- `cyberos-ai-gateway` crate skeleton — created by TASK-AI-000 (if needed) or as part of this FR's first commit. Cargo workspace member.
+- `cyberos-ai-gateway` crate skeleton — created by TASK-AI-000 (if needed) or as part of this task's first commit. Cargo workspace member.
 
-**Concept dependencies (must be agreed before this FR can be audited):**
+**Concept dependencies (must be agreed before this task can be audited):**
 - Model-alias resolution rules (TASK-AI-005 will formalise; for slice 1 use a hardcoded enum).
 - Cost-table source (TASK-AI-007; for slice 1 hardcode 3 providers' rates as a const HashMap).
 
@@ -471,10 +479,10 @@ All resolved 2026-05-15. Promoted to §1 normative clauses:
 
 ## §11 — Notes (informational, no normative force)
 
-- Slice 1 of AI Gateway is 5 FRs (TASK-AI-001..005). This one is the gate; TASK-AI-002 is the post-reconcile; TASK-AI-003 is the memory audit-bridge; TASK-AI-004 is the hold-expiry cleanup job; TASK-AI-005 is the tenant-policy loader.
-- After this FR ships, every other module (CUO, KB, CHAT, …) inherits the cost gate automatically by calling `ai_gateway::chat_complete()` instead of a raw provider SDK. The "no SDK in any other module" rule (AI Gateway page §0) is enforced architecturally, not by lint.
+- Slice 1 of AI Gateway is 5 tasks (TASK-AI-001..005). This one is the gate; TASK-AI-002 is the post-reconcile; TASK-AI-003 is the memory audit-bridge; TASK-AI-004 is the hold-expiry cleanup job; TASK-AI-005 is the tenant-policy loader.
+- After this task ships, every other module (CUO, KB, CHAT, …) inherits the cost gate automatically by calling `ai_gateway::chat_complete()` instead of a raw provider SDK. The "no SDK in any other module" rule (AI Gateway page §0) is enforced architecturally, not by lint.
 - The 50ms p95 latency budget is tight but achievable: Postgres read (~5ms) + Postgres write (~10ms) + memory Writer subprocess (~30ms). The subprocess is the bottleneck — see §9 Q4.
-- This FR's verification test fixture should land in `services/ai-gateway/tests/fixtures/cost_ledger/` and become a reusable property-test seed for TASK-AI-002 + TASK-AI-004.
+- This task's verification test fixture should land in `services/ai-gateway/tests/fixtures/cost_ledger/` and become a reusable property-test seed for TASK-AI-002 + TASK-AI-004.
 
 ---
 

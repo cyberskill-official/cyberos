@@ -10,7 +10,7 @@ verdict: pass requires 10/10; any rule failure -> fail; ambiguity -> needs_human
 - SPK-STRUCT-002 the five body sections present, in order: Question, Options probed,
   Evidence log, Recommendation, Discard log.
 - SPK-STRUCT-003 recommendation names EXACTLY ONE option that appears in options[].
-- SPK-STRUCT-004 spike_id matches `SPIKE-<FR-ID>-<n>`.
+- SPK-STRUCT-004 spike_id matches `SPIKE-<task-ID>-<n>`.
 
 ## SPK-EVID - evidence quality
 - SPK-EVID-001 >= 2 options probed (a one-option spike is not a fork - route to the

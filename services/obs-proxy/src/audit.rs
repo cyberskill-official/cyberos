@@ -1,6 +1,6 @@
 //! Audit rows for proxied queries (TASK-OBS-002 §1 #9, §8).
 //!
-//! Decoupled and best-effort by design: a query must still succeed if the sink can't write (FR §10),
+//! Decoupled and best-effort by design: a query must still succeed if the sink can't write (task §10),
 //! and the proxy is stateless, so it does not write Postgres directly the way auth's memory_bridge
 //! does. Rows carry the SHA-256 of the query, never the raw query (§1 #9 / §2), because queries can
 //! encode tenant-business semantics. The real memory sink (direct l1_audit_log write or an ingest
@@ -36,7 +36,7 @@ pub struct AuditRow {
     pub payload: Value,
 }
 
-/// `obs.query_proxied` - one per successfully proxied query (FR §8). `outcome` is `proxied` or
+/// `obs.query_proxied` - one per successfully proxied query (task §8). `outcome` is `proxied` or
 /// `root_admin_unfiltered`.
 pub fn query_proxied(
     tenant_id: &str,
@@ -59,7 +59,7 @@ pub fn query_proxied(
     }
 }
 
-/// `obs.cross_tenant_query_attempt` (sev-1) - a caller supplied a `tenant_id` label (FR §1 #4 / §8).
+/// `obs.cross_tenant_query_attempt` (sev-1) - a caller supplied a `tenant_id` label (task §1 #4 / §8).
 pub fn cross_tenant_query_attempt(
     caller_tenant_id: &str,
     query: &str,
@@ -75,7 +75,7 @@ pub fn cross_tenant_query_attempt(
     }
 }
 
-/// Where audit rows go. Best-effort: implementations must not fail the caller (FR §10).
+/// Where audit rows go. Best-effort: implementations must not fail the caller (task §10).
 pub trait AuditSink: Send + Sync {
     fn emit(&self, row: &AuditRow);
 }

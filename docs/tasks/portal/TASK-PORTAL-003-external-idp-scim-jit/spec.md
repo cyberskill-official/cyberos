@@ -1,8 +1,16 @@
 ---
 id: TASK-PORTAL-003
 title: "PORTAL external IdP — SAML 2.0 + OIDC sign-in for client-tenant users + SCIM 2.0 JIT provisioning + per-Engagement IdP binding + claim → role mapping + signed-attr trust chain"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: PORTAL
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P4
@@ -53,7 +61,7 @@ source_decisions:
   - DEC-884 2026-05-17 — SCIM token rotation: quarterly mandatory + 60s overlap window; old token accepted during overlap, both emit `portal.scim_token_rotation` informational row
   - DEC-885 2026-05-17 — Group-to-role mapping is many-to-one: multiple IdP groups can map to one CyberOS role; one IdP group cannot map to multiple roles
   - DEC-886 2026-05-17 — Audit-row PII: SAML AttributeStatement claims + OIDC ID-token claims PII-scrubbed via TASK-MEMORY-111 (email → email_hash16; name → name_hash16; raw retained only in subject row, RLS-scoped)
-  - eIDAS Reg. 910/2014 (QES baseline — external IdP must be eIDAS-conformant for EU regulated tenants; placeholder enforcement at slice 1 — full QES integration FR-AUTH-2xx)
+  - eIDAS Reg. 910/2014 (QES baseline — external IdP must be eIDAS-conformant for EU regulated tenants; placeholder enforcement at slice 1 — full QES integration task-AUTH-2xx)
   - PDPL Law 91/2025 Art. 5 (data minimisation — only claims explicitly mapped to roles are persisted; unrecognised claims discarded at JIT)
   - GDPR Art. 28 (data processor — IdP acts as DPA-bound processor; PORTAL signs DPA template at IdP config time)
 
@@ -138,7 +146,7 @@ subtasks:
   - "0.4h: auth/handlers/login.rs delegation hook"
   - "0.5h: integration smoke against Okta+Azure+OneLogin sandbox tenants"
 
-risk_if_skipped: "Without external IdP support, every client-tenant user creates a CyberOS-local password account — non-starter for enterprise prospects who require SSO (Okta/Azure AD/Google Workspace). TASK-PORTAL-005 (Branded Genie) needs JIT-provisioned subjects to attach the right scope_grants. TASK-PORTAL-004 (SCIM deprovision) is a security commitment (PDPL Art. 17 + GDPR Art. 17 right to erasure) that depends on SCIM endpoints existing. Without DEC-864's signed-attribute trust, attribute injection turns any IdP into a privilege-escalation vector. Without DEC-877's per-Engagement RLS, one Engagement's IdP config bleeds into another's. Without DEC-871's enforcement modes, regulated clients can't disable password fallback. Without DEC-885's many-to-one group mapping, common patterns ('Sales + Marketing both get viewer role') require duplicated config. The 10h effort lands the enterprise-grade external identity primitive that unblocks 4 PORTAL FRs + every regulated client deployment."
+risk_if_skipped: "Without external IdP support, every client-tenant user creates a CyberOS-local password account — non-starter for enterprise prospects who require SSO (Okta/Azure AD/Google Workspace). TASK-PORTAL-005 (Branded Genie) needs JIT-provisioned subjects to attach the right scope_grants. TASK-PORTAL-004 (SCIM deprovision) is a security commitment (PDPL Art. 17 + GDPR Art. 17 right to erasure) that depends on SCIM endpoints existing. Without DEC-864's signed-attribute trust, attribute injection turns any IdP into a privilege-escalation vector. Without DEC-877's per-Engagement RLS, one Engagement's IdP config bleeds into another's. Without DEC-871's enforcement modes, regulated clients can't disable password fallback. Without DEC-885's many-to-one group mapping, common patterns ('Sales + Marketing both get viewer role') require duplicated config. The 10h effort lands the enterprise-grade external identity primitive that unblocks 4 PORTAL tasks + every regulated client deployment."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -815,11 +823,11 @@ pub async fn scim_bearer_auth<B>(
 All resolved for slice 1. Deferred:
 
 - **Deferred:** SCIM 2.0 Group sync DELETE → cascade subject-membership revoke — slice 2, TASK-PORTAL-004 path.
-- **Deferred:** eIDAS QES (Qualified Electronic Signature) integration for EU regulated tenants — slice 3, FR-AUTH-2xx (placeholder).
+- **Deferred:** eIDAS QES (Qualified Electronic Signature) integration for EU regulated tenants — slice 3, task-AUTH-2xx (placeholder).
 - **Deferred:** Multi-IdP per Engagement (e.g., Okta primary + Google fallback) — slice 2.
 - **Deferred:** SCIM bulk operations (RFC 7644 §3.7) — slice 2 (single-user CRUD only at slice 1).
 - **Deferred:** Custom claim mappers for non-`groups` claim sources (e.g., role inferred from `department`) — slice 2.
-- **Deferred:** WebAuthn step-up at sensitive ops post-SSO (vs full re-auth) — slice 2, FR-AUTH-2xx.
+- **Deferred:** WebAuthn step-up at sensitive ops post-SSO (vs full re-auth) — slice 2, task-AUTH-2xx.
 - **Deferred:** Per-Engagement custom domain for SP endpoint (`sso.acme.com/saml2/acs`) — slice 2 + TASK-PORTAL-002 brand pack integration.
 - **Deferred:** SAML SLO (Single Log-Out) — slice 2; slice 1 has SCIM DELETE deprovision via TASK-PORTAL-004.
 
@@ -871,7 +879,7 @@ All resolved for slice 1. Deferred:
 
 **§11.7** Bearer-token format for SCIM is opaque (not JWT) — 32 random bytes base64url-encoded. Length 43 chars. Easy to rotate.
 
-**§11.8** The `subjects.last_sso_at` column requires a migration to TASK-AUTH-002's table — added via `services/auth/migrations/0XXX_subjects_last_sso_at.sql` referenced by this FR's modified_files.
+**§11.8** The `subjects.last_sso_at` column requires a migration to TASK-AUTH-002's table — added via `services/auth/migrations/0XXX_subjects_last_sso_at.sql` referenced by this task's modified_files.
 
 **§11.9** `signed_attr.rs` is the security-critical core. Test coverage MUST include: signed-only attrs (happy), mixed signed+unsigned (drop unsigned), nested Assertions, attributes outside enclosed Signature scope. Library: `xmlsec-rs` with libxmlsec bindings.
 

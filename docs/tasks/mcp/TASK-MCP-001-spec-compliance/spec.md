@@ -1,8 +1,16 @@
 ---
 id: TASK-MCP-001
 title: "MCP Gateway 2025-11-25 spec compliance — initialize + tools/list + tools/call + capabilities negotiation + Streamable HTTP transport + tool annotations"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: MCP
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P0
@@ -31,7 +39,7 @@ source_decisions:
   - "DEC-266 (capabilities response declares: `tools` (with listChanged subscription), `prompts`, `resources`, `logging`; `sampling` deferred to slice 5; `roots` deferred)"
   - DEC-267 (every `tools/call` invocation MUST validate caller scope per TASK-AUTH-101 + tool's required scope; missing scope → JSON-RPC error code -32001 unauthorized)
   - DEC-268 (rate-limit per (tenant, tool) configurable; default 100 calls/min; soft burst 200; exceeded → JSON-RPC -32002 rate_limited)
-  - DEC-269 (tool name format `cyberos.<module>.<verb>_<noun>` per SEP-986 — validator enforced by TASK-MCP-003; this FR ships the registration contract that requires it)
+  - DEC-269 (tool name format `cyberos.<module>.<verb>_<noun>` per SEP-986 — validator enforced by TASK-MCP-003; this task ships the registration contract that requires it)
   - DEC-270 (protocol version 2025-11-25 negotiation: client and server exchange `protocolVersion`; mismatch on initialize → JSON-RPC error -32600 with `supported` field)
   - DEC-271 (the gateway is stateless per-request; session state (Tasks, sampling continuations) lives in TASK-MCP-007's Tasks store; no in-process session)
   - DEC-272 (errors follow JSON-RPC 2.0: -32700 parse_error, -32600 invalid_request, -32601 method_not_found, -32602 invalid_params, -32603 internal_error + spec-defined -32001..-32099 for MCP-specific)
@@ -106,7 +114,7 @@ subtasks:
   - "0.4h: handlers/router.rs — axum mount"
   - "2.4h: tests — 12 test files covering protocol handshake, batch, transport, errors, annotations, JWT, scope, rate limit, audit, federation, spec conformance"
 
-risk_if_skipped: "The MCP Gateway is the external-agent door. Without spec-compliant initialize/tools/list/tools/call, Claude/Cursor/Codex/Cline cannot connect to CyberOS at all — every external-agent use-case is blocked. Every downstream MCP FR (TASK-MCP-002 module registration, TASK-MCP-003 SEP-986 naming, TASK-MCP-006 destructive-op gating, TASK-MCP-007 Tasks primitive, TASK-MCP-008 Elicitation) depends on this baseline. Without DEC-261's Streamable HTTP transport, legacy clients lock out; without DEC-262's federation, every module spins up a separate endpoint (operationally untenable at 22 modules); without DEC-265's audit pair, debugging tool-call crashes becomes impossible. The 12h effort lands the foundational JSON-RPC + transport + capability skeleton on which everything else builds."
+risk_if_skipped: "The MCP Gateway is the external-agent door. Without spec-compliant initialize/tools/list/tools/call, Claude/Cursor/Codex/Cline cannot connect to CyberOS at all — every external-agent use-case is blocked. Every downstream MCP task (TASK-MCP-002 module registration, TASK-MCP-003 SEP-986 naming, TASK-MCP-006 destructive-op gating, TASK-MCP-007 Tasks primitive, TASK-MCP-008 Elicitation) depends on this baseline. Without DEC-261's Streamable HTTP transport, legacy clients lock out; without DEC-262's federation, every module spins up a separate endpoint (operationally untenable at 22 modules); without DEC-265's audit pair, debugging tool-call crashes becomes impossible. The 12h effort lands the foundational JSON-RPC + transport + capability skeleton on which everything else builds."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -208,7 +216,7 @@ The MCP Gateway service **MUST** ship compliance with MCP specification 2025-11-
     - `scope` claim contains `mcp:tools` (baseline) AND any tool-specific scope per tool annotation.
    Missing/invalid → `-32001 unauthorized` with `data: {"reason":"<token_invalid|aud_mismatch|expired|insufficient_scope>", "required_scopes":[...]}`. The `initialize` exemption allows clients to negotiate before auth, but any subsequent method requires the token.
 
-12. **MUST** rate-limit per (tenant_id, tool_name) using a sliding window (per DEC-268). Default: 100 calls/min; soft burst: 200 in any 30-sec window. Exceeded → `-32002 rate_limited` with `data: {"retry_after_ms": <int>}`. Per-tenant override via tenant policy YAML (out of scope here; FR-MCP-2xx).
+12. **MUST** rate-limit per (tenant_id, tool_name) using a sliding window (per DEC-268). Default: 100 calls/min; soft burst: 200 in any 30-sec window. Exceeded → `-32002 rate_limited` with `data: {"retry_after_ms": <int>}`. Per-tenant override via tenant policy YAML (out of scope here; task-MCP-2xx).
 
 13. **MUST** emit `mcp.tool_call_started` memory audit row at the moment the gateway begins dispatch to the module server, AND `mcp.tool_call_completed` at completion (per DEC-265 + task-audit skill rule 26). Both rows carry: `{tenant_id, subject_id_hash16, tool_name, arguments_sha256, persona_version, request_id, trace_id, ts_ns}`. The completed row adds: `outcome` (success | tool_error | module_unreachable | timeout | rate_limited | unauthorized), `duration_ms`, `result_sha256` (SHA-256 of result JSON; for replay verification).
 
@@ -220,7 +228,7 @@ The MCP Gateway service **MUST** ship compliance with MCP specification 2025-11-
 
 17. **MUST** handle module-server timeouts with `-32004 module_unreachable` after 30s; the memory row carries `outcome=timeout`.
 
-18. **MUST** maintain the federated tool catalog in-memory at the gateway. Modules register via `POST /v1/mcp/register` (TASK-MCP-002 ships the handler; this FR ships the registry struct). The catalog is rebuilt at gateway start by polling each module's `/mcp/heartbeat` endpoint.
+18. **MUST** maintain the federated tool catalog in-memory at the gateway. Modules register via `POST /v1/mcp/register` (TASK-MCP-002 ships the handler; this task ships the registry struct). The catalog is rebuilt at gateway start by polling each module's `/mcp/heartbeat` endpoint.
 
 19. **MUST** annotate every tool in the registry with its capability requirements: `requires_scope: [...]`, `requires_persona: <key?>`, `module: <module-name>`, `endpoint: <internal-url>`. These are NOT exposed in `tools/list` response (internal use only); the public `annotations` field carries the spec-defined `destructiveHint`/`readOnlyHint`/`idempotentHint`/`openWorldHint`.
 
@@ -751,7 +759,7 @@ async fn 101st_call_returns_rate_limited() {
 ## §7 — Dependencies
 
 **Upstream:**
-- **TASK-AUTH-004** — JWT issuance + JWKS; this FR verifies tokens against the JWKS.
+- **TASK-AUTH-004** — JWT issuance + JWKS; this task verifies tokens against the JWKS.
 
 **Downstream (5 placeholders):**
 - **TASK-MCP-002** — per-module server registration + heartbeat; populates the federated registry.
@@ -764,7 +772,7 @@ async fn 101st_call_returns_rate_limited() {
 - **TASK-AUTH-101** — RBAC; `Resource::McpTool + Action::Invoke` patterns; agent-persona role on every call.
 - **TASK-AI-003** — memory audit bridge; receives `mcp.tool_call_started` + `mcp.tool_call_completed`.
 - **TASK-AI-022** — OTel trace emission; traceparent propagation.
-- **TASK-MCP-004** — OAuth 2.1 PKCE (this FR consumes JWT shape; TASK-MCP-004 ships the issuance flow).
+- **TASK-MCP-004** — OAuth 2.1 PKCE (this task consumes JWT shape; TASK-MCP-004 ships the issuance flow).
 - **TASK-MCP-005** — Protected Resource Metadata; published at /.well-known/oauth-protected-resource.
 
 ---
@@ -899,14 +907,14 @@ async fn 101st_call_returns_rate_limited() {
 ## §9 — Open questions
 
 Deferred:
-- **OAuth 2.1 PKCE flow** — TASK-MCP-004 ships the issuance; this FR consumes the JWT.
+- **OAuth 2.1 PKCE flow** — TASK-MCP-004 ships the issuance; this task consumes the JWT.
 - **Protected Resource Metadata (RFC 9728)** — TASK-MCP-005 publishes at `.well-known/oauth-protected-resource`.
-- **Destructive-op Elicitation flow** — TASK-MCP-006 ships the full flow; this FR stubs with `-32005 elicitation_required`.
+- **Destructive-op Elicitation flow** — TASK-MCP-006 ships the full flow; this task stubs with `-32005 elicitation_required`.
 - **Tasks primitive** — TASK-MCP-007.
 - **Elicitation primitive** — TASK-MCP-008.
 - **Sampling capability** — slice 5+.
 - **Roots capability** — slice 5+.
-- **Per-tenant rate-limit override** — FR-MCP-2xx.
+- **Per-tenant rate-limit override** — task-MCP-2xx.
 
 All other questions resolved.
 
@@ -970,7 +978,7 @@ All other questions resolved.
 - **Federation registry in-memory** — < 1MB; refreshed on TASK-MCP-002 registration events; eventual consistency across gateway instances.
 - **Dispatch HTTP client reuses connection pool** — reqwest with `pool_max_idle_per_host = 32`.
 - **Tool annotations are spec-defined** (`title`, `readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`) — exposed in `tools/list`; internal annotations (`required_scopes`, `required_persona`, `module`, `endpoint`) are NOT exposed.
-- **`logging` capability is empty object** — declares support without specific config; FR-MCP-2xx ships log-level subscription.
+- **`logging` capability is empty object** — declares support without specific config; task-MCP-2xx ships log-level subscription.
 - **`prompts` + `resources` capability flagged** — Prompts and Resources methods are not implemented at slice 4 (deferred); the capability flag signals support; calling them returns -32601.
 - **Server graceful shutdown drains 10s** — configurable via env; tokio drop graceful.
 - **GET /mcp/healthz** is unauthenticated — liveness probe target for k8s.
@@ -979,8 +987,8 @@ All other questions resolved.
 - **JSON-RPC errors -32001..-32099** are MCP-specific (per spec); custom codes outside that range = bug.
 - **`elicitation_required` -32005 is a stub at slice 4** — TASK-MCP-006 ships the full flow with the `Elicitation-Confirmed` header check + back-and-forth.
 - **`Mcp-Session-Id` allows re-init on expiry** — client treats HTTP 404 on a request with valid id as "re-initialise"; not a hard error.
-- **Module endpoint discovered via TASK-MCP-002 registration** — at slice 4 this FR uses a static map for tests; production lookup via TASK-MCP-002.
-- **No persistence in this FR** — sessions are in-memory; rate-limit windows in-memory; registry in-memory. Persistence (Tasks store, session re-distribution across instances) lands in later FRs.
+- **Module endpoint discovered via TASK-MCP-002 registration** — at slice 4 this task uses a static map for tests; production lookup via TASK-MCP-002.
+- **No persistence in this task** — sessions are in-memory; rate-limit windows in-memory; registry in-memory. Persistence (Tasks store, session re-distribution across instances) lands in later tasks.
 
 ---
 

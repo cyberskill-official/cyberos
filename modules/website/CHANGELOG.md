@@ -54,28 +54,28 @@ Verified: memory.html Mermaid no longer has `<kind>/<hex>/<file>` patterns; styl
 
 ---
 
-## 2026-05-14 — Heading line-height fix + FR authoring workflow guide
+## 2026-05-14 — Heading line-height fix + task authoring workflow guide
 
 - Fixed heading collision on H2 elements caused by the Be-Vietnam-Pro font swap. BVP has taller ascenders + descenders than Inter at the same `font-size`. The previous Inter-tuned `line-height: 1.05` (h-display), `1.15` (h-1), `1.25` (h-2) values were too tight and let the heading bounding box collide with the following paragraph (visible on the "The substrate · the catalog · the orchestrator" H2 on index.html). Updated `assets/styles.css` heading rhythm: h-display 1.05→1.1, h-1 1.15→1.25, h-2 1.25→1.4, h-3 (added) 1.45. Added explicit `margin-block-end` on each + an `h-* + * { margin-block-start: 0 }` rule to neutralise Tailwind `mb-*` collapse.
-- Added `task-audit skill` — canonical playbook for the post-strip FR re-authoring lifecycle. Covers the mental model, file layout, standalone vs chained flows, the standard module-slice-1 recipe (5–7 FRs per slice), how FRs surface back to the docs site, status state machine, task integration paths, and a fully worked TASK-AUTH-001 example. Designed to keep open while authoring.
+- Added `task-audit skill` — canonical playbook for the post-strip task re-authoring lifecycle. Covers the mental model, file layout, standalone vs chained flows, the standard module-slice-1 recipe (5–7 tasks per slice), how tasks surface back to the docs site, status state machine, task integration paths, and a fully worked TASK-AUTH-001 example. Designed to keep open while authoring.
 
 ---
 
-## 2026-05-14 — Comprehensive audit + FR catalog strip + Mermaid mass-fix
+## 2026-05-14 — Comprehensive audit + task catalog strip + Mermaid mass-fix
 
-Added `docs/AUDIT_AND_PLAN_2026_05_14.md` — single comprehensive audit + build-readiness plan covering UI glitches (severity-ranked), FR landscape, per-module build sequence for the 19 unbuilt modules with slice-1 outlines, and strategic followups. Designed as the source of truth for the next 2 weeks of work.
+Added `docs/AUDIT_AND_PLAN_2026_05_14.md` — single comprehensive audit + build-readiness plan covering UI glitches (severity-ranked), task landscape, per-module build sequence for the 19 unbuilt modules with slice-1 outlines, and strategic followups. Designed as the source of truth for the next 2 weeks of work.
 
-**FR catalog strip (per user decision: strip-everything).** Stripped:
+**task catalog strip (per user decision: strip-everything).** Stripped:
 - All 22 module pages: each "Functional Requirements" section (the `<section id="functional-requirements">` block, lines ~789–820 across modules) replaced with a stub linking to the `task-author` Agent Skill workflow. 23/23 pages patched cleanly via regex sweep.
-- `website/docs/reference/fr-catalog.html`: 1006-line generated catalog replaced with a 70-line stub explaining the rebuild + how to author new FRs via the skill module.
+- `website/docs/reference/fr-catalog.html`: 1006-line generated catalog replaced with a 70-line stub explaining the rebuild + how to author new tasks via the skill module.
 
 **Partially stripped (cross-refs remain — call to extend):**
-- `website/docs/reference/nfr-catalog.html` — still has 137 FR refs (NFRs are described in terms of which FRs they constrain)
-- `website/docs/reference/risk-register.html` — still has 51 FR refs (risks reference the FRs they affect)
-- Module pages — still have inline FR refs in Dependencies tables, NFR descriptions, KPIs, References footers (~200 total across all)
-- `docs/prd/PRD.md` (393 FR refs) and `docs/srs/SRS.md` (206 FR refs) — preserved as authoritative spec narrative; .docx originals also preserved
+- `website/docs/reference/nfr-catalog.html` — still has 137 task refs (NFRs are described in terms of which tasks they constrain)
+- `website/docs/reference/risk-register.html` — still has 51 task refs (risks reference the tasks they affect)
+- Module pages — still have inline task refs in Dependencies tables, NFR descriptions, KPIs, References footers (~200 total across all)
+- `docs/prd/PRD.md` (393 task refs) and `docs/srs/SRS.md` (206 task refs) — preserved as authoritative spec narrative; .docx originals also preserved
 
-The "strip-everything" decision affects ~434 remaining FR cross-references — these are inline within sentences and tables. They become broken references until re-authored. To clean them up, separate decisions are needed on whether to: keep them as broken refs (will rewrite organically as new FRs come online), replace with `(FR pending)` markers, or remove the surrounding sentences entirely.
+The "strip-everything" decision affects ~434 remaining task cross-references — these are inline within sentences and tables. They become broken references until re-authored. To clean them up, separate decisions are needed on whether to: keep them as broken refs (will rewrite organically as new tasks come online), replace with `(task pending)` markers, or remove the surrounding sentences entirely.
 
 **Mermaid mass-fix across 28 pages:**
 - `<br/>` → `<br>` — 754 instances replaced, ALL inside `<div class="mermaid">` blocks (zero outside, verified). This fixes the "Cursorvia MCP tool" text-collapse bug seen on `modules/memory.html` where Mermaid 11.4.1 strips self-closed `<br/>` tags inside quoted node labels.
@@ -85,7 +85,7 @@ The "strip-everything" decision affects ~434 remaining FR cross-references — t
 Net code change: 36 files, ~1,417 insertions / ~2,641 deletions. Plus new files `docs/AUDIT_AND_PLAN_2026_05_14.md` (the master plan) and `website/docs/assets/tailwind.min.css` (16.7 KB vendored from prior commit).
 
 Open items pending Stephen's call (per audit doc):
-1. Whether to strip the remaining 434 inline FR cross-refs (in NFR catalog / risk register / module sub-sections) or let them rewrite organically.
+1. Whether to strip the remaining 434 inline task cross-refs (in NFR catalog / risk register / module sub-sections) or let them rewrite organically.
 2. AUTH RFC's 5 open questions need answers before slice 1 codes.
 3. Redeploy `website/docs/` via wrangler so the brand + Tailwind + Mermaid + strip fixes go live.
 

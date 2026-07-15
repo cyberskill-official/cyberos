@@ -7,17 +7,17 @@
 //!
 //! Remaining TASK-AUTH-004..109 surfaces (JWT/JWKS, admin REST, bootstrap CLI,
 //! RBAC, MFA TOTP/WebAuthn/Passkey, SAML, OIDC, impossible-travel, HIBP,
-//! Lumi-tenant identity, migration tooling) land in follow-up FRs.
+//! Lumi-tenant identity, migration tooling) land in follow-up tasks.
 
 #![forbid(unsafe_code)]
 // `missing_docs` is deferred — re-enable per-module as docs land. With CI's
 // `RUSTFLAGS: -D warnings`, keeping `warn(missing_docs)` would block every PR
 // on undoc'd pub items (192+ in this crate alone after the TASK-AUTH-106 slice-3
-// drop). Tracking: FR-AUTH-NNN-restore-missing-docs-lint (TBD).
+// drop). Tracking: TASK-AUTH-NNN-restore-missing-docs-lint (TBD).
 #![allow(missing_docs)]
 // Style-class clippy lints that the existing TASK-AUTH-106 slice-3 drop trips
 // without affecting correctness. Suppressed at crate level to unblock CI;
-// re-enable + refactor as a separate hygiene wave (FR-AUTH-NNN-clippy-style-cleanup).
+// re-enable + refactor as a separate hygiene wave (TASK-AUTH-NNN-clippy-style-cleanup).
 //   * `doc_lazy_continuation` — doc comments need blank-line / indent fix in
 //     auth/src/travel.rs (cosmetic).
 //   * `type_complexity` — sqlx::query_as return tuples that clippy wants
@@ -32,7 +32,7 @@
 // middleware.rs, hibp.rs, lumi.rs, rate_limit.rs, passkey.rs). All are
 // modernisation nits (format-string interpolation, redundant closures, idiom
 // updates) or dead-code that's actually used via serde-deserialise. Deferred
-// to the same FR-AUTH-NNN-clippy-style-cleanup hygiene wave.
+// to the same TASK-AUTH-NNN-clippy-style-cleanup hygiene wave.
 #![allow(clippy::doc_overindented_list_items)]
 #![allow(clippy::let_and_return)]
 #![allow(clippy::redundant_closure)]

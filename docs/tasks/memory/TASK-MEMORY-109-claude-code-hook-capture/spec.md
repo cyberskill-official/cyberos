@@ -1,8 +1,16 @@
 ---
 id: TASK-MEMORY-109
 title: "Claude Code hook capture — UserPromptSubmit + PostToolUse + Stop hooks emit memory memories with prompt + diff + trace correlation"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: memory
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -130,7 +138,7 @@ Other hooks are operationally noisy (`Notification`, `PreToolUse`) or rare (`Sub
 
 **Why `tool_args_hash` even though redacted (§1 #2)?** Dedup. The same `Bash` invocation with the same args (e.g. `cargo test` run 10 times) should produce one logical "tool was run" memory, not 10. The hash key is `(tool_name, blake3(canonical_json(args)))`.
 
-**Why bullets vs prose in §1?** Per the FR template's normative structure; readability for compliance review.
+**Why bullets vs prose in §1?** Per the task template's normative structure; readability for compliance review.
 
 ---
 
@@ -576,10 +584,10 @@ pub async fn dispatch(kind: hook::HookKind, payload: serde_json::Value) -> anyho
 
 - **TASK-MEMORY-107 (upstream)** — capture daemon owns the Unix socket; hook is a client.
 - **TASK-MEMORY-101** — `MemoryWriter` (used by daemon, not directly by hook).
-- **TASK-MEMORY-111 (sibling)** — PII redaction ruleset; this FR uses a subset of those patterns.
+- **TASK-MEMORY-111 (sibling)** — PII redaction ruleset; this task uses a subset of those patterns.
 - **TASK-AI-022** — W3C TraceContext convention.
 - **TASK-AI-014** — `last_assistant_message` field could carry persona tagging in future.
-- **TASK-SKILL-101** — skill invocations are a sibling capture path; this FR captures only Claude Code's native tool use.
+- **TASK-SKILL-101** — skill invocations are a sibling capture path; this task captures only Claude Code's native tool use.
 - **`cyberos-cli-exit`** — shared exit codes (hook always exits 0 — never block Claude Code).
 
 ---
@@ -674,9 +682,9 @@ All resolved. Deferred:
 
 - The hook binary MUST be in `PATH` for Claude Code to find it. `cyberos memory hook claude install` updates `settings.json` with the absolute path discovered via `which cyberos-memory-claude-hook` (fallback: `/usr/local/bin/cyberos-memory-claude-hook`).
 - `tokio::main(flavor = "current_thread")` is intentional — the hook is short-lived; a multi-thread runtime would add tens of ms of startup cost.
-- The Unix socket path `/tmp/cyberos-memory-capture.sock` is documented in TASK-MEMORY-107; both this FR and the daemon must agree. Constant lives in `cyberos-memory-shared` crate.
+- The Unix socket path `/tmp/cyberos-memory-capture.sock` is documented in TASK-MEMORY-107; both this task and the daemon must agree. Constant lives in `cyberos-memory-shared` crate.
 - Redaction patterns are intentionally simple regexes — fast (≤ 5ms p95) but with known false-positive characteristics (e.g. 12-digit number false-positives as CCCD). Operators can tune the ruleset; TASK-MEMORY-111 owns the canonical version.
-- The `tool_args_hash` uses `serde_json::to_string` (compact form, default key ordering); this is NOT canonical JSON. For cross-session dedup, future FR may switch to canonical (RFC 8785).
+- The `tool_args_hash` uses `serde_json::to_string` (compact form, default key ordering); this is NOT canonical JSON. For cross-session dedup, future task may switch to canonical (RFC 8785).
 - The 1-hour TTL on trace_id cache is a balance: too short → sessions split across trace_ids; too long → /tmp accumulates files. TASK-MEMORY-110 sweeper deletes files older than 1h hourly.
 - `metric_record_latency` is a thin wrapper around the `metrics` crate's histogram macros; the actual Prometheus exporter is in the daemon.
 - The `--user` flag installer scope is the right default for personal workflows; `--project` (no flag) is the right default for team-shared projects (the hook config commits to git).

@@ -1,5 +1,5 @@
 ---
-description: What CyberOS does — commands, FR lifecycle, human gates, where things live.
+description: What CyberOS does — commands, task lifecycle, human gates, where things live.
 ---
 Orient the user. Present concisely:
 
@@ -11,8 +11,8 @@ Orient the user. Present concisely:
    - `/version` — check for a newer CyberOS; on yes → install
    - `/status` — open `docs/status/index.html` in the browser
    - `/help` — this overview
-   - `/ship-tasks` — drive the next FR (HITL)
-   - `/create-tasks` — draft FRs into the backlog
+   - `/ship-tasks` — drive the next task (HITL)
+   - `/create-tasks` — draft tasks into the backlog
 
 3. Soft update-check runs automatically on any `.cyberos` use. Day-to-day: install once, then forget.
 

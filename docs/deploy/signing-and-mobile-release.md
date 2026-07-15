@@ -57,7 +57,7 @@ The `ios/` project does NOT exist yet, and the workflow's iOS step is a stub. Do
        npx cap sync ios
        git add ios && git commit -m "chore: add Capacitor iOS shell"
 
-2. Add the fastlane lane (`apps/web/ios/App/fastlane/Fastfile`) with a `beta` lane that archives and uploads to TestFlight, and replace the stub `echo` in `release.yml`'s iOS step with `fastlane beta`. (This is a real task - open it as an FR, not a rushed edit.)
+2. Add the fastlane lane (`apps/web/ios/App/fastlane/Fastfile`) with a `beta` lane that archives and uploads to TestFlight, and replace the stub `echo` in `release.yml`'s iOS step with `fastlane beta`. (This is a real task - open it as a task, not a rushed edit.)
 3. Add these secrets (App Store Connect -> Users and Access -> Integrations -> App Store Connect API -> generate a key):
    - `APP_STORE_CONNECT_KEY_ID`
    - `APP_STORE_CONNECT_ISSUER_ID`
@@ -80,4 +80,4 @@ Then on GitHub -> Releases, delete the old failed draft and publish the new draf
 
 - Desktop (macOS + Windows + Linux): yes, right now - unsigned by default, or signed once section A is done.
 - Android `.aab`: yes, once section B's secrets + `ANDROID_RELEASE=true` are set.
-- iOS TestFlight: not until section C's one-time project + fastlane lane land - defer it to a follow-up FR; it does not hold up the rest.
+- iOS TestFlight: not until section C's one-time project + fastlane lane land - defer it to a follow-up task; it does not hold up the rest.

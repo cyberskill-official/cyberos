@@ -14,8 +14,8 @@ This workflow is retired. On Stephen's 2026-07-08 decision, CyberOS runs a singl
 
 Where to go now:
 
-- The workflow: `chief-technology-officer/ship-tasks.md` (section 1a covers improvement FRs and their gate profile).
-- The improvement-class home and the migration of the old `docs/improvement/` backlogs (`MEM-*`, `T-*`, `IMP-*`) into FR ids: `docs/tasks/improvement/README.md`.
+- The workflow: `chief-technology-officer/ship-tasks.md` (section 1a covers improvement tasks and their gate profile).
+- The improvement-class home and the migration of the old `docs/improvement/` backlogs (`MEM-*`, `T-*`, `IMP-*`) into task ids: `docs/tasks/improvement/README.md`.
 - The halt and HITL doctrine: `modules/cuo/EXECUTION-DISCIPLINE.md` §2a.
 
 The two generic skills this workflow used, `cyberos-improve-implement` and `cyberos-improve-review`, have been removed.

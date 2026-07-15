@@ -58,7 +58,7 @@ gated behind MOBILE_RELEASE and signing secrets. Nothing installable today.
 Deploy: single-origin p0 compose (auth 7700, chat 7720, Caddy TLS), Supabase Postgres, attachment volume,
 no Prometheus/Loki/OTel/Sentry, no external synthetic probes.
 
-FR state: TASK-CHAT-101 done (native skeleton). Drafts: 102 Slack import, 103 Zalo import, 104 real push,
+Task state: TASK-CHAT-101 done (native skeleton). Drafts: 102 Slack import, 103 Zalo import, 104 real push,
 105 DSAR export, 106 @lumi assistant.
 
 Strengths to protect: single-binary simplicity, per-tenant RLS everywhere, hash-chained audit, consent-gated
@@ -257,7 +257,7 @@ after go-live; P3 = later bet. Effort: S under a day, M days, L a week+ (one eng
 
 - C38 [P0/L] Real push relay (TASK-CHAT-104): small worker consuming push intents; FCM HTTP v1 for
   Android/web, APNs token-based for iOS/macOS. Payload stays privacy-preserving (title + sender, no body,
-  per the FR). Device tokens already registered via devices.rs.
+  per the task). Device tokens already registered via devices.rs.
 - C39 [P1/S] Web push for the PWA: standard VAPID web push, and adopt the declarative web push JSON shape
   (shipped in iOS/iPadOS 18.4 and macOS 15.5) so Apple-platform PWA pushes work without service-worker
   execution and fall back cleanly elsewhere.

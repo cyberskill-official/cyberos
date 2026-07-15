@@ -1817,7 +1817,7 @@ pub struct RevokeBody {
 /// TASK-AUTH-005 §1 #3 + #6 + #8 + G-003/G-006/G-008 — Revoke handler.
 ///
 /// 1. Idempotency-Key required (G-008).
-/// 2. `subjects.status = 'revoked'` (FR §1 #3).
+/// 2. `subjects.status = 'revoked'` (task §1 #3).
 /// 3. Enumerate `sessions` rows for the subject + push each jti into the
 ///    process-wide in-memory deny-list with the jti's natural expiry
 ///    (G-003 + G-011 + G-017 wiring).
@@ -1856,7 +1856,7 @@ async fn revoke_subject(
 /// TASK-AUTH-005 §1 #4 + #6 + #8 + #12 + G-004/G-006/G-008/G-012 — Unrevoke handler.
 ///
 /// 1. Idempotency-Key required (G-008).
-/// 2. `subjects.status = 'active'` (FR §1 #4).
+/// 2. `subjects.status = 'active'` (task §1 #4).
 /// 3. **Does NOT touch the deny-list** — per §1 #12 + G-012, existing
 ///    denied jtis remain denied until natural expiry; the subject must
 ///    re-authenticate via `/v1/auth/token` to receive fresh jtis.

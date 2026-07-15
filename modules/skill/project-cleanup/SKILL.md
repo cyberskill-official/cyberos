@@ -3,10 +3,10 @@ name: project-cleanup
 description: |
   Generic project hygiene skill. Triggers on "clean up the project",
   "tidy the repo", "remove leftovers", "absorb fragments", "merge small
-  docs", "check project state", "verify structure", "audit FRs / backlog
+  docs", "check project state", "verify structure", "audit tasks / backlog
   / changelog", or any request to detect + remove orphan files,
   consolidate small markdown fragments into unified docs, and report
-  project-state health. Auto-detects project structure (cyberos FR
+  project-state health. Auto-detects project structure (cyberos task
   catalog if present; falls back to generic repo cleanup otherwise).
 skill_version: 1.0.1
 persona: shared
@@ -62,7 +62,7 @@ Four phases, executed in order:
 1. **Inventory** — scan the project for stale fragments, orphan files, structural drift.
 2. **Absorb + merge** — consolidate small markdown fragments (<N lines) into the most-suitable parent doc.
 3. **Delete leftovers** — remove anything safely flagged as trash + confirm with the operator before destructive action.
-4. **Verify state** — run project-aware checks (cyberos FR DAG coherence, audit-score grep, BACKLOG/CHANGELOG sync) or generic checks (broken links, orphan refs).
+4. **Verify state** — run project-aware checks (cyberos task DAG coherence, audit-score grep, BACKLOG/CHANGELOG sync) or generic checks (broken links, orphan refs).
 
 ## When to use
 
@@ -74,7 +74,7 @@ Trigger this skill when you say any of:
 - "Absorb / merge small docs"
 - "Check project state"
 - "Verify project structure"
-- "Audit FRs / backlog / changelog"
+- "Audit tasks / backlog / changelog"
 - "Health check the repo"
 
 ## Behaviour (what the skill does)
@@ -132,12 +132,12 @@ Detect the project flavor and run the appropriate verifier:
 **Cyberos flavor detection:** presence of `docs/tasks/BACKLOG.md` AND either `task-audit` skill (post-2026-05-18 layout) or the legacy `task-audit` skill.
 
 If cyberos flavor:
-- Run FR DAG coherence (depends_on ↔ blocks reciprocity)
-- Audit-score grep (every FR has audit at 10/10)
+- Run task DAG coherence (depends_on ↔ blocks reciprocity)
+- Audit-score grep (every task has audit at 10/10)
 - Per-module spec/audit count balance (sanity check)
-- BACKLOG.md sync state (header version matches latest FR additions)
+- BACKLOG.md sync state (header version matches latest task additions)
 - CHANGELOG.md last-entry date freshness (warn if stale > 30 days)
-- Compare IMPLEMENTATION_ORDER.md FR count vs actual
+- Compare IMPLEMENTATION_ORDER.md task count vs actual
 
 Generic flavor (no task-audit skill / task-audit skill):
 - Broken markdown link check (relative `.md` links pointing to nonexistent files)
@@ -194,7 +194,7 @@ The skill ships with portable helper scripts under `./scripts/`:
 |---|---|
 | `find_fragments.py` | Phase 1: scan for stale fragments + orphan files |
 | `propose_absorbs.py` | Phase 2: auto-detect merge targets + propose plan |
-| `coherence_check.py` | Phase 4 (cyberos): FR DAG reciprocity + audit-score check |
+| `coherence_check.py` | Phase 4 (cyberos): task DAG reciprocity + audit-score check |
 | `gen_module_readmes.py` | Phase 4 (cyberos): regenerate per-module READMEs |
 | `gen_impl_artifacts.py` | Phase 4 (cyberos): regenerate IMPLEMENTATION_ORDER + SPRINT_PLAN |
 | `generic_verify.py` | Phase 4 (generic): broken link + orphan ref check |

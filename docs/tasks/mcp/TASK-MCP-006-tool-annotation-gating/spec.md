@@ -1,8 +1,16 @@
 ---
 id: TASK-MCP-006
 title: "MCP tool-annotation gating — destructive / write / external-effect tools require explicit confirm or Elicitation pre-execution per MCP 2025-11-25 spec"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: MCP
-priority: MUST
+priority: p0
 status: implementing
 verify: T
 phase: P0
@@ -23,7 +31,7 @@ source_pages:
   - https://datatracker.ietf.org/doc/html/rfc6750  # bearer-token authorisation
 
 source_decisions:
-  - "DEC-1040 2026-05-17 — MCP 2025-11-25 spec defines 5 tool annotations: `title`, `readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`; this FR enforces gating on the latter 4 hints"
+  - "DEC-1040 2026-05-17 — MCP 2025-11-25 spec defines 5 tool annotations: `title`, `readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`; this task enforces gating on the latter 4 hints"
   - DEC-1041 2026-05-17 — Tools with `destructiveHint=true` OR `openWorldHint=true` (external effect) MUST require explicit user confirmation OR Elicitation BEFORE the underlying handler runs
   - DEC-1042 2026-05-17 — Tools with `readOnlyHint=true` AND `destructiveHint=false` AND `openWorldHint=false` are FAST-PATH allowed (no confirmation needed)
   - "DEC-1043 2026-05-17 — Gating modes: `auto-confirm` (always proceed; for trusted callers), `confirm` (server-side ack required), `elicit` (server initiates Elicitation request to caller via TASK-MCP-008)"
@@ -38,7 +46,7 @@ source_decisions:
   - DEC-1052 2026-05-17 — Gating is enforced AT THE MCP GATEWAY ENTRY (before tools/call dispatches to the per-module server) — single ingress point; per-module server never bypasses
   - DEC-1053 2026-05-17 — Annotation precedence at gating decision (most restrictive wins): destructiveHint=true OR openWorldHint=true → REQUIRES confirmation; readOnlyHint=true AND no destructive/openWorld → BYPASS; idempotentHint informational only
   - DEC-1054 2026-05-17 — Confirmation acks stored in `mcp_pending_confirmations` table keyed by (caller_id, tool_id, request_payload_sha256, expires_at); per DEC-1047 single-use + TTL
-  - DEC-1055 2026-05-17 — Elicitation mode delegates to TASK-MCP-008 (placeholder until TASK-MCP-008 ships); at slice 1 of THIS FR, `elicit` gating mode returns `503 + elicitation_not_yet_supported` until TASK-MCP-008 lands
+  - DEC-1055 2026-05-17 — Elicitation mode delegates to TASK-MCP-008 (placeholder until TASK-MCP-008 ships); at slice 1 of THIS task, `elicit` gating mode returns `503 + elicitation_not_yet_supported` until TASK-MCP-008 lands
   - DEC-1056 2026-05-17 — Rate limit on confirmation requests: 100 confirm-mode requests/min/caller (defense against confirmation-flood abuse)
   - DEC-1057 2026-05-17 — Bypass-token usage emits sev-2 row `mcp.tool_gating_bypass_used` for every invocation (forensic visibility — bypass is rare-by-design)
   - DEC-1058 2026-05-17 — Policy update requires `tenant_admin` role; emits sev-1 `mcp.tool_gating_policy_updated` (security-relevant config change)
@@ -167,7 +175,7 @@ The MCP service **MUST** ship tool-annotation gating at `services/mcp/src/gating
     - If not found: return 403 + `confirm_required`.
     - `UNIQUE(caller_subject_id, tool_id, request_payload_sha256)` prevents double-use.
 
-13. **MUST** delegate elicit mode to TASK-MCP-008 per DEC-1055. At slice 2 of this FR (TASK-MCP-008 not yet shipped), `elicit` mode returns `503 + { error: "elicitation_not_yet_supported", retry_when: "TASK-MCP-008 ships in next slice" }`. When TASK-MCP-008 lands, the elicit handler invokes `mcp::elicitation::request(caller, tool, prompt)` + awaits the response inline.
+13. **MUST** delegate elicit mode to TASK-MCP-008 per DEC-1055. At slice 2 of this task (TASK-MCP-008 not yet shipped), `elicit` mode returns `503 + { error: "elicitation_not_yet_supported", retry_when: "TASK-MCP-008 ships in next slice" }`. When TASK-MCP-008 lands, the elicit handler invokes `mcp::elicitation::request(caller, tool, prompt)` + awaits the response inline.
 
 14. **MUST** support bypass token per DEC-1045 + DEC-1057. Callers with JWT `scope_grants` containing `mcp_gating_bypass` skip gating + record `bypassed` decision in audit log. The scope is granted ONLY to system-tenant callers (per TASK-AUTH-004 + DEC-1045); cross-tenant grant attempt is rejected at JWT mint. Every bypass invocation emits `mcp.tool_gating_bypass_used` sev-2.
 
@@ -203,7 +211,7 @@ The MCP service **MUST** ship tool-annotation gating at `services/mcp/src/gating
     }
     ```
 
-22. **MUST** support gating for TASK-MCP-007 Tasks primitive — long-running tasks with `destructiveHint=true` require confirmation at task START; subsequent task status polls do NOT require re-confirmation (the consent is to the task as a unit). Documented as cross-FR contract.
+22. **MUST** support gating for TASK-MCP-007 Tasks primitive — long-running tasks with `destructiveHint=true` require confirmation at task START; subsequent task status polls do NOT require re-confirmation (the consent is to the task as a unit). Documented as cross-task contract.
 
 23. **MUST NOT** cache gating decisions cross-tenant. Each `mcp_gating_policy` is per-tenant; per-tenant in-memory cache; tenant_id-scoped cache key.
 
@@ -781,7 +789,7 @@ All resolved for slice 2. Deferred:
 - **Deferred:** Per-caller policy overrides (one user trusted, another not) — slice 3.
 - **Deferred:** Time-bounded bypass scopes (bypass for next 1h) — slice 3.
 - **Deferred:** Policy templates (compliance presets: HIPAA-strict, SOC2-balanced) — slice 3.
-- **Deferred:** Confirmation via Out-Of-Band channel (Slack approval) — slice 3, FR-MCP-2xx.
+- **Deferred:** Confirmation via Out-Of-Band channel (Slack approval) — slice 3, task-MCP-2xx.
 - **Deferred:** Multi-actor confirmation (M-of-N approval for destructive ops) — slice 3.
 - **Deferred:** Dry-run mode (show what gating WOULD do without actually invoking) — slice 3.
 - **Deferred:** UI for policy editing (vs YAML) — slice 3.

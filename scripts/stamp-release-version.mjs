@@ -148,7 +148,7 @@ function stampXcodeProj(rel) {
 }
 
 stampJson("apps/desktop/src-tauri/tauri.conf.json");
-// FR 1.0.0-consistency leg: the tauri CARGO package version feeds about-dialogs and crate metadata -
+// task 1.0.0-consistency leg: the tauri CARGO package version feeds about-dialogs and crate metadata -
 // stamp it too so the desktop app never self-reports a stale number.
 stampCargo("apps/desktop/src-tauri/Cargo.toml");
 // The MCP server source lives at tools/cyberos-init/mcp/ (build.sh copies $here/mcp into the

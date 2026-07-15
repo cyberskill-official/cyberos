@@ -119,7 +119,7 @@ The Slack importer **MUST** ingest a Slack export zip via an 8-step idempotent c
 27. **MUST** support `--cleanup <job_id>` to remove all posts/users/channels created by a specific job: cascades via the `import_job_id` foreign key on `posts.props`, `users.props`, `channels.props`. Requires the job to be in `aborted` state.
 28. **MUST** sample post-import: after step 8, randomly sample 100 posts; verify their content matches the source zip (sha256 of `message` text). Mismatch → SEV-1 `chat.import_verification_failed` audit; job marked `verification_failed`.
 29. **MUST** record per-step timing AND row counts in `import_jobs.step_metrics` JSONB column for operator post-mortem.
-30. **MUST** preserve Slack workspace context: `props.slack_workspace_id` on every imported entity; allows downstream FRs to scope queries to a specific Slack history (e.g. "messages from the Sales-team Slack only").
+30. **MUST** preserve Slack workspace context: `props.slack_workspace_id` on every imported entity; allows downstream tasks to scope queries to a specific Slack history (e.g. "messages from the Sales-team Slack only").
 
 ---
 
@@ -149,7 +149,7 @@ The Slack importer **MUST** ingest a Slack export zip via an 8-step idempotent c
 
 **Why preserve reactions (§1 #19)?** Reactions are first-class data for analysts ("which messages got 👍 from leadership?"). The `:question:` fallback for unmapped custom emoji preserves the existence of the reaction without lying about the emoji.
 
-**Why mark imported posts with `cyberos_imported = true` (§1 #22)?** Downstream FRs (TASK-CHAT-008 mentions, TASK-CHAT-005 bridge memory payload) MUST distinguish "this post is from history" vs "this post is live." Live posts get push notifications; historical posts do not.
+**Why mark imported posts with `cyberos_imported = true` (§1 #22)?** Downstream tasks (TASK-CHAT-008 mentions, TASK-CHAT-005 bridge memory payload) MUST distinguish "this post is from history" vs "this post is live." Live posts get push notifications; historical posts do not.
 
 **Why per-step parallelism caps (§1 #23)?** Messages MUST be inserted sequentially per channel because MM's `create_at` ordering is rebuilt from insertion order under tie. Files can be parallelised (idempotent uploads). API calls to MM have a 4-parallelism sweet spot before MM rate-limits.
 

@@ -1,8 +1,16 @@
 ---
 id: TASK-OBS-001
 title: "OTel Collector + LGTM stack (Loki + Prometheus + Tempo + Grafana) with mTLS ingress + per-service tokens + retention + file-buffer"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: OBS
-priority: MUST
+priority: p0
 status: implementing
 verify: T
 phase: P0
@@ -81,7 +89,7 @@ The observability plane **MUST** deploy a self-hosted OpenTelemetry Collector re
     - Prometheus: 90 days raw (P2 extends to 1 year with downsampling via Mimir).
     - Tempo full traces: 7 days.
     - Tempo sampled traces (TASK-OBS-006 tail-sampled): 30 days.
-4. **MUST** label every observation with `tenant_id` (from caller's resource attributes). TASK-OBS-002's tenant-aware proxy enforces tenant-scoped queries downstream; this FR ensures the label IS present at ingress.
+4. **MUST** label every observation with `tenant_id` (from caller's resource attributes). TASK-OBS-002's tenant-aware proxy enforces tenant-scoped queries downstream; this task ensures the label IS present at ingress.
 5. **MUST** ship Grafana with provisioned datasources for all 3 backends (Loki, Prometheus, Tempo) AND a placeholder dashboards directory that TASK-OBS-002 populates.
 6. **MUST** expose `/ready` health endpoints on all 4 services (collector + Loki + Prometheus + Tempo). Docker-compose healthchecks consume these; failure → container restart.
 7. **MUST** survive single-pod restarts without losing buffered data via OTel Collector's `file_storage` extension (1GB on-disk buffer at `/var/lib/otelcol`). Buffer is replayed on restart; data emitted during the restart window is delivered eventually.
@@ -133,7 +141,7 @@ The observability plane **MUST** deploy a self-hosted OpenTelemetry Collector re
 
 **Why dedicated PII-scrub METRIC + sev-1 alert (§1 #11)?** A scrub that matches PII is a SIGNAL — caller-side prevention failed. Sustained scrub-rate > 0 means a service is leaking PII into telemetry; that's a code bug AND a compliance event. Sev-1 forces immediate investigation; the scrub itself prevents persistent storage of the leak.
 
-**Why grafana provisioned with placeholder dashboards (§1 #5)?** TASK-OBS-002 populates dashboards. Provisioning the datasources at THIS FR means dashboards land cleanly without manual datasource setup. The empty placeholder dir is a hook TASK-OBS-002 fills.
+**Why grafana provisioned with placeholder dashboards (§1 #5)?** TASK-OBS-002 populates dashboards. Provisioning the datasources at THIS task means dashboards land cleanly without manual datasource setup. The empty placeholder dir is a hook TASK-OBS-002 fills.
 
 **Why OTel semantic conventions (§1 #8)?** Standard attribute names mean Grafana dashboards (TASK-OBS-002), correlation rules (TASK-OBS-005), and tail-sampling policies (TASK-OBS-006) all work without per-service translation. The convention is the contract; deviating means rewriting all consumers.
 

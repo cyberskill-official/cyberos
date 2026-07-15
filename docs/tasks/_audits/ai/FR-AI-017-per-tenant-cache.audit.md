@@ -163,7 +163,7 @@ A Redis outage during business hours would silently drop hit rate to 0%, increas
 ## §3 — Strengths preserved through expansion
 
 - §3 introduces `CacheKey::derive(tenant_id, redacted_prompt, model, persona_handle)` as a single deterministic constructor — the four required inputs are mandatory by signature; no caller can accidentally drop one.
-- §1 #2 commits to per-tenant Redis key prefix as a STRUCTURAL invariant (not a runtime check). This is the property under test in TASK-AI-018 (the dedicated cross-tenant leak test FR).
+- §1 #2 commits to per-tenant Redis key prefix as a STRUCTURAL invariant (not a runtime check). This is the property under test in TASK-AI-018 (the dedicated cross-tenant leak test task).
 - §1 #4 puts TTLs in their own module (`cache/ttl.rs`) with a fallback "unknown alias → no-cache + WARN" pattern. New aliases extend the table; missing ones get a loud signal rather than silent caching.
 - §1 #6 + §1 #7 explicitly forbid caching streaming + failed responses; the handler-side decision is documented in the §6 skeleton. No clever logic; clean code paths.
 - §1 #11 establishes the 30% hit-rate floor as the break-even economic primitive. The number is justified by the cost target ($4 → $2.80/user/month); operators have a clear threshold for "is the cache earning its cost?"
@@ -172,7 +172,7 @@ A Redis outage during business hours would silently drop hit rate to 0%, increas
 
 ## §4 — Resolution
 
-All 6 mechanical revisions applied (2026-05-16) within the FR itself:
+All 6 mechanical revisions applied (2026-05-16) within the task itself:
 
 - **ISS-001 RESOLVED**: `CacheKey::derive(tenant_id, redacted_prompt, model, persona_handle)` is the four-input cryptographic constructor with unit-separator (`\x1f`) defence; AC #5 asserts persona-version change produces a different key; §5 test `persona_version_change_invalidates`; §1 #3 makes the persona-handle inclusion explicit.
 

@@ -12,12 +12,12 @@ gate: "Requires `APPROVE protocol change P19 §7.7` chat-turn before implementat
 
 ## §1 — Verdict summary
 
-TASK-MEMORY-115 authored direct-to-10/10. ~1100 lines (the largest FR in this wave). 18 §1 normative clauses (CLI trigger, out-of-band, four detector kinds, no auto-apply, two aux rows per run, provenance enforcement, dry-run, detector flag, invoker chain, idempotency w/ preconditions, §7.7 amendment runtime check, 5-min wall budget, interactive apply, transactional integrity, per-proposal aux row, quality metrics, review CLI stretch, plug-in stretch). 8 §2 rationale paragraphs. Full Python types + applier scaffold + AGENTS.md amendment text + schemas in §3. 26 ACs, all `traces_to: §1 #N`. 11 + 5 + 7 = 23 pytest tests across 3 test files. 19 failure modes. 9 implementation notes.
+TASK-MEMORY-115 authored direct-to-10/10. ~1100 lines (the largest task in this wave). 18 §1 normative clauses (CLI trigger, out-of-band, four detector kinds, no auto-apply, two aux rows per run, provenance enforcement, dry-run, detector flag, invoker chain, idempotency w/ preconditions, §7.7 amendment runtime check, 5-min wall budget, interactive apply, transactional integrity, per-proposal aux row, quality metrics, review CLI stretch, plug-in stretch). 8 §2 rationale paragraphs. Full Python types + applier scaffold + AGENTS.md amendment text + schemas in §3. 26 ACs, all `traces_to: §1 #N`. 11 + 5 + 7 = 23 pytest tests across 3 test files. 19 failure modes. 9 implementation notes.
 
 ## §2 — Findings (all resolved during authoring)
 
 ### ISS-001 — Auto-apply vs operator-gated apply
-Initial sketch had a `--auto-apply` flag. Risk: silent memory mutation, contradicts the talk's design rationale. Resolved: §1 #4 + DEC-211 + §2 rationale paragraph; no auto-apply in this FR; opt-in is future work.
+Initial sketch had a `--auto-apply` flag. Risk: silent memory mutation, contradicts the talk's design rationale. Resolved: §1 #4 + DEC-211 + §2 rationale paragraph; no auto-apply in this task; opt-in is future work.
 
 ### ISS-002 — Idempotency without preconditions is unsafe
 Re-apply of a tombstone proposal could clobber resurrected content. Resolved: §1 #10 body-hash preconditions; AC #15 covers drift refusal; §10 failure mode entry.
@@ -63,11 +63,11 @@ All 6 mechanical concerns addressed during authoring. **Score = 10/10 with expli
 
 ### Implementation precondition
 
-This FR cannot ship code without Stephen running `APPROVE protocol change P19 §7.7` in chat to authorise the AGENTS.md §7.7 amendment. The spec itself is at 10/10; the gate is a separate workflow step. **Once the APPROVE phrase lands, implementation can begin.**
+This task cannot ship code without Stephen running `APPROVE protocol change P19 §7.7` in chat to authorise the AGENTS.md §7.7 amendment. The spec itself is at 10/10; the gate is a separate workflow step. **Once the APPROVE phrase lands, implementation can begin.**
 
 ### COND-003 stylistic note
 
-A dedicated `## AI Risk Assessment` section would tighten COND-003 compliance. The FR's §2 rationale paragraphs already cover (a) data sources for the dream detectors (audit rows + memory bodies + future transcripts), (b) human oversight (operator-gated apply + interactive review + §7.7 amendment gate), (c) failure modes (extensive §10 table). If Stephen wants the explicit section header, that's a one-paragraph addition. Not a 10/10 blocker.
+A dedicated `## AI Risk Assessment` section would tighten COND-003 compliance. The task's §2 rationale paragraphs already cover (a) data sources for the dream detectors (audit rows + memory bodies + future transcripts), (b) human oversight (operator-gated apply + interactive review + §7.7 amendment gate), (c) failure modes (extensive §10 table). If Stephen wants the explicit section header, that's a one-paragraph addition. Not a 10/10 blocker.
 
 ---
 

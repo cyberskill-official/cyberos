@@ -85,13 +85,13 @@ mod tests {
 
     #[test]
     fn valid_description() {
-        let d = r#"Generate a task@1 markdown from PRDs. Use when user asks to "draft an FR" or "turn this PRD into a backlog". Outputs versioned FR-NNN-slug.md files with anti-fabrication discipline."#;
+        let d = r#"Generate a task@1 markdown from PRDs. Use when user asks to "draft a task" or "turn this PRD into a backlog". Outputs versioned TASK-NNN-slug.md files with anti-fabrication discipline."#;
         assert!(validate(d).is_ok());
     }
 
     #[test]
     fn too_short() {
-        let d = r#"Generate FRs. Use "draft" or "audit"."#;
+        let d = r#"Generate tasks. Use "draft" or "audit"."#;
         assert!(matches!(
             validate(d),
             Err(DescriptionViolation::TooShort { .. })
@@ -100,7 +100,7 @@ mod tests {
 
     #[test]
     fn forbidden_brackets() {
-        let d = r#"Generate <FR> markdowns. Use when user asks to "draft" or "audit". This is enough characters to clear the 80-char minimum length."#;
+        let d = r#"Generate <task> markdowns. Use when user asks to "draft" or "audit". This is enough characters to clear the 80-char minimum length."#;
         assert_eq!(
             validate(d).unwrap_err(),
             DescriptionViolation::ForbiddenBrackets
@@ -109,13 +109,13 @@ mod tests {
 
     #[test]
     fn missing_what_verb() {
-        let d = r#"Helps with FRs in the backlog. Useful when user says "FR" or "backlog" or "story". Returns markdown output."#;
+        let d = r#"Helps with tasks in the backlog. Useful when user says "task" or "backlog" or "story". Returns markdown output."#;
         assert_eq!(validate(d).unwrap_err(), DescriptionViolation::MissingWhat);
     }
 
     #[test]
     fn insufficient_triggers_single_positive() {
-        let d = r#"Generate FRs from a PRD source. Use when user asks to "draft an FR". Outputs versioned files in a structured backlog directory under output_dir for the team."#;
+        let d = r#"Generate tasks from a PRD source. Use when user asks to "draft a task". Outputs versioned files in a structured backlog directory under output_dir for the team."#;
         assert!(matches!(
             validate(d),
             Err(DescriptionViolation::InsufficientTriggers {
@@ -127,7 +127,7 @@ mod tests {
 
     #[test]
     fn negative_trigger_does_not_count() {
-        let d = r#"Generate FRs from a PRD source. Use when user asks to "draft an FR". Do NOT use for "audit existing FRs". Outputs versioned FR-NNN-slug.md files."#;
+        let d = r#"Generate tasks from a PRD source. Use when user asks to "draft a task". Do NOT use for "audit existing tasks". Outputs versioned TASK-NNN-slug.md files."#;
         assert!(matches!(
             validate(d),
             Err(DescriptionViolation::InsufficientTriggers {
@@ -139,7 +139,7 @@ mod tests {
 
     #[test]
     fn two_positive_plus_one_negative_accepts() {
-        let d = r#"Generate FRs from a PRD source. Use when user asks to "draft an FR" or "turn this PRD into a backlog". Do NOT use for "audit existing FRs". Outputs versioned files."#;
+        let d = r#"Generate tasks from a PRD source. Use when user asks to "draft a task" or "turn this PRD into a backlog". Do NOT use for "audit existing tasks". Outputs versioned files."#;
         assert!(validate(d).is_ok());
     }
 }

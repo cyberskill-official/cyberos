@@ -10,19 +10,19 @@ classifier_version: 3.0.0-a4
 
 ## Positive triggers (MUST route here)
 
-- "Turn this PRD into a backlog of FRs"
+- "Turn this PRD into a backlog of tasks"
 - "Draft a task for the new email-bounce handling"
-- "Expand the spec into FR markdowns"
-- "Generate the FR backlog from these source docs"
-- "Expand this PRD into FRs using the task@1 template"   (template override is still authoring - TASK-CUO-208)
+- "Expand the spec into task markdowns"
+- "Generate the task backlog from these source docs"
+- "Expand this PRD into tasks using the task@1 template"   (template override is still authoring - TASK-CUO-208)
 
 ## Negative triggers (MUST NOT route here)
 
-- "Audit this existing FR for completeness" → task-audit
-- "Has FR-007 changed since the last audit?" → task-audit
-- "Draft a tech spec from this FR" → fr-to-tech-spec
+- "Audit this existing task for completeness" → task-audit
+- "Has TASK-007 changed since the last audit?" → task-audit
+- "Draft a tech spec from this task" → fr-to-tech-spec
 - "What's our company holiday schedule?" → none
-- "Which FR template does this repo default to?" → none   (config question, nothing to author - TASK-CUO-208)
+- "Which task template does this repo default to?" → none   (config question, nothing to author - TASK-CUO-208)
 
 ## Authoring notes
 

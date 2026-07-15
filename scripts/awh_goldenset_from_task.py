@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""Derive an awh golden-set acceptance task from an FR's cited tests, and audit
+"""Derive an awh golden-set acceptance task from a task's cited tests, and audit
 cited-test path drift across the whole backlog.
 
 Two findings this operationalizes:
-1. FR specs cite test paths that are systematically stale (e.g. `tests/X.py` where the
+1. Task specs cite test paths that are systematically stale (e.g. `tests/X.py` where the
    real file is `tests/core/X.py`, plus some renames). The awh gate needs a cited->real
    mapping pass rather than trusting the cited path verbatim.
-2. Some cited tests do not exist on disk at all (the FR is a draft or the test was never
-   written). Those FRs cannot be auto-gated until the test lands.
+2. Some cited tests do not exist on disk at all (the task is a draft or the test was never
+   written). Those tasks cannot be auto-gated until the test lands.
 
 Usage:
-  awh_goldenset_from_fr.py TASK-MEMORY-116        # emit a golden-set acceptance task
-  awh_goldenset_from_fr.py --audit              # scan every FR, report cited-test drift
-  awh_goldenset_from_fr.py --audit --json       # machine-readable audit
+  awh_goldenset_from_task.py TASK-MEMORY-116        # emit a golden-set acceptance task
+  awh_goldenset_from_task.py --audit              # scan every task, report cited-test drift
+  awh_goldenset_from_task.py --audit --json       # machine-readable audit
 """
 from __future__ import annotations
 
@@ -23,8 +23,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path(".")
-FR_ROOT = Path("docs/tasks")
-# A test-file path mentioned anywhere in an FR: rooted (modules/.. , services/..) or
+TASK_ROOT = Path("docs/tasks")
+# A test-file path mentioned anywhere in a task: rooted (modules/.. , services/..) or
 # module-relative (tests/..). Captures the .py / .rs file.
 TEST_RE = re.compile(r"(?:modules/[\w.-]+/|services/[\w.-]+/)?tests/[\w./-]+\.(?:py|rs)")
 
@@ -35,14 +35,14 @@ CRATE = {  # module -> Rust crate package (where the module's service tests live
 
 
 def fr_files():
-    return sorted(p for p in FR_ROOT.rglob("FR-*.md") if not p.name.endswith(".audit.md"))
+    return sorted(p for p in TASK_ROOT.rglob("TASK-*.md") if not p.name.endswith(".audit.md"))
 
 
 def fr_module(text: str, path: Path) -> str:
     m = re.search(r"^module:\s*([A-Za-z]+)", text, re.M)
     if m:
         return m.group(1).lower()
-    parts = path.relative_to(FR_ROOT).parts
+    parts = path.relative_to(TASK_ROOT).parts
     return parts[0].lower() if parts else "?"
 
 
@@ -130,12 +130,12 @@ def audit(as_json: bool) -> int:
     for path in fr_files():
         text = path.read_text(encoding="utf-8")
         module = fr_module(text, path)
-        fid = re.search(r"^id:\s*(FR-[A-Z]+-\d+)", text, re.M)
+        fid = re.search(r"^id:\s*(TASK-[A-Z]+-\d+)", text, re.M)
         fid = fid.group(1) if fid else path.stem
         cites = cited_tests(text)
-        d = per_mod.setdefault(module, {"frs": 0, "with_cites": 0, "cites": 0,
+        d = per_mod.setdefault(module, {"tasks": 0, "with_cites": 0, "cites": 0,
                                         "resolved": 0, "unresolved": 0, "mapped": 0})
-        d["frs"] += 1
+        d["tasks"] += 1
         if cites:
             d["with_cites"] += 1
         miss = []
@@ -155,15 +155,15 @@ def audit(as_json: bool) -> int:
         print(json.dumps({"per_module": per_mod, "unresolved_frs": unresolved_frs}, indent=2))
         return 0
     print("cited-test drift audit (per module):")
-    print(f"  {'module':10s} {'FRs':>4} {'w/cites':>7} {'cites':>6} {'exact':>6} {'mapped':>6} {'unresolved':>10}")
-    tot = {"frs": 0, "cites": 0, "resolved": 0, "mapped": 0, "unresolved": 0}
+    print(f"  {'module':10s} {'tasks':>4} {'w/cites':>7} {'cites':>6} {'exact':>6} {'mapped':>6} {'unresolved':>10}")
+    tot = {"tasks": 0, "cites": 0, "resolved": 0, "mapped": 0, "unresolved": 0}
     for m in sorted(per_mod):
         d = per_mod[m]
         exact = d["resolved"] - d["mapped"]
-        print(f"  {m:10s} {d['frs']:>4} {d['with_cites']:>7} {d['cites']:>6} {exact:>6} {d['mapped']:>6} {d['unresolved']:>10}")
+        print(f"  {m:10s} {d['tasks']:>4} {d['with_cites']:>7} {d['cites']:>6} {exact:>6} {d['mapped']:>6} {d['unresolved']:>10}")
         for k in tot:
             tot[k] += d.get(k, 0)
-    print(f"  {'TOTAL':10s} {tot['frs']:>4} {'':>7} {tot['cites']:>6} {tot['resolved']-tot['mapped']:>6} {tot['mapped']:>6} {tot['unresolved']:>10}")
+    print(f"  {'TOTAL':10s} {tot['tasks']:>4} {'':>7} {tot['cites']:>6} {tot['resolved']-tot['mapped']:>6} {tot['mapped']:>6} {tot['unresolved']:>10}")
     print(f"\nFRs with at least one unresolved cited test: {len(unresolved_frs)}")
     for u in unresolved_frs[:20]:
         print(f"  {u['fr']:18s} {u['unresolved']}")
@@ -174,8 +174,8 @@ def audit(as_json: bool) -> int:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("fr", nargs="?", help="FR id, e.g. TASK-MEMORY-116")
-    ap.add_argument("--audit", action="store_true", help="scan all FRs for cited-test drift")
+    ap.add_argument("fr", nargs="?", help="task id, e.g. TASK-MEMORY-116")
+    ap.add_argument("--audit", action="store_true", help="scan all tasks for cited-test drift")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
     if args.audit:

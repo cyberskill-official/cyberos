@@ -23,7 +23,7 @@ The spec lands per-pack add-on pricing for the vertical-pack marketplace on top 
 
 ### ISS-002 — Cross-rail check duplication risk
 
-§1 #20 cross-rail rejected. But TASK-TEN-003 + TASK-TEN-102 each have their own guards. Resolved: §11.7 — this FR consumes existing guards; no new guard logic.
+§1 #20 cross-rail rejected. But TASK-TEN-003 + TASK-TEN-102 each have their own guards. Resolved: §11.7 — this task consumes existing guards; no new guard logic.
 
 ### ISS-003 — Pack uninstall mid-billing-period race
 

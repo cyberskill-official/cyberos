@@ -10,7 +10,7 @@
 
 ## 2026-05-19 — [AUTH] TASK-AUTH-005 drained 17/17 + rustc floor bumped 1.83→1.88
 
-**TASK-AUTH-005** (admin REST list_tenants + list_subjects + revoke + unrevoke + cursor + jti deny-list) drained end-to-end in one Cowork session. 17 spec-vs-code gaps closed across 5 slices; ≈1,300 LOC src + tests. BACKLOG line 224 mutated `planned` → `[BLOCKED: 17 gaps]` → `shipped + strict-audited`. **All 6 Wave-1 MUST AUTH FRs (001/002/003/004/005/006) are now shipped + strict-audited** — wave-1-2 deploy table-stakes are drain-complete.
+**TASK-AUTH-005** (admin REST list_tenants + list_subjects + revoke + unrevoke + cursor + jti deny-list) drained end-to-end in one Cowork session. 17 spec-vs-code gaps closed across 5 slices; ≈1,300 LOC src + tests. BACKLOG line 224 mutated `planned` → `[BLOCKED: 17 gaps]` → `shipped + strict-audited`. **All 6 Wave-1 MUST AUTH tasks (001/002/003/004/005/006) are now shipped + strict-audited** — wave-1-2 deploy table-stakes are drain-complete.
 
 New modules: `services/auth/src/{cursor,deny_list,sessions}.rs`. New migration: `migrations/0021_sessions.sql` (relocated per DEC-MIGRATION-SLOT-001; slot 0007 was taken). New memory_bridge emitters: `emit_subject_revoked` + `emit_subject_unrevoked`. New test files: `admin_list_test.rs` + `admin_revoke_test.rs` + `admin_cursor_pagination_test.rs` + `admin_deny_list_test.rs`. OTel `#[tracing::instrument]` on all 4 admin handlers.
 

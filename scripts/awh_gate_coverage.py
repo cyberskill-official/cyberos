@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Platform view of awh gate coverage: per module, is it gated, does it have a baseline,
-and what is the FR status mix. One glance at how far the out-of-band gate reaches.
+and what is the task status mix. One glance at how far the out-of-band gate reaches.
 
   awh_gate_coverage.py            # human table
   awh_gate_coverage.py --json
@@ -12,7 +12,7 @@ import json
 import re
 from pathlib import Path
 
-FR_ROOT = Path("docs/tasks")
+TASK_ROOT = Path("docs/tasks")
 ROADMAP = ["memory", "skill", "cuo", "auth", "chat", "proj"]
 # modules whose service crate is known red on main (do not gate green).
 # Empty now that ai is gated green (TASK-AI-001..022 shipped 2026-06-19).
@@ -20,11 +20,11 @@ KNOWN_RED: set[str] = set()
 
 
 def fr_status_counts(module: str) -> dict[str, int]:
-    d = FR_ROOT / module
+    d = TASK_ROOT / module
     counts: dict[str, int] = {}
     if not d.is_dir():
         return counts
-    for p in d.glob("FR-*.md"):
+    for p in d.glob("TASK-*.md"):
         if p.name.endswith(".audit.md"):
             continue
         m = re.search(r"^status:\s*['\"`]?([A-Za-z_]+)", p.read_text(encoding="utf-8")[:1500], re.M)
@@ -45,7 +45,7 @@ def held_out(module: str) -> str | None:
 
 
 def modules() -> list[str]:
-    fr_mods = {p.name for p in FR_ROOT.iterdir()
+    fr_mods = {p.name for p in TASK_ROOT.iterdir()
                if p.is_dir() and p.name != "docs" and not p.name.startswith(".")}
     awh_mods = {p.parent.parent.name for p in Path("modules").glob("*/.awh/goldenset.yaml")}
     ordered = ROADMAP + sorted((fr_mods | awh_mods) - set(ROADMAP))
@@ -73,7 +73,7 @@ def main() -> int:
 
     print(f"awh gate coverage: {sum(r['gated'] for r in rows)}/{len(rows)} modules gated, "
           f"{sum(r['baseline'] for r in rows)} with a committed baseline\n")
-    print(f"  {'module':9s} {'gated':5s} {'baseline':8s} {'red':3s} {'FRs':>4} status-mix")
+    print(f"  {'module':9s} {'gated':5s} {'baseline':8s} {'red':3s} {'tasks':>4} status-mix")
     for r in rows:
         rt = r["status"].get("ready_to_test", 0)
         dr = r["status"].get("draft", 0)

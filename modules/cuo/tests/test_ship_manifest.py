@@ -15,7 +15,7 @@ WORKFLOW_DOC = os.path.join(ROOT, "modules", "cuo", "chief-technology-officer",
                             "workflows", "ship-tasks.md")
 CONTRACT_DOC = os.path.join(ROOT, "modules", "skill", "contracts",
                             "task", "SHIP-MANIFEST.md")
-FR_DOC = os.path.join(ROOT, "docs", "tasks", "cuo",
+TASK_DOC = os.path.join(ROOT, "docs", "tasks", "cuo",
                       "TASK-CUO-206-ship-run-state-manifest.md")
 
 
@@ -78,7 +78,7 @@ class TestShipManifest(unittest.TestCase):
         self.assertIn("after EVERY completed, failed, or conditionally-skipped", doc)
         self.assertIn(".tmp.<nonce>", doc)
         with tempfile.TemporaryDirectory() as d:
-            p = os.path.join(d, "FR-X.ship.json")
+            p = os.path.join(d, "TASK-X.ship.json")
             sm.write_atomic(_manifest(), p)
             self.assertEqual(json.load(open(p))["task_id"], "TASK-TEN-208")
             self.assertEqual([f for f in os.listdir(d) if ".tmp." in f], [])
@@ -114,35 +114,38 @@ class TestShipManifest(unittest.TestCase):
 
     def test_queue_selection_total_order(self):  # AC 5
         tasks = [
-            {"id": "FR-A-002", "status": "ready_to_implement", "priority": "SHOULD",
+            {"id": "TASK-A-002", "status": "ready_to_implement", "priority": "SHOULD",
              "created": "2026-07-01", "depends_on": []},
-            {"id": "FR-A-003", "status": "ready_to_implement", "priority": "MUST",
-             "created": "2026-07-02", "depends_on": ["FR-A-009"]},  # unmet dep
-            {"id": "FR-B-001", "status": "ready_to_implement", "priority": "MUST",
-             "created": "2026-07-02", "depends_on": ["FR-A-001"]},
-            {"id": "FR-A-004", "status": "ready_to_implement", "priority": "MUST",
-             "created": "2026-07-02", "depends_on": []},  # ties FR-B-001 -> id asc wins
-            {"id": "FR-A-001", "status": "done", "priority": "MUST",
+            {"id": "TASK-A-003", "status": "ready_to_implement", "priority": "MUST",
+             "created": "2026-07-02", "depends_on": ["TASK-A-009"]},  # unmet dep
+            {"id": "TASK-B-001", "status": "ready_to_implement", "priority": "MUST",
+             "created": "2026-07-02", "depends_on": ["TASK-A-001"]},
+            {"id": "TASK-A-004", "status": "ready_to_implement", "priority": "MUST",
+             "created": "2026-07-02", "depends_on": []},  # ties TASK-B-001 -> id asc wins
+            {"id": "TASK-A-001", "status": "done", "priority": "MUST",
              "created": "2026-06-01", "depends_on": []},
-            {"id": "FR-A-005", "status": "draft", "priority": "MUST",
+            {"id": "TASK-A-005", "status": "draft", "priority": "MUST",
              "created": "2026-06-01", "depends_on": []},
         ]
         r1 = sm.select_next(tasks)
-        self.assertEqual(r1["picked"], "FR-A-004")
+        self.assertEqual(r1["picked"], "TASK-A-004")
         self.assertEqual(r1["reason"],
-                         "queue: picked FR-A-004 (priority=MUST, created=2026-07-02) "
-                         "over 2 other eligible FRs")
+                         "queue: picked TASK-A-004 (priority=MUST, created=2026-07-02) "
+                         "over 2 other eligible tasks")
         self.assertEqual(sm.select_next(list(reversed(tasks))), r1)  # deterministic
-        self.assertIsNone(sm.select_next([f for f in frs if f["status"] == "draft"])["picked"])
+        self.assertIsNone(sm.select_next([f for f in tasks if f["status"] == "draft"])["picked"])
 
     def test_gitignore_scaffold(self):  # AC 6
         gi = os.path.join(ROOT, "docs", "tasks", ".workflow", ".gitignore")
         self.assertEqual(open(gi).read().strip(), "*.ship.json")
-        init_sh = open(os.path.join(ROOT, "tools", "cyberos-init", "init.sh")).read()
+        # PRE-EXISTING failure, unrelated to the fr->task rename: init.sh was
+        # deleted in bb0f2392e ("1.0.0 CLI surface") and replaced by install.sh.
+        # The test kept opening the dead path and has been red ever since.
+        init_sh = open(os.path.join(ROOT, "tools", "cyberos-init", "install.sh")).read()
         self.assertIn(".workflow/.gitignore", init_sh)
         self.assertIn("*.ship.json", init_sh)
         out = subprocess.run(["git", "check-ignore",
-                              "docs/tasks/.workflow/FR-X.ship.json"],
+                              "docs/tasks/.workflow/TASK-X.ship.json"],
                              cwd=ROOT, capture_output=True)
         self.assertEqual(out.returncode, 0, "manifest path is not gitignored")
 

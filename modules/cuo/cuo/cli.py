@@ -211,8 +211,8 @@ def cmd_dry_run(ctx: click.Context, persona_workflow: str) -> None:
 @click.option(
     "--fr-id",
     default=None,
-    help="Force a specific FR (e.g. TASK-MEMORY-117). Shorthand for `--input task_id=<value>`. "
-         "Used by ship-tasks to target one FR rather than picking from BACKLOG.",
+    help="Force a specific task (e.g. TASK-MEMORY-117). Shorthand for `--input task_id=<value>`. "
+         "Used by ship-tasks to target one task rather than picking from BACKLOG.",
 )
 @click.option(
     "--auto-claim/--no-auto-claim",
@@ -237,7 +237,7 @@ def cmd_dry_run(ctx: click.Context, persona_workflow: str) -> None:
     "--backlog",
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
     default=None,
-    help="Path to BACKLOG.md for FR status lookup. Defaults to cyberos docs/tasks/BACKLOG.md.",
+    help="Path to BACKLOG.md for task status lookup. Defaults to cyberos docs/tasks/BACKLOG.md.",
 )
 @click.pass_context
 def cmd_execute(
@@ -458,7 +458,7 @@ def cmd_execute(
 @click.option(
     "--fr-id",
     required=True,
-    help="FR to resume (e.g. TASK-MEMORY-117).",
+    help="task to resume (e.g. TASK-MEMORY-117).",
 )
 @click.option(
     "--invoker",
@@ -470,7 +470,7 @@ def cmd_execute(
     "--backlog",
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
     default=None,
-    help="Path to BACKLOG.md for FR status lookup.",
+    help="Path to BACKLOG.md for task status lookup.",
 )
 @click.pass_context
 def cmd_resume(
@@ -549,14 +549,14 @@ def cmd_resume(
     "--output-dir",
     type=click.Path(file_okay=False, path_type=Path),
     required=True,
-    help="Directory where per-FR run artefacts are written. One subdir per FR.",
+    help="Directory where per-task run artefacts are written. One subdir per task.",
 )
 @click.option(
     "--module",
     "module_filter",
     default=None,
-    help="Filter FRs by module (e.g. 'memory'). Only FRs whose ID matches "
-         "FR-<MODULE>-<NNN> with matching module slug are picked.",
+    help="Filter tasks by module (e.g. 'memory'). Only tasks whose ID matches "
+         "TASK-<MODULE>-<NNN> with matching module slug are picked.",
 )
 @click.option(
     "--backlog",
@@ -566,10 +566,10 @@ def cmd_resume(
     help="Path to BACKLOG.md. Defaults to <cyberos_root>/docs/tasks/BACKLOG.md.",
 )
 @click.option(
-    "--max-frs",
+    "--max-tasks",
     type=int,
     default=0,
-    help="Max FRs to drain in this run. 0 = unbounded (until empty or HITL halt).",
+    help="Max tasks to drain in this run. 0 = unbounded (until empty or HITL halt).",
 )
 @click.option(
     "--invoker",
@@ -582,13 +582,13 @@ def cmd_resume(
     "--halt-on-repeat-rework",
     type=int,
     default=2,
-    help="Halt the drain loop when an FR routes back this many times "
+    help="Halt the drain loop when a task routes back this many times "
          "(default 2). Set 0 to disable.",
 )
 @click.option(
     "--rework/--no-rework",
     default=False,
-    help="Rework mode: allow selecting done FRs and re-running them from implementing to done.",
+    help="Rework mode: allow selecting done tasks and re-running them from implementing to done.",
 )
 @click.option(
     "--brief-output",
@@ -611,7 +611,7 @@ def cmd_drain(
     rework: bool,
     brief_output: Path | None,
 ) -> None:
-    """Drain a module's BACKLOG by running PERSONA_WORKFLOW on each eligible FR."""
+    """Drain a module's BACKLOG by running PERSONA_WORKFLOW on each eligible task."""
     from cuo.api import run
     run(
         persona_workflow,

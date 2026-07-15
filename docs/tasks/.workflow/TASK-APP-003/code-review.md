@@ -18,7 +18,7 @@ Status: `reviewing`. **HALTED at HITL gate 1 (review acceptance).** Diff under r
 ## Findings the review should weigh (implementer-disclosed)
 
 1. **Spec-skeleton bug fixed:** §3's child-signing step signed `Contents/MacOS/*` including the MAIN binary with the inherit plist — that would clobber the app's real entitlements. Implemented loop skips the main executable and re-seals the bundle only if a helper was signed. 
-2. **Real blocker discovered (AC #1 audit):** `tauri-plugin-updater` is active in the base config → MAS bundle would self-update = sandbox + policy violation. Recorded as **hard blocker #1**; needs a small `mas` cargo-feature follow-up FR (out of TASK-APP-003's scope per its own §11). `MAS_RELEASE` must stay off until then.
+2. **Real blocker discovered (AC #1 audit):** `tauri-plugin-updater` is active in the base config → MAS bundle would self-update = sandbox + policy violation. Recorded as **hard blocker #1**; needs a small `mas` cargo-feature follow-up task (out of TASK-APP-003's scope per its own §11). `MAS_RELEASE` must stay off until then.
 3. **Entitlement narrowed vs spec sketch:** `files.user-selected.read-write` dropped — zero fs access exists; keeping it would fail our own AC #2 lint and invite Apple scope-creep questions.
 4. **`modified_files` ended up empty:** spec predicted tauri.conf.json + release.yml edits; neither was needed (AC #3 forbids the first; standalone workflow avoids the second).
 5. AC #5 (`codesign`/`spctl` local run) is **expected-pending** — impossible without macOS + real certs; spec §5 explicitly allows documenting this state.

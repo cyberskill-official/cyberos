@@ -32,7 +32,7 @@ git commit --no-verify -m "feat(awh): absorb the verification gate; 7 modules gr
 Gate proven green on memory, skill, cuo, auth, chat, proj, email. Includes: vendored
 tools/awh, per-module .awh golden sets + baselines, ship-tasks step-28 gate
 (testing->done conditional on an independent GREEN rerun), CI + pre-commit (fail closed),
-FR re-baseline (116 done->ready_to_test) + 193 cited-test path fixes, the awh-gate skill,
+task re-baseline (116 done->ready_to_test) + 193 cited-test path fixes, the awh-gate skill,
 planning scripts (bootstrap/coverage/build-order/goldenset-from-fr/cited-fixups), the
 verification-gate docs page, and the migrated maturity ledger. Untracks leaked token files." \
   || { echo "  commit aborted (a hook failed?). Fix, then re-run or 'git commit' manually."; exit 1; }
@@ -55,5 +55,5 @@ Only these four are not scriptable here:
   2. Branch protection: mark the "awh gate" CI job required on main (GitHub settings).
   3. Retire standalone awh:  follow tools/awh/RETIREMENT.md  (all modules are green now).
   4. Ship Step 5: run chief-technology-officer/ship-tasks to move the 116
-     ready_to_test FRs to done; each now passes through the trusted gate.
+     ready_to_test tasks to done; each now passes through the trusted gate.
 NEXT

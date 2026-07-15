@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: coverage-gate-author
 description: >-
-  Test coverage gate (testing → done) — run the project's test suite + measure coverage on the files touched by the current FR (per the `git diff` since the FR's `implementing` status was set). Emits a coverage-gate@1 artefact: raw terminal output of the coverage tool, per-file coverage %, list of files below 90 %, list of edge-case-matrix rows without a corresponding test. Used by `chief-technology-officer/ship-tasks` during the `testing` phase to gate the `testing → done` transition (per `modules/skill/contracts/task/STATUS-REFERENCE.md` §1.1). Use when user asks to "draft a coverage gate" or "create the coverage gate". Do NOT use for "audit existing coverage gate" (use coverage-gate-audit instead). Do NOT use for spec correctness — that is `task-audit`'s job, run during the `draft → ready_to_implement` transition; the two gates are deliberately separated so spec correctness can be verified before any implementation work begins.
+  Test coverage gate (testing → done) — run the project's test suite + measure coverage on the files touched by the current task (per the `git diff` since the task's `implementing` status was set). Emits a coverage-gate@1 artefact: raw terminal output of the coverage tool, per-file coverage %, list of files below 90 %, list of edge-case-matrix rows without a corresponding test. Used by `chief-technology-officer/ship-tasks` during the `testing` phase to gate the `testing → done` transition (per `modules/skill/contracts/task/STATUS-REFERENCE.md` §1.1). Use when user asks to "draft a coverage gate" or "create the coverage gate". Do NOT use for "audit existing coverage gate" (use coverage-gate-audit instead). Do NOT use for spec correctness — that is `task-audit`'s job, run during the `draft → ready_to_implement` transition; the two gates are deliberately separated so spec correctness can be verified before any implementation work begins.
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -38,7 +38,7 @@ blockers:
 
 ## 1. What it does
 
-1. Reads the FR's `building` status timestamp from BACKLOG.md.
+1. Reads the task's `building` status timestamp from BACKLOG.md.
 2. `git diff --name-only <building_ts>..HEAD` → the touched-files set.
 3. Picks the right coverage tool per language (rust: `cargo tarpaulin`
    or `cargo llvm-cov`; python: `pytest --cov`; node: `vitest --coverage`).
@@ -51,7 +51,7 @@ blockers:
 
 ```yaml
 # coverage-gate@1
-task_id: FR-<MODULE>-<NNN>
+task_id: task-<MODULE>-<NNN>
 generated_at: <ISO-8601>
 language: rust | python | typescript | mixed
 tool: tarpaulin | llvm-cov | pytest-cov | vitest | ...

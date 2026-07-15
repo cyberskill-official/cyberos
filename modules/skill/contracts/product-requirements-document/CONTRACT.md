@@ -25,7 +25,7 @@ emitted_source_freshness_tier: 18   # high authority — a passed-audit PRD is s
 
 # `product-requirements-document@1` — canonical PRD contract
 
-> A **contract**, not a skill. Holds the single source of truth for the Product Requirements Document artefact shape across CyberOS. Loaded by `cuo/cpo/product-requirements-document-author` (as the generation skeleton); will be loaded by `cuo/cpo/product-requirements-document-audit` (registry v0.2.5) as the validation target. Consumed by `cuo/cpo/task-author` as the canonical PRD shape it decomposes into FRs.
+> A **contract**, not a skill. Holds the single source of truth for the Product Requirements Document artefact shape across CyberOS. Loaded by `cuo/cpo/product-requirements-document-author` (as the generation skeleton); will be loaded by `cuo/cpo/product-requirements-document-audit` (registry v0.2.5) as the validation target. Consumed by `cuo/cpo/task-author` as the canonical PRD shape it decomposes into tasks.
 
 ## Why a separate contract for PRDs
 

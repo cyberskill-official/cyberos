@@ -2,8 +2,16 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future fr-catalog renderer) ─────
 id: TASK-AI-009
 title: "Circuit breaker per (provider, model) with half-open recovery probing"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AI
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P0
@@ -929,10 +937,10 @@ fn emit_transition(provider: &ProviderKind, model: &str, from: BreakerState, to:
 
 ## §7 — Dependencies
 
-### Code dependencies (other FRs/modules)
+### Code dependencies (other tasks/modules)
 
 - **TASK-AI-008** — `router::call_provider` calls `breaker::is_open` before each provider dispatch and `breaker::record_outcome` after. The `router::failover::build_provider_chain` (TASK-AI-008 §6) filters out `(provider, model)` pairs whose breakers are open.
-- **TASK-AI-007 ISS-003 fix** — `ProviderKind::as_metric_label()` MUST exist. If TASK-AI-007 ships without it, this FR adds it as a sub-task (it lives in `policy/schema.rs` per TASK-AI-007's audit resolution).
+- **TASK-AI-007 ISS-003 fix** — `ProviderKind::as_metric_label()` MUST exist. If TASK-AI-007 ships without it, this task adds it as a sub-task (it lives in `policy/schema.rs` per TASK-AI-007's audit resolution).
 - **TASK-AI-021 (downstream)** — Operator CLI exposes `cyberos-ai breaker status` (calls `status_all()`) and `cyberos-ai breaker reset <provider> <model>` (calls `reset()`).
 
 ### Concept dependencies (shared types)
@@ -1014,7 +1022,7 @@ t=30.5s: new is_open() call returns false (Closed)
 
 ## §9 — Open questions
 
-All resolved at authoring time. Items deferred to later FRs:
+All resolved at authoring time. Items deferred to later tasks:
 
 - Per-tenant breaker scoping (TASK-AI-021).
 - Adaptive thresholds based on historical failure rate (TASK-AI-022, P3).

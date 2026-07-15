@@ -197,7 +197,7 @@ def test_validate_extras_error_required_on_non_success() -> None:
 def test_episode_log_writes_audit_row(store: Path) -> None:
     """AC #4 — `log()` advances HEAD via canonical writer."""
     ep = Episode(
-        task="ship FR", approach="audit-revise loop", outcome="success",
+        task="ship task", approach="audit-revise loop", outcome="success",
         duration_ms=1800_000, quality_score=0.92,
     )
     with Writer(store) as writer:
@@ -210,11 +210,11 @@ def test_episode_log_writes_audit_row(store: Path) -> None:
     fm, body = parse(raw)
     assert fm.kind == "episode"
     assert fm.actor == "stephen"
-    assert fm.extra["task"] == "ship FR"
+    assert fm.extra["task"] == "ship task"
     assert fm.extra["outcome"] == "success"
     assert fm.extra["quality_score"] == 0.92
     # Body matches the searchable document
-    assert body.startswith(b"Task: ship FR\n")
+    assert body.startswith(b"Task: ship task\n")
 
 
 def test_recall_similar_filters_to_episode_kind(store: Path) -> None:

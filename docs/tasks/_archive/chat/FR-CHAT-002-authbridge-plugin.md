@@ -61,7 +61,7 @@ subtasks:
 risk_if_skipped: "Without authbridge, Mattermost runs its own user database — two sources of truth (AUTH-004 + Mattermost). Users get confused (different password per service). Token revocation requires double-cleanup. Without tenant_id propagation, Mattermost shows messages from all tenants in one team. JIT provisioning means no IT-admin friction on user onboarding."
 ---
 
-> CLOSED - SUPERSEDED (2026-06-29). This FR is retained for history only; do not implement it. The
+> CLOSED - SUPERSEDED (2026-06-29). This task is retained for history only; do not implement it. The
 > AuthBridge plugin it specifies cannot work: a Mattermost plugin cannot replace the core
 > `/api/v4/users/login` route (plugins only serve under `/plugins/<id>/`), and the shipped
 > `services/chat/plugins/cyberos-authbridge/` is a non-working simulation - it does not use the Mattermost

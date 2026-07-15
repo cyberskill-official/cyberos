@@ -1,8 +1,16 @@
 ---
 id: TASK-PLUGIN-002
 title: "CyberOS MCP bridge server — exposes CUO/memory/SKILL tools over MCP 2025-11-25 protocol; single binary with stdio + HTTP transports"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-19T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: PLUGIN
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P1
@@ -25,7 +33,7 @@ source_decisions:
   - DEC-2410 2026-05-19 — Bridge ships as ONE Rust binary `cyberos-mcp-bridge` at services/plugin-host/ — supports both stdio and HTTP transports
   - DEC-2411 2026-05-19 — Default transport for desktop hosts (Claude Code, Cursor, Codex CLI) is stdio; HTTP is for Cowork + future cloud hosts
   - DEC-2412 2026-05-19 — Bridge implements MCP 2025-11-25 spec — initialize + tools/list + tools/call + capabilities negotiation per TASK-MCP-001
-  - DEC-2413 2026-05-19 — Initial tool surface = 8 tools across CUO (4) + memory (2) + SKILL (2); expansion via FR-PLUGIN-002a/b/c successor FRs
+  - DEC-2413 2026-05-19 — Initial tool surface = 8 tools across CUO (4) + memory (2) + SKILL (2); expansion via task-PLUGIN-002a/b/c successor tasks
   - DEC-2414 2026-05-19 — Long-running tools (CUO execute_workflow) implement MCP Tasks primitive per TASK-MCP-007 — async handle + status poll + resume-on-reconnect
   - DEC-2415 2026-05-19 — Bridge state is stateless — every request carries tenant_id (from JWT) and trace_id; no in-memory session affinity
   - DEC-2416 2026-05-19 — Tool errors MUST distinguish 4 classes (input_validation / authz_denied / upstream_unavailable / internal_error) for host-side UX
@@ -140,7 +148,7 @@ The PLUGIN module **MUST** ship the MCP bridge server at `services/plugin-host/`
 
 13. **MUST NOT** include CyberOS-internal data in error messages — error bodies are user-safe but do NOT leak: memory audit row contents, JWT bytes, internal DB IDs (use trace_id instead), tenant data from other tenants.
 
-14. **MUST NOT** speak any MCP protocol version other than 2025-11-25 in v1 per DEC-2412. Future protocol versions land via FR-MCP-001b/c successor FRs.
+14. **MUST NOT** speak any MCP protocol version other than 2025-11-25 in v1 per DEC-2412. Future protocol versions land via task-MCP-001b/c successor tasks.
 
 ---
 
@@ -152,7 +160,7 @@ The PLUGIN module **MUST** ship the MCP bridge server at `services/plugin-host/`
 
 **Why MCP 2025-11-25 only (DEC-2412, clause 14)?** Mixing protocol versions in one binary multiplies code paths quadratically. TASK-MCP-001 already commits the gateway to this version. Plugin bridge inherits.
 
-**Why exactly 8 tools at first ship (DEC-2413)?** Each tool is an API contract that must be stable (clients depend on the name + schema). Shipping 8 well-considered tools is far better than 30 hastily-named ones. The 8 cover the most common host workflows: orchestration (CUO 4), memory (memory 2), skill discovery (SKILL 2). Future tools land via FR-PLUGIN-002a/b/c.
+**Why exactly 8 tools at first ship (DEC-2413)?** Each tool is an API contract that must be stable (clients depend on the name + schema). Shipping 8 well-considered tools is far better than 30 hastily-named ones. The 8 cover the most common host workflows: orchestration (CUO 4), memory (memory 2), skill discovery (SKILL 2). Future tools land via task-PLUGIN-002a/b/c.
 
 **Why subprocess invocation for CUO (clause 4)?** CUO supervisor is Python; bridge is Rust. Without a Python embedding (PyO3 is heavy), the cleanest IPC is subprocess + JSON-RPC over stdin/stdout. Subprocess invocation also gives clean process isolation — a CUO crash doesn't take the bridge down.
 
@@ -504,7 +512,7 @@ Emitted by `cyberos.memory.append_audit` itself, but also by `cyberos.cuo.execut
 All resolved.
 
 - ~~Should the bridge embed CUO supervisor via PyO3?~~ → No, subprocess invocation per clause 4. Lighter dependency footprint, clean process isolation.
-- ~~Should we support MCP 2024-11-05 alongside 2025-11-25?~~ → No, single version per DEC-2412 + clause 14. Multi-version handled in future FR.
+- ~~Should we support MCP 2024-11-05 alongside 2025-11-25?~~ → No, single version per DEC-2412 + clause 14. Multi-version handled in future task.
 - ~~Should task state live in SQLite for single-instance simplicity?~~ → No, Postgres per clause 5. Multi-instance is the deploy target.
 - ~~Should CORS default to permissive for dev ergonomics?~~ → No, deny by default per clause 11. Dev opt-in is explicit `--cors-origin '*'`.
 
@@ -542,7 +550,7 @@ All resolved.
 
 - §11.4 **memory HTTP client.** `reqwest::Client` with default 5s timeout, 3 retries with exponential backoff (250ms / 1s / 4s). Body bytes flow as `application/json`.
 
-- §11.5 **Task polling design.** Client polls `tasks/get` every 500ms-1s typically. Bridge serves from Postgres directly (cheap read). For chatty clients, optional server-sent events (`tasks/stream?id=...`) lands in FR-PLUGIN-002a.
+- §11.5 **Task polling design.** Client polls `tasks/get` every 500ms-1s typically. Bridge serves from Postgres directly (cheap read). For chatty clients, optional server-sent events (`tasks/stream?id=...`) lands in task-PLUGIN-002a.
 
 - §11.6 **Reconnect resume.** Task state in Postgres is the canonical record. On client reconnect, client re-sends `tasks/get`; bridge looks up by task_id (scoped by tenant_id via RLS). State is current as of last status update. Final output is delivered via the same poll loop.
 

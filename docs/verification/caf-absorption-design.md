@@ -4,7 +4,7 @@
 
 Absorb CyberSkill/code-audit-framework (CAF) and code-audit-field-data into CyberOS the way awh was
 absorbed, so CyberOS can not only rerun tests independently (awh) but also audit code independently
-(CAF). End state: every FR, and every project, goes implement (CUO) -> tests-pass gate (awh) ->
+(CAF). End state: every task, and every project, goes implement (CUO) -> tests-pass gate (awh) ->
 code-audit gate (CAF) -> local pass -> live pass. The 8-project trigger is deferred per the owner;
 this document is the design only.
 
@@ -127,4 +127,4 @@ Remaining (owner-run on a build machine, or a later pass):
    (the LLM half - needs an executor: ANTHROPIC_API_KEY, a self-hosted model, or the Cowork host LLM
    via `--invoker brief`). Until then the gate runs the target-health-only floor, which already catches
    the CCAF/kymondongiap class.
-3. Commit on auto/awh-absorb; run the RETIREMENT.md procedure once a real FR has passed the caf-gate.
+3. Commit on auto/awh-absorb; run the RETIREMENT.md procedure once a real task has passed the caf-gate.

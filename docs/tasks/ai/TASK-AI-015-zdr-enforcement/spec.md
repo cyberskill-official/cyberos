@@ -2,8 +2,16 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future fr-catalog renderer) ─────
 id: TASK-AI-015
 title: "ZDR (Zero Data Retention) attestation table + enforcement when tenant policy requires"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AI
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P0
@@ -83,14 +91,14 @@ The AI Gateway service **MUST** maintain an authoritative ZDR (Zero Data Retenti
 2. **MUST** expose `zdr::is_zdr(provider: &ProviderKind, model: &str) -> bool` and `zdr::attestation_for(provider: &ProviderKind, model: &str) -> Option<ZdrAttestation>`. The boolean is the gate; the attestation struct is the audit-trail primitive.
 3. **MUST** default `is_zdr` to `false` for any (provider, model) NOT in the table — fail closed. The lookup must never return `true` based on a missing entry, a parse fallback, or a "trust the provider" heuristic. A non-attested call when policy requires ZDR is a refusal, not an unknown.
 4. **MUST** require every YAML entry to carry `is_zdr` (bool), `verified_at` (ISO date), `source_url` (HTTPS URL — HTTP rejected at parse), and `attested_by` (kebab-case email or username). `notes` is optional. An entry missing any required field MUST fail `init_zdr_table` with `LoaderInitError::Schema { reason }`. ZDR claims without source = audit failure; the parser blocks them at boot.
-5. **MUST** be consulted by `alias::resolve` (TASK-AI-006 §1 #6 invokes this FR) BEFORE returning a resolved (provider, model). When `policy.ai_policy.zdr_required == true` AND `zdr::is_zdr(&resolved_provider, &resolved_model) == false`, `alias::resolve` MUST return `Err(AliasError::ZdrViolation { resolved_provider, resolved_model, attestation: <option> })`. The `attestation` field surfaces the documented status (e.g., a known-non-ZDR provider returns the entry with `is_zdr: false`; a missing entry returns `None`) so the operator can distinguish "we know this isn't ZDR" from "we have no record."
+5. **MUST** be consulted by `alias::resolve` (TASK-AI-006 §1 #6 invokes this task) BEFORE returning a resolved (provider, model). When `policy.ai_policy.zdr_required == true` AND `zdr::is_zdr(&resolved_provider, &resolved_model) == false`, `alias::resolve` MUST return `Err(AliasError::ZdrViolation { resolved_provider, resolved_model, attestation: <option> })`. The `attestation` field surfaces the documented status (e.g., a known-non-ZDR provider returns the entry with `is_zdr: false`; a missing entry returns `None`) so the operator can distinguish "we know this isn't ZDR" from "we have no record."
 6. **MUST** emit an `ai.zdr_violation` memory audit row when a request is refused due to ZDR. The row carries `tenant_id`, `agent_persona`, `requested_alias`, `resolved_provider`, `resolved_model`, `policy_requires_zdr: true`, `attestation_present: bool`, `request_id`. The audit-before-refusal invariant from TASK-AI-001 §1 #6 applies.
 7. **MUST** be hot-reloadable via the `notify` crate's file-watch with a 250ms debounce (same machinery as TASK-AI-005, TASK-AI-007, TASK-AI-014). On reload-success, the new attestations replace the cache via `ArcSwap::store`.
 8. **MUST** detect ZDR-status revocations on hot-reload: for every (provider, model) where the previous cache entry had `is_zdr == true` AND the new entry has `is_zdr == false`, emit `tracing::warn!` AND increment `ai_zdr_attestations_revoked_total{provider, model}`. Operators MUST be alerted (the metric is a sev-2 alarm trigger).
 9. **MUST** implement staleness handling at two thresholds. (a) **Soft stale** at `verified_at + 90 days`: weekly CI cron (`.github/workflows/zdr-staleness-check.yml`) flags the entry; PR-time validation logs WARN; metric `ai_zdr_attestations_stale_total{provider, model}` increments. (b) **Hard stale** at `verified_at + 365 days`: `is_zdr` MUST return `false` regardless of the table's recorded value (defensive override; an attestation no one has reverified for a year is no longer trustworthy). The hard-stale path also logs `tracing::error!` and increments `ai_zdr_attestations_expired_total`.
 10. **MUST** validate `source_url` at parse time: scheme MUST be `https`, host MUST be a valid DNS name (or known provider domain — `aws.amazon.com`, `anthropic.com`, `platform.openai.com`, `cloud.google.com`, etc.). HTTP URLs and bare paths are rejected with `LoaderInitError::InvalidSourceUrl`. The validator does NOT fetch the URL (no network call at parse time); it only validates syntax + scheme.
 11. **MUST** validate `attested_by` at parse time as either `<localpart>@cyberos.world` (CyberSkill staff) OR `<auditor-id>@<approved-auditor-domain>` (third-party auditor on a maintained allow-list). Random strings are rejected with `LoaderInitError::InvalidAttestor`. The allow-list lives in `parse.rs` constants for slice 3; TASK-AI-022 will move it to a separate config.
-12. **MUST** integrate with `policy.ai_policy.zdr_required` from TASK-AI-005's tenant policy schema. The flag is read once per request via TASK-AI-001's policy load; this FR reads it through the request context, never directly from disk.
+12. **MUST** integrate with `policy.ai_policy.zdr_required` from TASK-AI-005's tenant policy schema. The flag is read once per request via TASK-AI-001's policy load; this task reads it through the request context, never directly from disk.
 13. **MUST** propagate `ZdrViolation` errors as HTTP `403 ZDR_VIOLATION` with body `{"error":"zdr_violation","resolved_provider":"<p>","resolved_model":"<m>","policy_requires_zdr":true,"contact":"ops@cyberos.world"}`. The body MUST NOT echo the attestation's `notes` field (operator-facing explanation, not customer-facing).
 14. **SHOULD** emit OTel metrics:
     - `ai_zdr_lookups_total{provider, model, outcome}` (counter; outcome ∈ `attested | missing | revoked | expired`).
@@ -690,21 +698,21 @@ pub mod canonical {
 
 ## §7 — Dependencies
 
-### Code dependencies (other FRs/modules)
+### Code dependencies (other tasks/modules)
 
-- **TASK-AI-006** — `alias::resolve` invokes `zdr::is_zdr` (declared in TASK-AI-006 §1 #6); this FR provides the implementation. The `AliasError::ZdrViolation` variant is added to TASK-AI-006's enum.
+- **TASK-AI-006** — `alias::resolve` invokes `zdr::is_zdr` (declared in TASK-AI-006 §1 #6); this task provides the implementation. The `AliasError::ZdrViolation` variant is added to TASK-AI-006's enum.
 - **TASK-AI-001** — Cost ledger precheck routes the request; `ZdrViolation` errors propagate through the precheck path to the handler.
-- **TASK-AI-005** — Tenant policy schema declares `policy.ai_policy.zdr_required`; this FR consumes it via the request context.
-- **TASK-AI-003** — memory audit-row bridge. This FR adds the `canonical::zdr_violation` builder for the `ai.zdr_violation` row kind (declared in TASK-AI-003 §3).
-- **TASK-AI-016 (downstream)** — Residency pinning is the natural pair of ZDR; both gates live behind tenant policy. TASK-AI-016 may extend this FR's table with regional-attestation columns.
+- **TASK-AI-005** — Tenant policy schema declares `policy.ai_policy.zdr_required`; this task consumes it via the request context.
+- **TASK-AI-003** — memory audit-row bridge. This task adds the `canonical::zdr_violation` builder for the `ai.zdr_violation` row kind (declared in TASK-AI-003 §3).
+- **TASK-AI-016 (downstream)** — Residency pinning is the natural pair of ZDR; both gates live behind tenant policy. TASK-AI-016 may extend this task's table with regional-attestation columns.
 - **TASK-AI-022 (downstream)** — OTel trace emission consumes `ai_zdr_*` metrics.
 
 ### Concept dependencies (shared types)
 
 - `ZdrAttestation` is the single attestation primitive used in lookups, audit rows, and operator queries. The five required fields (is_zdr, verified_at, source_url, attested_by, notes) are immutable across slice 3.
-- `(ProviderKind, String)` is the attestation key. ProviderKind enum is declared in TASK-AI-008's multi-provider router; this FR uses the same enum.
+- `(ProviderKind, String)` is the attestation key. ProviderKind enum is declared in TASK-AI-008's multi-provider router; this task uses the same enum.
 - `APPROVED_AUDITOR_DOMAINS` is the attestor allow-list (cyberos.world + third-party SOC 2 firms). Maintained in `parse.rs` constants for slice 3; TASK-AI-022 moves to a separate config.
-- Soft/hard staleness thresholds (90d / 365d) are baked-in constants matching SOC 2 cadence; changes require explicit FR amendment.
+- Soft/hard staleness thresholds (90d / 365d) are baked-in constants matching SOC 2 cadence; changes require explicit task amendment.
 
 ### Operational / external
 
@@ -815,9 +823,9 @@ Soft-stale entries (>90 days; refresh due):
 
 ## §9 — Open questions
 
-All resolved at authoring time. Items deferred to later FRs:
+All resolved at authoring time. Items deferred to later tasks:
 
-- Enterprise-plan tenant-tier check (Anthropic direct API requires Enterprise plan for ZDR; current FR ships the note-as-documentation but doesn't runtime-validate the tenant tier) — TASK-AI-022 follow-up.
+- Enterprise-plan tenant-tier check (Anthropic direct API requires Enterprise plan for ZDR; current task ships the note-as-documentation but doesn't runtime-validate the tenant tier) — TASK-AI-022 follow-up.
 - Per-region ZDR attestation (Vertex retention is region-dependent; current table is provider+model granularity) — TASK-AI-016 (residency pinning) area.
 - Auto-refresh attestations from provider APIs (programmatic scrape of provider policy pages) — out of scope; the human-in-the-loop verification step is the audit primitive.
 - Signed attestations (cryptographic signature from the attestor) — out of scope; `attested_by` + git-blame is sufficient evidence.
@@ -863,7 +871,7 @@ All resolved at authoring time. Items deferred to later FRs:
 - The audit row (`ai.zdr_violation`) is the proof-of-refusal primitive. Regulators investigating "did you ever route PDPL data to a non-ZDR provider for tenant X" can search the chain for `ai.zdr_violation` rows scoped to that tenant; positive results prove the gate fired.
 - The Anthropic "Enterprise plan only" caveat in the YAML is documentation-only for slice 3. A tenant on a non-Enterprise Anthropic plan whose calls route to Anthropic direct will get ZDR-attested results from this gate but might NOT actually have ZDR coverage (Anthropic's enforcement is at the API key tier). TASK-AI-022 will add the runtime tenant-tier check; until then, ops manually validates Enterprise tier per tenant during onboarding.
 - The OTel metric set (`ai_zdr_*`) is designed for direct dashboarding. The `attestations_expired_total` metric should pager-alert (sev-1) on any non-zero increment because it indicates the hard-stale safety net engaged — operators should reverify within hours, not days.
-- Future expansion (TASK-AI-016): regional ZDR attestation. Vertex's "is_zdr" depends on which region the call routes to; current schema collapses all regions into one boolean. The residency-pinning FR will likely extend this schema with `regions: { vn: true, eu: true, us: false }` per attestation. Until then, the conservative approach is to mark Vertex as `is_zdr: false` (current state) until per-region attestation lands.
+- Future expansion (TASK-AI-016): regional ZDR attestation. Vertex's "is_zdr" depends on which region the call routes to; current schema collapses all regions into one boolean. The residency-pinning task will likely extend this schema with `regions: { vn: true, eu: true, us: false }` per attestation. Until then, the conservative approach is to mark Vertex as `is_zdr: false` (current state) until per-region attestation lands.
 
 ---
 

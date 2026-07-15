@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: observability-injection-author
 description: >-
-  Walk the critical paths of the FR's implementation plan and emit an `observability-injection@1`: (a) structured-log lines at every state transition (always carrying tenant_id + subject_id when in-scope), (b) trace spans wrapping every external IO call, (c) counter increments for every error branch, (d) a coverage estimate (% of branches with a log/metric/trace point). Used by chief-technology-officer/ship-tasks as step 11. Use when user asks to "draft a observability injection" or "create the observability injection". Do NOT use for "audit existing observability injection" (use observability-injection-audit instead).
+  Walk the critical paths of the task's implementation plan and emit an `observability-injection@1`: (a) structured-log lines at every state transition (always carrying tenant_id + subject_id when in-scope), (b) trace spans wrapping every external IO call, (c) counter increments for every error branch, (d) a coverage estimate (% of branches with a log/metric/trace point). Used by chief-technology-officer/ship-tasks as step 11. Use when user asks to "draft a observability injection" or "create the observability injection". Do NOT use for "audit existing observability injection" (use observability-injection-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -34,7 +34,7 @@ triggers:
   - workflow `chief-technology-officer/ship-tasks` step 11
 blockers:
   - "no observability sink configured in repo (tracing/log subscriber missing) — must be resolved first"
-  - "implementation-plan has zero critical paths — author misclassified the FR; escalate"
+  - "implementation-plan has zero critical paths — author misclassified the task; escalate"
 ---
 
 # observability-injection-author
@@ -51,7 +51,7 @@ required input for any path it generates.
 
 ```yaml
 # observability-injection@1
-task_id: FR-<MODULE>-<NNN>
+task_id: task-<MODULE>-<NNN>
 generated_at: <ISO-8601>
 language: rust | python | typescript | mixed
 subscriber: "tracing / log / structlog / pino / ..."
@@ -81,8 +81,8 @@ redaction_policy:
 - Every external IO in `impl_plan.external_calls` has ≥ 1 trace_span.
 - Every error branch in `impl_plan.error_branches` has ≥ 1 error_counter.
 - `branch_coverage.coverage_pct ≥ 80`.
-- `redaction_policy` is non-empty if the FR touches any PII (verified
-  against the FR's `data:` frontmatter classification).
+- `redaction_policy` is non-empty if the task touches any PII (verified
+  against the task's `data:` frontmatter classification).
 
 ## 4. Chains to
 

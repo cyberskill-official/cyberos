@@ -2,8 +2,16 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + fr-catalog renderer) ─────
 id: TASK-MEMORY-105
 title: "cyberos doctor — watched-folders integrity invariants (manifest ↔ filesystem ↔ HEAD reconciliation; 5 new invariants in memory.invariants.yaml)"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: memory
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -620,9 +628,9 @@ include:
 
 ## §7 — Dependencies
 
-- **TASK-MEMORY-101 (upstream)** — defines `manifest.watched_folders[]` schema, the data this FR audits.
+- **TASK-MEMORY-101 (upstream)** — defines `manifest.watched_folders[]` schema, the data this task audits.
 - **TASK-MEMORY-102 (related)** — `cyberos memory watch/unwatch` is the repair path for `WatchedFolderManifestPresent` failures.
-- **TASK-MEMORY-103 (related)** — multi-device sync writes folder HEADs; if it bypasses the canonical writer, this FR catches it.
+- **TASK-MEMORY-103 (related)** — multi-device sync writes folder HEADs; if it bypasses the canonical writer, this task catches it.
 - **TASK-MEMORY-107 (downstream)** — FS watcher's startup uses `doctor --only watched-folders` as a gate; refuses to start if any error-severity invariant fails.
 - **TASK-MEMORY-110 (downstream)** — health-check daemon runs doctor on a 60-second interval and reports failures via OTel.
 - **TASK-OBS-003, TASK-OBS-005, TASK-OBS-007 (cross-module)** — metrics + spans flow into observability pillar.

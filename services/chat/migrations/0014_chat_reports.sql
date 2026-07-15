@@ -1,6 +1,6 @@
 -- TASK-CHAT-267: in-app content reporting. One row per report.
 --
--- Numbering: the FR text specifies 0013, but 0013_chat_hot_indexes.sql already exists. Renumbered to 0014;
+-- Numbering: the task text specifies 0013, but 0013_chat_hot_indexes.sql already exists. Renumbered to 0014;
 -- no other change to the shape.
 --
 -- The snapshot_* columns are written once at INSERT and never updated. The reported message can be edited or
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS chat_reports (
     snapshot_sender_id     UUID NULL,
     snapshot_taken_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    -- Written only by TASK-CHAT-269 (the moderation queue). This FR creates the columns and never
+    -- Written only by TASK-CHAT-269 (the moderation queue). This task creates the columns and never
     -- transitions them.
     status                 TEXT NOT NULL DEFAULT 'open',
     resolution             TEXT NULL,

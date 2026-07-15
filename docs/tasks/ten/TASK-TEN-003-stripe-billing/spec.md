@@ -1,8 +1,16 @@
 ---
 id: TASK-TEN-003
 title: "Stripe billing integration — USD/EUR/SGD/GBP customer + subscription + per-period invoice + overage push for international tenants"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: TEN
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P2
@@ -43,10 +51,10 @@ source_decisions:
   - DEC-795 2026-05-17 — Stripe API errors with `Retry-After` honoured; 5xx → exponential backoff (1s, 2s, 4s, 8s, 16s) to 5 min cap; persistent 5xx → memory audit + alert sev-2
   - DEC-796 2026-05-17 — `tenants.stripe_customer_id` UNIQUE NOT NULL when populated; nullable until first Stripe interaction; partial unique index `WHERE stripe_customer_id IS NOT NULL`
   - DEC-797 2026-05-17 — Plan downgrade defers Stripe subscription update to next billing period via Stripe Subscription Schedule (consistent with TASK-TEN-002 DEC-773)
-  - DEC-798 2026-05-17 — Multi-currency conversion not handled — tenant locked to billing_currency at provisioning; currency change = new tenant + manual migration (out-of-scope, deferred to FR-TEN-2xx)
-  - DEC-799 2026-05-17 — Tax handling deferred to FR-TEN-1xx — Stripe Tax integration not in slice 2; invoices ship `tax_behavior=exclusive` + manual tax_rate=0 in P2; tax-inclusive pricing for EU VAT lands at P3
+  - DEC-798 2026-05-17 — Multi-currency conversion not handled — tenant locked to billing_currency at provisioning; currency change = new tenant + manual migration (out-of-scope, deferred to task-TEN-2xx)
+  - DEC-799 2026-05-17 — Tax handling deferred to task-TEN-1xx — Stripe Tax integration not in slice 2; invoices ship `tax_behavior=exclusive` + manual tax_rate=0 in P2; tax-inclusive pricing for EU VAT lands at P3
   - DEC-800 2026-05-17 — Plan upgrade prorates via Stripe `proration_behavior=create_prorations`; downgrade uses `proration_behavior=none` (deferred per DEC-797)
-  - DEC-801 2026-05-17 — Stripe API key per residency (us-1 uses Stripe US account; eu-1 uses Stripe EU; sg-1 uses Stripe Singapore); TASK-TEN-103 wires the residency→API-key map; this FR consumes that map and never short-circuits
+  - DEC-801 2026-05-17 — Stripe API key per residency (us-1 uses Stripe US account; eu-1 uses Stripe EU; sg-1 uses Stripe Singapore); TASK-TEN-103 wires the residency→API-key map; this task consumes that map and never short-circuits
   - DEC-802 2026-05-17 — Stripe Customer email = the tenant's `billing_contact_email`; PII-scrubbed in memory chain via TASK-MEMORY-111 (hash16 form retained for forensic match)
   - DEC-803 2026-05-17 — Subscription cancellation is non-destructive — set `cancel_at_period_end=true`; tenant retains access until period boundary; hard cancel via TASK-TEN-104 termination flow only
   - DEC-804 2026-05-17 — Stripe webhook `invoice.payment_succeeded` → emit `ten.stripe_invoice_paid` memory row + clear `dunning_state` + un-suspend tenant if previously suspended via dunning
@@ -149,7 +157,7 @@ subtasks:
   - "0.3h: wire-up — plan_change.rs push hook, period_close.rs overage hook, inv dispatch NATS-publish"
   - "0.5h: integration smoke against Stripe test mode + sandbox tenant"
 
-risk_if_skipped: "Without Stripe billing, every international tenant payment becomes a manual Stripe Dashboard entry — non-scalable past ~10 tenants, error-prone, no audit linkage to TASK-TEN-002 plan changes or TASK-TEN-004 overages. Tenants on sg-1/eu-1/us-1 residencies (the entire international market) cannot be billed at all without this FR. Without DEC-787's idempotent customer creation, a transient failure during plan_change spawns duplicate Stripe Customers (one tenant → many customers = billing chaos + revenue recognition errors). Without DEC-789's metered Subscription Items, overage charges from TASK-TEN-004 metering are stranded in memory chain with no downstream rail to bill them. Without DEC-790's dunning state machine, failed payments leak revenue indefinitely (Stripe retries 3x then gives up; we must respond). Without DEC-805's founder-skip, the founder tenant gets charged for its own product (accounting noise + circular invoicing). Without DEC-798's currency lock, a tenant could be in two Stripe Customers (one USD, one EUR), making revenue split unanswerable. Without DEC-794's idempotency keys, network retries double-charge. TASK-TEN-101 self-serve signup cannot ship without an automated billing rail. TASK-TEN-102 VND domestic rail is a parallel rail; without TEN-003 first, the rail abstraction doesn't exist. The 8h effort lands the international billing primitive that unlocks the entire P3 commercial rollout."
+risk_if_skipped: "Without Stripe billing, every international tenant payment becomes a manual Stripe Dashboard entry — non-scalable past ~10 tenants, error-prone, no audit linkage to TASK-TEN-002 plan changes or TASK-TEN-004 overages. Tenants on sg-1/eu-1/us-1 residencies (the entire international market) cannot be billed at all without this task. Without DEC-787's idempotent customer creation, a transient failure during plan_change spawns duplicate Stripe Customers (one tenant → many customers = billing chaos + revenue recognition errors). Without DEC-789's metered Subscription Items, overage charges from TASK-TEN-004 metering are stranded in memory chain with no downstream rail to bill them. Without DEC-790's dunning state machine, failed payments leak revenue indefinitely (Stripe retries 3x then gives up; we must respond). Without DEC-805's founder-skip, the founder tenant gets charged for its own product (accounting noise + circular invoicing). Without DEC-798's currency lock, a tenant could be in two Stripe Customers (one USD, one EUR), making revenue split unanswerable. Without DEC-794's idempotency keys, network retries double-charge. TASK-TEN-101 self-serve signup cannot ship without an automated billing rail. TASK-TEN-102 VND domestic rail is a parallel rail; without TEN-003 first, the rail abstraction doesn't exist. The 8h effort lands the international billing primitive that unlocks the entire P3 commercial rollout."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -170,10 +178,10 @@ The TEN service **MUST** ship the Stripe billing rail at `services/ten/src/billi
 
 3. **MUST** derive `billing_rail` from `billing_currency` at tenant provisioning (TASK-TEN-001 handler):
    - `VND` → `vietqr_momo_zalo` (TASK-TEN-102 path).
-   - `USD | EUR | SGD | GBP` → `stripe` (this FR's path).
+   - `USD | EUR | SGD | GBP` → `stripe` (this task's path).
    - Founder tenant (`is_founder_tenant=true`) → `internal` (DEC-805) regardless of currency; Stripe API calls short-circuit with a no-op + sev-3 memory row `ten.stripe_founder_skip`.
 
-4. **MUST** lock `billing_currency` at provisioning — `UPDATE tenants SET billing_currency = ...` is REJECTED by a row-level trigger (DEC-798). Changing currency = create new tenant + manual data migration (out-of-scope, FR-TEN-2xx).
+4. **MUST** lock `billing_currency` at provisioning — `UPDATE tenants SET billing_currency = ...` is REJECTED by a row-level trigger (DEC-798). Changing currency = create new tenant + manual data migration (out-of-scope, task-TEN-2xx).
 
 5. **MUST** define the compile-time price catalog in `services/ten/src/billing/stripe/price_catalog.rs` as `const PRICE_CATALOG: [PriceEntry; 12]`. The 12 entries are 3 plan tiers × 4 international currencies (Starter/Team/Enterprise × USD/EUR/SGD/GBP). Each `PriceEntry` carries `{ currency, tier, amount_minor: i64 }`. The Stripe Price IDs are NOT baked into the constant — they live in the `stripe_price_map` Postgres table (per residency × currency × tier × axis) populated by the deploy-time `cyberos-ten stripe-sync-prices` CLI per DEC-792. Overage axes (4 per tier per currency) are ALSO mapped via `stripe_price_map.axis ∈ {base, overage_api_calls, overage_ai_tokens, overage_storage, overage_seats}`, giving 5 metered prices per (currency, tier) — totalling 12 base + 48 overage = 60 distinct Stripe Price IDs per residency. The CI cardinality test asserts 12 base catalog entries (the overage prices are derived from base — same currency/tier, different axis). Reference monthly base amounts (slice 2 baseline; CFO may rev via a follow-up DEC entry):
 
@@ -847,7 +855,7 @@ pub async fn run_dispatcher(ctx: AppCtx) {
 - **TASK-OBS-007** Auto-runbook — sev-1/sev-2 dunning + API-failure alerts route to CHAT/PagerDuty.
 
 **Downstream (blocks):**
-- **TASK-TEN-102** — VND rail follows the abstraction this FR establishes.
+- **TASK-TEN-102** — VND rail follows the abstraction this task establishes.
 - **TASK-TEN-101** — self-serve signup requires automated billing rail.
 
 ---
@@ -961,13 +969,13 @@ Payload:
 
 All resolved for slice 2. Deferred to later slices:
 
-- **Deferred:** Stripe Tax integration for EU VAT — slice 3, FR-TEN-1xx (placeholder — not yet specified).
+- **Deferred:** Stripe Tax integration for EU VAT — slice 3, task-TEN-1xx (placeholder — not yet specified).
 - **Deferred:** Multi-currency support per tenant (currency change without new tenant) — out-of-scope per DEC-798; new tenant + manual migration is the documented path.
-- **Deferred:** Stripe Connect / marketplace flows for FR-PORTAL-XXX — out-of-scope; client tenants not yet billed-through their portal (P4 milestone).
+- **Deferred:** Stripe Connect / marketplace flows for task-PORTAL-XXX — out-of-scope; client tenants not yet billed-through their portal (P4 milestone).
 - **Deferred:** Real-time invoice preview before plan_change commits — slice 3 enhancement; for now CFO uses Stripe Dashboard.
-- **Deferred:** SEPA Direct Debit / BACS / ACH local-payment rails — slice 3+ (FR-TEN-2xx); slice 2 is card-only via Stripe Payment Intents.
-- **Deferred:** Annual billing cycle (slice 2 is monthly only) — slice 3, FR-TEN-1xx.
-- **Deferred:** Coupon / promo code support — slice 3, FR-TEN-1xx.
+- **Deferred:** SEPA Direct Debit / BACS / ACH local-payment rails — slice 3+ (task-TEN-2xx); slice 2 is card-only via Stripe Payment Intents.
+- **Deferred:** Annual billing cycle (slice 2 is monthly only) — slice 3, task-TEN-1xx.
+- **Deferred:** Coupon / promo code support — slice 3, task-TEN-1xx.
 - **Deferred:** Reconciliation job comparing TEN dunning_state vs Stripe subscription.status (slice 3 per §11.13).
 - **Deferred:** Hourly overage push (vs once-per-period) — slice 3 per §11.10; reduces revenue-recognition lag.
 
@@ -1007,7 +1015,7 @@ All resolved for slice 2. Deferred to later slices:
 
 **§11.3** Idempotency keys MAX 255 chars per Stripe; UUID v4 + colon-delimited operation tag fits comfortably (`ten.<36-char-uuid>.<operation>.<suffix>` ~80 chars).
 
-**§11.4** `stripe_event_dispatch_log` is strictly INSERT-only at the `cyberos_app` role (REVOKE UPDATE, DELETE per §3.1 + task-audit skill rule 12). `dispatch_status` is set at INSERT time as a single-pass write — the handler computes status (`dispatched`/`duplicate`/`failed`) before INSERT based on idempotency lookup and dispatch result. Retry-and-update for transient failures lands in slice 3 (FR-TEN-2xx) with a separate `stripe_event_dispatch_retry` table that follows the correction_to pattern (task-audit skill rule 11 derivative).
+**§11.4** `stripe_event_dispatch_log` is strictly INSERT-only at the `cyberos_app` role (REVOKE UPDATE, DELETE per §3.1 + task-audit skill rule 12). `dispatch_status` is set at INSERT time as a single-pass write — the handler computes status (`dispatched`/`duplicate`/`failed`) before INSERT based on idempotency lookup and dispatch result. Retry-and-update for transient failures lands in slice 3 (task-TEN-2xx) with a separate `stripe_event_dispatch_retry` table that follows the correction_to pattern (task-audit skill rule 11 derivative).
 
 **§11.5** The `cancel_at_period_end=true` cancellation primitive (§1 #10 + DEC-803) is the *normal* deactivation path; hard cancellation comes only from TASK-TEN-104 termination, which explicitly invokes Stripe's `DELETE /v1/subscriptions/{id}?prorate=true`.
 
@@ -1021,7 +1029,7 @@ All resolved for slice 2. Deferred to later slices:
 
 **§11.10** The 1-hour overage push window (DEC-810) aligns with Stripe's billing-cycle-close grace period; pushing later means the overage lands on the NEXT period's invoice, which is acceptable but adds a 30-day delay to revenue recognition. Slice 3 adds a finer-grained push (hourly) for low-latency reporting.
 
-**§11.11** `billing_contact_email` is collected at provisioning (TASK-TEN-001 + this FR's modification of `tenant_create.rs` to accept the field). For backward compatibility with already-provisioned tenants (TASK-TEN-001 shipped before this), migration `0006` allows NULL initially with a 7-day operator backfill window before the NOT NULL constraint activates via a follow-up migration in slice 3.
+**§11.11** `billing_contact_email` is collected at provisioning (TASK-TEN-001 + this task's modification of `tenant_create.rs` to accept the field). For backward compatibility with already-provisioned tenants (TASK-TEN-001 shipped before this), migration `0006` allows NULL initially with a 7-day operator backfill window before the NOT NULL constraint activates via a follow-up migration in slice 3.
 
 **§11.12** The dunning state machine deliberately treats `Suspended → Suspended` on additional payment failures as a no-op (no further state advancement). Once suspended, further failures don't escalate; recovery via successful payment is the only exit. This matches operational reality: a suspended tenant's billing is "in a state of repair" — further failure signals don't add information.
 
@@ -1047,7 +1055,7 @@ All resolved for slice 2. Deferred to later slices:
 
 **§11.23** Cross-tenant cache leakage in stripe_api_calls is prevented by RLS (§1 #17); cache lookups always include `tenant_id = current_setting('auth.tenant_id')::uuid`. Property test: spawn two tenants concurrently issuing same operation; assert each gets their own response (no key collision).
 
-**§11.24** The `is_downgrade` check in plan_change (§1 #8) compares tier ordinals: `enterprise > team > starter`. Same-tier plan_change is rejected upstream at TASK-TEN-002 #13 (`no_change` 409), so this FR doesn't need to handle same-tier.
+**§11.24** The `is_downgrade` check in plan_change (§1 #8) compares tier ordinals: `enterprise > team > starter`. Same-tier plan_change is rejected upstream at TASK-TEN-002 #13 (`no_change` 409), so this task doesn't need to handle same-tier.
 
 **§11.25** Reason text in refund + dunning audit rows is free-text; TASK-MEMORY-111 PII scrubbing applies the standard ruleset. CFO provides reason at refund time; system generates reason for dunning (`payment_failed_retry_<n>`).
 

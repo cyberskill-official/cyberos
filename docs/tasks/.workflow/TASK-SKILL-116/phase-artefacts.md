@@ -1,5 +1,5 @@
 ---
-artefacts: repo-context-map@1 + edge-case-matrix@1 + implementation-plan@1 + observability-injection@1 (bundled - single-module FR)
+artefacts: repo-context-map@1 + edge-case-matrix@1 + implementation-plan@1 + observability-injection@1 (bundled - single-module task)
 task_id: TASK-SKILL-116
 created: 2026-07-12
 verdicts: all pass (respective audit skills)

@@ -5,7 +5,7 @@
 //! own client — and it simply never arrives. Refusing B's message with a 403 would be honest and simple and
 //! dangerous: it converts someone who was being ignored into someone who knows they were rejected, and the
 //! documented pattern is that they escalate through another channel. Signal, WhatsApp and iMessage all let
-//! the blocked sender believe the message went out. So do we (§1 #7, #8; rationale in the FR's §2).
+//! the blocked sender believe the message went out. So do we (§1 #7, #8; rationale in the task's §2).
 //!
 //! Enforcement is server-side at FOUR fan-out points (§1 #4), because there are four ways content reaches a
 //! person and filtering three of them is filtering none:
@@ -15,7 +15,7 @@
 //! 3. notification + push — `notify::fanout`
 //! 4. the DM list — `channels::list`
 //!
-//! Point 3 is the one that was silently broken before this FR: the fan-out selected channel members and did
+//! Point 3 is the one that was silently broken before this task: the fan-out selected channel members and did
 //! not know blocks existed, so a blocked person's name and the first line of their message would still have
 //! landed on the blocker's lock screen.
 //!

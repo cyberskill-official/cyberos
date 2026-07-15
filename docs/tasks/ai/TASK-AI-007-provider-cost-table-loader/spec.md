@@ -2,8 +2,16 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future fr-catalog renderer) ─────
 id: TASK-AI-007
 title: "Provider cost-table loader — YAML-backed, hot-reloadable rate table"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AI
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P0
@@ -64,7 +72,7 @@ subtasks:
   - "1.0h: notify-based hot reload with 100ms debounce + last-known-good fallback"
   - "0.5h: OTel metric registration + emit on lookup + reload"
   - "1.0h: integration tests (8 cases — happy / missing entry / invalid YAML / hot-reload / negative rate / aggregate failures / concurrent / determinism)"
-risk_if_skipped: "TASK-AI-001 (precheck) cannot compute estimated cost — every chat call fails before reaching the provider. TASK-AI-002 (reconcile) cannot compute actual cost from provider usage. TASK-AI-006 (alias resolve) cannot validate that the resolved model has a known price. Every consumer would either hardcode rates (creating 22 places to update on every provider price change) or fail. The whole cost-of-everything gate becomes non-functional — i.e., the entire P0 AI Gateway investment becomes worthless. This is the most load-bearing 4h FR in slice 2."
+risk_if_skipped: "TASK-AI-001 (precheck) cannot compute estimated cost — every chat call fails before reaching the provider. TASK-AI-002 (reconcile) cannot compute actual cost from provider usage. TASK-AI-006 (alias resolve) cannot validate that the resolved model has a known price. Every consumer would either hardcode rates (creating 22 places to update on every provider price change) or fail. The whole cost-of-everything gate becomes non-functional — i.e., the entire P0 AI Gateway investment becomes worthless. This is the most load-bearing 4h task in slice 2."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -262,7 +270,7 @@ rates:
 11. **Determinism property test** — `proptest!` runs 500 random YAML fixtures (validity-mixed); each fixture's `init` MUST produce a stable `Result` across 10 reads (verified via `Debug` formatting equality).
 12. **`loaded_at` populated after init** — After successful `init_cost_table`, `cost_table::loaded_at()` MUST return `Some(<DateTime within last 1s of init call>)`.
 13. **OTel metrics emit correctly** — After 100 lookups (90 hits + 10 misses), `ai_cost_table_lookups_total{outcome="hit"}` MUST equal 90 and `{outcome="miss"}` equal 10. Latency histogram MUST have 100 samples.
-14. **Last-updated CI lint** — A CI job (separate from this FR's tests) MUST emit a warning if `last_updated` is older than 90 days. Tested via fixture with `last_updated: 2025-01-01` → lint emits warning.
+14. **Last-updated CI lint** — A CI job (separate from this task's tests) MUST emit a warning if `last_updated` is older than 90 days. Tested via fixture with `last_updated: 2025-01-01` → lint emits warning.
 15. **is_embedding consistency** — A YAML with `is_embedding: true, output_per_1k_usd: 0.5` MUST be rejected at init with a `FileFailure { errors: vec!["is_embedding: true requires output_per_1k_usd == 0.0, got 0.5"] }`. The loader enforces §1 #12 invariant; downstream code can trust it.
 16. **Failure list deterministic order (task-audit skill §3.9 rule 27)** — Two `init` calls with the same malformed YAML MUST produce byte-identical `Vec<FileFailure>` sorted by `(path, model)`. The §6 skeleton's `validate_and_flatten` MUST end with `failures.sort_by(|a, b| a.path.cmp(&b.path).then(a.model.cmp(&b.model)))` so operator diffing across runs is reliable.
 
@@ -715,11 +723,11 @@ async fn apply_reload(path: &Path) {
 
 ## §7 — Dependencies
 
-**Code dependencies (must exist before this FR can build):**
+**Code dependencies (must exist before this task can build):**
 - None. This is foundational; TASK-AI-001, TASK-AI-002, TASK-AI-006 all depend on it.
 
 **Concept dependencies:**
-- `ProviderKind` enum from `services/ai-gateway/src/policy/schema.rs` (TASK-AI-005). The closed set `{Bedrock, Anthropic, OpenAI, Vertex, Bge}` is the same set this FR's `parse_provider` recognises.
+- `ProviderKind` enum from `services/ai-gateway/src/policy/schema.rs` (TASK-AI-005). The closed set `{Bedrock, Anthropic, OpenAI, Vertex, Bge}` is the same set this task's `parse_provider` recognises.
 - `Decimal` precision invariant — every cost-bearing field across AI Gateway uses `rust_decimal::Decimal` for arithmetic; TASK-AI-001/002 already assume this.
 
 **Operational dependencies:**
@@ -876,12 +884,12 @@ For reference, the questions considered + resolved during authoring:
 
 - Per provider's published pricing, rates change roughly monthly. The YAML's `last_updated` field is human-maintained; a CI lint flags entries older than 90 days for review. The lint is non-blocking — staleness is a warning, not a deploy gate.
 - The 6-decimal precision (`NUMERIC(12,6)`) accommodates `gpt-4o-mini`'s `$0.00015/1k` and `text-embedding-3-small`'s `$0.00002/1k` without precision loss. If a future provider publishes 8-decimal rates, the schema needs to widen — but unlikely in slice 2's horizon.
-- Multi-currency support is intentionally NOT in this FR. The invoicing module (TASK-INV-002, P2) handles VND/USD/SGD/EUR conversion using SBV's daily FX rate. Cost-ledger comparisons happen in USD throughout.
+- Multi-currency support is intentionally NOT in this task. The invoicing module (TASK-INV-002, P2) handles VND/USD/SGD/EUR conversion using SBV's daily FX rate. Cost-ledger comparisons happen in USD throughout.
 - The `is_embedding` flag is the only schema field with no provider-published equivalent — we set it manually in the YAML based on operational knowledge of which model produces vectors. If an operator forgets to set it on a new embedding model, TASK-AI-002's reconcile path emits a warn log but doesn't crash; the embedding cost would still be `0.0` because `output_per_1k_usd: 0.0` in the YAML.
 - The watcher's 100ms debounce can be tuned via env var `CYBEROS_AI_COST_TABLE_DEBOUNCE_MS` (default 100, min 10, max 5000). Most operators never touch it.
 - Cost-table reload doesn't invalidate in-flight precheck/reconcile transactions; each one captures the rate at its own time. If a price changes mid-call (rare), the call uses the rate that was active when precheck ran — not the rate at reconcile. This is intentional: estimate-and-reconcile arithmetic must use the same rate for consistency.
-- This FR is the simplest "config-loader" pattern in slice 2. The same pattern repeats in TASK-AI-005 (tenant policy), TASK-AI-015 (ZDR attestations). All three share idioms (ArcSwap, notify, aggregate failures); a shared crate is a future refactor (slice 4) once we have 3+ instances to extract from.
-- **Decimal vs BIGINT minor (task-audit skill §3.4 rule 11) — boundary clarification:** rates here use `rust_decimal::Decimal` for `input_per_1k_usd` / `output_per_1k_usd` because rates are **constants** with 7–9 decimal places (e.g. `$0.00015/1k`), not stored monetary state. task-audit skill §3.4 rule 11 "money MUST be stored as BIGINT minor" applies at the **storage tier** — i.e. `cost_ledger.estimated_cost_minor` and `actual_cost_minor` (TASK-AI-001 §3). The product `rate × tokens` IS BIGINT minor when stored. The cross-boundary conversion happens in `cost_ledger::estimate_cost_minor`, which multiplies the Decimal rate by token count and rounds to the currency-decimal-aware minor unit via `Currency::USD.decimals()`. Future maintainers: do not "fix" rates to BIGINT minor — sub-cent precision matters for embedding pricing.
+- This task is the simplest "config-loader" pattern in slice 2. The same pattern repeats in TASK-AI-005 (tenant policy), TASK-AI-015 (ZDR attestations). All three share idioms (ArcSwap, notify, aggregate failures); a shared crate is a future refactor (slice 4) once we have 3+ instances to extract from.
+- **Decimal vs BIGINT minor (task-audit skill §3.4 rule 11) — boundary clarification:** rates here use `rust_decimal::Decimal` for `input_per_1k_usd` / `output_per_1k_usd` because rates are **constants** with 7–9 decimal places (e.g. `$0.00015/1k`), not stored monetary state. Task-audit skill §3.4 rule 11 "money MUST be stored as BIGINT minor" applies at the **storage tier** — i.e. `cost_ledger.estimated_cost_minor` and `actual_cost_minor` (TASK-AI-001 §3). The product `rate × tokens` IS BIGINT minor when stored. The cross-boundary conversion happens in `cost_ledger::estimate_cost_minor`, which multiplies the Decimal rate by token count and rounds to the currency-decimal-aware minor unit via `Currency::USD.decimals()`. Future maintainers: do not "fix" rates to BIGINT minor — sub-cent precision matters for embedding pricing.
 
 ---
 

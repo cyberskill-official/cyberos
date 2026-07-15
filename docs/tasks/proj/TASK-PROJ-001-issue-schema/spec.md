@@ -1,8 +1,16 @@
 ---
 id: TASK-PROJ-001
 title: "PROJ Issue + Cycle + Engagement schema — RLS + cross-module linkable + status FSM + audit + assignee validation"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: PROJ
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -72,7 +80,7 @@ subtasks:
   - "1.5h: Tests — happy + RLS + FSM transitions + invalid status + invalid cycle + cross-tenant assignee + bidirectional links"
   - "0.5h: OTel metrics emission"
   - "1.5h: Tests — link types + concurrent mutations + audit row payloads"
-risk_if_skipped: "PROJ has no model; downstream FRs (TASK-PROJ-002 memory anchoring, TASK-PROJ-003 status mutations) have nothing to operate on. Without RLS, cross-tenant data exposure. Without status FSM, illegal transitions corrupt state. Without cross-module links, issues can't be derived from emails/chats — productivity loss."
+risk_if_skipped: "PROJ has no model; downstream tasks (TASK-PROJ-002 memory anchoring, TASK-PROJ-003 status mutations) have nothing to operate on. Without RLS, cross-tenant data exposure. Without status FSM, illegal transitions corrupt state. Without cross-module links, issues can't be derived from emails/chats — productivity loss."
 ---
 
 ## §1 — Description (BCP-14 normative)

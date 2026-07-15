@@ -9,14 +9,14 @@ use crate::auth::Claims;
 use crate::error::{Backend, ProxyError};
 use crate::inject;
 
-/// The audit outcome of a proxied query (FR §8).
+/// The audit outcome of a proxied query (task §8).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Outcome {
     Proxied,
     RootAdminUnfiltered,
 }
 
-/// Map a request path to its backend (FR §1 #13). Returns `None` for paths the proxy does not serve.
+/// Map a request path to its backend (task §1 #13). Returns `None` for paths the proxy does not serve.
 pub fn detect_backend(path: &str) -> Option<Backend> {
     if path.starts_with("/loki/") {
         Some(Backend::Loki)
@@ -41,7 +41,7 @@ fn reserved_label(backend: Backend) -> &'static str {
     }
 }
 
-/// True if the user's query already supplies the reserved tenant label - a bypass attempt (FR §1 #4).
+/// True if the user's query already supplies the reserved tenant label - a bypass attempt (task §1 #4).
 pub fn has_user_supplied_tenant_id(query: &str, backend: Backend) -> Result<bool, ProxyError> {
     match backend {
         Backend::Prometheus => inject::promql::has_label(query, "tenant_id"),
@@ -50,7 +50,7 @@ pub fn has_user_supplied_tenant_id(query: &str, backend: Backend) -> Result<bool
     }
 }
 
-/// Decide what to forward (FR §3):
+/// Decide what to forward (task §3):
 /// - a user-supplied tenant label is refused (`UserSuppliedTenantId` -> 400 + sev-1 audit);
 /// - a root-admin (nil-UUID tenant) query is forwarded unchanged (`RootAdminUnfiltered`);
 /// - otherwise the tenant label is AST-injected into every selector.

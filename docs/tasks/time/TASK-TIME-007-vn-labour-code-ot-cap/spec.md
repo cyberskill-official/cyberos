@@ -1,8 +1,16 @@
 ---
 id: TASK-TIME-007
 title: "TIME VN Labour Code Art. 107 OT cap — hard-block at entry write when monthly OT > 40h or yearly OT > 200h (300h with regulator approval)"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: TIME
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P1
@@ -25,7 +33,7 @@ source_decisions:
   - DEC-1391 2026-05-17 — Hard-block at entry write — refuses to record TIME entry that would breach; soft warnings at 80% threshold
   - DEC-1392 2026-05-17 — Closed enum `ot_breach_kind` = {monthly_40h_breach, yearly_200h_breach, yearly_300h_breach_no_approval, daily_4h_breach, weekly_12h_breach}; CI cardinality asserts 5
   - DEC-1393 2026-05-17 — Per-Member `vn_ot_approval` flag = 'standard' (200h cap) or 'extended' (300h cap with regulator approval); HR-001 owns
-  - DEC-1394 2026-05-17 — Applies ONLY to vn-1 residency Members (DEC-1390 is VN-specific); other residencies subject to their own labour-law FRs (future)
+  - DEC-1394 2026-05-17 — Applies ONLY to vn-1 residency Members (DEC-1390 is VN-specific); other residencies subject to their own labour-law tasks (future)
   - DEC-1395 2026-05-17 — Daily/weekly hard caps: 4h OT/day, 12h OT/week per Art. 107(2); breach blocks entry
   - DEC-1396 2026-05-17 — memory audit kinds: time.ot_warning_issued, time.ot_breach_blocked, time.ot_approval_changed
 
@@ -80,7 +88,7 @@ The TIME service **MUST** ship VN Labour Code Art. 107 OT cap enforcement at `se
 
 1. **MUST** define closed `ot_breach_kind` enum: `('monthly_40h_breach','yearly_200h_breach','yearly_300h_breach_no_approval','daily_4h_breach','weekly_12h_breach')` per DEC-1392. Cardinality 5.
 
-2. **MUST** apply caps ONLY when `Member's tenant.residency = 'vn-1'` per DEC-1394. Non-VN Members skip cap check entirely (other labour-law FRs handle).
+2. **MUST** apply caps ONLY when `Member's tenant.residency = 'vn-1'` per DEC-1394. Non-VN Members skip cap check entirely (other labour-law tasks handle).
 
 3. **MUST** compute OT = `MAX(0, daily_total_hours - 8)` per Art. 107. Standard workday baseline 8h; everything beyond is OT.
 
@@ -127,7 +135,7 @@ The TIME service **MUST** ship VN Labour Code Art. 107 OT cap enforcement at `se
 
 **Why approval tier flag (§1 #7, DEC-1393)?** MOLISA-approved 300h tier is per-Member (not org-wide). Per-Member flag lets CLO grant on case-by-case basis without org-wide policy change.
 
-**Why residency scoping (§1 #2, DEC-1394)?** Non-VN Members have their own labour laws (EU 48h/week, US no federal cap, etc.). Applying VN caps to non-VN Members is wrong; future FRs cover other jurisdictions.
+**Why residency scoping (§1 #2, DEC-1394)?** Non-VN Members have their own labour laws (EU 48h/week, US no federal cap, etc.). Applying VN caps to non-VN Members is wrong; future tasks cover other jurisdictions.
 
 ---
 
@@ -269,7 +277,7 @@ async fn 80pct_warning_emitted() {
 ## §9 — Open questions
 
 Deferred:
-- **Deferred:** Non-VN labour codes (EU 48h, US OSHA) — slice 2 / per-jurisdiction FRs.
+- **Deferred:** Non-VN labour codes (EU 48h, US OSHA) — slice 2 / per-jurisdiction tasks.
 - **Deferred:** Tet/National holiday triple-pay flagging — slice 2.
 - **Deferred:** Per-engagement OT cap (some clients want stricter) — slice 2.
 

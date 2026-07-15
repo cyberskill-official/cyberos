@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # install.sh — one-time (or re-vendor) install of CyberOS into a project under gitignored .cyberos/.
 # Organised by module (.cyberos/cuo, .cyberos/memory, .cyberos/plugin), scaffolds
-# docs/tasks/ + CHANGELOG.md + the BRAIN, runs FR migration + status page
+# docs/tasks/ + CHANGELOG.md + the BRAIN, runs task migration + status page
 # (skip with CYBEROS_NO_MIGRATE=1). Idempotent; never clobbers BACKLOG/CHANGELOG/BRAIN.
 # Day-to-day: soft update checks run on any .cyberos use; manual check: version.sh.
 # Remove: uninstall.sh. Open status page: status.sh.
@@ -12,7 +12,7 @@ avail_ver="$( [ -f "$src/VERSION" ] && tr -d ' \n\r' < "$src/VERSION" || echo un
 
 
 # Internal page regen lives at lib/status-page.sh (hooks + run-gates). Not user-facing.
-# Full FR migrate runs automatically during install (unless CYBEROS_NO_MIGRATE=1).
+# Full task migrate runs automatically during install (unless CYBEROS_NO_MIGRATE=1).
 
 target="${1:-$(pwd)}"; target="$(cd "$target" && pwd)"
 root="$(cd "$target" && git rev-parse --show-toplevel 2>/dev/null || echo "$target")"
@@ -44,12 +44,12 @@ cp -R "$src/plugin" "$CY/plugin"
 [ -f "$src/status.sh" ] && cp "$src/status.sh" "$CY/status.sh" && chmod +x "$CY/status.sh"
 [ -f "$src/help.sh" ] && cp "$src/help.sh" "$CY/help.sh" && chmod +x "$CY/help.sh"
 [ -f "$src/check-latest.sh" ] && cp "$src/check-latest.sh" "$CY/check-latest.sh" && chmod +x "$CY/check-latest.sh"
-# lib (fr-migrate, update-check, status-page) + docs-tools
+# lib (task-migrate, update-check, status-page) + docs-tools
 [ -d "$src/lib" ] && rm -rf "$CY/lib" && cp -R "$src/lib" "$CY/lib"
 [ -d "$src/docs-tools" ] && rm -rf "$CY/docs-tools" && cp -R "$src/docs-tools" "$CY/docs-tools"
-# drop orphans from older installs (init.sh, changelog.sh, migrate-frs.sh, status.html, …)
+# drop orphans from older installs (init.sh, changelog.sh, migrate-tasks.sh, status.html, …)
 rm -rf "$CY/status-site" 2>/dev/null || true
-rm -f "$CY/status.html" "$root/docs/status.html" "$CY/migrate-frs.sh" 2>/dev/null || true
+rm -f "$CY/status.html" "$root/docs/status.html" "$CY/migrate-tasks.sh" 2>/dev/null || true
 rm -f "$CY/init.sh" "$CY/changelog.sh" "$CY/update.sh" 2>/dev/null || true
 rm -f "$CY"/gates.env.bak.* 2>/dev/null || true
 chmod +x "$CY/cuo/gates/run-gates.sh" 2>/dev/null || true
@@ -138,7 +138,7 @@ fi
 env_file="$CY/gates.env"
 [ -f "$env_file" ] && cp "$env_file" "$env_file.bak.$(date +%s)"
 cat > "$env_file" <<EOF
-# .cyberos/gates.env - gate commands for the FR workflow (edit freely).
+# .cyberos/gates.env - gate commands for the task workflow (edit freely).
 # Auto-detected ecosystem: $ECOSYSTEM. Empty command = that gate is skipped.
 # The reduced-profile floor = build + lint + test + coverage. These always run.
 BUILD_CMD="$BUILD_CMD"
@@ -207,43 +207,43 @@ if [ ! -f "$cl" ]; then
 
 All notable changes to this project live here - one \`## [X.Y.Z] - YYYY-MM-DD\` section per
 release (Keep-a-Changelog style; the CyberOS status page's releases lens reads these sections,
-and every FR id you name in an entry becomes a chip that opens that FR).
+and every task id you name in an entry becomes a chip that opens that task).
 
 ## [0.1.0] - $(date +%Y-%m-%d)
 
-- CyberOS initialised: FR workflow vendored to .cyberos/, backlog at docs/tasks/BACKLOG.md, status page at docs/status/.
+- CyberOS initialised: task workflow vendored to .cyberos/, backlog at docs/tasks/BACKLOG.md, status page at docs/status/.
 EOF
   CHANGELOG_SET="created CHANGELOG.md (seeds the status page's releases lens)"
 fi
 
-# 4c. FR migration + status page (auto; skip with CYBEROS_NO_MIGRATE=1) --------
-# Brings pre-existing FRs to the folder-per-FR rule (root-level flat FRs included) and
+# 4c. Task migration + status page (auto; skip with CYBEROS_NO_MIGRATE=1) --------
+# Brings pre-existing tasks to the folder-per-task rule (root-level flat tasks included) and
 # (re)generates the status page at docs/status/ - ONE page, three lenses (board | table |
-# releases) over the FR corpus, with a drawer carrying each FR's full spec.
+# releases) over the task corpus, with a drawer carrying each task's full spec.
 # Idempotent and verified: cyberos-migrate ends with a machine-readable verify line and
 # WARNs for anything it could not place. A failure here never aborts init.
 MIGRATE_SET="skipped (CYBEROS_NO_MIGRATE=1)"
 if [ "${CYBEROS_NO_MIGRATE:-0}" != "1" ]; then
-  if [ -f "$src/lib/fr-migrate.sh" ] || [ -f "$CY/lib/fr-migrate.sh" ]; then
+  if [ -f "$src/lib/task-migrate.sh" ] || [ -f "$CY/lib/task-migrate.sh" ]; then
     # shellcheck source=/dev/null
-    if [ -f "$src/lib/fr-migrate.sh" ]; then source "$src/lib/fr-migrate.sh"; kit="$src"
-    else source "$CY/lib/fr-migrate.sh"; kit="$CY"; fi
+    if [ -f "$src/lib/task-migrate.sh" ]; then source "$src/lib/task-migrate.sh"; kit="$src"
+    else source "$CY/lib/task-migrate.sh"; kit="$CY"; fi
     if mig_out="$(PAGE_ONLY=0 _cyberos_fr_migrate "$root" "$kit" 2>&1)"; then MIGRATE_SET="ok"; else MIGRATE_SET="FAILED (non-fatal; re-run: bash $0 $root)"; fi
     printf '%s\n' "$mig_out" | sed 's/^/  | /'
     mig_verify="$(printf '%s\n' "$mig_out" | grep '^cyberos-migrate verify: ' | tail -1 || true)"
     MIGRATE_SET="$MIGRATE_SET${mig_verify:+; ${mig_verify#cyberos-migrate }}"
   else
-    MIGRATE_SET="unavailable (payload built without lib/fr-migrate.sh)"
+    MIGRATE_SET="unavailable (payload built without lib/task-migrate.sh)"
   fi
 fi
 
 # The summary must never claim a page that was not rendered (migration is what renders it).
 if [ -f "$root/docs/status/index.html" ]; then
   STATUS_SET="docs/status/ (index.html + assets/ + data/; ONE page, three lenses - board | table |
-                                       releases - over THIS repo's FRs, with a drawer carrying each
+                                       releases - over THIS repo's tasks, with a drawer carrying each
                                        full spec. Replaces the old standalone docs; tracked)"
 else
-  STATUS_SET="none (no FRs to render - the page appears the moment this repo has its first FR)"
+  STATUS_SET="none (no tasks to render - the page appears the moment this repo has its first task)"
 fi
 
 # 5. memory module + BRAIN (default on; skip with CYBEROS_NO_MEMORY=1) --------
@@ -311,7 +311,7 @@ cat > "$CY/AGENT-ENTRY.md" <<'ENTRY'
 This repository runs CyberOS. Any coding agent operating here follows these rules:
 
 1. Work = tasks. Read `.cyberos/cuo/ship-tasks.md` and drive
-   the next eligible FR in `docs/tasks/BACKLOG.md` (one backlog for both
+   the next eligible task in `docs/tasks/BACKLOG.md` (one backlog for both
    `class: product` and `class: improvement`; frontmatter `status` is the truth).
 2. HITL is required: halt at review acceptance (`reviewing -> ready_to_test`) and at
    final acceptance (`testing -> done`) for a recorded human verdict. Never set
@@ -508,7 +508,7 @@ awk -v b="$GI_BEGIN" -v e="$GI_END" '
 rm -f "$gi.cyberos.tmp"
 
 # 6b. status auto-sync hook (managed; CYBEROS_NO_HOOK=1 skips) -----------------
-# docs/status/ must stay synced with the markdown it renders (FR frontmatter, CHANGELOG.md,
+# docs/status/ must stay synced with the markdown it renders (task frontmatter, CHANGELOG.md,
 # VERSION). Touchpoints: run-gates.sh after gates, and this pre-commit when inputs are staged.
 # v2: blocking on regen failure + pipefail-safe staged list (never `git diff | grep -q`).
 # An existing foreign pre-commit is never replaced - we append a marked block once.
@@ -524,14 +524,14 @@ if [ "${CYBEROS_NO_HOOK:-0}" != "1" ]; then
       cat > "$hk" <<'HOOK'
 #!/usr/bin/env bash
 # cyberos-status-hook v2 (managed by cyberos install)
-# Regenerates docs/status/ when FR sources change and STAGES it in the same commit.
+# Regenerates docs/status/ when task sources change and STAGES it in the same commit.
 # Blocks the commit if regeneration fails (so status never lags GitHub).
 # Disable: delete this file, or re-install with CYBEROS_NO_HOOK=1.
 set -euo pipefail
 # Read staged list ONCE — never `git diff | grep -q` under pipefail (SIGPIPE skip bug).
 staged="$(git diff --cached --name-only || true)"
 if grep -Eq '^(docs/tasks/|CHANGELOG\.md$|VERSION$)' <<<"$staged"; then
-  if [ ! -f .cyberos/lib/status-page.sh ] || [ ! -f .cyberos/lib/fr-migrate.sh ]; then
+  if [ ! -f .cyberos/lib/status-page.sh ] || [ ! -f .cyberos/lib/task-migrate.sh ]; then
     echo "cyberos: ERROR .cyberos/lib/status-page.sh required (run cyberos install)" >&2
     exit 1
   fi
@@ -606,16 +606,16 @@ HOOK
       HOOK_SET="appended status-sync v2 to your existing pre-commit hook"
     fi
     # Scrub retired entrypoints (migrate-tasks, init.sh --page) → lib/status-page.sh
-    if [ -f "$hk" ] && grep -qE 'migrate-frs|init\.sh --page' "$hk" 2>/dev/null; then
+    if [ -f "$hk" ] && grep -qE 'migrate-tasks|init\.sh --page' "$hk" 2>/dev/null; then
       tmp="$hk.cyberos.tmp"
-      sed -e 's|\.cyberos/migrate-frs\.sh|.cyberos/lib/status-page.sh|g' \
+      sed -e 's|\.cyberos/migrate-tasks\.sh|.cyberos/lib/status-page.sh|g' \
           -e 's|\.cyberos/init\.sh --page|.cyberos/lib/status-page.sh|g' \
           -e 's|bash \.cyberos/init\.sh --page \.|bash .cyberos/lib/status-page.sh .|g' \
-          -e 's|migrate-frs\.sh --page|lib/status-page.sh|g' \
-          -e 's|migrate-frs --page|status-page|g' \
+          -e 's|migrate-tasks\.sh --page|lib/status-page.sh|g' \
+          -e 's|migrate-tasks --page|status-page|g' \
           "$hk" > "$tmp" && mv "$tmp" "$hk"
-      if grep -qE 'migrate-frs|init\.sh --page' "$hk" 2>/dev/null; then
-        sed -e 's|migrate-frs\.sh|lib/status-page.sh|g' \
+      if grep -qE 'migrate-tasks|init\.sh --page' "$hk" 2>/dev/null; then
+        sed -e 's|migrate-tasks\.sh|lib/status-page.sh|g' \
             -e 's|init\.sh --page|lib/status-page.sh|g' "$hk" > "$tmp" && mv "$tmp" "$hk"
       fi
       HOOK_SET="${HOOK_SET}; scrubbed legacy status regen paths from pre-commit"
@@ -647,11 +647,11 @@ cyberos install: done.
   version   -> CyberOS $avail_ver (.cyberos/VERSION); check: bash .cyberos/version.sh  (auto soft-check on any .cyberos use)
 
 Next:
-  1. Write an FR from the template:
-       mkdir -p docs/tasks/<module>/FR-001-<slug> && cp .cyberos/cuo/templates/FR-TEMPLATE.md docs/tasks/<module>/FR-001-<slug>/spec.md
+  1. Write a task from the template:
+       mkdir -p docs/tasks/<module>/TASK-001-<slug> && cp .cyberos/cuo/templates/TASK-TEMPLATE.md docs/tasks/<module>/TASK-001-<slug>/spec.md
        # fill in section 1, set status: ready_to_implement, add the row to BACKLOG.md
   2. Trigger the workflow in your agent (Claude Code / Cowork / Codex):
-       "Follow .cyberos/cuo/ship-tasks.md and drive the next eligible FR in
+       "Follow .cyberos/cuo/ship-tasks.md and drive the next eligible task in
         docs/tasks/BACKLOG.md. HITL is required: halt at the two human-acceptance
         gates. repo_root is this repo."
   3. Run the machine gates any time:

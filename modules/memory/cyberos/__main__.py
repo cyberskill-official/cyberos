@@ -2470,7 +2470,7 @@ def _cmd_workflow(args: argparse.Namespace) -> int:
             backlog_path = Path(wf_args[i])
         elif arg.startswith("--backlog="):
             backlog_path = Path(arg.split("=", 1)[1])
-        elif arg == "--max-frs" and i + 1 < len(wf_args):
+        elif arg == "--max-tasks" and i + 1 < len(wf_args):
             i += 1
             max_frs = int(wf_args[i])
         elif arg == "--invoker" and i + 1 < len(wf_args):
@@ -2488,11 +2488,11 @@ def _cmd_workflow(args: argparse.Namespace) -> int:
             print("usage: cyberos workflow <persona-workflow> [options]")
             print("")
             print("options:")
-            print("  --rework              re-run done FRs from implementing to done")
-            print("  --output-dir DIR      directory for per-FR artefacts (default: cwd)")
+            print("  --rework              re-run done tasks from implementing to done")
+            print("  --output-dir DIR      directory for per-task artefacts (default: cwd)")
             print("  --backlog PATH        path to BACKLOG.md (default: auto-discover)")
-            print("  --module MODULE       filter FRs by module slug")
-            print("  --max-frs N           max FRs to drain (0 = unbounded)")
+            print("  --module MODULE       filter tasks by module slug")
+            print("  --max-tasks N           max tasks to drain (0 = unbounded)")
             print("  --invoker INVOKER     auto|subprocess|llm")
             print("  --no-memory-emit      skip memory audit emission")
             print("  --actor NAME          actor name for memory rows")

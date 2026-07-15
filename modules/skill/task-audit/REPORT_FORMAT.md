@@ -7,7 +7,7 @@ Every `task-audit` invocation writes a sibling `fr.audit.md` per audited artefac
 ```yaml
 ---
 audit_template_version: "fr_rubric@1.0"
-audited_file:           "./frs/FR-001-foo.md"
+audited_file:           "./frs/TASK-001-foo.md"
 audited_file_sha256:    "<64-hex>"
 rubric_version:         "fr_rubric@1.0"
 skill_id:               "task-audit"

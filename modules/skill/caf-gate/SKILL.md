@@ -10,9 +10,9 @@ description: >-
   CLEAN or RED result. Used by chief-technology-officer/ship-tasks at step 29, after the
   awh-gate (step 28) and before the done flip (step 30). CLEAN is required to reach done; RED routes
   the task back to ready_to_implement per STATUS-REFERENCE section 1.3. Use when the user
-  asks to "run the caf gate", "code-audit this FR", or "gate testing to done with caf". Do NOT use
+  asks to "run the caf gate", "code-audit this task", or "gate testing to done with caf". Do NOT use
   for test-regression detection (that is awh-gate) or for spec correctness (that is
-  task-audit); this skill catches the class awh cannot see - a build or lint break, a
+  Task-audit); this skill catches the class awh cannot see - a build or lint break, a
   route that 404s, a changed data contract.
 license: Apache-2.0
 metadata:
@@ -41,7 +41,7 @@ outputs:
 
 triggers:
   - "run the caf gate"
-  - "code-audit this FR"
+  - "code-audit this task"
   - "gate testing to done with caf"
   - "target health before done"
 ---

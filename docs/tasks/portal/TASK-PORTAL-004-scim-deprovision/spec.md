@@ -1,8 +1,16 @@
 ---
 id: TASK-PORTAL-004
 title: "PORTAL SCIM deprovision — session invalidation ≤ 30 s on IdP user removal + grace period + cascade revocation + dual-channel kill (JWT blacklist + WebSocket close)"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: PORTAL
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P4
@@ -26,7 +34,7 @@ source_pages:
 source_decisions:
   - DEC-1080 2026-05-17 — SCIM DELETE on a user MUST invalidate all active sessions for that user within 30 seconds (p99 SLO); this is the contractual security commitment that enterprise tenants demand for "user-removed-from-AD" workflows
   - DEC-1081 2026-05-17 — Session invalidation is dual-channel: (a) JWT blacklist propagated to all gateway nodes via Redis pub/sub (catches REST API calls), (b) active WebSocket connections (CHAT, Genie) receive explicit close frame
-  - DEC-1082 2026-05-17 — Closed enum `scim_deprovision_action` = {soft_tombstone, hard_purge}; default `soft_tombstone`; `hard_purge` requires GDPR Art. 17 explicit request flow per FR-AUTH-2xx
+  - DEC-1082 2026-05-17 — Closed enum `scim_deprovision_action` = {soft_tombstone, hard_purge}; default `soft_tombstone`; `hard_purge` requires GDPR Art. 17 explicit request flow per task-AUTH-2xx
   - DEC-1083 2026-05-17 — Grace period 5 min default: soft-tombstoned subjects can be UNDELETED via SCIM PUT within the grace window (covers accidental SCIM DELETEs from IdP-side glitches); after 5 min, undelete requires explicit admin restore endpoint
   - DEC-1084 2026-05-17 — Cascade revocation: SCIM DELETE on a user cascades to revoke (a) all their TASK-PORTAL-005 Genie chat sessions, (b) all their TASK-PORTAL-001 scoped views, (c) all their TASK-CHAT-005 channel memberships, (d) any pending TASK-MCP-006 confirmation tokens
   - DEC-1085 2026-05-17 — JWT blacklist storage: Redis sorted set keyed by `(jti)` with score=expiration timestamp; auto-trimmed past expiration (no eternal-blacklist accumulation); 30s propagation SLO end-to-end
@@ -213,7 +221,7 @@ The PORTAL service **MUST** ship SCIM 2.0 DELETE handler at `services/portal/src
 
 20. **MUST** measure deprovision SLO via OTel histogram `portal_scim_deprovision_duration_seconds`. Alarm sev-1 if `p99 > 30s sustained 5 min`.
 
-21. **MUST NOT** hard-purge by default per DEC-1082. The `?action=hard_purge` query param is reserved for slice 3 GDPR Art. 17 explicit erasure flow (FR-AUTH-2xx); slice 2 returns 501 `not_implemented` on hard_purge.
+21. **MUST NOT** hard-purge by default per DEC-1082. The `?action=hard_purge` query param is reserved for slice 3 GDPR Art. 17 explicit erasure flow (task-AUTH-2xx); slice 2 returns 501 `not_implemented` on hard_purge.
 
 22. **MUST NOT** block sync phase on cascade completion per DEC-1096. Sync phase MUST return 204 within 1s; cascade async via `tokio::spawn` with deadline.
 
@@ -245,7 +253,7 @@ The PORTAL service **MUST** ship SCIM 2.0 DELETE handler at `services/portal/src
 
 **Why subject_id NOT scrubbed in audit (§1 #18, DEC-1090)?** Identity events are forensic-critical. Without subject_id, "who was deprovisioned at 09:14?" is unanswerable. UUID is non-PII (random + non-correlatable to external identity); email IS PII (correlatable to person + service). Differential scrub.
 
-**Why soft tombstone default, hard purge gated (§1 #21, DEC-1082)?** GDPR Art. 17 erasure is a heavyweight legal flow (verify request, document, propagate to processors, attest). Most deprovisions are operational ("employee left") not legal ("erase me"); soft tombstone preserves audit history without violating retention obligations. Hard purge is reserved for the explicit GDPR flow (FR-AUTH-2xx slice 3).
+**Why soft tombstone default, hard purge gated (§1 #21, DEC-1082)?** GDPR Art. 17 erasure is a heavyweight legal flow (verify request, document, propagate to processors, attest). Most deprovisions are operational ("employee left") not legal ("erase me"); soft tombstone preserves audit history without violating retention obligations. Hard purge is reserved for the explicit GDPR flow (task-AUTH-2xx slice 3).
 
 **Why SCIM-only at slice 2 (§1 #23, DEC-1098)?** Multi-channel deprovision (SCIM + webhook + admin UI) compounds correctness risk (which channel wins on simultaneous events?). SCIM is the standard; we stick to it at slice 2. Webhook deprovision deferred.
 
@@ -805,11 +813,11 @@ Client UI: "You've been signed out by your administrator."
 
 All resolved for slice 2. Deferred:
 
-- **Deferred:** Hard purge (GDPR Art. 17) flow — slice 3, FR-AUTH-2xx (placeholder).
+- **Deferred:** Hard purge (GDPR Art. 17) flow — slice 3, task-AUTH-2xx (placeholder).
 - **Deferred:** Webhook-based deprovision (non-SCIM channel) — slice 3.
 - **Deferred:** Multi-actor deprovision approval (M-of-N for executive accounts) — slice 3.
 - **Deferred:** Deprovision dry-run mode (preview cascade impact) — slice 3.
-- **Deferred:** SCIM Bulk endpoint (RFC 7644 §3.7) — slice 3, FR-PORTAL-3xx.
+- **Deferred:** SCIM Bulk endpoint (RFC 7644 §3.7) — slice 3, task-PORTAL-3xx.
 - **Deferred:** Per-Engagement grace period override (some Engagements want 0 min, some want 30 min) — slice 3.
 - **Deferred:** Deprovision report export (PDF for compliance) — slice 3.
 
@@ -862,7 +870,7 @@ All resolved for slice 2. Deferred:
 
 **§11.7** PII hash function: `email_hash16 = encode(substring(digest(lower(email) || global_salt, 'sha256') from 1 for 8), 'hex')` — matches TASK-TEN-101 + TASK-PORTAL-003 patterns.
 
-**§11.8** The `auth.subjects.status` enum is shared with TASK-AUTH-002; this FR adds `tombstoned` value via migration referenced in modified_files.
+**§11.8** The `auth.subjects.status` enum is shared with TASK-AUTH-002; this task adds `tombstoned` value via migration referenced in modified_files.
 
 **§11.9** `auth_sessions` table also shared with TASK-AUTH-004; column `revoked_at` + `revoked_reason` added via migration; TASK-AUTH-004 modified to set them.
 
@@ -886,7 +894,7 @@ All resolved for slice 2. Deferred:
 
 **§11.19** Trace_id propagation: SCIM DELETE handler generates trace_id; passes via `tracing::instrument` context into sync phase + async spawn + cascade targets; all audit rows carry the same trace_id.
 
-**§11.20** The 7-kind core list (§1 #17) plus `portal.scim_orphan_session_detected` (§1 #16) totals 8 memory audit kinds for this FR; TASK-AI-003 closed-set extension covers all 8.
+**§11.20** The 7-kind core list (§1 #17) plus `portal.scim_orphan_session_detected` (§1 #16) totals 8 memory audit kinds for this task; TASK-AI-003 closed-set extension covers all 8.
 
 **§11.21** Per-PSP-like multi-tenant abstraction not needed here — SCIM is the single canonical channel; webhook-based deprovision deferred per DEC-1098.
 

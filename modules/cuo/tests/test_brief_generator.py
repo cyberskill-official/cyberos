@@ -218,13 +218,13 @@ class TestBriefGenerator:
             workflow=ship_wf,
             skill_root=skill_root,
             output_dir=output_dir,
-            task_id="FR-NONEXISTENT-999",
+            task_id="TASK-NONEXISTENT-999",
         )
         brief = generator.generate()
 
-        # Should still generate a brief (with FR content unavailable)
+        # Should still generate a brief (with task content unavailable)
         assert "# Execution Brief" in brief
-        assert "FR-NONEXISTENT-999" in brief
+        assert "TASK-NONEXISTENT-999" in brief
 
 
 class TestBriefChain:

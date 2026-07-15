@@ -98,7 +98,7 @@ All 6 mechanical revisions applied. **Score = 10/10.**
 
 **§10.6.c — `tests/issues_test.rs` not shipped.** Spec `new_files` list includes `tests/issues_test.rs` as a happy-path runner. That coverage is split across the 4 named test files (`status_fsm_test.rs` + `audit_row_test.rs` + `link_types_test.rs` + `error_mapping_test.rs`) — strictly better organisation (one concern per file) but the spec list isn't satisfied as-named. Audit dossier records the recombination.
 
-**§10.6.d — `TENANT_SCOPED_TABLES` registry update not applied.** Spec `modified_files` includes `services/auth/src/rls/templates.rs` to append `engagements/cycles/issues/issue_links`. The repo at HEAD has `services/auth/src/rls.rs` with a `TENANT_SCOPED_TABLES` const directly (no `rls/templates.rs` subpath). The append is intentionally NOT applied in this session — adding to the AUTH constant would mean every AUTH boot-check would expect the PROJ schema present, which it won't be until the operator runs the PROJ migrations. The right fix is a separate "boot-check is per-service" amendment to TASK-AUTH-003 (or boot-check the union of registered tables per-service). Recorded as a follow-up FR.
+**§10.6.d — `TENANT_SCOPED_TABLES` registry update not applied.** Spec `modified_files` includes `services/auth/src/rls/templates.rs` to append `engagements/cycles/issues/issue_links`. The repo at HEAD has `services/auth/src/rls.rs` with a `TENANT_SCOPED_TABLES` const directly (no `rls/templates.rs` subpath). The append is intentionally NOT applied in this session — adding to the AUTH constant would mean every AUTH boot-check would expect the PROJ schema present, which it won't be until the operator runs the PROJ migrations. The right fix is a separate "boot-check is per-service" amendment to TASK-AUTH-003 (or boot-check the union of registered tables per-service). Recorded as a follow-up task.
 
 ### §10.4 — Verification record
 
@@ -118,7 +118,7 @@ SQL transaction balance verified (all 4 migrations have matched BEGIN/COMMIT).
 
 ### §10.5 — Status transition
 
-**Status:** `accepted → shipped (slice 1)`. Downstream FRs (TASK-PROJ-002 memory decision anchoring, TASK-PROJ-003 Yjs CRDT, etc.) build on this substrate.
+**Status:** `accepted → shipped (slice 1)`. Downstream tasks (TASK-PROJ-002 memory decision anchoring, TASK-PROJ-003 Yjs CRDT, etc.) build on this substrate.
 
 ---
 

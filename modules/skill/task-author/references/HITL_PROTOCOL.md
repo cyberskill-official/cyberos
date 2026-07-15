@@ -38,7 +38,7 @@ skill_id:     task-author
 total_paused: N
 
 issue 1:
-  artefact_id:   FR-001
+  artefact_id:   TASK-001
   category:      success_metric_targets
   rule_id:       QA-NUM-001
   question:      "Section §3.2 cites a 25% retention target. No source line provides this number. What is the source?"
@@ -47,7 +47,7 @@ issue 1:
   blocking:      true
 
 issue 2:
-  artefact_id:   FR-002
+  artefact_id:   TASK-002
   category:      ai_act_risk_boundary
   rule_id:       QA-001
   question:      "The artefact mentions 'biometric identification' but eu_ai_act_risk_class is set to minimal. Which class applies?"
@@ -56,7 +56,7 @@ issue 2:
   blocking:      true
 
 issue 3:
-  artefact_id:   FR-003
+  artefact_id:   TASK-003
   category:      cross_team_dependency
   rule_id:       QA-008
   question:      "Dependency on the data-pipeline team named without ticket or owner. Provide ticket ID + owner handle, or remove."

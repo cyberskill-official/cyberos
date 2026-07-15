@@ -3,7 +3,7 @@ artefact: edge-case-matrix@1
 task_id: TASK-IMP-068
 total_rows: 12
 created: 2026-07-12
-verdict: pass (edge-case-matrix-audit: every category >=1 row, total_rows >= 8 for MUST FR, SECURITY rows point at tests, DEGRADATION rows carry detection+recovery)
+verdict: pass (edge-case-matrix-audit: every category >=1 row, total_rows >= 8 for MUST task, SECURITY rows point at tests, DEGRADATION rows carry detection+recovery)
 ---
 # Edge-case matrix - TASK-IMP-068
 

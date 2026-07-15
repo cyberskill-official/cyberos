@@ -1,8 +1,16 @@
 ---
 id: TASK-AUTH-108
 title: "AUTH Lumi tenant-identity JWT shape — agent_persona + tenant_residency + lumi_org_tenant claims + persona-version stamping + cross-tenant sync identity"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AUTH
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P3
@@ -32,7 +40,7 @@ source_decisions:
   - DEC-429 (Lumi token TTL = 1 hour at slice 1; refresh via TASK-AUTH-004 refresh path; rotation on persona_version bump invalidates prior tokens within 1 hour)
   - DEC-430 (REVOKE UPDATE, DELETE on lumi_token_issuance_log from cyberos_app — append-only at SQL grant)
   - DEC-431 (Lumi JWT alg pinned at RS256 per TASK-AUTH-004 default; alg=none rejected always; alg=HS256 rejected always per JWT-confusion attack defense)
-  - DEC-432 (only `cuo-*` agent_persona values may issue Lumi tokens at slice 1; human subjects with agent-persona role cannot impersonate Lumi without explicit FR-AUTH-2xx delegation flow)
+  - DEC-432 (only `cuo-*` agent_persona values may issue Lumi tokens at slice 1; human subjects with agent-persona role cannot impersonate Lumi without explicit task-AUTH-2xx delegation flow)
   - DEC-433 (cross-tenant chain anchor — Lumi tokens carry an `anchor_chain_hash` claim that the memory sync endpoint validates against the source tenant's chain head; mismatch → 409 chain_diverged)
   - PDPL Art. 13 (data minimisation — JWT claims include only what's needed for sync gating)
   - EU AI Act Art. 13 (transparency — agent_persona stamp = explicit AI-actor identifier)
@@ -117,7 +125,7 @@ The AUTH service **MUST** extend TASK-AUTH-004 JWT shape with Lumi-specific clai
 
 7. **MUST** pin Lumi JWT alg at RS256 (per DEC-431). Reject alg=none ALWAYS. Reject alg=HS256 ALWAYS (JWT-confusion attack: attacker uses JWKS public key as HS256 secret). Unknown alg → 401 `unsupported_alg`.
 
-8. **MUST** restrict Lumi token issuance to subjects whose `roles` claim contains `agent-persona` per TASK-AUTH-101 (per DEC-432). Human subjects (those without `agent-persona` role) attempting issuance → 403 `human_cannot_issue_lumi`. Delegation flow (a human authorising a Lumi issuance on their behalf) deferred to FR-AUTH-2xx.
+8. **MUST** restrict Lumi token issuance to subjects whose `roles` claim contains `agent-persona` per TASK-AUTH-101 (per DEC-432). Human subjects (those without `agent-persona` role) attempting issuance → 403 `human_cannot_issue_lumi`. Delegation flow (a human authorising a Lumi issuance on their behalf) deferred to task-AUTH-2xx.
 
 9. **MUST** include `anchor_chain_hash: TEXT` claim (per DEC-433) — the source tenant's memory chain head at token issuance time. The memory sync endpoint validates this against the current chain head; if the source chain has diverged → 409 `chain_diverged` + emit `auth.lumi_token_rejected` with `reason='chain_diverged'`.
 
@@ -150,7 +158,7 @@ The AUTH service **MUST** extend TASK-AUTH-004 JWT shape with Lumi-specific clai
 
 19. **MUST** sign Lumi JWT with the SAME RS256 keypair used by TASK-AUTH-004 (issuer-distinct via the `iss` claim; key-distinct deferred to slice 2). The kid is the same; the iss differs — verifiers must check both.
 
-20. **MUST** include `jti: TEXT` claim (JWT ID — RFC 7519) as a UUIDv4. Stored in `lumi_token_issuance_log.token_jti` for revocation lookup. Revocation API ships in FR-AUTH-2xx; this FR ships the column.
+20. **MUST** include `jti: TEXT` claim (JWT ID — RFC 7519) as a UUIDv4. Stored in `lumi_token_issuance_log.token_jti` for revocation lookup. Revocation API ships in task-AUTH-2xx; this task ships the column.
 
 21. **MUST** ship the `LumiClaims` Rust struct with all 5 new claims + existing 8 TASK-AUTH-004 claims. Total 13 claims. Serialisation order: existing 8 first (preserves backward compat for any TASK-AUTH-004 verifier inspecting only the standard claims), then Lumi additions.
 
@@ -158,7 +166,7 @@ The AUTH service **MUST** extend TASK-AUTH-004 JWT shape with Lumi-specific clai
 
 23. **MUST** support TTL configurable via env `LUMI_TOKEN_TTL_SECONDS` with default 3600 (per DEC-429). Operators MAY shorten for high-security tenants; values < 300 (5min) → reject env config at startup.
 
-24. **MUST** include `anchor_chain_hash` validation flow: the memory sync endpoint (out of scope here, ships in FR-MEMORY-2xx) reads the claim + compares against the current chain head; this FR ships the claim emission + verifier-side parsing.
+24. **MUST** include `anchor_chain_hash` validation flow: the memory sync endpoint (out of scope here, ships in task-MEMORY-2xx) reads the claim + compares against the current chain head; this task ships the claim emission + verifier-side parsing.
 
 25. **MUST** validate `sync_class_allowed` ⊆ what the source tenant's policy permits. The per-tenant policy YAML (TASK-AI-005) declares per-tenant `lumi_sync_max_classes`. If requested array exceeds policy → 403 `sync_class_exceeds_policy` + emit `auth.lumi_token_rejected` with reason.
 
@@ -184,7 +192,7 @@ The AUTH service **MUST** extend TASK-AUTH-004 JWT shape with Lumi-specific clai
 
 **Why TTL 1 hour configurable (DEC-429, §1 #23)?** Lumi sync is a periodic activity (typically every 5-15 minutes). 1-hour TTL gives reasonable refresh cadence without making compromised tokens long-lived. Operators with high-security needs can tighten via env; lower bound of 5 minutes prevents pathological config.
 
-**Why jti claim with log row (§1 #20)?** Revocation requires looking up "is this jti revoked?". Storing every issued jti in the log enables this. The revocation API (FR-AUTH-2xx) consults the log. Slice 1 ships the column + log; revocation lookup is slice 2.
+**Why jti claim with log row (§1 #20)?** Revocation requires looking up "is this jti revoked?". Storing every issued jti in the log enables this. The revocation API (task-AUTH-2xx) consults the log. Slice 1 ships the column + log; revocation lookup is slice 2.
 
 **Why tenant_residency check at verifier (§1 #6, DEC-422)?** Decree 53/2022 + GDPR + DORA require data residency enforcement at every operation. If a Lumi token issued in vn-1 hits a sync endpoint in eu-1, that's a cross-residency operation — must be rejected even if the token is otherwise valid. The 451 status code (RFC 7725) is the spec-correct response for legal-reason rejection.
 
@@ -202,7 +210,7 @@ The AUTH service **MUST** extend TASK-AUTH-004 JWT shape with Lumi-specific clai
 
 **Why sev-2 alarm on persona_version_stale > 5/h (§1 #14, §1 #18)?** Normal rotation produces 0-1 stale tokens/hour; > 5/h sustained signals (a) version-registry update not propagated to issuer, (b) compromised token reuse beyond refresh window, (c) misconfigured caching. Sev-2 prompts operator investigation.
 
-**Why no Lumi token revocation handler at slice 1 (§1 #20)?** Revocation is a separable concern — needs a CRL endpoint + propagation mechanism + cache invalidation. Slice 1 ships the jti column; FR-AUTH-2xx ships the revocation flow. Until then, short TTL (1h) is the mitigation.
+**Why no Lumi token revocation handler at slice 1 (§1 #20)?** Revocation is a separable concern — needs a CRL endpoint + propagation mechanism + cache invalidation. Slice 1 ships the jti column; task-AUTH-2xx ships the revocation flow. Until then, short TTL (1h) is the mitigation.
 
 ---
 
@@ -617,7 +625,7 @@ fn unknown_sync_class_rejected_at_deserialise() {
 **Upstream:**
 - **TASK-AUTH-101** — RBAC catalogue (agent-persona role + role enum).
 
-**Downstream:** none at slice 1 (this FR provides the JWT shape that downstream memory sync + FR-AUTH-2xx revocation consume).
+**Downstream:** none at slice 1 (this task provides the JWT shape that downstream memory sync + task-AUTH-2xx revocation consume).
 
 **Cross-module:**
 - **TASK-AUTH-004** — JWT baseline + signing key + JWKS.
@@ -714,10 +722,10 @@ fn unknown_sync_class_rejected_at_deserialise() {
 ## §9 — Open questions
 
 Deferred:
-- **Lumi token revocation API + CRL endpoint** — FR-AUTH-2xx.
+- **Lumi token revocation API + CRL endpoint** — task-AUTH-2xx.
 - **Distinct kid for Lumi vs TASK-AUTH-004** — slice 2.
 - **Human delegation flow (human authorises specific Lumi sync)** — slice 3 ADR.
-- **Cross-Lumi token chain (Lumi A → Lumi B)** — FR-MEMORY-2xx.
+- **Cross-Lumi token chain (Lumi A → Lumi B)** — task-MEMORY-2xx.
 
 All other questions resolved.
 
@@ -781,7 +789,7 @@ All other questions resolved.
 - **OTel sampling 1% verify** — high-volume hot path; 100% on non-success.
 - **Sev-2 alarm on stale-version > 5/h** — operator investigation prompt.
 - **Distinct kid for Lumi** — slice 2 hardening.
-- **Revocation API** — FR-AUTH-2xx; jti column ships here.
+- **Revocation API** — task-AUTH-2xx; jti column ships here.
 
 ---
 

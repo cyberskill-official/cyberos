@@ -1,8 +1,16 @@
 ---
 id: TASK-AUTH-110
 title: "AUTH OIDC Provider - first-party authorization server (OIDC Core + RFC 8414 discovery, authorize with SSO-session / upstream-IdP brokering, token + id_token, userinfo, first-party RP client registry, PKCE S256, JWKS reuse, revoke-gated authorize)"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-06-29T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AUTH
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P4
@@ -494,7 +502,7 @@ Upstream:
 - TASK-MCP-004 - the OAuth-server substrate reused (DEC-2493).
 
 Downstream:
-- CHAT SSO (the Mattermost OIDC connector) consumes this provider - the reachable unified-path login (the AuthBridge plugin is a non-working simulation and is dropped; Mattermost's native OIDC connector points at this provider's discovery URL). The exact CHAT FR id is reconciled in the backlog.
+- CHAT SSO (the Mattermost OIDC connector) consumes this provider - the reachable unified-path login (the AuthBridge plugin is a non-working simulation and is dropped; Mattermost's native OIDC connector points at this provider's discovery URL). The exact CHAT task id is reconciled in the backlog.
 - TASK-PORTAL-003 - external IdP / portal login federates here too.
 - TASK-PORTAL-004 - SCIM auto-deprovision complements the revoke gate for instant cross-app deprovisioning.
 

@@ -1,8 +1,16 @@
 ---
 id: TASK-TIME-009
 title: "TIME per-cycle billable rollup → INV — per-Member × role × Engagement aggregation with rate-card application + idempotent emit"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: TIME
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P1
@@ -132,7 +140,7 @@ The TIME service **MUST** ship per-cycle billable rollup at `services/time/src/r
 
 **Why timesheets='locked' filter (§1 #2, DEC-1432)?** Pre-approval entries are draft; including would create invoices on un-reviewed data → trust + audit gap.
 
-**Why rate-card snapshot in result (§1 #3, DEC-1433)?** TASK-INV-001 needs the snapshot to fulfill DEC-1363. This FR provides it ready-to-copy.
+**Why rate-card snapshot in result (§1 #3, DEC-1433)?** TASK-INV-001 needs the snapshot to fulfill DEC-1363. This task provides it ready-to-copy.
 
 ---
 

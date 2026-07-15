@@ -90,7 +90,7 @@ And §11:
 
 > *"The 90-day staleness CI lint matches industry SOC 2 cadence for vendor reassessment."*
 
-But: §1 doesn't define the threshold, §3 doesn't define the check function, §5 doesn't test it, §6 doesn't implement it, and `new_files` doesn't include the workflow file. The lint is a recommendation; nothing in the FR makes it real.
+But: §1 doesn't define the threshold, §3 doesn't define the check function, §5 doesn't test it, §6 doesn't implement it, and `new_files` doesn't include the workflow file. The lint is a recommendation; nothing in the task makes it real.
 
 Worse, the "PR warning (not blocking)" model is the wrong default: a 91-day-old attestation might still be true (vendor policy unchanged), but it might not (vendor policy changed and no one noticed). Soft warning at 90d is fine; the spec is missing the hard-stop at some longer threshold (matching SOC 2's annual cadence).
 
@@ -164,7 +164,7 @@ Three possible behaviours:
 (b) Cache unchanged (continues serving old data) — silent failure; operator might not notice.
 (c) Cache cleared AND gateway exits — loud + impactful.
 
-The spec doesn't pick. TASK-AI-005 and TASK-AI-007's hot-reload patterns use behaviour (b) with a WARN log; this FR should too, but it's not explicit.
+The spec doesn't pick. TASK-AI-005 and TASK-AI-007's hot-reload patterns use behaviour (b) with a WARN log; this task should too, but it's not explicit.
 
 #### Suggested fix
 
@@ -179,13 +179,13 @@ The spec doesn't pick. TASK-AI-005 and TASK-AI-007's hot-reload patterns use beh
 - §1 #6 introduces a dedicated `ai.zdr_violation` memory row kind. This is the proof-of-refusal primitive: a regulator asking "did you ever route PDPL data to a non-ZDR provider for tenant X" gets a positive answer (rows showing the refusal) rather than an absence-of-evidence answer.
 - §1 #9 introduces the two-tier staleness model (90d soft, 365d hard) with the hard-tier forcing `is_zdr=false` regardless of recorded value. This is the defence-in-depth that converts "we forgot to reverify" from a silent failure to a loud refusal.
 - §1 #10 + #11 make `source_url` and `attested_by` validated at parse — accepting only HTTPS URLs and approved-domain attestors. Both validations are cheap (parser-level) but materially raise the audit-grade of the table.
-- §3 specifies the memory audit row builder (`canonical::zdr_violation`) inside this FR, not punting to TASK-AI-003. The owning-FR-builds-the-builder pattern matches TASK-AI-014's `canonical::persona_loaded` fix.
+- §3 specifies the memory audit row builder (`canonical::zdr_violation`) inside this task, not punting to TASK-AI-003. The owning-task-builds-the-builder pattern matches TASK-AI-014's `canonical::persona_loaded` fix.
 - §10 inventory grew from 5 rows to 22 — including the field-validation paths (HTTPS, bare-attestor, missing field), the hot-reload-parse-error path, the audit-emit-fails path, the watcher-thread-panic path, and the notes-leak-in-response-body path. Each row has an unambiguous detection mechanism.
 - §11 documents the Anthropic "Enterprise plan only" caveat AS A KNOWN GAP with a clear TASK-AI-022 follow-up. The honesty about scope is important — ops needs to manually verify Enterprise tier per tenant during onboarding until the runtime check ships.
 
 ## §4 — Resolution
 
-All 6 mechanical revisions applied (2026-05-16) within the FR itself:
+All 6 mechanical revisions applied (2026-05-16) within the task itself:
 
 - **ISS-001 RESOLVED**: HashMap key access uses `(provider.clone(), model.to_string())` — no `Copy` dependency on `ProviderKind`. Skeleton in §6 updated; §7 documents the clone-per-lookup as a deliberate forward-compatibility choice.
 

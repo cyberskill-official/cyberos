@@ -10,7 +10,7 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-/// The frozen contract version for this FR (§1 #2). Downstream emitters pin it; a real breaking change is
+/// The frozen contract version for this task (§1 #2). Downstream emitters pin it; a real breaking change is
 /// `schema_version: 2` with its own migration note (§1 #15).
 pub const SCHEMA_VERSION: u16 = 1;
 

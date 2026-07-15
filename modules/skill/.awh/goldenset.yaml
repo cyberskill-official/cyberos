@@ -25,7 +25,7 @@ tasks:
 
   # Held-out acceptance: the broker runtime contracts, a real deterministic skill-broker
   # test. Note: TASK-SKILL-113's cited marker_validator_test.rs does not exist on main
-  # (see scripts/awh_goldenset_from_fr.py --audit), so the gate uses a real test instead.
+  # (see scripts/awh_goldenset_from_task.py --audit), so the gate uses a real test instead.
   # Sealed read-only.
   - id: acceptance-skill-broker-runtime-contracts
     description: held-out skill-broker runtime-contracts test

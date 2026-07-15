@@ -1,8 +1,16 @@
 ---
 id: TASK-INV-003
 title: "INV Stripe webhook handler — Stripe-Signature verify + closed event-type allowlist + idempotent receipt insert + multi-currency + append-only ledger + memory audit"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: INV
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P2
@@ -32,7 +40,7 @@ source_decisions:
   - "DEC-468 (Stripe-Signature header format: `t=<unix_timestamp>,v1=<hex_signature>[,v0=<deprecated>]`; we accept v1 only; v0 deprecated by Stripe)"
   - DEC-469 (per-tenant webhook secret stored in `stripe_webhook_secrets` table KMS-encrypted; rotation handler with 60s overlap window)
   - DEC-470 (alarm sev-2 on > 10 rejections/h per tenant — same threshold as VietQR TASK-INV-005)
-  - DEC-471 (Stripe Connect / multi-account scenarios deferred to FR-INV-2xx — slice 2 is platform-account only)
+  - DEC-471 (Stripe Connect / multi-account scenarios deferred to task-INV-2xx — slice 2 is platform-account only)
   - DEC-472 (`payment_intent.metadata` field contains `invoice_id` or `tenant_invoice_ref` — extracted into receipt's `invoice_id` column for TASK-INV-006 cash app)
   - DEC-473 (PCI SAQ-A compliance — Stripe never sends raw card numbers to our webhook; PCI scope rests with Stripe)
   - PDPL Art. 13 (data minimisation — customer email + name PII-scrubbed in memory chain)
@@ -200,7 +208,7 @@ The INV service **MUST** ship the Stripe webhook handler at `POST /v1/inv/webhoo
 
 **Why per-tenant secret rotation with 60s overlap (DEC-469, §1 #18)?** Same logic as VietQR webhook. Operator rotates secret in our system + updates Stripe portal in sequence; 60s window handles the timing gap.
 
-**Why multi-currency stored as BIGINT minor (DEC-466, §1 #12)?** USD cents, EUR cents, SGD cents, GBP pence — all minor-unit currencies. task-audit skill rule 11. FLOAT for amount would round-error at scale.
+**Why multi-currency stored as BIGINT minor (DEC-466, §1 #12)?** USD cents, EUR cents, SGD cents, GBP pence — all minor-unit currencies. Task-audit skill rule 11. FLOAT for amount would round-error at scale.
 
 **Why supported currencies USD/EUR/SGD/GBP at slice 1 (§1 #12)?** Covers ~95% of international SaaS billing; adding more is an ADR (each new currency may need FX rate setup + invoicing template).
 
@@ -210,7 +218,7 @@ The INV service **MUST** ship the Stripe webhook handler at `POST /v1/inv/webhoo
 
 **Why charge.refunded creates negative payment_receipts (§1 #11)?** Accounting: a refund reverses a payment. Negative-amount row in the same ledger preserves the cause-effect link (refund row references the original payment_intent_id via the event's `payment_intent` field). Sum aggregates naturally net out.
 
-**Why customer.subscription.{updated,deleted} logged but not state-tracked at slice 1 (§1 #11)?** Subscription state lives in TASK-TEN-003 (Stripe billing). This FR persists the event; TASK-TEN-003 consumes for subscription tier transitions.
+**Why customer.subscription.{updated,deleted} logged but not state-tracked at slice 1 (§1 #11)?** Subscription state lives in TASK-TEN-003 (Stripe billing). This task persists the event; TASK-TEN-003 consumes for subscription tier transitions.
 
 **Why metadata.invoice_id linking (DEC-472, §1 #25)?** Stripe lets us attach arbitrary key-value metadata to payment intents + invoices. We populate `invoice_id` (our internal TASK-INV-001 invoice UUID) at payment_intent creation time; the webhook extracts it to match payment back to invoice.
 
@@ -218,7 +226,7 @@ The INV service **MUST** ship the Stripe webhook handler at `POST /v1/inv/webhoo
 
 **Why customer email + name PII-scrubbed in memory chain (§1 #13)?** Customer PII is sensitive; memory chain is queried broadly. Hashed forms suffice for forensic queries; raw retained in tenant-scoped Postgres rows under RLS.
 
-**Why no Stripe Connect at slice 1 (DEC-471)?** Connect (Stripe's marketplace pattern with multiple Stripe accounts) adds substantial complexity (oauth flow, on-behalf-of headers, application_fee). Slice 1 = single platform Stripe account; Connect ships as FR-INV-2xx when marketplace use case arrives.
+**Why no Stripe Connect at slice 1 (DEC-471)?** Connect (Stripe's marketplace pattern with multiple Stripe accounts) adds substantial complexity (oauth flow, on-behalf-of headers, application_fee). Slice 1 = single platform Stripe account; Connect ships as task-INV-2xx when marketplace use case arrives.
 
 **Why PCI SAQ-A scope (DEC-473)?** Stripe-hosted card data means we never touch card numbers — we're PCI SAQ-A (self-assessment questionnaire A, the simplest tier). No card numbers in our webhook = nothing to encrypt at rest beyond what we do already.
 
@@ -922,11 +930,11 @@ Stripe-Signature: t=1700000050,v1=5257a869e7ecebeda32affa62cdca3fa51cad7e77a0e56
 ## §9 — Open questions
 
 Deferred:
-- **Stripe Connect (multi-account marketplace)** — FR-INV-2xx.
+- **Stripe Connect (multi-account marketplace)** — task-INV-2xx.
 - **Cash application logic** — TASK-INV-006.
 - **Subscription state tracking** — TASK-TEN-003.
 - **Cross-currency FX reconciliation** — TASK-INV-002.
-- **Refund partial-allocation** — FR-INV-2xx.
+- **Refund partial-allocation** — task-INV-2xx.
 
 All other questions resolved.
 

@@ -42,7 +42,7 @@ Resolved: §1 #10 + 5-minute future tolerance + handler validation; AC #7.
 Resolved: §1 #3 + 4-value closed Postgres enum + `EntryKind::ALL` cardinality test; AC #1.
 
 ### ISS-009 — Current-effective row predicate scattered
-First-pass left downstream FRs to NOT-IN-subquery on every read. Resolved: §1 #9 + `current_time_entries_view` SQL view + index on `correction_to WHERE correction_to IS NOT NULL`; AC #16.
+First-pass left downstream tasks to NOT-IN-subquery on every read. Resolved: §1 #9 + `current_time_entries_view` SQL view + index on `correction_to WHERE correction_to IS NOT NULL`; AC #16.
 
 ### ISS-010 — Description PII could leak via memory chain
 First-pass stored raw description in memory row. Resolved: §1 #13 + TASK-MEMORY-111 PII scrubbing before chain commit; description retained in tenant-scoped Postgres row.

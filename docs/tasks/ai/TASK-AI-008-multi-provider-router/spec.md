@@ -2,8 +2,16 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future fr-catalog renderer) ─────
 id: TASK-AI-008
 title: "LiteLLM-derived multi-provider router with retry + 30s failover SLA"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AI
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P0
@@ -67,7 +75,7 @@ subtasks:
   - "1.0h: response normalization (3 provider response shapes → one ProviderResponse)"
   - "0.5h: jitter helper (rand::Rng::gen_range, NOT rand::random with mod)"
   - "1.5h: integration test suite (12 cases) + proptest for jitter bounds + concurrent stress"
-risk_if_skipped: "AI Gateway has no actual call path to LLM providers. Every consumer module times out. The cost-of-everything gate guards nothing because nothing is calling providers in the first place. The 30s failover SLA — promised in website/docs/modules/ai.html#failover-sla and pitched to early prospects — has no implementation. Slice 2 cannot be marked shipped without this FR."
+risk_if_skipped: "AI Gateway has no actual call path to LLM providers. Every consumer module times out. The cost-of-everything gate guards nothing because nothing is calling providers in the first place. The 30s failover SLA — promised in website/docs/modules/ai.html#failover-sla and pitched to early prospects — has no implementation. Slice 2 cannot be marked shipped without this task."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -126,7 +134,7 @@ The AI Gateway service **MUST** expose `router::call_provider(req, resolved, dea
 
 **Why does the deadline propagate through `tokio::time::timeout`?** Without deadline propagation, a retry could fire ~5s after the original call started, the provider takes 25s, and the caller times out before the response arrives. The caller has already returned `503` to the tenant by then; the eventual provider response is wasted compute that we still pay for. Deadline propagation guarantees the caller's timeout is respected even across retries — if we have 4s left of caller deadline AND 22s of failover budget, we use 4s.
 
-**Why a 30s constant rather than tenant-configurable?** Slice 2 ships with one number that satisfies our SLA promise. Tenant-configurable timeouts (TASK-AI-021) need a policy schema field, validation, OBS labels per tenant, and an analyst-friendly admin UI. None of that fits in slice 2's 10h budget for this FR. The 30s number is documented in the public-facing pricing page and the SLA contract; if tenants want different numbers, TASK-AI-021 covers it.
+**Why a 30s constant rather than tenant-configurable?** Slice 2 ships with one number that satisfies our SLA promise. Tenant-configurable timeouts (TASK-AI-021) need a policy schema field, validation, OBS labels per tenant, and an analyst-friendly admin UI. None of that fits in slice 2's 10h budget for this task. The 30s number is documented in the public-facing pricing page and the SLA contract; if tenants want different numbers, TASK-AI-021 covers it.
 
 ---
 
@@ -1010,7 +1018,7 @@ fn make_provider(kind: ProviderKind) -> Box<dyn Provider> {
 
 ## §7 — Dependencies
 
-### Code dependencies (other FRs/modules)
+### Code dependencies (other tasks/modules)
 
 - **TASK-AI-006** — `ResolvedModel` is the input. The router takes it as-is from `alias::resolve()`. The `fallback_position` field is mirrored verbatim into `AttemptRecord.fallback_position` on the primary's first attempt.
 - **TASK-AI-007** — Cost table validates model existence at alias resolution time. By the time the router sees a `ResolvedModel`, the model is guaranteed to exist in cost-table; a 404 from the provider therefore indicates a configuration error (cost table out of sync with provider catalog) — not a tenant-input issue.
@@ -1019,7 +1027,7 @@ fn make_provider(kind: ProviderKind) -> Box<dyn Provider> {
 ### Concept dependencies (shared types)
 
 - `ProviderKind` enum from `crate::policy::schema` — closed set; the router exhaustively matches it in `build_provider_chain`.
-- `ProviderKind::as_metric_label()` — added in TASK-AI-007 ISS-003 fix; the router relies on this method existing. If TASK-AI-007 ships without it, this FR adds it as a sub-task.
+- `ProviderKind::as_metric_label()` — added in TASK-AI-007 ISS-003 fix; the router relies on this method existing. If TASK-AI-007 ships without it, this task adds it as a sub-task.
 - `TenantPolicy.ai_policy.fallback_chain` from TASK-AI-005 — list of `Provider` configs (each carrying its own `model_alias_map`).
 - `ChatCompleteRequest` from `crate::handlers::chat` — the input request.
 
@@ -1113,7 +1121,7 @@ assert!(matches!(err, RouterError::StreamingNotImplemented));
 
 ## §9 — Open questions
 
-All resolved at authoring time. Items deferred to later FRs:
+All resolved at authoring time. Items deferred to later tasks:
 
 - Streaming first-token latency (TASK-AI-010).
 - Circuit breaker filtering of open providers from chain (TASK-AI-009).
@@ -1150,10 +1158,10 @@ All resolved at authoring time. Items deferred to later FRs:
 
 ## §11 — Notes
 
-- This is the largest FR in slice 2 (10h). Worth doing carefully — every other consumer module's reliability rides on this code path. A 5-line bug in the failover loop becomes a sev-1 incident affecting every tenant.
+- This is the largest task in slice 2 (10h). Worth doing carefully — every other consumer module's reliability rides on this code path. A 5-line bug in the failover loop becomes a sev-1 incident affecting every tenant.
 - The 3-impl provider trait (Bedrock, Anthropic, OpenAI) is sufficient for slice 2. Vertex AI (Gemini) lands in slice 4 (TASK-AI-017 area). The `ProviderKind::Vertex` arm in `make_provider` panics with `unimplemented!()` deliberately — fail loud if a slice-2 deploy gets a Vertex-bearing policy.
 - The deadline propagation pattern is non-obvious in Rust — readers may want to look at `tokio::time::timeout` docs before reviewing the skeleton. Key insight: `tokio::time::timeout(d, fut)` cancels `fut` when `d` elapses, but the cancellation point is at the next `.await`. Provider impls must yield frequently enough that cancellation is responsive (in practice, the underlying HTTP client's read loop yields per chunk).
-- Streaming (TASK-AI-010) layers ON TOP of this FR. The non-streaming code path stays as the "synchronous" workhorse; streaming uses the same retry/failover policy but consumes the response as an SSE stream. The trait's `call_chat_streaming` default impl returns `StreamingNotImplemented` so slice-2 consumers that try to stream get a clean error rather than silent fall-through.
+- Streaming (TASK-AI-010) layers ON TOP of this task. The non-streaming code path stays as the "synchronous" workhorse; streaming uses the same retry/failover policy but consumes the response as an SSE stream. The trait's `call_chat_streaming` default impl returns `StreamingNotImplemented` so slice-2 consumers that try to stream get a clean error rather than silent fall-through.
 - The `RETRY_DELAYS_MS` constant is `&[200, 800]` (length 2, matching `MAX_RETRIES_PER_PROVIDER - 1 = 2` — attempts 2 and 3 each have a backoff; attempt 1 is immediate). An off-by-one bug here would either (a) panic on index out of bounds on attempt 3, or (b) skip the attempt-2 backoff. The unit test `retries_on_503_then_succeeds` would catch either.
 - The `jitter_ms` helper is in its own module specifically so the proptest can target it. The same helper is reused by TASK-AI-009's circuit breaker reset timing — keep it pure and deterministic given its `Rng`.
 - The `ATTEMPTS_CAP = 16` constant catches infinite-loop bugs in `build_provider_chain`. Without it, a misconfigured policy with a self-referential fallback chain (theoretically prevented by TASK-AI-005 validation, but defence in depth) would produce unbounded `attempts` vecs. The cap is loud rather than silent — the resulting `InvalidResponse` returns to the caller and triggers a sev-2 alarm.

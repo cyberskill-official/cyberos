@@ -1,10 +1,17 @@
 ---
 id: TASK-IMP-081
 title: "CI leg rebuilds + recommits apps/console/web on real source changes - structural follow-up to TASK-IMP-080's served-bundle version-drift fix"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: improvement
+created_at: 2026-07-13T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: improvement
-priority: SHOULD
+priority: p1
 status: done
-class: improvement
 verify: T
 phase: "Wave 6 - go-live (web channel)"
 owner: Stephen Cheng (CTO)
@@ -18,10 +25,10 @@ source_pages:
   - "docs/tasks/improvement/TASK-IMP-080-served-bundle-version-drift/spec.md §9: 'Structural follow-up: a CI leg that rebuilds apps/web on apps/web/**/VERSION changes and ships it like the docs job (ship.sh pattern), retiring the tracked-output model. Decide together with the deploy.sh caddy-bind implications; not blocking 1.0.0.'"
   - "apps/web/scripts/stamp-sw.mjs lines 32-34: 'the badge on os.cyberskill.world sat at 1.2.0 while the platform shipped 1.7.0' - the exact incident class this closes for good"
   - ".github/workflows/deploy.yml line 6-8: 'A non-services push (apps/web, console, compose) skips the gate + build and just rolls (the bundle ships via the VPS git pull)' - confirms no CI leg currently rebuilds apps/console/web"
-  - ".github/workflows/version.yml: the proven bot-commit-back pattern (cyberos-bot identity, VERSION_BUMP_SSH_KEY deploy-key ruleset bypass, graceful degrade-to-warning on blocked push) this FR reuses rather than inventing a second one"
+  - ".github/workflows/version.yml: the proven bot-commit-back pattern (cyberos-bot identity, VERSION_BUMP_SSH_KEY deploy-key ruleset bypass, graceful degrade-to-warning on blocked push) this task reuses rather than inventing a second one"
 source_decisions:
   - "TASK-IMP-080 §9 (2026-07-13): explicitly deferred the structural fix as not blocking 1.0.0, to be decided together with the deploy.sh caddy-bind implications"
-  - "2026-07-13 (this FR): Option A (bot commit-back, mirroring version.yml) chosen over Option B (gitignore apps/console/web + ship it like the docs job's ship.sh rsync pattern). Option B is architecturally cleaner and matches §9's own suggested phrasing, but the one-time migration (untracking a directory the VPS currently git-pulls into a live-served path) carries a real outage window: the VPS's next `git pull` after the untracking commit would delete the tracked files before any new ship step could repopulate them, and nothing in this session can rehearse that sequencing against the real VPS. Option A is a small, additive diff with no migration step and no change to deploy.sh's documented caddy directory-bind behavior - the exact trade TASK-IMP-080 §9 asked to make deliberately rather than defer forever."
+  - "2026-07-13 (this task): Option A (bot commit-back, mirroring version.yml) chosen over Option B (gitignore apps/console/web + ship it like the docs job's ship.sh rsync pattern). Option B is architecturally cleaner and matches §9's own suggested phrasing, but the one-time migration (untracking a directory the VPS currently git-pulls into a live-served path) carries a real outage window: the VPS's next `git pull` after the untracking commit would delete the tracked files before any new ship step could repopulate them, and nothing in this session can rehearse that sequencing against the real VPS. Option A is a small, additive diff with no migration step and no change to deploy.sh's documented caddy directory-bind behavior - the exact trade TASK-IMP-080 §9 asked to make deliberately rather than defer forever."
 language: yaml (GitHub Actions)
 service: .github/workflows/deploy.yml
 new_files: []
@@ -68,13 +75,13 @@ Stephen approved gate 1 (human review) in chat. Re-ran the machine-checkable ver
 - `actionlint v1.7.12` against `.github/workflows/deploy.yml`: exit 0, zero findings (unchanged from the review-time run). PASS
 - `python3 -c "import yaml; yaml.safe_load(...)"` re-parse: clean. Re-asserted programmatically: `rebuild-web.continue-on-error == true`, `rebuild-web.needs == "changes"`, `deploy.needs == [changes, build-images, rebuild-web]`, `changes.outputs.web_src` present. All PASS.
 - No code changes were made between the reviewing-gate verdict and this testing pass, so the scratch-repo dry-run results recorded above (no-diff short-circuit, diff-branch commit-and-push, push-failure degrade-to-warning) still stand as-is; not re-run since nothing they exercise changed.
-- Same "not exercised" gap as review time still applies and is still unclosed from this sandbox: no real push through the live deploy key, no real `npm ci && npm run build` inside this job's actual checkout. This FR proceeds to the human acceptance gate with that gap disclosed, not silently.
+- Same "not exercised" gap as review time still applies and is still unclosed from this sandbox: no real push through the live deploy key, no real `npm ci && npm run build` inside this job's actual checkout. This task proceeds to the human acceptance gate with that gap disclosed, not silently.
 
 ### Acceptance (2026-07-13)
 Stephen approved gate 2 (human acceptance) in chat: "i approve". TASK-IMP-081 lands as `done`, `shipped: 2026-07-13`. The two sandbox-inherent gaps flagged above (live-deploy-key push, real build inside the actual CI checkout) remain unexercised — they close naturally on the first real `deploy.yml` run this job is present for, not before.
 
 ## §9
-- If `apps/console/web`'s serving model is ever revisited (Option B above), this job becomes dead weight to remove, not a blocker: nothing about it constrains that future migration, and the paths-filter/`needs:` wiring this FR adds is straightforward to delete in the same change that gitignores the directory.
+- If `apps/console/web`'s serving model is ever revisited (Option B above), this job becomes dead weight to remove, not a blocker: nothing about it constrains that future migration, and the paths-filter/`needs:` wiring this task adds is straightforward to delete in the same change that gitignores the directory.
 - Not covered: a Capacitor `cap sync` step. `apps/web/android/**` and `apps/web/ios/**` are release.yml's concern (mobile shell sync on tag), not deploy.yml's; this job only ever touches `apps/console/web`.
 
 ## §10

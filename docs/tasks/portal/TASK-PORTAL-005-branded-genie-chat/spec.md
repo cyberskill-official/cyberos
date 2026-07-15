@@ -1,8 +1,16 @@
 ---
 id: TASK-PORTAL-005
 title: "PORTAL branded Genie chat — CUO scope-narrowed by JWT scope_grants + per-Engagement brand pack + IdP-auth session integration + cross-tenant boundary enforcement"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: PORTAL
-priority: SHOULD
+priority: p1
 status: draft
 verify: T
 phase: P4
@@ -726,7 +734,7 @@ All resolved for slice 2. Deferred:
 
 **§11.6** Pre-flight heuristic keywords: deny-list of intent phrases ("all clients", "other engagements", "tenant X"); future ML-based intent classifier (slice 4).
 
-**§11.7** Post-flight enforcement: defense-in-depth — CUO's `cuo.boundary_test` invariant SHOULD prevent cross-tenant retrieval; this FR catches CUO bugs.
+**§11.7** Post-flight enforcement: defense-in-depth — CUO's `cuo.boundary_test` invariant SHOULD prevent cross-tenant retrieval; this task catches CUO bugs.
 
 **§11.8** Persona resolution: per-Engagement override > tenant default > CyberOS default. Cached in memory at handler startup; reload on engagement config change.
 

@@ -10,7 +10,7 @@ verdicts: all pass - human verdict pending at HITL gate 1
 ---
 # Ship artefact bundle - TASK-CUO-209
 
-## Context map / plan (condensed - single-tool FR)
+## Context map / plan (condensed - single-tool task)
 Domain: tools/cyberos-init only (build.sh set block, sizes; GUIDE source docs/index.md; README;
 allowlist; test). files_outside_immediate_domain: 0 -> no ADR. Edge rows folded into the suite:
 52-skill matrix (t01), data-not-string regression trap (t02), computed counts full vs reduced
@@ -40,7 +40,7 @@ t07_reduced_profile_skips (now 7/7).
 
 ## Reviewer attention points
 1. Plugin zip grew 320 KB -> ~1.0 MB (52 skills). Budget headroom 51%; the trim fallback
-   (payload keeps all, plugin trims) stays documented in the FR §10 if skill-selection quality
+   (payload keeps all, plugin trims) stays documented in the task §10 if skill-selection quality
    ever regresses.
 2. GUIDE map marks contract level per pair (full/thin) - expectation-setting for the thin
    upstream pairs until TASK-SKILL-118 deepens them.

@@ -1,10 +1,10 @@
 # LEARN module — task index
 
-_Generated 2026-05-17 — 7 FRs, 40 engineering-hours total._
+_Generated 2026-05-17 — 7 tasks, 40 engineering-hours total._
 
-## FRs
+## tasks
 
-| FR | Priority | Slice | Hours | Title |
+| Task | Priority | Slice | Hours | Title |
 |---|---|---|---:|---|
 | [TASK-LEARN-001](TASK-LEARN-001-skill-tree-mastery/spec.md) | MUST | 7 | 6 | LEARN skill tree schema — 1-5 mastery levels per skill per Member with parent-child skill graph |
 | [TASK-LEARN-002](TASK-LEARN-002-degrees-certifications/spec.md) | MUST | 7 | 4 | LEARN bằng cấp + chứng chỉ — degree + certification evidence types with issuer + expiry + verificati |

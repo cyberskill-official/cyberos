@@ -1,8 +1,16 @@
 ---
 id: TASK-PROJ-018
 title: "Liquid-Glass design tokens (tokens.proj.css) + axe-core CI accessibility gate + Storybook visual regression"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: PROJ
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -538,7 +546,7 @@ All resolved. Deferred:
 - Per-PR token diff comment includes a markdown table: token | before | after | components-affected.
 - The design-system audit CLI is intended for CI and on-demand; not real-time.
 - Empty-state hints use the proper "polite" ARIA live region so they don't interrupt focus.
-- The cheatsheet doc also serves as the contract for FR-AUTH and FR-AI dashboards to consume PROJ tokens.
+- The cheatsheet doc also serves as the contract for task-AUTH and task-AI dashboards to consume PROJ tokens.
 
 ---
 

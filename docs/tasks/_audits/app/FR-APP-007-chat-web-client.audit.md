@@ -14,7 +14,7 @@ Frontmatter (FM-001..111): file opens with `---` on line 1; all keys snake_case,
 
 Conditionals: eu_ai_act_risk_class is not_ai, so COND-003 does not fire and there is correctly no AI Risk Assessment section. client_visible is false, so COND-001 and COND-002 do not fire and there are correctly no Customer Quotes or Sales/CS Summary sections. ai_authorship is assisted, so COND-004 fires and the AI Authorship Disclosure section is present with the three required bullets (Tools used / Scope / Human review). No untrusted-content blocks appear, so the SAFE rules are not triggered.
 
-Open items (the -0.5): the first client slice is the flat channel transcript - threads, edit/delete, attachments upload, search UI, and a call UI are deferred to later additive slices, and the server supports all of them already; and the one service change the FR allows (the opt-in `CHAT_DEV_CORS` dev flag) is a development convenience that ships off and adds no route, with production relying on single-origin Caddy serving instead. Both are disclosed in Scope and in clauses 1 and 10 rather than hidden.
+Open items (the -0.5): the first client slice is the flat channel transcript - threads, edit/delete, attachments upload, search UI, and a call UI are deferred to later additive slices, and the server supports all of them already; and the one service change the task allows (the opt-in `CHAT_DEV_CORS` dev flag) is a development convenience that ships off and adds no route, with production relying on single-origin Caddy serving instead. Both are disclosed in Scope and in clauses 1 and 10 rather than hidden.
 
 Verdict: PASS. Ready as the first usable human surface for cyberos-chat; the richer chat affordances (threads, edit, attachments, search, calls) are the named follow-ups.
 

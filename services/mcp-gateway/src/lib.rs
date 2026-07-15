@@ -25,7 +25,7 @@
 //! - Bearer-token + scope check: **scaffolded** (TASK-MCP-004 PKCE flow lands the full
 //!   token issuance + audience-bound verification; this scaffold accepts any valid
 //!   JWT per TASK-AUTH-004 + asserts the `mcp:tools` scope).
-//! - Rate-limit + audit emission: **deferred** to follow-on FRs.
+//! - Rate-limit + audit emission: **deferred** to follow-on tasks.
 
 #![deny(missing_debug_implementations)]
 #![warn(missing_docs)]

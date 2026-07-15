@@ -92,7 +92,7 @@ class Episode:
 
         Per TASK-MEMORY-112 §1 #7, the deterministic format is::
 
-            Task: <task>
+            task: <task>
             Approach: <approach>
             Outcome: <outcome>
             Notes: <notes>
@@ -348,7 +348,7 @@ def _list_episodes(store: Path, *, query: str, backend: str, k: int) -> list[dic
       overlap.
     """
     # Strategy: scan disk + heuristic. This is the slice-3 implementation;
-    # subsequent FRs (TASK-MEMORY-115 dream pipeline) will hook into the FTS5
+    # subsequent tasks (TASK-MEMORY-115 dream pipeline) will hook into the FTS5
     # and semantic indices directly for better latency at scale.
     episodes_dir = store / "memories" / "episodes"
     if not episodes_dir.is_dir():

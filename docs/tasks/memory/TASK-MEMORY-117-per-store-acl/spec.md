@@ -1,8 +1,16 @@
 ---
 id: TASK-MEMORY-117
 title: "memory per-store ACL — `STORE.yaml` per top-level subtree (memories/ meta/ company/ client/ project/ persona/ episodes/) auto-generated on migration; writer enforces ACL on every put/move/delete; reads remain unrestricted to local processes"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-19T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: memory
-priority: SHOULD
+priority: p1
 status: done
 verify: T
 phase: P1
@@ -71,7 +79,7 @@ The store-ACL layer **MUST** sit between the canonical `cyberos.core.writer.Writ
 
 1. **MUST** enforce ACLs on every write through `Writer`. The check runs after path validation (§3.3 of AGENTS.md) and before the audit-chain append.
 2. **MUST NOT** enforce ACLs on reads. Reads are unrestricted to all local processes that can read the filesystem (DEC-232). OS file permissions are the operator's responsibility, not the protocol's.
-3. **MUST** locate the active `STORE.yaml` by walking from the target path UP toward `<memory-root>/`. The first `STORE.yaml` encountered governs; further-up `STORE.yaml` files are ignored. This lets `memories/episodes/STORE.yaml` override a hypothetical `memories/STORE.yaml`. If no `STORE.yaml` is found anywhere up to the root, the default is permissive (`read-write` for all actors) — preserving back-compat for stores predating this FR.
+3. **MUST** locate the active `STORE.yaml` by walking from the target path UP toward `<memory-root>/`. The first `STORE.yaml` encountered governs; further-up `STORE.yaml` files are ignored. This lets `memories/episodes/STORE.yaml` override a hypothetical `memories/STORE.yaml`. If no `STORE.yaml` is found anywhere up to the root, the default is permissive (`read-write` for all actors) — preserving back-compat for stores predating this task.
 4. **MUST** define `STORE.yaml` shape:
     ```yaml
     store_id: org-wide-knowledge
@@ -108,13 +116,13 @@ The store-ACL layer **MUST** sit between the canonical `cyberos.core.writer.Writ
 
 **Why subtree-rooted, not root-only (§1 #3).** The talk's three-store example demonstrates the load-bearing property: different subtrees need different rules. A single root-level ACL conflates the rules; one operator typo cascades across the memory. Subtree-rooted means a typo in `memories/episodes/STORE.yaml` affects episodes only. Search is upward — the closest `STORE.yaml` wins, which makes operator mental model match filesystem mental model.
 
-**Why permissive default (§1 #3, DEC-230).** Back-compat with existing memories that predate this FR. An operator upgrading should see zero behaviour change until they edit or migrate. The migration script (§1 #10) writes the default permissive `STORE.yaml` so the explicit shape is materialised for future edits, but the semantic remains "everything works as before."
+**Why permissive default (§1 #3, DEC-230).** Back-compat with existing memories that predate this task. An operator upgrading should see zero behaviour change until they edit or migrate. The migration script (§1 #10) writes the default permissive `STORE.yaml` so the explicit shape is materialised for future edits, but the semantic remains "everything works as before."
 
 **Why first-match-wins, with explicit-deny overriding (§1 #5, DEC-231).** Iptables-style rules are operator-intuitive; ordered evaluation matches how operators read the file. Explicit `deny` is special-cased because "first I want to block X, then permit everyone else" is a common pattern that's awkward in pure first-match (it forces putting deny entries first AND repeating allow patterns).
 
 **Why writes-only enforcement (§1 #2, DEC-232).** Two reasons. (a) Read enforcement requires kernel-level filesystem permissions, which conflate "OS user" with "agent actor" — the agent identity is a logical concept, not a unix uid. (b) The Anthropic talk frames `read-only` as "the agent's writer rejects writes," not as "the agent can't see the bytes." A separate file-permissions layer can be applied by the operator if they need uid-level isolation; that's out of scope for the memory protocol.
 
-**Why WARN-ONLY mode pre-amendment (§1 #13).** Anti-footgun. An operator pulling the FR code but not running the APPROVE chat-turn shouldn't have their writes silently blocked overnight. WARN-ONLY mode is the "ask forgiveness, not permission" pattern adapted to protocol amendments: the code path exists, it logs what it would have done, the operator gets time to APPROVE before enforcement bites. Once §14.4 is anchored, enforcement is real.
+**Why WARN-ONLY mode pre-amendment (§1 #13).** Anti-footgun. An operator pulling the task code but not running the APPROVE chat-turn shouldn't have their writes silently blocked overnight. WARN-ONLY mode is the "ask forgiveness, not permission" pattern adapted to protocol amendments: the code path exists, it logs what it would have done, the operator gets time to APPROVE before enforcement bites. Once §14.4 is anchored, enforcement is real.
 
 **Why `memory.acl_denied` aux row even on WARN-ONLY (§1 #14).** The aux row is the audit signal. Operators inspecting "what would have been denied?" need a queryable log, not just stderr noise. Once enforcement bites, the aux rows are still useful — they record blocked attempts for post-hoc analysis.
 
@@ -494,7 +502,7 @@ API contracts above are the skeleton. Order:
 ## §7 — Dependencies
 
 - **TASK-MEMORY-115 (related)** — dream rows respect store ACL; dream-runner / dream-applier are built-in actor literals.
-- **TASK-MEMORY-118 (this FR blocks)** — `put_if` precondition-hash operates within ACL constraints (rejected writes don't proceed regardless of precondition match).
+- **TASK-MEMORY-118 (this task blocks)** — `put_if` precondition-hash operates within ACL constraints (rejected writes don't proceed regardless of precondition match).
 - **TASK-MEMORY-103 (transitively related)** — multi-device sync respects ACL on import; foreign-chain rows arriving via sync get the `imported` actor literal.
 - **TASK-MEMORY-106 (related)** — sync_class is orthogonal to ACL; both can be active simultaneously.
 
@@ -587,7 +595,7 @@ All resolved. Deferred:
 - **fnmatch with `case`-sensitive matching** — actor strings are case-sensitive by spec. `fnmatchcase` (not `fnmatch`) enforces.
 - **Cache invalidation via mtime** — simple; the FS watcher in TASK-MEMORY-107 doesn't need to know about ACL caching.
 - **Migration script lives at `scripts/` not `cyberos/`** — it's an operator tool, not part of the runtime.
-- **WARN-ONLY mode is the bridge** — operators can install this FR before the APPROVE chat-turn and see what would happen; once they're satisfied, they APPROVE and enforcement engages.
+- **WARN-ONLY mode is the bridge** — operators can install this task before the APPROVE chat-turn and see what would happen; once they're satisfied, they APPROVE and enforcement engages.
 - **Reads NOT enforced — by design.** This is the most surprising design choice. Operator wanting read isolation uses OS file permissions. The protocol's contract: "writes are protocol-controlled; reads are filesystem-controlled."
 - **No new audit kind for ACL grants/revokes** — STORE.yaml edits are just file edits; TASK-MEMORY-107's FS watcher already captures them as `put` rows on the path. The walker invariant validates the resulting shape.
 - **`Writer.__init__` reads AGENTS.md once at construction** to set `warn_only`. Re-reading on every write would be wasteful; restart-after-APPROVE is the contract.

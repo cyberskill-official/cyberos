@@ -1,7 +1,7 @@
 //! TASK-MEMORY-123 §1 #5,#7,#8,#9,#10,#18 — `POST /v1/memory/recall`: summaries-first, access-scoped,
 //! provenance-carrying semantic recall.
 //!
-//! The flow (the FR's §3 recall sketch, made real):
+//! The flow (the task's §3 recall sketch, made real):
 //!   1. embed the query through the ai-gateway (graceful degrade to full-text over summaries if the gateway
 //!      is down — §1 #18; `query_embed` is then listed in `degraded_backends`);
 //!   2. search CURRENT summaries first (§1 #5);

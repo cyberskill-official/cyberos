@@ -8,7 +8,7 @@ each declared signal against the windowed audit rows, and emits a markdown
 report at `docs/harness/harness-report-<YYYY-MM-DD>.md`.
 
 The harness is **read-only**. It MUST NOT mutate any skill, RUBRIC, contract,
-or workflow file. Wave 2 (TASK-CUO-201) introduces proposal authoring; this FR
+or workflow file. Wave 2 (TASK-CUO-201) introduces proposal authoring; this task
 only provides visibility.
 
 Key invariants:
@@ -414,11 +414,11 @@ def format_markdown(report: HarnessReport) -> str:
         parts.append("*(no workflow runs in this window)*")
     parts.append("")
 
-    # §3. Per-FR routed-back history
-    parts.append("## Per-FR routed-back history")
+    # §3. Per-task routed-back history
+    parts.append("## Per-task routed-back history")
     parts.append("")
     if report.routed_back_history:
-        parts.append("| FR | routed_back_count |")
+        parts.append("| Task | routed_back_count |")
         parts.append("|---|---:|")
         for task_id, count in sorted(report.routed_back_history.items(),
                                     key=lambda kv: -kv[1]):

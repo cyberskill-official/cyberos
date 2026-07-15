@@ -20,7 +20,7 @@ TASK-MEMORY-117 authored direct-to-10/10. ~890 lines. 16 §1 normative clauses (
 First sketch enforced reads via filesystem inspection. Risk: conflates protocol-level identity with OS-level uid. Resolved: §1 #2 + DEC-232 explicit "writes only"; §2 rationale paragraph "Why writes-only enforcement"; AC #2 covers.
 
 ### ISS-002 — Migration backward-compat
-Existing memories predating this FR have no STORE.yaml. Without DEC-230 they would silently start blocking writes once enforcement engaged. Resolved: §1 #3 permissive default + migration script + WARN-ONLY mode + AC #1.
+Existing memories predating this task have no STORE.yaml. Without DEC-230 they would silently start blocking writes once enforcement engaged. Resolved: §1 #3 permissive default + migration script + WARN-ONLY mode + AC #1.
 
 ### ISS-003 — Move semantics ambiguity
 What if src is r-w but dst is read-only? First draft only checked src. Resolved: §1 #8 both paths; AC #10.

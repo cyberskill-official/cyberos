@@ -31,7 +31,7 @@ export const BLOCK_KEYS = [
 // "Show anyway" is a purely local reveal. It reveals nothing, because there is nothing to reveal: the server
 // withheld the body, and this client never had it. All the button does is stop hiding the fact that a
 // message exists — it cannot un-withhold content it was never sent. If we ever want a real reveal it has to
-// be a server round-trip, and that is a different FR.
+// be a server round-trip, and that is a different task.
 //
 // This is deliberately NOT rendered in a DM: there, a blocked sender's messages are not returned at all
 // (§1 #6). A column of these placeholders in a one-to-one thread is not context, it is a drip-feed of the

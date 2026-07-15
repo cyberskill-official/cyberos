@@ -15,7 +15,7 @@ LEARN is the **capability ledger** - what each Member can do, how good they are 
 | Planned tests | 90+ (incl. VP determinism + multi-judge aggregation) |
 | Mastery levels | 1-5 per skill, per Member |
 | Council size | 3-5 judges per promotion case |
-| Per-judge export | never - (FR pending) enforced at boundary |
+| Per-judge export | never - (task pending) enforced at boundary |
 | Depends on | AUTH, HR, PROJ, TIME, KB - VP roll-up inputs |
 | EU AI Act | Annex III §4 - promotion = employment decision |
 
@@ -82,7 +82,7 @@ Axis| Question| Answer
 **5W - Why**| Why a separate module?| Because promotion + skills is the most subjective decision in any company, and the only defence against bias is evidence and process. LEARN is the evidence layer.
 **1H - How**| How does it work?| Skill catalogue as Rust + sqlx-backed closed enum per discipline. Mastery claim = row with evidence FK (PROJ contribution id / KB post id / certificate id / endorsement id). VP = pure function of inputs; deterministic. Council workflow is a state-machine per case; per-judge rows stored in LEARN-private table with RLS that excludes HR's read role.
 **2C - Cost**| Cost budget?| P1: ~$20/month. 50-tenant: ~$70/month.
-**2C - Constraints**| Constraints?| (a) Per-judge scores never exported (FR pending). (b) Promotion gate criteria immutable per parameter version (anti-retroactive, FR pending). (c) EU AI Act Annex III §4 high-risk; P2 conformity pack. (d) Vietnamese bằng cấp / chứng chỉ fields supported.
+**2C - Constraints**| Constraints?| (a) Per-judge scores never exported (task pending). (b) Promotion gate criteria immutable per parameter version (anti-retroactive, task pending). (c) EU AI Act Annex III §4 high-risk; P2 conformity pack. (d) Vietnamese bằng cấp / chứng chỉ fields supported.
 **5M - Materials**| Stack?| Rust 1.81, axum, sqlx, PostgreSQL 16, async-graphql, NATS for VP-recompute triggers, S3 for certificate PDFs with QR-provenance.
 **5M - Methods**| Method choices?| Closed-enum skill catalogue (no free-text skills). Multi-judge aggregation = median of N scores (resilient to one extreme). Anti-retroactive parameter versioning identical to REW pattern.
 **5M - Machines**| Deployment?| Fargate task in SG-1. Multi-AZ Postgres RDS. S3 for cert PDFs.
@@ -353,9 +353,9 @@ Criteria are versioned. Changing them does not retroactively re-judge open cases
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
+The CyberOS task catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
-Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
+Previous task enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific tasks land here as they are re-authored.
 
 ## Non-functional requirements
 
@@ -401,7 +401,7 @@ Regulation / standard| Article / clause| LEARN feature that satisfies it
 ---|---|---
 EU AI Act (Reg. 2024/1689)| Annex III §4 - Worker management| LEARN is in scope. P2 conformity pack covers risk mgmt, data governance, transparency, human oversight.
 EU AI Act| Art. 13 - Transparency| Career-path visualiser; narrator explains promotion criteria; outcome summary disclosed to candidate.
-EU AI Act| Art. 14 - Human oversight| (FR pending): CEO can override council recommendation; council is advisory + Member can dispute.
+EU AI Act| Art. 14 - Human oversight| (task pending): CEO can override council recommendation; council is advisory + Member can dispute.
 EU AI Act| Art. 9 - Risk management| Per-judge data segregation; anti-retroactive parameter versioning; multi-judge aggregation (no single-judge decision).
 Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| Member DSAR returns own claims/endorsements/cases; per-judge data excluded.
 Vietnam Labour Code| Art. 6 - Equal treatment| Council judges anonymised to each other; gate criteria identical per level; bias-audit annual.
@@ -621,11 +621,11 @@ External LMS content providers| planned - P4
 - **Cross-module page links:** [hr.html](../hr/index.html), [rew.html](../rew/index.html), [proj.html](../proj/index.html), [time.html](../time/index.html), [kb.html](../kb/index.html), [memory.html](../memory/index.html)
 - **memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - LEARN deliberations sync_class=private; never ingested.
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - LEARN at P2-start (P1).
-- **FR authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
-- **FR catalogue** - LEARN module FRs ((FR pending) through (FR pending)).
+- **task authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
+- **task catalogue** - LEARN module tasks ((task pending) through (task pending)).
 - **Architecture spec** - LEARN architecture posture, council workflow design.
 - **NFR catalogue** - Usability NFRs (explainability of automated decisions).
-- **FR mapping** - Formal (FR pending) through (FR pending) with verification methods.
+- **task mapping** - Formal (task pending) through (task pending) with verification methods.
 - **Total Rewards & Career Path Appendix** - Promotion gate criteria per level.
 - **EU AI Act (Reg. 2024/1689)** - Annex III §4 high-risk; Art. 13 transparency; Art. 14 human oversight; Art. 9 risk management.
 - **GDPR (EU 2016/679)** - Art. 22 automated decision-making safeguards.

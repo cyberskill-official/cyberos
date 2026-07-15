@@ -20,7 +20,7 @@ Audited hardest on the one danger a run-state manifest introduces: becoming a se
 ### ISS-001 two-sources-of-truth risk
 A trusted manifest could contradict the backlog. Resolved: cache-only doctrine (§2), resume re-verifies every artefact hash (§1 #3), HITL gates re-ask regardless of manifest content (§1 #8, AC 8), and deletion is always safe (§10 #4).
 
-### ISS-002 FR spec edits mid-flight were invisible
+### ISS-002 task spec edits mid-flight were invisible
 Steps proven against version N of the spec would resume against version N+1. Resolved: fr_sha256 root field in the schema (§1 #1) with all-stale semantics; §3 example updated; §10 #3 cites the field instead of deferring it.
 
 ### ISS-003 mixed-workflow-version resume
@@ -33,11 +33,11 @@ Steps proven against version N of the spec would resume against version N+1. Res
 Manifests in git would churn every ship run; unstated either way invites both. Resolved: §1 #5 gitignore scaffold (repo + init.sh), AC 6.
 
 ### ISS-006 terminal-state handling
-Manifests of done FRs would accumulate; route-backs would lose history. Resolved: §1 #6 delete-on-done, keep-with-incremented-count on route-back, AC 7 fixture pair.
+Manifests of done tasks would accumulate; route-backs would lose history. Resolved: §1 #6 delete-on-done, keep-with-incremented-count on route-back, AC 7 fixture pair.
 
 ## §3 - Resolution
 
-All six findings addressed as cited. The FR upgrades ship from restartable to resumable without moving any authority off FR frontmatter. **Score = 10/10.**
+All six findings addressed as cited. The task upgrades ship from restartable to resumable without moving any authority off task frontmatter. **Score = 10/10.**
 
 *End of TASK-CUO-206 audit.*
 

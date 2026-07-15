@@ -1,8 +1,16 @@
 ---
 id: TASK-MEMORY-115
 title: "memory dreaming — `cyberos dream` out-of-band batch reflection that mines transcripts + episode rows for cross-session patterns; produces reviewable diffs that consolidate / mark-stale / verify / propose-new memories under explicit operator gate"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-19T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: memory
-priority: SHOULD
+priority: p1
 status: done
 verify: T
 phase: P1
@@ -78,7 +86,7 @@ subtasks:
   - "2.0h: modules/memory/tests/core/test_dream.py — 18 cases (4 per detector + cross-detector dedup; deterministic outputs given fixed inputs)"
   - "1.5h: modules/memory/tests/core/test_dream.py — 8 cases (apply with --proposal-ids filter, --interactive simulated stdin, idempotency, audit-row provenance valid, rollback semantics on partial failure)"
   - "1.0h: tests/fixtures/dream_inputs/ — JSONL fixtures simulating 3 dream scenarios (5 duplicates / 2 contradictions / 1 cross-session pattern; 1 verification candidate)"
-risk_if_skipped: "Without dreaming, the memory's memory-quality objective is permanently coupled to the task-completion objective — every session sees only its own context and can't notice cross-session patterns. The Anthropic talk's two cited customer outcomes (Harvey 6× task completion; Rakerton 90% mistake-drop) come from precisely this separation. Skipping means: (a) the 0.5M-row cyberos memory keeps accumulating duplicates because nothing dedupes them; (b) stale entries (e.g. 'Linear project INGEST' after we moved to Jira) never get caught until manual cleanup; (c) cross-FR / cross-session learnings ('5 different sessions all had to re-discover the §1↔§4↔§5 traceability rule') never crystallise into a `memories/refinements/` entry. The talk's framing — `memory is going to be increasingly important and load bearing` — is the precise reason this FR is the headline of the 2026-Q3 wave. Worse: TASK-MEMORY-116 (`semantic-dedup consolidate`) is a strict subset of TASK-MEMORY-115's `duplicates` detector — without TASK-MEMORY-115, TASK-MEMORY-116 has nowhere to live."
+risk_if_skipped: "Without dreaming, the memory's memory-quality objective is permanently coupled to the task-completion objective — every session sees only its own context and can't notice cross-session patterns. The Anthropic talk's two cited customer outcomes (Harvey 6× task completion; Rakerton 90% mistake-drop) come from precisely this separation. Skipping means: (a) the 0.5M-row cyberos memory keeps accumulating duplicates because nothing dedupes them; (b) stale entries (e.g. 'Linear project INGEST' after we moved to Jira) never get caught until manual cleanup; (c) cross-task / cross-session learnings ('5 different sessions all had to re-discover the §1↔§4↔§5 traceability rule') never crystallise into a `memories/refinements/` entry. The talk's framing — `memory is going to be increasingly important and load bearing` — is the precise reason this task is the headline of the 2026-Q3 wave. Worse: TASK-MEMORY-116 (`semantic-dedup consolidate`) is a strict subset of TASK-MEMORY-115's `duplicates` detector — without TASK-MEMORY-115, TASK-MEMORY-116 has nowhere to live."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -87,7 +95,7 @@ The dreaming subsystem is a **batch asynchronous process** that mines the memory
 
 1. **MUST** be triggerable via `cyberos dream` CLI invocation, with a per-run `dream_id` (ULID, 26-char base32) generated at start. Triggers fall into three classes:
     - **Manual**: `cyberos dream --since 24h` (operator on-demand)
-    - **Cron**: identical CLI invocation via OS-level scheduler (covered by TASK-MEMORY-110-style automation runbook; not part of this FR's scope)
+    - **Cron**: identical CLI invocation via OS-level scheduler (covered by TASK-MEMORY-110-style automation runbook; not part of this task's scope)
     - **API**: `POST /api/v2/dream` on `cyberos serve` (deferred to slice 4; CLI is the slice-3 surface)
 2. **MUST NOT** run in-band with any normal `cyberos put` / `cyberos read` / `cyberos search` operation. The dream runner takes a snapshot (HEAD seq + chain tip) at start and operates against that snapshot; concurrent writes from other processes proceed normally and are integrated on the next dream run, not preempted.
 3. **MUST** support the following four detector types (closed enum DEC-214) that produce a `DreamProposal`:
@@ -132,7 +140,7 @@ The dreaming subsystem is a **batch asynchronous process** that mines the memory
 
 **Why preconditioned re-apply (§1 #10).** Idempotency without preconditions is dangerous: imagine a stale-tombstone applied today, then someone resurrects the content tomorrow, then `dream apply --proposal-ids tombstone-prop` is re-run — would clobber the resurrection. Preconditions ensure the apply only proceeds if the memory's state matches what the proposal was generated against. The body_hash comparison is the natural primitive (already in `meta.body_hash`).
 
-**Why AGENTS.md §7.7 amendment required (§1 #11, DEC-212).** The protocol's §0.2 immutability gate. Adding `extra.dream_id` provenance is a new normative requirement on the writer ("rows from this origin MUST carry this metadata"). That's a protocol change, not a config change. The CLI's runtime check for the §7.7 anchor enforces the gate: an operator who installs the FR's code but hasn't APPROVED the protocol change can't accidentally emit non-compliant rows.
+**Why AGENTS.md §7.7 amendment required (§1 #11, DEC-212).** The protocol's §0.2 immutability gate. Adding `extra.dream_id` provenance is a new normative requirement on the writer ("rows from this origin MUST carry this metadata"). That's a protocol change, not a config change. The CLI's runtime check for the §7.7 anchor enforces the gate: an operator who installs the task's code but hasn't APPROVED the protocol change can't accidentally emit non-compliant rows.
 
 **Why 5-minute wall-time budget (§1 #12).** Dream is meant to run nightly. 5 minutes fits within a `0 2 * * *` cron slot without contending with other automation. The mock-invoker fast path (≤ 1 min) keeps tests + CI green.
 
@@ -772,9 +780,9 @@ API contracts above are the skeleton. Implementation order:
 - **TASK-MEMORY-112 (depends on)** — Episodes provide the `episode.logged` aux rows the patterns detector consumes.
 - **TASK-MEMORY-113 (depends on)** — recency decay informs detectors which memories are "old enough to be stale candidates".
 - **TASK-MEMORY-114 (depends on)** — importance signal feeds the stale-detector's "is this still important?" check; same Invoker pattern reused.
-- **TASK-MEMORY-116 (this FR enables)** — `cyberos consolidate --semantic-dedup` is a strict subset of the duplicates detector; TASK-MEMORY-116 wraps it as a consolidation phase.
+- **TASK-MEMORY-116 (this task enables)** — `cyberos consolidate --semantic-dedup` is a strict subset of the duplicates detector; TASK-MEMORY-116 wraps it as a consolidation phase.
 - **TASK-MEMORY-119 (related)** — session transcript ledger provides higher-fidelity input to the patterns detector; first ship uses audit-row-only input.
-- **TASK-MEMORY-120 (this FR enables)** — `cyberos history <path>` surfaces "this memory was last modified by dream X proposal Y" via the per-proposal aux rows.
+- **TASK-MEMORY-120 (this task enables)** — `cyberos history <path>` surfaces "this memory was last modified by dream X proposal Y" via the per-proposal aux rows.
 - **TASK-CUO-105 (related)** — the LLM Invoker contract; both modules share the type signature.
 
 ---
@@ -911,7 +919,7 @@ All resolved. Deferred:
 - **Proposal id generator uses `secrets`** — cryptographic randomness avoids `random` seeding issues across multi-process dream runs. 8 base32 chars = 40 bits; collision probability in a single dream is < 1 in 10^10 even at 1000 proposals.
 - **The `extra` dict on `put`/`delete` rows is open-ended** — `dream_id`, `proposal_id`, `reason`, `merged_into`, etc. all live in one bag. Schema-wise the AuditRecord's `extra` is `object` with no required keys; specific origins (dream) impose their own required-key invariant.
 - **The applier's `txn.set_origin(dream_id=...)` is the load-bearing primitive** — it tells the Writer that until the transaction commits, every emitted row gets `extra.dream_id` automatically. No risk of an applier forgetting to set it on one path.
-- **The §7.7 anchor-check is anti-footgun** — a developer who installs this FR's code but hasn't APPROVED the protocol amendment shouldn't be able to silently emit non-compliant rows. The check turns "subtle protocol violation" into "explicit error at apply time".
+- **The §7.7 anchor-check is anti-footgun** — a developer who installs this task's code but hasn't APPROVED the protocol amendment shouldn't be able to silently emit non-compliant rows. The check turns "subtle protocol violation" into "explicit error at apply time".
 - **Transcript-input deferred** — TASK-MEMORY-119 ships the session transcript ledger. For TASK-MEMORY-115 slice-3, dream consumes audit rows + memory bodies. When TASK-MEMORY-119 lands, the patterns detector gains conversation context as a stretch source.
 - **The bench / load test for `≤ 5 min wall-time anthropic` is operator-side** — needs a real API key + a representative fixture. CI runs the ≤ 60 s mock variant.
 - **`txn.touch_meta(...)` is a writer convenience for the verify op** — updates frontmatter `meta.last_verified_at` without rewriting the body. Implementation: read body, parse frontmatter, replace `last_verified_at` field, write back as a new `put` row whose body_hash differs only in frontmatter.

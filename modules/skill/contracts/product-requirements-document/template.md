@@ -77,7 +77,7 @@ Source brief: [<brief-title>](<project_brief_ref>) (`project_brief@1`, iteration
 
 ## Rough Sizing
 
-This document feels like ~<N> engineer-months at the FR-create granularity:
+This document feels like ~<N> engineer-months at the task-create granularity:
 
 - <Story 1> — <S/M/L/XL>.
 - <Story 2> — <S/M/L/XL>.

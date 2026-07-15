@@ -11,7 +11,7 @@
 //! This advertises the gateway's real capabilities, not the spec's aspirational set. The access-token
 //! verifier ([`super::jwt`]) is RS256-only, so `resource_signing_alg_values_supported` lists `RS256`
 //! only - advertising EdDSA would invite tokens the gateway cannot verify, the same reasoning that kept
-//! the RFC 8414 discovery document RS256-only. The FR's per-residency four-issuer list, rate limiting,
+//! the RFC 8414 discovery document RS256-only. The task's per-residency four-issuer list, rate limiting,
 //! drift detection, and tail-sampled telemetry are deferred until that infrastructure exists; the
 //! single-issuer default reflects that the gateway is its own authorization server today.
 

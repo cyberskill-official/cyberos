@@ -1,10 +1,18 @@
 ---
 id: TASK-MEMORY-124
 title: "memory.awh_gate_result aux audit row - the awh out-of-band gate verdict, emitted into the memory chain by the ship-tasks testing->done step (step 28)"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-06-19T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 renumbered_from: TASK-MEMORY-121
-renumbered_note: "Renumbered 121 -> 124 on 2026-06-29 so TASK-MEMORY-121/122/123 could carry the BRAIN capture trio (interaction-event schema / capture emitters / ingestion) per docs/strategy/cyberos-brain-evaluation-plan.md. The row-kind string `memory.awh_gate_result` is unchanged; only the FR id moved."
+renumbered_note: "Renumbered 121 -> 124 on 2026-06-29 so TASK-MEMORY-121/122/123 could carry the BRAIN capture trio (interaction-event schema / capture emitters / ingestion) per docs/strategy/cyberos-brain-evaluation-plan.md. The row-kind string `memory.awh_gate_result` is unchanged; only the task id moved."
 module: MEMORY
-priority: SHOULD
+priority: p1
 status: draft
 verify: T
 phase: P1
@@ -22,14 +30,14 @@ blocks: []
 
 ## §1 - Description (BCP-14 normative)
 
-The awh out-of-band gate (ship-tasks workflow step 28) reruns an FR's §1 cited
+The awh out-of-band gate (ship-tasks workflow step 28) reruns a task's §1 cited
 tests plus its module suite against a sealed, read-only baseline and returns GREEN or RED.
-This FR records that verdict as an aux audit row on the memory chain, so the chain tells the
-full story of why an FR reached `done` (independent verification), not just that an agent
+This task records that verdict as an aux audit row on the memory chain, so the chain tells the
+full story of why a task reached `done` (independent verification), not just that an agent
 claimed it.
 
-This FR is gated on `APPROVE protocol change P23 §6`, which adds the row kind to the audit
-ledger. Until P23 is approved and this FR ships, the gate writes verdicts to a side log
+This task is gated on `APPROVE protocol change P23 §6`, which adds the row kind to the audit
+ledger. Until P23 is approved and this task ships, the gate writes verdicts to a side log
 (`.awh/gate-results.jsonl`) and emits no chain row.
 
 1. The system MUST define a new aux audit row kind `memory.awh_gate_result`, enumerated in
@@ -39,11 +47,11 @@ ledger. Until P23 is approved and this FR ships, the gate writes verdicts to a s
    sealed_acceptance_hash, tasks}` where `outcome` is the closed enum `GREEN | RED`,
    `weighted_pass` is the awh eval weighted pass@1 in `[0.0, 1.0]`, `harness_version` is the
    vendored awh source sha, and `sealed_acceptance_hash` is the hash of the locked golden set
-   plus baseline that the FR was graded against.
+   plus baseline that the task was graded against.
 3. The row MUST be written through the canonical memory writer (AGENTS.md §14.1), never by
    touching `audit/` directly. The awh-gate workflow step shells to `cyberos` to emit it.
-4. On RED, the row MUST be emitted before the FR routes back to `ready_to_implement`
-   (STATUS-REFERENCE §1.3), so the failure is on the chain even though the FR did not ship.
+4. On RED, the row MUST be emitted before the task routes back to `ready_to_implement`
+   (STATUS-REFERENCE §1.3), so the failure is on the chain even though the task did not ship.
 5. The row is a pure record. It MUST NOT change any memory file and MUST NOT gate any read.
 
 ## §2 - Rationale
@@ -51,7 +59,7 @@ ledger. Until P23 is approved and this FR ships, the gate writes verdicts to a s
 The whole point of absorbing awh is that agent self-certification is not trust. Recording the
 gate verdict on the immutable chain makes the trust boundary auditable: every `done` carries a
 `memory.awh_gate_result{outcome: GREEN}` with the harness version and the sealed-acceptance
-hash, and every route-back carries a RED row. This FR is the dogfood: it is the first FR
+hash, and every route-back carries a RED row. This task is the dogfood: it is the first task
 shipped through the awh-gated workflow, so the gate proves itself by gating its own audit row.
 
 ## §3 - Cited tests (held-out)
@@ -76,5 +84,5 @@ cd modules/memory && python -m pytest tests/core/test_awh_gate_result_row.py -q
 
 This is a `draft`. It enters the normal `draft -> ready_to_implement` audit chain
 (`task-author` / `task-audit`) to reach 10/10 before the
-`ship-tasks` workflow picks it up. It is intentionally the first FR routed through
+`ship-tasks` workflow picks it up. It is intentionally the first task routed through
 the new awh gate.

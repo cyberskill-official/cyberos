@@ -1,10 +1,17 @@
 ---
 id: TASK-SKILL-120
-title: "Workflow/skill wiring for visual deliverables - FR folder scaffolding + template@1 citations in authoring contracts"
+title: "Workflow/skill wiring for visual deliverables - task folder scaffolding + template@1 citations in authoring contracts"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: improvement
+created_at: 2026-07-12T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: SKILL
-priority: SHOULD
+priority: p1
 status: done
-class: improvement
 verify: T
 phase: Wave D - visual deliverables
 owner: Stephen Cheng (CTO)
@@ -18,7 +25,7 @@ source_pages:
   - tools/cyberos-init/plugin/commands/create-tasks.md
   - modules/skill/task-author/SKILL.md
 source_decisions:
-  - "2026-07-12 operator decision: workflows/skills use the templates module to create new deliverables; new FRs are born as folders with assets/."
+  - "2026-07-12 operator decision: workflows/skills use the templates module to create new deliverables; new tasks are born as folders with assets/."
 language: markdown (contracts + command docs)
 service: modules/skill/ + tools/cyberos-init/plugin/
 new_files: []
@@ -38,15 +45,15 @@ The authoring path catches up with the new layout and the templates module, so e
 
 Normative clauses:
 
-1. `/create-tasks` step flow MUST scaffold each new FR as `<module>/<STEM>/spec.md` (+ `assets/` on first asset) and write the audit as `<STEM>/audit.md`; all path examples in the command doc updated.
+1. `/create-tasks` step flow MUST scaffold each new task as `<module>/<STEM>/spec.md` (+ `assets/` on first asset) and write the audit as `<STEM>/audit.md`; all path examples in the command doc updated.
 2. `task-author` MUST document the folder layout in its artefact section (spec.md naming, sibling audit, relative asset references) and name `modules/templates/contracts/TEMPLATE.md` as the presentation contract its output is rendered through (informative pointer - authoring stays markdown).
-3. `task-audit` MUST resolve `<STEM>/audit.md` as the report path for folder-layout FRs while keeping `.audit.md` sibling resolution for any legacy flat file it is pointed at (transition note, one release).
-4. The ship workflow doc's artefact-path examples and the backlog-state-update evidence citations MUST use the folder paths; `init.sh` MUST scaffold `docs/tasks/` ready for folder-layout FRs (no flat-file example remains in scaffolded docs).
-5. Asset discipline MUST be stated where authors read it (author SKILL.md + command doc): assets live in the FR's own `assets/`, referenced relatively; no cross-FR asset reaches into another FR's folder.
+3. `task-audit` MUST resolve `<STEM>/audit.md` as the report path for folder-layout tasks while keeping `.audit.md` sibling resolution for any legacy flat file it is pointed at (transition note, one release).
+4. The ship workflow doc's artefact-path examples and the backlog-state-update evidence citations MUST use the folder paths; `init.sh` MUST scaffold `docs/tasks/` ready for folder-layout tasks (no flat-file example remains in scaffolded docs).
+5. Asset discipline MUST be stated where authors read it (author SKILL.md + command doc): assets live in the task's own `assets/`, referenced relatively; no cross-task asset reaches into another task's folder.
 
 ## §2 - Why this design
 
-Contracts drive agents; if the contracts still describe flat files, every new FR fights the migration. One doc-wiring FR right after the layout FR keeps the fleet coherent.
+Contracts drive agents; if the contracts still describe flat files, every new task fights the migration. One doc-wiring task right after the layout task keeps the fleet coherent.
 
 ## §4 - Acceptance criteria
 
@@ -57,7 +64,7 @@ Contracts drive agents; if the contracts still describe flat files, every new FR
 
 ## §5 - Verification
 
-Doc assertions (grep-level, executable in `scripts/tests/test_fr_layout.sh` t07-t10 extension): command grammar, contract sections, workflow examples, asset rule. (AC 1-4.)
+Doc assertions (grep-level, executable in `scripts/tests/test_task_layout.sh` t07-t10 extension): command grammar, contract sections, workflow examples, asset rule. (AC 1-4.)
 
 ## §3 - Contract
 
@@ -82,7 +89,7 @@ None blocking. Whether OTHER deliverable classes (SOW, PRD...) also become folde
 ## §10 - Failure modes inventory
 
 1. Agent follows stale cached contract - trigger tests unchanged, but contract text is what ships in the payload; next /init update refreshes fleets.
-2. Legacy flat FR appears post-migration (old branch merge) - audit skill's transition note covers reading it; regen warns loudly (TASK-DOCS-004 #4) making it visible.
+2. Legacy flat task appears post-migration (old branch merge) - audit skill's transition note covers reading it; regen warns loudly (TASK-DOCS-004 #4) making it visible.
 3. Asset reach-across - stated rule + review; renderer resolves only own-folder assets (TASK-DOCS-005 fails missing assets loudly).
 4. init scaffolds diverge from repo docs - t09 greps the scaffolded output too.
 5. Plugin copy drift - payload rebuild vendors the edited docs; version-sync gate carries them.

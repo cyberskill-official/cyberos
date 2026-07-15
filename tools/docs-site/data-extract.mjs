@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // tools/docs-site/data-extract.mjs
-// TASK-DOCS-001 §1 #1 — extract data from FR markdown frontmatter to JSON
-// Walks docs/tasks/**/FR-*.md (excluding .audit.md), parses YAML
-// frontmatter, emits tools/docs-site/data/frs.json sorted deterministically by FR id.
+// TASK-DOCS-001 §1 #1 — extract data from task markdown frontmatter to JSON
+// Walks docs/tasks/**/TASK-*.md (excluding .audit.md), parses YAML
+// frontmatter, emits tools/docs-site/data/tasks.json sorted deterministically by task id.
 
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, statSync } from 'node:fs';
 import { join, resolve, dirname, relative } from 'node:path';
@@ -10,15 +10,15 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..', '..');
-const FR_DIR    = join(REPO_ROOT, 'docs', 'tasks');
+const TASK_DIR    = join(REPO_ROOT, 'docs', 'tasks');
 const OUT_DIR   = join(__dirname, 'data');
-const OUT_FILE  = join(OUT_DIR, 'frs.json');
+const OUT_FILE  = join(OUT_DIR, 'tasks.json');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Minimal YAML-flow parser for the frontmatter shapes we actually use.
 // Handles: scalars, quoted strings, flow lists `[a, b, c]`, inline comments,
 // `null`, ISO dates as strings. No anchors, no block scalars beyond what the
-// FR template uses.
+// task template uses.
 // ─────────────────────────────────────────────────────────────────────────────
 function parseScalar(raw) {
   let s = raw.trim();
@@ -92,19 +92,19 @@ function walkFR(dir) {
     const p = join(dir, name);
     const st = statSync(p);
     if (st.isDirectory()) {
-      if (/^FR-/.test(name)) {                     // TASK-DOCS-004 folder-per-FR
+      if (/^TASK-/.test(name)) {                     // TASK-DOCS-004 folder-per-task
         const spec = join(p, 'spec.md');
         try { if (statSync(spec).isFile()) { out.push(spec); continue; } } catch {}
       }
       out.push(...walkFR(p));
-    } else if (/^FR-.*\.md$/.test(name) && !name.endsWith('.audit.md')) {
+    } else if (/^TASK-.*\.md$/.test(name) && !name.endsWith('.audit.md')) {
       out.push(p);                                  // legacy flat file (none post-migration)
     }
   }
   return out;
 }
 
-const files = walkFR(FR_DIR).sort();
+const files = walkFR(TASK_DIR).sort();
 const records = [];
 for (const file of files) {
   const md = readFileSync(file, 'utf8');
@@ -137,7 +137,7 @@ for (const file of files) {
   });
 }
 
-// Deterministic sort by FR id (TASK-AI-001 < TASK-AI-002 < TASK-AUTH-001 ...).
+// Deterministic sort by task id (TASK-AI-001 < TASK-AI-002 < TASK-AUTH-001 ...).
 // Use module then numeric id for stable ordering even if id strings differ.
 records.sort((a, b) => {
   if (a.module !== b.module) return a.module.localeCompare(b.module);
@@ -152,4 +152,4 @@ const payload = {
   tasks: records,
 };
 writeFileSync(OUT_FILE, JSON.stringify(payload, null, 2) + '\n', 'utf8');
-console.log(`✓ wrote ${records.length} FRs → ${relative(REPO_ROOT, OUT_FILE)}`);
+console.log(`✓ wrote ${records.length} tasks → ${relative(REPO_ROOT, OUT_FILE)}`);

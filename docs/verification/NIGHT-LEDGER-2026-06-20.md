@@ -6,7 +6,7 @@ the night." This is the honest record of what I did, what is verified, and what 
 ## The constraint I worked within
 
 The sandbox has no Rust toolchain and no Docker, so I cannot compile, run tests, or run the awh/caf
-gates here. The system we built says an FR reaches `done` only on an independent GREEN+CLEAN gate run.
+gates here. The system we built says a task reaches `done` only on an independent GREEN+CLEAN gate run.
 I cannot produce that evidence without your machine, so I did not write Rust I could not compile and I
 did not mark anything `done`. Instead I advanced the work in the ways that are sound without a compiler:
 gate-readiness (real, structurally verified) and grounded, executable plans.
@@ -18,10 +18,10 @@ gate-readiness (real, structurally verified) and grounded, executable plans.
 2. mcp is gate-ready. `modules/mcp/.awh/goldenset.yaml` (cargo test -p cyberos-mcp-gateway + the
    held-out protocol::errors filter) and `modules/mcp/audit-profile.yaml`. TASK-MCP-001 already shipped
    with protocol tests.
-3. Remaining-modules build plan: `docs/tasks/remaining-build-plan.md` - the 261-FR backlog
+3. Remaining-modules build plan: `docs/tasks/remaining-build-plan.md` - the 261-task backlog
    sorted into three buckets (verify-existing; buildable-now; spec-blocked draft) against the locked
    13-layer order.
-4. obs FR-by-FR plan: `docs/tasks/obs/OBS-BUILD-PLAN.md` - the obs dependency DAG, per-FR
+4. obs task-by-task plan: `docs/tasks/obs/OBS-BUILD-PLAN.md` - the obs dependency DAG, per-task
    crate/files/test-plan/invariant, the cross-module deps (AUTH-004, AI-022), and how to keep the gate
    in step as obs-proxy / obs-router / obs-compliance-view crates land.
 
@@ -31,7 +31,7 @@ gate-readiness (real, structurally verified) and grounded, executable plans.
 - `bash scripts/caf_precommit_check.sh` -> "all 10 gated module(s) declare an audit-profile.yaml",
   exit 0. The gated set is now ai, auth, chat, cuo, email, mcp, memory, obs, proj, skill.
 - The vendored caf validator still self-tests 40/40 (no regression from these writes).
-- Grounding is from the repo itself: BACKLOG.md state engine, per-FR `status:` frontmatter, the obs FR
+- Grounding is from the repo itself: BACKLOG.md state engine, per-task `status:` frontmatter, the obs task
   `depends_on` + cited test files, and the services crate layout.
 
 ## What is yours to run (toolchain required)
@@ -43,8 +43,8 @@ gate-readiness (real, structurally verified) and grounded, executable plans.
    design. NOTE: the first obs capture sealed a broken baseline because the original acceptance task
    pointed at a non-existent `--test cyberos_obs` target; the goldenset now targets
    `validate_rejects_missing_pii_scrub` - recapture obs after this fix.
-2. Build obs FR-by-FR via `ship-tasks`, following OBS-BUILD-PLAN.md. obs is the locked next
-   module; TASK-OBS-001 scaffold is in, eight FRs remain.
+2. Build obs task-by-task via `ship-tasks`, following OBS-BUILD-PLAN.md. obs is the locked next
+   module; TASK-OBS-001 scaffold is in, eight tasks remain.
 3. For the ~14 draft modules (crm, hr, inv, kb, time, okr, plugin, ...), run the
    `draft -> ready_to_implement` spec audit first - the workflow cannot pick them up while they are
    draft. plugin is closest (authored at 10/10, crate exists).

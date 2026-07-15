@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: architectural-spike-author
 description: >-
-  Run a time-boxed architectural spike when an ADR is pending with >= 2 viable options, or the FR introduces a dependency the repo has never used - producing architectural-spike@1: the single question under investigation, options probed with CHECKABLE evidence (a repo file path, a command plus its observed output, or a URL), cost estimates, risks, exactly one recommendation with a confidence grade, and a discard log. Records planned vs actual hours and HALTS for the operator when actual exceeds plan by more than 50%. Feeds architecture-decision-record-author as its spike input. Use when user asks to "draft an architectural spike", "create the architectural spike", or "run a spike on X vs Y". Do NOT use for "audit existing architectural spike" (use architectural-spike-audit instead).
+  Run a time-boxed architectural spike when an ADR is pending with >= 2 viable options, or the task introduces a dependency the repo has never used - producing architectural-spike@1: the single question under investigation, options probed with CHECKABLE evidence (a repo file path, a command plus its observed output, or a URL), cost estimates, risks, exactly one recommendation with a confidence grade, and a discard log. Records planned vs actual hours and HALTS for the operator when actual exceeds plan by more than 50%. Feeds architecture-decision-record-author as its spike input. Use when user asks to "draft an architectural spike", "create the architectural spike", or "run a spike on X vs Y". Do NOT use for "audit existing architectural spike" (use architectural-spike-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -34,8 +34,8 @@ outputs:
 
 # ── Triggers / blockers ──────────────────────────────────────────────
 triggers:
-  - an ADR is pending for the FR and >= 2 viable options exist
-  - the FR introduces a dependency the repo has never used (per repo-context-map)
+  - an ADR is pending for the task and >= 2 viable options exist
+  - the task introduces a dependency the repo has never used (per repo-context-map)
 blockers:
   - "single obvious option - do NOT spike; proceed to the ADR with evidence inline (lean fallback)"
   - "actual hours exceed 1.5x the timebox - HALT for the operator; never keep probing silently"
@@ -55,8 +55,8 @@ Frontmatter (all fields required unless marked):
 
 | field | type | rule |
 |---|---|---|
-| spike_id | string | `SPIKE-<FR-ID>-<n>`, n = 1-based per FR |
-| task_id | string | the FR under investigation |
+| spike_id | string | `SPIKE-<task-ID>-<n>`, n = 1-based per task |
+| task_id | string | the task under investigation |
 | question | string | the SINGLE decision under investigation |
 | timebox_hours | integer | recorded BEFORE probing starts |
 | actual_hours | number | recorded at close |

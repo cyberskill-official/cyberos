@@ -10,7 +10,7 @@ score: 10/10
 ## Ship record (2026-07-12 - status-drift reconciliation)
 
 - Implemented by a parallel session (services/memory/src/interaction/, 2207 lines); surfaced by the
-  drift sweep of stale `implementing` FRs. 18/18 clause verification PASS (packet:
+  drift sweep of stale `implementing` tasks. 18/18 clause verification PASS (packet:
   docs/tasks/.workflow/TASK-MEMORY-121/review-packet.md); deviation-with-rationale on #13
   (structured tracing events as the metrics path, native meters deferred) + bonus backfill.rs recorded.
 - Test evidence: 697-line suite (main/RLS/contract); operator confirmed tests green (CI/cargo) -

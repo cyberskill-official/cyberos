@@ -1,10 +1,17 @@
 ---
 id: TASK-DOCS-006
 title: "Status hub - one status.html: command deck + Roadmap | Backlog | Changelog tabs (supersedes roadmap.html)"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-07-12T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: docs
-priority: MUST
+priority: p0
 status: done
-class: product
 verify: T
 phase: Wave D - visual deliverables
 owner: Stephen Cheng (CTO)
@@ -38,11 +45,11 @@ One page answers "where is the project" completely: a persistent deck of headlin
 
 Normative clauses:
 
-1. A builder `tools/docs-site/render-status-hub.mjs` MUST emit `dist/website/reference/status.html` through the `status-hub@1` template from the SAME three inputs as TASK-DOCS-003 (FR frontmatter, CHANGELOG sections, VERSION) - node stdlib only, deterministic stamp (VERSION + commit, no wall clock).
-2. The command deck MUST always show: VERSION, built-from commit, total FRs, per-status counts (10-value enum order), latest release (version + date), and module count - visible regardless of active tab.
-3. Three tabs MUST render: **Roadmap** (default; the TASK-DOCS-003 board + module rollups, rows linking to FR pages when TASK-DOCS-005 pages exist), **Backlog** (filterable table: id, title, module, class, priority, status - module/class/status/priority facets; BACKLOG.md stays the agents' write-path index, this tab is the human view), **Changelog** (the release timeline). Tab routing via URL hash (`#roadmap`, `#backlog`, `#changelog`) with hash-change handling; no JS -> all three panels present in the DOM and the tab bar degrades to in-page anchor links.
+1. A builder `tools/docs-site/render-status-hub.mjs` MUST emit `dist/website/reference/status.html` through the `status-hub@1` template from the SAME three inputs as TASK-DOCS-003 (task frontmatter, CHANGELOG sections, VERSION) - node stdlib only, deterministic stamp (VERSION + commit, no wall clock).
+2. The command deck MUST always show: VERSION, built-from commit, total tasks, per-status counts (10-value enum order), latest release (version + date), and module count - visible regardless of active tab.
+3. Three tabs MUST render: **Roadmap** (default; the TASK-DOCS-003 board + module rollups, rows linking to task pages when TASK-DOCS-005 pages exist), **Backlog** (filterable table: id, title, module, class, priority, status - module/class/status/priority facets; BACKLOG.md stays the agents' write-path index, this tab is the human view), **Changelog** (the release timeline). Tab routing via URL hash (`#roadmap`, `#backlog`, `#changelog`) with hash-change handling; no JS -> all three panels present in the DOM and the tab bar degrades to in-page anchor links.
 4. `roadmap.html` MUST become a redirect stub to `status.html#roadmap` (meta refresh + link, no JS required); the shared nav's entry MUST become "Status" pointing at status.html; TASK-DOCS-003's suite is repointed at the hub builder with its assertions preserved (board counts, determinism, honest failures, token-clean) - the superseding is recorded on TASK-DOCS-003 as a post-ship amendment.
-5. Inline vanilla JS only, CDS tokens only (template rule), same honest failures as TASK-DOCS-003 §1 #5 (unparseable FR names file; zero CHANGELOG sections fails).
+5. Inline vanilla JS only, CDS tokens only (template rule), same honest failures as TASK-DOCS-003 §1 #5 (unparseable task names file; zero CHANGELOG sections fails).
 
 ## §2 - Why this design
 
@@ -50,7 +57,7 @@ The deck answers 90% of "how are we doing" without a click; tabs keep each dense
 
 ## §3 - Contract
 
-Summary stdout: `status-hub: N FRs, R releases, VERSION X (deck+3 tabs)`. Page: `reference/status.html`, template `status-hub@1`.
+Summary stdout: `status-hub: N tasks, R releases, VERSION X (deck+3 tabs)`. Page: `reference/status.html`, template `status-hub@1`.
 
 ## §4 - Acceptance criteria
 
@@ -59,7 +66,7 @@ Summary stdout: `status-hub: N FRs, R releases, VERSION X (deck+3 tabs)`. Page: 
 3. **Backlog tab facets** (§1 #3) - rows carry data attrs for all four facets; filter script wired.
 4. **Supersession clean** (§1 #4) - roadmap.html is a stub pointing at status.html#roadmap; nav says Status; repointed legacy suite passes.
 5. **Determinism + honesty + tokens** (§1 #1, #5) - byte-identical rebuilds; failure fixtures fail loud; no hex outside token block.
-6. **FR-page links** (§1 #3) - board/backlog rows href `frs/<module>/<STEM>/` when TASK-DOCS-005 is present in the build (fixture with pages asserts hrefs).
+6. **task-page links** (§1 #3) - board/backlog rows href `frs/<module>/<STEM>/` when TASK-DOCS-005 is present in the build (fixture with pages asserts hrefs).
 
 ## §5 - Verification
 
@@ -75,7 +82,7 @@ TASK-TPL-001 (shell). Soft: TASK-DOCS-005 (links activate when pages exist; buil
 
 ## §8 - Example payloads
 
-`status-hub: 486 FRs, 18 releases, VERSION 0.1.0 (deck+3 tabs)`
+`status-hub: 486 tasks, 18 releases, VERSION 0.1.0 (deck+3 tabs)`
 
 ## §9 - Open questions
 

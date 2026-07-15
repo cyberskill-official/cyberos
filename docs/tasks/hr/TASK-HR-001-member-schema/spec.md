@@ -1,8 +1,16 @@
 ---
 id: TASK-HR-001
 title: "HR Member schema — profile + role + level + contract type + leave balance + sabbatical accrual + status FSM + comp-exclusion CI gate"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: HR
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P1
@@ -35,7 +43,7 @@ source_decisions:
   - PDPL Art. 14 (sensitive-data handling — CCCD photo + CCCD id are PDPL-sensitive; KMS keyspace + access audit required)
   - Decree 13/2023 Art. 18 (PII classification — employee records are "ordinary personal data" except CCCD which is "sensitive")
   - Decree 145/2020 Art. 113 (sabbatical eligibility — 5 consecutive years of service)
-  - Decree 145/2020 Art. 114 (annual-leave base table — 12 days/year + 1 day per 5 years; this FR stores leave_balance materialised)
+  - Decree 145/2020 Art. 114 (annual-leave base table — 12 days/year + 1 day per 5 years; this task stores leave_balance materialised)
   - ISO/IEC 27001:2022 A.7.3 (employee record management; defines the lifecycle states)
 
 language: rust 1.81 + sql
@@ -99,7 +107,7 @@ subtasks:
   - "0.5h: handlers/admin_members.rs — REST surface"
   - "1.0h: tests — 9 test files covering all the above"
 
-risk_if_skipped: "Every downstream HR FR (contract types, CCCD photo encryption, leave types, statutory caps, onboarding saga, performance signals, termination workflow) needs the Member record to exist before it can write rows. Every cross-module FR that joins on member identity (REW payroll, ESOP grant, LEARN skill tracking, RES allocation matrix, TIME-005 billable cascade) needs the schema. Without DEC-203's comp-exclusion CI gate, the next operator to add a column will type `base_salary DECIMAL(12,2)` and the encrypted REW comp keyspace (TASK-REW-001) becomes a Maginot Line — bypassed via the unprotected HR column. Without DEC-205's append-only history, status changes become an audit black hole — operators can re-write 'why did this person leave?'. Without DEC-204's read-only `leave_balance`, two writers (TASK-HR-001 + TASK-HR-004) race and produce inconsistent balances. The 6h effort guards against every one of those failure modes by getting the schema's invariants right at the column level."
+risk_if_skipped: "Every downstream HR task (contract types, CCCD photo encryption, leave types, statutory caps, onboarding saga, performance signals, termination workflow) needs the Member record to exist before it can write rows. Every cross-module task that joins on member identity (REW payroll, ESOP grant, LEARN skill tracking, RES allocation matrix, TIME-005 billable cascade) needs the schema. Without DEC-203's comp-exclusion CI gate, the next operator to add a column will type `base_salary DECIMAL(12,2)` and the encrypted REW comp keyspace (TASK-REW-001) becomes a Maginot Line — bypassed via the unprotected HR column. Without DEC-205's append-only history, status changes become an audit black hole — operators can re-write 'why did this person leave?'. Without DEC-204's read-only `leave_balance`, two writers (TASK-HR-001 + TASK-HR-004) race and produce inconsistent balances. The 6h effort guards against every one of those failure modes by getting the schema's invariants right at the column level."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -183,11 +191,11 @@ The HR service **MUST** ship the Member schema as the canonical single source of
     - `hr_member_count{tenant_id, status}` (gauge).
     - `hr_member_sabbatical_eligible_count{tenant_id}` (gauge; computed via `sabbatical_eligible_view`).
 
-20. **MUST** ship the `member_active_view` SQL view filtering `status IN ('probation','active','on_leave')` (per DEC-205 — `active` is a logical concept covering "currently engaged"). Downstream FRs querying "who is currently employed" SHOULD use this view, not the raw table, to avoid status-filter drift.
+20. **MUST** ship the `member_active_view` SQL view filtering `status IN ('probation','active','on_leave')` (per DEC-205 — `active` is a logical concept covering "currently engaged"). Downstream tasks querying "who is currently employed" SHOULD use this view, not the raw table, to avoid status-filter drift.
 
 21. **MUST** ship the `sabbatical_eligible_view` SQL view returning member_id + accrued_days_unused: `SELECT m.subject_id, sabbatical_accrued_days(m.start_date) - COALESCE(sl.used_days, 0) FROM members m LEFT JOIN sabbatical_used_summary sl ON m.subject_id = sl.member_id WHERE m.status = 'active' AND CURRENT_DATE >= m.sabbatical_eligible_at`. The view is the contract for TASK-HR-004's sabbatical-leave-type entry validation.
 
-22. **MUST** validate that `level` is appropriate for the contract type (per TASK-HR-002 once that lands): contract_type='contractor' rejects level='executive' (contractors are not on executive band). This FR ships the column; the cross-validation rule lands in TASK-HR-002 (forward-compatible — the validator stub returns OK for all combinations at slice 1).
+22. **MUST** validate that `level` is appropriate for the contract type (per TASK-HR-002 once that lands): contract_type='contractor' rejects level='executive' (contractors are not on executive band). This task ships the column; the cross-validation rule lands in TASK-HR-002 (forward-compatible — the validator stub returns OK for all combinations at slice 1).
 
 23. **MUST** anchor a `hr.member_created` memory row at member creation containing `{member_id, tenant_id, subject_id_hash16, level, contract_type, status, created_by_subject_id_hash16}`. The row is PII-scrubbed of `full_name` and `email` via TASK-MEMORY-111 before chain commit (only `subject_id_hash16` is privacy-safe in the audit chain).
 
@@ -215,13 +223,13 @@ The HR service **MUST** ship the Member schema as the canonical single source of
 
 **Why append-only status history (DEC-205, §1 #6)?** Status history is the answer to "what is this person's employment narrative?" — the cardinal HR question. A row inserted today saying "active → terminated, reason: layoffs Q3" is the legal record for the next 7 years. SQL grants make this audit-grade: `REVOKE UPDATE, DELETE FROM cyberos_app` means even a handler bug or operator typo can't rewrite history. Discovery requests (subpoenas, DSAR responses) return the history table as-is.
 
-**Why CCCD encrypted in this schema and not stored elsewhere (DEC-202, §1 #12)?** CCCD is PDPL-sensitive (Art. 14 + Decree 13/2023 Art. 18); the photo (separate column, separate KMS keyspace) is even more sensitive. Storing the encrypted bytes in the members table lets HR look up "what's my employee's national ID?" with a single query, and the encryption boundary at TASK-HR-003 means access requires a separate KMS unlock. The alternative (storing in a separate `member_cccd` table) is what TASK-HR-003 does — and this FR declares the column to make the relationship visible but defers the unlock contract to TASK-HR-003.
+**Why CCCD encrypted in this schema and not stored elsewhere (DEC-202, §1 #12)?** CCCD is PDPL-sensitive (Art. 14 + Decree 13/2023 Art. 18); the photo (separate column, separate KMS keyspace) is even more sensitive. Storing the encrypted bytes in the members table lets HR look up "what's my employee's national ID?" with a single query, and the encryption boundary at TASK-HR-003 means access requires a separate KMS unlock. The alternative (storing in a separate `member_cccd` table) is what TASK-HR-003 does — and this task declares the column to make the relationship visible but defers the unlock contract to TASK-HR-003.
 
 **Why sabbatical accrued via SQL function (§1 #26)?** Determinism. The function is pure (`years_of_service` → `eligible_days`), no hidden time or random factors. Tests assert the same `start_date` always produces the same output. Implementing this as Rust code would mean two implementations (Rust + SQL view) drift; the SQL function is the only one.
 
 **Why 5-year + 30-day cap sabbatical (DEC-201)?** Decree 145/2020 Art. 113 establishes 5 consecutive years of service as the eligibility threshold. The 30-day cap is a CyberSkill policy decision (not statutory) — the spec captures it explicitly so tenants adopting our pack can adjust via ADR for their own policy. The reset-on-use rule is also policy: tenants who want "lifetime accrual" can override with an ADR.
 
-**Why an `member_active_view` filter `status IN ('probation','active','on_leave')` (§1 #20)?** "Active" the SQL term is overloaded: HR's `member_status` has `'active'` as one of six values, but the question "who is currently employed?" includes probation and on-leave Members too. Filtering the view explicitly means downstream FRs don't reinvent the predicate, and changes to "what counts as currently employed?" are one view change, not a search-and-replace across the catalog.
+**Why an `member_active_view` filter `status IN ('probation','active','on_leave')` (§1 #20)?** "Active" the SQL term is overloaded: HR's `member_status` has `'active'` as one of six values, but the question "who is currently employed?" includes probation and on-leave Members too. Filtering the view explicitly means downstream tasks don't reinvent the predicate, and changes to "what counts as currently employed?" are one view change, not a search-and-replace across the catalog.
 
 **Why `subject_id` is the PRIMARY KEY (§1 #1)?** Two reasons. (1) It's already a UUID generated by AUTH on subject create; reusing it avoids a separate `member_id` UUID that adds no information. (2) Joins between AUTH and HR are by `subject_id` everywhere; making it the primary key removes a column. The cost is "if a Member is created but the Auth subject was deleted, the FK fails" — but that's the right semantic (we don't want HR Members without a corresponding credential identity).
 
@@ -737,17 +745,17 @@ async fn direct_update_to_leave_balance_blocked(pool: sqlx::PgPool) {
 ## §7 — Dependencies
 
 **Upstream:**
-- **TASK-AUTH-003** — RLS enforcement; this FR uses the same `current_setting('auth.tenant_id')` pattern.
+- **TASK-AUTH-003** — RLS enforcement; this task uses the same `current_setting('auth.tenant_id')` pattern.
 
 **Downstream (all 10 are placeholders):**
 - **TASK-HR-002** — contract type lifecycle (cross-validates level × contract_type).
-- **TASK-HR-003** — CCCD KMS keyspace + access audit (this FR declares the column; TASK-HR-003 ships the encryption boundary).
+- **TASK-HR-003** — CCCD KMS keyspace + access audit (this task declares the column; TASK-HR-003 ships the encryption boundary).
 - **TASK-HR-004** — leave entries (writes `leave_balance_days` via trigger).
 - **TASK-HR-005** — VN Decree 145/152 working-hour caps + SI rates.
 - **TASK-HR-007** — onboarding saga (consumes member.subject_id 1:1 with auth.subjects.id).
 - **TASK-HR-009** — termination workflow (uses the FSM's `* → terminated` transition).
 - **TASK-LEARN-001** — Member skill tree (joins on subject_id).
-- **TASK-REW-001** — comp keyspace (relies on this FR's comp-exclusion guard).
+- **TASK-REW-001** — comp keyspace (relies on this task's comp-exclusion guard).
 - **TASK-ESOP-001** — grant schema (joins on member).
 - **TASK-RES-001** — capacity matrix (joins on Member × level).
 
@@ -852,7 +860,7 @@ async fn direct_update_to_leave_balance_blocked(pool: sqlx::PgPool) {
 Deferred:
 - **Email mirror trigger from AUTH** — slice 3+; current spec assumes manual update of both AUTH + HR records on email change.
 - **Cross-validation `level × contract_type`** — TASK-HR-002 (slice 1 follow-up); current spec ships the columns orthogonally.
-- **Sabbatical-used summary view** — TASK-HR-004 ships `sabbatical_used_summary` view that this FR's `sabbatical_eligible_view` joins against; until then, the join falls back to 0 used days.
+- **Sabbatical-used summary view** — TASK-HR-004 ships `sabbatical_used_summary` view that this task's `sabbatical_eligible_view` joins against; until then, the join falls back to 0 used days.
 - **Membership transfer between tenants (rare)** — slice 4+; current spec treats `tenant_id` as effectively immutable per row.
 - **Email change audit row** — slice 2; current spec uses generic `hr.member_updated` with `fields_changed: ["email"]`.
 
@@ -864,7 +872,7 @@ All other questions resolved.
 
 | Failure | Detection | Outcome | Recovery |
 |---|---|---|---|
-| Migration adds `base_salary` column | `comp_exclusion_test` CI gate | Build fails | Either revert or write FR-REW-* amendment + ADR |
+| Migration adds `base_salary` column | `comp_exclusion_test` CI gate | Build fails | Either revert or write task-REW-* amendment + ADR |
 | Migration adds `salary` (synonym) | `comp_exclusion_test` lexical scan | Build fails | Same |
 | Direct UPDATE on `leave_balance_days` from non-TASK-HR-004 path | trigger raises `leave_balance_is_materialised` | 500 error | Use TASK-HR-004's leave-entry path |
 | Direct UPDATE on `start_date` after active | trigger raises `cannot_modify_locked_start_date` | 500 error | ADR + manual SQL via `bypass_immutable_start_date` GUC |
@@ -883,7 +891,7 @@ All other questions resolved.
 | Status FSM `validate_transition` returns OK for invalid combo | Property test | CI fails | Fix matrix |
 | Email mirror drift (AUTH email changes, HR not updated) | Email-equality test (slice 2+) | Sev-3 | Operator updates both; future trigger |
 | level enum drift (someone adds L8 in code without migration) | `level_enum_closed_test` reads SQL enum + Rust enum and compares | CI fails | ADR + migration + code change together |
-| `cccd_encrypted` BYTEA but contains plaintext | TASK-HR-003 enforcement (this FR just declares the column) | Out-of-scope for TASK-HR-001 | TASK-HR-003 |
+| `cccd_encrypted` BYTEA but contains plaintext | TASK-HR-003 enforcement (this task just declares the column) | Out-of-scope for TASK-HR-001 | TASK-HR-003 |
 | Sabbatical view shows ineligible member | `sabbatical_eligible_view_filter_test` | CI fails | Fix view predicate |
 | Cross-tenant member create attempt | RLS WITH CHECK denies | 403 `permission_denied` | Switch tenant context |
 | `subject_id_hash16` collision | 16-hex prefix = 64 bits; collision-safe ~10⁹ | Acceptable per design | None |
@@ -909,7 +917,7 @@ All other questions resolved.
 - **The comp-exclusion guard is intentionally redundant**: DB CHECK + CI gate + handler-side allow-list + disallowed_tools enumeration. The cost is < 0.5h to maintain; the benefit is "salary doesn't leak via HR queries."
 - **The `audit_chain_hash` field on `member_status_history` chains the history row to the memory audit row** — so the memory chain can be replayed to verify the history row is authentic. Mismatch = tampering detected.
 - **The `bypass_leave_balance_check` GUC** is a deliberate escape hatch for TASK-HR-004's recompute trigger; it's set within the trigger's transaction and never accessible from regular handlers. Don't use it elsewhere.
-- **`level` and `contract_type` are NOT cross-validated at slice 1** — TASK-HR-002 ships the constraint. This FR's tests assert the columns are orthogonal at slice 1; slice 2 tests assert the constraint plugs in cleanly.
+- **`level` and `contract_type` are NOT cross-validated at slice 1** — TASK-HR-002 ships the constraint. This task's tests assert the columns are orthogonal at slice 1; slice 2 tests assert the constraint plugs in cleanly.
 - **`member_active_view` is the join target for most cross-module queries** — REW payroll, RES capacity matrix, LEARN skill rollup. Querying `members` directly without the status filter is an anti-pattern; tests should call out the view.
 - **`sabbatical_eligible_view` LEFT JOINs `sabbatical_used_summary`** — until TASK-HR-004 ships that view, the JOIN returns 0 used days for all members (acceptable: sabbatical is rare).
 - **CCCD field default-omitted from JSON** is a defence-in-depth choice — even an admin's UI accidentally serialising a Member to JSON won't leak the bytes; explicit `?fields=cccd_encrypted` query param is the unlock.
@@ -918,7 +926,7 @@ All other questions resolved.
 - **`reason TEXT` on status history is 1–1000 chars** — long enough for narrative ("probation passed: see review doc DOC-PR-2026-08-12") but bounded to prevent abuse.
 - **`updated_at` is touched by trigger** on every row UPDATE — single source of truth for staleness.
 - **`hr.member_cccd_accessed` at sev-1** means OBS will page on the very first access; this is intentional alarm volume. Acceptable noise: ~10/month per tenant.
-- **The closed contract_type enum (5 values) is owned by TASK-HR-002** — this FR declares the enum so the column type exists, but TASK-HR-002 ships the lifecycle rules (probation auto-expires at 60 days, etc.).
+- **The closed contract_type enum (5 values) is owned by TASK-HR-002** — this task declares the enum so the column type exists, but TASK-HR-002 ships the lifecycle rules (probation auto-expires at 60 days, etc.).
 - **`subject_id` (UUID) NOT `member_id` (UUID)** — same physical column, semantic clarification. Member is a FACT about a SUBJECT; the SUBJECT is the credential identity. PK reuse is intentional.
 - **`reason` field PII concerns** — operators may write "PII: Person A had a panic attack in Q3" into the reason. The audit row scrubs `reason` via TASK-MEMORY-111 PII rules before chain commit; status_history table is RLS-protected and the audit chain is the long-term record.
 - **`anniversary_date` is computed**, not stored — it's `start_date + INTERVAL '<n>' year`. Avoids an extra column that could drift.

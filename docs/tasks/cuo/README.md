@@ -1,10 +1,10 @@
 # CUO module — task index
 
-_Generated 2026-05-17 — 5 FRs, 37 engineering-hours total._
+_Generated 2026-05-17 — 5 tasks, 37 engineering-hours total._
 
-## FRs
+## tasks
 
-| FR | Priority | Slice | Hours | Title |
+| Task | Priority | Slice | Hours | Title |
 |---|---|---|---:|---|
 | [TASK-CUO-101](TASK-CUO-101-langgraph-supervisor/spec.md) | MUST | 2 | 12 | CUO Phase 2 — LangGraph supervisor + LiteLLM cascade + confidence-band escalation + persona-aware ro |
 | [TASK-CUO-102](TASK-CUO-102-langgraph-postgres-checkpointer/spec.md) | MUST | 6 | 5 | CUO Postgres checkpointer for LangGraph state — persists supervisor graph state per run with EU AI A |

@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: repo-context-map-audit
 description: >-
-  Audit a repo-context-map@1 against repo_context_map_rubric@1.0: enforces presence of the three baseline patterns (error_type, logging, test_framework), `pinned_in` references that resolve to real files, schemas present when the FR declares migrations, and the module-placement warning either null or escalated. Emits a `score / 10` verdict; refuses to pass on <10/10. Use when user asks to "audit this repo context map" or "check the repo context map". Do NOT use for "draft a new repo context map" (use repo-context-map-author instead).
+  Audit a repo-context-map@1 against repo_context_map_rubric@1.0: enforces presence of the three baseline patterns (error_type, logging, test_framework), `pinned_in` references that resolve to real files, schemas present when the task declares migrations, and the module-placement warning either null or escalated. Emits a `score / 10` verdict; refuses to pass on <10/10. Use when user asks to "audit this repo context map" or "check the repo context map". Do NOT use for "draft a new repo context map" (use repo-context-map-author instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -35,7 +35,7 @@ outputs:
 |---|---|---|---|
 | RCM-001 | `existing_patterns` includes all of: error_type, logging, test_framework | 25% | error |
 | RCM-002 | Every `pinned_in` reference resolves to a real file (no dangling pointers) | 20% | error |
-| RCM-003 | `schemas` is non-empty when the FR declares migrations or a `data:` frontmatter block | 15% | error |
+| RCM-003 | `schemas` is non-empty when the task declares migrations or a `data:` frontmatter block | 15% | error |
 | RCM-004 | `files_outside_immediate_domain` entries each have a non-vacuous `reason` | 10% | warning |
 | RCM-005 | `blast_radius.score` is a number in 0–100 and consistent with the file counts | 10% | warning |
 | RCM-006 | If `files_outside_immediate_domain.length > 3`, the workflow ADR-branch flag is set | 10% | error |

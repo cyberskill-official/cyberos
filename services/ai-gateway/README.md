@@ -5,7 +5,7 @@ Implements [`docs/tasks/ai/TASK-AI-001..022`](../../docs/tasks/ai/) — pre-call
 
 ## Status (2026-05-19 wave)
 
-| FR | Title | Status |
+| Task | Title | Status |
 |---|---|---|
 | **TASK-AI-003** | memory audit-row bridge (canonical Writer subprocess) | **shipped** (core path + path-validation + chain-verify + 5s timeout-with-SIGTERM; typed builders for the slice-1 closed set: precheck · invocation · invocation_failed · hold_expired · persona_loaded) |
 | **TASK-AI-005** | Tenant-policy YAML loader | **shipped** (10/10 ACs covered by unit + integration tests; `ArcSwap` lock-free cache; `notify` file-watcher; `cyberos-ai policy validate` + `policy list` CLI) |

@@ -28,7 +28,7 @@ Round-2 revisions promoted §9 Q2/Q3/Q4/Q5 to normative §1 clauses (#11-14), ad
 
 ## §3 — task-audit skill compliance appendix (added 2026-05-16)
 
-task-audit skill §3.12 rule 36 requires ≥6 canonical ISS-NNN findings per audit. Six findings — four restate historical issues, two add task-audit skill compliance verifications. All RESOLVED.
+Task-audit skill §3.12 rule 36 requires ≥6 canonical ISS-NNN findings per audit. Six findings — four restate historical issues, two add task-audit skill compliance verifications. All RESOLVED.
 
 ### ISS-001 — §9 Q2 (hot-reload semantics on in-flight calls)
 - **severity:** warning  
@@ -49,7 +49,7 @@ task-audit skill §3.12 rule 36 requires ≥6 canonical ISS-NNN findings per aud
 ### ISS-005 — task-audit skill §3.4 rule 13 (RLS USING + WITH CHECK) — policy storage if persisted to DB
 - **severity:** info (compliance check)
 - **rule_id:** authoring-md-§3.4 (rule 13)
-- **status:** RESOLVED (2026-05-16, task-audit skill compliance pass) — §11 note added confirming that this FR loads policies from YAML files on disk, NOT from a tenant-scoped Postgres table; task-audit skill §3.4 rule 13 (RLS USING + WITH CHECK) is therefore N/A for this FR's storage layer. If a future P3 FR moves policy storage to Postgres (multi-tenant SaaS path), the WITH CHECK clause MUST be added on INSERT/UPDATE per task-audit skill §3.4 rule 13. Cross-link to TASK-AUTH-003 (RLS enforcement) added.
+- **status:** RESOLVED (2026-05-16, task-audit skill compliance pass) — §11 note added confirming that this task loads policies from YAML files on disk, NOT from a tenant-scoped Postgres table; task-audit skill §3.4 rule 13 (RLS USING + WITH CHECK) is therefore N/A for this task's storage layer. If a future P3 task moves policy storage to Postgres (multi-tenant SaaS path), the WITH CHECK clause MUST be added on INSERT/UPDATE per task-audit skill §3.4 rule 13. Cross-link to TASK-AUTH-003 (RLS enforcement) added.
 
 ### ISS-006 — task-audit skill §3.9 rule 27 (determinism) — YAML loader output ordering
 - **severity:** warning
@@ -60,4 +60,4 @@ task-audit skill §3.12 rule 36 requires ≥6 canonical ISS-NNN findings per aud
 
 ---
 
-*End of TASK-AI-005 audit. Status: PASS at 10/10. task-audit skill compliant 2026-05-16.*
+*End of TASK-AI-005 audit. Status: PASS at 10/10. Task-audit skill compliant 2026-05-16.*

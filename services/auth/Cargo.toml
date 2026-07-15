@@ -15,11 +15,11 @@ name = "cyberos-auth-bootstrap"
 path = "src/bin/bootstrap.rs"
 
 # TASK-AUTH-006 slice-2 — unified operations CLI. Name follows industry
-# convention (`systemctl`, `journalctl`, `kubectl`) — the FR's spec'd
+# convention (`systemctl`, `journalctl`, `kubectl`) — the task's spec'd
 # `cyberos-auth` name collides with the HTTP server's binary, so
 # `cyberos-authctl` resolves the conflict without renaming the daemon.
 # `cyberos-auth-bootstrap` remains as a transitional alias for slice-1
-# scripts; slice-3 (future FR) removes it.
+# scripts; slice-3 (future task) removes it.
 [[bin]]
 name = "cyberos-authctl"
 path = "src/bin/cli.rs"

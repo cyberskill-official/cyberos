@@ -17,7 +17,7 @@ TASK-AUTH-110 makes AUTH a first-party OIDC provider so CHAT (Mattermost) and PO
 ## §2 - Findings
 
 ### ISS-001 - The kick was overclaimed (RESOLVED)
-A first draft implied "revoke = instant logout everywhere". That is false for Mattermost, which mints its own session after the OIDC handshake. Resolved: DEC-2488 + §1 #13 + §1 #26 + §9 state the boundary plainly - slice 1 blocks re-auth and revokes the AUTH SSO session; live downstream sessions need back-channel logout (slice 2). The FR does not pretend otherwise. This honesty is required, not a weakness.
+A first draft implied "revoke = instant logout everywhere". That is false for Mattermost, which mints its own session after the OIDC handshake. Resolved: DEC-2488 + §1 #13 + §1 #26 + §9 state the boundary plainly - slice 1 blocks re-auth and revokes the AUTH SSO session; live downstream sessions need back-channel logout (slice 2). The task does not pretend otherwise. This honesty is required, not a weakness.
 
 ### ISS-002 - Two key systems would fragment verification (RESOLVED)
 A provider that minted its own signing keys would publish a second JWKS and drift on rotation. Resolved: DEC-2481 + §1 #10 + disallowed_tools forbid a second key system; id_token + access_token sign against TASK-AUTH-004 `auth_signing_keys` and the one JWKS.
@@ -45,11 +45,11 @@ Resolved: DEC-2489 + §1 #9 - server-side session table is truth (revocable), th
 ### OPEN-001 - consume-without-UPDATE pattern + extract-vs-reimplement
 Two implementation choices are left to the build, deliberately:
 1. `auth_oidc_auth_codes` revokes UPDATE/DELETE for forensic integrity, so "consume" cannot be a guarded `UPDATE ... WHERE consumed_at IS NULL`. §3.2 proposes a sibling `auth_oidc_code_consumptions(code_hash PK)` where the first insert wins and a second raises a unique violation (= replay). The alternative is to grant a single narrow UPDATE on `consumed_at`. Either is sound; pick at build with a one-line ADR.
-2. DEC-2493 reuse: extract `services/mcp-gateway/src/oauth/` into a shared crate vs re-implement the thin parts in auth. The FR mandates reuse; the mechanism is an impl decision. Neither choice changes the contract, so this does not block the spec.
+2. DEC-2493 reuse: extract `services/mcp-gateway/src/oauth/` into a shared crate vs re-implement the thin parts in auth. The task mandates reuse; the mechanism is an impl decision. Neither choice changes the contract, so this does not block the spec.
 
 ## §4 - Resolution
 
-8 of 8 mechanical concerns resolved in the FR. The one open item is a pair of implementation choices that do not change the API contract or the security properties. The spec's depth is bounded by the genuine surface (OIDC provider profile × human-auth brokering × revoke-gated authorize × single-use PKCE codes × SSO cookie × first-party RP registry × pinned issuer × honest kick boundary), not by a line target.
+8 of 8 mechanical concerns resolved in the task. The one open item is a pair of implementation choices that do not change the API contract or the security properties. The spec's depth is bounded by the genuine surface (OIDC provider profile × human-auth brokering × revoke-gated authorize × single-use PKCE codes × SSO cookie × first-party RP registry × pinned issuer × honest kick boundary), not by a line target.
 
 **Score = 9.5/10.** The half point withheld only until OPEN-001's two choices are pinned with one-line ADRs at build time.
 

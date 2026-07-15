@@ -84,7 +84,7 @@ def _project(signal_id: str, rows: list[dict]) -> list:
             for r in rows
         })
     if signal_id == "acceptance_rate_below":
-        # The set of failure REASONS (or outcome strings) — multiple FRs failing
+        # The set of failure REASONS (or outcome strings) — multiple tasks failing
         # for the same reason form one stripe.
         return sorted({
             (r.get("extra") or {}).get("outcome", "")

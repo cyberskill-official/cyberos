@@ -2,8 +2,16 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future fr-catalog renderer) ─────
 id: TASK-AI-019
 title: "Self-hosted BGE-M3 embeddings (single L4 GPU sidecar) + ONNX-CPU fallback + adaptive batching"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AI
-priority: SHOULD
+priority: p1
 status: done
 verify: T
 phase: P0
@@ -81,7 +89,7 @@ subtasks:
   - "0.5h: Sidecar/model version in response (model_name, model_sha256, sidecar_version)"
   - "1.5h: Tests — single embed, batch, GPU/CPU latency, fallback, fairness, max-length-rejection, version-reporting"
   - "0.5h: OTel metrics emission"
-risk_if_skipped: "Embeddings cost ~$0.00002–$0.0001/1k tokens via managed APIs (OpenAI text-embedding-3-small / Cohere embed-multilingual-v3). At memory Layer 2 ingest scale (50 tenants × 1M chunks × 100 tok avg = 5B tokens/month), that's $100/mo per tenant of pure embeddings spend — eating ~25% of the $4/user/month target. Self-host with L4 GPU = $360/mo total fixed cost; per-tenant marginal cost = $0; break-even at ~3 active tenants. Without this FR, TASK-AI-020 (BGE rerank, also self-hosted) has no shared infrastructure — adding 2x the operational burden."
+risk_if_skipped: "Embeddings cost ~$0.00002–$0.0001/1k tokens via managed APIs (OpenAI text-embedding-3-small / Cohere embed-multilingual-v3). At memory Layer 2 ingest scale (50 tenants × 1M chunks × 100 tok avg = 5B tokens/month), that's $100/mo per tenant of pure embeddings spend — eating ~25% of the $4/user/month target. Self-host with L4 GPU = $360/mo total fixed cost; per-tenant marginal cost = $0; break-even at ~3 active tenants. Without this task, TASK-AI-020 (BGE rerank, also self-hosted) has no shared infrastructure — adding 2x the operational burden."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -98,7 +106,7 @@ The AI Gateway service **SHOULD** offer a self-hosted BGE-M3 embeddings provider
 8. **MUST** expose `/health` returning HTTP 200 when (a) the model is loaded, (b) the device is detected, (c) a 1-text test embedding completes successfully. Returns HTTP 503 during warmup, model-loading errors, or test-embedding failures. The gateway's startup check refuses to bind if `/health` is non-200 within 60s.
 9. **MUST** support both `embed.standard` (BGE-M3 dense default) and `embed.code` (BGE-M3 with code-tuned prompt template prefix `"Code: "`) via a `task` field in the request body. The sidecar applies the prompt-template variation; the model itself is the same checkpoint.
 10. **MUST** complete an embedding request within **50ms p95** for batches ≤ 32 texts on an L4 GPU; CPU-fallback budget widens to **300ms p95**. SLO assertions live in `bge_test.rs` with 1000-sample latency measurements.
-11. **MUST** verify the BGE-M3 model SHA-256 checksum at sidecar startup against `embeddings/checksums/bge-m3.sha256`. Mismatch (corrupted download, supply-chain tamper) → sidecar refuses to start with `ChecksumMismatch` exit code; gateway refuses to bind. The checksum is pinned per FR amendment; model-version updates require both file replacement AND checksum file update in the same PR.
+11. **MUST** verify the BGE-M3 model SHA-256 checksum at sidecar startup against `embeddings/checksums/bge-m3.sha256`. Mismatch (corrupted download, supply-chain tamper) → sidecar refuses to start with `ChecksumMismatch` exit code; gateway refuses to bind. The checksum is pinned per task amendment; model-version updates require both file replacement AND checksum file update in the same PR.
 12. **MUST** validate input text length ≤ 8192 tokens (BGE-M3's hard limit) BEFORE embedding. Over-length inputs return HTTP 413 PAYLOAD_TOO_LARGE with body `{"error":"input_too_long","max_tokens":8192,"actual_tokens":<n>,"text_index":<i>}` identifying which input in the batch exceeded. The sidecar uses the model's tokeniser for the count; no upstream chunking happens here.
 13. **MUST** report `model_name` (`"bge-m3"`), `model_sha256` (first 16 hex of model checksum), `sidecar_version` (semver from `pyproject.toml`), and `device` (`"cuda" | "cpu"`) in every response. Downstream consumers (memory Layer 2) record these for index-version pinning.
 14. **MUST** read the sidecar URL from `services/ai-gateway/config/embeddings.yaml`:
@@ -143,7 +151,7 @@ The AI Gateway service **SHOULD** offer a self-hosted BGE-M3 embeddings provider
 
 **Why mid-run GPU-failure detection (§1 #15)?** PyTorch can fall back to CPU at runtime (e.g., GPU memory pressure, driver crash). The failover is invisible from the API surface — the sidecar still returns embeddings, just slower. Without observation, latency degrades silently and operators don't know to investigate. The sev-2 alarm + adjusted SLO budget triggers operator action while preserving service availability.
 
-**Why is this `SHOULD` (priority) and not `MUST`?** Embeddings have a managed-API fallback path (Cohere, OpenAI) that works correctly, just expensively. The cost target ($4/user/month) is achievable without self-hosted embeddings if we accept lower-margin operations OR fewer tenants. Self-hosted is the *economic* requirement for scaling, not a *correctness* requirement. FR priority `SHOULD` reflects this: ship managed first if you must (slice 4 might do this for the first 10 tenants), then transition to self-hosted as scale justifies. The FR is sized for "ship it now" but the gate is economic, not regulatory.
+**Why is this `SHOULD` (priority) and not `MUST`?** Embeddings have a managed-API fallback path (Cohere, OpenAI) that works correctly, just expensively. The cost target ($4/user/month) is achievable without self-hosted embeddings if we accept lower-margin operations OR fewer tenants. Self-hosted is the *economic* requirement for scaling, not a *correctness* requirement. Task priority `SHOULD` reflects this: ship managed first if you must (slice 4 might do this for the first 10 tenants), then transition to self-hosted as scale justifies. The task is sized for "ship it now" but the gate is economic, not regulatory.
 
 ---
 
@@ -290,7 +298,7 @@ health = HealthState()
 class EmbedRequest(BaseModel):
     texts: list[str]
     tenant_id: str
-    task: str = "passage"
+    Task: str = "passage"
 
 class EmbedResponse(BaseModel):
     embeddings: list[list[float]]
@@ -595,7 +603,7 @@ services:
 
 ## §7 — Dependencies
 
-### Code dependencies (other FRs/modules)
+### Code dependencies (other tasks/modules)
 
 - **TASK-AI-006** — alias map registers `embed.standard` and `embed.code` resolving to `BgeProvider`.
 - **TASK-AI-007** — cost_rates.yaml gets `bge-m3: { input: 0, output: 0 }` entry.
@@ -658,10 +666,10 @@ sev-1  ai_bge_checksum_failed  expected=4b8c...  actual=9d6e...
 
 ## §9 — Open questions
 
-All resolved at authoring time. Items deferred to later FRs:
+All resolved at authoring time. Items deferred to later tasks:
 
 - Multi-GPU sidecar (use 4×L4 with tensor parallelism) — slice 5+ when scale demands.
-- Model swap to BGE-M4 (when released) — handled by FR amendment + checksum bump + fixture refresh in memory Layer 2.
+- Model swap to BGE-M4 (when released) — handled by task amendment + checksum bump + fixture refresh in memory Layer 2.
 - Streaming embeddings (incremental embedding of long docs) — out of scope; chunking happens upstream.
 - Per-tenant model variants (one tenant wants a fine-tuned BGE) — slice 5+; current sidecar serves one model per instance.
 - Cross-region sidecar load-balancing during regional outage — TASK-AI-016 area; current model is strict per-region pinning.
@@ -706,7 +714,7 @@ All resolved at authoring time. Items deferred to later FRs:
 - The 50ms batch buffer ceiling (§1 #4) is the user-visible-latency budget; the 32-text floor maximises GPU efficiency. Tuning is empirical: batch sizes < 8 underutilise the GPU; > 64 hit OOM on long inputs.
 - Per-tenant fairness in the batch buffer (§1 #5) is the multi-tenancy correctness primitive. Without it, a single tenant's bursty workload can starve all other tenants — measurable as p99 latency spikes on the OBS dashboard.
 - Mid-run GPU failover detection (§1 #15) is a small but valuable observability feature. PyTorch's silent GPU→CPU fallback is convenient for availability but invisible to operators; the device-field check makes it loud.
-- memory Layer 2 (vector index) MUST record `model_sha256` alongside every stored embedding. A future FR (TASK-MEMORY-014, placeholder) handles re-embedding when the sidecar's model_sha256 changes — current consumers should be defensive about this signal.
+- memory Layer 2 (vector index) MUST record `model_sha256` alongside every stored embedding. A future task (TASK-MEMORY-014, placeholder) handles re-embedding when the sidecar's model_sha256 changes — current consumers should be defensive about this signal.
 
 ---
 

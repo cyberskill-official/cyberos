@@ -1,8 +1,16 @@
 ---
 id: TASK-PORTAL-002
 title: "PORTAL per-tenant brand pack — logo + colour palette + custom CNAME + email template overrides + ACME-issued TLS cert + brand-asset versioning"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: PORTAL
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P4
@@ -44,7 +52,7 @@ source_decisions:
   - DEC-1018 2026-05-17 — Per-tenant brand-pack edit limited to 10 saves per day (rate limit) to prevent storage exhaustion via rapid re-saves
   - DEC-1019 2026-05-17 — Image content-type validation via magic-bytes (not Content-Type header) — defends against spoofed uploads (e.g. executable disguised as PNG)
   - DEC-1020 2026-05-17 — Tenant-set custom favicon overrides browser default for `<slug>.cyberos.world` AND custom CNAME if active
-  - eIDAS QES (out-of-scope at slice 1 — brand pack does not include signing certs; QES integration is FR-DOC-2xx)
+  - eIDAS QES (out-of-scope at slice 1 — brand pack does not include signing certs; QES integration is task-DOC-2xx)
   - WCAG 2.1 AA (contrast minima for accessibility — DEC-1003)
   - GDPR Art. 25 (data protection by design — brand pack is no-PII per DEC-1009 validation)
 
@@ -837,7 +845,7 @@ All resolved for slice 1. Deferred:
 
 **§11.15** Per-tenant rate limit (10 saves/day) uses Redis sliding-window like TASK-TEN-101 §1 #5; same infrastructure.
 
-**§11.16** Email-override fallback chain is TASK-EMAIL-001 internal mechanism; this FR populates the override files via `portal_brand_packs.email_overrides` JSONB → on-disk Tera fragment.
+**§11.16** Email-override fallback chain is TASK-EMAIL-001 internal mechanism; this task populates the override files via `portal_brand_packs.email_overrides` JSONB → on-disk Tera fragment.
 
 **§11.17** CNAME global uniqueness (`uniq_cname_global`) prevents two tenants from claiming the same custom domain — first-come-first-served; second tenant gets `cname_taken` until first revokes.
 

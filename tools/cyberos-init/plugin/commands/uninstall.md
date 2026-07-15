@@ -1,5 +1,5 @@
 ---
-description: Remove the vendored CyberOS machine from a repo (keeps FRs and BRAIN by default).
+description: Remove the vendored CyberOS machine from a repo (keeps tasks and BRAIN by default).
 argument-hint: "[repo path, default: current repo]"
 ---
 Uninstall CyberOS from repo_root = ${1:-the current repo}.

@@ -63,7 +63,7 @@ Original Makefile entry said "build plugin .tar.gz" but didn't specify reproduci
 
 All 14 mechanical concerns addressed. **Score = 10/10.**
 
-Per task-audit skill §0 master rule: this spec is now perfect — highly detailed, perfectly matched to the FR's core requirements (CHAT auth delegation + tenant propagation), complete (all 11 sections present and substantive), no truncation. The line count exceeds the §3.14 calibration band; this is intentional per the master rule — depth is bounded by genuine spec needs, not by line targets.
+Per task-audit skill §0 master rule: this spec is now perfect — highly detailed, perfectly matched to the task's core requirements (CHAT auth delegation + tenant propagation), complete (all 11 sections present and substantive), no truncation. The line count exceeds the §3.14 calibration band; this is intentional per the master rule — depth is bounded by genuine spec needs, not by line targets.
 
 ---
 

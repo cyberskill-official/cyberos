@@ -11,7 +11,7 @@ Installers:
       Silent: "/S"              # NSIS's standard silent flag; AC #8 requires confirming against
       SilentWithProgress: "/S"  # CyberOS's actual NSIS installer via a real test run (spec 9)
 ManifestType: installer
-ManifestVersion: 1.6.0   # NOTE: schema version + InstallerSwitches nesting are this FR's
+ManifestVersion: 1.6.0   # NOTE: schema version + InstallerSwitches nesting are this task's
                          # best-available understanding, not independently re-verified against
                          # Microsoft's live current schema during authoring - spec 9 requires
                          # confirming both against winget-pkgs' current templates before this

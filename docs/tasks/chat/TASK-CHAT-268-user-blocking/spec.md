@@ -1,10 +1,17 @@
 ---
 id: TASK-CHAT-268
 title: "User blocking - stop seeing a person's content, and stop receiving their messages"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-07-11T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: CHAT
-priority: MUST
+priority: p0
 status: done
-class: product
 verify: T
 phase: P0
 milestone: P0 - store compliance (UGC controls)
@@ -77,7 +84,7 @@ risk_if_skipped: "Google Play requires an in-app block mechanism for any app car
 
 7. The blocked person **MUST** still be able to post. Their message is persisted normally and they see it in their own client. It is simply never delivered to the blocker: no row in the blocker's message list, no WebSocket frame, no notification, no push. The service **MUST NOT** return an error to the blocked sender.
 
-8. Consequently, the service **MUST NOT** disclose the existence of a block to the blocked person through *any* channel: not a status code, not an error string, not a missing-read-receipt, not a delivery indicator. See §2 for why this is the single most important security property of this FR.
+8. Consequently, the service **MUST NOT** disclose the existence of a block to the blocked person through *any* channel: not a status code, not an error string, not a missing-read-receipt, not a delivery indicator. See §2 for why this is the single most important security property of this task.
 
 9. Reactions and mentions authored by a blocked person **MUST** be suppressed for the blocker: their reaction is not counted in the folded reaction set the blocker receives, and their `@mention` of the blocker raises no notification.
 
@@ -95,7 +102,7 @@ risk_if_skipped: "Google Play requires an in-app block mechanism for any app car
 
 ## §2 - Why this design (rationale for humans)
 
-**Why the blocked person is never told (§1 #7, #8).** This is the clause the FR turns on, and it is counter-intuitive, so it is worth being blunt. The obvious design is to refuse the blocked person's message with a `403` - it is honest, it is simple, and it is dangerous. Telling a harasser "you have been blocked" is an escalation trigger: it converts a person who was being ignored into a person who knows they were rejected, and the documented pattern is that they escalate through another channel. Every mature messaging product - Signal, WhatsApp, iMessage - lets the blocked sender believe the message went out. So do we. The message is persisted, the sender sees it in their own client, and it simply never arrives. The blocker is protected, and the blocked person has nothing to react to.
+**Why the blocked person is never told (§1 #7, #8).** This is the clause the task turns on, and it is counter-intuitive, so it is worth being blunt. The obvious design is to refuse the blocked person's message with a `403` - it is honest, it is simple, and it is dangerous. Telling a harasser "you have been blocked" is an escalation trigger: it converts a person who was being ignored into a person who knows they were rejected, and the documented pattern is that they escalate through another channel. Every mature messaging product - Signal, WhatsApp, iMessage - lets the blocked sender believe the message went out. So do we. The message is persisted, the sender sees it in their own client, and it simply never arrives. The blocker is protected, and the blocked person has nothing to react to.
 
 **Why group-channel messages are collapsed rather than deleted (§1 #5).** Removing a blocked person's messages outright silently rewrites the channel's history for one participant: replies to a vanished message become nonsense, thread counts stop matching, and the blocker ends up more confused than protected. A collapsed placeholder preserves the shape of the conversation, tells the truth ("someone you blocked said something here"), and leaves the choice to reveal in the hands of the person who made the block. It is *their* block; they are allowed to un-hide their own view.
 
@@ -244,7 +251,7 @@ if sock.blocked.contains(&frame.sender_subject_id) {
 
 ```rust
 // services/chat/src/notify.rs :: fan_out
-// This is the point that was silently broken before this FR: the fan-out selects channel members
+// This is the point that was silently broken before this task: the fan-out selects channel members
 // and pushes to their devices. It did not know blocks existed, so a blocked person's message would
 // still have arrived on the blocker's lock screen carrying their name and the first line of text.
 
@@ -497,7 +504,7 @@ The audit row:
 
 **Deferred:**
 
-- *Workspace-wide block ("mute across every surface")* - once CyberOS grows modules beyond chat, a block should plausibly hide the person from mentions in PROJ, from the memory search index, and so on. That is a cross-module contract and belongs in its own FR. Chat-scoped is what the store policy requires and what ships here.
+- *Workspace-wide block ("mute across every surface")* - once CyberOS grows modules beyond chat, a block should plausibly hide the person from mentions in PROJ, from the memory search index, and so on. That is a cross-module contract and belongs in its own task. Chat-scoped is what the store policy requires and what ships here.
 - *Auto-expiring blocks* - "block for 7 days" is a real de-escalation tool. Deferred: `created_at` is present, an `expires_at` is additive.
 - *Administrator visibility of blocks* - an admin arguably wants to know that six people have blocked the same person, because that is the strongest possible signal in a small workspace. Deliberately deferred, and it needs a decision, not a design: it partially breaks §1 #2 (privacy of the block), and the trade is real. Raised as a decision for TASK-CHAT-269's follow-up.
 

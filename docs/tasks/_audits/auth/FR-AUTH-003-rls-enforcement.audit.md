@@ -96,9 +96,9 @@ All 6 mechanical revisions applied. **Score = 10/10.**
 
 Two spec-text drifts surfaced during the audit:
 
-1. **GUC name (§1 #3):** spec says `app.tenant_id`; deployed code uses `app.current_tenant_id`. The deployed name has been live since session 1 (2026-05-17). Recommendation: amend FR §1 #3 to `app.current_tenant_id` (matches code) rather than renaming the GUC across 18 migrations + every handler. Risk of rename: high (every SET LOCAL + every policy + every test); benefit: cosmetic alignment. Reject the rename; amend the spec.
+1. **GUC name (§1 #3):** spec says `app.tenant_id`; deployed code uses `app.current_tenant_id`. The deployed name has been live since session 1 (2026-05-17). Recommendation: amend task §1 #3 to `app.current_tenant_id` (matches code) rather than renaming the GUC across 18 migrations + every handler. Risk of rename: high (every SET LOCAL + every policy + every test); benefit: cosmetic alignment. Reject the rename; amend the spec.
 
-2. **Per-tenant policy model (§1 #7):** spec says `rls::apply_for_tenant(tenant_id)` creates per-tenant policy rows on every registered table, producing O(tenants × tables) policy count. Deployed code uses a global GUC-based policy: ONE policy per table that reads `current_setting('app.current_tenant_id')`, producing O(tables) policy count. **The GUC pattern is strictly better** (constant policy count regardless of tenant count, no policy thrash on tenant onboard, no missed policies on legacy tenants). Recommendation: amend FR §1 #7 to spec the GUC pattern as the implementation, replace `apply_for_tenant` with a no-op (RLS is automatic via the global policy + middleware's `SET LOCAL`).
+2. **Per-tenant policy model (§1 #7):** spec says `rls::apply_for_tenant(tenant_id)` creates per-tenant policy rows on every registered table, producing O(tenants × tables) policy count. Deployed code uses a global GUC-based policy: ONE policy per table that reads `current_setting('app.current_tenant_id')`, producing O(tables) policy count. **The GUC pattern is strictly better** (constant policy count regardless of tenant count, no policy thrash on tenant onboard, no missed policies on legacy tenants). Recommendation: amend task §1 #7 to spec the GUC pattern as the implementation, replace `apply_for_tenant` with a no-op (RLS is automatic via the global policy + middleware's `SET LOCAL`).
 
 Both amendments should land as TASK-AUTH-003 v2 — operator decision required.
 
@@ -110,7 +110,7 @@ Both amendments should land as TASK-AUTH-003 v2 — operator decision required.
 
 **Slice 3 — DEFERRED (G-009):** OTel metrics reassigned to TASK-OBS-001 per the no-half-built-metrics-surface rationale established with TASK-AUTH-002 G-011.
 
-Per task-audit skill §9.1, slice-1 + slice-2 land in one continuous session — each as its own commit for git-history hygiene, but no overnight pauses between them. Slice-3 deferred to a different FR (TASK-OBS-001), so the TASK-AUTH-003 audit closes with the §9.3 defer-with-rationale rule satisfied.
+Per task-audit skill §9.1, slice-1 + slice-2 land in one continuous session — each as its own commit for git-history hygiene, but no overnight pauses between them. Slice-3 deferred to a different task (TASK-OBS-001), so the TASK-AUTH-003 audit closes with the §9.3 defer-with-rationale rule satisfied.
 
 ---
 

@@ -5,12 +5,12 @@ After each batch, the skill emits a short human-readable summary in chat (in add
 ## Per-batch summary
 
 ```
-FR audit batch complete
+Task audit batch complete
 
-Audited N FR(s):
-  - FR-001-foo.md → audit verdict: pass (0 open, 1 warning, 3 iterations)
-  - FR-002-bar.md → audit verdict: needs_human (2 blocking issues — see HITL_BATCH_REQUEST below)
-  - FR-003-baz.md → audit verdict: pass (0 open, 0 warnings, 1 iteration)
+Audited N task(s):
+  - TASK-001-foo.md → audit verdict: pass (0 open, 1 warning, 3 iterations)
+  - TASK-002-bar.md → audit verdict: needs_human (2 blocking issues — see HITL_BATCH_REQUEST below)
+  - TASK-003-baz.md → audit verdict: pass (0 open, 0 warnings, 1 iteration)
 
 Rubric:        fr_rubric@1.0
 Total time:    <seconds>s

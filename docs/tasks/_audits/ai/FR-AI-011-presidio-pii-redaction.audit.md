@@ -34,7 +34,7 @@ Two ACs reference verification mechanisms but no test body appears in §5:
 - AC #14: *"Configure 6 sidecar-down events in 60s; assert the OBS alarm fires (verifiable via metrics-test scaffold)."* The phrase "verifiable via metrics-test scaffold" is hand-waving — no test code shows how to drive the alarm condition or assert the alarm firing.
 - AC #15: *"Deploy-time integration test attempts to connect to the sidecar from a non-loopback IP; assertion: connection refused. Verifies §1 #15."* §11 references a `make smoke-test` target but §5 has no test body.
 
-A code-gen agent reading the FR can implement the redact module but has no way to write the alarm test or the deploy smoke test from these ACs.
+A code-gen agent reading the task can implement the redact module but has no way to write the alarm test or the deploy smoke test from these ACs.
 
 #### Suggested fix
 Add the missing test bodies to §5:
@@ -257,7 +257,7 @@ Add §10 row: *"Presidio reports an entity type with no `PiiType` variant → it
 - **status:** open
 
 #### Description
-task-audit skill §3.6 rule 18 says "PII MUST be scrubbed via the `cyberos-memory-pii` ruleset BEFORE chain commit. Never depend on downstream redaction." This FR's `redact::redact` is the scrubber; TASK-AI-003 emits the memory audit row downstream. But §1 doesn't explicitly say "the redacted body MUST be the only form that reaches the memory emit path" — a future refactor could log the original-text-with-restoration-map to the chain, defeating the rule. The order-of-operations needs to be normative: `redact() → cost_ledger::precheck → memory emit (with redacted_text)`, and the memory row's `extra.prompt_snippet` field (if any) MUST be from the redacted text, NEVER the original.
+Task-audit skill §3.6 rule 18 says "PII MUST be scrubbed via the `cyberos-memory-pii` ruleset BEFORE chain commit. Never depend on downstream redaction." This task's `redact::redact` is the scrubber; TASK-AI-003 emits the memory audit row downstream. But §1 doesn't explicitly say "the redacted body MUST be the only form that reaches the memory emit path" — a future refactor could log the original-text-with-restoration-map to the chain, defeating the rule. The order-of-operations needs to be normative: `redact() → cost_ledger::precheck → memory emit (with redacted_text)`, and the memory row's `extra.prompt_snippet` field (if any) MUST be from the redacted text, NEVER the original.
 
 #### Suggested fix
 Add §1 #16: "**MUST** ensure the original (un-redacted) text NEVER reaches the memory audit-row emit path per task-audit skill §3.6 rule 18. The call sequence is: `redact::redact(text) → RedactionResult { redacted_text, map } → cost_ledger::precheck(.., redacted_text) → memory row.extra.prompt_snippet = first 256 chars of redacted_text`. The `RestorationMap` is held in a separate `Zeroizing<HashMap<...>>` that is NEVER serialised into any chain or log row. AC #16 verifies via a `tracing-test` capture that no chain row written during a redaction-round-trip test contains any of the original PII values."
@@ -269,7 +269,7 @@ Add §1 #16: "**MUST** ensure the original (un-redacted) text NEVER reaches the 
 - **status:** open
 
 #### Description
-task-audit skill §3.6 rule 19 says "Logs MUST use the `redact()` helper for sensitive fields. Never `tracing::info!(?email)` with raw PII; always `tracing::info!(email = %redact_email(email))`." §1 #13 says "no raw PII in logs" but doesn't mandate the `redact_*` helper pattern. A reviewer can't tell whether `tracing::info!(?prompt)` is forbidden (it is) or merely discouraged. The `redact_no_log_test.rs` test catches runtime leaks but a clippy-style lint would catch the pattern at compile time. task-audit skill rule 19 wants both.
+Task-audit skill §3.6 rule 19 says "Logs MUST use the `redact()` helper for sensitive fields. Never `tracing::info!(?email)` with raw PII; always `tracing::info!(email = %redact_email(email))`." §1 #13 says "no raw PII in logs" but doesn't mandate the `redact_*` helper pattern. A reviewer can't tell whether `tracing::info!(?prompt)` is forbidden (it is) or merely discouraged. The `redact_no_log_test.rs` test catches runtime leaks but a clippy-style lint would catch the pattern at compile time. Task-audit skill rule 19 wants both.
 
 #### Suggested fix
 Add §1 #17: "**MUST** use the `cyberos_pii::redact_for_log(text, &policy)` helper in every log statement that takes a text field per task-audit skill §3.6 rule 19. Direct `tracing::info!(?text)` / `tracing::debug!(prompt = %prompt)` / etc. with raw text are spec violations. The codebase enforces this via `#[deny(clippy::disallowed_methods)]` on a custom lint registered in `clippy.toml`: `disallowed-methods = [\"tracing::info_span!\", \"tracing::debug_span!\"]` when called with un-wrapped text args. The `redact_for_log` helper applies a fast-path regex redaction (email/phone/MST) without a sidecar round-trip — it's the right balance for log latency."

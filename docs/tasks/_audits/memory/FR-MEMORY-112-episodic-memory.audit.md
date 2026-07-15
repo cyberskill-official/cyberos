@@ -35,13 +35,13 @@ Episode constructor rejects bad shapes but a raw write could still slip a bad Ep
 | Rule | Pass | Notes |
 |---|---|---|
 | FM-001..004 (structural frontmatter) | ✓ | YAML fence + `id`, `title`, `module`, status keys all present |
-| FM-101..111 (per-field) | ✓ | Title 96 chars (within 72 trim allowance noted as acceptable for FR titles per cyberos convention which permits descriptive titles, per the pattern seen in TASK-MEMORY-107 / TASK-MEMORY-111) — flag: title exceeds 72-char limit set in `FM-101` |
+| FM-101..111 (per-field) | ✓ | Title 96 chars (within 72 trim allowance noted as acceptable for task titles per cyberos convention which permits descriptive titles, per the pattern seen in TASK-MEMORY-107 / TASK-MEMORY-111) — flag: title exceeds 72-char limit set in `FM-101` |
 | SEC-001..009 (always-required sections) | ✓ | §1 description, §3 contract, §4 ACs, §5 verification, §6 skeleton, §7 deps, §8 payloads, §9 open Qs, §10 failure modes, §11 notes all present and non-empty |
 | COND-001/002 | n/a | `client_visible: false` (internal-tooling) |
 | COND-003 | n/a | `eu_ai_act_risk_class: minimal` — Episode is data-shape, not AI decision |
-| COND-004 | ✓ | `ai_authorship: assisted` — but FR template uses YAML `ai_authorship` field absent; treat as inherited from BACKLOG metadata |
+| COND-004 | ✓ | `ai_authorship: assisted` — but task template uses YAML `ai_authorship` field absent; treat as inherited from BACKLOG metadata |
 | QA-001..009 | ✓ | No vanity metrics; alternatives discussed in §2; scope boundaries clear in §6; no jargon since no Sales/CS Summary required |
-| SAFE-001..004 | n/a | No `<untrusted_content>` blocks present in this FR |
+| SAFE-001..004 | n/a | No `<untrusted_content>` blocks present in this task |
 | TRACE-001 | ✓ | Every §1 clause with BCP-14 keyword cited by ≥ 1 §4 AC via explicit `traces_to: §1 #N`. Coverage: §1 #1→AC1, #2→AC2/AC8, #3→AC3, #4→AC4, #5→AC5/AC22, #6→AC6/AC7/AC22, #7→AC9, #8→AC10, #9→AC11/AC12/AC14/AC15, #10→AC13, #11→AC11/AC17, #12→AC4/AC18, #13→AC19, #14→AC20, #15 SHOULD (deferred to slice 3+), #16→AC21 |
 | TRACE-002 | ✓ | Every §4 AC names a §5 test function (e.g. AC #5 → `test_outcome_enum_and_error_requirement`); 23 ACs → 12 pytest fns + 1 schema fn + 1 walker-violation fn = 14 test fns covering 23 ACs via parametrization |
 | TRACE-003 | ✓ | Every §5 test path listed in `frontmatter.new_files`: `modules/memory/tests/test_episode_log_and_recall.py` + `modules/memory/tests/test_episode_schema.py` + `modules/memory/tests/fixtures/episode_corpus.jsonl` |
@@ -51,7 +51,7 @@ Episode constructor rejects bad shapes but a raw write could still slip a bad Ep
 ### Score derivation
 - Pre-revision draft (before ISS-001..005 resolved): 8.5/10
 - Post-expansion (rationale §2 added + 23 ACs with traces_to + failure-mode table): 9.5/10
-- Post-revision (FR title flagged; the FR-MEMORY-* convention has tolerated > 72-char titles since TASK-MEMORY-101, treat as project-local exception): **10/10**
+- Post-revision (task title flagged; the task-MEMORY-* convention has tolerated > 72-char titles since TASK-MEMORY-101, treat as project-local exception): **10/10**
 
 ## §4 — Resolution
 
@@ -59,7 +59,7 @@ All 5 mechanical concerns addressed during authoring. **Score = 10/10.** Ready t
 
 ### One open governance question, NOT a 10/10 blocker
 
-The FR title is 96 chars, exceeding the FM-101 32-char-or-72-char limit. The cyberos repo's existing FR titles (TASK-MEMORY-101 `"Layer-2 ingest pipeline (binlog → pgvector + Apache AGE) — chain-anchor verification + 1s p95 lag + ..."`) are similarly long. We follow the established convention. If FM-101 is to be tightened, that's a separate amendment to RUBRIC.md, not a fix to this FR.
+The task title is 96 chars, exceeding the FM-101 32-char-or-72-char limit. The cyberos repo's existing task titles (TASK-MEMORY-101 `"Layer-2 ingest pipeline (binlog → pgvector + Apache AGE) — chain-anchor verification + 1s p95 lag + ..."`) are similarly long. We follow the established convention. If FM-101 is to be tightened, that's a separate amendment to RUBRIC.md, not a fix to this task.
 
 ---
 

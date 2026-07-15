@@ -19,7 +19,7 @@ and gate. Estimates are focused build-time on the existing Mac-gate loop.
 
 ## P1 - status integrity + grooming (the approval covers doing this immediately after P0, ~a day)
 
-5. FR status corrections (both directions), one commit:
+5. Task status corrections (both directions), one commit:
    - flip to done: TASK-CHAT-101, TASK-AUTH-110, TASK-AI-003, TASK-AI-005 (+ TASK-CUO-204 per its gate);
    - close superseded (move to _archive/): TASK-CHAT-001..013 (native chat replaced the fork; keep as
      history), TASK-APP-001..007 (superseded by the React console; add pointer);
@@ -28,15 +28,15 @@ and gate. Estimates are focused build-time on the existing Mac-gate loop.
    - fix double-status frontmatter (TASK-SKILL-111..115, TASK-PROJ-012) to one canonical value;
    - normalize odd statuses (needs_human/completed/delivered/fixed/ready) into the fixed vocabulary:
      draft | ready_to_implement | implementing | done | superseded | blocked.
-6. Re-home still-wanted intents from the superseded pile as NEW native-chat FRs (unbuilt, draft):
+6. Re-home still-wanted intents from the superseded pile as NEW native-chat tasks (unbuilt, draft):
    Slack import, Zalo import, mobile push (exists as intent in push.rs), DSAR export, Lumi @-mention.
-7. As-built notes on drifted done FRs (memory AGE/paths, skill broker consolidation, proj paths): a
-   3-5 line "As built (2026-07-02)" block per affected FR - no spec rewrites. [~15 FRs]
+7. As-built notes on drifted done tasks (memory AGE/paths, skill broker consolidation, proj paths): a
+   3-5 line "As built (2026-07-02)" block per affected task - no spec rewrites. [~15 tasks]
 8. Orphan cleanup: delete services/eval_writetest; archive or delete services/chat-legacy-mattermost
    (operator call - it is the retired fork); confirm or remove services/business-suite; move all
    *.audit.md to docs/tasks/_audits/.
 9. Regenerate BACKLOG.md from the corrected frontmatter (script or by hand) so the backlog lists ONLY
-   not-yet-implemented + new FRs, grouped by module, with the deployed/built/draft distinction; retire
+   not-yet-implemented + new tasks, grouped by module, with the deployed/built/draft distinction; retire
    remaining-build-plan.md into it. Update CONTINUE-HERE.md + let roadmap.html re-render from the fixed
    frontmatter.
 
@@ -56,6 +56,6 @@ and gate. Estimates are focused build-time on the existing Mac-gate loop.
 ## Explicit non-actions (ledgered, deliberate)
 
 - Eval stays counsel-gated regardless of container fix (governance-first).
-- MCP FR-005..008 stay implementing until the DB slice lands.
+- MCP TASK-005..008 stay implementing until the DB slice lands.
 - Single-VPS topology accepted at team scale (RTO = redeploy; backups make it survivable).
 - Cloud AI provider keys remain deferred; local inference path only.

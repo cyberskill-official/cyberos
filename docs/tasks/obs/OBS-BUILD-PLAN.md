@@ -1,8 +1,8 @@
 # OBS module build plan (TASK-OBS-001..009)
 
 Written 2026-06-20. obs is the live front of the locked P0 path (AI -> OBS -> AUTH -> MCP -> CHAT) and
-all 9 FRs are `ready_to_implement`. TASK-OBS-001 (the collector) has shipped its slice-1 scaffold. This
-plan sequences the other eight and says, per FR, what to build, what test proves it, and how the gate
+all 9 tasks are `ready_to_implement`. TASK-OBS-001 (the collector) has shipped its slice-1 scaffold. This
+plan sequences the other eight and says, per task, what to build, what test proves it, and how the gate
 applies. Implementation is a toolchain step (cargo), run on your machine - this plan is the spec-to-code
 map, not the code.
 
@@ -20,11 +20,11 @@ TASK-OBS-008 obs-compliance-view   [002]                         -> NEW crate se
 TASK-OBS-009 chain-of-custody manifest   [008]                   -> obs-compliance-view (Ed25519)
 ```
 
-Two cross-module dependencies to confirm before starting the dependent FR: TASK-OBS-002 needs TASK-AUTH-004
-(tenant context), and TASK-OBS-004 needs TASK-AI-022 (the AI trace hook - AI has 2 ready_to_implement FRs;
+Two cross-module dependencies to confirm before starting the dependent task: TASK-OBS-002 needs TASK-AUTH-004
+(tenant context), and TASK-OBS-004 needs TASK-AI-022 (the AI trace hook - AI has 2 ready_to_implement tasks;
 check whether AI-022 is one of them or already done).
 
-## Per-FR
+## Per-task
 
 ### TASK-OBS-001 - OTel Collector + LGTM stack  (MUST, done scaffold)
 Shipped: `services/obs-collector` with the canonical `otel-collector-config.yaml` (OTLP receivers,
@@ -91,9 +91,9 @@ The obs goldenset (`modules/obs/.awh/goldenset.yaml`) and caf profile currently 
 cyberos-obs-<crate>` per new crate, and append it to the profile's `RUN_COMMANDS`. That keeps each new
 obs surface inside the same awh+caf gate.
 
-## How to ship each FR
+## How to ship each task
 
-Run `ship-tasks` for the obs FRs in the dependency order above. Each FR flows through the
+Run `ship-tasks` for the obs tasks in the dependency order above. Each task flows through the
 chain to step 28 (awh rerun) + step 29 (caf target health + audit); `testing -> done` flips only on
 `awh GREEN AND caf CLEAN`. Capture the obs baseline once before the first run
 (`awh eval modules/obs/.awh/goldenset.yaml --base-dir . --seeds 1 --out modules/obs/.awh/eval-baseline.json`).

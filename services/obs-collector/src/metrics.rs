@@ -1,7 +1,7 @@
 //! TASK-OBS-001 §1 #14 — Self-metric family emitted by the supervisor on `:8888`.
 //!
 //! Slice-1 defines the metric names + label sets as constants so call sites in
-//! follow-on FRs (TASK-OBS-002 / TASK-OBS-007 dashboard rules) reference one canonical
+//! follow-on tasks (TASK-OBS-002 / TASK-OBS-007 dashboard rules) reference one canonical
 //! source. The actual exposition is delegated to the upstream `otelcol-contrib`
 //! self-metrics endpoint; the supervisor proxies + decorates with `cyberos_` prefix.
 

@@ -5,12 +5,12 @@ After each batch, the skill emits a short human-readable summary in chat (in add
 ## Per-batch summary
 
 ```
-FR batch <batch_run_id> complete
+Task batch <batch_run_id> complete
 
-Wrote N FR(s):
-  - FR-001: <slug> — PASS (audit verdict: pass, 0 open issues)
-  - FR-002: <slug> — HITL_PAUSE (2 blocking issues — see HITL_BATCH_REQUEST below)
-  - FR-003: <slug> — PASS (audit verdict: pass, 1 warning)
+Wrote N task(s):
+  - TASK-001: <slug> — PASS (audit verdict: pass, 0 open issues)
+  - TASK-002: <slug> — HITL_PAUSE (2 blocking issues — see HITL_BATCH_REQUEST below)
+  - TASK-003: <slug> — PASS (audit verdict: pass, 1 warning)
 
 Manifest:    <output_dir>/manifest.json
 Total time:  <seconds>s

@@ -36,7 +36,7 @@ Harness Wave 1 — read-only daily report aggregating per-skill `self_audit` ano
 
 ## Implementation readiness
 
-The FR is implementation-ready. Estimated effort: ~1 day for the harness core + signal functions + report formatter + CLI subcommand + tests. No external dependencies beyond the Python stdlib + the existing `cyberos.core.reader` MmapWalker.
+The task is implementation-ready. Estimated effort: ~1 day for the harness core + signal functions + report formatter + CLI subcommand + tests. No external dependencies beyond the Python stdlib + the existing `cyberos.core.reader` MmapWalker.
 
 **Score = 10/10.**
 

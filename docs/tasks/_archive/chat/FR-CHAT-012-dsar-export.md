@@ -1166,7 +1166,7 @@ All resolved. Deferred:
 | Sender blocking on subject email (spam filter) | SendGrid bounce | URL via DM only | Operator |
 | Time-zone confusion in SLA deadline | always UTC + 30d | None | None |
 | Multiple DSARs in same minute | unique constraint on (subject, request_id) | each gets unique id | None |
-| Subject creates DSAR right before tenant deletion | tenant deletion blocked? or proceeds? | per tenant lifecycle FR | Operator coordinates |
+| Subject creates DSAR right before tenant deletion | tenant deletion blocked? or proceeds? | per tenant lifecycle task | Operator coordinates |
 | Audit log queries fail | export degraded (no dsar_history.jsonl) | SEV-3 | Operator |
 | Justification reveals confidential admin info | by design (admin chose to include) | None | Operator reviews |
 | Re-issued DSAR after expiry uses new request_id | each is independent | history shows both | None |
@@ -1196,7 +1196,7 @@ All resolved. Deferred:
 - The `requested_by` field in audit distinguishes self-requests from admin-requests; operators reviewing compliance logs filter on this.
 - Justification is stored in `dsar_requests.justification` AND in the memory audit payload, allowing post-export review without DB access.
 - The 30-day SLA gives a 25-day operator window before SEV-1 fires; this is calibrated against typical operator response times in our org.
-- Why we DON'T include subject's authentication history (login times, IP addresses): those are TASK-AUTH-004 owned; that FR has its own DSAR mechanism (slice 4+). Chat DSAR is scoped to chat data.
+- Why we DON'T include subject's authentication history (login times, IP addresses): those are TASK-AUTH-004 owned; that task has its own DSAR mechanism (slice 4+). Chat DSAR is scoped to chat data.
 - The `chat.dsar_url_reused` event is informational; it doesn't automatically rotate the subject's other URLs (that's an operator decision).
 - We considered making the URL contain a one-time token (instead of relying on S3 access log) but S3 doesn't natively support this. The log-based detection is a workable substitute.
 - The subject acknowledgement is OPTIONAL (subject can choose to not click); after 14 days unacked, operator reminder fires; after 30 days, the export is considered "delivered, ack-pending" indefinitely.

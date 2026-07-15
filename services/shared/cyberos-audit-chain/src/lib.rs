@@ -32,7 +32,7 @@ const ALLOWED_OPS: [&str; 4] = ["put", "move", "delete", "view"];
 
 /// Best-effort insert of a genesis audit row into `l1_audit_log` (`op = 'put'`, `prev_hash_hex = NULL`).
 /// Returns the new `seq`. The caller decides what to do on error - the obs callers log and swallow so the
-/// alert route or the view response still completes (the FR's best-effort contract).
+/// alert route or the view response still completes (the task's best-effort contract).
 ///
 /// This is now a thin `'put'` shim over [`emit_genesis_with_op`]; every existing caller (auth, chat, eval,
 /// obs-router, obs-compliance-view, mcp-gateway) keeps its exact 5-argument signature and `'put'` behaviour.

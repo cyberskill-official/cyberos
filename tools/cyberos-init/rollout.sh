@@ -44,14 +44,14 @@ for repo in "$@"; do
     mkdir -p .cyberos/memory && mv .cyberos-memory .cyberos/memory/store && brain_migrated=1
   fi
 
-  # 2. docs/improvement -> docs/tasks/improvement (a normal subfolder; FRs on pickup)
+  # 2. docs/improvement -> docs/tasks/improvement (a normal subfolder; tasks on pickup)
   if [ -d docs/improvement ] && [ ! -e docs/tasks/improvement ]; then
     mkdir -p docs/tasks
     if git mv docs/improvement docs/tasks/improvement 2>/dev/null; then moved=1
     elif mv docs/improvement docs/tasks/improvement 2>/dev/null; then moved=1; fi
   fi
 
-  # 3. vendor the machine (idempotent; never clobbers BACKLOG/FRs/AGENTS/BRAIN)
+  # 3. vendor the machine (idempotent; never clobbers BACKLOG/tasks/AGENTS/BRAIN)
   if ! bash "$PAYLOAD/install.sh" "$repo" >/dev/null 2>&1; then echo "  INSTALL FAILED"; continue; fi
 
   # 3b. drop a stale legacy gitignore line (the store lives inside .cyberos/ now)
@@ -66,16 +66,16 @@ for repo in "$@"; do
       echo ""
       echo "## Conventions (CyberOS)"
       echo ""
-      echo 'One backlog for both classes: rows are `- [status] FR-ID-slug - title`;'
+      echo 'One backlog for both classes: rows are `- [status] TASK-ID-slug - title`;'
       echo '`class: improvement` rows carry an `(improvement)` suffix, product rows are untagged.'
-      echo 'FR frontmatter `status` is the record of truth; this file is the index.'
+      echo 'task frontmatter `status` is the record of truth; this file is the index.'
     } >> "$bl"
     appended=1
   fi
   if [ "$moved" = 1 ] && [ -f "$bl" ] && ! grep -q 'moved from `docs/improvement/`' "$bl" && { [ "$appended" = 1 ] || [ "$had_backlog" = 0 ] || ! pre_dirty "$bl"; }; then
     {
       echo ""
-      echo '- improvement programs: see `improvement/` (moved from `docs/improvement/`; class: improvement work - convert items to FRs on pickup)'
+      echo '- improvement programs: see `improvement/` (moved from `docs/improvement/`; class: improvement work - convert items to tasks on pickup)'
     } >> "$bl"
     appended=1
   fi
@@ -89,7 +89,7 @@ for repo in "$@"; do
     ver="$(cat .cyberos/VERSION 2>/dev/null || echo '?')"
     git -c core.hooksPath=/dev/null commit -q -m "cyberos: adopt unified tasks structure (init v$ver)
 
-All FRs live under docs/tasks (improvement/ is a normal subfolder for
+All tasks live under docs/tasks (improvement/ is a normal subfolder for
 cross-cutting hardening; class: improvement rows share the one BACKLOG.md, tagged
 (improvement)). Vendored machine at .cyberos/ + BRAIN store at .cyberos/memory/store
 are gitignored. No push." && echo "  committed"

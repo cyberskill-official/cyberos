@@ -1,8 +1,16 @@
 ---
 id: TASK-HR-008
 title: "HR performance signal aggregator — read-only consumer of PROJ + TIME + LEARN signals for periodic performance snapshots"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: HR
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P1
@@ -65,7 +73,7 @@ subtasks:
   - "2.5h: tests — 5 test files"
   - "1.0h: CHRO UI for snapshot review"
 
-risk_if_skipped: "Without performance signals, CHRO has no quantitative view of member trajectory → review meetings rely on memory. Without DEC-1860 read-only constraint, this FR could mutate source modules (data integrity risk). Without DEC-1863 immutability, prior-period restatement breaks audit."
+risk_if_skipped: "Without performance signals, CHRO has no quantitative view of member trajectory → review meetings rely on memory. Without DEC-1860 read-only constraint, this task could mutate source modules (data integrity risk). Without DEC-1863 immutability, prior-period restatement breaks audit."
 ---
 
 ## §1 — Description (BCP-14 normative)

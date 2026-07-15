@@ -2,8 +2,16 @@
 # ───── Machine-readable frontmatter ─────
 id: TASK-AI-005
 title: "Tenant-policy YAML loader — per-tenant cap + warn + override + residency"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AI
-priority: MUST
+priority: p0
 status: done
 accepted_at: 2026-05-15
 accepted_by: Stephen Cheng
@@ -32,7 +40,7 @@ source_decisions:
 language: rust 1.81
 service: cyberos/services/ai-gateway/
 new_files:
-  - services/ai-gateway/src/policy.rs                         # already declared in TASK-AI-001; this FR populates it
+  - services/ai-gateway/src/policy.rs                         # already declared in TASK-AI-001; this task populates it
   - services/ai-gateway/src/policy/loader.rs
   - services/ai-gateway/src/policy/schema.rs
   - services/ai-gateway/src/policy/cache.rs
@@ -50,7 +58,7 @@ allowed_tools:
   - file_write: services/ai-gateway/{src,tests,config}/**
   - bash: cargo test -p cyberos-ai-gateway policy
 disallowed_tools:
-  - in-place edit of services/ai-gateway/src/cost_ledger.rs (TASK-AI-001 owns it; this FR is consumed by it)
+  - in-place edit of services/ai-gateway/src/cost_ledger.rs (TASK-AI-001 owns it; this task is consumed by it)
   - hardcode any tenant_id in the loader (multi-tenant invariant)
   - shell-out to read YAML (must use serde_yaml in-process)
 
@@ -63,7 +71,7 @@ subtasks:
   - "1.0h: in-memory cache with read-write lock"
   - "0.5h: error taxonomy + structured logs (PolicyMissing vs PolicyInvalid vs IOError)"
   - "1.0h: integration tests (valid load, invalid schema, file watch, cache, missing file)"
-risk_if_skipped: "TASK-AI-001 has no source of per-tenant caps. Every call would use a hardcoded global default, defeating the entire point of the cost-of-everything gate (each tenant has different caps). Worse, the override/residency/ZDR knobs are all keyed to tenant policy — they all fail without this FR."
+risk_if_skipped: "TASK-AI-001 has no source of per-tenant caps. Every call would use a hardcoded global default, defeating the entire point of the cost-of-everything gate (each tenant has different caps). Worse, the override/residency/ZDR knobs are all keyed to tenant policy — they all fail without this task."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -88,7 +96,7 @@ The loader:
 14. **SHOULD** emit OTel metrics: `ai_policy_cache_hits_total{tenant_id}` (counter), `ai_policy_cache_misses_total{tenant_id}` (counter), `ai_policy_reload_failures_total{tenant_id,reason}` (counter), `ai_policy_loaded_tenants` (gauge), `ai_policy_validation_failures_total{kind}` (counter; kind ∈ schema/range/charset/missing-field).
 15. **MUST** sort the loader's `HashMap<String, Arc<TenantPolicy>>` aggregation by tenant_id when iterated for OBS metric emission, log lines on load-success, and the `ai.policy_reload_completed` audit row's `extra.tenants_loaded: Vec<String>` field per task-audit skill §3.9 rule 27 (determinism). Two consecutive runs on the same set of YAML files MUST produce byte-identical sequences. AC #15 asserts `assert_eq!` on the captured `Vec<String>` across two loads.
 
-This FR is the static configuration layer of the AI Gateway. At slice 1 the YAML files live in-repo (checked in to source); at P2 (TASK-TEN-004) the TEN module replaces this with a per-tenant database table. The interface stays the same — only the loader's data source changes.
+This task is the static configuration layer of the AI Gateway. At slice 1 the YAML files live in-repo (checked in to source); at P2 (TASK-TEN-004) the TEN module replaces this with a per-tenant database table. The interface stays the same — only the loader's data source changes.
 
 ---
 
@@ -630,7 +638,7 @@ async fn handle_fs_event(event: Event, config_dir: &Path) {
 ## §7 — Dependencies
 
 **Code dependencies:**
-- None — this FR is foundational. TASK-AI-001 consumes its output; no upstream code dependency.
+- None — this task is foundational. TASK-AI-001 consumes its output; no upstream code dependency.
 
 **Crate dependencies (Cargo.toml additions):**
 - `serde_yaml = "0.9"` — YAML parsing.
@@ -774,7 +782,7 @@ All resolved 2026-05-15 (round 2). Promoted to §1 normative clauses:
 2. **~~Hot-reload latency on polling filesystems~~** → §1 #12 (detect + log; 35s budget on polling). Was Q2.
 3. **~~Provider model_alias_map overlap with cost table~~** → deferred to slice 4 (TASK-AI-007 + alias_profile reference). Was Q3.
 4. **~~allowed_personas enforcement~~** → TASK-AI-001 §1 #13 (enforced in `precheck()`). Was Q4.
-5. **~~policy validate CLI subcommand~~** → §1 #13 of this FR exposes `validate_yaml()`; TASK-AI-021 wraps it. Was Q5.
+5. **~~policy validate CLI subcommand~~** → §1 #13 of this task exposes `validate_yaml()`; TASK-AI-021 wraps it. Was Q5.
 
 ---
 
@@ -798,7 +806,7 @@ All resolved 2026-05-15 (round 2). Promoted to §1 normative clauses:
 
 ## §11 — Notes
 
-- This FR is named "tenant-policy loader" but it loads the entire policy surface, not just the AI-specific knobs. As more AI Gateway concerns surface (caching, residency, persona pinning), they all hang off `TenantPolicy.ai_policy` rather than scattering across separate YAMLs. The `ai_policy` namespacing leaves room for `auth_policy`, `obs_policy`, etc., at P1+.
+- This task is named "tenant-policy loader" but it loads the entire policy surface, not just the AI-specific knobs. As more AI Gateway concerns surface (caching, residency, persona pinning), they all hang off `TenantPolicy.ai_policy` rather than scattering across separate YAMLs. The `ai_policy` namespacing leaves room for `auth_policy`, `obs_policy`, etc., at P1+.
 - At slice 1 there is exactly one tenant: `org:cyberskill`. The loader is over-engineered for a single tenant by design — building the multi-tenant story now means we don't have to retrofit it when the second tenant lands.
 - The schema-regeneration CI gate (§5) is light but powerful: it prevents the kind of silent schema drift that bites multi-month projects when a developer adds a field to the Rust struct but forgets to update the YAML schema docs. The `gen-schema` binary is ~15 lines of `schemars` output.
 - The `notify` crate's `RecommendedWatcher` chooses inotify (Linux), FSEvents (macOS), or ReadDirectoryChangesW (Windows). All three are sub-millisecond on local filesystems. Don't be tempted to swap for a polling-only crate "for simplicity" — the latency difference matters for cost-runaway incidents.
@@ -809,4 +817,4 @@ All resolved 2026-05-15 (round 2). Promoted to §1 normative clauses:
 
 *End of TASK-AI-005. Run `task-audit` next: `cargo run -p cyberos-skill-cli -- run task-audit --input '{"fr_path": "docs/tasks/ai/TASK-AI-005-tenant-policy-yaml-loader/spec.md"}'`*
 
-**Slice-1 status after TASK-AI-005:** all 5 slice-1 FRs (TASK-AI-001 .. TASK-AI-005) are now `status: draft`. Next step per workflow §4: run `task-audit` on the batch, then the user reviews and accepts. After accept, slice 1 is implementable as 5 PRs (one per FR) in dependency order: TASK-AI-005 (loader) → TASK-AI-003 (audit bridge) → TASK-AI-001 (precheck) → TASK-AI-002 (reconcile) → TASK-AI-004 (cleanup).
+**Slice-1 status after TASK-AI-005:** all 5 slice-1 tasks (TASK-AI-001 .. TASK-AI-005) are now `status: draft`. Next step per workflow §4: run `task-audit` on the batch, then the user reviews and accepts. After accept, slice 1 is implementable as 5 PRs (one per task) in dependency order: TASK-AI-005 (loader) → TASK-AI-003 (audit bridge) → TASK-AI-001 (precheck) → TASK-AI-002 (reconcile) → TASK-AI-004 (cleanup).

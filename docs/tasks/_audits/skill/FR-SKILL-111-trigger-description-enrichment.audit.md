@@ -12,7 +12,7 @@ authoring_md_compliance: 2026-05-19 (per task-audit skill §3.12 — 8 canonical
 
 ## §1 — Verdict summary
 
-TASK-SKILL-111 authored direct-to-10/10 with one mid-loop expansion. ~640 lines. 15 §1 normative clauses (description fields format + length budget + trigger-phrase form + bracket discipline + negative-trigger handling + file-type guidance + verb-stem rule + output-artefact naming + multi-line YAML + locale-default + auditor severity + auto-fix prohibition + CLI error sub-codes + lazy-backfill discipline + body-section coexistence). 11 §2 rationale paragraphs. Full Rust validator + JSONSchema diff + RUBRIC entry + template diff + CLI example in §3. 21 numbered ACs. 11 Rust unit tests + auditor-fixture spec. 13 failure modes. 8 implementation notes. Cross-FR reciprocity (depends_on: TASK-SKILL-103) verified.
+TASK-SKILL-111 authored direct-to-10/10 with one mid-loop expansion. ~640 lines. 15 §1 normative clauses (description fields format + length budget + trigger-phrase form + bracket discipline + negative-trigger handling + file-type guidance + verb-stem rule + output-artefact naming + multi-line YAML + locale-default + auditor severity + auto-fix prohibition + CLI error sub-codes + lazy-backfill discipline + body-section coexistence). 11 §2 rationale paragraphs. Full Rust validator + JSONSchema diff + RUBRIC entry + template diff + CLI example in §3. 21 numbered ACs. 11 Rust unit tests + auditor-fixture spec. 13 failure modes. 8 implementation notes. Cross-task reciprocity (depends_on: TASK-SKILL-103) verified.
 
 ## §2 — Findings (all resolved during authoring)
 
@@ -44,19 +44,19 @@ Initial verb-stem regex had 12 verbs; missed common CyberOS verbs like `enforce`
 
 All 8 mechanical concerns addressed during authoring. **Score = 10/10.** Ready to ship + transition `draft → accepted`.
 
-Cross-FR sanity check:
+Cross-task sanity check:
 - `depends_on: [TASK-SKILL-103]` is reciprocal — TASK-SKILL-103's `blocks:` will be updated to include TASK-SKILL-111 in a follow-up housekeeping commit (per task-audit skill §3.1 rule 2). Operator note: this reciprocity sweep can be batched with TASK-SKILL-112's similar dependency.
-- `related_tasks:` enumerates TASK-SKILL-101 (memory integration — orthogonal), TASK-SKILL-103 (parent frontmatter spec — depended on), TASK-SKILL-112 (complementary — trigger-tests), TASK-SKILL-113 (sketch only — XML-free frontmatter). All four exist as draft or accepted FRs in the index.
+- `related_tasks:` enumerates TASK-SKILL-101 (memory integration — orthogonal), TASK-SKILL-103 (parent frontmatter spec — depended on), TASK-SKILL-112 (complementary — trigger-tests), TASK-SKILL-113 (sketch only — XML-free frontmatter). All four exist as draft or accepted tasks in the index.
 
 ## §4 — Implementation discoveries (2026-05-19 partial impl)
 
 During the same-session implementation pass:
 
 - **Rust validator deferred.** `services/skill-broker/` crate doesn't exist yet — TASK-SKILL-103's broker is specced but not implemented. The Rust description_validator + JSONSchema mirror are deferred until TASK-SKILL-103 ships the broker scaffold. No spec change needed; TASK-SKILL-111's Rust code lands when its prerequisite does.
-- **RUBRIC.md location correction.** TASK-SKILL-111 §3 placed FM-112 in `task-audit/RUBRIC.md` — but inspection revealed that file is the FR-artefact rubric (`audit_rubric@2.0`), not the skill-bundle rubric. Created `modules/skill/SKILL_BUNDLE_RUBRIC.md` (`skill_bundle_rubric@1.0`) using `SKB-` prefix to avoid namespace collision. TASK-SKILL-111's rules landed as SKB-020..023 (not FM-112). Spec-vs-impl note: future references to "FM-112" should be read as "SKB-020..023".
+- **RUBRIC.md location correction.** TASK-SKILL-111 §3 placed FM-112 in `task-audit/RUBRIC.md` — but inspection revealed that file is the task-artefact rubric (`audit_rubric@2.0`), not the skill-bundle rubric. Created `modules/skill/SKILL_BUNDLE_RUBRIC.md` (`skill_bundle_rubric@1.0`) using `SKB-` prefix to avoid namespace collision. TASK-SKILL-111's rules landed as SKB-020..023 (not FM-112). Spec-vs-impl note: future references to "FM-112" should be read as "SKB-020..023".
 - **3 exemplars backfilled live.** task-author, task-audit, product-requirements-document-author all carry enriched descriptions (510-673 chars, 4 quoted trigger phrases each, zero XML brackets). Verified by parse + AC #1 + AC #15-17.
 - **Templates updated.** `_template/author/SKILL.md` + `_template/audit/SKILL.md` carry the new description format; the YAML folded scalar `>-` form is used (preferred over `|` per §1 #9).
-- **134 pre-existing placeholder leaks discovered.** Many production skills (non-exemplar) carry stale template-syntax `<placeholder>` in `metadata.stage`, `description`, and other fields — inherited from earlier scaffold runs that never substituted. Not regressions from this FR; pre-existing tech debt. Operator note: queue TASK-SKILL-115 or equivalent to sweep stale placeholders in next maintenance cycle.
+- **134 pre-existing placeholder leaks discovered.** Many production skills (non-exemplar) carry stale template-syntax `<placeholder>` in `metadata.stage`, `description`, and other fields — inherited from earlier scaffold runs that never substituted. Not regressions from this task; pre-existing tech debt. Operator note: queue TASK-SKILL-115 or equivalent to sweep stale placeholders in next maintenance cycle.
 
 **Post-impl score remains 10/10.** No spec amendments needed; discoveries are operational (RUBRIC location + deferred Rust scope).
 

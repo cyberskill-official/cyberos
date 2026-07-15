@@ -1,10 +1,10 @@
 # PORTAL module — task index
 
-_Generated 2026-05-17 — 8 FRs, 61 engineering-hours total._
+_Generated 2026-05-17 — 8 tasks, 61 engineering-hours total._
 
-## FRs
+## tasks
 
-| FR | Priority | Slice | Hours | Title |
+| Task | Priority | Slice | Hours | Title |
 |---|---|---|---:|---|
 | [TASK-PORTAL-001](TASK-PORTAL-001-scoped-views/spec.md) | MUST | 1 | 12 | PORTAL scoped read-only views — PROJ/INV/DOC/CHAT filtered by Engagement membership + sync_class=cli |
 | [TASK-PORTAL-002](TASK-PORTAL-002-per-tenant-brand-pack/spec.md) | MUST | 1 | 8 | PORTAL per-tenant brand pack — logo + colour palette + custom CNAME + email template overrides + ACM |

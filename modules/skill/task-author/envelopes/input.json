@@ -81,7 +81,7 @@
         "engineering-spec@1",
         "task@1"
       ],
-      "description": "Active FR template profile. Resolution: invocation override > .cyberos/config.yaml fr_template > default engineering-spec@1 (TASK-CUO-208; profiles normative in references/TEMPLATE_PROFILES.md)."
+      "description": "Active task template profile. Resolution: invocation override > .cyberos/config.yaml fr_template > default engineering-spec@1 (TASK-CUO-208; profiles normative in references/TEMPLATE_PROFILES.md)."
     }
   }
 }

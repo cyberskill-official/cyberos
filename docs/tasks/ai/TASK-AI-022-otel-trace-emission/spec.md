@@ -2,8 +2,16 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future fr-catalog renderer) ─────
 id: TASK-AI-022
 title: "OpenTelemetry trace + span emission for every call (caller → router → provider → response) with W3C TraceContext + PII-safe attributes"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AI
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P0
@@ -83,7 +91,7 @@ subtasks:
   - "0.5h: <1ms overhead benchmark (otel_overhead_benchmark_test.rs comparing spans-on vs spans-off)"
   - "0.5h: span-names.md reference doc (canonical names + attributes per span)"
   - "1.0h: Tests — span tree well-formed, trace context propagated, PII lint, overhead, error sampling"
-risk_if_skipped: "TASK-OBS-004 (LangSmith integration) and TASK-OBS-005 (cross-pillar correlation) have nothing to correlate against. OBS investigators can't trace 'why was this call slow at 14:32 for tenant_alpha?' end-to-end — every request becomes a black box. NFR-PERF-01 latency SLOs become unmeasurable (you can measure aggregate latency but can't decompose into precheck/router/provider/reconcile). First production performance regression takes days to debug instead of minutes; first incident review can't reconstruct the failure path. The OBS pillar's value proposition rests on this FR; without it, the pillar is a logs-only graveyard."
+risk_if_skipped: "TASK-OBS-004 (LangSmith integration) and TASK-OBS-005 (cross-pillar correlation) have nothing to correlate against. OBS investigators can't trace 'why was this call slow at 14:32 for tenant_alpha?' end-to-end — every request becomes a black box. NFR-PERF-01 latency SLOs become unmeasurable (you can measure aggregate latency but can't decompose into precheck/router/provider/reconcile). First production performance regression takes days to debug instead of minutes; first incident review can't reconstruct the failure path. The OBS pillar's value proposition rests on this task; without it, the pillar is a logs-only graveyard."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -112,7 +120,7 @@ The AI Gateway service **MUST** emit OpenTelemetry traces for every request (cha
     - Schedule delay: 5s (export on either max_export_batch_size OR 5s elapsed).
 14. **MUST** gracefully degrade on collector unreachability: dropped spans increment `ai_gateway_otel_spans_dropped_total{reason}` (reason ∈ `queue_full | export_timeout | collector_unreachable`). Sustained drop rate > 1% over 5 minutes triggers OBS sev-2 alarm. The gateway never blocks on OTel — span emission is fire-and-forget.
 15. **MUST** lint at compile-time (via `pii_lint.rs` AST walk in CI) that EVERY span attribute uses a key declared in `attributes.rs`. New attributes require explicit addition to `attributes.rs` with a comment explaining why it's PII-safe. The lint is the structural defence against accidental PII leakage.
-16. **SHOULD** emit OTel METRICS in parallel to traces (the metrics enumerated in each prior FR's `SHOULD emit OTel metrics` clause). Metrics use the same OTLP endpoint; the OBS collector demuxes traces vs. metrics. Histogram metrics report p50, p95, p99 per attribute combination.
+16. **SHOULD** emit OTel METRICS in parallel to traces (the metrics enumerated in each prior task's `SHOULD emit OTel metrics` clause). Metrics use the same OTLP endpoint; the OBS collector demuxes traces vs. metrics. Histogram metrics report p50, p95, p99 per attribute combination.
 
 ---
 
@@ -120,7 +128,7 @@ The AI Gateway service **MUST** emit OpenTelemetry traces for every request (cha
 
 **Why OTel and not native (e.g., Datadog/Honeycomb SDKs)?** OTel is the vendor-neutral standard. CyberOS's OBS pillar (TASK-OBS-001) ships an OTel collector; tenants who self-host or run their own OBS stack get OTLP-compatible traces "for free." Vendor-locked SDKs would force tenants into Datadog or Honeycomb specifically. The small overhead of running through OTel's intermediate representation buys vendor-portability.
 
-**Why W3C TraceContext, not B3 or Jaeger-native (§1 #2)?** W3C TraceContext is the only IETF-standardised propagation format. B3 (Zipkin's format) and Jaeger-native are widely used but not standardised; future tracing tools may not support them. Choosing W3C aligns with where the ecosystem is going. The DEC-103 decision predates this FR; this FR is the implementation.
+**Why W3C TraceContext, not B3 or Jaeger-native (§1 #2)?** W3C TraceContext is the only IETF-standardised propagation format. B3 (Zipkin's format) and Jaeger-native are widely used but not standardised; future tracing tools may not support them. Choosing W3C aligns with where the ecosystem is going. The DEC-103 decision predates this task; this task is the implementation.
 
 **Why PII-out-of-attributes is a structural concern, not a runtime one (§1 #6)?** Span attributes are stored, queried, indexed, and often mirrored to multiple analysis tools (Tempo, Honeycomb, Datadog, internal SIEM). A PII leak into one attribute can fan out to many storage locations — each with different access controls and retention. Preventing the leak at the call site (typed attribute keys + AST lint) is much cheaper than detecting and scrubbing at the collector level (which is reactive and incomplete). This is the same prevention-vs-detection principle applied elsewhere (TASK-AI-011 redaction, TASK-AI-018 cache isolation).
 
@@ -128,7 +136,7 @@ The AI Gateway service **MUST** emit OpenTelemetry traces for every request (cha
 
 **Why 100% sampling on errors (§1 #10)?** Errors are the high-value debugging cases. A trace of a successful happy-path call is mildly interesting; a trace of a 500 is extremely interesting. Tail-based sampling at the collector reduces happy-path volume by 90% while preserving every error — the right shape for ops investigation. Doing the sampling at the gateway would force a decision before knowing the outcome (root span starts before status is known); collector-side tail sampling waits until all child spans are seen.
 
-**Why baggage propagation (§1 #9)?** Without baggage, downstream services (KB module spans for the same logical request) can't easily attribute their work to a tenant or a request. They'd have to re-derive from request bodies (parsing, authentication, etc.) — duplicating work. Baggage is the thin context-propagation primitive: small set of trustworthy values, propagated by header. The OTel SDK handles baggage natively; this FR just specifies which values to put in.
+**Why baggage propagation (§1 #9)?** Without baggage, downstream services (KB module spans for the same logical request) can't easily attribute their work to a tenant or a request. They'd have to re-derive from request bodies (parsing, authentication, etc.) — duplicating work. Baggage is the thin context-propagation primitive: small set of trustworthy values, propagated by header. The OTel SDK handles baggage natively; this task just specifies which values to put in.
 
 **Why span events for retries (§1 #8) instead of separate spans?** Retries on the same provider attempt are operationally one logical call (the developer cares about end-to-end provider call latency including retries). Separate spans would inflate the trace tree and obscure the failover-vs-retry distinction. Events on the same span give debugging context (when did the retry happen? what was the prior failure?) without polluting the tree structure. Failover IS a separate span because it represents a different provider — a structurally distinct operation.
 
@@ -219,7 +227,7 @@ pub const RETRY_ATTEMPT:       &str = "retry.attempt";
 pub const RETRY_BACKOFF_MS:    &str = "retry.backoff_ms";
 pub const RETRY_PRIOR_STATUS:  &str = "retry.prior_status_code";
 
-// FORBIDDEN at compile time (these are PII; if a future need emerges, requires FR amendment + DPO sign-off):
+// FORBIDDEN at compile time (these are PII; if a future need emerges, requires task amendment + DPO sign-off):
 // pub const USER_EMAIL:        &str = ... — would leak personal email
 // pub const PROMPT_TEXT:       &str = ... — would leak prompt content
 // pub const RESPONSE_TEXT:     &str = ... — would leak response content
@@ -665,9 +673,9 @@ pub async fn call_provider_attempt(req: &ChatCompleteRequest, provider: Provider
 
 ## §7 — Dependencies
 
-### Code dependencies (other FRs/modules)
+### Code dependencies (other tasks/modules)
 
-- **TASK-AI-008** — Router exposes `call_provider`; this FR wraps it with span instrumentation.
+- **TASK-AI-008** — Router exposes `call_provider`; this task wraps it with span instrumentation.
 - **TASK-AI-001** — `cost_ledger::precheck` and `reconcile` get span instrumentation.
 - **TASK-AI-002** — `ai.invocation` rows correlate with traces via `request_id` attribute.
 - **TASK-AI-009** — Circuit breaker retries become span events on the same `provider_call` span.
@@ -675,11 +683,11 @@ pub async fn call_provider_attempt(req: &ChatCompleteRequest, provider: Provider
 - **TASK-AI-014** — `persona_load` span carries `agent_persona` from TASK-AI-014's handle.
 - **TASK-AI-017** — `cache_lookup` span carries `cache_state` (hit/miss/skipped/error).
 - **TASK-AI-019/020** — Embedding/rerank sidecar HTTP calls carry traceparent.
-- **TASK-AI-021** — CLI mutations emit memory audit rows; this FR adds spans for the CLI commands themselves (separate concern).
+- **TASK-AI-021** — CLI mutations emit memory audit rows; this task adds spans for the CLI commands themselves (separate concern).
 - **TASK-OBS-001** — Deploys the OTel collector at localhost:4317.
 - **TASK-OBS-004** — LangSmith integration consumes propagated trace context to correlate LLM-side traces.
 - **TASK-OBS-005** — Cross-pillar correlation depends on W3C TraceContext propagation.
-- **TASK-OBS-006** — Tail-based sampling at the collector; this FR samples 100% at the gateway.
+- **TASK-OBS-006** — Tail-based sampling at the collector; this task samples 100% at the gateway.
 
 ### Concept dependencies (shared types)
 
@@ -803,12 +811,12 @@ WARN  reason=collector_unreachable dropped_count=42 elapsed=35s
 
 ## §9 — Open questions
 
-All resolved at authoring time. Items deferred to later FRs:
+All resolved at authoring time. Items deferred to later tasks:
 
-- Tail-based sampling configuration AT the collector — TASK-OBS-006 owns; this FR samples 100% at gateway.
+- Tail-based sampling configuration AT the collector — TASK-OBS-006 owns; this task samples 100% at gateway.
 - Span-attribute schema versioning (e.g., `ai_gateway.outcome.v2 = ...`) — out of scope; current convention is "rename = breaking change; add new key for new semantics."
 - Continuous-profiling integration (pyroscope, OTel profile signal) — slice 6+; TASK-OBS-008 area.
-- Custom span exporter for tenant-self-hosted observability — slice 6+; current FR ships gateway-side OBS pillar only.
+- Custom span exporter for tenant-self-hosted observability — slice 6+; current task ships gateway-side OBS pillar only.
 - LLM-call-content tracing (prompt + response in trace, like LangSmith does) — TASK-OBS-004 owns; structured to NOT leak PII via redacted-prompt-only.
 
 ---
@@ -822,7 +830,7 @@ All resolved at authoring time. Items deferred to later FRs:
 | Collector overload (4317 backpressure) | Slow export | Spans dropped after `export_timeout` (30s); metric `spans_dropped_total{export_timeout}` | Auto-scale collector |
 | Span attribute too large | OTel SDK truncates internally | Truncation logged at INFO | Caller checks attribute sizes |
 | PII accidentally added to span (string-literal key) | `otel_pii_lint_test` AST walk in CI | PR blocked | Add key to `attributes.rs` with PII-safe comment OR remove call site |
-| PII accidentally added via dynamic key | Runtime detection by FR-OBS PII-scrub on collector | Spans flagged sev-1 | Engineer fixes call site; PR with attributes.rs update |
+| PII accidentally added via dynamic key | Runtime detection by task-OBS PII-scrub on collector | Spans flagged sev-1 | Engineer fixes call site; PR with attributes.rs update |
 | Trace context invalid (malformed traceparent) | Parse error | New trace_id generated; WARN log with hash16 of bad value | Self-resolves; investigate caller for malformed-emit pattern |
 | Outgoing HTTP missing traceparent | Integration test asserts header presence | PR blocked | Add `propagation::inject_context_into_headers` to provider adapter |
 | Span tree malformed (orphan child without parent) | Trace UI shows orphans; integration test asserts parent_id matches | PR blocked | Fix `tracing::instrument` invocation order |

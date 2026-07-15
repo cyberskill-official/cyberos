@@ -45,4 +45,4 @@ second, as a pattern source for the dream loop. claude-mem is worth a verdict mo
 it beats the memory module on anything; expect a short note either way.
 
 Next action per pick: a Stage-0 verdict note at `docs/absorptions/<source>-absorption.md` - read in
-full, state overlap/gaps/license, and make the worth-it call before any FR mapping or vendoring.
+full, state overlap/gaps/license, and make the worth-it call before any task mapping or vendoring.

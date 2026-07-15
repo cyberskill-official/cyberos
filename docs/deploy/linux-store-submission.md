@@ -30,7 +30,7 @@ Install the CI-built artifact locally: `snap install --dangerous cyberos_*.snap`
 ### Operational notes
 
 - `SNAPCRAFT_STORE_CREDENTIALS` is a bounded-validity macaroon — `snapcore/action-publish` auth failures mean re-export + rotate (routine ops).
-- snapcraft.yaml carries `version: '1.0.0'` literal — **not yet wired into `scripts/stamp-release-version.mjs`**; until a follow-up wires it (or switches to `adopt-info`), bump it manually per release (disclosed in the FR review packet as a known drift risk).
+- snapcraft.yaml carries `version: '1.0.0'` literal — **not yet wired into `scripts/stamp-release-version.mjs`**; until a follow-up wires it (or switches to `adopt-info`), bump it manually per release (disclosed in the task review packet as a known drift risk).
 
 ## Section 2 — Flathub
 

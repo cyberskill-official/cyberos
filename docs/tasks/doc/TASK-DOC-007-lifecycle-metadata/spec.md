@@ -1,8 +1,16 @@
 ---
 id: TASK-DOC-007
 title: "DOC lifecycle metadata — parties + effective_date + expiry_date + renewal_terms + parent_contract_id for contract document substrate"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: DOC
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P2
@@ -220,7 +228,7 @@ async fn parent_chain_returns_ancestors() {
 - §11.2 Nightly cron runs at 03:00 tenant_tz, recomputes all docs with expiry_date set.
 - §11.3 Parent chain query recursive CTE: `WITH RECURSIVE chain AS (...)`.
 - §11.4 memory audit body: doc_id, status, status_computed_at; parties JSONB hashed.
-- §11.5 Future FR can ingest contract PDFs and auto-extract parties via TASK-AI-003 — this FR provides the schema.
+- §11.5 Future task can ingest contract PDFs and auto-extract parties via TASK-AI-003 — this task provides the schema.
 
 ---
 

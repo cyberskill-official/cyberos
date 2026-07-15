@@ -1,10 +1,17 @@
 ---
 id: TASK-CUO-206
 title: "Ship run-state manifest (ship-manifest@1) - resumable 31-step chain + depends_on-aware queue selection"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-07-12T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: cuo
-priority: MUST
+priority: p0
 status: done
-class: product
 verify: T
 phase: Wave C - strengthen the workflows
 owner: Stephen Cheng (CTO)
@@ -21,7 +28,7 @@ source_pages:
 source_decisions:
   - "2026-07-12 operator goal: the two workflows will run constantly across many repos; an interrupted ship (session end, crash, context limit) currently restarts the 31-step chain from memory of the backlog status alone, re-doing completed artefact steps."
   - "Precedent: task-author already runs on an ephemeral re-entrancy manifest (two-phase atomic writes, phase computed from state). Ship gets the same discipline."
-  - "Manifests are session state, not backlog artifacts: gitignored, FR frontmatter stays the record of truth."
+  - "Manifests are session state, not backlog artifacts: gitignored, task frontmatter stays the record of truth."
 language: markdown + JSON (workflow doc + schema contract) + python (schema test)
 service: modules/cuo/
 new_files:
@@ -38,16 +45,16 @@ modified_files:
 
 ## §1 - Description
 
-Give /ship-tasks the same re-entrancy anchor its authoring sibling already has: a per-FR manifest that records which of the 31 steps completed, over which artefacts, so a new session resumes instead of re-deriving - plus deterministic queue selection when no FR id is given.
+Give /ship-tasks the same re-entrancy anchor its authoring sibling already has: a per-task manifest that records which of the 31 steps completed, over which artefacts, so a new session resumes instead of re-deriving - plus deterministic queue selection when no task id is given.
 
 Normative clauses:
 
-1. A contract `ship-manifest@1` MUST be defined at `modules/skill/contracts/task/SHIP-MANIFEST.md` with fields: `manifest_version` (const `ship-manifest@1`), `task_id`, `fr_sha256` (hash of the FR spec file at run start - a later mismatch marks the whole manifest stale), `workflow_version` (from the workflow doc), `started_at`, `updated_at`, `current_step` (1..31), `routed_back_count`, `steps[]` - each `{index, skill, status (pending|done|failed|skipped-conditional), artefact_path, artefact_sha256, verdict, completed_at}` - and `hitl` (`{gate: null|review_approval|final_acceptance, requested_at}`).
-2. The ship workflow MUST write the manifest to `docs/tasks/.workflow/<FR-ID>.ship.json` after EVERY completed, failed, or conditionally-skipped step, using two-phase atomic writes (`.tmp.<nonce>` then rename), mirroring the memory-protocol write discipline.
-3. On invocation for an FR whose manifest exists with matching `workflow_version`, ship MUST resume at the first non-done step AFTER re-verifying every recorded `artefact_sha256` against disk; a mismatch marks that step and all later steps stale (redo from the earliest stale step). A `workflow_version` mismatch MUST route to needs_human, never a silent mixed-version run.
-4. Invoked WITHOUT an FR id, ship MUST select deterministically: among FRs at `ready_to_implement` whose `depends_on` are all `done`, order by priority (MUST before SHOULD before COULD), then `created` ascending, then id ascending; the selection and its reasoning line MUST be echoed to the operator before step 1 runs.
-5. Manifests MUST be gitignored via a scaffolded `docs/tasks/.workflow/.gitignore` (content: `*.ship.json`); FR frontmatter and BACKLOG.md remain the only committed state. `/init` MUST scaffold the same ignore file in target repos.
-6. On the FR reaching `done` (HITL gate 2 passed), ship MUST delete the manifest; on route-back to `ready_to_implement`, ship MUST keep it with `routed_back_count` incremented (the next run starts fresh at step 1 by §1 #3's staleness rule but retains the count and history).
+1. A contract `ship-manifest@1` MUST be defined at `modules/skill/contracts/task/SHIP-MANIFEST.md` with fields: `manifest_version` (const `ship-manifest@1`), `task_id`, `fr_sha256` (hash of the task spec file at run start - a later mismatch marks the whole manifest stale), `workflow_version` (from the workflow doc), `started_at`, `updated_at`, `current_step` (1..31), `routed_back_count`, `steps[]` - each `{index, skill, status (pending|done|failed|skipped-conditional), artefact_path, artefact_sha256, verdict, completed_at}` - and `hitl` (`{gate: null|review_approval|final_acceptance, requested_at}`).
+2. The ship workflow MUST write the manifest to `docs/tasks/.workflow/<task-ID>.ship.json` after EVERY completed, failed, or conditionally-skipped step, using two-phase atomic writes (`.tmp.<nonce>` then rename), mirroring the memory-protocol write discipline.
+3. On invocation for a task whose manifest exists with matching `workflow_version`, ship MUST resume at the first non-done step AFTER re-verifying every recorded `artefact_sha256` against disk; a mismatch marks that step and all later steps stale (redo from the earliest stale step). A `workflow_version` mismatch MUST route to needs_human, never a silent mixed-version run.
+4. Invoked WITHOUT a task id, ship MUST select deterministically: among tasks at `ready_to_implement` whose `depends_on` are all `done`, order by priority (MUST before SHOULD before COULD), then `created` ascending, then id ascending; the selection and its reasoning line MUST be echoed to the operator before step 1 runs.
+5. Manifests MUST be gitignored via a scaffolded `docs/tasks/.workflow/.gitignore` (content: `*.ship.json`); task frontmatter and BACKLOG.md remain the only committed state. `/init` MUST scaffold the same ignore file in target repos.
+6. On the task reaching `done` (HITL gate 2 passed), ship MUST delete the manifest; on route-back to `ready_to_implement`, ship MUST keep it with `routed_back_count` incremented (the next run starts fresh at step 1 by §1 #3's staleness rule but retains the count and history).
 7. The workflow doc MUST gain a `## Resume semantics` section and EXECUTION-DISCIPLINE.md a pointer to it; the plugin wrapper SKILL.md MUST mention resume-on-restart so agents look for the manifest before starting step 1.
 8. HITL gates MUST NOT be inferable from the manifest alone: resuming at a gate step re-requests the human approval; a recorded `hitl.requested_at` never substitutes for the approval itself.
 
@@ -97,7 +104,7 @@ def test_schema_fields_and_example_validate():      # AC 1
 def test_atomic_write_discipline_documented():      # AC 2  (workflow doc contains the write-point + tmp/rename clauses)
 def test_resume_plan_intact_and_stale():            # AC 3  (pure function over fixture manifests + artefact dir)
 def test_workflow_version_mismatch_needs_human():   # AC 4
-def test_queue_selection_total_order():             # AC 5  (fixture FR set -> expected id; idempotent)
+def test_queue_selection_total_order():             # AC 5  (fixture task set -> expected id; idempotent)
 def test_gitignore_scaffold():                      # AC 6
 def test_done_deletes_routeback_keeps():            # AC 7
 def test_hitl_reask_on_resume():                    # AC 8  (doc assertion + fixture plan marks gate pending)
@@ -107,7 +114,7 @@ def test_hitl_reask_on_resume():                    # AC 8  (doc assertion + fix
 
 ## §6 - Implementation skeleton
 
-SHIP-MANIFEST.md mirrors MANIFEST_SCHEMA.md's structure (field table, lifecycle, atomicity, staleness). Workflow doc: add manifest write-points to the step protocol preamble, the Resume semantics section (staleness rule, version rule, gate re-ask), and the queue algorithm where the doc currently says "next eligible FR".
+SHIP-MANIFEST.md mirrors MANIFEST_SCHEMA.md's structure (field table, lifecycle, atomicity, staleness). Workflow doc: add manifest write-points to the step protocol preamble, the Resume semantics section (staleness rule, version rule, gate re-ask), and the queue algorithm where the doc currently says "next eligible task".
 
 ## §7 - Dependencies
 
@@ -123,18 +130,18 @@ resume TASK-TEN-208: steps 1-10 verified (10 artefacts, hashes OK), continuing a
 
 ## §9 - Open questions
 
-None blocking. Cross-repo parallel shipping (two agents, two different FRs, one repo) is naturally safe - one manifest per FR; two agents on the SAME FR is out of scope and remains an operator error the backlog's status cell already surfaces.
+None blocking. Cross-repo parallel shipping (two agents, two different tasks, one repo) is naturally safe - one manifest per task; two agents on the SAME task is out of scope and remains an operator error the backlog's status cell already surfaces.
 
 ## §10 - Failure modes inventory
 
 1. Crash between artefact write and manifest write - resume re-verifies hashes; the missing manifest entry means the step re-runs, idempotent by skill design.
 2. Manifest edited by hand to skip a gate - §1 #8: gates re-ask regardless of manifest content; the manifest cannot authorize anything.
-3. Stale manifest after FR spec edits (FR re-audited mid-flight) - covered by the schema's `fr_sha256` root field (§1 #1): mismatch at resume marks every step stale, forcing a clean re-run against the revised spec.
+3. Stale manifest after task spec edits (task re-audited mid-flight) - covered by the schema's `fr_sha256` root field (§1 #1): mismatch at resume marks every step stale, forcing a clean re-run against the revised spec.
 4. .workflow dir deleted - clean restart from step 1; no correctness loss (cache semantics).
 5. Clock skew across sessions - ordering uses step indices, not timestamps; timestamps are informational only.
 
 ## §11 - Implementation notes
 
-Keep the manifest strictly derived (cache) - the words "record of truth" appear only next to FR frontmatter in every doc touched. The queue reasoning line format is part of the contract (operators grep session logs for it).
+Keep the manifest strictly derived (cache) - the words "record of truth" appear only next to task frontmatter in every doc touched. The queue reasoning line format is part of the contract (operators grep session logs for it).
 
 *End of TASK-CUO-206.*

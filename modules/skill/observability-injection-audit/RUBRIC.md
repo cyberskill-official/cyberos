@@ -1,6 +1,6 @@
 # observability_injection_rubric@1.0
 
-constants: TOTAL_ROWS_MIN=8 (MUST FRs) | BRANCH_COVERAGE_MIN=80 | COVERAGE_THRESHOLD=90 (config-overridable, TASK-CUO-207)
+constants: TOTAL_ROWS_MIN=8 (MUST tasks) | BRANCH_COVERAGE_MIN=80 | COVERAGE_THRESHOLD=90 (config-overridable, TASK-CUO-207)
 families: OBS-GATE
 verdict: pass requires 10/10; any family failure -> fail; ambiguity -> needs_human
 

@@ -1,8 +1,16 @@
 ---
 id: TASK-MCP-008
 title: "MCP Elicitation — server-initiated structured prompts for mid-call user input (clarifications, confirmations, missing args) with timeout + cancellation"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: MCP
-priority: MUST
+priority: p0
 status: implementing
 verify: T
 phase: P0
@@ -219,7 +227,7 @@ The MCP service **MUST** ship Elicitation primitive at `services/mcp/src/elicita
 
 **Why file_upload via presigned S3 (§1 #10, DEC-1153)?** Large file uploads through the MCP gateway bloat the request path + tie up memory. Presigned S3 = direct client-to-S3 upload; gateway only sees the reference. Standard pattern for file upload at scale.
 
-**Why TASK-MCP-006 confirm-mode satisfied by confirmation elicitation (§1 #11, DEC-1151)?** Both patterns ask "user, please confirm X". Unifying them avoids the gating-layer reinventing prompt UX. The MCP-006 `elicit` mode (previously placeholder per TASK-MCP-006 DEC-1055) de-stubs by routing to this FR's confirmation elicitation.
+**Why TASK-MCP-006 confirm-mode satisfied by confirmation elicitation (§1 #11, DEC-1151)?** Both patterns ask "user, please confirm X". Unifying them avoids the gating-layer reinventing prompt UX. The MCP-006 `elicit` mode (previously placeholder per TASK-MCP-006 DEC-1055) de-stubs by routing to this task's confirmation elicitation.
 
 **Why per-task elicitation scoping (§1 #3, schema task_id column)?** Elicitations belong to a tool invocation. Listing pending elicitations by task_id (or session_id) gives the UI a clean per-task action panel. Cross-task elicitations would require additional UX state.
 
@@ -338,7 +346,7 @@ async fn elicit<R: DeserializeOwned>(
 7. **Re-elicit cap 3 retries** — 4th attempt at re-submission for same `elicitation_id` → status='validation_failed' terminal.
 8. **Confirmation type happy** — tool emits `confirmation` elicit with prompt "delete X?"; caller responds `{confirmed: true}`; tool proceeds.
 9. **File-upload presigned URL** — tool emits `file_upload`; prompt response includes `upload_url` (presigned S3); caller PUTs file + POSTs response with s3_key.
-10. **TASK-MCP-006 integration** — TASK-MCP-006 policy `mode=elicit` on destructive tool routes through this FR's confirmation elicit; previous 503 placeholder de-stubbed.
+10. **TASK-MCP-006 integration** — TASK-MCP-006 policy `mode=elicit` on destructive tool routes through this task's confirmation elicit; previous 503 placeholder de-stubbed.
 11. **Sync-tool elicit forbidden** — sync tool calling `elicit()` returns Err `sync_elicit_forbidden_slice_3`.
 12. **Cross-caller access denied** — caller A polling caller B's elicitation_id → 403 + sev-1 audit.
 13. **Cross-tenant access denied** — RLS prevents cross-tenant read; verified via two-tenant test.

@@ -1,10 +1,10 @@
 # SKILL module — task index
 
-_Generated 2026-05-17 — 11 FRs, 84 engineering-hours total._
+_Generated 2026-05-17 — 11 tasks, 84 engineering-hours total._
 
-## FRs
+## tasks
 
-| FR | Priority | Slice | Hours | Title |
+| Task | Priority | Slice | Hours | Title |
 |---|---|---|---:|---|
 | [TASK-SKILL-101](TASK-SKILL-101-memory-integration/spec.md) | MUST | 1 | 6 | Skill memory integration — skill.invoked_started + skill.invoked_completed audit rows (skill.* namesp |
 | [TASK-SKILL-102](TASK-SKILL-102-oci-registry/spec.md) | MUST | 1 | 10 | Self-hosted OCI registry for .skill bundles — cosign signing + tenant-scoped + immutable tags + 100M |

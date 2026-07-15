@@ -76,7 +76,7 @@ Missing:
   - Call ringing only reaches a callee who has that conversation open (`lib/call.ts:6-7`).
   - There is no way to receive a message event, a mention, or a ring for a channel you are not currently viewing.
 - No desktop notifications. There is no `Notification` API use anywhere in `apps/web/src`.
-- No real push. As above, `push.rs` logs intent; there is no APNS/FCM client, no VAPID web-push, and the FR for mobile push is separate (`docs/tasks/chat/TASK-CHAT-011-mobile-push/spec.md`).
+- No real push. As above, `push.rs` logs intent; there is no APNS/FCM client, no VAPID web-push, and the task for mobile push is separate (`docs/tasks/chat/TASK-CHAT-011-mobile-push/spec.md`).
 - No notification preferences (per-channel mute, all/mentions/nothing, keywords, schedules).
 
 ### 5. Channels and org
@@ -152,7 +152,7 @@ Missing entirely:
 Almost absent:
 - The only moderation primitive is channel-role delete: a manager can delete another member's message (`messages.rs:412-417`), and an owner can remove a member (`members.rs::remove`, though the client never calls it).
 - Every action writes an audit-chain row (`audit.rs::emit`, called across the handlers), and the console has a read-only audit browser (`auditlog.rs`, `GET /v1/chat/audit`). That is observability, not moderation.
-- Missing: workspace/tenant admin console for chat, retention/deletion policies, message export/DSAR (there is an FR `TASK-CHAT-012-dsar-export/spec.md` but no code), banned words/content filters, report-a-message, user suspend/deactivate from within chat, channel-level permissions beyond the three roles, guest accounts, legal hold.
+- Missing: workspace/tenant admin console for chat, retention/deletion policies, message export/DSAR (there is a task `TASK-CHAT-012-dsar-export/spec.md` but no code), banned words/content filters, report-a-message, user suspend/deactivate from within chat, channel-level permissions beyond the three roles, guest accounts, legal hold.
 
 ### 12. Mobile, responsive, accessibility
 
@@ -184,7 +184,7 @@ Impact = how much it closes the distance to a modern team chat / how much the te
 | 13 | Group DM (unnamed multi-person) | Medium | M | B + C | `create_dm` is strictly two-person (`channels.rs:146-151`). |
 | 14 | TURN server + group calls + screen share | Medium | L | X + B + C | STUN-only today (`lib/call.ts:11-16`); depends on #1 for reliable ringing. |
 | 15 | Attachment previews (thumbnails, PDF/video/audio players), image lightbox/gallery | Medium | M | C (+ B for thumbnails) | Today: inline `<img>` or a generic chip (`Attachment.tsx`). |
-| 16 | Admin / moderation console + retention + DSAR export + report/suspend | Medium | L | B + C | Only role-delete + audit read exist today (`messages.rs`, `auditlog.rs`); FRs exist (TASK-CHAT-012). |
+| 16 | Admin / moderation console + retention + DSAR export + report/suspend | Medium | L | B + C | Only role-delete + audit read exist today (`messages.rs`, `auditlog.rs`); tasks exist (TASK-CHAT-012). |
 | 17 | Responsive / mobile layout | Medium | M | C | `styles.css` has no media queries; fixed 270/360px columns. |
 | 18 | Accessibility: focus trap in modals, keyboard nav, accessible delete dialog, live regions | Medium | M | C | `window.confirm` delete (`Chat.tsx:556`); no focus management in pickers. |
 | 19 | Notification preferences (mute, all/mentions/none, keywords) | Medium | M | B + C | Depends on #2/#4. |
@@ -268,4 +268,4 @@ Brand while modernizing: lead with umber as the ground and ochre as a discipline
 
 - This is a static read of the code as of 2026-07-02. It did not run the service, the client, or any test, and did not run git.
 - Contrast claims (Half B) are eyeballed from the hex values in `styles.css`; the exact WCAG pass/fail per pairing should be measured, but the near-monotone palette and heavy use of `--faint` for load-bearing text make several failures likely.
-- "Missing" means not found in the read files (`services/chat/src/*`, `services/chat/migrations/*`, `apps/web/src/*`). A few features exist as authored FRs under `docs/tasks/chat/` (mobile push, DSAR export, Lumi mention, imports) but have no code in the module today; those are flagged inline.
+- "Missing" means not found in the read files (`services/chat/src/*`, `services/chat/migrations/*`, `apps/web/src/*`). A few features exist as authored tasks under `docs/tasks/chat/` (mobile push, DSAR export, Lumi mention, imports) but have no code in the module today; those are flagged inline.

@@ -2,8 +2,16 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future fr-catalog renderer) ─────
 id: TASK-AI-018
 title: "Cross-tenant cache leak property-test (hard zero) — 200K random ops + 7 regression scenarios + adversarial inputs"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AI
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P0
@@ -25,7 +33,7 @@ source_decisions:
   - DEC-058 multi-tenancy invariant: cross-tenant data leakage = 0 (no acceptable rate; ANY leak = sev-1)
   - PDPL Art. 7 (tenant data MUST NOT cross tenant boundary without explicit consent)
   - GDPR Art. 32 (security of processing — multi-tenant isolation is a fundamental control)
-  - "MoPS A05 audit checkpoint: \"how do you prove no cross-tenant data exposure\" — this FR is the answer"
+  - "MoPS A05 audit checkpoint: \"how do you prove no cross-tenant data exposure\" — this task is the answer"
 
 # ───── Build envelope ─────
 language: rust 1.81 (test-only crate inside ai-gateway)
@@ -47,7 +55,7 @@ allowed_tools:
   - bash: docker run -d --name test-redis -p 6379:6379 redis:7
 disallowed_tools:
   - skip the property test in CI under any condition (NO `pytest.skip` analogue, no `#[ignore]` on the property body)
-  - lower the case count below the §1 #2 floor without explicit FR amendment
+  - lower the case count below the §1 #2 floor without explicit task amendment
   - omit any of the 7 enumerated regression scenarios (deletion = silent test-coverage drop)
   - share Redis state between test cases (per-case isolation prefix MUST be used; §1 #11)
 
@@ -117,13 +125,13 @@ The AI Gateway crate **MUST** include a property-based test asserting **zero cro
 
 **Why a JSON artefact (§1 #14)?** MoPS A05 (Vietnam's Department of Cyber Security) asks during audits: "how do you prove no cross-tenant data exposure?" Without an artefact, the answer is "we have a test in our codebase" — non-evidential. With the artefact, the answer is "this JSON file from CI run X on date Y proves the property held at that point." The artefact is a one-shot regulatory primitive.
 
-**Why this is its own FR (TASK-AI-018), not a test in TASK-AI-017?** TASK-AI-017 has its own property test (cross-tenant isolation at 1000-trial level) as a baseline. TASK-AI-018 is the dedicated, exhaustive treatment with 200K ops + 7 regressions + adversarial + concurrent + CI-artefact emission. Two reasons for the split: (a) the test surface is large enough to warrant its own owner; (b) future hardening (10M-op runs, mutation testing of the cache code, fuzzing) extends TASK-AI-018 without blowing up TASK-AI-017's scope.
+**Why this is its own task (TASK-AI-018), not a test in TASK-AI-017?** TASK-AI-017 has its own property test (cross-tenant isolation at 1000-trial level) as a baseline. TASK-AI-018 is the dedicated, exhaustive treatment with 200K ops + 7 regressions + adversarial + concurrent + CI-artefact emission. Two reasons for the split: (a) the test surface is large enough to warrant its own owner; (b) future hardening (10M-op runs, mutation testing of the cache code, fuzzing) extends TASK-AI-018 without blowing up TASK-AI-017's scope.
 
 ---
 
 ## §3 — API contract (formal spec for AI-agent implementers)
 
-This FR ships only test code; no production API. The test imports `cache::lookup`, `cache::insert`, `CacheKey::derive` from TASK-AI-017.
+This task ships only test code; no production API. The test imports `cache::lookup`, `cache::insert`, `CacheKey::derive` from TASK-AI-017.
 
 ### Test helpers
 
@@ -572,10 +580,10 @@ The test files reference `support::` modules; the support directory is shared te
 
 ## §7 — Dependencies
 
-### Code dependencies (other FRs/modules)
+### Code dependencies (other tasks/modules)
 
-- **TASK-AI-017** — `cache::lookup`, `cache::insert`, `CacheKey::derive`, `CacheLookupOutcome` are all consumed; this FR is the dedicated leak-test for TASK-AI-017's per-tenant isolation invariant.
-- **TASK-AI-005** — Tenant-id validation rules (the adversarial inputs assume some inputs would be rejected by TASK-AI-005's policy parser; this FR tests the cache layer assuming validation has failed).
+- **TASK-AI-017** — `cache::lookup`, `cache::insert`, `CacheKey::derive`, `CacheLookupOutcome` are all consumed; this task is the dedicated leak-test for TASK-AI-017's per-tenant isolation invariant.
+- **TASK-AI-005** — Tenant-id validation rules (the adversarial inputs assume some inputs would be rejected by TASK-AI-005's policy parser; this task tests the cache layer assuming validation has failed).
 - **TASK-AI-014** — Persona handle format (`<id>@<version>`) is one of the cache key inputs; the regression test #6 asserts persona-handle inclusion.
 
 ### Concept dependencies (shared types)
@@ -674,7 +682,7 @@ failed: cross-tenant leak: t_a="tenant_x" t_b="tenant_y" prompt="hello"
 
 ## §9 — Open questions
 
-All resolved at authoring time. Items deferred to later FRs:
+All resolved at authoring time. Items deferred to later tasks:
 
 - Mutation testing (deliberately mutate `CacheKey::derive` and assert the test catches it) — TASK-AI-022 area; current property test is structural defence.
 - Fuzz testing with libFuzzer over the cache key derivation — out of scope; proptest with adversarial inputs covers the current threat model.
@@ -693,7 +701,7 @@ All resolved at authoring time. Items deferred to later FRs:
 | Test runs > 90 sec | GitHub Actions `timeout-minutes: 5` fires | CI fails on timeout | Reduce per-case ops OR optimise hot path; investigate Redis latency |
 | Flaky test (Redis state pollution between cases) | Intermittent fails with same RNG seed | sev-2 CI alarm | Investigate RedisTestNamespace cleanup; add explicit Drop assertion |
 | Test skip slipped past CI | `cargo test` `--format=json` parsing detects | CI fails on skip-count check (§1 #13) | Engineer removes `#[ignore]`; if test is genuinely flaky, investigate root cause not silence |
-| Regression scenario removed/renamed | Test count drops; CI compares against expected list | CI fails on missing-test detection | Re-add; if intentional removal, requires FR amendment |
+| Regression scenario removed/renamed | Test count drops; CI compares against expected list | CI fails on missing-test detection | Re-add; if intentional removal, requires task amendment |
 | Adversarial input list shortened | Test count check | CI fails | Re-add; new adversarial inputs require addition not subtraction |
 | Concurrent test hangs (deadlock in cache code) | `tokio::test` 90s timeout | Test fails | Investigate cache::insert/lookup for blocking calls |
 | Concurrent test detects race | Atomic-Bool failure flag; assertion in any task fires | Test fails with task_id, owner, other | Investigate cache layer for non-atomic write paths |
@@ -718,7 +726,7 @@ All resolved at authoring time. Items deferred to later FRs:
 - The per-case Redis isolation (§1 #11) is the difference between "this test is authoritative" and "this test is flaky." Without it, intermittent failures from inter-case pollution would degrade developer trust until the test is silently disabled.
 - The non-skip enforcement (§1 #13) is paranoid by design. The most common compliance-test-erosion pattern is silent disablement; making the CI workflow refuse to merge a PR with any cache_isolation skip stops that pattern at the gate.
 - The Vietnamese regulator (MoPS A05) specifically asks during audits: "how do you prove no cross-tenant data exposure?" The JSON artefact (§1 #14) is the answer — durable, cryptographically-tied to the SHA, durable across Github Actions log retention.
-- This FR is downstream of TASK-AI-017 because it CONSUMES TASK-AI-017's API surface. But it's also UPSTREAM of any future FR that touches the cache (e.g., TASK-AI-022's cache warming, TASK-AI-024's semantic cache) — those FRs will inherit this gate automatically because they touch `services/ai-gateway/src/cache/**`.
+- This task is downstream of TASK-AI-017 because it CONSUMES TASK-AI-017's API surface. But it's also UPSTREAM of any future task that touches the cache (e.g., TASK-AI-022's cache warming, TASK-AI-024's semantic cache) — those tasks will inherit this gate automatically because they touch `services/ai-gateway/src/cache/**`.
 - The workflow file (`cache-isolation-gate.yml`) is in its own `paths:` for self-gate (matching TASK-AI-013's pattern). A PR loosening the gate gets caught by the gate against itself.
 
 ---

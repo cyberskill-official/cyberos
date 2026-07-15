@@ -1,8 +1,16 @@
 ---
 id: TASK-OBS-003
 title: "Per-service RED metrics (rate/errors/duration) via cyberos-obs-sdk shared crate with macro + CI lint + standardised buckets"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: OBS
-priority: MUST
+priority: p0
 status: implementing
 verify: T
 phase: P0
@@ -473,7 +481,7 @@ All resolved. Deferred:
 
 - The macro form (`#[red_instrument]`) keeps call sites clean. Manual calls are reserved for non-HTTP code paths (background jobs).
 - Histogram buckets MUST match across services for cross-service aggregation. The 13 standard boundaries cover 1ms-10s with reasonable resolution at each magnitude.
-- Cardinality guard at 1000 unique combos is conservative. Slice 1 services typically have 5-10 routes × 50 tenants × 4 status classes = 2000 combos. Above 1000 per metric, operators investigate; the limit can be raised with explicit FR amendment.
+- Cardinality guard at 1000 unique combos is conservative. Slice 1 services typically have 5-10 routes × 50 tenants × 4 status classes = 2000 combos. Above 1000 per metric, operators investigate; the limit can be raised with explicit task amendment.
 - The `instrument_completeness_test` is the structural enforcement of "every handler is instrumented." Without it, drift is inevitable.
 - Status_class labels (2xx/3xx/4xx/5xx/other) trade fine-grained visibility for cardinality. Operators rarely care about 201 vs 200; they care about 2xx vs 4xx. The trade-off is worth it.
 - The `extra_labels` parameter is the per-service flexibility surface. AI Gateway adds `model_alias`; CHAT adds `workspace_id`. Each service's PR includes the rationale for new labels.

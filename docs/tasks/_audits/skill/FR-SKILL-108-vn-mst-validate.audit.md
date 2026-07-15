@@ -23,7 +23,7 @@ Network-first wastes quota on typos; local-only misses inactive-but-checksum-val
 Reject vs accept? GDT statuses aren't binary. Resolved: §1 #5 + §2 explicit list (00 + 04 = valid for transactions; all else inactive); rationale documented.
 
 ### ISS-003 — Cache TTL: too long = stale, too short = wasteful
-Resolved: §1 #6 + DEC-212 24h calibrated for same-day churn; FR-INV re-validates before hóa đơn anyway.
+Resolved: §1 #6 + DEC-212 24h calibrated for same-day churn; task-INV re-validates before hóa đơn anyway.
 
 ### ISS-004 — PII redaction discipline (PDPL 2025)
 Without enforcement, raw MSTs leak into logs. Resolved: §1 #11 + §3 `redact()` helper + AC #18 log-redact verification; audit row uses redacted form too.

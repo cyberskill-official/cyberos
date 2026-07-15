@@ -1,8 +1,16 @@
 ---
 id: TASK-SKILL-103
 title: "SKILL.md frontmatter extension — allowed_memory_scopes + allowed_tools + version + signature enforced by capability broker"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: SKILL
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -22,7 +30,7 @@ source_pages:
 source_decisions:
   - DEC-180 (every .skill bundle MUST declare its memory scopes + tool requirements in frontmatter)
   - DEC-181 (broker enforces frontmatter at invoke time; missing/invalid frontmatter = refuse)
-  - DEC-182 (frontmatter schema versioned; v1 frozen at this FR; v2+ via SemVer-style migration)
+  - DEC-182 (frontmatter schema versioned; v1 frozen at this task; v2+ via SemVer-style migration)
 
 language: rust 1.81 + yaml
 service: cyberos/services/skill-broker/
@@ -518,7 +526,7 @@ $ cyberos skill validate tests/fixtures/skill-valid --json
 ## §7 — Dependencies
 
 - **TASK-SKILL-101 (upstream)** — defines the broker that consumes this frontmatter at invoke time.
-- **TASK-SKILL-102 (related)** — OCI registry uploads MUST include a valid signature; this FR's signature schema is the format.
+- **TASK-SKILL-102 (related)** — OCI registry uploads MUST include a valid signature; this task's signature schema is the format.
 - **TASK-SKILL-104 (downstream)** — capability broker enforces `allowed_tools` at runtime; TASK-SKILL-104 owns the MCP_TOOL_REGISTRY.
 - **TASK-SKILL-105 (downstream)** — memory-sync@1 skill bundle is the first canonical user of `sync_class: shareable`.
 - **TASK-MEMORY-106** — sync_class semantics are reused (same enum variants per AGENTS.md §15).

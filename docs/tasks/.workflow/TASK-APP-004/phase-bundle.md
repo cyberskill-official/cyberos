@@ -23,7 +23,7 @@ Run: 2026-07-13, ship-tasks v2.4.0. `queue: picked TASK-APP-004 (priority=SHOULD
 | 8 | security | EV cert/thumbprint without import | explicit `Import-PfxCertificate` step precedes signing; PFX temp file removed |
 | 9 | security | credential material outside secret manager | `${{ secrets.* }}` exclusively; token variable never echoed |
 | 10 | concurrency | interrupted multi-step submission → stale PendingCommit | documented operational recovery (Partner Center UI discard) — resume-idempotency out of scope per spec §10 |
-| 11 | regression | tile assets accidentally regenerated | AC #8 diff check — 0 lines (proven); FR only references assets |
+| 11 | regression | tile assets accidentally regenerated | AC #8 diff check — 0 lines (proven); task only references assets |
 | 12 | regression | release gates coupled in future refactor | independent `MSSTORE_RELEASE` + standing AC #4 assertion |
 
 ## Steps 9–10 — implementation plan (executed)

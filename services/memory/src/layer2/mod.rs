@@ -9,7 +9,7 @@
 //!
 //! Wave 1 first-slice ships the public types + cursor read/write. The
 //! actual ingest loop (`ingest::run`) is stubbed and returns
-//! `not_yet_implemented` so the binary boots cleanly. Future FRs fill in
+//! `not_yet_implemented` so the binary boots cleanly. Future tasks fill in
 //! the body without changing module boundaries.
 
 pub mod binlog_tail;

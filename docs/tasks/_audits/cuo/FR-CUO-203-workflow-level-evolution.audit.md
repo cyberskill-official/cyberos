@@ -38,8 +38,8 @@ Harness Wave 4 — workflow-level continuous evolution. Aggregates per-workflow 
 ## Architectural notes
 
 - **Workflow stripes are disjoint from skill stripes** by format (§2): skill stripes use `<skill_slug>:...`, workflow stripes use `<persona>/<workflow_slug>:...`. The `/` makes collisions impossible.
-- **All workflow diffs default to queue** (§1 #6): even cosmetic workflow edits queue under `pending_approval/`. The reason is workflows are read by many downstream FRs; a typo could change orchestration semantics. Auto-apply requires explicit `--auto-workflow-diffs` flag.
-- **Mid-flight FR uses old chain** (§2 out-of-scope, §1 risk-assessment failure mode): when a chain edit applies, in-flight runs keep their snapshot of the chain at start. This is consistent with TASK-MEMORY-115's dream-snapshot semantics — the workflow chain is just another in-memory artefact whose mutations don't propagate retroactively.
+- **All workflow diffs default to queue** (§1 #6): even cosmetic workflow edits queue under `pending_approval/`. The reason is workflows are read by many downstream tasks; a typo could change orchestration semantics. Auto-apply requires explicit `--auto-workflow-diffs` flag.
+- **Mid-flight task uses old chain** (§2 out-of-scope, §1 risk-assessment failure mode): when a chain edit applies, in-flight runs keep their snapshot of the chain at start. This is consistent with TASK-MEMORY-115's dream-snapshot semantics — the workflow chain is just another in-memory artefact whose mutations don't propagate retroactively.
 
 ## Implementation readiness
 

@@ -1,8 +1,16 @@
 ---
 id: TASK-TEN-103
 title: "4-residency provisioning — sg-1 / eu-1 / us-1 / vn-1 region pinning across Postgres + S3 + NATS + Stripe + KMS with cross-residency-write trip-wire"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: TEN
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P3
@@ -39,12 +47,12 @@ source_decisions:
   - DEC-932 2026-05-17 — Per-residency NATS cluster — subjects `tenant.<slug>.*` are local to the residency; no cross-region NATS routing
   - "DEC-933 2026-05-17 — Per-residency S3 bucket naming: `cyberos-{residency}-tenants` (data) + `cyberos-{residency}-audit` (audit archive); cross-bucket replication DISABLED"
   - DEC-934 2026-05-17 — Per-residency observability — each residency's Loki+Tempo+Prometheus stays in that residency; cross-region OBS query proxy (TASK-OBS-002) federates read-only via per-residency RBAC scope
-  - DEC-935 2026-05-17 — Per-residency Stripe account routing already in TASK-TEN-003 DEC-801; this FR consumes that map + enforces it via api_client construction
+  - DEC-935 2026-05-17 — Per-residency Stripe account routing already in TASK-TEN-003 DEC-801; this task consumes that map + enforces it via api_client construction
   - DEC-936 2026-05-17 — Provisioning workflow ATOMIC at the residency level — if Aurora INSERT succeeds but S3 prefix creation fails, the Aurora row is DELETED + sev-1 alert; no half-provisioned residency state
   - DEC-937 2026-05-17 — Connection-pool routing: each service holds a `Map<Residency, PgPool>` + a `Map<Residency, S3Client>`; service-level handlers extract `residency` from `tenants.residency` lookup + select correct pool; mis-pool = sev-1 trip-wire
   - DEC-938 2026-05-17 — Per-residency Aurora cluster has its own RLS `current_setting('auth.residency')` predicate ADDED on top of tenant_id predicate (defense-in-depth: even if tenant_id collides across residencies — which shouldn't happen per DEC-927 — residency predicate prevents leak)
   - DEC-939 2026-05-17 — Cross-residency-write trip-wire: trigger on every tenant-scoped table CHECKs `NEW.residency = current_setting('auth.residency')`; mismatch raises `cross_residency_write_blocked` exception + emits memory row
-  - DEC-940 2026-05-17 — Residency-failover deferred (no automatic failover from sg-1 to us-1 etc.) — DR is intra-region multi-AZ only; cross-region DR ships in P4 (FR-TEN-2xx)
+  - DEC-940 2026-05-17 — Residency-failover deferred (no automatic failover from sg-1 to us-1 etc.) — DR is intra-region multi-AZ only; cross-region DR ships in P4 (task-TEN-2xx)
   - DEC-941 2026-05-17 — Per-residency memory audit kinds (8): ten.residency_provisioned, ten.residency_pool_misroute, ten.cross_residency_access_attempt, ten.cross_residency_write_blocked, ten.cross_residency_memory_event_blocked, ten.residency_health_degraded, ten.residency_kms_unavailable, ten.tenant_residency_assigned
   - DEC-942 2026-05-17 — Residency-aware logging context — every log line carries `residency=<rid>` field via tracing instrument; missing field = OBS alarm
   - DEC-943 2026-05-17 — `cyberos-ten residency-status` CLI shows per-residency health (Aurora connection, S3 reachability, NATS heartbeat, Stripe ping, KMS responsiveness, JWT issuer responsiveness) — 6-component score per residency
@@ -168,7 +176,7 @@ The TEN service **MUST** ship 4-residency provisioning (`sg-1`, `eu-1`, `us-1`, 
     - One NATS cluster (3-node JetStream); subjects local per DEC-932.
     - One AWS KMS key for envelope encryption (DEC-929: region-pinned).
     - One OBS stack subset (Loki + Tempo + Prometheus regional shards) per DEC-934.
-    - One Stripe account binding per DEC-935 (TASK-TEN-003 DEC-801 already provisioned; this FR consumes).
+    - One Stripe account binding per DEC-935 (TASK-TEN-003 DEC-801 already provisioned; this task consumes).
     - One AUTH issuer URL per DEC-931 (`https://auth.<residency>.cyberos.world`).
 
 6. **MUST** provide a residency router in `services/ten/src/residency/`:
@@ -180,7 +188,7 @@ The TEN service **MUST** ship 4-residency provisioning (`sg-1`, `eu-1`, `us-1`, 
 
 7. **MUST** route every tenant-scoped operation through the residency router. Service-level handlers MUST:
     - Receive `tenant_id` from request context.
-    - Lookup `tenants.residency` via a per-residency-fanout query (one cross-residency lookup is permitted at the entry: the JWT carries `residency` claim per TASK-AUTH-004 + this FR's modification, so the lookup is JWT-only in 99% of cases).
+    - Lookup `tenants.residency` via a per-residency-fanout query (one cross-residency lookup is permitted at the entry: the JWT carries `residency` claim per TASK-AUTH-004 + this task's modification, so the lookup is JWT-only in 99% of cases).
     - Select the correct pool/client from the router.
     - Issue the operation against that pool only.
     - Mis-route (e.g., handler uses sg-1 pool for an eu-1 tenant) is caught by the trip-wire trigger + emits `ten.residency_pool_misroute` sev-1.
@@ -199,7 +207,7 @@ The TEN service **MUST** ship 4-residency provisioning (`sg-1`, `eu-1`, `us-1`, 
       RETURN NEW;
     END $$ LANGUAGE plpgsql;
     ```
-   Applied via cursor loop in migration `0016` to all 28 tenant-scoped tables identified at migration time. New tables added in future FRs MUST include this trigger.
+   Applied via cursor loop in migration `0016` to all 28 tenant-scoped tables identified at migration time. New tables added in future tasks MUST include this trigger.
 
 9. **MUST** set the session-local `auth.residency` Postgres setting at handler entry from the validated JWT's `residency` claim. The TASK-AUTH-004 JWT mint is extended to include this claim; TASK-AUTH-004's `services/auth/src/handlers/login.rs` modification covers the wiring.
 
@@ -216,7 +224,7 @@ The TEN service **MUST** ship 4-residency provisioning (`sg-1`, `eu-1`, `us-1`, 
     6. Commit tx.
    On any step failure: ROLLBACK tx + manual cleanup of any partial S3/NATS state via `cyberos-ten residency-cleanup-orphan` (slice 3 CLI; slice 2 = operator runs cleanup manually after sev-1 alert per DEC-944).
 
-13. **MUST** add `auth.residency` to AUTH JWT claims per #9 + DEC-931. JWT shape post-this-FR: `{ sub, tenant_id, residency, exp, iat, iss, aud, scope_grants, persona }`. Tokens issued before this FR ships (legacy) lack the claim; transitional handler accepts them only for 24h post-deploy then enforces presence (fail closed).
+13. **MUST** add `auth.residency` to AUTH JWT claims per #9 + DEC-931. JWT shape post-this-task: `{ sub, tenant_id, residency, exp, iat, iss, aud, scope_grants, persona }`. Tokens issued before this task ships (legacy) lack the claim; transitional handler accepts them only for 24h post-deploy then enforces presence (fail closed).
 
 14. **MUST** carry `residency=<rid>` field on every log line via `tracing::instrument(fields(residency = %ctx.residency))` per DEC-942. Missing field on any log line emitted from a tenant-scoped handler raises an OBS alarm sev-3 (`ten.residency_logging_context_missing` — informational, ops sweep).
 
@@ -281,7 +289,7 @@ The TEN service **MUST** ship 4-residency provisioning (`sg-1`, `eu-1`, `us-1`, 
 
 **Why explicit --residency flag (§1 #19, DEC-945)?** Auto-derivation hides operator intent. If billing_currency is wrong, auto-derive propagates the error. Explicit flag forces operator to commit to a residency separately from currency; CCO process review catches mismatches before provisioning.
 
-**Why 8 audit kinds with heavy sev-1 weighting (§1 #16, DEC-941)?** Every kind in this FR is a cross-residency event — by definition unusual + forensically critical. Sev-1 routes to TASK-OBS-007's CHAT/PagerDuty path for immediate response. Cross-residency leakage is a regulatory-reportable event; sev-1 catches it before any breach-notification window closes.
+**Why 8 audit kinds with heavy sev-1 weighting (§1 #16, DEC-941)?** Every kind in this task is a cross-residency event — by definition unusual + forensically critical. Sev-1 routes to TASK-OBS-007's CHAT/PagerDuty path for immediate response. Cross-residency leakage is a regulatory-reportable event; sev-1 catches it before any breach-notification window closes.
 
 ---
 
@@ -440,7 +448,7 @@ cyberos-ten residency-cleanup-orphan <tenant_id>     (slice 3)
 13. **UUIDv7 residency-prefix nibble** — tenant_id high nibble of byte 6 = residency index; collision-free across residencies.
 14. **Explicit --residency flag required** — provision CLI without `--residency` exits 64 (invalid arg).
 15. **Currency-residency mismatch rejected** — `--billing-currency VND --residency us-1` exits 64 with explicit error.
-16. **JWT carries residency claim** — post-FR JWT has `residency` claim; pre-FR JWTs accepted for 24h transitional then 401.
+16. **JWT carries residency claim** — post-task JWT has `residency` claim; pre-task JWTs accepted for 24h transitional then 401.
 17. **Logging carries `residency=<rid>` field** — log scrape of tenant handler shows field on every line.
 18. **AUTH issuer URLs per residency** — `issuer_map` has 4 entries matching `https://auth.<residency>.cyberos.world`.
 19. **No cross-residency NATS subscription** — sg-1 NATS subscriber cannot subscribe to `tenant.<slug>.*` on eu-1 cluster (separate clusters per DEC-932).
@@ -690,7 +698,7 @@ pub async fn check_residency(ctx: &AppCtx, residency: Residency) -> ResidencyHea
 - **TASK-OBS-007** Auto-runbook — sev-1 alerts route per-residency.
 - **TASK-OBS-008** Compliance views — per-residency scoping consumed.
 
-**Downstream (blocks):** None (this FR is bottom-of-stack for residency infrastructure; other FRs consume but don't block on TEN-103 at slice 2).
+**Downstream (blocks):** None (this task is bottom-of-stack for residency infrastructure; other tasks consume but don't block on TEN-103 at slice 2).
 
 ---
 
@@ -773,10 +781,10 @@ pub async fn check_residency(ctx: &AppCtx, residency: Residency) -> ResidencyHea
 
 All resolved for slice 2. Deferred:
 
-- **Deferred:** Cross-region DR (failover from sg-1 → us-1 etc.) — slice 3, FR-TEN-2xx (placeholder).
+- **Deferred:** Cross-region DR (failover from sg-1 → us-1 etc.) — slice 3, task-TEN-2xx (placeholder).
 - **Deferred:** vn-1 physical migration to AWS Vietnam region when it opens — slice 3, ops project (no code change required; Terraform plan-only).
 - **Deferred:** Per-residency self-serve via signup form — TASK-TEN-101 derives residency from billing_currency; explicit residency picker in UI is slice 3.
-- **Deferred:** Cross-residency tenant migration (rare admin op) — slice 3, FR-TEN-2xx.
+- **Deferred:** Cross-residency tenant migration (rare admin op) — slice 3, task-TEN-2xx.
 - **Deferred:** Residency-aware backup/restore CLI (`cyberos-ten residency-backup --to s3://...`) — slice 3.
 - **Deferred:** `cyberos-ten residency-cleanup-orphan` CLI — slice 3 (slice 2 = manual ops cleanup on sev-1).
 - **Deferred:** Per-residency rate limiting policy (different per residency) — slice 3.

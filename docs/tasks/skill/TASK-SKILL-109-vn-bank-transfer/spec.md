@@ -1,8 +1,16 @@
 ---
 id: TASK-SKILL-109
 title: "vietnam-bank-transfer@1 skill — VietQR + Napas247 transfer-code generator with bank-prefix validation, memory audit, and per-transfer idempotency"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: SKILL
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -57,7 +65,7 @@ subtasks:
   - "1.0h: vietqr_test.rs — 20+ fixture transfers (cross-validated against Sacombank/Techcombank/VietQR.io test vectors)"
   - "0.5h: banks_test.rs — bank-prefix lookup + invalid-bin rejection"
   - "0.5h: memory audit row emission (vn.qr_generated kind with amount, receiver_bank, idempotency_key)"
-risk_if_skipped: "Without authoritative VietQR generation, every payment-collecting feature (FR-INV invoice, FR-CRM deal-won, FR-CHAT escrow) reinvents the wheel. Without CRC16 checksum, generated QR codes are silently rejected by banks (banks compute CRC themselves; mismatch = no transfer). Without bank-bin validation, transfers go to non-existent banks (typed BIN like 970999 = no such bank; user sees 'transfer pending' forever). Without idempotency, retry-on-error duplicates payment requests; double-charged customers churn. Without memory audit, reconciliation (matching incoming bank statement entry to outgoing QR) is impossible at scale."
+risk_if_skipped: "Without authoritative VietQR generation, every payment-collecting feature (task-INV invoice, task-CRM deal-won, task-CHAT escrow) reinvents the wheel. Without CRC16 checksum, generated QR codes are silently rejected by banks (banks compute CRC themselves; mismatch = no transfer). Without bank-bin validation, transfers go to non-existent banks (typed BIN like 970999 = no such bank; user sees 'transfer pending' forever). Without idempotency, retry-on-error duplicates payment requests; double-charged customers churn. Without memory audit, reconciliation (matching incoming bank statement entry to outgoing QR) is impossible at scale."
 ---
 
 ## §1 — Description (BCP-14 normative)

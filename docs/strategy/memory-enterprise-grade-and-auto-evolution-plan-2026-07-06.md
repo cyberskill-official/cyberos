@@ -1,6 +1,6 @@
 # MEMORY module: enterprise-grade + auto-evolution plan
 
-Date: 2026-07-06. Scope: `services/memory` (Rust Layer-2 + BRAIN), `modules/memory` (Python Layer-1 personal store), the desktop app under `services/memory/desktop`, and their FR catalog (`docs/tasks/memory/`). Method: full read of the brain subsystem source, migrations 0001-0008, the interaction-event path, the desktop sync supervisor, and the Python core module map, cross-checked against 2025-2026 state of the art (Mem0, Letta, Zep/Graphiti, LongMemEval, ElectricSQL/PowerSync, OpenAI Dreaming, Anthropic memory tool and contextual retrieval). Companion docs: `cyberos-brain-evaluation-plan.md` (governance + evaluation phases) and `cyberos-deep-audit-and-auto-evolution-plan-2026-07-06.md` (platform-wide R1-R52). This plan goes deep on one module only and is numbered independently: S = strength, F = finding, R = recommendation.
+Date: 2026-07-06. Scope: `services/memory` (Rust Layer-2 + BRAIN), `modules/memory` (Python Layer-1 personal store), the desktop app under `services/memory/desktop`, and their task catalog (`docs/tasks/memory/`). Method: full read of the brain subsystem source, migrations 0001-0008, the interaction-event path, the desktop sync supervisor, and the Python core module map, cross-checked against 2025-2026 state of the art (Mem0, Letta, Zep/Graphiti, LongMemEval, ElectricSQL/PowerSync, OpenAI Dreaming, Anthropic memory tool and contextual retrieval). Companion docs: `cyberos-brain-evaluation-plan.md` (governance + evaluation phases) and `cyberos-deep-audit-and-auto-evolution-plan-2026-07-06.md` (platform-wide R1-R52). This plan goes deep on one module only and is numbered independently: S = strength, F = finding, R = recommendation.
 
 ## 1. Executive summary
 
@@ -27,7 +27,7 @@ The recommendations below (R1-R108) are sequenced into four phases. P0 closes th
 | Privacy + compliance | PII regex-only and not in the cloud path; no retention engine; erasure unsolved vs chain | D |
 | Embedding lifecycle | Model version recorded per row; fixed vector(1024); no migration flow; serial embeds | C |
 | Observability | OTel RED + ingest/tier/recall metrics, Prometheus cursor gauges | B |
-| Self-evolution | Dream loop spec'd (FR-115) and implemented file-side; zero recall evals; no feedback signals | D+ |
+| Self-evolution | Dream loop spec'd (TASK-115) and implemented file-side; zero recall evals; no feedback signals | D+ |
 
 ## 3. Current state map
 
@@ -39,7 +39,7 @@ The Rust service (`services/memory`, ~9k LOC) is the enterprise plane: `l1_audit
 
 The desktop app (`services/memory/desktop`) is a Tauri 2 scaffold whose `sync_supervisor.rs` spawns `python3 -m cyberos.core.memory_sync_daemon` with a circuit breaker; the module it spawns does not exist yet, and the file's own header says so.
 
-The FR catalog already specifies most of what modern memory systems do: TASK-MEMORY-112 episodic memory, 113 recency-decay ranking (Park et al. 0.4 relevance / 0.3 importance / 0.3 recency), 114 write-time importance, 115 dreaming, 116 semantic dedup, 117 per-store ACL, 118 put-if preconditions, 119 session transcript ledger, 120 history. Wave 1-3 sequencing and Stephen's one-approval-at-a-time protocol rule are recorded in the FR README. The gap is that these are implemented (or specified) for the file store and absent from the serving path that the rest of CyberOS calls.
+The task catalog already specifies most of what modern memory systems do: TASK-MEMORY-112 episodic memory, 113 recency-decay ranking (Park et al. 0.4 relevance / 0.3 importance / 0.3 recency), 114 write-time importance, 115 dreaming, 116 semantic dedup, 117 per-store ACL, 118 put-if preconditions, 119 session transcript ledger, 120 history. Wave 1-3 sequencing and Stephen's one-approval-at-a-time protocol rule are recorded in the task README. The gap is that these are implemented (or specified) for the file store and absent from the serving path that the rest of CyberOS calls.
 
 ## 4. Strengths to preserve (S1-S12)
 
@@ -195,7 +195,7 @@ Numbered R1-R108, grouped A-J. Each item names the mechanism and, where useful, 
 - R64. Do not adopt CRDTs for memory rows. They solve concurrent collaborative editing, which memory does not have (single writer per row, server-derived everything else), and they complicate audit. If collaboratively edited memory notes ever ship, scope Automerge 3 or Loro to those documents only.
 - R65. Enforce `sync_class` server-side at the shape boundary (private rows never leave the owner's devices; shareable rows follow access grants), not just in the Python client (`sync_class.py`); add an RLS-backed test.
 - R66. Desktop at-rest encryption: SQLCipher (AES-256) with the key in the OS keystore via the keyring crate, WAL mode, 0600 permissions including WAL/journal files; document the recovery story (re-hydrate from server on key loss).
-- R67. Offline capture: interaction events and quick-capture notes queue in the local outbox with client-generated UUIDv7 `event_id`s; replays collide harmlessly with the unique guard. Document this contract in the FR so module authors rely on it.
+- R67. Offline capture: interaction events and quick-capture notes queue in the local outbox with client-generated UUIDv7 `event_id`s; replays collide harmlessly with the unique guard. Document this contract in the task so module authors rely on it.
 - R68. Initial hydration: snapshot of the hot window (30d) plus profiles and current summaries, then cursor streaming; cold history stays server-side and fetches on demand by `audit_row_id` (the recall API already supports that shape).
 - R69. Keep `conflicts.py` sibling detection for the file store (Dropbox-class safety net), but mark it legacy once first-party sync ships; surface any detected sibling into the doctor report as today.
 - R70. Multi-device chain identity: add `device_id` to pushed chain rows so per-device segments interleave attributably in cloud L1; the anchor verify already tolerates this because anchors are per-row.
@@ -209,7 +209,7 @@ Numbered R1-R108, grouped A-J. Each item names the mechanism and, where useful, 
 - R75. (P0) Add RLS with FORCE to `l1_audit_log`, `l2_memory`, `l2_entity`, `l2_edge`, and extend the RLS property gate plus a scheduled cross-tenant probe to memory tables (deep-audit R15) (F17).
 - R76. Keep `tenant_id` leading every composite index (already true for new tables; verify `l1_audit_log` query plans under RLS since its PK is bare `seq`), and add an RLS performance smoke so policies do not silently 100x a query.
 - R77. Per-principal rate limits on recall/search (token bucket per subject and per tenant) plus a global concurrency cap; recall is an extraction oracle without them (F18).
-- R78. Ship real PII protection where content enters the cloud: a Presidio sidecar (analyzer + anonymizer) invoked by the Rust ingest path before any content-bearing body is chained, with the custom VN recognizers TASK-MEMORY-111 specifies (CCCD/CMND ids, VN phone formats, addresses), held to the FR's >= 99.5% recall bar on a labeled set; store `pii_flags[]` per row to drive retention and masking (F20).
+- R78. Ship real PII protection where content enters the cloud: a Presidio sidecar (analyzer + anonymizer) invoked by the Rust ingest path before any content-bearing body is chained, with the custom VN recognizers TASK-MEMORY-111 specifies (CCCD/CMND ids, VN phone formats, addresses), held to the task's >= 99.5% recall bar on a labeled set; store `pii_flags[]` per row to drive retention and masking (F20).
 - R79. Trust-scored provenance: every memory row carries `source_kind` (user | agent | tool | external) and a trust score that decays ranking for low-trust sources; recall snippets are wrapped as quoted data in agent prompts (never interpolated as instructions), and prompts state that memory content is untrusted input (F24).
 - R80. Quarantine new memories: facts younger than a soak window (or from low-trust sources) are excluded from recalls that feed privileged actions (evaluations, money, deploys) until aged or human-approved; expose `include_quarantined` only to admin tooling.
 - R81. Retention policy engine: per-kind and per-event-class TTLs (presence/view events weeks, content events years, facts until invalidated), a policy table that is itself versioned and chained, and a reaper that archives to cold object storage rather than deleting Layer 1 within its legal window (F22).
@@ -245,7 +245,7 @@ Numbered R1-R108, grouped A-J. Each item names the mechanism and, where useful, 
 - R105. Lumi reads memory only through the recall API with her own subject identity and access grants, never raw SQL; every evaluation cites `audit_row_id`s (TASK-EVAL-003), and the citation check is enforced at the evaluation engine, not by convention.
 - R106. Keep the personal-versus-company boundary explicit: `sync_class: private` rows never leave the owner's devices in plaintext (R65/R66); the enterprise BRAIN indexes only consented, shareable material; publish this split in the employee-facing notice.
 - R107. Per-module namespaces and budgets: memory kinds and spend caps per emitting module via gateway policy, so one chatty module cannot starve embedding budget or pollute recall for everyone.
-- R108. Write the module-author guide: how to emit events, what belongs in `attributes` versus `content_ref`, how to call recall with scopes, and the poisoning rules (memory output is data, not instructions). Add it to `docs/` beside the FR index and link it from AGENTS.md.
+- R108. Write the module-author guide: how to emit events, what belongs in `attributes` versus `content_ref`, how to call recall with scopes, and the poisoning rules (memory output is data, not instructions). Add it to `docs/` beside the task index and link it from AGENTS.md.
 
 ## 7. Target architecture
 
@@ -301,7 +301,7 @@ Phase 2, sync + compliance (3-5 weeks, parallelizable with Phase 1 tail). R60-R6
 
 Phase 3, evolution on (2-4 weeks, then permanent). R33 dream loop gated-live, R28/R29/R30 promotion + dedup + contradiction, R47/R24 feedback loop, R48 A/B, R49 GEPA, R52 self-healing registry, R53 weekly report, R56 benchmark, R58 poisoning suite, R101/R102 MCP + memory-tool surfaces, R104 console tile. Acceptance: one full month of unattended loop operation with every applied change carrying eval evidence and zero manual reverts.
 
-Suggested FR numbering for net-new work: TASK-MEMORY-125 auth+RLS hardening, 126 fact layer + op pipeline, 127 content-aware ingestion + PII sidecar, 128 hybrid ranking stack, 129 first-party sync, 130 retention + erasure + PDPL, 131 evolution loop + evals, 132 MCP/memory-tool surface. Existing TASK-MEMORY-112..120 fold into these rather than shipping file-store-only.
+Suggested task numbering for net-new work: TASK-MEMORY-125 auth+RLS hardening, 126 fact layer + op pipeline, 127 content-aware ingestion + PII sidecar, 128 hybrid ranking stack, 129 first-party sync, 130 retention + erasure + PDPL, 131 evolution loop + evals, 132 MCP/memory-tool surface. Existing TASK-MEMORY-112..120 fold into these rather than shipping file-store-only.
 
 ## 10. What not to do
 

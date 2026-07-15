@@ -2,8 +2,16 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future fr-catalog renderer) ─────
 id: TASK-AI-010
 title: "Streaming SSE end-to-end (token-by-token to client)"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AI
-priority: SHOULD
+priority: p1
 status: done
 verify: T
 phase: P0
@@ -71,7 +79,7 @@ risk_if_skipped: "Chat UX feels sluggish — users wait 3-5 seconds for full res
 The AI Gateway service **SHOULD** support Server-Sent Events (SSE) streaming for chat completions when the request has `stream: true`. The streaming path:
 
 1. **MUST** invoke `cost_ledger::precheck` (TASK-AI-001) synchronously before opening the SSE stream — no token streams without a valid hold. The hold is created with `state="held"`; reconcile (step 7) transitions it to `committed` or `cancelled`.
-2. **MUST** dispatch to `router::call_provider_streaming(req, resolved, deadline, policy)` (TASK-AI-008 §1 #16 — the streaming entry that returns `Err(StreamingNotImplemented)` in slice 2 stub form). This FR replaces the stub with the real SSE pipeline; TASK-AI-008 §1 #16's MUST-stub becomes a MUST-impl per slice 3.
+2. **MUST** dispatch to `router::call_provider_streaming(req, resolved, deadline, policy)` (TASK-AI-008 §1 #16 — the streaming entry that returns `Err(StreamingNotImplemented)` in slice 2 stub form). This task replaces the stub with the real SSE pipeline; TASK-AI-008 §1 #16's MUST-stub becomes a MUST-impl per slice 3.
 3. **MUST** emit SSE events in the canonical shape and order: zero or more `event: token` events, exactly one `event: usage` event, exactly one `event: done` event (or `event: error` if the stream failed). Token events use `data: {"text": "...", "model": "...", "index": N}\n\n`; the `index` field is monotonic per stream so clients can detect drops.
 4. **MUST** emit `event: error` on any provider failure mid-stream; the stream MUST close after. The error payload includes a structured code (`provider_disconnect`/`first_token_timeout`/`mid_stream_timeout`/`backpressure_drop`) and a human-readable message.
 5. **MUST** stream the first token within **1500ms p95** from request acceptance. The metric `ai_streaming_first_token_ms` (histogram) measures this; the bench gates p95 at 1500ms in CI.
@@ -985,18 +993,18 @@ pub async fn run(
 
 ## §7 — Dependencies
 
-### Code dependencies (other FRs/modules)
+### Code dependencies (other tasks/modules)
 
 - **TASK-AI-001 / TASK-AI-002** — `cost_ledger::precheck` and `cost_ledger::reconcile` (unchanged contracts; streaming uses the same calls).
 - **TASK-AI-006** — `alias::resolve` resolves the model before the stream opens.
-- **TASK-AI-008** — `router::call_provider_streaming` is the entry that this FR replaces (TASK-AI-008 §1 #16 ships a stub returning `StreamingNotImplemented`; TASK-AI-010 ships the real impl).
+- **TASK-AI-008** — `router::call_provider_streaming` is the entry that this task replaces (TASK-AI-008 §1 #16 ships a stub returning `StreamingNotImplemented`; TASK-AI-010 ships the real impl).
 - **TASK-AI-009** — Circuit breaker is consulted by `router::call_provider_streaming` before each provider attempt (same as the non-streaming path).
 
 ### Concept dependencies (shared types)
 
 - `ProviderUsage`, `FinishReason` from `crate::router::normalize` (TASK-AI-008 §3).
 - `CallOutcome` from `crate::cost_ledger` (TASK-AI-002).
-- `ProviderKind::as_metric_label()` and the `ReconcileReason::as_metric_label()` (added in this FR's §3) — both follow the TASK-AI-007 ISS-003 stable-string-label pattern.
+- `ProviderKind::as_metric_label()` and the `ReconcileReason::as_metric_label()` (added in this task's §3) — both follow the TASK-AI-007 ISS-003 stable-string-label pattern.
 - `tokio::sync::mpsc` for the in-process channel.
 - `axum::response::sse::{Sse, Event}` for the HTTP-level SSE serialization.
 
@@ -1099,7 +1107,7 @@ Content-Type: application/json
 
 ## §9 — Open questions
 
-All resolved at authoring time. Items deferred to later FRs:
+All resolved at authoring time. Items deferred to later tasks:
 
 - WebSocket variant for bidirectional flows (TASK-AI-022, P3 — not on the slice-2 roadmap).
 - Last-Event-Id resume semantics — explicitly NOT supported (a partial stream is committed; restart with a new request).

@@ -1,8 +1,16 @@
 ---
 id: TASK-MEMORY-112
 title: "memory episodic memory — `kind: episode` frontmatter + `cyberos recall-similar` API; task / approach / outcome / quality_score per Episode; reflection-loop foundation"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-19T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: memory
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -64,7 +72,7 @@ subtasks:
   - "0.5h: tests/fixtures/episode_corpus.jsonl — 40-row fixture: 10 success, 10 partial, 10 failure, 10 edge (zero duration, quality_score=0.0, etc.)"
   - "0.5h: walker.py — wire the new invariants so `cyberos doctor` catches violations the same way it catches frontmatter drift"
   - "0.5h: AGENTS.md + CHANGELOG.md — additive doc updates; AGENTS.md §2 gets one line for `memories/episodes/`; no §0.2 protocol-amendment chat-turn required because adding to the closed enum is exactly the §5.2 evolution path"
-risk_if_skipped: "Without episodic memory the memory can never answer the question 'have I tried this kind of task before, and did my approach work?'. Every other improvement in the 2026-Q3 wave compounds against this: TASK-MEMORY-113 (recency decay) and TASK-MEMORY-114 (importance scoring) need a clean Episode shape to score against; TASK-MEMORY-115 (cyberos dream) consumes Episodes when looking for cross-session patterns ('5 sessions all hit this 60-second retry'); TASK-MEMORY-120 (cyberos history) needs Episode rows to surface 'last time you tried this approach it took 4× longer than this run'. Shipping the rest of the wave without TASK-MEMORY-112 forces every downstream FR to either (a) hand-roll an Episode-shaped memory inline (drift inevitable) or (b) operate on raw audit rows (cardinality + semantic mismatch). The article's reflection loop (Ramakrushna §3) and the Anthropic talk's dreaming pipeline both pre-suppose this kind. Defer this and the wave becomes incoherent."
+risk_if_skipped: "Without episodic memory the memory can never answer the question 'have I tried this kind of task before, and did my approach work?'. Every other improvement in the 2026-Q3 wave compounds against this: TASK-MEMORY-113 (recency decay) and TASK-MEMORY-114 (importance scoring) need a clean Episode shape to score against; TASK-MEMORY-115 (cyberos dream) consumes Episodes when looking for cross-session patterns ('5 sessions all hit this 60-second retry'); TASK-MEMORY-120 (cyberos history) needs Episode rows to surface 'last time you tried this approach it took 4× longer than this run'. Shipping the rest of the wave without TASK-MEMORY-112 forces every downstream task to either (a) hand-roll an Episode-shaped memory inline (drift inevitable) or (b) operate on raw audit rows (cardinality + semantic mismatch). The article's reflection loop (Ramakrushna §3) and the Anthropic talk's dreaming pipeline both pre-suppose this kind. Defer this and the wave becomes incoherent."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -121,7 +129,7 @@ A new memory kind `episode` is the **agent's record of one completed task**. It 
 
 **Why a closed outcome enum (§1 #5)?** The article (Ramakrushna §3) defines outcome as `success | partial | failure`. Open-text outcomes turn dashboards into NLP problems: counting "partial" vs "partial success" vs "kinda worked" vs "almost-success". Closed enum keeps aggregation arithmetic, not heuristic. Anything ambiguous gets rejected at write time so the agent has to pick a side.
 
-**Why default missing `quality_score` to 0.5 (§1 #10, DEC-181)?** Three options were considered: (a) default to 1.0 ("optimistic, treat unscored as good"); (b) default to 0.0 ("pessimistic, treat unscored as bad"); (c) default to 0.5 ("no opinion"). The article's combined-score formula `relevance · 0.4 + importance · 0.3 + recency · 0.3` is sensitive to score weight; defaulting to either extreme would silently up-rank or down-rank unscored Episodes against scored ones. 0.5 is the only neutral value. Documented in the §3 type contract so downstream FRs (especially TASK-MEMORY-113's recall ranking) don't surprise the operator.
+**Why default missing `quality_score` to 0.5 (§1 #10, DEC-181)?** Three options were considered: (a) default to 1.0 ("optimistic, treat unscored as good"); (b) default to 0.0 ("pessimistic, treat unscored as bad"); (c) default to 0.5 ("no opinion"). The article's combined-score formula `relevance · 0.4 + importance · 0.3 + recency · 0.3` is sensitive to score weight; defaulting to either extreme would silently up-rank or down-rank unscored Episodes against scored ones. 0.5 is the only neutral value. Documented in the §3 type contract so downstream tasks (especially TASK-MEMORY-113's recall ranking) don't surprise the operator.
 
 **Why ship `recall-similar` separately from `recall` (§1 #11)?** Two reasons. First, `recall` is general (any `kind`) — adding kind-specific logic to it would push complexity into a path most callers don't need. Second, `recall-similar` is the load-bearing primitive for the reflection loop (Ramakrushna's §"Reflection loop"); separating it keeps the call site readable: "give me episodes similar to this current task" is one mental operation, "search the store" is another.
 
@@ -197,7 +205,7 @@ EpisodeOutcome = Literal["success", "partial", "failure"]
 
 @dataclass
 class Episode:
-    task:         str
+    Task:         str
     approach:     str
     outcome:      EpisodeOutcome
     duration_ms:  int
@@ -368,7 +376,7 @@ def add_args(sub: argparse.ArgumentParser) -> None:
 
 def run(writer: Writer, args: argparse.Namespace, actor: str) -> str:
     ep = Episode(
-        task=args.task, approach=args.approach, outcome=args.outcome,
+        Task=args.task, approach=args.approach, outcome=args.outcome,
         duration_ms=args.duration_ms, token_cost=args.token_cost,
         quality_score=args.quality_score, notes=args.notes, error=args.error,
     )
@@ -421,7 +429,7 @@ from cyberos.core.writer   import Writer
 def test_episode_log_writes_put_and_aux_rows(tmp_memory: Writer):
     """AC #4 + #18 — both `put` and `episode.logged` rows emitted."""
     seq_before = tmp_memory.head_seq()
-    ep = Episode(task="ship FR", approach="audit-revise loop", outcome="success",
+    ep = Episode(task="ship task", approach="audit-revise loop", outcome="success",
                  duration_ms=1800_000, quality_score=0.92)
     path = episode_log(tmp_memory, ep, actor="stephen")
     assert tmp_memory.head_seq() == seq_before + 2
@@ -572,7 +580,7 @@ def test_walker_rejects_outcome_outside_enum(broken_memory):
 {"task": "Ship TASK-AUTH-003 RLS enforcement", "approach": "single-commit RLS GUC; per-tenant policies", "outcome": "success", "duration_ms": 1800000, "token_cost": 120000, "quality_score": 0.9, "notes": "8/9 gaps closed"}
 {"task": "Migrate Slack workspace to Mattermost", "approach": "Slack import API + decommission gate ≥ 0.95", "outcome": "partial", "duration_ms": 5400000, "token_cost": 88000, "quality_score": 0.7, "notes": "decommission gate at 0.91; held back for round 2", "error": "decommission signal below 0.95 threshold"}
 {"task": "Reduce capture daemon p95", "approach": "rate-limit + debounce", "outcome": "failure", "duration_ms": 9_000_000, "token_cost": 200_000, "quality_score": 0.2, "notes": "p95 went UP because debounce ate priority events", "error": "wrong invariant"}
-{"task": "Author FR with §1↔§4↔§5 traceability", "approach": "audit-revise loop", "outcome": "success", "duration_ms": 1500000}
+{"task": "Author task with §1↔§4↔§5 traceability", "approach": "audit-revise loop", "outcome": "success", "duration_ms": 1500000}
 ```
 
 ---
@@ -595,10 +603,10 @@ API contracts above are the skeleton. Implementation order:
 ## §7 — Dependencies
 
 - **TASK-MEMORY-108 (depends on, shipped or in flight)** — semantic search engine: `cyberos.core.semantic.recall()` is the API we extend. If `sentence-transformers` not installed, FTS5 fallback is the same one TASK-MEMORY-108 ships.
-- **TASK-MEMORY-113 (this FR blocks)** — recency-decay recall ranking: pluggable `recency` function will replace the constant `1.0` placeholder in `combined_score`.
-- **TASK-MEMORY-114 (this FR blocks)** — write-time importance scoring: optional `meta.importance` field reuses the same per-kind frontmatter contract pattern.
-- **TASK-MEMORY-115 (this FR blocks)** — `cyberos dream` consumes `episode.logged` aux rows for cross-session pattern detection.
-- **TASK-MEMORY-120 (this FR enables)** — `cyberos history` surfaces "last time you tried this approach" by walking Episodes for a given task fingerprint.
+- **TASK-MEMORY-113 (this task blocks)** — recency-decay recall ranking: pluggable `recency` function will replace the constant `1.0` placeholder in `combined_score`.
+- **TASK-MEMORY-114 (this task blocks)** — write-time importance scoring: optional `meta.importance` field reuses the same per-kind frontmatter contract pattern.
+- **TASK-MEMORY-115 (this task blocks)** — `cyberos dream` consumes `episode.logged` aux rows for cross-session pattern detection.
+- **TASK-MEMORY-120 (this task enables)** — `cyberos history` surfaces "last time you tried this approach" by walking Episodes for a given task fingerprint.
 
 ---
 
@@ -710,7 +718,7 @@ All resolved. Deferred:
 - **Recall path is over-fetch + filter, not query-level kind filter at the engine.** Reason: SQLite FTS5 doesn't natively filter on JSON metadata; vector store does but each backend has its own filter syntax. Over-fetching 4× the requested k and filtering in Python is portable + fast enough (vector retrieval is O(log N); filter is O(k·4) post-step).
 - **Fixture corpus is 40+ rows because that's the threshold below which CI flakes.** Adding 10 more rows per quarter as the team observes new failure modes is the maintenance cadence (same as TASK-MEMORY-111's PII corpus).
 - **`memory_kind` is a string, not an enum, in the Python API.** Enum would be cleaner but it forces every caller to import the enum; a string is easier for the CLI to pass through. The schema is the source of truth; runtime validation is on the schema side.
-- **`tmp_memory` and `seeded_memory` pytest fixtures** — defined in `modules/memory/tests/core/test_mmr.py`. `tmp_memory` is a fresh empty store; `seeded_memory` has 5 episodes + 5 facts pre-loaded for recall tests. Add `empty_memory` and `broken_memory` (with a hand-written invalid Episode) in this FR.
+- **`tmp_memory` and `seeded_memory` pytest fixtures** — defined in `modules/memory/tests/core/test_mmr.py`. `tmp_memory` is a fresh empty store; `seeded_memory` has 5 episodes + 5 facts pre-loaded for recall tests. Add `empty_memory` and `broken_memory` (with a hand-written invalid Episode) in this task.
 - **Why we don't auto-set `last_seen_at` on the frontmatter.** The audit chain already records when the put happened; duplicating it in the body would be drift-prone. TASK-MEMORY-120 (`cyberos history`) projects `last_seen_at` from the latest audit row touching that path.
 
 ---

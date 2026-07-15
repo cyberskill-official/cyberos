@@ -1,10 +1,17 @@
 ---
 id: TASK-SKILL-119
 title: "Stale-reference sweep - repoint dead SDP anchors across modules/skill and refresh obsolete ship-workflow notes, with a doc-anchor checker"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: improvement
+created_at: 2026-07-12T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: SKILL
-priority: SHOULD
+priority: p1
 status: done
-class: improvement
 verify: T
 phase: Wave B - finish the children
 owner: Stephen Cheng (CTO)
@@ -39,12 +46,12 @@ modified_files:
 
 ## §1 - Description
 
-Skills are contracts; contracts that cite documents which no longer exist train agents to distrust citations. The SDP anchor died in the docs split and the ship workflow carries notes that predate its own children. This FR sweeps both and adds the checker that prevents recurrence.
+Skills are contracts; contracts that cite documents which no longer exist train agents to distrust citations. The SDP anchor died in the docs split and the ship workflow carries notes that predate its own children. This task sweeps both and adds the checker that prevents recurrence.
 
 Normative clauses:
 
 1. Every `modules/skill/*/SKILL.md` (and any other modules/skill markdown) citing `modules/cuo/README.md#software-development-process` - including the `SDP §2(a)..(g)` lettered forms - MUST be repointed to the live SDP location (`modules/cuo/docs/appendices.md` §13 stage mapping, or `modules/cuo/docs/module.md` where the prose form fits), preserving each citation's stage letter/number semantics unchanged.
-2. `ship-tasks.md` MUST drop the obsolete note (currently near line 199) claiming the code-review pair may not exist yet, replacing it with the current fact (pair exists, vendored); the Issue Request `TBD` (near line 137) MUST either point at a tracked FR id or be reworded as explicitly unscheduled future work - a bare `TBD` MUST NOT remain.
+2. `ship-tasks.md` MUST drop the obsolete note (currently near line 199) claiming the code-review pair may not exist yet, replacing it with the current fact (pair exists, vendored); the Issue Request `TBD` (near line 137) MUST either point at a tracked task id or be reworded as explicitly unscheduled future work - a bare `TBD` MUST NOT remain.
 3. A script `scripts/check_doc_anchors.sh` MUST scan `modules/skill/**/*.md` and `modules/cuo/**/*.md` for repo-relative markdown links and inline path#anchor citations, and verify each target file exists and (when an anchor is given) the anchor resolves to a heading in that file (GitHub slug rules: lowercase, spaces to hyphens, punctuation stripped). Unresolved references exit 10 as `DEAD <citing-file>:<line> -> <target>`; external URLs (http/https) MUST be skipped; a `--list` flag prints the would-be-swept set without failing.
 4. The checker MUST run in CI on changes to `modules/skill/**` or `modules/cuo/**` (extend `payload-gate.yml` from TASK-IMP-068 with a step, or the existing voice-and-consistency workflow - implementer's choice, documented in the workflow file).
 5. The sweep MUST NOT alter any skill's trigger description, frontmatter, or artefact contract - citation strings only (same byte-stability discipline as TASK-SKILL-118 §1 #7).
@@ -67,7 +74,7 @@ scripts/check_doc_anchors.sh [--list] [root]
 
 1. **Zero dead SDP anchors after the sweep** (§1 #1) - `grep -rn "modules/cuo/README.md" modules/skill modules/cuo` returns nothing, and the checker exits 0 over both trees.
 2. **Stage semantics preserved** (§1 #1) - the two named SKILL.md files (implementation-plan-author, architecture-decision-record-author) still cite their respective SDP stages (implementation prep / architecture decision), now at the live location.
-3. **Ship workflow notes are current** (§1 #2) - line-199-class note gone, replaced by the present-tense fact; no bare `TBD` remains in the file (grep clean), the Issue Request mention names an FR or says "future work, unscheduled".
+3. **Ship workflow notes are current** (§1 #2) - line-199-class note gone, replaced by the present-tense fact; no bare `TBD` remains in the file (grep clean), the Issue Request mention names a task or says "future work, unscheduled".
 4. **Checker resolves anchors, not just files** (§1 #3) - a fixture link to an existing file but nonexistent heading is reported DEAD with file:line; the same link with a valid heading passes.
 5. **External URLs skipped, --list works** (§1 #3) - an https link never fails the check; `--list` prints every reference with its status and exits 0.
 6. **CI wired** (§1 #4) - the chosen workflow runs the checker on the two path filters; the step is present and the workflow parses.

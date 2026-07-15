@@ -19,7 +19,7 @@ classifier_version: 3.0.0-a4
 
 - "Audit this existing PRD" → product-requirements-document-audit
 - "Check the PRD against acceptance criteria" → product-requirements-document-audit
-- "Turn this PRD into a backlog of FRs" → task-author
+- "Turn this PRD into a backlog of tasks" → task-author
 - "Draft an SRS from this PRD" → software-requirements-specification-author
 - "What's our Q4 hiring plan?" → none
 
@@ -32,7 +32,7 @@ classifier_version: 3.0.0-a4
 - Negative 1-2 catch the most common confusion: PRD author vs auditor.
   These ARE the auditor's positive triggers — verb cues ("audit",
   "check") MUST route to the auditor.
-- Negative 3 catches the downstream-chain confusion: PRD → FR backlog is
+- Negative 3 catches the downstream-chain confusion: PRD → task backlog is
   a separate skill (task-author), not this one.
 - Negative 4 catches the upstream-chain confusion: PRD → SRS is also a
   separate skill (software-requirements-specification-author).

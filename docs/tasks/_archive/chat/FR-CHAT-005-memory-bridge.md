@@ -128,7 +128,7 @@ The bridge **MUST** consume Postgres logical replication from chat DB and emit m
 
 **Why reactions as separate rows (§1 #17)?** A message + 20 reactions = 21 events. Bundling them produces fragile derived state ("the reaction count changed from 19 to 20 — was that an add or a delete?"). Separate rows mirror the source-of-truth shape.
 
-**Why channelmember events (§1 #18)?** TASK-CHAT-008 mentions resolve from channelmembers (who can see a mention?). TASK-CHAT-012 DSAR needs the timeline of "what channels did user X access." Without these events, those FRs would have to query the chat DB directly — coupling we want to avoid.
+**Why channelmember events (§1 #18)?** TASK-CHAT-008 mentions resolve from channelmembers (who can see a mention?). TASK-CHAT-012 DSAR needs the timeline of "what channels did user X access." Without these events, those tasks would have to query the chat DB directly — coupling we want to avoid.
 
 **Why refuse to start on read replica (§1 #19)?** Postgres logical replication only works on the primary. A bridge connected to a replica would silently consume nothing. Loud failure at startup is far better than silent no-op.
 
@@ -1114,7 +1114,7 @@ The bridge consumes `cyberos-memory-client::emit_with_ack(row, ack_tx)` (a works
 
 ### §6.6 — PII allowlist propagation
 
-FR-AGENTS.md §3.6 allows tenant-scoped PII allowlists. The bridge reads `<memory-root>/manifest.json::tenants[tenant_id].pii_allowlist` at startup and passes it to `cyberos_memory_pii::scan_and_redact(body, &allowlist)`. Reload on SIGHUP (or memory-side hot-reload event).
+Task-AGENTS.md §3.6 allows tenant-scoped PII allowlists. The bridge reads `<memory-root>/manifest.json::tenants[tenant_id].pii_allowlist` at startup and passes it to `cyberos_memory_pii::scan_and_redact(body, &allowlist)`. Reload on SIGHUP (or memory-side hot-reload event).
 
 ### §6.7 — Init publication command
 

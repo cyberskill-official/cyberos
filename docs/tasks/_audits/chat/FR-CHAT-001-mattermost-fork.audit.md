@@ -78,8 +78,8 @@ All 6 mechanical concerns addressed. **Score = 10/10.**
 16. `.github/CODEOWNERS` — pins `PINNED_COMMIT` + patches/** to legal-team approval.
 
 **Replaced stubs (2 files):**
-17. `.github/workflows/chat-license-drift-watcher.yml` — was placeholder stub; now full FR §1 #4 implementation with cron + workflow_dispatch + script invocation + exit-code handling.
-18. `.github/workflows/chat-cherry-pick-review.yml` — was placeholder stub; now FR §1 #5 implementation with label-required gate responding to `labeled`/`unlabeled` events.
+17. `.github/workflows/chat-license-drift-watcher.yml` — was placeholder stub; now full task §1 #4 implementation with cron + workflow_dispatch + script invocation + exit-code handling.
+18. `.github/workflows/chat-cherry-pick-review.yml` — was placeholder stub; now task §1 #5 implementation with label-required gate responding to `labeled`/`unlabeled` events.
 
 **Modified (1 file):**
 19. `services/Makefile` — appended `chat-build` / `chat-license-check` / `chat-test` / `chat-verify` targets that delegate into `services/chat/Makefile`.
@@ -128,7 +128,7 @@ Test sub-cases inside `license_drift_test.sh`:
 - ✅ All 10 §4 ACs trace to §1 clauses AND have at least one verifying artefact.
 - ✅ All §1 MUST-clauses surface as enforceable code or workflow.
 - ✅ §5 verification matches what was actually shipped (no spec drift).
-- ✅ No partial-ship state — every gap in §10.4 is explicitly out-of-scope per the FR's own §9 deferral list.
+- ✅ No partial-ship state — every gap in §10.4 is explicitly out-of-scope per the task's own §9 deferral list.
 
 **Status transition recommended:** `accepted → shipped`. The implementation pages BACKLOG.md regenerator's `IMPLEMENTATION_ORDER.md` appendix should move TASK-CHAT-001 out of Layer 0 pending into shipped.
 

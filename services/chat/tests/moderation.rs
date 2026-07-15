@@ -395,7 +395,7 @@ async fn duplicates_fold_and_severity_outranks_age() {
     assert_eq!(q[1]["report_count"], json!(3));
 }
 
-/// AC 7 — the privacy property this FR turns on. A DM report discloses the reported message and NOTHING
+/// AC 7 — the privacy property this task turns on. A DM report discloses the reported message and NOTHING
 /// else. Not the thread. Not one line of it.
 #[tokio::test]
 #[ignore = "requires Postgres (DATABASE_URL)"]

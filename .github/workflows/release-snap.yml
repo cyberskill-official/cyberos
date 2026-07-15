@@ -9,7 +9,7 @@ name: release-snap
 # external Flathub repository is a Stephen-gated, per-instance human action (spec §1 #2/#7;
 # AC #6 structurally guarantees no such automation exists under .github/ or tools/).
 #
-# Divergences from the FR's §3 skeleton, on purpose (recorded in the review packet):
+# Divergences from the task's §3 skeleton, on purpose (recorded in the review packet):
 #   - unconditional lint/anchor job added (AC #2/#3/#5/#6 need standing checks + a
 #     completed run to assert the gate's skipped-conclusion against)
 #   - staging extracts to apps/desktop/src-tauri/dist (snapcraft resolves `source: dist/`

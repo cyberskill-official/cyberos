@@ -89,4 +89,4 @@ At least 1 screenshot is required by Partner Center (1366×768 minimum, PNG/JPG,
 
 ## Open item carried forward
 
-CyberOS has chat (user-to-user content). The Play Store answer sheet flags that Play's UGC policy requires in-app report/block mechanisms and a published content policy, which don't exist yet, and recommends raising an FR before submitting. The same reasoning applies to any store review that asks about user-generated content — this is not Play-specific. Not blocking §5.4 itself (drafting copy), but should be resolved before §5.5 (submit) on **any** store, not just Play.
+CyberOS has chat (user-to-user content). The Play Store answer sheet flags that Play's UGC policy requires in-app report/block mechanisms and a published content policy, which don't exist yet, and recommends raising a task before submitting. The same reasoning applies to any store review that asks about user-generated content — this is not Play-specific. Not blocking §5.4 itself (drafting copy), but should be resolved before §5.5 (submit) on **any** store, not just Play.

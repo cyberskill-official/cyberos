@@ -50,7 +50,7 @@ A new screen set inside the TASK-APP-001 console under `apps/console/src/screens
 
 1. This panel MUST be a screen set inside the TASK-APP-001 console under `apps/console/`, reusing that app's shell, auth gate, and CDS design language. It MUST NOT define its own shell, its own auth, or a second design language; it is one panel added to the existing single-page app.
 
-2. The panel MUST consume only service APIs that already ship: the mcp-gateway `tools/list`, `tools/call`, tasks, and confirmation/elicitation surfaces (TASK-MCP-001, TASK-MCP-007, TASK-MCP-006, TASK-MCP-008) and the ai-gateway chat surface (TASK-AI-022). It MUST NOT introduce a new backend endpoint or server-side component. A screen that appears to need a new endpoint is a signal to extend the owning service's FR, not to add a backend in `app`; this is the guardrail metric.
+2. The panel MUST consume only service APIs that already ship: the mcp-gateway `tools/list`, `tools/call`, tasks, and confirmation/elicitation surfaces (TASK-MCP-001, TASK-MCP-007, TASK-MCP-006, TASK-MCP-008) and the ai-gateway chat surface (TASK-AI-022). It MUST NOT introduce a new backend endpoint or server-side component. A screen that appears to need a new endpoint is a signal to extend the owning service's task, not to add a backend in `app`; this is the guardrail metric.
 
 3. The workflow and skill list MUST come from the mcp-gateway `tools/list` surface (TASK-MCP-001) at runtime, filtered to what the signed-in subject may invoke. The panel MUST NOT show a hard-coded catalogue that can drift from what the gateway actually exposes.
 
@@ -60,7 +60,7 @@ A new screen set inside the TASK-APP-001 console under `apps/console/src/screens
 
 6. When a workflow step is destructive, the panel MUST surface the mcp-gateway confirmation/elicitation gate (TASK-MCP-006 annotation gating, TASK-MCP-008 elicitation) as an explicit confirm prompt, and MUST send the operator's verdict back to the gateway and honour it. The panel MUST NOT bypass, auto-confirm, or suppress that gate; a destructive step proceeds only when the gate clears.
 
-7. The GENIE assistant chat MUST route to the ai-gateway chat surface (TASK-AI-022), the same path the console already uses, scoped by the session. The panel MUST NOT call a model provider directly or open a second chat backend; the assistant's behaviour and any model risk are owned by the ai-gateway and CUO FRs, not by this presentation panel.
+7. The GENIE assistant chat MUST route to the ai-gateway chat surface (TASK-AI-022), the same path the console already uses, scoped by the session. The panel MUST NOT call a model provider directly or open a second chat backend; the assistant's behaviour and any model risk are owned by the ai-gateway and CUO tasks, not by this presentation panel.
 
 8. Every outbound call MUST carry the session token the TASK-APP-001 auth shell holds, and MUST target the same-origin mcp-gateway and ai-gateway upstreams that Caddy already fronts. The panel MUST NOT call third-party services or send operator data anywhere other than the configured CyberOS upstreams.
 
@@ -70,7 +70,7 @@ A new screen set inside the TASK-APP-001 console under `apps/console/src/screens
 
 ## Alternatives Considered
 
-Treat the desktop workflow trigger (TASK-APP-002) as the only run-and-monitor surface and add nothing to the console. Rejected because the two surfaces are not duplicates: TASK-APP-002 is a native Tauri binary the operator installs and updates per machine, and this panel is the web-console equivalent that needs no install and lives in the screen the operator already signs in to. The desktop app suits an always-on launcher on the operator's own machine; the console panel suits any browser behind the Caddy front. Both drive the same mcp-gateway and ai-gateway surfaces, so neither re-implements the other; they are two front-ends over one control plane, and this FR is the web one.
+Treat the desktop workflow trigger (TASK-APP-002) as the only run-and-monitor surface and add nothing to the console. Rejected because the two surfaces are not duplicates: TASK-APP-002 is a native Tauri binary the operator installs and updates per machine, and this panel is the web-console equivalent that needs no install and lives in the screen the operator already signs in to. The desktop app suits an always-on launcher on the operator's own machine; the console panel suits any browser behind the Caddy front. Both drive the same mcp-gateway and ai-gateway surfaces, so neither re-implements the other; they are two front-ends over one control plane, and this task is the web one.
 
 Build a standalone GENIE chat app, separate from the operator console. Rejected because it would duplicate the shell, the auth gate, and the CDS setup that TASK-APP-001 already provides, and split the operator's surfaces into two apps to sign in to. The GENIE chat is one tab of the same panel, behind the same session, routing to the same ai-gateway chat path the console already calls; a separate app buys nothing and doubles the maintenance.
 
@@ -88,7 +88,7 @@ Primary metric - operator workflow runs and GENIE turns through the console pane
 Guardrail metric - new backend endpoints introduced by the panel.
 - Definition: number of new server-side endpoints or backend components the panel requires in order to function.
 - Baseline: 0. The panel is specified as a pure front-end over the shipped mcp-gateway and ai-gateway surfaces.
-- Target: zero. Any screen that appears to need a new endpoint is a signal to extend the owning service's FR (mcp-gateway or ai-gateway), not to add a backend inside `app`.
+- Target: zero. Any screen that appears to need a new endpoint is a signal to extend the owning service's task (mcp-gateway or ai-gateway), not to add a backend inside `app`.
 - Measurement method: review of the panel's `apps/console/src/api/` clients against the existing mcp-gateway and ai-gateway route lists; any call to a route that does not already exist fails the check.
 - Source: the existing mcp-gateway and ai-gateway route definitions plus code review of the panel's API layer.
 
@@ -98,11 +98,11 @@ In scope: the workflows panel (the `tools/list`-driven catalogue, the JSON-argum
 
 ### Out of scope
 
-- Any new backend API or server-side component. The panel is a front-end only; new data needs go to the owning service's FR (mcp-gateway or ai-gateway).
-- Authoring or editing a workflow. The first release lists, triggers, and monitors existing workflows; creating, editing, versioning, or deleting a workflow stays in CUO and is a later FR.
+- Any new backend API or server-side component. The panel is a front-end only; new data needs go to the owning service's task (mcp-gateway or ai-gateway).
+- Authoring or editing a workflow. The first release lists, triggers, and monitors existing workflows; creating, editing, versioning, or deleting a workflow stays in CUO and is a later task.
 - Re-implementing CUO orchestration or the destructive-step gate. The panel surfaces and honours the gate the mcp-gateway returns; it does not decide what is destructive or run the workflow itself.
 - A second auth flow, shell, or design language. Sign-in, the app shell, and the CDS look are owned by TASK-APP-001; this panel reuses them and adds none of its own.
-- The native desktop trigger. The web panel and the Tauri app (TASK-APP-002) are separate front-ends over the same control plane; this FR does not change or absorb the desktop app.
+- The native desktop trigger. The web panel and the Tauri app (TASK-APP-002) are separate front-ends over the same control plane; this task does not change or absorb the desktop app.
 
 ## Dependencies
 
@@ -118,6 +118,6 @@ In scope: the workflows panel (the `tools/list`-driven catalogue, the JSON-argum
 
 ## AI Authorship Disclosure
 
-- Tools used: Claude (Cowork), authoring this FR from the founder's unified-admin-console decision (one operator console with one panel per engine module, no separate GUIs) and the existing module FRs (mcp-gateway, CUO, ai-gateway, auth, and TASK-APP-001).
-- Scope: full draft of this specification, including the normative clauses, the alternatives, the metrics, and the scope boundaries. No console code is written by this FR; the panel is built in a later session.
+- Tools used: Claude (Cowork), authoring this task from the founder's unified-admin-console decision (one operator console with one panel per engine module, no separate GUIs) and the existing module tasks (mcp-gateway, CUO, ai-gateway, auth, and TASK-APP-001).
+- Scope: full draft of this specification, including the normative clauses, the alternatives, the metrics, and the scope boundaries. No console code is written by this task; the panel is built in a later session.
 - Human review: Stephen reviews and approves before status moves past draft. The "one panel in the TASK-APP-001 SPA, no new backend, never bypass the destructive-step gate" boundaries are operator-mandated, and the paired audit (TASK-APP-006.audit.md) validates the format before merge.

@@ -74,7 +74,7 @@ Tauri is the recommended framework, for four concrete reasons. The backend is Ru
 
 Electron instead of Tauri. Rejected on two counts. It bundles Chromium, so the binary is an order of magnitude larger for a tool the operator updates frequently, and it puts the backend in Node, away from the Rust stack that the gateway and mcp-gateway are written in. Tauri keeps the backend in Rust (shared types and clients with the existing crates) and uses the OS webview, so the binary stays small. The cross-OS story is comparable; the stack-match and size arguments decide it.
 
-A terminal TUI (a Rust ratatui app) instead of a desktop app. Rejected because it still lives in a terminal, which is the round-trip this FR removes. A TUI would reuse the same Rust clients, but the operator wants a desktop launcher with a window and a clickable picker, not another shell program. The clients are factored so a TUI could be added later if needed.
+A terminal TUI (a Rust ratatui app) instead of a desktop app. Rejected because it still lives in a terminal, which is the round-trip this task removes. A TUI would reuse the same Rust clients, but the operator wants a desktop launcher with a window and a clickable picker, not another shell program. The clients are factored so a TUI could be added later if needed.
 
 Drive the existing portal client-initiated-workflow surface (TASK-PORTAL-006) from a desktop wrapper. Rejected because that surface is tenant-facing and engagement-scoped: it is for a client submitting a request into a CHAT thread, not for the CyberOS operator triggering an internal workflow. The operator surface is `app`, distinct from the tenant-facing `portal`; reusing the portal write path would conflate the two audiences and pull engagement scoping into an operator tool.
 
@@ -102,7 +102,7 @@ In scope: the Tauri shell (Rust src-tauri backend plus the webview front-end), s
 
 - A full IDE or code editor. This is a launcher and a status surface, not a development environment.
 - Offline workflow execution. The app triggers runs on the live backend; with no backend reachable it shows an error, it does not run anything locally.
-- App-store distribution (Mac App Store, Microsoft Store) in v1. The macOS build ships as a directly distributed signed binary; store packaging is a later FR.
+- App-store distribution (Mac App Store, Microsoft Store) in v1. The macOS build ships as a directly distributed signed binary; store packaging is a later task.
 - Re-implementing any workflow or skill. The app only triggers existing ones through the existing endpoints; CUO and the skills own the logic.
 - Windows and Linux builds as delivered artefacts in v1. The code stays portable and the keychain trait has the other backends sketched, but only macOS is built and shipped first.
 
@@ -120,6 +120,6 @@ In scope: the Tauri shell (Rust src-tauri backend plus the webview front-end), s
 
 ## AI Authorship Disclosure
 
-- Tools used: Claude (Cowork), authoring this FR from Stephen's capability request and the existing gateway, mcp-gateway, CUO, and auth FRs.
-- Scope: full draft of this specification, including the normative clauses, the Tauri recommendation and its rationale, the alternatives, the metrics, and the scope boundaries. No application code is written by this FR; the desktop app is built in a later session.
+- Tools used: Claude (Cowork), authoring this task from Stephen's capability request and the existing gateway, mcp-gateway, CUO, and auth tasks.
+- Scope: full draft of this specification, including the normative clauses, the Tauri recommendation and its rationale, the alternatives, the metrics, and the scope boundaries. No application code is written by this task; the desktop app is built in a later session.
 - Human review: Stephen reviews and approves before status moves past draft. The Tauri choice (Rust-native, small binary, multi-OS, macOS first) is operator-confirmed, and the paired audit (TASK-APP-002.audit.md) validates the format before merge.

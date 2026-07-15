@@ -42,7 +42,7 @@ Flat list lost conversation context. Resolved: §1 #13 + threading + depth-5 cap
 Standard @user tagging missing. Resolved: §1 #14 + auto-complete + notify + AC #24.
 
 ### ISS-009 — Attachments missing (strict-redo pass)
-Comments couldn't carry files (screenshots, logs). Resolved: §1 #15 + FR-FILES upload + AC #25.
+Comments couldn't carry files (screenshots, logs). Resolved: §1 #15 + task-FILES upload + AC #25.
 
 ### ISS-010 — Reactions missing (strict-redo pass)
 Lightweight feedback signal absent. Resolved: §1 #16 + reaction tally + AC #26.

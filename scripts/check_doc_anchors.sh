@@ -28,7 +28,7 @@ def slug(h):
     return re.sub(r"\s+", "-", h).strip("-")
 
 def planned_files(src):
-    """new_files/modified_files entries of an FR spec (planned deliverables are valid citations)."""
+    """new_files/modified_files entries of a task spec (planned deliverables are valid citations)."""
     out = set()
     try:
         txt = open(src, encoding="utf-8", errors="replace").read()
@@ -48,7 +48,7 @@ def corpus_planned(repo):
     if CORPUS_PLANNED is None:
         CORPUS_PLANNED = set()
         import glob as g
-        for spec in g.glob(os.path.join(repo, "docs", "tasks", "*", "FR-*", "spec.md")):
+        for spec in g.glob(os.path.join(repo, "docs", "tasks", "*", "TASK-*", "spec.md")):
             CORPUS_PLANNED |= planned_files(spec)
     return CORPUS_PLANNED
 

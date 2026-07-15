@@ -1,8 +1,16 @@
 ---
 id: TASK-CRM-003
 title: "CRM VN account types + MST — legal entity classification (Sole/LLC/JSC/FDI) + tax ID field with format validation"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: CRM
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P1
@@ -195,7 +203,7 @@ async fn invalid_mst_rejected() {
 | Residency=vn-1 without MST | trigger/handler | 400 | provide MST |
 | Residency change vn-1 → sg-1 | leave MST as-is | inherent | inherent |
 | MST duplicate across tenants | per-tenant index OK (cross-tenant allowed) | inherent | inherent |
-| TASK-CRM-008 skill validates external | future FR | optional confirm via GDT | inherent |
+| TASK-CRM-008 skill validates external | future task | optional confirm via GDT | inherent |
 | Account legacy missing fields | migration backfill | NULL preserved | manual fill |
 | MST with whitespace | reject | 400 | trim client-side |
 

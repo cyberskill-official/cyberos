@@ -90,7 +90,7 @@ Primary metric - operator console adoption for the first screens.
 Guardrail metric - new backend endpoints introduced by the console.
 - Definition: number of new server-side endpoints or backend components the console requires in order to function.
 - Baseline: 0. The console is specified as a pure front-end over shipped APIs.
-- Target: zero. Any screen that appears to need a new endpoint is a signal to extend the owning service's FR, not to add a backend inside `app`.
+- Target: zero. Any screen that appears to need a new endpoint is a signal to extend the owning service's task, not to add a backend inside `app`.
 - Measurement method: review of the console's `apps/console/src/api/` clients against the existing service OpenAPI and route lists; any call to a route that does not already exist fails the check.
 - Source: the existing gateway and obs route definitions plus code review of the console's API layer.
 
@@ -100,11 +100,11 @@ In scope: the static SPA shell built with CDS tokens and components, the auth-ga
 
 ### Out of scope
 
-- Any new backend API or server-side component. The console is a front-end only; new data needs go to the owning service's FR.
+- Any new backend API or server-side component. The console is a front-end only; new data needs go to the owning service's task.
 - Tenant-facing branding or any white-label theming. That is the `portal` module's job (TASK-PORTAL-002); this console is CyberSkill-branded and operator-only.
-- A native mobile app. The console is a responsive web SPA; a native shell, if ever wanted, is a separate FR (the desktop trigger is TASK-APP-002).
+- A native mobile app. The console is a responsive web SPA; a native shell, if ever wanted, is a separate task (the desktop trigger is TASK-APP-002).
 - Re-hosting or replacing Grafana. The console links to Grafana through the obs-proxy for deep metric panels; it does not reimplement dashboards.
-- Write or admin-mutation flows beyond what the first screens need. The first release is read-oriented (compliance views, health, usage); operator mutations are added screen by screen in later FRs.
+- Write or admin-mutation flows beyond what the first screens need. The first release is read-oriented (compliance views, health, usage); operator mutations are added screen by screen in later tasks.
 
 ## Dependencies
 
@@ -114,11 +114,11 @@ In scope: the static SPA shell built with CDS tokens and components, the auth-ga
 - TASK-OBS-002 tenant-aware Grafana proxy - the obs-proxy the console links to for deep metric panels.
 - TASK-AUTH-004 JWT and JWKS - the session token the auth shell holds and presents on every call.
 - TASK-AUTH-104 OIDC SSO - the IdP sign-in path for operators who authenticate through an identity provider.
-- TASK-PORTAL-006 and TASK-PORTAL-007 - referenced for contrast and house style, not consumed: those are the tenant-facing client-surface FRs, and the operator console deliberately sits in a separate module from them.
+- TASK-PORTAL-006 and TASK-PORTAL-007 - referenced for contrast and house style, not consumed: those are the tenant-facing client-surface tasks, and the operator console deliberately sits in a separate module from them.
 - Cross-cutting: the existing Caddy front that terminates the other CyberOS surfaces; the console adds a static-serving snippet, not a new ingress.
 
 ## AI Authorship Disclosure
 
-- Tools used: Claude (Cowork), authoring this FR from Stephen's capability request and the existing gateway, obs, auth, and portal FRs.
-- Scope: full draft of this specification, including the normative clauses, the alternatives, the metrics, and the scope boundaries. No console code is written by this FR; the SPA is built in a later session.
+- Tools used: Claude (Cowork), authoring this task from Stephen's capability request and the existing gateway, obs, auth, and portal tasks.
+- Scope: full draft of this specification, including the normative clauses, the alternatives, the metrics, and the scope boundaries. No console code is written by this task; the SPA is built in a later session.
 - Human review: Stephen reviews and approves before status moves past draft. The "front-end only, no new backend" boundary and the CDS-as-source-of-truth rule are operator-mandated, and the paired audit (TASK-APP-001.audit.md) validates the format before merge.

@@ -1,8 +1,16 @@
 ---
 id: TASK-TIME-008
 title: "TIME expense capture — photo → AWS Textract OCR → hóa đơn parser → Member confirm + categorisation + invoice integration"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: TIME
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P1
@@ -85,7 +93,7 @@ subtasks:
   - "2.0h: tests — 10 test files"
   - "0.6h: integration smoke against Textract sandbox"
 
-risk_if_skipped: "Without expense capture, Members keep paper receipts → lost reimbursements, lost billable expense lines, audit gaps. Without DEC-1453 confirm gate, OCR errors silently bill clients fake amounts. Without DEC-1454 policy cap, runaway expenses (Member submits $5000 dinner). Without DEC-1456 hóa đơn parsing, VN tax reconciliation fails. The 8h effort is the most complex TIME FR (OCR pipeline + 2 parsers + policy + invoice integration)."
+risk_if_skipped: "Without expense capture, Members keep paper receipts → lost reimbursements, lost billable expense lines, audit gaps. Without DEC-1453 confirm gate, OCR errors silently bill clients fake amounts. Without DEC-1454 policy cap, runaway expenses (Member submits $5000 dinner). Without DEC-1456 hóa đơn parsing, VN tax reconciliation fails. The 8h effort is the most complex TIME task (OCR pipeline + 2 parsers + policy + invoice integration)."
 ---
 
 ## §1 — Description (BCP-14 normative)

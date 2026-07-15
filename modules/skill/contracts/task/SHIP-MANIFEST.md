@@ -1,10 +1,10 @@
-# ship-manifest@1 - per-FR run state for chief-technology-officer/ship-tasks (TASK-CUO-206)
+# ship-manifest@1 - per-task run state for chief-technology-officer/ship-tasks (TASK-CUO-206)
 
 The manifest is a CACHE of proven work, never an authority: resumes re-hash artefacts, human
-gates always re-ask, and deleting a manifest costs at most redone work. FR frontmatter and
+gates always re-ask, and deleting a manifest costs at most redone work. Task frontmatter and
 BACKLOG.md remain the only committed state.
 
-Location: `docs/tasks/.workflow/<FR-ID>.ship.json` (gitignored via the scaffolded
+Location: `docs/tasks/.workflow/<task-ID>.ship.json` (gitignored via the scaffolded
 `.workflow/.gitignore`). Written after EVERY completed, failed, or conditionally-skipped step
 with two-phase atomic writes (`.tmp.<nonce>` then rename), mirroring the memory protocol.
 
@@ -13,8 +13,8 @@ with two-phase atomic writes (`.tmp.<nonce>` then rename), mirroring the memory 
 | field | type | rule |
 |---|---|---|
 | manifest_version | const | `ship-manifest@1` |
-| task_id | string | the FR being shipped |
-| fr_sha256 | hex64 | hash of the FR spec at run start; later mismatch = whole manifest stale |
+| task_id | string | the task being shipped |
+| fr_sha256 | hex64 | hash of the task spec at run start; later mismatch = whole manifest stale |
 | workflow_version | string | from the workflow doc frontmatter; mismatch on resume = needs_human |
 | started_at / updated_at | ISO-8601 | informational; ordering uses step indices, never timestamps |
 | current_step | int 1..31 | |
@@ -41,12 +41,12 @@ with two-phase atomic writes (`.tmp.<nonce>` then rename), mirroring the memory 
 - Terminal: `done` (gate 2 passed) deletes the manifest; route-back keeps it with
   routed_back_count += 1.
 
-## Queue selection (ship invoked without an FR id)
+## Queue selection (ship invoked without a task id)
 
-Among FRs at `ready_to_implement` whose `depends_on` are all `done`: order by priority
+Among tasks at `ready_to_implement` whose `depends_on` are all `done`: order by priority
 (MUST < SHOULD < COULD), then `created` ascending, then id ascending. Echo the selection
 reasoning line to the operator before step 1: 
-`queue: picked <id> (priority=<p>, created=<d>) over <n> other eligible FRs`.
+`queue: picked <id> (priority=<p>, created=<d>) over <n> other eligible tasks`.
 
 Reference helpers: `modules/cuo/cuo/ship_manifest.py` (validate / resume_plan / select_next /
 finalize) - doc-driven agents apply the same algorithm from this contract.

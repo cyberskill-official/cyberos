@@ -2,11 +2,11 @@
 
 This is the portable form of the single `ship-tasks` workflow. It runs in any repo, any language, with no CyberOS clone required. It is exposed through many channels so a user can pick whatever fits their setup.
 
-New to it? `GUIDE.md` is the step-by-step walkthrough (zero to your first shipped FR). This README is the channel catalog and reference.
+New to it? `GUIDE.md` is the step-by-step walkthrough (zero to your first shipped task). This README is the channel catalog and reference.
 
-`install` sets up two things by default: the FR workflow AND the BRAIN memory protocol. It scaffolds a local `.cyberos/memory/store/` store (gitignored tenant data) and drops the `AGENTS.md` Layer-1 memory rules, so the project gets both the workflow and the memory discipline. Skip the memory half with `CYBEROS_NO_MEMORY=1`.
+`install` sets up two things by default: the task workflow AND the BRAIN memory protocol. It scaffolds a local `.cyberos/memory/store/` store (gitignored tenant data) and drops the `AGENTS.md` Layer-1 memory rules, so the project gets both the workflow and the memory discipline. Skip the memory half with `CYBEROS_NO_MEMORY=1`.
 
-`install` also runs the FR migration automatically (skip with `CYBEROS_NO_MIGRATE=1`): pre-existing FRs move to the folder-per-FR layout (root-level flat FRs included - module comes from frontmatter `module:`, else the FR id segment), a `CHANGELOG.md` is seeded once if the repo has none, and the status page (Roadmap | Backlog | Changelog tabs) is (re)generated at `docs/status/` - a folder holding `index.html` plus `assets/` (stylesheet + favicon), titled after the target repo (never "CyberOS" for someone else's project). That one page REPLACES the old standalone documents: a pre-existing `docs/BACKLOG.md` is adopted into `docs/tasks/BACKLOG.md` and a `docs/CHANGELOG.md` into the root `CHANGELOG.md` (content preserved, each only when the canonical home is empty), then any remaining `docs/ROADMAP.md` / `docs/BACKLOG.md` / `docs/CHANGELOG.md` is REMOVED - the page is those documents now, and git history keeps the old text. The migration ends with a machine-readable verify line (`cyberos-migrate verify: fr_specs=N flat_fr_files_remaining=0 fr_folders_missing_spec=0 status_page=present`) and WARNs for anything it could not place.
+`install` also runs the task migration automatically (skip with `CYBEROS_NO_MIGRATE=1`): pre-existing tasks move to the folder-per-task layout (root-level flat tasks included - module comes from frontmatter `module:`, else the task id segment), a `CHANGELOG.md` is seeded once if the repo has none, and the status page (Roadmap | Backlog | Changelog tabs) is (re)generated at `docs/status/` - a folder holding `index.html` plus `assets/` (stylesheet + favicon), titled after the target repo (never "CyberOS" for someone else's project). That one page REPLACES the old standalone documents: a pre-existing `docs/BACKLOG.md` is adopted into `docs/tasks/BACKLOG.md` and a `docs/CHANGELOG.md` into the root `CHANGELOG.md` (content preserved, each only when the canonical home is empty), then any remaining `docs/ROADMAP.md` / `docs/BACKLOG.md` / `docs/CHANGELOG.md` is REMOVED - the page is those documents now, and git history keeps the old text. The migration ends with a machine-readable verify line (`cyberos-migrate verify: fr_specs=N flat_fr_files_remaining=0 fr_folders_missing_spec=0 status_page=present`) and WARNs for anything it could not place.
 
 The page stays synced with the markdown it renders - markdown remains the record of truth, the page only renders it. Two auto-sync touchpoints: a managed `pre-commit` hook (installed only when no foreign hook exists; never blocks a commit; `CYBEROS_NO_HOOK=1` skips) regenerates `docs/status/` whenever `docs/tasks/**`, `CHANGELOG.md`, or `VERSION` is staged, and `run-gates.sh` regenerates it after every gates run. Manual refresh any time: `bash .cyberos/lib/status-page.sh`.
 
@@ -121,12 +121,12 @@ curl -fsSL https://raw.githubusercontent.com/cyberskill-official/cyberos/main/to
 
 ### 4. Claude plugin (available)
 
-The payload IS a plugin marketplace: `dist/cyberos/.claude-plugin/marketplace.json` catalogs the plugin at `dist/cyberos/plugin/` (its own manifest at `plugin/.claude-plugin/plugin.json`; the `/install`, `/version`, `/status`, `/help` commands and the `ship-tasks` skill (typeable as `/ship-tasks`, and used automatically when you ask to ship an FR)). Install:
+The payload IS a plugin marketplace: `dist/cyberos/.claude-plugin/marketplace.json` catalogs the plugin at `dist/cyberos/plugin/` (its own manifest at `plugin/.claude-plugin/plugin.json`; the `/install`, `/version`, `/status`, `/help` commands and the `ship-tasks` skill (typeable as `/ship-tasks`, and used automatically when you ask to ship a task)). Install:
 
 - Claude Code: `/plugin marketplace add /path/to/dist/cyberos`, then `/plugin install cyberos@cyberos`.
 - Claude desktop / Cowork: the Add picker wants a FILE - use `dist/cyberos/cyberos.plugin` (the one-file bundle build.sh produces; selecting a folder greys the Open button). The folder route works where marketplaces are supported: add `dist/cyberos` as a marketplace (its root carries `.claude-plugin/marketplace.json`).
 
-Then run `/install` in a repo and `/ship-tasks` (or just ask to ship the next FR) to drive the backlog; `/version` and `/status` keep the repo current, `/help` orients a new user.
+Then run `/install` in a repo and `/ship-tasks` (or just ask to ship the next task) to drive the backlog; `/version` and `/status` keep the repo current, `/help` orients a new user.
 
 ### 4b. Every other agent (Codex, Cursor, Gemini, Antigravity, Grok, zcode, Command Code, Copilot, Windsurf) - agent-independent
 
@@ -192,8 +192,8 @@ Every agent is one data row in `install.sh`. For an instruction pointer file: ad
 
 ## After install: trigger, gate, sign off
 
-1. Write an FR: `cp .cyberos/cuo/templates/FR-TEMPLATE.md docs/tasks/FR-001-<slug>.md`, fill section 1, set `status: ready_to_implement`, add the row to `BACKLOG.md`.
-2. Trigger: tell your agent to follow `.cyberos/cuo/ship-tasks.md` and drive the next eligible FR, HITL required, `repo_root` = this repo. (Or `/ship-tasks` with the plugin.)
+1. Write a task: `cp .cyberos/cuo/templates/task-TEMPLATE.md docs/tasks/TASK-001-<slug>.md`, fill section 1, set `status: ready_to_implement`, add the row to `BACKLOG.md`.
+2. Trigger: tell your agent to follow `.cyberos/cuo/ship-tasks.md` and drive the next eligible task, HITL required, `repo_root` = this repo. (Or `/ship-tasks` with the plugin.)
 3. Gate: `bash .cyberos/cuo/gates/run-gates.sh`.
 4. Sign off: you record the review verdict and the final acceptance. The agent never sets `done`.
 

@@ -1,8 +1,16 @@
 ---
 id: TASK-AUTH-004
 title: "JWT issuance + JWKS endpoint (RS256) with tenant_id + agent_persona + scope_grants + dual-rate-limit + jti dedup"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AUTH
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P0
@@ -66,7 +74,7 @@ subtasks:
   - "0.5h: jti generation (ULID format) + emission in claims"
   - "0.5h: Constant-time email lookup (bcrypt-verify even on missing-email to prevent enumeration timing)"
   - "0.5h: canonical::token_issued + canonical::token_failed memory audit row builders"
-  - "0.5h: Quarterly rotation cron (TASK-AUTH-006 schedules; this FR provides the function)"
+  - "0.5h: Quarterly rotation cron (TASK-AUTH-006 schedules; this task provides the function)"
   - "1.5h: Tests — happy + invalid pwd + suspended + rate-limit IP + rate-limit account + JWKS rotation + verify + replay"
   - "0.5h: OTel spans + metrics"
 risk_if_skipped: "No JWT means no authentication for any downstream module. AI Gateway can't read tenant_id from claims (TASK-AI-006 explicitly references this). MCP module has no scope-gating. Without dual-rate-limit, credential stuffing succeeds (single-IP attackers can iterate accounts; per-account limits without per-IP let distributed attacks pass). Without JWKS rotation overlap, key rotation produces an outage window where in-flight tokens fail verification. Without auth.token_failed audit, brute-force attacks are invisible."
@@ -103,13 +111,13 @@ The AUTH service **MUST** issue RS256-signed JWTs containing tenant context, per
 9. **MUST** use **constant-time email lookup** to prevent enumeration timing attack: even when the email doesn't exist in the requested tenant, the handler runs a dummy `bcrypt::verify` against a constant hash to keep response time identical for "wrong password" vs "no such email." Without this, an attacker times responses to enumerate valid emails.
 10. **MUST** complete `/v1/auth/token` in ≤ 250ms p95 (bcrypt verify ~150ms + DB + claims build + sign ~50ms + audit emit ~50ms). Above this budget, investigate (likely DB or Redis latency).
 11. **MUST** include `kid` (key id) in the JWT header so verifiers know which JWKS key to use. Without `kid`, verifiers must try every key — works at slice 1 but doesn't scale.
-12. **MUST** propagate `agent_persona` from `subjects.default_persona` column (added in this FR) — the persona claim defaults to `"cuo-cpo@0.4.1"` if not set per subject. Callers can override at request time via `X-Override-Persona` header (subject to TASK-AI-005's allowed-personas check).
+12. **MUST** propagate `agent_persona` from `subjects.default_persona` column (added in this task) — the persona claim defaults to `"cuo-cpo@0.4.1"` if not set per subject. Callers can override at request time via `X-Override-Persona` header (subject to TASK-AI-005's allowed-personas check).
 13. **MUST** generate `scope_grants` from a join of `subjects.roles` × role-to-grants mapping (defined in `services/auth/src/scope_map.rs`). Slice 1 mappings:
     - `tenant-admin` → `["chat:*", "kb:*", "proj:*", "ai:read", "ai:invoke"]`
     - `tenant-member` → `["chat:read", "chat:write", "kb:read", "ai:invoke"]`
     - `root-admin` (tenant 0 only) → `["*"]`
 14. **MUST** check `subjects.suspended == false` BEFORE issuing token. Suspended subjects get `403 FORBIDDEN` with `{"error":"subject_suspended","contact":"ops@cyberos.world"}` AND an `auth.token_failed` audit row with reason `suspended`.
-15. **SHOULD** support refresh tokens via separate HTTP-only cookie (TASK-AUTH-007 ships the full flow; this FR defines the access-token shape).
+15. **SHOULD** support refresh tokens via separate HTTP-only cookie (TASK-AUTH-007 ships the full flow; this task defines the access-token shape).
 16. **SHOULD** emit OTel metrics:
     - `auth_token_issued_total{tenant_id, outcome}` (counter; outcome ∈ ok | invalid_credentials | suspended | rate_limited).
     - `auth_token_issuance_latency_ms` (histogram; SLO p95 < 250ms).

@@ -49,7 +49,7 @@ Add to §3 the explicit `AliasError::ResidencyViolation { policy_residency, reso
 
 #### Description
 
-The first-pass AC #8 wrote: *"Override to `bedrock ap-southeast-1` → `Ok`."* But the FR doesn't define what "override" means — is it a per-tenant config, a per-call request field, a different alias name? Without a spec, this AC is untestable; a code-gen agent cannot implement what isn't specified.
+The first-pass AC #8 wrote: *"Override to `bedrock ap-southeast-1` → `Ok`."* But the task doesn't define what "override" means — is it a per-tenant config, a per-call request field, a different alias name? Without a spec, this AC is untestable; a code-gen agent cannot implement what isn't specified.
 
 The pattern is real (a tenant occasionally needs one alias to behave differently from the tenant default), so the override mechanism is genuinely useful — but it has to be a first-class normative feature, not an aside in an AC.
 
@@ -60,7 +60,7 @@ Add §1 #11 normative requirement: per-alias `residency_override` map in tenant 
 ### ISS-003 — No `ai.residency_violation` audit row; TASK-AI-015 has the analogue but TASK-AI-016 lacks it
 
 - **severity:** error
-- **rule_id:** spec-completeness / cross-FR consistency
+- **rule_id:** spec-completeness / cross-task consistency
 - **location:** §1 (no clause), §3 (no builder), §6 (no emission)
 - **status:** resolved
 
@@ -112,7 +112,7 @@ This is the same string-typing-accident class that ISS-001 fixed via the `Person
 
 #### Description
 
-The first-pass FR doesn't specify whether ZDR or residency runs first in `alias::resolve`. Both are compliance gates; both refuse calls. Order matters because:
+The first-pass task doesn't specify whether ZDR or residency runs first in `alias::resolve`. Both are compliance gates; both refuse calls. Order matters because:
 1. The operator dashboard sees the first-fired error.
 2. Audit rows are emitted for whichever fires.
 3. Tests asserting "ZDR refusal" vs. "residency refusal" can't be written without knowing the order.
@@ -159,7 +159,7 @@ Show the strategy definitions (`any_residency`, `any_region`). Set `ProptestConf
 ## §3 — Strengths preserved through expansion
 
 - §3 introduces `Residency` (enum) and `Region` (newtype) as distinct, parseable types — the type-system separation prevents string-typing accidents (e.g., comparing `"ap-southeast-1a"` against `"ap-southeast-1"` and silently mismatching).
-- §1 #2 commits to the `LazyLock<HashMap<Residency, HashSet<&'static str>>>` static map. The "changes require FR amendment" discipline keeps the residency mapping stable across deploys; operators can't quietly add regions and break compliance assumptions.
+- §1 #2 commits to the `LazyLock<HashMap<Residency, HashSet<&'static str>>>` static map. The "changes require task amendment" discipline keeps the residency mapping stable across deploys; operators can't quietly add regions and break compliance assumptions.
 - §1 #4 makes the missing-residency-field default explicit per tenant jurisdiction: PDPL tenants fail closed (no implicit fallback), non-PDPL tenants default to `Sg1`. The tier discrimination prevents accidentally relaxing PDPL constraints.
 - §1 #6 + §1 #12 explicitly forbid silent `Vn1 → Sg1` degradation. The honesty principle: a tenant pinning `vn-1` is making a regulatory statement, and we cannot satisfy that statement without VN infrastructure. Refusing is correct; silently fallback is wrong.
 - §1 #11 introduces per-alias residency_override with `OverrideAmbiguous` rejection. Surgical control without the operational footgun of competing globs.
@@ -168,7 +168,7 @@ Show the strategy definitions (`any_residency`, `any_region`). Set `ProptestConf
 
 ## §4 — Resolution
 
-All 6 mechanical revisions applied (2026-05-16) within the FR itself:
+All 6 mechanical revisions applied (2026-05-16) within the task itself:
 
 - **ISS-001 RESOLVED**: §3 now defines `AliasError::ResidencyViolation { policy_residency, resolved_region, attempted_alias, vn1_no_provider }` as an extension to TASK-AI-006's enum; §6 shows the handler-side conversion to HTTP 403; §8 has the response payload example.
 

@@ -1,10 +1,17 @@
 ---
 id: TASK-CHAT-269
 title: "Workspace moderation queue - an administrator reviews reports, acts, and is audited"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-07-11T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: CHAT
-priority: MUST
+priority: p0
 status: done
-class: product
 verify: T
 phase: P0
 milestone: P0 - store compliance (UGC controls)
@@ -50,7 +57,7 @@ subtasks:
   - "0015 migration: retention purge of resolved reports (1h)"
   - "client: Moderation route, ReportCard, content-policy link in Settings (5h)"
   - "integration tests incl. the role gate and the DM-context carve-out (2h)"
-risk_if_skipped: "TASK-CHAT-267 gives users a button that files a report into a table nobody can read. A report path with no review path is worse than none: it tells the person being harassed that something will happen, and nothing does. Google Play's UGC policy requires that reported content is actually reviewed, and the app must link to a published content policy. Without this FR the store submission is dishonest even if it passes."
+risk_if_skipped: "TASK-CHAT-267 gives users a button that files a report into a table nobody can read. A report path with no review path is worse than none: it tells the person being harassed that something will happen, and nothing does. Google Play's UGC policy requires that reported content is actually reviewed, and the app must link to a published content policy. Without this task the store submission is dishonest even if it passes."
 ---
 
 ## §1 - Description (BCP-14 normative)
@@ -536,7 +543,7 @@ pub async fn purge_resolved_reports(pool: &PgPool) -> anyhow::Result<u64> {
 
 ## §7 - Dependencies
 
-- **Upstream:** TASK-CHAT-267 (`chat_reports` and its snapshot columns; this FR is the only writer of `status`, `resolution`, `resolved_at`, `resolved_by_subject_id`, `purge_after`).
+- **Upstream:** TASK-CHAT-267 (`chat_reports` and its snapshot columns; this task is the only writer of `status`, `resolution`, `resolved_at`, `resolved_by_subject_id`, `purge_after`).
 - **Cross-module:** TASK-AUTH-101 supplies the `roles` claim. Chat is its first consumer; no auth-side change is required, but if the role catalogue ever renames `tenant-admin`, `MODERATOR_ROLES` moves with it.
 - **Constrains:** TASK-CHAT-268 - §1 #10 here requires that the blocked-set is *not* applied to these routes. That is asserted from both sides (AC #9 here, AC #12 there).
 - **External:** the content policy page at `cyberskill.world/{locale}/cyberos/content-policy` must exist before §1 #19's link is anything but a 404. It ships in the landing-page repo alongside the privacy and account-deletion pages, not here.
@@ -587,7 +594,7 @@ The two audit rows a `delete_message` resolution produces:
 
 **Deferred:**
 
-- *Escalation to CyberSkill.* Today a report terminates with the workspace administrator, which is what the published privacy policy says ("your organisation is the controller"). If we ever need to handle abuse *by* an administrator, or abuse crossing tenants, that is a new FR **and** a privacy-policy change, in that order.
+- *Escalation to CyberSkill.* Today a report terminates with the workspace administrator, which is what the published privacy policy says ("your organisation is the controller"). If we ever need to handle abuse *by* an administrator, or abuse crossing tenants, that is a new task **and** a privacy-policy change, in that order.
 - *Administrator visibility of block counts.* TASK-CHAT-268 §9 raises it: "six people have blocked this person" is the strongest signal available in a small workspace, and surfacing it partially breaks the privacy of the block. It needs a decision from the operator, not a design. Not in this slice.
 - *Reporter feedback ("your report was actioned").* Real need, but it re-introduces the oracle TASK-CHAT-267 §2 closed, and needs a notification surface. Deferred; the columns exist.
 - *Moderation of AI-generated content.* CyberOS chat has AI features (`ai.rs`). A summary that reproduces abusive content is not currently reportable. Deferred; the target-shape constraint would need a fourth arm.

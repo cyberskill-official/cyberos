@@ -30,14 +30,14 @@ author_audit_skills: 20 was already a lie-in-waiting. Resolved: §1 #3 computed 
 More vendored skills = more trigger surface for agents. Resolved: 2 MB budget with build-time assert (§1 #6), GUIDE lifecycle map setting expectations (§1 #4), and a documented trim fallback (payload keeps all, plugin trims) as the named escape hatch (§10 #1).
 
 ### ISS-005 workflow scope creep
-Vendoring upstream/downstream pairs invites wiring them into the chain in the same change. Resolved: §1 #8 freeze + AC 8 diff-clean on both workflow docs; wiring is future work by separate FR.
+Vendoring upstream/downstream pairs invites wiring them into the chain in the same change. Resolved: §1 #8 freeze + AC 8 diff-clean on both workflow docs; wiring is future work by separate task.
 
 ### ISS-006 map completeness unverifiable
 A lifecycle map with TBD rows would defeat its purpose. Resolved: AC 4 requires exactly 14 rows, each naming pair + invoker, no TBD (t04).
 
 ## §3 - Resolution
 
-All six findings addressed as cited. Dependencies on TASK-SKILL-116/117 are declared on all three FRs; TASK-SKILL-118 interplay (per-pair parity scope) is stated without creating a hard dep. **Score = 10/10.**
+All six findings addressed as cited. Dependencies on TASK-SKILL-116/117 are declared on all three tasks; TASK-SKILL-118 interplay (per-pair parity scope) is stated without creating a hard dep. **Score = 10/10.**
 
 *End of TASK-CUO-209 audit.*
 

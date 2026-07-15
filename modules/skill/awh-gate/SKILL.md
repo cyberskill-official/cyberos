@@ -3,13 +3,13 @@
 name: awh-gate
 description: >-
   Out-of-band verification gate for the testing to done transition. Independently reruns the
-  task's section-1 cited tests plus its module suite via `awh eval` against a sealed,
+  Task's section-1 cited tests plus its module suite via `awh eval` against a sealed,
   read-only baseline, and blocks the transition on any regression. Emits an awh-eval@1 artefact:
   per-task pass@1, the weighted aggregate, the sealed-baseline hash, and a GREEN or RED verdict.
   Used by chief-technology-officer/ship-tasks at step 28, after the post-implementation
-  task-audit (step 27) and before the done flip (step 30). GREEN is required to reach
+  Task-audit (step 27) and before the done flip (step 30). GREEN is required to reach
   done; RED routes the task back to ready_to_implement per STATUS-REFERENCE section 1.3.
-  Use when the user asks to "run the awh gate", "verify this FR out of band", or "gate testing to
+  Use when the user asks to "run the awh gate", "verify this task out of band", or "gate testing to
   done". Do NOT use for spec correctness (that is task-audit, during draft to
   ready_to_implement) or for in-context coverage (that is coverage-gate-author); this skill is the
   independent rerun those two are not, because an agent grading its own work is not a check.
@@ -40,7 +40,7 @@ outputs:
 
 triggers:
   - "run the awh gate"
-  - "verify this FR out of band"
+  - "verify this task out of band"
   - "gate testing to done"
   - "independent rerun before done"
 ---

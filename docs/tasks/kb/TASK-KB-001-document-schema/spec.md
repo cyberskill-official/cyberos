@@ -1,8 +1,16 @@
 ---
 id: TASK-KB-001
 title: "KB Document schema — slug + markdown body + YAML frontmatter + closed category enum + 3-tier ACL + immutable versions + translation_of"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: KB
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P1
@@ -27,7 +35,7 @@ source_decisions:
   - DEC-243 (every save creates a new immutable version; documents reference current_version_id; old versions are never UPDATEd or DELETEd)
   - DEC-244 (slug uniqueness is per-tenant per-language; same slug in vi + en is allowed and is the translation pair indicator)
   - DEC-245 (translation_of is a self-FK between documents in different languages; same-language link forbidden)
-  - DEC-246 (markdown body 1–500_000 chars; frontmatter YAML-validated against schema; oversize is an FR-KB-2xx import problem, not a slice-1 case)
+  - DEC-246 (markdown body 1–500_000 chars; frontmatter YAML-validated against schema; oversize is a task-KB-2xx import problem, not a slice-1 case)
   - DEC-247 (REVOKE UPDATE, DELETE on document_versions from cyberos_app — append-only enforced at SQL grant)
   - "DEC-248 (frontmatter required keys: title, category, language, permission; optional: tags, owner_subject_id, translation_of, summary, applicability_tags for runbooks)"
   - DEC-249 (memory audit kinds: kb.document_created, kb.document_versioned, kb.document_acl_changed, kb.document_archived)
@@ -92,7 +100,7 @@ subtasks:
   - "0.5h: handlers/documents.rs — REST surface with idempotency"
   - "1.5h: tests — 11 test files covering enum closure, append-only, version chain, translation pair, slug uniqueness, role validation, frontmatter, archive flow"
 
-risk_if_skipped: "KB is the canonical source for AI-grounded retrieval — every Genie answer, every OBS auto-runbook lookup, every CUO synthesis needs structured docs. Every downstream KB FR (TASK-KB-002 rendering, TASK-KB-003 permission tiers, TASK-KB-004 FTS5 search, TASK-KB-005 BGE-M3 semantic search, TASK-KB-007 'Ask this page' Q&A, TASK-KB-008 runbook category) reads from this schema. Without DEC-243's immutable versions, every save silently rewrites history — citations become unverifiable. Without DEC-244's per-tenant per-language uniqueness, the translation linkage breaks (the natural pair indicator is shared slug). Without DEC-247's SQL-grant append-only, a developer typo could mass-delete the corpus and the audit chain claim collapses. Without DEC-252's closed category enum, free-form categories proliferate and TASK-KB-008's runbook filter can't be precise. The 6h effort hardens the schema so every downstream KB FR can trust the invariants."
+risk_if_skipped: "KB is the canonical source for AI-grounded retrieval — every Genie answer, every OBS auto-runbook lookup, every CUO synthesis needs structured docs. Every downstream KB task (TASK-KB-002 rendering, TASK-KB-003 permission tiers, TASK-KB-004 FTS5 search, TASK-KB-005 BGE-M3 semantic search, TASK-KB-007 'Ask this page' Q&A, TASK-KB-008 runbook category) reads from this schema. Without DEC-243's immutable versions, every save silently rewrites history — citations become unverifiable. Without DEC-244's per-tenant per-language uniqueness, the translation linkage breaks (the natural pair indicator is shared slug). Without DEC-247's SQL-grant append-only, a developer typo could mass-delete the corpus and the audit chain claim collapses. Without DEC-252's closed category enum, free-form categories proliferate and TASK-KB-008's runbook filter can't be precise. The 6h effort hardens the schema so every downstream KB task can trust the invariants."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -156,7 +164,7 @@ The KB service **MUST** ship the Document schema as the canonical structured-kno
     - `kb_document_acl_changes_total{from_tier, to_tier}` (counter).
     - `kb_document_archives_total{tenant_id}` (counter).
 
-24. **MUST** ship `current_documents_view` filtering `status != 'archived'` and `active_documents_view` filtering `status = 'active'`. Downstream FRs querying "what is searchable?" use `active_documents_view`; "what is still resolvable for rendering?" uses `current_documents_view`.
+24. **MUST** ship `current_documents_view` filtering `status != 'archived'` and `active_documents_view` filtering `status = 'active'`. Downstream tasks querying "what is searchable?" use `active_documents_view`; "what is still resolvable for rendering?" uses `current_documents_view`.
 
 25. **MUST** preserve the SQL function `document_version_chain(doc_id UUID) RETURNS SETOF document_versions` returning all versions ordered by `version_number ASC`. Used by TASK-KB-002's "history" UI and by Q&A retrieval that may cite an older version.
 
@@ -805,12 +813,12 @@ async fn version_numbers_monotonic(ctx: TestCtx) {
 ## §9 — Open questions
 
 Deferred:
-- **Notion import (preserve links + categories)** — FR-KB-2xx (slice 2+).
+- **Notion import (preserve links + categories)** — task-KB-2xx (slice 2+).
 - **Slug-rename with redirect** — slice 2+; slice 1 treats slug as effectively immutable.
-- **Trust Center opt-in flag at tenant level** — FR-KB-2xx.
-- **Per-page or per-tree markdown export** — FR-KB-2xx.
+- **Trust Center opt-in flag at tenant level** — task-KB-2xx.
+- **Per-page or per-tree markdown export** — task-KB-2xx.
 - **Bulk frontmatter migration** — slice 2+ tool.
-- **Dead-link detection nightly job** — FR-KB-2xx.
+- **Dead-link detection nightly job** — task-KB-2xx.
 - **Comments / annotations on docs** — out of scope; PROJ handles comments.
 
 All other questions resolved.
@@ -872,7 +880,7 @@ All other questions resolved.
 - **archive vs delete**: archive preserves rendering + citations; delete would require cleanup of every citation (which we can't enumerate). Archive is the only way to "remove" a doc.
 - **`updated_at` touched by trigger** — single source of truth for staleness; TASK-KB-005's ingestion checks this for re-embed.
 - **`change_summary` 1–500 chars** — short enough to discourage prose, long enough for "Updated section 3 to reflect Decree 145 amendment".
-- **Permission validation at retrieval time, not after** — TASK-KB-003 enforces; this FR provides the data. Acceptable: this FR's GET handler also enforces (defence in depth).
+- **Permission validation at retrieval time, not after** — TASK-KB-003 enforces; this task provides the data. Acceptable: this task's GET handler also enforces (defence in depth).
 - **`allowed_role_codes TEXT[]` not enum array** — Postgres enums don't compose well into arrays; storing as text and validating at boundary is simpler.
 - **`status='draft'` is the create default** — operators must explicitly publish (slice 2 publish handler); prevents accidental exposure.
 - **`current_documents_view` excludes only archived** — drafts ARE current (for the author who's editing); they're just not searchable (active_documents_view excludes them).

@@ -1,8 +1,16 @@
 ---
 id: TASK-SKILL-115
 title: "Sweep stale `<placeholder>` syntax in 134 production SKILL.md files (metadata.stage + description + allowed_memory_scopes)"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-19T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: SKILL
-priority: SHOULD
+priority: p1
 status: done
 verify: T
 phase: P1
@@ -18,7 +26,7 @@ blocks: []
 
 source_pages:
   - "[SKILL Appendix L](https://cyberos-wiki.cyberskill.world/modules/skill/appendices.html) (SKILL_BUNDLE_RUBRIC.md)"
-  - task-audit skill
+  - Task-audit skill
   - "[SKILL Appendix J](https://cyberos-wiki.cyberskill.world/modules/skill/appendices.html) (ANTHROPIC_GUIDE_DIGEST.md)"
 source_decisions:
   - DEC-091 (host-portability — CCSM is source of truth)
@@ -34,7 +42,7 @@ new_files:
   - modules/cuo/tests/test_placeholder_check.py
 modified_files:
   - website docs (SKILL Appendix L)                        # add SKB-030 placeholder-free-frontmatter rule
-  - task-audit skill  # §3.13 38f mentions placeholder rule
+  - Task-audit skill  # §3.13 38f mentions placeholder rule
   - modules/skill/<each of 134 production SKILL.md files>        # operator-attested per-skill substitution
 allowed_tools:
   - file_read: modules/skill/**, tools/sweep-placeholders/**, docs/tasks/skill/**
@@ -48,7 +56,7 @@ disallowed_tools:
 
 effort_hours: 16
 subtasks:
-  - "1.0h: detect.py — Python scanner that walks modules/skill/**/SKILL.md, parses frontmatter, identifies fields where YAML values contain literal `<placeholder>` patterns (not the wrap_in_marker which is post-FR-113 already string-form)"
+  - "1.0h: detect.py — Python scanner that walks modules/skill/**/SKILL.md, parses frontmatter, identifies fields where YAML values contain literal `<placeholder>` patterns (not the wrap_in_marker which is post-TASK-113 already string-form)"
   - "1.5h: suggest.py — per-skill suggestion engine that reads SKILL.md body + STANDALONE_INTERVIEW + MANIFEST_SCHEMA + acceptance fixtures, proposes a substitution for each placeholder based on what the skill actually does (e.g. metadata.stage → 'b' if body references SDP stage b, description placeholders → inferred from CONTRACT_ECHO block, etc.)"
   - "1.5h: report.md generator — produces a single markdown report listing each of the 134 skills, its stale placeholders, and the suggest.py recommended substitution. Operator reviews + approves in one pass"
   - "2.0h: placeholder_check.py + tests — Python validator that fires the SKB-030 rule at audit time; identifies stale placeholders + emits structured errors with skill_path + field_path + placeholder_token"
@@ -56,12 +64,12 @@ subtasks:
   - "0.5h: task-audit skill §3.13 rule 38f"
   - "8.0h: 134-skill mechanical sweep — apply approved substitutions from report.md to each SKILL.md. ~3.5 min per skill at 134 skills. Operator can batch by persona (cluster similar skills) to amortise context-switching"
   - "0.5h: verify.py — post-sweep invariant check; assert zero placeholder-style angle brackets in any production SKILL.md frontmatter value"
-risk_if_skipped: "The 134 production SKILL.md files inherited template-syntax `<placeholder>` from earlier scaffold runs that never substituted real values. Three concrete consequences: (1) Anthropic-host transpilation (Phase B per TASK-SKILL-103) will reject the frontmatter at load time per Reference B 'forbidden frontmatter chars' — even though TASK-SKILL-113 fixed `wrap_in` specifically, the broader rule SKB-040 (no-xml-in-frontmatter) fires on every remaining placeholder. The 134 skills will fail to load on any non-CyberOS host. (2) Operator UX is degraded: the audit reports + run-time error messages will show `<SDP §2 stage letter or \"cross\">` etc. instead of meaningful values, making debugging harder. (3) TASK-SKILL-111's description-format check (SKB-022 verb-stem; SKB-023 trigger phrases) is undermined when the description itself contains a `<placeholder>` block instead of substantive prose — the trigger-phrase detector treats the placeholder as a literal phrase, leaving the skill un-triggerable. Cost of THIS FR ≈ 16 hours (1.5h of tooling + 8h of mechanical sweep + 6.5h of review/test/QA). Cost of NOT shipping ≈ 134 silent portability failures + a future emergency sweep under deadline pressure when the first partner connector ships."
+risk_if_skipped: "The 134 production SKILL.md files inherited template-syntax `<placeholder>` from earlier scaffold runs that never substituted real values. Three concrete consequences: (1) Anthropic-host transpilation (Phase B per TASK-SKILL-103) will reject the frontmatter at load time per Reference B 'forbidden frontmatter chars' — even though TASK-SKILL-113 fixed `wrap_in` specifically, the broader rule SKB-040 (no-xml-in-frontmatter) fires on every remaining placeholder. The 134 skills will fail to load on any non-CyberOS host. (2) Operator UX is degraded: the audit reports + run-time error messages will show `<SDP §2 stage letter or \"cross\">` etc. instead of meaningful values, making debugging harder. (3) TASK-SKILL-111's description-format check (SKB-022 verb-stem; SKB-023 trigger phrases) is undermined when the description itself contains a `<placeholder>` block instead of substantive prose — the trigger-phrase detector treats the placeholder as a literal phrase, leaving the skill un-triggerable. Cost of THIS task ≈ 16 hours (1.5h of tooling + 8h of mechanical sweep + 6.5h of review/test/QA). Cost of NOT shipping ≈ 134 silent portability failures + a future emergency sweep under deadline pressure when the first partner connector ships."
 ---
 
 ## §1 — Description (BCP-14 normative)
 
-This FR catalogues, classifies, and substitutes the stale `<placeholder>` syntax that survives in 134 production SKILL.md frontmatter fields across `modules/skill/`. These placeholders were inherited from earlier scaffold runs (pre-2026-05-19 template work) and never substituted with real values. They block Anthropic-host portability (Phase B transpilers fail on Reference B's bracket prohibition) and degrade operator UX in audit + runtime error messages.
+This task catalogues, classifies, and substitutes the stale `<placeholder>` syntax that survives in 134 production SKILL.md frontmatter fields across `modules/skill/`. These placeholders were inherited from earlier scaffold runs (pre-2026-05-19 template work) and never substituted with real values. They block Anthropic-host portability (Phase B transpilers fail on Reference B's bracket prohibition) and degrade operator UX in audit + runtime error messages.
 
 1. The detection script `tools/sweep-placeholders/detect.py` **MUST** walk every `SKILL.md` under `modules/skill/`, parse the YAML frontmatter, and identify every field whose value contains a literal `<word>` pattern that is **NOT** the now-corrected `wrap_in_marker:` (per TASK-SKILL-113). Output: a structured JSON dump grouped by skill_path, field_path, and placeholder_token.
 2. Known stale-placeholder fields (from the 2026-05-19 sweep audit) **MUST** be covered: `metadata.stage` (134 hits — `<SDP §2 stage letter or "cross">`), `description` (28 hits — `<input>`, `<artifact>` etc.), `allowed_memory_scopes.write[*]` (16 hits — `<scope-glob>`), `name` (2 hits — `<artifact>-author`/`<artifact>-audit` in `_template/*` scaffolds only), and `depends_on_contracts[*].{id, pin_path}` (4 hits — `<artifact>`).
@@ -77,11 +85,11 @@ This FR catalogues, classifies, and substitutes the stale `<placeholder>` syntax
 12. Pre-existing exceptions: the `_template/author/SKILL.md` and `_template/audit/SKILL.md` files are intentional scaffolds and **MUST** retain their `<artifact>` placeholders (they're literal substitution tokens for `cp` operations, not real values). The detector exempts paths under `_template/`.
 13. The post-sweep verify script `tools/sweep-placeholders/verify.py` **MUST** assert: zero stale-placeholder hits in any non-`_template/` SKILL.md; the placeholder_check validator agrees; every modified file still parses as valid YAML.
 14. The sweep report **MUST** be committed alongside the substitutions (lives at `tools/sweep-placeholders/report-<YYYY-MM-DD>.md`). Future operators reviewing the sweep can reconstruct the decision chain.
-15. Registry version: this FR is a v0.2.6 increment (post-v0.2.5 introduced by TASK-SKILL-113). The bump is documented in the repo-root `CHANGELOG.md` `[SKILL]` section.
+15. Registry version: this task is a v0.2.6 increment (post-v0.2.5 introduced by TASK-SKILL-113). The bump is documented in the repo-root `CHANGELOG.md` `[SKILL]` section.
 
 ## §2 — Why this design (rationale for humans)
 
-**Why a separate FR rather than fold into TASK-SKILL-113 (§1 #1)?** TASK-SKILL-113 specifically migrated the `wrap_in` field via a mechanical pattern match. The stale placeholders span DOZENS of distinct fields with NO common pattern. Each one needs operator domain knowledge to substitute correctly. Bundling the work into 113 would have either inflated 113 from 12h to 28h (wrong scope grouping) or shipped 113 incomplete (leaving 134 portability bugs). Separating the FRs honours the audit-fix-audit discipline — 113 closed one specific bug class; 115 closes the residual.
+**Why a separate task rather than fold into TASK-SKILL-113 (§1 #1)?** TASK-SKILL-113 specifically migrated the `wrap_in` field via a mechanical pattern match. The stale placeholders span DOZENS of distinct fields with NO common pattern. Each one needs operator domain knowledge to substitute correctly. Bundling the work into 113 would have either inflated 113 from 12h to 28h (wrong scope grouping) or shipped 113 incomplete (leaving 134 portability bugs). Separating the tasks honours the audit-fix-audit discipline — 113 closed one specific bug class; 115 closes the residual.
 
 **Why operator-attested rather than auto-substituted (§1 #4)?** Each placeholder asks a domain question. `metadata.stage: <SDP §2 stage letter or "cross">` — is this skill stage b (requirements), c (design), e (delivery), or cross-cutting? The right answer is in the skill's body, but extracting it requires understanding what the skill actually does. A pattern-matching auto-substituter would get this wrong 30-50% of the time (the body sometimes mentions multiple stages; some skills genuinely span multiple stages and should be "cross"). Operator review at 3.5 min/skill × 134 skills = 8 hours is the right tradeoff.
 
@@ -228,7 +236,7 @@ def suggest_for_description(skill_path: Path, field_value: str) -> str | None:
 17. **Registry version bumped** — v0.2.5 → v0.2.6 in CHANGELOG.md `[SKILL]` section.
 18. **Sweep report committed** — `tools/sweep-placeholders/report-2026-05-19.md` (or later date) lists every skill + every substitution decision.
 19. **Idempotency check** — running detect.py + sweep + detect.py again yields the same zero-hit state; no flapping.
-20. **Cross-FR reciprocity** — TASK-SKILL-113's `blocks:` list updated to include TASK-SKILL-115; reciprocity sweep passes.
+20. **Cross-task reciprocity** — TASK-SKILL-113's `blocks:` list updated to include TASK-SKILL-115; reciprocity sweep passes.
 
 ## §5 — Verification
 
@@ -301,7 +309,7 @@ body
 4. `modules/cuo/cuo/placeholder_check.py` is the runtime validator (re-exported from `cuo` package).
 5. `modules/cuo/tests/test_placeholder_check.py` integrates with the existing CUO test suite.
 6. SKILL_BUNDLE_RUBRIC.md gains SKB-030.
-7. task-audit skill gains §3.13 rule 38f.
+7. Task-audit skill gains §3.13 rule 38f.
 8. Per-persona batches commit independently (P0 cpo + cto first, then P1, then P2+).
 
 ## §7 — Dependencies
@@ -364,7 +372,7 @@ updated_at:      "2026-05-19T17:00:00Z"
 **All resolved during authoring.**
 
 Deferred:
-- **Per-persona owner sign-off** at batch-commit time — out of scope for this FR; handled by normal PR review process.
+- **Per-persona owner sign-off** at batch-commit time — out of scope for this task; handled by normal PR review process.
 - **Automated batch-commit grouping by persona** — out of scope; the operator manually groups via `git add modules/skill/<persona>/`.
 
 ## §10 — Failure modes inventory

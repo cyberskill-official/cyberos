@@ -27,7 +27,7 @@ The spec lands RFC 9728 Protected Resource Metadata for the MCP gateway + per-mo
 
 ### ISS-003 — `WWW-Authenticate: Bearer resource_metadata=...` only mentioned in passing
 
-§1 #19 added a note about emitting this header from TASK-MCP-001 401 responses — but the spec note is a downstream coupling that an MCP-001 implementer might miss. Resolved: §8.4 added a full example HTTP 401 response showing the header pointing at this FR's PRM URL; §7 cross-module section calls out the TASK-MCP-001 integration explicitly.
+§1 #19 added a note about emitting this header from TASK-MCP-001 401 responses — but the spec note is a downstream coupling that an MCP-001 implementer might miss. Resolved: §8.4 added a full example HTTP 401 response showing the header pointing at this task's PRM URL; §7 cross-module section calls out the TASK-MCP-001 integration explicitly.
 
 ### ISS-004 — Drift detector scope unclear (full-body vs shared-fields)
 
@@ -37,13 +37,13 @@ The spec lands RFC 9728 Protected Resource Metadata for the MCP gateway + per-mo
 
 §1 #10 said "returns 429" but didn't specify the `Retry-After` header. RFC 6585 §4 + §7 require Retry-After on 429. Resolved: §10 failure-mode table row shows `429 + Retry-After: 60`; §1 #10 wording strengthened to "returns `429` + `Retry-After`".
 
-### ISS-006 — `ModuleRegistration.exposed_scopes` field never landed via this FR
+### ISS-006 — `ModuleRegistration.exposed_scopes` field never landed via this task
 
-§1 #4 + §11.11 require TASK-MCP-002's `ModuleRegistration` struct to carry `exposed_scopes`. But TASK-MCP-002 is upstream and shipped without that field. The implementer of THIS FR would have to also modify TASK-MCP-002's registration handler. Resolved: build_envelope `modified_files` now explicitly includes `services/mcp/src/server_registry.rs`; §1 #4 + §11.11 are explicit that the extension lands in this FR's PR, not as a separate FR. AC #20 asserts the validation gate ("Registry-write fails if registration lacks `exposed_scopes`") so the cross-FR effect is testable.
+§1 #4 + §11.11 require TASK-MCP-002's `ModuleRegistration` struct to carry `exposed_scopes`. But TASK-MCP-002 is upstream and shipped without that field. The implementer of THIS task would have to also modify TASK-MCP-002's registration handler. Resolved: build_envelope `modified_files` now explicitly includes `services/mcp/src/server_registry.rs`; §1 #4 + §11.11 are explicit that the extension lands in this task's PR, not as a separate task. AC #20 asserts the validation gate ("Registry-write fails if registration lacks `exposed_scopes`") so the cross-task effect is testable.
 
 ## §3 — Resolution
 
-All 6 mechanical concerns addressed. PRM contract is now spec-complete + RFC 9728 conformant; drift detection scoped precisely; downstream coupling to TASK-MCP-001 visible; cross-FR registration extension explicit in build envelope.
+All 6 mechanical concerns addressed. PRM contract is now spec-complete + RFC 9728 conformant; drift detection scoped precisely; downstream coupling to TASK-MCP-001 visible; cross-task registration extension explicit in build envelope.
 
 The 880-line length is appropriate for the genuinely-small surface (PRM is one JSON document advertised at one endpoint family). Density per line is high — every clause is load-bearing.
 

@@ -15,7 +15,7 @@
 //!
 //! AC coverage (§4):
 //!   AC 7   a_returning_user_whose_name_is_their_email_is_repaired
-//!   AC 8   a_deliberately_set_name_is_never_clobbered      <- the guarantee the FR turns on
+//!   AC 8   a_deliberately_set_name_is_never_clobbered      <- the guarantee the task turns on
 //!   AC 9   a_blank_resolution_never_blanks_a_stored_name
 //!   AC 13  the_visibility_view_drains
 //!   AC 6   heal_never_writes_the_email_back                 (belt and braces; the resolver already refuses)
@@ -145,7 +145,7 @@ async fn unset_rows_for(pool: &PgPool, tenant: Uuid) -> i64 {
 
 // ── Tests ────────────────────────────────────────────────────────────────────────────────────────
 
-/// AC 7 — the self-heal. This is the case the FR's own §3 skeleton would have MISSED: it put the rule in the
+/// AC 7 — the self-heal. This is the case the task's own §3 skeleton would have MISSED: it put the rule in the
 /// JIT upsert's ON CONFLICT clause, which a returning SSO user never reaches, because `resolve_subject`
 /// short-circuits on the existing-link fast path. Everyone damaged today is a returning user. The rule has to
 /// live somewhere that runs on every path, and this test is what proves it does.

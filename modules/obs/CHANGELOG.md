@@ -61,7 +61,7 @@ LangSmith all hold the same trace_id for one synthetic call - owner-run, since i
 The AI Gateway gained an HTTP serving surface (`services/ai-gateway/src/server` + `bin/cyberos_gateway`):
 an axum listener (`POST /v1/chat`, `/healthz`, `/metrics`) that binds the existing pipeline (policy loader,
 alias resolver, provider call) behind injectable `PolicySource` and `ChatBackend` seams, with an
-`EchoBackend` since the TASK-AI-008 provider adapters are still stubs. This is the surface the obs-AI FRs
+`EchoBackend` since the TASK-AI-008 provider adapters are still stubs. This is the surface the obs-AI tasks
 needed.
 
 On it:

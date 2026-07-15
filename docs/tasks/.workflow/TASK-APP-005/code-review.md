@@ -10,7 +10,7 @@ Status: `reviewing`. **HALTED at HITL gate 1 (review acceptance).** Diff under r
 | 2 | Snap vs Flathub treated as architecturally distinct | Snap: CI job; Flathub: manifest + Stephen-gated PR, **no CI gate anywhere** — structural, not just documented | ✅ |
 | 3 | `confinement: strict`, gnome/core22, webkit2gtk-4.1 generation | recipe fields + standing AC #2 lint (proven locally); runtime lib names match release.yml's dev-package generation | ✅ |
 | 4 | Plugs = exactly the justified six | recipe + standing AC #3 exact-set lint (proven locally, want/got output on drift) | ✅ |
-| 5 | Flatpak app-id an explicit decision, not silent reuse | PROVISIONAL banner in-manifest; hard-blocker section in the answer sheet; rename cost contained to this FR's own files | ✅ |
+| 5 | Flatpak app-id an explicit decision, not silent reuse | PROVISIONAL banner in-manifest; hard-blocker section in the answer sheet; rename cost contained to this task's own files | ✅ |
 | 6 | `SNAP_RELEASE` gate per repo idiom; no Flathub CI flag | job `if:`; AC #6 standing grep guard (self-match found + fixed) | ✅ |
 | 7 | No name registration / credential minting / Flathub PR by the agent | none performed; per-instance approval requirement restated in 3 places (manifest header, answer sheet, this packet) | ✅ |
 | 8 | Two-section answer sheet | `linux-store-submission.md`: Snap metadata + Flathub review checklist + smoke-test gate | ✅ (`pending-human` fields for you) |
@@ -21,7 +21,7 @@ Status: `reviewing`. **HALTED at HITL gate 1 (review acceptance).** Diff under r
 2. **AC #6 guard self-match:** the in-repo guard's own grep pattern was the string it forbids; fixed with the split-pattern idiom (chosen over an exclusion flag, which would blind the guard to future additions in the same file). The spec's §5 check assumed an external runner; an in-repo standing check needs the idiom.
 3. **YAML scalar bug caught by verification:** unquoted `confinement: strict` inside a plain `run:` scalar; block-scalar fix.
 4. **Binary-name normalization added:** deb layout/binary name unconfirmed until a real build (spec §10 row 3) — staging accepts cyberos/cyberos-desktop/CyberOS and fails loudly with the tree listing, upgrading a smoke-test-only catch to a hard CI failure.
-5. **Version-drift disclosure:** `snapcraft.yaml` carries a literal `version: '1.0.0'` not yet wired into the stamper — manual bump per release until a follow-up lands (answer sheet ops note). Not silently wired in: stamper changes are outside this FR's scope.
+5. **Version-drift disclosure:** `snapcraft.yaml` carries a literal `version: '1.0.0'` not yet wired into the stamper — manual bump per release until a follow-up lands (answer sheet ops note). Not silently wired in: stamper changes are outside this task's scope.
 6. **`.desktop` entry deliberately absent** per spec §6 (depends on the app-id decision) — absence is spec-compliant, not an oversight.
 
 ## Machine gates

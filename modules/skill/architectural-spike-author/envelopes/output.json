@@ -4,7 +4,7 @@
   "required": ["spike_path", "spike_id", "recommendation", "confidence", "halted"],
   "properties": {
     "spike_path":     { "type": "string", "description": "path of the emitted architectural-spike@1" },
-    "spike_id":       { "type": "string", "pattern": "^SPIKE-FR-[A-Z]+-[0-9]+-[0-9]+$" },
+    "spike_id":       { "type": "string", "pattern": "^SPIKE-task-[A-Z]+-[0-9]+-[0-9]+$" },
     "recommendation": { "type": "string" },
     "confidence":     { "type": "string", "enum": ["low", "medium", "high"] },
     "halted":         { "type": "boolean" }

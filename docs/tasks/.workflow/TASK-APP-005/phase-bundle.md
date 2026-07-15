@@ -23,7 +23,7 @@ Run: 2026-07-13, ship-tasks v2.4.0. `queue: picked TASK-APP-005 (priority=SHOULD
 | 9 | bounds/platform | -dev vs runtime `-N` package confusion | `stage-packages` uses runtime names (`libwebkit2gtk-4.1-0`); smoke-test requirement documented (spec §10) |
 | 10 | regression | skeleton's staging-path bug (snap/dist vs project-root dist/) | fixed: extraction to `apps/desktop/src-tauri/dist` where `source: dist/` actually resolves; disclosed |
 | 11 | degradation | credentials macaroon expiry | publish-step auth failure → rotate; documented ops note |
-| 12 | degradation | snapcraft.yaml `version:` drifts from VERSION | disclosed known gap + manual bump note in answer sheet; stamper follow-up suggested (not silently wired in — out of FR scope) |
+| 12 | degradation | snapcraft.yaml `version:` drifts from VERSION | disclosed known gap + manual bump note in answer sheet; stamper follow-up suggested (not silently wired in — out of task scope) |
 
 ## Steps 9–10 — implementation plan (executed)
 

@@ -1,8 +1,16 @@
 ---
 id: TASK-MEMORY-111
 title: "memory pre-ingest PII detection — Presidio EN + custom VN recognisers; ≥ 99.5% held-back recall on labelled fixture; auto-redact at capture boundary"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: memory
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -21,7 +29,7 @@ source_pages:
   - website/docs/runbooks/memory-pii-runbook.html
 source_decisions:
   - DEC-170 (PII detection happens at capture boundary BEFORE chain commit; redaction is mandatory)
-  - DEC-171 (canonical ruleset is shared between TASK-MEMORY-109 hook + this FR; one regex catalogue, two consumers)
+  - DEC-171 (canonical ruleset is shared between TASK-MEMORY-109 hook + this task; one regex catalogue, two consumers)
   - DEC-172 (Vietnamese PII includes CCCD, MST, passport, bank account; recognisers are first-class)
   - DEC-173 (≥ 99.5% recall is the CI gate; ≤ 1% false-positive rate; both measured against a labelled fixture corpus)
 
@@ -104,7 +112,7 @@ The pre-ingest PII detection layer **MUST** sit between the TASK-MEMORY-107 capt
 
 **Why hash the redacted body (§1 #1)?** Same redacted bytes = same memory (idempotent capture). If we hashed raw → identical-with-different-PII bodies produce different hashes → duplicate memories. Hashing the redacted form is the correct invariant.
 
-**Why one shared ruleset (§1 #2 + DEC-171)?** Three places redact PII: the capture daemon (this FR), the Claude Code hook (TASK-MEMORY-109), the AI Gateway (TASK-AI-011/012). If each maintains its own regex catalogue, drift is inevitable — fixing a CCCD regex in one place doesn't fix it in the others. One crate, three importers. The CI test that bans inline regex literals in callers locks this in mechanically.
+**Why one shared ruleset (§1 #2 + DEC-171)?** Three places redact PII: the capture daemon (this task), the Claude Code hook (TASK-MEMORY-109), the AI Gateway (TASK-AI-011/012). If each maintains its own regex catalogue, drift is inevitable — fixing a CCCD regex in one place doesn't fix it in the others. One crate, three importers. The CI test that bans inline regex literals in callers locks this in mechanically.
 
 **Why regex-first, NER-second (§1 #4)?** Regex handles 95% of detected PII (emails, phone numbers, structured IDs). NER (Presidio) catches the remaining 5% (names, locations). NER is 20× slower than regex. Running NER only when regex finds nothing AND body is non-trivial gives us 99% of the recall at 20% of the cost.
 
@@ -566,7 +574,7 @@ span: memory.pii.scan
 All resolved. Deferred:
 - Per-folder category override (medical / financial / HR profiles) — §1 #15; slice 3+.
 - Self-updating Presidio model (fetch latest on `cyberos doctor --update-models`) — slice 3+; needs offline-bundle distribution design.
-- Multi-language NER (FR Korean? Spanish?) — slice 4+.
+- Multi-language NER (task Korean? Spanish?) — slice 4+.
 
 ---
 

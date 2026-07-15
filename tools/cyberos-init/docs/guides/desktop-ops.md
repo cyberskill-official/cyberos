@@ -28,7 +28,7 @@ Select the project and press "Check". This runs the read-only version comparison
 
 ## Init or update a project
 
-Press "Init" on the selected project. First time, this installs CyberOS into the repo (a gitignored `.cyberos/`, a `docs/tasks/` scaffold, gate autodetection, the BRAIN, the agent entry files). On an already-initialised project the same button applies the update: init is idempotent and never touches your backlog, FRs, `AGENTS.md`, or BRAIN - it swaps the machine, not your work.
+Press "Init" on the selected project. First time, this installs CyberOS into the repo (a gitignored `.cyberos/`, a `docs/tasks/` scaffold, gate autodetection, the BRAIN, the agent entry files). On an already-initialised project the same button applies the update: init is idempotent and never touches your backlog, tasks, `AGENTS.md`, or BRAIN - it swaps the machine, not your work.
 
 Two guard rails are built in: the app refuses to init a path that is not a git repository, and it refuses to init the CyberOS checkout itself.
 
@@ -46,4 +46,4 @@ Every action streams its full stdout and stderr into the output panel, verbatim.
 
 ## What the app deliberately does not do
 
-It never pushes, merges, or deploys, and it never edits your repo's tracked files beyond what `init.sh` scaffolds. Driving FRs through the workflow stays in your agent (Claude, Codex, Gemini, Cursor - via `.cyberos/AGENT-ENTRY.md`); accepting the two human gates stays with you.
+It never pushes, merges, or deploys, and it never edits your repo's tracked files beyond what `init.sh` scaffolds. Driving tasks through the workflow stays in your agent (Claude, Codex, Gemini, Cursor - via `.cyberos/AGENT-ENTRY.md`); accepting the two human gates stays with you.

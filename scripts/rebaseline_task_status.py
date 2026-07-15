@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Re-baseline CyberOS FR statuses from evidence (Step 2).
+"""Re-baseline CyberOS task statuses from evidence (Step 2).
 
-Deterministic and idempotent. Reads the canonical `status:` field in each FR spec
-file's YAML frontmatter (docs/tasks/<module>/FR-*.md, excluding *.audit.md),
+Deterministic and idempotent. Reads the canonical `status:` field in each task spec
+file's YAML frontmatter (docs/tasks/<module>/TASK-*.md, excluding *.audit.md),
 applies two transforms, and writes a reviewable unified diff. Writes nothing unless
 --apply is passed.
 
@@ -13,12 +13,12 @@ Transforms, in order:
    already canonicalized the field, so this is expected to be a no-op; it is kept so
    the script is safe to run on any older tree.
 
-2. Reset every FR currently past `implementing`
+2. Reset every task currently past `implementing`
    (ready_to_review | reviewing | ready_to_test | testing | done) to `ready_to_test`.
    Rationale: the code already exists on `main`; the work is independent awh
    re-verification, which is what ready_to_test / the test gate is for. This matches
    STATUS-REFERENCE section 1.4's re-audit convention (done -> ready_to_review /
-   ready_to_test). `implementing` and `ready_to_implement` are reserved only for FRs
+   ready_to_test). `implementing` and `ready_to_implement` are reserved only for tasks
    where `main` genuinely lacks a real implementation; pass those ids in --lacks-impl.
 
 Idempotent: ready_to_test is in the reset set and maps to itself, so a second run is a
@@ -53,7 +53,7 @@ LEGACY = {
     "backlog": "ready_to_implement", "todo": "ready_to_implement", "wip": "implementing",
 }
 
-# FRs past implementing -> reset target.
+# tasks past implementing -> reset target.
 PAST_IMPLEMENTING = {"ready_to_review", "reviewing", "ready_to_test", "testing", "done"}
 RESET_TARGET = "ready_to_test"
 
@@ -110,13 +110,13 @@ def plan_file(path: Path, lacks_impl: set[str]) -> dict | None:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Re-baseline FR statuses (Step 2).")
+    ap = argparse.ArgumentParser(description="Re-baseline task statuses (Step 2).")
     ap.add_argument("--root", default="docs/tasks",
                     help="tasks root (default: docs/tasks)")
     ap.add_argument("--apply", action="store_true",
                     help="write changes (default: dry-run, no writes)")
     ap.add_argument("--lacks-impl", default="",
-                    help="comma-separated FR ids to send to ready_to_implement instead")
+                    help="comma-separated task ids to send to ready_to_implement instead")
     ap.add_argument("--json", action="store_true", help="emit a JSON summary")
     ap.add_argument("--max-diffs", type=int, default=12,
                     help="how many unified diffs to print in dry-run")
@@ -128,7 +128,7 @@ def main() -> int:
         return 2
     lacks_impl = {x.strip() for x in args.lacks_impl.split(",") if x.strip()}
 
-    files = sorted(p for p in root.rglob("FR-*.md") if not p.name.endswith(".audit.md"))
+    files = sorted(p for p in root.rglob("TASK-*.md") if not p.name.endswith(".audit.md"))
     plans = [p for p in (plan_file(f, lacks_impl) for f in files) if p is not None]
 
     changed = [p for p in plans if p["changed"]]
@@ -155,7 +155,7 @@ def main() -> int:
         }, indent=2))
         return 0
 
-    print(f"scanned {len(plans)} FR spec files under {root}")
+    print(f"scanned {len(plans)} task spec files under {root}")
     print(f"would change {len(changed)} file(s)" if not args.apply
           else f"applied {len(changed)} change(s)")
     print("transitions:")

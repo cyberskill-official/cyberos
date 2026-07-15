@@ -21,10 +21,10 @@ Audited for contract-evolution safety (a @1->@2 bump on a skill every ship run t
 Two writers to one row format eventually disagree. Resolved: §1 #3 regenerator-identical grammar + CASE-08 round-trip byte equality; §11 cross-cites regen_backlog() in both directions.
 
 ### ISS-002 concurrent-insert race unhandled
-Two agents inserting the same FR row. Resolved: expected_absent pre-image gate + post-image single-occurrence check, deterministic fail-and-retry per put_if semantics (§10 #1).
+Two agents inserting the same task row. Resolved: expected_absent pre-image gate + post-image single-occurrence check, deterministic fail-and-retry per put_if semantics (§10 #1).
 
 ### ISS-003 row could lie about status
-An inserted row's status had no tie to the FR file. Resolved: BSU-INS-005 (row status == frontmatter status at write time), AC 6.
+An inserted row's status had no tie to the task file. Resolved: BSU-INS-005 (row status == frontmatter status at write time), AC 6.
 
 ### ISS-004 whole-file discipline unstated
 An insert mutation could smuggle unrelated edits. Resolved: BSU-INS-004 (no other line changed except that section's header counts), AC 5.

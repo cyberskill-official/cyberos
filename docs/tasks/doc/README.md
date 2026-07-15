@@ -1,10 +1,10 @@
 # DOC module — task index
 
-_Generated 2026-05-17 — 11 FRs, 103 engineering-hours total._
+_Generated 2026-05-17 — 11 tasks, 103 engineering-hours total._
 
-## FRs
+## tasks
 
-| FR | Priority | Slice | Hours | Title |
+| Task | Priority | Slice | Hours | Title |
 |---|---|---|---:|---|
 | [TASK-DOC-001](TASK-DOC-001-document-repository/spec.md) | MUST | 1 | 8 | DOC Document repository — S3 Object-Lock Compliance bucket + per-tenant residency pinning + versione |
 | [TASK-DOC-002](TASK-DOC-002-eidas-qtsp/spec.md) | MUST | 3 | 16 | DOC eIDAS QTSP integration — GlobalSign or Cryptomathic partner for EU residency qualified signature |

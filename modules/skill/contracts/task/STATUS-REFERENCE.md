@@ -1,6 +1,6 @@
-# FR Status Reference
+# Task Status Reference
 
-> Canonical answer to "what statuses can an FR be in?" Every other file (RUBRIC, skill SKILL.md files, workflow `.md` files, BACKLOG.md prose) MUST defer to the list below.
+> Canonical answer to "what statuses can a task be in?" Every other file (RUBRIC, skill SKILL.md files, workflow `.md` files, BACKLOG.md prose) MUST defer to the list below.
 >
 > **Last updated:** 2026-05-19 alongside the lifecycle-simplification wave (`STATUS-WAVE-2026-05`) — collapsed the previous "tag soup" enum (in-flight + terminal-success-with-modifier + freeform `[BLOCKED: ...]` / `[FAILED: ...]` + governance) into one orthogonal lifecycle axis. Implementation-quality and failure metadata moved out of `status` into separate frontmatter fields or aux audit rows.
 > **Source of truth:** this file. Other files MUST defer to the list below.
@@ -9,37 +9,67 @@
 
 ## 1. The full status enum
 
-An FR carries exactly one status at any point in time. There are **10** valid values, all lowercase snake_case, drawn from a single linear lifecycle axis (no embedded modifiers, no freeform tags).
+A task carries exactly one status at any point in time. There are **10** valid values, all lowercase snake_case, drawn from a single linear lifecycle axis (no embedded modifiers, no freeform tags).
 
 ### 1.1 The lifecycle (in order)
 
 | # | Status | Meaning | Default writer |
 |---|---|---|---|
 | 1 | `draft` | Author has started writing the spec; not yet audited. | `task-author` |
-| 2 | `ready_to_implement` | Spec passes `task-audit` at 10/10; eligible for the build queue. **Also the status an FR returns to when an in-cycle step (implementing / reviewing / testing) fails or is blocked — see §1.3.** | `task-audit`, `backlog-state-update-author` (rework path) |
+| 2 | `ready_to_implement` | Spec passes `task-audit` at 10/10; eligible for the build queue. **Also the status a task returns to when an in-cycle step (implementing / reviewing / testing) fails or is blocked — see §1.3.** | `task-audit`, `backlog-state-update-author` (rework path) |
 | 3 | `implementing` | Build is in flight; code is being written, tests partially in place. | `ship-tasks` workflow step entry |
 | 4 | `ready_to_review` | Implementer finished writing code + tests; awaiting reviewer pickup. | `ship-tasks` |
 | 5 | `reviewing` | Reviewer is reading the diff against §1 clauses + AC matrix. | `ship-tasks` |
 | 6 | `ready_to_test` | A human reviewer recorded approval (HITL, §1.4); awaiting tester pickup. | human review verdict (via `ship-tasks`) |
 | 7 | `testing` | Tester is running `coverage-gate-author` + `coverage-gate-audit` (every §1 clause's named test passes in the coverage report). | `ship-tasks` |
-| 8 | `done` | Tester certified: all clauses traced to passing tests, AND a human recorded final acceptance (HITL, §1.4). FR is shipped. Terminal success. | human acceptance verdict (via `ship-tasks`) |
+| 8 | `done` | Tester certified: all clauses traced to passing tests, AND a human recorded final acceptance (HITL, §1.4). Task is shipped. Terminal success. | human acceptance verdict (via `ship-tasks`) |
 
 ### 1.2 Off-ramps (operator-decided, no time pressure)
 
 | # | Status | Meaning |
 |---|---|---|
 | 9 | `on_hold` | Deliberately deferred — out of scope for the current wave, will revisit later. Stays in BACKLOG.md as a future candidate. Skipped by the default `ship-tasks` queue. |
-| 10 | `closed` | Terminal kill — won't be built (rejected, superseded by another FR, deduplicated, won't-do). Stays in BACKLOG.md for audit-trail purposes. Skipped by the default queue. |
+| 10 | `closed` | Terminal kill — won't be built (rejected, superseded by another task, deduplicated, won't-do). Stays in BACKLOG.md for audit-trail purposes. Skipped by the default queue. |
+| 11 | `cannot_reproduce` | **`type: bug` only.** The reproduction steps do not reproduce. Terminal, but *softly*: a bug that cannot be reproduced is not a bug that does not exist, and this status says so honestly rather than laundering it through `closed`. Re-opening is a normal operator flip back to `draft`, and the audit chain shows how many times that happened — which is itself the signal that the repro is wrong, not the bug. |
+| 12 | `duplicate` | Superseded by another task. REQUIRES a `duplicate_of: TASK-<ID>` frontmatter field pointing at a task that exists. Distinct from `closed` because `closed` loses the link, and the link is the whole value: it is how you discover that six reports were one cause. |
+
+Both were added 2026-07-14 with the `type` discriminator. `closed` alone forced
+every non-fix outcome through one door and destroyed the reason. A backlog where
+`closed` means six different things is a backlog you cannot learn from.
 
 ### 1.3 What happened to `[FAILED: ...]` and `[BLOCKED: ...]`?
 
 In the previous enum, these were sticky terminal statuses. They are no longer states — they are **routing decisions**:
 
-- A circuit-breaker failure in `implementing` (e.g. 5 consecutive test failures within an FR) → status drops back to `ready_to_implement`.
+- A circuit-breaker failure in `implementing` (e.g. 5 consecutive test failures within a task) → status drops back to `ready_to_implement`.
 - A non-fatal blocker discovered during `reviewing` or `testing` (e.g. spec ambiguity, missing dependency) → status drops back to `ready_to_implement`.
 - The reason text moves into an aux audit row (`memory.fr_routed_back` — TBD row_kind) and/or an inline comment on the BACKLOG row.
 
-**Future hook — Issue Request artefact (TBD):** when an FR is routed back to `ready_to_implement` from a downstream stage, the system will eventually auto-spawn an Issue Request (a new artefact type, distinct from FR) carrying the failure reason, the failing test name(s), and the reverting commit hash. Until that artefact type lands, the back-route is recorded in the audit chain + BACKLOG comment cell.
+**LANDED 2026-07-14 — the "Issue Request artefact" is a `type: bug` task.**
+
+This section previously said:
+
+> Future hook — Issue Request artefact (TBD): when an FR is routed back to
+> `ready_to_implement` from a downstream stage, the system will eventually auto-spawn
+> an Issue Request (a new artefact type, distinct from FR) carrying the failure
+> reason, the failing test name(s), and the reverting commit hash.
+
+That artefact needed no new type. It is a task with `type: bug`. The route-back path
+now auto-drafts one, pre-filled from the evidence that already exists at the moment
+of failure:
+
+| Issue-Request field (as specified) | `type: bug` field it became |
+|---|---|
+| failure reason | `## Root cause` (draft) + `## Expected vs observed` |
+| failing test name(s) | `regression_test` |
+| reverting commit hash | `first_bad_commit` |
+
+**Second intake path.** `services/obs-router/src/cuo_triage.rs` and
+`modules/cuo/cuo/triage_server.py` already route production alerts into CUO triage.
+An alert that survives triage emits a `type: bug` task with the reproduction
+pre-filled from the trace. Both intake paths — a gate failing on the way out, and an
+alert firing in production — now land in the same artefact, with the same rubric and
+the same regression gate. That is the whole reason to have a type discriminator.
 
 ### 1.4 HITL — Human-in-the-loop is REQUIRED
 
@@ -48,15 +78,15 @@ Human acceptance is mandatory, not optional (see `modules/cuo/EXECUTION-DISCIPLI
 - **Review acceptance** (`reviewing → ready_to_test`): a human reviewer records the approval verdict after reading the diff against the §1 clauses and the edge-case matrix.
 - **Final acceptance** (`testing → done`): a human records the acceptance verdict after every machine gate (coverage, TRACE-004, awh, caf) is green. The agent NEVER self-sets `done`.
 
-The agent brings the FR up to each gate with evidence and halts; the recorded human verdict is what advances the cell. An operator retains the superset power to override any cell to any other cell at any time (park, resurrect, re-audit, or explicitly skip a gate for a trivial FR) — that override authority is unchanged. What changed: the forward path no longer auto-crosses the two acceptance gates on green alone; a human verdict is required there.
+The agent brings the task up to each gate with evidence and halts; the recorded human verdict is what advances the cell. An operator retains the superset power to override any cell to any other cell at any time (park, resurrect, re-audit, or explicitly skip a gate for a trivial task) — that override authority is unchanged. What changed: the forward path no longer auto-crosses the two acceptance gates on green alone; a human verdict is required there.
 
 Common operator operations:
-- **Re-audit a shipped FR:** flip `done` → `ready_to_review` (or `ready_to_test`) to force `ship-tasks` to re-run review + test gates from that point.
-- **Skip review** for a trivial FR: flip `ready_to_review` → `ready_to_test` directly (an explicit, recorded operator override).
-- **Park an in-flight FR:** flip `implementing` → `on_hold`.
-- **Resurrect a closed FR:** flip `closed` → `ready_to_implement`.
+- **Re-audit a shipped task:** flip `done` → `ready_to_review` (or `ready_to_test`) to force `ship-tasks` to re-run review + test gates from that point.
+- **Skip review** for a trivial task: flip `ready_to_review` → `ready_to_test` directly (an explicit, recorded operator override).
+- **Park an in-flight task:** flip `implementing` → `on_hold`.
+- **Resurrect a closed task:** flip `closed` → `ready_to_implement`.
 
-Every human verdict or override emits one `memory.status_overridden` aux audit row capturing `{actor, task_id, prior_status, new_status, reason}`. The audit chain tells the full lifecycle story, and now also proves a human accepted each FR at the two mandatory gates.
+Every human verdict or override emits one `memory.status_overridden` aux audit row capturing `{actor, task_id, prior_status, new_status, reason}`. The audit chain tells the full lifecycle story, and now also proves a human accepted each task at the two mandatory gates.
 
 ---
 
@@ -114,9 +144,9 @@ Now that `status` is a single linear axis, two pieces of metadata that used to b
 |---|---|---|---|
 | `status` | enum | see §1.1 / §1.2 | `draft` |
 | `implementation_kind` | enum (optional) | `real` \| `mocked` | `real` |
-| `routed_back_count` | int (optional) | 0..N — increments every time the FR drops to `ready_to_implement` from a downstream stage | `0` |
+| `routed_back_count` | int (optional) | 0..N — increments every time the task drops to `ready_to_implement` from a downstream stage | `0` |
 
-`implementation_kind: mocked` replaces the old `shipped + mocked-dependency` status. It means the implementation shipped against a mock service (parity-only contract test) because the real dependency isn't available. The FR can still reach `done` — the mocked-ness is a property of the implementation, not the lifecycle stage. **NOTE:** decision pending — Stephen indicated "drop" for `mocked-dependency`; this field is retained here as the recommended way to capture that information if needed later. Default behaviour treats every FR as `real`; if Stephen confirms total drop, this row will be removed in a follow-up patch.
+`implementation_kind: mocked` replaces the old `shipped + mocked-dependency` status. It means the implementation shipped against a mock service (parity-only contract test) because the real dependency isn't available. The task can still reach `done` — the mocked-ness is a property of the implementation, not the lifecycle stage. **NOTE:** decision pending — Stephen indicated "drop" for `mocked-dependency`; this field is retained here as the recommended way to capture that information if needed later. Default behaviour treats every task as `real`; if Stephen confirms total drop, this row will be removed in a follow-up patch.
 
 ---
 

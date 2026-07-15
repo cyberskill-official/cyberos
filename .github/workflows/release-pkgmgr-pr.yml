@@ -4,7 +4,7 @@ name: release-pkgmgr-pr
 # On dispatch, each gated job re-derives version + SHA256 from the actual GitHub Release
 # artifact and uploads a staged manifest draft for Stephen's review. NO job here ever
 # opens a PR against the external homebrew-cask or winget-pkgs monorepos - submission
-# stays a manual, per-instance, Stephen-approved action under this FR's own standing
+# stays a manual, per-instance, Stephen-approved action under this task's own standing
 # guard step below (spec 1 #5/#6: the flags gate preparation, never submission; the
 # shared-monorepo blast radius is why this is stricter than the Flathub gate).
 #

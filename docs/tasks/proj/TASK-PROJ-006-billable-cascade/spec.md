@@ -1,8 +1,16 @@
 ---
 id: TASK-PROJ-006
 title: "Billable cascade — Member-override → task-class → role-default → fallback; resolution snapshot at time-entry write"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: PROJ
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -412,7 +420,7 @@ All resolved. Deferred:
 - `BillableResolution.tier_consulted` is the matching tier (1..=4), not the depth searched. Both interpretations are useful; the field name reflects "which tier produced the value."
 - The lookup query order matches §1: Tier 1 → 2 → 3 → 4. Each is a separate SQL — could be one big LEFT JOIN but readability wins for the 4-table case.
 - The fallback case is its own enum variant rather than a sentinel value — callers pattern-match cleanly.
-- Snapshot field lives on TASK-TIME-005's time entry row; this FR's responsibility ends at returning `BillableResolution`.
+- Snapshot field lives on TASK-TIME-005's time entry row; this task's responsibility ends at returning `BillableResolution`.
 - The `proj.billable_resolved` audit row's `time_entry_id` is the downstream entry being created; if resolver is called for PREVIEW (without writing), `time_entry_id` is null.
 - Metrics cardinality bounded: 2 (value) × 4 (source) = 8 label combinations — safe.
 - Input validation at the handler boundary is per task-audit skill §3.4 rule 13 (RLS WITH CHECK + handler validation). Defence in depth.

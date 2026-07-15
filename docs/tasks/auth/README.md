@@ -1,10 +1,10 @@
 # AUTH module — task index
 
-_Generated 2026-05-17 - 16 FRs, 139 engineering-hours total (TASK-AUTH-110 OIDC provider added 2026-06-29)._
+_Generated 2026-05-17 - 16 tasks, 139 engineering-hours total (TASK-AUTH-110 OIDC provider added 2026-06-29)._
 
-## FRs
+## tasks
 
-| FR | Priority | Slice | Hours | Title |
+| Task | Priority | Slice | Hours | Title |
 |---|---|---|---:|---|
 | [TASK-AUTH-001](TASK-AUTH-001-tenant-create/spec.md) | MUST | 1 | 8 | Tenant create — root-admin in tenant 0 calls POST /v1/admin/tenants with idempotency + RLS provision |
 | [TASK-AUTH-002](TASK-AUTH-002-subject-create/spec.md) | MUST | 1 | 6 | Subject create — POST /v1/admin/subjects with bcrypt + role allow-list + idempotency + RLS-enforced  |

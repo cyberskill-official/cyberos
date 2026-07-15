@@ -1,8 +1,16 @@
 ---
 id: TASK-OBS-005
 title: "W3C TraceContext correlation across logs/metrics/traces/AI-traces — propagate, embed, exemplar, end-to-end CI test"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: OBS
-priority: MUST
+priority: p0
 status: implementing
 verify: T
 phase: P0
@@ -73,10 +81,10 @@ Every CyberOS service **MUST** propagate W3C TraceContext via HTTP headers AND e
 2. **MUST** include `trace_id` + `span_id` + `tenant_id` fields in EVERY structured log line emitted by CyberOS services. Implementation: `tracing-subscriber` layer that pulls from current OTel context and adds the fields automatically. No manual `info!(trace_id = ..., ...)` boilerplate at call sites.
 3. **MUST** include `trace_id` as Prometheus exemplar on the `cyberos_duration_ms` histogram (TASK-OBS-003). Exemplars let Grafana operators click a histogram bucket and jump directly to the offending trace in Tempo. The OTel SDK's `record` method supports exemplar injection natively.
 4. **MUST** forward `traceparent` (and `tracestate` + `baggage`) to downstream HTTP calls. The HTTP client wrapper auto-injects from the current span's context. Manual `req.headers_mut().insert("traceparent", ...)` at call sites is forbidden — use the wrapper.
-5. **MUST** correlate LangSmith trace with operational trace via shared `trace_id` (TASK-OBS-004 §1 #1 already requires this; this FR ensures the propagation chain ending at LangSmith preserves the value).
+5. **MUST** correlate LangSmith trace with operational trace via shared `trace_id` (TASK-OBS-004 §1 #1 already requires this; this task ensures the propagation chain ending at LangSmith preserves the value).
 6. **MUST** include `tenant_id` in every log line + every metric label (extracted from current request context). Without tenant_id, multi-tenant filtering at the OBS layer (TASK-OBS-002) doesn't work.
 7. **MUST** be CI-gated by `obs-correlation-gate.yml`: the workflow runs `end_to_end_correlation_test.rs` which makes a synthetic AI call, waits for OTel batches to flush, then queries Loki + Tempo + LangSmith + Prometheus and asserts all 4 systems hold records for the same trace_id.
-8. **MUST** preserve trace_id through tokio tasks (e.g., async background work). The `tracing::Instrument` extension propagates the span across `tokio::spawn`; this FR requires its use throughout.
+8. **MUST** preserve trace_id through tokio tasks (e.g., async background work). The `tracing::Instrument` extension propagates the span across `tokio::spawn`; this task requires its use throughout.
 9. **MUST** preserve trace_id through cross-process boundaries (subprocess spawns, e.g., memory_writer subprocess). The OTel context is serialised via env vars `OTEL_TRACE_ID` and `OTEL_SPAN_ID`; the subprocess restores at boot.
 10. **MUST** generate W3C-compliant trace_id (16 random bytes, hex-encoded as 32-char string) when no incoming header. The `opentelemetry::trace::TraceId::from_random()` produces this.
 11. **MUST** validate parsed `traceparent` strictly per W3C spec: `00-{32hex}-{16hex}-01` format. Malformed → generate new trace_id + log WARN with hash of bad value (NOT raw — bad values may be malicious).
@@ -397,9 +405,9 @@ let app = Router::new()
 
 ## §7 — Dependencies
 
-- **TASK-OBS-003** — RED metrics; this FR adds exemplar emission to histograms.
+- **TASK-OBS-003** — RED metrics; this task adds exemplar emission to histograms.
 - **TASK-OBS-004** — LangSmith trace_id correlation.
-- **TASK-AI-022** — OTel trace emission; this FR ensures the trace_id is universal.
+- **TASK-AI-022** — OTel trace emission; this task ensures the trace_id is universal.
 - Crates: `opentelemetry@0.21`, `opentelemetry-otlp@0.14`, `opentelemetry_sdk@0.21`, `tracing@0.1`, `tracing-subscriber@0.3` with `Layer`, `tracing-opentelemetry`, `axum-tracing-opentelemetry@0.18`.
 
 ---

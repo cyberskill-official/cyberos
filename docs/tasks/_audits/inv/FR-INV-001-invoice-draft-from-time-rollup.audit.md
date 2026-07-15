@@ -23,7 +23,7 @@ The spec lands the invoice substrate on top of TASK-TIME-009. 870 lines, 27 §1 
 
 ### ISS-002 — TIME-side coupling (invoiced_at column)
 
-§11.2 — column added via this FR's modified_files; TIME-009 derivative.
+§11.2 — column added via this task's modified_files; TIME-009 derivative.
 
 ### ISS-003 — Status FSM table-driven
 
@@ -45,7 +45,7 @@ The spec lands the invoice substrate on top of TASK-TIME-009. 870 lines, 27 §1 
 
 All 6 mechanical concerns addressed. Schema-level append-only + state-machine + gap-free numbering = forensically sound invoice substrate.
 
-The 870-line length is appropriate for 8h-effort foundational FR with 5 migrations + 8-state FSM + cross-FR anchoring.
+The 870-line length is appropriate for 8h-effort foundational task with 5 migrations + 8-state FSM + cross-task anchoring.
 
 **Score = 10/10.**
 

@@ -1,13 +1,13 @@
 # MCP module build plan (TASK-MCP-001..008)
 
 Written 2026-06-24. mcp is the live front of the locked P0 path (AI -> OBS -> AUTH -> MCP -> CHAT) now
-that obs is feature-complete in-repo. This plan reconciles each FR's frontmatter status against the code
+that obs is feature-complete in-repo. This plan reconciles each task's frontmatter status against the code
 actually shipped in `services/mcp-gateway`, then sequences the rest. Implementation is a toolchain step
 (cargo), run on your machine - this is the spec-to-code map, not the code.
 
 ## The status-lag to clear first (blocks everything)
 
-The frontmatter lags reality. The root dependency `TASK-AUTH-004` (JWT/JWKS) is `done`, and two MCP FRs
+The frontmatter lags reality. The root dependency `TASK-AUTH-004` (JWT/JWKS) is `done`, and two MCP tasks
 are already implemented but still read `draft`:
 
 - TASK-MCP-001 (spec-compliance) - the whole protocol surface is in `src/protocol/` (initialize,
@@ -17,8 +17,8 @@ are already implemented but still read `draft`:
   registry heartbeat / deregister / lazy-status, the `/v1/mcp/heartbeat` + `/v1/mcp/deregister` routes,
   and the tools/list withdrawal + tools/call skill_unavailable gate. Built this session, `draft`.
 
-This matters because `ship-tasks` only picks an FR whose `depends_on` rows are all `done`,
-and six of the eight MCP FRs depend on TASK-MCP-001. TASK-MCP-004 even reads `ready_to_implement` while its
+This matters because `ship-tasks` only picks a task whose `depends_on` rows are all `done`,
+and six of the eight MCP tasks depend on TASK-MCP-001. TASK-MCP-004 even reads `ready_to_implement` while its
 dependency TASK-MCP-001 is `draft` - an inconsistency the workflow would refuse. So the first action is
 not a new build: it is running the awh + caf gate on TASK-MCP-001 and TASK-MCP-002 on your Mac and flipping
 them `draft -> done` on GREEN+CLEAN. That single reconciliation unblocks the rest of the module.
@@ -29,14 +29,14 @@ them `draft -> done` on GREEN+CLEAN. That single reconciliation unblocks the res
 TASK-MCP-001 spec-compliance            [TASK-AUTH-004 done]   SHIPPED -> gate-verify -> done
   ├─ TASK-MCP-002 heartbeat lifecycle   [001]                SHIPPED -> gate-verify -> done
   ├─ TASK-MCP-003 SEP-986 naming validator [001]             slices 1-2 SHIPPED -> slice 3 (CI grep + audit) left
-  └─ TASK-MCP-004 OAuth 2.1 + PKCE      [TASK-AUTH-004 + 001]  NOT BUILT (the ready FR - buildable now)
+  └─ TASK-MCP-004 OAuth 2.1 + PKCE      [TASK-AUTH-004 + 001]  NOT BUILT (the ready task - buildable now)
        ├─ TASK-MCP-005 protected-resource-metadata [004]     NOT BUILT
        ├─ TASK-MCP-008 elicitation                 [001+004] NOT BUILT  (build before 006's gating)
        │    └─ TASK-MCP-006 tool-annotation-gating [001+004] PARTIAL   (needs 008 for destructive->elicit)
        └─ TASK-MCP-007 tasks primitive             [001+004] NOT BUILT
 ```
 
-## Per-FR
+## Per-task
 
 ### TASK-MCP-001 - spec compliance  (dep AUTH-004; SHIPPED, status-lag draft)
 The MCP 2025-11-25 wire surface: `protocol/initialize.rs`, `capabilities.rs`, `jsonrpc.rs`, `errors.rs`,
@@ -68,7 +68,7 @@ Slice 3 left (DB/CI-bound, bundled with the next Postgres session): the CI grep 
 memory-audit kinds (`mcp.skill_name_validated` / `_rejected` / `naming_ci_check_passed` / `_failed`,
 DEC-2364). Independent of OAuth.
 
-### TASK-MCP-004 - OAuth 2.1 + PKCE  (dep AUTH-004 + 001; NOT BUILT - the ready FR)
+### TASK-MCP-004 - OAuth 2.1 + PKCE  (dep AUTH-004 + 001; NOT BUILT - the ready task)
 The authorization-code + PKCE flow that lets a real MCP client authenticate to the gateway, building on
 TASK-AUTH-004's JWT/JWKS. New module under `src/` (e.g. `auth/` with the authorize + token + PKCE
 verifier). Test plan: a valid code+verifier exchanges for a token; a wrong verifier is refused; an
@@ -103,7 +103,7 @@ working -> complete; the result is fetchable; an unknown task id errors cleanly.
 The mcp goldenset (`modules/mcp/.awh/goldenset.yaml`) and caf profile already cover
 `cyberos-mcp-gateway`. Everything above lands in that one crate, so the existing golden-set task
 (`cd services && cargo test -p cyberos-mcp-gateway`) covers the new code automatically - no new task per
-FR. Re-seal the baseline once after the first FR adds behaviour
+Task. Re-seal the baseline once after the first task adds behaviour
 (`awh eval modules/mcp/.awh/goldenset.yaml --base-dir . --seeds 1 --out modules/mcp/.awh/eval-baseline.json`),
 then it holds for the rest.
 
@@ -111,7 +111,7 @@ then it holds for the rest.
 
 1. Reconcile first: run awh + caf on the gateway as it stands, and flip TASK-MCP-001 and TASK-MCP-002
    `draft -> done` on GREEN+CLEAN. This is the unblock - do it before anything else.
-2. Ship TASK-MCP-003 (small, independent) alongside, then TASK-MCP-004 (OAuth, the ready FR).
+2. Ship TASK-MCP-003 (small, independent) alongside, then TASK-MCP-004 (OAuth, the ready task).
 3. With 004 done, ship TASK-MCP-005, then TASK-MCP-008, then TASK-MCP-006 (which needs 008), then TASK-MCP-007.
-4. Each FR flows through `ship-tasks` to step 28 (awh rerun) + step 29 (caf target health +
+4. Each task flows through `ship-tasks` to step 28 (awh rerun) + step 29 (caf target health +
    audit); `testing -> done` flips only on awh GREEN and caf CLEAN.

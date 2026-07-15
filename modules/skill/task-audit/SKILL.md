@@ -6,12 +6,12 @@ description: >-
   markdowns against audit_rubric@2.0 (FM/SEC/COND/QA/SAFE/TRACE rule
   families) to drive the `draft → ready_to_implement` lifecycle
   transition per `modules/skill/contracts/task/STATUS-REFERENCE.md` §1.1. Use
-  when user asks to "audit this FR", "check the rubric on this FR", or
-  "tell me which FRs would fail acceptance today". Produces a sibling
-  .audit.md per FR plus an AUDIT_BATCH_SUMMARY. Halts on needs_human
+  when user asks to "audit this task", "check the rubric on this task", or
+  "tell me which tasks would fail acceptance today". Produces a sibling
+  .audit.md per task plus an AUDIT_BATCH_SUMMARY. Halts on needs_human
   verdicts; resumable on audited_file_sha256. Standalone trigger or
   chains naturally after task-author. Do NOT use for "draft
-  a new FR from this PRD" (use task-author instead). Do NOT
+  a new task from this PRD" (use task-author instead). Do NOT
   use for "verify every clause has a passing test" (that is
   coverage-gate-audit's job, run during the `testing → done`
   transition — phase split documented in RUBRIC.md §9).
@@ -151,7 +151,7 @@ gated_until_phase: null
 untrusted_content_wrapping: required
 ---
 
-# task-audit — Task auditor
+# Task-audit — Task auditor
 
 > Standalone trigger that runs `audit_rubric@2.0` against one or
 > more existing `task@1` markdowns and writes a sibling
@@ -165,9 +165,9 @@ untrusted_content_wrapping: required
 
 CUO routes a request here when the user wants to:
 
-- "Audit these existing `FR`s."
-- "Has `FR-007` changed since the last audit?"
-- "Tell me which `FR`s would fail acceptance today."
+- "Audit these existing `task`s."
+- "Has `TASK-007` changed since the last audit?"
+- "Tell me which `task`s would fail acceptance today."
 
 Also invoked automatically by the supervisor when `task-author`'s output envelope sets `next_skill_recommendation: task-audit` (the default chain).
 
@@ -202,7 +202,7 @@ phase:                           AUDIT
 
 ```json
 {
-  "artefact_paths": ["./frs/FR-001-foo.md", "./frs/FR-002-bar.md"],
+  "artefact_paths": ["./frs/TASK-001-foo.md", "./frs/TASK-002-bar.md"],
   "caller_persona": "cuo-cpo",
   "trace_id": "<uuid>",
   "upstream_context": {
@@ -225,8 +225,8 @@ phase:                           AUDIT
   "overall_status_counts": {"pass": 1, "needs_human": 1, "fail": 0},
   "exit_code": 1,
   "per_artefact": [
-    {"artefact_path": "./frs/FR-001-foo.md", "audit_path": "./frs/FR-001-foo.audit.md", "status": "pass", "iterations": 1, "audited_file_sha256": "<hex>"},
-    {"artefact_path": "./frs/FR-002-bar.md", "audit_path": "./frs/FR-002-bar.audit.md", "status": "needs_human", "iterations": 3, "audited_file_sha256": "<hex>"}
+    {"artefact_path": "./frs/TASK-001-foo.md", "audit_path": "./frs/TASK-001-foo.audit.md", "status": "pass", "iterations": 1, "audited_file_sha256": "<hex>"},
+    {"artefact_path": "./frs/TASK-002-bar.md", "audit_path": "./frs/TASK-002-bar.audit.md", "status": "needs_human", "iterations": 3, "audited_file_sha256": "<hex>"}
   ],
   "hitl_required": true,
   "requires_regen": false,
@@ -308,7 +308,7 @@ See `references/FAILURE_MODES.md` for the BOOT-001..008 + drift + self-audit cat
 Persona: cuo-cpo
 Skill:   task-audit
 Input:
-  artefact_paths:  [./team-a/FR-001-something.md, ./team-b/FR-018-other.md]
+  artefact_paths:  [./team-a/TASK-001-something.md, ./team-b/TASK-018-other.md]
   caller_persona:  cuo-cpo
   trace_id:        <uuid>
 
@@ -322,15 +322,15 @@ For each artefact: locate → hash → load-or-init audit report → apply rubri
 
 > This section was absorbed from the legacy task-audit skill file on 2026-05-20.
 
-# FR Authoring Discipline — CyberOS
+# Task Authoring Discipline — CyberOS
 
 > **Co-located with the auditor that enforces it.** This file lives next to the `task-audit` skill (`modules/skill/task-audit/`) because every rule below is checked by `audit_rubric@2.0`. The discipline doc and the rubric ship together — if you change one, you change the other.
 >
-> Authored FRs live at `cyberos/docs/tasks/{module}/FR-{MOD}-{NNN}-{slug}.md` with sibling `*.audit.md`. This file is the operator-side companion to the skill-side `RUBRIC.md`.
+> Authored tasks live at `cyberos/docs/tasks/{module}/task-{MOD}-{NNN}-{slug}.md` with sibling `*.audit.md`. This file is the operator-side companion to the skill-side `RUBRIC.md`.
 
 **Source of truth.** This file is normative for every Task in `cyberos/docs/tasks/`. It supersedes any prior ad-hoc patterns.
 
-**Created:** 2026-05-16 after a session that wrote 41 FRs across the priority modules (memory, SKILL, PROJ, CHAT) and codified the lessons learned. **Absorbed into the `task-audit` skill on 2026-05-18** — was previously at `cyberos/task-audit skill`. Every rule below maps to at least one rework moment that cost ≥ 15 minutes to identify and fix.
+**Created:** 2026-05-16 after a session that wrote 41 tasks across the priority modules (memory, SKILL, PROJ, CHAT) and codified the lessons learned. **Absorbed into the `task-audit` skill on 2026-05-18** — was previously at `cyberos/task-audit skill`. Every rule below maps to at least one rework moment that cost ≥ 15 minutes to identify and fix.
 
 The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHALL**, **SHALL NOT**, **SHOULD**, **SHOULD NOT**, **RECOMMENDED**, **NOT RECOMMENDED**, **MAY**, and **OPTIONAL** in this document are to be interpreted as described in BCP 14 (RFC 2119, RFC 8174) when, and only when, they appear in all capitals.
 
@@ -338,7 +338,7 @@ The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHALL**, **SHALL NOT**, **
 
 ## §0 — The Master Rule
 
-> **After creating one FR, loop audit rounds on it until it reaches *perfect* — before starting the next FR.**
+> **After creating one task, loop audit rounds on it until it reaches *perfect* — before starting the next task.**
 
 This is the single load-bearing discipline. Everything else in this document is subordinate to it.
 
@@ -347,57 +347,57 @@ This is the single load-bearing discipline. Everything else in this document is 
 Perfect = **highly detailed** AND **perfectly matched to core requirements** AND **complete** AND **no truncation**.
 
 - **Highly detailed**: every architectural decision is named, every contract surface is enumerated, every failure mode is listed.
-- **Perfectly matched to core requirements**: the spec covers what the FR is *for* — no scope creep, no scope under-coverage. The §1 normative clauses fully express the contract that downstream FRs and engineers depend on.
-- **Complete**: all 11 sections present and substantive. No `(elided)`, no `(see other FR)` cross-references that hide the contract.
-- **No truncation**: no "summary form," no "compact form due to context budget," no "abridged for brevity," no "inlined into shorter prose." If the author runs into a budget limit, the right action is to **stop, save state, and resume later** — never to ship a truncated FR.
+- **Perfectly matched to core requirements**: the spec covers what the task is *for* — no scope creep, no scope under-coverage. The §1 normative clauses fully express the contract that downstream tasks and engineers depend on.
+- **Complete**: all 11 sections present and substantive. No `(elided)`, no `(see other task)` cross-references that hide the contract.
+- **No truncation**: no "summary form," no "compact form due to context budget," no "abridged for brevity," no "inlined into shorter prose." If the author runs into a budget limit, the right action is to **stop, save state, and resume later** — never to ship a truncated task.
 
 ### The Loop
 
-1. **First-pass author** the FR per the 11-section template (§3 below).
+1. **First-pass author** the task per the 11-section template (§3 below).
 2. **Author the audit file** at `<spec-stem>.audit.md` — find at least 6 ISS-xxx findings; score the spec honestly.
-3. **If `score_post_revision < 10/10`**: revise the FR addressing every finding.
+3. **If `score_post_revision < 10/10`**: revise the task addressing every finding.
 4. **Re-audit** the revised spec.
 5. **Repeat** steps 3–4 until `score_post_revision: 10/10`.
-6. **Only then** start the next FR.
+6. **Only then** start the next task.
 
 ### Why this rule first
 
-- **Drift compounds.** A spec with one ambiguity invites a second; downstream FRs that depend on it inherit the ambiguity.
-- **Re-entry cost.** Returning to a half-spec'd FR weeks later costs 3× the time of finishing it now — the author has lost the mental model.
-- **Audit trail integrity.** Every accepted FR claims `score_post_revision: 10/10`. If some accepted FRs are quietly 8/10 (truncated, summary-form), the score loses its meaning.
+- **Drift compounds.** A spec with one ambiguity invites a second; downstream tasks that depend on it inherit the ambiguity.
+- **Re-entry cost.** Returning to a half-spec'd task weeks later costs 3× the time of finishing it now — the author has lost the mental model.
+- **Audit trail integrity.** Every accepted task claims `score_post_revision: 10/10`. If some accepted tasks are quietly 8/10 (truncated, summary-form), the score loses its meaning.
 - **Reviewer confidence.** The reciprocal-spec promise is "10/10 means it shipped to spec." Sliding the bar breaks that promise.
 
 ### How to apply
 
-When tempted to ship a compact FR:
+When tempted to ship a compact task:
 
 | Temptation | What to do instead |
 |---|---|
 | "Context budget is tight" | Pause; save state; resume in a fresh session. Don't truncate. |
-| "This is a small FR" | If small, then ≤ 300 lines spec is fine AS LONG AS it's complete (all 11 sections present, each meaningful). The size cap isn't the issue — truncation is. |
-| "I've established the pattern already; this FR can lean on it" | Use cross-FR primitives via §7 dependencies, but the FR's own §1–§11 must still be self-contained. A reader should not need to open the dependency FR to understand THIS FR's contract. |
-| "I'm running 12 FRs in this session; I'll come back and polish" | The rework is 3× more expensive later. Loop to 10/10 NOW. |
+| "This is a small task" | If small, then ≤ 300 lines spec is fine AS LONG AS it's complete (all 11 sections present, each meaningful). The size cap isn't the issue — truncation is. |
+| "I've established the pattern already; this task can lean on it" | Use cross-task primitives via §7 dependencies, but the task's own §1–§11 must still be self-contained. A reader should not need to open the dependency task to understand THIS task's contract. |
+| "I'm running 12 tasks in this session; I'll come back and polish" | The rework is 3× more expensive later. Loop to 10/10 NOW. |
 
 ### Exceptions
 
-There are **two** sanctioned exceptions to the size/depth target. Both must be explicit in the FR title AND the audit file:
+There are **two** sanctioned exceptions to the size/depth target. Both must be explicit in the task title AND the audit file:
 
-1. **Stub FRs.** An FR whose explicit purpose is to reserve an OCI tag / skill ID / API namespace for a later phase. The stub MUST fully spec the stub contract (the no-op behaviour, the audit-row emission, the "DeferredToP<n>" outcome). Acceptable ≤ 300 lines. Examples: `TASK-SKILL-106` (memory-sync@1 stub for P2), `TASK-SKILL-107` (synthesis-author@1 P3 reservation).
-2. **Pure-infrastructure / Terraform / config FRs.** Where the contract surface is small (resource provisioning, single Dockerfile, single workflow). Acceptable ≤ 400 lines. Example: `TASK-CHAT-001` (Mattermost fork pinning).
+1. **Stub tasks.** A task whose explicit purpose is to reserve an OCI tag / skill ID / API namespace for a later phase. The stub MUST fully spec the stub contract (the no-op behaviour, the audit-row emission, the "DeferredToP<n>" outcome). Acceptable ≤ 300 lines. Examples: `TASK-SKILL-106` (memory-sync@1 stub for P2), `TASK-SKILL-107` (synthesis-author@1 P3 reservation).
+2. **Pure-infrastructure / Terraform / config tasks.** Where the contract surface is small (resource provisioning, single Dockerfile, single workflow). Acceptable ≤ 400 lines. Example: `TASK-CHAT-001` (Mattermost fork pinning).
 
 Neither exception authorises *truncation* — both still require all 11 sections, just at a smaller-but-complete scale.
 
 ---
 
-## §1 — Mandatory FR template (11 sections)
+## §1 — Mandatory task template (11 sections)
 
-Every FR file MUST contain these 11 sections, in order, with the canonical headings:
+Every task file MUST contain these 11 sections, in order, with the canonical headings:
 
 ### §0 — Frontmatter
 
 ```yaml
 ---
-id: FR-<MODULE>-<NUMBER>
+id: task-<MODULE>-<NUMBER>
 title: "<one-line subject, ≤ 120 chars>"
 module: <AI | AUTH | memory | CHAT | DOCS | OBS | PROJ | SKILL | ...>
 priority: <MUST | SHOULD | COULD | MAY>
@@ -410,9 +410,9 @@ owner: <person name>
 created: <YYYY-MM-DD>
 shipped: null
 memory_chain_hash: null
-related_tasks: [FR-..., FR-...]
-depends_on: [FR-..., FR-...]
-blocks: [FR-..., FR-...]
+related_tasks: [task-..., task-...]
+depends_on: [task-..., task-...]
+blocks: [task-..., task-...]
 source_pages:
   - <URL or path>
 source_decisions:
@@ -438,7 +438,7 @@ risk_if_skipped: "<one paragraph>"
 - Comments MUST be on their own line (never `priority: MUST   # comment`). Trailing comments break YAML parsers.
 - `effort_hours` MUST be populated. If unknown, use the closest 2h-grain estimate.
 - `depends_on` and `blocks` MUST be reciprocal — see §6.2.
-- Any `depends_on:` / `blocks:` entry pointing at a non-existent FR MUST carry `# placeholder — not yet specified` inline.
+- Any `depends_on:` / `blocks:` entry pointing at a non-existent task MUST carry `# placeholder — not yet specified` inline.
 
 ### §1 — Description (BCP-14 normative)
 
@@ -450,7 +450,7 @@ One paragraph per non-obvious design decision, named after the §1 clause it jus
 
 ### §3 — API contract
 
-Code blocks: types, traits, schemas, migrations, REST endpoints. Whatever surface the FR introduces. Concrete code, not pseudo-code.
+Code blocks: types, traits, schemas, migrations, REST endpoints. Whatever surface the task introduces. Concrete code, not pseudo-code.
 
 ### §4 — Acceptance criteria
 
@@ -466,7 +466,7 @@ If §3 is complete, this section may simply say `(API contract above is the skel
 
 ### §7 — Dependencies
 
-Bulleted list of upstream + downstream + cross-module FRs the spec depends on.
+Bulleted list of upstream + downstream + cross-module tasks the spec depends on.
 
 ### §8 — Example payloads
 
@@ -478,7 +478,7 @@ JSON examples of audit rows, request bodies, response bodies, etc.
 
 ### §10 — Failure modes inventory
 
-Table with columns `Failure | Detection | Outcome | Recovery`. **At least 10 rows** for a substantive FR. Cover every architectural decision's failure path.
+Table with columns `Failure | Detection | Outcome | Recovery`. **At least 10 rows** for a substantive task. Cover every architectural decision's failure path.
 
 ### §11 — Implementation notes
 
@@ -486,7 +486,7 @@ Bulleted notes: "the why behind the how" — tradeoffs that future engineers mig
 
 ### Section terminator
 
-End with `*End of FR-<MODULE>-<NUMBER>.*` on its own line.
+End with `*End of task-<MODULE>-<NUMBER>.*` on its own line.
 
 ---
 
@@ -496,7 +496,7 @@ Every spec MUST have a matching audit at `<spec-stem>.audit.md`. Structure:
 
 ```markdown
 ---
-task_id: FR-<MODULE>-<NUMBER>
+task_id: task-<MODULE>-<NUMBER>
 audited: <YYYY-MM-DD>
 verdict: PASS (after revision)
 score_pre_revision: <X/10>
@@ -526,7 +526,7 @@ All 6 mechanical concerns addressed. **Score = 10/10.**
 
 ---
 
-*End of FR-<MODULE>-<NUMBER> audit.*
+*End of task-<MODULE>-<NUMBER> audit.*
 ```
 
 **Audit rules:**
@@ -544,8 +544,8 @@ These are rules the master rule (§0) tends to surface naturally if followed. Th
 ### §3.1 — Frontmatter rules (MUST)
 
 1. **Use `Uuid::nil()`, not numeric `0`,** when referring to the root tenant. The literal `0` is invalid because `tenant_id` is `UUID` everywhere; the nil-UUID `00000000-0000-0000-0000-000000000000` is the canonical convention. Use it in prose AND code.
-2. **`depends_on` and `blocks` MUST be reciprocal.** If FR-X has `depends_on: [FR-Y]`, FR-Y MUST have `FR-X` in `blocks` (and vice-versa). Validate via a post-authoring sweep against every other FR.
-3. **Mark placeholder FRs explicitly.** Any `depends_on:` or `blocks:` entry pointing to an FR that doesn't yet exist MUST carry an inline comment `# placeholder — not yet specified`.
+2. **`depends_on` and `blocks` MUST be reciprocal.** If task-X has `depends_on: [task-Y]`, task-Y MUST have `task-X` in `blocks` (and vice-versa). Validate via a post-authoring sweep against every other task.
+3. **Mark placeholder tasks explicitly.** Any `depends_on:` or `blocks:` entry pointing to a task that doesn't yet exist MUST carry an inline comment `# placeholder — not yet specified`.
 4. **`status` field MUST be one of** `draft | ready_to_implement | implementing | ready_to_review | reviewing | ready_to_test | testing | done | on_hold | closed`. No other values.
 5. **`effort_hours` MUST be populated.** If unknown, use the closest 2h-grain estimate; never leave blank.
 
@@ -553,7 +553,7 @@ These are rules the master rule (§0) tends to surface naturally if followed. Th
 
 6. **Audit-row kinds MUST match `^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$`** — exactly one `.` separating module and event_kind. Examples: `ai.precheck`, `memory.sync_row_filtered`, `skill.invoked_started`, `chat.message`. Anti-pattern: `cli.policy_updated` (no module prefix → drift).
 7. **Audit-row kinds MUST be namespaced by the OWNING module.** A skill's audit row is `skill.*`, not `ai.skill_*`. A CHAT-emitted row is `chat.*`. Cross-module rows (e.g. AI Gateway emitting `auth.*`) are forbidden; rows belong to one module each.
-8. **TASK-AI-003 closed-set list MUST be extended** whenever a new `ai.*` row is introduced. Add a §1 #8 entry citing the originating FR.
+8. **TASK-AI-003 closed-set list MUST be extended** whenever a new `ai.*` row is introduced. Add a §1 #8 entry citing the originating task.
 
 ### §3.3 — Cross-CLI rules (MUST)
 
@@ -594,13 +594,13 @@ These are rules the master rule (§0) tends to surface naturally if followed. Th
 ### §3.9 — Determinism (MUST)
 
 27. **Every catalogue / report-generator output MUST be deterministic.** No `Date.now()`, no random IDs, no hash-map iteration without sorting. Two consecutive runs on the same input MUST produce byte-identical output.
-28. **Snapshot files MUST sort by stable key** (e.g. realpath, FR-ID) before iteration.
+28. **Snapshot files MUST sort by stable key** (e.g. realpath, task-ID) before iteration.
 
 ### §3.10 — Verification rules (MUST)
 
-29. **Every FR MUST have at least one failure-mode row per architectural decision.** Empty §10 is a sign of insufficient design pressure.
+29. **Every task MUST have at least one failure-mode row per architectural decision.** Empty §10 is a sign of insufficient design pressure.
 30. **Tests MUST assert failure paths explicitly** — not just happy paths. Each `MUST NOT` in §1 corresponds to a negative test in §5.
-31. **CI gates that depend on data fixtures** (e.g. PII-recall, VN-search-recall) MUST commit the fixture corpus with the FR, not "we'll generate it later."
+31. **CI gates that depend on data fixtures** (e.g. PII-recall, VN-search-recall) MUST commit the fixture corpus with the task, not "we'll generate it later."
 
 ### §3.11 — Documentation discipline (SHOULD)
 
@@ -632,8 +632,8 @@ These are rules the master rule (§0) tends to surface naturally if followed. Th
 
 ### §3.14 — Spec-depth calibration (NICE-TO-FIX)
 
-39. **Target 500–700 lines per substantive FR.** Below 300 (excluding sanctioned stubs/infra per §0 exceptions) suggests under-specification; above 1 000 suggests prose padding that obscures the spec.
-40. **Stub FRs (status: draft, P2/P3 reservation) MAY be ≤ 300 lines BUT MUST clearly say** "this is a scaffold; full impl in P<n> via FR-<x>" in the title + §1 #1.
+39. **Target 500–700 lines per substantive task.** Below 300 (excluding sanctioned stubs/infra per §0 exceptions) suggests under-specification; above 1 000 suggests prose padding that obscures the spec.
+40. **Stub tasks (status: draft, P2/P3 reservation) MAY be ≤ 300 lines BUT MUST clearly say** "this is a scaffold; full impl in P<n> via task-<x>" in the title + §1 #1.
 
 ---
 
@@ -647,20 +647,20 @@ Run **before every bulk-accept**, ideally as a CI gate:
 - [ ] TASK-AI-003 closed-set up-to-date with all `ai.*` kinds
 - [ ] All audit files have `score_post_revision: 10/10`
 - [ ] All `effort_hours` populated
-- [ ] No FR < 300 lines unless explicitly stub/infra per §0 exceptions
-- [ ] No FR > 1 000 lines that isn't justified by genuine surface complexity
+- [ ] No task < 300 lines unless explicitly stub/infra per §0 exceptions
+- [ ] No task > 1 000 lines that isn't justified by genuine surface complexity
 - [ ] No trailing `#` comments on frontmatter value lines
-- [ ] Every dangling FR reference has `# placeholder` annotation
-- [ ] Cross-FR primitives use canonical names (Uuid::nil, sync_class, etc.)
+- [ ] Every dangling task reference has `# placeholder` annotation
+- [ ] Cross-task primitives use canonical names (Uuid::nil, sync_class, etc.)
 
 ---
 
 ## §5 — How to use this document
 
-- **Before writing a new FR:** read §0 (Master Rule) and §1 (template). The rest is a checklist for self-audit.
-- **When auditing an FR:** the §3 sub-rules are the categories of findings to look for.
-- **When reviewing a PR that adds an FR:** confirm §0 was followed — was there an audit-loop until 10/10?
-- **When discovering a new anti-pattern:** add it to §3 with a one-line origin reference (which FR's mistake taught it).
+- **Before writing a new task:** read §0 (Master Rule) and §1 (template). The rest is a checklist for self-audit.
+- **When auditing a task:** the §3 sub-rules are the categories of findings to look for.
+- **When reviewing a PR that adds a task:** confirm §0 was followed — was there an audit-loop until 10/10?
+- **When discovering a new anti-pattern:** add it to §3 with a one-line origin reference (which task's mistake taught it).
 
 ---
 
@@ -674,29 +674,29 @@ This document follows the same precedence rule as `AGENTS.md` §0: explicit user
 
 **Added 2026-05-17 by explicit operator approval.**
 
-When the operator says "continue", "march", or any equivalent open-ended go-ahead, the FR-authoring agent **MUST** keep draining the topological-order frontier autonomously and **MUST NOT** stop between FRs to ask "should I keep going?" The agent stops only when one of these conditions fires:
+When the operator says "continue", "march", or any equivalent open-ended go-ahead, the task-authoring agent **MUST** keep draining the topological-order frontier autonomously and **MUST NOT** stop between tasks to ask "should I keep going?" The agent stops only when one of these conditions fires:
 
-1. **Decision required.** A genuine design choice surfaces that the operator alone can resolve — e.g., the next FR's scope is ambiguous in the BACKLOG, a normative DEC entry would commit the company to a course not previously chosen, or a coherence error implies a backlog-level priority swap. In that case stop, summarise the decision, and present 2–4 options via `AskUserQuestion`.
-2. **Session-limit warning.** The harness signals approaching context exhaustion (system reminder about token budget, or the agent observes the working set creeping toward the context window). In that case stop after the current FR's audit-loop + coherence patch reach a clean state, then emit the §14 block + a "resume point" pointer naming the next-ready FR.
+1. **Decision required.** A genuine design choice surfaces that the operator alone can resolve — e.g., the next task's scope is ambiguous in the BACKLOG, a normative DEC entry would commit the company to a course not previously chosen, or a coherence error implies a backlog-level priority swap. In that case stop, summarise the decision, and present 2–4 options via `AskUserQuestion`.
+2. **Session-limit warning.** The harness signals approaching context exhaustion (system reminder about token budget, or the agent observes the working set creeping toward the context window). In that case stop after the current task's audit-loop + coherence patch reach a clean state, then emit the §14 block + a "resume point" pointer naming the next-ready task.
 3. **Coherence sweep fails post-patch.** If `coherence_check.py` reports errors that mechanical reciprocity edits can't resolve (e.g., a true cycle in the dependency graph), stop and surface the dependency conflict.
-4. **Audit cannot reach 10/10 in three loops.** If three iterations of audit→revise→re-audit on a single FR fail to land 10/10 (rare — usually means the FR's scope is genuinely under-specified at the backlog level), stop and ask the operator to clarify scope before continuing.
+4. **Audit cannot reach 10/10 in three loops.** If three iterations of audit→revise→re-audit on a single task fail to land 10/10 (rare — usually means the task's scope is genuinely under-specified at the backlog level), stop and ask the operator to clarify scope before continuing.
 
-Routine surprises (a single missing dependency on an upstream FR, a one-off reciprocity gap, a small clarification needed in implementation details) are **NOT** stop conditions — the agent fills the gap inline and continues.
+Routine surprises (a single missing dependency on an upstream task, a one-off reciprocity gap, a small clarification needed in implementation details) are **NOT** stop conditions — the agent fills the gap inline and continues.
 
-**Per-FR loop the agent runs without prompting:** pick next-ready from frontier → write spec → write audit → loop to 10/10 → run coherence check → patch upstream reciprocity → emit single-line FR-shipped marker → loop back to pick next-ready.
+**Per-task loop the agent runs without prompting:** pick next-ready from frontier → write spec → write audit → loop to 10/10 → run coherence check → patch upstream reciprocity → emit single-line task-shipped marker → loop back to pick next-ready.
 
-**End-of-march report (when stop condition fires):** a single response covering every FR drained in the session, with §14 block listing every non-memory file change in one consolidated `📁 Files changed:` block.
+**End-of-march report (when stop condition fires):** a single response covering every task drained in the session, with §14 block listing every non-memory file change in one consolidated `📁 Files changed:` block.
 
 ---
 
 ## §8 — Audit-finding pattern library
 
-**Consolidated 2026-05-17 from STRICT_REDO_PROGRESS.md (now deleted).** When auditing an FR, run this checklist before declaring 10/10. Each pattern below has been a real ISS finding on a shipped FR — they are the categories of mechanical concern that the AUTHORING discipline catches.
+**Consolidated 2026-05-17 from STRICT_REDO_PROGRESS.md (now deleted).** When auditing a task, run this checklist before declaring 10/10. Each pattern below has been a real ISS finding on a shipped task — they are the categories of mechanical concern that the AUTHORING discipline catches.
 
-### §8.1 — Cross-FR / single-source-of-truth concerns
+### §8.1 — Cross-task / single-source-of-truth concerns
 
 - **§8.1a Single-source-of-truth violations.** When two modules can answer the same question (`Provider::is_zdr()` AND `zdr::is_zdr`), pick one as canonical and remove the other surface. Origin: TASK-AI-006 ISS-001.
-- **§8.1b §1 SHOULD vs §4 MUST mismatch.** Never have §1 say MAY/SHOULD when §4 asserts MUST. Either scope SHOULDs to a specific slice, move them to the FR that owns the behaviour, or upgrade §1 to MUST. Origin: TASK-AI-008 ISS-001.
+- **§8.1b §1 SHOULD vs §4 MUST mismatch.** Never have §1 say MAY/SHOULD when §4 asserts MUST. Either scope SHOULDs to a specific slice, move them to the task that owns the behaviour, or upgrade §1 to MUST. Origin: TASK-AI-008 ISS-001.
 - **§8.1c Invariants declared in §1 but not enforced in §6.** Every §1 MUST-clause needs §6 enforcement or §4 verification. If §1 #12 says "is_embedding ⇒ output=0", the loader must check it. Origin: TASK-AI-007 ISS-002.
 - **§8.1d Constant defined but never referenced.** Every documented constant MUST appear in at least one §6 code path; otherwise the SLA it represents isn't enforced. Origin: TASK-AI-010 ISS-002.
 - **§8.1e Metric-label cardinality drift between §1 and §6.** Every documented label value must have at least one emit site in §6, OR be removed from §1's enumeration. Origin: TASK-AI-008 ISS-004.
@@ -706,7 +706,7 @@ Routine surprises (a single missing dependency on an upstream FR, a one-off reci
 - **§8.2a Promised tests not in §5.** Every AC referencing a test type (proptest, property test, integration test) must have an example body in §5 — not just a named tokio test. Origin: TASK-AI-006 ISS-002, TASK-AI-007 ISS-001.
 - **§8.2b Metric assertions promised in ACs but no test body.** Every metric-MUST in §4 needs a `metric_value(name, labels)` helper invocation in §5. State-only checks don't verify the metric emission. Origin: TASK-AI-009 ISS-001.
 - **§8.2c Aggregate metric hides per-component regression.** When an SLO is "≥X% recall" or "≤Y latency" across N components, the test MUST assert per-component AND aggregate, not just aggregate. Origin: TASK-AI-012 ISS-004.
-- **§8.2d Absence claims need lints.** When §1 claims ABSENCE ("no network calls", "no persistence", "no DB"), the FR must include an AST/grep-based CI lint that enforces the absence at PR time. Origin: TASK-AI-012 ISS-002.
+- **§8.2d Absence claims need lints.** When §1 claims ABSENCE ("no network calls", "no persistence", "no DB"), the task must include an AST/grep-based CI lint that enforces the absence at PR time. Origin: TASK-AI-012 ISS-002.
 
 ### §8.3 — Concurrency + state-transition correctness
 
@@ -734,7 +734,7 @@ Routine surprises (a single missing dependency on an upstream FR, a one-off reci
 
 ### How to use §8
 
-When writing a `*.audit.md`, walk this checklist. Many findings will not apply to a given FR — that's fine. The point is that the categories themselves are the audit's pressure-test rubric. New patterns surfaced in future audits SHOULD be appended here with origin reference.
+When writing a `*.audit.md`, walk this checklist. Many findings will not apply to a given task — that's fine. The point is that the categories themselves are the audit's pressure-test rubric. New patterns surfaced in future audits SHOULD be appended here with origin reference.
 
 ---
 
@@ -742,20 +742,20 @@ When writing a `*.audit.md`, walk this checklist. Many findings will not apply t
 
 ## §9 — Implementation-audit discipline (added 2026-05-19)
 
-The §10 Implementation audit dossier (per `feedback_cyberos_audit_dossier_location.md`) is where code-vs-spec drift is tracked. Three rules govern HOW the audit-fix loop runs against an FR:
+The §10 Implementation audit dossier (per `feedback_cyberos_audit_dossier_location.md`) is where code-vs-spec drift is tracked. Three rules govern HOW the audit-fix loop runs against a task:
 
-### §9.1 — No partial-ship-and-pause within an FR
+### §9.1 — No partial-ship-and-pause within a task
 
-When running the `chief-technology-officer/ship-tasks` workflow against an FR, **drive ALL slices to completion in a single continuous session**. Pause only between FRs.
+When running the `chief-technology-officer/ship-tasks` workflow against a task, **drive ALL slices to completion in a single continuous session**. Pause only between tasks.
 
 **Origin:** TASK-AUTH-002 took three commits (slice-1 · slice-2 · slice-3) spread across multiple "continue" cycles in session 21+22. Stephen flagged the fragmentation on 2026-05-19: partial-ship states (`slice-N shipped (N/M gaps); slice-{N+1} planned`) sit in BACKLOG between sessions, fragmenting review and delaying the strict-audited signal.
 
 **Rules:**
 1. Read the full gap list + §10.7 slice plan BEFORE starting any slice
-2. Don't ask between slices — continuation is implied by "drive this FR to completion"
+2. Don't ask between slices — continuation is implied by "drive this task to completion"
 3. Commit per slice for git-history hygiene (each slice = its own conventional commit + cargo verify gate)
-4. Only pause between FRs — that's a fresh priority decision
-5. If genuinely blocked mid-FR (e.g. needs ADR-class operator decision), DOCUMENT the block in §10.7 with required-decision text, mark `[BLOCKED: needs decision X]` in BACKLOG, surface to operator. Do NOT silently ship a partial slice and walk away.
+4. Only pause between tasks — that's a fresh priority decision
+5. If genuinely blocked mid-task (e.g. needs ADR-class operator decision), DOCUMENT the block in §10.7 with required-decision text, mark `[BLOCKED: needs decision X]` in BACKLOG, surface to operator. Do NOT silently ship a partial slice and walk away.
 
 **Grandfathered exception:** the TASK-AUTH-002 multi-commit slice run (commits `d1dea2e` + `d32f9f6` + `6e58ad4`) predates this rule.
 
@@ -765,8 +765,8 @@ Before writing any G-NNN code-fix, the §10 audit dossier MUST exist with the fu
 
 ### §9.3 — Defer-with-rationale rules
 
-When a gap is deferred to a later slice or another FR (e.g. TASK-AUTH-002 G-011 OTel metrics → TASK-OBS-001), the §10.2 status cell MUST include both:
-1. The destination (slice-N OR FR-X-NNN)
+When a gap is deferred to a later slice or another task (e.g. TASK-AUTH-002 G-011 OTel metrics → TASK-OBS-001), the §10.2 status cell MUST include both:
+1. The destination (slice-N OR task-X-NNN)
 2. A one-sentence rationale (why deferred, not just where)
 
 This prevents "deferred to slice 2" entries that nobody can pick up because nobody remembers WHY.
@@ -775,9 +775,9 @@ This prevents "deferred to slice 2" entries that nobody can pick up because nobo
 
 ## §10 — Backlog Management and Invariants
 
-### §10.1 — Cross-Phase Invariants (NOT FR-level — protocol-level)
+### §10.1 — Cross-Phase Invariants (NOT task-level — protocol-level)
 
-These apply to **every** Task. Auditors MUST check that no FR violates these.
+These apply to **every** Task. Auditors MUST check that no task violates these.
 
 1. **memory audit-row coverage = 100%** — every state-changing operation in every module emits a chained memory audit row before returning success. CI gate per module.
 2. **Tenant isolation cross-leak = 0** — property-based test runs per release on every tenant-aware code path. Zero cross-tenant data reads under any randomised query, JWT, label, or ID manipulation.
@@ -789,11 +789,11 @@ These apply to **every** Task. Auditors MUST check that no FR violates these.
 
 ### §10.2 — How the Backlog Grows
 
-- **New FRs:** authored per the playbook rules above. Each FR is a markdown file at `docs/tasks/{module}/FR-{MOD}-{NNN}-{slug}.md` with a sibling `.audit.md` at 10/10 score. The backlog is regenerated from these files.
-- **FR status flow:** `draft → ready_to_implement → implementing → ready_to_review → reviewing → ready_to_test → testing → done` (with `on_hold` or `closed` off-ramps per [`STATUS-REFERENCE.md`](../contracts/task/STATUS-REFERENCE.md)).
-- **Re-prioritising:** edit `priority` in the FR's frontmatter, then re-generate the backlog. Don't edit the backlog index directly — it's a derived view.
-- **Re-phasing:** if a P1 FR becomes urgent for P0, edit `phase: P0` in the FR's frontmatter. The phase exit gate criteria don't change — just move the FR.
-- **Deferring a phase:** if a slice can't ship in its planned phase, mark its FRs `deferred` and add a follow-up FR in the next phase with the same scope.
+- **New tasks:** authored per the playbook rules above. Each task is a markdown file at `docs/tasks/{module}/task-{MOD}-{NNN}-{slug}.md` with a sibling `.audit.md` at 10/10 score. The backlog is regenerated from these files.
+- **task status flow:** `draft → ready_to_implement → implementing → ready_to_review → reviewing → ready_to_test → testing → done` (with `on_hold` or `closed` off-ramps per [`STATUS-REFERENCE.md`](../contracts/task/STATUS-REFERENCE.md)).
+- **Re-prioritising:** edit `priority` in the task's frontmatter, then re-generate the backlog. Don't edit the backlog index directly — it's a derived view.
+- **Re-phasing:** if a P1 task becomes urgent for P0, edit `phase: P0` in the task's frontmatter. The phase exit gate criteria don't change — just move the task.
+- **Deferring a phase:** if a slice can't ship in its planned phase, mark its tasks `deferred` and add a follow-up task in the next phase with the same scope.
 
 ---
 
@@ -813,7 +813,7 @@ To support seamless workflow execution, resumption, and manual intervention, the
    - This prevents starting from scratch, avoids wasting token budgets, and ensures no duplicate or conflicting deliverables are left in the repository.
 
 ### §11.3 — Status-Aware Restart
-1. Except when the target FR is in a terminal state (`done`, `on_hold`, `closed`), the workflow execution engine MUST support restarting the current phase's work (e.g., resuming from the first step of the active state).
+1. Except when the target task is in a terminal state (`done`, `on_hold`, `closed`), the workflow execution engine MUST support restarting the current phase's work (e.g., resuming from the first step of the active state).
 2. Enabling `--rework` forces the workflow to restart from the beginning of the `implementing` phase (Step 1) to ensure a clean, deterministic rebuild.
 
 ---
@@ -831,6 +831,6 @@ identical across templates. Profiles: `../task-author/references/TEMPLATE_PROFIL
 
 ## Report path resolution (TASK-SKILL-120)
 
-Folder-layout FRs (`<module>/<STEM>/spec.md`): the report is `<STEM>/audit.md`. Legacy flat files
+Folder-layout tasks (`<module>/<STEM>/spec.md`): the report is `<STEM>/audit.md`. Legacy flat files
 this skill is explicitly pointed at keep sibling `<stem>.audit.md` resolution for one release
 (transition window opened 2026-07-12; drops with the next MAJOR of this skill).

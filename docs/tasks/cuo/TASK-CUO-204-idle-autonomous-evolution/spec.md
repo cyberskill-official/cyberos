@@ -2,13 +2,13 @@
 template: task@1
 id: TASK-CUO-204
 title: "Idle-time autonomous evolution - the dream loop under the AWH gate"
+type: feature
 author: "@stephen"
 department: engineering
 status: done
 priority: p2
 created_at: "2026-06-22T10:30:00+07:00"
 ai_authorship: assisted
-feature_type: internal_tooling
 eu_ai_act_risk_class: high
 target_release: 2026-Q4
 client_visible: false
@@ -123,6 +123,6 @@ A bad proposal that passes tests but is wrong is caught when the follow-up gate 
 
 ## AI Authorship Disclosure
 
-- Tools used: Claude (Cowork), authoring this FR from Stephen's capability request and the existing TASK-CUO-200..203 harness specs.
+- Tools used: Claude (Cowork), authoring this task from Stephen's capability request and the existing TASK-CUO-200..203 harness specs.
 - Scope: full draft of this specification, including the normative clauses, the envelope design, and the acceptance metrics.
-- Human review: Stephen reviews and approves before status moves past draft; this is a high-risk FR, so the envelope and the denylist need his explicit sign-off, and the paired audit plus the CAF gate validate before any implementation merges.
+- Human review: Stephen reviews and approves before status moves past draft; this is a high-risk task, so the envelope and the denylist need his explicit sign-off, and the paired audit plus the CAF gate validate before any implementation merges.

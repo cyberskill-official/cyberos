@@ -61,7 +61,7 @@ subtasks:
   - "1.0h: owner-run live browser sign-in proof (login + JIT user + logout)"
   - "1.0h: the deploy config doc + runbook"
 
-risk_if_skipped: "Without this, chat cannot federate to the one CyberOS identity TASK-AUTH-110 provides - it falls back to a separate Mattermost password store (two sources of truth, no kick-by-revoke) or stays on the closed TASK-CHAT-002 AuthBridge plugin, which does not work (a Mattermost plugin cannot replace the login route; the shipped one is a simulation). The whole unified-identity story for the team's chat depends on this wiring. The effort is small because the heavy lifting is the provider (TASK-AUTH-110, built + green); this FR is configuration plus an owner-run live sign-in."
+risk_if_skipped: "Without this, chat cannot federate to the one CyberOS identity TASK-AUTH-110 provides - it falls back to a separate Mattermost password store (two sources of truth, no kick-by-revoke) or stays on the closed TASK-CHAT-002 AuthBridge plugin, which does not work (a Mattermost plugin cannot replace the login route; the shipped one is a simulation). The whole unified-identity story for the team's chat depends on this wiring. The effort is small because the heavy lifting is the provider (TASK-AUTH-110, built + green); this task is configuration plus an owner-run live sign-in."
 
 ---
 
@@ -79,7 +79,7 @@ CHAT (the Mattermost fork, TASK-CHAT-001) **MUST** authenticate users by federat
 
 5. **MUST** disable builtin password sign-up via Mattermost's own configuration, not a patch (DEC-2506): set `EmailSettings.EnableSignUpWithEmail=false` (and the related password-login settings) so the only way in is the CyberOS connector. The TASK-CHAT-002 patches `010-disable-builtin-auth` and `011-load-authbridge-plugin` are removed.
 
-6. **MUST** support the kick (DEC-2503): a CyberOS revoke (TASK-AUTH-005) makes the provider's `/authorize` refuse, so the person cannot sign into chat again. An already-open Mattermost session is killed by the TASK-AUTH-110 back-channel-logout follow-up (its slice 2) or expires by the Mattermost session TTL; instant cross-app deprovision is SCIM (TASK-PORTAL-004). The FR states this boundary plainly rather than claiming instant logout.
+6. **MUST** support the kick (DEC-2503): a CyberOS revoke (TASK-AUTH-005) makes the provider's `/authorize` refuse, so the person cannot sign into chat again. An already-open Mattermost session is killed by the TASK-AUTH-110 back-channel-logout follow-up (its slice 2) or expires by the Mattermost session TTL; instant cross-app deprovision is SCIM (TASK-PORTAL-004). The task states this boundary plainly rather than claiming instant logout.
 
 7. **MUST** run over HTTPS end to end in production (DEC-2504): OIDC redirects and the provider's `__Host-cyberos_sso` cookie require TLS. Local development uses a TLS tunnel, or a one-line local-only drop of the cookie `Secure` flag in the provider.
 
@@ -191,13 +191,13 @@ Owner-run live sign-in (DEC-2509), mirroring the Google runbook:
 4. Check the Mattermost System Console - the user exists with the right email/username.
 5. Revoke the subject in AUTH, sign out, try to sign in again - it fails at the provider.
 
-The provider side (authorize/token/userinfo) is already proven by `docs/deploy/auth-oidc-provider-roundtrip.md`. This FR's proof is that Mattermost's native connector consumes it.
+The provider side (authorize/token/userinfo) is already proven by `docs/deploy/auth-oidc-provider-roundtrip.md`. This task's proof is that Mattermost's native connector consumes it.
 
 ---
 
 ## §6 - Implementation skeleton
 
-The work is configuration (§3) plus removing two patches; there is no new Go in the fork. The provider (TASK-AUTH-110) is the implementation; this FR wires Mattermost to it.
+The work is configuration (§3) plus removing two patches; there is no new Go in the fork. The provider (TASK-AUTH-110) is the implementation; this task wires Mattermost to it.
 
 ---
 

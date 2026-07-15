@@ -1,10 +1,10 @@
 # PROJ module — task index
 
-_Generated 2026-05-17 — 18 FRs, 128 engineering-hours total._
+_Generated 2026-05-17 — 18 tasks, 128 engineering-hours total._
 
-## FRs
+## tasks
 
-| FR | Priority | Slice | Hours | Title |
+| Task | Priority | Slice | Hours | Title |
 |---|---|---|---:|---|
 | [TASK-PROJ-001](TASK-PROJ-001-issue-schema/spec.md) | MUST | 1 | 12 | PROJ Issue + Cycle + Engagement schema — RLS + cross-module linkable + status FSM + audit + assignee |
 | [TASK-PROJ-002](TASK-PROJ-002-memory-decision-anchoring/spec.md) | MUST | 1 | 7 | memory-anchored proj.decision row per Issue state change — reason + prior_chain link + cross-module r |

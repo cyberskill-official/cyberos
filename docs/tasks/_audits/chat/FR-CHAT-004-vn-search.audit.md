@@ -15,14 +15,14 @@ authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; 
 
 ## §1 — Verdict summary
 
-TASK-CHAT-004 originally shipped in compact form during a context-budget pressure point; the audit at that time scored it 10/10 with an explicit caveat ("compact form due to context budget"). On creation of the `task-audit` skill master rule (2026-05-16), this FR was identified as the catalogue's only canonical-template violation. Re-authored to full form on the same date.
+TASK-CHAT-004 originally shipped in compact form during a context-budget pressure point; the audit at that time scored it 10/10 with an explicit caveat ("compact form due to context budget"). On creation of the `task-audit` skill master rule (2026-05-16), this task was identified as the catalogue's only canonical-template violation. Re-authored to full form on the same date.
 
 **Current state:** ~900 lines. 15 §1 clauses (PGroonga setup, 2 PL/pgSQL functions, 2 indexes, plugin route interception, hybrid routing logic, RLS filter, pagination, ordering, latency budget, fixture corpus, recall CI gate, audit row, OTel metrics, rate limit, debug CLI). 9 §2 rationale paragraphs. Full SQL migrations + Go plugin + Python recall script + CI workflow + fixture format in §3. 27 ACs. 11 Go unit + integration tests + 1 bash test for CI gate. 18 failure modes. 10 implementation notes.
 
 ## §2 — Findings (all resolved)
 
 ### ISS-001 — Truncated original (violates task-audit skill §0 master rule)
-First-pass FR was 243 lines with §6-§11 collapsed to one paragraph and explicit "abridged for brevity due to space budget" caveat. This is the canonical anti-pattern the task-audit skill master rule was written to prevent. Resolved: full re-authoring; all 11 sections restored; ≈900 lines.
+First-pass task was 243 lines with §6-§11 collapsed to one paragraph and explicit "abridged for brevity due to space budget" caveat. This is the canonical anti-pattern the task-audit skill master rule was written to prevent. Resolved: full re-authoring; all 11 sections restored; ≈900 lines.
 
 ### ISS-002 — §1 was a summary paragraph, not numbered MUST clauses
 Original §1 was prose ("PostgreSQL extension + custom Vietnamese bigram tokeniser..."). Without numbered clauses, callers can't cite specific contract surface; reviewers can't grep for "MUST". Resolved: 15 numbered §1 clauses each carrying single-sentence MUST or SHOULD.
@@ -41,7 +41,7 @@ PL/pgSQL `substr(input, i, 2)` is char-aware (good), but the Go mirror function 
 
 ## §3 — Resolution
 
-All 6 mechanical concerns addressed via full canonical-form re-authoring. **Score = 10/10.** The lesson learned (no truncation) is now codified in `task-audit` skill §0 (Master Rule); this FR's revision history is the case study for future authors.
+All 6 mechanical concerns addressed via full canonical-form re-authoring. **Score = 10/10.** The lesson learned (no truncation) is now codified in `task-audit` skill §0 (Master Rule); this task's revision history is the case study for future authors.
 
 ---
 

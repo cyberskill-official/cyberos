@@ -1,8 +1,16 @@
 ---
 id: TASK-TEN-102
 title: "VND domestic billing rail — VnPay + Momo + ZaloPay subscription, recurring-charge, refund, dunning + per-PSP webhook bridge for vn-1 tenants"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: TEN
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P3
@@ -291,7 +299,7 @@ The TEN service **MUST** ship the VND domestic billing rail at `services/ten/src
 
 22. **MUST** lock `billing_currency` immutable post-provisioning per DEC-977 (already enforced by TASK-TEN-003's `trg_billing_currency_immutable` trigger).
 
-23. **MUST** require `billing_contact_phone` at vn-1 signup per DEC-981. TASK-TEN-101's `SignupCompleteReq` body extended (in this FR's modified_files) with optional `billing_contact_phone: Option<String>`; validation in `vnd::token_bind::start` requires it for VND tenants (returns 400 + `phone_required_for_vnd` if missing).
+23. **MUST** require `billing_contact_phone` at vn-1 signup per DEC-981. TASK-TEN-101's `SignupCompleteReq` body extended (in this task's modified_files) with optional `billing_contact_phone: Option<String>`; validation in `vnd::token_bind::start` requires it for VND tenants (returns 400 + `phone_required_for_vnd` if missing).
 
 24. **MUST** PII-scrub all audit rows per task-audit skill rule 18 + DEC-979. Phone hashed as `phone_hash16 = HMAC(global_salt, phone_e164_form)`; masked account hint (last-4 of bank account) hashed.
 
@@ -732,7 +740,7 @@ pub async fn run_dispatcher(ctx: AppCtx) {
 ## §7 — Dependencies
 
 **Upstream (depends_on):**
-- **TASK-TEN-003** Stripe billing — provides billing-rail abstraction this FR consumes (rail trait pattern + plan_change push hook + dunning state machine pattern + refund flow pattern); founder-skip + cross-rail block guards consumed.
+- **TASK-TEN-003** Stripe billing — provides billing-rail abstraction this task consumes (rail trait pattern + plan_change push hook + dunning state machine pattern + refund flow pattern); founder-skip + cross-rail block guards consumed.
 - **TASK-INV-005** VietQR webhook — VnPay webhook handler shape consumed; extended for Momo + ZaloPay variants.
 
 **Cross-module (related_tasks):**
@@ -831,15 +839,15 @@ pub async fn run_dispatcher(ctx: AppCtx) {
 
 All resolved for slice 2. Deferred:
 
-- **Deferred:** Multi-PSP failover within a single tenant — slice 3, FR-TEN-2xx (placeholder).
+- **Deferred:** Multi-PSP failover within a single tenant — slice 3, task-TEN-2xx (placeholder).
 - **Deferred:** PSP-side card whitelabeling (custom branding at PSP redirect) — slice 3.
 - **Deferred:** Annual billing cycle for VND — slice 3 (monthly only at slice 2, mirrors TASK-TEN-003).
 - **Deferred:** Coupon / promo code support — slice 3.
-- **Deferred:** Hóa đơn cancellation flow (Decree 123 §17 conditions) — slice 3, FR-TEN-2xx.
+- **Deferred:** Hóa đơn cancellation flow (Decree 123 §17 conditions) — slice 3, task-TEN-2xx.
 - **Deferred:** Bulk hóa đơn export to tax authority's quarterly upload format — slice 3.
 - **Deferred:** Multi-PSP-per-tenant for redundancy — slice 3.
-- **Deferred:** Recurring-charge advance-notice email (T-3 days reminder) — slice 3, FR-EMAIL-1xx.
-- **Deferred:** Per-PSP availability monitoring + auto-failover — slice 3, FR-OBS-2xx.
+- **Deferred:** Recurring-charge advance-notice email (T-3 days reminder) — slice 3, task-EMAIL-1xx.
+- **Deferred:** Per-PSP availability monitoring + auto-failover — slice 3, task-OBS-2xx.
 
 ---
 

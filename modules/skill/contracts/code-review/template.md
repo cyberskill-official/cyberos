@@ -15,7 +15,7 @@ verdict: approved    # approved | request_changes | approved_with_conditions | b
 # PR #<N> — <description>
 
 ## 1. Correctness vs Ticket
-Does the diff implement the linked FR? <Y/N + notes>.
+Does the diff implement the linked task? <Y/N + notes>.
 
 ## 2. Readability
 <naming, comments, structure>.

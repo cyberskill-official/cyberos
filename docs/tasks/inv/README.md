@@ -1,10 +1,10 @@
 # INV module — task index
 
-_Generated 2026-05-17 — 11 FRs, 67 engineering-hours total._
+_Generated 2026-05-17 — 11 tasks, 67 engineering-hours total._
 
-## FRs
+## tasks
 
-| FR | Priority | Slice | Hours | Title |
+| Task | Priority | Slice | Hours | Title |
 |---|---|---|---:|---|
 | [TASK-INV-001](TASK-INV-001-invoice-draft-from-time-rollup/spec.md) | MUST | 1 | 8 | INV invoice substrate — draft invoices from TIME per-cycle rollup with rate-card snapshot preservati |
 | [TASK-INV-002](TASK-INV-002-multi-currency/spec.md) | MUST | 1 | 6 | INV multi-currency support — VND/USD/SGD/EUR/GBP with daily SBV FX snapshot + per-invoice currency l |

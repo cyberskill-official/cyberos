@@ -118,7 +118,7 @@ const C = {
   "dash.mod.memory.name": { en: "Memory & Audit", vi: "Bộ nhớ & Audit" },
   "dash.mod.memory.desc": { en: "The tenant's hash-chained audit log.", vi: "Nhật ký audit chuỗi băm của tenant." },
   "dash.mod.cuo.name": { en: "Workflows & GENIE", vi: "Quy trình & GENIE" },
-  "dash.mod.cuo.desc": { en: "Dream-loop envelope and FR backlog.", vi: "Vòng lặp dream-loop và backlog FR." },
+  "dash.mod.cuo.desc": { en: "Dream-loop envelope and task backlog.", vi: "Vòng lặp dream-loop và backlog task." },
 
   // sidebar
   "sidebar.editProfile": { en: "Edit your profile", vi: "Chỉnh sửa hồ sơ của bạn" },
@@ -342,7 +342,7 @@ const C = {
   "mod.context": { en: "Context", vi: "Bối cảnh" },
   "mod.noContext": { en: "No surrounding context.", vi: "Không có bối cảnh xung quanh." },
   // Say WHY, plainly. A silent empty panel invites someone to "fix" it by fetching the DM thread — the one
-  // thing this FR exists to prevent (§1 #9).
+  // thing this task exists to prevent (§1 #9).
   "mod.noContextDm": {
     en: "Only the reported message is shown. Direct messages are not disclosed, and a private channel you are not in is not shown.",
     vi: "Chỉ hiển thị tin nhắn bị báo cáo. Tin nhắn riêng không được tiết lộ, và kênh riêng tư bạn không tham gia sẽ không hiện ra.",

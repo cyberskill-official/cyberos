@@ -1,6 +1,6 @@
 # MCP module (mcp-gateway) golden set (awh). TASK-MCP-001 (JSON-RPC 2.0 parser + initialize handshake +
 # capabilities + tools/list pagination + tools/call permission gate + router dispatch) has shipped with
-# protocol unit tests; TASK-MCP-002..008 follow. This wires the awh gate so each mcp FR reaches done only
+# protocol unit tests; TASK-MCP-002..008 follow. This wires the awh gate so each mcp task reaches done only
 # once its suite verifies GREEN against the sealed baseline.
 #
 #   awh eval modules/mcp/.awh/goldenset.yaml --base-dir . --seeds 1 --out modules/mcp/.awh/eval-baseline.json

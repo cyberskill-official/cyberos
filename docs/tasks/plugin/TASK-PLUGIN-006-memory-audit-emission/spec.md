@@ -1,8 +1,16 @@
 ---
 id: TASK-PLUGIN-006
 title: "memory audit emission — every plugin install/update/uninstall/invoke/auth event produces a plugin.* audit row with idempotent retry queue"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-19T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: PLUGIN
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P1
@@ -125,7 +133,7 @@ The PLUGIN module **MUST** emit memory audit rows for every plugin lifecycle eve
 
 ## §2 — Why this design
 
-**Why 6 audit kinds, locked (DEC-2450)?** Each represents a distinct lifecycle moment that compliance frameworks (SOC 2 CC6.1, ISO 27001 A.9.2) require visibility into. Locking the set means downstream memory consumers (dashboards, alerting rules, exports) can rely on the schema. Future additions need successor FR.
+**Why 6 audit kinds, locked (DEC-2450)?** Each represents a distinct lifecycle moment that compliance frameworks (SOC 2 CC6.1, ISO 27001 A.9.2) require visibility into. Locking the set means downstream memory consumers (dashboards, alerting rules, exports) can rely on the schema. Future additions need successor task.
 
 **Why audit-then-respond, not audit-after-respond (DEC-2451, clause 2)?** Audit-after means a process crash between response and audit emission loses the row. Audit-then-respond means a crash loses the response, but the audit is queued — client retries safely (idempotent). For an audit-chained product, missing audits are worse than missing responses.
 

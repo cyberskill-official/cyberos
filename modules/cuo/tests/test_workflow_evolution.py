@@ -154,12 +154,12 @@ def test_repeat_stripe_halts(tmp_path: Path) -> None:
 
 
 # ----------------------------------------------------------------------------
-# AC #10 — workflow report cites FR ids per tripped signal
+# AC #10 — workflow report cites task ids per tripped signal
 # ----------------------------------------------------------------------------
 
 
 def test_report_cites_fr_ids(tmp_path: Path) -> None:
-    """AC #10: the proposal evidence table references specific FR ids."""
+    """AC #10: the proposal evidence table references specific task ids."""
     evidence = [
         _row("workflow_complete", workflow_id="cto/ship",
              outcome="ROUTED_BACK", task_id="TASK-MEMORY-101",

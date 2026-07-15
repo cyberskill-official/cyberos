@@ -1,8 +1,16 @@
 ---
 id: TASK-PROJ-009
 title: "MEMORY_LINK schema — Issue ↔ memory memory linkage (cites | implements | supersedes) with bidirectional traversal and link-graph queries"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: PROJ
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -398,7 +406,7 @@ async fn soft_remove_then_recreate() {
 
 All resolved. Deferred:
 - `disputes` link type — slice 4+.
-- Issue↔Issue links (in addition to Issue↔Memory) — slice 4+; sibling FR.
+- Issue↔Issue links (in addition to Issue↔Memory) — slice 4+; sibling task.
 - Auto-link via NLP (extract memory references from issue body) — slice 4+.
 
 ---
@@ -447,14 +455,14 @@ All resolved. Deferred:
 - Forward-only supersedes uses ns timestamps; memory memory's `created_at_ns` is from its audit row (canonical).
 - Soft-delete preserves history; TASK-PROJ-008 records the link create/remove as history_event rows pegged to the linked issue.
 - The `?include_removed=true` parameter is for auditors; default UI hides removed links.
-- Cross-issue links (Issue X links to Issue Y) are NOT in scope here; separate FR.
+- Cross-issue links (Issue X links to Issue Y) are NOT in scope here; separate task.
 - For high-traffic memories (e.g. DEC-XXX style decision records), incoming-edges query may need a materialised view; slice 3+.
 - Annotation text is PII-redacted before storage (reuses TASK-MEMORY-111 ruleset); raw form NOT retained.
 - Cycle detection DFS is bounded at depth 100 because real-world supersession chains rarely exceed 10; depth-100 catches malicious or buggy chains.
 - link_strength is operator-typed; we considered auto-computed strength (e.g. based on annotation length, surrounding context) but kept it explicit for clarity.
 - Batch create uses parallel validation but serial DB insert to preserve order + per-item status accuracy.
 - Graph traversal limits: depth ≤ 5, total nodes ≤ 1000. Beyond either bound, response is truncated with `truncated: true` flag.
-- Link transfer on split is a slice-2 operator UI concern; the FR specifies the data model + default behaviour.
+- Link transfer on split is a slice-2 operator UI concern; the task specifies the data model + default behaviour.
 - cites_with_quote is a separate link type (not annotation extension) because consumers (legal export) treat quotes differently from annotations.
 - metadata JSONB is per-link; tenant-specific extension without table churn.
 - review-pending links are stored but excluded from default queries; admin endpoint shows them all.

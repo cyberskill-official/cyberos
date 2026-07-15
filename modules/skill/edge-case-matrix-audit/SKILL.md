@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: edge-case-matrix-audit
 description: >-
-  Audit an edge-case-matrix@1 against edge_case_matrix_rubric@1.0: enforces ≥1 row per category, SECURITY rows pointing at real test paths, DEGRADATION rows specifying detection + recovery, and `total_rows ≥ 8` for MUST-priority FRs. Emits a `score / 10` verdict + an itemised findings list; refuses to pass the chain on <10/10. Use when user asks to "audit this edge case matrix" or "check the edge case matrix". Do NOT use for "draft a new edge case matrix" (use edge-case-matrix-author instead).
+  Audit an edge-case-matrix@1 against edge_case_matrix_rubric@1.0: enforces ≥1 row per category, SECURITY rows pointing at real test paths, DEGRADATION rows specifying detection + recovery, and `total_rows ≥ 8` for MUST-priority tasks. Emits a `score / 10` verdict + an itemised findings list; refuses to pass the chain on <10/10. Use when user asks to "audit this edge case matrix" or "check the edge case matrix". Do NOT use for "draft a new edge case matrix" (use edge-case-matrix-author instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -36,7 +36,7 @@ outputs:
 | EC-001 | Every category (NULL_INPUT, BOUNDARY, MALFORMED, CONCURRENT, SECURITY, DEGRADATION) has ≥1 row | 30% | error |
 | EC-002 | Every SECURITY row has a `planned_test` pointing at a real file | 25% | error |
 | EC-003 | Every DEGRADATION row specifies both detection AND recovery | 15% | error |
-| EC-004 | For MUST-priority FRs: `total_rows ≥ 8` | 10% | error |
+| EC-004 | For MUST-priority tasks: `total_rows ≥ 8` | 10% | error |
 | EC-005 | No row has a vacuous `expected` ("works correctly" etc.) | 10% | warning |
 | EC-006 | Severity field is one of `critical|high|medium|low` | 10% | error |
 

@@ -1,8 +1,16 @@
 ---
 id: TASK-CUO-101
 title: "CUO Phase 2 — LangGraph supervisor + LiteLLM cascade + confidence-band escalation + persona-aware routing + memory audit per decision"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: CUO
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P0
@@ -76,7 +84,7 @@ modified_files:
   - cuo/cuo/core/__init__.py                          # re-export Supervisor for top-level import
   - cuo/cuo/cli/__init__.py                           # mount `cyberos-cuo supervisor` subcommand
   - cuo/pyproject.toml                                # +langgraph ==0.2.*, +litellm ==1.52.*, +pydantic >=2.7, +httpx, +psycopg[binary] (for checkpointer scaffolding)
-  - cuo/docs/AGENTS.md                                # §3.2 Phase 2 normative — replace "(pending)" with this FR's contract
+  - cuo/docs/AGENTS.md                                # §3.2 Phase 2 normative — replace "(pending)" with this task's contract
   - services/ai-gateway/src/handlers/chat.rs          # accept `X-CUO-Decision-Id` header so the supervisor's row chains to the AI Gateway row
 
 allowed_tools:
@@ -89,7 +97,7 @@ allowed_tools:
 
 disallowed_tools:
   - call any LLM provider (Bedrock, Anthropic, OpenAI) directly from CUO; ALL provider calls MUST go through AI Gateway TASK-AI-008 (per DEC-161)
-  - introduce a 6th supervisor node (per DEC-168 — graph topology is closed; new nodes require a new FR)
+  - introduce a 6th supervisor node (per DEC-168 — graph topology is closed; new nodes require a new task)
   - allow operator to disable the defer-to-human matrix via env var or config (per DEC-164 + EU AI Act Art. 26)
   - emit a routing decision without a `cuo.routing_decision` memory audit row (per DEC-165 — never silent)
   - accept unstructured LLM responses (per DEC-163 — structured-pick only)
@@ -114,7 +122,7 @@ subtasks:
   - "0.5h: cli/supervisor.py — `cyberos-cuo supervisor route` subcommand"
   - "2.5h: Tests — 12 test files covering all 4 confidence paths + persona matrix + audit row + LiteLLM routing + timeout + freeform rejection + state versioning + persona JWT + transparency + idempotency"
 
-risk_if_skipped: "CUO's Phase 1 rule router handles unambiguous queries fine but degrades to defer-to-human for the entire ambiguous tail. Every downstream FR that needs CUO routing (TASK-PROJ-011 blocker notification, TASK-PROJ-012 cycle review, TASK-CRM-005 next-action skill, TASK-EMAIL-008 Genie subject prefix, TASK-INV-010 dunning draft, TASK-OKR-006 Monday digest, TASK-DOC-009 renewal proposal, TASK-RES-004 hiring memo) assumes CUO can resolve ambiguous queries. Without the LangGraph supervisor: (1) ambiguous queries dead-end at 'defer-to-human' surfacing alternatives, requiring manual operator pick for every uncertain request; (2) no per-decision audit replay (EU AI Act Art. 12 compliance gap); (3) no structured persona routing — every persona uses the same fallback logic instead of its own keyword bank + defer matrix; (4) no transparent end-of-response disclosure (Art. 13 gap). The cost of skipping is a degraded CUO that handles only the easy half of the workload — and forces every downstream consumer to implement its own ambiguity-resolution logic, fragmenting the catalogue routing into per-module inventions that drift."
+risk_if_skipped: "CUO's Phase 1 rule router handles unambiguous queries fine but degrades to defer-to-human for the entire ambiguous tail. Every downstream task that needs CUO routing (TASK-PROJ-011 blocker notification, TASK-PROJ-012 cycle review, TASK-CRM-005 next-action skill, TASK-EMAIL-008 Genie subject prefix, TASK-INV-010 dunning draft, TASK-OKR-006 Monday digest, TASK-DOC-009 renewal proposal, TASK-RES-004 hiring memo) assumes CUO can resolve ambiguous queries. Without the LangGraph supervisor: (1) ambiguous queries dead-end at 'defer-to-human' surfacing alternatives, requiring manual operator pick for every uncertain request; (2) no per-decision audit replay (EU AI Act Art. 12 compliance gap); (3) no structured persona routing — every persona uses the same fallback logic instead of its own keyword bank + defer matrix; (4) no transparent end-of-response disclosure (Art. 13 gap). The cost of skipping is a degraded CUO that handles only the easy half of the workload — and forces every downstream consumer to implement its own ambiguity-resolution logic, fragmenting the catalogue routing into per-module inventions that drift."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -161,7 +169,7 @@ The CUO service **MUST** ship the LangGraph supervisor that adds the Phase 2 LLM
 
 11. **MUST** route all LLM calls through the **`litellm_proxy`** module — a thin LiteLLM-shaped client that forwards to AI Gateway TASK-AI-008 (POST `/v1/ai/chat`). The proxy MUST NOT include direct provider SDKs (no `import boto3`, no `import anthropic`, no `import openai`). The architectural test `test_supervisor_litellm_routes_via_gateway` asserts this by AST-walking the supervisor package and rejecting forbidden imports.
 
-12. **MUST** use a **Postgres checkpointer** for LangGraph state persistence per EU AI Act Art. 12 (logging requirement). Slice 2 (this FR) ships an in-memory checkpointer scaffold — the production Postgres-backed checkpointer ships in TASK-CUO-102. The state schema is versioned: `cuo_state_v = 1` (per DEC-167); replays from `cuo_state_v` within ±2 of current are tolerated, beyond rejected with `state_version_unsupported`.
+12. **MUST** use a **Postgres checkpointer** for LangGraph state persistence per EU AI Act Art. 12 (logging requirement). Slice 2 (this task) ships an in-memory checkpointer scaffold — the production Postgres-backed checkpointer ships in TASK-CUO-102. The state schema is versioned: `cuo_state_v = 1` (per DEC-167); replays from `cuo_state_v` within ±2 of current are tolerated, beyond rejected with `state_version_unsupported`.
 
 13. **MUST** support **transparent end-of-response disclosure** (EU AI Act Art. 13): every supervisor return value includes `transparency: {skill_chosen, confidence, alternatives: list[{skill, confidence}], path_taken, llm_used: bool}` so the caller can render the disclosure to the user. CHAT/EMAIL/PROJ surfaces consume this for the "🤖 routed via Genie → cfo persona → vietnam-vat-invoice@1.2 · 0.84" footer.
 
@@ -207,7 +215,7 @@ The CUO service **MUST** ship the LangGraph supervisor that adds the Phase 2 LLM
 
 **Why LiteLLM as the LLM abstraction and not direct SDKs (§1 #11, DEC-161)?** LiteLLM provides a unified interface across providers (OpenAI, Anthropic, Bedrock) — but we don't want CUO making direct provider calls because (a) the AI Gateway TASK-AI-008 already provides multi-provider routing, failover, and cost ledger; (b) direct CUO→provider calls bypass the cost ledger, breaking budget accounting; (c) two competing routing systems is a maintenance nightmare. The solution: the `litellm_proxy` module is shaped like the LiteLLM API but forwards every call to the AI Gateway. CUO benefits from LiteLLM's prompt/response normalisation; the AI Gateway remains the single egress point for provider calls. The architectural test (`test_supervisor_litellm_routes_via_gateway`) AST-walks the supervisor package and rejects any direct provider import — this is enforced at CI, not by reviewer vigilance.
 
-**Why the confidence bands ≥0.70 / 0.50–0.70 / 0.10–0.50 / <0.10 (§1 #5, DEC-162)?** These come from the website docs §architecture and reflect a year of routing experiments. 0.70 is "confident enough to act without asking" — the rule scorer's top fixture matches all score above 0.70. The 0.50–0.70 band is "good guess but not certain" — surfacing alternatives is cheap and lets the operator confirm. The 0.10–0.50 band is the "ambiguous tail" where LLM cascade adds value — below 0.10, the candidates are noise and the LLM would hallucinate; the right action is defer-to-human. The numeric thresholds are hard-coded constants (not env-tuned) for replay determinism — Phase 2 ships them as the published contract, and tuning happens in subsequent FRs with explicit version bumps.
+**Why the confidence bands ≥0.70 / 0.50–0.70 / 0.10–0.50 / <0.10 (§1 #5, DEC-162)?** These come from the website docs §architecture and reflect a year of routing experiments. 0.70 is "confident enough to act without asking" — the rule scorer's top fixture matches all score above 0.70. The 0.50–0.70 band is "good guess but not certain" — surfacing alternatives is cheap and lets the operator confirm. The 0.10–0.50 band is the "ambiguous tail" where LLM cascade adds value — below 0.10, the candidates are noise and the LLM would hallucinate; the right action is defer-to-human. The numeric thresholds are hard-coded constants (not env-tuned) for replay determinism — Phase 2 ships them as the published contract, and tuning happens in subsequent tasks with explicit version bumps.
 
 **Why a hard 3-second LLM cascade budget (§1 #6, DEC-169)?** User-facing latency budget for an ambiguous query is ~5 seconds total (perceived as "thinking, not broken"). 3 seconds for the LLM, 500 ms for supervisor overhead, 500 ms for skill invocation, 500 ms slack. Past 3 seconds the LLM is rarely going to produce a meaningfully better pick; the failure mode (timeout → fall through to `ask`) is benign — the user sees alternatives and picks. Better to fail fast and clearly than spin indefinitely and confuse the user.
 
@@ -221,11 +229,11 @@ The CUO service **MUST** ship the LangGraph supervisor that adds the Phase 2 LLM
 
 **Why route LLM calls THROUGH the AI Gateway and not direct (DEC-161)?** Three reasons converge: (1) the AI Gateway is the cost-ledger authority — every LLM call is preflight-budgeted via TASK-AI-001 and post-call reconciled via TASK-AI-002; bypassing it breaks budget accounting. (2) the AI Gateway is the residency-pinning authority (TASK-AI-016) — direct CUO→provider calls would not honour tenant residency policy. (3) the AI Gateway is the failover authority (TASK-AI-008) — implementing failover in CUO too would duplicate logic and create drift. The `litellm_proxy` module solves the LiteLLM-style ergonomics on the CUO side while preserving the AI Gateway as single egress.
 
-**Why slice-2 ships only the in-memory checkpointer (§1 #12)?** Splitting the Postgres-backed checkpointer to TASK-CUO-102 keeps this FR focused on the supervisor topology + LLM cascade. The in-memory checkpointer is functionally complete for tests; production deployment of slice 2 runs without persistent checkpointing (state lost on supervisor restart — acceptable because each request is independent). TASK-CUO-102 adds Postgres persistence for replay + EU AI Act Art. 12 full compliance.
+**Why slice-2 ships only the in-memory checkpointer (§1 #12)?** Splitting the Postgres-backed checkpointer to TASK-CUO-102 keeps this task focused on the supervisor topology + LLM cascade. The in-memory checkpointer is functionally complete for tests; production deployment of slice 2 runs without persistent checkpointing (state lost on supervisor restart — acceptable because each request is independent). TASK-CUO-102 adds Postgres persistence for replay + EU AI Act Art. 12 full compliance.
 
 **Why `cuo_state_v` field in state and memory row (§1 #12, DEC-167)?** Slice 3+ will add fields to the state (multi-step `next_step`, chain context, etc.). Embedded version lets the supervisor reject state replays from incompatible versions cleanly — and lets the memory row's analyst tooling filter by state-schema version. ±2 version tolerance (current is 1; tolerate 1–3) allows rolling upgrades without breaking replay during deployment windows.
 
-**Why 5 nodes exactly and no more (§1 #1, DEC-168)?** Graph topology is a contract. New nodes (e.g. "post-process LLM response" or "rate-limit check") add hidden state transitions that consumers can't reason about. Five nodes is the minimum complete set: parse → score → decide → act → record. Anything else is a refactor — and a refactor of the supervisor is a new FR, not a code change.
+**Why 5 nodes exactly and no more (§1 #1, DEC-168)?** Graph topology is a contract. New nodes (e.g. "post-process LLM response" or "rate-limit check") add hidden state transitions that consumers can't reason about. Five nodes is the minimum complete set: parse → score → decide → act → record. Anything else is a refactor — and a refactor of the supervisor is a new task, not a code change.
 
 **Why no fallback to direct provider on AI Gateway failure (§1 #11)?** AI Gateway failure should be a sev-1 alarm, not silently routed-around. If CUO falls back to direct provider on gateway failure, the cost ledger and residency pinning are silently bypassed — and operators never see the gateway outage because CUO masks it. The right behaviour: cascade fails → fall through to `ask` (no LLM input but user sees alternatives); the OTel `cuo_supervisor_llm_cascade_total{outcome=gateway_error}` counter triggers an alarm.
 
@@ -768,13 +776,13 @@ async def test_rule_path_under_50ms_p95():
 
 ## §7 — Dependencies
 
-**Upstream (this FR depends on):**
+**Upstream (this task depends on):**
 - **TASK-AI-008** — multi-provider router; `litellm_proxy` forwards every cascade LLM call to the AI Gateway's `/v1/ai/chat` endpoint.
 
-**Downstream (this FR blocks — all 14 are placeholders / not yet specified):**
-- **TASK-CUO-102** — Postgres checkpointer; replaces this FR's in-memory checkpointer scaffold.
+**Downstream (this task blocks — all 14 are placeholders / not yet specified):**
+- **TASK-CUO-102** — Postgres checkpointer; replaces this task's in-memory checkpointer scaffold.
 - **TASK-CUO-103** — Phase 2 trace rows with prompt + model + temperature + seed for replay.
-- **TASK-CUO-104** — topological walk of `depends_on` chain; consumes this FR's `next_step` field.
+- **TASK-CUO-104** — topological walk of `depends_on` chain; consumes this task's `next_step` field.
 - **TASK-CRM-005, TASK-CRM-006, TASK-CRM-007** — CRM-side CUO skills (next-action, lead scoring, win/loss analysis).
 - **TASK-DOC-009** — renewal proposal CUO draft.
 - **TASK-EMAIL-008** — Genie subject-prefix routing.
@@ -973,7 +981,7 @@ All other questions resolved.
 | Counter cardinality explosion (tenant_id label) | Cardinality budget alarm in OBS | sev-3 | Aggregate by tenant_id only at Grafana query layer |
 | Dry-run mode accidentally emits memory row | `test_supervisor_dry_run_no_row` | CI fails | Fix conditional in record node |
 | TASK-CUO-102 ships Postgres checkpointer but state schema unchanged | Forward-compat by `cuo_state_v` tolerance ±2 | Works without changes | None — designed |
-| TASK-CUO-104 ships chain walk; this FR's `next_step` always null | Forward-compat by always-null contract | TASK-CUO-104 fills the field | None — designed |
+| TASK-CUO-104 ships chain walk; this task's `next_step` always null | Forward-compat by always-null contract | TASK-CUO-104 fills the field | None — designed |
 | Tenant residency policy denies LLM call | TASK-AI-016 returns 451 at gateway | Cascade fails → fall through to `ask`; emit timeout-shaped row with `error=residency_denied` | Operator reviews residency policy |
 | Cost ledger insufficient budget | TASK-AI-001 precheck rejects at gateway | Cascade fails → fall through to `ask`; emit row with `error=budget_exceeded` | Operator tops up budget or operator overrides |
 | Catalog snapshot hash mismatch between request + record | Catch in record node | sev-3 alarm; record row anyway with snapshot mismatch flagged | Investigate catalog reload race |

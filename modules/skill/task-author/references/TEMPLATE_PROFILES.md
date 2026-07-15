@@ -1,15 +1,15 @@
-# FR template profiles (TASK-CUO-208) - normative, both templates side by side
+# Task template profiles (TASK-CUO-208) - normative, both templates side by side
 
 <!-- verification preamble (executable, TASK-SKILL-117 convention):
   grep -c '^## engineering-spec@1' THIS_FILE            -> 1
   grep -c '^## task@1' THIS_FILE             -> 1
   grep -c 'rule families' THIS_FILE                     -> >= 2 (one list per profile)
-  newest exemplars validate: any docs/tasks/**/FR-*.md with '## §1 - Description'
+  newest exemplars validate: any docs/tasks/**/task-*.md with '## §1 - Description'
   parses per the engineering-spec grammar below; any with 'template: task@1'
   parses per the task grammar below.
 -->
 
-Resolution chain (who decides which template a NEW FR uses):
+Resolution chain (who decides which template a NEW task uses):
 
 1. explicit per-invocation operator override, else
 2. `.cyberos/config.yaml` `fr_template` (TASK-CUO-207), else
@@ -33,12 +33,12 @@ invocation batch; the AUDIT judges every file by its own detected template (belo
 - Sections, in order: `## §1 - Description` (numbered BCP-14 clauses), `## §2 - Why this design`,
   `## §3 - Contract`, `## §4 - Acceptance criteria`, `## §5 - Verification`, `## §6 - Implementation
   skeleton`, `## §7 - Dependencies`, `## §8 - Example payloads`, `## §9 - Open questions`,
-  `## §10 - Failure modes inventory`, `## §11 - Implementation notes`. End marker: `*End of FR-X.*`.
+  `## §10 - Failure modes inventory`, `## §11 - Implementation notes`. End marker: `*End of task-X.*`.
 - Authoring rules: task-author SKILL.md §12 (the single normative home; not duplicated here).
 - Audit rule families: the §12 structural sub-rule set + `TRACE` (TRACE-001..005, spec-vs-implementation
   traceability per RUBRIC.md §9) + `QA` + `SAFE`. 10/10 bar; needs_human semantics per RUBRIC.md.
 
-## task@1
+## Task@1
 
 - Frontmatter: `template: task@1` (FM-004) plus the FM-101..111 field set (title, author,
   department, status, priority p0..p3, created_at, ai_authorship, feature_type, eu_ai_act_risk_class,

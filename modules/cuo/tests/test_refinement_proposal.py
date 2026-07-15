@@ -153,7 +153,7 @@ def test_proposal_body_shape(tmp_path: Path) -> None:
                            suggested_change="Add TRACE-006 rule to catch this.")
     assert isinstance(result, Emitted)
     body = result.proposal_path.read_text(encoding="utf-8")
-    # 5 mandatory body sections (FR §1 #5)
+    # 5 mandatory body sections (task §1 #5)
     for section in ("## Stripe", "## Triggering signal", "## Evidence rows",
                     "## Suggested change", "## Risk class"):
         assert section in body

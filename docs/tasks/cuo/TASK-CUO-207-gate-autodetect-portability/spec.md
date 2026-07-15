@@ -1,10 +1,17 @@
 ---
 id: TASK-CUO-207
 title: "Portability hardening - init.sh gate autodetect for Go/JVM/.NET/PHP/Ruby + per-repo .cyberos/config.yaml overrides"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-07-12T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: cuo
-priority: SHOULD
+priority: p1
 status: done
-class: product
 verify: T
 phase: Wave C - strengthen the workflows
 owner: Stephen Cheng (CTO)
@@ -98,7 +105,7 @@ t08_malformed_config_loud()      # AC 8
 
 ## §7 - Dependencies
 
-Blocks TASK-CUO-208 (it reads `fr_template` from this config). TASK-SKILL-118's coverage rubric names the threshold hook this FR turns on. No dependency on Wave A.
+Blocks TASK-CUO-208 (it reads `fr_template` from this config). TASK-SKILL-118's coverage rubric names the threshold hook this task turns on. No dependency on Wave A.
 
 ## §8 - Example payloads
 

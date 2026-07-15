@@ -1,10 +1,10 @@
 # CRM module — task index
 
-_Generated 2026-05-17 — 10 FRs, 52 engineering-hours total._
+_Generated 2026-05-17 — 10 tasks, 52 engineering-hours total._
 
-## FRs
+## tasks
 
-| FR | Priority | Slice | Hours | Title |
+| Task | Priority | Slice | Hours | Title |
 |---|---|---|---:|---|
 | [TASK-CRM-001](TASK-CRM-001-account-contact-deal-schema/spec.md) | MUST | 1 | 6 | CRM Account/Contact/Deal Postgres schema — closed entity primitives + custom pipelines + closed stag |
 | [TASK-CRM-002](TASK-CRM-002-activity-feed/spec.md) | MUST | 5 | 8 | CRM activity feed — auto-log inbound email + outbound send + chat mention + calendar event to per-co |

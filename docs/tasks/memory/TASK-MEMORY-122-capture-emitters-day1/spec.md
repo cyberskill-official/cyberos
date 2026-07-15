@@ -1,8 +1,14 @@
 ---
 id: TASK-MEMORY-122
 title: "capture emitters — wire AUTH (sign-in, presence) + CHAT (message create/edit/delete, channel/DM activity) to emit TASK-MEMORY-121 interaction-events, turn ON the chat→brain audit link (CHAT_AUDIT_DATABASE_URL), define the emitter contract for PROJ/EMAIL/APP/MCP, gated by the consent check; day-1 wide capture"
+client_visible: false
+type: feature
+created_at: 2026-06-29T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: MEMORY
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P1
@@ -79,14 +85,14 @@ subtasks:
   - "1.0h: smoke_capture.py — create/edit/delete a message + join a channel over the live chat service with the brain link ON; assert the matching interaction-event rows appear in l1_audit_log"
   - "0.5h: interaction_backfill_test.rs — backfill replays N messages into events idempotently; re-run is a no-op"
   - "0.5h: docs/runbook — p0 runbook says the chat→brain link is ON, with the verify query; note the consent prerequisite"
-risk_if_skipped: "TASK-MEMORY-121 defines the event shape but nothing emits it, so the BRAIN stays empty and the whole evaluation plan has no data — the schema is a contract with no traffic. Concretely: chat content is already live in production (P0) but the audit link is OFF, so none of it reaches the brain; without this FR that gap persists and the first thing the evaluation engine would look for (what people actually did) isn't there. Without the shared emitter contract, AUTH and CHAT each wire capture differently and PROJ/EMAIL/APP/MCP re-litigate the shape when they arrive. Without routing every emitter through emit(), one emitter can forget the consent gate and capture someone who never acknowledged — the exact governance failure the gate exists to prevent."
+risk_if_skipped: "TASK-MEMORY-121 defines the event shape but nothing emits it, so the BRAIN stays empty and the whole evaluation plan has no data — the schema is a contract with no traffic. Concretely: chat content is already live in production (P0) but the audit link is OFF, so none of it reaches the brain; without this task that gap persists and the first thing the evaluation engine would look for (what people actually did) isn't there. Without the shared emitter contract, AUTH and CHAT each wire capture differently and PROJ/EMAIL/APP/MCP re-litigate the shape when they arrive. Without routing every emitter through emit(), one emitter can forget the consent gate and capture someone who never acknowledged — the exact governance failure the gate exists to prevent."
 ---
 
 ## §1 — Description (BCP-14 normative)
 
-This FR makes day-1 wide capture real: it wires the first two live modules (AUTH and CHAT) to emit TASK-MEMORY-121 interaction-events for every platform work-interaction, turns on the chat→brain audit link so chat activity chains into MEMORY, and defines the emitter contract so the remaining modules add emitters the same way. It introduces no new event shape — it produces events of the TASK-MEMORY-121 shape. Each piece:
+This task makes day-1 wide capture real: it wires the first two live modules (AUTH and CHAT) to emit TASK-MEMORY-121 interaction-events for every platform work-interaction, turns on the chat→brain audit link so chat activity chains into MEMORY, and defines the emitter contract so the remaining modules add emitters the same way. It introduces no new event shape — it produces events of the TASK-MEMORY-121 shape. Each piece:
 
-1. **MUST** provide a shared emitter in a new crate `cyberos-capture`: a `Capturer` that holds the brain audit pool and a `capture()` method which builds an TASK-MEMORY-121 `InteractionEvent` (via that FR's typed builder) and calls TASK-MEMORY-121 `emit()`. Every module emits through this one path; no module constructs an `l1_audit_log` row directly. The `Capturer::capture` signature is best-effort: it returns the TASK-MEMORY-121 `EmitOutcome`/`EmitError`, and callers log + swallow.
+1. **MUST** provide a shared emitter in a new crate `cyberos-capture`: a `Capturer` that holds the brain audit pool and a `capture()` method which builds an TASK-MEMORY-121 `InteractionEvent` (via that task's typed builder) and calls TASK-MEMORY-121 `emit()`. Every module emits through this one path; no module constructs an `l1_audit_log` row directly. The `Capturer::capture` signature is best-effort: it returns the TASK-MEMORY-121 `EmitOutcome`/`EmitError`, and callers log + swallow.
 2. **MUST** define a `CaptureEmitter` convention (DEC-2714): each module owns a thin `capture.rs` that exposes typed helpers (e.g. `emit_signed_in(...)`, `emit_message_created(...)`) translating that module's domain event into a built `InteractionEvent`. The helper set is the per-module surface; the crate is the shared mechanism. New modules add a `capture.rs`, not a new shape.
 3. **MUST** wire AUTH to emit, next to the existing `emit_token_issued` / `emit_token_failed` in `handlers.rs`:
     - `auth.signed_in` (`event_class: auth`, `source_channel` from the request, `target_ref: session{jti}`, `content_ref: none`, `attributes: {source_ip_hash16, method}` where method ∈ `password | oidc | passkey`) on a successful token issue.
@@ -101,7 +107,7 @@ This FR makes day-1 wide capture real: it wires the first two live modules (AUTH
     - `chat.dm_opened` (`activity`, `target_ref: dm{id}`).
     - `chat.presence_changed` (`presence`, `target_ref: channel{id}`, `attributes: {state}` where state ∈ `online | offline`).
     Message bodies are NEVER inlined; the `content_ref` points at chat's own `chat_messages` row (migration 0005's attachment link is reused for the attachment flag only).
-5. **MUST** turn ON the chat→brain audit link (DEC-2713). CHAT already reads `CHAT_AUDIT_DATABASE_URL` into `audit_pool` and logs `"unset; chat audit events are logged, not chained"` when absent (P0 left it unset). This FR sets that variable to the brain's audit DB (the MEMORY `l1_audit_log` database, Supabase Postgres in prod) so chat interaction-events chain into MEMORY, changes the `unset` log from `warn` to `info`, and documents the variable as required in production. The chat capture path routes through `cyberos-capture` → TASK-MEMORY-121 `emit()` over that pool.
+5. **MUST** turn ON the chat→brain audit link (DEC-2713). CHAT already reads `CHAT_AUDIT_DATABASE_URL` into `audit_pool` and logs `"unset; chat audit events are logged, not chained"` when absent (P0 left it unset). This task sets that variable to the brain's audit DB (the MEMORY `l1_audit_log` database, Supabase Postgres in prod) so chat interaction-events chain into MEMORY, changes the `unset` log from `warn` to `info`, and documents the variable as required in production. The chat capture path routes through `cyberos-capture` → TASK-MEMORY-121 `emit()` over that pool.
 6. **MUST** route every emitter through TASK-MEMORY-121 `emit()` so the consent gate (TASK-MEMORY-121 §1 #8) and validation apply uniformly. An emitter physically cannot skip the gate, because it has no other way to write the row. A subject who has not acknowledged the TASK-EVAL-001 notice produces `Skipped` outcomes and zero rows, regardless of which module emitted.
 7. **MUST** keep capture best-effort and off the critical path: a capture failure (audit pool down, validation error, `Skipped`) MUST NOT fail or delay the underlying interaction — the sign-in still issues its token, the message still sends. Emitters call `capture()`, match the outcome for metrics, and swallow errors with a `tracing::warn!`, exactly as AUTH's `emit_token_issued` and chat's `audit::emit` already do.
 8. **MUST** dedup presence emits to the online/offline edges only: `chat.presence_changed{online}` is emitted when a subject's open-connection count for a channel goes 0→1, and `{offline}` when it goes 1→0 (the `Presence` map in `realtime.rs` already tracks the count). A subject opening a second tab does NOT emit another `online`. This keeps presence signal meaningful and the chain uncluttered.
@@ -126,7 +132,7 @@ This FR makes day-1 wide capture real: it wires the first two live modules (AUTH
 
 **Why route everything through `emit()` and forbid hand-built rows (DEC-2712)?** The consent gate, the validation, and the schema only protect capture if there is no way around them. If an emitter could insert an `l1_audit_log` row directly, it could (by accident) capture an unacknowledged subject or write a malformed/raw-content row. Making `emit()` the only door means the governance property holds for every module by construction, not by everyone remembering.
 
-**Why best-effort, never blocking (§1 #7)?** Capture must never be the reason a sign-in fails or a message is slow. The product comes first; the record is a side effect. AUTH and CHAT already treat their audit writes this way; this FR keeps that contract so capture is invisible to the user whose work it records.
+**Why best-effort, never blocking (§1 #7)?** Capture must never be the reason a sign-in fails or a message is slow. The product comes first; the record is a side effect. AUTH and CHAT already treat their audit writes this way; this task keeps that contract so capture is invisible to the user whose work it records.
 
 **Why dedup presence to edges (§1 #8)?** Presence is useful signal ("Stephen was online 09:00–18:00") but a naive emit on every websocket open/close produces noise — a person with three tabs would emit three `online`s. Emitting only on the 0↔1 connection-count edge captures the meaningful transition and keeps the chain readable. The count is already tracked in `realtime.rs`.
 
@@ -468,7 +474,7 @@ See §3 (shared crate, AUTH + CHAT emitters, the link flip, backfill). Each modu
 
 ## §7 — Dependencies
 
-- **TASK-MEMORY-121** — the event shape, the typed builder, `emit()`, the consent gate, and the contract these emitters produce/obey. This FR adds no shape; it produces TASK-MEMORY-121 events.
+- **TASK-MEMORY-121** — the event shape, the typed builder, `emit()`, the consent gate, and the contract these emitters produce/obey. This task adds no shape; it produces TASK-MEMORY-121 events.
 - **TASK-AUTH-002 / TASK-AUTH-004** — the subjects + sessions AUTH attributes events to; the existing audit pool + `emit_token_issued`/`_failed` call sites the new emitters sit next to.
 - **TASK-CHAT-101** — the cyberos-chat service (channels/DMs/messages/attachments/presence) the chat emitters hook into; the existing `CHAT_AUDIT_DATABASE_URL` / `audit_pool` plumbing DEC-2713 turns on.
 - **TASK-EVAL-001** — owns the acknowledgment ledger the consent gate reads (via TASK-MEMORY-121); capture for a subject begins only after acknowledgment.
@@ -541,7 +547,7 @@ backfill_chat tenant=cyberskill window_days=30 apply=true
 ## §9 — Open questions
 
 All resolved. Deferred:
-- PROJ / EMAIL / APP / MCP emitters — added as those modules come online, each via its own `capture.rs` against this FR's contract (the emitter convention is defined here; the wiring lands per module).
+- PROJ / EMAIL / APP / MCP emitters — added as those modules come online, each via its own `capture.rs` against this task's contract (the emitter convention is defined here; the wiring lands per module).
 - A batched/async emit channel for very high-frequency emitters — slice 3; the synchronous best-effort path is sufficient for AUTH + CHAT volumes at P0 scale.
 - Backfilling AUTH sign-in history — not meaningful (sign-ins were not durably recorded pre-link beyond the token rows); chat is the history worth replaying.
 
@@ -575,7 +581,7 @@ All resolved. Deferred:
 
 ## §11 — Implementation notes
 
-- This FR produces TASK-MEMORY-121 events; it defines no new shape. The shared `cyberos-capture` crate is the mechanism (build → `emit()`); each module's `capture.rs` is the thin domain translation. New modules add a `capture.rs`, not a new pattern — that is the whole DEC-2714 point.
+- This task produces TASK-MEMORY-121 events; it defines no new shape. The shared `cyberos-capture` crate is the mechanism (build → `emit()`); each module's `capture.rs` is the thin domain translation. New modules add a `capture.rs`, not a new pattern — that is the whole DEC-2714 point.
 - AUTH reuses its existing audit pool (the one `memory_bridge` already writes to). The `auth.signed_in` / `auth.sign_in_failed` emits sit literally next to `emit_token_issued` / `emit_token_failed` so the same request data (jti, subject, ip hash, reason) is in hand; no new connection, no new request plumbing.
 - CHAT already had the brain link plumbing from P0 — it reads `CHAT_AUDIT_DATABASE_URL`, holds an `audit_pool`, and writes through `cyberos-audit-chain`. P0 deliberately left the variable unset (the warn line). DEC-2713 is therefore a configuration flip plus routing chat's capture through `emit()`, not new infrastructure. The deploy compose sets it to the Supabase audit DB.
 - Message bodies never leave chat's database. The emitter writes `content_ref: pointer{store:"chat_messages", id}`; the BRAIN holds the pointer, chat holds the content under chat's RLS. A consumer that needs the text resolves the pointer for a viewer who already has access. `message_deleted` uses `content_ref:none` so there is no dangling pointer to a removed row.
@@ -584,13 +590,13 @@ All resolved. Deferred:
 - Capture is best-effort everywhere. A failed capture logs a `tracing::warn!` and is swallowed; the sign-in still issues its token, the message still sends. This is the same contract AUTH and CHAT already hold for their audit writes, kept so capture is invisible to the user whose work it records.
 - Direct-write to the audit DB (not via the memory HTTP service) follows the existing AUTH `memory_bridge` / obs-services pattern: the services share one Postgres deployment, so capture writes go straight to `l1_audit_log` and never couple a critical-path interaction to memory's HTTP liveness.
 - The runbook update is load-bearing for trust: "is capture live?" is one query (`count(*) ... WHERE iev_module='chat'`), and "why does this person show nothing?" has one answer (they have not acknowledged). The brain plan's trust argument depends on capture being visible and explainable.
-- `eu_ai_act_risk_class: limited` and the personal-data handling are carried in the AI Risk Assessment below: this FR is where employee work-activity actually starts being recorded, so the privacy posture (platform-only, content_ref-not-raw, consent-gated, per-tenant RLS, no autonomous decision) is stated explicitly here, not only in the schema FR.
+- `eu_ai_act_risk_class: limited` and the personal-data handling are carried in the AI Risk Assessment below: this task is where employee work-activity actually starts being recorded, so the privacy posture (platform-only, content_ref-not-raw, consent-gated, per-tenant RLS, no autonomous decision) is stated explicitly here, not only in the schema task.
 
 ---
 
 ## AI Risk Assessment
 
-- **Why limited:** this FR is the point where real employee work-activity begins flowing into the BRAIN — sign-ins, presence, and chat activity for CyberSkill staff — which is the data foundation for the later AI-assisted evaluation (TASK-EVAL-003/004). The emitters run no model and make no decision, but they feed a limited-risk AI use (workplace evaluation support), so they are classified and governed as part of that chain.
+- **Why limited:** this task is the point where real employee work-activity begins flowing into the BRAIN — sign-ins, presence, and chat activity for CyberSkill staff — which is the data foundation for the later AI-assisted evaluation (TASK-EVAL-003/004). The emitters run no model and make no decision, but they feed a limited-risk AI use (workplace evaluation support), so they are classified and governed as part of that chain.
 - **Personal data captured, and the hard limits:** who signed in (and from where, as a hashed IP prefix), who was online when, and who created/edited/deleted which message in which channel/DM. That is platform work-interaction metadata plus pointers to content — NOT keystroke logging, NOT screen capture, NOT anything from private life (DEC-2711). Message bodies stay in chat's own database; the captured row carries a `content_ref` pointer, never the text.
 - **Consent before capture (enforced, not promised):** every emitter writes only through TASK-MEMORY-121 `emit()`, which is hard-gated on the TASK-EVAL-001 notice acknowledgment. There is no emit path that bypasses the gate (hand-built audit rows are forbidden by `disallowed_tools`), so no subject is captured before they have acknowledged the monitoring notice — live or in backfill. This is disclosed monitoring made structural.
 - **Minimisation + purpose limitation:** emitters carry only the bounded attributes their event needs (e.g. `channel_kind`, `method`, `source_ip_hash16`), reference content rather than copying it, and inherit TASK-MEMORY-121's 2 KiB attributes cap and body-bytes watch. The purpose is to record the work, not to surveil the person; the closed event vocabulary bounds what can be recorded.

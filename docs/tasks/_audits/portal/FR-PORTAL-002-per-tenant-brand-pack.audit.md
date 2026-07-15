@@ -45,7 +45,7 @@ The spec lands per-tenant brand pack (palette + logo + email overrides) and cust
 
 All 6 mechanical concerns addressed. SVG XSS mitigated by Content-Disposition at slice 1; ACME lifecycle acknowledged; rollback semantics clarified; CDN staleness window made explicit; renewal job race-safe; cross-table FK design rationalised.
 
-The 1,148-line length is justified by 4 migrations + 6 REST endpoints + ACME integration + image pipeline + WCAG validation + Tera sandbox + deterministic export + 8 memory kinds; density comparable to peer FRs. Single largest sub-surface is the ACME flow (RFC 8555 compliance is non-trivial).
+The 1,148-line length is justified by 4 migrations + 6 REST endpoints + ACME integration + image pipeline + WCAG validation + Tera sandbox + deterministic export + 8 memory kinds; density comparable to peer tasks. Single largest sub-surface is the ACME flow (RFC 8555 compliance is non-trivial).
 
 **Score = 10/10.**
 

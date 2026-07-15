@@ -29,7 +29,7 @@ pub const RETRY_ATTEMPT: &str = "retry.attempt";
 pub const RETRY_BACKOFF_MS: &str = "retry.backoff_ms";
 pub const RETRY_PRIOR_STATUS: &str = "retry.prior_status_code";
 
-// FORBIDDEN at compile time (PII; requires FR amendment + DPO sign-off):
+// FORBIDDEN at compile time (PII; requires task amendment + DPO sign-off):
 // pub const USER_EMAIL:    &str = ... — would leak personal email
 // pub const PROMPT_TEXT:   &str = ... — would leak prompt content
 // pub const RESPONSE_TEXT: &str = ... — would leak response content

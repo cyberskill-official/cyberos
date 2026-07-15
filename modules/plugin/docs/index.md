@@ -15,11 +15,11 @@ Both give the same commands and the `ship-tasks` skill.
 
 ## The commands and the skill
 
-- `/init [repo]` - install CyberOS into the current repo, or update it: autodetect the build / lint / test commands, vendor the machine under a gitignored `.cyberos/`, scaffold the `docs/tasks/` backlog, and write the agent entry files. It prefers a full CyberOS payload when one is reachable and falls back to self-hosting from the plugin's own bundle. Idempotent - re-running it applies an update and never touches an existing `BACKLOG.md`, FRs, `AGENTS.md`, `gates.env`, or BRAIN.
+- `/init [repo]` - install CyberOS into the current repo, or update it: autodetect the build / lint / test commands, vendor the machine under a gitignored `.cyberos/`, scaffold the `docs/tasks/` backlog, and write the agent entry files. It prefers a full CyberOS payload when one is reachable and falls back to self-hosting from the plugin's own bundle. Idempotent - re-running it applies an update and never touches an existing `BACKLOG.md`, tasks, `AGENTS.md`, `gates.env`, or BRAIN.
 - `/update [repo]` - compare the repo's installed version (`.cyberos/VERSION`) against an available payload and apply the update on request. Read-only until you confirm.
 - `/changelog [repo]` - report the installed version and what changed recently.
-- `/help` - what the plugin does: the commands, the FR lifecycle, the two human gates, and where things live in an initialised repo.
-- `ship-tasks` skill - drive the next eligible FR from `docs/tasks/BACKLOG.md` through implement -> review -> test -> done. Type it as `/ship-tasks`, or just ask to ship an FR and the skill is used. It bundles its own copy of the workflow doctrine (`ship-tasks.md`, `EXECUTION-DISCIPLINE.md`, `STATUS-REFERENCE.md`) so it works standalone.
+- `/help` - what the plugin does: the commands, the task lifecycle, the two human gates, and where things live in an initialised repo.
+- `ship-tasks` skill - drive the next eligible task from `docs/tasks/BACKLOG.md` through implement -> review -> test -> done. Type it as `/ship-tasks`, or just ask to ship a task and the skill is used. It bundles its own copy of the workflow doctrine (`ship-tasks.md`, `EXECUTION-DISCIPLINE.md`, `STATUS-REFERENCE.md`) so it works standalone.
 
 ## Human-in-the-loop is required
 

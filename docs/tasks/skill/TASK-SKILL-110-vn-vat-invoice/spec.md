@@ -1,8 +1,16 @@
 ---
 id: TASK-SKILL-110
 title: "vietnam-vat-invoice@1 skill — Vietnamese e-invoice (hóa đơn) Decree 123 XML emitter with GDT submission, digital signature, and per-invoice audit trail"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: SKILL
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -671,7 +679,7 @@ All resolved. Deferred:
 - The `Sha256` hash is appended to audit row for tamper detection — operators querying memory can re-verify the XML matches what was submitted.
 - The `numbering::reserve` API is async (sled is sync but wrapped in `spawn_blocking`); the transaction guarantees no double-issue under concurrency.
 - The `IdempotentReplay` variant of InvoiceError carries the prior outcome boxed (avoids large stack frames); callers pattern-match to extract.
-- `amount_to_words` lives in `cyberos-vn-common` because it's also used by FR-INV (invoice module's UI rendering).
+- `amount_to_words` lives in `cyberos-vn-common` because it's also used by task-INV (invoice module's UI rendering).
 - The CLI `cyberos skill vietnam-vat-invoice replay` is implemented as a memory query (filter `vn.invoice_emitted` + `vn.invoice_submission_failed` by `idempotency_key`); no separate state store.
 - The PDF renderer (§1 #16 SHOULD) is deferred; the XML emitter is the legal artifact.
 - Operators who need to mass-resubmit failed invoices (after fixing the GDT config issue) use new idempotency_keys; the failed-audit rows remain as the manual-reconciliation trail.

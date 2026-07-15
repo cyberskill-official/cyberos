@@ -1,10 +1,17 @@
 ---
 id: TASK-SKILL-118
 title: "Bring the six thin vendored pairs to full contract parity (RUBRIC, PIPELINE, INVARIANTS, envelopes, references, acceptance)"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: improvement
+created_at: 2026-07-12T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: SKILL
-priority: MUST
+priority: p0
 status: done
-class: improvement
 verify: T
 phase: Wave B - finish the children
 owner: Stephen Cheng (CTO)
@@ -52,15 +59,15 @@ modified_files:
 
 ## §1 - Description
 
-Six pairs at the heart of /ship-tasks run on a SKILL.md and trigger tests alone: no rubric an auditor can score against, no pipeline, no envelopes, no invariants. The audits therefore re-derive their bar from prose every run. This FR raises all six to the file-level contract the four full pairs already have.
+Six pairs at the heart of /ship-tasks run on a SKILL.md and trigger tests alone: no rubric an auditor can score against, no pipeline, no envelopes, no invariants. The audits therefore re-derive their bar from prose every run. This task raises all six to the file-level contract the four full pairs already have.
 
 Normative clauses:
 
 1. Each of the six author skills (`repo-context-map`, `edge-case-matrix`, `mock-contract-test`, `observability-injection`, `backlog-state-update`, `coverage-gate`) MUST gain: `PIPELINE.md` (phased steps incl. HALT points), `INVARIANTS.md`, `envelopes/input.json` + `envelopes/output.json`, `references/FAILURE_MODES.md`, and `acceptance/README.md` - matching the file classes of `task-author`.
 2. Each of the six audit skills MUST gain: `RUBRIC.md` (versioned `<name>_rubric@1.0`, rule families with stable rule IDs, /10 scoring, 10/10 pass bar), `AUDIT_LOOP.md`, `REPORT_FORMAT.md`, `envelopes/input.json` + `envelopes/output.json`, and `acceptance/README.md` - matching the file classes of `task-audit`.
-3. The rubrics MUST encode exactly the gates already normative in each pair's SKILL.md prose, with rule IDs: edge-case-matrix (>= 1 row per category; SECURITY rows point at real test paths; DEGRADATION rows carry detection + recovery; total_rows >= 8 for MUST FRs), observability-injection (>= 1 log point per state transition, >= 1 span per external IO, >= 1 counter per error branch, branch_coverage >= 80%, redaction policy when PII in scope), coverage-gate (tests_failed == 0; files_below_90pct empty; ecm_rows_uncovered empty; raw terminal present + non-truncated; §1-clause test closure), backlog-state-update (status in the 10-value enum; line_number resolves; old_line byte-match; evidence rows resolve; mutation_kind == status-cell-only), mock-contract-test (>= 1 request/response pair; error_modes cover every SECURITY/DEGRADATION matrix row; swap_target is a real symbol; sunset criterion observable; contract tests pass against the mock), repo-context-map (three baseline patterns present; pinned_in references resolve; schemas present when FR declares migrations; module-placement warning null or escalated).
+3. The rubrics MUST encode exactly the gates already normative in each pair's SKILL.md prose, with rule IDs: edge-case-matrix (>= 1 row per category; SECURITY rows point at real test paths; DEGRADATION rows carry detection + recovery; total_rows >= 8 for MUST tasks), observability-injection (>= 1 log point per state transition, >= 1 span per external IO, >= 1 counter per error branch, branch_coverage >= 80%, redaction policy when PII in scope), coverage-gate (tests_failed == 0; files_below_90pct empty; ecm_rows_uncovered empty; raw terminal present + non-truncated; §1-clause test closure), backlog-state-update (status in the 10-value enum; line_number resolves; old_line byte-match; evidence rows resolve; mutation_kind == status-cell-only), mock-contract-test (>= 1 request/response pair; error_modes cover every SECURITY/DEGRADATION matrix row; swap_target is a real symbol; sunset criterion observable; contract tests pass against the mock), repo-context-map (three baseline patterns present; pinned_in references resolve; schemas present when task declares migrations; module-placement warning null or escalated).
 4. Numeric gates MUST be expressed as named constants at the top of each RUBRIC.md, with the coverage threshold noted as overridable by `.cyberos/config.yaml` `coverage_threshold` once TASK-CUO-207 lands (default 90 preserved).
-5. Artefact schemas MUST stay at @1 - additive documentation only; no change to any emitted artefact shape, so already-shipped FRs' artefacts remain valid.
+5. Artefact schemas MUST stay at @1 - additive documentation only; no change to any emitted artefact shape, so already-shipped tasks' artefacts remain valid.
 6. A script `tools/cyberos-init/check-pair-parity.sh <skills-dir>` MUST verify, for every author/audit pair present: authors carry the #1 file classes, audits carry the #2 file classes; missing files exit 10 as `PARITY <skill>: missing <file>`. `build.sh` MUST run it over the vendored set after the chain-coverage check (TASK-SKILL-116 ordering).
 7. Each rewritten SKILL.md MUST keep its existing trigger description contract (TASK-SKILL-111/112/113 conventions) - descriptions, trigger tests, and frontmatter shape unchanged except for pointers to the new files.
 
@@ -74,7 +81,7 @@ Rubric header convention (all six):
 
 ```markdown
 # <name>_rubric@1.0
-constants: TOTAL_ROWS_MIN=8 (MUST FRs) | BRANCH_COVERAGE_MIN=80 | COVERAGE_THRESHOLD=90 (config-overridable, TASK-CUO-207)
+constants: TOTAL_ROWS_MIN=8 (MUST tasks) | BRANCH_COVERAGE_MIN=80 | COVERAGE_THRESHOLD=90 (config-overridable, TASK-CUO-207)
 families: <ABBR>-STRUCT | <ABBR>-GATE | <ABBR>-TRACE   (per-pair families as needed)
 verdict: pass requires 10/10; any family failure -> fail; ambiguity -> needs_human
 ```
@@ -108,7 +115,7 @@ Full file matrix = 72 files across the 12 skill dirs (6 per author, 6 per audit,
 
 ## §7 - Dependencies
 
-None upstream. TASK-CUO-207 later flips COVERAGE_THRESHOLD to config-driven (the rubric already names the hook). TASK-CUO-209 vendors the enriched pairs as-is. TASK-CUO-205 will bump backlog-state-update to @2 (insert-row) - land THIS FR first so the @2 change edits a full contract, not a thin one.
+None upstream. TASK-CUO-207 later flips COVERAGE_THRESHOLD to config-driven (the rubric already names the hook). TASK-CUO-209 vendors the enriched pairs as-is. TASK-CUO-205 will bump backlog-state-update to @2 (insert-row) - land THIS task first so the @2 change edits a full contract, not a thin one.
 
 ## §8 - Example payloads
 
@@ -128,9 +135,9 @@ None blocking. Shared references (HITL_PROTOCOL.md, ANTI_FABRICATION.md, UNTRUST
 
 1. Rubric invents a stricter bar than the SKILL.md prose - AC 2's prose->rule mapping table makes each rule cite its prose source; unsourced rules are review findings.
 2. Envelope drift from actual artefacts - envelopes are copied from the nearest full pair then field-checked against each SKILL.md artefact section (AC 4 protects the section).
-3. Parity checker too rigid for legitimately different skills (backlog-state-update has no references/ need) - the checker checks FILE CLASSES per side as listed in §1; the list IS the policy, adjustable only by editing this FR's clauses.
+3. Parity checker too rigid for legitimately different skills (backlog-state-update has no references/ need) - the checker checks FILE CLASSES per side as listed in §1; the list IS the policy, adjustable only by editing this task's clauses.
 4. Vendored copies go stale - build.sh copies from modules/skill on every build; TASK-IMP-068's gate rebuilds on every touch of modules/skill/**.
-5. Six-pair scope creep into content rewrites - clause #7 pins descriptions and trigger tests byte-stable; the FR adds files, it does not re-author skills.
+5. Six-pair scope creep into content rewrites - clause #7 pins descriptions and trigger tests byte-stable; the task adds files, it does not re-author skills.
 
 ## §11 - Implementation notes
 

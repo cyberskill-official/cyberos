@@ -15,11 +15,11 @@
       "suggested_prompts": [
         {
           "label": "Turn this PRD into audited tasks",
-          "prompt": "Use /create-tasks to draft tasks from my PRD, audit them against the rubric, and land them ready_to_implement in docs/tasks/BACKLOG.md. Halt at the PLAN approval gate so I can review the FR set before anything is written."
+          "prompt": "Use /create-tasks to draft tasks from my PRD, audit them against the rubric, and land them ready_to_implement in docs/tasks/BACKLOG.md. Halt at the PLAN approval gate so I can review the task set before anything is written."
         },
         {
           "label": "Ship the next task",
-          "prompt": "Use /ship-tasks to drive the next eligible FR in docs/tasks/BACKLOG.md through implement -> review -> test. HITL is required: halt at review acceptance and at final acceptance for my verdict, and never set done yourself."
+          "prompt": "Use /ship-tasks to drive the next eligible task in docs/tasks/BACKLOG.md through implement -> review -> test. HITL is required: halt at review acceptance and at final acceptance for my verdict, and never set done yourself."
         },
         {
           "label": "Install CyberOS in this repo",

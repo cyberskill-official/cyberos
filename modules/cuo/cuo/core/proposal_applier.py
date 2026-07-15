@@ -53,7 +53,7 @@ BUCKET_DEFAULT_AUTO: dict[Bucket, bool] = {
     "cosmetic": True,
     "wording_polish": True,
     "threshold_tune": True,
-    "rule_addition": False,   # always queue per FR §2 "rule_addition default queue"
+    "rule_addition": False,   # always queue per task §2 "rule_addition default queue"
     "rule_removal": False,
     "contract_field_change": False,
     "safety_class": False,    # NEVER auto regardless of flags

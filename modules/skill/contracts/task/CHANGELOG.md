@@ -52,4 +52,4 @@ Standard sub-sections:
 - **Added** — new optional frontmatter fields, new optional sections.
 - **Changed** — wording within fixed sections (PATCH only).
 - **Template** — only on MAJOR bumps; describe the structural change and list every consumer skill that needs updating.
-- **Backwards compatibility** — what existing FRs still validate, what needs migration.
+- **Backwards compatibility** — what existing tasks still validate, what needs migration.

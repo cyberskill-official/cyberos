@@ -2,8 +2,16 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future fr-catalog renderer) ─────
 id: TASK-AI-011
 title: "Presidio EN-base PII redaction in-flight (every prompt)"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AI
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P0
@@ -811,7 +819,7 @@ pub fn restore(text: &str, map: &RestorationMap) -> String {
 
 ## §7 — Dependencies
 
-### Code dependencies (other FRs/modules)
+### Code dependencies (other tasks/modules)
 
 - **TASK-AI-001 / TASK-AI-002** — `cost_ledger::precheck` runs BEFORE `redact()`; `cost_ledger::reconcile` runs AFTER `router::call_provider` returns; the memory `ai.invocation` row's `extra.pii_redactions` field is populated from `RedactionResult.counts`.
 - **TASK-AI-005** — `TenantPolicy.ai_policy.pii_redaction_extra` lives in the policy schema.
@@ -898,7 +906,7 @@ extra:
 
 ## §9 — Open questions
 
-All resolved at authoring time. Items deferred to later FRs:
+All resolved at authoring time. Items deferred to later tasks:
 
 - VN-specific recognizers (TASK-AI-012).
 - Recall-floor CI gate (TASK-AI-013).
@@ -937,11 +945,11 @@ All resolved at authoring time. Items deferred to later FRs:
 
 - Default 10 EN types is conservative — covers GDPR Art. 5(1)(c) data-minimisation, Singapore PDPA s.18 purpose limitation, and U.S. HIPAA medical-license redaction. TASK-AI-012 adds the VN-specific layer for PDPL Art. 7.
 - The sidecar pattern adds operational complexity (one more process to monitor). PyO3 alternative was considered but rejected: Presidio's transitive dependency surface (spaCy, NLTK, transformers) makes in-process embedding hostile to Rust's static-linking ergonomics; the GIL also limits in-process concurrency to one redaction at a time.
-- Recall floor is TASK-AI-013's job. This FR ensures the redaction RUNS; TASK-AI-013 ensures it CATCHES ≥ 99% of real-world cases on a curated 200-sample test set. Slice 3 is incomplete without both FRs landed.
+- Recall floor is TASK-AI-013's job. This task ensures the redaction RUNS; TASK-AI-013 ensures it CATCHES ≥ 99% of real-world cases on a curated 200-sample test set. Slice 3 is incomplete without both tasks landed.
 - The `RestorationMap` uses `zeroize::Zeroizing<String>` so the underlying allocation is wiped on Drop. This defends against memory-dump-based PII recovery (e.g., from a heap snapshot triggered by a panic). Without zeroization, the original PII could linger in process heap until reallocated.
 - The `sanitize_sidecar_error_message` function is conservative — any error message longer than 64 bytes OR containing `@` OR containing 5+ consecutive digits is replaced with a placeholder. This may hide genuine sidecar errors (loss of debuggability) but the trade-off favours prompt-leak prevention. Operator workflow: if sidecar errors are mysterious, attach a sidecar-side debugger; never lower this filter.
 - The deploy-time test `assert_sidecar_loopback_only` runs as part of the `make smoke-test` target. It spawns a temporary pod alongside the AI gateway and tries to `curl http://<gateway-ip>:5050/redact` — assertion: connection refused. Anything other than refusal (a redirect, a 404, a timeout) fails the smoke test.
-- Per-tenant custom recognizers (e.g., proprietary SKU patterns) are not in slice 3. The `pii_redaction_extra` policy field accepts entity-type strings; TASK-AI-012 wires the VN types; future FRs may add per-tenant custom recognizers via a `pii_recognizers_yaml` policy field that Presidio loads at sidecar startup.
+- Per-tenant custom recognizers (e.g., proprietary SKU patterns) are not in slice 3. The `pii_redaction_extra` policy field accepts entity-type strings; TASK-AI-012 wires the VN types; future tasks may add per-tenant custom recognizers via a `pii_recognizers_yaml` policy field that Presidio loads at sidecar startup.
 - The `tracing-test` crate is dev-only — it captures emitted log records into an in-memory buffer for assertion. Production builds don't include it. The `redact_no_log_test.rs` test runs on every PR but is excluded from release-mode binaries.
 - Future work (TASK-AI-022): semantic-similarity redaction (e.g., a paraphrased SSN like "my social is twelve thirty-four fifty-six seven eight nine") that current Presidio doesn't catch. Requires LLM-based detection or richer regex; out of scope for slice 3 baseline.
 

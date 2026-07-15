@@ -9,7 +9,7 @@ CyberOS Layer-1 Memory Protocol); it does NOT override the protocol's
 
 ## §1 — Read order for any change
 
-1. The FR being implemented — `docs/tasks/email/FR-EMAIL-<N>-<slug>.md`.
+1. The task being implemented — `docs/tasks/email/task-EMAIL-<N>-<slug>.md`.
 2. Its audit dossier — same name + `.audit.md`.
 3. This file.
 4. The root `AGENTS.md` if a protocol-level concern surfaces.

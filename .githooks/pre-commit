@@ -22,7 +22,7 @@ if matches "$trigger"; then
   bash "$root/tools/cyberos-init/check-version-sync.sh" "$root/dist/cyberos"
 fi
 
-# TASK-DOCS-007: any staged change to FR specs, backlog inputs, templates, or the site tooling
+# TASK-DOCS-007: any staged change to task specs, backlog inputs, templates, or the site tooling
 # regenerates dist/website locally (gitignored) - the HTML deliverables can never lag the
 # markdown truth on the machine that authored the change. Published freshness rides deploy.yml
 # (same paths) + version.yml's post-bump dispatch + release.yml's docs job.
@@ -40,23 +40,34 @@ if matches "$docs_trigger"; then
   fi
 fi
 
-# TASK-IMP-074 group A: any staged FR/CHANGELOG/VERSION change regenerates docs/status/ and
+# TASK-IMP-074 group A: any staged task/CHANGELOG/VERSION change regenerates docs/status/ and
 # stages it IN THE SAME COMMIT, so the status page can never lag the frontmatter it renders.
 # Best-effort-loud: a render failure warns (with the fix command) but never blocks the commit -
-# a docs-render bug must not dead-lock all FR work (mirrors run-gates.sh's posture).
+# a docs-render bug must not dead-lock all task work (mirrors run-gates.sh's posture).
 status_trigger='^(docs/tasks/|CHANGELOG\.md$|VERSION$)'
 if matches "$status_trigger"; then
-  migrate="$root/.cyberos/migrate-frs.sh"
-  [ -f "$migrate" ] || migrate="$root/tools/cyberos-init/migrate-frs.sh"   # self-hosting repo fallback
-  if [ -f "$migrate" ] && command -v node >/dev/null 2>&1; then
-    if bash "$migrate" --page "$root" >/dev/null 2>&1; then
+  # BUG (fixed 2026-07-14): this pointed at `migrate-frs.sh`, which was DELETED in
+  # 0a7553f25 ("Drop migrate-frs shim"). The `[ -f "$migrate" ]` guard then made the
+  # whole block a silent no-op — so docs/status/ has not been auto-regenerated since
+  # that commit, which is exactly why it sat there full of stale FR-*.js chunks.
+  # A guard that skips when its own tool is missing is indistinguishable from success.
+  status_page="$root/.cyberos/lib/status-page.sh"
+  [ -f "$status_page" ] || status_page="$root/tools/cyberos-init/lib/status-page.sh"  # self-hosting fallback
+  if [ -f "$status_page" ] && command -v node >/dev/null 2>&1; then
+    if bash "$status_page" "$root" >/dev/null 2>&1; then
       git add "$root/docs/status/" 2>/dev/null || true
-      echo "cyberos: docs/status regenerated + staged (FR sources changed)"
+      echo "cyberos: docs/status regenerated + staged (task sources changed)"
     else
-      echo "cyberos: WARN docs/status regeneration failed - run: bash $migrate --page ." >&2
+      echo "cyberos: WARN docs/status regeneration failed - run: bash $status_page ." >&2
     fi
+  else
+    echo "cyberos: WARN status-page tool missing at $status_page - docs/status NOT regenerated" >&2
   fi
 fi
+
+# Retired-vocabulary gate. The fr->task rename touched ~32,000 sites; without a gate
+# the old words creep back through vendored skill prose. See docs/tasks/RENAME-EPOCH.md.
+bash "$root/.pre-commit-hooks/no-legacy-fr-vocabulary.sh"
 
 # TASK-IMP-072: a staged VERSION change must carry the whole codebase with it.
 if grep -qx "VERSION" <<<"$staged"; then

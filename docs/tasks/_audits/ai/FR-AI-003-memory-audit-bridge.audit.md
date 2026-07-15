@@ -37,7 +37,7 @@ TASK-AI-003 is ship-grade. Round-2 revisions promoted Q2/Q3/Q4/Q5 to normative �
 
 The round-1/round-2 ISSes above were merged into the original prose; task-audit skill §3.12 rule 36 requires ≥6 ISS-NNN findings in canonical format per audit. The following six findings re-state the resolved issues in canonical form plus add new task-audit skill-grounded compliance verifications. All RESOLVED.
 
-### ISS-001 — Open Q2 (audit-row dedup_key) deferred without explicit FR linkage
+### ISS-001 — Open Q2 (audit-row dedup_key) deferred without explicit task linkage
 - **severity:** info  
 - **status:** RESOLVED — deferred to TASK-AI-008 with documented spec-text linkage in §1 #12 and §9 (Open questions).
 
@@ -67,4 +67,4 @@ The round-1/round-2 ISSes above were merged into the original prose; task-audit 
 
 ---
 
-*End of TASK-AI-003 audit. Status: PASS at 10/10. task-audit skill compliant 2026-05-16.*
+*End of TASK-AI-003 audit. Status: PASS at 10/10. Task-audit skill compliant 2026-05-16.*

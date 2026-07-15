@@ -1,8 +1,16 @@
 ---
 id: TASK-SKILL-113
 title: "SKILL.md frontmatter — replace XML-bracket sentinel `wrap_in: <untrusted_content/>` with string-form `wrap_in_marker: \"untrusted_content\"` for host-portable load"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-19T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: SKILL
-priority: SHOULD
+priority: p1
 status: done
 verify: T
 phase: P1
@@ -46,7 +54,7 @@ modified_files:
   - modules/skill/_template/author/references/UNTRUSTED_CONTENT.md     # clarify: body XML form remains; frontmatter is string-form sentinel
   - modules/skill/_template/audit/references/UNTRUSTED_CONTENT.md      # same
   - modules/skill/task-audit/RUBRIC.md                      # add FM-115 (no-xml-in-frontmatter) + FM-116 (wrap_in_marker-form)
-  - task-audit skill        # §3.13 mentions new rules
+  - Task-audit skill        # §3.13 mentions new rules
   - website docs (SKILL appendices)                                    # Part 2.1 frontmatter row updates; Part 18 anti-pattern entry
   - website docs (SKILL Appendix J)                                    # §6.3 status update + decision recorded (option A)
   - <ALL 104 production SKILL.md files in modules/skill/>               # mechanical sweep
@@ -59,7 +67,7 @@ allowed_tools:
 disallowed_tools:
   - touch the body XML form (`<untrusted_content source="...">…</untrusted_content>`) in any SKILL.md body or in references/UNTRUSTED_CONTENT.md prose — the body XML form is the actual runtime wrapper and stays unchanged
   - perform the 104-pair sweep without running --dry-run first
-  - rename the marker string `"untrusted_content"` to anything else in this FR (a future extension may add `"untrusted_content_strict"` etc., but TASK-SKILL-113 freezes the v1 form)
+  - rename the marker string `"untrusted_content"` to anything else in this task (a future extension may add `"untrusted_content_strict"` etc., but TASK-SKILL-113 freezes the v1 form)
 
 effort_hours: 12
 subtasks:
@@ -78,28 +86,28 @@ subtasks:
   - "0.5h: verify.sh — grep for residuals; assert zero matches on `wrap_in:\\s*<` after sweep"
   - "1.5h: mechanical 104-pair sweep via migrate.sh; commit one batch; verify with verify.sh; manually spot-check 3 random pairs"
   - "0.5h: ANTHROPIC_GUIDE_DIGEST.md §6.3 update — record option-A decision + ship status"
-risk_if_skipped: "Without TASK-SKILL-113, every CyberOS skill's frontmatter contains literal `<untrusted_content/>` text. Anthropic Reference B p. 31 forbids `<` and `>` in frontmatter for system-prompt injection reasons; Anthropic's loader rejects the field on parse. When Phase-B transpilers ship (TASK-SKILL-103, TASK-CUO-101 / TASK-SKILL-102 OCI registry), every CyberOS-to-Anthropic transpile fails at this exact field. Three downstream consequences: (1) the entire 104-skill catalog is un-shippable to Anthropic / Claude.ai until fixed; (2) Phase-B transpilers can't be tested end-to-end (no valid output anywhere); (3) the registry v0.2.0 frontmatter contract has an embedded port-blocker that wasn't visible until the Anthropic guide was read. Cost of the FR ≈ 12 hours including the 104-pair sweep; cost of NOT shipping ≈ Phase-B blocked indefinitely + future emergency 104-pair fix under deadline pressure when the first partner connector deal is on the table. Option A (rename to wrap_in_marker: \"untrusted_content\") is reversible and preserves the dual-layer model where the body XML form is the actual wrapper. Option B (drop the field, rely on the parallel untrusted_content_wrapping: required field) is also reversible but loses the explicit sentinel/runtime-wrapper coupling. We chose option A for forward-extensibility — future high-trust modes might add markers like \"untrusted_content_strict\" or \"untrusted_pii_redacted\" without re-fighting the XML-bracket battle. Foundation-stage decision: ship the wider namespace now."
+risk_if_skipped: "Without TASK-SKILL-113, every CyberOS skill's frontmatter contains literal `<untrusted_content/>` text. Anthropic Reference B p. 31 forbids `<` and `>` in frontmatter for system-prompt injection reasons; Anthropic's loader rejects the field on parse. When Phase-B transpilers ship (TASK-SKILL-103, TASK-CUO-101 / TASK-SKILL-102 OCI registry), every CyberOS-to-Anthropic transpile fails at this exact field. Three downstream consequences: (1) the entire 104-skill catalog is un-shippable to Anthropic / Claude.ai until fixed; (2) Phase-B transpilers can't be tested end-to-end (no valid output anywhere); (3) the registry v0.2.0 frontmatter contract has an embedded port-blocker that wasn't visible until the Anthropic guide was read. Cost of the task ≈ 12 hours including the 104-pair sweep; cost of NOT shipping ≈ Phase-B blocked indefinitely + future emergency 104-pair fix under deadline pressure when the first partner connector deal is on the table. Option A (rename to wrap_in_marker: \"untrusted_content\") is reversible and preserves the dual-layer model where the body XML form is the actual wrapper. Option B (drop the field, rely on the parallel untrusted_content_wrapping: required field) is also reversible but loses the explicit sentinel/runtime-wrapper coupling. We chose option A for forward-extensibility — future high-trust modes might add markers like \"untrusted_content_strict\" or \"untrusted_pii_redacted\" without re-fighting the XML-bracket battle. Foundation-stage decision: ship the wider namespace now."
 ---
 
 ## §1 — Description (BCP-14 normative)
 
-This FR removes XML angle brackets from CyberOS SKILL.md frontmatter — the only remaining port-blocker between the v0.2.0 frontmatter contract and the Anthropic Agent Skills loader. The fix renames the `wrap_in` field's string-form value from a markup-style sentinel (`<untrusted_content/>`) to a plain-string marker name (`"untrusted_content"`) and freezes that marker namespace at the registry v0.2.5 boundary.
+This task removes XML angle brackets from CyberOS SKILL.md frontmatter — the only remaining port-blocker between the v0.2.0 frontmatter contract and the Anthropic Agent Skills loader. The fix renames the `wrap_in` field's string-form value from a markup-style sentinel (`<untrusted_content/>`) to a plain-string marker name (`"untrusted_content"`) and freezes that marker namespace at the registry v0.2.5 boundary.
 
 1. The frontmatter field previously known as `wrap_in:` **MUST** be renamed to `wrap_in_marker:` in all SKILL.md files. The new field's value **MUST** be a YAML string conforming to the regex `^[a-z][a-z0-9_]*$` — lowercase ASCII letters, digits, underscores, starting with a letter, 1-32 chars. No angle brackets, no spaces, no special characters.
-2. The canonical v1 marker value **MUST** be `"untrusted_content"`. Future markers SHALL be added via separate FRs as the marker namespace expands (sketched candidates: `"untrusted_content_strict"` for partner-connector skills, `"untrusted_pii_redacted"` for HR/finance skills). TASK-SKILL-113 freezes only the canonical v1 marker; expansion is out of scope.
+2. The canonical v1 marker value **MUST** be `"untrusted_content"`. Future markers SHALL be added via separate tasks as the marker namespace expands (sketched candidates: `"untrusted_content_strict"` for partner-connector skills, `"untrusted_pii_redacted"` for HR/finance skills). TASK-SKILL-113 freezes only the canonical v1 marker; expansion is out of scope.
 3. The body XML form `<untrusted_content source="..." page="...">…</untrusted_content>` **MUST NOT** be touched anywhere in the codebase. The body XML wraps real bytes at runtime; the frontmatter `wrap_in_marker:` is a *declaration* of which marker shape the skill uses, not the wrapper itself. The two layers serve different purposes: declaration vs. runtime wrap.
 4. `references/UNTRUSTED_CONTENT.md` (per-skill or per-template) **MUST** be updated to explicitly call out the two layers: (a) frontmatter declares the marker name as a string, (b) body wraps untrusted bytes in the corresponding XML tags at the named marker. The documentation MUST NOT imply the frontmatter contains XML; the frontmatter v0.2.0+ NEVER does.
 5. The auditor rule **MUST** be split into two:
    - **FM-115 no-xml-in-frontmatter** — generic rule rejecting `<` or `>` in any frontmatter value across the entire SKILL.md frontmatter block (defence in depth — catches future drift, not just `wrap_in`). Severity: error. Auto-fix: never (cross-cutting; needs human review of intent).
    - **FM-116 wrap_in_marker-form** — specific rule asserting the field is present, named `wrap_in_marker:` (not `wrap_in:`), value matches the marker regex, value is one of the registered marker strings (today only `"untrusted_content"`). Severity: error. Auto-fix: **enabled** for the `wrap_in:` → `wrap_in_marker:` rename (mechanical; safe).
-6. Skills written before this FR ships **MUST** be migrated mechanically via `tools/migrate-wrap-in/migrate.sh`. The script walks `modules/skill/**/SKILL.md`, replaces `wrap_in: <untrusted_content/>` (and YAML-folded variants like `wrap_in:  <untrusted_content/>` with extra whitespace) with `wrap_in_marker: "untrusted_content"`, and emits an audit-log row per file changed. Dry-run mode (`--dry-run`) is mandatory before `--apply`.
+6. Skills written before this task ships **MUST** be migrated mechanically via `tools/migrate-wrap-in/migrate.sh`. The script walks `modules/skill/**/SKILL.md`, replaces `wrap_in: <untrusted_content/>` (and YAML-folded variants like `wrap_in:  <untrusted_content/>` with extra whitespace) with `wrap_in_marker: "untrusted_content"`, and emits an audit-log row per file changed. Dry-run mode (`--dry-run`) is mandatory before `--apply`.
 7. The migration script **MUST** preserve YAML whitespace + indentation per-file (so the audit hash chain over the skill body remains stable; only the named field changes). The script **MUST** detect and refuse to edit files that have already been migrated (idempotent re-run is a no-op).
-8. The `verify.sh` companion script **MUST** assert post-sweep invariants: (a) zero residual `wrap_in:\s*<` matches anywhere under `modules/skill/`, (b) every production SKILL.md (`status: accepted` or higher in its FR metadata, where applicable) contains exactly one `wrap_in_marker:` field, (c) the marker value is `"untrusted_content"` (only the canonical v1 marker).
+8. The `verify.sh` companion script **MUST** assert post-sweep invariants: (a) zero residual `wrap_in:\s*<` matches anywhere under `modules/skill/`, (b) every production SKILL.md (`status: accepted` or higher in its task metadata, where applicable) contains exactly one `wrap_in_marker:` field, (c) the marker value is `"untrusted_content"` (only the canonical v1 marker).
 9. The `_template/author/SKILL.md` and `_template/audit/SKILL.md` **MUST** be updated to ship the new field form. The inline YAML comment **SHOULD** point at TASK-SKILL-113 / DEC-091 for traceability.
 10. The Rust validator (TASK-SKILL-103 `services/skill-broker/`) **MUST** reject `wrap_in: <untrusted_content/>` as `FrontmatterError::DeprecatedXmlField` with a structured error pointing at the rename. Skills that haven't been migrated fail-fast at load time with a clear remediation message.
 11. The JSONSchema mirror (`skill.schema.json`) **MUST** mirror the new field name + pattern + `enum: ["untrusted_content"]` (v1 marker freeze).
 12. README.md Part 2.1 **MUST** show the new field name in the canonical frontmatter table. A new sub-section "What changed in registry v0.2.5" **SHOULD** be added documenting the rename, the rationale, and the migration path.
-13. task-audit skill §3.13 **MUST** gain a new rule: "Frontmatter values are strings, not markup — no `<`, `>`, no XML tags anywhere in YAML values; markup belongs in the body or in `references/`."
+13. Task-audit skill §3.13 **MUST** gain a new rule: "Frontmatter values are strings, not markup — no `<`, `>`, no XML tags anywhere in YAML values; markup belongs in the body or in `references/`."
 14. The sweep timing **MUST** be one atomic commit batch: 104 production SKILL.md files + both `_template/*/SKILL.md` files + both `_template/*/references/UNTRUSTED_CONTENT.md` files + RUBRIC.md + task-audit skill + README.md + ANTHROPIC_GUIDE_DIGEST.md. Splitting across commits would leave the registry in a half-migrated state and break the audit-chain invariant that all skills at a given catalog version use the same frontmatter shape.
 15. Post-migration, the catalog version **MUST** bump from v0.2.4 → v0.2.5. Per DEC-182, field renames are MINOR-compatible (the old form fails fast on load via FM-116; the new form replaces it transparently); MAJOR bump would only be required for semantic changes that consumers cannot detect at load time.
 
@@ -107,7 +115,7 @@ This FR removes XML angle brackets from CyberOS SKILL.md frontmatter — the onl
 
 **Why a rename rather than a drop (§1 #1)?** The `wrap_in` field carries a real semantic: it declares which marker shape the skill expects in the body. A skill that wraps web-fetched content uses `<untrusted_content source="https://..." />…</untrusted_content>`; a future skill that wraps PII-redacted content might use `<untrusted_pii_redacted source="..." />…</untrusted_pii_redacted>`. The declaration is what lets the runtime / auditor / scanner know which marker to look for. Dropping the field (option B in the findings doc) would force the runtime to infer the marker from body content — fragile, error-prone, and silently broken if a skill body uses a non-standard marker. Renaming preserves the declaration; option A is the foundation-stage right call.
 
-**Why option A over option B (§1 #2 — operator decision)?** Foundation stages favour explicit declarations over inferred ones. As the SKILL module grows past 104 pairs into the v0.3.0+ multi-marker landscape, having a typed `wrap_in_marker:` field with a registered enum lets the validator / auditor / partner-connector gate make decisions on the marker without parsing body content. Option B (drop the field) would have required a future FR to re-introduce a declaration field; doing it now under the same FR is cheaper than doing it twice.
+**Why option A over option B (§1 #2 — operator decision)?** Foundation stages favour explicit declarations over inferred ones. As the SKILL module grows past 104 pairs into the v0.3.0+ multi-marker landscape, having a typed `wrap_in_marker:` field with a registered enum lets the validator / auditor / partner-connector gate make decisions on the marker without parsing body content. Option B (drop the field) would have required a future task to re-introduce a declaration field; doing it now under the same task is cheaper than doing it twice.
 
 **Why the canonical marker is `"untrusted_content"` (§1 #2)?** Matches the body XML tag name (`<untrusted_content>`). The two layers are now consistent: frontmatter declares the *name*, body uses the *XML form* of the same name. The runtime can mechanically construct the body wrapper from the frontmatter declaration without lookup tables. This naming consistency is load-bearing for future code that emits the body wrapper from the marker name.
 
@@ -125,11 +133,11 @@ This FR removes XML angle brackets from CyberOS SKILL.md frontmatter — the onl
 
 **Why fail-fast on load if not migrated (§1 #10)?** Better to refuse to load a half-migrated skill than to silently degrade. The structured error (`FrontmatterError::DeprecatedXmlField`) points at the rename and the migration script — operators see exactly what to do. The alternative — accepting old-form `wrap_in:` for a transition window — would leave the registry in a permanent half-migrated state.
 
-**Why JSONSchema enum freeze on v1 marker (§1 #11)?** Future markers add registry entries via separate FRs. The current spec freezes v1 at `"untrusted_content"` so editor LSPs / CI gates / OCI registry validators can rely on the v1 contract until the next FR widens it. JSONSchema enums catch typos at edit time; without them, an author writing `wrap_in_marker: "untrusted_cotent"` (typo) would slip past validation.
+**Why JSONSchema enum freeze on v1 marker (§1 #11)?** Future markers add registry entries via separate tasks. The current spec freezes v1 at `"untrusted_content"` so editor LSPs / CI gates / OCI registry validators can rely on the v1 contract until the next task widens it. JSONSchema enums catch typos at edit time; without them, an author writing `wrap_in_marker: "untrusted_cotent"` (typo) would slip past validation.
 
 **Why a new README sub-section (§1 #12)?** Registry version bumps deserve narrative documentation. Readers six months from now opening README.md to understand the frontmatter contract should be able to find "what changed in v0.2.5 and why" without grepping git log. The sub-section also serves as a citation anchor for ANTHROPIC_GUIDE_DIGEST.md §6.3.
 
-**Why an task-audit skill rule for frontmatter-no-markup (§1 #13)?** Prevents future drift. Without an explicit discipline rule, a future skill author re-introduces `<untrusted_content/>` (or invents a new XML-shaped sentinel) under time pressure. The rule fires at audit time on every commit, catching the drift before it ships.
+**Why a task-audit skill rule for frontmatter-no-markup (§1 #13)?** Prevents future drift. Without an explicit discipline rule, a future skill author re-introduces `<untrusted_content/>` (or invents a new XML-shaped sentinel) under time pressure. The rule fires at audit time on every commit, catching the drift before it ships.
 
 **Why one atomic commit batch (§1 #14)?** The catalog version is a single source of truth. Splitting the sweep across commits would mean: at commit N, half the skills use the old form and half the new form. Any audit run during that window sees a mixed catalog — FM-116 fires on half the skills, the migrate script's idempotency check sees a mixed state — and the operator can't tell whether the migration is "done". One atomic commit removes the ambiguity.
 
@@ -338,7 +346,7 @@ esac
 3. **Empty marker rejected** — fixture with `wrap_in_marker: ""` → `Err`.
 4. **Unregistered marker rejected** — fixture with `wrap_in_marker: "untrusted_pii_redacted"` (not in v1 enum) → `Err(InvalidFrontmatter)`.
 5. **Legacy `wrap_in: <untrusted_content/>` rejected** — old-form fixture → `Err(FrontmatterError::DeprecatedXmlField)` with structured message pointing at the rename.
-6. **FM-115 fires on any XML bracket in any frontmatter field** — fixture with `description: "Generate <FR> backlogs"` → audit reports one FM-115 issue (severity error, status needs_human). (Cross-validates with TASK-SKILL-111's bracket check.)
+6. **FM-115 fires on any XML bracket in any frontmatter field** — fixture with `description: "Generate <task> backlogs"` → audit reports one FM-115 issue (severity error, status needs_human). (Cross-validates with TASK-SKILL-111's bracket check.)
 7. **FM-116 fires on legacy wrap_in form** — fixture using `wrap_in: <untrusted_content/>` → audit reports one FM-116 issue with `sub_code: wrap_in_legacy_form`; `auto_fix_applied: true` after auto-fix runs.
 8. **FM-116 auto-fix is correct** — running the auditor on a legacy-form fixture with auto-fix enabled produces a sibling SKILL.md with the renamed field, byte-identical to a hand-migrated reference.
 9. **migrate.sh --dry-run lists files** — running on a fixture catalog with 5 legacy SKILL.mds → script prints 5 paths to stdout, exits 0.
@@ -379,7 +387,7 @@ wrap_in_marker: "untrusted_content"
 fn xml_bracket_in_other_field_rejected() {
     let yaml = r#"
 name: foo-author
-description: "Generate <FR> backlogs"
+description: "Generate <task> backlogs"
 wrap_in_marker: "untrusted_content"
 "#;
     let err = marker_validator::validate(yaml, &MarkerName::UntrustedContent).unwrap_err();
@@ -473,13 +481,13 @@ acceptance/regression-2026-05-19-fm116-legacy-wrap-in/
 **Depends on:**
 - **TASK-SKILL-103** (frontmatter-extension) — provides the broker, schema.rs, validator framework, CLI, JSONSchema mirror.
 
-**Blocks:** none directly. (TASK-SKILL-111 + TASK-SKILL-112 are independent; this FR doesn't block them.)
+**Blocks:** none directly. (TASK-SKILL-111 + TASK-SKILL-112 are independent; this task doesn't block them.)
 
 **Related:**
 - **TASK-SKILL-111** (description trigger enrichment) — TASK-SKILL-111's §1 #4 has its own "no XML brackets in description" check; TASK-SKILL-113's FM-115 is the broader catch-all. They overlap defensively.
 - **TASK-SKILL-112** (TRIGGER_TESTS.md) — orthogonal; doesn't touch frontmatter format.
 - **TASK-SKILL-114** (BASELINE.md at promotion) — orthogonal; new artefact convention, no frontmatter change.
-- **TASK-SKILL-117+** (future markers — placeholder, not yet specified) — namespace expansion FRs that add new MarkerName variants.
+- **TASK-SKILL-117+** (future markers — placeholder, not yet specified) — namespace expansion tasks that add new MarkerName variants.
 
 ## §8 — Example payloads
 
@@ -527,9 +535,9 @@ rule_id:         FM-115
 severity:        error
 category:        xml_bracket_in_frontmatter
 location:        frontmatter line 5 — description field
-evidence:        "description: \"Generate <FR> backlogs from PRDs\""
+evidence:        "description: \"Generate <task> backlogs from PRDs\""
 description:     "Frontmatter description field contains `<` and `>` brackets. Per TASK-SKILL-113 §1 #5 (FM-115), no frontmatter value may contain unescaped XML brackets (system-prompt injection vector — Anthropic Reference B p. 31)."
-suggestion:      "Rewrite description without brackets: 'Generate FR backlogs from PRDs'."
+suggestion:      "Rewrite description without brackets: 'Generate task backlogs from PRDs'."
 auto_fix_applied: false
 resolution:      null
 opened_at:       "2026-05-19T15:01:00Z"
@@ -557,7 +565,7 @@ PASS — sweep verified.
 
 **All resolved during authoring.**
 
-Deferred to follow-up FRs:
+Deferred to follow-up tasks:
 - **TASK-SKILL-117** (placeholder — not yet specified): expand the marker namespace. Candidate values: `"untrusted_content_strict"` for partner-connector skills with elevated trust requirements; `"untrusted_pii_redacted"` for HR/finance skills where the body wrapper is augmented with PII redaction. Phase P2+.
 
 ## §10 — Failure modes inventory
@@ -584,7 +592,7 @@ Deferred to follow-up FRs:
 
 - **The body XML form is the actual runtime wrapper; the frontmatter field is a declaration.** This is the load-bearing distinction that makes the rename safe. The wrap happens at runtime when a skill reads bytes from an external source — the body emits `<untrusted_content source="...">…</untrusted_content>` *into the markdown body* before the LLM reasons. The frontmatter `wrap_in_marker:` field tells the runtime/auditor/scanner which marker name to look for; it doesn't itself wrap anything. Conflating the two is the most common authoring mistake; the references/UNTRUSTED_CONTENT.md update is designed to surface the distinction at edit time.
 - **Why MarkerName as a frozen Rust enum?** Editor + CI gates need to know what's valid. A free-string field would accept `wrap_in_marker: "Untrusted_Content"` (capital-U typo); the enum's serde_yaml mapping rejects it. Adding new markers means a PR + a new enum variant + a schema update + a per-skill audit decision — high-friction-by-design.
-- **Why one canonical marker in v1?** Foundation discipline. Shipping with one marker forces every author to think about *which* marker they need before adding new variants. Premature multi-marker namespace dilutes the security boundary — the "untrusted_content" wrapper is the strongest single discipline; carve-outs come with explicit FRs.
+- **Why one canonical marker in v1?** Foundation discipline. Shipping with one marker forces every author to think about *which* marker they need before adding new variants. Premature multi-marker namespace dilutes the security boundary — the "untrusted_content" wrapper is the strongest single discipline; carve-outs come with explicit tasks.
 - **Why an atomic sweep commit?** A half-migrated catalog leaves the audit-fix-audit discipline in an undefined state — FM-116 fires on half the skills, the auditor's classifier verdict is ambiguous ("are we mid-migration or in steady-state?"), and operators can't tell whether to debug a skill or wait for the sweep to complete. Atomic commit removes the ambiguity. Operators can review the full sweep in one diff.
 - **Why migrate.sh as a bash script and not a Rust binary?** Operational simplicity. The script runs on any developer's machine without compile setup; perl + grep + find are POSIX. Rust binary would require `cargo install` + `wasm32-wasi target` (per the toolchain). Bash is the right tool for a one-shot mechanical sweep.
 - **Why FM-115 has no draft exemption?** XML brackets in frontmatter are a security boundary (per Anthropic Reference B p. 31). Draft skills are still loaded into the supervisor's context at classify_act time; an injection-vector frontmatter field is exploitable even at draft status. Severity stays error throughout.
@@ -592,7 +600,7 @@ Deferred to follow-up FRs:
 - **References docs (UNTRUSTED_CONTENT.md) update is small — one paragraph.** The bulk of the doc is body XML examples; those remain verbatim. The opening paragraph adds: "**Frontmatter declares the marker name as a string** (`wrap_in_marker: \"untrusted_content\"`). **Body wraps untrusted bytes in the corresponding XML tags** (`<untrusted_content source=\"...\">…</untrusted_content>`). Two layers, one marker name — by convention they match."
 - **Version bump rationale.** Registry v0.2.4 → v0.2.5 is MINOR per DEC-182. Field renames are MINOR-compatible because consumers can fail fast on the old form (FM-116 catches; broker rejects); MAJOR is reserved for changes consumers can't detect. The version bump goes into the repo-root CHANGELOG.md `[SKILL]` section.
 - **Foundation-stage rationale (operator decision recorded).** Option A vs Option B (from the findings doc §6.3): operator picked option A. Rationale: at foundation stage, having an explicit declaration field (with frozen v1 namespace + room for v2+) is cheaper than dropping the field and re-adding it later. The wider namespace + explicit declaration is the right shape for a multi-tenant / multi-marker future. Option B's "just rely on the parallel `untrusted_content_wrapping: required` field" was viable but lost the marker name semantic.
-- **Cross-FR coupling note.** TASK-SKILL-111's §1 #4 has its own bracket check on the description field; TASK-SKILL-113's FM-115 is the broader catch-all on every frontmatter field. The two rules overlap defensively — a description with brackets fires both. That's intentional: 111 is the description-specific UX rule (better error message); 113 is the catalogue-wide security rule.
+- **Cross-task coupling note.** TASK-SKILL-111's §1 #4 has its own bracket check on the description field; TASK-SKILL-113's FM-115 is the broader catch-all on every frontmatter field. The two rules overlap defensively — a description with brackets fires both. That's intentional: 111 is the description-specific UX rule (better error message); 113 is the catalogue-wide security rule.
 
 ---
 

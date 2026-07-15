@@ -1,10 +1,10 @@
 # MCP module — task index
 
-_Generated 2026-05-17 — 8 FRs, 56 engineering-hours total._
+_Generated 2026-05-17 — 8 tasks, 56 engineering-hours total._
 
-## FRs
+## tasks
 
-| FR | Priority | Slice | Hours | Title |
+| Task | Priority | Slice | Hours | Title |
 |---|---|---|---:|---|
 | [TASK-MCP-001](TASK-MCP-001-spec-compliance/spec.md) | MUST | 4 | 12 | MCP Gateway 2025-11-25 spec compliance — initialize + tools/list + tools/call + capabilities negotia |
 | [TASK-MCP-002](TASK-MCP-002-server-heartbeat-lifecycle/spec.md) | MUST | 2 | 6 | MCP per-module server registration + heartbeat lifecycle — 3-miss → unhealthy with automatic skill_u |

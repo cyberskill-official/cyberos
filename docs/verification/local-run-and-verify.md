@@ -7,7 +7,7 @@ is the local-dev loop, not the VPS go-live (that is `docs/deploy/cyberos-core-de
 ## How CyberOS "does work" (read these two first)
 
 - `modules/cuo/chief-technology-officer/workflows/ship-tasks.md` - the ~30-step author/audit
-  chain that drives one FR from `ready_to_implement` to `done`. The last gates are step 28 `awh-gate`
+  chain that drives one task from `ready_to_implement` to `done`. The last gates are step 28 `awh-gate`
   (rerun the tests) and step 28.5 `caf-gate` (rerun the target's own build/lint/test + audit). The
   `testing -> done` flip requires `awh GREEN AND caf CLEAN`.
 - `website/docs/architecture/verification-gate.html` - why the gate exists (separate the grader from

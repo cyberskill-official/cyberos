@@ -86,7 +86,7 @@ async fn main() -> ExitCode {
         // from generic failure so CI scripts can detect rerun-after-success.
         // Maps to the shared enum's `PreconditionFailed` (code 6) — the
         // "no root-admin already exists" precondition is what's violated.
-        // FR spec §1 #12 mentions a future AUTH-200-range variant for this;
+        // task spec §1 #12 mentions a future AUTH-200-range variant for this;
         // tracked in §10.7 of the audit as a follow-up to the
         // cyberos-cli-exit shared enum.
         Err(BootstrapError::AlreadyInitialised) => {

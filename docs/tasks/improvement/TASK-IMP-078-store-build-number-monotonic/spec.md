@@ -1,10 +1,17 @@
 ---
 id: TASK-IMP-078
 title: "Store build-number monotonicity — release-time floor decouples re-tags from BUILD_NUMBER bumps (Play versionCode 10706 collision)"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: improvement
+created_at: 2026-07-13T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: improvement
-priority: MUST
+priority: p0
 status: done
-class: improvement
 verify: T
 phase: "Wave 6 - go-live (Track B: mobile shells)"
 owner: Stephen Cheng (CTO)
@@ -38,7 +45,7 @@ risk_if_skipped: "Every re-tag of a pinned version re-offers a consumed build nu
 ## §1
 1. `stamp-release-version.mjs` **MUST** accept `--store-monotonic`: effective build number = `max(BUILD_NUMBER, floor(now/60s))`. Without the flag, behavior is byte-identical to today (committed baseline, `--check` drift detection, version.yml bump commits all unchanged).
 2. `release.yml`'s android and iOS stamp steps **MUST** pass the flag; no other call site does. The high-water-mark guard keeps validating the FILE value (the committed floor), and the effective value can only be >= it.
-3. `BUILD_NUMBER` keeps its existing role and is NOT bumped here: one mechanism owns re-tag safety (the wall-clock floor), one owns the committed baseline (version bumps). A second incrementer was considered and rejected - it re-introduces the operator-memory dependency this FR removes.
+3. `BUILD_NUMBER` keeps its existing role and is NOT bumped here: one mechanism owns re-tag safety (the wall-clock floor), one owns the committed baseline (version bumps). A second incrementer was considered and rejected - it re-introduces the operator-memory dependency this task removes.
 4. Wall-clock minutes, not commit timestamps: a re-tag of the SAME commit must still get a fresh number (commit-time would collide; run-time cannot). ~29.7M in 2026 vs Play's 2100000000 cap - headroom measured in millennia.
 
 *Lean profile: one flag + two step args; defect, fix, and both-mode behavior machine-verified in-session; store acceptance proven by the next tag run.*

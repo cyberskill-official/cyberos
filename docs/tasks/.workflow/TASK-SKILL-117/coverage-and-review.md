@@ -10,7 +10,7 @@ verdicts: coverage pass; code review pass - human verdict pending at HITL gate 1
 ---
 # Coverage gate + code review packet - TASK-SKILL-117
 
-## Verification method (contract work - acceptance-driven per FR §5)
+## Verification method (contract work - acceptance-driven per task §5)
 Both TRIGGER_TESTS.md files open with an executable pair-verification preamble; every
 line was run green: artefact id grammar + timebox HALT + evidence rule declared on the
 author side (AC 1, 3, 4); SPK-STRUCT/EVID/BOX/DISC families + the 10/10 bar on the
@@ -33,7 +33,7 @@ mod: modules/skill/architecture-decision-record-author/SKILL.md (spike input + l
   Scope contract / Inputs-outputs / Triggers-blockers blocks, verified against
   debugging-cycle-author and implementation-plan-author).
 - Descriptions 793 and 747 chars - under the 1024 host limit (TASK-SKILL-111 lineage).
-- NOT vendored: build.sh untouched per FR §11 (TASK-CUO-209 owns the expansion); fresh
+- NOT vendored: build.sh untouched per task §11 (TASK-CUO-209 owns the expansion); fresh
   build + chain-coverage stays green (24 referenced, 22 vendored, 2 allowlisted).
 - ADR-author still carries the dead SDP anchor - deliberately untouched here; that is
   TASK-SKILL-119's sweep.

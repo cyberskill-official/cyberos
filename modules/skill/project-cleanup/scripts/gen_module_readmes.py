@@ -2,7 +2,7 @@
 """Phase 4 (cyberos) — Regenerate per-module README index files.
 
 For each docs/tasks/<module>/ folder, write a fresh README.md with:
-- FR table (id, priority, slice, hours, title)
+- Task table (id, priority, slice, hours, title)
 - Cross-module dep summary (depends on / depended on by)
 
 Usage:
@@ -47,17 +47,17 @@ def main():
         return
 
     tasks = {}
-    for path in sorted(glob.glob(f"{fr_root}/**/FR-*.md", recursive=True)):
+    for path in sorted(glob.glob(f"{fr_root}/**/TASK-*.md", recursive=True)):
         if path.endswith(".audit.md"):
             continue
         fm = parse_fm(path)
         if not fm or "id" not in fm:
             continue
         fm["_path"] = path
-        frs[fm["id"]] = fm
+        tasks[fm["id"]] = fm
 
     by_folder = defaultdict(list)
-    for fr in frs.values():
+    for fr in tasks.values():
         by_folder[os.path.dirname(fr["_path"])].append(fr)
 
     for folder, fr_list in sorted(by_folder.items()):
@@ -69,11 +69,11 @@ def main():
         from datetime import date
         out.append(f"# {module_name} module — task index")
         out.append("")
-        out.append(f"_Generated {date.today().isoformat()} — {len(fr_list_sorted)} FRs, {total_hours:.0f} engineering-hours total._")
+        out.append(f"_Generated {date.today().isoformat()} — {len(fr_list_sorted)} tasks, {total_hours:.0f} engineering-hours total._")
         out.append("")
-        out.append("## FRs")
+        out.append("## tasks")
         out.append("")
-        out.append("| FR | Priority | Slice | Hours | Title |")
+        out.append("| Task | Priority | Slice | Hours | Title |")
         out.append("|---|---|---|---:|---|")
         for fr in fr_list_sorted:
             task_id = fr["id"]
@@ -91,10 +91,10 @@ def main():
         deps_out = defaultdict(list)
         for fr in fr_list_sorted:
             for dep in fr.get("depends_on", []):
-                if dep in frs and dep not in own_ids:
-                    dep_module = os.path.basename(os.path.dirname(frs[dep]["_path"])).upper()
+                if dep in tasks and dep not in own_ids:
+                    dep_module = os.path.basename(os.path.dirname(tasks[dep]["_path"])).upper()
                     deps_in[dep_module].append((fr["id"], dep))
-        for task_id, fr in frs.items():
+        for task_id, fr in tasks.items():
             if task_id in own_ids:
                 continue
             for dep in fr.get("depends_on", []):
@@ -116,7 +116,7 @@ def main():
 
         with open(os.path.join(folder, "README.md"), "w") as f:
             f.write("\n".join(out))
-        print(f"Wrote {folder}/README.md ({len(fr_list_sorted)} FRs, {total_hours:.0f}h)")
+        print(f"Wrote {folder}/README.md ({len(fr_list_sorted)} tasks, {total_hours:.0f}h)")
 
 
 if __name__ == "__main__":

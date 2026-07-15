@@ -1,8 +1,16 @@
 ---
 id: TASK-MEMORY-119
 title: "memory session transcript ledger — opt-in `cyberos session {start,append,end}` writes turn-level transcript rows under sessions/<date>/<id>.binlog.zst; default classification=confidential; configurable retention; feeds TASK-MEMORY-115 dream"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-19T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: memory
-priority: SHOULD
+priority: p1
 status: done
 verify: T
 phase: P1
@@ -45,7 +53,7 @@ allowed_tools:
   - bash: cd modules/memory && python -m cyberos session start --id smoke-test && python -m cyberos session append --id smoke-test --role user --content "hello" && python -m cyberos session end --id smoke-test
 disallowed_tools:
   - emit session.turn rows without a preceding session.start for that id (per §1 #6 — walker rejects)
-  - write session bodies in plaintext when classification: restricted is configured (per FR §5.4 + §1 #4)
+  - write session bodies in plaintext when classification: restricted is configured (per task §5.4 + §1 #4)
   - mutate AGENTS.md §18 without APPROVE protocol change P22 §18 chat-turn
 
 effort_hours: 24
@@ -55,7 +63,7 @@ subtasks:
   - "1.0h: memory.invariants.yaml — `session-lifecycle-well-formed` (error: every session.start matched by zero-or-one session.end; turn_seq monotone increasing per session) + `session-classification-valid` (error: enum)"
   - "3.0h: cyberos/core/session.py — `Session` dataclass + `start(writer, id, classification, retention_days)`, `append(writer, id, role, content)`, `end(writer, id, reason?)`; storage at `<root>/sessions/<YYYY-MM-DD>/<id>.binlog.zst`; turn rows compressed with zstd"
   - "2.0h: cyberos/cli/session.py — full subcommand surface (start, append, end, read, list, purge-expired)"
-  - "1.5h: writer.py — session-aware emit path; reuse FR §3 atomic-write + §4 lock; sessions chain INDEPENDENTLY from the main audit chain (own binlog segment) but emit summary rows (session.start, session.end) onto the main chain for TASK-MEMORY-115 dream consumption"
+  - "1.5h: writer.py — session-aware emit path; reuse task §3 atomic-write + §4 lock; sessions chain INDEPENDENTLY from the main audit chain (own binlog segment) but emit summary rows (session.start, session.end) onto the main chain for TASK-MEMORY-115 dream consumption"
   - "1.5h: encryption integration — when classification: restricted, body of each turn is encrypted per §5.4 envelope before storage; meta sidecar plaintext per §5.4"
   - "2.0h: purge job — `cyberos session purge-expired` scans manifest retention_days and purges expired sessions with `delete(purge)` semantics on the chain"
   - "3.0h: modules/memory/tests/core/test_transcript.py — 18 cases (full lifecycle, append-without-start rejected, out-of-order rejected, dual-end rejected, encryption when restricted, read round-trip, list-by-date, classification override per-call)"
@@ -574,7 +582,7 @@ API contracts above. Order:
 ## §7 — Dependencies
 
 - **TASK-MEMORY-111 (related)** — PII detector invoked on `--redactions-applied true`.
-- **TASK-MEMORY-115 (this FR blocks)** — dream's patterns detector consumes `session.start` / `session.end` rows + (optionally) decrypts session bodies for finer-grained pattern detection.
+- **TASK-MEMORY-115 (this task blocks)** — dream's patterns detector consumes `session.start` / `session.end` rows + (optionally) decrypts session bodies for finer-grained pattern detection.
 - **TASK-MEMORY-117 (related)** — ACL on `sessions/` subtree controls who can start/append/end sessions.
 - **TASK-MEMORY-109 (related)** — Claude Code hook can call `cyberos session append` to record real conversation turns; the hook can pre-redact via TASK-MEMORY-111 then set `redactions_applied: true`.
 

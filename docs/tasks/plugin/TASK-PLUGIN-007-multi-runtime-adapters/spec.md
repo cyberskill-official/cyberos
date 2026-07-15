@@ -1,8 +1,16 @@
 ---
 id: TASK-PLUGIN-007
 title: "Multi-runtime adapters — cyberos-plugin pack --target {claude-code,cursor,cowork,codex-cli} emitters; deferred targets in P2"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-19T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: PLUGIN
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P1
@@ -21,7 +29,7 @@ source_pages:
   - modules/plugin/INTEROP.md target runtimes matrix
 
 source_decisions:
-  - DEC-2460 2026-05-19 — Four P1 targets ship in v1: claude-code, cursor, cowork, codex-cli. P2 targets (goose, amp, continue-dev) deferred to successor FR
+  - DEC-2460 2026-05-19 — Four P1 targets ship in v1: claude-code, cursor, cowork, codex-cli. P2 targets (goose, amp, continue-dev) deferred to successor task
   - DEC-2461 2026-05-19 — Each adapter is its own Rust module at services/plugin-host/src/adapters/<target>/ exposing a single pack(canonical_manifest, out_dir) -> Bundle function
   - DEC-2462 2026-05-19 — Adapters MUST consume the SAME canonical manifest from modules/plugin/manifests/ — no per-target manifest files; differences expressed at adapter pack time only
   - DEC-2463 2026-05-19 — Adapter outputs are reproducible per TASK-PLUGIN-001 clause 10 — same canonical manifest → same target bundle hash for a given target
@@ -456,7 +464,7 @@ Authenticate once via `cyberos-plugin auth login` (browser-based OAuth-PKCE).
 All resolved.
 
 - ~~Should the adapter chain produce a single multi-target bundle (one zip with all targets)?~~ → No, one bundle per target per clause 1. Multi-target zip complicates install and signature verification.
-- ~~Should we ship adapter for VS Code's MCP integration?~~ → VS Code uses Continue.dev for MCP; deferred to P2 successor FR.
+- ~~Should we ship adapter for VS Code's MCP integration?~~ → VS Code uses Continue.dev for MCP; deferred to P2 successor task.
 - ~~Should the codex-cli adapter convert each command into a separate skill (1:1)?~~ → Yes for now (per clause 8); revisit when Codex CLI's command surface ships.
 
 ---
@@ -466,7 +474,7 @@ All resolved.
 | Failure | Detection | Outcome | Recovery |
 |---|---|---|---|
 | Unknown target name | adapter selector | UnknownTarget error | Author uses one of 4 P1 targets |
-| Deferred target name | adapter selector | DeferredTarget error | Wait for P2 successor FR or contribute |
+| Deferred target name | adapter selector | DeferredTarget error | Wait for P2 successor task or contribute |
 | Target not in manifest.targets[] | pack-time cross-check | error: "manifest doesn't include target" | Author updates manifest |
 | Bridge binary not found for target arch | filesystem check | error: "binary for x86_64-linux-musl not in CDN cache" | Run pre-fetch step OR fall back to download-at-pack-time |
 | Reproducibility broken | adapter test | CI fails | Investigate which adapter helper leaks state |
@@ -489,7 +497,7 @@ All resolved.
 
 - §11.2 **Binary selection.** Adapters that bundle binary use a `bin_cache` directory pre-populated by CI from CDN URLs `https://cdn.cyberskill.world/binaries/cyberos-mcp-bridge/{version}/{target}`. Pack failure if any required arch missing.
 
-- §11.3 **CDN binary cache.** CI build job uploads built binaries to CDN at every release. Adapter downloads on demand if cache miss. SHA-256 of binary is pinned in canonical manifest's `binary_pins` map (added in FR-PLUGIN-007a if needed).
+- §11.3 **CDN binary cache.** CI build job uploads built binaries to CDN at every release. Adapter downloads on demand if cache miss. SHA-256 of binary is pinned in canonical manifest's `binary_pins` map (added in task-PLUGIN-007a if needed).
 
 - §11.4 **Claude Code bundle.** `.plugin` files are zips per Anthropic Claude Code spec. Bundle root has `plugin.json`. Nested `.claude/commands/` and `.claude/skills/` are read by Claude Code at install.
 
@@ -503,7 +511,7 @@ All resolved.
 
 - §11.9 **Multi-arch single bundle.** Cursor + Cowork + Codex bundles include 3 binaries (Linux x86_64, macOS arm64, Windows x86_64) by default. Adapter has a `--arch` flag to ship single-arch bundles for size-sensitive distribution. Default is multi-arch.
 
-- §11.10 **Why no goose / amp / continue-dev in v1.** Each adds ~200 LoC + tests + format learning cost. Validating the 4-adapter pattern in v1 lets us evolve confidently. Successor FR (FR-PLUGIN-007a) covers P2 targets.
+- §11.10 **Why no goose / amp / continue-dev in v1.** Each adds ~200 LoC + tests + format learning cost. Validating the 4-adapter pattern in v1 lets us evolve confidently. Successor task (task-PLUGIN-007a) covers P2 targets.
 
 ---
 

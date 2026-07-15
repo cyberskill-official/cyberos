@@ -1,4 +1,4 @@
-# TASK-CUO-206 phase bundle (condensed per-FR ship artefacts)
+# TASK-CUO-206 phase bundle (condensed per-task ship artefacts)
 
 ## repo-context-map (step 1)
 Patterns followed: contract docs live at modules/skill/contracts/task/ (STATUS-REFERENCE,
@@ -15,7 +15,7 @@ NULL/EMPTY: manifest missing on resume -> fresh run (contract Lifecycle; trivial
 BOUNDS: step index 0/32 rejected (test_schema... bad2); current_step 1..31 enum (validate).
 MALFORMED: missing root field -> validate error (test_schema); truncated JSON on disk -> resume treats
   as no manifest per contract (cache semantics, §10 #4).
-RACE: crash between artefact + manifest write -> step re-runs, idempotent (FR §10 #1; write_atomic
+RACE: crash between artefact + manifest write -> step re-runs, idempotent (task §10 #1; write_atomic
   leaves no .tmp - test_atomic asserts empty tmp listing).
 SECURITY: manifest hand-edited to skip a gate -> gates re-ask (test_hitl_reask_on_resume + doc clause
   "NOT be treated as approval"); fr_sha256 mismatch forces full redo (test_workflow_version_mismatch).
@@ -32,11 +32,11 @@ points, 4-rule resume, gate re-ask, terminal handling, queue algorithm; cross-re
 EXECUTION-DISCIPLINE.md (Run-state manifests section); plugin wrapper SKILL.md (resume-on-restart
 paragraph); init.sh (scaffolds .workflow/.gitignore).
 Field finding folded back: TASK-CUO-209's t08 was a point-in-time scope guard as permanent invariant -
-amended post-ship (FR §1 #8 + AC 8 + audit §11), t08 repurposed to workflows_vendored_intact.
+amended post-ship (task §1 #8 + AC 8 + audit §11), t08 repurposed to workflows_vendored_intact.
 
 ## observability (step 15)
 Operator-facing state transitions echo as greppable lines (contract-pinned): resume line
-`resume <FR-ID>: ...` and queue line `queue: picked <id> ...`. Error branches return structured
+`resume <task-ID>: ...` and queue line `queue: picked <id> ...`. Error branches return structured
 reasons (needs_human reason string carries both versions). No PII surface.
 
 ## code review vs §1 clauses (steps 16-18)

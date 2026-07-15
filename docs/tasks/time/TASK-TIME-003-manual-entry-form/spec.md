@@ -1,8 +1,16 @@
 ---
 id: TASK-TIME-003
 title: "TIME manual entry form — retroactive time logging with date validation + per-day total cap + TASK-TIME-007 VN Labour Code cap integration"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: TIME
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P1
@@ -71,7 +79,7 @@ subtasks:
   - "0.4h: handlers/manual_entry_routes.rs"
   - "0.5h: web/manual-entry-form.ts"
   - "1.5h: tests — 9 test files"
-  - "1.1h: integration smoke + cross-FR test with TASK-TIME-007"
+  - "1.1h: integration smoke + cross-task test with TASK-TIME-007"
 
 risk_if_skipped: "Without manual entry, Members can't log time they forgot to track via timer — lost billable revenue + audit incompleteness. Without DEC-1400 30-day default limit, fraudulent backdating risks (logging fake hours months later). Without DEC-1404 escalating approval tiers, no governance on suspicious old entries. Without DEC-1402 VN OT chain, manual entries become the cap-evasion path. Without DEC-1401 24h per-day cap, fat-finger errors (typed 80h instead of 8h) ship to invoices. The 6h effort covers the daily edge cases timer can't."
 ---

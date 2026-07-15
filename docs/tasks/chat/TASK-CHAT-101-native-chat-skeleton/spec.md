@@ -1,8 +1,16 @@
 ---
 id: TASK-CHAT-101
 title: "CyberOS-native chat - slice 1 (skeleton: channels, messages, live delivery, CyberOS-token auth)"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-06-29T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: CHAT
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P4
@@ -169,13 +177,13 @@ All HTTP routes require `Authorization: Bearer <CyberOS access token>`; tenant +
 
 ## §7 - Slice roadmap (native chat)
 
-1. **This FR** - skeleton: auth, channels, messages, live delivery, one tenant.
+1. **This task** - skeleton: auth, channels, messages, live delivery, one tenant.
 2. Threads and replies; channel membership and roles; message history paging and edits/deletes.
 3. Vietnamese search (the TASK-CHAT-004 goal, re-homed natively) and file attachments.
 4. Presence, typing, read receipts, mobile push.
 5. Voice and video; mobile clients. The heavy, later items.
 
-The web client lands alongside slice 1-2 inside the existing console app (its own FR under the APP module).
+The web client lands alongside slice 1-2 inside the existing console app (its own task under the APP module).
 
 ## §8 - Dependencies and what this retires
 

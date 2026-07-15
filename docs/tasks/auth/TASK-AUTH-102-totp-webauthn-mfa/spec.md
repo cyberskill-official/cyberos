@@ -1,8 +1,16 @@
 ---
 id: TASK-AUTH-102
 title: "AUTH TOTP (RFC 6238) + WebAuthn Level 3 MFA — closed factor enum + enrolment FSM + challenge/response + recovery codes + sev-1 lockout + memory audit per factor lifecycle event"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AUTH
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P3
@@ -35,8 +43,8 @@ source_decisions:
   - "DEC-491 (per-tenant MFA policy in tenant_policy YAML: `mfa_required_roles: [<role>...]` — when a subject's roles intersect this set, login requires MFA challenge; founder role always requires per TASK-AUTH-101 DEC-128)"
   - DEC-492 (recovery codes regeneration invalidates ALL prior codes — emit `auth.mfa_factor_enrolled` row with `factor_kind='recovery_codes_batch'`; never partial regeneration to avoid bookkeeping ambiguity)
   - DEC-493 (challenge response carries `factor_id` so verifier knows which credential to check against — prevents credential confusion attack)
-  - DEC-494 (WebAuthn attestation = `none` at slice 1 — `direct`/`indirect` attestation deferred to FR-AUTH-2xx; suitable for our risk model since we control the relying party + enforce user verification)
-  - DEC-495 (FIDO2 + Passkey conformance — the platform-authenticator path IS the passkey path; TASK-AUTH-105's passkey enrolment uses this FR's WebAuthn factor with `resident_key=preferred`)
+  - DEC-494 (WebAuthn attestation = `none` at slice 1 — `direct`/`indirect` attestation deferred to task-AUTH-2xx; suitable for our risk model since we control the relying party + enforce user verification)
+  - DEC-495 (FIDO2 + Passkey conformance — the platform-authenticator path IS the passkey path; TASK-AUTH-105's passkey enrolment uses this task's WebAuthn factor with `resident_key=preferred`)
   - NIST SP 800-63B (AAL2 for TOTP; AAL3 for WebAuthn cross-platform with attestation)
   - W3C WebAuthn Level 3 (2024); RFC 6238 TOTP; RFC 4226 HOTP
 
@@ -233,7 +241,7 @@ The AUTH service **MUST** ship TOTP (RFC 6238) + WebAuthn Level 3 MFA with close
 
 **Why WebAuthn user_verification=required (DEC-483, §1 #10)?** "Required" forces the authenticator to verify the user (biometric, PIN, etc.) before signing — provides "something you have AND something you are" rather than just "something you have". This is the AAL3 requirement.
 
-**Why attestation=none at slice 1 (DEC-494)?** Direct/indirect attestation lets us verify the authenticator manufacturer (e.g. "only YubiKeys allowed"). For our risk model — internal app + commercial tenants — none is acceptable. FR-AUTH-2xx adds direct attestation for high-security tenant tiers.
+**Why attestation=none at slice 1 (DEC-494)?** Direct/indirect attestation lets us verify the authenticator manufacturer (e.g. "only YubiKeys allowed"). For our risk model — internal app + commercial tenants — none is acceptable. Task-AUTH-2xx adds direct attestation for high-security tenant tiers.
 
 **Why counter-monotonicity check (DEC-490, §1 #10)?** WebAuthn authenticators increment a signature counter per use. Two authenticators sharing the same private key (cloned) will produce non-monotonic counters across calls — we detect + revoke. This is the W3C-defined cloned-authenticator defense.
 
@@ -892,10 +900,10 @@ async fn regen_invalidates_all_prior(ctx: TestCtx) {
 ## §7 — Dependencies
 
 **Upstream:**
-- **TASK-AUTH-002** — subject creation; this FR's factor rows reference auth.subjects.
+- **TASK-AUTH-002** — subject creation; this task's factor rows reference auth.subjects.
 
 **Downstream (1 placeholder):**
-- **TASK-AUTH-105** — passkey enrolment + login (uses this FR's WebAuthn `resident_key=preferred` foundation).
+- **TASK-AUTH-105** — passkey enrolment + login (uses this task's WebAuthn `resident_key=preferred` foundation).
 
 **Cross-module:**
 - **TASK-AUTH-004** — JWT issuer consults MFA policy before issuing.
@@ -974,11 +982,11 @@ Response:
 ## §9 — Open questions
 
 Deferred:
-- **WebAuthn direct attestation for high-security tenants** — FR-AUTH-2xx.
+- **WebAuthn direct attestation for high-security tenants** — task-AUTH-2xx.
 - **SMS / email OTP factor** — out of scope (phishable); ADR required.
 - **Biometric without WebAuthn** — out of scope.
 - **Per-tenant lockout policy override** — slice 2.
-- **MFA recovery via verified email link** — FR-AUTH-2xx.
+- **MFA recovery via verified email link** — task-AUTH-2xx.
 
 All other questions resolved.
 

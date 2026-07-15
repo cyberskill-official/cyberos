@@ -7,7 +7,7 @@ reachable without signing in. A promise on that page that this runbook cannot ex
 compliance failure, so the two move together: **if the data model changes, change both.**
 
 Deletion is currently manual and operator-run. Automating it (a self-serve request endpoint plus a
-scheduled purge job) is worth an FR; until that lands, this is the path.
+scheduled purge job) is worth a task; until that lands, this is the path.
 
 ## Scope
 

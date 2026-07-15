@@ -128,7 +128,7 @@ def summarize(results: dict[str, ScanResult], status_filter: str | None = None) 
     """Produce a human-readable summary of run_all() results.
 
     `status_filter` (optional): if provided, only count skills at that frontmatter
-    status. (Not yet wired — placeholder for future status-based gating per FR-115 §1 #11.)
+    status. (Not yet wired — placeholder for future status-based gating per TASK-115 §1 #11.)
     """
     total = len(results)
     exempt = sum(1 for r in results.values() if r.exempt)

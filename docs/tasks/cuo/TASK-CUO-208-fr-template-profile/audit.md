@@ -21,7 +21,7 @@ Audited for detection soundness (a file must be judgeable by its own bytes) and 
 A file with a template: key AND §-sections matched both profiles. Resolved: §1 #4 needs_human on both-or-neither, AC 5 fixture.
 
 ### ISS-002 plugin command contradicted the author skill
-The command doc asserts task@1 while §12 authors engineering-spec@1 - the exact ambiguity this FR exists to kill, present in its own deliverable. Resolved: §1 #5 rewrites the wording to the resolution chain; AC 6 includes the negative grep.
+The command doc asserts task@1 while §12 authors engineering-spec@1 - the exact ambiguity this task exists to kill, present in its own deliverable. Resolved: §1 #5 rewrites the wording to the resolution chain; AC 6 includes the negative grep.
 
 ### ISS-003 mixed repos forced a single template
 Repo-level config alone would misjudge the minority template's files. Resolved: §1 #6 per-file detection regardless of default, AC 7 two-template batch fixture.

@@ -1,10 +1,17 @@
 ---
 id: TASK-AUTH-111
 title: "SSO JIT provisioning must take the person's name from the ID token, not their email address"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-07-11T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AUTH
-priority: SHOULD
+priority: p1
 status: done
-class: product
 verify: T
 phase: P0
 milestone: P0 - store compliance (UGC controls)
@@ -49,7 +56,7 @@ risk_if_skipped: "Every person provisioned through Google SSO wears their email 
 
 1. The OIDC callback **MUST** parse the person's name from the verified ID token, using the standard OpenID Connect claims: `name`, and failing that `given_name` + `family_name`, and failing that `preferred_username`.
 
-2. At JIT provisioning the service **MUST** bind `subjects.display_name` from that resolution chain, falling back in order to: the ID token's `name`; `given_name family_name` joined; `preferred_username`; the local-part of the email; and only then the full email address. It **MUST NOT** bind `display_name` directly from the email, which is what it does today (`oidc.rs` binds `idp_email.unwrap_or("")` into the `display_name` column - the bug this FR exists to remove).
+2. At JIT provisioning the service **MUST** bind `subjects.display_name` from that resolution chain, falling back in order to: the ID token's `name`; `given_name family_name` joined; `preferred_username`; the local-part of the email; and only then the full email address. It **MUST NOT** bind `display_name` directly from the email, which is what it does today (`oidc.rs` binds `idp_email.unwrap_or("")` into the `display_name` column - the bug this task exists to remove).
 
 3. The service **MUST NOT** invent, prettify, title-case, or otherwise transform a name it was given. If the IdP says the person is called `nguyenvana`, that is their name. Guessing at capitalisation or splitting on separators is how a product mangles Vietnamese names.
 
@@ -63,13 +70,13 @@ risk_if_skipped: "Every person provisioned through Google SSO wears their email 
 
 8. The resolution **MUST** be logged at `debug` with the *rung of the chain that matched*, never with the name itself. `tracing::debug!(rung = "given_name+family_name")` is a diagnostic; `tracing::debug!(?name)` puts personal data in the log stream, which the privacy policy says we do not do.
 
-9. No claim beyond those in §1 #1 **MAY** be persisted. In particular the `picture` claim **MUST NOT** be stored: the published privacy policy enumerates what we collect, and adding a field to `subjects` is a change to that enumeration, not an implementation detail. If we want avatars, that is a separate FR *and* a privacy-policy revision, in that order.
+9. No claim beyond those in §1 #1 **MAY** be persisted. In particular the `picture` claim **MUST NOT** be stored: the published privacy policy enumerates what we collect, and adding a field to `subjects` is a change to that enumeration, not an implementation detail. If we want avatars, that is a separate task *and* a privacy-policy revision, in that order.
 
 ## §2 - Why this design (rationale for humans)
 
 **Why this is a defect and not a cosmetic issue.** `oidc.rs` line ~965 binds the email into the `display_name` column. Every human provisioned by Google SSO therefore renders as `van-anh.vu@cyberskill.world` wherever a name belongs: in the channel list, above every message they have ever sent, in mentions, in the member picker, and in any screenshot or export. It reads as broken software. It also means the address is displayed in contexts where only a name was intended - a small but real leak, and one that has already forced a manual `UPDATE` against production to make a store screenshot presentable.
 
-**Why the code contradicts the published policy.** `cyberskill.world/en/cyberos/privacy` says, in terms: "When you sign in with Google we receive your name, your email address, and your Google account identifier." We do receive the name. We then drop it on the floor and store the email in its place. The policy is not wrong about what Google sends us; the code is wrong about what we do with it. Aligning them is the whole of this FR.
+**Why the code contradicts the published policy.** `cyberskill.world/en/cyberos/privacy` says, in terms: "When you sign in with Google we receive your name, your email address, and your Google account identifier." We do receive the name. We then drop it on the floor and store the email in its place. The policy is not wrong about what Google sends us; the code is wrong about what we do with it. Aligning them is the whole of this task.
 
 **Why the no-clobber rule (§1 #4) is a MUST and not a nicety.** The naive fix - always refresh `display_name` from the ID token on login - would work today and break the moment anything else can set a name. An administrator who fixes a colleague's name by hand, or a future profile editor, would watch their change silently revert on that person's next sign-in, with no error and no trace. Refreshing *only* the sentinel value (null, empty, or exactly the email) is the narrow rule that repairs the damage without acquiring the authority to undo a human's decision.
 
@@ -290,7 +297,7 @@ again in `saml.rs`.)
 
 - **Upstream:** none. `oidc.rs` already verifies the ID token before this code runs; we are reading claims from an already-verified token, not adding a trust boundary.
 - **Downstream:** TASK-CHAT-269's moderation queue renders reporter and reported names; it inherits the fix for free.
-- **Policy:** `cyberskill.world/en/cyberos/privacy` already declares that we receive the person's name. This FR makes the code match the declaration. Any *widening* of what we persist - `picture`, `locale`, `hd` - is a policy change first and a code change second (§1 #9).
+- **Policy:** `cyberskill.world/en/cyberos/privacy` already declares that we receive the person's name. This task makes the code match the declaration. Any *widening* of what we persist - `picture`, `locale`, `hd` - is a policy change first and a code change second (§1 #9).
 
 ## §8 - Example payloads
 
@@ -317,7 +324,7 @@ The subject row today (the bug):
   "email": "thai-anh.trinh@cyberskill.world" }
 ```
 
-The subject row after this FR:
+The subject row after this task:
 
 ```json
 { "handle": "@thai-anh.trinh",
@@ -329,9 +336,9 @@ The subject row after this FR:
 
 **Deferred:**
 
-- *Avatars.* The `picture` claim is right there and the product would look better for it. It is deliberately out of scope (§1 #9): persisting it widens the published Data Safety declaration, so it needs a privacy-policy revision and a Play Data Safety update before a line of code. Its own FR.
+- *Avatars.* The `picture` claim is right there and the product would look better for it. It is deliberately out of scope (§1 #9): persisting it widens the published Data Safety declaration, so it needs a privacy-policy revision and a Play Data Safety update before a line of code. Its own task.
 - *A profile editor.* Once people can set their own display name, §1 #4's no-clobber rule is what stops SSO from reverting it. The rule is written now precisely so the editor is additive later.
-- *Handle derivation.* `@oidc-<sub prefix>` for a subject with no email is unpleasant but out of scope here; this FR touches `display_name` only.
+- *Handle derivation.* `@oidc-<sub prefix>` for a subject with no email is unpleasant but out of scope here; this task touches `display_name` only.
 
 ## §10 - Failure modes inventory
 

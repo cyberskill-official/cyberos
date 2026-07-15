@@ -4,7 +4,7 @@ When CUO runs inside Claude Code, Cursor, Codex, or another host LLM
 environment, the BriefGenerator produces a self-contained markdown runbook
 that the host LLM follows using its own tools (Read/Write/Edit/Bash).
 
-CUO does the planning (FR resolution, chain validation, input resolution,
+CUO does the planning (task resolution, chain validation, input resolution,
 condition evaluation, SKILL.md reading). The host LLM does the execution
 (code writing, file creation, tests, backlog updates).
 
@@ -48,7 +48,7 @@ _APPLIER_INSTRUCTIONS: dict[str, str] = {
 1. Write the code review to `docs/tasks/{module}/code-review-{task_id}.md`
 2. Include YAML frontmatter with template, verdict, reviewed_at""",
     "task-audit": """After writing the output JSON, you MUST also:
-1. Write the audit report to `{fr_file_stem}.audit.md` (sibling to the FR spec)
+1. Write the audit report to `{fr_file_stem}.audit.md` (sibling to the task spec)
 2. Include YAML frontmatter with task_id, audited, auditor, verdict, audited_file_sha256""",
     "observability-injection-author": """After writing the output JSON, you MUST also:
 1. Write the observability plan to `docs/tasks/{module}/obs-injection-{task_id}.md`
@@ -231,7 +231,7 @@ class BriefGenerator:
         # 2. Detect project context
         project_ctx = _detect_project_context(self.project_root)
 
-        # 3. Determine start step from FR status
+        # 3. Determine start step from task status
         current_status = "ready_to_implement"
         start_step = 1
         cyberos_root = self.skill_root.parent.parent
@@ -256,7 +256,7 @@ class BriefGenerator:
             start_step = 21
 
         # 4. Build the brief
-        fr_body = hand_off.get("next_fr", "[FR content not available]")
+        fr_body = hand_off.get("next_fr", "[task content not available]")
         fr_file_path = hand_off.get("fr_file_path", "unknown")
 
         # Header
@@ -264,8 +264,8 @@ class BriefGenerator:
         parts.append("")
         parts.append(f"**Workflow:** `{self.workflow.workflow_id}`")
         parts.append(f"**Project:** `{self.project_root}`")
-        parts.append(f"**FR file:** `{fr_file_path}`")
-        parts.append(f"**FR status:** `{current_status}` → start at step {start_step}")
+        parts.append(f"**task file:** `{fr_file_path}`")
+        parts.append(f"**task status:** `{current_status}` → start at step {start_step}")
         parts.append(f"**Output dir:** `{self.output_dir}`")
         parts.append("")
 
@@ -332,7 +332,7 @@ class BriefGenerator:
 
             # Phase skipping
             if step_num < start_step:
-                parts.append(f"### Step {step_num}: {skill_name} — **SKIPPED** (FR already `{current_status}`)")
+                parts.append(f"### Step {step_num}: {skill_name} — **SKIPPED** (task already `{current_status}`)")
                 parts.append("")
                 continue
 
@@ -425,13 +425,13 @@ class BriefGenerator:
         # Completion
         parts.append("## 6. Completion")
         parts.append("")
-        parts.append("The FR must reach status `done` in BACKLOG.md.")
+        parts.append("The task must reach status `done` in BACKLOG.md.")
         parts.append("If any step fails, update BACKLOG.md status back to `ready_to_implement`")
         parts.append("and note the failure reason.")
         parts.append("")
         parts.append("Output files go in: `" + str(self.output_dir) + "/`")
         parts.append("Deliverable files (.audit.md, ADR, impl-plan, code-review, etc.)")
-        parts.append("go alongside their respective FR spec files in the project.")
+        parts.append("go alongside their respective task spec files in the project.")
         parts.append("")
 
         # Output format reference

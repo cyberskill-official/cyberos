@@ -2,7 +2,7 @@
 //! (policy loader, alias resolver, router/provider call) into a request handler.
 //!
 //! Until now the gateway shipped as a library plus the operator CLI: every module existed (alias, policy,
-//! redact, router, cost ledger, otel) but nothing bound them behind an HTTP endpoint, so several FRs that
+//! redact, router, cost ledger, otel) but nothing bound them behind an HTTP endpoint, so several tasks that
 //! say "before binding the HTTP server" referred to a listener that did not exist. This module is that
 //! listener. It is also the surface TASK-OBS-003 (RED middleware), TASK-OBS-004 (LangSmith export), and
 //! TASK-OBS-005 (TraceContext) attach to.

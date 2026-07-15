@@ -1,10 +1,10 @@
 # HR module — task index
 
-_Generated 2026-05-17 — 9 FRs, 52 engineering-hours total._
+_Generated 2026-05-17 — 9 tasks, 52 engineering-hours total._
 
-## FRs
+## tasks
 
-| FR | Priority | Slice | Hours | Title |
+| Task | Priority | Slice | Hours | Title |
 |---|---|---|---:|---|
 | [TASK-HR-001](TASK-HR-001-member-schema/spec.md) | MUST | 1 | 6 | HR Member schema — profile + role + level + contract type + leave balance + sabbatical accrual + sta |
 | [TASK-HR-002](TASK-HR-002-contract-types/spec.md) | MUST | 6 | 4 | HR 5 contract types — indefinite + fixed_term + probation + part_time + contractor with per-type lea |

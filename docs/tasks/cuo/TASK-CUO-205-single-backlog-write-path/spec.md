@@ -1,10 +1,17 @@
 ---
 id: TASK-CUO-205
 title: "Single backlog write path - /create-tasks delegates BACKLOG.md rows to backlog-state-update@2 (insert-row)"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: improvement
+created_at: 2026-07-12T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: cuo
-priority: MUST
+priority: p0
 status: done
-class: improvement
 verify: T
 phase: Wave C - strengthen the workflows
 owner: Stephen Cheng (CTO)
@@ -36,20 +43,20 @@ modified_files:
 
 ## §1 - Description
 
-BACKLOG.md is the index every workflow trusts, yet only one of its two writers is governed. This FR extends the backlog-state-update contract from status-cell rewrites to row insertion and routes /create-tasks through it, leaving exactly one audited write path to the file.
+BACKLOG.md is the index every workflow trusts, yet only one of its two writers is governed. This task extends the backlog-state-update contract from status-cell rewrites to row insertion and routes /create-tasks through it, leaving exactly one audited write path to the file.
 
 Normative clauses:
 
 1. The artefact MUST bump to `backlog-state-update@2` with a `mutation_kind` enum of exactly `{status-cell-only, insert-row}`. `@1` artefacts (implicitly status-cell-only) MUST remain valid inputs to the audit during a one-release transition window.
 2. `insert-row` payload MUST carry: `task_id`, `slug`, `title`, `class` (product|improvement), `status` (10-value enum), `module`, and `expected_absent: true`. Its concurrency gate is the inverse of `old_line`: the audit MUST verify no row for `task_id` existed in the pre-image and exactly one exists in the post-image.
-3. The inserted row MUST match the regenerator's format byte-for-byte: `- [<status>] <FR-ID-slug> - <title>` with the ` (improvement)` suffix when `class: improvement`, placed inside the module's `## <module>` section (section created per regen conventions when absent), rows kept in sorted order within the section.
-4. The audit rubric MUST gain insert-row rules: BSU-INS-001 (row absent before, present once after), BSU-INS-002 (format + suffix exact), BSU-INS-003 (placed in the correct module section, sort order kept), BSU-INS-004 (no other line of the file changed except that section's header counts when they are present), BSU-INS-005 (status is a valid enum value and equals the FR frontmatter status at write time).
-5. `plugin/commands/create-tasks.md` step 3 MUST instruct delegation to `backlog-state-update-author` + `-audit` (one insert-row mutation per FR, batched per module section allowed), and MUST NOT instruct inline editing of BACKLOG.md. The step MUST remind that FR frontmatter stays the record of truth and the backlog the index.
+3. The inserted row MUST match the regenerator's format byte-for-byte: `- [<status>] <task-ID-slug> - <title>` with the ` (improvement)` suffix when `class: improvement`, placed inside the module's `## <module>` section (section created per regen conventions when absent), rows kept in sorted order within the section.
+4. The audit rubric MUST gain insert-row rules: BSU-INS-001 (row absent before, present once after), BSU-INS-002 (format + suffix exact), BSU-INS-003 (placed in the correct module section, sort order kept), BSU-INS-004 (no other line of the file changed except that section's header counts when they are present), BSU-INS-005 (status is a valid enum value and equals the task frontmatter status at write time).
+5. `plugin/commands/create-tasks.md` step 3 MUST instruct delegation to `backlog-state-update-author` + `-audit` (one insert-row mutation per task, batched per module section allowed), and MUST NOT instruct inline editing of BACKLOG.md. The step MUST remind that task frontmatter stays the record of truth and the backlog the index.
 6. /ship-tasks behavior MUST be unchanged (status-cell-only remains its only mutation kind); `workflow_complete` audit-row semantics of the existing contract are untouched.
 
 ## §2 - Why this design
 
-Insert-row is the smallest extension that removes the ungoverned writer: same file, same optimistic-concurrency philosophy (uniqueness instead of byte-match), same audit discipline. Reusing the regenerator's row grammar means `migrate_improvement_to_fr.py --backlog` remains a drop-in rebuild at any time - the inserted rows are indistinguishable from regenerated ones, so the two mechanisms can coexist without churn.
+Insert-row is the smallest extension that removes the ungoverned writer: same file, same optimistic-concurrency philosophy (uniqueness instead of byte-match), same audit discipline. Reusing the regenerator's row grammar means `migrate_improvement_to_task.py --backlog` remains a drop-in rebuild at any time - the inserted rows are indistinguishable from regenerated ones, so the two mechanisms can coexist without churn.
 
 ## §3 - Contract
 
@@ -76,7 +83,7 @@ Audit verdict: pass | fail | needs_human, score /10, findings keyed BSU-INS-00x 
 3. **Row grammar is regenerator-identical** (§1 #3) - inserting a row then running the regenerator produces zero diff for that row (fixture asserts byte equality, both classes: with and without the improvement suffix).
 4. **Section handling** (§1 #3) - insert into an existing module section keeps sort order; insert for a module with no section creates the section per regen conventions (fixture covers both).
 5. **Whole-file discipline** (§1 #4) - a mutation that also touches an unrelated line fails BSU-INS-004.
-6. **Status honesty** (§1 #4 BSU-INS-005) - inserting a row whose status differs from the FR file's frontmatter fails audit.
+6. **Status honesty** (§1 #4 BSU-INS-005) - inserting a row whose status differs from the task file's frontmatter fails audit.
 7. **Command doc delegates** (§1 #5) - create-tasks.md step 3 names the pair and contains no inline-edit instruction (the current "done inline" wording is gone).
 8. **Ship path untouched** (§1 #6) - the ship workflow doc and the status-cell rules are diff-clean apart from the @2 version reference.
 
@@ -90,7 +97,7 @@ CASE-02 insert with improvement suffix                     -> pass          # AC
 CASE-03 duplicate task_id in pre-image                        -> fail BSU-INS-001   # AC 2
 CASE-04 new module section created, sorted                 -> pass          # AC 4
 CASE-05 stray edit to an unrelated line                    -> fail BSU-INS-004   # AC 5
-CASE-06 row status != FR frontmatter status                -> fail BSU-INS-005   # AC 6
+CASE-06 row status != task frontmatter status                -> fail BSU-INS-005   # AC 6
 CASE-07 @1 artefact (no mutation_kind)                     -> pass (transition note)  # AC 1
 CASE-08 regenerator round-trip byte equality               -> pass          # AC 3
 ```
@@ -103,7 +110,7 @@ Author SKILL.md: add the mutation_kind section, the insert payload table, and th
 
 ## §7 - Dependencies
 
-Sequencing preference (not a hard dep): TASK-SKILL-118 first, so RUBRIC.md exists as the place BSU-INS rules land; if this FR goes first, the rules land in SKILL.md prose and migrate. TASK-CUO-208 later threads template choice through the same command doc - independent sections, no conflict.
+Sequencing preference (not a hard dep): TASK-SKILL-118 first, so RUBRIC.md exists as the place BSU-INS rules land; if this task goes first, the rules land in SKILL.md prose and migrate. TASK-CUO-208 later threads template choice through the same command doc - independent sections, no conflict.
 
 ## §8 - Example payloads
 
@@ -127,6 +134,6 @@ None blocking. Batched inserts (one artefact carrying N rows for one module) are
 
 ## §11 - Implementation notes
 
-Keep the placement algorithm identical to `regen_backlog()` in scripts/migrate_improvement_to_fr.py (same sort key: row string ascending) - cite the function in the SKILL.md so future edits to either side know about the other.
+Keep the placement algorithm identical to `regen_backlog()` in scripts/migrate_improvement_to_task.py (same sort key: row string ascending) - cite the function in the SKILL.md so future edits to either side know about the other.
 
 *End of TASK-CUO-205.*

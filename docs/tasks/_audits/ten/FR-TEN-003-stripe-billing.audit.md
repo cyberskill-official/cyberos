@@ -35,11 +35,11 @@ AC #1 and the §5.1 test reference a trigger by name (`billing_currency_immutabl
 
 ### ISS-005 — `cyberos_pruner` role grant lacked lineage reference
 
-The §3.1 `GRANT DELETE ON stripe_api_calls TO cyberos_pruner;` referenced a role that this FR did not introduce. A reviewer would have to grep for where the role is defined. Resolved: §3.1 now carries an inline comment citing `cyberos_pruner` as the existing scheduled-job role from TASK-AUTH-003 §3.4, scoped to TTL pruning per DEC-807.
+The §3.1 `GRANT DELETE ON stripe_api_calls TO cyberos_pruner;` referenced a role that this task did not introduce. A reviewer would have to grep for where the role is defined. Resolved: §3.1 now carries an inline comment citing `cyberos_pruner` as the existing scheduled-job role from TASK-AUTH-003 §3.4, scoped to TTL pruning per DEC-807.
 
 ### ISS-006 — §9 carried `DEC-XXX TBD` placeholder
 
-The §9 deferred-items list had one item citing `DEC-XXX TBD` for real-time invoice preview, which violates the task-audit skill guidance that deferred items SHOULD list `Deferred:` prefix + concrete slice/phase reference. Resolved: §9 rewritten — all 9 deferred items now cite slice 3 + concrete FR-TEN-1xx or FR-TEN-2xx target (marked as `placeholder — not yet specified` where appropriate per task-audit skill rule 3).
+The §9 deferred-items list had one item citing `DEC-XXX TBD` for real-time invoice preview, which violates the task-audit skill guidance that deferred items SHOULD list `Deferred:` prefix + concrete slice/phase reference. Resolved: §9 rewritten — all 9 deferred items now cite slice 3 + concrete task-TEN-1xx or task-TEN-2xx target (marked as `placeholder — not yet specified` where appropriate per task-audit skill rule 3).
 
 ### ISS-007 — Overage axis Price IDs under-specified in §1 #5
 
@@ -65,7 +65,7 @@ The §9 deferred-items list had one item citing `DEC-XXX TBD` for real-time invo
 
 All 11 mechanical concerns addressed. Spec is now coherent (no dangling self-corrections), self-contained (no unresolved references to constructs defined outside the spec), and forensically defensive (triggers enforce DEC-805 + DEC-784 + DEC-798 at the schema level, not just at handler entry).
 
-The 1,054-line length sits just above the task-audit skill §3.14 "above 1,000 lines suggests prose padding" soft cap. Justification: the FR introduces 5 migrations, 11 audit-row kinds, 60 Stripe Price IDs per residency, dunning state machine, refund flow, NATS dispatcher, deploy-time CLI, and 20+ failure modes. Genuine surface complexity, not padding. The substantive density (clauses per line, failure modes per line, test coverage per line) is comparable to TASK-TEN-002 (peer FR with similar scope) at 740 lines — TEN-003's extra 300 lines come from the per-axis Stripe Item map, per-residency API routing, and 11 audit-row kinds vs TEN-002's 1.
+The 1,054-line length sits just above the task-audit skill §3.14 "above 1,000 lines suggests prose padding" soft cap. Justification: the task introduces 5 migrations, 11 audit-row kinds, 60 Stripe Price IDs per residency, dunning state machine, refund flow, NATS dispatcher, deploy-time CLI, and 20+ failure modes. Genuine surface complexity, not padding. The substantive density (clauses per line, failure modes per line, test coverage per line) is comparable to TASK-TEN-002 (peer task with similar scope) at 740 lines — TEN-003's extra 300 lines come from the per-axis Stripe Item map, per-residency API routing, and 11 audit-row kinds vs TEN-002's 1.
 
 **Score = 10/10.**
 

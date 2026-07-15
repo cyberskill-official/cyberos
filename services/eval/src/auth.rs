@@ -28,7 +28,7 @@ pub const ACK_RECORDER_ROLES: &[&str] = &[ROLE_FOUNDER, "tenant-admin", "chro", 
 
 /// Roles permitted to ADMINISTER the TASK-EVAL-002 rubric - create / add items / publish (DEC-2601 §1 #10:
 /// "founder + designated rubric admins"). The founder always counts (via `is_founder`); `rubric-admin` is
-/// the AUTH wire form for a delegate the founder designates. This is the authoring grant the FR requires;
+/// the AUTH wire form for a delegate the founder designates. This is the authoring grant the task requires;
 /// it deliberately does not invent an access rule, only names which AUTH roles hold the existing
 /// founder/admin authority over the rubric.
 pub const RUBRIC_ADMIN_ROLES: &[&str] = &[ROLE_FOUNDER, "rubric-admin"];

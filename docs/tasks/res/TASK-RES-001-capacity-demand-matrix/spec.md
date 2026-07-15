@@ -1,8 +1,16 @@
 ---
 id: TASK-RES-001
 title: "RES capacity-vs-demand matrix — nightly join across HR + PROJ + TIME + LEARN producing per-member-week capacity/demand grid"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: RES
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P1
@@ -21,7 +29,7 @@ source_pages:
 
 source_decisions:
   - DEC-2030 2026-05-17 — Matrix is per (member_id, iso_week, project_id) with capacity_hours + demand_hours + allocated_hours; nightly batch refresh
-  - DEC-2031 2026-05-17 — Capacity computed from member.hours_per_week (TASK-HR-002) minus FR-LEARN training hours minus PTO; demand from TASK-PROJ-013 estimate
+  - DEC-2031 2026-05-17 — Capacity computed from member.hours_per_week (TASK-HR-002) minus task-LEARN training hours minus PTO; demand from TASK-PROJ-013 estimate
   - DEC-2032 2026-05-17 — Closed enum `matrix_run_status` = {running, completed, partial, failed}; cardinality 4
   - DEC-2033 2026-05-17 — Idempotent per (tenant_id, run_date); UNIQUE constraint
   - DEC-2034 2026-05-17 — memory audit kinds: res.matrix_run_started, res.matrix_member_computed, res.matrix_run_completed, res.matrix_run_failed
@@ -79,7 +87,7 @@ The RES service **MUST** ship capacity matrix at `services/res/src/matrix/` join
 2. **MUST** compute at `computer.rs::compute(member, iso_week)` per DEC-2031:
    - capacity_hours = member.hours_per_week (TASK-HR-002) - approved PTO (TASK-HR-004) - LEARN training (TASK-LEARN-001)
    - demand_hours = sum TASK-PROJ-013 estimates for member's assigned issues in week
-   - allocated_hours = sum FR-TIME entries (actual + planned)
+   - allocated_hours = sum task-TIME entries (actual + planned)
 
 3. **MUST** run batch at `batch_runner.rs::run(tenant, run_date)` per DEC-2030:
    - For each active member, compute next 12 weeks of capacity+demand+allocated

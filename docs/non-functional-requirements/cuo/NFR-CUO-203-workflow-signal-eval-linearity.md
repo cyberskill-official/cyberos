@@ -18,7 +18,7 @@ related_tasks: [TASK-CUO-203]
 2. `evaluate_workflow_signals(metrics, rows, signals)` **MUST** scope its row scans to one workflow at a time — for W workflows and S signals, total cost is O(N × W × S / W) ≈ O(N × S) (the row filter at the start of each signal cuts the per-workflow scan to that workflow's row subset).
 3. The workflow-refinement proposal emitter (`emit_workflow_proposal`) **MUST** delegate to `cuo.core.refinement_proposal.emit_or_halt` — there is exactly one stripe-dedup code path across both skill and workflow proposal flows.
 4. Workflow stripes **MUST** be disjoint from skill stripes by the `/` separator presence — `cuo.core.workflow_evolution.compute_workflow_stripe` produces ids of the form `<persona>/<wf>:<sig>:<8hex>`; `cuo.core.stripe.compute_stripe` produces ids of the form `<skill>:<sig>:<8hex>`. The two regex grammars are non-overlapping.
-5. All workflow-level diffs **MUST** default to QUEUE (never auto-apply) regardless of bucket — workflows are higher-stakes than skills because a chain edit affects every future invocation across many FRs.
+5. All workflow-level diffs **MUST** default to QUEUE (never auto-apply) regardless of bucket — workflows are higher-stakes than skills because a chain edit affects every future invocation across many tasks.
 
 ## §2 — Why this constraint
 
@@ -50,7 +50,7 @@ Inspection: `compute_workflow_metrics` is a single `for r in rows` loop with O(1
 
 **On-call action:** profile with `py-spy`; the hot path should be entirely inside `compute_workflow_metrics`'s single pass. Any frame inside a nested loop iterating `rows` is the bug.
 
-**Escalation:** if the chain itself grows past 10⁷ rows (unlikely in Stephen's solo usage but possible for a tenant deployment), a row-index keyed by `workflow_id` becomes necessary — file a follow-up FR to materialise that index at consolidation time.
+**Escalation:** if the chain itself grows past 10⁷ rows (unlikely in Stephen's solo usage but possible for a tenant deployment), a row-index keyed by `workflow_id` becomes necessary — file a follow-up task to materialise that index at consolidation time.
 
 ## §6 — Notes
 

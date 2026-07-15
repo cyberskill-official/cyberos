@@ -21,7 +21,7 @@
 | `FM-102` | `project` | required, string | error | false |
 | `FM-103` | `rtm_version` | required, SemVer | error | true |
 | `FM-104` | `generated_at` | required, ISO 8601 (when the matrix was last regenerated) | error | true |
-| `FM-105` | `source_set` | required, object listing each source artefact path + hash (SRSes, PRDs, FRs) | error | false |
+| `FM-105` | `source_set` | required, object listing each source artefact path + hash (SRSes, PRDs, tasks) | error | false |
 | `FM-106` | `provenance.source_path`, `provenance.source_hash` | required (typically the source_set canonical concat hash) | error | false |
 | `FM-107` | `release` | optional; if present, ties the matrix to a specific release tag | warning | false |
 

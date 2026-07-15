@@ -46,7 +46,7 @@ allowed_tools:
   - bash: cd infra/terraform/modules/tenant_chat && terraform validate
   - bash: cd infra/terraform/modules/tenant_chat && terraform fmt -check
 disallowed_tools:
-  - run terraform apply from this FR (CI-managed)
+  - run terraform apply from this task (CI-managed)
   - shared infrastructure across tenants (per DEC-440)
 
 effort_hours: 6
@@ -166,7 +166,7 @@ The CHAT deployment **MUST** be a Terraform module provisioning a per-tenant iso
 
 **Why weekly synthetic PITR test (§1 #17)?** Backups that are never restored are aspirational, not real. A weekly automated restore + row-count assertion confirms the backup→restore pipeline still works; ops finds out about it Monday morning, not at 03:00 during an incident. We pay a small RDS-snapshot-restore fee weekly per tenant for this guarantee.
 
-**Why custom parameter group (§1 #18)?** Default Postgres parameter group is read-only in RDS, so any tuning requires a custom group. We need it anyway for `pgroonga` + `wal2json` shared libraries (TASK-CHAT-004 and TASK-CHAT-005 depend on these). Doing it once, here, prevents downstream FRs from each maintaining their own override.
+**Why custom parameter group (§1 #18)?** Default Postgres parameter group is read-only in RDS, so any tuning requires a custom group. We need it anyway for `pgroonga` + `wal2json` shared libraries (TASK-CHAT-004 and TASK-CHAT-005 depend on these). Doing it once, here, prevents downstream tasks from each maintaining their own override.
 
 **Why Redis `allkeys-lru` (§1 #19)?** Mattermost uses Redis for session cache + presence; running out of memory with `noeviction` (the default) returns errors to Mattermost which then degrades to in-process cache (correct but slow). LRU eviction gracefully drops cold sessions, preserving warm sessions — degradation is invisible to users.
 
@@ -1363,7 +1363,7 @@ Promotion to standard/premium fleets only after the canary tenant runs for 24h w
 
 ### §6.5 — KMS CMK lifecycle
 
-The CMK is created OUTSIDE this module (per TASK-AUTH-001 KMS-management FR). This module consumes the ARN. Why split: KMS CMK deletion has a 7–30 day pending window; we want it managed by a Terraform run that ONLY manages KMS so accidental tenant-stack destroy doesn't queue CMK deletion.
+The CMK is created OUTSIDE this module (per TASK-AUTH-001 KMS-management task). This module consumes the ARN. Why split: KMS CMK deletion has a 7–30 day pending window; we want it managed by a Terraform run that ONLY manages KMS so accidental tenant-stack destroy doesn't queue CMK deletion.
 
 ### §6.6 — Memory-writer socket reachability
 
@@ -1382,7 +1382,7 @@ Terraform's implicit dependency graph handles most ordering, but two cases need 
 
 ### §6.9 — Module versioning + breaking-change policy
 
-`local.module_version` follows semver. Breaking changes (variable renames, resource removals) bump major; non-breaking additions bump minor; bug fixes bump patch. Callers pin to a major via `source = "git::ssh://...//modules/tenant_chat?ref=v1.x"`. Major bumps require a coordinated migration FR.
+`local.module_version` follows semver. Breaking changes (variable renames, resource removals) bump major; non-breaking additions bump minor; bug fixes bump patch. Callers pin to a major via `source = "git::ssh://...//modules/tenant_chat?ref=v1.x"`. Major bumps require a coordinated migration task.
 
 ### §6.10 — Apply-time secret seeding
 
@@ -1575,8 +1575,8 @@ All resolved. Deferred:
 | ALB 5xx spike from Mattermost | `alb_5xx` alarm | Sev-1 | Investigate via CloudWatch logs; common: DB connection pool exhausted |
 | memory writer socket unreachable from Fargate | post-apply `null_resource.deployment_audit` `local-exec` fails | Audit row not emitted; warning row emitted | Operator verifies TASK-MEMORY-101 socket up + VPC route exists |
 | Drift detector finds out-of-band change | scheduled `terraform plan` exit-code 2 | `chat.deployment_drift_detected` audit | Operator investigates; either revert or codify into Terraform |
-| Tenant requests data-residency change (vn-only → global) | `terraform plan` shows region change → cluster destroy | Requires data-migration workflow; not in-place | Migration FR (deferred) |
-| Module-version bump introduces breaking diff | `terraform plan` shows unexpected destroy/create | Apply fails preflight check | Operator pins to older major; coordinates migration FR |
+| Tenant requests data-residency change (vn-only → global) | `terraform plan` shows region change → cluster destroy | Requires data-migration workflow; not in-place | Migration task (deferred) |
+| Module-version bump introduces breaking diff | `terraform plan` shows unexpected destroy/create | Apply fails preflight check | Operator pins to older major; coordinates migration task |
 | Two operators apply concurrently | DynamoDB lock contention | One blocks until other completes | None — Terraform handles |
 | Image digest in tfvars typo'd | variable validation regex rejects | Plan fails | Operator fixes |
 | Pin to wrong arch (`linux/amd64` digest on Graviton) | ECS task start returns `EssentialContainerExited` | Sev-1 crash loop | Operator pins arch-matched digest |
@@ -1585,7 +1585,7 @@ All resolved. Deferred:
 | Route53 hosted zone disabled mid-apply | `aws_route53_record.chat` fails | Apply fails; tenant URL not resolvable | Operator restores hosted zone |
 | Logical replication slot exhausted (TASK-CHAT-005 consumer) | `max_replication_slots` hit | New consumers can't subscribe | Bump param group; restart RDS |
 | Lambda rotation IAM permission revoked | rotation fails silently | Password stays static | Sev-3 if undetected for >30d (next rotation due); detected via `last_rotated_date` CloudWatch metric |
-| Module v1.x deprecation announcement | release notes + memory audit `chat.module_deprecated` | Operators get 90d notice | Migrate to v2.x per migration FR |
+| Module v1.x deprecation announcement | release notes + memory audit `chat.module_deprecated` | Operators get 90d notice | Migrate to v2.x per migration task |
 
 ---
 
@@ -1593,7 +1593,7 @@ All resolved. Deferred:
 
 - Tier-aware specs use Terraform locals for readability; adding a tier = one map entry.
 - Fargate Spot supported via separate `tier_trial_spot` variant — slice 4+. Spot is not safe for standard/premium because evictions cause WebSocket reconnect storms.
-- Backup retention 7 days at trial (cost), 14 days at standard (SLA), 30 days at premium (compliance). Longer retention via S3 export to Glacier — separate FR.
+- Backup retention 7 days at trial (cost), 14 days at standard (SLA), 30 days at premium (compliance). Longer retention via S3 export to Glacier — separate task.
 - Tags drive AWS Cost Allocation reports; finance team pivots on `Tenant` tag. The `CostCenter` tag is used for chargeback to the per-tenant invoice.
 - Post-apply memory audit via `null_resource` provisioner is non-ideal (provisioners are Terraform's escape hatch, not its primary surface) but the AWS provider has no first-class "emit-after-apply" extension point. The alternative — Lambda triggered by CloudWatch Events on `terraform apply` completion — adds complexity without buying clarity. We'll revisit if Terraform 1.10+ ships native post-apply hooks.
 - Auto-scaling policy: scale up at 70% CPU, scale down at 30%; cooldown 5min on both directions. The asymmetric thresholds avoid flapping. Scale-up cooldown is intentionally long enough to absorb a sudden burst (e.g. all-hands meeting login storm) without runaway scaling.
@@ -1603,7 +1603,7 @@ All resolved. Deferred:
 - The premium tier's Redis cluster mode (3 shards) is required for Mattermost installations >1k concurrent users. The Mattermost docs say "we recommend Redis Cluster for >500 users"; we set the threshold at premium tier (3k users) so smaller tenants don't pay for cluster overhead.
 - Why we don't use Fargate task ECS managed service auto-scaling on the RDS connection count: ECS metric-based scaling reacts to instance metrics, not application metrics. We rely on CPU and memory; queue-depth-based scaling would require custom CloudWatch metric publication from inside Mattermost, which is out of scope.
 - The custom RDS parameter group is required at apply time (not after-the-fact) because `shared_preload_libraries` is `apply_method = "pending-reboot"`. Forgetting it means a manual `RebootDBInstance` after TASK-CHAT-004 ships pgroonga.
-- `rds.logical_replication = 1` is required by TASK-CHAT-005. We enable it at this FR (deployment) rather than at TASK-CHAT-005 (the consumer) because changing the param requires a reboot — better to pay that cost once at provisioning than later when traffic exists.
+- `rds.logical_replication = 1` is required by TASK-CHAT-005. We enable it at this task (deployment) rather than at TASK-CHAT-005 (the consumer) because changing the param requires a reboot — better to pay that cost once at provisioning than later when traffic exists.
 - `max_replication_slots = 10` accommodates: 1 for TASK-CHAT-005 memory replication, 1 for the read-replica, 8 spare for future consumers. Bumping this requires reboot, so we overprovision.
 - Why a single shared lock table instead of per-tenant: DynamoDB pricing is per-table baseline + per-read. 100 tenants × per-tenant table = 100 × $0.10/mo baseline = $10/mo for zero functional gain (DynamoDB locks are keyed by LockID, not table). One shared table costs $0.10/mo total.
 - The state-backend convention uses `<aws-account>/<tenant_id>/...` so that one Terraform state file per tenant is the natural unit. If a tenant ever spans multiple AWS accounts (e.g. compliance carve-out), the account prefix scales naturally.
@@ -1611,7 +1611,7 @@ All resolved. Deferred:
 - ALB `enable_deletion_protection` is conditional on premium tier because trial tenants get torn down regularly; the protection would be operator friction.
 - We chose ALB over NLB because ALB's HTTP-aware health checks (`/api/v4/system/ping`) catch issues NLB's TCP probe misses (e.g. Mattermost server running but DB unreachable returns 503).
 - The `auth_jwks_vpc_endpoint_service_name` variable is required (not optional default) because the PrivateLink endpoint service name is account-specific; defaulting would mask misconfiguration.
-- A `data_residency=vn-only` tenant doesn't get a Route 53 record in the global zone — they get one in a VN-region private hosted zone. This is enforced via the cross-validation in `main.tf` precondition; downstream FR will add the actual VN private zone wiring (slice 2).
+- A `data_residency=vn-only` tenant doesn't get a Route 53 record in the global zone — they get one in a VN-region private hosted zone. This is enforced via the cross-validation in `main.tf` precondition; downstream task will add the actual VN private zone wiring (slice 2).
 - We don't auto-tier-upgrade based on usage (deferred to slice 4+) because tier changes incur downtime; auto-upgrade in production is unsafe without operator coordination.
 - The `dry_run` variable is intentionally minimal — it doesn't gate `terraform apply`, it just emits a different audit row when set. The drift detector uses it as a marker; humans MUST still be in the loop for actual applies.
 - The reproducible-plan check (AC #41) is the most important guard against subtle module-version regressions — if the same inputs ever produced different plans, downstream automation would silently change behaviour across runs.

@@ -1,10 +1,17 @@
 ---
 id: TASK-IMP-071
 title: "Durable release trigger - version bumps drop [skip ci] so tag pushes fire release.yml natively"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: improvement
+created_at: 2026-07-12T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: improvement
-priority: MUST
+priority: p0
 status: done
-class: improvement
 verify: T
 phase: Wave E - 1.0.0 hardening closeout
 owner: Stephen Cheng (CTO)
@@ -34,7 +41,7 @@ modified_files:
 1. version.yml's bump commit MUST NOT carry `[skip ci]`; the message stays `chore(release): vX.Y.Z`.
 2. The workflow's own loop protection MUST rest solely on the existing job guard (`!startsWith(head_commit.message, 'chore(release):')`), documented as the single brake.
 3. The TASK-DOCS-007 §1 #4c deploy-dispatch workaround MUST be removed (deploy.yml's VERSION path filter now fires natively on the bump push); the `actions: write` permission it needed goes with it.
-4. TASK-IMP-068 §1 #7's inline proof MUST remain (belt-and-suspenders now that payload-gate also sees bump commits), with its comment updated; both affected shipped FRs carry post-ship amendment notes.
+4. TASK-IMP-068 §1 #7's inline proof MUST remain (belt-and-suspenders now that payload-gate also sees bump commits), with its comment updated; both affected shipped tasks carry post-ship amendment notes.
 5. RELEASE.md MUST document the new model: `git push origin vX.Y.Z` triggers the release; dispatch remains the fallback/retry path.
 
 ## §2 - Why this design

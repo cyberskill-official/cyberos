@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-"""awh_promote.py — faithful, zero-LLM promotion of ready_to_test FRs to done.
+"""awh_promote.py — faithful, zero-LLM promotion of ready_to_test tasks to done.
 
 The ship-tasks workflow gates testing->done at step 28 (awh-gate): it reruns
-the FR's MODULE goldenset (the real build+test suite vs the sealed baseline) out of band,
+the task's MODULE goldenset (the real build+test suite vs the sealed baseline) out of band,
 and step 29 flips testing->done only if that rerun is GREEN. This script applies exactly
 that bar, minus the LLM doc-authoring steps (1-27), which regenerate artifacts that are not
 the gate's acceptance criterion:
 
   - For each gated module, it RE-RUNS the gate now (not trusting the stored baseline -
     "agent self-certification is not trust").
-  - Every ready_to_test FR in a module whose gate is GREEN is promoted to done.
-  - ready_to_test FRs in ungated modules (e.g. ai, red-deferred) are HELD with a reason.
+  - Every ready_to_test task in a module whose gate is GREEN is promoted to done.
+  - ready_to_test tasks in ungated modules (e.g. ai, red-deferred) are HELD with a reason.
 
 It never regenerates the authoring artifacts (context map, ADR, code-review, coverage). If a
-specific FR needs those, run it through the full workflow with a real --invoker later.
+specific task needs those, run it through the full workflow with a real --invoker later.
 
   python3 scripts/awh_promote.py            # REPORT only - no file changes
   python3 scripts/awh_promote.py --apply    # flip status ready_to_test->done + write a ledger
@@ -35,9 +35,9 @@ REPO = Path(subprocess.check_output(["git", "rev-parse", "--show-toplevel"], tex
 # goldenset.yaml (e.g. ai) includes it with no edit here. A goldenset without a captured
 # baseline still counts as gated but reruns RED (run_gate returns "no goldenset/baseline").
 GATED = sorted(p.parent.parent.name for p in (REPO / "modules").glob("*/.awh/goldenset.yaml"))
-FR_DIR = REPO / "docs" / "tasks"
+TASK_DIR = REPO / "docs" / "tasks"
 LEDGER = REPO / ".awh" / "promotion-log.jsonl"
-# Hardened for quoted/trailing values, same shape as scripts/rebaseline_fr_status.py.
+# Hardened for quoted/trailing values, same shape as scripts/rebaseline_task_status.py.
 STATUS_RE = re.compile(r'^(status:\s*["\'`]?)(ready_to_test)(["\'`]?.*)$', re.M)
 
 
@@ -78,7 +78,7 @@ def run_gate(m: str):
 
 
 def ready_frs(module_dir: str):
-    d = FR_DIR / module_dir
+    d = TASK_DIR / module_dir
     if not d.is_dir():
         return []
     return [f for f in sorted(d.glob("*.md"))
@@ -107,7 +107,7 @@ def main() -> int:
         print(f"  [gate] {m:7} -> {verdict}" + (f"  weighted={w:.3f}" if w is not None else ""))
 
     decisions = []  # (action, module, fr, reason)
-    all_mods = sorted({p.parent.name for p in FR_DIR.glob("*/*.md")})
+    all_mods = sorted({p.parent.name for p in TASK_DIR.glob("*/*.md")})
     for mod in all_mods:
         tasks = ready_frs(mod)
         if not tasks:
@@ -121,7 +121,7 @@ def main() -> int:
             for f in tasks:
                 decisions.append(("HOLD", mod, f.name, reason))
 
-    print(f"\n{'ACTION':8} {'MODULE':7} FR  -- reason")
+    print(f"\n{'ACTION':8} {'MODULE':7} task  -- reason")
     for act, mod, fr, reason in decisions:
         print(f"{act:8} {mod:7} {fr}  -- {reason}")
     promoted = sum(1 for d in decisions if d[0] == "PROMOTE")

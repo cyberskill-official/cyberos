@@ -1,8 +1,15 @@
 ---
 id: TASK-EVAL-001
 title: "governance, consent, access-control + retention layer — versioned monitoring notice + per-subject acknowledgment gate + data-category/purpose registry + per-category retention sweeper + manager/self access grants (tenant RLS + audit row per read) + data-subject rights — the Phase-0 gate every BRAIN/EVAL capture and evaluation depends on"
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-06-29T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: EVAL
-priority: MUST
+priority: p0
 status: on_hold   # was "blocked" (not a valid status per STATUS-REFERENCE §1); deferred pending TASK-AUTH-003
 verify: T
 phase: P0
@@ -45,7 +52,7 @@ new_files:
   - services/eval/tests/retention_sweep_test.rs
 modified_files:
   - services/eval/Cargo.toml                   # depend on shared cyberos-audit-chain
-  - docs/tasks/eval/README.md       # new EVAL module index (created with this FR)
+  - docs/tasks/eval/README.md       # new EVAL module index (created with this task)
 allowed_tools:
   - file_read: services/eval/**
   - file_write: services/eval/{src,tests,migrations}/**
@@ -625,7 +632,7 @@ async fn out_of_scope_category_rejected() {
 
 Resolved by Stephen's 2026-06-29 decisions (DEC-2520..2525). Deferred / for counsel:
 
-- The exact notice text and the lawful-basis selection per category MUST be confirmed by Vietnamese counsel before go-live (clause 13, §2 closing note). This FR ships the structure; the content is a legal sign-off, not an engineering decision.
+- The exact notice text and the lawful-basis selection per category MUST be confirmed by Vietnamese counsel before go-live (clause 13, §2 closing note). This task ships the structure; the content is a legal sign-off, not an engineering decision.
 - Whether `manager_of` is sourced from an HR org-chart (TASK-HR-001) or set explicitly via grants — Phase 0 supports explicit grants; the HR-derived auto-grant is a Phase-5 wiring (TASK-EVAL-004) once the org chart exists.
 - Cross-tenant founder visibility (a holding-company founder over multiple tenant orgs) — out of scope here; single-tenant founder only. Revisit if CyberSkill operates multiple tenants under one owner.
 
@@ -672,8 +679,8 @@ Resolved by Stephen's 2026-06-29 decisions (DEC-2520..2525). Deferred / for coun
 - The founder path is role-based (`cyberos_founder` from the JWT, TASK-AUTH-101), not a grant row, so the founder never needs a self-issued grant to every subject. Designated managers and HR reviewers are grant rows so they are explicit, revocable, and auditable.
 - DSR requests are first-class rows precisely so the data-subject-rights obligation is demonstrable: a subject *can* object/rectify, the request *is* recorded, and a *human* resolves it. Auto-applying erasure was rejected — it could destroy evidence and it removes the human checkpoint the plan requires for anything consequential.
 - The notice-bump re-gate (clause 17) is what keeps consent *living*. A one-time checkbox at hire does not cover a later expansion of monitoring scope; bumping the version pauses capture for everyone whose ack is stale until they acknowledge the new terms. Operators should bump the version only on a *material* scope change, not for typo fixes (a typo fix that does not change scope can reuse the version if the hash is unchanged; if the text changes at all the hash changes, so in practice any text edit is a new version — keep notice edits deliberate).
-- This FR is high-risk under the EU AI Act framing (employment-context monitoring feeding AI evaluation), so it carries the `## AI Risk Assessment` section below and its paired audit verifies the governance-first invariants explicitly. Stephen's sign-off and Vietnamese counsel's confirmation of the notice text are both preconditions to go-live.
-- The whole layer is deliberately boring and conservative: it adds gates, registries, audit rows, and retention limits. It does not itself analyse anyone. Analysis is TASK-EVAL-003, and it runs only inside the fence this FR builds.
+- This task is high-risk under the EU AI Act framing (employment-context monitoring feeding AI evaluation), so it carries the `## AI Risk Assessment` section below and its paired audit verifies the governance-first invariants explicitly. Stephen's sign-off and Vietnamese counsel's confirmation of the notice text are both preconditions to go-live.
+- The whole layer is deliberately boring and conservative: it adds gates, registries, audit rows, and retention limits. It does not itself analyse anyone. Analysis is TASK-EVAL-003, and it runs only inside the fence this task builds.
 
 ---
 
@@ -693,7 +700,7 @@ The safe state everywhere is "do not capture, do not disclose" reached by gating
 
 ## AI Authorship Disclosure
 
-- Tools used: Claude (Cowork), authoring this FR from `docs/strategy/cyberos-brain-evaluation-plan.md` and Stephen's 2026-06-29 governance decisions (DEC-2520..2525), matching the repo's engineering-spec@1 house style.
+- Tools used: Claude (Cowork), authoring this task from `docs/strategy/cyberos-brain-evaluation-plan.md` and Stephen's 2026-06-29 governance decisions (DEC-2520..2525), matching the repo's engineering-spec@1 house style.
 - Scope: full draft of this specification — the normative clauses, the governance schema, the access-resolution and retention-sweep sketches, the acceptance criteria, and the AI risk assessment.
 - Human review: Stephen reviews and approves before status moves past draft. Because this is the Phase-0 legal/trust gate for the whole BRAIN/EVAL workstream, the notice text and per-category lawful basis additionally require Vietnamese counsel sign-off, and the paired audit plus the CAF gate validate before any implementation merges.
 

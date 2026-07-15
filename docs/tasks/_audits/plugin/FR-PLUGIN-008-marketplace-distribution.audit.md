@@ -11,7 +11,7 @@ template: engineering-spec@1
 
 ## §1 — Verdict summary
 
-Marketplace distribution — cyberos-plugin publish surface pushing to plugins.cyberskill.world (OCI) with public-tier mirror to agentskills.io, 3 visibility modes, 70/30 revenue share, vetted-by-CyberSkill JWT badge, yank-not-delete model. CLI in this FR; full marketplace server scaffolded (FR-PLUGIN-008a covers UI/search/billing). 500 lines, 14 §1 clauses, 22 ACs, 4 test files, 15 failure modes, 10 implementation notes. 7 issues resolved (OCI compatibility unlocks Docker/GitHub/AWS ecosystem; agentskills.io mirror amplifies Strategy Level 1 reach; 3 visibility modes cover all 4 strategy levels; locked publish-time re-validation closes tampered-CLI threat; JWT-signed vetted badge is unforgeable client-side; version monotonicity makes 'latest' tag deterministic; yank-not-delete preserves install reproducibility). **Score = 10/10.**
+Marketplace distribution — cyberos-plugin publish surface pushing to plugins.cyberskill.world (OCI) with public-tier mirror to agentskills.io, 3 visibility modes, 70/30 revenue share, vetted-by-CyberSkill JWT badge, yank-not-delete model. CLI in this task; full marketplace server scaffolded (task-PLUGIN-008a covers UI/search/billing). 500 lines, 14 §1 clauses, 22 ACs, 4 test files, 15 failure modes, 10 implementation notes. 7 issues resolved (OCI compatibility unlocks Docker/GitHub/AWS ecosystem; agentskills.io mirror amplifies Strategy Level 1 reach; 3 visibility modes cover all 4 strategy levels; locked publish-time re-validation closes tampered-CLI threat; JWT-signed vetted badge is unforgeable client-side; version monotonicity makes 'latest' tag deterministic; yank-not-delete preserves install reproducibility). **Score = 10/10.**
 
 ## §2 — Findings (all resolved)
 
@@ -38,7 +38,7 @@ Permanent delete invalidates SHA-256 references in existing installs. Resolved: 
 
 ## §3 — Resolution
 
-All 7 ISS findings resolved by extending §1 (clauses 2, 4, 5, 7, 9, 10, 12), defining the OCI media types + Postgres schema, designing JWT vetted-badge format, and writing 4 integration tests. Marketplace server scaffolded; full server in FR-PLUGIN-008a.
+All 7 ISS findings resolved by extending §1 (clauses 2, 4, 5, 7, 9, 10, 12), defining the OCI media types + Postgres schema, designing JWT vetted-badge format, and writing 4 integration tests. Marketplace server scaffolded; full server in task-PLUGIN-008a.
 
 Final score: **10/10.**
 

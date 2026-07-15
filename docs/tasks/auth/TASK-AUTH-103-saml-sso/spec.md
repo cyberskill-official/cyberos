@@ -1,8 +1,16 @@
 ---
 id: TASK-AUTH-103
 title: "AUTH SAML 2.0 SSO — SP-initiated flow + per-tenant IdP config + XML signature verification + assertion validation + JIT provisioning + attribute → role mapping + replay defense"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AUTH
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P3
@@ -21,8 +29,8 @@ source_pages:
   - https://docs.oasis-open.org/security/saml/v2.0/ (SAML 2.0 Core spec)
   - https://docs.oasis-open.org/security/saml/v2.0/saml-bindings-2.0-os.pdf (Bindings spec)
 source_decisions:
-  - DEC-520 (SAML 2.0 SP-initiated flow only at slice 1 — IdP-initiated unsolicited responses rejected per OASIS guidance; IdP-initiated is FR-AUTH-2xx and requires per-tenant explicit opt-in)
-  - DEC-521 (HTTP POST binding for SAMLResponse; HTTP Redirect binding for SAMLRequest — standard SP profile; HTTP Artifact deferred to FR-AUTH-2xx)
+  - DEC-520 (SAML 2.0 SP-initiated flow only at slice 1 — IdP-initiated unsolicited responses rejected per OASIS guidance; IdP-initiated is task-AUTH-2xx and requires per-tenant explicit opt-in)
+  - DEC-521 (HTTP POST binding for SAMLResponse; HTTP Redirect binding for SAMLRequest — standard SP profile; HTTP Artifact deferred to task-AUTH-2xx)
   - DEC-522 (assertion + response signature BOTH verified — `WantAssertionsSigned=true` + `AuthnRequestsSigned=true`; signature-only-on-response (Microsoft default) rejected with `assertion_signature_required`)
   - "DEC-523 (SAML metadata fetched from IdP per RFC 7517 equivalent path: `metadata_url` configured; cached 24h with kid-style certificate rotation overlap)"
   - DEC-524 (NameIDFormat enforced — only `urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress` and `urn:oasis:names:tc:SAML:2.0:nameid-format:persistent` accepted at slice 1; transient + unspecified rejected)
@@ -34,9 +42,9 @@ source_decisions:
   - DEC-530 (REVOKE UPDATE, DELETE on auth_saml_login_history from cyberos_app — append-only at SQL grant)
   - DEC-531 (XML canonicalisation — Exclusive Canonicalization (exc-c14n) per W3C; transforms enveloped + exc-c14n only; other transforms rejected per XSW (XML Signature Wrapping) attack defense)
   - DEC-532 (XML signature algorithm RSA-SHA256 minimum; SHA1 rejected per NIST guidance + recent collision research; ECDSA-SHA256/384 accepted)
-  - DEC-533 (assertion encryption optional at slice 1 — `WantAssertionsEncrypted=false`; deferred to FR-AUTH-2xx for high-sec tenants)
+  - DEC-533 (assertion encryption optional at slice 1 — `WantAssertionsEncrypted=false`; deferred to task-AUTH-2xx for high-sec tenants)
   - DEC-534 (per-tenant max 2 active SAML IdP configs — tenants typically have one corporate IdP + one fallback; ADR required to raise)
-  - DEC-535 (single logout (SLO) deferred to FR-AUTH-2xx — slice 1 ships login only; tenant-side session termination is handled by token expiry)
+  - DEC-535 (single logout (SLO) deferred to task-AUTH-2xx — slice 1 ships login only; tenant-side session termination is handled by token expiry)
   - DEC-536 (Conditions/AudienceRestriction MUST match SP entity_id; mismatch → 401 audience_mismatch)
   - OASIS SAML 2.0 Core + Bindings + Profiles (Mar 2005)
   - W3C XML Signature Syntax and Processing (2008)
@@ -226,7 +234,7 @@ The AUTH service **MUST** ship SAML 2.0 SP-initiated SSO with per-tenant IdP con
 
 ## §2 — Why this design (rationale for humans)
 
-**Why SP-initiated only at slice 1 (DEC-520)?** IdP-initiated unsolicited responses lack the InResponseTo binding to a known SP request — an attacker hosting their own IdP can mint assertions for arbitrary subjects (the "evil IdP" attack). OASIS recommends SP-initiated. Some legitimate use cases (bookmark-from-IdP-portal) need IdP-initiated; deferred to FR-AUTH-2xx with per-tenant explicit opt-in + additional defenses.
+**Why SP-initiated only at slice 1 (DEC-520)?** IdP-initiated unsolicited responses lack the InResponseTo binding to a known SP request — an attacker hosting their own IdP can mint assertions for arbitrary subjects (the "evil IdP" attack). OASIS recommends SP-initiated. Some legitimate use cases (bookmark-from-IdP-portal) need IdP-initiated; deferred to task-AUTH-2xx with per-tenant explicit opt-in + additional defenses.
 
 **Why both AuthnRequestsSigned AND WantAssertionsSigned (DEC-522)?** Signing AuthnRequests proves SP authenticity to IdP (prevents request forgery). Signing assertions proves IdP authenticity to SP (prevents assertion injection). Response-only signing (Azure AD default) is insufficient — the assertion within an unsigned envelope can be swapped via XSW. Both signatures together = full chain validated.
 
@@ -248,7 +256,7 @@ The AUTH service **MUST** ship SAML 2.0 SP-initiated SSO with per-tenant IdP con
 
 **Why samael crate not hand-rolled (§1 #23)?** SAML signature verification is famously bug-prone (10+ public CVEs from incorrect parser implementations in 2015-2020 alone). Battle-tested crate is the only safe path. Hand-rolled XML signature is forbidden at slice 1.
 
-**Why SLO deferred (DEC-535)?** Single Logout (SLO) is operationally complex (cascading logout across multiple SPs; partial-failure handling; user-visible session inconsistency). Slice 1 covers login; tenant session expiry handles logout adequately for slice 1. SLO ships in FR-AUTH-2xx when enterprise tenants demand it.
+**Why SLO deferred (DEC-535)?** Single Logout (SLO) is operationally complex (cascading logout across multiple SPs; partial-failure handling; user-visible session inconsistency). Slice 1 covers login; tenant session expiry handles logout adequately for slice 1. SLO ships in task-AUTH-2xx when enterprise tenants demand it.
 
 **Why KMS-encrypt SP signing key (§1 #25, DEC-527)?** SP signing key proves to IdP that AuthnRequests are from us. Compromise = attacker forges AuthnRequests for any subject. KMS encryption requires KMS-decrypt permission to sign — meaningful additional barrier.
 
@@ -877,9 +885,9 @@ fn email_address_format_accepted() {
 ## §9 — Open questions
 
 Deferred:
-- **IdP-initiated unsolicited responses** — FR-AUTH-2xx with per-tenant opt-in.
-- **Single Logout (SLO)** — FR-AUTH-2xx.
-- **Assertion encryption (WantAssertionsEncrypted)** — FR-AUTH-2xx for high-sec tenants.
+- **IdP-initiated unsolicited responses** — task-AUTH-2xx with per-tenant opt-in.
+- **Single Logout (SLO)** — task-AUTH-2xx.
+- **Assertion encryption (WantAssertionsEncrypted)** — task-AUTH-2xx for high-sec tenants.
 - **HTTP Artifact binding** — out of scope; POST + Redirect cover modern enterprise.
 - **Dynamic SP metadata cert rotation** — slice 2.
 
@@ -928,7 +936,7 @@ All other questions resolved.
 
 ## §11 — Implementation notes
 
-- **SP-initiated only** — IdP-initiated requires per-tenant opt-in (FR-AUTH-2xx).
+- **SP-initiated only** — IdP-initiated requires per-tenant opt-in (task-AUTH-2xx).
 - **HTTP POST + Redirect bindings** — modern enterprise standard.
 - **WantAssertionsSigned + AuthnRequestsSigned both required** — XSW defense.
 - **exc-c14n + enveloped-signature only** — XSW transform whitelist.

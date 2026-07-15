@@ -1,10 +1,10 @@
 # TEN module — task index
 
-_Generated 2026-05-17 — 14 FRs, 124 engineering-hours total._
+_Generated 2026-05-17 — 14 tasks, 124 engineering-hours total._
 
-## FRs
+## tasks
 
-| FR | Priority | Slice | Hours | Title |
+| Task | Priority | Slice | Hours | Title |
 |---|---|---|---:|---|
 | [TASK-TEN-001](TASK-TEN-001-provisioning-cli/spec.md) | MUST | 1 | 5 | TEN tenant provisioning CLI — `cyberos-ten provision` ops-driven flow with schema namespace + NATS s |
 | [TASK-TEN-002](TASK-TEN-002-plan-tiers/spec.md) | MUST | 1 | 4 | 3 plan tiers (Starter / Team / Enterprise) hardcoded with per-tier caps |

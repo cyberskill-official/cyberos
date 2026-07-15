@@ -1,8 +1,16 @@
 ---
 id: TASK-MEMORY-116
 title: "memory consolidate — semantic-dedup phase (Walk → Compact → Sign → Publish → SemanticDedup); shares duplicates detector with TASK-MEMORY-115; opt-in via --semantic-dedup; dry-run by default"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-19T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: memory
-priority: SHOULD
+priority: p1
 status: done
 verify: T
 phase: P1
@@ -48,8 +56,8 @@ subtasks:
   - "1.0h: --threshold flag plumbing to the duplicates detector (default 0.92 per TASK-MEMORY-115 §1 #3)"
   - "1.5h: tests/test_consolidate_semantic_dedup.py — 10 cases (default-off, --semantic-dedup --dry-run produces diff, --semantic-dedup --apply requires §7.7, --apply with valid §7.7 advances chain, --threshold override, phase ordering, earlier-phase failure skips SemanticDedup)"
   - "0.5h: CHANGELOG entry + README/usage note"
-  - "1.0h: integration test against the seeded_memory_with_dupes fixture from TASK-MEMORY-115 (validates the cross-FR composition works end-to-end)"
-risk_if_skipped: "TASK-MEMORY-116 is a strict subset of TASK-MEMORY-115's capabilities — it ships nothing TASK-MEMORY-115 doesn't already provide. The reason it's a distinct FR is operator ergonomics: many operators run `cyberos consolidate` on a nightly cron and want dedup to happen there, not as a separate `cyberos dream` invocation. Without TASK-MEMORY-116, operators have to either (a) run two cron jobs (consolidate + dream) and live with the duplication of audit-chain work, or (b) skip dedup during routine maintenance and accept the duplicate accumulation. The 6-hour effort is dominantly tests + CLI glue — the semantic logic is already in TASK-MEMORY-115. Skipping means we'd later have to re-explain to operators that dedup lives in a separate command, which is a documentation tax. Cheaper to ship the convenience surface."
+  - "1.0h: integration test against the seeded_memory_with_dupes fixture from TASK-MEMORY-115 (validates the cross-task composition works end-to-end)"
+risk_if_skipped: "TASK-MEMORY-116 is a strict subset of TASK-MEMORY-115's capabilities — it ships nothing TASK-MEMORY-115 doesn't already provide. The reason it's a distinct task is operator ergonomics: many operators run `cyberos consolidate` on a nightly cron and want dedup to happen there, not as a separate `cyberos dream` invocation. Without TASK-MEMORY-116, operators have to either (a) run two cron jobs (consolidate + dream) and live with the duplication of audit-chain work, or (b) skip dedup during routine maintenance and accept the duplicate accumulation. The 6-hour effort is dominantly tests + CLI glue — the semantic logic is already in TASK-MEMORY-115. Skipping means we'd later have to re-explain to operators that dedup lives in a separate command, which is a documentation tax. Cheaper to ship the convenience surface."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -62,7 +70,7 @@ The semantic-dedup phase **MUST** be an optional addition to the existing four-p
 4. **MUST** propagate the same `--threshold <float>` (default 0.92) that the duplicates detector accepts. The threshold is the cosine-sim cut for marking two memories as duplicates.
 5. **MUST** tag the resulting `dream.start` / `dream.complete` / `dream.proposal_applied` audit rows with `extra.invocation: "consolidate"` so TASK-MEMORY-120's history view can distinguish dedup-from-consolidate from dedup-from-explicit-dream-run.
 6. **MUST** skip the SemanticDedup phase if any of the four prior phases (Walk / Compact / Sign / Publish) failed. The pipeline emits the standard failure rows for the failed phase and exits non-zero; SemanticDedup never starts in that state.
-7. **MUST** honour the same AGENTS.md §7.7 anchor check before `--apply` proceeds. The check is enforced inside `cyberos.core.dream.applier.apply()`; this FR adds no new path that bypasses it.
+7. **MUST** honour the same AGENTS.md §7.7 anchor check before `--apply` proceeds. The check is enforced inside `cyberos.core.dream.applier.apply()`; this task adds no new path that bypasses it.
 8. **MUST** emit a structured summary to stdout at the end of the consolidation run: phase-by-phase pass/fail, semantic-dedup proposal count (if run), apply count (if applied).
 9. **MUST** be idempotent — re-running `cyberos consolidate --semantic-dedup --apply` with identical store state produces zero new chain rows (same `dream apply` idempotency from TASK-MEMORY-115 #10).
 10. **SHOULD** support `--threshold 0.95` for tighter dedup or `0.88` for looser — both within the cosine-sim sane range. Outside `[0.5, 0.99]` rejected at CLI parse time.
@@ -166,7 +174,7 @@ async def consolidate(
 11. **Re-apply idempotent** — apply once, then apply again on unchanged state → second apply emits zero new rows. *(traces_to: §1 #9)*
 12. **Summary stdout** — final stdout line is JSON-parseable summary with `walk_ok`, `compact_ok`, `sign_ok`, `publish_ok`, `dedup_proposals_count`, `dedup_applied_count`. *(traces_to: §1 #8)*
 13. **Reuses TASK-MEMORY-115 detector** — code-level test asserts the import path `cyberos.core.dream.detectors.duplicates.run` is invoked from consolidate.py; no duplicate detector code exists in consolidate.py. *(traces_to: §1 #3, DEC-220)*
-14. **Cross-FR integration smoke** — `seeded_memory_with_dupes` fixture (TASK-MEMORY-115) → `cyberos consolidate --semantic-dedup --dry-run` produces the SAME diff (same proposal_ids) as `cyberos dream --detectors duplicates --dry-run`. *(traces_to: §1 #3)*
+14. **Cross-task integration smoke** — `seeded_memory_with_dupes` fixture (TASK-MEMORY-115) → `cyberos consolidate --semantic-dedup --dry-run` produces the SAME diff (same proposal_ids) as `cyberos dream --detectors duplicates --dry-run`. *(traces_to: §1 #3)*
 
 ---
 
@@ -305,7 +313,7 @@ Skeleton above is the implementation. Order:
 
 ## §7 — Dependencies
 
-- **TASK-MEMORY-115 (depends on)** — `duplicates.run` + `dream_apply` + AGENTS.md §7.7. This FR is a CLI wrapper around them.
+- **TASK-MEMORY-115 (depends on)** — `duplicates.run` + `dream_apply` + AGENTS.md §7.7. This task is a CLI wrapper around them.
 - **TASK-MEMORY-108 (transitively)** — semantic backend (sentence-transformers) is the substrate for cosine sim.
 
 ---
@@ -366,7 +374,7 @@ All resolved. Deferred:
 ## §11 — Implementation notes
 
 - **`--apply` is the operator's "I trust the proposals" signal.** Resist the temptation to add an `--auto-apply-merges` shortcut; that drifts back into the auto-apply anti-pattern.
-- **`extra.invocation` tagging** — happens via `txn.set_origin(dream_id=..., invocation="consolidate")` from `cyberos.core.dream.applier`. This FR adds the `invocation` kwarg to `set_origin`.
+- **`extra.invocation` tagging** — happens via `txn.set_origin(dream_id=..., invocation="consolidate")` from `cyberos.core.dream.applier`. This task adds the `invocation` kwarg to `set_origin`.
 - **Phase ordering matters** for the SemanticDedup audit-row chain.
 - **`to_summary_dict()` is a thin accessor on `ConsolidationResult`** — keeps the CLI's stdout-JSON contract decoupled from the dataclass field names.
 

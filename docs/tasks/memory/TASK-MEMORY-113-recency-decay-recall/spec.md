@@ -1,8 +1,16 @@
 ---
 id: TASK-MEMORY-113
 title: "memory recall ranking — Park-et-al combined score (relevance · 0.4 + importance · 0.3 + recency · 0.3) with configurable Ebbinghaus decay; MARS-aligned forgetting curve"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-19T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: memory
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -63,7 +71,7 @@ subtasks:
   - "1.0h: modules/memory/tests/core/test_ranking_and_decay.py — 14 cases (weight permutations, importance defaults to 0.5, recency=1.0 fallback when last_seen absent, weights sum check, regression vs TASK-MEMORY-112 default ordering)"
   - "1.0h: modules/memory/tests/core/test_digest.py — 8 cases (exponential half-life property, Ebbinghaus monotonic decreasing, both bounded in [0.0, 1.0], invalid params rejected)"
   - "1.0h: bench/bench_recall_latency.py — fixture-driven benchmark, asserts p95 budget for 10K-Episode store with ranking applied (within TASK-MEMORY-112's 500 ms semantic budget + ≤ 10% ranking-overhead headroom)"
-risk_if_skipped: "Without recency decay and importance weighting, `cyberos recall-similar` (TASK-MEMORY-112) ranks purely by semantic relevance. Two pathologies follow: (1) Old, low-quality, lucky-similarity hits dominate fresh, high-quality recent hits — the memory's recall surface degrades monotonically as the store grows. (2) TASK-MEMORY-115 (`cyberos dream`) can't use recall to find candidate episodes for cross-session pattern detection without a quality signal — every episode of the same task looks the same regardless of whether the agent did a good job. The article (Ramakrushna §'Time-based decay') and MARS [1] both single out time-decay forgetting as the load-bearing primitive that prevents old facts from drowning new ones. Park et al. 2023 'Generative Agents' uses the exact 0.4 / 0.3 / 0.3 weighting we adopt, validated on a benchmark generative-agents simulation. Skipping this FR means we'd later have to retrofit the ranking call sites in `semantic.py`, `reader.py`, `recall.py`, and TASK-MEMORY-115's input pipeline — and we'd ship a recall surface that's known to degrade. Cheaper to ship the right shape now."
+risk_if_skipped: "Without recency decay and importance weighting, `cyberos recall-similar` (TASK-MEMORY-112) ranks purely by semantic relevance. Two pathologies follow: (1) Old, low-quality, lucky-similarity hits dominate fresh, high-quality recent hits — the memory's recall surface degrades monotonically as the store grows. (2) TASK-MEMORY-115 (`cyberos dream`) can't use recall to find candidate episodes for cross-session pattern detection without a quality signal — every episode of the same task looks the same regardless of whether the agent did a good job. The article (Ramakrushna §'Time-based decay') and MARS [1] both single out time-decay forgetting as the load-bearing primitive that prevents old facts from drowning new ones. Park et al. 2023 'Generative Agents' uses the exact 0.4 / 0.3 / 0.3 weighting we adopt, validated on a benchmark generative-agents simulation. Skipping this task means we'd later have to retrofit the ranking call sites in `semantic.py`, `reader.py`, `recall.py`, and TASK-MEMORY-115's input pipeline — and we'd ship a recall surface that's known to degrade. Cheaper to ship the right shape now."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -319,7 +327,7 @@ def score_hits(
 18. **Manifest unknown profile fail-fast** — `decay_profile: "made_up"` → `ManifestError`. *(traces_to: §1 #9)*
 19. **Pure function — `now` injected** — `score_hits(..., now=fixed_dt)` returns the same scores on two consecutive calls; no `datetime.now()` inside. *(traces_to: §1 #10)*
 20. **RecallHit annotations preserved** — `ScoredHit` exposes `relevance`, `importance`, `recency`, `combined_score`. *(traces_to: §1 #8)*
-21. **Back-compat — relevance-only mode** — `score_hits(hits, RecallWeights.relevance_only(), ...)` orders identically to pre-FR sort-by-relevance. *(traces_to: §1 #7)*
+21. **Back-compat — relevance-only mode** — `score_hits(hits, RecallWeights.relevance_only(), ...)` orders identically to pre-task sort-by-relevance. *(traces_to: §1 #7)*
 22. **Bench latency budget** — `bench_recall_latency.py --episodes 10000 --trials 100` records ranking-overhead p95 ≤ 10% of retrieval p95. *(traces_to: §1 #11)*
 23. **`meta.importance` on a `facts` memory** — non-Episode kind accepts the optional `importance` field; round-trips through reader. *(traces_to: §1 #12)*
 24. **TASK-MEMORY-112 CLI calls real ranking** — after migration, `cyberos recall-similar` returns identical `combined_score` to `score_hits()` invoked directly with same inputs (regression vs the TASK-MEMORY-112 stub). *(traces_to: §1 #1)*
@@ -558,9 +566,9 @@ API contracts above are the skeleton. Implementation order:
 
 - **TASK-MEMORY-108 (depends on)** — semantic search; we extend its `recall()` not replace it.
 - **TASK-MEMORY-112 (depends on)** — Episodes are the highest-stakes consumers of this ranking; the TASK-MEMORY-112 stub `combined_score` is replaced by `ranking.score_hits`.
-- **TASK-MEMORY-114 (this FR enables)** — write-time importance scoring writes the `meta.importance` field that this FR consumes.
-- **TASK-MEMORY-115 (this FR blocks)** — `cyberos dream` calls `score_hits()` against a fixed snapshot timestamp to score candidate episodes in batch.
-- **TASK-MEMORY-120 (this FR enables)** — `cyberos history` surfaces the four scalar annotations so the agent can explain "why did this rank first?".
+- **TASK-MEMORY-114 (this task enables)** — write-time importance scoring writes the `meta.importance` field that this task consumes.
+- **TASK-MEMORY-115 (this task blocks)** — `cyberos dream` calls `score_hits()` against a fixed snapshot timestamp to score candidate episodes in batch.
+- **TASK-MEMORY-120 (this task enables)** — `cyberos history` surfaces the four scalar annotations so the agent can explain "why did this rank first?".
 
 ---
 

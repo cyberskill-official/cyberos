@@ -2,8 +2,16 @@
 # ───── Machine-readable frontmatter ─────
 id: TASK-AI-004
 title: "Cost-hold expiry cleanup job — refund unsettled holds + emit audit"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AI
-priority: MUST
+priority: p0
 status: done
 accepted_at: 2026-05-15
 accepted_by: Stephen Cheng
@@ -46,7 +54,7 @@ allowed_tools:
 disallowed_tools:
   - in-place edit of cost_ledger_hold schema (TASK-AI-001/002 own it)
   - bypass memory_writer when emitting ai.hold_expired rows
-  - touch services/ai-gateway/src/cost_ledger.rs (this FR adds a sibling, not a fork)
+  - touch services/ai-gateway/src/cost_ledger.rs (this task adds a sibling, not a fork)
 
 # ───── Estimated work ─────
 effort_hours: 3
@@ -446,7 +454,7 @@ async fn process_one_hold(pool: &PgPool, hold_id: Uuid) -> Result<HoldDispositio
 - TASK-AI-003 — `memory_writer::emit()` + `canonical::hold_expired()` are available.
 
 **Concept dependencies:**
-- The state machine for `cost_ledger_hold.state`: `held → reconciled | refunded | expired`. This FR is the only path that creates `'expired'` rows.
+- The state machine for `cost_ledger_hold.state`: `held → reconciled | refunded | expired`. This task is the only path that creates `'expired'` rows.
 
 **Operational dependencies:**
 - Postgres at `DATABASE_URL`.
@@ -553,7 +561,7 @@ All resolved 2026-05-15 (round 2). Promoted to §1 normative clauses or deferred
 
 ## §11 — Notes
 
-- This is the smallest FR in slice 1 (3h effort) but probably the highest-leverage at runtime — it's the only thing standing between "holds that got reconciled" and "holds that didn't ever settle". Without it, the hold table is unbounded growth and the chain is missing a class of rows.
+- This is the smallest task in slice 1 (3h effort) but probably the highest-leverage at runtime — it's the only thing standing between "holds that got reconciled" and "holds that didn't ever settle". Without it, the hold table is unbounded growth and the chain is missing a class of rows.
 - The systemd unit lives in `deploy/systemd/` not `services/ai-gateway/deploy/`; that path convention is set by the platform team (deploy assets centralised, code repos clean).
 - The `ai_expiry_consecutive_failures_total` counter resets on each successful tick — its purpose is to drive an alert when cleanup is *completely* broken, not to count cumulative lifetime failures. The latter is provided by `ai_expiry_holds_processed_total` minus the lifetime `holds_succeeded` rollup in the OBS dashboard.
 - Once TASK-AI-021 (operator CLI) ships, the `cyberos-ai expiry-status` subcommand will surface the binary's live tick state without needing OBS — useful for low-environment debugging.

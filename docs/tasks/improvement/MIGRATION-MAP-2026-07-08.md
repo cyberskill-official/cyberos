@@ -1,7 +1,7 @@
 # Improvement backlog migration map (2026-07-08)
 
 One-time renumber of the three docs/improvement backlogs into tasks as
-`class: improvement` FRs. No `legacy_id` was kept on the FRs (operator choice); this
+`class: improvement` tasks. No `legacy_id` was kept on the tasks (operator choice); this
 table is the only record linking old ids to new. Use it to reconcile the in-flight
 `auto/memory-enterprise` and `auto/chat-enterprise` branches after merge.
 
@@ -33,7 +33,7 @@ table is the only record linking old ids to new. Use it to reconcile the in-flig
 | MEM-022 | TASK-MEMORY-222 | draft | Contextual embedding - situating prefix (who/where/when/kind) at embed |
 | MEM-023 | TASK-MEMORY-223 | draft | Query rewriting - relative-time parsing (EN+VN) and subject-handle exp |
 | MEM-024 | TASK-MEMORY-224 | draft | Write-time importance scoring with anchored rubric (TASK-MEMORY-114) |
-| MEM-025 | TASK-MEMORY-225 | draft | Day-1 emitters (chat/auth/proj/obs) + real consent gate wired to FR-EV |
+| MEM-025 | TASK-MEMORY-225 | draft | Day-1 emitters (chat/auth/proj/obs) + real consent gate wired to task-EV |
 | MEM-026 | TASK-MEMORY-226 | draft | Embedding lifecycle - halfvec, content_hash+embedded_at, batch embeds, |
 | MEM-027 | TASK-MEMORY-227 | draft | Warm-tier reachable on drill (honor documented behavior) |
 | MEM-028 | TASK-MEMORY-228 | draft | Recall API v1.1 - keyset pagination, scores breakdown in explain, feed |
@@ -152,7 +152,7 @@ table is the only record linking old ids to new. Use it to reconcile the in-flig
 | IMP-007 | TASK-IMP-007 | draft | apps/web test spine |
 | IMP-008 | TASK-IMP-008 | draft | Goldensets as first-class gate inputs |
 | IMP-009 | TASK-IMP-009 | draft | LLM call ledger in ai-gateway |
-| IMP-010 | TASK-IMP-010 | draft | Telemetry-to-FR bridge |
+| IMP-010 | TASK-IMP-010 | draft | Telemetry-to-task bridge |
 | IMP-011 | TASK-IMP-011 | draft | Structured gate-failure taxonomy |
 | IMP-012 | TASK-IMP-012 | draft | Coverage measurement and ratchet |
 | IMP-013 | TASK-IMP-013 | draft | Cross-service contract tests |
@@ -162,10 +162,10 @@ table is the only record linking old ids to new. Use it to reconcile the in-flig
 | IMP-017 | TASK-IMP-017 | draft | OTLP tracing export |
 | IMP-018 | TASK-IMP-018 | draft | Prometheus metrics endpoints |
 | IMP-019 | TASK-IMP-019 | draft | SLO definitions and burn-rate alerts |
-| IMP-020 | TASK-IMP-020 | draft | FR outcome scoring |
+| IMP-020 | TASK-IMP-020 | draft | task outcome scoring |
 | IMP-021 | TASK-IMP-021 | draft | Rubric evals for LLM outputs, anchored judge |
 | IMP-022 | TASK-IMP-022 | draft | Ban defensive asserts |
-| IMP-023 | TASK-IMP-023 | draft | Groom draft FRs with value and confidence |
+| IMP-023 | TASK-IMP-023 | draft | Groom draft tasks with value and confidence |
 | IMP-024 | TASK-IMP-024 | draft | Dream proposal ranking |
 | IMP-025 | TASK-IMP-025 | draft | Dream budget, latency and drift gates |
 | IMP-026 | TASK-IMP-026 | draft | Auto-revert on gate regression |

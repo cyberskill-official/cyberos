@@ -28,7 +28,7 @@ Without rotation, stolen refresh grants indefinite access. Resolved: §1 clause 
 Easy at-rest exfiltration. Resolved: §1 clause 7 + DEC-2445 — OS keychain (macOS/Windows/Linux) with encrypted-file fallback at 0600; AC #13-14; §11.4.
 
 ### ISS-005 — Open scope strings drift
-Scope catalogue creep makes consent UI unpredictable. Resolved: §1 clause 5 + DEC-2443 — closed catalogue of 7 scopes; new scopes require successor FR; AC #20.
+Scope catalogue creep makes consent UI unpredictable. Resolved: §1 clause 5 + DEC-2443 — closed catalogue of 7 scopes; new scopes require successor task; AC #20.
 
 ### ISS-006 — Revocation has no propagation latency target
 Without a stated target, admins don't know what to expect. Resolved: §1 clause 8 + DEC-2446 — 60-second cache TTL; AC #15; failure mode row 10.

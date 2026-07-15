@@ -2,8 +2,16 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future fr-catalog renderer) ─────
 id: TASK-AUTH-001
 title: "Tenant create — root-admin in tenant 0 calls POST /v1/admin/tenants with idempotency + RLS provisioning"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AUTH
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P0
@@ -71,7 +79,7 @@ subtasks:
   - "0.5h: Authorisation middleware (tenant_id == Uuid::nil() + role contains root-admin)"
   - "0.5h: Idempotency-Key header parsing + 24h dedup window"
   - "1.5h: Tests — happy + 401 + 403 + 409 + 400 + idempotent-replay + RLS-applied + audit-emitted + p95 latency"
-risk_if_skipped: "Every other AUTH FR depends on tenants existing. AI Gateway slice 2+ uses tenant_id from JWT (TASK-AI-006 references AUTH JWT extraction). CHAT can't have a workspace. Multi-tenancy starts at zero usable tenants. Without RLS auto-provisioning, every new tenant requires manual SQL — operator bottleneck on every onboarding. Without idempotency, network retries during tenant create produce duplicates with different UUIDs (one tenant becomes two; data scattered across both)."
+risk_if_skipped: "Every other AUTH task depends on tenants existing. AI Gateway slice 2+ uses tenant_id from JWT (TASK-AI-006 references AUTH JWT extraction). CHAT can't have a workspace. Multi-tenancy starts at zero usable tenants. Without RLS auto-provisioning, every new tenant requires manual SQL — operator bottleneck on every onboarding. Without idempotency, network retries during tenant create produce duplicates with different UUIDs (one tenant becomes two; data scattered across both)."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -565,12 +573,12 @@ pub async fn emit_in_tx(tx: &mut PgConnection, row: AuditRow) -> Result<(), memo
 
 ## §7 — Dependencies
 
-### Code dependencies (other FRs/modules)
+### Code dependencies (other tasks/modules)
 
-- **TASK-AUTH-006 (upstream)** — Bootstrap CLI creates tenant 0; this FR cannot create tenant 0.
-- **TASK-AUTH-002 (downstream)** — Subject create scopes subjects to a tenant; uses the tenant_id this FR returns.
-- **TASK-AUTH-003 (downstream)** — RLS enforcement consumes the policies this FR provisions.
-- **TASK-AUTH-004 (downstream)** — JWT issuance carries `tenant_id` claim referencing tenants this FR created.
+- **TASK-AUTH-006 (upstream)** — Bootstrap CLI creates tenant 0; this task cannot create tenant 0.
+- **TASK-AUTH-002 (downstream)** — Subject create scopes subjects to a tenant; uses the tenant_id this task returns.
+- **TASK-AUTH-003 (downstream)** — RLS enforcement consumes the policies this task provisions.
+- **TASK-AUTH-004 (downstream)** — JWT issuance carries `tenant_id` claim referencing tenants this task created.
 - **TASK-AI-006 (downstream)** — AI Gateway alias resolution reads `tenant_id` from JWT, queries tenant_policies (a tenant-scoped table requiring RLS).
 - **TASK-AI-022 (downstream)** — OTel span `auth.create_tenant` carries W3C TraceContext.
 
@@ -685,7 +693,7 @@ POST /v1/admin/tenants HTTP/1.1
 
 ## §9 — Open questions
 
-All resolved at authoring time. Items deferred to later FRs:
+All resolved at authoring time. Items deferred to later tasks:
 
 - Tenant deletion (hard delete vs. soft delete via `suspended`) — slice 5+; no production tenant has been deleted to date.
 - Tenant rename (`PATCH /v1/admin/tenants/<id> --name=...`) — slice 3+; current model is immutable name.

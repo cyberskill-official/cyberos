@@ -60,4 +60,4 @@ services:
 
 # Note: services/auth's docker-compose stays separate. The AUTH bridge
 # plugin (TASK-CHAT-002) is what wires this stack to the AUTH JWT layer.
-# Slice 1 (this FR) uses Mattermost's native auth.
+# Slice 1 (this task) uses Mattermost's native auth.

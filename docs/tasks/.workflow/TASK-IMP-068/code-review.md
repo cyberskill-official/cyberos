@@ -31,7 +31,7 @@ mod: docs/deploy/RELEASE.md (enforcement wording replaces the aspirational claim
 ## Edge-case matrix: 12/12 rows covered (see matrix "covered by" column)
 
 ## Deviations from spec (all recorded)
-1. marketplace.json version lives at `metadata.version`, not on the plugin entry - FR §1 #1 and §3
+1. marketplace.json version lives at `metadata.version`, not on the plugin entry - task §1 #1 and §3
    wording corrected to match reality (behavioral intent unchanged: the marketplace manifest stamp
    is guarded).
 2. build.sh guard placed at the TOP of the script (before `rm -rf "$out"`), stronger than the spec's

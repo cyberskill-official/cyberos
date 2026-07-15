@@ -162,7 +162,7 @@ SELECT 'service-account', resource, action FROM role_permissions WHERE role = 't
 INSERT INTO role_permissions (role, resource, action)
 SELECT 'agent-persona',   resource, action FROM role_permissions WHERE role = 'tenant-member';
 
--- C-suite per-officer focal points (minimum seed; full matrix grows with FRs).
+-- C-suite per-officer focal points (minimum seed; full matrix grows with tasks).
 INSERT INTO role_permissions (role, resource, action) VALUES
 ('cfo',   'inv-invoice',    'read'),
 ('cfo',   'inv-invoice',    'approve'),

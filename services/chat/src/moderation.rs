@@ -429,7 +429,7 @@ pub async fn detail(
     }))
 }
 
-/// §1 #8, #9 — the whole privacy argument of this FR, in one function.
+/// §1 #8, #9 — the whole privacy argument of this task, in one function.
 ///
 /// Returns the messages around the reported one, and ONLY when BOTH hold:
 ///   1. the channel is a GROUP channel (never a DM), and

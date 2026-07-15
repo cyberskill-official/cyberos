@@ -35,7 +35,7 @@ curl -X POST http://localhost:7700/v1/admin/subjects \
 
 ## What ships in this slice
 
-| FR | Component | State |
+| Task | Component | State |
 |---|---|---|
 | TASK-AUTH-001 | `POST /v1/admin/tenants` + idempotency table | ✓ shipped |
 | TASK-AUTH-002 | `POST /v1/admin/subjects` + bcrypt | ✓ shipped |

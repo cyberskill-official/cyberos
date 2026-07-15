@@ -1,8 +1,16 @@
 ---
 id: TASK-INV-001
 title: "INV invoice substrate — draft invoices from TIME per-cycle rollup with rate-card snapshot preservation + closed enums + lifecycle FSM + per-line traceability"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: INV
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P2
@@ -14,7 +22,7 @@ shipped: null
 memory_chain_hash: null
 related_tasks: [TASK-INV-002, TASK-INV-003, TASK-INV-005, TASK-INV-006, TASK-INV-007, TASK-TIME-009, TASK-TEN-003, TASK-TEN-102, TASK-PORTAL-001, TASK-PORTAL-006, TASK-CRM-001, TASK-AUTH-101, TASK-AI-003, TASK-MEMORY-111, TASK-OBS-007]
 depends_on: [TASK-TIME-009]   # TASK-TIME-009 placeholder — not yet specified
-blocks: [TASK-INV-002, TASK-INV-007, TASK-INV-009, TASK-INV-011]   # INV-009/011 use INV-001 invoice substrate; INV-003/005/006 already shipped + depend on AUTH-101 instead of this FR
+blocks: [TASK-INV-002, TASK-INV-007, TASK-INV-009, TASK-INV-011]   # INV-009/011 use INV-001 invoice substrate; INV-003/005/006 already shipped + depend on AUTH-101 instead of this task
 
 source_pages:
   - website/docs/modules/inv.html
@@ -32,7 +40,7 @@ source_decisions:
   - DEC-1368 2026-05-17 — Per-engagement billing: invoice belongs to ONE engagement (multi-engagement invoices = anti-pattern; client confusion + audit-attribution unclear)
   - DEC-1369 2026-05-17 — Draft auto-generation: scheduled job at end of each billing cycle (per-engagement cycle config — monthly default) creates draft from unbilled TIME entries; manual override path for off-cycle invoices
   - DEC-1370 2026-05-17 — Approval gate: only `cfo` or `engagement_admin` can transition `ready_for_review → approved`; sent transition requires approved status
-  - DEC-1371 2026-05-17 — Write-off requires CFO + reason; preserves audit trail; surfaces in financial reports per FR-INV-2xx
+  - DEC-1371 2026-05-17 — Write-off requires CFO + reason; preserves audit trail; surfaces in financial reports per task-INV-2xx
   - DEC-1372 2026-05-17 — VAT handling at slice 1: per-line VAT rate (decimal 0-100%), defaults to engagement-configured rate; line.amount_minor is pre-tax; totals computed at render time
   - DEC-1373 2026-05-17 — Multi-currency support deferred to TASK-INV-002; slice 1 = engagement.billing_currency only (single-currency per invoice per DEC-1368 derivative)
   - DEC-1374 2026-05-17 — memory audit kinds: inv.draft_created, inv.lines_added, inv.status_transitioned, inv.approved, inv.sent, inv.paid, inv.void, inv.written_off, inv.correction_added
@@ -110,7 +118,7 @@ risk_if_skipped: "Without invoice substrate, the entire billing → revenue → 
 
 ## §1 — Description (BCP-14 normative)
 
-The INV service **MUST** ship invoice substrate at `services/inv/src/` with 5 migrations, 8-state status FSM, append-only line corrections, rate-card snapshot, per-engagement scoping, gap-free per-tenant numbering, CFO-gated write-off, and 9 memory audit kinds. Anchors all downstream INV FRs (002-011) and cross-module invoice references.
+The INV service **MUST** ship invoice substrate at `services/inv/src/` with 5 migrations, 8-state status FSM, append-only line corrections, rate-card snapshot, per-engagement scoping, gap-free per-tenant numbering, CFO-gated write-off, and 9 memory audit kinds. Anchors all downstream INV tasks (002-011) and cross-module invoice references.
 
 1. **MUST** define closed `invoice_status` enum: `('draft','ready_for_review','approved','sent','partially_paid','paid','void','written_off')` per DEC-1361. Cardinality 8.
 
@@ -548,7 +556,7 @@ Deferred:
 
 **§11.1** Rate-card snapshot deep-copy via `serde_json::to_value(&rate_card)` ensures complete capture.
 
-**§11.2** TIME-side `invoiced_at` column added via migration in this FR's `modified_files`.
+**§11.2** TIME-side `invoiced_at` column added via migration in this task's `modified_files`.
 
 **§11.3** Numbering sequence uses Postgres `FOR UPDATE` row lock to prevent race; skipped logged via post-rollback hook.
 

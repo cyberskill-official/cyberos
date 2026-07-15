@@ -1,10 +1,17 @@
 ---
 id: TASK-IMP-075
 title: "MAS updater exclusion — `mas` cargo feature compiles the self-updater out of the Mac App Store build"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: improvement
+created_at: 2026-07-13T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: improvement
-priority: MUST
+priority: p0
 status: done
-class: improvement
 verify: T
 phase: "Wave 6 - go-live (Track B: store channels)"
 owner: Stephen Cheng (CTO)
@@ -16,7 +23,7 @@ depends_on: []
 blocks: []
 source_pages:
   - "apps/desktop/src-tauri/src/lib.rs lines 75-107 (three #[cfg(desktop)] sites: spawn_update_check defn, plugin registration, launch call)"
-  - "apps/desktop/src-tauri/tauri.conf.json plugins.updater (pubkey + GitHub endpoint CONFIGURED - the MAS bundle would actively self-update without this FR)"
+  - "apps/desktop/src-tauri/tauri.conf.json plugins.updater (pubkey + GitHub endpoint CONFIGURED - the MAS bundle would actively self-update without this task)"
   - "docs/deploy/mac-app-store-submission.md 'Updater finding' + hard blocker #1 (TASK-APP-003's audit discovered this; fix explicitly deferred to this follow-up)"
 source_decisions:
   - "2026-07-13 Stephen: 'Start' - go-ahead for the updater-exclusion follow-up TASK-APP-003 requires before MAS_RELEASE can ever flip."

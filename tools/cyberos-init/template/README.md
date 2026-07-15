@@ -9,11 +9,11 @@ Grok CLI, zcode, Command Code, Copilot, Windsurf, ...).
 1. Your agent reads `AGENTS.md` (the cross-agent spine) or `.cyberos/AGENT-ENTRY.md`.
 2. Write a task:
    ```bash
-   cp .cyberos/cuo/templates/FR-TEMPLATE.md docs/tasks/FR-001-<slug>.md
+   cp .cyberos/cuo/templates/task-TEMPLATE.md docs/tasks/TASK-001-<slug>.md
    # fill section 1, set status: ready_to_implement, add the row to docs/tasks/BACKLOG.md
    ```
 3. Trigger it: tell your agent to "follow `.cyberos/cuo/ship-tasks.md` and drive
-   the next eligible FR" - or, with an MCP client, call the `ship_fr` tool.
+   the next eligible task" - or, with an MCP client, call the `ship_fr` tool.
 4. Gates any time: `bash .cyberos/cuo/gates/run-gates.sh`.
 
 HITL is required: the agent halts at review acceptance and final acceptance for your verdict,

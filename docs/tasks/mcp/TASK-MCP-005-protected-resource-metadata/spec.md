@@ -1,8 +1,16 @@
 ---
 id: TASK-MCP-005
 title: "MCP Protected Resource Metadata (RFC 9728) at `/.well-known/oauth-protected-resource` — closed audience-binding advertisement for federated MCP clients"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: MCP
-priority: MUST
+priority: p0
 status: implementing
 verify: T
 phase: P0
@@ -141,7 +149,7 @@ The MCP service **MUST** expose RFC 9728 Protected Resource Metadata at `/.well-
 
 18. **MUST** route per-module PRM 404 (unknown module) via the same RLS/rate-limit middleware as the gateway-aggregate path — do not branch the middleware. Single ingress.
 
-19. **MUST** emit the `WWW-Authenticate` resource-metadata header on 401 responses from TASK-MCP-001 endpoints per MCP spec §2.1, pointing at this FR's PRM URL. Implementation note for TASK-MCP-001 integration (this FR provides the endpoint; TASK-MCP-001 references it).
+19. **MUST** emit the `WWW-Authenticate` resource-metadata header on 401 responses from TASK-MCP-001 endpoints per MCP spec §2.1, pointing at this task's PRM URL. Implementation note for TASK-MCP-001 integration (this task provides the endpoint; TASK-MCP-001 references it).
 
 20. **SHOULD** include `client_uri` field in the PRM pointing at `https://cyberos.world/mcp/clients` (a public landing page documenting registered MCP clients per DEC-902 derivative). OPTIONAL; included for client discoverability.
 
@@ -426,7 +434,7 @@ pub async fn build_per_module_prm(ctx: &AppCtx, module: &str) -> Option<PrmDocum
 - **TASK-MCP-004** OAuth 2.1 PKCE — audience-bound tokens require this discovery endpoint to be useful.
 
 **Cross-module (related_tasks):**
-- **TASK-MCP-001** spec compliance — `WWW-Authenticate: Bearer resource_metadata=<this-FR's-URL>` referenced from 401 responses.
+- **TASK-MCP-001** spec compliance — `WWW-Authenticate: Bearer resource_metadata=<this-task's-URL>` referenced from 401 responses.
 - **TASK-MCP-002** per-module registration — registry feeds per-module PRM `scopes_supported`.
 - **TASK-MCP-006** Tool-annotation gating — scopes advertised here reflect the tool-annotation set.
 - **TASK-MCP-007** Tasks primitive — tasks tools' scopes appear in per-module PRM.
@@ -435,7 +443,7 @@ pub async fn build_per_module_prm(ctx: &AppCtx, module: &str) -> Option<PrmDocum
 - **TASK-AI-003** memory audit-row bridge — 3 new kinds register.
 - **TASK-OBS-005** Trace correlation — `mcp.prm_served` sampled via OBS tail-sampling.
 
-**Downstream (blocks):** None at this slice. Future per-tool authz hooks (FR-MCP-2xx) may consume PRM.
+**Downstream (blocks):** None at this slice. Future per-tool authz hooks (task-MCP-2xx) may consume PRM.
 
 ---
 
@@ -522,7 +530,7 @@ Content-Type: application/json
 
 All resolved. Deferred:
 
-- **Deferred:** Per-tenant PRM override (vanity URLs at `<slug>.cyberos.world/.well-known/...`) — slice 3, FR-MCP-2xx.
+- **Deferred:** Per-tenant PRM override (vanity URLs at `<slug>.cyberos.world/.well-known/...`) — slice 3, task-MCP-2xx.
 - **Deferred:** Multi-language `resource_documentation` URLs — slice 3.
 - **Deferred:** Localised PRM scope descriptions (`scopes_supported_descriptions`) — slice 3.
 - **Deferred:** PRM signing per RFC 9728 §3.5 (signed metadata) — slice 3; current trust model is HTTPS-only.

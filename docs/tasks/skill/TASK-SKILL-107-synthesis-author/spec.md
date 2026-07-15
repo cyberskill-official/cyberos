@@ -1,8 +1,16 @@
 ---
 id: TASK-SKILL-107
 title: "synthesis-author@1 skill — nightly multi-memory auto-evolve composes derived memories from clustered raw captures (P3 — stub scaffold in P1)"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: SKILL
-priority: COULD
+priority: p2
 status: done
 verify: I
 phase: P3
@@ -69,7 +77,7 @@ The `synthesis-author@1` skill **MUST** scaffold the nightly multi-memory synthe
 
 ## §2 — Why this design
 
-Same reasoning as TASK-SKILL-106 stub: reserve ID, capture UX, audit invocations, defer logic to module-owner FR (here: the eventual P3 synthesis pipeline). Synthesis is high-leverage but expensive (LLM compose chains); shipping the stub now lets early adopters experiment with the surface API without compute cost.
+Same reasoning as TASK-SKILL-106 stub: reserve ID, capture UX, audit invocations, defer logic to module-owner task (here: the eventual P3 synthesis pipeline). Synthesis is high-leverage but expensive (LLM compose chains); shipping the stub now lets early adopters experiment with the surface API without compute cost.
 
 ---
 

@@ -1,8 +1,16 @@
 ---
 id: TASK-CRM-002
 title: "CRM activity feed — auto-log inbound email + outbound send + chat mention + calendar event to per-contact timeline"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: CRM
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P1
@@ -234,7 +242,7 @@ async fn append_only_no_update() {
 | Correction chain too deep (>10) | sanity check | sev-3; allow | inherent |
 
 ## §11 — Implementation notes
-- §11.1 Subscribers via internal event bus or polling FR-memory audit log; choose per-deployment.
+- §11.1 Subscribers via internal event bus or polling task-memory audit log; choose per-deployment.
 - §11.2 Dedup window 60s — short enough to catch races, long enough to allow distinct re-sends.
 - §11.3 Summary auto-generated: kind-specific template (`"Email from {sender}: {subject_first_60_chars}"`).
 - §11.4 memory audit body: kind, contact_id, source ids; summary SHA256.

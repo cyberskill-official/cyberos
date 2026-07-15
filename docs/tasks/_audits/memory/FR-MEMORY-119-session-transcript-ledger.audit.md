@@ -43,7 +43,7 @@ Without walker-level enforcement, malformed session lifecycles (start without en
 | SEC-001..009 | ✓ | All required sections present |
 | COND-001..004 | n/a | client_visible: false |
 | QA-001..009 | ✓ | Alternatives discussed; scope clear; non-vanity metrics |
-| SAFE-001..004 | n/a | No untrusted_content blocks (transcripts may contain user content but the FR doesn't quote any inline) |
+| SAFE-001..004 | n/a | No untrusted_content blocks (transcripts may contain user content but the task doesn't quote any inline) |
 | TRACE-001 | ✓ | Coverage: §1 #1→AC1/AC9/AC10, #2→AC24/AC25, #3→AC2/AC4, #4→AC3/AC15/AC16, #5→AC5/AC6/AC7/AC8/AC13/AC14, #6→AC5/AC6/AC7, #7→AC15/AC16, #8→AC17, #9→AC18/AC19, #10→AC18/AC20, #11→AC21, #12→AC22, #13→AC11/AC12, #14→AC23, #15/#16 SHOULD (deferred) |
 | TRACE-002 | ✓ | Every AC named in §5 test fns |
 | TRACE-003 | ✓ | Test paths in `frontmatter.new_files` |

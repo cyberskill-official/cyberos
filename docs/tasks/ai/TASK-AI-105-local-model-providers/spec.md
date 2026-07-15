@@ -2,13 +2,13 @@
 template: task@1
 id: TASK-AI-105
 title: "Local + external model providers (LM Studio + Ollama, no-key local)"
+type: feature
 author: "@stephen"
 department: engineering
 status: draft
 priority: p1
 created_at: "2026-06-22T10:00:00+07:00"
 ai_authorship: assisted
-feature_type: integration
 eu_ai_act_risk_class: limited
 target_release: 2026-Q3
 client_visible: false
@@ -101,8 +101,8 @@ In scope: the LocalOpenai and Ollama adapters, env-driven endpoints, the no-key 
 ### Out of scope
 
 - Streaming for local providers (SSE token-by-token). Deferred to a follow-up; the streaming-support table returns false for now.
-- Local embeddings (Ollama /api/embeddings, LM Studio /v1/embeddings). The embedding path stays on TASK-AI-019 BGE; local embeddings are a separate FR.
-- Full KMS wiring of cloud-provider keys (Anthropic, OpenAI, Bedrock). This FR specs the seam and keeps those adapters on the same trait, but the secrets-management implementation is its own FR and stays behind the prohibited-secrets boundary.
+- Local embeddings (Ollama /api/embeddings, LM Studio /v1/embeddings). The embedding path stays on TASK-AI-019 BGE; local embeddings are a separate task.
+- Full KMS wiring of cloud-provider keys (Anthropic, OpenAI, Bedrock). This task specs the seam and keeps those adapters on the same trait, but the secrets-management implementation is its own task and stays behind the prohibited-secrets boundary.
 - GPU or model lifecycle management of the local server itself (loading, unloading, quantization).
 
 ## Dependencies
@@ -113,7 +113,7 @@ In scope: the LocalOpenai and Ollama adapters, env-driven endpoints, the no-key 
 - TASK-AI-007 provider cost-table loader - zero-cost rows for local providers, and the loader must tolerate their absence.
 - TASK-AI-015 ZDR enforcement - local providers are inherently zero-retention; the ZDR parser learns the new kinds.
 - TASK-AI-003 memory audit bridge - the two new audit kinds.
-- Cross-cutting: the server-dispatch flip touches `services/ai-gateway/src/server.rs` (the HTTP handler), which is the one architecturally significant change in this FR.
+- Cross-cutting: the server-dispatch flip touches `services/ai-gateway/src/server.rs` (the HTTP handler), which is the one architecturally significant change in this task.
 
 ## AI Risk Assessment
 
@@ -131,6 +131,6 @@ If the local server is down, the adapter fails closed and the router falls over 
 
 ## AI Authorship Disclosure
 
-- Tools used: Claude (Cowork), authoring this FR from Stephen's capability request and the existing TASK-AI-008 router code.
+- Tools used: Claude (Cowork), authoring this task from Stephen's capability request and the existing TASK-AI-008 router code.
 - Scope: full draft of this specification, including the normative clauses and acceptance criteria. The LocalOpenai and Ollama adapter code is authored in the same session.
 - Human review: Stephen reviews and approves before status moves past draft; the paired audit (TASK-AI-105.audit.md) and the CAF gate validate before merge.

@@ -1,8 +1,16 @@
 ---
 id: TASK-TEN-101
 title: "Self-serve signup form ≤ 30 s end-to-end — email OTP + slug + plan + currency + payment + provisioning + root-admin + first-login JWT in one orchestrated flow"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: TEN
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P3
@@ -188,7 +196,7 @@ The TEN service **MUST** ship the public self-serve signup flow at `services/ten
       2. Verify `signup_sessions.state == 'email_verified'`; else 409.
       3. Validate plan_tier ∈ {Starter, Team}; reject Enterprise with 403.
       4. Validate consents: ToS + Privacy MUST be present at the latest published versions; Marketing OPTIONAL; for VN tenants, `pdpl_vn_data_processing` MUST be present.
-      5. Check duplicate-email guard (per DEC-842): if `tenants` already has a row keyed by `billing_contact_email_hash16 = HMAC(global_salt, email_lower)` AND `status='active'`, return 409 + `{ error: "email_already_associated", magic_link_sent: true }` AND email a magic-link sign-in to the existing tenant; emit `ten.signup_abandoned` with reason='duplicate_email'. The hash16 index on `tenants.billing_contact_email_hash16` is created by this FR's migration `0011` ALTER statement.
+      5. Check duplicate-email guard (per DEC-842): if `tenants` already has a row keyed by `billing_contact_email_hash16 = HMAC(global_salt, email_lower)` AND `status='active'`, return 409 + `{ error: "email_already_associated", magic_link_sent: true }` AND email a magic-link sign-in to the existing tenant; emit `ten.signup_abandoned` with reason='duplicate_email'. The hash16 index on `tenants.billing_contact_email_hash16` is created by this task's migration `0011` ALTER statement.
     - **Phase B — external Stripe call (outside DB tx to avoid long-held connections):**
       6. For stripe-rail: confirm the SetupIntent via Stripe API (`POST /v1/setup_intents/{id}/confirm`); on failure, transition `signup_sessions.state='abandoned'` + `abandon_reason='payment_failed'` + return 402 PAYMENT_REQUIRED. The Stripe SetupIntent ID is recorded in `signup_sessions.payment_captured_at` BEFORE the DB tx opens so any subsequent failure can void it (DEC-843 derivative).
     - **Phase C — atomic provisioning transaction:**
@@ -279,7 +287,7 @@ The TEN service **MUST** ship the public self-serve signup flow at `services/ten
 
 **Why squatting detection (§1 #18, DEC-844)?** Bots that scrape signup forms often abandon at payment (no valid card). 5 abandoned signups from one IP in 24h is statistically improbable for humans (~10⁻⁴ in our observed funnel data, mostly families with multiple businesses). 24h cool-off + manual support unblock for false positives is the right trade.
 
-**Why versioned consents (§1 #16, DEC-832)?** Regulators ask "what did this user agree to?" The answer needs a version string + a way to fetch the exact text. Storing `version: "tos-v2.3"` + a static `tos-v2.3.md` file in source means we can answer that question with bit-exact text years later. ToS/Privacy version bumps require a consent-re-acceptance flow (out-of-scope here; FR-TEN-1xx).
+**Why versioned consents (§1 #16, DEC-832)?** Regulators ask "what did this user agree to?" The answer needs a version string + a way to fetch the exact text. Storing `version: "tos-v2.3"` + a static `tos-v2.3.md` file in source means we can answer that question with bit-exact text years later. ToS/Privacy version bumps require a consent-re-acceptance flow (out-of-scope here; task-TEN-1xx).
 
 **Why dual-scope RLS on signup_sessions (§1 #27)?** Pre-tenant signups have no `tenant_id` (no tenant exists yet), but the row must be RLS-scoped — without scoping, anonymous users could enumerate all in-flight signups via the API. The "system tenant" UUID `00000000-0000-0000-0000-000000000001` is a well-known sentinel that the public signup handlers set via `SET LOCAL auth.tenant_id` at request entry; post-completion the row's `tenant_id` is back-filled and the policy transparently transitions to the real tenant.
 
@@ -1028,16 +1036,16 @@ pub fn hash_otp(otp: &str, signup_session_id: uuid::Uuid, secret: &[u8]) -> Stri
 
 All resolved for slice 1. Deferred to later slices:
 
-- **Deferred:** Magic-link sign-in flow for existing-tenant returns — slice 2, FR-TEN-1xx (placeholder — not yet specified). For slice 1, the `magic_link_sent: true` response sets a follow-up commitment.
-- **Deferred:** Multi-step ToS/Privacy version-bump re-acceptance flow — slice 2, FR-TEN-1xx.
+- **Deferred:** Magic-link sign-in flow for existing-tenant returns — slice 2, task-TEN-1xx (placeholder — not yet specified). For slice 1, the `magic_link_sent: true` response sets a follow-up commitment.
+- **Deferred:** Multi-step ToS/Privacy version-bump re-acceptance flow — slice 2, task-TEN-1xx.
 - **Deferred:** B2B "invite teammate" flow at signup (currently root-admin only; teammates invited post-signup via TASK-AUTH-101 admin) — slice 2.
 - **Deferred:** Phone-number alternate identifier for SMS OTP — slice 2 (email-only at slice 1).
 - **Deferred:** SSO-only enforcement at signup (some enterprises want "no password account creation") — slice 2.
-- **Deferred:** Sub-tenant signup (PORTAL invites; TASK-PORTAL-001 path) — out-of-scope at this FR.
-- **Deferred:** Annual billing cycle option at signup — slice 2 / FR-TEN-1xx (currently monthly only per TASK-TEN-003 §9).
+- **Deferred:** Sub-tenant signup (PORTAL invites; TASK-PORTAL-001 path) — out-of-scope at this task.
+- **Deferred:** Annual billing cycle option at signup — slice 2 / task-TEN-1xx (currently monthly only per TASK-TEN-003 §9).
 - **Deferred:** Promotional coupon code field at signup — slice 2.
-- **Deferred:** Enterprise self-serve via Sales-Assisted flow (signup → sales calendar booking → manual provisioning) — out-of-scope at this FR (DEC-823).
-- **Deferred:** eIDAS QTSP-compliant signup for EU regulated tenants — slice 3 / FR-TEN-2xx (placeholder — not yet specified).
+- **Deferred:** Enterprise self-serve via Sales-Assisted flow (signup → sales calendar booking → manual provisioning) — out-of-scope at this task (DEC-823).
+- **Deferred:** eIDAS QTSP-compliant signup for EU regulated tenants — slice 3 / task-TEN-2xx (placeholder — not yet specified).
 
 ---
 
@@ -1103,7 +1111,7 @@ All resolved for slice 1. Deferred to later slices:
 
 **§11.14** The PII scrub job (§1 #21) runs daily at 03:00 UTC via the same scheduled-job framework as TASK-TEN-003's TTL pruner. Scrubbed rows retain analytical value (funnel state, geoip_country) but no longer carry personally identifying data.
 
-**§11.15** The `cyberos_consent_writer` role (§3.1 grant) is held only by the consent-withdrawal endpoint (slice 2, FR-TEN-1xx); slice 1 has no withdrawal flow yet, so the role exists with no live grants beyond the schema permission.
+**§11.15** The `cyberos_consent_writer` role (§3.1 grant) is held only by the consent-withdrawal endpoint (slice 2, task-TEN-1xx); slice 1 has no withdrawal flow yet, so the role exists with no live grants beyond the schema permission.
 
 **§11.16** The signup flow is the FIRST place where `signup_session_id` is generated; the client (frontend SPA) generates a UUIDv7 at page load and reuses across all 5 endpoints. Server never generates session_ids — this makes the flow resumable across browser reloads.
 
@@ -1115,7 +1123,7 @@ All resolved for slice 1. Deferred to later slices:
 
 **§11.20** Test fixtures for `signup_30s_sla_test` use Stripe test cards that auto-succeed (no 3DS challenge); production users hit 3DS on ~5-10% of cards which adds ~5s. The 30s SLO is measured with 3DS-skip; the realistic-3DS SLO is 40s (informally tracked).
 
-**§11.21** The system tenant UUID `00000000-0000-0000-0000-000000000001` is reserved by TASK-AUTH-001 §3.2 (per TASK-AUTH-001's DEC entry) — not invented here. This FR consumes the well-known sentinel.
+**§11.21** The system tenant UUID `00000000-0000-0000-0000-000000000001` is reserved by TASK-AUTH-001 §3.2 (per TASK-AUTH-001's DEC entry) — not invented here. This task consumes the well-known sentinel.
 
 **§11.22** Welcome email content includes: tenant slug, login URL, JWT-as-magic-link (24h TTL), root-admin's auto-generated password (one-time display), short onboarding checklist. The password lives in the email body which is sensitive — TASK-EMAIL-001 enforces TLS-only delivery + DKIM + SPF.
 
@@ -1123,7 +1131,7 @@ All resolved for slice 1. Deferred to later slices:
 
 **§11.24** Analytics emission: the 5 funnel stages (start, otp_verified, payment_captured, provisioned, completed) emit OTel events with attribute `funnel_stage`; drop-off analysis lives in OBS (TASK-OBS-005).
 
-**§11.25** Locale handling: `locale_hint` from the client (Accept-Language header default + override) drives consent locale + welcome email locale + UI strings. Supported at slice 1: `en-US`, `vi-VN`; slice 2 adds `zh-SG`, `de-DE`, `fr-FR`, `es-ES`.
+**§11.25** Locale handling: `locale_hint` from the client (Accept-Language header default + override) drives consent locale + welcome email locale + UI strings. Supported at slice 1: `en-US`, `vi-VN`; slice 2 adds `zh-SG`, `de-DE`, `fr-task`, `es-ES`.
 
 **§11.26** The form submits to our backend over HTTPS only; HSTS preload + Content-Security-Policy `default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://js.stripe.com` prevents MitM + XSS. Stripe Elements iframes are sandboxed.
 

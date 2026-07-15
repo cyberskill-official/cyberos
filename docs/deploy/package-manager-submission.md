@@ -31,5 +31,5 @@ Review this sheet TOGETHER with `docs/deploy/linux-store-submission.md` before t
 ## Shared operational rules
 
 - **`--clobber` staleness rule:** the existing release pipeline re-uploads assets with `--clobber`; ALWAYS re-run the prep job against the final release state immediately before preparing a submission — a hash from an earlier run may be stale (spec §10).
-- **PAT scopes (future automation only):** this FR ships no PR automation and no PAT. If a future FR adopts `wingetcreate`/Homebrew bump tooling, scope the PAT to the minimum fork-and-PR permission set that tool needs (never a full-`repo` classic token), stored like the other release secrets (`*_BASE64` pattern).
+- **PAT scopes (future automation only):** this task ships no PR automation and no PAT. If a future task adopts `wingetcreate`/Homebrew bump tooling, scope the PAT to the minimum fork-and-PR permission set that tool needs (never a full-`repo` classic token), stored like the other release secrets (`*_BASE64` pattern).
 - **Version-bump PRs are also Stephen-gated** — not just the first submission (spec §1 #5/#6).

@@ -1,8 +1,16 @@
 ---
 id: TASK-PROJ-007
 title: "Three billing modes — Time & Materials, Fixed-Fee, Retainer — with mode-aware rollups and per-mode invoice generation hooks"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: PROJ
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -491,7 +499,7 @@ All resolved. Deferred:
 | Mode change without proration | period straddles change | rollup uses mode-at-period-start | Slice 4+ proration |
 | memory audit fails | rollup still returns; audit lost | sev-2 alarm | Operator restores |
 | Concurrent rollup calls | retainer_state ON CONFLICT DO UPDATE | last writer wins for state; rollup result deterministic | None |
-| Invoice already generated for period | duplicate invoice attempt | caller's TASK-INV-001 dedup catches | None at this FR |
+| Invoice already generated for period | duplicate invoice attempt | caller's TASK-INV-001 dedup catches | None at this task |
 | RLS bypass | RLS policy | 0 rows | None |
 | Config JSON malformed | serde Err | 422 | Caller fixes |
 | Milestone has target_pct_complete > 100 | should be rejected at insert | 422 | Caller fixes |

@@ -1,8 +1,16 @@
 ---
 id: TASK-EMAIL-007
-title: "EMAIL convert-to-issue — one-click create FR-PROJ issue from message with thread backlink + attachment carry-over + AI summary"
+title: "EMAIL convert-to-issue — one-click create task-PROJ issue from message with thread backlink + attachment carry-over + AI summary"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: EMAIL
-priority: SHOULD
+priority: p1
 status: draft
 verify: T
 phase: P2
@@ -72,7 +80,7 @@ risk_if_skipped: "Without convert-to-issue, support requests stay in email + los
 
 ## §1 — Description (BCP-14 normative)
 
-The EMAIL service **MUST** ship convert-to-issue at `services/email/src/convert/` creating FR-PROJ issue from message/thread, attachment refs, AI summary, bi-directional backlink, 3 memory audit kinds.
+The EMAIL service **MUST** ship convert-to-issue at `services/email/src/convert/` creating task-PROJ issue from message/thread, attachment refs, AI summary, bi-directional backlink, 3 memory audit kinds.
 
 1. **MUST** expose `POST /v1/email/messages/{id}/convert-to-issue` body `{ project_id, convert_source, title_override?, priority_override? }`.
 

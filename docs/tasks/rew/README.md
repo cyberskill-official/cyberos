@@ -1,10 +1,10 @@
 # REW module — task index
 
-_Generated 2026-05-17 — 10 FRs, 55 engineering-hours total._
+_Generated 2026-05-17 — 10 tasks, 55 engineering-hours total._
 
-## FRs
+## tasks
 
-| FR | Priority | Slice | Hours | Title |
+| Task | Priority | Slice | Hours | Title |
 |---|---|---|---:|---|
 | [TASK-REW-001](TASK-REW-001-3p-income-schema/spec.md) | MUST | 1 | 6 | REW 3P income schema — P1 Base + P2 Allowance + P3 Performance with separate encrypted comp keyspace |
 | [TASK-REW-002](TASK-REW-002-parameter-versioning/spec.md) | MUST | 1 | 6 | REW parameter versioning — immutable versioned formula parameters with 100% replay-equivalence on pr |

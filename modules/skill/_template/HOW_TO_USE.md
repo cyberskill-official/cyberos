@@ -43,7 +43,7 @@ Edit `skill/<artifact>-audit/`:
 
 ### 5. Audit your work
 
-Run your new audit skill against your new author skill's output (a sample artifact). Iterate until 10/10 (per the FR-authoring loop discipline). Then add an entry to `MODULE.md` §3 marking the pair `shipped`.
+Run your new audit skill against your new author skill's output (a sample artifact). Iterate until 10/10 (per the task-authoring loop discipline). Then add an entry to `MODULE.md` §3 marking the pair `shipped`.
 
 ### 6. Wire the chain
 

@@ -34,7 +34,7 @@ triggers:
   - workflow `chief-technology-officer/ship-tasks` step 15 when coverage_report.tests_failed > 0
 blockers:
   - "test framework itself is broken (no test process can start) — diagnose tooling before this skill runs"
-  - "circuit breaker already tripped on this FR this session — escalate, do not retry"
+  - "circuit breaker already tripped on this task this session — escalate, do not retry"
 ---
 
 # debugging-cycle-author
@@ -50,7 +50,7 @@ circuit breaker.
 
 ```yaml
 # debug-trace@1
-task_id: FR-<MODULE>-<NNN>
+task_id: task-<MODULE>-<NNN>
 generated_at: <ISO-8601>
 trigger: "tests_failed > 0 | files_below_90pct | ecm_rows_uncovered"
 budget_max_attempts: 5
@@ -75,7 +75,7 @@ circuit_breaker_tripped: false | true
 resolution: passed | tripped-circuit-breaker
 on_trip_actions:
   - "git restore on touched paths"
-  - "mark FR [FAILED: UNRESOLVABLE ERROR] in BACKLOG via backlog-state-update"
+  - "mark task [FAILED: UNRESOLVABLE ERROR] in BACKLOG via backlog-state-update"
   - "emit workflow_failed memory audit row with this debug-trace as the artefact"
 ```
 

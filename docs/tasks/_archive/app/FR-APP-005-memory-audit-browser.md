@@ -49,7 +49,7 @@ A memory panel added to the console under `apps/console/`, built with the same C
 
 1. The memory panel MUST be one panel in the same static single-page app as TASK-APP-001, under `apps/console/`, mounted inside the TASK-APP-001 shell and behind its auth gate. It MUST NOT define its own shell, navigation chrome, sign-in flow, or design language; it reuses what TASK-APP-001 established.
 
-2. The panel MUST consume only memory service APIs that already ship: the memory search endpoint (TASK-MEMORY-108), the entity-and-edge read it exposes over `l2_edge`, and the audit-chain read over `l1_audit_log` (the ledger whose row kinds TASK-MEMORY-124 enumerates and whose anchor design is TASK-MEMORY-101). It MUST NOT introduce a new backend endpoint or any server-side component; a screen that appears to need a new endpoint is a signal to extend the memory service's FR, not to add a backend in `app`.
+2. The panel MUST consume only memory service APIs that already ship: the memory search endpoint (TASK-MEMORY-108), the entity-and-edge read it exposes over `l2_edge`, and the audit-chain read over `l1_audit_log` (the ledger whose row kinds TASK-MEMORY-124 enumerates and whose anchor design is TASK-MEMORY-101). It MUST NOT introduce a new backend endpoint or any server-side component; a screen that appears to need a new endpoint is a signal to extend the memory service's task, not to add a backend in `app`.
 
 3. The panel MUST be read-only. It MUST NOT write, edit, delete, or otherwise mutate any memory: no layer-2 row, no entity, no edge, and no audit row. It issues read requests only; memory mutation is out of scope for this panel and stays with the memory service.
 
@@ -87,7 +87,7 @@ Primary metric - operator memory and audit checks done through the console.
 Guardrail metric - new backend endpoints introduced by the memory panel.
 - Definition: number of new server-side endpoints or backend components the memory panel requires in order to function.
 - Baseline: 0. The panel is specified as a pure front-end over shipped memory reads.
-- Target: zero. Any screen that appears to need a new endpoint is a signal to extend the memory service's FR (TASK-MEMORY-108 for search and entities/edges, the ledger FRs for the audit chain), not to add a backend inside `app`.
+- Target: zero. Any screen that appears to need a new endpoint is a signal to extend the memory service's task (TASK-MEMORY-108 for search and entities/edges, the ledger tasks for the audit chain), not to add a backend inside `app`.
 - Measurement method: review of the panel's `apps/console/src/api/memory.ts` client against the existing memory route list and OpenAPI; any call to a route that does not already exist fails the check.
 - Source: the existing memory service route definitions plus code review of the panel's API layer.
 
@@ -97,23 +97,23 @@ In scope: the three memory screens (knowledge search over TASK-MEMORY-108, entit
 
 ### Out of scope
 
-- Any new backend API or server-side component. The panel is a front-end only; new data needs go to the memory service's FR. The recursive-CTE traversal of `l2_edge` and the anchor verification are the service's job, not the console's.
-- Any memory mutation: writing, editing, deleting, or re-ingesting layer-2 rows, entities, edges, or audit rows. The first release is read-only; operator mutation screens for memory, if ever wanted, are a separate later FR.
+- Any new backend API or server-side component. The panel is a front-end only; new data needs go to the memory service's task. The recursive-CTE traversal of `l2_edge` and the anchor verification are the service's job, not the console's.
+- Any memory mutation: writing, editing, deleting, or re-ingesting layer-2 rows, entities, edges, or audit rows. The first release is read-only; operator mutation screens for memory, if ever wanted, are a separate later task.
 - A Cypher or Apache AGE property-graph view, or any interactive graph-drawing canvas. AGE is removed; the relationships are relational `l2_edge` rows rendered as a list. A visual graph view is a later additive screen.
 - Client-side recomputation or re-hashing of the audit chain. The console shows the memory service's anchor-verification verdict; it does not become a second verifier.
-- The shell, the auth gate, the sign-in flow, and the CDS token wiring. Those are TASK-APP-001; this FR reuses them and does not redefine them.
+- The shell, the auth gate, the sign-in flow, and the CDS token wiring. Those are TASK-APP-001; this task reuses them and does not redefine them.
 
 ## Dependencies
 
-- TASK-APP-001 APP CDS web console - the shell, the auth gate, the CDS tokens and components, and the Caddy static-serving path this panel mounts into; this FR adds a panel, not a new app.
+- TASK-APP-001 APP CDS web console - the shell, the auth gate, the CDS tokens and components, and the Caddy static-serving path this panel mounts into; this task adds a panel, not a new app.
 - TASK-AUTH-004 JWT and JWKS - the session token the shell holds and the panel carries on every memory read; the token's claims are what the memory service scopes results by.
 - TASK-MEMORY-108 memory search - the shipped `GET /v1/memory/search` the knowledge-search screen reads, already RLS-scoped per tenant and already verifying each result's `chain_anchor`; it also backs the entity and `l2_edge` relation reads the entities screen renders.
-- TASK-MEMORY-124 awh_gate_result audit row - enumerates the audit row kinds in the `l1_audit_log` AuditRecord schema that the audit-chain viewer lists; the ledger this FR reads is the one that FR defines rows for. (Renumbered from TASK-MEMORY-121; 121 now carries the BRAIN interaction-event schema.)
+- TASK-MEMORY-124 awh_gate_result audit row - enumerates the audit row kinds in the `l1_audit_log` AuditRecord schema that the audit-chain viewer lists; the ledger this task reads is the one that task defines rows for. (Renumbered from TASK-MEMORY-121; 121 now carries the BRAIN interaction-event schema.)
 - TASK-MEMORY-101 layer-2 ingest pipeline - the source of the `chain_anchor` design and the layer-1-versus-layer-2 trust rule the chain-integrity indication reflects; the console surfaces this verification rather than reimplementing it.
 - Cross-cutting: the existing Caddy front that TASK-APP-001 deploys behind; the memory panel ships as part of the same static bundle and adds no new ingress. AGE removal is a standing constraint: the graph data is relational `l2_edge`, not a property graph.
 
 ## AI Authorship Disclosure
 
-- Tools used: Claude (Cowork), authoring this FR from the founder's unified-admin-console decision and the existing module FRs (TASK-APP-001 for the console, TASK-MEMORY-108 / TASK-MEMORY-124 / TASK-MEMORY-101 for the memory reads).
-- Scope: full draft of this specification, including the normative clauses, the alternatives, the metrics, and the scope boundaries. No console code is written by this FR; the memory panel is built in a later session.
+- Tools used: Claude (Cowork), authoring this task from the founder's unified-admin-console decision and the existing module tasks (TASK-APP-001 for the console, TASK-MEMORY-108 / TASK-MEMORY-124 / TASK-MEMORY-101 for the memory reads).
+- Scope: full draft of this specification, including the normative clauses, the alternatives, the metrics, and the scope boundaries. No console code is written by this task; the memory panel is built in a later session.
 - Human review: Stephen reviews and approves before status moves past draft. The "panel in the same SPA, no new backend, read-only, relational not AGE" boundaries are operator-mandated, and the paired audit (TASK-APP-005.audit.md) validates the format before merge.

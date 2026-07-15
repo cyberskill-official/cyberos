@@ -1,8 +1,16 @@
 ---
 id: TASK-SKILL-112
 title: "`acceptance/TRIGGER_TESTS.md` convention — positive + negative trigger phrases verified against the supervisor classifier"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-19T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: SKILL
-priority: SHOULD
+priority: p1
 status: done
 verify: T
 phase: P1
@@ -40,9 +48,9 @@ modified_files:
   - modules/skill/_template/author/acceptance/README.md                # cross-link to TRIGGER_TESTS.md
   - modules/skill/_template/audit/acceptance/README.md                 # cross-link to TRIGGER_TESTS.md
   - modules/skill/task-audit/RUBRIC.md                      # add FM-113 (trigger-tests-present)
-  - task-audit skill        # §3.10 mentions trigger-tests rule
+  - Task-audit skill        # §3.10 mentions trigger-tests rule
   - website docs (SKILL appendices)                                    # Part 13.2 validation pyramid grows a new tier (Layer 1.5: triggering tests); Part 24.1 self-test checklist adds row
-  - website docs (SKILL Appendix J)                                    # §6.2 status badge updates when FR ships
+  - website docs (SKILL Appendix J)                                    # §6.2 status badge updates when task ships
   - website docs (CUO appendices)                                      # documents the trigger-tests smoke test path
 allowed_tools:
   - file_read: modules/**, docs/tasks/skill/**
@@ -51,7 +59,7 @@ allowed_tools:
 disallowed_tools:
   - require backfill of TRIGGER_TESTS.md across all 104 pairs in one commit batch (lazy backfill per §1 #11)
   - block CUO supervisor from booting if a skill lacks TRIGGER_TESTS.md (graceful degradation per §1 #9)
-  - auto-generate trigger phrases by inferring from the description (TASK-SKILL-111 covers description; this FR validates separately)
+  - auto-generate trigger phrases by inferring from the description (TASK-SKILL-111 covers description; this task validates separately)
 
 effort_hours: 10
 subtasks:
@@ -65,19 +73,19 @@ subtasks:
   - "1.5h: modules/cuo/tests/test_trigger_tests.py — happy path + parametric tests; integrates into existing 49/50 test suite"
   - "1.0h: README.md Part 13.2 + Part 24.1 updates"
   - "0.5h: ANTHROPIC_GUIDE_DIGEST.md §6.2 status update when CI passes"
-  - "0.5h: documentation pass — cross-link TRIGGER_TESTS.md from TASK-SKILL-111 (description field carries the triggers; this FR validates they actually route)"
-risk_if_skipped: "Without triggering tests, the supervisor's classifier behaviour is silently coupled to skill descriptions. When TASK-SKILL-111 ships and an author widens a description to catch a new user phrasing, the wider phrasing may overlap with a sibling skill's triggers — the classifier picks the wrong skill 30% of the time. The regression surfaces only in production OBS after a week of <40% acceptance, which auto-pauses the skill per DEC-055. By then, customers have already seen wrong-skill responses. Inventory the failure: task-audit's description is enriched to mention 'audit existing FRs'; supervisor classifier now matches 'audit my FR collection' to task-audit when the user actually meant chain-selector → task-author (re-author from refined source). The misrouting is silent — both skills' bodies look plausible to a non-expert user; the wrong-skill output ships, the user's intent isn't met, OBS records 'no correction' (user doesn't push back) and the acceptance metric is computed against the wrong baseline. TRIGGER_TESTS.md catches this at edit time: the moment the description widens, the fixture's negative-trigger row ('audit my FR collection' MUST NOT match task-audit) fails the CI gate. Cost of the FR ≈ 10 hours; cost of NOT shipping ≈ silent classifier regressions every fine-tune cycle, each surfacing 5-7 days late in OBS, each requiring root-cause analysis on production telemetry rather than design-time test failure."
+  - "0.5h: documentation pass — cross-link TRIGGER_TESTS.md from TASK-SKILL-111 (description field carries the triggers; this task validates they actually route)"
+risk_if_skipped: "Without triggering tests, the supervisor's classifier behaviour is silently coupled to skill descriptions. When TASK-SKILL-111 ships and an author widens a description to catch a new user phrasing, the wider phrasing may overlap with a sibling skill's triggers — the classifier picks the wrong skill 30% of the time. The regression surfaces only in production OBS after a week of <40% acceptance, which auto-pauses the skill per DEC-055. By then, customers have already seen wrong-skill responses. Inventory the failure: task-audit's description is enriched to mention 'audit existing tasks'; supervisor classifier now matches 'audit my task collection' to task-audit when the user actually meant chain-selector → task-author (re-author from refined source). The misrouting is silent — both skills' bodies look plausible to a non-expert user; the wrong-skill output ships, the user's intent isn't met, OBS records 'no correction' (user doesn't push back) and the acceptance metric is computed against the wrong baseline. TRIGGER_TESTS.md catches this at edit time: the moment the description widens, the fixture's negative-trigger row ('audit my task collection' MUST NOT match task-audit) fails the CI gate. Cost of the task ≈ 10 hours; cost of NOT shipping ≈ silent classifier regressions every fine-tune cycle, each surfacing 5-7 days late in OBS, each requiring root-cause analysis on production telemetry rather than design-time test failure."
 ---
 
 ## §1 — Description (BCP-14 normative)
 
-This FR establishes the `acceptance/TRIGGER_TESTS.md` convention — a per-skill fixture listing positive and negative trigger phrases that the supervisor classifier MUST match correctly. It closes the third Anthropic-guide test layer (triggering tests) that CyberOS currently lacks (per `modules/skill/ANTHROPIC_GUIDE_DIGEST.md` §5.1 Gap 2).
+This task establishes the `acceptance/TRIGGER_TESTS.md` convention — a per-skill fixture listing positive and negative trigger phrases that the supervisor classifier MUST match correctly. It closes the third Anthropic-guide test layer (triggering tests) that CyberOS currently lacks (per `modules/skill/ANTHROPIC_GUIDE_DIGEST.md` §5.1 Gap 2).
 
 1. Every production skill (`status: accepted` or higher) **MUST** carry an `acceptance/TRIGGER_TESTS.md` file at `<skill-folder>/acceptance/TRIGGER_TESTS.md`. The file declares positive trigger phrases the supervisor classifier MUST route to this skill, and negative phrases the classifier MUST NOT route here.
 2. The file's frontmatter **MUST** declare `skill_id` (kebab-case folder name) + `min_confidence: <float in [0.0, 1.0]>` (lowest classifier confidence accepted as a positive match — default `0.7`) + `classifier_version: <semver>` (the CUO router version the fixtures were authored against — protects against silent classifier regressions).
 3. The file's body **MUST** contain two sections — `## Positive triggers (MUST route here)` and `## Negative triggers (MUST NOT route here)` — each containing a bulleted list of natural-language phrases (one phrase per bullet, ≤120 chars per phrase, in human-natural form).
 4. Every production skill **MUST** carry **≥ 3 positive triggers** AND **≥ 3 negative triggers**. The 3-floor balances coverage against authoring cost. Skills with broader surface SHOULD scale up — `chain-selector` may carry 8-12 positive; `task-audit` may carry 5-8.
-5. Positive triggers **MUST** be distinct **paraphrases** — not lexical variants. `"draft an FR"` and `"author an FR"` are duplicates (same verb meaning, same noun); `"draft an FR"` and `"turn this PRD into a backlog"` are paraphrases (different surface, same intent). The validator rejects positive-trigger lists where any two phrases have edit distance ≤3 (single-character variants).
+5. Positive triggers **MUST** be distinct **paraphrases** — not lexical variants. `"draft a task"` and `"author a task"` are duplicates (same verb meaning, same noun); `"draft a task"` and `"turn this PRD into a backlog"` are paraphrases (different surface, same intent). The validator rejects positive-trigger lists where any two phrases have edit distance ≤3 (single-character variants).
 6. Negative triggers **MUST** be drawn from one of three pools: (a) phrases that route to a sibling skill in the same persona (e.g. `task-author` → `task-audit`), (b) phrases that route to a different persona (cross-persona disambiguation), (c) phrases that should NOT route to any skill (the supervisor returns "I'm not sure which workflow"). Each negative trigger SHOULD carry an inline `→` annotation pointing to the *expected* target skill or `→ none` for the "no workflow" case.
 7. The CUO supervisor's classifier **MUST** be invocable via a Python entry point `cyberos.cuo.trigger_tests.run_for_skill(skill_path: Path) -> TriggerTestResult`. The function reads `acceptance/TRIGGER_TESTS.md`, invokes `cyberos.cuo.router.classify` per the existing v3 supervisor (TASK-CUO-101 / TASK-CUO-103) for each phrase, asserts the routing matches the fixture, and returns a `TriggerTestResult` with per-phrase verdicts.
 8. The CI gate **MUST** run `cyberos.cuo.trigger_tests.run_all()` as part of every `cuo` test invocation. Failures block merge for any skill at `status: accepted` or higher. Skills at `status: draft` produce CI warnings only.
@@ -95,7 +103,7 @@ This FR establishes the `acceptance/TRIGGER_TESTS.md` convention — a per-skill
 
 **Why ≥3 positive + ≥3 negative as the floor (§1 #4)?** Below 3 doesn't catch the paraphrase variance space (Anthropic's guide p. 15 example test suites have 3-5 each). Above 5 inflates authoring cost. The 3-floor is the smallest number that catches typical user phrasing variations without padding the fixture with near-duplicates.
 
-**Why mandate paraphrase distinctness (§1 #5)?** A fixture with `"draft an FR"` + `"author an FR"` + `"write an FR"` tests one phrasing three times — the classifier either matches all three or none. A fixture with `"draft an FR"` + `"turn this PRD into a backlog"` + `"expand the spec into FRs"` tests three different paraphrases — the classifier might match all three (good — wide trigger surface) or only one (signals the description is too narrow). Edit-distance ≤3 catches single-character drift (`"audit"` vs `"audits"`); larger differences are accepted.
+**Why mandate paraphrase distinctness (§1 #5)?** A fixture with `"draft a task"` + `"author a task"` + `"write a task"` tests one phrasing three times — the classifier either matches all three or none. A fixture with `"draft a task"` + `"turn this PRD into a backlog"` + `"expand the spec into tasks"` tests three different paraphrases — the classifier might match all three (good — wide trigger surface) or only one (signals the description is too narrow). Edit-distance ≤3 catches single-character drift (`"audit"` vs `"audits"`); larger differences are accepted.
 
 **Why three pools for negative triggers (§1 #6)?** Each pool catches a different failure class:
 - Pool (a) — sibling routing: catches when a description widens and now overlaps a sister skill.
@@ -104,7 +112,7 @@ This FR establishes the `acceptance/TRIGGER_TESTS.md` convention — a per-skill
 
 The inline `→` annotation makes the expected target explicit and human-readable; without it, "negative trigger" is ambiguous.
 
-**Why an inline `→ <skill>` annotation (§1 #6)?** Documentation as test. A reader sees `- "audit my FR collection" → task-audit` and immediately understands "this skill must NOT match this phrase; the right skill is task-audit". The annotation is also machine-readable: the validator can assert the classifier *did* route to the named target, not just *didn't* route here. This catches false-positives where the classifier happened to route nowhere for an unrelated reason.
+**Why an inline `→ <skill>` annotation (§1 #6)?** Documentation as test. A reader sees `- "audit my task collection" → task-audit` and immediately understands "this skill must NOT match this phrase; the right skill is task-audit". The annotation is also machine-readable: the validator can assert the classifier *did* route to the named target, not just *didn't* route here. This catches false-positives where the classifier happened to route nowhere for an unrelated reason.
 
 **Why a Python entry point in the CUO module rather than the broker (§1 #7)?** The classifier lives in CUO v3 (TASK-CUO-101). The classifier's stage-1 (filesystem-catalog domain-language fallback) and stage-2 (LLM router) both run in Python. Adding a sibling module `cyberos.cuo.trigger_tests` keeps the test fixture close to the thing under test. The broker (Rust) is the wrong layer for classifier testing — the broker validates frontmatter shape, not classifier behaviour.
 
@@ -139,16 +147,16 @@ classifier_version: 3.0.0-a4
 
 ## Positive triggers (MUST route here)
 
-- "Turn this PRD into a backlog of FRs"
+- "Turn this PRD into a backlog of tasks"
 - "Draft a task for the new email-bounce handling"
-- "Expand the spec into FR markdowns"
-- "Generate the FR backlog from these source docs"
+- "Expand the spec into task markdowns"
+- "Generate the task backlog from these source docs"
 
 ## Negative triggers (MUST NOT route here)
 
-- "Audit this existing FR for completeness" → task-audit
-- "Has FR-007 changed since the last audit?" → task-audit
-- "Draft a tech spec from this FR" → fr-to-tech-spec
+- "Audit this existing task for completeness" → task-audit
+- "Has TASK-007 changed since the last audit?" → task-audit
+- "Draft a tech spec from this task" → fr-to-tech-spec
 - "What's our company holiday schedule?" → none
 
 ## Authoring notes
@@ -313,7 +321,7 @@ def run_all(catalog_root: Path) -> dict[str, TriggerTestResult]:
 2. **Fixture rejected if missing frontmatter** — file without leading `---` → `ValueError`.
 3. **Fixture rejected if < 3 positive triggers** — fixture with 2 positive → auditor rule FM-113 fires `insufficient_positive`.
 4. **Fixture rejected if < 3 negative triggers** — fixture with 2 negative → auditor rule FM-113 fires `insufficient_negative`.
-5. **Paraphrase-distinct check** — fixture with `"draft an FR"` + `"draft a FR"` (edit-distance 2) → FM-113 fires `paraphrase_duplicate`.
+5. **Paraphrase-distinct check** — fixture with `"draft a task"` + `"draft a task"` (edit-distance 2) → FM-113 fires `paraphrase_duplicate`.
 6. **Positive trigger routing PASS** — classifier returns this skill with confidence ≥ min_confidence → row pass.
 7. **Positive trigger routing FAIL** — classifier returns different skill OR confidence < min_confidence → row fail.
 8. **Negative trigger routing PASS — no expected target** — classifier returns NOT this skill (anything else) → row pass.
@@ -544,10 +552,10 @@ classifier_version: 3.0.0-a4
 
 
 def test_paraphrase_distinct_check():
-    # Edit-distance ≤3 between "draft an FR" and "draft a FR" → duplicate
+    # Edit-distance ≤3 between "draft a task" and "draft a task" → duplicate
     from cyberos.cuo.trigger_tests import are_paraphrase_distinct
-    assert not are_paraphrase_distinct("draft an FR", "draft a FR")
-    assert are_paraphrase_distinct("draft an FR", "turn this PRD into a backlog")
+    assert not are_paraphrase_distinct("draft a task", "draft a task")
+    assert are_paraphrase_distinct("draft a task", "turn this PRD into a backlog")
 
 
 def test_confidence_relationship_validator():
@@ -600,16 +608,16 @@ classifier_version: 3.0.0-a4
 
 ## Positive triggers (MUST route here)
 
-- "Audit this FR for completeness"
-- "Has FR-007 changed since the last audit?"
-- "Tell me which FRs would fail acceptance today"
-- "Re-run the rubric against this FR collection"
+- "Audit this task for completeness"
+- "Has TASK-007 changed since the last audit?"
+- "Tell me which tasks would fail acceptance today"
+- "Re-run the rubric against this task collection"
 
 ## Negative triggers (MUST NOT route here)
 
-- "Turn this PRD into a backlog of FRs" → task-author
-- "Generate FRs from this spec" → task-author
-- "Draft a tech spec from this FR" → fr-to-tech-spec
+- "Turn this PRD into a backlog of tasks" → task-author
+- "Generate tasks from this spec" → task-author
+- "Draft a tech spec from this task" → fr-to-tech-spec
 - "What's the team's holiday schedule?" → none
 
 ## Authoring notes
@@ -630,14 +638,14 @@ classifier_version: 3.0.0-a4
   "passed": true,
   "rows": [
     {
-      "phrase": "Audit this FR for completeness",
+      "phrase": "Audit this task for completeness",
       "expected_skill": "task-audit",
       "is_positive": true,
       "classifier_result": {"skill_id": "task-audit", "confidence": 0.91},
       "passed": true
     },
     {
-      "phrase": "Turn this PRD into a backlog of FRs",
+      "phrase": "Turn this PRD into a backlog of tasks",
       "expected_skill": "task-author",
       "is_positive": false,
       "classifier_result": {"skill_id": "task-author", "confidence": 0.88},
@@ -674,9 +682,9 @@ rule_id:         FM-113
 severity:        error
 category:        paraphrase_duplicate
 location:        acceptance/TRIGGER_TESTS.md
-evidence:        "Positive triggers: \"draft an FR\" and \"draft a FR\" (edit-distance 2)"
-description:     "Positive triggers must be paraphrase-distinct (edit-distance > 3 per TASK-SKILL-112 §1 #5). \"draft an FR\" and \"draft a FR\" differ by 1 character — same surface, same intent. Replace one with a distinct paraphrase."
-suggestion:      "Replace \"draft a FR\" with a paraphrase like \"turn this PRD into a backlog\" or \"author the FR from this spec\". Aim for verb-or-noun substitution, not lexical variant."
+evidence:        "Positive triggers: \"draft a task\" and \"draft a task\" (edit-distance 2)"
+description:     "Positive triggers must be paraphrase-distinct (edit-distance > 3 per TASK-SKILL-112 §1 #5). \"draft a task\" and \"draft a task\" differ by 1 character — same surface, same intent. Replace one with a distinct paraphrase."
+suggestion:      "Replace \"draft a task\" with a paraphrase like \"turn this PRD into a backlog\" or \"author the task from this spec\". Aim for verb-or-noun substitution, not lexical variant."
 auto_fix_applied: false
 resolution:      null
 opened_at:       "2026-05-19T14:00:00Z"
@@ -687,7 +695,7 @@ updated_at:      "2026-05-19T14:00:00Z"
 
 **All resolved during authoring.**
 
-Deferred to follow-up FRs:
+Deferred to follow-up tasks:
 - **TASK-SKILL-116** (placeholder — not yet specified): OBS-driven candidate trigger-phrase suggestions — mine real user phrasings; auto-propose additions to TRIGGER_TESTS.md as `refinement_proposal` envelopes for human review. Phase P2+, requires OBS to be live.
 - **TASK-SKILL-117** (placeholder — not yet specified): trigger-test localisation — VN-locale users' phrasings drive a parallel `TRIGGER_TESTS.vi.md`. Phase P2+.
 
@@ -712,7 +720,7 @@ Deferred to follow-up FRs:
 
 ## §11 — Implementation notes
 
-- **Why not auto-generate trigger phrases from descriptions?** Two reasons. (1) Trigger phrases reflect real user phrasings, not the author's idealised description prose; auto-generation from the description would systematically miss the gap that this FR is designed to surface. (2) Auto-generated fixtures would silently pass even when the description is wrong — the test would only verify "the classifier matches what the description says", not "the classifier matches what real users type". Human authorship of trigger phrases is the load-bearing design choice.
+- **Why not auto-generate trigger phrases from descriptions?** Two reasons. (1) Trigger phrases reflect real user phrasings, not the author's idealised description prose; auto-generation from the description would systematically miss the gap that this task is designed to surface. (2) Auto-generated fixtures would silently pass even when the description is wrong — the test would only verify "the classifier matches what the description says", not "the classifier matches what real users type". Human authorship of trigger phrases is the load-bearing design choice.
 - **Why edit-distance 3 for paraphrase-distinctness?** Empirical. Edit-distance 1-2 catches single-character drift; edit-distance 3 catches one short word change (`a` → `the`); edit-distance >3 catches genuine paraphrasing (different verbs, different nouns). The threshold can be tuned in a future PATCH — currently 3 is conservative.
 - **Why ≥3 floor for both positive and negative?** Below 3 doesn't test the paraphrase-variance space. The fixture's value comes from covering distinct phrasings; 3 is the smallest set that demonstrates coverage. Above 5 inflates authoring cost; the rule never complains about >5.
 - **Why three negative-trigger pools (sibling / cross-persona / none)?** Each pool catches a different failure class. A fixture with all three pools represented makes the test resilient against multiple regression types — a description widening (sibling pool), a persona surface expansion (cross-persona pool), or an overall classifier softening (none pool).
@@ -723,7 +731,7 @@ Deferred to follow-up FRs:
 - **The "Layer 1.5: triggering" naming is deliberate.** Inserting between existing Layer 1 (mechanical) and Layer 2 (functional) signals "this is between structure and behaviour — it's about *routing*". The half-step naming makes it clear this is an addition, not a renumbering of existing layers. README.md Part 13.1's validation pyramid diagram absorbs the new layer at the right height.
 - **TRIGGER_TESTS.md vs trigger_tests.json — why Markdown?** Three reasons. (1) Authors write in Markdown for everything else (SKILL.md, INVARIANTS.md, RUBRIC.md); a JSON fixture would be the only non-Markdown artefact in a skill folder. (2) The `## Authoring notes` section is prose — JSON would force comments-as-key-values or YAML embedding. (3) The fixture is human-read more often than machine-read; readability matters. The parser strips Markdown lightly (just `## Section` headers + `- ` bullets), so the format is trivially machine-parseable too.
 - **Why fix-attribution per phrase in `## Authoring notes`?** Trust calibration. A failing CI gate on a phrase sourced from "real OBS log week 2026-W18" is high-signal — real users typed this; if it's failing, the description widened past the safe envelope. A failing gate on a phrase sourced from "author intuition" is lower-signal — the author may have been wrong about how users phrase requests. The source-attribution lets the fine-tune cycle prioritise.
-- **Cross-FR coupling with TASK-SKILL-111**: TASK-SKILL-111 enforces description format (≥2 trigger phrases in frontmatter); TASK-SKILL-112 enforces classifier behaviour (those phrases actually route). Either can ship first. Once both are live, the contract is: description carries triggers, fixture asserts triggers route. If only 111 ships, classifier regressions still slip through. If only 112 ships, the description can ship with no triggers and the fixture still passes (because the body's `## When to invoke` triggers the supervisor). Together they close the loop.
+- **Cross-task coupling with TASK-SKILL-111**: TASK-SKILL-111 enforces description format (≥2 trigger phrases in frontmatter); TASK-SKILL-112 enforces classifier behaviour (those phrases actually route). Either can ship first. Once both are live, the contract is: description carries triggers, fixture asserts triggers route. If only 111 ships, classifier regressions still slip through. If only 112 ships, the description can ship with no triggers and the fixture still passes (because the body's `## When to invoke` triggers the supervisor). Together they close the loop.
 
 ---
 

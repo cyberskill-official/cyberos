@@ -26,18 +26,18 @@ Six residual issues prevented 10/10 at the post-expansion checkpoint; all six ar
 ### ISS-001 — Sidecar URL hardcoded `http://localhost:5060` with no service discovery or per-region routing
 
 - **severity:** error
-- **rule_id:** spec-completeness / cross-FR coupling
+- **rule_id:** spec-completeness / cross-task coupling
 - **location:** §3 sidecar URL, §1 (no per-region clause)
 - **status:** resolved
 
 #### Description
 
-The first-pass §3 used `http://localhost:5060` as the sidecar URL. This is fine for a single-instance dev deployment but breaks two FR-coupling invariants:
+The first-pass §3 used `http://localhost:5060` as the sidecar URL. This is fine for a single-instance dev deployment but breaks two task-coupling invariants:
 
-1. **TASK-AI-016 (residency pinning)**: An `Eu1` tenant's embedding request can't be served by an `ap-southeast-1` sidecar — the data crosses the residency border. The first-pass FR doesn't acknowledge per-region deployment.
+1. **TASK-AI-016 (residency pinning)**: An `Eu1` tenant's embedding request can't be served by an `ap-southeast-1` sidecar — the data crosses the residency border. The first-pass task doesn't acknowledge per-region deployment.
 2. **Service discovery**: Production deployments use container DNS (`bge-sidecar-sg-1:5060`) or service-mesh resolution. Hardcoded `localhost` is wrong outside dev.
 
-A code-gen agent reading the FR would build the localhost-only adapter; the production deployment would have to retrofit per-region routing.
+A code-gen agent reading the task would build the localhost-only adapter; the production deployment would have to retrofit per-region routing.
 
 #### Suggested fix
 
@@ -175,7 +175,7 @@ But PyTorch can fall back to CPU at runtime (driver crash, GPU memory pressure, 
 
 ## §4 — Resolution
 
-All 6 mechanical revisions applied (2026-05-16) within the FR itself:
+All 6 mechanical revisions applied (2026-05-16) within the task itself:
 
 - **ISS-001 RESOLVED**: §1 #14 added with `embeddings.yaml` per-region URL config; §3 adapter takes `Arc<HashMap<Region, String>>`; `BgeError::NoSidecarForRegion` variant; ACs #14 + #15 added; §5 test `no_sidecar_in_region_returns_residency_violation`; §2 rationale paragraph.
 

@@ -1,10 +1,17 @@
 ---
 id: TASK-SKILL-116
 title: "Vendor the debugging-cycle pair + chain-coverage check so no ship-referenced skill can be missing from the payload"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: improvement
+created_at: 2026-07-12T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: SKILL
-priority: MUST
+priority: p0
 status: done
-class: improvement
 verify: T
 phase: Wave B - finish the children
 owner: Stephen Cheng (CTO)
@@ -34,7 +41,7 @@ modified_files:
 
 ## §1 - Description
 
-The ship workflow's 31-step `skill_chain` is the contract for what the payload must carry, but the vendored skill list in `build.sh` is a hand-maintained string that silently drifted from it. This FR vendors the missing pair and adds a coverage check that fails the build whenever the two disagree.
+The ship workflow's 31-step `skill_chain` is the contract for what the payload must carry, but the vendored skill list in `build.sh` is a hand-maintained string that silently drifted from it. This task vendors the missing pair and adds a coverage check that fails the build whenever the two disagree.
 
 Normative clauses:
 
@@ -87,7 +94,7 @@ Extraction: `grep -Eo 'skill: *[a-z0-9-]+' <doc> | awk '{print $2}' | sort -u` o
 
 ## §7 - Dependencies
 
-None upstream. Blocks TASK-CUO-209 (the expanded vendored set lands behind this checker). Related TASK-IMP-068 (gate runs the build, so this check rides along) and TASK-SKILL-118 (parity of pair CONTENTS; this FR guarantees pair PRESENCE).
+None upstream. Blocks TASK-CUO-209 (the expanded vendored set lands behind this checker). Related TASK-IMP-068 (gate runs the build, so this check rides along) and TASK-SKILL-118 (parity of pair CONTENTS; this task guarantees pair PRESENCE).
 
 ## §8 - Example payloads
 

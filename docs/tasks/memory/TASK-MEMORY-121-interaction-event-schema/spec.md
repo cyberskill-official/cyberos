@@ -1,8 +1,14 @@
 ---
 id: TASK-MEMORY-121
 title: "interaction-event schema & contract — the one work-interaction event shape (event_id, subject, module, event_type, target_ref, content_ref) every module emits into l1_audit_log, versioned + RLS + emit API; the single BRAIN capture primitive"
+client_visible: false
+type: feature
+created_at: 2026-06-29T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: MEMORY
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -21,7 +27,7 @@ source_pages:
 source_decisions:
   - DEC-2700 (one interaction-event schema, every module emits it — chat, sign-in, presence, module-open, task/doc/IP activity — from the moment a person logs in; Stephen 2026-06-29)
   - DEC-2701 (platform work-interactions ONLY — no keystroke logging, no screen capture, no private life; the schema carries pointers/hashes (content_ref), not raw sensitive content, wherever practical)
-  - DEC-2702 (capture is gated on the TASK-EVAL-001 monitoring-notice acknowledgment — a subject that has not acknowledged emits no interaction-event; this FR defines the gate hook, TASK-MEMORY-122 wires it)
+  - DEC-2702 (capture is gated on the TASK-EVAL-001 monitoring-notice acknowledgment — a subject that has not acknowledged emits no interaction-event; this task defines the gate hook, TASK-MEMORY-122 wires it)
   - DEC-2703 (the interaction-event is an aux audit row on the existing hash-chained l1_audit_log — one capture substrate, not a second store; it reuses cyberos-audit-chain byte-for-byte so memory's reconcile + TASK-MEMORY-101 ingest accept it unchanged)
   - "DEC-2704 (the schema is versioned: `iev` schema_version is a field, the row kind is `memory.interaction_event`, and the contract is published so AUTH/CHAT/PROJ/EMAIL/APP/MCP depend on a frozen shape, not on each other)"
 
@@ -74,11 +80,11 @@ risk_if_skipped: "Without one frozen event shape, every module (AUTH, CHAT, PROJ
 
 ## §1 — Description (BCP-14 normative)
 
-This FR defines **one** interaction-event shape that every CyberOS module emits for every platform work-interaction, and the API + contract + storage + access rules around it. It is the single BRAIN capture primitive (Phase 1 of `docs/strategy/cyberos-brain-evaluation-plan.md`). It captures emitters for no module itself — TASK-MEMORY-122 wires AUTH + CHAT and defines the emitter contract for the rest. Each piece:
+This task defines **one** interaction-event shape that every CyberOS module emits for every platform work-interaction, and the API + contract + storage + access rules around it. It is the single BRAIN capture primitive (Phase 1 of `docs/strategy/cyberos-brain-evaluation-plan.md`). It captures emitters for no module itself — TASK-MEMORY-122 wires AUTH + CHAT and defines the emitter contract for the rest. Each piece:
 
 1. **MUST** define the row kind `memory.interaction_event` and enumerate it in `services/memory/contracts/interaction-event.schema.json` (JSON Schema draft 2020-12), alongside the existing aux audit kinds (`memory.precondition_failed`, `memory.acl_denied`, `memory.status_overridden`, `memory.awh_gate_result`). The schema is the published contract other modules depend on.
 2. **MUST** define the event field set, frozen for `schema_version: 1`:
-    - `schema_version` (int, const `1` for this FR) — downstream emitters pin it.
+    - `schema_version` (int, const `1` for this task) — downstream emitters pin it.
     - `event_id` (UUIDv7) — globally unique; v7 so it is time-sortable and dedup-safe across replay.
     - `tenant_id` (UUID) — the emitting subject's tenant; drives RLS.
     - `subject_id` (UUID) — the person who acted (TASK-AUTH-002 subject); the unit of evaluation. `null` only for genuine system actors (e.g. a scheduled job), never to hide a person.
@@ -115,10 +121,10 @@ This FR defines **one** interaction-event shape that every CyberOS module emits 
     - `memory_interaction_consent_skipped_total{module}` (counter — visibility into how much is suppressed by the gate; a sudden spike means a notice-version bump locked people out).
     - `memory_interaction_event_body_bytes{module}` (histogram — watches for content leaking through `attributes`).
 14. **MUST** be tenant-scoped on read via the existing `l1_audit_log` RLS path (TASK-AUTH-003 pattern); interaction-events inherit it because they ARE `l1_audit_log` rows. There is no second table and therefore no second RLS policy to drift.
-15. **MUST** publish the contract as a versioned, frozen artifact: `interaction-event.schema.json` carries `schema_version` const `1` and an explicit `additive-only` evolution rule (new optional fields and new `event_type` verbs are allowed without a bump; removing/retyping a field or changing the required set requires `schema_version: 2` and a migration note). Downstream emitter FRs (TASK-MEMORY-122 and beyond) depend on this file, not on each other.
+15. **MUST** publish the contract as a versioned, frozen artifact: `interaction-event.schema.json` carries `schema_version` const `1` and an explicit `additive-only` evolution rule (new optional fields and new `event_type` verbs are allowed without a bump; removing/retyping a field or changing the required set requires `schema_version: 2` and a migration note). Downstream emitter tasks (TASK-MEMORY-122 and beyond) depend on this file, not on each other.
 16. **MUST** provide a typed builder so emitters cannot construct an invalid event: `InteractionEvent::builder(module, event_type, event_class).subject(..).occurred_now().target(..).content(ContentRef::..).source(..).build()` validates §1 #9–#10 at `build()` and returns `Result`. The free `emit` re-validates (defence in depth) but the builder is the ergonomic, misuse-resistant front door for TASK-MEMORY-122's emitters.
 17. **MUST** make `event_id` idempotent across replay: re-emitting the same `event_id` is a no-op at ingest (TASK-MEMORY-101 already UPSERTs on the chain row; the BRAIN layer-2 dedups on `event_id`). An emitter that retries after a transient `EmitError` reuses the same `event_id` so a retry never double-counts an interaction.
-18. **MUST** document, in the schema and in §11, the closed `module`/`event_class`/`source_channel`/`target_ref.kind`/`content_ref.kind` enums as the cardinality-bounded vocabulary the evaluation engine (TASK-EVAL-003) and the BRAIN ingestion (TASK-MEMORY-123) build against, so those FRs index on stable, low-cardinality dimensions rather than free strings.
+18. **MUST** document, in the schema and in §11, the closed `module`/`event_class`/`source_channel`/`target_ref.kind`/`content_ref.kind` enums as the cardinality-bounded vocabulary the evaluation engine (TASK-EVAL-003) and the BRAIN ingestion (TASK-MEMORY-123) build against, so those tasks index on stable, low-cardinality dimensions rather than free strings.
 
 ---
 
@@ -657,25 +663,25 @@ All resolved. Deferred:
 - Interaction-events are NOT a new store. They are `memory.interaction_event` aux rows on `l1_audit_log`, written through `cyberos-audit-chain` exactly like `auth.token_issued` and the obs rows, so memory's reconcile and the TASK-MEMORY-101 layer-2 ingest accept them with no special path. This is the whole point of DEC-2703.
 - The audit-row `event_type` (TASK-OBS-008's generated column) is the constant `memory.interaction_event`; the interaction's own verb is `payload.event_type`, surfaced by the new `iev_event_type` generated column so it is indexable without per-row JSON parsing. The TASK-APP-005 audit viewer keeps working because it reads the row-level `event_type`.
 - `content_ref` is the privacy spine. Chat message bodies stay in chat's own DB under chat's RLS; the BRAIN holds `pointer{store:"chat_messages", id}`. The evaluation engine resolves the pointer only when it needs the content and only for a viewer who already has access to it — the BRAIN never becomes a second, looser copy of sensitive content.
-- The consent gate reads TASK-EVAL-001's acknowledgment ledger. TASK-EVAL-001 is Phase 0 and lands first; this FR depends on it. Until it ships, `consent_gate` resolves against a stub table the operator seeds (default: capture OFF for every subject, so the safe default is "no capture without explicit acknowledgment"). The stub is replaced, not the call site, when TASK-EVAL-001 arrives.
+- The consent gate reads TASK-EVAL-001's acknowledgment ledger. TASK-EVAL-001 is Phase 0 and lands first; this task depends on it. Until it ships, `consent_gate` resolves against a stub table the operator seeds (default: capture OFF for every subject, so the safe default is "no capture without explicit acknowledgment"). The stub is replaced, not the call site, when TASK-EVAL-001 arrives.
 - `subject_id = null` is reserved for genuine system actors (scheduled jobs, the dream loop). It MUST NOT be used to anonymise a real person's action — that would defeat both the evaluation purpose and the audit trail. Validation cannot enforce intent here, so it is a code-review rule, called out in the schema description.
-- `op` derivation: read-class interactions chain as `view`, mutations as `put`. The chain's `op` enum already had `view`; this FR is the first heavy producer of `view` rows, which is why `emit_genesis_with_op` is added (the old `emit_genesis` becomes a thin `'put'` shim so AUTH/OBS callers are untouched).
+- `op` derivation: read-class interactions chain as `view`, mutations as `put`. The chain's `op` enum already had `view`; this task is the first heavy producer of `view` rows, which is why `emit_genesis_with_op` is added (the old `emit_genesis` becomes a thin `'put'` shim so AUTH/OBS callers are untouched).
 - UUIDv7 for `event_id` buys time-ordering for free (the BRAIN's recency-decay recall, TASK-MEMORY-113, and replay dedup both want it) and keeps the unique index selective.
 - The 2 KiB `attributes` cap and the body-bytes histogram are the anti-leak pair: the cap makes the worst case impossible, the histogram makes drift visible. If a module's body bytes climb, that is the signal someone started inlining content instead of referencing it.
-- The contract file is the dependency surface for every emitter FR. TASK-MEMORY-122 (AUTH + CHAT emitters) and every later module emitter depend on `interaction-event.schema.json` at `schema_version: 1`, not on each other. The additive-only rule (new optional fields, new verbs) lets the vocabulary grow without a flag day; a real breaking change is a `schema_version: 2` with its own migration note.
+- The contract file is the dependency surface for every emitter task. TASK-MEMORY-122 (AUTH + CHAT emitters) and every later module emitter depend on `interaction-event.schema.json` at `schema_version: 1`, not on each other. The additive-only rule (new optional fields, new verbs) lets the vocabulary grow without a flag day; a real breaking change is a `schema_version: 2` with its own migration note.
 - The builder is the misuse-resistant front door, but `emit` re-validates so a hand-constructed event or a future non-builder caller still cannot write a malformed row. Defence in depth, cheap.
-- This FR is `eu_ai_act_risk_class: limited` because the events it captures feed a downstream system (the BRAIN + the evaluation engine, TASK-EVAL-003) that informs human decisions about people. This FR itself runs no model and makes no decision — it is the capture contract — but the limited classification is carried here so the whole capture-to-evaluation chain is consistently flagged. See the AI Risk Assessment below.
+- This task is `eu_ai_act_risk_class: limited` because the events it captures feed a downstream system (the BRAIN + the evaluation engine, TASK-EVAL-003) that informs human decisions about people. This task itself runs no model and makes no decision — it is the capture contract — but the limited classification is carried here so the whole capture-to-evaluation chain is consistently flagged. See the AI Risk Assessment below.
 
 ---
 
 ## AI Risk Assessment
 
-- **Why limited, not minimal/not_ai:** this FR defines the capture primitive whose output feeds the BRAIN ingestion (TASK-MEMORY-123) and, ultimately, an AI-assisted evaluation of employees against the three signed documents (TASK-EVAL-003/004). The capture is not itself AI, but it is the data foundation of a limited-risk AI use (workplace evaluation support), so it is classified and governed as part of that chain.
+- **Why limited, not minimal/not_ai:** this task defines the capture primitive whose output feeds the BRAIN ingestion (TASK-MEMORY-123) and, ultimately, an AI-assisted evaluation of employees against the three signed documents (TASK-EVAL-003/004). The capture is not itself AI, but it is the data foundation of a limited-risk AI use (workplace evaluation support), so it is classified and governed as part of that chain.
 - **Personal data captured:** identity and activity of CyberSkill employees on the platform — who signed in, who messaged in which channel, who opened or changed which document/issue. It is platform work-interaction metadata, plus pointers/hashes to content; it is NOT keystroke logging, screen capture, or anything from private life (DEC-2701). Content references prefer pointers/hashes over raw bodies, so the captured row carries who/what/when, not the sensitive payload.
-- **Lawful basis + notice (human governance):** capture for any subject is hard-gated on that subject's acknowledgment of the TASK-EVAL-001 monitoring notice (DEC-2702). The gate lives in the one emit path, so there is no code path that captures a person before notice is acknowledged — disclosed monitoring, never covert. The Vietnamese PDPD framing (lawful basis, notice, purpose limitation, data-subject rights) and the Labor Code context are owned by TASK-EVAL-001; this FR enforces the technical gate that makes the notice meaningful.
+- **Lawful basis + notice (human governance):** capture for any subject is hard-gated on that subject's acknowledgment of the TASK-EVAL-001 monitoring notice (DEC-2702). The gate lives in the one emit path, so there is no code path that captures a person before notice is acknowledged — disclosed monitoring, never covert. The Vietnamese PDPD framing (lawful basis, notice, purpose limitation, data-subject rights) and the Labor Code context are owned by TASK-EVAL-001; this task enforces the technical gate that makes the notice meaningful.
 - **Purpose limitation + minimisation:** the closed `module`/`event_class`/`target_ref`/`content_ref` vocabulary bounds what can be recorded; the 2 KiB attributes cap and the content_ref-over-raw-body rule enforce minimisation; the per-`event_type` retention classes are applied downstream (TASK-EVAL-001 / TASK-MEMORY-123). The point is to record the work, not the person's life.
 - **Access + tenancy:** interaction-events inherit the `l1_audit_log` per-tenant RLS, so a tenant's records never cross to another tenant. Who-can-read (manager + HR + the employee for their own record) is enforced by the consuming surfaces (TASK-EVAL-005 views), not loosened here.
-- **No autonomous decision:** this FR records; it never scores, ranks, or decides. Every consequential use of these events runs through the human-in-the-loop evaluation workflow (TASK-EVAL-004). The capture primitive deliberately has no opinion about the events it stores.
+- **No autonomous decision:** this task records; it never scores, ranks, or decides. Every consequential use of these events runs through the human-in-the-loop evaluation workflow (TASK-EVAL-004). The capture primitive deliberately has no opinion about the events it stores.
 
 ---
 

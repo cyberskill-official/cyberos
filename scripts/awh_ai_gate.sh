@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Stand up the AI module gate and, only if the suite is truly GREEN, capture a sealed baseline
-# and promote the 20 ai FRs. AI was red-deferred, so this is deliberately strict:
+# and promote the 20 ai tasks. AI was red-deferred, so this is deliberately strict:
 #   - it never captures a baseline from a red run (that would weaken the gate to whatever passes),
 #   - it requires a running Redis (the cache-isolation tests connect to 127.0.0.1:6379).
 #
@@ -40,7 +40,7 @@ sys.exit(0 if (weighted >= 0.999 and not failing) else 1)
 PY
 then
   echo "  AI suite is RED -> discarding the captured baseline (never seal a red bar)."
-  echo "  The 20 ai FRs stay ready_to_test. Fix the failing task(s) above, then re-run."
+  echo "  The 20 ai tasks stay ready_to_test. Fix the failing task(s) above, then re-run."
   rm -f "$BASE"
   exit 1
 fi

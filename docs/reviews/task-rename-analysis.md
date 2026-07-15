@@ -1,8 +1,8 @@
-# Task to task: rename impact analysis
+# Feature request to task: rename impact analysis
 
 Status: draft for decision. Not an ADR yet.
 Author: analysis pass, 2026-07-14.
-Scope: `task(s)` -> `task(s)` globally, plus a `type` discriminator (feature | bug) with per-type templates, rubrics and gates.
+Scope: `feature-request(s)` -> `task(s)` globally, plus a `type` discriminator (feature | bug) with per-type templates, rubrics and gates.
 
 ---
 
@@ -24,7 +24,7 @@ Recommendation: sequence this as five phases, do not run a codemod as step one.
 |---|---|
 | Files containing `feature[-_ ]request` (any case) | 731 |
 | Occurrences of `feature[-_ ]request` | 2,817 |
-| Paths with `task` in the filename | 978 |
+| Paths with `feature-request` in the filename | 978 |
 | `FR-<MOD>-<NNN>` ID citations, whole repo | 29,640 |
 | Distinct FR IDs | 563 |
 | FR ID citations outside `docs/` (source, tests, migrations, CI) | 3,204 |
@@ -40,23 +40,23 @@ Non-doc dirs that cite FR IDs in source comments: `modules/skill` (296), `servic
 
 This is the finding that should change your plan.
 
-### 2.1 `subtask@1` is an existing contract with a different meaning
+### 2.1 `task@1` is an existing contract with a different meaning
 
-`modules/skill/contracts/subtask/` exists today. It defines `subtask@1` as:
+`modules/skill/contracts/task/` exists today. It defines `task@1` as:
 
-> a comprehensive, addressable, assignable unit of work embedded **inside** a `task@1`
+> a comprehensive, addressable, assignable unit of work embedded **inside** a `feature_request@1`
 
-- Task ID format: `FR-NNN-T-MM` (the third task of FR-007 is `TASK-007-S-03`).
+- Task ID format: `FR-NNN-T-MM` (the third task of FR-007 is `FR-007-T-03`).
 - Lifecycle: `draft -> ready -> in_progress -> done | blocked`.
 - Fields: `sizing`, `assignable_to: [human, ai-agent]`, `agent_profile`, `estimated_tokens`, `acceptance_test`, `parallelisable`.
-- Consumed by `modules/skill/runners/task_with_subtasks.py` (skill `cuo/cpo/task-with-subtasks`).
+- Consumed by `modules/skill/runners/fr_with_tasks.py` (skill `cuo/cpo/fr-with-tasks`).
 - Referenced by `modules/memory/runtime/migrations/README.md`.
 
 So today: an FR **contains** tasks. If FR becomes "task", a task contains tasks.
 
-### 2.2 FR frontmatter already carries `subtasks:`
+### 2.2 FR frontmatter already carries `sub_tasks:`
 
-44 of the 80 FR specs sampled carry a `subtasks:` list of hour-estimated work items. Same concept, second spelling.
+44 of the 80 FR specs sampled carry a `sub_tasks:` list of hour-estimated work items. Same concept, second spelling.
 
 ### 2.3 CAF has its own Task table
 
@@ -82,9 +82,9 @@ Naming the backlog atom `task` means the word carries four unrelated meanings in
 
 Examples of what breaks if IDs are rewritten:
 
-- `git blame` and `git log -S TASK-AUTH-111` stop finding the reason a line exists.
-- Every emitted audit artefact (`docs/tasks/_audits/`, `.workflow/*/code-review.md`, `.workflow/*/coverage-gate.md`) cites FR IDs as evidence of what was audited. Rewriting them falsifies the record.
-- The memory audit chain (AGENTS.md §3.3, §6.5) is append-only and immutable. Rows already on-chain cite `docs/tasks/...` paths and FR IDs. Those rows cannot be rewritten. After a path rename, the chain permanently references paths that no longer exist, and any walker invariant that resolves a path could flip the store to `FROZEN_RECOVERABLE`.
+- `git blame` and `git log -S FR-AUTH-111` stop finding the reason a line exists.
+- Every emitted audit artefact (`docs/feature-requests/_audits/`, `.workflow/*/code-review.md`, `.workflow/*/coverage-gate.md`) cites FR IDs as evidence of what was audited. Rewriting them falsifies the record.
+- The memory audit chain (AGENTS.md §3.3, §6.5) is append-only and immutable. Rows already on-chain cite `docs/feature-requests/...` paths and FR IDs. Those rows cannot be rewritten. After a path rename, the chain permanently references paths that no longer exist, and any walker invariant that resolves a path could flip the store to `FROZEN_RECOVERABLE`.
 - `scripts/awh_goldenset_from_fr.py` builds the eval goldenset from FR specs. `.awh/gate.sh` runs `awh eval ... --max-regression 0.0`. Changing FR identity changes the goldenset, and the gate blocks on any regression.
 
 Conclusion: rewriting the 563 historical IDs is a false economy. Freeze them.
@@ -95,7 +95,7 @@ Conclusion: rewriting the 563 historical IDs is a false economy. Freeze them.
 
 The FR schema disagrees with itself in three places.
 
-`modules/skill/contracts/task/CONTRACT.md` (FM-101..111) declares:
+`modules/skill/contracts/feature-request/CONTRACT.md` (FM-101..111) declares:
 
 ```
 title, author, department, status (draft|in_review|approved|in_progress|shipped|closed),
@@ -103,7 +103,7 @@ priority (p0|p1|p2|p3), created_at, ai_authorship, feature_type,
 eu_ai_act_risk_class, target_release, client_visible, template
 ```
 
-`modules/skill/contracts/task/STATUS-REFERENCE.md` declares a different, 10-value status enum:
+`modules/skill/contracts/feature-request/STATUS-REFERENCE.md` declares a different, 10-value status enum:
 
 ```
 draft, ready_to_implement, implementing, ready_to_review, reviewing,
@@ -114,9 +114,9 @@ The FR specs actually on disk carry none of the CONTRACT.md field names. Real fr
 
 ```
 id, title, module, priority (MUST), status, verify, phase, milestone, slice,
-owner, created, shipped, memory_chain_hash, related_tasks, depends_on, blocks,
+owner, created, shipped, memory_chain_hash, related_frs, depends_on, blocks,
 source_pages, source_decisions, language, service, new_files, modified_files,
-allowed_tools, disallowed_tools, subtasks, class, refs
+allowed_tools, disallowed_tools, sub_tasks, class, refs
 ```
 
 `class:` (product | improvement) appears on only 30 of 80 sampled specs.
@@ -130,14 +130,14 @@ If you rename before reconciling, you carry three incompatible schemas forward u
 `modules/cuo/cuo/core/backlog_reader.py` parses a markdown **table**:
 
 ```python
-_TASK_ROW_RE = re.compile(r"^\|\s*\*{0,2}(?P<task_id>FR-[A-Z]+-\d+)\*{0,2}\s*\|" ...)
+_FR_ROW_RE = re.compile(r"^\|\s*\*{0,2}(?P<fr_id>FR-[A-Z]+-\d+)\*{0,2}\s*\|" ...)
 # expects: | FR-ID | Title | Pri | Status | Depends on | Effort |
 ```
 
-`docs/tasks/BACKLOG.md` has **0 table rows and 357 bullet rows**:
+`docs/feature-requests/BACKLOG.md` has **0 table rows and 357 bullet rows**:
 
 ```
-- [draft] TASK-AI-104-vn-provider-integration - AI VN provider integration ...
+- [draft] FR-AI-104-vn-provider-integration - AI VN provider integration ...
 ```
 
 The reader returns zero rows against the live backlog. `backlog-state-update-author`'s `line_number` / `old_line` optimistic-concurrency pre-image is written against the table shape (BSU rule family). This is broken today, independent of the rename, and the rename will be blamed for it if not fixed first.
@@ -150,13 +150,13 @@ The reader returns zero rows against the live backlog. `backlog-state-update-aut
 |---|---|---|---|
 | R1 | Classifier precision collapse | `modules/cuo/cuo/trigger_tests.py` + per-skill `acceptance/TRIGGER_TESTS.md` assert the CUO supervisor routes phrasings to skills. `description_format_check.py` and `services/skill-broker/src/frontmatter/description_validator.rs` enforce 80-1024 chars, >=2 quoted trigger phrases, >=1 verb stem, no XML-tag shapes. A `task-author` skill whose description quotes "create a task" will fire on generic agent prose. | Never write bare "task" in a skill description. Always "CyberOS task" or "backlog task". Re-author all TRIGGER_TESTS.md. Add negative triggers for the host Task tool. Re-baseline `.awh/eval-baseline.json` and expect the `--max-regression 0.0` gate to block until it is regenerated. |
 | R2 | Public URL break | `tools/docs-site/render-fr-pages.mjs` emits `/frs/<module>/<stem>/index.html` and cross-links `../../${module}/${stem}/index.html`. `docs/status/` has 507 per-FR data files. Deployed via `vercel.json`. | Emit both `/frs/` and `/tasks/` for one release, with 301s from `/frs/`. Keep the FR-ID-keyed data filenames stable (see §7.2). |
-| R3 | Stale symlinks in every installed repo | `.gitignore` managed block lists `.claude/skills/ship-tasks`, and the same under `.grok`, `.codex`, `.opencode`, `.commandcode`. Five agent-tool dirs, all symlinked to `.cyberos/plugin/skills`. | `cyberos install` must remove the five old symlinks by name before creating new ones, and rewrite the managed gitignore block. Add a test in `tools/cyberos-init/tests/`. |
-| R4 | Vendored payload drift | `tools/cyberos-init/build.sh` hardcodes `ship-tasks.md`, `contracts/task/STATUS-REFERENCE.md`, and a skill allowlist naming `task-author` / `task-audit`. `.pre-commit-hooks/cyberos-payload-build.sh` has a trigger regex that the comment says is mirrored in `check-version-sync.sh`. `.cyberos/` is fully gitignored (0 tracked files) and regenerated. | Update build.sh, both trigger regexes, and `tools/cyberos-init/lib/fr-migrate.sh` in the same commit. Add a check that fails if the two regexes diverge. |
+| R3 | Stale symlinks in every installed repo | `.gitignore` managed block lists `.claude/skills/ship-feature-requests`, and the same under `.grok`, `.codex`, `.opencode`, `.commandcode`. Five agent-tool dirs, all symlinked to `.cyberos/plugin/skills`. | `cyberos install` must remove the five old symlinks by name before creating new ones, and rewrite the managed gitignore block. Add a test in `tools/cyberos-init/tests/`. |
+| R4 | Vendored payload drift | `tools/cyberos-init/build.sh` hardcodes `ship-feature-requests.md`, `contracts/feature-request/STATUS-REFERENCE.md`, and a skill allowlist naming `feature-request-author` / `feature-request-audit`. `.pre-commit-hooks/cyberos-payload-build.sh` has a trigger regex that the comment says is mirrored in `check-version-sync.sh`. `.cyberos/` is fully gitignored (0 tracked files) and regenerated. | Update build.sh, both trigger regexes, and `tools/cyberos-init/lib/fr-migrate.sh` in the same commit. Add a check that fails if the two regexes diverge. |
 | R5 | CAF fixture corruption | 63 golden fixtures at `tools/caf/core/evals/fixtures/*/docs/BACKLOG.md`, using CAF's own unrelated BACKLOG + Task-table shape. | Hard-exclude `tools/caf/**` from every codemod pass. Add it to the codemod's deny-list and assert zero diff under `tools/caf/` in CI. |
-| R6 | Audit-chain path dangling | Memory protocol §3.3 / §6.5: rows are immutable, append-only, no reordering, no deletion. On-chain rows cite `docs/tasks/...`. | Emit one `memory.path_rename_epoch` aux row recording `{old_prefix, new_prefix, at_seq}`, and teach the walker to resolve pre-epoch paths through it. Do not rewrite rows. |
-| R7 | Evidence falsification | `docs/tasks/_archive/`, `_audits/`, `.workflow/*/`, and `CHANGELOG.md` are records of what happened, not live spec. | Never codemod them. Freeze in place or `git mv` the directory without touching file contents. See D3 in §8. |
+| R6 | Audit-chain path dangling | Memory protocol §3.3 / §6.5: rows are immutable, append-only, no reordering, no deletion. On-chain rows cite `docs/feature-requests/...`. | Emit one `memory.path_rename_epoch` aux row recording `{old_prefix, new_prefix, at_seq}`, and teach the walker to resolve pre-epoch paths through it. Do not rewrite rows. |
+| R7 | Evidence falsification | `docs/feature-requests/_archive/`, `_audits/`, `.workflow/*/`, and `CHANGELOG.md` are records of what happened, not live spec. | Never codemod them. Freeze in place or `git mv` the directory without touching file contents. See D3 in §8. |
 | R8 | FR-specific scripts break | `scripts/migrate_fr_layout.py`, `repair_fr_yaml.py`, `rebaseline_fr_status.py`, `migrate_improvement_to_fr.py`, `awh_goldenset_from_fr.py`. Two of these are vendored into the payload as `docs-tools/`. | Rename with the codemod, but re-run each against a fixture repo before shipping the payload. |
-| R9 | Path filters in hooks | `.pre-commit-hooks/docs-site-build.sh` regex includes `docs/tasks/`. `.pre-commit-hooks/no-real-pii-in-corpus.sh` also matches. | Grep all hook path regexes; they are easy to miss because they are inside single-quoted shell strings. |
+| R9 | Path filters in hooks | `.pre-commit-hooks/docs-site-build.sh` regex includes `docs/feature-requests/`. `.pre-commit-hooks/no-real-pii-in-corpus.sh` also matches. | Grep all hook path regexes; they are easy to miss because they are inside single-quoted shell strings. |
 | R10 | `proj` module namespace | `services/proj` has its own `issues` and `issue_links` tables. If you later name the bug type "issue", it collides. | Reserve "issue" for the proj module. Use `type: bug` on the task, not "issue". |
 
 ---
@@ -165,15 +165,15 @@ The reader returns zero rows against the live backlog. `backlog-state-update-aut
 
 ### 7.1 Free the word before you use it
 
-`subtask@1` (the sub-unit inside an FR) must be renamed before `task` can mean the backlog atom. Candidates, in order of preference:
+`task@1` (the sub-unit inside an FR) must be renamed before `task` can mean the backlog atom. Candidates, in order of preference:
 
 - `work-package@1` — unambiguous, standard PM vocabulary, no collision anywhere in the repo.
 - `step@1` — short, but collides with `ship-manifest` step semantics (`steps[].status`).
 - `subtask@1` — clear, but keeps "task" as a substring, so grep and classifier ambiguity survive.
 
-Recommendation: `work-package@1`, with `subtasks:` in FR frontmatter renamed to `work_packages:` in the same pass. This is ~11 `subtask@1` references, 1 runner, 1 contract dir, and 44 frontmatter blocks. Small and contained.
+Recommendation: `work-package@1`, with `sub_tasks:` in FR frontmatter renamed to `work_packages:` in the same pass. This is ~11 `task@1` references, 1 runner, 1 contract dir, and 44 frontmatter blocks. Small and contained.
 
-Then, and only then, `task@1` -> `subtask@1`, and the ID sub-format becomes `TASK-NNN-WP-MM`.
+Then, and only then, `feature_request@1` -> `task@1`, and the ID sub-format becomes `TASK-NNN-WP-MM`.
 
 ### 7.2 Freeze the ID space
 
@@ -181,8 +181,8 @@ Do not rewrite 563 IDs across 29,640 sites. Instead:
 
 - Readers accept `^(FR|TASK)-[A-Z]+-\d+$`.
 - Writers emit `TASK-` only, from the rename epoch forward.
-- The 563 `FR-*` IDs stay valid forever as a legacy prefix. `related_tasks:` / `depends_on:` / `blocks:` values are untouched.
-- Rename the frontmatter *field* `related_tasks:` -> `related_tasks:` (with a reader alias for one release), but not the values.
+- The 563 `FR-*` IDs stay valid forever as a legacy prefix. `related_frs:` / `depends_on:` / `blocks:` values are untouched.
+- Rename the frontmatter *field* `related_frs:` -> `related_tasks:` (with a reader alias for one release), but not the values.
 - Keep `docs/status/data/fr/FR-XXX.js` filenames stable; add `TASK-XXX.js` alongside. The directory name `fr/` can stay: it is a generated cache, not a contract.
 
 This preserves git blame, the audit chain, every code comment, every NFR cross-reference, and the awh goldenset, at the cost of a dual-prefix regex forever. That trade is correct.
@@ -199,7 +199,7 @@ class: product | improvement   # existing, orthogonal, keep
 Structure the contract so a third type is cheap:
 
 ```
-modules/skill/contracts/subtask/
+modules/skill/contracts/task/
   CONTRACT.md
   STATUS-REFERENCE.md
   templates/feature.md
@@ -266,7 +266,7 @@ Ships value even if you abandon the rename.
 
 ### Phase 1 — free the word
 
-- `subtask@1` -> `work-package@1`. Rename `contracts/subtask/` -> `contracts/work-package/`, `runners/task_with_subtasks.py` -> `runners/fr_with_work_packages.py`, `subtasks:` -> `work_packages:`.
+- `task@1` -> `work-package@1`. Rename `contracts/task/` -> `contracts/work-package/`, `runners/fr_with_tasks.py` -> `runners/fr_with_work_packages.py`, `sub_tasks:` -> `work_packages:`.
 - Nothing else changes. `task` is now an unused identifier in CyberOS.
 
 ### Phase 2 — introduce the type discriminator, still under the FR name
@@ -282,14 +282,14 @@ At this point you have the actual capability you want. The rename is now cosmeti
 
 Codemod, ordered longest-identifier-first so shorter patterns cannot eat longer ones:
 
-1. `task@1` -> `subtask@1`
-2. `task-author` -> `task-author`; `task-audit` -> `task-audit`
-3. `ship-tasks` -> `ship-tasks`; `create-tasks` -> `create-tasks`
-4. `contracts/task/` -> `contracts/subtask/`
-5. `docs/tasks/` -> `docs/tasks/` (via `git mv`, for rename detection)
-6. `task-manifest@1` -> `task-manifest@1`
+1. `feature_request@1` -> `task@1`
+2. `feature-request-author` -> `task-author`; `feature-request-audit` -> `task-audit`
+3. `ship-feature-requests` -> `ship-tasks`; `create-feature-requests` -> `create-tasks`
+4. `contracts/feature-request/` -> `contracts/task/`
+5. `docs/feature-requests/` -> `docs/tasks/` (via `git mv`, for rename detection)
+6. `fr-manifest@2` -> `task-manifest@1`
 7. `audit_rubric@2.0` -> keep the name, bump to `@3.0`
-8. prose: `Task` / `task` / `FRs` -> `task` / `tasks`
+8. prose: `Feature Request` / `feature request` / `FRs` -> `task` / `tasks`
 9. bare `FR` abbreviation: **manual pass only**, word-boundary, and never inside an `FR-<MOD>-<NNN>` ID
 
 Codemod deny-list (assert zero diff in CI):
@@ -300,22 +300,22 @@ tools/caf/**                       # separate BACKLOG/Task vocabulary, golden fi
 dist/**                            # build output
 docs/status/data/**                # generated cache
 CHANGELOG.md                       # historical record
-docs/tasks/_archive/**  # evidence
-docs/tasks/_audits/**   # evidence
-docs/tasks/.workflow/** # evidence
+docs/feature-requests/_archive/**  # evidence
+docs/feature-requests/_audits/**   # evidence
+docs/feature-requests/.workflow/** # evidence
 ```
 
 Freeze the backlog during the cut: no task may be mid-flight, because BSU optimistic concurrency pre-images are invalidated by any BACKLOG rewrite. Alternatively add a `schema_version` to the BACKLOG frontmatter that the concurrency check reads, and fail loudly on mismatch.
 
 ### Phase 4 — ship it
 
-- Alias `/create-tasks` and `/ship-tasks` to the new commands for one release, printing a deprecation notice. Then delete.
-- `cyberos install` detects `docs/tasks/`, offers the migration, removes the five stale agent symlinks, rewrites the managed gitignore block.
+- Alias `/create-feature-requests` and `/ship-feature-requests` to the new commands for one release, printing a deprecation notice. Then delete.
+- `cyberos install` detects `docs/feature-requests/`, offers the migration, removes the five stale agent symlinks, rewrites the managed gitignore block.
 - Emit the `memory.path_rename_epoch` audit row.
 - Regenerate `.awh/eval-baseline.json` and re-author every `TRIGGER_TESTS.md`.
 - Emit `/frs/` -> `/tasks/` 301s on the docs site for one release.
 
-Dogfood: run `/create-tasks` one last time to author the tasks that retire tasks.
+Dogfood: run `/create-feature-requests` one last time to author the tasks that retire feature requests.
 
 ---
 
@@ -323,7 +323,7 @@ Dogfood: run `/create-tasks` one last time to author the tasks that retire tasks
 
 | # | Decision | Chosen | Rationale given |
 |---|---|---|---|
-| D1 | `subtask@1` collision | rename existing `subtask@1` -> `subtask@1` | parent/child reading is obvious |
+| D1 | `task@1` collision | rename existing `task@1` -> `subtask@1` | parent/child reading is obvious |
 | D2 | ID scheme | rewrite all 563 IDs, `FR-*` -> `TASK-*` | clean namespace |
 | D3 | History posture | rewrite everything including archives | pre-1.0 |
 | D4 | Sequencing | one wave | not released 1.0.0 yet |
@@ -351,7 +351,7 @@ overridden by CyberOS's own protocol, not by preference.
                                 1,334 memory files
 ```
 
-- 446 memory files carry an FR ID **in the filename** (`impl-plan-task-mcp-003.md`, `TASK-MCP-003-sep986-naming-validator.audit.md`).
+- 446 memory files carry an FR ID **in the filename** (`impl-plan-fr-mcp-003.md`, `FR-MCP-003-sep986-naming-validator.audit.md`).
 - 500 memory files carry an FR ID **in the body**.
 - 15 distinct FR IDs are inside the **binlog rows themselves**.
 
@@ -394,7 +394,7 @@ compaction horizon. Worth a separate task.
 
 ## 11. Sixth collision found during the codemod: `task_id` is a wire protocol
 
-`task_id` is the obvious rename target for `task_id`. It is not available.
+`fr_id` is the obvious rename target for `task_id`. It is not available.
 
 `task_id` already exists 444 times, and its most important owner is not ours:
 
@@ -421,15 +421,15 @@ Running total of what "task" means inside this repo after the rename:
 | 5 | MCP long-running task (`mcp_tasks.task_id`) | MCP spec | **no, wire protocol** |
 | 6 | agent runtime Task tool / TaskCreate | Claude Code | no |
 
-Consequence for the codemod: **do not rewrite `task_id` -> `task_id`.** It would
+Consequence for the codemod: **do not rewrite `fr_id` -> `task_id`.** It would
 put two unrelated `task_id` meanings in one repo, and grep is how agents retrieve
 context here.
 
 Options:
 
-- `task_id` -> `task_id`, scoped to `modules/cuo` + `modules/skill` only, with an ADR recording the overload and `scripts/check_sep986_naming.sh` extended to enforce the module boundary. Cheapest, cognitively lossy.
-- `task_id` -> `backlog_task_id`. Unambiguous, verbose, greps clean. [recommended]
-- Leave `task_id` as-is. Honest but leaves the old vocabulary in the hot path.
+- `fr_id` -> `task_id`, scoped to `modules/cuo` + `modules/skill` only, with an ADR recording the overload and `scripts/check_sep986_naming.sh` extended to enforce the module boundary. Cheapest, cognitively lossy.
+- `fr_id` -> `backlog_task_id`. Unambiguous, verbose, greps clean. [recommended]
+- Leave `fr_id` as-is. Honest but leaves the old vocabulary in the hot path.
 
 This is decision **D5**, still open.
 
@@ -448,14 +448,14 @@ total substitutions    : 26,454
 
 | rule | hits | files |
 |---|---|---|
-| `id:fr-module-num` (`TASK-AUTH-111` -> `TASK-AUTH-111`) | 23,141 | 2,280 |
+| `id:fr-module-num` (`FR-AUTH-111` -> `TASK-AUTH-111`) | 23,141 | 2,280 |
 | `skill:fr-audit` | 932 | 295 |
 | `field:related-frs` | 516 | 486 |
 | `path:docs-dir` | 432 | 174 |
-| `free-word:frontmatter-field` (`subtasks` -> `subtasks`) | 302 | 295 |
-| `cmd:ship` (`ship-tasks` -> `ship-tasks`) | 267 | 97 |
+| `free-word:frontmatter-field` (`sub_tasks` -> `subtasks`) | 302 | 295 |
+| `cmd:ship` (`ship-feature-requests` -> `ship-tasks`) | 267 | 97 |
 | `skill:fr-author` | 258 | 81 |
-| `artefact:task-1` (`task@1` -> `subtask@1`) | 196 | 135 |
+| `artefact:feature-request-1` (`feature_request@1` -> `task@1`) | 196 | 135 |
 | prose + remaining identifiers | 412 | — |
 
 ### Residue the rules cannot safely reach
@@ -463,12 +463,12 @@ total substitutions    : 26,454
 | residue | hits | files | disposition |
 |---|---|---|---|
 | bare `FR` / `FRs` in prose ("the FR", "FR IDs", "FRs land here") | 4,601 | 1,191 | mechanical, but 2 chars — needs a reviewed pass, not a blind sed |
-| `task_id`, `TaskRow`, `_TASK_ROW_RE`, `_TASK_ID_RE` | 724 | 402 | blocked on D5 (§11) |
-| `task` in agent-config files | 13 | 8 | hand-edit: `.cursorrules`, `.windsurfrules`, `.grok/GROK.md`, `.github/copilot-instructions.md`, `.agents/rules/`, `.cursor/rules/`, `.gitignore` managed block, `.githooks/pre-commit`, `AGENTS.md`, `CLAUDE.md`, `CHANGELOG.md` |
+| `fr_id`, `FrRow`, `_FR_ROW_RE`, `_FR_ID_RE` | 724 | 402 | blocked on D5 (§11) |
+| `feature-request` in agent-config files | 13 | 8 | hand-edit: `.cursorrules`, `.windsurfrules`, `.grok/GROK.md`, `.github/copilot-instructions.md`, `.agents/rules/`, `.cursor/rules/`, `.gitignore` managed block, `.githooks/pre-commit`, `AGENTS.md`, `CLAUDE.md`, `CHANGELOG.md` |
 
 The 13 agent-config files matter more than their count suggests. Each one is a
 rules file that a different coding agent reads. Miss one and that agent keeps
-generating `task` artefacts after the rename.
+generating `feature-request` artefacts after the rename.
 
 ---
 
@@ -505,7 +505,7 @@ disk explains why.
 1. `scripts/migrate_fr_to_task.py --apply` (content + `git mv` of the 15 known paths)
 2. `git mv` the 563 per-spec directories `docs/tasks/<mod>/FR-*/` -> `TASK-*/`
 3. Hand-edit the 13 agent-config files
-4. Resolve D5, then close the `task_id` residue
+4. Resolve D5, then close the `fr_id` residue
 5. Reviewed pass over the 4,601 bare-`FR` prose sites
 6. Reconcile the three-way schema drift (§4) and the backlog reader (§5) — now unavoidable, since both are in the blast radius
 7. Add `type: feature | bug` + `templates/{feature,bug}.md` + `rubrics/bug.md` + the `REGRESSION-*` gate family (§7.3, §7.4)
@@ -577,15 +577,15 @@ Two are docstring-only. The third is not:
 
 | file | line | content |
 |---|---|---|
-| `modules/memory/cyberos/core/claude_code_hook.py` | 90 | `"source": "task-memory-109",` (emitter) |
-| `modules/memory/tests/test_claude_code_hook.py` | 82 | `assert fm["source"] == "task-memory-109"` (sealed assertion) |
+| `modules/memory/cyberos/core/claude_code_hook.py` | 90 | `"source": "fr-memory-109",` (emitter) |
+| `modules/memory/tests/test_claude_code_hook.py` | 82 | `assert fm["source"] == "fr-memory-109"` (sealed assertion) |
 
 `source` is written into the frontmatter of every memory file the Claude Code hook
 creates. It is **data**, not a code reference. It is also the only hardcoded
 `fr-*` provenance value anywhere in the source tree.
 
 The emitter is in scope; the test is sealed. So after `--apply`, the emitter says
-`task-memory-109` and the sealed test still asserts `task-memory-109`, and
+`task-memory-109` and the sealed test still asserts `fr-memory-109`, and
 **the sealed test goes red.** That is the seal working exactly as designed: it
 catches a rename that changed observable behaviour, and forces a human to look.
 
@@ -595,165 +595,52 @@ Decide it consciously, in either direction:
 - **Rewrite both.** `chmod u+w` the three files, hand-edit the four lines, `python -m awh lock modules/memory/tests` to re-seal, commit separately with the reason in the message.
 
 Free either way today only because the BRAIN has **zero** memory files carrying
-`task-memory-109` — the hook has never written one. Had it run even once, you would
+`fr-memory-109` — the hook has never written one. Had it run even once, you would
 have persisted data on one vocabulary and new code on another, with the BRAIN
 deny-listed from this codemod and no migration between them. Check
-`grep -rl 'task-memory-109' .cyberos/memory/store` before deciding, in case that
+`grep -rl 'fr-memory-109' .cyberos/memory/store` before deciding, in case that
 changed.
 
-### 13.6 The codemod is not idempotent (found on the pass-2 dry run)
-
-Three rules are **one-shot**:
-
-```
-free-word:contract-literal   task@1          -> subtask@1
-free-word:contract-id        contract_id:task -> subtask
-free-word:contract-path      contracts/task  -> contracts/subtask
-```
-
-They exist to free the word `task` by demoting the old contract. After pass 1,
-`task@1` means the **new** thing (the former `task@1`). Re-running them
-would demote *that* to `subtask@1` across 216 sites and collapse both contracts
-into one — silently, with a green exit code.
-
-`word_already_freed()` now keys off `modules/skill/contracts/subtask/` existing on
-disk and disarms those three rules. Every other rule is naturally idempotent: its
-left-hand side no longer exists after the first run.
-
-If you ever fork this codemod, keep the guard. A second `--apply` without it is
-unrecoverable by inspection.
-
-### 13.7 Pass-2 residue: the `_` word-boundary class
-
-`_` is a word character, so `\btask\b` never matched inside a longer
-snake_case identifier. Pass 1 left ~90 sites behind:
-
-| site | why it matters |
-|---|---|
-| `modules/skill/backlog-state-update-author/SKILL.md:81` — `task_audit:` | **Contract-level.** An envelope FIELD name that the BSU rubric requires for the `draft -> ready_to_implement` transition. Not cosmetic. |
-| `modules/cuo/cuo/core/applier.py:75,453` — `_apply_task_audit` | dispatch key was renamed to `task-audit`, the function it points at was not |
-| `services/skill-broker/tests/integration.rs` — `task_author_validates()` | cosmetic; the paths and assertions inside were renamed correctly, so the tests still pass |
-| 4 SVG architecture diagrams | `.svg` was wrongly in `SKIP_SUFFIXES`. SVG is text; the diagrams still rendered `cuo/cpo/task-author`. Now in scope. |
-| `tools/docs-site/render-task-pages.mjs:79` — `'Task — engineering-spec@1'` | the user-visible kind label on every rendered docs page |
-
-Prose misses: hyphenated Title Case (`Task`) and sentence case
-(`Task`) were not covered by the Title Case rule.
-
-### 13.8 Tracked symlinks (crashed the pass-2 run)
-
-`git ls-files` lists symlinks like ordinary paths. This repo has six tracked ones:
-
-```
-AGENTS.md                                 -> modules/memory/cyberos/data/AGENTS.md
-CLAUDE.md                                 -> modules/memory/cyberos/data/AGENTS.md
-.codex/skills/ship-tasks       -> ../../.cyberos/plugin/skills/ship-tasks
-.commandcode/skills/ship-tasks -> (same)
-.grok/skills/ship-tasks        -> (same)
-.opencode/skill/ship-tasks     -> (same)
-```
-
-Two failure modes, one loud and one silent:
-
-- **Loud.** Four of them point at a *directory*, so `read_text()` raised
-  `IsADirectoryError` and killed the pass-2 run outright.
-- **Silent, and much worse.** `AGENTS.md` and `CLAUDE.md` point at the **same**
-  file — the memory protocol. The codemod planned three edits that all write
-  through to one target. Under the old write-as-you-read loop, the second read
-  would have seen the already-rewritten body and fired the one-shot
-  `task@1 -> subtask@1` rule on it, quietly corrupting §3.1 of the protocol.
-  The two-phase apply (plan everything, then write), added for crash safety,
-  prevented it by accident.
-
-The codemod now skips symlinks outright. Their targets are tracked separately and
-get rewritten on their own.
-
-The four skill symlinks are also how Claude Code, Codex, Grok, opencode and
-commandcode *discover the workflow*. `fix_symlinks()` retargets all five (the
-`.claude` one is gitignored but equally broken) to `ship-tasks`. They will dangle
-until the payload is rebuilt:
-
-```bash
-bash tools/cyberos-init/build.sh
-```
-
-The managed block in `.gitignore` still names the old paths. Fix it, and teach
-`cyberos install` to delete stale links by name (risk R3).
-
-### 13.9 The idempotency guard was incomplete (pass-2 incident)
-
-§13.6 guarded the one-shot *content* rules. It did not guard the one-shot *path
-rename*. On the pass-2 run, `contracts/task -> contracts/subtask` re-fired.
-
-`git mv` into an existing directory **nests instead of failing**, so the NEW task
-contract (formerly `feature-request`) was swallowed whole:
-
-```
-modules/skill/contracts/subtask/task/{CONTRACT,STATUS-REFERENCE,SHIP-MANIFEST,template,CHANGELOG}.md
-```
-
-`build.sh` then died on `cp modules/skill/contracts/task/STATUS-REFERENCE.md: No
-such file or directory`, which is the only reason anyone noticed. Nothing was
-lost — the moves were staged as renames — but the failure was quiet in exactly
-the way a rename failure must never be.
-
-Three fixes, all in the codemod:
-
-1. `ONE_SHOT_PATH_RENAMES` — the contract-dir move is skipped once `freed`.
-   An "is the source absent?" check does **not** catch this: the source exists,
-   it is simply a different thing now.
-2. A path rename whose destination already exists is REFUSED, not nested.
-3. `git add -f` on the agent skill symlinks. Those dirs are gitignored and the
-   old links were force-added, so a plain `git add` dies mid-set — which is what
-   left `.codex` retargeted and the other four untouched.
-
-The general lesson, and the reason this keeps happening: a rename codemod is a
-**state machine**, not a substitution. Every rule has a precondition about which
-side of the rename the tree is on. Rules that assume "before" must be disarmed
-once the tree is "after", and that includes the file moves, not just the text.
-
-### 13.10 `git mv` does not rename the callers (pass-3 incident)
-
-`bash tools/cyberos-init/build.sh` reported `WARN docs-site build failed`. Cause:
-
-```
-tools/docs-site/build.sh:36    node tools/docs-site/render-fr-catalog.mjs
-tools/docs-site/build.sh:59    node tools/docs-site/render-fr-pages.mjs
-```
-
-Pass 1 `git mv`'d those renderers to `render-task-catalog.mjs` and
-`render-task-pages.mjs`. It did not touch the lines that **invoke them by name**,
-because no content rule matched `render-fr-pages` — it contains neither
-`feature-request` nor an `FR-<MOD>-<NNN>` id.
-
-The same hole applies to every moved script: `migrate_fr_layout`, `repair_fr_yaml`,
-`rebaseline_fr_status`, `awh_goldenset_from_fr`, `fr-migrate`. And four files were
-never renamed at all: `migrate_improvement_to_fr.py`, `test_fr_layout.sh`,
-`test_render_fr_pages.sh`, `ship-your-first-fr.md`.
-
-99 substitutions across 37 files, all of them callers.
-
-**Invariant, now enforced by `unreferenced_renames()`:** every entry in
-`PATH_RENAMES` MUST have a matching content rule for its basename. A move without
-one is a landmine that only detonates when something tries to run the file.
-
-### 13.11 Not our bug: `check-chain-coverage.sh`
-
-```
-tools/cyberos-init/check-chain-coverage.sh: line 32: declare: -A: invalid option
-tools/cyberos-init/check-chain-coverage.sh: line 34: awh: unbound variable
-```
-
-`declare -A` (associative array) needs bash 4. macOS ships bash 3.2. Introduced in
-commit `53db4e30f`, long before this rename — `git log -S 'declare -A ALLOW'`
-confirms it. The script has therefore never run successfully on a stock Mac, and
-the chain-coverage gate has been silently passing by not executing.
-
-Fix separately: `#!/usr/bin/env bash` finds Homebrew bash if it is first on PATH,
-so either require bash >= 4 explicitly and fail loudly, or rewrite the allowlist
-without associative arrays.
-
-### 13.12 CI guard against re-entry
+### 13.6 CI guard against re-entry
 
 After the wave, add a hook that fails on any new `feature[-_ ]request` or
 `FR-[A-Z]+-\d+` in tracked files outside the deny-list. Without it, the 5,000+
 lines of vendored skill prose will reintroduce the old vocabulary within a month.
+
+---
+
+## 14. Incident log
+
+Six failures during execution. None were in the original risk register. Every one
+was caught by a guard added in response to the previous failure.
+
+| # | Failure | Root cause | Guard added |
+|---|---|---|---|
+| 1 | Apply died at file ~1,349 of 2,498, leaving a half-renamed tree that `git checkout` could not undo | wrote files as it read them | **Two-phase apply**: plan every edit in memory, pre-flight writability, then write. Plus a **dirty-tree guard** so `git checkout -- .` is always a clean undo. |
+| 2 | Apply refused: 3 files not writable | They are **sealed held-out acceptance tests** (`awh lock`, chmod 444, "so the authoring agent cannot edit the bar it is graded against"). There is no `awh unlock` verb. The codemod was about to `chmod` through an anti-reward-hacking control. | Sealed paths **deny-listed**; `--sealed` reports the edits it refuses to make. |
+| 3 | Pass-2 dry run would have rewritten `task@1 -> subtask@1` across 216 sites | The three word-freeing rules are **one-shot**. After pass 1, `task@1` means the *new* thing. | `word_already_freed()` disarms them once `contracts/subtask/` exists. |
+| 4 | Pass-2 crashed: `IsADirectoryError` on `.codex/skills/ship-feature-requests` | Six **tracked symlinks**. Four point at directories. `AGENTS.md` and `CLAUDE.md` point at the *same file* — the memory protocol — so three planned edits wrote through to one target. Under the old write-as-you-read loop, the second read would have seen the rewritten body and fired the one-shot rule on it, silently corrupting §3.1. The two-phase apply from #1 prevented it by accident. | Symlinks skipped outright; `fix_symlinks()` retargets the five agent links. |
+| 5 | `build.sh` died on `cp contracts/task/STATUS-REFERENCE.md: No such file` | Guard #3 covered the one-shot *content* rules but not the one-shot *path rename*. `contracts/task -> contracts/subtask` re-fired, and **`git mv` into an existing directory nests instead of failing**, swallowing the new task contract into `contracts/subtask/task/`. | `ONE_SHOT_PATH_RENAMES`; a rename whose destination exists is **refused, not nested**. |
+| 6 | docs-site build failed | **`git mv` renames a file; it does not rename the lines that call it by name.** `build.sh` kept invoking `render-fr-pages.mjs` after it moved. Same for 5 other scripts; 4 more were never renamed at all. 99 call sites. | Invariant: every `PATH_RENAMES` entry MUST have a content rule for its basename. Checked by `unreferenced_renames()`. |
+| 7 | This document rewrote itself into nonsense ("Task to task: rename impact analysis") | A document whose subject IS the rename must be excluded from the rename. | `docs/reviews/task-rename-analysis.md` deny-listed. |
+
+Not our bug, found along the way: `tools/cyberos-init/check-chain-coverage.sh`
+uses `declare -A` (bash 4 associative array). macOS ships bash 3.2. Introduced in
+`53db4e30f`, long before this rename. The chain-coverage gate has therefore never
+executed on a stock Mac — it has been passing by not running.
+
+### The generalisable lesson
+
+A rename codemod is a **state machine, not a substitution**. Every rule carries an
+implicit precondition about which side of the rename the tree is on. Rules that
+assume "before" must be disarmed once the tree is "after" — and that includes the
+file moves and the filename references, not just the text.
+
+Corollaries, each learned the hard way:
+
+- Plan all edits before writing any. A half-applied rename is not recoverable by inspection.
+- Never write through a symlink.
+- `git mv` into an existing directory nests. Refuse, do not nest.
+- Every path rename needs a matching content rule for its basename.
+- Anything whose *subject* is the old vocabulary — audit evidence, changelogs, this
+  document — must be excluded from the rename, or you falsify the record.

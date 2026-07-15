@@ -2,13 +2,13 @@
 template: task@1
 id: TASK-CUO-200
 title: "Harness Wave 1 — read-only daily report of self_audit signals per skill"
+type: feature
 author: "@stephen"
 department: engineering
 status: done
 priority: p1
 created_at: 2026-05-19T20:00:00+07:00
 ai_authorship: assisted
-feature_type: internal_tooling
 eu_ai_act_risk_class: minimal
 target_release: 2026-Q3
 client_visible: false
@@ -40,7 +40,7 @@ Without a harness, the entire self-evolution architecture lives in frontmatter a
 2. **MUST** ship `cuo/core/harness_signals.py` with one Python function per declared signal type (`confidence_low_streak`, `user_correction_streak`, `rule_reversal_streak`, `needs_human_rate_above`, `deterministic_drift`, plus the `human_fine_tune.signals_to_initiate` set: `acceptance_rate_below`, `hitl_pause_rate_above`, `drift_signal_count_above`). Each signal function takes the windowed audit rows + the skill's threshold dict and returns `(tripped: bool, value: float, evidence_rows: list[dict])`.
 3. **MUST** support window arguments via duration strings (`24h`, `7d`, `30d`) parsed once and applied per-skill. *(traces_to: §1 #3 → AC #1)*
 4. **MUST** read each skill's `self_audit.anomaly_signals` and `human_fine_tune.signals_to_initiate` blocks from its SKILL.md frontmatter at report time — no hard-coded threshold lists. *(traces_to: §1 #4 → AC #2)*
-5. **MUST** emit a markdown report at `docs/harness/harness-report-<YYYY-MM-DD>.md` with sections: (a) skills with tripped signals (sorted by severity), (b) workflows with elevated `ROUTED_BACK` rates, (c) per-FR routed-back history with `routed_back_count` over the window, (d) summary stats (total runs, total HITL pauses, total rework events).
+5. **MUST** emit a markdown report at `docs/harness/harness-report-<YYYY-MM-DD>.md` with sections: (a) skills with tripped signals (sorted by severity), (b) workflows with elevated `ROUTED_BACK` rates, (c) per-task routed-back history with `routed_back_count` over the window, (d) summary stats (total runs, total HITL pauses, total rework events).
 6. **MUST** include the matching audit-row IDs as `evidence:` cells in the report so operators can drill in via `cyberos history --row <id>`.
 7. **MUST NOT** mutate any skill, RUBRIC, contract, or workflow file. **Read-only.** Wave 2 (TASK-CUO-201) introduces proposal authoring.
 8. **MUST** add CLI subcommand `cyberos-cuo harness report --since <window> [--skill <name>] [--workflow <id>] [--out <path>]`. Default window `24h`; default path computed from date.
@@ -88,14 +88,14 @@ In scope: `cuo/core/harness.py`, `cuo/core/harness_signals.py`, signal functions
 
 ## AI Authorship Disclosure
 
-- **Tools used:** Anthropic Claude (the assistant authored the FR body via the standard `task-author` chain).
+- **Tools used:** Anthropic Claude (the assistant authored the task body via the standard `task-author` chain).
 - **Scope:** §1 normative clauses, §4 ACs, §5 test entries, alternatives section — all draft-generated and then revised by the operator.
 - **Human review:** Stephen Cheng reviewed the spec end-to-end before audit; revisions are tracked in the audit-fix log per §10 of the sibling .audit.md.
 
 ## §4 Acceptance Criteria
 
 1. `cyberos-cuo harness report --since 7d` produces a non-empty markdown file at `docs/harness/harness-report-YYYY-MM-DD.md`. *(traces_to: §1 #5, #8)*
-2. The report's "Skills with tripped signals" section lists at least one entry when running against a seeded chain with 11 `memory.fr_routed_back` rows for one FR (above `acceptance_rate_below: 0.6` if any forward-runs exist). *(traces_to: §1 #2, #5)*
+2. The report's "Skills with tripped signals" section lists at least one entry when running against a seeded chain with 11 `memory.fr_routed_back` rows for one task (above `acceptance_rate_below: 0.6` if any forward-runs exist). *(traces_to: §1 #2, #5)*
 3. Each tripped signal's row carries the skill name, signal id, observed value, threshold, and at least one evidence row ID. *(traces_to: §1 #6)*
 4. The report includes a "Workflows with elevated rework" section sorting workflows by `routed_back_count / total_runs` descending. *(traces_to: §1 #5)*
 5. Re-running the same command in `--watch` mode after one new event writes a new report atomically (write-to-temp then rename) without truncation. *(traces_to: §1 #9)*

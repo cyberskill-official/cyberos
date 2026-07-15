@@ -1,8 +1,16 @@
 ---
 id: TASK-CUO-104
 title: "CUO topological walk of `depends_on` chain — orchestrates multi-step skill invocations with composite audit row + per-step sub-rows"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: CUO
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -256,7 +264,7 @@ async fn step_failure_updates_chain() {
 - §11.1 Topo sort via Kahn's algorithm; cycle detection via in-degree check.
 - §11.2 Walker runs steps sequentially v1; parallel walks (independent branches) future enhancement.
 - §11.3 memory audit body: chain_id, step_order, skill_id, status; result SHA256.
-- §11.4 Step failure → no further steps; TASK-CUO-105 handles rollback in next FR.
+- §11.4 Step failure → no further steps; TASK-CUO-105 handles rollback in next task.
 - §11.5 Plan JSONB stored verbatim for replay.
 
 ---

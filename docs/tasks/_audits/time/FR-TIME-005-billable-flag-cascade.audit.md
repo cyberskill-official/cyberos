@@ -11,7 +11,7 @@ template: engineering-spec@1
 
 ## §1 — Verdict summary
 
-The spec lands 4-step billable-flag cascade on top of TASK-TIME-001 + TASK-PROJ-006. 410 lines, 10 §1 clauses, 20 ACs, 3 tests, 15 failure modes, 10 notes. Narrow-surface focused FR.
+The spec lands 4-step billable-flag cascade on top of TASK-TIME-001 + TASK-PROJ-006. 410 lines, 10 §1 clauses, 20 ACs, 3 tests, 15 failure modes, 10 notes. Narrow-surface focused task.
 
 6 issues resolved (snapshot immutability, null vs false override, cascade O(1) perf, role scope checks, audit sampling exception, REVOKE UPDATE on snapshot fields).
 

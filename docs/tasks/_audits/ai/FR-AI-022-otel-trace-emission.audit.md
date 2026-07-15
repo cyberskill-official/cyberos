@@ -27,14 +27,14 @@ Six residual issues prevented 10/10 at the post-expansion checkpoint; all six ar
 
 - **severity:** error
 - **rule_id:** security / structural defence
-- **location:** §1 #6 (claim "MUST NOT include PII"), §10 first-pass row "Detected by FR-OBS PII-scrub on collector"
+- **location:** §1 #6 (claim "MUST NOT include PII"), §10 first-pass row "Detected by task-OBS PII-scrub on collector"
 - **status:** resolved
 
 #### Description
 
 The first-pass §10 had:
 
-> *"PII accidentally added to span | Detected by FR-OBS PII-scrub on collector | Spans flagged; sev-1 | Engineer fixes call site."*
+> *"PII accidentally added to span | Detected by task-OBS PII-scrub on collector | Spans flagged; sev-1 | Engineer fixes call site."*
 
 This is REACTIVE detection. By the time the collector flags a span, the PII has already left the gateway, traversed the OTel exporter, sat in the queue, been transported via gRPC, and stored in the collector's intake buffer — at minimum five locations where the PII existed transiently. Each location is a potential leak surface (logs, debug dumps, pcap captures).
 
@@ -111,7 +111,7 @@ Without the implementation, TASK-OBS-004's correlation breaks silently — the p
 
 First-pass AC #7 said: *"Overhead < 1ms — Benchmark: 1000 calls with OTel disabled vs enabled. Diff in p95 < 1ms."* But no benchmark test code was shown; "diff in p95" wasn't formalised.
 
-A code-gen agent reading the FR can't write the benchmark. Worse, "OTel disabled" wasn't defined — is it `OTEL_SDK_DISABLED=true`? Conditional compilation? Removing the SDK entirely?
+A code-gen agent reading the task can't write the benchmark. Worse, "OTel disabled" wasn't defined — is it `OTEL_SDK_DISABLED=true`? Conditional compilation? Removing the SDK entirely?
 
 #### Suggested fix
 
@@ -185,7 +185,7 @@ Worse, span status conveys outcome semantics that attributes don't: a `provider_
 
 ## §4 — Resolution
 
-All 6 mechanical revisions applied (2026-05-16) within the FR itself:
+All 6 mechanical revisions applied (2026-05-16) within the task itself:
 
 - **ISS-001 RESOLVED**: §1 #6 + §1 #15 add typed-attribute-key + AST-lint requirements; `attributes.rs` shown in §3 with 20+ approved keys + FORBIDDEN block; `pii_lint.rs` AST walker shown; AC #7 + §5 `lint_rejects_planted_user_email_attribute` test; §10 row updated to compile-time prevention; §2 prevention-vs-detection paragraph.
 

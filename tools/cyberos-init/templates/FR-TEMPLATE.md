@@ -1,5 +1,5 @@
 ---
-id: FR-001-slug
+id: TASK-001-slug
 title: Short imperative title
 status: draft            # draft | ready_to_implement | implementing | ready_to_review | reviewing | ready_to_test | testing | done | on_hold | closed (see cuo/STATUS-REFERENCE.md)
 class: product           # product = net-new feature | improvement = hardening/refactor/audit-remediation
@@ -9,7 +9,7 @@ routed_back_count: 0
 awh: N/A                 # N/A unless this repo has a sealed goldenset for the touched area
 ---
 
-# FR-001: Short imperative title
+# TASK-001: Short imperative title
 
 ## 1. Description (normative)
 
@@ -37,7 +37,7 @@ test or an ADR.
 
 - ...
 
-## 5. Protected invariants this FR must not weaken
+## 5. Protected invariants this task must not weaken
 
 List anything a gate must never be made green by weakening (auth model, tenant
 isolation, audit integrity, consent, etc.). Weakening one is a fork: park and record.

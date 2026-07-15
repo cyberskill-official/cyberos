@@ -24,7 +24,7 @@ Six residual issues prevented 10/10 at the post-expansion checkpoint; all six ar
 
 ### ISS-001 — Tenant ID type mismatch: API uses UUID but `jwt.tenant_id != 0` (numeric)
 - **severity:** error  **status:** resolved
-- First-pass §6 had `if jwt.tenant_id != 0` — but the table schema uses UUID. A code-gen agent would either make tenant_id an integer (breaking the schema) or write `Uuid::nil()` checks without the FR specifying. Resolved: §1 + §3 + §6 use `Uuid::nil()` (the convention for tenant 0); explicit in §11 notes.
+- First-pass §6 had `if jwt.tenant_id != 0` — but the table schema uses UUID. A code-gen agent would either make tenant_id an integer (breaking the schema) or write `Uuid::nil()` checks without the task specifying. Resolved: §1 + §3 + §6 use `Uuid::nil()` (the convention for tenant 0); explicit in §11 notes.
 
 ### ISS-002 — RLS policy application not specified (which tables, what template)
 - **severity:** error  **status:** resolved
@@ -60,7 +60,7 @@ All 6 mechanical revisions applied (2026-05-16). **Score = 10/10.**
 
 ### §10.1 — Verdict
 
-**Implementation status:** SHIPPED + strict-audited. 7/7 spec-vs-code gaps closed via the audit-fix loop. Workspace compiles green; 84 unit tests pass; 8 integration tests (`#[ignore]`) gated by Postgres + memory-migrations cover G-005/G-006/G-007 end-to-end. Two ECM rows (ECM-009 concurrent slug, ECM-014 memory-unreachable rollback) tracked as documented follow-ups in §10.7 — neither blocks the FR's spec contract.
+**Implementation status:** SHIPPED + strict-audited. 7/7 spec-vs-code gaps closed via the audit-fix loop. Workspace compiles green; 84 unit tests pass; 8 integration tests (`#[ignore]`) gated by Postgres + memory-migrations cover G-005/G-006/G-007 end-to-end. Two ECM rows (ECM-009 concurrent slug, ECM-014 memory-unreachable rollback) tracked as documented follow-ups in §10.7 — neither blocks the task's spec contract.
 
 **Original BLOCKED verdict (2026-05-18 session 20):** 7 spec-vs-code gaps documented; audit-fix loop pending.
 
@@ -70,7 +70,7 @@ All 6 mechanical revisions applied (2026-05-16). **Score = 10/10.**
 |---|---|---|
 | repo-context-map | 10/10 | Found handler at `services/auth/src/handlers.rs:125-217`; 7 baseline patterns + 2 domain-specific captured |
 | edge-case-matrix | 9/10 | 14 rows × 6 categories; WARN: planned test files don't exist (resolved by §10.3 fixes) |
-| implementation-plan | 10/10 | 9 gap-fills + execution order; 8h estimate matches FR effort_hours |
+| implementation-plan | 10/10 | 9 gap-fills + execution order; 8h estimate matches task effort_hours |
 | observability-injection | 10/10 | 7 logs + 3 trace spans + 4 counters; 100% branch coverage planned |
 | coverage-gate | 4/10 | FAIL — 0 of 14 ECM rows covered; 3 declared test files don't exist; per-file coverage on `create_tenant` estimated 0% |
 | backlog-state-update | 10/10 | Atomic single-cell mutation on BACKLOG.md line 212 |
@@ -86,7 +86,7 @@ All 6 mechanical revisions applied (2026-05-16). **Score = 10/10.**
 | G-004 | §1 #13 | OTel `auth.create_tenant` span not emitted — no `#[tracing::instrument]` macro | medium | ~30 LOC | **CLOSED** |
 | G-005 | §1 #6 | `auth.tenant_created` memory audit row not emitted in-transaction; no memory bridge wired | high | ~180 LOC (new `memory_bridge.rs` module + wiring) | **CLOSED** (DEC-memory-BRIDGE-001 resolved: direct same-DB insert, see §10.5 below) |
 | G-006 | §1 #8 | 100 ms p95 SLO not asserted by any test | medium | 60 LOC (Postgres-required `#[ignore]` test) | **CLOSED** |
-| G-007 | §new_files | Test files declared in FR header but absent on disk: `admin_tenant_create_test.rs`, `admin_tenant_idempotency_test.rs`, `admin_tenant_rls_test.rs` | high | ~350 LOC (8 integration tests in `admin_tenant_create_test.rs`) | **CLOSED for ECM-001..008 + ECM-010 + ECM-012; deferred for ECM-009 + ECM-011 + ECM-014** (see §10.7) |
+| G-007 | §new_files | Test files declared in task header but absent on disk: `admin_tenant_create_test.rs`, `admin_tenant_idempotency_test.rs`, `admin_tenant_rls_test.rs` | high | ~350 LOC (8 integration tests in `admin_tenant_create_test.rs`) | **CLOSED for ECM-001..008 + ECM-010 + ECM-012; deferred for ECM-009 + ECM-011 + ECM-014** (see §10.7) |
 
 **Edge-case-matrix coverage (referenced by gap closures):** 14 rows × 6 categories — all currently uncovered. Each gap closure adds the corresponding ECM rows to a real test. Full ECM enumeration captured during step 5; preserved in §10.5 working notes below.
 
@@ -173,12 +173,12 @@ Driving the audit-fix loop on TASK-AUTH-001 G-001 (closing one 5-LOC gap) expose
 | `passkey.rs` typing `(Uuid, Uuid)` for a row whose first column can be NULL | `auth/src/passkey.rs:187` | Changed to `(Option<Uuid>, Uuid)` so the discoverable-credential branch's `SELECT NULL::uuid, …` returns None, and the downstream `.ok_or_else()` at line 213 works | ERROR (TASK-AUTH-105) |
 | `geoip.rs` test used `.unwrap_err()` on Result whose Ok type is `Arc<dyn GeoIpResolver>` (not Debug) | `auth/src/geoip.rs:255` | Replaced with explicit `match` pattern | ERROR (test compile only) |
 
-### §10.7 — Deferred ECM rows (track as new FRs / follow-ups)
+### §10.7 — Deferred ECM rows (track as new tasks / follow-ups)
 
 The audit-fix loop covered **11 of 14** ECM rows. Three remain deferred:
 
-1. **ECM-009 — concurrent same-slug 409.** Needs `tokio::join!` racing two POSTs with the same slug + serializable transaction isolation on the test DB to be deterministic. The handler-side code path is already correct (PG UNIQUE constraint catches the race + returns the structured 409 from G-002) — only the **test** is deferred. Track as a follow-up integration FR; estimated 1h.
-2. **ECM-011 — same Idempotency-Key + DIFFERENT body → 409 idempotency_key_reuse.** Current `crate::idempotency::lookup` returns the prior response on any same-key hit, regardless of body equality. Per TASK-AUTH-001 §1 #5 the handler should return 409 with `{error:"idempotency_key_reuse", prior_request_hash:<hex16>}` when bodies differ. Closing this is a small `idempotency.rs` change (store + compare request body hash); estimated 2h. Track as new FR or G-008.
+1. **ECM-009 — concurrent same-slug 409.** Needs `tokio::join!` racing two POSTs with the same slug + serializable transaction isolation on the test DB to be deterministic. The handler-side code path is already correct (PG UNIQUE constraint catches the race + returns the structured 409 from G-002) — only the **test** is deferred. Track as a follow-up integration task; estimated 1h.
+2. **ECM-011 — same Idempotency-Key + DIFFERENT body → 409 idempotency_key_reuse.** Current `crate::idempotency::lookup` returns the prior response on any same-key hit, regardless of body equality. Per TASK-AUTH-001 §1 #5 the handler should return 409 with `{error:"idempotency_key_reuse", prior_request_hash:<hex16>}` when bodies differ. Closing this is a small `idempotency.rs` change (store + compare request body hash); estimated 2h. Track as new task or G-008.
 3. **ECM-014 — memory audit row insert failure → transaction rollback.** The handler IS correct (returns `Err` → tx auto-rolls back); only the **test** is deferred. Deterministic failure injection requires the `memory_bridge` module to live behind a trait that the test can swap to a `FailingBridge`. Track as a small refactor + follow-up test; estimated 2h.
 
 **3 previously-failing tests** that surfaced when cargo first ran on this code (session 20-21):
@@ -188,4 +188,4 @@ The audit-fix loop covered **11 of 14** ECM rows. Three remain deferred:
 
 ---
 
-*End of TASK-AUTH-001 audit. Spec quality: PASS 10/10. Implementation: **7/7 gaps closed**; workspace compiles green; **84 unit tests pass** + 8 ignored integration tests gated by Postgres. 3 ECM rows deferred to follow-up FRs per §10.7. Status: **shipped + strict-audited**.*
+*End of TASK-AUTH-001 audit. Spec quality: PASS 10/10. Implementation: **7/7 gaps closed**; workspace compiles green; **84 unit tests pass** + 8 ignored integration tests gated by Postgres. 3 ECM rows deferred to follow-up tasks per §10.7. Status: **shipped + strict-audited**.*

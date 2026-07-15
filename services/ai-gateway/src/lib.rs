@@ -19,10 +19,10 @@
 
 #![deny(missing_debug_implementations)]
 // `missing_docs` is deferred — see services/auth/src/lib.rs for the rationale.
-// Tracking: FR-AI-NNN-restore-missing-docs-lint (TBD).
+// Tracking: TASK-AI-NNN-restore-missing-docs-lint (TBD).
 #![allow(missing_docs)]
 // Style-class clippy lints suppressed at crate level — see services/auth/src/lib.rs
-// for the rationale and tracking FR. Same hygiene-wave plan.
+// for the rationale and tracking task. Same hygiene-wave plan.
 #![allow(clippy::doc_lazy_continuation)]
 #![allow(clippy::type_complexity)]
 #![allow(clippy::too_many_arguments)]

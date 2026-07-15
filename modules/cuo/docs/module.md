@@ -227,7 +227,7 @@ audit_hooks:
 | Added `cuo/MODULE.md` (this file) | Canonical catalog. |
 | Added `cuo/_template/{persona, workflow}/` | Copy-paste scaffolds. |
 | Added `cuo/chief-technology-officer/` as the canonical reference persona | CyberSkill IS technical. CTO is the highest-traffic persona for an internal-eng-led consultancy. |
-| Marked 46 other personas `planned` | Subsequent build sessions march through them per the FR-authoring loop discipline (one at 10/10 before the next). |
+| Marked 46 other personas `planned` | Subsequent build sessions march through them per the task-authoring loop discipline (one at 10/10 before the next). |
 
 The wipe was destructive. Recovery is via git history. No memory entries were touched.
 

@@ -19,7 +19,15 @@ _REQUIRED_ROOT = [
     "manifest_version", "task_id", "fr_sha256", "workflow_version", "started_at",
     "updated_at", "current_step", "routed_back_count", "steps", "hitl",
 ]
-_PRIORITY_RANK = {"MUST": 0, "SHOULD": 1, "COULD": 2}
+# Contract schema (task@1, FM-105) uses p0..p3. The 2026-07-14 schema migration
+# mapped the legacy MoSCoW values: MUST->p0, SHOULD->p1, COULD->p2, WONT->p3.
+# Both are accepted so a repo mid-migration (or a downstream repo that has not run
+# the migration yet) still sorts deterministically instead of silently ranking
+# everything last.
+_PRIORITY_RANK = {
+    "p0": 0, "p1": 1, "p2": 2, "p3": 3,
+    "MUST": 0, "SHOULD": 1, "COULD": 2, "WONT": 3,   # legacy MoSCoW
+}
 
 
 def validate(m: dict) -> list:
@@ -76,7 +84,7 @@ def resume_plan(m: dict, workflow_version: str, fr_sha256: str, hash_of) -> dict
                 "reason": f"workflow_version mismatch: manifest {m['workflow_version']} vs {workflow_version}"}
     if m["fr_sha256"] != fr_sha256:
         return {"action": "resume", "start_step": 1, "stale_from": 1, "gate_pending": None,
-                "reason": "FR spec changed since run start (fr_sha256 mismatch) - all steps stale"}
+                "reason": "task spec changed since run start (fr_sha256 mismatch) - all steps stale"}
     stale_from = None
     for s in sorted(m["steps"], key=lambda x: x["index"]):
         if s["status"] == "done" and s.get("artefact_sha256"):
@@ -103,18 +111,18 @@ def select_next(tasks: list) -> dict:
     tasks: [{id, status, priority, created, depends_on: [...]}]. Returns
     {"picked": id|None, "reason": str}.
     """
-    done = {f["id"] for f in frs if f["status"] == "done"}
-    eligible = [f for f in frs
+    done = {f["id"] for f in tasks if f["status"] == "done"}
+    eligible = [f for f in tasks
                 if f["status"] == "ready_to_implement"
                 and all(d in done for d in f.get("depends_on", []))]
     if not eligible:
-        return {"picked": None, "reason": "queue: no eligible FR (ready_to_implement with all depends_on done)"}
-    eligible.sort(key=lambda f: (_PRIORITY_RANK.get(f.get("priority", "COULD"), 9),
+        return {"picked": None, "reason": "queue: no eligible task (ready_to_implement with all depends_on done)"}
+    eligible.sort(key=lambda f: (_PRIORITY_RANK.get(f.get("priority", "p2"), 9),
                                  str(f.get("created", "")), f["id"]))
     w = eligible[0]
     return {"picked": w["id"],
             "reason": (f"queue: picked {w['id']} (priority={w.get('priority')}, "
-                       f"created={w.get('created')}) over {len(eligible) - 1} other eligible FRs")}
+                       f"created={w.get('created')}) over {len(eligible) - 1} other eligible tasks")}
 
 
 def finalize(m: dict, outcome: str) -> dict:

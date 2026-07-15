@@ -32,7 +32,7 @@ First version. No predecessor.
 
 ### Acceptance evidence (when harness ships)
 
-- A round-trip test: `product-requirements-document-author` produces a PRD from a `project_brief@1`; `product-requirements-document-audit` (registry v0.2.5) validates frontmatter + section presence + authority markers; `task-author` consumes the audited PRD; produced FRs reference the PRD by `memory_id` or path.
+- A round-trip test: `product-requirements-document-author` produces a PRD from a `project_brief@1`; `product-requirements-document-audit` (registry v0.2.5) validates frontmatter + section presence + authority markers; `task-author` consumes the audited PRD; produced tasks reference the PRD by `memory_id` or path.
 - Authority-marker compliance test: every claim in `## Goals` carries at least `llm-explicit` (rejected if `llm-implicit`); every claim in `## User Stories` acceptance criteria carries at least `llm-explicit`.
 
 ## How to add a future entry

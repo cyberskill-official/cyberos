@@ -10,26 +10,26 @@ classifier_version: 3.0.0-a4
 
 ## Positive triggers (MUST route here)
 
-- "Audit this FR for completeness"
-- "Has FR-007 changed since the last audit?"
-- "Tell me which FRs would fail acceptance today"
-- "Re-run the rubric against this FR collection"
-- "Audit this mixed batch - some FRs are task@1, some engineering-spec"   (per-file detection is the audit's job - TASK-CUO-208)
+- "Audit this task for completeness"
+- "Has TASK-007 changed since the last audit?"
+- "Tell me which tasks would fail acceptance today"
+- "Re-run the rubric against this task collection"
+- "Audit this mixed batch - some tasks are task@1, some engineering-spec"   (per-file detection is the audit's job - TASK-CUO-208)
 
 ## Negative triggers (MUST NOT route here)
 
-- "Turn this PRD into a backlog of FRs" → task-author
-- "Generate FRs from this spec" → task-author
-- "Draft a tech spec from this FR" → fr-to-tech-spec
+- "Turn this PRD into a backlog of tasks" → task-author
+- "Generate tasks from this spec" → task-author
+- "Draft a tech spec from this task" → fr-to-tech-spec
 - "What's the team's holiday schedule?" → none
-- "Convert this FR from task@1 to engineering-spec@1" → task-author   (conversion = re-authoring - TASK-CUO-208)
+- "Convert this task from task@1 to engineering-spec@1" → task-author   (conversion = re-authoring - TASK-CUO-208)
 
 ## Authoring notes
 
 - Positive 1-3 anchor on "audit", "check", "re-audit" verbs from the
   description-format triggers (TASK-SKILL-111).
 - Positive 4 is the "re-audit" repeat case — operators come back to an
-  existing FR-collection to re-run the rubric.
+  existing task-collection to re-run the rubric.
 - Negative 1-2 derived from common confusion in pilot (author/audit pair).
   These ARE the author's positive triggers — by design, the classifier MUST
   pick the right side based on verb cues ("draft" / "generate" vs "audit" /

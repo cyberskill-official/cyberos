@@ -1,10 +1,17 @@
 ---
 id: TASK-IMP-069
 title: "Publish the versioned payload + Claude plugin as GitHub Release assets on every vX.Y.Z tag"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: improvement
+created_at: 2026-07-12T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: improvement
-priority: MUST
+priority: p0
 status: done
-class: improvement
 verify: T
 phase: Wave A - version coupling
 owner: Stephen Cheng (CTO)
@@ -22,7 +29,7 @@ source_pages:
   - docs/deploy/RELEASE.md
 source_decisions:
   - "2026-07-12 operator decision: publish channel = GitHub Releases (payload tarball + cyberos.plugin per tag). npm package and hosted bootstrap remain future follow-ups on top of this channel."
-  - "Scope boundary: TASK-PLUGIN-008 (plugins.cyberskill.world OCI marketplace) and TASK-SKILL-201 (.skill OCI registry) are separate product-distribution systems and are NOT superseded; this FR covers only the cyberos-init payload channel."
+  - "Scope boundary: TASK-PLUGIN-008 (plugins.cyberskill.world OCI marketplace) and TASK-SKILL-201 (.skill OCI registry) are separate product-distribution systems and are NOT superseded; this task covers only the cyberos-init payload channel."
 language: bash + GitHub Actions YAML
 service: .github/workflows/ + tools/cyberos-init/
 new_files:
@@ -40,7 +47,7 @@ modified_files:
 
 ## §1 - Description
 
-Today the payload exists only as a gitignored local build; every consumer (Claude marketplace add, `.plugin` file pick, `init.sh`, `rollout.sh`) copies whatever a laptop last built. This FR gives the payload one canonical, versioned, downloadable source: the GitHub Release for each `vX.Y.Z` tag.
+Today the payload exists only as a gitignored local build; every consumer (Claude marketplace add, `.plugin` file pick, `init.sh`, `rollout.sh`) copies whatever a laptop last built. This task gives the payload one canonical, versioned, downloadable source: the GitHub Release for each `vX.Y.Z` tag.
 
 Normative clauses:
 
@@ -54,7 +61,7 @@ Normative clauses:
 
 ## §2 - Why this design
 
-GitHub Releases is the zero-infrastructure channel that matches the existing tag-driven `release.yml` and needs no hosting, keys, or registry. Deterministic tarballs mirror the memory module's export discipline and make the artifact reproducible from the tag alone. Stable-name aliases exist because GitHub's `latest/download/` URL requires a constant asset name; versioned twins keep every historical release independently fetchable. Checksums ship next to the assets so `bootstrap.sh` can verify without a signing infrastructure (cosign-grade signing stays with TASK-PLUGIN-008's marketplace, which this FR deliberately does not replace).
+GitHub Releases is the zero-infrastructure channel that matches the existing tag-driven `release.yml` and needs no hosting, keys, or registry. Deterministic tarballs mirror the memory module's export discipline and make the artifact reproducible from the tag alone. Stable-name aliases exist because GitHub's `latest/download/` URL requires a constant asset name; versioned twins keep every historical release independently fetchable. Checksums ship next to the assets so `bootstrap.sh` can verify without a signing infrastructure (cosign-grade signing stays with TASK-PLUGIN-008's marketplace, which this task deliberately does not replace).
 
 ## §3 - Contract
 

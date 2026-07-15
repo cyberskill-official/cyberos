@@ -1,12 +1,12 @@
 # TASK-IMP-073 — ship-workflow phase bundle (steps 1–12)
 
-Run: 2026-07-13, ship-tasks v2.4.0. Queue echo: `queue: picked TASK-IMP-073 (priority=MUST, created=2026-07-13) over 4 other eligible FRs`.
+Run: 2026-07-13, ship-tasks v2.4.0. Queue echo: `queue: picked TASK-IMP-073 (priority=MUST, created=2026-07-13) over 4 other eligible tasks`.
 
 ## Steps 1–2 — repo context map (repo-context-map@1)
 
-- **Patterns to follow:** release.yml gated-job convention (`vars.ANDROID_RELEASE`/`IOS_RELEASE`, own gate per platform); loud `::error::` annotations for CI failures; hash comparison via `sha256sum` on ubuntu runners and `shasum -a 256` on macos runners (macos images do not ship sha256sum); docs runbooks live in `docs/deploy/RELEASE.md` with per-feature FR references.
+- **Patterns to follow:** release.yml gated-job convention (`vars.ANDROID_RELEASE`/`IOS_RELEASE`, own gate per platform); loud `::error::` annotations for CI failures; hash comparison via `sha256sum` on ubuntu runners and `shasum -a 256` on macos runners (macos images do not ship sha256sum); docs runbooks live in `docs/deploy/RELEASE.md` with per-feature task references.
 - **State of the fix at run start:** the 16-file icon copy was already committed at `a6a2f3d` and pushed; `git show a6a2f3d --stat -- apps/web/android apps/web/ios` touches exactly the 16 icon paths and nothing else under the Capacitor trees (AC #2 intent satisfied — the commit also carried unrelated docs/spec files, but zero unrelated Capacitor project files, which is the failure mode AC #2 exists to exclude).
-- **Blast radius of the remaining work:** 2 files — `.github/workflows/release.yml` (2 inserted steps), `docs/deploy/RELEASE.md` (one section refresh + recopy runbook). Files outside the FR's immediate domain: 0. **ADR condition (steps 3–4): not triggered** (threshold is >3 outside-domain files).
+- **Blast radius of the remaining work:** 2 files — `.github/workflows/release.yml` (2 inserted steps), `docs/deploy/RELEASE.md` (one section refresh + recopy runbook). Files outside the task's immediate domain: 0. **ADR condition (steps 3–4): not triggered** (threshold is >3 outside-domain files).
 - **Mock condition (steps 7–8): not triggered** — no external dependency (`has_external_dependency` absent/false; pure filesystem + CI change).
 
 ## Steps 5–6 — edge-case matrix (edge-case-matrix@1)
@@ -48,6 +48,6 @@ The new code is two CI steps; their observability surface:
 - Negative path: tampered copy → DRIFT branch fires, fail=1. **PASS**.
 - `release.yml` YAML parse: **PASS**.
 - `.cyberos/cuo/gates/run-gates.sh`: **GREEN** (floor profile; build/lint/test/coverage unconfigured in gates.env → skipped by config, caf/awh disabled).
-- Coverage gate note: touched files are YAML + markdown + binary PNGs — line-coverage tooling does not apply; per workflow §1a the FR "declares awh N/A in its §1 and relies on coverage + caf + the review gate; it does not fabricate" — same declaration here for line coverage, with the §5 hash verification + guard dry-runs as the equivalent machine evidence.
+- Coverage gate note: touched files are YAML + markdown + binary PNGs — line-coverage tooling does not apply; per workflow §1a the task "declares awh N/A in its §1 and relies on coverage + caf + the review gate; it does not fabricate" — same declaration here for line coverage, with the §5 hash verification + guard dry-runs as the equivalent machine evidence.
 
 *End phase bundle.*

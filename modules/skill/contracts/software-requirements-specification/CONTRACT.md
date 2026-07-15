@@ -27,7 +27,7 @@ emitted_source_freshness_tier: 20
 
 SRS ≠ PRD. PRD answers "what should we build and why?" (audience: product, leadership). SRS answers "what does the system actually do, in technical detail?" (audience: engineering, ops). They have different lifecycles (PRD changes when goals shift; SRS changes when tech changes), different content density, different review processes (PRDs go through stakeholder approval; SRSs go through architectural review).
 
-SRS ≠ tech-spec. The tech-spec (`tech_spec@1`, future contract owned by fr-to-tech-spec) decomposes a single FR into work-packages. The SRS describes the SYSTEM as a whole — components, data flows, runtime mechanisms, NFRs (non-functional requirements). One PRD typically begets one SRS; one SRS typically begets many tech-specs (one per FR).
+SRS ≠ tech-spec. The tech-spec (`tech_spec@1`, future contract owned by fr-to-tech-spec) decomposes a single task into work-packages. The SRS describes the SYSTEM as a whole — components, data flows, runtime mechanisms, NFRs (non-functional requirements). One PRD typically begets one SRS; one SRS typically begets many tech-specs (one per task).
 
 ## Frontmatter contract
 

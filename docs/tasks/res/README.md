@@ -1,10 +1,10 @@
 # RES module — task index
 
-_Generated 2026-05-17 — 5 FRs, 38 engineering-hours total._
+_Generated 2026-05-17 — 5 tasks, 38 engineering-hours total._
 
-## FRs
+## tasks
 
-| FR | Priority | Slice | Hours | Title |
+| Task | Priority | Slice | Hours | Title |
 |---|---|---|---:|---|
 | [TASK-RES-001](TASK-RES-001-capacity-demand-matrix/spec.md) | MUST | 7 | 10 | RES capacity-vs-demand matrix — nightly join across HR + PROJ + TIME + LEARN producing per-member-we |
 | [TASK-RES-002](TASK-RES-002-allocation-gantt-ui/spec.md) | MUST | 8 | 12 | RES allocation Gantt UI — drag-rebalance interface over capacity matrix with optimistic concurrency  |

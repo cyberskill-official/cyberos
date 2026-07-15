@@ -8,12 +8,12 @@ The first stable release of CyberOS - the deliberate 1.0.0 call. The 0.x line ha
 governed development machinery end to end; 1.0.0 commits to it.
 
 Added
-- The 1.0 commitment: engineering-spec@1 and the 10-state FR lifecycle are stable contracts; the
+- The 1.0 commitment: engineering-spec@1 and the 10-state task lifecycle are stable contracts; the
   /create-tasks and /ship-tasks workflows are hardened for multi-repo production
   use (resumable ship manifests, deterministic queue selection, gate autodetect across 9 stacks,
   per-repo config, audited backlog writes, chain/pair/anchor/version gates in CI).
-- Visual deliverables: every FR renders to its own CDS-styled page; one status hub (status-hub@2)
-  with three lenses (board / table / releases) regenerates from FR frontmatter + CHANGELOG + VERSION.
+- Visual deliverables: every task renders to its own CDS-styled page; one status hub (status-hub@2)
+  with three lenses (board / table / releases) regenerates from task frontmatter + CHANGELOG + VERSION.
 - Consumer CLI (final surface): `install` | `uninstall` | `version` | `status` | `help`, with matching
   Claude plugin slash commands `/install` `/uninstall` `/version` `/status` `/help`.
 - Soft update-check on any `.cyberos` use; manual check is `version` (if stale and the user confirms,
@@ -27,9 +27,9 @@ Changed
 - Version bumps now carry the whole codebase (installers, store projects, manifests) and fire the
   release + docs pipelines natively - no [skip ci], no manual dispatch (TASK-IMP-071/072).
 - The status page is ONE page (status-hub@2): Roadmap, Backlog and Changelog stopped being three
-  tabs and became three lenses - board, table, releases - over one filtered FR corpus, with a drawer
-  carrying each FR's full spec (lazy per-FR chunks), relationship graph and metadata. The releases
-  lens is generated from this CHANGELOG (FR chips for cited ids + shipped-date matches). Extends
+  tabs and became three lenses - board, table, releases - over one filtered task corpus, with a drawer
+  carrying each task's full spec (lazy per-task chunks), relationship graph and metadata. The releases
+  lens is generated from this CHANGELOG (task chips for cited ids + shipped-date matches). Extends
   TASK-DOCS-006 / TASK-DOCS-007 and the auto-sync of TASK-IMP-074.
 - Renamed consumer entrypoints for 1.0.0: init → install, changelog → status (open page), update →
   version (check-only). No user-facing `install --page` / `--check`; page regen is internal
@@ -51,10 +51,10 @@ Fixed
 Added
 - TASK-SKILL-120 authoring wiring - Wave D complete (visual deliverables shipped end-to-end)
 - TASK-DOCS-006 status hub - deck + Roadmap|Backlog|Changelog tabs, roadmap superseded (6/6 + 7/7 AC)
-- TASK-DOCS-005 per-FR CDS pages - 491 self-contained deliverable pages, media support, catalog links (6/6 AC)
+- TASK-DOCS-005 per-task CDS pages - 491 self-contained deliverable pages, media support, catalog links (6/6 AC)
 - TASK-TPL-001 templates module - CDS shells (template@1), vendored tokens+glass, 4/4 AC
-- TASK-DOCS-004 folder-per-FR layout - 491 FRs migrated, corpus 100% strict-yaml, loud regen
-- Wave D batch - visual deliverables (5 FRs audited, ready_to_implement)
+- TASK-DOCS-004 folder-per-task layout - 491 tasks migrated, corpus 100% strict-yaml, loud regen
+- Wave D batch - visual deliverables (5 tasks audited, ready_to_implement)
 
 ## [0.2.0] - 2026-07-12
 
@@ -157,7 +157,7 @@ Added
 ## [1.5.0] - 2026-07-11
 
 Added
-- UGC compliance FRs - reporting, blocking, moderation queue + the SSO display-name defect
+- UGC compliance tasks - reporting, blocking, moderation queue + the SSO display-name defect
 
 ## [1.4.0] - 2026-07-11
 
@@ -222,12 +222,12 @@ Added
 - Per-module golden sets: `modules/memory/.awh/`, `modules/skill/.awh/`.
 - `ship-tasks` workflow: new step 28 `awh-gate`; `testing -> done` now requires an independent GREEN rerun against a sealed, read-only baseline (the done-flip is conditional; RED routes back to `ready_to_implement`).
 - CI merge gate `.github/workflows/awh-gate.yml`; pre-commit hook `.pre-commit-hooks/awh-gate.sh`.
-- `scripts/rebaseline_fr_status.py` (deterministic, idempotent FR status re-baseline).
+- `scripts/rebaseline_task_status.py` (deterministic, idempotent task status re-baseline).
 - TASK-MEMORY-124 (draft): `memory.awh_gate_result` audit row, gated on protocol change P23 §6. (Renumbered from TASK-MEMORY-121; 121/122/123 now carry the BRAIN capture trio.)
 - Maturity ledger migrated to `.awh/evolution-log.jsonl` (6 prior adoptions).
 
 Changed
-- FR statuses re-baselined: 116 `done` -> `ready_to_test` (independent awh re-verification pending; the code already exists on `main`).
+- Task statuses re-baselined: 116 `done` -> `ready_to_test` (independent awh re-verification pending; the code already exists on `main`).
 
 Verified
 - MEMORY green under the awh gate (pilot TASK-MEMORY-116, weighted pass@1 = 100%).

@@ -1,10 +1,17 @@
 ---
 id: TASK-IMP-068
 title: "Payload-version drift gate - CI and git hooks fail when any dist/plugin stamp differs from VERSION"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: improvement
+created_at: 2026-07-12T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: improvement
-priority: MUST
+priority: p0
 status: done
-class: improvement
 verify: T
 phase: Wave A - version coupling
 owner: Stephen Cheng (CTO)
@@ -40,7 +47,7 @@ modified_files:
 
 ## §1 - Description
 
-The root `VERSION` file is the single platform version, auto-bumped in CI by `version.yml`. The distributable payload (`dist/cyberos`) is stamped from `VERSION` by `tools/cyberos-init/build.sh`, but only when a human runs the build. Nothing compares the two, so the payload and every installed plugin silently lag (observed: 1.2.0 vs 1.7.0). This FR adds the missing comparison and makes it enforceable in CI and locally.
+The root `VERSION` file is the single platform version, auto-bumped in CI by `version.yml`. The distributable payload (`dist/cyberos`) is stamped from `VERSION` by `tools/cyberos-init/build.sh`, but only when a human runs the build. Nothing compares the two, so the payload and every installed plugin silently lag (observed: 1.2.0 vs 1.7.0). This task adds the missing comparison and makes it enforceable in CI and locally.
 
 Normative clauses:
 

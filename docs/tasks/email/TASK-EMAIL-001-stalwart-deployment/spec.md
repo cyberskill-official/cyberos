@@ -1,8 +1,16 @@
 ---
 id: TASK-EMAIL-001
 title: "EMAIL Stalwart Rust mail server deployment — JMAP + IMAP + SMTP + ManageSieve + MTA-STS + DANE + per-tenant residency + S3+KMS body storage + Postgres metadata"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: EMAIL
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -34,7 +42,7 @@ source_decisions:
   - DEC-310 (memory audit kinds: email.message_received, email.message_sent, email.message_bounced, email.message_quarantined, email.dkim_key_rotated)
   - DEC-311 (message bodies are stored encrypted at rest in S3 with KMS keyspace separate from DOC + KB; messages cannot be exported plaintext without an audit row)
   - DEC-312 (deployment target: Stalwart runs as a separate container; the gateway/adapter layer at services/email/ talks JMAP from the SPA + REST internally for module integration)
-  - DEC-313 (DSAR export at message level — TASK-EMAIL-011 ships the per-subject export; this FR ships the queryable metadata that the export reads)
+  - DEC-313 (DSAR export at message level — TASK-EMAIL-011 ships the per-subject export; this task ships the queryable metadata that the export reads)
   - Decree 53/2022 (VN data localisation — VN-tenant mail must reside in VN-region storage)
   - RFC 8620 (JMAP Core); RFC 8621 (JMAP for Mail); RFC 5321 (SMTP); RFC 9051 (IMAP4rev2); RFC 6376 (DKIM); RFC 8617 (ARC)
   - RFC 8460 (MTA-STS); RFC 7672 (SMTP + DANE); RFC 7489 (DMARC)
@@ -113,7 +121,7 @@ subtasks:
   - "0.5h: cli/provision.rs — slice-1 user provisioning CLI"
   - "2.5h: tests — 10 test files covering inbound, outbound, residency, DKIM, bounce, spam, protocol endpoints, MTA-STS, DSAR query, audit emission"
 
-risk_if_skipped: "EMAIL is the second-highest-volume communication channel after CHAT and one of the highest-risk attack surfaces (EchoLeak 2025 + most prompt-injection CVEs entered through email). Every downstream EMAIL FR (TASK-EMAIL-002 JWT bridge, TASK-EMAIL-003 shared-inbox UX, TASK-EMAIL-004 DKIM/ARC/BIMI hardening, TASK-EMAIL-005 CaMeL quarantine, TASK-EMAIL-006 CRM auto-log, TASK-EMAIL-007 thread-to-issue) needs the protocol stack and the metadata mirror. Without DEC-300's Stalwart deployment, we depend on hosted SaaS (Gmail/M365) which (a) cannot accommodate CaMeL, (b) lacks shared-inbox primitives, (c) violates Decree 53/2022 for VN tenants. Without DEC-306's residency routing, VN tenant mail bodies cross border. Without DEC-304's per-tenant DKIM keys, outbound legitimacy depends on shared keys (operationally fragile). Without DEC-311's S3+KMS body storage separate from Postgres, message bodies create a PII-everywhere problem. The 12h effort lands the foundational mail-server + adapter layer so every email FR has a known-good substrate."
+risk_if_skipped: "EMAIL is the second-highest-volume communication channel after CHAT and one of the highest-risk attack surfaces (EchoLeak 2025 + most prompt-injection CVEs entered through email). Every downstream EMAIL task (TASK-EMAIL-002 JWT bridge, TASK-EMAIL-003 shared-inbox UX, TASK-EMAIL-004 DKIM/ARC/BIMI hardening, TASK-EMAIL-005 CaMeL quarantine, TASK-EMAIL-006 CRM auto-log, TASK-EMAIL-007 thread-to-issue) needs the protocol stack and the metadata mirror. Without DEC-300's Stalwart deployment, we depend on hosted SaaS (Gmail/M365) which (a) cannot accommodate CaMeL, (b) lacks shared-inbox primitives, (c) violates Decree 53/2022 for VN tenants. Without DEC-306's residency routing, VN tenant mail bodies cross border. Without DEC-304's per-tenant DKIM keys, outbound legitimacy depends on shared keys (operationally fragile). Without DEC-311's S3+KMS body storage separate from Postgres, message bodies create a PII-everywhere problem. The 12h effort lands the foundational mail-server + adapter layer so every email task has a known-good substrate."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -191,7 +199,7 @@ The EMAIL service **MUST** deploy Stalwart as the canonical mail server with Pos
 
 24. **MUST** support graceful shutdown: SIGTERM triggers (a) refuse new SMTP connections with 421 temporary failure, (b) drain in-flight messages with 30s budget, (c) close IMAP/JMAP sessions cleanly, (d) shut down. Shutdown deadline configurable via env `EMAIL_SHUTDOWN_BUDGET_SECONDS`.
 
-25. **MUST** ensure body integrity at storage: `body_sha256_hex` recorded in metadata MUST match the actual SHA-256 of the S3 object. A reconciliation job (out of scope here; FR-EMAIL-2xx) cross-checks; this FR enforces at write time via S3 ETag comparison.
+25. **MUST** ensure body integrity at storage: `body_sha256_hex` recorded in metadata MUST match the actual SHA-256 of the S3 object. A reconciliation job (out of scope here; task-EMAIL-2xx) cross-checks; this task enforces at write time via S3 ETag comparison.
 
 26. **MUST** support `Bcc` recipients without leaking in `to_addresses` or `cc_addresses` arrays. Per RFC 5322, Bcc is preserved at the SMTP envelope level but stripped from the message body. The Stalwart adapter records Bcc in a separate `bcc_addresses TEXT[]` column visible only to the sender's view (RLS additional clause).
 
@@ -217,9 +225,9 @@ The EMAIL service **MUST** deploy Stalwart as the canonical mail server with Pos
 
 **Why JMAP on application HTTPS endpoint, not direct (DEC-303)?** JMAP-over-HTTPS uses standard HTTP/2 paths; reverse-proxying through our ingress lets us apply standard rate-limiting + WAF + auth (TASK-EMAIL-002 JWT bridge). The cost is one extra hop; the benefit is unified observability + security.
 
-**Why CaMeL quarantine deferred to TASK-EMAIL-005 (disallowed_tools)?** CaMeL is a deliberate isolation pattern (quarantine LLM with no tools + no memory parses untrusted body; privileged CUO only sees sanitised extraction). Implementing it correctly is its own work; shipping TASK-EMAIL-001 + TASK-EMAIL-005 in parallel slows both. Split: this FR ships the mail server; TASK-EMAIL-005 wires CaMeL between the inbound handler and any CUO-bound consumer.
+**Why CaMeL quarantine deferred to TASK-EMAIL-005 (disallowed_tools)?** CaMeL is a deliberate isolation pattern (quarantine LLM with no tools + no memory parses untrusted body; privileged CUO only sees sanitised extraction). Implementing it correctly is its own work; shipping TASK-EMAIL-001 + TASK-EMAIL-005 in parallel slows both. Split: this task ships the mail server; TASK-EMAIL-005 wires CaMeL between the inbound handler and any CUO-bound consumer.
 
-**Why shared-inbox UX deferred to TASK-EMAIL-003?** Shared-inbox UX (assignment, internal comments, snooze, tagging) is a TypeScript SPA + backend handlers — substantial. Splitting lets this FR focus on the protocol stack + storage + residency; the UX builds on top.
+**Why shared-inbox UX deferred to TASK-EMAIL-003?** Shared-inbox UX (assignment, internal comments, snooze, tagging) is a TypeScript SPA + backend handlers — substantial. Splitting lets this task focus on the protocol stack + storage + residency; the UX builds on top.
 
 **Why JWT bridge deferred to TASK-EMAIL-002 (DEC-307)?** Stalwart has its own user store; integrating with our AUTH JWT (TASK-AUTH-004) is a Stalwart plugin. The plugin is a focused work item (~6h); shipping it together would mean blocking on AUTH-004 fully. Slice 1 uses Stalwart's internal store via the CLI; slice 2 cuts over.
 
@@ -229,7 +237,7 @@ The EMAIL service **MUST** deploy Stalwart as the canonical mail server with Pos
 
 **Why fail-closed residency mismatch (§1 #12)?** A cross-region body write is a Decree 53/2022 violation per message — a single mistake creates real regulatory exposure. Fail-closed means the handler refuses to commit; the message gets retried (transient SMTP failure 421) until the residency lookup is fixed. The cost is occasional delivery delay; the benefit is "compliance is enforced by code, not by review."
 
-**Why no DELETE on metadata or bounce_log (§1 #11)?** Both are forensic records. DELETE would let operators "make a mistake go away"; legal/compliance reviews of mail flows need the complete history. Retention policies are S3-side (lifecycle rules); metadata persists until explicit GDPR/PDPL erasure (FR-EMAIL-2xx ships handler that anonymises rather than deletes).
+**Why no DELETE on metadata or bounce_log (§1 #11)?** Both are forensic records. DELETE would let operators "make a mistake go away"; legal/compliance reviews of mail flows need the complete history. Retention policies are S3-side (lifecycle rules); metadata persists until explicit GDPR/PDPL erasure (task-EMAIL-2xx ships handler that anonymises rather than deletes).
 
 **Why hashed addresses in memory audit (§1 #14)?** Email addresses are PII. memory audit chain is forensically queryable but kept lean; embedding raw addresses would create everywhere-PII. SHA-256[..16] is collision-safe at our scale (~10⁹) + lets forensic queries join.
 
@@ -239,7 +247,7 @@ The EMAIL service **MUST** deploy Stalwart as the canonical mail server with Pos
 
 **Why `Bcc` separate column (§1 #26)?** RFC 5322 keeps Bcc out of the delivered message body to preserve recipient privacy (other recipients shouldn't see Bcc'd parties). Our `to_addresses + cc_addresses` arrays mirror the delivered message; `bcc_addresses` captures the SMTP envelope (visible only to the sender via RLS-extended policy).
 
-**Why TASK-EMAIL-001 has zero upstream deps (`depends_on: []`)?** The mail server itself is a leaf service — it doesn't depend on RBAC at slice 1 (per DEC-307 — Stalwart internal user store), it doesn't depend on RLS (Stalwart handles its own auth), it doesn't depend on TASK-AI-016 logically (residency routing is a config lookup; the residency tag table can ship alongside this FR with a default `vn-1` tag). Slice 2 wires JWT (TASK-EMAIL-002 = TASK-AUTH-004) + slice 3 wires CUO (TASK-EMAIL-005 = TASK-CUO-101). Slice 1 is foundational and independent.
+**Why TASK-EMAIL-001 has zero upstream deps (`depends_on: []`)?** The mail server itself is a leaf service — it doesn't depend on RBAC at slice 1 (per DEC-307 — Stalwart internal user store), it doesn't depend on RLS (Stalwart handles its own auth), it doesn't depend on TASK-AI-016 logically (residency routing is a config lookup; the residency tag table can ship alongside this task with a default `vn-1` tag). Slice 2 wires JWT (TASK-EMAIL-002 = TASK-AUTH-004) + slice 3 wires CUO (TASK-EMAIL-005 = TASK-CUO-101). Slice 1 is foundational and independent.
 
 **Why slice 1 uses Stalwart internal user store (DEC-307)?** Two reasons. (1) Stalwart's directory layer already exists; reusing it is fastest path to working mail. (2) Mail server deployment is risky enough; adding JWT-bridge complexity at the same slice multiplies failure modes. TASK-EMAIL-002 cuts over in slice 2, after slice 1 is proven stable.
 
@@ -694,7 +702,7 @@ async fn metadata_delete_blocked(pool: sqlx::PgPool) {
 
 ## §7 — Dependencies
 
-**Upstream:** none — this FR is a leaf service. Residency lookup consumes TASK-AI-016's policy table; TASK-AI-016 ships independently (its dependency on this FR is for the email-side residency tag).
+**Upstream:** none — this task is a leaf service. Residency lookup consumes TASK-AI-016's policy table; TASK-AI-016 ships independently (its dependency on this task is for the email-side residency tag).
 
 **Downstream (6 placeholders):**
 - **TASK-EMAIL-002** — `cyberos-email-authbridge` plugin (Stalwart JMAP auth delegates to AUTH JWT).
@@ -826,7 +834,7 @@ All other questions resolved.
 | Stalwart container fails to start | docker healthcheck | Service unavailable | Investigate logs; common causes: bad config, DB unreachable, S3 perm |
 | Postgres backend connection lost | Stalwart loses metadata | SMTP returns 451 (temporary) | DB restored |
 | S3 write failure for body | adapter logs + S3 SDK error | SMTP returns 421 | S3 outage recovery |
-| KMS key disabled | aws-sdk error on PUT | SMTP returns 421 + sev-1 | Re-enable; rotate per FR-AUTH-2xx |
+| KMS key disabled | aws-sdk error on PUT | SMTP returns 421 + sev-1 | Re-enable; rotate per task-AUTH-2xx |
 | Residency mismatch attempt | handler check | SMTP returns 421 | Operator fixes residency tag |
 | Body > 25MB | DB CHECK + handler | SMTP returns 552 size limit | Caller chunks |
 | MTA-STS policy fetch fails | Stalwart fallback to STARTTLS | Outbound proceeds opportunistic | Designed |
@@ -841,15 +849,15 @@ All other questions resolved.
 | RLS bypass attempt | `USING` predicate | 0 rows | Designed |
 | Bcc accidentally exposed in to_addresses | handler test | CI fails | Fix adapter |
 | Audit row commit fails | tx rollback | metadata not persisted; SMTP 421 | memory_writer diagnosis |
-| body_sha256 mismatch S3 ETag | reconciliation job (FR-EMAIL-2xx) | sev-2 alarm | Investigate; possible corruption |
+| body_sha256 mismatch S3 ETag | reconciliation job (task-EMAIL-2xx) | sev-2 alarm | Investigate; possible corruption |
 | Stalwart admin API unauthorised | CLI errors out | Service unavailable | Re-credential per docker secret |
 | ManageSieve port blocked at firewall | client cannot upload filters | Filters not updated | Operator opens port |
 | JMAP HTTP/2 frame too large | proxy returns 431 | Caller chunks | None — designed |
 | DKIM key rotation in progress + outbound queued | active key sync atomic | Old key still valid | Designed (no flap) |
-| User mailbox quota exceeded | Stalwart 552 | Sender retries / drop | Quota mgmt at FR-EMAIL-2xx |
+| User mailbox quota exceeded | Stalwart 552 | Sender retries / drop | Quota mgmt at task-EMAIL-2xx |
 | Stalwart upgrade requires migration | upgrade docs | Operator runs migration | docs |
 | Concurrent SMTP listener crash | tokio task supervisor | Restart; ~5s gap | Designed |
-| TLS cert expiring | OBS alarm at 14 days | Operator rotates per FR-AUTH-2xx | Standard rotation |
+| TLS cert expiring | OBS alarm at 14 days | Operator rotates per task-AUTH-2xx | Standard rotation |
 | Postgres `tenant_residency` row missing | residency lookup fails | SMTP 421 | Provision tenant |
 | OTel exporter down | metrics buffered locally | None visible | OTel restore |
 | Bounce_log row mid-tx fails | tx rollback | None | Designed |
@@ -879,13 +887,13 @@ All other questions resolved.
 - **`bcc_addresses` separate column** — RFC 5322 mandates Bcc be stripped from delivered body; adapter records envelope-level Bcc in this column for sender's view.
 - **`spam_score_band` cardinality bounded** — Prometheus labels: 5-7, 7-10, 10+ (only spam-classified messages get banded; ham messages have no spam_score_band label).
 - **`participant_addresses` array on thread_metadata** — append-only growing list; useful for "who has been on this thread?" queries.
-- **`normalise_subject`** — strips `Re: `, `Fwd: `, leading/trailing whitespace; for thread-merge heuristics (slice 2; this FR uses Stalwart's threadId).
+- **`normalise_subject`** — strips `Re: `, `Fwd: `, leading/trailing whitespace; for thread-merge heuristics (slice 2; this task uses Stalwart's threadId).
 - **`cyberos-email-cli provision` is slice-1 only** — TASK-EMAIL-002 replaces with JWT-driven JIT provisioning.
 - **`status: dropped` covers outbound drop (DKIM missing, MTA-STS fail, etc.)** — distinct from `bounced` (peer rejected) and `delivered` (peer accepted).
-- **`MessageStatus::Sent` transitions to `Delivered` on bounce-window-passed** — at slice 1, sent stays as sent (we don't implement the bounce window timer); FR-EMAIL-2xx ships the transition.
+- **`MessageStatus::Sent` transitions to `Delivered` on bounce-window-passed** — at slice 1, sent stays as sent (we don't implement the bounce window timer); task-EMAIL-2xx ships the transition.
 - **Stalwart healthcheck**: `curl http://localhost:8080/admin/health` returns 200 when ready; our `email_stalwart_up` gauge scrapes.
 - **Docker compose includes minio** for local-dev S3; production uses real S3.
-- **`Bcc` privacy concerns**: per-recipient view should NOT show other Bcc'd addresses; this FR ships the column; UI (TASK-EMAIL-003) enforces visibility.
+- **`Bcc` privacy concerns**: per-recipient view should NOT show other Bcc'd addresses; this task ships the column; UI (TASK-EMAIL-003) enforces visibility.
 
 ---
 

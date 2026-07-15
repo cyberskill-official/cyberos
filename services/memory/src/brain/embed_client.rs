@@ -5,7 +5,7 @@
 //! embedding against the tenant cap and returns `402` when exhausted — at which point the worker marks the
 //! row `pending_embed_retry` and backs off (it has NO code path that falls back to a provider, by design).
 //!
-//! Contract (FR §3, matching the ai-gateway router's `EmbedRequest`/`EmbedResponse` stub types):
+//! Contract (task §3, matching the ai-gateway router's `EmbedRequest`/`EmbedResponse` stub types):
 //!   POST {AI_GATEWAY_URL}/v1/embeddings
 //!   header  x-tenant-id: <tenant_uuid>        (how the gateway resolves the TenantPolicy)
 //!   body    { "input": ["<text>"], "model": "bge-m3" }
@@ -19,7 +19,7 @@
 //! short-circuits the backoff immediately.
 //!
 //! NOTE (honest dependency edge): the ai-gateway's `/v1/embeddings` HTTP route is the TASK-AI-019 + TASK-AI-022
-//! contract this FR depends on. At the time of writing the gateway exposes `/v1/chat` and the embeddings
+//! contract this task depends on. At the time of writing the gateway exposes `/v1/chat` and the embeddings
 //! route is a documented-but-unwired contract (router `EmbedRequest`/`EmbedResponse` types exist). This
 //! client targets the contract exactly so it works the moment the gateway lights the route up; it is
 //! exercised in tests via a stub gateway (`EmbedClient::stub`).

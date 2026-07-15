@@ -1,8 +1,16 @@
 ---
 id: TASK-MCP-007
 title: "MCP Tasks primitive — long-running tool calls with status polling + resume-on-reconnect + cancellation + per-task memory audit chain"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: MCP
-priority: MUST
+priority: p0
 status: implementing
 verify: T
 phase: P0
@@ -714,7 +722,7 @@ impl TaskCtx {
 - **TASK-MCP-002** Per-module registration — extended with long_running + ttl + max_concurrent fields.
 - **TASK-MCP-004** OAuth 2.1 PKCE — JWT bearer auth for poll/cancel.
 - **TASK-MCP-005** PRM — long_running tools advertised via per-module PRM (slice-3 add).
-- **TASK-MCP-006** Gating — destructive long-running tools confirm at start; TASK-MCP-006 §1 #22 cross-FR contract honoured here.
+- **TASK-MCP-006** Gating — destructive long-running tools confirm at start; TASK-MCP-006 §1 #22 cross-task contract honoured here.
 - **TASK-MCP-008** Elicitation — long-running tools may emit elicitation requests mid-run (slice 3+).
 - **TASK-AUTH-004** JWT validate — caller_subject_id verification on poll/cancel.
 - **TASK-AI-003** memory audit-row bridge — 8 new kinds.

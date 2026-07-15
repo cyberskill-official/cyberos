@@ -219,7 +219,7 @@ trace in Grafana.
 What success looks like: infra healthy with all five extensions; every crate suite GREEN under
 `--include-ignored`; `/v1/chat` returns an echo (Tier 1) then a real model completion (Tier 2); the two
 MCP tool calls return their results (Tier 3). At that point the core is proven locally. MCP is now
-feature-complete (all 8 FRs + the DB-slice store-of-record, audited 2026-06-28); the next step is the
+feature-complete (all 8 tasks + the DB-slice store-of-record, audited 2026-06-28); the next step is the
 VPS deploy.
 
 ## Teardown

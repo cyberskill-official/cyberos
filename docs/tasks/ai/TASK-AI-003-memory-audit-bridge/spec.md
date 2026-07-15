@@ -2,8 +2,16 @@
 # ───── Machine-readable frontmatter ─────
 id: TASK-AI-003
 title: "memory audit-row bridge — canonical Writer for AI Gateway"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AI
-priority: MUST
+priority: p0
 status: done
 accepted_at: 2026-05-15
 accepted_by: Stephen Cheng
@@ -77,14 +85,14 @@ The `memory_writer::emit()` function:
 5. **MUST** be re-entrant: multiple AI Gateway tokio tasks calling `emit()` concurrently MUST serialise through the Writer's `.lock` (POSIX `LOCK_EX`) — no parallel chain advances are permitted.
 6. **MUST** validate the payload's canonical form before invoking the subprocess: NFC-normalised UTF-8, sorted keys, no insignificant whitespace, integers in their natural form. Per `AGENTS.md §6.2`.
 7. **MUST** verify the returned `chain` hash equals `SHA-256(canonical(record_minus_chain) || prev_chain)`; refuse to return `Ok` to the caller if the verification fails (catches a corrupted Writer).
-8. **MUST** support the following closed set of `ai.*` row kinds (updated 2026-05-16 as additional FRs were specified):
+8. **MUST** support the following closed set of `ai.*` row kinds (updated 2026-05-16 as additional tasks were specified):
     - Slice-1 initial: `ai.precheck`, `ai.invocation`, `ai.invocation_failed`, `ai.hold_expired`, `ai.persona_loaded`.
     - Added by TASK-AI-009 (circuit breaker): `ai.failover_triggered`.
     - Added by TASK-AI-015 (ZDR enforcement): `ai.zdr_violation`.
     - Added by TASK-AI-016 (residency pinning): `ai.residency_violation`.
     - Added by TASK-AI-017 (per-tenant cache): `ai.cache_hit`.
     - Added by TASK-AI-021 (operator CLI) — operator-action rows in `ai.cli_*` sub-namespace: `ai.cli_policy_updated`, `ai.cli_failover_drill`, `ai.cli_invoice_exported`, `ai.cli_breaker_reset`, `ai.cli_expiry_repaired`, `ai.cli_memory_emitted`.
-    - Cross-module rows in adjacent namespaces (NOT owned by this bridge but emitted via the module's own writer; registered here per task-audit skill §3.2 rule 8 for the canonical closed-set): `auth.*` per TASK-AUTH-001/002/004/006; `memory.sync_row_filtered` per TASK-MEMORY-106; `skill.invoked_started` + `skill.invoked_completed` per TASK-SKILL-101; `obs.*` per FR-OBS module.
+    - Cross-module rows in adjacent namespaces (NOT owned by this bridge but emitted via the module's own writer; registered here per task-audit skill §3.2 rule 8 for the canonical closed-set): `auth.*` per TASK-AUTH-001/002/004/006; `memory.sync_row_filtered` per TASK-MEMORY-106; `skill.invoked_started` + `skill.invoked_completed` per TASK-SKILL-101; `obs.*` per task-OBS module.
     - **CHAT module rows** (added via the strict-redo 2026-05-16 P.M. expansion of TASK-CHAT-002..012; emitted by services/chat/*, services/chat-memory-bridge/*, services/chat-importer/*, services/chat-lumi/*, services/chat-push/*, services/chat-dsar/*):
         - TASK-CHAT-002 (authbridge): `chat.session_started`.
         - TASK-CHAT-003 (Fargate deployment): `chat.deployment_provisioned`, `chat.deployment_inventory`, `chat.deployment_drift_detected`, `chat.tier_upgraded`, `chat.pitr_test_passed`, `chat.deployment_warning`, `chat.maintenance_started`, `chat.deployment_blocked`, `chat.tf_state_recovered`, `chat.module_deprecated`.
@@ -112,8 +120,8 @@ The `memory_writer::emit()` function:
         - TASK-PROJ-015 (Timeline): `proj.timeline_bar_moved`.
         - TASK-PROJ-016 (Gantt): `proj.dependency_added`, `proj.dependency_removed`, `proj.dependency_near_cycle`, `proj.critical_path_recomputed`.
         - TASK-PROJ-017 (Brief Modal): `proj.brief_modal_opened`.
-        - TASK-PROJ-018 (design tokens): n/a — visual/CI FR; no audit rows.
-   Adding a new `ai.*` kind requires (a) a Rust enum variant, (b) a serde-derive update, (c) a unit test, (d) a docs cross-reference to the kind's purpose, (e) a one-line update to this clause. Adding a new `chat.*` or `proj.*` kind requires the same plus a one-line append to the per-FR sublist above so this clause stays the closed-set source of truth across the platform.
+        - TASK-PROJ-018 (design tokens): n/a — visual/CI task; no audit rows.
+   Adding a new `ai.*` kind requires (a) a Rust enum variant, (b) a serde-derive update, (c) a unit test, (d) a docs cross-reference to the kind's purpose, (e) a one-line update to this clause. Adding a new `chat.*` or `proj.*` kind requires the same plus a one-line append to the per-task sublist above so this clause stays the closed-set source of truth across the platform.
 9. **MUST** NOT bypass the Writer to write directly to `<memory-root>/audit/*.binlog` or `<memory-root>/HEAD`. The Writer is the only legal mutator (per `AGENTS.md §14.1`).
 10. **MUST** run a startup health check via `python3 -m cyberos.writer --version` as a synchronous subprocess call during AI Gateway init. Non-zero exit MUST cause the gateway to exit 1 with stderr `memory_writer: Writer subprocess unavailable: <reason>`. This catches misconfigured deploys at deploy time, not first-request time.
 11. **MUST NOT** expose `memory_writer::emit_batch()` in slice 1. Callers needing N rows MUST call `emit()` N times (or use `futures::future::join_all`). TASK-AI-008 (slice 2 PyO3 spike) re-introduces a real batching API.
@@ -124,7 +132,7 @@ The `memory_writer::emit()` function:
 16. **MUST** emit history events as pairs per task-audit skill §3.8 rule 26: every `ai.precheck_started` row MUST be followed by either `ai.precheck_completed` OR `ai.precheck_failed` within 30s (the precheck deadline). The same pairing rule applies to `ai.reconcile_started` / `ai.reconcile_completed | ai.reconcile_failed`. Standalone `*_started` rows are crash signals — an OBS Grafana lint alerts when `count(*_started) - count(*_completed) - count(*_failed) > 0` over any 5-minute window for any (tenant, module).
 17. **MUST** include `extra.trace_id: String` (32-char lower-hex W3C `trace-id` form per task-audit skill §3.7 rule 23) in every emitted `MemoryRow`. The format MUST be produced via OTel `TraceId` Display (NOT Debug — Debug yields `TraceId(0af7…)` while Display yields the 32-char hex per task-audit skill §3.7 rule 24). AC #17 verifies via regex `^[0-9a-f]{32}$` against every emitted row's `extra.trace_id` in the round-trip test.
 
-This FR is the load-bearing piece beneath every other AI Gateway audit emission. It is also the slowest part of the call hot path (subprocess fork dominates the precheck's 50ms budget) — getting it right matters for both correctness and throughput.
+This task is the load-bearing piece beneath every other AI Gateway audit emission. It is also the slowest part of the call hot path (subprocess fork dominates the precheck's 50ms budget) — getting it right matters for both correctness and throughput.
 
 ---
 
@@ -543,7 +551,7 @@ fn compute_expected_chain(canonical_payload: &str, prev_chain_hex: &str) -> [u8;
 - `python3` ≥ 3.11 on the PATH at runtime (containers ship it; CI ensures it).
 - A live `<memory-root>/` (test fixtures use tmpfs).
 
-**Versioning:** the Writer's CLI contract is pinned. If the Writer changes its stdin/stdout shape, this FR must be re-audited. The contract version travels in the memory manifest under `manifest.writer_cli_version`.
+**Versioning:** the Writer's CLI contract is pinned. If the Writer changes its stdin/stdout shape, this task must be re-audited. The contract version travels in the memory manifest under `manifest.writer_cli_version`.
 
 ---
 
@@ -614,7 +622,7 @@ All resolved 2026-05-15 (round 2). Promoted to §1 normative clauses:
 5. **~~dry_run mode~~** → §1 #15 (NOT in bridge; TASK-AI-021 CLI subcommand). Was Q5.
 2. **Chain-hash verification cost** — 5µs per emit, but 16 concurrent emits could compound. Profile in §5 integration test; if it pushes p95 over 50ms, gate behind a feature flag (`memory_writer/verify-chain`) that defaults on in dev and off in prod. Decision: leave on by default, profile, revise if needed.
 3. **What if `python3` isn't on the PATH?** — Slice-1 proposal: hard-fail at AI Gateway startup with a clear error message. The runtime container MUST ship Python; the dev environment MUST install it. This is enforced at deploy time, not runtime.
-4. **OBS event emission on ChainHashMismatch** — Sev-1 ("chain corruption") is the right severity, but TASK-OBS-003 isn't shipped yet at this FR's build time. Proposal: log a structured `chain_hash_mismatch` event via `tracing::error!`; OBS slice 1 (TASK-OBS-007) will route those to PagerDuty when it lands.
+4. **OBS event emission on ChainHashMismatch** — Sev-1 ("chain corruption") is the right severity, but TASK-OBS-003 isn't shipped yet at this task's build time. Proposal: log a structured `chain_hash_mismatch` event via `tracing::error!`; OBS slice 1 (TASK-OBS-007) will route those to PagerDuty when it lands.
 5. **Should the bridge expose a `dry_run` mode?** — Useful for TASK-AI-021 (operator CLI) to validate a payload without emitting. Slice-1 proposal: yes, but as an opt-in flag on `emit_batch`, not on `emit`; keeps the hot path simple.
 
 ---
@@ -639,11 +647,11 @@ All resolved 2026-05-15 (round 2). Promoted to §1 normative clauses:
 
 ## §11 — Notes
 
-- This FR is the single biggest latency contributor on the AI Gateway hot path (50ms of the gateway's ~200ms p95 budget). PyO3 (TASK-AI-008) could cut that to <10ms; we defer the optimisation until real traffic confirms the win.
+- This task is the single biggest latency contributor on the AI Gateway hot path (50ms of the gateway's ~200ms p95 budget). PyO3 (TASK-AI-008) could cut that to <10ms; we defer the optimisation until real traffic confirms the win.
 - The Writer subprocess is the only path that holds `<memory-root>/.lock`. The AI Gateway never touches the lock directly — that's the rule from `AGENTS.md §14.1` made into code.
-- The five row kinds defined here (`ai.precheck`, `ai.invocation`, `ai.invocation_failed`, `ai.hold_expired`, `ai.persona_loaded`) are the closed initial set for slice 1. Subsequent FRs extend the closed set explicitly via §1 #8: `ai.failover_triggered` (TASK-AI-009), `ai.zdr_violation` (TASK-AI-015), `ai.residency_violation` (TASK-AI-016), `ai.cache_hit` (TASK-AI-017), and the `ai.cli_*` family (TASK-AI-021). Every new kind needs the same minimal PR shape — enum variant + typed builder + unit test + update to §1 #8.
+- The five row kinds defined here (`ai.precheck`, `ai.invocation`, `ai.invocation_failed`, `ai.hold_expired`, `ai.persona_loaded`) are the closed initial set for slice 1. Subsequent tasks extend the closed set explicitly via §1 #8: `ai.failover_triggered` (TASK-AI-009), `ai.zdr_violation` (TASK-AI-015), `ai.residency_violation` (TASK-AI-016), `ai.cache_hit` (TASK-AI-017), and the `ai.cli_*` family (TASK-AI-021). Every new kind needs the same minimal PR shape — enum variant + typed builder + unit test + update to §1 #8.
 - The `actor` field is `agent:cyberos-ai-gateway` (not a human subject id). This matches `AGENTS.md` §11's distinction between trusted and untrusted authors: only the canonical Writer can write to the chain, but the *originating actor* on the row is the AI Gateway service.
-- This FR is the first non-memory module to depend on the canonical Writer subprocess. Once it lands, the pattern can be lifted into other modules (CHAT, CUO, EMAIL) by duplicating the Rust module into each service crate. A later refactor will extract it into a shared `cyberos-memory-client` crate.
+- This task is the first non-memory module to depend on the canonical Writer subprocess. Once it lands, the pattern can be lifted into other modules (CHAT, CUO, EMAIL) by duplicating the Rust module into each service crate. A later refactor will extract it into a shared `cyberos-memory-client` crate.
 
 ---
 

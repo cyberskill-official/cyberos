@@ -1,11 +1,11 @@
 # memory module — task index
 
-_Generated 2026-05-17 — 11 FRs, 136 engineering-hours total._
-_Updated 2026-05-19 — +9 FRs (TASK-MEMORY-112..120) from the MEMORY Improvement Wave 2026 Q3 (Anthropic Memory+Dreaming alignment + Ramakrushna agentic-memory taxonomy). Catalog: 20 FRs, ~266 engineering-hours total._
+_Generated 2026-05-17 — 11 tasks, 136 engineering-hours total._
+_Updated 2026-05-19 — +9 tasks (TASK-MEMORY-112..120) from the MEMORY Improvement Wave 2026 Q3 (Anthropic Memory+Dreaming alignment + Ramakrushna agentic-memory taxonomy). Catalog: 20 tasks, ~266 engineering-hours total._
 
-## FRs
+## tasks
 
-| FR | Priority | Slice | Hours | Title |
+| Task | Priority | Slice | Hours | Title |
 |---|---|---|---:|---|
 | [TASK-MEMORY-101](TASK-MEMORY-101-layer2-ingest-pipeline/spec.md) | MUST | 1 | 18 | Layer-2 ingest pipeline (binlog → pgvector + Apache AGE) — chain-anchor verification + 1s p95 lag +  |
 | [TASK-MEMORY-102](TASK-MEMORY-102-layer2-rebuild-ci-gate/spec.md) | MUST | 1 | 10 | Layer-2 rebuild-from-Layer-1 CI gate — deterministic rebuild + spot-check + 30min budget + mid-rebui |
@@ -43,13 +43,13 @@ _Updated 2026-05-19 — +9 FRs (TASK-MEMORY-112..120) from the MEMORY Improvemen
 
 ## Wave 2026 Q3 — Self-learning agents (MEMORY Improvement)
 
-Authored 2026-05-19 in response to the Anthropic Memory+Dreaming talk + Ramakrushna agentic-memory article (source materials at `../../../playground/extracts/`). The 9-FR wave splits into three sub-waves with explicit ship sequencing:
+Authored 2026-05-19 in response to the Anthropic Memory+Dreaming talk + Ramakrushna agentic-memory article (source materials at `../../../playground/extracts/`). The 9-task wave splits into three sub-waves with explicit ship sequencing:
 
 - **Wave 1 (4 dev-days)** — high-leverage, low-protocol-impact: TASK-MEMORY-112 (episodic) + TASK-MEMORY-113 (recency decay) + TASK-MEMORY-114 (importance scoring).
 - **Wave 2 (9 dev-days, gated on `APPROVE protocol change P19 §7.7`)** — the headline `cyberos dream` out-of-band reflection pipeline: TASK-MEMORY-115 + TASK-MEMORY-116.
 - **Wave 3 (8 dev-days, gated on `APPROVE protocol change P20 §14.4` / `P21 §3.1` / `P22 §18`)** — multi-agent scale: TASK-MEMORY-117 (per-store ACL) + TASK-MEMORY-118 (put_if precondition) + TASK-MEMORY-119 (session transcript ledger) + TASK-MEMORY-120 (`cyberos history`).
 
-Each protocol-amendment-bearing FR carries its own approval chat-turn (per Stephen's 2026-05-19 decision: one-at-a-time, not bundled).
+Each protocol-amendment-bearing task carries its own approval chat-turn (per Stephen's 2026-05-19 decision: one-at-a-time, not bundled).
 
 ---
 

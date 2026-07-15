@@ -16,7 +16,7 @@
 //! the real tables already exist; `CREATE TABLE IF NOT EXISTS` is a no-op then and the sweep hits the real
 //! schema.
 //!
-//! What they prove (FR §4 #10, #11; §1 #18):
+//! What they prove (task §4 #10, #11; §1 #18):
 //!   * the sweep deletes an L2 row past `retain_days` but keeps a fresher one (clause 6);
 //!   * the sweep NEVER deletes an `l1_audit_log` row - the count is unchanged (clause 6, 11);
 //!   * the sweep is idempotent (a second run erases zero more);

@@ -64,9 +64,9 @@
 
 ---
 
-## §3 — What remains deferred (per FR §9)
+## §3 — What remains deferred (per task §9)
 
-| Concern | FR | Notes |
+| Concern | Task | Notes |
 |---|---|---|
 | JMAP / IMAP / SMTP JWT bridge | TASK-EMAIL-002 | Stalwart's auth delegates to AUTH JWT validator |
 | Shared-inbox UX (assignment, comments, snooze) | TASK-EMAIL-003 | TypeScript SPA + backend handlers |

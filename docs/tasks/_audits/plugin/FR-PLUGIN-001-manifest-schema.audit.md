@@ -19,7 +19,7 @@ Plugin manifest schema v1.0.0 + Python reference packer. 380 lines, 14 §1 claus
 Open string capability sets invite misleading names ("harmless_memory_lookup" → write). Resolved: §1 clause 5 + DEC-2404 + schema `additionalProperties: false` on capabilities object; AC #8.
 
 ### ISS-002 — Schema version drift risk
-Allowing `schema_version: "^1\\..*"` lets v1.3 manifests appear in v1.0 validators. Resolved: §1 clause 2 + DEC-2401 — const "1.0.0"; future versions get FR-PLUGIN-001a; AC #2.
+Allowing `schema_version: "^1\\..*"` lets v1.3 manifests appear in v1.0 validators. Resolved: §1 clause 2 + DEC-2401 — const "1.0.0"; future versions get task-PLUGIN-001a; AC #2.
 
 ### ISS-003 — Tool naming enforced only at gateway
 TASK-MCP-003 enforces SEP-986 at MCP gateway runtime. If manifest schema doesn't ALSO enforce it, violations leak to publish time. Resolved: §1 clause 6 + DEC-2405 + schema pattern; AC #9.

@@ -1,8 +1,16 @@
 ---
 id: TASK-MEMORY-114
 title: "memory write-time importance scoring — cuo-Phase-3-pattern Invoker (mock-llm + anthropic); haiku-rated `meta.importance` filters noise at the source; opt-in via `cyberos put --score-importance`"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-19T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: memory
-priority: SHOULD
+priority: p1
 status: done
 verify: T
 phase: P1
@@ -64,7 +72,7 @@ subtasks:
   - "0.5h: modules/memory/tests/core/test_importance.py — 6 cases (env var precedence, manifest precedence, default to mock, unknown invoker raises, CYBEROS_DISABLE_LLM=1 forces mock)"
   - "0.5h: modules/memory/tests/core/test_importance.py — 6 cases (cache hit returns same score, cache miss calls invoker, sha256 mismatch invalidates, cache survives Writer restart, cache file gracefully created)"
   - "0.5h: schema + invariant for `manifest.importance` block"
-risk_if_skipped: "Without write-time importance scoring, every memory in the memory has `meta.importance` absent → ranking defaults all to 0.5 (DEC-192 + TASK-MEMORY-113 #3). The combined-score formula then degenerates: importance contribution is a constant 0.15 (= 0.5 · 0.3), so ranking is effectively `relevance · 0.4 + recency · 0.3 + 0.15`. The article (Ramakrushna §'Memory management') flags this as the noise-at-source problem — trivia accumulates in the store at the same weight as decisions. As stores grow past 1K memories, recall surface degrades. Skipping this FR means we have the *infrastructure* to rank by importance (TASK-MEMORY-113) but no signal feeding it. We'd be in the same place as if we'd skipped TASK-MEMORY-113. Shipping TASK-MEMORY-114 closes Wave 1 — gives TASK-MEMORY-115 (dream) a real signal to use when proposing 'this memory is stale, that one matters'."
+risk_if_skipped: "Without write-time importance scoring, every memory in the memory has `meta.importance` absent → ranking defaults all to 0.5 (DEC-192 + TASK-MEMORY-113 #3). The combined-score formula then degenerates: importance contribution is a constant 0.15 (= 0.5 · 0.3), so ranking is effectively `relevance · 0.4 + recency · 0.3 + 0.15`. The article (Ramakrushna §'Memory management') flags this as the noise-at-source problem — trivia accumulates in the store at the same weight as decisions. As stores grow past 1K memories, recall surface degrades. Skipping this task means we have the *infrastructure* to rank by importance (TASK-MEMORY-113) but no signal feeding it. We'd be in the same place as if we'd skipped TASK-MEMORY-113. Shipping TASK-MEMORY-114 closes Wave 1 — gives TASK-MEMORY-115 (dream) a real signal to use when proposing 'this memory is stale, that one matters'."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -613,7 +621,7 @@ API contracts above are the skeleton. Implementation order:
 
 - **TASK-MEMORY-113 (depends on)** — `meta.importance` schema field + RecallWeights consume the scored value.
 - **TASK-MEMORY-112 (related)** — Episodes can opt-in to scoring; `Episode.quality_score` is the agent's self-rated output, `meta.importance` is the LLM's external rating — orthogonal signals.
-- **TASK-MEMORY-115 (this FR blocks)** — `cyberos dream` consumes `memory.importance_scored` audit rows for trend analysis (cache hit %, fallback %).
+- **TASK-MEMORY-115 (this task blocks)** — `cyberos dream` consumes `memory.importance_scored` audit rows for trend analysis (cache hit %, fallback %).
 - **TASK-CUO-105 (related, depends_on pattern)** — the Invoker Protocol mirrors CUO's; cross-module test ensures the two stay aligned (additive — same shape, different concern).
 
 ---
@@ -709,7 +717,7 @@ All resolved. Deferred:
 - **`select_invoker(name=None)` reuses CUO's selection algorithm** — explicit name beats env beats default. Same priority order = same operator mental model.
 - **Cache table schema is single-table on purpose.** No JOINs, no migrations, no ALTER TABLE. If the schema changes in slice 4, drop + recreate (data is regenerable by re-scoring).
 - **The `aux_emitter` callable is the same shim TASK-MEMORY-112 uses for `episode.logged`.** Keeps the importance.py module decoupled from Writer (no direct call into Writer.emit_aux).
-- **Why we don't batch invoker calls** — Haiku's per-call latency is ~1.5s; batching would require structured-output prompting and complicate fallback handling. The Slice-4 `score-all` mode can batch internally without changing this FR's API.
+- **Why we don't batch invoker calls** — Haiku's per-call latency is ~1.5s; batching would require structured-output prompting and complicate fallback handling. The Slice-4 `score-all` mode can batch internally without changing this task's API.
 - **AnthropicInvoker uses `AsyncAnthropic`, not `Anthropic`** — non-blocking. Lets the Writer overlap scoring with the file-write fsync if it wanted to (it currently doesn't, but the option is preserved).
 - **The `test_anthropic_invoker_parse_paths` test scaffold is simplified for readability.** Real tests use `responses.RequestsMock` or `aioresponses` to mock the HTTP layer. The fixture lives in `modules/memory/tests/core/test_mmr.py`.
 

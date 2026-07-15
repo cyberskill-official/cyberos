@@ -1,8 +1,16 @@
 ---
 id: TASK-MEMORY-103
 title: "memory-sync daemon — laptop A ↔ Cloud memory ↔ laptop B with sync_class gating + CRDT conflict + 10K offline buffer + device-id stamp"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: memory
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -451,7 +459,7 @@ See §3.
 - **TASK-MEMORY-101** — Layer 2 sees synced rows downstream.
 - **TASK-MEMORY-104** — Tauri app embeds memory-sync.
 - **TASK-MEMORY-105** — Disputed-pair UI (slice 2+).
-- **TASK-MEMORY-106** — sync-class enforcement at write time (this FR enforces at sync boundary).
+- **TASK-MEMORY-106** — sync-class enforcement at write time (this task enforces at sync boundary).
 - Cloud memory service (separate, P1+).
 - Crates: `tonic@0.12`, `prost@0.13`, `tokio`, `sqlx`, `serde`, `glob`.
 

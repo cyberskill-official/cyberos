@@ -1036,7 +1036,7 @@ pub async fn file_request(
 // ===========================================================================
 
 /// Map a `RubricError` to the `(StatusCode, String)` HTTP shape with the §1 / §4 stable error code as the
-/// body. The status codes follow the FR's failure-modes table: uncited / missing-vi / bad-shape / empty ->
+/// body. The status codes follow the task's failure-modes table: uncited / missing-vi / bad-shape / empty ->
 /// 422; effective overlap -> 409; human-approver-required -> 403; not-found -> 404; everything else a 422
 /// authoring error except a DB fault which is a 500.
 fn rubric_err(e: RubricError) -> (StatusCode, String) {

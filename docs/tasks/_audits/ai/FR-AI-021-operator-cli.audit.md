@@ -108,7 +108,7 @@ This is the classic API-stability problem: the JSON output IS an API for consume
 
 1. Add §1 #8 normative requirement: every JSON output starts with `"schema_version":"v1"`.
 2. Schema files in `cli/json_schemas/<command>.v1.json` (JSON Schema draft-07).
-3. Bumping a schema requires explicit FR amendment + retain prior version for one release cycle.
+3. Bumping a schema requires explicit task amendment + retain prior version for one release cycle.
 4. Add `cli/json_schemas.rs` with `validate_output` helper using the `jsonschema@0.18` crate.
 5. Add AC #17 + §5 test `json_output_validates_against_usage_v1_schema`.
 6. Add §10 row "JSON output schema drift → CI fails" + §11 note.
@@ -172,7 +172,7 @@ The first-pass catalogue showed `policy set <tenant> --cap-usd <N>` — a single
 
 ## §4 — Resolution
 
-All 6 mechanical revisions applied (2026-05-16) within the FR itself:
+All 6 mechanical revisions applied (2026-05-16) within the task itself:
 
 - **ISS-001 RESOLVED**: §1 #6 operator token + role-gating; `cli/auth.rs` with JWT parsing + `Role` enum + `require_role`; ACs #12 + #13 + §5 tests `missing_token_exits_2` and `insufficient_role_exits_2`; `operator_id` in every audit row payload.
 

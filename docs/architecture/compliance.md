@@ -26,7 +26,7 @@ Gate-by-gate, the deliverables light up as follows:
 
 ## Ring 1 - Vietnam home regime
 
-Vietnamese law is the cornerstone. CyberSkill JSC is a Vietnam-incorporated entity processing Vietnamese-citizen personal data. Every architectural decision - RLS-by-default, per-tenant region pinning, Merkle-chained audit, A05 filings, mandatory DPO - exists to satisfy Vietnam first. The internal Compliance Strategy spec documents the obligations; this section traces each regulation to a CyberOS module and FR.
+Vietnamese law is the cornerstone. CyberSkill JSC is a Vietnam-incorporated entity processing Vietnamese-citizen personal data. Every architectural decision - RLS-by-default, per-tenant region pinning, Merkle-chained audit, A05 filings, mandatory DPO - exists to satisfy Vietnam first. The internal Compliance Strategy spec documents the obligations; this section traces each regulation to a CyberOS module and task.
 
 ### Decree 13/2023/NĐ-CP - Personal Data Protection
 
@@ -124,22 +124,22 @@ Mandatory e-invoice issuance, monthly VAT declaration, MST (tax code) validation
 - Monthly filing: by the 20th of the following month via the `vietnam-tax-filing` skill (planned).
 - Retention: 10 years (Law on Accounting Article 41).
 
-### Vietnam traceability - regulations to CyberOS modules and FRs
+### Vietnam traceability - regulations to CyberOS modules and tasks
 
-| Regulation | Obligation | CyberOS module | FR / DEC | Phase |
+| Regulation | Obligation | CyberOS module | task / DEC | Phase |
 |---|---|---|---|---|
-| Decree 13/2023 Art. 24 | DPIA before sensitive-data processing | CP (Compliance) | (FR pending) - DEC-053 | P0 |
-| Decree 13/2023 Art. 14 | DSAR within 30 days | CP + AUTH | (FR pending) | P1 |
-| Decree 13/2023 Art. 28 | Cross-border-transfer A05 notification | CP | (FR pending) | P0 |
-| Decree 13/2023 Art. 23 | 72-hour breach notification | OBS + CP | (FR pending) | P0 |
+| Decree 13/2023 Art. 24 | DPIA before sensitive-data processing | CP (Compliance) | (task pending) - DEC-053 | P0 |
+| Decree 13/2023 Art. 14 | DSAR within 30 days | CP + AUTH | (task pending) | P1 |
+| Decree 13/2023 Art. 28 | Cross-border-transfer A05 notification | CP | (task pending) | P0 |
+| Decree 13/2023 Art. 23 | 72-hour breach notification | OBS + CP | (task pending) | P0 |
 | Decree 53/2022 Art. 26 | Data localisation for in-scope services | (Infra) - per-tenant region pinning | DEC-009, DEC-027 | P2 |
 | PDPL Art. 38 | SME grace-period tracking + graduation | CP | DEC-053 (rev. 2026-05-15) | P0 |
-| Law 91/2025 + Decree 356 | National-law DPO, fines 5% revenue | CP, HR (DPO role) | (FR pending) | P2 |
+| Law 91/2025 + Decree 356 | National-law DPO, fines 5% revenue | CP, HR (DPO role) | (task pending) | P2 |
 | Law 91/2025 right-to-explanation | CUO output explainability | AI + CUO | DEC-055 | P0 |
-| Penal Code section 288 | Criminal liability prevention | (Infra) - audit chain | N(FR pending) | P0 |
+| Penal Code section 288 | Criminal liability prevention | (Infra) - audit chain | N(task pending) | P0 |
 | Law on Accounting Art. 41 | 10-year retention | INV + memory archival | DEC-020 | P2 |
-| NQ 142/2024 + TT 80/2021 | e-invoice, MST, monthly VAT filing | INV + Skill (3 VN skills) | (FR pending)..050 | P2 |
-| Labour Code 2019 | SI/PIT remittance, payslip retention | REW | (FR pending)..080 | P1 |
+| NQ 142/2024 + TT 80/2021 | e-invoice, MST, monthly VAT filing | INV + Skill (3 VN skills) | (task pending)..050 | P2 |
+| Labour Code 2019 | SI/PIT remittance, payslip retention | REW | (task pending)..080 | P1 |
 
 ## Ring 2 - Cross-border
 
@@ -305,7 +305,7 @@ The Trust Center is CyberOS's public-facing compliance surface. One URL - `trust
 
 - VPAT 2.5 INT (Voluntary Product Accessibility Template)
 - Stripe SAQ-A AOC (subprocessor disclosure)
-- Sub-processor list (public - N(FR pending))
+- Sub-processor list (public - N(task pending))
 - Accessibility statement (WCAG 2.2 AA target)
 - Data residency disclosure (region per tenant)
 - Incident response runbook (DEC-027)
@@ -325,7 +325,7 @@ The Trust Center is CyberOS's public-facing compliance surface. One URL - `trust
 3. The buyer requests the SOC 2 Type II report.
 4. AUTH applies an NDA gate: a click-through e-sign, pre-filled with the buyer's organisation.
 5. Once signed, a time-limited signed URL is issued from the R2 / signed-PDF store; the buyer downloads the PDF (24-hour TTL).
-6. The Trust Center logs the access with the CP subgraph (N(FR pending)).
+6. The Trust Center logs the access with the CP subgraph (N(task pending)).
 
 ## Breach notification matrix
 

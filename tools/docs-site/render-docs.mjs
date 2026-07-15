@@ -182,7 +182,7 @@ function generateNav() {
 
   const refItems = [
     ["reference/getting-started.html", "Getting started"],
-    ["reference/fr-catalog.html", "FR catalog"],
+    ["reference/fr-catalog.html", "task catalog"],
     ["reference/nfr-catalog.html", "NFR catalog"],
     ["reference/changelog.html", "Changelog"],
     ["reference/status.html", "Status"],

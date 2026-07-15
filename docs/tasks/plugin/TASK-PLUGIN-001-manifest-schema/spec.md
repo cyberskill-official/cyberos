@@ -1,8 +1,16 @@
 ---
 id: TASK-PLUGIN-001
 title: "Plugin manifest schema v1.0.0 — canonical plugin.json validated against manifest.schema.json with cyberos-plugin pack reference packer"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-19T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: PLUGIN
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P1
@@ -22,8 +30,8 @@ source_pages:
   - modules/plugin/INTEROP.md
 
 source_decisions:
-  - DEC-2400 2026-05-19 — Manifest schema v1.0.0 is the SINGLE source of truth for plugin bundle shape; every adapter consumes it; bumps require this FR amendment
-  - DEC-2401 2026-05-19 — schema_version is a const ("1.0.0") not a range; future versions get FR-PLUGIN-001a/b/c successor FRs to avoid drift
+  - DEC-2400 2026-05-19 — Manifest schema v1.0.0 is the SINGLE source of truth for plugin bundle shape; every adapter consumes it; bumps require this task amendment
+  - DEC-2401 2026-05-19 — schema_version is a const ("1.0.0") not a range; future versions get task-PLUGIN-001a/b/c successor tasks to avoid drift
   - DEC-2402 2026-05-19 — id pattern is kebab-case, 3-64 chars, lowercase only; matches OCI image-name conventions for marketplace symmetry
   - DEC-2403 2026-05-19 — version is SemVer 2.0 strict; pre-release identifiers allowed (1.0.0-beta.1) but build metadata MUST NOT affect compatibility
   - DEC-2404 2026-05-19 — capabilities is a closed enum of 7 keys (read_memory / write_memory / execute_workflow / list_skills / invoke_skill / publish_skill / route_natural_language); additions require schema bump
@@ -89,7 +97,7 @@ The PLUGIN module **MUST** ship the manifest schema and reference packer at `mod
 
 1. **MUST** validate canonical manifests against `manifest.schema.json` per DEC-2400. Validation runs at three sites: (a) author time via `cyberos-plugin validate manifests/<id>@<version>.plugin.json`; (b) pack time via `cyberos-plugin pack` (refuses to emit a bundle if the manifest doesn't validate); (c) install time via the host runtime (each adapter inherits the schema). Validation errors MUST be human-readable with the failing JSON-pointer and the constraint that failed.
 
-2. **MUST** declare `schema_version` as the const `"1.0.0"` per DEC-2401. Schema evolutions are handled by writing FR-PLUGIN-001a (then b, then c) — never by widening the v1 schema in place. This keeps every shipped plugin pinned to a known schema generation.
+2. **MUST** declare `schema_version` as the const `"1.0.0"` per DEC-2401. Schema evolutions are handled by writing task-PLUGIN-001a (then b, then c) — never by widening the v1 schema in place. This keeps every shipped plugin pinned to a known schema generation.
 
 3. **MUST** enforce the `id` pattern `^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$` per DEC-2402 — lowercase kebab-case, 3-64 characters, no leading/trailing hyphen. This pattern is OCI-image-name compatible so marketplace artefacts can be addressed as `oci://plugins.cyberskill.world/<id>:<version>` without transformation.
 
@@ -99,7 +107,7 @@ The PLUGIN module **MUST** ship the manifest schema and reference packer at `mod
 
 6. **MUST** enforce the SEP-986 tool name pattern `^cyberos\.[a-z][a-z0-9]*\.[a-z][a-z0-9_]*$` per DEC-2405. Each tool's `name` MUST start with `cyberos.`, then a module slug, then a verb-underscore-noun pair (e.g. `cyberos.cuo.execute_workflow`, `cyberos.memory.read_audit`, `cyberos.skill.list_catalog`).
 
-7. **MUST** enforce `auth.method == "oauth-pkce"` as a JSONSchema const per DEC-2406. Other auth methods (api-key, basic-auth, bearer-static) MUST be rejected at validation. Future versions MAY add methods via FR-PLUGIN-001a but v1 is locked.
+7. **MUST** enforce `auth.method == "oauth-pkce"` as a JSONSchema const per DEC-2406. Other auth methods (api-key, basic-auth, bearer-static) MUST be rejected at validation. Future versions MAY add methods via task-PLUGIN-001a but v1 is locked.
 
 8. **MUST** require `signature.rekor_uuid` and `signature.sigstore_bundle` per DEC-2407 — these fields are at the top of `manifest.schema.json#/required`. A manifest cannot validate without a Sigstore Rekor transparency-log entry referenced. The packer (clause 11) refuses to emit unsigned bundles.
 
@@ -121,13 +129,13 @@ The PLUGIN module **MUST** ship the manifest schema and reference packer at `mod
 
 **Why JSONSchema 2020-12 (DEC-2400)?** Latest stable JSONSchema draft; broad tooling support (Python `jsonschema` 4.x, Rust `jsonschema`, JS `ajv` 8.x); supports `const`, `additionalProperties: false`, pattern, format, enum — every constraint we need. Older drafts (draft-07) lack some constraints we use; draft-2019-09 is superseded.
 
-**Why const schema_version (DEC-2401)?** Allowing a range (e.g. `^1\\..*$`) invites silent compatibility drift — fields appear in v1.3 manifests that v1.0 validators don't recognise. Constant versions force every new field to ship under a new FR with explicit ecosystem migration guidance. This is the Lockfile pattern, applied to plugin schemas.
+**Why const schema_version (DEC-2401)?** Allowing a range (e.g. `^1\\..*$`) invites silent compatibility drift — fields appear in v1.3 manifests that v1.0 validators don't recognise. Constant versions force every new field to ship under a new task with explicit ecosystem migration guidance. This is the Lockfile pattern, applied to plugin schemas.
 
 **Why OCI-compatible id pattern (DEC-2402)?** Strategy §4 Level 3 envisions a marketplace addressable as `oci://plugins.cyberskill.world/<id>:<version>`. If `id` accepts characters OCI rejects (uppercase, underscores, dots), the marketplace adapter has to transform before push, breaking round-trip identity. Keeping the patterns aligned avoids the transformation entirely.
 
 **Why SemVer 2.0 (DEC-2403)?** Plugin consumers (hosts) need a well-known compatibility model. SemVer is the industry default. Pre-release identifiers (`1.0.0-beta.1`) are essential for staged rollouts. Build metadata is semantically irrelevant per SemVer spec — two builds of the same source can carry different `+sha.x` and still be the same plugin.
 
-**Why closed capabilities enum (DEC-2404)?** Hosts render the capability list at install time so the user knows what they're granting. If capabilities are an open string set, malicious plugins could declare misleading capability names (`harmless_memory_lookup` instead of `read_memory`) that users skim past. A closed enum forces every capability to be reviewed and named in this FR.
+**Why closed capabilities enum (DEC-2404)?** Hosts render the capability list at install time so the user knows what they're granting. If capabilities are an open string set, malicious plugins could declare misleading capability names (`harmless_memory_lookup` instead of `read_memory`) that users skim past. A closed enum forces every capability to be reviewed and named in this task.
 
 **Why SEP-986 enforced at manifest level (DEC-2405, clause 6)?** TASK-MCP-003 already enforces this at the gateway. Enforcing it at the manifest schema level catches violations earlier (author time, not runtime) and surfaces them in the same validator output as other schema errors. Defense-in-depth.
 
@@ -350,8 +358,8 @@ echo $?  # → 0
 
 ## §7 — Dependencies
 
-- **Upstream:** none — this is the keystone FR with no FR-level dependencies.
-- **Downstream:** every other FR in this module reads `manifest.schema.json` for its contract. TASK-PLUGIN-002 reads `tools[*]` for what MCP tools to register. TASK-PLUGIN-003 reads `commands[*]`. TASK-PLUGIN-004 reads `skills[*]`. TASK-PLUGIN-005 reads `auth.*`. TASK-PLUGIN-006 reads `audit.*`. TASK-PLUGIN-007 reads `targets[*]`. TASK-PLUGIN-008 reads `marketplace.*`.
+- **Upstream:** none — this is the keystone task with no task-level dependencies.
+- **Downstream:** every other task in this module reads `manifest.schema.json` for its contract. TASK-PLUGIN-002 reads `tools[*]` for what MCP tools to register. TASK-PLUGIN-003 reads `commands[*]`. TASK-PLUGIN-004 reads `skills[*]`. TASK-PLUGIN-005 reads `auth.*`. TASK-PLUGIN-006 reads `audit.*`. TASK-PLUGIN-007 reads `targets[*]`. TASK-PLUGIN-008 reads `marketplace.*`.
 - **Cross-module:** TASK-MCP-003 (SEP-986 tool naming — clause 6 enforces it), TASK-MCP-006 (tool annotation gating — clause 14 enforces it), TASK-SKILL-111 (description enrichment — manifest `description` 60-480 char range matches the trigger-discovery discipline).
 
 ---
@@ -400,7 +408,7 @@ echo $?  # → 0
 
 All resolved.
 
-- ~~Should we support api-key auth in v1?~~ → No, oauth-pkce only per DEC-2406. Re-evaluated for FR-PLUGIN-001a (post-v1 schema bump).
+- ~~Should we support api-key auth in v1?~~ → No, oauth-pkce only per DEC-2406. Re-evaluated for task-PLUGIN-001a (post-v1 schema bump).
 - ~~Should reproducibility be opt-in?~~ → No, default-on per DEC-2409. The opt-out `reproducible=False` exists for debugging only.
 - ~~Should the packer ship as Rust to match production?~~ → No, Python reference first per DEC-2408. Rust binary lands in TASK-PLUGIN-007 alongside multi-runtime adapter work.
 
@@ -412,7 +420,7 @@ All resolved.
 |---|---|---|---|
 | Manifest missing required field | JSONSchema validation | `cyberos-plugin pack` exits 1 with `/<field>: required` | Author adds field |
 | Tool name violates SEP-986 | JSONSchema pattern | exit 1 with `/tools/N/name: pattern` | Author renames per cyberos.{module}.{verb}_{noun} |
-| schema_version mismatch | JSONSchema const | exit 1 with `/schema_version: const` | Author downgrades to "1.0.0" or waits for FR-PLUGIN-001a |
+| schema_version mismatch | JSONSchema const | exit 1 with `/schema_version: const` | Author downgrades to "1.0.0" or waits for task-PLUGIN-001a |
 | Capability declared without matching scope | validator.py custom check | exit 1 with `capability '<x>' declared but no tool has scope '<y>'` | Author adds the scope to one of the tools |
 | Destructive tool without write scope | validator.py custom check | exit 1 with `tool '<n>' marked destructive but lacks write scope` | Author adds the write scope OR un-marks the annotation |
 | Unsigned manifest at pack time | packer.py check | raises `UnsignedManifestError` | Author runs Sigstore sign first, then re-packs |
@@ -421,7 +429,7 @@ All resolved.
 | Bundle SHA-256 mismatch on verifier rebuild | Sigstore verifier rebuilds bundle, compares hash | verifier rejects | Investigate non-determinism in packer; report bug |
 | Mtimes injected by network filesystem | `pack()` on NFS sees host clocks | reproducible check fails | Use local fs for packing; CI runs on local tmpfs |
 | Marketplace upload of non-validated bundle | `cyberos-plugin publish` re-runs validate before upload | exit 1 | Author re-runs pack with valid manifest |
-| Future schema field appears in v1 manifest | additionalProperties: false | exit 1 with `unknown property` | Field MUST land via FR-PLUGIN-001a, not in v1 |
+| Future schema field appears in v1 manifest | additionalProperties: false | exit 1 with `unknown property` | Field MUST land via task-PLUGIN-001a, not in v1 |
 | Empty tools array | `tools.minItems: 1` | exit 1 | A plugin with zero tools is meaningless; add at least one |
 | Description shorter than 60 chars | `description.minLength: 60` | exit 1 | Author writes meaningful description |
 | Tool input_schema not a JSONSchema object | JSONSchema type | exit 1 | Author fixes input_schema |
@@ -437,11 +445,11 @@ All resolved.
 
 - §11.3 **CLI ergonomics.** Use `argparse` (stdlib) not `click` to avoid the dependency. Subcommands: `pack`, `validate`, `doctor`. Each returns exit 0 on success, exit 1 on validation failure, exit 2 on usage error.
 
-- §11.4 **Error message format.** Every validation error MUST include the JSON pointer to the failing field. Errors include a hint pointing back to this FR (e.g. "per TASK-PLUGIN-001 clause 6") so the author can find the rationale.
+- §11.4 **Error message format.** Every validation error MUST include the JSON pointer to the failing field. Errors include a hint pointing back to this task (e.g. "per TASK-PLUGIN-001 clause 6") so the author can find the rationale.
 
 - §11.5 **Performance.** Validation runs in <100ms for manifests with up to 200 tools (typical). The reproducibility-stripping pass is O(n_files) — for a 12-skill plugin with ~50 files, packing completes in <200ms.
 
-- §11.6 **Schema versioning escape valve.** When v2 lands (FR-PLUGIN-001a), the validator will accept both `schema_version: "1.0.0"` (forwarded to v1 validation rules) and `schema_version: "2.0.0"` (v2 rules). The dual-validator lives in `validator.py::validate_dispatch`. v1 plugins remain installable indefinitely.
+- §11.6 **Schema versioning escape valve.** When v2 lands (task-PLUGIN-001a), the validator will accept both `schema_version: "1.0.0"` (forwarded to v1 validation rules) and `schema_version: "2.0.0"` (v2 rules). The dual-validator lives in `validator.py::validate_dispatch`. v1 plugins remain installable indefinitely.
 
 - §11.7 **Marketplace pre-check.** When TASK-PLUGIN-008 lands, `cyberos-plugin publish` runs `validate` before upload. This is duplicative with packer-time validation but is mandatory because plugins may be uploaded by tools other than the official packer.
 

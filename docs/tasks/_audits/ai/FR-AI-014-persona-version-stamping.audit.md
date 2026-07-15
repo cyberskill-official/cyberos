@@ -94,13 +94,13 @@ Add `canonicalise_body` in §3 + §6. Hash the canonicalised string, not the raw
 
 #### Description
 
-The first-pass §1 #6 said: *"emit one `ai.persona_loaded` memory audit row per request (via TASK-AI-003's `canonical::persona_loaded` builder)."* But (a) TASK-AI-003 declares the row *kind* (`ai.persona_loaded`) without specifying the payload schema, and (b) this FR doesn't implement the builder.
+The first-pass §1 #6 said: *"emit one `ai.persona_loaded` memory audit row per request (via TASK-AI-003's `canonical::persona_loaded` builder)."* But (a) TASK-AI-003 declares the row *kind* (`ai.persona_loaded`) without specifying the payload schema, and (b) this task doesn't implement the builder.
 
 A code-gen agent reading TASK-AI-014 cannot tell what fields go in the row's payload. The available signal is "TASK-AI-003 declares the kind" — but reading TASK-AI-003 reveals only the kind name, not the payload. The builder has to live somewhere; in the absence of explicit ownership, it lives nowhere and the row never gets emitted.
 
 #### Suggested fix
 
-This FR owns the builder (since the row's data lives here — persona handle, source path, source hash). Add to §3 + §6:
+This task owns the builder (since the row's data lives here — persona handle, source path, source hash). Add to §3 + §6:
 
 ```rust
 pub mod canonical {
@@ -179,7 +179,7 @@ A request with `agent_persona = "cuo-cpo@latest"` would be looked up in the regi
 
 ## §4 — Resolution
 
-All 6 mechanical revisions applied (2026-05-16) within the FR itself:
+All 6 mechanical revisions applied (2026-05-16) within the task itself:
 
 - **ISS-001 RESOLVED**: `PersonaHandle` introduced as `{ id: PersonaId, version: Version }`; bare `PersonaVersion(String)` removed; all examples, AC tests, and skeletons use the handle uniformly. Filename-match check added to enforce the `<handle>.md` invariant at parse time.
 

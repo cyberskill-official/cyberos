@@ -1,8 +1,16 @@
 ---
 id: TASK-PROJ-004
 title: "Issue lifecycle FSM — backlog → todo → in-progress → in-review → done | cancelled with TASK-PROJ-002 audit trail, validation, and forward-only enforcement"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: PROJ
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -91,7 +99,7 @@ The issue lifecycle **MUST** be a strict FSM with the following 5 states and 13 
     - **No-op**: same-state → same-state (allowed; treated as `Idempotent` not Transition).
    All other pairs MUST be rejected with `FsmError::IllegalTransition { from, to, allowed_from }` where `allowed_from` is the list of legal targets from current state.
 3. **MUST** validate transitions server-side BEFORE the LWW scalar write. Validation order:
-    1. FSM check (this FR).
+    1. FSM check (this task).
     2. LWW timestamp check (TASK-PROJ-003 §1 #6).
     3. Apply.
    FSM failure → 422 UNPROCESSABLE_ENTITY with body `{"error":"illegal_transition","from":<s>,"to":<s>,"allowed_to":[...]}`.

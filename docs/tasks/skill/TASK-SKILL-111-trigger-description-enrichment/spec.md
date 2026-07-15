@@ -1,8 +1,16 @@
 ---
 id: TASK-SKILL-111
 title: "SKILL.md `description:` field — mandated trigger-phrase enrichment + 1024-char budget for host-portable triggering"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-19T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: SKILL
-priority: SHOULD
+priority: p1
 status: done
 verify: T
 phase: P1
@@ -42,9 +50,9 @@ modified_files:
   - modules/skill/_template/author/SKILL.md                            # description block carries trigger phrases per FM-112
   - modules/skill/_template/audit/SKILL.md                             # description block carries trigger phrases per FM-112
   - modules/skill/task-audit/RUBRIC.md                      # add FM-112 (description-format)
-  - task-audit skill        # §3.13 mentions description-format rule
+  - Task-audit skill        # §3.13 mentions description-format rule
   - website docs (SKILL appendices)                                    # Part 2.1 description field row updates; Part 18 anti-pattern entry added
-  - website docs (SKILL Appendix J)                                    # §6.1 status badge updates when FR ships
+  - website docs (SKILL Appendix J)                                    # §6.1 status badge updates when task ships
 allowed_tools:
   - file_read: modules/skill/**, services/skill-broker/**, docs/tasks/skill/**
   - file_write: services/skill-broker/{src,tests,fixtures}/**, modules/skill/{_template,task-audit}, docs/tasks/skill/**
@@ -70,17 +78,17 @@ subtasks:
   - "1.0h: ANTHROPIC_GUIDE_DIGEST.md §6.1 status update — mark TASK-SKILL-111 shipped when CI passes"
   - "0.5h: integration test against 3 backfilled exemplar skills (task-author, task-audit, prd-author — confirm new auditor rule fires correctly on un-enriched descriptions)"
   - "1.5h: backfill exemplar enrichment — hand-edit description: blocks of task-author + task-audit + prd-author to carry trigger phrases (validates rule + provides reference patterns for lazy-sweep cohort)"
-risk_if_skipped: "Without trigger phrases in the frontmatter description, CyberOS skills under-trigger on every non-CyberOS host (Claude.ai, Codex, Cursor, vanilla MCP) once Phase-B transpilers ship. The host's progressive-disclosure level 1 (frontmatter only) decides whether to load the skill — if the description carries WHAT but not WHEN, the loader returns 'no skill matched' on natural user phrasings the body anticipates. Inside CyberOS the gap is silent because the supervisor reads the body during classify_act; outside CyberOS the skill ships dead. Inventory the failure: a user types 'Turn this PRD into a backlog' on Claude.ai; the host classifier reads task-author's current description (which mentions 'backlog' and 'Task' but not 'Turn this into a backlog' or 'PRD'); skill is not loaded; user falls back to manual prompting. This is exactly the under-triggering pattern Anthropic's guide Chapter 5 lists as the #1 reason skills fail in the wild. Without TASK-SKILL-111, every skill we ship to a non-CyberOS host inherits the failure. With TASK-SKILL-111, the auditor rule (FM-112) forces every production skill to carry ≥2 trigger-phrase forms in the description; the description budget rises from 200 to 1024 chars to fit; lazy backfill spreads the fix over the next month's natural fine-tune cycle. Cost of the FR ≈ 12 hours; cost of NOT shipping it once Phase-B is live ≈ 104 silent skill failures plus a future emergency sweep when the first partner connector ships and the partner complains."
+risk_if_skipped: "Without trigger phrases in the frontmatter description, CyberOS skills under-trigger on every non-CyberOS host (Claude.ai, Codex, Cursor, vanilla MCP) once Phase-B transpilers ship. The host's progressive-disclosure level 1 (frontmatter only) decides whether to load the skill — if the description carries WHAT but not WHEN, the loader returns 'no skill matched' on natural user phrasings the body anticipates. Inside CyberOS the gap is silent because the supervisor reads the body during classify_act; outside CyberOS the skill ships dead. Inventory the failure: a user types 'Turn this PRD into a backlog' on Claude.ai; the host classifier reads task-author's current description (which mentions 'backlog' and 'Task' but not 'Turn this into a backlog' or 'PRD'); skill is not loaded; user falls back to manual prompting. This is exactly the under-triggering pattern Anthropic's guide Chapter 5 lists as the #1 reason skills fail in the wild. Without TASK-SKILL-111, every skill we ship to a non-CyberOS host inherits the failure. With TASK-SKILL-111, the auditor rule (FM-112) forces every production skill to carry ≥2 trigger-phrase forms in the description; the description budget rises from 200 to 1024 chars to fit; lazy backfill spreads the fix over the next month's natural fine-tune cycle. Cost of the task ≈ 12 hours; cost of NOT shipping it once Phase-B is live ≈ 104 silent skill failures plus a future emergency sweep when the first partner connector ships and the partner complains."
 ---
 
 ## §1 — Description (BCP-14 normative)
 
-This FR establishes the rules for the `description:` field of every `SKILL.md` frontmatter so that Anthropic-style hosts (and any host whose progressive-disclosure level 1 reads only frontmatter) can correctly route user requests to CyberOS skills.
+This task establishes the rules for the `description:` field of every `SKILL.md` frontmatter so that Anthropic-style hosts (and any host whose progressive-disclosure level 1 reads only frontmatter) can correctly route user requests to CyberOS skills.
 
 1. The `description:` field **MUST** carry three structural elements in any order: **(a) WHAT** the skill does (one verb phrase, present tense, third-person), **(b) WHEN** the host should route to it (≥2 distinct trigger-phrase forms quoted in the description prose; trigger phrases mirror natural-language fragments a user might type), and **(c) KEY VALUE** (what the user gets — one outcome phrase). Order is recommended `WHAT + WHEN + KEY VALUE` but not enforced.
 2. The `description:` field's character length **MUST** be **≥ 80 chars** AND **≤ 1024 chars** (raised from TASK-SKILL-103's baseline of 200; aligns with the Anthropic guide's published cap per Reference B p. 31). Below 80 chars cannot carry both WHAT and ≥2 trigger phrases; above 1024 violates the host system-prompt budget.
 3. Trigger phrases **MUST** be quoted in standard double-quotes (`"..."`) inside the description prose. Two acceptable forms:
-   - **Use-when form** — `Use when user asks to "<verb phrase>"` or `Use when user mentions "<noun>"`. Example: `Use when user asks to "audit this FR" or "check the rubric"`.
+   - **Use-when form** — `Use when user asks to "<verb phrase>"` or `Use when user mentions "<noun>"`. Example: `Use when user asks to "audit this task" or "check the rubric"`.
    - **Triggers-on form** — `Triggers on "<phrase>" or "<phrase>"`. Example: `Triggers on "draft a PRD" or "outline the requirements"`.
 4. The description **MUST NOT** contain XML angle brackets `<` or `>`. (Restates TASK-SKILL-103 §1 #2 and TASK-SKILL-113 sketch; included here so FM-112 is self-contained for the auditor — the validator runs the bracket check before the trigger-phrase check so the user gets the more diagnostic error first.)
 5. The description **MAY** contain negative triggers in the form `Do NOT use for "<phrase>" (use <other-skill> instead)`. When present, the validator increments the trigger-phrase count for the positive triggers but not the negative ones (negatives are disambiguators, not triggers).
@@ -88,11 +96,11 @@ This FR establishes the rules for the `description:` field of every `SKILL.md` f
 7. The description **MUST NOT** be a single trailing word like `Helps with X.` or `Manages Y.` — these were the canonical bad examples in the Anthropic guide p. 12. The validator rejects any description that fails the WHAT-detection regex (`\b(generate|author|audit|review|draft|emit|build|propose|render|extract|classify|tag|score|track|enforce|validate|orchestrate|chain|select|pin|halt|resume|escalate|wrap|publish|deliver|test|simulate)\b` — verb stems that indicate concrete action).
 8. The description **SHOULD** name the skill's principal output artefact when the skill is artefact-producing (i.e. `produces.output_kind: artefact`). Example: `Generates a versioned task@1 markdown`. This anchors trust because the user can verify the artefact appears in the output.
 9. The description **MAY** be a multi-line YAML block (using `|` or `>-` folding) for readability. The 80-1024 char budget applies to the **flattened single-line equivalent** (after YAML folding resolves whitespace).
-10. Description **MUST** be locale-default English. Localised variants for VN-locale skills live in `description_localized.<lang>` under `metadata:` (out of scope for this FR; documented as future v0.3.0 work in §9).
+10. Description **MUST** be locale-default English. Localised variants for VN-locale skills live in `description_localized.<lang>` under `metadata:` (out of scope for this task; documented as future v0.3.0 work in §9).
 11. The auditor rule **MUST** be `FM-112 description-format` with severity `error` for production skills (`status: accepted` or higher); `severity: warning` for `status: draft` skills (so authors get feedback during authoring but the rule doesn't block draft work).
 12. The auditor rule **MUST NOT** auto-fix the description. Description text reflects human intent; auto-edit would silently rewrite trigger phrases the author chose deliberately. Verdict on description issues is always `needs_human` per `_template/audit/REPORT_FORMAT.md`.
 13. The CLI `cyberos skill validate` (TASK-SKILL-103 #10) **MUST** report description-format violations with a structured error message naming the missing element (`missing_what` | `missing_triggers` | `missing_value_phrase` | `too_short` | `too_long` | `forbidden_brackets`). The host shim per Part 9 of `modules/skill/README.md` MUST surface the message identically across hosts.
-14. Existing skills that pre-date this FR **MUST** be backfilled lazily — the rule fires at `status: accepted` or higher; scaffold/`status: draft` skills get a grace window. The auditor rule fires only on fields that were touched by a fine-tune commit after this FR ships (per `human_fine_tune.signals_to_initiate` — fine-tune session brings the skill into compliance as a side effect).
+14. Existing skills that pre-date this task **MUST** be backfilled lazily — the rule fires at `status: accepted` or higher; scaffold/`status: draft` skills get a grace window. The auditor rule fires only on fields that were touched by a fine-tune commit after this task ships (per `human_fine_tune.signals_to_initiate` — fine-tune session brings the skill into compliance as a side effect).
 15. The `## When to invoke this skill` body section **MUST NOT** be deleted; it remains the long-form companion to the frontmatter trigger phrases. The body section serves three purposes the description cannot: (a) negative triggers with prose explanations, (b) disambiguation cross-links to sibling skills, (c) handoff guidance to other personas. The frontmatter triggers are the host's level-1 hook; the body section is level-2 detail. **Both must be kept in sync** — when the description's triggers are updated, the body section MUST be re-audited for consistency (auditor rule SEC-007 enforces).
 
 ## §2 — Why this design (rationale for humans)
@@ -117,7 +125,7 @@ This FR establishes the rules for the `description:` field of every `SKILL.md` f
 
 **Why warning on draft, error on accepted (§1 #11)?** Drafting is exploratory; forcing the trigger-phrase format on every draft commit would slow first-pass authoring. Production skills (`status: accepted` or higher) are routed by the supervisor and shipped to hosts — they MUST conform. The two-severity scheme lets authors iterate while keeping production hygienic.
 
-**Why no auto-fix (§1 #12)?** Trigger phrases reflect human intent. An auto-edit might rewrite `"audit this FR"` as `"check the FR"` and silently miss the user-visible verb the author chose. Description issues always require human review.
+**Why no auto-fix (§1 #12)?** Trigger phrases reflect human intent. An auto-edit might rewrite `"audit this task"` as `"check the task"` and silently miss the user-visible verb the author chose. Description issues always require human review.
 
 **Why the body `## When to invoke this skill` stays (§1 #15)?** Three irreducible functions: (a) negative triggers with prose explanations (e.g. "If the user wants `<other skill>`, route to `<other skill>` instead"); (b) disambiguation cross-links to sibling skills that the description's character budget can't accommodate; (c) handoff guidance describing chains. Frontmatter is for the host classifier; body is for the supervisor + human reader. Keeping both keeps the cross-host port honest while preserving the rich-body audit surface.
 
@@ -294,14 +302,14 @@ cyberos skill validate-all --status-min accepted
 
 ## §4 — Acceptance criteria
 
-1. **Valid description with 2 triggers loads** — fixture `description-valid/SKILL.md` with `description: "Generate a task@1 markdown from PRDs. Use when user asks to \"draft an FR\" or \"turn this PRD into a backlog\". Outputs versioned FR-NNN-slug.md files."` → `description_validator::validate` returns `Ok(())`.
+1. **Valid description with 2 triggers loads** — fixture `description-valid/SKILL.md` with `description: "Generate a task@1 markdown from PRDs. Use when user asks to \"draft a task\" or \"turn this PRD into a backlog\". Outputs versioned task-NNN-slug.md files."` → `description_validator::validate` returns `Ok(())`.
 2. **Description too short rejected** — 70-char description → `Err(TooShort { len: 70 })`.
 3. **Description too long rejected** — 1100-char description → `Err(TooLong { len: 1100 })`.
 4. **XML brackets in description rejected** — description containing `<untrusted>` → `Err(ForbiddenBrackets)`.
-5. **Description missing verb stem rejected** — `"Helps with FRs. Use when user says \"FR\" or \"backlog\"."` → `Err(MissingWhat)`.
-6. **Description with only 1 trigger rejected** — `"Generate FRs. Use when user asks to \"draft an FR\"."` (single quoted phrase) → `Err(InsufficientTriggers { found: 1, needed: 2 })`.
-7. **Description with 1 positive + 1 negative trigger rejected** — `"Generate FRs. Use when user asks to \"draft an FR\". Do NOT use for \"audit existing FRs\"."` → `Err(InsufficientTriggers { found: 1, needed: 2 })`. (Negative trigger doesn't count.)
-8. **Description with 2 positive + 1 negative trigger accepts** — `"Generate FRs. Use when user asks to \"draft an FR\" or \"turn this PRD into a backlog\". Do NOT use for \"audit existing FRs\"."` → `Ok(())`.
+5. **Description missing verb stem rejected** — `"Helps with tasks. Use when user says \"task\" or \"backlog\"."` → `Err(MissingWhat)`.
+6. **Description with only 1 trigger rejected** — `"Generate tasks. Use when user asks to \"draft a task\"."` (single quoted phrase) → `Err(InsufficientTriggers { found: 1, needed: 2 })`.
+7. **Description with 1 positive + 1 negative trigger rejected** — `"Generate tasks. Use when user asks to \"draft a task\". Do NOT use for \"audit existing tasks\"."` → `Err(InsufficientTriggers { found: 1, needed: 2 })`. (Negative trigger doesn't count.)
+8. **Description with 2 positive + 1 negative trigger accepts** — `"Generate tasks. Use when user asks to \"draft a task\" or \"turn this PRD into a backlog\". Do NOT use for \"audit existing tasks\"."` → `Ok(())`.
 9. **Folded YAML multi-line description flattened correctly** — `description: >-\n  Line one with first trigger \"phrase one\".\n  Line two with second trigger \"phrase two\".\n  Outputs X.\n` → flattened to single line and validated as if one-line; → `Ok(())`.
 10. **JSONSchema mirror agrees on length bounds** — running `ajv validate -s skill.schema.json -d <fixture>` against the same 4 length-test fixtures yields the same accept/reject pattern as the Rust validator.
 11. **CLI exit codes** — `cyberos skill validate <valid>` → 0; `cyberos skill validate <missing-triggers>` → 6 (SchemaViolation); `cyberos skill validate <too-short>` → 6.
@@ -313,7 +321,7 @@ cyberos skill validate-all --status-min accepted
 17. **Backfill exemplar — prd-author** — analogous, completing the 3 exemplars cited in the §6.1 of `modules/skill/ANTHROPIC_GUIDE_DIGEST.md`.
 18. **README Part 2.1 row updated** — the description-field row in Part 2.1 of `modules/skill/README.md` shows new min/max + cross-references TASK-SKILL-111.
 19. **task-audit skill §3.13 entry added** — new sub-rule "Description format" with example good + bad descriptions.
-20. **Cross-FR reciprocity preserved** — TASK-SKILL-103's `blocks:` list updated to include TASK-SKILL-111 (since 103 is the parent frontmatter spec).
+20. **Cross-task reciprocity preserved** — TASK-SKILL-103's `blocks:` list updated to include TASK-SKILL-111 (since 103 is the parent frontmatter spec).
 21. **OTel span emitted** — every validate call emits `skill.description.validate` with attributes `skill_id`, `outcome` (ok | too_short | too_long | forbidden_brackets | missing_what | insufficient_triggers), `length_chars`, `trigger_count`, `duration_ms`.
 
 ## §5 — Verification
@@ -325,39 +333,39 @@ use cyberos_skill_broker::frontmatter::description_validator::{validate, Descrip
 
 #[test]
 fn valid_description_with_two_triggers() {
-    let d = r#"Generate a task@1 markdown from PRDs. Use when user asks to "draft an FR" or "turn this PRD into a backlog". Outputs versioned FR-NNN-slug.md files with anti-fabrication discipline."#;
+    let d = r#"Generate a task@1 markdown from PRDs. Use when user asks to "draft a task" or "turn this PRD into a backlog". Outputs versioned task-NNN-slug.md files with anti-fabrication discipline."#;
     assert!(validate(d).is_ok());
 }
 
 #[test]
 fn too_short() {
-    let d = r#"Generate FRs. Use "draft" or "audit"."#; // 38 chars
+    let d = r#"Generate tasks. Use "draft" or "audit"."#; // 38 chars
     assert_eq!(validate(d).unwrap_err(), DescriptionViolation::TooShort { len: 38 });
 }
 
 #[test]
 fn too_long() {
     let d = "A".repeat(1100);
-    let d = format!(r#"Generate FRs. Use when user asks to "draft" or "audit". {d}"#);
+    let d = format!(r#"Generate tasks. Use when user asks to "draft" or "audit". {d}"#);
     let len = d.chars().count();
     assert_eq!(validate(&d).unwrap_err(), DescriptionViolation::TooLong { len });
 }
 
 #[test]
 fn forbidden_brackets() {
-    let d = r#"Generate <FR> markdowns. Use when user asks to "draft" or "audit"."#;
+    let d = r#"Generate <task> markdowns. Use when user asks to "draft" or "audit"."#;
     assert_eq!(validate(d).unwrap_err(), DescriptionViolation::ForbiddenBrackets);
 }
 
 #[test]
 fn missing_what_verb() {
-    let d = r#"Helps with FRs in the backlog. Useful when user says "FR" or "backlog" or "story". Returns markdown."#;
+    let d = r#"Helps with tasks in the backlog. Useful when user says "task" or "backlog" or "story". Returns markdown."#;
     assert_eq!(validate(d).unwrap_err(), DescriptionViolation::MissingWhat);
 }
 
 #[test]
 fn insufficient_triggers_single_positive() {
-    let d = r#"Generate FRs from a PRD source. Use when user asks to "draft an FR". Outputs versioned files in a structured backlog directory under output_dir."#;
+    let d = r#"Generate tasks from a PRD source. Use when user asks to "draft a task". Outputs versioned files in a structured backlog directory under output_dir."#;
     assert_eq!(
         validate(d).unwrap_err(),
         DescriptionViolation::InsufficientTriggers { found: 1, needed: 2 }
@@ -366,7 +374,7 @@ fn insufficient_triggers_single_positive() {
 
 #[test]
 fn negative_trigger_does_not_count() {
-    let d = r#"Generate FRs from a PRD source. Use when user asks to "draft an FR". Do NOT use for "audit existing FRs". Outputs versioned FR-NNN-slug.md files."#;
+    let d = r#"Generate tasks from a PRD source. Use when user asks to "draft a task". Do NOT use for "audit existing tasks". Outputs versioned task-NNN-slug.md files."#;
     assert_eq!(
         validate(d).unwrap_err(),
         DescriptionViolation::InsufficientTriggers { found: 1, needed: 2 }
@@ -375,25 +383,25 @@ fn negative_trigger_does_not_count() {
 
 #[test]
 fn two_positive_plus_one_negative_accepts() {
-    let d = r#"Generate FRs from a PRD source. Use when user asks to "draft an FR" or "turn this PRD into a backlog". Do NOT use for "audit existing FRs". Outputs versioned files."#;
+    let d = r#"Generate tasks from a PRD source. Use when user asks to "draft a task" or "turn this PRD into a backlog". Do NOT use for "audit existing tasks". Outputs versioned files."#;
     assert!(validate(d).is_ok());
 }
 
 #[test]
 fn folded_yaml_multiline_flattens() {
     // Simulate what serde_yaml emits after parsing a `description: >-` block.
-    let d = "Generate FRs from a PRD source. Use when user asks to\n\"draft an FR\" or \"turn this PRD into a backlog\".\nOutputs versioned files.";
+    let d = "Generate tasks from a PRD source. Use when user asks to\n\"draft a task\" or \"turn this PRD into a backlog\".\nOutputs versioned files.";
     assert!(validate(d).is_ok());
 }
 
 #[test]
 fn exact_floor_80_chars_with_two_triggers() {
     // Smallest valid string: exactly 80 chars including 2 triggers + verb.
-    let d = r#"Audit FRs. Use when user asks to "audit FR" or "check FR". Reports issues."#;
+    let d = r#"Audit tasks. Use when user asks to "audit task" or "check task". Reports issues."#;
     assert_eq!(d.chars().count(), 74); // sanity — below floor, should fail
     assert_eq!(validate(d).unwrap_err(), DescriptionViolation::TooShort { len: 74 });
 
-    let d = r#"Audit task@1 markdowns. Use when user asks to "audit an FR" or "check rubric". Reports per-rule verdicts."#;
+    let d = r#"Audit task@1 markdowns. Use when user asks to "audit a task" or "check rubric". Reports per-rule verdicts."#;
     assert!(d.chars().count() >= 80);
     assert!(validate(d).is_ok());
 }
@@ -432,7 +440,7 @@ fn jsonschema_mirror_agrees_on_length_bounds() {
 ```bash
 # Three new golden fixtures:
 acceptance/regression-2026-05-19-fm112-missing-triggers/
-  golden-input.json    # an FR-style fixture with frontmatter that fails FM-112
+  golden-input.json    # a task-style fixture with frontmatter that fails FM-112
   golden-output.audit.md   # expected audit report with one FM-112 issue
 ```
 
@@ -443,7 +451,7 @@ Most of the surface is in §3 (Rust types + validator + JSONSchema diff + audito
 1. **Validator wiring** — `services/skill-broker/src/frontmatter/validators.rs`'s top-level `validate(fm, body, broker_version)` calls `description_validator::validate(&fm.description)?` as the first check.
 2. **CLI integration** — `cyberos skill validate` already exists (TASK-SKILL-103 §3 CLI block). No change needed in the CLI itself — the new validator surfaces through the same `Err` path.
 3. **Auditor integration** — `task-audit/RUBRIC.md` is the lookup table; the auditor's 8-step loop (per `_template/audit/AUDIT_LOOP.md`) runs every rule including FM-112.
-4. **Lazy-backfill mechanic** — no automation. The new RUBRIC rule fires on `status: accepted` skills; first audit cycle after FR ship surfaces the issue; author addresses during normal fine-tune flow. No bulk sweep.
+4. **Lazy-backfill mechanic** — no automation. The new RUBRIC rule fires on `status: accepted` skills; first audit cycle after task ship surfaces the issue; author addresses during normal fine-tune flow. No bulk sweep.
 
 ## §7 — Dependencies
 
@@ -453,7 +461,7 @@ Most of the surface is in §3 (Rust types + validator + JSONSchema diff + audito
 **Blocks:** none (independent of TASK-SKILL-112 and TASK-SKILL-113).
 
 **Related:**
-- **TASK-SKILL-112** (trigger-tests-fixtures) — defines positive + negative trigger phrases per skill in `acceptance/TRIGGER_TESTS.md`. The two FRs are complementary: 111 puts triggers in the description; 112 validates the description's triggers against actual classifier behaviour. Either can ship first.
+- **TASK-SKILL-112** (trigger-tests-fixtures) — defines positive + negative trigger phrases per skill in `acceptance/TRIGGER_TESTS.md`. The two tasks are complementary: 111 puts triggers in the description; 112 validates the description's triggers against actual classifier behaviour. Either can ship first.
 - **TASK-SKILL-113** (XML-tag-free frontmatter — sketched only, not authored) — both 111 and 113 strengthen the host-portability surface. If 113 ships first, TASK-SKILL-111's §1 #4 becomes a duplicate check (acceptable; the duplicate is defensive). If 111 ships first, TASK-SKILL-113 still provides the broader sweep across `wrap_in:` and other fields.
 - **TASK-SKILL-101** (memory integration) — orthogonal; runs in a separate slice.
 - **AGENTS.md §15** — the SKILL.md scope contract referenced from the broker.
@@ -468,14 +476,14 @@ Most of the surface is in §3 (Rust types + validator + JSONSchema diff + audito
 ```yaml
 description: >-
   Generate a versioned task@1 markdown from one or more PRD/spec/SRS
-  documents. Use when user asks to "draft an FR", "turn this PRD into a backlog",
-  or "expand this spec into FRs". Halts at PLAN approval and HITL gates;
+  documents. Use when user asks to "draft a task", "turn this PRD into a backlog",
+  or "expand this spec into tasks". Halts at PLAN approval and HITL gates;
   resumable from manifest.json. Chains into task-audit by default.
-  Outputs FR-NNN-slug.md files with per-claim authority markers + provenance.
-  Do NOT use for "audit existing FRs" (use task-audit instead).
+  Outputs task-NNN-slug.md files with per-claim authority markers + provenance.
+  Do NOT use for "audit existing tasks" (use task-audit instead).
 ```
 
-Flattened length: ~478 chars. Triggers detected: 3 positive (`"draft an FR"`, `"turn this PRD into a backlog"`, `"expand this spec into FRs"`) + 1 negative (`"audit existing FRs"` after `Do NOT use for`). Verb stems: `generate`, `chain` (multiple). Verdict: **OK**.
+Flattened length: ~478 chars. Triggers detected: 3 positive (`"draft a task"`, `"turn this PRD into a backlog"`, `"expand this spec into tasks"`) + 1 negative (`"audit existing tasks"` after `Do NOT use for`). Verb stems: `generate`, `chain` (multiple). Verdict: **OK**.
 
 ### Example 2 — auditor issue block (FM-112 firing)
 
@@ -530,7 +538,7 @@ updated_at:      "2026-05-19T14:00:00Z"
 
 **All resolved during authoring.**
 
-Deferred to follow-up FRs (out of scope here):
+Deferred to follow-up tasks (out of scope here):
 - **TASK-SKILL-115** (placeholder — not yet specified): localised descriptions (`description_localized.<lang>`) for VN-locale skills. Per §1 #10. Phase P2+.
 - **TASK-SKILL-116** (placeholder — not yet specified): classifier-feedback loop — feed real user phrasings that triggered (or failed to trigger) each skill back into the description's trigger phrases. Phase P2+ when OBS dashboards have enough volume.
 
@@ -556,14 +564,14 @@ Deferred to follow-up FRs (out of scope here):
 ## §11 — Implementation notes
 
 - **Why not enforce trigger-phrase format at YAML-parse time?** Could be a JSONSchema regex, but that regex would be unwieldy (`(?s)^.*"[^"]+".*"[^"]+".*$` works for two but breaks on negative-trigger detection). Pushing this to the Rust validator gives us precise sub-code errors and keeps JSONSchema simple. The JSONSchema mirror handles length + bracket guard only; full semantic in Rust.
-- **Why 80-char floor and not 100?** Empirical. 74 chars (`"Audit FRs. Use when user asks to \"audit FR\" or \"check FR\". Reports issues."`) hits 2 trigger phrases + WHAT verb + brief value — but feels tight. 80 gives slack for a slightly longer outcome phrase. Below 80 the descriptions read as cryptic; above 80 they breathe.
+- **Why 80-char floor and not 100?** Empirical. 74 chars (`"Audit tasks. Use when user asks to \"audit task\" or \"check task\". Reports issues."`) hits 2 trigger phrases + WHAT verb + brief value — but feels tight. 80 gives slack for a slightly longer outcome phrase. Below 80 the descriptions read as cryptic; above 80 they breathe.
 - **Why verb-stem regex and not a model-based check?** Determinism. CI gates need byte-stable outcomes. A model-based "is this a verb-action description?" check would drift between model versions and break reproducibility. The regex is conservative (29 verb stems); operators extend it via PR when a legitimate new verb appears. False negatives are caught at audit (verdict: `needs_human` — operator can override).
 - **Why preserve `## When to invoke this skill` body section?** Three reasons in §1 #15 + §2 — but the deeper one is **audit-trail integrity**. The body is what the supervisor reads at classify_act; the frontmatter is what hosts read at level-1 discovery. The two serve different layers; merging them would force one or the other to compromise. Keeping both is a small cost.
 - **Lazy backfill is the right strategy.** A 104-pair sweep in one batch would consume ~30 hours and inject inconsistency into the audit ledger (every skill bumps `skill_version` in one commit batch). Lazy backfill — fire FM-112 only on `status: accepted`+ skills, surface during natural fine-tune — spreads the fix over 4-6 weeks of normal cadence. No big-bang risk.
 - **Two trigger-phrase forms is a floor, not a ceiling.** Skills with broad surface (e.g. `chain-selector`) may want 5+ triggers. The validator never complains about >2; it only complains about <2.
 - **Authors who hate the verb-stem regex** can propose extensions via PR + RUBRIC bump. The list is intentionally conservative — adding 50 verbs would let `Helps with X` slip through. A tight regex with a clear extension protocol is healthier than a permissive regex that admits anti-patterns.
-- **Cross-host portability is the load-bearing reason for this FR.** Inside CyberOS, the supervisor reads the body, and trigger-phrase placement doesn't matter. Outside CyberOS — Phase B transpilers, partner connectors, the eventual OCI registry per TASK-SKILL-102 — the host follows Anthropic's contract. TASK-SKILL-111 makes CyberOS skills portable on day one of Phase B without an emergency port-surface sweep.
-- **TASK-SKILL-112's TRIGGER_TESTS.md complements this FR**. Once both ship, the workflow becomes: description carries triggers (111) → TRIGGER_TESTS.md asserts the classifier matches those triggers (112) → CI catches drift. The two FRs are independent but together close the routing gap entirely.
+- **Cross-host portability is the load-bearing reason for this task.** Inside CyberOS, the supervisor reads the body, and trigger-phrase placement doesn't matter. Outside CyberOS — Phase B transpilers, partner connectors, the eventual OCI registry per TASK-SKILL-102 — the host follows Anthropic's contract. TASK-SKILL-111 makes CyberOS skills portable on day one of Phase B without an emergency port-surface sweep.
+- **TASK-SKILL-112's TRIGGER_TESTS.md complements this task**. Once both ship, the workflow becomes: description carries triggers (111) → TRIGGER_TESTS.md asserts the classifier matches those triggers (112) → CI catches drift. The two tasks are independent but together close the routing gap entirely.
 
 ---
 

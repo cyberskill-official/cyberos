@@ -17,7 +17,7 @@ scripts/doc-anchor-exemptions.txt (reasoned allowlist, chain-allowlist disciplin
 CHANGELOGs = historical record, runners/README = self-declared legacy, index.md GUIDE sources cite
 build-generated html). Sweep: 388 files repointed citation-strings-only; ship workflow v1.x stale
 note replaced with present-tense fact + chain-coverage citation; bare TBD reworded "future work,
-unscheduled (no FR yet)". CI: payload-gate.yml step (path filters already cover modules/skill/** +
+unscheduled (no task yet)". CI: payload-gate.yml step (path filters already cover modules/skill/** +
 modules/cuo/**). Templates (_template scaffolds) repointed to the live atlas with section mapping.
 
 ## recorded deviation (newest wins)
@@ -39,7 +39,7 @@ test_check_doc_anchors.sh 6/6; 7/7 cyberos-init suites; ship_manifest 8/8; live 
 341 references, exit 0. tests_failed=0.
 
 ## regression note (recorded, refinement queued)
-test_pair_parity t04 ("no SKILL.md lines removed vs HEAD") fired mid-flight on this FR's citation
+test_pair_parity t04 ("no SKILL.md lines removed vs HEAD") fired mid-flight on this task's citation
 swaps - a legitimate §1 #5 mutation class. Green at rest post-commit (worktree == HEAD). Third
 instance of the point-in-time-guard class (after 116's reduced-profile and 209's t08): t04 should
 scope to artefact-section heading ranges, per TASK-SKILL-118 §4 AC 4's original wording. Queued as a

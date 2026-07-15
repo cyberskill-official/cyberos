@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://cyberskill.world/schemas/plugin/manifest@1.json",
   "title": "CyberOS plugin manifest",
-  "description": "Canonical manifest for a CyberOS plugin bundle. Each per-runtime adapter (claude-code, cursor, cowork, codex-cli, ...) transforms this canonical form into the target's native install format. Authoritative version is in modules/plugin/manifest.schema.json; FR contract is TASK-PLUGIN-001.",
+  "description": "Canonical manifest for a CyberOS plugin bundle. Each per-runtime adapter (claude-code, cursor, cowork, codex-cli, ...) transforms this canonical form into the target's native install format. Authoritative version is in modules/plugin/manifest.schema.json; task contract is TASK-PLUGIN-001.",
   "type": "object",
   "required": [
     "schema_version",

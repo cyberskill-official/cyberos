@@ -2,8 +2,16 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future fr-catalog renderer) ─────
 id: TASK-AI-002
 title: "AI Gateway cost-ledger post-call reconcile"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AI
-priority: MUST
+priority: p0
 status: done
 accepted_at: 2026-05-15
 accepted_by: Stephen Cheng
@@ -72,7 +80,7 @@ The AI Gateway service **MUST** expose a `cost_ledger::reconcile(hold_id, outcom
 8. **SHOULD** emit a `cap_crossed_after_reconcile` event to OBS if `spent_usd` after update crosses the `monthly_cap_usd × warn_threshold` boundary (default 0.80). De-duplication: `cost_ledger.warn_emitted_at` MUST be set atomically with the threshold crossing; subsequent reconciles in the same period that further increase `spent_usd` MUST NOT emit again.
 9. **MUST** treat the provider's `finish_reason` as authoritative when constructing `CallOutcome`. If `finish_reason = "stop"`, the call is `Success` regardless of any client-disconnect signal. The `Cancelled` variant is reserved for cases where the provider did not return `finish_reason: stop`.
 
-This FR completes the two-phase cost-gate begun in TASK-AI-001. Once it ships, the AI Gateway provides true cost-of-everything accounting — no held budget leaks, no provider-error charges, no double-billing on idempotent retries.
+This task completes the two-phase cost-gate begun in TASK-AI-001. Once it ships, the AI Gateway provides true cost-of-everything accounting — no held budget leaks, no provider-error charges, no double-billing on idempotent retries.
 
 ---
 
@@ -423,14 +431,14 @@ fn compute_actual_cost(hold: &HoldRow, usage: &ProviderUsage) -> Result<Decimal,
 
 ## §7 — Dependencies
 
-**Code dependencies (must exist before this FR can build):**
-- TASK-AI-001 — shipped or building. This FR consumes `cost_ledger_hold` rows in `state='held'`.
-- TASK-AI-003 — at least the `memory_writer::emit_for_hold()` function signature stub. The actual chained-audit-row emission is TASK-AI-003's job; this FR depends on its signature.
+**Code dependencies (must exist before this task can build):**
+- TASK-AI-001 — shipped or building. This task consumes `cost_ledger_hold` rows in `state='held'`.
+- TASK-AI-003 — at least the `memory_writer::emit_for_hold()` function signature stub. The actual chained-audit-row emission is TASK-AI-003's job; this task depends on its signature.
 - Cost-table — for slice 1, the same hardcoded `const HashMap` used by TASK-AI-001 §6.
 
 **Concept dependencies:**
 - Idempotency-key semantics inherited from TASK-AI-001 (`UNIQUE (tenant_id, idempotency_key)` on `cost_ledger_hold`).
-- Cost-table source — see TASK-AI-001 §9 Q1 (resolution applies equally to this FR).
+- Cost-table source — see TASK-AI-001 §9 Q1 (resolution applies equally to this task).
 
 **Operational dependencies:**
 - Postgres at `DATABASE_URL` (same as TASK-AI-001).
@@ -571,8 +579,8 @@ All resolved 2026-05-15 (round 2). Promoted to §1/§4 normative clauses:
 - The 80ms p95 budget is ~30ms looser than precheck's 50ms because reconcile does more work (compute actual cost, transactional update, larger audit row). Both fit comfortably under the AI Gateway's overall 200ms p99 budget (NFR-AI-001).
 - memory row payload sizes (~600 bytes for `ai.invocation`) drive monthly storage estimates: at 100k AI calls/month per tenant × 600 bytes = 60 MB/tenant/month of audit rows. The compaction trigger (`AGENTS.md §7.6`: 5 MB / 5000 rows) will fire monthly per active tenant. This is expected and fine.
 - The `provider_request_id` field on the audit row is the primary join key for OBS — when a tenant reports "my call took forever", the OBS investigator looks up the `ai.invocation` row by tenant + time window, pulls the `provider_request_id`, then queries the provider's status API for the full trace.
-- After this FR ships, AI Gateway can serve the first dogfood call from CUO. CUO Phase 2 LLM (P1) cannot start until this two-phase gate is live.
-- The `expired` state branch is owned by TASK-AI-004 (cleanup job), not this FR. This FR only ensures `expired` rows are recognised as `AlreadyFinalised` on a late reconcile attempt.
+- After this task ships, AI Gateway can serve the first dogfood call from CUO. CUO Phase 2 LLM (P1) cannot start until this two-phase gate is live.
+- The `expired` state branch is owned by TASK-AI-004 (cleanup job), not this task. This task only ensures `expired` rows are recognised as `AlreadyFinalised` on a late reconcile attempt.
 - **Money-as-BIGINT-minor (task-audit skill §3.4 rule 11) — boundary confirmation:** `cost_ledger.estimated_cost_minor` and `actual_cost_minor` are `BIGINT` (i64) in the schema; the `Decimal × tokens` conversion happens at the boundary via `Currency::USD.decimals()` helper which rounds to the minor-unit precision (cents for USD, hundredths for VND). No `FLOAT`/`DOUBLE` anywhere in the storage path or hot-path computation. The rates themselves (TASK-AI-007's `rust_decimal::Decimal`) are constants — see TASK-AI-007 §11 for the rate-vs-storage boundary explanation. Future maintainers: do not "fix" `actual_cost_minor` to Decimal — currency arithmetic in BIGINT minor is required for SOX-level audit precision per task-audit skill §3.4.
 
 ---

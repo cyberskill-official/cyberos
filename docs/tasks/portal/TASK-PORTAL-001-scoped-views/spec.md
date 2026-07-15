@@ -1,8 +1,16 @@
 ---
 id: TASK-PORTAL-001
 title: "PORTAL scoped read-only views — PROJ/INV/DOC/CHAT filtered by Engagement membership + sync_class=client-visible + per-row redaction + GraphQL-style projection"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: PORTAL
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P4
@@ -676,7 +684,7 @@ All resolved for slice 1. Deferred:
 
 **§11.7** XLSX export uses `rust_xlsxwriter` crate; streaming write to bytes buffer.
 
-**§11.8** Rate limit per-caller via Redis sliding-window (consistent with all other PORTAL FRs).
+**§11.8** Rate limit per-caller via Redis sliding-window (consistent with all other PORTAL tasks).
 
 **§11.9** SQL view RLS via WHERE clause + current_setting — not separate POLICY because views inherit base-table policies but adding view-specific RLS predicate is clearer.
 

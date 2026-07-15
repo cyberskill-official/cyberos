@@ -24,7 +24,7 @@ class TaskWithSubtasksRunner(BaseSkillRunner):
     # Standalone-interview questions (mirrors STANDALONE_INTERVIEW.md).
     interview_questions = [
         ("target_sprint", "Which sprint? (current / next / unsequenced)", "unsequenced"),
-        ("ai_token_budget", "AI-agent token budget per FR?", 30000),
+        ("ai_token_budget", "AI-agent token budget per task?", 30000),
         ("risk_tier_ceiling", "Max EU AI Act tier? (minimal/limited/high_risk)", "limited"),
     ]
 
@@ -78,7 +78,7 @@ Emit ONE `task@1` markdown file using the NEW shape (Batch A, 2026-05-12).
 
 ```yaml
 ---
-task_id: FR-001
+task_id: TASK-001
 title: <one-sentence title>
 profile: solo
 project: <project-slug>
@@ -102,7 +102,7 @@ Frontmatter is for tools; tasks live as body H2 sections below.
 ## Body
 
 The body has these H2 sections in order:
-1. `# FR-NNN — <Title>` (one H1 right after the closing `---`)
+1. `# TASK-NNN — <Title>` (one H1 right after the closing `---`)
 2. `## Problem statement` — 1-3 paragraphs of prose
 3. `## Users` — primary / secondary / tertiary as a paragraph or short list
 4. `## Success metrics` — bullet list of measurable targets
@@ -111,7 +111,7 @@ The body has these H2 sections in order:
 7. `## EU AI Act classification` — single short paragraph naming the risk class
 8. `## Total estimated effort` — short paragraph: N hours human + M tokens AI
 
-Then ONE H2 per task: `## FR-NNN-T-MM — <Task title>`. Inside each task section:
+Then ONE H2 per task: `## TASK-NNN-T-MM — <Task title>`. Inside each task section:
 
 - Description prose (>= 200 chars, multiple paragraphs OK).
 - `**Preconditions:**` followed by `- bullet` list (or `- none`).
@@ -120,7 +120,7 @@ Then ONE H2 per task: `## FR-NNN-T-MM — <Task title>`. Inside each task sectio
 - A fenced `task-meta` block (info-string literally `task-meta`) carrying YAML:
   ```task-meta
   sizing: S | M | L | XL
-  dependencies: [FR-NNN-T-MM, ...]
+  dependencies: [TASK-NNN-T-MM, ...]
   parallelisable: true | false
   assignable_to: [human] | [ai-agent] | [human, ai-agent]
   agent_profile: <profile-id>    # required when ai-agent in assignable_to
@@ -180,12 +180,12 @@ Output ONLY the artefact body starting with `---`. No commentary, no surrounding
             if tasks:
                 findings.append({"invariant": "shape-legacy",
                                  "severity": "WARN",
-                                 "fix_hint": "FR uses legacy frontmatter-tasks shape; "
+                                 "fix_hint": "task uses legacy frontmatter-tasks shape; "
                                              "regenerate with body H2 sections per Batch A"})
         if not tasks:
             findings.append({"invariant": "INV-001",
                              "severity": "CRITICAL",
-                             "fix_hint": "FR must declare tasks as body `## FR-NNN-T-MM —` "
+                             "fix_hint": "task must declare tasks as body `## TASK-NNN-T-MM —` "
                                          "H2 sections OR a frontmatter `tasks:` list"})
             return findings
         if not isinstance(tasks, list):
@@ -203,10 +203,10 @@ Output ONLY the artefact body starting with `---`. No commentary, no surrounding
                                  "fix_hint": f"task[{i}] must be a dict"})
                 continue
             tid = t.get("id", "")
-            if not re.match(r"^FR-\d+-T-\d{2}$", tid):
+            if not re.match(r"^TASK-\d+-S-\d{2}$", tid):
                 findings.append({"invariant": "INV-003",
                                  "severity": "WARN",
-                                 "fix_hint": f"task[{i}].id {tid!r} must match FR-NNN-T-MM"})
+                                 "fix_hint": f"task[{i}].id {tid!r} must match TASK-NNN-T-MM"})
             if tid in task_ids:
                 findings.append({"invariant": "INV-003-dup",
                                  "severity": "CRITICAL",

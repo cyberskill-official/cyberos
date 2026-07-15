@@ -22,7 +22,7 @@ CyberOS has more than 8 distinct concerns (16 are enumerated below), but they cl
 ### Three design constraints driving every pick
 
 1. **Vietnamese data sovereignty** - no SaaS dependency where Vietnamese-origin personal data must travel through a US-based vendor's servers. AWS Bedrock is acceptable because of the ap-southeast-1 region; OpenAI direct is not (no Singapore endpoint).
-2. **Cost ceiling at scale** - <= $150/mo LLM + $230/mo infra at 10-Member internal; <= $4/active user/mo LLM + $2,200/mo infra at 50-tenant (N(FR pending), N(FR pending)). Anything that does not fit that envelope is rejected.
+2. **Cost ceiling at scale** - <= $150/mo LLM + $230/mo infra at 10-Member internal; <= $4/active user/mo LLM + $2,200/mo infra at 50-tenant (N(task pending), N(task pending)). Anything that does not fit that envelope is rejected.
 3. **Migration door always open** - every pick has a documented escape hatch. Storage is S3-compatible (DEC-005), so R2 <-> MinIO <-> AWS S3 is a config flip. SQL is portable, the audit chain is exportable, MCP servers are spec-conforming.
 
 ## Tier 1 - Persona / agent layer
@@ -79,9 +79,9 @@ Each module ships as an MF remote bundle. The host shell lazy-loads on route ent
 
 #### NFR ceilings
 
-- N(FR pending) - module first-paint <= 1.5 s on cold load
-- N(FR pending) - initial module bundle <= 50 KB gzipped JS
-- N(FR pending) - module-rebuild time on token change <= 30 min including tests
+- N(task pending) - module first-paint <= 1.5 s on cold load
+- N(task pending) - initial module bundle <= 50 KB gzipped JS
+- N(task pending) - module-rebuild time on token change <= 30 min including tests
 
 ## Tier 4 - API gateway (GraphQL Federation)
 
@@ -135,8 +135,8 @@ One gateway, one cost ledger, one residency policy. Routes between Bedrock prima
 
 #### Cost ceiling
 
-- N(FR pending) - <= $150/mo internal LLM
-- N(FR pending) - <= $4/active user/mo at 50-tenant
+- N(task pending) - <= $150/mo internal LLM
+- N(task pending) - <= $4/active user/mo at 50-tenant
 - Semantic + exact-prompt cache >= 30% hit rate
 - Self-hosted BGE-M3 embeddings on a shared GPU node (~$80/mo for GPU)
 
@@ -197,7 +197,7 @@ BGE-M3 produces 1024-dim dense + sparse + multi-vector embeddings in one pass. M
 
 #### NFR ceilings
 
-- N(FR pending) - memory search <= 250 ms p95 on 1M chunks
+- N(task pending) - memory search <= 250 ms p95 on 1M chunks
 - Embed p95 <= 80 ms; rerank p95 <= 200 ms
 - End-to-end retrieve: embed + pgvector + rerank <= 250 ms p95
 
@@ -253,7 +253,7 @@ memory's audit ledger uses an MMR for additive inclusion proofs. Each consolidat
 - memory audit chain - every memory operation appends a leaf; STH signed per consolidation.
 - AuditEvent - per-scope Merkle chain; prevHash chained.
 - DEC-019 - Merkle-chained audit log invariant.
-- N(FR pending) - memory signed-zip portability: Ed25519 sig + Merkle proof.
+- N(task pending) - memory signed-zip portability: Ed25519 sig + Merkle proof.
 
 ## Tier 14 - Audit ledger encoding
 
@@ -299,13 +299,13 @@ OPA enforces Rego policies across Kubernetes manifests, GraphQL operation direct
 - Astro - static site generator with MDX support
 - Auth - NDA click-wrap before downloading reports (AUTH module integration)
 - Signed URLs - 24-hour TTL via R2 presigned URLs
-- Audit - every download logged for N(FR pending) compliance
+- Audit - every download logged for N(task pending) compliance
 
 ## Tier 16 - Typography and design tokens
 
 Pick: Be Vietnam Pro (UI) + JetBrains Mono (code) + CyberSkill Global Design System v1.0.0.
 
-Be Vietnam Pro is the diacritic-aware, Vietnamese-first typeface; Design System Part 5 specifies stack-fidelity (N(FR pending)). Tokens are exported in W3C DTCG format (2025.10) for cross-platform consumption (Style Dictionary, Tailwind via a PostCSS plugin, iOS/Android, Figma).
+Be Vietnam Pro is the diacritic-aware, Vietnamese-first typeface; Design System Part 5 specifies stack-fidelity (N(task pending)). Tokens are exported in W3C DTCG format (2025.10) for cross-platform consumption (Style Dictionary, Tailwind via a PostCSS plugin, iOS/Android, Figma).
 
 #### Token surface
 
@@ -332,7 +332,7 @@ The same graph in prose: users and agents reach the host shell (Vite + React 19)
 
 Two reference scales - 10 Members internal (P0-P2) and 50 tenants (P4 GA). Each tier's contribution maps to a hard NFR ceiling.
 
-Where the dollar goes at internal scale (the $535/mo N(FR pending) envelope):
+Where the dollar goes at internal scale (the $535/mo N(task pending) envelope):
 
 | Share | Line item | $/mo |
 |---|---|---|
@@ -345,7 +345,7 @@ Where the dollar goes at internal scale (the $535/mo N(FR pending) envelope):
 | 4% | NATS (single-node JetStream) | $20 |
 | 1% | CDN + auth | $10 |
 
-Internal scale (10 Members): total <= $530/mo against the N(FR pending) budget of $530/mo ($150 LLM + $380 infra). 50-tenant scale: LLM $800, Postgres (3 regions) $600, compute (k8s) $500, storage $200, OBS $200, NATS (cluster) $100, AUTH $50, GPU embed $200 - total <= $2,650/mo against the N(FR pending) budget of $2,200/mo + $4/user/mo LLM.
+Internal scale (10 Members): total <= $530/mo against the N(task pending) budget of $530/mo ($150 LLM + $380 infra). 50-tenant scale: LLM $800, Postgres (3 regions) $600, compute (k8s) $500, storage $200, OBS $200, NATS (cluster) $100, AUTH $50, GPU embed $200 - total <= $2,650/mo against the N(task pending) budget of $2,200/mo + $4/user/mo LLM.
 
 ### Per-tier production cost (P1 exit, P4 mid projections)
 
@@ -379,7 +379,7 @@ Five major architectural picks deserve an explicit alternatives table. Each reje
 | Postgres + pgvector HNSW | One DB; transactional embed-writes; structural joins; cheap; VN tokenisation via PGroonga | Operational complexity (more extensions); ~10% slower than a dedicated vector DB at very large scale | SELECTED |
 | Pinecone | Best-in-class recall; managed; horizontal scaling | Vendor lock; egress fees; no Singapore region; not transactional with the source of truth | Rejected - sovereignty + cost |
 | Weaviate | OSS; multi-modal; GraphQL native | Memory-heavy; Janus runtime; embedded mode not prod-grade for 1M+ chunks | Rejected - operational cost |
-| Qdrant | Rust-native; fast; OSS | Two-system writes still required; smaller community | Reconsider if pgvector p95 fails N(FR pending) |
+| Qdrant | Rust-native; fast; OSS | Two-system writes still required; smaller community | Reconsider if pgvector p95 fails N(task pending) |
 | Milvus / Zilliz | Scales to billions; cloud-native | K8s-heavy ops; same two-system issue | Out of scope for 10-50 tenant scale |
 
 ### Apollo Federation v2 - vs REST / gRPC / single GraphQL

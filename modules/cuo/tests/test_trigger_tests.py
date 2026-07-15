@@ -96,31 +96,31 @@ min_confidence: 0.7
 # ─── Paraphrase-distinct tests ──────────────────────────────────────────────────
 
 def test_paraphrase_distinct_close_variants_rejected():
-    # "draft an FR" vs "draft a FR" — 1 char diff
-    assert not are_paraphrase_distinct("draft an FR", "draft a FR")
-    # "draft FR" vs "draft FRs" — 1 char diff
-    assert not are_paraphrase_distinct("draft FR", "draft FRs")
+    # "draft a task" vs "draft a task" — 1 char diff
+    assert not are_paraphrase_distinct("draft a task", "draft a task")
+    # "draft task" vs "draft tasks" — 1 char diff
+    assert not are_paraphrase_distinct("draft task", "draft tasks")
     # Identical — distance 0, not distinct
-    assert not are_paraphrase_distinct("draft an FR", "draft an FR")
+    assert not are_paraphrase_distinct("draft a task", "draft a task")
 
 
 def test_paraphrase_distinct_real_paraphrases_accepted():
     assert are_paraphrase_distinct(
-        "draft an FR",
+        "draft a task",
         "turn this PRD into a backlog",
     )
     assert are_paraphrase_distinct(
-        "audit this FR",
-        "check the rubric on this FR",
+        "audit this task",
+        "check the rubric on this task",
     )
 
 
 def test_check_paraphrase_distinct_finds_duplicates():
-    phrases = ["draft an FR", "draft a FR", "turn this PRD into a backlog"]
+    phrases = ["draft a task", "draft a task", "turn this PRD into a backlog"]
     failures = check_paraphrase_distinct(phrases)
     assert len(failures) == 1
     a, b, d = failures[0]
-    assert a == "draft an FR" and b == "draft a FR"
+    assert a == "draft a task" and b == "draft a task"
     assert d <= 3
 
 

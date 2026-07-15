@@ -1,10 +1,10 @@
 # OBS module — task index
 
-_Generated 2026-05-17 — 9 FRs, 82 engineering-hours total._
+_Generated 2026-05-17 — 9 tasks, 82 engineering-hours total._
 
-## FRs
+## tasks
 
-| FR | Priority | Slice | Hours | Title |
+| Task | Priority | Slice | Hours | Title |
 |---|---|---|---:|---|
 | [TASK-OBS-001](TASK-OBS-001-otel-collector/spec.md) | MUST | 1 | 10 | OTel Collector + LGTM stack (Loki + Prometheus + Tempo + Grafana) with mTLS ingress + per-service to |
 | [TASK-OBS-002](TASK-OBS-002-tenant-aware-grafana/spec.md) | MUST | 1 | 12 | Tenant-aware Grafana proxy (Rust) — AST-injects tenant_id into PromQL/LogQL/TraceQL with anti-bypass |

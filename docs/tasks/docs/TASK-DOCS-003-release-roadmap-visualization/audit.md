@@ -13,7 +13,7 @@ template: engineering-spec@1
 
 ## §1 - Verdict summary
 
-Audited for doctrine fit with TASK-DOCS-002 (generated, deterministic, dependency-free, never committed) and for the integrity of a page that visualizes the FR corpus itself. The timestamp/determinism conflict and the silent-drop of invalid statuses were the two real defects; both closed. Traceability closes over t01-t08 in tools/docs-site/tests/test_render_roadmap.sh.
+Audited for doctrine fit with TASK-DOCS-002 (generated, deterministic, dependency-free, never committed) and for the integrity of a page that visualizes the task corpus itself. The timestamp/determinism conflict and the silent-drop of invalid statuses were the two real defects; both closed. Traceability closes over t01-t08 in tools/docs-site/tests/test_render_roadmap.sh.
 
 ## §2 - Findings (all resolved)
 
@@ -48,9 +48,9 @@ All six findings addressed as cited. Depends on TASK-DOCS-002 (reviewing) as dec
   target as deploy.yml); commit 3747f4c. Phase artefacts: docs/tasks/.workflow/TASK-DOCS-003/.
 - Review: human verdict at gate 1 APPROVE + pre-authorize done (Stephen Cheng, in-chat).
 - Testing: test_render_roadmap.sh 8/8 (one per AC), 8/8 repo suites, live build green
-  (486 FRs / 18 releases / VERSION 0.1.0, page in nav). Gate 2 recorded per pre-authorization.
-- Field finding queued: regen_backlog read_fm silently skips 42 yaml-invalid FRs (444 vs 486) -
-  next-batch FR to make the skip loud and repair the files. The roadmap's invalid-status bucket is
+  (486 tasks / 18 releases / VERSION 0.1.0, page in nav). Gate 2 recorded per pre-authorization.
+- Field finding queued: regen_backlog read_fm silently skips 42 yaml-invalid tasks (444 vs 486) -
+  next-batch task to make the skip loud and repair the files. The roadmap's invalid-status bucket is
   live as the corpus data-quality monitor (§11).
 
 Verdict unchanged: PASS, Score = 10/10.

@@ -9,7 +9,7 @@ verdict: pass (implementation-plan-audit: every matrix row addressed, patterns f
 
 Slices (each maps to §1 clauses and matrix rows):
 1. check-version-sync.sh - 6 readers, exit contract 0/10/2, tool probes (rows 3,6,7,8,9,12; §1 #1).
-2. tests/test_check_version_sync.sh - t01..t10 per FR §5 (all rows).
+2. tests/test_check_version_sync.sh - t01..t10 per task §5 (all rows).
 3. payload-gate.yml - push+PR, 4 path filters, build-into-temp + check (§1 #2, #6; row 11 backstop).
 4. build.sh guard - remove `|| echo 0.0.0`, regex-gate VERSION (§1 #3; rows 1,2,4,10).
 5. .githooks/pre-commit wrapper - trigger match -> engine rebuild -> check; failure aborts commit (§1 #4).

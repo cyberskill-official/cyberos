@@ -1,8 +1,16 @@
 ---
 id: TASK-PROJ-005
 title: "Rate-card schema per Engagement — (role × currency × hourly_rate × billable_default) with effective-date versioning and TASK-AUTH-003 RLS"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: PROJ
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -99,7 +107,7 @@ The rate-card layer **MUST** persist per-engagement billing rates with effective
 
 **Why minor units in BIGINT (§1 #1)?** Floats are unsafe for money (0.1 + 0.2 ≠ 0.3). VND/JPY have 0 decimals → minor = whole. USD/SGD/EUR have 2 → minor = cents. Storage as BIGINT covers up to 9.2 quintillion minor — far beyond any conceivable hourly rate.
 
-**Why 6 canonical roles (§1 #2)?** Empirical from VN consultancy market: engineer + designer + PM + QA + analyst covers ~95% of billable roles; exec for senior advisory. More granular roles (senior-vs-junior engineer) belong in `Member.tier` (different FR), not rate cards.
+**Why 6 canonical roles (§1 #2)?** Empirical from VN consultancy market: engineer + designer + PM + QA + analyst covers ~95% of billable roles; exec for senior advisory. More granular roles (senior-vs-junior engineer) belong in `Member.tier` (different task), not rate cards.
 
 **Why only `billable_default` mutable (§1 #7)?** The rate is the contractual artifact — once a rate-card is referenced by a billable entry, changing it would be retroactive fraud. The default flag is a UX hint ("when creating a new task in this engagement, default-bill it") — changing it doesn't change historical entries.
 
@@ -476,7 +484,7 @@ All resolved. Deferred:
 - `hourly_rate_minor` is BIGINT (signed i64) — supports up to ~9.2 quintillion minor units. JPY at 0 decimals + i64 covers any conceivable rate.
 - The partial-unique index on `(engagement_id, role, currency) WHERE effective_to IS NULL` enforces "≤ 1 active card per cell" without preventing historical rows.
 - `effective_to = effective_from + 1 day` would be cleaner (closed-open interval) but Postgres DATE arithmetic makes the half-open `effective_to > $at` query natural; we use closed-open.
-- The `Currency::decimals()` helper is used by TASK-PROJ-007 + FR-INV when rendering amounts; minor unit display formula = `value / 10^decimals`.
+- The `Currency::decimals()` helper is used by TASK-PROJ-007 + task-INV when rendering amounts; minor unit display formula = `value / 10^decimals`.
 - Idempotency uses the same `admin_idempotency_keys` table pattern as TASK-AUTH-001.
 - Concurrency: `FOR UPDATE` lock on prior card row prevents two callers from both reading "no prior" and both inserting.
 - Audit row currency stored as enum string (matches CHECK constraint).

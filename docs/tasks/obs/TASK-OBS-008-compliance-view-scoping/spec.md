@@ -1,8 +1,16 @@
 ---
 id: TASK-OBS-008
 title: "obs-compliance-view: pre-built read-only views (EU AI Act / PDPL / SOC 2 / ISO 27001) over memory audit chain with Ed25519 chain-proof + tenant-scoped + PDF/JSON export"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: OBS
-priority: MUST
+priority: p0
 status: implementing
 verify: T
 phase: P0
@@ -133,7 +141,7 @@ A read-only HTTP service `obs-compliance-view` **MUST** expose pre-built complia
 
 **Why 30s p95 budget (§1 #8)?** Auditors expect responsive tooling. Above 30s, the audit experience degrades; auditors workaround by exporting raw chain data (which compromises the view's value-add).
 
-**Why 365-day max window (§1 #6)?** Multi-year queries balloon response size + render time. 365 days covers annual audit cycles; longer queries paginate. The cap is conservative; raising requires explicit FR amendment.
+**Why 365-day max window (§1 #6)?** Multi-year queries balloon response size + render time. 365 days covers annual audit cycles; longer queries paginate. The cap is conservative; raising requires explicit task amendment.
 
 **Why per-engagement JWT TTL (§1 #13)?** Standard 1-hour JWTs would force auditors to refresh constantly. 30-day TTL covers a typical engagement window. Per-engagement issuance + rotation prevents stale auditor access.
 
@@ -404,9 +412,9 @@ See §3.
 
 ## §7 — Dependencies
 
-- **TASK-OBS-002** — Tenant-aware query proxy (this FR's tenant scoping inherits the pattern).
+- **TASK-OBS-002** — Tenant-aware query proxy (this task's tenant scoping inherits the pattern).
 - **TASK-AUTH-004** — JWT verification.
-- **TASK-OBS-009** — chain-of-custody manifest (TASK-OBS-008 surfaces backup attestations from this FR).
+- **TASK-OBS-009** — chain-of-custody manifest (TASK-OBS-008 surfaces backup attestations from this task).
 - memory module's `query` API + `current_signed_tree_head` API.
 - Crates: `axum`, `ed25519-dalek@2`, `wkhtmltopdf` (or `weasyprint` Python binding), `serde`, `chrono`, `base64`, `hex`.
 
@@ -518,7 +526,7 @@ All resolved. Deferred:
 - Per-engagement auditor JWT (30-day TTL) covers typical engagement; rotation prevents stale access.
 - Tenant-scoping at the query layer (RLS) + 403 on tenant_id query param = defense in depth.
 - PII placeholders in audit chain (TASK-AUTH-002 + TASK-AI-014) + regex scan at view-time = defense in depth.
-- 365-day max window is conservative; larger requires explicit FR amendment.
+- 365-day max window is conservative; larger requires explicit task amendment.
 - The auditor self-audit (`obs.compliance_view_accessed`) means even compliance reviews of the auditor have evidence.
 - PDF export uses wkhtmltopdf — battle-tested; alternative weasyprint (Python) also viable. Pin version.
 

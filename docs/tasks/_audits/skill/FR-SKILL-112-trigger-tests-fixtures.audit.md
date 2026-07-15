@@ -12,7 +12,7 @@ authoring_md_compliance: 2026-05-19 (per task-audit skill §3.12 — 8 canonical
 
 ## §1 — Verdict summary
 
-TASK-SKILL-112 authored direct-to-10/10 with one mid-loop expansion (negative-trigger pools added in §1 #6). ~700 lines. 15 §1 normative clauses (fixture file required + frontmatter schema + body sections + count floors + paraphrase-distinct + negative-trigger pools + Python entry point + CI integration + graceful degradation + auditor severity + lazy backfill + authoring-notes source attribution + Layer 1.5 pyramid update + byte-stability + min_confidence relationship). 12 §2 rationale paragraphs. Full Python module + fixture format + auditor rule + 3 example payloads + CI exit-code contract in §3. 23 numbered ACs. 8 pytest functions with parametric coverage. 14 failure modes. 11 implementation notes. Cross-FR reciprocity verified (depends_on: TASK-SKILL-103, TASK-CUO-101).
+TASK-SKILL-112 authored direct-to-10/10 with one mid-loop expansion (negative-trigger pools added in §1 #6). ~700 lines. 15 §1 normative clauses (fixture file required + frontmatter schema + body sections + count floors + paraphrase-distinct + negative-trigger pools + Python entry point + CI integration + graceful degradation + auditor severity + lazy backfill + authoring-notes source attribution + Layer 1.5 pyramid update + byte-stability + min_confidence relationship). 12 §2 rationale paragraphs. Full Python module + fixture format + auditor rule + 3 example payloads + CI exit-code contract in §3. 23 numbered ACs. 8 pytest functions with parametric coverage. 14 failure modes. 11 implementation notes. Cross-task reciprocity verified (depends_on: TASK-SKILL-103, TASK-CUO-101).
 
 ## §2 — Findings (all resolved during authoring)
 
@@ -44,7 +44,7 @@ Draft §3 Python module didn't address ordering: `run_all` walks `glob("**/accep
 
 All 8 mechanical concerns addressed during authoring. **Score = 10/10.** Ready to ship + transition `draft → accepted`.
 
-Cross-FR sanity check:
+Cross-task sanity check:
 - `depends_on: [TASK-SKILL-103, TASK-CUO-101]` — both exist (103 accepted per `cyberos/docs/tasks/skill/TASK-SKILL-103-frontmatter-extension.audit.md`; 101 status per BACKLOG.md). Reciprocity update for both parents queued for a housekeeping commit per task-audit skill §3.1 rule 2.
 - `related_tasks:` enumerates TASK-SKILL-111 (complementary — descriptions enrichment), TASK-CUO-101 (classifier dependency), TASK-CUO-103 (LLM router future), TASK-SKILL-103 (parent frontmatter spec).
 - TASK-SKILL-111 + TASK-SKILL-112 are intentionally independent — neither blocks the other; together they close the routing-portability gap.

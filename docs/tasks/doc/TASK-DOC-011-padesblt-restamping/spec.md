@@ -1,8 +1,16 @@
 ---
 id: TASK-DOC-011
 title: "DOC PAdES-B-LT format + year-9 LTV re-stamping — extend B-T signatures with validation data + re-timestamp before signature/TS authority expires"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: DOC
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P2

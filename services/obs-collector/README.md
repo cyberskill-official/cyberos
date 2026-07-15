@@ -5,7 +5,7 @@ Implements [`docs/tasks/obs/TASK-OBS-001..009`](../../docs/tasks/obs/) — OTel 
 
 ## Status (2026-05-19 wave)
 
-| FR | Title | Status |
+| Task | Title | Status |
 |---|---|---|
 | **TASK-OBS-001** | OTel collector + LGTM backends + PII scrub + bearer-token auth | **building** (slice-1 scaffold shipped: canonical otelcol-contrib config + bearer-token file format + supervisor CLI with `validate-config` + `validate-tokens` subcommands + self-metric name constants + tests; remaining: actual otelcol process supervision + Helm/docker-compose for the LGTM backends — landing next session) |
 | TASK-OBS-002 | Grafana tenant-aware query proxy (Rust) | pending |
@@ -59,7 +59,7 @@ Slice 1 baseline (TASK-OBS-001 §1 #13): 6.5 vCPU · 11.5 GB RAM · 100 GB disk 
 | Loki | 2 | 4 GB | 30-day retention floor |
 | Prometheus | 2 | 4 GB | 90-day retention floor |
 | Tempo | 1 | 2 GB | 7-day retention floor (sampled 30d via TASK-OBS-006) |
-| Grafana | 0.5 | 0.5 GB | Datasources provisioned at this FR; dashboards via TASK-OBS-002 |
+| Grafana | 0.5 | 0.5 GB | Datasources provisioned at this task; dashboards via TASK-OBS-002 |
 
 The Helm chart + docker-compose files land at `deploy/obs/` in the next-session ship; this scaffold's job is the validated config + supervisor surface that those charts will consume.
 

@@ -2,7 +2,7 @@
 
 ## Situation
 Implementation shipped in commit f62b018 ("feat(chat): UGC controls - reporting, blocking, moderation
-queue") by a prior session, but the FR never left ready_to_implement - discovered when the ship queue
+queue") by a prior session, but the task never left ready_to_implement - discovered when the ship queue
 selected it. This packet is the clause-by-clause verification of the EXISTING code; nothing was
 re-implemented.
 

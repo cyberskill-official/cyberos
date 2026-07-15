@@ -6,7 +6,7 @@ Run: 2026-07-13, ship-tasks v2.4.0. `queue: picked TASK-APP-006 (priority=SHOULD
 
 - **Patterns:** gated dispatch + unconditional guard/anchor job (batch convention); `gh release download` + hash re-derivation against the always-on `desktop` job's artifacts; split-pattern self-excluding guards (release-snap.yml precedent).
 - **Grounding:** repo slug + `releases/download/v<ver>/<file>` URL shape confirmed from tauri.conf.json's production updater endpoint; `v<semver>` tag convention from release.yml; pre-existing submission-command matches in `.github/`+`tools/`: **0** (verified before authoring).
-- **Blast radius:** 6 new files across 3 new dirs; `modified_files: []` honored. Outside-domain: 2 → **ADR skipped**. **Mocks skipped** — external monorepos are human-gated submission targets, not services this FR calls.
+- **Blast radius:** 6 new files across 3 new dirs; `modified_files: []` honored. Outside-domain: 2 → **ADR skipped**. **Mocks skipped** — external monorepos are human-gated submission targets, not services this task calls.
 
 ## Steps 5–6 — edge-case matrix
 
@@ -17,7 +17,7 @@ Run: 2026-07-13, ship-tasks v2.4.0. `queue: picked TASK-APP-006 (priority=SHOULD
 | 3 | malformed | placeholder survives a render | explicit post-render asserts (grep computed-SHA present + placeholder absent) — proven in dry-run |
 | 4 | malformed | sed pattern misses a field after manifest refactor | same asserts catch it (draft without this run's SHA fails) |
 | 5 | security | submission command added under any flag | AC #3 standing guard, checks (a)+(b), split patterns so it never matches itself — proven clean including against my own new workflow |
-| 6 | security | PAT provisioned prematurely / over-scoped | no PAT exists in this FR; future-FR scoping rule documented (answer sheet + spec §11) |
+| 6 | security | PAT provisioned prematurely / over-scoped | no PAT exists in this task; future-task scoping rule documented (answer sheet + spec §11) |
 | 7 | bounds | tag with/without leading `v` | `VER="${TAG#v}"` normalization in both jobs |
 | 8 | regression | flags coupled in future refactor | two independent `if:` conditions + per-job AC #4 assertions |
 | 9 | degradation | `--clobber` re-upload staling an earlier run's hash | ecosystem-side hash verification rejects (never silently accepted); re-run-before-submit rule in answer sheet (spec §10) |
@@ -40,10 +40,10 @@ Both prep jobs echo `tag/version/sha` before rendering; every assert prints a na
 
 - `ruby -c` cask manifest: **Syntax OK** (real interpreter).
 - YAML parses ×4 (3 winget files + workflow): **PASS**.
-- AC #3 checks (a) and (b): **PASS** (0 matches repo-wide, including this FR's own additions).
+- AC #3 checks (a) and (b): **PASS** (0 matches repo-wide, including this task's own additions).
 - **Render dry-run (both ecosystems) with a fake artifact: PASS** — version/URL/sha substituted, placeholders eliminated, outputs still valid ruby/YAML, asserts fire.
 - AC #1 (`brew audit/style`) + AC #2 (`winget validate`): **expected-pending** — tools unavailable here; both are pre-PR requirements in the answer sheet, run against RENDERED drafts.
 - AC #8 (NSIS `/S` real test): **pending-human** (needs a Windows machine + real installer).
-- AC #7: manual secret assert (no scan gate yet — TASK-IMP-003 draft); zero credentials referenced at all in this FR.
+- AC #7: manual secret assert (no scan gate yet — TASK-IMP-003 draft); zero credentials referenced at all in this task.
 
 *End phase bundle.*

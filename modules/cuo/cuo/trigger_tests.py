@@ -191,17 +191,32 @@ def classify(phrase: str) -> SkillRoutingResult:
     """
     try:
         from cuo.core.router import route as _route
+        from cuo.core.catalog import discover_personas
     except ImportError:
         return SkillRoutingResult(skill_id=None, workflow_slug=None, confidence=0.0)
 
-    decision = _route(phrase)
+    # BUG (fixed 2026-07-14): this called `_route(phrase)`, but route() takes
+    # (query, personas). Every call raised TypeError, so the adapter to the LIVE
+    # classifier has never once run — the trigger tests monkeypatch `classify`, so
+    # the breakage was invisible. Trigger-test coverage of the real router was 0%
+    # while reporting 29 passing tests.
+    cuo_root = Path(__file__).resolve().parents[1]   # .../modules/cuo/cuo/trigger_tests.py -> modules/cuo
+    personas = discover_personas(cuo_root)
+    decision = _route(phrase, personas)
     if decision is None or decision.confidence < 0.1:
         return SkillRoutingResult(skill_id=None, workflow_slug=None, confidence=0.0)
 
     # Resolve the entry skill from the routed workflow's skill_chain.
+    #
+    # BUG (fixed 2026-07-14): this called `discover_workflows(cuo_root)`, but the
+    # signature is `discover_workflows(persona: PersonaEntry)`. It raised
+    # AttributeError, which the bare `except` below swallowed, so classify() returned
+    # skill_id=None for EVERY phrase. Third independent break in this one function —
+    # and every one of them was invisible because the trigger tests monkeypatch
+    # `classify` rather than exercising it.
     try:
         from cuo.core.catalog import discover_workflows
-        workflows = discover_workflows()
+        workflows = [wf for persona in personas for wf in discover_workflows(persona)]
         for wf in workflows:
             if wf.persona == decision.persona_slug and wf.slug == decision.workflow_slug:
                 if wf.skill_chain:

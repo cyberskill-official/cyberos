@@ -1,10 +1,17 @@
 ---
 id: TASK-TPL-001
 title: "templates module - CDS-adapted HTML shells (template@1) every workflow/skill renders deliverables through"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-07-12T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: templates
-priority: MUST
+priority: p0
 status: done
-class: product
 verify: T
 phase: Wave D - visual deliverables
 owner: Stephen Cheng (CTO)

@@ -2,8 +2,16 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future fr-catalog renderer) ─────
 id: TASK-AI-017
 title: "Per-tenant Redis response cache keyed by (tenant × redacted-prompt × model × persona); ≥30% hit-rate P0 target"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AI
-priority: SHOULD
+priority: p1
 status: done
 verify: T
 phase: P0
@@ -75,7 +83,7 @@ subtasks:
   - "0.5h: Cache warming hook at boot (no-op for slice 4; documented for future)"
   - "0.5h: Redis-unreachable graceful degradation (lookup returns None; insert silently drops)"
   - "0.5h: Tests: 16 ACs covering hit/miss/cross-tenant/TTL/streaming-skip/failure-skip/property-test/workload-sim"
-risk_if_skipped: "Every call hits the LLM provider. At 100k calls/month × $0.001/call avg = $100/tenant/month — well above the $4/user target. Cost-of-everything gate becomes economically unsustainable; CyberOS unit economics break before 100 customers. Worse: the per-tenant cache is a dependency of TASK-AI-018 (cross-tenant leak test); without this FR, TASK-AI-018's tests can't even be authored."
+risk_if_skipped: "Every call hits the LLM provider. At 100k calls/month × $0.001/call avg = $100/tenant/month — well above the $4/user target. Cost-of-everything gate becomes economically unsustainable; CyberOS unit economics break before 100 customers. Worse: the per-tenant cache is a dependency of TASK-AI-018 (cross-tenant leak test); without this task, TASK-AI-018's tests can't even be authored."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -701,19 +709,19 @@ pub mod canonical {
 
 ## §7 — Dependencies
 
-### Code dependencies (other FRs/modules)
+### Code dependencies (other tasks/modules)
 
 - **TASK-AI-008** — `router::call_provider` returns the `ProviderResponse` shape consumed by `cache::insert`.
 - **TASK-AI-001** — `cost_ledger::precheck` runs before cache lookup; `cost_ledger::reconcile_hit` zero-cost path.
-- **TASK-AI-002** — `ai.invocation` memory row schema declares `cache_state` field; this FR populates it.
+- **TASK-AI-002** — `ai.invocation` memory row schema declares `cache_state` field; this task populates it.
 - **TASK-AI-011** — Redacted prompt is the cache-key input. The redaction MUST run BEFORE key derivation.
 - **TASK-AI-014** — Persona handle (`<id>@<version>`) is part of the cache key. Persona changes auto-invalidate by key divergence.
-- **TASK-AI-018 (downstream)** — Cross-tenant cache leak test; consumes this FR's per-tenant isolation invariant as its property under test.
+- **TASK-AI-018 (downstream)** — Cross-tenant cache leak test; consumes this task's per-tenant isolation invariant as its property under test.
 - **TASK-AI-022 (downstream)** — Cache-warming hooks (slice 4 ships a no-op stub).
 
 ### Concept dependencies (shared types)
 
-- `CacheKey::derive(tenant_id, redacted_prompt, model, persona_handle)` — the four-input cryptographic key derivation. Changes to the input set require explicit FR amendment.
+- `CacheKey::derive(tenant_id, redacted_prompt, model, persona_handle)` — the four-input cryptographic key derivation. Changes to the input set require explicit task amendment.
 - `CACHE_SCHEMA_VERSION = "v1"` — the schema-version primitive; bumps invalidate old entries cleanly.
 - TTL table in `cache/ttl.rs` is the single source of truth for per-alias TTL; new aliases extend it.
 - Per-tenant prefix `ai_cache:v1:{tenant_id}:` is the structural isolation invariant tested in TASK-AI-018.
@@ -810,9 +818,9 @@ WARN  tenant=tenant_beta hit_rate=0.18 floor=0.30 window=7d
 
 ## §9 — Open questions
 
-All resolved at authoring time. Items deferred to later FRs:
+All resolved at authoring time. Items deferred to later tasks:
 
-- Cache warming at boot (preload likely-asked prompts) — slice 5; no-op stub in this FR.
+- Cache warming at boot (preload likely-asked prompts) — slice 5; no-op stub in this task.
 - Per-alias-class hit-rate target (chat.fast might warrant 50% floor; embed.* might warrant 70%) — TASK-AI-022.
 - Semantic cache (embedding-distance lookup; "what's the weather?" hits "How's the weather?") — out of scope; current model is exact-prompt-match-only.
 - Cross-region cache replication (replicate hot entries between SG and EU Redis instances for residency-aware tenants) — TASK-AI-016 area; current cache is single-region per gateway instance.
@@ -828,7 +836,7 @@ All resolved at authoring time. Items deferred to later FRs:
 | Redis timeout (>200ms) | `tokio::time::timeout` fires | `Error(Timeout)`; same handler path as Unreachable | Investigate Redis load; possibly add replicas |
 | Cache schema version mismatch | `lookup` reads payload, `schema_version != "v1"` | `SchemaMismatch` returned; handler treats as miss | Self-resolves as old entries expire; metric tracks volume |
 | Serialisation/deserialisation failure | `serde_json` error in `lookup` | `Error(Deserialisation)`; metric increments | Operator investigates payload corruption; clear cache if widespread |
-| Cross-tenant leak (key derivation bug) | proptest in `cache_property_test.rs` (THIS FR) + TASK-AI-018 (dedicated cross-tenant test FR) | PR blocked on test failure | Fix `CacheKey::derive` |
+| Cross-tenant leak (key derivation bug) | proptest in `cache_property_test.rs` (THIS task) + TASK-AI-018 (dedicated cross-tenant test task) | PR blocked on test failure | Fix `CacheKey::derive` |
 | Cache size > 100MB per tenant | Redis MEMORY USAGE; Redis-managed eviction | LRU evicts oldest entries; `ai_cache_evictions_total{reason=lru}` | Self-resolves; operator monitors eviction rate |
 | Hit rate < 30% over 7 days | `ai_cache_hit_rate{tenant_id}` gauge | Sev-3 OBS alarm | Operator investigates: prompt diversity? Cold cache? Persona churn? |
 | Persona version churn (frequent edits) | Cache invalidates on every persona-bump; hit rate drops | Hit-rate alarm | By design (correctness > hit rate); operator considers persona stability |
@@ -857,7 +865,7 @@ All resolved at authoring time. Items deferred to later FRs:
 - The 100MB per-tenant budget × ~100 tenants slice 4 = 10GB Redis allocation. At slice 5+ scale (1000 tenants), the budget needs revisiting OR per-tenant Redis namespaces. The current monolithic Redis is a deliberate slice-4 simplification.
 - `allkeys-lru` policy was chosen over `volatile-lru` because every cache entry has a TTL — there are no "permanent" entries to spare. Eviction is purely usage-recency based, which matches the cost-of-everything intuition (recent calls are likely to recur).
 - The graceful-degradation-on-Redis-down path (§1 #14) is the operability primitive. The cache should be helpful (when up), never critical (when down). The alternative — refusing requests when Redis is down — would convert a Redis outage into a gateway outage.
-- The cross-tenant property test in this FR (§5) is the BASELINE; TASK-AI-018 is the DEDICATED cross-tenant leak FR with adversarial scenarios (1000s of tenants, race conditions, malicious tenant_id strings). TASK-AI-018 is downstream and EXTENDS this FR's correctness floor.
+- The cross-tenant property test in this task (§5) is the BASELINE; TASK-AI-018 is the DEDICATED cross-tenant leak task with adversarial scenarios (1000s of tenants, race conditions, malicious tenant_id strings). TASK-AI-018 is downstream and EXTENDS this task's correctness floor.
 - The cache-warming hook (§1 #16) ships as a no-op stub. Slice 4 doesn't have hit-rate data showing where warming would pay off; TASK-AI-022 implements warming based on the trend analysis. The stub exists so the wiring is in place for the future implementation.
 - Persona-handle inclusion in the cache key (§1 #3) means a single-byte change to a persona prompt (via TASK-AI-014's hot-reload) invalidates the entire cache for that persona. The trade-off is correctness > hit rate: a stale-persona response served from cache would violate TASK-AI-014's hash-tamper-detect contract anyway. Operators should batch persona edits to avoid hit-rate dips.
 

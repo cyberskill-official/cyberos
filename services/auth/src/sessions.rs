@@ -10,7 +10,7 @@
 //! The table lives in the shared auth Postgres database; RLS pins each
 //! row to its `tenant_id` so tenant-admin cannot enumerate other tenants'
 //! active jtis. The `cyberos_ops` BYPASSRLS role is used only by the
-//! reaper job (future FR), never by request-path code.
+//! reaper job (future task), never by request-path code.
 
 use chrono::{DateTime, Utc};
 use sqlx::{Postgres, Transaction};

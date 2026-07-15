@@ -1,8 +1,16 @@
 ---
 id: TASK-DOC-001
 title: "DOC Document repository — S3 Object-Lock Compliance bucket + per-tenant residency pinning + versioned + ACL'd + 10-year retention + hash-chained audit"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: DOC
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P4
@@ -106,7 +114,7 @@ subtasks:
   - "0.5h: handlers/documents.rs — REST surface"
   - "1.5h: tests — 11 test files covering bucket-scope closure, residency pinning, Object-Lock, audit chain integrity, legal hold dual-signoff, access audit emission, GDPR erasure with hold, cross-scope move rejection"
 
-risk_if_skipped: "Every downstream DOC FR (TASK-DOC-002 eIDAS QTSP, TASK-DOC-003 AATL CA, TASK-DOC-004 VNeID + VN CA, TASK-DOC-005 multi-party signing, TASK-DOC-007 lifecycle metadata, TASK-DOC-010 DocuSign import) needs the repository to store + retrieve documents. Without DEC-280's Object-Lock Compliance mode, the 'retention is non-negotiable' guarantee is paper — a malicious root admin can DELETE. Without DEC-281's residency pinning, VN tenants' contracts cross border (Decree 53/2022 violation); EU contracts violate GDPR if stored in non-EU regions. Without DEC-283's hash-chained audit, signature-tamper detection is impossible. Without DEC-285's dual-signoff for LegalHold, litigation hold becomes a single-operator action (subpoena response could leak via individual misuse). The 8h effort lands the legally-defensible storage primitives on which signing law depends."
+risk_if_skipped: "Every downstream DOC task (TASK-DOC-002 eIDAS QTSP, TASK-DOC-003 AATL CA, TASK-DOC-004 VNeID + VN CA, TASK-DOC-005 multi-party signing, TASK-DOC-007 lifecycle metadata, TASK-DOC-010 DocuSign import) needs the repository to store + retrieve documents. Without DEC-280's Object-Lock Compliance mode, the 'retention is non-negotiable' guarantee is paper — a malicious root admin can DELETE. Without DEC-281's residency pinning, VN tenants' contracts cross border (Decree 53/2022 violation); EU contracts violate GDPR if stored in non-EU regions. Without DEC-283's hash-chained audit, signature-tamper detection is impossible. Without DEC-285's dual-signoff for LegalHold, litigation hold becomes a single-operator action (subpoena response could leak via individual misuse). The 8h effort lands the legally-defensible storage primitives on which signing law depends."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -166,7 +174,7 @@ The DOC service **MUST** ship the document repository as the foundational storag
     - On apply: S3 `put_object_legal_hold` with `Status=ON`; `legal_hold=true` in metadata; `doc.legal_hold_applied` row.
     - On release: same shape; `Status=OFF`; `doc.legal_hold_released` row.
 
-13. **MUST** block GDPR/PDPL erasure requests while `legal_hold=true` (per §1 #12 + GDPR Art. 17). Erasure handler (placeholder; slice 2) calls `is_erasure_blocked(doc_id) -> bool` from this FR; true → erasure refused with reason `legal_hold_active`. This FR ships the predicate; the erasure handler ships in FR-DOC-2xx.
+13. **MUST** block GDPR/PDPL erasure requests while `legal_hold=true` (per §1 #12 + GDPR Art. 17). Erasure handler (placeholder; slice 2) calls `is_erasure_blocked(doc_id) -> bool` from this task; true → erasure refused with reason `legal_hold_active`. This task ships the predicate; the erasure handler ships in task-DOC-2xx.
 
 14. **MUST** forbid cross-bucket-scope moves (per DEC-292). A `BEFORE UPDATE` trigger on `document_metadata` rejects `UPDATE ... SET bucket_scope = <different>` with `cross_scope_move_forbidden`. Once uploaded to `hr_contracts`, the doc cannot be migrated to `generic`; the keyspace + retention policy + RBAC scope are bound.
 
@@ -188,7 +196,7 @@ The DOC service **MUST** ship the document repository as the foundational storag
 
 19. **MUST** support idempotent creation via `Idempotency-Key` header (same semantics as TASK-AUTH-002 §1 #6).
 
-20. **MUST** scope RBAC permissions per bucket_scope (per TASK-AUTH-101): caller MUST have `Resource::DocDocument + Action::Write` for the specific scope. Slice 1 ships scope as a single resource; per-scope refinement (HR vs CRM scope override) lands in FR-DOC-2xx via scope_grants.
+20. **MUST** scope RBAC permissions per bucket_scope (per TASK-AUTH-101): caller MUST have `Resource::DocDocument + Action::Write` for the specific scope. Slice 1 ships scope as a single resource; per-scope refinement (HR vs CRM scope override) lands in task-DOC-2xx via scope_grants.
 
 21. **MUST** emit OTel span `doc.{upload,version,archive,download,legal_hold,acl_change}` with attributes: `tenant_id`, `document_id`, `bucket_scope`, `status`, `outcome` (success | invalid_scope | residency_mismatch | integrity_mismatch | legal_hold_blocked | not_found | permission_denied | object_lock_apply_failed | etag_mismatch).
 
@@ -238,9 +246,9 @@ The DOC service **MUST** ship the document repository as the foundational storag
 
 **Why access emits sev-2 audit (DEC-290, §1 #23, §1 #11)?** Document access is a forensically-relevant event — "did Person A read Person B's contract on Date X?". Sev-2 means it goes through TASK-OBS-007's operator digest. Routine high-volume access (e.g. operations dashboard auto-fetching every contract) would create noise; the `purpose` requirement filters trivial cases (caller must supply a purpose; routine systems use a stable purpose code).
 
-**Why `parent_object_id` is a soft-typed FK (§1 #1)?** The doc may belong to an HR contract (TASK-HR-002), a CRM deal (TASK-CRM-004), an ESOP grant (TASK-ESOP-001), a vendor agreement (FR-OPS-vendor-2xx). Cross-service FKs are complex; soft-typing on `parent_object_id` + `bucket_scope` together identifies the owner, queried via the appropriate module's API.
+**Why `parent_object_id` is a soft-typed FK (§1 #1)?** The doc may belong to an HR contract (TASK-HR-002), a CRM deal (TASK-CRM-004), an ESOP grant (TASK-ESOP-001), a vendor agreement (task-OPS-vendor-2xx). Cross-service FKs are complex; soft-typing on `parent_object_id` + `bucket_scope` together identifies the owner, queried via the appropriate module's API.
 
-**Why max 500 MB per document (§1 #1)?** Above this size the upload latency makes the UX intolerable; the use cases (PDF contracts, scanned KYC docs, signed images) fit well below 500 MB. Larger media goes to a different path (FR-MEDIA-* — out of scope). The CHECK constraint prevents the table from accidentally accepting GB-sized uploads.
+**Why max 500 MB per document (§1 #1)?** Above this size the upload latency makes the UX intolerable; the use cases (PDF contracts, scanned KYC docs, signed images) fit well below 500 MB. Larger media goes to a different path (task-MEDIA-* — out of scope). The CHECK constraint prevents the table from accidentally accepting GB-sized uploads.
 
 **Why `s3_key` includes the document UUID (§1 #1, implicit in s3 upload)?** Stable + collision-free + opaque. The key shape is `<tenant_uuid>/<scope>/<doc_uuid>` (e.g. `5e8f1d2a-.../hr_contracts/01HG7V8...`). Listing operations are filtered server-side by tenant_uuid prefix; collisions are impossible (UUID v4).
 
@@ -252,7 +260,7 @@ The DOC service **MUST** ship the document repository as the foundational storag
 
 **Why `purpose` required on GET (§1 #23)?** Forces the caller to declare why they're reading the document. Operators see "Person A read Person B's contract for purpose: kyc_review" — actionable; without purpose, the audit row would say "Person A read Person B's contract" — context-free.
 
-**Why slice 1 ships only the storage primitive (not signing, not lifecycle)?** Storage is the foundation; signing (TASK-DOC-002/003/004) and lifecycle (TASK-DOC-007) build on it. Splitting concerns keeps each FR focused. The storage primitive alone is useful: it can hold HR contracts, CRM contracts, vendor agreements as draft/in_signing/archived documents — signing comes later but the storage works without it.
+**Why slice 1 ships only the storage primitive (not signing, not lifecycle)?** Storage is the foundation; signing (TASK-DOC-002/003/004) and lifecycle (TASK-DOC-007) build on it. Splitting concerns keeps each task focused. The storage primitive alone is useful: it can hold HR contracts, CRM contracts, vendor agreements as draft/in_signing/archived documents — signing comes later but the storage works without it.
 
 ---
 
@@ -800,7 +808,7 @@ async fn chain_integrity_enforced(pool: sqlx::PgPool) {
 **Cross-module:**
 - **TASK-AUTH-003** — RLS enforcement.
 - **TASK-AI-003** — memory audit bridge; receives the 8 `doc.*` audit row kinds.
-- **TASK-AI-016** — residency policy; this FR consumes the per-tenant residency tag.
+- **TASK-AI-016** — residency policy; this task consumes the per-tenant residency tag.
 - **TASK-MEMORY-111** — PII scrubbing on `event_payload` fields containing PII (e.g. names in reason).
 
 ---
@@ -904,8 +912,8 @@ Deferred:
 - **Renewal proposal CUO draft** — TASK-DOC-009.
 - **DocuSign / Adobe Sign / HelloSign import** — TASK-DOC-010.
 - **PAdES-B-LT format with re-stamping** — TASK-DOC-011.
-- **GDPR erasure handler** — FR-DOC-2xx; this FR ships the `is_erasure_blocked` predicate.
-- **Per-scope RBAC refinement via scope_grants** — FR-DOC-2xx.
+- **GDPR erasure handler** — task-DOC-2xx; this task ships the `is_erasure_blocked` predicate.
+- **Per-scope RBAC refinement via scope_grants** — task-DOC-2xx.
 
 All other questions resolved.
 
@@ -923,7 +931,7 @@ All other questions resolved.
 | Residency resolver returns unknown tenant | `ResidencyError::Unknown` | 500 | Provision tenant residency |
 | Residency mismatch handler-side | mismatch check | 400 `residency_mismatch` | None — designed |
 | SHA-256 mismatch at finalize | client supplied vs S3 ETag | 409 `integrity_mismatch` | Re-upload |
-| Byte size > 500MB | DB CHECK | 400 | Use FR-MEDIA-* path |
+| Byte size > 500MB | DB CHECK | 400 | Use task-MEDIA-* path |
 | Legal hold without dual-signoff | handler validates roles | 400 `signer_role_mismatch` | Add appropriate signer |
 | Legal hold self-co-sign | handler check | 400 `self_co_sign` | Use distinct signers |
 | Case reference too short | handler validation | 400 `case_reference_invalid` | Provide 5–200 char ref |
@@ -934,7 +942,7 @@ All other questions resolved.
 | Subject deleted while metadata references created_by | FK RESTRICT | DELETE auth.subjects fails | Designed |
 | S3 PutObject failed mid-upload | client gets 5xx from S3 | Document stuck in draft | 24h cleanup via S3 lifecycle |
 | AWS region not available (outage) | aws-sdk timeout | 500 with outage info | Wait + retry |
-| KMS key disabled | aws-sdk error on PUT | 500 `kms_disabled` | Re-enable key or rotate per FR-AUTH-2xx |
+| KMS key disabled | aws-sdk error on PUT | 500 `kms_disabled` | Re-enable key or rotate per task-AUTH-2xx |
 | Audit log replay reveals broken chain | application chain re-hash | sev-1 alarm | Investigate; manual repair |
 | Object-Lock Compliance applied incorrectly (Governance instead) | aws-sdk response check | sev-1 alarm | Replay with correct mode |
 | GDPR erasure with active hold | `is_erasure_blocked` returns true | 403 `legal_hold_active` | Defer erasure; document the deferral |
@@ -947,7 +955,7 @@ All other questions resolved.
 | LegalHold release without dual-signoff | handler validates roles same as apply | 400 | Provide CLO + CSO |
 | Audit log filesize growth | partition by month | OK | None |
 | RLS bypass attempt | `USING` predicate | 0 rows | None — designed |
-| `parent_object_id` references deleted object | soft FK; no enforcement | Stale reference | Periodic cleanup job (FR-DOC-2xx) |
+| `parent_object_id` references deleted object | soft FK; no enforcement | Stale reference | Periodic cleanup job (task-DOC-2xx) |
 
 ---
 
@@ -964,7 +972,7 @@ All other questions resolved.
 - **GDPR/PDPL erasure blocked under hold** — this is the legal trump (litigation > data minimisation under most jurisdictions). The `is_erasure_blocked` predicate is the contract for the erasure handler.
 - **Access audit at sev-2** — every read is forensically relevant; the `purpose` requirement filters trivial cases.
 - **`parent_object_id` soft-typed** — bucket_scope identifies the owner module; cross-service FK enforcement is operationally complex.
-- **500 MB max** — covers PDFs + scanned images + signed documents. Larger media (video, audio attachments) goes through FR-MEDIA-*.
+- **500 MB max** — covers PDFs + scanned images + signed documents. Larger media (video, audio attachments) goes through task-MEDIA-*.
 - **S3 lifecycle cleanup of orphaned drafts at 24h** — uploads that never finalize get garbage-collected; metadata stays as draft until finalize or 24h expiry.
 - **Retention computation uses `INTERVAL '<years>' year`** — leap-year aware via Postgres date math; deterministic.
 - **`alias/<bucket-name>`** is the KMS alias convention — operations on the alias resolve to the current key version (supports rotation without app changes).
@@ -975,7 +983,7 @@ All other questions resolved.
 - **`case_reference` 5–200 chars** — long enough for internal case numbers, short enough to discourage prose narrative.
 - **`OBS sev-1 alarm on PutObjectRetention failure`** — Object-Lock-Compliance is critical; failure to apply is a sev-1 (the doc was supposed to be locked).
 - **`Mode=COMPLIANCE` is the only valid mode** — Governance mode is forbidden by spec; if a future migration changes it, the CI gate should fail.
-- **`signature_event_log` (TASK-DOC-002/003/004)** — those FRs add their own per-signature audit kinds; this FR ships only `doc.signed` as a placeholder.
+- **`signature_event_log` (TASK-DOC-002/003/004)** — those tasks add their own per-signature audit kinds; this task ships only `doc.signed` as a placeholder.
 - **`document_metadata.kms_key_id`** is the actual key id used at write — recorded for forensic verification + rotation-safety.
 
 ---

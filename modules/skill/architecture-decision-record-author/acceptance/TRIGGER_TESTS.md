@@ -17,7 +17,7 @@ classifier_version: 3.0.0-a4
 
 - "Audit this existing ADR for completeness" → architecture-decision-record-audit
 - "Review the technical merit of ADR-007" → architecture-decision-record-audit
-- "Draft a tech spec from this FR" → software-design-document-author
+- "Draft a tech spec from this task" → software-design-document-author
 - "What's the team holiday schedule?" → none
 
 ## Authoring notes

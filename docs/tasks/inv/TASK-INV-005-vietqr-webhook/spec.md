@@ -1,8 +1,16 @@
 ---
 id: TASK-INV-005
 title: "INV VietQR / Napas247 webhook handler — HMAC-SHA256 signature + idempotent receipt insert + reference memo parsing + append-only ledger + memory audit"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: INV
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P2
@@ -48,7 +56,7 @@ new_files:
   - services/inv/src/parser/memo.rs                             # transfer_memo → invoice_id parser (regex)
   - services/inv/src/repo/payment_receipts.rs                   # append-only writer
   - services/inv/src/repo/webhook_secrets.rs                    # secret CRUD + rotation
-  - services/inv/src/audit/inv_events.rs                        # canonical inv.* memory row builders (5 kinds for this FR)
+  - services/inv/src/audit/inv_events.rs                        # canonical inv.* memory row builders (5 kinds for this task)
   - services/inv/src/types.rs                                   # PaymentReceipt, BankCode (15) enum, ReceiptSource enum
   - services/inv/tests/vietqr_webhook_happy_test.rs             # valid HMAC + new TXN → 200 + payment_receipts row + memory row
   - services/inv/tests/vietqr_webhook_hmac_test.rs              # invalid signature → 401 + inv.webhook_rejected
@@ -99,7 +107,7 @@ risk_if_skipped: "Without VietQR/Napas247 webhook capture, every VN-domestic pay
 
 The INV service **MUST** ship the VietQR / Napas247 webhook handler at `POST /v1/inv/webhooks/vietqr/{tenant_slug}` with HMAC-SHA256 signature verification + idempotent receipt insertion + reference memo parsing. Each requirement:
 
-1. **MUST** define `payment_receipts` table with: `id UUID PRIMARY KEY`, `tenant_id UUID NOT NULL`, `receipt_source receipt_source NOT NULL` (closed enum: `vietqr_napas247` for this FR; `stripe`/`wise` for TASK-INV-003/004), `bank_code bank_code NOT NULL` (closed enum per DEC-384), `transaction_reference TEXT NOT NULL` (Napas247 TXN ref; idempotency key), `amount_minor BIGINT NOT NULL CHECK (amount_minor > 0)` (đồng; per DEC-386), `currency CHAR(3) NOT NULL CHECK (currency = 'VND')`, `sender_account TEXT` (PII; scrubbed in audit), `sender_name TEXT` (PII; scrubbed in audit), `transfer_memo TEXT`, `invoice_id UUID REFERENCES invoices(id)` (nullable; populated by memo parser OR TASK-INV-006 cash application), `received_at TIMESTAMPTZ NOT NULL`, `napas_payload_sha256 CHAR(64) NOT NULL` (hash of original webhook body for forensic replay), `webhook_ts TIMESTAMPTZ NOT NULL` (timestamp claimed by Napas247), `created_at TIMESTAMPTZ NOT NULL DEFAULT now()`. UNIQUE `(tenant_id, transaction_reference)`.
+1. **MUST** define `payment_receipts` table with: `id UUID PRIMARY KEY`, `tenant_id UUID NOT NULL`, `receipt_source receipt_source NOT NULL` (closed enum: `vietqr_napas247` for this task; `stripe`/`wise` for TASK-INV-003/004), `bank_code bank_code NOT NULL` (closed enum per DEC-384), `transaction_reference TEXT NOT NULL` (Napas247 TXN ref; idempotency key), `amount_minor BIGINT NOT NULL CHECK (amount_minor > 0)` (đồng; per DEC-386), `currency CHAR(3) NOT NULL CHECK (currency = 'VND')`, `sender_account TEXT` (PII; scrubbed in audit), `sender_name TEXT` (PII; scrubbed in audit), `transfer_memo TEXT`, `invoice_id UUID REFERENCES invoices(id)` (nullable; populated by memo parser OR TASK-INV-006 cash application), `received_at TIMESTAMPTZ NOT NULL`, `napas_payload_sha256 CHAR(64) NOT NULL` (hash of original webhook body for forensic replay), `webhook_ts TIMESTAMPTZ NOT NULL` (timestamp claimed by Napas247), `created_at TIMESTAMPTZ NOT NULL DEFAULT now()`. UNIQUE `(tenant_id, transaction_reference)`.
 
 2. **MUST** declare the closed `receipt_source` Postgres enum with exactly 3 values: `'vietqr_napas247'`, `'stripe'`, `'wise'`. Adding a 4th source is an ADR.
 
@@ -751,7 +759,7 @@ Deferred:
 - **Multi-currency webhooks** — TASK-INV-003 Stripe + TASK-INV-004 Wise.
 - **Per-tenant rate limiting on webhook endpoint** — slice 3 (currently rely on edge rate limiter).
 - **Webhook secret rotation UI** — slice 3.
-- **Bank-specific transaction_reference formats** — FR-INV-2xx if needed.
+- **Bank-specific transaction_reference formats** — task-INV-2xx if needed.
 
 All other questions resolved.
 

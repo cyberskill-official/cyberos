@@ -13,11 +13,11 @@
       "properties": {
         "fr_written": {
           "type": "object",
-          "description": "Emitted by cuo/cpo/task-author on subject cuo.fr_author.fr_written for every FR markdown successfully written.",
+          "description": "Emitted by cuo/cpo/task-author on subject cuo.fr_author.fr_written for every task markdown successfully written.",
           "required": ["task_id", "fr_path", "fr_hash", "manifest_path", "trace_id", "ts"],
           "additionalProperties": false,
           "properties": {
-            "task_id":         {"type": "string", "pattern": "^FR-\\d{3}$"},
+            "task_id":         {"type": "string", "pattern": "^task-\\d{3}$"},
             "fr_path":       {"type": "string", "minLength": 1},
             "fr_hash":       {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
             "manifest_path": {"type": "string", "minLength": 1},
@@ -27,11 +27,11 @@
         },
         "batch_complete": {
           "type": "object",
-          "description": "Emitted by cuo/cpo/task-author on subject cuo.fr_author.batch_complete after a WORKER batch finishes. Lists every FR written this batch + a manifest pointer.",
+          "description": "Emitted by cuo/cpo/task-author on subject cuo.fr_author.batch_complete after a WORKER batch finishes. Lists every task written this batch + a manifest pointer.",
           "required": ["fr_ids", "manifest_path", "trace_id", "ts", "next_skill_recommendation"],
           "additionalProperties": false,
           "properties": {
-            "fr_ids":                     {"type": "array", "items": {"type": "string", "pattern": "^FR-\\d{3}$"}, "minItems": 1},
+            "fr_ids":                     {"type": "array", "items": {"type": "string", "pattern": "^task-\\d{3}$"}, "minItems": 1},
             "manifest_path":              {"type": "string", "minLength": 1},
             "trace_id":                   {"type": "string", "format": "uuid"},
             "ts":                         {"type": "string", "format": "date-time"},
@@ -57,7 +57,7 @@
           "required": ["task_id", "audit_path", "audited_file_sha256", "verdict", "trace_id", "ts"],
           "additionalProperties": false,
           "properties": {
-            "task_id":               {"type": "string", "pattern": "^FR-\\d{3}$"},
+            "task_id":               {"type": "string", "pattern": "^task-\\d{3}$"},
             "audit_path":          {"type": "string", "minLength": 1},
             "audited_file_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
             "verdict":             {"type": "string", "enum": ["pass", "fail", "needs_human", "stale", "exhausted"]},
@@ -71,7 +71,7 @@
           "required": ["fr_ids", "summary_path", "verdicts", "trace_id", "ts"],
           "additionalProperties": false,
           "properties": {
-            "fr_ids":       {"type": "array", "items": {"type": "string", "pattern": "^FR-\\d{3}$"}, "minItems": 1},
+            "fr_ids":       {"type": "array", "items": {"type": "string", "pattern": "^task-\\d{3}$"}, "minItems": 1},
             "summary_path": {"type": "string", "minLength": 1},
             "verdicts":     {"type": "object", "additionalProperties": {"type": "string", "enum": ["pass", "fail", "needs_human", "stale", "exhausted"]}},
             "trace_id":     {"type": "string", "format": "uuid"},

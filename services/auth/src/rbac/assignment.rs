@@ -210,7 +210,7 @@ pub async fn revoke_role(
 
 /// Parse the caller's effective Role membership from the JWT.
 /// TASK-AUTH-101 §1 #8 — `Claims.roles` is the canonical source; the prior
-/// `scope_grants` fallback handles tokens issued before this FR shipped
+/// `scope_grants` fallback handles tokens issued before this task shipped
 /// (the 30-day grace window per DEC-125).
 fn parse_caller_roles(claims: &Claims) -> Vec<Role> {
     // Prefer the canonical `roles` claim if present (TASK-AUTH-101 era).

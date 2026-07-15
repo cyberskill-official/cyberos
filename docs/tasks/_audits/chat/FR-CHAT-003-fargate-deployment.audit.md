@@ -47,7 +47,7 @@ Original spec mentioned Fargate listening on port 8065 but never said how extern
 ### ISS-010 — Backups untested (strict-redo pass)
 Original §1 mentioned 7-day backup retention but had no validation that backups can actually be restored. Resolved: §1 #17 mandates weekly synthetic PITR test; `chat-pitr-weekly.yml` workflow; AC #23 + `chat.pitr_test_passed` memory audit row.
 
-### ISS-011 — Postgres needs custom parameter group for downstream FRs (strict-redo pass)
+### ISS-011 — Postgres needs custom parameter group for downstream tasks (strict-redo pass)
 TASK-CHAT-004 requires pgroonga; TASK-CHAT-005 requires wal2json + logical_replication. The original spec used the default parameter group, which would have forced reboots later. Resolved: §1 #18 + parameter_groups.tf with all required settings at apply time, including pending-reboot params so the first apply pays the reboot cost; AC #24 + #25 verify.
 
 ### ISS-012 — IAM task role overpermissive (strict-redo pass)

@@ -6,15 +6,15 @@ When the skill is invoked without a fully-formed envelope (e.g. directly in chat
 
 | Field | Question | Acceptable answer |
 |---|---|---|
-| `source_files` | "Which source file(s) should I read to draft the `FR`?" | One or more existing paths or URLs. The skill confirms each path resolves and is UTF-8 readable. |
-| `output_dir` | "Where should I write the `FR` markdown(s)?" | An absolute or project-relative directory path. The skill creates the directory if it does not exist (subject to scope sandbox). |
+| `source_files` | "Which source file(s) should I read to draft the `task`?" | One or more existing paths or URLs. The skill confirms each path resolves and is UTF-8 readable. |
+| `output_dir` | "Where should I write the `task` markdown(s)?" | An absolute or project-relative directory path. The skill creates the directory if it does not exist (subject to scope sandbox). |
 
 ## Optional fields
 
 | Field | Question | Default |
 |---|---|---|
 | `manifest_path` | "Where should I write the manifest? (default: `<output_dir>/manifest.json`)" | `<output_dir>/manifest.json` |
-| `batch_size` | "How many `FR`s per batch? (default 3, max 10)" | 3 |
+| `batch_size` | "How many `task`s per batch? (default 3, max 10)" | 3 |
 | `caller_persona` | "Who is asking? (cuo-cpo / cuo-cto / cuo-clo / cuo-cseco / cuo-coo / cuo-ceo)" | `cuo-cpo` |
 | `chain_to` | "Should I chain to the audit skill afterwards? (default yes)" | `['task-audit']` |
 

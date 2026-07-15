@@ -1,8 +1,16 @@
 ---
 id: TASK-PLUGIN-008
 title: "Marketplace distribution — cyberos-plugin publish pushes signed bundle to plugins.cyberskill.world + mirrors to agentskills.io; revenue-share + vetted badge"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-19T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: PLUGIN
-priority: SHOULD
+priority: p1
 status: draft
 verify: T
 phase: P1
@@ -32,7 +40,7 @@ source_decisions:
 
 build_envelope:
   language: rust 1.81
-  service: services/plugin-host/ (CLI side) + new services/plugin-marketplace/ (server side, scaffolded in this FR; full server implementation deferred to FR-PLUGIN-008a)
+  service: services/plugin-host/ (CLI side) + new services/plugin-marketplace/ (server side, scaffolded in this task; full server implementation deferred to task-PLUGIN-008a)
   new_files:
     - services/plugin-host/src/marketplace/mod.rs
     - services/plugin-host/src/marketplace/publish.rs
@@ -76,7 +84,7 @@ risk_if_skipped: "Without marketplace, plugins distribute only via direct downlo
 
 ## §1 — Description (BCP-14 normative)
 
-The PLUGIN module **MUST** ship a marketplace publish surface at `services/plugin-host/src/marketplace/`. CLI `cyberos-plugin publish <bundle>` uploads a packed bundle to `plugins.cyberskill.world` (OCI-compatible registry); public plugins additionally mirror to `agentskills.io`. The marketplace server itself (registry API + UI) is scaffolded here and fully implemented in FR-PLUGIN-008a.
+The PLUGIN module **MUST** ship a marketplace publish surface at `services/plugin-host/src/marketplace/`. CLI `cyberos-plugin publish <bundle>` uploads a packed bundle to `plugins.cyberskill.world` (OCI-compatible registry); public plugins additionally mirror to `agentskills.io`. The marketplace server itself (registry API + UI) is scaffolded here and fully implemented in task-PLUGIN-008a.
 
 1. **MUST** implement `cyberos-plugin publish <bundle>` CLI with flags per DEC-2470 + DEC-2471:
    - `--visibility {public,private,enterprise}` — default reads from manifest's `marketplace.visibility` (per TASK-PLUGIN-001 schema)
@@ -171,7 +179,7 @@ cyberos-plugin list [--visibility VIS] [--vetted]
 cyberos-plugin info <id>@<version>
 ```
 
-### Plugin registry Postgres schema (scaffold for FR-PLUGIN-008a server)
+### Plugin registry Postgres schema (scaffold for task-PLUGIN-008a server)
 
 ```sql
 -- services/plugin-marketplace/migrations/0001_plugin_registry.sql
@@ -389,14 +397,14 @@ async fn cross_tenant_private_install_denied() {
 
 ## §6 — Implementation skeleton
 
-(API contract + Postgres schema in §3 are the skeleton. Full marketplace server implementation deferred to FR-PLUGIN-008a, which fleshes out search, browse UI, billing integration with TASK-TEN-005, and admin review tooling.)
+(API contract + Postgres schema in §3 are the skeleton. Full marketplace server implementation deferred to task-PLUGIN-008a, which fleshes out search, browse UI, billing integration with TASK-TEN-005, and admin review tooling.)
 
 ---
 
 ## §7 — Dependencies
 
 - **Upstream:** TASK-PLUGIN-006 (audit emission for plugin.published / plugin.yanked); TASK-PLUGIN-007 (per-target adapters produce the bundles being published).
-- **Downstream:** TASK-TEN-005 (vertical pack pricing — paid plugins billed via TEN service); TASK-PORTAL-005 (branded Genie chat — enterprise marketplaces appear in branded portal); FR-PLUGIN-008a (full marketplace server: search, UI, billing).
+- **Downstream:** TASK-TEN-005 (vertical pack pricing — paid plugins billed via TEN service); TASK-PORTAL-005 (branded Genie chat — enterprise marketplaces appear in branded portal); task-PLUGIN-008a (full marketplace server: search, UI, billing).
 - **Cross-module:** Strategy §4 Levels 1, 3, 4, 5 — every distribution-facing milestone in the strategy depends on this surface shipping at least at the publish-CLI level.
 
 ---
@@ -454,10 +462,10 @@ async fn cross_tenant_private_install_denied() {
 
 All resolved.
 
-- ~~Should the marketplace server ship in this FR?~~ → No. CLI publish + registry scaffolding in this FR; full server (search, UI, billing) in FR-PLUGIN-008a.
+- ~~Should the marketplace server ship in this task?~~ → No. CLI publish + registry scaffolding in this task; full server (search, UI, billing) in task-PLUGIN-008a.
 - ~~Should agentskills.io mirror be optional (off-by-default for public)?~~ → No, on by default per clause 1. Strategy §4 Level 1 OSS-distribution depends on agentskills.io presence.
 - ~~Should revenue_share allow > 70 for author (more generous)?~~ → Yes (schema 0-100); only < 70 triggers warning. Author getting more than 70 is fine.
-- ~~Should we support arbitrary review chains (multiple vetters)?~~ → Deferred to FR-PLUGIN-008b; v1 is single CyberSkill reviewer.
+- ~~Should we support arbitrary review chains (multiple vetters)?~~ → Deferred to task-PLUGIN-008b; v1 is single CyberSkill reviewer.
 
 ---
 
@@ -485,13 +493,13 @@ All resolved.
 
 ## §11 — Implementation notes
 
-- §11.1 **Why scaffold the marketplace server here.** Full server is FR-PLUGIN-008a (registry API, search UI, browse, install metrics, billing). This FR ships the CLI side + Postgres schema so the publish path is operational. Server implementation can land independently because schema is locked.
+- §11.1 **Why scaffold the marketplace server here.** Full server is task-PLUGIN-008a (registry API, search UI, browse, install metrics, billing). This task ships the CLI side + Postgres schema so the publish path is operational. Server implementation can land independently because schema is locked.
 
 - §11.2 **OCI push library.** Rust `oci-distribution` crate (4.x) handles the OCI v1.1 spec including blobs, manifests, tags. Adapter wraps it for the CyberSkill-specific media types.
 
 - §11.3 **agentskills.io API key.** CyberSkill-org-level API key stored in AWS Secrets Manager at `plugins.cyberskill.world/agentskills_api_key`. Fetched once at process start; rotated quarterly.
 
-- §11.4 **Vetted badge token issuance flow.** Out of scope of this FR; manual at `https://plugins.cyberskill.world/admin/vet` for v1. Future automation: scan bundle for known-bad patterns (FR-PLUGIN-008b).
+- §11.4 **Vetted badge token issuance flow.** Out of scope of this task; manual at `https://plugins.cyberskill.world/admin/vet` for v1. Future automation: scan bundle for known-bad patterns (task-PLUGIN-008b).
 
 - §11.5 **Enterprise origin pattern.** `plugins.<enterprise-name>.cyberskill.world` — DNS managed by CyberSkill; routed to the same OCI backend with tenant_id filter. Enterprise tenant_id derived from origin.
 
@@ -499,7 +507,7 @@ All resolved.
 
 - §11.7 **Why `yank` instead of `delete`.** Yank model from crates.io. Permanent deletion breaks reproducibility of historical installs. Yank hides from discovery but preserves bytes. The bundle bytes can be force-deleted by admin (DSAR or court order); that emits a separate `plugin.deleted` audit kind.
 
-- §11.8 **Revenue billing integration.** TASK-TEN-005 receives memory audit `plugin.invoked` rows from paid plugins; bills the user tenant; pays the author tenant per `revenue_share_percent`. This FR ships the data; TEN does the money.
+- §11.8 **Revenue billing integration.** TASK-TEN-005 receives memory audit `plugin.invoked` rows from paid plugins; bills the user tenant; pays the author tenant per `revenue_share_percent`. This task ships the data; TEN does the money.
 
 - §11.9 **Why CyberSkill 30% (not lower).** Below 20% the marketplace cannot fund: hosting, security review, fraud detection, OAuth issuance, audit chain storage. Above 30% authors balk. 30% is the equilibrium.
 

@@ -23,7 +23,7 @@ CyberOS vendors itself into any repository under a single gitignored `.cyberos/`
    bash /path/to/dist/cyberos/init.sh /path/to/your/repo
    ```
 
-   This vendors `.cyberos/cuo` (the FR workflow engine), `.cyberos/memory` (the BRAIN protocol) and `.cyberos/plugin`, detects your build/lint/test gates into `.cyberos/gates.env`, scaffolds `docs/tasks/BACKLOG.md`, creates the local BRAIN store at `.cyberos/memory/store/`, and stamps `.cyberos/VERSION`.
+   This vendors `.cyberos/cuo` (the task workflow engine), `.cyberos/memory` (the BRAIN protocol) and `.cyberos/plugin`, detects your build/lint/test gates into `.cyberos/gates.env`, scaffolds `docs/tasks/BACKLOG.md`, creates the local BRAIN store at `.cyberos/memory/store/`, and stamps `.cyberos/VERSION`.
 
 3. Stay current:
 
@@ -34,11 +34,11 @@ CyberOS vendors itself into any repository under a single gitignored `.cyberos/`
 
 Desktop alternative: the CyberOS desktop app has a "CyberOS Ops" tab that runs the same build / check / init operations from the UI.
 
-The full step-by-step runbook (first FR, gates, human acceptance, multi-repo rollout) is `tools/cyberos-init/docs/index.md`.
+The full step-by-step runbook (first task, gates, human acceptance, multi-repo rollout) is `tools/cyberos-init/docs/index.md`.
 
 ## Ship work
 
-All work is a task under `docs/tasks/` - net-new (`class: product`) and hardening (`class: improvement`) alike, indexed by ONE `BACKLOG.md`. The `ship-tasks` workflow drives each FR through the lifecycle with two mandatory human-acceptance gates (review acceptance and final acceptance); an agent never sets `done` itself.
+All work is a task under `docs/tasks/` - net-new (`class: product`) and hardening (`class: improvement`) alike, indexed by ONE `BACKLOG.md`. The `ship-tasks` workflow drives each task through the lifecycle with two mandatory human-acceptance gates (review acceptance and final acceptance); an agent never sets `done` itself.
 
 ## Develop CyberOS itself
 

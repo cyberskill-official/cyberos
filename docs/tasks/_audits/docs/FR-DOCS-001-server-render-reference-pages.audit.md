@@ -22,7 +22,7 @@ First-pass §6 mentioned "alternative: move data arrays into data/*.json files" 
 Crawlers + screenshot tools need `#NFR-PERF-01` URL fragments. Resolved: §1 #7 + AC #7 + Handlebars template includes `id="{{id}}"`.
 
 ### ISS-003 — Per-card type metadata fields unspecified
-First-pass templates only sketched NFR; RSK + FR not fully specified. Resolved: §1 #6 enumerates fields per card type; §3 NFR template shown; analogous patterns for RSK + FR.
+First-pass templates only sketched NFR; RSK + task not fully specified. Resolved: §1 #6 enumerates fields per card type; §3 NFR template shown; analogous patterns for RSK + task.
 
 ### ISS-004 — Watch mode for local dev missing
 Local iteration requires manual rebuild on every JSON change. Resolved: §1 #10 + `--watch` flag + AC #10.

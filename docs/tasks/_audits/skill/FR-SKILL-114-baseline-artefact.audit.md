@@ -12,7 +12,7 @@ authoring_md_compliance: 2026-05-19 (per task-audit skill §3.12 — 6 canonical
 
 ## §1 — Verdict summary
 
-TASK-SKILL-114 authored direct-to-10/10 with no second-loop expansion needed (cleanest of the 4 FRs in this session — the artefact is conceptually simple). ~620 lines. 15 §1 normative clauses (file required + frontmatter contract + 6 body sections + without/with-skill measurements + 30%/30%/50% thresholds + token-budget transparency + trust calibration + authoring notes + auditor severity + broker check for partner_connector + attested_by format + review cadence + backfill discipline + validation pyramid update). 11 §2 rationale paragraphs. Full Python validator + auditor rule + worked-example body in §3. 20 numbered ACs. 8 pytest functions. 13 failure modes. 8 implementation notes.
+TASK-SKILL-114 authored direct-to-10/10 with no second-loop expansion needed (cleanest of the 4 tasks in this session — the artefact is conceptually simple). ~620 lines. 15 §1 normative clauses (file required + frontmatter contract + 6 body sections + without/with-skill measurements + 30%/30%/50% thresholds + token-budget transparency + trust calibration + authoring notes + auditor severity + broker check for partner_connector + attested_by format + review cadence + backfill discipline + validation pyramid update). 11 §2 rationale paragraphs. Full Python validator + auditor rule + worked-example body in §3. 20 numbered ACs. 8 pytest functions. 13 failure modes. 8 implementation notes.
 
 ## §2 — Findings (all resolved during authoring)
 
@@ -38,9 +38,9 @@ Draft §1 #11 said broker checks BASELINE.md but didn't tie to partner_connector
 
 All 6 mechanical concerns addressed during authoring. **Score = 10/10.** Ready to ship + transition `draft → accepted`.
 
-Cross-FR sanity check:
+Cross-task sanity check:
 - `depends_on: [TASK-SKILL-103]` — present + verified.
-- `related_tasks:` enumerates TASK-SKILL-103 (parent), TASK-SKILL-111 (orthogonal description), TASK-SKILL-112 (orthogonal trigger tests), TASK-SKILL-113 (orthogonal frontmatter shape). All four exist; orthogonal coverage confirms the 4-FR set's coherence as the v0.2.0 Anthropic-portability + foundation-discipline bundle.
+- `related_tasks:` enumerates TASK-SKILL-103 (parent), TASK-SKILL-111 (orthogonal description), TASK-SKILL-112 (orthogonal trigger tests), TASK-SKILL-113 (orthogonal frontmatter shape). All four exist; orthogonal coverage confirms the 4-task set's coherence as the v0.2.0 Anthropic-portability + foundation-discipline bundle.
 - `priority: MAY` reflects that BASELINE.md is required only at v1.0 promotion (not on every v0.x skill); the auditor severity scheme protects v0.x drafts from rule noise.
 
 ## §4 — Implementation discoveries (2026-05-19 partial impl)

@@ -37,7 +37,7 @@ Phase 3 — Delete leftovers
   Operator confirms → delete
 
 Phase 4 — Verify state (cyberos flavor)
-  FR DAG coherence: 0 errors ✓
+  Task DAG coherence: 0 errors ✓
   Missing audits: 0 ✓
   Specs not at 10/10: 0 ✓
   Per-module spec/audit balance: 24/24 modules balanced ✓
@@ -53,7 +53,7 @@ Report SHA-256: <hash>
 ## What "PASS" means
 
 - 4 fragments detected → 4 absorbed → 4 deleted (no leftover)
-- FR DAG coherent (reciprocity errors = 0)
+- Task DAG coherent (reciprocity errors = 0)
 - All audits present + at 10/10
 - No structural drift
 

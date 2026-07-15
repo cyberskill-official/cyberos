@@ -1,8 +1,16 @@
 ---
 id: TASK-INV-006
 title: "INV cash application — closed 4-step matching cascade (exact-ref → amount+date → fuzzy-fraction → manual) + atomic ledger reconciliation + partial allocation + over-allocation block + memory audit per match"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: INV
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P2
@@ -98,7 +106,7 @@ subtasks:
   - "0.6h: handlers/cash_app.rs"
   - "1.6h: tests — 12 test files"
 
-risk_if_skipped: "Without cash application, every webhook receipt that arrives with an unparseable memo OR partial amount becomes a manual operator task — at scale, this is intractable. The 80% case (HD/INV prefix in memo) handles via TASK-INV-005's parser; the remaining 20% requires this FR's 4-step cascade. Without DEC-562's partial allocation, customers paying in installments (common in VN B2B) can't be reconciled — invoices stay open with mismatched amounts. Without DEC-563's over-allocation block, accountant mistakes silently overpay invoices + corrupt AR aging. Without DEC-568's CFO-only manual gate, every operator can touch the ledger (segregation-of-duties violation). Without DEC-569's reversal pattern, allocation mistakes require DB surgery. The 8h effort lands the deterministic 4-step cascade + atomic ledger primitive that AR/AP reconciliation depends on."
+risk_if_skipped: "Without cash application, every webhook receipt that arrives with an unparseable memo OR partial amount becomes a manual operator task — at scale, this is intractable. The 80% case (HD/INV prefix in memo) handles via TASK-INV-005's parser; the remaining 20% requires this task's 4-step cascade. Without DEC-562's partial allocation, customers paying in installments (common in VN B2B) can't be reconciled — invoices stay open with mismatched amounts. Without DEC-563's over-allocation block, accountant mistakes silently overpay invoices + corrupt AR aging. Without DEC-568's CFO-only manual gate, every operator can touch the ledger (segregation-of-duties violation). Without DEC-569's reversal pattern, allocation mistakes require DB surgery. The 8h effort lands the deterministic 4-step cascade + atomic ledger primitive that AR/AP reconciliation depends on."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -937,9 +945,9 @@ Response:
 ## §9 — Open questions
 
 Deferred:
-- **Multi-currency cross-allocation (e.g. USD receipt against VND invoice via FX)** — TASK-INV-002 ships SBV FX snapshot; cross-currency cash app is FR-INV-2xx.
+- **Multi-currency cross-allocation (e.g. USD receipt against VND invoice via FX)** — TASK-INV-002 ships SBV FX snapshot; cross-currency cash app is task-INV-2xx.
 - **ML-suggested matches** — slice 3 augmentation of step 4 manual.
-- **Bulk import historical allocations** — FR-INV-2xx migration tool.
+- **Bulk import historical allocations** — task-INV-2xx migration tool.
 - **Customer-side allocation hint via API** — TASK-PORTAL-008.
 
 All other questions resolved.

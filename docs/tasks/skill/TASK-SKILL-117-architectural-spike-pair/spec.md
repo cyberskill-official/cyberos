@@ -1,10 +1,17 @@
 ---
 id: TASK-SKILL-117
 title: "Author the architectural-spike-author/-audit pair - the missing ADR input artefact (architectural-spike@1)"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-07-12T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: SKILL
-priority: MUST
+priority: p0
 status: done
-class: product
 verify: T
 phase: Wave B - finish the children
 owner: Stephen Cheng (CTO)
@@ -45,12 +52,12 @@ modified_files:
 
 ## §1 - Description
 
-A spike is the time-boxed investigation that turns "we have 2+ plausible architectures" into evidence an ADR can cite. The ADR skill already demands spike output; nothing can produce it. This FR authors the pair and its artefact contract.
+A spike is the time-boxed investigation that turns "we have 2+ plausible architectures" into evidence an ADR can cite. The ADR skill already demands spike output; nothing can produce it. This task authors the pair and its artefact contract.
 
 Normative clauses:
 
-1. A new artefact type `architectural-spike@1` MUST be defined with frontmatter: `spike_id` (SPIKE-<FR-ID>-<n>), `task_id`, `question` (the single decision under investigation), `timebox_hours` (int, recorded up front), `options` (array, each `{name, hypothesis, evidence[], cost_estimate, risks[]}`), `recommendation` (names exactly one option), `confidence` (low|medium|high), `discarded` (array of `{name, reason}`), `created`. Body sections: `## Question`, `## Options probed`, `## Evidence log`, `## Recommendation`, `## Discard log`.
-2. `architectural-spike-author` MUST: take an audited FR + repo-context-map as inputs (input envelope), declare its trigger conditions (an ADR is pending AND >= 2 viable options exist, or the FR introduces a dependency the repo has never used), enforce the timebox by recording planned vs actual hours, and HALT for the operator when actual exceeds planned by more than 50%.
+1. A new artefact type `architectural-spike@1` MUST be defined with frontmatter: `spike_id` (SPIKE-<task-ID>-<n>), `task_id`, `question` (the single decision under investigation), `timebox_hours` (int, recorded up front), `options` (array, each `{name, hypothesis, evidence[], cost_estimate, risks[]}`), `recommendation` (names exactly one option), `confidence` (low|medium|high), `discarded` (array of `{name, reason}`), `created`. Body sections: `## Question`, `## Options probed`, `## Evidence log`, `## Recommendation`, `## Discard log`.
+2. `architectural-spike-author` MUST: take an audited task + repo-context-map as inputs (input envelope), declare its trigger conditions (an ADR is pending AND >= 2 viable options exist, or the task introduces a dependency the repo has never used), enforce the timebox by recording planned vs actual hours, and HALT for the operator when actual exceeds planned by more than 50%.
 3. Every `evidence[]` entry MUST cite something checkable: a file path in the repo, a command + its observed output, or an external URL. Unsupported assertions ("X is faster") without a citation MUST NOT count as evidence.
 4. `architectural-spike-audit` MUST score /10 against a RUBRIC.md with at least these rule families: SPK-STRUCT (frontmatter + sections complete, recommendation names exactly one probed option), SPK-EVID (>= 2 options probed, every option has >= 1 checkable evidence entry, recommendation cites evidence), SPK-BOX (timebox recorded, overrun HALT honored), SPK-DISC (discard log non-empty whenever options were rejected). Only 10/10 passes; the audit report format mirrors REPORT_FORMAT.md conventions of the existing full pairs.
 5. `architecture-decision-record-author/SKILL.md` MUST be updated to name `architectural-spike@1` as its spike input (replacing the dangling prose reference), and to state the fallback when no spike exists (lean profile: ADR options table carries the evidence inline).
@@ -124,6 +131,6 @@ None blocking. Whether ship-tasks gains an optional spike step between steps 2 a
 
 ## §11 - Implementation notes
 
-Keep artefact version pinned at @1 in both SKILL.md files; version bumps follow the contracts CHANGELOG discipline. The pair is NOT added to build.sh here - vendoring is TASK-CUO-209's single expansion, kept out of this FR to avoid two writers on build.sh:28.
+Keep artefact version pinned at @1 in both SKILL.md files; version bumps follow the contracts CHANGELOG discipline. The pair is NOT added to build.sh here - vendoring is TASK-CUO-209's single expansion, kept out of this task to avoid two writers on build.sh:28.
 
 *End of TASK-SKILL-117.*

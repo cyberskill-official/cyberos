@@ -1,10 +1,17 @@
 ---
 id: TASK-IMP-070
 title: "Remote update awareness - /update and init.sh --check compare installed vs latest published release, not the local payload"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: improvement
+created_at: 2026-07-12T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: improvement
-priority: MUST
+priority: p0
 status: done
-class: improvement
 verify: T
 phase: Wave A - version coupling
 owner: Stephen Cheng (CTO)
@@ -38,7 +45,7 @@ modified_files:
 
 ## §1 - Description
 
-`init.sh --check` compares a target repo's `.cyberos/VERSION` against the LOCAL payload's VERSION, and the `/update` command trusts that answer. Once TASK-IMP-069 publishes every release, the honest comparison is against the latest published version. This FR adds that third data point and rewrites the verdict logic around it.
+`init.sh --check` compares a target repo's `.cyberos/VERSION` against the LOCAL payload's VERSION, and the `/update` command trusts that answer. Once TASK-IMP-069 publishes every release, the honest comparison is against the latest published version. This task adds that third data point and rewrites the verdict logic around it.
 
 Normative clauses:
 
@@ -48,7 +55,7 @@ Normative clauses:
 4. `plugin/commands/update.md` MUST direct the agent to run the extended `--check` and act on the verdict: on `payload_stale`, fetch the latest release payload (or rebuild from a current checkout) BEFORE re-running init, and never report "up to date" from the local-payload comparison alone. On `latest=unknown` it MUST say the remote check was skipped and the answer is only as fresh as the local payload.
 5. `plugin/commands/changelog.md` MUST, when `latest` is newer than `installed`, link the GitHub Releases page as the span to read (installed+1 .. latest), in addition to the local `.cyberos/manifest.yaml` details.
 6. Offline behavior MUST be first-class: `CYBEROS_OFFLINE=1` (or network failure) degrades `--check` to today's local comparison plus an explicit `latest=unknown source=offline` note. Exit code semantics of `--check` (0 = ran) MUST NOT change.
-7. Nothing in this FR mutates a target repo; the check remains read-only and auto-update stays out of scope.
+7. Nothing in this task mutates a target repo; the check remains read-only and auto-update stays out of scope.
 
 ## §2 - Why this design
 

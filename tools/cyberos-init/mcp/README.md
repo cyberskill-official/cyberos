@@ -7,8 +7,8 @@ Tools:
 
 - `fr_init {repo?}` - vendor the CyberOS machine into a repo (needs the payload reachable; set `CYBEROS_PAYLOAD` if the server was vendored away from `init.sh`).
 - `fr_gates {repo?}` - run the machine gates (the repo's own build/lint/test + coverage, plus caf/awh if present).
-- `fr_status {repo?}` - summarize the FR backlog (counts by status, next eligible FR) and installed version.
-- `ship_fr {repo?, task_id?}` - return the canonical, HITL-gated trigger for the next (or a named) FR. It never drives or accepts an FR itself - the human still holds the two acceptance gates.
+- `fr_status {repo?}` - summarize the task backlog (counts by status, next eligible task) and installed version.
+- `ship_fr {repo?, task_id?}` - return the canonical, HITL-gated trigger for the next (or a named) task. It never drives or accepts a task itself - the human still holds the two acceptance gates.
 
 `repo` defaults to the current working directory, walked up to the repo root. After `init.sh`
 runs, the server is vendored at `.cyberos/mcp/cyberos-mcp.mjs`; `fr_gates` / `fr_status` /

@@ -26,7 +26,7 @@ Six residual issues prevented 10/10 at the post-expansion checkpoint; all six ar
 ### ISS-001 — Inherits all TASK-AI-019 issues uncorrected (per-region URL, checksum, max-input, fairness, GPU failover)
 
 - **severity:** error
-- **rule_id:** consistency / cross-FR pattern propagation
+- **rule_id:** consistency / cross-task pattern propagation
 - **location:** §1 (multiple missing clauses), §3 (no per-region config)
 - **status:** resolved
 
@@ -90,7 +90,7 @@ First-pass §4 AC #2 said: *"Scores are descending; relevant docs first."*
 
 The first-pass §1 #5 said: *"MUST emit `ai.invocation` memory row per call (same audit as any other inference)."* But the row's payload schema for rerank is different from a standard chat invocation — it carries `candidate_count`, `query_token_count`, `total_token_count`, `skipped`, `model_sha256` that aren't in TASK-AI-002's vanilla invocation row. No builder shown.
 
-This is the same pattern as TASK-AI-014 ISS-004 (`canonical::persona_loaded` builder missing) and TASK-AI-015 ISS-003 (`canonical::zdr_violation` builder missing). The owning-FR-builds-the-builder principle applies: this FR owns the rerank-specific row variant.
+This is the same pattern as TASK-AI-014 ISS-004 (`canonical::persona_loaded` builder missing) and TASK-AI-015 ISS-003 (`canonical::zdr_violation` builder missing). The owning-task-builds-the-builder principle applies: this task owns the rerank-specific row variant.
 
 #### Suggested fix
 
@@ -180,13 +180,13 @@ The caller (KB module) needs to distinguish: case (a) might warrant refusing the
 - §1 #12 + the `skipped: true` signal makes the caller-fallback path unambiguous. KB module's `if resp.skipped { fall_back_to_embedding() }` pattern works correctly without guessing.
 - §1 #13 supports both raw logit AND sigmoid-normalised scores via a single `normalize` bool — UI consumers get clean [0,1]; observability gets full dynamic range.
 - §10 inventory grew from 3 rows to 19 — including the model-version-drift-across-regions path, the KB-caller-doesnt-check-skipped path, the token-budget-vs-OOM path, and the score-normalisation-inconsistency path. Each row has an unambiguous detection mechanism.
-- §11 documents the COULD priority rationale (KB works without rerank) AND the shared-L4 economic rationale (one GPU serves both sidecars; ~$360/mo amortises across both FRs).
+- §11 documents the COULD priority rationale (KB works without rerank) AND the shared-L4 economic rationale (one GPU serves both sidecars; ~$360/mo amortises across both tasks).
 
 ## §4 — Resolution
 
-All 6 mechanical revisions applied (2026-05-16) within the FR itself:
+All 6 mechanical revisions applied (2026-05-16) within the task itself:
 
-- **ISS-001 RESOLVED**: Six new §1 clauses added mirroring TASK-AI-019 (per-region URL #8, token budget #7, fairness #14, checksum #9, model identity #10, GPU failover #11); cost-accounting clarity in #4 + §2; cross-FR pattern propagated; corresponding ACs + §5 tests + §10 rows.
+- **ISS-001 RESOLVED**: Six new §1 clauses added mirroring TASK-AI-019 (per-region URL #8, token budget #7, fairness #14, checksum #9, model identity #10, GPU failover #11); cost-accounting clarity in #4 + §2; cross-task pattern propagated; corresponding ACs + §5 tests + §10 rows.
 
 - **ISS-002 RESOLVED**: AC #2 split into mechanical assertions (descending + indices preserved); AC #4 introduces the known-relevance fixture in `rerank_quality_test.rs` with concrete docs (Decree 13 / PDPL); §5 test asserts top-3 contains relevant + top score > 0.5.
 

@@ -37,7 +37,7 @@ outputs:
 | OBS-002 | Every external IO in impl_plan has ≥1 trace_span (wraps + attributes set) | 20% | error |
 | OBS-003 | Every error branch in impl_plan has ≥1 error_counter | 20% | error |
 | OBS-004 | `branch_coverage.coverage_pct ≥ 80` | 15% | error |
-| OBS-005 | If FR touches PII, `redaction_policy` is non-empty + covers obvious fields | 10% | error |
+| OBS-005 | If task touches PII, `redaction_policy` is non-empty + covers obvious fields | 10% | error |
 | OBS-006 | `subscriber` matches the project's configured subscriber (no rogue libs) | 10% | warning |
 
 ## 2. Pass criterion

@@ -1,8 +1,16 @@
 ---
 id: TASK-PROJ-010
 title: "Citation drift detector — nightly sweep flags stale MEMORY_LINKs (deleted target, superseded chain, broken memory_row_id) with operator notification"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: PROJ
-priority: SHOULD
+priority: p1
 status: done
 verify: T
 phase: P1
@@ -59,7 +67,7 @@ The drift detector **MUST** run a nightly sweep over all active memory_links and
 2. **MUST** also support on-demand sweep via `cyberos drift sweep [--tenant-id <uuid>]` CLI.
 3. **MUST** detect three drift kinds:
     - `TargetMissing`: linked memory_path no longer exists in memory (deletion / unwatched folder).
-    - `TargetSuperseded`: linked memory has been superseded by a newer memory (FR-AGENTS §8 correction_to row); the link points at the older revision.
+    - `TargetSuperseded`: linked memory has been superseded by a newer memory (task-AGENTS §8 correction_to row); the link points at the older revision.
     - `ScopeRevoked`: the issue's tenant lost read scope to the memory (tenant permission change since link was created).
 4. **MUST** emit `proj.citation_drift_detected` memory audit row PER detected drift with payload `{link_id, issue_id, memory_path, drift_kind, detected_at_ns, prior_check_at_ns, trace_id}`.
 5. **MUST** record sweep state in `drift_state` table: per-tenant `last_sweep_at`, `last_total_links_checked`, `last_drift_count_by_kind`. Operators query for "when did the last sweep run."

@@ -24,9 +24,9 @@ determinism:
 emitted_source_freshness_tier: 10   # high authority — this IS the schema
 ---
 
-# `task@1` — canonical FR contract
+# `task@1` — canonical task contract
 
-> A **contract**, not a skill. Holds the single source of truth for the Task artefact shape across CyberOS. Loaded by both `cuo/cpo/task-author` (as the generation skeleton) and `cuo/cpo/task-audit` (as the validation target). Future workflows like a `tech-spec-from-fr` skill will load this to understand FR structure before deriving downstream artefacts.
+> A **contract**, not a skill. Holds the single source of truth for the Task artefact shape across CyberOS. Loaded by both `cuo/cpo/task-author` (as the generation skeleton) and `cuo/cpo/task-audit` (as the validation target). Future workflows like a `tech-spec-from-fr` skill will load this to understand task structure before deriving downstream artefacts.
 
 ## What is a contract (vs. a skill)?
 
@@ -36,7 +36,7 @@ Contracts live under `cyberos/docs/contracts/<contract-id>/` (flat layout per re
 
 ## How to use this contract
 
-`task-author` reads `template.md` (in this folder) as the body skeleton and adapts it per-FR. `task-audit` reads it via the rule IDs encoded in `task-audit/RUBRIC.md` — every audit rule's "what's expected" field maps to a region of this contract. Other workflows that need to know "what is an FR" should `read_file('cyberos/docs/contracts/task/template.md')` rather than hard-code the shape.
+`task-author` reads `template.md` (in this folder) as the body skeleton and adapts it per-task. `task-audit` reads it via the rule IDs encoded in `task-audit/RUBRIC.md` — every audit rule's "what's expected" field maps to a region of this contract. Other workflows that need to know "what is a task" should `read_file('cyberos/docs/contracts/task/template.md')` rather than hard-code the shape.
 
 ## Frontmatter contract (FM-001..111)
 

@@ -1,15 +1,15 @@
 # MCP gate-flip checklist (prep 2026-06-28)
 
-What to run after the MCP PR (auto/mcp-finish-008-006-007) is merged, and exactly which FR statuses to
-flip. Prepared so the flips are honest: a green gate certifies the code that exists, not the FR clauses
-we deliberately deferred to the database slice. Do not flip a slice-FR to done just because the gate is
+What to run after the MCP PR (auto/mcp-finish-008-006-007) is merged, and exactly which task statuses to
+flip. Prepared so the flips are honest: a green gate certifies the code that exists, not the task clauses
+we deliberately deferred to the database slice. Do not flip a slice-task to done just because the gate is
 green.
 
 ## DB slice (branch auto/mcp-db-slice) - built + green locally 2026-06-28
 
-A separate branch from auto/mcp-finish-008-006-007, commit-per-FR, all compile + clippy clean locally (143
+A separate branch from auto/mcp-finish-008-006-007, commit-per-task, all compile + clippy clean locally (143
 tests). The DB read/write paths themselves still need Postgres integration tests (run after applying the
-migrations). This slice landed much of what the per-FR lists below marked "deferred to the DB slice"; treat
+migrations). This slice landed much of what the per-task lists below marked "deferred to the DB slice"; treat
 this section as the current truth where it disagrees with the older section.
 
 - TASK-MCP-003 slice 3: CI grep gate (scripts/check_sep986_naming.sh + .github/workflows/mcp-sep986-check.yml)
@@ -36,8 +36,8 @@ Narrowed deferrals after this slice (still enough to keep these at implementing)
 ## Gate coverage (verified, no change needed)
 
 - awh goldenset (modules/mcp/.awh/goldenset.yaml): the full-suite task runs
-  `cd services && cargo test -p cyberos-mcp-gateway`, which compiles and runs every new FR-004..008 test
-  automatically. Plus the held-out error-code acceptance task. No per-FR task to add.
+  `cd services && cargo test -p cyberos-mcp-gateway`, which compiles and runs every new TASK-004..008 test
+  automatically. Plus the held-out error-code acceptance task. No per-task task to add.
 - caf audit-profile (modules/mcp/audit-profile.yaml): RUN_COMMANDS now runs the crate test suite AND
   `cargo clippy -p cyberos-mcp-gateway --all-targets -- -D warnings` (added this prep; the crate is
   `#![warn(missing_docs)]` + `#![deny(missing_debug_implementations)]`, so clippy -D is part of the floor).
@@ -66,7 +66,7 @@ Flip on green:
   leave at implementing.
 
 Already flipped to implementing in this prep (were draft; substantial code now exists and is green, but
-core FR clauses remain deferred to the DB slice, so NOT done yet):
+core task clauses remain deferred to the DB slice, so NOT done yet):
 - TASK-MCP-005 protected resource metadata: deferred = drift table + detector, rate limit, OTel p95, NATS
   cache invalidation, tail-sampled prm_served, 4-issuer residency list, EdDSA.
 - TASK-MCP-006 tool-annotation gating: deferred = persistence of the confirmation + the audit-sampling
@@ -83,12 +83,12 @@ Unchanged (separate remaining slice):
 ## Bottom line
 
 At this gate only TASK-MCP-004 is a candidate for done. 003 and 005..008 stay implementing until the DB
-slice lands their deferred clauses. The deferred items per FR are recorded in the space memory
-(cyberos-mcp-build-state) and in each FR body, so the eventual done-flip is unambiguous.
+slice lands their deferred clauses. The deferred items per task are recorded in the space memory
+(cyberos-mcp-build-state) and in each task body, so the eventual done-flip is unambiguous.
 
 ## 2026-07-02 - TASK-MCP-004 flipped to done (operator decision)
 
 Per the module review (docs/reviews/MODULE-REVIEW-2026-07-02.md), the operator accepted the ledgered
 deferral of the per-tenant redirect-host allowlist (clause #11) as a follow-up, so TASK-MCP-004 flips to
-done on its green gate. The allowlist remains a named follow-up here and in the FR body; 003 and 005..008
+done on its green gate. The allowlist remains a named follow-up here and in the task body; 003 and 005..008
 stay implementing until the DB slice lands, exactly as decided at the 2026-06-28 gate.

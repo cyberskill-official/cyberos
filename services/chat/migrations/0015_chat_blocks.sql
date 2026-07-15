@@ -1,10 +1,10 @@
 -- TASK-CHAT-268: user blocking. One row per (blocker, blocked) pair.
 --
--- Numbering: the FR text specifies 0014, but 0014 is taken by TASK-CHAT-267's chat_reports. Renumbered to
+-- Numbering: the task text specifies 0014, but 0014 is taken by TASK-CHAT-267's chat_reports. Renumbered to
 -- 0015; no other change to the shape.
 --
 -- Directional: A blocking B says nothing about whether B blocks A. Private: only the blocker ever reads
--- their own rows, and B is never told (§1 #2, #8 — see the FR's §2 for why telling B is the dangerous
+-- their own rows, and B is never told (§1 #2, #8 — see the task's §2 for why telling B is the dangerous
 -- design, not the honest one).
 
 CREATE TABLE IF NOT EXISTS chat_blocks (

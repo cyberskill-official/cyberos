@@ -1,8 +1,16 @@
 ---
 id: TASK-MEMORY-120
 title: "memory history — `cyberos history <path>` surfaces per-file version + attribution from the audit chain; REST `/api/v2/memories/<path>/history`; dream-applied + session_id annotations rendered inline"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-19T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: memory
-priority: SHOULD
+priority: p1
 status: done
 verify: T
 phase: P1
@@ -114,7 +122,7 @@ The history projection is a **read-only** view over the existing audit chain tha
 
 **Why `--all-paths` cluster view (§1 #12).** Common operator question: "what's been happening in this memory over the last hour?" Without `--all-paths`, the operator has to do per-path history or read the raw binlog. Cluster view is one command + filter.
 
-**Why no protocol amendment (§1 — implicit).** This FR adds zero new normative writer behaviour, no new audit kinds, no new schema fields. It's pure projection over existing data. AGENTS.md unchanged.
+**Why no protocol amendment (§1 — implicit).** This task adds zero new normative writer behaviour, no new audit kinds, no new schema fields. It's pure projection over existing data. AGENTS.md unchanged.
 
 ---
 

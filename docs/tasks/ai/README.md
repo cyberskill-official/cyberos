@@ -1,10 +1,10 @@
 # AI module — task index
 
-_Generated 2026-05-17 — 23 FRs, 175 engineering-hours total._
+_Generated 2026-05-17 — 23 tasks, 175 engineering-hours total._
 
-## FRs
+## tasks
 
-| FR | Priority | Slice | Hours | Title |
+| Task | Priority | Slice | Hours | Title |
 |---|---|---|---:|---|
 | [TASK-AI-001](TASK-AI-001-cost-ledger-precheck/spec.md) | MUST | 1 | 8 | AI Gateway cost-ledger pre-call check |
 | [TASK-AI-002](TASK-AI-002-cost-ledger-postcall-reconcile/spec.md) | MUST | 1 | 6 | AI Gateway cost-ledger post-call reconcile |
@@ -53,7 +53,7 @@ _Generated 2026-05-17 — 23 FRs, 175 engineering-hours total._
 
 ## Historical slice arc (P0 AI Gateway, audited 2026-05-15)
 
-| Slice | FRs | Effort | Theme |
+| Slice | tasks | Effort | Theme |
 |---|---:|---:|---|
 | 1 | TASK-AI-001..005 | 27h | Cost-ledger + memory bridge + policy loader |
 | 2 | TASK-AI-006..010 | 34h | Multi-provider router + circuit breaker + streaming |
@@ -61,7 +61,7 @@ _Generated 2026-05-17 — 23 FRs, 175 engineering-hours total._
 | 4 | TASK-AI-016..020 | 27h | Residency + cache + cross-leak property test + BGE embeddings/rerank |
 | 5 | TASK-AI-021..022 | 12h | Operator CLI + OTel emission |
 
-**P0 AI Gateway closed:** 22 FRs, 128h, all 10/10. **+1 P3 add (TASK-AI-104, 12h)** — Viettel + FPT Cloud integration for `Vn1` residency closure.
+**P0 AI Gateway closed:** 22 tasks, 128h, all 10/10. **+1 P3 add (TASK-AI-104, 12h)** — Viettel + FPT Cloud integration for `Vn1` residency closure.
 
 **Within-slice build order:**
 ```
@@ -73,8 +73,8 @@ slice 5: TASK-AI-022 → TASK-AI-021
 P3:      TASK-AI-104 (depends on TASK-AI-016)
 ```
 
-**Cross-FR consistency anchors:**
-- TenantPolicy schema (TASK-AI-005) consumed by 8 other AI FRs
+**Cross-task consistency anchors:**
+- TenantPolicy schema (TASK-AI-005) consumed by 8 other AI tasks
 - ResolvedModel (TASK-AI-006) consumed by TASK-AI-008, TASK-AI-015, TASK-AI-016, TASK-AI-104
 - memory_writer::emit (TASK-AI-003) consumed by TASK-AI-001, TASK-AI-002, TASK-AI-004, TASK-AI-014
 - cost_table::lookup (TASK-AI-007) consumed by TASK-AI-001, TASK-AI-002, TASK-AI-006

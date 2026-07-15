@@ -45,7 +45,7 @@ Caller switches tenant → manifest cache still has old tenant's brand for up to
 
 All 6 mechanical concerns addressed.
 
-The 660-line length is appropriate for 6h-effort SHOULD-priority FR.
+The 660-line length is appropriate for 6h-effort SHOULD-priority task.
 
 **Score = 10/10.**
 

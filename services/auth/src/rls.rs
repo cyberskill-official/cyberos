@@ -16,7 +16,7 @@
 //!
 //! This pattern is strictly better than the spec's per-tenant policy model:
 //! O(tables) policies instead of O(tenants × tables), no policy thrash on
-//! tenant onboard, no missed policies on legacy tenants. The FR §10.6 spec
+//! tenant onboard, no missed policies on legacy tenants. The task §10.6 spec
 //! amendment documents the divergence + operator-decision request.
 //!
 //! ### What this module ships (TASK-AUTH-003 §10.2)

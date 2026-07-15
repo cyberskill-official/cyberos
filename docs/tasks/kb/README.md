@@ -1,10 +1,10 @@
 # KB module — task index
 
-_Generated 2026-05-17 — 9 FRs, 49 engineering-hours total._
+_Generated 2026-05-17 — 9 tasks, 49 engineering-hours total._
 
-## FRs
+## tasks
 
-| FR | Priority | Slice | Hours | Title |
+| Task | Priority | Slice | Hours | Title |
 |---|---|---|---:|---|
 | [TASK-KB-001](TASK-KB-001-document-schema/spec.md) | MUST | 1 | 6 | KB Document schema — slug + markdown body + YAML frontmatter + closed category enum + 3-tier ACL + i |
 | [TASK-KB-002](TASK-KB-002-server-side-renderer/spec.md) | MUST | 4 | 5 | KB server-side renderer — markdown → sanitised HTML (ammonia) + sanitised plaintext for memory ingest |
@@ -13,7 +13,7 @@ _Generated 2026-05-17 — 9 FRs, 49 engineering-hours total._
 | [TASK-KB-005](TASK-KB-005-bge-m3-semantic/spec.md) | MUST | 5 | 6 | KB BGE-M3 semantic search — memory Layer 2 vector ingest + dense embedding query with chunk-level ret |
 | [TASK-KB-006](TASK-KB-006-bge-rerank/spec.md) | MUST | 5 | 4 | KB BGE-rerank-v2-m3 cross-encoder — reranks top-K results from TASK-KB-004 lexical + TASK-KB-005 semanti |
 | [TASK-KB-007](TASK-KB-007-ask-this-page-qa/spec.md) | MUST | 5 | 8 | KB Ask-this-page Q&A — CUO-grounded answer over current + linked docs with span-level citations and  |
-| [TASK-KB-008](TASK-KB-008-runbook-tags/spec.md) | MUST | 5 | 5 | KB runbook category — applicability tags (provider / region / severity) for OBS triage with FR-OBS-0 |
+| [TASK-KB-008](TASK-KB-008-runbook-tags/spec.md) | MUST | 5 | 5 | KB runbook category — applicability tags (provider / region / severity) for OBS triage with task-OBS-0 |
 | [TASK-KB-009](TASK-KB-009-translation-of-link/spec.md) | SHOULD | 5 | 4 | KB dual-language `translation_of` link — vi/en pairing with locale-aware reader display and translat |
 
 ## Cross-module dependencies

@@ -3,7 +3,7 @@
 GENIE tile. It exposes two things the CUO module already computes, with no LLM call and no mutation:
 
   - the dream-loop evolution envelope (TASK-CUO-204): enabled / mode / idle window / allowlist / denylist;
-  - a summary of the FR backlog (docs/tasks/BACKLOG.md): totals by status and by module.
+  - a summary of the task backlog (docs/tasks/BACKLOG.md): totals by status and by module.
 
 Run from modules/cuo so the `cuo` package imports:
 

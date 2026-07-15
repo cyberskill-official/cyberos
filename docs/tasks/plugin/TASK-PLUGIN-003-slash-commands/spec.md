@@ -1,8 +1,16 @@
 ---
 id: TASK-PLUGIN-003
 title: "Canonical slash-commands — /cyberos-run, /cyberos-memory, /cyberos-skill-list, /cyberos-route markdown definitions in modules/plugin/commands/"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-19T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: PLUGIN
-priority: MUST
+priority: p0
 status: draft
 new_files:
   - modules/plugin/commands/SCHEMA.md
@@ -23,7 +31,7 @@ source_pages:
 
 source_decisions:
   - DEC-2420 2026-05-19 — Slash commands are markdown files at modules/plugin/commands/<name>.md with YAML frontmatter declaring shape + tool bindings
-  - DEC-2421 2026-05-19 — Exactly 4 commands ship in v1 — /cyberos-run, /cyberos-memory, /cyberos-skill-list, /cyberos-route; new commands need a successor FR
+  - DEC-2421 2026-05-19 — Exactly 4 commands ship in v1 — /cyberos-run, /cyberos-memory, /cyberos-skill-list, /cyberos-route; new commands need a successor task
   - DEC-2422 2026-05-19 — Command files MUST be host-portable — Claude Code + Cowork render natively; Cursor + Codex CLI use the SKILL.md compat layer in TASK-PLUGIN-007
   - DEC-2423 2026-05-19 — Command argument schema MUST mirror the underlying MCP tool's input_schema — single source of truth per TASK-PLUGIN-001
   - DEC-2424 2026-05-19 — Commands MUST include before-use trigger discipline per TASK-SKILL-111 — description (60-480 chars) + 4 trigger examples
@@ -53,7 +61,7 @@ build_envelope:
 
   disallowed_tools:
     - inline tool input schemas (per DEC-2423 — single source of truth in manifest)
-    - exceed 4 commands in v1 (per DEC-2421 — successor FR required)
+    - exceed 4 commands in v1 (per DEC-2421 — successor task required)
 
 effort_hours: 4
 subtasks:
@@ -118,7 +126,7 @@ The PLUGIN module **MUST** ship 4 canonical slash-commands at `modules/plugin/co
 
 9. **MUST NOT** declare a tool binding to a non-existent tool (validated by test_commands_bind_to_valid_tools).
 
-10. **MUST NOT** add new commands without a successor FR (FR-PLUGIN-003a, etc.) per DEC-2421.
+10. **MUST NOT** add new commands without a successor task (task-PLUGIN-003a, etc.) per DEC-2421.
 
 11. **MUST NOT** rename a command between v1.x.y releases — rename = breaking change, requires major bump.
 
@@ -128,7 +136,7 @@ The PLUGIN module **MUST** ship 4 canonical slash-commands at `modules/plugin/co
 
 **Why markdown + frontmatter (clause 2)?** Markdown commands are the standard format Claude Code expects (per Anthropic Agent Skills spec) and Cowork rendering uses. YAML frontmatter gives structured metadata (bindings, triggers) while keeping the body rich for human readers.
 
-**Why exactly 4 commands in v1 (DEC-2421)?** Each command is a learnable UI primitive — too many and users can't remember what's available. The 4 cover orchestration (run + route), memory (memory read/append), and discovery (skill-list). Future commands land via successor FRs after usage data.
+**Why exactly 4 commands in v1 (DEC-2421)?** Each command is a learnable UI primitive — too many and users can't remember what's available. The 4 cover orchestration (run + route), memory (memory read/append), and discovery (skill-list). Future commands land via successor tasks after usage data.
 
 **Why mirror tool input_schema (DEC-2423, clause 3)?** Two sources of truth for the same shape drift. The manifest schema (TASK-PLUGIN-001) is canonical. Commands MUST derive from it.
 
@@ -360,7 +368,7 @@ All resolved.
 
 - ~~Should commands support typed argument completion?~~ → Yes, via `arguments[].type` per clause 6. Hosts that support tab-complete (Claude Code) use the type hint.
 - ~~Should /cyberos-memory be one command or split into /cyberos-memory-read and /cyberos-memory-append?~~ → One command with mode prefix per clause 1. Symmetric with how /cyberos-route handles both reads and writes via inputs.
-- ~~Should we add /cyberos-doctor for the bundle health check?~~ → No, TASK-PLUGIN-001 ships `cyberos-plugin doctor` as a CLI; not surfaced as a slash command. Successor FR may add if user demand emerges.
+- ~~Should we add /cyberos-doctor for the bundle health check?~~ → No, TASK-PLUGIN-001 ships `cyberos-plugin doctor` as a CLI; not surfaced as a slash command. Successor task may add if user demand emerges.
 
 ---
 
@@ -373,10 +381,10 @@ All resolved.
 | Description too short | length check | validator test fails | Author expands to ≥60 chars |
 | Description too long | length check | validator test fails | Author trims to ≤480 chars |
 | Triggers count != 4 | length check | validator test fails | Author adds/removes triggers |
-| Tool binding doesn't exist | set membership | validator test fails | Author fixes tool name OR ships FR-PLUGIN-002a to add the tool |
+| Tool binding doesn't exist | set membership | validator test fails | Author fixes tool name OR ships task-PLUGIN-002a to add the tool |
 | Argument type mismatch | type check vs input_schema | validator test fails | Author fixes argument type |
 | Destructive flag missing on append-memory command | explicit fixture assertion | validator test fails | Author adds `destructive: true` |
-| New command added without FR | manifest commands[] grows | validator test fails (5 instead of 4) | Author rolls back OR ships FR-PLUGIN-003a |
+| New command added without task | manifest commands[] grows | validator test fails (5 instead of 4) | Author rolls back OR ships task-PLUGIN-003a |
 | Command rename within v1 | git diff on filename | manual review caught at PR | Revert or bump to v2 |
 | Host renders empty command body | manual smoke test | UX bug surfaces in install | Author adds body |
 | Body missing worked example | grep test for `## Example` | validator test fails | Author adds Example section |
@@ -387,7 +395,7 @@ All resolved.
 
 ## §11 — Implementation notes
 
-- §11.1 **Why no slash-command schema in `manifest.schema.json` is needed.** The manifest just lists `{name, file, description}` per command. The full frontmatter contract lives in the markdown file itself and is validated by the tests in this FR.
+- §11.1 **Why no slash-command schema in `manifest.schema.json` is needed.** The manifest just lists `{name, file, description}` per command. The full frontmatter contract lives in the markdown file itself and is validated by the tests in this task.
 
 - §11.2 **Why `name` in frontmatter doesn't include leading `/`.** Hosts that render commands prepend the `/` themselves. Storing it without the slash keeps the value usable as a slug in URLs and filesystem paths.
 
@@ -401,7 +409,7 @@ All resolved.
 
 - §11.7 **Claude Code custom command rendering.** Claude Code reads markdown from a `.claude/commands/` directory (relative to project). The Claude Code adapter (TASK-PLUGIN-007) copies `modules/plugin/commands/*.md` to `dist/.claude/commands/` in the packed bundle.
 
-- §11.8 **Future command expansion path.** When usage shows demand for additional commands, ship FR-PLUGIN-003a covering each new command at 10/10 with the same validator coverage. Don't accumulate command sprawl.
+- §11.8 **Future command expansion path.** When usage shows demand for additional commands, ship task-PLUGIN-003a covering each new command at 10/10 with the same validator coverage. Don't accumulate command sprawl.
 
 ---
 

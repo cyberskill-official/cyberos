@@ -150,7 +150,7 @@ When `source_hash` drifts:
 
 When PLAN phase enumerates the backlog, each artefact entry MUST be populated with:
 
-- `id`: deterministic from PLAN-time index (e.g. `FR-001` for the first item).
+- `id`: deterministic from PLAN-time index (e.g. `TASK-001` for the first item).
 - `slug`: kebab-cased short description, ≤32 chars.
 - `file_path`: `<output_dir>/<id>-<slug>.md`.
 - `source_refs`: list of file paths + line ranges (`./EXAMPLE.md:42-58`) that justify this artefact's existence.

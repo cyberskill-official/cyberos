@@ -240,7 +240,7 @@ docker build --build-arg PINNED_COMMIT=$(cat services/chat/PINNED_COMMIT) -t cyb
 
 ## §8 — Example payloads
 
-(N/A — infra FR.)
+(N/A — infra task.)
 
 ---
 

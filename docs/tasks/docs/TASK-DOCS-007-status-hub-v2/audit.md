@@ -25,7 +25,7 @@ ISS-002 hook could block commits on a broken site build - resolved: warn-not-blo
 ## §4 - Ship record (2026-07-12, batch mode)
 
 - Implemented: shell v2 (header band, overall segmented bar, callout, legend, additive slots),
-  builder fragments v2 (29 module cards, 996 status chips linked to FR pages, tick changelog,
+  builder fragments v2 (29 module cards, 996 status chips linked to task pages, tick changelog,
   chip'd backlog), contract slot table updated. Zero-touch: pre-commit docs trigger (warn-not-block),
   deploy.yml paths += VERSION + modules/templates/**, version.yml post-bump dispatch (acyclic).
   Wiring greps verified; hub 6/6, legacy 7/7, templates 4/4, full suite sweep clean; site build green.

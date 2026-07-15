@@ -6,7 +6,7 @@ deleted. The capture daemon (TASK-MEMORY-110) subscribes to this stream and
 decides which events should produce memory ``put`` / ``move`` / ``delete``
 ops.
 
-Design choices (DEC-091 / DEC-092 from the FR spec):
+Design choices (DEC-091 / DEC-092 from the task spec):
 
 * **Polling vs native watcher.** Slice 1 ships a portable polling implementation
   in pure stdlib so the personal-memory runs on every platform without
@@ -100,7 +100,7 @@ class FsWatcher:
         """Infinite generator. Calls :meth:`_scan_once` on each tick.
 
         Coalescing IS NOT done here — that's the capture daemon's job (it
-        carries the 250ms window per FR spec §1 #5).
+        carries the 250ms window per task spec §1 #5).
         """
         while self._running:
             for ev in self._scan_once():

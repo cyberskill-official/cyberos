@@ -1,8 +1,16 @@
 ---
 id: TASK-AUTH-105
 title: "AUTH Passkey enrolment + login — discoverable credentials (resident keys) + autofill UI + cross-platform sync + closed enrolment FSM + downgrade-resistance + memory audit per lifecycle event"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AUTH
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P3
@@ -94,7 +102,7 @@ subtasks:
   - "0.3h: jwt/issuer.rs downgrade-gate integration"
   - "2.5h: tests — 11 test files"
 
-risk_if_skipped: "Passkeys are the leading-edge phishing-resistant authentication primitive in 2026; without DEC-540's discoverable credentials + DEC-542's autofill UI, the TASK-AUTH-102 WebAuthn substrate ships unused. TASK-AUTH-101's founder-role passkey requirement (DEC-128) is inert without an enrolment + login flow. Without DEC-543's downgrade-resistance, an attacker who steals a password skips the passkey entirely. Without DEC-552's re-authentication for removal, a session-hijack lets the attacker wipe legitimate passkeys + re-enrol their own. Without DEC-548's recovery-code warning, passkey-only subjects discover the lockout only when they lose their device. The 8h effort lands the modern auth UX that downstream FR-PORTAL-* + TASK-CRM-005 + (every external-facing surface) depend on for credibility."
+risk_if_skipped: "Passkeys are the leading-edge phishing-resistant authentication primitive in 2026; without DEC-540's discoverable credentials + DEC-542's autofill UI, the TASK-AUTH-102 WebAuthn substrate ships unused. TASK-AUTH-101's founder-role passkey requirement (DEC-128) is inert without an enrolment + login flow. Without DEC-543's downgrade-resistance, an attacker who steals a password skips the passkey entirely. Without DEC-552's re-authentication for removal, a session-hijack lets the attacker wipe legitimate passkeys + re-enrol their own. Without DEC-548's recovery-code warning, passkey-only subjects discover the lockout only when they lose their device. The 8h effort lands the modern auth UX that downstream task-PORTAL-* + TASK-CRM-005 + (every external-facing surface) depend on for credibility."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -245,7 +253,7 @@ The AUTH service **MUST** ship passkey enrolment + login via WebAuthn discoverab
 
 **Why platform_synced vs platform_local distinction (DEC-541)?** platform_synced = recoverable via cloud (lose device → restore on new device). platform_local = device-bound (lose device → lose credential). Operator analytics + UX warnings differ between the two.
 
-**Why TASK-AUTH-105 has empty `blocks: []`?** No downstream FRs explicitly depend on passkeys at slice 1 — passkeys are the UX layer on top of TASK-AUTH-102 WebAuthn. Future FRs (FR-PORTAL-*) implicitly benefit but don't have a direct dependency.
+**Why TASK-AUTH-105 has empty `blocks: []`?** No downstream tasks explicitly depend on passkeys at slice 1 — passkeys are the UX layer on top of TASK-AUTH-102 WebAuthn. Future tasks (task-PORTAL-*) implicitly benefit but don't have a direct dependency.
 
 **Why explicit "recovery_warning" in enrol response (§1 #24)?** Default frontend UI shows the warning; tenants with custom UX can decide how to surface (popover, modal, banner). Backend signals the intent; frontend executes.
 
@@ -798,7 +806,7 @@ fn unknown_aaguid_defaults_cross_platform() {
 
 Deferred:
 - **Multi-tenant passkey portability** — same physical key across tenants treated as distinct credentials at slice 1; cross-tenant binding at slice 3.
-- **Passkey backup/recovery via cross-platform key** — recovery codes are the primary fallback; cross-platform-key-as-recovery is FR-AUTH-2xx UX.
+- **Passkey backup/recovery via cross-platform key** — recovery codes are the primary fallback; cross-platform-key-as-recovery is task-AUTH-2xx UX.
 - **Passkey enrolment UI on mobile native app** — slice 2 (web flow only at slice 1).
 - **Sync detection from authenticator metadata** — extension protocols not standardised yet; AAGUID lookup is the slice 1 proxy.
 

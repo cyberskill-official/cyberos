@@ -37,7 +37,7 @@ Clause #5 (build fails on violation) had no test. Resolved: AC 3 / t03 run a pat
 
 ## §3 - Resolution
 
-All six findings addressed as cited. The FR now kills the bug class (hardcoded set drifting from the chain) rather than the single instance. **Score = 10/10.**
+All six findings addressed as cited. The task now kills the bug class (hardcoded set drifting from the chain) rather than the single instance. **Score = 10/10.**
 
 *End of TASK-SKILL-116 audit.*
 

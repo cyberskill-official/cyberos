@@ -29,7 +29,7 @@ Actually the spec §3.1 mcp_tasks doesn't have a `last_progress_at` column. The 
 
 ### ISS-003 — Per-tool annotation `long_running` interplay with TASK-MCP-005 PRM
 
-§7 cross-FR references TASK-MCP-005 "long_running tools advertised via per-module PRM (slice-3 add)". But TASK-MCP-005 shipped without this field. The new field is added to ModuleRegistration here; the PRM consumer reads it. Resolved: §7 explicit that TASK-MCP-005's `scopes_supported` field is the bridge; future PRM enhancement (slice 4) adds `long_running_tools` array. Slice 3 of THIS FR is independent; PRM-side advertising is a deferred enhancement.
+§7 cross-task references TASK-MCP-005 "long_running tools advertised via per-module PRM (slice-3 add)". But TASK-MCP-005 shipped without this field. The new field is added to ModuleRegistration here; the PRM consumer reads it. Resolved: §7 explicit that TASK-MCP-005's `scopes_supported` field is the bridge; future PRM enhancement (slice 4) adds `long_running_tools` array. Slice 3 of THIS task is independent; PRM-side advertising is a deferred enhancement.
 
 ### ISS-004 — Idempotency-key partial index TIME-bound
 
@@ -59,7 +59,7 @@ Actually for slice 3, the subquery is acceptable performance-wise (checkpoint fr
 
 All 6 mechanical concerns addressed. Sub-task cancel cascade scoped to slice 4; worker heartbeat improvement scoped to slice 4 (slice 3 uses conservative TTL-based re-pickup); TASK-MCP-005 cross-reference clarified; idempotency-key partial-index simplified; worker-pool dual-mechanism rationalised; checkpoint RLS performance noted as slice-4 optimisation target.
 
-The 1,135-line length is justified by 3 migrations + 4 endpoints + 8 memory kinds + bounded-concurrency worker pool + checkpoint mechanism + cross-FR integration with MCP-001/002/006/008 + 22 failure modes covering distributed-system pitfalls. Density matches peer MCP FRs.
+The 1,135-line length is justified by 3 migrations + 4 endpoints + 8 memory kinds + bounded-concurrency worker pool + checkpoint mechanism + cross-task integration with MCP-001/002/006/008 + 22 failure modes covering distributed-system pitfalls. Density matches peer MCP tasks.
 
 **Score = 10/10.**
 

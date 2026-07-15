@@ -7,7 +7,7 @@ skill packages what an agent can do into versioned, auditable capabilities. A sk
 
 ## What lives here
 
-- The skill library: author/audit pairs for the FR workflow (context maps, edge-case matrices, implementation plans, code review, coverage gate, observability injection, backlog state updates) - the working parts of `ship-tasks`.
+- The skill library: author/audit pairs for the task workflow (context maps, edge-case matrices, implementation plans, code review, coverage gate, observability injection, backlog state updates) - the working parts of `ship-tasks`.
 - Contracts: `modules/skill/contracts/` holds normative references, including the task STATUS-REFERENCE (the 10-state lifecycle and the two required human-acceptance gates).
 - The Rust host (`modules/skill/crates/host`): loads, validates, and executes skill definitions.
 - Golden sets: `modules/skill/.awh/` seals a baseline of the skill suite; the awh gate reruns it out-of-band so a regression can never self-certify.

@@ -1,6 +1,6 @@
 # PLUGIN module — task index
 
-_Generated 2026-05-19 — 8 FRs, 58 engineering-hours total._
+_Generated 2026-05-19 — 8 tasks, 58 engineering-hours total._
 
 The PLUGIN module ships the packaging + distribution surface that takes shipped CyberOS surfaces (CUO workflows, memory memory tools, SKILL playbooks) and bundles them as installable plugins for **Claude Code**, **Cursor**, **Anthropic Cowork**, **OpenAI Codex CLI**, and downstream MCP-/Skills-compatible runtimes.
 
@@ -8,9 +8,9 @@ This is **distinct** from the MCP gateway (`docs/tasks/mcp/TASK-MCP-001..008`) w
 
 **Strategy alignment:** CYBEROS_STRATEGY §4 Level 1 (OSS distribution) + Level 3 (marketplace) + Level 4 (vertical packs ship as per-region plugins) + Level 5 (enterprise white-label uses private marketplace mode).
 
-## FRs
+## tasks
 
-| FR | Priority | Slice | Hours | Title |
+| Task | Priority | Slice | Hours | Title |
 |---|---|---|---:|---|
 | [TASK-PLUGIN-001](TASK-PLUGIN-001-manifest-schema/spec.md) | MUST | 1 | 8 | Plugin manifest schema v1.0.0 — canonical `plugin.json` validated against `manifest.schema.json`; reference Python packer `cyberos-plugin pack` |
 | [TASK-PLUGIN-002](TASK-PLUGIN-002-mcp-bridge/spec.md) | MUST | 1 | 10 | CyberOS MCP bridge server — exposes CUO/memory/SKILL tools over MCP 2025-11-25 protocol; one binary, stdio + HTTP transports |
@@ -37,7 +37,7 @@ This is **distinct** from the MCP gateway (`docs/tasks/mcp/TASK-MCP-001..008`) w
 - **AUTH**: TASK-PLUGIN-005 → TASK-AUTH-004 (JWT/JWKS issuance, shipped), TASK-AUTH-007 (OAuth-PKCE authorize/token endpoints — placeholder, not yet specified)
 - **memory**: TASK-PLUGIN-006 → TASK-MEMORY-101 (Layer-2 ingest pipeline, shipped), TASK-MEMORY-104 (Tauri/HTTP REST, shipped)
 - **SKILL**: TASK-PLUGIN-004 → TASK-SKILL-111 (description trigger enrichment, shipped), TASK-SKILL-112 (TRIGGER_TESTS.md, shipped), TASK-SKILL-104 (capability broker)
-- **CUO**: TASK-PLUGIN-002 → CUO supervisor v3.0.0-a4 (shipped at modules/cuo/, no FR — already production code)
+- **CUO**: TASK-PLUGIN-002 → CUO supervisor v3.0.0-a4 (shipped at modules/cuo/, no task — already production code)
 
 **This module blocks:**
 
@@ -47,22 +47,22 @@ This is **distinct** from the MCP gateway (`docs/tasks/mcp/TASK-MCP-001..008`) w
 
 ## Status
 
-All 8 FRs at **10/10 audit** as of 2026-05-19. See sibling `*.audit.md` files.
+All 8 tasks at **10/10 audit** as of 2026-05-19. See sibling `*.audit.md` files.
 
 ## Implementation order
 
-The slice order above IS the implementation order. TASK-PLUGIN-001 has the lowest dependency surface (just JSONSchema validation) and is the keystone — every other FR consumes its manifest contract. Within each slice, FRs can be implemented in parallel (different files), but reciprocity invariants in BACKLOG.md §B require shipping in slice order.
+The slice order above IS the implementation order. TASK-PLUGIN-001 has the lowest dependency surface (just JSONSchema validation) and is the keystone — every other task consumes its manifest contract. Within each slice, tasks can be implemented in parallel (different files), but reciprocity invariants in BACKLOG.md §B require shipping in slice order.
 
 ```
 Slice 1                           Slice 2                                Slice 3
 ┌───────────────┐    ┌──────┐    ┌────────────┐    ┌──────────────┐    ┌────────────┐    ┌─────────────┐
-│ TASK-PLUGIN-001 │ ─▶ │ -002 │ ─▶ │ FR-PLUGIN- │ ─▶ │  FR-PLUGIN-  │ ─▶ │ FR-PLUGIN- │ ─▶ │ FR-PLUGIN-  │
+│ TASK-PLUGIN-001 │ ─▶ │ -002 │ ─▶ │ task-PLUGIN- │ ─▶ │  task-PLUGIN-  │ ─▶ │ task-PLUGIN- │ ─▶ │ task-PLUGIN-  │
 │   manifest    │    │ MCP  │    │  005 auth  │    │ 006 audit    │    │ 007 multi  │    │ 008 publish │
 └───────────────┘    └──────┘    └────────────┘    └──────────────┘    └────────────┘    └─────────────┘
         │                              │                                       ▲
         ▼                              ▼                                       │
    ┌─────────┐                  ┌─────────────┐                                │
-   │ FR-003  │                  │  FR-004     │ ──────── playbook deps ────────┘
+   │ TASK-003  │                  │  TASK-004     │ ──────── playbook deps ────────┘
    │ slash   │                  │  skill      │
    │ cmds    │                  │  playbooks  │
    └─────────┘                  └─────────────┘

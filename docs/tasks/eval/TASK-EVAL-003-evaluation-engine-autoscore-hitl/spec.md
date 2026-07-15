@@ -2,8 +2,10 @@
 template: engineering-spec@1
 id: TASK-EVAL-003
 title: "Evaluation engine — GENIE evidence-linked auto-scoring against the TASK-EVAL-002 rubric with a mandatory human-in-the-loop gate before any assessment is final"
+type: feature
+created_at: 2026-06-29T00:00:00+07:00
 module: EVAL
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P4
@@ -17,7 +19,6 @@ memory_chain_hash: null
 author: "@stephen"
 department: engineering
 ai_authorship: assisted
-feature_type: internal_tooling
 eu_ai_act_risk_class: high
 client_visible: false
 
@@ -75,7 +76,7 @@ disallowed_tools:
   - draft an assessment for a subject with no acknowledged TASK-EVAL-001 notice (per DEC-2510)
   - emit a fabricated/default numeric score when GENIE is unsupported/offline (per DEC-2514 — the only legal fallback is "no score, flag for human")
   - auto-apply a consequential outcome (pay/progression/employment) from a model output (per DEC-2512)
-  - call any model except via the ai-gateway `eval.score` route with ZDR on (per DEC-2515 / FR-AI residency+ZDR contract)
+  - call any model except via the ai-gateway `eval.score` route with ZDR on (per DEC-2515 / task-AI residency+ZDR contract)
 
 effort_hours: 14
 subtasks:
@@ -115,7 +116,7 @@ The evaluation engine **MUST** turn captured platform evidence into an *evidence
 
 9. **MUST** let the subject view and respond to their own assessment. Once an assessment is `pending_review` or later, the subject MUST be able to read it (their own, in full, with evidence and rationale) and submit a `rebuttal` (free text + optional clause-level disagreements) via `POST /v1/eval/assessments/:id/rebut`. The rebuttal MUST be captured immutably, surfaced to the reviewer before they finalize, and recorded in the audit chain. A pending rebuttal MUST block transition to `approved` until the reviewer has seen it (reviewer sets `rebuttal_considered = true`).
 
-10. **MUST** write the final result AND every state change to `l1_audit_log` (DEC-2515) via the FR-MEMORY chain. Each transition emits one append-only audit row: `eval.assessment_drafted`, `eval.assessment_pending_review`, `eval.assessment_approved`, `eval.assessment_changed`, `eval.assessment_rejected`, `eval.assessment_rebutted`, `eval.fallback_no_score`, `eval.draft_refused_no_consent`. Each row MUST carry `{assessment_id, subject_id, actor_subject_id, rubric_version, prior_state, new_state, evidence_event_ids, score_digest, change_summary, trace_id}`. The chain is the defensible record.
+10. **MUST** write the final result AND every state change to `l1_audit_log` (DEC-2515) via the task-MEMORY chain. Each transition emits one append-only audit row: `eval.assessment_drafted`, `eval.assessment_pending_review`, `eval.assessment_approved`, `eval.assessment_changed`, `eval.assessment_rejected`, `eval.assessment_rebutted`, `eval.fallback_no_score`, `eval.draft_refused_no_consent`. Each row MUST carry `{assessment_id, subject_id, actor_subject_id, rubric_version, prior_state, new_state, evidence_event_ids, score_digest, change_summary, trace_id}`. The chain is the defensible record.
 
 11. **MUST** run GENIE via the ai-gateway with spend caps + residency + ZDR (DEC-2515). All model calls MUST route through the ai-gateway `eval.score` policy: per-tenant spend cap enforced, data residency honored (no cross-region egress of personal data), zero-data-retention (ZDR) on so the provider does not retain or train on the evidence. A direct provider call bypassing the gateway MUST be impossible from this service (no provider keys in the eval service).
 
@@ -161,7 +162,7 @@ The evaluation engine **MUST** turn captured platform evidence into an *evidence
 
 **Why pin the rubric version (§1 #17)?** Rubrics evolve. An assessment scored against v3 must keep meaning v3 forever, or every historical review silently rewrites itself when the rubric changes. Pinning makes the record stable and the comparison honest.
 
-**Why a dedicated `services/eval` Rust+Python split?** The state machine, the citation invariant, the access/consent gate, and the audit emit are correctness-critical and benefit from Rust's type system and the existing per-tenant RLS+sqlx patterns (mirrors TASK-PROJ-008, FR-CHAT). The GENIE inference orchestration (recall → prompt → parse) is Python because that's where the ai-gateway client and the prompt live (mirrors the CUO/modules layout). The boundary is clean: Python proposes scores, Rust validates and persists them — and Rust is where every gate lives, so a Python bug can't finalize anything.
+**Why a dedicated `services/eval` Rust+Python split?** The state machine, the citation invariant, the access/consent gate, and the audit emit are correctness-critical and benefit from Rust's type system and the existing per-tenant RLS+sqlx patterns (mirrors TASK-PROJ-008, task-CHAT). The GENIE inference orchestration (recall → prompt → parse) is Python because that's where the ai-gateway client and the prompt live (mirrors the CUO/modules layout). The boundary is clean: Python proposes scores, Rust validates and persists them — and Rust is where every gate lives, so a Python bug can't finalize anything.
 
 ---
 
@@ -529,7 +530,7 @@ async def test_unsupported_clause_never_carries_a_score():
 
 - **TASK-MEMORY-123** — brain recall supplies the evidence events with provenance; the recall set is the universe a score may cite (§1 #3 #5). *(depends_on)*
 - **TASK-EVAL-002** — the rubric (clauses + source contract clause) the engine scores against; `rubric_version` is pinned per assessment (§1 #4 #17). *(depends_on)*
-- **TASK-EVAL-001** — governance/consent/access/retention; the consent gate (§1 #2) and the founder|manager|self visibility (§1 #16) are this FR's enforcement of TASK-EVAL-001's rules.
+- **TASK-EVAL-001** — governance/consent/access/retention; the consent gate (§1 #2) and the founder|manager|self visibility (§1 #16) are this task's enforcement of TASK-EVAL-001's rules.
 - **TASK-CUO-204 / the ai-gateway** — GENIE (Lumi) is the analysis engine; the `eval.score` route reuses the gateway's spend cap + residency + ZDR machinery (§1 #11).
 - **TASK-AUTH-003** — per-tenant RLS spine for assessment visibility (§1 #16).
 - **TASK-PROJ-008** — the chain_anchor / memory-row linkage pattern reused for `assessment_state_event` (§1 #10).
@@ -628,13 +629,13 @@ Resolved in-spec: HITL is mandatory and structural (DEC-2511/2512); the fallback
 - Citation coverage is enforced in three places on purpose: the prompt (`score_v1` refuses to guess), the Rust boundary (`validate_citation` rejects), and the DB (`CHECK (clause_status <> 'scored' OR array_length(evidence_event_ids,1) >= 1)`). Defense in depth because an uncited score is the failure that most undermines trust.
 - "No score, flag for human" is the single fallback for every model failure mode — offline, timeout, malformed output, unsupported clause. The engine has no code path that writes a numeric score the model did not ground; a `None` score is a first-class value, not an error to be defaulted away.
 - GENIE never persists. Python returns a `DraftAssessment`; Rust validates and writes it. This keeps every gate (consent, citation, finalize, audit) in the typed Rust service where it's testable, and means a Python exception degrades to `needs_human_review` rather than corrupting state.
-- The `eval.score` gateway route reuses the existing AI-gateway policy machinery (spend cap, residency, ZDR) rather than re-implementing it — this FR adds the route and its policy, not a second cost/residency engine. ZDR-on is non-negotiable for employment evidence; the route refuses to dispatch to a provider that doesn't honor it.
+- The `eval.score` gateway route reuses the existing AI-gateway policy machinery (spend cap, residency, ZDR) rather than re-implementing it — this task adds the route and its policy, not a second cost/residency engine. ZDR-on is non-negotiable for employment evidence; the route refuses to dispatch to a provider that doesn't honor it.
 - `genie_score` on `assessment_score` always preserves the model's original draft even after a human `change`, so the GENIE-vs-human diff is queryable forever. The override rate and its rationales are the primary fairness telemetry; a high rate is a prompt/rubric signal, not a reviewer failing.
 - Protected-attribute blinding happens in Python before the gateway call so the model literally never receives identity. The blind list is per-tenant (jurisdictions differ on what's protected) and auditable. The disparity check is post-hoc and advisory: it flags for a human, never mutates a score, because an auto-correcting fairness pass is just a different bias.
 - The rebuttal is immutable and must be seen before approval (`rebuttal_considered`). This is deliberately a hard block, not a soft nudge: a person's written disagreement cannot be approved around without a reviewer acknowledging it.
 - The appeal path requires a *second* human reviewer, distinct from the one who finalized, mirroring a normal grievance escalation. It's the human safety net beyond the in-cycle rebuttal.
-- This is an EU-AI-Act high-risk system (employment evaluation): the conformance posture is disclosed-purpose (TASK-EVAL-001 notice), human oversight (Article 14 — the mandatory reviewer and the appeal), transparency to the subject (own-record view + rebuttal), data governance (recall provenance, ZDR, residency), and logging (the audit chain). Stephen reviews and signs off before this FR leaves `draft`, per the high-risk rule.
-- `eval_is_manager_of` is a tenant-scoped helper over the org/manager-chain data (FR-AUTH directory); it backs the RLS visibility policy and the appeal-reviewer selection. If the org graph is unavailable, the safe default is *deny* (founder + self only), never *allow*.
+- This is an EU-AI-Act high-risk system (employment evaluation): the conformance posture is disclosed-purpose (TASK-EVAL-001 notice), human oversight (Article 14 — the mandatory reviewer and the appeal), transparency to the subject (own-record view + rebuttal), data governance (recall provenance, ZDR, residency), and logging (the audit chain). Stephen reviews and signs off before this task leaves `draft`, per the high-risk rule.
+- `eval_is_manager_of` is a tenant-scoped helper over the org/manager-chain data (task-AUTH directory); it backs the RLS visibility policy and the appeal-reviewer selection. If the org graph is unavailable, the safe default is *deny* (founder + self only), never *allow*.
 - Cadence and on-demand drafts share one code path (§1 #1) so a gate can never be present on one and missing on the other; the scheduler is just a different caller of the same `draft_assessment` entrypoint.
 
 ---
@@ -660,7 +661,7 @@ A human is the decision-maker at every consequential point (EU AI Act Article 14
 - **Consequential hard gate.** Anything affecting pay, progression, level, bonus, PIP, or continued employment stays inert until a human sets it with `consequential_ack = true`; the engine never auto-applies it to payroll/HRIS/level (§1 #8). The model assists; only an approving human's explicit act makes it real.
 - **Employee rebuttal.** The subject reads their own assessment in full (evidence + rationale) and can rebut in writing; a pending rebuttal hard-blocks approval until the reviewer has seen it (§1 #9).
 - **Appeal.** A finalized assessment can be escalated to a second human reviewer, distinct from the first (§1 #15).
-- **Override accountability + audit.** A human `change`/`reject` requires a stated rationale (§1 #19); every state change is written append-only to `l1_audit_log` with actor, evidence, rubric version, and change summary (§1 #10), so who decided what on what evidence is always reconstructable. Stephen signs off before this FR leaves `draft`, per the high-risk rule.
+- **Override accountability + audit.** A human `change`/`reject` requires a stated rationale (§1 #19); every state change is written append-only to `l1_audit_log` with actor, evidence, rubric version, and change summary (§1 #10), so who decided what on what evidence is always reconstructable. Stephen signs off before this task leaves `draft`, per the high-risk rule.
 
 ### Failure Modes
 
@@ -673,9 +674,9 @@ Every model failure resolves to a human, never to a fabricated or silent score �
 
 ## AI Authorship Disclosure
 
-- **Tools used:** Claude (Cowork), authoring this FR + its paired audit from Stephen's 2026-06-29 decisions and the BRAIN/EVAL strategy note (`docs/strategy/cyberos-brain-evaluation-plan.md`, Phase 4 + "Doing the monitoring responsibly"), in the repo's engineering-spec@1 house style.
+- **Tools used:** Claude (Cowork), authoring this task + its paired audit from Stephen's 2026-06-29 decisions and the BRAIN/EVAL strategy note (`docs/strategy/cyberos-brain-evaluation-plan.md`, Phase 4 + "Doing the monitoring responsibly"), in the repo's engineering-spec@1 house style.
 - **Scope:** full draft of this specification — the normative clauses, the migrations and Rust/Python sketches, the AI Risk Assessment, the acceptance criteria, and the failure-mode inventory.
-- **Human review:** Stephen reviews and approves before status moves past `draft`. This is a high-risk FR, so the mandatory-HITL design, the consent gate, and the no-score fallback need his explicit sign-off; the paired audit plus the CAF/AWH gate validate before any implementation merges.
+- **Human review:** Stephen reviews and approves before status moves past `draft`. This is a high-risk task, so the mandatory-HITL design, the consent gate, and the no-score fallback need his explicit sign-off; the paired audit plus the CAF/AWH gate validate before any implementation merges.
 
 ---
 

@@ -26,7 +26,7 @@ emitted_source_freshness_tier: 10
 
 # `subtask@1` — canonical task contract
 
-A task is a comprehensive, ready-to-assign unit of work that lives inside a task@1 artefact. Each task is self-contained enough that an engineer or an AI agent can pick it up and execute without re-reading the parent FR's discussion.
+A task is a comprehensive, ready-to-assign unit of work that lives inside a task@1 artefact. Each task is self-contained enough that an engineer or an AI agent can pick it up and execute without re-reading the parent task's discussion.
 
 ## When to use
 
@@ -36,17 +36,17 @@ A task is a comprehensive, ready-to-assign unit of work that lives inside a task
 
 ## Task ID format
 
-`<FR-id>-T-<MM>` — e.g. `TASK-007-S-03` is the third task of FR-007. Sequential within an FR, two-digit zero-padded. Greppable, auditable, referenceable from PR descriptions ("closes TASK-007-S-03").
+`<task-id>-T-<MM>` — e.g. `TASK-007-S-03` is the third task of TASK-007. Sequential within a task, two-digit zero-padded. Greppable, auditable, referenceable from PR descriptions ("closes TASK-007-S-03").
 
 ## Required fields
 
 ```yaml
-id: FR-NNN-T-MM                       # required
+id: task-NNN-T-MM                       # required
 title: <one-sentence imperative>      # required
 description: |                        # required, no character cap
   Full description of what this task accomplishes. Includes context an
   engineer or AI agent needs to execute without re-reading the parent
-  FR. Cite specific files, line numbers, runtimes, configs as relevant.
+  Task. Cite specific files, line numbers, runtimes, configs as relevant.
   Multi-paragraph encouraged.
 preconditions:                        # required (list, may be empty)
   - <what must be true before starting>
@@ -112,14 +112,14 @@ review_cohort: [subject:..., ...]     # who must approve before done
 
 A task is *valid* when:
 
-1. `id` matches `^FR-\d+-T-\d{2}$`
+1. `id` matches `^task-\d+-T-\d{2}$`
 2. `description` is ≥ 200 characters (forces comprehensive scope)
 3. `acceptance_test` has exactly one of `shell` or `assertion`
 4. `sizing` is one of `S|M|L|XL`
-5. `parallelisable` is consistent with `dependencies`: if dependencies is non-empty AND every dependency is in the same FR's task list, `parallelisable: false` is required during the dependency window
+5. `parallelisable` is consistent with `dependencies`: if dependencies is non-empty AND every dependency is in the same task's task list, `parallelisable: false` is required during the dependency window
 6. `agent_profile` is set iff `"ai-agent"` is in `assignable_to`
 7. `estimated_hours` is set iff `"human"` is in `assignable_to`
-8. Every dependency in `dependencies` resolves to a real task in the same FR or an earlier FR
+8. Every dependency in `dependencies` resolves to a real task in the same task or an earlier task
 
 ## Lifecycle
 
@@ -128,13 +128,13 @@ draft  ─►  ready  ─►  in_progress  ─►  done
                                   └►  blocked
 ```
 
-Transitions audit-logged via op:str_replace on the parent FR file.
+Transitions audit-logged via op:str_replace on the parent task file.
 
 ## Pipeline interface
 
 - **Input**: a `task@1` body that includes a `tasks:` list field.
 - **Output**: same; tasks are embedded, not separate files.
-- **External integration**: `cyberos proj sync FR-NNN` reads the task list, creates project-tracker tickets, writes back `linked_pr` + `status` updates.
+- **External integration**: `cyberos proj sync task-NNN` reads the task list, creates project-tracker tickets, writes back `linked_pr` + `status` updates.
 
 ## Versioning
 

@@ -1,8 +1,16 @@
 ---
 id: TASK-AUTH-002
 title: "Subject create — POST /v1/admin/subjects with bcrypt + role allow-list + idempotency + RLS-enforced cross-tenant blocking"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AUTH
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P0
@@ -96,7 +104,7 @@ The AUTH service **MUST** expose `POST /v1/admin/subjects` for creating new auth
 
 **Why the password complexity rules in §1 #4?** NIST SP 800-63B walks back from arbitrary complexity rules ("must contain symbol", etc.) toward "length + breach-list check." We adopt the modern approach: 12-char minimum (length is the dominant factor) + character-class diversity (defence against the most common weak patterns) + breach-list check via embedded top-10K. The breach list is small (~80KB compressed) and embedded in the binary; lookups are constant-time hash-set membership checks.
 
-**Why a role allow-list (§1 #5)?** Free-form role strings invite typos (`"tenant_admin"` vs `"tenant-admin"`) and accidental privilege creep (operator typos `"tenant-superadmin"` and creates a role nothing checks for). The closed allow-list catches typos at the API boundary; expansion is a deliberate FR (TASK-AUTH-101 ships 22 roles).
+**Why a role allow-list (§1 #5)?** Free-form role strings invite typos (`"tenant_admin"` vs `"tenant-admin"`) and accidental privilege creep (operator typos `"tenant-superadmin"` and creates a role nothing checks for). The closed allow-list catches typos at the API boundary; expansion is a deliberate task (TASK-AUTH-101 ships 22 roles).
 
 **Why cross-tenant creation forbidden even for root-admin (§1 #1)?** Root-admin's privilege is "I can do anything in tenant 0 AND I can switch tenant context." But creating a subject in tenant X from tenant-0 context is two operations conflated into one — and the audit row would attribute the creation to "root-admin in tenant 0," obscuring which actual tenant the subject belongs to. Forcing root-admin to switch context first (via `X-Switch-Tenant`) makes the action explicit and the audit clean.
 
@@ -444,7 +452,7 @@ pub async fn create_subject(
 - **TASK-AUTH-001** — Tenants table + RLS templates (subjects MUST be added to `TENANT_SCOPED_TABLES`).
 - **TASK-AUTH-004 (downstream)** — JWT issuance reads `password_hash` for `bcrypt::verify` during login.
 - **TASK-AUTH-101 (downstream)** — Expands the role allow-list from 2 to 22.
-- **TASK-AUTH-114 (downstream)** — Argon2id migration; this FR ships bcrypt only.
+- **TASK-AUTH-114 (downstream)** — Argon2id migration; this task ships bcrypt only.
 - Crates: `bcrypt@0.15`, `zeroize@1`, `regex@1`, `sha2@0.10`, `hex@0.4`, `axum`, `sqlx`, `serde`, `thiserror`.
 - Build dependency: `top_10k_passwords.rs` generated at build time from a vendored breach list (~80KB compressed).
 
@@ -580,7 +588,7 @@ the connection pool and paying a fresh DNS + TCP + TLS handshake on *every passw
 in `hibp.rs`; the client is now built once and reused. That is a real latency win for every signup and
 password change, and it existed only because a latency test nobody could satisfy was being tolerated.
 
-**What we did NOT do: lower the cost factor.** The original §1 #10 offered "switch to cost 10 ONLY via FR
+**What we did NOT do: lower the cost factor.** The original §1 #10 offered "switch to cost 10 ONLY via task
 amendment" as the escape hatch. This amendment explicitly closes that hatch. [OWASP's Password Storage Cheat
 Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html) sets bcrypt's
 minimum work factor at 10 and says it should be "as large as verification server performance will allow";

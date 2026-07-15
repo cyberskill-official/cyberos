@@ -33,11 +33,11 @@ Encoding 90 as a literal would collide with TASK-CUO-207's config override a wav
 Rewriting SKILL.md files invites description drift that would break TASK-SKILL-111/112 trigger tests. Resolved: §1 #7 byte-stability rule + AC 6 sha256 assertion on the six TRIGGER_TESTS.md.
 
 ### ISS-006 checker rigidity
-Skills legitimately differ (backlog-state-update needs no references/ tree in the same shape). Resolved: the file-class arrays at the top of the checker ARE the policy, changeable only by editing this FR's clauses (§10 #3) - no per-skill exceptions smuggled in code.
+Skills legitimately differ (backlog-state-update needs no references/ tree in the same shape). Resolved: the file-class arrays at the top of the checker ARE the policy, changeable only by editing this task's clauses (§10 #3) - no per-skill exceptions smuggled in code.
 
 ## §3 - Resolution
 
-All six findings addressed as cited. Sequencing note (land before TASK-CUO-205's @2 bump) is recorded on both FRs. **Score = 10/10.**
+All six findings addressed as cited. Sequencing note (land before TASK-CUO-205's @2 bump) is recorded on both tasks. **Score = 10/10.**
 
 *End of TASK-SKILL-118 audit.*
 

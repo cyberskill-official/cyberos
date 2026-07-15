@@ -2,7 +2,7 @@
 
 **Status:** draft, 2026-05-14
 **Author:** Stephen Cheng (CyberSkill)
-**Spec:** `../../website/docs/modules/auth.html` (1,218 lines, 5W1H2C5M + 12 internal components + 20 FR-AUTH + RBAC catalogue)
+**Spec:** `../../website/docs/modules/auth.html` (1,218 lines, 5W1H2C5M + 12 internal components + 20 task-AUTH + RBAC catalogue)
 **Lives at:** `services/auth/` once approved
 **Depends on:** memory module (audit chain), OBS module (telemetry — not built; deferred dep)
 

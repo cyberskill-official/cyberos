@@ -2,8 +2,16 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future fr-catalog renderer) ─────
 id: TASK-AI-012
 title: "VN-PII Presidio plugin (CCCD · MST · VN phone · NĐD · VN address · bank account)"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AI
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P0
@@ -77,7 +85,7 @@ risk_if_skipped: "Vietnamese personal data leaks to LLM providers on every VN te
 
 The Presidio sidecar (TASK-AI-011) **MUST** register 6 Vietnamese-specific PII recognizers. Each recognizer:
 
-1. **MUST** match the documented pattern with **recall ≥ 99% per entity type AND ≥ 99% aggregate** on the 200-sample VN PII test set (TASK-AI-013 enforces the CI gate; this FR provides the recognizers and the fixture file). The per-type floor catches the case where one recognizer regresses to 90% recall while others compensate to keep the aggregate above 99%.
+1. **MUST** match the documented pattern with **recall ≥ 99% per entity type AND ≥ 99% aggregate** on the 200-sample VN PII test set (TASK-AI-013 enforces the CI gate; this task provides the recognizers and the fixture file). The per-type floor catches the case where one recognizer regresses to 90% recall while others compensate to keep the aggregate above 99%.
 2. **MUST** assign a confidence score in the range `[0.0, 1.0]` per Presidio convention. The placeholder format is `<VN_<TYPE>_<N>>` where TYPE ∈ `CCCD`, `MST`, `PHONE`, `NDD`, `ADDRESS`, `BANK_ACCOUNT`. Scores MUST come from the shared `confidence.py` constants — no inline numeric literals in recognizer classes.
 3. **MUST** support both pre-composed and combining-form Vietnamese characters (Unicode normalisation handled by Presidio's analyzer pipeline; recognizers receive NFC-normalized text).
 4. **MUST NOT** false-positive on plain Vietnamese text. The 200-sample test set MUST include negative examples (Vietnamese names without CCCD, addresses without ward/district structure, dates that look like 12-digit numbers, VND amounts that look like phone numbers).
@@ -685,11 +693,11 @@ test_vn_recall_floor.py::test_recall_at_least_99_percent PASSED  # 199/200 = 0.9
 
 ## §7 — Dependencies
 
-### Code dependencies (other FRs/modules)
+### Code dependencies (other tasks/modules)
 
-- **TASK-AI-011** — Presidio sidecar must exist; this FR adds recognizers TO it. The `PiiType` Rust enum already includes the VN variants (declared in TASK-AI-011 §3 for ABI stability).
+- **TASK-AI-011** — Presidio sidecar must exist; this task adds recognizers TO it. The `PiiType` Rust enum already includes the VN variants (declared in TASK-AI-011 §3 for ABI stability).
 - **TASK-AI-013 (downstream)** — Recall-floor CI gate consumes the `vn_pii_200_samples.yaml` fixture and runs `test_vn_recall_floor.py` as the gate.
-- **TASK-AI-005** — `TenantPolicy.ai_policy.pii_redaction_extra` lists the VN entities to enable per-tenant; this FR's recognizers handle them once the policy field reaches the sidecar.
+- **TASK-AI-005** — `TenantPolicy.ai_policy.pii_redaction_extra` lists the VN entities to enable per-tenant; this task's recognizers handle them once the policy field reaches the sidecar.
 
 ### Concept dependencies (shared types)
 
@@ -785,7 +793,7 @@ RuntimeError: recognizer_registration_failed: VnAddressRecognizer: ...
 
 ## §9 — Open questions
 
-All resolved at authoring time. Items deferred to later FRs:
+All resolved at authoring time. Items deferred to later tasks:
 
 - Partial-redact policy (`vn_address_partial_redact: true`) — slice 5.
 - Per-tenant custom recognizers (proprietary product SKUs as PII) — slice 5.

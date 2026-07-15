@@ -438,7 +438,7 @@ async fn idempotency_key_long_string_currently_accepted() {
 // NOT covered here (documented in audit §10.2 G-007 follow-up):
 //   * ECM-009 concurrent same-slug — needs tokio::join! racing two POSTs;
 //     deterministic only with serializable isolation set on the test
-//     transaction. Deferred to a follow-up integration FR.
+//     transaction. Deferred to a follow-up integration task.
 //   * ECM-011 same Idempotency-Key + DIFFERENT body — 409 idempotency_key_reuse;
 //     the current idempotency module returns the prior body (silent replay)
 //     instead of 409. Closing this gap is a small idempotency.rs change,

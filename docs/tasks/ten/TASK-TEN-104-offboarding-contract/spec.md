@@ -1,8 +1,16 @@
 ---
 id: TASK-TEN-104
 title: "TEN 90-day offboarding contract — closed 4-state FSM (Active → Terminating-A → Terminating-B → Terminated) + day-pinned transitions + scheduled jobs + read-only freeze + dead-letter recovery + dual-signoff irreversible wipe"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: TEN
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P4
@@ -30,7 +38,7 @@ source_decisions:
   - DEC-508 (REVOKE UPDATE, DELETE on tenant_offboarding_log from cyberos_app — append-only at SQL grant)
   - DEC-509 (read-only freeze enforced at TASK-AUTH-004 JWT issuance: tokens for tenants in terminating_a have `scope_grants` filtered to read-only operations; write attempts return 423 `tenant_read_only` + emit `ten.read_only_write_attempted`)
   - DEC-510 (cancellation (terminating_a → active) requires same caller authority as initiation: root-admin OR tenant-admin with explicit confirmation step; emits `ten.terminating_cancelled` row)
-  - DEC-511 (TASK-TEN-202 hostile-termination fast-track bypasses 30-day terminating_a window — direct active → terminating_b with CEO+CLO+CSO sign-off; this FR ships the FSM that TASK-TEN-202 consumes)
+  - DEC-511 (TASK-TEN-202 hostile-termination fast-track bypasses 30-day terminating_a window — direct active → terminating_b with CEO+CLO+CSO sign-off; this task ships the FSM that TASK-TEN-202 consumes)
   - DEC-512 (per-tenant offboarding extension via `POST /v1/ten/offboarding/extend` — adds 1-30 days to current state; max 2 extensions per offboarding cycle; CLO role required)
   - DEC-513 (dead-letter restore from terminating_b requires CSO + CLO dual-signoff + restore reason; emits `ten.dead_letter_restored` memory row sev-1)
   - DEC-514 (FSM enforced at trigger AND handler — defense in depth; trigger uses ENUM transition matrix function)
@@ -204,7 +212,7 @@ The TEN service **MUST** ship the 90-day offboarding contract — closed 4-state
 
 ## §2 — Why this design (rationale for humans)
 
-**Why closed 4-state FSM (DEC-500)?** Each state corresponds to a distinct legal+operational meaning. `active` = customer pays + has full access. `terminating_a` = grace period for export + cancellation. `terminating_b` = data already wiped to dead-letter; only restoration is recovery. `terminated` = irreversible per Object-Lock. A 5th state (e.g. `suspended` for non-payment) is FR-TEN-2xx — distinct lifecycle, separate FSM. Closed enum prevents drift.
+**Why closed 4-state FSM (DEC-500)?** Each state corresponds to a distinct legal+operational meaning. `active` = customer pays + has full access. `terminating_a` = grace period for export + cancellation. `terminating_b` = data already wiped to dead-letter; only restoration is recovery. `terminated` = irreversible per Object-Lock. A 5th state (e.g. `suspended` for non-payment) is task-TEN-2xx — distinct lifecycle, separate FSM. Closed enum prevents drift.
 
 **Why 30+60 = 90 days default (DEC-501)?** GDPR Art. 17 doesn't specify a fixed grace, but industry practice is 90 days (matches Salesforce, Microsoft 365, Zendesk). 30-day RO + export covers the "I changed my mind" case; 60-day dead-letter covers the "I changed my mind two months later" case. Per-tenant config allows 30-180 for high-trust or high-risk variants.
 
@@ -230,7 +238,7 @@ The TEN service **MUST** ship the 90-day offboarding contract — closed 4-state
 
 **Why explicit confirmation string per handler (§1 #9, #11, #13)?** Destructive operations (cancel, terminate, restore) are rare; operator confirms by typing the exact string. Prevents accidental click-through.
 
-**Why TASK-TEN-202 fast-track bypasses 30-day terminating_a (DEC-511)?** Hostile termination (regulatory order, court injunction) demands faster action than 90-day grace allows. CEO+CLO+CSO triple-sign-off (vs CSO+CLO dual for normal flow) reflects the elevated authority. This FR ships the FSM that TASK-TEN-202 consumes; the fast-track handler is TASK-TEN-202.
+**Why TASK-TEN-202 fast-track bypasses 30-day terminating_a (DEC-511)?** Hostile termination (regulatory order, court injunction) demands faster action than 90-day grace allows. CEO+CLO+CSO triple-sign-off (vs CSO+CLO dual for normal flow) reflects the elevated authority. This task ships the FSM that TASK-TEN-202 consumes; the fast-track handler is TASK-TEN-202.
 
 **Why FSM at trigger AND handler (DEC-514, §1 #16)?** Trigger catches direct SQL access (e.g. operator psql session bypassing handlers). Handler provides clearer error responses (HTTP status, JSON body). Both ensure invariant holds.
 
@@ -796,7 +804,7 @@ async fn terminated_at_mutation_rejected(pool: sqlx::PgPool) {
 ## §7 — Dependencies
 
 **Upstream:**
-- **TASK-TEN-001** — tenant provisioning (this FR consumes tenants table).
+- **TASK-TEN-001** — tenant provisioning (this task consumes tenants table).
 
 **Downstream (2 placeholders):**
 - **TASK-TEN-105** — signed-bundle export (consumes terminating_a state to gate exports).
@@ -945,7 +953,7 @@ All other questions resolved.
 - **Object-Lock COMPLIANCE** — even root account can't delete dead letter.
 - **Per-tenant dead_letter_retention_days override** — 30-90 days.
 - **Explicit confirmation strings** — operator deliberate confirmation.
-- **TASK-TEN-202 fast-track via active → terminating_b** — this FR ships FSM; TEN-202 ships the triple-signoff handler.
+- **TASK-TEN-202 fast-track via active → terminating_b** — this task ships FSM; TEN-202 ships the triple-signoff handler.
 - **FSM at trigger + handler** — direct SQL + handler both blocked.
 - **scheduled_advance_at pinned at entry** — extensions UPDATE this.
 - **CLO for extension, root-admin for initiate** — role separation.

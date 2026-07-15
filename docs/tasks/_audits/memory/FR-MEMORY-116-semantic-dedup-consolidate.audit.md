@@ -11,7 +11,7 @@ template: engineering-spec@1
 
 ## §1 — Verdict summary
 
-TASK-MEMORY-116 authored direct-to-10/10. ~460 lines (compact because it's a wrapper FR). 10 §1 clauses (opt-in, dry-run default, reuse TASK-MEMORY-115 detectors, threshold knob, audit-row invocation tagging, phase ordering, §7.7 anchor enforcement, summary stdout, idempotency, threshold range). 4 §2 rationale paragraphs. CLI signature + pipeline integration scaffold in §3. 14 ACs all `traces_to: §1 #N`. 10 pytest tests covering all ACs. 9 failure modes. 4 implementation notes.
+TASK-MEMORY-116 authored direct-to-10/10. ~460 lines (compact because it's a wrapper task). 10 §1 clauses (opt-in, dry-run default, reuse TASK-MEMORY-115 detectors, threshold knob, audit-row invocation tagging, phase ordering, §7.7 anchor enforcement, summary stdout, idempotency, threshold range). 4 §2 rationale paragraphs. CLI signature + pipeline integration scaffold in §3. 14 ACs all `traces_to: §1 #N`. 10 pytest tests covering all ACs. 9 failure modes. 4 implementation notes.
 
 ## §2 — Findings (all resolved during authoring)
 
@@ -41,7 +41,7 @@ Without `extra.invocation`, dedup rows from consolidate vs explicit dream runs a
 | TRACE-005 | n/a | No deferred slices |
 
 ### Score derivation
-- Pre-revision: 9.0/10 (clean wrapper FR; minor ambiguity on phase failure semantics)
+- Pre-revision: 9.0/10 (clean wrapper task; minor ambiguity on phase failure semantics)
 - Post-expansion: 9.5/10 (added DEC-220..222 + §1 #6 phase-ordering invariant)
 - Post-revision: **10/10**
 

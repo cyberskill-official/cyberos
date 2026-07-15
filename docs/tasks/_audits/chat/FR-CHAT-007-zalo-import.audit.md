@@ -51,7 +51,7 @@ Zalo filenames frequently embed VN names. Resolved: §1 #22 + filename redaction
 Zalo bundles inconsistently use seconds, milliseconds, or ISO-8601 timestamps depending on exporter version. A static parser would mis-import dates silently. Resolved: §1 #23 + `normalise_ts` magnitude-based heuristic with explicit boundary documentation; AC #24 + parameterised rstest; §6.4 documents the boundary values.
 
 ### ISS-012 — Membership events absent (strict-redo pass)
-Zalo `<div class="event" data-type="user_joined">` elements need to surface as channel-member changes for downstream FRs (TASK-CHAT-008 mentions, TASK-CHAT-012 DSAR). Resolved: §1 #24 + ZaloMembershipEvent type + AC #25 + dedicated test body.
+Zalo `<div class="event" data-type="user_joined">` elements need to surface as channel-member changes for downstream tasks (TASK-CHAT-008 mentions, TASK-CHAT-012 DSAR). Resolved: §1 #24 + ZaloMembershipEvent type + AC #25 + dedicated test body.
 
 ### ISS-013 — Legacy cp1258 encoding silently corrupts (strict-redo pass)
 Older Zalo Windows exports use Windows-1258 for VN text; default UTF-8 decoding produces mojibake silently. Resolved: §1 #25 + `--bundle-encoding` flag + encoding-detection fallback heuristic; AC #26 + decoding round-trip test.

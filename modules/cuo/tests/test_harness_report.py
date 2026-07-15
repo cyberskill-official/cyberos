@@ -115,7 +115,7 @@ def test_report_emits_markdown(skill_root: Path, tmp_path: Path) -> None:
     assert "# Harness report" in body
     assert "## Skills with tripped signals" in body
     assert "## Workflows with elevated rework" in body
-    assert "## Per-FR routed-back history" in body
+    assert "## Per-task routed-back history" in body
     assert "## Summary" in body
     assert len(body) > 200
 
@@ -134,7 +134,7 @@ def test_signal_thresholds_trip_correctly(skill_root: Path) -> None:
         rows.append(_row(
             "memory.fr_routed_back", now_ns - i * 1_000_000_000,
             skill="task-audit",
-            task_id=f"FR-X-{i:03d}",
+            task_id=f"TASK-X-{i:03d}",
             outcome="ROUTED_BACK",
             row_id=f"rb-{i}",
         ))
@@ -142,7 +142,7 @@ def test_signal_thresholds_trip_correctly(skill_root: Path) -> None:
     rows.append(_row(
         "memory.fr_completed", now_ns,
         skill="task-audit",
-        task_id="FR-X-999",
+        task_id="TASK-X-999",
         outcome="done",
         row_id="rc-1",
     ))
@@ -293,7 +293,7 @@ def test_empty_chain_clean_exit(skill_root: Path, tmp_path: Path) -> None:
     # All 4 sections present
     assert "## Skills with tripped signals" in body
     assert "## Workflows with elevated rework" in body
-    assert "## Per-FR routed-back history" in body
+    assert "## Per-task routed-back history" in body
     assert "## Summary" in body
     # All empty
     assert "*(no signals tripped in this window)*" in body

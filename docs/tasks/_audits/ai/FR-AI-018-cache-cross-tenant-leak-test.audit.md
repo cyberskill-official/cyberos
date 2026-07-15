@@ -172,7 +172,7 @@ The §5 stub had no `setUp`/`tearDown`. The §10 row "Flaky test (Redis state po
 
 ## §4 — Resolution
 
-All 6 mechanical revisions applied (2026-05-16) within the FR itself:
+All 6 mechanical revisions applied (2026-05-16) within the task itself:
 
 - **ISS-001 RESOLVED**: §1 #2 makes the math explicit (`ProptestConfig::with_cases(256)` × ~1000 ops/case = 256K ops); §5 every proptest body specifies `ProptestConfig`; CI workflow exposes `PROPTEST_CASES: "256"` env var; §2 has the calibration paragraph.
 

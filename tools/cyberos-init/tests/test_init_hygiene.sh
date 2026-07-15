@@ -3,8 +3,8 @@
 #   t01  .gitignore = ONE managed block, regenerated in place; legacy scattered entries lifted;
 #        operator lines outside the markers survive re-init byte-for-byte.
 #   t02  CHANGELOG.md is created exactly once (never clobbered on re-init).
-#   t03  auto-migration: root-level flat FRs relocate to <module>/<STEM>/spec.md (module from
-#        frontmatter), module-level flat FRs migrate, references rewrite, verify line is clean.
+#   t03  auto-migration: root-level flat tasks relocate to <module>/<STEM>/spec.md (module from
+#        frontmatter), module-level flat tasks migrate, references rewrite, verify line is clean.
 #   t04  payload self-cleanup: <repo>/.cyberos-init removes itself on success; kept with
 #        CYBEROS_KEEP_PAYLOAD=1; non-canonical in-repo copies are never removed.
 set -uo pipefail
@@ -60,9 +60,9 @@ t02_changelog_once() {
 t03_root_fr_migration() {
   local d="$TMP/mig"; mkrepo "$d"
   mkdir -p "$d/docs/tasks/api"
-  printf -- '---\nid: TASK-CORE-001\ntitle: Root FR\nmodule: widget-core\nstatus: draft\n---\nbody\n' \
+  printf -- '---\nid: TASK-CORE-001\ntitle: Root task\nmodule: widget-core\nstatus: draft\n---\nbody\n' \
     > "$d/docs/tasks/TASK-CORE-001-root-thing.md"
-  printf -- '---\nid: TASK-API-001\ntitle: Mod FR\nstatus: draft\n---\nbody\n' \
+  printf -- '---\nid: TASK-API-001\ntitle: Mod task\nstatus: draft\n---\nbody\n' \
     > "$d/docs/tasks/api/TASK-API-001-mod-thing.md"
   printf -- '# idx\nsee docs/tasks/TASK-CORE-001-root-thing.md and TASK-CORE-001-root-thing.md\n' \
     > "$d/docs/tasks/INDEX.md"
@@ -84,7 +84,7 @@ t03_root_fr_migration() {
   fi
   # idempotent: second run moves nothing
   out2="$(bash "$TMP/payload/install.sh" "$d" 2>&1)"
-  grep -q "nothing to do (already folder-per-FR)" <<<"$out2" || { fail t03-idem "second run not a no-op"; all=0; }
+  grep -q "nothing to do (already folder-per-task)" <<<"$out2" || { fail t03-idem "second run not a no-op"; all=0; }
   [ "$all" -eq 1 ] && ok t03
 }
 
@@ -109,11 +109,11 @@ t05_supersede_old_docs() {
   local all=1 d="$TMP/sup"; mkrepo "$d"
   mkdir -p "$d/docs"
   printf '# my roadmap\nQ3 plans here\n'            > "$d/docs/ROADMAP.md"
-  printf '# my backlog\n- FR-A-001 pending row\n'   > "$d/docs/BACKLOG.md"
+  printf '# my backlog\n- TASK-A-001 pending row\n'   > "$d/docs/BACKLOG.md"
   printf '# changes\n\n## [0.2.0] - 2026-01-01\n\n- old release\n' > "$d/docs/CHANGELOG.md"
   bash "$TMP/payload/install.sh" "$d" >/dev/null 2>&1
   # adoption: content preserved in the canonical homes
-  grep -q "FR-A-001 pending row" "$d/docs/tasks/BACKLOG.md" || { fail t05-adopt-bl "docs/BACKLOG.md not adopted"; all=0; }
+  grep -q "TASK-A-001 pending row" "$d/docs/tasks/BACKLOG.md" || { fail t05-adopt-bl "docs/BACKLOG.md not adopted"; all=0; }
   grep -q "0.2.0" "$d/CHANGELOG.md" || { fail t05-adopt-cl "docs/CHANGELOG.md not adopted to root"; all=0; }
   if command -v node >/dev/null 2>&1; then
     # the old standalone docs are REMOVED outright - the page replaces them
@@ -123,7 +123,7 @@ t05_supersede_old_docs() {
     # idempotent: re-init keeps them removed and keeps the adopted content
     bash "$TMP/payload/install.sh" "$d" >/dev/null 2>&1
     [ ! -f "$d/docs/ROADMAP.md" ] || { fail t05-idem "removed doc resurrected on re-init"; all=0; }
-    grep -q "FR-A-001 pending row" "$d/docs/tasks/BACKLOG.md" || { fail t05-idem-bl "adopted backlog lost on re-init"; all=0; }
+    grep -q "TASK-A-001 pending row" "$d/docs/tasks/BACKLOG.md" || { fail t05-idem-bl "adopted backlog lost on re-init"; all=0; }
   fi
   [ "$all" -eq 1 ] && ok t05
 }

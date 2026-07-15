@@ -1,6 +1,6 @@
 # architectural-spike-author - pipeline
 
-P0 intake: validate inputs (audited FR, repo-context-map, one question, integer
+P0 intake: validate inputs (audited task, repo-context-map, one question, integer
 timebox). Refuse a multi-question spike - one spike, one decision. Record
 timebox_hours in the draft artefact BEFORE any probing (INV-1). Allocate spike_id.
 

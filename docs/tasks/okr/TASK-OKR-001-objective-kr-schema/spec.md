@@ -1,8 +1,16 @@
 ---
 id: TASK-OKR-001
 title: "OKR Objective × Key Result schema — Company → Team → Member cascade + quarterly Cycle + closed alignment FSM + RLS + face-saving status enum"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: OKR
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P3
@@ -29,10 +37,10 @@ source_decisions:
   - DEC-366 (closed cycle_status enum at 4 values: planning · active · closing · closed — transitions are unidirectional)
   - DEC-367 (REVOKE UPDATE, DELETE on kr_progress_log, objective_status_history from cyberos_app — append-only at SQL grant)
   - DEC-368 (memory audit kinds: okr.cycle_opened, okr.cycle_closed, okr.objective_created, okr.objective_updated, okr.kr_progress_recorded, okr.kr_status_changed, okr.alignment_created, okr.cycle_retro_recorded)
-  - DEC-369 (EU AI Act Art. 14 — OKR-driven employment decisions REQUIRE explicit human approval; this FR ships the data model that downstream HR/REW/LEARN consumes; the human-in-loop gate is in those FRs)
+  - DEC-369 (EU AI Act Art. 14 — OKR-driven employment decisions REQUIRE explicit human approval; this task ships the data model that downstream HR/REW/LEARN consumes; the human-in-loop gate is in those tasks)
   - DEC-370 (KR `progress_value_numeric` is BIGINT for hit_target + improvement; for milestone, the value is a boolean (achieved = 1 | not = 0); TASK-OKR-002 ships full per-type validation)
   - DEC-371 (cascading delete: Cycle delete CASCADES to objectives; Objective delete CASCADES to KRs; KR delete RESTRICTs if progress_log exists — preserves audit history)
-  - DEC-372 (Member OKRs reference HR Member by subject_id 1:1 with auth.subjects; team OKRs reference a Team entity declared in this FR (tenant-local) since HR doesn't ship a Team primitive)
+  - DEC-372 (Member OKRs reference HR Member by subject_id 1:1 with auth.subjects; team OKRs reference a Team entity declared in this task (tenant-local) since HR doesn't ship a Team primitive)
   - PDPL Art. 13 (data minimisation — KR rationale + progress comments PII-scrubbed in memory chain)
   - ISO 27001:2022 A.5.16 (information classification — OKR data classified as "internal strategy")
   - EU AI Act Art. 14 Annex III §4 (high-risk-adjacent: OKR-driven employment decisions)
@@ -41,7 +49,7 @@ language: rust 1.81 + sql
 service: cyberos/services/okr/
 new_files:
   - services/okr/migrations/0001_cycles.sql                      # cycles table + cycle_kind + cycle_status enums + RLS
-  - services/okr/migrations/0002_teams.sql                       # tenant-local teams (FR-HR ships members; OKR ships team primitive)
+  - services/okr/migrations/0002_teams.sql                       # tenant-local teams (task-HR ships members; OKR ships team primitive)
   - services/okr/migrations/0003_objectives.sql                  # objectives + scope enum + alignment FK + RLS
   - services/okr/migrations/0004_key_results.sql                 # key_results + kr_type + kr_status enums + RLS
   - services/okr/migrations/0005_progress_log.sql                # append-only KR progress recordings (consumed by TASK-OKR-005 check-ins)
@@ -108,7 +116,7 @@ subtasks:
   - "0.3h: face-saving-terminology CI lint test"
   - "1.0h: tests — 11 test files"
 
-risk_if_skipped: "OKR is the quarterly strategy operating loop; without the schema, the cascade is operator-mental rather than data-canonical. Every downstream OKR FR (TASK-OKR-002 KR types, TASK-OKR-003 progress source DSL, TASK-OKR-004 auto-progress batch, TASK-OKR-005 weekly check-ins, TASK-OKR-006 Monday digest, TASK-OKR-007 retros) reads from these tables. Without DEC-365's strict alignment tree, member OKRs drift away from company strategy. Without DEC-364's face-saving status enum, the Vietnamese cultural adaptation is lost — operators see 'failed' and the retro becomes blame-finding. Without DEC-367's append-only progress log, KR progress can be retroactively edited — forecast integrity breaks. Without DEC-369's EU AI Act Art. 14 acknowledgement, OKR-driven employment decisions skip the human-in-loop requirement. The 6h effort lands the foundational primitives + the cultural adaptations baked into the schema."
+risk_if_skipped: "OKR is the quarterly strategy operating loop; without the schema, the cascade is operator-mental rather than data-canonical. Every downstream OKR task (TASK-OKR-002 KR types, TASK-OKR-003 progress source DSL, TASK-OKR-004 auto-progress batch, TASK-OKR-005 weekly check-ins, TASK-OKR-006 Monday digest, TASK-OKR-007 retros) reads from these tables. Without DEC-365's strict alignment tree, member OKRs drift away from company strategy. Without DEC-364's face-saving status enum, the Vietnamese cultural adaptation is lost — operators see 'failed' and the retro becomes blame-finding. Without DEC-367's append-only progress log, KR progress can be retroactively edited — forecast integrity breaks. Without DEC-369's EU AI Act Art. 14 acknowledgement, OKR-driven employment decisions skip the human-in-loop requirement. The 6h effort lands the foundational primitives + the cultural adaptations baked into the schema."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -217,7 +225,7 @@ The OKR service **MUST** ship the Cycle + Team + Objective + KeyResult schema as
 
 **Why team_id on Team objectives + owner_subject_id on Member objectives (§1 #5, §1 #8)?** Scope alone is insufficient — we need to know WHICH team / WHICH member. Per-scope conditional required field at handler validation. The team_id references the tenant-local `teams` table; owner_subject_id references AUTH.
 
-**Why teams as a tenant-local primitive (DEC-372, §1 #4)?** HR (TASK-HR-001) ships Member records but doesn't ship a Team primitive (deferred to FR-HR-2xx). OKR needs teams now for the Team-scope objectives. Shipping the teams table here (in OKR's schema) is the pragmatic answer; future HR Team primitive can either supersede or join.
+**Why teams as a tenant-local primitive (DEC-372, §1 #4)?** HR (TASK-HR-001) ships Member records but doesn't ship a Team primitive (deferred to task-HR-2xx). OKR needs teams now for the Team-scope objectives. Shipping the teams table here (in OKR's schema) is the pragmatic answer; future HR Team primitive can either supersede or join.
 
 **Why append-only kr_progress_log (DEC-367, §1 #13)?** Quarterly retros depend on "what was the KR's progression over time?" — answerable only with a chained history. UPDATE in place loses prior recordings; the log preserves them. The `source` field (manual | auto | check_in) lets TASK-OKR-003's auto-progress batch distinguish its own writes from operator manual recordings.
 
@@ -237,7 +245,7 @@ The OKR service **MUST** ship the Cycle + Team + Objective + KeyResult schema as
 
 **Why `description`, `rationale`, `name` PII-scrubbed (§1 #19)?** Objective descriptions may contain employee names ("Improve Alice's onboarding time"); KR rationale during weekly check-ins may carry personal context. TASK-MEMORY-111 scrubs before memory chain commit; Postgres retains raw for in-tenant queries.
 
-**Why slice 1 ships only the schema + handlers, not the progress DSL or check-in flow?** Split: TASK-OKR-001 = data model; TASK-OKR-003 = progress source DSL (substantial — queries against PROJ/INV/HR/LEARN); TASK-OKR-005 = weekly check-in handler. Splitting keeps this FR focused on the foundational schema.
+**Why slice 1 ships only the schema + handlers, not the progress DSL or check-in flow?** Split: TASK-OKR-001 = data model; TASK-OKR-003 = progress source DSL (substantial — queries against PROJ/INV/HR/LEARN); TASK-OKR-005 = weekly check-in handler. Splitting keeps this task focused on the foundational schema.
 
 ---
 
@@ -865,7 +873,7 @@ All other questions resolved.
 - **Doerr/Grove canonical** — 3-tier cascade + 3-5 KRs + quarterly cycles. Closed enums prevent organisational drift.
 - **Face-saving terminology baked into schema + CI lint** — Vietnamese cultural adaptation enforced mechanically.
 - **Alignment tree at trigger** — defense in depth; handler validates too.
-- **Tenant-local teams primitive** — FR-HR ships Members; OKR ships Teams (no HR Team primitive yet).
+- **Tenant-local teams primitive** — task-HR ships Members; OKR ships Teams (no HR Team primitive yet).
 - **Append-only progress_log via SQL grant** — quarterly retros depend on the full history.
 - **EU AI Act Art. 14 acknowledgement in OpenAPI** — high-risk-adjacent module; human-in-loop is the contract.
 - **Cascading delete Cycle → Objectives → KRs** — operator-explicit destructive action.

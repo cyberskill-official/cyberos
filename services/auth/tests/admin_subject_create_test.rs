@@ -377,7 +377,7 @@ async fn create_subject_emits_memory_audit_row() {
 // The cost factor stays at 12. OWASP's floor is 10 and the industry is moving toward 13-14 (and toward
 // Argon2 entirely) — lowering it to make an assertion green would walk backwards past the recommended
 // minimum to satisfy a budget that was miscalculated. If hashing ever needs to get cheaper, that is a
-// security decision with its own FR, not a side effect of a test.
+// security decision with its own task, not a side effect of a test.
 
 /// Local stand-in for the HIBP range API, so the SLO measures our code rather than Cloudflare.
 ///

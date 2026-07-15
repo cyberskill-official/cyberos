@@ -2,7 +2,7 @@
 //! citable brain. Ingestion + embedding (via the ai-gateway) + rolling summaries + hot/warm/cold tiering +
 //! access-scoped, provenance-carrying recall.
 //!
-//! Design invariants (the FR's load-bearing decisions):
+//! Design invariants (the task's load-bearing decisions):
 //!   * DEC-2721 — `l1_audit_log` (the hash chain) is the SYSTEM OF RECORD; `brain_event_embedding` +
 //!     `brain_summary` are a DERIVED, rebuildable fast lens. Layer 1 wins on any conflict. The worker is
 //!     READ-ONLY over the chain (it never writes, deletes, or mutates an audit row).
@@ -165,7 +165,7 @@ pub struct RecallResults {
     pub degraded_backends: Vec<String>,
 }
 
-/// Brain runtime config, read from the environment at startup. Defaults match the FR (30d hot / 180d warm,
+/// Brain runtime config, read from the environment at startup. Defaults match the task (30d hot / 180d warm,
 /// §1 #6). Kept in one place so the worker, the tiering pass, and the tests agree.
 #[derive(Clone, Copy, Debug)]
 pub struct BrainConfig {

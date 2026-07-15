@@ -2,8 +2,16 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future fr-catalog renderer) ─────
 id: TASK-AI-021
 title: "cyberos-ai operator CLI (usage · models · policy · failover · invoice · breaker · expiry · memory) with --confirm + --json + audit"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AI
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P0
@@ -113,7 +121,7 @@ The AI Gateway service **MUST** ship a `cyberos-ai` operator CLI binary providin
     - `7` — internal error
     - `6` — internal error (panic, unexpected state)
    Exit codes are part of the CLI's stable contract; scripts and CI pipelines depend on them.
-8. **MUST** version `--json` output schemas. Each command's JSON output starts with `{"schema_version":"v1",...}`; consumers parse the version first and select the appropriate parser. Schema files live in `cli/json_schemas/<command>.v1.json` (JSON Schema draft-07). Bumping a schema requires explicit FR amendment AND inclusion of the prior schema for one release cycle.
+8. **MUST** version `--json` output schemas. Each command's JSON output starts with `{"schema_version":"v1",...}`; consumers parse the version first and select the appropriate parser. Schema files live in `cli/json_schemas/<command>.v1.json` (JSON Schema draft-07). Bumping a schema requires explicit task amendment AND inclusion of the prior schema for one release cycle.
 9. **MUST** include the subcommand catalogue (each subcommand has `--help` listing its specific flags):
 
    | Command | Purpose | Mutating | Required role | Audit row kind |
@@ -575,13 +583,13 @@ async fn main() {
 
 ## §7 — Dependencies
 
-### Code dependencies (other FRs/modules)
+### Code dependencies (other tasks/modules)
 
-- **TASK-AI-005** — `policy::validate_yaml()` + `policy::apply()` exposed to the CLI; this FR depends on the schema being stable.
+- **TASK-AI-005** — `policy::validate_yaml()` + `policy::apply()` exposed to the CLI; this task depends on the schema being stable.
 - **TASK-AI-008** — `breaker::status_all()` + `breaker::reset(target)`; the breaker module exposes admin entry-points.
 - **TASK-AI-001** — Cost-ledger Postgres tables for `usage` + `invoice` aggregations.
 - **TASK-AI-002** — `ai.invocation` rows are the source for invoice export.
-- **TASK-AI-003** — memory audit-row bridge; this FR adds `canonical::cli_*` builders.
+- **TASK-AI-003** — memory audit-row bridge; this task adds `canonical::cli_*` builders.
 - **TASK-AI-004** — `expiry_repair` directly closes TASK-AI-004's slice-1 dedup limitation (AC #9).
 - **TASK-AI-007** — `cost_table::lookup()` for `models pricing`.
 - **TASK-AI-014** — Persona-handle parsing for `policy set --allowed-personas`.
@@ -729,7 +737,7 @@ exit 4
 
 ## §9 — Open questions
 
-All resolved at authoring time. Items deferred to later FRs:
+All resolved at authoring time. Items deferred to later tasks:
 
 - Multi-operator collaboration (e.g., one operator initiates a drill, another approves) — out of scope; current model is single-operator-per-command.
 - Web-based operator UI alongside the CLI — slice 6+; CLI is the slice-5 surface.

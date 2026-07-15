@@ -371,7 +371,7 @@ fn build_digest(scope_kind: &str, scope_id: &str, kinds: &[String], total: usize
 }
 
 /// ISO-8601 week key (`YYYY-Www`) for a ns timestamp — the `time_window` scope id. Uses chrono's ISO week so
-/// the week boundaries match the FR's `2026-W26` example.
+/// the week boundaries match the task's `2026-W26` example.
 fn iso_week_key(ts_ns: i64) -> String {
     use chrono::Datelike;
     let secs = ts_ns / 1_000_000_000;

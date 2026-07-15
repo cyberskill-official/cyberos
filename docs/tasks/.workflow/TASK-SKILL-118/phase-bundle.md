@@ -16,14 +16,14 @@ NULL: pair dir absent in trimmed payload -> checker skips (presence is chain-cov
   (t03). MALFORMED: unreadable skills dir -> exit 2 (checker guard). RACE: none (read-only checker).
 SECURITY: none new (docs + read-only bash; no injection surface - checker takes one dir arg, no eval).
 DEGRADATION: file-class policy drift -> arrays at top of checker ARE the policy, changeable only via
-  this FR (§10 #3); t05 proves a deleted RUBRIC.md exits 10 by name.
+  this task (§10 #3); t05 proves a deleted RUBRIC.md exits 10 by name.
 
 ## implementation (steps 6-14)
 86 files generated: per author PIPELINE/INVARIANTS/envelopes(2)/FAILURE_MODES/acceptance-README; per
 audit RUBRIC/AUDIT_LOOP/REPORT_FORMAT/envelopes(2)/acceptance-README; spike pair acceptance READMEs.
-Rubrics encode FR §1 #3 gates verbatim with prose->rule tables (AC 2): RCM-/ECM-/MCT-/OBS-/BSU-/COV-/DBG-
+Rubrics encode task §1 #3 gates verbatim with prose->rule tables (AC 2): RCM-/ECM-/MCT-/OBS-/BSU-/COV-/DBG-
 prefixes. BSU rubric versioned backlog_state_update_rubric@2.0 (NOT @1.0): TASK-CUO-205 landed first and
-already bumped the artefact to @2 with BSU-INS-001..005 in SKILL.md prose - this FR migrates them to the
+already bumped the artefact to @2 with BSU-INS-001..005 in SKILL.md prose - this task migrates them to the
 file form its §7 anticipated ("rules land in SKILL.md prose and migrate"). Deviation from §1 #2's "@1.0"
 literal recorded here per newest-wins doctrine.
 SKILL.md changes: one additive "Contract files (TASK-SKILL-118)" section per skill, appended at EOF -
@@ -45,7 +45,7 @@ BSU @2 transition window intact.
 ## coverage gate (steps 21-29)
 test_pair_parity.sh 6/6 (one per AC). Full regression: 6/6 cyberos-init suites (incl. new suite),
 ship_manifest 8/8, full-profile build green with parity gate live (52 skills, plugin 1.09MB < 2MB).
-ECM rows each name their covering check inline above. tests_failed=0; files_below_90pct n/a (bash+docs FR,
+ECM rows each name their covering check inline above. tests_failed=0; files_below_90pct n/a (bash+docs task,
 no python touched); ecm_rows_uncovered=[].
 
 ## ship-manifest dogfood (TASK-CUO-206 in production)

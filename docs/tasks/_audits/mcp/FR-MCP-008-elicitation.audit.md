@@ -27,7 +27,7 @@ The spec lands the MCP Elicitation primitive per MCP 2025-11-25 spec; closes TAS
 
 ### ISS-003 — Cross-caller security audit kind outside 5-core list
 
-§17 emits 5 core kinds. The cross-caller security event (`mcp.cross_caller_access_denied`) is outside but mentioned in §11.5 + §10 row + §6.2 code. task-audit skill rule 8 closed-set extension requires explicit listing. Resolved: §11.16 explicitly adds `mcp.cross_caller_access_denied` as a 6th security-signal kind (outside the 5-core because emitted by the security boundary check, not the lifecycle path); TASK-AI-003 closed-set extension covers 6 total.
+§17 emits 5 core kinds. The cross-caller security event (`mcp.cross_caller_access_denied`) is outside but mentioned in §11.5 + §10 row + §6.2 code. Task-audit skill rule 8 closed-set extension requires explicit listing. Resolved: §11.16 explicitly adds `mcp.cross_caller_access_denied` as a 6th security-signal kind (outside the 5-core because emitted by the security boundary check, not the lifecycle path); TASK-AI-003 closed-set extension covers 6 total.
 
 ### ISS-004 — Idempotency uniqueness on response_payload_sha256
 
@@ -45,7 +45,7 @@ The spec lands the MCP Elicitation primitive per MCP 2025-11-25 spec; closes TAS
 
 All 6 mechanical concerns addressed. Worker-slot semantics documented as accepted tradeoff; sync-tool ban scope clarified; 6th audit kind (cross-caller security) explicit; idempotency mechanism documented; presigned URL clock-skew handling noted; tool API generic-vs-schema limitation acknowledged as implementer responsibility.
 
-The 1,090-line length is justified by 5 elicitation types × per-type fixed schemas + dual transport (polling + NATS push) + file upload via S3 + TASK-MCP-006 integration + JSON Schema validator + 22 failure modes. Density comparable to peer MCP FRs.
+The 1,090-line length is justified by 5 elicitation types × per-type fixed schemas + dual transport (polling + NATS push) + file upload via S3 + TASK-MCP-006 integration + JSON Schema validator + 22 failure modes. Density comparable to peer MCP tasks.
 
 **Score = 10/10.**
 

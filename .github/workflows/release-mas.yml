@@ -4,10 +4,10 @@ name: release-mas
 # .pkg packaging, App Store Connect upload. Manual dispatch only (deliberately NOT coupled to
 # release tags while the channel is stood up) and inert until the repo variable MAS_RELEASE=true
 # AND every hard blocker in docs/deploy/mac-app-store-submission.md is resolved - notably the
-# follow-up FR that excludes tauri-plugin-updater from the MAS target (self-update is both a
+# follow-up task that excludes tauri-plugin-updater from the MAS target (self-update is both a
 # sandbox violation and an App Store policy violation; see the answer sheet's "Updater finding").
 #
-# Divergences from the FR's §3 skeleton, on purpose (recorded in the FR review packet):
+# Divergences from the task's §3 skeleton, on purpose (recorded in the task review packet):
 #   - bundle paths are repo-root-relative and include the universal-apple-darwin target triple
 #   - helper-binary signing SKIPS the main executable (re-signing it with the inherit plist
 #     would clobber the app's real entitlements - the skeleton's `MacOS/*` glob was a bug)

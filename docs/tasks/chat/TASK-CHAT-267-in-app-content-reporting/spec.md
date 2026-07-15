@@ -1,10 +1,17 @@
 ---
 id: TASK-CHAT-267
 title: "In-app content reporting - report a message, an attachment, or a person"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-07-11T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: CHAT
-priority: MUST
+priority: p0
 status: done
-class: product
 verify: T
 phase: P0
 milestone: P0 - store compliance (UGC controls)
@@ -48,7 +55,7 @@ subtasks:
   - "ReportDialog + message overflow entry + member-list entry (4h)"
   - "i18n EN/VI + a11y pass (1h)"
   - "integration tests: dedup, rate limit, cross-tenant, deleted target (2h)"
-risk_if_skipped: "Google Play requires an in-app report path for any app that carries user-generated content. CyberOS ships team chat, so the content-rating questionnaire must declare user-to-user communication, and declaring it without a report path is a policy violation that gets the submission rejected. Declining to declare it is worse: the app is pulled after it is live, with the developer account at risk. Without this FR the Play submission cannot honestly proceed."
+risk_if_skipped: "Google Play requires an in-app report path for any app that carries user-generated content. CyberOS ships team chat, so the content-rating questionnaire must declare user-to-user communication, and declaring it without a report path is a policy violation that gets the submission rejected. Declining to declare it is worse: the app is pulled after it is live, with the developer account at risk. Without this task the Play submission cannot honestly proceed."
 ---
 
 ## §1 - Description (BCP-14 normative)
@@ -85,7 +92,7 @@ risk_if_skipped: "Google Play requires an in-app report path for any app that ca
 
 **Why a closed reason set (§1 #2)?** Google's UGC policy is satisfied by "a mechanism to report", but the mechanism has to be usable by whoever reviews the report. TASK-CHAT-269 sorts an admin's queue by severity, and severity is a function of reason. Free text cannot be sorted. The set chosen mirrors the categories every major platform converged on, so it maps cleanly onto the content-rating questionnaire's own vocabulary.
 
-**Why snapshot the content at report time (§1 #4)?** This is the clause the whole FR turns on. `chat_messages` supports edit (`edited_at`) and soft delete (`deleted_at`), both available to the sender. Without a snapshot, the obvious abuse is: post something abusive, wait for the report, delete it, and the moderation queue shows an empty row while the recipient has already read it. The snapshot is the evidence. It is written once and never updated.
+**Why snapshot the content at report time (§1 #4)?** This is the clause the whole task turns on. `chat_messages` supports edit (`edited_at`) and soft delete (`deleted_at`), both available to the sender. Without a snapshot, the obvious abuse is: post something abusive, wait for the report, delete it, and the moderation queue shows an empty row while the recipient has already read it. The snapshot is the evidence. It is written once and never updated.
 
 **Why does a second report return 200, not 409 (§1 #6)?** Two reasons, one usability and one security. Usability: a user who is not sure their tap registered will tap again, and greeting that with an error teaches them the feature is broken. Security: a distinct response for "already reported" is an oracle. Anyone could probe whether a given message has an outstanding report by reporting it and reading the status code. Returning the same shape either way closes that.
 
@@ -614,7 +621,7 @@ async fn snapshot_target(
 ## §7 - Dependencies
 
 - **Upstream:** none. `chat_messages`, `chat_attachments`, `chat_channel_members` and the tenant-GUC helper (`db::begin_tenant`) all exist from TASK-CHAT-101 and its successors.
-- **Downstream:** TASK-CHAT-269 (moderation queue) reads `chat_reports` and is the only writer of `status`, `resolution`, `resolved_at`, `resolved_by_subject_id`. This FR creates those columns but never transitions them.
+- **Downstream:** TASK-CHAT-269 (moderation queue) reads `chat_reports` and is the only writer of `status`, `resolution`, `resolved_at`, `resolved_by_subject_id`. This task creates those columns but never transitions them.
 - **Sibling:** TASK-CHAT-268 (blocking) is independent - a person can be blocked without being reported, and reported without being blocked. The two share only the member-list entry point in the client.
 - **Cross-module:** `audit::emit` writes into the memory module's `l1_audit_log` when an audit pool is configured. No schema change is required there: `chat.report_created` is a new `event_type` value, not a new column.
 
@@ -680,7 +687,7 @@ The stored row, after the reported message has been edited and deleted by its se
 
 - *Reporter-visible report history* - "you reported this, here is what happened" is a real product need but it re-introduces the oracle problem (§2) and needs a notification surface. Deferred to a later slice; the columns needed already exist.
 - *Report an entire channel* - useful for a workspace where an entire channel has gone bad. Out of scope: the target-shape constraint would need a fourth arm, and no store policy requires it.
-- *Escalation to CyberSkill* - the current design has reports terminate with the workspace administrator, matching what the published privacy policy says about who controls workspace content. If we ever need cross-tenant abuse handling (a customer using CyberOS to harass another customer's members), that is a new FR and a change to the privacy policy, in that order.
+- *Escalation to CyberSkill* - the current design has reports terminate with the workspace administrator, matching what the published privacy policy says about who controls workspace content. If we ever need cross-tenant abuse handling (a customer using CyberOS to harass another customer's members), that is a new task and a change to the privacy policy, in that order.
 
 ## §10 - Failure modes inventory
 

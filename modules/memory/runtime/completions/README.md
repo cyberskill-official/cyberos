@@ -32,7 +32,7 @@ ln -s /abs/path/to/cyberos/runtime/completions/cyberos.fish ~/.config/fish/compl
 
 - All subcommand names (`cyberos <TAB>` → `add`, `audit`, `chain`, `doctor`, …).
 - Per-subcommand flags (`cyberos chain run --<TAB>` → `--pitch`, `--profile`, `--prd`, `--srs`, `--with-llm`, …).
-- Dynamic values where cheap to enumerate: persona slugs, memory types, FR IDs from `cyberos fr list`.
+- Dynamic values where cheap to enumerate: persona slugs, memory types, task IDs from `cyberos fr list`.
 
 ## Regenerating
 

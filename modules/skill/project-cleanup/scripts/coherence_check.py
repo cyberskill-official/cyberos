@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Phase 4 (cyberos) — FR DAG coherence + audit-score check.
+"""Phase 4 (cyberos) — task DAG coherence + audit-score check.
 
-For repos with a cyberos-style docs/tasks/ FR catalog:
+For repos with a cyberos-style docs/tasks/ task catalog:
 - Every depends_on edge has reciprocal blocks edge
-- Every FR has matching .audit.md
+- Every task has matching .audit.md
 - Every audit shows score_post_revision: 10/10
 - (Optional) per-module spec/audit balance
 
@@ -51,7 +51,7 @@ def main():
         sys.exit(2)
 
     all_frs = {}
-    for path in sorted(glob.glob(f"{fr_root}/**/FR-*.md", recursive=True)):
+    for path in sorted(glob.glob(f"{fr_root}/**/TASK-*.md", recursive=True)):
         if path.endswith(".audit.md"):
             continue
         fm = parse_fm(path)
@@ -67,13 +67,13 @@ def main():
     for task_id, info in all_frs.items():
         for dep in info["depends_on"]:
             if dep not in all_frs:
-                errors.append(f"{task_id} depends_on missing FR {dep}")
+                errors.append(f"{task_id} depends_on missing task {dep}")
                 continue
             if task_id not in all_frs[dep]["blocks"]:
                 errors.append(f"RECIP: {dep}.blocks must include {task_id}")
         for blk in info["blocks"]:
             if blk not in all_frs:
-                errors.append(f"{task_id} blocks missing FR {blk}")
+                errors.append(f"{task_id} blocks missing task {blk}")
                 continue
             if task_id not in all_frs[blk]["depends_on"]:
                 errors.append(f"RECIP: {blk}.depends_on must include {task_id}")
@@ -103,7 +103,7 @@ def main():
     if args.json:
         print(json.dumps(result, indent=2))
     else:
-        print(f"Total FRs: {result['total_frs']}")
+        print(f"Total tasks: {result['total_frs']}")
         print(f"Reciprocity errors: {result['reciprocity_errors']}")
         for e in result["errors_sample"]:
             print(f"  - {e}")

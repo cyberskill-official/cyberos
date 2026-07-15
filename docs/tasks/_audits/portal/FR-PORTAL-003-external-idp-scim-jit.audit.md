@@ -29,9 +29,9 @@ First-draft `REVOKE UPDATE, DELETE FROM cyberos_app` was followed by no GRANT, b
 
 §1 #12 said "highest-privilege match wins" but the original draft didn't enumerate the ordinal. Two reviewers would interpret "highest" differently. Resolved: §11.11 added explicit `client_viewer < client_editor < client_admin` ordinal; tie-break is deterministic-max.
 
-### ISS-004 — `last_sso_at` column referenced but not in any migration this FR controls
+### ISS-004 — `last_sso_at` column referenced but not in any migration this task controls
 
-§1 #17 + §11.15 read `subjects.last_sso_at`; this column is in the TASK-AUTH-002 `subjects` table not owned by PORTAL. Without a migration reference, the implementer would hit "column does not exist" errors. Resolved: §11.8 calls out the required AUTH-side migration `services/auth/migrations/0XXX_subjects_last_sso_at.sql`; build_envelope `modified_files` already lists `services/auth/src/admin/subjects.rs` so the cross-crate change is acknowledged. The migration filename is intentionally a placeholder pending the exact number assignment when this FR builds.
+§1 #17 + §11.15 read `subjects.last_sso_at`; this column is in the TASK-AUTH-002 `subjects` table not owned by PORTAL. Without a migration reference, the implementer would hit "column does not exist" errors. Resolved: §11.8 calls out the required AUTH-side migration `services/auth/migrations/0XXX_subjects_last_sso_at.sql`; build_envelope `modified_files` already lists `services/auth/src/admin/subjects.rs` so the cross-crate change is acknowledged. The migration filename is intentionally a placeholder pending the exact number assignment when this task builds.
 
 ### ISS-005 — SCIM token storage SHA-256 vs HMAC choice unclear
 

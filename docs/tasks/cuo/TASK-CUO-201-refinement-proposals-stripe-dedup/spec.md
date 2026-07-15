@@ -2,13 +2,13 @@
 template: task@1
 id: TASK-CUO-201
 title: "Harness Wave 2 — refinement-proposal emitter with stripe-based dedup"
+type: feature
 author: "@stephen"
 department: engineering
 status: done
 priority: p1
 created_at: 2026-05-19T20:15:00+07:00
 ai_authorship: assisted
-feature_type: internal_tooling
 eu_ai_act_risk_class: minimal
 target_release: 2026-Q3
 client_visible: false
@@ -27,7 +27,7 @@ blocks: [TASK-CUO-202]
 
 ## Summary
 
-When a skill's `self_audit.on_breach.emit == "refinement_proposal"` policy fires (via the TASK-CUO-200 harness), this FR's emitter:
+When a skill's `self_audit.on_breach.emit == "refinement_proposal"` policy fires (via the TASK-CUO-200 harness), this task's emitter:
 
 1. Computes a **stripe** for the proposal — a categorical key derived from `(skill_name, signal_id, normalised_evidence_pattern)`.
 2. Checks `docs/proposals/open/` for any unresolved proposal with the same stripe.
@@ -62,7 +62,7 @@ Stripe-based dedup with halt-on-repeat threads the needle: dedup is automatic (o
    - `cyberos-cuo proposal apply <stripe_id>` — moves file to `applied/`, optionally runs the diff (Wave 3 — TASK-CUO-202)
    - `cyberos-cuo proposal reject <stripe_id> --reason "<text>"` — moves file to `rejected/<stripe_id>-<ts>.md` with `## Rejection rationale` appended
 9. **MUST** treat `<proposals_root>/{applied,rejected}/` as "resolved": stripe-dedup only checks `open/`, so a previously-applied stripe can naturally re-fire if the issue recurs after the fix.
-10. **MUST** treat the proposal output `## Suggested change` as informational only — Wave 3 (TASK-CUO-202) decides which proposals auto-apply vs require HITL. Wave 2 (this FR) never mutates a skill/RUBRIC/contract automatically. *(traces_to: §1 #10 → AC #5)*
+10. **MUST** treat the proposal output `## Suggested change` as informational only — Wave 3 (TASK-CUO-202) decides which proposals auto-apply vs require HITL. Wave 2 (this task) never mutates a skill/RUBRIC/contract automatically. *(traces_to: §1 #10 → AC #5)*
 
 ### §2 Stripe taxonomy (initial set)
 
@@ -70,9 +70,9 @@ Stripes are open-ended (`compute_stripe` derives them deterministically) but the
 
 | Stripe pattern | Means |
 |---|---|
-| `task-audit:TRACE-001:<hash>` | Same set of §1 clauses keep failing TRACE-001 (no §4 AC) across multiple FRs |
-| `coverage-gate-audit:tests_failed:<hash>` | Same test names keep failing across multiple FR runs |
-| `ship-tasks:routed_back:<hash>` | Same FR keeps routing back at the same phase |
+| `task-audit:TRACE-001:<hash>` | Same set of §1 clauses keep failing TRACE-001 (no §4 AC) across multiple tasks |
+| `coverage-gate-audit:tests_failed:<hash>` | Same test names keep failing across multiple task runs |
+| `ship-tasks:routed_back:<hash>` | Same task keeps routing back at the same phase |
 | `<skill>:needs_human_rate_above:<hash>` | Skill is asking for HITL too often on the same evidence pattern |
 | `<skill>:deterministic_drift:<hash>` | Same skill's output is drifting between runs in the same way |
 
@@ -103,7 +103,7 @@ In scope: stripe computation, proposal authoring, halt-on-repeat logic, operator
 
 ## Dependencies
 
-- **TASK-CUO-200** — harness emits signals + report; this FR consumes them.
+- **TASK-CUO-200** — harness emits signals + report; this task consumes them.
 
 ## AI Authorship Disclosure
 
@@ -122,7 +122,7 @@ In scope: stripe computation, proposal authoring, halt-on-repeat logic, operator
 7. `cyberos-cuo proposal reject <id> --reason "X"` appends a `## Rejection rationale` section to the file before moving it. *(traces_to: §1 #8)*
 8. Running the emitter against an audit chain with zero qualifying signals produces zero files + zero halt rows. *(traces_to: §1 #3)*
 9. Stripe pattern_hash is exactly 8 hex chars; collision between two genuinely-different evidence patterns has acceptance rate ≤ 1 in 10⁹ (SHA-256 birthday-bound at 8 hex chars ≈ 2⁻³²). *(traces_to: §1 #2)*
-10. The supervisor's `HITL_HALT` outcome from this FR is honoured by `cyberos-cuo drain` (writes DRAIN_HALT.md, exits non-zero). *(traces_to: §1 #7, TASK-CUO-200 §1 #5 indirectly via drain)*
+10. The supervisor's `HITL_HALT` outcome from this task is honoured by `cyberos-cuo drain` (writes DRAIN_HALT.md, exits non-zero). *(traces_to: §1 #7, TASK-CUO-200 §1 #5 indirectly via drain)*
 
 ## §5 Verification
 

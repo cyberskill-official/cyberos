@@ -5,7 +5,7 @@ Implements [`docs/tasks/mcp/TASK-MCP-001..008`](../../docs/tasks/mcp/) — Model
 
 ## Status (2026-05-19 wave)
 
-| FR | Title | Status |
+| Task | Title | Status |
 |---|---|---|
 | **TASK-MCP-001** | MCP 2025-11-25 spec compliance — `initialize` + `tools/list` + `tools/call` + capabilities | **building** (slice-1 scaffold: JSON-RPC parser · closed error-code map · `initialize` handshake with capability advertisement · `tools/list` with cursor pagination · `tools/call` dispatch returning `-32004 module_unreachable` until TASK-MCP-002 wires registration · `ToolAnnotations` · `ToolRegistry` · `axum` router with `/mcp` + `/mcp/healthz`. Tests cover JSON-RPC parsing, error codes, initialize match/mismatch, pagination, tools/call permission gate. Remaining: JWT verification + tenant-aware rate-limit + audit emission + Streamable HTTP SSE transport — landing in follow-on slices) |
 | TASK-MCP-002 | Per-module server registration + heartbeat lifecycle | pending |

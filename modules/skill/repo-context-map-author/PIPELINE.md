@@ -7,7 +7,7 @@ Artefact: `repo-context-map@1`. This document binds the skill into the ship chai
 
 | Upstream skill | Trigger | Hand-off |
 |---|---|---|
-| (ship step 0 - FR selected) | Default chain | FR path via workflow |
+| (ship step 0 - task selected) | Default chain | task path via workflow |
 
 ## Downstream
 
@@ -18,6 +18,6 @@ Artefact: `repo-context-map@1`. This document binds the skill into the ship chai
 
 ## HALT points
 
-- Module-placement warning non-null and not resolvable from FR text -> HALT for operator (escalate, never guess).
+- Module-placement warning non-null and not resolvable from task text -> HALT for operator (escalate, never guess).
 
 *Added by TASK-SKILL-118 (contract parity). Phases and step prose: SKILL.md is normative.*

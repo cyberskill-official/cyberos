@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# fr-migrate.sh — FR layout + status page (sourced by init.sh; not a standalone entry).
+# Task-migrate.sh — task layout + status page (sourced by init.sh; not a standalone entry).
 # Combined into init so one entry point owns vendoring + migrate + page regen.
 # shellcheck shell=bash
 #
@@ -34,15 +34,15 @@ _cyberos_fr_migrate() {
     fi
 
     echo "== migrate 1/4 frontmatter repair =="
-    if [ -f "$kit/docs-tools/repair_fr_yaml.py" ]; then
-      python3 "$kit/docs-tools/repair_fr_yaml.py" --root "$root" || true
+    if [ -f "$kit/docs-tools/repair_task_yaml.py" ]; then
+      python3 "$kit/docs-tools/repair_task_yaml.py" --root "$root" || true
     fi
 
-    echo "== migrate 2/4 folder-per-FR layout =="
-    if [ -f "$kit/docs-tools/migrate_fr_layout.py" ]; then
-      python3 "$kit/docs-tools/migrate_fr_layout.py" --root "$root"
+    echo "== migrate 2/4 folder-per-task layout =="
+    if [ -f "$kit/docs-tools/migrate_task_layout.py" ]; then
+      python3 "$kit/docs-tools/migrate_task_layout.py" --root "$root"
     else
-      echo "cyberos migrate: WARN migrate_fr_layout.py missing — skip layout"
+      echo "cyberos migrate: WARN migrate_task_layout.py missing — skip layout"
     fi
   fi
 
@@ -95,10 +95,10 @@ _cyberos_fr_migrate() {
 
   echo "== migrate 4/4 verify =="
   local flat flat_n nospec nospec_n page specs_n deep_n
-  flat="$(find "$root/docs/tasks" -mindepth 1 -maxdepth 2 -type f -name 'FR-*.md' \
+  flat="$(find "$root/docs/tasks" -mindepth 1 -maxdepth 2 -type f -name 'TASK-*.md' \
           -not -path '*/_*' -not -path '*/.*' 2>/dev/null | sort || true)"
   flat_n=0; [ -n "$flat" ] && flat_n="$(printf '%s\n' "$flat" | wc -l | tr -d ' ')"
-  nospec="$(find "$root/docs/tasks" -mindepth 2 -maxdepth 2 -type d -name 'FR-*' \
+  nospec="$(find "$root/docs/tasks" -mindepth 2 -maxdepth 2 -type d -name 'TASK-*' \
           -not -path '*/_*' -not -path '*/.*' 2>/dev/null | sort | while IFS= read -r d; do
             [ -f "$d/spec.md" ] || echo "$d"; done || true)"
   nospec_n=0; [ -n "$nospec" ] && nospec_n="$(printf '%s\n' "$nospec" | wc -l | tr -d ' ')"
@@ -106,20 +106,20 @@ _cyberos_fr_migrate() {
   [ -f "$root/docs/status/index.html" ] && [ -f "$root/docs/status/assets/status.css" ] && page="present"
   specs_n="$(find "$root/docs/tasks" -mindepth 3 -maxdepth 3 -type f -name 'spec.md' \
           -not -path '*/_*' -not -path '*/.*' 2>/dev/null | wc -l | tr -d ' ')"
-  deep_n="$(find "$root/docs/tasks" -mindepth 3 -type f -name 'FR-*.md' \
+  deep_n="$(find "$root/docs/tasks" -mindepth 3 -type f -name 'TASK-*.md' \
           -not -path '*/_*' -not -path '*/.*' 2>/dev/null | wc -l | tr -d ' ')"
   echo "cyberos-migrate verify: fr_specs=$specs_n flat_fr_files_remaining=$flat_n fr_folders_missing_spec=$nospec_n deep_fr_files=$deep_n status_page=$page"
   if [ "${deep_n:-0}" -gt 0 ] 2>/dev/null; then
-    echo "cyberos migrate: note $deep_n FR-named .md below module depth (left untouched)"
+    echo "cyberos migrate: note $deep_n TASK-named .md below module depth (left untouched)"
   fi
   if [ "${flat_n:-0}" -gt 0 ] 2>/dev/null; then
-    echo "cyberos migrate: WARN un-migrated flat FR files:"
+    echo "cyberos migrate: WARN un-migrated flat task files:"
     printf '%s\n' "$flat" | sed 's/^/  /'
   fi
   if [ "${nospec_n:-0}" -gt 0 ] 2>/dev/null; then
-    echo "cyberos migrate: WARN FR folders without spec.md:"
+    echo "cyberos migrate: WARN task folders without spec.md:"
     printf '%s\n' "$nospec" | sed 's/^/  /'
   fi
-  echo "cyberos migrate: done. FR frontmatter is the record of truth."
+  echo "cyberos migrate: done. Task frontmatter is the record of truth."
   return 0
 }

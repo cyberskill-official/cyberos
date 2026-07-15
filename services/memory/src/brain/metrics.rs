@@ -3,7 +3,7 @@
 //! event carrying the metric name + its label set as structured fields; the obs pipeline derives the
 //! histograms / gauges / counters. Promoting these to native meters later does not change these call sites.
 //!
-//! The metric names match the FR verbatim so the obs dashboards + SLO alerts bind without translation.
+//! The metric names match the task verbatim so the obs dashboards + SLO alerts bind without translation.
 
 use uuid::Uuid;
 

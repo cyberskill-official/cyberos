@@ -1,8 +1,16 @@
 ---
 id: TASK-PROJ-017
 title: "Brief Modal — issue deep-view with Yjs description editor + threaded comments + LWW meta sidebar + presence cursors"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: PROJ
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -103,7 +111,7 @@ The Brief Modal **MUST** be a unified deep-view for one issue with collaborative
     - `proj_brief_modal_session_seconds` (histogram — engagement signal).
 13. **MUST** support comment threading: each comment can be a reply to another via `reply_to_comment_id`; threading rendered with visual indentation (max depth 5).
 14. **MUST** support comment mentions: `@username` in comment body resolves to user; sends in-app notification to mentioned user via CUO triage.
-15. **MUST** support attachments on comments: file upload via FR-FILES (max 25MB per file, 5 files per comment); previewable images/PDFs inline.
+15. **MUST** support attachments on comments: file upload via task-FILES (max 25MB per file, 5 files per comment); previewable images/PDFs inline.
 16. **MUST** support reactions on comments: emoji picker; each comment shows reaction tallies; clicking re-toggles user's reaction.
 17. **MUST** support `@lumi` invocation in comments: routes to TASK-CHAT-008 sibling handler scoped to issue context (description + recent comments).
 18. **MUST** support "link" actions in sidebar: quick-add issue dependencies (TASK-PROJ-016) + memory-links (TASK-PROJ-009) without leaving modal.
@@ -298,7 +306,7 @@ export function HistoryDrawer({ issueId }: { issueId: string }) {
 22. **RLS isolates** — tenant A's issue invisible to tenant B's modal request → 404.
 23. **Comment thread depth ≤ 5** — replies indent up to depth 5; beyond → flat with marker (AC for §1 #13).
 24. **Mention notifies user** — comment with `@alice` → CUO notification queued for alice (AC for §1 #14).
-25. **Attachment uploads** — drop file → FR-FILES upload; preview inline (AC for §1 #15).
+25. **Attachment uploads** — drop file → task-FILES upload; preview inline (AC for §1 #15).
 26. **Reaction toggle** — click emoji → toggles user's reaction; tally updates (AC for §1 #16).
 27. **@lumi in comment routes to handler** — comment with @lumi → reply appears as Lumi-authored comment (AC for §1 #17).
 28. **Sidebar quick-link actions** — click "Add Dep" in sidebar → opens TASK-PROJ-016 dialog inline (AC for §1 #18).
@@ -453,7 +461,7 @@ All resolved. Deferred:
 - Comments are appended to Y.Array; deletion via Y.Array.delete() preserves CRDT history.
 - Threading uses `reply_to_comment_id` field; rendering recursively indents up to depth 5; deeper threads flatten with "deeply nested" marker.
 - Mention regex matches `@[a-zA-Z0-9_]+`; resolves against users table for tenant.
-- Attachment upload uses FR-FILES presigned URL flow; preview component handles common MIME types.
+- Attachment upload uses task-FILES presigned URL flow; preview component handles common MIME types.
 - Reactions use Y.Map (emoji → Set of user_ids); CRDT handles concurrent toggles.
 - @lumi in comments routes to chat-lumi service with `context="issue-comment"`; reply appears as a comment authored by Lumi system user.
 - Sidebar quick-link actions open inline dialogs (radix UI Dialog) without leaving modal.

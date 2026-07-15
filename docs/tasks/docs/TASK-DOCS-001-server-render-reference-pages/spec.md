@@ -1,8 +1,16 @@
 ---
 id: TASK-DOCS-001
-title: "Server-render NFR catalog + Risk Register + FR catalog at build time — Pagefind-indexed + crawler-visible + deterministic + Alpine reactive coexistence"
+title: "Server-render NFR catalog + Risk Register + task catalog at build time — Pagefind-indexed + crawler-visible + deterministic + Alpine reactive coexistence"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: DOCS
-priority: SHOULD
+priority: p1
 status: closed
 verify: I
 phase: P0
@@ -61,7 +69,7 @@ disallowed_tools:
 
 effort_hours: 14
 subtasks:
-  - "1.0h: data-extract.mjs — read existing HTML, extract NFR_DATA, RISKS, FR_CATALOG arrays via cheerio + JS evaluation"
+  - "1.0h: data-extract.mjs — read existing HTML, extract NFR_DATA, RISKS, TASK_CATALOG arrays via cheerio + JS evaluation"
   - "1.0h: Persist arrays to JSON files in website/build/data/"
   - "1.0h: Handlebars templates per page (3 templates + 1 shared _card.hbs)"
   - "1.0h: render-reference-pages.mjs main script (read JSON → render → inject into HTML)"
@@ -69,7 +77,7 @@ subtasks:
   - "0.5h: Alpine init modification — hide `[data-prerendered]` once `hydrated=true`"
   - "0.5h: Avoid double-render flash via `x-cloak` + CSS `[x-cloak] { display: none }`"
   - "1.0h: Determinism check — sort arrays, stable iteration, no Date.now() calls"
-  - "1.0h: render_test.mjs — assert output contains expected NFR-IDs / RSK-IDs / FR-IDs"
+  - "1.0h: render_test.mjs — assert output contains expected NFR-IDs / RSK-IDs / task-IDs"
   - "1.0h: determinism_test.mjs — run twice; assert byte-identical"
   - "1.0h: pagefind_index_test.mjs — re-index + assert search hits"
   - "0.5h: docs-prerender-gate.yml CI workflow"
@@ -83,7 +91,7 @@ risk_if_skipped: "First paint of /reference/* shows empty scaffold + 'of NFRs ma
 
 The CyberOS documentation build pipeline **MUST** server-render the three reference catalog pages at build time, producing static HTML rows visible at first paint AND indexed by Pagefind. Each piece:
 
-1. **MUST** parse the data arrays (`NFR_DATA`, `RISKS`, `FR_CATALOG`) at build time. Source-of-truth becomes JSON files at `website/build/data/{nfrs,risks,frs}.json` (DEC-221); both the build script AND the Alpine reactive layer consume from JSON.
+1. **MUST** parse the data arrays (`NFR_DATA`, `RISKS`, `TASK_CATALOG`) at build time. Source-of-truth becomes JSON files at `website/build/data/{nfrs,risks,frs}.json` (DEC-221); both the build script AND the Alpine reactive layer consume from JSON.
 2. **MUST** emit a `<section data-prerendered="true">` block per page, containing the same `<article>` cards Alpine would render at runtime. Prerendered cards include all card content (title, IDs, descriptions, badges) — visible without JS.
 3. **MUST** be deterministic — running the build twice on the same JSON inputs produces byte-identical HTML output. No Date.now(), no RNG, no unsorted iteration. CI gate (§1 #11) enforces.
 4. **MUST** preserve Alpine reactive behaviour: on JS hydration, `hydrated=true` is set; CSS `[x-cloak] { display: none }` hides prerendered AND Alpine takes over. No double-render flash.
@@ -91,7 +99,7 @@ The CyberOS documentation build pipeline **MUST** server-render the three refere
 6. **MUST** include all metadata fields per card type:
     - **NFR**: id, category, target, phase, modules, references, description.
     - **Risk**: id, severity, likelihood, mitigation, owner, status.
-    - **FR**: id, module, priority, status, slice, owner, depends_on, blocks.
+    - **task**: id, module, priority, status, slice, owner, depends_on, blocks.
 7. **MUST** generate stable IDs/anchors so external links (e.g., `https://docs.cyberos.world/reference/nfr-catalog.html#NFR-PERF-01`) work. Each card has `id="<NFR-ID>"` attribute.
 8. **MUST** integrate with Cloudflare Pages build (or other CI). The build script runs as a step BEFORE deploy; failure aborts deploy.
 9. **MUST** be Pagefind-indexable — re-running `pagefind --site docs/` after prerender produces an index that returns hits for `NFR-PERF-01`, `RSK-09`, `TASK-AI-001` queries.
@@ -99,13 +107,13 @@ The CyberOS documentation build pipeline **MUST** server-render the three refere
     - `node build/render-reference-pages.mjs` (one-shot).
     - `node build/render-reference-pages.mjs --watch` (re-renders on JSON change; for local dev).
 11. **MUST** be CI-gated by `docs-prerender-gate.yml`: on every PR touching `website/**`, the workflow runs the build + asserts the output matches the committed HTML (drift = build fail). Prevents the JSON-vs-HTML drift class.
-12. **SHOULD** emit a build report at `website/build/last-build-report.json` with stats: number of NFRs/RSKs/FRs rendered, build duration, output bytes per page. Visible in CI logs for operator review.
+12. **SHOULD** emit a build report at `website/build/last-build-report.json` with stats: number of NFRs/RSKs/tasks rendered, build duration, output bytes per page. Visible in CI logs for operator review.
 
 ---
 
 ## §2 — Why this design (rationale for humans)
 
-Per research review §4 #1: "Tables render client-side; first paint shows empty scaffold with 'of NFRs match current filters' placeholder text." Per §5.4: "FR catalog is empty. NFR catalog renders empty without JS. Risk register relies on client-side rendering."
+Per research review §4 #1: "Tables render client-side; first paint shows empty scaffold with 'of NFRs match current filters' placeholder text." Per §5.4: "task catalog is empty. NFR catalog renders empty without JS. Risk register relies on client-side rendering."
 
 The current architecture is a hard procurement and accessibility failure:
 
@@ -313,7 +321,7 @@ jobs:
 5. **Determinism** — running the build twice on same JSON produces byte-identical HTML output (`git diff --exit-code` = clean).
 6. **CI gate** — drift between JSON and HTML fails the PR.
 7. **Per-card anchors work** — `#NFR-PERF-01` URL fragment scrolls to the card without JS.
-8. **All metadata fields rendered** — verifying NFR cards have id/category/target/phase/modules/references; RSK cards have id/severity/likelihood/mitigation/owner/status; FR cards have id/module/priority/status/slice/owner/depends_on/blocks.
+8. **All metadata fields rendered** — verifying NFR cards have id/category/target/phase/modules/references; RSK cards have id/severity/likelihood/mitigation/owner/status; task cards have id/module/priority/status/slice/owner/depends_on/blocks.
 9. **Cloudflare Pages build runs prerender** — `deploy.yml` includes the step; failure aborts deploy.
 10. **Watch mode works** — `--watch` flag re-renders on JSON change.
 11. **Build report emitted** — `last-build-report.json` contains per-page stats.
@@ -362,7 +370,7 @@ test('render produces NFR cards', async () => {
     assert.ok(html.includes('<section data-prerendered="true"'), 'expected prerendered section');
 });
 
-test('render produces FR cards with all metadata', async () => {
+test('render produces task cards with all metadata', async () => {
     execSync('node build/render-reference-pages.mjs', { cwd: process.cwd() });
     const html = readFileSync('docs/reference/fr-catalog.html', 'utf8');
     assert.ok(html.includes('TASK-AI-001'));
@@ -415,7 +423,7 @@ import vm from 'vm';
 const FILES = [
   { html: 'docs/reference/nfr-catalog.html', varName: 'NFR_DATA', out: 'build/data/nfrs.json' },
   { html: 'docs/reference/risk-register.html', varName: 'RISKS', out: 'build/data/risks.json' },
-  { html: 'docs/reference/fr-catalog.html', varName: 'FR_CATALOG', out: 'build/data/frs.json' },
+  { html: 'docs/reference/fr-catalog.html', varName: 'TASK_CATALOG', out: 'build/data/frs.json' },
 ];
 
 for (const { html, varName, out } of FILES) {
@@ -516,7 +524,7 @@ All resolved. Deferred:
 
 ## §11 — Notes
 
-- This FR closes UX defects #1 and #2 from `docs/archive/2026-05-14/RESEARCH_REVIEW.md §4`. Load-bearing for procurement-story for auditors.
+- This task closes UX defects #1 and #2 from `docs/archive/2026-05-14/RESEARCH_REVIEW.md §4`. Load-bearing for procurement-story for auditors.
 - Deferred to P0 polish slice; estimated land date late P0.
 - JSON-as-source-of-truth + watch mode + CI gate together prevent JSON-HTML drift.
 - Alpine reactive coexists; UX preserved.
@@ -532,14 +540,14 @@ All resolved. Deferred:
 
 ---
 
-**Supersession record (2026-07-12, conflict-scan doctrine: newest wins).** The live intent of this FR
+**Supersession record (2026-07-12, conflict-scan doctrine: newest wins).** The live intent of this task
 shipped through the TASK-DOCS-002/005/006 pipeline: data extraction to JSON (tools/docs-site/data-extract.mjs
--> data/frs.json, nfrs), prerendered `<section data-prerendered="true">` catalog cards (render-fr-catalog /
+-> data/frs.json, nfrs), prerendered `<section data-prerendered="true">` catalog cards (render-task-catalog /
 render-nfr-catalog carry `TASK-DOCS-001 §1 #2` citations), deterministic builds, stable per-card anchors,
 and last-build-report.json. The remaining clauses are obsolete by later approved doctrine: #1's
 website/build paths and #8's Cloudflare Pages (replaced by tools/docs-site + VPS deploy), #4/#5 Alpine
 hydration (vanilla JS since the rebuild), #11's committed-HTML drift gate (FORBIDDEN by TASK-DOCS-002:
 generated output is never committed), #9 Pagefind and #10 watch mode (never built). Client-side search
-of the docs site is genuinely undelivered and is queued as a fresh-FR candidate for the next intake batch
+of the docs site is genuinely undelivered and is queued as a fresh-task candidate for the next intake batch
 rather than resurrecting this spec's mechanics. Status: closed (superseded), not done - several clauses
 as written are permanently false.

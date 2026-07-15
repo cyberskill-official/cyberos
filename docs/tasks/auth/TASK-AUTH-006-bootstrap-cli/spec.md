@@ -1,8 +1,16 @@
 ---
 id: TASK-AUTH-006
 title: "cyberos-auth bootstrap CLI: tenant 0 + root-admin + initial signing key + sweepers + idempotency-table cleanup"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AUTH
-priority: MUST
+priority: p0
 status: done
 verify: D
 phase: P0
@@ -109,7 +117,7 @@ The AUTH service **MUST** ship a `cyberos-auth` CLI binary providing bootstrap +
 
 **Why production-reset extra guard (§1 #11)?** Resetting tenant 0 in production wipes EVERY tenant + EVERY subject + EVERY signing key. The destructive blast radius is total. The triple gate (`--reset` + `--confirm` + `--force-prod-reset` + interactive Y) makes accidental production destruction structurally impossible. Even malicious destruction requires deliberate steps that leave audit trail.
 
-**Why sweepers in this CLI (§1 #9)?** Three tables grow unbounded without sweeping: `sessions`, `admin_idempotency_keys`, `signing_keys` (retired ones). Each FR's responsibility was "the data exists for N hours/days then becomes stale"; the sweeper is the implementation of "becomes stale = deleted." Centralising in this CLI gives one place to audit + one cron to schedule.
+**Why sweepers in this CLI (§1 #9)?** Three tables grow unbounded without sweeping: `sessions`, `admin_idempotency_keys`, `signing_keys` (retired ones). Each task's responsibility was "the data exists for N hours/days then becomes stale"; the sweeper is the implementation of "becomes stale = deleted." Centralising in this CLI gives one place to audit + one cron to schedule.
 
 **Why `bootstrapped_by` in audit row (§1 #4)?** Forensic question: "who bootstrapped this deployment?" The CLI captures the system user (from `whoami` or `USER` env) — not perfect identity (no JWT here; we're pre-auth) but better than nothing. Combined with the deployment_tier, gives a useful audit trail.
 
@@ -389,7 +397,7 @@ Cron schedule (TASK-AUTH-006 ships the binary; ops team configures cron):
 
 ## §7 — Dependencies
 
-- **TASK-AUTH-001..005** — All AUTH FRs use what bootstrap creates.
+- **TASK-AUTH-001..005** — All AUTH tasks use what bootstrap creates.
 - Crates: `clap@4`, `rpassword@7`, `zeroize@1`, `bcrypt@0.15`, `sqlx`, `tokio`, `anyhow`.
 - `whoami` for `bootstrapped_by` field.
 

@@ -49,7 +49,7 @@ The spec lands SCIM 2.0 DELETE deprovision with 30s end-to-end session-invalidat
 
 All 7 mechanical concerns addressed. SCIM idiom correct (204); dual-channel ordering sound; reconciliation dedup logic explicit; concurrent grace/restore race acceptable; Redis-failure fallback path documented; hard-purge query param scoped to CyberOS extension; per-Engagement scoping validated end-to-end.
 
-The 1,090-line length is justified by 3 migrations + 4 endpoints + 7 memory kinds + dual-channel kill mechanism + 4 cascade targets + reconciliation job + grace period + admin restore + per-Engagement isolation + 23 failure modes covering distributed-system pitfalls. Density matches peer FRs at similar scope.
+The 1,090-line length is justified by 3 migrations + 4 endpoints + 7 memory kinds + dual-channel kill mechanism + 4 cascade targets + reconciliation job + grace period + admin restore + per-Engagement isolation + 23 failure modes covering distributed-system pitfalls. Density matches peer tasks at similar scope.
 
 **Score = 10/10.**
 

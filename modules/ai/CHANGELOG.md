@@ -14,8 +14,8 @@ CyberOS's P0 build order is locked at AI Gateway → OBS → AUTH (stub) → MCP
 
 ### Catalog totals after this wave
 
-- **FRs at `shipped + 10/10`:** prior 17 → **19** (+TASK-AI-003, +TASK-AI-005)
-- **FRs flipped `planned → building`:** **+2** (TASK-OBS-001, TASK-MCP-001)
+- **tasks at `shipped + 10/10`:** prior 17 → **19** (+TASK-AI-003, +TASK-AI-005)
+- **tasks flipped `planned → building`:** **+2** (TASK-OBS-001, TASK-MCP-001)
 
 ---
 

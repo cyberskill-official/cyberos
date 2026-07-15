@@ -5,7 +5,7 @@
 | Shell | Slash | Role |
 |-------|-------|------|
 | `bash install.sh [repo]` | `/install` | Install or re-vendor the machine |
-| `bash uninstall.sh [repo]` | `/uninstall` | Remove the machine (keeps FRs; BRAIN kept by default) |
+| `bash uninstall.sh [repo]` | `/uninstall` | Remove the machine (keeps tasks; BRAIN kept by default) |
 | `bash version.sh [repo]` | `/version` | Check for a newer CyberOS; if stale, ask → `install` |
 | `bash status.sh [repo]` | `/status` | Open `docs/status/index.html` in the default browser |
 | `bash help.sh` | `/help` | CLI surface |

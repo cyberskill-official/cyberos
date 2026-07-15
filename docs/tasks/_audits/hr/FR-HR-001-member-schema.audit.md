@@ -21,7 +21,7 @@ TASK-HR-001 ships the HR Member schema — the canonical "is this person current
 First-pass had no CI gate against `base_salary` column drift. Resolved: §1 #11 + DEC-203 + DB CHECK + CI `comp_exclusion_test` parsing SQL migrations; AC #17.
 
 ### ISS-002 — Leave balance double-writer
-First-pass let both this FR and TASK-HR-004 write leave_balance_days. Resolved: §1 #10 + DEC-204 + trigger blocking UPDATE; AC #6. TASK-HR-004 ships the single recompute path.
+First-pass let both this task and TASK-HR-004 write leave_balance_days. Resolved: §1 #10 + DEC-204 + trigger blocking UPDATE; AC #6. TASK-HR-004 ships the single recompute path.
 
 ### ISS-003 — Start_date drift after onboarding
 First-pass allowed retroactive start_date amendment, breaking sabbatical math. Resolved: §1 #8 + DEC-207 + BEFORE UPDATE trigger raising `cannot_modify_locked_start_date`; AC #7.

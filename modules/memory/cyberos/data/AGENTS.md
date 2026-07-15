@@ -284,7 +284,7 @@ The v1 four-tier `sync_class` (`local-only / publishable / shared / client-visib
 
 ## §18  Session transcript ledger (added by P22 — approved 2026-05-19 per §0.2)
 
-§18.1  Sessions are an OPTIONAL turn-level audit trail for agent-user conversations. Operators opt in per conversation via the lifecycle CLI; cyberos invocations without a session never produce transcript rows. Implementation lives in [`TASK-MEMORY-119`](docs/tasks/memory/TASK-MEMORY-119-session-transcript-ledger/spec.md). Note: the FR's spec'd CLI verb `cyberos session` collides with the existing P11 multi-agent coordination subcommand; the implementation namespaces the transcript ledger under `cyberos transcript {start,append,end,read,list,purge-expired}` instead.
+§18.1  Sessions are an OPTIONAL turn-level audit trail for agent-user conversations. Operators opt in per conversation via the lifecycle CLI; cyberos invocations without a session never produce transcript rows. Implementation lives in [`TASK-MEMORY-119`](docs/tasks/memory/TASK-MEMORY-119-session-transcript-ledger/spec.md). Note: the task's spec'd CLI verb `cyberos session` collides with the existing P11 multi-agent coordination subcommand; the implementation namespaces the transcript ledger under `cyberos transcript {start,append,end,read,list,purge-expired}` instead.
 
 §18.2  Session bodies live at `<memory-root>/sessions/<YYYY-MM-DD>/<id>.binlog.zst` — date-partitioned at the session's START date (sessions spanning midnight stay in the start-date directory). The framed binlog format mirrors §6.2; turn frames carry msgspec canonical-JSON payloads.
 

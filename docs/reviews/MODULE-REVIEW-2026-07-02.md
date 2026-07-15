@@ -1,9 +1,9 @@
 # CyberOS module review - 2026-07-02
 
-Deep review of every module and FR, focused on those marked done, verifying they work RIGHT NOW.
+Deep review of every module and task, focused on those marked done, verifying they work RIGHT NOW.
 Method: fresh full gate on the Mac (workspace fmt + clippy -D warnings + 1,173 tests, web tsc + vite +
 richtext smoke 25/25 - ALL GREEN), live production probes against os.cyberskill.world, and a four-way
-FR-by-FR sweep of all 287 spec files (574 files including .audit companions) cross-checked against the
+Task-by-task sweep of all 287 spec files (574 files including .audit companions) cross-checked against the
 code that exists today. Companion improvement plan: `IMPROVEMENT-PLAN-2026-07-02.md` (same directory).
 
 ## 1. What is verified working right now
@@ -12,14 +12,14 @@ Production (os.cyberskill.world, probed 2026-07-02):
 
 - AUTH: live and healthy (/status/auth 200). Google Workspace SSO, OIDC provider for first-party apps,
   domain gate, directory, profiles. Migrations 0001-0032 accounted for, RLS boot-check in main.rs,
-  audit-chain emits on every decision path. 15 done FRs verified against code.
+  audit-chain emits on every decision path. 15 done tasks verified against code.
 - CHAT: live and healthy (/status/chat 200). The full native stack verified end to end: messaging core,
   threads, reactions (64-byte emoji), rich text, full emoji picker, multi-file attachments on the VPS
   volume (raw upload route live), global search (401-gated, deployed), jump windows, channel management
   (migration 0011), notification prefs (migration 0012, route live - 422 on empty body as expected),
   @-mentions + per-user notify socket, AI endpoints deployed (401), i18n VN/EN + mute + drafts + mobile
   drawer (commits ab2989d, 3b82968 - deployed; bundle index-DkYzkd4H.js serving). Migrations 0001-0012.
-- AI-GATEWAY: deployed internal-only; embeddings live; /v1/status wired to the console. 20 done FRs
+- AI-GATEWAY: deployed internal-only; embeddings live; /v1/status wired to the console. 20 done tasks
   verified in code (router, breaker, streaming, redaction VN/EN, cost ledger, CLI, otel...). Chat-side AI
   + translation return clean 502 until the llm profile is enabled (by design).
 - WEB CONSOLE: React SPA live with dual theme, per-build SW cache stamp, PWA.
@@ -52,11 +52,11 @@ rew, ten, time.
 ### B. Status integrity - the roadmap's "Done" is wrong in BOTH directions
 
 False dones (marked done, deliverable does not exist in the current architecture):
-- TASK-CHAT-003..012 (10 FRs): Fargate deployment, PGroonga VN search, memory bridge, Slack import, Zalo
+- TASK-CHAT-003..012 (10 tasks): Fargate deployment, PGroonga VN search, memory bridge, Slack import, Zalo
   import, Lumi mention, retro capture, Signal decommission, mobile push, DSAR export - ALL are
   Mattermost-era specs. The Mattermost fork was retired (TASK-CHAT-101 supersedes wholesale); none of these
   exist in the native chat. They must flip to `superseded` (or their intents re-homed as new native-chat
-  FRs - Slack/Zalo import, mobile push, and DSAR are still WANTED features, just unbuilt).
+  tasks - Slack/Zalo import, mobile push, and DSAR are still WANTED features, just unbuilt).
 - TASK-MEMORY-104 (tauri app): CORRECTED - the app exists at services/memory/desktop (Svelte + Tauri 2);
   the sweep looked for apps/tauri. Verified done; carries two of the dependabot vite alerts (dev-server
   class, same ledger as apps/web).
@@ -69,7 +69,7 @@ Stale statuses (built + live, still marked draft/implementing):
 - TASK-AI-003, TASK-AI-005 "ready_to_implement" -> memory-writer bridge + policy loader shipped; flip to done.
 - TASK-APP-001..007 draft/implementing -> the six console tiles WERE built (static console) and then
   superseded by the React SPA (apps/web). Close as superseded-by-react-console with a pointer, or re-home
-  as "React console parity" FRs.
+  as "React console parity" tasks.
 - TASK-EVAL-001 "implementing" -> code built + gated; blocked on counsel, and the prod container is down.
   Status should be `built_blocked_on_legal` (or equivalent) + a note.
 - TASK-MCP-004: MCP-STATUS-FLIP.md says "flip on green" if the redirect-host allowlist deferral is
@@ -80,15 +80,15 @@ Metadata corruption:
   These explain the odd one-off statuses in the corpus (needs_human x7, completed/delivered/fixed/ready).
   One canonical `status:` per file, values from a fixed vocabulary.
 
-### C. Spec-vs-code drift (code works; the done FR describes a different shape)
+### C. Spec-vs-code drift (code works; the done task describes a different shape)
 
-- memory: FR-101/102/108 still name Apache AGE (removed - relational l2_edge + pgvector now); ~9 FRs
-  promise Rust services that landed in python modules/memory or consolidated crates; FR-108 promises a
+- memory: TASK-101/102/108 still name Apache AGE (removed - relational l2_edge + pgvector now); ~9 tasks
+  promise Rust services that landed in python modules/memory or consolidated crates; TASK-108 promises a
   modular search/ tree, shipped as search.rs monolith.
-- skill: FR-101/102 promise skill-host + skill-registry services; everything lives in skill-broker.
-- proj: FR-014..017 reference web/proj-client/, real path apps/web/src; FR-001 promises split handlers.
-None of these are functional problems; they make done FRs unauditable. Fix with a short "as-built" note
-per FR (not a rewrite).
+- skill: TASK-101/102 promise skill-host + skill-registry services; everything lives in skill-broker.
+- proj: TASK-014..017 reference web/proj-client/, real path apps/web/src; TASK-001 promises split handlers.
+None of these are functional problems; they make done tasks unauditable. Fix with a short "as-built" note
+per task (not a rewrite).
 
 ### D. Risks
 
@@ -113,7 +113,7 @@ per FR (not a rewrite).
 - docs/tasks/BACKLOG.md: written 2026-05-19, pre-APP/EVAL/chat-native era.
 - docs/tasks/remaining-build-plan.md: 2026-06-24, mislabels mcp, omits app/eval waves.
 - docs/CONTINUE-HERE.md: current through the chat waves (kept updated), but does not reflect this review.
-- docs/roadmap.html: renders FR frontmatter -> inherits every status error above; fixing statuses fixes
+- docs/roadmap.html: renders task frontmatter -> inherits every status error above; fixing statuses fixes
   the roadmap.
 
 ### F. Orphans + cleanup candidates
@@ -124,5 +124,5 @@ per FR (not a rewrite).
 - services/business-suite/: outside the workspace members - confirm intent (scaffold?) or remove.
 - 287 `.audit.md` companions: half the files in docs/tasks; they were one-time review
   artifacts. Move to docs/tasks/_audits/ (or delete) so the backlog reads clean.
-- Superseded Mattermost-era chat FRs + closed TASK-CHAT-002 + app-era FRs: move to docs/tasks/
+- Superseded Mattermost-era chat tasks + closed TASK-CHAT-002 + app-era tasks: move to docs/tasks/
   _archive/ per the grooming rule (backlog = only not-yet-implemented + new).

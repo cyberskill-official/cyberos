@@ -5,7 +5,7 @@
 -- structured, versioned, clause-cited framework TASK-EVAL-003 can evaluate evidence against - with a human
 -- approving every item before it is effective. This migration is the schema; the human-curated authoring
 -- path is services/eval/src/rubric/. Continues the EVAL migration numbering at 0003 (0001 = governance
--- core, 0002 = subject_request); the FR's draft named it 0002_rubric.sql before 0002_subject_request.sql
+-- core, 0002 = subject_request); the task's draft named it 0002_rubric.sql before 0002_subject_request.sql
 -- existed.
 --
 -- THREE TABLES (§1 #1): `rubric` is the named framework for a tenant; `rubric_version` is one immutable,

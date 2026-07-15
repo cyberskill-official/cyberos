@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: coverage-gate-audit
 description: >-
-  Test coverage gate audit (testing → done) — audit a coverage-gate@1 artefact against coverage_gate_rubric@1.0: enforces tests_failed==0, files_below_90pct empty, ecm_rows_uncovered empty, raw_terminal present + non-truncated, AND every §1 clause's cited test from the FR is `passed` in the coverage report (TRACE-004 closure). Emits a `score / 10` verdict; refuses to pass on <10/10. The pass certifies the `testing → done` lifecycle transition per `modules/skill/contracts/task/STATUS-REFERENCE.md` §1.1. Use when user asks to "audit this coverage gate" or "check the coverage gate". Do NOT use for "draft a new coverage gate" (use coverage-gate-author instead). Do NOT use for spec correctness (that is `task-audit`'s job during the `draft → ready_to_implement` transition).
+  Test coverage gate audit (testing → done) — audit a coverage-gate@1 artefact against coverage_gate_rubric@1.0: enforces tests_failed==0, files_below_90pct empty, ecm_rows_uncovered empty, raw_terminal present + non-truncated, AND every §1 clause's cited test from the task is `passed` in the coverage report (TRACE-004 closure). Emits a `score / 10` verdict; refuses to pass on <10/10. The pass certifies the `testing → done` lifecycle transition per `modules/skill/contracts/task/STATUS-REFERENCE.md` §1.1. Use when user asks to "audit this coverage gate" or "check the coverage gate". Do NOT use for "draft a new coverage gate" (use coverage-gate-author instead). Do NOT use for spec correctness (that is `task-audit`'s job during the `draft → ready_to_implement` transition).
 license: Apache-2.0
 metadata:
   version: 1.0.0

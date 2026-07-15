@@ -1,6 +1,14 @@
 ---
 id: TASK-SKILL-114
 title: "BASELINE.md artefact at v0.x → v1.0 promotion — design-time performance baseline + with/without-skill comparison + token-budget transparency"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-19T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: SKILL
 priority: MAY
 status: done
@@ -36,7 +44,7 @@ new_files:
   - modules/cuo/tests/fixtures/baseline-numeric-out-of-range.md
 modified_files:
   - modules/skill/task-audit/RUBRIC.md                      # add FM-114 (baseline-present-at-v1)
-  - task-audit skill        # §3.11 adds promotion-readiness rule
+  - Task-audit skill        # §3.11 adds promotion-readiness rule
   - website docs (SKILL appendices)                                    # Recipe 11 expanded; Part 13 validation pyramid mentions baseline
   - website docs (SKILL Appendix J)                                    # §6.4 status update + path
 
@@ -62,12 +70,12 @@ subtasks:
   - "1.0h: ANTHROPIC_GUIDE_DIGEST.md §6.4 update — status badge + cross-reference to TASK-SKILL-114"
   - "1.0h: integration with TASK-SKILL-103 broker — broker reads `gated_until_phase: P3` (partner_connector skills require BASELINE.md before flag flips); broker rejects partner_connector: true on any skill lacking BASELINE.md if skill_version >= 1.0.0"
   - "0.5h: cross-referencing — add BASELINE.md path into v1.0-promotion checklist in task-audit skill + into the v1.0-promotion section of every skill's CHANGELOG template"
-risk_if_skipped: "Without BASELINE.md, v1.0 promotion is a 'vibes-based' decision per Anthropic guide Chapter 2 p. 9 — operators promote skills without quantitative justification. Two consequences: (1) partner-connector skills (per TASK-SKILL-103 exposability) ship without trust calibration evidence; the `exposable_as.partner_connector: true` flag flips on skills whose with-vs-without performance was never measured. When a partner complains that the skill doesn't add value, there's no design-time baseline to defend the trust↔exposability link. (2) Operators have no record of why a skill was promoted; six months later, when the skill's acceptance rate drifts, there's no anchor to compare against ('was the 80% acceptance ever real, or was it always borderline?'). The artefact is small (one markdown file ~80-120 lines per promoted skill) but high-leverage at promotion time. Cost of the FR ≈ 8 hours including the validator and recipe expansion; cost of NOT shipping ≈ when the first partner connector ships, the trust calibration gap surfaces as a customer-visible blame ('why does this skill exist?') with no documented answer."
+risk_if_skipped: "Without BASELINE.md, v1.0 promotion is a 'vibes-based' decision per Anthropic guide Chapter 2 p. 9 — operators promote skills without quantitative justification. Two consequences: (1) partner-connector skills (per TASK-SKILL-103 exposability) ship without trust calibration evidence; the `exposable_as.partner_connector: true` flag flips on skills whose with-vs-without performance was never measured. When a partner complains that the skill doesn't add value, there's no design-time baseline to defend the trust↔exposability link. (2) Operators have no record of why a skill was promoted; six months later, when the skill's acceptance rate drifts, there's no anchor to compare against ('was the 80% acceptance ever real, or was it always borderline?'). The artefact is small (one markdown file ~80-120 lines per promoted skill) but high-leverage at promotion time. Cost of the task ≈ 8 hours including the validator and recipe expansion; cost of NOT shipping ≈ when the first partner connector ships, the trust calibration gap surfaces as a customer-visible blame ('why does this skill exist?') with no documented answer."
 ---
 
 ## §1 — Description (BCP-14 normative)
 
-This FR introduces the `BASELINE.md` artefact — a per-skill design-time performance comparison written at v0.x → v1.0 promotion. It closes the Anthropic guide Chapter 2 "performance comparison" measurement layer (per `modules/skill/ANTHROPIC_GUIDE_DIGEST.md` §6.4) that CyberOS currently lacks at design time (it tracks the metrics in production via OBS but doesn't fossilise the promotion-time justification).
+This task introduces the `BASELINE.md` artefact — a per-skill design-time performance comparison written at v0.x → v1.0 promotion. It closes the Anthropic guide Chapter 2 "performance comparison" measurement layer (per `modules/skill/ANTHROPIC_GUIDE_DIGEST.md` §6.4) that CyberOS currently lacks at design time (it tracks the metrics in production via OBS but doesn't fossilise the promotion-time justification).
 
 1. Every skill at `skill_version: 1.0.0` or higher **MUST** carry a `BASELINE.md` file at `<skill-folder>/BASELINE.md` (sibling of SKILL.md). The file documents the design-time performance comparison + the trust justification that earned the promotion.
 2. The file's frontmatter **MUST** declare: `skill_id` (kebab-case folder name) + `baseline_version: <semver>` (the baseline doc's own version, independent of skill_version) + `baseline_measured_at: <ISO 8601 with timezone>` + `attested_by: <persona-id | human:<id>>` (who signed off) + `next_review_due: <ISO 8601>` (when this baseline should be re-measured — default +12 months).
@@ -82,7 +90,7 @@ This FR introduces the `BASELINE.md` artefact — a per-skill design-time perfor
 11. The Rust broker (TASK-SKILL-103) **MUST** check `BASELINE.md` presence when `skill_version >= 1.0.0` AND `exposable_as.partner_connector: true`. Missing baseline on a partner-flagged skill rejects load with `FrontmatterError::PartnerWithoutBaseline`.
 12. The `attested_by` field's identity **MUST** be either a CyberOS persona id (e.g. `cuo-cpo` for CPO-attested baselines) or a `human:<id>` form (e.g. `human:stephen-cheng`). The attestation chain is part of the audit log (per AGENTS.md §7) — the `op:"baseline.attested"` row records the signoff.
 13. `next_review_due` **MUST** be set; default +12 months. When the date passes, the auditor rule severity escalates from `info` (compliant) to `warning` (review overdue). After 24 months without re-measurement, the rule escalates to `error` (stale baseline).
-14. Existing skills at v1.0+ (only `cuo/_shared/hello-world` at v1.0.0 today per `MODULE.md`) **MUST** be backfilled with a retrospective BASELINE.md as part of this FR's implementation. Future v1.0 promotions ship with BASELINE.md at the promotion-commit boundary; lazy backfill is not allowed (the artefact's whole point is to justify *this* promotion).
+14. Existing skills at v1.0+ (only `cuo/_shared/hello-world` at v1.0.0 today per `MODULE.md`) **MUST** be backfilled with a retrospective BASELINE.md as part of this task's implementation. Future v1.0 promotions ship with BASELINE.md at the promotion-commit boundary; lazy backfill is not allowed (the artefact's whole point is to justify *this* promotion).
 15. The validation pyramid in `modules/skill/README.md` Part 13.1 **MUST** be updated to reference BASELINE.md at the promotion gate (Layer 3 — operational telemetry now anchors against the design-time baseline). The pyramid diagram's third layer caption updates from "production telemetry" to "production telemetry vs design-time baseline".
 
 ## §2 — Why this design (rationale for humans)
@@ -131,10 +139,10 @@ next_review_due: 2027-05-19T00:00:00+07:00
 ## Workflow under test
 
 The workflow is "turn a PRD into a task backlog". Human-baseline:
-the operator reads the PRD, identifies candidate FRs by hand, writes each
-FR markdown, runs the audit by hand. Skill-augmented: invoke
+the operator reads the PRD, identifies candidate tasks by hand, writes each
+Task markdown, runs the audit by hand. Skill-augmented: invoke
 `task-author` with the PRD path; it generates a manifest +
-backlog, halts at PLAN approval, the operator approves, it writes the FRs.
+backlog, halts at PLAN approval, the operator approves, it writes the tasks.
 
 ## Without-skill baseline
 
@@ -177,7 +185,7 @@ a backlog is genuinely needed.
 
 `confidence_band.default: 0.7` chosen because:
 
-- FR authoring is judgement work (`determinism.reproducible: false`).
+- Task authoring is judgement work (`determinism.reproducible: false`).
 - The 0.7 default balances "model is confident enough to act" (0.7) against
   "model defers on ambiguity" (≤0.5 triggers HITL).
 - During the v0.x measurement window, the empirical acceptance rate was **84%**
@@ -186,7 +194,7 @@ a backlog is genuinely needed.
 
 `defer_below: 0.5` chosen because:
 
-- Below 0.5, the model is genuinely uncertain about an FR claim.
+- Below 0.5, the model is genuinely uncertain about a task claim.
 - HITL surfaces the question to the operator — the alternative is silent
   fabrication (anti-pattern per `references/ANTI_FABRICATION.md`).
 
@@ -197,7 +205,7 @@ a backlog is genuinely needed.
   personas needs more data; recommend re-measuring in v1.1.
 - Baseline measurement excluded one PRD that was malformed (no `## Summary`
   section); the skill correctly refused with `INPUTS_CHANGED`. Reported as
-  an FR-AI-XXX follow-up for the input-validation pipeline.
+  a task-AI-XXX follow-up for the input-validation pipeline.
 - Attestation chain: measurement gathered by claude-opus-4-7 (this session)
   during sweep; reviewed by cuo-cpo; signed off by stephen-cheng (human).
 ```
@@ -319,7 +327,7 @@ def validate(path: Path) -> BaselineValidationResult:
 11. **Broker rejects partner_connector v1.0+ without baseline** — load attempt → `FrontmatterError::PartnerWithoutBaseline`.
 12. **Numeric threshold pass check** — fixture with tool-call ratio 0.5 (≤0.7) + token ratio 0.5 + failure ratio 0.4 → meets thresholds; promotion eligible.
 13. **Numeric threshold fail check** — fixture with tool-call ratio 0.8 → does NOT meet threshold; promotion would require operator override + reason captured in Authoring notes.
-14. **Backfill hello-world v1.0** — `cuo/_shared/hello-world/BASELINE.md` exists post-FR-ship; passes `validate`.
+14. **Backfill hello-world v1.0** — `cuo/_shared/hello-world/BASELINE.md` exists post-task-ship; passes `validate`.
 15. **README Recipe 11 expanded** — Recipe 11 in README.md mentions BASELINE.md + the 3-threshold check + the operator-override clause.
 16. **task-audit skill §3.11 entry added** — new sub-rule references TASK-SKILL-114.
 17. **Validation pyramid updated** — README.md Part 13 mentions BASELINE.md as the design-time anchor.
@@ -477,7 +485,7 @@ next_review_due: 2027-05-19T00:00:00+07:00
 2. `modules/cuo/cuo/baseline.py` is added as a new module; re-exported from `modules/cuo/cuo/__init__.py`.
 3. `modules/cuo/cli.py` gains a `validate-baseline <skill_path>` subcommand.
 4. README Recipe 11 expanded from 3 paragraphs to 8 paragraphs covering the TASK-SKILL-114 contract.
-5. task-audit skill §3.11 (documentation-discipline) adds the rule.
+5. Task-audit skill §3.11 (documentation-discipline) adds the rule.
 6. RUBRIC.md FM-114 added.
 
 ## §7 — Dependencies
@@ -535,7 +543,7 @@ $ python -m cyberos.cuo.baseline modules/skill/closure-author/
 
 **All resolved during authoring.**
 
-Deferred to follow-up FRs:
+Deferred to follow-up tasks:
 - **TASK-SKILL-118** (placeholder — not yet specified): re-measurement automation — at the 12-month review-due date, automatically schedule a re-measurement run using OBS data + propose updated numbers via a `refinement_proposal` envelope. Phase P2+.
 
 ## §10 — Failure modes inventory

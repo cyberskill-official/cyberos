@@ -1,8 +1,16 @@
 ---
 id: TASK-TEN-001
 title: "TEN tenant provisioning CLI — `cyberos-ten provision` ops-driven flow with schema namespace + NATS subject + S3 prefix + initial root-admin subject + memory audit"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: TEN
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P2
@@ -34,7 +42,7 @@ source_decisions:
   - DEC-330 (exit codes follow cyberos-cli-exit shared crate per task-audit skill rule 9: 0 success, 1 already-exists-idempotent-match, 64 invalid-arg, 65 invalid-data, 73 cant-create, 75 temp-fail, 77 permission-denied)
   - DEC-331 (the initial root-admin password is printed ONCE to the operator's terminal + immediately scrubbed from CLI memory via zeroize; never logged, never persisted in plaintext)
   - DEC-332 (provisioning generates a tenant-bootstrap audit-chain anchor — first chain row that bootstraps the tenant's memory audit chain for TASK-AI-003)
-  - DEC-058 (tenant-as-degenerate-tenant: until TASK-TEN-001 ships, system runs as single-tenant; this FR activates the second-and-beyond tenants)
+  - DEC-058 (tenant-as-degenerate-tenant: until TASK-TEN-001 ships, system runs as single-tenant; this task activates the second-and-beyond tenants)
   - PDPL Art. 4 (data minimisation — operator's name + email recorded as `provisioned_by_subject_id` but the tenant's customer-facing data is empty at creation)
 
 language: rust 1.81
@@ -99,7 +107,7 @@ subtasks:
   - "0.5h: cli/provision.rs — clap subcommand + flag parsing + exit code mapping"
   - "1.1h: tests — 9 test files covering happy path, slug validation, idempotency, memory audit, root-admin, namespace isolation, residency default, append-only, exit codes"
 
-risk_if_skipped: "CyberOS is multi-tenant by construction (every table has `tenant_id`, every NATS subject is namespaced, every S3 bucket key is prefixed), but until TASK-TEN-001 ships, the system runs as a degenerate single tenant (DEC-058). Every downstream TEN FR (TASK-TEN-002 plan tiers, TASK-TEN-003 Stripe billing, TASK-TEN-004 metering, TASK-TEN-101 self-serve signup, TASK-TEN-103 4-residency provisioning, TASK-TEN-104 90-day offboarding, TASK-TEN-105 signed-bundle export) depends on the tenant lifecycle primitive. Without DEC-321's per-tenant schema namespace, RLS becomes the ONLY isolation layer — a single SQL bug leaks across tenants. Without DEC-322's NATS namespace, message subscriptions can leak across tenants. Without DEC-323's S3 prefix, body storage can race across tenants. Without DEC-331's password-printed-once policy, ops accidentally pastes root credentials into logs. The 5h effort lands the foundational ops-driven flow + creates the namespace invariants that every other module trusts."
+risk_if_skipped: "CyberOS is multi-tenant by construction (every table has `tenant_id`, every NATS subject is namespaced, every S3 bucket key is prefixed), but until TASK-TEN-001 ships, the system runs as a degenerate single tenant (DEC-058). Every downstream TEN task (TASK-TEN-002 plan tiers, TASK-TEN-003 Stripe billing, TASK-TEN-004 metering, TASK-TEN-101 self-serve signup, TASK-TEN-103 4-residency provisioning, TASK-TEN-104 90-day offboarding, TASK-TEN-105 signed-bundle export) depends on the tenant lifecycle primitive. Without DEC-321's per-tenant schema namespace, RLS becomes the ONLY isolation layer — a single SQL bug leaks across tenants. Without DEC-322's NATS namespace, message subscriptions can leak across tenants. Without DEC-323's S3 prefix, body storage can race across tenants. Without DEC-331's password-printed-once policy, ops accidentally pastes root credentials into logs. The 5h effort lands the foundational ops-driven flow + creates the namespace invariants that every other module trusts."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -144,7 +152,7 @@ The TEN service **MUST** ship the `cyberos-ten provision` CLI as the canonical o
 
 9. **MUST** enforce RLS on `tenants` AND `tenant_status_history` with the **superuser-only** policy: `USING (current_setting('auth.is_root_admin', true) = 'true')`. Tenant management is a CyberSkill-operator privilege, not a tenant-admin privilege. Tenant-admins read their own tenant via TASK-TEN-107's SPA (slice 3+).
 
-10. **MUST** be **append-only** on `tenants` AND `tenant_status_history` at the SQL-grant layer (per DEC-328). `REVOKE UPDATE, DELETE ON tenants, tenant_status_history FROM cyberos_app;`. Status transitions create new rows in history table; the `tenants.status` column is updated via the elevated `cyberos_provisioner` role (used by this FR's CLI + TASK-TEN-104's offboarding orchestrator).
+10. **MUST** be **append-only** on `tenants` AND `tenant_status_history` at the SQL-grant layer (per DEC-328). `REVOKE UPDATE, DELETE ON tenants, tenant_status_history FROM cyberos_app;`. Status transitions create new rows in history table; the `tenants.status` column is updated via the elevated `cyberos_provisioner` role (used by this task's CLI + TASK-TEN-104's offboarding orchestrator).
 
 11. **MUST** use the `cyberos_provisioner` SQL role for the CLI's writes — distinct from `cyberos_app` (which has REVOKE'd UPDATE/DELETE). The provisioner role:
     - Has INSERT on `tenants`, `tenant_status_history`, `tenant_residency_map`.
@@ -243,7 +251,7 @@ The TEN service **MUST** ship the `cyberos-ten provision` CLI as the canonical o
 
 **Why list + get subcommands (§1 #22, #23)?** Operators need to inspect existing tenants. `list` for inventory; `get` for detail. Both are read-only and require `root-admin` role.
 
-**Why email uniqueness check across all tenants (§1 #24)?** A subject's email is the cross-tenant join key for "I'm the same human in two tenants". Allowing the same email in two new tenants creates ambiguity. Slice 1 enforces single-tenant-email; FR-AUTH-2xx may add multi-tenant binding later (out of scope).
+**Why email uniqueness check across all tenants (§1 #24)?** A subject's email is the cross-tenant join key for "I'm the same human in two tenants". Allowing the same email in two new tenants creates ambiguity. Slice 1 enforces single-tenant-email; task-AUTH-2xx may add multi-tenant binding later (out of scope).
 
 **Why 30s p95 perf budget (§1 #15)?** Provisioning touches 4 external systems + creates ~10 rows. 30s is generous — typical happy path is 5-10s. The p95 budget catches infrastructure outliers; outliers > 30s = sev-3 alarm for ops investigation.
 
@@ -802,7 +810,7 @@ async fn two_tenants_get_distinct_namespaces() {
 ## §7 — Dependencies
 
 **Upstream:**
-- **TASK-AUTH-001** — tenant + subject create (this FR delegates via internal helper).
+- **TASK-AUTH-001** — tenant + subject create (this task delegates via internal helper).
 
 **Downstream (2 placeholders):**
 - **TASK-TEN-002** — 3 plan tiers (consumes `plan_tier` column).
@@ -902,8 +910,8 @@ Deferred:
 - **Self-serve signup form** — TASK-TEN-101 (P3).
 - **Per-tenant residency change workflow** — TASK-TEN-103.
 - **90-day offboarding** — TASK-TEN-104.
-- **Plan downgrade with quota violation** — FR-TEN-2xx.
-- **Branding config** — FR-TEN-2xx.
+- **Plan downgrade with quota violation** — task-TEN-2xx.
+- **Branding config** — task-TEN-2xx.
 - **Slug rename** — out of scope; manual SQL + ADR.
 
 All other questions resolved.
@@ -929,12 +937,12 @@ All other questions resolved.
 | memory audit emit fails | step 8 tx rollback | exit 73; full rollback | memory_writer diagnosis |
 | Password generation fails | step 7 internal | exit 75 transient | Retry |
 | RNG entropy starvation | step 7 | exit 75 | Restart process |
-| Operator deletes the printed password before saving | None — operator responsibility | Tenant unusable; force password-reset via AUTH | FR-AUTH-2xx password reset flow |
+| Operator deletes the printed password before saving | None — operator responsibility | Tenant unusable; force password-reset via AUTH | task-AUTH-2xx password reset flow |
 | Postgres connection pool exhausted | sqlx error | exit 75 | Wait + retry |
 | Cross-tenant slug-derived schema collision (e.g. SQL injection in slug) | regex check + parameterised query | None | Regex prevents |
 | `cyberos_provisioner` role not granted to CLI's connection | startup check fails | Service refuses to start | Grant role |
 | `tenant_residency_map` INSERT fails | step 3 tx rollback | exit 73 | Investigate cluster health |
-| Idempotent re-run with different display_name | OK (idempotency only checks slug+residency+plan_tier) | exit 1; display_name from existing row | Use `cyberos-ten update display-name` (FR-TEN-2xx) |
+| Idempotent re-run with different display_name | OK (idempotency only checks slug+residency+plan_tier) | exit 1; display_name from existing row | Use `cyberos-ten update display-name` (task-TEN-2xx) |
 | NATS compensating action fails | logged; sev-1 alarm | Orphan NATS account | Operator manual cleanup |
 | S3 compensating action fails | logged; sev-1 alarm | Orphan marker object (low cost) | S3 lifecycle cleanup |
 | AUTH compensating action fails | logged; sev-1 alarm | Orphan AUTH tenant + subject | Operator manual cleanup via AUTH CLI |
@@ -966,7 +974,7 @@ All other questions resolved.
 - **`provisioned_by_subject_id` is the operator's UUID** — accountability without storing operator PII (PDPL Art. 4 satisfied).
 - **`tenant_status_history` append-only** — full lifecycle trace for forensics + compliance reviews.
 - **TenantStatus 5 values** — ships all at slice 1; transitions to suspended/terminating/terminated land in TASK-TEN-104.
-- **`cyberos-ten get` excludes password** — there is no path to retrieve the original password; password reset is via AUTH (FR-AUTH-2xx).
+- **`cyberos-ten get` excludes password** — there is no path to retrieve the original password; password reset is via AUTH (task-AUTH-2xx).
 - **`--json` mode separates password to stderr** — automation-friendly stdout JSON + force-attention stderr password block.
 - **AUTH internal helper exposed only for TASK-TEN-001** — not a public REST endpoint; operator-privilege only.
 - **`tenant.slug.>` NATS subject pattern** — Multi-level wildcard captures all events for the tenant; ACLs limit pub/sub to this namespace.

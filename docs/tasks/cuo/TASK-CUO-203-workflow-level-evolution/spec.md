@@ -2,13 +2,13 @@
 template: task@1
 id: TASK-CUO-203
 title: "Harness Wave 4 — workflow-level evolution via outcome distribution"
+type: feature
 author: "@stephen"
 department: engineering
 status: done
 priority: p2
 created_at: 2026-05-19T20:45:00+07:00
 ai_authorship: assisted
-feature_type: internal_tooling
 eu_ai_act_risk_class: limited
 target_release: 2026-Q3
 client_visible: false
@@ -21,7 +21,7 @@ depends_on: [TASK-CUO-200, TASK-CUO-201, TASK-CUO-202]
 
 ## Summary
 
-Wave 4 of the continuous-improvement harness extends TASK-CUO-200..202 from skill-level to workflow-level evolution. The harness aggregates per-workflow outcome distributions (COMPLETED / ROUTED_BACK / HITL_HALT / FAILED) over rolling windows, and when a workflow's ROUTED_BACK rate exceeds a threshold OR the same phase keeps tripping repeat failures across multiple FRs, it emits a `workflow_refinement_proposal@1` proposing chain edits — e.g. "add a pre-review check before phase 8", "tighten the coverage-gate threshold from 90% to 95% per file", "swap the order of steps 11 and 12 so observability lands before impl-plan".
+Wave 4 of the continuous-improvement harness extends TASK-CUO-200..202 from skill-level to workflow-level evolution. The harness aggregates per-workflow outcome distributions (COMPLETED / ROUTED_BACK / HITL_HALT / FAILED) over rolling windows, and when a workflow's ROUTED_BACK rate exceeds a threshold OR the same phase keeps tripping repeat failures across multiple tasks, it emits a `workflow_refinement_proposal@1` proposing chain edits — e.g. "add a pre-review check before phase 8", "tighten the coverage-gate threshold from 90% to 95% per file", "swap the order of steps 11 and 12 so observability lands before impl-plan".
 
 The stripe-dedup + auto-bump machinery from TASK-CUO-201/202 reuses cleanly — workflow stripes are just `<workflow_id>:<phase>:<pattern_hash>` and the applier extends to mutate workflow YAML frontmatter + skill_chain steps with the same major/minor/safety classification.
 
@@ -35,11 +35,11 @@ Without workflow-level evolution, structural issues that span multiple skills go
 
 ### §1 Normative requirements
 
-1. **MUST** ship `cuo/core/workflow_evolution.py` with `compute_workflow_metrics(audit_dir, window) -> dict[str, WorkflowMetrics]` that aggregates per-workflow: total runs, COMPLETED count, ROUTED_BACK count (sum + per-FR median), HITL_HALT count, average step count of failed runs, top-3 steps where failure occurred most often.
+1. **MUST** ship `cuo/core/workflow_evolution.py` with `compute_workflow_metrics(audit_dir, window) -> dict[str, WorkflowMetrics]` that aggregates per-workflow: total runs, COMPLETED count, ROUTED_BACK count (sum + per-task median), HITL_HALT count, average step count of failed runs, top-3 steps where failure occurred most often.
 2. **MUST** define workflow-level threshold signals (mirroring SKILL-level `self_audit.anomaly_signals`):
    - `routed_back_rate_above` (default 0.3 → 30% of runs route back)
    - `hitl_halt_rate_above` (default 0.1 → 10% of runs halt for human)
-   - `repeat_phase_failure_above` (default 3 → same phase fails on 3+ different FRs in window)
+   - `repeat_phase_failure_above` (default 3 → same phase fails on 3+ different tasks in window)
    - `chain_length_efficiency_below` (default 0.7 → average steps_run / chain_length below 70%)
 3. **MUST** declare these signals in each workflow file's `self_audit:` frontmatter (similar to SKILL.md's). Workflow YAML extension: add the same `self_audit` + `human_fine_tune` blocks the SKILL.md frontmatter already has. (Schema change in `cuo/contracts/workflow/CONTRACT.md`.) *(traces_to: §1 #3 → AC #2)*
 4. **MUST** compute workflow stripes via `compute_workflow_stripe(workflow_id, signal_id, failure_pattern) -> str` with format `<persona>/<workflow_slug>:<signal_id>:<pattern_hash>`.
@@ -56,8 +56,8 @@ Without workflow-level evolution, structural issues that span multiple skills go
 8. **MUST** add CLI:
    - `cyberos-cuo workflow metrics --since 30d` — table of per-workflow outcome distribution.
    - `cyberos-cuo workflow propose --workflow <id>` — manually trigger proposal authoring against one workflow.
-9. **SHOULD** include per-FR routed-back history in the workflow report — if FR-X has routed back 3+ times in the window, the proposal body cites it as the canonical case study.
-10. **MUST** include in proposal body: `## Before` (current chain snippet), `## After` (proposed chain snippet), `## Rationale` (which signal tripped + evidence rows), `## Backward-compat notes` (whether the change breaks in-flight FRs at older chain positions).
+9. **SHOULD** include per-task routed-back history in the workflow report — if task-X has routed back 3+ times in the window, the proposal body cites it as the canonical case study.
+10. **MUST** include in proposal body: `## Before` (current chain snippet), `## After` (proposed chain snippet), `## Rationale` (which signal tripped + evidence rows), `## Backward-compat notes` (whether the change breaks in-flight tasks at older chain positions).
 
 ### §2 Stripe collision with skill stripes
 
@@ -66,14 +66,14 @@ Skill stripes from TASK-CUO-201 have format `<skill_slug>:<signal_id>:<hash>`; w
 ## Alternatives Considered
 
 1. **Workflow proposals as a separate folder** (`docs/workflow-proposals/`) — splits the operator surface area unnecessarily. Unified `docs/proposals/` with `kind:` discrimination is simpler.
-2. **Only humans propose workflow edits** — but workflow drift is exactly the kind of thing the harness is best at noticing across many FRs; humans see one FR at a time.
+2. **Only humans propose workflow edits** — but workflow drift is exactly the kind of thing the harness is best at noticing across many tasks; humans see one task at a time.
 3. **Tie workflow evolution to skill evolution (apply skill diff cascades into workflow diff)** — too coupled; the propagation rules become fragile. Keep them independent.
 
 ## Success Metrics
 
 | metric | baseline | target | deadline |
 |---|---|---|---|
-| Workflow refinement proposals produced per quarter | n/a | 2–5 per workflow that ships > 50 FRs | 30 days post-ship |
+| Workflow refinement proposals produced per quarter | n/a | 2–5 per workflow that ships > 50 tasks | 30 days post-ship |
 | % of workflow proposals approved by Stephen | n/a | ≥ 50% | continuous |
 | ROUTED_BACK rate improvement for workflows with applied proposals | n/a | -25% in the following window | per-proposal |
 
@@ -85,7 +85,7 @@ In scope: per-workflow metrics aggregator, threshold-signal evaluator (reusing T
 
 - Multi-workflow refactors (single proposal touches > 1 workflow)
 - Persona-level evolution (e.g. proposing to spawn a new persona)
-- Auto-runs of proposed chain edits on the CURRENT in-flight FRs (those use the chain as it was at start of their run; new chains apply to future invocations)
+- Auto-runs of proposed chain edits on the CURRENT in-flight tasks (those use the chain as it was at start of their run; new chains apply to future invocations)
 
 ## Dependencies
 
@@ -105,7 +105,7 @@ ALL workflow-level diffs default to queue (§1 #6 says "All workflow diffs defau
 
 ### Failure Modes
 
-(a) **Mid-flight FR uses old chain** — when a chain edit applies during an in-flight FR run, the FR continues using the chain it started with (snapshot at run-start). Risk: the operator expects the new chain to fix the in-flight FR. Mitigation: §2 explicitly out-of-scope; only future invocations use the new chain. (b) **Workflow stripe collision** — workflow stripes use `<persona>/<workflow_slug>` format; the `/` makes them disjoint from skill stripes — verifiable via `compute_workflow_stripe` test (AC #5). (c) **Proposed step references a non-existent skill** — the validator (existing `validate_chain`) catches this BEFORE the applier writes; the proposal is rejected as ill-formed. (d) **Backward-compat regression** — the proposal body's `## Backward-compat notes` section (§1 #10) is mandatory; if the LLM omits it, the proposal fails its own structural validation.
+(a) **Mid-flight task uses old chain** — when a chain edit applies during an in-flight task run, the task continues using the chain it started with (snapshot at run-start). Risk: the operator expects the new chain to fix the in-flight task. Mitigation: §2 explicitly out-of-scope; only future invocations use the new chain. (b) **Workflow stripe collision** — workflow stripes use `<persona>/<workflow_slug>` format; the `/` makes them disjoint from skill stripes — verifiable via `compute_workflow_stripe` test (AC #5). (c) **Proposed step references a non-existent skill** — the validator (existing `validate_chain`) catches this BEFORE the applier writes; the proposal is rejected as ill-formed. (d) **Backward-compat regression** — the proposal body's `## Backward-compat notes` section (§1 #10) is mandatory; if the LLM omits it, the proposal fails its own structural validation.
 
 ## AI Authorship Disclosure
 
@@ -124,7 +124,7 @@ ALL workflow-level diffs default to queue (§1 #6 says "All workflow diffs defau
 7. Repeat occurrence of the same workflow stripe (per TASK-CUO-201's halt-on-repeat rule) halts the workflow with `HITL_HALT`. *(traces_to: §1 #5 via TASK-CUO-201 §1 #7)*
 8. Per applied workflow proposal: exactly one `cuo.workflow_refinement_applied` aux row + `workflow_version` in YAML frontmatter is bumped per §2 rules. *(traces_to: §1 #6, #7)*
 9. A workflow proposal whose pattern change converts `linear` → `time_critical` is classified `major` + queued (not auto-applied even with `--auto-workflow-diffs`). *(traces_to: §1 #6)*
-10. The workflow report cites at least one specific FR id per tripped signal — the operator can drill from the report into the FR's debug trace. *(traces_to: §1 #9)*
+10. The workflow report cites at least one specific task id per tripped signal — the operator can drill from the report into the task's debug trace. *(traces_to: §1 #9)*
 
 ## §5 Verification
 

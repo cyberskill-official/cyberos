@@ -11,7 +11,7 @@
 //! down, validation error, gated subject) MUST NOT fail or delay the sign-in / message send. Modules wire
 //! the emit so it cannot delay the response (after the response is built, or in a spawned task).
 //!
-//! **Reconciliation with the FR skeleton.** TASK-MEMORY-122 §3 sketched `emit(&self.pool, ev)` (two args),
+//! **Reconciliation with the task skeleton.** TASK-MEMORY-122 §3 sketched `emit(&self.pool, ev)` (two args),
 //! but the shipped TASK-MEMORY-121 `emit(pool, ev, gate)` takes the gate explicitly so the gate is a visible
 //! dependency, not a hidden global. The `Capturer` therefore *owns* the gate (built once, wrapped in the
 //! TASK-MEMORY-121 `CachingGate`) and passes it into `emit` on every call — same effect, gate dependency

@@ -1,8 +1,16 @@
 ---
 id: TASK-SKILL-106
 title: "memory-sync@1 skill bundle — operator-facing sync trigger that defers to Stage 4 orchestrator (slice-3 stub; full sync ships P2)"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: SKILL
-priority: SHOULD
+priority: p1
 status: done
 verify: I
 phase: P1
@@ -63,7 +71,7 @@ The `memory-sync@1` skill bundle **MUST** scaffold the sync-trigger surface; ful
     - bash: `cyberos-memory-sync push --dry-run`
 6. **MUST** exit with `ExitCode::Ok` (slice-3) even though no actual sync occurs; bash CLI prints `"⚠  memory-sync@1 slice-3: deferred to P2 — see TASK-MEMORY-103"`.
 7. **MUST** emit OTel metric `skill_memory_sync_requests_total{direction, dry_run, outcome}` (counter; outcome ∈ deferred_p2 | error).
-8. **SHOULD** when P2 ships, this FR's slice-4 version will delegate to TASK-MEMORY-103's sync daemon via Unix socket call.
+8. **SHOULD** when P2 ships, this task's slice-4 version will delegate to TASK-MEMORY-103's sync daemon via Unix socket call.
 
 ---
 

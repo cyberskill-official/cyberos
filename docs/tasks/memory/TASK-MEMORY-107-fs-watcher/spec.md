@@ -1,8 +1,16 @@
 ---
 id: TASK-MEMORY-107
 title: "memory capture daemon — Rust + notify crate FS watcher with rate-limit + content-dedup + backpressure + W3C trace propagation"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: memory
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -72,7 +80,7 @@ subtasks:
   - "1.0h: rate_limit_test.rs — 1000-event burst → ≤ 200 emitted in first second; overflow → `memory.capture_dropped` row"
   - "1.5h: end_to_end_test.rs — write 100 files to watched folder → 100 capture rows in memory; chain_anchor verified"
   - "1.0h: integrate with TASK-MEMORY-102's `memory watch` (registration writes manifest entry; daemon picks up via SIGHUP)"
-risk_if_skipped: "Without an event-driven watcher, capture latency is bounded by polling interval (minutes) — by then the user has moved on. Without dedup, rapid auto-save (editor write-on-keystroke) creates thousands of duplicate rows per minute. Without rate-limit, a runaway file-generation script could flood the memory chain and trigger backpressure across the system. Without W3C trace propagation, downstream consumers can't correlate a capture row with the upstream tool call that produced it (cowork session, Claude Code hook, terminal command). Without `memory.capture_dropped` rows on overflow, observability sees the event count drop and assumes the user stopped working — silent data loss. This FR is load-bearing for TASK-MEMORY-108 (Cowork session capture), TASK-MEMORY-109 (Claude Code hook capture), TASK-MEMORY-110 (health daemon), TASK-MEMORY-111 (pre-ingest PII)."
+risk_if_skipped: "Without an event-driven watcher, capture latency is bounded by polling interval (minutes) — by then the user has moved on. Without dedup, rapid auto-save (editor write-on-keystroke) creates thousands of duplicate rows per minute. Without rate-limit, a runaway file-generation script could flood the memory chain and trigger backpressure across the system. Without W3C trace propagation, downstream consumers can't correlate a capture row with the upstream tool call that produced it (cowork session, Claude Code hook, terminal command). Without `memory.capture_dropped` rows on overflow, observability sees the event count drop and assumes the user stopped working — silent data loss. This task is load-bearing for TASK-MEMORY-108 (Cowork session capture), TASK-MEMORY-109 (Claude Code hook capture), TASK-MEMORY-110 (health daemon), TASK-MEMORY-111 (pre-ingest PII)."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -760,8 +768,8 @@ async fn drain_loop(
 - **TASK-MEMORY-101** — `MemoryWriter` + `MemoryReader` are the interface for chain mutations + reads.
 - **TASK-MEMORY-102** — `cyberos memory watch/unwatch` is the registration UX; this daemon picks up via SIGHUP.
 - **TASK-MEMORY-105** — `cyberos doctor --only watched-folders` is the boot gate.
-- **TASK-MEMORY-108** (downstream) — Cowork session-hook capture FR uses this daemon as its emit pathway.
-- **TASK-MEMORY-109** (downstream) — Claude Code hook capture FR likewise.
+- **TASK-MEMORY-108** (downstream) — Cowork session-hook capture task uses this daemon as its emit pathway.
+- **TASK-MEMORY-109** (downstream) — Claude Code hook capture task likewise.
 - **TASK-MEMORY-110** (downstream) — health-check daemon supervises this process.
 - **TASK-MEMORY-111** (downstream) — pre-ingest PII detection runs on `body` BEFORE `blake3::hash` is invoked.
 - **TASK-AI-022** — W3C TraceContext extract/inject pattern reused.

@@ -36,7 +36,7 @@ final check invocation (t01, t03 part 2). 9/9 edge-matrix rows covered.
 
 ## Diff summary (4 files)
 new: check-chain-coverage.sh, chain-allowlist.txt, tests/test_chain_coverage.sh
-mod: build.sh (set gains debugging-cycle pair with FR comment; final-step check)
+mod: build.sh (set gains debugging-cycle pair with task comment; final-step check)
 
 ## Deviations from spec
 None. (§8 example output confirmed byte-shape: MISSING lines exactly as specced.)

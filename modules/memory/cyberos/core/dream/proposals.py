@@ -5,7 +5,7 @@ cyberos.core.dream.proposals — DreamProposal + DreamDiff types
 Pure data classes + ID generators. No I/O.
 
 The four proposal kinds (`merge | stale | new | verify`) are closed per
-DEC-214 — adding a new kind requires a new FR + protocol amendment so
+DEC-214 — adding a new kind requires a new task + protocol amendment so
 the apply-side validation surface stays bounded.
 """
 

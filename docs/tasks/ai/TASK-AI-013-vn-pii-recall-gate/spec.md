@@ -2,8 +2,16 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future fr-catalog renderer) ─────
 id: TASK-AI-013
 title: "VN-PII recall ≥ 99% per-recognizer CI gate on 200-sample fixture"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AI
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P0
@@ -23,7 +31,7 @@ source_pages:
   - website/docs/legal/vn-pdpl-compliance.html
 source_decisions:
   - TASK-AI-012 §1 #1 (recall ≥ 99% per-recognizer AND aggregate floor)
-  - TASK-AI-012 §1 #14 (recognizer-version endpoint exists; this FR pins fixture to it)
+  - TASK-AI-012 §1 #14 (recognizer-version endpoint exists; this task pins fixture to it)
   - PDPL Art. 7 (Vietnam personal-data-sale ban; CCCD government-ID handling)
   - DEC-053 (CCCD treated as Class-A government ID — never persists in memory raw)
   - archive/2026-05-14/RESEARCH_REVIEW.md §4.2 (recall gate is the compliance assertion)
@@ -87,7 +95,7 @@ risk_if_skipped: "TASK-AI-012's recall claim is unenforced. Recognizers can degr
 
 A CI gate on every PR touching `services/ai-gateway/pii/**`, the recall-fixture file, or the recall-gate workflow file itself **MUST** run a recall check against a 200-sample VN PII test corpus and **MUST fail the PR** if any recognizer's recall drops below 99%. The corpus and the gate together obey the following:
 
-1. **MUST** contain exactly 200 positive samples distributed across the 6 VN recognizers (50 CCCD / 30 MST / 40 PHONE / 20 NĐD / 40 ADDRESS / 20 BANK_ACCOUNT, matching TASK-AI-012's enumeration in §1 #1). The sample-count distribution is asserted in `test_fixture_invariants.py`; drift requires explicit FR amendment.
+1. **MUST** contain exactly 200 positive samples distributed across the 6 VN recognizers (50 CCCD / 30 MST / 40 PHONE / 20 NĐD / 40 ADDRESS / 20 BANK_ACCOUNT, matching TASK-AI-012's enumeration in §1 #1). The sample-count distribution is asserted in `test_fixture_invariants.py`; drift requires explicit task amendment.
 2. **MUST** include at least 30 **negative samples** — Vietnamese text without PII (plain names, dates, VND amounts, hợp đồng numbers, biển số xe, sentences from gov.vn legal text). Negative samples MUST produce **zero matches** from any VN recognizer; any false positive on a negative sample is logged but does NOT fail the gate (precision is reported, not gated — see §1 #6 below).
 3. **MUST** be synthetic OR aggressively anonymised real data. Real customer data MUST have the digit-bearing PII replaced with valid-format-fake equivalents (real CCCD `038198001234` → fake `038100000001` with valid province code prefix). The anonymisation rule is "preserve format-validity, destroy identity-linkage." A pre-commit hook (`.pre-commit-hooks/no-real-pii-in-corpus.sh` per §1 #14 below) AST-walks the fixture for any sequence matching the same span as a known internal customer record.
 4. **MUST** be regenerated quarterly (Jan 1, Apr 1, Jul 1, Oct 1) to capture format drift — new VN ID formats, new bank patterns, new province codes after administrative reorganisation, newly-onboarded VN telco prefixes. Regeneration is owned by the operator on rotation; the bot reminder (§1 #13) drives the cadence.
@@ -99,10 +107,10 @@ A CI gate on every PR touching `services/ai-gateway/pii/**`, the recall-fixture 
 10. **MUST** pin the fixture's expected recognizer versions in `fixtures/fixture_manifest.yaml`. The test reads the live recognizer versions from `GET /recognizers/version` (TASK-AI-012 §1 #14) and asserts they match the manifest before computing recall. A recognizer-version drift fails the gate with `fixture_version_mismatch` — forcing the operator to either bump the fixture or revert the recognizer.
 11. **MUST NOT** make any network call during test execution. The fixture is the sole input; the recognizers are imported in-process. The CI runner has internet access for `pip install` only; once the test starts, network egress is monitored by the GitHub Actions job (no proxy → no real-PII exfiltration risk during CI).
 12. **MUST** publish recall, precision, and runtime metrics to a JSON artefact at `recall_gate_report_<sha>.json` attached to the PR. The artefact is the input to the trend chart (§1 #16) and the audit record for any subsequent compliance enquiry — "what was the recall at the time this PR shipped?"
-13. **MUST** trigger a quarterly refresh reminder via `.github/workflows/vn-pii-quarterly-refresh.yml` (scheduled at `0 0 1 1,4,7,10 *`) that opens a GitHub issue titled `VN PII corpus refresh due — quarter <Q><YYYY>` against the `services/ai-gateway/pii` codeowner. The issue body MUST reference this FR and the `regen_fixture.py` runbook.
+13. **MUST** trigger a quarterly refresh reminder via `.github/workflows/vn-pii-quarterly-refresh.yml` (scheduled at `0 0 1 1,4,7,10 *`) that opens a GitHub issue titled `VN PII corpus refresh due — quarter <Q><YYYY>` against the `services/ai-gateway/pii` codeowner. The issue body MUST reference this task and the `regen_fixture.py` runbook.
 14. **MUST** enforce, via the `.pre-commit-hooks/no-real-pii-in-corpus.sh` hook, that no sample in the fixture contains a digit sequence that matches a known-internal-CCCD pattern (Luhn-style check digit + known-customer province distribution). The hook is registered in `.pre-commit-config.yaml` and executes on every commit touching `fixtures/vn_pii_200_samples.yaml`.
 15. **MUST** assert that the fixture-format validator (`scripts/validate_corpus_format.py`) runs cleanly: every sample has `id`, `text`, `expected_entities`, `expected_count`, `provenance` (synthetic | anonymised-real | gov.vn-public); every span offset (start/end) is verified to actually delimit a substring matching the declared entity; every entity is one of the 6 VN_* types or PERSON (Presidio's built-in fallback).
-16. **SHOULD** publish a trend chart (recall + precision over time per recognizer) to the build dashboard. The artefact source is the JSON from §1 #12; the dashboard is out of scope for this FR (TASK-AI-022 implements it).
+16. **SHOULD** publish a trend chart (recall + precision over time per recognizer) to the build dashboard. The artefact source is the JSON from §1 #12; the dashboard is out of scope for this task (TASK-AI-022 implements it).
 
 ---
 
@@ -124,7 +132,7 @@ A CI gate on every PR touching `services/ai-gateway/pii/**`, the recall-fixture 
 
 **Why a 5-minute runtime budget (§1 #9)?** GitHub Actions billing is per-minute; a 5-minute job is ~$0.04 per PR. At 10 PRs/week touching pii/**, that's ~$2/month — trivial. But if the test creeps to 30 minutes (e.g., someone adds a 10,000-sample fixture), it becomes both expensive AND a velocity problem (engineers wait 30 min on every push). The budget is a forcing function for keeping the fixture lean: 200 samples is enough to detect 99% recall regression with statistical confidence; 10,000 is overkill until we have the precision gate driving the sample size.
 
-**Why expose the recall-gate report as a JSON artefact (§1 #12)?** Three reasons. (1) The trend chart (§1 #16) needs a parseable source; markdown PR comments aren't structured. (2) A compliance auditor asking "what was the recall on the day FR-X shipped?" needs an answer that's *durable* — the GH Actions log retention is 90 days, but the artefact can be archived. (3) The artefact's `recognizer_versions` field lets a future reader correlate recall numbers with recognizer code, even if the recognizer code has since changed.
+**Why expose the recall-gate report as a JSON artefact (§1 #12)?** Three reasons. (1) The trend chart (§1 #16) needs a parseable source; markdown PR comments aren't structured. (2) A compliance auditor asking "what was the recall on the day task-X shipped?" needs an answer that's *durable* — the GH Actions log retention is 90 days, but the artefact can be archived. (3) The artefact's `recognizer_versions` field lets a future reader correlate recall numbers with recognizer code, even if the recognizer code has since changed.
 
 **Why a workflow file inclusion in `paths:` (§1 #8)?** Without it, a PR that *only* edits `.github/workflows/vn-pii-recall.yml` to disable the gate (e.g., comments out the assertion) would not trigger the gate. The workflow needs to gate-itself: any change to the gate's own logic must run through the gate. This is a standard "you can't unilaterally relax your own enforcement" pattern; it's why the workflow file is in its own `paths:` list.
 
@@ -220,7 +228,7 @@ recognizer_versions:
   VN_BANK_ACCOUNT: "1.0.0"
 
 # Per-recognizer floors. Default is 99%; lower floor for a recognizer requires
-# explicit FR amendment.
+# explicit task amendment.
 recall_floors:
   VN_CCCD: 0.99
   VN_MST: 0.99
@@ -276,7 +284,7 @@ Aggregate         199/200     1    3   0.9950 ✅                  —
 
 Runtime: 142.3s (budget: 300s) ✅
 
-PR cannot merge until VN_PHONE recall ≥ 0.99 OR fixture is updated (with FR amendment).
+PR cannot merge until VN_PHONE recall ≥ 0.99 OR fixture is updated (with task amendment).
 
 Artefact: recall_gate_report_<sha>.json attached to this run.
 ```
@@ -879,9 +887,9 @@ if __name__ == "__main__":
 
 ## §7 — Dependencies
 
-### Code dependencies (other FRs/modules)
+### Code dependencies (other tasks/modules)
 
-- **TASK-AI-012** — VN recognizers (`VN_RECOGNIZERS` list, the 6 recognizer classes, `register_vn_recognizers`, and the `GET /recognizers/version` endpoint) MUST exist. This FR consumes them; it does not modify them.
+- **TASK-AI-012** — VN recognizers (`VN_RECOGNIZERS` list, the 6 recognizer classes, `register_vn_recognizers`, and the `GET /recognizers/version` endpoint) MUST exist. This task consumes them; it does not modify them.
 - **TASK-AI-011** — Presidio sidecar (`presidio_sidecar.py:app`) must be importable; the recall gate uses `fastapi.testclient.TestClient(app)` to query the version endpoint.
 - **TASK-AI-022 (downstream)** — Recall + precision JSON artefact is the source for the trend chart. Schema MUST be stable; `validate_corpus_format.py --schema-out` is the contract surface.
 
@@ -1012,7 +1020,7 @@ Acceptance: PR that bumps fixture_version, passes the recall gate at ≥99% per 
 
 ## §9 — Open questions
 
-All resolved at authoring time. Items deferred to later FRs:
+All resolved at authoring time. Items deferred to later tasks:
 
 - Precision gate (TASK-AI-022) — currently precision is reported, not gated. Gate activation requires 6 months of operational data.
 - Adversarial samples (typo CCCDs, partial CCCDs, foreign-looking VN IDs) — phase-2 expansion; placeholder TASK-AI-024.
@@ -1033,10 +1041,10 @@ All resolved at authoring time. Items deferred to later FRs:
 | Real PII slips past pre-commit hook (table not present locally) | CI-step decrypts pattern table and re-runs the hook BEFORE the recall gate | CI fails on hook; PR blocked | Operator rotates the leaked CCCD's customer; updates pattern table; force-pushes corrected corpus |
 | Corpus stale (>90 days since last quarterly refresh) | `vn-pii-quarterly-refresh.yml` scheduled bot opens a tracking issue | GitHub issue created; assigned to codeowner | Operator runs `regen_fixture.py` for the quarter; opens PR through gate |
 | Quarterly bot fails to create issue (workflow disabled, permission missing) | Out-of-band: monthly process review notices missing issue | Reminder missed; quarterly refresh skipped | Manual issue creation; investigate workflow status; restore `issues:write` permission |
-| CI runner slow → test exceeds 5-min budget | `test_recall_gate_runtime_budget.py` asserts wall-clock | Test fails on budget violation | Reduce sample count (with FR amendment) OR parallelize OR profile the recognizer (likely regex backtracking) |
+| CI runner slow → test exceeds 5-min budget | `test_recall_gate_runtime_budget.py` asserts wall-clock | Test fails on budget violation | Reduce sample count (with task amendment) OR parallelize OR profile the recognizer (likely regex backtracking) |
 | Fixture file format invalid (bad YAML, missing required fields) | `test_fixture_invariants.py` | CI fails on fixture invariants test before recall is computed | Engineer fixes YAML; runs `make pii-fixture-validate` locally |
 | Span offset wrong in fixture (start/end don't delimit actual text) | `test_span_offsets_delimit_actual_substrings` | CI fails on span validation | Engineer recomputes offsets in `regen_fixture.py` |
-| Sample-count drift (e.g., 51 CCCD instead of 50) | `test_sample_counts_match_manifest` | CI fails; manifest is the source-of-truth | Engineer either removes the extra sample or bumps the manifest (FR amendment if per-type floors change) |
+| Sample-count drift (e.g., 51 CCCD instead of 50) | `test_sample_counts_match_manifest` | CI fails; manifest is the source-of-truth | Engineer either removes the extra sample or bumps the manifest (task amendment if per-type floors change) |
 | Recognizer version drift between deployed sidecar and fixture pin | `test_recognizer_versions_match_manifest` | CI fails with `fixture_version_mismatch` | Engineer either bumps fixture (regen for new recognizer behaviour) OR reverts the recognizer change |
 | Negative sample false-positives at high confidence | `test_negative_samples_no_high_confidence_matches` | CI fails on precision-disguised-as-spec-violation | Engineer tightens recognizer regex OR adjusts context boost OR removes the negative sample (with rationale) |
 | Workflow disabled silently (PR comments out `paths:`) | Workflow file is itself in `paths:`; self-gate fires | CI fails on the disabled-workflow PR | Reviewer rejects the PR |
@@ -1050,20 +1058,20 @@ All resolved at authoring time. Items deferred to later FRs:
 | Force-pass via `pytest.skip` in `test_recall_gate.py` | CI matrix asserts no `s ` (skip) markers in pytest output for the recall test | CI fails on skip detection | Engineer removes the skip annotation |
 | Precision regression > 5pp vs baseline | `test_precision_reported_no_gate` logs `::warning::` lines | PR comment posted; merge NOT blocked | Engineer investigates; may bump baseline next quarter if regression is intentional |
 | Fixture-manifest `runtime_budget_seconds` changed without rationale | PR review (no automated detection) | Caught at code review | Reviewer demands explanation in PR body |
-| Workflow file edited to skip the gate (`if: false`) | `vn-pii-recall.yml` is in its own `paths:` list; PR triggers gate against itself | Self-gate runs; assertion runs; PR fails or passes on real recall | If gate is intentionally disabled, requires FR amendment |
+| Workflow file edited to skip the gate (`if: false`) | `vn-pii-recall.yml` is in its own `paths:` list; PR triggers gate against itself | Self-gate runs; assertion runs; PR fails or passes on real recall | If gate is intentionally disabled, requires task amendment |
 
 ---
 
 ## §11 — Notes
 
-- The 200-sample size is calibrated against the "1 missed per 100 cases" intuition. For 99% recall floors per recognizer: 50-sample types tolerate at most 0 misses (50 × 0.99 = 49.5 → round-up requires 50/50), and 20-sample types likewise tolerate 0 misses (20 × 0.99 = 19.8 → requires 20/20). The compressed first-pass of this FR claimed "at most 2 missed per recognizer"; that figure was wrong for tiny recognizers and has been removed. The accurate statement is: *every recognizer must hit 100% on its current sample subset to clear the 99% floor with margin; one miss on a 20-sample recognizer drops it to 95%, which fails*.
+- The 200-sample size is calibrated against the "1 missed per 100 cases" intuition. For 99% recall floors per recognizer: 50-sample types tolerate at most 0 misses (50 × 0.99 = 49.5 → round-up requires 50/50), and 20-sample types likewise tolerate 0 misses (20 × 0.99 = 19.8 → requires 20/20). The compressed first-pass of this task claimed "at most 2 missed per recognizer"; that figure was wrong for tiny recognizers and has been removed. The accurate statement is: *every recognizer must hit 100% on its current sample subset to clear the 99% floor with margin; one miss on a 20-sample recognizer drops it to 95%, which fails*.
 - Quarterly regeneration is the load-bearing operational discipline. Without it, the fixture decays into a historical snapshot. The bot reminder (§1 #13) is the forcing function; the runbook is `scripts/regen_fixture.py`.
-- Per-recognizer recall floors live in `fixture_manifest.yaml` so a calibration change is a single-PR diff. Changing the floor requires an explicit FR amendment to TASK-AI-013 §1 #5 (the 99% number is normative); the manifest knob is for fine-tuning, not weakening.
+- Per-recognizer recall floors live in `fixture_manifest.yaml` so a calibration change is a single-PR diff. Changing the floor requires an explicit task amendment to TASK-AI-013 §1 #5 (the 99% number is normative); the manifest knob is for fine-tuning, not weakening.
 - The pre-commit hook approach is "fail-closed in CI, warn-only locally." Developers without the encrypted pattern table get a WARN at commit time; the CI runner (which has the decrypted table) is the source-of-truth. This avoids blocking developers who don't have ops-issued credentials while still gating real PII from merging.
 - The `recognizer_versions` field in `fixture_manifest.yaml` is the lock-step that prevents silent recognizer upgrades from invalidating the fixture. If TASK-AI-012's VnCccdRecognizer bumps to 1.1.0, the recall gate fails until the fixture is consciously bumped to match — forcing a deliberate "does the new version actually still find these samples" check.
 - The precision-warning report is opt-in by design: precision data is collected from day 1, but the gate doesn't enforce. TASK-AI-022 will activate the gate once we have ≥6 months of trend data showing per-recognizer precision is stable above 95%. Until then, the report is a "what would happen if we turned this on?" signal.
 - The workflow-file self-gate (`paths:` includes the workflow file itself) is a small but important pattern. Without it, a PR like "loosen the recall floor to 95%" could ship without ever running the gate. With it, even a PR that *only* edits the workflow runs the gate first.
-- The `recall_gate_report_<sha>.json` artefact is the audit primitive. When a regulator (or an internal compliance team) asks "what was the recall on the day FR-X shipped?", the answer is in the artefact attached to the merge commit's CI run. This is the durable record; GH Actions log retention is short, but artefacts can be re-archived to the internal compliance data lake.
+- The `recall_gate_report_<sha>.json` artefact is the audit primitive. When a regulator (or an internal compliance team) asks "what was the recall on the day task-X shipped?", the answer is in the artefact attached to the merge commit's CI run. This is the durable record; GH Actions log retention is short, but artefacts can be re-archived to the internal compliance data lake.
 - Negative samples (30) are the minimum floor; we can grow this set as we discover specific false-positive patterns in production. The 30-sample floor is asserted in `test_fixture_invariants.py` (via the manifest `sample_counts.negative` field).
 - The `regen_fixture.py` anonymisation rule is "preserve format validity, destroy identity linkage." The simplest impl is to keep the province-code prefix (which is public knowledge) and replace the identity-bearing suffix with a deterministic-but-irreversible HMAC over a salt-rotated-quarterly. This way we maintain format-valid samples (which exercise the province-code validator) without leaking any real identifier.
 

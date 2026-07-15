@@ -1,8 +1,15 @@
 ---
 id: TASK-EVAL-002
 title: "evaluation rubric from the three signed employment documents — versioned, effective-dated, bilingual VN/EN; each item cites its exact source clause (document + clause_ref) so an assessment can name the contract clause it measured against"
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-06-29T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: EVAL
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P3
@@ -104,7 +111,7 @@ The rubric layer **MUST** turn the three signed employment documents into a stru
     - Every GENIE-drafted item **MUST** carry `authored_by = 'genie'` and a `genie_confidence NUMERIC(4,3)`; a human-authored item carries `authored_by = 'human'`. The provenance is never erased on later human edit (an `edited_by_subject_id` is added; `authored_by` stays).
     - A GENIE draft that cannot ground an item in a specific clause **MUST** leave it flagged `needs_clause_ref` rather than inventing a citation; the human supplies the clause before approval. The model **MUST NOT** fabricate a `clause_ref` that is not in the document.
 
-10. **MUST** be access-gated by the TASK-EVAL-001 governance layer, not by an access rule this FR invents (DEC-2601). Authoring (create/edit/approve/publish) **MUST** require the TASK-EVAL-001 grant for rubric administration (founder + designated rubric admins); reading the rubric **MUST** require a valid grant. The rubric tables **MUST NOT** ship before TASK-EVAL-001 exists.
+10. **MUST** be access-gated by the TASK-EVAL-001 governance layer, not by an access rule this task invents (DEC-2601). Authoring (create/edit/approve/publish) **MUST** require the TASK-EVAL-001 grant for rubric administration (founder + designated rubric admins); reading the rubric **MUST** require a valid grant. The rubric tables **MUST NOT** ship before TASK-EVAL-001 exists.
 
 11. **MUST** emit one hash-chained memory audit row per rubric mutation through `services/eval/src/audit.rs` (DEC-2604): `eval.rubric_drafted`, `eval.rubric_edited`, `eval.rubric_approved`, `eval.rubric_published`, `eval.rubric_superseded`. Each payload carries `{rubric_id, rubric_version_id, version_no, item_id?, actor_subject_id, authored_by?, source_doc?, clause_ref?, trace_id}`. These chain into the same `l1_audit_log` the rest of CyberOS uses (TASK-PROJ-008 / TASK-MEMORY-123 pattern), so the rubric's full curation history is tamper-evident.
 
@@ -121,7 +128,7 @@ The rubric layer **MUST** turn the three signed employment documents into a stru
     - At least one item exists. Publishing an empty version **MUST** be rejected (`422 rubric_version_empty`).
     A publish that fails any check **MUST** return the specific failure and leave the version unpublished.
 
-14. **MUST** keep the rubric independent of any one person — a rubric and its versions describe the *standard*, not an assessment of an individual. Per-person scoring lives in TASK-EVAL-003 and references `rubric_version_id`; this FR **MUST NOT** store any per-employee score, evidence, or assessment. (Separation of the standard from the judgement is what lets the same version fairly measure everyone.)
+14. **MUST** keep the rubric independent of any one person — a rubric and its versions describe the *standard*, not an assessment of an individual. Per-person scoring lives in TASK-EVAL-003 and references `rubric_version_id`; this task **MUST NOT** store any per-employee score, evidence, or assessment. (Separation of the standard from the judgement is what lets the same version fairly measure everyone.)
 
 15. **MUST** emit OTel metrics: `eval_rubric_items_total{item_kind,source_doc}` (gauge of items in the current published version), `eval_rubric_publishes_total{result}` (counter; result ∈ ok | rejected), and `eval_rubric_genie_drafts_total{outcome}` (counter; outcome ∈ proposed | needs_clause_ref).
 
@@ -139,7 +146,7 @@ The rubric layer **MUST** turn the three signed employment documents into a stru
 
 **Why bilingual VN/EN with Vietnamese primary (§1 #5)?** The employment documents are bilingual and governed by Vietnamese law; the Vietnamese text is the legally-operative one. Storing both, with `_vi` required, means the standard is readable to the Vietnamese-speaking team in the authoritative language and to others in the working translation, and an assessment can show the employee the clause in the language they signed.
 
-**Why separate the standard from the judgement (§1 #14)?** A rubric describes what "good" and "compliant" mean for everyone; an assessment is one person measured against it. Keeping per-person scoring out of this FR (it lives in TASK-EVAL-003, referencing `rubric_version_id`) is what makes the rubric fair — the same version measures everyone, and changing the standard for one person is structurally impossible.
+**Why separate the standard from the judgement (§1 #14)?** A rubric describes what "good" and "compliant" mean for everyone; an assessment is one person measured against it. Keeping per-person scoring out of this task (it lives in TASK-EVAL-003, referencing `rubric_version_id`) is what makes the rubric fair — the same version measures everyone, and changing the standard for one person is structurally impossible.
 
 **Why governance-first dependency on TASK-EVAL-001 (DEC-2601, §1 #10)?** The rubric is the spine of a system that affects pay and progression. Building it before the consent, access, and retention layer exists would mean authoring the most sensitive artifact in the platform with no access control and no disclosed basis. TASK-EVAL-001 is a hard `depends_on`, and rubric reads/writes are gated by its grants, so the rubric never exists outside the governance frame.
 
@@ -498,7 +505,7 @@ async fn rubric_is_tenant_isolated() {
 ## §7 — Dependencies
 
 - **TASK-EVAL-001** — governance, consent, access grants, retention. Hard dependency: the rubric tables ship only after it exists, and rubric authoring/reads are gated by its grants (DEC-2601).
-- **TASK-EVAL-003** — the evaluation engine that consumes the published rubric: it calls `resolve_effective(at)` and reads `rubric_item` rows to score evidence. This FR `blocks` it.
+- **TASK-EVAL-003** — the evaluation engine that consumes the published rubric: it calls `resolve_effective(at)` and reads `rubric_item` rows to score evidence. This task `blocks` it.
 - **TASK-MEMORY-123** — brain recall; the same audit-chain + memory substrate the rubric mutations chain into.
 - **TASK-AUTH-003** — RLS / roles; the tenant isolation and the `cyberos_app` vs `cyberos_ops` role split the immutability REVOKE relies on.
 - **TASK-PROJ-008 / TASK-MEMORY-123** — the established hash-chained audit-row pattern the `eval.rubric_*` rows follow.
@@ -545,7 +552,7 @@ async fn rubric_is_tenant_isolated() {
 ## §9 — Open questions
 
 Resolved by Stephen's 2026-06-29 decisions (governance first; GENIE drafts, human approves; versioned + effective-dated; clause-cited). Deferred:
-- Whether `check_params` schemas get a formal JSON-Schema registry per `check_type` (slice 2) — this FR validates shape by `check_type` in code; a declared schema registry is additive.
+- Whether `check_params` schemas get a formal JSON-Schema registry per `check_type` (slice 2) — this task validates shape by `check_type` in code; a declared schema registry is additive.
 - A diff view between two rubric versions (which clause changed, which item was added) for the TASK-EVAL-004 console — surfacing only, a later additive screen.
 - Multi-document rubrics beyond the three signed documents (e.g. a code-of-conduct addendum) — out of scope until such a document is signed; the `source_doc` enum is deliberately closed to the three for now.
 
@@ -567,7 +574,7 @@ Resolved by Stephen's 2026-06-29 decisions (governance first; GENIE drafts, huma
 | UPDATE on a published row by app role | REVOKE / permission | denied | Make a new version instead |
 | GENIE fabricates a clause_ref | `needs_clause_ref` flag + publish coherence | item flagged; publish blocked | Human supplies the real clause |
 | GENIE proposes an item for a non-existent doc | `source_doc` CHECK | rejected on insert | Human corrects/drops it |
-| Rubric authored before TASK-EVAL-001 exists | dependency gate (DEC-2601) | FR not shippable | Ship TASK-EVAL-001 first |
+| Rubric authored before TASK-EVAL-001 exists | dependency gate (DEC-2601) | task not shippable | Ship TASK-EVAL-001 first |
 | Read by a caller without a grant | TASK-EVAL-001 access guard | 403 | Grant access per governance |
 | `resolve_effective` finds no in-force version | NoEffectiveVersion | error to TASK-EVAL-003 | Publish a version covering the period |
 | Two published versions overlap (data drift) | publish-time overlap guard prevents | n/a at write; sweep flags if introduced by admin | Admin corrects-of-record |
@@ -590,11 +597,11 @@ Resolved by Stephen's 2026-06-29 decisions (governance first; GENIE drafts, huma
 - Vietnamese is primary because the documents are governed by Vietnamese law and the Vietnamese text is the operative one; `_vi NOT NULL`, `_en` optional captures that without forcing a translation to exist before the standard can.
 - The `cyberos_app` REVOKE makes published rows immutable to the runtime; `cyberos_ops` retains the ability to correct a record (rare, audited via `eval.rubric_edited`). This mirrors the TASK-PROJ-008 role split.
 - `check_type` is intentionally a small closed enum so TASK-EVAL-003's evaluation logic is bounded: five evaluation shapes cover obligations (evidence presence / attestation), working terms (periodic review), KPIs (numeric threshold), and career milestones (milestone reached). A new shape is a deliberate schema change, not a free-form field.
-- `weight` is relative within a version; the roll-up math (how item weights compose into a section and an overall draft score) belongs to TASK-EVAL-003, not here. This FR stores the weight; it does not compute a score.
+- `weight` is relative within a version; the roll-up math (how item weights compose into a section and an overall draft score) belongs to TASK-EVAL-003, not here. This task stores the weight; it does not compute a score.
 - No per-person column exists anywhere in this schema by design (clause 14). If a future need tempts adding one, that is the signal to put it in TASK-EVAL-003 against `rubric_version_id`, keeping the standard and the judgement separate.
 - The audit rows reuse the `services/eval/src/audit.rs` emitter (the TASK-MEMORY-123 chain), so the rubric's curation history lives in the same tamper-evident ledger as every other CyberOS event — a reviewer reconstructs how the standard was set from one place.
 - Effective-dating uses `[effective_from, effective_to)` half-open intervals so adjacent versions meet exactly on a boundary date with no gap and no overlap; the publish-time overlap guard enforces it.
-- This is a high-risk FR under the EU AI Act framing (the rubric feeds an employment-evaluation system); see the AI Risk Assessment section. The model's role is bounded to drafting, every operative item is human-approved, and the standard is clause-grounded and auditable.
+- This is a high-risk task under the EU AI Act framing (the rubric feeds an employment-evaluation system); see the AI Risk Assessment section. The model's role is bounded to drafting, every operative item is human-approved, and the standard is clause-grounded and auditable.
 
 ---
 
@@ -602,11 +609,11 @@ Resolved by Stephen's 2026-06-29 decisions (governance first; GENIE drafts, huma
 
 ### Risk classification
 
-High-risk under the EU AI Act framing: the rubric is the standard a later system (TASK-EVAL-003) uses to assess employees, and employment evaluation that can influence pay and progression is a high-risk use. This FR does not itself score anyone, but it defines what "good" and "compliant" mean, so it is held to the high-risk bar: human oversight, traceability, and grounding in the signed source.
+High-risk under the EU AI Act framing: the rubric is the standard a later system (TASK-EVAL-003) uses to assess employees, and employment evaluation that can influence pay and progression is a high-risk use. This task does not itself score anyone, but it defines what "good" and "compliant" mean, so it is held to the high-risk bar: human oversight, traceability, and grounding in the signed source.
 
 ### Data sources
 
-The rubric is built only from the three signed employment documents — the Labor Contract, the NDA/non-compete/IP agreement, and the Total Rewards & Career Path Appendix (bilingual VN/EN, dated 2026-01-01, under Labor Code 45/2019/QH14 and Decree 145/2020). It stores no per-employee data, no evidence, and no scores. Reading the documents to draft items happens through the TASK-EVAL-001-governed analysis path, under that FR's consent and access basis.
+The rubric is built only from the three signed employment documents — the Labor Contract, the NDA/non-compete/IP agreement, and the Total Rewards & Career Path Appendix (bilingual VN/EN, dated 2026-01-01, under Labor Code 45/2019/QH14 and Decree 145/2020). It stores no per-employee data, no evidence, and no scores. Reading the documents to draft items happens through the TASK-EVAL-001-governed analysis path, under that task's consent and access basis.
 
 ### Human oversight
 

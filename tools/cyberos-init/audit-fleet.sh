@@ -19,7 +19,7 @@ for base in "$@"; do
     # --- core modules (must exist after init) ---
     for p in \
       install.sh uninstall.sh version.sh status.sh help.sh VERSION manifest.yaml \
-      lib/fr-migrate.sh lib/update-check.sh lib/status-page.sh \
+      lib/task-migrate.sh lib/update-check.sh lib/status-page.sh \
       cuo/gates/run-gates.sh \
       cuo/ship-tasks.md \
       cuo/EXECUTION-DISCIPLINE.md \
@@ -47,7 +47,7 @@ for base in "$@"; do
     done
 
     # orphan / legacy must NOT remain
-    [ ! -f "$cy/migrate-frs.sh" ] || bad="$bad orphan:migrate-frs.sh"
+    [ ! -f "$cy/migrate-tasks.sh" ] || bad="$bad orphan:migrate-tasks.sh"
     [ ! -f "$cy/init.sh" ] || bad="$bad orphan:init.sh"
     [ ! -f "$cy/changelog.sh" ] || bad="$bad orphan:changelog.sh"
     [ ! -f "$cy/update.sh" ] || bad="$bad orphan:update.sh"
@@ -110,22 +110,22 @@ for base in "$@"; do
       if [ "$(git -C "$r" config core.hooksPath 2>/dev/null)" = "" ]; then
         { [ -f "$hk" ] && grep -qE 'cyberos-status-hook|init\.sh --page|check-status-sync|docs/status' "$hk"; } \
           || bad="$bad status-hook"
-        # hook must not reference retired migrate-frs
-        if [ -f "$hk" ] && grep -qE 'migrate-frs|init\.sh --page' "$hk" 2>/dev/null; then
+        # hook must not reference retired migrate-tasks
+        if [ -f "$hk" ] && grep -qE 'migrate-tasks|init\.sh --page' "$hk" 2>/dev/null; then
           bad="$bad hook-legacy-status-path"
         fi
       fi
     fi
 
-    # --- FR layout ---
+    # --- task layout ---
     specs=0; flat=0; nospec=0; chunks=0
     if [ -d "$r/docs/tasks" ]; then
       specs="$(find "$r/docs/tasks" -mindepth 3 -maxdepth 3 -name spec.md -not -path '*/_*' -not -path '*/.*' 2>/dev/null | wc -l | tr -d ' ')"
-      flat="$(find "$r/docs/tasks" -mindepth 1 -maxdepth 2 -type f -name 'FR-*.md' -not -name '*.audit.md' -not -path '*/_*' -not -path '*/.*' 2>/dev/null | wc -l | tr -d ' ')"
-      nospec="$(find "$r/docs/tasks" -mindepth 2 -maxdepth 2 -type d -name 'FR-*' -not -path '*/_*' -not -path '*/.*' 2>/dev/null \
+      flat="$(find "$r/docs/tasks" -mindepth 1 -maxdepth 2 -type f -name 'TASK-*.md' -not -name '*.audit.md' -not -path '*/_*' -not -path '*/.*' 2>/dev/null | wc -l | tr -d ' ')"
+      nospec="$(find "$r/docs/tasks" -mindepth 2 -maxdepth 2 -type d -name 'TASK-*' -not -path '*/_*' -not -path '*/.*' 2>/dev/null \
                  | while IFS= read -r d; do [ -f "$d/spec.md" ] || echo x; done | wc -l | tr -d ' ')"
     fi
-    [ "$flat" -eq 0 ]   || bad="$bad flat-frs($flat)"
+    [ "$flat" -eq 0 ]   || bad="$bad flat-tasks($flat)"
     [ "$nospec" -eq 0 ] || bad="$bad fr-folders-without-spec($nospec)"
 
     # --- status page ---
@@ -197,9 +197,9 @@ for base in "$@"; do
     if [ -f "$cy/cuo/ship-tasks.md" ]; then
       grep -qi 'HITL\|human-acceptance\|human acceptance' "$cy/cuo/ship-tasks.md" \
         || bad="$bad workflow-no-hitl"
-      # no retired migrate-frs in workflow
-      grep -q 'migrate-frs' "$cy/cuo/ship-tasks.md" 2>/dev/null \
-        && bad="$bad workflow-still-migrate-frs"
+      # no retired migrate-tasks in workflow
+      grep -q 'migrate-tasks' "$cy/cuo/ship-tasks.md" 2>/dev/null \
+        && bad="$bad workflow-still-migrate-tasks"
     fi
 
     if [ -z "$bad" ]; then

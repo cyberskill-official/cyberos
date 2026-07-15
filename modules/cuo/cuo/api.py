@@ -130,10 +130,10 @@ def run(
     cuo_root: Path | None = None,
     skill_root: Path | None = None,
 ) -> None:
-    """Drain eligible FRs through a persona workflow.
+    """Drain eligible tasks through a persona workflow.
 
     This is the high-level zero-touch entry point. Reads BACKLOG.md,
-    finds eligible FRs, and runs the workflow on each one.
+    finds eligible tasks, and runs the workflow on each one.
     """
     from cuo.core.backlog_reader import (
         parse_backlog, next_eligible, routed_back_count,
@@ -221,7 +221,7 @@ def run(
             if brief_output:
                 brief_output.parent.mkdir(parents=True, exist_ok=True)
                 if max_frs != 1 and frs_run > 1:
-                    # Multiple FRs: append with separator
+                    # Multiple tasks: append with separator
                     with open(brief_output, "a", encoding="utf-8") as f:
                         f.write(f"\n\n---\n\n## [{frs_run}] {eligible.task_id}\n\n")
                         f.write(brief)
@@ -250,7 +250,7 @@ def run(
         eligible = next_eligible(rows, module=module, rework=rework,
                                   skip_fr_ids=processed_fr_ids)
         if eligible is None:
-            print(f"# drain complete: no more eligible FRs"
+            print(f"# drain complete: no more eligible tasks"
                   f"{' in module=' + module if module else ''}")
             break
 
@@ -291,14 +291,14 @@ def run(
                       f"{rbc} times (>= --halt-on-repeat-rework={halt_on_repeat_rework})")
                 halt_reason_path.write_text(
                     f"# DRAIN HALT\n\n"
-                    f"FR `{eligible.task_id}` has been rework-routed {rbc} times — "
+                    f"task `{eligible.task_id}` has been rework-routed {rbc} times — "
                     f"likely a real spec issue. HITL inspection required.\n\n"
                     f"## Last attempt\n\n"
                     f"- outcome: {result.outcome}\n"
                     f"- notes: {result.notes}\n"
                     f"- output dir: {fr_output_dir}\n\n"
                     f"## Next action\n\n"
-                    f"Review the FR spec + last debug trace. Either patch the spec, "
+                    f"Review the task spec + last debug trace. Either patch the spec, "
                     f"flip status to on_hold/closed, or override routed_back_count.\n",
                     encoding="utf-8",
                 )
@@ -307,7 +307,7 @@ def run(
             print(f"# drain HALTED: {eligible.task_id} hit {result.outcome}")
             halt_reason_path.write_text(
                 f"# DRAIN HALT\n\n"
-                f"FR `{eligible.task_id}` outcome: **{result.outcome}**.\n\n"
+                f"task `{eligible.task_id}` outcome: **{result.outcome}**.\n\n"
                 f"- notes: {result.notes}\n"
                 f"- step results:\n"
                 + "\n".join(f"  - step {s.step} [{s.status}] {s.skill}: "
@@ -320,6 +320,6 @@ def run(
             sys.exit(2)
 
     print("")
-    print(f"# drain summary: {frs_run} FRs run, {completed} completed, "
+    print(f"# drain summary: {frs_run} tasks run, {completed} completed, "
           f"{routed_back} routed back")
     sys.exit(0 if frs_run > 0 else 0)

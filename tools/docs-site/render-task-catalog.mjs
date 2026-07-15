@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// tools/docs-site/render-fr-catalog.mjs
+// tools/docs-site/render-task-catalog.mjs
 // TASK-DOCS-001 §1 #2 — render <section data-prerendered="true"> blocks
-// from tools/docs-site/data/frs.json into dist/website/reference/fr-catalog.html.
+// from tools/docs-site/data/tasks.json into dist/website/reference/fr-catalog.html.
 // Pure-Node, no Handlebars dependency: this is the minimal first-cut renderer
-// for the FR catalog; NFR + Risk renderers can lift the same pattern.
+// for the task catalog; NFR + Risk renderers can lift the same pattern.
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT  = resolve(__dirname, '..', '..');
-const DATA_FILE  = join(__dirname, 'data', 'frs.json');
+const DATA_FILE  = join(__dirname, 'data', 'tasks.json');
 const OUT_DIR    = join(REPO_ROOT, 'dist', 'website', 'reference');
 const OUT_FILE   = join(OUT_DIR, 'fr-catalog.html');
 const REPORT_FILE = join(__dirname, 'last-build-report.json');
@@ -43,7 +43,7 @@ function renderCard(fr) {
                data-phase="${esc(fr.phase)}">
         <header class="fr-card-header">
           <a href="#${esc(fr.id)}" class="fr-anchor">#</a>
-          <h3 class="fr-id">${fr.stem ? `<a class="fr-page-link" href="../frs/${esc(fr.dir_module)}/${esc(fr.stem)}/index.html">${esc(fr.id)}</a>` : esc(fr.id)}</h3>
+          <h3 class="fr-id">${fr.stem ? `<a class="fr-page-link" href="../tasks/${esc(fr.dir_module)}/${esc(fr.stem)}/index.html">${esc(fr.id)}</a>` : esc(fr.id)}</h3>
           <p class="fr-title">${esc(fr.title)}</p>
         </header>
         <div class="fr-badges">
@@ -81,7 +81,7 @@ function renderPage(data) {
 
   const modulesHtml = modules.map(m => `
     <section class="module-section" id="module-${esc(m)}">
-      <h2 class="module-heading">${esc(m)} <span class="module-count">${byModule[m].length} FR${byModule[m].length === 1 ? '' : 's'}</span></h2>
+      <h2 class="module-heading">${esc(m)} <span class="module-count">${byModule[m].length} task${byModule[m].length === 1 ? '' : 's'}</span></h2>
       <div class="fr-grid">
 ${byModule[m].map(renderCard).join('\n')}
       </div>
@@ -93,8 +93,8 @@ ${byModule[m].map(renderCard).join('\n')}
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>FR Catalog — CyberOS</title>
-  <meta name="description" content="Complete catalog of CyberOS Tasks (FRs) — ${data.count} specifications across ${modules.length} modules.">
+  <title>task Catalog — CyberOS</title>
+  <meta name="description" content="Complete catalog of CyberOS Tasks (tasks) — ${data.count} specifications across ${modules.length} modules.">
   <link rel="canonical" href="https://docs.cyberos.world/reference/fr-catalog.html">
   <style>
     :root {
@@ -194,18 +194,18 @@ ${byModule[m].map(renderCard).join('\n')}
 </head>
 <body>
   <div class="container">
-    <h1>FR Catalog</h1>
+    <h1>task Catalog</h1>
     <p class="subtitle">Complete inventory of CyberOS Tasks — server-rendered at build time per <a href="../../docs/tasks/docs/TASK-DOCS-001-server-render-reference-pages/spec.md" class="fr-link">TASK-DOCS-001</a>.</p>
 
     <div class="stats">
-      <div class="stat"><span class="stat-num">${data.count}</span><span class="stat-label">total FRs</span></div>
+      <div class="stat"><span class="stat-num">${data.count}</span><span class="stat-label">total tasks</span></div>
       <div class="stat"><span class="stat-num">${modules.length}</span><span class="stat-label">modules</span></div>
-      <div class="stat"><span class="stat-num">${data.frs.filter(f => f.priority === 'MUST').length}</span><span class="stat-label">MUST</span></div>
-      <div class="stat"><span class="stat-num">${data.frs.filter(f => f.priority === 'SHOULD').length}</span><span class="stat-label">SHOULD</span></div>
-      <div class="stat"><span class="stat-num">${data.frs.filter(f => f.status === 'draft').length}</span><span class="stat-label">draft</span></div>
-      <div class="stat"><span class="stat-num">${data.frs.filter(f => f.status === 'accepted').length}</span><span class="stat-label">accepted</span></div>
-      <div class="stat"><span class="stat-num">${data.frs.filter(f => f.shipped).length}</span><span class="stat-label">shipped</span></div>
-      <div class="stat"><span class="stat-num">${data.frs.reduce((a, f) => a + (f.effort_hours || 0), 0)}h</span><span class="stat-label">total effort</span></div>
+      <div class="stat"><span class="stat-num">${data.tasks.filter(f => f.priority === 'MUST').length}</span><span class="stat-label">MUST</span></div>
+      <div class="stat"><span class="stat-num">${data.tasks.filter(f => f.priority === 'SHOULD').length}</span><span class="stat-label">SHOULD</span></div>
+      <div class="stat"><span class="stat-num">${data.tasks.filter(f => f.status === 'draft').length}</span><span class="stat-label">draft</span></div>
+      <div class="stat"><span class="stat-num">${data.tasks.filter(f => f.status === 'accepted').length}</span><span class="stat-label">accepted</span></div>
+      <div class="stat"><span class="stat-num">${data.tasks.filter(f => f.shipped).length}</span><span class="stat-label">shipped</span></div>
+      <div class="stat"><span class="stat-num">${data.tasks.reduce((a, f) => a + (f.effort_hours || 0), 0)}h</span><span class="stat-label">total effort</span></div>
     </div>
 
     <nav class="module-nav">${moduleNav}</nav>
@@ -215,10 +215,10 @@ ${modulesHtml}
     </section>
 
     <p class="footer">
-      Generated by <code>tools/docs-site/render-fr-catalog.mjs</code> from
-      <code>tools/docs-site/data/frs.json</code>.
+      Generated by <code>tools/docs-site/render-task-catalog.mjs</code> from
+      <code>tools/docs-site/data/tasks.json</code>.
       Build is deterministic (TASK-DOCS-001 §1 #3) — same input ⇒ byte-identical output.
-      Re-run via <code>node tools/docs-site/data-extract.mjs &amp;&amp; node tools/docs-site/render-fr-catalog.mjs</code>.
+      Re-run via <code>node tools/docs-site/data-extract.mjs &amp;&amp; node tools/docs-site/render-task-catalog.mjs</code>.
     </p>
   </div>
 </body>
@@ -235,11 +235,11 @@ const report = {
   schema_version: 'v1',
   page:        'fr-catalog.html',
   fr_count:    data.count,
-  modules:     [...new Set(data.frs.map(f => f.module))].sort(),
+  modules:     [...new Set(data.tasks.map(f => f.module))].sort(),
   output_bytes: Buffer.byteLength(html, 'utf8'),
   build_marker: 'deterministic',
 };
 writeFileSync(REPORT_FILE, JSON.stringify(report, null, 2) + '\n', 'utf8');
 
-console.log(`✓ rendered ${data.count} FRs → dist/website/reference/fr-catalog.html (${(report.output_bytes / 1024).toFixed(1)} KB)`);
+console.log(`✓ rendered ${data.count} tasks → dist/website/reference/fr-catalog.html (${(report.output_bytes / 1024).toFixed(1)} KB)`);
 console.log(`✓ build report   → tools/docs-site/last-build-report.json`);

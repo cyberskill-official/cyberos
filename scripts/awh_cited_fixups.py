@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Suggest (and optionally apply) corrections for FR cited-test paths that do not exist.
+"""Suggest (and optionally apply) corrections for task cited-test paths that do not exist.
 
-Most FR cited tests do not resolve on disk: specs name granular per-clause tests that the
-real suites consolidated or renamed. For FRs that claim completion (status ready_to_test) a
+Most task cited tests do not resolve on disk: specs name granular per-clause tests that the
+real suites consolidated or renamed. For tasks that claim completion (status ready_to_test) a
 stale path is a real spec defect. This tool fuzzy-matches each unresolved cited test against
 the real test files in that module's trees and proposes the most likely replacement (its full
 repo-relative path).
 
-  awh_cited_fixups.py                 # ready_to_test FRs (default), human report
-  awh_cited_fixups.py --status all    # every FR
+  awh_cited_fixups.py                 # ready_to_test tasks (default), human report
+  awh_cited_fixups.py --status all    # every task
   awh_cited_fixups.py --json
   awh_cited_fixups.py --apply          # rewrite confident cited paths -> real paths (reviewable diff)
 
@@ -26,7 +26,7 @@ import re
 from pathlib import Path
 
 _here = Path(__file__).parent
-_spec = importlib.util.spec_from_file_location("agf", _here / "awh_goldenset_from_fr.py")
+_spec = importlib.util.spec_from_file_location("agf", _here / "awh_goldenset_from_task.py")
 agf = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(agf)
 
@@ -78,7 +78,7 @@ def run(status_filter: str, as_json: bool, apply: bool) -> int:
         if status_filter != "all" and st != status_filter:
             continue
         module = agf.fr_module(text, path)
-        fid = re.search(r"^id:\s*(FR-[A-Z]+-\d+)", text, re.M)
+        fid = re.search(r"^id:\s*(TASK-[A-Z]+-\d+)", text, re.M)
         fid = fid.group(1) if fid else path.stem
         unresolved = []
         new_text = text
@@ -98,7 +98,7 @@ def run(status_filter: str, as_json: bool, apply: bool) -> int:
             repl_count += sum(1 for u in unresolved if u["suggest"])
 
     if apply:
-        print(f"applied: {repl_count} cited-path corrections across {files_changed} FR spec(s).")
+        print(f"applied: {repl_count} cited-path corrections across {files_changed} task spec(s).")
         print("review with: git --no-optional-locks diff -- docs/tasks")
         return 0
     if as_json:
@@ -106,7 +106,7 @@ def run(status_filter: str, as_json: bool, apply: bool) -> int:
         return 0
     n_unres = sum(len(r["unresolved"]) for r in rows)
     n_sugg = sum(1 for r in rows for u in r["unresolved"] if u["suggest"])
-    print(f"FRs (status={status_filter}) with unresolved cited tests: {len(rows)}")
+    print(f"tasks (status={status_filter}) with unresolved cited tests: {len(rows)}")
     print(f"unresolved cited tests: {n_unres} | with a confident suggestion: {n_sugg} "
           f"| no match: {n_unres - n_sugg}")
     print()
@@ -121,7 +121,7 @@ def run(status_filter: str, as_json: bool, apply: bool) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--status", default="ready_to_test",
-                    help="FR status to scan (default ready_to_test; 'all' for every FR)")
+                    help="task status to scan (default ready_to_test; 'all' for every task)")
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--apply", action="store_true",
                     help="rewrite confident cited paths to real paths (reviewable, no commit)")

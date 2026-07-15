@@ -1,7 +1,7 @@
 //! TASK-MEMORY-121 §1 #8, #12 (DEC-2702) — the consent gate HOOK.
 //!
 //! Capture for any *subject* is hard-gated on that subject's acknowledgment of the TASK-EVAL-001 monitoring
-//! notice. This FR DEFINES the gate as a trait and ships a default-deny stub; TASK-MEMORY-122 wires the real
+//! notice. This task DEFINES the gate as a trait and ships a default-deny stub; TASK-MEMORY-122 wires the real
 //! implementation that consults TASK-EVAL-001's acknowledgment ledger (`monitoring_notice` /
 //! `subject_acknowledgment`, owned by `services/eval`). This crate deliberately does NOT depend on
 //! `services/eval`: the gate is injected as a `&dyn ConsentGate`, so the wiring is a later, additive change

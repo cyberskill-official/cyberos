@@ -33,7 +33,7 @@ Four residual issues prevent 10/10.
 
 But §4 AC #16 says: *"In slice 2, calling `call_provider_streaming` MUST return `Err(StreamingNotImplemented)`."*
 
-The clause says "MAY return Err" (optional) while the AC says "MUST return Err" (required). A reader following only §1 might write a partial streaming impl in slice 2 and pass §1 but fail §4. The 1500ms first-token SHOULD belongs to TASK-AI-010 (the FR that actually wires streaming), not here.
+The clause says "MAY return Err" (optional) while the AC says "MUST return Err" (required). A reader following only §1 might write a partial streaming impl in slice 2 and pass §1 but fail §4. The 1500ms first-token SHOULD belongs to TASK-AI-010 (the task that actually wires streaming), not here.
 
 #### Suggested fix
 Replace §1 #16 with a slice-2-scoped clause and move the latency SHOULD to TASK-AI-010:
@@ -45,7 +45,7 @@ Replace §1 #16 with a slice-2-scoped clause and move the latency SHOULD to TASK
     the SSE pipeline; TASK-AI-010 owns the 1500ms p95 first-token SLA.
 ```
 
-This makes §1 #16 testable by AC #16 and aligns "MAY in slice 2 / MUST in slice 3" cleanly across the two FRs.
+This makes §1 #16 testable by AC #16 and aligns "MAY in slice 2 / MUST in slice 3" cleanly across the two tasks.
 
 ### ISS-002 — AC #15 (response normalization) test body has placeholder comments
 - **severity:** error
@@ -187,7 +187,7 @@ This separates the two concerns cleanly: `CALLS` is one row per call (terminal o
 - **status:** open
 
 #### Description
-The router opens one outbound HTTPS call per attempt (Bedrock, Anthropic, OpenAI, etc.). task-audit skill §3.7 rule 22 requires "every outbound HTTP/RPC/queue write MUST carry W3C `traceparent`." The current spec relies on TASK-AI-022's `tracing-opentelemetry` layer auto-injecting the header at the `reqwest` middleware boundary, but no §1 clause asserts the contract. A provider impl using a different HTTP client (e.g., `hyper` directly) would silently skip the header. The §1 contract should be explicit: "every provider impl MUST propagate the inbound traceparent into the outbound HTTPS request headers (`traceparent` and `tracestate`)."
+The router opens one outbound HTTPS call per attempt (Bedrock, Anthropic, OpenAI, etc.). Task-audit skill §3.7 rule 22 requires "every outbound HTTP/RPC/queue write MUST carry W3C `traceparent`." The current spec relies on TASK-AI-022's `tracing-opentelemetry` layer auto-injecting the header at the `reqwest` middleware boundary, but no §1 clause asserts the contract. A provider impl using a different HTTP client (e.g., `hyper` directly) would silently skip the header. The §1 contract should be explicit: "every provider impl MUST propagate the inbound traceparent into the outbound HTTPS request headers (`traceparent` and `tracestate`)."
 
 #### Suggested fix
 Add §1 #17: "**MUST** propagate the inbound W3C `traceparent` and `tracestate` headers into every outbound provider HTTPS call. Provider impls using `reqwest` get this for free via TASK-AI-022's `reqwest-tracing` middleware; provider impls using other HTTP clients MUST add equivalent header propagation. AC #17 verifies via a header-capture mock that the outbound request to `mock_provider` carries the same `traceparent` value as the inbound `cost_ledger::precheck` call." Add corresponding AC #17.
@@ -199,7 +199,7 @@ Add §1 #17: "**MUST** propagate the inbound W3C `traceparent` and `tracestate` 
 - **status:** open
 
 #### Description
-task-audit skill §3.10 rule 30 says "Each `MUST NOT` in §1 corresponds to a negative test in §5." Scanning §1 for MUST NOT: "MUST NOT bypass the alias resolution," "MUST NOT mutate policy from inside the router," and "MUST NOT retry on terminal-4xx errors except 429." The first two have implicit coverage but no named negative test. The third is covered by AC #4. The first two need explicit `#[tokio::test]` bodies asserting: (a) calling `router::call_provider` with a hand-constructed `ResolvedModel` that bypasses alias resolution MUST work AT THE FUNCTION SIGNATURE LEVEL but a corresponding lint MUST flag any production-code call site that constructs `ResolvedModel` manually; (b) calling the router with `policy: &Arc<TenantPolicy>` MUST NOT result in any mutation observable via `Arc::strong_count`.
+Task-audit skill §3.10 rule 30 says "Each `MUST NOT` in §1 corresponds to a negative test in §5." Scanning §1 for MUST NOT: "MUST NOT bypass the alias resolution," "MUST NOT mutate policy from inside the router," and "MUST NOT retry on terminal-4xx errors except 429." The first two have implicit coverage but no named negative test. The third is covered by AC #4. The first two need explicit `#[tokio::test]` bodies asserting: (a) calling `router::call_provider` with a hand-constructed `ResolvedModel` that bypasses alias resolution MUST work AT THE FUNCTION SIGNATURE LEVEL but a corresponding lint MUST flag any production-code call site that constructs `ResolvedModel` manually; (b) calling the router with `policy: &Arc<TenantPolicy>` MUST NOT result in any mutation observable via `Arc::strong_count`.
 
 #### Suggested fix
 Add §5 tests `test_router_does_not_mutate_policy` (asserts `Arc::strong_count(&policy)` unchanged before/after call) and `test_lint_flags_manual_resolved_model_construction` (clippy-style lint check via `#[deny(clippy::disallowed_methods)]` on the `ResolvedModel::new_manual` constructor). Add §4 AC #18, #19 to match.
@@ -210,9 +210,9 @@ Add §5 tests `test_router_does_not_mutate_policy` (asserts `Arc::strong_count(&
 - §3 closed-set enums (`AttemptStatus` with 11 explicit variants, `FinishReason` with 5, `CacheState` with 3) match the TASK-AI-007 pattern of exhaustive enum coverage.
 - §6 skeleton's `metrics` module preamble (added per TASK-AI-006 ISS-003 pattern) is the right level of detail and demonstrates `as_metric_label()` use throughout.
 - §6 introduced `record()` helper to centralize `AttemptRecord` construction — reduces field-mismatch bugs across the 8+ places attempts are pushed.
-- §6 jitter helper is in its own module (per ISS-pattern from prior FRs about pure-function testability), explicitly safe for `factor=0.0` and `base_ms=0`.
+- §6 jitter helper is in its own module (per ISS-pattern from prior tasks about pure-function testability), explicitly safe for `factor=0.0` and `base_ms=0`.
 - §10 failure-modes inventory covers 16 distinct paths including the `unimplemented!()` panic for `ProviderKind::Vertex` in slice 2 and the `attempts.len() >= ATTEMPTS_CAP` defence-in-depth row.
-- §7 split into code/concept/operational deps gives reviewers a clear "what other FRs do I need to understand first" answer.
+- §7 split into code/concept/operational deps gives reviewers a clear "what other tasks do I need to understand first" answer.
 
 ## §4 — Resolution
 

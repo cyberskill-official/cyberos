@@ -2,8 +2,16 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future fr-catalog renderer) ─────
 id: TASK-AI-006
 title: "Model-alias resolution (chat.smart → bedrock:claude-3.5-sonnet) with per-tenant override"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AI
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P0
@@ -83,21 +91,21 @@ The AI Gateway service **MUST** expose `alias::resolve(alias, policy) -> Result<
 13. **MUST** be called from `cost_ledger::precheck` (TASK-AI-001 §6) BEFORE the cost-estimate step. TASK-AI-001's skeleton is updated to call `alias::resolve` and pass the `ResolvedModel` to the rest of the precheck.
 14. **MUST** emit OTel metrics on every call: `ai_alias_resolutions_total{alias,resolved_provider,fallback_position}` (counter), `ai_alias_resolution_failures_total{alias,reason}` (counter; reason ∈ `unknown_alias` / `cost_missing` / `zdr` / `residency` / `no_provider_has_alias`), `ai_alias_resolution_latency_ns` (histogram with buckets at 100ns / 500ns / 1µs / 5µs / 10µs).
 15. **SHOULD** expose `alias::supported_aliases() -> &'static [&'static str]` so operator CLI (TASK-AI-021 `models list`) and the operator UI can enumerate the closed set without re-reading the const.
-16. **MUST** be callable without trace-context parameters — it has no I/O and emits no audit row of its own — AND its return value `ResolvedModel` MUST be carried through to `Provider::complete()` so the inbound `traceparent` (read at the trust boundary in `cost_ledger::precheck`) propagates to the downstream HTTP call per task-audit skill §3.7 rule 22. TASK-AI-022 §1 #3 owns the propagation contract; this FR's responsibility is to NOT strip the span context from the caller's flow. A spec violation: passing `ResolvedModel` by value to a function that then opens a new span without inheriting from the caller.
+16. **MUST** be callable without trace-context parameters — it has no I/O and emits no audit row of its own — AND its return value `ResolvedModel` MUST be carried through to `Provider::complete()` so the inbound `traceparent` (read at the trust boundary in `cost_ledger::precheck`) propagates to the downstream HTTP call per task-audit skill §3.7 rule 22. TASK-AI-022 §1 #3 owns the propagation contract; this task's responsibility is to NOT strip the span context from the caller's flow. A spec violation: passing `ResolvedModel` by value to a function that then opens a new span without inheriting from the caller.
 
-This FR provides the abstraction layer that every consumer module (CUO Phase 2, KB ingest, CHAT, OBS auto-triage, PROJ Genie inline) uses to ask for an LLM call without naming a provider. The provider naming is a tenant-policy concern, not an application concern. Once TASK-AI-006 ships, the gateway has a single chokepoint for cross-cutting checks (cost-table, ZDR, residency); TASK-AI-008 routes the resolved tuple, TASK-AI-015/016 enforce policy at the point of resolution, and adding a new provider (Vertex, on-prem Llama, etc.) is a one-file additive change.
+This task provides the abstraction layer that every consumer module (CUO Phase 2, KB ingest, CHAT, OBS auto-triage, PROJ Genie inline) uses to ask for an LLM call without naming a provider. The provider naming is a tenant-policy concern, not an application concern. Once TASK-AI-006 ships, the gateway has a single chokepoint for cross-cutting checks (cost-table, ZDR, residency); TASK-AI-008 routes the resolved tuple, TASK-AI-015/016 enforce policy at the point of resolution, and adding a new provider (Vertex, on-prem Llama, etc.) is a one-file additive change.
 
 ---
 
 ## §2 — Why this design (rationale for humans)
 
-**Why a closed alias set of exactly 6?** Six aliases is the right grain at slice 2. Too few (`fast`, `smart`) loses precision — a caller writing "chat with this 100k-token document" can't tell the gateway it needs long-context behaviour. Too many (one per provider's marketing name like `claude-3-5-sonnet-20241022-v2:0`) reproduces the vendor lock-in we're trying to escape — the caller now hard-codes Anthropic naming. The 6-tier set (smart/fast/long for chat, standard/code for embed, fast for rerank) covers every reasonable LLM workload we identified across the 22 module pages. Adding a 7th requires a const edit, an FR, and a schema update — that's the right level of friction.
+**Why a closed alias set of exactly 6?** Six aliases is the right grain at slice 2. Too few (`fast`, `smart`) loses precision — a caller writing "chat with this 100k-token document" can't tell the gateway it needs long-context behaviour. Too many (one per provider's marketing name like `claude-3-5-sonnet-20241022-v2:0`) reproduces the vendor lock-in we're trying to escape — the caller now hard-codes Anthropic naming. The 6-tier set (smart/fast/long for chat, standard/code for embed, fast for rerank) covers every reasonable LLM workload we identified across the 22 module pages. Adding a 7th requires a const edit, a task, and a schema update — that's the right level of friction.
 
 **Why pure synchronous, no I/O?** This is on the precheck hot path of every chat call. Precheck's budget is 50ms p95 (TASK-AI-001 §1 #7). Adding a Postgres roundtrip would consume ~5ms; adding an HTTP roundtrip would consume ~20ms. Neither is acceptable when the entire alias resolution can be done in <1µs of HashMap lookups against in-memory caches. Sub-microsecond latency makes the alias layer "free" — every consumer can call it without measuring impact.
 
 **Why override beats primary?** A tenant in `sg-1` residency might still want a specific call (one persona, one workflow) to use Anthropic native instead of Bedrock for regulatory or quality reasons — e.g., "for client-facing legal drafts, the persona MUST use Anthropic's longer-context claude-3-5-sonnet, not Bedrock's claude-3-haiku, because legal quality matters more than residency." The override path lets policy thread that needle per-alias without restructuring the whole `primary_provider` config (which would affect every other call). Without override, the only escape hatch would be a per-call API parameter — which defeats the abstraction and re-introduces the lock-in.
 
-**Why does this FR enforce ZDR + residency?** Both are tenant-policy invariants. Violating either is a contract breach with regulatory consequences (PDPL Art. 6, Decree 53/2022, GDPR Art. 5(1)(f)). Catching the violation at alias resolution (before the provider call) is much cheaper than catching it after the bytes are in flight — the precheck is the hot path; the provider call is 100-1000x more expensive. TASK-AI-015 and TASK-AI-016 add the *attestation surface* (which providers/models are ZDR, which regions count as sg-1); this FR is the *enforcement point* that consumes those attestations.
+**Why does this task enforce ZDR + residency?** Both are tenant-policy invariants. Violating either is a contract breach with regulatory consequences (PDPL Art. 6, Decree 53/2022, GDPR Art. 5(1)(f)). Catching the violation at alias resolution (before the provider call) is much cheaper than catching it after the bytes are in flight — the precheck is the hot path; the provider call is 100-1000x more expensive. TASK-AI-015 and TASK-AI-016 add the *attestation surface* (which providers/models are ZDR, which regions count as sg-1); this task is the *enforcement point* that consumes those attestations.
 
 **Why expose `fallback_position` in the result?** Three reasons. (1) memory audit row includes it (DEC-072 — every AI call's provenance is auditable; "this call used fallback #2 because primary was open" is part of the chain). (2) OBS dashboards filter by "calls that used a fallback" to detect primary-provider degradation before the SLA alarm fires. (3) TASK-AI-008's circuit breaker uses `fallback_position` to skip the open breakers — if `fallback_position: 0` is open, resolve picks 1.
 
@@ -616,15 +624,15 @@ fn record_success(alias: &str, r: &ResolvedModel, started: Instant) {
 
 ## §7 — Dependencies
 
-**Code dependencies (must exist before this FR can build):**
-- **TASK-AI-005** — `TenantPolicy` struct + the `alias_overrides`, `residency_requires_regional_provider` field additions. The schema lives in `services/ai-gateway/src/policy/schema.rs`. This FR adds 2 fields if not already present.
+**Code dependencies (must exist before this task can build):**
+- **TASK-AI-005** — `TenantPolicy` struct + the `alias_overrides`, `residency_requires_regional_provider` field additions. The schema lives in `services/ai-gateway/src/policy/schema.rs`. This task adds 2 fields if not already present.
 - **TASK-AI-007** — `cost_table::lookup` function. Used at step 5 of every resolution.
 - **TASK-AI-015** — `zdr::is_zdr` function (attestation source of truth). Used at step 6.
 - **TASK-AI-016** — `residency::matches` function. Used at step 7.
-- **TASK-AI-022** — W3C trace-propagation contract. This FR's §1 #16 asserts `alias::resolve` does not strip span context from its caller; TASK-AI-022 owns the propagation contract for the outbound `Provider::complete()` call that follows.
+- **TASK-AI-022** — W3C trace-propagation contract. This task's §1 #16 asserts `alias::resolve` does not strip span context from its caller; TASK-AI-022 owns the propagation contract for the outbound `Provider::complete()` call that follows.
 
-**Concept dependencies (must be agreed before this FR can be audited):**
-- The closed alias set is fixed at 6 for slice 2. Adding `chat.toolcall`, `embed.multimodal`, or `chat.fast-long` is a separate FR.
+**Concept dependencies (must be agreed before this task can be audited):**
+- The closed alias set is fixed at 6 for slice 2. Adding `chat.toolcall`, `embed.multimodal`, or `chat.fast-long` is a separate task.
 - `latency_class_for_alias` mapping is opinionated; the latency-class → actual-budget translation is a policy field, not hardcoded here.
 - `fallback_position` semantics: override → 0, primary → 0, fallback[N] → N+1. The "override reports as 0" choice matches TASK-AI-008's circuit-breaker logic.
 
@@ -816,10 +824,10 @@ For reference, the questions considered + resolved during authoring:
 
 ## §11 — Notes (informational, no normative force)
 
-- This FR is intentionally small in code (6h effort) because the complexity lives in the data model (TASK-AI-005's policy schema) and the cross-cutting attestation tables (TASK-AI-007 cost, TASK-AI-015 ZDR, TASK-AI-016 residency). The function itself is ~150 lines of Rust.
-- After this FR ships, every other AI Gateway FR uses `alias::resolve()` instead of inline alias logic. A refactor PR will touch TASK-AI-001's §6 skeleton to call `resolve()` rather than the inline `resolve_model_alias` placeholder. The refactor is mechanical.
+- This task is intentionally small in code (6h effort) because the complexity lives in the data model (TASK-AI-005's policy schema) and the cross-cutting attestation tables (TASK-AI-007 cost, TASK-AI-015 ZDR, TASK-AI-016 residency). The function itself is ~150 lines of Rust.
+- After this task ships, every other AI Gateway task uses `alias::resolve()` instead of inline alias logic. A refactor PR will touch TASK-AI-001's §6 skeleton to call `resolve()` rather than the inline `resolve_model_alias` placeholder. The refactor is mechanical.
 - The closed alias set is intentional friction — adding a new alias (`chat.toolcall`, `embed.multimodal`, `chat.fast-long`) requires updating the const, the schema, the latency-class mapping, and the test suite. This is the right amount of pushback against ad-hoc alias proliferation.
-- The "override reports as `fallback_position: 0`" choice is debatable. The alternative — reporting some marker like `255` — would make "this call used an override" visible in OBS. The current choice prioritises simplicity (no special case). If operators report that override visibility is needed, we add a `was_override: bool` field in slice 4 (FR-AI-006a).
+- The "override reports as `fallback_position: 0`" choice is debatable. The alternative — reporting some marker like `255` — would make "this call used an override" visible in OBS. The current choice prioritises simplicity (no special case). If operators report that override visibility is needed, we add a `was_override: bool` field in slice 4 (task-AI-006a).
 - Latency budget on this function is so tight that the OBS histogram has nano-second buckets (100ns / 500ns / 1µs / 5µs / 10µs). Any call landing in the >10µs bucket triggers an investigation — likely a CPU pegged elsewhere.
 - The latency-class → timeout-budget mapping (`LatencyClass::timeout_budget_seconds`) is a convenience helper for TASK-AI-008. The policy field `call_timeout_seconds` is still the canonical config; this helper just translates it.
 - TASK-AI-006 + TASK-AI-007 + TASK-AI-015 + TASK-AI-016 together form the "policy enforcement layer" that sits between consumers and the provider layer. Treat the four as a unit — none ships alone.

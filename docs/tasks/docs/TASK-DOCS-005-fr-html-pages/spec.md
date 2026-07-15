@@ -1,10 +1,17 @@
 ---
 id: TASK-DOCS-005
-title: "Per-FR CDS HTML pages - every spec renders to its own self-contained deliverable page with assets"
+title: "Per-task CDS HTML pages - every spec renders to its own self-contained deliverable page with assets"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-07-12T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: docs
-priority: MUST
+priority: p0
 status: done
-class: product
 verify: T
 phase: Wave D - visual deliverables
 owner: Stephen Cheng (CTO)
@@ -18,36 +25,36 @@ source_pages:
   - tools/docs-site/md.mjs
   - modules/templates/html/deliverable.html
 source_decisions:
-  - "2026-07-12 operator decision: FR deliverables get better UI, visual-rich (images, videos), CDS-styled, directly viewable on all platforms."
+  - "2026-07-12 operator decision: task deliverables get better UI, visual-rich (images, videos), CDS-styled, directly viewable on all platforms."
   - "2026-07-12 viewing answer: published site + local build; generated HTML stays uncommitted (TASK-DOCS-002 doctrine holds)."
 language: javascript (node stdlib) + html
 service: tools/docs-site/
 new_files:
-  - tools/docs-site/render-fr-pages.mjs
-  - tools/docs-site/tests/test_render_fr_pages.sh
+  - tools/docs-site/render-task-pages.mjs
+  - tools/docs-site/tests/test_render_task_pages.sh
 modified_files:
   - tools/docs-site/build.sh
-  - tools/docs-site/render-fr-catalog.mjs
+  - tools/docs-site/render-task-catalog.mjs
 ---
 
-# TASK-DOCS-005: Per-FR CDS HTML pages
+# TASK-DOCS-005: Per-task CDS HTML pages
 
 ## §1 - Description
 
-Every FR folder renders to one CDS-styled page a human can read anywhere - spec body, audit verdict, media - while markdown stays the only authored source.
+Every task folder renders to one CDS-styled page a human can read anywhere - spec body, audit verdict, media - while markdown stays the only authored source.
 
 Normative clauses:
 
-1. A builder `tools/docs-site/render-fr-pages.mjs` MUST walk `docs/tasks/<module>/<STEM>/spec.md`, render markdown via the existing dependency-free `md.mjs`, and emit `dist/website/frs/<module>/<STEM>/index.html` through the `deliverable@1` template (TASK-TPL-001), node stdlib only.
-2. Each page MUST show: id, title, status badge, module + class + priority badges, key frontmatter (created/shipped/depends_on/blocks as links when those FRs have pages), the rendered spec body with heading anchors per §-section, and the audit verdict + score when `audit.md` exists (rendered below the spec, visually separated).
+1. A builder `tools/docs-site/render-task-pages.mjs` MUST walk `docs/tasks/<module>/<STEM>/spec.md`, render markdown via the existing dependency-free `md.mjs`, and emit `dist/website/frs/<module>/<STEM>/index.html` through the `deliverable@1` template (TASK-TPL-001), node stdlib only.
+2. Each page MUST show: id, title, status badge, module + class + priority badges, key frontmatter (created/shipped/depends_on/blocks as links when those tasks have pages), the rendered spec body with heading anchors per §-section, and the audit verdict + score when `audit.md` exists (rendered below the spec, visually separated).
 3. Assets MUST work: `<STEM>/assets/**` is copied beside the page; relative `assets/...` references in the markdown resolve unchanged; image links render as `<img>`, and links to video files (mp4/webm/mov) render as `<video controls>` - both capped to content width.
 4. Self-containment (template rule): CDS tokens + shell styles inlined into each page; the only external references are the page's own relative assets - pages work from file://.
-5. `build.sh` MUST run the builder before nav generation; the FR catalog's cards MUST link to the pages (`render-fr-catalog.mjs` href swap); determinism and honesty per house rules: byte-identical rebuilds, unreadable spec fails naming the file, missing referenced asset fails non-zero (TASK-DOCS-002 §1 #7 discipline).
+5. `build.sh` MUST run the builder before nav generation; the task catalog's cards MUST link to the pages (`render-task-catalog.mjs` href swap); determinism and honesty per house rules: byte-identical rebuilds, unreadable spec fails naming the file, missing referenced asset fails non-zero (TASK-DOCS-002 §1 #7 discipline).
 6. Scale envelope: the full corpus (~486 pages) MUST build in under 30s on CI hardware and add no external asset weight beyond the corpus's own media.
 
 ## §2 - Why this design
 
-Rendering through the templates module is what makes "CDS everywhere" a property instead of a habit - one shell, hundreds of pages. Reusing md.mjs keeps a single markdown dialect across docs and FRs.
+Rendering through the templates module is what makes "CDS everywhere" a property instead of a habit - one shell, hundreds of pages. Reusing md.mjs keeps a single markdown dialect across docs and tasks.
 
 ## §3 - Contract
 
@@ -64,7 +71,7 @@ Page path: `frs/<module>/<STEM>/index.html`; template `deliverable@1`; asset cop
 
 ## §5 - Verification
 
-`tools/docs-site/tests/test_render_fr_pages.sh`: t01_corpus_renders, t02_media, t03_selfcontained, t04_wired_deterministic_honest, t05_catalog_links, t06_envelope. (AC 1-6.)
+`tools/docs-site/tests/test_render_task_pages.sh`: t01_corpus_renders, t02_media, t03_selfcontained, t04_wired_deterministic_honest, t05_catalog_links, t06_envelope. (AC 1-6.)
 
 ## §6 - Implementation skeleton
 

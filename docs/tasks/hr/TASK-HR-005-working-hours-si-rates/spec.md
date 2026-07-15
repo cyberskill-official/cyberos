@@ -1,8 +1,16 @@
 ---
 id: TASK-HR-005
 title: "HR Decree 145/2020 working-hour caps + Decree 152/2020 SI rates — version-pinned policy constants with annual refresh + tenant override"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: HR
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P1

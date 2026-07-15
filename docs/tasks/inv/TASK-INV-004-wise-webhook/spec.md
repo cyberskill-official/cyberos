@@ -1,8 +1,16 @@
 ---
 id: TASK-INV-004
 title: "Wise webhook handler for multi-currency receipts (USD / EUR / GBP / SGD / JPY)"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: INV
-priority: SHOULD
+priority: p1
 status: ready_to_implement
 accepted_at: 2026-05-16
 accepted_by: Stephen Cheng
@@ -136,7 +144,7 @@ The INV service **MUST** accept Wise webhook events at `POST /v1/webhooks/wise/{
 
 22. **MUST** reject webhook URLs where the path's `profile_id` does not match the body's `data.resource.profile_id` for transfer events. URL-vs-body profile_id mismatch returns `400 profile_id_mismatch` + sev-2 audit `inv.wise_profile_mismatch`.
 
-23. **MUST** enforce TLS 1.3 on the webhook endpoint (no TLS 1.2 fallback). Wise sends from documented IP ranges; we additionally allowlist the Wise IP ranges at the Cloudflare/edge layer as a defense-in-depth bonus (out of scope for this FR, listed in implementation notes for downstream wiring).
+23. **MUST** enforce TLS 1.3 on the webhook endpoint (no TLS 1.2 fallback). Wise sends from documented IP ranges; we additionally allowlist the Wise IP ranges at the Cloudflare/edge layer as a defense-in-depth bonus (out of scope for this task, listed in implementation notes for downstream wiring).
 
 24. **MUST** apply rate limiting per profile_id: max 100 webhooks per second per profile. Burst beyond returns `429 TOO_MANY_REQUESTS` with `Retry-After: 1` header. Wise's documented peak rate is well under 100/s; the limit defends against malformed retries or hostile traffic.
 

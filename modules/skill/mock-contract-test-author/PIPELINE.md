@@ -1,6 +1,6 @@
 # `mock-contract-test-author` - pipeline
 
-When an FR declares a missing external dependency: pin the expected request/response contract, a mock that satisfies it today, and contract tests the real service passes tomorrow.
+When a task declares a missing external dependency: pin the expected request/response contract, a mock that satisfies it today, and contract tests the real service passes tomorrow.
 Artefact: `mock-contract-test@1`. This document binds the skill into the ship chain; the step semantics live in SKILL.md.
 
 ## Upstream
@@ -18,6 +18,6 @@ Artefact: `mock-contract-test@1`. This document binds the skill into the ship ch
 
 ## HALT points
 
-- Dependency turns out to exist and be reachable -> HALT: the FR's has_external_dependency flag is wrong; operator corrects the FR.
+- Dependency turns out to exist and be reachable -> HALT: the task's has_external_dependency flag is wrong; operator corrects the task.
 
 *Added by TASK-SKILL-118 (contract parity). Phases and step prose: SKILL.md is normative.*

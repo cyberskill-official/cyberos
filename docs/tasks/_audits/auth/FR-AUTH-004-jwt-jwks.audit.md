@@ -62,7 +62,7 @@ All 6 mechanical revisions applied. **Score = 10/10.**
 | G-008 | §1 #13 | `scope_grants` derived from roles 1:1 instead of role → grants mapping (`tenant-admin → ["chat:*", ...]`) | high | new `scope_map.rs` module (~60 LOC) + integration | **CLOSED** (slice-1) |
 | G-009 | §1 #4 | Token request field is `handle` (code) not `email` (spec) | low (spec/code drift) | spec amendment recommended in §10.6 | **CLOSED** (slice-1; spec amendment recommended) |
 | G-010 | §1 #4 + #5 | Tenant-slug-not-found path returns 401 but skips bcrypt — enumeration timing leak | high | ~10 LOC always-run-dummy-bcrypt before lookup | **CLOSED** (slice-1; merged into G-003 fix) |
-| G-011 | §1 #1 | Key rotation 'retiring' state-machine absent — migration only has `status IN ('active','retired')`, no 24h overlap state | medium | new migration + rotation::generate_new_signing_key + sweep_retired | **DEFERRED** to TASK-AUTH-006 (per FR §1 #1 + subtasks line "Quarterly rotation cron (TASK-AUTH-006 schedules; this FR provides the function)" — TASK-AUTH-006 explicitly owns the rotation lifecycle). TASK-AUTH-004 ships the JWKS query that ALREADY accommodates both states via the `retired_at > NOW() - INTERVAL '7 days'` clause. |
+| G-011 | §1 #1 | Key rotation 'retiring' state-machine absent — migration only has `status IN ('active','retired')`, no 24h overlap state | medium | new migration + rotation::generate_new_signing_key + sweep_retired | **DEFERRED** to TASK-AUTH-006 (per task §1 #1 + subtasks line "Quarterly rotation cron (TASK-AUTH-006 schedules; this task provides the function)" — TASK-AUTH-006 explicitly owns the rotation lifecycle). TASK-AUTH-004 ships the JWKS query that ALREADY accommodates both states via the `retired_at > NOW() - INTERVAL '7 days'` clause. |
 | G-012 | §1 #11 | `kid` in JWT header — already present in code | n/a | n/a | **VERIFIED PRESENT** (jwt.rs:289 `hdr.kid = Some(key.kid.clone())`) |
 | G-013 | §1 #2 | `email` claim missing from Claims struct | medium | ~3 LOC + backfill in token_response_body | **CLOSED** (slice-1) |
 | G-014 | §1 #7 | Issuer + audience validation on verify | n/a | n/a | **VERIFIED PRESENT** (jwt.rs:188-189 `v.set_issuer + v.set_audience`) |
@@ -104,9 +104,9 @@ All 6 mechanical revisions applied. **Score = 10/10.**
 
 Three spec-text drifts surfaced during the audit:
 
-1. **TokenRequest `email` vs `handle` (§1 #4):** spec says `{email, password, tenant_slug}`; code uses `{handle, password, tenant_slug}`. `handle` is the canonical subject identifier (TASK-AUTH-002's `subjects.handle` column is the primary user-facing key; `email` is optional). Recommendation: amend FR §1 #4 to `handle` (matches code + matches subjects schema). Risk of code rename: high (every test + client + downstream OIDC callback); benefit: cosmetic spec alignment. **Reject the rename; amend the spec.**
+1. **TokenRequest `email` vs `handle` (§1 #4):** spec says `{email, password, tenant_slug}`; code uses `{handle, password, tenant_slug}`. `handle` is the canonical subject identifier (TASK-AUTH-002's `subjects.handle` column is the primary user-facing key; `email` is optional). Recommendation: amend task §1 #4 to `handle` (matches code + matches subjects schema). Risk of code rename: high (every test + client + downstream OIDC callback); benefit: cosmetic spec alignment. **Reject the rename; amend the spec.**
 
-2. **Rate-limit Redis backend (§1 #5):** spec specifies Redis counters. Deployed implementation uses in-memory `DashMap` — operationally adequate for single-instance dev/prod and the current scale, but multi-instance prod needs Redis sync to avoid bucket fragmentation across replicas. Recommendation: amend FR §1 #5 to either (a) describe the in-memory + Redis-future pattern, or (b) keep Redis as required and defer the in-memory backend to a dev-only fallback. **Operator decision required.** Until decided, TASK-OBS-002 owns the Redis backend ship.
+2. **Rate-limit Redis backend (§1 #5):** spec specifies Redis counters. Deployed implementation uses in-memory `DashMap` — operationally adequate for single-instance dev/prod and the current scale, but multi-instance prod needs Redis sync to avoid bucket fragmentation across replicas. Recommendation: amend task §1 #5 to either (a) describe the in-memory + Redis-future pattern, or (b) keep Redis as required and defer the in-memory backend to a dev-only fallback. **Operator decision required.** Until decided, TASK-OBS-002 owns the Redis backend ship.
 
 3. **Key rotation 'retiring' state (§1 #1):** spec says `status IN ('active', 'retiring', 'retired')`. Deployed migration has only `('active', 'retired')` with the JWKS query simulating the overlap via `retired_at > NOW() - INTERVAL '7 days'`. The deployed simulation is operationally equivalent (covers the 24h overlap window) but the spec amendment isn't strictly recommended — instead, TASK-AUTH-006 (which owns the rotation cron) will add the 'retiring' state when it ships the rotation lifecycle. **No spec amendment; track as TASK-AUTH-006 dependency.**
 
@@ -116,7 +116,7 @@ Three spec-text drifts surfaced during the audit:
 
 **Slice 2 — DEFERRED (G-004 + G-005 + G-006 + G-011):** G-004 deferred to consuming services (spec-explicit); G-005 + G-006 deferred to TASK-OBS-001; G-011 deferred to TASK-AUTH-006 (spec-explicit).
 
-Per task-audit skill §9.1, slice-1 lands in one continuous session, single commit. Deferrals satisfy §9.3 defer-with-rationale rule — each cites the receiving FR + spec evidence.
+Per task-audit skill §9.1, slice-1 lands in one continuous session, single commit. Deferrals satisfy §9.3 defer-with-rationale rule — each cites the receiving task + spec evidence.
 
 ---
 

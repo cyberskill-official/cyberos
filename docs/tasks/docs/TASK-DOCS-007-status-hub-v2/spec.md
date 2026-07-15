@@ -1,10 +1,17 @@
 ---
 id: TASK-DOCS-007
-title: "Status hub v2 - dashboard UI (module cards, progress bars, chips) + zero-touch HTML regeneration on every FR/backlog/version change"
+title: "Status hub v2 - dashboard UI (module cards, progress bars, chips) + zero-touch HTML regeneration on every task/backlog/version change"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: improvement
+created_at: 2026-07-12T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: docs
-priority: MUST
+priority: p0
 status: done
-class: improvement
 verify: T
 phase: Wave D - visual deliverables
 owner: Stephen Cheng (CTO)
@@ -19,8 +26,8 @@ source_pages:
   - tools/docs-site/render-status-hub.mjs
   - .githooks/pre-commit
 source_decisions:
-  - "2026-07-12 operator feedback with reference HTML: status page too simple / wall of text - adopt the reference's dashboard language (segmented progress bars, FR chips, module cards, callout, tick phases) on CDS tokens."
-  - "2026-07-12 operator requirement: FR/backlog/version changes MUST regenerate the HTML automatically - no manual trigger anywhere."
+  - "2026-07-12 operator feedback with reference HTML: status page too simple / wall of text - adopt the reference's dashboard language (segmented progress bars, task chips, module cards, callout, tick phases) on CDS tokens."
+  - "2026-07-12 operator requirement: task/backlog/version changes MUST regenerate the HTML automatically - no manual trigger anywhere."
 language: html + javascript (node stdlib) + bash + yaml
 service: tools/docs-site/
 new_files: []
@@ -40,8 +47,8 @@ modified_files:
 
 Normative clauses:
 
-1. The status-hub@1 shell MUST adopt the operator-reference dashboard language on CDS tokens: umber header band with ochre rule (title/subtitle/meta), an overall-progress card with a SEGMENTED bar (done=success green, in-flight=ochre, on-hold=muted) + count chips, a generated "Now shipping" callout listing in-flight FRs as chips, and a color legend. New slots (subtitle, meta:html, now:html, legend:html) are additive to the contract table.
-2. The Roadmap tab MUST replace the 10-column board with MODULE CARDS: one card per module carrying a per-module segmented minibar, % done, and one chip per FR (short id, status-colored, title+status tooltip, linked to its page); in-flight modules get the ochre card accent; the invalid-status bucket stays visible as its own card; the rollup table remains below.
+1. The status-hub@1 shell MUST adopt the operator-reference dashboard language on CDS tokens: umber header band with ochre rule (title/subtitle/meta), an overall-progress card with a SEGMENTED bar (done=success green, in-flight=ochre, on-hold=muted) + count chips, a generated "Now shipping" callout listing in-flight tasks as chips, and a color legend. New slots (subtitle, meta:html, now:html, legend:html) are additive to the contract table.
+2. The Roadmap tab MUST replace the 10-column board with MODULE CARDS: one card per module carrying a per-module segmented minibar, % done, and one chip per task (short id, status-colored, title+status tooltip, linked to its page); in-flight modules get the ochre card accent; the invalid-status bucket stays visible as its own card; the rollup table remains below.
 3. The Changelog tab MUST render releases as tick-circle rows (newest = ochre "now", older = green done). The Backlog tab keeps its four facets with status rendered as chips.
 4. Zero-touch regeneration MUST hold on all three surfaces: (a) local - the pre-commit hook regenerates dist/website whenever staged changes touch docs/tasks/**, docs/**, module docs, modules/templates/**, tools/docs-site/**, CHANGELOG.md, or VERSION (warn-not-block on build failure, skip with warning when node is absent); (b) published on push - deploy.yml's docs job path filters gain VERSION and modules/templates/**; (c) published on version bump - version.yml dispatches deploy.yml after pushing the [skip ci] bump commit, so the hub's VERSION stamp never goes stale (warn on dispatch failure).
 5. Styling stays token-only (hex solely in vendored cds/*.css) and the page self-contained; suites keep the TASK-DOCS-006 assertions updated to the v2 structure.
@@ -52,11 +59,11 @@ The reference page communicates in bars and chips where v1 used columns of text;
 
 ## §3 - Contract
 
-Slot table (status-hub@1, additive): title, subtitle, meta:html, deck:html, now:html, legend:html, tab_*:html, footer. Chip grammar: span.chip.(done|active|hold|todo) with data-status, wrapped in a.chip-link when the FR page exists.
+Slot table (status-hub@1, additive): title, subtitle, meta:html, deck:html, now:html, legend:html, tab_*:html, footer. Chip grammar: span.chip.(done|active|hold|todo) with data-status, wrapped in a.chip-link when the task page exists.
 
 ## §4 - Acceptance criteria
 
-1. **Dashboard structure renders** (§1 #1, #2) - fixture: overall bar with 50.0% done segment + count chips; module card grid with minibars and linked chips; callout appears when in-flight FRs exist.
+1. **Dashboard structure renders** (§1 #1, #2) - fixture: overall bar with 50.0% done segment + count chips; module card grid with minibars and linked chips; callout appears when in-flight tasks exist.
 2. **Changelog ticks + backlog chips** (§1 #3) - newest release row carries the "now" tick; the status column renders chips.
 3. **Zero-touch surfaces wired** (§1 #4) - the hook contains the docs trigger + build call; deploy.yml paths carry VERSION + modules/templates/**; version.yml dispatches deploy.yml after a successful bump push.
 4. **Token-clean + suites green** (§1 #5) - no hex outside the token block; hub + legacy + templates suites pass on the v2 structure.
@@ -75,11 +82,11 @@ TASK-DOCS-006 (the hub it restyles). TASK-IMP-068's hook infrastructure hosts th
 
 ## §8 - Example payloads
 
-Summary line unchanged: `status-hub: 491 FRs (...), 20 releases, VERSION 0.2.0 (deck+3 tabs)`.
+Summary line unchanged: `status-hub: 491 tasks (...), 20 releases, VERSION 0.2.0 (deck+3 tabs)`.
 
 ## §9 - Open questions
 
-None blocking. Per-FR history sparklines need event data the corpus does not carry - future scope.
+None blocking. Per-task history sparklines need event data the corpus does not carry - future scope.
 
 ## §10 - Failure modes inventory
 
@@ -91,7 +98,7 @@ None blocking. Per-FR history sparklines need event data the corpus does not car
 
 ## §11 - Implementation notes
 
-Chips show short ids (FR- prefix stripped) for density; full id + title + status live in the tooltip.
+Chips show short ids (task- prefix stripped) for density; full id + title + status live in the tooltip.
 
 **Post-ship amendment (2026-07-12, TASK-IMP-071):** §1 #4c's deploy-dispatch workaround is retired -
 with [skip ci] gone from bump commits, deploy.yml's VERSION path filter fires natively on the bump

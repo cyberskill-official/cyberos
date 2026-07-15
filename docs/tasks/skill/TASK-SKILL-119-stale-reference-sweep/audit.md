@@ -27,7 +27,7 @@ Contract files quote paths in code blocks legitimately. Resolved: scanner skips 
 A skill discussing the old path as history must survive. Resolved: sweep set = checker resolution output (--list), not grep (§10 #3).
 
 ### ISS-004 "reworded TBD" loophole
-The clause could be satisfied by cosmetic rewording. Resolved: §1 #2 bare-TBD MUST NOT remain + AC 3's grep-clean assertion plus the named-FR-or-unscheduled disjunction.
+The clause could be satisfied by cosmetic rewording. Resolved: §1 #2 bare-TBD MUST NOT remain + AC 3's grep-clean assertion plus the named-task-or-unscheduled disjunction.
 
 ### ISS-005 contract byte-stability
 Same risk class as TASK-SKILL-118 ISS-005. Resolved: §1 #5 citations-only rule, AC 7 diff-scope check.

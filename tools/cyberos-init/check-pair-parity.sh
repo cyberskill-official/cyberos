@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # check-pair-parity.sh <skills-dir> - TASK-SKILL-118 §1 #6.
 # Verifies every author/audit pair carries its file classes. The two arrays below
-# ARE the policy (TASK-SKILL-118 §10 #3): change them only by amending that FR.
+# ARE the policy (TASK-SKILL-118 §10 #3): change them only by amending that task.
 set -uo pipefail
 dir="${1:-}"
 [ -d "$dir" ] || { echo "cyberos-init: ERROR: unreadable skills dir: $dir" >&2; exit 2; }

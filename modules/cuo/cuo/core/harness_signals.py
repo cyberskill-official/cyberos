@@ -177,7 +177,7 @@ def deterministic_drift(rows: list[dict], threshold: dict) -> tuple[bool, float,
 
 
 def acceptance_rate_below(rows: list[dict], threshold: dict) -> tuple[bool, float, list[dict]]:
-    """Fraction of FR runs that reached `done` divided by total terminal runs
+    """Fraction of task runs that reached `done` divided by total terminal runs
     falls below threshold. Inverse-direction signal: trip when value is below.
     """
     t = _to_threshold(threshold, "threshold")

@@ -1,8 +1,16 @@
 ---
 id: TASK-MCP-004
 title: "OAuth 2.1 PKCE authorization-code flow with audience-bound tokens for MCP servers"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: MCP
-priority: MUST
+priority: p0
 status: done
 accepted_at: 2026-05-16
 accepted_by: Stephen Cheng

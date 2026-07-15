@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # test_render_status_hub.sh - TASK-DOCS-006 §5 (t01-t06) carried forward to the single-page
 # hub of TASK-IMP-074: Roadmap | Backlog | Changelog are no longer three tabs but three lenses
-# (board | table | releases) over one corpus, plus an FR drawer that carries the full spec.
-# t07-t09 cover what the merge added: changelog->FR binding, lazy spec chunks, no-JS truth.
+# (board | table | releases) over one corpus, plus a task drawer that carries the full spec.
+# t07-t09 cover what the merge added: changelog->task binding, lazy spec chunks, no-JS truth.
 set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"; repo="$(cd "$here/../../.." && pwd)"
 R="$repo/tools/docs-site/render-status-hub.mjs"
@@ -18,8 +18,8 @@ mkfix() {
   cp "$repo/modules/templates/html/status-hub.html" "$repo/modules/templates/html/status-app.js" "$d/modules/templates/html/"
   cp "$repo/modules/templates/cds/tokens.css" "$repo/modules/templates/cds/status.css" "$d/modules/templates/cds/"
   echo "ref: refs/heads/main" > "$d/.git/HEAD"; echo "abcdef1234567890" > "$d/.git/refs/heads/main"
-  printf -- '---\nid: TASK-AA-001\ntitle: First\nmodule: aa\npriority: MUST\nstatus: done\nclass: product\nphase: P0\nowner: Ada\neffort_hours: 3\nshipped: 2026-07-01\ndepends_on: []\nblocks: [TASK-BB-001]\nsub_tasks:\n  - "wire it"\n  - "prove it"\n---\n## §1 — Description\n\nFirst FR body paragraph.\n\n## §4 — Acceptance criteria\n\n- one\n' > "$d/docs/tasks/aa/TASK-AA-001-first/spec.md"
-  printf -- '---\nid: TASK-BB-001\ntitle: Third\nmodule: bb\npriority: SHOULD\nstatus: draft\nclass: improvement\nphase: P1\ndepends_on: [TASK-AA-001]\n---\n## §1 — Description\n\nThird FR body paragraph.\n' > "$d/docs/tasks/bb/TASK-BB-001-third/spec.md"
+  printf -- '---\nid: TASK-AA-001\ntitle: First\nmodule: aa\npriority: MUST\nstatus: done\nclass: product\nphase: P0\nowner: Ada\neffort_hours: 3\nshipped: 2026-07-01\ndepends_on: []\nblocks: [TASK-BB-001]\nsub_tasks:\n  - "wire it"\n  - "prove it"\n---\n## §1 — Description\n\nFirst task body paragraph.\n\n## §4 — Acceptance criteria\n\n- one\n' > "$d/docs/tasks/aa/TASK-AA-001-first/spec.md"
+  printf -- '---\nid: TASK-BB-001\ntitle: Third\nmodule: bb\npriority: SHOULD\nstatus: draft\nclass: improvement\nphase: P1\ndepends_on: [TASK-AA-001]\n---\n## §1 — Description\n\nThird task body paragraph.\n' > "$d/docs/tasks/bb/TASK-BB-001-third/spec.md"
   printf '# CL\n\n## [2.0.0] - 2026-07-01\n\nAdded\n- TASK-AA-001 first thing landed\n' > "$d/CHANGELOG.md"
   echo "2.0.0" > "$d/VERSION"
 }
@@ -60,24 +60,24 @@ t05_deterministic() {                                                  # AC 5 - 
     && cmp -s "$TMP/a/out/reference/data/fr/TASK-AA-001.js" "$TMP/a/out2/reference/data/fr/TASK-AA-001.js" \
     && ok t05 || fail t05 "nondeterministic"
 }
-t06_fr_page_links() {                                                  # AC 6 - the drawer links the FR page
+t06_fr_page_links() {                                                  # AC 6 - the drawer links the task page
   mkfix "$TMP/d"
-  mkdir -p "$TMP/d/out/frs/aa/TASK-AA-001-first"; touch "$TMP/d/out/frs/aa/TASK-AA-001-first/index.html"
+  mkdir -p "$TMP/d/out/tasks/aa/TASK-AA-001-first"; touch "$TMP/d/out/tasks/aa/TASK-AA-001-first/index.html"
   node "$R" "$TMP/d" "$TMP/d/out" >/dev/null 2>&1
-  grep -q '"pg":"../frs/aa/TASK-AA-001-first/index.html"' "$TMP/d/out/reference/status.html" \
-    && ok t06 || fail t06 "FR page link absent from the corpus"
+  grep -q '"pg":"../tasks/aa/TASK-AA-001-first/index.html"' "$TMP/d/out/reference/status.html" \
+    && ok t06 || fail t06 "task page link absent from the corpus"
 }
-t07_changelog_binds_frs() {                                            # the changelog references FRs, not prose
+t07_changelog_binds_frs() {                                            # the changelog references tasks, not prose
   h="$TMP/a/out/reference/status.html"
   grep -q '"cited":\["TASK-AA-001"\]' "$h" \
     && grep -q 'data-fr=\\"TASK-AA-001\\"' "$h" \
     && grep -q '"bound":\["TASK-AA-001"\]' "$h" \
-    && ok t07 || fail t07 "release -> FR binding missing"
+    && ok t07 || fail t07 "release -> task binding missing"
 }
 t08_spec_chunks() {                                                    # full spec, lazily
   c="$TMP/a/out/reference/data/fr/TASK-AA-001.js"
   [ -f "$c" ] && grep -q 'window.CS_SPEC\["TASK-AA-001"\]' "$c" \
-    && grep -q 'First FR body paragraph' "$c" \
+    && grep -q 'First task body paragraph' "$c" \
     && grep -q '"sp":1' "$TMP/a/out/reference/status.html" || { fail t08 "chunk missing"; return; }
   CYBEROS_STATUS_SPECS=0 node "$R" "$TMP/a" "$TMP/a/out3" >/dev/null 2>&1
   [ ! -d "$TMP/a/out3/reference/data" ] && ! grep -q '"sp":1' "$TMP/a/out3/reference/status.html" \

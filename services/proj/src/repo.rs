@@ -180,7 +180,7 @@ pub async fn patch_issue_row(
     Ok((current, updated))
 }
 
-/// List issues with the FR §1 #5 filter set.
+/// List issues with the task §1 #5 filter set.
 pub async fn list_issues(
     db: &PgPool,
     actor: Actor,

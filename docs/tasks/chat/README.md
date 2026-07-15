@@ -1,10 +1,10 @@
 # CHAT module — task index
 
-_Generated 2026-05-17 - 13 FRs, 101 engineering-hours total (TASK-CHAT-013 added 2026-06-29; TASK-CHAT-002 closed as superseded)._
+_Generated 2026-05-17 - 13 tasks, 101 engineering-hours total (TASK-CHAT-013 added 2026-06-29; TASK-CHAT-002 closed as superseded)._
 
-## FRs
+## tasks
 
-| FR | Priority | Slice | Hours | Title |
+| Task | Priority | Slice | Hours | Title |
 |---|---|---|---:|---|
 | [TASK-CHAT-001](TASK-CHAT-001-mattermost-fork/spec.md) | MUST | 1 | 8 | Mattermost v9.x fork at pinned MIT-Apache commit + automated license-drift watcher + CI gate |
 | [TASK-CHAT-002](TASK-CHAT-002-authbridge-plugin/spec.md) | MUST | 1 | 10 | [CLOSED - superseded by TASK-CHAT-013] cyberos-chat-authbridge plugin - non-working (a Mattermost plugin cannot replace the login route) |

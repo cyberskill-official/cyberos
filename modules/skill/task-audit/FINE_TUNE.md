@@ -4,11 +4,11 @@ Default discipline at `../docs/FINE_TUNE.md`. This file documents the **task-aud
 
 ## Why task-audit is different
 
-`task-audit` ships with `audit_rubric@2.0` ported verbatim from the proven legacy `cuo/cpo/task-audit` skill (2026-02 vintage). The rubric was battle-tested against 50+ FRs in `cyberos/docs/tasks/` before being ported. Bumping it requires extra scrutiny because:
+`task-audit` ships with `audit_rubric@2.0` ported verbatim from the proven legacy `cuo/cpo/task-audit` skill (2026-02 vintage). The rubric was battle-tested against 50+ tasks in `cyberos/docs/tasks/` before being ported. Bumping it requires extra scrutiny because:
 
-1. The rule IDs (FM-001..111, SEC-001..009, COND-001..004, QA-001..009, SAFE-001..004, STALE-001) are referenced by **active audit reports across the cyberos project** + are baked into the FR catalog's `audit_score: 10/10` claim made in 50+ FR documents. Renames are catastrophic.
+1. The rule IDs (FM-001..111, SEC-001..009, COND-001..004, QA-001..009, SAFE-001..004, STALE-001) are referenced by **active audit reports across the cyberos project** + are baked into the task catalog's `audit_score: 10/10` claim made in 50+ task documents. Renames are catastrophic.
 2. The EU AI Act decision-tree rules (QA-001..003) are compliance-relevant; loosening them creates regulatory exposure.
-3. The task-author + task-audit pair is the cyberos project's primary feature-tracking workflow. Audit instability shakes confidence in every FR's status.
+3. The task-author + task-audit pair is the cyberos project's primary feature-tracking workflow. Audit instability shakes confidence in every task's status.
 
 ## Locked behaviour
 
@@ -18,7 +18,7 @@ The following are LOCKED until a major version bump with full governance review 
 - The full SEC-001..009 required-sections list.
 - The QA-001..003 EU AI Act decision-tree rules (these encode legal positions).
 - The SAFE-003 injection-marker scan list (changing the marker set requires CSecO sign-off).
-- The XCHAIN-001/002 chain hashes (changing them breaks chain-of-custody for the existing FR catalog).
+- The XCHAIN-001/002 chain hashes (changing them breaks chain-of-custody for the existing task catalog).
 
 ## Permitted minor changes
 
@@ -42,7 +42,7 @@ The following are LOCKED until a major version bump with full governance review 
 
 Every minor bump SHALL add:
 
-1. A fixture FR file under `acceptance/golden-v<new>-<rule-id>-input.md` that triggers the new/changed rule.
+1. A fixture task file under `acceptance/golden-v<new>-<rule-id>-input.md` that triggers the new/changed rule.
 2. The expected audit report at `acceptance/golden-v<new>-<rule-id>-input.audit.md`.
 3. A regression test that exercises the new rule against the prior pass-clean fixture (must still pass — no false positives).
 

@@ -1,8 +1,15 @@
 ---
 id: TASK-EVAL-004
 title: "manager + employee evaluation views — access-restricted console panel over the eval service; founder/manager-of-report/self-only reads, the auto-score shown as a clearly-marked DRAFT requiring human approval before it is final, and the employee's right to see + respond to their own record; every cross-person read audited"
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-06-29T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: EVAL
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P5
@@ -114,7 +121,7 @@ The evaluation-views panel **MUST** surface TASK-EVAL-003 assessments to a stric
 
 11. **MUST** be tenant-scoped through the session: every eval read/write **MUST** carry the TASK-AUTH-004 session token the TASK-APP-001 shell holds, and results **MUST** be the tenant scope the eval service's RLS applies to that token. The panel **MUST NOT** attempt to widen scope or pass a tenant other than the session's.
 
-12. **MUST** add no backend beyond the eval service's own read/approve/respond endpoints (DEC-2624). The console is a front-end over those endpoints; a screen that appears to need a new endpoint is a signal to extend the eval service's FR, not to add a backend in `app`. The access check, the audit emission, and the state machine live in the eval service, not in the browser.
+12. **MUST** add no backend beyond the eval service's own read/approve/respond endpoints (DEC-2624). The console is a front-end over those endpoints; a screen that appears to need a new endpoint is a signal to extend the eval service's task, not to add a backend in `app`. The access check, the audit emission, and the state machine live in the eval service, not in the browser.
 
 13. **MUST** fail visibly and safely on error: on a 401 the panel **MUST** defer to the TASK-APP-001 auth gate and return to sign-in; on a 403 it **MUST** show an explicit access-denied state (not an empty panel that reads as "no assessments"); on any other non-2xx the affected screen **MUST** show a clear error and **MUST NOT** fabricate an assessment, a score, or a state. An empty-but-successful read (the employee has no assessment yet) **MUST** be shown as "no assessment yet", distinct from denied and from error.
 
@@ -475,10 +482,10 @@ test("access-denied renders the denied state, not an empty panel", () => {
 ## §9 — Open questions
 
 Resolved by Stephen's 2026-06-29 decisions (access-restricted + contract-disclosed; both auto-score AND HITL with the draft clearly marked; employee right to respond; every cross-person read audited; panel in the console, no new backend). Deferred:
-- A formal response window (a duration after which "opportunity to respond" is auto-satisfied with an audited waiver) versus a purely event-driven close — this FR requires the opportunity but leaves the window-vs-event policy to TASK-EVAL-001 governance config; the close gate honours whichever it sets.
+- A formal response window (a duration after which "opportunity to respond" is auto-satisfied with an audited waiver) versus a purely event-driven close — this task requires the opportunity but leaves the window-vs-event policy to TASK-EVAL-001 governance config; the close gate honours whichever it sets.
 - An HR role distinct from the founder (the brain plan mentions HR) — folded into the founder/manager grants for now; a dedicated HR grant is an additive TASK-EVAL-001 grant, not a change to this panel's access shape.
 - A diff/history view of how an assessment moved draft → approved/overridden over time, and a rubric-version diff — surfacing-only additive screens, later.
-- Notifications to the employee that a draft assessment exists — additive; the audit row and the self-view exist now, a push/email nudge is a later FR.
+- Notifications to the employee that a draft assessment exists — additive; the audit row and the self-view exist now, a push/email nudge is a later task.
 
 ---
 
@@ -503,7 +510,7 @@ Resolved by Stephen's 2026-06-29 decisions (access-restricted + contract-disclos
 | 401 expired session | TASK-APP-001 auth gate | return to sign-in | Re-authenticate |
 | Upstream eval unreachable | non-2xx | error state, no fabrication | Restore eval service |
 | Cross-tenant read | RLS + session scope | 0 rows / 403 | None — by design |
-| New endpoint appears needed | API-layer review (guardrail) | extend eval FR, not add backend | Add to the eval service's FR |
+| New endpoint appears needed | API-layer review (guardrail) | extend eval task, not add backend | Add to the eval service's task |
 | Audit emit fails mid-review | sqlx tx rollback | state change not committed | Caller retries |
 | OTel exporter down | buffered then dropped | logged | Restore TASK-OBS-001 |
 | Manager loses manager-of mid-session | next read re-checks relationship | 403 on next read | None — re-checked per call |
@@ -522,7 +529,7 @@ Resolved by Stephen's 2026-06-29 decisions (access-restricted + contract-disclos
 - The panel adds no backend: the access check, the audit, and the state machine live in `services/eval/`, and the console is a faithful renderer (the TASK-APP-005 discipline). A screen that seems to need a new endpoint is the signal to extend TASK-EVAL-003, not to put logic in the browser.
 - The three render distinctions — denied (403), empty-but-allowed (200, no assessment), and error (other non-2xx) — are kept separate because conflating them either leaks or misleads. The audit row for a denied read is not written by this panel (the deny happens before content load), but the 403 itself is observable via the access metric.
 - `eval_assessment_reads_total{relationship}` makes the governance promise auditable in aggregate: the founder can watch the balance of self vs manager vs founder reads and spot an anomaly without walking the audit log.
-- This is a high-risk FR under the EU AI Act framing because it surfaces an employment evaluation and is where human oversight is operationalised; see the AI Risk Assessment section. The human approve/override gate (Article 14) is the core of the FR, not an add-on.
+- This is a high-risk task under the EU AI Act framing because it surfaces an employment evaluation and is where human oversight is operationalised; see the AI Risk Assessment section. The human approve/override gate (Article 14) is the core of the task, not an add-on.
 - The override-outcome validity is checked against the TASK-EVAL-002 rubric version's scale, so a reviewer cannot record an outcome the rubric does not define; this keeps the human's adjustment inside the same standard the draft was scored against.
 - HR-as-a-distinct-role is deferred: the brain plan mentions HR, but for the first release the founder/manager grants cover it, and a dedicated HR grant is an additive TASK-EVAL-001 grant rather than a change to this panel's three-relationship access shape.
 
@@ -532,7 +539,7 @@ Resolved by Stephen's 2026-06-29 decisions (access-restricted + contract-disclos
 
 ### Risk classification
 
-High-risk under the EU AI Act framing: the panel surfaces an automated employment-evaluation output that can inform pay and progression, and it is the surface where human oversight of that output is exercised. Human oversight (Article 14) is the core of this FR, not a peripheral control.
+High-risk under the EU AI Act framing: the panel surfaces an automated employment-evaluation output that can inform pay and progression, and it is the surface where human oversight of that output is exercised. Human oversight (Article 14) is the core of this task, not a peripheral control.
 
 ### Data sources
 
@@ -554,9 +561,9 @@ Unauthorised access is denied by default with no content or existence leak (clau
 
 ## AI Authorship Disclosure
 
-- Tools used: Claude (Cowork), authoring this FR from the brain-evaluation plan (Phase 5 surfacing), Stephen's 2026-06-29 decisions, and the existing TASK-APP-001 / TASK-APP-005 console pattern and the TASK-EVAL-001..003 chain.
-- Scope: full draft of this specification — the normative clauses, the access model, the DRAFT-vs-approved state machine, the employee-response gate, the read-audit requirement, and the paired AI Risk Assessment. No console or service code is written by this FR; the panel and the views endpoints are built in a later session.
-- Human review: Stephen reviews and approves before status moves past draft; this is a high-risk FR, so the access restriction, the human-approval gate, and the read-audit need his explicit sign-off, and the paired audit plus the CAF gate validate before any implementation merges.
+- Tools used: Claude (Cowork), authoring this task from the brain-evaluation plan (Phase 5 surfacing), Stephen's 2026-06-29 decisions, and the existing TASK-APP-001 / TASK-APP-005 console pattern and the TASK-EVAL-001..003 chain.
+- Scope: full draft of this specification — the normative clauses, the access model, the DRAFT-vs-approved state machine, the employee-response gate, the read-audit requirement, and the paired AI Risk Assessment. No console or service code is written by this task; the panel and the views endpoints are built in a later session.
+- Human review: Stephen reviews and approves before status moves past draft; this is a high-risk task, so the access restriction, the human-approval gate, and the read-audit need his explicit sign-off, and the paired audit plus the CAF gate validate before any implementation merges.
 
 ---
 

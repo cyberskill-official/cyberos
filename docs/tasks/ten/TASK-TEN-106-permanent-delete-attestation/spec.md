@@ -1,8 +1,16 @@
 ---
 id: TASK-TEN-106
 title: "TEN permanent-delete attestation — CSO + CLO dual-sign + chain-anchored evidence + cascade hard-purge across all tenant data with verification"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: TEN
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P4
@@ -105,7 +113,7 @@ The TEN service **MUST** ship permanent-delete attestation at `services/ten/src/
 5. **MUST** expose `POST /v1/admin/tenants/{tid}/permanent-delete/initiate` body `{ reason }`. Caller has `cso` OR `tenant_admin` role. Handler validates preconditions:
    - `tenants.status = 'terminating'` (set by TASK-TEN-104) — else 412 + `tenant_not_terminating`.
    - `now() - tenant.terminating_at >= 30 days` — else 412 + `cool_off_not_elapsed`.
-   - Recent bundle within 90d per TASK-TEN-105 §1 #14 — else 412 + `bundle_export_required_before_attestation` (referenced from TASK-TEN-105 cross-FR contract).
+   - Recent bundle within 90d per TASK-TEN-105 §1 #14 — else 412 + `bundle_export_required_before_attestation` (referenced from TASK-TEN-105 cross-task contract).
    - INSERTs attestation row with status='pending_cso_sign'.
    - Emits `ten.permanent_delete_attestation_initiated`.
 

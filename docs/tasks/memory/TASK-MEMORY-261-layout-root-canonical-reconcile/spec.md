@@ -1,8 +1,16 @@
 ---
 id: TASK-MEMORY-261
 title: Reconcile layout-root-canonical with the store scaffold (top-level artifact dirs)
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: improvement
+created_at: 2026-07-14T00:00:00+07:00
+priority: p2
+department: engineering
+author: @unassigned
+template: task@1
 module: memory
-class: improvement
 status: draft
 owner: unassigned
 ---
@@ -13,7 +21,7 @@ owner: unassigned
 
 `cyberos doctor` runs the `layout-root-canonical` invariant (`modules/memory/cyberos/core/invariants.py`, `_CANONICAL_TOP_LEVEL_DIRS`), which accepts exactly: `memories, meta, company, module, member, client, project, persona, conflicts, exports, index, audit`.
 
-CyberOS's own live BRAIN (now at `.cyberos/memory/store/`) also carries top-level `adrs/`, `audits/`, `impl-plans/`, `code-reviews/`, `obs-injections/` - CUO artifact kinds created by earlier tooling. So `doctor` reports `overall: FAIL (12 pass / 1 error)` on an otherwise healthy store. The shell scaffolder was already fixed to stop creating these (commit `0ae91c4`), so fresh stores are clean; this FR is about the pre-existing dirs and the source-of-truth split.
+CyberOS's own live BRAIN (now at `.cyberos/memory/store/`) also carries top-level `adrs/`, `audits/`, `impl-plans/`, `code-reviews/`, `obs-injections/` - CUO artifact kinds created by earlier tooling. So `doctor` reports `overall: FAIL (12 pass / 1 error)` on an otherwise healthy store. The shell scaffolder was already fixed to stop creating these (commit `0ae91c4`), so fresh stores are clean; this task is about the pre-existing dirs and the source-of-truth split.
 
 ## 1. Normative clauses
 
@@ -28,4 +36,4 @@ CyberOS's own live BRAIN (now at `.cyberos/memory/store/`) also carries top-leve
 
 ## 3. Gate
 
-`python -m pytest` in `modules/memory` plus `cyberos doctor` on a seeded store. Improvement-class FR: machine gates plus the two HITL acceptance verdicts.
+`python -m pytest` in `modules/memory` plus `cyberos doctor` on a seeded store. Improvement-class task: machine gates plus the two HITL acceptance verdicts.

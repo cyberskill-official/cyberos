@@ -45,7 +45,7 @@ The spec lands client-initiated workflows bridging PORTAL submissions → CHAT t
 
 All 6 mechanical concerns addressed.
 
-The 730-line length is appropriate for a 6h-effort FR with focused but bidirectional scope.
+The 730-line length is appropriate for a 6h-effort task with focused but bidirectional scope.
 
 **Score = 10/10.**
 

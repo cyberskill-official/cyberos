@@ -1,8 +1,16 @@
 ---
 id: TASK-SKILL-102
 title: "Self-hosted OCI registry for .skill bundles — cosign signing + tenant-scoped + immutable tags + 100MB cap + audit"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: SKILL
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -14,7 +22,7 @@ shipped: null
 memory_chain_hash: null
 related_tasks: [TASK-SKILL-101, TASK-AUTH-004, TASK-AUTH-003]
 depends_on: [TASK-SKILL-101]
-blocks: [TASK-SKILL-201]   # placeholder — OCI registry deploy FR (R3 stage), not yet specified
+blocks: [TASK-SKILL-201]   # placeholder — OCI registry deploy task (R3 stage), not yet specified
 
 source_pages:
   - website/docs/modules/skill.html#oci-registry

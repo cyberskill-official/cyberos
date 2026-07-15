@@ -16,7 +16,7 @@ from cuo.core.supervisor import execute_chain
 def mock_backlog_file(tmp_path: Path) -> Path:
     backlog_content = """# Task Backlog
 
-| FR-ID | Title | Pri | Status | Depends on | Effort |
+| TASK-ID | Title | Pri | Status | Depends on | Effort |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | TASK-CUO-101 | Implement backlog reader | High | done | | 3 |
 | TASK-CUO-102 | Add rework mode | Medium | ready_to_implement | TASK-CUO-101 | 5 |
@@ -48,7 +48,7 @@ def test_next_eligible_no_rework(mock_backlog_file: Path) -> None:
 
 def test_next_eligible_with_rework(mock_backlog_file: Path) -> None:
     rows = parse_backlog(mock_backlog_file)
-    # With rework, "done" FRs (TASK-CUO-101, TASK-CUO-104) are eligible.
+    # With rework, "done" tasks (TASK-CUO-101, TASK-CUO-104) are eligible.
     # The first matching row in BACKLOG is TASK-CUO-101.
     eligible = next_eligible(rows, rework=True)
     assert eligible is not None
@@ -77,7 +77,7 @@ def test_execute_chain_start_step_from_status(monkeypatch: pytest.MonkeyPatch, t
         return orig_is_file(self)
     monkeypatch.setattr(Path, "is_file", mock_is_file)
 
-    # Mock parse_backlog to return our target FR with status ready_to_review
+    # Mock parse_backlog to return our target task with status ready_to_review
     import cuo.core.backlog_reader
     monkeypatch.setattr(
         cuo.core.backlog_reader,

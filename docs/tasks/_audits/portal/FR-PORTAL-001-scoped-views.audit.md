@@ -43,9 +43,9 @@ The spec lands scoped read-only views over PROJ/INV/DOC/CHAT for client-tenant p
 
 ## §3 — Resolution
 
-All 6 mechanical concerns addressed. SQL view dependency on sync_class column flagged via TASK-MEMORY-106 cross-FR; cursor lifecycle bounded by rotation; sub-resource RLS filtering documented; partial-export audit completeness; default field-set design reasoned; ETag perf footprint scoped.
+All 6 mechanical concerns addressed. SQL view dependency on sync_class column flagged via TASK-MEMORY-106 cross-task; cursor lifecycle bounded by rotation; sub-resource RLS filtering documented; partial-export audit completeness; default field-set design reasoned; ETag perf footprint scoped.
 
-The 1,090-line length is justified by 5 view kinds × per-kind filters/fields + 4 endpoints (list/detail/search/export) + GraphQL projection + cursor pagination + CSV/XLSX export + per-row redaction + 6 memory kinds with mixed sampling + 21 failure modes. Density matches peer FRs at similar scope.
+The 1,090-line length is justified by 5 view kinds × per-kind filters/fields + 4 endpoints (list/detail/search/export) + GraphQL projection + cursor pagination + CSV/XLSX export + per-row redaction + 6 memory kinds with mixed sampling + 21 failure modes. Density matches peer tasks at similar scope.
 
 **Score = 10/10.**
 

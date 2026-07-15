@@ -401,7 +401,7 @@ P0 planned; build window: P0 slice 2 -> P0 exit.
 
 - DEC-021 - LGTM observability stack
 - OpenTelemetry semantic conventions 1.27+
-- N(FR pending) - p99 latency degradation budget (CI gate)
+- N(task pending) - p99 latency degradation budget (CI gate)
 
 ## GraphQL federation
 
@@ -428,7 +428,7 @@ Persisted queries are mandatory for production traffic. Query hashes are pre-reg
 - Apollo Router, not GraphQL Mesh: production-grade Rust runtime; query plan cache; the Federation v2.5 reference.
 - Persisted queries mandatory: zero query injection surface; CDN-cacheable; rate-shaped.
 - Federation v2.5: `@interfaceObject` (P3 module hierarchies), `@progressive @override` (zero-downtime schema moves).
-- Schema deprecation discipline: removal requires >= 1 phase notice (N(FR pending)); breaks no client mid-phase.
+- Schema deprecation discipline: removal requires >= 1 phase notice (N(task pending)); breaks no client mid-phase.
 
 #### Composition and request path
 
@@ -445,10 +445,10 @@ The host shell (Module Federation; Vite, React 19, Tauri) posts persisted-query 
 
 | Metric | Target | Notes |
 |---|---|---|
-| GraphQL p95 | <= 400 ms | N(FR pending) |
-| Cache hit rate | >= 70% | N(FR pending) persisted-query |
-| Subgraph deploy | <= 10 min | N(FR pending) module CI |
-| Composition check | pass | N(FR pending) per release |
+| GraphQL p95 | <= 400 ms | N(task pending) |
+| Cache hit rate | >= 70% | N(task pending) persisted-query |
+| Subgraph deploy | <= 10 min | N(task pending) module CI |
+| Composition check | pass | N(task pending) per release |
 
 #### Status
 

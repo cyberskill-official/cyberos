@@ -3,7 +3,7 @@
 //! Core types and constants for the rerank subsystem. The actual provider
 //! integration (RerankProvider, batch buffer, circuit breaker) depends on
 //! TASK-AI-008 (router) and TASK-AI-019 (embedding sidecar) and will be wired
-//! when those FRs ship.
+//! when those tasks ship.
 //!
 //! See TASK-AI-020 for normative behaviour and acceptance criteria.
 

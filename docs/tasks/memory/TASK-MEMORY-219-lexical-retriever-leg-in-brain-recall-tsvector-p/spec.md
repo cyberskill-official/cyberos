@@ -1,10 +1,17 @@
 ---
 id: TASK-MEMORY-219
 title: "Lexical retriever leg in brain recall (tsvector + pg_trgm) fused via RRF"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: improvement
+created_at: 2026-07-08T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: memory
-priority: SHOULD
+priority: p1
 status: draft
-class: improvement
 phase: P1
 refs: [R11, F12]
 depends_on: [TASK-MEMORY-212]
@@ -17,7 +24,7 @@ verify: N   # awh N/A until a goldenset is sealed for this area
 
 hybrid beats vector-only on golden set; expression indexes in place; degraded modes unchanged
 
-Migrated 2026-07-08 from the memory improvement backlog, folded into the FR system as `class: improvement`. Source report refs: R11, F12.
+Migrated 2026-07-08 from the memory improvement backlog, folded into the task system as `class: improvement`. Source report refs: R11, F12.
 
 ## Acceptance criteria
 

@@ -4,7 +4,7 @@ source: website/docs/modules/portal/index.html
 migrated: TASK-DOCS-002
 ---
 
-PORTAL is CyberOS's **white-labelled client-facing surface**. A tenant's customers log in at `clients.<tenant>.cyberos.world` or at their own CNAME (e.g. `portal.acmecorp.com`) and see a portal that looks like the agency's brand: logo, colours, typography, sub-brand accents per (FR pending). The data plane is a permission-narrowed lens on the underlying agency data: PROJ projects scoped to `this client`, INV invoices scoped to `this client`, DOC signed-docs scoped to `this client`, CHAT threads scoped to `this client`. Cross-tenant isolation in the shared infrastructure is enforced at three layers: Postgres RLS, Apollo Router scope checks, and per-bucket S3 prefix ACLs. Authentication is via SSO from the client's IdP (SAML 2.0 or OIDC); ClientMembers are mapped to internal Subject rows via JIT provisioning at first login. A branded client AI assistant - a CUO variant - has the client's project history pre-loaded and answers grounded questions with citations. Client-initiated workflows (new project request, billing inquiry, support ticket) materialise as CHAT threads on the agency side, automatically routed to the right AM. Vietnamese + English UI; multi-currency rendering for international clients.
+PORTAL is CyberOS's **white-labelled client-facing surface**. A tenant's customers log in at `clients.<tenant>.cyberos.world` or at their own CNAME (e.g. `portal.acmecorp.com`) and see a portal that looks like the agency's brand: logo, colours, typography, sub-brand accents per (task pending). The data plane is a permission-narrowed lens on the underlying agency data: PROJ projects scoped to `this client`, INV invoices scoped to `this client`, DOC signed-docs scoped to `this client`, CHAT threads scoped to `this client`. Cross-tenant isolation in the shared infrastructure is enforced at three layers: Postgres RLS, Apollo Router scope checks, and per-bucket S3 prefix ACLs. Authentication is via SSO from the client's IdP (SAML 2.0 or OIDC); ClientMembers are mapped to internal Subject rows via JIT provisioning at first login. A branded client AI assistant - a CUO variant - has the client's project history pre-loaded and answers grounded questions with citations. Client-initiated workflows (new project request, billing inquiry, support ticket) materialise as CHAT threads on the agency side, automatically routed to the right AM. Vietnamese + English UI; multi-currency rendering for international clients.
 
 ## At a glance
 
@@ -78,7 +78,7 @@ Axis| Question| Answer
 **5W - Why**| Why a separate module?| Because the auth surface, the brand-theme system, the data-lens narrowing, and the client AI assistant differ enough from internal CyberOS that compositing them into the main app would muddy both. PORTAL is a focused product for a focused audience.
 **1H - How**| How does it work?| SSO at edge resolves ClientMember -> Subject row -> scope contract grants narrowed to `client_account_id`. Federated GraphQL queries are predicate-narrowed by Apollo Router at request time. Branded SPA reads a tenant.branding config; custom CNAME terminates at edge.
 **2C - Cost**| Cost budget?| P4: edge-served static SPA ($5/mo CloudFront); per-tenant ACM cert ($0). API: ~$20 / month per active client account at low traffic. Branded email templates pass through SES.
-**2C - Constraints**| Constraints?| (a) zero cross-tenant data leakage - three-layer enforcement. (b) ClientMember access is read-only on tenant data; write only on their own consents / requests (FR pending). (c) Every portal action audited to memory (FR pending). (d) PDPL Art. 14 + GDPR Art. 15 DSAR for ClientMembers. (e) Vietnamese-localised UI.
+**2C - Constraints**| Constraints?| (a) zero cross-tenant data leakage - three-layer enforcement. (b) ClientMember access is read-only on tenant data; write only on their own consents / requests (task pending). (c) Every portal action audited to memory (task pending). (d) PDPL Art. 14 + GDPR Art. 15 DSAR for ClientMembers. (e) Vietnamese-localised UI.
 **5M - Materials**| Stack?| Rust 1.81, axum (API), Next.js + React + Tailwind (SPA), CloudFront / Vercel edge, ACM for per-tenant TLS, S3 for theme assets, SAML / OIDC libraries, OpenTelemetry.
 **5M - Methods**| Method choices?| Predicate-narrowing at Apollo Router (every field has @requiresScopes + tenant + client_account predicate). JIT user provisioning at SSO callback. Branded CUO is a thin wrapper on the main CUO with persona-stamped scope.
 **5M - Machines**| Deployment?| Edge SPA + multi-region API. Per-tenant ACM cert auto-issued and renewed on CNAME claim. PWA service worker for offline-tolerant read views.
@@ -354,9 +354,9 @@ Closed| Day 30 of grace| Data wiped per retention policy; audit row retained; CN
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
+The CyberOS task catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
-Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
+Previous task enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific tasks land here as they are re-authored.
 
 ## Non-functional requirements
 
@@ -398,10 +398,10 @@ PORTAL is in the SOC 2 / ISO 27001 isolation hotspot and inherits client-data DS
 
 Regulation / standard| Article / clause| PORTAL feature that satisfies it
 ---|---|---
-Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| Client-side DSAR export (FR pending).
+Vietnam PDPL (Law 91/2025)| Art. 14 - DSAR| Client-side DSAR export (task pending).
 Vietnam PDPL| Art. 13 - Consent| ConsentRecord per ClientMember per consent_type.
 GDPR (EU 2016/679)| Art. 15 - Right of access| Same surface as PDPL.
-GDPR| Art. 17 - Right to erasure| Self-service erasure with 30-day grace (FR pending).
+GDPR| Art. 17 - Right to erasure| Self-service erasure with 30-day grace (task pending).
 GDPR| Art. 7 - Conditions for consent| Versioned consent doc hash; ConsentRecord captures version.
 SOC 2 Type II| CC6.1 - Logical access| SAML / OIDC SSO; RBAC; ClientMember role tiers.
 SOC 2 Type II| CC6.6 - Restricted access| Three-layer predicate-narrowing + RLS + scope check.
@@ -602,9 +602,9 @@ Isolation property fuzz in CI| planned - P4
 
 ## References
 
-- **FR catalogue** - PORTAL - Client portal. FRs 001..005.
+- **task catalogue** - PORTAL - Client portal. tasks 001..005.
 - **Module spec** - Client portal subjects + isolation invariants.
-- **Formal FR mapping** - (FR pending)..005 with verification methods.
+- **Formal task mapping** - (task pending)..005 with verification methods.
 - **Vietnam PDPL (Law 91/2025)** - Art. 13 (consent), 14 (DSAR).
 - **GDPR (EU 2016/679)** - Art. 7 (consent), 15 (access), 17 (erasure).
 - **SAML 2.0 Core (OASIS)** - assertion + protocol bindings.
@@ -623,7 +623,7 @@ Isolation property fuzz in CI| planned - P4
 - **Bigger picture (above):** 3 strategic roles + multi-tenant-within-multi-tenant diagram + 10-row auto-vs-human matrix.
 - **memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - PORTAL retrievals strictly filtered to sync_class=client-visible.
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - PORTAL at P3-start (current status P4 long-term).
-- **FR authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
+- **task authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md).
 
 ## Changelog
 

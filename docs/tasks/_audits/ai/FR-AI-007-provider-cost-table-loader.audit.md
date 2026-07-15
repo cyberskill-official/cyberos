@@ -29,7 +29,7 @@ Four residual issues prevent 10/10.
 - **status:** open
 
 #### Description
-§4 AC #11 says: *"Determinism property test — `proptest!` runs 500 random YAML fixtures (validity-mixed); each fixture's `init` MUST produce a stable `Result` across 10 reads."* But §5 only shows 8 named `#[tokio::test]` bodies and a benchmark. No proptest code. A code-gen agent reading the FR would skip the AC because there's no example to crib from.
+§4 AC #11 says: *"Determinism property test — `proptest!` runs 500 random YAML fixtures (validity-mixed); each fixture's `init` MUST produce a stable `Result` across 10 reads."* But §5 only shows 8 named `#[tokio::test]` bodies and a benchmark. No proptest code. A code-gen agent reading the task would skip the AC because there's no example to crib from.
 
 #### Suggested fix
 Add the proptest body to §5:
@@ -130,10 +130,10 @@ Also add §10 row: *"Watcher init on bare-filename path → watches CWD instead;
 - **status:** open
 
 #### Description
-task-audit skill §3.4 rule 11 says "Money MUST be stored as `BIGINT minor` with currency-aware decimals" for **stored** monetary state — i.e., journal rows, ledger entries, billable amounts. The cost-table here uses `rust_decimal::Decimal` for `input_per_1k_usd` / `output_per_1k_usd`. This is intentional and correct: cost-table rates are **rate constants** (price per 1000 tokens, often 7-9 decimal places), not stored monetary amounts. The output of `cost_table::lookup × tokens` IS a money amount and DOES get stored as BIGINT minor in TASK-AI-001/002's cost_ledger table. So the rule is observed at the right boundary — but the FR doesn't say so. A future reader could mistakenly "fix" this to BIGINT minor and break sub-cent rates.
+Task-audit skill §3.4 rule 11 says "Money MUST be stored as `BIGINT minor` with currency-aware decimals" for **stored** monetary state — i.e., journal rows, ledger entries, billable amounts. The cost-table here uses `rust_decimal::Decimal` for `input_per_1k_usd` / `output_per_1k_usd`. This is intentional and correct: cost-table rates are **rate constants** (price per 1000 tokens, often 7-9 decimal places), not stored monetary amounts. The output of `cost_table::lookup × tokens` IS a money amount and DOES get stored as BIGINT minor in TASK-AI-001/002's cost_ledger table. So the rule is observed at the right boundary — but the task doesn't say so. A future reader could mistakenly "fix" this to BIGINT minor and break sub-cent rates.
 
 #### Suggested fix
-Add §11 note: "Rates use `rust_decimal::Decimal` not BIGINT minor — rates are constants (7-9 dp), not stored money. The product rate×tokens is stored as BIGINT minor by TASK-AI-001 §3 `cost_ledger.estimated_cost_minor`. task-audit skill §3.4 rule 11 applies to the storage tier, satisfied at the cost_ledger boundary." Also cross-link from §2.
+Add §11 note: "Rates use `rust_decimal::Decimal` not BIGINT minor — rates are constants (7-9 dp), not stored money. The product rate×tokens is stored as BIGINT minor by TASK-AI-001 §3 `cost_ledger.estimated_cost_minor`. Task-audit skill §3.4 rule 11 applies to the storage tier, satisfied at the cost_ledger boundary." Also cross-link from §2.
 
 ### ISS-006 — task-audit skill §3.9 rule 27 (determinism) only partially covered by AC #11 proptest
 - **severity:** warning

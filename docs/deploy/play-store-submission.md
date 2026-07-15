@@ -20,7 +20,7 @@ manual upload that the API is not permitted to do for you (see the bottom of thi
    Play's UGC policy: an in-app way to **report** objectionable content, an in-app way to **block**
    another user, and a published content policy. CyberOS has none of these today. The workspace is
    invite-only and org-scoped, which makes the moderation load light, but the mechanisms still have
-   to exist. Raise this as an FR against the chat module before you submit. Declaring UGC without
+   to exist. Raise this as a task against the chat module before you submit. Declaring UGC without
    the controls gets you rejected; not declaring it gets you pulled later, which is worse.
 
 ## Set up your app

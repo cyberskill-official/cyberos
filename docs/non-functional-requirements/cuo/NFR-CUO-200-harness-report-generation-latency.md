@@ -47,7 +47,7 @@ Inspection: `cuo.core.harness.compute_report` is single-pass over `all_rows`; th
 
 **On-call action:** profile the run with `py-spy` against the failing chain; common cause is an unbounded `evidence_rows` list that the markdown formatter materialises into a single string. Mitigation: cap `evidence_row_ids` per breach to 10 (already done in `compute_report`); cap evidence-table rows in markdown to 20 (already done).
 
-**Escalation:** if profiling shows N²-style scaling, file a follow-up FR to introduce a row-index keyed by skill name (avoid the per-skill list comprehension over `rows`).
+**Escalation:** if profiling shows N²-style scaling, file a follow-up task to introduce a row-index keyed by skill name (avoid the per-skill list comprehension over `rows`).
 
 ## §6 — Notes
 

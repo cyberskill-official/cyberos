@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: edge-case-matrix-author
 description: >-
-  Generate a structured edge-case-matrix@1 for an FR before implementation. Enumerates: null/empty inputs, extreme bounds (off-by-one, integer overflow, time-zone DST, leap second, Unicode normalisation), malformed payloads (truncated, oversized, non-UTF-8, type-confused), concurrent race conditions (double-submit, double-acknowledge, cross-tenant cross-talk, RLS escape), security-class entries (auth bypass, injection, token replay), and degradation modes (downstream slow, downstream unreachable, partial write). One matrix row per category-and-trigger with a pointer to the test that will cover it. Used by chief-technology-officer/ship-tasks as step 5. Use when user asks to "draft a edge case matrix" or "create the edge case matrix". Do NOT use for "audit existing edge case matrix" (use edge-case-matrix-audit instead).
+  Generate a structured edge-case-matrix@1 for a task before implementation. Enumerates: null/empty inputs, extreme bounds (off-by-one, integer overflow, time-zone DST, leap second, Unicode normalisation), malformed payloads (truncated, oversized, non-UTF-8, type-confused), concurrent race conditions (double-submit, double-acknowledge, cross-tenant cross-talk, RLS escape), security-class entries (auth bypass, injection, token replay), and degradation modes (downstream slow, downstream unreachable, partial write). One matrix row per category-and-trigger with a pointer to the test that will cover it. Used by chief-technology-officer/ship-tasks as step 5. Use when user asks to "draft a edge case matrix" or "create the edge case matrix". Do NOT use for "audit existing edge case matrix" (use edge-case-matrix-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -31,10 +31,10 @@ outputs:
 
 # ── Triggers / blockers ──────────────────────────────────────────────
 triggers:
-  - any FR moving from `accepted` → `building`
+  - any task moving from `accepted` → `building`
   - workflow `chief-technology-officer/ship-tasks` step 5
 blockers:
-  - "FR acceptance criteria are ambiguous — escalate to chief-product-officer"
+  - "task acceptance criteria are ambiguous — escalate to chief-product-officer"
   - "no test framework declared in repo — must be resolved first"
 ---
 
@@ -44,7 +44,7 @@ blockers:
 
 Produce a single artefact — the `edge-case-matrix@1` — that captures every
 boundary condition the implementation must address, **before** any code is
-written. The matrix is the contract between the FR's acceptance criteria
+written. The matrix is the contract between the task's acceptance criteria
 and the test suite; the coverage-gate skill (which runs after
 implementation) reads the matrix to verify every row has a corresponding
 test.
@@ -53,7 +53,7 @@ test.
 
 ```yaml
 # edge-case-matrix@1
-task_id: FR-<MODULE>-<NNN>
+task_id: task-<MODULE>-<NNN>
 generated_at: <ISO-8601>
 total_rows: <int>
 rows:
@@ -71,7 +71,7 @@ rows:
 - SECURITY rows have a `planned_test` pointing at a real test file (not
   TBD).
 - DEGRADATION rows describe both detection and recovery.
-- `total_rows ≥ 8` for any FR rated `MUST` priority.
+- `total_rows ≥ 8` for any task rated `MUST` priority.
 
 ## 4. Chains to
 

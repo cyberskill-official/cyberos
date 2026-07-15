@@ -20,7 +20,7 @@ TASK-AUTH-002 expanded from 80 lines to ~700. Added 7 §1 clauses (#4 password c
 First-pass had no minimum length, no breach-list check, no character-class requirements. Resolved: §1 #4 specifies 12-128 chars + 3-of-4 character classes + no email-localpart + top-10K-breach-list check; `password.rs` shows the implementation; AC #7-#10 + §5 tests cover each path.
 
 ### ISS-002 — bcrypt cost 12 hardcoded; no config
-First-pass said "bcrypt (cost 12)" with no rationale or config knob. Resolved: §1 #3 cites DEC-115 + NIST SP 800-63B; §2 explains the 10-vs-12-vs-14 trade-off; cost change requires FR amendment.
+First-pass said "bcrypt (cost 12)" with no rationale or config knob. Resolved: §1 #3 cites DEC-115 + NIST SP 800-63B; §2 explains the 10-vs-12-vs-14 trade-off; cost change requires task amendment.
 
 ### ISS-003 — `password` plaintext in request — no transport-encryption requirement
 First-pass had no HTTPS requirement. Plaintext password over HTTP is credentials-on-the-wire. Resolved: §1 #11 HTTPS-required check via `X-Forwarded-Proto`; AC #11 + §10 row.
@@ -99,7 +99,7 @@ All 6 mechanical revisions applied. **Score = 10/10.**
 
 ### §10.7 — Slicing plan
 
-TASK-AUTH-002 has the highest gap count of any audited FR. Three slices recommended:
+TASK-AUTH-002 has the highest gap count of any audited task. Three slices recommended:
 
 **Slice 1 — security + observability foundations** (~250 LOC; estimated 1 working day):
 - G-001 email regex validation

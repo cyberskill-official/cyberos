@@ -11,7 +11,7 @@ Status: `reviewing`. **HALTED at HITL gate 1 (review acceptance).** Diff under r
 | 3 | Cask declares version/sha256/url/name/desc/homepage/app + livecheck | All present in `cyberos.rb` (ruby -c verified) | ✅ |
 | 4 | winget three-file set per Microsoft's schema | All three authored; ManifestVersion/switches hedges preserved in-file per spec §3's own caveat | ✅ |
 | 5 | No PR opened as a consequence of landing | Nothing submits; guard is standing CI, not policy prose | ✅ |
-| 6 | Flags gate PREPARATION only; no submission command under any state | AC #3 checks (a)+(b) proven: 0 matches repo-wide including this FR's own workflow (split-pattern idiom; comments deliberately avoid contiguous command strings) | ✅ |
+| 6 | Flags gate PREPARATION only; no submission command under any state | AC #3 checks (a)+(b) proven: 0 matches repo-wide including this task's own workflow (split-pattern idiom; comments deliberately avoid contiguous command strings) | ✅ |
 | 7 | Version/hash re-derivable, never hand-maintained | REAL render logic implemented + dry-run proven (fake artifact → correct version/URL/sha in both ecosystems, placeholders eliminated, post-render asserts fire) | ✅ |
 | 8 | Answer sheet: quality bars + PAT scopes | `package-manager-submission.md` — 8 Cask rows, 6 winget rows, shared ops rules | ✅ (`pending-human` rows for you) |
 | 9 | zap trash: verified before final | Real `brew uninstall --zap` test required + recorded in the answer sheet; candidates flagged in-file as unverified | ✅ (deferred-by-requirement, honestly marked) |

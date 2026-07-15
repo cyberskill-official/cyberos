@@ -1,8 +1,16 @@
 ---
 id: TASK-PROJ-008
 title: "memory audit row per issue mutation — chained to PROJ history_event table with field-level diff and chain_anchor verification"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: PROJ
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -31,7 +39,7 @@ new_files:
   - services/proj-sync/tests/history_event_test.rs
 modified_files:
   - services/proj-sync/src/scalar_handlers.rs        # call history::emit on every mutation
-  - services/proj-sync/src/lifecycle/transitions.rs  # already emits status_changed; this FR adds history_event link
+  - services/proj-sync/src/lifecycle/transitions.rs  # already emits status_changed; this task adds history_event link
 allowed_tools:
   - file_read: services/proj-sync/**
   - file_write: services/proj-sync/{src,tests,migrations}/**

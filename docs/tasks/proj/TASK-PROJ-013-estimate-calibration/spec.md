@@ -1,8 +1,16 @@
 ---
 id: TASK-PROJ-013
 title: "Estimate calibration snapshot — per-member per-task-class nightly batch with Bayesian update and operator-visible accuracy trend"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: PROJ
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -434,7 +442,7 @@ All resolved. Deferred:
 - Posterior std is weighted variance (Bessel correction not applied because weighted; effective_sample_size accounts for it).
 - Cell-aware new-hire (use team-average prior) is slice 4+; current implementation just waits for 3 data points.
 - The UI hint in §1 #8 lives in TASK-PROJ-001's issue create form: when assignee + task_class chosen, fetches latest snapshot and displays "recommended × <multiplier>".
-- Issue estimate units are points/hours depending on engagement convention; this FR treats them opaquely (just numbers; ratio is dimensionless).
+- Issue estimate units are points/hours depending on engagement convention; this task treats them opaquely (just numbers; ratio is dimensionless).
 - Outlier thresholds (5×, 0.2×) were chosen empirically from observed data; data-entry errors typically cluster at integer ratios (5, 10, 100).
 - CI is computed using normal approximation (mean ± 1.96 × std / sqrt(effective_n)); good enough for the sample sizes typical.
 - Per-engagement opt-out is rare; R&D engagements specifically. Most engagements should contribute.

@@ -48,7 +48,7 @@ Inspection: `cuo.core.stripe._project()` uses `sorted({...})` projections — or
 
 **Alert:** sev-2 — duplicate stripes in `open/` directly violates Stephen's "don't waste time on rework" rule.
 
-**On-call action:** (a) diff the two proposals to find the divergence; (b) consolidate manually (move one to `applied/`, leave the other in `open/`); (c) file a follow-up FR if the divergence reveals a `_project()` bug.
+**On-call action:** (a) diff the two proposals to find the divergence; (b) consolidate manually (move one to `applied/`, leave the other in `open/`); (c) file a follow-up task if the divergence reveals a `_project()` bug.
 
 **Escalation:** if collision rate is observed > 10⁻⁴ in practice (vs the theoretical 10⁻⁴ at 1000 proposals), widen `pattern_hash` to 12 chars (96 bits of entropy → collision bound 2⁻⁹⁶). This is a minor bump under TASK-CUO-202's classifier (cosmetic field width change).
 

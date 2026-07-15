@@ -1,8 +1,16 @@
 ---
 id: TASK-PLUGIN-004
 title: "Skill playbooks bundle — Anthropic-Agent-Skills SKILL.md files teaching hosts how to chain plugin tools correctly"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-19T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: PLUGIN
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P1
@@ -27,7 +35,7 @@ source_decisions:
   - DEC-2432 2026-05-19 — Every playbook MUST pass SKILL_BUNDLE_RUBRIC SKB-020..023 (description format + XML-free frontmatter) per TASK-SKILL-111/113
   - DEC-2433 2026-05-19 — Every playbook MUST carry acceptance/TRIGGER_TESTS.md with 4 positive + 4 negative fixtures per TASK-SKILL-112
   - DEC-2434 2026-05-19 — Playbooks are organised by use-case (orchestration, memory, skill discovery, governance) not by tool — single playbook MAY reference multiple tools
-  - DEC-2435 2026-05-19 — Playbook v1 set is 12; subsequent additions via FR-PLUGIN-004a/b/c successor FRs gated on usage data
+  - DEC-2435 2026-05-19 — Playbook v1 set is 12; subsequent additions via task-PLUGIN-004a/b/c successor tasks gated on usage data
 
 build_envelope:
   language: markdown
@@ -73,7 +81,7 @@ build_envelope:
   disallowed_tools:
     - bypass TASK-SKILL-111 description format (per DEC-2432)
     - skip TRIGGER_TESTS (per DEC-2433)
-    - extend playbook set without FR (per DEC-2435)
+    - extend playbook set without task (per DEC-2435)
 
 effort_hours: 6
 subtasks:
@@ -126,7 +134,7 @@ The PLUGIN module **MUST** ship 12 skill playbooks at `modules/plugin/skills/<na
 
 9. **MUST** be subject to lazy-load discipline — host routers load only the SKILL.md description, not the body, at fingerprinting time. Body content is fetched only when the skill is triggered. Authors MUST treat the description as the load-bearing copy.
 
-10. **MUST NOT** add new playbooks in v1.x.y without a successor FR (FR-PLUGIN-004a, etc.) per DEC-2435.
+10. **MUST NOT** add new playbooks in v1.x.y without a successor task (task-PLUGIN-004a, etc.) per DEC-2435.
 
 11. **MUST NOT** rename a playbook within v1.x.y — rename = breaking change requiring major bump (mirrors TASK-PLUGIN-003 clause 11).
 
@@ -139,7 +147,7 @@ The PLUGIN module **MUST** ship 12 skill playbooks at `modules/plugin/skills/<na
 **Why playbooks AND commands AND tools (clauses 1+)?** Three layers of host-facing surface:
 - **Tools** (TASK-PLUGIN-002) — *what* the plugin can do; called by the host's tool-calling subsystem.
 - **Commands** (TASK-PLUGIN-003) — *how the user invokes* it explicitly; a UI affordance.
-- **Playbooks** (this FR) — *when and why* the host model should pick a tool; injected into the model's prompt when the description matches the user's input.
+- **Playbooks** (this task) — *when and why* the host model should pick a tool; injected into the model's prompt when the description matches the user's input.
 
 Without playbooks, the host model sees tool names + brief descriptions but has no discipline to follow. Playbooks add the "use this tool ONLY when X" prose that prevents misuse.
 
@@ -392,7 +400,7 @@ All resolved.
 | TRIGGER_TESTS imbalanced (<4 pos/neg) | line count | test fails | Author adds fixtures |
 | Tool name typo in body | regex + registry check | test fails | Author corrects to SEP-986 name |
 | Body missing required section | grep check | test fails | Author adds section |
-| Playbook count != 12 | folder count | test fails | Author adds/removes per FR-PLUGIN-004a (additions need FR) |
+| Playbook count != 12 | folder count | test fails | Author adds/removes per task-PLUGIN-004a (additions need task) |
 | Two playbooks with same name | filesystem | install fails | inherent |
 | Playbook rename within v1 | git diff | manual review | Revert or bump major |
 | Worked example references missing tool | regex + registry | test fails | Author fixes |

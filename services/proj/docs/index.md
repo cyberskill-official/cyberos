@@ -107,7 +107,7 @@ A structured decomposition of PROJ's scope.
 | **5W - Why** | Why a separate tracker? | Existing trackers do not natively model the Engagement / rate-card / billable-time loop; sync-engine UX is rare outside Linear; and memory-linked work is a CyberOS-specific need that no off-the-shelf tracker provides. |
 | **1H - How** | How does it work? | Mutations: client-side optimistic apply -> JMAP-like RPC over WebSocket -> server validates -> server-canonical state broadcast to all connected SPAs -> conflicts resolved server-side and rebased into the client. CRDT: long-form fields (description, comment body) are Yjs documents; the rest is last-write-wins with a vector clock. |
 | **2C - Cost** | Cost budget? | P1: ~$80 / month for the SG-1 single-tenant pilot. 50-tenant: ~$340 / month (RDS + Redis + Fargate + S3). Per-issue write cost ~$0.0000004. |
-| **2C - Constraints** | Constraints? | (a) Issues ingested into memory Layer 3 - but body content gates as per (FR pending). (b) Per-task ACL - private engagements MUST NOT be visible to non-engaged Members. (c) Vietnamese localisation of status / UI strings - non-negotiable for P1 launch. |
+| **2C - Constraints** | Constraints? | (a) Issues ingested into memory Layer 3 - but body content gates as per (task pending). (b) Per-task ACL - private engagements MUST NOT be visible to non-engaged Members. (c) Vietnamese localisation of status / UI strings - non-negotiable for P1 launch. |
 | **5M - Materials** | Stack? | Rust 1.81, axum 0.7, sqlx, PostgreSQL 16 + PGroonga, Redis 7, S3 + KMS, Yjs (server-side ywasm + client TS), TypeScript SPA (React + Zustand), WebSocket fan-out via NATS JetStream, OpenTelemetry SDK. |
 | **5M - Methods** | Method choices? | Three-primitive model (Linear). Sync-engine UX (Linear). Yjs for CRDT long-form (because OT is too brittle at scale). Closed status enum + workflow overlay (not free-form labels). PGroonga for VN search. NATS JetStream for fan-out (not Postgres LISTEN/NOTIFY - won't scale past 1k WS connections). |
 | **5M - Machines** | Deployment? | Per-tenant Fargate axum binary handling WebSocket + REST. Postgres RDS Multi-AZ. Redis for hot-cache and WS rooms. NATS JetStream cluster (3 nodes P2+). S3 for attachments. |
@@ -393,13 +393,13 @@ graph TB
 ### The four primitives
 
 - **Issue (the atomic unit).** A discrete piece of work. Has title, description (Yjs), status, priority, assignee, estimate, labels, dependencies, parent issue, cycle binding. Comments are sub-resources.
-- **Cycle (1-2 week sprint).** A time-boxed bucket of Issues. Has start / end dates, target velocity, retro link. Incomplete Issues auto-roll to the next cycle if the team configures it (FR pending).
+- **Cycle (1-2 week sprint).** A time-boxed bucket of Issues. Has start / end dates, target velocity, retro link. Incomplete Issues auto-roll to the next cycle if the team configures it (task pending).
 - **Project (durable container).** A multi-cycle initiative. Has roadmap view, status (planned / active / paused / completed), client visibility flag (visible via PORTAL when the Engagement permits).
 - **Engagement (the contract).** The contract under which a Project is delivered for a Client. Carries the rate card, billable / non-billable rules, ACL. TIME -> INV pulls from here. Vietnamese-consultancy-specific.
 
 ### Internal components
 
-The `cyberos-proj` crate is building TASK-PROJ-001 slice 1 - Issue / Cycle / Engagement with RLS, the status FSM, and memory-audit emission. The table lists the module's planned file layout; rows marked (FR pending) are not yet built.
+The `cyberos-proj` crate is building TASK-PROJ-001 slice 1 - Issue / Cycle / Engagement with RLS, the status FSM, and memory-audit emission. The table lists the module's planned file layout; rows marked (task pending) are not yet built.
 
 | Component | Path (planned) | Responsibility |
 |---|---|---|
@@ -409,9 +409,9 @@ The `cyberos-proj` crate is building TASK-PROJ-001 slice 1 - Issue / Cycle / Eng
 | `blockers.rs` | services/proj/src/blockers.rs | Blocker detection from the comment stream. "blocked by", "waiting on", and dwell-time heuristics -> CUO Notify. |
 | `cycle_review.rs` | services/proj/src/cycle_review.rs | End-of-cycle review draft generator. Pulls from issue changelog + comments; CUO-stamped persona; the AM edits before sending. |
 | `estimate.rs` | services/proj/src/estimate.rs | Estimate vs actual hours per Member per task class. Surfaces calibration drift to the Member's dashboard. |
-| `memory_ingest.rs` | services/proj/src/memory_ingest.rs | Layer 3 ingestion of issues + comments (FR pending). Body content gates per ACL. |
-| `acl.rs` | services/proj/src/acl.rs | Per-task / per-engagement ACL. Private engagements not visible to non-engaged Members (FR pending). |
-| `autoroll.rs` | services/proj/src/autoroll.rs | End-of-cycle auto-roll. Incomplete issues move to the next cycle if team config permits (FR pending). |
+| `memory_ingest.rs` | services/proj/src/memory_ingest.rs | Layer 3 ingestion of issues + comments (task pending). Body content gates per ACL. |
+| `acl.rs` | services/proj/src/acl.rs | Per-task / per-engagement ACL. Private engagements not visible to non-engaged Members (task pending). |
+| `autoroll.rs` | services/proj/src/autoroll.rs | End-of-cycle auto-roll. Incomplete issues move to the next cycle if team config permits (task pending). |
 | `nats_fanout.rs` | services/proj/src/nats_fanout.rs | NATS JetStream publisher / subscriber for mutation fan-out. |
 | `search.rs` | services/proj/src/search.rs | PGroonga query builder; VN bigram tokenisation. |
 | `graphql.rs` | services/proj/src/graphql.rs | Federated subgraph; `@key(fields:"id")` on every primitive. |
@@ -852,7 +852,7 @@ stateDiagram-v2
 
 | Issue status at cycle close | Auto-roll behaviour | Configurable? |
 |---|---|---|
-| `todo` | Roll to next cycle | yes (FR pending) |
+| `todo` | Roll to next cycle | yes (task pending) |
 | `in-progress` | Roll to next cycle | yes |
 | `in-review` | Roll to next cycle | yes |
 | `done` | Stay in original cycle (velocity counts) | no |
@@ -861,9 +861,9 @@ stateDiagram-v2
 
 ## Functional requirements
 
-The CyberOS FR catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
+The CyberOS task catalogue is being rebuilt one feature at a time via the open [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) Agent Skill.
 
-Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.
+Previous task enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific tasks land here as they are re-authored.
 
 ## Non-functional requirements
 
@@ -871,18 +871,18 @@ NFRs that PROJ must satisfy. Cross-referenced at [nfr-catalog.html#proj](../../r
 
 | NFR ID | Concern | Target | Measurement |
 |---|---|---|---|
-| `N(FR pending)` | Issue update mutation | p95 <= 120 ms server-side | histogram via OBS |
-| `N(FR pending)` | Issue list view (50 issues) | p95 <= 250 ms (network + render) | SPA RUM |
-| `N(FR pending)` | WebSocket fan-out latency (mutation -> other clients) | p95 <= 200 ms within region | NATS lag metric |
-| `N(FR pending)` | Memory ingestion (issue create -> indexed) | p95 <= 5 s | memory ingest histogram |
-| `N(FR pending)` | Offline-edit merge correctness | >= 99.9% | property-based test (10k random workloads) |
-| `N(FR pending)` | Vietnamese search recall (50-query corpus) | >= 90% | quarterly eval |
-| `N(FR pending)` | Cycle-review draft acceptance rate | >= 60% by AM | SPA telemetry |
-| `N(FR pending)` | Service availability (28-day) | >= 99.9% | OBS SLO monitor |
-| `N(FR pending)` | Private-engagement isolation | = 0 cross-leak | CI test on every PR |
-| `N(FR pending)` | RLS coverage | 100% of tables | migration-CI gate |
-| `N(FR pending)` | Mutation durability after WS ack | = 0 dropped under crash | chaos test + memory walk |
-| `N(FR pending)` | WS connections per tenant per axum task | >= 5k sustained | k6 load test |
+| `N(task pending)` | Issue update mutation | p95 <= 120 ms server-side | histogram via OBS |
+| `N(task pending)` | Issue list view (50 issues) | p95 <= 250 ms (network + render) | SPA RUM |
+| `N(task pending)` | WebSocket fan-out latency (mutation -> other clients) | p95 <= 200 ms within region | NATS lag metric |
+| `N(task pending)` | Memory ingestion (issue create -> indexed) | p95 <= 5 s | memory ingest histogram |
+| `N(task pending)` | Offline-edit merge correctness | >= 99.9% | property-based test (10k random workloads) |
+| `N(task pending)` | Vietnamese search recall (50-query corpus) | >= 90% | quarterly eval |
+| `N(task pending)` | Cycle-review draft acceptance rate | >= 60% by AM | SPA telemetry |
+| `N(task pending)` | Service availability (28-day) | >= 99.9% | OBS SLO monitor |
+| `N(task pending)` | Private-engagement isolation | = 0 cross-leak | CI test on every PR |
+| `N(task pending)` | RLS coverage | 100% of tables | migration-CI gate |
+| `N(task pending)` | Mutation durability after WS ack | = 0 dropped under crash | chaos test + memory walk |
+| `N(task pending)` | WS connections per tenant per axum task | >= 5k sustained | k6 load test |
 
 ## Dependencies
 
@@ -1138,7 +1138,7 @@ $ cyberos-proj sync replay --tenant cyberskill --since 1h --filter "issue.update
 - **Memory-anchored decisions:** the "Memory-anchored decisions" section above - citation relations + decision-to-issues sequence + dual-write audit chain.
 - **Liquid-Glass UI exemplar:** the "Liquid-Glass UI surfaces" section above - 4 canonical surfaces + tokens.proj.css overlay + accessibility commitments.
 - **Memory auto-sync vision:** [MEMORY_AUTOSYNC_DESIGN.md §5 (capture surfaces)](../../docs/MEMORY_AUTOSYNC_DESIGN.md) - PROJ mutations are one of the four canonical capture inputs to the local memory.
-- **FR authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md) - PROJ FRs re-authored one-by-one via the `task-author` Agent Skill; "(FR pending)" markers are intentional placeholders.
+- **task authoring discipline:** [modules/skill/task-audit/AUTHORING_DISCIPLINE.md](https://github.com/cyberskill/cyberos/blob/main/modules/skill/task-audit/AUTHORING_DISCIPLINE.md) - PROJ tasks re-authored one-by-one via the `task-author` Agent Skill; "(task pending)" markers are intentional placeholders.
 - **Build-readiness audit:** `archive/2026-05-14/AUDIT_AND_PLAN.md` (archived; see `cyberos/CHANGELOG.md`) - PROJ placed at P1 mid in the P1 sequence (after the CHAT decommission gate clears at P0 exit).
 - **Research review:** `archive/2026-05-14/RESEARCH_REVIEW.md` (archived; see `cyberos/CHANGELOG.md`) - the reviewer flagged the consultancy-Engagement primitive as the highest-impact differentiator vs Linear/Jira; the orchestration-spine framing addresses §6 "what makes this not a feature?".
 - **Cross-module page links:** [memory.html](../memory/index.html), [skill.html](../skill/index.html), [auth.html](../auth/index.html), [chat.html](../chat/index.html), [time.html](../time/index.html), [inv.html](../inv/index.html), [crm.html](../crm/index.html), [kb.html](../kb/index.html), [rew.html](../rew/index.html), [okr.html](../okr/index.html), [portal.html](../portal/index.html)
@@ -1167,8 +1167,8 @@ PROJ is the work-tracking surface most CUO personas read from and write to. The 
 
 **Skill-bundle reads & writes:**
 
-- [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) + audit - drafts an FR Markdown that becomes a PROJ Issue on commit
-- [implementation-plan-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/implementation-plan-author) + audit - explodes an FR into a child-issue tree
+- [task-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/task-author) + audit - drafts a task Markdown that becomes a PROJ Issue on commit
+- [implementation-plan-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/implementation-plan-author) + audit - explodes a task into a child-issue tree
 - [project-plan-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/project-plan-author) + audit - per-program project plan written to PROJ Cycles
 - [stage-gate-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/stage-gate-author) + audit - per-cycle exit-gate adjudication
 - [retrospective-author](https://github.com/cyberskill/cyberos/tree/main/modules/skill/retrospective-author) + audit - end-of-cycle retro draft

@@ -87,7 +87,15 @@ class HookCapture:
             "ts_ns": self.ts_ns,
             "sync_class": "private",
             "pii_policy": "redact",
-            "source": "task-memory-109",
+            # FROZEN provenance tag. NOT renamed in the fr->task wave (2026-07-14).
+            # This value is DATA: it is written into the frontmatter of every memory
+            # file this hook creates, and the BRAIN store is deny-listed from the
+            # codemod. Renaming the emitter while the store keeps the old value would
+            # split the data on two vocabularies with no migration between them.
+            # It names the task that introduced the hook, the same way on-chain audit
+            # rows keep their original ids. Asserted by the SEALED held-out test
+            # modules/memory/tests/test_claude_code_hook.py:82 — do not "fix" that test.
+            "source": "fr-memory-109",
         }
         if self.tool is not None:
             fm["tool"] = self.tool

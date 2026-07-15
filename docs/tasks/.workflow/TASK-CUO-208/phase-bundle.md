@@ -30,6 +30,6 @@ RUBRIC §10 + TC-01/02); #5 ambiguity needs_human PASS (TC-03); #6 command doc u
 gone - grep); #7 mixed repos per-file PASS (TC-04). Additive-only on all four modified skill files.
 
 ## coverage gate (steps 21-29)
-Acceptance-driven FR (contracts, no executable code): TC-01..05 case table + trigger P5/N5 pairs =
+Acceptance-driven task (contracts, no executable code): TC-01..05 case table + trigger P5/N5 pairs =
 the §5 verification set. 7/7 cyberos-init suites green post-change (payload rebuilds carry the edited
 command doc + skill files; chain-coverage + pair-parity + t04-additive all pass).

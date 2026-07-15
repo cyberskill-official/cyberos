@@ -1,8 +1,16 @@
 ---
 id: TASK-CRM-001
 title: "CRM Account/Contact/Deal Postgres schema — closed entity primitives + custom pipelines + closed stage-template enum + RLS + deal status FSM"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: CRM
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P1
@@ -24,7 +32,7 @@ source_decisions:
   - DEC-340 (3 closed primitives: Account · Contact · Deal — adding a 4th primitive is an ADR)
   - DEC-341 (4 default pipeline shapes: sales · partner · inbound · outbound; tenants can create custom pipelines but must derive from one of the 4 shapes for the TASK-CRM-005 next-action skill to apply)
   - DEC-342 (pipeline stages are tenant-defined per pipeline; ordering is integer position; stages tagged with `is_won|is_lost|is_open` for win/loss/active classification)
-  - "DEC-343 (closed `account_type` placeholder enum at slice 1: `unknown` — full VN-specific enum ships in TASK-CRM-003; this FR declares the column with single value to keep migration forward-compatible)"
+  - "DEC-343 (closed `account_type` placeholder enum at slice 1: `unknown` — full VN-specific enum ships in TASK-CRM-003; this task declares the column with single value to keep migration forward-compatible)"
   - DEC-344 (closed `deal_status` enum at 4 values: open · won · lost · cancelled — independent from per-pipeline stage; `won` and `lost` are terminal states gated by a stage with matching `is_won`/`is_lost` flag)
   - DEC-345 (money fields stored as BIGINT minor units per task-audit skill rule 11; `currency CHAR(3)` ISO-4217 alongside; deal.amount_minor + deal.amount_currency)
   - DEC-346 (REVOKE UPDATE, DELETE on deal_status_history from cyberos_app — append-only enforced by SQL grant)
@@ -107,7 +115,7 @@ subtasks:
   - "0.8h: handlers/*.rs — 4 REST handler modules"
   - "1.7h: tests — 11 test files"
 
-risk_if_skipped: "CRM is the sales-pipeline spine upstream of PROJ; without the schema there's nothing to track customer engagement against. Every downstream CRM FR (TASK-CRM-002 activity feed, TASK-CRM-003 VN-specific account types, TASK-CRM-004 Convert-to-Engagement, TASK-CRM-005 CUO next-action skill, TASK-CRM-006 AI lead scoring, TASK-CRM-007 win/loss analysis) reads from these tables. Without DEC-344's closed deal_status FSM, status drift across handlers produces inconsistent forecasts. Without DEC-345's BIGINT-minor money storage, FLOAT rounding breaks invoice math downstream. Without DEC-346's append-only history, win/loss attribution becomes ambiguous (operators can re-write 'why did this deal win?'). Without DEC-348's many-to-many contact-account membership, the common case 'this person works at two parent companies' forces operators to create duplicate contacts. The 6h effort lands the foundational schema so every CRM FR can trust the invariants."
+risk_if_skipped: "CRM is the sales-pipeline spine upstream of PROJ; without the schema there's nothing to track customer engagement against. Every downstream CRM task (TASK-CRM-002 activity feed, TASK-CRM-003 VN-specific account types, TASK-CRM-004 Convert-to-Engagement, TASK-CRM-005 CUO next-action skill, TASK-CRM-006 AI lead scoring, TASK-CRM-007 win/loss analysis) reads from these tables. Without DEC-344's closed deal_status FSM, status drift across handlers produces inconsistent forecasts. Without DEC-345's BIGINT-minor money storage, FLOAT rounding breaks invoice math downstream. Without DEC-346's append-only history, win/loss attribution becomes ambiguous (operators can re-write 'why did this deal win?'). Without DEC-348's many-to-many contact-account membership, the common case 'this person works at two parent companies' forces operators to create duplicate contacts. The 6h effort lands the foundational schema so every CRM task can trust the invariants."
 ---
 
 ## §1 — Description (BCP-14 normative)

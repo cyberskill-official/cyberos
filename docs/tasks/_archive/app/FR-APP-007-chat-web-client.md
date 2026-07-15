@@ -25,7 +25,7 @@ depends_on: [TASK-CHAT-101, TASK-AUTH-110, TASK-APP-001]
 
 ## Summary
 
-CyberOS now has a first-party chat service (cyberos-chat, TASK-CHAT-101): channels, messages, threads, membership and roles, search, attachments, presence, typing, read receipts, and call signaling, all on the CyberOS identity, database, and audit chain. It has no human surface. This FR adds one: a self-contained chat web client in the same console family as TASK-APP-001, styled with the CyberSkill Design System (Umber and Ochre, "Turn Your Will Into Real"). It is a static page that consumes only the chat service's existing HTTP and websocket surface and adds no backend. It signs the operator in with a CyberOS access token (TASK-AUTH-110), lists the channels they belong to, opens a channel, shows history, and from there is live: incoming messages, presence, and typing arrive over the websocket; sending posts a message; reading marks the channel read. It deploys as a static file behind the same Caddy front as the rest of the console.
+CyberOS now has a first-party chat service (cyberos-chat, TASK-CHAT-101): channels, messages, threads, membership and roles, search, attachments, presence, typing, read receipts, and call signaling, all on the CyberOS identity, database, and audit chain. It has no human surface. This task adds one: a self-contained chat web client in the same console family as TASK-APP-001, styled with the CyberSkill Design System (Umber and Ochre, "Turn Your Will Into Real"). It is a static page that consumes only the chat service's existing HTTP and websocket surface and adds no backend. It signs the operator in with a CyberOS access token (TASK-AUTH-110), lists the channels they belong to, opens a channel, shows history, and from there is live: incoming messages, presence, and typing arrive over the websocket; sending posts a message; reading marks the channel read. It deploys as a static file behind the same Caddy front as the rest of the console.
 
 ## Problem
 
@@ -79,7 +79,7 @@ Primary metric - chat usable by a human end to end.
 Guardrail metric - new backend endpoints introduced by the client.
 - Definition: number of new server-side endpoints the client requires.
 - Baseline: 0. The client is specified as a pure front-end over the shipped chat surface.
-- Target: zero. The one service change this FR allows is the opt-in `CHAT_DEV_CORS` dev flag, which adds no route and ships off.
+- Target: zero. The one service change this task allows is the opt-in `CHAT_DEV_CORS` dev flag, which adds no route and ships off.
 - Measurement method: review the client's calls against the existing chat route list; any call to a route that does not already exist fails the check.
 - Source: the cyberos-chat router (`services/chat/src/lib.rs`) and code review of the page's fetch and websocket calls.
 
@@ -89,11 +89,11 @@ In scope: the self-contained CDS-styled page (`apps/console/chat.html`) with tok
 
 ### Out of scope
 
-- Any new backend API. The client is a front-end only; new data needs go to the chat service's FR.
+- Any new backend API. The client is a front-end only; new data needs go to the chat service's task.
 - Attachments upload UI and search UI. The server ships both (TASK-CHAT-101 slice 3); surfacing them in the client is a later additive slice.
-- Voice and video media. The server relays WebRTC signaling (slice 5); the media path, TURN, and a call UI are a separate FR and depend on deferred infrastructure.
+- Voice and video media. The server relays WebRTC signaling (slice 5); the media path, TURN, and a call UI are a separate task and depend on deferred infrastructure.
 - Threads, edit, and delete UI. The server supports them (slice 2); the first client slice is the flat channel transcript, with threads and edit added later.
-- A native or mobile client. This is a responsive web page; a native shell is a separate FR.
+- A native or mobile client. This is a responsive web page; a native shell is a separate task.
 
 ## Dependencies
 
@@ -104,6 +104,6 @@ In scope: the self-contained CDS-styled page (`apps/console/chat.html`) with tok
 
 ## AI Authorship Disclosure
 
-- Tools used: Claude (Cowork), authoring this FR and the client page from the shipped cyberos-chat surface and the TASK-APP-001 console pattern.
+- Tools used: Claude (Cowork), authoring this task and the client page from the shipped cyberos-chat surface and the TASK-APP-001 console pattern.
 - Scope: the specification and the first client slice (`apps/console/chat.html`), plus the opt-in `CHAT_DEV_CORS` flag on the chat service. No new chat endpoint is added.
 - Human review: Stephen reviews and approves before status moves past implementing, and does all git. The "front-end only, no new backend" boundary and the CDS-as-source-of-truth rule are operator-mandated; the paired audit (TASK-APP-007.audit.md) validates the format before merge.

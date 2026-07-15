@@ -1,8 +1,16 @@
 ---
 id: TASK-MEMORY-123
 title: "BRAIN ingestion + embedding + rolling summaries + hot/warm/cold tiering + access-scoped recall — the interaction-event log becomes a fast, persistent, citable brain (HNSW sub-second recall, summaries-first, audit chain stays system of record)"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-06-29T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: MEMORY
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P2
@@ -94,12 +102,12 @@ subtasks:
   - "0.5h: tests — brain_provenance_test (every hit cites a source audit row; summary cites covered range; chain_anchor mismatch drops hit)"
   - "0.5h: tests — brain_backfill_rebuild_test (rebuild index + summaries from Layer 1; derived state matches; model-version re-embed)"
   - "0.5h: tests — brain_residency_spend_test (embeddings routed through gateway; spend cap honoured; over-cap → pending, not a direct provider call)"
-risk_if_skipped: "Without this FR the captured interaction log (TASK-MEMORY-121/122) is an append-only pile no one can query at the speed an evaluation needs — TASK-EVAL-003 cannot retrieve evidence, so the whole BRAIN-evaluation plan stalls at Phase 2. Without summaries-first + tiering, recall latency and embedding cost grow linearly with the log forever; at company scale 'what did X commit to about project Y last quarter' becomes a full-table scan. Without the TASK-EVAL-001 access scope on recall, the brain leaks one employee's record into another's evaluation context (the closest vector neighbour is returned regardless of who may see it) — a privacy and trust breach under Vietnam's PDPD and the signed NDA. Without provenance pointers, an assessment cites 'the brain said so' instead of an exact, tamper-evident audit row, which is indefensible in a performance or IP dispute. Without residency + spend-cap routing, embeddings leave the residency region and the tenant's AI spend is unbounded."
+risk_if_skipped: "Without this task the captured interaction log (TASK-MEMORY-121/122) is an append-only pile no one can query at the speed an evaluation needs — TASK-EVAL-003 cannot retrieve evidence, so the whole BRAIN-evaluation plan stalls at Phase 2. Without summaries-first + tiering, recall latency and embedding cost grow linearly with the log forever; at company scale 'what did X commit to about project Y last quarter' becomes a full-table scan. Without the TASK-EVAL-001 access scope on recall, the brain leaks one employee's record into another's evaluation context (the closest vector neighbour is returned regardless of who may see it) — a privacy and trust breach under Vietnam's PDPD and the signed NDA. Without provenance pointers, an assessment cites 'the brain said so' instead of an exact, tamper-evident audit row, which is indefensible in a performance or IP dispute. Without residency + spend-cap routing, embeddings leave the residency region and the tenant's AI spend is unbounded."
 ---
 
 ## §1 — Description (BCP-14 normative)
 
-A long-lived Rust worker (`brain-ingest`, spawned in `services/memory` alongside the Layer-2 loop) **MUST** consume the TASK-MEMORY-121 interaction-event log produced by the TASK-MEMORY-122 emitters, embed each event into pgvector with an HNSW index, maintain rolling summaries, tier storage by age, and serve an access-scoped, provenance-carrying recall API. The l1_audit_log hash chain remains the system of record; everything this FR builds is a derived, rebuildable fast lens (DEC-2721). The contract:
+A long-lived Rust worker (`brain-ingest`, spawned in `services/memory` alongside the Layer-2 loop) **MUST** consume the TASK-MEMORY-121 interaction-event log produced by the TASK-MEMORY-122 emitters, embed each event into pgvector with an HNSW index, maintain rolling summaries, tier storage by age, and serve an access-scoped, provenance-carrying recall API. The l1_audit_log hash chain remains the system of record; everything this task builds is a derived, rebuildable fast lens (DEC-2721). The contract:
 
 1. **MUST** consume interaction events from the TASK-MEMORY-121 stream via a per-tenant cursor (`brain_ingest_cursor (tenant_id PK, last_source_seq, updated_at)`); persist the last-consumed `source_seq` to Postgres so a restart resumes without re-embedding or skipping. WIDE day-1 capture (DEC-2720): every event kind the emitters produce is ingested; no kind is special-cased out.
 2. **MUST** compute an embedding for every ingested event's body through the ai-gateway embeddings path (TASK-AI-019 model, TASK-AI-022 policy surface) — NEVER by calling a model provider directly (DEC-2723). The call MUST carry the tenant's residency pin and ZDR flag and MUST be charged against the tenant spend cap. Insert into `brain_event_embedding` with `(tenant_id, source_seq, audit_row_id, subject_id, channel_id, kind, ts_ns, embedding vector(1024), chain_anchor BYTEA, tier)`.
@@ -141,7 +149,7 @@ A long-lived Rust worker (`brain-ingest`, spawned in `services/memory` alongside
 
 ## §2 — Why this design (rationale for humans)
 
-**Why consume the event log rather than re-define capture (DEC-2720).** TASK-MEMORY-121 already fixes the interaction-event shape and TASK-MEMORY-122 already emits it; this FR is Phase 2 — the brain, not the capture. Re-defining the event here would fork the schema. The worker's only input is the TASK-MEMORY-121 stream, and it ingests every kind so the brain is complete by construction.
+**Why consume the event log rather than re-define capture (DEC-2720).** TASK-MEMORY-121 already fixes the interaction-event shape and TASK-MEMORY-122 already emits it; this task is Phase 2 — the brain, not the capture. Re-defining the event here would fork the schema. The worker's only input is the TASK-MEMORY-121 stream, and it ingests every kind so the brain is complete by construction.
 
 **Why the audit chain stays the system of record (DEC-2721, reuse DEC-070).** The vector index and summaries are lossy and model-dependent: an embedding is a projection, a summary is a paraphrase. Neither can be authoritative for a record that may inform pay or a legal dispute. Keeping `l1_audit_log` as the source of truth means the brain is always rebuildable from the tamper-evident chain, and a model swap or an index bug can never corrupt the record — it can only require a re-derive.
 
@@ -427,13 +435,13 @@ pub enum EmbedError {
 ```
 
 ```python
-# modules/ai-gateway/gateway/embeddings.py  (CONTRACT NOTE — no new behaviour in this FR)
+# modules/ai-gateway/gateway/embeddings.py  (CONTRACT NOTE — no new behaviour in this task)
 # The brain worker POSTs {tenant_id, input} here. This endpoint already:
 #   - resolves the tenant TenantPolicy (TASK-AI-022): region pin, ZDR, model alias, spend cap
 #   - routes to the TASK-AI-019 BGE-M3 embedding model in-region
 #   - charges the embedding against the tenant spend cap; returns 402 when exhausted
 #   - echoes embed_model_version so the worker can record it for re-embed migrations
-# This FR depends on that contract; it does not change it.
+# This task depends on that contract; it does not change it.
 ```
 
 ---
@@ -729,13 +737,13 @@ All resolved for slice 1. Deferred:
 - Recall verifies `chain_anchor` per hit exactly as TASK-MEMORY-101/108 do; the cost is justified because this evidence may inform pay or an IP dispute, where stale-or-tampered input is unacceptable.
 - The `brain-ingest` reserved actor writes subject summaries under an ACL-governed subtree (TASK-MEMORY-117); if it lacks write capability there, the write is rejected with a `memory.acl_denied` aux row and the summary is simply not materialised into that subtree — recall still works off the `brain_summary` table.
 - Importance (TASK-MEMORY-114) and recency (TASK-MEMORY-113) are SHOULD-weights so the brain ships before they are wired per tenant; recall degrades gracefully to raw cosine + RRF and improves automatically when the signals are present.
-- This FR `blocks` TASK-EVAL-003 (the evaluation engine), which consumes `POST /v1/memory/recall` for evidence retrieval and relies on the provenance pointers to cite events. It does NOT touch the rubric (Phase 3) or the human-review workflow (Phase 4) — those are separate FRs.
+- This task `blocks` TASK-EVAL-003 (the evaluation engine), which consumes `POST /v1/memory/recall` for evidence retrieval and relies on the provenance pointers to cite events. It does NOT touch the rubric (Phase 3) or the human-review workflow (Phase 4) — those are separate tasks.
 
 ---
 
 ## AI Risk Assessment
 
-- **EU AI Act risk class: limited.** This FR is retrieval infrastructure: it indexes, summarises, and serves an organisation's own interaction records back to authorised internal callers. It does not itself make or automate any decision about a person. It is not a prohibited practice and is not, on its own, a high-risk system under Annex III.
+- **EU AI Act risk class: limited.** This task is retrieval infrastructure: it indexes, summarises, and serves an organisation's own interaction records back to authorised internal callers. It does not itself make or automate any decision about a person. It is not a prohibited practice and is not, on its own, a high-risk system under Annex III.
 - **Where the risk actually concentrates.** The consequential decisions (performance, progression, pay, employment) live downstream in TASK-EVAL-003 + the human-review workflow, which keep a human in the loop (per the strategy note). The brain's contribution to that risk is bounded to two failure modes it must control: (a) leaking one person's record into another's context, and (b) feeding stale or tampered evidence into an assessment. Both are addressed normatively: §1 #8 (access exclude + deny-by-default), §1 #9/#16 (provenance + derivability), §1 #10/#11 (read-time chain verify + Layer-1-wins).
 - **Transparency + provenance.** Because every recall hit cites the exact audit row(s) it derived from, an assessment built on this brain is auditable and contestable: a reviewer or the affected employee can trace a claim back to the immutable, hash-chained source. This supports the disclosed-monitoring posture the strategy note requires and Vietnam's PDPD (13/2023/ND-CP) purpose-limitation and data-subject rights; it does not replace counsel's sign-off on the monitoring basis.
 - **Data minimisation + residency.** Summaries-first + tiering keep only what recall needs hot; embeddings and summaries are generated in-region under the tenant residency pin and ZDR via the ai-gateway, so employee-interaction text does not leave the residency boundary for embedding.

@@ -1,8 +1,16 @@
 ---
 id: TASK-MEMORY-110
 title: "memory capture daemon supervision — systemd + launchd units + /healthz + watchdog + crash-restart with exponential backoff + sweeper cron"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: memory
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -594,9 +602,9 @@ async fn main() -> cyberos_cli_exit::ExitCode {
 ## §7 — Dependencies
 
 - **TASK-MEMORY-105 (upstream)** — `cyberos doctor --only watched-folders` is the gate at boot AND the periodic check feeding `/healthz`.
-- **TASK-MEMORY-107 (upstream)** — capture daemon being supervised; this FR adds the supervision wrapper.
-- **TASK-MEMORY-108 (related)** — Cowork session capture FR is downstream consumer (its hook posts to this daemon's socket).
-- **TASK-MEMORY-109 (related)** — Claude Code hook capture; same socket consumer + the `/tmp/cyberos-memory-claude-traces/` cache this FR sweeps.
+- **TASK-MEMORY-107 (upstream)** — capture daemon being supervised; this task adds the supervision wrapper.
+- **TASK-MEMORY-108 (related)** — Cowork session capture task is downstream consumer (its hook posts to this daemon's socket).
+- **TASK-MEMORY-109 (related)** — Claude Code hook capture; same socket consumer + the `/tmp/cyberos-memory-claude-traces/` cache this task sweeps.
 - **TASK-OBS-001 (related)** — journal/log capture by the OTel collector reads our stdout/journalctl.
 - **TASK-OBS-007 (downstream)** — alert routing fires on 503-for-60s and 503-for-5min thresholds.
 

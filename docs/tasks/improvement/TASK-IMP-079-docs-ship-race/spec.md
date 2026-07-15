@@ -1,10 +1,17 @@
 ---
 id: TASK-IMP-079
 title: "Docs-ship race — shared staging dir between deploy.yml and release.yml docs jobs; fixed by a single ship script with per-run staging + flock'd swap"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: improvement
+created_at: 2026-07-13T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: improvement
-priority: MUST
+priority: p0
 status: done
-class: improvement
 verify: T
 phase: "Wave 6 - go-live (docs channel)"
 owner: Stephen Cheng (CTO)
@@ -51,7 +58,7 @@ risk_if_skipped: "Stephen's standard release sequence (git push, then the tag pu
 
 ## §9
 - The docs-absent window during the swap (sub-second, now serialized) is accepted, as it was pre-fix. A symlink-flip scheme (docs -> release dir, atomic `ln -sfn`) would remove it entirely; adopt only if a monitoring blip ever attributes to it.
-- deploy.yml's docs job and release.yml's docs job still both exist by design (TASK-DOCS-003: tags refresh the site too); deduplicating the JOBS is out of scope - this FR dedupes the shipper.
+- deploy.yml's docs job and release.yml's docs job still both exist by design (TASK-DOCS-003: tags refresh the site too); deduplicating the JOBS is out of scope - this task dedupes the shipper.
 
 ## §10
 | Failure | Detection | Recovery |

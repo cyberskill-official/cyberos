@@ -134,7 +134,7 @@ def _eval_workflow_signal(
         ]
         return value, evidence
     if sig_id == "repeat_phase_failure_above":
-        # Count distinct FRs that failed at the same phase across this workflow.
+        # Count distinct tasks that failed at the same phase across this workflow.
         phase_failures: dict[str, set] = {}
         for r in rows:
             extra = r.get("extra") or {}

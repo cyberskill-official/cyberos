@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Ship the ready_to_test FRs to done THROUGH the awh gate (ship-tasks step 28).
+# Ship the ready_to_test tasks to done THROUGH the awh gate (ship-tasks step 28).
 #
-#   bash scripts/awh_ship.sh TASK-MEMORY-116   # ship one FR (dry-run preview, then execute)
-#   bash scripts/awh_ship.sh --drain         # drain every remaining ready_to_test FR
+#   bash scripts/awh_ship.sh TASK-MEMORY-116   # ship one task (dry-run preview, then execute)
+#   bash scripts/awh_ship.sh --drain         # drain every remaining ready_to_test task
 #
 # It runs THIS BRANCH's cuo source directly (no install), so it always has the current flags
 # (--fr-id, and the now-required --output-dir). That sidesteps the `pip install -e modules/cuo`
@@ -45,16 +45,16 @@ echo "branch cuo source: $REPO/modules/cuo/cuo   |   output-dir: $OUT"
 echo
 
 if [ "${1:-}" = "--drain" ]; then
-  echo "== drain: ship every remaining ready_to_test FR through the gate =="
-  echo "   each FR flips testing->done ONLY if step-28 awh-gate reruns GREEN; RED routes it back."
+  echo "== drain: ship every remaining ready_to_test task through the gate =="
+  echo "   each task flips testing->done ONLY if step-28 awh-gate reruns GREEN; RED routes it back."
   exec "${CUO[@]}" drain "$WF" --invoker llm --output-dir "$OUT" --rework
 fi
 
-FR="${1:?usage: awh_ship.sh FR-XXXX-NNN   |   awh_ship.sh --drain}"
+task="${1:?usage: awh_ship.sh TASK-XXXX-NNN   |   awh_ship.sh --drain}"
 echo "== dry-run: preview the workflow skill chain =="
 "${CUO[@]}" dry-run "$WF" || true
 echo
-echo "== execute $FR through the gate =="
+echo "== execute $task through the gate =="
 echo "   step 28 (awh-gate) reruns the module suite vs the sealed baseline;"
 echo "   GREEN is required for the step-29 testing->done flip."
-exec "${CUO[@]}" execute "$WF" --fr-id "$FR" --invoker llm --output-dir "$OUT"
+exec "${CUO[@]}" execute "$WF" --fr-id "$task" --invoker llm --output-dir "$OUT"

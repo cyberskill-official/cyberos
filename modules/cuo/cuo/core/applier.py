@@ -100,15 +100,15 @@ def apply_step_side_effect(
 
 
 def _apply_backlog_state_update(step_result, hand_off: dict, run_span_id: str) -> None:
-    """Rewrite the FR's status cell in docs/tasks/BACKLOG.md.
+    """Rewrite the task's status cell in docs/tasks/BACKLOG.md.
 
     The LLM's output is expected to be a backlog-state-update@1 JSON document
     (see backlog-state-update-author/SKILL.md §2). We extract:
-      * task_id — the FR to update
+      * task_id — the task to update
       * new_status — must be one of the 10 enum values
       * transition_kind — forward | rework | off_ramp
 
-    Then locate the row in BACKLOG.md by FR ID, parse its pipe-separated
+    Then locate the row in BACKLOG.md by task ID, parse its pipe-separated
     columns, replace column 5 (Status) with the new value, and rewrite the
     file atomically (write-to-temp then rename).
 
@@ -157,11 +157,11 @@ def _apply_backlog_state_update(step_result, hand_off: dict, run_span_id: str) -
         )
         return
 
-    # Read BACKLOG.md, locate the FR row, rewrite column 5.
+    # Read BACKLOG.md, locate the task row, rewrite column 5.
     text = backlog_path.read_text(encoding="utf-8")
     lines = text.splitlines(keepends=True)
 
-    # Match FR-ID with optional bold markdown (**FR-ID**) or plain FR-ID
+    # Match TASK-ID with optional bold markdown (**TASK-ID**) or plain TASK-ID
     fr_escaped = re.escape(task_id)
     fr_row_pattern = re.compile(r"^\|\s*\**\s*" + fr_escaped + r"\s*\**\s*\|")
     target_idx = None
@@ -229,7 +229,7 @@ def _apply_backlog_state_update(step_result, hand_off: dict, run_span_id: str) -
 def _rewrite_status_cell(line: str, new_status: str) -> str:
     """Replace column 5 of a markdown table row with `new_status`.
 
-    Row shape: `| FR-X | Title | Pri | Status | Depends | Effort |`
+    Row shape: `| TASK-X | Title | Pri | Status | Depends | Effort |`
     We split on `|`, find column 5 (index 4 in a 0-indexed split since
     the leading `|` produces an empty string at index 0), replace its
     contents preserving the surrounding spaces.
@@ -446,15 +446,15 @@ def _find_test_root(start: Any) -> Path | None:
 
 
 # ---------------------------------------------------------------------------
-# task-audit applier — writes sibling .audit.md
+# Task-audit applier — writes sibling .audit.md
 # ---------------------------------------------------------------------------
 
 
 def _apply_task_audit(step_result, hand_off: dict, run_span_id: str) -> None:
-    """Write a sibling .audit.md for the audited FR from the LLM's JSON output.
+    """Write a sibling .audit.md for the audited task from the LLM's JSON output.
 
     The LLM produces structured audit output. We extract findings and write a
-    markdown audit report next to the FR spec file.  Handles three shapes:
+    markdown audit report next to the task spec file.  Handles three shapes:
 
     1. ``audit_body`` key present → write it verbatim as the .audit.md body.
     2. ``findings`` or ``issues`` list → render ISSUE blocks + SUMMARY.
@@ -470,7 +470,7 @@ def _apply_task_audit(step_result, hand_off: dict, run_span_id: str) -> None:
         )
         return
 
-    # Locate the FR spec file.
+    # Locate the task spec file.
     repo_root = _resolve_project_root(hand_off)
     output_dir = _get_output_dir(step_result)
     fr_path = _find_fr_file(task_id, repo_root, output_dir)
@@ -498,7 +498,7 @@ def _apply_task_audit(step_result, hand_off: dict, run_span_id: str) -> None:
     else:
         body = _render_audit_markdown(output, task_id, fr_path)
 
-    # Compute a simple hash of the FR for the frontmatter.
+    # Compute a simple hash of the task for the frontmatter.
     try:
         import hashlib
         fr_hash = hashlib.sha256(fr_path.read_text(encoding="utf-8").encode("utf-8")).hexdigest()
@@ -651,7 +651,7 @@ def _find_fr_file(
     repo_root: Path | None = None,
     output_dir: Path | None = None,
 ) -> Path | None:
-    """Locate the FR spec file by searching for ``*<task_id>*.md`` under docs/tasks/.
+    """Locate the task spec file by searching for ``*<task_id>*.md`` under docs/tasks/.
 
     Search order:
     1. Walk up from output_dir looking for docs/tasks/
@@ -907,7 +907,7 @@ def _apply_implementation_plan(step_result, hand_off: dict, run_span_id: str) ->
     3. Structured fields → render to template format
 
     The plan document goes to ``.cyberos/memory/store/impl-plans/<module>/impl-plan-<task_id>.md``
-    (sibling to the FR spec, or fallback to output_dir).
+    (sibling to the task spec, or fallback to output_dir).
     """
     output = _extract_output(step_result)
     if not output:
@@ -1255,7 +1255,7 @@ def _generate_stub(title: str, description: str, ext: str, task_id: str | None =
     Used when the LLM provides implementation steps with descriptions but no file content.
     The stub documents what needs to be implemented and serves as a starting point.
     """
-    fr_tag = f" (FR: {task_id})" if task_id else ""
+    fr_tag = f" (task: {task_id})" if task_id else ""
 
     if ext in (".ts", ".tsx", ".js", ".jsx"):
         return (
@@ -1373,8 +1373,8 @@ def _resolve_artifact_path(
 
     Strategy:
     1. If ``output.artifact_path`` or ``output.path`` exists, use it (relative to repo root).
-    2. If task_id is known, locate the FR file and place the artifact as a sibling
-       (unless ``force_default_dir`` is True, which skips FR-sibling placement).
+    2. If task_id is known, locate the task file and place the artifact as a sibling
+       (unless ``force_default_dir`` is True, which skips TASK-sibling placement).
     3. Fallback: <repo_root>/<default_dir>/<filename_prefix>-<task_id>.md
     """
     # Check explicit path in output.
@@ -1386,7 +1386,7 @@ def _resolve_artifact_path(
                 return repo_root / p
             return Path(p)
 
-    # Try to find the FR file and place as sibling (unless force_default_dir).
+    # Try to find the task file and place as sibling (unless force_default_dir).
     if task_id and not force_default_dir:
         cyberos_root = _resolve_project_root(hand_off)
         fr_path = _find_fr_file(task_id, cyberos_root, output_dir)
@@ -1412,7 +1412,7 @@ def _resolve_artifact_path(
 def _apply_code_review(step_result, hand_off: dict, run_span_id: str) -> None:
     """Write a code-review@1 markdown document from the LLM's output.
 
-    Target: sibling to the FR spec or ``docs/tasks/<module>/code-review-<task_id>.md``.
+    Target: sibling to the task spec or ``docs/tasks/<module>/code-review-<task_id>.md``.
     """
     output = _extract_output(step_result)
     if not output:
@@ -1537,7 +1537,7 @@ def _render_code_review_markdown(output: dict) -> str:
 def _apply_observability_injection(step_result, hand_off: dict, run_span_id: str) -> None:
     """Write an observability-injection@1 document from the LLM's output.
 
-    Target: sibling to the FR spec or ``docs/tasks/<module>/obs-injection-<task_id>.md``.
+    Target: sibling to the task spec or ``docs/tasks/<module>/obs-injection-<task_id>.md``.
     """
     output = _extract_output(step_result)
     if not output:

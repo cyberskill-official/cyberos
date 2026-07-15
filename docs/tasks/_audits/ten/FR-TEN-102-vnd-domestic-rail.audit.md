@@ -39,15 +39,15 @@ A tenant binds a VnPay token at signup; later an operator (manually via SQL) ins
 
 ### ISS-006 — RLS double-condition `tenant_id + residency='vn-1'` could regress
 
-§3.1 VND tables enforce `tenant_id = current_setting('auth.tenant_id') AND current_setting('auth.residency') = 'vn-1'`. If a future FR forgets the residency check in session setup, the AND degrades to single-condition. Defense-in-depth review: TASK-TEN-103 §1 #9 mandates setting `auth.residency` at every handler entry; the trip-wire on writes catches if missing. Marked resolved as documented + cross-FR enforced.
+§3.1 VND tables enforce `tenant_id = current_setting('auth.tenant_id') AND current_setting('auth.residency') = 'vn-1'`. If a future task forgets the residency check in session setup, the AND degrades to single-condition. Defense-in-depth review: TASK-TEN-103 §1 #9 mandates setting `auth.residency` at every handler entry; the trip-wire on writes catches if missing. Marked resolved as documented + cross-task enforced.
 
 ### ISS-007 — Billing_contact_phone capture point — TASK-TEN-101 modification scope
 
-§1 #23 says "TASK-TEN-101's `SignupCompleteReq` body extended with optional `billing_contact_phone`". But TASK-TEN-101 already shipped at 10/10 — modifying it post-hoc breaks the "no edits after accepted" convention. Resolved: `modified_files` build_envelope explicitly lists `services/ten/src/handlers/tenant_create.rs` — the field is captured at the TEN-001 provisioning layer, not in TASK-TEN-101's signup flow. TASK-TEN-101's signup orchestrator passes `billing_contact_email` to TEN-001; this FR extends the TEN-001 request shape to also accept phone for VND tenants. No retro-edit of TEN-101 needed.
+§1 #23 says "TASK-TEN-101's `SignupCompleteReq` body extended with optional `billing_contact_phone`". But TASK-TEN-101 already shipped at 10/10 — modifying it post-hoc breaks the "no edits after accepted" convention. Resolved: `modified_files` build_envelope explicitly lists `services/ten/src/handlers/tenant_create.rs` — the field is captured at the TEN-001 provisioning layer, not in TASK-TEN-101's signup flow. TASK-TEN-101's signup orchestrator passes `billing_contact_email` to TEN-001; this task extends the TEN-001 request shape to also accept phone for VND tenants. No retro-edit of TEN-101 needed.
 
 ## §3 — Resolution
 
-All 7 mechanical concerns addressed. Hóa đơn legal semantics correct per Decree 123 §10 + §13; async charge resolution bounded by timeout; PSP-key length adapter handles all 3 PSPs; cross-PSP confusion impossible by data model; cross-FR modification scope respects "accepted = frozen" rule.
+All 7 mechanical concerns addressed. Hóa đơn legal semantics correct per Decree 123 §10 + §13; async charge resolution bounded by timeout; PSP-key length adapter handles all 3 PSPs; cross-PSP confusion impossible by data model; cross-task modification scope respects "accepted = frozen" rule.
 
 The 1,210-line length is justified by 3 PSPs × full lifecycle (token-bind + charge + refund + revoke + webhook + signature verify) + Decree 123 hóa đơn machinery + dunning + cross-rail guards. Density comparable to TASK-TEN-003 (1,054) + TASK-TEN-103 (1,205); VND rail has more PSP-specific surface than Stripe's single-rail model.
 

@@ -35,7 +35,7 @@ LLM-rated importance is only as good as the prompt. Reinventing the prompt risks
 | FM-101..111 | ✓ | Title 130 chars (project convention exception per TASK-MEMORY-112 precedent) |
 | SEC-001..009 | ✓ | All required sections present |
 | COND-001/002 | n/a | client_visible: false |
-| COND-003 | n/a | eu_ai_act_risk_class: limited — note: this FR DOES call an LLM but the AI decision is bounded scoring (0..1 float) for an internal ranking signal, not a user-facing automated decision. Acceptable as `limited`. The conditional §AI Risk Assessment is technically NOT required since the class is `limited` not `high`; however the FR's §2 rationale paragraphs functionally serve the same role |
+| COND-003 | n/a | eu_ai_act_risk_class: limited — note: this task DOES call an LLM but the AI decision is bounded scoring (0..1 float) for an internal ranking signal, not a user-facing automated decision. Acceptable as `limited`. The conditional §AI Risk Assessment is technically NOT required since the class is `limited` not `high`; however the task's §2 rationale paragraphs functionally serve the same role |
 | COND-004 | ✓ | ai_authorship: assisted per BACKLOG metadata |
 | QA-001..009 | ✓ | Alternatives (mock vs anthropic) explicit; scope bounded |
 | SAFE-001..004 | n/a | No untrusted_content blocks |
@@ -56,7 +56,7 @@ All 4 mechanical concerns addressed during authoring. **Score = 10/10.**
 
 ### One governance observation
 
-`eu_ai_act_risk_class` could arguably be debated as `minimal` rather than `limited`. The FR uses `limited` because the scoring drives a downstream ranking signal that affects what memories an agent surfaces — that's a behaviour-shaping decision, not pure data transformation. If Stephen prefers `minimal`, the COND-003 conditional section disappears entirely. Either choice is defensible; the current choice is the more conservative.
+`eu_ai_act_risk_class` could arguably be debated as `minimal` rather than `limited`. The task uses `limited` because the scoring drives a downstream ranking signal that affects what memories an agent surfaces — that's a behaviour-shaping decision, not pure data transformation. If Stephen prefers `minimal`, the COND-003 conditional section disappears entirely. Either choice is defensible; the current choice is the more conservative.
 
 ---
 

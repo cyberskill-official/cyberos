@@ -2,8 +2,16 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future fr-catalog renderer) ─────
 id: TASK-AI-020
 title: "BGE-reranker-v2-m3 cross-encoder for KB reranking (per-region sidecar; CPU fallback)"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AI
-priority: COULD
+priority: p2
 status: done
 verify: T
 phase: P0
@@ -114,7 +122,7 @@ The AI Gateway service **MAY** offer a BGE-reranker-v2-m3 cross-encoder service 
 
 **Why BGE-reranker-v2-m3 specifically?** Three reasons aligning with TASK-AI-019: (1) Multilingual — handles Vi+En and Vi-only equally well; English-only rerankers underperform on VN content. (2) MIT license — safe to self-host commercially. (3) State-of-art on MTEB Vietnamese rerank benchmarks for open-source models < 1B params. The alternatives (Cohere rerank-3, Voyage rerank-1) are paid APIs at ~$0.001 per search.
 
-**Why the COULD priority?** KB module retrieves usably without rerank — just at lower precision. The user-visible degradation is "the answer is in position 5 instead of position 1" — annoying but not broken. If GPU capacity is constrained at slice 4 (TASK-AI-019 saturates the L4), this FR can defer to slice 5 without breaking anything. The COULD priority makes the descope decision explicit and reversible.
+**Why the COULD priority?** KB module retrieves usably without rerank — just at lower precision. The user-visible degradation is "the answer is in position 5 instead of position 1" — annoying but not broken. If GPU capacity is constrained at slice 4 (TASK-AI-019 saturates the L4), this task can defer to slice 5 without breaking anything. The COULD priority makes the descope decision explicit and reversible.
 
 **Why per-tenant fairness in the rerank batch buffer (§1 #14)?** Same reasoning as TASK-AI-019 §1 #5: multi-tenant fairness is a SaaS correctness requirement. A tenant submitting 50 concurrent rerank queries (e.g., bulk ingestion path) must not starve another tenant's interactive query.
 
@@ -132,7 +140,7 @@ The AI Gateway service **MAY** offer a BGE-reranker-v2-m3 cross-encoder service 
 
 **Why the audit row (§1 #5) reports `total_token_count` even though cost is zero?** Token counts are operational signals: the OBS dashboard tracks token volume per tenant for capacity planning. A tenant suddenly reranking 10x more tokens is a signal worth seeing (legitimate growth or a buggy ingestion loop). Recording the count even with zero cost preserves the operational visibility.
 
-**Why is this FR a sibling sidecar rather than the same sidecar as TASK-AI-019?** Architectural cleanliness: embedding and rerank are different model families with different memory footprints (BGE-M3 ~2GB; BGE-reranker-v2-m3 ~600MB). A single sidecar serving both would have larger startup time, larger memory pressure, and more complex health-check semantics. The two sidecars share an L4 GPU (the GPU has enough VRAM for both models) but run as independent processes. Operational independence (one can crash without affecting the other) is worth the small infrastructure overhead.
+**Why is this task a sibling sidecar rather than the same sidecar as TASK-AI-019?** Architectural cleanliness: embedding and rerank are different model families with different memory footprints (BGE-M3 ~2GB; BGE-reranker-v2-m3 ~600MB). A single sidecar serving both would have larger startup time, larger memory pressure, and more complex health-check semantics. The two sidecars share an L4 GPU (the GPU has enough VRAM for both models) but run as independent processes. Operational independence (one can crash without affecting the other) is worth the small infrastructure overhead.
 
 ---
 
@@ -579,7 +587,7 @@ pub mod canonical {
 
 ## §7 — Dependencies
 
-### Code dependencies (other FRs/modules)
+### Code dependencies (other tasks/modules)
 
 - **TASK-AI-019** — Shares L4 GPU pod (sidecars are sibling Docker services). Pattern (per-region URL, checksum, health, batch buffer, fairness, GPU detection) is mirrored.
 - **TASK-AI-006** — alias map registers `rerank.fast` resolving to `RerankProvider`.
@@ -692,7 +700,7 @@ let ranked: Vec<KbDoc> = if resp.skipped {
 
 ## §9 — Open questions
 
-All resolved at authoring time. Items deferred to later FRs:
+All resolved at authoring time. Items deferred to later tasks:
 
 - Cross-call batch merging (multiple `(query, candidates)` calls in one sidecar request) — slice 5+ if rerank throughput becomes the bottleneck.
 - Per-tenant relevance threshold (some tenants want score > 0.7 floor; others want any-score-included) — KB module concern, not gateway.
@@ -737,9 +745,9 @@ All resolved at authoring time. Items deferred to later FRs:
 - The shared L4 GPU between BGE-M3 (TASK-AI-019) and BGE-reranker-v2-m3 saves ~$360/mo vs separate GPUs. Both models comfortably fit in 24GB VRAM (~2.6GB combined). Operational independence (sibling sidecars, not single sidecar) is preserved.
 - Score normalisation (§1 #13) is a small but valuable feature. UI surfaces want `[0, 1]` (intuitive); observability surfaces want raw logits (more dynamic range at the upper end). Supporting both costs one bool field; restricting to one would force conversion in every consumer.
 - The token budget (§1 #7) catches pathological inputs BEFORE they trigger sidecar OOM. Without it, a request with 100 × 10K-token candidates would crash the sidecar; with it, the call returns a clear 413 with the budget breakdown.
-- The per-tenant fairness pattern (§1 #14) mirrors TASK-AI-019 §1 #5. The two FRs share the multi-tenancy concern; consistent handling across embedding + rerank is operational hygiene.
-- The amortised infra cost (~$360/mo for the L4) is shared between TASK-AI-019 (embedding) and TASK-AI-020 (rerank) — neither FR carries the full cost. TASK-AI-022's accounting will surface this as a single `ai_infra_amortised_usd_per_day` metric, attributed to the GPU pool not the individual sidecar.
-- Future expansion (slice 5+): per-domain finetuned rerankers (e.g., a legal-domain rerank tuned on Vietnamese legal corpora). The current FR ships the general-purpose reranker; domain variants would be additional sidecars with different model checksums.
+- The per-tenant fairness pattern (§1 #14) mirrors TASK-AI-019 §1 #5. The two tasks share the multi-tenancy concern; consistent handling across embedding + rerank is operational hygiene.
+- The amortised infra cost (~$360/mo for the L4) is shared between TASK-AI-019 (embedding) and TASK-AI-020 (rerank) — neither task carries the full cost. TASK-AI-022's accounting will surface this as a single `ai_infra_amortised_usd_per_day` metric, attributed to the GPU pool not the individual sidecar.
+- Future expansion (slice 5+): per-domain finetuned rerankers (e.g., a legal-domain rerank tuned on Vietnamese legal corpora). The current task ships the general-purpose reranker; domain variants would be additional sidecars with different model checksums.
 
 ---
 

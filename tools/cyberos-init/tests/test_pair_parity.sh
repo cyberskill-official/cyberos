@@ -22,7 +22,7 @@ t02_prose_gate_rule_ids() {                                            # AC 2
     r="$SKILLS/$n-audit/RUBRIC.md"
     grep -q "prose source" "$r" && grep -q "${want[$n]}" "$r" || bad="$bad $n"
   done
-  # spot gates from FR §1 #3 present as rules
+  # spot gates from task §1 #3 present as rules
   grep -q "TOTAL_ROWS_MIN" "$SKILLS/edge-case-matrix-audit/RUBRIC.md" \
     && grep -q "BRANCH_COVERAGE_MIN" "$SKILLS/observability-injection-audit/RUBRIC.md" \
     && grep -q "files_below_90pct" "$SKILLS/coverage-gate-audit/RUBRIC.md" \

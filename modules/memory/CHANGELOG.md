@@ -6,9 +6,9 @@ New `services/memory/desktop/` (19 files). Backend: Tauri 2 + plugin-shell + plu
 
 ---
 
-## 2026-05-19 — MEMORY Wave 2026-Q3 CLOSED — TASK-MEMORY-120 `cyberos history` shipped (final FR)
+## 2026-05-19 — MEMORY Wave 2026-Q3 CLOSED — TASK-MEMORY-120 `cyberos history` shipped (final task)
 
-Final FR of the MEMORY Improvement Wave 2026 Q3. No protocol amendment needed (pure read-only projection).
+Final task of the MEMORY Improvement Wave 2026 Q3. No protocol amendment needed (pure read-only projection).
 
 ### TASK-MEMORY-120 implementation
 
@@ -37,7 +37,7 @@ New: `modules/memory/tests/core/test_history.py` (302 lines, 18 test functions).
 
 ### Full MEMORY Wave 2026-Q3 — FINAL STATUS
 
-| FR | Spec | Impl | Tests | Amendment |
+| Task | Spec | Impl | Tests | Amendment |
 |---|---|---|---|---|
 | TASK-MEMORY-112 | episodic memory | ✅ | 351L | — |
 | TASK-MEMORY-113 | recency-decay recall | ✅ | 266L | — |
@@ -49,7 +49,7 @@ New: `modules/memory/tests/core/test_history.py` (302 lines, 18 test functions).
 | TASK-MEMORY-119 | session transcript ledger | ✅ | 308L | P22 §18 ✅ |
 | TASK-MEMORY-120 | `cyberos history` | ✅ | 302L | — |
 
-**All 9 FRs shipped end-to-end. All 4 protocol amendments APPROVED + merged into AGENTS.md. 2,784 lines of tests covering 110+ acceptance criteria. `cyberos verify` reports chain integrity across every test fixture.**
+**All 9 tasks shipped end-to-end. All 4 protocol amendments APPROVED + merged into AGENTS.md. 2,784 lines of tests covering 110+ acceptance criteria. `cyberos verify` reports chain integrity across every test fixture.**
 
 The MEMORY module now matches Anthropic's Memory+Dreaming primitive (per the source talk + Ramakrushna article that started this whole wave 2026-05-19 morning).
 
@@ -61,7 +61,7 @@ The MEMORY module now matches Anthropic's Memory+Dreaming primitive (per the sou
 
 Operator's fourth terse `APPROVE` of the session. New section §18 Session transcript ledger added to [`modules/memory/AGENTS.md`](modules/memory/AGENTS.md). Nine sub-clauses cover opt-in lifecycle, date-partitioned storage at start-date, closed classification enum (`confidential` default per Stephen 2026-05-19 / `restricted`), encryption envelope for restricted payloads, summary rows on the main chain, retention (default 30 days), in-session `extra.session_id` propagation, lifecycle invariants, and ACL applicability to the `sessions/` subtree.
 
-**Namespace conflict resolved**: the FR spec'd `cyberos session start|append|end`, but the existing P11 `cyberos session` subcommand handles multi-agent coordination — different product with the same verb. The implementation namespaces the transcript ledger under `cyberos transcript` (start / append / end / read / list / purge-expired). §18.1 documents the rename.
+**Namespace conflict resolved**: the task spec'd `cyberos session start|append|end`, but the existing P11 `cyberos session` subcommand handles multi-agent coordination — different product with the same verb. The implementation namespaces the transcript ledger under `cyberos transcript` (start / append / end / read / list / purge-expired). §18.1 documents the rename.
 
 Tracker entry in [`modules/memory/README.md`](modules/memory/README.md) Appendix D flipped P22 from "awaiting APPROVE" to **APPROVED 2026-05-19**.
 
@@ -97,7 +97,7 @@ CLI: new `cyberos transcript {start|append|end|read|list|purge-expired}` subcomm
 
 New: `modules/memory/tests/core/test_transcript.py` (308 lines, 19 test functions) covering: amendment-gate enforcement, lifecycle round-trip, date-partitioned storage, restricted encrypt/decrypt round-trip, closed classification enum (4 reject paths), append-without-start, append-after-end, double-end, two-active-rejection, `active_session_id()` helper, input validation (empty id, bad role, retention_days ≤ 0), `list_sessions`, purge dry-run + actual, session.purged payload shape, read-unknown-session-returns-empty.
 
-### Combined test surface (Waves 1+2+FR-117+FR-118+FR-119)
+### Combined test surface (Waves 1+2+TASK-117+TASK-118+TASK-119)
 
 8 test files at `modules/memory/tests/core/` = **2,482 lines, ~122 test functions across 95+ acceptance criteria**.
 
@@ -156,7 +156,7 @@ CLI: new `cyberos put-if <path> <body_file> --precondition <hex|none>` subcomman
 
 New: `modules/memory/tests/core/test_put_if.py` (349 lines, 19 test functions) covering: amendment-gate enforcement, shape validation (5 parametrized bad inputs), 4×2 precondition cross-product, HEAD-doesn't-advance-on-reject invariant, success-row-is-`op=put` invariant, aux-row payload shape, ACL-before-precondition ordering, PutIfResult shape, retry-loop pattern, sequential two-writer race smoke.
 
-### Combined test surface (Waves 1+2+FR-117+FR-118)
+### Combined test surface (Waves 1+2+TASK-117+TASK-118)
 
 7 test files at `modules/memory/tests/core/` = **2,174 lines, ~103 test functions across 80+ acceptance criteria**.
 
@@ -328,7 +328,7 @@ Result: memory page now reflects the expanded universal-protocol vision while pr
 
 ## 2026-05-14 — Research review ingested + memory auto-sync design v1.0 locked
 
-- Saved `docs/RESEARCH_REVIEW_2026_05_14.md` (315 lines, ~53 KB) — the pre-launch audit from Claude Chat's Research Mode. Aggregate 6.5/10; lowest substantive scores on Spec Quality (5) and GTM (5). 10 follow-up tasks created (#31–#40) covering: P0→P1 descope gate, AI Gateway → AUTH reorder, PDPL citation fixes, server-render NFR + Risk catalogs, first 50 FRs via task-author, 7 missing risks, TEN-billing P2 slice, UX defects, memory Layer 2 source-of-truth one-pager, memory decision memory.
+- Saved `docs/RESEARCH_REVIEW_2026_05_14.md` (315 lines, ~53 KB) — the pre-launch audit from Claude Chat's Research Mode. Aggregate 6.5/10; lowest substantive scores on Spec Quality (5) and GTM (5). 10 follow-up tasks created (#31–#40) covering: P0→P1 descope gate, AI Gateway → AUTH reorder, PDPL citation fixes, server-render NFR + Risk catalogs, first 50 tasks via task-author, 7 missing risks, TEN-billing P2 slice, UX defects, memory Layer 2 source-of-truth one-pager, memory decision memory.
 - **Wrote `docs/MEMORY_AUTOSYNC_DESIGN.md`** (~700 lines, design v1.0.0) — universal Personal memory + Lumi's memory architecture. Per Stephen's clarified vision: (1) Personal memory works on any folder, not just cyberos; (2) captures everything including discussions, not just file deliverables; (3) portable by folder copy across user's machines; (4) 2-way sync with Cloud memory aka Lumi's memory (also CUO's memory, CyberSkill's memory — same store, different names for different audiences); (5) multi-memory power + auto-evolve memory at scale.
   - 16 sections: vision, naming, three-layer architecture, Personal memory spec, Capture daemon spec, Lumi's memory spec, Sync orchestrator, Multi-memory auto-evolve, Dependency map, Privacy + governance, AGENTS.md Proposal P13 additions, CyberOS strategic implications, naming/branding decisions, 4-week sprint plan, 5 open questions, where-to-read-next.
   - Stage gating: **Stage 1 (Personal memory universal) + Stage 2 (capture daemon) are buildable today** — no external dep. Stages 3+ ride the P0+P2 critical path (AUTH + AI Gateway + TEN).

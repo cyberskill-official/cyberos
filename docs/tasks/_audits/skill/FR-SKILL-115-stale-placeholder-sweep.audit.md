@@ -41,7 +41,7 @@ Draft suggest.py picked the "most frequent" stage letter. Risk: cross-cutting sk
 
 All 7 mechanical concerns addressed during authoring. **Score = 10/10.** Ready to ship + transition `draft → accepted`.
 
-Cross-FR sanity check:
+Cross-task sanity check:
 - `depends_on: [TASK-SKILL-113]` — reciprocal; TASK-SKILL-113's `blocks:` list updated in the housekeeping commit that batches 111/112/113/114/115 reciprocity.
 - `related_tasks:` enumerates TASK-SKILL-111 / 112 / 113 / 114 — all four shipped this session.
 - `priority: SHOULD` reflects portability concern but non-blocking for CyberOS internal use (only hits when Phase-B transpilers ship).

@@ -28,7 +28,7 @@ Description-match routers (Claude Code) need trigger phrases. Resolved: §1 clau
 Bare frontmatter with no body produces useless help UI. Resolved: §1 clause 8 + body required sections (When to use / Required scopes / Side effects / Example); AC #16-17.
 
 ### ISS-005 — New commands invite scope creep
-Plugin authors will keep adding commands. Resolved: §1 clause 10 + DEC-2421 — exactly 4 in v1; new ones need successor FR; failure mode row 9.
+Plugin authors will keep adding commands. Resolved: §1 clause 10 + DEC-2421 — exactly 4 in v1; new ones need successor task; failure mode row 9.
 
 ### ISS-006 — Command renames break user scripts
 Slash commands appear in user automation. Renames silently break. Resolved: §1 clause 11 — rename requires major version bump; failure mode row 10.

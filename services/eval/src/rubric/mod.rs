@@ -9,7 +9,7 @@
 //! author and publish clause-cited criteria. The GENIE/Lumi draft path (DEC-2602) needs the AI gateway and
 //! is a deliberately separate, later slice - see [`draft_genie`] for the seam + TODO.
 //!
-//! Layout (mirrors the FR's `new_files`):
+//! Layout (mirrors the task's `new_files`):
 //! - [`model`] - the five closed enums, the row + draft structs, [`model::validate_item`], and `RubricError`.
 //! - [`authoring`] - the human create / add-item flow (validate -> insert -> audit).
 //! - [`versioning`] - `resolve_effective(at)`, the HITL `publish_version`, supersede-not-mutate.

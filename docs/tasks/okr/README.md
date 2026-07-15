@@ -1,10 +1,10 @@
 # OKR module — task index
 
-_Generated 2026-05-17 — 7 FRs, 42 engineering-hours total._
+_Generated 2026-05-17 — 7 tasks, 42 engineering-hours total._
 
-## FRs
+## tasks
 
-| FR | Priority | Slice | Hours | Title |
+| Task | Priority | Slice | Hours | Title |
 |---|---|---|---:|---|
 | [TASK-OKR-001](TASK-OKR-001-objective-kr-schema/spec.md) | MUST | 1 | 6 | OKR Objective × Key Result schema — Company → Team → Member cascade + quarterly Cycle + closed align |
 | [TASK-OKR-002](TASK-OKR-002-kr-types/spec.md) | MUST | 3 | 4 | OKR 3 KR types — hit_target + improvement + milestone with type-specific progress calculation |

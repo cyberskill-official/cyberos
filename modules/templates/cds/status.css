@@ -158,7 +158,7 @@ button.kpi { cursor: pointer; }
   line-height: 1; padding: 2px 4px; border-radius: var(--cs-radius-full); }
 .fchip button:hover { color: var(--cs-color-semantic-danger); }
 
-/* ---- FR chips and pills -------------------------------------------------- */
+/* ---- task chips and pills -------------------------------------------------- */
 .frs { display: flex; flex-wrap: wrap; gap: 5px; }
 .chip { font-family: var(--cs-font-family-mono); font-size: 11px; font-weight: 600;
   padding: 3px 7px; border-radius: 6px; cursor: pointer; display: inline-block;
@@ -179,9 +179,12 @@ button.kpi { cursor: pointer; }
 .pill.hold { background: var(--cs-color-semantic-danger); color: var(--cs-status-on-fill); }
 .pill.todo { background: var(--cs-color-border-default); color: var(--cs-color-text-accent); }
 .pri { font-size: 11px; font-weight: 700; letter-spacing: .04em; }
-.pri.MUST { color: var(--cs-color-semantic-danger); }
-.pri.SHOULD { color: var(--cs-color-semantic-warning); }
-.pri.COULD, .pri.MAY { color: var(--cs-color-text-muted); }
+/* task@1 FM-105 priority is p0..p3. The MoSCoW classes are kept so a repo that has
+   not run the 2026-07-14 schema migration still renders coloured priorities rather
+   than silently falling back to unstyled text. */
+.pri.p0, .pri.MUST { color: var(--cs-color-semantic-danger); }
+.pri.p1, .pri.SHOULD { color: var(--cs-color-semantic-warning); }
+.pri.p2, .pri.p3, .pri.COULD, .pri.MAY { color: var(--cs-color-text-muted); }
 
 /* ---- lens: board --------------------------------------------------------- */
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: var(--cs-space-4); }
@@ -277,7 +280,7 @@ td.t { max-width: 520px; }
   border-radius: var(--cs-radius-full); padding: 3px 9px; color: var(--cs-color-text-accent); }
 .toc a:hover { border-color: var(--cs-color-brand-ochre); }
 
-/* ---- the FR spec, rendered ----------------------------------------------- */
+/* ---- the task spec, rendered ----------------------------------------------- */
 .spec { font-size: 14px; }
 .spec h1, .spec h2 { font-size: 16px; margin: var(--cs-space-5) 0 var(--cs-space-2);
   padding-bottom: 4px; border-bottom: 1px solid var(--cs-color-border-default); }

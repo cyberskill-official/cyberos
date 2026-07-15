@@ -1,8 +1,16 @@
 ---
 id: TASK-PLUGIN-005
 title: "Plugin OAuth-PKCE authentication — install-time authorize + 24h refresh-token rotation against auth.cyberskill.world"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-19T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: PLUGIN
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P1
@@ -25,7 +33,7 @@ source_decisions:
   - DEC-2440 2026-05-19 — Plugin auth is OAuth 2.1 + RFC 7636 PKCE — only oauth-pkce in v1, no api-key or basic auth
   - DEC-2441 2026-05-19 — Access tokens are JWT RS256 audience-bound to "plugin:<plugin_id>"; lifetime 1 hour
   - DEC-2442 2026-05-19 — Refresh tokens are opaque, lifetime 24 hours (configurable via manifest.auth.refresh_interval_seconds, min 600)
-  - DEC-2443 2026-05-19 — Scopes follow "cyberos:<resource>:<action>" namespace — list locked in this FR
+  - DEC-2443 2026-05-19 — Scopes follow "cyberos:<resource>:<action>" namespace — list locked in this task
   - DEC-2444 2026-05-19 — Install-time consent screen MUST render declared capabilities translated to scope list — user grants explicit
   - DEC-2445 2026-05-19 — Token storage on host filesystem MUST use the host's secret store (Keychain on macOS, Credential Manager on Windows, Secret Service on Linux) — fall back to encrypted file with restrictive perms
   - DEC-2446 2026-05-19 — Token theft mitigation: refresh tokens are rotated on every use; tenant admin MAY revoke at AUTH service; revocation propagates within 60 seconds via cache TTL
@@ -158,7 +166,7 @@ The PLUGIN module **MUST** implement OAuth 2.1 + RFC 7636 PKCE authentication fo
 
 **Why rotation on every refresh (DEC-2446)?** Without rotation, a stolen refresh token grants attacker indefinite access. With rotation, the legitimate client and attacker diverge — second-use detection at AUTH service catches the duplicate (a feature of OAuth 2.1).
 
-**Why locked scope catalogue (DEC-2443, clause 5)?** Open scope strings invite naming creep ("cyberos.memory.write_v2", "memory:write", etc.). A locked catalogue with a clear pattern (`cyberos:<resource>:<action>`) ensures consistency across the manifest, the consent UI, and the bridge. Adding scopes requires this FR or a successor.
+**Why locked scope catalogue (DEC-2443, clause 5)?** Open scope strings invite naming creep ("cyberos.memory.write_v2", "memory:write", etc.). A locked catalogue with a clear pattern (`cyberos:<resource>:<action>`) ensures consistency across the manifest, the consent UI, and the bridge. Adding scopes requires this task or a successor.
 
 **Why mandatory consent screen (DEC-2444, clause 6)?** Without consent, users grant scopes implicitly by installing the plugin. The consent screen makes the grant explicit and reviewable. Strategy §2 ("audit-chained") requires consent be a separate audit event from install.
 
@@ -389,7 +397,7 @@ async fn revocation_propagates_within_60s() {
 
 - **Upstream:** TASK-PLUGIN-001 (manifest declares `auth.method: "oauth-pkce"`); TASK-AUTH-004 (JWT/JWKS issuance, shipped).
 - **Downstream:** TASK-PLUGIN-002 (bridge enforces scope on every call); TASK-PLUGIN-006 (audit rows for auth events); TASK-PLUGIN-007 (per-runtime adapter handles browser redirect to localhost callback).
-- **Cross-module:** TASK-MCP-004 (OAuth-PKCE protocol shape — clause 10 inherits); TASK-AUTH-007 (planned: OAuth-PKCE authorize/token endpoints at AUTH service — placeholder until that FR ships).
+- **Cross-module:** TASK-MCP-004 (OAuth-PKCE protocol shape — clause 10 inherits); TASK-AUTH-007 (planned: OAuth-PKCE authorize/token endpoints at AUTH service — placeholder until that task ships).
 
 ---
 
@@ -434,8 +442,8 @@ async fn revocation_propagates_within_60s() {
 All resolved.
 
 - ~~Should refresh token lifetime be a user-set per-grant value?~~ → No, per-plugin via manifest with min 600s per DEC-2442. Per-grant config is operational burden without security gain.
-- ~~Should the scope catalogue be extensible per plugin?~~ → No, locked in this FR per DEC-2443. New scopes require successor FR; keeps host-side consent UI predictable.
-- ~~Should we support OAuth Device Code grant for headless servers?~~ → Deferred to FR-PLUGIN-005a. v1 is interactive-browser only; headless servers run with pre-baked grants per operations playbook.
+- ~~Should the scope catalogue be extensible per plugin?~~ → No, locked in this task per DEC-2443. New scopes require successor task; keeps host-side consent UI predictable.
+- ~~Should we support OAuth Device Code grant for headless servers?~~ → Deferred to task-PLUGIN-005a. v1 is interactive-browser only; headless servers run with pre-baked grants per operations playbook.
 - ~~Should JWT verification cache JWKS per-key or whole-document?~~ → Whole-document with 5-minute TTL per clause 3. Per-key complicates rotation; whole-document is simpler with minor latency.
 
 ---
@@ -459,7 +467,7 @@ All resolved.
 | Time skew between bridge + AUTH | iat/exp drift | JWT rejected | Use NTP; AUTH MAY tolerate ±30s skew |
 | Plugin manifest auth.method != "oauth-pkce" | TASK-PLUGIN-001 schema check | install fails | Author fixes manifest |
 | Concurrent refresh race | DB unique constraint on (tenant,subject,plugin) | last writer wins; first refresh response stale | Bridge retries with stale → triggers re-auth |
-| Browser cannot open (headless server) | host UI absent | authorize fails | Use FR-PLUGIN-005a Device Code flow when shipped |
+| Browser cannot open (headless server) | host UI absent | authorize fails | Use task-PLUGIN-005a Device Code flow when shipped |
 
 ---
 
@@ -479,7 +487,7 @@ All resolved.
 
 - §11.7 **Why 60-second revocation TTL specifically.** Less than 60s = AUTH service request volume scales with cache instances (bad). More than 60s = revocation feels slow. 60s is the longest tolerable by typical admin response time.
 
-- §11.8 **Scope expansion path.** FR-PLUGIN-005a covers Device Code flow. FR-PLUGIN-005b covers richer scope semantics (per-resource grants like `cyberos:memory:write:project-X`). Both deferred to post-v1.
+- §11.8 **Scope expansion path.** task-PLUGIN-005a covers Device Code flow. Task-PLUGIN-005b covers richer scope semantics (per-resource grants like `cyberos:memory:write:project-X`). Both deferred to post-v1.
 
 - §11.9 **Why audience is `plugin:<id>` not `https://...`.** Compact, predictable string. URLs in audience strings create canonicalisation traps (trailing slash, http vs https). `plugin:<id>` is unambiguous.
 

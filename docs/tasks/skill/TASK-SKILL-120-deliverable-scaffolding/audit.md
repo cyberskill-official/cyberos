@@ -23,7 +23,7 @@ ISS-001 audit skill hard-cutting .audit.md would break pointed-at legacy files -
 
 - Implemented: command doc folder-scaffolding section, author SKILL.md layout + TEMPLATE.md pointer,
   audit SKILL.md dual resolution + dated transition window, ship workflow audit-path grammar,
-  init.sh next-steps example. t07-t10 asserts riding test_fr_layout.sh (10/10 total).
+  init.sh next-steps example. t07-t10 asserts riding test_task_layout.sh (10/10 total).
 - HITL: operator standing batch verdict recorded.
 
 Verdict unchanged: PASS, Score = 10/10.

@@ -1,8 +1,16 @@
 ---
 id: TASK-SKILL-104
 title: "Capability broker — subprocess sandbox enforces allowed_tools + allowed_memory_scopes at invoke time; tool-name allowlist + path-glob allowlist + timeout enforcement"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: SKILL
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -66,7 +74,7 @@ subtasks:
   - "1.5h: broker_e2e_test.rs — invoke skill that calls Read + MemoryEmit; verify enforce works; verify timeout"
   - "1.0h: enforce_test.rs — tool-not-allowed → reject; scope-not-allowed → reject; oversized request → reject"
   - "1.0h: timeout_test.rs — skill runs forever; SIGTERM at 0.9×; SIGKILL at 1.0×; broker.tool_calls_total{outcome='timeout'} increments"
-risk_if_skipped: "Without enforcement, TASK-SKILL-103's frontmatter is decorative — a skill declares `allowed_tools: [Read]` but can call Bash, MemoryEmit, anything. Every skill becomes a potential privilege-escalation vector. Without per-call path-glob check on memory, a skill granted `memories/projects/cyberos/**` can read `memories/people/founders/compensation`. Without timeout, a skill stuck in an infinite loop holds the broker's connection forever. Without sandbox sealing, the skill inherits broker's env vars (potentially containing the JWT signing key) — total auth compromise. This FR is load-bearing; skipping it makes the entire SKILL module security-theatre."
+risk_if_skipped: "Without enforcement, TASK-SKILL-103's frontmatter is decorative — a skill declares `allowed_tools: [Read]` but can call Bash, MemoryEmit, anything. Every skill becomes a potential privilege-escalation vector. Without per-call path-glob check on memory, a skill granted `memories/projects/cyberos/**` can read `memories/people/founders/compensation`. Without timeout, a skill stuck in an infinite loop holds the broker's connection forever. Without sandbox sealing, the skill inherits broker's env vars (potentially containing the JWT signing key) — total auth compromise. This task is load-bearing; skipping it makes the entire SKILL module security-theatre."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -566,7 +574,7 @@ async fn timeout_enforced() {
 
 ## §7 — Dependencies
 
-- **TASK-SKILL-103 (upstream)** — frontmatter parser; this FR consumes parsed `SkillFrontmatter`.
+- **TASK-SKILL-103 (upstream)** — frontmatter parser; this task consumes parsed `SkillFrontmatter`.
 - **TASK-SKILL-101 (upstream)** — memory integration (pre/post audit rows pattern).
 - **TASK-SKILL-102 (related)** — OCI registry distributes signed bundles; broker reads them.
 - **TASK-SKILL-105 (downstream)** — memory-capture@1 skill is the first canonical user.
@@ -653,7 +661,7 @@ All resolved. Deferred:
 - `unsafe { cmd.pre_exec(...) }` runs in the child between fork and exec; the closure must be async-signal-safe. `libc::close` and `libc::setrlimit` are; `tracing::info!` is NOT (allocates).
 - `RLIMIT_AS` (address space) is enforced by the kernel; `RLIMIT_DATA` is more granular but less reliably available across glibc versions.
 - `unshare(CLONE_NEWPID)` requires CAP_SYS_ADMIN on Linux; in non-root cyberos installs, we skip with a WARN. Per-skill PID isolation is defense-in-depth, not the primary boundary.
-- `globset` is used both at parse time (TASK-SKILL-103) and at enforce time (this FR); single glob library = consistent semantics.
+- `globset` is used both at parse time (TASK-SKILL-103) and at enforce time (this task); single glob library = consistent semantics.
 - The dispatcher's `check_args` pattern-matches on tool name. For MCP tools (dynamic at startup), the registry entry carries an `arg_validator` fn that performs the equivalent check.
 - The trace_id is per-invocation, not per-tool-call. Tool calls within one invocation share trace_id; cascade spans connect them.
 - `skill.tool_denied` rows include `attempted_args_hash` (NOT raw args) for the same reason TASK-MEMORY-109 hashes Claude Code tool args: args may contain secrets.

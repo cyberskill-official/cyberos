@@ -1,8 +1,16 @@
 ---
 id: TASK-INV-011
 title: "INV revenue recognition — ASC 606 / IFRS 15 compliant deferred-revenue rollforward with monthly journal entries + per-engagement schedule"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-17T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: INV
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P2
@@ -325,7 +333,7 @@ None blocking — ASC 606 + IFRS 15 patterns well-established.
 - §11.1 EOM tenant_timezone: midnight of first of next month; jitter ±30min to avoid thundering herd.
 - §11.2 pct_completion formula: `recognized = (hours_completed / hours_estimated) * total_contract`; cap at 100%.
 - §11.3 memory audit body: engagement_id (uuid), period_end (date), period_revenue SHA256 hashed.
-- §11.4 Snapshots are reportable via TASK-INV-009 + future financial-statements FR.
+- §11.4 Snapshots are reportable via TASK-INV-009 + future financial-statements task.
 - §11.5 Prior-period adjustment pattern: new snapshot with `description: 'PPA: <reason>'`; original snapshot unchanged.
 
 ---

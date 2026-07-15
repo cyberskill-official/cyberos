@@ -34,7 +34,7 @@
               review ─▶  todo      (significant rework)
 ```
 
-`done` is terminal — reopening requires the explicit reopen API (not in this FR). `deleted` is a reserved soft-delete state usable only by root-admin.
+`done` is terminal — reopening requires the explicit reopen API (not in this task). `deleted` is a reserved soft-delete state usable only by root-admin.
 
 Illegal transitions return `400 BAD_REQUEST` with body:
 

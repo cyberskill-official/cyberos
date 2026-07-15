@@ -1,7 +1,7 @@
 //! YAML schema for SKILL.md frontmatter — minimum-viable subset.
 //!
 //! Full 33-field shape per TASK-SKILL-103 §2.1 + v0.2.5 + v0.2.6. This phase-A
-//! scaffold carries only the fields the FR-111/113 validators touch; the rest
+//! scaffold carries only the fields the TASK-111/113 validators touch; the rest
 //! land when TASK-SKILL-104 (capability broker) ships.
 
 use serde::{Deserialize, Serialize};

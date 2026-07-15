@@ -38,7 +38,7 @@ gates.env. Backcompat: gates.env alone (no config.yaml) behaves exactly as befor
 
 ## coverage gate (steps 21-29)
 test_gate_autodetect.sh 8/8 (one per AC). Full regression: 7/7 cyberos-init suites, ship_manifest 8/8
-upstream. ECM rows covered per matrix above. tests_failed=0; bash-only FR (no python coverage basis).
+upstream. ECM rows covered per matrix above. tests_failed=0; bash-only task (no python coverage basis).
 
 ## HITL record
 Gate 1: pending below. Gate 2: per verdict.

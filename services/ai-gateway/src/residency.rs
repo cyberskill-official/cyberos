@@ -16,7 +16,7 @@ use crate::policy::Residency;
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-/// §1 #2: residency → acceptable-region mapping. Changes require FR amendment.
+/// §1 #2: residency → acceptable-region mapping. Changes require task amendment.
 static REGIONS_BY_RESIDENCY: LazyLock<HashMap<Residency, HashSet<&'static str>>> =
     LazyLock::new(|| {
         let mut m = HashMap::new();

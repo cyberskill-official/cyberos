@@ -2,13 +2,13 @@
 template: task@1
 id: TASK-CUO-202
 title: "Harness Wave 3 — auto-bump applier for low-risk refinement proposals"
+type: feature
 author: "@stephen"
 department: engineering
 status: done
 priority: p2
 created_at: 2026-05-19T20:30:00+07:00
 ai_authorship: assisted
-feature_type: internal_tooling
 eu_ai_act_risk_class: limited
 target_release: 2026-Q3
 client_visible: false
@@ -23,7 +23,7 @@ blocks: [TASK-CUO-203]
 
 ## Summary
 
-Wave 3 of the continuous-improvement harness: when a `refinement_proposal@1` is approved (via `cyberos-cuo proposal apply <id>`), this FR's applier reads the proposal's `## Suggested change` diff, classifies it as **minor** / **major** / **safety** per the target skill's `human_fine_tune.review_required` policy, and either:
+Wave 3 of the continuous-improvement harness: when a `refinement_proposal@1` is approved (via `cyberos-cuo proposal apply <id>`), this task's applier reads the proposal's `## Suggested change` diff, classifies it as **minor** / **major** / **safety** per the target skill's `human_fine_tune.review_required` policy, and either:
 
 - **Minor + `on_minor_bump: false`** → applies the diff automatically, bumps the skill's `metadata.version` patch number, writes `memory_refinement_entry` aux row + CHANGELOG entry.
 - **Major OR `on_*: true`** → queues under `<proposals_root>/pending_approval/<stripe>-<ts>.md`, requires explicit `cyberos-cuo proposal approve <id>` from Stephen before applying.

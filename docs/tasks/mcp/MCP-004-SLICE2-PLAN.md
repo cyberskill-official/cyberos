@@ -99,7 +99,7 @@ In `protocol/tools_call.rs`, before dispatch: decode the bearer JWT against the 
 `if !audience::audience_matches(&claims.aud, this_server_canonical_url) { 401 +
 audience::audience_mismatch_challenge(); emit mcp.oauth_audience_mismatch; }`. Also check `exp`,
 signature, and the `jti` revocation list (60s in-process cache, clause #24). This is the property the
-whole FR exists for - an access token only works at the resource server it was minted for.
+whole task exists for - an access token only works at the resource server it was minted for.
 
 ## Audit + scrubbing
 
@@ -121,4 +121,4 @@ DATABASE_URL=postgres://... cargo test -p cyberos-mcp-gateway --test 'oauth_*'
 ## Out of scope for slice 2
 
 `client_credentials` grant (deferred to TASK-MCP-007). ES256 (auth is RS256-only). TASK-MCP-005 Protected
-Resource Metadata is a separate FR that depends on this one.
+Resource Metadata is a separate task that depends on this one.

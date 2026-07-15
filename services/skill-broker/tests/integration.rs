@@ -2,7 +2,7 @@
 //!
 //! These tests run against the 13 SKB-* compliant skills shipped in
 //! 2026-05-19 (3 exemplars from TASK-SKILL-111+112+113 + 10 G-cohort
-//! backfills from TASK-SKILL-115 session). If any of these fails, FR-111/113
+//! backfills from TASK-SKILL-115 session). If any of these fails, TASK-111/113
 //! invariants have regressed.
 
 use std::path::PathBuf;
@@ -121,7 +121,7 @@ fn xml_bracket_in_other_field_rejected() {
         &skill_md,
         r#"---
 name: bracket-test
-description: Author a <FR> from a PRD. Use when user asks to "draft" or "audit".
+description: Author a <task> from a PRD. Use when user asks to "draft" or "audit".
 untrusted_inputs:
   wrap_in_marker: "untrusted_content"
   injection_scan: required

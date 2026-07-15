@@ -39,7 +39,7 @@ First-pass accepted any string. Resolved: §1 #5 + DEC-425 + closed enum (5 valu
 First-pass omitted anchor_chain_hash. Resolved: §1 #9 + DEC-433 + 64-hex required claim + memory sync validates against current head.
 
 ### ISS-008 — Token revocation impossible (no jti)
-First-pass omitted jti. Resolved: §1 #20 + RFC 7519 jti + UNIQUE constraint + FR-AUTH-2xx revocation API consumes.
+First-pass omitted jti. Resolved: §1 #20 + RFC 7519 jti + UNIQUE constraint + task-AUTH-2xx revocation API consumes.
 
 ### ISS-009 — sync_class_allowed could exceed tenant policy
 First-pass had no policy gate. Resolved: §1 #25 + per-tenant policy check at issuance; AC #21.

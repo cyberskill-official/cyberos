@@ -33,7 +33,7 @@ depends_on: [TASK-APP-001, TASK-AUTH-004, TASK-MCP-001, TASK-MCP-002, TASK-MCP-0
 
 ## Summary
 
-The operator console needs one panel that shows what the mcp-gateway is federating and whether it is healthy. This FR adds an MCP registry and tools panel to the same static single-page app as TASK-APP-001: the registered modules and their tool catalogs (the gateway's `tools/list`), per-module server health (the `healthy` / `degraded` / `unhealthy` / `deregistered` states from the TASK-MCP-002 server-status list), the OAuth clients and the Protected Resource Metadata (TASK-MCP-004 / TASK-MCP-005), and the federation registry as a whole. It is a panel inside the TASK-APP-001 shell, behind the same auth gate, built with the same CDS tokens and components; it defines no shell, no auth, and no design language of its own. It reads only mcp-gateway endpoints that already ship and adds no backend. The first release is read-oriented: an operator can see the federation and its health but cannot trigger a tool from here. Triggering a tool is a named follow-up in Out of scope, and if it is ever added, a destructive tool MUST route through the mcp-gateway confirmation gate (TASK-MCP-006), never around it.
+The operator console needs one panel that shows what the mcp-gateway is federating and whether it is healthy. This task adds an MCP registry and tools panel to the same static single-page app as TASK-APP-001: the registered modules and their tool catalogs (the gateway's `tools/list`), per-module server health (the `healthy` / `degraded` / `unhealthy` / `deregistered` states from the TASK-MCP-002 server-status list), the OAuth clients and the Protected Resource Metadata (TASK-MCP-004 / TASK-MCP-005), and the federation registry as a whole. It is a panel inside the TASK-APP-001 shell, behind the same auth gate, built with the same CDS tokens and components; it defines no shell, no auth, and no design language of its own. It reads only mcp-gateway endpoints that already ship and adds no backend. The first release is read-oriented: an operator can see the federation and its health but cannot trigger a tool from here. Triggering a tool is a named follow-up in Out of scope, and if it is ever added, a destructive tool MUST route through the mcp-gateway confirmation gate (TASK-MCP-006), never around it.
 
 ## Problem
 
@@ -49,7 +49,7 @@ A new panel set inside the TASK-APP-001 console, under `apps/console/src/`, buil
 
 1. The panel MUST be a screen set inside the TASK-APP-001 single-page app under `apps/console/src/`, reusing the TASK-APP-001 shell, navigation, and auth gate. It MUST NOT define its own application shell, its own sign-in, or its own design language; it is an addition to the existing console, not a second app.
 
-2. The panel MUST consume only mcp-gateway endpoints that already ship: the federated catalog via `tools/list` (TASK-MCP-001), the per-server status list `GET /v1/mcp/servers` and the aggregate `GET /mcp/healthz` (TASK-MCP-002 / TASK-MCP-001), and the OAuth Protected Resource Metadata at `/.well-known/oauth-protected-resource` and its per-module documents (TASK-MCP-005). It MUST NOT introduce a new backend endpoint or server-side component; a view that appears to need a new endpoint is a signal to extend the owning mcp-gateway FR, not to add a backend inside `app`.
+2. The panel MUST consume only mcp-gateway endpoints that already ship: the federated catalog via `tools/list` (TASK-MCP-001), the per-server status list `GET /v1/mcp/servers` and the aggregate `GET /mcp/healthz` (TASK-MCP-002 / TASK-MCP-001), and the OAuth Protected Resource Metadata at `/.well-known/oauth-protected-resource` and its per-module documents (TASK-MCP-005). It MUST NOT introduce a new backend endpoint or server-side component; a view that appears to need a new endpoint is a signal to extend the owning mcp-gateway task, not to add a backend inside `app`.
 
 3. The panel MUST use CDS design tokens and components for layout, colour, type, and controls, the same Umber and Ochre palette and component set TASK-APP-001 establishes. It MUST NOT introduce ad-hoc styling or a second design system.
 
@@ -75,7 +75,7 @@ A new panel set inside the TASK-APP-001 console, under `apps/console/src/`, buil
 
 Fold the MCP view into the TASK-APP-001 ai-gateway-health panel instead of giving it its own panel. Rejected because the two surfaces answer different questions about different services. The ai-gateway-health panel reads the ai-gateway (TASK-AI-022) for model serving health and usage; the MCP panel reads the mcp-gateway for federation, tool catalogs, per-module server health, and OAuth. Sharing one panel would force two unrelated service APIs and two unrelated mental models into one screen and blur which service an error belongs to. A separate panel in the same shell keeps each panel mapped to one service while reusing the console.
 
-Build a standalone MCP admin app outside the console with its own shell and auth. Rejected because it duplicates exactly what TASK-APP-001 already provides. The console already has the CDS shell, the auth gate, and the Caddy deployment path; a second app would re-implement sign-in and re-host the design system for one panel's worth of content, and split the operator surface across two front-ends. The founder's decision is one unified operator console with one panel per engine module, and this FR honours that by extending the existing SPA.
+Build a standalone MCP admin app outside the console with its own shell and auth. Rejected because it duplicates exactly what TASK-APP-001 already provides. The console already has the CDS shell, the auth gate, and the Caddy deployment path; a second app would re-implement sign-in and re-host the design system for one panel's worth of content, and split the operator surface across two front-ends. The founder's decision is one unified operator console with one panel per engine module, and this task honours that by extending the existing SPA.
 
 Let the panel trigger tools directly and add a small backend in `app` to broker the `tools/call` and the confirmation handshake. Rejected on two counts. First, tool-triggering is out of scope for the first release, which is read-only. Second, even when triggering is added, the mcp-gateway already owns `tools/call`, the SEP-986 routing, and the TASK-MCP-006 destructive-tool confirmation gate; brokering any of that through a new `app` backend would duplicate gateway logic and create a second path around the confirmation gate, which clause 8 forbids. A future trigger screen calls the gateway directly through its confirmation flow, with no new backend.
 
@@ -91,7 +91,7 @@ Primary metric - operator MCP-state checks done through the panel.
 Guardrail metric - new backend endpoints introduced by the panel.
 - Definition: number of new server-side endpoints or backend components the panel requires in order to function.
 - Baseline: 0. The panel is specified as a pure front-end over shipped mcp-gateway APIs.
-- Target: zero. Any view that appears to need a new endpoint is a signal to extend the owning mcp-gateway FR, not to add a backend inside `app`.
+- Target: zero. Any view that appears to need a new endpoint is a signal to extend the owning mcp-gateway task, not to add a backend inside `app`.
 - Measurement method: review of `apps/console/src/api/mcp.ts` against the existing mcp-gateway route list (`tools/list`, `/v1/mcp/servers`, `/mcp/healthz`, `/.well-known/oauth-protected-resource`); any call to a route that does not already exist fails the check.
 - Source: the existing mcp-gateway route definitions plus code review of the panel's API layer.
 
@@ -101,11 +101,11 @@ In scope: the MCP panel's four views (registry, tools, per-module health, OAuth 
 
 ### Out of scope
 
-- Any new backend API or server-side component. The panel is a front-end only over shipped mcp-gateway endpoints; new data needs go to the owning mcp-gateway FR.
+- Any new backend API or server-side component. The panel is a front-end only over shipped mcp-gateway endpoints; new data needs go to the owning mcp-gateway task.
 - Triggering a tool from the panel (`tools/call`). The first release is read-only; a trigger screen is a named follow-up, and per clause 8 any destructive tool it surfaces routes through the TASK-MCP-006 confirmation gate.
-- Registering, deregistering, or editing a module, and minting, editing, or revoking an OAuth client. Those are gateway mutations owned by the mcp-gateway FRs; a panel mutation screen, if ever wanted, is a later FR.
+- Registering, deregistering, or editing a module, and minting, editing, or revoking an OAuth client. Those are gateway mutations owned by the mcp-gateway tasks; a panel mutation screen, if ever wanted, is a later task.
 - Editing the per-tenant gating policy (TASK-MCP-006) or the gating-decision log. The panel reads federation and health state, not the gating policy admin surface.
-- The shell, the auth gate, and the CDS token definitions themselves. Those belong to TASK-APP-001; this FR consumes them and does not redefine them.
+- The shell, the auth gate, and the CDS token definitions themselves. Those belong to TASK-APP-001; this task consumes them and does not redefine them.
 
 ## Dependencies
 
@@ -121,6 +121,6 @@ In scope: the MCP panel's four views (registry, tools, per-module health, OAuth 
 
 ## AI Authorship Disclosure
 
-- Tools used: Claude (Cowork), authoring this FR from the founder's unified-admin-console decision (one console, one panel per engine module) and the existing mcp-gateway FRs (TASK-MCP-001 through TASK-MCP-006) plus TASK-APP-001.
-- Scope: full draft of this specification, including the normative clauses, the alternatives, the metrics, and the scope boundaries. No console code is written by this FR; the panel is built in a later session.
+- Tools used: Claude (Cowork), authoring this task from the founder's unified-admin-console decision (one console, one panel per engine module) and the existing mcp-gateway tasks (TASK-MCP-001 through TASK-MCP-006) plus TASK-APP-001.
+- Scope: full draft of this specification, including the normative clauses, the alternatives, the metrics, and the scope boundaries. No console code is written by this task; the panel is built in a later session.
 - Human review: Stephen reviews and approves before status moves past draft. The "panel in the same SPA, no new backend" boundary and the destructive-tool-routes-through-TASK-MCP-006 rule are operator-mandated, and the paired audit (TASK-APP-004.audit.md) validates the format before merge.

@@ -46,13 +46,13 @@ def detect_scope(project_root: str) -> str:
 
 
 def find_orphan_audits(project_root: str) -> list[dict]:
-    """For cyberos repos: find FR-*.audit.md files without matching FR-*.md, and vice versa."""
+    """For cyberos repos: find TASK-*.audit.md files without matching TASK-*.md, and vice versa."""
     fr_dir = os.path.join(project_root, "docs/tasks")
     if not os.path.isdir(fr_dir):
         return []
     orphans = []
     for dirpath, _, files in os.walk(fr_dir):
-        specs = {f[:-3] for f in files if f.startswith("FR-") and f.endswith(".md") and not f.endswith(".audit.md")}
+        specs = {f[:-3] for f in files if f.startswith("TASK-") and f.endswith(".md") and not f.endswith(".audit.md")}
         audits = {f[:-len(".audit.md")] for f in files if f.endswith(".audit.md")}
         for spec_stem in specs - audits:
             orphans.append({"kind": "spec_no_audit", "path": os.path.join(dirpath, f"{spec_stem}.md")})

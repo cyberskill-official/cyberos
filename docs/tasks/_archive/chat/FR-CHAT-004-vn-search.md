@@ -651,7 +651,7 @@ echo "✓ gate correctly exits 1 on low recall"
 - **TASK-CHAT-005 (related)** — memory bridge picks up `chat.search_query` audit rows.
 - **TASK-CHAT-001 (upstream)** — Mattermost fork patches load this plugin; `020-search-route.patch` routes search to plugin.
 - **TASK-CHAT-002 (upstream)** — JWT auth + `tenant_id` propagation in session props.
-- **TASK-AUTH-003** — RLS on `posts` table; this FR's queries inherit.
+- **TASK-AUTH-003** — RLS on `posts` table; this task's queries inherit.
 - **TASK-MEMORY-108** — sibling search surface (memory vector + graph search); CHAT search is text-only.
 - **TASK-OBS-003** — standardised histogram buckets reused.
 - **TASK-OBS-007** — alerts when `chat_search_recall` gauge < 0.80.

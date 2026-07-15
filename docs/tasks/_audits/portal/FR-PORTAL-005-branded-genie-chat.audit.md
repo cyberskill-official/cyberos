@@ -27,7 +27,7 @@ The spec lands the branded Genie chat for client-tenant portal on top of TASK-PO
 
 ### ISS-003 — Post-flight boundary check requires CUO sources metadata
 
-§8 requires CUO to return `retrieval_sources: [{type, id, tenant_id}]`. But TASK-CUO-101 shipped before this requirement. Resolved: §10 row "CUO emits sources without tenant_id metadata" covers — sev-1 audit + conservative reject (assume violation); §7 dependencies + modified_files explicitly note `services/cuo/src/orchestrator.rs` needs the sources schema. TASK-CUO-101 won't break; this FR's modification adds the new requirement.
+§8 requires CUO to return `retrieval_sources: [{type, id, tenant_id}]`. But TASK-CUO-101 shipped before this requirement. Resolved: §10 row "CUO emits sources without tenant_id metadata" covers — sev-1 audit + conservative reject (assume violation); §7 dependencies + modified_files explicitly note `services/cuo/src/orchestrator.rs` needs the sources schema. TASK-CUO-101 won't break; this task's modification adds the new requirement.
 
 ### ISS-004 — Hallucinated tenant-boundary leak in answer text
 
@@ -45,7 +45,7 @@ Long SSE connections through proxies (Cloudflare, AWS ALB) timeout if idle > 60s
 
 All 6 mechanical concerns addressed. JWT scope_grants size handling slice-2 acceptable + slice-3 wildcard roadmap; pre-flight heuristic non-blocking + post-flight authoritative; CUO retrieval-source schema dependency flagged with conservative fallback; hallucination risk acknowledged as slice-2 residual; SSE keepalive specified; conversation truncation logic documented.
 
-The 1,090-line length is justified by 2 migrations + scope_grants JWT extension + dual boundary checks + SSE streaming + brand integration + SCIM cascade + 22 failure modes covering distributed-system + LLM-specific pitfalls. Density matches peer PORTAL FRs.
+The 1,090-line length is justified by 2 migrations + scope_grants JWT extension + dual boundary checks + SSE streaming + brand integration + SCIM cascade + 22 failure modes covering distributed-system + LLM-specific pitfalls. Density matches peer PORTAL tasks.
 
 **Score = 10/10.**
 

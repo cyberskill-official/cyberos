@@ -163,7 +163,7 @@ mod tests {
     fn unquoted_brackets_flagged() {
         assert!(has_unquoted_angle_bracket("wrap_in: <untrusted_content/>"));
         assert!(has_unquoted_angle_bracket(
-            "description: Author <FR> from PRD"
+            "description: Author <task> from PRD"
         ));
     }
 }

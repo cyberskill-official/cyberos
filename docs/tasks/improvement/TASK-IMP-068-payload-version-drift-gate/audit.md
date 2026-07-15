@@ -37,7 +37,7 @@ First cut hung the local guard on the pre-commit framework; the repo's core.hook
 
 ## §3 - Resolution
 
-All six findings addressed in the FR body as cited. Clause set is closed, ACs are individually falsifiable, failure modes name their mitigations. **Score = 10/10.**
+All six findings addressed in the task body as cited. Clause set is closed, ACs are individually falsifiable, failure modes name their mitigations. **Score = 10/10.**
 
 *End of TASK-IMP-068 audit.*
 

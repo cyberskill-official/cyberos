@@ -8,7 +8,7 @@
 //!
 //! ## Why this lives here and not in `services/eval`
 //!
-//! The FR is explicit (DEC-2714 + §1 #16, and the TASK-MEMORY-121 consent_gate doc): AUTH and CHAT must NOT
+//! The task is explicit (DEC-2714 + §1 #16, and the TASK-MEMORY-121 consent_gate doc): AUTH and CHAT must NOT
 //! depend on the whole eval binary just to ask "may I capture this subject?". So this gate queries the two
 //! governance TABLES directly — `monitoring_notice` and `subject_acknowledgment` (owned by
 //! `services/eval/migrations/0001_governance.sql`) — over whatever Postgres pool the caller passes. It is

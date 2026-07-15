@@ -1,8 +1,16 @@
 ---
 id: TASK-AUTH-101
 title: "AUTH 22-role RBAC catalogue — closed enum + permission matrix + role-assignment REST + JWT claims + ADR gate + stub→full migration"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AUTH
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P3
@@ -24,7 +32,7 @@ source_decisions:
   - DEC-122 (permission matrix is roles × resources × actions; never ABAC)
   - DEC-123 (5-role stub from TASK-AUTH-002 §1 #5 is strict prefix of the 22-role full catalogue — same role names, additive only)
   - DEC-124 (role + scope-grant layered: role gives base privilege; scope-grant narrows to specific resources)
-  - DEC-125 (existing TASK-AUTH-004 access tokens remain valid for a 30-day grace window after this FR ships — see TASK-AUTH-109 for the migration enforcer)
+  - DEC-125 (existing TASK-AUTH-004 access tokens remain valid for a 30-day grace window after this task ships — see TASK-AUTH-109 for the migration enforcer)
   - DEC-126 (role checks via in-memory `RoleMatrix` snapshot, refreshed every 60s; never per-request DB lookup)
   - DEC-127 (root-admin and external roles `client-portal-user / auditor / regulator / billing-system` MUST NOT be self-assignable — only granted via dedicated REST endpoints with elevated approval)
   - DEC-128 (founder role REQUIRES WebAuthn enrolment per TASK-AUTH-105; assignment endpoint refuses if MFA factor missing)
@@ -57,7 +65,7 @@ new_files:
   - services/auth/tests/rbac_adr_gate_test.rs                        # role + scope-grant intersection; revoked grant blocks access
   - services/auth/tests/rbac_adr_gate_test.rs              # founder assignment fails without WebAuthn factor
   - services/auth/tests/rbac_reserved_role_self_assign_test.rs          # root-admin / auditor / regulator / billing-system / client-portal-user — refuse self-assign
-  - services/auth/adr/ADR-101-rbac-22-role-catalogue.md                 # the catalogue's own ADR (this FR ships the ADR)
+  - services/auth/adr/ADR-101-rbac-22-role-catalogue.md                 # the catalogue's own ADR (this task ships the ADR)
 modified_files:
   - services/auth/src/admin/subjects.rs                                 # role allow-list switches from {tenant-admin, tenant-member} to full RoleMatrix
   - services/auth/src/admin/password.rs                                 # founder role triggers MFA-required side-condition
@@ -102,7 +110,7 @@ subtasks:
   - "0.5h: subjects.rs + rls/templates.rs — switch role allow-list to RoleMatrix; RLS consults membership for sensitive tables"
   - "2.5h: Tests — 11 test files (catalogue / matrix / check / assignment / jwt-claim / stub-migration / adr-gate / scope-grant / founder-webauthn / reserved-role-self-assign / perf)"
 
-risk_if_skipped: "Every downstream module that needs more than a 2-role gate (tenant-admin/tenant-member) is blocked. DOC, KB, HR, REW, CRM, OKR all assume specialist roles (cfo, dpo, chro, cseco, founder, auditor) for sensitive operations. Without this FR, those modules ship with either (a) ad-hoc string-typed role checks that drift across services, or (b) over-broad permissions that grant tenant-admin too much power. TASK-AUTH-108 (Lumi tenant-identity JWT) needs agent-persona to be in the production catalogue; TASK-AUTH-109 (stub→full migration) needs this FR's matrix to point to. Compliance auditors (ISO 27001 A.5.18 + SOC 2 CC6.1) reject ad-hoc role checks — they expect a documented, ADR-gated catalogue with traceable assignment and revocation. Without ADR-101, the next time someone adds 'super-admin' to AUTH-005's allow-list there is no documented stop-sign — and the 22-role boundary is the only thing preventing the slide into ABAC complexity."
+risk_if_skipped: "Every downstream module that needs more than a 2-role gate (tenant-admin/tenant-member) is blocked. DOC, KB, HR, REW, CRM, OKR all assume specialist roles (cfo, dpo, chro, cseco, founder, auditor) for sensitive operations. Without this task, those modules ship with either (a) ad-hoc string-typed role checks that drift across services, or (b) over-broad permissions that grant tenant-admin too much power. TASK-AUTH-108 (Lumi tenant-identity JWT) needs agent-persona to be in the production catalogue; TASK-AUTH-109 (stub→full migration) needs this task's matrix to point to. Compliance auditors (ISO 27001 A.5.18 + SOC 2 CC6.1) reject ad-hoc role checks — they expect a documented, ADR-gated catalogue with traceable assignment and revocation. Without ADR-101, the next time someone adds 'super-admin' to AUTH-005's allow-list there is no documented stop-sign — and the 22-role boundary is the only thing preventing the slide into ABAC complexity."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -141,7 +149,7 @@ The AUTH service **MUST** ship the closed 22-role RBAC catalogue, the permission
 
 10. **MUST** consult the `RoleMatrix` from RLS via the `auth.has_role(role_name)` SQL function (created in migration `0005_roles_permissions.sql`). The function reads the per-session GUC `auth.roles` (set by the JWT middleware on every connection). RLS policies for sensitive tables (`subjects`, `audit_row`, `billing_*`, `hr_cccd_photo`, `rew_payslip`) **MUST** include a `auth.has_role(<role>)` check in addition to the existing tenant-id RLS.
 
-11. **MUST** classify the following 5 roles as **reserved** (`Role::is_reserved() == true`): `root-admin`, `client-portal-user`, `auditor`, `regulator`, `billing-system`. Reserved roles **MUST NOT** be assignable via the standard `POST /v1/admin/subjects/{id}/roles` endpoint. Attempts return `403 FORBIDDEN {"error":"reserved_role","role":"<x>","required_endpoint":"<path or 'not yet specified'>"}`. The dedicated reserved-role-assignment endpoints land in slice 2 (out of scope for this FR; see §9).
+11. **MUST** classify the following 5 roles as **reserved** (`Role::is_reserved() == true`): `root-admin`, `client-portal-user`, `auditor`, `regulator`, `billing-system`. Reserved roles **MUST NOT** be assignable via the standard `POST /v1/admin/subjects/{id}/roles` endpoint. Attempts return `403 FORBIDDEN {"error":"reserved_role","role":"<x>","required_endpoint":"<path or 'not yet specified'>"}`. The dedicated reserved-role-assignment endpoints land in slice 2 (out of scope for this task; see §9).
 
 12. **MUST** classify `founder` as **WebAuthn-required** (`Role::requires_webauthn() == true`). All other roles return `false` from this method. The classification is intrinsic to the role (closed enum match), not driven by configuration — preventing accidental relaxation.
 
@@ -166,7 +174,7 @@ The AUTH service **MUST** ship the closed 22-role RBAC catalogue, the permission
     - For each such migration, requires a matching `services/auth/adr/ADR-NNN-*.md` file referenced in a SQL comment `-- ADR: ADR-NNN`.
     - Fails the test if any role-touching migration lacks an ADR reference, OR if the referenced ADR-NNN.md file does not exist.
 
-18. **MUST** support the 5-role stub→full migration path **without invalidating existing access tokens issued under `rbac_v = 1`**. Existing tokens (issued by TASK-AUTH-002's 5-role allow-list, before this FR ships) carry no `rbac_v` claim. The verifier treats the absence of `rbac_v` as implicit `rbac_v = 1` and accepts the token for a 30-day grace window. After grace, missing-claim tokens are rejected (`401 UNAUTHORIZED {"error":"rbac_version_required"}`). The grace-window enforcer is TASK-AUTH-109.
+18. **MUST** support the 5-role stub→full migration path **without invalidating existing access tokens issued under `rbac_v = 1`**. Existing tokens (issued by TASK-AUTH-002's 5-role allow-list, before this task ships) carry no `rbac_v` claim. The verifier treats the absence of `rbac_v` as implicit `rbac_v = 1` and accepts the token for a 30-day grace window. After grace, missing-claim tokens are rejected (`401 UNAUTHORIZED {"error":"rbac_version_required"}`). The grace-window enforcer is TASK-AUTH-109.
 
 19. **MUST** classify the 5 stub roles (root-admin, tenant-admin, tenant-member, service-account, agent-persona) as a strict prefix of the 22-role catalogue — same names, same string form, additive permissions only. The matrix migration MUST NOT change the permission matrix for any stub role except to add new (resource, action) tuples. A regression test (`rbac_stub_compat_test`) asserts that every (stub_role, resource, action) tuple present in the prior TASK-AUTH-002 catalogue is still present after migration.
 
@@ -183,9 +191,9 @@ The AUTH service **MUST** ship the closed 22-role RBAC catalogue, the permission
     - `auth_rbac_subject_role_count{tenant_id}` (gauge — number of (subject, role) pairs).
     - `auth_rbac_catalogue_version` (gauge — current `rbac_v`).
 
-24. **MUST** include `roles` and `rbac_v` claims in every JWT issued by TASK-AUTH-004 after this FR ships. The JWT header `typ` MUST remain `JWT`; the claim shape change is additive only (no breaking changes to existing claim names). TASK-AUTH-004's verifier is updated to surface both claims via `Claims::roles()` and `Claims::rbac_v()`.
+24. **MUST** include `roles` and `rbac_v` claims in every JWT issued by TASK-AUTH-004 after this task ships. The JWT header `typ` MUST remain `JWT`; the claim shape change is additive only (no breaking changes to existing claim names). TASK-AUTH-004's verifier is updated to surface both claims via `Claims::roles()` and `Claims::rbac_v()`.
 
-25. **MUST** ship the ADR file `services/auth/adr/ADR-101-rbac-22-role-catalogue.md` as part of this FR. The ADR documents: business rationale (closed catalogue prevents ABAC slide), scope-creep risk assessment (each new role costs 1 ADR + DPO + CSEC review), deprecation policy (90-day shadow-monitoring window), audit-trail implications (every assignment + revocation chained into memory), and the explicit DPO + CSEC sign-off block.
+25. **MUST** ship the ADR file `services/auth/adr/ADR-101-rbac-22-role-catalogue.md` as part of this task. The ADR documents: business rationale (closed catalogue prevents ABAC slide), scope-creep risk assessment (each new role costs 1 ADR + DPO + CSEC review), deprecation policy (90-day shadow-monitoring window), audit-trail implications (every assignment + revocation chained into memory), and the explicit DPO + CSEC sign-off block.
 
 ---
 
@@ -193,13 +201,13 @@ The AUTH service **MUST** ship the closed 22-role RBAC catalogue, the permission
 
 **Why a closed 22-role catalogue and not ABAC (§1 #1, DEC-121, DEC-122)?** ABAC (attribute-based access control) sounds flexible — "if subject.department == finance AND resource.classification <= confidential, allow" — but in practice it produces a debugging nightmare. Every access decision becomes a logic puzzle; tracing why a request was denied requires reconstructing the attribute graph at decision time. RBAC with a closed catalogue is auditable by construction: every subject's privileges are a finite, enumerable set, and changes are ADR-gated. The 22-role boundary is a deliberate ceiling — when we want a 23rd, we either (a) realise an existing role covers the case, or (b) write an ADR that forces explicit consideration of scope creep. The website docs (§2.6) describe this as "a design assertion."
 
-**Why the 5-role stub is a strict prefix (§1 #19, DEC-123)?** TASK-AUTH-002 shipped a 2-name allow-list (`tenant-admin`, `tenant-member`); the wider stub used in TASK-AUTH-005/006 included `root-admin`, `service-account`, `agent-persona`. Those 5 names are not "temporary placeholder names" — they ARE the production names. This FR adds 17 more without renaming any of the 5. The `rbac_stub_compat_test` regression test makes this guarantee enforceable: prior subjects holding `tenant-admin` keep exactly the same matrix-permission set + any new (resource, action) tuples that were absent before. This is the property that lets existing tokens (without `rbac_v`) keep working — the underlying matrix is additive only.
+**Why the 5-role stub is a strict prefix (§1 #19, DEC-123)?** TASK-AUTH-002 shipped a 2-name allow-list (`tenant-admin`, `tenant-member`); the wider stub used in TASK-AUTH-005/006 included `root-admin`, `service-account`, `agent-persona`. Those 5 names are not "temporary placeholder names" — they ARE the production names. This task adds 17 more without renaming any of the 5. The `rbac_stub_compat_test` regression test makes this guarantee enforceable: prior subjects holding `tenant-admin` keep exactly the same matrix-permission set + any new (resource, action) tuples that were absent before. This is the property that lets existing tokens (without `rbac_v`) keep working — the underlying matrix is additive only.
 
 **Why a permission matrix layer instead of role checks directly in code (§1 #4, DEC-122)?** Role checks scattered across services produce drift: service A might use `caller.has_role("chief-financial-officer")`, service B might write `caller.role == "cfo" || caller.role == "founder"`. The matrix centralises the truth — `caller.has_permission(Resource::InvInvoice, Action::Approve)` is the canonical check, and the matrix decides which roles satisfy it. Adding a new role only requires updating the matrix; consuming services don't change. This is the ISO 27001:2022 A.5.18 recommendation (access rights provisioned via documented roles), not via inline string comparisons.
 
 **Why role + scope-grant layered (§1 #20, DEC-124)?** Pure RBAC over-grants: giving an external auditor the `auditor` role grants matrix-wide read; we only want them to see the specific audit window they were engaged for. The scope-grant layer narrows: `auditor` role provides base privilege; the `scope_grants` row narrows it to `resource_id IN (engagement-2026-q3)`. Without scope-grants, we'd be forced to invent per-audit roles (`auditor-2026-q3`) — and that's the ABAC slide the closed catalogue is designed to prevent. Scope grants are NOT standalone privileges (they cannot grant what the role does not already permit); they only narrow/restrict. This preserves the matrix as the source of truth for "what is allowed in principle."
 
-**Why in-memory RoleMatrix with 60s refresh and not per-request DB lookup (§1 #9, §1 #21, DEC-126)?** Role checks happen on every authenticated request — typically 5–20 per request lifetime (auth, RLS context, scope checks, audit-row emission). At 1k RPS with 10 checks each, that's 10k role lookups per second; at 1 ms per DB hop, that's 10 cores burning on RBAC alone. The in-memory matrix collapses this to a single hashmap lookup at < 50 µs. The 60-second refresh tolerates revocation latency in exchange for performance: a revoked role is honoured for up to 60s after revocation; the OTel `auth_rbac_matrix_refresh_total{outcome=success}` metric tracks freshness. Time-critical revocations (e.g. terminated employee) go via the per-tenant CRL flush endpoint that targets the cache directly (out of scope for this FR; see TASK-AUTH-111 placeholder).
+**Why in-memory RoleMatrix with 60s refresh and not per-request DB lookup (§1 #9, §1 #21, DEC-126)?** Role checks happen on every authenticated request — typically 5–20 per request lifetime (auth, RLS context, scope checks, audit-row emission). At 1k RPS with 10 checks each, that's 10k role lookups per second; at 1 ms per DB hop, that's 10 cores burning on RBAC alone. The in-memory matrix collapses this to a single hashmap lookup at < 50 µs. The 60-second refresh tolerates revocation latency in exchange for performance: a revoked role is honoured for up to 60s after revocation; the OTel `auth_rbac_matrix_refresh_total{outcome=success}` metric tracks freshness. Time-critical revocations (e.g. terminated employee) go via the per-tenant CRL flush endpoint that targets the cache directly (out of scope for this task; see TASK-AUTH-111 placeholder).
 
 **Why reserved roles cannot be self-assigned (§1 #11, DEC-127)?** `root-admin` is the cross-tenant superuser — its assignment is a CyberSkill operator action, not a tenant action. `client-portal-user` belongs to PORTAL's JIT provisioning flow (TASK-PORTAL-003). `auditor` and `regulator` are external identities granted through a vetted intake — never by a tenant-admin clicking a UI button. `billing-system` is the Stripe/VietQR webhook identity — assigned via a setup script, not a REST call. Routing reserved-role assignment through the standard endpoint would invite operator mistakes; refusing at the API boundary makes the elevated path explicit.
 
@@ -217,7 +225,7 @@ The AUTH service **MUST** ship the closed 22-role RBAC catalogue, the permission
 
 **Why hard-delete role assignments instead of soft-delete (§1 #6)?** The `auth.role_revoked` memory audit row IS the record. Soft-delete would create two records of truth (the row's `revoked_at` field plus the audit row) and invite "is this revoked?" ambiguity in queries. The audit row is unerasable (per AGENTS.md §6.5); soft-delete adds nothing the audit chain doesn't already provide.
 
-**Why a 30-day grace window for stub-era tokens (§1 #18, DEC-125)?** Typical access-token lifetime in the TASK-AUTH-004 design is 1 hour; refresh tokens 7 days. A 30-day grace covers every refresh-token cycle plus a safety margin — no production user is surprised by a forced re-auth. The grace-window enforcer (TASK-AUTH-109) flips on `30d after this FR ships`; until then, missing-`rbac_v` tokens are accepted. After flip, missing-claim tokens are rejected — and the rejection metric `auth_rbac_check_total{outcome=stub_token_rejected}` tells operations how many tokens are still missing the claim.
+**Why a 30-day grace window for stub-era tokens (§1 #18, DEC-125)?** Typical access-token lifetime in the TASK-AUTH-004 design is 1 hour; refresh tokens 7 days. A 30-day grace covers every refresh-token cycle plus a safety margin — no production user is surprised by a forced re-auth. The grace-window enforcer (TASK-AUTH-109) flips on `30d after this task ships`; until then, missing-`rbac_v` tokens are accepted. After flip, missing-claim tokens are rejected — and the rejection metric `auth_rbac_check_total{outcome=stub_token_rejected}` tells operations how many tokens are still missing the claim.
 
 ---
 
@@ -988,19 +996,19 @@ async fn stub_role_permissions_strictly_additive() {
 
 ## §7 — Dependencies
 
-**Upstream (this FR depends on):**
-- **TASK-AUTH-005** — admin REST router; this FR adds `/v1/admin/subjects/{id}/roles` and `/v1/admin/roles` to it.
-- **TASK-AUTH-004** — JWT issuance; this FR extends the claim shape.
-- **TASK-AUTH-003** — RLS enforcement; this FR adds role-aware policies on sensitive tables.
+**Upstream (this task depends on):**
+- **TASK-AUTH-005** — admin REST router; this task adds `/v1/admin/subjects/{id}/roles` and `/v1/admin/roles` to it.
+- **TASK-AUTH-004** — JWT issuance; this task extends the claim shape.
+- **TASK-AUTH-003** — RLS enforcement; this task adds role-aware policies on sensitive tables.
 - **TASK-AI-003** — memory-audit bridge; receives `auth.role_assigned / .role_revoked / .role_catalogue_changed` rows.
 
-**Downstream (this FR blocks):**
+**Downstream (this task blocks):**
 - **TASK-AUTH-108** — Lumi tenant-identity JWT shape (needs agent-persona role in production catalogue).
-- **TASK-AUTH-109** — stub→full migration enforcer (this FR ships the matrix it migrates to).
+- **TASK-AUTH-109** — stub→full migration enforcer (this task ships the matrix it migrates to).
 - **TASK-CRM-001, TASK-DOC-001, TASK-HR-001, TASK-KB-001, TASK-OKR-001, TASK-REW-001** — all need specialist roles (cfo, dpo, chro, founder).
 
 **Cross-module (informational):**
-- **TASK-AUTH-105 (placeholder)** — passkey enrolment. The founder-WebAuthn gate (§1 #12) calls this FR's `webauthn::has_factor`. Until TASK-AUTH-105 ships, the gate returns `false` for all subjects (founder assignment effectively disabled).
+- **TASK-AUTH-105 (placeholder)** — passkey enrolment. The founder-WebAuthn gate (§1 #12) calls this task's `webauthn::has_factor`. Until TASK-AUTH-105 ships, the gate returns `false` for all subjects (founder assignment effectively disabled).
 - **TASK-AUTH-111 (placeholder)** — per-tenant CRL flush for instant revocation. Until TASK-AUTH-111 ships, revocations are honoured at 60s latency.
 
 ---
@@ -1090,7 +1098,7 @@ async fn stub_role_permissions_strictly_additive() {
 
 Deferred:
 - **Per-tenant CRL flush endpoint** for sub-60s revocation latency — deferred to TASK-AUTH-111 (slice 2).
-- **Reserved-role assignment endpoints** — root-admin assignment via cyberos-ten bootstrap CLI (TASK-TEN-001); auditor/regulator/billing-system via dedicated intake flow; client-portal-user via PORTAL JIT provisioning (TASK-PORTAL-003). Each of those FRs documents its own reserved-role grant path.
+- **Reserved-role assignment endpoints** — root-admin assignment via cyberos-ten bootstrap CLI (TASK-TEN-001); auditor/regulator/billing-system via dedicated intake flow; client-portal-user via PORTAL JIT provisioning (TASK-PORTAL-003). Each of those tasks documents its own reserved-role grant path.
 - **Argon2id migration** — TASK-AUTH-114 (slice 4); orthogonal to RBAC.
 - **Scope-grant TTL enforcement** — slice 2; current spec allows `expires_at` but does not enforce expiry cleanup (relies on the `has_permission` checker to ignore expired rows).
 - **Role-impact diff in PR review** — a tool that surfaces "this migration changes which roles can do X" — slice 3; would be a nice-to-have for ADR reviewers.
@@ -1145,7 +1153,7 @@ All other questions resolved.
 - **`auth.has_role()` SQL function reads session GUC**: the JWT middleware sets `auth.roles` GUC on connection acquisition via `SET LOCAL auth.roles = $1`. RLS policies invoke `auth.has_role('tenant-admin')`. The GUC is per-transaction; never leaks across connections.
 - **`rbac_v` design rationale**: comparing token-issued version vs live version is a soft-reject (2-version tolerance) rather than a hard match. Strict-match would force re-auth every time any role's matrix tweaked; tolerance preserves UX while catching meaningful drift.
 - **Founder-WebAuthn check is intrinsic to the role**: not "configured as required" — preventing operator from accidentally turning the gate off via env var. The cost is one extra match arm in `requires_webauthn()`; the safety is "this is the kind of mistake that won't happen."
-- **Reserved-role routing**: standard endpoint refuses; dedicated endpoints (out of scope) handle reserved-role assignment with their own elevated-privilege gates. Until those FRs ship, reserved roles can only be assigned via direct SQL (operator action); the memory audit row carries `granted_by` to attribute the action.
+- **Reserved-role routing**: standard endpoint refuses; dedicated endpoints (out of scope) handle reserved-role assignment with their own elevated-privilege gates. Until those tasks ship, reserved roles can only be assigned via direct SQL (operator action); the memory audit row carries `granted_by` to attribute the action.
 - **30-day grace window**: longer than 7-day refresh-token max (TASK-AUTH-004) plus 23-day safety margin. After grace, missing-claim tokens are rejected and the rejection metric tells ops whether to push a re-auth notice.
 - **Matrix-version mismatch tolerance** (2 versions): tolerates one missed refresh cycle (60s × 2 minutes) on a single auth-server instance during catalogue change; rejects tokens issued 3+ versions ago (typically > 1 day stale).
 - **ADR validator scope**: only checks migrations that *modify* `roles` or `role_permissions` tables; pure DDL on unrelated tables doesn't require ADR. Detection regex: `(INSERT|UPDATE|DELETE).*(roles|role_permissions)`. Bypasses include schema-only changes (column comments, etc.) — see `services/auth/src/rbac/adr.rs` heuristic.
@@ -1155,8 +1163,8 @@ All other questions resolved.
 - **`auth_rbac_subject_role_count` gauge**: high cardinality on tenant_id label; aggregate by tenant_id only (no subject_id label). The gauge is for capacity planning, not per-subject debugging.
 - **PostgreSQL `current_setting('auth.roles', true)` second arg**: `true` means "return NULL if not set" instead of erroring. The SQL function handles NULL with an early FALSE return — preventing accidental role-check passes from un-initialised connections.
 - **JWT claim ordering**: `roles` array order is insertion order (DB returns sorted by `(subject_id, role)` ASC). Verifiers MUST NOT depend on ordering — they should treat `roles` as a set. The `Claims::roles()` helper returns `Vec<Role>` for ergonomics but downstream uses `.contains()`.
-- **ADR-101 itself is shipped in this FR**: per task-audit skill the spec must be self-contained; the ADR is part of the spec's deliverables, not a separately negotiable artifact.
-- **CHANGELOG note**: this FR closes the 17-role gap referenced in `CHANGELOG.md` line 338 ("the remaining 17 land across slices 3–5"); after this FR, all 22 are seeded — the slice number per role only documents intent for SCOPE-CREEP audits, not gating.
+- **ADR-101 itself is shipped in this task**: per task-audit skill the spec must be self-contained; the ADR is part of the spec's deliverables, not a separately negotiable artifact.
+- **CHANGELOG note**: this task closes the 17-role gap referenced in `CHANGELOG.md` line 338 ("the remaining 17 land across slices 3–5"); after this task, all 22 are seeded — the slice number per role only documents intent for SCOPE-CREEP audits, not gating.
 
 ---
 

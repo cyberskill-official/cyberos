@@ -45,7 +45,7 @@
 - **Quarterly technical roadmap** — what infra/platform investments unlock product strategy.
 
 ### 5.2 Operational
-- **Implementation plans** — translate FRs into engineering tickets via the FR → impl-plan chain.
+- **Implementation plans** — translate tasks into engineering tickets via the task → impl-plan chain.
 - **Deploy go/no-go decisions** — review the deployment-readiness checklist; sign off or escalate.
 - **Threat-model refresh** — at least quarterly + on every major architecture change.
 - **Code-review escalations** — adjudicate when reviewers disagree on a high-stakes PR.

@@ -1,8 +1,16 @@
 ---
 id: TASK-SKILL-108
 title: "vietnam-mst-validate@1 skill — Vietnamese Tax ID (MST) validation against General Department of Taxation (GDT) public registry"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: SKILL
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -99,7 +107,7 @@ The `vietnam-mst-validate@1` skill **MUST** validate Vietnamese Tax IDs (MST) us
 
 **Why two-stage validation (§1 #2 + #4)?** Local checksum catches 99% of typos at zero cost; GDT call catches the remaining 1% (validly-checksummed but registry-inactive). Skipping local would burn GDT quota on obvious typos; skipping GDT would miss the truly-invalid MSTs.
 
-**Why cache 24h (§1 #6, DEC-212)?** Onboarding flows revalidate the same MST many times in a day (form submit + edit + retry). 24h cache catches same-day churn without staleness risk: MST status changes are rare, and FR-INV (Invoice module) re-validates before each hóa đơn anyway.
+**Why cache 24h (§1 #6, DEC-212)?** Onboarding flows revalidate the same MST many times in a day (form submit + edit + retry). 24h cache catches same-day churn without staleness risk: MST status changes are rare, and task-INV (Invoice module) re-validates before each hóa đơn anyway.
 
 **Why audit on cache hit too (§1 #10)?** KYC compliance needs the trail. The auditor's question is "did you check this MST before emitting hóa đơn?" — answer = "yes, validation row at <time> with status=<x>". Cache hit doesn't mean "we didn't check"; it means "we checked recently."
 

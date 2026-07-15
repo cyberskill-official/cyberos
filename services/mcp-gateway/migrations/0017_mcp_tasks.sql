@@ -6,7 +6,7 @@
 -- services/mcp-gateway/src/tasks. The gateway keeps the in-memory store as the no-database path; the
 -- write-through wiring lands with the code commit (and the long_running annotation + tools/call async
 -- routing that actually creates tasks in the request path, currently deferred). The per-task checkpoint
--- and progress-event tables (FR §3.1 0010/0011) are deferred with the worker pool + NATS progress.
+-- and progress-event tables (task §3.1 0010/0011) are deferred with the worker pool + NATS progress.
 --
 -- RLS note: same decision as 0016 - append-only GRANT model, not GUC-based CREATE POLICY, because the
 -- gateway does not set a per-connection `auth.tenant_id`. Tenant/caller isolation is enforced in the
@@ -49,7 +49,7 @@ CREATE TABLE mcp_tasks (
     trace_id                  CHAR(32)
 );
 
--- Idempotency (DEC-1121): one live task per (tenant, key). The FR's "within 24h" predicate cannot live
+-- Idempotency (DEC-1121): one live task per (tenant, key). The task's "within 24h" predicate cannot live
 -- in an index (now() is not immutable), so the 24h dedup window is enforced in the handler; the index
 -- guarantees uniqueness while a key is in use.
 CREATE UNIQUE INDEX idx_tasks_idempotency

@@ -30,7 +30,7 @@
 //! `app.tenant_id`), mirroring `cyberos_memory::brain::access_scope::set_access_guc`, so the RLS predicate
 //! fires for the right tenant no matter which GUC each table keys on (`l1_audit_log` itself has no RLS).
 //!
-//! CATEGORY-TAGGING CAVEAT (FR §10 failure mode "L2 row missing eval_category frontmatter"). A derived row
+//! CATEGORY-TAGGING CAVEAT (task §10 failure mode "L2 row missing eval_category frontmatter"). A derived row
 //! is erased ONLY when it positively matches the policy's category AND is past `retain_days`. An untagged
 //! row (no `eval_category` frontmatter / a `kind` that does not equal the category) is NOT swept - it is
 //! retained, the documented fail-safe (never over-delete). Backfilling the category tag at ingest
@@ -212,7 +212,7 @@ async fn sweep_table(
 ///   * emits the `eval_retention_swept_rows_total{category}` OTel counter (structured tracing event).
 ///
 /// Defensive: a tenant/category with no policy sweeps nothing; a non-positive `retain_days` is skipped; an
-/// untagged derived row (no `eval_category` / a non-matching `kind`) is retained, never over-deleted (FR §10
+/// untagged derived row (no `eval_category` / a non-matching `kind`) is retained, never over-deleted (task §10
 /// fail-safe). The sweep NEVER deletes from `l1_audit_log` - it only ever targets the derived projections.
 /// A missing derived table surfaces as the `sqlx::Error` (a deployment without the brain lens is a
 /// misconfiguration to fix, not silently ignored).
@@ -348,7 +348,7 @@ mod tests {
     #[test]
     fn every_target_has_a_category_match_and_age_column() {
         // Each target must positively match a category AND bound an age column - so an untagged or fresh row
-        // is never erased (the FR §10 fail-safe: no over-deletion).
+        // is never erased (the task §10 fail-safe: no over-deletion).
         for t in SWEEP_TARGETS {
             assert!(
                 t.category_match.contains("$2"),

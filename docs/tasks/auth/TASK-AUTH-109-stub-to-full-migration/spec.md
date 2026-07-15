@@ -1,8 +1,16 @@
 ---
 id: TASK-AUTH-109
 title: "AUTH stub → full migration enforcer — 30-day grace window + cutover timestamp + rejection metric + per-tenant override"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AUTH
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P3
@@ -147,7 +155,7 @@ The AUTH service **MUST** enforce the TASK-AUTH-101 stub → full migration via 
 
 18. **MUST** validate extension `additional_days` is integer in [1, 60]; outside → 400 `additional_days_out_of_range`.
 
-19. **MUST** track in OBS sev-2 alarm when `auth_stub_token_rejected_total{tenant_id}` rate > 100/h sustained over 1h. Rule lives in TASK-OBS-007's rule set; this FR documents the alarm contract.
+19. **MUST** track in OBS sev-2 alarm when `auth_stub_token_rejected_total{tenant_id}` rate > 100/h sustained over 1h. Rule lives in TASK-OBS-007's rule set; this task documents the alarm contract.
 
 20. **MUST** persist the seed at TASK-AUTH-101 ship time via a one-off migration that INSERTs `auth_migration_state` for every existing tenant. The migration is idempotent (uses `INSERT ... ON CONFLICT DO NOTHING`).
 
@@ -201,7 +209,7 @@ The AUTH service **MUST** enforce the TASK-AUTH-101 stub → full migration via 
 
 **Why no automatic cutover scheduling job (§1 #10)?** Verifier-driven lazy transition is simpler: no cron, no missed-window risk, transition happens on first stub-token request after grace expiry. The first rejection IS the cutover.
 
-**Why TASK-AUTH-109 has no `blocks: []`?** TASK-AUTH-101's contract claims the grace window will be enforced; TASK-AUTH-109 ships the enforcer. No downstream FR needs to know about TASK-AUTH-109 — it's the implementation of an existing promise.
+**Why TASK-AUTH-109 has no `blocks: []`?** TASK-AUTH-101's contract claims the grace window will be enforced; TASK-AUTH-109 ships the enforcer. No downstream task needs to know about TASK-AUTH-109 — it's the implementation of an existing promise.
 
 **Why refresh log captures `prior_rbac_v_present`?** Operator analytics: "how many refreshes converted from stub to full?" — the count of `prior_rbac_v_present=false` rows = exactly the number of stub-to-full conversions. Useful for predicting cutover readiness.
 
@@ -660,12 +668,12 @@ async fn cutover_backward_forbidden(pool: sqlx::PgPool) {
 ## §7 — Dependencies
 
 **Upstream:**
-- **TASK-AUTH-101** — RBAC catalogue; consumes the `rbac_v` claim contract from §1 #18 of that FR.
+- **TASK-AUTH-101** — RBAC catalogue; consumes the `rbac_v` claim contract from §1 #18 of that task.
 
-**Downstream:** none — this FR is the implementation of TASK-AUTH-101's grace-window promise.
+**Downstream:** none — this task is the implementation of TASK-AUTH-101's grace-window promise.
 
 **Cross-module:**
-- **TASK-AUTH-004** — JWT verifier + refresh path (this FR hooks both).
+- **TASK-AUTH-004** — JWT verifier + refresh path (this task hooks both).
 - **TASK-AI-003** — memory audit bridge.
 - **TASK-MEMORY-111** — PII scrub of grace_extension_reason.
 - **TASK-OBS-007** — sev-2 alarm on > 100/h rejections.
@@ -757,7 +765,7 @@ async fn cutover_backward_forbidden(pool: sqlx::PgPool) {
 ## §9 — Open questions
 
 Deferred:
-- **Token revocation API** — FR-AUTH-2xx; this FR's rejection doesn't revoke (token is rejected at verify but the token itself isn't on a CRL).
+- **Token revocation API** — task-AUTH-2xx; this task's rejection doesn't revoke (token is rejected at verify but the token itself isn't on a CRL).
 - **Per-subject grace override** — slice 4; useful for specific bot/service accounts.
 - **Automated extension recommendation** — slice 4; preview API gives data; operator decides.
 

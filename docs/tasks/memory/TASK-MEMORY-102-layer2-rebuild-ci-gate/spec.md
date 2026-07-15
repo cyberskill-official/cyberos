@@ -1,8 +1,16 @@
 ---
 id: TASK-MEMORY-102
 title: "Layer-2 rebuild-from-Layer-1 CI gate — deterministic rebuild + spot-check + 30min budget + mid-rebuild resume + multi-tenant"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: memory
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P1
@@ -46,7 +54,7 @@ allowed_tools:
 disallowed_tools:
   - run rebuild against production Layer 2 without explicit `--prod-confirmed-aware` (per §1 #11)
   - skip spot-check verification (per §1 #4)
-  - lower 30min CI budget without explicit FR amendment (per DEC-185)
+  - lower 30min CI budget without explicit task amendment (per DEC-185)
   - skip determinism check on rebuild output (per §1 #6)
 
 effort_hours: 10

@@ -1,10 +1,10 @@
 # ESOP module — task index
 
-_Generated 2026-05-17 — 7 FRs, 38 engineering-hours total._
+_Generated 2026-05-17 — 7 tasks, 38 engineering-hours total._
 
-## FRs
+## tasks
 
-| FR | Priority | Slice | Hours | Title |
+| Task | Priority | Slice | Hours | Title |
 |---|---|---|---:|---|
 | [TASK-ESOP-001](TASK-ESOP-001-sp-grant-schema/spec.md) | MUST | 1 | 5 | ESOP SP grant schema — Stock Plan grant with 4-year vesting + 12-month cliff default + per-grant imm |
 | [TASK-ESOP-002](TASK-ESOP-002-monthly-vesting-batch/spec.md) | MUST | 1 | 4 | ESOP monthly vesting accrual deterministic batch — runs EOM tenant_tz computing per-grant vested sha |

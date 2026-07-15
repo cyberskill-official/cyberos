@@ -147,7 +147,7 @@ export function Moderation({ onBack }: { onBack: () => void }) {
               <h2 className="mod-h2">{t("mod.context")}</h2>
               {selected.context.length === 0 ? (
                 // §1 #9 — say WHY there is no context, plainly. A silent empty panel invites someone to
-                // "fix" it by fetching the DM thread, which is the one thing this FR exists to prevent.
+                // "fix" it by fetching the DM thread, which is the one thing this task exists to prevent.
                 <p className="muted">
                   {selected.target_kind === "message" && selected.channel_id
                     ? t("mod.noContextDm")

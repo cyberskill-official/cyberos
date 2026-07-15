@@ -14,7 +14,7 @@
 
 ### Driver
 
-Registry v0.2.6 Stage C. The chain needed: `product-requirements-document@1` (product spec) → `software-requirements-specification@1` (system spec) → tech-specs (per-FR engineering plans). Without `software-requirements-specification@1`, fr-to-tech-spec would have to consume `product-requirements-document@1` directly — losing the architectural-review seam where engineering signs off on the system design before per-FR work begins.
+Registry v0.2.6 Stage C. The chain needed: `product-requirements-document@1` (product spec) → `software-requirements-specification@1` (system spec) → tech-specs (per-task engineering plans). Without `software-requirements-specification@1`, fr-to-tech-spec would have to consume `product-requirements-document@1` directly — losing the architectural-review seam where engineering signs off on the system design before per-task work begins.
 
 ### Backwards compatibility
 

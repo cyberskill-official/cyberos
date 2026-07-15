@@ -4,9 +4,9 @@ The `eval` module is CyberOS's people-evaluation surface: it measures work recor
 
 Governing principles (founder decisions, 2026-06-29): wide day-1 capture; access-restricted (founder + manager-of-report + self) and contract-disclosed (not covert collection); auto-scoring AND a mandatory human-in-the-loop gate for anything affecting pay, progression, or employment; governance and capture first. Operating mode (2026-06-30): the product runs quiet / in-product-silent - no employee-facing monitoring or evaluation surface by default, access founder + managers only, employee self-view off by default (served on request via HR). The lawful-basis floor that is kept is the signed clause in [`../../legal/data-monitoring-and-evaluation-notice.md`](../../legal/data-monitoring-and-evaluation-notice.md) (EN + VN, for counsel review); fully-covert collection with no notice is out of scope.
 
-## FRs
+## tasks
 
-| FR | Priority | Step | Title |
+| Task | Priority | Step | Title |
 |---|---|---|---|
 | [TASK-EVAL-001](TASK-EVAL-001-governance-consent-access-retention/spec.md) | MUST | 0 governance | Governance, consent, access-control + retention - the Phase-0 gate every capture and evaluation depends on |
 | [TASK-EVAL-002](TASK-EVAL-002-rubric-from-signed-documents/spec.md) | MUST | 3 rubric | Rubric from the three signed documents - versioned, bilingual VN/EN, each item cites its source clause |

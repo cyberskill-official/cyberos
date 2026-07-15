@@ -13,12 +13,12 @@ template: engineering-spec@1
 
 ## §1 - Verdict summary
 
-Audited for spec correctness and for scope honesty against the two adjacent distribution FRs (TASK-PLUGIN-008, TASK-SKILL-201). Draft under-specified asset naming for `latest/download`, raced release creation, and assumed GNU tar everywhere. All resolved; traceability closes over t01-t09 in tools/cyberos-init/tests/test_release_assets.sh.
+Audited for spec correctness and for scope honesty against the two adjacent distribution tasks (TASK-PLUGIN-008, TASK-SKILL-201). Draft under-specified asset naming for `latest/download`, raced release creation, and assumed GNU tar everywhere. All resolved; traceability closes over t01-t09 in tools/cyberos-init/tests/test_release_assets.sh.
 
 ## §2 - Findings (all resolved)
 
 ### ISS-001 latest/download needs stable asset names
-GitHub's latest-download URL requires a constant filename; versioned-only names broke the one canonical URL the whole FR exists to provide. Resolved: §1 #1 stable aliases + versioned twins, AC 2.
+GitHub's latest-download URL requires a constant filename; versioned-only names broke the one canonical URL the whole task exists to provide. Resolved: §1 #1 stable aliases + versioned twins, AC 2.
 
 ### ISS-002 upload raced release creation
 `gh release upload` fails when the release object does not exist yet (installer jobs create it concurrently). Resolved: §6 create-or-upload idempotent step (`gh release create --verify-tag || true` before upload).
@@ -26,8 +26,8 @@ GitHub's latest-download URL requires a constant filename; versioned-only names 
 ### ISS-003 determinism flags are GNU-only
 `tar --sort/--mtime` and `gzip -n` false-fail on macOS bsdtar. Resolved: §11 pins CI to ubuntu and requires a visible SKIP (not a false pass or fail) for the determinism case on non-GNU hosts.
 
-### ISS-004 supersession ambiguity with the marketplace FRs
-Per the operator's "newest wins" conflict rule, the audit checked whether this FR displaces TASK-PLUGIN-008/TASK-SKILL-201: it does not (different systems). Resolved: source_decisions boundary statement + §2/§7 non-supersession wording, so no old FR is closed by mistake.
+### ISS-004 supersession ambiguity with the marketplace tasks
+Per the operator's "newest wins" conflict rule, the audit checked whether this task displaces TASK-PLUGIN-008/TASK-SKILL-201: it does not (different systems). Resolved: source_decisions boundary statement + §2/§7 non-supersession wording, so no old task is closed by mistake.
 
 ### ISS-005 checksums covered only the tarballs
 The .plugin assets were outside SHA256SUMS in the first cut, leaving the desktop-install path unverifiable. Resolved: §1 #1 "covering all four", AC 3 round-trip.
@@ -59,4 +59,4 @@ Field finding: on workflow_dispatch (the ONLY practical trigger, since bump comm
 and refused with "tag main != v1.8.0". Fix: the script now honors TAG (set by the job from
 inputs.tag || ref_name) with GITHUB_REF_NAME as fallback; t04 gained dispatch-precedence and
 wrong-TAG sub-cases. §1 #2 amended accordingly. Root cause ([skip ci] on bump commits) is
-queued as a durable-fix FR for the next batch.
+queued as a durable-fix task for the next batch.

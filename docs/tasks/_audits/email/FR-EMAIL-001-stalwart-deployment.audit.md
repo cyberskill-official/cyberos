@@ -129,7 +129,7 @@ Per task-audit skill §0 master rule: spec is now perfect — depth bounded by t
 
 **§10.6 — RLS GUC naming.** Spec §1 #10 uses `auth.tenant_id`. Shipped implementation uses `app.current_tenant_id`, aligning with TASK-AUTH-003 §10.6 amendment (which converged on the global-GUC pattern). The pattern is strictly stronger (one policy per table instead of one per tenant × table) and matches the rest of the cluster.
 
-**§10.7 — Slice-1 placeholder DKIM PEM.** `generate_rsa_2048_pem_pair` returns a fixed-shape PEM so the migration CHECK constraint passes without invoking actual crypto. Slice 2 wires `openssl` or pure-Rust RSA via a feature flag. The §1 #5 contract holds at the schema + flow level; the actual crypto is correctly scoped as slice-2 work per FR §9 deferral list.
+**§10.7 — Slice-1 placeholder DKIM PEM.** `generate_rsa_2048_pem_pair` returns a fixed-shape PEM so the migration CHECK constraint passes without invoking actual crypto. Slice 2 wires `openssl` or pure-Rust RSA via a feature flag. The §1 #5 contract holds at the schema + flow level; the actual crypto is correctly scoped as slice-2 work per task §9 deferral list.
 
 **§10.8 — Live-runtime ACs deferred.** AC #20 (inbound perf < 200ms p95), #21 (provision < 5s with real crypto), #22 (OTel spans), #23 (OTel metrics) require live infrastructure (Stalwart container + Postgres + S3 + OTel collector) and land via the integration-test runner in CI. The substrate shipped here is ready for them.
 
@@ -151,7 +151,7 @@ SQL syntax was validated by transaction-balance check (all 4 migrations have mat
 
 ### §10.5 — Status transition
 
-**Status:** `draft → shipped (slice 1)`. Next FRs (TASK-EMAIL-002 JWT bridge, TASK-EMAIL-004 DKIM/ARC/BIMI, etc.) build on the substrate this FR provides.
+**Status:** `draft → shipped (slice 1)`. Next tasks (TASK-EMAIL-002 JWT bridge, TASK-EMAIL-004 DKIM/ARC/BIMI, etc.) build on the substrate this task provides.
 
 ---
 

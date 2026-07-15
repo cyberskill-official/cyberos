@@ -45,7 +45,7 @@ Different TTLs would mean URL stale before bundle decryptable. Resolved: both us
 
 All 6 mechanical concerns addressed. Rate-limit pattern aligned with TASK-MCP-007 fix; identity-verify email lifecycle bounded; SLA breach has operator escalation; dual-sign edge cases documented; deletion review process clear; bundle lifecycle synchronized.
 
-The 660-line length is appropriate for a 5h-effort FR with focused scope (one user-facing flow + compliance workflow). Density per clause is high.
+The 660-line length is appropriate for a 5h-effort task with focused scope (one user-facing flow + compliance workflow). Density per clause is high.
 
 **Score = 10/10.**
 

@@ -11,7 +11,7 @@ template: engineering-spec@1
 ## §1 - Verdict summary
 Audited for loop safety above all: the message-prefix job guard predates this change, is orthogonal to
 [skip ci], and becomes the documented single brake (§10 #1 names the weakening risk). Workaround
-retirement verified by grep; amendments close the two shipped FRs' stale premises. TRACE: #1->AC1,
+retirement verified by grep; amendments close the two shipped tasks' stale premises. TRACE: #1->AC1,
 #2->AC2, #3->AC3, #4->AC4; §5 greps executable; live-proof clause deferred to the next release by
 design (operator-observed).
 

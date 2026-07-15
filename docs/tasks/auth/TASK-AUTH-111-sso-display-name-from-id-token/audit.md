@@ -41,12 +41,12 @@ people sign in. AC #13. §10 row 4.
 ### ISS-003 - SAML has the same bug and was going to be left open
 `saml.rs` binds `display_name` the same way as `oidc.rs`. Fixing one door and leaving the other means the bug
 is rediscovered by whoever next onboards a SAML tenant, having read a changelog entry that says it was fixed.
-Resolved: §1 #6 makes both call sites normative in this FR; AC #12 runs the same assertions against the SAML
+Resolved: §1 #6 makes both call sites normative in this task; AC #12 runs the same assertions against the SAML
 path.
 
 ### ISS-004 - The debug line would have logged the person's name
 Adding `tracing::debug!(?display_name)` is the reflex when debugging a name-resolution bug, and it puts
-personal data into the log stream - contradicting the privacy policy this FR exists to align the code with.
+personal data into the log stream - contradicting the privacy policy this task exists to align the code with.
 Removing the log line entirely is the other reflex, and leaves the resolver unobservable. Resolved: §1 #8 logs
 the **rung of the chain that matched**, never the value; §3's `resolve_display_name` returns
 `(&'static str, String)` so the caller gets both properties for free; AC #10 captures the log stream and
@@ -58,7 +58,7 @@ one line. It would also make the Data Safety declaration we are about to file wi
 that form and the published privacy policy both enumerate what we collect. Resolved: §1 #9 forbids persisting
 any claim beyond those in §1 #1, names `picture` explicitly, and states that widening the set is a
 policy revision first and a code change second. `IdTokenProfile` has no `picture` field to deserialise into.
-AC #11 greps the raw row. §9 keeps it as a deferred FR with its paperwork attached.
+AC #11 greps the raw row. §9 keeps it as a deferred task with its paperwork attached.
 
 ### ISS-006 - Whitespace-only and empty claims would have written a blank name
 `name: ""` and `name: "   "` are both things IdPs emit. The draft's `Option` check treated them as present, so

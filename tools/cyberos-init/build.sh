@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # build.sh - assemble the vendorable CyberOS payload into dist/cyberos/.
 # install.sh lays this out under a target repo's gitignored .cyberos/, by module:
-#   .cyberos/cuo/     - the FR workflow engine (ship-tasks + doctrine + status
+#   .cyberos/cuo/     - the task workflow engine (ship-tasks + doctrine + status
 #                       contract + author/audit skills + gates + templates)
 #   .cyberos/memory/  - the memory module (Layer-1 protocol + schema + invariants)
 #   .cyberos/plugin/  - the Claude/Cowork plugin
@@ -45,7 +45,7 @@ nfr-certification-author                    # SDP 4  NFR (allowlisted unpaired)
 nfr-evaluator                               # SDP 4  NFR
 nfr-test-runner                             # SDP 4  NFR
 nfr-regression-handler                      # SDP 4  NFR
-task-author                      # SDP 5  FR
+task-author                      # SDP 5  task
 task-audit                       # SDP 5
 architectural-spike-author                  # SDP 6  spike (ADR input)
 architectural-spike-audit                   # SDP 6
@@ -122,16 +122,16 @@ cp "$here/marketplace/.claude-plugin/marketplace.json" "$out/.claude-plugin/mark
 cp "$here/install.sh"   "$out/install.sh"
 cp "$here/uninstall.sh" "$out/uninstall.sh"
 cp "$here/check-latest.sh"      "$out/check-latest.sh"
-# Portable lib + docs-tools (status-page hooks, update soft-check). No migrate-frs / init.sh.
+# Portable lib + docs-tools (status-page hooks, update soft-check). No migrate-tasks / init.sh.
 mkdir -p "$out/lib"
-[ -f "$here/lib/fr-migrate.sh" ] && cp "$here/lib/fr-migrate.sh" "$out/lib/fr-migrate.sh"
+[ -f "$here/lib/task-migrate.sh" ] && cp "$here/lib/task-migrate.sh" "$out/lib/task-migrate.sh"
 [ -f "$here/lib/update-check.sh" ] && cp "$here/lib/update-check.sh" "$out/lib/update-check.sh"
 [ -f "$here/lib/status-page.sh" ] && cp "$here/lib/status-page.sh" "$out/lib/status-page.sh"
 # (docs-tools sources may be absent in trimmed fixture builds — vendor what exists)
-if [ -f "$here/../../scripts/migrate_fr_layout.py" ]; then
+if [ -f "$here/../../scripts/migrate_task_layout.py" ]; then
   mkdir -p "$out/docs-tools/templates"
-  cp "$here/../../scripts/migrate_fr_layout.py" "$out/docs-tools/"
-  [ -f "$here/../../scripts/repair_fr_yaml.py" ] && cp "$here/../../scripts/repair_fr_yaml.py" "$out/docs-tools/"
+  cp "$here/../../scripts/migrate_task_layout.py" "$out/docs-tools/"
+  [ -f "$here/../../scripts/repair_task_yaml.py" ] && cp "$here/../../scripts/repair_task_yaml.py" "$out/docs-tools/"
   # status page: render-status-hub.mjs + md.mjs + templates (all five or half-render fails loudly)
   [ -f "$here/../docs-site/render-status-hub.mjs" ] && cp "$here/../docs-site/render-status-hub.mjs" "$out/docs-tools/"
   [ -f "$here/../docs-site/md.mjs" ] && cp "$here/../docs-site/md.mjs" "$out/docs-tools/"
@@ -141,7 +141,7 @@ if [ -f "$here/../../scripts/migrate_fr_layout.py" ]; then
   [ -f "$here/../../modules/templates/cds/tokens.css" ] && cp "$here/../../modules/templates/cds/tokens.css" "$out/docs-tools/templates/"
 fi
 # Never ship retired names (pre-1.0.0)
-rm -f "$out/migrate-frs.sh" "$out/init.sh" "$out/changelog.sh" "$out/update.sh"
+rm -f "$out/migrate-tasks.sh" "$out/init.sh" "$out/changelog.sh" "$out/update.sh"
 cp "$here/bootstrap.sh" "$out/bootstrap.sh"
 cp "$here/create.sh"    "$out/create.sh"        # template / fresh-project scaffolder channel
 # 1.0.0 CLI: install | uninstall | version | status | help
@@ -170,7 +170,7 @@ cp "$out/cuo/ship-tasks.md" "$out/cuo/EXECUTION-DISCIPLINE.md" "$out/cuo/STATUS-
 # edge-case-matrix, implementation-plan, observability-injection, code-review, coverage-gate, ...).
 # Those only existed under .cyberos/cuo/skills/ after /init, so the plugin's bundled workflow could
 # not reach its own children standalone - the plugin shipped the conductor without the orchestra.
-# task-{author,audit} additionally back /create-tasks. ~860K total; the zip
+# Task-{author,audit} additionally back /create-tasks. ~860K total; the zip
 # stays well under a megabyte, so there is no reason to ship a partial set.
 plugin_skills=0
 for d in "$out"/cuo/skills/*/; do

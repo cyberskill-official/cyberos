@@ -49,7 +49,7 @@
 //! only. The TASK-EMAIL-001 spec uses `auth.tenant_id` in §1 #10; this is a
 //! documented spec divergence in the audit dossier §10.6.
 
-// Style-class clippy + hygiene lints deferred to the FR-EMAIL-NNN-clippy-
+// Style-class clippy + hygiene lints deferred to the TASK-EMAIL-NNN-clippy-
 // style-cleanup hygiene wave — see services/auth/src/lib.rs for the rationale
 // (CI's `RUSTFLAGS: -D warnings` escalates idiom-modernisation hints to
 // blocking errors on every PR; the diffs are style nits, not correctness bugs).

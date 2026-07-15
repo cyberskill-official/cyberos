@@ -23,16 +23,16 @@ Six residual issues prevented 10/10 at the post-expansion checkpoint; all six ar
 
 ## §2 — Findings
 
-### ISS-001 — Fixture path/format diverges from TASK-AI-012 (FR coupling drift)
+### ISS-001 — Fixture path/format diverges from TASK-AI-012 (task coupling drift)
 
 - **severity:** error
-- **rule_id:** consistency / cross-FR coupling
+- **rule_id:** consistency / cross-task coupling
 - **location:** frontmatter `new_files`, §3 fixture format, §5 test bodies
 - **status:** resolved
 
 #### Description
 
-The compressed first-pass declared the fixture at `services/ai-gateway/pii/tests/vn_pii_corpus.jsonl` (JSONL, in the `tests/` directory). TASK-AI-012 (the upstream this FR depends_on) places the fixture at `services/ai-gateway/pii/fixtures/vn_pii_200_samples.yaml` (YAML, in `fixtures/`), and TASK-AI-012's `test_recall_floor.py` reads from that path.
+The compressed first-pass declared the fixture at `services/ai-gateway/pii/tests/vn_pii_corpus.jsonl` (JSONL, in the `tests/` directory). TASK-AI-012 (the upstream this task depends_on) places the fixture at `services/ai-gateway/pii/fixtures/vn_pii_200_samples.yaml` (YAML, in `fixtures/`), and TASK-AI-012's `test_recall_floor.py` reads from that path.
 
 A consumer (TASK-AI-013's CI gate) and a producer (TASK-AI-012's fixture-curation tooling) disagreeing on the fixture path is the cleanest possible recipe for "the gate ran against a non-existent file and silently passed because pytest collection emitted 0 tests."
 
@@ -61,7 +61,7 @@ The compressed first-pass had §1 #5 saying *"recall ≥ 99% per recognizer, not
 2. A structured failure message identifying which recognizer failed and which sample IDs were missed.
 3. A guard against zero-denominator (a recognizer with zero samples in a fixture).
 
-A code-gen agent reading the FR has no template for the failure-message shape; the gate fails with `AssertionError: ` and no payload.
+A code-gen agent reading the task has no template for the failure-message shape; the gate fails with `AssertionError: ` and no payload.
 
 #### Suggested fix
 
@@ -176,7 +176,7 @@ Replace the §11 paragraph with the correct math:
 
 ## §4 — Resolution
 
-All 6 mechanical revisions applied (2026-05-16) within the FR itself:
+All 6 mechanical revisions applied (2026-05-16) within the task itself:
 
 - **ISS-001 RESOLVED**: Fixture path realigned to `services/ai-gateway/pii/fixtures/vn_pii_200_samples.yaml` (matching TASK-AI-012 §6); format converted from JSONL to YAML with the `expected_entities` / `expected_count` / `expected_spans` shape; tests updated to use `yaml.safe_load`.
 

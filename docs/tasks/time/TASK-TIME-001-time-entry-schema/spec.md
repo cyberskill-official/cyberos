@@ -1,8 +1,16 @@
 ---
 id: TASK-TIME-001
 title: "TIME TimeEntry append-only schema — correction_to link semantics + tenant-scoped RLS + invoice-grade integrity"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: TIME
-priority: MUST
+priority: p0
 status: draft
 verify: T
 phase: P1
@@ -24,7 +32,7 @@ source_decisions:
   - DEC-220 (append-only at audit layer; mutations write a fresh row with correction_to pointing at the prior row id)
   - DEC-221 (timestamps stored as TIMESTAMPTZ + duration as INT minutes — never as separate start/end on the wire; UI may render as start+end)
   - DEC-222 (entry is bound to (engagement_id, issue_id) — issue is REQUIRED at slice 1; standalone-engagement entries deferred to slice 2)
-  - DEC-223 (billable flag is materialised on the row but COMPUTED by TASK-TIME-005 — this FR declares the column as `billable BOOLEAN NOT NULL DEFAULT false` with no constraint until TASK-TIME-005 ships the cascade)
+  - DEC-223 (billable flag is materialised on the row but COMPUTED by TASK-TIME-005 — this task declares the column as `billable BOOLEAN NOT NULL DEFAULT false` with no constraint until TASK-TIME-005 ships the cascade)
   - DEC-224 (rate_card snapshot is JSONB on the row — never a foreign key; rate-card mutations don't shift past entries per the snapshot pattern)
   - DEC-225 (correction_to is a self-FK; the chain is acyclic — enforced by trigger + CI test)
   - DEC-226 (one row supersedes at most one row; multiple corrections to the same original create a chain, not a tree)
@@ -33,7 +41,7 @@ source_decisions:
   - DEC-229 (entry currency = engagement.invoice_currency at row creation time; snapshotted on the row; multi-currency invoice math happens at TASK-INV-001)
   - DEC-230 (REVOKE UPDATE, DELETE on time_entries from cyberos_app; corrections are INSERTs not UPDATEs — append-only enforced by SQL grant)
   - DEC-231 (memory audit kinds: time.entry_recorded, time.entry_corrected, time.entry_submitted_for_approval — submission is TASK-TIME-006's responsibility but the kind is reserved here)
-  - VN Labour Code Art. 107 (300h/yr OT cap — enforced by TASK-TIME-007, not this FR)
+  - VN Labour Code Art. 107 (300h/yr OT cap — enforced by TASK-TIME-007, not this task)
   - Decree 145/2020 Art. 105 (40h regular week — enforced by TASK-TIME-007)
   - PDPL Art. 13 (data minimisation — entry rows store description as PII-scrubbable but not categorically banned; TASK-TIME-006 audit row carries scrubbed form)
   - ISO 27001:2022 A.12.4 (audit logging — append-only chain satisfies)
@@ -77,8 +85,8 @@ disallowed_tools:
   - allow correction_to pointing at an entry in a different tenant or different engagement (per §1 #11)
   - allow correction creating a tree (two rows correcting the same parent) — chain only (per DEC-226)
   - allow durations < 1 minute or > 1440 minutes per row (per DEC-227 + DEC-228)
-  - hard-code billable cascade logic in this FR — that is TASK-TIME-005's responsibility (per DEC-223)
-  - enforce VN Labour Code OT caps at this FR — that is TASK-TIME-007's responsibility (per spec scope)
+  - hard-code billable cascade logic in this task — that is TASK-TIME-005's responsibility (per DEC-223)
+  - enforce VN Labour Code OT caps at this task — that is TASK-TIME-007's responsibility (per spec scope)
 
 effort_hours: 5
 subtasks:
@@ -92,7 +100,7 @@ subtasks:
   - "0.5h: handlers/entries.rs — 3 REST endpoints"
   - "1.9h: tests — 11 test files covering append-only enforcement, RLS, correction chain semantics, cycle rejection, duration bounds, view filtering"
 
-risk_if_skipped: "TIME is invoice-grade infrastructure — one missed entry breaks a client invoice. Every downstream FR (TASK-TIME-002 timer UI, TASK-TIME-003 manual entry form, TASK-TIME-005 billable cascade, TASK-TIME-006 weekly approval, TASK-TIME-007 OT cap enforcement, TASK-TIME-009 per-cycle rollup, TASK-INV-001 invoice draft from rollup) reads from this schema. Without DEC-220's append-only audit, mutations could silently rewrite past hours — every audit chain claim breaks. Without DEC-225's acyclic correction enforcement, the chain becomes a graph and 'what is the current value?' becomes ambiguous. Without DEC-224's rate-card snapshot, a CFO bumping the rate card retroactively would silently shift every historic billable hour's amount — invoices on the books would diverge from the system. Without DEC-228's per-row duration cap, a single buggy entry could log a year of hours; daily caps don't help if one row spans a year. The 5h effort defends the integrity at the row level; TASK-TIME-005 onwards build on the guarantees."
+risk_if_skipped: "TIME is invoice-grade infrastructure — one missed entry breaks a client invoice. Every downstream task (TASK-TIME-002 timer UI, TASK-TIME-003 manual entry form, TASK-TIME-005 billable cascade, TASK-TIME-006 weekly approval, TASK-TIME-007 OT cap enforcement, TASK-TIME-009 per-cycle rollup, TASK-INV-001 invoice draft from rollup) reads from this schema. Without DEC-220's append-only audit, mutations could silently rewrite past hours — every audit chain claim breaks. Without DEC-225's acyclic correction enforcement, the chain becomes a graph and 'what is the current value?' becomes ambiguous. Without DEC-224's rate-card snapshot, a CFO bumping the rate card retroactively would silently shift every historic billable hour's amount — invoices on the books would diverge from the system. Without DEC-228's per-row duration cap, a single buggy entry could log a year of hours; daily caps don't help if one row spans a year. The 5h effort defends the integrity at the row level; TASK-TIME-005 onwards build on the guarantees."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -109,7 +117,7 @@ The TIME service **MUST** ship the TimeEntry schema as the canonical append-only
     - `duration_minutes INT NOT NULL CHECK (duration_minutes BETWEEN 1 AND 1440)` — minimum 1 minute, maximum 24 hours (per DEC-227 + DEC-228).
     - `entry_kind entry_kind NOT NULL` — closed enum: `regular | overtime | weekend | holiday`.
     - `entry_status entry_status NOT NULL DEFAULT 'draft'` — closed enum: `draft | submitted | approved | reverted` (TASK-TIME-006 transitions).
-    - `billable BOOLEAN NOT NULL DEFAULT false` — set by TASK-TIME-005's cascade; this FR declares the column only (per DEC-223).
+    - `billable BOOLEAN NOT NULL DEFAULT false` — set by TASK-TIME-005's cascade; this task declares the column only (per DEC-223).
     - `rate_card_snapshot JSONB` — populated at entry creation by TASK-TIME-005; snapshot of the engagement rate-card at the row's instant (per DEC-224); empty `{}` at slice 1.
     - `entry_currency CHAR(3) NOT NULL` — ISO-4217; defaulted from engagement.invoice_currency at row creation (per DEC-229).
     - `description TEXT` — nullable; 0–1000 chars; PII-scrubbable.
@@ -119,9 +127,9 @@ The TIME service **MUST** ship the TimeEntry schema as the canonical append-only
 
 2. **MUST** enforce RLS with both `USING` and `WITH CHECK` (task-audit skill rule 13). Policy: `tenant_id = current_setting('auth.tenant_id')::uuid`. Cross-tenant reads return 0 rows; cross-tenant writes fail `permission_denied`.
 
-3. **MUST** declare the closed `entry_kind` Postgres enum with exactly 4 values (per VN-1 working-time classification): `'regular'`, `'overtime'`, `'weekend'`, `'holiday'`. Adding a 5th is an ADR. Holiday-list driving the kind defaulting is TASK-TIME-007's responsibility; this FR just stores the column.
+3. **MUST** declare the closed `entry_kind` Postgres enum with exactly 4 values (per VN-1 working-time classification): `'regular'`, `'overtime'`, `'weekend'`, `'holiday'`. Adding a 5th is an ADR. Holiday-list driving the kind defaulting is TASK-TIME-007's responsibility; this task just stores the column.
 
-4. **MUST** declare the closed `entry_status` Postgres enum with exactly 4 values: `'draft'`, `'submitted'`, `'approved'`, `'reverted'`. State transitions are TASK-TIME-006's responsibility; this FR ships the column at default `'draft'`.
+4. **MUST** declare the closed `entry_status` Postgres enum with exactly 4 values: `'draft'`, `'submitted'`, `'approved'`, `'reverted'`. State transitions are TASK-TIME-006's responsibility; this task ships the column at default `'draft'`.
 
 5. **MUST** be **append-only** at the SQL grant layer (per DEC-230 + task-audit skill rule 12). Migration applies `REVOKE UPDATE, DELETE ON time_entries FROM cyberos_app;`. Mutations write a fresh row with `correction_to` pointing at the prior row (per §1 #6 below).
 
@@ -136,7 +144,7 @@ The TIME service **MUST** ship the TimeEntry schema as the canonical append-only
 
 8. **MUST** enforce **chain (not tree) topology** (per DEC-226). At most one row may have `correction_to = <prior_id>` for any given `prior_id`. A `BEFORE INSERT` trigger checks `EXISTS (SELECT 1 FROM time_entries WHERE correction_to = $new.correction_to)`; if so → reject with `prior_row_already_corrected`. Reasoning: "what is the current value of entry X?" must be unambiguous; trees create N parallel current values.
 
-9. **MUST** ship the `current_time_entries_view` SQL view filtering to "effective rows only" — rows that no other row supersedes via `correction_to`. Definition: `SELECT * FROM time_entries WHERE id NOT IN (SELECT correction_to FROM time_entries WHERE correction_to IS NOT NULL)`. Downstream FRs (TASK-TIME-005 billable cascade, TASK-TIME-009 rollup) MUST read from the view, not the raw table.
+9. **MUST** ship the `current_time_entries_view` SQL view filtering to "effective rows only" — rows that no other row supersedes via `correction_to`. Definition: `SELECT * FROM time_entries WHERE id NOT IN (SELECT correction_to FROM time_entries WHERE correction_to IS NOT NULL)`. Downstream tasks (TASK-TIME-005 billable cascade, TASK-TIME-009 rollup) MUST read from the view, not the raw table.
 
 10. **MUST** validate at API layer:
     - `duration_minutes` between 1 and 1440 (per DEC-227 + DEC-228; the DB CHECK constraint duplicates).
@@ -204,9 +212,9 @@ The TIME service **MUST** ship the TimeEntry schema as the canonical append-only
 
 **Why entry_status separate from billable (§1 #1)?** `entry_status` is workflow ("has this been approved?"); `billable` is financial classification ("is this hour invoiced?"). An entry can be `status=approved, billable=false` (approved internal work, not billed to client). They are orthogonal axes.
 
-**Why slice-1 ships billable=false default (DEC-223)?** The billable cascade (TASK-TIME-005) is a non-trivial 4-step decision involving the engagement's non-billable categories, the rate card's role default, and member overrides. Splitting it to its own FR keeps this schema FR focused on integrity. Default `false` is conservative — if the cascade fails to set the flag, the entry is treated as non-billable (no invoice line) rather than mis-billed. TASK-TIME-005's tests assert the default is replaced on every entry.
+**Why slice-1 ships billable=false default (DEC-223)?** The billable cascade (TASK-TIME-005) is a non-trivial 4-step decision involving the engagement's non-billable categories, the rate card's role default, and member overrides. Splitting it to its own task keeps this schema task focused on integrity. Default `false` is conservative — if the cascade fails to set the flag, the entry is treated as non-billable (no invoice line) rather than mis-billed. TASK-TIME-005's tests assert the default is replaced on every entry.
 
-**Why entry_currency on the row (DEC-229)?** Multi-currency tenants run engagements in VND, USD, SGD, etc. The entry's currency is the engagement's invoice currency at the row's instant. Snapshotting prevents the engagement's currency switch (rare but possible during contract renegotiation) from retroactively converting past entries. Invoice math is TASK-INV-001's concern; this FR just preserves the source-of-truth currency.
+**Why entry_currency on the row (DEC-229)?** Multi-currency tenants run engagements in VND, USD, SGD, etc. The entry's currency is the engagement's invoice currency at the row's instant. Snapshotting prevents the engagement's currency switch (rare but possible during contract renegotiation) from retroactively converting past entries. Invoice math is TASK-INV-001's concern; this task just preserves the source-of-truth currency.
 
 **Why created_by_subject_id distinct from member_subject_id (§1 #25)?** Most entries are self-logged (member = creator). Some entries are AM-on-behalf-of (manual entry on someone else's behalf with their confirmation — TASK-TIME-003 ships that flow). Both fields capture different facts: "whose work this records" vs "who pressed the button." Audit trails need both.
 
@@ -678,7 +686,7 @@ async fn entry_chain_walker_returns_oldest_first(pool: sqlx::PgPool) {
 - **TASK-AUTH-101** — RBAC catalogue; `Resource::TimeEntry + Action::Write/Read` matrix entry.
 
 **Downstream (8 placeholders):**
-- **TASK-TIME-002** — timer start/stop UI (creates entries via this FR's API).
+- **TASK-TIME-002** — timer start/stop UI (creates entries via this task's API).
 - **TASK-TIME-003** — manual entry form + VN Labour Code cap validation.
 - **TASK-TIME-005** — billable cascade (populates `billable` + `rate_card_snapshot`).
 - **TASK-TIME-006** — weekly approval flow (transitions `entry_status`).
@@ -786,7 +794,7 @@ async fn entry_chain_walker_returns_oldest_first(pool: sqlx::PgPool) {
 Deferred:
 - **Standalone-engagement entries (no issue_id)** — slice 2; some non-billable internal time has no specific issue.
 - **Holiday-list driving entry_kind defaulting** — TASK-TIME-007 ships the holiday table.
-- **VN Labour Code OT cap enforcement** — TASK-TIME-007 (this FR allows the kind = overtime; the cap is TASK-TIME-007's gate).
+- **VN Labour Code OT cap enforcement** — TASK-TIME-007 (this task allows the kind = overtime; the cap is TASK-TIME-007's gate).
 - **Billable cascade computation** — TASK-TIME-005.
 - **Approval flow transitions** — TASK-TIME-006.
 - **Per-cycle rollup emit to INV** — TASK-TIME-009.
@@ -829,7 +837,7 @@ All other questions resolved.
 | `description` contains PII not scrubbed | memory PII test | Pre-commit failure | Add PII rule |
 | Chain walker called on entry id from different tenant | RLS filters out | Returns 0 rows | None — designed |
 | Subject deleted but cleanup ordering wrong | FK ON DELETE RESTRICT | Migration fails | Restore subject first |
-| Daily aggregation exceeds 24h via many sub-row entries | This FR's per-row cap is 24h; aggregate cap is TASK-TIME-007 | Out-of-scope here | TASK-TIME-007 |
+| Daily aggregation exceeds 24h via many sub-row entries | This task's per-row cap is 24h; aggregate cap is TASK-TIME-007 | Out-of-scope here | TASK-TIME-007 |
 | Time-zone confusion: ts_start interpreted in local time | DB stores TIMESTAMPTZ — always UTC | None | Document for UI implementers |
 | Description-edit on existing entry attempted | Handler omits from PATCH — there is no PATCH | Use correct endpoint | None — designed |
 | `billable` field set in create request | Handler ignores (slice 1; cascade sets) | Default false applied | TASK-TIME-005 takes over |
@@ -860,7 +868,7 @@ All other questions resolved.
 - **The view's `NOT IN` query** — Postgres optimises with the `correction_to_idx` partial index; performance is bounded by correction count (~5% of rows).
 - **REVOKE applies to `cyberos_app` role only** — superuser + migration role can mutate (for backups, manual repair, etc.). Production app code uses cyberos_app.
 - **`entry_kind` and `entry_status` are orthogonal axes** — workflow status (draft → submitted → approved) is independent of working-time classification (regular vs overtime).
-- **`description` is NOT searchable via full-text** at slice 1 — that's an FR-TIME-2xx ambition. Slice 1 stores as TEXT.
+- **`description` is NOT searchable via full-text** at slice 1 — that's a task-TIME-2xx ambition. Slice 1 stores as TEXT.
 
 ---
 

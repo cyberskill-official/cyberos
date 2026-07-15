@@ -1,10 +1,17 @@
 ---
 id: TASK-IMP-077
 title: "iOS icon alpha flatten — ASC 90717 hotfix: 1024x1024 marketing icon must carry no alpha channel"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: improvement
+created_at: 2026-07-13T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: improvement
-priority: MUST
+priority: p0
 status: done
-class: improvement
 verify: T
 phase: "Wave 6 - go-live (Track B: mobile shells)"
 owner: Stephen Cheng (CTO)
@@ -47,7 +54,7 @@ risk_if_skipped: "Every iOS TestFlight upload fails at ASC validation (90717) af
 - Android guard untouched (15-file hash loop intact). PASS
 - Testing pass 2026-07-13 (post gate-1 "approve all"): PIL RGB/1024x1024 re-verified, both guards re-verified, release.yml parses. PASS. Store-side proof already live: the re-tag's iOS lane went green and build 10706 reached TestFlight.
 ## §9
-- Why did TASK-IMP-073's checks miss this? Hash-equality proved copy fidelity, AC #3's visual check cannot see a 254-255 alpha channel - exactly §10 row 3's predicted blind spot. This FR converts the blind spot into a standing machine check.
+- Why did TASK-IMP-073's checks miss this? Hash-equality proved copy fidelity, AC #3's visual check cannot see a 254-255 alpha channel - exactly §10 row 3's predicted blind spot. This task converts the blind spot into a standing machine check.
 ## §10
 | Failure | Detection | Recovery |
 |---|---|---|

@@ -79,10 +79,10 @@ The infrastructure plane plus the substrate (memory), the catalog (SKILL - alrea
 
 - All 10 internal Members on CyberOS for chat + memory by P0 exit
 - Slack + Zalo billing terminated by P0 exit
-- CUO answers >= 50 questions/week with >= 98% citation rate (N(FR pending))
+- CUO answers >= 50 questions/week with >= 98% citation rate (N(task pending))
 - memory search p95 <= 250 ms on a 50k-chunk corpus
 - Zero compensation/equity facts ingested into memory (denylist DEC-036)
-- p95 GraphQL <= 400 ms across all subgraphs (N(FR pending))
+- p95 GraphQL <= 400 ms across all subgraphs (N(task pending))
 
 #### Risks (likelihood x impact)
 
@@ -96,7 +96,7 @@ The infrastructure plane plus the substrate (memory), the catalog (SKILL - alrea
 - P0 start: module template + Federation router + design tokens repo live
 - P0 slice 1: AUTH + AI Gateway in beta; memory + SKILL already-shipped baseline
 - P0 slice 2: MCP Gateway live; CUO router-only mode
-- P0 exit: CHAT live; OBS LGTM stack live; 7/23 modules ready; Trust Center launched; PLUGIN scaffold + 8 FRs at 10/10 (cross-runtime distribution to Claude Code / Cursor / Cowork / Codex CLI)
+- P0 exit: CHAT live; OBS LGTM stack live; 7/23 modules ready; Trust Center launched; PLUGIN scaffold + 8 tasks at 10/10 (cross-runtime distribution to Claude Code / Cursor / Cowork / Codex CLI)
 
 ## P0 -> P1 descope gate
 
@@ -108,7 +108,7 @@ Every plan that adds modules monotonically becomes a death march. CyberOS must h
 
 1. Did P0 exit ship clean? All 5 P0 modules (AI Gateway, OBS, AUTH stub, MCP Gateway, CHAT) at `status: shipped`; Trust Center live; SOC 2 readiness signal positive; 0 cross-tenant leak incidents in P0. Amber = 1 module slipped to P1; Red = 2+ modules slipped, or any incident.
 2. Is CHAT decommission >= 0.95? A 14-day rolling decommission signal: how much of CyberSkill's internal chatter is in CHAT vs Slack/Zalo. Amber = 0.85-0.94; Red = below 0.85.
-3. Is the AI Gateway cost-of-everything gate fully operational? TASK-AI-001..005 shipped and audited; 0 budget breaches; cache hit rate >= 30%. Amber = 1 of the 5 FRs deferred; Red = 2+ deferred, or any budget breach.
+3. Is the AI Gateway cost-of-everything gate fully operational? TASK-AI-001..005 shipped and audited; 0 budget breaches; cache hit rate >= 30%. Amber = 1 of the 5 tasks deferred; Red = 2+ deferred, or any budget breach.
 4. Is the headcount ramp on track? 10 -> 12 hires by P1 start. Amber = 1 hire late by <= 30 days; Red = 1+ hire late by more than 30 days, or any hire pulled.
 
 ### Descope rules (if any Red)
@@ -163,14 +163,14 @@ The productivity moat. PROJ + TIME + CRM + KB + HR + EMAIL + REW + LEARN - eight
 
 - First full payroll cycle issued through REW (month-end at P1 exit)
 - First promotion review through Hội đồng Chuyên môn
-- P1 base salary invariant verified: zero system-reductions (N(FR pending))
+- P1 base salary invariant verified: zero system-reductions (N(task pending))
 - BP balance tracked with anti-inflation interest at the ACB rate
 - EMAIL daily summary in memory for every Member
 - CRM activities auto-logged from EMAIL outgoing (CaMeL safe extraction)
 
 #### Risks
 
-- R-101 (M x H) - REW parameter versioning bug; a retroactive recompute could violate N(FR pending). Mitigation: anti-retroactive CI gate; replay tests on every release.
+- R-101 (M x H) - REW parameter versioning bug; a retroactive recompute could violate N(task pending). Mitigation: anti-retroactive CI gate; replay tests on every release.
 - R-102 (M x H) - EU AI Act Annex III section 4 over-application; HR features flagged as high-risk. Mitigation: DEC-054 - drafts only, no scoring.
 - R-103 (M x M) - Stalwart self-hosted EMAIL reliability. Mitigation: fallback SMTP relay; OBS alarms on bounce rate.
 - R-104 (L x M) - SOC 2 Type I auditor unavailability in Vietnam. Mitigation: Schellman, A-LIGN shortlist; remote audit option.
@@ -285,7 +285,7 @@ External GA. DOC + PORTAL + TEN close the gap. First external paying tenant onbo
 - 5 external paying tenants by P4 late
 - 10 external paying tenants by P4 GA -> ARR >= $3M
 - NPS >= 40 from external tenants
-- Zero tenant data leakage incidents (N(FR pending) maintained)
+- Zero tenant data leakage incidents (N(task pending) maintained)
 - First eIDAS QTSP-signed document issued
 
 #### Risks
@@ -340,12 +340,12 @@ Each phase has a "north-star plus three" KPI set. The north-star is the dogfoodi
 
 #### Continuous (cross-phase) NFRs
 
-- N(FR pending) - GraphQL p95 <= 400 ms
-- N(FR pending) - memory search p95 <= 250 ms on 1M chunks
-- N(FR pending) - platform availability >= 99.5%
-- N(FR pending) - CHAT availability >= 99.9%
-- N(FR pending) - tenant data leakage = 0
-- N(FR pending) - CUO citation rate >= 98%
+- N(task pending) - GraphQL p95 <= 400 ms
+- N(task pending) - memory search p95 <= 250 ms on 1M chunks
+- N(task pending) - platform availability >= 99.5%
+- N(task pending) - CHAT availability >= 99.9%
+- N(task pending) - tenant data leakage = 0
+- N(task pending) - CUO citation rate >= 98%
 
 #### Anti-metrics (watched to not grow)
 

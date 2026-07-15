@@ -1,8 +1,16 @@
 ---
 id: TASK-MEMORY-118
 title: "memory put_if — optimistic-concurrency primitive with content-hash preconditions; many-agent contention without clobbering; canonical-ops extension §3.1"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-19T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: memory
-priority: SHOULD
+priority: p1
 status: done
 verify: T
 phase: P1
@@ -462,9 +470,9 @@ API + tests above are the skeleton. Order:
 
 ## §7 — Dependencies
 
-- **TASK-MEMORY-117 (depends on)** — ACL check runs first. This FR requires `put_if` to honour STORE.yaml ACL.
+- **TASK-MEMORY-117 (depends on)** — ACL check runs first. This task requires `put_if` to honour STORE.yaml ACL.
 - **TASK-MEMORY-115 (related)** — dream-applier's preconditions are conceptually identical; the applier could be refactored to use `put_if` (slice-4 cleanup).
-- **TASK-MEMORY-103 (related)** — multi-device sync uses optimistic concurrency at the chain level (`prev_chain`); this FR adds it at the memory-file level for finer granularity.
+- **TASK-MEMORY-103 (related)** — multi-device sync uses optimistic concurrency at the chain level (`prev_chain`); this task adds it at the memory-file level for finer granularity.
 
 ---
 
@@ -536,7 +544,7 @@ All resolved. Deferred:
 | Hash collision (cosmic ray) | cryptographically improbable | n/a | n/a |
 | HEAD advances by 0 on rejection | aux row IS emitted | HEAD +1 | None — aux row is the audit |
 | Caller passes uppercase hex | shape check | ValueError | Caller lowercases |
-| Memory file is encrypted (FR §5.4) | precondition is computed on the cipher BYTES (not plaintext) | works because both sides see the same ciphertext | None |
+| Memory file is encrypted (task §5.4) | precondition is computed on the cipher BYTES (not plaintext) | works because both sides see the same ciphertext | None |
 | File has UTF-8 BOM | hash computed on raw bytes | works (BOM is part of body) | None |
 | Caller forgets `--precondition` flag | argparse required arg | CLI error | Caller adds flag |
 

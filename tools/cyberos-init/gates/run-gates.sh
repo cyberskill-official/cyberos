@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# run-gates.sh - the machine-gate floor for an FR. Reads .cyberos/gates.env and runs
+# run-gates.sh - the machine-gate floor for a task. Reads .cyberos/gates.env and runs
 # the target repo's own build / lint / test / coverage, plus optional caf / awh when
 # enabled. GREEN here is necessary but NOT sufficient: the two human-acceptance gates
 # (review acceptance, final acceptance) are always still required and are never run here.
@@ -68,7 +68,7 @@ gate coverage "${COVERAGE_CMD:-}" "$CFG_COVERAGE" "${SRC_COVERAGE:-}"
 
 echo "----------------------------------------------------------------------"
 if [ "$fail" -ne 0 ]; then
-  echo "GATES: RED - route the FR back to ready_to_implement and fix; do not advance."
+  echo "GATES: RED - route the task back to ready_to_implement and fix; do not advance."
   exit 1
 fi
 if [ -z "${BUILD_CMD:-}$CFG_BUILD${LINT_CMD:-}$CFG_LINT${TEST_CMD:-}$CFG_TEST${COVERAGE_CMD:-}$CFG_COVERAGE" ]; then
@@ -76,7 +76,7 @@ if [ -z "${BUILD_CMD:-}$CFG_BUILD${LINT_CMD:-}$CFG_LINT${TEST_CMD:-}$CFG_TEST${C
 fi
 echo "GATES: GREEN (machine gates only)."
 echo "HITL still required: a human records the review verdict and the final acceptance."
-echo "The agent must NOT set the FR to done itself."
+echo "The agent must NOT set the task to done itself."
 
 # Status page via internal lib (not a user-facing command)
 if command -v node >/dev/null 2>&1 && [ -f "$root/.cyberos/lib/status-page.sh" ]; then

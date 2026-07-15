@@ -1,10 +1,17 @@
 ---
 id: TASK-DOCS-002
 title: Documentation single source of truth - module-owned markdown, generated website
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-07-14T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: docs
-class: product
 status: done
-priority: MUST
+priority: p0
 depends_on: []
 routed_back_count: 0
 shipped: 2026-07-12
@@ -17,7 +24,7 @@ awh: N/A
 
 The public wiki lives in `website/` as hand-authored HTML that duplicates and drifts from the real sources. Decision (operator 2026-07-10, format delegated): documentation moves to ONE source of truth, authored in Markdown with a separated `assets/` folder per scope, and every display surface (public website, web console, desktop app) renders from that source. HTML is an OUTPUT of the site build, never an authoring format. Ownership follows the code: each module owns its own documentation and step-by-step guides next to its code; only genuinely global artifacts stay in `docs/`.
 
-Why markdown over authored HTML: agents and humans author it natively, it diffs cleanly in review, one source renders to all three platforms, and the site build already generates its reference pages (FR/NFR catalogs, changelogs) from repo data - this extends that proven pattern to the doctrine pages instead of maintaining a parallel hand-written HTML tree.
+Why markdown over authored HTML: agents and humans author it natively, it diffs cleanly in review, one source renders to all three platforms, and the site build already generates its reference pages (task/NFR catalogs, changelogs) from repo data - this extends that proven pattern to the doctrine pages instead of maintaining a parallel hand-written HTML tree.
 
 ## 1. Normative clauses
 
@@ -35,7 +42,7 @@ Why markdown over authored HTML: agents and humans author it natively, it diffs 
 - [ ] `tools/docs-site/build.sh` regenerates the whole docs site from md sources into `dist/website`; running twice yields byte-identical output.
 - [ ] All previously hand-authored doctrine pages exist as md under their owning scope; the `website/` folder is gone from version control entirely.
 - [ ] Site renders with the existing chrome (nav, styles) and working asset links.
-- [ ] Web console and desktop app can consume the same md sources (path contract documented in this FR; their viewers are follow-up FRs).
+- [ ] Web console and desktop app can consume the same md sources (path contract documented in this task; their viewers are follow-up tasks).
 
 ## 3. Gate
 

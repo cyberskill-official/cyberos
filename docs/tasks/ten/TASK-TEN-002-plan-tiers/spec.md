@@ -1,8 +1,16 @@
 ---
 id: TASK-TEN-002
 title: "3 plan tiers (Starter / Team / Enterprise) hardcoded with per-tier caps"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: TEN
-priority: MUST
+priority: p0
 status: ready_to_implement
 new_files:
   - docs/tasks/ten/PLAN_CAPS.md
@@ -107,11 +115,11 @@ The TEN service **MUST** define exactly three hardcoded plan tiers — Starter, 
 
 8. **MUST** prevent any non-founder API path from changing the plan of a tenant flagged `is_founder_tenant = true` (DEC-777). The handler short-circuits with `403 FORBIDDEN` + `{error: "founder_tenant_plan_immutable"}`. The founder tenant is the CyberSkill operator's own tenant — hardcoded to Enterprise + cannot be moved.
 
-9. **MUST** consume the per-tier caps as the metering default when `tenants.metering_caps_yaml IS NULL`. The metering policy resolver order (DEC-781 ref): (1) per-tenant explicit `metering_caps_yaml` (founder-set), (2) plan-tier caps (this FR), (3) platform absolute maximums (TASK-TEN-004 §11.10). Per-tenant overrides are stronger than plan caps; plan caps are stronger than platform defaults.
+9. **MUST** consume the per-tier caps as the metering default when `tenants.metering_caps_yaml IS NULL`. The metering policy resolver order (DEC-781 ref): (1) per-tenant explicit `metering_caps_yaml` (founder-set), (2) plan-tier caps (this task), (3) platform absolute maximums (TASK-TEN-004 §11.10). Per-tenant overrides are stronger than plan caps; plan caps are stronger than platform defaults.
 
 10. **MUST** emit one memory audit row per plan change at sev-2 with kind `ten.plan_changed`. The row carries `(tenant_id, actor_id, from_tier, to_tier, effective_at, proration_amount_cents)`. The reason field is scrubbed via TASK-MEMORY-111 before chain emission.
 
-11. **MUST** compute proration on upgrade as `((target_tier_price - current_tier_price) * days_remaining_in_period) / days_in_period`, integer math in cents (no floating-point). The result is positive for upgrade (tenant owes prorated diff). The proration handler is invoked by TASK-TEN-003 Stripe billing; this FR emits the proration_amount_cents in the history row but does NOT mutate Stripe state.
+11. **MUST** compute proration on upgrade as `((target_tier_price - current_tier_price) * days_remaining_in_period) / days_in_period`, integer math in cents (no floating-point). The result is positive for upgrade (tenant owes prorated diff). The proration handler is invoked by TASK-TEN-003 Stripe billing; this task emits the proration_amount_cents in the history row but does NOT mutate Stripe state.
 
 12. **MUST** snapshot the `from_tier` caps at the moment of change into the history row so future audits can reconstruct what the tenant had access to. The snapshot is the JSONB `from_tier_caps_snapshot` column. This avoids "the tier caps changed, now history rows are ambiguous" — even if we add a fourth tier later, old history rows show the caps as they were.
 
@@ -167,7 +175,7 @@ The TEN service **MUST** define exactly three hardcoded plan tiers — Starter, 
 
 **§2.2  Why hardcoded constants and not DB rows.** DEC-772 + clause #2. Plan caps are part of the product contract. A DB-mutable "caps" table would let an operator silently change a tenant's plan caps (compliance + customer-trust violation). Hardcoded constants mean cap changes require a code release + a coordinated customer notification. The cost is that adding a new tier or changing caps requires a deploy; the benefit is that "what's my cap?" has a single answer reachable by reading source.
 
-**§2.3  Why no Free tier.** DEC-770 implicit. Free tiers attract abuse (spam, mass account creation) without producing revenue. Our model is paid-from-day-1; trial periods are time-limited per-tenant flags (out of scope for this FR) but not first-class tiers.
+**§2.3  Why no Free tier.** DEC-770 implicit. Free tiers attract abuse (spam, mass account creation) without producing revenue. Our model is paid-from-day-1; trial periods are time-limited per-tenant flags (out of scope for this task) but not first-class tiers.
 
 **§2.4  Why proration on upgrade but defer-to-next-period on downgrade.** DEC-773. Upgrade is a positive cashflow event for us and the tenant gets immediate access to the upgraded caps; proration matches the cash to the access. Downgrade is a negative cashflow event for us — deferring to next-period keeps the tenant on the current tier for the rest of the paid-for period (no refund accounting) and gives them time to "pull back" before the downgrade hits. The override (immediate downgrade with audit) exists for true exit cases.
 
@@ -203,7 +211,7 @@ The TEN service **MUST** define exactly three hardcoded plan tiers — Starter, 
 
 **§2.20  Why audit kinds are 4 not 1.** Clause #25. Each kind reflects a different operational signal: normal change, founder override, downgrade violation, rate limit. Operators dashboard-query on kind; collapsing them would force free-text parsing.
 
-**§2.21  Why we don't ship a plan-comparison UI as part of this FR.** Out of scope. The marketing site + the tenant-admin SPA (TASK-TEN-107) own the UI; this FR is the data + API substrate.
+**§2.21  Why we don't ship a plan-comparison UI as part of this task.** Out of scope. The marketing site + the tenant-admin SPA (TASK-TEN-107) own the UI; this task is the data + API substrate.
 
 **§2.22  Why proration math is integer cents.** Clause #11. Floating-point in money is forbidden — accumulated rounding errors create invoice mysteries. Integer cents (i64 max = ~$92 quadrillion, sufficient for billing) is the correct primitive. The proration formula is integer division with floor semantics; the rounding goes in the tenant's favor (we under-bill by up to 1 cent per change).
 
@@ -628,7 +636,7 @@ Authorization: Bearer <cyberskill_founder>
 
 - **OQ-1** (closed by DEC-770): 3 tiers — Starter, Team, Enterprise. Confirmed.
 - **OQ-2** (closed by DEC-772): hardcoded constants.
-- **OQ-3** (open): should mid-year price changes trigger automatic notifications to current tenants? Out of scope; emails are FR-EMAIL-* domain. Currently we'd handle via marketing.
+- **OQ-3** (open): should mid-year price changes trigger automatic notifications to current tenants? Out of scope; emails are task-EMAIL-* domain. Currently we'd handle via marketing.
 - **OQ-4** (open): vertical-pack pricing (TASK-TEN-005) layers add-ons on top of base plan; the interaction model needs TASK-TEN-005 + TASK-TEN-003 to be finalized.
 
 ---

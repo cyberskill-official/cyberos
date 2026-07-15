@@ -1,4 +1,4 @@
-# task-audit - template-detection cases (TASK-CUO-208 AC 3/4/5/7)
+# Task-audit - template-detection cases (TASK-CUO-208 AC 3/4/5/7)
 
 Executable case table; fixtures inline below (each case: detection -> families -> expected verdict).
 
@@ -36,13 +36,13 @@ x
 
 ```markdown
 ---
-id: FR-X-001
+id: TASK-X-001
 ---
 ## §1 - Description
 1. MUST x.
 ## §2 - Why this design
 ...sections §3-§9, §11 present, §10 absent...
-*End of FR-X-001.*
+*End of TASK-X-001.*
 ```
 
 ## fixture: ambiguous-both-markers

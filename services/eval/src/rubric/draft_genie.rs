@@ -4,7 +4,7 @@
 //! signed documents and PROPOSE `rubric_item` rows into `state='draft'`. This is intentionally deferred
 //! because it requires the AI gateway (services/ai-gateway, TASK-AI-022) and the TASK-EVAL-001 document-access
 //! basis, neither of which this slice depends on. Keeping the seam here, with no model call compiled in,
-//! keeps the module structure aligned with the FR while honouring "disabled-by-default, human-only" for now.
+//! keeps the module structure aligned with the task while honouring "disabled-by-default, human-only" for now.
 //!
 //! When implemented, this path MUST hold to the §1 #9 contract:
 //!   * it MAY create items in `state='draft'` ONLY - it has NO path to approve or publish (that is the human

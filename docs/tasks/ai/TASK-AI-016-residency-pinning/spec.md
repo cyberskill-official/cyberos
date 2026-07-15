@@ -2,8 +2,16 @@
 # ───── Machine-readable frontmatter (parsed by task-audit + future fr-catalog renderer) ─────
 id: TASK-AI-016
 title: "Tenant residency pinning (sg-1 / eu-1 / us-1 / vn-1) propagating to provider region selection"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-15T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AI
-priority: MUST
+priority: p0
 status: done
 verify: T
 phase: P0
@@ -55,7 +63,7 @@ disallowed_tools:
   - hardcode region strings outside `region_table.rs`
   - bypass `policy.ai_policy.residency` from any code path
   - silently degrade `vn-1` to `sg-1` (must explicitly refuse and let the caller choose; per §1 #6)
-  - extend the residency enum without an FR amendment (slice 4 ships exactly 4 variants)
+  - extend the residency enum without a task amendment (slice 4 ships exactly 4 variants)
 
 # ───── Estimated work ─────
 effort_hours: 8
@@ -81,13 +89,13 @@ risk_if_skipped: "Tenant `residency: vn-1` could resolve to `bedrock: us-east-1`
 The AI Gateway service **MUST** enforce tenant residency at alias-resolution time. The enforcement and surrounding contract obey the following:
 
 1. **MUST** expose `residency::matches(policy_residency: Residency, provider_region: &Region) -> bool`. Returns `true` if and only if the provider's region is in the residency's acceptable-region set per the `region_table.rs` mapping.
-2. **MUST** define the residency → acceptable-region mapping in `region_table.rs` as a `frozenset` per residency; changes to the mapping require explicit FR amendment:
+2. **MUST** define the residency → acceptable-region mapping in `region_table.rs` as a `frozenset` per residency; changes to the mapping require explicit task amendment:
    - `Sg1` → `{"ap-southeast-1"}` (Singapore; AWS only at slice 4).
    - `Eu1` → `{"eu-central-1", "eu-west-1"}` (Frankfurt, Ireland — both adequacy-covered for EU↔EU intra-region transfers).
    - `Us1` → `{"us-east-1", "us-east-2", "us-west-2"}` (Northern Virginia, Ohio, Oregon).
    - `Vn1` → `{}` (empty set; no AWS region is in-country for Vietnam at slice 4).
 3. **MUST** be invoked by `alias::resolve` (TASK-AI-006 §1 #7). When `residency::matches(policy.residency, &resolved_region) == false`, `alias::resolve` returns `Err(AliasError::ResidencyViolation { policy_residency, resolved_region, attempted_alias })`.
-4. **MUST** treat tenants with a missing `policy.ai_policy.residency` field as fail-closed for PDPL-pinned tenants (any tenant with `policy.tenant_jurisdiction == "VN"`); for other tenants the missing-field default is `Sg1` (Asia-Pacific consensus default for the CyberSkill home region). The default is documented in TASK-AI-005's schema; this FR consumes the parsed value.
+4. **MUST** treat tenants with a missing `policy.ai_policy.residency` field as fail-closed for PDPL-pinned tenants (any tenant with `policy.tenant_jurisdiction == "VN"`); for other tenants the missing-field default is `Sg1` (Asia-Pacific consensus default for the CyberSkill home region). The default is documented in TASK-AI-005's schema; this task consumes the parsed value.
 5. **MUST** strip AZ suffix from the provider-returned region string before matching: `"ap-southeast-1a"` → `"ap-southeast-1"`. The matcher operates on AWS region strings (no AZ); AZ-aware policies are out of scope at slice 4. The strip rule is `^(?P<region>[a-z]{2}-[a-z]+-\d+)[a-z]?$` — stripping a single trailing alpha character if present.
 6. **MUST** return `false` for `Vn1` against ANY provider region in slice 4 (no VN provider integrated). Tenants pinning `vn-1` MUST be refused at resolve time; the refusal carries a distinct error message `vn1_no_provider_yet` so the operator dashboard can distinguish "no VN provider" from "wrong region" failures. TASK-AI-104 (placeholder) will integrate Viettel Cloud + FPT Cloud and add their region strings to the `Vn1` set.
 7. **MUST** emit an `ai.residency_violation` memory audit row when a request is refused due to residency. The row carries `tenant_id`, `agent_persona`, `requested_alias`, `policy_residency`, `resolved_region`, `request_id`, AND a `vn1_no_provider` boolean (true when residency is Vn1 and the failure is due to absence of a VN provider rather than wrong region).
@@ -111,13 +119,13 @@ The AI Gateway service **MUST** enforce tenant residency at alias-resolution tim
 
 **Why fail-closed on missing residency for PDPL tenants (§1 #4)?** A VN-jurisdiction tenant whose policy file omits `residency:` is in an indeterminate state — they didn't explicitly pin VN, but the regulator presumes VN data localisation applies. Defaulting to `Sg1` (the closest acceptable AP region) is the conservative call: it avoids the Decree 53 risk without forcing every onboarding to explicitly set residency. Tenants who legitimately want EU or US routing must explicitly pin; the default is the safe-but-tight choice. Non-PDPL tenants get the same `Sg1` default for operational consistency.
 
-**Why static enum (§1 #2) and not config-driven?** The four residency values map to legal-jurisdiction categories that change rarely (AWS region launches don't add new residency tiers — they add new acceptable regions within an existing tier). Encoding them as a Rust enum + LazyLock map means the type system enforces "you can't add a residency without amending the FR and recompiling." A config-driven approach invites operational drift ("operator added `apac-2` to the YAML; nobody noticed it doesn't map to any AWS region"). The trade-off is loss of hot-reloadability for residency itself; given the rarity of changes, this is the right trade.
+**Why static enum (§1 #2) and not config-driven?** The four residency values map to legal-jurisdiction categories that change rarely (AWS region launches don't add new residency tiers — they add new acceptable regions within an existing tier). Encoding them as a Rust enum + LazyLock map means the type system enforces "you can't add a residency without amending the task and recompiling." A config-driven approach invites operational drift ("operator added `apac-2` to the YAML; nobody noticed it doesn't map to any AWS region"). The trade-off is loss of hot-reloadability for residency itself; given the rarity of changes, this is the right trade.
 
 **Why is `Vn1` an empty set rather than mapped to `ap-southeast-1` (the closest region)?** Because mapping it to `ap-southeast-1` would convert "Vietnam data residency" into "Singapore data residency" without telling anyone. A tenant pinning `vn-1` is making a regulatory statement; satisfying that statement requires a VN-located provider, which we don't have at slice 4. The honest answer is "we can't serve you under this constraint yet" — the dishonest answer is "we'll route to Singapore and hope the regulator doesn't notice." Refusing and waiting for TASK-AI-104 (Viettel/FPT integration) preserves the regulatory contract.
 
 **Why strip AZ suffix (§1 #5)?** Bedrock and Vertex sometimes return AZ-suffixed region strings (`ap-southeast-1a`) in error messages or routing metadata. The matcher operates at region granularity (the legal residency unit) — AZ is sub-region and irrelevant to localisation regulation. The single trailing `[a-z]?` strip handles every AWS AZ format and is unambiguous (no AWS region ends in a single letter; the ambiguity of `ap-southeast-1a` would only arise if AWS launched a region literally named `ap-southeast-1a`, which they won't because their convention treats trailing letters as AZ).
 
-**Why does residency precedence go AFTER ZDR (§1 #10)?** Both are compliance gates; both refuse calls. Order matters because the operator dashboard sees the first-fired error. Putting ZDR first lets a tenant who fails BOTH gates see "ZDR violation" first (the more expensive/restrictive gate is more diagnostic — fixing ZDR often resolves residency, since ZDR-attested providers tend to publish region availability). Putting residency first would obscure ZDR failures behind region failures. The order is documented and tested; future FRs touching this precedence must justify a change.
+**Why does residency precedence go AFTER ZDR (§1 #10)?** Both are compliance gates; both refuse calls. Order matters because the operator dashboard sees the first-fired error. Putting ZDR first lets a tenant who fails BOTH gates see "ZDR violation" first (the more expensive/restrictive gate is more diagnostic — fixing ZDR often resolves residency, since ZDR-attested providers tend to publish region availability). Putting residency first would obscure ZDR failures behind region failures. The order is documented and tested; future tasks touching this precedence must justify a change.
 
 **Why per-alias residency override (§1 #11)?** Real-world: a SG-default tenant has one workflow that processes EU customer data ("send EU customer support summary to model X"). They want most calls to route via SG (latency, cost), but THIS specific alias must route via EU. Without the override, the tenant has only two unsatisfactory choices: (a) flip the entire tenant to `Eu1` (degrading every other call's latency), or (b) accept the GDPR risk. The override gives them surgical control. The ambiguity-rejection rule (`OverrideAmbiguous`) prevents the operational footgun of two glob patterns matching the same alias with different residencies.
 
@@ -207,7 +215,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
 use super::Residency;
 
-/// §1 #2: residency → acceptable-region mapping. Changes require FR amendment.
+/// §1 #2: residency → acceptable-region mapping. Changes require task amendment.
 pub static REGIONS_BY_RESIDENCY: LazyLock<HashMap<Residency, HashSet<&'static str>>> =
     LazyLock::new(|| {
         let mut m = HashMap::new();
@@ -615,25 +623,25 @@ match alias::resolve(&req.alias, &policy).await {
 
 ## §7 — Dependencies
 
-### Code dependencies (other FRs/modules)
+### Code dependencies (other tasks/modules)
 
 - **TASK-AI-006** — `alias::resolve` consumes `residency::matches`. The `AliasError::ResidencyViolation` variant is added to TASK-AI-006's enum.
 - **TASK-AI-005** — Tenant policy schema declares `policy.ai_policy.residency` (Residency enum) and `policy.ai_policy.residency_override` (map of glob → Residency). TASK-AI-005's parser delegates to `residency::parse_residency` for the value.
 - **TASK-AI-015** — ZDR enforcement runs BEFORE residency in `alias::resolve` (precedence in §1 #10). Both errors are surfaced via the same handler path.
-- **TASK-AI-003** — memory audit-row bridge. This FR adds the `canonical::residency_violation` builder for the `ai.residency_violation` row kind.
-- **TASK-AI-104 (downstream placeholder)** — VN provider integration (Viettel Cloud + FPT Cloud). Will extend `REGIONS_BY_RESIDENCY[Vn1]` from empty set to a populated set; this FR's `Vn1 → false` rule reverts at that point.
+- **TASK-AI-003** — memory audit-row bridge. This task adds the `canonical::residency_violation` builder for the `ai.residency_violation` row kind.
+- **TASK-AI-104 (downstream placeholder)** — VN provider integration (Viettel Cloud + FPT Cloud). Will extend `REGIONS_BY_RESIDENCY[Vn1]` from empty set to a populated set; this task's `Vn1 → false` rule reverts at that point.
 
 ### Concept dependencies (shared types)
 
 - `Residency` enum is the residency primitive used by tenant policy, alias resolve, audit rows, response bodies, OTel metrics.
 - `Region` newtype prevents string-typing accidents (e.g., comparing AZ-suffixed vs. region-only strings).
 - `REGIONS_BY_RESIDENCY` is the single source of truth for the residency → region mapping; all matchers consult this.
-- The precedence (ZDR before residency) is a documented invariant; FRs touching `alias::resolve` must preserve it.
+- The precedence (ZDR before residency) is a documented invariant; tasks touching `alias::resolve` must preserve it.
 
 ### Operational / external
 
 - Rust crates: `regex@1`, `globset@0.4`, `proptest@1`, `serde@1`, `serde_yaml@0.9`, `thiserror@1`.
-- AWS region list is enumerated in `region_table.rs`; if AWS launches a new region in an existing residency tier (e.g., `eu-south-1` for EU), the table is updated via FR amendment.
+- AWS region list is enumerated in `region_table.rs`; if AWS launches a new region in an existing residency tier (e.g., `eu-south-1` for EU), the table is updated via task amendment.
 - `LazyLock` is used for the static map (Rust 1.80+); on older toolchains, `once_cell::sync::Lazy` is the fallback.
 
 ---
@@ -726,7 +734,7 @@ ERROR policy file tenants/tenant_beta/policy.yaml load failed:
 
 ## §9 — Open questions
 
-All resolved at authoring time. Items deferred to later FRs:
+All resolved at authoring time. Items deferred to later tasks:
 
 - **TASK-AI-104 (placeholder)**: VN provider integration (Viettel Cloud + FPT Cloud). Will populate `REGIONS_BY_RESIDENCY[Vn1]` and remove the §1 #6 fail-closed rule.
 - AZ-aware policies (rare regulatory ask: "must be in `us-east-1` AZ a"; e.g., for some federal compliance regimes) — out of scope; AZ stripping is the slice 4 boundary.
@@ -741,7 +749,7 @@ All resolved at authoring time. Items deferred to later FRs:
 | Failure | Detection | Outcome | Recovery |
 |---|---|---|---|
 | Tenant pins `vn-1` but no VN provider | `Vn1` empty set always returns false | `Err(ResidencyViolation { vn1_no_provider: true })` → `403` with `reason: no_vn_provider_yet` | Tenant chooses `sg-1` (closest acceptable) OR waits for TASK-AI-104 |
-| New AWS region not in matcher | Region returns false (fail closed) | `Err(ResidencyViolation)` for affected residencies | Operator adds region to `region_table.rs`; FR amendment; redeploy |
+| New AWS region not in matcher | Region returns false (fail closed) | `Err(ResidencyViolation)` for affected residencies | Operator adds region to `region_table.rs`; task amendment; redeploy |
 | Property test detects cross-residency leak | proptest panics in CI | PR blocked | Fix `region_table.rs` (likely accidental aliasing across residencies) |
 | Region string with AZ suffix | `Region::from_provider_string` strips suffix | Match proceeds against region-only string | By design (§1 #5) |
 | Region string in unknown format | `RegionParseError::Invalid` from regex | `Err` propagates; alias resolve fails with `RegionParseError` (not residency violation) | Operator investigates provider response; likely a provider API change |
@@ -766,8 +774,8 @@ All resolved at authoring time. Items deferred to later FRs:
 ## §11 — Notes
 
 - The Vn1 placeholder is intentional and load-bearing. Adding Viettel/FPT as Provider variants is TASK-AI-104; until then, refusing Vn1 calls is the correct regulatory behaviour. The metric `ai_residency_vn1_refused_total` quantifies the demand for TASK-AI-104.
-- The Sg1 single-region pinning may relax in future if AWS adds another AP region with similar latency to Singapore (currently `ap-southeast-3` Jakarta is closest but not yet covered for Bedrock). Any addition requires FR amendment.
-- The static enum + `LazyLock` map design trades hot-reloadability for type-system safety. Residency tiers map to legal jurisdictions (slow-changing); region additions within tiers are FR amendments. This is the right trade vs. ZDR (TASK-AI-015), which uses a YAML config because attestations DO drift quarterly.
+- The Sg1 single-region pinning may relax in future if AWS adds another AP region with similar latency to Singapore (currently `ap-southeast-3` Jakarta is closest but not yet covered for Bedrock). Any addition requires task amendment.
+- The static enum + `LazyLock` map design trades hot-reloadability for type-system safety. Residency tiers map to legal jurisdictions (slow-changing); region additions within tiers are task amendments. This is the right trade vs. ZDR (TASK-AI-015), which uses a YAML config because attestations DO drift quarterly.
 - The precedence rule (ZDR before residency, §1 #10) is a small but important UX choice. An operator getting "ZDR violation" first for a tenant who fails both gates can fix ZDR (by routing to a ZDR-attested provider) and discover the residency issue separately. The opposite order would mask the ZDR failure under a region failure.
 - The per-alias override mechanism (§1 #11) is the answer to "we have ONE alias that needs to behave differently." Without it, tenants face the all-or-nothing choice. The `OverrideAmbiguous` rejection prevents the operational footgun of two glob patterns silently fighting.
 - The AZ-strip rule (§1 #5) is conservative. Provider responses occasionally surface AZ-suffixed regions (in error messages, in routing metadata); the matcher operates at region granularity per the legal definition. AZ-aware policies are explicitly OUT of scope.

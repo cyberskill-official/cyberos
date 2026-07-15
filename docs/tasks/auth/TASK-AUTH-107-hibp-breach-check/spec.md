@@ -1,8 +1,16 @@
 ---
 id: TASK-AUTH-107
 title: "HIBP password breach check (k-anonymity) on signup + rotation"
+eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+ai_authorship: generated_then_reviewed  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft
+client_visible: false
+type: feature
+created_at: 2026-05-16T00:00:00+07:00
+department: engineering
+author: @stephencheng
+template: task@1
 module: AUTH
-priority: SHOULD
+priority: p1
 status: done
 accepted_at: 2026-05-16
 accepted_by: Stephen Cheng
@@ -611,7 +619,7 @@ PUT /v1/admin/tenants/{id}/hibp-policy?dry_run=true
 
 **§11.2** SHA-1 is chosen by HIBP, not by us. The hash is not used for password storage (Argon2 does that); it's used only as a corpus index key.
 
-**§11.3** The audit emission is async + after the COMMIT — a failed audit row never blocks signup. Failed audits are retried via the FR-OBS WAL queue pattern.
+**§11.3** The audit emission is async + after the COMMIT — a failed audit row never blocks signup. Failed audits are retried via the task-OBS WAL queue pattern.
 
 **§11.4** Per-tenant policy is cached in the AUTH process with a 60s TTL (matching the TASK-AUTH-109 active-tenant pattern). Mutation invalidates the cache via pg_notify.
 
