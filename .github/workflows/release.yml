@@ -187,10 +187,10 @@ jobs:
           cd "$RUNNER_TEMP/payload"
           test -f package.json || { echo "build.sh produced no package.json"; exit 1; }
           name="$(node -p "require('./package.json').name")"
-          test "$name" = "cyberos" || { echo "package name is '$name', want 'cyberos'"; exit 1; }
+          test "$name" = "@cyberskill/cyberos" || { echo "package name is '$name', want '@cyberskill/cyberos'"; exit 1; }
           # Re-running a release must not fail on an already-published version.
-          if npm view "cyberos@${TAG#v}" version >/dev/null 2>&1; then
-            echo "cyberos@${TAG#v} already published — nothing to do"
+          if npm view "@cyberskill/cyberos@${TAG#v}" version >/dev/null 2>&1; then
+            echo "@cyberskill/cyberos@${TAG#v} already published — nothing to do"
           else
             npm publish --access public --provenance
           fi

@@ -85,9 +85,9 @@ if [ -f "$cli" ]; then
   ok "npx-cli: cli/bin/cli.mjs present"
   node --check "$cli" 2>/dev/null && ok "npx-cli: cli.mjs parses" \
                                   || bad "npx-cli: cli.mjs syntax error"
-  grep -q '"name": *"cyberos"' "$root/tools/install/build.sh" \
-    && ok "npx-cli: build.sh publishes the package as 'cyberos'" \
-    || bad "npx-cli: build.sh does not set the npm package name to 'cyberos'"
+  grep -q '"name": *"@cyberskill/cyberos"' "$root/tools/install/build.sh" \
+    && ok "npx-cli: build.sh publishes the package as '@cyberskill/cyberos'" \
+    || bad "npx-cli: build.sh does not set the npm package name to '@cyberskill/cyberos'"
   grep -q '"cyberos": *"cli/bin/cli.mjs"' "$root/tools/install/build.sh" \
     && ok "npx-cli: build.sh maps bin.cyberos -> cli/bin/cli.mjs" \
     || bad "npx-cli: build.sh does not map bin.cyberos to cli/bin/cli.mjs"

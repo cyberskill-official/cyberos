@@ -280,7 +280,7 @@ echo "$cyver" > "$out/VERSION"     # plain file so version.sh can compare fast
 # mirrors help.sh and the plugin's slash commands 1:1, so the channels cannot drift.
 cat > "$out/package.json" <<PKG
 {
-  "name": "cyberos",
+  "name": "@cyberskill/cyberos",
   "version": "$cyver",
   "description": "Run the CyberOS ship-tasks workflow in any repo - install, gates, and an MCP server, wired for every popular coding agent (Claude Code, Codex, Cursor, Gemini, Antigravity, Grok CLI, zcode, Command Code, Copilot, Windsurf).",
   "type": "module",
