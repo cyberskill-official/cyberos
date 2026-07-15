@@ -1,7 +1,7 @@
 # Retiring standalone code-audit-framework (CAF) after the CyberOS absorption
 
 CAF is now vendored into CyberOS at `tools/caf/` and wired into the ship gate as step 29 (see
-`docs/verification/caf-absorption-design.md` and `modules/cuo/chief-technology-officer/workflows/ship-feature-requests.md`).
+`docs/verification/caf-absorption-design.md` and `modules/cuo/chief-technology-officer/workflows/ship-tasks.md`).
 This mirrors the awh retirement (`tools/awh/RETIREMENT.md`): once the vendored copy is self-contained
 and gating, the standalone repos `CyberSkill/code-audit-framework` and `CyberSkill/code-audit-field-data`
 can be archived so there is one source of truth.
@@ -13,7 +13,7 @@ can be archived so there is one source of truth.
    returns `40/40 fixtures OK - ALL GREEN`, exit 0. (Captured during the absorption, 2026-06-20.)
 2. Gate wired. Every gated module (those with `modules/<m>/.awh/goldenset.yaml`) also has
    `modules/<m>/audit-profile.yaml`; `bash scripts/caf_precommit_check.sh` is GREEN; step 29 and the
-   step-29 dual condition are present in `ship-feature-requests.md`.
+   step-29 dual condition are present in `ship-tasks.md`.
 3. Field-data preserved. `tools/caf/field-data/` holds the `code-audit-field-data` records, reports,
    schemas, and pilot. New CyberOS audit runs emit `--emit-feedback` records here, so the calibration
    loop continues from inside CyberOS.

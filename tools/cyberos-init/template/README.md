@@ -19,5 +19,5 @@ Grok CLI, zcode, Command Code, Copilot, Windsurf, ...).
 HITL is required: the agent halts at review acceptance and final acceptance for your verdict,
 and never sets `done`, pushes, deploys, or merges on its own.
 
-Re-run `bash <payload>/init.sh .` after pulling a newer CyberOS to refresh the machine
+Re-run `bash <payload>/install.sh .` after pulling a newer CyberOS to refresh the machine
 (your `BACKLOG.md`, tasks, and BRAIN are never clobbered).

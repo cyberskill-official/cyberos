@@ -17,7 +17,7 @@ Option A - desktop app (no terminal): open the CyberOS app, CyberOS Ops tab, pic
 
 Option B - terminal:
 
-    bash /path/to/cyberos/dist/cyberos/init.sh /path/to/your-repo
+    bash /path/to/cyberos/dist/cyberos/install.sh /path/to/your-repo
 
 Either way, the result is the same: a gitignored `.cyberos/` folder (the workflow engine, the memory protocol, the plugin), a `docs/tasks/` folder with a `BACKLOG.md`, and agent entry files (`.cyberos/AGENT-ENTRY.md` plus `CLAUDE.md` / `GEMINI.md` / `.cursorrules` stubs where absent). Nothing about your code changes.
 
@@ -82,7 +82,7 @@ Once you have accepted, the change is yours to land the normal way: commit (if t
 - Gates fail: the agent must fix and re-run them before ever reaching you. If it asks you to accept with red gates, refuse.
 - The task was wrong: route back at either gate with one sentence about why; `routed_back_count` in the task frontmatter tracks the loop.
 - Not sure of a status meaning: `.cyberos/cuo/STATUS-REFERENCE.md` defines all ten states and who may set each.
-- CyberOS itself is outdated in your repo: CyberOS Ops tab -> Check, or `init.sh --check <repo>`; re-run Init to update.
+- CyberOS itself is outdated in your repo: CyberOS Ops tab -> Check, or `version.sh <repo>`; re-run Init to update.
 
 ## Where everything lives
 

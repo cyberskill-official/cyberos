@@ -20,7 +20,7 @@ CyberOS vendors itself into any repository under a single gitignored `.cyberos/`
 2. Initialise your repo:
 
    ```
-   bash /path/to/dist/cyberos/init.sh /path/to/your/repo
+   bash /path/to/dist/cyberos/install.sh /path/to/your/repo
    ```
 
    This vendors `.cyberos/cuo` (the task workflow engine), `.cyberos/memory` (the BRAIN protocol) and `.cyberos/plugin`, detects your build/lint/test gates into `.cyberos/gates.env`, scaffolds `docs/tasks/BACKLOG.md`, creates the local BRAIN store at `.cyberos/memory/store/`, and stamps `.cyberos/VERSION`.
@@ -28,8 +28,8 @@ CyberOS vendors itself into any repository under a single gitignored `.cyberos/`
 3. Stay current:
 
    ```
-   bash /path/to/dist/cyberos/init.sh --check /path/to/your/repo   # notify
-   bash /path/to/dist/cyberos/init.sh /path/to/your/repo           # apply update
+   bash /path/to/dist/cyberos/version.sh /path/to/your/repo   # notify
+   bash /path/to/dist/cyberos/install.sh /path/to/your/repo   # apply update
    ```
 
 Desktop alternative: the CyberOS desktop app has a "CyberOS Ops" tab that runs the same build / check / init operations from the UI.

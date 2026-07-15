@@ -5,18 +5,18 @@ workflow as tools, so any MCP-capable agent triggers it with no files. Requires 
 
 Tools:
 
-- `task_init {repo?}` - vendor the CyberOS machine into a repo (needs the payload reachable; set `CYBEROS_PAYLOAD` if the server was vendored away from `init.sh`).
+- `task_init {repo?}` - vendor the CyberOS machine into a repo (needs the payload reachable; set `CYBEROS_PAYLOAD` if the server was vendored away from `install.sh`).
 - `task_gates {repo?}` - run the machine gates (the repo's own build/lint/test + coverage, plus caf/awh if present).
 - `task_status {repo?}` - summarize the task backlog (counts by status, next eligible task) and installed version.
 - `ship_task {repo?, task_id?}` - return the canonical, HITL-gated trigger for the next (or a named) task. It never drives or accepts a task itself - the human still holds the two acceptance gates.
 
-`repo` defaults to the current working directory, walked up to the repo root. After `init.sh`
+`repo` defaults to the current working directory, walked up to the repo root. After `install.sh`
 runs, the server is vendored at `.cyberos/mcp/cyberos-mcp.mjs`; `task_gates` / `task_status` /
 `ship_task` need only that repo's `.cyberos/`.
 
 ## Register it (pick your agent)
 
-Claude Code, Cursor, Windsurf and other `.mcp.json` readers - `init.sh` already writes this
+Claude Code, Cursor, Windsurf and other `.mcp.json` readers - `install.sh` already writes this
 (and `.cursor/mcp.json` for Cursor) when absent. Manual form:
 
 ```json
@@ -49,7 +49,7 @@ Payload-hosted (before a repo is inited) - run from the pack so `task_init` can 
 repos, or set `CYBEROS_PAYLOAD`:
 
 ```bash
-node dist/cyberos/mcp/cyberos-mcp.mjs           # task_init resolves ../init.sh
+node dist/cyberos/mcp/cyberos-mcp.mjs           # task_init resolves ../install.sh
 CYBEROS_PAYLOAD=/path/to/dist/cyberos node .cyberos/mcp/cyberos-mcp.mjs
 ```
 

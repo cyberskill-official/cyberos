@@ -4,7 +4,7 @@ title: Operate CyberOS from the desktop app · CyberOS
 
 # Operate CyberOS from the desktop app
 
-The UI path for running CyberOS operations - no terminal required. Everything here is a button over the same canonical scripts the CLI uses (`tools/cyberos-init/build.sh` and `init.sh`), so the UI and the CLI can never disagree.
+The UI path for running CyberOS operations - no terminal required. Everything here is a button over the same canonical scripts the CLI uses (`tools/cyberos-init/build.sh` and `install.sh`), so the UI and the CLI can never disagree.
 
 ## Open the Ops tab
 
@@ -16,7 +16,7 @@ The Settings field holds the absolute path of the CyberOS checkout the operation
 
 ## Build the payload
 
-Press "Build payload". This assembles the distributable machine into `dist/cyberos/` inside the checkout - the workflow engine, the memory protocol, the plugin, `init.sh`, and the version stamp. The full script output appears in the panel; a red result means the build failed and the output tells you why. Build once per CyberOS version, or whenever you have pulled new changes.
+Press "Build payload". This assembles the distributable machine into `dist/cyberos/` inside the checkout - the workflow engine, the memory protocol, the plugin, `install.sh`, and the version stamp. The full script output appears in the panel; a red result means the build failed and the output tells you why. Build once per CyberOS version, or whenever you have pulled new changes.
 
 ## Pick a project
 
@@ -24,7 +24,7 @@ The project list shows every git repository under `~/Projects` (one and two leve
 
 ## Check for updates
 
-Select the project and press "Check". This runs the read-only version comparison (`init.sh --check`) and prints `installed=<x> available=<y>` plus whether an update exists. Nothing is modified.
+Select the project and press "Check". This runs the read-only version comparison (`version.sh`) and prints `installed=<x> available=<y>` plus whether an update exists. Nothing is modified.
 
 ## Init or update a project
 
@@ -38,7 +38,7 @@ Every action streams its full stdout and stderr into the output panel, verbatim.
 
 ## Troubleshooting
 
-- "payload not built yet": press "Build payload" first - Init and Check need `dist/cyberos/init.sh` to exist.
+- "payload not built yet": press "Build payload" first - Init and Check need `dist/cyberos/install.sh` to exist.
 - "not a CyberOS checkout": fix the Settings path; it must point at a CyberOS working copy.
 - "not a git repository": the project path is wrong, or the folder is not a repo yet (`git init` it first).
 - A project is missing from the list: it is deeper than two levels under `~/Projects` - paste its absolute path instead.
@@ -46,4 +46,4 @@ Every action streams its full stdout and stderr into the output panel, verbatim.
 
 ## What the app deliberately does not do
 
-It never pushes, merges, or deploys, and it never edits your repo's tracked files beyond what `init.sh` scaffolds. Driving tasks through the workflow stays in your agent (Claude, Codex, Gemini, Cursor - via `.cyberos/AGENT-ENTRY.md`); accepting the two human gates stays with you.
+It never pushes, merges, or deploys, and it never edits your repo's tracked files beyond what `install.sh` scaffolds. Driving tasks through the workflow stays in your agent (Claude, Codex, Gemini, Cursor - via `.cyberos/AGENT-ENTRY.md`); accepting the two human gates stays with you.

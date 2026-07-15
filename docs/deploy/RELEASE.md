@@ -24,7 +24,7 @@ Because all four surfaces load the same root bundle, one update mechanism at the
 - The prompt: when a newer id is live, a small "A new version is available - Reload" banner appears (`UpdateBanner`). Reload applies it - the service worker is network-first, so the reload pulls the fresh index and hashed bundles and the new worker purges the old caches. This works identically in the browser, the installed PWA, the Tauri desktop window, and the Capacitor mobile shell.
 - Desktop shell binary: the Tauri wrapper rarely changes (it just loads the site root), so the banner above already updates what the user sees. The `tauri-plugin-updater` is wired in and checks on launch (`apps/desktop/src-tauri/src/lib.rs`), staying a quiet no-op until it has a config. To switch it on, do the three key-dependent steps in the activation checklist: generate the signing keypair, add a `plugins.updater` block to `apps/desktop/src-tauri/tauri.conf.json` with your public key and the GitHub releases endpoint, and set `bundle.createUpdaterArtifacts: true`. `release.yml` then emits the signed update artifacts.
 - Mobile binary: native app updates ship through the App Store / Play from a tagged release; the web-layer banner still covers the in-app content between store updates.
-- Consumer repos (the init payload): compare installed vs available with `bash dist/cyberos/init.sh --check <repo>`, re-run `init.sh <repo>` to apply; the desktop app's CyberOS Ops tab and `tools/cyberos-init/rollout.sh` (fleet-wide) drive the same scripts.
+- Consumer repos (the init payload): compare installed vs available with `bash dist/cyberos/version.sh <repo>`, re-run `install.sh <repo>` to apply; the desktop app's CyberOS Ops tab and `tools/cyberos-init/rollout.sh` (fleet-wide) drive the same scripts.
 
 ## Track 1: continuous delivery (web + services)
 
@@ -173,7 +173,7 @@ Repo variable:
 
 5. Watch `deploy.yml` go green (images pushed, VPS rolled), then the `release` workflow build the native installers and open a draft GitHub Release with them attached (plus the Android bundle once `ANDROID_RELEASE=true`, and a TestFlight upload once `IOS_RELEASE=true`).
 6. Edit the draft release notes and publish. Hand out the installer links; with mobile on, the iOS build is in TestFlight and the Android `.aab` is the release artifact to upload to Play.
-7. Distribute the payload to consumer repos: each project updates with `init.sh --check` (notify) and re-running `init.sh` (apply) - or from the desktop app's CyberOS Ops tab. Fleet-wide: `tools/cyberos-init/rollout.sh`. Every `vX.Y.Z` tag also publishes the payload as GitHub Release assets (`cyberos-payload.tar.gz`, `cyberos.plugin`, versioned twins, `SHA256SUMS` - the `payload` job in release.yml), so consumers can install from `releases/latest/download/` via `bootstrap.sh` or `rollout.sh --from-release` without a local checkout (TASK-IMP-069).
+7. Distribute the payload to consumer repos: each project updates with `version.sh` (notify) and re-running `install.sh` (apply) - or from the desktop app's CyberOS Ops tab. Fleet-wide: `tools/cyberos-init/rollout.sh`. Every `vX.Y.Z` tag also publishes the payload as GitHub Release assets (`cyberos-payload.tar.gz`, `cyberos.plugin`, versioned twins, `SHA256SUMS` - the `payload` job in release.yml), so consumers can install from `releases/latest/download/` via `bootstrap.sh` or `rollout.sh --from-release` without a local checkout (TASK-IMP-069).
 
 ## Docs are part of every release
 

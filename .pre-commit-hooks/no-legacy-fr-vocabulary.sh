@@ -25,7 +25,11 @@ cd "$root"
 EXCLUDE='^(docs/status/|tools/caf/|docs/tasks/RENAME-EPOCH\.md|docs/reviews/task-rename-analysis\.md|scripts/migrate_fr_to_task\.py|\.pre-commit-hooks/no-legacy-fr-vocabulary\.sh|modules/memory/tests/test_(claude_code_hook|memory_sync|sync_class)\.py)'
 BINARY='\.(png|jpg|jpeg|gif|ico|woff2?|ttf|zip|gz|zst|pdf|sqlite|binlog)$'
 
-staged="$(git diff --cached --name-only --diff-filter=ACM \
+# R (renamed) belongs in the filter. Without it this gate could not see a rename AT ALL:
+# `git mv a b` with no edit reports R100, and ACM silently drops it — so the one operation
+# the fr->task epoch most needed policed (git mv != re.sub) was the one it was blind to.
+# ACM also means a rename's NEW path never got its contents re-scanned.
+staged="$(git diff --cached --name-only --diff-filter=ACMR \
   | grep -Ev "$EXCLUDE" | grep -Ev "$BINARY" || true)"
 [ -z "$staged" ] && exit 0
 
@@ -61,6 +65,31 @@ PATTERN='\bFR-[A-Z0-9]|feature[-_ ]request|(^|[^A-Za-z0-9_-])FRs?([^A-Za-z0-9_-]
 # the line. Same class of bug as everything else this rename turned up: the pattern
 # was fine, the thing it was pointed at was not.
 QUOTE_SHAPES='^[0-9]+:[[:space:]]*(>|#|//|\*)|NOTE:|WAS:|HISTORY:|previously|retired|legacy'
+
+# PATHS, not just contents. This gate read every staged file's BODY and never once looked at
+# its NAME — so `tools/cyberos-init/plugin/skills/ship-feature-requests/SKILL.md` passed clean:
+# the codemod had rewritten the contents (name: ship-tasks) but never git mv'd the directory.
+# The build then shipped that dir beside an empty plugin/skills/ship-tasks/, and the flagship
+# skill could not load in any channel. Contents-not-filenames is the same blind spot this
+# rename kept producing; a path is a name too, so check it.
+# No exemption shapes here: a path cannot be a quote or an explanatory comment.
+path_hits=0
+while IFS= read -r f; do
+  case "$f" in *feature-request*|*feature_request*) ;; *) continue ;; esac
+  if [ "$path_hits" -eq 0 ]; then
+    echo "cyberos: retired 'feature-request' vocabulary in a staged PATH." >&2
+    echo "         Contents can be renamed by a codemod; a directory needs git mv." >&2
+    echo >&2
+  fi
+  echo "  $f" >&2
+  path_hits=$((path_hits + 1))
+done <<< "$staged"
+if [ "$path_hits" -gt 0 ]; then
+  echo >&2
+  echo "  git mv <old-path> <new-path>   # then rebuild: bash tools/cyberos-init/build.sh dist/cyberos" >&2
+  echo >&2
+  exit 1
+fi
 
 hits=0
 while IFS= read -r f; do

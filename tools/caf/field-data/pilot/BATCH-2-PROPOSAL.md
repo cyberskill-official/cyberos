@@ -33,7 +33,7 @@ gaps remain for the framework's evidence base:
    code-audit-framework into cyberos. Running the protocol *on* cyberos is the
    honest first step of that absorption — it tells us whether the protocol
    survives contact with its future host, and cyberos already keeps
-   `docs/feature-requests/*.audit.md` files, so an audit artifact is idiomatic
+   `docs/tasks/*.audit.md` files, so an audit artifact is idiomatic
    there.
 
 **Scoping is mandatory.** 5,834 files is far too large for one audit loop. The

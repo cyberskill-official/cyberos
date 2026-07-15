@@ -33,7 +33,7 @@ cyberos/
 └── VERSION           <- the single platform version
 ```
 
-The website is generated (`bash tools/docs-site/build.sh` -> `dist/website`); there is no hand-authored HTML in the repo. Consumer repos install CyberOS from the payload (`bash tools/cyberos-init/build.sh`, then `dist/cyberos/init.sh <repo>`) - see the day-one guide on the docs site (cuo module -> Guides).
+The website is generated (`bash tools/docs-site/build.sh` -> `dist/website`); there is no hand-authored HTML in the repo. Consumer repos install CyberOS from the payload (`bash tools/cyberos-init/build.sh`, then `dist/cyberos/install.sh <repo>`) - see the day-one guide on the docs site (cuo module -> Guides).
 
 ## Quick start
 
