@@ -79,12 +79,18 @@ fn require_checkout(checkout: &str) -> Result<PathBuf, String> {
     Ok(root)
 }
 
-fn require_payload(root: &Path) -> Result<PathBuf, String> {
-    let init = root.join("dist/cyberos/init.sh");
-    if !init.is_file() {
-        return Err("payload not built yet — run \"Build payload\" first (dist/cyberos/init.sh missing)".into());
+/// Resolve a payload entry point. `init.sh` was deleted at the 1.0.0 CLI surface and split
+/// into install.sh / version.sh / lib/status-page.sh, but this gate still probed for it — so
+/// it returned "payload not built yet" on EVERY op, even with a freshly built payload. The
+/// whole CyberOS Ops tab (Check + Init) was dead. Probe the script each command actually runs.
+fn require_payload_script(root: &Path, script: &str) -> Result<PathBuf, String> {
+    let p = root.join("dist/cyberos").join(script);
+    if !p.is_file() {
+        return Err(format!(
+            "payload not built yet — run \"Build payload\" first (dist/cyberos/{script} missing)"
+        ));
     }
-    Ok(init)
+    Ok(p)
 }
 
 fn require_project(root: &Path, project: &str) -> Result<PathBuf, String> {
@@ -103,11 +109,22 @@ fn require_project(root: &Path, project: &str) -> Result<PathBuf, String> {
 // ── process runner ──────────────────────────────────────────────────────────
 
 async fn run_bash(script: PathBuf, args: Vec<String>, cwd: PathBuf) -> Result<OpResult, String> {
+    run_bash_env(script, args, cwd, vec![]).await
+}
+
+async fn run_bash_env(
+    script: PathBuf,
+    args: Vec<String>,
+    cwd: PathBuf,
+    env: Vec<(&'static str, &'static str)>,
+) -> Result<OpResult, String> {
     tauri::async_runtime::spawn_blocking(move || {
-        let out = Command::new("bash")
-            .arg(&script)
-            .args(&args)
-            .current_dir(&cwd)
+        let mut cmd = Command::new("bash");
+        cmd.arg(&script).args(&args).current_dir(&cwd);
+        for (k, v) in env {
+            cmd.env(k, v);
+        }
+        let out = cmd
             .output()
             .map_err(|e| format!("spawn bash {}: {e}", script.display()))?;
         let mut text = String::from_utf8_lossy(&out.stdout).into_owned();
@@ -134,22 +151,31 @@ pub async fn ops_build(checkout: String) -> Result<OpResult, String> {
     run_bash(script, vec![], root).await
 }
 
-/// Installed-vs-available: `bash dist/cyberos/init.sh --check <project>`.
+/// Installed-vs-available: `bash dist/cyberos/version.sh <project>`.
+/// Was `init.sh --check`; --check is version.sh now, and it takes the repo as a bare arg.
+/// CYBEROS_NONINTERACTIVE keeps version.sh from prompting "update now?" at a GUI with no tty.
 #[tauri::command]
 pub async fn ops_check(checkout: String, project: String) -> Result<OpResult, String> {
     let root = require_checkout(&checkout)?;
-    let init = require_payload(&root)?;
+    let script = require_payload_script(&root, "version.sh")?;
     let p = require_project(&root, &project)?;
-    run_bash(init, vec!["--check".into(), p.to_string_lossy().into_owned()], root).await
+    run_bash_env(
+        script,
+        vec![p.to_string_lossy().into_owned()],
+        root,
+        vec![("CYBEROS_NONINTERACTIVE", "1")],
+    )
+    .await
 }
 
-/// Init or update a project: `bash dist/cyberos/init.sh <project>`. Idempotent by design.
+/// Install or re-vendor a project: `bash dist/cyberos/install.sh <project>`. Idempotent by design.
+/// Was init.sh; install is the only re-vendor path (there is deliberately no second one).
 #[tauri::command]
 pub async fn ops_init(checkout: String, project: String) -> Result<OpResult, String> {
     let root = require_checkout(&checkout)?;
-    let init = require_payload(&root)?;
+    let script = require_payload_script(&root, "install.sh")?;
     let p = require_project(&root, &project)?;
-    run_bash(init, vec![p.to_string_lossy().into_owned()], root).await
+    run_bash(script, vec![p.to_string_lossy().into_owned()], root).await
 }
 
 /// Candidate projects: git repositories at `~/Projects/*` and `~/Projects/*/*`,

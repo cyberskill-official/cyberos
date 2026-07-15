@@ -887,7 +887,7 @@ The SRS audit's rubric leans advisory - most rules emit warnings, not blocking i
 
   2. **Decompose the audited PRD (+ SRS if full) into tasks.** Each task <=2 weeks of work, single dominant risk, single dominant invariant, independently completable.
 
-  3. **Generate one task markdown per feature** under `<output_dir>/fr/TASK-001-<slug>.md`, TASK-002-..., etc.
+  3. **Generate one task markdown per feature** under `<output_dir>/tasks/TASK-001-<slug>.md`, TASK-002-..., etc.
 
   4. **Show the user the task list** with one-line summaries:
 
@@ -915,7 +915,7 @@ Use AskUserQuestion: approve / amend / re-decompose.
   1. **Read** `cuo/cpo/task-audit/SKILL.md` + its RUBRIC + AUDIT_LOOP.
   2. **Run the 8-step loop per-task sequentially.** Don't parallelise - concurrent writes to the memory ledger contend on `.lock`.
   3. **Aggregate HITL questions across all tasks** before pausing. Better UX than asking once per task.
-  4. **Emit `AUDIT_BATCH_SUMMARY.md`** at `<output_dir>/fr/`.
+  4. **Emit `AUDIT_BATCH_SUMMARY.md`** at `<output_dir>/tasks/`.
   5. **On all-PASS**: announce; move to Phase H or I.
   6. **On any task not PASS**: list the tasks that need attention; ask user how to proceed (edit task / drop the task / file refinement / accept-with-warnings).
 
@@ -1461,7 +1461,7 @@ The SRS-audit's RUBRIC focuses on:
      * Has a single dominant invariant
      * Is independently completable
      * Has clear acceptance criteria
-  4. **Output**: `./planning/<date>-<slug>/fr/TASK-001-<slug>.md`, `TASK-002-<slug>.md`, ... One file per feature.
+  4. **Output**: `./planning/<date>-<slug>/tasks/TASK-001-<slug>.md`, `TASK-002-<slug>.md`, ... One file per feature.
 
 
 #### Validation

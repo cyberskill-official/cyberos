@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Rebuild the vendorable CyberOS payload (dist/cyberos) whenever a source that
 # feeds it is staged. dist/ is gitignored, so this only refreshes the local
-# artifact - nothing is committed. It keeps tools/install/init.sh vendoring
+# artifact - nothing is committed. It keeps tools/install/install.sh vendoring
 # current bits during implement/development, per the "auto-build on module
 # update" rule. Fast no-op when nothing relevant changed.
 #

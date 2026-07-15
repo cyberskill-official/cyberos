@@ -5,7 +5,7 @@
 # env:
 #   CYBEROS_PAYLOAD_URL  payload tarball URL (default: this repo's latest-release stable asset)
 #   CYBEROS_PACK_URL     legacy alias, still honored
-# arg: target repo (default: cwd). If you already have a payload folder locally, run init.sh directly.
+# arg: target repo (default: cwd). If you already have a payload folder locally, run install.sh directly.
 set -euo pipefail
 
 DEFAULT_URL="https://github.com/cyberskill-official/cyberos/releases/latest/download/cyberos-payload.tar.gz"

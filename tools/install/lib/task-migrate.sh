@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Task-migrate.sh — task layout + status page (sourced by init.sh; not a standalone entry).
+# Task-migrate.sh — task layout + status page (sourced by install.sh; not a standalone entry).
 # Combined into init so one entry point owns vendoring + migrate + page regen.
 # shellcheck shell=bash
 #

@@ -7,7 +7,7 @@ runs:
       shell: bash
       run: |
         if [ ! -f .cyberos/gates.env ]; then
-          echo "::error::.cyberos/gates.env not found. Run the CyberOS payload init.sh in this repo first." ; exit 2
+          echo "::error::.cyberos/gates.env not found. Run the CyberOS payload install.sh in this repo first." ; exit 2
         fi
         bash .cyberos/cuo/gates/run-gates.sh
     - name: Note on HITL
