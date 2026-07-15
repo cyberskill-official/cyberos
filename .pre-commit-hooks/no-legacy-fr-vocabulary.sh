@@ -19,11 +19,12 @@ cd "$root"
 #   tools/caf/field-data/ sanitized external client records (R8); a record may name a real FR
 #   docs/tasks/RENAME-EPOCH.md   the id mapping — it IS the old vocabulary, on purpose
 #   docs/reviews/task-rename-analysis.md   the analysis doc quotes the old names
-#   scripts/migrate_fr_to_task.py          the codemod's own rules
-#   scripts/migrate_consumer_fr_to_task.py the consumer codemod's own rules (same reason:
-#                                          a rule table has to name what it rewrites)
 #   modules/memory/tests/test_*            SEALED held-out tests (awh lock)
 #   *.png *.jpg ...       binaries produce false regex hits
+#
+# The two rename codemods were deleted at 1.0.0 (spent; RENAME-EPOCH.md is the record), so
+# their EXCLUDE entries went with them. If a future codemod needs one, add it back: a rule
+# table has to name what it rewrites, and that is a legitimate exemption.
 #
 # NARROWED from all of tools/caf/ (2026-07-16). That exemption was justified as "CAF owns
 # BACKLOG.md / Task table with unrelated meanings" — true of the word "task", but this PATTERN
@@ -32,7 +33,7 @@ cd "$root"
 # caf-gate") plus stale pointers to ship-feature-requests.md and docs/feature-requests/.
 # With those fixed, the PATTERN scores ZERO hits across tools/caf — so only field-data,
 # which is genuinely someone else's record, stays exempt.
-EXCLUDE='^(docs/status/|tools/caf/field-data/|docs/tasks/RENAME-EPOCH\.md|docs/reviews/task-rename-analysis\.md|scripts/migrate_(consumer_)?fr_to_task\.py|\.pre-commit-hooks/no-legacy-fr-vocabulary\.sh|modules/memory/tests/test_(claude_code_hook|memory_sync|sync_class)\.py)'
+EXCLUDE='^(docs/status/|tools/caf/field-data/|docs/tasks/RENAME-EPOCH\.md|docs/reviews/task-rename-analysis\.md|\.pre-commit-hooks/no-legacy-fr-vocabulary\.sh|modules/memory/tests/test_(claude_code_hook|memory_sync|sync_class)\.py)'
 BINARY='\.(png|jpg|jpeg|gif|ico|woff2?|ttf|zip|gz|zst|pdf|sqlite|binlog)$'
 
 # R (renamed) belongs in the filter. Without it this gate could not see a rename AT ALL:

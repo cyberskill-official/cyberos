@@ -70,7 +70,7 @@ fi
 # NOTE: the filename says `fr`, deliberately. It names what the gate BLOCKS (the
 # legacy FR vocabulary), not the vocabulary we migrated to. The codemod renamed
 # this line once and left the target behind, which aborted the rename commit —
-# frozen in migrate_fr_to_task.py:FROZEN_LITERALS.
+# frozen as a literal by the (now-deleted) rename codemod; see docs/tasks/RENAME-EPOCH.md.
 bash "$root/.pre-commit-hooks/no-legacy-fr-vocabulary.sh"
 
 # Shell test suites (glob-discovered, ~10s). Until 2026-07-15 NOTHING ran these — not this
