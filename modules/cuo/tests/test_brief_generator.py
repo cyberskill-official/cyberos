@@ -207,7 +207,7 @@ class TestBriefGenerator:
         assert "Conditional Steps" in brief
         assert "condition" in brief.lower()
 
-    def test_handles_missing_fr_gracefully(
+    def test_handles_missing_task_gracefully(
         self, cto_persona, ship_wf, skill_root, tmp_path
     ):
         output_dir = tmp_path / "output"
@@ -248,7 +248,7 @@ class TestBriefChain:
         assert "ERROR" in result
         assert "not found" in result
 
-    def test_brief_chain_requires_fr_id(
+    def test_brief_chain_requires_task_id(
         self, cto_persona, skill_root, tmp_path
     ):
         from cuo.core.supervisor import brief_chain

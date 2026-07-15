@@ -130,7 +130,7 @@ Upstream none; downstream: a follow-up task may teach `cyberos update`/plugin/MC
 |---|---|---|---|
 | Render script errors during commit | warning printed, commit proceeds (clause 2) | page stale for one commit | run-gates.sh next run heals; fix renderer |
 | Two batched tasks secretly touch the same file despite declared cones | git conflict/second edit visible in review packet diff | reviewer rejects at gate 1 | route one back; cones corrected in frontmatter |
-| Unlock rescan picks a task whose spec drifted since audit | ship-manifest fr_sha256 staleness rule (TASK-CUO-206) triggers restart at step 1 | no stale-spec shipping | existing manifest machinery |
+| Unlock rescan picks a task whose spec drifted since audit | ship-manifest task_sha256 staleness rule (TASK-CUO-206) triggers restart at step 1 | no stale-spec shipping | existing manifest machinery |
 | rules_sha nondeterminism across OS (sort/locale) | AC #3 double-build check; LC_ALL=C forced in build.sh | none if caught | pinned locale in the hash pipeline |
 | Channels ignore rules_sha (no client logic yet) | clause 10 documents it as pull-side follow-up | drift detectable, not yet auto-acted-on | follow-up task |
 | deploy docs job now triggers more often | Actions usage visible | slightly more CI minutes | acceptable; docs job is minutes-cheap |

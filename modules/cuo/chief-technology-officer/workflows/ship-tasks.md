@@ -21,46 +21,46 @@ outputs:
   - { name: edge_case_matrix,          format: edge-case-matrix@1 (one per task),                    recipient: memory audit chain }
   - { name: coverage_report,           format: coverage-gate@1 (one per task),                       recipient: memory audit chain }
   - { name: debug_trace,               format: debug-trace@1 (one per failed task attempt),          recipient: memory audit chain }
-  - { name: fr_audit_report,           format: task-audit@2.0 (pre-flight, one per task), recipient: memory audit chain + <task>/audit.md §10 }
+  - { name: task_audit_report,           format: task-audit@2.0 (pre-flight, one per task), recipient: memory audit chain + <task>/audit.md §10 }
   - { name: coverage_gate_report,      format: coverage-gate-audit@1 (one per task),                 recipient: memory audit chain + <task>/audit.md §10.4 }
   - { name: awh_gate_report,           format: awh-eval@1 (one per task, out-of-band rerun),         recipient: memory audit chain (memory.awh_gate_result) + <task>/audit.md §10.5 }
   - { name: caf_gate_report,           format: caf-gate@1 (one per task, code-audit floor),          recipient: memory audit chain (memory.caf_gate_result) + <task>/audit.md §10.6 }
 
 skill_chain:
   # ── Phase: ready_to_implement → implementing (workflow start) ──
-  - { step: 1,  skill: repo-context-map-author,                    inputs_from: { repo_root: repo_root, task_id: next_fr_id },              outputs_to: context_map_draft,                         phase: "ready_to_implement → implementing" }
+  - { step: 1,  skill: repo-context-map-author,                    inputs_from: { repo_root: repo_root, task_id: next_task_id },              outputs_to: context_map_draft,                         phase: "ready_to_implement → implementing" }
   - { step: 2,  skill: repo-context-map-audit,                     inputs_from: context_map_draft,                                        outputs_to: context_map }
-  - { step: 3,  skill: architecture-decision-record-author,        inputs_from: { context_map: context_map, fr: next_fr },                outputs_to: adr_draft,                                 condition: 'context_map.files_outside_immediate_domain > 3' }
+  - { step: 3,  skill: architecture-decision-record-author,        inputs_from: { context_map: context_map, fr: next_task },                outputs_to: adr_draft,                                 condition: 'context_map.files_outside_immediate_domain > 3' }
   - { step: 4,  skill: architecture-decision-record-audit,         inputs_from: adr_draft,                                                outputs_to: adr,                                       condition: "step 3 ran" }
-  - { step: 5,  skill: edge-case-matrix-author,                    inputs_from: { fr: next_fr, context_map: context_map },                outputs_to: edge_case_matrix_draft }
+  - { step: 5,  skill: edge-case-matrix-author,                    inputs_from: { fr: next_task, context_map: context_map },                outputs_to: edge_case_matrix_draft }
   - { step: 6,  skill: edge-case-matrix-audit,                     inputs_from: edge_case_matrix_draft,                                   outputs_to: edge_case_matrix }
-  - { step: 7,  skill: mock-contract-test-author,                  inputs_from: { fr: next_fr, edge_case_matrix: edge_case_matrix },      outputs_to: mock_contracts_draft,                      condition: "fr.has_external_dependency" }
+  - { step: 7,  skill: mock-contract-test-author,                  inputs_from: { fr: next_task, edge_case_matrix: edge_case_matrix },      outputs_to: mock_contracts_draft,                      condition: "fr.has_external_dependency" }
   - { step: 8,  skill: mock-contract-test-audit,                   inputs_from: mock_contracts_draft,                                     outputs_to: mock_contracts,                            condition: "step 7 ran" }
-  - { step: 9,  skill: implementation-plan-author,                 inputs_from: { fr: next_fr, edge_case_matrix: edge_case_matrix, adr: adr },  outputs_to: impl_plan_draft }
+  - { step: 9,  skill: implementation-plan-author,                 inputs_from: { fr: next_task, edge_case_matrix: edge_case_matrix, adr: adr },  outputs_to: impl_plan_draft }
   - { step: 10, skill: implementation-plan-audit,                  inputs_from: impl_plan_draft,                                          outputs_to: impl_plan }
-  - { step: 11, skill: observability-injection-author,             inputs_from: { fr: next_fr, impl_plan: impl_plan },                    outputs_to: obs_injection_plan }
+  - { step: 11, skill: observability-injection-author,             inputs_from: { fr: next_task, impl_plan: impl_plan },                    outputs_to: obs_injection_plan }
   - { step: 12, skill: observability-injection-audit,              inputs_from: obs_injection_plan,                                       outputs_to: obs_injection }
   # ── Phase transition: implementing → ready_to_review ──
-  - { step: 13, skill: backlog-state-update-author,                inputs_from: { fr: next_fr, transition: "implementing → ready_to_review", outcome: steps_1_to_12 }, outputs_to: backlog_mutation_phase_1, phase: "implementing → ready_to_review" }
+  - { step: 13, skill: backlog-state-update-author,                inputs_from: { fr: next_task, transition: "implementing → ready_to_review", outcome: steps_1_to_12 }, outputs_to: backlog_mutation_phase_1, phase: "implementing → ready_to_review" }
   - { step: 14, skill: backlog-state-update-audit,                 inputs_from: backlog_mutation_phase_1,                                 outputs_to: backlog_after_phase_1 }
   # ── Phase: ready_to_review → reviewing → ready_to_test ──
-  - { step: 15, skill: backlog-state-update-author,                inputs_from: { fr: next_fr, transition: "ready_to_review → reviewing", outcome: reviewer_claim }, outputs_to: backlog_mutation_phase_2 }
+  - { step: 15, skill: backlog-state-update-author,                inputs_from: { fr: next_task, transition: "ready_to_review → reviewing", outcome: reviewer_claim }, outputs_to: backlog_mutation_phase_2 }
   - { step: 16, skill: backlog-state-update-audit,                 inputs_from: backlog_mutation_phase_2,                                 outputs_to: backlog_after_phase_2 }
-  - { step: 17, skill: code-review-author,                         inputs_from: { fr: next_fr, impl_diff: implementation_diff, adr: adr, edge_case_matrix: edge_case_matrix }, outputs_to: code_review_draft }
+  - { step: 17, skill: code-review-author,                         inputs_from: { fr: next_task, impl_diff: implementation_diff, adr: adr, edge_case_matrix: edge_case_matrix }, outputs_to: code_review_draft }
   - { step: 18, skill: code-review-audit,                          inputs_from: code_review_draft,                                        outputs_to: code_review_report }
-  - { step: 19, skill: backlog-state-update-author,                inputs_from: { fr: next_fr, transition: "reviewing → ready_to_test", outcome: code_review_report }, outputs_to: backlog_mutation_phase_3 }
+  - { step: 19, skill: backlog-state-update-author,                inputs_from: { fr: next_task, transition: "reviewing → ready_to_test", outcome: code_review_report }, outputs_to: backlog_mutation_phase_3 }
   - { step: 20, skill: backlog-state-update-audit,                 inputs_from: backlog_mutation_phase_3,                                 outputs_to: backlog_after_phase_3 }
   # ── Phase: ready_to_test → testing → done ──
-  - { step: 21, skill: backlog-state-update-author,                inputs_from: { fr: next_fr, transition: "ready_to_test → testing", outcome: tester_claim }, outputs_to: backlog_mutation_phase_4 }
+  - { step: 21, skill: backlog-state-update-author,                inputs_from: { fr: next_task, transition: "ready_to_test → testing", outcome: tester_claim }, outputs_to: backlog_mutation_phase_4 }
   - { step: 22, skill: backlog-state-update-audit,                 inputs_from: backlog_mutation_phase_4,                                 outputs_to: backlog_after_phase_4 }
-  - { step: 23, skill: coverage-gate-author,                       inputs_from: { fr: next_fr, edge_case_matrix: edge_case_matrix },      outputs_to: coverage_gate_draft }
+  - { step: 23, skill: coverage-gate-author,                       inputs_from: { fr: next_task, edge_case_matrix: edge_case_matrix },      outputs_to: coverage_gate_draft }
   - { step: 24, skill: coverage-gate-audit,                        inputs_from: coverage_gate_draft,                                      outputs_to: coverage_gate_report }
-  - { step: 25, skill: debugging-cycle-author,                     inputs_from: { fr: next_fr, coverage_report: coverage_gate_report },   outputs_to: debug_cycle_draft,                         condition: "coverage_gate_report.tests_failed > 0" }
+  - { step: 25, skill: debugging-cycle-author,                     inputs_from: { fr: next_task, coverage_report: coverage_gate_report },   outputs_to: debug_cycle_draft,                         condition: "coverage_gate_report.tests_failed > 0" }
   - { step: 26, skill: debugging-cycle-audit,                      inputs_from: debug_cycle_draft,                                        outputs_to: debug_trace,                               condition: "step 25 ran" }
-  - { step: 27, skill: task-audit,                      inputs_from: { fr: next_fr, coverage_report: coverage_gate_report },   outputs_to: fr_audit_report,                           description: "Post-implementation TRACE-004 closure — every §1 clause's cited test MUST be passed in coverage_gate_report. Pre-flight spec audit (`draft → ready_to_implement` transition) ran earlier, BEFORE this workflow; this is the closure check just before marking the task done." }
-  - { step: 28, skill: awh-gate,                                   inputs_from: { fr: next_fr, module: next_fr.module, goldenset: "modules/<module>/.awh/goldenset.yaml", baseline: "modules/<module>/.awh/eval-baseline.json" }, outputs_to: awh_gate_report, description: "Out-of-band independent rerun (the check step 27 is NOT). `awh eval <goldenset> --base-dir . --seeds 1 --baseline <baseline> --max-regression 0.0` reruns the task's §1 cited tests plus the module suite against the sealed, read-only baseline. GREEN (no task regressed) is REQUIRED to reach the done-flip; RED routes the task back to ready_to_implement per STATUS-REFERENCE §1.3 with routed_back_count += 1. Tests sealed via `awh lock modules/<module>/tests`. Emits memory.awh_gate_result." }
-  - { step: 29, skill: caf-gate,                                 inputs_from: { fr: next_fr, module: next_fr.module, audit_profile: "modules/<module>/audit-profile.yaml", audit_baseline: "modules/<module>/.caf/" }, outputs_to: caf_gate_report, description: "Code-audit gate (absorbed from CyberSkill/code-audit-framework). Deterministic floor, no LLM: `bash scripts/caf_gate.sh <module>` runs the module's TARGET HEALTH via tools/caf/core/evals/verify-target.sh (the module's own RUN_COMMANDS - build/lint/typecheck/test - from modules/<module>/audit-profile.yaml, fail-closed) AND, when a sealed audit exists at modules/<module>/.caf/, `code-audit-validate --run modules/<module>/.caf --fail-on High` (no new High/Critical finding vs the sealed baseline). CLEAN is REQUIRED alongside the awh gate to reach the done-flip; RED routes the task back to ready_to_implement per STATUS-REFERENCE §1.3 with routed_back_count += 1. Catches the class awh cannot: build/lint breaks, route 404s, changed data contracts (the CCAF/kymondongiap class). Emits memory.caf_gate_result. See docs/verification/caf-absorption-design.md." }
-  - { step: 30, skill: backlog-state-update-author,                inputs_from: { fr: next_fr, transition: "testing → done", outcome: { fr_audit_report: fr_audit_report, awh_gate_report: awh_gate_report, caf_gate_report: caf_gate_report } }, outputs_to: backlog_mutation_phase_5, condition: "awh_gate_report.outcome == GREEN AND caf_gate_report.outcome == CLEAN" }
+  - { step: 27, skill: task-audit,                      inputs_from: { fr: next_task, coverage_report: coverage_gate_report },   outputs_to: task_audit_report,                           description: "Post-implementation TRACE-004 closure — every §1 clause's cited test MUST be passed in coverage_gate_report. Pre-flight spec audit (`draft → ready_to_implement` transition) ran earlier, BEFORE this workflow; this is the closure check just before marking the task done." }
+  - { step: 28, skill: awh-gate,                                   inputs_from: { fr: next_task, module: next_task.module, goldenset: "modules/<module>/.awh/goldenset.yaml", baseline: "modules/<module>/.awh/eval-baseline.json" }, outputs_to: awh_gate_report, description: "Out-of-band independent rerun (the check step 27 is NOT). `awh eval <goldenset> --base-dir . --seeds 1 --baseline <baseline> --max-regression 0.0` reruns the task's §1 cited tests plus the module suite against the sealed, read-only baseline. GREEN (no task regressed) is REQUIRED to reach the done-flip; RED routes the task back to ready_to_implement per STATUS-REFERENCE §1.3 with routed_back_count += 1. Tests sealed via `awh lock modules/<module>/tests`. Emits memory.awh_gate_result." }
+  - { step: 29, skill: caf-gate,                                 inputs_from: { fr: next_task, module: next_task.module, audit_profile: "modules/<module>/audit-profile.yaml", audit_baseline: "modules/<module>/.caf/" }, outputs_to: caf_gate_report, description: "Code-audit gate (absorbed from CyberSkill/code-audit-framework). Deterministic floor, no LLM: `bash scripts/caf_gate.sh <module>` runs the module's TARGET HEALTH via tools/caf/core/evals/verify-target.sh (the module's own RUN_COMMANDS - build/lint/typecheck/test - from modules/<module>/audit-profile.yaml, fail-closed) AND, when a sealed audit exists at modules/<module>/.caf/, `code-audit-validate --run modules/<module>/.caf --fail-on High` (no new High/Critical finding vs the sealed baseline). CLEAN is REQUIRED alongside the awh gate to reach the done-flip; RED routes the task back to ready_to_implement per STATUS-REFERENCE §1.3 with routed_back_count += 1. Catches the class awh cannot: build/lint breaks, route 404s, changed data contracts (the CCAF/kymondongiap class). Emits memory.caf_gate_result. See docs/verification/caf-absorption-design.md." }
+  - { step: 30, skill: backlog-state-update-author,                inputs_from: { fr: next_task, transition: "testing → done", outcome: { task_audit_report: task_audit_report, awh_gate_report: awh_gate_report, caf_gate_report: caf_gate_report } }, outputs_to: backlog_mutation_phase_5, condition: "awh_gate_report.outcome == GREEN AND caf_gate_report.outcome == CLEAN" }
   - { step: 31, skill: backlog-state-update-audit,                 inputs_from: backlog_mutation_phase_5,                                 outputs_to: updated_backlog }
 
 escalates_to:
@@ -76,15 +76,15 @@ audit_hooks:
   - each skill emits one artefact_write row to the memory audit chain per its frontmatter audit.row_kind
   - between every phase transition (steps 13-14, 15-16, 19-20, 21-22, 30-31) backlog-state-update emits a `workflow_phase_complete` memory row
   - on successful `testing → done` transition (step 30) backlog-state-update emits a `workflow_complete` memory row with the full artefact summary
-  - on circuit-breaker trip or any in-cycle failure → status reverts to `ready_to_implement` and the writer emits `fr_routed_back` with the rework reason
+  - on circuit-breaker trip or any in-cycle failure → status reverts to `ready_to_implement` and the writer emits `task_routed_back` with the rework reason
   - HITL pauses (typically at step 4 ADR-self-approval boundary, step 24 coverage < 90 %, step 26 5-fail circuit-breaker trip) halt the chain
 
 circuit_breaker:
-  consecutive_test_failures_per_fr: 5
+  consecutive_test_failures_per_task: 5
   on_trip:
     - revert files to pre-execution state (`git restore` on touched paths)
     - mark task `ready_to_implement` in BACKLOG.md (with `routed_back_count += 1`) via step 30's rework branch
-    - emit a `fr_routed_back` memory audit row with the last debug_trace + reason `"circuit_breaker_5_consecutive_test_failures"`
+    - emit a `task_routed_back` memory audit row with the last debug_trace + reason `"circuit_breaker_5_consecutive_test_failures"`
     - proceed to the next eligible task (do NOT halt the outer loop)
 ---
 # Ship Tasks — `chief-technology-officer/ship-tasks`
@@ -132,7 +132,7 @@ Every human verdict or override emits one `memory.status_overridden` aux row cap
 
 Any failure in `implementing` (steps 1-12), `reviewing` (steps 17-18), or `testing` (steps 23-28) routes the task back to `ready_to_implement` with `routed_back_count += 1`. The reason is recorded in:
 
-1. A `memory.fr_routed_back` aux audit row with the failure context (debug_trace, failing-test-name, or blocker reason).
+1. A `memory.task_routed_back` aux audit row with the failure context (debug_trace, failing-test-name, or blocker reason).
 2. A comment cell on the BACKLOG row (`<!-- routed back: <reason> -->`).
 3. A future **Issue Request** artefact that will auto-spawn from the rework signal - future work, unscheduled (no task yet; see STATUS-REFERENCE §1.3 for the rework signal it would consume).
 
@@ -213,10 +213,10 @@ The final phase transition. Outcomes derived by steps 27-29 (post-impl audit + t
 | Step 27 audit + step 28 awh gate + step 29 caf gate + circuit breaker status                                                                                                                          | New status                      | Mutation                                                                                                               |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | All TRACE-001..005 passing + 0 failed tests + awh gate GREEN (independent rerun, no task regressed vs the sealed baseline) + caf gate CLEAN (target health PASS + no new High/Critical audit finding) + recorded human acceptance verdict | `done`                        | `workflow_complete` memory row (written when the human records acceptance), BACKLOG cell `testing → done`         |
-| TRACE-004 fails (test exists per spec but isn't passing)                                                                                                                                              | `ready_to_implement` (rework) | `fr_routed_back` memory row with `reason: "trace-004: <test_name> not in coverage_gate_report"`                    |
-| awh gate RED (a task regressed vs the sealed baseline, or the task's cited test is not passing on independent rerun)                                                                                    | `ready_to_implement` (rework) | `fr_routed_back` + `memory.awh_gate_result{outcome: RED}`, `reason: "awh-gate: <task> regressed"`                |
-| caf gate RED (target health failed - a RUN_COMMAND broke - or the audit raised a new High/Critical finding)                                                                                           | `ready_to_implement` (rework) | `fr_routed_back` + `memory.caf_gate_result{outcome: RED}`, `reason: "caf-gate: <target-health-fail or finding>"` |
-| Circuit breaker tripped during steps 25-26                                                                                                                                                            | `ready_to_implement` (rework) | `fr_routed_back` memory row with `reason: "circuit_breaker_5_consecutive_test_failures"`                           |
+| TRACE-004 fails (test exists per spec but isn't passing)                                                                                                                                              | `ready_to_implement` (rework) | `task_routed_back` memory row with `reason: "trace-004: <test_name> not in coverage_gate_report"`                    |
+| awh gate RED (a task regressed vs the sealed baseline, or the task's cited test is not passing on independent rerun)                                                                                    | `ready_to_implement` (rework) | `task_routed_back` + `memory.awh_gate_result{outcome: RED}`, `reason: "awh-gate: <task> regressed"`                |
+| caf gate RED (target health failed - a RUN_COMMAND broke - or the audit raised a new High/Critical finding)                                                                                           | `ready_to_implement` (rework) | `task_routed_back` + `memory.caf_gate_result{outcome: RED}`, `reason: "caf-gate: <target-health-fail or finding>"` |
+| Circuit breaker tripped during steps 25-26                                                                                                                                                            | `ready_to_implement` (rework) | `task_routed_back` memory row with `reason: "circuit_breaker_5_consecutive_test_failures"`                           |
 
 The top row's `done` is not written by the agent: when the gates are green it halts at the acceptance gate, a human records the acceptance verdict, and that verdict writes `done` (HITL required, STATUS-REFERENCE §1.4).
 
@@ -228,9 +228,9 @@ The CUO supervisor invokes this workflow in a loop:
 
 ```
 while ! stop_signal:
-    next_fr = read_backlog().next_eligible()   # deterministic: see 'Queue selection' in Resume semantics below
-    if next_fr is None: break        # backlog drained
-    invoke_workflow("chief-technology-officer/ship-tasks", { repo_root, next_fr })
+    next_task = read_backlog().next_eligible()   # deterministic: see 'Queue selection' in Resume semantics below
+    if next_task is None: break        # backlog drained
+    invoke_workflow("chief-technology-officer/ship-tasks", { repo_root, next_task })
 ```
 
 The supervisor handles persistence (state survives across sessions because the truth is in BACKLOG.md + the memory chain), parallelism (multiple tasks may run in parallel when their dependency cones don't overlap), and observability (the per-phase `workflow_phase_complete` + the final `workflow_complete` rows are enough to reconstruct the run).
@@ -268,13 +268,13 @@ CACHE of proven work, never an authority - task frontmatter and BACKLOG.md remai
 **Write points.** The manifest MUST be rewritten after EVERY completed, failed, or conditionally-skipped
 step - no step's outcome goes unrecorded. Writes are two-phase atomic (`.tmp.<nonce>` then rename),
 mirroring the memory-protocol discipline. Each step entry records `{index, skill, status, artefact_path,
-artefact_sha256, verdict, completed_at}`; `fr_sha256` (hash of the task spec at run start) and
+artefact_sha256, verdict, completed_at}`; `task_sha256` (hash of the task spec at run start) and
 `workflow_version` are pinned at manifest creation.
 
 **Resume.** On invocation for a task whose manifest exists:
 
 1. `workflow_version` mismatch -> needs_human. Never a silent mixed-version run.
-2. `fr_sha256` mismatch (task spec edited since run start) -> every step is stale; restart at step 1
+2. `task_sha256` mismatch (task spec edited since run start) -> every step is stale; restart at step 1
    (history and `routed_back_count` are retained).
 3. Otherwise re-hash EVERY recorded `artefact_sha256` against disk. The earliest mismatch marks that
    step and all later steps stale - redo from there. All intact -> continue at the first non-done step.

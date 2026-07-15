@@ -49,7 +49,7 @@ Give /ship-tasks the same re-entrancy anchor its authoring sibling already has: 
 
 Normative clauses:
 
-1. A contract `ship-manifest@1` MUST be defined at `modules/skill/contracts/task/SHIP-MANIFEST.md` with fields: `manifest_version` (const `ship-manifest@1`), `task_id`, `fr_sha256` (hash of the task spec file at run start - a later mismatch marks the whole manifest stale), `workflow_version` (from the workflow doc), `started_at`, `updated_at`, `current_step` (1..31), `routed_back_count`, `steps[]` - each `{index, skill, status (pending|done|failed|skipped-conditional), artefact_path, artefact_sha256, verdict, completed_at}` - and `hitl` (`{gate: null|review_approval|final_acceptance, requested_at}`).
+1. A contract `ship-manifest@1` MUST be defined at `modules/skill/contracts/task/SHIP-MANIFEST.md` with fields: `manifest_version` (const `ship-manifest@1`), `task_id`, `task_sha256` (hash of the task spec file at run start - a later mismatch marks the whole manifest stale), `workflow_version` (from the workflow doc), `started_at`, `updated_at`, `current_step` (1..31), `routed_back_count`, `steps[]` - each `{index, skill, status (pending|done|failed|skipped-conditional), artefact_path, artefact_sha256, verdict, completed_at}` - and `hitl` (`{gate: null|review_approval|final_acceptance, requested_at}`).
 2. The ship workflow MUST write the manifest to `docs/tasks/.workflow/<task-ID>.ship.json` after EVERY completed, failed, or conditionally-skipped step, using two-phase atomic writes (`.tmp.<nonce>` then rename), mirroring the memory-protocol write discipline.
 3. On invocation for a task whose manifest exists with matching `workflow_version`, ship MUST resume at the first non-done step AFTER re-verifying every recorded `artefact_sha256` against disk; a mismatch marks that step and all later steps stale (redo from the earliest stale step). A `workflow_version` mismatch MUST route to needs_human, never a silent mixed-version run.
 4. Invoked WITHOUT a task id, ship MUST select deterministically: among tasks at `ready_to_implement` whose `depends_on` are all `done`, order by priority (MUST before SHOULD before COULD), then `created` ascending, then id ascending; the selection and its reasoning line MUST be echoed to the operator before step 1 runs.
@@ -68,7 +68,7 @@ The manifest is a cache of proven work, never an authority: every resume re-hash
 {
   "manifest_version": "ship-manifest@1",
   "task_id": "TASK-TEN-208",
-  "fr_sha256": "4c1e...",
+  "task_sha256": "4c1e...",
   "workflow_version": "2.3.1",
   "started_at": "2026-07-12T10:00:00+07:00",
   "updated_at": "2026-07-12T11:42:10+07:00",
@@ -136,7 +136,7 @@ None blocking. Cross-repo parallel shipping (two agents, two different tasks, on
 
 1. Crash between artefact write and manifest write - resume re-verifies hashes; the missing manifest entry means the step re-runs, idempotent by skill design.
 2. Manifest edited by hand to skip a gate - §1 #8: gates re-ask regardless of manifest content; the manifest cannot authorize anything.
-3. Stale manifest after task spec edits (task re-audited mid-flight) - covered by the schema's `fr_sha256` root field (§1 #1): mismatch at resume marks every step stale, forcing a clean re-run against the revised spec.
+3. Stale manifest after task spec edits (task re-audited mid-flight) - covered by the schema's `task_sha256` root field (§1 #1): mismatch at resume marks every step stale, forcing a clean re-run against the revised spec.
 4. .workflow dir deleted - clean restart from step 1; no correctness loss (cache semantics).
 5. Clock skew across sessions - ordering uses step indices, not timestamps; timestamps are informational only.
 

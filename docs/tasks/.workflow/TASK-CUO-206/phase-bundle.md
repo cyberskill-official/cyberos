@@ -18,7 +18,7 @@ MALFORMED: missing root field -> validate error (test_schema); truncated JSON on
 RACE: crash between artefact + manifest write -> step re-runs, idempotent (task §10 #1; write_atomic
   leaves no .tmp - test_atomic asserts empty tmp listing).
 SECURITY: manifest hand-edited to skip a gate -> gates re-ask (test_hitl_reask_on_resume + doc clause
-  "NOT be treated as approval"); fr_sha256 mismatch forces full redo (test_workflow_version_mismatch).
+  "NOT be treated as approval"); task_sha256 mismatch forces full redo (test_workflow_version_mismatch).
 DEGRADATION: workflow doc version bumped mid-flight -> needs_human (test_workflow_version_mismatch);
   artefact corrupted -> stale-from-earliest (test_resume_plan_intact_and_stale).
 

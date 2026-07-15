@@ -142,7 +142,7 @@ Output ONLY the artefact body starting with `---`. No commentary, no surrounding
     def validate_emit(self, body: str, inputs: dict) -> list[dict]:
         """Run task-with-subtasks-specific INVARIANTS on the emitted body.
 
-        Reads tasks via cyberos_fr_parser (Batch A): prefers body-H2 task
+        Reads tasks via cyberos_task_parser (Batch A): prefers body-H2 task
         sections; falls back to legacy `tasks:` frontmatter list.
         """
         findings = list(super().validate_emit(body, inputs))
@@ -173,7 +173,7 @@ Output ONLY the artefact body starting with `---`. No commentary, no surrounding
         import sys as _sys
         from pathlib import Path as _Path
         _sys.path.insert(0, str(_Path(__file__).resolve().parents[1] / "tools"))
-        from cyberos_fr_parser import parse_body_tasks
+        from cyberos_task_parser import parse_body_tasks
         tasks = parse_body_tasks(body_after_fm)
         if not tasks:
             tasks = fm.get("tasks") or []

@@ -32,4 +32,4 @@ jobs:
         run: bash tools/docs-site/build.sh
 
       - name: Sanity
-        run: test -f dist/website/index.html && test -f dist/website/reference/fr-catalog.html && echo "site built"
+        run: test -f dist/website/index.html && test -f dist/website/reference/task-catalog.html && echo "site built"

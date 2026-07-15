@@ -67,6 +67,10 @@ fi
 
 # Retired-vocabulary gate. The fr->task rename touched ~32,000 sites; without a gate
 # the old words creep back through vendored skill prose. See docs/tasks/RENAME-EPOCH.md.
+# NOTE: the filename says `fr`, deliberately. It names what the gate BLOCKS (the
+# legacy FR vocabulary), not the vocabulary we migrated to. The codemod renamed
+# this line once and left the target behind, which aborted the rename commit —
+# frozen in migrate_fr_to_task.py:FROZEN_LITERALS.
 bash "$root/.pre-commit-hooks/no-legacy-fr-vocabulary.sh"
 
 # TASK-IMP-072: a staged VERSION change must carry the whole codebase with it.

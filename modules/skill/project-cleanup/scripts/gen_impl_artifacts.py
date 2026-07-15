@@ -40,13 +40,13 @@ def main():
     ap.add_argument("--project-root", required=True)
     args = ap.parse_args()
 
-    fr_root = os.path.join(args.project_root, "docs/tasks")
-    if not os.path.isdir(fr_root):
-        print(f"ERROR: no docs/tasks/ at {fr_root}")
+    task_root = os.path.join(args.project_root, "docs/tasks")
+    if not os.path.isdir(task_root):
+        print(f"ERROR: no docs/tasks/ at {task_root}")
         return
 
     tasks = {}
-    for path in sorted(glob.glob(f"{fr_root}/**/TASK-*.md", recursive=True)):
+    for path in sorted(glob.glob(f"{task_root}/**/TASK-*.md", recursive=True)):
         if path.endswith(".audit.md"):
             continue
         fm = parse_fm(path)
@@ -65,11 +65,11 @@ def main():
         layers.append(sorted(current))
         next_layer = []
         for task_id in current:
-            for dep_fr_id, dep_fr in tasks.items():
-                if task_id in dep_fr.get("depends_on", []):
-                    in_degree[dep_fr_id] -= 1
-                    if in_degree[dep_fr_id] == 0:
-                        next_layer.append(dep_fr_id)
+            for dep_task_id, dep_task in tasks.items():
+                if task_id in dep_task.get("depends_on", []):
+                    in_degree[dep_task_id] -= 1
+                    if in_degree[dep_task_id] == 0:
+                        next_layer.append(dep_task_id)
         current = next_layer
 
     from datetime import date
@@ -86,7 +86,7 @@ def main():
             slice_v = fr.get("slice", "?")
             out.append(f"- **{task_id}** [{priority}, {effort}h, slice {slice_v}] — {title}")
         out.append("")
-    with open(f"{fr_root}/IMPLEMENTATION_ORDER.md", "w") as f:
+    with open(f"{task_root}/IMPLEMENTATION_ORDER.md", "w") as f:
         f.write("\n".join(out))
     print(f"Wrote IMPLEMENTATION_ORDER.md: {len(layers)} layers, {len(tasks)} tasks")
 
@@ -126,10 +126,10 @@ def main():
         out.append("|---|---:|---:|---|")
         for slice_v in sorted(by_module[module]):
             s = by_module[module][slice_v]
-            fr_list = ", ".join(sorted(s["tasks"]))
-            out.append(f"| {slice_v} | {s['count']} | {s['hours']:.0f} | {fr_list} |")
+            task_list = ", ".join(sorted(s["tasks"]))
+            out.append(f"| {slice_v} | {s['count']} | {s['hours']:.0f} | {task_list} |")
         out.append("")
-    with open(f"{fr_root}/SPRINT_PLAN.md", "w") as f:
+    with open(f"{task_root}/SPRINT_PLAN.md", "w") as f:
         f.write("\n".join(out))
     print(f"Wrote SPRINT_PLAN.md: {len(tasks)} tasks / {total_hours:.0f}h across {len(by_module)} modules")
 

@@ -57,7 +57,7 @@ t02_changelog_once() {
     && ok t02 || fail t02 "clobbered or duplicated on re-init"
 }
 
-t03_root_fr_migration() {
+t03_root_task_migration() {
   local d="$TMP/mig"; mkrepo "$d"
   mkdir -p "$d/docs/tasks/api"
   printf -- '---\nid: TASK-CORE-001\ntitle: Root task\nmodule: widget-core\nstatus: draft\n---\nbody\n' \
@@ -72,7 +72,7 @@ t03_root_fr_migration() {
   [ -f "$d/docs/tasks/api/TASK-API-001-mod-thing/spec.md" ]           || { fail t03-mod "module-level flat not migrated"; all=0; }
   grep -q "docs/tasks/widget-core/TASK-CORE-001-root-thing/spec.md" "$d/docs/tasks/INDEX.md" \
     && ! grep -q "TASK-CORE-001-root-thing\.md" "$d/docs/tasks/INDEX.md" || { fail t03-refs "references not rewritten"; all=0; }
-  grep -q "flat_fr_files_remaining=0 fr_folders_missing_spec=0" <<<"$out" || { fail t03-verify "verify line not clean"; all=0; }
+  grep -q "flat_task_files_remaining=0 task_folders_missing_spec=0" <<<"$out" || { fail t03-verify "verify line not clean"; all=0; }
   if command -v node >/dev/null 2>&1; then
     [ -f "$d/docs/status/index.html" ] && [ -f "$d/docs/status/assets/status.css" ] && [ -f "$d/docs/status/assets/favicon.svg" ] \
       || { fail t03-page "docs/status/ folder incomplete"; all=0; }
@@ -144,7 +144,7 @@ t06_hook_append_foreign() {
 
 t01_gitignore_managed_block
 t02_changelog_once
-t03_root_fr_migration
+t03_root_task_migration
 t04_payload_self_cleanup
 t05_supersede_old_docs
 t06_hook_append_foreign

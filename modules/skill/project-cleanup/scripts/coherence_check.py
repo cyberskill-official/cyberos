@@ -45,13 +45,13 @@ def main():
     ap.add_argument("--json", action="store_true", help="emit JSON output")
     args = ap.parse_args()
 
-    fr_root = os.path.join(args.project_root, "docs/tasks")
-    if not os.path.isdir(fr_root):
+    task_root = os.path.join(args.project_root, "docs/tasks")
+    if not os.path.isdir(task_root):
         print(json.dumps({"error": "no docs/tasks/ — not a cyberos repo"}), file=sys.stderr)
         sys.exit(2)
 
     all_frs = {}
-    for path in sorted(glob.glob(f"{fr_root}/**/TASK-*.md", recursive=True)):
+    for path in sorted(glob.glob(f"{task_root}/**/TASK-*.md", recursive=True)):
         if path.endswith(".audit.md"):
             continue
         fm = parse_fm(path)

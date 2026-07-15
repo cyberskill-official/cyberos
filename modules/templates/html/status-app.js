@@ -1,7 +1,7 @@
 /* status-app.js - client for status-hub@2.
    One corpus, three lenses (board / table / releases) + a task detail drawer.
    No dependencies and no network calls except the on-demand per-task spec chunk
-   (data/fr/<ID>.js - a classic script, so it works over file:// too).
+   (data/task/<ID>.js - a classic script, so it works over file:// too).
    The page stays readable without this file: <noscript> carries a static table
    of every task plus the full release list. */
 (function () {

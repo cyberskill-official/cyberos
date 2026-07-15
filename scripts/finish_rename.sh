@@ -61,7 +61,7 @@ run "bash dist/cyberos/install.sh ."           # refreshes .cyberos/ from dist/c
 run "bash tools/cyberos-init/check-chain-coverage.sh dist/cyberos"
 
 # ─────────────────────────────────────────────────────────────────────────────
-say "3/6  Regenerate docs/status (507 stale FR-*.js chunks)"
+say "3/6  Regenerate docs/status (507 stale TASK-*.js chunks)"
 # The renderer rmSync's its output dir, which the sandbox cannot do. The chunks under
 # docs/status/data/fr/ are still named FR-*.js, so the status page's detail drawer
 # 404s on every task.

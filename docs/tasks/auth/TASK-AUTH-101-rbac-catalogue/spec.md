@@ -977,7 +977,7 @@ async fn stub_token_rejected_after_grace_window() {
 
 #[tokio::test]
 async fn stub_role_permissions_strictly_additive() {
-    let pre_matrix = load_pre_fr_auth_101_matrix();
+    let pre_matrix = load_pre_task_auth_101_matrix();
     let post_matrix = load_matrix_after_migrations();
     for (role, res, act) in &pre_matrix.allowed {
         assert!(post_matrix.allowed.contains(&(*role, *res, *act)),

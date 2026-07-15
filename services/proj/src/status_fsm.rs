@@ -157,7 +157,7 @@ mod tests {
     }
 
     #[test]
-    fn canonical_lifecycle_matches_fr_proj_004() {
+    fn canonical_lifecycle_matches_task_proj_004() {
         assert!(validate_lifecycle(
             LifecycleStatus::Backlog,
             LifecycleStatus::Todo

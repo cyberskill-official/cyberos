@@ -7,7 +7,7 @@ Author and audit tasks for this repo. Input = ${1:-ask the user for the PRD/spec
 Run the two skills in order. Both are bundled with this plugin (`${CLAUDE_PLUGIN_ROOT}/skills/`) and also vendored at `.cyberos/cuo/skills/` once `/init` has run.
 
 1. Author - `task-author`.
-   - If given a PRD / spec / SRS document, expand it into task markdowns using the RESOLVED template: explicit operator override for this invocation, else `.cyberos/config.yaml` `fr_template`, else default `engineering-spec@1`. Echo the resolved template (value + source) in the PLAN so the operator approves template + content together (profiles: TEMPLATE_PROFILES.md, TASK-CUO-208).
+   - If given a PRD / spec / SRS document, expand it into task markdowns using the RESOLVED template: explicit operator override for this invocation, else `.cyberos/config.yaml` `task_template`, else default `engineering-spec@1`. Echo the resolved template (value + source) in the PLAN so the operator approves template + content together (profiles: TEMPLATE_PROFILES.md, TASK-CUO-208).
    - If given only an idea (no document), use the skill's standalone interview to elicit scope, then draft from that.
    - It HALTS at PLAN approval: show the user the proposed task set (ids, titles, class) and get their go-ahead before writing files. Respect that halt - do not auto-approve on their behalf.
    - Write tasks to `docs/tasks/` (module subfolder in a monorepo, flat otherwise). Each starts at `status: draft`. Cross-cutting hardening work is `class: improvement`; everything else is `class: product` (the default).

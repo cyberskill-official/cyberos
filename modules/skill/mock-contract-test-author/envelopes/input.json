@@ -4,13 +4,13 @@
   "title": "mock-contract-test-author input envelope",
   "type": "object",
   "required": [
-    "fr_path",
+    "task_path",
     "edge_case_matrix_path",
     "output_dir"
   ],
   "additionalProperties": false,
   "properties": {
-    "fr_path": {
+    "task_path": {
       "type": "string"
     },
     "edge_case_matrix_path": {

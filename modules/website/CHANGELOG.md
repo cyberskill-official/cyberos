@@ -38,7 +38,7 @@ Stephen flagged five UI bugs from live deploy screenshots; all fixed.
   - Mermaid `max-height: 70vh` on mobile to prevent monstrous portrait diagrams
 
 **Bug 5 — Lingering PRD/SRS references:**
-- 47 textual edits across 28 HTML files in `website/docs/` (per Agent sweep). Removed: "PRD/SRS narrative remains authoritative" disclaimers (23), "PRD coverage" eyebrows, broken `<a href="#"></a>` empty anchors, "Generated from PRD + SRS source" footer, "DEC-NNN in SRS" → "DEC-NNN" rewrites (5 in infrastructure.html + 1 in ten.html), persona "draft PRD/SRS" chip rephrases. Preserved: the two intentional github.com canonical-spec links in `fr-catalog.html` lines 56–57.
+- 47 textual edits across 28 HTML files in `website/docs/` (per Agent sweep). Removed: "PRD/SRS narrative remains authoritative" disclaimers (23), "PRD coverage" eyebrows, broken `<a href="#"></a>` empty anchors, "Generated from PRD + SRS source" footer, "DEC-NNN in SRS" → "DEC-NNN" rewrites (5 in infrastructure.html + 1 in ten.html), persona "draft PRD/SRS" chip rephrases. Preserved: the two intentional github.com canonical-spec links in `task-catalog.html` lines 56–57.
 - Grep verification: `\bPRD\b|\bSRS\b` across `website/docs/*.html` → 2 hits, both intentional.
 
 Verified: memory.html Mermaid no longer has `<kind>/<hex>/<file>` patterns; styles.css line counts went from 1018 → 1085. The fix should ship cleanly to Cloudflare Pages on next deploy.
@@ -67,7 +67,7 @@ Added `docs/AUDIT_AND_PLAN_2026_05_14.md` — single comprehensive audit + build
 
 **task catalog strip (per user decision: strip-everything).** Stripped:
 - All 22 module pages: each "Functional Requirements" section (the `<section id="functional-requirements">` block, lines ~789–820 across modules) replaced with a stub linking to the `task-author` Agent Skill workflow. 23/23 pages patched cleanly via regex sweep.
-- `website/docs/reference/fr-catalog.html`: 1006-line generated catalog replaced with a 70-line stub explaining the rebuild + how to author new tasks via the skill module.
+- `website/docs/reference/task-catalog.html`: 1006-line generated catalog replaced with a 70-line stub explaining the rebuild + how to author new tasks via the skill module.
 
 **Partially stripped (cross-refs remain — call to extend):**
 - `website/docs/reference/nfr-catalog.html` — still has 137 task refs (NFRs are described in terms of which tasks they constrain)

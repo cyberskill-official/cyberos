@@ -197,17 +197,17 @@ def run(
     if invoker == "brief":
         from cuo.core.supervisor import brief_chain
         frs_run = 0
-        processed_fr_ids: set[str] = set()
+        processed_task_ids: set[str] = set()
         while True:
             if max_frs and frs_run >= max_frs:
                 break
             rows = parse_backlog(backlog_path)
             eligible = next_eligible(rows, module=module, rework=rework,
-                                      skip_fr_ids=processed_fr_ids)
+                                      skip_task_ids=processed_task_ids)
             if eligible is None:
                 break
             frs_run += 1
-            processed_fr_ids.add(eligible.task_id)
+            processed_task_ids.add(eligible.task_id)
             brief = brief_chain(
                 persona=persona,
                 workflow_slug=workflow_slug,
@@ -241,27 +241,27 @@ def run(
     frs_run = 0
     completed = 0
     routed_back = 0
-    processed_fr_ids: set[str] = set()
+    processed_task_ids: set[str] = set()
     while True:
         if max_frs and frs_run >= max_frs:
             print(f"# drain halted: --max-tasks={max_frs} reached")
             break
         rows = parse_backlog(backlog_path)
         eligible = next_eligible(rows, module=module, rework=rework,
-                                  skip_fr_ids=processed_fr_ids)
+                                  skip_task_ids=processed_task_ids)
         if eligible is None:
             print(f"# drain complete: no more eligible tasks"
                   f"{' in module=' + module if module else ''}")
             break
 
-        fr_output_dir = output_dir
+        task_output_dir = output_dir
         print(f"## [{frs_run + 1}] {eligible.task_id} — {eligible.title[:60]}")
 
         result = execute_chain(
             persona=persona,
             workflow_slug=workflow_slug,
             skill_root=skill_path,
-            output_dir=fr_output_dir,
+            output_dir=task_output_dir,
             task_id=eligible.task_id,
             inputs={"task_id": eligible.task_id, "auto_claim": True,
                     "module": module or eligible.module,
@@ -271,7 +271,7 @@ def run(
             backlog_path=backlog_path,
         )
         frs_run += 1
-        processed_fr_ids.add(eligible.task_id)
+        processed_task_ids.add(eligible.task_id)
         print(f"   outcome: {result.outcome}  ({len(result.step_results)} steps, "
               f"{result.total_duration_ms} ms)")
 
@@ -296,7 +296,7 @@ def run(
                     f"## Last attempt\n\n"
                     f"- outcome: {result.outcome}\n"
                     f"- notes: {result.notes}\n"
-                    f"- output dir: {fr_output_dir}\n\n"
+                    f"- output dir: {task_output_dir}\n\n"
                     f"## Next action\n\n"
                     f"Review the task spec + last debug trace. Either patch the spec, "
                     f"flip status to on_hold/closed, or override routed_back_count.\n",

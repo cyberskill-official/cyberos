@@ -23,9 +23,9 @@ This skill publishes the following NATS subjects (per `cyberos/skill/contracts/n
 
 | subject | payload | when |
 |---|---|---|
-| `fr_audit.audit_written` | `{artefact_path, audit_path, audited_file_sha256, verdict}` | After every successful Step 8 WRITE. |
-| `fr_audit.audit_batch_complete` | `{batch_run_id, per_artefact, hitl_required}` | At the end of a batch. |
-| `fr_audit.hitl_pause` | `{artefact_path, blocking_issues}` | When the batch halts on HITL. |
+| `task_audit.audit_written` | `{artefact_path, audit_path, audited_file_sha256, verdict}` | After every successful Step 8 WRITE. |
+| `task_audit.audit_batch_complete` | `{batch_run_id, per_artefact, hitl_required}` | At the end of a batch. |
+| `task_audit.hitl_pause` | `{artefact_path, blocking_issues}` | When the batch halts on HITL. |
 
 ## Halting and resuming
 

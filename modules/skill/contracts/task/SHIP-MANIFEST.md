@@ -14,7 +14,7 @@ with two-phase atomic writes (`.tmp.<nonce>` then rename), mirroring the memory 
 |---|---|---|
 | manifest_version | const | `ship-manifest@1` |
 | task_id | string | the task being shipped |
-| fr_sha256 | hex64 | hash of the task spec at run start; later mismatch = whole manifest stale |
+| task_sha256 | hex64 | hash of the task spec at run start; later mismatch = whole manifest stale |
 | workflow_version | string | from the workflow doc frontmatter; mismatch on resume = needs_human |
 | started_at / updated_at | ISO-8601 | informational; ordering uses step indices, never timestamps |
 | current_step | int 1..31 | |
@@ -31,9 +31,9 @@ with two-phase atomic writes (`.tmp.<nonce>` then rename), mirroring the memory 
 
 ## Lifecycle
 
-- Resume (matching workflow_version + fr_sha256): start at the first non-done step AFTER
+- Resume (matching workflow_version + task_sha256): start at the first non-done step AFTER
   re-hashing every recorded artefact; the earliest mismatch marks that step and all later
-  steps stale (redo from there). fr_sha256 mismatch = everything stale (fresh run, history
+  steps stale (redo from there). task_sha256 mismatch = everything stale (fresh run, history
   and routed_back_count retained). workflow_version mismatch = needs_human, never a silent
   mixed-version run.
 - HITL: a recorded `hitl.requested_at` NEVER substitutes for an approval - resuming at a gate

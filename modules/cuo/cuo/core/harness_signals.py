@@ -185,7 +185,7 @@ def acceptance_rate_below(rows: list[dict], threshold: dict) -> tuple[bool, floa
         r for r in rows
         if (r.get("extra") or {}).get("outcome") in (
             "done", "ROUTED_BACK", "HITL_HALT", "FAILED",
-        ) or r.get("op") in ("memory.fr_routed_back",)
+        ) or r.get("op") in ("memory.task_routed_back",)
     ]
     if not terminal:
         return (False, 0.0, [])

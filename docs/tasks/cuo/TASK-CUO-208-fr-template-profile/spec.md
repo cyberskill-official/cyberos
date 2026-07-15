@@ -48,7 +48,7 @@ Make the template decision explicit, per repo, in one place - instead of a plugi
 Normative clauses:
 
 1. A reference `TEMPLATE_PROFILES.md` MUST define both templates normatively side by side: `engineering-spec@1` (frontmatter field set; `## §1 - Description` .. `## §11 - Implementation notes` section grammar; end marker) and `task@1` (its frontmatter incl. `template:` key; `## Summary` .. `## Dependencies` + conditional sections). Each profile lists its applicable audit rule families.
-2. `/create-tasks` MUST resolve the active template as: explicit per-invocation operator override, else `.cyberos/config.yaml` `fr_template` (TASK-CUO-207), else default `engineering-spec@1` - and MUST echo the resolved template in its PLAN so the operator approves template + content together.
+2. `/create-tasks` MUST resolve the active template as: explicit per-invocation operator override, else `.cyberos/config.yaml` `task_template` (TASK-CUO-207), else default `engineering-spec@1` - and MUST echo the resolved template in its PLAN so the operator approves template + content together.
 3. `task-author` MUST accept the template as an input-envelope field and emit the selected profile faithfully; its §12 authoring rules apply to engineering-spec@1, and TEMPLATE_PROFILES.md carries the equivalent authoring rules for task@1.
 4. `task-audit` MUST select rule families by detected template: task@1 -> FM + SEC + COND + QA + SAFE (+ TRACE only where the grafted §4/§5 sections are present, as RUBRIC §9 already states); engineering-spec@1 -> the §12 sub-rule set + TRACE-001..005 + QA + SAFE. The 10/10 verdict bar and needs_human semantics MUST be identical across templates. Template detection MUST come from the file itself (`template:` key present -> task@1; §-section grammar -> engineering-spec@1) and a file matching neither or both MUST be needs_human.
 5. The plugin command doc MUST stop naming task@1 as THE format (current step-1 wording) and instead name the resolution chain from #2.
@@ -87,7 +87,7 @@ TEMPLATE_PROFILES.md: two mirrored halves + a comparison table + the detection r
 
 ## §7 - Dependencies
 
-Depends on TASK-CUO-207 (`fr_template` config key). Composes with TASK-CUO-205 (same command doc, different step - #5 here touches step 1, 205 touches step 3).
+Depends on TASK-CUO-207 (`task_template` config key). Composes with TASK-CUO-205 (same command doc, different step - #5 here touches step 1, 205 touches step 3).
 
 ## §8 - Example payloads
 

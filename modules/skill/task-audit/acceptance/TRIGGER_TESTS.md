@@ -20,7 +20,7 @@ classifier_version: 3.0.0-a4
 
 - "Turn this PRD into a backlog of tasks" → task-author
 - "Generate tasks from this spec" → task-author
-- "Draft a tech spec from this task" → fr-to-tech-spec
+- "Draft a tech spec from this task" → task-to-tech-spec
 - "What's the team's holiday schedule?" → none
 - "Convert this task from task@1 to engineering-spec@1" → task-author   (conversion = re-authoring - TASK-CUO-208)
 

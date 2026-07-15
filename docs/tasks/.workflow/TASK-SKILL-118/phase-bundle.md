@@ -49,6 +49,6 @@ ECM rows each name their covering check inline above. tests_failed=0; files_belo
 no python touched); ecm_rows_uncovered=[].
 
 ## ship-manifest dogfood (TASK-CUO-206 in production)
-docs/tasks/.workflow/TASK-SKILL-118.ship.json live: initialized at step 1 with fr_sha256 +
+docs/tasks/.workflow/TASK-SKILL-118.ship.json live: initialized at step 1 with task_sha256 +
 workflow_version 2.4.0, updated after implementation chunks (steps 1/5/8 recorded, current_step=16),
 confirmed gitignored via git check-ignore. First real manifest-tracked ship run.

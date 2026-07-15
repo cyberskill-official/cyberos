@@ -115,6 +115,42 @@ SKIP_SUFFIXES = (
 # ─────────────────────────────────────────────────────────────────────────────
 FROZEN_LITERALS = {
     "task-memory-109": "fr-memory-109",   # claude_code_hook.py frontmatter `source`
+
+    # ── PROPER NOUNS. Same restore mechanism, different reason. ──────────────
+    #
+    # The token rules below rename `fr` wherever it appears as a snake_case
+    # component. This script's OWN NAME contains one:
+    #
+    #     migrate_fr_to_task.py      ->  migrate_task_to_task.py     WRONG
+    #     _cyberos_fr_migrate        ->  _cyberos_task_migrate       RIGHT
+    #
+    # Both are `_fr_` inside snake_case. They are structurally identical and NO
+    # regex can separate them — the difference is that one is a proper noun and the
+    # other is a description. The first run of the token rules rewrote 127 files to
+    # cite `migrate_task_to_task.py`, a file that does not exist, and turned
+    # `--grep='feature-request -> task'` (which searches the rename commit message)
+    # into `--grep='task -> task'`, which matches nothing.
+    #
+    # Reverted, then fixed here. A codemod broad enough to catch every identifier is
+    # broad enough to rename itself into nonsense.
+    "migrate_task_to_task": "migrate_fr_to_task",
+    "'task -> task'": "'feature-request -> task'",
+
+    # Third instance of the same class, found when the vocabulary gate aborted the
+    # rename commit itself:
+    #
+    #     bash: .pre-commit-hooks/no-legacy-task-vocabulary.sh: No such file
+    #
+    # DENY_PREFIXES protects the gate's own FILE from rewrite. It does not protect
+    # .githooks/pre-commit, which CALLS that file by name — so `token:fr-kebab`
+    # renamed the pointer and left the target where it was. Deny-listing a file
+    # protects its contents, never its callers; every reference to a frozen name
+    # from a non-frozen file needs its own entry here.
+    #
+    # This name must never track the rename anyway. The gate blocks the legacy FR
+    # vocabulary; "no-legacy-task-vocabulary" would name a gate that blocks the
+    # vocabulary we just adopted — true of the filename, false of the code.
+    "no-legacy-task-vocabulary": "no-legacy-fr-vocabulary",
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -218,6 +254,23 @@ RULES: list[tuple[str, str, str]] = [
     ("file:awh-goldenset-from-fr",   r"awh_goldenset_from_fr",         "awh_goldenset_from_task"),
     ("file:fr-migrate-sh",           r"\bfr-migrate\b",                "task-migrate"),
     ("file:ship-your-first-fr",      r"ship-your-first-fr\b",          "ship-your-first-task"),
+
+    # ── Pass 5a2: `fr` as a snake_case / kebab TOKEN. ───────────────────────
+    #
+    # Pass 1 enumerated six identifiers (fr_id, fr_row, FrRow, _FR_ROW_RE, _FR_ID_RE,
+    # frs) and missed 37 more across 357 sites: fr_path, fr_root, fr_dir, fr_file,
+    # ship_fr, fr_routed_back, fr_list_sorted, next_fr, dep_fr_id, _cyberos_fr_migrate,
+    # CYBEROS_FR_BASE, ...
+    #
+    # Enumerating names does not converge — every pass found more. Rename the TOKEN.
+    # `\b` is useless here: `_` is a word character, so `\bfr_` never matches inside
+    # `_cyberos_fr_migrate`. That is precisely how it survived four passes.
+    #
+    # Protected by FROZEN_LITERALS: this script's own name (see the note there).
+    ("token:fr_-lead",               r"(?<![A-Za-z0-9])fr_",           "task_"),
+    ("token:_fr-tail",               r"_fr(?![A-Za-z0-9_])",           "_task"),
+    ("token:FR_-const",              r"(?<![A-Za-z0-9])FR_",           "TASK_"),
+    ("token:fr-kebab",               r"(?<![A-Za-z0-9_])fr-(?=[a-z])", "task-"),
 
     # ── Pass 5b: code identifiers. D5 = task_id, module-scoped.
     #     Safe at the rename site: `fr_id` appears only in modules/cuo,
@@ -348,11 +401,47 @@ PROSE_FIXUPS: list[tuple[str, str]] = [
 # The bare `FR` abbreviation is NOT in RULES. It is 2 characters and appears
 # inside unrelated words, inside the FR-<MOD>-<NNN> ids handled above, and in
 # third-party prose. --residue reports every remaining site for a human pass.
+# ─────────────────────────────────────────────────────────────────────────────
+# RULE-INDEPENDENT completeness scan.
+#
+# --verify used to re-run the RULES and report what THEY still matched. That is a
+# coverage check wearing a completeness check's clothes: a missing rule is
+# indistinguishable from a clean tree. It reported "0 residue" while 357 `fr_*`
+# identifiers were still in the tree across 37 names the rules had never heard of.
+#
+# Same shape as every other false-green this migration turned up: bash 3.2
+# swallowing `declare -A`, 29 trigger tests passing against a monkeypatched
+# `classify`, a parser returning 0 rows because its regex matched nothing.
+#
+# These patterns know nothing about the rules. They ask the only question that
+# matters: is the retired vocabulary still here?
+# ─────────────────────────────────────────────────────────────────────────────
 RESIDUE_PATTERNS = [
-    ("bare-FR-abbrev",  re.compile(r"(?<![A-Za-z0-9_-])FRs?(?![A-Za-z0-9_-])")),
-    ("fr-lowercase",    re.compile(r"\bfr_id\b|\bfr_row\b|\bFrRow\b|\b_FR_ROW_RE\b|\b_FR_ID_RE\b")),
-    ("leftover",        re.compile(r"(?i)feature[-_ ]request")),
+    ("bare-FR-abbrev",   re.compile(r"(?<![A-Za-z0-9_-])FRs?(?![A-Za-z0-9_-])")),
+    ("FR-id-prefix",     re.compile(r"\bFR-[A-Z0-9]")),
+    ("feature-request",  re.compile(r"(?i)feature[-_ ]request")),
+    ("fr_-identifier",   re.compile(r"(?<![A-Za-z0-9])fr_|_fr(?![A-Za-z0-9_])|(?<![A-Za-z0-9])FR_")),
+    ("fr-kebab",         re.compile(r"(?<![A-Za-z0-9_])fr-(?=[a-z])")),
 ]
+
+# Literals that MUST survive the rename, on any line, comment or not. Each is a
+# reference whose SUBJECT is the retired vocabulary — the same reasoning that
+# deny-lists RENAME-EPOCH.md, and the reason --verify can reach exit 0 at all:
+#
+#   migrate_fr_to_task.py       this script's own filename (a proper noun)
+#   fr-memory-109               FROZEN provenance value, written into memory-file
+#                               frontmatter; the BRAIN still holds it (FROZEN_LITERALS)
+#   'feature-request -> task'   the git-log --grep key that finds the rename commit;
+#                               the old words ARE the search key
+#
+# A residue scan that flags these can never pass, and a gate that can never pass is
+# one people learn to route around.
+RESIDUE_EXEMPT = (
+    "migrate_fr_to_task",
+    "fr-memory-109",
+    "'feature-request -> task'",
+    "no-legacy-fr-vocabulary",
+)
 
 # Path renames (git mv). Applied after content rewrite.
 PATH_RENAMES = [
@@ -705,8 +794,9 @@ def main() -> int:
             # gate that can never pass is one people learn to route around — the exact
             # failure this session kept finding (bash 3.2 `declare -A` silently
             # passing; 29 trigger tests green against a monkeypatched fake).
-            probe = "\n".join(l for l in (src if args.verify else new).split("\n")
-                              if not _is_comment(l))
+            probe = "\n".join(
+                l for l in (src if args.verify else new).split("\n")
+                if not _is_comment(l) and not any(x in l for x in RESIDUE_EXEMPT))
             for rname, rpat in RESIDUE_PATTERNS:
                 n = len(rpat.findall(probe))
                 if n:

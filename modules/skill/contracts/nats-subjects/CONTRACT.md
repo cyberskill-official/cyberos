@@ -3,7 +3,7 @@
 contract_id: nats-subjects
 contract_version: v1
 template_literal: nats_subjects@1
-description: Canonical naming and shape contract for every NATS subject emitted or subscribed by a CyberOS skill. Skills publish events on the bus (e.g. `cuo.fr_author.fr_written`) so the LangGraph supervisor's classify-act node can decide whether to chain a follow-up skill. This contract pins subject names, payload shapes, and the durability/QoS promises so the bus is interoperable across skills + persona namespaces.
+description: Canonical naming and shape contract for every NATS subject emitted or subscribed by a CyberOS skill. Skills publish events on the bus (e.g. `cuo.task_author.task_written`) so the LangGraph supervisor's classify-act node can decide whether to chain a follow-up skill. This contract pins subject names, payload shapes, and the durability/QoS promises so the bus is interoperable across skills + persona namespaces.
 contract_kind: wire_protocol        # artefact_schema | envelope_schema | wire_protocol
 locked_at: 2026-05-06
 
@@ -29,7 +29,7 @@ emitted_source_freshness_tier: 15   # high authority — this IS the wire protoc
 
 ## Why this contract exists
 
-Skills decoupled via NATS pub-sub (per DEC-029) need a shared vocabulary so the supervisor's classify-act node can route events to follow-up skills deterministically. Without a contract, two teams could independently invent `cuo.fr.create.done` and `cuo.fr_author.completed` for the same event — the supervisor would catch one and miss the other. This contract fixes the names at the registry level, not the skill level, so every consumer has a single source of truth.
+Skills decoupled via NATS pub-sub (per DEC-029) need a shared vocabulary so the supervisor's classify-act node can route events to follow-up skills deterministically. Without a contract, two teams could independently invent `cuo.fr.create.done` and `cuo.task_author.completed` for the same event — the supervisor would catch one and miss the other. This contract fixes the names at the registry level, not the skill level, so every consumer has a single source of truth.
 
 ## How a skill consumes this contract
 
@@ -53,10 +53,10 @@ Subjects use **dot-separated lowercase tokens** in the form:
 ```
 
 - **`<top_level_persona>`** — the **outer** lowercase persona namespace (`cuo`, future `cao`, `cmo`, etc. — whatever sits at the registry root). Sub-personas (`cpo`, `cto`, `clo`, …) are NOT included in the subject name; they're implicit in the `skill_id`. Rationale: subjects exist at the routing layer (the supervisor consumes them), and the supervisor routes at the top-level persona granularity. Including the sub-persona makes the subject more verbose without adding routing power. The persona's specific sub-namespace IS preserved in the `skill_id` field of the payload (e.g. `"skill_id": "cuo/cpo/task-author"`).
-- **`<skill_id_with_underscores>`** — the skill folder name with hyphens replaced by underscores (`task-author` → `fr_author`).
-- **`<event_name>`** — past-tense lowercase phrase describing what happened. Examples: `fr_written`, `audit_complete`, `hitl_pause`, `refinement_proposed`.
+- **`<skill_id_with_underscores>`** — the skill folder name with hyphens replaced by underscores (`task-author` → `task_author`).
+- **`<event_name>`** — past-tense lowercase phrase describing what happened. Examples: `task_written`, `audit_complete`, `hitl_pause`, `refinement_proposed`.
 
-This naming matches the pre-existing skill-body convention used by `cuo/cpo/task-author` since v0.1.0 (e.g. `cuo.fr_author.fr_written`). The contract documents the existing convention; it does not redefine it.
+This naming matches the pre-existing skill-body convention used by `cuo/cpo/task-author` since v0.1.0 (e.g. `cuo.task_author.task_written`). The contract documents the existing convention; it does not redefine it.
 
 ### Reserved tokens
 
@@ -70,12 +70,12 @@ The following token positions are reserved and may not be used as `<event_name>`
 
 | Subject | Publisher | Payload shape ref | QoS | Durability |
 | --- | --- | --- | --- | --- |
-| `cuo.fr_author.fr_written` | `cuo/cpo/task-author` | `schema.json#/payloads/fr_written` | at-least-once | `WorkQueue` retain ≥7d |
-| `cuo.fr_author.batch_complete` | `cuo/cpo/task-author` | `schema.json#/payloads/batch_complete` | at-least-once | `WorkQueue` retain ≥7d |
-| `cuo.fr_author.hitl_pause` | `cuo/cpo/task-author` | `schema.json#/payloads/hitl_pause` | at-least-once | `Memory` retain ≥30d |
-| `cuo.fr_audit.audit_written` | `cuo/cpo/task-audit` | `schema.json#/payloads/audit_written` | at-least-once | `WorkQueue` retain ≥7d |
-| `cuo.fr_audit.audit_batch_complete` | `cuo/cpo/task-audit` | `schema.json#/payloads/audit_batch_complete` | at-least-once | `WorkQueue` retain ≥7d |
-| `cuo.fr_audit.hitl_pause` | `cuo/cpo/task-audit` | `schema.json#/payloads/hitl_pause` | at-least-once | `Memory` retain ≥30d |
+| `cuo.task_author.task_written` | `cuo/cpo/task-author` | `schema.json#/payloads/task_written` | at-least-once | `WorkQueue` retain ≥7d |
+| `cuo.task_author.batch_complete` | `cuo/cpo/task-author` | `schema.json#/payloads/batch_complete` | at-least-once | `WorkQueue` retain ≥7d |
+| `cuo.task_author.hitl_pause` | `cuo/cpo/task-author` | `schema.json#/payloads/hitl_pause` | at-least-once | `Memory` retain ≥30d |
+| `cuo.task_audit.audit_written` | `cuo/cpo/task-audit` | `schema.json#/payloads/audit_written` | at-least-once | `WorkQueue` retain ≥7d |
+| `cuo.task_audit.audit_batch_complete` | `cuo/cpo/task-audit` | `schema.json#/payloads/audit_batch_complete` | at-least-once | `WorkQueue` retain ≥7d |
+| `cuo.task_audit.hitl_pause` | `cuo/cpo/task-audit` | `schema.json#/payloads/hitl_pause` | at-least-once | `Memory` retain ≥30d |
 | `cuo.refinement_proposed` | any skill | `schema.json#/payloads/refinement_proposed` | at-least-once | `Memory` retain ≥90d |
 | `cuo.supervisor.session_start` | the supervisor | `schema.json#/payloads/session_lifecycle` | at-most-once | ephemeral |
 | `cuo.supervisor.session_end` | the supervisor | `schema.json#/payloads/session_lifecycle` | at-most-once | ephemeral |
@@ -109,8 +109,8 @@ The full payload shapes live in `schema.json` (one schema per `<event_name>`). N
 
 ## Forbidden patterns
 
-- **Camel-case or hyphen in subject tokens.** Subjects are dot-separated lowercase. `cuo.frCreate.fr_written` and `cuo.task-author.fr_written` are both rejected.
-- **Verb-first event names.** Use past-tense `<noun>_<verb_past>` not `<verb>_<noun>`. Good: `fr_written`. Bad: `write_fr`.
+- **Camel-case or hyphen in subject tokens.** Subjects are dot-separated lowercase. `cuo.frCreate.task_written` and `cuo.task-author.task_written` are both rejected.
+- **Verb-first event names.** Use past-tense `<noun>_<verb_past>` not `<verb>_<noun>`. Good: `task_written`. Bad: `write_task`.
 - **Subjects with PII or secrets in payload.** Same denylist as `.cyberos/memory/store/` (AGENTS.md §9.3): no salaries, government IDs, bank, secrets, raw API keys. Use a pointer to the secret store instead.
 - **Cross-tenant subscriptions.** A skill MUST only subscribe to subjects emitted by skills in its own tenant (matched on the `tenant.id` from `manifest.json`). The supervisor enforces at the bus level.
 

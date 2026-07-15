@@ -3,7 +3,7 @@
 contract_id: subtask
 contract_version: v1
 template_literal: subtask@1
-description: Canonical subtask@1 schema — comprehensive, addressable, assignable unit of work embedded inside a task@1. Each task is self-contained (no character limit), carries a runnable acceptance test, and declares assignability (human / ai-agent / either). Promoted to first-class contract in 2026-05-12 to support the `solo` chain_profile that collapses task-author + fr-to-tech-spec.
+description: Canonical subtask@1 schema — comprehensive, addressable, assignable unit of work embedded inside a task@1. Each task is self-contained (no character limit), carries a runnable acceptance test, and declares assignability (human / ai-agent / either). Promoted to first-class contract in 2026-05-12 to support the `solo` chain_profile that collapses task-author + task-to-tech-spec.
 contract_kind: artefact_schema
 locked_at: 2026-05-12
 introduced_by: skills-Stage-1-collapse

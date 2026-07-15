@@ -19,7 +19,7 @@ ROADMAP = ["memory", "skill", "cuo", "auth", "chat", "proj"]
 KNOWN_RED: set[str] = set()
 
 
-def fr_status_counts(module: str) -> dict[str, int]:
+def task_status_counts(module: str) -> dict[str, int]:
     d = TASK_ROOT / module
     counts: dict[str, int] = {}
     if not d.is_dir():
@@ -45,11 +45,11 @@ def held_out(module: str) -> str | None:
 
 
 def modules() -> list[str]:
-    fr_mods = {p.name for p in TASK_ROOT.iterdir()
+    task_mods = {p.name for p in TASK_ROOT.iterdir()
                if p.is_dir() and p.name != "docs" and not p.name.startswith(".")}
     awh_mods = {p.parent.parent.name for p in Path("modules").glob("*/.awh/goldenset.yaml")}
-    ordered = ROADMAP + sorted((fr_mods | awh_mods) - set(ROADMAP))
-    return [m for m in ordered if m in (fr_mods | awh_mods)]
+    ordered = ROADMAP + sorted((task_mods | awh_mods) - set(ROADMAP))
+    return [m for m in ordered if m in (task_mods | awh_mods)]
 
 
 def main() -> int:
@@ -60,11 +60,11 @@ def main() -> int:
     for m in modules():
         gs = (Path("modules") / m / ".awh" / "goldenset.yaml").is_file()
         bl = (Path("modules") / m / ".awh" / "eval-baseline.json").is_file()
-        counts = fr_status_counts(m)
+        counts = task_status_counts(m)
         rows.append({
             "module": m, "gated": gs, "baseline": bl,
             "held_out": held_out(m), "red": m in KNOWN_RED,
-            "fr_total": sum(counts.values()), "status": counts,
+            "task_total": sum(counts.values()), "status": counts,
         })
 
     if args.json:
@@ -81,7 +81,7 @@ def main() -> int:
         mix = f"ready_to_test:{rt} draft:{dr} ready_to_impl:{ri}"
         mark = lambda b: " yes " if b else "  -  "
         print(f"  {r['module']:9s} {mark(r['gated'])} {mark(r['baseline']):8s} "
-              f"{'RED' if r['red'] else '  -':3s} {r['fr_total']:>4} {mix}")
+              f"{'RED' if r['red'] else '  -':3s} {r['task_total']:>4} {mix}")
     print("\nroadmap waves: " + " -> ".join(m.upper() for m in ROADMAP))
     red_mods = [r["module"] for r in rows if r["red"]]
     ungated = sum(1 for r in rows if not r["gated"])

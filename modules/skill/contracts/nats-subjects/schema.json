@@ -11,15 +11,15 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "fr_written": {
+        "task_written": {
           "type": "object",
-          "description": "Emitted by cuo/cpo/task-author on subject cuo.fr_author.fr_written for every task markdown successfully written.",
-          "required": ["task_id", "fr_path", "fr_hash", "manifest_path", "trace_id", "ts"],
+          "description": "Emitted by cuo/cpo/task-author on subject cuo.task_author.task_written for every task markdown successfully written.",
+          "required": ["task_id", "task_path", "task_hash", "manifest_path", "trace_id", "ts"],
           "additionalProperties": false,
           "properties": {
             "task_id":         {"type": "string", "pattern": "^task-\\d{3}$"},
-            "fr_path":       {"type": "string", "minLength": 1},
-            "fr_hash":       {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+            "task_path":       {"type": "string", "minLength": 1},
+            "task_hash":       {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
             "manifest_path": {"type": "string", "minLength": 1},
             "trace_id":      {"type": "string", "format": "uuid"},
             "ts":            {"type": "string", "format": "date-time"}
@@ -27,11 +27,11 @@
         },
         "batch_complete": {
           "type": "object",
-          "description": "Emitted by cuo/cpo/task-author on subject cuo.fr_author.batch_complete after a WORKER batch finishes. Lists every task written this batch + a manifest pointer.",
-          "required": ["fr_ids", "manifest_path", "trace_id", "ts", "next_skill_recommendation"],
+          "description": "Emitted by cuo/cpo/task-author on subject cuo.task_author.batch_complete after a WORKER batch finishes. Lists every task written this batch + a manifest pointer.",
+          "required": ["task_ids", "manifest_path", "trace_id", "ts", "next_skill_recommendation"],
           "additionalProperties": false,
           "properties": {
-            "fr_ids":                     {"type": "array", "items": {"type": "string", "pattern": "^task-\\d{3}$"}, "minItems": 1},
+            "task_ids":                     {"type": "array", "items": {"type": "string", "pattern": "^task-\\d{3}$"}, "minItems": 1},
             "manifest_path":              {"type": "string", "minLength": 1},
             "trace_id":                   {"type": "string", "format": "uuid"},
             "ts":                         {"type": "string", "format": "date-time"},
@@ -44,7 +44,7 @@
           "required": ["category", "skill_id", "trace_id", "ts", "request_path"],
           "additionalProperties": false,
           "properties": {
-            "category":     {"type": "string", "enum": ["plan_approval", "amendment_review", "exhausted_disposition", "stale_fr_disposition", "low_confidence_field", "untrusted_marker_hit"]},
+            "category":     {"type": "string", "enum": ["plan_approval", "amendment_review", "exhausted_disposition", "stale_task_disposition", "low_confidence_field", "untrusted_marker_hit"]},
             "skill_id":     {"type": "string", "pattern": "^cuo/[a-z0-9-]+/[a-z0-9-]+$"},
             "trace_id":     {"type": "string", "format": "uuid"},
             "ts":           {"type": "string", "format": "date-time"},
@@ -53,7 +53,7 @@
         },
         "audit_written": {
           "type": "object",
-          "description": "Emitted by cuo/cpo/task-audit on subject cuo.fr_audit.audit_written for every *.audit.md sibling written.",
+          "description": "Emitted by cuo/cpo/task-audit on subject cuo.task_audit.audit_written for every *.audit.md sibling written.",
           "required": ["task_id", "audit_path", "audited_file_sha256", "verdict", "trace_id", "ts"],
           "additionalProperties": false,
           "properties": {
@@ -67,11 +67,11 @@
         },
         "audit_batch_complete": {
           "type": "object",
-          "description": "Emitted by cuo/cpo/task-audit on subject cuo.fr_audit.audit_batch_complete after every fr_path in the batch has been processed.",
-          "required": ["fr_ids", "summary_path", "verdicts", "trace_id", "ts"],
+          "description": "Emitted by cuo/cpo/task-audit on subject cuo.task_audit.audit_batch_complete after every task_path in the batch has been processed.",
+          "required": ["task_ids", "summary_path", "verdicts", "trace_id", "ts"],
           "additionalProperties": false,
           "properties": {
-            "fr_ids":       {"type": "array", "items": {"type": "string", "pattern": "^task-\\d{3}$"}, "minItems": 1},
+            "task_ids":       {"type": "array", "items": {"type": "string", "pattern": "^task-\\d{3}$"}, "minItems": 1},
             "summary_path": {"type": "string", "minLength": 1},
             "verdicts":     {"type": "object", "additionalProperties": {"type": "string", "enum": ["pass", "fail", "needs_human", "stale", "exhausted"]}},
             "trace_id":     {"type": "string", "format": "uuid"},

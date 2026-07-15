@@ -23,10 +23,10 @@ This skill publishes the following NATS subjects (per `cyberos/skill/contracts/n
 
 | subject | payload | when |
 |---|---|---|
-| `fr_author.fr_written` | `{artefact_id, artefact_path, artefact_hash, source_hash}` | After every successful W3 WRITE. |
-| `fr_author.batch_complete` | `{batch_run_id, artefacts_written, batch_outcome}` | At the end of a WORKER batch. |
-| `fr_author.hitl_pause` | `{artefact_id, blocking_issues}` | When the batch halts on HITL. |
-| `fr_author.amendment_request` | `{amendment_id, risk_class, change_description}` | When the author proposes a plan amendment. |
+| `task_author.task_written` | `{artefact_id, artefact_path, artefact_hash, source_hash}` | After every successful W3 WRITE. |
+| `task_author.batch_complete` | `{batch_run_id, artefacts_written, batch_outcome}` | At the end of a WORKER batch. |
+| `task_author.hitl_pause` | `{artefact_id, blocking_issues}` | When the batch halts on HITL. |
+| `task_author.amendment_request` | `{amendment_id, risk_class, change_description}` | When the author proposes a plan amendment. |
 
 ## Halting and resuming
 

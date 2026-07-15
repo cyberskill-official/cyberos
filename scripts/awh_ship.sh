@@ -37,8 +37,8 @@ if ! "${CUO[@]}" --help >/dev/null 2>"$err"; then
   rm -f "$err"; exit 1
 fi
 rm -f "$err"
-"${CUO[@]}" execute --help 2>/dev/null | grep -q -- '--fr-id' || {
-  echo "Branch source loaded but execute lacks --fr-id (unexpected) - stop."; exit 1; }
+"${CUO[@]}" execute --help 2>/dev/null | grep -q -- '--task-id' || {
+  echo "Branch source loaded but execute lacks --task-id (unexpected) - stop."; exit 1; }
 
 echo "using interpreter: $PYBIN"
 echo "branch cuo source: $REPO/modules/cuo/cuo   |   output-dir: $OUT"
@@ -57,4 +57,4 @@ echo
 echo "== execute $task through the gate =="
 echo "   step 28 (awh-gate) reruns the module suite vs the sealed baseline;"
 echo "   GREEN is required for the step-29 testing->done flip."
-exec "${CUO[@]}" execute "$WF" --fr-id "$task" --invoker llm --output-dir "$OUT"
+exec "${CUO[@]}" execute "$WF" --task-id "$task" --invoker llm --output-dir "$OUT"

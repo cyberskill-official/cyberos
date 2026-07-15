@@ -12,7 +12,7 @@
 Resolution chain (who decides which template a NEW task uses):
 
 1. explicit per-invocation operator override, else
-2. `.cyberos/config.yaml` `fr_template` (TASK-CUO-207), else
+2. `.cyberos/config.yaml` `task_template` (TASK-CUO-207), else
 3. default `engineering-spec@1`.
 
 The resolved template MUST be echoed in /create-tasks' PLAN (value + source) so the

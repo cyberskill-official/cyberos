@@ -9,7 +9,7 @@
 # Optional:
 #   PAGE_ONLY=1  — status page only (step 3)
 
-_cyberos_fr_migrate() {
+_cyberos_task_migrate() {
   local PAGE_ONLY="${PAGE_ONLY:-0}"
   local root="${1:?root required}"
   local kit="${2:?kit dir with docs-tools required}"
@@ -55,7 +55,7 @@ _cyberos_fr_migrate() {
   if command -v node >/dev/null 2>&1 && [ -f "$kit/docs-tools/render-status-hub.mjs" ]; then
     mkdir -p "$root/.cyberos/status-site" "$root/docs/status"
     CYBEROS_HUB_LENIENT=1 CYBEROS_PAGE_ASSETS=1 CYBEROS_PROJECT="$(basename "$root")" \
-      CYBEROS_FR_BASE="../tasks/" \
+      CYBEROS_TASK_BASE="../tasks/" \
       CYBEROS_STATUS_SPECS="${CYBEROS_STATUS_SPECS:-1}" \
       CYBEROS_TEMPLATES="$kit/docs-tools/templates" \
       node "$kit/docs-tools/render-status-hub.mjs" "$root" "$root/.cyberos/status-site"
@@ -108,7 +108,7 @@ _cyberos_fr_migrate() {
           -not -path '*/_*' -not -path '*/.*' 2>/dev/null | wc -l | tr -d ' ')"
   deep_n="$(find "$root/docs/tasks" -mindepth 3 -type f -name 'TASK-*.md' \
           -not -path '*/_*' -not -path '*/.*' 2>/dev/null | wc -l | tr -d ' ')"
-  echo "cyberos-migrate verify: fr_specs=$specs_n flat_fr_files_remaining=$flat_n fr_folders_missing_spec=$nospec_n deep_fr_files=$deep_n status_page=$page"
+  echo "cyberos-migrate verify: task_specs=$specs_n flat_task_files_remaining=$flat_n task_folders_missing_spec=$nospec_n deep_task_files=$deep_n status_page=$page"
   if [ "${deep_n:-0}" -gt 0 ] 2>/dev/null; then
     echo "cyberos migrate: note $deep_n TASK-named .md below module depth (left untouched)"
   fi

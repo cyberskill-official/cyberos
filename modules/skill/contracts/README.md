@@ -58,11 +58,11 @@ The registry validator confirms:
 
 | Contract | Latest version | Kind | Stewarded by | Consumed by |
 | --- | --- | --- | --- | --- |
-| [`task`](./task/CONTRACT.md) | v1 (`task@1`) | artefact_schema | `cuo-cpo` | `cuo/cpo/task-author`, `cuo/cpo/task-audit`, `cuo/chief-technology-officer/fr-to-tech-spec` |
-| [`nats-subjects`](./nats-subjects/CONTRACT.md) | v1 (`nats_subjects@1`) | wire_protocol | `cuo-cto` | `cuo/cpo/task-author`, `cuo/cpo/task-audit`, `cuo/chief-technology-officer/fr-to-tech-spec`, the supervisor |
+| [`task`](./task/CONTRACT.md) | v1 (`task@1`) | artefact_schema | `cuo-cpo` | `cuo/cpo/task-author`, `cuo/cpo/task-audit`, `cuo/chief-technology-officer/task-to-tech-spec` |
+| [`nats-subjects`](./nats-subjects/CONTRACT.md) | v1 (`nats_subjects@1`) | wire_protocol | `cuo-cto` | `cuo/cpo/task-author`, `cuo/cpo/task-audit`, `cuo/chief-technology-officer/task-to-tech-spec`, the supervisor |
 | [`project-brief`](./project-brief/CONTRACT.md) | v1 (`project_brief@1`) | artefact_schema | `cuo-cpo` | `cuo/cpo/requirements-discovery`, `cuo/cpo/product-requirements-document-author` |
 | [`prd`](./product-requirements-document/CONTRACT.md) | v1 (`product-requirements-document@1`) | artefact_schema | `cuo-cpo` | `cuo/cpo/product-requirements-document-author` v0.1.0+, `cuo/cpo/product-requirements-document-audit` v0.1.0+, `cuo/chief-technology-officer/software-requirements-specification-author` v0.1.0+ (input), `cuo/cpo/task-author` v0.3.0+ (planned) |
-| [`srs`](./software-requirements-specification/CONTRACT.md) | v1 (`software-requirements-specification@1`) | artefact_schema | `cuo-cto` | `cuo/chief-technology-officer/software-requirements-specification-author` v0.1.0+, `cuo/chief-technology-officer/software-requirements-specification-audit` v0.1.0+, `cuo/chief-technology-officer/fr-to-tech-spec` v0.2.0+ (input context) |
+| [`srs`](./software-requirements-specification/CONTRACT.md) | v1 (`software-requirements-specification@1`) | artefact_schema | `cuo-cto` | `cuo/chief-technology-officer/software-requirements-specification-author` v0.1.0+, `cuo/chief-technology-officer/software-requirements-specification-audit` v0.1.0+, `cuo/chief-technology-officer/task-to-tech-spec` v0.2.0+ (input context) |
 | [`impl-plan`](./implementation-plan/CONTRACT.md) | v1 (`impl_plan@1`) | artefact_schema | `cuo-cto` | `cuo/chief-technology-officer/spec-to-impl-plan` v0.1.0+ |
 
 ## How to add a new contract

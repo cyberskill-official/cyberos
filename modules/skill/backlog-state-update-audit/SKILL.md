@@ -40,7 +40,7 @@ Common rules (every mutation):
 | BSU-001 | `new_status` (or `insert.status`) ∈ the 10-value lifecycle enum of STATUS-REFERENCE.md §1 (draft, ready_to_implement, implementing, ready_to_review, reviewing, ready_to_test, testing, done, on_hold, closed). Fixed in @2.0: the @1.0 table still cited the RETIRED pre-enum vocabulary. | error |
 | BSU-004 | Every `evidence_artefact_ids` entry cross-references a real memory audit row from the same run | error |
 | BSU-005 | `mutation_kind` ∈ {status-cell-only, insert-row}; never row reorder / task delete / multi-line edit | error |
-| BSU-006 | The matching memory row (`workflow_complete` / `workflow_phase_complete` / `fr_routed_back`) emitted as a side effect of passing | error |
+| BSU-006 | The matching memory row (`workflow_complete` / `workflow_phase_complete` / `task_routed_back`) emitted as a side effect of passing | error |
 
 status-cell-only rules:
 

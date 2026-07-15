@@ -140,10 +140,10 @@ if __name__ == "__main__":
     moved, summary, renames = migrate()
     swept = sweep(renames) if moved or "--sweep" in sys.argv else 0
     if moved == 0:
-        print("fr-layout: nothing to do (already folder-per-task)")
+        print("task-layout: nothing to do (already folder-per-task)")
     else:
         mods = ", ".join(f"{k}:{v}" for k, v in sorted(summary.items()))
-        print(f"fr-layout: moved {moved} files across {len(summary)} modules ({mods}); {swept} files re-referenced")
+        print(f"task-layout: moved {moved} files across {len(summary)} modules ({mods}); {swept} files re-referenced")
     if denied:
-        print(f"fr-layout: WARN {len(denied)} write-protected files skipped (fix perms + re-run --sweep):")
+        print(f"task-layout: WARN {len(denied)} write-protected files skipped (fix perms + re-run --sweep):")
         for d in denied: print(f"  {d}")

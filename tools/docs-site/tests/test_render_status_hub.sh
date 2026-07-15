@@ -60,7 +60,7 @@ t05_deterministic() {                                                  # AC 5 - 
     && cmp -s "$TMP/a/out/reference/data/fr/TASK-AA-001.js" "$TMP/a/out2/reference/data/fr/TASK-AA-001.js" \
     && ok t05 || fail t05 "nondeterministic"
 }
-t06_fr_page_links() {                                                  # AC 6 - the drawer links the task page
+t06_task_page_links() {                                                  # AC 6 - the drawer links the task page
   mkfix "$TMP/d"
   mkdir -p "$TMP/d/out/tasks/aa/TASK-AA-001-first"; touch "$TMP/d/out/tasks/aa/TASK-AA-001-first/index.html"
   node "$R" "$TMP/d" "$TMP/d/out" >/dev/null 2>&1
@@ -101,6 +101,6 @@ t10_token_clean() {                                                    # colour 
 }
 
 t01_deck_true; t02_one_page_three_lenses; t03_facets_and_search; t04_supersession
-t05_deterministic; t06_fr_page_links; t07_changelog_binds_frs; t08_spec_chunks
+t05_deterministic; t06_task_page_links; t07_changelog_binds_frs; t08_spec_chunks
 t09_nojs_and_honest_failures; t10_token_clean
 echo "----"; echo "pass=$PASS fail=$FAIL"; [ "$FAIL" -eq 0 ]

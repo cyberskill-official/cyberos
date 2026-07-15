@@ -156,7 +156,7 @@ classifier_version: 3.0.0-a4
 
 - "Audit this existing task for completeness" → task-audit
 - "Has TASK-007 changed since the last audit?" → task-audit
-- "Draft a tech spec from this task" → fr-to-tech-spec
+- "Draft a tech spec from this task" → task-to-tech-spec
 - "What's our company holiday schedule?" → none
 
 ## Authoring notes
@@ -164,7 +164,7 @@ classifier_version: 3.0.0-a4
 - Positive triggers 1-3 derived from real OBS user phrasings observed during the v0.2.0 pilot (week 2026-W18).
 - Positive trigger 4 is author intuition (canonical CyberOS phrasing).
 - Negative triggers 1-2 derived from common confusion observed in pilot (users confused the author/audit pair).
-- Negative trigger 3 derived from the planned fr-to-tech-spec routing (TASK-SKILL-111 description-format makes this trigger unambiguous).
+- Negative trigger 3 derived from the planned task-to-tech-spec routing (TASK-SKILL-111 description-format makes this trigger unambiguous).
 - Negative trigger 4 is a canonical "no skill" sanity case.
 ```
 
@@ -617,7 +617,7 @@ classifier_version: 3.0.0-a4
 
 - "Turn this PRD into a backlog of tasks" → task-author
 - "Generate tasks from this spec" → task-author
-- "Draft a tech spec from this task" → fr-to-tech-spec
+- "Draft a tech spec from this task" → task-to-tech-spec
 - "What's the team's holiday schedule?" → none
 
 ## Authoring notes
@@ -625,7 +625,7 @@ classifier_version: 3.0.0-a4
 - Positive 1-3 derived from OBS week 2026-W18 (real user phrasings).
 - Positive 4 is author intuition — covers the "re-audit" repeat case.
 - Negative 1-2 from common author/audit confusion in pilot.
-- Negative 3 from the planned fr-to-tech-spec routing.
+- Negative 3 from the planned task-to-tech-spec routing.
 - Negative 4 is the canonical "no skill" sanity case.
 ```
 

@@ -21,7 +21,7 @@ Audited hardest on the one danger a run-state manifest introduces: becoming a se
 A trusted manifest could contradict the backlog. Resolved: cache-only doctrine (§2), resume re-verifies every artefact hash (§1 #3), HITL gates re-ask regardless of manifest content (§1 #8, AC 8), and deletion is always safe (§10 #4).
 
 ### ISS-002 task spec edits mid-flight were invisible
-Steps proven against version N of the spec would resume against version N+1. Resolved: fr_sha256 root field in the schema (§1 #1) with all-stale semantics; §3 example updated; §10 #3 cites the field instead of deferring it.
+Steps proven against version N of the spec would resume against version N+1. Resolved: task_sha256 root field in the schema (§1 #1) with all-stale semantics; §3 example updated; §10 #3 cites the field instead of deferring it.
 
 ### ISS-003 mixed-workflow-version resume
 2.3.0 manifest under a 2.3.1 workflow silently blends step semantics. Resolved: §1 #3 needs_human on version mismatch, AC 4.

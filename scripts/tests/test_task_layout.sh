@@ -58,10 +58,20 @@ t08_contracts_updated() {
     && ok t08 || fail t08 "author/audit contracts"
 }
 t09_ship_and_init_coherent() {
+  # Asserts the scaffolder documents folder-per-task, not the flat FR-era layout.
+  #
+  # Was `tools/cyberos-init/init.sh` until bb0f2392e ("1.0.0 CLI surface") deleted
+  # init.sh and moved the scaffold grammar into install.sh. The assert did not
+  # follow, so t09 has been red ever since — `grep` on a missing file returns 1 and
+  # short-circuits the && chain into fail. It went unnoticed because this file is
+  # wired into NO gate: not .githooks/pre-commit, not local_verify.sh, not CI. A
+  # test nobody runs cannot report anything.
+  scaffold="$repo/tools/cyberos-init/install.sh"
+  [ -e "$scaffold" ] || { fail t09 "scaffold source missing: $scaffold"; return; }
   grep -q "<task>/audit.md" "$repo/modules/cuo/chief-technology-officer/workflows/ship-tasks.md" \
-    && grep -q "TASK-001-<slug>/spec.md" "$repo/tools/cyberos-init/init.sh" \
-    && ! grep -q "tasks/TASK-001-<slug>.md" "$repo/tools/cyberos-init/init.sh" \
-    && ok t09 || fail t09 "ship/init grammar"
+    && grep -q "TASK-001-<slug>/spec.md" "$scaffold" \
+    && ! grep -q "tasks/TASK-001-<slug>.md" "$scaffold" \
+    && ok t09 || fail t09 "ship/install scaffold grammar"
 }
 t10_asset_discipline_stated() {
   grep -q "assets/<file>" "$repo/tools/cyberos-init/plugin/commands/create-tasks.md" \

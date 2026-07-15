@@ -34,11 +34,11 @@ CRATE = {  # module -> Rust crate package (where the module's service tests live
 }
 
 
-def fr_files():
+def task_files():
     return sorted(p for p in TASK_ROOT.rglob("TASK-*.md") if not p.name.endswith(".audit.md"))
 
 
-def fr_module(text: str, path: Path) -> str:
+def task_module(text: str, path: Path) -> str:
     m = re.search(r"^module:\s*([A-Za-z]+)", text, re.M)
     if m:
         return m.group(1).lower()
@@ -86,13 +86,13 @@ def resolve(cited: str, module: str) -> tuple[str | None, str]:
 
 
 def emit_task(task_id: str) -> int:
-    files = [p for p in fr_files() if p.name.startswith(task_id + "-") or p.stem == task_id]
+    files = [p for p in task_files() if p.name.startswith(task_id + "-") or p.stem == task_id]
     if not files:
         print(f"error: no spec for {task_id}", file=sys.stderr)
         return 2
     path = files[0]
     text = path.read_text(encoding="utf-8")
-    module = fr_module(text, path)
+    module = task_module(text, path)
     resolved, unresolved = [], []
     for c in cited_tests(text):
         real, how = resolve(c, module)
@@ -127,9 +127,9 @@ def emit_task(task_id: str) -> int:
 def audit(as_json: bool) -> int:
     per_mod: dict[str, dict[str, int]] = {}
     unresolved_frs: list[dict] = []
-    for path in fr_files():
+    for path in task_files():
         text = path.read_text(encoding="utf-8")
-        module = fr_module(text, path)
+        module = task_module(text, path)
         fid = re.search(r"^id:\s*(TASK-[A-Z]+-\d+)", text, re.M)
         fid = fid.group(1) if fid else path.stem
         cites = cited_tests(text)

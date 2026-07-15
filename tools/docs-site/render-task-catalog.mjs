@@ -13,7 +13,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT  = resolve(__dirname, '..', '..');
 const DATA_FILE  = join(__dirname, 'data', 'tasks.json');
 const OUT_DIR    = join(REPO_ROOT, 'dist', 'website', 'reference');
-const OUT_FILE   = join(OUT_DIR, 'fr-catalog.html');
+const OUT_FILE   = join(OUT_DIR, 'task-catalog.html');
 const REPORT_FILE = join(__dirname, 'last-build-report.json');
 
 const esc = s => String(s ?? '')
@@ -30,23 +30,23 @@ const list = arr =>
     ? arr.map(x => {
         // detect "# placeholder" comments stripped during parse — render plain
         const txt = esc(x);
-        return `<a href="#${txt}" class="fr-link">${txt}</a>`;
+        return `<a href="#${txt}" class="task-link">${txt}</a>`;
       }).join(', ')
     : '<em class="muted">none</em>';
 
 function renderCard(fr) {
-  return `      <article class="fr-card"
+  return `      <article class="task-card"
                id="${esc(fr.id)}"
                data-module="${esc(fr.module)}"
                data-priority="${esc(fr.priority)}"
                data-status="${esc(fr.status)}"
                data-phase="${esc(fr.phase)}">
-        <header class="fr-card-header">
-          <a href="#${esc(fr.id)}" class="fr-anchor">#</a>
-          <h3 class="fr-id">${fr.stem ? `<a class="fr-page-link" href="../tasks/${esc(fr.dir_module)}/${esc(fr.stem)}/index.html">${esc(fr.id)}</a>` : esc(fr.id)}</h3>
-          <p class="fr-title">${esc(fr.title)}</p>
+        <header class="task-card-header">
+          <a href="#${esc(fr.id)}" class="task-anchor">#</a>
+          <h3 class="task-id">${fr.stem ? `<a class="task-page-link" href="../tasks/${esc(fr.dir_module)}/${esc(fr.stem)}/index.html">${esc(fr.id)}</a>` : esc(fr.id)}</h3>
+          <p class="task-title">${esc(fr.title)}</p>
         </header>
-        <div class="fr-badges">
+        <div class="task-badges">
           ${badge('module',   fr.module,   'module')}
           ${badge('priority', fr.priority, 'priority-' + fr.priority.toLowerCase())}
           ${badge('status',   fr.status,   'status-' + fr.status)}
@@ -55,7 +55,7 @@ function renderCard(fr) {
           ${badge('slice',    fr.slice,    'slice')}
           ${badge('effort',   (fr.effort_hours ? fr.effort_hours + 'h' : ''), 'effort')}
         </div>
-        <dl class="fr-meta">
+        <dl class="task-meta">
           <dt>Owner</dt>      <dd>${esc(fr.owner) || '<em class="muted">unassigned</em>'}</dd>
           <dt>Milestone</dt>  <dd>${esc(fr.milestone) || '<em class="muted">—</em>'}</dd>
           <dt>Created</dt>    <dd>${esc(fr.created) || '<em class="muted">—</em>'}</dd>
@@ -63,7 +63,7 @@ function renderCard(fr) {
           <dt>Depends on</dt> <dd>${list(fr.depends_on)}</dd>
           <dt>Blocks</dt>     <dd>${list(fr.blocks)}</dd>
         </dl>
-        <p class="fr-source"><a href="../../${esc(fr.path)}">Open spec ↗</a></p>
+        <p class="task-source"><a href="../../${esc(fr.path)}">Open spec ↗</a></p>
       </article>`;
 }
 
@@ -82,7 +82,7 @@ function renderPage(data) {
   const modulesHtml = modules.map(m => `
     <section class="module-section" id="module-${esc(m)}">
       <h2 class="module-heading">${esc(m)} <span class="module-count">${byModule[m].length} task${byModule[m].length === 1 ? '' : 's'}</span></h2>
-      <div class="fr-grid">
+      <div class="task-grid">
 ${byModule[m].map(renderCard).join('\n')}
       </div>
     </section>
@@ -95,7 +95,7 @@ ${byModule[m].map(renderCard).join('\n')}
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>task Catalog — CyberOS</title>
   <meta name="description" content="Complete catalog of CyberOS Tasks (tasks) — ${data.count} specifications across ${modules.length} modules.">
-  <link rel="canonical" href="https://docs.cyberos.world/reference/fr-catalog.html">
+  <link rel="canonical" href="https://docs.cyberos.world/reference/task-catalog.html">
   <style>
     :root {
       --bg: #0b0d10;
@@ -143,25 +143,25 @@ ${byModule[m].map(renderCard).join('\n')}
       padding-bottom: 8px; border-bottom: 1px solid var(--border);
     }
     .module-count { color: var(--muted); font-weight: 400; font-size: 14px; }
-    .fr-grid {
+    .task-grid {
       display: grid; gap: 16px;
       grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
     }
-    .fr-card {
+    .task-card {
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 18px 20px;
       scroll-margin-top: 16px;
     }
-    .fr-card:target { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(110, 168, 254, 0.18); }
-    .fr-card-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
-    .fr-anchor { color: var(--muted); text-decoration: none; font-weight: 700; }
-    .fr-anchor:hover { color: var(--accent); }
-    .fr-id { margin: 0; font-size: 14px; font-weight: 700; color: var(--accent-2); font-family: ui-monospace, SF Mono, Menlo, monospace; }
-    .fr-page-link { color: var(--accent); text-decoration: none; }
-    .fr-title { margin: 0; font-size: 14px; color: var(--text); flex: 1; }
-    .fr-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .task-card:target { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(110, 168, 254, 0.18); }
+    .task-card-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+    .task-anchor { color: var(--muted); text-decoration: none; font-weight: 700; }
+    .task-anchor:hover { color: var(--accent); }
+    .task-id { margin: 0; font-size: 14px; font-weight: 700; color: var(--accent-2); font-family: ui-monospace, SF Mono, Menlo, monospace; }
+    .task-page-link { color: var(--accent); text-decoration: none; }
+    .task-title { margin: 0; font-size: 14px; color: var(--text); flex: 1; }
+    .task-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
     .badge {
       display: inline-block; padding: 2px 8px;
       font-size: 11px; border-radius: 4px;
@@ -176,26 +176,26 @@ ${byModule[m].map(renderCard).join('\n')}
     .badge-status-planned  { background: rgba(136, 147, 160, 0.15); color: var(--muted); }
     .badge-status-shipped  { background: rgba(94, 208, 155, 0.25); color: var(--green); }
     .badge-module          { background: rgba(110, 168, 254, 0.15); border-color: var(--accent); }
-    .fr-meta {
+    .task-meta {
       display: grid; grid-template-columns: 110px 1fr;
       gap: 4px 12px; margin: 12px 0;
       font-size: 13px;
     }
-    .fr-meta dt { color: var(--muted); }
-    .fr-meta dd { margin: 0; }
-    .fr-link { color: var(--accent); text-decoration: none; }
-    .fr-link:hover { text-decoration: underline; }
+    .task-meta dt { color: var(--muted); }
+    .task-meta dd { margin: 0; }
+    .task-link { color: var(--accent); text-decoration: none; }
+    .task-link:hover { text-decoration: underline; }
     .muted { color: var(--muted); font-style: italic; }
-    .fr-source { margin: 12px 0 0; font-size: 12px; }
-    .fr-source a { color: var(--muted); }
-    .fr-source a:hover { color: var(--accent); }
+    .task-source { margin: 12px 0 0; font-size: 12px; }
+    .task-source a { color: var(--muted); }
+    .task-source a:hover { color: var(--accent); }
     .footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 13px; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>task Catalog</h1>
-    <p class="subtitle">Complete inventory of CyberOS Tasks — server-rendered at build time per <a href="../../docs/tasks/docs/TASK-DOCS-001-server-render-reference-pages/spec.md" class="fr-link">TASK-DOCS-001</a>.</p>
+    <p class="subtitle">Complete inventory of CyberOS Tasks — server-rendered at build time per <a href="../../docs/tasks/docs/TASK-DOCS-001-server-render-reference-pages/spec.md" class="task-link">TASK-DOCS-001</a>.</p>
 
     <div class="stats">
       <div class="stat"><span class="stat-num">${data.count}</span><span class="stat-label">total tasks</span></div>
@@ -233,13 +233,13 @@ writeFileSync(OUT_FILE, html, 'utf8');
 
 const report = {
   schema_version: 'v1',
-  page:        'fr-catalog.html',
-  fr_count:    data.count,
+  page:        'task-catalog.html',
+  task_count:    data.count,
   modules:     [...new Set(data.tasks.map(f => f.module))].sort(),
   output_bytes: Buffer.byteLength(html, 'utf8'),
   build_marker: 'deterministic',
 };
 writeFileSync(REPORT_FILE, JSON.stringify(report, null, 2) + '\n', 'utf8');
 
-console.log(`✓ rendered ${data.count} tasks → dist/website/reference/fr-catalog.html (${(report.output_bytes / 1024).toFixed(1)} KB)`);
+console.log(`✓ rendered ${data.count} tasks → dist/website/reference/task-catalog.html (${(report.output_bytes / 1024).toFixed(1)} KB)`);
 console.log(`✓ build report   → tools/docs-site/last-build-report.json`);

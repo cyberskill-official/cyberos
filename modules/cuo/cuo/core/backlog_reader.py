@@ -183,7 +183,7 @@ def next_eligible(
     module: Optional[str] = None,
     current_status: str | list[str] | tuple[str, ...] | None = None,
     rework: bool = False,
-    skip_fr_ids: set[str] | None = None,
+    skip_task_ids: set[str] | None = None,
 ) -> Optional[TaskRow]:
     """Return the first task in the matching status list whose deps are all `done`.
 
@@ -205,7 +205,7 @@ def next_eligible(
     for row in rows:
         if row.status not in statuses:
             continue
-        if skip_fr_ids and row.task_id in skip_fr_ids:
+        if skip_task_ids and row.task_id in skip_task_ids:
             continue
         if module and row.module != module.lower():
             continue
@@ -246,7 +246,7 @@ def list_eligible(
 def routed_back_count(task_id: str, audit_dir: Path) -> int:
     """Count how many times `task_id` has been rework-routed in the audit chain.
 
-    Walks the latest binlog segments looking for memory.fr_routed_back rows
+    Walks the latest binlog segments looking for memory.task_routed_back rows
     whose payload.task_id matches. Returns 0 if no such rows or audit_dir missing.
 
     For Phase 5 this is an approximation — production should scan all segments;
@@ -259,7 +259,7 @@ def routed_back_count(task_id: str, audit_dir: Path) -> int:
     # event kind as raw bytes. The kind string `memory.fr_routed_back` will
     # appear verbatim near each instance.
     target = f'"task_id":"{task_id}"'.encode("utf-8")
-    kind = b'memory.fr_routed_back'
+    kind = b'memory.task_routed_back'
     for binlog in audit_dir.glob("*.binlog"):
         try:
             data = binlog.read_bytes()

@@ -83,19 +83,19 @@ function toolFrInstall(a = {}) {
   if (!init) {
     return err(
       `No install.sh reachable. Run the MCP server from the payload (dist/cyberos/mcp/) or set ` +
-      `CYBEROS_PAYLOAD to the payload dir. Post-install, use fr_gates / fr_status / ship_fr - ` +
+      `CYBEROS_PAYLOAD to the payload dir. Post-install, use task_gates / task_status / ship_task - ` +
       `they need only ${repo}/.cyberos/.`,
     );
   }
   const { code, out } = run("bash", [init, repo], dirname(init));
-  return text(`fr_install on ${repo} (exit ${code})\n\n${out}`, code !== 0);
+  return text(`task_install on ${repo} (exit ${code})\n\n${out}`, code !== 0);
 }
 
 function toolFrGates(a = {}) {
   const repo = repoRoot(a.repo);
   softUpdateCheck(repo);
   const gates = join(repo, ".cyberos", "cuo", "gates", "run-gates.sh");
-  if (!isFile(gates)) return err(`No gates at ${gates}. Run fr_install first.`);
+  if (!isFile(gates)) return err(`No gates at ${gates}. Run task_install first.`);
   const { code, out } = run("bash", [gates], repo);
   return text(`gates on ${repo} (exit ${code} - green is necessary, never sufficient)\n\n${out}`, code !== 0);
 }
@@ -105,7 +105,7 @@ function toolFrStatus(a = {}) {
   softUpdateCheck(repo);
   const ver = readIf(join(repo, ".cyberos", "VERSION")).trim() || "not installed";
   const bl = readIf(join(repo, "docs", "tasks", "BACKLOG.md"));
-  if (!bl) return text(`CyberOS ${ver} @ ${repo}\nNo docs/tasks/BACKLOG.md yet - run fr_install, then add tasks.`);
+  if (!bl) return text(`CyberOS ${ver} @ ${repo}\nNo docs/tasks/BACKLOG.md yet - run task_install, then add tasks.`);
   const rows = bl.split("\n").filter((l) => /^\s*-\s*\[/.test(l));
   const counts = {};
   for (const l of rows) { const m = l.match(/\[([a-z_]+)\]/); if (m) counts[m[1]] = (counts[m[1]] || 0) + 1; }
@@ -131,7 +131,7 @@ function toolShipFr(a = {}) {
     `Run gates with bash .cyberos/cuo/gates/run-gates.sh. repo_root is ${repo}. ` +
     `Never push, deploy, or merge without an explicit operator instruction.`;
   return text(
-    `ship_fr hands you the trigger below (it does NOT auto-run - the human holds the two ` +
+    `ship_task hands you the trigger below (it does NOT auto-run - the human holds the two ` +
     `acceptance gates). Follow it now:\n\n${prompt}`,
   );
 }
@@ -141,10 +141,10 @@ function readIf(p) { try { return readFileSync(p, "utf8"); } catch { return ""; 
 // --- MCP tool registry ---------------------------------------------------------
 const repoArg = { repo: { type: "string", description: "Absolute path to the target repo (default: cwd, walked up to the repo root)." } };
 const TOOLS = [
-  { name: "fr_install",   description: "Install the CyberOS machine into a repo (gate autodetect, task backlog, agent surface, BRAIN). Needs the payload reachable.", inputSchema: { type: "object", properties: { ...repoArg } }, run: toolFrInstall },
-  { name: "fr_gates",  description: "Run the CyberOS machine gates (the repo's own build/lint/test + coverage, plus caf/awh if present). Green is necessary, never sufficient.", inputSchema: { type: "object", properties: { ...repoArg } }, run: toolFrGates },
-  { name: "fr_status", description: "Summarize the task backlog (counts by status, next eligible task) and the installed CyberOS version.", inputSchema: { type: "object", properties: { ...repoArg } }, run: toolFrStatus },
-  { name: "ship_fr",   description: "Return the canonical, HITL-gated trigger to drive the next (or a named) task. Does NOT auto-run or self-accept.", inputSchema: { type: "object", properties: { ...repoArg, task_id: { type: "string", description: "Optional task id, e.g. TASK-012-slug. Omit to take the next ready_to_implement row." } } }, run: toolShipFr },
+  { name: "task_install",   description: "Install the CyberOS machine into a repo (gate autodetect, task backlog, agent surface, BRAIN). Needs the payload reachable.", inputSchema: { type: "object", properties: { ...repoArg } }, run: toolFrInstall },
+  { name: "task_gates",  description: "Run the CyberOS machine gates (the repo's own build/lint/test + coverage, plus caf/awh if present). Green is necessary, never sufficient.", inputSchema: { type: "object", properties: { ...repoArg } }, run: toolFrGates },
+  { name: "task_status", description: "Summarize the task backlog (counts by status, next eligible task) and the installed CyberOS version.", inputSchema: { type: "object", properties: { ...repoArg } }, run: toolFrStatus },
+  { name: "ship_task",   description: "Return the canonical, HITL-gated trigger to drive the next (or a named) task. Does NOT auto-run or self-accept.", inputSchema: { type: "object", properties: { ...repoArg, task_id: { type: "string", description: "Optional task id, e.g. TASK-012-slug. Omit to take the next ready_to_implement row." } } }, run: toolShipFr },
 ];
 
 // --- helpers -------------------------------------------------------------------

@@ -41,7 +41,7 @@ t01_corpus_renders() {                                                 # AC 1
   h="$TMP/a/out/tasks/aa/TASK-AA-001-first/index.html"
   grep -q 'data-template-id="deliverable@1"' "$h" && grep -q "badge-status" "$h" \
     && grep -q "Audit" "$h" && grep -q 'href="../../aa/TASK-AA-002-second/index.html"' "$h" \
-    && grep -q "fr-pages: 2 pages, 2 assets copied, 1 with audits" <<<"$out" \
+    && grep -q "task-pages: 2 pages, 2 assets copied, 1 with audits" <<<"$out" \
     && ok t01 || fail t01 "page content/summary wrong: $out"
 }
 t02_media() {                                                          # AC 2
@@ -65,7 +65,7 @@ t04_wired_deterministic_honest() {                                     # AC 4
   [ "$rc" -ne 0 ] && grep -q "GONE.png" <<<"$out" && ok t04 || fail t04 "missing asset not fatal: rc=$rc"
 }
 t05_catalog_links() {                                                  # AC 5
-  grep -q "fr-page-link" "$repo/tools/docs-site/render-task-catalog.mjs" \
+  grep -q "task-page-link" "$repo/tools/docs-site/render-task-catalog.mjs" \
     && grep -q "tasks/" "$repo/tools/docs-site/render-task-catalog.mjs" \
     && ok t05 || fail t05 "catalog not linked"
 }

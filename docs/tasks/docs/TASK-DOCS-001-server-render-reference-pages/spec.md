@@ -27,7 +27,7 @@ blocks: []
 source_pages:
   - website/docs/reference/nfr-catalog.html
   - website/docs/reference/risk-register.html
-  - website/docs/reference/fr-catalog.html
+  - website/docs/reference/task-catalog.html
 source_decisions:
   - docs/archive/2026-05-14/RESEARCH_REVIEW.md §4 (UX defects #1, #2)
   - docs/archive/2026-05-14/RESEARCH_REVIEW.md §5.4 (reference-page weighting)
@@ -41,7 +41,7 @@ new_files:
   - website/build/data-extract.mjs
   - website/build/templates/nfr-catalog.hbs
   - website/build/templates/risk-register.hbs
-  - website/build/templates/fr-catalog.hbs
+  - website/build/templates/task-catalog.hbs
   - website/build/templates/_card.hbs
   - website/build/data/nfrs.json
   - website/build/data/risks.json
@@ -53,7 +53,7 @@ new_files:
 modified_files:
   - website/docs/reference/nfr-catalog.html              # gain server-rendered <section> blocks
   - website/docs/reference/risk-register.html
-  - website/docs/reference/fr-catalog.html
+  - website/docs/reference/task-catalog.html
   - website/docs/reference/_alpine-init.js               # use JSON data; hide prerendered post-hydrate
   - .github/workflows/deploy.yml                         # add `node build/render-reference-pages.mjs` step
   - website/package.json                                 # cheerio, handlebars deps
@@ -155,7 +155,7 @@ import path from 'path';
 const PAGES = [
   { html: 'docs/reference/nfr-catalog.html', data: 'build/data/nfrs.json',  template: 'build/templates/nfr-catalog.hbs', selector: '#nfr-list' },
   { html: 'docs/reference/risk-register.html', data: 'build/data/risks.json', template: 'build/templates/risk-register.hbs', selector: '#risk-list' },
-  { html: 'docs/reference/fr-catalog.html',  data: 'build/data/frs.json',   template: 'build/templates/fr-catalog.hbs', selector: '#fr-list' },
+  { html: 'docs/reference/task-catalog.html',  data: 'build/data/frs.json',   template: 'build/templates/task-catalog.hbs', selector: '#task-list' },
 ];
 
 async function renderPage({ html, data, template, selector }) {
@@ -372,7 +372,7 @@ test('render produces NFR cards', async () => {
 
 test('render produces task cards with all metadata', async () => {
     execSync('node build/render-reference-pages.mjs', { cwd: process.cwd() });
-    const html = readFileSync('docs/reference/fr-catalog.html', 'utf8');
+    const html = readFileSync('docs/reference/task-catalog.html', 'utf8');
     assert.ok(html.includes('TASK-AI-001'));
     assert.ok(html.includes('depends_on'));
 });
@@ -423,7 +423,7 @@ import vm from 'vm';
 const FILES = [
   { html: 'docs/reference/nfr-catalog.html', varName: 'NFR_DATA', out: 'build/data/nfrs.json' },
   { html: 'docs/reference/risk-register.html', varName: 'RISKS', out: 'build/data/risks.json' },
-  { html: 'docs/reference/fr-catalog.html', varName: 'TASK_CATALOG', out: 'build/data/frs.json' },
+  { html: 'docs/reference/task-catalog.html', varName: 'TASK_CATALOG', out: 'build/data/frs.json' },
 ];
 
 for (const { html, varName, out } of FILES) {
@@ -459,7 +459,7 @@ for (const { html, varName, out } of FILES) {
   "pages": [
     { "html": "docs/reference/nfr-catalog.html", "rendered_count": 76, "output_bytes": 89234 },
     { "html": "docs/reference/risk-register.html", "rendered_count": 22, "output_bytes": 31872 },
-    { "html": "docs/reference/fr-catalog.html", "rendered_count": 64, "output_bytes": 124398 }
+    { "html": "docs/reference/task-catalog.html", "rendered_count": 64, "output_bytes": 124398 }
   ]
 }
 ```

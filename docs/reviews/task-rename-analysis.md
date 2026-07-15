@@ -644,3 +644,47 @@ Corollaries, each learned the hard way:
 - Every path rename needs a matching content rule for its basename.
 - Anything whose *subject* is the old vocabulary — audit evidence, changelogs, this
   document — must be excluded from the rename, or you falsify the record.
+
+### 14.7 The vocabulary gate renamed its own caller (2026-07-15)
+
+The rename commit aborted. Not on a test — on the gate meant to protect the rename:
+
+```
+bash: .pre-commit-hooks/no-legacy-task-vocabulary.sh: No such file or directory
+```
+
+`DENY_PREFIXES` protects the gate's own **file** from rewrite. It does not protect
+`.githooks/pre-commit`, which *calls* that file by name. `token:fr-kebab` rewrote the
+caller's pointer; the target never moved. `set -e` did the rest.
+
+**Deny-listing a file protects its contents, never its callers.** Every reference to a
+frozen name, from a non-frozen file, needs its own `FROZEN_LITERALS` entry. This is the
+third instance of one class — after `migrate_fr_to_task.py` → `migrate_task_to_task.py`
+(127 files) and `--grep='feature-request -> task'` → `--grep='task -> task'`.
+
+This name must never track the rename regardless. The gate blocks the *legacy FR*
+vocabulary; `no-legacy-task-vocabulary` names a gate that blocks the vocabulary we just
+adopted — true of the filename, false of the code.
+
+The generalisable check is not "grep for the old word." It is **does every referenced
+path resolve?** That check found this, and found §14.8 for free.
+
+### 14.8 Two findings the resolve-check turned up
+
+**`test_task_layout.sh` t09 — red since `bb0f2392e`.** Asserted against
+`tools/cyberos-init/init.sh`, which `bb0f2392e` ("1.0.0 CLI surface") deleted, moving the
+scaffold grammar to `install.sh:651`. The assert did not follow. `grep` on a missing file
+returns 1 and short-circuits the `&&` chain into `fail`. It went unnoticed because this
+file is wired into **no gate**: not `.githooks/pre-commit`, not `local_verify.sh`, not CI.
+A test nobody runs cannot report anything. Repointed at `install.sh`; t09 green, 10/10.
+
+**Two task slugs kept the old word.** `TASK-IMP-010-telemetry-to-fr-bridge` and
+`TASK-IMP-020-fr-outcome-scoring`. The `id:` frontmatter and the titles were renamed —
+"Telemetry-to-**task** bridge" — so each folder contradicted its own contents. Slugs live
+inside paths, and `PATH_RENAMES` only carried explicit entries, so no rule reached them.
+Found by rule-independent residue, not by any rule. `git mv`'d; nothing referenced the
+slug, only the id.
+
+Both were invisible to the rule-echo `--verify` (§14.6). Neither is a rename bug. Both are
+debt the rename surfaced — the same shape as the dead ship pipeline, the unpassable audit
+gate, and `check-chain-coverage.sh` never running on bash 3.2.

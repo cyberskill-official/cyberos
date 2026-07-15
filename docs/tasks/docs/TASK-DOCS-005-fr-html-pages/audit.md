@@ -24,7 +24,7 @@ ISS-002 video inlining would explode page size - resolved: copy-not-inline rule 
 
 - Implemented: render-task-pages.mjs (491 pages via deliverable@1, tokens inlined, video/img support,
   cross-task depends_on/blocks links, audit block, loud missing-asset/unreadable-spec failures,
-  deterministic), build.sh wiring, catalog title links (fr-page-link). Bug found+fixed during AC
+  deterministic), build.sh wiring, catalog title links (task-page-link). Bug found+fixed during AC
   tests: fill() escaped :html slot content (template@1 substitution rule now correctly branch-typed).
   test_render_task_pages.sh 6/6; corpus renders in <30s envelope.
 - HITL: operator standing batch verdict recorded.

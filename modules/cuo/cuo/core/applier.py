@@ -8,7 +8,7 @@ actual filesystem / subprocess work for skills with non-LLM-friendly contracts:
     new_line, transition_kind, rework_reason, ...}`. This module applies the
     line rewrite to `docs/tasks/BACKLOG.md` atomically, then emits
     a memory aux row of the appropriate kind (`workflow_phase_complete`,
-    `workflow_complete`, or `fr_routed_back`).
+    `workflow_complete`, or `task_routed_back`).
 
   * `coverage-gate-author` — the LLM emits a `coverage-gate@1` JSON document
     that DESCRIBES which tests to run. This module actually invokes the test
@@ -162,19 +162,19 @@ def _apply_backlog_state_update(step_result, hand_off: dict, run_span_id: str) -
     lines = text.splitlines(keepends=True)
 
     # Match TASK-ID with optional bold markdown (**TASK-ID**) or plain TASK-ID
-    fr_escaped = re.escape(task_id)
-    fr_row_pattern = re.compile(r"^\|\s*\**\s*" + fr_escaped + r"\s*\**\s*\|")
+    task_escaped = re.escape(task_id)
+    task_row_pattern = re.compile(r"^\|\s*\**\s*" + task_escaped + r"\s*\**\s*\|")
     target_idx = None
     for idx, line in enumerate(lines):
-        if fr_row_pattern.match(line):
+        if task_row_pattern.match(line):
             target_idx = idx
             break
 
     if target_idx is None:
         _SPANS.warning(
-            "applier.fr_not_found",
+            "applier.task_not_found",
             extra={
-                "event": "applier.fr_not_found", "span_id": run_span_id,
+                "event": "applier.task_not_found", "span_id": run_span_id,
                 "task_id": task_id, "backlog_path": str(backlog_path),
             },
         )
@@ -473,11 +473,11 @@ def _apply_task_audit(step_result, hand_off: dict, run_span_id: str) -> None:
     # Locate the task spec file.
     repo_root = _resolve_project_root(hand_off)
     output_dir = _get_output_dir(step_result)
-    fr_path = _find_fr_file(task_id, repo_root, output_dir)
-    if fr_path is None:
+    task_path = _find_task_file(task_id, repo_root, output_dir)
+    if task_path is None:
         _SPANS.warning(
-            "applier.fr_not_found",
-            extra={"event": "applier.fr_not_found", "span_id": run_span_id,
+            "applier.task_not_found",
+            extra={"event": "applier.task_not_found", "span_id": run_span_id,
                    "task_id": task_id},
         )
         return
@@ -486,9 +486,9 @@ def _apply_task_audit(step_result, hand_off: dict, run_span_id: str) -> None:
     if repo_root:
         audits_dir = repo_root / ".cyberos/memory/store" / "audits"
         audits_dir.mkdir(parents=True, exist_ok=True)
-        audit_path = audits_dir / f"{fr_path.stem}.audit.md"
+        audit_path = audits_dir / f"{task_path.stem}.audit.md"
     else:
-        audit_path = fr_path.with_suffix(".audit.md")
+        audit_path = task_path.with_suffix(".audit.md")
 
     # Determine the audit body.
     if isinstance(output.get("audit_body"), str):
@@ -496,14 +496,14 @@ def _apply_task_audit(step_result, hand_off: dict, run_span_id: str) -> None:
     elif isinstance(output.get("raw_response"), str):
         body = output["raw_response"]
     else:
-        body = _render_audit_markdown(output, task_id, fr_path)
+        body = _render_audit_markdown(output, task_id, task_path)
 
     # Compute a simple hash of the task for the frontmatter.
     try:
         import hashlib
-        fr_hash = hashlib.sha256(fr_path.read_text(encoding="utf-8").encode("utf-8")).hexdigest()
+        task_hash = hashlib.sha256(task_path.read_text(encoding="utf-8").encode("utf-8")).hexdigest()
     except OSError:
-        fr_hash = "unknown"
+        task_hash = "unknown"
 
     verdict = output.get("verdict") or output.get("overall_status", "pass")
     if isinstance(output.get("overall_status_counts"), dict):
@@ -519,7 +519,7 @@ def _apply_task_audit(step_result, hand_off: dict, run_span_id: str) -> None:
     issues_open = output.get("issues_open", 0)
     if isinstance(output.get("per_artefact"), list):
         for pa in output["per_artefact"]:
-            if pa.get("artefact_path", "").endswith(fr_path.name):
+            if pa.get("artefact_path", "").endswith(task_path.name):
                 issues_open = pa.get("issues_open", issues_open)
                 break
 
@@ -529,7 +529,7 @@ def _apply_task_audit(step_result, hand_off: dict, run_span_id: str) -> None:
         f"audited: {_today_iso()}\n"
         f"auditor: cuo-workflow (task-audit)\n"
         f"verdict: {verdict}\n"
-        f"audited_file_sha256: {fr_hash}\n"
+        f"audited_file_sha256: {task_hash}\n"
         f"issues_open: {issues_open}\n"
         f"template: task@1\n"
         f"---\n"
@@ -555,7 +555,7 @@ def _apply_task_audit(step_result, hand_off: dict, run_span_id: str) -> None:
         )
 
 
-def _render_audit_markdown(output: dict, task_id: str, fr_path: Path) -> str:
+def _render_audit_markdown(output: dict, task_id: str, task_path: Path) -> str:
     """Render a structured LLM output into audit markdown.
 
     Handles the common shapes the LLM produces for audit skills:
@@ -646,7 +646,7 @@ def _render_audit_markdown(output: dict, task_id: str, fr_path: Path) -> str:
     return "\n".join(parts)
 
 
-def _find_fr_file(
+def _find_task_file(
     task_id: str,
     repo_root: Path | None = None,
     output_dir: Path | None = None,
@@ -692,12 +692,12 @@ def _find_fr_file(
             break
         cur = cur.parent
 
-    fr_lower = task_id.lower()
+    task_lower = task_id.lower()
     for root in search_roots:
         if not root.is_dir():
             continue
         for md in root.rglob("*.md"):
-            if fr_lower in md.stem.lower() and not md.stem.endswith(".audit"):
+            if task_lower in md.stem.lower() and not md.stem.endswith(".audit"):
                 return md
     return None
 
@@ -1255,12 +1255,12 @@ def _generate_stub(title: str, description: str, ext: str, task_id: str | None =
     Used when the LLM provides implementation steps with descriptions but no file content.
     The stub documents what needs to be implemented and serves as a starting point.
     """
-    fr_tag = f" (task: {task_id})" if task_id else ""
+    task_tag = f" (task: {task_id})" if task_id else ""
 
     if ext in (".ts", ".tsx", ".js", ".jsx"):
         return (
             f"/**\n"
-            f" * {title}{fr_tag}\n"
+            f" * {title}{task_tag}\n"
             f" *\n"
             f" * {description}\n"
             f" *\n"
@@ -1270,14 +1270,14 @@ def _generate_stub(title: str, description: str, ext: str, task_id: str | None =
         )
     elif ext == ".sql":
         return (
-            f"-- {title}{fr_tag}\n"
+            f"-- {title}{task_tag}\n"
             f"-- {description}\n"
             f"--\n"
             f"-- TODO: Implement this migration — description from CUO workflow.\n\n"
         )
     elif ext == ".py":
         return (
-            f'"""{title}{fr_tag}\n\n'
+            f'"""{title}{task_tag}\n\n'
             f"{description}\n\n"
             f"TODO: Implement this module — description from CUO workflow.\n"
             f'"""\n\n'
@@ -1286,7 +1286,7 @@ def _generate_stub(title: str, description: str, ext: str, task_id: str | None =
     elif ext in (".mjs", ".mts"):
         return (
             f"/**\n"
-            f" * {title}{fr_tag}\n"
+            f" * {title}{task_tag}\n"
             f" *\n"
             f" * {description}\n"
             f" *\n"
@@ -1296,7 +1296,7 @@ def _generate_stub(title: str, description: str, ext: str, task_id: str | None =
         )
     else:
         return (
-            f"# {title}{fr_tag}\n\n"
+            f"# {title}{task_tag}\n\n"
             f"{description}\n\n"
             f"TODO: Implement this file — description from CUO workflow.\n"
         )
@@ -1389,9 +1389,9 @@ def _resolve_artifact_path(
     # Try to find the task file and place as sibling (unless force_default_dir).
     if task_id and not force_default_dir:
         cyberos_root = _resolve_project_root(hand_off)
-        fr_path = _find_fr_file(task_id, cyberos_root, output_dir)
-        if fr_path:
-            return fr_path.parent / f"{filename_prefix}-{task_id}.md"
+        task_path = _find_task_file(task_id, cyberos_root, output_dir)
+        if task_path:
+            return task_path.parent / f"{filename_prefix}-{task_id}.md"
 
     # Fallback: <repo_root>/<default_dir>/
     repo_root = _find_repo_root(hand_off, output_dir)

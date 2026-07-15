@@ -47,7 +47,7 @@ Make /init produce working gates on the stacks CyberSkill's client projects actu
 Normative clauses:
 
 1. Gate autodetection MUST extend to, in documented order after the existing Rust/Node/Python detectors: Go (`go.mod` -> build `go build ./...`, lint `go vet ./...`, test `go test ./...`, coverage `go test -coverprofile`), Maven (`pom.xml` -> `mvn -q -DskipTests package` / `mvn -q verify`), Gradle (`build.gradle` or `build.gradle.kts`, preferring `./gradlew` when present -> `build` / `test`), .NET (`*.sln` or `*.csproj` -> `dotnet build` / `dotnet test`), PHP (`composer.json` -> `composer validate --strict` plus `vendor/bin/phpunit` when present), Ruby (`Gemfile` -> `bundle exec rspec` when spec/ exists, else `bundle exec rake test` when a Rakefile exists). Multi-stack repos MUST union the detected gates; detection MUST never invent a command whose tool marker file is absent.
-2. A per-repo config file `.cyberos/config.yaml` MUST be honored by `run-gates.sh` when present, with keys: `gates.build`, `gates.lint`, `gates.test`, `gates.coverage` (string commands; each overrides ONLY its own gate), `coverage_threshold` (integer, default 90), `fr_template` (`engineering-spec@1` | `task@1`, consumed by TASK-CUO-208), `profile` (`full` | `reduced`). Unknown keys MUST warn, not fail.
+2. A per-repo config file `.cyberos/config.yaml` MUST be honored by `run-gates.sh` when present, with keys: `gates.build`, `gates.lint`, `gates.test`, `gates.coverage` (string commands; each overrides ONLY its own gate), `coverage_threshold` (integer, default 90), `task_template` (`engineering-spec@1` | `task@1`, consumed by TASK-CUO-208), `profile` (`full` | `reduced`). Unknown keys MUST warn, not fail.
 3. `init.sh` MUST scaffold `.cyberos/config.yaml` exactly once (never clobber an existing one, same discipline as BACKLOG/AGENTS), pre-filled with every value commented out and the DETECTED commands written as comments beside each key, so the file documents what will run by default.
 4. `run-gates.sh` MUST resolve each gate as: config value if set, else autodetected, else absent - and MUST print one provenance line per gate before running it: `gate <name>: <command> (source: config|autodetect:<stack>|absent)`.
 5. `coverage_threshold` MUST flow to the coverage gate: `run-gates.sh` exposes it (env `CYBEROS_COVERAGE_THRESHOLD`) and the coverage-gate skill contract reads it, defaulting to 90 when unset (hook already named by TASK-SKILL-118's rubric constants).
@@ -105,7 +105,7 @@ t08_malformed_config_loud()      # AC 8
 
 ## §7 - Dependencies
 
-Blocks TASK-CUO-208 (it reads `fr_template` from this config). TASK-SKILL-118's coverage rubric names the threshold hook this task turns on. No dependency on Wave A.
+Blocks TASK-CUO-208 (it reads `task_template` from this config). TASK-SKILL-118's coverage rubric names the threshold hook this task turns on. No dependency on Wave A.
 
 ## §8 - Example payloads
 

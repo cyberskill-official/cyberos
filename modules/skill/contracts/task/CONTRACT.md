@@ -85,7 +85,7 @@ Every required H2 must have ≥1 non-blank line of body (SEC-008).
 
 ## The body template
 
-The complete skeleton lives in [`template.md`](./template.md) — sourced verbatim from `task/FR_CREATE_AND_AUDIT.md` v2.0.0 §18. The skeleton is reproducible byte-for-byte; bumping it is a MAJOR `contract_version` bump for this contract (→ v2 / `task@2`) AND a parallel MAJOR `skill_version` bump for every consumer skill declared via `depends_on_contracts:`.
+The complete skeleton lives in [`template.md`](./template.md) — sourced verbatim from `task/TASK_CREATE_AND_AUDIT.md` v2.0.0 §18. The skeleton is reproducible byte-for-byte; bumping it is a MAJOR `contract_version` bump for this contract (→ v2 / `task@2`) AND a parallel MAJOR `skill_version` bump for every consumer skill declared via `depends_on_contracts:`.
 
 ## Untrusted-content discipline (inherited from AGENTS.md §11)
 
@@ -107,7 +107,7 @@ When this contract bumps to v2, the registry CI matrix verifies every declared c
 
 ## Citations
 
-- Source artefact → `task/FR_CREATE_AND_AUDIT.md` v2.0.0 §18 + §15.1–§15.7 (rubric).
+- Source artefact → `task/TASK_CREATE_AND_AUDIT.md` v2.0.0 §18 + §15.1–§15.7 (rubric).
 - Untrusted-content rules → AGENTS.md §11.
 - EU AI Act framing → CyberOS-PRD.docx §12.2.2; SRS DEC-064.
 - Contracts vs. skills distinction → registry README v0.2.0 Part 8 + DEC-090.
@@ -115,4 +115,4 @@ When this contract bumps to v2, the registry CI matrix verifies every declared c
 ## History
 
 - 2026-05-06 — moved from `cuo/_shared/task-template/` to this location; promoted from "shared skill" to "contract" per registry v0.2.0 + DEC-090. Body byte-identical to v1.0.0.
-- 2026-05-05 — v1.0.0. Initial extraction from `FR_CREATE_AND_AUDIT.md` v2.0.0 §18. Template body is byte-identical to the source.
+- 2026-05-05 — v1.0.0. Initial extraction from `TASK_CREATE_AND_AUDIT.md` v2.0.0 §18. Template body is byte-identical to the source.

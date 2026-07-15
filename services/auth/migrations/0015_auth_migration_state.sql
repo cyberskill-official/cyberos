@@ -14,7 +14,7 @@
 
 CREATE TABLE auth_migration_state (
     id                      INT PRIMARY KEY CHECK (id = 1),
-    fr_auth_101_shipped_at  TIMESTAMPTZ NOT NULL,        -- when migration 0007 ran (RBAC catalogue)
+    task_auth_101_shipped_at  TIMESTAMPTZ NOT NULL,        -- when migration 0007 ran (RBAC catalogue)
     grace_window_days       INTEGER NOT NULL DEFAULT 30,
     grace_closes_at         TIMESTAMPTZ NOT NULL,        -- computed at row insert
     extended_by             UUID,                        -- subject_id of operator who extended
@@ -26,7 +26,7 @@ CREATE TABLE auth_migration_state (
 -- migration's apply (close enough — operators care about the boundary in
 -- days, not seconds).
 INSERT INTO auth_migration_state
-    (id, fr_auth_101_shipped_at, grace_window_days, grace_closes_at)
+    (id, task_auth_101_shipped_at, grace_window_days, grace_closes_at)
 VALUES
     (1, NOW(), 30, NOW() + INTERVAL '30 days');
 

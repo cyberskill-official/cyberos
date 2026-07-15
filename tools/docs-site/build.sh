@@ -57,6 +57,6 @@ echo "✓ build complete"
 if [[ "$MODE" == "full" || "$MODE" == "--docs" ]]; then
   echo "→ Docs pages (markdown SSoT)"
   node tools/docs-site/render-task-pages.mjs   # TASK-DOCS-005: per-task CDS pages
-  node tools/docs-site/render-status-hub.mjs   # TASK-DOCS-006: status hub (supersedes roadmap; after fr-pages for links)
+  node tools/docs-site/render-status-hub.mjs   # TASK-DOCS-006: status hub (supersedes roadmap; after task-pages for links)
   node tools/docs-site/render-docs.mjs
 fi

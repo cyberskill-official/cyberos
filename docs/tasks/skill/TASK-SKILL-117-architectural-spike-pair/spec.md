@@ -70,7 +70,7 @@ The artefact is deliberately evidence-first: the rubric makes uncited claims wor
 
 ## §3 - Contract
 
-Input envelope (author): `{fr_path, repo_context_map_path, question, timebox_hours, output_dir}`. Output envelope: `{spike_path, spike_id, recommendation, confidence, halted}`. Audit input: `{spike_path}`; audit output: `{verdict: pass|fail|needs_human, score, findings[]}`. Envelope JSONs are normative in `envelopes/`.
+Input envelope (author): `{task_path, repo_context_map_path, question, timebox_hours, output_dir}`. Output envelope: `{spike_path, spike_id, recommendation, confidence, halted}`. Audit input: `{spike_path}`; audit output: `{verdict: pass|fail|needs_human, score, findings[]}`. Envelope JSONs are normative in `envelopes/`.
 
 ## §4 - Acceptance criteria
 

@@ -126,7 +126,7 @@ for base in "$@"; do
                  | while IFS= read -r d; do [ -f "$d/spec.md" ] || echo x; done | wc -l | tr -d ' ')"
     fi
     [ "$flat" -eq 0 ]   || bad="$bad flat-tasks($flat)"
-    [ "$nospec" -eq 0 ] || bad="$bad fr-folders-without-spec($nospec)"
+    [ "$nospec" -eq 0 ] || bad="$bad task-folders-without-spec($nospec)"
 
     # --- status page ---
     page="$r/docs/status/index.html"
@@ -151,7 +151,7 @@ for base in "$@"; do
           t="$(mktemp -d)"
           pinned="$(grep -o '"commit":"[^"]*"' "$page" | head -1 | cut -d'"' -f4)"
           if CYBEROS_HUB_LENIENT=1 CYBEROS_PAGE_ASSETS=1 \
-             CYBEROS_PROJECT="$(basename "$r")" CYBEROS_FR_BASE="../tasks/" \
+             CYBEROS_PROJECT="$(basename "$r")" CYBEROS_TASK_BASE="../tasks/" \
              CYBEROS_COMMIT="${pinned:-unknown}" \
              CYBEROS_TEMPLATES="$cy/docs-tools/templates" \
              node "$cy/docs-tools/render-status-hub.mjs" "$r" "$t" >/dev/null 2>"$t/err"; then
@@ -191,7 +191,7 @@ for base in "$@"; do
     # mcp entry non-empty
     if [ -f "$cy/mcp/cyberos-mcp.mjs" ]; then
       head -1 "$cy/mcp/cyberos-mcp.mjs" | grep -q . || bad="$bad mcp-empty"
-      grep -q 'fr_init\|fr_gates\|ship_fr' "$cy/mcp/cyberos-mcp.mjs" || bad="$bad mcp-tools-missing"
+      grep -q 'task_init\|task_gates\|ship_task' "$cy/mcp/cyberos-mcp.mjs" || bad="$bad mcp-tools-missing"
     fi
     # workflow doc mentions HITL
     if [ -f "$cy/cuo/ship-tasks.md" ]; then

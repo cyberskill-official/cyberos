@@ -132,7 +132,7 @@ def test_signal_thresholds_trip_correctly(skill_root: Path) -> None:
     # Seed 11 fr_routed_back rows for the skill — all terminals are non-done.
     for i in range(11):
         rows.append(_row(
-            "memory.fr_routed_back", now_ns - i * 1_000_000_000,
+            "memory.task_routed_back", now_ns - i * 1_000_000_000,
             skill="task-audit",
             task_id=f"TASK-X-{i:03d}",
             outcome="ROUTED_BACK",
@@ -140,7 +140,7 @@ def test_signal_thresholds_trip_correctly(skill_root: Path) -> None:
         ))
     # Plus 1 done row → done_rate = 1/12 = 8.3%, below 0.6 → trips
     rows.append(_row(
-        "memory.fr_completed", now_ns,
+        "memory.task_completed", now_ns,
         skill="task-audit",
         task_id="TASK-X-999",
         outcome="done",

@@ -43,7 +43,7 @@ In the previous enum, these were sticky terminal statuses. They are no longer st
 
 - A circuit-breaker failure in `implementing` (e.g. 5 consecutive test failures within a task) → status drops back to `ready_to_implement`.
 - A non-fatal blocker discovered during `reviewing` or `testing` (e.g. spec ambiguity, missing dependency) → status drops back to `ready_to_implement`.
-- The reason text moves into an aux audit row (`memory.fr_routed_back` — TBD row_kind) and/or an inline comment on the BACKLOG row.
+- The reason text moves into an aux audit row (`memory.task_routed_back` — TBD row_kind) and/or an inline comment on the BACKLOG row.
 
 **LANDED 2026-07-14 — the "Issue Request artefact" is a `type: bug` task.**
 

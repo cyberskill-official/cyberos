@@ -16,7 +16,7 @@ STEP_STATUSES = {"pending", "done", "failed", "skipped-conditional"}
 HITL_GATES = {None, "review_approval", "final_acceptance"}
 GATE_STEPS = {19, 20, 30, 31}  # reviewing->ready_to_test and testing->done transitions
 _REQUIRED_ROOT = [
-    "manifest_version", "task_id", "fr_sha256", "workflow_version", "started_at",
+    "manifest_version", "task_id", "task_sha256", "workflow_version", "started_at",
     "updated_at", "current_step", "routed_back_count", "steps", "hitl",
 ]
 # Contract schema (task@1, FM-105) uses p0..p3. The 2026-07-14 schema migration
@@ -40,8 +40,8 @@ def validate(m: dict) -> list:
         return errs
     if m["manifest_version"] != MANIFEST_VERSION:
         errs.append(f"manifest_version != {MANIFEST_VERSION}")
-    if not re.fullmatch(r"[0-9a-f]{64}", str(m["fr_sha256"] or "")):
-        errs.append("fr_sha256 is not a hex64 digest")
+    if not re.fullmatch(r"[0-9a-f]{64}", str(m["task_sha256"] or "")):
+        errs.append("task_sha256 is not a hex64 digest")
     if not isinstance(m["current_step"], int) or not 1 <= m["current_step"] <= 31:
         errs.append("current_step outside 1..31")
     if not isinstance(m["routed_back_count"], int) or m["routed_back_count"] < 0:
@@ -71,7 +71,7 @@ def write_atomic(m: dict, path: str) -> None:
             os.unlink(tmp)
 
 
-def resume_plan(m: dict, workflow_version: str, fr_sha256: str, hash_of) -> dict:
+def resume_plan(m: dict, workflow_version: str, task_sha256: str, hash_of) -> dict:
     """Compute the resume plan. hash_of(path) -> hex digest or None.
 
     Returns {"action": "needs_human"|"resume", "start_step": int, "stale_from": int|None,
@@ -82,9 +82,9 @@ def resume_plan(m: dict, workflow_version: str, fr_sha256: str, hash_of) -> dict
         return {"action": "needs_human", "start_step": None, "stale_from": None,
                 "gate_pending": None,
                 "reason": f"workflow_version mismatch: manifest {m['workflow_version']} vs {workflow_version}"}
-    if m["fr_sha256"] != fr_sha256:
+    if m["task_sha256"] != task_sha256:
         return {"action": "resume", "start_step": 1, "stale_from": 1, "gate_pending": None,
-                "reason": "task spec changed since run start (fr_sha256 mismatch) - all steps stale"}
+                "reason": "task spec changed since run start (task_sha256 mismatch) - all steps stale"}
     stale_from = None
     for s in sorted(m["steps"], key=lambda x: x["index"]):
         if s["status"] == "done" and s.get("artefact_sha256"):

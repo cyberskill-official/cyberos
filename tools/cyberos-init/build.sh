@@ -111,7 +111,7 @@ memory_vendored="protocol"
 [ -f "$repo/modules/memory/memory.invariants.yaml" ] && cp "$repo/modules/memory/memory.invariants.yaml" "$out/memory/memory.invariants.yaml"
 
 # --- plugin + runtime + docs ---
-rm -rf "$repo/dist/fr-pack"   # self-heal: purge the pre-rename payload if a stale copy lingers
+rm -rf "$repo/dist/task-pack"   # self-heal: purge the pre-rename payload if a stale copy lingers
 cp -R "$here/plugin"    "$out/plugin"
 # Marketplace manifest at the payload ROOT: lets Claude add dist/cyberos as a plugin
 # marketplace (`/plugin marketplace add <path>` or the desktop Plugins > Add picker),
@@ -280,7 +280,7 @@ agent_surface:
   spine: AGENTS.md                       # canonical cross-agent instruction file
   pointer_files: [CLAUDE.md, GEMINI.md, .cursorrules, .cursor/rules/cyberos.mdc, .grok/GROK.md, .github/copilot-instructions.md, .agents/rules/cyberos.md, .windsurfrules]
   native_skill_dirs: [.claude/skills, .grok/skills, .commandcode/skills, .codex/skills, .opencode/skill]
-  mcp: { server: mcp/cyberos-mcp.mjs, tools: [fr_init, fr_gates, fr_status, ship_fr] }
+  mcp: { server: mcp/cyberos-mcp.mjs, tools: [task_init, task_gates, task_status, ship_task] }
 notes: >
   install.sh lays this out under a target repo's gitignored .cyberos/, by module. Doc-driven
   mode always works; missing skills/caf degrade to the reduced-profile floor (the target

@@ -95,7 +95,7 @@ In scope: `cuo/core/harness.py`, `cuo/core/harness_signals.py`, signal functions
 ## §4 Acceptance Criteria
 
 1. `cyberos-cuo harness report --since 7d` produces a non-empty markdown file at `docs/harness/harness-report-YYYY-MM-DD.md`. *(traces_to: §1 #5, #8)*
-2. The report's "Skills with tripped signals" section lists at least one entry when running against a seeded chain with 11 `memory.fr_routed_back` rows for one task (above `acceptance_rate_below: 0.6` if any forward-runs exist). *(traces_to: §1 #2, #5)*
+2. The report's "Skills with tripped signals" section lists at least one entry when running against a seeded chain with 11 `memory.task_routed_back` rows for one task (above `acceptance_rate_below: 0.6` if any forward-runs exist). *(traces_to: §1 #2, #5)*
 3. Each tripped signal's row carries the skill name, signal id, observed value, threshold, and at least one evidence row ID. *(traces_to: §1 #6)*
 4. The report includes a "Workflows with elevated rework" section sorting workflows by `routed_back_count / total_runs` descending. *(traces_to: §1 #5)*
 5. Re-running the same command in `--watch` mode after one new event writes a new report atomically (write-to-temp then rename) without truncation. *(traces_to: §1 #9)*

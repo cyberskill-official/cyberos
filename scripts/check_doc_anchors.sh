@@ -52,7 +52,7 @@ def corpus_planned(repo):
             CORPUS_PLANNED |= planned_files(spec)
     return CORPUS_PLANNED
 
-def fr_status(src):
+def task_status(src):
     try:
         head = open(src, encoding="utf-8", errors="replace").read(2000)
         m = re.search(r"^status:\s*([a-z_]+)", head, re.M)
@@ -108,7 +108,7 @@ for root in roots:
                         if want not in headings(target):
                             status = "dead-anchor"
                     if status.startswith("dead"):
-                        if "tasks" in rel_src and f == "spec.md" and fr_status(src) in ("done", "closed", "on_hold"):
+                        if "tasks" in rel_src and f == "spec.md" and task_status(src) in ("done", "closed", "on_hold"):
                             print(f"WARN historical spec ref: {rel_src}:{ln} -> {t}", file=sys.stderr)
                             listed.append(f"hist-stale  {rel_src}:{ln} -> {t}"); continue
                         dead.append(f"DEAD {rel_src}:{ln} -> {t}")

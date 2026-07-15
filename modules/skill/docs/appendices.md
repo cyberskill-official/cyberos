@@ -56,7 +56,7 @@ The canonical chain. Walk through it once and you understand the whole architect
 
 A user types in CHAT: _"Turn this PRD into a backlog and audit it."_ The supervisor's `classify_act` node returns `{persona_id: cuo-cpo, skill_id: cuo/cpo/task-author, confidence: 0.93}`. The supervisor synthesises the input envelope (it's chat-mode entry; `STANDALONE_INTERVIEW.md` runs to fill `requirements_files`; the rest defaults). It invokes `task-author`. The skill enters PLAN phase: reads the PRD with sequential pagination (per AGENTS.md §4.10), enumerates tasks, runs INV-003 (ingestion-coverage check). PLAN appends one `row_kind: question` row to `genie.action_log` and emits the proposed task backlog as a Question primitive. The supervisor halts, surfaces the backlog to the user via `HUMAN_SUMMARY.md`. The user replies "APPROVE."
 
-The supervisor resumes from the LangGraph checkpoint. `task-author` enters WORKER phase: writes TASK-001, TASK-002, TASK-003 to disk, computing each task's hash and appending three `row_kind: artefact_write` rows to action_log. Output envelope sets `next_skill_recommendation: cuo/cpo/task-audit`. The supervisor's conditional edge fires; it invokes `task-audit` with `{fr_paths: [...]}` and the upstream context. `task-audit` runs its 8-step audit loop against `audit_rubric@2.0`, checking INV-001 (verdict determinism - sev-0). All 3 tasks PASS; three `row_kind: artefact_write` rows are appended for the audit reports. The chain closes; `HUMAN_SUMMARY` renders to chat: _"Audit complete - 3/3 PASS. Reports at TASK-001.audit.md, TASK-002.audit.md, TASK-003.audit.md. Trace: `<uuid>`."_
+The supervisor resumes from the LangGraph checkpoint. `task-author` enters WORKER phase: writes TASK-001, TASK-002, TASK-003 to disk, computing each task's hash and appending three `row_kind: artefact_write` rows to action_log. Output envelope sets `next_skill_recommendation: cuo/cpo/task-audit`. The supervisor's conditional edge fires; it invokes `task-audit` with `{task_paths: [...]}` and the upstream context. `task-audit` runs its 8-step audit loop against `audit_rubric@2.0`, checking INV-001 (verdict determinism - sev-0). All 3 tasks PASS; three `row_kind: artefact_write` rows are appended for the audit reports. The chain closes; `HUMAN_SUMMARY` renders to chat: _"Audit complete - 3/3 PASS. Reports at TASK-001.audit.md, TASK-002.audit.md, TASK-003.audit.md. Trace: `<uuid>`."_
 
 ### 11.2 Why this example is the canonical one
 
@@ -466,7 +466,7 @@ Persona / shared | Skill | Status | Owner-role | Pipeline links
 `cuo/cpo/` | `task-author` | v0.2.2 | cpo | consumes PRD/spec docs -> task markdowns -> `task-audit`
 `cuo/cpo/` | `task-audit` | v0.2.2 | cpo | consumes task markdowns from `task-author` or any source
 `cuo/cpo/` | `product-requirements-document-audit` | v0.1.0 (scaffold) | cpo | quality gate on PRDs (advisory-leaning per Q4)
-`cuo/chief-technology-officer/` | `fr-to-tech-spec` | v0.1.0 (scaffold) | cto | consumes audited task markdowns -> emits tech specs (gated on runtime)
+`cuo/chief-technology-officer/` | `task-to-tech-spec` | v0.1.0 (scaffold) | cto | consumes audited task markdowns -> emits tech specs (gated on runtime)
 `cuo/chief-technology-officer/` | `software-requirements-specification-author` | v0.1.0 (scaffold) | cto | consumes audited PRD -> emits `software-requirements-specification@1` markdown
 `cuo/chief-technology-officer/` | `software-requirements-specification-audit` | v0.1.0 (scaffold) | cto | quality gate on SRSs (advisory-leaning)
 `cuo/chief-technology-officer/` | `spec-to-impl-plan` | v0.1.0 (scaffold) | cto | tech-spec OR audited task -> impl-plan + tickets in PROJ MCP
@@ -476,11 +476,11 @@ Persona / shared | Skill | Status | Owner-role | Pipeline links
 
 Contract | Latest version | Kind | Stewarded by | Consumed by
 ---|---|---|---|---
-`task` | v1 (`task@1`) | artefact_schema | `cuo-cpo` | `cuo/cpo/task-author` v0.2.0+, `cuo/cpo/task-audit` v0.2.0+, `cuo/chief-technology-officer/fr-to-tech-spec` v0.1.0+, `cuo/chief-technology-officer/spec-to-impl-plan` v0.1.0+ (lean)
+`task` | v1 (`task@1`) | artefact_schema | `cuo-cpo` | `cuo/cpo/task-author` v0.2.0+, `cuo/cpo/task-audit` v0.2.0+, `cuo/chief-technology-officer/task-to-tech-spec` v0.1.0+, `cuo/chief-technology-officer/spec-to-impl-plan` v0.1.0+ (lean)
 `nats-subjects` | v1 (`nats_subjects@1`) | wire_protocol | `cuo-cto` | all skills v0.2.2+, the supervisor
 `project-brief` | v1 (`project_brief@1`) | artefact_schema | `cuo-cpo` | `cuo/cpo/requirements-discovery` v0.1.0+, `cuo/cpo/product-requirements-document-author` v0.1.0+, `cuo/cpo/chain-selector` v0.1.0+
 `prd` | v1 (`product-requirements-document@1`) | artefact_schema | `cuo-cpo` | `cuo/cpo/product-requirements-document-author` v0.1.0+, `cuo/cpo/product-requirements-document-audit` v0.1.0+, `cuo/chief-technology-officer/software-requirements-specification-author` v0.1.0+ (input), `cuo/cpo/task-author` v0.3.0+ (planned)
-`srs` | v1 (`software-requirements-specification@1`) | artefact_schema | `cuo-cto` | `cuo/chief-technology-officer/software-requirements-specification-author` v0.1.0+, `cuo/chief-technology-officer/software-requirements-specification-audit` v0.1.0+, `cuo/chief-technology-officer/fr-to-tech-spec` v0.2.0+ (input context)
+`srs` | v1 (`software-requirements-specification@1`) | artefact_schema | `cuo-cto` | `cuo/chief-technology-officer/software-requirements-specification-author` v0.1.0+, `cuo/chief-technology-officer/software-requirements-specification-audit` v0.1.0+, `cuo/chief-technology-officer/task-to-tech-spec` v0.2.0+ (input context)
 `impl-plan` | v1 (`impl_plan@1`) | artefact_schema | `cuo-cto` | `cuo/chief-technology-officer/spec-to-impl-plan` v0.1.0+
 
 (Indexes grow as skills land. Maintained by hand; CI consolidation script is a v0.3.0 follow-up.)
@@ -692,7 +692,7 @@ Run these in order; the user shouldn't see most of this unless something fails.
          E. software-requirements-specification-author + software-requirements-specification-audit   ->  audited software-requirements-specification@1            (full only)
          F. Task-author                ->  task@1 xN
          G. Task-audit                 ->  audited task@1 xN
-         H. fr-to-tech-spec          ->  tech_spec@1              (skipped on lean)
+         H. task-to-tech-spec          ->  tech_spec@1              (skipped on lean)
          I. spec-to-impl-plan        ->  impl_plan@1
 
 
@@ -924,7 +924,7 @@ Use AskUserQuestion: approve / amend / re-decompose.
 
 #### Your steps
 
-  1. **Read** `cuo/chief-technology-officer/fr-to-tech-spec/SKILL.md`.
+  1. **Read** `cuo/chief-technology-officer/task-to-tech-spec/SKILL.md`.
   2. **Generate `tech_spec@1` markdown** consuming all audited tasks. The tech-spec adds: data shapes / component decomposition / sequence diagrams / library + framework + language choices (with ADR refs in `<project>/docs/adr/` if architectural).
   3. **Offer ADRs sparingly** - only when ALL THREE: hard-to-reverse + surprising-without-context + result-of-real-trade-off (per mattpocock's grill-with-docs rule).
   4. **Confirm tech-spec with user** in chunks (Architecture / Data shapes / Components / Cross-system integrations / Failure modes).
@@ -1185,7 +1185,7 @@ This file is the project's shared vocabulary. Every chain skill will read and up
       -> E. [if full] software-requirements-specification-author -> software-requirements-specification@1 -> software-requirements-specification-audit -> audited software-requirements-specification@1
       -> F. Task-author -> task markdowns
       -> G. Task-audit -> audited tasks
-      -> H. [if standard|full] fr-to-tech-spec -> tech_spec@1
+      -> H. [if standard|full] task-to-tech-spec -> tech_spec@1
       -> I. spec-to-impl-plan -> impl_plan@1 + (optionally) tickets in PROJ MCP
 
 
@@ -3750,8 +3750,8 @@ Cyberos-specific thing | Replaced with
 `task-audit` skill rubric file | The 10/10 rubric inlined in Prompt 1's PROCESS step 3
 `task-author` + `task-audit` skill names | Generic "draft + self-audit until 10/10" loop
 `memory audit chain` + `AGENTS.md §14` heartbeat | Atomic commits with structured messages; project's existing changelog
-`memory feedback_fr_autonomous_march` reference | "March autonomously ... do not ask between tasks unless real decision"
-`memory feedback_no_partial_ship_per_fr` reference | "NO partial-ship within a task" stated directly in Prompt 2
+`memory feedback_task_autonomous_march` reference | "March autonomously ... do not ask between tasks unless real decision"
+`memory feedback_no_partial_ship_per_task` reference | "NO partial-ship within a task" stated directly in Prompt 2
 `re_audit_complete` memory row emission | Changelog row with prior/new score
 Hard-coded `/Users/stephencheng/.../cyberos` path | `{{REPO_ROOT}}` placeholder
 
@@ -4160,7 +4160,7 @@ Each skill's `produces.next_skill_recommendation` field encodes its default down
 
 §6.2 **The audit skill is the spec.** Every author skill's behavior is normative-fixed by its sibling audit skill's `RUBRIC.md`. To change an author's behavior, update the audit's rubric first, regenerate the artifact, observe the new audit verdict, then update the author body to satisfy the new rubric. This is the only way the catalog stays internally consistent.
 
-§6.3 **Audit-fix loop until 10/10.** Per the task-authoring loop discipline (memory: `feedback_fr_authoring_loop.md`), every artifact SHALL pass its rubric at 10/10 before the next artifact is started. Half-finished artifacts are forbidden. The audit loop's `EXHAUSTED` exit condition triggers HITL escalation rather than ship-with-warnings.
+§6.3 **Audit-fix loop until 10/10.** Per the task-authoring loop discipline (memory: `feedback_task_authoring_loop.md`), every artifact SHALL pass its rubric at 10/10 before the next artifact is started. Half-finished artifacts are forbidden. The audit loop's `EXHAUSTED` exit condition triggers HITL escalation rather than ship-with-warnings.
 
 §6.4 **March autonomously on continue.** Per the task-autonomous-march memory, when a user says "continue", drain the planned-skill frontier until a decision is needed or the catalog is complete - do not pause between skills.
 
@@ -4411,7 +4411,7 @@ Worth documenting because future fine-tunes are tempted to "simplify" toward Ant
   6. **`untrusted_inputs:` block + CaMeL pattern** (DEC-050) - every external byte wrapped in `<untrusted_content>`, marker scan, surface-to-human on hit. The guide acknowledges "instructions not followed" troubleshooting but has no prompt-injection defence.
   7. **`self_audit:` block with `INVARIANTS.md`** - Part 6's auto-refinement loop. Runtime checks invariants at every node boundary; breach -> `refinement_proposal` envelope -> pipeline pause -> human review. The guide's equivalent is "iterate based on feedback"; CyberOS makes it a contract.
   8. **`human_fine_tune:` block + 7-step playbook** (Part 7) - pause + diagnose + add regression + edit + re-run + bump + resume. Reviewer roles, blackout windows, required artefacts (changelog_entry, acceptance_test_added, memory_refinement_entry). The guide has no equivalent.
-  9. **Audit-fix-audit discipline** (Part 18 + Recipe 13) - mandatory after every new contract registration. Caught real drift on `nats-subjects@1` registry v0.2.2 (contract said `cuo_cpo.fr_author.fr_written`; reality was `cuo.fr_author.fr_written`). The guide has nothing like it.
+  9. **Audit-fix-audit discipline** (Part 18 + Recipe 13) - mandatory after every new contract registration. Caught real drift on `nats-subjects@1` registry v0.2.2 (contract said `cuo_cpo.task_author.task_written`; reality was `cuo.task_author.task_written`). The guide has nothing like it.
   10. **Anomaly signals** - `confidence_low_streak`, `user_correction_streak`, `denylist_near_miss_streak`, `scope_rejection_streak`, `citation_missing_streak`, `deterministic_drift`, `rule_reversal_streak`, `needs_human_rate_above`. Tunable thresholds + windows. The guide has none.
   11. **40-rule task-audit skill** + the master rule ("after creating one task, loop audit rounds on it until it reaches perfect - before starting the next task"). The guide has Reference A's 4-stage checklist; CyberOS has 40 specific rules each tied to a prior rework moment.
   12. **Persona-card pattern** - `cuo/<role>/SKILL.md` declares voice / scope ceiling / escalation graph; workflow skills inherit. The guide has no role-scoped namespacing.
@@ -4487,7 +4487,7 @@ Anthropic Chapter 3 (p. 16) suggests baselining tool-calls / tokens / failures w
 
 #### Nuance 3 - "Negative triggers" pattern (`Do NOT use for...`)
 
-Anthropic Chapter 5 (p. 25) shows `description: ...Use for statistical modeling. Do NOT use for simple data exploration (use data-viz skill instead).` CyberOS bodies do this in `## When to invoke this skill` ("If the user asks to _audit an existing FR_ , route to `task-audit` instead") but the disambiguation is in the body, not the description. **Same root cause as Gap 1** - addressed by TASK-SKILL-111's mandated description format (which can include the negative-trigger clause).
+Anthropic Chapter 5 (p. 25) shows `description: ...Use for statistical modeling. Do NOT use for simple data exploration (use data-viz skill instead).` CyberOS bodies do this in `## When to invoke this skill` ("If the user asks to _audit an existing TASK_ , route to `task-audit` instead") but the disambiguation is in the body, not the description. **Same root cause as Gap 1** - addressed by TASK-SKILL-111's mandated description format (which can include the negative-trigger clause).
 
 #### Nuance 4 - `compatibility` field uniform adoption
 
@@ -4820,7 +4820,7 @@ What I'm leaving the operator in a clean state for next session:
   * `.fuse_hidden*` cleanup on macOS side (user-action; one-liner)
 
 
-_End of FR_111_115_COMPLETION_PLAN.md._
+_End of TASK_111_115_COMPLETION_PLAN.md._
 
 
 ## Appendix L - Bundle rubric (SKB-*)

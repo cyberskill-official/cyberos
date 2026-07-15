@@ -93,7 +93,7 @@ insert:
   module: <module folder name>
   expected_absent: true   # the concurrency gate, inverse of old_line: no row for task_id may pre-exist
 memory_emit:
-  row_kind: workflow_complete | workflow_phase_complete | fr_routed_back
+  row_kind: workflow_complete | workflow_phase_complete | task_routed_back
   task_id: task-<MODULE>-<NNN>
   outcome_summary: "<one-paragraph human-readable summary>"
 ```
@@ -126,7 +126,7 @@ two in sync when either changes:
 - `mutation_kind` ∈ {status-cell-only, insert-row} (closed enum). This skill never moves rows, reorders the queue, or deletes tasks.
 - insert-row only: `expected_absent` verified against the pre-image (no row for `task_id` exists); post-image carries exactly one; row grammar + placement per §2b; `insert.status` equals the task file's frontmatter status at write time.
 - Back-compat: a `backlog-state-update@1` artefact (no `mutation_kind`, or `status-cell-only`) stays valid for one release window; the audit accepts both versions during the transition.
-- The `memory_emit.row_kind` MUST be one of: `workflow_phase_complete` (intra-lifecycle forward transition), `workflow_complete` (only when `new_status == "done"`), or `fr_routed_back` (when `transition_kind == "rework"`).
+- The `memory_emit.row_kind` MUST be one of: `workflow_phase_complete` (intra-lifecycle forward transition), `workflow_complete` (only when `new_status == "done"`), or `task_routed_back` (when `transition_kind == "rework"`).
 
 ## 4. HITL bypass
 
@@ -136,7 +136,7 @@ If the operator's override leaves the BACKLOG in a state that the next workflow 
 
 ## 5. Chains to
 
-`backlog-state-update-audit` — the only successor. The audit emits the `workflow_complete` / `workflow_phase_complete` / `fr_routed_back` memory row as a side effect of passing.
+`backlog-state-update-audit` — the only successor. The audit emits the `workflow_complete` / `workflow_phase_complete` / `task_routed_back` memory row as a side effect of passing.
 
 ---
 

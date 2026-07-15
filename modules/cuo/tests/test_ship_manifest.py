@@ -22,7 +22,7 @@ TASK_DOC = os.path.join(ROOT, "docs", "tasks", "cuo",
 def _manifest(steps=None, wf="2.4.0", frsha="a" * 64):
     return {
         "manifest_version": "ship-manifest@1", "task_id": "TASK-TEN-208",
-        "fr_sha256": frsha, "workflow_version": wf,
+        "task_sha256": frsha, "workflow_version": wf,
         "started_at": "2026-07-12T10:00:00+07:00",
         "updated_at": "2026-07-12T11:42:10+07:00",
         "current_step": 11, "routed_back_count": 0,
@@ -55,20 +55,20 @@ class TestShipManifest(unittest.TestCase):
 
     def test_schema_fields_and_example_validate(self):  # AC 1
         contract = open(CONTRACT_DOC).read()
-        for field in ("manifest_version", "task_id", "fr_sha256", "workflow_version",
+        for field in ("manifest_version", "task_id", "task_sha256", "workflow_version",
                       "started_at", "updated_at", "current_step", "routed_back_count",
                       "steps", "hitl", "artefact_sha256", "skipped-conditional",
                       "review_approval", "final_acceptance"):
             self.assertIn(field, contract, f"SHIP-MANIFEST.md missing field {field}")
         self.assertEqual(sm.validate(_manifest()), [])
         bad = _manifest()
-        del bad["fr_sha256"]
-        self.assertTrue(any("fr_sha256" in e for e in sm.validate(bad)))
+        del bad["task_sha256"]
+        self.assertTrue(any("task_sha256" in e for e in sm.validate(bad)))
         bad2 = _manifest(steps=[{"index": 99, "skill": "x", "status": "wat"}])
         self.assertEqual(len(sm.validate(bad2)), 2)  # bad status + bad index
         # every root error branch fires exactly once
         wrong = _manifest()
-        wrong.update({"manifest_version": "ship-manifest@0", "fr_sha256": "zz",
+        wrong.update({"manifest_version": "ship-manifest@0", "task_sha256": "zz",
                       "current_step": 0, "routed_back_count": -1})
         wrong["hitl"] = {"gate": "vibes"}
         self.assertEqual(len(sm.validate(wrong)), 5)

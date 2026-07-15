@@ -330,7 +330,7 @@ def compute_report(
                 wm.hitl_halt += 1
             elif outcome == "FAILED":
                 wm.failed += 1
-        if op == "memory.fr_routed_back":
+        if op == "memory.task_routed_back":
             task_id = extra.get("task_id") or "(unknown)"
             routed_back[task_id] = routed_back.get(task_id, 0) + 1
 

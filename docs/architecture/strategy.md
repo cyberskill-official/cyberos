@@ -156,7 +156,7 @@ Three actionable next steps, in order.
 ### Session 1 - Push the docs site to public-ready
 
 1. Wire site-wide search (evaluate Lunr.js or Pagefind)
-2. Add per-task anchors in fr-catalog (cross-link tightening)
+2. Add per-task anchors in task-catalog (cross-link tightening)
 3. Add a decision log + RSS-able changelog page
 4. Polish remaining Tailwind utility colors to match the Umber/Ochre tokens
 5. Deploy to `cyberskill.world/docs` (Cloudflare Pages or GitHub Pages)

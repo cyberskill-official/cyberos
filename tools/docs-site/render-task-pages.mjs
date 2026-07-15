@@ -54,7 +54,7 @@ let pages = 0, assets = 0, withAudit = 0;
 for (const { module, stem, spec } of folders) {
   let raw;
   try { raw = readFileSync(spec, 'utf-8'); }
-  catch (e) { console.error(`fr-pages: ERROR unreadable spec ${spec}: ${e.message}`); process.exit(1); }
+  catch (e) { console.error(`task-pages: ERROR unreadable spec ${spec}: ${e.message}`); process.exit(1); }
   const { meta, body } = frontmatter(raw);
   const fmText = (raw.match(/\A?---\n([\s\S]*?)\n---\n/) || ['',''])[1];
   let html = renderMarkdown(body);
@@ -101,8 +101,8 @@ for (const { module, stem, spec } of folders) {
   }
   for (const m of page.matchAll(/(?:src|href)="(assets\/[^"]+)"/g)) {
     if (!existsSync(join(dirname(spec), m[1]))) {
-      console.error(`fr-pages: ERROR missing referenced asset ${m[1]} in ${spec}`); process.exit(1);
+      console.error(`task-pages: ERROR missing referenced asset ${m[1]} in ${spec}`); process.exit(1);
     }
   }
 }
-console.log(`fr-pages: ${pages} pages, ${assets} assets copied, ${withAudit} with audits`);
+console.log(`task-pages: ${pages} pages, ${assets} assets copied, ${withAudit} with audits`);

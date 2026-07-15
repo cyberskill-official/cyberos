@@ -4,13 +4,13 @@
   "title": "edge-case-matrix-author input envelope",
   "type": "object",
   "required": [
-    "fr_path",
+    "task_path",
     "repo_context_map_path",
     "output_dir"
   ],
   "additionalProperties": false,
   "properties": {
-    "fr_path": {
+    "task_path": {
       "type": "string"
     },
     "repo_context_map_path": {

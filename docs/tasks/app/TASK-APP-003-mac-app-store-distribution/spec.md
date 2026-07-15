@@ -226,15 +226,15 @@ Two distinct certificate types are deliberately kept as two distinct secrets (`M
 # `git stash`, so the comparison can never lose or clobber uncommitted work
 # in the primary working tree.
 cd /sessions/ecstatic-sharp-lovelace/mnt/cyberos
-PRE_FR_SHA=$(git merge-base HEAD "$(git log --diff-filter=A -- \
+PRE_TASK_SHA=$(git merge-base HEAD "$(git log --diff-filter=A -- \
   apps/desktop/src-tauri/tauri.mas.conf.json | tail -1)^")
-git worktree add /tmp/pre-fr-worktree "$PRE_FR_SHA"
-( cd /tmp/pre-fr-worktree/apps/desktop/src-tauri && \
-  npx tauri build --bundles app --ci --config /dev/null > /tmp/pre-fr-bundle.json )
+git worktree add /tmp/pre-task-worktree "$PRE_TASK_SHA"
+( cd /tmp/pre-task-worktree/apps/desktop/src-tauri && \
+  npx tauri build --bundles app --ci --config /dev/null > /tmp/pre-task-bundle.json )
 ( cd apps/desktop/src-tauri && \
-  npx tauri build --bundles app --ci --config /dev/null > /tmp/post-fr-bundle.json )
-diff /tmp/pre-fr-bundle.json /tmp/post-fr-bundle.json  # MUST be empty
-git worktree remove /tmp/pre-fr-worktree
+  npx tauri build --bundles app --ci --config /dev/null > /tmp/post-task-bundle.json )
+diff /tmp/pre-task-bundle.json /tmp/post-task-bundle.json  # MUST be empty
+git worktree remove /tmp/pre-task-worktree
 
 # AC #5 — local sandbox validity (macOS runner only)
 codesign --verify --deep --strict target/release/bundle/macos/CyberOS.app

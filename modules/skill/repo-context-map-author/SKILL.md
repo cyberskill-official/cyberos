@@ -54,7 +54,7 @@ radius exceeds the in-module threshold.
 # repo-context-map@1
 task_id: task-<MODULE>-<NNN>
 generated_at: <ISO-8601>
-fr_module: <module name from task frontmatter>
+task_module: <module name from task frontmatter>
 repo_root: <absolute path>
 
 # A. Existing patterns the new code must respect

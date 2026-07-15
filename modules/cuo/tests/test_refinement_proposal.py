@@ -39,7 +39,7 @@ def _row(op: str, **extra) -> dict:
 
 def test_first_occurrence_writes_proposal(tmp_path: Path) -> None:
     rows = [
-        _row("memory.fr_routed_back", skill="task-audit",
+        _row("memory.task_routed_back", skill="task-audit",
              outcome="ROUTED_BACK", rework_reason="trace-001 failure",
              row_id="r1"),
     ]
@@ -67,7 +67,7 @@ def test_first_occurrence_writes_proposal(tmp_path: Path) -> None:
 
 def test_repeat_stripe_halts_no_new_file(tmp_path: Path) -> None:
     rows = [
-        _row("memory.fr_routed_back",
+        _row("memory.task_routed_back",
              skill="task-audit",
              outcome="ROUTED_BACK",
              rework_reason="trace-001 failure", row_id="r1"),
@@ -94,7 +94,7 @@ def test_repeat_stripe_halts_no_new_file(tmp_path: Path) -> None:
 
 
 def test_applied_proposal_reopens_stripe(tmp_path: Path) -> None:
-    rows = [_row("memory.fr_routed_back", skill="x", outcome="ROUTED_BACK",
+    rows = [_row("memory.task_routed_back", skill="x", outcome="ROUTED_BACK",
                   rework_reason="r", row_id="r1")]
     first = emit_or_halt("x", "acceptance_rate_below", rows, tmp_path)
     assert isinstance(first, Emitted)
@@ -126,16 +126,16 @@ def test_applied_proposal_reopens_stripe(tmp_path: Path) -> None:
 
 def test_stripe_determinism() -> None:
     rows = [
-        _row("memory.fr_routed_back", skill="x", outcome="ROUTED_BACK",
+        _row("memory.task_routed_back", skill="x", outcome="ROUTED_BACK",
              rework_reason="boom", row_id="r1"),
-        _row("memory.fr_routed_back", skill="x", outcome="ROUTED_BACK",
+        _row("memory.task_routed_back", skill="x", outcome="ROUTED_BACK",
              rework_reason="bang", row_id="r2"),
     ]
     s1 = compute_stripe("x", "acceptance_rate_below", rows)
     s2 = compute_stripe("x", "acceptance_rate_below", rows)
     assert str(s1) == str(s2)
     # Different evidence → different stripe
-    rows2 = [_row("memory.fr_routed_back", skill="x", outcome="ROUTED_BACK",
+    rows2 = [_row("memory.task_routed_back", skill="x", outcome="ROUTED_BACK",
                    rework_reason="totally-different", row_id="r3")]
     s3 = compute_stripe("x", "acceptance_rate_below", rows2)
     assert str(s3) != str(s1)
@@ -147,7 +147,7 @@ def test_stripe_determinism() -> None:
 
 
 def test_proposal_body_shape(tmp_path: Path) -> None:
-    rows = [_row("memory.fr_routed_back", skill="x", outcome="ROUTED_BACK",
+    rows = [_row("memory.task_routed_back", skill="x", outcome="ROUTED_BACK",
                   rework_reason="r", row_id="r1")]
     result = emit_or_halt("x", "acceptance_rate_below", rows, tmp_path,
                            suggested_change="Add TRACE-006 rule to catch this.")
@@ -171,7 +171,7 @@ def test_proposal_body_shape(tmp_path: Path) -> None:
 
 
 def test_list_show_apply_reject(tmp_path: Path) -> None:
-    rows = [_row("memory.fr_routed_back", skill="x", outcome="ROUTED_BACK",
+    rows = [_row("memory.task_routed_back", skill="x", outcome="ROUTED_BACK",
                   rework_reason="r", row_id="r1")]
     result = emit_or_halt("x", "acceptance_rate_below", rows, tmp_path)
     assert isinstance(result, Emitted)
@@ -226,7 +226,7 @@ def test_drain_honours_hitl_halt(tmp_path: Path) -> None:
     just verifies that a StripeRepeatHalt result carries enough info for the
     drain command to write a DRAIN_HALT.md.
     """
-    rows = [_row("memory.fr_routed_back", skill="x", outcome="ROUTED_BACK",
+    rows = [_row("memory.task_routed_back", skill="x", outcome="ROUTED_BACK",
                   row_id="r1")]
     first = emit_or_halt("x", "needs_human_rate_above", rows, tmp_path)
     assert isinstance(first, Emitted)

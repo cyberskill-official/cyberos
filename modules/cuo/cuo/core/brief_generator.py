@@ -20,7 +20,7 @@ from typing import Any
 
 from cuo.core.catalog import PersonaEntry, WorkflowEntry
 from cuo.core.backlog_reader import parse_backlog
-from cuo.core.supervisor import _eval_condition, _find_workflow, _resolve_step_inputs, _resolve_fr
+from cuo.core.supervisor import _eval_condition, _find_workflow, _resolve_step_inputs, _resolve_task
 
 
 # Applier instructions for skills with side effects.
@@ -48,7 +48,7 @@ _APPLIER_INSTRUCTIONS: dict[str, str] = {
 1. Write the code review to `docs/tasks/{module}/code-review-{task_id}.md`
 2. Include YAML frontmatter with template, verdict, reviewed_at""",
     "task-audit": """After writing the output JSON, you MUST also:
-1. Write the audit report to `{fr_file_stem}.audit.md` (sibling to the task spec)
+1. Write the audit report to `{task_file_stem}.audit.md` (sibling to the task spec)
 2. Include YAML frontmatter with task_id, audited, auditor, verdict, audited_file_sha256""",
     "observability-injection-author": """After writing the output JSON, you MUST also:
 1. Write the observability plan to `docs/tasks/{module}/obs-injection-{task_id}.md`
@@ -226,7 +226,7 @@ class BriefGenerator:
         hand_off = dict(self.inputs)
         hand_off["_cyberos_root"] = str(self.skill_root.parent.parent)
         hand_off.setdefault("task_id", self.task_id)
-        _resolve_fr(hand_off)
+        _resolve_task(hand_off)
 
         # 2. Detect project context
         project_ctx = _detect_project_context(self.project_root)
@@ -256,15 +256,15 @@ class BriefGenerator:
             start_step = 21
 
         # 4. Build the brief
-        fr_body = hand_off.get("next_fr", "[task content not available]")
-        fr_file_path = hand_off.get("fr_file_path", "unknown")
+        task_body = hand_off.get("next_task", "[task content not available]")
+        task_file_path = hand_off.get("task_file_path", "unknown")
 
         # Header
         parts.append(f"# Execution Brief — {self.task_id}")
         parts.append("")
         parts.append(f"**Workflow:** `{self.workflow.workflow_id}`")
         parts.append(f"**Project:** `{self.project_root}`")
-        parts.append(f"**task file:** `{fr_file_path}`")
+        parts.append(f"**task file:** `{task_file_path}`")
         parts.append(f"**task status:** `{current_status}` → start at step {start_step}")
         parts.append(f"**Output dir:** `{self.output_dir}`")
         parts.append("")
@@ -279,10 +279,10 @@ class BriefGenerator:
         # Task
         parts.append("## 2. Task")
         parts.append("")
-        fr_preview = fr_body[:3000] if len(fr_body) > 3000 else fr_body
-        parts.append(fr_preview)
-        if len(fr_body) > 3000:
-            parts.append(f"\n... [truncated, full content in `{fr_file_path}`]")
+        task_preview = task_body[:3000] if len(task_body) > 3000 else task_body
+        parts.append(task_preview)
+        if len(task_body) > 3000:
+            parts.append(f"\n... [truncated, full content in `{task_file_path}`]")
         parts.append("")
 
         # Workflow overview

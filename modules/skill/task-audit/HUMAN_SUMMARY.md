@@ -12,7 +12,7 @@ Audited N task(s):
   - TASK-002-bar.md → audit verdict: needs_human (2 blocking issues — see HITL_BATCH_REQUEST below)
   - TASK-003-baz.md → audit verdict: pass (0 open, 0 warnings, 1 iteration)
 
-Rubric:        fr_rubric@1.0
+Rubric:        task_rubric@1.0
 Total time:    <seconds>s
 Reports:       written alongside each artefact as <name>.audit.md
 Next:          PASS items can proceed to the next stage. HITL items wait for your reply.

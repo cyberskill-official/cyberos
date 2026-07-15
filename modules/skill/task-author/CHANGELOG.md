@@ -8,7 +8,7 @@ All notable changes to this skill SHALL be documented here. Format follows Keep-
 - Initial author skill scaffold copied from `_template/author/`.
 - PLAN / WORKER / RESUME phase machine.
 - HITL halt-batch policy.
-- NATS event emission for `fr_written`, `batch_complete`, `hitl_pause`.
+- NATS event emission for `task_written`, `batch_complete`, `hitl_pause`.
 - Anti-fabrication + untrusted-content discipline.
 
 ### Acceptance

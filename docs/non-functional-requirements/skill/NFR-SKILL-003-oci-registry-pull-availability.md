@@ -26,7 +26,7 @@ Every CUO workflow invocation pulls the skill bundle on cold start. If the regis
 
 ## §3 — Measurement
 
-- Synthetic prober every 60s from 3 regions hitting `GET /v2/cyberos-skill-fr-author/manifests/latest`.
+- Synthetic prober every 60s from 3 regions hitting `GET /v2/cyberos-skill-task-author/manifests/latest`.
 - Availability calculation: (successful prober pings / total prober pings) × 100, monthly window.
 - Histogram `skill_registry_pull_latency_seconds{region, op=manifest|blob}`.
 

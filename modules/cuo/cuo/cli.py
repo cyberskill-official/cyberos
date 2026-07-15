@@ -209,7 +209,7 @@ def cmd_dry_run(ctx: click.Context, persona_workflow: str) -> None:
     help="Bypass Phase 4 handler dispatch; always use linear execute_chain (debug).",
 )
 @click.option(
-    "--fr-id",
+    "--task-id",
     default=None,
     help="Force a specific task (e.g. TASK-MEMORY-117). Shorthand for `--input task_id=<value>`. "
          "Used by ship-tasks to target one task rather than picking from BACKLOG.",
@@ -456,7 +456,7 @@ def cmd_execute(
     help="Directory containing existing step output JSON files from a previous run.",
 )
 @click.option(
-    "--fr-id",
+    "--task-id",
     required=True,
     help="task to resume (e.g. TASK-MEMORY-117).",
 )

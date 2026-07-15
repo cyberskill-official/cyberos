@@ -20,7 +20,7 @@ classifier_version: 3.0.0-a4
 
 - "Audit this existing task for completeness" → task-audit
 - "Has TASK-007 changed since the last audit?" → task-audit
-- "Draft a tech spec from this task" → fr-to-tech-spec
+- "Draft a tech spec from this task" → task-to-tech-spec
 - "What's our company holiday schedule?" → none
 - "Which task template does this repo default to?" → none   (config question, nothing to author - TASK-CUO-208)
 
@@ -32,7 +32,7 @@ classifier_version: 3.0.0-a4
 - Positive trigger 4 is the canonical CyberOS phrasing observed during pilot.
 - Negative triggers 1-2 derived from common author/audit confusion observed
   during the v0.2.0 pilot (users confused the author/audit pair).
-- Negative trigger 3 derived from the planned fr-to-tech-spec routing (when
+- Negative trigger 3 derived from the planned task-to-tech-spec routing (when
   that skill goes from scaffold → accepted in P1).
 - Negative trigger 4 is a canonical "no skill" sanity case.
 - Re-author when classifier_version MAJOR-bumps (today v3.0.0-a4).

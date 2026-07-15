@@ -28,7 +28,7 @@ DEC-090: a contract is not a skill. The previous "schema living as a skill" mode
 ### Added
 
 - `SKILL.md` (now `CONTRACT.md`) — frontmatter + the audit-rule cross-reference table that maps every FM-NNN, SEC-NNN, COND-NNN audit rule to the corresponding template region.
-- `template.md` — verbatim copy of the body skeleton from `task/FR_CREATE_AND_AUDIT.md` v2.0.0 §18.
+- `template.md` — verbatim copy of the body skeleton from `task/TASK_CREATE_AND_AUDIT.md` v2.0.0 §18.
 
 ### Template version
 
@@ -41,7 +41,7 @@ DEC-090: a contract is not a skill. The previous "schema living as a skill" mode
 
 ### Backwards compatibility
 
-This is the first release; nothing to be compatible with except the pre-existing `task/FR_CREATE_AND_AUDIT.md` v2.0.0 prompt, whose §18 template is byte-identical.
+This is the first release; nothing to be compatible with except the pre-existing `task/TASK_CREATE_AND_AUDIT.md` v2.0.0 prompt, whose §18 template is byte-identical.
 
 ---
 

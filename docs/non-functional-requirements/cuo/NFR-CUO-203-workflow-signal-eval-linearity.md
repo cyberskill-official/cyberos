@@ -38,7 +38,7 @@ Queue-default: `test_workflow_diffs_default_to_queue` (deferred — requires ext
 
 ## §4 — Verification
 
-Tests passing today (TASK-CUO-203): `test_metrics_aggregation`, `test_all_completed_no_trips`, `test_routed_back_rate_trips`, `test_proposal_body_sections`, `test_workflow_stripe_format`, `test_repeat_stripe_halts`, `test_report_cites_fr_ids`, `test_workflow_and_skill_stripes_disjoint`.
+Tests passing today (TASK-CUO-203): `test_metrics_aggregation`, `test_all_completed_no_trips`, `test_routed_back_rate_trips`, `test_proposal_body_sections`, `test_workflow_stripe_format`, `test_repeat_stripe_halts`, `test_report_cites_task_ids`, `test_workflow_and_skill_stripes_disjoint`.
 
 Inspection: `compute_workflow_metrics` is a single `for r in rows` loop with O(1) dict-insertion per row. `evaluate_workflow_signals` iterates `(metric, signal)` pairs; each signal's evaluator scopes to `wf_id`-tagged rows via list comprehension — that's O(N) per signal × per workflow, but with low constant.
 

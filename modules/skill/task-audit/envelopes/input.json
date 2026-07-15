@@ -13,7 +13,7 @@
     },
     "rubric_version": {
       "type": "string",
-      "default": "fr_rubric@1.0",
+      "default": "task_rubric@1.0",
       "description": "Override rubric version. Defaults to the skill's declared version."
     },
     "upstream_context": {

@@ -6,7 +6,7 @@ All notable changes to this skill SHALL be documented here. Format follows Keep-
 
 ### Added
 - Initial audit skill scaffold copied from `_template/audit/`.
-- Rubric version `fr_rubric@1.0`.
+- Rubric version `task_rubric@1.0`.
 - 8-step audit loop per `cyberos/skill/docs/AUDIT_LOOP.md`.
 - HITL halt-batch policy + aggregation discipline.
 - NATS event emission for `audit_written`, `audit_batch_complete`, `hitl_pause`.

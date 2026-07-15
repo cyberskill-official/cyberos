@@ -70,7 +70,7 @@ Summary stdout: `status-hub: N tasks, R releases, VERSION X (deck+3 tabs)`. Page
 
 ## §5 - Verification
 
-`tools/docs-site/tests/test_render_status_hub.sh`: t01_deck_true, t02_tabs_routing_degrade, t03_backlog_facets, t04_supersession, t05_deterministic_honest_tokens, t06_fr_links. (AC 1-6.)
+`tools/docs-site/tests/test_render_status_hub.sh`: t01_deck_true, t02_tabs_routing_degrade, t03_backlog_facets, t04_supersession, t05_deterministic_honest_tokens, t06_task_links. (AC 1-6.)
 
 ## §6 - Implementation skeleton
 

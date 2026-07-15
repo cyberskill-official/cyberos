@@ -6,7 +6,7 @@ New to it? `GUIDE.md` is the step-by-step walkthrough (zero to your first shippe
 
 `install` sets up two things by default: the task workflow AND the BRAIN memory protocol. It scaffolds a local `.cyberos/memory/store/` store (gitignored tenant data) and drops the `AGENTS.md` Layer-1 memory rules, so the project gets both the workflow and the memory discipline. Skip the memory half with `CYBEROS_NO_MEMORY=1`.
 
-`install` also runs the task migration automatically (skip with `CYBEROS_NO_MIGRATE=1`): pre-existing tasks move to the folder-per-task layout (root-level flat tasks included - module comes from frontmatter `module:`, else the task id segment), a `CHANGELOG.md` is seeded once if the repo has none, and the status page (Roadmap | Backlog | Changelog tabs) is (re)generated at `docs/status/` - a folder holding `index.html` plus `assets/` (stylesheet + favicon), titled after the target repo (never "CyberOS" for someone else's project). That one page REPLACES the old standalone documents: a pre-existing `docs/BACKLOG.md` is adopted into `docs/tasks/BACKLOG.md` and a `docs/CHANGELOG.md` into the root `CHANGELOG.md` (content preserved, each only when the canonical home is empty), then any remaining `docs/ROADMAP.md` / `docs/BACKLOG.md` / `docs/CHANGELOG.md` is REMOVED - the page is those documents now, and git history keeps the old text. The migration ends with a machine-readable verify line (`cyberos-migrate verify: fr_specs=N flat_fr_files_remaining=0 fr_folders_missing_spec=0 status_page=present`) and WARNs for anything it could not place.
+`install` also runs the task migration automatically (skip with `CYBEROS_NO_MIGRATE=1`): pre-existing tasks move to the folder-per-task layout (root-level flat tasks included - module comes from frontmatter `module:`, else the task id segment), a `CHANGELOG.md` is seeded once if the repo has none, and the status page (Roadmap | Backlog | Changelog tabs) is (re)generated at `docs/status/` - a folder holding `index.html` plus `assets/` (stylesheet + favicon), titled after the target repo (never "CyberOS" for someone else's project). That one page REPLACES the old standalone documents: a pre-existing `docs/BACKLOG.md` is adopted into `docs/tasks/BACKLOG.md` and a `docs/CHANGELOG.md` into the root `CHANGELOG.md` (content preserved, each only when the canonical home is empty), then any remaining `docs/ROADMAP.md` / `docs/BACKLOG.md` / `docs/CHANGELOG.md` is REMOVED - the page is those documents now, and git history keeps the old text. The migration ends with a machine-readable verify line (`cyberos-migrate verify: task_specs=N flat_task_files_remaining=0 task_folders_missing_spec=0 status_page=present`) and WARNs for anything it could not place.
 
 The page stays synced with the markdown it renders - markdown remains the record of truth, the page only renders it. Two auto-sync touchpoints: a managed `pre-commit` hook (installed only when no foreign hook exists; never blocks a commit; `CYBEROS_NO_HOOK=1` skips) regenerates `docs/status/` whenever `docs/tasks/**`, `CHANGELOG.md`, or `VERSION` is staged, and `run-gates.sh` regenerates it after every gates run. Manual refresh any time: `bash .cyberos/lib/status-page.sh`.
 
@@ -154,7 +154,7 @@ cyberos-gates: ; bash .cyberos/cuo/gates/run-gates.sh
 
 ### 8. MCP server (available) - any MCP agent, zero files
 
-`dist/cyberos/mcp/cyberos-mcp.mjs` is a zero-dependency Node stdio MCP server exposing `fr_init`, `fr_gates`, `fr_status`, and `ship_fr`. Any MCP-capable agent (Codex, zcode, Antigravity, Cursor, Claude Code, Command Code) triggers the workflow tool-natively. `install.sh` vendors it to `.cyberos/mcp/` and writes `.mcp.json` (and `.cursor/mcp.json`) when absent. Registration snippets for every agent: `mcp/README.md`. `ship_fr` hands the agent the HITL-gated trigger - it never self-accepts. Quick check:
+`dist/cyberos/mcp/cyberos-mcp.mjs` is a zero-dependency Node stdio MCP server exposing `task_init`, `task_gates`, `task_status`, and `ship_task`. Any MCP-capable agent (Codex, zcode, Antigravity, Cursor, Claude Code, Command Code) triggers the workflow tool-natively. `install.sh` vendors it to `.cyberos/mcp/` and writes `.mcp.json` (and `.cursor/mcp.json`) when absent. Registration snippets for every agent: `mcp/README.md`. `ship_task` hands the agent the HITL-gated trigger - it never self-accepts. Quick check:
 
 ```bash
 printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' \
@@ -221,6 +221,6 @@ never invented when its marker file is absent - root-only scanning):
 
 Overrides live in `.cyberos/config.yaml` (scaffolded once, all-commented, detected values shown as
 comments): `gates.build/lint/test/coverage` (each overrides only its own gate), `coverage_threshold`
-(default 90, exported as CYBEROS_COVERAGE_THRESHOLD), `fr_template`, `profile`. `run-gates.sh` prints
+(default 90, exported as CYBEROS_COVERAGE_THRESHOLD), `task_template`, `profile`. `run-gates.sh` prints
 one provenance line per gate: `gate <name>: <cmd> (source: config|autodetect:<stack>|absent)`.
 A malformed config fails loudly with its line number and runs no gate. Unknown keys warn only.

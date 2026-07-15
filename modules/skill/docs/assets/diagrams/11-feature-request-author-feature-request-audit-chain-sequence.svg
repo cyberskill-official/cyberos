@@ -102,7 +102,7 @@
   <text x="690" y="735" font-size="11" font-weight="700" fill="#1E2A78">11</text>
   <path d="M 410 735 L 1130 735" stroke="#0F172A" stroke-width="2" fill="none" marker-end="url(#arr)"/>
   <rect x="430" y="720" width="690" height="30" rx="6" fill="#fff" stroke="#1E2A78"/>
-  <text x="775" y="740" font-size="10" fill="#0F172A" text-anchor="middle">conditional edge fires (next_skill_recommendation) → invoke task-audit with {fr_paths, upstream_context}</text>
+  <text x="775" y="740" font-size="10" fill="#0F172A" text-anchor="middle">conditional edge fires (next_skill_recommendation) → invoke task-audit with {task_paths, upstream_context}</text>
 
   <!-- Step 12: task-audit runs -->
   <text x="1150" y="775" font-size="11" font-weight="700" fill="#F59E0B">12</text>

@@ -30,11 +30,11 @@ failure-routing rework branch + observability spans. This is what makes
     step whose `transition` literal starts with "any-stage" OR contains
     "ready_to_implement"). If found, it's invoked with a synthesized
     rework outcome, applying the BACKLOG.md status flip and emitting
-    memory.fr_routed_back. The chain outcome becomes ROUTED_BACK.
+    memory.task_routed_back. The chain outcome becomes ROUTED_BACK.
 
   * Observability spans — every step invocation emits a structured log
     line `{event: skill.invoke, span_id, step, skill, status, duration_ms}`
-    via the `cyberos.cuo.spans` logger. A run-level `fr_routed_back_count`
+    via the `cyberos.cuo.spans` logger. A run-level `task_routed_back_count`
     is maintained in-process; production OTel exporters tracked under
     TASK-OBS-001..003.
 """
@@ -63,7 +63,7 @@ _SPANS_LOGGER = logging.getLogger("cyberos.cuo.spans")
 
 # In-process counter for rework-routed tasks. Surfaced in ChainResult.notes
 # and emitted as a memory.fr_routed_back aux row by emit_chain_result.
-_REWORK_COUNTER: dict[str, int] = {"fr_routed_back": 0}
+_REWORK_COUNTER: dict[str, int] = {"task_routed_back": 0}
 
 
 @dataclass
@@ -205,22 +205,22 @@ class ChainResult:
         )
 
 
-def _resolve_fr(hand_off: dict) -> None:
+def _resolve_task(hand_off: dict) -> None:
     """Populate next_fr_id, next_fr, and fr_file_path in the hand_off.
 
     Looks up the task file in docs/tasks/{module}/TASK-{ID}-*.md
     relative to the cyberos root or CWD. Reads the file content into
-    `next_fr` so skills can access the task spec directly.
+    `next_task` so skills can access the task spec directly.
     """
     task_id = hand_off.get("task_id")
     if not task_id:
         return
 
     # Ensure next_fr_id is always set
-    hand_off.setdefault("next_fr_id", task_id)
+    hand_off.setdefault("next_task_id", task_id)
 
     # Already resolved
-    if "next_fr" in hand_off:
+    if "next_task" in hand_off:
         return
 
     # Find the task file — search in docs/tasks/{module}/
@@ -234,24 +234,24 @@ def _resolve_fr(hand_off: dict) -> None:
     for root in search_roots:
         # Try module-specific directory first
         if module:
-            fr_dir = root / "docs" / "tasks" / module
-            if fr_dir.is_dir():
-                fr_path = _find_fr_file(fr_dir, task_id)
-                if fr_path:
-                    _load_fr_file(hand_off, fr_path)
+            task_dir = root / "docs" / "tasks" / module
+            if task_dir.is_dir():
+                task_path = _find_task_file(task_dir, task_id)
+                if task_path:
+                    _load_task_file(hand_off, task_path)
                     return
         # Try all module directories
         base = root / "docs" / "tasks"
         if base.is_dir():
             for subdir in sorted(base.iterdir()):
                 if subdir.is_dir():
-                    fr_path = _find_fr_file(subdir, task_id)
-                    if fr_path:
-                        _load_fr_file(hand_off, fr_path)
+                    task_path = _find_task_file(subdir, task_id)
+                    if task_path:
+                        _load_task_file(hand_off, task_path)
                         return
 
 
-def _find_fr_file(directory: Path, task_id: str) -> Path | None:
+def _find_task_file(directory: Path, task_id: str) -> Path | None:
     """Find the task markdown file matching task_id in a directory."""
     # Match files like TASK-AUTH-001-google-oauth-authjs-v5.md (not .audit.md)
     pattern = re.compile(re.escape(task_id) + r"[-\.].*\.md$")
@@ -261,12 +261,12 @@ def _find_fr_file(directory: Path, task_id: str) -> Path | None:
     return None
 
 
-def _load_fr_file(hand_off: dict, fr_path: Path) -> None:
+def _load_task_file(hand_off: dict, task_path: Path) -> None:
     """Read task file content into hand_off."""
     try:
-        content = fr_path.read_text(encoding="utf-8")
-        hand_off["next_fr"] = content
-        hand_off["fr_file_path"] = str(fr_path)
+        content = task_path.read_text(encoding="utf-8")
+        hand_off["next_task"] = content
+        hand_off["task_file_path"] = str(task_path)
     except (OSError, UnicodeDecodeError):
         pass
 
@@ -351,7 +351,7 @@ def execute_chain(
     if backlog_path is not None:
         hand_off["_project_root"] = str(backlog_path.parent.parent.parent)
     # Resolve task file content so skills can access it directly.
-    _resolve_fr(hand_off)
+    _resolve_task(hand_off)
     step_results: list[StepResult] = []
     outcome = "COMPLETED"
 
@@ -680,7 +680,7 @@ def execute_chain(
                 )
             except ImportError:
                 pass
-            _REWORK_COUNTER["fr_routed_back"] += 1
+            _REWORK_COUNTER["task_routed_back"] += 1
             outcome = "ROUTED_BACK"
 
     if outcome == "COMPLETED" and any(s.status == "FAILED" for s in step_results):
@@ -693,7 +693,7 @@ def execute_chain(
             "workflow_id": wf.workflow_id, "outcome": outcome,
             "steps_run": sum(1 for s in step_results if s.status != "SKIPPED"),
             "steps_skipped": sum(1 for s in step_results if s.status == "SKIPPED"),
-            "fr_routed_back_count": _REWORK_COUNTER["fr_routed_back"],
+            "task_routed_back_count": _REWORK_COUNTER["task_routed_back"],
         },
     )
 
@@ -854,7 +854,7 @@ def _build_rework_inputs_from_failure(
         to ready_to_implement and increment routed_back_count.
       * `new_status: "ready_to_implement"` — the target lifecycle state.
       * `rework_reason` — string built from the failing step(s) for the
-        memory.fr_routed_back aux row payload.
+        memory.task_routed_back aux row payload.
       * `outcome` — the last failed StepResult's output, so the LLM/applier
         knows which artefact caused the rework.
       * `synthesized_rework: True` — distinguishes from natural-flow rework
@@ -882,14 +882,14 @@ def get_rework_counter() -> int:
     """Return the in-process count of rework-routed tasks since process start.
 
     Surfaced via `cyberos-cuo execute --explain` and emitted as a
-    memory.fr_routed_back_count aux row by emit_chain_result.
+    memory.task_routed_back_count aux row by emit_chain_result.
     """
-    return _REWORK_COUNTER["fr_routed_back"]
+    return _REWORK_COUNTER["task_routed_back"]
 
 
 def reset_rework_counter() -> None:
     """Reset the in-process rework counter — test-only helper."""
-    _REWORK_COUNTER["fr_routed_back"] = 0
+    _REWORK_COUNTER["task_routed_back"] = 0
 
 
 def _resolve_step_inputs(inputs_from, hand_off: dict) -> dict:

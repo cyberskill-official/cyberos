@@ -228,7 +228,7 @@ if [ "${CYBEROS_NO_MIGRATE:-0}" != "1" ]; then
     # shellcheck source=/dev/null
     if [ -f "$src/lib/task-migrate.sh" ]; then source "$src/lib/task-migrate.sh"; kit="$src"
     else source "$CY/lib/task-migrate.sh"; kit="$CY"; fi
-    if mig_out="$(PAGE_ONLY=0 _cyberos_fr_migrate "$root" "$kit" 2>&1)"; then MIGRATE_SET="ok"; else MIGRATE_SET="FAILED (non-fatal; re-run: bash $0 $root)"; fi
+    if mig_out="$(PAGE_ONLY=0 _cyberos_task_migrate "$root" "$kit" 2>&1)"; then MIGRATE_SET="ok"; else MIGRATE_SET="FAILED (non-fatal; re-run: bash $0 $root)"; fi
     printf '%s\n' "$mig_out" | sed 's/^/  | /'
     mig_verify="$(printf '%s\n' "$mig_out" | grep '^cyberos-migrate verify: ' | tail -1 || true)"
     MIGRATE_SET="$MIGRATE_SET${mig_verify:+; ${mig_verify#cyberos-migrate }}"

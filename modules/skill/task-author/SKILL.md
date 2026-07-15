@@ -160,7 +160,7 @@ untrusted_content_wrapping: required
 > HITL gates; resumable from `manifest.json` state. Chains naturally
 > into [`task-audit`](../task-audit/SKILL.md) by default.
 
-`prompt_revision: fr_author@1.0.0`
+`prompt_revision: task_author@1.0.0`
 
 ## When to invoke this skill
 
@@ -180,7 +180,7 @@ Begin every invocation with a single fenced `CONTRACT_ECHO` block. Do NOT procee
 CONTRACT_ECHO
 skill_id:                        task-author
 skill_version:                   1.0.0
-prompt_revision:                 fr_author@1.0.0
+prompt_revision:                 task_author@1.0.0
 template_version:                task@1   (loaded from cyberos/skill/contracts/task/template.md)
 output_dir:                      <from caller>
 manifest_path:                   <from caller; default: <output_dir>/manifest.json>
@@ -289,7 +289,7 @@ Pick the next artefact by topological order (`depends_on` resolved → leftmost 
 
   Render by adapting the loaded template to this artefact's source_refs, applying anti-fabrication rules (`references/ANTI_FABRICATION.md`).
 - **W3 WRITE** — `write_file(artefact.file_path, body)`. Compute `artefact_hash`. Append one `artefact_write` row to `genie.action_log`.
-- **W4 EMIT EVENT** — publish a NATS subject `fr_author.fr_written` carrying `(artefact_id, artefact_path, artefact_hash)`.
+- **W4 EMIT EVENT** — publish a NATS subject `task_author.task_written` carrying `(artefact_id, artefact_path, artefact_hash)`.
 - **W5 ROUTE** — depending on whether the chained audit is wired:
   - If chained to `task-audit`: invoke it with the just-written artefact's path. Forward its `overall_status` into `artefacts[X].status`.
   - If standalone: leave `artefacts[X].status = PASS` and continue.
@@ -888,7 +888,7 @@ To support seamless workflow execution, resumption, and manual intervention, the
 The input envelope's `template` field selects the emitted profile: `engineering-spec@1` (default; §12
 authoring rules below apply) or `task@1` (authoring rules in
 `references/TEMPLATE_PROFILES.md`, the normative side-by-side profile doc). Resolution chain:
-invocation override > `.cyberos/config.yaml` `fr_template` > default. The resolved template is echoed
+invocation override > `.cyberos/config.yaml` `task_template` > default. The resolved template is echoed
 in the PLAN so the operator approves template + content together.
 
 ## Folder layout + presentation (TASK-SKILL-120)

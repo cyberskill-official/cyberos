@@ -72,12 +72,12 @@ def run(status_filter: str, as_json: bool, apply: bool) -> int:
     rows = []
     files_changed = 0
     repl_count = 0
-    for path in agf.fr_files():
+    for path in agf.task_files():
         text = path.read_text(encoding="utf-8")
         st = status_of(text)
         if status_filter != "all" and st != status_filter:
             continue
-        module = agf.fr_module(text, path)
+        module = agf.task_module(text, path)
         fid = re.search(r"^id:\s*(TASK-[A-Z]+-\d+)", text, re.M)
         fid = fid.group(1) if fid else path.stem
         unresolved = []

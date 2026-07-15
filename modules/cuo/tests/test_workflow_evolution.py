@@ -158,7 +158,7 @@ def test_repeat_stripe_halts(tmp_path: Path) -> None:
 # ----------------------------------------------------------------------------
 
 
-def test_report_cites_fr_ids(tmp_path: Path) -> None:
+def test_report_cites_task_ids(tmp_path: Path) -> None:
     """AC #10: the proposal evidence table references specific task ids."""
     evidence = [
         _row("workflow_complete", workflow_id="cto/ship",

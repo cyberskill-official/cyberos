@@ -159,7 +159,7 @@ untrusted_content_wrapping: required
 > the standard Question primitive; resumable on `audited_file_sha256`.
 > Chains naturally after [`task-author`](../task-author/SKILL.md).
 
-`prompt_revision: fr_audit@2.0.0` (port of the proven legacy `cuo/cpo/task-audit@0.2.2`)
+`prompt_revision: task_audit@2.0.0` (port of the proven legacy `cuo/cpo/task-audit@0.2.2`)
 
 ## When to invoke this skill
 
@@ -179,10 +179,10 @@ Begin every invocation with a single fenced `CONTRACT_ECHO` block. Do NOT procee
 CONTRACT_ECHO
 skill_id:                        task-audit
 skill_version:                   1.0.0
-prompt_revision:                 fr_audit@2.0.0
+prompt_revision:                 task_audit@2.0.0
 template_version:                task@1   (loaded from cyberos/skill/contracts/task/template.md)
 audit_rubric_version:            audit_rubric@2.0
-audit_path_pattern:              <fr_path with extension replaced by ".audit.md">
+audit_path_pattern:              <task_path with extension replaced by ".audit.md">
 hitl_categories:                 [customer_quotes, ai_act_risk_boundary, success_metric_targets,
                                   cross_team_dependency, legal_compliance, scope_decomposition,
                                   stale_artefact_disposition]

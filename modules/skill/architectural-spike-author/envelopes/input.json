@@ -1,9 +1,9 @@
 {
   "envelope": "architectural-spike-author.input@1",
   "type": "object",
-  "required": ["fr_path", "repo_context_map_path", "question", "timebox_hours", "output_dir"],
+  "required": ["task_path", "repo_context_map_path", "question", "timebox_hours", "output_dir"],
   "properties": {
-    "fr_path":               { "type": "string", "description": "audited task@1 file" },
+    "task_path":               { "type": "string", "description": "audited task@1 file" },
     "repo_context_map_path": { "type": "string", "description": "repo-context-map@1 for the task" },
     "question":              { "type": "string", "description": "the single decision under investigation" },
     "timebox_hours":         { "type": "integer", "minimum": 1 },

@@ -101,7 +101,7 @@ This rubric is a port of the proven rule set from the legacy `cuo/cpo/task-audit
 
 ## §9  Spec-vs-implementation traceability  *(applies to cyberos-style §1/§4/§5 task template only)*
 
-These rules apply to tasks that use the cyberos template (numbered §1 normative clauses · §4 acceptance criteria · §5 verification/tests), per `task-audit` skill §1. Added 2026-05-18 (session 21) after the audit-fix loop on TASK-AUTH-001 + TASK-AUTH-006 surfaced 13 §1↔§4 / §4↔§5 traceability gaps in two "shipped" tasks — see memory feedback `feedback_fr_author_clause_to_test_traceability.md`. The upstream fix: refuse to score 10/10 if any §1 clause lacks a downstream test, so future tasks can't ship code that passes §5 tests while missing §1 clauses.
+These rules apply to tasks that use the cyberos template (numbered §1 normative clauses · §4 acceptance criteria · §5 verification/tests), per `task-audit` skill §1. Added 2026-05-18 (session 21) after the audit-fix loop on TASK-AUTH-001 + TASK-AUTH-006 surfaced 13 §1↔§4 / §4↔§5 traceability gaps in two "shipped" tasks — see memory feedback `feedback_task_author_clause_to_test_traceability.md`. The upstream fix: refuse to score 10/10 if any §1 clause lacks a downstream test, so future tasks can't ship code that passes §5 tests while missing §1 clauses.
 
 | rule_id | Check | Severity | Auto-fixable |
 | ------- | ----- | -------- | ------------ |

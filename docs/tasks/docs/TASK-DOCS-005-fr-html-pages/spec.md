@@ -58,7 +58,7 @@ Rendering through the templates module is what makes "CDS everywhere" a property
 
 ## §3 - Contract
 
-Page path: `frs/<module>/<STEM>/index.html`; template `deliverable@1`; asset copy: sibling `assets/`. Build summary line: `fr-pages: N pages, M assets copied, K with audits`.
+Page path: `frs/<module>/<STEM>/index.html`; template `deliverable@1`; asset copy: sibling `assets/`. Build summary line: `task-pages: N pages, M assets copied, K with audits`.
 
 ## §4 - Acceptance criteria
 
@@ -66,7 +66,7 @@ Page path: `frs/<module>/<STEM>/index.html`; template `deliverable@1`; asset cop
 2. **Media works** (§1 #3) - fixture with png + mp4 emits `<img>` + `<video controls>`; asset files copied beside the page; relative hrefs unchanged.
 3. **Self-contained** (§1 #4) - a rendered page has zero http(s)/absolute asset references; tokens present inline.
 4. **Wired + deterministic + honest** (§1 #5) - build.sh invokes it; double build byte-identical; broken spec and missing asset each fail naming the file.
-5. **Catalog links** (§1 #5) - fr-catalog cards href the new pages (fixture assert).
+5. **Catalog links** (§1 #5) - task-catalog cards href the new pages (fixture assert).
 6. **Envelope** (§1 #6) - timed corpus build under the cap on the runner.
 
 ## §5 - Verification
@@ -83,7 +83,7 @@ TASK-TPL-001 (shell + tokens), TASK-DOCS-004 (layout). TASK-DOCS-006 links these
 
 ## §8 - Example payloads
 
-`fr-pages: 486 pages, 12 assets copied, 209 with audits`
+`task-pages: 486 pages, 12 assets copied, 209 with audits`
 
 ## §9 - Open questions
 

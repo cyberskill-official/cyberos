@@ -13,7 +13,7 @@ Grok CLI, zcode, Command Code, Copilot, Windsurf, ...).
    # fill section 1, set status: ready_to_implement, add the row to docs/tasks/BACKLOG.md
    ```
 3. Trigger it: tell your agent to "follow `.cyberos/cuo/ship-tasks.md` and drive
-   the next eligible task" - or, with an MCP client, call the `ship_fr` tool.
+   the next eligible task" - or, with an MCP client, call the `ship_task` tool.
 4. Gates any time: `bash .cyberos/cuo/gates/run-gates.sh`.
 
 HITL is required: the agent halts at review acceptance and final acceptance for your verdict,

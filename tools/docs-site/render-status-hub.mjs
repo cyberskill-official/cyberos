@@ -5,7 +5,7 @@
 // with a task detail drawer that carries the full spec.
 // Inputs (exactly three, unchanged): task frontmatter, CHANGELOG.md version sections, VERSION.
 // Node stdlib only; deterministic stamp (VERSION + commit, no wall clock); honest failures.
-// Emits: reference/status.html, reference/data/fr/<ID>.js (per-task spec chunks, lazy-loaded),
+// Emits: reference/status.html, reference/data/task/<ID>.js (per-task spec chunks, lazy-loaded),
 //        reference/assets/{status.css,status.js,favicon.svg} when CYBEROS_PAGE_ASSETS=1,
 //        reference/roadmap.html (redirect stub - bookmarks stay alive).
 // Usage: node render-status-hub.mjs [repoRoot] [outDir]
@@ -383,10 +383,12 @@ ${releases.map(r => `<article class="rel"><span class="tick">✓</span><div>
 const data = {
   project: NAME, version: VERSION, commit: COMMIT,
   statuses: STATUSES,
-  specDir: 'data/fr',
+  // The client reads specDir out of the emitted JSON (status-app.js:312), so this
+  // one string is the whole producer/consumer contract for the chunk path.
+  specDir: 'data/task',
   // where spec.md lives *relative to this page* - empty when the markdown is not shipped
   // next to the output (the website build links the rendered task page instead).
-  frBase: process.env.CYBEROS_FR_BASE || '',
+  frBase: process.env.CYBEROS_TASK_BASE || '',
   tasks, releases, bound,
 };
 // empty scalars carry no information and cost ~25% of the payload - drop them.
@@ -415,7 +417,7 @@ const REF = join(OUT, 'reference');
 mkdirSync(REF, { recursive: true });
 
 let specBytes = 0;
-const dataDir = join(REF, 'data', 'fr');
+const dataDir = join(REF, 'data', 'task');
 rmSync(join(REF, 'data'), { recursive: true, force: true });   // stale chunks must not linger
 if (specs.size) {
   mkdirSync(dataDir, { recursive: true });

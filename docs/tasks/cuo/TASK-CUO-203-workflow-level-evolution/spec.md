@@ -136,4 +136,4 @@ ALL workflow-level diffs default to queue (§1 #6 says "All workflow diffs defau
 - `modules/cuo/tests/test_workflow_evolution.py::test_repeat_stripe_halts` (AC #7)
 - `modules/cuo/tests/test_workflow_evolution.py::test_apply_emits_audit_row` (AC #8)
 - `modules/cuo/tests/test_workflow_evolution.py::test_pattern_change_is_major` (AC #9)
-- `modules/cuo/tests/test_workflow_evolution.py::test_report_cites_fr_ids` (AC #10)
+- `modules/cuo/tests/test_workflow_evolution.py::test_report_cites_task_ids` (AC #10)

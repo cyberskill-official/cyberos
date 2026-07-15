@@ -16,7 +16,7 @@ Concrete Python runners that execute the 11 chain skills under [`../skills/cuo/`
 
 ## How to add a new runner
 
-1. Copy `task_with_subtasks.py` to `<skill_id>.py` (e.g. `fr_audit.py`).
+1. Copy `task_with_subtasks.py` to `<skill_id>.py` (e.g. `task_audit.py`).
 2. Override:
    - `skill_id` — matches the SKILL.md location under `docs/skills/`.
    - `output_filename_pattern` — what the emitted artefact is called.

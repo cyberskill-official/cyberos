@@ -763,7 +763,7 @@ All resolved at authoring time. Items deferred to later tasks:
 | Audit row emit fails (memory bridge down) | `memory_writer::emit` returns Err | Refusal still proceeds; sev-1 log "residency refused but audit row failed" | Operator investigates memory; TASK-AI-003 §10 covers |
 | Concurrent `matches()` calls | LazyLock + immutable HashSet | All readers see same result | By design (§1 #9 deterministic) |
 | Region table mutation attempted at runtime | LazyLock prevents writes | Compile error if attempted | By design |
-| TASK-AI-104 lands but `Vn1` set still empty | Test `test_vn1_set_populated_after_fr_ai_104` fails | CI blocked on TASK-AI-104 PR | TASK-AI-104 must extend the table as part of its acceptance |
+| TASK-AI-104 lands but `Vn1` set still empty | Test `test_vn1_set_populated_after_task_ai_104` fails | CI blocked on TASK-AI-104 PR | TASK-AI-104 must extend the table as part of its acceptance |
 | Alias is in alias map but its region is invalid format | `Region::from_provider_string` fails at alias-load time | Alias load fails; alias unavailable | Operator fixes alias map entry |
 | Tenant overrides residency to a value with no acceptable provider | Override resolves to (e.g.) `Vn1` for an alias whose only region is `us-east-1` | `ResidencyViolation` with override-resolved residency | Operator removes override OR waits for VN provider |
 | Tenant onboarding skipped residency selection | TASK-AI-005 onboarding wizard enforces residency | Cannot complete onboarding without selection | By design |
