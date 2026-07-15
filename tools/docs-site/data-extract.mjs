@@ -86,9 +86,24 @@ function parseFrontmatter(md) {
   return result;
 }
 
-function walkFR(dir) {
+// Underscore-prefixed dirs under docs/tasks/ are META, not the live backlog: _archive/
+// (superseded specs) and _audits/ (audit evidence). They are NOT catalog input.
+//
+// Nothing excluded them before. _archive/ was skipped purely because its files were named
+// FR-*, which /^TASK-.*\.md$/ did not match — an accident of naming, not a rule. The
+// 2026-07-15 rename moved them to TASK-*, they started matching, and the catalog jumped
+// 509 -> 529 with TASK-APP-001 listed TWICE: once live, once from its archived copy.
+// _audits/ survived only on the .audit.md suffix check — one coincidence deep.
+//
+// The comment on the flat-file branch read "none post-migration", which was true when it
+// was written. An exclusion that depends on how a file happens to be NAMED is not an
+// exclusion; it is a coincidence with a shelf life.
+const META_DIR = /^_/;
+
+function walkTasks(dir) {
   const out = [];
   for (const name of readdirSync(dir)) {
+    if (META_DIR.test(name)) continue;              // _archive/, _audits/ — never catalog input
     const p = join(dir, name);
     const st = statSync(p);
     if (st.isDirectory()) {
@@ -96,7 +111,7 @@ function walkFR(dir) {
         const spec = join(p, 'spec.md');
         try { if (statSync(spec).isFile()) { out.push(spec); continue; } } catch {}
       }
-      out.push(...walkFR(p));
+      out.push(...walkTasks(p));
     } else if (/^TASK-.*\.md$/.test(name) && !name.endsWith('.audit.md')) {
       out.push(p);                                  // legacy flat file (none post-migration)
     }
@@ -104,7 +119,7 @@ function walkFR(dir) {
   return out;
 }
 
-const files = walkFR(TASK_DIR).sort();
+const files = walkTasks(TASK_DIR).sort();
 const records = [];
 for (const file of files) {
   const md = readFileSync(file, 'utf8');
