@@ -8,9 +8,9 @@
 //   task_install   {repo?}           - vendor the CyberOS machine into a repo (needs the payload)
 //   task_gates  {repo?}           - run the machine gates (repo's own build/lint/test + coverage)
 //   task_status {repo?}           - summarize the task backlog + installed version
-//   ship_fr   {repo?, task_id?}   - return the canonical, HITL-gated trigger for the next task
+//   ship_task   {repo?, task_id?}   - return the canonical, HITL-gated trigger for the next task
 //
-// HITL is preserved: ship_fr never drives or accepts a task itself. It hands the
+// HITL is preserved: ship_task never drives or accepts a task itself. It hands the
 // calling agent the exact instruction to follow; the human still holds the two acceptance gates.
 //
 // Nothing but protocol JSON is ever written to stdout. Diagnostics go to stderr.
@@ -76,7 +76,7 @@ function softUpdateCheck(repo) {
   } catch { /* soft */ }
 }
 
-function toolFrInstall(a = {}) {
+function toolInstall(a = {}) {
   const repo = repoRoot(a.repo);
   softUpdateCheck(repo);
   const init = findInstall(repo);
@@ -91,7 +91,7 @@ function toolFrInstall(a = {}) {
   return text(`task_install on ${repo} (exit ${code})\n\n${out}`, code !== 0);
 }
 
-function toolFrGates(a = {}) {
+function toolGates(a = {}) {
   const repo = repoRoot(a.repo);
   softUpdateCheck(repo);
   const gates = join(repo, ".cyberos", "cuo", "gates", "run-gates.sh");
@@ -100,7 +100,7 @@ function toolFrGates(a = {}) {
   return text(`gates on ${repo} (exit ${code} - green is necessary, never sufficient)\n\n${out}`, code !== 0);
 }
 
-function toolFrStatus(a = {}) {
+function toolStatus(a = {}) {
   const repo = repoRoot(a.repo);
   softUpdateCheck(repo);
   const ver = readIf(join(repo, ".cyberos", "VERSION")).trim() || "not installed";
@@ -114,7 +114,7 @@ function toolFrStatus(a = {}) {
   return text(`CyberOS ${ver} @ ${repo}\nbacklog: ${rows.length} rows\n${summary}\nnext eligible: ${next ? next.trim() : "(none ready_to_implement)"}`);
 }
 
-function toolShipFr(a = {}) {
+function toolShipTask(a = {}) {
   const repo = repoRoot(a.repo);
   softUpdateCheck(repo);
   const bl = readIf(join(repo, "docs", "tasks", "BACKLOG.md"));
@@ -141,10 +141,10 @@ function readIf(p) { try { return readFileSync(p, "utf8"); } catch { return ""; 
 // --- MCP tool registry ---------------------------------------------------------
 const repoArg = { repo: { type: "string", description: "Absolute path to the target repo (default: cwd, walked up to the repo root)." } };
 const TOOLS = [
-  { name: "task_install",   description: "Install the CyberOS machine into a repo (gate autodetect, task backlog, agent surface, BRAIN). Needs the payload reachable.", inputSchema: { type: "object", properties: { ...repoArg } }, run: toolFrInstall },
-  { name: "task_gates",  description: "Run the CyberOS machine gates (the repo's own build/lint/test + coverage, plus caf/awh if present). Green is necessary, never sufficient.", inputSchema: { type: "object", properties: { ...repoArg } }, run: toolFrGates },
-  { name: "task_status", description: "Summarize the task backlog (counts by status, next eligible task) and the installed CyberOS version.", inputSchema: { type: "object", properties: { ...repoArg } }, run: toolFrStatus },
-  { name: "ship_task",   description: "Return the canonical, HITL-gated trigger to drive the next (or a named) task. Does NOT auto-run or self-accept.", inputSchema: { type: "object", properties: { ...repoArg, task_id: { type: "string", description: "Optional task id, e.g. TASK-012-slug. Omit to take the next ready_to_implement row." } } }, run: toolShipFr },
+  { name: "task_install",   description: "Install the CyberOS machine into a repo (gate autodetect, task backlog, agent surface, BRAIN). Needs the payload reachable.", inputSchema: { type: "object", properties: { ...repoArg } }, run: toolInstall },
+  { name: "task_gates",  description: "Run the CyberOS machine gates (the repo's own build/lint/test + coverage, plus caf/awh if present). Green is necessary, never sufficient.", inputSchema: { type: "object", properties: { ...repoArg } }, run: toolGates },
+  { name: "task_status", description: "Summarize the task backlog (counts by status, next eligible task) and the installed CyberOS version.", inputSchema: { type: "object", properties: { ...repoArg } }, run: toolStatus },
+  { name: "ship_task",   description: "Return the canonical, HITL-gated trigger to drive the next (or a named) task. Does NOT auto-run or self-accept.", inputSchema: { type: "object", properties: { ...repoArg, task_id: { type: "string", description: "Optional task id, e.g. TASK-012-slug. Omit to take the next ready_to_implement row." } } }, run: toolShipTask },
 ];
 
 // --- helpers -------------------------------------------------------------------

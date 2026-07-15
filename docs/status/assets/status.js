@@ -321,7 +321,7 @@
     if (dwTab === "spec") specTab(f);
     else document.getElementById("dw-body").innerHTML = dwTab === "links" ? links(f) : overview(f);
   }
-  function openFR(id, push) {
+  function openTask(id, push) {
     var f = BY[id];
     if (!f) return;
     if (!S.task) lastFocus = document.activeElement;
@@ -416,8 +416,13 @@
       return;
     }
 
+    // The codemod renamed the DECLARATION (var fr -> var task, [data-fr] -> [data-task])
+    // and left the USAGE reading `fr` / `.dataset.fr`. `fr` was then an undefined variable
+    // and `dataset.fr` an attribute nothing emits (rows carry data-task, line 161), so this
+    // branch never fired: clicking a task row on the status page did nothing, in every repo
+    // that vendored this file. Renamed the declaration, left the target — again.
     var task = t.closest("[data-task]");
-    if (fr) { openFR(fr.dataset.fr); return; }
+    if (task) { openTask(task.dataset.task); return; }
 
     var ln = t.closest(".ln");
     if (ln) { S.lens = ln.dataset.lens; writeHash(); paint(); return; }
@@ -455,7 +460,7 @@
       document.getElementById("q").focus();
       return;
     }
-    if (e.key === "Enter" && e.target.dataset && e.target.dataset.fr) openFR(e.target.dataset.fr);
+    if (e.key === "Enter" && e.target.dataset && e.target.dataset.task) openTask(e.target.dataset.task);
   });
 
   var qEl = document.getElementById("q");
@@ -487,7 +492,7 @@
     S.task = null; S.q = ""; S.f = {};
     readHash();
     syncControls();
-    if (S.task) { openFR(S.task, false); return; }
+    if (S.task) { openTask(S.task, false); return; }
     if (was) closeFR();
     paint();
   });
@@ -501,5 +506,5 @@
   readHash();
   syncControls();
   paint();
-  if (S.task) openFR(S.task, false);
+  if (S.task) openTask(S.task, false);
 })();

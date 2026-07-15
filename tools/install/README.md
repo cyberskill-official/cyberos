@@ -154,7 +154,7 @@ cyberos-gates: ; bash .cyberos/cuo/gates/run-gates.sh
 
 ### 8. MCP server (available) - any MCP agent, zero files
 
-`dist/cyberos/mcp/cyberos-mcp.mjs` is a zero-dependency Node stdio MCP server exposing `task_init`, `task_gates`, `task_status`, and `ship_task`. Any MCP-capable agent (Codex, zcode, Antigravity, Cursor, Claude Code, Command Code) triggers the workflow tool-natively. `install.sh` vendors it to `.cyberos/mcp/` and writes `.mcp.json` (and `.cursor/mcp.json`) when absent. Registration snippets for every agent: `mcp/README.md`. `ship_task` hands the agent the HITL-gated trigger - it never self-accepts. Quick check:
+`dist/cyberos/mcp/cyberos-mcp.mjs` is a zero-dependency Node stdio MCP server exposing `task_install`, `task_gates`, `task_status`, and `ship_task`. Any MCP-capable agent (Codex, zcode, Antigravity, Cursor, Claude Code, Command Code) triggers the workflow tool-natively. `install.sh` vendors it to `.cyberos/mcp/` and writes `.mcp.json` (and `.cursor/mcp.json`) when absent. Registration snippets for every agent: `mcp/README.md`. `ship_task` hands the agent the HITL-gated trigger - it never self-accepts. Quick check:
 
 ```bash
 printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' \

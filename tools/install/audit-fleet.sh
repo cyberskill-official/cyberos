@@ -219,7 +219,11 @@ for base in "$@"; do
     # mcp entry non-empty
     if [ -f "$cy/mcp/cyberos-mcp.mjs" ]; then
       head -1 "$cy/mcp/cyberos-mcp.mjs" | grep -q . || bad="$bad mcp-empty"
-      grep -q 'task_init\|task_gates\|ship_task' "$cy/mcp/cyberos-mcp.mjs" || bad="$bad mcp-tools-missing"
+      # every declared tool must be present. An OR probe passes while 3 of 4 are missing --
+      # it cannot fail for the reason it exists, so it asserts each name separately.
+      for _t in task_install task_gates task_status ship_task; do
+        grep -q "\"$_t\"" "$cy/mcp/cyberos-mcp.mjs" || bad="$bad mcp-tool-missing:$_t"
+      done
     fi
     # workflow doc mentions HITL
     if [ -f "$cy/cuo/ship-tasks.md" ]; then

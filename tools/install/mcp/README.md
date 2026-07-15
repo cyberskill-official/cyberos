@@ -5,7 +5,7 @@ workflow as tools, so any MCP-capable agent triggers it with no files. Requires 
 
 Tools:
 
-- `task_init {repo?}` - vendor the CyberOS machine into a repo (needs the payload reachable; set `CYBEROS_PAYLOAD` if the server was vendored away from `install.sh`).
+- `task_install {repo?}` - vendor the CyberOS machine into a repo (needs the payload reachable; set `CYBEROS_PAYLOAD` if the server was vendored away from `install.sh`).
 - `task_gates {repo?}` - run the machine gates (the repo's own build/lint/test + coverage, plus caf/awh if present).
 - `task_status {repo?}` - summarize the task backlog (counts by status, next eligible task) and installed version.
 - `ship_task {repo?, task_id?}` - return the canonical, HITL-gated trigger for the next (or a named) task. It never drives or accepts a task itself - the human still holds the two acceptance gates.
@@ -45,11 +45,11 @@ Antigravity / zcode / Command Code / any MCP client - point a stdio server at
 `node .cyberos/mcp/cyberos-mcp.mjs` (use the client's "add MCP server" UI or its
 `mcp.json`/config, e.g. Command Code `/mcp add`).
 
-Payload-hosted (before a repo is inited) - run from the pack so `task_init` can bootstrap new
+Payload-hosted (before a repo is inited) - run from the pack so `task_install` can bootstrap new
 repos, or set `CYBEROS_PAYLOAD`:
 
 ```bash
-node dist/cyberos/mcp/cyberos-mcp.mjs           # task_init resolves ../install.sh
+node dist/cyberos/mcp/cyberos-mcp.mjs           # task_install resolves ../install.sh
 CYBEROS_PAYLOAD=/path/to/dist/cyberos node .cyberos/mcp/cyberos-mcp.mjs
 ```
 
@@ -63,4 +63,4 @@ printf '%s\n' \
  | node cyberos-mcp.mjs
 ```
 
-`CYBEROS_MCP_TIMEOUT_MS` caps how long `task_gates` / `task_init` may run (default 30 min).
+`CYBEROS_MCP_TIMEOUT_MS` caps how long `task_gates` / `task_install` may run (default 30 min).
