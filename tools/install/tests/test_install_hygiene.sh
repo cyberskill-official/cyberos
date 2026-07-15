@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# test_init_hygiene.sh - install.sh hygiene contract:
+# test_install_hygiene.sh - install.sh hygiene contract:
 #   t01  .gitignore = ONE managed block, regenerated in place; legacy scattered entries lifted;
-#        operator lines outside the markers survive re-init byte-for-byte.
-#   t02  CHANGELOG.md is created exactly once (never clobbered on re-init).
+#        operator lines outside the markers survive re-install byte-for-byte.
+#   t02  CHANGELOG.md is created exactly once (never clobbered on re-install).
 #   t03  auto-migration: root-level flat tasks relocate to <module>/<STEM>/spec.md (module from
 #        frontmatter), module-level flat tasks migrate, references rewrite, verify line is clean.
 #   t04  payload self-cleanup: <repo>/.cyberos-install removes itself on success; kept with

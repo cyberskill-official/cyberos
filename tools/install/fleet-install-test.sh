@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# fleet-init-test.sh — init + audit every repo under CyberSkill + Personal (23 targets).
-# Loop: init → audit → print FAIL; optional --fix-once re-install fails only.
+# fleet-install-test.sh — install + audit every repo under CyberSkill + Personal (23 targets).
+# Loop: install → audit → print FAIL; optional --fix-once re-install fails only.
 # Usage:
-#   bash tools/install/fleet-init-test.sh [payload-dir]
+#   bash tools/install/fleet-install-test.sh [payload-dir]
 # Env:
 #   FLEET_MAX_ROUNDS=3   re-install/audit rounds on failures
 set -uo pipefail
@@ -131,5 +131,5 @@ if [ "$fail_n" -gt 0 ]; then
   printf '  %s\n' "${unique_fails[@]}"
   exit 1
 fi
-echo "fleet-init-test: all green"
+echo "fleet-install-test: all green"
 exit 0
