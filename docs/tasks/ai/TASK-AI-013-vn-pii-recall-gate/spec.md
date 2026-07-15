@@ -1,5 +1,5 @@
 ---
-# ───── Machine-readable frontmatter (parsed by task-audit + future fr-catalog renderer) ─────
+# ───── Machine-readable frontmatter (parsed by task-audit + future task-catalog renderer) ─────
 id: TASK-AI-013
 title: "VN-PII recall ≥ 99% per-recognizer CI gate on 200-sample fixture"
 eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft

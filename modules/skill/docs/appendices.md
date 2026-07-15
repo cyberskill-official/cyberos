@@ -82,7 +82,7 @@ The CyberOS runtime is three layers stacked. **Layer 1 - the LangGraph superviso
 
 **Layer 2 - `genie.action_log`** (per SRS §6.7) is the append-only Postgres table where every skill output gets a row. Schema: `(audit_id, ts, persona_id, skill_id, skill_version, row_kind, target, payload_sha256, explanation_pane_ref, confidence, hash_chain_prev, hash_chain_self, trace_id, cc_personas, correction_to)`. The hash chain is canonical-JSON over the row minus the chain field, prepended to the previous row's chain. The CP module's tamper detector (SRS §10.4.6) runs continuously and surfaces any chain break as a Notify primitive routed to the security oncall.
 
-**Layer 3 - NATS event bus** (DEC-029) carries fire-and-forget events between skills that don't need direct chaining. Subjects follow the pattern `cuo.<skill-id>.<event-name>` (e.g., `cuo.fr_author.fr_written`). Subscribers (other skills, OBS metrics, downstream pipelines) consume the event without coupling to the producer's invocation lifecycle. NATS is **not** a substitute for LangGraph chaining - it complements it. Use NATS for "tell me when X happened"; use LangGraph for "now run Y."
+**Layer 3 - NATS event bus** (DEC-029) carries fire-and-forget events between skills that don't need direct chaining. Subjects follow the pattern `cuo.<skill-id>.<event-name>` (e.g., `cuo.task_author.task_written`). Subscribers (other skills, OBS metrics, downstream pipelines) consume the event without coupling to the producer's invocation lifecycle. NATS is **not** a substitute for LangGraph chaining - it complements it. Use NATS for "tell me when X happened"; use LangGraph for "now run Y."
 
 ### 12.2 How a skill invocation flows
 
@@ -272,7 +272,7 @@ Patterns that look reasonable but break CyberOS contracts.
 
 **Don't bypass `STANDALONE_INTERVIEW.md` to "save time."** Skills that hard-code defaults and skip the interview break user expectation that they can override defaults. The interview pattern is what makes dual-mode work.
 
-**Don't over-specify a new contract beyond what consumers actually do.** When you register a contract to capture a previously-undocumented convention (e.g. NATS subject names that skills already emit), the temptation is to add structural rules that "sound right" - sub-persona namespacing, field-naming hierarchies, payload-versioning schemes the skills don't actually produce. The first draft of `nats-subjects@1` (registry v0.2.2) made this mistake: contract said `<sub-persona>.<skill>.<event>` (e.g. `cuo_cpo.fr_author.fr_written`); reality has always been `<top-level-persona>.<skill>.<event>` (e.g. `cuo.fr_author.fr_written`). The audit-fix-audit loop caught the drift before merge. **Rule:** when documenting a pre-existing convention, grep the consuming skill bodies for the exact form before writing the contract; reality wins. See REF-016 in memory. The audit-fix-audit discipline (audit -> fix -> re-audit until clean) is mandatory after every new contract registration; see Recipe 13.
+**Don't over-specify a new contract beyond what consumers actually do.** When you register a contract to capture a previously-undocumented convention (e.g. NATS subject names that skills already emit), the temptation is to add structural rules that "sound right" - sub-persona namespacing, field-naming hierarchies, payload-versioning schemes the skills don't actually produce. The first draft of `nats-subjects@1` (registry v0.2.2) made this mistake: contract said `<sub-persona>.<skill>.<event>` (e.g. `cuo_cpo.task_author.task_written`); reality has always been `<top-level-persona>.<skill>.<event>` (e.g. `cuo.task_author.task_written`). The audit-fix-audit loop caught the drift before merge. **Rule:** when documenting a pre-existing convention, grep the consuming skill bodies for the exact form before writing the contract; reality wins. See REF-016 in memory. The audit-fix-audit discipline (audit -> fix -> re-audit until clean) is mandatory after every new contract registration; see Recipe 13.
 
 
 ## Part 19 - Cookbook: 13 recipes
@@ -360,7 +360,7 @@ Mandatory after every new contract registration. Running this loop on `nats-subj
 
 **Step 1 - Author the first draft.** Create `cyberos/docs/contracts/<id>/CONTRACT.md` (with `contract_version: v1` in frontmatter), `schema.json` (or `template.md`), `protocol.md` (wire_protocol only), `CHANGELOG.md`. Pick the convention the contract documents (subject names, payload shapes, frontmatter fields, etc.).
 
-**Step 2 - Audit pass 1: grep consumer skill bodies for the convention as the contract describes it.** Use the contract's exact form in the grep. If the grep returns nothing, or returns the wrong form, the contract has drifted from reality and needs correction. Real example from v0.2.2: contract said `cuo_cpo.fr_author.fr_written`; grep against task-author's body returned `cuo.fr_author.fr_written`. Reality wins. Update the contract.
+**Step 2 - Audit pass 1: grep consumer skill bodies for the convention as the contract describes it.** Use the contract's exact form in the grep. If the grep returns nothing, or returns the wrong form, the contract has drifted from reality and needs correction. Real example from v0.2.2: contract said `cuo_cpo.task_author.task_written`; grep against task-author's body returned `cuo.task_author.task_written`. Reality wins. Update the contract.
 
 **Step 3 - Fix.** Update the contract files (CONTRACT.md inventory + naming convention prose, schema.json descriptions, protocol.md prose, CHANGELOG.md historical claims). Be exhaustive - include the description fields in JSON Schema, not just the inventory tables. Strings appear in surprising places.
 
@@ -410,7 +410,7 @@ When each persona comes online, it brings its own scope contract + skill set + e
 
 **`cpo` (P0, today)** - owns task backlog management. Two skills: task-author, task-audit. See `cuo/cpo/SKILL.md` for voice deltas (user outcomes over feature counts; one primary metric + one guardrail; out-of-scope is a feature; never auto-set EU AI Act risk class to minimal).
 
-**`cto` (P0, today)** - owns tech-spec drafting and architecture review. First workflow: `fr-to-tech-spec` (planned, consumes `task-author`'s output). See PRD §6.5 for voice.
+**`cto` (P0, today)** - owns tech-spec drafting and architecture review. First workflow: `task-to-tech-spec` (planned, consumes `task-author`'s output). See PRD §6.5 for voice.
 
 **`cfo` (P1)** - owns cashflow projection, payroll narration, budget variance. Defers to `cuo-clo` on REW (right-to-erasure) writes per PRD §6.4.1. Defers to `cuo-cseco` on financial-data security boundaries.
 
@@ -1327,7 +1327,7 @@ The agent will end its response with a §14.1 compact block. The audit row goes 
 
   3. The skill reads the brief's `project_kind`, `eu_ai_act_risk_class`, `confidentiality`, `budget_band`, `target_release` -> recommends a `chain_profile`:
 
-     * **lean** - small / experimental / non-customer-facing. Skips PRD-audit, SRS-author/audit, fr-to-tech-spec. Just: brief -> task-author -> task-audit -> spec-to-impl-plan. Use for prototypes, internal tools.
+     * **lean** - small / experimental / non-customer-facing. Skips PRD-audit, SRS-author/audit, task-to-tech-spec. Just: brief -> task-author -> task-audit -> spec-to-impl-plan. Use for prototypes, internal tools.
      * **standard** - typical customer-facing feature. Skips SRS-author/audit. Use for most projects.
      * **full** - regulated / high-risk / multi-team. Everything including SRS. Use for EU AI Act high-risk, healthcare/finance verticals, anything with compliance review.
   4. **Override at brief-completion time** if the auto-selection feels wrong. Just say _"override to `<profile>`"_.
@@ -1488,7 +1488,7 @@ Same shape as PRD-audit but **runs per-task sequentially**. The skill emits an `
 
 ### Phase H - Tech Spec (standard / full only)
 
-**Skill**: `cuo/chief-technology-officer/fr-to-tech-spec` **Files to load**: `SKILL.md` (270 lines / 14 KB) **Input**: audited task markdowns **Output**: `tech_spec@1` markdown - implementation-shaped spec engineering will execute against
+**Skill**: `cuo/chief-technology-officer/task-to-tech-spec` **Files to load**: `SKILL.md` (270 lines / 14 KB) **Input**: audited task markdowns **Output**: `tech_spec@1` markdown - implementation-shaped spec engineering will execute against
 
 For lean profile, **skip this phase**; spec-to-impl-plan consumes audited tasks directly.
 

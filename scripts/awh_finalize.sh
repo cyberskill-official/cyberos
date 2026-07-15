@@ -33,7 +33,7 @@ Gate proven green on memory, skill, cuo, auth, chat, proj, email. Includes: vend
 tools/awh, per-module .awh golden sets + baselines, ship-tasks step-28 gate
 (testing->done conditional on an independent GREEN rerun), CI + pre-commit (fail closed),
 task re-baseline (116 done->ready_to_test) + 193 cited-test path fixes, the awh-gate skill,
-planning scripts (bootstrap/coverage/build-order/goldenset-from-fr/cited-fixups), the
+planning scripts (bootstrap/coverage/build-order/goldenset-from-task/cited-fixups), the
 verification-gate docs page, and the migrated maturity ledger. Untracks leaked token files." \
   || { echo "  commit aborted (a hook failed?). Fix, then re-run or 'git commit' manually."; exit 1; }
 echo "  committed $(git rev-parse --short HEAD)"

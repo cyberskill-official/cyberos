@@ -5,9 +5,9 @@
 //
 // Transport: newline-delimited JSON-RPC 2.0 over stdin/stdout (the MCP stdio transport).
 // Tools:
-//   fr_install   {repo?}           - vendor the CyberOS machine into a repo (needs the payload)
-//   fr_gates  {repo?}           - run the machine gates (repo's own build/lint/test + coverage)
-//   fr_status {repo?}           - summarize the task backlog + installed version
+//   task_install   {repo?}           - vendor the CyberOS machine into a repo (needs the payload)
+//   task_gates  {repo?}           - run the machine gates (repo's own build/lint/test + coverage)
+//   task_status {repo?}           - summarize the task backlog + installed version
 //   ship_fr   {repo?, task_id?}   - return the canonical, HITL-gated trigger for the next task
 //
 // HITL is preserved: ship_fr never drives or accepts a task itself. It hands the

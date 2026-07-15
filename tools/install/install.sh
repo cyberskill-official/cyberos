@@ -59,11 +59,14 @@ cp -R "$src/plugin" "$CY/plugin"
 # lib (task-migrate, update-check, status-page) + docs-tools
 [ -d "$src/lib" ] && rm -rf "$CY/lib" && cp -R "$src/lib" "$CY/lib"
 [ -d "$src/docs-tools" ] && rm -rf "$CY/docs-tools" && cp -R "$src/docs-tools" "$CY/docs-tools"
-# drop orphans from older installs (init.sh, changelog.sh, migrate-tasks.sh, status.html, …)
-rm -rf "$CY/status-site" 2>/dev/null || true
-rm -f "$CY/status.html" "$root/docs/status.html" "$CY/migrate-tasks.sh" 2>/dev/null || true
-rm -f "$CY/init.sh" "$CY/changelog.sh" "$CY/update.sh" 2>/dev/null || true
-rm -f "$CY"/gates.env.bak.* 2>/dev/null || true
+# Retired-orphan scrub removed at 1.0.0. It deleted init.sh / changelog.sh / update.sh /
+# migrate-tasks.sh / status.html / status-site/ from older installs. Every one of those was
+# gone before the v1.0.0 tag (init.sh at bb0f2392e), so NO payload that has ever shipped can
+# produce them, and a sweep of all 24 installed repos found 0 of 6 present. It was cleaning
+# up after a build that no longer exists.
+# The audit-fleet `orphan:` assertions stay — they are the PROOF this scrub is unnecessary,
+# and they surface a legacy install for a human instead of silently deleting files.
+rm -f "$CY"/gates.env.bak.* 2>/dev/null || true   # not an orphan: our own backup churn
 chmod +x "$CY/cuo/gates/run-gates.sh" 2>/dev/null || true
 [ -f "$CY/mcp/cyberos-mcp.mjs" ] && chmod +x "$CY/mcp/cyberos-mcp.mjs" 2>/dev/null || true
 # update check on every full init (soft)
@@ -186,7 +189,7 @@ if [ ! -f "$cfg_file" ]; then
 #   test: "$TEST_CMD"$([ -n "$SRC_TEST" ] && printf '%s' "         # autodetected: $SRC_TEST")
 #   coverage: "$COVERAGE_CMD"$([ -n "$SRC_COVERAGE" ] && printf '%s' "     # autodetected: $SRC_COVERAGE")
 # coverage_threshold: 90
-# fr_template: engineering-spec@1
+# task_template: engineering-spec@1
 # profile: full
 EOF
 fi
@@ -685,7 +688,7 @@ exit $_cyberos_rc
 HOOK
       HOOK_SET="appended status-sync v2 to your existing pre-commit hook"
     fi
-    # Scrub retired entrypoints (migrate-tasks, init.sh --page) → lib/status-page.sh
+    # Repoint any hook still calling a retired entrypoint at lib/status-page.sh
     if [ -f "$hk" ] && grep -qE 'migrate-tasks|init\.sh --page' "$hk" 2>/dev/null; then
       tmp="$hk.cyberos.tmp"
       sed -e 's|\.cyberos/migrate-tasks\.sh|.cyberos/lib/status-page.sh|g' \

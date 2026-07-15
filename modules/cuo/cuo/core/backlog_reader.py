@@ -256,7 +256,7 @@ def routed_back_count(task_id: str, audit_dir: Path) -> int:
         return 0
     count = 0
     # The binlog is binary; the simplest parse is to look for the task ID and
-    # event kind as raw bytes. The kind string `memory.fr_routed_back` will
+    # event kind as raw bytes. The kind string `memory.task_routed_back` will
     # appear verbatim near each instance.
     target = f'"task_id":"{task_id}"'.encode("utf-8")
     kind = b'memory.task_routed_back'

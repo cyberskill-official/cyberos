@@ -121,7 +121,7 @@ def test_report_emits_markdown(skill_root: Path, tmp_path: Path) -> None:
 
 
 # ----------------------------------------------------------------------------
-# AC #2 — seeded chain with 11 fr_routed_back rows trips acceptance_rate_below
+# AC #2 — seeded chain with 11 task_routed_back rows trips acceptance_rate_below
 # ----------------------------------------------------------------------------
 
 
@@ -129,7 +129,7 @@ def test_signal_thresholds_trip_correctly(skill_root: Path) -> None:
     """AC #2/#3: tripped signal carries skill/signal/value/threshold/evidence."""
     now_ns = int(time.time() * 1_000_000_000)
     rows: list[dict] = []
-    # Seed 11 fr_routed_back rows for the skill — all terminals are non-done.
+    # Seed 11 task_routed_back rows for the skill — all terminals are non-done.
     for i in range(11):
         rows.append(_row(
             "memory.task_routed_back", now_ns - i * 1_000_000_000,

@@ -1,5 +1,5 @@
 ---
-# ───── Machine-readable frontmatter (parsed by task-audit + future fr-catalog renderer) ─────
+# ───── Machine-readable frontmatter (parsed by task-audit + future task-catalog renderer) ─────
 id: TASK-AI-017
 title: "Per-tenant Redis response cache keyed by (tenant × redacted-prompt × model × persona); ≥30% hit-rate P0 target"
 eu_ai_act_risk_class: not_ai  # UNREVIEWED: auto-set by the 2026-07-14 schema migration; a human MUST confirm before this task leaves draft

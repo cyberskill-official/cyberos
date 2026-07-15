@@ -107,7 +107,7 @@ class TestShipManifest(unittest.TestCase):
     def test_workflow_version_mismatch_needs_human(self):  # AC 4
         plan = sm.resume_plan(_manifest(wf="2.3.0"), "2.4.0", "a" * 64, _hash_of)
         self.assertEqual(plan["action"], "needs_human")
-        # fr_sha256 mismatch: everything stale, fresh start (not needs_human)
+        # task_sha256 mismatch: everything stale, fresh start (not needs_human)
         plan2 = sm.resume_plan(_manifest(), "2.4.0", "b" * 64, _hash_of)
         self.assertEqual((plan2["action"], plan2["start_step"], plan2["stale_from"]),
                          ("resume", 1, 1))

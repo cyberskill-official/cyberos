@@ -62,7 +62,7 @@ from cuo.core.validator import ValidationResult, validate_chain
 _SPANS_LOGGER = logging.getLogger("cyberos.cuo.spans")
 
 # In-process counter for rework-routed tasks. Surfaced in ChainResult.notes
-# and emitted as a memory.fr_routed_back aux row by emit_chain_result.
+# and emitted as a memory.task_routed_back aux row by emit_chain_result.
 _REWORK_COUNTER: dict[str, int] = {"task_routed_back": 0}
 
 
@@ -206,7 +206,7 @@ class ChainResult:
 
 
 def _resolve_task(hand_off: dict) -> None:
-    """Populate next_fr_id, next_fr, and fr_file_path in the hand_off.
+    """Populate next_task_id, next_task, and task_file_path in the hand_off.
 
     Looks up the task file in docs/tasks/{module}/TASK-{ID}-*.md
     relative to the cyberos root or CWD. Reads the file content into
@@ -216,7 +216,7 @@ def _resolve_task(hand_off: dict) -> None:
     if not task_id:
         return
 
-    # Ensure next_fr_id is always set
+    # Ensure next_task_id is always set
     hand_off.setdefault("next_task_id", task_id)
 
     # Already resolved

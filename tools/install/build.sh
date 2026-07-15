@@ -159,7 +159,8 @@ if [ -f "$here/../../scripts/migrate_task_layout.py" ]; then
   [ -f "$here/../../modules/templates/cds/tokens.css" ] && cp "$here/../../modules/templates/cds/tokens.css" "$out/docs-tools/templates/"
 fi
 # Never ship retired names (pre-1.0.0)
-rm -f "$out/migrate-tasks.sh" "$out/init.sh" "$out/changelog.sh" "$out/update.sh"
+# (retired-orphan scrub removed at 1.0.0: no build step has emitted migrate-tasks.sh /
+#  init.sh / changelog.sh / update.sh since bb0f2392e, so this deleted nothing.)
 cp "$here/bootstrap.sh" "$out/bootstrap.sh"
 cp "$here/create.sh"    "$out/create.sh"        # template / fresh-project scaffolder channel
 # 1.0.0 CLI: install | uninstall | version | status | help

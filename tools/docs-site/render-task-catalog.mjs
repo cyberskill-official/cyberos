@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // tools/docs-site/render-task-catalog.mjs
 // TASK-DOCS-001 §1 #2 — render <section data-prerendered="true"> blocks
-// from tools/docs-site/data/tasks.json into dist/website/reference/fr-catalog.html.
+// from tools/docs-site/data/tasks.json into dist/website/reference/task-catalog.html.
 // Pure-Node, no Handlebars dependency: this is the minimal first-cut renderer
 // for the task catalog; NFR + Risk renderers can lift the same pattern.
 

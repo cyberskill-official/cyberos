@@ -211,7 +211,7 @@ async fn main() -> Result<()> {
 /// Mirrors `tools/run_fixtures.py::PRIMARY_SCRIPT` to keep parity tests
 /// honest. Phase 5 generalises this via a manifest field.
 ///
-/// 2026-05-17 flat-layout rebuild: the SDP-driven catalog (sow/srs/fr/prd/etc.
+/// 2026-05-17 flat-layout rebuild: the SDP-driven catalog (sow/srs/task/prd/etc.
 /// author+audit pairs) executes through LLM prompts described in each SKILL.md
 /// body — none of them ship a primary executable script in this generation.
 /// The VN bundles (vietnam-mst-validate, vietnam-vat-invoice, vietnam-bank-transfer,

@@ -16,7 +16,7 @@ runs:
         echo "::notice::Machine gates only. Final acceptance (testing -> done) is a human verdict and is NOT performed in CI."
 # Usage: add a workflow that calls this action, e.g.
 #   jobs:
-#     fr-gates:
+#     task-gates:
 #       runs-on: ubuntu-latest
 #       steps:
 #         - uses: actions/checkout@v4
